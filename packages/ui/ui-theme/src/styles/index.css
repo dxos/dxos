@@ -4,7 +4,6 @@
 
 @import './anchored-overflow.css';
 @import './animation.css';
-@import './codemirror.css';
 @import './attention.css';
 @import './base.css';
 @import './button.css';
@@ -26,5 +25,7 @@
 @import './generated-tokens.css';
 @import './tokens.css';
 @import './typography.css';
+
+@import './plugins/index.css';
 
 @layer dx-tokens, user-tokens, tw-base, dx-base, tw-components, dx-components, utilities;

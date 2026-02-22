@@ -109,10 +109,6 @@
     --dx-cardPadding: var(--dx-trimMd);
   }
 
-  .density-flush {
-
-  }
-
   [data-grid-focus-indicator-variant="stack"] {
     --dx-gridFocusIndicatorWidth: var(--dx-thickLine);
   }
@@ -168,6 +164,7 @@
     --dx-calc-max: max-content;
     --dx-calc-content: content;
   }
+
   @supports (block-size: calc-size(fit-content, size)) {
     :root {
       --dx-calc-auto: calc-size(auto, size);
