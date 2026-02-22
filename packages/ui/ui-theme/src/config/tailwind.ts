@@ -7,7 +7,6 @@ import merge from 'lodash.merge';
 import tailwindScrollbar from 'tailwind-scrollbar';
 import defaultTheme from 'tailwindcss/defaultTheme';
 import type { Config, ThemeConfig } from 'tailwindcss/plugin';
-import tailwindcssLogical from 'tailwindcss-logical';
 import tailwindcssRadix from 'tailwindcss-radix';
 
 import { tokensTailwindConfig } from './tokens';
@@ -247,7 +246,6 @@ export const tailwindConfig = ({
   },
   plugins: [
     tailwindcssForms,
-    tailwindcssLogical,
     tailwindcssRadix(),
     // https://adoxography.github.io/tailwind-scrollbar/utilities
     tailwindScrollbar({

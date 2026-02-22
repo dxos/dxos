@@ -3,6 +3,15 @@
  */
 
 @import 'tailwindcss';
+
+/**
+ * Load plugins using v4 @plugin directive.
+ * Note: tailwindcss-logical removed - v4 has native logical property support.
+ */
+@plugin '@tailwindcss/forms';
+@plugin 'tailwind-scrollbar';
+@plugin 'tailwindcss-radix';
+
 @import './styles/layers/index.css';
 
 /**

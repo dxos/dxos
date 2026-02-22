@@ -67,7 +67,6 @@
     "tailwind-merge": "catalog:",
     "tailwind-scrollbar": "catalog:",
     "tailwindcss": "catalog:",
-    "tailwindcss-logical": "catalog:",
     "tailwindcss-radix": "catalog:"
   },
   "devDependencies": {

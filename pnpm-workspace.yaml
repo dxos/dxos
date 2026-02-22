@@ -639,7 +639,6 @@ catalog:
   tailwind-scrollbar: ^4.0.0
   '@tailwindcss/postcss': ^4.2.0
   tailwindcss: ^4.2.0
-  tailwindcss-logical: ^4.0.1
   tailwindcss-radix: ^4.0.2
   tauri-plugin-web-auth-api: ^1.0.0
   three: ^0.178.0
