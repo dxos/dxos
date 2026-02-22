@@ -9,6 +9,9 @@
  */
 @layer properties, theme, dx-tokens, user-tokens, base, tw-base, dx-base, components, tw-components, dx-components, utilities;
 
+/* Scan all source files in the ui packages so Tailwind detects utility classes used in TypeScript. */
+@source "../../../**/*.{ts,tsx}";
+
 @import 'tailwindcss';
 @import './styles/index.css';
 @import './styles/colors.css';
@@ -40,29 +43,6 @@
   --font-body: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'JetBrains Mono Variable', ui-monospace, 'Cascadia Code', 'Source Code Pro', monospace;
 
-  /* Custom spacing/sizing values - for ring, ring-offset, border-width, etc. */
-  --ring-offset-width-focusOffset: var(--dx-focusOffset);
-  --ring-width-focusLine: var(--dx-focusLine);
-  --ring-width-hairLine: var(--dx-hairLine);
-  --ring-width-thickLine: var(--dx-thickLine);
-  --ring-width-noLine: var(--dx-noLine);
-
-  /* Custom spacing for prose/container/card sizing */
-  --spacing-prose-max-width: var(--dx-prose-max-width);
-  --spacing-container-max-width: var(--dx-container-max-width);
-  --spacing-card-default-width: var(--dx-card-default-width);
-  --spacing-card-min-width: var(--dx-card-min-width);
-  --spacing-card-max-width: var(--dx-card-max-width);
-  --spacing-card-min-height: var(--dx-card-min-height);
-  --spacing-card-max-height: var(--dx-card-max-height);
-
-  /* Border radius scale (matches v3 config override) */
-  --radius-none: 0;
-  --radius-sm: 0.25rem;
-  --radius: 0.5rem;
-  --radius-md: 0.75rem;
-  --radius-lg: 1rem;
-
   /* Font size scale (Tailwind v4 defaults — clean rem/px values) */
   --text-xs: 0.75rem;
   --text-xs--line-height: 1rem;
@@ -91,10 +71,33 @@
   --text-9xl: 8rem;
   --text-9xl--line-height: 1;
 
+  /* Custom spacing/sizing values - for ring, ring-offset, border-width, etc. */
+  --ring-offset-width-focusOffset: var(--dx-focusOffset);
+  --ring-width-focusLine: var(--dx-focusLine);
+  --ring-width-hairLine: var(--dx-hairLine);
+  --ring-width-thickLine: var(--dx-thickLine);
+  --ring-width-noLine: var(--dx-noLine);
+
+  /* Border radius scale (matches v3 config override) */
+  --radius-none: 0;
+  --radius-sm: 0.25rem;
+  --radius: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+
   /* Box shadow */
   --shadow-slider: 0 0 0 5px rgba(0, 0, 0, 0.3);
 
   /* Transition timing function */
   --ease-in-out-symmetric: cubic-bezier(0.5, 0, 0.5, 1);
+
+  /* Custom spacing for prose/container/card sizing */
+  --spacing-prose-max-width: var(--dx-prose-max-width);
+  --spacing-container-max-width: var(--dx-container-max-width);
+  --spacing-card-default-width: var(--dx-card-default-width);
+  --spacing-card-min-width: var(--dx-card-min-width);
+  --spacing-card-max-width: var(--dx-card-max-width);
+  --spacing-card-min-height: var(--dx-card-min-height);
+  --spacing-card-max-height: var(--dx-card-max-height);
 }
 
