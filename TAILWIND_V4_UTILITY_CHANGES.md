@@ -304,6 +304,61 @@ module.exports = {
 grep -rn 'grid-cols-\[[0-9a-z]*,[0-9a-z]*\]' packages/ --include="*.tsx" --include="*.ts"
 ```
 
+#### 6. Logical Properties Migration (FIXED)
+
+**Breaking Change**: The `tailwindcss-logical` plugin is incompatible with Tailwind v4's `@plugin` directive system. Tailwind v4 now has native logical property support built-in.
+
+**Plugin Removed:**
+- Removed `@plugin 'tailwindcss-logical'` from theme.css
+- Removed from package.json dependencies
+- Removed from pnpm-workspace.yaml catalog
+- Removed import and plugin registration from tailwind.ts config
+
+**Syntax Migration (453 files, 1150+ changes):**
+
+**Sizing Properties:**
+- `bs-*` → `block-*` (block-size)
+- `is-*` → `inline-*` (inline-size)
+- `min-bs-*` → `min-block-*`
+- `max-bs-*` → `max-block-*`
+- `min-is-*` → `min-inline-*`
+- `max-is-*` → `max-inline-*`
+
+**Padding Properties:**
+- `pli-*` → `px-*` (padding-inline)
+- `plb-*` → `py-*` (padding-block)
+- `pis-*` → `ps-*` (padding-inline-start)
+- `pie-*` → `pe-*` (padding-inline-end)
+
+**Margin Properties:**
+- `mli-*` → `mx-*` (margin-inline)
+- `mlb-*` → `my-*` (margin-block)
+- `mis-*` → `ms-*` (margin-inline-start)
+- `mie-*` → `me-*` (margin-inline-end)
+
+**Important Note:**
+In Tailwind v4, `px-*` and `py-*` are now **semantic logical properties**:
+- `px-*` = `padding-inline` (NOT padding-x)
+- `py-*` = `padding-block` (NOT padding-y)
+- `ps-*` = `padding-inline-start` (NOT padding-start)
+- `pe-*` = `padding-inline-end` (NOT padding-end)
+
+This aligns with CSS Logical Properties specification for better internationalization support. In LTR layouts, inline = horizontal and block = vertical. In RTL layouts, inline direction reverses automatically.
+
+**Migration Method:**
+Applied bulk find/replace using perl regex with word boundaries to ensure accuracy:
+```bash
+# Example patterns used:
+s/\bmin-bs-\[/min-block-[/g;
+s/\bpli-(\[|[0-9])/px-$1/g;
+s/\bmli-(\[|[0-9]|auto)/mx-$1/g;
+```
+
+**Verified:**
+- Storybook builds successfully without errors
+- All logical property utilities now resolve correctly
+- No `min-bs-`, `pli-`, or other old syntax remaining in source
+
 ## Testing Recommendations
 
 ### Visual Regression Testing
@@ -340,6 +395,10 @@ grep -rn 'grid-cols-\[[0-9a-z]*,[0-9a-z]*\]' packages/ --include="*.tsx" --inclu
 - ✅ **FIXED**: CSS variable syntax (2 files)
 - ✅ **FIXED**: Grid track list syntax (3 files)
 - ✅ **FIXED**: PostCSS plugin usage (3 files)
+- ✅ **FIXED**: Logical properties migration (453 files, 1150+ changes)
+  - Removed tailwindcss-logical plugin
+  - Migrated to Tailwind v4 native logical properties
+  - Storybook verified working
 - ⚠️ Visual regression testing pending
 - ⚠️ Full test suite pending
 
