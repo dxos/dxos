@@ -2,8 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import adapter, { type TailwindAdapterConfig } from '../../vendor/tailwind-tokens';
 import { type TokenSet } from '@ch-ui/tokens';
+
+import adapter, { type TailwindAdapterConfig } from '../../vendor/tailwind-tokens';
 
 import { aliasColors, huePalettes, physicalColors, semanticColors, systemAliases, systemSememes } from './colors';
 import { lengthsFacet, maxSizesFacet } from './lengths';

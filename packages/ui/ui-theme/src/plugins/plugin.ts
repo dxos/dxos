@@ -16,7 +16,7 @@ import tailwindcss from 'tailwindcss';
 import type { ThemeConfig } from 'tailwindcss/plugin';
 import { type Plugin, type UserConfig } from 'vite';
 
-import { tailwindConfig, tokenSet } from '../config';
+import { tokenSet } from '../config';
 
 import { resolveKnownPeers } from './resolveContent';
 

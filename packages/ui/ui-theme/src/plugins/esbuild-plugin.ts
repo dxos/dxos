@@ -11,8 +11,6 @@ import stylePlugin from 'esbuild-style-plugin';
 import tailwindcss from 'tailwindcss';
 import type { ThemeConfig } from 'tailwindcss/plugin';
 
-import { tailwindConfig } from '../config';
-
 import { resolveKnownPeers } from './resolveContent';
 
 export const ThemePlugins = async (options: {
@@ -49,10 +47,7 @@ export const ThemePlugins = async (options: {
     // TODO(zhenyasav): autoprefixer version misalignment with esbuild-style-plugin requires the `as any`.
     stylePlugin({
       postcss: {
-        plugins: [
-          tailwindcss(),
-          autoprefixer as any,
-        ],
+        plugins: [tailwindcss(), autoprefixer as any],
       },
     }),
   ];
