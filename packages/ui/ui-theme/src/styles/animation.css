@@ -1,3 +1,6 @@
+/**
+ * Animation
+ */
 @layer utilities {
   @keyframes blink {
     0%,

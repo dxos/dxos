@@ -1,3 +1,6 @@
+/**
+ * Can-scroll
+ */
 @layer dx-components {
   :root {
     --can-scroll-inline: initial;

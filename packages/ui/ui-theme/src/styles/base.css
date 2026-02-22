@@ -1,3 +1,6 @@
+/**
+ * Base utilities.
+ */
 @layer dx-base {
   :root {
     touch-action: pan-x pan-y;
@@ -17,8 +20,8 @@
 @layer dx-tokens {
   html, html.dark, html .dark {
     background-color: var(--dx-baseSurface);
-    --surface-bg: var(--dx-baseSurface);
     color: var(--dx-baseText);
+    --surface-bg: var(--dx-baseSurface);
     --surface-text: var(--dx-baseText);
     --description-text: var(--dx-description);
   }

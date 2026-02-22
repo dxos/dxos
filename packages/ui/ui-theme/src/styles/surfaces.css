@@ -1,3 +1,6 @@
+/**
+ * Surfaces
+ */
 @layer utilities {
   .base-surface {
     background-color: var(--dx-baseSurface);

@@ -1,3 +1,6 @@
+/**
+ * Attention
+ */
 @layer utilities {
   /* If an element should apply attention-related color tokens, it should use this class. */
   .attention-surface {

@@ -1,3 +1,6 @@
+/**
+ * Positioning
+ */
 @layer utilities {
   .snap-inline {
     scroll-snap-type: inline var(--tw-scroll-snap-strictness);

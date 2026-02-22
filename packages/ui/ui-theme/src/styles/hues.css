@@ -1,3 +1,6 @@
+/**
+ * Hues
+ */
 @layer dx-components {
   .dx-text-hue[data-hue='red'],
   .dx-text-hue--red {

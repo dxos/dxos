@@ -10,7 +10,7 @@
 @layer properties, theme, dx-tokens, user-tokens, base, tw-base, dx-base, components, tw-components, dx-components, utilities;
 
 @import 'tailwindcss';
-@import './styles/layers/index.css';
+@import './styles/index.css';
 
 @plugin '@tailwindcss/forms';
 @plugin 'tailwind-scrollbar';
@@ -23,6 +23,13 @@
 @custom-variant pointer-fine (@media (pointer: fine));
 @custom-variant hover-hover (@media (hover: hover));
 
+/*
+  * TODO(burdon): Generate semantic sets (e.g., -fill, -text, -surface, -surface-text: see hash-styles.ts)
+  * TODO(burdon): Define size tokens from tailwind.ts (then delete).
+  * TODO(burdon): Search for all custom classes like dx-
+  * TODO(burdon): Normalize format to kebab-case.
+  */
+
 /**
  * Tailwind v4 theme configuration using @theme directive.
  * Replaces JavaScript config for theme values.
@@ -31,15 +38,6 @@
   /* Font families */
   --font-body: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'JetBrains Mono Variable', ui-monospace, 'Cascadia Code', 'Source Code Pro', monospace;
-
-  /* Custom theme colors - mapped from --dx-* CSS variables */
-
-  /*
-   * TODO(burdon): Generate semantic sets (e.g., -fill, -text, -surface, -surface-text: see hash-styles.ts)
-   * TODO(burdon): Define size tokens from tailwind.ts (then delete).
-   * TODO(burdon): Search for all custom classes like dx-
-   * TODO(burdon): Normalize format to kebab-case.
-   */
 
    --color-test: theme(colors.blue.500);
    --spacing-test: theme(spacing.4);

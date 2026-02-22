@@ -1,3 +1,6 @@
+/**
+ * Focus ring
+ */
 @layer utilities {
   .dx-focus-ring,
   .dx-focus-ring-inset {
