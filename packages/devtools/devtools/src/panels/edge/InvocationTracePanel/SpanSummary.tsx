@@ -55,7 +55,7 @@ export const SpanSummary: FC<SpanSummaryProps> = ({ db, span, onClose }) => {
   return (
     <div className='p-2 overflow-auto' role='none'>
       <div className='is-flex justify-between items-start' role='none'>
-        <div className='is-full flex flex-row justify-between' role='none'>
+        <div className='inline-full flex flex-row justify-between' role='none'>
           <h3 className='text-lg font-medium mb-1'>{targetName}</h3>
           <IconButton icon='ph--x--regular' iconOnly label='Close panel' onClick={onClose} />
         </div>
@@ -73,7 +73,7 @@ export const SpanSummary: FC<SpanSummaryProps> = ({ db, span, onClose }) => {
       </div>
 
       {span.error && (
-        <div className='mlb-2 text-sm font-medium'>
+        <div className='my-2 text-sm font-medium'>
           {span.error.name}: {span.error.message}
         </div>
       )}

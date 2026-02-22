@@ -95,7 +95,7 @@ const EventHeader = ({ db, onContactCreate }: EventHeaderProps) => {
   return (
     <div role='none' className='p-1 flex flex-col gap-2 border-be border-subduedSeparator'>
       <div role='none' className='grid grid-cols-[2rem_1fr] gap-1'>
-        <div role='none' className='flex pli-2 text-subdued bs-[28px] items-center'>
+        <div role='none' className='flex px-2 text-subdued block-[28px] items-center'>
           <Icon icon='ph--check--regular' />
         </div>
         <div role='none' className='flex flex-col gap-1 overflow-hidden'>
@@ -104,7 +104,7 @@ const EventHeader = ({ db, onContactCreate }: EventHeaderProps) => {
       </div>
 
       <div role='none' className='grid grid-cols-[2rem_1fr] gap-1'>
-        <div role='none' className='flex pli-2 text-subdued items-center'>
+        <div role='none' className='flex px-2 text-subdued items-center'>
           <Icon icon='ph--calendar--regular' />
         </div>
         <div role='none' className='flex flex-col gap-1 overflow-hidden'>

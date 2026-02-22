@@ -21,7 +21,7 @@ import { Meeting, MeetingOperation } from '../types';
 
 // TODO(wittjosiah): Add a story which renders meetings alongside call?
 
-const grid = 'grid grid-cols-[1fr_auto] min-bs-[2.5rem]';
+const grid = 'grid grid-cols-[1fr_auto] min-block-[2.5rem]';
 
 const MeetingItem = ({
   meeting,
@@ -42,7 +42,7 @@ const MeetingItem = ({
     <List.Item<Meeting.Meeting>
       key={meeting.id}
       item={meeting}
-      classNames={mx(grid, ghostHover, 'items-center', 'pli-2', 'min-bs-[3rem]')}
+      classNames={mx(grid, ghostHover, 'items-center', 'px-2', 'min-block-[3rem]')}
     >
       <div className='flex flex-col truncate'>
         <List.ItemTitle classNames='truncate'>{getLabel(meeting)}</List.ItemTitle>
@@ -96,12 +96,12 @@ export const MeetingsList = ({ channel }: MeetingsListProps) => {
 
   return (
     <div>
-      <div className='pli-2 min-bs-[3rem] flex justify-end items-center'>
+      <div className='px-2 min-block-[3rem] flex justify-end items-center'>
         <Button onClick={handleCreateMeeting}>{t('create meeting label')}</Button>
       </div>
       <List.Root<Meeting.Meeting> items={sortedMeetings} isItem={Schema.is(Meeting.Meeting)} getId={getId}>
         {({ items }) => (
-          <div role='list' className='flex flex-col is-full'>
+          <div role='list' className='flex flex-col inline-full'>
             {items?.map((meeting) => (
               <MeetingItem key={meeting.id} meeting={meeting} getLabel={meetingMetadata.label} />
             ))}

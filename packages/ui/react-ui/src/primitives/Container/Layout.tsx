@@ -37,9 +37,9 @@ const Main = forwardRef<HTMLDivElement, MainProps>(
         role={role ?? 'none'}
         style={style}
         className={mx(
-          'bs-full is-full grid grid-cols-[100%] overflow-hidden',
+          'block-full inline-full grid grid-cols-[100%] overflow-hidden',
           toolbar && [
-            '[.dx-main-mobile-layout_&>.dx-toolbar]:pli-3 [&>.dx-toolbar]:relative',
+            '[.dx-main-mobile-layout_&>.dx-toolbar]:px-3 [&>.dx-toolbar]:relative',
             '[&>.dx-toolbar]:border-be [&>.dx-toolbar]:border-subduedSeparator',
           ],
           classNames,

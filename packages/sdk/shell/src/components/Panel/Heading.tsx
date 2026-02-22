@@ -20,7 +20,7 @@ export const Heading = forwardRef<HTMLDivElement, PanelHeadingProps>(
         {corner}
         <h1
           {...(!titleSrOnly && { id: titleId })}
-          className={mx(descriptionText, 'text-center mlb-2', titleSrOnly && 'invisible')}
+          className={mx(descriptionText, 'text-center my-2', titleSrOnly && 'invisible')}
         >
           {title}
         </h1>

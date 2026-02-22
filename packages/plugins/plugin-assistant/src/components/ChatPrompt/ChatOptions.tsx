@@ -22,7 +22,7 @@ import {
 } from '../../hooks';
 import { meta } from '../../meta';
 
-const panelClassNames = 'is-[calc(100dvw-.5rem)] sm:is-max md:is-72 max-is-[--text-content]';
+const panelClassNames = 'inline-[calc(100dvw-.5rem)] sm:inline-max md:inline-72 max-inline-[--text-content]';
 
 export type ChatOptionsProps = {
   db: Database.Database;
@@ -70,16 +70,16 @@ export const ChatOptions = ({ db, context, blueprintRegistry, presets, preset, o
               <Tabs.Root orientation='horizontal' defaultValue='blueprints' defaultActivePart='list' tabIndex={-1}>
                 <Tabs.Viewport
                   classNames={mx(
-                    'max-bs-[--radix-popover-content-available-height] grid grid-rows-[1fr_min-content]',
+                    'max-block-[--radix-popover-content-available-height] grid grid-rows-[1fr_min-content]',
                     '[&_[cmdk-root]]:contents [&_[role="tabpanel"]]:grid [&_[role="tabpanel"]]:grid-rows-[1fr_min-content]',
-                    '[&_[role="listbox"]]:min-bs-0 [&_[role="listbox"]]:overflow-y-auto',
-                    '[&_[role="tabpanel"]]:min-bs-0 [&_[role="tabpanel"]]:pli-cardChrome [&_[role="tabpanel"][data-state="active"]]:order-first [&_[role="tabpanel"][data-state="inactive"]]:hidden',
+                    '[&_[role="listbox"]]:min-block-0 [&_[role="listbox"]]:overflow-y-auto',
+                    '[&_[role="tabpanel"]]:min-block-0 [&_[role="tabpanel"]]:pli-cardChrome [&_[role="tabpanel"][data-state="active"]]:order-first [&_[role="tabpanel"][data-state="inactive"]]:hidden',
                   )}
                 >
                   <Tabs.Tabpanel value='blueprints' tabIndex={-1} classNames='dx-focus-ring-inset'>
                     <BlueprintsPanel blueprintRegistry={blueprintRegistry} db={db} context={context} />
                   </Tabs.Tabpanel>
-                  <Tabs.Tabpanel value='model' tabIndex={-1} classNames='dx-focus-ring-inset pli-0!'>
+                  <Tabs.Tabpanel value='model' tabIndex={-1} classNames='dx-focus-ring-inset px-0!'>
                     <ModelsPanel presets={presets} preset={preset} onPresetChange={onPresetChange} />
                   </Tabs.Tabpanel>
                   <Tabs.Tablist classNames='sm:overflow-x-hidden justify-center p-[--dx-cardChrome] border-bs border-subduedSeparator order-last'>
@@ -198,7 +198,7 @@ const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'context'>)
 
   return (
     <SearchList.Root onSearch={handleSearch}>
-      <SearchList.Content classNames='p-cardChrome [&:has([cmdk-list-sizer]:empty)]:plb-0'>
+      <SearchList.Content classNames='p-cardChrome [&:has([cmdk-list-sizer]:empty)]:py-0'>
         <SearchList.Viewport>
           {results.length ? (
             results.map((object) => {

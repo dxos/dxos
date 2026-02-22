@@ -100,7 +100,7 @@ const l0Breakpoints: Record<string, string> = {
 };
 
 const l0ItemRoot =
-  'group/l0item flex is-full justify-center items-center relative data[type!="collection"]:cursor-pointer app-no-drag dx-focus-ring-group';
+  'group/l0item flex inline-full justify-center items-center relative data[type!="collection"]:cursor-pointer app-no-drag dx-focus-ring-group';
 
 const l0ItemContent = 'flex justify-center items-center dx-focus-ring-group-indicator transition-colors rounded-xs';
 
@@ -139,7 +139,7 @@ export const L0ItemActiveTabIndicator = ({ classNames }: ThemedClassName<{}>) =>
   <div
     role='none'
     className={mx(
-      'hidden group-aria-selected/l0item:block absolute inline-start-0 inset-block-2 is-1 bg-accentSurface rounded-ie',
+      'hidden group-aria-selected/l0item:block absolute inline-start-0 inset-block-2 inline-1 bg-accentSurface rounded-ie',
       classNames,
     )}
   />
@@ -219,7 +219,7 @@ const L0Item = ({ item, parent, path, pinned, onRearrange }: L0ItemProps) => {
           l0ItemContent,
           pinned
             ? 'p-2 group-hover/l0item:bg-activeSurface'
-            : 'is-[--l0-avatar-size] bs-[--l0-avatar-size] bg-activeSurface',
+            : 'inline-[--l0-avatar-size] block-[--l0-avatar-size] bg-activeSurface',
         )}
       >
         <ItemAvatar item={item} />
@@ -302,7 +302,7 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
       classNames={[
         'group/l0 absolute z-[1] inset-block-0 inline-start-0 rounded-is',
         'grid grid-cols-[var(--l0-size)] grid-rows-[var(--rail-size)_1fr_min-content_var(--l0-size)] contain-layout',
-        '!is-[--l0-size] bg-baseSurface border-ie border-subduedSeparator app-drag pbe-[env(safe-area-inset-bottom)]',
+        '!inline-[--l0-size] bg-baseSurface border-ie border-subduedSeparator app-drag pbe-[env(safe-area-inset-bottom)]',
       ]}
     >
       {/* TODO(wittjosiah): Use L0Item trigger. */}
@@ -322,7 +322,7 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
                   role='none'
                   className={mx(
                     l0ItemContent,
-                    'bs-[--rail-action] is-[--rail-action] group-hover/l0item:bg-hoverSurface',
+                    'block-[--rail-action] inline-[--rail-action] group-hover/l0item:bg-hoverSurface',
                   )}
                 >
                   <Icon icon='ph--list--regular' size={5} />

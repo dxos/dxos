@@ -75,7 +75,7 @@ const DefaultStory = ({ layout: _layout, items: _items, grid, ...props }: StoryP
       onMove={handleMove}
       ref={controller}
     >
-      <Board.Toolbar classNames='absolute top-3 left-3 z-10 min-bs-0 is-auto!' />
+      <Board.Toolbar classNames='absolute top-3 left-3 z-10 min-block-0 inline-auto!' />
       <Board.Container>
         <Board.Viewport>
           <Board.Backdrop />

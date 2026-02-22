@@ -153,7 +153,7 @@ export const FullPresence = (props: MemberPresenceProps) => {
           <Popover.Portal>
             <Popover.Content side='bottom'>
               <Popover.Arrow />
-              <Popover.Viewport classNames='max-bs-56'>
+              <Popover.Viewport classNames='max-block-56'>
                 <List>
                   {members.map((member) => (
                     <ListItem.Root
@@ -206,7 +206,7 @@ const PresenceAvatar = forwardRef<DxAvatar, PresenceAvatarProps>(
           fallback={identity.profile?.data?.emoji || fallbackValue.emoji}
           ref={forwardedRef}
         />
-        <Avatar.Label classNames={showName ? 'text-sm truncate pli-2' : 'sr-only'}>{getName(identity)}</Avatar.Label>
+        <Avatar.Label classNames={showName ? 'text-sm truncate px-2' : 'sr-only'}>{getName(identity)}</Avatar.Label>
       </Avatar.Root>
     );
   },
@@ -266,7 +266,7 @@ export const SmallPresence = ({ count = 0, attended, containsAttended }: SmallPr
         attended={attended}
         containsAttended={containsAttended}
         presence={count > 1 ? 'many' : count === 1 ? 'one' : 'none'}
-        classNames='self-center mie-1'
+        classNames='self-center me-1'
       />
     </Tooltip.Trigger>
   );

@@ -34,7 +34,7 @@ export const TasksModule = ({ space }: ComponentProps) => {
       </Toolbar.Root>
       <EditorContent
         id={document.id}
-        classNames='bs-full p-2 overflow-hidden'
+        classNames='block-full p-2 overflow-hidden'
         extensions={[
           createThemeExtensions({ themeMode }),
           createDataExtensions({ id: document.id, text: createDocAccessor(document.content.target, ['content']) }),

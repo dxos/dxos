@@ -23,7 +23,7 @@ export const Wireframe = ({ classNames, label, object }: WireframeProps) => {
   const { width, height, ref } = useResizeDetector();
 
   return (
-    <div ref={ref} className={mx('relative grow min-bs-96', classNames)} {...attentionAttrs}>
+    <div ref={ref} className={mx('relative grow min-block-96', classNames)} {...attentionAttrs}>
       <div className='absolute inset-2 flex flex-col gap-2 overflow-hidden font-mono'>
         <div className='flex justify-between'>
           <div>{label}</div>

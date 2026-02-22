@@ -112,7 +112,7 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
               value={getValue()}
               onChange={handleChange}
               placeholder={t('display name input placeholder')}
-              classNames='min-is-64'
+              classNames='min-inline-64'
             />
           </Settings.ItemInput>
         );

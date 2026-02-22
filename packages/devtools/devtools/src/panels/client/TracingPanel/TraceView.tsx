@@ -48,7 +48,7 @@ export const TraceView: FC<{
   const flameGraph = showThreads ? graphs[Math.min(selectedFlameIndex, graphs.length - 1)] : graphs.flat();
 
   return (
-    <div className='bs-full'>
+    <div className='block-full'>
       <div className='flex items-center p-2'>
         <div className='flex items-center gap-2'>
           <Input.Root>
@@ -84,7 +84,7 @@ export const TraceView: FC<{
         )}
       </div>
 
-      <div className='bs-full'>{flameGraph && <FlameChart className='bs-full' data={flameGraph} />}</div>
+      <div className='block-full'>{flameGraph && <FlameChart className='block-full' data={flameGraph} />}</div>
     </div>
   );
 };

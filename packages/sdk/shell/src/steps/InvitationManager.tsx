@@ -60,18 +60,18 @@ export const InvitationManager = ({
 
   return (
     <>
-      <Viewport.Root activeView={activeView} classNames='grow plb-1'>
+      <Viewport.Root activeView={activeView} classNames='grow py-1'>
         <Viewport.Views>
           <InvitationManagerView id='showing qr' emoji={emoji}>
-            <p className='text-sm mlb-1 font-normal text-center'>
+            <p className='text-sm my-1 font-normal text-center'>
               {t(multiUse ? 'invite many qr label' : 'invite one qr label')}
             </p>
-            <div role='none' className={mx(descriptionText, 'is-full max-is-[14rem] relative')}>
+            <div role='none' className={mx(descriptionText, 'inline-full max-inline-[14rem] relative')}>
               <QR
                 rounding={100}
                 backgroundColor='transparent'
                 color='currentColor'
-                className={mx('is-full bs-full p-2', showAuthCode && 'invisible')}
+                className={mx('inline-full block-full p-2', showAuthCode && 'invisible')}
                 aria-labelledby={qrLabel}
                 errorCorrectionLevel='Q'
                 cutout={true}

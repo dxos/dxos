@@ -217,7 +217,7 @@ export const Sketch = ({
       role='none'
       ref={containerRef}
       style={{ visibility: ready ? 'visible' : 'hidden' }}
-      className={mx('is-full bs-full', classNames)}
+      className={mx('inline-full block-full', classNames)}
     >
       <Tldraw
         key={Obj.getDXN(sketch).toString()}

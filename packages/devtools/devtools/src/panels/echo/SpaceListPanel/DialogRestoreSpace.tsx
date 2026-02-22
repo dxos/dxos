@@ -20,10 +20,10 @@ export const DialogRestoreSpace = ({ handleFile }: { handleFile: (backupFile: Fi
         <Dialog.Overlay>
           <Dialog.Content>
             <Dialog.Title>{'Import space'}</Dialog.Title>
-            <p className='mlb-4'>{'Importing from a backup will create new space from.'}</p>
+            <p className='my-4'>{'Importing from a backup will create new space from.'}</p>
             <FileUploader
               types={['json', 'tar']}
-              classes='block mlb-4 p-8 border-2 border-dashed border-neutral-500/50 rounded-sm flex items-center justify-center gap-2 cursor-pointer'
+              classes='block my-4 p-8 border-2 border-dashed border-neutral-500/50 rounded-sm flex items-center justify-center gap-2 cursor-pointer'
               dropMessageStyle={{ border: 'none', backgroundColor: '#EEE' }}
               handleChange={(backupFile: File) => handleFile(backupFile).finally(() => setDialogOpen(false))}
             >

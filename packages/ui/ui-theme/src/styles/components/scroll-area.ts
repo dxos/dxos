@@ -19,15 +19,15 @@ export const scrollAreaRoot: ComponentFunction<ScrollAreaStyleProps> = ({ orient
   mx(
     'overflow-hidden',
 
-    orientation === 'vertical' && 'group/scroll-v bs-full is-full min-bs-0',
-    orientation === 'horizontal' && 'group/scroll-h bs-full is-full min-is-0',
-    orientation === 'all' && 'group/scroll-all bs-full is-full min-bs-0 min-is-0',
+    orientation === 'vertical' && 'group/scroll-v block-full inline-full min-block-0',
+    orientation === 'horizontal' && 'group/scroll-h block-full inline-full min-inline-0',
+    orientation === 'all' && 'group/scroll-all block-full inline-full min-block-0 min-inline-0',
 
     // Balance left/right, top/bottom "margin" with scrollbar.
     margin && [
-      orientation === 'vertical' && (thin ? 'pis-[4px]' : 'pis-[8px]'),
+      orientation === 'vertical' && (thin ? 'ps-[4px]' : 'ps-[8px]'),
       orientation === 'horizontal' && (thin ? 'pbs-[4px]' : 'pbs-[8px]'),
-      orientation === 'all' && (thin ? 'pis-[4px] pbs-[8px]' : 'pis-[8px] pbs-[8px]'),
+      orientation === 'all' && (thin ? 'ps-[4px] pbs-[8px]' : 'ps-[8px] pbs-[8px]'),
     ],
 
     ...etc,
@@ -41,15 +41,15 @@ export const scrollAreaViewport: ComponentFunction<ScrollAreaStyleProps> = (
   ...etc
 ) =>
   mx(
-    'bs-full is-full',
+    'block-full inline-full',
 
     orientation === 'vertical' && 'flex flex-col overflow-y-scroll',
     orientation === 'horizontal' && 'flex overflow-x-scroll',
     orientation === 'all' && 'overflow-scroll',
 
     thin
-      ? '[&::-webkit-scrollbar]:is-[4px] [&::-webkit-scrollbar]:bs-[4px]'
-      : '[&::-webkit-scrollbar]:is-[8px] [&::-webkit-scrollbar]:bs-[8px]',
+      ? '[&::-webkit-scrollbar]:inline-[4px] [&::-webkit-scrollbar]:block-[4px]'
+      : '[&::-webkit-scrollbar]:inline-[8px] [&::-webkit-scrollbar]:block-[8px]',
 
     '[&::-webkit-scrollbar-corner]:bg-transparent',
     '[&::-webkit-scrollbar-track]:bg-transparent',
@@ -68,9 +68,9 @@ export const scrollAreaViewport: ComponentFunction<ScrollAreaStyleProps> = (
         ],
 
     padding && [
-      orientation === 'vertical' && 'pli-[4px]',
+      orientation === 'vertical' && 'px-[4px]',
       orientation === 'horizontal' && 'pbe-[4px]',
-      orientation === 'all' && 'pis-[4px] pbe-[4px]',
+      orientation === 'all' && 'ps-[4px] pbe-[4px]',
     ],
 
     snap && [

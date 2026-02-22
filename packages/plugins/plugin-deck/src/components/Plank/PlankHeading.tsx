@@ -152,8 +152,8 @@ export const PlankHeading = memo(
     return (
       <StackItem.Heading
         classNames={[
-          'plb-1 items-stretch gap-1 sticky inline-start-12 app-drag min-is-0 contain-layout density-coarse',
-          part === 'solo' ? soloInlinePadding : 'pli-1',
+          'py-1 items-stretch gap-1 sticky inline-start-12 app-drag min-inline-0 contain-layout density-coarse',
+          part === 'solo' ? soloInlinePadding : 'px-1',
           ...(layoutMode === 'solo--fullscreen'
             ? [
                 hoverableControls,
@@ -167,7 +167,7 @@ export const PlankHeading = memo(
       >
         {companions && isCompanionNode ? (
           /* TODO(thure): IMPORTANT: This is a tablist; it should be implemented as such. */
-          <div role='none' className='flex-1 min-is-0 overflow-x-auto scrollbar-none flex gap-1'>
+          <div role='none' className='flex-1 min-inline-0 overflow-x-auto scrollbar-none flex gap-1'>
             {companions.map(({ id, properties: { icon, label } }) => (
               <IconButton
                 key={id}

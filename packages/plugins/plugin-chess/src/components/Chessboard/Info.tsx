@@ -35,7 +35,7 @@ export const Info = ({ classNames, orientation = 'white', onOrientationChange, o
   return (
     <div
       className={mx(
-        'grid grid-rows-[min-content_1fr_min-content] is-full min-is-[18rem] p-2 overflow-hidden bg-groupSurface rounded-xs',
+        'grid grid-rows-[min-content_1fr_min-content] inline-full min-inline-[18rem] p-2 overflow-hidden bg-groupSurface rounded-xs',
         classNames,
       )}
     >
@@ -156,12 +156,12 @@ const History = ({ classNames, model, min, max, onSelect }: HistoryProps) => {
       }}
     >
       {moves.map(([a, b], index) => (
-        <div key={index} className='grid grid-cols-[3rem_1fr_1fr_1rem] gap-2 pis-4 leading-1'>
+        <div key={index} className='grid grid-cols-[3rem_1fr_1fr_1rem] gap-2 ps-4 leading-1'>
           <div className='content-center text-xs text-subdued'>{index + 1}</div>
           {a && (
             <div
               data-index={a.index}
-              className={mx('pis-2 cursor-pointer', a.index === moveIndex - 1 && 'bg-primary-500')}
+              className={mx('ps-2 cursor-pointer', a.index === moveIndex - 1 && 'bg-primary-500')}
               onClick={() => onSelect?.(a.index + 1)}
             >
               {a.move}
@@ -170,7 +170,7 @@ const History = ({ classNames, model, min, max, onSelect }: HistoryProps) => {
           {b && (
             <div
               data-index={b.index}
-              className={mx('pis-2 cursor-pointer', b.index === moveIndex - 1 && 'bg-primary-500')}
+              className={mx('ps-2 cursor-pointer', b.index === moveIndex - 1 && 'bg-primary-500')}
               onClick={() => onSelect?.(b.index + 1)}
             >
               {b.move}
@@ -196,7 +196,7 @@ type PlayerIndicatorProps = PropsWithChildren<{
 const PlayerIndicator = ({ children, model, player, icon }: PlayerIndicatorProps) => {
   const turn = player === (model.game.turn() === 'w' ? 'white' : 'black');
   return (
-    <div className='grid grid-cols-[2rem_1fr_2rem] gap-2 bs-[--rail-size] pli-1 flex items-center overflow-hidden'>
+    <div className='grid grid-cols-[2rem_1fr_2rem] gap-2 block-[--rail-size] px-1 flex items-center overflow-hidden'>
       <div className='place-items-center'>
         <Icon
           icon={turn ? 'ph--circle--fill' : 'ph--circle--thin'}

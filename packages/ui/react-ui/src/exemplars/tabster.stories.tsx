@@ -27,8 +27,8 @@ const Board = forwardRef<HTMLDivElement, { columns: string[][] }>(({ columns }, 
   const arrowNavigationAttrs = useArrowNavigationGroup({ axis: 'horizontal', memorizeCurrent: true, tabbable: true });
 
   return (
-    <div ref={ref} tabIndex={0} {...arrowNavigationAttrs} className='flex bs-full is-full overflow-hidden'>
-      <div className={mx('flex bs-full overflow-x-auto p-4 gap-4')}>
+    <div ref={ref} tabIndex={0} {...arrowNavigationAttrs} className='flex block-full inline-full overflow-hidden'>
+      <div className={mx('flex block-full overflow-x-auto p-4 gap-4')}>
         {columns.map((column) => (
           <Column key={column[0]} items={column} />
         ))}
@@ -43,7 +43,7 @@ const Column = forwardRef<HTMLDivElement, { items: string[] }>(({ items }, ref) 
   const tabsterAttrs = useMergedTabsterAttributes_unstable(focusableGroupAttrs, arrowNavigationAttrs);
 
   return (
-    <ScrollArea.Root tabIndex={0} orientation='vertical' classNames={mx('is-[25rem]', border)}>
+    <ScrollArea.Root tabIndex={0} orientation='vertical' classNames={mx('inline-[25rem]', border)}>
       <ScrollArea.Viewport {...tabsterAttrs} classNames='p-4 gap-4' ref={ref}>
         {items.map((item) => (
           <Item key={item} value={item} />
@@ -61,7 +61,7 @@ const Item = forwardRef<HTMLDivElement, { value: string }>(({ value }, ref) => {
       ref={ref}
       tabIndex={0}
       {...focusableGroupAttrs}
-      className={mx('flex shrink-0 is-full gap-4 p-4 items-center', border)}
+      className={mx('flex shrink-0 inline-full gap-4 p-4 items-center', border)}
     >
       <Input.Root>
         <Input.Checkbox />

@@ -104,7 +104,7 @@ export const Welcome = ({
         backgroundImage: 'radial-gradient(circle farthest-corner at 50% 50%, #2d6fff80, var(--dx-neutral-950))',
       }}
     >
-      <div className='z-10 flex flex-col gap-8 p-8 md:pli-16'>
+      <div className='z-10 flex flex-col gap-8 p-8 md:px-16'>
         <h1 className="font-['Poiret One'] text-[80px]" style={{ fontFamily: 'Poiret One' }}>
           composer
         </h1>
@@ -122,7 +122,7 @@ export const Welcome = ({
                 </div>
                 <div className='flex items-center is-full my-4'>
                   <div className='flex-grow bs-px bg-subdued'></div>
-                  <span className='pli-4 text-sm text-subdued'>or</span>
+                  <span className='px-4 text-sm text-subdued'>or</span>
                   <div className='flex-grow bs-px bg-subdued'></div>
                 </div>
               </>
@@ -140,7 +140,7 @@ export const Welcome = ({
                     onKeyDown={handleEmailKeyDown}
                   />
                   <Input.DescriptionAndValidation>
-                    <Input.Validation classNames='flex bs-4 pli-2 plb-1 text-rose-550'>
+                    <Input.Validation classNames='flex bs-4 px-2 py-1 text-rose-550'>
                       {error && t('email error')}
                     </Input.Validation>
                   </Input.DescriptionAndValidation>

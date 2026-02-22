@@ -34,7 +34,7 @@ export const TaskList = (props: TaskListProps) => {
   return (
     <div className='p-2'>
       <button
-        className='float-right bg-white hover:bg-gray-100 text-gray-800 font-semibold plb-2 pli-4 border border-gray-400 rounded-sm shadow active:bg-gray-200'
+        className='float-right bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded-sm shadow active:bg-gray-200'
         onClick={onInviteClick}
       >
         Share
@@ -59,7 +59,7 @@ export const TaskList = (props: TaskListProps) => {
         )}
         <div className='flex items-center justify-between'>
           <input
-            className='mr-2 rounded-sm shadow flex-grow plb-2 pli-4'
+            className='mr-2 rounded-sm shadow flex-grow py-2 px-4'
             type='text'
             value={newTaskTitle}
             onChange={(e) => {
@@ -72,7 +72,7 @@ export const TaskList = (props: TaskListProps) => {
             }}
           />
           <button
-            className='bg-white hover:bg-gray-100 text-gray-800 font-semibold plb-2 pli-4 border border-gray-400 rounded-sm shadow active:bg-gray-200'
+            className='bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded-sm shadow active:bg-gray-200'
             onClick={newTask}
           >
             Add Task

@@ -45,7 +45,7 @@ export const MessageRoot = forwardRef<HTMLDivElement, MessageRootProps>(
             />
             {continues && <div role='none' className='is-px grow bg-separator' />}
           </div>
-          <div role='none' className='plb-1 min-is-0'>
+          <div role='none' className='py-1 min-inline-0'>
             {children}
           </div>
         </div>
@@ -167,7 +167,7 @@ export const MessageTextbox = ({
       <div
         role='none'
         ref={parentRef}
-        className={mx('plb-0.5 mie-1 rounded-xs', focusRing, disabled && 'opacity-50')}
+        className={mx('py-0.5 me-1 rounded-xs', focusRing, disabled && 'opacity-50')}
         {...focusAttributes}
       />
     </MessageRoot>

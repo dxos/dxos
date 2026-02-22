@@ -100,7 +100,7 @@ const ListboxRoot = forwardRef<HTMLUListElement, ListboxRootProps>(
         <ul
           role='listbox'
           {...rootProps}
-          className={mx('is-full p-cardChrome', classNames)}
+          className={mx('inline-full p-cardChrome', classNames)}
           ref={rootRef}
           {...arrowGroup}
         >
@@ -137,7 +137,7 @@ const ListboxOption = forwardRef<HTMLLIElement, ListboxOptionProps>(
           tabIndex={0}
           className={mx(
             'dx-focus-ring',
-            'plb-1 pli-2 rounded-xs select-none cursor-pointer data-[selected=true]:bg-hoverOverlay hover:bg-hoverOverlay',
+            'py-1 px-2 rounded-xs select-none cursor-pointer data-[selected=true]:bg-hoverOverlay hover:bg-hoverOverlay',
             commandItem,
             classNames,
           )}

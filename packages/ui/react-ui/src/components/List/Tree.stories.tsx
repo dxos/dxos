@@ -38,7 +38,7 @@ const StorybookTreeItem = ({ data, prefix }: StorybookTreeItemProps) => {
               <TreeItem.Heading classNames='grow pbs-1'>{valueIsScalar ? String(value) : key}</TreeItem.Heading>
             </div>
             {!valueIsScalar && (
-              <TreeItem.Body className='pis-2'>
+              <TreeItem.Body className='ps-2'>
                 <Tree.Branch>
                   <StorybookTreeItem data={value} prefix={id} />
                 </Tree.Branch>

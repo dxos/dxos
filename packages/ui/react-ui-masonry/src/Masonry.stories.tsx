@@ -34,7 +34,7 @@ const DefaultStory = () => {
     <Masonry.Root<Organization.Organization>
       items={organizations}
       render={StoryItem}
-      classNames='is-full max-is-full bs-full max-bs-full overflow-y-auto p-4'
+      classNames='inline-full max-inline-full block-full max-block-full overflow-y-auto p-4'
     />
   );
 };

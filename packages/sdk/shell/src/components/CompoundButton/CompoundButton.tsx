@@ -37,7 +37,7 @@ export const CompoundButton = ({
   const { tx } = useThemeContext();
   const elevation = useElevationContext(propsElevation);
   const styleProps = { ...buttonProps, variant, elevation, textWrap: true };
-  const buttonClassName = tx('button.root', styleProps, 'flex items-center gap-4 plb-2.5', slots.root?.className);
+  const buttonClassName = tx('button.root', styleProps, 'flex items-center gap-4 py-2.5', slots.root?.className);
 
   return (
     <button

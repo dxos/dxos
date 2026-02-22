@@ -33,7 +33,7 @@ type Story = StoryObj<typeof TextCrawl>;
 
 export const Default: Story = {
   args: {
-    classNames: 'is-[20rem] pli-1',
+    classNames: 'inline-[20rem] px-1',
     lines: createLines(),
     autoAdvance: true,
   },
@@ -41,7 +41,7 @@ export const Default: Story = {
 
 export const Cyclic: Story = {
   args: {
-    classNames: 'is-[20rem] pli-1',
+    classNames: 'inline-[20rem] px-1',
     lines: createLines(),
     autoAdvance: true,
     cyclic: true,
@@ -52,7 +52,7 @@ export const Controlled: Story = {
   render: () => {
     const [lines, setLines] = useState<string[]>(createLines());
     return (
-      <div className='flex flex-col is-[20rem] gap-4'>
+      <div className='flex flex-col inline-[20rem] gap-4'>
         <Toolbar.Root>
           <Toolbar.Button
             onClick={() =>

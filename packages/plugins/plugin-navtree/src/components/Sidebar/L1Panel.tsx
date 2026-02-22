@@ -54,7 +54,7 @@ export const L1Panel = ({ open, path, item, currentItemId, onBack }: L1PanelProp
       value={item.id}
       classNames={[
         'absolute inset-block-0 inline-end-0',
-        'is-[calc(100%-var(--l0-size))] lg:is-[--l1-size] grid-cols-1 grid-rows-[var(--rail-size)_1fr]',
+        'inline-[calc(100%-var(--l0-size))] lg:inline-[--l1-size] grid-cols-1 grid-rows-[var(--rail-size)_1fr]',
         'pbs-[env(safe-area-inset-top)]',
         item.id === currentItemId && 'grid',
       ]}
@@ -110,9 +110,9 @@ const L1PanelHeader = ({ item, path, onBack }: L1PanelProps) => {
   useLoadDescendents(item);
 
   return (
-    <div className='flex is-full items-center border-be border-subduedSeparator app-drag density-coarse'>
-      <div className='is-6' />
-      <h2 className='flex-1 truncate min-is-0'>{title}</h2>
+    <div className='flex inline-full items-center border-be border-subduedSeparator app-drag density-coarse'>
+      <div className='inline-6' />
+      <h2 className='flex-1 truncate min-inline-0'>{title}</h2>
       {/* TODO(wittjosiah): Reconcile with NavTreeItemColumns. */}
       <div role='none' className='contents app-no-drag'>
         {primaryAction?.properties?.disposition === 'list-item-primary' && !primaryAction?.properties?.disabled && (
@@ -131,7 +131,7 @@ const L1PanelHeader = ({ item, path, onBack }: L1PanelProps) => {
           <IconButton
             size={5}
             density='coarse'
-            classNames={['shrink-0 pli-2 pointer-fine:pli-1', hoverableControlItem, hoverableOpenControlItem]}
+            classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
             variant='ghost'
             icon={menuActions[0].properties?.icon ?? 'ph--placeholder--regular'}
             iconOnly
@@ -147,7 +147,7 @@ const L1PanelHeader = ({ item, path, onBack }: L1PanelProps) => {
                 <IconButton
                   size={5}
                   density='coarse'
-                  classNames={['shrink-0 pli-2 pointer-fine:pli-1', hoverableControlItem, hoverableOpenControlItem]}
+                  classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
                   variant='ghost'
                   icon='ph--dots-three-vertical--regular'
                   iconOnly

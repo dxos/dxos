@@ -77,14 +77,14 @@ export const Comments: Story = {
 };
 
 const Key: FC<{ char: string }> = ({ char }) => (
-  <span className='flex justify-center items-center is-[24px] bs-[24px] rounded-sm text-xs bg-neutral-200 text-black'>
+  <span className='flex justify-center items-center inline-[24px] block-[24px] rounded-sm text-xs bg-neutral-200 text-black'>
     {char}
   </span>
 );
 
 const CommentTooltip: FC<{ shortcut: string }> = ({ shortcut }) => {
   return (
-    <div className='flex items-center gap-2 pli-2 plb-2 bg-neutral-700 text-white text-xs rounded-sm'>
+    <div className='flex items-center gap-2 px-2 py-2 bg-neutral-700 text-white text-xs rounded-sm'>
       <div>Create comment</div>
       <div className='flex gap-1'>
         {keySymbols(parseShortcut(shortcut)).map((char) => (

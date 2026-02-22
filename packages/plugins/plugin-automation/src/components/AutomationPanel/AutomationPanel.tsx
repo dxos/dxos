@@ -25,7 +25,7 @@ import { isNonNullable } from '@dxos/util';
 import { meta } from '../../meta';
 import { TriggerEditor, type TriggerEditorProps } from '../TriggerEditor';
 
-const grid = 'grid grid-cols-[40px_1fr_32px_32px] min-bs-[2.5rem]';
+const grid = 'grid grid-cols-[40px_1fr_32px_32px] min-block-[2.5rem]';
 
 export type AutomationPanelProps = {
   space: Space;
@@ -128,7 +128,7 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
           getId={(field) => field.id}
         >
           {({ items: filteredTriggers }) => (
-            <div role='list' className='flex flex-col is-full'>
+            <div role='list' className='flex flex-col inline-full'>
               {filteredTriggers?.map((trigger) => (
                 <TriggerListItem
                   key={trigger.id}
@@ -145,7 +145,7 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
         </List.Root>
       )}
 
-      {filteredTriggers.length > 0 && <Separator classNames='mlb-4' />}
+      {filteredTriggers.length > 0 && <Separator classNames='my-4' />}
       <IconButton icon='ph--plus--regular' label={t('new trigger label')} onClick={handleAdd} />
     </Settings.Container>
   );
@@ -219,14 +219,14 @@ const TriggerListItem = ({
     <List.Item<Obj.Snapshot<Trigger.Trigger>>
       key={trigger.id}
       item={snapshot}
-      classNames={mx(grid, ghostHover, 'items-center', 'pli-2')}
+      classNames={mx(grid, ghostHover, 'items-center', 'px-2')}
     >
       <Input.Root>
         <Input.Switch checked={enabled} onCheckedChange={onEnabledChange} />
       </Input.Root>
 
       <div className={'flex'}>
-        <List.ItemTitle classNames='pli-1 cursor-pointer is-0 shrink truncate' onClick={handleSelect}>
+        <List.ItemTitle classNames='px-1 cursor-pointer inline-0 shrink truncate' onClick={handleSelect}>
           {getFunctionName(functions, trigger) ?? '∅'}
           {cursor && <div className='text-xs text-description truncate ml-4'>Position: {cursor}</div>}
         </List.ItemTitle>

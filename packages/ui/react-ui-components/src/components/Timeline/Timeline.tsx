@@ -201,7 +201,7 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
     return (
       <ScrollContainer.Root pin ref={scrollerRef}>
         <ScrollContainer.Viewport
-          classNames={['flex flex-col is-full outline-hidden!', classNames]}
+          classNames={['flex flex-col inline-full outline-hidden!', classNames]}
           tabIndex={0}
           ref={containerRef}
         >
@@ -221,7 +221,7 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
                   data-index={index}
                   aria-current={current === index}
                   className={mx(
-                    'group flex shrink-0 overflow-hidden pli-3 gap-2 items-center',
+                    'group flex shrink-0 overflow-hidden px-3 gap-2 items-center',
                     // TODO(burdon): Factor out fragment.
                     'aria-[current=true]:bg-activeSurface hover:bg-hoverSurface',
                   )}
@@ -239,7 +239,7 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
                     />
                   </div>
                   {showIcon && (
-                    <div className='flex shrink-0 is-6 justify-center'>
+                    <div className='flex shrink-0 inline-6 justify-center'>
                       {commit.icon && (
                         <Icon icon={commit.icon} classNames={mx(commit.level && levelColors[commit.level])} size={4} />
                       )}

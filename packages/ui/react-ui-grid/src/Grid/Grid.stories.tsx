@@ -155,7 +155,7 @@ export const Basic: Story = {
         '1,1': {
           value: 'Demo decoration',
           accessoryHtml: `
-            <button class="dx-button is-6 pli-0.5 min-bs-0 absolute inset-block-1 inline-end-1" data-story-action="menu">
+            <button class="dx-button inline-6 px-0.5 min-block-0 absolute inset-block-1 inline-end-1" data-story-action="menu">
               <svg><use href="/icons.svg#ph--arrow-right--regular"/></svg>
             </button>
           `,
@@ -199,7 +199,7 @@ export const Calendar: Story = {
             // TODO(burdon): Formatting changes when cell is selected.
             cells[toPlaneCellIndex({ col, row })] = {
               readonly: true,
-              accessoryHtml: '<div class="flex bs-full is-full justify-center items-center overflow-hidden">0</div>',
+              accessoryHtml: '<div class="flex block-full inline-full justify-center items-center overflow-hidden">0</div>',
               className: '',
             };
           }
@@ -209,8 +209,8 @@ export const Calendar: Story = {
     },
   },
   render: (args) => (
-    <div className='bs-full flex justify-center'>
-      <div className='bs-full is-[288px] border-x border-separator'>
+    <div className='block-full flex justify-center'>
+      <div className='block-full inline-[288px] border-x border-separator'>
         <GridStory {...args} />
       </div>
     </div>

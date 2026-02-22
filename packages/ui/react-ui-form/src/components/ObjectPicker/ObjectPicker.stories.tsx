@@ -74,10 +74,10 @@ const DefaultStory = () => {
   );
 
   return (
-    <div role='none' className='flex is-96'>
+    <div role='none' className='flex inline-96'>
       <ObjectPicker.Root open={isOpen} onOpenChange={setIsOpen}>
         <ObjectPicker.Trigger asChild>
-          <Button variant='primary' data-testid='trigger' classNames='is-full'>
+          <Button variant='primary' data-testid='trigger' classNames='inline-full'>
             Select Person
           </Button>
         </ObjectPicker.Trigger>

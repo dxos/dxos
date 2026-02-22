@@ -32,11 +32,11 @@ export const CopyButton = ({ classNames, value, size = 5, ...props }: CopyButton
       data-testid='copy-invitation'
     >
       <div role='none' className={mx('flex gap-1 items-center', isCopied && inactiveLabelStyles)}>
-        <span className='pli-1'>{t('copy label')}</span>
+        <span className='px-1'>{t('copy label')}</span>
         <Icon icon='ph--copy--regular' size={size} />
       </div>
       <div role='none' className={mx('flex gap-1 items-center', !isCopied && inactiveLabelStyles)}>
-        <span className='pli-1'>{t('copy success label')}</span>
+        <span className='px-1'>{t('copy success label')}</span>
         <Icon icon='ph--check--regular' size={size} />
       </div>
     </Button>

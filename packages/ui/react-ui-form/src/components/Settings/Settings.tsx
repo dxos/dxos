@@ -64,7 +64,7 @@ const SettingsSection = ({ title, description, children }: SettingsSectionProps)
   return (
     <>
       <SettingsSectionHeading title={title} description={description} />
-      <div className='is-full pbs-trimMd space-y-trimMd'>{children}</div>
+      <div className='inline-full pbs-trimMd space-y-trimMd'>{children}</div>
     </>
   );
 };
@@ -135,7 +135,7 @@ const SettingsFrameItem = ({ title, description, children }: SettingsItemProps) 
   const { t } = useTranslation(translationKey);
 
   return (
-    <div role='group' className='min-is-0'>
+    <div role='group' className='min-inline-0'>
       <h3 className='text-lg mbe-2'>{toLocalizedString(title, t)}</h3>
       {description && <p className='mlb-trimSm md:mbe-0 text-description'>{toLocalizedString(description, t)}</p>}
       {children}
@@ -183,7 +183,7 @@ const SettingsItem = ({ title, description = '', children }: SettingsItemProps) 
     <SettingsContainer classNames={styles.grid}>
       <h3 className={mx(styles.title, 'md:col-span-2')}>{toLocalizedString(title, t)}</h3>
       <p className={styles.description}>{toLocalizedString(description, t)}</p>
-      <div role='none' className='overflow-hidden text-end plb-1'>
+      <div role='none' className='overflow-hidden text-end py-1'>
         {children}
       </div>
     </SettingsContainer>
@@ -206,7 +206,7 @@ const SettingsItemInput = ({ title, description = '', children }: SettingsItemPr
         <Input.DescriptionAndValidation>
           <Input.Description classNames={styles.description}>{toLocalizedString(description, t)}</Input.Description>
         </Input.DescriptionAndValidation>
-        <div role='none' className='text-end plb-1'>
+        <div role='none' className='text-end py-1'>
           {children}
         </div>
       </SettingsContainer>

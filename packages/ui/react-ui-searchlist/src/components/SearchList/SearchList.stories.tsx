@@ -40,7 +40,7 @@ const DefaultStory = ({ items = defaultItems }: DefaultStoryProps) => {
 
   return (
     <SearchList.Root onSearch={handleSearch}>
-      <SearchList.Content classNames='bs-[400px]'>
+      <SearchList.Content classNames='block-[400px]'>
         <SearchList.Input placeholder='Search items...' autoFocus />
         <SearchList.Viewport>
           {results.length > 0 ? (
@@ -85,7 +85,7 @@ const ControlledStory = ({ items = defaultItems }: DefaultStoryProps) => {
   };
 
   return (
-    <div className='is-full bs-[400px] flex flex-col gap-2'>
+    <div className='inline-full block-[400px] flex flex-col gap-2'>
       <div className='text-sm text-description'>Controlled query: &quot;{query}&quot;</div>
       <SearchList.Root onSearch={handleSearch} value={query}>
         <SearchList.Input placeholder='Controlled search...' onChange={(e) => handleQueryChange(e.target.value)} />
@@ -103,7 +103,7 @@ const ControlledStory = ({ items = defaultItems }: DefaultStoryProps) => {
           </SearchList.Viewport>
         </SearchList.Content>
       </SearchList.Root>
-      <button className='pli-2 plb-1 rounded-sm bg-accentSurface text-accentText' onClick={() => handleQueryChange('')}>
+      <button className='px-2 py-1 rounded-sm bg-accentSurface text-accentText' onClick={() => handleQueryChange('')}>
         Clear Query
       </button>
     </div>
@@ -157,7 +157,7 @@ const CustomRenderingStory = ({ items = defaultItems }: DefaultStoryProps) => {
   const { results, handleSearch } = useSearchListResults({ items });
 
   return (
-    <div className='is-full bs-[400px] flex flex-col'>
+    <div className='inline-full block-[400px] flex flex-col'>
       <SearchList.Root onSearch={handleSearch}>
         <SearchList.Input placeholder='Search with custom rendering...' autoFocus />
         <SearchList.Content>
@@ -190,7 +190,7 @@ const WithEmptyStory = () => {
   };
 
   return (
-    <div className='is-full bs-[400px] flex flex-col'>
+    <div className='inline-full block-[400px] flex flex-col'>
       <SearchList.Root onSearch={handleSearch}>
         <SearchList.Input placeholder='Try searching for anything...' />
         <SearchList.Content>
@@ -219,7 +219,7 @@ const WithoutViewportStory = ({ items = defaultItems }: DefaultStoryProps) => {
   const { results, handleSearch } = useSearchListResults({ items });
 
   return (
-    <div className='is-full bs-[300px] flex flex-col'>
+    <div className='inline-full block-[300px] flex flex-col'>
       <SearchList.Root onSearch={handleSearch}>
         <SearchList.Input placeholder='Search without viewport (no scroll)...' classNames='shrink-0' />
         <SearchList.Content>
@@ -252,7 +252,7 @@ const iconsItems: StoryItem[] = [
 
 const WithIconsStory = () => {
   return (
-    <div className='is-full flex flex-col'>
+    <div className='inline-full flex flex-col'>
       <SearchList.Root>
         <SearchList.Input placeholder='Search items with icons...' />
         <SearchList.Content>
@@ -351,7 +351,7 @@ const CustomInputStory = ({ items = defaultItems }: DefaultStoryProps) => {
   const { results, handleSearch } = useSearchListResults({ items });
 
   return (
-    <div className='is-full bs-[400px] flex flex-col border border-separator'>
+    <div className='inline-full block-[400px] flex flex-col border border-separator'>
       <SearchList.Root onSearch={handleSearch}>
         <CustomInput />
         <SearchList.Content>
@@ -386,7 +386,7 @@ const disabledItems: StoryItem[] = [
 
 const WithDisabledItemsStory = () => {
   return (
-    <div className='is-full flex flex-col'>
+    <div className='inline-full flex flex-col'>
       <SearchList.Root>
         <SearchList.Input placeholder='Arrow keys skip disabled items...' autoFocus />
         <SearchList.Content>
@@ -436,7 +436,7 @@ const WithGroupsStory = () => {
   );
 
   return (
-    <div className='is-full bs-[400px] flex flex-col'>
+    <div className='inline-full block-[400px] flex flex-col'>
       <SearchList.Root onSearch={handleSearch}>
         <SearchList.Input placeholder='Search grouped items...' autoFocus />
         <SearchList.Content>

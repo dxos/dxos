@@ -139,7 +139,7 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
   return (
     <div role='none' className='p-1 flex flex-col gap-2 border-be border-subduedSeparator'>
       <div role='none' className='grid grid-cols-[2rem_1fr] gap-1'>
-        <div role='none' className='flex pli-2 pbs-1.5 text-subdued'>
+        <div role='none' className='flex px-2 pbs-1.5 text-subdued'>
           <Icon icon='ph--envelope-open--regular' />
         </div>
         <div role='none' className='flex flex-col gap-1 overflow-hidden'>

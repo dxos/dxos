@@ -13,8 +13,8 @@ export type StatusStyleProps = {
 
 export const statusRoot: ComponentFunction<StatusStyleProps> = ({ variant = 'default' }, ...etc) =>
   mx(
-    'bs-1 relative bg-hoverOverlay rounded-full overflow-hidden',
-    variant === 'main-bottom' ? 'is-full block' : 'is-20 inline-block',
+    'block-1 relative bg-hoverOverlay rounded-full overflow-hidden',
+    variant === 'main-bottom' ? 'inline-full block' : 'inline-20 inline-block',
     ...etc,
   );
 

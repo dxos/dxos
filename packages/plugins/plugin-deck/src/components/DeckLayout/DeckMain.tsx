@@ -215,7 +215,7 @@ export const DeckMain = () => {
               size='contain'
               itemsCount={itemsCount - 1}
               classNames={[
-                'absolute inset-block-[--main-spacing] -inset-inline-px bs-[calc(100%-2*var(--main-spacing))]',
+                'absolute inset-block-[--main-spacing] -inset-inline-px block-[calc(100%-2*var(--main-spacing))]',
                 mainPaddingTransitions,
               ]}
               style={padding}
@@ -280,7 +280,7 @@ const PlankSeparator = ({ order, encapsulate }: { order: number; encapsulate?: b
   order > 0 ? (
     <span
       role='separator'
-      className={mx('row-span-2 bg-deckSurface', encapsulate ? 'is-0' : 'is-4')}
+      className={mx('row-span-2 bg-deckSurface', encapsulate ? 'inline-0' : 'inline-4')}
       style={{ gridColumn: order }}
     />
   ) : null;

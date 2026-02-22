@@ -98,7 +98,7 @@ export const Toolbar = ({
         />
 
         {(participants !== undefined && (
-          <div className='flex justify-center items-center gap-2 is-[5rem] text-xs text-subdued'>
+          <div className='flex justify-center items-center gap-2 inline-[5rem] text-xs text-subdued'>
             <Icon icon='ph--users--regular' size={4} />
             <div>{participants}</div>
           </div>

@@ -221,7 +221,7 @@ export const renderLinkTooltip = createRenderer(LinkTooltip);
 const LinkButton: FC<{ url: string }> = ({ url }) => {
   return (
     <a href={url} target='_blank' rel='noreferrer' className={mx(hover)}>
-      <Icon icon='ph--arrow-square-out--regular' size={4} classNames='inline-block mis-1 mb-[3px]' />
+      <Icon icon='ph--arrow-square-out--regular' size={4} classNames='inline-block ms-1 mb-[3px]' />
     </a>
   );
 };

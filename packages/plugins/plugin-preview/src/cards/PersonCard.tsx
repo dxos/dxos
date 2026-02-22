@@ -16,7 +16,7 @@ export const PersonCard = ({ subject }: SurfaceComponentProps<Person.Person>) =>
     <Avatar.Root>
       <Card.Content>
         {image && (
-          <Card.Row className='plb-1'>
+          <Card.Row className='py-1'>
             <Avatar.Content
               imgSrc={image}
               icon='ph--user--regular'

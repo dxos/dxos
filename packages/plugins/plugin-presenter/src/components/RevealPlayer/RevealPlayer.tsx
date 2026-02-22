@@ -149,12 +149,12 @@ export const RevealPlayer = ({ classNames, content, slide, fullscreen = true, on
   return (
     <div
       className={mx(
-        'grid place-items-center is-full bs-full overflow-hidden bg-black',
+        'grid place-items-center inline-full block-full overflow-hidden bg-black',
         fullscreen && 'absolute inset-0',
         classNames,
       )}
     >
-      <div className='relative aspect-video is-full bs-full bs-auto max-bs-full overflow-hidden'>
+      <div className='relative aspect-video inline-full block-full block-auto max-block-full overflow-hidden'>
         <div ref={deckDivRef} className='absolute inset-0 reveal'>
           {/* NOTE: Must be in head. */}
           <style>

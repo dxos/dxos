@@ -21,8 +21,8 @@ const edgeToOrientationMap: Record<InstructionType, Orientation> = {
 const orientationStyles: Record<Orientation, HTMLAttributes<HTMLElement>['className']> = {
   // TODO(wittjosiah): Stop using left/right here.
   sibling:
-    'bs-[--line-thickness] left-[--horizontal-indent] right-0 bg-accentSurface before:left-[--negative-terminal-size]',
-  child: 'is-full block-start-0 block-end-0 border-[length:--line-thickness] before:invisible',
+    'block-[--line-thickness] left-[--horizontal-indent] right-0 bg-accentSurface before:left-[--negative-terminal-size]',
+  child: 'inline-full block-start-0 block-end-0 border-[length:--line-thickness] before:invisible',
 };
 
 const instructionStyles: Record<InstructionType, HTMLAttributes<HTMLElement>['className']> = {
@@ -64,7 +64,7 @@ export const TreeDropIndicator = ({ instruction, gap = 0 }: DropIndicatorProps) 
           '--horizontal-indent': `${desiredInstruction.currentLevel * desiredInstruction.indentPerLevel + 4}px`,
         } as CSSProperties
       }
-      className={`absolute z-10 pointer-events-none before:is-[--terminal-size] before:bs-[--terminal-size] box-border before:absolute before:border-[length:--line-thickness] before:border-solid before:border-accentSurface before:rounded-full ${orientationStyles[orientation]} ${instructionStyles[desiredInstruction.type]}`}
+      className={`absolute z-10 pointer-events-none before:inline-[--terminal-size] before:block-[--terminal-size] box-border before:absolute before:border-[length:--line-thickness] before:border-solid before:border-accentSurface before:rounded-full ${orientationStyles[orientation]} ${instructionStyles[desiredInstruction.type]}`}
     ></div>
   );
 };

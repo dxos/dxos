@@ -56,7 +56,7 @@ const BoardColumnRootInner = forwardRef<HTMLDivElement, PropsWithChildren<BoardC
         <Focus.Group
           classNames={mx(
             // NOTE: Reserves 2px for outer Focus.Group border.
-            'bs-full overflow-hidden is-[calc(100vw-2px)] md:is-card-default-width snap-center bg-deckSurface',
+            'block-full overflow-hidden inline-[calc(100vw-2px)] md:is-card-default-width snap-center bg-deckSurface',
             classNames,
           )}
           ref={forwardedRef}
@@ -97,7 +97,7 @@ const BOARD_COLUMN_GRID_NAME = 'Board.Column.Grid';
 type BoardColumnGridProps = ThemedClassName<PropsWithChildren>;
 
 const BoardColumnGrid = ({ classNames, children }: BoardColumnGridProps) => (
-  <div role='none' data-testid='board-column' className={mx('group/column grid bs-full overflow-hidden', classNames)}>
+  <div role='none' data-testid='board-column' className={mx('group/column grid block-full overflow-hidden', classNames)}>
     {children}
   </div>
 );

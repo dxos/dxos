@@ -62,7 +62,7 @@ const decorations = ({ tags }: QueryOptions): Extension => {
               node.from,
               node.to,
               Decoration.mark({
-                class: 'pli-1',
+                class: 'px-1',
               }),
             );
             break;
@@ -146,7 +146,7 @@ const decorations = ({ tags }: QueryOptions): Extension => {
               node.from,
               node.to,
               Decoration.mark({
-                class: 'pie-1 uppercase',
+                class: 'pe-1 uppercase',
                 atomic: true,
               }),
             );
@@ -212,9 +212,9 @@ const lineHeight = '30px';
  */
 const container = (classNames: string, ...children: Domino<HTMLElement>[]) => {
   const inner = Domino.of('span')
-    .classNames(mx('inline-flex bs-[26px] border rounded-xs', classNames))
+    .classNames(mx('inline-flex block-[26px] border rounded-xs', classNames))
     .children(...children);
-  return Domino.of('span').classNames('inline-flex bs-[28px] align-middle').children(inner).root;
+  return Domino.of('span').classNames('inline-flex block-[28px] align-middle').children(inner).root;
 };
 
 /**
@@ -237,8 +237,8 @@ class TypeWidget extends WidgetType {
     const label: string = this._identifier.split(/\W/).at(-1)!;
     return container(
       'border-sky-500',
-      Domino.of('span').classNames(mx('flex items-center pli-1 text-black text-xs bg-sky-500')).text('type'),
-      Domino.of('span').classNames(mx('flex items-center pli-1 text-subdued')).text(label),
+      Domino.of('span').classNames(mx('flex items-center px-1 text-black text-xs bg-sky-500')).text('type'),
+      Domino.of('span').classNames(mx('flex items-center px-1 text-subdued')).text(label),
     );
   }
 }
@@ -262,9 +262,9 @@ class TagWidget extends WidgetType {
     const { bg, border, surface } = getStyles(this._hue);
     return container(
       border,
-      Domino.of('span').classNames(mx('flex items-center pli-1 text-black text-xs', bg)).text('#'),
+      Domino.of('span').classNames(mx('flex items-center px-1 text-black text-xs', bg)).text('#'),
       Domino.of('span')
-        .classNames(mx('flex items-center pli-1 text-subdued text-sm rounded-r-[3px]', surface))
+        .classNames(mx('flex items-center px-1 text-subdued text-sm rounded-r-[3px]', surface))
         .text(this._str),
     );
   }
@@ -296,9 +296,9 @@ class ObjectWidget extends WidgetType {
       'border-separator divide-x divide-separator',
       ...this._entries.map(([key, value]) => {
         const keyEl = Domino.of('span')
-          .classNames('flex items-center pli-1 text-subdued text-xs bg-modalSurface first:rounded-l-[3px]')
+          .classNames('flex items-center px-1 text-subdued text-xs bg-modalSurface first:rounded-l-[3px]')
           .text(key);
-        const valueEl = Domino.of('span').classNames('flex items-center pli-1 text-subdued').text(value);
+        const valueEl = Domino.of('span').classNames('flex items-center px-1 text-subdued').text(value);
         return Domino.of('span').classNames('inline-flex items-stretch').children(keyEl, valueEl);
       }),
     );

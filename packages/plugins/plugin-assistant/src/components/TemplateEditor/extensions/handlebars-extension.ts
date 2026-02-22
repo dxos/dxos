@@ -64,7 +64,7 @@ const regex = {
   url: /[\w.-]+\.[\w.-]+\/[\w/]+/g,
 };
 
-const tagPadding = 'mli-0.5 pli-1 rounded-xs';
+const tagPadding = 'mx-0.5 px-1 rounded-xs';
 
 /**
  * ViewPlugin that decorates Handlebars syntax.

@@ -25,7 +25,7 @@ import { getMessageMetadata } from '../util';
 
 import { command } from './command-extension';
 
-export const buttonGroupClassNames = 'flex flex-row items-center gap-0.5 pie-2';
+export const buttonGroupClassNames = 'flex flex-row items-center gap-0.5 pe-2';
 export const buttonClassNames = 'p-1! transition-opacity';
 
 export type MessageContainerProps = {
@@ -187,12 +187,12 @@ const TextboxBlock = ({
     editing && view?.focus();
   }, [editing, view]);
 
-  return <div role='none' ref={parentRef} className='mie-4' {...focusAttributes} />;
+  return <div role='none' ref={parentRef} className='me-4' {...focusAttributes} />;
 };
 
 const ProposalBlock = ({ block }: { block: ContentBlock.Proposal }) => {
   return (
-    <div role='none' className='mie-4 italic'>
+    <div role='none' className='me-4 italic'>
       {block.text}
     </div>
   );
@@ -207,7 +207,7 @@ const MessageBlockObjectTile = forwardRef<HTMLDivElement, { subject: Obj.Unknown
 
   return (
     <Card.Root
-      className={mx('grid col-span-3 plb-1 pr-4', hoverableControls, hoverableFocusedWithinControls)}
+      className={mx('grid col-span-3 py-1 pr-4', hoverableControls, hoverableFocusedWithinControls)}
       ref={forwardedRef}
     >
       <Surface.Surface role='card-content' limit={1} data={{ subject }} fallback={title} />

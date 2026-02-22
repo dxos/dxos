@@ -68,7 +68,7 @@ export const Image = ({
 
   return (
     <div
-      className={mx(`relative flex is-full justify-center overflow-hidden transition-all duration-700`, classNames)}
+      className={mx(`relative flex inline-full justify-center overflow-hidden transition-all duration-700`, classNames)}
       style={{
         backgroundColor: dominantColor,
       }}

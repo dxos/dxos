@@ -106,7 +106,7 @@ export const ProfileContainer = () => {
               value={getValue()}
               onChange={handleChange}
               placeholder={t('display name input placeholder')}
-              classNames='min-is-64'
+              classNames='min-inline-64'
             />
           </Settings.ItemInput>
         );
@@ -149,8 +149,8 @@ export const ProfileContainer = () => {
       did: ({ label, getValue }) => {
         return (
           <Settings.ItemInput title={label} description={t('did description')}>
-            <ButtonGroup classNames='is-full'>
-              <Input.TextInput value={getValue()} disabled classNames='min-is-64' />
+            <ButtonGroup classNames='inline-full'>
+              <Input.TextInput value={getValue()} disabled classNames='min-inline-64' />
               <Clipboard.IconButton value={getValue() ?? ''} />
             </ButtonGroup>
           </Settings.ItemInput>

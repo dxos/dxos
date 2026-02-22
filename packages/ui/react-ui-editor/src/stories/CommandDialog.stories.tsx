@@ -36,10 +36,10 @@ const CommandDialog = ({ onAction }: { onAction: (action?: any) => void }) => {
   };
 
   return (
-    <div className='flex is-full justify-center'>
+    <div className='flex inline-full justify-center'>
       <div
         className={mx(
-          'flex is-full p-2 gap-2 items-center bg-modalSurface border border-separator rounded-md',
+          'flex inline-full p-2 gap-2 items-center bg-modalSurface border border-separator rounded-md',
           editorWidth,
         )}
       >
@@ -57,7 +57,7 @@ const CommandDialog = ({ onAction }: { onAction: (action?: any) => void }) => {
           label='Cancel'
           iconOnly
           variant='ghost'
-          classNames='pli-0'
+          classNames='px-0'
           onClick={() => onAction({ type: 'cancel' })}
         />
       </div>

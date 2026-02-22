@@ -104,7 +104,7 @@ const DefaultStory = (props: GraphCanvasProps) => {
   }
 
   return (
-    <div className='flex is-full bs-full absolute inset-0'>
+    <div className='flex inline-full block-full absolute inset-0'>
       <Editor.Root id='story' graph={graph}>
         <GraphCanvas {...props} />
       </Editor.Root>

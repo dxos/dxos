@@ -26,7 +26,7 @@ export type EventListProps = ThemedClassName<{
 
 export const EventList = ({ classNames, events = [], onSelect }: EventListProps) => {
   return (
-    <List classNames={mx('@container is-full divide-y divide-separator overflow-y-auto', classNames)}>
+    <List classNames={mx('@container inline-full divide-y divide-separator overflow-y-auto', classNames)}>
       {events.map((event) => (
         <ListItem.Root key={event.id} classNames='p-2 hover:bg-hoverOverlay' onClick={() => onSelect?.(event)}>
           <EventComponent event={event} />
@@ -41,7 +41,7 @@ const EventComponent = ({ event }: { event: Event.Event }) => {
   return (
     <div
       className="
-        flex flex-col is-full gap-2 overflow-hidden
+        flex flex-col inline-full gap-2 overflow-hidden
         @xl:grid @xl:grid-cols-[1fr_20rem] @xl:grid-rows-[auto_1fr]
         @xl:[grid-template-areas:'left-top_right''left-main_right']
         @xl:gap-x-4

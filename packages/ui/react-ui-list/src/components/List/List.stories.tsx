@@ -16,7 +16,7 @@ import { List, type ListRootProps } from './List';
 import { TestItemSchema, type TestItemType, type TestList, createList } from './testing';
 
 // TODO(burdon): var-icon-size.
-const grid = 'grid grid-cols-[32px_1fr_32px] min-bs-[2rem] rounded-sm';
+const grid = 'grid grid-cols-[32px_1fr_32px] min-block-[2rem] rounded-sm';
 
 const DefaultStory = (props: Omit<ListRootProps<TestItemType>, 'items'>) => {
   const registry = useContext(RegistryContext);
@@ -45,13 +45,13 @@ const DefaultStory = (props: Omit<ListRootProps<TestItemType>, 'items'>) => {
     <List.Root<TestItemType> dragPreview items={items} getId={(item) => item.id} onMove={handleMove} {...props}>
       {({ items }) => (
         <>
-          <div className='flex flex-col is-full'>
+          <div className='flex flex-col inline-full'>
             <div role='none' className={grid}>
               <div />
               <div className='flex items-center text-sm'>Items</div>
             </div>
 
-            <div role='list' className='is-full bs-full overflow-auto'>
+            <div role='list' className='inline-full block-full overflow-auto'>
               {items?.map((item) => (
                 <List.Item<TestItemType> key={item.id} item={item} classNames={mx(grid, ghostHover)}>
                   <List.ItemDragHandle />
@@ -89,7 +89,7 @@ const SimpleStory = (props: Omit<ListRootProps<TestItemType>, 'items'>) => {
   return (
     <List.Root<TestItemType> dragPreview items={items} {...props}>
       {({ items }) => (
-        <div role='list' className='is-full bs-full overflow-auto'>
+        <div role='list' className='inline-full block-full overflow-auto'>
           {items?.map((item) => (
             <List.Item<TestItemType> key={item.id} item={item} classNames={mx(grid, ghostHover)}>
               <List.ItemDragHandle />

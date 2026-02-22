@@ -87,7 +87,7 @@ export const TaskItem = (props: TaskItemProps) => {
       </div>
       {isShowingDelete && (
         <button
-          className='bg-white rounded-sm ml-2 p-0 pli-2 hover:bg-gray-100 hover:cursor-pointer shadow border border-gray-400 active:bg-gray-200'
+          className='bg-white rounded-sm ml-2 p-0 px-2 hover:bg-gray-100 hover:cursor-pointer shadow border border-gray-400 active:bg-gray-200'
           onClick={() => onRemove(task)}
         >
           Delete

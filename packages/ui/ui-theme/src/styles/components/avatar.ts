@@ -20,7 +20,7 @@ export const avatarRoot: ComponentFunction<AvatarStyleProps> = ({ size = 10, inG
   mx(
     'relative inline-flex shrink-0',
     getSize(size),
-    inGroup && (size === 'px' || size <= 3 ? '-mie-1' : '-mie-2'),
+    inGroup && (size === 'px' || size <= 3 ? '-me-1' : '-me-2'),
     ...etc,
   );
 
@@ -30,7 +30,7 @@ export const avatarDescription: ComponentFunction<AvatarStyleProps> = ({ srOnly 
   mx(descriptionText, srOnly && 'sr-only', ...etc);
 
 export const avatarFrame: ComponentFunction<AvatarStyleProps> = ({ variant }, ...etc) =>
-  mx('is-full bs-full bg-[--surface-bg]', variant === 'circle' ? 'rounded-full' : 'rounded-sm', ...etc);
+  mx('inline-full block-full bg-[--surface-bg]', variant === 'circle' ? 'rounded-full' : 'rounded-sm', ...etc);
 
 export const avatarStatusIcon: ComponentFunction<AvatarStyleProps> = ({ status, size = 3 }, ...etc) =>
   mx(
@@ -74,7 +74,7 @@ export const avatarGroupLabel: ComponentFunction<AvatarStyleProps> = ({ size, sr
   mx(
     srOnly
       ? 'sr-only'
-      : 'rounded-full truncate text-sm leading-none plb-1 pli-2 relative z-[1] flex items-center justify-center',
+      : 'rounded-full truncate text-sm leading-none py-1 px-2 relative z-[1] flex items-center justify-center',
     size && getSizeHeight(size),
     ...etc,
   );

@@ -24,21 +24,21 @@
    * Main content padding.
    */
   .dx-main-content-padding {
-    @apply pis-0 scroll-ps-0 pie-0 scroll-pe-0;
+    @apply ps-0 scroll-ps-0 pe-0 scroll-pe-0;
 
     @media (min-width: theme('screens.lg')) {
       &[data-sidebar-inline-start-state='collapsed'] {
-        @apply pis-[--l0-size] scroll-ps-[--l0-size];
+        @apply ps-[--l0-size] scroll-ps-[--l0-size];
       }
       &[data-sidebar-inline-start-state='expanded'] {
-        @apply pis-[--nav-sidebar-size] scroll-ps-[--nav-sidebar-size];
+        @apply ps-[--nav-sidebar-size] scroll-ps-[--nav-sidebar-size];
       }
 
       &[data-sidebar-inline-end-state='collapsed'] {
-        @apply pie-[--r0-size] scroll-pe-[--r0-size];
+        @apply pe-[--r0-size] scroll-pe-[--r0-size];
       }
       &[data-sidebar-inline-end-state='expanded'] {
-        @apply pie-[--complementary-sidebar-size] scroll-pe-[--complementary-sidebar-size];
+        @apply pe-[--complementary-sidebar-size] scroll-pe-[--complementary-sidebar-size];
       }
     }
   }
@@ -53,7 +53,7 @@
    *
    */
   .dx-main-intrinsic-size {
-    @apply is-[calc(100dvw)-2*var(--main-spacing)] transition-[inline-size] ease-in-out-symmetric duration-200;
+    @apply inline-[calc(100dvw)-2*var(--main-spacing)] transition-[inline-size] ease-in-out-symmetric duration-200;
 
     @media (min-width: theme('screens.lg')) {
       &[data-sidebar-inline-start-state='closed'][data-sidebar-inline-end-state='closed'] {
@@ -124,17 +124,17 @@
       }
 
       @media (min-width: theme('screens.sm')) {
-        @apply is-[--nav-sidebar-size];
+        @apply inline-[--nav-sidebar-size];
       }
 
       @media (min-width: theme('screens.lg')) {
-        @apply border-is-0;
+        @apply border-inline-0;
 
         &[data-state='collapsed'] {
-          @apply is-[--l0-size] inline-start-0;
+          @apply inline-[--l0-size] inline-start-0;
         }
         &[data-state='expanded'] {
-          @apply is-[--nav-sidebar-size];
+          @apply inline-[--nav-sidebar-size];
         }
       }
     }
@@ -150,16 +150,16 @@
       }
 
       @media (min-width: theme('screens.sm')) {
-        @apply is-[--complementary-sidebar-size];
+        @apply inline-[--complementary-sidebar-size];
       }
 
       @media (min-width: theme('screens.lg')) {
         @apply border-ie-0;
         &[data-state='collapsed'] {
-          @apply is-[--r0-size] inline-end-0;
+          @apply inline-[--r0-size] inline-end-0;
         }
         &[data-state='expanded'] {
-          @apply is-[--complementary-sidebar-size];
+          @apply inline-[--complementary-sidebar-size];
         }
       }
     }

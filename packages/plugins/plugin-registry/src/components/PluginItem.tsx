@@ -58,7 +58,7 @@ export const PluginItem = ({
       labelId={labelId}
       data-testid={`pluginList.${id}`}
       aria-describedby={descriptionId}
-      classNames={mx(gridCols, 'bs-[12rem] is-full gap-3 pie-2 border border-separator rounded-md overflow-hidden')}
+      classNames={mx(gridCols, 'block-[12rem] inline-full gap-3 pe-2 border border-separator rounded-md overflow-hidden')}
     >
       <div className={mx(gridRows, 'justify-center rounded-l-md', styles.bg)}>
         <div />
@@ -71,10 +71,10 @@ export const PluginItem = ({
         </div>
 
         <div>
-          <p className={mx(descriptionText, 'line-clamp-4 min-is-0')}>{description}</p>
+          <p className={mx(descriptionText, 'line-clamp-4 min-inline-0')}>{description}</p>
         </div>
 
-        <div className='flex -mis-0.5 overflow-x-auto scrollbar-none'>
+        <div className='flex -ms-0.5 overflow-x-auto scrollbar-none'>
           {tags?.map((tag) => (
             <Tag key={tag} palette={tagColors[tag as RegistryTagType]} classNames='text-xs uppercase font-thin'>
               {tag}
@@ -99,7 +99,7 @@ export const PluginItem = ({
           </Link>
 
           <div className='grow' />
-          <div className='pie-1'>
+          <div className='pe-1'>
             <Input.Root id={inputId}>
               <Input.Switch classNames='self-center' checked={isEnabled} onClick={handleChange} />
             </Input.Root>

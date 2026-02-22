@@ -106,7 +106,7 @@ const FocusContainer = ({ id }: { id: string }) => {
 export const Test: StoryObj = {
   render: () => {
     return (
-      <div className='flex flex-col is-full justify-center items-center gap-2 m-4'>
+      <div className='flex flex-col inline-full justify-center items-center gap-2 m-4'>
         <FocusContainer id='test-1' />
         <FocusContainer id='test-2' />
       </div>

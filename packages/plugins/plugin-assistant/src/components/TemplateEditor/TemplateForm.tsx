@@ -61,14 +61,14 @@ export const TemplateForm = ({ id, template, commandEditable = true, onChange }:
   );
 
   return (
-    <div className={mx('flex flex-col is-full overflow-hidden gap-4', groupBorder)}>
+    <div className={mx('flex flex-col inline-full overflow-hidden gap-4', groupBorder)}>
       {/* {commandEditable && (
         <div className='flex items-center pl-4'>
           <span className='text-neutral-500'>/</span>
           <Input.Root>
             <Input.TextInput
               placeholder={t('command placeholder')}
-              classNames='is-full bg-transparent m-2'
+              classNames='inline-full bg-transparent m-2'
               value={template.command ?? ''}
               onChange={(event) => {
                 onChange?.((t) => {
@@ -86,14 +86,14 @@ export const TemplateForm = ({ id, template, commandEditable = true, onChange }:
         <div className='grid grid-cols-[10rem_10rem_1fr] gap-1 items-center'>
           {template.inputs?.filter(isNonNullable).map((input) => (
             <Fragment key={input.name}>
-              <div className='pis-3 text-blueText'>{input.name}</div>
+              <div className='ps-3 text-blueText'>{input.name}</div>
 
               <Input.Root>
                 <Select.Root
                   value={input.kind}
                   onValueChange={(kind) => handleInputKindChange(input.name, kind as Template.InputKind)}
                 >
-                  <Select.TriggerButton placeholder='Type' classNames='is-full' />
+                  <Select.TriggerButton placeholder='Type' classNames='inline-full' />
                   <Select.Portal>
                     <Select.Content>
                       <Select.Viewport>
@@ -115,7 +115,7 @@ export const TemplateForm = ({ id, template, commandEditable = true, onChange }:
                     <Input.Root>
                       <Input.TextInput
                         placeholder={t('command placeholder')}
-                        classNames='is-full bg-transparent'
+                        classNames='inline-full bg-transparent'
                         value={input.default ?? ''}
                         onChange={(event) => handleInputDefaultChange(input.name, event.target.value)}
                       />

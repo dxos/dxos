@@ -20,7 +20,7 @@ export type SelectStyleProps = Partial<{
 
 export const selectContent: ComponentFunction<SelectStyleProps> = ({ elevation }, ...etc) => {
   return mx(
-    'min-w-[--radix-select-trigger-width] rounded-sm max-bs-[--radix-select-content-available-height] border border-separator',
+    'min-w-[--radix-select-trigger-width] rounded-sm max-block-[--radix-select-content-available-height] border border-separator',
     modalSurface,
     surfaceShadow({ elevation: 'positioned' }),
     surfaceZIndex({ elevation, level: 'menu' }),
@@ -32,7 +32,7 @@ export const selectViewport: ComponentFunction<SelectStyleProps> = (_props, ...e
 
 export const selectItem: ComponentFunction<SelectStyleProps> = (_props, ...etc) =>
   mx(
-    'flex items-center min-bs-[2rem] pli-3 plb-1 gap-2',
+    'flex items-center min-block-[2rem] px-3 py-1 gap-2',
     'text-baseText leading-none select-none outline-hidden',
     '[&>svg]:invisible [&[data-state=checked]>svg]:visible',
     ghostHighlighted,
@@ -47,7 +47,7 @@ export const selectSeparator: ComponentFunction<SelectStyleProps> = (_props, ...
   mx(blockSeparator, separatorBorderColor, ...etc);
 
 export const selectScrollButton: ComponentFunction<SelectStyleProps> = (_props, ...etc) =>
-  mx(modalSurface, 'flex items-center justify-center cursor-default bs-6 is-full', ...etc);
+  mx(modalSurface, 'flex items-center justify-center cursor-default block-6 inline-full', ...etc);
 
 export const selectTheme: Theme<SelectStyleProps> = {
   content: selectContent,

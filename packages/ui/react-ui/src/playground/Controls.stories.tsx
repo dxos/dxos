@@ -59,7 +59,7 @@ const DefaultStory = () => {
             <Icon icon='ph--bug--regular' />
           </Toggle>
         </Toolbar.Button>
-        {/* TODO(burdon): Should not be 'is-full' by default. */}
+        {/* TODO(burdon): Should not be 'inline-full' by default. */}
         <Input.Root>
           <Input.TextInput placeholder='Enter text...' />
         </Input.Root>

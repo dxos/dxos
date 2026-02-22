@@ -130,7 +130,7 @@ export const ManySizesDraggable: Story = {
         text: (
           <p
             className={mx(
-              index % 3 === 0 ? 'bs-20' : index % 2 === 0 ? 'bs-12' : 'bs-8',
+              index % 3 === 0 ? 'block-20' : index % 2 === 0 ? 'block-12' : 'block-8',
               surfaceShadow({ elevation: 'positioned' }),
               'mbe-2 p-2 bg-white dark:bg-neutral-800 rounded-sm',
             )}
@@ -233,7 +233,7 @@ export const SelectableListbox: Story = {
             onClick={() => setSelectedId(id)}
             onKeyUp={(event) => handleKeyUp(event, id)}
           >
-            <ListItem.Heading classNames='flex pli-1 items-center grow truncate'>{text}</ListItem.Heading>
+            <ListItem.Heading classNames='flex px-1 items-center grow truncate'>{text}</ListItem.Heading>
           </ListItem.Root>
         ))}
       </List>

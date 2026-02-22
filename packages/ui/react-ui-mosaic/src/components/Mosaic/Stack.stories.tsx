@@ -56,7 +56,7 @@ export const Default: Story = {
     const [DebugInfo, debugHandler] = useContainerDebug(props.debug);
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
     return (
-      <Mosaic.Root debug={props.debug} classNames='bs-full grid grid-rows-[min-content_1fr_min-content]'>
+      <Mosaic.Root debug={props.debug} classNames='block-full grid grid-rows-[min-content_1fr_min-content]'>
         <Toolbar.Root classNames='border-be border-separator'>
           <div className='flex grow justify-center'>Items: {items.length}</div>
         </Toolbar.Root>

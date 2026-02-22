@@ -294,7 +294,7 @@ export const Streaming: Story = {
     const scrollerRef = useRef<ScrollController>(null);
 
     return (
-      <div className='flex flex-col is-full bs-full overflow-hidden'>
+      <div className='flex flex-col inline-full block-full overflow-hidden'>
         <Toolbar.Root>
           <Button onClick={() => setRunning(true)}>Start</Button>
           <Button onClick={() => setRunning(false)}>Stop</Button>

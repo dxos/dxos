@@ -39,7 +39,7 @@ export const PluginDetail = ({ plugin, enabled, onEnabledChange }: PluginDetailP
             <Icon classNames={mx('p-1 rounded-sm', styles.bg, styles.icon)} icon={icon} size={14} />
           </div>
           <div role='none' className='flex flex-col gap-6'>
-            <div role='none' className='grid grid-cols-[1fr_min-content] gap-x-3 is-full pbs-1'>
+            <div role='none' className='grid grid-cols-[1fr_min-content] gap-x-3 inline-full pbs-1'>
               <h2 className='text-xl'>{name}</h2>
               <Input.Root>
                 <Input.Switch classNames='self-center' checked={enabled} onCheckedChange={onEnabledChange} />
@@ -61,14 +61,14 @@ export const PluginDetail = ({ plugin, enabled, onEnabledChange }: PluginDetailP
                 {homePage && (
                   <Link href={homePage} target='_blank' rel='noreferrer' classNames='text-sm text-description'>
                     {t('home page label')}
-                    <Icon icon='ph--arrow-square-out--bold' size={3} classNames='inline-block leading-none mli-1' />
+                    <Icon icon='ph--arrow-square-out--bold' size={3} classNames='inline-block leading-none mx-1' />
                   </Link>
                 )}
 
                 {source && (
                   <Link href={source} target='_blank' rel='noreferrer' classNames='text-sm text-description'>
                     {t('source label')}
-                    <Icon icon='ph--arrow-square-out--bold' size={3} classNames='inline-block leading-none mli-1' />
+                    <Icon icon='ph--arrow-square-out--bold' size={3} classNames='inline-block leading-none mx-1' />
                   </Link>
                 )}
               </div>

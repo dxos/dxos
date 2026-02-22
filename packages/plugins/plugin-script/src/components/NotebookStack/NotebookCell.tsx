@@ -30,8 +30,8 @@ import { TypescriptEditor, type TypescriptEditorProps } from '../TypescriptEdito
 
 import { type NotebookMenuProps } from './NotebookMenu';
 
-const editorStyles = 'p-2 pis-3';
-const valueStyles = 'p-1 pis-3';
+const editorStyles = 'p-2 ps-3';
+const valueStyles = 'p-1 ps-3';
 
 export type NotebookCellProps = {
   db?: Database.Database;
@@ -115,7 +115,7 @@ export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: 
       // TODO(burdon): Remove app-framework deps (via render prop).
       return (
         <div
-          className={mx('bs-full overflow-hidden grid', explorerGraph && !dragging && 'grid-rows-[min-content_1fr]')}
+          className={mx('block-full overflow-hidden grid', explorerGraph && !dragging && 'grid-rows-[min-content_1fr]')}
         >
           <QueryEditor
             id={cell.id}
@@ -161,7 +161,7 @@ const NotebookCellValue = ({ cell, graph }: NotebookCellProps) => {
   return (
     <div
       className={mx(
-        'flex is-full bg-groupSurface border-bs border-subduedSeparator text-description font-mono',
+        'flex inline-full bg-groupSurface border-bs border-subduedSeparator text-description font-mono',
         valueStyles,
       )}
     >
@@ -187,7 +187,7 @@ const NotebookPromptResult = ({ cell, promptResults }: NotebookCellProps) => {
   }
 
   return (
-    <div className={mx('flex is-full bg-groupSurface text-description border-bs border-subduedSeparator', valueStyles)}>
+    <div className={mx('flex inline-full bg-groupSurface text-description border-bs border-subduedSeparator', valueStyles)}>
       <NotebookTextEditor readOnly value={value} />
     </div>
   );

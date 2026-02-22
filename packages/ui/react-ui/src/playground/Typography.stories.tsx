@@ -9,7 +9,7 @@ import { withTheme } from '../testing';
 
 const DefaultStory = () => {
   return (
-    <div className='mli-auto p-8 max-is-[60rem] space-b-4'>
+    <div className='mx-auto p-8 max-inline-[60rem] space-b-4'>
       <h1 className='text-4xl font-medium'>
         Việc <span className='italic'>thừa</span> nhận{' '}
         <span className='font-mono bg-neutral-500/10'>

@@ -136,7 +136,7 @@ const CalendarToolbar = ({ classNames }: CalendarToolbarProps) => {
   return (
     <div
       role='none'
-      className={mx('shink-0 is-full grid grid-cols-3 items-center bg-barSurface', classNames)}
+      className={mx('shink-0 inline-full grid grid-cols-3 items-center bg-barSurface', classNames)}
       style={{ width: defaultWidth }}
     >
       <div className='flex justify-start'>
@@ -227,7 +227,7 @@ const CalendarGrid = ({ classNames, rows, onSelect }: CalendarGridProps) => {
     ({ key, index, style }) => {
       const getBgColor = (date: Date) => date.getMonth() % 2 === 0 && 'bg-modalSurface';
       return (
-        <div key={key} role='none' style={style} className='is-full grid grid-cols-[1fr_max-content_1fr] snap-center'>
+        <div key={key} role='none' style={style} className='inline-full grid grid-cols-[1fr_max-content_1fr] snap-center'>
           <div role='none' className={mx(getBgColor(getDate(start, index, 0, weekStartsOn)))} />
           <div role='none' className='grid grid-cols-7' style={{ gridTemplateColumns: `repeat(7, ${size}px)` }}>
             {Array.from({ length: 7 }).map((_, i) => {
@@ -253,7 +253,7 @@ const CalendarGrid = ({ classNames, rows, onSelect }: CalendarGridProps) => {
                   {border && (
                     <div
                       role='none'
-                      className={mx('absolute top-0 left-0 is-full bs-full border-2 rounded-full', border)}
+                      className={mx('absolute top-0 left-0 inline-full block-full border-2 rounded-full', border)}
                     />
                   )}
                   {num > 0 && (
@@ -275,10 +275,10 @@ const CalendarGrid = ({ classNames, rows, onSelect }: CalendarGridProps) => {
   );
 
   return (
-    <div role='none' className={mx('flex flex-col bs-full is-full justify-center overflow-hidden', classNames)}>
+    <div role='none' className={mx('flex flex-col block-full inline-full justify-center overflow-hidden', classNames)}>
       {/* Day labels */}
       <div role='none' className='flex justify-center bg-groupSurface'>
-        <div role='none' className='flex is-full grid grid-cols-7' style={{ width: defaultWidth }}>
+        <div role='none' className='flex inline-full grid grid-cols-7' style={{ width: defaultWidth }}>
           {days.map((date, i) => (
             <div key={i} role='none' className='flex justify-center p-2 text-sm font-thin'>
               {date}
@@ -288,7 +288,7 @@ const CalendarGrid = ({ classNames, rows, onSelect }: CalendarGridProps) => {
       </div>
 
       {/* Grid */}
-      <div role='none' className='flex flex-col bs-full is-full justify-center overflow-hidden' ref={containerRef}>
+      <div role='none' className='flex flex-col block-full inline-full justify-center overflow-hidden' ref={containerRef}>
         <List
           ref={listRef}
           role='none'

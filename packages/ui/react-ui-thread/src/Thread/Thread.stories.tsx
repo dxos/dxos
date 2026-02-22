@@ -59,7 +59,7 @@ const DefaultStory = () => {
   };
 
   return (
-    <div className='mli-auto is-96 overflow-y-auto'>
+    <div className='mx-auto inline-96 overflow-y-auto'>
       <Thread.Root id='t1'>
         {messages.map((message) => (
           <MessageRoot key={message.id} classNames={[hoverableControls, hoverableFocusedWithinControls]} {...message}>

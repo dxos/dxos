@@ -39,7 +39,7 @@ export const UI = ({ showTools, showToolbar }: UIProps) => {
   };
 
   return (
-    <div {...testId<TestId>('dx-ui')} className={mx('absolute bs-full inset-0', eventsNone)}>
+    <div {...testId<TestId>('dx-ui')} className={mx('absolute block-full inset-0', eventsNone)}>
       <div>
         <div className='absolute top-2 left-2'>{debug && <FPS bar='bg-cyan-500' />}</div>
       </div>
@@ -53,7 +53,7 @@ export const UI = ({ showTools, showToolbar }: UIProps) => {
         <div className='absolute bottom-2 left-2'>
           {debug && (
             <Json
-              classNames={mx('is-[300px] bg-baseSurface border border-separator rounded-xs text-xs opacity-70')}
+              classNames={mx('inline-[300px] bg-baseSurface border border-separator rounded-xs text-xs opacity-70')}
               data={info}
             />
           )}

@@ -246,7 +246,7 @@ type CardRowProps = CardSharedProps & { icon?: string };
 const CardRow = forwardRef<HTMLDivElement, CardRowProps>(
   ({ children, classNames, className, role = 'none', icon, ...props }, forwardedRef) => {
     return (
-      <div {...props} role={role} className={mx(styles.grid_2, 'pli-1', classNames, className)} ref={forwardedRef}>
+      <div {...props} role={role} className={mx(styles.grid_2, 'px-1', classNames, className)} ref={forwardedRef}>
         {(icon && <CardIcon classNames='text-subdued' icon={icon} />) || <div />}
         {children}
       </div>
@@ -265,8 +265,8 @@ const CardHeading = forwardRef<HTMLDivElement, CardHeadingProps>(
     const Root = asChild ? Slot : 'div';
     // NOTE: Padding align first line of text with center of icon.
     const variantClassNames: Record<string, string> = {
-      default: 'plb-1',
-      subtitle: 'plb-2 text-xs text-description font-medium uppercase',
+      default: 'py-1',
+      subtitle: 'py-2 text-xs text-description font-medium uppercase',
     };
 
     return (
@@ -292,10 +292,10 @@ const CardText = forwardRef<HTMLDivElement, CardTextProps>(
     // NOTE: Padding align first line of text with center of icon.
     const variantClassNames: Record<string, { root: string; span?: string }> = {
       default: {
-        root: 'plb-1',
+        root: 'py-1',
       },
       description: {
-        root: 'plb-1.5',
+        root: 'py-1.5',
         span: 'text-sm text-description line-clamp-3',
       },
     };
@@ -355,14 +355,14 @@ type CardActionProps = { icon?: string; label: string; actionIcon?: string; onCl
 
 const CardAction = ({ icon, actionIcon = 'ph--arrow-right--regular', label, onClick }: CardActionProps) => {
   return (
-    <div role='none' className='is-full pli-1'>
+    <div role='none' className='inline-full px-1'>
       <Button
         variant='ghost'
-        classNames={mx(styles.grid_3, 'p-0! is-full text-start overflow-hidden')}
+        classNames={mx(styles.grid_3, 'p-0! inline-full text-start overflow-hidden')}
         onClick={onClick}
       >
         {icon ? <CardIcon classNames='text-subdued' icon={icon} /> : <div />}
-        <span className={mx('min-is-0 flex-1 truncate', !actionIcon && 'col-span-2')}>{label}</span>
+        <span className={mx('min-inline-0 flex-1 truncate', !actionIcon && 'col-span-2')}>{label}</span>
         {actionIcon && <CardIcon icon={actionIcon} />}
       </Button>
     </div>
@@ -377,16 +377,16 @@ type CardLinkProps = { label: string; href: string };
 
 const CardLink = ({ label, href }: CardLinkProps) => {
   return (
-    <div role='none' className='is-full pli-1'>
+    <div role='none' className='inline-full px-1'>
       <a
-        className={mx(styles.grid_3, 'group p-0! dx-button dx-focus-ring min-bs-1!')}
+        className={mx(styles.grid_3, 'group p-0! dx-button dx-focus-ring min-block-1!')}
         data-variant='ghost'
         href={href}
         target='_blank'
         rel='noreferrer'
       >
         <CardIcon classNames='text-subdued' icon='ph--link--regular' />
-        <span className={mx('min-is-0 flex-1 truncate')}>{label}</span>
+        <span className={mx('min-inline-0 flex-1 truncate')}>{label}</span>
         <CardIcon classNames='invisible group-hover:visible' icon='ph--arrow-square-out--regular' />
       </a>
     </div>
@@ -407,7 +407,7 @@ const CardIconBlock = ({
     <div
       {...props}
       role={role}
-      className={mx('grid bs-[var(--rail-item)] is-[var(--rail-item)] place-items-center', classNames)}
+      className={mx('grid block-[var(--rail-item)] inline-[var(--rail-item)] place-items-center', classNames)}
     >
       {children}
     </div>

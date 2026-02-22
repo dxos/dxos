@@ -96,7 +96,7 @@ const MapRoot = forwardRef<MapController, MapRootProps>(
         <MapContainer
           {...props}
           ref={mapRef}
-          className={mx('group relative grid bs-full is-full !bg-baseSurface dx-focus-ring-inset', classNames)}
+          className={mx('group relative grid block-full inline-full !bg-baseSurface dx-focus-ring-inset', classNames)}
           attributionControl={false}
           zoomControl={false}
           scrollWheelZoom={scrollWheelZoom}

@@ -135,7 +135,7 @@ export const Chat = ({ classNames, host, url }: ChatProps) => {
             value={text}
             onChange={(ev) => setText(ev.target.value)}
             onKeyDown={(ev) => ev.key === 'Enter' && handleSubmit()}
-            classNames='pli-2 pbs-[4px] pbe-[4px] is-full rounded-none text-lg ring-none! ring-sky-500!'
+            classNames='px-2 pbs-[4px] pbe-[4px] is-full rounded-none text-lg ring-none! ring-sky-500!'
           />
         </Input.Root>
         {filteredMessages.length > 0 && (
@@ -156,8 +156,8 @@ export const Chat = ({ classNames, host, url }: ChatProps) => {
         <ScrollContainer.Root pin classNames='max-bs-[480px] p-3'>
           <ScrollContainer.Viewport classNames='scrollbar-none'>
             {filteredMessages.map((message, i) => (
-              <div key={i} className={mx('flex', 'text-base', message.role === 'user' && 'justify-end mlb-3')}>
-                <p className={mx(message.role === 'user' ? 'bg-sky-500 pli-2 plb-1 rounded-sm' : 'text-description')}>
+              <div key={i} className={mx('flex', 'text-base', message.role === 'user' && 'justify-end my-3')}>
+                <p className={mx(message.role === 'user' ? 'bg-sky-500 px-2 py-1 rounded-sm' : 'text-description')}>
                   <MarkdownViewer
                     content={message.parts
                       .map((part) => (part.type === 'text' ? part.text : null))
@@ -173,7 +173,7 @@ export const Chat = ({ classNames, host, url }: ChatProps) => {
 
       {error && (
         <div className='flex overflow-hidden items-center opacity-50'>
-          <div className='pli-2 text-subdued text-xs whitespace-nowrap truncate'>
+          <div className='px-2 text-subdued text-xs whitespace-nowrap truncate'>
             {error.message || 'An error occurred'}
           </div>
           <div className='flex shrink-0'>

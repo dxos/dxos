@@ -119,7 +119,7 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
         </SearchList.Root>
         <div role='none' className='p-cardPadding'>
           <Dialog.Close asChild>
-            <Button classNames='is-full'>{t('close label', { ns: osTranslations })}</Button>
+            <Button classNames='inline-full'>{t('close label', { ns: osTranslations })}</Button>
           </Dialog.Close>
         </div>
       </Dialog.Content>

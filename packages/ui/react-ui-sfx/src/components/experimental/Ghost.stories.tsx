@@ -16,7 +16,7 @@ const DefaultStory = (props: Partial<GhostProps>) => {
     <>
       <Ghost {...props} />
       <div className='inset-0 absolute grid place-content-center'>
-        <DXOS className='is-[40rem] bs-[40rem] opacity-5' />
+        <DXOS className='inline-[40rem] block-[40rem] opacity-5' />
       </div>
     </>
   );

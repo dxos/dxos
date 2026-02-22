@@ -47,7 +47,7 @@ const StoryPlankHeading = ({ attendableId }: { attendableId: string }) => {
         label='Test'
         iconOnly
         variant={hasAttention ? 'primary' : 'ghost'}
-        classNames='is-[--rail-action] bs-[--rail-action]'
+        classNames='inline-[--rail-action] block-[--rail-action]'
       />
       <StackItem.ResizeHandle />
     </div>

@@ -5,4 +5,4 @@
 /**
  * Content areas that contain the text editor.
  */
-export const textBlockWidth = 'is-full mli-auto max-is-[var(--text-content)]';
+export const textBlockWidth = 'inline-full mx-auto max-inline-[var(--text-content)]';

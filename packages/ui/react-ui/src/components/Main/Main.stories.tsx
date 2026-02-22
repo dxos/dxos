@@ -48,7 +48,7 @@ const DefaultStory = (_args: StoryMainArgs) => {
           <NavigationSidebarToggle close />
         </Toolbar.Root>
       </Main.NavigationSidebar>
-      <Main.Content classNames='is-full'>
+      <Main.Content classNames='inline-full'>
         <Toolbar.Root>
           <NavigationSidebarToggle />
           <div className='flex items-center grow justify-center'>Main</div>

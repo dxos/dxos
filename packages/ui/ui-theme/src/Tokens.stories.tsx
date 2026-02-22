@@ -14,9 +14,9 @@ const Swatch = ({ variableName, value, semantic, physical }: TokenAudit<HelicalA
   const [luminosity, alpha] = parseAlphaLuminosity(value);
 
   return (
-    <div className='shrink-0 is-48 flex flex-col rounded-sm overflow-hidden'>
+    <div className='shrink-0 inline-48 flex flex-col rounded-sm overflow-hidden'>
       <dd className='aspect-video' style={{ background: `var(${variableName})` }}></dd>
-      <dt className='text-xs bg-baseSurface grow pli-2 plb-1'>
+      <dt className='text-xs bg-baseSurface grow px-2 py-1'>
         <p className='text-sm'>
           {luminosity}
           {typeof alpha !== 'undefined' && ` / ${alpha}`}
@@ -57,7 +57,7 @@ const DefaultStory = () => {
       {Object.entries(colorAudit).map(([seriesId, audits], i) => (
         <Fragment key={i}>
           <h2 className='mbs-12 mbe-4'>
-            <span className='pli-2 plb-1 bg-baseSurface rounded-sm'>{seriesId}</span>
+            <span className='px-2 py-1 bg-baseSurface rounded-sm'>{seriesId}</span>
           </h2>
           <dl className='flex flex-wrap gap-2'>
             {audits

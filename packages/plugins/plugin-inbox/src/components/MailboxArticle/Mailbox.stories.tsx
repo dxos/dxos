@@ -50,7 +50,7 @@ const WithCompanionStory = () => {
   }
 
   return (
-    <div {...attentionAttrs} className='bs-full is-full grid grid-cols-2 grid-rows-2 overflow-hidden'>
+    <div {...attentionAttrs} className='block-full inline-full grid grid-cols-2 grid-rows-2 overflow-hidden'>
       <Surface.Surface role='article' data={mailboxData} />
       <Surface.Surface role='article' data={companionData} />
     </div>

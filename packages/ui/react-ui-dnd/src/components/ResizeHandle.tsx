@@ -136,8 +136,8 @@ export const ResizeHandle = ({
         'group absolute flex focus-visible:outline-hidden',
         surfaceZIndex({ elevation, level: 'tooltip' }),
         orientation === 'horizontal'
-          ? 'cursor-col-resize is-4 inset-block-0 data-[side="inline-end"]:inline-end-0 data-[side="inline-end"]:before:inline-end-0 data-[side="inline-start"]:inline-start-0 data-[side="inline-start"]:before:inline-start-0 border-lb-0! before:inset-block-0 before:is-1'
-          : 'cursor-row-resize bs-4 inset-inline-0 data-[side="block-end"]:block-end-0 data-[side="block-end"]:before:block-end-0 data-[side="block-start"]:block-start-0 data-[side="block-start"]:before:block-start-0 border-li-0! before:inset-inline-0 before:bs-1',
+          ? 'cursor-col-resize inline-4 inset-block-0 data-[side="inline-end"]:inline-end-0 data-[side="inline-end"]:before:inline-end-0 data-[side="inline-start"]:inline-start-0 data-[side="inline-start"]:before:inline-start-0 border-lb-0! before:inset-block-0 before:inline-1'
+          : 'cursor-row-resize block-4 inset-inline-0 data-[side="block-end"]:block-end-0 data-[side="block-end"]:before:block-end-0 data-[side="block-start"]:block-start-0 data-[side="block-start"]:before:block-start-0 border-li-0! before:inset-inline-0 before:block-1',
         orientation === 'horizontal'
           ? iconPosition === 'end'
             ? 'align-end'
@@ -159,7 +159,7 @@ export const ResizeHandle = ({
         data-side={side}
         className={mx(
           'grid place-items-center group-hover:opacity-0 group-focus-visible:opacity-0 group-active:opacity-0',
-          orientation === 'horizontal' ? 'bs-[--rail-size] is-4' : 'is-[--rail-size] bs-4',
+          orientation === 'horizontal' ? 'block-[--rail-size] inline-4' : 'inline-[--rail-size] block-4',
         )}
       >
         <DragHandleSignifier side={side} />
@@ -175,7 +175,7 @@ const DragHandleSignifier = ({ side }: Pick<ResizeHandleProps, 'side'>) => {
       viewBox='0 0 256 256'
       fill='currentColor'
       className={mx(
-        'shrink-0 bs-4 is-4 text-unAccent',
+        'shrink-0 block-4 inline-4 text-unAccent',
         side === 'block-end'
           ? 'rotate-90'
           : side === 'block-start'

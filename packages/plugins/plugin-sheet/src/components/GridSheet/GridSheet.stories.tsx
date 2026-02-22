@@ -30,7 +30,7 @@ export const Basic = () => {
 
   return (
     <SheetProvider graph={graph} sheet={sheet} ignoreAttention>
-      <div role='none' className='grid bs-full is-full'>
+      <div role='none' className='grid block-full inline-full'>
         <GridSheet />
       </div>
     </SheetProvider>

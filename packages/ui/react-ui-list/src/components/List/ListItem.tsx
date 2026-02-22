@@ -255,7 +255,7 @@ export const ListItemDragPreview = <T extends ListItemRecord>({
 };
 
 export const ListItemWrapper = ({ classNames, children }: ThemedClassName<PropsWithChildren>) => (
-  <div className={mx('flex is-full gap-2', classNames)}>{children}</div>
+  <div className={mx('flex inline-full gap-2', classNames)}>{children}</div>
 );
 
 export const ListItemTitle = ({

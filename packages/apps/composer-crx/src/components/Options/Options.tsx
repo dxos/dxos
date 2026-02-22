@@ -59,7 +59,7 @@ export const Options = () => {
     <ScrollArea.Root orientation='vertical'>
       <ScrollArea.Viewport>
         <div className={headerGrid}>
-          <a href='https://dxos.org/composer' target='_blank' rel='noreferrer' className='flex justify-end -mie-4'>
+          <a href='https://dxos.org/composer' target='_blank' rel='noreferrer' className='flex justify-end -me-4'>
             <Composer className='is-[8rem] bs-[8rem]' />
           </a>
           <div className='flex flex-col justify-end'>

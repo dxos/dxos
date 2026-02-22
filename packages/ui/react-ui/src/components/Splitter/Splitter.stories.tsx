@@ -33,7 +33,7 @@ const DefaultStory = (props: SplitterRootProps) => {
   const [mode, setMode] = useState(props.mode ?? 'both');
 
   return (
-    <div className='grid grid-rows-[min-content_1fr] bs-full overflow-hidden'>
+    <div className='grid grid-rows-[min-content_1fr] block-full overflow-hidden'>
       <Toolbar.Root>
         <Toolbar.Button onClick={() => setMode('upper')}>A</Toolbar.Button>
         <Toolbar.Button onClick={() => setMode('both')}>A + B</Toolbar.Button>

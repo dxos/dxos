@@ -20,9 +20,9 @@ export type ColumnStyleProps = {
 
 // TODO(burdon): Remove these TW types and just define here.
 const padding: Record<ColumnPadding, string> = {
-  sm: 'pli-2',
-  md: 'pli-3',
-  lg: 'pli-6',
+  sm: 'px-2',
+  md: 'px-3',
+  lg: 'px-6',
 };
 
 const containerColumn: ComponentFunction<ColumnStyleProps> = ({ variant }, ...etc) =>

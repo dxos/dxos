@@ -20,11 +20,11 @@ export default {
 export const Default = {
   render: () => (
     <div className='flex flex-col gap-4 p-4 border border-separator rounded-xs'>
-      <div className='flex is-fit items-center gap-4'>
+      <div className='flex inline-fit items-center gap-4'>
         <Skeleton classNames='size-10 shrink-0 rounded-full' />
         <div className='grid gap-2'>
-          <Skeleton classNames='bs-4 is-[150px]' />
-          <Skeleton classNames='bs-4 is-[100px]' />
+          <Skeleton classNames='block-4 inline-[150px]' />
+          <Skeleton classNames='block-4 inline-[100px]' />
         </div>
       </div>
     </div>
@@ -33,19 +33,19 @@ export const Default = {
 
 export const Card = {
   render: () => (
-    <div className='flex flex-col gap-3 is-96 p-4 border border-separator rounded-xs'>
+    <div className='flex flex-col gap-3 inline-96 p-4 border border-separator rounded-xs'>
       <div className='flex items-center gap-3'>
-        <Skeleton variant='circle' classNames='bs-12 is-12 rounded-full' />
+        <Skeleton variant='circle' classNames='block-12 inline-12 rounded-full' />
         <div className='flex flex-col gap-2 flex-1'>
-          <Skeleton classNames='bs-4 is-24' />
-          <Skeleton classNames='bs-3 is-32' />
+          <Skeleton classNames='block-4 inline-24' />
+          <Skeleton classNames='block-3 inline-32' />
         </div>
       </div>
-      <Skeleton classNames='bs-32 is-full rounded-sm' />
+      <Skeleton classNames='block-32 inline-full rounded-sm' />
       <div className='flex flex-col gap-2'>
-        <Skeleton classNames='bs-3 is-full' />
-        <Skeleton classNames='bs-3 is-5/6' />
-        <Skeleton classNames='bs-3 is-4/6' />
+        <Skeleton classNames='block-3 inline-full' />
+        <Skeleton classNames='block-3 inline-5/6' />
+        <Skeleton classNames='block-3 inline-4/6' />
       </div>
     </div>
   ),

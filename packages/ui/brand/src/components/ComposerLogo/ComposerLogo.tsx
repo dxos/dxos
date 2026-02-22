@@ -117,7 +117,7 @@ export const ComposerLogo = forwardRef<AnimationController, ComposerLogoProps>(
       >
         {layers.map(({ inset, spin, style, className }, i) => (
           <div key={i} className='absolute' style={{ inset: `${inset}px` }}>
-            <Composer className={mx('is-full bs-full', animate && spin, className)} style={style} />
+            <Composer className={mx('inline-full block-full', animate && spin, className)} style={style} />
           </div>
         ))}
       </div>

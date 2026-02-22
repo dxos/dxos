@@ -145,7 +145,7 @@ export const RefField = (props: RefFieldProps) => {
           !item ? (
             <p className={mx(descriptionText, 'mbe-2')}>{t('empty readonly ref field label')}</p>
           ) : (
-            <DxAnchor key={item.id} dxn={item.id} rootclassname='mie-1'>
+            <DxAnchor key={item.id} dxn={item.id} rootclassname='me-1'>
               {item.label}
             </DxAnchor>
           )
@@ -153,13 +153,13 @@ export const RefField = (props: RefFieldProps) => {
           <ObjectPicker.Root>
             <ObjectPicker.Trigger asChild classNames='p-0'>
               {item ? (
-                <div className='flex gap-2 is-full'>
+                <div className='flex gap-2 inline-full'>
                   <Input.Root key={item.id}>
-                    <Input.TextInput value={item.label} readOnly classNames='is-full' />
+                    <Input.TextInput value={item.label} readOnly classNames='inline-full' />
                   </Input.Root>
                 </div>
               ) : (
-                <Button classNames='is-full text-start gap-2'>
+                <Button classNames='inline-full text-start gap-2'>
                   <div role='none' className='grow overflow-hidden'>
                     <span className='flex truncate text-description'>{placeholder ?? t('ref field placeholder')}</span>
                   </div>

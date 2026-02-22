@@ -196,7 +196,7 @@ const FormContent = ({ classNames, children }: FormContentProps) => {
     <div
       ref={ref}
       role='form'
-      className={mx('is-full flex flex-col gap-cardPadding pli-cardPadding', classNames)}
+      className={mx('inline-full flex flex-col gap-cardPadding pli-cardPadding', classNames)}
       data-testid={testId}
     >
       {children}
@@ -295,9 +295,9 @@ const FormSubmit = ({ classNames, label, icon, disabled }: FormSubmitProps) => {
   }
 
   return (
-    <div role='none' className={mx('flex is-full pbs-formSpacing', classNames)}>
+    <div role='none' className={mx('flex inline-full pbs-formSpacing', classNames)}>
       <IconButton
-        classNames='is-full'
+        classNames='inline-full'
         type='submit'
         variant='primary'
         disabled={disabled ?? !canSave}

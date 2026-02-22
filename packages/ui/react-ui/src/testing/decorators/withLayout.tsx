@@ -55,7 +55,7 @@ const layouts: Record<ContainerType, FC<ContainerProps>> = {
 
   column: ({ children, classNames }: ContainerProps) => (
     <div role='none' className='fixed inset-0 flex justify-center overflow-hidden bg-deckSurface'>
-      <div role='none' className={mx('flex flex-col is-[40rem] bg-baseSurface', classNames)}>
+      <div role='none' className={mx('flex flex-col inline-[40rem] bg-baseSurface', classNames)}>
         {children}
       </div>
     </div>

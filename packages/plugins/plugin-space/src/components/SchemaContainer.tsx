@@ -28,7 +28,7 @@ export const SchemaContainer = ({ space }: SchemaPanelProps) => {
     <Settings.Root>
       <Settings.Section title={t('schema verbose label')} description={t('schema description')}>
         <div role='none' className={itemClasses}>
-          {schemas.length === 0 && <div className='text-center plb-4'>{t('no schemas found message')}</div>}
+          {schemas.length === 0 && <div className='text-center py-4'>{t('no schemas found message')}</div>}
           {schemas.map((schema) => (
             <div role='none' key={schema.id}>
               {schema.typename}

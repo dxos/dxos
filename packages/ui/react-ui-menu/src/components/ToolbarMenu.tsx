@@ -113,7 +113,7 @@ const DropdownMenuToolbarItem = ({
         children: (
           <>
             <ActionLabel action={labelAction} />
-            <Icon size={3} icon='ph--caret-down--bold' classNames='mis-1' />
+            <Icon size={3} icon='ph--caret-down--bold' classNames='ms-1' />
           </>
         ),
       };
@@ -191,7 +191,7 @@ export const ToolbarMenu = ({
   const { hasAttention } = useAttention(attendableId);
   const InnerRoot = textBlockWidthProp ? 'div' : Fragment;
   const innerRootProps = textBlockWidthProp
-    ? { role: 'none', className: mx(textBlockWidth, toolbarLayout, 'bs-full') }
+    ? { role: 'none', className: mx(textBlockWidth, toolbarLayout, 'block-full') }
     : {};
 
   return (

@@ -12,7 +12,7 @@ import { Container, type ContainerRootProps } from './Container';
 
 const DefaultStory = (props: ContainerRootProps) => {
   return (
-    <div className='plb-2 is-[20rem] border border-separator rounded-xs'>
+    <div className='py-2 inline-[20rem] border border-separator rounded-xs'>
       <Container.Root {...props}>
         <Container.Column>
           <Input.Root>

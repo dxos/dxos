@@ -38,7 +38,7 @@ export const Default: Story = {
   },
 };
 
-const classNames = 'bs-[12rem] is-[18rem]';
+const classNames = 'block-[12rem] inline-[18rem]';
 
 /**
  * Access to image at 'https://dxos.network/dxos-logotype-blue.png'
@@ -76,7 +76,7 @@ export const Many: Story = {
       [],
     );
     return (
-      <div className='is-[60rem] grid grid-cols-3 grid-rows-3 gap-8'>
+      <div className='inline-[60rem] grid grid-cols-3 grid-rows-3 gap-8'>
         {images.map((src, i) => (
           <Image key={i} src={src} classNames={classNames} />
         ))}

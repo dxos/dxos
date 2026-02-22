@@ -236,13 +236,13 @@ const PlankComponent = memo(
       isSolo && mainIntrinsicSize,
       railGridHorizontal,
       part.startsWith('solo') && 'grid',
-      part.startsWith('solo-') && 'grid-rows-subgrid row-span-2 min-is-0',
+      part.startsWith('solo-') && 'grid-rows-subgrid row-span-2 min-inline-0',
       fullscreen && 'grid-rows-1',
       part === 'deck' && (companioned === 'companion' ? 'border-separator! border-ie' : 'border-separator! border-li'),
       part === 'solo-companion' && 'border-separator! border-is',
       settings?.encapsulatedPlanks &&
         !part.startsWith('solo') &&
-        'mli-[--main-spacing] border-separator! border rounded-sm overflow-hidden',
+        'mx-[--main-spacing] border-separator! border rounded-sm overflow-hidden',
     );
 
     return (

@@ -101,7 +101,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
         <div
           role='none'
           className={mx(
-            'absolute z-[1] inset-block-0 inline-end-0 !is-[--r0-size]',
+            'absolute z-[1] inset-block-0 inline-end-0 !inline-[--r0-size]',
             'pbs-[env(safe-area-inset-top)] pbe-[env(safe-area-inset-bottom)] border-is border-subduedSeparator',
             'grid grid-cols-1 grid-rows-[1fr_min-content] bg-baseSurface contain-layout app-drag',
           )}
@@ -143,7 +143,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
               value={getCompanionId(companion.id)}
               classNames={[
                 'absolute data-[state="inactive"]:-z-[1] overflow-hidden',
-                'inset-block-0 inline-start-0 is-[calc(100%-var(--r0-size))] lg:is-[--r1-size]',
+                'inset-block-0 inline-start-0 inline-[calc(100%-var(--r0-size))] lg:inline-[--r1-size]',
                 'grid grid-cols-1 grid-rows-[var(--rail-size)_1fr_min-content] pbs-[env(safe-area-inset-top)]',
               ]}
               {...(state.complementarySidebarState !== 'expanded' && { inert: true })}
@@ -189,10 +189,10 @@ const ComplementarySidebarPanel = ({ companion, activeId, data, hoistStatusbar }
           iconOnly
           tooltipSide='left'
           data-value={getCompanionId(companion.id)}
-          classNames='bs-10 is-10'
+          classNames='block-10 inline-10'
           variant='default'
         />
-        <div role='none' className='pli-1'>
+        <div role='none' className='px-1'>
           {toLocalizedString(companion.properties.label, t)}
         </div>
       </div>

@@ -57,13 +57,13 @@ export const Main = () => {
     <div
       role='none'
       className={mx(
-        'bs-full grid overflow-hidden bg-toolbarSurface',
+        'block-full grid overflow-hidden bg-toolbarSurface',
         showNavBar ? 'grid-rows-[var(--rail-action)_1fr_var(--toolbar-size)]' : 'grid-rows-[var(--rail-action)_1fr]',
       )}
       {...attentionAttrs}
     >
       <AppBar {...appBarProps} />
-      <article className='bs-full overflow-hidden bg-baseSurface'>
+      <article className='block-full overflow-hidden bg-baseSurface'>
         <Surface.Surface
           key={id}
           role='article'

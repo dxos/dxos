@@ -39,7 +39,7 @@ const DefaultStory = () => {
   }
 
   return (
-    <Stack orientation='horizontal' size='split' rail={false} classNames='pli-0 bs-full'>
+    <Stack orientation='horizontal' size='split' rail={false} classNames='px-0 block-full'>
       <PipelineContainer role='article' subject={pipeline} />
       <PipelineObjectSettings pipeline={pipeline} classNames='border-is border-separator' />
     </Stack>

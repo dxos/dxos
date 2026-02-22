@@ -19,13 +19,13 @@ export const RecoveryCodeDialog = ({ code }: RecoveryCodeDialogProps) => {
   const handleConfirmation = useCallback((checked: boolean) => setConfirmation(checked), []);
 
   return (
-    <AlertDialog.Content classNames='bs-content min-bs-[15rem] max-bs-full md:max-is-[40rem] overflow-hidden'>
+    <AlertDialog.Content classNames='bs-content min-block-[15rem] max-block-full md:max-inline-[40rem] overflow-hidden'>
       <AlertDialog.Title>{t('recovery code dialog title')}</AlertDialog.Title>
-      <p className='plb-4'>{t('recovery code dialog description')}</p>
+      <p className='py-4'>{t('recovery code dialog description')}</p>
       <Clipboard.Provider>
         <Code code={code} />
       </Clipboard.Provider>
-      <div className='flex flex-col plb-4 gap-2'>
+      <div className='flex flex-col py-4 gap-2'>
         <p>{t('recovery code dialog warning 1')}</p>
         <p>{t('recovery code dialog warning 2')}</p>
       </div>
@@ -58,7 +58,7 @@ const Code = ({ code }: { code: string }) => {
       <div className='grid grid-cols-4'>
         {words.map((word, i) => (
           <div key={i} className='flex items-center p-2 gap-2'>
-            <div className='is-4 text-xs text-center text-subdued'>{i + 1}</div>
+            <div className='inline-4 text-xs text-center text-subdued'>{i + 1}</div>
             <div className='text-sm'>{word}</div>
           </div>
         ))}

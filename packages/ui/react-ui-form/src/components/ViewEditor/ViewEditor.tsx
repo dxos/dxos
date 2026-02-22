@@ -300,7 +300,7 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
                     className={mx(
                       subtleHover,
                       'grid grid-cols-subgrid col-span-5',
-                      'rounded-xs cursor-pointer min-bs-10',
+                      'rounded-xs cursor-pointer min-block-10',
                     )}
                   >
                     <List.ItemDragHandle disabled={readonly || schemaReadonly} />
@@ -357,7 +357,7 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
                 label={t('add property button label')}
                 onClick={handleAdd}
                 disabled={viewSnapshot.projection.fields.length >= VIEW_FIELD_LIMIT}
-                classNames='is-full'
+                classNames='inline-full'
               />
             </div>
           )}

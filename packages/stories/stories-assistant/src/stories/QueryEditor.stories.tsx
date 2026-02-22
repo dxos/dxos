@@ -33,7 +33,7 @@ const DefaultStory = ({ value: valueProp }: QueryEditorProps) => {
   return (
     <div role='none' className='grid grid-cols-2 grow divide-x divide-subduedSeparator overflow-hidden'>
       <div className='flex flex-col overflow-hidden'>
-        <QueryEditor classNames='p-2 is-full border-be border-subduedSeparator' db={space?.db} onChange={setQuery} />
+        <QueryEditor classNames='p-2 inline-full border-be border-subduedSeparator' db={space?.db} onChange={setQuery} />
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport>
             {objects.map((object) => (

@@ -14,12 +14,12 @@ export type ToolbarStyleProps = Partial<{
 }>;
 
 export const toolbarLayout =
-  'is-full shrink-0 flex flex-nowrap p-1 gap-1 items-center overflow-x-auto scrollbar-none contain-layout';
+  'inline-full shrink-0 flex flex-nowrap p-1 gap-1 items-center overflow-x-auto scrollbar-none contain-layout';
 
 export const toolbarRoot: ComponentFunction<ToolbarStyleProps> = ({ density, disabled, layoutManaged }, ...etc) => {
   return mx(
     'bg-toolbarSurface dx-toolbar',
-    density === 'coarse' && 'bs-[var(--rail-size)] !pli-3',
+    density === 'coarse' && 'block-[var(--rail-size)] !px-3',
     disabled && '*:opacity-20',
     !layoutManaged && toolbarLayout,
     ...etc,

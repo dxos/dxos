@@ -169,7 +169,7 @@ const Sidebar = ({ mutate }: { mutate?: boolean }) => {
         </ScrollArea.Viewport>
       </ScrollArea.Root>
 
-      <div className='flex items-center my-2 pli-2 gap-2'>
+      <div className='flex items-center my-2 px-2 gap-2'>
         <IconButton icon='ph--plus-circle--regular' iconOnly label='Create space' onClick={handleCreateSpace} />
         <span className='grow text-sm' onClick={handleCreateSpace}>
           New space
@@ -183,7 +183,7 @@ const Sidebar = ({ mutate }: { mutate?: boolean }) => {
 const meta = {
   title: 'plugins/plugin-navtree/experimental/Tree',
   component: Tree,
-  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'is-[20rem]' })],
+  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'inline-[20rem]' })],
   parameters: {
     layout: 'fullscreen',
   },

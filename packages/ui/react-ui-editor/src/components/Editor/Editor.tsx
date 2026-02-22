@@ -93,7 +93,7 @@ type EditorViewportProps = ThemedClassName<PropsWithChildren<{}>>;
  */
 const EditorViewport = ({ classNames, children }: EditorViewportProps) => {
   return (
-    <div role='none' className={mx('grid grid-rows-[min-content_1fr] bs-full overflow-hidden', classNames)}>
+    <div role='none' className={mx('grid grid-rows-[min-content_1fr] block-full overflow-hidden', classNames)}>
       {children}
     </div>
   );

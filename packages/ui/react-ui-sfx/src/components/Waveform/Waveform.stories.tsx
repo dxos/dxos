@@ -27,28 +27,28 @@ const DefaultStory = ({ active: _active }: WaveformProps) => {
         </div>
         <div className='flex gap-4 items-center'>
           <IconButton
-            classNames='p-1 min-bs-1 rounded-sm'
+            classNames='p-1 min-block-1 rounded-sm'
             label='Waveform'
             iconOnly
             icon='ph--waveform--regular'
             size={3}
           />
           <IconButton
-            classNames='p-1 min-bs-1 rounded-sm'
+            classNames='p-1 min-block-1 rounded-sm'
             label='Waveform'
             iconOnly
             icon='ph--waveform--regular'
             size={4}
           />
           <IconButton
-            classNames='p-1 min-bs-1 rounded-sm'
+            classNames='p-1 min-block-1 rounded-sm'
             label='Waveform'
             iconOnly
             icon='ph--waveform--regular'
             size={5}
           />
           <IconButton
-            classNames='p-1 min-bs-1 rounded-sm'
+            classNames='p-1 min-block-1 rounded-sm'
             label='Waveform'
             iconOnly
             icon='ph--waveform--regular'

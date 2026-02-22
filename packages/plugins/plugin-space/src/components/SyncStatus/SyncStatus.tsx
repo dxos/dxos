@@ -86,7 +86,7 @@ const EdgeConnectionPopover = () => {
   const isConnected = status?.state === EdgeStatus.ConnectionState.CONNECTED;
 
   return (
-    <div className='min-is-[240px] p-2'>
+    <div className='min-inline-[240px] p-2'>
       {/* Connection Status Header */}
       <div className='flex items-center gap-2 mbe-2'>
         <Icon
@@ -146,7 +146,7 @@ const UnitValue = ({ value: input, format, suffix }: { value: number; format: Un
   return (
     <span className='font-mono'>
       {formattedValue}
-      <span className='mis-1 text-subdued'>
+      <span className='ms-1 text-subdued'>
         {unit.symbol}
         {suffix}
       </span>

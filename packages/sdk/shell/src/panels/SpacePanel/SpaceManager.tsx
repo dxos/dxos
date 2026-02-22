@@ -96,7 +96,7 @@ export const SpaceManager = (props: SpaceManagerProps) => {
   return <SpaceManagerImpl {...props} invitations={invitations} inviteActions={inviteActions} />;
 };
 
-const headingFragment = 'pis-3 pie-1 plb-1 mbe-1 font-medium';
+const headingFragment = 'ps-3 pe-1 py-1 mbe-1 font-medium';
 
 export const SpaceManagerImpl = (props: SpaceManagerImplProps) => {
   const {
@@ -136,7 +136,7 @@ export const SpaceManagerImpl = (props: SpaceManagerImplProps) => {
 
   return (
     <>
-      <ScrollArea.Root thin orientation='vertical' classNames='grow shrink basis-28 -mli-2'>
+      <ScrollArea.Root thin orientation='vertical' classNames='grow shrink basis-28 -mx-2'>
         <ScrollArea.Viewport>
           {!!visibleInvitations?.length && (
             <>

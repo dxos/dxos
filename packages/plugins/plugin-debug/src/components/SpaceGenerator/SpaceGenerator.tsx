@@ -101,7 +101,7 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
           <Input.TextInput
             type='number'
             placeholder='Count'
-            classNames='is-[4rem] text-right'
+            classNames='inline-[4rem] text-right'
             min={1}
             max={100}
             size={8}

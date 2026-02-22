@@ -104,15 +104,15 @@ const DefaultStory = () => {
   }, [ref]);
 
   return (
-    <div className='flex flex-col bs-full overflow-hidden'>
+    <div className='flex flex-col block-full overflow-hidden'>
       <Toolbar.Root>
         <Toolbar.Button onClick={handleAdd}>Add</Toolbar.Button>
         <Toolbar.Button onClick={handleSelect}>Pick</Toolbar.Button>
         <Toolbar.Button onClick={handleError}>Error</Toolbar.Button>
       </Toolbar.Root>
-      <div className='grid grid-cols-2 bs-full gap-4 overflow-hidden'>
+      <div className='grid grid-cols-2 block-full gap-4 overflow-hidden'>
         <Surface role='item' data={selected ? { id: selected } : undefined} limit={1} ref={ref} />
-        <div className='overflow-y-auto bs-full'>
+        <div className='overflow-y-auto block-full'>
           <List>
             {surfaces.map((surface) => (
               <ListItem.Root key={surface.id} id={surface.id}>

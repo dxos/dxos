@@ -17,7 +17,7 @@ export const ResearchOutputModule = ({ space }: ComponentProps) => {
   const queue = useQueue(researchGraph?.queue.dxn);
 
   return (
-    <ul className='flex flex-col gap-4 p-4 bs-full overflow-y-auto'>
+    <ul className='flex flex-col gap-4 p-4 block-full overflow-y-auto'>
       {queue?.objects.map((object) => (
         <li key={object.id}>
           <Card.Root>

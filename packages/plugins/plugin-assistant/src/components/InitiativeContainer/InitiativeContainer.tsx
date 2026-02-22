@@ -78,7 +78,7 @@ export const InitiativeContainer = ({ subject: initiative }: InitiativeContainer
     <StackItem.Content toolbar>
       <div
         role='none'
-        className='flex flex-1 min-is-0 overflow-x-auto scrollbar-none gap-1 border-b border-subduedSeparator'
+        className='flex flex-1 min-inline-0 overflow-x-auto scrollbar-none gap-1 border-b border-subduedSeparator'
       >
         {tabs.map((tab) => (
           <IconButton

@@ -12,10 +12,10 @@ import { StackItem, type StackItemRootProps } from './StackItem';
 
 const DefaultStory = (props: StackItemRootProps) => {
   return (
-    <StackItem.Root role='section' {...props} classNames='is-[20rem] border border-separator'>
-      <StackItem.Heading classNames='is-full border-be border-separator'>
+    <StackItem.Root role='section' {...props} classNames='inline-[20rem] border border-separator'>
+      <StackItem.Heading classNames='inline-full border-be border-separator'>
         <span className='sr-only'>Title</span>
-        <div role='none' className='sticky -block-start-px bg-[--sticky-bg] p-1 is-full'>
+        <div role='none' className='sticky -block-start-px bg-[--sticky-bg] p-1 inline-full'>
           <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
               <StackItem.SigilButton>

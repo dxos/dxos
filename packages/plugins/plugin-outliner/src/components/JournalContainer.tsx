@@ -32,7 +32,7 @@ export const JournalContainer = ({ role, subject: journal, showCalendar = true }
         className={mx(
           showCalendar
             ? isNotMobile
-              ? 'bs-full grid grid-cols-[min-content_1fr] overflow-hidden'
+              ? 'block-full grid grid-cols-[min-content_1fr] overflow-hidden'
               : 'flex flex-col overflow-hidden'
             : 'contents',
         )}

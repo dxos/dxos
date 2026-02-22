@@ -54,7 +54,7 @@ export const infoInputValence = 'shadow-cyan-500/50 dark:shadow-cyan-600/50';
 export const warningInputValence = 'shadow-amber-500/50 dark:shadow-amber-600/50';
 export const errorInputValence = 'shadow-rose-500/50 dark:shadow-rose-600/50';
 
-export const inputTextLabel = 'text-sm text-description plb-1';
+export const inputTextLabel = 'text-sm text-description py-1';
 
 const textInputSurfaceFocus =
   'transition-colors bg-textInputSurface focus:bg-focusSurface border border-separator focus:border-separator';
@@ -85,7 +85,7 @@ export const inputValence = (valence?: MessageValence) => {
 // TODO(burdon): Factor out color defs?
 
 const sharedSubduedInputStyles: ComponentFragment<InputStyleProps> = (props) => [
-  'plb-0 is-full bg-transparent text-current [[data-drag-autoscroll="active"]_&]:pointer-events-none',
+  'py-0 inline-full bg-transparent text-current [[data-drag-autoscroll="active"]_&]:pointer-events-none',
   props.density === 'fine' ? fineBlockSize : coarseBlockSize,
   placeholderText,
   subduedFocus,
@@ -93,7 +93,7 @@ const sharedSubduedInputStyles: ComponentFragment<InputStyleProps> = (props) => 
 ];
 
 const sharedDefaultInputStyles: ComponentFragment<InputStyleProps> = (props) => [
-  'plb-0 is-full text-baseText rounded-xs text-[color:var(--surface-text)] [[data-drag-autoscroll="active"]_&]:pointer-events-none',
+  'py-0 inline-full text-baseText rounded-xs text-[color:var(--surface-text)] [[data-drag-autoscroll="active"]_&]:pointer-events-none',
   textInputSurfaceFocus,
   placeholderText,
   props.density === 'fine' ? fineDimensions : coarseDimensions,
@@ -101,7 +101,7 @@ const sharedDefaultInputStyles: ComponentFragment<InputStyleProps> = (props) => 
 ];
 
 const sharedStaticInputStyles: ComponentFragment<InputStyleProps> = (props) => [
-  'plb-0 is-full text-baseText rounded-xs text-[color:var(--surface-text)] [[data-drag-autoscroll="active"]_&]:pointer-events-none',
+  'py-0 inline-full text-baseText rounded-xs text-[color:var(--surface-text)] [[data-drag-autoscroll="active"]_&]:pointer-events-none',
   textInputSurfaceFocus,
   textInputSurfaceHover,
   props.focused && 'bg-attention',
@@ -138,7 +138,7 @@ const inputSwitch: ComponentFunction<InputStyleProps> = ({ size = 5, disabled },
     booleanInputSurface,
     !disabled && booleanInputSurfaceHover,
     // TODO(burdon): Added m-1 margin to make 40px width to align with 40px icon button.
-    'cursor-pointer shrink-0 rounded-full pli-1 mx-1 relative',
+    'cursor-pointer shrink-0 rounded-full px-1 mx-1 relative',
     focusRing,
     ...etc,
   );
@@ -151,7 +151,7 @@ const inputSwitchThumb: ComponentFunction<InputStyleProps> = ({ size = 5 }, ...e
   );
 
 const inputWithSegmentsInput: ComponentFunction<InputStyleProps> = (props, ...etc) =>
-  mx('font-mono selection:bg-transparent mli-auto', props.disabled && 'cursor-not-allowed', ...etc);
+  mx('font-mono selection:bg-transparent mx-auto', props.disabled && 'cursor-not-allowed', ...etc);
 
 const inputLabel: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
   mx('block', inputTextLabel, props.srOnly && 'sr-only', ...etc);
@@ -160,7 +160,7 @@ const inputDescription: ComponentFunction<InputMetaStyleProps> = (props, ...etc)
   mx(descriptionText, props.srOnly && 'sr-only', ...etc);
 
 const inputDescriptionAndValidation: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
-  mx('leading-none mlb-1.5', props.srOnly && 'sr-only', ...etc);
+  mx('leading-none my-1.5', props.srOnly && 'sr-only', ...etc);
 
 const inputValidation: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
   mx(descriptionText, props.srOnly ? 'sr-only' : valenceColorText(props.validationValence), ...etc);

@@ -1758,9 +1758,6 @@ catalogs:
     tailwindcss:
       specifier: ^4.2.0
       version: 4.2.0
-    tailwindcss-logical:
-      specifier: ^4.0.1
-      version: 4.2.0
     tailwindcss-radix:
       specifier: ^4.0.2
       version: 4.0.2
@@ -18640,9 +18637,6 @@ importers:
       tailwindcss:
         specifier: 'catalog:'
         version: 4.2.0
-      tailwindcss-logical:
-        specifier: 'catalog:'
-        version: 4.2.0(tailwindcss@4.2.0)
       tailwindcss-radix:
         specifier: 'catalog:'
         version: 4.0.2(tailwindcss@4.2.0)
@@ -36412,11 +36406,6 @@ packages:
     engines: {node: '>=12.13.0'}
     peerDependencies:
       tailwindcss: 4.x
-
-  tailwindcss-logical@4.2.0:
-    resolution: {integrity: sha512-G+7NFU8xiMczeaykFRvaDbfbpqvFWv05YG6RtS2klW1wvTRkUs96P/e+Zy/Qse6y0HL8tLQ+da8M7trDfu12sw==}
-    peerDependencies:
-      tailwindcss: '>=4.0.0'
 
   tailwindcss-radix@4.0.2:
     resolution: {integrity: sha512-Uoa2BUCfWKGCjQPXbj4X4Q4EWAeCsvhj0udn0IupeNcvuLbqRXvC5+bKAqsngIne5mrRUPTy/IqMXGh81YyrCA==}
@@ -59998,10 +59987,6 @@ snapshots:
       tailwindcss: 4.2.0
     transitivePeerDependencies:
       - react
-
-  tailwindcss-logical@4.2.0(tailwindcss@4.2.0):
-    dependencies:
-      tailwindcss: 4.2.0
 
   tailwindcss-radix@4.0.2(tailwindcss@4.2.0):
     dependencies:

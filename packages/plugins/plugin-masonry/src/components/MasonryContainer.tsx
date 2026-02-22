@@ -60,7 +60,7 @@ export const MasonryContainer = ({
     <MasonryComponent.Root
       items={filteredObjects}
       render={Item as any}
-      classNames='is-full max-is-full bs-full max-bs-full overflow-y-auto p-4'
+      classNames='inline-full max-inline-full block-full max-block-full overflow-y-auto p-4'
     />
   );
 };

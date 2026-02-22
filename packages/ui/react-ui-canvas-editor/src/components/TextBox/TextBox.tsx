@@ -59,7 +59,7 @@ export const TextBox = forwardRef<TextBoxControl, TextBoxProps>(
             themeMode,
             syntaxHighlighting: !!language,
             slots: {
-              editor: { className: 'is-full bs-full [&>.cm-scroller]:scrollbar-none p-2' },
+              editor: { className: 'inline-full block-full [&>.cm-scroller]:scrollbar-none p-2' },
               content: { className: mx(centered && 'text-center') },
             },
           }),
@@ -138,7 +138,7 @@ export const TextBox = forwardRef<TextBoxControl, TextBoxProps>(
         //     '--dx-cmCursor': 'red',
         //   } as CSSProperties
         // }
-        className={mx('bs-full is-full overflow-hidden', classNames)}
+        className={mx('block-full inline-full overflow-hidden', classNames)}
       />
     );
   },
@@ -147,9 +147,9 @@ export const TextBox = forwardRef<TextBoxControl, TextBoxProps>(
 export const ReadonlyTextBox = ({ classNames, value = '' }: Pick<TextBoxProps, 'value' | 'classNames'>) => {
   const lines = value.split('\n');
   return (
-    <div role='none' className={mx('is-full overflow-hidden', classNames)}>
+    <div role='none' className={mx('inline-full overflow-hidden', classNames)}>
       {lines.map((line, i) => (
-        <div key={i} className='is-full text-center overflow-hidden'>
+        <div key={i} className='inline-full text-center overflow-hidden'>
           {line}
         </div>
       ))}

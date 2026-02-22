@@ -4,7 +4,7 @@
 
 import React, { type FC } from 'react';
 
-const defaultSize = 'is-[128px] bs-[128px]';
+const defaultSize = 'inline-[128px] block-[128px]';
 
 export const DXOSVerticalType: FC<{ className?: string }> = ({ className = defaultSize }) => {
   return (

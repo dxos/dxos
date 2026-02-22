@@ -157,7 +157,7 @@ const ComboboxContent = forwardRef<HTMLDivElement, ComboboxContentProps>(
           forceMount,
         }}
         classNames={[
-          'is-[--radix-popover-trigger-width] max-bs-[--radix-popover-content-available-height] grid grid-rows-[min-content_1fr]',
+          'inline-[--radix-popover-trigger-width] max-block-[--radix-popover-content-available-height] grid grid-rows-[min-content_1fr]',
           classNames,
         ]}
         id={modalId}
@@ -204,7 +204,7 @@ const ComboboxTrigger = forwardRef<HTMLButtonElement, ComboboxTriggerProps>(
           {children ?? (
             <>
               <span
-                className={mx('font-normal text-start flex-1 min-is-0 truncate mie-2', !value && staticPlaceholderText)}
+                className={mx('font-normal text-start flex-1 min-inline-0 truncate me-2', !value && staticPlaceholderText)}
               >
                 {value || placeholder}
               </span>
@@ -237,7 +237,7 @@ const ComboboxInput = forwardRef<HTMLInputElement, ComboboxInputProps>(({ classN
   return (
     <SearchList.Input
       {...props}
-      classNames={['m-cardChrome mbe-0 is-[calc(100%-2*var(--dx-cardChrome))]', classNames]}
+      classNames={['m-cardChrome mbe-0 inline-[calc(100%-2*var(--dx-cardChrome))]', classNames]}
       ref={forwardedRef}
     />
   );

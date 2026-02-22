@@ -30,7 +30,7 @@ import {
 import { IdentityActionChooser } from './steps';
 import { useAgentHandlers } from './useAgentHandlers';
 
-const viewStyles = 'pbs-1 pbe-3 pli-3';
+const viewStyles = 'pbs-1 pbe-3 px-3';
 
 // TODO(thure): Factor out?
 const getHueValue = (identity?: Identity) =>
@@ -100,7 +100,7 @@ const IdentityHeading = ({
             status={isConnected ? 'active' : 'error'}
             hue={hue || fallbackValue.hue}
             fallback={emoji || fallbackValue.emoji}
-            classNames='relative z-[2] -mli-4 chromatic-ignore'
+            classNames='relative z-[2] -mx-4 chromatic-ignore'
           />
         </Toolbar.Root>
 
@@ -121,16 +121,16 @@ const IdentityHeading = ({
         </Input.Root>
 
         <Toolbar.Root classNames='justify-center pt-3'>
-          <EmojiPickerToolbarButton emoji={emoji} onChangeEmoji={setEmoji} classNames='bs-[--rail-action]' />
+          <EmojiPickerToolbarButton emoji={emoji} onChangeEmoji={setEmoji} classNames='block-[--rail-action]' />
           <HuePicker
             value={hue}
             onChange={setHue}
             onReset={() => setHue(undefined)}
-            classNames='bs-[--rail-action]'
+            classNames='block-[--rail-action]'
             rootVariant='toolbar-button'
           />
           <Clipboard.IconButton
-            classNames='bs-[--rail-action]'
+            classNames='block-[--rail-action]'
             data-testid='update-profile-form-copy-key'
             label={t('copy self did label')}
             value={identity.did}
@@ -141,7 +141,7 @@ const IdentityHeading = ({
               label={t('manage credentials label')}
               iconOnly
               tooltipSide='bottom'
-              classNames='bs-[--rail-action]'
+              classNames='block-[--rail-action]'
               onClick={onManageCredentials}
             />
           )}
@@ -150,7 +150,7 @@ const IdentityHeading = ({
             label={t(isConnected ? 'disconnect label' : 'connect label')}
             iconOnly
             tooltipSide='bottom'
-            classNames={['bs-[--rail-action]', !isConnected && errorText]}
+            classNames={['block-[--rail-action]', !isConnected && errorText]}
             onClick={() => onChangeConnectionState?.(isConnected ? ConnectionState.OFFLINE : ConnectionState.ONLINE)}
           />
         </Toolbar.Root>

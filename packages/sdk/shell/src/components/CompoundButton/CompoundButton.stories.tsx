@@ -37,8 +37,8 @@ export const Default: Story = {
   args: {
     children: 'Hello',
     description: 'This is a compound button',
-    before: <Icon icon='ph--clock-counter-clockwise' classNames='is-5 bs-5' />,
-    after: <Icon icon='ph--arrow-right' classNames='is-5 bs-5' />,
+    before: <Icon icon='ph--clock-counter-clockwise' classNames='inline-5 block-5' />,
+    after: <Icon icon='ph--arrow-right' classNames='inline-5 block-5' />,
     disabled: false,
   },
 };
@@ -47,8 +47,8 @@ export const Primary: Story = {
   args: {
     children: 'Hello',
     description: 'This is a compound button',
-    before: <Icon icon='ph--clock-counter-clockwise' classNames='is-5 bs-5' />,
-    after: <Icon icon='ph--arrow-right' classNames='is-5 bs-5' />,
+    before: <Icon icon='ph--clock-counter-clockwise' classNames='inline-5 block-5' />,
+    after: <Icon icon='ph--arrow-right' classNames='inline-5 block-5' />,
     disabled: false,
     variant: 'primary',
   },

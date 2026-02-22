@@ -61,7 +61,7 @@ export const outliner = (_options: OutlinerProps = {}): Extension => [
   decorateMarkdown({ listPaddingLeft: 8 }),
 
   // Researve space for menu.
-  EditorView.contentAttributes.of({ class: 'is-full !mr-[3rem]' }),
+  EditorView.contentAttributes.of({ class: 'inline-full !mr-[3rem]' }),
 ];
 
 /**

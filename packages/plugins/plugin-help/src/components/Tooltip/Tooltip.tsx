@@ -38,7 +38,7 @@ export const Tooltip = forwardRef<HTMLDivElement, TooltipRenderProps>(
 
     return (
       <div
-        className='flex flex-col is-[15rem] min-bs-[10rem] overflow-hidden rounded-md shadow-xl bg-accentSurface text-accentSurfaceText'
+        className='flex flex-col inline-[15rem] min-block-[10rem] overflow-hidden rounded-md shadow-xl bg-accentSurface text-accentSurfaceText'
         role='tooltip'
         data-testid='helpPlugin.tooltip'
         data-step={index + 1}
@@ -46,7 +46,7 @@ export const Tooltip = forwardRef<HTMLDivElement, TooltipRenderProps>(
         ref={forwardedRef}
       >
         <div className='flex p-2'>
-          <h2 className='grow pli-2 plb-1 text-lg font-medium text-accentSurfaceText'>{title}</h2>
+          <h2 className='grow px-2 py-1 text-lg font-medium text-accentSurfaceText'>{title}</h2>
           <IconButton
             density='fine'
             icon='ph--x--bold'
@@ -58,7 +58,7 @@ export const Tooltip = forwardRef<HTMLDivElement, TooltipRenderProps>(
             data-testid='helpPlugin.tooltip.close'
           />
         </div>
-        <div className='flex grow pli-4 mlb-2'>{content}</div>
+        <div className='flex grow px-4 my-2'>{content}</div>
         <div className='flex p-2 items-center justify-between' {...arrowNavigationAttrs}>
           {
             <IconButton
@@ -78,7 +78,7 @@ export const Tooltip = forwardRef<HTMLDivElement, TooltipRenderProps>(
                   key={i}
                   icon={index === i ? 'ph--circle--fill' : 'ph--circle--regular'}
                   size={2}
-                  classNames='mli-1 cursor-pointer'
+                  classNames='mx-1 cursor-pointer'
                 />
               ))}
             </div>

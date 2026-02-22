@@ -293,7 +293,7 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
 
     const gridClasses = useMemo(() => {
       if (!rail) {
-        return orientation === 'horizontal' ? 'grid-rows-1 pli-[--stack-gap]' : 'grid-cols-1 plb-[--stack-gap]';
+        return orientation === 'horizontal' ? 'grid-rows-1 px-[--stack-gap]' : 'grid-cols-1 py-[--stack-gap]';
       }
 
       if (orientation === 'horizontal') {
@@ -328,8 +328,8 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
             gridClasses,
             size === 'contain' &&
               (orientation === 'horizontal'
-                ? 'overflow-x-auto overscroll-x-contain min-bs-0 max-bs-full bs-full'
-                : 'overflow-y-auto min-is-0 max-is-full is-full'),
+                ? 'overflow-x-auto overscroll-x-contain min-block-0 max-block-full block-full'
+                : 'overflow-y-auto min-inline-0 max-inline-full inline-full'),
             classNames,
           )}
           onKeyDown={handleKeyDown}

@@ -171,7 +171,7 @@ export const InvocationTraceContainer = ({
         ) : undefined
       }
     >
-      <div className={mx('bs-full', gridLayout)}>
+      <div className={mx('block-full', gridLayout)}>
         {/* <DynamicTable properties={properties} rows={rows} features={features} onRowClick={handleRowClick} /> */}
         <div className='overflow-auto'>
           <table className='table-fixed min-w-full text-xs border-collapse'>
@@ -238,9 +238,9 @@ const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
   const isLogQueue = 'logs' === contents || objects.length === 0;
 
   return (
-    <div className='grid grid-cols-1 grid-rows-[min-content_1fr] bs-full min-bs-0 border-separator'>
+    <div className='grid grid-cols-1 grid-rows-[min-content_1fr] block-full min-block-0 border-separator'>
       <Tabs.Root
-        classNames='grid grid-rows-[min-content_1fr] min-bs-0 [&>[role="tabpanel"]]:min-bs-0 [&>[role="tabpanel"][data-state="active"]]:grid border-bs border-separator'
+        classNames='grid grid-rows-[min-content_1fr] min-block-0 [&>[role="tabpanel"]]:min-block-0 [&>[role="tabpanel"][data-state="active"]]:grid border-bs border-separator'
         orientation='horizontal'
         value={activeTab}
         onValueChange={setActiveTab}
@@ -267,7 +267,7 @@ const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
           </Tabs.Tabpanel>
         )}
         {isLogQueue && (
-          <Tabs.Tabpanel value='raw' classNames='min-bs-0 min-is-0 is-full overflow-auto'>
+          <Tabs.Tabpanel value='raw' classNames='min-block-0 min-inline-0 inline-full overflow-auto'>
             <RawDataPanel classNames='text-xs' span={span} objects={objects} />
           </Tabs.Tabpanel>
         )}

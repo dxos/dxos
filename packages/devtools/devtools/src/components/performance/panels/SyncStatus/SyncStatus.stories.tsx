@@ -62,7 +62,7 @@ const meta = {
     layout: 'centered',
   },
   args: {
-    classNames: 'is-[16rem] p-1 border border-separator',
+    classNames: 'inline-[16rem] p-1 border border-separator',
   },
 } satisfies Meta<typeof SyncStatus>;
 

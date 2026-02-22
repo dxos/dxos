@@ -44,7 +44,7 @@
   }
 
   .dx-dialog__content {
-    @apply flex flex-col is-dvw max-bs-full max-is-full p-4 overflow-hidden shadow-md backdrop-blur;
+    @apply flex flex-col is-dvw max-block-full max-inline-full p-4 overflow-hidden shadow-md backdrop-blur;
 
     &[data-state='open'] {
       @apply animate-slide-up-and-fade;
@@ -57,13 +57,13 @@
 
   @media (min-width: theme('screens.sm')) {
     .dx-dialog__content {
-      @apply is-[95vw] border rounded-md border-separator;
+      @apply inline-[95vw] border rounded-md border-separator;
     }
   }
 
   @media (min-width: theme('screens.md')) {
     .dx-dialog__content {
-      @apply max-is-[24rem];
+      @apply max-inline-[24rem];
     }
   }
 

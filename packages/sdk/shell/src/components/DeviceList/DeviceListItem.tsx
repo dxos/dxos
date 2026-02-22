@@ -55,7 +55,7 @@ export const DeviceListItem = forwardRef<
     return (
       <ListItem.Root
         {...props}
-        classNames={['flex gap-2 items-center mlb-2', classNames]}
+        classNames={['flex gap-2 items-center my-2', classNames]}
         data-testid={`device-list-item${isCurrent ? '-current' : ''}`}
         labelId={labelId}
         ref={forwardedRef}
@@ -97,7 +97,7 @@ export const DeviceListItem = forwardRef<
               <Tooltip.Trigger asChild>
                 <Button
                   variant='ghost'
-                  classNames='pli-0 is-[--rail-action] bs-[--rail-action]'
+                  classNames='px-0 inline-[--rail-action] block-[--rail-action]'
                   data-testid='agent.destroy'
                   onClick={onAgentDestroy}
                 >
@@ -117,7 +117,7 @@ export const DeviceListItem = forwardRef<
               <DropdownMenu.Trigger asChild>
                 <Button
                   variant='ghost'
-                  classNames='pli-0 is-[--rail-action] bs-[--rail-action]'
+                  classNames='px-0 inline-[--rail-action] block-[--rail-action]'
                   data-testid={`device-list-item${isCurrent ? '-current' : ''}.options`}
                 >
                   <span className='sr-only'>{t('more options label')}</span>

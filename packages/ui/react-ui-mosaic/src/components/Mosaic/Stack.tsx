@@ -83,7 +83,7 @@ const MosaicStackInner = forwardRef<HTMLDivElement, MosaicStackProps>(
         role={role}
         className={mx(
           'flex',
-          orientation === 'horizontal' && 'bs-full [&>*]:shrink-0',
+          orientation === 'horizontal' && 'block-full [&>*]:shrink-0',
           orientation === 'vertical' && 'flex-col',
           classNames,
           className,
@@ -158,7 +158,7 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
         role={role}
         className={mx(
           'flex',
-          orientation === 'horizontal' && 'bs-full [&>*]:shrink-0',
+          orientation === 'horizontal' && 'block-full [&>*]:shrink-0',
           orientation === 'vertical' && 'flex-col',
           classNames,
           className,
@@ -227,7 +227,7 @@ const InternalPlaceholder = (props: MosaicPlaceholderProps<number>) => {
     <MosaicPlaceholder {...props} classNames={styles.placeholder.root}>
       <div
         className={mx(
-          'flex bs-full bg-baseSurface border border-dashed border-separator rounded-xs',
+          'flex block-full bg-baseSurface border border-dashed border-separator rounded-xs',
           styles.placeholder.content,
         )}
       />

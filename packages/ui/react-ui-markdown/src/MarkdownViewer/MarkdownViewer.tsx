@@ -45,7 +45,7 @@ const defaultComponents: ReactMarkdownOptions['components'] = {
     return <h3 className='pbs-1 pbe-1 text-base'>{children}</h3>;
   },
   blockquote: ({ children, ...props }) => (
-    <blockquote className='pis-4 mbs-2 mbe-2 pbs-2 pbe-2 border-l-4 border-accentText text-accentText' {...props}>
+    <blockquote className='ps-4 mbs-2 mbe-2 pbs-2 pbe-2 border-l-4 border-accentText text-accentText' {...props}>
       {children}
     </blockquote>
   ),
@@ -64,12 +64,12 @@ const defaultComponents: ReactMarkdownOptions['components'] = {
     </a>
   ),
   ol: ({ children, ...props }) => (
-    <ol className='pbs-1 pbe-1 pis-6 leading-tight list-decimal' {...props}>
+    <ol className='pbs-1 pbe-1 ps-6 leading-tight list-decimal' {...props}>
       {children}
     </ol>
   ),
   ul: ({ children, ...props }) => (
-    <ul className='pbs-1 pbe-1 pis-6 leading-tight list-disc' {...props}>
+    <ul className='pbs-1 pbe-1 ps-6 leading-tight list-disc' {...props}>
       {children}
     </ul>
   ),

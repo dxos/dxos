@@ -171,7 +171,7 @@ export const ThreadCompanion = ({ subject }: { subject: any }) => {
         value={showResolvedThreads ? 'all' : 'unresolved'}
         orientation='horizontal'
         classNames={[
-          'contents [&_[role="tabpanel"]]:min-bs-0 [&_[role="tabpanel"]]:overflow-y-auto [&_[role="tabpanel"]]:scrollbar-thin',
+          'contents [&_[role="tabpanel"]]:min-block-0 [&_[role="tabpanel"]]:overflow-y-auto [&_[role="tabpanel"]]:scrollbar-thin',
         ]}
         onValueChange={onChangeViewState}
       >
