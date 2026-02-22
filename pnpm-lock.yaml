@@ -66,9 +66,6 @@ catalogs:
     '@bufbuild/protoc-gen-es':
       specifier: 2.11.0
       version: 2.11.0
-    '@ch-ui/colors':
-      specifier: 1.2.1
-      version: 1.2.1
     '@ch-ui/icons':
       specifier: ^1.0.1
       version: 1.0.1
@@ -1741,8 +1738,8 @@ catalogs:
       specifier: ^8.5.5
       version: 8.5.5
     tailwind-merge:
-      specifier: ^2.2.1
-      version: 2.2.1
+      specifier: ^3.5.0
+      version: 3.5.0
     tailwind-scrollbar:
       specifier: ^4.0.0
       version: 4.0.2
@@ -18499,7 +18496,7 @@ importers:
         version: 13.0.2(postcss@8.5.6)
       tailwind-merge:
         specifier: 'catalog:'
-        version: 2.2.1
+        version: 3.5.0
       tailwind-scrollbar:
         specifier: 'catalog:'
         version: 4.0.2(react@19.2.3)(tailwindcss@4.2.0)
@@ -18510,9 +18507,6 @@ importers:
         specifier: 'catalog:'
         version: 4.0.2(tailwindcss@4.2.0)
     devDependencies:
-      '@ch-ui/colors':
-        specifier: 'catalog:'
-        version: 1.2.1
       '@dxos/ui-types':
         specifier: workspace:*
         version: link:../ui-types
@@ -20158,10 +20152,6 @@ packages:
 
   '@cfworker/json-schema@4.1.1':
     resolution: {integrity: sha512-gAmrUZSGtKc3AiBL71iNWxDsyUC5uMaKKGdvzYsBoTW/xi42JQHl7eKV2OYzCUqvc+D2RCcf7EXY2iCyFIk6og==}
-
-  '@ch-ui/colors@1.2.1':
-    resolution: {integrity: sha512-s2uFrSVOsdV3T+STroZEBty5RL8FP6t//8HO1nvYkFSPEuS7lNteiKgX+N7IbvrJRtAi0lw5HPXnJjCLc4eUHw==}
-    engines: {node: '>=20.0.0'}
 
   '@ch-ui/icons@1.0.1':
     resolution: {integrity: sha512-RKFKEC6jeNcERFAsdJ2AuK25ZevYLUI8I8PoH2CCIjD2xkP3oSVCDbnS7a2BjOOc/HTzK93Bt5cYbuvGyMR0PA==}
@@ -28806,9 +28796,6 @@ packages:
   colord@2.9.3:
     resolution: {integrity: sha512-jeC1axXpnb0/2nn/Y1LPuLdgXBLH7aDcHu4KEKfqw3CUhX7ZpfBSlPKyqXE6btIgEzfWtrX3/tyBCaCvXvMkOw==}
 
-  colorjs.io@0.5.2:
-    resolution: {integrity: sha512-twmVoizEW7ylZSN32OgKdXRmo1qg+wT5/6C3xu5b9QsWzSFAhHLn2xd8ro0diCsKfCj1RdaTP/nrcW+vAoQPIw==}
-
   colorspace@1.1.4:
     resolution: {integrity: sha512-BgvKJiuVu1igBUF2kEjRCZXol6wiiGbY5ipL/oVPwm0BL9sIpMIzM8IK7vwuxIIzOXMV3Ey5w+vxhm0rR/TN8w==}
 
@@ -36253,8 +36240,8 @@ packages:
   tabster@8.5.5:
     resolution: {integrity: sha512-fqoBWIZRPJ2LuAqQWbGGE1KkKz6sX+6ROOeHlXIyRM7qD7XZK0gWc50mJbI8G48wuy8201/kvGkYq3p+QmSTAg==}
 
-  tailwind-merge@2.2.1:
-    resolution: {integrity: sha512-o+2GTLkthfa5YUt4JxPfzMIpQzZ3adD1vLVkvKE1Twl9UAhGsEbIZhHHZVRttyW177S8PDJI3bTQNaebyofK3Q==}
+  tailwind-merge@3.5.0:
+    resolution: {integrity: sha512-I8K9wewnVDkL1NTGoqWmVEIlUcB9gFriAEkXkfCjX5ib8ezGxtR3xD7iZIxrfArjEsH7F1CHD4RFUtxefdqV/A==}
 
   tailwind-scrollbar@4.0.2:
     resolution: {integrity: sha512-wAQiIxAPqk0MNTPptVe/xoyWi27y+NRGnTwvn4PQnbvB9kp8QUBiGl/wsfoVBHnQxTmhXJSNt9NHTmcz9EivFA==}
@@ -40105,10 +40092,6 @@ snapshots:
     optional: true
 
   '@cfworker/json-schema@4.1.1': {}
-
-  '@ch-ui/colors@1.2.1':
-    dependencies:
-      colorjs: colorjs.io@0.5.2
 
   '@ch-ui/icons@1.0.1':
     dependencies:
@@ -50414,8 +50397,6 @@ snapshots:
 
   colord@2.9.3: {}
 
-  colorjs.io@0.5.2: {}
-
   colorspace@1.1.4:
     dependencies:
       color: 3.2.1
@@ -59815,9 +59796,7 @@ snapshots:
     optionalDependencies:
       '@rollup/rollup-linux-x64-gnu': 4.40.0
 
-  tailwind-merge@2.2.1:
-    dependencies:
-      '@babel/runtime': 7.27.1
+  tailwind-merge@3.5.0: {}
 
   tailwind-scrollbar@4.0.2(react@19.2.3)(tailwindcss@4.2.0):
     dependencies:

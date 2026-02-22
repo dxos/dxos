@@ -635,7 +635,7 @@ catalog:
   streamx: ^2.12.5
   style-mod: ^4.1.0
   tabster: ^8.5.5
-  tailwind-merge: ^2.2.1
+  tailwind-merge: ^3.5.0
   tailwind-scrollbar: ^4.0.0
   '@tailwindcss/postcss': ^4.2.0
   tailwindcss: ^4.2.0
