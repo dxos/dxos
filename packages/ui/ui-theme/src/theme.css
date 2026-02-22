@@ -12,13 +12,16 @@
 @import 'tailwindcss';
 @import './styles/layers/index.css';
 
-/**
- * Load plugins using v4 @plugin directive.
- * Note: tailwindcss-logical removed - v4 has native logical property support.
- */
 @plugin '@tailwindcss/forms';
 @plugin 'tailwind-scrollbar';
 @plugin 'tailwindcss-radix';
+
+/**
+ * Custom variants for pointer/hover media queries.
+ * Replaces v3 custom screens: pointer-fine, hover-hover.
+ */
+@custom-variant pointer-fine (@media (pointer: fine));
+@custom-variant hover-hover (@media (hover: hover));
 
 /**
  * Tailwind v4 theme configuration using @theme directive.
@@ -281,6 +284,56 @@
   --ring-width-hairLine: var(--dx-hairLine);
   --ring-width-thickLine: var(--dx-thickLine);
   --ring-width-noLine: var(--dx-noLine);
+
+  /* Custom spacing for prose/container/card sizing */
+  --spacing-prose-max-width: var(--dx-prose-max-width);
+  --spacing-container-max-width: var(--dx-container-max-width);
+  --spacing-card-default-width: var(--dx-card-default-width);
+  --spacing-card-min-width: var(--dx-card-min-width);
+  --spacing-card-max-width: var(--dx-card-max-width);
+  --spacing-card-min-height: var(--dx-card-min-height);
+  --spacing-card-max-height: var(--dx-card-max-height);
+
+  /* Border radius scale (matches v3 config override) */
+  --radius-none: 0;
+  --radius-sm: 0.25rem;
+  --radius: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+
+  /* Font size scale (1.125 modular scale from v3 config) */
+  --text-xs: 0.790rem;
+  --text-xs--line-height: 1rem;
+  --text-sm: 0.889rem;
+  --text-sm--line-height: 1.25rem;
+  --text-base: 1rem;
+  --text-base--line-height: 1.5rem;
+  --text-lg: 1.125rem;
+  --text-lg--line-height: 1.75rem;
+  --text-xl: 1.266rem;
+  --text-xl--line-height: 1.75rem;
+  --text-2xl: 1.424rem;
+  --text-2xl--line-height: 2rem;
+  --text-3xl: 1.602rem;
+  --text-3xl--line-height: 2.25rem;
+  --text-4xl: 1.802rem;
+  --text-4xl--line-height: 2.5rem;
+  --text-5xl: 2.027rem;
+  --text-5xl--line-height: 2.5rem;
+  --text-6xl: 2.281rem;
+  --text-6xl--line-height: 2.5rem;
+  --text-7xl: 2.566rem;
+  --text-7xl--line-height: 2.75rem;
+  --text-8xl: 2.887rem;
+  --text-8xl--line-height: 3rem;
+  --text-9xl: 3.247rem;
+  --text-9xl--line-height: 3.25rem;
+
+  /* Box shadow */
+  --shadow-slider: 0 0 0 5px rgba(0, 0, 0, 0.3);
+
+  /* Transition timing function */
+  --ease-in-out-symmetric: cubic-bezier(0.5, 0, 0.5, 1);
 
   /* Custom animations - migrated from tailwind.ts */
 
