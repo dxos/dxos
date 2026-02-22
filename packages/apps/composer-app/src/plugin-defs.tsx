@@ -49,7 +49,7 @@ import { StackPlugin } from '@dxos/plugin-stack';
 import { StatusBarPlugin } from '@dxos/plugin-status-bar';
 import { TablePlugin } from '@dxos/plugin-table';
 import { ThemePlugin } from '@dxos/plugin-theme';
-import { ThemeEditorPlugin } from '@dxos/plugin-theme-editor';
+
 import { ThreadPlugin } from '@dxos/plugin-thread';
 import { TokenManagerPlugin } from '@dxos/plugin-token-manager';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription';
@@ -201,7 +201,7 @@ export const getPlugins = ({
     }),
     StackPlugin(),
     StatusBarPlugin(),
-    ThemeEditorPlugin(),
+
     TablePlugin(),
     ThemePlugin({
       appName: 'Composer',

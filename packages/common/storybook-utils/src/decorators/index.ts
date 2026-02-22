@@ -4,4 +4,4 @@
 
 export * from './withLayout';
 export * from './withRegistry';
-export * from './withThemeEditor';
+

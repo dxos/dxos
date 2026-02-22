@@ -4,43 +4,8 @@
 
 import { type TokenSet } from '@ch-ui/tokens';
 
-import adapter, { type TailwindAdapterConfig } from '../../vendor/tailwind-tokens';
-
 import { aliasColors, huePalettes, physicalColors, semanticColors, systemAliases, systemSememes } from './colors';
 import { lengthsFacet, maxSizesFacet } from './lengths';
-
-const adapterConfig: TailwindAdapterConfig = {
-  colors: {
-    facet: 'colors',
-    disposition: 'overwrite',
-    tokenization: 'recursive',
-  },
-  borderWidth: {
-    facet: 'lengths',
-    disposition: 'extend',
-    tokenization: 'omit-series',
-  },
-  ringWidth: {
-    facet: 'lengths',
-    disposition: 'extend',
-    tokenization: 'omit-series',
-  },
-  ringOffsetWidth: {
-    facet: 'lengths',
-    disposition: 'extend',
-    tokenization: 'omit-series',
-  },
-  outlineWidth: {
-    facet: 'lengths',
-    disposition: 'extend',
-    tokenization: 'omit-series',
-  },
-  spacing: {
-    facet: 'lengths',
-    disposition: 'extend',
-    tokenization: 'keep-series',
-  },
-};
 
 export const hues = Object.keys(huePalettes);
 
@@ -83,5 +48,3 @@ export const userDefaultTokenSet = {
     },
   },
 } satisfies TokenSet;
-
-export const tokensTailwindConfig = adapter(tokenSet, adapterConfig);

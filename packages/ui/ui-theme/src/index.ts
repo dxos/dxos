@@ -3,7 +3,7 @@
 //
 
 // TODO(burdon): Factor out public vs. internals.
-export { cardDefaultInlineSize, cardMinInlineSize, cardMaxInlineSize, hues, userDefaultTokenSet } from './config';
+export { cardDefaultInlineSize, cardMinInlineSize, cardMaxInlineSize, hues } from './config';
 export * from './styles';
 export * from './types';
 export * from './util';
