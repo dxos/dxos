@@ -3,14 +3,15 @@
  */
 
 @theme {
-  --color-cmCodeblock: theme(colors.neutral.500 / 0.1);
-  --color-cmActiveLine: light-dark(theme(colors.neutral.200 / 0.5), theme(colors.neutral.800 / 0.5));
-  --color-cmSeparator: theme(colors.blue.500);
-  --color-cmCursor: light-dark(theme(colors.neutral.900), theme(colors.neutral.100));
-  --color-cmSelection: light-dark(theme(colors.blue.400 / 0.5), theme(colors.blue.600 / 0.5));
-  --color-cmFocusedSelection: light-dark(theme(colors.blue.400), theme(colors.blue.600));
-  --color-cmHighlight: light-dark(theme(colors.neutral.950), theme(colors.neutral.50));
-  --color-cmHighlightSurface: light-dark(theme(colors.sky.200), theme(colors.cyan.600));
-  --color-cmCommentText: light-dark(theme(colors.neutral.50), theme(colors.neutral.950));
-  --color-cmCommentSurface: light-dark(theme(colors.amber.700), theme(colors.amber.200));
+  --color-cm-codeblock: theme(colors.neutral.500 / 0.1);
+  --color-cm-active-line: light-dark
+  (theme(colors.neutral.200 / 0.5), theme(colors.neutral.800 / 0.5));
+  --color-cm-separator: theme(colors.blue.500);
+  --color-cm-cursor: light-dark(theme(colors.neutral.900), theme(colors.neutral.100));
+  --color-cm-selection: light-dark(theme(colors.blue.400 / 0.5), theme(colors.blue.600 / 0.5));
+  --color-cm-focused-selection: light-dark(theme(colors.blue.400), theme(colors.blue.600));
+  --color-cm-highlight: light-dark(theme(colors.neutral.950), theme(colors.neutral.50));
+  --color-cm-highlight-surface: light-dark(theme(colors.sky.200), theme(colors.cyan.600));
+  --color-cm-comment-text: light-dark(theme(colors.neutral.50), theme(colors.neutral.950));
+  --color-cm-comment-surface: light-dark(theme(colors.amber.700), theme(colors.amber.200));
 }

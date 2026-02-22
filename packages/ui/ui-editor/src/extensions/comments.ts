@@ -103,14 +103,14 @@ export const commentsState = StateField.define<CommentsState>({
 const styles = EditorView.theme({
   '.cm-comment, .cm-comment-current': {
     padding: '3px 0',
-    color: 'var(--color-cmCommentText)',
-    backgroundColor: 'var(--color-cmCommentSurface)',
+    color: 'var(--color-cm-comment-text)',
+    backgroundColor: 'var(--color-cm-comment-surface)',
   },
   '.cm-comment > span, .cm-comment-current > span': {
     boxDecorationBreak: 'clone',
-    boxShadow: '0 0 1px 3px var(--color-cmCommentSurface)',
-    backgroundColor: 'var(--color-cmCommentSurface)',
-    color: 'var(--color-cmCommentText)',
+    boxShadow: '0 0 1px 3px var(--color-cm-comment-surface)',
+    backgroundColor: 'var(--color-cm-comment-surface)',
+    color: 'var(--color-cm-comment-text)',
     cursor: 'pointer',
   },
 });
