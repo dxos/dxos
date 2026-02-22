@@ -63,39 +63,38 @@
   --radius-md: 0.75rem;
   --radius-lg: 1rem;
 
-  /* Font size scale (1.125 modular scale from v3 config) */
-  --text-xs: 0.790rem;
+  /* Font size scale (Tailwind v4 defaults — clean rem/px values) */
+  --text-xs: 0.75rem;
   --text-xs--line-height: 1rem;
-  --text-sm: 0.889rem;
+  --text-sm: 0.875rem;
   --text-sm--line-height: 1.25rem;
   --text-base: 1rem;
   --text-base--line-height: 1.5rem;
   --text-lg: 1.125rem;
   --text-lg--line-height: 1.75rem;
-  --text-xl: 1.266rem;
+  --text-xl: 1.25rem;
   --text-xl--line-height: 1.75rem;
-  --text-2xl: 1.424rem;
+  --text-2xl: 1.5rem;
   --text-2xl--line-height: 2rem;
-  --text-3xl: 1.602rem;
+  --text-3xl: 1.875rem;
   --text-3xl--line-height: 2.25rem;
-  --text-4xl: 1.802rem;
+  --text-4xl: 2.25rem;
   --text-4xl--line-height: 2.5rem;
-  --text-5xl: 2.027rem;
-  --text-5xl--line-height: 2.5rem;
-  --text-6xl: 2.281rem;
-  --text-6xl--line-height: 2.5rem;
-  --text-7xl: 2.566rem;
-  --text-7xl--line-height: 2.75rem;
-  --text-8xl: 2.887rem;
-  --text-8xl--line-height: 3rem;
-  --text-9xl: 3.247rem;
-  --text-9xl--line-height: 3.25rem;
+  --text-5xl: 3rem;
+  --text-5xl--line-height: 1;
+  --text-6xl: 3.75rem;
+  --text-6xl--line-height: 1;
+  --text-7xl: 4.5rem;
+  --text-7xl--line-height: 1;
+  --text-8xl: 6rem;
+  --text-8xl--line-height: 1;
+  --text-9xl: 8rem;
+  --text-9xl--line-height: 1;
 
   /* Box shadow */
   --shadow-slider: 0 0 0 5px rgba(0, 0, 0, 0.3);
 
   /* Transition timing function */
   --ease-in-out-symmetric: cubic-bezier(0.5, 0, 0.5, 1);
-
 }
 
