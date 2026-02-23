@@ -89,6 +89,7 @@
     "lodash.isequal": "catalog:"
   },
   "devDependencies": {
+    "@automerge/automerge-repo-keyhive": "0.1.0-alpha.17g",
     "@dxos/test-utils": "workspace:*",
     "@types/lodash.isequal": "catalog:",
     "fast-check": "catalog:",
