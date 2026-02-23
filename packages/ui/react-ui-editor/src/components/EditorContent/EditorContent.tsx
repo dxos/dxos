@@ -72,7 +72,7 @@ export const EditorContent = forwardRef<EditorController, EditorContentProps>(
       <div
         role='none'
         className={mx(
-          'inline-full outline-hidden focus:border-accentSurface focus-within:border-neutralFocusIndicator',
+          'inline-full outline-hidden focus:border-accent-surface focus-within:border-neutral-focus-indicator',
           classNames,
         )}
         ref={parentRef}

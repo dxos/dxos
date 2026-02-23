@@ -150,7 +150,7 @@ export const ResizeHandle = ({
               ? 'justify-center'
               : 'justify-start',
         'before:transition-opacity before:duration-100 before:ease-in-out before:opacity-0 hover:before:opacity-100 focus-visible:before:opacity-100 active:before:opacity-100',
-        'before:absolute before:block before:bg-neutralFocusIndicator',
+        'before:absolute before:block before:bg-neutral-focus-indicator',
         classNames,
       )}
     >
@@ -175,7 +175,7 @@ const DragHandleSignifier = ({ side }: Pick<ResizeHandleProps, 'side'>) => {
       viewBox='0 0 256 256'
       fill='currentColor'
       className={mx(
-        'shrink-0 block-4 inline-4 text-unAccent',
+        'shrink-0 block-4 inline-4 text-un-accent',
         side === 'block-end'
           ? 'rotate-90'
           : side === 'block-start'

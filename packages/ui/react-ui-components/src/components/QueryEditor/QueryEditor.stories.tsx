@@ -43,7 +43,7 @@ const meta = {
       <div role='none' className='flex flex-col gap-2'>
         <QueryEditor
           {...args}
-          classNames='p-2 border border-subduedSeparator rounded-xs'
+          classNames='p-2 border border-subdued-separator rounded-xs'
           db={space?.db}
           onChange={handleChange}
         />

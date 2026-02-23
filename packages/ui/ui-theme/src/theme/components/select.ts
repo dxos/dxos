@@ -33,7 +33,7 @@ export const selectViewport: ComponentFunction<SelectStyleProps> = (_props, ...e
 export const selectItem: ComponentFunction<SelectStyleProps> = (_props, ...etc) =>
   mx(
     'flex items-center min-block-[2rem] px-3 py-1 gap-2',
-    'text-baseText leading-none select-none outline-hidden',
+    'text-base-text leading-none select-none outline-hidden',
     '[&>svg]:invisible [&[data-state=checked]>svg]:visible',
     ghostHighlighted,
     ...etc,

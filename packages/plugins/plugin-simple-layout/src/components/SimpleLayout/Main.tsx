@@ -57,13 +57,13 @@ export const Main = () => {
     <div
       role='none'
       className={mx(
-        'block-full grid overflow-hidden bg-toolbarSurface',
+        'block-full grid overflow-hidden bg-toolbar-surface',
         showNavBar ? 'grid-rows-[var(--rail-action)_1fr_var(--toolbar-size)]' : 'grid-rows-[var(--rail-action)_1fr]',
       )}
       {...attentionAttrs}
     >
       <AppBar {...appBarProps} />
-      <article className='block-full overflow-hidden bg-baseSurface'>
+      <article className='block-full overflow-hidden bg-base-surface'>
         <Surface.Surface
           key={id}
           role='article'
@@ -73,7 +73,7 @@ export const Main = () => {
           placeholder={placeholder}
         />
       </article>
-      {showNavBar && <NavBar classNames='border-y border-subduedSeparator' actions={actions} onAction={onAction} />}
+      {showNavBar && <NavBar classNames='border-y border-subdued-separator' actions={actions} onAction={onAction} />}
     </div>
   );
 };

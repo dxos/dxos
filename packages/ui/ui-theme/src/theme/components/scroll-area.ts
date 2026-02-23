@@ -57,14 +57,14 @@ export const scrollAreaViewport: ComponentFunction<ScrollAreaStyleProps> = (
 
     autoHide
       ? [
-          orientation === 'vertical' && 'group-hover/scroll-v:[&::-webkit-scrollbar-thumb]:bg-scrollbarThumb',
-          orientation === 'horizontal' && 'group-hover/scroll-h:[&::-webkit-scrollbar-thumb]:bg-scrollbarThumb',
-          orientation === 'all' && 'group-hover/scroll-all:[&::-webkit-scrollbar-thumb]:bg-scrollbarThumb',
+          orientation === 'vertical' && 'group-hover/scroll-v:[&::-webkit-scrollbar-thumb]:bg-scrollbar-thumb',
+          orientation === 'horizontal' && 'group-hover/scroll-h:[&::-webkit-scrollbar-thumb]:bg-scrollbar-thumb',
+          orientation === 'all' && 'group-hover/scroll-all:[&::-webkit-scrollbar-thumb]:bg-scrollbar-thumb',
         ]
       : [
-          orientation === 'vertical' && '[&::-webkit-scrollbar-thumb]:bg-scrollbarThumb',
-          orientation === 'horizontal' && '[&::-webkit-scrollbar-thumb]:bg-scrollbarThumb',
-          orientation === 'all' && '[&::-webkit-scrollbar-thumb]:bg-scrollbarThumb',
+          orientation === 'vertical' && '[&::-webkit-scrollbar-thumb]:bg-scrollbar-thumb',
+          orientation === 'horizontal' && '[&::-webkit-scrollbar-thumb]:bg-scrollbar-thumb',
+          orientation === 'all' && '[&::-webkit-scrollbar-thumb]:bg-scrollbar-thumb',
         ],
 
     padding && [

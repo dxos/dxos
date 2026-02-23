@@ -21,7 +21,7 @@ import { mx } from '@dxos/ui-theme';
 // TODO(burdon): Prevent tab out of app.
 
 const border =
-  'rounded-xs outline-hidden border border-subduedSeparator focus:border-primary-500 focus-within:border-rose-500';
+  'rounded-xs outline-hidden border border-subdued-separator focus:border-primary-500 focus-within:border-rose-500';
 
 const Board = forwardRef<HTMLDivElement, { columns: string[][] }>(({ columns }, ref) => {
   const arrowNavigationAttrs = useArrowNavigationGroup({ axis: 'horizontal', memorizeCurrent: true, tabbable: true });

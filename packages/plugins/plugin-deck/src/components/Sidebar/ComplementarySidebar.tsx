@@ -102,8 +102,8 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
           role='none'
           className={mx(
             'absolute z-[1] inset-block-0 end-0 !inline-[--r0-size]',
-            'py-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] border-is border-subduedSeparator',
-            'grid grid-cols-1 grid-rows-[1fr_min-content] bg-baseSurface contain-layout app-drag',
+            'py-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] border-is border-subdued-separator',
+            'grid grid-cols-1 grid-rows-[1fr_min-content] bg-base-surface contain-layout app-drag',
           )}
         >
           <Tabs.Tablist classNames='grid grid-cols-1 auto-rows-[--rail-action] p-1 gap-1 overflow-y-auto!'>
@@ -182,7 +182,7 @@ const ComplementarySidebarPanel = ({ companion, activeId, data, hoistStatusbar }
 
   return (
     <>
-      <div role='none' className='flex items-center p-1 gap-1 border-b border-subduedSeparator'>
+      <div role='none' className='flex items-center p-1 gap-1 border-b border-subdued-separator'>
         <IconButton
           label={toLocalizedString(companion.properties.label, t)}
           icon={companion.properties.icon}
@@ -207,7 +207,7 @@ const ComplementarySidebarPanel = ({ companion, activeId, data, hoistStatusbar }
       {!hoistStatusbar && (
         <div
           role='contentinfo'
-          className='flex flex-wrap justify-center items-center border-y border-subduedSeparator pt-1 pb-[max(env(safe-area-inset-bottom),0.25rem)]'
+          className='flex flex-wrap justify-center items-center border-y border-subdued-separator pt-1 pb-[max(env(safe-area-inset-bottom),0.25rem)]'
         >
           <Surface.Surface role='status-bar--r1-footer' limit={1} />
         </div>

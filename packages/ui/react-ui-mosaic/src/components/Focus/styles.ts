@@ -11,9 +11,9 @@ export const styles = {
       // TODO(burdon): Option for border/rounded; ring/outline vs border?
       'outline-hidden border border-separator md:rounded-xs',
       // Focus (e.g., via tabster).
-      'focus:!border-accentSurface',
+      'focus:!border-accent-surface',
       // Active (e.g., drop target).
-      'data-[focus-state=active]:border-neutralFocusIndicator',
+      'data-[focus-state=active]:border-neutral-focus-indicator',
       // Error
       'data-[focus-state=error]:border-rose-500',
     ],

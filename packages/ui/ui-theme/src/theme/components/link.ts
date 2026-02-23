@@ -16,7 +16,7 @@ export const linkRoot: ComponentFunction<LinkStyleProps> = ({ variant }, ...etc)
     'underline decoration-1 underline-offset-2 transition-color rounded-xs',
     variant === 'neutral'
       ? 'text-inherit hover:opacity-90 visited:text-inherit visited:hover:opacity-90'
-      : 'text-accentText hover:text-accentTextHover visited:text-accentText visited:hover:text-accentTextHover',
+      : 'text-accent-text hover:text-accent-text-hover visited:text-accent-text visited:hover:text-accent-text-hover',
     focusRing,
     ...etc,
   );

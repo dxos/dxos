@@ -124,7 +124,7 @@ export const Chat = ({ classNames, host, url }: ChatProps) => {
   }, [clearError, clearHistory, stop]);
 
   return (
-    <div className={mx('flex flex-col gap-2 overflow-hidden bg-baseSurface', classNames)}>
+    <div className={mx('flex flex-col gap-2 overflow-hidden bg-base-surface', classNames)}>
       {/* TODO(burdon): Replace with chat from plugin-assistant. */}
       <div className='flex relative'>
         <Input.Root>

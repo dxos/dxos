@@ -119,7 +119,7 @@ export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: 
         >
           <QueryEditor
             id={cell.id}
-            classNames={[editorStyles, 'border-b border-subduedSeparator']}
+            classNames={[editorStyles, 'border-b border-subdued-separator']}
             db={db}
             value={cell.source.target.content}
             onChange={handleQueryChange}
@@ -161,7 +161,7 @@ const NotebookCellValue = ({ cell, graph }: NotebookCellProps) => {
   return (
     <div
       className={mx(
-        'flex inline-full bg-groupSurface border-y border-subduedSeparator text-description font-mono',
+        'flex inline-full bg-group-surface border-y border-subdued-separator text-description font-mono',
         valueStyles,
       )}
     >
@@ -187,7 +187,7 @@ const NotebookPromptResult = ({ cell, promptResults }: NotebookCellProps) => {
   }
 
   return (
-    <div className={mx('flex inline-full bg-groupSurface text-description border-y border-subduedSeparator', valueStyles)}>
+    <div className={mx('flex inline-full bg-group-surface text-description border-y border-subdued-separator', valueStyles)}>
       <NotebookTextEditor readOnly value={value} />
     </div>
   );

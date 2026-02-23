@@ -84,7 +84,7 @@ const DefaultStory = ({ content = '', streamOptions = defaultStreamOptions, ...p
       className={mx('flex flex-col block-full inline-full')}
       style={userHue ? ({ '--user-fill': `var(--dx-${userHue}Fill)` } as CSSProperties) : undefined}
     >
-      <Toolbar.Root classNames='border-be border-subduedSeparator'>
+      <Toolbar.Root classNames='border-be border-subdued-separator'>
         <Toolbar.Button disabled={streaming} onClick={() => setStreaming(true)}>
           Start
         </Toolbar.Button>

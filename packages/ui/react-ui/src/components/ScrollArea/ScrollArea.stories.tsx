@@ -25,7 +25,7 @@ export default {
 const Column = () => (
   <div>
     {Array.from({ length: 50 }).map((_, index) => (
-      <div key={index} className='px-1 text-sm cursor-pointer hover:bg-hoverSurface'>
+      <div key={index} className='px-1 text-sm cursor-pointer hover:bg-hover-surface'>
         Item {index + 1}
       </div>
     ))}
@@ -37,7 +37,7 @@ const Row = () => (
     {Array.from({ length: 50 }).map((_, index) => (
       <div
         key={index}
-        className='shrink-0 block-20 inline-20 cursor-pointer border border-separator rounded-md flex items-center justify-center text-sm hover:bg-hoverSurface'
+        className='shrink-0 block-20 inline-20 cursor-pointer border border-separator rounded-md flex items-center justify-center text-sm hover:bg-hover-surface'
       >
         {index + 1}
       </div>
@@ -167,7 +167,7 @@ export const NativeScroll = {
           '[&::-webkit-scrollbar-thumb]:rounded-none',
           '[&::-webkit-scrollbar-track]:bg-scrollbarTrack',
           '[&::-webkit-scrollbar-thumb]:bg-scrollbarThumbSubdued',
-          'group-hover:[&::-webkit-scrollbar-thumb]:bg-scrollbarThumb',
+          'group-hover:[&::-webkit-scrollbar-thumb]:bg-scrollbar-thumb',
         )}
       >
         <Column />

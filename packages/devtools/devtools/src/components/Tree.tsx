@@ -32,7 +32,7 @@ export const Node: FC<{ data?: any; root?: boolean }> = ({ data }) => {
   return (
     <div className='flex flex-col space-y-2'>
       {Object.entries(data).map(([key, value]) => (
-        <KeyValue key={key} label={key} data={value} className='bg-groupSurface text-description font-thin' />
+        <KeyValue key={key} label={key} data={value} className='bg-group-surface text-description font-thin' />
       ))}
     </div>
   );
@@ -47,7 +47,7 @@ export const KeyValue: FC<{ label: string; data?: any; className?: string }> = (
   return (
     <div className='flex'>
       <Box
-        className={mx('bg-inputSurface text-sm select-none cursor-pointer', className)}
+        className={mx('bg-input-surface text-sm select-none cursor-pointer', className)}
         onClick={() => setOpen((open) => !open)}
       >
         {label}

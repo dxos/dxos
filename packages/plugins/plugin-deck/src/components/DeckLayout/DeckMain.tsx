@@ -202,7 +202,7 @@ export const DeckMain = () => {
           {/* Deck mode. */}
           <div
             role='none'
-            className={!solo ? 'relative bg-deckSurface overflow-hidden' : 'sr-only'}
+            className={!solo ? 'relative bg-deck-surface overflow-hidden' : 'sr-only'}
             {...(solo && { inert: true })}
           >
             {!topbar && !fullscreen && <ToggleSidebarButton classNames={fixedSidebarToggleStyles} />}
@@ -241,7 +241,7 @@ export const DeckMain = () => {
           {/* Solo mode. */}
           <div
             role='none'
-            className={solo ? 'relative overflow-hidden bg-deckSurface' : 'sr-only'}
+            className={solo ? 'relative overflow-hidden bg-deck-surface' : 'sr-only'}
             {...(!solo && { inert: true })}
           >
             {!topbar && !fullscreen && <ToggleSidebarButton classNames={fixedSidebarToggleStyles} />}
@@ -280,7 +280,7 @@ const PlankSeparator = ({ order, encapsulate }: { order: number; encapsulate?: b
   order > 0 ? (
     <span
       role='separator'
-      className={mx('row-span-2 bg-deckSurface', encapsulate ? 'inline-0' : 'inline-4')}
+      className={mx('row-span-2 bg-deck-surface', encapsulate ? 'inline-0' : 'inline-4')}
       style={{ gridColumn: order }}
     />
   ) : null;

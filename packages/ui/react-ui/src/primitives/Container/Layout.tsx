@@ -40,7 +40,7 @@ const Main = forwardRef<HTMLDivElement, MainProps>(
           'block-full inline-full grid grid-cols-[100%] overflow-hidden',
           toolbar && [
             '[.dx-main-mobile-layout_&>.dx-toolbar]:px-3 [&>.dx-toolbar]:relative',
-            '[&>.dx-toolbar]:border-be [&>.dx-toolbar]:border-subduedSeparator',
+            '[&>.dx-toolbar]:border-be [&>.dx-toolbar]:border-subdued-separator',
           ],
           classNames,
         )}

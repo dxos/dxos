@@ -72,7 +72,7 @@ const NotebookSection = ({
       {/* TODO(burdon): Move drag preview to outer stack (uniformly). */}
       <StackItem.DragPreview>
         {({ item: cell }) => (
-          <StackItem.Content classNames='overflow-visible bg-groupSurface border border-subduedSeparator'>
+          <StackItem.Content classNames='overflow-visible bg-group-surface border border-subdued-separator'>
             <NotebookCell db={db} cell={cell} env={env} dragging />
           </StackItem.Content>
         )}

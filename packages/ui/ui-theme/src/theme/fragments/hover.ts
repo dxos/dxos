@@ -5,11 +5,11 @@
 /**
  * @deprecated
  */
-export const hoverColors = 'transition-colors duration-100 linear hover:bg-hoverSurface';
+export const hoverColors = 'transition-colors duration-100 linear hover:bg-hover-surface';
 
-export const ghostHover = 'hover:bg-hoverSurface';
-export const ghostFocusWithin = 'focus-within:bg-hoverSurface';
-export const subtleHover = 'hover:bg-hoverOverlay';
+export const ghostHover = 'hover:bg-hover-surface';
+export const ghostFocusWithin = 'focus-within:bg-hover-surface';
+export const subtleHover = 'hover:bg-hover-overlay';
 
 export const hoverableControls =
   '[--controls-opacity:1] hover-hover:[--controls-opacity:0] hover-hover:hover:[--controls-opacity:1]';

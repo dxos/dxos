@@ -7,7 +7,7 @@ import { type ClassNameValue } from '@dxos/react-ui';
 export const styles = {
   root: 'group/card relative min-block-[--rail-item] inline-full card-min-width overflow-hidden',
   border:
-    'bg-cardSurface border border-separator dark:border-subduedSeparator rounded-xs dx-focus-ring-group-y-indicator',
+    'bg-card-surface border border-separator dark:border-subdued-separator rounded-xs dx-focus-ring-group-y-indicator',
 
   /**
    * Row grid.

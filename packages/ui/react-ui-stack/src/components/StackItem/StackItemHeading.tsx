@@ -37,10 +37,10 @@ export const StackItemHeading = ({
       role='heading'
       {...props}
       className={mx(
-        'flex items-center border-x-0! bg-headerSurface',
+        'flex items-center border-x-0! bg-header-surface',
         separateOnScroll
-          ? 'border-transparent [[data-scroll-separator="true"]_&]:border-subduedSeparator'
-          : 'border-subduedSeparator',
+          ? 'border-transparent [[data-scroll-separator="true"]_&]:border-subdued-separator'
+          : 'border-subdued-separator',
         orientation === 'horizontal' ? 'block-[--rail-size]' : 'inline-[--rail-size] flex-col',
         orientation === 'horizontal' ? 'border-be' : 'border-ie',
         classNames,
@@ -70,7 +70,7 @@ export const StackItemHeadingLabel = forwardRef<HTMLHeadingElement, StackItemHea
         {...props}
         data-attention={((related && isRelated) || hasAttention || isAncestor).toString()}
         className={mx(
-          'px-1 min-inline-0 inline-0 grow truncate font-medium text-baseText data-[attention=true]:text-accentText self-center',
+          'px-1 min-inline-0 inline-0 grow truncate font-medium text-base-text data-[attention=true]:text-accent-text self-center',
           classNames,
         )}
         ref={forwardedRef}

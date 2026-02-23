@@ -52,14 +52,14 @@ export const CalendarArticle = ({ role, subject: calendar }: SurfaceComponentPro
         <div role='none' className='hidden @2xl:flex'>
           <NaturalCalendar.Root>
             <NaturalCalendar.Viewport classNames='grid grid-rows-[var(--toolbar-size)_1fr]'>
-              <NaturalCalendar.Toolbar classNames='block-full border-b border-subduedSeparator' />
+              <NaturalCalendar.Toolbar classNames='block-full border-b border-subdued-separator' />
               <NaturalCalendar.Grid />
             </NaturalCalendar.Viewport>
           </NaturalCalendar.Root>
         </div>
 
         <Layout.Main toolbar>
-          <Toolbar.Root classNames='border-b border-subduedSeparator'>
+          <Toolbar.Root classNames='border-b border-subdued-separator'>
             <Toolbar.IconButton icon='ph--calendar--duotone' iconOnly variant='ghost' label={t('calendar')} />
           </Toolbar.Root>
           <EventList events={objects} selected={selected} onSelect={handleSelect} />

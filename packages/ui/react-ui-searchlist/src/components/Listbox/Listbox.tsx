@@ -137,7 +137,7 @@ const ListboxOption = forwardRef<HTMLLIElement, ListboxOptionProps>(
           tabIndex={0}
           className={mx(
             'dx-focus-ring',
-            'py-1 px-2 rounded-xs select-none cursor-pointer data-[selected=true]:bg-hoverOverlay hover:bg-hoverOverlay',
+            'py-1 px-2 rounded-xs select-none cursor-pointer data-[selected=true]:bg-hover-overlay hover:bg-hover-overlay',
             commandItem,
             classNames,
           )}

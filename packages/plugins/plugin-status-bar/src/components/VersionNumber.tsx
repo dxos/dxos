@@ -52,7 +52,7 @@ export const VersionNumber = () => {
               </Link>
             </Message.Content>
           </Message.Root>
-          <div role='none' className='py-4 px-5 space-b-2 text-baseText'>
+          <div role='none' className='py-4 px-5 space-b-2 text-base-text'>
             {timestamp && (
               <p>
                 {t('released message', {

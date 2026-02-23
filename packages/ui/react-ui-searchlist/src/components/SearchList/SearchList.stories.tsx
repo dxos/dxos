@@ -103,7 +103,7 @@ const ControlledStory = ({ items = defaultItems }: DefaultStoryProps) => {
           </SearchList.Viewport>
         </SearchList.Content>
       </SearchList.Root>
-      <button className='px-2 py-1 rounded-sm bg-accentSurface text-accentText' onClick={() => handleQueryChange('')}>
+      <button className='px-2 py-1 rounded-sm bg-accent-surface text-accent-text' onClick={() => handleQueryChange('')}>
         Clear Query
       </button>
     </div>
@@ -144,7 +144,7 @@ const CustomItem = ({ value, label, description, onSelect }: CustomItemProps) =>
       role='option'
       aria-selected={isSelected}
       data-selected={isSelected}
-      className={`p-2 border-be border-separator cursor-pointer ${isSelected ? 'bg-hoverOverlay' : 'hover:bg-hoverOverlay'}`}
+      className={`p-2 border-be border-separator cursor-pointer ${isSelected ? 'bg-hover-overlay' : 'hover:bg-hover-overlay'}`}
       onClick={onSelect}
     >
       <div className='font-medium'>{label}</div>
@@ -339,7 +339,7 @@ const CustomInput = () => {
         className='bg-transparent outline-hidden grow'
       />
       {query && (
-        <button onClick={() => onQueryChange('')} className='text-description hover:text-baseText'>
+        <button onClick={() => onQueryChange('')} className='text-description hover:text-base-text'>
           ✕
         </button>
       )}

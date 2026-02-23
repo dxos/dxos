@@ -30,7 +30,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     animate: true,
-    classNames: 'border border-subduedSeparator',
+    classNames: 'border border-subdued-separator',
     children: (
       <div className='px-4 py-2 text-center text-description text-sm'>
         <p>A light effect that travels around the border.</p>

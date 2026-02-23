@@ -364,7 +364,7 @@ const ChatPrompt = ({
       className={mx(
         'flex flex-col inline-full density-fine',
         outline &&
-          'bg-groupSurface border border-subduedSeparator transition transition-border [&:has(.cm-content:focus)]:border-separator rounded-sm',
+          'bg-group-surface border border-subdued-separator transition transition-border [&:has(.cm-content:focus)]:border-separator rounded-sm',
         classNames,
       )}
     >

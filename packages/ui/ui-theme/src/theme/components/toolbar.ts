@@ -18,7 +18,7 @@ export const toolbarLayout =
 
 export const toolbarRoot: ComponentFunction<ToolbarStyleProps> = ({ density, disabled, layoutManaged }, ...etc) => {
   return mx(
-    'bg-toolbarSurface dx-toolbar',
+    'bg-toolbar-surface dx-toolbar',
     density === 'coarse' && 'block-[var(--rail-size)] !px-3',
     disabled && '*:opacity-20',
     !layoutManaged && toolbarLayout,

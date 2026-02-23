@@ -70,22 +70,22 @@ const StoryPlank = ({ attendableId }: { attendableId: string }) => {
     <StackItem.Root
       item={{ id: attendableId }}
       {...attentionAttrs}
-      classNames='bg-baseSurface border-ie border-separator'
+      classNames='bg-base-surface border-ie border-separator'
       size={30}
       onKeyDown={handleKeyDown}
       ref={rootElement}
     >
       <StoryPlankHeading attendableId={attendableId} />
       <StackItem.Content toolbar>
-        <Toolbar.Root classNames='border-b border-subduedSeparator'>
+        <Toolbar.Root classNames='border-b border-subdued-separator'>
           <Toolbar.Button>Test</Toolbar.Button>
         </Toolbar.Root>
 
-        <div className={mx(container, 'm-2 bg-activeSurface')}>
+        <div className={mx(container, 'm-2 bg-active-surface')}>
           <Input.Root>
             <Input.Label>Level 1 (group)</Input.Label>
           </Input.Root>
-          <div className={mx(container, 'bg-baseSurface')}>
+          <div className={mx(container, 'bg-base-surface')}>
             <Input.Root>
               <Input.Label>Level 2 (base)</Input.Label>
               <Input.TextArea placeholder='Enter text' />

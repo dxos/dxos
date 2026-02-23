@@ -25,7 +25,7 @@ import { isNonNullable } from '@dxos/util';
 import { ChatModule, type ComponentProps } from '../components';
 import { config, getDecorators } from '../testing';
 
-const panelClassNames = 'bg-baseSurface rounded-xs border border-separator overflow-hidden';
+const panelClassNames = 'bg-base-surface rounded-xs border border-separator overflow-hidden';
 
 type StoryProps = {
   modules: FC<ComponentProps>[][];

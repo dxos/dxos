@@ -39,7 +39,7 @@ const DefaultStory = (props: SplitterRootProps) => {
         <Toolbar.Button onClick={() => setMode('both')}>A + B</Toolbar.Button>
         <Toolbar.Button onClick={() => setMode('lower')}>B</Toolbar.Button>
       </Toolbar.Root>
-      <Splitter.Root mode={mode} ratio={props.ratio} classNames='divide-y divide-subduedSeparator'>
+      <Splitter.Root mode={mode} ratio={props.ratio} classNames='divide-y divide-subdued-separator'>
         <Splitter.Panel position='upper'>
           <Panel label='A' />
         </Splitter.Panel>

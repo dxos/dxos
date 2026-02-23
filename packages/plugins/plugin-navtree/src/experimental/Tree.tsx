@@ -193,9 +193,9 @@ export const TreeNodeRow = (props: TreeNodeProps & { className?: string }) => {
     <Grid
       style={{ paddingLeft: `${(depth - 1) * 24}px` }}
       className={mx(
-        'group inline-full items-center cursor-pointer bg-hoverSurface',
+        'group inline-full items-center cursor-pointer bg-hover-surface',
         // TODO(burdon): Use data-active.
-        selected?.[id] && 'bg-activeSurface',
+        selected?.[id] && 'bg-active-surface',
         className,
       )}
       onClick={() => selected && onChangeSelected?.(id, !selected[id])}

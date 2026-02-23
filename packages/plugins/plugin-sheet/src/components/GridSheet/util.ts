@@ -96,13 +96,13 @@ const gridCellGetter = (model: SheetModel) => {
 
 export const rowLabelCell = (row: number) => ({
   value: rowToA1Notation(row),
-  className: '!bg-toolbarSurface text-subdued text-end pr-1',
+  className: '!bg-toolbar-surface text-subdued text-end pr-1',
   resizeHandle: 'row',
 });
 
 export const colLabelCell = (col: number) => ({
   value: colToA1Notation(col),
-  className: '!bg-toolbarSurface text-subdued',
+  className: '!bg-toolbar-surface text-subdued',
   resizeHandle: 'col',
 });
 
@@ -114,7 +114,7 @@ const cellGetter = (model: SheetModel) => {
         return getGridCells(nextBounds);
       case 'fixedStartStart': {
         return {
-          '0,0': { className: '!bg-toolbarSurface' },
+          '0,0': { className: '!bg-toolbar-surface' },
         };
       }
       case 'frozenColsStart':

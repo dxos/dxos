@@ -101,11 +101,11 @@ export const blocks = () => [
     '.cm-line.block-line': {
       paddingLeft: '0.75rem',
       paddingRight: '0.75rem',
-      borderLeft: '1px solid var(--dx-subduedSeparator)',
-      borderRight: '1px solid var(--dx-subduedSeparator)',
+      borderLeft: '1px solid var(--dx-subdued-separator)',
+      borderRight: '1px solid var(--dx-subdued-separator)',
     },
     '.cm-line.block-single': {
-      border: '1px solid var(--dx-subduedSeparator)',
+      border: '1px solid var(--dx-subdued-separator)',
       borderRadius: '6px',
       paddingTop: '0.5rem',
       paddingBottom: '0.5rem',
@@ -113,7 +113,7 @@ export const blocks = () => [
       marginBottom: '0.5rem',
     },
     '.cm-line.block-first': {
-      borderTop: '1px solid var(--dx-subduedSeparator)',
+      borderTop: '1px solid var(--dx-subdued-separator)',
       borderTopLeftRadius: '6px',
       borderTopRightRadius: '6px',
       paddingTop: '0.5rem',
@@ -121,7 +121,7 @@ export const blocks = () => [
     },
     '.cm-line.block-middle': {},
     '.cm-line.block-last': {
-      borderBottom: '1px solid var(--dx-subduedSeparator)',
+      borderBottom: '1px solid var(--dx-subdued-separator)',
       borderBottomLeftRadius: '6px',
       borderBottomRightRadius: '6px',
       paddingBottom: '0.5rem',

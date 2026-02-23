@@ -28,7 +28,7 @@ export const GraphNode = memo(({ data, selected }: GraphNodeProps) => {
       <div
         role='none'
         className={mx(
-          'block-full inline-full p-1 bg-groupSurface rounded-xs border border-separator',
+          'block-full inline-full p-1 bg-group-surface rounded-xs border border-separator',
           selected && 'ring-1 ring-primary-500',
         )}
       >

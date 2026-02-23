@@ -35,7 +35,7 @@ const getIcon = (state: TriggerStatusState): string => {
 const getIconClassNames = (state: TriggerStatusState): string | undefined => {
   switch (state) {
     case 'running':
-      return 'animate-pulse text-accentText';
+      return 'animate-pulse text-accent-text';
     case 'error':
       return 'text-error-text';
     default:

@@ -73,7 +73,7 @@ export const FPS = ({ classNames, width = 60, height = 30, bar = 'bg-cyan-500' }
       style={{ width: width + 6 }}
       className={mx(
         'relative flex flex-col p-0.5',
-        'bg-baseSurface text-xs text-subdued font-thin pointer-events-none border border-separator',
+        'bg-base-surface text-xs text-subdued font-thin pointer-events-none border border-separator',
         classNames,
       )}
     >

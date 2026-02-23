@@ -68,13 +68,13 @@ export const NumericTabs = forwardRef<HTMLDivElement, NumericTabsProps>(
               {connector > 0 && i < length - 1 && (
                 <div
                   style={{ left: (diameter - 1) / 2, top: diameter, width: 2, height: connector }}
-                  className='absolute border-l border-groupSurface'
+                  className='absolute border-l border-group-surface'
                 />
               )}
               <div
                 className={mx(
-                  'flex justify-center items-center text-xs bg-groupSurface hover:bg-hoverSurface',
-                  selected === i ? 'bg-inputSurface' : 'text-subdued',
+                  'flex justify-center items-center text-xs bg-group-surface hover:bg-hover-surface',
+                  selected === i ? 'bg-input-surface' : 'text-subdued',
                   connector && 'rounded-full',
                 )}
                 style={{ width: diameter, height: diameter }}

@@ -36,9 +36,9 @@ const Panel = ({
 
 export const withLayoutVariants = ({
   elevations = [
-    { elevation: 'base', surface: 'bg-baseSurface' },
-    { elevation: 'positioned', surface: 'bg-cardSurface' },
-    { elevation: 'dialog', surface: 'bg-modalSurface' },
+    { elevation: 'base', surface: 'bg-base-surface' },
+    { elevation: 'positioned', surface: 'bg-card-surface' },
+    { elevation: 'dialog', surface: 'bg-modal-surface' },
   ],
   densities = ['coarse'],
 }: Config = {}): Decorator => {

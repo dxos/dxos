@@ -107,7 +107,7 @@ type CalendarViewportProps = PropsWithChildren<ThemedClassName>;
 
 const CalendarViewport = ({ children, classNames }: CalendarViewportProps) => {
   return (
-    <div role='none' className={mx('flex flex-col items-center overflow-hidden bg-inputSurface', classNames)}>
+    <div role='none' className={mx('flex flex-col items-center overflow-hidden bg-input-surface', classNames)}>
       {children}
     </div>
   );
@@ -225,7 +225,7 @@ const CalendarGrid = ({ classNames, rows, onSelect }: CalendarGridProps) => {
 
   const rowRenderer = useCallback<ListRowRenderer>(
     ({ key, index, style }) => {
-      const getBgColor = (date: Date) => date.getMonth() % 2 === 0 && 'bg-modalSurface';
+      const getBgColor = (date: Date) => date.getMonth() % 2 === 0 && 'bg-modal-surface';
       return (
         <div key={key} role='none' style={style} className='inline-full grid grid-cols-[1fr_max-content_1fr] snap-center'>
           <div role='none' className={mx(getBgColor(getDate(start, index, 0, weekStartsOn)))} />
@@ -277,7 +277,7 @@ const CalendarGrid = ({ classNames, rows, onSelect }: CalendarGridProps) => {
   return (
     <div role='none' className={mx('flex flex-col block-full inline-full justify-center overflow-hidden', classNames)}>
       {/* Day labels */}
-      <div role='none' className='flex justify-center bg-groupSurface'>
+      <div role='none' className='flex justify-center bg-group-surface'>
         <div role='none' className='flex inline-full grid grid-cols-7' style={{ width: defaultWidth }}>
           {days.map((date, i) => (
             <div key={i} role='none' className='flex justify-center p-2 text-sm font-thin'>

@@ -139,7 +139,7 @@ export const L0ItemActiveTabIndicator = ({ classNames }: ThemedClassName<{}>) =>
   <div
     role='none'
     className={mx(
-      'hidden group-aria-selected/l0item:block absolute start-0 inset-block-2 inline-1 bg-accentSurface rounded-ie',
+      'hidden group-aria-selected/l0item:block absolute start-0 inset-block-2 inline-1 bg-accent-surface rounded-ie',
       classNames,
     )}
   />
@@ -218,8 +218,8 @@ const L0Item = ({ item, parent, path, pinned, onRearrange }: L0ItemProps) => {
         className={mx(
           l0ItemContent,
           pinned
-            ? 'p-2 group-hover/l0item:bg-activeSurface'
-            : 'inline-[--l0-avatar-size] block-[--l0-avatar-size] bg-activeSurface',
+            ? 'p-2 group-hover/l0item:bg-active-surface'
+            : 'inline-[--l0-avatar-size] block-[--l0-avatar-size] bg-active-surface',
         )}
       >
         <ItemAvatar item={item} />
@@ -302,7 +302,7 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
       classNames={[
         'group/l0 absolute z-[1] inset-block-0 start-0 rounded-is',
         'grid grid-cols-[var(--l0-size)] grid-rows-[var(--rail-size)_1fr_min-content_var(--l0-size)] contain-layout',
-        '!inline-[--l0-size] bg-baseSurface border-ie border-subduedSeparator app-drag pb-[env(safe-area-inset-bottom)]',
+        '!inline-[--l0-size] bg-base-surface border-ie border-subdued-separator app-drag pb-[env(safe-area-inset-bottom)]',
       ]}
     >
       {/* TODO(wittjosiah): Use L0Item trigger. */}
@@ -322,7 +322,7 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
                   role='none'
                   className={mx(
                     l0ItemContent,
-                    'block-[--rail-action] inline-[--rail-action] group-hover/l0item:bg-hoverSurface',
+                    'block-[--rail-action] inline-[--rail-action] group-hover/l0item:bg-hover-surface',
                   )}
                 >
                   <Icon icon='ph--list--regular' size={5} />

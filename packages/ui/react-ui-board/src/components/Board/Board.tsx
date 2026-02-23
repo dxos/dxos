@@ -329,7 +329,7 @@ const BoardDropTarget = ({ position, rect, onAddClick }: BoardDropTargetProps) =
       style={rect}
       className={mx(
         'group/cell absolute flex items-center justify-center border rounded-sm opacity-50',
-        active ? 'border-transparent ring ring-accentSurface' : 'border-separator border-dashed',
+        active ? 'border-transparent ring ring-accent-surface' : 'border-separator border-dashed',
       )}
     >
       {onAddClick && (

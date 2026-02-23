@@ -195,7 +195,7 @@ export const ObjectsPanel = (props: { space?: Space }) => {
             className={mx(
               'block-[--statusbar-size]',
               'flex shrink-0 justify-end items-center gap-2',
-              'bg-baseSurface text-description',
+              'bg-base-surface text-description',
             )}
           >
             <div className='text-sm pr-2'>Objects: {items.length}</div>

@@ -29,7 +29,7 @@ export const TasksModule = ({ space }: ComponentProps) => {
 
   return (
     <>
-      <Toolbar.Root classNames='border-be border-subduedSeparator'>
+      <Toolbar.Root classNames='border-be border-subdued-separator'>
         <h2>{Obj.getLabel(document)}</h2>
       </Toolbar.Root>
       <EditorContent

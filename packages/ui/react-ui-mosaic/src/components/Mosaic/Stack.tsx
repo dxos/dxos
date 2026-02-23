@@ -227,7 +227,7 @@ const InternalPlaceholder = (props: MosaicPlaceholderProps<number>) => {
     <MosaicPlaceholder {...props} classNames={styles.placeholder.root}>
       <div
         className={mx(
-          'flex block-full bg-baseSurface border border-dashed border-separator rounded-xs',
+          'flex block-full bg-base-surface border border-dashed border-separator rounded-xs',
           styles.placeholder.content,
         )}
       />

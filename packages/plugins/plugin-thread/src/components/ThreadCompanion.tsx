@@ -176,7 +176,7 @@ export const ThreadCompanion = ({ subject }: { subject: any }) => {
         onValueChange={onChangeViewState}
       >
         {/* TODO(burdon): Standardize (like Tollbar). */}
-        <Tabs.Tablist classNames={mx('bg-toolbarSurface border-b border-subduedSeparator')}>
+        <Tabs.Tablist classNames={mx('bg-toolbar-surface border-b border-subdued-separator')}>
           <Tabs.Tab value='unresolved' classNames='text-sm'>
             {t('show unresolved label')}
           </Tabs.Tab>

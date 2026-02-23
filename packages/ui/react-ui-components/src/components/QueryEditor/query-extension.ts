@@ -296,7 +296,7 @@ class ObjectWidget extends WidgetType {
       'border-separator divide-x divide-separator',
       ...this._entries.map(([key, value]) => {
         const keyEl = Domino.of('span')
-          .classNames('flex items-center px-1 text-subdued text-xs bg-modalSurface first:rounded-l-[3px]')
+          .classNames('flex items-center px-1 text-subdued text-xs bg-modal-surface first:rounded-l-[3px]')
           .text(key);
         const valueEl = Domino.of('span').classNames('flex items-center px-1 text-subdued').text(value);
         return Domino.of('span').classNames('inline-flex items-stretch').children(keyEl, valueEl);

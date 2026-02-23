@@ -2,6 +2,8 @@
  * Surfaces
  */
 @layer utilities {
+  /* TODO(burdon): Check if used or remov and use classname directly */
+
   .base-surface {
     background-color: var(--dx-baseSurface);
     --surface-bg: var(--dx-baseSurface);

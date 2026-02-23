@@ -98,7 +98,7 @@ export const CommentsThreadContainer = ({
   return (
     <ThreadComponent.Root
       id={Obj.getDXN(thread).toString()}
-      classNames='pt-2 border-b border-subduedSeparator last:border-none'
+      classNames='pt-2 border-b border-subdued-separator last:border-none'
       current={current}
       onClickCapture={handleAttend}
       onFocusCapture={handleAttend}

@@ -21,7 +21,7 @@ export const BlueprintModule = ({ space }: ComponentProps) => {
     <p className={mx(descriptionMessage, 'm-trimMd')}>{t('no blueprint message')}</p>
   ) : (
     <div className='flex flex-col block-full'>
-      <Toolbar.Root classNames='border-be border-subduedSeparator'>
+      <Toolbar.Root classNames='border-be border-subdued-separator'>
         <h2>{Obj.getLabel(blueprint)}</h2>
         <div className='flex-1' />
         <Toolbar.IconButton icon='ph--arrow-clockwise--regular' iconOnly label='Refresh' />

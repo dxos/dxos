@@ -48,14 +48,14 @@ export const withLayout =
 
 const layouts: Record<ContainerType, FC<ContainerProps>> = {
   fullscreen: ({ children, classNames }: ContainerProps) => (
-    <div role='none' className={mx('fixed inset-0 flex overflow-hidden bg-deckSurface', classNames)}>
+    <div role='none' className={mx('fixed inset-0 flex overflow-hidden bg-deck-surface', classNames)}>
       {children}
     </div>
   ),
 
   column: ({ children, classNames }: ContainerProps) => (
-    <div role='none' className='fixed inset-0 flex justify-center overflow-hidden bg-deckSurface'>
-      <div role='none' className={mx('flex flex-col inline-[40rem] bg-baseSurface', classNames)}>
+    <div role='none' className='fixed inset-0 flex justify-center overflow-hidden bg-deck-surface'>
+      <div role='none' className={mx('flex flex-col inline-[40rem] bg-base-surface', classNames)}>
         {children}
       </div>
     </div>

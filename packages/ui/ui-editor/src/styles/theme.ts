@@ -117,7 +117,7 @@ export const baseTheme = EditorView.baseTheme({
     transition: 'background 0.15s',
   },
   '&:hover .cm-scroller::-webkit-scrollbar-thumb': {
-    background: 'var(--dx-scrollbarThumb)',
+    background: 'var(--dx-scrollbar-thumb)',
   },
 
   /**
@@ -141,7 +141,7 @@ export const baseTheme = EditorView.baseTheme({
   '.cm-gutter': {},
   '.cm-gutter.cm-lineNumbers': {
     paddingRight: '4px',
-    borderRight: '1px solid var(--dx-subduedSeparator)',
+    borderRight: '1px solid var(--dx-subdued-separator)',
     color: 'var(--dx-subduedText)',
   },
   '.cm-gutter.cm-lineNumbers .cm-gutterElement': {
@@ -212,14 +212,14 @@ export const baseTheme = EditorView.baseTheme({
     borderRadius: '.125rem',
   },
   '.cm-link > span': {
-    color: 'var(--dx-accentText)',
+    color: 'var(--dx-accent-text)',
   },
 
   /**
    * Tooltip.
    */
   '.cm-tooltip': {
-    background: 'var(--dx-baseSurface)',
+    background: 'var(--dx-base-surface)',
   },
   '.cm-tooltip-below': {},
 
@@ -240,7 +240,7 @@ export const baseTheme = EditorView.baseTheme({
     padding: '4px',
   },
   '.cm-tooltip.cm-tooltip-autocomplete > ul > li[aria-selected]': {
-    background: 'var(--dx-activeSurface)',
+    background: 'var(--dx-active-surface)',
     color: 'var(--dx-activeSurfaceText)',
   },
   '.cm-tooltip.cm-tooltip-autocomplete > ul > completion-section': {
@@ -265,7 +265,7 @@ export const baseTheme = EditorView.baseTheme({
     padding: '0 4px',
   },
   '.cm-completionMatchedText': {
-    color: 'var(--dx-baseText)',
+    color: 'var(--dx-base-text)',
     textDecoration: 'none !important',
   },
 
@@ -298,10 +298,10 @@ export const baseTheme = EditorView.baseTheme({
     outline: '1px solid transparent',
   },
   '.cm-panel input, .cm-panel button': {
-    backgroundColor: 'var(--dx-inputSurface)',
+    backgroundColor: 'var(--dx-input-surface)',
   },
   '.cm-panel input:focus, .cm-panel button:focus': {
-    outline: '1px solid var(--dx-neutralFocusIndicator)',
+    outline: '1px solid var(--dx-neutral-focus-indicator)',
   },
   '.cm-panel label': {
     display: 'inline-flex',
@@ -314,15 +314,15 @@ export const baseTheme = EditorView.baseTheme({
     height: '8px',
     marginRight: '6px !important',
     padding: '2px !important',
-    color: 'var(--dx-neutralFocusIndicator)',
+    color: 'var(--dx-neutral-focus-indicator)',
   },
   '.cm-panel button': {
     '&:hover': {
-      // TODO(burdon): Replace with layer and @apply bg-accentSurfaceHover
-      backgroundColor: 'var(--dx-accentSurfaceHover) !important',
+      // TODO(burdon): Replace with layer and @apply bg-accent-surface-hover
+      backgroundColor: 'var(--dx-accent-surface-hover) !important',
     },
     '&:active': {
-      backgroundColor: 'var(--dx-accentSurfaceHover)',
+      backgroundColor: 'var(--dx-accent-surface-hover)',
     },
   },
   '.cm-panel.cm-search': {
@@ -334,7 +334,7 @@ export const baseTheme = EditorView.baseTheme({
 export const editorGutter: Extension = EditorView.theme({
   '.cm-gutters': {
     // NOTE: Non-transparent background required to cover content if scrolling horizontally.
-    background: 'var(--dx-baseSurface) !important',
+    background: 'var(--dx-base-surface) !important',
     paddingRight: '1rem',
   },
 });

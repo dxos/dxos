@@ -438,7 +438,7 @@ const TableMainInner = <T extends Type.Entity.Any = Type.Entity.Any>(
         onCreate={onCreate}
       />
       <Grid.Content
-        className={mx('[--dx-grid-base:var(--baseSurface)]', gridSeparatorInlineEnd, gridSeparatorBlockEnd)}
+        className={mx('[--dx-grid-base:var(--base-surface)]', gridSeparatorInlineEnd, gridSeparatorBlockEnd)}
         frozen={frozen}
         columns={columnMeta}
         columnDefault={columnDefault}

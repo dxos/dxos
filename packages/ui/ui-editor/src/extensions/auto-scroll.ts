@@ -107,7 +107,7 @@ export const autoScroll = ({
         constructor(view: EditorView) {
           const icon = Domino.of('dx-icon' as any).attributes({ icon: 'ph--arrow-down--regular' });
           const button = Domino.of('button')
-            .classNames('dx-button bg-accentSurface')
+            .classNames('dx-button bg-accent-surface')
             .attributes({ 'data-density': 'fine' })
             .children(icon)
             .on('click', () => {
@@ -139,7 +139,7 @@ export const autoScroll = ({
         transition: 'background 0.15s',
       },
       '&:hover .cm-scroller::-webkit-scrollbar-thumb': {
-        background: 'var(--dx-scrollbarThumb)',
+        background: 'var(--dx-scrollbar-thumb)',
       },
       '.cm-scroll-button': {
         position: 'absolute',

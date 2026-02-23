@@ -42,7 +42,7 @@ const CardStackRoot = forwardRef<HTMLDivElement, SharedCardStackProps>(
 // TODO(burdon): Rename Viewport (should be the component that scrolls).
 //
 
-const cardStackContent = 'shrink min-block-0 grid dx-focus-ring-group-x-indicator bg-baseSurface';
+const cardStackContent = 'shrink min-block-0 grid dx-focus-ring-group-x-indicator bg-base-surface';
 
 type CardStackContentProps = SharedCardStackProps & {
   footer?: boolean;
@@ -145,7 +145,7 @@ const CardStackHeading = forwardRef<HTMLDivElement, SharedCardStackProps>(
 //
 
 const cardStackFooter =
-  'py-2 mx-2 border-bs border-transparent [[data-scroll-separator-end="true"]_&]:border-subduedSeparator';
+  'py-2 mx-2 border-bs border-transparent [[data-scroll-separator-end="true"]_&]:border-subdued-separator';
 
 const CardStackFooter = forwardRef<HTMLDivElement, SharedCardStackProps>(
   ({ children, classNames, asChild, role = 'none', ...props }, forwardedRef) => {

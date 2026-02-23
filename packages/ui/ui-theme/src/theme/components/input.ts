@@ -57,15 +57,15 @@ export const errorInputValence = 'shadow-rose-500/50 dark:shadow-rose-600/50';
 export const inputTextLabel = 'text-sm text-description py-1';
 
 const textInputSurfaceFocus =
-  'transition-colors bg-textInputSurface focus:bg-focusSurface border border-separator focus:border-separator';
+  'transition-colors bg-text-input-surface focus:bg-focus-surface border border-separator focus:border-separator';
 
-const textInputSurfaceHover = 'hover:bg-textInputSurface focus:hover:bg-focusSurface';
+const textInputSurfaceHover = 'hover:bg-text-input-surface focus:hover:bg-focus-surface';
 
 const booleanInputSurface =
-  'shadow-inner transition-colors bg-unAccent aria-checked:bg-accentSurface aria-[checked=mixed]:bg-accentSurface';
+  'shadow-inner transition-colors bg-un-accent aria-checked:bg-accent-surface aria-[checked=mixed]:bg-accent-surface';
 
 const booleanInputSurfaceHover =
-  'hover:bg-unAccentHover hover:aria-checked:bg-accentSurfaceHover hover:aria-[checked=mixed]:bg-accentSurfaceHover';
+  'hover:bg-un-accent-hover hover:aria-checked:bg-accent-surface-hover hover:aria-[checked=mixed]:bg-accent-surface-hover';
 
 export const inputValence = (valence?: MessageValence) => {
   switch (valence) {
@@ -93,7 +93,7 @@ const sharedSubduedInputStyles: ComponentFragment<InputStyleProps> = (props) => 
 ];
 
 const sharedDefaultInputStyles: ComponentFragment<InputStyleProps> = (props) => [
-  'py-0 inline-full text-baseText rounded-xs text-[color:var(--surface-text)] [[data-drag-autoscroll="active"]_&]:pointer-events-none',
+  'py-0 inline-full text-base-text rounded-xs text-[color:var(--surface-text)] [[data-drag-autoscroll="active"]_&]:pointer-events-none',
   textInputSurfaceFocus,
   placeholderText,
   props.density === 'fine' ? fineDimensions : coarseDimensions,
@@ -101,7 +101,7 @@ const sharedDefaultInputStyles: ComponentFragment<InputStyleProps> = (props) => 
 ];
 
 const sharedStaticInputStyles: ComponentFragment<InputStyleProps> = (props) => [
-  'py-0 inline-full text-baseText rounded-xs text-[color:var(--surface-text)] [[data-drag-autoscroll="active"]_&]:pointer-events-none',
+  'py-0 inline-full text-base-text rounded-xs text-[color:var(--surface-text)] [[data-drag-autoscroll="active"]_&]:pointer-events-none',
   textInputSurfaceFocus,
   textInputSurfaceHover,
   props.focused && 'bg-attention',

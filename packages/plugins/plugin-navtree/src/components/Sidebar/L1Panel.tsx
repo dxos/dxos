@@ -110,7 +110,7 @@ const L1PanelHeader = ({ item, path, onBack }: L1PanelProps) => {
   useLoadDescendents(item);
 
   return (
-    <div className='flex inline-full items-center border-b border-subduedSeparator app-drag density-coarse'>
+    <div className='flex inline-full items-center border-b border-subdued-separator app-drag density-coarse'>
       <div className='inline-6' />
       <h2 className='flex-1 truncate min-inline-0'>{title}</h2>
       {/* TODO(wittjosiah): Reconcile with NavTreeItemColumns. */}

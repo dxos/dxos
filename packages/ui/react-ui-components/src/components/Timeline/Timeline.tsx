@@ -223,7 +223,7 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
                   className={mx(
                     'group flex shrink-0 overflow-hidden px-3 gap-2 items-center',
                     // TODO(burdon): Factor out fragment.
-                    'aria-[current=true]:bg-activeSurface hover:bg-hoverSurface',
+                    'aria-[current=true]:bg-active-surface hover:bg-hover-surface',
                   )}
                   style={{ height: `${options.lineHeight}px` }}
                   onClick={() => setCurrent(index)}
@@ -245,7 +245,7 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
                       )}
                     </div>
                   )}
-                  <div className='text-sm truncate cursor-pointer text-subdued group-hover:text-baseText'>
+                  <div className='text-sm truncate cursor-pointer text-subdued group-hover:text-base-text'>
                     {debug ? JSON.stringify({ id: commit.id, parents: commit.parents }) : commit.message}
                   </div>
                 </div>
@@ -367,13 +367,13 @@ const LineVector = ({
         cx={cx(col)}
         cy={halfHeight}
         r={options.nodeRadius}
-        className={mx('fill-baseSurface stroke-baseSurface')}
+        className={mx('fill-base-surface stroke-base-surface')}
       />
       <circle
         cx={cx(col)}
         cy={halfHeight}
         r={options.nodeRadius}
-        className={mx('fill-baseSurface', options.lineStyle, color.stroke, color.fill, opacity(commit.branch))}
+        className={mx('fill-base-surface', options.lineStyle, color.stroke, color.fill, opacity(commit.branch))}
       />
     </svg>
   );

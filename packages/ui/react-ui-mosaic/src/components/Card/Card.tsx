@@ -338,7 +338,7 @@ const CardPoster = (props: CardPosterProps) => {
     return (
       <div
         role='image'
-        className={mx('grid place-items-center bg-inputSurface text-subdued', styles.poster, aspect, props.classNames)}
+        className={mx('grid place-items-center bg-input-surface text-subdued', styles.poster, aspect, props.classNames)}
         aria-label={props.alt}
       >
         <Icon icon={props.icon} size={10} />

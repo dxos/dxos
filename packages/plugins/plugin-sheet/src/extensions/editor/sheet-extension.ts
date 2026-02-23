@@ -33,7 +33,7 @@ const highlightStyles = HighlightStyle.define([
   // Function.
   {
     tag: tags.name,
-    class: 'text-accentText',
+    class: 'text-accent-text',
   },
   // Range.
   {
@@ -56,7 +56,7 @@ const highlightStyles = HighlightStyle.define([
   // Error.
   {
     tag: tags.invalid,
-    class: 'text-unAccent',
+    class: 'text-un-accent',
   },
 ]);
 
@@ -97,7 +97,7 @@ export const sheetExtension = ({ debug, functions = [] }: SheetExtensionOptions)
 
         const title = document.createElement('h2');
         title.innerText = name;
-        title.className = 'text-lg font-mono text-accentText';
+        title.className = 'text-lg font-mono text-accent-text';
         root.appendChild(title);
 
         if (description) {
@@ -170,7 +170,7 @@ export const sheetExtension = ({ debug, functions = [] }: SheetExtensionOptions)
       tooltipClass: () =>
         mx(
           '!-left-[1px] !top-[33px] !-m-0 border border-block-0! [&>ul]:!min-w-[198px]',
-          '[&>ul>li[aria-selected]]:!bg-accentSurface',
+          '[&>ul>li[aria-selected]]:!bg-accent-surface',
           'border-separator',
         ),
     }),

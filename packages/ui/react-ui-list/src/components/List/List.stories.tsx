@@ -69,7 +69,7 @@ const DefaultStory = (props: Omit<ListRootProps<TestItemType>, 'items'>) => {
 
           <List.ItemDragPreview<TestItemType>>
             {({ item }) => (
-              <List.ItemWrapper classNames={mx(grid, 'bg-modalSurface border border-separator')}>
+              <List.ItemWrapper classNames={mx(grid, 'bg-modal-surface border border-separator')}>
                 <List.ItemDragHandle />
                 <div className='flex items-center'>{item.name}</div>
               </List.ItemWrapper>

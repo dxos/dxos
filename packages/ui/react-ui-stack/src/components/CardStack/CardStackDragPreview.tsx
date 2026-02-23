@@ -13,7 +13,7 @@ import { type StackProps } from '../Stack';
 const CardStackDragPreviewRoot = ({ children }: PropsWithChildren<{}>) => {
   return (
     <div className='p-2'>
-      <div className='rounded-md max-block-[calc(100dvh-1rem)] overflow-hidden bg-baseSurface border border-separator ring-focusLine ring-neutralFocusIndicator flex flex-col'>
+      <div className='rounded-md max-block-[calc(100dvh-1rem)] overflow-hidden bg-base-surface border border-separator ring-focus-line ring-neutral-focus-indicator flex flex-col'>
         {children}
       </div>
     </div>

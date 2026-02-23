@@ -4,7 +4,7 @@
 
 // TODO(burdon): Remove?
 export const separatorBorderColor = 'border-separator';
-export const subduedSeparatorBorderColor = 'border-subduedSeparator';
+export const subduedSeparatorBorderColor = 'border-subdued-separator';
 
 export const inlineSeparator = 'self-stretch border-ie mx-1';
 export const blockSeparator = 'self-stretch border-be my-1';

@@ -28,7 +28,7 @@ export const EventList = ({ classNames, events = [], onSelect }: EventListProps)
   return (
     <List classNames={mx('@container inline-full divide-y divide-separator overflow-y-auto', classNames)}>
       {events.map((event) => (
-        <ListItem.Root key={event.id} classNames='p-2 hover:bg-hoverOverlay' onClick={() => onSelect?.(event)}>
+        <ListItem.Root key={event.id} classNames='p-2 hover:bg-hover-overlay' onClick={() => onSelect?.(event)}>
           <EventComponent event={event} />
         </ListItem.Root>
       ))}

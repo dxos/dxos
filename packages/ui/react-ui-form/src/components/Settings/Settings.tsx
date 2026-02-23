@@ -30,7 +30,7 @@ const SETTINGS_ITEM_NAME = 'Settings.Item';
 const SETTINGS_ITEM_INPUT_NAME = 'Settings.ItemInput';
 
 const styles = {
-  title: 'pb-trimMd text-baseText text-lg',
+  title: 'pb-trimMd text-base-text text-lg',
   description: 'text-base text-description',
   grid: 'grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-x-trimLg',
 };

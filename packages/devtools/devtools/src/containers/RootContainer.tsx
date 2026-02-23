@@ -40,7 +40,7 @@ const Sidebar = () => {
             <div className='flex text-sm pl-4 py-1'>{section.title}</div>
             <div>
               {section.items?.map(({ id, title, icon }) => (
-                <div key={id} className={mx('flex items-center pl-4 gap-2', id === pathname && 'bg-activeSurface')}>
+                <div key={id} className={mx('flex items-center pl-4 gap-2', id === pathname && 'bg-active-surface')}>
                   <Icon icon={icon} size={4} />
                   <Link to={id} className='grow'>
                     <span>{title}</span>

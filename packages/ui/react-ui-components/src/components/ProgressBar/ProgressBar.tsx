@@ -80,7 +80,7 @@ type NodeState = 'closed' | 'open' | 'active' | 'terminal' | 'error';
 type Slots = Partial<Record<NodeState | 'default' | 'selected', string>>;
 
 const defaultSlots = {
-  default: 'bg-baseSurface border-subduedSeparator',
+  default: 'bg-base-surface border-subdued-separator',
   active: 'bg-amber-500 border-transparent text-amber-500',
   terminal: 'bg-primary-500 border-transparent',
   selected: 'bg-neutral-500 border-transparent',
@@ -147,7 +147,7 @@ const Node = ({ state = 'open', selected, classes, options = defaultOptions, onC
               width: width - radius,
             },
           }}
-          className={mx('absolute left-0 border-be border-subduedSeparator box-border', state === 'closed' && 'hidden')}
+          className={mx('absolute left-0 border-be border-subdued-separator box-border', state === 'closed' && 'hidden')}
         />
         <motion.div
           transition={{

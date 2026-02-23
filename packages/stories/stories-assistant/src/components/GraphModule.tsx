@@ -53,7 +53,7 @@ export const GraphModule = ({ space }: ComponentProps) => {
           role='none'
           className={mx(
             'flex absolute left-2 right-2 bottom-2 block-[8rem]',
-            'overflow-hidden bg-baseSurface border border-subduedSeparator opacity-80',
+            'overflow-hidden bg-base-surface border border-subdued-separator opacity-80',
           )}
         >
           <Json classNames='text-sm' data={filter} />

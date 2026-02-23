@@ -1478,7 +1478,7 @@ export class DxGrid extends LitElement {
           .map(
             // TODO(burdon): Consistent camelCase?
             (activeRef) =>
-              `[data-refs~="${activeRef}"] { background: var(--dx-grid-commented-active, var(--dx-gridCommentedActive)) !important; }`,
+              `[data-refs~="${activeRef}"] { background: var(--dx-grid-commented-active, var(--dx-grid-commented-active)) !important; }`,
           )
           .join('\n')}
       </style>

@@ -339,7 +339,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
           ${direction !== undefined ? tableButtons.sort.render({ fieldId: field.id, direction }) : ''}
           ${tableButtons.columnSettings.render({ fieldId: field.id })}
         `,
-        className: '!bg-toolbarSurface text-description! [&>div]:flex [&>div]:items-stretch',
+        className: '!bg-toolbar-surface text-description! [&>div]:flex [&>div]:items-stretch',
       };
     }
 
@@ -382,7 +382,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
     if (!this.model.features.selection.enabled || this.model.selection.selectionMode === 'single') {
       return {
         [toPlaneCellIndex({ col: 0, row: 0 })]: {
-          className: '!bg-toolbarSurface',
+          className: '!bg-toolbar-surface',
           readonly: true,
           value: '',
         },
@@ -396,7 +396,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
           header: true,
           checked: this.model.selection.allRowsSelected,
         }),
-        className: '!bg-toolbarSurface',
+        className: '!bg-toolbar-surface',
         readonly: true,
         value: '',
       },
@@ -411,7 +411,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
               disabled: (this.model.projection?.getFields()?.length ?? 0) >= VIEW_FIELD_LIMIT,
             })
           : undefined,
-        className: '!bg-toolbarSurface',
+        className: '!bg-toolbar-surface',
         readonly: true,
         value: '',
       },
@@ -473,8 +473,8 @@ export const cellClassesForRowSelection = (selected: boolean, selectionMode: Sel
 
   switch (selectionMode) {
     case 'single':
-      return ['!bg-currentRelated dx-grid__cell--no-focus-unfurl hover:bg-hoverSurface cursor-pointer!'];
+      return ['!bg-currentRelated dx-grid__cell--no-focus-unfurl hover:bg-hover-surface cursor-pointer!'];
     case 'multiple':
-      return ['!bg-gridCellSelected'];
+      return ['!bg-grid-cell-selected'];
   }
 };

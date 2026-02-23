@@ -104,7 +104,7 @@ export const StatsPanel = ({ stats, onRefresh, children }: PropsWithChildren<Que
   return (
     <div
       role='none'
-      className='flex flex-col inline-full block-full max-block-[calc(var(--radix-popover-content-available-height)-2*var(--dx-modalLine))] overflow-y-auto divide-y divide-separator'
+      className='flex flex-col inline-full block-full max-block-[calc(var(--radix-popover-content-available-height)-2*var(--dx-modal-line))] overflow-y-auto divide-y divide-separator'
     >
       <Panel
         id='main'
