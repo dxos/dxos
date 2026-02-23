@@ -104,14 +104,15 @@ export const PipelineObjectSettings = ({ classNames, pipeline }: PipelineObjectS
   );
 
   const handleColumnValuesChanged = useCallback(
-    (column: Pipeline.Column) => (newValues: { name?: string }, { changed }: { changed: Record<JsonPath, boolean> }) => {
-      if (changed['name' as JsonPath]) {
-        const columnIndex = columns.findIndex((c) => c === column);
-        updateColumns((cols) => {
-          cols[columnIndex].name = newValues.name ?? '';
-        });
-      }
-    },
+    (column: Pipeline.Column) =>
+      (newValues: { name?: string }, { changed }: { changed: Record<JsonPath, boolean> }) => {
+        if (changed['name' as JsonPath]) {
+          const columnIndex = columns.findIndex((c) => c === column);
+          updateColumns((cols) => {
+            cols[columnIndex].name = newValues.name ?? '';
+          });
+        }
+      },
     [columns, updateColumns],
   );
 
