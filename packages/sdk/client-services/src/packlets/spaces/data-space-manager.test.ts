@@ -49,14 +49,15 @@ describe('DataSpaceManager', () => {
     await space1.inner.controlPipeline.state.waitUntilTimeframe(space1.inner.controlPipeline.state.endTimeframe);
 
     // Admit peer2 to space1.
+    const admissionCredentials = await createAdmissionCredentials(
+      peer1.identity.credentialSigner,
+      peer2.identity.identityKey,
+      space1.key,
+      space1.inner.genesisFeedKey,
+    );
     await writeMessages(
       space1.inner.controlPipeline.writer,
-      (await createAdmissionCredentials(
-        peer1.identity.credentialSigner,
-        peer2.identity.identityKey,
-        space1.key,
-        space1.inner.genesisFeedKey,
-      )) as never,
+      admissionCredentials.map((credential) => ({ credential: { credential } })),
     );
 
     // Accept must be called after admission so that the peer can authenticate for notarization.
@@ -119,14 +120,15 @@ describe('DataSpaceManager', () => {
     await space1.inner.controlPipeline.state.waitUntilTimeframe(space1.inner.controlPipeline.state.endTimeframe);
 
     // Admit peer2 to space1.
+    const admissionCreds = await createAdmissionCredentials(
+      peer1.identity.credentialSigner,
+      peer2.identity.identityKey,
+      space1.key,
+      space1.inner.genesisFeedKey,
+    );
     await writeMessages(
       space1.inner.controlPipeline.writer,
-      (await createAdmissionCredentials(
-        peer1.identity.credentialSigner,
-        peer2.identity.identityKey,
-        space1.key,
-        space1.inner.genesisFeedKey,
-      )) as never,
+      admissionCreds.map((credential) => ({ credential: { credential } })),
     );
 
     // Accept must be called after admission so that the peer can authenticate for notarization.

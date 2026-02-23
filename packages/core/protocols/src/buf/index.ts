@@ -6,8 +6,13 @@ import { create } from '@bufbuild/protobuf';
 import { EmptySchema } from '@bufbuild/protobuf/wkt';
 
 import { PublicKey } from '@dxos/keys';
+import { Timeframe } from '@dxos/timeframe';
 
 import * as KeysPb from './proto/gen/dxos/keys_pb';
+import {
+  type TimeframeVector,
+  TimeframeVectorSchema,
+} from './proto/gen/dxos/echo/timeframe_pb';
 
 export * as buf from '@bufbuild/protobuf';
 export * as bufWkt from '@bufbuild/protobuf/wkt';
@@ -62,3 +67,9 @@ export const bufToProto = <T>(value: unknown): T => value as T;
 
 /** Cast proto type to buf equivalent after codec/feed decoding. */
 export const protoToBuf = <T>(value: unknown): T => value as T;
+
+/** Convert a Timeframe instance to buf TimeframeVector message. */
+export const timeframeToBuf = (timeframe: Timeframe): TimeframeVector =>
+  create(TimeframeVectorSchema, {
+    frames: timeframe.frames().map(([feedKey, seq]) => ({ feedKey: feedKey.asUint8Array(), seq })),
+  });

@@ -13,17 +13,22 @@ import {
   ProofSchema,
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { PublicKeySchema } from '@dxos/protocols/buf/dxos/keys_pb';
-import { type TypedMessage } from '@dxos/protocols/proto';
-
 import { getCredentialProofPayload } from './signing';
 import { SIGNATURE_TYPE_ED25519, verifyChain } from './verifier';
 
 /** Helper to convert @dxos/keys PublicKey to buf PublicKey message. */
 const toBufPublicKey = (key: PublicKey) => create(PublicKeySchema, { data: key.asUint8Array() });
 
+/**
+ * Structural type for credential assertions.
+ * Accepts both protobuf.js TypedMessage and plain objects with buf enum values.
+ * The `@type` field is the fully-qualified protobuf type name (e.g., 'dxos.halo.credentials.SpaceMember').
+ */
+export type TypedAssertion = { '@type': string } & Record<string, unknown>;
+
 export type CreateCredentialSignerProps = {
   subject: PublicKey;
-  assertion: TypedMessage;
+  assertion: TypedAssertion;
   nonce?: Uint8Array;
   parentCredentialIds?: PublicKey[];
 };
@@ -37,7 +42,7 @@ export type CreateCredentialProps = {
   chain?: Chain;
 
   subject: PublicKey;
-  assertion: TypedMessage;
+  assertion: TypedAssertion;
   nonce?: Uint8Array;
   parentCredentialIds?: PublicKey[];
 };

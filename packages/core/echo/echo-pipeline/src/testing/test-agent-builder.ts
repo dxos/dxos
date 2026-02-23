@@ -258,8 +258,7 @@ export class TestAgent {
 
     for (const credential of credentials) {
       await space.controlPipeline.writer.write({
-        // buf Credential cast to proto Credential for feed encoding.
-        credential: { credential: credential as never },
+        credential: { credential },
       });
     }
   }

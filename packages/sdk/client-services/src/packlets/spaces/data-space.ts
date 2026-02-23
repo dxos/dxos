@@ -11,6 +11,7 @@ import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context'
 import type { SpecificCredential } from '@dxos/credentials';
 import { timed, warnAfterTimeout } from '@dxos/debug';
 import {
+  type ControlPipelinePayload,
   type DatabaseRoot,
   type EchoHost,
   type MetadataStore,
@@ -25,21 +26,21 @@ import { type Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { CancelledError, SystemError } from '@dxos/protocols';
-import { type CreateEpochRequest_Migration } from '@dxos/protocols/buf/dxos/client/services_pb';
-import {
-  type CreateEpochRequest,
-  type Space as SpaceProto,
-  SpaceState,
-} from '@dxos/protocols/proto/dxos/client/services';
+import { timestampFromDate } from '@dxos/protocols/buf';
+import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { type CreateEpochRequest_Migration, type Space_Metrics } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type CreateEpochRequest } from '@dxos/protocols/proto/dxos/client/services';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type SpaceCache } from '@dxos/protocols/proto/dxos/echo/metadata';
 import {
-  AdmittedFeed,
   type Credential,
+  SpaceMember_Role,
+} from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import {
+  AdmittedFeed,
   type Epoch,
   type ProfileDocument,
-  SpaceMember,
 } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { type Gossip, type Presence } from '@dxos/teleport-extension-gossip';
@@ -134,7 +135,7 @@ export class DataSpace {
   public readonly postOpen = new CallbackCollection<AsyncCallback<void>>();
   public readonly preClose = new CallbackCollection<AsyncCallback<void>>();
 
-  public metrics: SpaceProto.Metrics = {};
+  public metrics: Space_Metrics = {};
 
   constructor(params: DataSpaceProps) {
     this._inner = params.inner;
@@ -160,7 +161,7 @@ export class DataSpace {
         new ComplexSet(
           PublicKey.hash,
           Array.from(this._inner.spaceState.members.values())
-            .filter((member) => member.role !== SpaceMember.Role.REMOVED)
+            .filter((member) => member.role !== SpaceMember_Role.REMOVED)
             .map((member) => member.key),
         ),
       update: this._inner.stateUpdate,
@@ -257,7 +258,7 @@ export class DataSpace {
     log('new state', { state: SpaceState[this._state] });
     this.stateUpdate.emit();
     this.metrics = {};
-    this.metrics.open = new Date();
+    this.metrics.open = timestampFromDate(new Date());
 
     await this.postOpen.callSerial();
   }
@@ -309,7 +310,7 @@ export class DataSpace {
   initializeDataPipelineAsync(): void {
     scheduleTask(this._ctx, async () => {
       try {
-        this.metrics.pipelineInitBegin = new Date();
+        this.metrics.pipelineInitBegin = timestampFromDate(new Date());
         await this.initializeDataPipeline();
       } catch (err) {
         if (err instanceof CancelledError || err instanceof ContextDisposedError) {
@@ -323,7 +324,7 @@ export class DataSpace {
         this.error = err as Error;
         this.stateUpdate.emit();
       } finally {
-        this.metrics.ready = new Date();
+        this.metrics.ready = timestampFromDate(new Date());
       }
     });
   }
@@ -384,7 +385,7 @@ export class DataSpace {
       breakOnStall: false,
     });
 
-    this.metrics.controlPipelineReady = new Date();
+    this.metrics.controlPipelineReady = timestampFromDate(new Date());
 
     await this._createWritableFeeds();
     log('writable feeds created');
@@ -392,12 +393,12 @@ export class DataSpace {
 
     if (!this.notarizationPlugin.hasWriter) {
       this.notarizationPlugin.setWriter(
-        createMappedFeedWriter<Credential, FeedMessage.Payload>(
+        createMappedFeedWriter<Credential, ControlPipelinePayload>(
           (credential) => ({
             credential: { credential },
           }),
           this._inner.controlPipeline.writer,
-        ) as never,
+        ),
       );
     }
   }
@@ -410,7 +411,7 @@ export class DataSpace {
       await this.inner.setControlFeed(controlFeed);
 
       credentials.push(
-        (await this._signingContext.credentialSigner.createCredential({
+        await this._signingContext.credentialSigner.createCredential({
           subject: controlFeed.key,
           assertion: {
             '@type': 'dxos.halo.credentials.AdmittedFeed',
@@ -419,7 +420,7 @@ export class DataSpace {
             identityKey: this._signingContext.identityKey,
             designation: AdmittedFeed.Designation.CONTROL,
           },
-        })) as never,
+        }),
       );
     }
     if (!this.inner.dataFeedKey) {
@@ -430,7 +431,7 @@ export class DataSpace {
       await this.inner.setDataFeed(dataFeed);
 
       credentials.push(
-        (await this._signingContext.credentialSigner.createCredential({
+        await this._signingContext.credentialSigner.createCredential({
           subject: dataFeed.key,
           assertion: {
             '@type': 'dxos.halo.credentials.AdmittedFeed',
@@ -439,7 +440,7 @@ export class DataSpace {
             identityKey: this._signingContext.identityKey,
             designation: AdmittedFeed.Designation.DATA,
           },
-        })) as never,
+        }),
       );
     }
 
@@ -447,7 +448,7 @@ export class DataSpace {
       try {
         log('will notarize credentials for feed admission', { count: credentials.length });
         // Never times out
-        await this.notarizationPlugin.notarize({ ctx: this._ctx, credentials: credentials as never, timeout: 0 });
+        await this.notarizationPlugin.notarize({ ctx: this._ctx, credentials, timeout: 0 });
 
         log('credentials notarized');
       } catch (err) {
@@ -527,7 +528,7 @@ export class DataSpace {
         profile,
       },
     });
-    await this.inner.controlPipeline.writer.write({ credential: { credential: credential as never } });
+    await this.inner.controlPipeline.writer.write({ credential: { credential } });
   }
 
   async createEpoch(options?: CreateEpochOptions): Promise<CreateEpochResult | null> {
@@ -548,7 +549,9 @@ export class DataSpace {
     });
 
     const epoch: Epoch = {
-      previousId: this._automergeSpaceState.lastEpoch?.id as never,
+      previousId: this._automergeSpaceState.lastEpoch?.id
+        ? PublicKey.from(this._automergeSpaceState.lastEpoch.id.data)
+        : undefined,
       number: (this._automergeSpaceState.lastEpoch?.subject.assertion.number ?? -1) + 1,
       timeframe: this._automergeSpaceState.lastEpoch?.subject.assertion.timeframe ?? new Timeframe(),
       automergeRoot: newRoot ?? this._automergeSpaceState.rootUrl,
@@ -563,7 +566,7 @@ export class DataSpace {
     })) as SpecificCredential<Epoch>;
 
     const receipt = await this.inner.controlPipeline.writer.write({
-      credential: { credential: credential as never },
+      credential: { credential },
     });
 
     const timeframe = new Timeframe([[receipt.feedKey, receipt.seq]]);

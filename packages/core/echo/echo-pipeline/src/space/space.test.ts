@@ -97,8 +97,7 @@ describe('space/space', () => {
 
       for (const credential of credentials) {
         await space1.controlPipeline.writer.write({
-          // buf Credential cast to proto Credential for feed encoding.
-          credential: { credential: credential as never },
+          credential: { credential },
         });
       }
     }

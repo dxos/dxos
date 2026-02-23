@@ -10,6 +10,8 @@ import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
+import { create } from '@dxos/protocols/buf';
+import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type Storage, StorageType, createStorage } from '@dxos/random-access-storage';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
@@ -108,10 +110,10 @@ describe('identity/identity-manager', () => {
 
     const peer1 = await setupPeer({ signalContext });
     const identity1 = await peer1.identityManager.createIdentity();
-    peer1.networkManager.setPeerInfo({
+    peer1.networkManager.setPeerInfo(create(PeerSchema, {
       peerKey: identity1.deviceKey.toHex(),
       identityKey: identity1.identityKey.toHex(),
-    } as never);
+    }));
     await identity1.joinNetwork();
 
     const peer2 = await setupPeer({ signalContext });
@@ -131,7 +133,7 @@ describe('identity/identity-manager', () => {
 
     await identity1.controlPipeline.writer.write({
       credential: {
-        credential: credential as never,
+        credential,
       },
     });
 
@@ -142,12 +144,12 @@ describe('identity/identity-manager', () => {
       haloGenesisFeedKey: identity1.haloGenesisFeedKey,
       controlFeedKey,
       dataFeedKey,
-      authorizedDeviceCredential: credential as never,
+      authorizedDeviceCredential: credential,
     });
-    peer2.networkManager.setPeerInfo({
+    peer2.networkManager.setPeerInfo(create(PeerSchema, {
       peerKey: identity2.deviceKey.toHex(),
       identityKey: identity2.identityKey.toHex(),
-    } as never);
+    }));
     await identity2.joinNetwork();
 
     // Identity2 is not yet ready at this point. Peer1 needs to admit peer2 device key and feed keys.

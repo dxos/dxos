@@ -23,7 +23,9 @@ import { Keyring } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
+import { create } from '@dxos/protocols/buf';
 import { EdgeStatus_ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
@@ -89,14 +91,14 @@ describe('identity/identity', () => {
       const signer = owner.identity.getIdentityCredentialSigner();
       void owner.identity.controlPipeline.writer.write({
         credential: {
-          credential: (await signer.createCredential({
+          credential: await signer.createCredential({
             subject: secondDevice.deviceKey,
             assertion: {
               '@type': 'dxos.halo.credentials.AuthorizedDevice',
               identityKey: owner.identityKey,
               deviceKey: secondDevice.deviceKey,
             },
-          })) as never,
+          }),
         },
       });
 
@@ -187,7 +189,7 @@ describe('identity/identity', () => {
       networkManager: new SwarmNetworkManager({
         signalManager: new MemorySignalManager(args?.signalContext ?? new MemorySignalManagerContext()),
         transportFactory: MemoryTransportFactory,
-        peerInfo: { identityKey: identityKey.toHex(), peerKey: deviceKey.toHex() } as never,
+        peerInfo: create(PeerSchema, { identityKey: identityKey.toHex(), peerKey: deviceKey.toHex() }),
       }),
     });
 
@@ -233,7 +235,7 @@ describe('identity/identity', () => {
 
     for (const credential of credentials) {
       await setup.identity.controlPipeline.writer.write({
-        credential: { credential: credential as never },
+        credential: { credential },
       });
     }
   };

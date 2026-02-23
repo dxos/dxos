@@ -46,10 +46,10 @@ describe.skip('WebSocketSignalManager', () => {
 
     const [topic, peer1, peer2, peer3] = PublicKey.randomSequence();
 
-    const joined12 = expectPeerAvailable(client1, topic, { peerKey: peer2.toHex() } as never);
-    const joined13 = expectPeerAvailable(client1, topic, { peerKey: peer3.toHex() } as never);
-    const joined21 = expectPeerAvailable(client2, topic, { peerKey: peer1.toHex() } as never);
-    const joined31 = expectPeerAvailable(client3, topic, { peerKey: peer1.toHex() } as never);
+    const joined12 = expectPeerAvailable(client1, topic, create(PeerSchema, { peerKey: peer2.toHex() }));
+    const joined13 = expectPeerAvailable(client1, topic, create(PeerSchema, { peerKey: peer3.toHex() }));
+    const joined21 = expectPeerAvailable(client2, topic, create(PeerSchema, { peerKey: peer1.toHex() }));
+    const joined31 = expectPeerAvailable(client3, topic, create(PeerSchema, { peerKey: peer1.toHex() }));
 
     await client1.join(joinReq(topic, peer1.toHex()));
     await client2.join(joinReq(topic, peer2.toHex()));
@@ -65,8 +65,8 @@ describe.skip('WebSocketSignalManager', () => {
 
     const [topic, peer1, peer2] = PublicKey.randomSequence();
 
-    const joined12 = expectPeerAvailable(client1, topic, { peerKey: peer2.toHex() } as never);
-    const joined21 = expectPeerAvailable(client2, topic, { peerKey: peer1.toHex() } as never);
+    const joined12 = expectPeerAvailable(client1, topic, create(PeerSchema, { peerKey: peer2.toHex() }));
+    const joined21 = expectPeerAvailable(client2, topic, create(PeerSchema, { peerKey: peer1.toHex() }));
 
     await client1.join(joinReq(topic, peer1.toHex()));
     await client2.join(joinReq(topic, peer2.toHex()));
@@ -92,8 +92,8 @@ describe.skip('WebSocketSignalManager', () => {
 
     const [topic, peer1, peer2] = PublicKey.randomSequence();
 
-    const joined12 = expectPeerAvailable(client1, topic, { peerKey: peer2.toHex() } as never);
-    const joined21 = expectPeerAvailable(client2, topic, { peerKey: peer1.toHex() } as never);
+    const joined12 = expectPeerAvailable(client1, topic, create(PeerSchema, { peerKey: peer2.toHex() }));
+    const joined21 = expectPeerAvailable(client2, topic, create(PeerSchema, { peerKey: peer1.toHex() }));
 
     await client1.join(joinReq(topic, peer1.toHex()));
     await client2.join(joinReq(topic, peer2.toHex()));
@@ -108,15 +108,15 @@ describe.skip('WebSocketSignalManager', () => {
 
     const [topic1, topic2, peer1, peer2] = PublicKey.randomSequence();
 
-    const joined112 = expectPeerAvailable(client1, topic1, { peerKey: peer2.toHex() } as never);
-    const joined121 = expectPeerAvailable(client2, topic1, { peerKey: peer1.toHex() } as never);
+    const joined112 = expectPeerAvailable(client1, topic1, create(PeerSchema, { peerKey: peer2.toHex() }));
+    const joined121 = expectPeerAvailable(client2, topic1, create(PeerSchema, { peerKey: peer1.toHex() }));
 
     await client1.join(joinReq(topic1, peer1.toHex()));
     await client2.join(joinReq(topic1, peer2.toHex()));
     await Promise.all([joined112, joined121]);
 
-    const joined212 = expectPeerAvailable(client1, topic2, { peerKey: peer2.toHex() } as never);
-    const joined221 = expectPeerAvailable(client2, topic2, { peerKey: peer1.toHex() } as never);
+    const joined212 = expectPeerAvailable(client1, topic2, create(PeerSchema, { peerKey: peer2.toHex() }));
+    const joined221 = expectPeerAvailable(client2, topic2, create(PeerSchema, { peerKey: peer1.toHex() }));
 
     await client1.join(joinReq(topic2, peer1.toHex()));
     await client2.join(joinReq(topic2, peer2.toHex()));

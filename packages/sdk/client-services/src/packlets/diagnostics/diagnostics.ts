@@ -10,24 +10,28 @@ import { createDidFromIdentityKey, credentialTypeFilter } from '@dxos/credential
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { STORAGE_VERSION } from '@dxos/protocols';
-import { type QueryDevicesResponse } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { timestampMs } from '@dxos/protocols/buf';
+import {
+  type Device as BufDevice,
+  type NetworkStatus as BufNetworkStatus,
+  type Platform,
+  type QueryDevicesResponse,
+  type Space_Metrics,
+} from '@dxos/protocols/buf/dxos/client/services_pb';
 import {
   type SubscribeToFeedsResponse,
   type SubscribeToFeedsResponse_Feed,
 } from '@dxos/protocols/buf/dxos/devtools/host_pb';
 import { type SwarmInfo } from '@dxos/protocols/buf/dxos/devtools/swarm_pb';
-import { type Epoch } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type Credential, type Epoch } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type Resource, type Span } from '@dxos/protocols/buf/dxos/tracing_pb';
 import {
-  type Device,
   type Identity,
   type LogEntry,
   type Metrics,
-  type NetworkStatus,
-  type Platform,
   SpaceMember,
-  type Space as SpaceProto,
 } from '@dxos/protocols/proto/dxos/client/services';
+import { Timeframe } from '@dxos/timeframe';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { DXOS_VERSION } from '../../version';
@@ -54,9 +58,9 @@ export type Diagnostics = {
       };
     };
     identity?: Identity;
-    devices?: Device[];
+    devices?: BufDevice[];
     spaces?: SpaceStats[];
-    networkStatus?: NetworkStatus;
+    networkStatus?: BufNetworkStatus;
     swarms?: SwarmInfo[];
     feeds?: Partial<SubscribeToFeedsResponse_Feed>[];
     metrics?: Metrics;
@@ -79,12 +83,19 @@ export type SpaceStats = {
   db?: {
     objects: number;
   };
-  metrics?: SpaceProto.Metrics & {
+  metrics?: Space_Metrics & {
     startupTime?: number;
   };
   epochs?: (Epoch & { id?: PublicKey })[];
   members?: SpaceMember[];
-  pipeline?: SpaceProto.PipelineState;
+  pipeline?: {
+    currentEpoch?: Credential;
+    appliedEpoch?: Credential;
+    controlFeeds?: PublicKey[];
+    currentControlTimeframe?: Timeframe;
+    targetControlTimeframe?: Timeframe;
+    totalControlTimeframe?: Timeframe;
+  };
 };
 
 /**
@@ -97,7 +108,7 @@ export const createDiagnostics = async (
 ): Promise<Diagnostics['services']> => {
   const diagnostics: Diagnostics['services'] = {
     created: new Date().toISOString(),
-    platform: getPlatform() as never,
+    platform: getPlatform(),
     client: {
       version: DXOS_VERSION,
       storage: {
@@ -134,7 +145,7 @@ export const createDiagnostics = async (
         const { devices } = ((await getFirstStreamValue(clientServices.DevicesService!.queryDevices(), {
           timeout: DEFAULT_TIMEOUT,
         }).catch(() => undefined)) ?? {}) as Partial<QueryDevicesResponse>;
-        diagnostics.devices = devices as never;
+        diagnostics.devices = devices;
 
         // TODO(dmaretskyi): Add metrics for halo space.
 
@@ -156,11 +167,11 @@ export const createDiagnostics = async (
         const status = await getFirstStreamValue(clientServices.NetworkService!.queryStatus(), {
           timeout: DEFAULT_TIMEOUT,
         }).catch(() => undefined);
-        diagnostics.networkStatus = status as never;
+        diagnostics.networkStatus = status;
 
         // Networking.
 
-        diagnostics.swarms = serviceContext.networkManager.connectionLog?.swarms as never;
+        diagnostics.swarms = serviceContext.networkManager.connectionLog?.swarms;
       }
     },
   ]);
@@ -201,8 +212,8 @@ const getSpaceStats = async (space: DataSpace): Promise<SpaceStats> => {
 
     pipeline: {
       // TODO(burdon): Pick properties from credentials if needed.
-      currentEpoch: space.automergeSpaceState.lastEpoch as never,
-      appliedEpoch: space.automergeSpaceState.lastEpoch as never,
+      currentEpoch: space.automergeSpaceState.lastEpoch,
+      appliedEpoch: space.automergeSpaceState.lastEpoch,
 
       controlFeeds: space.inner.controlPipeline.state.feeds.map((feed) => feed.key),
       currentControlTimeframe: space.inner.controlPipeline.state.timeframe,
@@ -214,7 +225,7 @@ const getSpaceStats = async (space: DataSpace): Promise<SpaceStats> => {
   // TODO(burdon): Factor out.
   if (stats.metrics) {
     const { open, ready } = stats.metrics;
-    stats.metrics.startupTime = open && ready && ready.getTime() - open.getTime();
+    stats.metrics.startupTime = open && ready ? Number(timestampMs(ready) - timestampMs(open)) : undefined;
   }
 
   return stats;

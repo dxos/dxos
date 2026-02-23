@@ -47,11 +47,12 @@ import { log } from '@dxos/log';
 import { AlreadyJoinedError, trace as Trace } from '@dxos/protocols';
 import { encodePublicKey } from '@dxos/protocols/buf';
 import { Invitation_Kind, Invitation_Type } from '@dxos/protocols/buf/dxos/client/invitation_pb';
-import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
+import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { EdgeReplicationSetting, type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { type Credential, type ProfileDocument, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Credential, SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type DelegateSpaceInvitation } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { type PeerState } from '@dxos/protocols/proto/dxos/mesh/presence';
 import { type Teleport } from '@dxos/teleport';
@@ -101,7 +102,7 @@ export type AcceptSpaceOptions = {
 export type AdmitMemberOptions = {
   spaceKey: PublicKey;
   identityKey: PublicKey;
-  role: SpaceMember.Role;
+  role: SpaceMember_Role;
   profile?: ProfileDocument;
   delegationCredentialId?: PublicKey;
 };
@@ -441,7 +442,7 @@ export class DataSpaceManager extends Resource {
     const space = this._spaceManager.spaces.get(options.spaceKey);
     invariant(space);
 
-    if (space.spaceState.getMemberRole(options.identityKey) !== SpaceMember.Role.REMOVED) {
+    if (space.spaceState.getMemberRole(options.identityKey) !== SpaceMember_Role.REMOVED) {
       throw new AlreadyJoinedError();
     }
 
@@ -461,9 +462,9 @@ export class DataSpaceManager extends Resource {
     invariant(credentials[0].credential);
     const spaceMemberCredential = credentials[0].credential.credential;
     invariant(getCredentialAssertion(spaceMemberCredential)['@type'] === 'dxos.halo.credentials.SpaceMember');
-    await writeMessages(space.controlPipeline.writer, credentials as never);
+    await writeMessages(space.controlPipeline.writer, credentials);
 
-    return spaceMemberCredential as never;
+    return spaceMemberCredential;
   }
 
   /**

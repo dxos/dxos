@@ -85,7 +85,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     const spaceMemberCredential = await this._spaceManager.admitMember({
       spaceKey: this._spaceKey,
       identityKey: request.space.identityKey,
-      role: (invitation.role ?? SpaceMember_Role.ADMIN) as never,
+      role: invitation.role ?? SpaceMember_Role.ADMIN,
       profile: guestProfile,
       delegationCredentialId: invitation.delegationCredentialId as never,
     });
@@ -113,7 +113,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
       space.key,
       {
         invitationId: invitation.invitationId,
-        authMethod: invitation.authMethod as never,
+        authMethod: invitation.authMethod,
         swarmKey: decodePublicKey(invitation.swarmKey!),
         role: (invitation.role ?? SpaceMember_Role.ADMIN) as never,
         expiresOn: computeExpirationTime(invitation),
@@ -126,7 +126,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     );
 
     invariant(credential.credential);
-    await writeMessages(space.inner.controlPipeline.writer, [credential as never]);
+    await writeMessages(space.inner.controlPipeline.writer, [credential]);
     return credential.credential.credential.id! as never;
   }
 
@@ -144,7 +144,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     );
 
     invariant(credential.credential);
-    await writeMessages(space.inner.controlPipeline.writer, [credential as never]);
+    await writeMessages(space.inner.controlPipeline.writer, [credential]);
   }
 
   checkInvitation(invitation: Partial<Invitation>): InvalidInvitationError | AlreadyJoinedError | undefined {

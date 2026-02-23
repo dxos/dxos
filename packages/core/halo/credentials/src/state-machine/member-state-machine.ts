@@ -5,8 +5,8 @@
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { type ProfileDocument, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Credential, SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type ProfileDocument, type SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { ComplexMap } from '@dxos/util';
 
 import { fromBufPublicKey, getCredentialAssertion } from '../credentials';
@@ -18,9 +18,12 @@ import {
   type StateScope,
 } from '../graph/credential-graph';
 
+/** Safe numeric cast between protobuf.js and buf enums (identical wire values). */
+const toBufRole = (role: number): SpaceMember_Role => role as SpaceMember_Role;
+
 export interface MemberInfo {
   key: PublicKey;
-  role: SpaceMember.Role;
+  role: SpaceMember_Role;
   credential: Credential;
   assertion: SpaceMember;
   profile?: ProfileDocument;
@@ -51,7 +54,7 @@ export class MemberStateMachine implements CredentialGraphStateHandler<SpaceMemb
     return this._hashgraph.getLeafIds();
   }
 
-  getRole(member: PublicKey): SpaceMember.Role {
+  getRole(member: PublicKey): SpaceMember_Role {
     return this._getRole(this._hashgraph.getGlobalStateScope(), member);
   }
 
@@ -95,7 +98,7 @@ export class MemberStateMachine implements CredentialGraphStateHandler<SpaceMemb
     const memberKey = fromBufPublicKey(credential.subject!.id!)!;
     return {
       key: memberKey,
-      role: assertion.role,
+      role: toBufRole(assertion.role),
       credential,
       assertion,
       profile: this._memberProfiles.get(memberKey),
@@ -106,7 +109,7 @@ export class MemberStateMachine implements CredentialGraphStateHandler<SpaceMemb
     const issuer = fromBufPublicKey(credential.issuer!)!;
     const subjectId = fromBufPublicKey(credential.subject!.id!)!;
 
-    if (assertion.role === SpaceMember.Role.OWNER) {
+    if (toBufRole(assertion.role) === SpaceMember_Role.OWNER) {
       return issuer.equals(this._spaceKey);
     }
     const isChangingOwnRole = issuer.equals(subjectId);
@@ -117,7 +120,7 @@ export class MemberStateMachine implements CredentialGraphStateHandler<SpaceMemb
       return true;
     }
     const issuerRole = this._getRole(scope, issuer);
-    return issuerRole === SpaceMember.Role.ADMIN || issuerRole === SpaceMember.Role.OWNER;
+    return issuerRole === SpaceMember_Role.ADMIN || issuerRole === SpaceMember_Role.OWNER;
   }
 
   public getConflictingPaths(
@@ -125,7 +128,8 @@ export class MemberStateMachine implements CredentialGraphStateHandler<SpaceMemb
     update: ChainVertex<SpaceMember>,
   ): PathState<SpaceMember>[] {
     // a member can't be an issuer in a concurrent branch if we decided to remove or revoke admin permissions during merge
-    if (update.assertion.role !== SpaceMember.Role.REMOVED && update.assertion.role !== SpaceMember.Role.EDITOR) {
+    const updateRole = toBufRole(update.assertion.role);
+    if (updateRole !== SpaceMember_Role.REMOVED && updateRole !== SpaceMember_Role.EDITOR) {
       return [];
     }
     const memberId = fromBufPublicKey(update.credential!.subject!.id!)!;
@@ -140,27 +144,28 @@ export class MemberStateMachine implements CredentialGraphStateHandler<SpaceMemb
   ): Credential | null {
     const path1IssuerRole = this._getRole(scope1, fromBufPublicKey(update1.issuer!)!);
     const path2IssuerRole = this._getRole(scope2, fromBufPublicKey(update2.issuer!)!);
-    if ((path2IssuerRole === SpaceMember.Role.OWNER) !== (path1IssuerRole === SpaceMember.Role.OWNER)) {
+    if ((path2IssuerRole === SpaceMember_Role.OWNER) !== (path1IssuerRole === SpaceMember_Role.OWNER)) {
       log('owner decision used to break the tie');
-      return path1IssuerRole === SpaceMember.Role.OWNER ? update1 : update2;
+      return path1IssuerRole === SpaceMember_Role.OWNER ? update1 : update2;
     }
     return null;
   }
 
   public toLogString(assertion: SpaceMember | undefined): string {
-    const role = assertion?.role ?? SpaceMember.Role.REMOVED;
-    return Object.entries(SpaceMember.Role).find(([_, value]) => value === role)![0];
+    const role = assertion?.role != null ? toBufRole(assertion.role) : SpaceMember_Role.REMOVED;
+    return Object.entries(SpaceMember_Role).find(([_, value]) => value === role)![0];
   }
 
   public hasStateChanged(s1?: MemberInfo, s2?: MemberInfo): boolean {
     return s1?.role !== s2?.role;
   }
 
-  private _getRole(scope: StateScope<SpaceMember>, memberId: PublicKey): SpaceMember.Role {
+  private _getRole(scope: StateScope<SpaceMember>, memberId: PublicKey): SpaceMember_Role {
     if (this._ownerKey?.equals(memberId)) {
-      return SpaceMember.Role.OWNER;
+      return SpaceMember_Role.OWNER;
     }
-    const realRole = scope.state.get(memberId)?.assertion?.role ?? SpaceMember.Role.REMOVED;
+    const memberAssertion = scope.state.get(memberId)?.assertion;
+    const realRole = memberAssertion?.role != null ? toBufRole(memberAssertion.role) : SpaceMember_Role.REMOVED;
     if (scope.stateOverrides != null) {
       const override = scope.stateOverrides.get(memberId);
       if (override != null) {
@@ -169,7 +174,7 @@ export class MemberStateMachine implements CredentialGraphStateHandler<SpaceMemb
           roleOverride: this.toLogString(override.assertion),
           realRole: this.toLogString(scope.state.get(memberId)?.assertion),
         }));
-        return override.assertion.role;
+        return toBufRole(override.assertion.role);
       }
     }
     return realRole;

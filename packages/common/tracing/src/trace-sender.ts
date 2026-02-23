@@ -9,9 +9,13 @@ import { type LogEntry } from '@dxos/protocols/buf/dxos/client/logging_pb';
 import {
   type StreamTraceEvent,
   StreamTraceEventSchema,
+  StreamTraceEvent_LogAddedSchema,
   type StreamTraceEvent_LogAdded,
+  StreamTraceEvent_ResourceAddedSchema,
   type StreamTraceEvent_ResourceAdded,
+  StreamTraceEvent_ResourceRemovedSchema,
   type StreamTraceEvent_ResourceRemoved,
+  StreamTraceEvent_SpanAddedSchema,
   type StreamTraceEvent_SpanAdded,
 } from '@dxos/protocols/buf/dxos/tracing_pb';
 
@@ -32,14 +36,14 @@ export class TraceSender implements Client.TracingService {
           for (const id of resources) {
             const entry = this._traceProcessor.resources.get(id);
             if (entry) {
-              resourceAdded.push({ resource: entry.data } as never);
+              resourceAdded.push(create(StreamTraceEvent_ResourceAddedSchema, { resource: entry.data as never }));
             } else {
-              resourceRemoved.push({ id } as never);
+              resourceRemoved.push(create(StreamTraceEvent_ResourceRemovedSchema, { id }));
             }
           }
         } else {
           for (const entry of this._traceProcessor.resources.values()) {
-            resourceAdded.push({ resource: entry.data } as never);
+            resourceAdded.push(create(StreamTraceEvent_ResourceAddedSchema, { resource: entry.data as never }));
           }
         }
 
@@ -47,22 +51,22 @@ export class TraceSender implements Client.TracingService {
           for (const id of spans) {
             const span = this._traceProcessor.spans.get(id);
             if (span) {
-              spanAdded.push({ span } as never);
+              spanAdded.push(create(StreamTraceEvent_SpanAddedSchema, { span: span as never }));
             }
           }
         } else {
           for (const span of this._traceProcessor.spans.values()) {
-            spanAdded.push({ span } as never);
+            spanAdded.push(create(StreamTraceEvent_SpanAddedSchema, { span: span as never }));
           }
         }
 
         if (logs) {
           for (const log of logs) {
-            logAdded.push({ log } as never);
+            logAdded.push(create(StreamTraceEvent_LogAddedSchema, { log }));
           }
         } else {
           for (const log of this._traceProcessor.logs) {
-            logAdded.push({ log } as never);
+            logAdded.push(create(StreamTraceEvent_LogAddedSchema, { log }));
           }
         }
 

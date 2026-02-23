@@ -7,7 +7,7 @@ import { failUndefined } from '@dxos/debug';
 import { type Space } from '@dxos/echo-pipeline';
 import { type Keyring } from '@dxos/keyring';
 import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { AdmittedFeed, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { AdmittedFeed_Designation, SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Timeframe } from '@dxos/timeframe';
 
 import { type SigningContext } from './data-space-manager';
@@ -37,7 +37,7 @@ export const spaceGenesis = async (
       assertion: {
         '@type': 'dxos.halo.credentials.SpaceMember',
         spaceKey: space.key,
-        role: SpaceMember.Role.OWNER,
+        role: SpaceMember_Role.OWNER,
         profile: signingContext.getProfile(),
         genesisFeedKey: space.controlFeedKey ?? failUndefined(),
       },
@@ -50,7 +50,7 @@ export const spaceGenesis = async (
         spaceKey: space.key,
         identityKey: signingContext.identityKey,
         deviceKey: signingContext.deviceKey,
-        designation: AdmittedFeed.Designation.CONTROL,
+        designation: AdmittedFeed_Designation.CONTROL,
       },
     }),
 
@@ -61,7 +61,7 @@ export const spaceGenesis = async (
         spaceKey: space.key,
         identityKey: signingContext.identityKey,
         deviceKey: signingContext.deviceKey,
-        designation: AdmittedFeed.Designation.DATA,
+        designation: AdmittedFeed_Designation.DATA,
       },
     }),
 
@@ -80,7 +80,7 @@ export const spaceGenesis = async (
 
   for (const credential of credentials) {
     await space.controlPipeline.writer.write({
-      credential: { credential: credential as never },
+      credential: { credential },
     });
   }
 

@@ -10,7 +10,7 @@ import { Keyring } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { AdmittedFeed_Designation } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { Timeframe } from '@dxos/timeframe';
 
@@ -75,8 +75,7 @@ describe('space/control-pipeline', () => {
       for (const credential of credentials) {
         await controlPipeline.pipeline.writer?.write({
           credential: {
-            // buf Credential cast to proto Credential for feed encoding (structurally compatible).
-            credential: credential as never,
+            credential,
           },
         });
       }
@@ -100,9 +99,9 @@ describe('space/control-pipeline', () => {
               spaceKey,
               identityKey,
               deviceKey,
-              designation: AdmittedFeed.Designation.CONTROL,
+              designation: AdmittedFeed_Designation.CONTROL,
             },
-          })) as never,
+          })),
         },
       });
 
@@ -125,9 +124,9 @@ describe('space/control-pipeline', () => {
               spaceKey,
               identityKey,
               deviceKey,
-              designation: AdmittedFeed.Designation.DATA,
+              designation: AdmittedFeed_Designation.DATA,
             },
-          })) as never,
+          })),
         },
       });
 

@@ -4,13 +4,12 @@
 
 import { type Signer } from '@dxos/crypto';
 import { type PublicKey } from '@dxos/keys';
-import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import {
-  AdmittedFeed,
-  type DeviceProfileDocument,
-  type ProfileDocument,
-  SpaceMember,
-} from '@dxos/protocols/proto/dxos/halo/credentials';
+  AdmittedFeed_Designation,
+  type Credential,
+  SpaceMember_Role,
+} from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type DeviceProfileDocument, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type DelegateSpaceInvitation } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { Timeframe } from '@dxos/timeframe';
 
@@ -55,13 +54,13 @@ export class CredentialGenerator {
         assertion: {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
-          role: SpaceMember.Role.ADMIN,
+          role: SpaceMember_Role.ADMIN,
           profile: creatorProfile,
           genesisFeedKey: controlKey,
         },
       }),
 
-      await this.createFeedAdmission(spaceKey, controlKey, AdmittedFeed.Designation.CONTROL),
+      await this.createFeedAdmission(spaceKey, controlKey, AdmittedFeed_Designation.CONTROL),
     ];
   }
 
@@ -86,13 +85,13 @@ export class CredentialGenerator {
         assertion: {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
-          role: SpaceMember.Role.EDITOR,
+          role: SpaceMember_Role.EDITOR,
           genesisFeedKey,
         },
       }),
 
-      await this.createFeedAdmission(spaceKey, controlKey, AdmittedFeed.Designation.CONTROL),
-      await this.createFeedAdmission(spaceKey, dataKey, AdmittedFeed.Designation.DATA),
+      await this.createFeedAdmission(spaceKey, controlKey, AdmittedFeed_Designation.CONTROL),
+      await this.createFeedAdmission(spaceKey, dataKey, AdmittedFeed_Designation.DATA),
     ];
   }
 
@@ -134,7 +133,7 @@ export class CredentialGenerator {
   async createFeedAdmission(
     spaceKey: PublicKey,
     feedKey: PublicKey,
-    designation: AdmittedFeed.Designation,
+    designation: AdmittedFeed_Designation,
   ): Promise<Credential> {
     return createCredential({
       signer: this._signer,
@@ -215,7 +214,7 @@ export const createAdmissionCredentials = async (
   identityKey: PublicKey,
   spaceKey: PublicKey,
   genesisFeedKey: PublicKey,
-  role: SpaceMember.Role = SpaceMember.Role.ADMIN,
+  role: SpaceMember_Role = SpaceMember_Role.ADMIN,
   membershipChainHeads: PublicKey[] = [],
   profile?: ProfileDocument,
   invitationCredentialId?: PublicKey,

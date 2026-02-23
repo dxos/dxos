@@ -6,9 +6,8 @@ import { runInContextAsync, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type Credential, SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type TypedMessage } from '@dxos/protocols/proto';
-import { SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type DelegateSpaceInvitation } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { type AsyncCallback, Callback, ComplexMap, ComplexSet } from '@dxos/util';
 
@@ -33,7 +32,7 @@ export interface SpaceState {
 
   getCredentialsOfType(type: TypedMessage['@type']): Credential[];
 
-  getMemberRole(memberKey: PublicKey): SpaceMember.Role;
+  getMemberRole(memberKey: PublicKey): SpaceMember_Role;
   hasMembershipManagementPermission(memberKey: PublicKey): boolean;
 }
 
@@ -256,7 +255,7 @@ export class SpaceStateMachine implements SpaceState {
     return true;
   }
 
-  public getMemberRole(memberKey: PublicKey): SpaceMember.Role {
+  public getMemberRole(memberKey: PublicKey): SpaceMember_Role {
     return this._members.getRole(memberKey);
   }
 
@@ -267,8 +266,8 @@ export class SpaceStateMachine implements SpaceState {
   private _canInviteNewMembers(key: PublicKey): boolean {
     return (
       key.equals(this._spaceKey) ||
-      this._members.getRole(key) === SpaceMember.Role.ADMIN ||
-      this._members.getRole(key) === SpaceMember.Role.OWNER
+      this._members.getRole(key) === SpaceMember_Role.ADMIN ||
+      this._members.getRole(key) === SpaceMember_Role.OWNER
     );
   }
 }

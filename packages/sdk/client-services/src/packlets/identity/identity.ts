@@ -217,7 +217,7 @@ export class Identity {
       subject: this.identityKey,
       assertion: { '@type': 'dxos.halo.credentials.DefaultSpace', spaceId },
     });
-    const receipt = await this.controlPipeline.writer.write({ credential: { credential: credential as never } });
+    const receipt = await this.controlPipeline.writer.write({ credential: { credential } });
     await this.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
   }
 
@@ -262,7 +262,7 @@ export class Identity {
             designation: AdmittedFeed.Designation.DATA,
           },
         }),
-      ].map((credential): FeedMessage.Payload => ({ credential: { credential: credential as never } })),
+      ].map((credential) => ({ credential: { credential } })),
     );
 
     return deviceCredential as never;

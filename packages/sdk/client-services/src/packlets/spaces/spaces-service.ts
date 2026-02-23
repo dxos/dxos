@@ -26,11 +26,12 @@ import {
   SpaceNotFoundError,
   encodeError,
 } from '@dxos/protocols';
-import { type Empty, EmptySchema, create, decodePublicKey } from '@dxos/protocols/buf';
+import { type Empty, EmptySchema, create, decodePublicKey, timeframeToBuf } from '@dxos/protocols/buf';
 import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import {
   type AdmitContactRequest,
   type ContactAdmission,
+  ContactAdmissionSchema,
   type CreateEpochRequest,
   type CreateEpochResponse,
   CreateEpochResponseSchema,
@@ -128,13 +129,13 @@ export class SpacesServiceImpl implements Client.SpacesService {
       memberKeyPk,
       space.key,
       space.genesisFeedKey,
-      request.newRole as never,
+      request.newRole,
       space.spaceState.membershipChainHeads,
     );
     invariant(credentials[0].credential);
     const spaceMemberCredential = credentials[0].credential.credential;
     invariant(getCredentialAssertion(spaceMemberCredential)['@type'] === 'dxos.halo.credentials.SpaceMember');
-    await writeMessages(space.controlPipeline.writer, credentials as never);
+    await writeMessages(space.controlPipeline.writer, credentials);
     return create(EmptySchema);
   }
 
@@ -248,7 +249,7 @@ export class SpacesServiceImpl implements Client.SpacesService {
     const space = this._spaceManager.spaces.get(spaceKeyPk) ?? raise(new SpaceNotFoundError(spaceKeyPk));
     for (const credential of credentials ?? []) {
       if (credential.proof) {
-        await space.controlPipeline.writer.write({ credential: { credential: credential as never } });
+        await space.controlPipeline.writer.write({ credential: { credential } });
       } else {
         invariant(!credential.id, 'Id on unsigned credentials is not allowed');
         invariant(this._identityManager.identity, 'Identity is not available');
@@ -261,7 +262,7 @@ export class SpacesServiceImpl implements Client.SpacesService {
           subject: subjectId,
           assertion: credential.subject?.assertion as never,
         });
-        await space.controlPipeline.writer.write({ credential: { credential: signedCredential as never } });
+        await space.controlPipeline.writer.write({ credential: { credential: signedCredential } });
       }
     }
     return create(EmptySchema);
@@ -271,10 +272,10 @@ export class SpacesServiceImpl implements Client.SpacesService {
     const dataSpaceManager = await this._getDataSpaceManager();
     const spaceKeyPk = decodePublicKey(spaceKey!);
     const space = dataSpaceManager.spaces.get(spaceKeyPk) ?? raise(new SpaceNotFoundError(spaceKeyPk));
-    const result = await space.createEpoch({ migration: migration as never, newAutomergeRoot: automergeRootUrl });
+    const result = await space.createEpoch({ migration, newAutomergeRoot: automergeRootUrl });
     return create(CreateEpochResponseSchema, {
-      epochCredential: result?.credential as never,
-      controlTimeframe: result?.timeframe as never,
+      epochCredential: result?.credential,
+      controlTimeframe: result?.timeframe ? timeframeToBuf(result.timeframe) : undefined,
     });
   }
 
@@ -286,7 +287,7 @@ export class SpacesServiceImpl implements Client.SpacesService {
     await dataSpaceManager.admitMember({
       spaceKey: spaceKeyPk,
       identityKey: identityKeyPk,
-      role: request.role as never,
+      role: request.role,
     });
     return create(EmptySchema);
   }
@@ -295,7 +296,7 @@ export class SpacesServiceImpl implements Client.SpacesService {
     const dataSpaceManager = await this._getDataSpaceManager();
     const spaceKeyPk = decodePublicKey(spaceKey!);
     const credential = await dataSpaceManager.requestSpaceAdmissionCredential(spaceKeyPk);
-    return this._joinByAdmission({ credential } as never);
+    return this._joinByAdmission(create(ContactAdmissionSchema, { credential }));
   }
 
   async exportSpace(request: ExportSpaceRequest): Promise<ExportSpaceResponse> {
@@ -345,7 +346,7 @@ export class SpacesServiceImpl implements Client.SpacesService {
         spaceKey: assertion.spaceKey,
         genesisFeedKey: assertion.genesisFeedKey,
       });
-      await myIdentity.controlPipeline.writer.write({ credential: { credential: credential as never } });
+      await myIdentity.controlPipeline.writer.write({ credential: { credential } });
     }
 
     return create(JoinSpaceResponseSchema, { space: await this._serializeSpace(dataSpace) });
@@ -355,16 +356,16 @@ export class SpacesServiceImpl implements Client.SpacesService {
     return create(SpaceSchema, {
       id: space.id,
       spaceKey: { data: space.key.asUint8Array() },
-      state: space.state as never,
+      state: space.state,
       error: space.error ? encodeError(space.error) : undefined,
       pipeline: {
-        currentEpoch: space.automergeSpaceState.lastEpoch as never,
-        appliedEpoch: space.automergeSpaceState.lastEpoch as never,
+        currentEpoch: space.automergeSpaceState.lastEpoch,
+        appliedEpoch: space.automergeSpaceState.lastEpoch,
 
         controlFeeds: space.inner.controlPipeline.state.feeds.map((feed) => ({ data: feed.key.asUint8Array() })),
-        currentControlTimeframe: space.inner.controlPipeline.state.timeframe as never,
-        targetControlTimeframe: space.inner.controlPipeline.state.targetTimeframe as never,
-        totalControlTimeframe: space.inner.controlPipeline.state.endTimeframe as never,
+        currentControlTimeframe: timeframeToBuf(space.inner.controlPipeline.state.timeframe),
+        targetControlTimeframe: timeframeToBuf(space.inner.controlPipeline.state.targetTimeframe),
+        totalControlTimeframe: timeframeToBuf(space.inner.controlPipeline.state.endTimeframe),
 
         dataFeeds: undefined,
         startDataTimeframe: undefined,
@@ -394,10 +395,10 @@ export class SpacesServiceImpl implements Client.SpacesService {
             peerStates: peers,
           };
         }),
-      )) as never,
+      )),
       creator: space.inner.spaceState.creator ? { data: space.inner.spaceState.creator.key.asUint8Array() } : undefined,
       cache: space.cache as never,
-      metrics: space.metrics as never,
+      metrics: space.metrics,
       edgeReplication: space.getEdgeReplicationSetting() as never,
     });
   }
