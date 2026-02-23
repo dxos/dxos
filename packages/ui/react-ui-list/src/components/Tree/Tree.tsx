@@ -78,7 +78,6 @@ export const Tree = <T extends { id: string } = any, O = any>({
       useChildIds,
       useItem,
     }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [useItems, getProps, useIsOpen, useIsCurrent, useChildIdsProp, useItemProp],
   );
   const items = useItems(root);
