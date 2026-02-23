@@ -198,9 +198,9 @@ export const Default: Story = {
     // Verify the relation was set (cell should now contain the org name).
     // Re-query the cell since the grid may re-render and replace DOM elements.
     await waitFor(
-      () => {
+      async () => {
         const updatedCell = within(secondGrid).getByTestId('grid.4.0');
-        expect(updatedCell).toHaveTextContent(orgName.substring(0, 4));
+        await expect(updatedCell).toHaveTextContent(orgName.substring(0, 4));
       },
       { timeout: 5000 },
     );
@@ -241,9 +241,9 @@ export const Default: Story = {
     // Verify the new object was created and relation was set.
     // Re-query the cell since the grid may re-render and replace DOM elements.
     await waitFor(
-      () => {
+      async () => {
         const updatedNewCell = within(secondGrid).getByTestId('grid.4.1');
-        expect(updatedNewCell).toHaveTextContent(newOrgName);
+        await expect(updatedNewCell).toHaveTextContent(newOrgName);
       },
       { timeout: 5000 },
     );
