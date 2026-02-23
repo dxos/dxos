@@ -18,8 +18,6 @@ import type * as FeedProtocol from './FeedProtocol';
 // - Protobuf service definitions are allowed (Q: What about PublicKey, Timeframe, etc.).
 // - Breaking changes in this interface should be carefully considered.
 
-// TODO(dmaretskyi): Consider moving this to protocols.
-
 /**
  * Function implementation.
  * This is a contract between the user-defined function and the runtime.

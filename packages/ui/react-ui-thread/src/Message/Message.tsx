@@ -16,9 +16,9 @@ import { type MessageMetadata } from '../types';
 
 const avatarSize = 7;
 
-export type MessageRootProps = ThemedClassName<ComponentPropsWithRef<'div'>> &
-  MessageMetadata &
-  Partial<{ continues: boolean }>;
+export type MessageRootProps = ThemedClassName<
+  ComponentPropsWithRef<'div'> & MessageMetadata & Partial<{ continues: boolean }>
+>;
 
 // TODO(burdon): Show authorName on tooltip.
 export const MessageRoot = forwardRef<HTMLDivElement, MessageRootProps>(

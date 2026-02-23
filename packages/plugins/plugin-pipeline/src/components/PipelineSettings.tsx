@@ -158,7 +158,7 @@ export const PipelineObjectSettings = ({ classNames, pipeline }: PipelineObjectS
   }, [space, updateColumns]);
 
   return (
-    <div role='none' className={mx('plb-cardSpacingBlock overflow-y-auto', classNames)}>
+    <div role='none' className={mx('plb-cardPadding overflow-y-auto', classNames)}>
       <h2 className='text-sm text-description plb-1'>{t('views label')}</h2>
 
       <List.Root<Pipeline.Column>
@@ -229,7 +229,7 @@ export const PipelineObjectSettings = ({ classNames, pipeline }: PipelineObjectS
         )}
       </List.Root>
 
-      <div role='none' className='mlb-cardSpacingBlock'>
+      <div role='none' className='mlb-cardPadding'>
         <IconButton icon='ph--plus--regular' label={t('add view label')} onClick={handleAdd} classNames='is-full' />
       </div>
     </div>

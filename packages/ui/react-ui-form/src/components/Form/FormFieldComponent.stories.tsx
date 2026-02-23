@@ -10,7 +10,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { type FormFieldComponentProps, FormFieldWrapper } from './FormFieldComponent';
 
-const Component = ({
+const DefaultStory = ({
   type,
   placeholder,
   readonly,
@@ -24,7 +24,7 @@ const Component = ({
   );
 
   return (
-    <div className='plb-cardSpacingBlock pli-cardSpacingInline'>
+    <div className='p-formSpacing'>
       <FormFieldWrapper<string> {...props}>
         {({ value = '' }) => (
           <Input.TextInput
@@ -41,9 +41,9 @@ const Component = ({
   );
 };
 
-const meta: Meta<typeof Component> = {
+const meta: Meta<typeof DefaultStory> = {
   title: 'ui/react-ui-form/FormFieldComponent',
-  component: Component,
+  component: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {
     layout: 'fullscreen',
