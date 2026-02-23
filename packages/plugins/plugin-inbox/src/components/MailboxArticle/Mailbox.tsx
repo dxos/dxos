@@ -128,8 +128,8 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ classNames, 
                       key={labelId}
                       type='button'
                       className='dx-tag dx-focus-ring'
-                      data-label={label}
                       data-hue={labelHue}
+                      data-label={label}
                       onClick={(e) => handleTagClick(e, label)}
                     >
                       {label}

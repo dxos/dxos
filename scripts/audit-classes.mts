@@ -29,6 +29,9 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
+// minimatch is a transitive CJS dependency — load via createRequire (ESM scope).
+const _req = createRequire(import.meta.url);
+const minimatch = _req('minimatch') as (path: string, pattern: string, opts?: object) => boolean;
 
 // ── Paths ─────────────────────────────────────────────────────────────────────
 
@@ -36,6 +39,32 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
 const THEME_CSS_PATH = path.join(ROOT, 'packages/ui/ui-theme/src/theme.css');
 const STYLES_DIR = path.join(ROOT, 'packages/ui/ui-theme/src/config');
+const TWIGNORE_PATH = path.join(ROOT, '.twignore');
+
+// Load ignore patterns from `.twignore` in the project root.
+// Each non-empty, non-comment line is treated as a glob pattern matched
+// against file paths relative to the project root.
+//
+// Example .twignore:
+//   # Ignore all geo data files
+//   packages/ui/react-ui-geo/data/**
+//   packages/**/testing/**
+//   **/*.test.tsx
+function loadIgnorePatterns(): string[] {
+  if (!fs.existsSync(TWIGNORE_PATH)) return [];
+  return fs
+    .readFileSync(TWIGNORE_PATH, 'utf-8')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0 && !line.startsWith('#'));
+}
+
+/** Returns true if the relative file path matches any pattern in `.twignore`. */
+function isIgnored(relPath: string, patterns: string[]): boolean {
+  // Normalise to forward slashes for cross-platform glob matching.
+  const fwd = relPath.replace(/\\/g, '/');
+  return patterns.some((pattern) => minimatch(fwd, pattern, { dot: true, matchBase: false }));
+}
 
 // Source globs that are scanned when no --path option is given.
 // Default: only TSX/JSX (React components) and CSS (@apply directives).
@@ -378,6 +407,12 @@ async function main(): Promise<void> {
     return;
   }
 
+  // ── Load .twignore patterns ─────────────────────────────────────────────────
+  const ignorePatterns = loadIgnorePatterns();
+  if (ignorePatterns.length > 0) {
+    console.log(`Loaded ${ignorePatterns.length} ignore pattern${ignorePatterns.length > 1 ? 's' : ''} from .twignore`);
+  }
+
   // ── Extract custom CSS classes ──────────────────────────────────────────────
   console.log('Extracting custom class names from ui-theme styles…');
   const customClasses = extractCustomClassNames(STYLES_DIR);
@@ -407,8 +442,14 @@ async function main(): Promise<void> {
   const candidateOccurrences = new Map<string, Array<{ file: string; line: number; col: number }>>();
 
   let scanned = 0;
+  let ignoredCount = 0;
   for (const filePath of files) {
     if (SKIP_FILE_PATTERNS.some((re) => re.test(filePath))) continue;
+    const relPath = path.relative(ROOT, filePath);
+    if (ignorePatterns.length > 0 && isIgnored(relPath, ignorePatterns)) {
+      ignoredCount++;
+      continue;
+    }
     let content: string;
     try {
       content = fs.readFileSync(filePath, 'utf-8');
@@ -532,10 +573,11 @@ async function main(): Promise<void> {
   const uniqueUnknown = new Set(unknown.map((f) => f.candidate)).size;
   const uniqueMalformed = new Set(malformed.map((f) => f.candidate)).size;
   console.log(hr);
+  const ignoredMsg = ignoredCount > 0 ? `, ${ignoredCount} ignored (.twignore)` : '';
   console.log(
     `\nSummary: ${uniqueMalformed} malformed classes (${malformed.length} occurrences), ` +
       `${uniqueUnknown} unknown classes (${unknown.length} occurrences)` +
-      `  |  scanned ${scanned} files, ${candidateOccurrences.size} unique candidates\n`,
+      `  |  scanned ${scanned} files${ignoredMsg}, ${candidateOccurrences.size} unique candidates\n`,
   );
 
   if (!noExitCode) process.exit(1);
