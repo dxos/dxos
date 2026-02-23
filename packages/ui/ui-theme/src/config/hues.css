@@ -4,6 +4,34 @@
  */
 
 @layer dx-components {
+  /*
+   * System
+   */
+
+  .dx-text-hue[data-hue='info'],
+  .dx-text-hue--info {
+    @apply text-cyan-text;
+  }
+
+  .dx-text-hue[data-hue='success'],
+  .dx-text-hue--success {
+    @apply text-emerald-text;
+  }
+
+  .dx-text-hue[data-hue='warning'],
+  .dx-text-hue--warning {
+    @apply text-amber-text;
+  }
+
+  .dx-text-hue[data-hue='error'],
+  .dx-text-hue--error {
+    @apply text-rose-text;
+  }
+
+  /*
+   * Colors
+   */
+
   .dx-text-hue[data-hue='neutral'],
   .dx-text-hue--neutral {
     @apply text-neutral-text;
@@ -91,30 +119,6 @@
 
   .dx-text-hue[data-hue='rose'],
   .dx-text-hue--rose {
-    @apply text-rose-text;
-  }
-
-  /*
-   * System
-   */
-
-  .dx-text-hue[data-hue='info'],
-  .dx-text-hue--info {
-    @apply text-cyan-text;
-  }
-
-  .dx-text-hue[data-hue='success'],
-  .dx-text-hue--success {
-    @apply text-emerald-text;
-  }
-
-  .dx-text-hue[data-hue='warning'],
-  .dx-text-hue--warning {
-    @apply text-amber-text;
-  }
-
-  .dx-text-hue[data-hue='error'],
-  .dx-text-hue--error {
     @apply text-rose-text;
   }
 }

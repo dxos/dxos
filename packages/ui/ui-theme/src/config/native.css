@@ -1,6 +1,7 @@
 /**
  * Native app
  */
+
 @layer utilities {
 
   /**
@@ -19,5 +20,4 @@
     -webkit-app-region: no-drag;
     --app-region: no-drag;
   }
-
 }

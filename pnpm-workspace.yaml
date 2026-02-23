@@ -638,6 +638,7 @@ catalog:
   tailwind-merge: ^3.5.0
   tailwind-scrollbar: ^4.0.0
   '@tailwindcss/postcss': ^4.2.0
+  '@tailwindcss/oxide': ^4.2.0
   tailwindcss: ^4.2.0
   tailwindcss-radix: ^4.0.2
   tauri-plugin-web-auth-api: ^1.0.0

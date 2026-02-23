@@ -3,6 +3,9 @@
  */
 
 @theme {
+  /* Transition timing function */
+  --ease-in-out-symmetric: cubic-bezier(0.5, 0, 0.5, 1);
+
   /** 
    * Fade
    */

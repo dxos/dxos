@@ -1,6 +1,7 @@
 /**
  * Base utilities.
  */
+
 @layer dx-base {
   :root {
     color-scheme: light;

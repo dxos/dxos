@@ -1,6 +1,9 @@
 /**
  * Drag preview
  */
+
+/* TODO(burdon): REMOVE */
+
 @layer dx-base {
   body[data-drag-preview] {
     i[data-tabster-dummy] {

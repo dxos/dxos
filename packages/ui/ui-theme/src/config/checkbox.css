@@ -1,6 +1,7 @@
 /**
  * Checkbox
  */
+
 /* TODO(thure): Focus is handled by .dx-focus-ring, but should ideally be applied as part of this component.*/
 @layer dx-components {
   .dx-checkbox--switch,

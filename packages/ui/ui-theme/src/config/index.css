@@ -2,18 +2,27 @@
  * NOTE: The order of the layers is important and defined in the root `index.html`.
  */
 
+/**
+ * NOTE: The order of the layers is important and defined in the root `index.html`.
+ *
+ * Example: `composer-app/index.html`
+ * ```html
+ * <style>
+ *   @layer dx-tokens, user-tokens, tw-base, dx-base, tw-components, dx-components, utilities;
+ * </style>
+ * ```
+ */
+
+@import './theme/index.css';
+
 @import './anchored-overflow.css';
-@import './animation.css';
 @import './attention.css';
 @import './base.css';
 @import './button.css';
-@import './can-scroll.css';
 @import './checkbox.css';
-@import './experimental.css';
 @import './dialog.css';
 @import './drag-preview.css';
 @import './focus-ring.css';
-@import './colors.css';
 @import './hues.css';
 @import './positioning.css';
 @import './main.css';
@@ -22,10 +31,7 @@
 @import './size.css';
 @import './surfaces.css';
 @import './tag.css';
-@import './text.css';
-@import './tokens.css';
+@import './tldraw.css';
 @import './typography.css';
-
-@import './plugins/index.css';
 
 @layer dx-tokens, user-tokens, tw-base, dx-base, tw-components, dx-components, utilities;

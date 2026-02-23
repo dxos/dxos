@@ -8,6 +8,18 @@
   --color-base-surface: light-dark(theme(colors.white), theme(colors.neutral.900));
   --color-base-text: light-dark(theme(colors.black), theme(colors.neutral.50));
 
+  --color-inverse-surface: light-dark(theme(colors.neutral.900), theme(colors.white));
+  --color-inverse-surface-text: light-dark(theme(colors.neutral.50), theme(colors.black));
+
+  --color-deck-surface: light-dark(theme(colors.neutral.50), theme(colors.neutral.950));
+  --color-active-surface: light-dark(theme(colors.neutral.100), theme(colors.neutral.800));
+  --color-card-surface: light-dark(theme(colors.white), theme(colors.neutral.900));
+  --color-modal-surface: light-dark(theme(colors.white), theme(colors.neutral.800));
+  --color-scrim-surface: light-dark(theme(colors.neutral.50 / 0.65), theme(colors.neutral.900 / 0.65));
+  --color-sidebar-surface: light-dark(theme(colors.white), theme(colors.neutral.900));
+  --color-toolbar-surface: light-dark(theme(colors.white), theme(colors.neutral.900));
+
+  --color-group-surface: light-dark(theme(colors.white), theme(colors.neutral.800));
   --color-header-surface: light-dark(theme(colors.white), theme(colors.neutral.900));
 
   --color-hover-surface: light-dark(theme(colors.neutral.100), theme(colors.neutral.800));
@@ -16,27 +28,11 @@
   --color-input-surface: light-dark(theme(colors.neutral.100), theme(colors.neutral.800));
   --color-input-surface-group: light-dark(theme(colors.neutral.100), theme(colors.neutral.700));
 
-  --color-inverse-surface: light-dark(theme(colors.neutral.900), theme(colors.white));
-  --color-inverse-surface-text: light-dark(theme(colors.neutral.50), theme(colors.black));
-
-  --color-active-surface: light-dark(theme(colors.neutral.100), theme(colors.neutral.800));
-  --color-group-surface: light-dark(theme(colors.white), theme(colors.neutral.800));
-
-  --color-card-surface: light-dark(theme(colors.white), theme(colors.neutral.900));
-  --color-modal-surface: light-dark(theme(colors.white), theme(colors.neutral.800));
-
-  --color-attention: light-dark(theme(colors.white), theme(colors.black));
-
-  --color-scrim-surface: light-dark(theme(colors.neutral.50 / 0.65), theme(colors.neutral.900 / 0.65));
-  --color-sidebar-surface: light-dark(theme(colors.white), theme(colors.neutral.900));
-  --color-toolbar-surface: light-dark(theme(colors.white), theme(colors.neutral.900));
-
   --color-text-input-surface: light-dark(theme(colors.neutral.50), theme(colors.neutral.900));
   --color-text-input-surface-group: light-dark(theme(colors.neutral.50), theme(colors.neutral.700));
 
-  --color-deck-surface: light-dark(theme(colors.neutral.50), theme(colors.neutral.950));
+  --color-attention: light-dark(theme(colors.white), theme(colors.black));
 
-  --color-focus-line: 2px;
   --color-focus-surface: light-dark(theme(colors.white), theme(colors.black));
   --color-neutral-focus-indicator: light-dark(theme(colors.neutral.300), theme(colors.neutral.600));
 
@@ -95,6 +91,7 @@
   --color-placeholder: light-dark(var(--color-neutral-600), var(--color-neutral-400))
 }
 
+/* TODO(burdon): Layer names. */
 @layer dx-tokens {
 
   /* TODO(burdon): Are these used? See surfaces.css */
@@ -111,123 +108,5 @@
     --color-input-surface: light-dark(var(--color-neutral-100), var(--color-neutral-800));
     --color-hover-surface: light-dark(var(--color-neutral-100), var(--color-neutral-700));
     --color-separator: light-dark(var(--color-neutral-200), var(--color-neutral-700));
-  }
-
-  /* TODO(burdon): Move sizes to different file. */
-
-  :root {
-    /* Lines */
-
-    --dx-hairLine: 1px;
-    --dx-landmarkLine: 1px;
-    --dx-modalLine: 1px;
-    --dx-noLine: 0px;
-    --dx-positionedLine: 1px;
-    --dx-thickLine: 2px;
-  }
-
-  :root {
-    --dx-line-0: 0.000px;
-    --dx-line-1: 1.000px;
-    --dx-line-2: 2.000px;
-
-    --dx-lacuna-12: 1.500rem;
-    --dx-lacuna-3: 0.375rem;
-    --dx-lacuna-4: 0.500rem;
-    --dx-lacuna-6: 0.750rem;
-  }
-
-  :root {
-    --dx-noLine: var(--dx-line-0);
-    --dx-hairLine: var(--dx-line-1);
-    --dx-thickLine: var(--dx-line-2);
-    --dx-trimXs: var(--dx-lacuna-3);
-    --dx-trimSm: var(--dx-lacuna-4);
-    --dx-trimMd: var(--dx-lacuna-6);
-    --dx-trimLg: var(--dx-lacuna-12);
-    --dx-inputFine: var(--dx-lacuna-3);
-    --dx-inputCoarse: var(--dx-lacuna-4);
-  }
-
-  :root, .density-fine {
-    --dx-focusOffset: var(--dx-noLine);
-    --dx-modalLine: var(--dx-hairLine);
-    --dx-gridGap: var(--dx-hairLine);
-    --dx-gridFocusIndicatorWidth: var(--dx-hairLine);
-    --dx-focusLine: var(--dx-thickLine);
-    --dx-iconButtonPadding: var(--dx-inputFine);
-    --dx-cardChrome: var(--dx-trimXs);
-    --dx-cardPadding: var(--dx-trimSm);
-  }
-
-  .density-coarse {
-    --dx-iconButtonPadding: var(--dx-inputCoarse);
-    --dx-cardPadding: var(--dx-trimMd);
-  }
-
-  [data-grid-focus-indicator-variant="stack"] {
-    --dx-gridFocusIndicatorWidth: var(--dx-thickLine);
-  }
-
-  :root {
-    --dx-size-18: 18.000rem;
-    --dx-size-20: 20.000rem;
-    --dx-size-22: 22.000rem;
-    --dx-size-30: 30.000rem;
-    --dx-size-50: 50.000rem;
-  }
-
-  :root {
-    --dx-prose-max-width: var(--dx-size-50);
-    --dx-container-max-width: var(--dx-size-50);
-    --dx-card-default-width: var(--dx-size-20);
-    --dx-card-min-width: var(--dx-size-18);
-    --dx-card-max-width: var(--dx-size-22);
-    --dx-card-min-height: var(--dx-size-18);
-    --dx-card-max-height: var(--dx-size-30);
-  }
-
-  :root {
-    /* Recitations */
-    --sticky-top: 0;
-
-    /* Lengths / sizes */
-    --rail-content: 3rem;
-    --rail-size: calc(var(--rail-content) + 1px);
-    --rail-action: calc(var(--rail-content) - 0.5rem + 1px);
-    --rail-item: calc(var(--rail-content) - 1rem);
-    --line-height: 32px;
-    --topbar-size: var(--rail-size);
-    --toolbar-size: var(--rail-content);
-    --statusbar-size: var(--rail-content);
-    --nav-sidebar-size: 22.5rem;
-    --complementary-sidebar-size: 25rem;
-    --drawer-size: 50dvh;
-    /* NOTE(thure): 74px (rather than rem) is intentional in order to match the size of macOS windowing controls. */
-    --l0-size: 74px;
-    --l0-avatar-size: 3rem;
-    --l1-size: calc(var(--nav-sidebar-size) - var(--l0-size));
-    --r0-size: var(--rail-size);
-    --r1-size: calc(var(--complementary-sidebar-size) - var(--r0-size));
-    --text-content: calc(50rem - env(safe-area-inset-left) - env(safe-area-inset-right));
-  }
-
-  /* TODO(thure): Support arbitrary values (like for keywords e.g. `auto`, or font families) in @ch-ui/tokens */
-  :root {
-    --dx-calc-auto: auto;
-    --dx-calc-min: min-content;
-    --dx-calc-fit: fit-content;
-    --dx-calc-max: max-content;
-    --dx-calc-content: content;
-  }
-
-  @supports (block-size: calc-size(fit-content, size)) {
-    :root {
-      --dx-calc-auto: calc-size(auto, size);
-      --dx-calc-min: calc-size(min-content, size);
-      --dx-calc-fit: calc-size(fit-content, size);
-      --dx-calc-max: calc-size(max-content, size);
-      --dx-calc-content: calc-size(content, size);
-    }
   }
 }

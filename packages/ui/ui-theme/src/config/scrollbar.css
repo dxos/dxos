@@ -2,6 +2,7 @@
  * Scrolling 
  * Pseudo-classes are not supported by Tailwind.
  */
+
 @layer components {
   ::-webkit-scrollbar-thumb:hover {
     @apply bg-scrollbar-thumb-hover!;

@@ -1,6 +1,7 @@
 /**
  * Dialog
  */
+
 @layer dx-components {
   .dx-dialog__overlay {
     @apply z-50 fixed grid inset-x-0 top-0 block-dvh py-[env(safe-area-inset-top)] place-items-center overflow-auto bg-scrim-surface;

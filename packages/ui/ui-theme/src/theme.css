@@ -10,7 +10,8 @@
 @layer properties, theme, dx-tokens, user-tokens, base, tw-base, dx-base, components, tw-components, dx-components, utilities;
 
 @import 'tailwindcss';
-@import './styles/index.css';
+
+@import './config/index.css';
 
 @plugin '@tailwindcss/forms';
 @plugin 'tailwind-scrollbar';
@@ -19,43 +20,7 @@
 /**
  * Custom variants for pointer/hover media queries.
  * Replaces v3 custom screens: pointer-fine, hover-hover.
+ * TODO(burdon): ???
  */
 @custom-variant pointer-fine (@media (pointer: fine));
 @custom-variant hover-hover (@media (hover: hover));
-
-/**
- * NOTES
- * - @theme variables are always emitted to :root unconditionally.
- */
-
-@theme {
-  /* Custom spacing/sizing values - for ring, ring-offset, border-width, etc. */
-  --ring-offset-width-focus-offset: var(--dx-focusOffset);
-  --ring-width-focus-line: var(--dx-focusLine);
-  --ring-width-hair-line: var(--dx-hairLine);
-  --ring-width-thick-line: var(--dx-thickLine);
-  --ring-width-no-line: var(--dx-noLine);
-
-  /* Border radius scale */
-  --radius-none: 0;
-  --radius-sm: 0.25rem;
-  --radius: 0.5rem;
-  --radius-md: 0.75rem;
-  --radius-lg: 1rem;
-
-  /* Box shadow */
-  --shadow-slider: 0 0 0 5px rgba(0, 0, 0, 0.3);
-
-  /* Transition timing function */
-  --ease-in-out-symmetric: cubic-bezier(0.5, 0, 0.5, 1);
-
-  /* Custom spacing for prose/container/card sizing */
-  --spacing-prose-max-width: var(--dx-prose-max-width);
-  --spacing-container-max-width: var(--dx-container-max-width);
-  --spacing-card-default-width: var(--dx-card-default-width);
-  --spacing-card-min-width: var(--dx-card-min-width);
-  --spacing-card-max-width: var(--dx-card-max-width);
-  --spacing-card-min-height: var(--dx-card-min-height);
-  --spacing-card-max-height: var(--dx-card-max-height);
-}
-

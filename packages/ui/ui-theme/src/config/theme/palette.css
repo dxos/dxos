@@ -8,7 +8,6 @@
  *   text-[var(--color-red-500)]
  */
 
-/* TODO(burdon): Define borders. */
 @theme {
   --color-neutral-fill: theme(colors.neutral.500);
   --color-neutral-surface: light-dark(theme(colors.neutral.200), theme(colors.neutral.800));
