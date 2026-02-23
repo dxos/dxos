@@ -11,10 +11,13 @@ import { Obj } from '@dxos/echo';
 import { Message } from '@dxos/types';
 import { bufferToArray } from '@dxos/util';
 
-import { preprocessPrompt } from './AiPreprocessor';
+import { estimateTokens, preprocessPrompt } from './AiPreprocessor';
 import { PromptPreprocessingError } from './errors';
+import { TestData } from './testing';
+import { LanguageModel } from '@effect/ai/LanguageModel';
+import { dbg } from '@dxos/log';
 
-describe('preprocessor', () => {
+describe('AiPreprocessor.preprocessPrompt', () => {
   it.effect(
     'should preprocess simple user message with text',
     Effect.fn(function* ({ expect }) {
@@ -520,6 +523,17 @@ describe('preprocessor', () => {
       if (Either.isLeft(result)) {
         expect(result.left).toBeInstanceOf(PromptPreprocessingError);
       }
+    }),
+  );
+});
+
+describe('AiPreprocessor.estimateTokens', () => {
+  it.effect(
+    'should estimate tokens for a simple user message with text',
+    Effect.fn(function* ({ expect }) {
+      const prompt = yield* preprocessPrompt(yield* Effect.promise(TestData.internetOrderConversation));
+      const tokens = yield* estimateTokens(prompt);
+      expect(tokens).toBeGreaterThan(0);
     }),
   );
 });
