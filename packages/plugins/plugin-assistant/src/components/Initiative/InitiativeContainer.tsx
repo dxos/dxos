@@ -103,93 +103,8 @@ export const InitiativeContainer = ({ subject: initiative }: InitiativeContainer
 
 export default InitiativeContainer;
 
+// TODO(dmaretskyi): Rename
 const InitiativeForm = ({ initiative }: { initiative: Initiative.Initiative }) => {
-  const handleChange = useCallback(
-    (
-      values: Omit<Initiative.Initiative, 'id'>,
-      { isValid, changed }: { isValid: boolean; changed: Record<string, boolean> },
-    ) => {
-      if (!isValid) {
-        return;
-      }
-
-      const changedPaths = Object.keys(changed).filter((path) => changed[path as string]) as JsonPath[];
-      // Handle other property changes.
-      if (changedPaths.length > 0) {
-        Obj.change(initiative, () => {
-          for (const path of changedPaths) {
-            const parts = splitJsonPath(path);
-            const value = Obj.getValue(values as any, parts);
-            Obj.setValue(initiative, parts, value);
-          }
-        });
-      }
-
-      queueMicrotask(() => syncTriggers(initiative));
-    },
-    [initiative],
-  );
-
-  const fieldMap = useMemo<FormFieldMap>(
-    () => ({
-      spec: ({ type, label, getValue, onValueChange }) => {
-        const { t } = useTranslation();
-
-        const value: Ref.Ref<Text.Text> = getValue();
-        const target = useAtomValue(AtomRef.make(value));
-        const [initialValue] = useObject(target, 'content');
-
-        return (
-          <Input.Root>
-            <div role='none'>
-              <Input.Label>{toLocalizedString(label, t)}</Input.Label>
-            </div>
-            <MarkdownEditor.Root id={target?.id ?? ''} object={target}>
-              <MarkdownEditor.Content initialValue={initialValue} />
-            </MarkdownEditor.Root>
-          </Input.Root>
-        );
-      },
-      plan: ({ type, label, getValue, onValueChange }) => {
-        const { t } = useTranslation();
-
-        const value: Ref.Ref<Plan.Plan> = getValue();
-        const target = useAtomValue(AtomRef.make(value));
-
-        return (
-          <Input.Root>
-            <div role='none'>
-              <Input.Label>{toLocalizedString(label, t)}</Input.Label>
-            </div>
-            <MarkdownEditor.Root id={target?.id ?? ''}>
-              <MarkdownEditor.Content initialValue={target ? Plan.formatPlan(target) : ''} />
-            </MarkdownEditor.Root>
-          </Input.Root>
-        );
-      },
-    }),
-    [],
-  );
-
-  const computeRuntime = useCapability(AutomationCapabilities.ComputeRuntime);
-
-  const handleResetHistory = useCallback(async () => {
-    const runtime = computeRuntime.getRuntime(Obj.getDatabase(initiative)!.spaceId);
-
-    await runtime.runPromise(Initiative.resetChatHistory(initiative));
-
-    if (!initiative.queue) {
-      await runtime.runPromise(
-        Effect.gen(function* () {
-          const queue = yield* QueueService.createQueue();
-          Obj.change(initiative, (initiative) => {
-            initiative.queue = Ref.fromDXN(queue.dxn);
-          });
-        }),
-      );
-    }
-  }, [initiative, computeRuntime]);
-
   const inputQueue = useAtomValue(
     AtomObj.make(initiative).pipe((_) =>
       Atom.make((get) =>
@@ -200,29 +115,14 @@ const InitiativeForm = ({ initiative }: { initiative: Initiative.Initiative }) =
 
   const inputQueueItems = useQuery(inputQueue, Query.select(Filter.everything()));
 
-  // TODO(dmaretskyi): Form breaks if we provide the echo object directly.
-  const spreadValue = useMemo(() => ({ ...initiative }), [initiative]);
   return (
     <Layout.Main>
-      <ButtonGroup classNames='h-10'>
-        <Button onClick={handleResetHistory}>Reset History</Button>
-      </ButtonGroup>
-      <h3 className='mb-2'>Input Queue</h3>
-      <div className='border border-subduedSeparator rounded-md p-2 h-64 overflow-y-auto'>
+      <div className='border border-subduedSeparator rounded-md p-2 overflow-y-auto'>
         {inputQueueItems.map((item) => (
           <Surface.Surface key={item.id} role='section' data={{ subject: item }} limit={1} />
         ))}
         {inputQueueItems.length === 0 && <div className='text-subdued'>No items in queue</div>}
       </div>
-      <Form.Root
-        schema={omitId(Initiative.Initiative)}
-        onValuesChanged={handleChange as any}
-        values={spreadValue}
-        db={Obj.getDatabase(initiative)}
-        fieldMap={fieldMap}
-      >
-        <Form.FieldSet />
-      </Form.Root>
     </Layout.Main>
   );
 };
