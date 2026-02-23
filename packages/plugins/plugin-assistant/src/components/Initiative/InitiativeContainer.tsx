@@ -3,39 +3,20 @@
 //
 
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
-import * as Effect from 'effect/Effect';
-import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
-import type * as Record from 'effect/Record';
-import React, { forwardRef, useCallback, useMemo, useState } from 'react';
+import React, { forwardRef, useMemo, useState } from 'react';
 
-import { Surface, useCapability } from '@dxos/app-framework/ui';
+import { Surface } from '@dxos/app-framework/ui';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { Initiative, InitiativeFunctions, Plan } from '@dxos/assistant-toolkit';
+import { type Initiative, InitiativeFunctions } from '@dxos/assistant-toolkit';
 import { DXN, Filter, Obj, Query, Ref } from '@dxos/echo';
-import { type JsonPath, splitJsonPath } from '@dxos/echo/internal';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';
-import { FunctionDefinition, QueueService, Trigger } from '@dxos/functions';
-import { AutomationCapabilities } from '@dxos/plugin-automation/types';
-import { MarkdownEditor } from '@dxos/plugin-markdown';
-import { useObject, useQuery } from '@dxos/react-client/echo';
-import {
-  Button,
-  ButtonGroup,
-  ElevationProvider,
-  IconButton,
-  Input,
-  Layout,
-  ScrollArea,
-  toLocalizedString,
-  useTranslation,
-} from '@dxos/react-ui';
-import { Form, type FormFieldMap, omitId } from '@dxos/react-ui-form';
-import { StackItem } from '@dxos/react-ui-stack';
-import { type Text } from '@dxos/schema';
+import { FunctionDefinition, Trigger } from '@dxos/functions';
+import { useQuery } from '@dxos/react-client/echo';
+import { ElevationProvider, IconButton, Layout, ScrollArea } from '@dxos/react-ui';
 import { Toolbar } from '@dxos/react-ui';
 import { Card, Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
-import { dbg } from '@dxos/log';
+import { StackItem } from '@dxos/react-ui-stack';
 import { isNonNullable } from '@dxos/util';
 
 const TAB_INITATIVE = 'Initiative';

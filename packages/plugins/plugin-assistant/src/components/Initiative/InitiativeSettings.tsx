@@ -2,37 +2,25 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo } from 'react';
-
-import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { Obj, Ref } from '@dxos/echo';
-import { Trigger } from '@dxos/functions';
-import { invariant } from '@dxos/invariant';
-import { AutomationOperation } from '@dxos/plugin-automation/types';
-import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
-import { Filter, useQuery } from '@dxos/react-client/echo';
-import { Button, useTranslation } from '@dxos/react-ui';
-
-import { Initiative } from '@dxos/assistant-toolkit';
-import { Atom, useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
-import { meta } from '../../meta';
+import React, { useCallback, useEffect } from 'react';
 
-import { Surface, useCapability } from '@dxos/app-framework/ui';
-import { InitiativeFunctions, Plan } from '@dxos/assistant-toolkit';
-import { DXN, Query } from '@dxos/echo';
-import { AtomObj, AtomRef } from '@dxos/echo-atom';
-import { type JsonPath, splitJsonPath } from '@dxos/echo/internal';
+import { useCapability } from '@dxos/app-framework/ui';
+import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { Initiative } from '@dxos/assistant-toolkit';
+import { InitiativeFunctions } from '@dxos/assistant-toolkit';
+import { Obj, Ref } from '@dxos/echo';
+import { DXN } from '@dxos/echo';
+import { AtomRef } from '@dxos/echo-atom';
+import { Trigger } from '@dxos/functions';
 import { FunctionDefinition, QueueService } from '@dxos/functions';
 import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { MarkdownEditor } from '@dxos/plugin-markdown';
+import { Filter } from '@dxos/react-client/echo';
 import { useObject } from '@dxos/react-client/echo';
-import { ButtonGroup, Input, Layout, toLocalizedString } from '@dxos/react-ui';
-import { Form, type FormFieldMap, omitId } from '@dxos/react-ui-form';
-import { type Text } from '@dxos/schema';
+import { Button } from '@dxos/react-ui';
+import { ButtonGroup, Input } from '@dxos/react-ui';
 
 export const InitiativeSettings = ({ subject: initiative }: SurfaceComponentProps<Initiative.Initiative>) => {
   const computeRuntime = useCapability(AutomationCapabilities.ComputeRuntime);
