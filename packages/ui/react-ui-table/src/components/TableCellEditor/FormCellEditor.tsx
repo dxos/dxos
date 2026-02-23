@@ -85,7 +85,15 @@ export const FormCellEditor = <T extends Type.Entity.Any = Type.Entity.Any>({
 
   // NOTE: Important to get a mutable deep clone to eject from the echo object.
   // TODO(wittjosiah): Consider using something like Obj.clone for this use case.
-  const formValues = useMemo(() => (originalRow ? JSON.parse(JSON.stringify(originalRow)) : {}), [originalRow]);
+  const initialFormValues = useMemo(() => (originalRow ? JSON.parse(JSON.stringify(originalRow)) : {}), [originalRow]);
+  const [formValues, setFormValues] = useState<any>(initialFormValues);
+
+  const handleValuesChanged = useCallback<NonNullable<FormRootProps<any>['onValuesChanged']>>(
+    (values) => {
+      setFormValues(values);
+    },
+    [],
+  );
 
   const handleOpenChange = useCallback((nextOpen: boolean) => {
     if (nextOpen === false) {
@@ -170,6 +178,7 @@ export const FormCellEditor = <T extends Type.Entity.Any = Type.Entity.Any>({
               autoFocus
               schema={narrowedSchema}
               values={formValues}
+              onValuesChanged={handleValuesChanged}
               projection={model?.projection}
               createInitialValuePath={fieldProjection.field.referencePath}
               createOptionIcon='ph--plus--regular'
