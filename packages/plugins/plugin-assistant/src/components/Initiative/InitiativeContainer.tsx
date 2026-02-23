@@ -103,11 +103,13 @@ const InitiativeStack = ({ initiative }: { initiative: Initiative.Initiative }) 
         ))}
         {inputQueueItems.length === 0 && (
           <div className='text-subdued'>
-            Initiative has no objects associated with it.{'\n'}
-            To get started:{'\n'}
-            {'\t'}- Write the initative spec: what is the goal of the initiative?{'\n'}
-            {'\t'}- subscribe initiative to your email.{'\n'}
-            {'\t'}- Chat with the agent.{'\n'}
+            Initiative has no objects associated with it.
+            <br />
+            <br />
+            To get started:
+            <br />- Write the initative spec: what is the goal of the initiative?
+            <br />- subscribe initiative to your email.
+            <br />- Chat with the agent.
           </div>
         )}
       </div>
