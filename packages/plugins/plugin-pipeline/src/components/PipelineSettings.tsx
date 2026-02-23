@@ -108,6 +108,9 @@ export const PipelineObjectSettings = ({ classNames, pipeline }: PipelineObjectS
       (newValues: { name?: string }, { changed }: { changed: Record<JsonPath, boolean> }) => {
         if (changed['name' as JsonPath]) {
           const columnIndex = columns.findIndex((c) => c === column);
+          if (columnIndex === -1) {
+            return;
+          }
           updateColumns((cols) => {
             cols[columnIndex].name = newValues.name ?? '';
           });

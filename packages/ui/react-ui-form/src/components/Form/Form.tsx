@@ -82,21 +82,25 @@ const useFormValues: {
     path: (string | number)[] | undefined,
     defaultValue: () => T,
   ): T | undefined;
-} = (componentName: string, path: (string | number)[] = [], defaultValue?: () => any) => {
-  const jsonPath = createJsonPath(path);
+} = (componentName: string, path?: (string | number)[], defaultValue?: () => any) => {
+  const stablePath = useMemo(() => path ?? [], [path ? path.join('.') : undefined]);
+  const jsonPath = createJsonPath(stablePath);
   const {
     form: { values, onValueChange },
   } = useFormContext(componentName);
 
   const value = getValue$(values, jsonPath);
 
-  const appliedDefaultRef = useRef(false);
+  // Apply default value once when the field has no value. lastAppliedPathRef prevents
+  // re-applying on every render (e.g. when defaultValue() returns null) and ensures
+  // we apply per path when the hook is used for different fields.
+  const lastAppliedPathRef = useRef<string | null>(null);
   useEffect(() => {
-    if (!value && defaultValue && !appliedDefaultRef.current) {
-      appliedDefaultRef.current = true;
-      onValueChange(path, SchemaAST.stringKeyword, defaultValue());
+    if (value == null && defaultValue && lastAppliedPathRef.current !== jsonPath) {
+      lastAppliedPathRef.current = jsonPath;
+      onValueChange(stablePath, SchemaAST.stringKeyword, defaultValue());
     }
-  }, [value, defaultValue, onValueChange, path]);
+  }, [value, defaultValue, onValueChange, stablePath, jsonPath]);
 
   return value;
 };

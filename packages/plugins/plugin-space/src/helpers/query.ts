@@ -150,7 +150,8 @@ export const getQueryTarget = (query: QueryAST.Query, space?: Space) => {
           return Option.fromNullable(space?.queues.get(parsed));
         }),
       );
-      // Invalid queue DXN. Don't query to avoid 400 errors.
+      // Skip query when a requested queue is not found (structurally invalid DXN or valid DXN
+      // referencing a queue not present in space.queues, e.g. not yet synced) to avoid 400 errors.
       // TODO(wittjosiah): Can we handle this upstream?
       if (options.queues?.length && Option.isNone(result)) {
         return undefined;

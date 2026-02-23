@@ -250,7 +250,7 @@ export const useFormHandler = <T extends AnyProperties>({
       log('onValueChange', { path, value });
 
       const jsonPath = createJsonPath(path);
-      const pathArray = Array.isArray(path) ? path : [path];
+      const pathArray = path;
       let parsedValue = value as any;
       try {
         if (type._tag === 'NumberKeyword') {
@@ -266,7 +266,7 @@ export const useFormHandler = <T extends AnyProperties>({
 
       // TODO(burdon): Check value has changed from original.
       const newChanged = { [jsonPath]: true };
-      setChanged({ ...changed, ...newChanged });
+      setChanged((prev) => ({ ...prev, ...newChanged }));
 
       // Validate.
       const isValid = validate(newValues);
@@ -279,7 +279,7 @@ export const useFormHandler = <T extends AnyProperties>({
         setValues(newValues);
       }
     },
-    [values, changed, validate, onValuesChanged, valuesProp],
+    [values, validate, onValuesChanged, valuesProp],
   );
 
   const onBlur = useCallback(
@@ -342,6 +342,7 @@ export const useFormHandler = <T extends AnyProperties>({
 
 /**
  * Creates a new object with value at path. Does not mutate source.
+ * Preserves arrays when path segments are numeric indices.
  */
 const mergeAtPath = (obj: any, path: readonly (string | number)[], value: any): any => {
   if (path.length === 0) {
@@ -349,12 +350,15 @@ const mergeAtPath = (obj: any, path: readonly (string | number)[], value: any): 
   }
 
   const [head, ...rest] = path;
-  if (rest.length === 0) {
-    return { ...obj, [head]: value };
+  const child = rest.length === 0 ? value : mergeAtPath(obj?.[head], rest, value);
+
+  if (Array.isArray(obj)) {
+    const copy = [...obj];
+    copy[head as number] = child;
+    return copy;
   }
 
-  const nested = obj && typeof obj === 'object' && head in obj ? obj[head] : undefined;
-  return { ...obj, [head]: mergeAtPath(nested, rest, value) };
+  return { ...obj, [head]: child };
 };
 
 const flatMap = (errors: ValidationError[]) => {

@@ -152,8 +152,8 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
         const parsed = typeof target === 'string' ? DXN.tryParse(target) : undefined;
         // For queue DXNs, only commit when asQueueDXN() succeeds (subspaceTag + spaceId + queueId).
         // Incomplete/backspaced queue DXNs parse but fail asQueueDXN, causing view to reject and reset.
-        const isValidQueueDXN = parsed?.kind === DXN.kind.QUEUE ? !!parsed.asQueueDXN() : !!parsed;
-        const isValidOrEmpty = target === '' || target === undefined || isValidQueueDXN;
+        const isValidDXN = parsed?.kind === DXN.kind.QUEUE ? !!parsed.asQueueDXN() : !!parsed;
+        const isValidOrEmpty = target === '' || target === undefined || isValidDXN;
         if (isValidOrEmpty) {
           // When committing empty, keep override as '' so we show empty until view updates.
           // Otherwise targetDisplay falls back to queueTarget (still the old DXN) and reverts.
