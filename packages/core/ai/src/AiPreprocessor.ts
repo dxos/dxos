@@ -28,7 +28,7 @@ export type CacheControl = 'no-cache' | 'ephemeral';
  * The function returns a list of valid Prompt objects.
  */
 export const preprocessPrompt: (
-  messages: Message.Message[],
+  messages: readonly Message.Message[],
   opts?: { system?: string; cacheControl?: CacheControl },
 ) => Effect.Effect<Prompt.Prompt, PromptPreprocesorError, never> = Effect.fn('preprocessPrompt')(function* (
   messages,
@@ -37,7 +37,7 @@ export const preprocessPrompt: (
   let prompt = yield* Function.pipe(
     messages,
     (messages) =>
-      Array.isNonEmptyArray(messages)
+      Array.isNonEmptyReadonlyArray(messages)
         ? Array.groupWith((a: Message.Message, b: Message.Message) => a.sender.role === b.sender.role)(messages)
         : [],
     Array.map(mergeMessages),
@@ -108,6 +108,11 @@ export const preprocessPrompt: (
             },
       ),
     );
+  }
+
+  if (prompt.content.at(-1)?.role === 'assistant') {
+    // Insert empty user message so that the assistant can continue the conversation.
+    prompt = prompt.pipe(Prompt.merge('Continue'));
   }
 
   return prompt;

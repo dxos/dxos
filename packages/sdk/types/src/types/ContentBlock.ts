@@ -328,8 +328,21 @@ export const Proposal = Schema.TaggedStruct('proposal', {
 export interface Proposal extends Schema.Schema.Type<typeof Proposal> {}
 
 /**
+ * Summary of the conversation prior to this point.
+ * Used to compress context.
+ */
+export const Summary = Schema.TaggedStruct('summary', {
+  content: Schema.String,
+
+  ...Base.fields,
+});
+
+export interface Summary extends Schema.Schema.Type<typeof Summary> {}
+
+/**
  * Model printing info about the list of available tools.
  */
+// TODO(dmaretskyi): Deprecate. Allow injecting html for rendering UI components.
 export const Toolkit = Schema.TaggedStruct('toolkit', {
   ...Base.fields,
 });
@@ -362,6 +375,7 @@ export const Any = Schema.Union(
   Suggestion,
   Stats,
   Text,
+  Summary,
   Toolkit,
   ToolCall,
   ToolResult,
