@@ -76,7 +76,8 @@
     "diff": "catalog:",
     "json-stable-stringify": "catalog:",
     "parjs": "catalog:",
-    "parsimmon": "catalog:"
+    "parsimmon": "catalog:",
+    "tokenx": "^1.3.0"
   },
   "devDependencies": {
     "@types/parsimmon": "catalog:",

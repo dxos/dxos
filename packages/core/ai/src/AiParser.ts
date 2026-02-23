@@ -74,7 +74,7 @@ export interface ParseResponseCallbacks<Tools extends Record<string, Tool.Any> =
   /**
    * Called when the stream ends.
    */
-  onEnd: (block: ContentBlock.Summary) => Effect.Effect<void>;
+  onEnd: (block: ContentBlock.Stats) => Effect.Effect<void>;
 }
 
 export interface ParseResponseOptions<Tools extends Record<string, Tool.Any>> extends ParseResponseCallbacks<Tools> {
@@ -104,8 +104,8 @@ export const parseResponse =
 
         /** Stack of open tags. */
         const tagStack: StreamBlock[] = [];
-        const summary: Types.Mutable<ContentBlock.Summary> = {
-          _tag: 'summary',
+        const stats: Types.Mutable<ContentBlock.Stats> = {
+          _tag: 'stats',
         };
 
         /** Current partial block used to accumulate content. */
@@ -332,7 +332,7 @@ export const parseResponse =
 
             case 'response-metadata': {
               yield* flushText();
-              summary.model = Option.getOrUndefined(part.modelId);
+              stats.model = Option.getOrUndefined(part.modelId);
               log('metadata', { metadata: part });
               break;
             }
@@ -340,18 +340,18 @@ export const parseResponse =
             case 'finish': {
               yield* flushText();
               const { inputTokens, outputTokens, totalTokens } = part.usage;
-              summary.duration = Date.now() - start;
-              summary.message = 'OK'; // part.reason;
-              summary.toolCalls = toolCalls;
-              summary.usage = {
+              stats.duration = Date.now() - start;
+              stats.message = 'OK'; // part.reason;
+              stats.toolCalls = toolCalls;
+              stats.usage = {
                 inputTokens,
                 outputTokens,
                 totalTokens,
               };
               yield* emitFullBlock({
-                ...summary,
-                _tag: 'summary',
-              } satisfies ContentBlock.Summary);
+                ...stats,
+                _tag: 'stats',
+              } satisfies ContentBlock.Stats);
               log('finish', { finish: part });
               break;
             }
@@ -370,8 +370,8 @@ export const parseResponse =
         yield* Stream.runForEach(input, handlePart);
 
         yield* flushText();
-        log('end', { blocks, parts, summary });
-        yield* onEnd(summary);
+        log('end', { blocks, parts, summary: stats });
+        yield* onEnd(stats);
         emit.end();
       }),
     );
