@@ -18,6 +18,7 @@ import {
   CalendarArticle,
   ComposeEmailDialog,
   type ComposeEmailDialogProps,
+  DraftMessageArticle,
   EventArticle,
   EventCard,
   MailboxArticle,
@@ -27,7 +28,6 @@ import {
   PopoverSaveFilter,
   RelatedToContact,
   RelatedToOrganization,
-  DraftMessageArticle,
 } from '../../components';
 import { COMPOSE_EMAIL_DIALOG, POPOVER_SAVE_FILTER } from '../../constants';
 import { GmailFunctions } from '../../functions';
