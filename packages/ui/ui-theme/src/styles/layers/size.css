@@ -38,12 +38,9 @@
   @apply is-full max-is-card-max-width;
 }
 
-.popover-card-max-width {
-  inline-size: min(var(--radix-popper-available-width), var(--dx-card-max-width));
-}
-
-.popover-card-max-height {
-  block-size: min(var(--radix-popper-available-height), var(--dx-card-max-height));
+.popover-card {
+  inline-size: var(--dx-card-max-width);
+  max-block-size: min(var(--radix-popper-available-height), var(--dx-card-max-height));
 }
 
 @layer dx-components {

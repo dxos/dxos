@@ -4403,6 +4403,9 @@ importers:
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../../plugins/plugin-markdown
+      '@dxos/react-ui-mosaic':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-mosaic
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../../ui/react-ui-syntax-highlighter
@@ -15914,6 +15917,9 @@ importers:
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../react-ui-form
+      '@dxos/react-ui-mosaic':
+        specifier: workspace:*
+        version: link:../react-ui-mosaic
       '@dxos/react-ui-sfx':
         specifier: workspace:*
         version: link:../react-ui-sfx

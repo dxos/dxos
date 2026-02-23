@@ -8,7 +8,7 @@ import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { Card } from '@dxos/react-ui-mosaic';
-import { CardContainer } from '@dxos/react-ui-mosaic/testing';
+import { CardContainer, type CardContainerProps } from '@dxos/react-ui-mosaic/testing';
 import { Organization, Person, Pipeline, Task } from '@dxos/types';
 
 export type DefaultStoryProps<T extends Obj.Any> = {
@@ -20,7 +20,7 @@ export type DefaultStoryProps<T extends Obj.Any> = {
 export const DefaultStory = <T extends Obj.Any>({ Component, createObject, image }: DefaultStoryProps<T>) => {
   // TODO(wittjosiah): ECHO objects don't work when passed via Storybook args.
   const object = useMemo(() => createObject(), [createObject]);
-  const roles: SurfaceComponentProps['role'][] = ['card--intrinsic', 'card--popover'];
+  const roles: CardContainerProps['role'][] = ['intrinsic', 'popover'];
 
   return (
     <div className='bs-full grid grid-rows-2 p-16 gap-16'>

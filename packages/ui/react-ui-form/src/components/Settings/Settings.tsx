@@ -32,7 +32,7 @@ const SETTINGS_ITEM_INPUT_NAME = 'Settings.ItemInput';
 const styles = {
   title: 'pbe-trimMd text-baseText text-lg',
   description: 'text-base text-description',
-  grid: 'grid grid-cols-1 md:grid-cols-[3fr_2fr] gap-x-trimLg',
+  grid: 'grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-x-trimLg',
 };
 
 //
@@ -183,7 +183,7 @@ const SettingsItem = ({ title, description = '', children }: SettingsItemProps) 
     <SettingsContainer classNames={styles.grid}>
       <h3 className={mx(styles.title, 'md:col-span-2')}>{toLocalizedString(title, t)}</h3>
       <p className={styles.description}>{toLocalizedString(description, t)}</p>
-      <div role='none' className='text-end plb-1'>
+      <div role='none' className='overflow-hidden text-end plb-1'>
         {children}
       </div>
     </SettingsContainer>

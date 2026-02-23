@@ -27,6 +27,11 @@ import { type ChessModel, type ChessPiece, ChessPieces, boardStyles, getSquareCo
 /** Fallback atom for when model is undefined. */
 const EMPTY_PIECES_ATOM = Atom.make<PieceMap<ChessPiece>>({});
 
+/**
+ * Chessboard layout.
+ */
+const CHESSBOARD_NAME = 'Chessboard';
+
 export type ChessboardProps = ThemedClassName<
   PropsWithChildren<{
     orientation?: Player;
@@ -36,11 +41,6 @@ export type ChessboardProps = ThemedClassName<
     cols?: number;
   }>
 >;
-
-/**
- * Chessboard layout.
- */
-const CHESSBOARD_NAME = 'Chessboard';
 
 const ChessboardComponent = forwardRef<HTMLDivElement, ChessboardProps>(
   ({ classNames, orientation, showLabels, debug, rows = 8, cols = 8 }, forwardedRef) => {

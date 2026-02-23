@@ -27,8 +27,8 @@ export const AnimatedBorder = ({ children, classNames, animate = false }: Animat
       </div>
       {animate && (
         <>
-          <div role='none' className={mx('animate-trail', ...trail)} />
-          <div role='none' className={mx('animate-trail-offset', ...trail)} />
+          <div role='none' className={mx(...trail, 'animate-trail')} />
+          <div role='none' className={mx(...trail, 'animate-trail-offset')} />
         </>
       )}
     </div>

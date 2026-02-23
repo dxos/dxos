@@ -94,11 +94,7 @@ export const PipelineColumn = ({ data: column, location, classNames, debug }: Pi
         data-testid='board-column'
         className={mx('group/column grid bs-full overflow-hidden grid-rows-[var(--rail-action)_1fr]', classNames)}
       >
-        <Board.Column.Header
-          classNames='border-be border-separator'
-          label={column.name ?? t('untitled view title')}
-          dragHandleRef={dragHandleRef}
-        />
+        <Board.Column.Header label={column.name ?? t('untitled view title')} dragHandleRef={dragHandleRef} />
         <Board.Column.Body data={column} Tile={Tile} />
       </div>
     </Board.Column.Root>

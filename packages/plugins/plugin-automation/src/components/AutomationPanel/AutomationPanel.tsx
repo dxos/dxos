@@ -15,7 +15,7 @@ import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { useTypeOptions } from '@dxos/plugin-space';
 import { type Client, useClient } from '@dxos/react-client';
 import { type Space, useObject, useQuery } from '@dxos/react-client/echo';
-import { Clipboard, IconButton, Input, Separator, useTranslation } from '@dxos/react-ui';
+import { Clipboard, IconButton, type IconButtonProps, Input, Separator, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';
 import { Pipeline } from '@dxos/types';
@@ -105,7 +105,7 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
 
   if (trigger) {
     return (
-      <Settings.Item title={t('trigger editor title')}>
+      <Settings.Item title={t('trigger editor title')} description={t('trigger editor description')}>
         <TriggerEditor
           db={space.db}
           trigger={trigger}
@@ -195,6 +195,26 @@ const TriggerListItem = ({
     onForceRun?.(trigger);
   }, [onForceRun, trigger]);
 
+  const actionProps = useMemo<IconButtonProps | undefined>(() => {
+    if (trigger.spec?.kind === 'timer' && onForceRun) {
+      return {
+        disabled: !enabled || trigger.spec?.kind !== 'timer',
+        icon: 'ph--play--regular',
+        label: 'Force run',
+        onClick: handleForceRun,
+      };
+    }
+
+    if (trigger.spec?.kind === 'queue' && onResetCursor) {
+      return {
+        disabled: !cursor,
+        icon: 'ph--arrow-clockwise--regular',
+        label: 'Reset cursor',
+        onClick: handleResetCursor,
+      };
+    }
+  }, [enabled, trigger.spec?.kind, handleForceRun]);
+
   return (
     <List.Item<Obj.Snapshot<Trigger.Trigger>>
       key={trigger.id}
@@ -216,24 +236,7 @@ const TriggerListItem = ({
         )}
       </div>
 
-      {trigger.spec?.kind === 'timer' && onForceRun && (
-        <List.ItemButton
-          autoHide={false}
-          disabled={!enabled || trigger.spec?.kind !== 'timer'}
-          icon='ph--play--regular'
-          label='Force run'
-          onClick={handleForceRun}
-        />
-      )}
-      {trigger.spec?.kind === 'queue' && onResetCursor && (
-        <List.ItemButton
-          autoHide={false}
-          disabled={!cursor}
-          icon='ph--arrow-clockwise--regular'
-          label='Reset cursor'
-          onClick={handleResetCursor}
-        />
-      )}
+      {actionProps ? <List.ItemButton {...actionProps} autoHide={false} /> : <div />}
 
       {onDelete && <List.ItemDeleteButton onClick={handleDelete} />}
     </List.Item>

@@ -15,15 +15,17 @@ const MIN_BLOCK_SIZE = 8;
 // Card container.
 //
 
-export const CardContainer = ({
-  children,
-  icon = 'ph--arrow-line-down--regular',
-  role,
-}: PropsWithChildren<{ icon?: string; role?: string }>) => {
+export type CardContainerProps = PropsWithChildren<{ role?: 'popover' | 'intrinsic'; icon?: string }>;
+
+export const CardContainer = ({ children, role, icon = 'ph--arrow-line-down--regular' }: CardContainerProps) => {
   switch (role) {
-    case 'card--popover':
-      return <PopoverCardContainer icon={icon}>{children}</PopoverCardContainer>;
-    case 'card--intrinsic':
+    case 'popover':
+      return (
+        <div role='none' className='flex justify-center'>
+          <PopoverCardContainer icon={icon}>{children}</PopoverCardContainer>
+        </div>
+      );
+    case 'intrinsic':
     default:
       return <IntrinsicCardContainer>{children}</IntrinsicCardContainer>;
   }
@@ -42,7 +44,7 @@ export const PopoverCardContainer = ({
   return (
     <Popover.Root open>
       <Popover.Content onOpenAutoFocus={(event: Event) => event.preventDefault()}>
-        <Popover.Viewport classNames='popover-card-max-height popover-card-max-width'>{children}</Popover.Viewport>
+        <Popover.Viewport classNames='popover-card'>{children}</Popover.Viewport>
         <Popover.Arrow />
       </Popover.Content>
       <Popover.Trigger asChild>

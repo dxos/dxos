@@ -111,12 +111,7 @@ export const ArrayField = ({
 
       {/* TODO(burdon): Get label from schema. */}
       {!readonly && layout !== 'static' && (
-        <IconButton
-          classNames='flex is-full _mlb-cardSpacingBlock'
-          icon='ph--plus--regular'
-          label={t('add field')}
-          onClick={handleAdd}
-        />
+        <IconButton classNames='flex is-full' icon='ph--plus--regular' label={t('add field')} onClick={handleAdd} />
       )}
     </>
   );
