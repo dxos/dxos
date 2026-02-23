@@ -5,7 +5,60 @@
 import { type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 
-import { fontBody, fontMono } from './tokens';
+import { mx } from '@dxos/ui-theme';
+
+export type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
+
+// https://tailwindcss.com/docs/font-weight
+const headings: Record<HeadingLevel, { className: string; fontSize: string; lineHeight: string }> = {
+  1: {
+    className: 'text-4xl',
+    fontSize: 'var(--text-4xl)',
+    lineHeight: 'var(--text-4xl--line-height)',
+  },
+  2: {
+    className: 'text-3xl',
+    fontSize: 'var(--text-3xl)',
+    lineHeight: 'var(--text-3xl--line-height)',
+  },
+  3: {
+    className: 'text-2xl',
+    fontSize: 'var(--text-2xl)',
+    lineHeight: 'var(--text-2xl--line-height)',
+  },
+  4: {
+    className: 'text-xl',
+    fontSize: 'var(--text-xl)',
+    lineHeight: 'var(--text-xl--line-height)',
+  },
+  5: {
+    className: 'text-lg',
+    fontSize: 'var(--text-lg)',
+    lineHeight: 'var(--text-lg--line-height)',
+  },
+  6: {
+    className: 'text-base',
+    fontSize: 'var(--text-base)',
+    lineHeight: 'var(--text-base--line-height)',
+  },
+};
+
+export const markdownTheme = {
+  code: 'font-mono no-underline! text-cm-code',
+  codeMark: 'font-mono text-cm-code-mark',
+  mark: 'opacity-50',
+  heading: (level: HeadingLevel) => ({
+    className: mx(headings[level].className, 'font-light text-cm-heading'),
+    color: 'var(--color-cm-heading) !important',
+    lineHeight: headings[level].lineHeight,
+    fontSize: headings[level].fontSize,
+    fontWeight: '100 !important',
+  }),
+};
+
+// Font families matching --font-body and --font-mono in theme.css.
+export const fontBody = 'Inter Variable, ui-sans-serif, system-ui, sans-serif';
+export const fontMono = 'JetBrains Mono Variable, ui-monospace, Cascadia Code, Source Code Pro, monospace';
 
 /**
  * Global base theme.

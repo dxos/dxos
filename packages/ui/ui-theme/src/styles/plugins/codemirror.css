@@ -1,36 +1,19 @@
 /**
  * CodeMirror theme tokens.
  *
- * @theme defines static light-mode values so Tailwind can generate utility classes
- * (e.g. text-cm-heading, bg-cm-active-line). The :root block then overrides each
- * token with light-dark() so the browser applies the correct value at runtime.
+ * Uses light-dark() directly in @theme so Tailwind preserves the function as a
+ * live CSS value (not resolved at build time). The browser then resolves light-dark()
+ * at computed-style time per element, based on the inherited color-scheme.
+ * This matches the pattern in experimental.css which is confirmed to work.
  */
 
 @theme {
   --color-cm-codeblock: theme(colors.neutral.500 / 0.1);
-  --color-cm-active-line: theme(colors.neutral.200 / 0.5);
-  --color-cm-separator: theme(colors.blue.500);
-  --color-cm-cursor: theme(colors.neutral.900);
-  --color-cm-selection: theme(colors.blue.400 / 0.5);
-  --color-cm-focused-selection: theme(colors.blue.400);
-  --color-cm-highlight: theme(colors.neutral.950);
-  --color-cm-highlight-surface: theme(colors.sky.200);
-  --color-cm-comment-text: theme(colors.neutral.50);
-  --color-cm-comment-surface: theme(colors.amber.800);
-
-  /* Markdown syntax highlighting */
-  --color-cm-code: theme(colors.neutral.700);
-  --color-cm-code-mark: theme(colors.blue.500);
-  --color-cm-mark-opacity: 0.5;
-  --color-cm-heading: theme(colors.neutral.900);
-}
-
-/* Override tokens with light-dark() for runtime light/dark switching. */
-:root {
   --color-cm-active-line: light-dark(
     theme(colors.neutral.200 / 0.5),
     theme(colors.neutral.800 / 0.5)
   );
+  --color-cm-separator: theme(colors.blue.500);
   --color-cm-cursor: light-dark(
     theme(colors.neutral.900),
     theme(colors.neutral.100)
@@ -59,10 +42,14 @@
     theme(colors.amber.800),
     theme(colors.amber.200)
   );
+
+  /* Markdown syntax highlighting */
   --color-cm-code: light-dark(
     theme(colors.neutral.700),
     theme(colors.neutral.300)
   );
+  --color-cm-code-mark: theme(colors.blue.500);
+  --color-cm-mark-opacity: 0.5;
   --color-cm-heading: light-dark(
     theme(colors.neutral.900),
     theme(colors.neutral.400)
