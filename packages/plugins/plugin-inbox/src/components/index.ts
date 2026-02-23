@@ -4,7 +4,7 @@
 
 import { type ComponentType, lazy } from 'react';
 
-export * from './ComposeEmailDialog';
+export * from './ComposeEmail';
 export * from './MailboxSettings';
 export * from './MailboxArticle';
 export * from './Related';

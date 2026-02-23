@@ -50,7 +50,7 @@ const DefaultStory = ({ content = '', streamOptions = defaultStreamOptions, ...p
 
     let cancelled = false;
     void (async () => {
-      for await (const chunk of textStream(content, streamOptions)) {
+      for await (const chunk of textStream(content + '\n', streamOptions)) {
         if (cancelled) {
           break;
         }
@@ -73,7 +73,7 @@ const DefaultStory = ({ content = '', streamOptions = defaultStreamOptions, ...p
 
   const handleAppend = useCallback(() => {
     void controller?.append(
-      [faker.lorem.paragraph(), `<suggestion>${faker.lorem.word()}</suggestion>`, faker.lorem.paragraph(), ''].join(
+      ['', faker.lorem.paragraph(), `<suggestion>${faker.lorem.word()}</suggestion>`, faker.lorem.paragraph(), ''].join(
         '\n\n',
       ),
     );
