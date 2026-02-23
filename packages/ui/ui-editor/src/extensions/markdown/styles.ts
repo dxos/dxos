@@ -93,7 +93,7 @@ export const formattingStyles = EditorView.theme({
     padding: '2px 16px 2px 0px',
     textAlign: 'left',
     borderBottom: '1px solid var(--color-cm-separator)',
-    color: 'var(--dx-subdued)',
+    color: 'var(--color-subdued)',
   },
   '.cm-table-cell': {
     padding: '2px 16px 2px 0px',

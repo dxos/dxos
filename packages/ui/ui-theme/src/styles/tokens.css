@@ -60,6 +60,7 @@
 
   /* Scrollbar */
 
+  --color-scrollbar-track: light-dark(var(--color-neutral-50), var(--color-neutral-950));
   --color-scrollbar-thumb: light-dark(theme(colors.neutral.200), theme(colors.neutral.700));
   --color-scrollbar-thumb-active: light-dark(theme(colors.neutral.200), theme(colors.neutral.600));
   --color-scrollbar-thumb-hover: light-dark(theme(colors.neutral.200), theme(colors.neutral.600));
@@ -71,56 +72,33 @@
   --color-axis-surface: light-dark(theme(colors.neutral.50), theme(colors.neutral.800));
   --color-axis-text: light-dark(theme(colors.neutral.800), theme(colors.neutral.200));
 
-  /* Misc */
+  /* Grid */
 
-  --color-call-active: theme(colors.green.500);
+  --color-grid-selection-overlay: oklch(from var(--color-blue-500) l c h / 0.2);
+  --color-grid-highlight: oklch(from var(--color-emerald-500) l c h / 0.5);
+  --color-grid-commented: light-dark(var(--color-green-200), var(--color-green-600));
+  --color-grid-commented-active: light-dark(var(--color-green-300), var(--color-green-700));
+  --color-grid-hover-overlay: oklch(from var(--color-neutral-500) l c h / 0.1);
+
   --color-grid-commented-active: light-dark(theme(colors.green.200 / 0.5), theme(colors.green.600 / 0.5));
   --color-grid-line: light-dark(theme(colors.neutral.100), theme(colors.neutral.800));
   --color-grid-focus-indicator-color: light-dark(theme(colors.blue.300), theme(colors.blue.500));
-  --color-hair-line: 1px;
-  --color-landmark-line: 1px;
-  --color-modal-line: 1px;
-  --color-no-line: 0px;
-  --color-positioned-line: 1px;
-  --color-thick-line: 2px;
+
+  /* Cursors */
+
+  --color-success-cursor: light-dark(var(--color-emerald-400), var(--color-emerald-300));
+  --color-info-cursor: light-dark(var(--color-cyan-400), var(--color-cyan-300));
+  --color-warning-cursor: light-dark(var(--color-amber-400), var(--color-amber-300));
+  --color-error-cursor: light-dark(var(--color-rose-400), var(--color-rose-300));
+
+  /* Text */
+
+  --color-description: light-dark(var(--color-neutral-600), var(--color-neutral-400));
+  --color-subdued: light-dark(var(--color-neutral-800), var(--color-neutral-200));
+  --color-placeholder: light-dark(var(--color-neutral-600), var(--color-neutral-400))
 }
 
-
-
 @layer dx-tokens {
-  /* Semantic tokens without --color-* equivalents */
-
-  :root, .dark {
-    --dx-callAlert: var(--color-rose-500);
-    --dx-primaryCursor: light-dark(var(--color-blue-400), var(--color-blue-300));
-
-    --dx-gridCell: light-dark(transparent, var(--color-neutral-950));
-    --dx-gridCellSelected: light-dark(var(--color-neutral-100), var(--color-neutral-900));
-    --dx-gridOverlay: oklch(from var(--color-blue-500) l c h / 0.5);
-    --dx-gridSelectionOverlay: oklch(from var(--color-blue-500) l c h / 0.2);
-    --dx-gridHighlight: oklch(from var(--color-emerald-500) l c h / 0.5);
-    --dx-gridCommented: light-dark(var(--color-green-200), var(--color-green-600));
-
-    --dx-scrollbarTrack: light-dark(var(--color-neutral-50), var(--color-neutral-900));
-    --dx-scrollbarThumbSubdued: light-dark(var(--color-neutral-100), var(--color-neutral-800));
-    --dx-hoverOverlay: oklch(from var(--color-neutral-500) l c h / 0.1);
-    --dx-accentSurfaceRelated: light-dark(oklch(from var(--color-blue-300) l c h / 0.1), oklch(from var(--color-blue-400) l c h / 0.1));
-    --dx-description: light-dark(var(--color-neutral-600), var(--color-neutral-400));
-    --dx-subdued: light-dark(var(--color-neutral-800), var(--color-neutral-200));
-    --dx-placeholder: var(--color-neutral-600);
-  }
-
-  /* Aliases and cursor tokens */
-
-  :root, .dark {
-    --dx-currentRelated: var(--color-modal-surface);
-
-    --dx-successCursor: light-dark(var(--color-emerald-400), var(--color-emerald-300));
-    --dx-infoCursor: light-dark(var(--color-cyan-400), var(--color-cyan-300));
-    --dx-warningCursor: light-dark(var(--color-amber-400), var(--color-amber-300));
-    --dx-errorCursor: light-dark(var(--color-rose-400), var(--color-rose-300));
-    --dx-currentCursor: var(--dx-primaryCursor);
-  }
 
   /* TODO(burdon): Are these used? See surfaces.css */
   .sidebar-surface, .dark .sidebar-surface, .bg-group-surface, .dark .bg-group-surface, .bg-sidebar-surface, .dark .bg-sidebar-surface, .bg-header-surface, .dark .bg-header-surface, .bg-toolbar-surface, .dark .bg-toolbar-surface, .bg-card-surface, .dark .bg-card-surface {
@@ -140,6 +118,19 @@
 
   [data-grid-focus-indicator-variant="stack"] {
     --color-grid-focus-indicator-color: light-dark(var(--color-neutral-400), var(--color-neutral-600));
+  }
+
+  /* TODO(burdon): Move sizes to different file. */
+
+  :root {
+    /* Lines */
+
+    --dx-hairLine: 1px;
+    --dx-landmarkLine: 1px;
+    --dx-modalLine: 1px;
+    --dx-noLine: 0px;
+    --dx-positionedLine: 1px;
+    --dx-thickLine: 2px;
   }
 
   :root {

@@ -142,7 +142,7 @@ export const baseTheme = EditorView.baseTheme({
   '.cm-gutter.cm-lineNumbers': {
     paddingRight: '4px',
     borderRight: '1px solid var(--color-subdued-separator)',
-    color: 'var(--dx-subduedText)',
+    color: 'var(--color-subdued)',
   },
   '.cm-gutter.cm-lineNumbers .cm-gutterElement': {
     minWidth: '40px',
@@ -173,7 +173,7 @@ export const baseTheme = EditorView.baseTheme({
     borderLeft: '2px solid var(--color-cm-cursor)',
   },
   '.cm-placeholder': {
-    color: 'var(--dx-placeholder)',
+    color: 'var(--color-placeholder)',
   },
 
   /**
@@ -261,7 +261,7 @@ export const baseTheme = EditorView.baseTheme({
     display: 'none',
   },
   '.cm-completionLabel': {
-    color: 'var(--dx-description)',
+    color: 'var(--color-description)',
     padding: '0 4px',
   },
   '.cm-completionMatchedText': {
@@ -290,7 +290,7 @@ export const baseTheme = EditorView.baseTheme({
     backgroundColor: 'var(--surface-bg)',
   },
   '.cm-panel input, .cm-panel button, .cm-panel label': {
-    color: 'var(--dx-subdued)',
+    color: 'var(--color-subdued)',
     fontSize: '14px',
     all: 'unset',
     margin: '3px !important',

@@ -6,8 +6,6 @@ import { type ComponentFragment } from '@dxos/ui-types';
 
 import { ghostHover } from './hover';
 
-// TODO(burdon): Use semantic tokens (e.g., accentSurfaceHover, bg-gridSelectionOverlay)?
-
 export const ghostSelectedCurrent = [
   ghostHover,
   'aria-[current]:bg-input-surface hover:aria-[current]:bg-hover-surface',

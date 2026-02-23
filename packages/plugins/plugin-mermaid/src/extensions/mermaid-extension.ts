@@ -119,11 +119,11 @@ export const mermaid = (_options: MermaidOptions = {}): Extension => {
         position: 'absolute',
         right: '16px',
         fontFamily: 'unset',
-        color: 'var(--dx-subdued)',
+        color: 'var(--color-subdued)',
       },
       '& .cm-mermaid-error': {
         display: 'inline-block',
-        color: 'var(--dx-errorText)',
+        color: 'var(--color-error)',
       },
       '& .cm-mermaid-hidden': {
         display: 'none !important',
