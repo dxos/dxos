@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef } from 'react';
 
 import { Treegrid, type TreegridRootProps } from '@dxos/react-ui';
 
@@ -13,7 +13,8 @@ export type TreeProps<T extends { id: string } = any, O = any> = {
   root?: T;
   path?: string[];
   id: string;
-} & TreeContextType<T, O> &
+} & Omit<TreeContextType<T, O>, 'useChildIds' | 'useItem'> &
+  Partial<Pick<TreeContextType<T, O>, 'useChildIds' | 'useItem'>> &
   Partial<Pick<TreegridRootProps, 'gridTemplateColumns' | 'classNames'>> &
   Pick<
     TreeItemProps<T>,
@@ -35,6 +36,8 @@ export const Tree = <T extends { id: string } = any, O = any>({
   getProps,
   useIsOpen,
   useIsCurrent,
+  useChildIds: useChildIdsProp,
+  useItem: useItemProp,
   draggable = false,
   gridTemplateColumns = '[tree-row-start] 1fr min-content [tree-row-end]',
   classNames,
@@ -46,14 +49,36 @@ export const Tree = <T extends { id: string } = any, O = any>({
   onOpenChange,
   onSelect,
 }: TreeProps<T, O>) => {
+  // Shared item cache for default useChildIds/useItem fallback.
+  const itemCacheRef = useRef(new Map<string, T>());
+
+  // Default useChildIds: wraps useItems and populates item cache.
+  const defaultUseChildIds = (parent?: T) => {
+    const items = useItems(parent);
+    for (const item of items) {
+      itemCacheRef.current.set(item.id, item);
+    }
+    return items.map((item) => item.id);
+  };
+
+  // Default useItem: reads from item cache populated by defaultUseChildIds.
+  const defaultUseItem = (itemId: string) => {
+    return itemCacheRef.current.get(itemId);
+  };
+
+  const useChildIds = useChildIdsProp ?? defaultUseChildIds;
+  const useItem = useItemProp ?? defaultUseItem;
+
   const context = useMemo(
     () => ({
       useItems,
       getProps,
       useIsOpen,
       useIsCurrent,
+      useChildIds,
+      useItem,
     }),
-    [useItems, getProps, useIsOpen, useIsCurrent],
+    [useItems, getProps, useIsOpen, useIsCurrent, useChildIds, useItem],
   );
   const items = useItems(root);
   const treePath = useMemo(() => (path ? [...path, id] : [id]), [id, path]);

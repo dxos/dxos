@@ -85,8 +85,9 @@ const RawTreeItem = <T extends { id: string } = any>({
   const [instruction, setInstruction] = useState<Instruction | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const { useItems, getProps, useIsOpen, useIsCurrent } = useTree();
-  const items = useItems(item);
+  const { useChildIds, getProps, useIsOpen, useIsCurrent } = useTree();
+  const childIds = useChildIds(item);
+
   const { id, parentOf, label, className, headingClassName, icon, iconHue, disabled, testId } = getProps(item, _path);
   const path = useMemo(() => [..._path, id], [_path, id]);
   const open = useIsOpen(path, item);
@@ -223,6 +224,16 @@ const RawTreeItem = <T extends { id: string } = any>({
     [isBranch, open, handleOpenToggle, handleSelect],
   );
 
+  const childProps = {
+    draggable: _draggable,
+    renderColumns: Columns,
+    blockInstruction,
+    canDrop,
+    canSelect,
+    onOpenChange,
+    onSelect,
+  };
+
   return (
     <>
       <Treegrid.Row
@@ -276,19 +287,13 @@ const RawTreeItem = <T extends { id: string } = any>({
         </div>
       </Treegrid.Row>
       {open &&
-        items.map((item, index) => (
-          <TreeItem
-            key={item.id}
-            item={item}
+        childIds.map((childId, index) => (
+          <TreeItemById
+            key={childId}
+            id={childId}
             path={path}
-            last={index === items.length - 1}
-            draggable={_draggable}
-            renderColumns={Columns}
-            blockInstruction={blockInstruction}
-            canDrop={canDrop}
-            canSelect={canSelect}
-            onOpenChange={onOpenChange}
-            onSelect={onSelect}
+            last={index === childIds.length - 1}
+            {...childProps}
           />
         ))}
     </>
@@ -296,3 +301,15 @@ const RawTreeItem = <T extends { id: string } = any>({
 };
 
 export const TreeItem = memo(RawTreeItem) as FC<TreeItemProps>;
+
+/** Resolves a child ID to an item via `useItem` and renders a TreeItem. */
+type TreeItemByIdProps = Omit<TreeItemProps, 'item'> & { id: string };
+
+const TreeItemById = <T extends { id: string } = any>({ id, ...props }: TreeItemByIdProps) => {
+  const { useItem } = useTree();
+  const item = useItem(id) as T | undefined;
+  if (!item) {
+    return null;
+  }
+  return <TreeItem item={item} {...props} />;
+};

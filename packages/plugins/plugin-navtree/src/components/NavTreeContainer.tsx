@@ -11,7 +11,7 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { useAppGraph, useLayout } from '@dxos/app-toolkit/ui';
 import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { Graph, Node, useActionRunner } from '@dxos/plugin-graph';
-import { useConnections, useActions as useGraphActions } from '@dxos/plugin-graph';
+import { useConnections, useEdges, useNode, useActions as useGraphActions } from '@dxos/plugin-graph';
 import { useMediaQuery, useSidebars } from '@dxos/react-ui';
 import { type TreeData, type TreeItemDataProps, isTreeData } from '@dxos/react-ui-list';
 import { mx } from '@dxos/ui-theme';
@@ -58,6 +58,29 @@ const useItems = (node?: Node.Node, options?: { disposition?: string; sort?: boo
   const connections = useConnections(graph, node?.id ?? Node.RootId);
   const filtered = connections.filter((node) => filterItems(node, options?.disposition));
   return options?.sort ? filtered.toSorted((a, b) => byPosition(a.properties, b.properties)) : filtered;
+};
+
+/** Subscribe to child IDs only (topology), avoiding content subscription. */
+const useChildIds = (node?: Node.Node) => {
+  const { graph } = useAppGraph();
+  const edges = useEdges(graph, node?.id ?? Node.RootId);
+  return useMemo(
+    () =>
+      edges.outbound.filter((id) => {
+        const nodeOption = Graph.getNode(graph, id);
+        if (nodeOption._tag === 'None') {
+          return false;
+        }
+        return filterItems(nodeOption.value);
+      }),
+    [edges, graph],
+  );
+};
+
+/** Subscribe to a single item by ID (content only). */
+const useItemById = (id: string) => {
+  const { graph } = useAppGraph();
+  return useNode(graph, id);
 };
 
 const useActions = (node: Node.Node): FlattenedActions => {
@@ -307,6 +330,8 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
         topbar,
         useActions,
         useItems,
+        useChildIds,
+        useItem: useItemById,
       }),
       [
         blockInstruction,

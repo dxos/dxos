@@ -15,7 +15,7 @@ import type { L1PanelProps } from './Sidebar';
 
 export type NavTreeContextValue = Pick<
   TreeProps<NavTreeItemGraphNode, { disposition?: string; sort?: boolean }>,
-  'useItems' | 'getProps' | 'useIsCurrent' | 'useIsOpen' | 'blockInstruction' | 'canDrop' | 'onOpenChange' | 'onSelect'
+  'useItems' | 'getProps' | 'useIsCurrent' | 'useIsOpen' | 'useChildIds' | 'useItem' | 'blockInstruction' | 'canDrop' | 'onOpenChange' | 'onSelect'
 > &
   Pick<L1PanelProps, 'onBack'> & {
     tab: string;

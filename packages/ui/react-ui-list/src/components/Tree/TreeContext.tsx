@@ -26,6 +26,10 @@ export type TreeContextType<T = any, O = any> = {
   useIsOpen: (path: string[], item: T) => boolean;
   /** Hook that subscribes to and returns the current state for a tree item. */
   useIsCurrent: (path: string[], item: T) => boolean;
+  /** Subscribe to child IDs only (topology), avoiding content subscription. */
+  useChildIds: (parent?: T) => string[];
+  /** Subscribe to a single item by ID (content only). */
+  useItem: (id: string) => T | undefined;
 };
 
 const TreeContext = createContext<null | TreeContextType>(null);
