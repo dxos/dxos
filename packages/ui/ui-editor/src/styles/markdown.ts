@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { mx } from '@dxos/ui-theme';
+
 export type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
 
 // https://tailwindcss.com/docs/font-weight
@@ -18,5 +20,5 @@ export const markdownTheme = {
   code: 'font-mono no-underline! text-cm-code',
   codeMark: 'font-mono text-cm-code-mark',
   mark: 'opacity-50',
-  heading: (level: HeadingLevel) => `${headings[level]} text-cm-heading`,
+  heading: (level: HeadingLevel) => mx(headings[level], 'text-cm-heading'),
 };
