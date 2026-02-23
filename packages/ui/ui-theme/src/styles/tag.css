@@ -19,9 +19,11 @@
     @apply inline cursor-pointer -mx-[4px] px-[3px] py-0.5 border border-separator rounded-xs bg-group-surface transition-colors;
 
     &:hover {
-      @apply bg-hoverSurface;
+      @apply bg-hover-surface;
     }
   }
+
+  /* TODO(burdon): Reconcile with hues.css */
 
   .dx-tag[data-hue='neutral'],
   .dx-tag--neutral {
