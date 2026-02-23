@@ -97,32 +97,29 @@ const InitiativeStack = ({ initiative }: { initiative: Initiative.Initiative }) 
 
   return (
     <Layout.Main classNames='overflow-y-auto'>
-      <div className='border border-subduedSeparator rounded-md p-2 overflow-y-auto'>
-        {inputQueueItems.map((item) => (
-          <Surface.Surface key={item.id} role='section' data={{ subject: item }} limit={1} />
-        ))}
-        {inputQueueItems.length === 0 && (
-          <div className='text-subdued'>
-            Initiative has no objects associated with it.
-            <br />
-            <br />
-            To get started:
-            <br />- Write the initative spec: what is the goal of the initiative?
-            <br />- subscribe initiative to your email.
-            <br />- Chat with the agent.
-          </div>
-        )}
-      </div>
+      {inputQueueItems.length === 0 && (
+        <div className='text-subdued'>
+          Initiative has no objects associated with it.
+          <br />
+          <br />
+          To get started:
+          <br />- Write the initative spec: what is the goal of the initiative?
+          <br />- subscribe initiative to your email.
+          <br />- Chat with the agent.
+        </div>
+      )}
 
-      <Focus.Group asChild>
-        <Mosaic.Container asChild withFocus autoScroll={viewport}>
-          <ScrollArea.Root orientation='vertical'>
-            <ScrollArea.Viewport classNames='p-2' ref={setViewport}>
-              <Mosaic.Stack items={stackObjects} getId={(item) => item.id} draggable={false} Tile={StackTile} />
-            </ScrollArea.Viewport>
-          </ScrollArea.Root>
-        </Mosaic.Container>
-      </Focus.Group>
+      {stackObjects.length > 0 && (
+        <Focus.Group asChild>
+          <Mosaic.Container asChild withFocus autoScroll={viewport}>
+            <ScrollArea.Root orientation='vertical'>
+              <ScrollArea.Viewport classNames='p-2' ref={setViewport}>
+                <Mosaic.Stack items={stackObjects} getId={(item) => item.id} draggable={false} Tile={StackTile} />
+              </ScrollArea.Viewport>
+            </ScrollArea.Root>
+          </Mosaic.Container>
+        </Focus.Group>
+      )}
     </Layout.Main>
   );
 };
