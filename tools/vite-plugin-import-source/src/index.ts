@@ -80,6 +80,10 @@ const PluginImportSource = ({
             return null;
           }
 
+          if(resolved.packageJsonPath) {
+            this.addWatchFile(resolved.packageJsonPath);
+          }
+
           this.addWatchFile(resolved.path);
           verbose && console.log(`[plugin-import-source] ${source} -> ${resolved.path}`);
           return resolved.path;
