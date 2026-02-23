@@ -5,84 +5,84 @@
 @theme {
   /* Surfaces */
 
-  --color-baseSurface: light-dark(theme(colors.white), theme(colors.neutral.900));
-  --color-baseText: light-dark(theme(colors.black), theme(colors.neutral.50));
+  --color-base-surface: light-dark(theme(colors.white), theme(colors.neutral.900));
+  --color-base-text: light-dark(theme(colors.black), theme(colors.neutral.50));
 
-  --color-headerSurface: var(--dx-headerSurface);
+  --color-header-surface: light-dark(theme(colors.white), theme(colors.neutral.900));
 
-  --color-hoverSurface: var(--dx-hoverSurface);
-  --color-hoverSurfaceGroup: light-dark(theme(colors.neutral.100), theme(colors.neutral.700));
+  --color-hover-surface: light-dark(theme(colors.neutral.100), theme(colors.neutral.800));
+  --color-hover-surface-group: light-dark(theme(colors.neutral.100), theme(colors.neutral.700));
 
-  --color-inputSurface: var(--dx-inputSurface);
-  --color-inputSurfaceGroup: light-dark(theme(colors.neutral.100), theme(colors.neutral.700));
+  --color-input-surface: light-dark(theme(colors.neutral.100), theme(colors.neutral.800));
+  --color-input-surface-group: light-dark(theme(colors.neutral.100), theme(colors.neutral.700));
 
-  --color-inverseSurface: light-dark(theme(colors.neutral.900), theme(colors.white));
-  --color-inverseSurfaceText: light-dark(theme(colors.neutral.50), theme(colors.black));
+  --color-inverse-surface: light-dark(theme(colors.neutral.900), theme(colors.white));
+  --color-inverse-surface-text: light-dark(theme(colors.neutral.50), theme(colors.black));
 
-  --color-activeSurface: var(--dx-activeSurface);
-  --color-groupSurface: light-dark(theme(colors.white), theme(colors.neutral.800));
+  --color-active-surface: light-dark(theme(colors.neutral.100), theme(colors.neutral.800));
+  --color-group-surface: light-dark(theme(colors.white), theme(colors.neutral.800));
 
-  --color-cardSurface: var(--dx-cardSurface);
-  --color-modalSurface: light-dark(theme(colors.white), theme(colors.neutral.800));
+  --color-card-surface: light-dark(theme(colors.white), theme(colors.neutral.900));
+  --color-modal-surface: light-dark(theme(colors.white), theme(colors.neutral.800));
 
-  --color-attention: var(--dx-attention);
+  --color-attention: light-dark(theme(colors.white), theme(colors.black));
 
-  --color-scrimSurface: light-dark(theme(colors.neutral.50 / 0.65), theme(colors.neutral.900 / 0.65));
-  --color-sidebarSurface: var(--dx-sidebarSurface);
-  --color-toolbarSurface: var(--dx-toolbarSurface);
+  --color-scrim-surface: light-dark(theme(colors.neutral.50 / 0.65), theme(colors.neutral.900 / 0.65));
+  --color-sidebar-surface: light-dark(theme(colors.white), theme(colors.neutral.900));
+  --color-toolbar-surface: light-dark(theme(colors.white), theme(colors.neutral.900));
 
-  --color-textInputSurface: var(--dx-textInputSurface);
-  --color-textInputSurfaceGroup: light-dark(theme(colors.neutral.50), theme(colors.neutral.700));
+  --color-text-input-surface: light-dark(theme(colors.neutral.50), theme(colors.neutral.900));
+  --color-text-input-surface-group: light-dark(theme(colors.neutral.50), theme(colors.neutral.700));
 
-  --color-deckSurface: light-dark(theme(colors.neutral.50), theme(colors.neutral.950));
+  --color-deck-surface: light-dark(theme(colors.neutral.50), theme(colors.neutral.950));
 
-  --color-focusLine: var(--dx-focusLine);
-  --color-focusSurface: light-dark(theme(colors.white), theme(colors.black));
-  --color-neutralFocusIndicator: light-dark(theme(colors.neutral.300), theme(colors.neutral.600));
+  --color-focus-line: 2px;
+  --color-focus-surface: light-dark(theme(colors.white), theme(colors.black));
+  --color-neutral-focus-indicator: light-dark(theme(colors.neutral.300), theme(colors.neutral.600));
 
   /* Accent */
 
-  --color-accentSurface: theme(colors.blue.500);
-  --color-accentSurfaceHover: light-dark(theme(colors.blue.600), theme(colors.blue.500));
-  --color-accentSurfaceText: theme(colors.white);
-  --color-accentText: light-dark(theme(colors.blue.600), theme(colors.blue.400));
-  --color-accentTextHover: light-dark(theme(colors.blue.500), theme(colors.blue.400));
-  --color-accentFocusIndicator: light-dark(theme(colors.blue.300), theme(colors.blue.500));
+  --color-accent-surface: theme(colors.blue.500);
+  --color-accent-surface-hover: light-dark(theme(colors.blue.600), theme(colors.blue.500));
+  --color-accent-surface-text: theme(colors.white);
+  --color-accent-text: light-dark(theme(colors.blue.600), theme(colors.blue.400));
+  --color-accent-text-hover: light-dark(theme(colors.blue.500), theme(colors.blue.400));
+  --color-accent-focus-indicator: light-dark(theme(colors.blue.300), theme(colors.blue.500));
 
-  --color-unAccent: theme(colors.neutral.400);
-  --color-unAccentHover: theme(colors.neutral.500);
+  --color-un-accent: theme(colors.neutral.400);
+  --color-un-accent-hover: theme(colors.neutral.500);
 
   /* Separator */
 
-  --color-separator: var(--dx-separator);
-  --color-separatorGroup: light-dark(theme(colors.neutral.200), theme(colors.neutral.700));
-  --color-subduedSeparator: light-dark(theme(colors.neutral.200), theme(colors.neutral.700));
+  --color-separator: light-dark(theme(colors.neutral.200), theme(colors.neutral.700));
+  --color-separator-group: light-dark(theme(colors.neutral.200), theme(colors.neutral.700));
+  --color-subdued-separator: light-dark(theme(colors.neutral.200), theme(colors.neutral.700));
 
   /* Scrollbar */
 
-  --color-scrollbarThumb: light-dark(theme(colors.neutral.200), theme(colors.neutral.700));
-  --color-scrollbarThumbActive: light-dark(theme(colors.neutral.200), theme(colors.neutral.600));
-  --color-scrollbarThumbHover: light-dark(theme(colors.neutral.200), theme(colors.neutral.600));
+  --color-scrollbar-thumb: light-dark(theme(colors.neutral.200), theme(colors.neutral.700));
+  --color-scrollbar-thumb-active: light-dark(theme(colors.neutral.200), theme(colors.neutral.600));
+  --color-scrollbar-thumb-hover: light-dark(theme(colors.neutral.200), theme(colors.neutral.600));
 
   /* Sheet */
 
-  --color-axisSelectedSurface: light-dark(theme(colors.neutral.100), theme(colors.neutral.900));
-  --color-axisSelectedText: light-dark(theme(colors.neutral.100), theme(colors.neutral.900));
-  --color-axisSurface: light-dark(theme(colors.neutral.50), theme(colors.neutral.800));
-  --color-axisText: light-dark(theme(colors.neutral.800), theme(colors.neutral.200));
+  --color-axis-selected-surface: light-dark(theme(colors.neutral.100), theme(colors.neutral.900));
+  --color-axis-selected-text: light-dark(theme(colors.neutral.100), theme(colors.neutral.900));
+  --color-axis-surface: light-dark(theme(colors.neutral.50), theme(colors.neutral.800));
+  --color-axis-text: light-dark(theme(colors.neutral.800), theme(colors.neutral.200));
 
   /* Misc */
 
-  --color-callActive: theme(colors.green.500);
-  --color-gridCommentedActive: light-dark(theme(colors.green.200 / 0.5), theme(colors.green.600 / 0.5));
-  --color-gridLine: var(--dx-gridLine);
-  --color-gridFocusIndicatorColor: var(--dx-gridFocusIndicatorColor);
-  --color-hairLine: var(--dx-hairLine);
-  --color-landmarkLine: var(--dx-landmarkLine);
-  --color-modalLine: var(--dx-modalLine);
-  --color-noLine: var(--dx-noLine);
-  --color-positionedLine: var(--dx-positionedLine);
-  --color-thickLine: var(--dx-thickLine);
+  --color-call-active: theme(colors.green.500);
+  --color-grid-commented-active: light-dark(theme(colors.green.200 / 0.5), theme(colors.green.600 / 0.5));
+  --color-grid-line: light-dark(theme(colors.neutral.100), theme(colors.neutral.800));
+  --color-grid-focus-indicator-color: light-dark(theme(colors.blue.300), theme(colors.blue.500));
+  --color-hair-line: 1px;
+  --color-landmark-line: 1px;
+  --color-modal-line: 1px;
+  --color-no-line: 0px;
+  --color-positioned-line: 1px;
+  --color-thick-line: 2px;
 }
 
 
@@ -157,17 +157,9 @@
   /* Design token aliases and contextual overrides */
 
   :root, .dark {
-    --dx-gridLine: var(--dx-activeSurface);
-    --dx-gridFocusIndicatorColor: var(--dx-accentFocusIndicator);
-
     --dx-activeSurface: var(--dx-inputSurfaceBase);
     --dx-inputSurface: var(--dx-inputSurfaceBase);
     --dx-sidebarSurface: var(--dx-groupSurface);
-    --dx-headerSurface: var(--dx-groupSurface);
-    --dx-toolbarSurface: var(--dx-groupSurface);
-    --dx-cardSurface: var(--dx-groupSurface);
-    --dx-textInputSurface: var(--dx-textInputSurfaceBase);
-    --dx-hoverSurface: var(--dx-hoverSurfaceBase);
     --dx-attention: var(--dx-focusSurface);
     --dx-currentRelated: var(--dx-modalSurface);
     --dx-separator: var(--dx-separatorBase);
@@ -179,22 +171,24 @@
     --dx-currentCursor: var(--dx-primaryCursor);
   }
 
-  .sidebar-surface, .dark .sidebar-surface, .bg-groupSurface, .dark .bg-groupSurface, .bg-sidebarSurface, .dark .bg-sidebarSurface, .bg-headerSurface, .dark .bg-headerSurface, .bg-toolbarSurface, .dark .bg-toolbarSurface, .bg-cardSurface, .dark .bg-cardSurface {
-    --dx-textInputSurface: var(--dx-textInputSurfaceGroup);
-    --dx-inputSurface: var(--dx-inputSurfaceGroup);
-    --dx-hoverSurface: var(--dx-hoverSurfaceGroup);
-    --dx-separator: var(--dx-separatorGroup);
+  /* TODO(burdon): Are these used? See surfaces.css */
+  .sidebar-surface, .dark .sidebar-surface, .bg-group-surface, .dark .bg-group-surface, .bg-sidebar-surface, .dark .bg-sidebar-surface, .bg-header-surface, .dark .bg-header-surface, .bg-toolbar-surface, .dark .bg-toolbar-surface, .bg-card-surface, .dark .bg-card-surface {
+    --color-text-input-surface: light-dark(var(--color-neutral-50), var(--color-neutral-800));
+    --color-input-surface: light-dark(var(--color-neutral-100), var(--color-neutral-800));
+    --color-hover-surface: light-dark(var(--color-neutral-100), var(--color-neutral-700));
+    --color-separator: light-dark(var(--color-neutral-200), var(--color-neutral-700));
   }
 
-  .modal-surface, .dark .modal-surface, .bg-modalSurface, .dark .bg-modalSurface, .bg-currentRelated, .dark .bg-currentRelated {
-    --dx-textInputSurface: var(--dx-textInputSurfaceModal);
-    --dx-inputSurface: var(--dx-inputSurfaceModal);
-    --dx-hoverSurface: var(--dx-hoverSurfaceModal);
-    --dx-separator: var(--dx-separatorModal);
+  /* TODO(burdon): Are these used? See surfaces.css */
+  .modal-surface, .dark .modal-surface, .bg-modal-surface, .dark .bg-modal-surface, .bg-current-related, .dark .bg-current-related {
+    --color-text-input-surface: light-dark(var(--color-neutral-50), var(--color-neutral-800));
+    --color-input-surface: light-dark(var(--color-neutral-100), var(--color-neutral-800));
+    --color-hover-surface: light-dark(var(--color-neutral-100), var(--color-neutral-700));
+    --color-separator: light-dark(var(--color-neutral-200), var(--color-neutral-700));
   }
 
   [data-grid-focus-indicator-variant="stack"] {
-    --dx-gridFocusIndicatorColor: var(--dx-neutralFocusIndicator);
+    --color-grid-focus-indicator-color: light-dark(var(--color-neutral-400), var(--color-neutral-600));
   }
 
   :root {
@@ -223,8 +217,6 @@
   :root, .density-fine {
     --dx-focusOffset: var(--dx-noLine);
     --dx-modalLine: var(--dx-hairLine);
-    --dx-landmarkLine: var(--dx-hairLine);
-    --dx-positionedLine: var(--dx-hairLine);
     --dx-gridGap: var(--dx-hairLine);
     --dx-gridFocusIndicatorWidth: var(--dx-hairLine);
     --dx-focusLine: var(--dx-thickLine);
