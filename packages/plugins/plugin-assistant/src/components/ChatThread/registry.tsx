@@ -78,7 +78,7 @@ export const componentRegistry: XmlWidgetRegistry = {
       return text ? new SuggestionWidget(text) : null;
     },
   },
-  ['summary' as const]: {
+  ['stats' as const]: {
     block: true,
     factory: ({ children }) => {
       const text = getXmlTextChild(children);
@@ -172,8 +172,8 @@ const blockToMarkdownImpl = (context: MessageThreadContext, message: Message.Mes
       }));
       break;
     }
-    case 'summary': {
-      return `<summary>${ContentBlock.createSummaryMessage(block)}</summary>`;
+    case 'stats': {
+      return `<stats>${ContentBlock.createStatsMessage(block)}</stats>`;
     }
     case 'reasoning': {
       const text = block.reasoningText ?? block.redactedText;

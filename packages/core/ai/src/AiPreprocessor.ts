@@ -14,6 +14,8 @@ import { bufferToArray } from '@dxos/util';
 
 import { PromptPreprocessingError as PromptPreprocesorError } from './errors';
 
+export type CacheControl = 'no-cache' | 'ephemeral';
+
 /**
  * Preprocesses messages for AI input.
  *
@@ -27,10 +29,10 @@ import { PromptPreprocessingError as PromptPreprocesorError } from './errors';
  */
 export const preprocessPrompt: (
   messages: Message.Message[],
-  opts?: { system?: string; cacheControl?: 'no-cache' | 'ephemeral' },
+  opts?: { system?: string; cacheControl?: CacheControl },
 ) => Effect.Effect<Prompt.Prompt, PromptPreprocesorError, never> = Effect.fn('preprocessPrompt')(function* (
   messages,
-  { system, cacheControl = 'none' } = {},
+  { system, cacheControl = 'no-cache' } = {},
 ) {
   let prompt = yield* Function.pipe(
     messages,
@@ -262,7 +264,7 @@ const convertAssistantMessagePart: (
       case 'file':
         // TODO(burdon): Just log and ignore?
         return yield* Effect.fail(new PromptPreprocesorError({ message: `Invalid content block: ${block._tag}` }));
-      case 'summary':
+      case 'stats':
         break;
       default:
         // Ignore spurious tags.
