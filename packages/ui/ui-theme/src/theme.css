@@ -9,9 +9,6 @@
  */
 @layer properties, theme, dx-tokens, user-tokens, base, tw-base, dx-base, components, tw-components, dx-components, utilities;
 
-/* Scan all source files in the ui packages so Tailwind detects utility classes used in TypeScript. */
-@source "../../../**/*.{ts,tsx}";
-
 @import 'tailwindcss';
 @import './styles/index.css';
 @import './styles/colors.css';
