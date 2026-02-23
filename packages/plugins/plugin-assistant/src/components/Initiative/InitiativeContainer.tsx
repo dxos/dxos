@@ -101,7 +101,15 @@ const InitiativeStack = ({ initiative }: { initiative: Initiative.Initiative }) 
         {inputQueueItems.map((item) => (
           <Surface.Surface key={item.id} role='section' data={{ subject: item }} limit={1} />
         ))}
-        {inputQueueItems.length === 0 && <div className='text-subdued'>No items in queue</div>}
+        {inputQueueItems.length === 0 && (
+          <div className='text-subdued'>
+            Initiative has no objects associated with it.{'\n'}
+            To get started:{'\n'}
+            {'\t'}- Write the initative spec: what is the goal of the initiative?{'\n'}
+            {'\t'}- subscribe initiative to your email.{'\n'}
+            {'\t'}- Chat with the agent.{'\n'}
+          </div>
+        )}
       </div>
 
       <Focus.Group asChild>
