@@ -2,53 +2,52 @@
  * Tokens
  */
 
-
 @theme {
   /* Surfaces */
 
-  --color-baseSurface: theme(colors.white);
-  --color-baseText: theme(colors.black);
+  --color-baseSurface: light-dark(theme(colors.white), theme(colors.neutral.900));
+  --color-baseText: light-dark(theme(colors.black), theme(colors.neutral.50));
 
   --color-headerSurface: var(--dx-headerSurface);
 
   --color-hoverSurface: var(--dx-hoverSurface);
-  --color-hoverSurfaceGroup: theme(colors.neutral.100);
+  --color-hoverSurfaceGroup: light-dark(theme(colors.neutral.100), theme(colors.neutral.700));
 
   --color-inputSurface: var(--dx-inputSurface);
-  --color-inputSurfaceGroup: theme(colors.neutral.100);
+  --color-inputSurfaceGroup: light-dark(theme(colors.neutral.100), theme(colors.neutral.700));
 
-  --color-inverseSurface: theme(colors.neutral.900);
-  --color-inverseSurfaceText: theme(colors.neutral.50);
+  --color-inverseSurface: light-dark(theme(colors.neutral.900), theme(colors.white));
+  --color-inverseSurfaceText: light-dark(theme(colors.neutral.50), theme(colors.black));
 
   --color-activeSurface: var(--dx-activeSurface);
-  --color-groupSurface: theme(colors.white);
+  --color-groupSurface: light-dark(theme(colors.white), theme(colors.neutral.800));
 
   --color-cardSurface: var(--dx-cardSurface);
-  --color-modalSurface: theme(colors.white);
+  --color-modalSurface: light-dark(theme(colors.white), theme(colors.neutral.800));
 
   --color-attention: var(--dx-attention);
 
-  --color-scrimSurface: theme(colors.neutral.50 / 0.65);
+  --color-scrimSurface: light-dark(theme(colors.neutral.50 / 0.65), theme(colors.neutral.900 / 0.65));
   --color-sidebarSurface: var(--dx-sidebarSurface);
   --color-toolbarSurface: var(--dx-toolbarSurface);
 
   --color-textInputSurface: var(--dx-textInputSurface);
-  --color-textInputSurfaceGroup: theme(colors.neutral.50);
+  --color-textInputSurfaceGroup: light-dark(theme(colors.neutral.50), theme(colors.neutral.700));
 
-  --color-deckSurface: theme(colors.neutral.50);
+  --color-deckSurface: light-dark(theme(colors.neutral.50), theme(colors.neutral.950));
 
   --color-focusLine: var(--dx-focusLine);
-  --color-focusSurface: theme(colors.white);
-  --color-neutralFocusIndicator: theme(colors.neutral.300);
+  --color-focusSurface: light-dark(theme(colors.white), theme(colors.black));
+  --color-neutralFocusIndicator: light-dark(theme(colors.neutral.300), theme(colors.neutral.600));
 
   /* Accent */
 
   --color-accentSurface: theme(colors.blue.500);
-  --color-accentSurfaceHover: theme(colors.blue.600);
+  --color-accentSurfaceHover: light-dark(theme(colors.blue.600), theme(colors.blue.500));
   --color-accentSurfaceText: theme(colors.white);
-  --color-accentText: theme(colors.blue.600);
-  --color-accentTextHover: theme(colors.blue.500);
-  --color-accentFocusIndicator: theme(colors.blue.300);
+  --color-accentText: light-dark(theme(colors.blue.600), theme(colors.blue.400));
+  --color-accentTextHover: light-dark(theme(colors.blue.500), theme(colors.blue.400));
+  --color-accentFocusIndicator: light-dark(theme(colors.blue.300), theme(colors.blue.500));
 
   --color-unAccent: theme(colors.neutral.400);
   --color-unAccentHover: theme(colors.neutral.500);
@@ -56,26 +55,26 @@
   /* Separator */
 
   --color-separator: var(--dx-separator);
-  --color-separatorGroup: theme(colors.neutral.200);
-  --color-subduedSeparator: theme(colors.neutral.200);
+  --color-separatorGroup: light-dark(theme(colors.neutral.200), theme(colors.neutral.700));
+  --color-subduedSeparator: light-dark(theme(colors.neutral.200), theme(colors.neutral.700));
 
   /* Scrollbar */
 
-  --color-scrollbarThumb: theme(colors.neutral.200);
-  --color-scrollbarThumbActive: theme(colors.neutral.200);
-  --color-scrollbarThumbHover: theme(colors.neutral.200);
+  --color-scrollbarThumb: light-dark(theme(colors.neutral.200), theme(colors.neutral.700));
+  --color-scrollbarThumbActive: light-dark(theme(colors.neutral.200), theme(colors.neutral.600));
+  --color-scrollbarThumbHover: light-dark(theme(colors.neutral.200), theme(colors.neutral.600));
 
   /* Sheet */
 
-  --color-axisSelectedSurface: theme(colors.neutral.100);
-  --color-axisSelectedText: theme(colors.neutral.100);
-  --color-axisSurface: theme(colors.neutral.50);
-  --color-axisText: theme(colors.neutral.800);
+  --color-axisSelectedSurface: light-dark(theme(colors.neutral.100), theme(colors.neutral.900));
+  --color-axisSelectedText: light-dark(theme(colors.neutral.100), theme(colors.neutral.900));
+  --color-axisSurface: light-dark(theme(colors.neutral.50), theme(colors.neutral.800));
+  --color-axisText: light-dark(theme(colors.neutral.800), theme(colors.neutral.200));
 
   /* Misc */
 
   --color-callActive: theme(colors.green.500);
-  --color-gridCommentedActive: theme(colors.green.200 / 0.5);
+  --color-gridCommentedActive: light-dark(theme(colors.green.200 / 0.5), theme(colors.green.600 / 0.5));
   --color-gridLine: var(--dx-gridLine);
   --color-gridFocusIndicatorColor: var(--dx-gridFocusIndicatorColor);
   --color-hairLine: var(--dx-hairLine);
@@ -84,38 +83,6 @@
   --color-noLine: var(--dx-noLine);
   --color-positionedLine: var(--dx-positionedLine);
   --color-thickLine: var(--dx-thickLine);
-}
-
-/* Dark mode color overrides */
-.dark {
-  --color-axisSurface: theme(colors.neutral.800);
-  --color-axisText: theme(colors.neutral.200);
-  --color-axisSelectedSurface: theme(colors.neutral.900);
-  --color-axisSelectedText: theme(colors.neutral.900);
-  --color-gridCommentedActive: theme(colors.green.600 / 0.5);
-
-  --color-baseSurface: theme(colors.neutral.900);
-  --color-baseText: theme(colors.neutral.50);
-  --color-groupSurface: theme(colors.neutral.800);
-  --color-modalSurface: theme(colors.neutral.800);
-  --color-textInputSurfaceGroup: theme(colors.neutral.700);
-  --color-inputSurfaceGroup: theme(colors.neutral.700);
-  --color-hoverSurfaceGroup: theme(colors.neutral.700);
-  --color-separatorGroup: theme(colors.neutral.700);
-  --color-subduedSeparator: theme(colors.neutral.700);
-  --color-scrollbarThumb: theme(colors.neutral.700);
-  --color-scrollbarThumbHover: theme(colors.neutral.600);
-  --color-scrollbarThumbActive: theme(colors.neutral.600);
-  --color-scrimSurface: theme(colors.neutral.900 / 0.65);
-  --color-focusSurface: theme(colors.black);
-  --color-deckSurface: theme(colors.neutral.950);
-  --color-inverseSurface: theme(colors.white);
-  --color-inverseSurfaceText: theme(colors.black);
-  --color-accentSurfaceHover: theme(colors.blue.500);
-  --color-accentText: theme(colors.blue.400);
-  --color-accentTextHover: theme(colors.blue.400);
-  --color-accentFocusIndicator: theme(colors.blue.500);
-  --color-neutralFocusIndicator: theme(colors.neutral.600);
 }
 
 
