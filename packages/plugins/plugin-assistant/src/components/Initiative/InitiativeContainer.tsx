@@ -130,6 +130,11 @@ const StackTile = forwardRef<HTMLDivElement, MosaicTileProps<Obj.Unknown>>(
       <Mosaic.Tile asChild id={data.id} data={data} location={location} debug={debug}>
         <Focus.Group asChild>
           <Card.Root ref={forwardedRef} data-testid='board-item'>
+            <Card.Toolbar>
+              <Card.IconBlock></Card.IconBlock>
+              <Card.Title>{Obj.getLabel(data)}</Card.Title>
+              <Card.Menu />
+            </Card.Toolbar>
             <Card.Content>
               <Surface.Surface role='card--content' limit={1} data={{ subject: data }} />
             </Card.Content>
