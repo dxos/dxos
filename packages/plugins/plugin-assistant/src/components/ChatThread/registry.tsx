@@ -33,6 +33,15 @@ const Fallback = ({ _tag, ...props }: XmlWidgetProps<MessageThreadContext>) => {
   );
 };
 
+const Summary = ({ text }: { text: string }) => {
+  return (
+    <ToggleContainer.Root classNames='rounded-sm'>
+      <ToggleContainer.Header classNames='bg-groupSurface'>Conversation summarized</ToggleContainer.Header>
+      <ToggleContainer.Content classNames='bg-modalSurface'>{text}</ToggleContainer.Content>
+    </ToggleContainer.Root>
+  );
+};
+
 /**
  * Custom XML tags registry.
  */
@@ -78,7 +87,7 @@ export const componentRegistry: XmlWidgetRegistry = {
       return text ? new SuggestionWidget(text) : null;
     },
   },
-  ['summary' as const]: {
+  ['stats' as const]: {
     block: true,
     factory: ({ children }) => {
       const text = getXmlTextChild(children);
@@ -101,6 +110,10 @@ export const componentRegistry: XmlWidgetRegistry = {
   ['toolkit' as const]: {
     block: true,
     Component: Fallback,
+  },
+  ['summary' as const]: {
+    block: true,
+    Component: Summary,
   },
 
   //
@@ -172,8 +185,8 @@ const blockToMarkdownImpl = (context: MessageThreadContext, message: Message.Mes
       }));
       break;
     }
-    case 'summary': {
-      return `<summary>${ContentBlock.createSummaryMessage(block)}</summary>`;
+    case 'stats': {
+      return `<stats>${ContentBlock.createStatsMessage(block)}</stats>`;
     }
     case 'reasoning': {
       const text = block.reasoningText ?? block.redactedText;
@@ -182,6 +195,9 @@ const blockToMarkdownImpl = (context: MessageThreadContext, message: Message.Mes
       }
       // TODO(dmaretskyi): The mixed Markdown/XML parser does not support parsing multi-line XML tags.
       return `<reasoning>${text.replace(/\n/g, ' ').trim()}</reasoning>`;
+    }
+    case 'summary': {
+      return `<summary>${block.content}</summary>`;
     }
     default: {
       // TODO(burdon): Needs stable ID.

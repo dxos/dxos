@@ -106,7 +106,7 @@ export const translations = [
         'chat update name label': 'Update AI Chat name',
 
         'toolkit label': 'Toolkit',
-        'summary label': 'Summary',
+        'stats label': 'Stats',
 
         'search placeholder': 'Search...',
         'prompt placeholder': 'Enter question or command...',
