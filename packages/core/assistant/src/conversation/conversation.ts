@@ -41,6 +41,12 @@ export type AiConversationOptions = {
   registry?: Registry.Registry;
 };
 
+// TODO(dmaretskyi): Take from model characteristics. opus has 200k max tokens.
+/**
+ * Summarization threshold in tokens.
+ */
+const SUMMARY_THRESHOLD = 80_000;
+
 /**
  * Durable conversation state (initiated by users and agents) backed by a Queue.
  * Executes tools based on AI responses and supports cancellation of in-progress requests.
@@ -117,7 +123,9 @@ export class AiConversation extends Resource {
       });
 
       // Process request.
-      const session = new AiSession();
+      const session = new AiSession({
+        summarizationThreshold: SUMMARY_THRESHOLD,
+      });
       const messages = yield* session
         .run({
           history,

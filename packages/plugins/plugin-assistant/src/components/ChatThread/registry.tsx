@@ -33,6 +33,15 @@ const Fallback = ({ _tag, ...props }: XmlWidgetProps<MessageThreadContext>) => {
   );
 };
 
+const Summary = ({ text }: { text: string }) => {
+  return (
+    <ToggleContainer.Root classNames='rounded-sm'>
+      <ToggleContainer.Header classNames='bg-groupSurface'>Conversation summarized</ToggleContainer.Header>
+      <ToggleContainer.Content classNames='bg-modalSurface'>{text}</ToggleContainer.Content>
+    </ToggleContainer.Root>
+  );
+};
+
 /**
  * Custom XML tags registry.
  */
@@ -101,6 +110,10 @@ export const componentRegistry: XmlWidgetRegistry = {
   ['toolkit' as const]: {
     block: true,
     Component: Fallback,
+  },
+  ['summary' as const]: {
+    block: true,
+    Component: Summary,
   },
 
   //
@@ -182,6 +195,9 @@ const blockToMarkdownImpl = (context: MessageThreadContext, message: Message.Mes
       }
       // TODO(dmaretskyi): The mixed Markdown/XML parser does not support parsing multi-line XML tags.
       return `<reasoning>${text.replace(/\n/g, ' ').trim()}</reasoning>`;
+    }
+    case 'summary': {
+      return `<summary>${block.content}</summary>`;
     }
     default: {
       // TODO(burdon): Needs stable ID.
