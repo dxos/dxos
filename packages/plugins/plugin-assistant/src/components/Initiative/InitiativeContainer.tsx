@@ -116,7 +116,7 @@ const InitiativeForm = ({ initiative }: { initiative: Initiative.Initiative }) =
   const inputQueueItems = useQuery(inputQueue, Query.select(Filter.everything()));
 
   return (
-    <Layout.Main>
+    <Layout.Main classNames='overflow-y-auto'>
       <div className='border border-subduedSeparator rounded-md p-2 overflow-y-auto'>
         {inputQueueItems.map((item) => (
           <Surface.Surface key={item.id} role='section' data={{ subject: item }} limit={1} />
