@@ -4,10 +4,10 @@
 
 import { type MessageValence } from '@dxos/ui-types';
 
-export const successText = 'text-xs font-medium text-success-text';
-export const infoText = 'text-xs font-medium text-info-text';
-export const warningText = 'text-xs font-medium text-warning-text';
-export const errorText = 'text-xs font-medium text-error-text';
+export const successText = 'text-xs font-medium text-success';
+export const infoText = 'text-xs font-medium text-info';
+export const warningText = 'text-xs font-medium text-warning';
+export const errorText = 'text-xs font-medium text-error';
 
 export const valenceColorText = (valence?: MessageValence) => {
   switch (valence) {

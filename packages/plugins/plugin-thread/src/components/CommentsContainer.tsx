@@ -40,7 +40,7 @@ export const CommentsContainer = ({ anchors, currentId, showResolvedThreads, ...
 
   if (filteredAnchors.length === 0) {
     return (
-      <div role='none' className='p-cardPadding'>
+      <div role='none' className='p-card-padding'>
         <Message.Root>
           <Message.Title>
             <Trans

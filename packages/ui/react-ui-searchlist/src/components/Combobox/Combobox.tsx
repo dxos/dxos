@@ -204,7 +204,10 @@ const ComboboxTrigger = forwardRef<HTMLButtonElement, ComboboxTriggerProps>(
           {children ?? (
             <>
               <span
-                className={mx('font-normal text-start flex-1 min-inline-0 truncate mr-2', !value && staticPlaceholderText)}
+                className={mx(
+                  'font-normal text-start flex-1 min-inline-0 truncate mr-2',
+                  !value && staticPlaceholderText,
+                )}
               >
                 {value || placeholder}
               </span>
@@ -237,7 +240,7 @@ const ComboboxInput = forwardRef<HTMLInputElement, ComboboxInputProps>(({ classN
   return (
     <SearchList.Input
       {...props}
-      classNames={['m-cardChrome mb-0 inline-[calc(100%-2*var(--dx-cardChrome))]', classNames]}
+      classNames={['m-card-chrome mb-0 inline-[calc(100%-2*var(--dx-card-chrome))]', classNames]}
       ref={forwardedRef}
     />
   );
@@ -250,7 +253,7 @@ const ComboboxInput = forwardRef<HTMLInputElement, ComboboxInputProps>(({ classN
 type ComboboxListProps = SearchListViewportProps;
 
 const ComboboxList = forwardRef<HTMLDivElement, ComboboxListProps>(({ classNames, ...props }, forwardedRef) => {
-  return <SearchList.Viewport {...props} classNames={['plb-cardChrome', classNames]} ref={forwardedRef} />;
+  return <SearchList.Viewport {...props} classNames={['plb-card-chrome', classNames]} ref={forwardedRef} />;
 });
 
 //
@@ -279,7 +282,7 @@ const ComboboxItem = forwardRef<HTMLDivElement, ComboboxItemProps>(
       <SearchList.Item
         {...props}
         value={value}
-        classNames={['mli-cardChrome pli-cardChrome', classNames]}
+        classNames={['mli-card-chrome pli-card-chrome', classNames]}
         onSelect={handleSelect}
         ref={forwardedRef}
       />

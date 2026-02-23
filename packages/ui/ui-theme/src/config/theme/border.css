@@ -4,12 +4,12 @@
 
 @theme {
   /* Custom spacing/sizing values - for ring, ring-offset, border-width, etc. */
-  --ring-offset-width-focus-offset: var(--dx-focusOffset);
-  --ring-width-focus-line: var(--dx-focusLine);
-  --ring-width-hair-line: var(--dx-hairLine);
-  --ring-width-thick-line: var(--dx-thickLine);
-  --ring-width-no-line: var(--dx-noLine);
-  --border-width-landmark-line: var(--dx-landmarkLine);
+  --ring-offset-width-focus-offset: var(--dx-focus-offset);
+  --ring-width-focus-line: var(--dx-focus-line);
+  --ring-width-hair-line: var(--dx-hair-line);
+  --ring-width-thick-line: var(--dx-thick-line);
+  --ring-width-no-line: var(--dx-no-line);
+  --border-width-landmark-line: var(--dx-landmark-line);
 
   /* Border radius scale */
   --radius-none: 0;

@@ -3,18 +3,39 @@
  */
 
 @theme {
-  --spacing-prose-max-width: var(--dx-prose-max-width);
-  --spacing-container-max-width: var(--dx-container-max-width);
-  --spacing-card-default-width: var(--dx-card-default-width);
-  --spacing-card-min-width: var(--dx-card-min-width);
-  --spacing-card-max-width: var(--dx-card-max-width);
-  --spacing-card-min-height: var(--dx-card-min-height);
-  --spacing-card-max-height: var(--dx-card-max-height);
+  --spacing-prose-max-width: 50rem;
+  --spacing-container-max-width: 50rem;
+  --spacing-card-default-width: 20rem;
+  --spacing-card-min-width: 18rem;
+  --spacing-card-max-width: 22rem;
+  --spacing-card-min-height: 18rem;
+  --spacing-card-max-height: 30rem;
+
+  /**
+   * Density: fine
+   */
+  --spacing-icon-button-padding: var(--dx-input-fine);
+  --spacing-card-padding: var(--dx-trim-sm);
 }
 
-/* TODO(burdon): Convert dx- to spacing-- */
+@layer dx-tokens {
+  /**
+   * Density: coarse
+   */
+  .density-coarse {
+    --spacing-icon-button-padding: var(--dx-input-coarse);
+    --spacing-card-padding: var(--dx-trim-md);
+  }
+}
 
 @layer dx-tokens {
+  :root {
+    --dx-card-min-width: var(--dx-size-18);
+    --dx-card-max-width: var(--dx-size-22);
+    --dx-card-min-height: var(--dx-size-18);
+    --dx-card-max-height: var(--dx-size-30);
+  }
+
   :root {
     --dx-line-0: 0.000px;
     --dx-line-1: 1.000px;
@@ -27,68 +48,40 @@
   }
 
   :root {
-    --dx-hairLine: 1px;
-    --dx-landmarkLine: 1px;
-    --dx-modalLine: 1px;
-    --dx-noLine: 0px;
-    --dx-positionedLine: 1px;
-    --dx-thickLine: 2px;
-    --dx-focusLine: 2px;
-  }
+    --dx-hair-line: 1px;
+    --dx-landmark-line: 1px;
+    --dx-modal-line: 1px;
+    --dx-no-line: 0px;
+    --dx-thick-line: 2px;
+    --dx-focus-line: 2px;
 
-  :root {
-    /* TODO(burdon): Test density; Button also. */
-    --dx-inputFine: var(--dx-lacuna-3);
-    --dx-inputCoarse: var(--dx-lacuna-4);
+    --dx-no-line: var(--dx-line-0);
+    --dx-hair-line: var(--dx-line-1);
+    --dx-thick-line: var(--dx-line-2);
+    --dx-trim-xs: var(--dx-lacuna-3);
+    --dx-trim-sm: var(--dx-lacuna-4);
+    --dx-trim-md: var(--dx-lacuna-6);
+    --dx-trim-lg: var(--dx-lacuna-12);
 
-    --dx-noLine: var(--dx-line-0);
-    --dx-hairLine: var(--dx-line-1);
-    --dx-thickLine: var(--dx-line-2);
-    --dx-trimXs: var(--dx-lacuna-3);
-    --dx-trimSm: var(--dx-lacuna-4);
-    --dx-trimMd: var(--dx-lacuna-6);
-    --dx-trimLg: var(--dx-lacuna-12);
+    --dx-focus-offset: var(--dx-no-line);
+    --dx-focus-line: var(--dx-thick-line);
+    --dx-modal-line: var(--dx-hair-line);
+    --dx-grid-focus-indicator-width: var(--dx-hair-line);
+    --dx-card-chrome: var(--dx-trim-xs);
 
-    --dx-focusOffset: var(--dx-noLine);
-    --dx-modalLine: var(--dx-hairLine);
-    --dx-gridGap: var(--dx-hairLine);
-    --dx-gridFocusIndicatorWidth: var(--dx-hairLine);
-    --dx-focusLine: var(--dx-thickLine);
-    --dx-iconButtonPadding: var(--dx-inputFine);
-    --dx-cardChrome: var(--dx-trimXs);
-    --dx-cardPadding: var(--dx-trimSm);
-  }
-
-  .density-coarse {
-    --dx-iconButtonPadding: var(--dx-inputCoarse);
-    --dx-cardPadding: var(--dx-trimMd);
+    --dx-input-fine: var(--dx-lacuna-3);
+    --dx-input-coarse: var(--dx-lacuna-4);
   }
 
   [data-grid-focus-indicator-variant="stack"] {
-    --dx-gridFocusIndicatorWidth: var(--dx-thickLine);
-  }
-
-  :root {
-    --dx-size-18: 18.000rem;
-    --dx-size-20: 20.000rem;
-    --dx-size-22: 22.000rem;
-    --dx-size-30: 30.000rem;
-    --dx-size-50: 50.000rem;
-
-    --dx-prose-max-width: var(--dx-size-50);
-    --dx-container-max-width: var(--dx-size-50);
-    --dx-card-default-width: var(--dx-size-20);
-    --dx-card-min-width: var(--dx-size-18);
-    --dx-card-max-width: var(--dx-size-22);
-    --dx-card-min-height: var(--dx-size-18);
-    --dx-card-max-height: var(--dx-size-30);
+    --dx-grid-focus-indicator-width: var(--dx-thick-line);
   }
 
   :root {
     /* Recitations */
     --sticky-top: 0;
 
-    /* Lengths / sizes */
+    /* Sizes */
     --rail-content: 3rem;
     --rail-size: calc(var(--rail-content) + 1px);
     --rail-action: calc(var(--rail-content) - 0.5rem + 1px);
@@ -100,16 +93,16 @@
     --nav-sidebar-size: 22.5rem;
     --complementary-sidebar-size: 25rem;
     --drawer-size: 50dvh;
-    /* NOTE(thure): 74px (rather than rem) is intentional in order to match the size of macOS windowing controls. */
-    --l0-size: 74px;
+
+    --l0-size: 74px; /* MacOS windowing controls. */
     --l0-avatar-size: 3rem;
     --l1-size: calc(var(--nav-sidebar-size) - var(--l0-size));
     --r0-size: var(--rail-size);
     --r1-size: calc(var(--complementary-sidebar-size) - var(--r0-size));
+
     --text-content: calc(50rem - env(safe-area-inset-left) - env(safe-area-inset-right));
   }
 
-  /* TODO(thure): Support arbitrary values (like for keywords e.g. `auto`, or font families) in @ch-ui/tokens */
   :root {
     --dx-calc-auto: auto;
     --dx-calc-min: min-content;

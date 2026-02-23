@@ -324,7 +324,7 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
         <div
           {...props}
           className={mx(
-            'grid relative [--stack-gap:var(--dx-trimXs)]',
+            'grid relative [--stack-gap:var(--dx-trim-xs)]',
             gridClasses,
             size === 'contain' &&
               (orientation === 'horizontal'

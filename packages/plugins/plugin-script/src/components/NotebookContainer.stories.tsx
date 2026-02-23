@@ -39,7 +39,7 @@ const meta: Meta<typeof NotebookContainer> = {
   },
   decorators: [
     withTheme(),
-    withLayout({ layout: 'column', classNames: 'w-proseMaxWidth' }),
+    withLayout({ layout: 'column', classNames: 'w-prose-max-width' }),
     withPluginManager({
       plugins: [
         ...corePlugins(),

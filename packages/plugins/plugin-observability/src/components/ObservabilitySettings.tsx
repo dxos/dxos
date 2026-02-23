@@ -36,7 +36,7 @@ export const ObservabilitySettings = ({ settings }: ObservabilitySettingsCompone
   return (
     <Settings.Root>
       <Settings.Section title={t('settings title', { ns: meta.id })}>
-        <Message.Root valence='info' classNames='container-max-width mb-cardPadding'>
+        <Message.Root valence='info' classNames='container-max-width mb-card-padding'>
           <Message.Content>{t('observability description')}</Message.Content>
         </Message.Root>
         <Settings.Group>

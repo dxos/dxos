@@ -83,7 +83,7 @@ const meta = {
   title: 'plugins/plugin-script/TypescriptEditor',
   component: TypescriptEditor,
   render: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'w-proseMaxWidth' })],
+  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'w-prose-max-width' })],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

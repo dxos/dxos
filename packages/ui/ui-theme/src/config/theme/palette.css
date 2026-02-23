@@ -9,6 +9,19 @@
  */
 
 @theme {
+  /* TODO(burdon): Primary/Accent */
+  --color-primary-50:  var(--color-blue-50);
+  --color-primary-100: var(--color-blue-100);
+  --color-primary-200: var(--color-blue-200);
+  --color-primary-300: var(--color-blue-300);
+  --color-primary-400: var(--color-blue-400);
+  --color-primary-500: var(--color-blue-500);
+  --color-primary-600: var(--color-blue-600);
+  --color-primary-700: var(--color-blue-700);
+  --color-primary-800: var(--color-blue-800);
+  --color-primary-900: var(--color-blue-900);
+  --color-primary-950: var(--color-blue-950);
+
   --color-neutral-fill: theme(colors.neutral.500);
   --color-neutral-surface: light-dark(theme(colors.neutral.200), theme(colors.neutral.800));
   --color-neutral-surface-text: light-dark(theme(colors.neutral.800), theme(colors.neutral.200));
@@ -106,25 +119,25 @@
   --color-primary-fill: var(--color-cyan-fill);
   --color-primary-surface: var(--color-cyan-surface);
   --color-primary-surface-text: var(--color-cyan-surface-text);
-  --color-primary-text: var(--color-cyan-text);
+  --color-primary: var(--color-cyan-text);
 
   --color-info-fill: var(--color-cyan-fill);
   --color-info-surface: var(--color-cyan-surface);
   --color-info-surface-text: var(--color-cyan-surface-text);
-  --color-info-text: var(--color-cyan-text);
+  --color-info: var(--color-cyan-text);
 
   --color-success-fill: var(--color-emerald-fill);
   --color-success-surface: var(--color-emerald-surface);
   --color-success-surface-text: var(--color-emerald-surface-text);
-  --color-success-text: var(--color-emerald-text);
+  --color-success: var(--color-emerald-text);
 
   --color-warning-fill: var(--color-amber-fill);
   --color-warning-surface: var(--color-amber-surface);
   --color-warning-surface-text: var(--color-amber-surface-text);
-  --color-warning-text: var(--color-amber-text);
+  --color-warning: var(--color-amber-text);
 
   --color-error-fill: var(--color-rose-fill);
   --color-error-surface: var(--color-rose-surface);
   --color-error-surface-text: var(--color-rose-surface-text);
-  --color-error-text: var(--color-rose-text);
+  --color-error: var(--color-rose-text);
 }

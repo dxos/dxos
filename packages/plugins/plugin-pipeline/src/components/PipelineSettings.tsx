@@ -158,7 +158,7 @@ export const PipelineObjectSettings = ({ classNames, pipeline }: PipelineObjectS
   );
 
   return (
-    <div role='none' className={mx('plb-cardPadding overflow-y-auto', classNames)}>
+    <div role='none' className={mx('plb-card-padding overflow-y-auto', classNames)}>
       <h2 className='text-sm text-description py-1'>{t('views label')}</h2>
 
       <List.Root<Pipeline.Column>
@@ -225,7 +225,7 @@ export const PipelineObjectSettings = ({ classNames, pipeline }: PipelineObjectS
         )}
       </List.Root>
 
-      <div role='none' className='mlb-cardPadding'>
+      <div role='none' className='mlb-card-padding'>
         <IconButton icon='ph--plus--regular' label={t('add view label')} onClick={handleAdd} classNames='inline-full' />
       </div>
     </div>

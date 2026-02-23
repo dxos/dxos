@@ -48,14 +48,14 @@ export const TaskItem = (props: TaskItemProps) => {
       }}
     >
       <input
-        className='mr-2 rounded-sm shadow hover:pointer-cursor'
+        className='mr-2 rounded-sm shadow hover:cursor-pointer'
         type='checkbox'
         checked={completed}
         onChange={(e) => {
           updateCompleted(e.target.checked);
         }}
       />
-      <div className='hover:pointer-cursor flex-grow' onClick={() => onEdit(index)}>
+      <div className='hover:cursor-pointer flex-grow' onClick={() => onEdit(index)}>
         {isEditing ? (
           <span className='flex justify-between'>
             <input

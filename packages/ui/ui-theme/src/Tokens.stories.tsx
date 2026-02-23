@@ -84,15 +84,20 @@ export const Surfaces = {
   },
 };
 
-export const Experimental = {
+export const Animation = {
   render: () => {
     return (
       <div className='absolute inset-0 grid place-items-center'>
-        <div className='border border-separator rounded-md'>
-          <div className='flex items-center font-mono p-test-experimental text-2xl text-test-experimental'>
-            <span className='animate-blink text-[var(--color-red-500)]'>*</span>
-            <span>experimental</span>
-            <span className='animate-blink text-[var(--color-red-500)]'>*</span>
+        <div className='density-coarse border border-separator rounded-md'>
+          <div
+            className={mx(
+              'flex items-center font-mono text-2xl text-test-experimental',
+              'p-card-padding w-card-min-width grid grid-cols-[min-content_1fr_min-content]',
+            )}
+          >
+            <span className='animate-blink text-error'>*</span>
+            <span className='text-center'>experimental</span>
+            <span className='animate-blink text-error'>*</span>
           </div>
         </div>
       </div>
