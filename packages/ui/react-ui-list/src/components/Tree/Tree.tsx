@@ -53,7 +53,7 @@ export const Tree = <T extends { id: string } = any, O = any>({
   const itemCacheRef = useRef(new Map<string, T>());
 
   // Default useChildIds: wraps useItems and populates item cache.
-  const defaultUseChildIds = (parent?: T) => {
+  const useDefaultChildIds = (parent?: T) => {
     const items = useItems(parent);
     for (const item of items) {
       itemCacheRef.current.set(item.id, item);
@@ -61,13 +61,13 @@ export const Tree = <T extends { id: string } = any, O = any>({
     return items.map((item) => item.id);
   };
 
-  // Default useItem: reads from item cache populated by defaultUseChildIds.
-  const defaultUseItem = (itemId: string) => {
+  // Default useItem: reads from item cache populated by useDefaultChildIds.
+  const useDefaultItem = (itemId: string) => {
     return itemCacheRef.current.get(itemId);
   };
 
-  const useChildIds = useChildIdsProp ?? defaultUseChildIds;
-  const useItem = useItemProp ?? defaultUseItem;
+  const useChildIds = useChildIdsProp ?? useDefaultChildIds;
+  const useItem = useItemProp ?? useDefaultItem;
 
   const context = useMemo(
     () => ({
@@ -78,7 +78,8 @@ export const Tree = <T extends { id: string } = any, O = any>({
       useChildIds,
       useItem,
     }),
-    [useItems, getProps, useIsOpen, useIsCurrent, useChildIds, useItem],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [useItems, getProps, useIsOpen, useIsCurrent, useChildIdsProp, useItemProp],
   );
   const items = useItems(root);
   const treePath = useMemo(() => (path ? [...path, id] : [id]), [id, path]);
