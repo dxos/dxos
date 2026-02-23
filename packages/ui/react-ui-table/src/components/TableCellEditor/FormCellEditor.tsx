@@ -88,13 +88,9 @@ export const FormCellEditor = <T extends Type.Entity.Any = Type.Entity.Any>({
   const initialFormValues = useMemo(() => (originalRow ? JSON.parse(JSON.stringify(originalRow)) : {}), [originalRow]);
   const [formValues, setFormValues] = useState<any>(initialFormValues);
 
-  const handleValuesChanged = useCallback<NonNullable<FormRootProps<any>['onValuesChanged']>>(
-    (values) => {
-      setFormValues(values);
-    },
-    [],
-  );
-
+  const handleValuesChanged = useCallback<NonNullable<FormRootProps<any>['onValuesChanged']>>((values) => {
+    setFormValues(values);
+  }, []);
   const handleOpenChange = useCallback((nextOpen: boolean) => {
     if (nextOpen === false) {
       setEditing(null);
