@@ -27,9 +27,9 @@ export const dbg: {
   <T>(value: T, _meta?: CallMetadata): T;
 } = <T>(arg: T, meta?: CallMetadata): T => {
   if (meta?.A) {
-    console.log(`${meta.A[0]} =`, inspect(arg, { colors: true }));
+    console.log(`${meta.A[0]} =`, arg);
   } else {
-    console.log(inspect(arg, { colors: true }));
+    console.log(arg);
   }
 
   return arg;
