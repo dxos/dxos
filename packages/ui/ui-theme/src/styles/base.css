@@ -24,10 +24,10 @@
   }
 
   html, html.dark, html .dark {
-    background-color: var(--dx-baseSurface);
-    color: var(--dx-baseText);
-    --surface-bg: var(--dx-baseSurface);
-    --surface-text: var(--dx-baseText);
+    background-color: var(--color-base-surface);
+    color: var(--color-base-text);
+    --surface-bg: var(--color-base-surface);
+    --surface-text: var(--color-base-text);
     --description-text: var(--dx-description);
   }
 }

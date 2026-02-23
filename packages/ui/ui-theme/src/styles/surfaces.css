@@ -2,32 +2,32 @@
  * Surfaces
  */
 @layer utilities {
-  /* TODO(burdon): Check if used or remov and use classname directly */
+  /* TODO(burdon): Are these used as markers; e.g., to change inputSurface? */
 
   .base-surface {
-    background-color: var(--dx-baseSurface);
-    --surface-bg: var(--dx-baseSurface);
+    background-color: var(--color-base-surface);
+    --surface-bg: var(--color-base-surface);
   }
   .dark .base-surface {
-    background-color: var(--dx-baseSurface);
-    --surface-bg: var(--dx-baseSurface);
+    background-color: var(--color-base-surface);
+    --surface-bg: var(--color-base-surface);
   }
 
   .sidebar-surface {
-    background-color: var(--dx-sidebarSurface);
-    --surface-bg: var(--dx-sidebarSurface);
+    background-color: var(--color-sidebar-surface);
+    --surface-bg: var(--color-sidebar-surface);
   }
   .dark .sidebar-surface {
-    background-color: var(--dx-sidebarSurface);
-    --surface-bg: var(--dx-sidebarSurface);
+    background-color: var(--color-sidebar-surface);
+    --surface-bg: var(--color-sidebar-surface);
   }
 
   .modal-surface {
-    background-color: var(--dx-modalSurface);
-    --surface-bg: var(--dx-modalSurface);
+    background-color: var(--color-modal-surface);
+    --surface-bg: var(--color-modal-surface);
   }
   .dark .modal-surface {
-    background-color: var(--dx-modalSurface);
-    --surface-bg: var(--dx-modalSurface);
+    background-color: var(--color-modal-surface);
+    --surface-bg: var(--color-modal-surface);
   }
 }

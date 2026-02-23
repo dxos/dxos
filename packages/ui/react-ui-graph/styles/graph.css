@@ -117,10 +117,10 @@ svg {
             @apply stroke-2 stroke-neutral-500;
           }
           rect {
-            @apply stroke-1 stroke-neutral-500 fill-inverseSurface;
+            @apply stroke-1 stroke-neutral-500 fill-inverse-surface;
           }
           text {
-            @apply fill-inverseSurfaceText;
+            @apply fill-inverse-text;
           }
         }
       }
