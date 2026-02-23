@@ -1,6 +1,6 @@
 import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
-import { LanguageModel, type AiError } from '@effect/ai';
+import { LanguageModel, Prompt, type AiError } from '@effect/ai';
 import { Effect } from 'effect';
 import * as AiPreprocessor from './AiPreprocessor';
 import { Obj } from '@dxos/echo';
@@ -16,7 +16,13 @@ export const summarize: (
   opts?: SummarizeOptions,
 ) => Effect.Effect<Message.Message, AiError.AiError | PromptPreprocessingError, LanguageModel.LanguageModel> =
   Effect.fn('AiSummarizer.summarize')(function* (messages, { instructions = DEFAULT_INSTRUCTIONS } = {}) {
-    const prompt = yield* AiPreprocessor.preprocessPrompt(messages, { system: instructions, cacheControl: 'no-cache' });
+    let prompt = yield* AiPreprocessor.preprocessPrompt(messages, { system: instructions, cacheControl: 'no-cache' });
+
+    // Last turn must be a user message for summarization to work.
+    if (prompt.content.at(-1)?.role === 'assistant') {
+      prompt = prompt.pipe(Prompt.merge('<empty user message>'));
+    }
+
     const response = yield* LanguageModel.generateText({
       prompt,
     });

@@ -3,6 +3,7 @@
 //
 
 import type * as AiError from '@effect/ai/AiError';
+import type * as Tokenizer from '@effect/ai/Tokenizer';
 import * as LanguageModel from '@effect/ai/LanguageModel';
 import type * as Tool from '@effect/ai/Tool';
 import type * as Toolkit from '@effect/ai/Toolkit';
@@ -20,6 +21,7 @@ import {
   type ToolResolverService,
   callTool,
   withoutToolCallParising,
+  AiSummarizer,
 } from '@dxos/ai';
 import { type Blueprint } from '@dxos/blueprints';
 import { todo } from '@dxos/debug';
@@ -42,7 +44,12 @@ export type AiSessionRunRequirements =
   | TracingService
   | FunctionInvocationService;
 
-export type AiSessionOptions = {};
+export type AiSessionOptions = {
+  /**
+   * Summarize before executing the prompt if the existing history exceeds this threshold.
+   */
+  summarizationThreshold?: number;
+};
 
 export type AiSessionRunProps<Tools extends Record<string, Tool.Any>> = {
   prompt: string;
@@ -110,22 +117,35 @@ export class AiSession {
       this._started = Date.now();
       this._history = [...history];
       this._pending = [];
-      const pending = this._pending;
 
-      const submitMessage = Effect.fnUntraced(function* (message: Message.Message) {
-        pending.push(message);
-        yield* observer.onMessage(message);
-        yield* TracingService.emitConverationMessage(message);
-        yield* onOutput(message);
-        return message;
-      });
+      const submitMessage = (message: Message.Message) =>
+        Effect.gen(this, function* () {
+          this._pending.push(message);
+          yield* observer.onMessage(message);
+          yield* TracingService.emitConverationMessage(message);
+          yield* onOutput(message);
+          return message;
+        });
+
+      const system = yield* formatSystemPrompt({ system: systemTemplate, blueprints, objects }).pipe(Effect.orDie);
+
+      if (this._options.summarizationThreshold !== undefined) {
+        const tokenCount = yield* AiPreprocessor.estimateTokens(
+          yield* AiPreprocessor.preprocessPrompt([...this._history], {
+            system,
+          }),
+        );
+        if (tokenCount > this._options.summarizationThreshold) {
+          const summary = yield* AiSummarizer.summarize([...this._history]);
+          yield* submitMessage(summary);
+        }
+      }
 
       // Submit the prompt.
       // TODO(burdon): Remove if cancelled?
       const promptMessage = yield* submitMessage(yield* formatUserPrompt({ prompt, history }));
 
       // Generate system and prompt messages.
-      const system = yield* formatSystemPrompt({ system: systemTemplate, blueprints, objects }).pipe(Effect.orDie);
 
       // Tool call loop.
       do {
@@ -219,23 +239,6 @@ export class AiSession {
       log('done', { pending: this._pending.length, duration: this.duration, tools: this._toolCalls });
       return this._pending;
     }).pipe(this._semaphore.withPermits(1), Effect.withSpan('AiSession.run'));
-
-  /**
-   * @deprecated
-   */
-  // TODO(burdon): Implement or remove.
-  async runStructured<S extends Schema.Schema.AnyNoContext>(
-    _schema: S,
-    _options: AiSessionRunProps<any>,
-  ): Promise<Schema.Schema.Type<S>> {
-    return todo();
-    // const parser = structuredOutputParser(schema);
-    // const result = await this.run({
-    //   ...options,
-    //   executableTools: [...(options.executableTools ?? []), parser.tool],
-    // });
-    // return parser.getResult(result);
-  }
 }
 
 const createSnippet = (text: string, len = 32) =>

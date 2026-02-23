@@ -3,7 +3,7 @@
 //
 
 import { type CallMetadata } from './meta';
-
+import { inspect } from 'node:util';
 /**
  * Debug-log value to console.
  * Log's the expression being evaluated.
@@ -26,9 +26,9 @@ export const dbg: {
   <T>(value: T, _meta?: CallMetadata): T;
 } = <T>(arg: T, meta?: CallMetadata): T => {
   if (meta?.A) {
-    console.log(`${meta.A[0]} =`, arg);
+    console.log(`${meta.A[0]} =`, inspect(arg, { colors: true }));
   } else {
-    console.log(arg);
+    console.log(inspect(arg, { colors: true }));
   }
 
   return arg;

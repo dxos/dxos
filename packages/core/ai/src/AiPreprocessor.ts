@@ -7,6 +7,7 @@ import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Predicate from 'effect/Predicate';
+import * as TokenX from 'tokenx';
 
 import { log } from '@dxos/log';
 import { ContentBlock, type Message } from '@dxos/types';
@@ -122,6 +123,65 @@ export const preprocessPrompt: (
 
   return prompt;
 });
+
+/**
+ * Fast regex-based token estimation.
+ * This is only an approximation and might differ from the actual token count.
+ */
+export const estimateTokens: (prompt: Prompt.Prompt) => Effect.Effect<number> = Effect.fn('estimateTokens')(
+  function* (prompt) {
+    let totalTokens = 0;
+
+    for (const message of prompt.content) {
+      totalTokens += MESSAGE_DELIMITER_TOKENS;
+
+      switch (message.role) {
+        case 'system': {
+          totalTokens += TokenX.estimateTokenCount(message.content);
+          break;
+        }
+        case 'user':
+        case 'assistant': {
+          for (const part of message.content) {
+            totalTokens += estimatePartTokens(part);
+          }
+          break;
+        }
+        case 'tool': {
+          for (const part of message.content) {
+            totalTokens += TokenX.estimateTokenCount(part.name);
+            totalTokens += TokenX.estimateTokenCount(JSON.stringify(part.result));
+          }
+          break;
+        }
+      }
+    }
+
+    totalTokens += REPLY_PRIMING_TOKENS;
+
+    return totalTokens;
+  },
+);
+
+/** Per-message overhead for role/start/end delimiter tokens. */
+const MESSAGE_DELIMITER_TOKENS = 4;
+
+/** Overhead for the assistant reply priming at the end of a prompt. */
+const REPLY_PRIMING_TOKENS = 3;
+
+const estimatePartTokens = (part: Prompt.UserMessagePart | Prompt.AssistantMessagePart): number => {
+  switch (part.type) {
+    case 'text':
+    case 'reasoning':
+      return TokenX.estimateTokenCount(part.text);
+    case 'tool-call':
+      return TokenX.estimateTokenCount(part.name) + TokenX.estimateTokenCount(JSON.stringify(part.params));
+    case 'tool-result':
+      return TokenX.estimateTokenCount(part.name) + TokenX.estimateTokenCount(JSON.stringify(part.result));
+    case 'file':
+      return 0;
+  }
+};
 
 /**
  * Finds the last message containing a summary block and trims the conversation accordingly.
