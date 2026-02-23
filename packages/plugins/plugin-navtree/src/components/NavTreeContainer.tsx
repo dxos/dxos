@@ -64,23 +64,17 @@ const useItems = (node?: Node.Node, options?: { disposition?: string; sort?: boo
 const useChildIds = (node?: Node.Node) => {
   const { graph } = useAppGraph();
   const edges = useEdges(graph, node?.id ?? Node.RootId);
-  return useMemo(
-    () =>
-      edges.outbound.filter((id) => {
-        const nodeOption = Graph.getNode(graph, id);
-        if (nodeOption._tag === 'None') {
-          return false;
-        }
-        return filterItems(nodeOption.value);
-      }),
-    [edges, graph],
-  );
+  return edges.outbound;
 };
 
-/** Subscribe to a single item by ID (content only). */
+/** Subscribe to a single item by ID (content only), returning undefined for hidden/filtered items. */
 const useItemById = (id: string) => {
   const { graph } = useAppGraph();
-  return useNode(graph, id);
+  const node = useNode(graph, id);
+  if (!node || !filterItems(node)) {
+    return undefined;
+  }
+  return node;
 };
 
 const useActions = (node: Node.Node): FlattenedActions => {
