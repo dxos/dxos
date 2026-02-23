@@ -1,13 +1,14 @@
 /**
  * Color theme tokens.
- * Imported by theme.css.
+ * 
+ * NOTE: The following are equivalent:
+ *   text-red-500
+ *   text-(--color-red-500)
+ *   text-[var(--color-red-500)]
  */
 
 @theme {
-  --color-currentFill: var(--dx-currentFill);
-  --color-currentSurface: var(--dx-currentSurface);
-  --color-currentSurfaceText: var(--dx-currentSurfaceText);
-  --color-currentText: var(--dx-currentText);
+  /** Tags */
 
   --color-amberFill: theme(colors.amber.500);
   --color-amberSurface: theme(colors.amber.200);
@@ -106,30 +107,26 @@
   --color-primarySurfaceText: theme(colors.blue.700);
   --color-primaryText: theme(colors.blue.600);
 
-  --color-errorFill: var(--dx-errorFill);
-  --color-errorSurface: var(--dx-errorSurface);
-  --color-errorSurfaceText: var(--dx-errorSurfaceText);
-  --color-errorText: var(--dx-errorText);
 
   --color-infoFill: var(--dx-infoFill);
   --color-infoSurface: var(--dx-infoSurface);
   --color-infoSurfaceText: var(--dx-infoSurfaceText);
   --color-infoText: var(--dx-infoText);
 
-  --color-internalFill: var(--dx-internalFill);
-  --color-internalSurface: var(--dx-internalSurface);
-  --color-internalSurfaceText: var(--dx-internalSurfaceText);
-  --color-internalText: var(--dx-internalText);
+  --color-successFill: var(--dx-successFill);
+  --color-successSurface: var(--dx-successSurface);
+  --color-successSurfaceText: var(--dx-successSurfaceText);
+  --color-successText: var(--dx-successText);
 
   --color-warningFill: var(--dx-warningFill);
   --color-warningSurface: var(--dx-warningSurface);
   --color-warningSurfaceText: var(--dx-warningSurfaceText);
   --color-warningText: var(--dx-warningText);
 
-  --color-successFill: var(--dx-successFill);
-  --color-successSurface: var(--dx-successSurface);
-  --color-successSurfaceText: var(--dx-successSurfaceText);
-  --color-successText: var(--dx-successText);
+  --color-errorFill: var(--dx-errorFill);
+  --color-errorSurface: var(--dx-errorSurface);
+  --color-errorSurfaceText: var(--dx-errorSurfaceText);
+  --color-errorText: var(--dx-errorText);
 
   /* Accent */
 

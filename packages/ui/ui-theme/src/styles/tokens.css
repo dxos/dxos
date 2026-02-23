@@ -165,12 +165,12 @@
     --dx-accentSurface: var(--color-blue-500);
     --dx-baseText: light-dark(black, var(--color-neutral-100));
     --dx-inverseSurfaceText: light-dark(var(--color-neutral-100), black);
-    --dx-description: light-dark(var(--color-neutral-600), var(--color-neutral-500));
-    --dx-subdued: light-dark(var(--color-neutral-800), var(--color-neutral-400));
+    --dx-description: light-dark(var(--color-neutral-600), var(--color-neutral-400));
+    --dx-subdued: light-dark(var(--color-neutral-800), var(--color-neutral-200));
     --dx-placeholder: var(--color-neutral-600);
     --dx-accentText: light-dark(var(--color-blue-600), var(--color-blue-400));
     --dx-accentSurfaceText: white;
-    --dx-accentTextHover: light-dark(var(--color-blue-500), var(--color-blue-400));
+    --dx-accentTextHover: light-dark(var(--color-blue-600), var(--color-blue-400));
     --dx-accentFocusIndicator: light-dark(var(--color-blue-300), var(--color-blue-500));
     --dx-neutralFocusIndicator: light-dark(var(--color-neutral-400), var(--color-neutral-600));
   }
@@ -195,32 +195,23 @@
     --dx-infoText: var(--dx-cyanText);
     --dx-warningText: var(--dx-amberText);
     --dx-errorText: var(--dx-roseText);
-    --dx-currentText: var(--dx-primaryText);
-    --dx-internalText: var(--dx-fuchsiaText);
     --dx-successSurface: var(--dx-emeraldSurface);
     --dx-infoSurface: var(--dx-cyanSurface);
     --dx-warningSurface: var(--dx-amberSurface);
     --dx-errorSurface: var(--dx-roseSurface);
-    --dx-currentSurface: var(--dx-primarySurface);
-    --dx-internalSurface: var(--dx-fuchsiaSurface);
     --dx-successSurfaceText: var(--dx-emeraldSurfaceText);
     --dx-infoSurfaceText: var(--dx-cyanSurfaceText);
     --dx-warningSurfaceText: var(--dx-amberSurfaceText);
     --dx-errorSurfaceText: var(--dx-roseSurfaceText);
-    --dx-currentSurfaceText: var(--dx-primarySurfaceText);
-    --dx-internalSurfaceText: var(--dx-fuchsiaSurfaceText);
     --dx-successFill: var(--dx-emeraldFill);
     --dx-infoFill: var(--dx-cyanFill);
     --dx-warningFill: var(--dx-amberFill);
     --dx-errorFill: var(--dx-roseFill);
-    --dx-currentFill: var(--dx-primaryFill);
-    --dx-internalFill: var(--dx-fuchsiaFill);
     --dx-successCursor: var(--dx-emeraldCursor);
     --dx-infoCursor: var(--dx-cyanCursor);
     --dx-warningCursor: var(--dx-amberCursor);
     --dx-errorCursor: var(--dx-roseCursor);
     --dx-currentCursor: var(--dx-primaryCursor);
-    --dx-internalCursor: var(--dx-fuchsiaCursor);
   }
 
   .sidebar-surface, .dark .sidebar-surface, .bg-groupSurface, .dark .bg-groupSurface, .bg-sidebarSurface, .dark .bg-sidebarSurface, .bg-headerSurface, .dark .bg-headerSurface, .bg-toolbarSurface, .dark .bg-toolbarSurface, .bg-cardSurface, .dark .bg-cardSurface {
