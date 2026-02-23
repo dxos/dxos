@@ -80,7 +80,7 @@ const PluginImportSource = ({
             return null;
           }
 
-          if(resolved.packageJsonPath) {
+          if (resolved.packageJsonPath) {
             this.addWatchFile(resolved.packageJsonPath);
           }
 

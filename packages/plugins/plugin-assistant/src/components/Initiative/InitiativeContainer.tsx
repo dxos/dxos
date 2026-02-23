@@ -61,7 +61,6 @@ export const InitiativeContainer = ({ subject: initiative }: InitiativeContainer
         </Toolbar.Root>
       </ElevationProvider>
       {selectedTab === TAB_INITATIVE && <InitiativeStack initiative={initiative} />}
-
       {selectedTab === TAB_CHAT && <Surface.Surface role='article' data={{ subject: chat }} limit={1} />}
     </StackItem.Content>
   );

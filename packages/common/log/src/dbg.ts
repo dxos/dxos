@@ -2,8 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { inspect } from 'node:util';
-
 import { type CallMetadata } from './meta';
 /**
  * Debug-log value to console.

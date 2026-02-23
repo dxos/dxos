@@ -11,14 +11,13 @@ import { type Blueprint } from '@dxos/blueprints';
 import { Type } from '@dxos/echo';
 import { Database, Obj, Ref, Relation } from '@dxos/echo';
 import { type ObjectNotFoundError } from '@dxos/echo/Err';
+import { FormInputAnnotation } from '@dxos/echo/internal';
 import { Queue } from '@dxos/echo-db';
 import { acquireReleaseResource } from '@dxos/effect';
 import { QueueService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { QueueAnnotation, Text } from '@dxos/schema';
 import type { Message } from '@dxos/types';
-
-import { FormInputAnnotation } from '@dxos/echo/internal';
 
 import * as Chat from './Chat';
 import * as Plan from './Plan';
