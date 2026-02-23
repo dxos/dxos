@@ -5,7 +5,7 @@
 import { RegistryContext } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { expect, userEvent, waitFor, within } from 'storybook/test';
+import { expect, userEvent, within } from 'storybook/test';
 
 import { Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -196,14 +196,8 @@ export const Default: Story = {
     await userEvent.click(saveButton);
 
     // Verify the relation was set (cell should now contain the org name).
-    // Re-query the cell since the grid may re-render and replace DOM elements.
-    await waitFor(
-      async () => {
-        const updatedCell = within(secondGrid).getByTestId('grid.4.0');
-        await expect(updatedCell).toHaveTextContent(orgName.substring(0, 4));
-      },
-      { timeout: 5000 },
-    );
+    const updatedCell = within(secondGrid).getByTestId('grid.4.0');
+    await expect(updatedCell).toHaveTextContent(orgName.substring(0, 4));
 
     // Test object creation (new relations) - equivalent to "new relations work as expected" test
     // Find a different cell to test object creation (second row, relations column)
@@ -239,13 +233,7 @@ export const Default: Story = {
     await userEvent.click(saveObjectButton);
 
     // Verify the new object was created and relation was set.
-    // Re-query the cell since the grid may re-render and replace DOM elements.
-    await waitFor(
-      async () => {
-        const updatedNewCell = within(secondGrid).getByTestId('grid.4.1');
-        await expect(updatedNewCell).toHaveTextContent(newOrgName);
-      },
-      { timeout: 5000 },
-    );
+    const updatedNewCell = within(secondGrid).getByTestId('grid.4.1');
+    await expect(updatedNewCell).toHaveTextContent(newOrgName);
   },
 } as any;
