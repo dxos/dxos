@@ -12,7 +12,10 @@ import { log } from '@dxos/log';
 import { ClientEvents } from '../../types';
 import { ClientCapabilities, type ClientPluginOptions } from '../../types';
 
-type ClientCapabilityOptions = Omit<ClientPluginOptions, 'appKey' | 'shareableLinkOrigin' | 'invitationPath' | 'invitationParam' | 'onReset'>;
+type ClientCapabilityOptions = Omit<
+  ClientPluginOptions,
+  'appKey' | 'shareableLinkOrigin' | 'invitationPath' | 'invitationParam' | 'onReset'
+>;
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* (props?: ClientCapabilityOptions) {
