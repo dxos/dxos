@@ -3,7 +3,7 @@
 //
 
 export * from './tokens';
-export * from './theme';
+export * from './theme/index';
 export * from './types';
 export * from './util';
 

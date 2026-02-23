@@ -11,7 +11,7 @@ export type PickerButtonProps = ThemedClassName<{
   Component: FC<{ value: string; size?: IconProps['size'] }>;
   label: string;
   icon: string;
-  values: string[];
+  values: readonly string[];
   disabled?: boolean;
   defaultValue?: string;
   value?: string;
