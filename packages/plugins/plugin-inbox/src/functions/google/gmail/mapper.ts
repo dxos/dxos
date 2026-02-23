@@ -25,7 +25,7 @@ export const mapMessage = Effect.fn(function* (message: GoogleMail.Message) {
 
   // Skip the message if content or sender is missing.
   // TODO(wittjosiah): This comparison should be done via foreignId probably.
-  const sender = { ...from, contact: contact && Ref.make(contact) };
+  const sender = { ...from, ...(contact ? { contact: Ref.make(contact) } : {}) };
   if (!sender || !data) {
     return null;
   }
