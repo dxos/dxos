@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 import type * as Record from 'effect/Record';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { Surface, useCapability } from '@dxos/app-framework/ui';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
@@ -19,30 +19,34 @@ import { FunctionDefinition, QueueService, Trigger } from '@dxos/functions';
 import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { MarkdownEditor } from '@dxos/plugin-markdown';
 import { useObject, useQuery } from '@dxos/react-client/echo';
-import { Button, ButtonGroup, IconButton, Input, Layout, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import {
+  Button,
+  ButtonGroup,
+  ElevationProvider,
+  IconButton,
+  Input,
+  Layout,
+  ScrollArea,
+  toLocalizedString,
+  useTranslation,
+} from '@dxos/react-ui';
 import { Form, type FormFieldMap, omitId } from '@dxos/react-ui-form';
 import { StackItem } from '@dxos/react-ui-stack';
 import { type Text } from '@dxos/schema';
+import { Toolbar } from '@dxos/react-ui';
+import { Card, Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
+import { dbg } from '@dxos/log';
+import { isNonNullable } from '@dxos/util';
 
 const TAB_INITATIVE = 'Initiative';
 const TAB_CHAT = 'Chat';
 
 export type InitiativeContainerProps = SurfaceComponentProps<Initiative.Initiative>;
 
+// TODO(dmaretskyi): Rename InitaitveArticle.
+// TODO(dmaretskyi): Remove Chat and only leave stack. Currently chat companion is struggling with multiple chats associated with an initiative.
 export const InitiativeContainer = ({ subject: initiative }: InitiativeContainerProps) => {
   const [selectedTab, setSelectedTab] = useState<string>(TAB_INITATIVE);
-
-  const tabs = useAtomValue(
-    useMemo(
-      () =>
-        AtomObj.make(initiative).pipe((initiative) =>
-          Atom.make((get) => {
-            return [TAB_INITATIVE, TAB_CHAT, ...get(initiative).artifacts.map((artifact) => artifact.name)];
-          }),
-        ),
-      [initiative],
-    ),
-  );
 
   const chat = useAtomValue(
     useMemo(
@@ -57,54 +61,34 @@ export const InitiativeContainer = ({ subject: initiative }: InitiativeContainer
     ),
   );
 
-  const artifacts = useAtomValue(
-    useMemo(
-      () =>
-        AtomObj.make(initiative).pipe((initiative) =>
-          Atom.make((get) => {
-            return get(initiative).artifacts.map((artifact) => ({
-              name: artifact.name,
-              data: get(AtomRef.make(artifact.data)),
-            }));
-          }),
-        ),
-      [initiative],
-    ),
-  );
-
-  const selectedArtifact = artifacts.find((artifact) => artifact.name === selectedTab);
-
   return (
     <StackItem.Content toolbar>
-      <div
-        role='none'
-        className='flex flex-1 min-is-0 overflow-x-auto scrollbar-none gap-1 border-b border-subduedSeparator'
-      >
-        {tabs.map((tab) => (
+      <ElevationProvider elevation='positioned'>
+        <Toolbar.Root>
           <IconButton
-            key={tab}
-            icon={Match.value(tab).pipe(
-              Match.when(TAB_INITATIVE, () => 'ph--sparkle--regular'),
-              Match.when(TAB_CHAT, () => 'ph--chat--regular'),
-              Match.orElse(() => 'ph--file--regular'),
-            )}
-            label={tab}
-            variant={selectedTab === tab ? 'primary' : 'ghost'}
-            onClick={() => setSelectedTab(tab)}
+            icon='ph--sparkle--regular'
+            label='Initiative'
+            variant={selectedTab === TAB_INITATIVE ? 'primary' : 'ghost'}
+            onClick={() => setSelectedTab(TAB_INITATIVE)}
           />
-        ))}
-      </div>
-      {selectedTab === TAB_INITATIVE && <InitiativeForm initiative={initiative} />}
+          <IconButton
+            icon='ph--chat--regular'
+            label='Chat'
+            variant={selectedTab === TAB_CHAT ? 'primary' : 'ghost'}
+            onClick={() => setSelectedTab(TAB_CHAT)}
+          />
+        </Toolbar.Root>
+      </ElevationProvider>
+      {selectedTab === TAB_INITATIVE && <InitiativeStack initiative={initiative} />}
+
       {selectedTab === TAB_CHAT && <Surface.Surface role='article' data={{ subject: chat }} limit={1} />}
-      {selectedArtifact && <Surface.Surface role='section' data={{ subject: selectedArtifact.data }} limit={1} />}
     </StackItem.Content>
   );
 };
 
 export default InitiativeContainer;
 
-// TODO(dmaretskyi): Rename
-const InitiativeForm = ({ initiative }: { initiative: Initiative.Initiative }) => {
+const InitiativeStack = ({ initiative }: { initiative: Initiative.Initiative }) => {
   const inputQueue = useAtomValue(
     AtomObj.make(initiative).pipe((_) =>
       Atom.make((get) =>
@@ -113,7 +97,23 @@ const InitiativeForm = ({ initiative }: { initiative: Initiative.Initiative }) =
     ),
   );
 
-  const inputQueueItems = useQuery(inputQueue, Query.select(Filter.everything()));
+  const inputQueueItems: Obj.Unknown[] = useQuery(inputQueue, Query.select(Filter.everything()));
+
+  const artifacts = useAtomValue(
+    useMemo(
+      () =>
+        AtomObj.make(initiative).pipe((initiative) =>
+          Atom.make((get) => {
+            return get(initiative).artifacts.map((artifact) => get(AtomRef.make(artifact.data)) as Obj.Unknown);
+          }),
+        ),
+      [initiative],
+    ),
+  );
+
+  const [viewport, setViewport] = useState<HTMLElement | null>(null);
+
+  const stackObjects = [...artifacts, ...inputQueueItems].filter(isNonNullable);
 
   return (
     <Layout.Main classNames='overflow-y-auto'>
@@ -123,9 +123,36 @@ const InitiativeForm = ({ initiative }: { initiative: Initiative.Initiative }) =
         ))}
         {inputQueueItems.length === 0 && <div className='text-subdued'>No items in queue</div>}
       </div>
+
+      <Focus.Group asChild>
+        <Mosaic.Container asChild withFocus autoScroll={viewport}>
+          <ScrollArea.Root orientation='vertical'>
+            <ScrollArea.Viewport classNames='p-2' ref={setViewport}>
+              <Mosaic.Stack items={stackObjects} getId={(item) => item.id} draggable={false} Tile={StackTile} />
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
+        </Mosaic.Container>
+      </Focus.Group>
     </Layout.Main>
   );
 };
+
+const StackTile = forwardRef<HTMLDivElement, MosaicTileProps<Obj.Unknown>>(
+  ({ data, location, debug }, forwardedRef) => {
+    return (
+      <Mosaic.Tile asChild id={data.id} data={data} location={location} debug={debug}>
+        <Focus.Group asChild>
+          <Card.Root ref={forwardedRef} data-testid='board-item'>
+            <Card.Content>
+              <Surface.Surface role='card--content' limit={1} data={{ subject: data }} />
+            </Card.Content>
+          </Card.Root>
+        </Focus.Group>
+      </Mosaic.Tile>
+    );
+  },
+);
+StackTile.displayName = 'StackTile';
 
 // TODO(dmaretskyi): Perhaps the association is better done with a relation.
 
