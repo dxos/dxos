@@ -238,7 +238,7 @@ export const Transcript: FC<TranscriptViewProps> = ({ classNames, blocks, attend
           rows={rows}
           rowDefault={rowDefault}
           onWheel={handleWheel}
-          className='[--dx-grid-base:var(--dx-base-surface)] [--dx-grid-lines:var(--dx-base-surface)] [&_.dx-grid]:min-block-0 [&_.dx-grid]:min-inline-0 [&_.dx-grid]:select-auto'
+          className='[--dx-grid-base:var(--color-base-surface)] [--dx-grid-lines:var(--color-base-surface)] [&_.dx-grid]:min-block-0 [&_.dx-grid]:min-inline-0 [&_.dx-grid]:select-auto'
           ref={setDxGrid}
         />
       </Grid.Root>

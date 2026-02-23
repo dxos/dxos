@@ -6,6 +6,6 @@
   .attention-surface {
     --surface-separator: transparent;
     background-color: var(--color-base-surface);
-    border-color: var(--dx-separator);
+    border-color: var(--color-separator);
   }
 }

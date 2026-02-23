@@ -117,7 +117,7 @@ export const baseTheme = EditorView.baseTheme({
     transition: 'background 0.15s',
   },
   '&:hover .cm-scroller::-webkit-scrollbar-thumb': {
-    background: 'var(--dx-scrollbar-thumb)',
+    background: 'var(--color-scrollbar-thumb)',
   },
 
   /**
@@ -141,7 +141,7 @@ export const baseTheme = EditorView.baseTheme({
   '.cm-gutter': {},
   '.cm-gutter.cm-lineNumbers': {
     paddingRight: '4px',
-    borderRight: '1px solid var(--dx-subdued-separator)',
+    borderRight: '1px solid var(--color-subdued-separator)',
     color: 'var(--dx-subduedText)',
   },
   '.cm-gutter.cm-lineNumbers .cm-gutterElement': {
@@ -207,19 +207,19 @@ export const baseTheme = EditorView.baseTheme({
   '.cm-link': {
     textDecorationLine: 'underline',
     textDecorationThickness: '1px',
-    textDecorationColor: 'var(--dx-separator)',
+    textDecorationColor: 'var(--color-separator)',
     textUnderlineOffset: '2px',
     borderRadius: '.125rem',
   },
   '.cm-link > span': {
-    color: 'var(--dx-accent-text)',
+    color: 'var(--color-accent-text)',
   },
 
   /**
    * Tooltip.
    */
   '.cm-tooltip': {
-    background: 'var(--dx-base-surface)',
+    background: 'var(--color-base-surface)',
   },
   '.cm-tooltip-below': {},
 
@@ -230,7 +230,7 @@ export const baseTheme = EditorView.baseTheme({
   '.cm-tooltip.cm-tooltip-autocomplete': {
     marginTop: '6px',
     marginLeft: '-10px',
-    border: '2px solid var(--dx-separator)',
+    border: '2px solid var(--color-separator)',
     borderRadius: '4px',
   },
   '.cm-tooltip.cm-tooltip-autocomplete > ul': {
@@ -240,7 +240,7 @@ export const baseTheme = EditorView.baseTheme({
     padding: '4px',
   },
   '.cm-tooltip.cm-tooltip-autocomplete > ul > li[aria-selected]': {
-    background: 'var(--dx-active-surface)',
+    background: 'var(--color-active-surface)',
     color: 'var(--dx-activeSurfaceText)',
   },
   '.cm-tooltip.cm-tooltip-autocomplete > ul > completion-section': {
@@ -255,7 +255,7 @@ export const baseTheme = EditorView.baseTheme({
     width: '360px !important',
     margin: '-10px 1px 0 1px',
     padding: '8px !important',
-    borderColor: 'var(--dx-separator)',
+    borderColor: 'var(--color-separator)',
   },
   '.cm-completionIcon': {
     display: 'none',
@@ -265,7 +265,7 @@ export const baseTheme = EditorView.baseTheme({
     padding: '0 4px',
   },
   '.cm-completionMatchedText': {
-    color: 'var(--dx-base-text)',
+    color: 'var(--color-base-text)',
     textDecoration: 'none !important',
   },
 
@@ -298,10 +298,10 @@ export const baseTheme = EditorView.baseTheme({
     outline: '1px solid transparent',
   },
   '.cm-panel input, .cm-panel button': {
-    backgroundColor: 'var(--dx-input-surface)',
+    backgroundColor: 'var(--color-input-surface)',
   },
   '.cm-panel input:focus, .cm-panel button:focus': {
-    outline: '1px solid var(--dx-neutral-focus-indicator)',
+    outline: '1px solid var(--color-neutral-focus-indicator)',
   },
   '.cm-panel label': {
     display: 'inline-flex',
@@ -314,27 +314,27 @@ export const baseTheme = EditorView.baseTheme({
     height: '8px',
     marginRight: '6px !important',
     padding: '2px !important',
-    color: 'var(--dx-neutral-focus-indicator)',
+    color: 'var(--color-neutral-focus-indicator)',
   },
   '.cm-panel button': {
     '&:hover': {
       // TODO(burdon): Replace with layer and @apply bg-accent-surface-hover
-      backgroundColor: 'var(--dx-accent-surface-hover) !important',
+      backgroundColor: 'var(--color-accent-surface-hover) !important',
     },
     '&:active': {
-      backgroundColor: 'var(--dx-accent-surface-hover)',
+      backgroundColor: 'var(--color-accent-surface-hover)',
     },
   },
   '.cm-panel.cm-search': {
     padding: '4px',
-    borderTop: '1px solid var(--dx-separator)',
+    borderTop: '1px solid var(--color-separator)',
   },
 });
 
 export const editorGutter: Extension = EditorView.theme({
   '.cm-gutters': {
     // NOTE: Non-transparent background required to cover content if scrolling horizontally.
-    background: 'var(--dx-base-surface) !important',
+    background: 'var(--color-base-surface) !important',
     paddingRight: '1rem',
   },
 });

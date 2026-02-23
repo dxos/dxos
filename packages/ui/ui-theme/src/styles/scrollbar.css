@@ -4,10 +4,10 @@
  */
 @layer components {
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-scrollbarThumbHover!;
+    @apply bg-scrollbar-thumb-hover!;
   }
   ::-webkit-scrollbar-thumb:active {
-    @apply bg-scrollbarThumbActive!;
+    @apply bg-scrollbar-thumb-active!;
   }
 
   .dx-scrollbar-thin::-webkit-scrollbar {
@@ -18,6 +18,6 @@
     transition: background 0.15s;
   }
   .dx-scrollbar-thin:hover::-webkit-scrollbar-thumb {
-    @apply bg-scrollbarThumb;
+    @apply bg-scrollbar-thumb;
   }
 }

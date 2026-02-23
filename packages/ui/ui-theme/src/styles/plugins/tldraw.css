@@ -12,7 +12,7 @@
     /* Panels *
     --color-panel: theme(colors.neutral.50);
     --color-divider: theme(colors.neutral.75); /* Separator light. */
-    --color-panel-contrast: var(--dx-separator);
+    --color-panel-contrast: var(--color-separator);
     --color-panel-overlay: rgba(255, 255, 255, 0.82);
 
     /* Unmodified.
@@ -56,9 +56,9 @@
     --color-background: var(--surface-bg);
 
     /* Panels */
-    --color-divider: var(--dx-separator); /* Separator dark. */
-    --color-panel: var(--dx-attention);
-    --color-panel-contrast: var(--dx-separator);
+    --color-divider: var(--color-separator); /* Separator dark. */
+    --color-panel: var(--color-attention);
+    --color-panel-contrast: var(--color-separator);
     --color-panel-overlay: rgba(54, 61, 68, 0.82);
 
     /* Unmodified.

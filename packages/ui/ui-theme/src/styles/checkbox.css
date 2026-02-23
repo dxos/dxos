@@ -5,35 +5,35 @@
 @layer dx-components {
   .dx-checkbox--switch,
   .dx-checkbox {
-    @apply border border-unAccent;
+    @apply border border-un-accent;
     &[aria-checked='true'],
     &[aria-checked='mixed'],
     &:checked {
-      @apply bg-accentSurface accent-accentSurface border-accentSurface;
+      @apply bg-accent-surface accent-accent-surface border-accent-surface;
     }
 
     &:not([disabled]),
     &[disabled='false'] {
       &:hover {
-        @apply bg-unAccentHover accent-unAccentHover;
+        @apply bg-un-accent-hover accent-un-accent-hover;
         &[aria-checked='true'],
         &[aria-checked='mixed'],
         &:checked {
-          @apply bg-accentSurfaceHover accent-accentSurfaceHover border-accentSurfaceHover;
+          @apply bg-accent-surface-hover accent-accent-surface-hover border-accent-surface-hover;
         }
       }
     }
   }
 
   .dx-checkbox {
-    @apply inline-4 block-4 overflow-hidden shadow-inner transition-colors bg-unAccent accent-unAccent text-accentSurfaceText shrink-0 inline-grid place-items-center rounded-xs;
+    @apply inline-4 block-4 overflow-hidden shadow-inner transition-colors bg-un-accent accent-un-accent text-accent-surface-text shrink-0 inline-grid place-items-center rounded-xs;
   }
 
   /* TODO(ZaymonFC): Focus is handled by .dx-focus-ring, but should ideally be applied as part of this component.*/
   /* NOTE: This isn't compatible with the Radix switch. */
   .dx-checkbox--switch {
     @apply inline-block appearance-none relative shrink-0 block-5 inline-8;
-    @apply shadow-inner transition-colors bg-unAccent;
+    @apply shadow-inner transition-colors bg-un-accent;
     @apply cursor-pointer rounded-full;
 
     &::before {

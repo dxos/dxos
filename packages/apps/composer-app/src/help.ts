@@ -18,7 +18,7 @@ const base: Partial<Step> = {
   disableOverlay: true,
   styles: {
     options: {
-      arrowColor: 'var(--dx-accent-surface)',
+      arrowColor: 'var(--color-accent-surface)',
     },
   },
   offset: 0,

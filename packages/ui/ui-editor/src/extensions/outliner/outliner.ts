@@ -157,10 +157,10 @@ const decorations = () => [
       },
 
       '.cm-list-item-focused': {
-        borderColor: 'var(--dx-neutral-focus-indicator)',
+        borderColor: 'var(--color-neutral-focus-indicator)',
       },
       '&:focus-within .cm-list-item-selected': {
-        borderColor: 'var(--dx-separator)',
+        borderColor: 'var(--color-separator)',
       },
     }),
   ),

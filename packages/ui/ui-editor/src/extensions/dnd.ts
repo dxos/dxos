@@ -29,8 +29,8 @@ export const dropFile = (options: DropOptions = {}): Extension => {
 
 const styles = EditorView.theme({
   '.cm-dropCursor': {
-    borderLeft: '2px solid var(--dx-accent-text)',
-    color: 'var(--dx-accent-text)',
+    borderLeft: '2px solid var(--color-accent-text)',
+    color: 'var(--color-accent-text)',
     padding: '0 4px',
   },
   '.cm-dropCursor:after': {

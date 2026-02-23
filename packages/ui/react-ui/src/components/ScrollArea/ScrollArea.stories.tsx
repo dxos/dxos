@@ -166,7 +166,7 @@ export const NativeScroll = {
           '[&::-webkit-scrollbar]:inline-3',
           '[&::-webkit-scrollbar-thumb]:rounded-none',
           '[&::-webkit-scrollbar-track]:bg-scrollbarTrack',
-          '[&::-webkit-scrollbar-thumb]:bg-scrollbarThumbSubdued',
+          '[&::-webkit-scrollbar-thumb]:bg-scrollbar-thumbSubdued',
           'group-hover:[&::-webkit-scrollbar-thumb]:bg-scrollbar-thumb',
         )}
       >

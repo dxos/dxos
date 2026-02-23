@@ -9,10 +9,10 @@
 
   /* Base styles */
   .dx-button {
-    @apply font-medium shrink-0 inline-flex select-none items-center justify-center overflow-hidden transition-colors duration-100 ease-linear bg-inputSurface min-block-[2.5rem] px-3;
+    @apply font-medium shrink-0 inline-flex select-none items-center justify-center overflow-hidden transition-colors duration-100 ease-linear bg-input-surface min-block-[2.5rem] px-3;
     &[aria-pressed='true'],
     &[aria-checked='true'] {
-      @apply text-accentText bg-attention;
+      @apply text-accent-text bg-attention;
     }
     /* Disabled styles */
     &[disabled]:not([disabled='false']) {
@@ -22,20 +22,20 @@
     &[data-variant='ghost'] {
       @apply bg-transparent;
       &:hover {
-        @apply bg-hoverSurface text-inherit;
+        @apply bg-hover-surface text-inherit;
       }
       &[data-state='open'] {
-        @apply bg-inputSurface;
+        @apply bg-input-surface;
       }
       &[aria-pressed='true'],
       &[aria-checked='true'] {
-        @apply bg-baseSurface text-accentText;
+        @apply bg-base-surface text-accent-text;
       }
     }
     &[data-variant='outline'] {
-      @apply border border-baseSurface bg-transparent;
+      @apply border border-base-surface bg-transparent;
       &:hover {
-        @apply bg-hoverSurface;
+        @apply bg-hover-surface;
       }
     }
     /* Enabled styles */
@@ -43,19 +43,19 @@
     &[disabled='false'] {
       /* Hover */
       &:hover {
-        @apply bg-hoverSurface;
+        @apply bg-hover-surface;
       }
       /* Variants */
       &[data-variant='primary'] {
-        @apply text-accentSurfaceText bg-accentSurface;
+        @apply text-accent-surface-text bg-accent-surface;
         &:hover,
         &[aria-pressed='true'],
         &[aria-checked='true'] &[data-state='open'] {
-          @apply bg-accentSurfaceHover;
+          @apply bg-accent-surface-hover;
         }
       }
       &[data-variant='destructive'] {
-        @apply text-accentSurfaceText bg-rose-fill;
+        @apply text-accent-surface-text bg-rose-fill;
         &:hover,
         &[aria-pressed='true'],
         &[aria-checked='true'] &[data-state='open'] {

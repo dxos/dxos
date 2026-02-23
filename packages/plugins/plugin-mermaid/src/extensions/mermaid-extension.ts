@@ -112,7 +112,7 @@ export const mermaid = (_options: MermaidOptions = {}): Extension => {
         maring: '4px 0',
         padding: '16px',
         justifyContent: 'center',
-        backgroundColor: 'var(--dx-group-surface)',
+        backgroundColor: 'var(--color-group-surface)',
         borderRadius: '8px',
       },
       '& .cm-mermaid-label': {

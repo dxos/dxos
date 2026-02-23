@@ -139,7 +139,7 @@ export const autoScroll = ({
         transition: 'background 0.15s',
       },
       '&:hover .cm-scroller::-webkit-scrollbar-thumb': {
-        background: 'var(--dx-scrollbar-thumb)',
+        background: 'var(--color-scrollbar-thumb)',
       },
       '.cm-scroll-button': {
         position: 'absolute',
