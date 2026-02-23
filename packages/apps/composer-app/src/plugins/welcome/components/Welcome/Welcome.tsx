@@ -101,7 +101,7 @@ export const Welcome = ({
         'rounded-xl shadow-md lg:translate-x-[-40%]',
       )}
       style={{
-        backgroundImage: 'radial-gradient(circle farthest-corner at 50% 50%, #2d6fff80, var(--dx-neutral-950))',
+        backgroundImage: 'radial-gradient(circle farthest-corner at 50% 50%, #2d6fff80, var(--color-neutral-950))',
       }}
     >
       <div className='z-10 flex flex-col gap-8 p-8 md:px-16'>

@@ -17,45 +17,45 @@ svg {
 
   g.dx-grid {
     path.dx-axis {
-      @apply stroke-[var(--dx-neutral-200)];
+      @apply stroke-neutral-300;
 
       .dark & {
-        @apply stroke-[var(--dx-neutral-700)];
+        @apply stroke-neutral-800;
       }
     }
     path.dx-major {
-      @apply stroke-[var(--dx-neutral-100)];
+      @apply stroke-neutral-200;
 
       .dark & {
-        @apply stroke-[var(--dx-neutral-800)];
+        @apply stroke-neutral-900;
       }
     }
     path.dx-minor {
-      @apply stroke-[var(--dx-neutral-100)];
+      @apply stroke-neutral-200;
 
       .dark & {
-        @apply stroke-[var(--dx-neutral-850)];
+        @apply stroke-neutral-950;
       }
     }
-  }  
+  }
 
   g.dx-graph {
     g.dx-guides {
       circle {
-        @apply fill-[var(--dx-neutral-300)] stroke-[var(--dx-neutral-500)] opacity-10;
+        @apply fill-neutral-400 stroke-neutral-600 opacity-10;
 
         .dark & {
-          @apply fill-[var(--dx-neutral-700)] stroke-[var(--dx-neutral-900)];
+          @apply fill-neutral-800 stroke-neutral-950;
         }
       }
     }
 
     g.dx-subgraphs {
       path.dx-subgraph {
-        @apply stroke-red-500 fill-[var(--dx-neutral-100)] [stroke-dasharray:4_4];
+        @apply stroke-red-500 fill-neutral-200 [stroke-dasharray:4_4];
 
         .dark & {
-          @apply fill-[var(--dx-neutral-900)];
+          @apply fill-neutral-950;
         }
       }
     }
@@ -63,18 +63,18 @@ svg {
     g.dx-nodes {
       g.dx-node {
         circle {
-          @apply fill-[var(--dx-neutral-200)] stroke-[var(--dx-neutral-700)];
+          @apply fill-neutral-300 stroke-neutral-800;
 
           .dark & {
-            @apply fill-[var(--dx-neutral-500)] stroke-none;
+            @apply fill-neutral-600 stroke-none;
           }
         }
         &.dx-selected {
           circle {
-            @apply !fill-red-500 stroke-2 stroke-[var(--dx-neutral-900)];
+            @apply !fill-red-500 stroke-2 stroke-neutral-950;
 
             .dark & {
-              @apply stroke-[var(--dx-neutral-200)];
+              @apply stroke-neutral-300;
             }
           }
         }
