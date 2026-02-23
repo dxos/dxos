@@ -7,21 +7,12 @@ import type * as Schema from 'effect/Schema';
 import type * as SchemaAST from 'effect/SchemaAST';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Obj } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
-import {
-  type JsonPath,
-  createJsonPath,
-  fromEffectValidationPath,
-  getValue as getValue$,
-  setValue as setValue$,
-} from '@dxos/effect';
+import { type JsonPath, createJsonPath, fromEffectValidationPath, getValue as getValue$ } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { useDefaultValue } from '@dxos/react-ui';
 import { type ValidationError, validateSchema } from '@dxos/schema';
 import { type MaybePromise } from '@dxos/util';
-
-import { setValueEchoAware } from '../util';
 
 export type FormFieldStatus = {
   status?: 'error';
@@ -259,6 +250,7 @@ export const useFormHandler = <T extends AnyProperties>({
       log('onValueChange', { path, value });
 
       const jsonPath = createJsonPath(path);
+      const pathArray = Array.isArray(path) ? path : [path];
       let parsedValue = value as any;
       try {
         if (type._tag === 'NumberKeyword') {
@@ -269,12 +261,8 @@ export const useFormHandler = <T extends AnyProperties>({
         parsedValue = undefined;
       }
 
-      // Update.
-      // For ECHO objects, mutate in place via Obj.change(); for plain objects, spread to create new reference.
-      const newValues = Obj.isObject(values)
-        ? (setValueEchoAware(values, jsonPath, parsedValue), values)
-        : { ...setValue$(values, jsonPath, parsedValue) };
-      setValues(newValues);
+      // Create merged values for validation and callback. Form never mutates; parent applies via onValuesChanged.
+      const newValues = mergeAtPath(values, pathArray as (string | number)[], parsedValue) as Partial<T>;
 
       // TODO(burdon): Check value has changed from original.
       const newChanged = { [jsonPath]: true };
@@ -283,10 +271,15 @@ export const useFormHandler = <T extends AnyProperties>({
       // Validate.
       const isValid = validate(newValues);
 
-      // Callback.
+      // Notify parent; parent is responsible for applying the change.
       onValuesChanged?.(newValues, { isValid, changed: newChanged });
+
+      // For uncontrolled mode, update internal state. Controlled mode relies on parent to pass new values.
+      if (valuesProp === undefined) {
+        setValues(newValues);
+      }
     },
-    [values, changed, validate, onValuesChanged],
+    [values, changed, validate, onValuesChanged, valuesProp],
   );
 
   const onBlur = useCallback(
@@ -345,6 +338,23 @@ export const useFormHandler = <T extends AnyProperties>({
       onCancel,
     ],
   );
+};
+
+/**
+ * Creates a new object with value at path. Does not mutate source.
+ */
+const mergeAtPath = (obj: any, path: readonly (string | number)[], value: any): any => {
+  if (path.length === 0) {
+    return value;
+  }
+
+  const [head, ...rest] = path;
+  if (rest.length === 0) {
+    return { ...obj, [head]: value };
+  }
+
+  const nested = obj && typeof obj === 'object' && head in obj ? obj[head] : undefined;
+  return { ...obj, [head]: mergeAtPath(nested, rest, value) };
 };
 
 const flatMap = (errors: ValidationError[]) => {

@@ -7,9 +7,9 @@ import * as Array from 'effect/Array';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
-import React, { forwardRef, useCallback, useContext, useImperativeHandle, useMemo, useState } from 'react';
+import React, { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useMemo, useState } from 'react';
 
-import { Filter, Format, Obj, Query, QueryAST, type SchemaRegistry } from '@dxos/echo';
+import { DXN, Filter, Format, Obj, Query, QueryAST, type SchemaRegistry } from '@dxos/echo';
 import { EchoSchema, type JsonProp, isMutable, toJsonSchema } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { useObject } from '@dxos/react-client/echo';
@@ -107,6 +107,15 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
       Match.orElse(() => undefined),
     );
 
+    // TODO(wittjosiah): Find a better approach. Target override is necessary because the query AST schema
+    //   validates the target as a DXN, so invalid intermediate input (e.g. while backspacing) cannot be
+    //   stored in the view and would reset the field.
+    const [targetOverride, setTargetOverride] = useState<string | null>(null);
+    const targetDisplay = targetOverride !== null ? targetOverride : queueTarget;
+    useEffect(() => {
+      setTargetOverride(null);
+    }, [queueTarget]);
+
     const viewSchema = useMemo(() => {
       const base = Schema.Struct({
         query:
@@ -130,9 +139,9 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
     const viewValues = useMemo(
       () => ({
         query: mode === 'schema' ? getTypenameFromQuery(view.query.ast) : view.query.ast,
-        target: queueTarget,
+        target: targetDisplay,
       }),
-      [mode, view.query.ast, queueTarget],
+      [mode, view.query.ast, targetDisplay],
     );
 
     const fieldMap = useMemo<FormFieldMap | undefined>(
@@ -142,12 +151,23 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
 
     const handleUpdate = useCallback(
       (values: any) => {
-        requestAnimationFrame(() => {
+        const target = values.target;
+        const parsed = typeof target === 'string' ? DXN.tryParse(target) : undefined;
+        // For queue DXNs, only commit when asQueueDXN() succeeds (subspaceTag + spaceId + queueId).
+        // Incomplete/backspaced queue DXNs parse but fail asQueueDXN, causing view to reject and reset.
+        const isValidQueueDXN = parsed?.kind === DXN.kind.QUEUE ? !!parsed.asQueueDXN() : !!parsed;
+        const isValidOrEmpty = target === '' || target === undefined || isValidQueueDXN;
+        if (isValidOrEmpty) {
+          // When committing empty, keep override as '' so we show empty until view updates.
+          // Otherwise targetDisplay falls back to queueTarget (still the old DXN) and reverts.
+          setTargetOverride(target === '' || target === undefined ? '' : null);
           const query = mode === 'schema' ? Query.select(Filter.typename(values.query)).ast : values.query;
-          onQueryChanged?.(query, values.target);
-        });
+          onQueryChanged?.(query, target || undefined);
+        } else {
+          setTargetOverride(target ?? null);
+        }
       },
-      [onQueryChanged, view, queueTarget, mode],
+      [onQueryChanged, mode],
     );
 
     const handleDelete = useCallback(
@@ -168,7 +188,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
         )}
 
         {/* TODO(burdon): Is the form read-only or just the schema? */}
-        <Form.Root schema={viewSchema} values={viewValues} fieldMap={fieldMap} autoSave onSave={handleUpdate}>
+        <Form.Root schema={viewSchema} values={viewValues} fieldMap={fieldMap} onValuesChanged={handleUpdate}>
           <Form.FieldSet />
 
           <FormFieldLabel label={t('fields label')} asChild />

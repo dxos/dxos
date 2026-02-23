@@ -61,7 +61,7 @@ const queryFamily = Atom.family((key: string) => {
     get.addFinalizer(unsubscribe);
 
     return queryResult.results;
-  });
+  }).pipe(Atom.keepAlive);
 });
 
 /**

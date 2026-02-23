@@ -4,7 +4,7 @@
 
 import { createContext } from '@radix-ui/react-context';
 import * as Schema from 'effect/Schema';
-import type * as SchemaAST from 'effect/SchemaAST';
+import * as SchemaAST from 'effect/SchemaAST';
 import React, { type PropsWithChildren, useEffect, useMemo, useRef } from 'react';
 
 import { type AnyProperties } from '@dxos/echo/internal';
@@ -20,7 +20,6 @@ import {
   useKeyHandler,
 } from '../../hooks';
 import { translationKey } from '../../translations';
-import { setValueEchoAware } from '../../util';
 
 import { FormFieldLabel, type FormFieldLabelProps, type FormFieldStateProps } from './FormFieldComponent';
 import {
@@ -87,16 +86,18 @@ const useFormValues: {
 } = (componentName: string, path: (string | number)[] = [], defaultValue?: () => any) => {
   const jsonPath = createJsonPath(path);
   const {
-    form: { values },
+    form: { values, onValueChange },
   } = useFormContext(componentName);
 
   const value = getValue$(values, jsonPath);
 
+  const appliedDefaultRef = useRef(false);
   useEffect(() => {
-    if (!value && defaultValue) {
-      setValueEchoAware(values, jsonPath, defaultValue());
+    if (!value && defaultValue && !appliedDefaultRef.current) {
+      appliedDefaultRef.current = true;
+      onValueChange(path, SchemaAST.stringKeyword, defaultValue());
     }
-  }, [value, defaultValue]);
+  }, [value, defaultValue, onValueChange, path]);
 
   return value;
 };

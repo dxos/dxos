@@ -10,7 +10,7 @@ import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { DXN, Filter, Query, type QueryAST, type SchemaRegistry } from '@dxos/echo';
+import { DXN, Filter, Key, Query, type QueryAST, type SchemaRegistry } from '@dxos/echo';
 import {
   ReferenceAnnotationId,
   type ReferenceAnnotationValue,
@@ -141,12 +141,21 @@ const typenameFromFilter = (filter: QueryAST.Filter): Option.Option<string> =>
 export const getQueryTarget = (query: QueryAST.Query, space?: Space) => {
   return Match.value(query).pipe(
     Match.when({ type: 'options' }, ({ options }) => {
-      return Option.fromNullable(options.queues).pipe(
+      const result = Option.fromNullable(options.queues).pipe(
         Option.flatMap((queues) => Array.head(queues)),
         Option.flatMap((queueDxn) => Option.fromNullable(DXN.tryParse(queueDxn))),
-        Option.flatMap((queueDxn) => Option.fromNullable(space?.queues.get(queueDxn))),
-        Option.getOrElse(() => space?.db),
+        Option.flatMap((parsed) => {
+          const q = parsed.asQueueDXN();
+          if (!q || !Key.ObjectId.isValid(q.queueId)) return Option.none();
+          return Option.fromNullable(space?.queues.get(parsed));
+        }),
       );
+      // Invalid queue DXN. Don't query to avoid 400 errors.
+      // TODO(wittjosiah): Can we handle this upstream?
+      if (options.queues?.length && Option.isNone(result)) {
+        return undefined;
+      }
+      return Option.getOrElse(result, () => space?.db);
     }),
     Match.orElse(() => space?.db),
   );
