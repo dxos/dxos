@@ -127,7 +127,7 @@ describe('AiSession', () => {
     ),
   );
 
-  it.effect.only(
+  it.effect(
     'summarization',
     Effect.fnUntraced(
       function* (_) {
