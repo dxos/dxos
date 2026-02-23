@@ -197,6 +197,64 @@ describe('Integration tests', () => {
     }
   });
 
+  test('Ref.make sets resolver when object is in a database and can load after eviction', async () => {
+    await using peer = await builder.createPeer();
+
+    let outerId: string;
+    {
+      await using db = await peer.createDatabase();
+      const inner = db.add(Obj.make(TestSchema.Expando, { name: 'inner' }));
+
+      // Ref.make on a database-backed object should set up a resolver.
+      const ref = Ref.make(inner);
+      expect(ref.isAvailable).to.be.true;
+
+      const outer = db.add(Obj.make(TestSchema.Expando, { inner: ref }));
+      outerId = outer.id;
+      await db.flush();
+    }
+
+    // Reload peer to evict all objects from memory.
+    await peer.reload();
+    {
+      await using db = await peer.openLastDatabase();
+      const outer = await db.query(Filter.id(outerId)).first();
+
+      // The ref on the reloaded object should have a resolver and be loadable.
+      expect(outer.inner.target).to.eq(undefined); // Not loaded yet.
+      const loaded = await outer.inner.load();
+      expect(loaded).to.include({ name: 'inner' });
+    }
+  });
+
+  test('Ref.make on a database-backed object can resolve without inline target', async () => {
+    await using peer = await builder.createPeer();
+    await using db = await peer.createDatabase();
+    const obj = db.add(Obj.make(TestSchema.Expando, { name: 'alpha' }));
+    await db.flush();
+
+    // Create a ref using Ref.make (not db.makeRef) on a database-backed object.
+    const ref = Ref.make(obj);
+
+    // Strip the inline target — the resolver from Ref.make should still resolve.
+    const refNoInline = ref.noInline();
+    expect(refNoInline.isAvailable).to.be.true;
+    const loaded = await refNoInline.tryLoad();
+    expect(loaded).to.include({ name: 'alpha' });
+  });
+
+  test('Ref.make on standalone object has no resolver', () => {
+    const obj = Obj.make(TestSchema.Expando, { name: 'standalone' });
+    const ref = Ref.make(obj);
+
+    // Inline target is available.
+    expect(ref.isAvailable).to.be.true;
+
+    // But without a database, noInline ref has no resolver.
+    const refNoInline = ref.noInline();
+    expect(refNoInline.isAvailable).to.be.false;
+  });
+
   test('replication', async () => {
     const [spaceKey] = PublicKey.randomSequence();
     await using network = await new TestReplicationNetwork().open();

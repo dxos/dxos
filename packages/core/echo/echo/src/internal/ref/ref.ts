@@ -19,6 +19,7 @@ import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
 
 import * as Database from '../../Database';
+import { getDatabase } from '../api/entity';
 import { ReferenceAnnotationId, getSchemaDXN, getTypeAnnotation, getTypeIdentifierAnnotation } from '../annotations';
 import { type JsonSchemaType } from '../json-schema';
 import type { AnyEntity, AnyProperties } from '../types';
@@ -224,7 +225,15 @@ Ref.make = <T extends AnyProperties>(obj: T): Ref<T> => {
   const id = obj.id;
   invariant(ObjectId.isValid(id), 'Invalid object ID');
   const dxn = DXN.fromLocalObjectId(id);
-  return new RefImpl(dxn, obj);
+  const ref = new RefImpl(dxn, obj);
+
+  // If the object is in a database, set up the resolver so the ref can be loaded.
+  const db: Database.Database | undefined = getDatabase(obj as any);
+  if (db) {
+    setRefResolver(ref, db.graph.createRefResolver({ context: { space: db.spaceId } }));
+  }
+
+  return ref;
 };
 
 Ref.fromDXN = (dxn: DXN): Ref<any> => {
