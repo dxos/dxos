@@ -4,10 +4,10 @@
 
 import { type MessageValence } from '@dxos/ui-types';
 
-export const successText = 'text-xs font-medium text-successText';
-export const infoText = 'text-xs font-medium text-infoText';
-export const warningText = 'text-xs font-medium text-warningText';
-export const errorText = 'text-xs font-medium text-errorText';
+export const successText = 'text-xs font-medium text-success-text';
+export const infoText = 'text-xs font-medium text-info-text';
+export const warningText = 'text-xs font-medium text-warning-text';
+export const errorText = 'text-xs font-medium text-error-text';
 
 export const valenceColorText = (valence?: MessageValence) => {
   switch (valence) {
@@ -25,10 +25,10 @@ export const valenceColorText = (valence?: MessageValence) => {
 };
 
 export const neutralMessageColors = 'border border-dashed border-separator text-subdued';
-export const successMessageColors = 'text-successSurfaceText bg-successSurface';
-export const infoMessageColors = 'text-infoSurfaceText bg-infoSurface';
-export const warningMessageColors = 'text-warningSurfaceText bg-warningSurface';
-export const errorMessageColors = 'text-errorSurfaceText bg-errorSurface';
+export const successMessageColors = 'text-success-surface-text bg-success-surface';
+export const infoMessageColors = 'text-info-surface-text bg-info-surface';
+export const warningMessageColors = 'text-warning-surface-text bg-warning-surface';
+export const errorMessageColors = 'text-error-surface-text bg-error-surface';
 
 export const messageValence = (valence?: MessageValence) => {
   switch (valence) {

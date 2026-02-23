@@ -38,20 +38,20 @@ const highlightStyles = HighlightStyle.define([
   // Range.
   {
     tag: tags.tagName,
-    class: 'text-pinkText',
+    class: 'text-pink-text',
   },
   // Values.
   {
     tag: tags.number,
-    class: 'text-tealText',
+    class: 'text-teal-text',
   },
   {
     tag: tags.bool,
-    class: 'text-tealText',
+    class: 'text-teal-text',
   },
   {
     tag: tags.string,
-    class: 'text-tealText',
+    class: 'text-teal-text',
   },
   // Error.
   {
@@ -110,7 +110,7 @@ export const sheetExtension = ({ debug, functions = [] }: SheetExtensionOptions)
         if (syntax) {
           const detail = document.createElement('pre');
           detail.innerText = syntax;
-          detail.className = 'whitespace-pre-wrap text-greenText';
+          detail.className = 'whitespace-pre-wrap text-green-text';
           root.appendChild(detail);
         }
 

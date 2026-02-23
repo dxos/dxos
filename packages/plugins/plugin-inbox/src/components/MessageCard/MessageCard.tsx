@@ -27,7 +27,7 @@ export const MessageCard = ({ subject: message }: SurfaceComponentProps<Message.
         </div>
       </Card.Toolbar>
       <Card.Row>
-        <p className='text-xs text-description text-infoText'>{email}</p>
+        <p className='text-xs text-description text-info-text'>{email}</p>
       </Card.Row>
       <Card.Row>
         <Card.Text variant='description'>{snippet}</Card.Text>

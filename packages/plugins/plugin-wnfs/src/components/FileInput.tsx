@@ -37,7 +37,7 @@ export const FileInput = ({ schema, onChange }: FileInputProps) => {
         'flex flex-col items-center p-8 border border-separator',
         isFocused && 'focus-ring',
         isDragAccept && 'bg-attention',
-        isDragReject && 'border-roseFill',
+        isDragReject && 'border-rose-fill',
       )}
     >
       <input {...getInputProps()} />

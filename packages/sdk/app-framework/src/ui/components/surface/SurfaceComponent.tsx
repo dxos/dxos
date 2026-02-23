@@ -232,8 +232,8 @@ const DefaultFallback = ({ data, error, dev }: { data: any; error: Error; dev?: 
 
   return (
     <ScrollArea.Root orientation='vertical'>
-      <ScrollArea.Viewport classNames='p-4 gap-4 border border-roseFill'>
-        <h1 className='flex gap-2 text-sm mbs-2 text-errorText'>{error.message}</h1>
+      <ScrollArea.Viewport classNames='p-4 gap-4 border border-rose-fill'>
+        <h1 className='flex gap-2 text-sm mbs-2 text-error-text'>{error.message}</h1>
         <pre className='overflow-x-auto text-xs text-description'>{error.stack}</pre>
         <pre className='overflow-x-auto text-xs text-description'>{JSON.stringify(data, null, 2)}</pre>
       </ScrollArea.Viewport>

@@ -1,126 +1,138 @@
 /**
  * Tokens
  */
+
+
+@theme {
+  /* Surfaces */
+
+  --color-baseSurface: theme(colors.white);
+  --color-baseText: theme(colors.black);
+
+  --color-headerSurface: var(--dx-headerSurface);
+
+  --color-hoverSurface: var(--dx-hoverSurface);
+  --color-hoverSurfaceGroup: theme(colors.neutral.100);
+
+  --color-inputSurface: var(--dx-inputSurface);
+  --color-inputSurfaceGroup: theme(colors.neutral.100);
+
+  --color-inverseSurface: theme(colors.neutral.900);
+  --color-inverseSurfaceText: theme(colors.neutral.50);
+
+  --color-activeSurface: var(--dx-activeSurface);
+  --color-groupSurface: theme(colors.white);
+
+  --color-cardSurface: var(--dx-cardSurface);
+  --color-modalSurface: theme(colors.white);
+
+  --color-attention: var(--dx-attention);
+
+  --color-scrimSurface: theme(colors.neutral.50 / 0.65);
+  --color-sidebarSurface: var(--dx-sidebarSurface);
+  --color-toolbarSurface: var(--dx-toolbarSurface);
+
+  --color-textInputSurface: var(--dx-textInputSurface);
+  --color-textInputSurfaceGroup: theme(colors.neutral.50);
+
+  --color-deckSurface: theme(colors.neutral.50);
+
+  --color-focusLine: var(--dx-focusLine);
+  --color-focusSurface: theme(colors.white);
+  --color-neutralFocusIndicator: theme(colors.neutral.300);
+
+  /* Accent */
+
+  --color-accentSurface: theme(colors.blue.500);
+  --color-accentSurfaceHover: theme(colors.blue.600);
+  --color-accentSurfaceText: theme(colors.white);
+  --color-accentText: theme(colors.blue.600);
+  --color-accentTextHover: theme(colors.blue.500);
+  --color-accentFocusIndicator: theme(colors.blue.300);
+
+  --color-unAccent: theme(colors.neutral.400);
+  --color-unAccentHover: theme(colors.neutral.500);
+
+  /* Separator */
+
+  --color-separator: var(--dx-separator);
+  --color-separatorGroup: theme(colors.neutral.200);
+  --color-subduedSeparator: theme(colors.neutral.200);
+
+  /* Scrollbar */
+
+  --color-scrollbarThumb: theme(colors.neutral.200);
+  --color-scrollbarThumbActive: theme(colors.neutral.200);
+  --color-scrollbarThumbHover: theme(colors.neutral.200);
+
+  /* Sheet */
+
+  --color-axisSelectedSurface: theme(colors.neutral.100);
+  --color-axisSelectedText: theme(colors.neutral.100);
+  --color-axisSurface: theme(colors.neutral.50);
+  --color-axisText: theme(colors.neutral.800);
+
+  /* Misc */
+
+  --color-callActive: theme(colors.green.500);
+  --color-gridCommentedActive: theme(colors.green.200 / 0.5);
+  --color-gridLine: var(--dx-gridLine);
+  --color-gridFocusIndicatorColor: var(--dx-gridFocusIndicatorColor);
+  --color-hairLine: var(--dx-hairLine);
+  --color-landmarkLine: var(--dx-landmarkLine);
+  --color-modalLine: var(--dx-modalLine);
+  --color-noLine: var(--dx-noLine);
+  --color-positionedLine: var(--dx-positionedLine);
+  --color-thickLine: var(--dx-thickLine);
+}
+
+/* Dark mode color overrides */
+.dark {
+  --color-axisSurface: theme(colors.neutral.800);
+  --color-axisText: theme(colors.neutral.200);
+  --color-axisSelectedSurface: theme(colors.neutral.900);
+  --color-axisSelectedText: theme(colors.neutral.900);
+  --color-gridCommentedActive: theme(colors.green.600 / 0.5);
+
+  --color-baseSurface: theme(colors.neutral.900);
+  --color-baseText: theme(colors.neutral.50);
+  --color-groupSurface: theme(colors.neutral.800);
+  --color-modalSurface: theme(colors.neutral.800);
+  --color-textInputSurfaceGroup: theme(colors.neutral.700);
+  --color-inputSurfaceGroup: theme(colors.neutral.700);
+  --color-hoverSurfaceGroup: theme(colors.neutral.700);
+  --color-separatorGroup: theme(colors.neutral.700);
+  --color-subduedSeparator: theme(colors.neutral.700);
+  --color-scrollbarThumb: theme(colors.neutral.700);
+  --color-scrollbarThumbHover: theme(colors.neutral.600);
+  --color-scrollbarThumbActive: theme(colors.neutral.600);
+  --color-scrimSurface: theme(colors.neutral.900 / 0.65);
+  --color-focusSurface: theme(colors.black);
+  --color-deckSurface: theme(colors.neutral.950);
+  --color-inverseSurface: theme(colors.white);
+  --color-inverseSurfaceText: theme(colors.black);
+  --color-accentSurfaceHover: theme(colors.blue.500);
+  --color-accentText: theme(colors.blue.400);
+  --color-accentTextHover: theme(colors.blue.400);
+  --color-accentFocusIndicator: theme(colors.blue.500);
+  --color-neutralFocusIndicator: theme(colors.neutral.600);
+}
+
+
+
 @layer dx-tokens {
   /* Color semantic tokens */
 
   :root, .dark {
     --dx-callActive: var(--color-green-500);
     --dx-callAlert: var(--color-rose-500);
-    --dx-redCursor: light-dark(var(--color-red-400), var(--color-red-300));
-    --dx-redText: light-dark(var(--color-red-600), var(--color-red-300));
-    --dx-redFill: var(--color-red-500);
-    --dx-redSurface: light-dark(var(--color-red-200), var(--color-red-700));
-    --dx-redSurfaceText: light-dark(var(--color-red-700), var(--color-red-200));
-    --dx-redScreen: light-dark(var(--color-red-100), var(--color-red-800));
-    --dx-orangeCursor: light-dark(var(--color-orange-400), var(--color-orange-300));
-    --dx-orangeText: light-dark(var(--color-orange-600), var(--color-orange-300));
-    --dx-orangeFill: var(--color-orange-500);
-    --dx-orangeSurface: light-dark(var(--color-orange-200), var(--color-orange-700));
-    --dx-orangeSurfaceText: light-dark(var(--color-orange-700), var(--color-orange-200));
-    --dx-orangeScreen: light-dark(var(--color-orange-100), var(--color-orange-800));
-    --dx-amberCursor: light-dark(var(--color-amber-400), var(--color-amber-300));
-    --dx-amberText: light-dark(var(--color-amber-600), var(--color-amber-300));
-    --dx-amberFill: var(--color-amber-500);
-    --dx-amberSurface: light-dark(var(--color-amber-200), var(--color-amber-700));
-    --dx-amberSurfaceText: light-dark(var(--color-amber-700), var(--color-amber-200));
-    --dx-amberScreen: light-dark(var(--color-amber-100), var(--color-amber-800));
-    --dx-yellowCursor: light-dark(var(--color-yellow-400), var(--color-yellow-300));
-    --dx-yellowText: light-dark(var(--color-yellow-600), var(--color-yellow-300));
-    --dx-yellowFill: var(--color-yellow-500);
-    --dx-yellowSurface: light-dark(var(--color-yellow-200), var(--color-yellow-700));
-    --dx-yellowSurfaceText: light-dark(var(--color-yellow-700), var(--color-yellow-200));
-    --dx-yellowScreen: light-dark(var(--color-yellow-100), var(--color-yellow-800));
-    --dx-limeCursor: light-dark(var(--color-lime-400), var(--color-lime-300));
-    --dx-limeText: light-dark(var(--color-lime-600), var(--color-lime-300));
-    --dx-limeFill: var(--color-lime-500);
-    --dx-limeSurface: light-dark(var(--color-lime-200), var(--color-lime-700));
-    --dx-limeSurfaceText: light-dark(var(--color-lime-700), var(--color-lime-200));
-    --dx-limeScreen: light-dark(var(--color-lime-100), var(--color-lime-800));
-    --dx-greenCursor: light-dark(var(--color-green-400), var(--color-green-300));
-    --dx-greenText: light-dark(var(--color-green-600), var(--color-green-300));
-    --dx-greenFill: var(--color-green-500);
-    --dx-greenSurface: light-dark(var(--color-green-200), var(--color-green-700));
-    --dx-greenSurfaceText: light-dark(var(--color-green-700), var(--color-green-200));
-    --dx-greenScreen: light-dark(var(--color-green-100), var(--color-green-800));
-    --dx-emeraldCursor: light-dark(var(--color-emerald-400), var(--color-emerald-300));
-    --dx-emeraldText: light-dark(var(--color-emerald-600), var(--color-emerald-300));
-    --dx-emeraldFill: var(--color-emerald-500);
-    --dx-emeraldSurface: light-dark(var(--color-emerald-200), var(--color-emerald-700));
-    --dx-emeraldSurfaceText: light-dark(var(--color-emerald-700), var(--color-emerald-200));
-    --dx-emeraldScreen: light-dark(var(--color-emerald-100), var(--color-emerald-800));
-    --dx-tealCursor: light-dark(var(--color-teal-400), var(--color-teal-300));
-    --dx-tealText: light-dark(var(--color-teal-600), var(--color-teal-300));
-    --dx-tealFill: var(--color-teal-500);
-    --dx-tealSurface: light-dark(var(--color-teal-200), var(--color-teal-700));
-    --dx-tealSurfaceText: light-dark(var(--color-teal-700), var(--color-teal-200));
-    --dx-tealScreen: light-dark(var(--color-teal-100), var(--color-teal-800));
-    --dx-cyanCursor: light-dark(var(--color-cyan-400), var(--color-cyan-300));
-    --dx-cyanText: light-dark(var(--color-cyan-600), var(--color-cyan-300));
-    --dx-cyanFill: var(--color-cyan-500);
-    --dx-cyanSurface: light-dark(var(--color-cyan-200), var(--color-cyan-700));
-    --dx-cyanSurfaceText: light-dark(var(--color-cyan-700), var(--color-cyan-200));
-    --dx-cyanScreen: light-dark(var(--color-cyan-100), var(--color-cyan-800));
-    --dx-skyCursor: light-dark(var(--color-sky-400), var(--color-sky-300));
-    --dx-skyText: light-dark(var(--color-sky-600), var(--color-sky-300));
-    --dx-skyFill: var(--color-sky-500);
-    --dx-skySurface: light-dark(var(--color-sky-200), var(--color-sky-700));
-    --dx-skySurfaceText: light-dark(var(--color-sky-700), var(--color-sky-200));
-    --dx-skyScreen: light-dark(var(--color-sky-100), var(--color-sky-800));
-    --dx-blueCursor: light-dark(var(--color-blue-400), var(--color-blue-300));
-    --dx-blueText: light-dark(var(--color-blue-600), var(--color-blue-300));
-    --dx-blueFill: var(--color-blue-500);
-    --dx-blueSurface: light-dark(var(--color-blue-200), var(--color-blue-700));
-    --dx-blueSurfaceText: light-dark(var(--color-blue-700), var(--color-blue-200));
-    --dx-blueScreen: light-dark(var(--color-blue-100), var(--color-blue-800));
-    --dx-indigoCursor: light-dark(var(--color-indigo-400), var(--color-indigo-300));
-    --dx-indigoText: light-dark(var(--color-indigo-600), var(--color-indigo-300));
-    --dx-indigoFill: var(--color-indigo-500);
-    --dx-indigoSurface: light-dark(var(--color-indigo-200), var(--color-indigo-700));
-    --dx-indigoSurfaceText: light-dark(var(--color-indigo-700), var(--color-indigo-200));
-    --dx-indigoScreen: light-dark(var(--color-indigo-100), var(--color-indigo-800));
-    --dx-violetCursor: light-dark(var(--color-violet-400), var(--color-violet-300));
-    --dx-violetText: light-dark(var(--color-violet-600), var(--color-violet-300));
-    --dx-violetFill: var(--color-violet-500);
-    --dx-violetSurface: light-dark(var(--color-violet-200), var(--color-violet-700));
-    --dx-violetSurfaceText: light-dark(var(--color-violet-700), var(--color-violet-200));
-    --dx-violetScreen: light-dark(var(--color-violet-100), var(--color-violet-800));
-    --dx-purpleCursor: light-dark(var(--color-purple-400), var(--color-purple-300));
-    --dx-purpleText: light-dark(var(--color-purple-600), var(--color-purple-300));
-    --dx-purpleFill: var(--color-purple-500);
-    --dx-purpleSurface: light-dark(var(--color-purple-200), var(--color-purple-700));
-    --dx-purpleSurfaceText: light-dark(var(--color-purple-700), var(--color-purple-200));
-    --dx-purpleScreen: light-dark(var(--color-purple-100), var(--color-purple-800));
-    --dx-fuchsiaCursor: light-dark(var(--color-fuchsia-400), var(--color-fuchsia-300));
-    --dx-fuchsiaText: light-dark(var(--color-fuchsia-600), var(--color-fuchsia-300));
-    --dx-fuchsiaFill: var(--color-fuchsia-500);
-    --dx-fuchsiaSurface: light-dark(var(--color-fuchsia-200), var(--color-fuchsia-700));
-    --dx-fuchsiaSurfaceText: light-dark(var(--color-fuchsia-700), var(--color-fuchsia-200));
-    --dx-fuchsiaScreen: light-dark(var(--color-fuchsia-100), var(--color-fuchsia-800));
-    --dx-pinkCursor: light-dark(var(--color-pink-400), var(--color-pink-300));
-    --dx-pinkText: light-dark(var(--color-pink-600), var(--color-pink-300));
-    --dx-pinkFill: var(--color-pink-500);
-    --dx-pinkSurface: light-dark(var(--color-pink-200), var(--color-pink-700));
-    --dx-pinkSurfaceText: light-dark(var(--color-pink-700), var(--color-pink-200));
-    --dx-pinkScreen: light-dark(var(--color-pink-100), var(--color-pink-800));
-    --dx-roseCursor: light-dark(var(--color-rose-400), var(--color-rose-300));
-    --dx-roseText: light-dark(var(--color-rose-600), var(--color-rose-300));
-    --dx-roseFill: var(--color-rose-500);
-    --dx-roseSurface: light-dark(var(--color-rose-200), var(--color-rose-700));
-    --dx-roseSurfaceText: light-dark(var(--color-rose-700), var(--color-rose-200));
-    --dx-roseScreen: light-dark(var(--color-rose-100), var(--color-rose-800));
-    --dx-neutralCursor: light-dark(var(--color-neutral-500), var(--color-neutral-400));
-    --dx-neutralText: light-dark(var(--color-neutral-600), var(--color-neutral-400));
-    --dx-neutralFill: var(--color-neutral-600);
-    --dx-neutralSurface: light-dark(var(--color-neutral-300), var(--color-neutral-800));
-    --dx-neutralSurfaceText: light-dark(var(--color-neutral-800), var(--color-neutral-300));
-    --dx-neutralScreen: light-dark(var(--color-neutral-200), var(--color-neutral-900));
     --dx-primaryCursor: light-dark(var(--color-blue-400), var(--color-blue-300));
-    --dx-primaryText: light-dark(var(--color-blue-600), var(--color-blue-300));
-    --dx-primaryFill: var(--color-blue-500);
-    --dx-primarySurface: light-dark(var(--color-blue-200), var(--color-blue-700));
-    --dx-primarySurfaceText: light-dark(var(--color-blue-700), var(--color-blue-200));
-    --dx-primaryScreen: light-dark(var(--color-blue-100), var(--color-blue-800));
+
+    --dx-primaryText: var(--color-primary-text);
+    --dx-primaryFill: var(--color-primary-fill);
+    --dx-primarySurface: var(--color-primary-surface);
+    --dx-primarySurfaceText: var(--color-primary-surface-text);
+
     --dx-axisSurface: light-dark(var(--color-neutral-100), var(--color-neutral-900));
     --dx-axisText: light-dark(var(--color-neutral-900), var(--color-neutral-300));
     --dx-axisSelectedSurface: light-dark(var(--color-neutral-200), var(--color-neutral-950));
@@ -180,6 +192,7 @@
   :root, .dark {
     --dx-gridLine: var(--dx-activeSurface);
     --dx-gridFocusIndicatorColor: var(--dx-accentFocusIndicator);
+
     --dx-activeSurface: var(--dx-inputSurfaceBase);
     --dx-inputSurface: var(--dx-inputSurfaceBase);
     --dx-sidebarSurface: var(--dx-groupSurface);
@@ -191,26 +204,11 @@
     --dx-attention: var(--dx-focusSurface);
     --dx-currentRelated: var(--dx-modalSurface);
     --dx-separator: var(--dx-separatorBase);
-    --dx-successText: var(--dx-emeraldText);
-    --dx-infoText: var(--dx-cyanText);
-    --dx-warningText: var(--dx-amberText);
-    --dx-errorText: var(--dx-roseText);
-    --dx-successSurface: var(--dx-emeraldSurface);
-    --dx-infoSurface: var(--dx-cyanSurface);
-    --dx-warningSurface: var(--dx-amberSurface);
-    --dx-errorSurface: var(--dx-roseSurface);
-    --dx-successSurfaceText: var(--dx-emeraldSurfaceText);
-    --dx-infoSurfaceText: var(--dx-cyanSurfaceText);
-    --dx-warningSurfaceText: var(--dx-amberSurfaceText);
-    --dx-errorSurfaceText: var(--dx-roseSurfaceText);
-    --dx-successFill: var(--dx-emeraldFill);
-    --dx-infoFill: var(--dx-cyanFill);
-    --dx-warningFill: var(--dx-amberFill);
-    --dx-errorFill: var(--dx-roseFill);
-    --dx-successCursor: var(--dx-emeraldCursor);
-    --dx-infoCursor: var(--dx-cyanCursor);
-    --dx-warningCursor: var(--dx-amberCursor);
-    --dx-errorCursor: var(--dx-roseCursor);
+
+    --dx-successCursor: light-dark(var(--color-emerald-400), var(--color-emerald-300));
+    --dx-infoCursor: light-dark(var(--color-cyan-400), var(--color-cyan-300));
+    --dx-warningCursor: light-dark(var(--color-amber-400), var(--color-amber-300));
+    --dx-errorCursor: light-dark(var(--color-rose-400), var(--color-rose-300));
     --dx-currentCursor: var(--dx-primaryCursor);
   }
 

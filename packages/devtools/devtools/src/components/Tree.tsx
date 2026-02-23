@@ -59,7 +59,7 @@ export const KeyValue: FC<{ label: string; data?: any; className?: string }> = (
 
 const Scalar: FC<{ value: any }> = ({ value }) => {
   return (
-    <Box className='bg-skySurface text-information rounded-r-sm text-sm font-thin'>
+    <Box className='bg-sky-surface text-information rounded-r-sm text-sm font-thin'>
       {(value === undefined && 'undefined') ||
         (value === null && 'null') ||
         (typeof value === 'string' && value) ||

@@ -9,11 +9,8 @@ type AdditionalClassGroups = 'density' | 'dx-focus-ring';
 export const mx = extendTailwindMerge<AdditionalClassGroups>({
   extend: {
     classGroups: {
-        // Arbitrary numbers
-        validators.isArbitraryNumber,
-      'text-color': [{ text: [{ cm: [validators.isAny] }] }],
-      'font-family': ['font-body', 'font-mono'],
-      'font-weight': [
+      ['font-family' as const]: ['font-body', 'font-mono'],
+      ['font-weight' as const]: [
         // App weights
         'font-thin',
         'font-extralight',
@@ -24,9 +21,14 @@ export const mx = extendTailwindMerge<AdditionalClassGroups>({
         'font-bold',
         'font-extrabold',
         'font-black',
+
+        // Arbitrary numbers
+        validators.isArbitraryNumber,
       ],
-      density: ['density-fine', 'density-coarse'],
-      'dx-focus-ring': [
+
+      ['density' as const]: ['density-fine', 'density-coarse'],
+
+      ['dx-focus-ring' as const]: [
         'dx-focus-ring',
         'dx-focus-ring-inset',
         'dx-focus-ring-always',

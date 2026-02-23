@@ -55,11 +55,11 @@
         }
       }
       &[data-variant='destructive'] {
-        @apply text-accentSurfaceText bg-roseFill;
+        @apply text-accentSurfaceText bg-rose-fill;
         &:hover,
         &[aria-pressed='true'],
         &[aria-checked='true'] &[data-state='open'] {
-          @apply bg-roseFill;
+          @apply bg-rose-fill;
         }
       }
     }

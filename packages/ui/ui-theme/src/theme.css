@@ -11,7 +11,6 @@
 
 @import 'tailwindcss';
 @import './styles/index.css';
-@import './styles/colors.css';
 
 @plugin '@tailwindcss/forms';
 @plugin 'tailwind-scrollbar';
@@ -24,50 +23,12 @@
 @custom-variant pointer-fine (@media (pointer: fine));
 @custom-variant hover-hover (@media (hover: hover));
 
-/*
-  * TODO(burdon): Generate semantic sets (e.g., -fill, -text, -surface, -surface-text: see hash-styles.ts)
-  * TODO(burdon): Define size tokens from tailwind.ts (then delete).
-  * TODO(burdon): Search for all custom classes like dx-
-  * TODO(burdon): Normalize format to kebab-case.
-  */
-
 /**
- * Tailwind v4 theme configuration using @theme directive.
- * Replaces JavaScript config for theme values.
+ * NOTES
+ * - @theme variables are always emitted to :root unconditionally.
  */
+
 @theme {
-  /* Font families */
-  --font-body: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono Variable', ui-monospace, 'Cascadia Code', 'Source Code Pro', monospace;
-
-  /* Font size scale (Tailwind v4 defaults — clean rem/px values) */
-  --text-xs: 0.75rem;
-  --text-xs--line-height: 1rem;
-  --text-sm: 0.875rem;
-  --text-sm--line-height: 1.25rem;
-  --text-base: 1rem;
-  --text-base--line-height: 1.5rem;
-  --text-lg: 1.125rem;
-  --text-lg--line-height: 1.75rem;
-  --text-xl: 1.25rem;
-  --text-xl--line-height: 1.75rem;
-  --text-2xl: 1.5rem;
-  --text-2xl--line-height: 2rem;
-  --text-3xl: 1.875rem;
-  --text-3xl--line-height: 2.25rem;
-  --text-4xl: 2.25rem;
-  --text-4xl--line-height: 2.5rem;
-  --text-5xl: 3rem;
-  --text-5xl--line-height: 1;
-  --text-6xl: 3.75rem;
-  --text-6xl--line-height: 1;
-  --text-7xl: 4.5rem;
-  --text-7xl--line-height: 1;
-  --text-8xl: 6rem;
-  --text-8xl--line-height: 1;
-  --text-9xl: 8rem;
-  --text-9xl--line-height: 1;
-
   /* Custom spacing/sizing values - for ring, ring-offset, border-width, etc. */
   --ring-offset-width-focusOffset: var(--dx-focusOffset);
   --ring-width-focusLine: var(--dx-focusLine);
@@ -75,7 +36,7 @@
   --ring-width-thickLine: var(--dx-thickLine);
   --ring-width-noLine: var(--dx-noLine);
 
-  /* Border radius scale (matches v3 config override) */
+  /* Border radius scale */
   --radius-none: 0;
   --radius-sm: 0.25rem;
   --radius: 0.5rem;

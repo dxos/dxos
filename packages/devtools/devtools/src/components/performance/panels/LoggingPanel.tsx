@@ -54,12 +54,12 @@ export const LoggingPanel = ({ maxLines = 100, ...props }: CustomPanelProps<{ ma
               <div
                 className={mx(
                   entry.level > LogLevel.WARN
-                    ? 'text-errorText'
+                    ? 'text-error-text'
                     : entry.level > LogLevel.INFO
-                      ? 'text-warningText'
+                      ? 'text-warning-text'
                       : entry.level > LogLevel.VERBOSE
-                        ? 'text-infoText'
-                        : 'text-successText',
+                        ? 'text-info-text'
+                        : 'text-success-text',
                 )}
               >
                 {shortLevelName[entry.level]}

@@ -30,106 +30,106 @@
 
   .dx-tag[data-hue='red'],
   .dx-tag--red {
-    @apply bg-redSurface text-redSurfaceText;
+    @apply bg-red-surface text-red-surface-text;
   }
 
   .dx-tag[data-hue='orange'],
   .dx-tag--orange {
-    @apply bg-orangeSurface text-orangeSurfaceText;
+    @apply bg-orange-surface text-orange-surface-text;
   }
 
   .dx-tag[data-hue='amber'],
   .dx-tag--amber {
-    @apply bg-amberSurface text-amberSurfaceText;
+    @apply bg-amber-surface text-amber-surface-text;
   }
 
   .dx-tag[data-hue='yellow'],
   .dx-tag--yellow {
-    @apply bg-yellowSurface text-yellowSurfaceText;
+    @apply bg-yellow-surface text-yellow-surface-text;
   }
 
   .dx-tag[data-hue='lime'],
   .dx-tag--lime {
-    @apply bg-limeSurface text-limeSurfaceText;
+    @apply bg-lime-surface text-lime-surface-text;
   }
 
   .dx-tag[data-hue='green'],
   .dx-tag--green {
-    @apply bg-greenSurface text-greenSurfaceText;
+    @apply bg-green-surface text-green-surface-text;
   }
 
   .dx-tag[data-hue='emerald'],
   .dx-tag--emerald {
-    @apply bg-emeraldSurface text-emeraldSurfaceText;
+    @apply bg-emerald-surface text-emerald-surface-text;
   }
 
   .dx-tag[data-hue='teal'],
   .dx-tag--teal {
-    @apply bg-tealSurface text-tealSurfaceText;
+    @apply bg-teal-surface text-teal-surface-text;
   }
 
   .dx-tag[data-hue='cyan'],
   .dx-tag--cyan {
-    @apply bg-cyanSurface text-cyanSurfaceText;
+    @apply bg-cyan-surface text-cyan-surface-text;
   }
 
   .dx-tag[data-hue='sky'],
   .dx-tag--sky {
-    @apply bg-skySurface text-skySurfaceText;
+    @apply bg-sky-surface text-sky-surface-text;
   }
 
   .dx-tag[data-hue='blue'],
   .dx-tag--blue {
-    @apply bg-blueSurface text-blueSurfaceText;
+    @apply bg-blue-surface text-blue-surface-text;
   }
 
   .dx-tag[data-hue='indigo'],
   .dx-tag--indigo {
-    @apply bg-indigoSurface text-indigoSurfaceText;
+    @apply bg-indigo-surface text-indigo-surface-text;
   }
 
   .dx-tag[data-hue='violet'],
   .dx-tag--violet {
-    @apply bg-violetSurface text-violetSurfaceText;
+    @apply bg-violet-surface text-violet-surface-text;
   }
 
   .dx-tag[data-hue='purple'],
   .dx-tag--purple {
-    @apply bg-purpleSurface text-purpleSurfaceText;
+    @apply bg-purple-surface text-purple-surface-text;
   }
 
   .dx-tag[data-hue='fuchsia'],
   .dx-tag--fuchsia {
-    @apply bg-fuchsiaSurface text-fuchsiaSurfaceText;
+    @apply bg-fuchsia-surface text-fuchsia-surface-text;
   }
 
   .dx-tag[data-hue='pink'],
   .dx-tag--pink {
-    @apply bg-pinkSurface text-pinkSurfaceText;
+    @apply bg-pink-surface text-pink-surface-text;
   }
 
   .dx-tag[data-hue='rose'],
   .dx-tag--rose {
-    @apply bg-roseSurface text-roseSurfaceText;
+    @apply bg-rose-surface text-rose-surface-text;
   }
 
   .dx-tag[data-hue='info'],
   .dx-tag--info {
-    @apply bg-cyanSurface text-cyanSurfaceText;
+    @apply bg-cyan-surface text-cyan-surface-text;
   }
 
   .dx-tag[data-hue='success'],
   .dx-tag--success {
-    @apply bg-emeraldSurface text-emeraldSurfaceText;
+    @apply bg-emerald-surface text-emerald-surface-text;
   }
 
   .dx-tag[data-hue='warning'],
   .dx-tag--warning {
-    @apply bg-amberSurface text-amberSurfaceText;
+    @apply bg-amber-surface text-amber-surface-text;
   }
 
   .dx-tag[data-hue='error'],
   .dx-tag--error {
-    @apply bg-roseSurface text-roseSurfaceText;
+    @apply bg-rose-surface text-rose-surface-text;
   }
 }

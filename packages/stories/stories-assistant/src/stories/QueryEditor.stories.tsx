@@ -48,7 +48,7 @@ const DefaultStory = ({ value: valueProp }: QueryEditorProps) => {
             ))}
           </ScrollArea.Viewport>
         </ScrollArea.Root>
-        <div className='p-2 text-right text-infoText text-xs'>{objects.length}</div>
+        <div className='p-2 text-right text-info-text text-xs'>{objects.length}</div>
       </div>
       <D3ForceGraph model={model} />
     </div>

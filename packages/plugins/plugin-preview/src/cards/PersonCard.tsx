@@ -36,7 +36,7 @@ export const PersonCard = ({ subject }: SurfaceComponentProps<Person.Person>) =>
         )}
         {emails.map(({ value }) => (
           <Card.Row key={value} icon='ph--at--regular'>
-            <Card.Text truncate className='text-primaryText'>
+            <Card.Text truncate className='text-primary-text'>
               {value}
             </Card.Text>
           </Card.Row>

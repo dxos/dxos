@@ -158,7 +158,7 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
             value={sender}
             onContactCreate={() => onContactCreate?.(message.sender)}
           />
-          <h3 className='truncate text-primaryText'>{message.sender.name || message.sender.email}</h3>
+          <h3 className='truncate text-primary-text'>{message.sender.name || message.sender.email}</h3>
         </div>
       </div>
     </div>

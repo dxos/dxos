@@ -373,21 +373,21 @@ const queryLanguage = LRLanguage.define({
  * Define a custom highlight style for the query language.
  */
 const queryHighlightStyle = HighlightStyle.define([
-  { tag: t.keyword, class: 'text-blueText' },
-  { tag: t.string, class: 'text-orangeText' },
-  { tag: t.number, class: 'text-greenText' },
-  { tag: t.bool, class: 'text-greenText' },
-  { tag: t.null, class: 'text-neutralText' },
-  { tag: t.attributeName, class: 'text-blueText' },
-  { tag: t.variableName, class: 'text-tealText' },
-  { tag: t.propertyName, class: 'text-tealText' },
+  { tag: t.keyword, class: 'text-blue-text' },
+  { tag: t.string, class: 'text-orange-text' },
+  { tag: t.number, class: 'text-green-text' },
+  { tag: t.bool, class: 'text-green-text' },
+  { tag: t.null, class: 'text-neutral-text' },
+  { tag: t.attributeName, class: 'text-blue-text' },
+  { tag: t.variableName, class: 'text-teal-text' },
+  { tag: t.propertyName, class: 'text-teal-text' },
   { tag: t.definitionOperator, class: 'text-subdued' },
   { tag: t.separator, class: 'text-subdued' },
   { tag: t.derefOperator, class: 'text-subdued' },
   { tag: t.brace, class: 'text-subdued' },
   { tag: t.squareBracket, class: 'text-subdued' },
   { tag: t.operator, class: 'text-subdued' },
-  { tag: t.paren, class: 'text-amberText' },
+  { tag: t.paren, class: 'text-amber-text' },
 ]);
 
 type Range = { from: number; to: number };

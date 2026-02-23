@@ -130,16 +130,7 @@ export const TextBox = forwardRef<TextBoxControl, TextBoxProps>(
     }, [view]);
 
     return (
-      <div
-        ref={parentRef}
-        {...focusAttributes}
-        // style={
-        //   {
-        //     '--dx-cmCursor': 'red',
-        //   } as CSSProperties
-        // }
-        className={mx('block-full inline-full overflow-hidden', classNames)}
-      />
+      <div ref={parentRef} {...focusAttributes} className={mx('block-full inline-full overflow-hidden', classNames)} />
     );
   },
 );

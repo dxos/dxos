@@ -6,9 +6,23 @@
  * Available color hues for UI components.
  */
 export const hues = [
-  'red', 'orange', 'amber', 'yellow', 'lime', 'green',
-  'emerald', 'teal', 'cyan', 'sky', 'blue', 'indigo',
-  'violet', 'purple', 'fuchsia', 'pink', 'rose',
+  'red',
+  'orange',
+  'amber',
+  'yellow',
+  'lime',
+  'green',
+  'emerald',
+  'teal',
+  'cyan',
+  'sky',
+  'blue',
+  'indigo',
+  'violet',
+  'purple',
+  'fuchsia',
+  'pink',
+  'rose',
 ] as const;
 
 /**

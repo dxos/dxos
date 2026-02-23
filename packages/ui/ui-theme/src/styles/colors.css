@@ -1,5 +1,6 @@
 /**
  * Color theme tokens.
+ * https://tailwindcss.com/docs/colors
  * 
  * NOTE: The following are equivalent:
  *   text-red-500
@@ -7,296 +8,124 @@
  *   text-[var(--color-red-500)]
  */
 
+/* TODO(burdon): Define borders. */
 @theme {
-  /** Tags */
+  --color-neutral-fill: theme(colors.neutral.500);
+  --color-neutral-surface: light-dark(theme(colors.neutral.200), theme(colors.neutral.800));
+  --color-neutral-surface-text: light-dark(theme(colors.neutral.800), theme(colors.neutral.200));
+  --color-neutral-text: light-dark(theme(colors.neutral.600), theme(colors.neutral.400));
 
-  --color-amberFill: theme(colors.amber.500);
-  --color-amberSurface: theme(colors.amber.200);
-  --color-amberSurfaceText: theme(colors.amber.700);
-  --color-amberText: theme(colors.amber.600);
+  --color-red-fill: theme(colors.red.500);
+  --color-red-surface: light-dark(theme(colors.red.200), theme(colors.red.800));
+  --color-red-surface-text: light-dark(theme(colors.red.800), theme(colors.red.200));
+  --color-red-text: light-dark(theme(colors.red.600), theme(colors.red.400));
 
-  --color-blueFill: theme(colors.blue.500);
-  --color-blueSurface: theme(colors.blue.200);
-  --color-blueSurfaceText: theme(colors.blue.700);
-  --color-blueText: theme(colors.blue.600);
+  --color-orange-fill: theme(colors.orange.500);
+  --color-orange-surface: light-dark(theme(colors.orange.200), theme(colors.orange.800));
+  --color-orange-surface-text: light-dark(theme(colors.orange.800), theme(colors.orange.200));
+  --color-orange-text: light-dark(theme(colors.orange.600), theme(colors.orange.400));
 
-  --color-cyanFill: theme(colors.cyan.500);
-  --color-cyanSurface: theme(colors.cyan.200);
-  --color-cyanSurfaceText: theme(colors.cyan.700);
-  --color-cyanText: theme(colors.cyan.600);
+  --color-amber-fill: theme(colors.amber.500);
+  --color-amber-surface: light-dark(theme(colors.amber.200), theme(colors.amber.800));
+  --color-amber-surface-text: light-dark(theme(colors.amber.800), theme(colors.amber.200));
+  --color-amber-text: light-dark(theme(colors.amber.600), theme(colors.amber.400));
 
-  --color-emeraldFill: theme(colors.emerald.500);
-  --color-emeraldSurface: theme(colors.emerald.200);
-  --color-emeraldSurfaceText: theme(colors.emerald.700);
-  --color-emeraldText: theme(colors.emerald.600);
+  --color-yellow-fill: theme(colors.yellow.500);
+  --color-yellow-surface: light-dark(theme(colors.yellow.200), theme(colors.yellow.800));
+  --color-yellow-surface-text: light-dark(theme(colors.yellow.800), theme(colors.yellow.200));
+  --color-yellow-text: light-dark(theme(colors.yellow.600), theme(colors.yellow.400));
 
-  --color-fuchsiaFill: theme(colors.fuchsia.500);
-  --color-fuchsiaSurface: theme(colors.fuchsia.200);
-  --color-fuchsiaSurfaceText: theme(colors.fuchsia.700);
-  --color-fuchsiaText: theme(colors.fuchsia.600);
+  --color-lime-fill: theme(colors.lime.500);
+  --color-lime-surface: light-dark(theme(colors.lime.200), theme(colors.lime.800));
+  --color-lime-surface-text: light-dark(theme(colors.lime.800), theme(colors.lime.200));
+  --color-lime-text: light-dark(theme(colors.lime.600), theme(colors.lime.400));
 
-  --color-greenFill: theme(colors.green.500);
-  --color-greenSurface: theme(colors.green.200);
-  --color-greenSurfaceText: theme(colors.green.700);
-  --color-greenText: theme(colors.green.600);
+  --color-green-fill: theme(colors.green.500);
+  --color-green-surface: light-dark(theme(colors.green.200), theme(colors.green.800));
+  --color-green-surface-text: light-dark(theme(colors.green.800), theme(colors.green.200));
+  --color-green-text: light-dark(theme(colors.green.600), theme(colors.green.400));
 
-  --color-indigoFill: theme(colors.indigo.500);
-  --color-indigoSurface: theme(colors.indigo.200);
-  --color-indigoSurfaceText: theme(colors.indigo.700);
-  --color-indigoText: theme(colors.indigo.600);
+  --color-emerald-fill: theme(colors.emerald.500);
+  --color-emerald-surface: light-dark(theme(colors.emerald.200), theme(colors.emerald.800));
+  --color-emerald-surface-text: light-dark(theme(colors.emerald.800), theme(colors.emerald.200));
+  --color-emerald-text: light-dark(theme(colors.emerald.600), theme(colors.emerald.400));
 
-  --color-limeFill: theme(colors.lime.500);
-  --color-limeSurface: theme(colors.lime.200);
-  --color-limeSurfaceText: theme(colors.lime.700);
-  --color-limeText: theme(colors.lime.600);
+  --color-teal-fill: theme(colors.teal.500);
+  --color-teal-surface: light-dark(theme(colors.teal.200), theme(colors.teal.800));
+  --color-teal-surface-text: light-dark(theme(colors.teal.800), theme(colors.teal.200));
+  --color-teal-text: light-dark(theme(colors.teal.600), theme(colors.teal.400));
 
-  --color-neutralFill: theme(colors.neutral.500);
-  --color-neutralSurface: theme(colors.neutral.200);
-  --color-neutralSurfaceText: theme(colors.neutral.700);
-  --color-neutralText: theme(colors.neutral.600);
+  --color-cyan-fill: theme(colors.cyan.500);
+  --color-cyan-surface: light-dark(theme(colors.cyan.200), theme(colors.cyan.800));
+  --color-cyan-surface-text: light-dark(theme(colors.cyan.800), theme(colors.cyan.200));
+  --color-cyan-text: light-dark(theme(colors.cyan.600), theme(colors.cyan.400));
 
-  --color-orangeFill: theme(colors.orange.500);
-  --color-orangeSurface: theme(colors.orange.200);
-  --color-orangeSurfaceText: theme(colors.orange.700);
-  --color-orangeText: theme(colors.orange.600);
+  --color-sky-fill: theme(colors.sky.500);
+  --color-sky-surface: light-dark(theme(colors.sky.200), theme(colors.sky.800));
+  --color-sky-surface-text: light-dark(theme(colors.sky.800), theme(colors.sky.200));
+  --color-sky-text: light-dark(theme(colors.sky.600), theme(colors.sky.400));
 
-  --color-pinkFill: theme(colors.pink.500);
-  --color-pinkSurface: theme(colors.pink.200);
-  --color-pinkSurfaceText: theme(colors.pink.700);
-  --color-pinkText: theme(colors.pink.600);
+  --color-blue-fill: theme(colors.blue.500);
+  --color-blue-surface: light-dark(theme(colors.blue.200), theme(colors.blue.800));
+  --color-blue-surface-text: light-dark(theme(colors.blue.800), theme(colors.blue.200));
+  --color-blue-text: light-dark(theme(colors.blue.600), theme(colors.blue.400));
 
-  --color-purpleFill: theme(colors.purple.500);
-  --color-purpleSurface: theme(colors.purple.200);
-  --color-purpleSurfaceText: theme(colors.purple.700);
-  --color-purpleText: theme(colors.purple.600);
+  --color-indigo-fill: theme(colors.indigo.500);
+  --color-indigo-surface: light-dark(theme(colors.indigo.200), theme(colors.indigo.800));
+  --color-indigo-surface-text: light-dark(theme(colors.indigo.800), theme(colors.indigo.200));
+  --color-indigo-text: light-dark(theme(colors.indigo.600), theme(colors.indigo.400));
 
-  --color-redFill: theme(colors.red.500);
-  --color-redSurface: theme(colors.red.200);
-  --color-redSurfaceText: theme(colors.red.700);
-  --color-redText: theme(colors.red.600);
+  --color-violet-fill: theme(colors.violet.500);
+  --color-violet-surface: light-dark(theme(colors.violet.200), theme(colors.violet.800));
+  --color-violet-surface-text: light-dark(theme(colors.violet.800), theme(colors.violet.200));
+  --color-violet-text: light-dark(theme(colors.violet.600), theme(colors.violet.400));
 
-  --color-roseFill: theme(colors.rose.500);
-  --color-roseSurface: theme(colors.rose.200);
-  --color-roseSurfaceText: theme(colors.rose.700);
-  --color-roseText: theme(colors.rose.600);
+  --color-purple-fill: theme(colors.purple.500);
+  --color-purple-surface: light-dark(theme(colors.purple.200), theme(colors.purple.800));
+  --color-purple-surface-text: light-dark(theme(colors.purple.800), theme(colors.purple.200));
+  --color-purple-text: light-dark(theme(colors.purple.600), theme(colors.purple.400));
 
-  --color-skyFill: theme(colors.sky.500);
-  --color-skySurface: theme(colors.sky.200);
-  --color-skySurfaceText: theme(colors.sky.700);
-  --color-skyText: theme(colors.sky.600);
+  --color-fuchsia-fill: theme(colors.fuchsia.500);
+  --color-fuchsia-surface: light-dark(theme(colors.fuchsia.200), theme(colors.fuchsia.800));
+  --color-fuchsia-surface-text: light-dark(theme(colors.fuchsia.800), theme(colors.fuchsia.200));
+  --color-fuchsia-text: light-dark(theme(colors.fuchsia.600), theme(colors.fuchsia.400));
 
-  --color-tealFill: theme(colors.teal.500);
-  --color-tealSurface: theme(colors.teal.200);
-  --color-tealSurfaceText: theme(colors.teal.700);
-  --color-tealText: theme(colors.teal.600);
+  --color-pink-fill: theme(colors.pink.500);
+  --color-pink-surface: light-dark(theme(colors.pink.200), theme(colors.pink.800));
+  --color-pink-surface-text: light-dark(theme(colors.pink.800), theme(colors.pink.200));
+  --color-pink-text: light-dark(theme(colors.pink.600), theme(colors.pink.400));
 
-  --color-violetFill: theme(colors.violet.500);
-  --color-violetSurface: theme(colors.violet.200);
-  --color-violetSurfaceText: theme(colors.violet.700);
-  --color-violetText: theme(colors.violet.600);
+  --color-rose-fill: theme(colors.rose.500);
+  --color-rose-surface: light-dark(theme(colors.rose.200), theme(colors.rose.800));
+  --color-rose-surface-text: light-dark(theme(colors.rose.800), theme(colors.rose.200));
+  --color-rose-text: light-dark(theme(colors.rose.600), theme(colors.rose.400));
 
-  --color-yellowFill: theme(colors.yellow.500);
-  --color-yellowSurface: theme(colors.yellow.200);
-  --color-yellowSurfaceText: theme(colors.yellow.700);
-  --color-yellowText: theme(colors.yellow.600);
+  /*
+   * System
+   */
 
-  /* Semantic colors */
+  --color-primary-fill: var(--color-cyan-fill);
+  --color-primary-surface: var(--color-cyan-surface);
+  --color-primary-surface-text: var(--color-cyan-surface-text);
+  --color-primary-text: var(--color-cyan-text);
 
-  --color-primaryFill: theme(colors.blue.500);
-  --color-primarySurface: theme(colors.blue.200);
-  --color-primarySurfaceText: theme(colors.blue.700);
-  --color-primaryText: theme(colors.blue.600);
+  --color-info-fill: var(--color-cyan-fill);
+  --color-info-surface: var(--color-cyan-surface);
+  --color-info-surface-text: var(--color-cyan-surface-text);
+  --color-info-text: var(--color-cyan-text);
 
+  --color-success-fill: var(--color-emerald-fill);
+  --color-success-surface: var(--color-emerald-surface);
+  --color-success-surface-text: var(--color-emerald-surface-text);
+  --color-success-text: var(--color-emerald-text);
 
-  --color-infoFill: var(--dx-infoFill);
-  --color-infoSurface: var(--dx-infoSurface);
-  --color-infoSurfaceText: var(--dx-infoSurfaceText);
-  --color-infoText: var(--dx-infoText);
+  --color-warning-fill: var(--color-amber-fill);
+  --color-warning-surface: var(--color-amber-surface);
+  --color-warning-surface-text: var(--color-amber-surface-text);
+  --color-warning-text: var(--color-amber-text);
 
-  --color-successFill: var(--dx-successFill);
-  --color-successSurface: var(--dx-successSurface);
-  --color-successSurfaceText: var(--dx-successSurfaceText);
-  --color-successText: var(--dx-successText);
-
-  --color-warningFill: var(--dx-warningFill);
-  --color-warningSurface: var(--dx-warningSurface);
-  --color-warningSurfaceText: var(--dx-warningSurfaceText);
-  --color-warningText: var(--dx-warningText);
-
-  --color-errorFill: var(--dx-errorFill);
-  --color-errorSurface: var(--dx-errorSurface);
-  --color-errorSurfaceText: var(--dx-errorSurfaceText);
-  --color-errorText: var(--dx-errorText);
-
-  /* Accent */
-
-  --color-accentSurface: theme(colors.blue.500);
-  --color-accentSurfaceHover: theme(colors.blue.600);
-  --color-accentSurfaceText: theme(colors.white);
-  --color-accentText: theme(colors.blue.600);
-  --color-accentTextHover: theme(colors.blue.500);
-  --color-accentFocusIndicator: theme(colors.blue.300);
-
-  /* Surfaces */
-
-  --color-baseSurface: theme(colors.white);
-  --color-baseText: theme(colors.black);
-
-  --color-headerSurface: var(--dx-headerSurface);
-
-  --color-hoverSurface: var(--dx-hoverSurface);
-  --color-hoverSurfaceGroup: theme(colors.neutral.100);
-
-  --color-inputSurface: var(--dx-inputSurface);
-  --color-inputSurfaceGroup: theme(colors.neutral.100);
-
-  --color-inverseSurface: theme(colors.neutral.900);
-  --color-inverseSurfaceText: theme(colors.neutral.50);
-
-  --color-activeSurface: var(--dx-activeSurface);
-  --color-groupSurface: theme(colors.white);
-
-  --color-cardSurface: var(--dx-cardSurface);
-  --color-modalSurface: theme(colors.white);
-
-  --color-attention: var(--dx-attention);
-
-  --color-scrimSurface: theme(colors.neutral.50 / 0.65);
-  --color-sidebarSurface: var(--dx-sidebarSurface);
-  --color-toolbarSurface: var(--dx-toolbarSurface);
-
-  --color-textInputSurface: var(--dx-textInputSurface);
-  --color-textInputSurfaceGroup: theme(colors.neutral.50);
-
-  --color-deckSurface: theme(colors.neutral.50);
-
-  --color-focusLine: var(--dx-focusLine);
-  --color-focusSurface: theme(colors.white);
-  --color-neutralFocusIndicator: theme(colors.neutral.300);
-
-  /* Separator */
-
-  --color-separator: var(--dx-separator);
-  --color-separatorGroup: theme(colors.neutral.200);
-  --color-subduedSeparator: theme(colors.neutral.200);
-
-  /* Scrollbar */
-
-  --color-scrollbarThumb: theme(colors.neutral.200);
-  --color-scrollbarThumbActive: theme(colors.neutral.200);
-  --color-scrollbarThumbHover: theme(colors.neutral.200);
-
-  /* Sheet */
-
-  --color-axisSelectedSurface: theme(colors.neutral.100);
-  --color-axisSelectedText: theme(colors.neutral.100);
-  --color-axisSurface: theme(colors.neutral.50);
-  --color-axisText: theme(colors.neutral.800);
-
-  /* Misc */
-
-  --color-callActive: theme(colors.green.500);
-  --color-gridCommentedActive: theme(colors.green.200 / 0.5);
-  --color-gridLine: var(--dx-gridLine);
-  --color-gridFocusIndicatorColor: var(--dx-gridFocusIndicatorColor);
-  --color-hairLine: var(--dx-hairLine);
-  --color-landmarkLine: var(--dx-landmarkLine);
-  --color-modalLine: var(--dx-modalLine);
-  --color-noLine: var(--dx-noLine);
-  --color-positionedLine: var(--dx-positionedLine);
-  --color-thickLine: var(--dx-thickLine);
-
-  --color-unAccent: theme(colors.neutral.400);
-  --color-unAccentHover: theme(colors.neutral.500);
-}
-
-/* Dark mode color overrides */
-.dark {
-  --color-redText: theme(colors.red.300);
-  --color-redSurface: theme(colors.red.700);
-  --color-redSurfaceText: theme(colors.red.200);
-  --color-orangeText: theme(colors.orange.300);
-  --color-orangeSurface: theme(colors.orange.700);
-  --color-orangeSurfaceText: theme(colors.orange.200);
-  --color-amberText: theme(colors.amber.300);
-  --color-amberSurface: theme(colors.amber.700);
-  --color-amberSurfaceText: theme(colors.amber.200);
-  --color-yellowText: theme(colors.yellow.300);
-  --color-yellowSurface: theme(colors.yellow.700);
-  --color-yellowSurfaceText: theme(colors.yellow.200);
-  --color-limeText: theme(colors.lime.300);
-  --color-limeSurface: theme(colors.lime.700);
-  --color-limeSurfaceText: theme(colors.lime.200);
-  --color-greenText: theme(colors.green.300);
-  --color-greenSurface: theme(colors.green.700);
-  --color-greenSurfaceText: theme(colors.green.200);
-  --color-emeraldText: theme(colors.emerald.300);
-  --color-emeraldSurface: theme(colors.emerald.700);
-  --color-emeraldSurfaceText: theme(colors.emerald.200);
-  --color-tealText: theme(colors.teal.300);
-  --color-tealSurface: theme(colors.teal.700);
-  --color-tealSurfaceText: theme(colors.teal.200);
-  --color-cyanText: theme(colors.cyan.300);
-  --color-cyanSurface: theme(colors.cyan.700);
-  --color-cyanSurfaceText: theme(colors.cyan.200);
-  --color-skyText: theme(colors.sky.300);
-  --color-skySurface: theme(colors.sky.700);
-  --color-skySurfaceText: theme(colors.sky.200);
-  --color-blueText: theme(colors.blue.300);
-  --color-blueSurface: theme(colors.blue.700);
-  --color-blueSurfaceText: theme(colors.blue.200);
-  --color-indigoText: theme(colors.indigo.300);
-  --color-indigoSurface: theme(colors.indigo.700);
-  --color-indigoSurfaceText: theme(colors.indigo.200);
-  --color-violetText: theme(colors.violet.300);
-  --color-violetSurface: theme(colors.violet.700);
-  --color-violetSurfaceText: theme(colors.violet.200);
-  --color-purpleText: theme(colors.purple.300);
-  --color-purpleSurface: theme(colors.purple.700);
-  --color-purpleSurfaceText: theme(colors.purple.200);
-  --color-fuchsiaText: theme(colors.fuchsia.300);
-  --color-fuchsiaSurface: theme(colors.fuchsia.700);
-  --color-fuchsiaSurfaceText: theme(colors.fuchsia.200);
-  --color-pinkText: theme(colors.pink.300);
-  --color-pinkSurface: theme(colors.pink.700);
-  --color-pinkSurfaceText: theme(colors.pink.200);
-  --color-roseText: theme(colors.rose.300);
-  --color-roseSurface: theme(colors.rose.700);
-  --color-roseSurfaceText: theme(colors.rose.200);
-  --color-neutralText: theme(colors.neutral.300);
-  --color-neutralSurface: theme(colors.neutral.700);
-  --color-neutralSurfaceText: theme(colors.neutral.200);
-
-  --color-primaryText: theme(colors.blue.300);
-  --color-primarySurface: theme(colors.blue.700);
-  --color-primarySurfaceText: theme(colors.blue.200);
-
-  --color-axisSurface: theme(colors.neutral.800);
-  --color-axisText: theme(colors.neutral.200);
-  --color-axisSelectedSurface: theme(colors.neutral.900);
-  --color-axisSelectedText: theme(colors.neutral.900);
-  --color-gridCommentedActive: theme(colors.green.600 / 0.5);
-
-  --color-baseSurface: theme(colors.neutral.900);
-  --color-baseText: theme(colors.neutral.50);
-  --color-groupSurface: theme(colors.neutral.800);
-  --color-modalSurface: theme(colors.neutral.800);
-  --color-textInputSurfaceGroup: theme(colors.neutral.700);
-  --color-inputSurfaceGroup: theme(colors.neutral.700);
-  --color-hoverSurfaceGroup: theme(colors.neutral.700);
-  --color-separatorGroup: theme(colors.neutral.700);
-  --color-subduedSeparator: theme(colors.neutral.700);
-  --color-scrollbarThumb: theme(colors.neutral.700);
-  --color-scrollbarThumbHover: theme(colors.neutral.600);
-  --color-scrollbarThumbActive: theme(colors.neutral.600);
-  --color-scrimSurface: theme(colors.neutral.900 / 0.65);
-  --color-focusSurface: theme(colors.black);
-  --color-deckSurface: theme(colors.neutral.950);
-  --color-inverseSurface: theme(colors.white);
-  --color-inverseSurfaceText: theme(colors.black);
-  --color-accentSurfaceHover: theme(colors.blue.500);
-  --color-accentText: theme(colors.blue.400);
-  --color-accentTextHover: theme(colors.blue.400);
-  --color-accentFocusIndicator: theme(colors.blue.500);
-  --color-neutralFocusIndicator: theme(colors.neutral.600);
+  --color-error-fill: var(--color-rose-fill);
+  --color-error-surface: var(--color-rose-surface);
+  --color-error-surface-text: var(--color-rose-surface-text);
+  --color-error-text: var(--color-rose-text);
 }

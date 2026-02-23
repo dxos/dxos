@@ -1,113 +1,120 @@
 /**
  * Hues
+ * Example: <span className='dx-text-hue' data-hue={getHashHue(object.id)}>
  */
+
 @layer dx-components {
+  .dx-text-hue[data-hue='neutral'],
+  .dx-text-hue--neutral {
+    @apply text-neutral-text;
+  }
+
   .dx-text-hue[data-hue='red'],
   .dx-text-hue--red {
-    @apply text-redText;
+    @apply text-red-text;
   }
 
   .dx-text-hue[data-hue='orange'],
   .dx-text-hue--orange {
-    @apply text-orangeText;
+    @apply text-orange-text;
   }
 
   .dx-text-hue[data-hue='amber'],
   .dx-text-hue--amber {
-    @apply text-amberText;
+    @apply text-amber-text;
   }
 
   .dx-text-hue[data-hue='yellow'],
   .dx-text-hue--yellow {
-    @apply text-yellowText;
+    @apply text-yellow-text;
   }
 
   .dx-text-hue[data-hue='lime'],
   .dx-text-hue--lime {
-    @apply text-limeText;
+    @apply text-lime-text;
   }
 
   .dx-text-hue[data-hue='green'],
   .dx-text-hue--green {
-    @apply text-greenText;
+    @apply text-green-text;
   }
 
   .dx-text-hue[data-hue='emerald'],
   .dx-text-hue--emerald {
-    @apply text-emeraldText;
+    @apply text-emerald-text;
   }
 
   .dx-text-hue[data-hue='teal'],
   .dx-text-hue--teal {
-    @apply text-tealText;
+    @apply text-teal-text;
   }
 
   .dx-text-hue[data-hue='cyan'],
   .dx-text-hue--cyan {
-    @apply text-cyanText;
+    @apply text-cyan-text;
   }
 
   .dx-text-hue[data-hue='sky'],
   .dx-text-hue--sky {
-    @apply text-skyText;
+    @apply text-sky-text;
   }
 
   .dx-text-hue[data-hue='blue'],
   .dx-text-hue--blue {
-    @apply text-blueText;
+    @apply text-blue-text;
   }
 
   .dx-text-hue[data-hue='indigo'],
   .dx-text-hue--indigo {
-    @apply text-indigoText;
+    @apply text-indigo-text;
   }
 
   .dx-text-hue[data-hue='violet'],
   .dx-text-hue--violet {
-    @apply text-violetText;
+    @apply text-violet-text;
   }
 
   .dx-text-hue[data-hue='purple'],
   .dx-text-hue--purple {
-    @apply text-purpleText;
+    @apply text-purple-text;
   }
 
   .dx-text-hue[data-hue='fuchsia'],
   .dx-text-hue--fuchsia {
-    @apply text-fuchsiaText;
+    @apply text-fuchsia-text;
   }
 
   .dx-text-hue[data-hue='pink'],
   .dx-text-hue--pink {
-    @apply text-pinkText;
+    @apply text-pink-text;
   }
 
   .dx-text-hue[data-hue='rose'],
   .dx-text-hue--rose {
-    @apply text-roseText;
+    @apply text-rose-text;
   }
 
   /*
-   * System colors.
+   * System
    */
 
   .dx-text-hue[data-hue='info'],
   .dx-text-hue--info {
-    @apply text-cyanText;
+    @apply text-cyan-text;
   }
 
   .dx-text-hue[data-hue='success'],
   .dx-text-hue--success {
-    @apply text-emeraldText;
+    @apply text-emerald-text;
   }
 
   .dx-text-hue[data-hue='warning'],
   .dx-text-hue--warning {
-    @apply text-amberText;
+    @apply text-amber-text;
   }
 
   .dx-text-hue[data-hue='error'],
   .dx-text-hue--error {
-    @apply text-roseText;
+    @apply text-rose-text;
   }
 }

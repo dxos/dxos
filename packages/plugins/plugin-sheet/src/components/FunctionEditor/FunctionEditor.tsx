@@ -32,7 +32,7 @@ export const FunctionEditor = () => {
           {(range && rangeToA1Notation(range)) || (cursor && addressToA1Notation(cursor))}
         </div>
         <div className='flex gap-2 items-center'>
-          <Icon icon='ph--function--regular' classNames={['text-greenText', formula ? 'visible' : 'invisible']} />
+          <Icon icon='ph--function--regular' classNames={['text-green-text', formula ? 'visible' : 'invisible']} />
           <span className='font-mono'>{value}</span>
         </div>
       </div>

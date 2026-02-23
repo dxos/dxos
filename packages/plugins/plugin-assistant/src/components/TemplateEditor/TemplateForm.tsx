@@ -86,7 +86,7 @@ export const TemplateForm = ({ id, template, commandEditable = true, onChange }:
         <div className='grid grid-cols-[10rem_10rem_1fr] gap-1 items-center'>
           {template.inputs?.filter(isNonNullable).map((input) => (
             <Fragment key={input.name}>
-              <div className='pl-3 text-blueText'>{input.name}</div>
+              <div className='pl-3 text-blue-text'>{input.name}</div>
 
               <Input.Root>
                 <Select.Root
