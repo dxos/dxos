@@ -9,7 +9,7 @@ import React, { useMemo, useRef, useState } from 'react';
 import { type Topology } from 'topojson-specification';
 
 import { useAsyncState } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { type Vector, useDrag, useGlobeZoomHandler, useSpinner, useTour } from '../../hooks';
 import { type LatLngLiteral } from '../../types';
@@ -227,7 +227,7 @@ const meta = {
   title: 'ui/react-ui-geo/Globe',
   component: Globe.Root,
   render: DefaultStory,
-  decorators: [withTheme()],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
   },

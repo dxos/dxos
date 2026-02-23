@@ -11,7 +11,7 @@ import { PublicKey } from '@dxos/keys';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useThemeContext } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import {
   createBasicExtensions,
@@ -108,6 +108,7 @@ const meta = {
   title: 'plugins/plugin-sheet/extensions',
   decorators: [
     withTheme(),
+    withLayout({ layout: 'fullscreen' }),
     withClientProvider({
       types: [Sheet.Sheet],
       createIdentity: true,

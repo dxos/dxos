@@ -9,7 +9,7 @@
   --color-base-text: light-dark(theme(colors.black), theme(colors.neutral.50));
 
   --color-inverse-surface: light-dark(theme(colors.neutral.900), theme(colors.white));
-  --color-inverse-surface-text: light-dark(theme(colors.neutral.50), theme(colors.black));
+  --color-inverse-text: light-dark(theme(colors.neutral.50), theme(colors.black));
 
   --color-deck-surface: light-dark(theme(colors.neutral.50), theme(colors.neutral.950));
   --color-active-surface: light-dark(theme(colors.neutral.100), theme(colors.neutral.800));

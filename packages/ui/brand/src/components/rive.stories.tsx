@@ -8,7 +8,7 @@ import React, { useEffect } from 'react';
 
 import { log } from '@dxos/log';
 import { useAsyncState } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { render } from '@dxos/storybook-utils';
 import { mx } from '@dxos/ui-theme';
 
@@ -85,7 +85,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'ui/brand/Rive',
   render: render(DefaultStory),
-  decorators: [withTheme()],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
   },

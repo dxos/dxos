@@ -7,7 +7,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 import { type Mock, expect, fn, screen, userEvent, within } from 'storybook/test';
 
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type ActionGraphProps, createGapSeparator, createMenuAction, createMenuItemGroup } from '@dxos/react-ui-menu';
 import { withRegistry } from '@dxos/storybook-utils';
 
@@ -92,7 +92,7 @@ const buildDefaultActions = (): ActionGraphProps => {
 const meta = {
   title: 'plugins/plugin-simple-layout/NavBar',
   component: NavBar,
-  decorators: [withTheme(), withRegistry],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withRegistry],
   parameters: {
     layout: 'fullscreen',
     translations,

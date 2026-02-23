@@ -7,7 +7,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { useContext, useMemo } from 'react';
 
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 import { ghostHover, mx } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';
@@ -106,7 +106,7 @@ const SimpleStory = (props: Omit<ListRootProps<TestItemType>, 'items'>) => {
 const meta = {
   title: 'ui/react-ui-list/List',
   component: List.Root,
-  decorators: [withTheme(), withRegistry],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withRegistry],
   parameters: {
     layout: 'fullscreen',
   },

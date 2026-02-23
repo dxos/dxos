@@ -17,7 +17,7 @@ import { Assistant } from '@dxos/plugin-assistant/types';
 import { MarkdownPlugin } from '@dxos/plugin-markdown';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
 import { render } from '@dxos/storybook-utils';
 import { isNonNullable } from '@dxos/util';
@@ -130,7 +130,7 @@ const StackContainer = ({ objects }: { objects: Obj.Any[] }) => {
 const storybook: Meta<typeof DefaultStory> = {
   title: 'stories/stories-assistant/Initiatives',
   render: render(DefaultStory),
-  decorators: [withTheme()],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
     translations,

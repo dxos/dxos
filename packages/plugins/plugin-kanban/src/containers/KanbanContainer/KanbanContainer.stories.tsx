@@ -19,7 +19,7 @@ import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { Filter, type Space, useQuery, useSchema, useSpaces } from '@dxos/react-client/echo';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 import { View, getTypenameFromQuery } from '@dxos/schema';
@@ -141,7 +141,7 @@ const meta = {
   title: 'plugins/plugin-kanban/Kanban',
   component: DefaultComponent,
   render: () => <DefaultComponent />,
-  decorators: [withTheme()],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
     translations,

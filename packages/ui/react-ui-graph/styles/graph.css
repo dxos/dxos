@@ -1,3 +1,6 @@
+/* TODO(burdon): Move into theme. */
+@reference "../../ui-theme/src/theme.css";
+
 /**
  * Graph styles.
  */
