@@ -19,9 +19,8 @@ export const summarize: (
     let prompt = yield* AiPreprocessor.preprocessPrompt(messages, { system: instructions, cacheControl: 'no-cache' });
 
     // Last turn must be a user message for summarization to work.
-    if (prompt.content.at(-1)?.role === 'assistant') {
-      prompt = prompt.pipe(Prompt.merge('<empty user message>'));
-    }
+    // Repeating the instructions to ensure the model sees them, otherwise the model tends to forget them.
+    prompt = prompt.pipe(Prompt.merge(instructions));
 
     const response = yield* LanguageModel.generateText({
       prompt,
@@ -42,6 +41,7 @@ export const DEFAULT_INSTRUCTIONS = trim`
     Remove unnecessary details and focus on the most important information.
     Keep user requests, method of action, and progress.
     Keep the important objects and references in original format.
+    It is very important you maintain unchanged ECHO DXNs and IDs of the objects.
     Output only the summary.
   </instructions>
 
