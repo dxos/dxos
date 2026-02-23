@@ -203,7 +203,7 @@ const InitiativeForm = ({ initiative }: { initiative: Initiative.Initiative }) =
   // TODO(dmaretskyi): Form breaks if we provide the echo object directly.
   const spreadValue = useMemo(() => ({ ...initiative }), [initiative]);
   return (
-    <Layout.Main>
+    <Layout.Main classNames='overflow-y-auto'>
       <ButtonGroup classNames='h-10'>
         <Button onClick={handleResetHistory}>Reset History</Button>
       </ButtonGroup>
