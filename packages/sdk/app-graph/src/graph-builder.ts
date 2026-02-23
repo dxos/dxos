@@ -11,7 +11,6 @@ import * as Option from 'effect/Option';
 import * as Pipeable from 'effect/Pipeable';
 import * as Record from 'effect/Record';
 import type * as Schema from 'effect/Schema';
-
 import { scheduleTask, yieldOrContinue } from 'main-thread-scheduling';
 
 import { type CleanupFn, type Trigger } from '@dxos/async';

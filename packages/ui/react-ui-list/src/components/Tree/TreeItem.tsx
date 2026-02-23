@@ -288,13 +288,7 @@ const RawTreeItem = <T extends { id: string } = any>({
       </Treegrid.Row>
       {open &&
         childIds.map((childId, index) => (
-          <TreeItemById
-            key={childId}
-            id={childId}
-            path={path}
-            last={index === childIds.length - 1}
-            {...childProps}
-          />
+          <TreeItemById key={childId} id={childId} path={path} last={index === childIds.length - 1} {...childProps} />
         ))}
     </>
   );

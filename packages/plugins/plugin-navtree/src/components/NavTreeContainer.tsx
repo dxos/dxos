@@ -11,7 +11,7 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { useAppGraph, useLayout } from '@dxos/app-toolkit/ui';
 import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { Graph, Node, useActionRunner } from '@dxos/plugin-graph';
-import { useConnections, useEdges, useNode, useActions as useGraphActions } from '@dxos/plugin-graph';
+import { useConnections, useEdges, useActions as useGraphActions, useNode } from '@dxos/plugin-graph';
 import { useMediaQuery, useSidebars } from '@dxos/react-ui';
 import { type TreeData, type TreeItemDataProps, isTreeData } from '@dxos/react-ui-list';
 import { mx } from '@dxos/ui-theme';
