@@ -383,3 +383,9 @@ export const Any = Schema.Union(
 );
 
 export type Any = Schema.Schema.Type<typeof Any>;
+
+export const is =
+  <T extends Any['_tag']>(tag: T) =>
+  (block: Any): block is Extract<Any, { _tag: T }> => {
+    return block._tag === tag;
+  };

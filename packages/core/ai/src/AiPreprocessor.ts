@@ -9,7 +9,7 @@ import * as Function from 'effect/Function';
 import * as Predicate from 'effect/Predicate';
 
 import { log } from '@dxos/log';
-import { type ContentBlock, type Message } from '@dxos/types';
+import { ContentBlock, type Message } from '@dxos/types';
 import { bufferToArray } from '@dxos/util';
 
 import { PromptPreprocessingError as PromptPreprocesorError } from './errors';
@@ -36,50 +36,54 @@ export const preprocessPrompt: (
 ) {
   let prompt = yield* Function.pipe(
     messages,
-    (messages) =>
+    applySummaryTrimming,
+    Effect.map((messages) =>
       Array.isNonEmptyReadonlyArray(messages)
         ? Array.groupWith((a: Message.Message, b: Message.Message) => a.sender.role === b.sender.role)(messages)
         : [],
-    Array.map(mergeMessages),
-    Effect.forEach(
-      Effect.fnUntraced(function* (msg) {
-        switch (msg.sender.role) {
-          case 'user':
-            return [
-              Prompt.makeMessage('user', {
-                content: yield* Function.pipe(
-                  msg.blocks,
-                  Effect.forEach(convertUserMessagePart),
-                  Effect.map(Array.filter(Predicate.isNotUndefined)),
-                ),
-              }),
-            ];
-          case 'assistant':
-            return [
-              Prompt.makeMessage('assistant', {
-                content: yield* Function.pipe(
-                  msg.blocks,
-                  Effect.forEach(convertAssistantMessagePart),
-                  Effect.map(Array.filter(Predicate.isNotUndefined)),
-                ),
-              }),
-            ];
+    ),
+    Effect.map(Array.map(mergeMessages)),
+    Effect.flatMap(
+      Effect.forEach(
+        Effect.fnUntraced(function* (msg) {
+          switch (msg.sender.role) {
+            case 'user':
+              return [
+                Prompt.makeMessage('user', {
+                  content: yield* Function.pipe(
+                    msg.blocks,
+                    Effect.forEach(convertUserMessagePart),
+                    Effect.map(Array.filter(Predicate.isNotUndefined)),
+                  ),
+                }),
+              ];
+            case 'assistant':
+              return [
+                Prompt.makeMessage('assistant', {
+                  content: yield* Function.pipe(
+                    msg.blocks,
+                    Effect.forEach(convertAssistantMessagePart),
+                    Effect.map(Array.filter(Predicate.isNotUndefined)),
+                  ),
+                }),
+              ];
 
-          case 'tool':
-            return [
-              Prompt.makeMessage('tool', {
-                content: yield* Function.pipe(
-                  msg.blocks,
-                  Effect.forEach(convertToolMessagePart),
-                  Effect.map(Array.filter(Predicate.isNotUndefined)),
-                ),
-              }),
-            ];
+            case 'tool':
+              return [
+                Prompt.makeMessage('tool', {
+                  content: yield* Function.pipe(
+                    msg.blocks,
+                    Effect.forEach(convertToolMessagePart),
+                    Effect.map(Array.filter(Predicate.isNotUndefined)),
+                  ),
+                }),
+              ];
 
-          default:
-            return [];
-        }
-      }),
+            default:
+              return [];
+          }
+        }),
+      ),
     ),
     Effect.map(Array.flatten),
     Effect.map(Array.filter((_) => _.content.length > 0)),
@@ -110,13 +114,54 @@ export const preprocessPrompt: (
     );
   }
 
-  if (prompt.content.at(-1)?.role === 'assistant') {
-    // Insert empty user message so that the assistant can continue the conversation.
-    prompt = prompt.pipe(Prompt.merge('Continue'));
-  }
+  // TODO(dmaretskyi): Pull this out to the session?
+  // if (prompt.content.at(-1)?.role === 'assistant') {
+  //   // Insert empty user message so that the assistant can continue the conversation.
+  //   prompt = prompt.pipe(Prompt.merge('Continue'));
+  // }
 
   return prompt;
 });
+
+/**
+ * Finds the last message containing a summary block and trims the conversation accordingly.
+ * If the summary is in an assistant message, all prior messages and non-summary blocks are removed.
+ * If the summary is in a user or tool message, an error is raised.
+ */
+const applySummaryTrimming: (
+  messages: readonly Message.Message[],
+) => Effect.Effect<readonly Message.Message[], PromptPreprocesorError, never> = Effect.fn('applySummaryTrimming')(
+  function* (messages) {
+    let lastSummaryIndex = -1;
+    for (let idx = messages.length - 1; idx >= 0; idx--) {
+      if (messages[idx].blocks.some(ContentBlock.is('summary'))) {
+        lastSummaryIndex = idx;
+        break;
+      }
+    }
+
+    if (lastSummaryIndex === -1) {
+      return messages;
+    }
+
+    const summaryMessage = messages[lastSummaryIndex];
+
+    if (summaryMessage.sender.role !== 'assistant') {
+      return yield* Effect.fail(
+        new PromptPreprocesorError({
+          message: `Summary blocks are only allowed in assistant messages, found in "${summaryMessage.sender.role}" message.`,
+        }),
+      );
+    }
+
+    const trimmedSummaryMessage: Message.Message = {
+      ...summaryMessage,
+      blocks: summaryMessage.blocks.filter(ContentBlock.is('summary')),
+    };
+
+    return [trimmedSummaryMessage, ...messages.slice(lastSummaryIndex + 1)];
+  },
+);
 
 const convertUserMessagePart: (
   block: ContentBlock.Any,
@@ -257,6 +302,10 @@ const convertAssistantMessagePart: (
         return Prompt.makePart('text', {
           text: `<proposal>${block.text}</proposal>`,
         });
+      case 'summary':
+        return Prompt.makePart('text', {
+          text: `<summary>${block.content}</summary>`,
+        });
       case 'toolkit':
         return Prompt.makePart('text', {
           text: '<toolkit/>',
@@ -278,34 +327,6 @@ const convertAssistantMessagePart: (
     }
   },
 );
-
-const isToolResult = Predicate.isTagged('toolResult');
-
-/**
- * @param predicate Determines whether to split an array at this location, based on two neighbors.
- * @returns Arrays partitioned into subarrays based on the predicate.
- */
-// TODO(dmaretskyi): Extract.
-const splitBy = <T>(arr: T[], predicate: (left: T, right: T) => boolean): T[][] => {
-  const result: T[][] = [];
-  for (const item of arr) {
-    if (result.length === 0) {
-      result.push([item]);
-      continue;
-    }
-
-    const prevChunk = result.at(-1)!;
-    const prev = prevChunk.at(-1)!;
-    const makeSplit = predicate(prev, item);
-    if (makeSplit) {
-      result.push([item]);
-    } else {
-      prevChunk.push(item);
-    }
-  }
-
-  return result;
-};
 
 const mergeMessages = (messages: Message.Message[]): Message.Message => ({
   ...messages[0],
