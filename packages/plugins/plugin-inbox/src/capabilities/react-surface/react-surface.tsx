@@ -23,6 +23,7 @@ import {
   PopoverSaveFilter,
   RelatedToContact,
   RelatedToOrganization,
+  DraftMessageArticle,
 } from '../../components';
 import { COMPOSE_EMAIL_DIALOG, POPOVER_SAVE_FILTER } from '../../constants';
 import { meta } from '../../meta';
@@ -54,6 +55,15 @@ export default Capability.makeModule(() =>
           Obj.instanceOf(Message.Message, data.subject) && Obj.instanceOf(Mailbox.Mailbox, data.companionTo),
         component: ({ data: { companionTo, subject }, role }) => {
           return <MessageArticle role={role} subject={subject} mailbox={companionTo} />;
+        },
+      }),
+      Surface.create({
+        id: `${meta.id}/draft-message`,
+        role: ['article'],
+        filter: (data): data is { subject: Message.Message } =>
+          Obj.instanceOf(Message.Message, data.subject) && !Obj.instanceOf(Mailbox.Mailbox, data.companionTo),
+        component: ({ data: { subject }, role }) => {
+          return <DraftMessageArticle role={role} subject={subject} />;
         },
       }),
       Surface.create({

@@ -13,7 +13,7 @@ import { Operation, OperationResolver } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { SpaceOperation } from '@dxos/plugin-space/types';
 import { Collection } from '@dxos/schema';
-import { Organization, Person } from '@dxos/types';
+import { Message, Organization, Person } from '@dxos/types';
 
 import { COMPOSE_EMAIL_DIALOG } from '../../constants';
 import { Calendar, InboxOperation, Mailbox } from '../../types';
@@ -26,8 +26,9 @@ export default Capability.makeModule(
         handler: Effect.fnUntraced(function* ({ rootCollection }) {
           const mailboxCollection = Collection.makeManaged({ key: Mailbox.Mailbox.typename });
           const calendarCollection = Collection.makeManaged({ key: Calendar.Calendar.typename });
+          const messageCollection = Collection.makeManaged({ key: Message.Message.typename });
           Obj.change(rootCollection, (c) => {
-            c.objects.push(Ref.make(mailboxCollection), Ref.make(calendarCollection));
+            c.objects.push(Ref.make(mailboxCollection), Ref.make(calendarCollection), Ref.make(messageCollection));
           });
         }),
       }),

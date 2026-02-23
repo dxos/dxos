@@ -15,3 +15,4 @@ export const EventCard: ComponentType<any> = lazy(() => import('./EventCard'));
 export const MailboxArticle: ComponentType<any> = lazy(() => import('./MailboxArticle'));
 export const MessageArticle: ComponentType<any> = lazy(() => import('./MessageArticle'));
 export const MessageCard: ComponentType<any> = lazy(() => import('./MessageCard'));
+export const DraftMessageArticle: ComponentType<any> = lazy(() => import('./DraftMessageArticle'));
