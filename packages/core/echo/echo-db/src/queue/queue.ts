@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Predicate from 'effect/Predicate';
+
 import { DeferredTask } from '@dxos/async';
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
@@ -17,7 +19,6 @@ import { Filter, Query, QueryResultImpl } from '../query';
 
 import { QueueQueryContext } from './queue-query-context';
 import type { Queue } from './types';
-import { isNotUndefined } from 'effect/Predicate';
 
 const TRACE_QUEUE_LOAD = false;
 
@@ -68,7 +69,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
             return undefined;
           }
         }),
-      ).then((objects) => objects.filter(isNotUndefined));
+      ).then((objects) => objects.filter(Predicate.isNotUndefined));
 
       if (thisRefreshId !== this._refreshId) {
         return;
@@ -272,7 +273,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
             return undefined;
           }
         })
-        .filter(isNotUndefined),
+        .filter(Predicate.isNotUndefined),
     );
 
     return decodedObjects as T[];

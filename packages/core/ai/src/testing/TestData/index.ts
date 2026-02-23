@@ -1,6 +1,10 @@
-import { Message } from '@dxos/types';
+//
+// Copyright 2026 DXOS.org
+//
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
+
+import { Message } from '@dxos/types';
 
 const parseConversation = (json: unknown): readonly Message.Message[] => {
   return Schema.Array(Message.Message).pipe(Schema.decodeUnknownSync)(json);

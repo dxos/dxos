@@ -3,28 +3,25 @@
 //
 
 import type * as AiError from '@effect/ai/AiError';
-import type * as Tokenizer from '@effect/ai/Tokenizer';
 import * as LanguageModel from '@effect/ai/LanguageModel';
 import type * as Tool from '@effect/ai/Tool';
 import type * as Toolkit from '@effect/ai/Toolkit';
 import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
-import type * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
 import {
   AiParser,
   AiPreprocessor,
+  AiSummarizer,
   type AiToolNotFoundError,
   type PromptPreprocessingError,
   type ToolExecutionService,
   type ToolResolverService,
   callTool,
   withoutToolCallParising,
-  AiSummarizer,
 } from '@dxos/ai';
 import { type Blueprint } from '@dxos/blueprints';
-import { todo } from '@dxos/debug';
 import { Obj } from '@dxos/echo';
 import { type FunctionInvocationService, TracingService } from '@dxos/functions';
 import { log } from '@dxos/log';

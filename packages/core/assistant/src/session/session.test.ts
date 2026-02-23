@@ -12,11 +12,11 @@ import * as Schema from 'effect/Schema';
 import { Obj, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { dbg, log } from '@dxos/log';
+import { Message } from '@dxos/types';
 
 import { AssistantTestLayer } from '../testing';
 
 import { AiSession } from './session';
-import { Message } from '@dxos/types';
 
 // Define a calendar event artifact schema.
 const CalendarEventSchema = Schema.Struct({

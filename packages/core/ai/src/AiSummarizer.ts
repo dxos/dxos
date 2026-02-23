@@ -1,11 +1,18 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import type * as AiError from '@effect/ai/AiError';
+import * as LanguageModel from '@effect/ai/LanguageModel';
+import * as Prompt from '@effect/ai/Prompt';
+import * as Effect from 'effect/Effect';
+
+import { Obj } from '@dxos/echo';
 import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
-import { LanguageModel, Prompt, type AiError } from '@effect/ai';
-import { Effect } from 'effect';
+
 import * as AiPreprocessor from './AiPreprocessor';
-import { Obj } from '@dxos/echo';
 import type { PromptPreprocessingError } from './errors';
-import { dbg } from '@dxos/log';
 
 export interface SummarizeOptions {
   instructions?: string;

@@ -1,14 +1,18 @@
-import { describe, expect, it } from '@effect/vitest';
-import { Effect, Layer } from 'effect';
+//
+// Copyright 2026 DXOS.org
+//
+
+import { describe, it } from '@effect/vitest';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+
+import { TestHelpers } from '@dxos/effect/testing';
+import { invariant } from '@dxos/invariant';
+import { ObjectId } from '@dxos/keys';
+
+import * as AiService from './AiService';
 import { summarize } from './AiSummarizer';
 import { TestAiService, TestData } from './testing';
-import { Message, type ContentBlock } from '@dxos/types';
-import { Obj } from '@dxos/echo';
-import { invariant } from '@dxos/invariant';
-import * as AiService from './AiService';
-import { TestHelpers } from '@dxos/effect/testing';
-import { ObjectId } from '@dxos/keys';
-import { dbg } from '@dxos/log';
 
 ObjectId.dangerouslyDisableRandomness();
 

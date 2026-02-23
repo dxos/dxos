@@ -14,8 +14,6 @@ import { bufferToArray } from '@dxos/util';
 import { estimateTokens, preprocessPrompt } from './AiPreprocessor';
 import { PromptPreprocessingError } from './errors';
 import { TestData } from './testing';
-import { LanguageModel } from '@effect/ai/LanguageModel';
-import { dbg } from '@dxos/log';
 
 describe('AiPreprocessor.preprocessPrompt', () => {
   it.effect(
