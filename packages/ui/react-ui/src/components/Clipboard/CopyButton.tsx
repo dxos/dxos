@@ -27,7 +27,7 @@ export const CopyButton = ({ classNames, value, size = 5, ...props }: CopyButton
   return (
     <Button
       {...props}
-      classNames={['flex flex-col justify-center', classNames]}
+      classNames={['inline-flex flex-col justify-center', classNames]}
       onClick={() => setTextValue(value)}
       data-testid='copy-invitation'
     >
@@ -67,7 +67,7 @@ export const CopyButtonIconOnly = ({
       icon='ph--copy--regular'
       size={size}
       variant={variant}
-      classNames={['flex flex-col justify-center', classNames]}
+      classNames={['inline-flex flex-col justify-center', classNames]}
       onClick={() => setTextValue(value).then(onOpen)}
       data-testid='copy-invitation'
     />
