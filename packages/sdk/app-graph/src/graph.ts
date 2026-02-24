@@ -748,9 +748,14 @@ const sortEdgesImpl = <T extends ExpandableGraph | WritableGraph>(
   const internal = getInternal(graph);
   const edgesAtom = internal._edges(id);
   const edges = internal._registry.get(edgesAtom);
-  const unsorted = edges[relation].filter((id) => !order.includes(id)) ?? [];
-  const sorted = order.filter((id) => edges[relation].includes(id)) ?? [];
-  edges[relation].splice(0, edges[relation].length, ...[...sorted, ...unsorted]);
+  const current = edges[relation];
+  const unsorted = current.filter((id) => !order.includes(id)) ?? [];
+  const sorted = order.filter((id) => current.includes(id)) ?? [];
+  const newOrder = [...sorted, ...unsorted];
+  if (newOrder.length === current.length && newOrder.every((id, i) => id === current[i])) {
+    return graph;
+  }
+  current.splice(0, current.length, ...newOrder);
   internal._registry.set(edgesAtom, edges);
   return graph;
 };

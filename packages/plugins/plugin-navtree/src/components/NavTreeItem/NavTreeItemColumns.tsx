@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { Fragment, memo } from 'react';
+import React, { Fragment, memo, useMemo } from 'react';
 
 import { Node } from '@dxos/app-graph';
 import { Popover, Treegrid, toLocalizedString, useTranslation } from '@dxos/react-ui';
@@ -21,13 +21,29 @@ export const NavTreeItemColumns = memo(({ path, item, open }: NavTreeItemColumns
 
   const level = path.length - 2;
   const { actions: _actions, groupedActions } = useActions(item);
-  const [primaryAction, ...secondaryActions] = _actions.toSorted((a, _b) =>
-    a.properties?.disposition === 'list-item-primary' ? -1 : 1,
+  const sortedActions = useMemo(
+    () => _actions.toSorted((a, _b) => (a.properties?.disposition === 'list-item-primary' ? -1 : 1)),
+    [_actions],
+  );
+  const [primaryAction, ...secondaryActions] = sortedActions;
+
+  const actions = useMemo(
+    () =>
+      (primaryAction?.properties?.disposition === 'list-item-primary' ? secondaryActions : sortedActions)
+        .flatMap((action) => (Node.isAction(action) ? [action] : []))
+        .filter((a) => ['list-item', 'list-item-primary'].includes(a.properties?.disposition)),
+    [primaryAction, secondaryActions, sortedActions],
   );
 
-  const actions = (primaryAction?.properties?.disposition === 'list-item-primary' ? secondaryActions : _actions)
-    .flatMap((action) => (Node.isAction(action) ? [action] : []))
-    .filter((a) => ['list-item', 'list-item-primary'].includes(a.properties?.disposition));
+  const primaryMenuActions = useMemo(
+    () =>
+      primaryAction
+        ? Node.isAction(primaryAction)
+          ? [primaryAction]
+          : groupedActions[primaryAction?.id ?? '']
+        : undefined,
+    [primaryAction, groupedActions],
+  );
 
   useLoadDescendents(item);
   useLoadDescendents(primaryAction && !Node.isAction(primaryAction) ? (primaryAction as Node.Node) : undefined);
@@ -44,7 +60,7 @@ export const NavTreeItemColumns = memo(({ path, item, open }: NavTreeItemColumns
             icon={primaryAction.properties?.icon ?? 'ph--placeholder--regular'}
             parent={item}
             monolithic={Node.isAction(primaryAction)}
-            menuActions={Node.isAction(primaryAction) ? [primaryAction] : groupedActions[primaryAction?.id ?? '']}
+            menuActions={primaryMenuActions}
             menuType={primaryAction.properties?.menuType}
             caller={NAV_TREE_ITEM}
           />

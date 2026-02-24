@@ -163,7 +163,9 @@ class GraphBuilderImpl implements GraphBuilder {
         relation === 'outbound' ? { source: id, target: node.id } : { source: node.id, target: id },
       ),
     );
-    Graph.sortEdges(this._graph, id, relation, ids);
+    if (ids.length !== previous.length || ids.some((id, i) => id !== previous[i])) {
+      Graph.sortEdges(this._graph, id, relation, ids);
+    }
   }
 
   private _scheduleDirtyFlush(): void {

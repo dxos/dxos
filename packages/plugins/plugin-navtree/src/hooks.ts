@@ -11,15 +11,35 @@ import { type Node } from '@dxos/app-graph';
 import { useNavTreeContext } from './components';
 import { NavTreeCapabilities } from './types';
 
+const pendingNodes = new Map<Node.Node, () => void>();
+let pendingFrame: number | null = null;
+
+const flushPending = () => {
+  pendingFrame = null;
+  const entries = [...pendingNodes.entries()];
+  pendingNodes.clear();
+  for (const [node, load] of entries) {
+    load();
+  }
+};
+
 export const useLoadDescendents = (root?: Node.Node) => {
   const { loadDescendents } = useNavTreeContext();
   useEffect(() => {
-    const frame = requestAnimationFrame(() => {
-      if (root) {
-        void loadDescendents?.(root);
+    if (!root || !loadDescendents) {
+      return;
+    }
+    pendingNodes.set(root, () => void loadDescendents(root));
+    if (pendingFrame === null) {
+      pendingFrame = requestAnimationFrame(flushPending);
+    }
+    return () => {
+      pendingNodes.delete(root);
+      if (pendingNodes.size === 0 && pendingFrame !== null) {
+        cancelAnimationFrame(pendingFrame);
+        pendingFrame = null;
       }
-    });
-    return () => cancelAnimationFrame(frame);
+    };
   }, [root]);
 };
 
