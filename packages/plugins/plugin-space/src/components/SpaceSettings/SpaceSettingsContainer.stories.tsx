@@ -17,7 +17,7 @@ import { SpaceSettingsContainer, type SpaceSettingsContainerProps } from './Spac
 const Story = (props: Partial<SpaceSettingsContainerProps>) => {
   const { space } = useClientStory();
   return (
-    <div role='none' className='p-2 border border-primary-500 rounded'>
+    <div role='none' className='p-2 border border-primary-500 rounded-sm'>
       <SpaceSettingsContainer {...props} space={space!} />
     </div>
   );

@@ -10,7 +10,7 @@ import React, { type PropsWithChildren, useContext, useEffect, useMemo, useRef }
 import { combine } from '@dxos/async';
 import { type Graph } from '@dxos/graph';
 import { log } from '@dxos/log';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 
 import { SVG } from '../components';
@@ -158,7 +158,7 @@ const DefaultStory = ({ children, ...props }: ComponentProps) => {
 const meta = {
   title: 'ui/react-ui-graph/hooks',
   render: DefaultStory,
-  decorators: [withRegistry, withTheme()],
+  decorators: [withRegistry, withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
   },

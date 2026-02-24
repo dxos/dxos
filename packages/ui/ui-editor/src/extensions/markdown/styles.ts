@@ -18,7 +18,7 @@ export const formattingStyles = EditorView.theme({
     width: '100%',
     height: '0',
     verticalAlign: 'middle',
-    borderTop: '1px solid var(--dx-cmSeparator)',
+    borderTop: '1px solid var(--color-cm-separator)',
     opacity: 0.5,
   },
 
@@ -43,8 +43,8 @@ export const formattingStyles = EditorView.theme({
    * Blockquote.
    */
   '& .cm-blockquote': {
-    background: 'var(--dx-cmCodeblock)',
-    borderLeft: '2px solid var(--dx-cmSeparator)',
+    background: 'var(--color-cm-codeblock)',
+    borderLeft: '2px solid var(--color-cm-separator)',
     paddingLeft: '1rem',
     margin: '0',
   },
@@ -56,7 +56,7 @@ export const formattingStyles = EditorView.theme({
     fontFamily: fontMono,
   },
   '& .cm-codeblock-line': {
-    background: 'var(--dx-cmCodeblock)',
+    background: 'var(--color-cm-codeblock)',
     paddingInline: '1rem !important',
   },
   '& .cm-codeblock-start': {
@@ -92,8 +92,8 @@ export const formattingStyles = EditorView.theme({
   '.cm-table-head': {
     padding: '2px 16px 2px 0px',
     textAlign: 'left',
-    borderBottom: '1px solid var(--dx-cmSeparator)',
-    color: 'var(--dx-subdued)',
+    borderBottom: '1px solid var(--color-cm-separator)',
+    color: 'var(--color-subdued)',
   },
   '.cm-table-cell': {
     padding: '2px 16px 2px 0px',

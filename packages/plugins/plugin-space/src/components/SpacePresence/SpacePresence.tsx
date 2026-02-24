@@ -125,7 +125,7 @@ export const FullPresence = (props: MemberPresenceProps) => {
           key={member.identity.identityKey.toHex()}
           side='bottom'
           content={getName(member.identity)}
-          className='grid focus:outline-none'
+          className='grid focus:outline-hidden'
         >
           <PresenceAvatar
             identity={member.identity}
@@ -139,7 +139,7 @@ export const FullPresence = (props: MemberPresenceProps) => {
 
       {members.length > 3 && (
         <Popover.Root>
-          <Popover.Trigger className='grid focus:outline-none'>
+          <Popover.Trigger className='grid focus:outline-hidden'>
             <Avatar.Root>
               {/* TODO(wittjosiah): Make text fit. */}
               <Avatar.Content
@@ -153,12 +153,12 @@ export const FullPresence = (props: MemberPresenceProps) => {
           <Popover.Portal>
             <Popover.Content side='bottom'>
               <Popover.Arrow />
-              <Popover.Viewport classNames='max-bs-56'>
+              <Popover.Viewport classNames='max-h-56'>
                 <List>
                   {members.map((member) => (
                     <ListItem.Root
                       key={member.identity.identityKey.toHex()}
-                      classNames='flex gap-2 items-center cursor-pointer mbe-2'
+                      classNames='flex gap-2 items-center cursor-pointer mb-2'
                       onClick={() => onMemberClick?.(member)}
                       data-testid='identity-list-item'
                     >
@@ -206,7 +206,7 @@ const PresenceAvatar = forwardRef<DxAvatar, PresenceAvatarProps>(
           fallback={identity.profile?.data?.emoji || fallbackValue.emoji}
           ref={forwardedRef}
         />
-        <Avatar.Label classNames={showName ? 'text-sm truncate pli-2' : 'sr-only'}>{getName(identity)}</Avatar.Label>
+        <Avatar.Label classNames={showName ? 'text-sm truncate px-2' : 'sr-only'}>{getName(identity)}</Avatar.Label>
       </Avatar.Root>
     );
   },
@@ -266,7 +266,7 @@ export const SmallPresence = ({ count = 0, attended, containsAttended }: SmallPr
         attended={attended}
         containsAttended={containsAttended}
         presence={count > 1 ? 'many' : count === 1 ? 'one' : 'none'}
-        classNames='self-center mie-1'
+        classNames='self-center me-1'
       />
     </Tooltip.Trigger>
   );

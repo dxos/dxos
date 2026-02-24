@@ -49,7 +49,7 @@ export const QueueComponent = ({ shape }: ShapeComponentProps<QueueShape>) => {
       <ScrollArea.Root orientation='vertical'>
         <ScrollArea.Viewport classNames='divide-y divide-separator'>
           {[...items].map((item, i) => (
-            <QueueItem key={i} classNames='p-1 pli-2' item={item} />
+            <QueueItem key={i} classNames='p-1 px-2' item={item} />
           ))}
         </ScrollArea.Viewport>
       </ScrollArea.Root>
@@ -63,7 +63,7 @@ export const QueueItem = ({ classNames, item }: ThemedClassName<{ item: any }>) 
   }
 
   return (
-    <div className={mx('grid grid-cols-[80px,1fr]', classNames)}>
+    <div className={mx('grid grid-cols-[80px_1fr]', classNames)}>
       {Object.entries(item).map(([key, value]) => (
         <Fragment key={key}>
           <div className='p-1 text-xs text-subdued'>{key}</div>

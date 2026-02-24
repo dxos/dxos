@@ -41,7 +41,7 @@ const DefaultStory = ({ initialLines = 0, running: runningProp, ...props }: Stor
         <Button onClick={() => setRunning((running) => !running)}>{running ? 'Stop' : 'Start'}</Button>
         <Button onClick={() => scroller.current?.scrollToBottom()}>Scroll to bottom</Button>
         <Toolbar.Separator variant='gap' />
-        <div className='pli-1'>{lines.length}</div>
+        <div className='px-1'>{lines.length}</div>
       </Toolbar.Root>
       <ScrollContainer.Root {...props} ref={scroller}>
         <ScrollContainer.Viewport>
@@ -61,7 +61,7 @@ const meta = {
   title: 'ui/react-ui-core/components/ScrollContainer',
   component: ScrollContainer.Root,
   render: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'is-[30rem]' })],
+  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'w-[30rem]' })],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

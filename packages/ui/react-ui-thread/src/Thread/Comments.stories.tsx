@@ -11,7 +11,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { Icon, IconButton, useThemeContext } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import {
   type Comment,
@@ -208,7 +208,7 @@ const StoryThread: FC<{
           variant='ghost'
           icon='ph--check--regular'
           iconOnly
-          classNames='pli-1'
+          classNames='px-1'
           label='Resolve'
           onClick={onResolve}
         />
@@ -350,7 +350,7 @@ const DefaultStory = ({ text, autoCreate }: StoryProps) => {
 
   return (
     <main className='fixed inset-0 grid grid-cols-[1fr_24rem]'>
-      <div role='none' className='max-bs-full overflow-y-auto p-4'>
+      <div role='none' className='max-h-full overflow-y-auto p-4'>
         <Editor
           initialValue={item.content}
           selected={selected}
@@ -362,7 +362,7 @@ const DefaultStory = ({ text, autoCreate }: StoryProps) => {
         />
       </div>
 
-      <div role='none' className='max-bs-full overflow-y-auto p-4'>
+      <div role='none' className='max-h-full overflow-y-auto p-4'>
         <Sidebar
           threads={visibleThreads}
           selected={selected}
@@ -378,7 +378,7 @@ const meta = {
   title: 'ui/react-ui-thread/Comments',
   component: StoryThread as any,
   render: DefaultStory,
-  decorators: [withTheme()],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     translations,
     layout: 'fullscreen',

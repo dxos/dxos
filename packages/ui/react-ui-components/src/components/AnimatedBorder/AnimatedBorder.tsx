@@ -8,7 +8,7 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 const trail = [
-  'absolute z-0 aspect-[2/1] is-16',
+  'absolute z-0 aspect-[2/1] w-16',
   'bg-[radial-gradient(at_100%_50%,_theme(colors.sky.500),_transparent_70%)]',
   '[offset-anchor:100%_50%] [offset-path:border-box]',
 ];
@@ -21,8 +21,8 @@ export type AnimatedBorderProps = ThemedClassName<PropsWithChildren<{ animate?: 
  */
 export const AnimatedBorder = ({ children, classNames, animate = false }: AnimatedBorderProps) => {
   return (
-    <div role='none' className='relative overflow-hidden p-px rounded'>
-      <div role='none' className={mx('relative z-10 bg-baseSurface rounded', classNames)}>
+    <div role='none' className='relative overflow-hidden p-px rounded-sm'>
+      <div role='none' className={mx('relative z-10 bg-base-surface rounded-sm', classNames)}>
         {children}
       </div>
       {animate && (

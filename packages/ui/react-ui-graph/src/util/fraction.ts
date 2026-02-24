@@ -30,7 +30,7 @@ export class FractionUtil {
 
   /**
    * @param {Fraction}
-   * Convert to rounded number.
+   * Convert to rounded-sm number.
    */
   static toNumber = ([n, d]: Fraction): number => {
     FractionUtil.validate([n, d]);

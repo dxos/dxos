@@ -33,30 +33,30 @@ const highlightStyles = HighlightStyle.define([
   // Function.
   {
     tag: tags.name,
-    class: 'text-accentText',
+    class: 'text-accent-text',
   },
   // Range.
   {
     tag: tags.tagName,
-    class: 'text-pinkText',
+    class: 'text-pink-text',
   },
   // Values.
   {
     tag: tags.number,
-    class: 'text-tealText',
+    class: 'text-teal-text',
   },
   {
     tag: tags.bool,
-    class: 'text-tealText',
+    class: 'text-teal-text',
   },
   {
     tag: tags.string,
-    class: 'text-tealText',
+    class: 'text-teal-text',
   },
   // Error.
   {
     tag: tags.invalid,
-    class: 'text-unAccent',
+    class: 'text-un-accent',
   },
 ]);
 
@@ -97,7 +97,7 @@ export const sheetExtension = ({ debug, functions = [] }: SheetExtensionOptions)
 
         const title = document.createElement('h2');
         title.innerText = name;
-        title.className = 'text-lg font-mono text-accentText';
+        title.className = 'text-lg font-mono text-accent-text';
         root.appendChild(title);
 
         if (description) {
@@ -110,7 +110,7 @@ export const sheetExtension = ({ debug, functions = [] }: SheetExtensionOptions)
         if (syntax) {
           const detail = document.createElement('pre');
           detail.innerText = syntax;
-          detail.className = 'whitespace-pre-wrap text-greenText';
+          detail.className = 'whitespace-pre-wrap text-green-text';
           root.appendChild(detail);
         }
 
@@ -169,8 +169,8 @@ export const sheetExtension = ({ debug, functions = [] }: SheetExtensionOptions)
       icons: false,
       tooltipClass: () =>
         mx(
-          '!-left-[1px] !top-[33px] !-m-0 border !border-bs-0 [&>ul]:!min-w-[198px]',
-          '[&>ul>li[aria-selected]]:!bg-accentSurface',
+          '!-left-[1px] !top-[33px] !-m-0 border border-h-0! [&>ul]:!min-w-[198px]',
+          '[&>ul>li[aria-selected]]:!bg-accent-surface',
           'border-separator',
         ),
     }),

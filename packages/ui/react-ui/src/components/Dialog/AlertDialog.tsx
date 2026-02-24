@@ -151,12 +151,12 @@ const AlertDialogOverlay: ForwardRefExoticComponent<AlertDialogOverlayProps> = f
         'dialog.overlay',
         {},
         classNames,
-        'data-[block-align=start]:justify-center',
-        'data-[block-align=start]:items-start',
-        'data-[block-align=center]:place-content-center',
+        'data-[h-align=start]:justify-center',
+        'data-[h-align=start]:items-start',
+        'data-[h-align=center]:place-content-center',
       )}
       ref={forwardedRef}
-      data-block-align={blockAlign}
+      data-h-align={blockAlign}
     >
       <OverlayLayoutProvider inOverlayLayout>{children}</OverlayLayoutProvider>
     </AlertDialogOverlayPrimitive>

@@ -7,7 +7,7 @@ import React from 'react';
 
 import { DXOS } from '@dxos/brand';
 import { log } from '@dxos/log';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { Ghost, type GhostProps } from './Ghost';
 
@@ -16,7 +16,7 @@ const DefaultStory = (props: Partial<GhostProps>) => {
     <>
       <Ghost {...props} />
       <div className='inset-0 absolute grid place-content-center'>
-        <DXOS className='is-[40rem] bs-[40rem] opacity-5' />
+        <DXOS className='w-[40rem] h-[40rem] opacity-5' />
       </div>
     </>
   );
@@ -26,7 +26,7 @@ const meta = {
   title: 'ui/react-ui-sfx/Ghost',
   component: Ghost,
   render: DefaultStory,
-  decorators: [withTheme()],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
   },

@@ -137,9 +137,9 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
   const { message, sender } = useMessageContext(MESSAGE_HEADER_NAME);
 
   return (
-    <div role='none' className='p-1 flex flex-col gap-2 border-be border-subduedSeparator'>
+    <div role='none' className='p-1 flex flex-col gap-2 border-b border-subdued-separator'>
       <div role='none' className='grid grid-cols-[2rem_1fr] gap-1'>
-        <div role='none' className='flex pli-2 pbs-1.5 text-subdued'>
+        <div role='none' className='flex px-2 pt-1.5 text-subdued'>
           <Icon icon='ph--envelope-open--regular' />
         </div>
         <div role='none' className='flex flex-col gap-1 overflow-hidden'>
@@ -158,7 +158,7 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
             value={sender}
             onContactCreate={() => onContactCreate?.(message.sender)}
           />
-          <h3 className='truncate text-primaryText'>{message.sender.name || message.sender.email}</h3>
+          <h3 className='truncate text-primary-text'>{message.sender.name || message.sender.email}</h3>
         </div>
       </div>
     </div>

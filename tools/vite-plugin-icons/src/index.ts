@@ -1,8 +1,10 @@
 //
-// Copyright 2024 Will Shown <ch-ui@willshown.com>
 // Copyright 2024 DXOS.org
+// Copyright 2024 Will Shown <ch-ui@willshown.com>
 // Based upon @tailwindcss/vite, fetched on 9 April 2024 from <https://github.com/tailwindlabs/tailwindcss/blob/next/packages/%40tailwindcss-vite/package.json>
 //
+
+// TODO(burdon): Replace with https://github.com/vnphanquang/phosphor-icons-tailwindcss
 
 import fs from 'fs';
 import { join, resolve } from 'path';

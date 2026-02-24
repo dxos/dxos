@@ -217,8 +217,7 @@ catalog:
   '@svgr/cli': ^8.1.0
   '@swc/core': 1.13.5
   '@swc/types': ^0.1.25
-  '@tailwindcss/container-queries': ^0.1.1
-  '@tailwindcss/forms': ^0.5.3
+  '@tailwindcss/forms': ^0.5.9
   '@tanstack/react-virtual': ^3.13.18
   '@tauri-apps/api': ^2.8.0
   '@tauri-apps/cli': ^2.8.4
@@ -562,6 +561,7 @@ catalog:
   plotly.js-dist-min: ^2.25.1
   postcss: ^8.4.41
   postcss-import: ^16.1.0
+  postcss-nesting: ^13.0.1
   posthog-js: ^1.347.2
   preact: ^10.26.9
   prettier: ^3.6.2
@@ -635,11 +635,12 @@ catalog:
   streamx: ^2.12.5
   style-mod: ^4.1.0
   tabster: ^8.5.5
-  tailwind-merge: ^2.2.1
-  tailwind-scrollbar: ^3.1.0
-  tailwindcss: ~3.4.1
-  tailwindcss-logical: ^3.0.0
-  tailwindcss-radix: ^2.8.0
+  tailwind-merge: ^3.5.0
+  tailwind-scrollbar: ^4.0.0
+  '@tailwindcss/postcss': ^4.2.0
+  '@tailwindcss/oxide': ^4.2.0
+  tailwindcss: ^4.2.0
+  tailwindcss-radix: ^4.0.2
   tauri-plugin-web-auth-api: ^1.0.0
   three: ^0.178.0
   todomvc-app-css: ^2.4.2

@@ -105,7 +105,7 @@ const ChessboardComponent = forwardRef<HTMLDivElement, ChessboardProps>(
     }, [grid, pieces, promoting]);
 
     return (
-      <div ref={targetRef} tabIndex={0} className={mx('relative outline-none', classNames)}>
+      <div ref={targetRef} tabIndex={0} className={mx('relative outline-hidden', classNames)}>
         {/* DOM Layout. */}
         <div ref={gridRef} className='grid grid-rows-8 grid-cols-8 aspect-square select-none'>
           {layout}

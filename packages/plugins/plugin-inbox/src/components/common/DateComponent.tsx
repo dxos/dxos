@@ -28,7 +28,7 @@ export const DateComponent = ({ start, end, icon }: { start: Date; end?: Date; i
           iconOnly
           size={4}
           label={t('open calendar button')}
-          classNames='cursor-pointer text-subdued !p-0'
+          classNames='cursor-pointer text-subdued p-0!'
         />
       )}
       <div className='truncate text-description'>{format(start, 'PPp')}</div>

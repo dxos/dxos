@@ -54,7 +54,7 @@ export const CloseSidebarButton = () => {
       size={4}
       label={t('close navigation sidebar label')}
       onClick={handleClick}
-      classNames='rounded-none pli-1 dx-focus-ring-inset pie-[max(.5rem,env(safe-area-inset-left))]'
+      classNames='rounded-none px-1 dx-focus-ring-inset pe-[max(.5rem,env(safe-area-inset-left))]'
     />
   );
 };
