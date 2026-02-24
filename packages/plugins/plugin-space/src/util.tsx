@@ -85,11 +85,11 @@ function createFactory<TArgs extends any[], T>(
   const cache = new Map<string, T>();
   return (...args: TArgs) => {
     const key = keyFn ? keyFn(...args) : (args[0] as string);
-    let value = cache.get(key);
-    if (!value) {
-      value = create(...args);
-      cache.set(key, value);
+    if (cache.has(key)) {
+      return cache.get(key)!;
     }
+    const value = create(...args);
+    cache.set(key, value);
     return value;
   };
 }
@@ -307,7 +307,8 @@ export const createObjectNode = ({
   }
 
   const objectId = Obj.getDXN(object).toString();
-  let blockInstruction = blockInstructionCache.get(objectId);
+  const blockInstructionKey = `${objectId}:${managedCollectionChild}`;
+  let blockInstruction = blockInstructionCache.get(blockInstructionKey);
   if (!blockInstruction) {
     blockInstruction = (source: TreeData, instruction: Instruction) => {
       if (source.item.properties.managedCollectionChild) {
@@ -318,7 +319,7 @@ export const createObjectNode = ({
       }
       return managedCollectionChild;
     };
-    blockInstructionCache.set(objectId, blockInstruction);
+    blockInstructionCache.set(blockInstructionKey, blockInstruction);
   }
 
   const canDrop = droppable ? CAN_DROP_OBJECT : CAN_DROP_OBJECT_DISABLED;
