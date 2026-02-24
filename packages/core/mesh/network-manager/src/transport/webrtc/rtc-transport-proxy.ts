@@ -12,7 +12,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ConnectionResetError, ConnectivityError, type Mesh, TimeoutError } from '@dxos/protocols';
-import { create } from '@dxos/protocols/buf';
+import { bufToProto, create, protoToBuf } from '@dxos/protocols/buf';
 import { PublicKeySchema } from '@dxos/protocols/buf/dxos/keys_pb';
 import {
   type BridgeEvent,
@@ -159,8 +159,7 @@ export class RtcTransportProxy extends Resource implements Transport {
 
   async onSignal(signal: Signal): Promise<void> {
     this._options.bridgeService
-      // Signal types are structurally compatible between proto and buf (both have payload: JsonObject).
-      .sendSignal(create(SignalRequestSchema, { proxyId: toBufKey(this._proxyId), signal: signal as never }), {
+      .sendSignal(create(SignalRequestSchema, { proxyId: toBufKey(this._proxyId), signal: protoToBuf(signal) }), {
         timeout: RPC_TIMEOUT,
       })
       .catch((err) => this._raiseIfOpen(decodeError(err)));
@@ -195,8 +194,7 @@ export class RtcTransportProxy extends Resource implements Transport {
 
   private async _handleSignal(signalEvent: BridgeEvent_SignalEvent): Promise<void> {
     try {
-      // Signal types are structurally compatible between buf and proto.
-      await this._options.sendSignal(signalEvent.payload as never);
+      await this._options.sendSignal(bufToProto(signalEvent.payload));
     } catch (error) {
       const data = signalEvent.payload?.payload?.data;
       const type =

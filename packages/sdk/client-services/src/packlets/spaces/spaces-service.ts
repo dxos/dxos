@@ -8,6 +8,7 @@ import { SubscriptionList, UpdateScheduler, scheduleTask } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import {
   type CredentialProcessor,
+  type TypedAssertion,
   createAdmissionCredentials,
   createDidFromIdentityKey,
   getCredentialAssertion,
@@ -26,7 +27,7 @@ import {
   SpaceNotFoundError,
   encodeError,
 } from '@dxos/protocols';
-import { type Empty, EmptySchema, create, decodePublicKey, timeframeToBuf } from '@dxos/protocols/buf';
+import { type Empty, EmptySchema, create, decodePublicKey, protoToBuf, timeframeToBuf } from '@dxos/protocols/buf';
 import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import {
   type AdmitContactRequest,
@@ -217,7 +218,7 @@ export class SpacesServiceImpl implements Client.SpacesService {
         const spaceKeyPk = decodePublicKey(spaceKey!);
         const space = dataSpaceManager.spaces.get(spaceKeyPk) ?? raise(new SpaceNotFoundError(spaceKeyPk));
         const handle = space.listen(getChannelId(channel), (message) => {
-          next(message as never);
+          next(protoToBuf<GossipMessage>(message));
         });
         ctx.onDispose(() => handle.unsubscribe());
       });
@@ -260,7 +261,7 @@ export class SpacesServiceImpl implements Client.SpacesService {
         invariant(subjectId, 'Subject ID is required');
         const signedCredential = await signer.createCredential({
           subject: subjectId,
-          assertion: credential.subject?.assertion as never,
+          assertion: credential.subject?.assertion as TypedAssertion,
         });
         await space.controlPipeline.writer.write({ credential: { credential: signedCredential } });
       }
@@ -397,9 +398,9 @@ export class SpacesServiceImpl implements Client.SpacesService {
         }),
       )),
       creator: space.inner.spaceState.creator ? { data: space.inner.spaceState.creator.key.asUint8Array() } : undefined,
-      cache: space.cache as never,
+      cache: protoToBuf(space.cache),
       metrics: space.metrics,
-      edgeReplication: space.getEdgeReplicationSetting() as never,
+      edgeReplication: protoToBuf(space.getEdgeReplicationSetting()),
     });
   }
 

@@ -71,7 +71,7 @@ export class MemorySignalManager implements SignalManager {
     this._ctx.onDispose(this._context.swarmEvent.on((data) => this.swarmEvent.emit(data)));
 
     await Promise.all(
-      [...this._joinedSwarms.values()].map(({ topic, peer }) => this.join({ topic: toBufKey(topic), peer } as never)),
+      [...this._joinedSwarms.values()].map(({ topic, peer }) => this.join({ topic: toBufKey(topic), peer })),
     );
   }
 
@@ -86,7 +86,7 @@ export class MemorySignalManager implements SignalManager {
     );
 
     await Promise.all(
-      [...this._joinedSwarms.values()].map(({ topic, peer }) => this.leave({ topic: toBufKey(topic), peer } as never)),
+      [...this._joinedSwarms.values()].map(({ topic, peer }) => this.leave({ topic: toBufKey(topic), peer })),
     );
 
     // assign joined swarms back because .leave() deletes it.

@@ -15,6 +15,7 @@ import { type FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type FeedMessageBlock } from '@dxos/protocols';
+import { bufToProto, protoToBuf } from '@dxos/protocols/buf';
 import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type ControlPipelineSnapshot } from '@dxos/protocols/proto/dxos/echo/metadata';
@@ -142,8 +143,7 @@ export class ControlPipeline {
     await this._pipeline.setCursor(snapshot.timeframe);
 
     for (const message of snapshot.messages ?? []) {
-      // Credential from snapshot is proto-decoded; cast to buf type for the state machine.
-      const result = await this._spaceStateMachine.process(message.credential as never, {
+      const result = await this._spaceStateMachine.process(protoToBuf<Credential>(message.credential), {
         sourceFeed: message.feedKey,
         skipVerification: true,
       });
@@ -158,10 +158,9 @@ export class ControlPipeline {
     await this._pipeline.pause();
     const snapshot: ControlPipelineSnapshot = {
       timeframe: this._pipeline.state.timeframe,
-      // Credential entries from state machine use buf types; snapshot expects proto types.
       messages: this._spaceStateMachine.credentialEntries.map((entry) => ({
         feedKey: entry.sourceFeed,
-        credential: entry.credential as never,
+        credential: bufToProto(entry.credential),
       })),
     };
     await this._pipeline.unpause();
@@ -191,8 +190,7 @@ export class ControlPipeline {
     log('processing', { key: msg.feedKey, seq: msg.seq });
     if (msg.data.payload.credential) {
       const timer = tracer.mark('dxos.echo.pipeline.control');
-      // Credential from feed message is proto-decoded; cast to buf type for the state machine.
-      const result = await this._spaceStateMachine.process(msg.data.payload.credential.credential as never, {
+      const result = await this._spaceStateMachine.process(protoToBuf<Credential>(msg.data.payload.credential.credential), {
         sourceFeed: PublicKey.from(msg.feedKey),
       });
 

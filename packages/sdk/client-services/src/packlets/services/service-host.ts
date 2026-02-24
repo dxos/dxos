@@ -173,11 +173,11 @@ export class ClientServicesHost {
       },
     });
 
-    this.diagnosticsBroadcastHandler = createCollectDiagnosticsBroadcastHandler(this._systemService as never);
+    this.diagnosticsBroadcastHandler = createCollectDiagnosticsBroadcastHandler(this._systemService);
     this._loggingService = new LoggingServiceImpl();
 
     this._serviceRegistry = new ServiceRegistry<ClientServices>(clientServiceBundle, {
-      SystemService: this._systemService as never,
+      SystemService: this._systemService,
       TracingService: this._tracingService,
     });
   }

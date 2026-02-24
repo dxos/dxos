@@ -73,7 +73,7 @@ export const ClientRepeater = <P extends ClientRepeatedComponentProps>(props: Cl
       await Promise.all(
         clients
           .slice(1)
-          .flatMap((client) => performInvitation({ host: space as never, guest: client.spaces as never })),
+          .flatMap((client) => performInvitation({ host: space, guest: client.spaces })),
       );
     }
 

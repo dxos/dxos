@@ -45,8 +45,8 @@ import { type Keyring } from '@dxos/keyring';
 import { ObjectId, PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AlreadyJoinedError, trace as Trace } from '@dxos/protocols';
-import { encodePublicKey } from '@dxos/protocols/buf';
-import { Invitation_Kind, Invitation_Type } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { encodePublicKey, protoToBuf } from '@dxos/protocols/buf';
+import { type Invitation_AuthMethod, Invitation_Kind, Invitation_Type } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
@@ -343,7 +343,7 @@ export class DataSpaceManager extends Resource {
 
     const memberCredential = credentials[1];
     invariant(getCredentialAssertion(memberCredential)['@type'] === 'dxos.halo.credentials.SpaceMember');
-    await this._signingContext.recordCredential(memberCredential as never);
+    await this._signingContext.recordCredential(memberCredential);
 
     await space.initializeDataPipeline();
 
@@ -715,15 +715,15 @@ export class DataSpaceManager extends Resource {
         type: Invitation_Type.DELEGATED,
         kind: Invitation_Kind.SPACE,
         spaceKey: encodePublicKey(space.key),
-        authMethod: invitation.authMethod,
+        authMethod: protoToBuf<Invitation_AuthMethod>(invitation.authMethod),
         invitationId: invitation.invitationId,
         swarmKey: encodePublicKey(invitation.swarmKey),
-        guestKeypair: invitation.guestKey ? { publicKey: invitation.guestKey } : undefined,
+        guestKeypair: invitation.guestKey ? { publicKey: protoToBuf(invitation.guestKey) } : undefined,
         lifetime: invitation.expiresOn ? (invitation.expiresOn.getTime() - Date.now()) / 1000 : undefined,
         multiUse: invitation.multiUse,
         delegationCredentialId: encodePublicKey(credentialId),
         persistent: false,
-      } as never);
+      });
     });
     await Promise.all(tasks);
   }

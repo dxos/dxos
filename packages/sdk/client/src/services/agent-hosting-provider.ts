@@ -65,7 +65,7 @@ export class AgentManagerClient implements AgentHostingProviderClient {
   private readonly _config: AgentHostingProvider;
   private readonly DXRPC_PATH = 'dxrpc';
   private readonly _wsDxrpcUrl: string;
-  // AgentManager is a proto service, not a buf GenService. Type as Record to satisfy WebsocketRpcClient constraints.
+  // AgentManager is a proto service, not a buf GenService. All `as never` casts in this class are at proto↔buf boundaries.
   private _rpc:
     | WebsocketRpcClient<Record<string, GenService<GenServiceMethods>>, Record<string, GenService<GenServiceMethods>>>
     | undefined;
@@ -219,6 +219,7 @@ export class AgentManagerClient implements AgentHostingProviderClient {
     const { WebsocketRpcClient } = await import('@dxos/websocket-rpc');
     this._rpc = new WebsocketRpcClient({
       url: this._wsDxrpcUrl,
+      // Proto service descriptor cast to buf GenService at proto↔buf boundary.
       requested: { AgentManager: schema.getService('dxos.service.agentmanager.AgentManager') } as never,
       noHandshake: true,
     });
@@ -247,6 +248,7 @@ export class AgentManagerClient implements AgentHostingProviderClient {
   async _agentManagerAuth(authDeviceCreds: Credential, agentAuthzCredential?: Credential): Promise<void> {
     await this._openRpc();
     invariant(this._rpc, 'RPC not initialized');
+    // Proto AgentManager accessed from buf RPC peer at proto↔buf boundary.
     const { result, nonce, agentmanagerKey, initAuthResponseReason } = await (
       this._rpc.rpc.AgentManager as never as AgentManager
     ).initAuthSequence({
@@ -276,6 +278,7 @@ export class AgentManagerClient implements AgentHostingProviderClient {
       nonce,
     });
 
+    // Proto AgentManager accessed from buf RPC peer; buf Presentation passed to proto method at proto↔buf boundary.
     const { token, credential } = await (this._rpc.rpc.AgentManager as never as AgentManager).authenticate({
       presentation: presentation as never,
     });
@@ -288,6 +291,7 @@ export class AgentManagerClient implements AgentHostingProviderClient {
     } else {
       invariant(credential, 'No credential or token received');
       log('received credential, writing to HALO', { credential });
+      // Proto credential from AgentManager cast to buf Credential at proto↔buf boundary.
       await this._halo.writeCredentials([credential as never as Credential]);
       // re-do authentication now that we have a agentmanager serviceAccess credential.
       await this._agentManagerAuth(authDeviceCreds, agentAuthzCredential);

@@ -26,7 +26,7 @@ import { EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type FeedProtocol } from '@dxos/protocols';
+import { type Echo as EchoProtocol } from '@dxos/protocols';
 import {
   ApiError,
   AuthorizationError,
@@ -120,7 +120,7 @@ export class Client {
   private _shellManager?: ShellManager;
   private _shellClientProxy?: BufProtoRpcPeer<typeof clientServiceBundle>;
   private _edgeClient?: EdgeHttpClient = undefined;
-  private _queuesService?: FeedProtocol.QueueService = undefined;
+  private _queuesService?: EchoProtocol.QueueService = undefined;
 
   constructor(options: ClientOptions = {}) {
     if (
@@ -424,7 +424,7 @@ export class Client {
     if (useLocalFirstQueues) {
       log.verbose('running with local-first queues');
       invariant(this._services.services.QueueService, 'QueueService not available.');
-      this._queuesService = this._services.services.QueueService as never;
+      this._queuesService = this._services.services.QueueService;
     } else if (edgeUrl) {
       log.verbose('running with edge queues');
       this._edgeClient = new EdgeHttpClient(edgeUrl);
@@ -435,8 +435,8 @@ export class Client {
     }
 
     this._echoClient.connectToService({
-      dataService: (this._services.services.DataService ?? raise(new Error('DataService not available'))) as never,
-      queryService: (this._services.services.QueryService ?? raise(new Error('QueryService not available'))) as never,
+      dataService: this._services.services.DataService ?? raise(new Error('DataService not available')),
+      queryService: this._services.services.QueryService ?? raise(new Error('QueryService not available')),
       queueService: this._queuesService,
     });
     await this._echoClient.open(this._ctx);

@@ -9,7 +9,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Mesh } from '@dxos/protocols';
-import { EMPTY } from '@dxos/protocols/buf';
+import { EMPTY, bufToProto } from '@dxos/protocols/buf';
 import { type PublicKey as BufPublicKey } from '@dxos/protocols/buf/dxos/keys_pb';
 import {
   type BridgeEvent,
@@ -130,8 +130,7 @@ export class RtcTransportService implements Mesh.BridgeService {
     const transport = this._openTransports.get(key);
     invariant(transport);
 
-    // Signal types are structurally compatible between buf and proto.
-    await transport.transport.onSignal(signal as never);
+    await transport.transport.onSignal(bufToProto(signal));
     return EMPTY;
   }
 

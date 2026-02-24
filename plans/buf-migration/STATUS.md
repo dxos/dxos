@@ -76,7 +76,7 @@ Migrating DXOS protocol types from **protobuf.js** (codegen via `@dxos/codec-pro
 
 | Cast Type    | Added | Removed | Net      |
 | ------------ | ----- | ------- | -------- |
-| `as never`   | 141   | 0       | **+141** |
+| `as never`   | 107   | 0       | **+107** |
 | `as unknown` | 23    | 7       | **+16**  |
 | `as any`     | 6     | 29      | **−23**  |
 
@@ -260,30 +260,32 @@ Fixed bugs that were actively crashing tests.
 - Remaining: `space-invitation-protocol.ts` (6), `authenticator.ts` (2), `identity.ts` (1), `invitations-manager.ts` (3), `device-invitation-protocol.ts` (2) — proto/buf codec boundary casts that require deeper refactoring.
 - **Result**: 13 `as never` casts removed. `as never` count: 141 (was 154).
 
-### Phase 5: Client SDK & Service Wiring (~20 casts)
+### Phase 5: Client SDK & Service Wiring (Done — 11 casts removed)
 
-- [ ] `client/client.ts` (3), `agent-hosting-provider.ts` (5), `local-client-services.ts` (2).
-- [ ] `service-context.ts` (3), `service-host.ts` (2), `worker-runtime.ts` (2), `worker-session.ts` (1).
-- [ ] `service-registry.test.ts` (1), `service-host.test.ts` (2).
-- [ ] Test files: `lazy-space-loading.test.ts` (3), `space-member-management.test.ts` (2), `client.test.ts` (1), `halo-credentials.node.test.ts` (1).
-- [ ] `react-client/testing/withClientProvider.tsx` (2), `ClientRepeater.tsx` (1).
-- **Target**: ~20 `as never` casts removed.
+- [x] `client.ts` — QueueService field type fix, DataService/QueryService casts removed (3).
+- [x] `service-host.ts` — SystemServiceImpl already implements correct interface (2).
+- [x] `service-context.ts` — Removed unnecessary Invitation/Credential casts (2). Kept `deviceCredential as never` (proto→buf boundary).
+- [x] `worker-session.ts` — BridgeService structurally compatible (1).
+- [x] `withClientProvider.tsx`/`ClientRepeater.tsx` — InvitationHost/InvitationGuest structural match (3).
+- Remaining: `agent-hosting-provider.ts` (5 kept — WebsocketRpcClient proto↔buf boundary with comments), `service-context.ts` (1 kept).
+- **Result**: 11 casts removed. Remaining are all documented proto↔buf boundaries.
 
-### Phase 6: Pipeline & Space Internals (~15 casts)
+### Phase 6: Pipeline & Space Internals (Done — 14 casts removed)
 
-- [ ] `spaces-service.ts` (4) — GossipMessage, assertion, cache, edge replication.
-- [ ] `notarization-plugin.ts` (4) — credential notarization.
-- [ ] `control-pipeline.ts` (3) — pipeline internal types.
-- [ ] `data-space-manager.ts` (2), `admission-discovery-extension.ts` (1).
-- [ ] `echo-db/queue.ts` (1).
-- **Target**: ~15 `as never` casts removed.
+- [x] `spaces-service.ts` (4) — Used `protoToBuf`/`bufToProto` for GossipMessage, assertion, cache, edge replication.
+- [x] `notarization-plugin.ts` (4) — Used `protoToBuf`/`bufToProto` for credential codec boundary and RPC.
+- [x] `control-pipeline.ts` (3) — Snapshot/feed credential conversions with `protoToBuf`/`bufToProto`.
+- [x] `data-space-manager.ts` (2) — Removed unnecessary memberCredential cast; `protoToBuf` for invitation fields.
+- [x] `admission-discovery-extension.ts` (1) — `bufToProto` for credential in RPC response.
+- `queue.ts` (0) — Kept with comment (ObjectJSON→Struct type mismatch).
+- **Result**: 14 casts removed.
 
-### Phase 7: Network & Mesh Layer (~10 casts)
+### Phase 7: Network & Mesh Layer (Done — 9 casts removed)
 
-- [ ] `network-manager`: `rtc-transport-proxy.ts` (2), `rtc-transport-service.ts` (1), `swarm.ts` (1), `connection-log.ts` (1).
-- [ ] `messaging`: `memory-signal-manager.ts` (2), `signal-client.ts` (1), `signal-local-state.ts` (1), `messenger.ts` (1).
-- [ ] Signal/mesh tests: `swarm-messenger.node.test.ts` (1), `integration.node.test.ts` (1).
-- **Target**: ~10 `as never` casts removed.
+- [x] `rtc-transport-proxy.ts` (2), `rtc-transport-service.ts` (1) — Signal type conversions with `protoToBuf`/`bufToProto`.
+- [x] `memory-signal-manager.ts` (2) — Types structurally compatible, removed directly.
+- [x] `swarm.ts` (1), `connection-log.ts` (1), `signal-client.ts` (1), `signal-local-state.ts` (1), `messenger.ts` (1) — All used `protoToBuf`/`bufToProto`.
+- **Result**: 9 casts removed. `as never` count: 107 (was 141, -34).
 
 ### Phase 8: Tracing, Devtools & Edge (~20 casts)
 

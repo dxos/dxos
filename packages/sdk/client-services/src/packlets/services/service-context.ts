@@ -182,7 +182,7 @@ export class ServiceContext extends Resource {
     );
     this.invitationsManager = new InvitationsManager(
       this.invitations,
-      (invitation) => this.getInvitationHandler(invitation as never),
+      (invitation) => this.getInvitationHandler(invitation),
       this.metadataStore,
     );
 
@@ -381,7 +381,7 @@ export class ServiceContext extends Resource {
 
     this._deviceSpaceSync = {
       processCredential: async (credential) => {
-        const assertion = getCredentialAssertion(credential as never);
+        const assertion = getCredentialAssertion(credential);
         if (assertion['@type'] !== 'dxos.halo.credentials.SpaceMember') {
           return;
         }
@@ -429,6 +429,7 @@ export class ServiceContext extends Resource {
           identity.signer,
           identity.identityKey,
           identity.deviceKey,
+          // Proto Credential from JoinIdentityProps passed to buf ChainSchema at proto↔buf codec boundary.
           params?.deviceCredential && create(ChainSchema, { credential: params.deviceCredential as never }),
           [], // TODO(dmaretskyi): Service access credentials.
         );
