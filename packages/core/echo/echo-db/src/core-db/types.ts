@@ -7,7 +7,7 @@
 import type { ChangeFn, ChangeOptions, Doc, Heads } from '@automerge/automerge';
 
 import { type EncodedReference } from '@dxos/echo-protocol';
-import { get } from '@dxos/util';
+import { getDeep } from '@dxos/util';
 
 /**
  * Values that can be encoded/decoded from Automerge documents.
@@ -45,7 +45,7 @@ export interface DocAccessor<T = any> {
 
 // TODO(burdon): Extract function.
 export const DocAccessor = {
-  getValue: <T>(accessor: DocAccessor): T => get(accessor.handle.doc(), accessor.path) as T,
+  getValue: <T>(accessor: DocAccessor): T => getDeep(accessor.handle.doc(), accessor.path) as T,
 };
 
 export const isValidKeyPath = (value: unknown): value is KeyPath =>
