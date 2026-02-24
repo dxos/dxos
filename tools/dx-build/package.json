@@ -21,7 +21,5 @@
     "chalk": "catalog:",
     "comment-json": "catalog:"
   },
-  "devDependencies": {
-    "@types/comment-json": "catalog:"
-  }
+  "devDependencies": {}
 }

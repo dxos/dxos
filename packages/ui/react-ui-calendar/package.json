@@ -47,7 +47,6 @@
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@types/react-virtualized": "catalog:",
-    "@types/react-window": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
