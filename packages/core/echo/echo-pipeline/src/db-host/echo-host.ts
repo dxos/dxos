@@ -211,14 +211,14 @@ export class EchoHost extends Resource {
     await this._queryService.open(ctx);
     await this._spaceStateManager.open(ctx);
 
+    await RuntimeProvider.runPromise(this._runtime)(this._indexEngine.migrate());
+    this._updateIndexes = new DeferredTask(this._ctx, this._runUpdateIndexes);
+
     await RuntimeProvider.runPromise(this._runtime)(this._feedStore.migrate());
     this._feedStore.onNewBlocks.on(this._ctx, () => {
       this._queryService.invalidateQueries();
       this._updateIndexes.schedule();
     });
-
-    await RuntimeProvider.runPromise(this._runtime)(this._indexEngine.migrate());
-    this._updateIndexes = new DeferredTask(this._ctx, this._runUpdateIndexes);
 
     this._spaceStateManager.spaceDocumentListUpdated.on(this._ctx, (e) => {
       if (e.previousRootId) {
