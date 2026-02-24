@@ -17,7 +17,6 @@ import { faker } from '@dxos/random';
 import { useDatabase, useQuery } from '@dxos/react-client/echo';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as stackTranslations } from '@dxos/react-ui-stack';
-import { Stack } from '@dxos/react-ui-stack';
 import { Collection, View } from '@dxos/schema';
 import { createObjectFactory } from '@dxos/schema/testing';
 import { Message, Organization, Person, Pipeline, Task } from '@dxos/types';
@@ -39,10 +38,10 @@ const DefaultStory = () => {
   }
 
   return (
-    <Stack orientation='horizontal' size='split' rail={false} classNames='px-0 h-full'>
+    <div className='grow grid grid-cols-[1fr_350px] overflow-hidden bs-full is-full'>
       <PipelineContainer role='article' subject={pipeline} />
-      <PipelineObjectSettings pipeline={pipeline} classNames='border-s border-separator' />
-    </Stack>
+      <PipelineObjectSettings pipeline={pipeline} classNames='border-is border-separator' />
+    </div>
   );
 };
 
