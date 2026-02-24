@@ -101,7 +101,7 @@ export const L1Panel = ({ open, path, item, currentItemId, onBack }: L1PanelProp
 /**
  * Header row.
  */
-const L1PanelHeader = ({ item, path, onBack }: L1PanelProps) => {
+const L1PanelHeader = ({ item, path }: L1PanelProps) => {
   const { t } = useTranslation(meta.id);
   const { renderItemEnd: ItemEnd } = useNavTreeContext();
   const title = toLocalizedString(item.properties.label, t);
@@ -158,7 +158,11 @@ const L1PanelHeader = ({ item, path, onBack }: L1PanelProps) => {
             </DropdownMenu.Root>
           </MenuProvider>
         )}
-        {ItemEnd && <ItemEnd node={item} open />}
+        {ItemEnd && (
+          <div role='none' className='p-icon-button-padding'>
+            <ItemEnd node={item} open />
+          </div>
+        )}
       </div>
     </div>
   );
