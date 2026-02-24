@@ -4,41 +4,41 @@
 
 @theme {
   /* Surfaces */
+  /* TODO(burdon): Audit surfaces. */
 
-  --color-base-surface: light-dark(theme(colors.white), theme(colors.neutral.900));
-  --color-base-text: light-dark(theme(colors.black), theme(colors.neutral.50));
+  --color-base-surface: light-dark(theme(colors.neutral.50), theme(colors.neutral.950));
+  --color-base-text: light-dark(theme(colors.neutral.950), theme(colors.neutral.50));
 
-  --color-inverse-surface: light-dark(theme(colors.neutral.900), theme(colors.white));
-  --color-inverse-text: light-dark(theme(colors.neutral.50), theme(colors.black));
+  --color-inverse-surface: light-dark(theme(colors.neutral.900), theme(colors.neutral.100));
+  --color-inverse-text: light-dark(theme(colors.neutral.50), theme(colors.neutral.950));
 
   --color-deck-surface: light-dark(theme(colors.neutral.50), theme(colors.neutral.950));
-  --color-active-surface: light-dark(theme(colors.neutral.100), theme(colors.neutral.800));
-  --color-card-surface: light-dark(theme(colors.white), theme(colors.neutral.900));
-  --color-modal-surface: light-dark(theme(colors.white), theme(colors.neutral.800));
-  --color-scrim-surface: light-dark(theme(colors.neutral.50 / 0.65), theme(colors.neutral.900 / 0.65));
-  --color-sidebar-surface: light-dark(theme(colors.white), theme(colors.neutral.900));
-  --color-toolbar-surface: light-dark(theme(colors.white), theme(colors.neutral.900));
+  --color-active-surface: light-dark(theme(colors.neutral.100), theme(colors.neutral.900));
+  --color-modal-surface: light-dark(theme(colors.neutral.50), theme(colors.neutral.950));
+  --color-scrim-surface: light-dark(theme(colors.neutral.50 / 0.5), theme(colors.neutral.950 / 0.5));
+  --color-group-surface: light-dark(theme(colors.neutral.50), theme(colors.neutral.950));
 
-  --color-group-surface: light-dark(theme(colors.white), theme(colors.neutral.800));
-  --color-header-surface: light-dark(theme(colors.white), theme(colors.neutral.900));
+  --color-card-surface: light-dark(theme(colors.neutral.100), theme(colors.neutral.900));
+  --color-sidebar-surface: light-dark(theme(colors.neutral.100), theme(colors.neutral.900));
+  --color-toolbar-surface: light-dark(theme(colors.neutral.100), theme(colors.neutral.900));
+  --color-header-surface: light-dark(theme(colors.neutral.100), theme(colors.neutral.900));
 
-  --color-hover-surface: light-dark(theme(colors.neutral.100), theme(colors.neutral.800));
-  --color-hover-surface-group: light-dark(theme(colors.neutral.100), theme(colors.neutral.700));
+  --color-hover-surface: light-dark(theme(colors.neutral.200), theme(colors.neutral.800));
+  --color-hover-surface-group: light-dark(theme(colors.neutral.300), theme(colors.neutral.700));
 
-  --color-input-surface: light-dark(theme(colors.neutral.100), theme(colors.neutral.800));
-  --color-input-surface-group: light-dark(theme(colors.neutral.100), theme(colors.neutral.700));
+  --color-input-surface: light-dark(theme(colors.neutral.100), theme(colors.neutral.900));
+  --color-input-surface-group: light-dark(theme(colors.neutral.300), theme(colors.neutral.700));
 
   --color-text-input-surface: light-dark(theme(colors.neutral.50), theme(colors.neutral.900));
   --color-text-input-surface-group: light-dark(theme(colors.neutral.50), theme(colors.neutral.700));
 
-  --color-attention: light-dark(theme(colors.white), theme(colors.black));
-
-  --color-focus-surface: light-dark(theme(colors.white), theme(colors.black));
-  --color-neutral-focus-indicator: light-dark(theme(colors.neutral.300), theme(colors.neutral.600));
+  --color-attention: light-dark(theme(colors.neutral.50), theme(colors.neutral.950));
+  --color-focus-surface: light-dark(theme(colors.neutral.50), theme(colors.neutral.950));
+  --color-neutral-focus-indicator: light-dark(theme(colors.neutral.400), theme(colors.neutral.600));
 
   /* Accent */
 
-  --color-accent-surface: theme(colors.blue.500);
+  --color-accent-surface: light-dark(theme(colors.blue.500), theme(colors.blue.700));
   --color-accent-surface-hover: light-dark(theme(colors.blue.600), theme(colors.blue.500));
   --color-accent-surface-text: theme(colors.white);
   --color-accent-text: light-dark(theme(colors.blue.600), theme(colors.blue.400));

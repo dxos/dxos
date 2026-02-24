@@ -38,7 +38,7 @@ export const Default: Story = {
       <div className='flex flex-col w-[30rem] p-2 bg-attention rounded-lg'>
         <ToggleContainer.Root classNames='grid grid-rows-[max-content_1fr]' open>
           <ToggleContainer.Header>
-            <div className='pl-2'>{content[selected].title}</div>
+            <div className='ps-2'>{content[selected].title}</div>
           </ToggleContainer.Header>
           <ToggleContainer.Content classNames='grid grid-cols-[max-content_1fr]'>
             <div className='px-1'>

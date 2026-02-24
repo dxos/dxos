@@ -35,7 +35,7 @@ export const AuthCode = (props: PropsWithChildren<AuthCodeProps>) => {
       onClick={handleClick}
       ref={codeRef}
     >
-      <span className='mr-[0.4em]'>{left}</span>
+      <span className='me-[0.4em]'>{left}</span>
       <span>{right}</span>
     </span>
   );

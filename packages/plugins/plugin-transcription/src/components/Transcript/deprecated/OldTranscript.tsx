@@ -58,7 +58,7 @@ const cellSpacing = 8 + 2;
 const timestampColumnWidth = 68;
 
 const authorClasses = 'font-medium text-base leading-[20px]';
-const timestampClasses = 'text-xs leading-[20px] text-description pr-0 tabular-nums';
+const timestampClasses = 'text-xs leading-[20px] text-description pe-0 tabular-nums';
 const segmentTextClasses = 'text-sm whitespace-normal hyphens-auto';
 const measureClasses = mx(
   // NOTE(thure): The `w-start` value must equal `timestampColumnWidth` plus grid’s gap (1px)

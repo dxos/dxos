@@ -146,7 +146,7 @@ const UnitValue = ({ value: input, format, suffix }: { value: number; format: Un
   return (
     <span className='font-mono'>
       {formattedValue}
-      <span className='ml-1 text-subdued'>
+      <span className='ms-1 text-subdued'>
         {unit.symbol}
         {suffix}
       </span>

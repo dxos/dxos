@@ -80,7 +80,7 @@ export const NavTreeItemMonolithicAction = (
         'shrink-0',
         hoverableControlItem,
         hoverableOpenControlItem,
-        iconOnly ? 'px-2 pointer-fine:px-1' : 'p-2 pointer-fine:p-2 mr-1',
+        iconOnly ? 'px-2 pointer-fine:px-1' : 'p-2 pointer-fine:p-2 me-1',
       ]}
       icon={icon ?? fallbackIcon}
       iconOnly={iconOnly}

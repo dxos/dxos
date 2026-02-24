@@ -147,8 +147,8 @@ const TabsViewport = ({ classNames, children, ...props }: TabsViewportProps) => 
       className={mx(
         orientation === 'vertical' &&
           verticalVariant === 'stateful' && [
-            'grid w-[200%] grid-cols-2 data-[active=panel]:ml-[-100%]',
-            '@md:w-auto @md:data-[active=panel]:ml-0 @md:grid-cols-[minmax(min-content,1fr)_3fr] @md:gap-1',
+            'grid w-[200%] grid-cols-2 data-[active=panel]:ms-[-100%]',
+            '@md:w-auto @md:data-[active=panel]:ms-0 @md:grid-cols-[minmax(min-content,1fr)_3fr] @md:gap-1',
           ],
         classNames,
       )}

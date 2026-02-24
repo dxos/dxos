@@ -96,7 +96,7 @@ const gridCellGetter = (model: SheetModel) => {
 
 export const rowLabelCell = (row: number) => ({
   value: rowToA1Notation(row),
-  className: '!bg-toolbar-surface text-subdued text-end pr-1',
+  className: '!bg-toolbar-surface text-subdued text-end pe-1',
   resizeHandle: 'row',
 });
 

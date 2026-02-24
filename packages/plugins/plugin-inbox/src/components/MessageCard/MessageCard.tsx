@@ -23,7 +23,7 @@ export const MessageCard = ({ subject: message }: SurfaceComponentProps<Message.
         </Card.IconBlock>
         <div className='flex gap-3 items-center justify-between col-span-2'>
           <p className='grow truncate'>{from}</p>
-          <p className='text-xs text-description text-right whitespace-nowrap pr-2'>{date}</p>
+          <p className='text-xs text-description text-right whitespace-nowrap pe-2'>{date}</p>
         </div>
       </Card.Toolbar>
       <Card.Row>

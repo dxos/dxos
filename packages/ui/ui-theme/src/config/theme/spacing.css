@@ -5,6 +5,7 @@
 @theme {
   --spacing-prose-max-width: 50rem;
   --spacing-container-max-width: 50rem;
+
   --spacing-card-default-width: 20rem;
   --spacing-card-min-width: 18rem;
   --spacing-card-max-width: 22rem;
@@ -35,13 +36,6 @@
 }
 
 @layer dx-tokens {
-  :root {
-    --dx-card-min-width: var(--dx-size-18);
-    --dx-card-max-width: var(--dx-size-22);
-    --dx-card-min-height: var(--dx-size-18);
-    --dx-card-max-height: var(--dx-size-30);
-  }
-
   :root {
     --dx-line-0: 0.000px;
     --dx-line-1: 1.000px;

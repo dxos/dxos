@@ -146,7 +146,7 @@ const decorations = ({ tags }: QueryOptions): Extension => {
               node.from,
               node.to,
               Decoration.mark({
-                class: 'pr-1 uppercase',
+                class: 'pe-1 uppercase',
                 atomic: true,
               }),
             );

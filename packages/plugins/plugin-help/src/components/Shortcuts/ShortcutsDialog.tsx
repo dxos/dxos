@@ -17,7 +17,7 @@ export const ShortcutsDialogContent = () => {
 
   return (
     <Dialog.Content>
-      <div role='none' className='flex justify-between mb-1 pt-3 pl-2 pr-3 @md:pt-4 @md:pl-4 @md:pr-5'>
+      <div role='none' className='flex justify-between mb-1 pt-3 ps-2 pe-3 @md:pt-4 @md:ps-4 @md:pe-5'>
         <Dialog.Title>{t('shortcuts dialog title')}</Dialog.Title>
         <Dialog.Close asChild>
           <IconButton icon='ph--x--bold' iconOnly size={3} label='Close' variant='ghost' autoFocus />

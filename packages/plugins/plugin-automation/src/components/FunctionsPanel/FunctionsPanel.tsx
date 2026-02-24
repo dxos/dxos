@@ -79,10 +79,7 @@ export const FunctionsPanel = ({ space }: FunctionsPanelProps) => {
                 <List.Item<Function.Function>
                   key={func.id}
                   item={func}
-                  classNames={mx(
-                    'grid grid-cols-[1fr_auto] min-h-[2.5rem] min-h-[3rem] px-2 items-center',
-                    ghostHover,
-                  )}
+                  classNames={mx('grid grid-cols-[1fr_auto] min-h-[2.5rem] min-h-[3rem] px-2 items-center', ghostHover)}
                 >
                   <div className='flex flex-col truncate'>
                     <List.ItemTitle classNames='truncate'>{func.name}</List.ItemTitle>

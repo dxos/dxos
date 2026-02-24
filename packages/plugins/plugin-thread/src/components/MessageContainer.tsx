@@ -25,7 +25,7 @@ import { getMessageMetadata } from '../util';
 
 import { command } from './command-extension';
 
-export const buttonGroupClassNames = 'flex flex-row items-center gap-0.5 pr-2';
+export const buttonGroupClassNames = 'flex flex-row items-center gap-0.5 pe-2';
 export const buttonClassNames = 'p-1! transition-opacity';
 
 export type MessageContainerProps = {
@@ -187,12 +187,12 @@ const TextboxBlock = ({
     editing && view?.focus();
   }, [editing, view]);
 
-  return <div role='none' ref={parentRef} className='mr-4' {...focusAttributes} />;
+  return <div role='none' ref={parentRef} className='me-4' {...focusAttributes} />;
 };
 
 const ProposalBlock = ({ block }: { block: ContentBlock.Proposal }) => {
   return (
-    <div role='none' className='mr-4 italic'>
+    <div role='none' className='me-4 italic'>
       {block.text}
     </div>
   );

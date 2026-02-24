@@ -12,9 +12,7 @@ import stylePlugin from 'esbuild-style-plugin';
 import postcssImport from 'postcss-import';
 import postcssNesting from 'postcss-nesting';
 
-export const ThemePlugins = async (options: {
-  outdir: string;
-}): Promise<Plugin[]> => {
+export const ThemePlugins = async (options: { outdir: string }): Promise<Plugin[]> => {
   return [
     // TODO(burdon): FIX!!! Is this still required?
     // Based on: https://github.com/evanw/esbuild/issues/800#issuecomment-786151076

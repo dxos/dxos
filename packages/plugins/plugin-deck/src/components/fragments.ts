@@ -5,7 +5,7 @@
 import { mx } from '@dxos/ui-theme';
 
 export const soloInlinePadding =
-  'pl-[calc(env(safe-area-inset-left)+.25rem)] pr-[calc(env(safe-area-inset-left)+.25rem)]';
+  'ps-[calc(env(safe-area-inset-left)+.25rem)] pe-[calc(env(safe-area-inset-left)+.25rem)]';
 
 const sidebarToggleStyles = 'h-(--rail-item) w-(--rail-item) absolute bottom-2 z-[1] !bg-deck-surface lg:hidden';
 

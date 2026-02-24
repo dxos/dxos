@@ -150,7 +150,7 @@ export const InvitationListItemImpl = ({
     <ListItem.Root
       id={invitationCode}
       {...props}
-      classNames={['flex gap-2 pl-3 pr-1 items-center relative', props.classNames]}
+      classNames={['flex gap-2 ps-3 pe-1 items-center relative', props.classNames]}
     >
       <ListItem.Heading classNames='sr-only'>
         {t(multiUse ? 'invite many list item label' : 'invite one list item label')}

@@ -5,14 +5,7 @@
 import React from 'react';
 
 export const MenuSignifierHorizontal = () => (
-  <svg
-    className='absolute bottom-[7px]'
-    width={20}
-    height={2}
-    viewBox='0 0 20 2'
-    stroke='currentColor'
-    opacity={0.5}
-  >
+  <svg className='absolute bottom-[7px]' width={20} height={2} viewBox='0 0 20 2' stroke='currentColor' opacity={0.5}>
     <line
       x1={0.5}
       y1={0.75}

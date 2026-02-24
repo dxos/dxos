@@ -204,10 +204,7 @@ const ComboboxTrigger = forwardRef<HTMLButtonElement, ComboboxTriggerProps>(
           {children ?? (
             <>
               <span
-                className={mx(
-                  'font-normal text-start flex-1 min-w-0 truncate mr-2',
-                  !value && staticPlaceholderText,
-                )}
+                className={mx('font-normal text-start flex-1 min-w-0 truncate me-2', !value && staticPlaceholderText)}
               >
                 {value || placeholder}
               </span>

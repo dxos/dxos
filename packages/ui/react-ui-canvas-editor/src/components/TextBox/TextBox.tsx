@@ -129,9 +129,7 @@ export const TextBox = forwardRef<TextBoxControl, TextBoxProps>(
       view?.dispatch({ selection: { anchor: view.state.doc.length } });
     }, [view]);
 
-    return (
-      <div ref={parentRef} {...focusAttributes} className={mx('h-full w-full overflow-hidden', classNames)} />
-    );
+    return <div ref={parentRef} {...focusAttributes} className={mx('h-full w-full overflow-hidden', classNames)} />;
   },
 );
 

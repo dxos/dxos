@@ -30,7 +30,7 @@ export const MessageStoryText = ({ text, onDelete, authorName, timestamp }: Mess
             iconOnly
             label='Delete'
             variant='ghost'
-            classNames={['p-1.5 min-h-0 mr-1 items-start transition-opacity', hoverableControlItem]}
+            classNames={['p-1.5 min-h-0 me-1 items-start transition-opacity', hoverableControlItem]}
             onClick={() => onDelete()}
           />
         )}

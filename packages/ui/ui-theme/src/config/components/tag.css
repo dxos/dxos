@@ -2,12 +2,6 @@
  * Tag
  */
 
-@layer dx-tokens {
-  :root {
-    --dx-tag-padding-block: 0.125rem;
-  }
-}
-
 @layer dx-components {
   .dx-tag {
     @apply inline-block text-xs font-semibold m-0.5 px-1 rounded-xs cursor-default truncate;

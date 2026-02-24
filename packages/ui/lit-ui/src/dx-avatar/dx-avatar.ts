@@ -122,7 +122,9 @@ export class DxAvatar extends LitElement {
             : `var(--dx-${this.hue === 'neutral' ? 'inputSurface' : `${this.hue}Fill`})`
           : 'var(--surface-bg)';
     const fg =
-      this.hue && this.hueVariant === 'surface' ? `var(--dx-${this.hue}SurfaceText)` : 'var(--color-accent-surface-text)';
+      this.hue && this.hueVariant === 'surface'
+        ? `var(--dx-${this.hue}SurfaceText)`
+        : 'var(--color-accent-surface-text)';
 
     return html`<span
       role="none"

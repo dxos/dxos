@@ -217,7 +217,7 @@ const Controls = ({ children }: PropsWithChildren) => {
             <Input.TextInput
               autoComplete='off'
               size={5}
-              classNames='w-[100px] text-right pr-[22px]'
+              classNames='w-[100px] text-right pe-[22px]'
               placeholder='Interval'
               value={actionInterval}
               onChange={({ target: { value } }) => setActionInterval(value)}

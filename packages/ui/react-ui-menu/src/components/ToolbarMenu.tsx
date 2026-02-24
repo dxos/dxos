@@ -113,7 +113,7 @@ const DropdownMenuToolbarItem = ({
         children: (
           <>
             <ActionLabel action={labelAction} />
-            <Icon size={3} icon='ph--caret-down--bold' classNames='ml-1' />
+            <Icon size={3} icon='ph--caret-down--bold' classNames='ms-1' />
           </>
         ),
       };

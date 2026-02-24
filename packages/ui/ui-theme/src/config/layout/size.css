@@ -1,46 +1,48 @@
 /**
- * @layer dx-components
- * See lengths.ts for dx- sememes.
+ * Sizes
  */
 
-/** 
- * Container query root.
- */
+@layer dx-components {
+  /**
+   * Container query root.
+   */
 
-.size-container {
-  container-type: size;
-}
+  .size-container {
+    container-type: size;
+  }
 
-.container-max-width {
-  @apply w-full max-w-container-max-width mx-auto;
-}
+  .container-max-width {
+    @apply w-full max-w-container-max-width mx-auto;
+  }
 
-/**
- * Card
- */
+  /**
+   * Card
+   */
 
-.card-square {
-  inline-size: min(min(var(--radix-popper-available-width), var(--dx-card-max-width)),
-      min(var(--radix-popper-available-height), 100dvh));
-  block-size: min(min(var(--radix-popper-available-width), var(--dx-card-max-width)),
-      min(var(--radix-popper-available-height), 100dvh));
-}
+  .card-square {
+    inline-size: min(min(var(--radix-popper-available-width), var(--spacing-card-max-width)),
+        min(var(--radix-popper-available-height), 100dvh));
+    block-size: min(min(var(--radix-popper-available-width), var(--spacing-card-max-width)),
+        min(var(--radix-popper-available-height), 100dvh));
+  }
 
-.card-default-width {
-  @apply inline-card-default-width;
-}
+  .card-default-width {
+    @apply inline-card-default-width;
+  }
 
-.card-min-width {
-  @apply min-w-card-min-width;
-}
+  .card-min-width {
+    @apply min-w-card-min-width;
+  }
 
-.card-max-width {
-  @apply w-full max-w-card-max-width;
-}
+  .card-max-width {
+    @apply w-full max-w-card-max-width;
+  }
 
-.popover-card {
-  @apply inline-card-max-width;
-  max-h-size: min(var(--radix-popper-available-height), var(--dx-card-max-height));
+  .popover-card {
+    @apply inline-card-max-width bg-card-surface;
+    max-width: min(var(--radix-popper-available-width), var(--spacing-card-max-width));
+    max-height: min(var(--radix-popper-available-height), var(--spacing-card-max-height));
+  }
 }
 
 @layer dx-components {

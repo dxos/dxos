@@ -147,7 +147,7 @@ export const SchemaPanel = (props: { space?: Space }) => {
               'bg-base-surface text-description',
             )}
           >
-            <div className='text-sm pr-2'>Objects: {dataRows.length}</div>
+            <div className='text-sm pe-2'>Objects: {dataRows.length}</div>
           </div>
         </div>
 

@@ -37,10 +37,10 @@ const Sidebar = () => {
       <ScrollArea.Viewport classNames='gap-4 divide-y divide-separator'>
         {sections.map((section) => (
           <div key={section.id}>
-            <div className='flex text-sm pl-4 py-1'>{section.title}</div>
+            <div className='flex text-sm ps-4 py-1'>{section.title}</div>
             <div>
               {section.items?.map(({ id, title, icon }) => (
-                <div key={id} className={mx('flex items-center pl-4 gap-2', id === pathname && 'bg-active-surface')}>
+                <div key={id} className={mx('flex items-center ps-4 gap-2', id === pathname && 'bg-active-surface')}>
                   <Icon icon={icon} size={4} />
                   <Link to={id} className='grow'>
                     <span>{title}</span>

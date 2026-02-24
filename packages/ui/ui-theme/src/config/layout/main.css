@@ -82,7 +82,7 @@
     @apply fixed overscroll-contain overflow-x-hidden overflow-y-auto;
     transition-duration: 200ms;
     transition-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
-    @apply border-landmark-line border-subdued-separator rounded-md;
+    @apply border-subdued-separator rounded-md;
     @apply backdrop-blur-md;
     .dark & {
       @apply backdrop-blur-lg;
@@ -97,7 +97,7 @@
     z-index: 7;
 
     @media (min-width: theme('screens.lg')) {
-      @apply top-0 bottom-0 rounded-none border-b-0;
+      @apply top-0 bottom-0 rounded-none border-y-0;
     }
 
     &[data-resizing='false'] {
@@ -105,7 +105,9 @@
     }
 
     &[data-side='is'] {
-      @apply -start-[100vw] border-e-landmark-line border-subdued-separator;
+      @apply -start-[100vw] border-e;
+      border-inline-end-width: var(--border-width-landmark-line) !important;
+      border-inline-end-style: solid;
       z-index: 8;
 
       &[data-state='expanded'] {
@@ -120,7 +122,8 @@
       }
 
       @media (min-width: theme('screens.lg')) {
-        @apply border-x-0;
+        border-inline-start-width: 0;
+        border-inline-end-width: 0;
 
         &[data-state='collapsed'] {
           @apply w-(--l0-size) start-0;
@@ -132,7 +135,9 @@
     }
 
     &[data-side='ie'] {
-      @apply -end-[100vw] border-s-landmark-line border-subdued-separator;
+      @apply -end-[100vw] border-s;
+      border-inline-start-width: var(--border-width-landmark-line);
+      border-inline-start-style: solid;
 
       &[data-state='expanded'] {
         inset-inline-end: max(0.5rem, env(safe-area-inset-right));
@@ -146,7 +151,7 @@
       }
 
       @media (min-width: theme('screens.lg')) {
-        @apply border-e-0;
+        border-inline-end-width: 0;
 
         &[data-state='collapsed'] {
           @apply w-(--r0-size) end-0;

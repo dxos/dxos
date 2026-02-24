@@ -145,10 +145,7 @@ const BoardPlaceholder = (props: MosaicPlaceholderProps<number>) => {
   return (
     <Mosaic.Placeholder {...props} classNames={mosaicStyles.placeholder.root}>
       <div
-        className={mx(
-          'flex h-full border border-dashed border-separator rounded-xs',
-          mosaicStyles.placeholder.content,
-        )}
+        className={mx('flex h-full border border-dashed border-separator rounded-xs', mosaicStyles.placeholder.content)}
       />
     </Mosaic.Placeholder>
   );

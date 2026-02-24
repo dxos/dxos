@@ -3,6 +3,16 @@
  */
 
 @layer dx-components {
+  .overflow-anchored * {
+    overflow-anchor: none;
+  }
+
+  .overflow-anchor {
+    overflow-anchor: auto;
+  }
+}
+
+@layer dx-components {
   .snap-inline {
     scroll-snap-type: inline var(--tw-scroll-snap-strictness);
   }

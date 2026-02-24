@@ -30,8 +30,8 @@ import { TypescriptEditor, type TypescriptEditorProps } from '../TypescriptEdito
 
 import { type NotebookMenuProps } from './NotebookMenu';
 
-const editorStyles = 'p-2 pl-3';
-const valueStyles = 'p-1 pl-3';
+const editorStyles = 'p-2 ps-3';
+const valueStyles = 'p-1 ps-3';
 
 export type NotebookCellProps = {
   db?: Database.Database;

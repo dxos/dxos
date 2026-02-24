@@ -51,7 +51,10 @@ export const ExceptionPanel: FC<ExceptionPanelProps> = ({ objects }) => {
         const stack = context?.stack;
 
         return (
-          <div key={`log-${index}`} className='mb-2 border border-red-200 dark:border-red-900 rounded-sm overflow-hidden'>
+          <div
+            key={`log-${index}`}
+            className='mb-2 border border-red-200 dark:border-red-900 rounded-sm overflow-hidden'
+          >
             <div className='p-2'>
               <div className='flex justify-between items-start'>
                 <div className='font-medium'>{errorName}</div>

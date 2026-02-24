@@ -98,7 +98,7 @@ const PaletteSwatch = ({ hue, shades }: { hue: string; shades: number[] }) => (
 );
 
 const meta = {
-  title: 'ui/ui-theme/Tokens',
+  title: 'ui/ui-theme/Theme',
   parameters: {
     layout: 'fullscreen',
   },
@@ -125,7 +125,7 @@ export const Palette = {
     return (
       <div className='p-4'>
         <div className='flex flex-col gap-1'>
-          <PaletteSwatch hue={'neutral'} shades={[50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 925, 950, 975]} />
+          <PaletteSwatch hue={'neutral'} shades={[50, 75, 100, 200, 300, 400, 500, 600, 700, 800, 900, 925, 950]} />
           {hues.map((hue) => (
             <PaletteSwatch key={hue} hue={hue} shades={[50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950]} />
           ))}

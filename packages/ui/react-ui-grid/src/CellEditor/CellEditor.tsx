@@ -150,7 +150,7 @@ export const CellEditor = ({ value, extensions, box, gridId, autoFocus, slots, o
             },
             scroll: {
               className: mx(
-                'overflow-x-hidden! !py-[max(0,calc(var(--dx-grid-cell-editor-padding-block)-1px))] pr-0! !pl-(--dx-grid-cell-editor-padding-inline)',
+                'overflow-x-hidden! !py-[max(0,calc(var(--dx-grid-cell-editor-padding-block)-1px))] pe-0! !pl-(--dx-grid-cell-editor-padding-inline)',
                 slots?.scroll?.className,
               ),
             },

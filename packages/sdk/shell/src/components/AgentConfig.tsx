@@ -80,7 +80,7 @@ export const AgentConfig = ({
         <>
           <Button
             variant='ghost'
-            classNames='my-2 w-full justify-start gap-2 pl-0 pr-3'
+            classNames='my-2 w-full justify-start gap-2 ps-0 pe-3'
             data-testid={agentStatus === 'creatable' ? 'devices-panel.create-agent' : 'devices-panel.agent-error'}
             onClick={agentStatus === 'creatable' ? onAgentCreate : onAgentRefresh}
             aria-describedby='devices-panel.create-agent.description'

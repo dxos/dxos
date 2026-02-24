@@ -1,10 +1,9 @@
 /**
- * CodeMirror theme tokens.
- *
- * Uses light-dark() directly in @theme so Tailwind preserves the function as a
- * live CSS value (not resolved at build time). The browser then resolves light-dark()
- * at computed-style time per element, based on the inherited color-scheme.
- * This matches the pattern in experimental.css which is confirmed to work.
+ * CodeMirror
+ * Uses @theme (not @layer) so Tailwind generates text-cm-* / bg-cm-* utility classes
+ * consumed by ui-editor. Compare: tldraw.css uses @layer to map tokens onto tldraw's
+ * own variables without generating utilities.
+ * TODO(burdon): This could move into the ui-editor package (similar to graph.css).
  */
 
 @theme {
