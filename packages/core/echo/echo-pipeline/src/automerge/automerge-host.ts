@@ -13,10 +13,12 @@ import {
 } from '@automerge/automerge';
 import {
   type AnyDocumentId,
+  type AutomergeUrl,
   type DocHandle,
   type DocHandleChangePayload,
   type DocumentId,
   type HandleState,
+  type NetworkAdapter,
   type PeerCandidatePayload,
   type PeerDisconnectedPayload,
   type PeerId,
@@ -24,7 +26,16 @@ import {
   type StorageAdapterInterface,
   type StorageKey,
   interpretAsDocumentId,
+  parseAutomergeUrl,
 } from '@automerge/automerge-repo';
+import {
+  type AutomergeRepoKeyhive,
+  Identifier,
+  DocumentId as KeyhiveDocumentId,
+  initKeyhiveWasm,
+  initializeAutomergeRepoKeyhive,
+  verifyingKeyPeerIdWithoutSuffix,
+} from '@automerge/automerge-repo-keyhive';
 import type * as Record from 'effect/Record';
 
 import { DeferredTask, Event, asyncTimeout } from '@dxos/async';
@@ -50,6 +61,25 @@ export type PeerIdProvider = () => string | undefined;
 
 export type RootDocumentSpaceKeyProvider = (documentId: string) => PublicKey | undefined;
 
+/**
+ * Configuration for keyhive integration with AutomergeHost.
+ * When provided, the EchoNetworkAdapter is wrapped with keyhive's KeyhiveNetworkAdapter,
+ * and the Repo uses keyhive-derived peerId and idFactory.
+ */
+export type KeyhiveConfig = {
+  /** Suffix appended to the keyhive-derived peer ID. */
+  peerIdSuffix: string;
+
+  /** Whether to periodically request keyhive sync. */
+  periodicallyRequestSync?: boolean;
+
+  /** Pre-existing key pair. Generated if not provided. */
+  keyPair?: CryptoKeyPair;
+
+  /** Enable keyhive-based access control in share config. */
+  accessControl?: boolean;
+};
+
 export type AutomergeHostProps = {
   db: LevelDB;
   dataMonitor?: EchoDataMonitor;
@@ -59,6 +89,13 @@ export type AutomergeHostProps = {
    */
   peerIdProvider?: PeerIdProvider;
   getSpaceKeyByRootDocumentId?: RootDocumentSpaceKeyProvider;
+
+  /**
+   * Optional keyhive configuration.
+   * When provided, wraps the network adapter with keyhive's KeyhiveNetworkAdapter
+   * and uses keyhive-derived peerId and idFactory.
+   */
+  keyhive?: KeyhiveConfig;
 };
 
 export type LoadDocOptions = {
@@ -165,10 +202,13 @@ export class AutomergeHost extends Resource {
   private _documentsRequested = new Map<PeerId, Set<DocumentId>>();
 
   private _sharePolicyChangedTask?: DeferredTask;
+  private readonly _keyhiveConfig?: KeyhiveConfig;
+  private _keyhiveInstance?: AutomergeRepoKeyhive;
 
-  constructor({ db, dataMonitor, peerIdProvider, getSpaceKeyByRootDocumentId }: AutomergeHostProps) {
+  constructor({ db, dataMonitor, peerIdProvider, getSpaceKeyByRootDocumentId, keyhive }: AutomergeHostProps) {
     super();
     this._db = db;
+    this._keyhiveConfig = keyhive;
     this._storage = new LevelDBStorageAdapter({
       db: db.sublevel('automerge'),
       callbacks: {
@@ -204,16 +244,40 @@ export class AutomergeHost extends Resource {
 
     await this._storage.open?.();
 
+    // Initialize keyhive wrapping the network adapter if configured.
+    let repoNetworkAdapter: NetworkAdapter = this._echoNetworkAdapter;
+    let idFactory: ((heads: any) => Promise<Uint8Array>) | undefined;
+    if (this._keyhiveConfig) {
+      initKeyhiveWasm();
+
+      const keyhiveStorage = new LevelDBStorageAdapter({ db: this._db.sublevel('keyhive') });
+      await keyhiveStorage.open?.();
+
+      this._keyhiveInstance = await initializeAutomergeRepoKeyhive({
+        storage: keyhiveStorage,
+        peerIdSuffix: this._keyhiveConfig.peerIdSuffix,
+        networkAdapter: this._echoNetworkAdapter,
+        periodicallyRequestSync: this._keyhiveConfig.periodicallyRequestSync ?? false,
+        keyPair: this._keyhiveConfig.keyPair,
+      });
+
+      this._peerId = this._keyhiveInstance.peerId;
+      repoNetworkAdapter = this._keyhiveInstance.networkAdapter;
+      idFactory = this._keyhiveInstance.idFactory;
+    }
+
     // Construct the automerge repo.
     this._repo = new Repo({
       peerId: this._peerId as PeerId,
       shareConfig: this._shareConfig,
       storage: this._storage,
-      network: [
-        // Upstream swarm.
-        this._echoNetworkAdapter,
-      ],
+      network: [repoNetworkAdapter],
+      ...(idFactory ? { idFactory } : {}),
     });
+
+    if (this._keyhiveInstance) {
+      this._keyhiveInstance.linkRepo(this._repo);
+    }
 
     let updatingAuthScope = false;
     Event.wrap(this._echoNetworkAdapter, 'peer-candidate').on(
@@ -277,6 +341,10 @@ export class AutomergeHost extends Resource {
 
   get peerId(): PeerId {
     return this._peerId;
+  }
+
+  get keyhive(): AutomergeRepoKeyhive | undefined {
+    return this._keyhiveInstance;
   }
 
   get loadedDocsCount(): number {
@@ -431,6 +499,9 @@ export class AutomergeHost extends Resource {
 
   private readonly _shareConfig = {
     access: async (peerId: PeerId, documentId: DocumentId): Promise<boolean> => {
+      if (this._keyhiveConfig?.accessControl && this._keyhiveInstance) {
+        return this._checkKeyhiveAccess(peerId, documentId);
+      }
       return true;
     },
 
@@ -463,6 +534,33 @@ export class AutomergeHost extends Resource {
       return false;
     },
   };
+
+  private static readonly _ALLOWED_ACCESS_LEVELS = new Set(['Pull', 'Read', 'Write', 'Admin']);
+
+  private async _checkKeyhiveAccess(peerId: PeerId, documentId: DocumentId): Promise<boolean> {
+    try {
+      const khDocId = AutomergeHost._keyhiveDocIdFromAutomergeDocId(documentId);
+      if (!khDocId) {
+        return true;
+      }
+      const peerIdPrefix = verifyingKeyPeerIdWithoutSuffix(peerId);
+      const verifyingKeyBytes = Uint8Array.from(atob(peerIdPrefix), (char) => char.charCodeAt(0));
+      const identifier = new Identifier(verifyingKeyBytes);
+      const access = await this._keyhiveInstance!.keyhive.accessForDoc(identifier, khDocId);
+      return access !== undefined && AutomergeHost._ALLOWED_ACCESS_LEVELS.has(access.toString());
+    } catch {
+      return true;
+    }
+  }
+
+  private static _keyhiveDocIdFromAutomergeDocId(documentId: DocumentId): KeyhiveDocumentId | undefined {
+    try {
+      const { binaryDocumentId } = parseAutomergeUrl(`automerge:${documentId}` as AutomergeUrl);
+      return new KeyhiveDocumentId(binaryDocumentId);
+    } catch {
+      return undefined;
+    }
+  }
 
   private async _beforeSave({ path, batch }: BeforeSaveProps): Promise<void> {
     const handle = this._repo.handles[path[0] as DocumentId];
