@@ -7,7 +7,7 @@ import type { EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import type { ObjectId, SpaceId } from '@dxos/keys';
 import { type Echo, FeedProtocol } from '@dxos/protocols';
-import { type Empty, EmptySchema, type JsonObject, create } from '@dxos/protocols/buf';
+import { type Empty, EmptySchema, EMPTY, type JsonObject, bufToProto, create, protoToBuf } from '@dxos/protocols/buf';
 import {
   type DeleteFromQueueRequest,
   type InsertIntoQueueRequest,
@@ -29,9 +29,9 @@ export class QueueServiceImpl implements Echo.QueueService {
     const result = await this._client.queryQueue(
       request.query.queuesNamespace,
       request.query.spaceId as SpaceId,
-      request.query,
+      bufToProto(request.query),
     );
-    return result;
+    return protoToBuf<QueueQueryResult>(result);
   }
 
   async insertIntoQueue(request: InsertIntoQueueRequest): Promise<Empty> {
@@ -54,8 +54,8 @@ export class QueueServiceImpl implements Echo.QueueService {
     return create(EmptySchema);
   }
 
-  async syncQueue(_: SyncQueueRequest): Promise<void> {
-    // no-op
+  async syncQueue(_: SyncQueueRequest): Promise<Empty> {
+    return EMPTY;
   }
 }
 
@@ -102,8 +102,8 @@ export class MockQueueService implements Echo.QueueService {
     return create(EmptySchema);
   }
 
-  async syncQueue(_: SyncQueueRequest): Promise<void> {
-    // no-op
+  async syncQueue(_: SyncQueueRequest): Promise<Empty> {
+    return EMPTY;
   }
 }
 

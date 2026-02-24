@@ -45,8 +45,8 @@ import { type Keyring } from '@dxos/keyring';
 import { ObjectId, PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AlreadyJoinedError, trace as Trace } from '@dxos/protocols';
-import { encodePublicKey, protoToBuf } from '@dxos/protocols/buf';
-import { type Invitation_AuthMethod, Invitation_Kind, Invitation_Type } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { create, encodePublicKey, protoToBuf } from '@dxos/protocols/buf';
+import { AdmissionKeypairSchema, type Invitation_AuthMethod, Invitation_Kind, Invitation_Type } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
@@ -483,7 +483,7 @@ export class DataSpaceManager extends Resource {
   }
 
   public async requestSpaceAdmissionCredential(spaceKey: PublicKey): Promise<Credential> {
-    return this._spaceManager.requestSpaceAdmissionCredential({
+    return protoToBuf<Credential>(await this._spaceManager.requestSpaceAdmissionCredential({
       spaceKey,
       identityKey: this._signingContext.identityKey,
       timeout: 15_000,
@@ -493,7 +493,7 @@ export class DataSpaceManager extends Resource {
         credentialProvider: createAuthProvider(this._signingContext.credentialSigner),
         credentialAuthenticator: async () => true,
       },
-    });
+    }));
   }
 
   async setSpaceEdgeReplicationSetting(spaceKey: PublicKey, setting: EdgeReplicationSetting): Promise<void> {
@@ -662,7 +662,7 @@ export class DataSpaceManager extends Resource {
       const peers = presence.getPeersByIdentityKey(member.key);
       const sessions = peers.map((p) => p.peerId && spaceProtocol.sessions.get(p.peerId));
       const sessionsToClose = sessions.filter((s): s is SpaceProtocolSession => {
-        return (s && (member.role === SpaceMember.Role.REMOVED) !== (s.authStatus === AuthStatus.FAILURE)) ?? false;
+        return (s && (member.role === SpaceMember_Role.REMOVED) !== (s.authStatus === AuthStatus.FAILURE)) ?? false;
       });
       sessionsToClose.forEach((session) => {
         void session.close().catch(log.error);
@@ -680,7 +680,7 @@ export class DataSpaceManager extends Resource {
 
   private _handleNewPeerConnected(space: Space, peerState: PeerState): void {
     const role = space.spaceState.getMemberRole(peerState.identityKey);
-    if (role === SpaceMember.Role.REMOVED) {
+    if (role === SpaceMember_Role.REMOVED) {
       const session = peerState.peerId && space.protocol.sessions.get(peerState.peerId);
       if (session != null) {
         log('closing a session with a removed peer', { peerId: peerState.peerId });
@@ -718,7 +718,7 @@ export class DataSpaceManager extends Resource {
         authMethod: protoToBuf<Invitation_AuthMethod>(invitation.authMethod),
         invitationId: invitation.invitationId,
         swarmKey: encodePublicKey(invitation.swarmKey),
-        guestKeypair: invitation.guestKey ? { publicKey: protoToBuf(invitation.guestKey) } : undefined,
+        guestKeypair: invitation.guestKey ? create(AdmissionKeypairSchema, { publicKey: encodePublicKey(invitation.guestKey) }) : undefined,
         lifetime: invitation.expiresOn ? (invitation.expiresOn.getTime() - Date.now()) / 1000 : undefined,
         multiUse: invitation.multiUse,
         delegationCredentialId: encodePublicKey(credentialId),

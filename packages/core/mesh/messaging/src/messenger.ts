@@ -267,7 +267,7 @@ export class Messenger {
       create(MessageSchema, {
         author,
         recipient,
-        payload: protoToBuf(reliablePayload.payload),
+        payload: protoToBuf<bufWkt.Any>(reliablePayload.payload),
       }),
     );
   }

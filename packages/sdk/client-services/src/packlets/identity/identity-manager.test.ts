@@ -10,9 +10,10 @@ import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
-import { create } from '@dxos/protocols/buf';
+import { bufToProto, create } from '@dxos/protocols/buf';
 import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import type { Credential as ProtoCredential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type Storage, StorageType, createStorage } from '@dxos/random-access-storage';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
 
@@ -144,7 +145,7 @@ describe('identity/identity-manager', () => {
       haloGenesisFeedKey: identity1.haloGenesisFeedKey,
       controlFeedKey,
       dataFeedKey,
-      authorizedDeviceCredential: credential,
+      authorizedDeviceCredential: bufToProto<ProtoCredential>(credential),
     });
     peer2.networkManager.setPeerInfo(create(PeerSchema, {
       peerKey: identity2.deviceKey.toHex(),

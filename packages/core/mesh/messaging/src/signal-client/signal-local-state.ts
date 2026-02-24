@@ -7,7 +7,7 @@ import type { Stream } from '@dxos/codec-protobuf/stream';
 import { type Context, cancelWithContext } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { create, protoToBuf, timestampFromDate } from '@dxos/protocols/buf';
+import { type bufWkt, create, protoToBuf, timestampFromDate } from '@dxos/protocols/buf';
 import { MessageSchema, SwarmEventSchema } from '@dxos/protocols/buf/dxos/edge/signal_pb';
 import { PublicKeySchema } from '@dxos/protocols/buf/dxos/keys_pb';
 import {
@@ -171,7 +171,7 @@ export class SignalLocalState {
           const message: Message = create(MessageSchema, {
             author: { peerKey: PublicKey.from(signalMessage.author).toHex() },
             recipient: { peerKey: PublicKey.from(signalMessage.recipient).toHex() },
-            payload: protoToBuf(signalMessage.payload),
+            payload: protoToBuf<bufWkt.Any>(signalMessage.payload),
           });
           await this._onMessage(message);
         }

@@ -27,7 +27,7 @@ import { create } from '@dxos/protocols/buf';
 import { EdgeStatus_ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { AdmittedFeed_Designation } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
 
@@ -230,7 +230,7 @@ describe('identity/identity', () => {
     const credentials = [
       ...(await generator.createSpaceGenesis(setup.spaceKey, setup.controlFeed.key)),
       await generator.createDeviceAuthorization(setup.deviceKey),
-      await generator.createFeedAdmission(setup.spaceKey, setup.dataFeed.key, AdmittedFeed.Designation.DATA),
+      await generator.createFeedAdmission(setup.spaceKey, setup.dataFeed.key, AdmittedFeed_Designation.DATA),
     ];
 
     for (const credential of credentials) {

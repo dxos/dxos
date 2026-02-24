@@ -17,6 +17,7 @@ import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
 import type { Echo } from '@dxos/protocols';
+import { protoToBuf } from '@dxos/protocols/buf';
 import type { SyncQueueRequest } from '@dxos/protocols/proto/dxos/client/services';
 import type * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { trace } from '@dxos/tracing';
@@ -121,8 +122,7 @@ export class EchoHost extends Resource {
         runtime: this._runtime,
         getSpaceIds: () => this._spaceStateManager.spaceIds,
       });
-      // LocalQueueServiceImpl uses proto types; buf QueueService is structurally compatible at runtime.
-      this._queuesService =  new LocalQueueServiceImpl(runtime, this._feedStore, syncQueue) as Echo.QueueService;
+      this._queuesService = protoToBuf<Echo.QueueService>(new LocalQueueServiceImpl(runtime, this._feedStore, syncQueue));
     } else {
       this._queuesService = new QueueServiceStub();
     }

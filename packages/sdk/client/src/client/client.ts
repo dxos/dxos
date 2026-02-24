@@ -424,7 +424,7 @@ export class Client {
     if (useLocalFirstQueues) {
       log.verbose('running with local-first queues');
       invariant(this._services.services.QueueService, 'QueueService not available.');
-      this._queuesService = this._services.services.QueueService;
+      this._queuesService = this._services.services.QueueService as unknown as EchoProtocol.QueueService;
     } else if (edgeUrl) {
       log.verbose('running with edge queues');
       this._edgeClient = new EdgeHttpClient(edgeUrl);
@@ -435,8 +435,8 @@ export class Client {
     }
 
     this._echoClient.connectToService({
-      dataService: this._services.services.DataService ?? raise(new Error('DataService not available')),
-      queryService: this._services.services.QueryService ?? raise(new Error('QueryService not available')),
+      dataService: (this._services.services.DataService ?? raise(new Error('DataService not available'))) as unknown as EchoProtocol.DataService,
+      queryService: (this._services.services.QueryService ?? raise(new Error('QueryService not available'))) as unknown as EchoProtocol.QueryService,
       queueService: this._queuesService,
     });
     await this._echoClient.open(this._ctx);

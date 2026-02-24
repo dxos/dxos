@@ -27,6 +27,7 @@ import {
   SignalRequestSchema,
   StatsRequestSchema,
 } from '@dxos/protocols/buf/dxos/mesh/bridge_pb';
+import { type Signal as BufSignal } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { arrayToBuffer } from '@dxos/util';
 
@@ -159,7 +160,7 @@ export class RtcTransportProxy extends Resource implements Transport {
 
   async onSignal(signal: Signal): Promise<void> {
     this._options.bridgeService
-      .sendSignal(create(SignalRequestSchema, { proxyId: toBufKey(this._proxyId), signal: protoToBuf(signal) }), {
+      .sendSignal(create(SignalRequestSchema, { proxyId: toBufKey(this._proxyId), signal: protoToBuf<BufSignal>(signal) }), {
         timeout: RPC_TIMEOUT,
       })
       .catch((err) => this._raiseIfOpen(decodeError(err)));

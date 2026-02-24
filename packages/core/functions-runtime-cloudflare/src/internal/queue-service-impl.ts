@@ -4,7 +4,7 @@
 
 import { RuntimeServiceError } from '@dxos/errors';
 import { type Echo, type EdgeFunctionEnv, type FeedProtocol } from '@dxos/protocols';
-import { EMPTY, type Empty } from '@dxos/protocols/buf';
+import { bufToProto, EMPTY, type Empty } from '@dxos/protocols/buf';
 import type {
   DeleteFromQueueRequest,
   InsertIntoQueueRequest,
@@ -20,7 +20,7 @@ export class QueueServiceImpl implements Echo.QueueService {
 
   async queryQueue(request: QueryQueueRequest): Promise<QueueQueryResult> {
     try {
-      using result = await this._queueService.queryQueue(this._ctx, request);
+      using result = await this._queueService.queryQueue(this._ctx, bufToProto(request));
       // Copy to avoid hanging RPC stub (Workers RPC lifecycle).
       return {
         objects: structuredClone(result.objects),
@@ -66,9 +66,10 @@ export class QueueServiceImpl implements Echo.QueueService {
         ifTypeDiffers: true,
       })(error);
     }
+    return EMPTY;
   }
 
-  async syncQueue(_: FeedProtocol.SyncQueueRequest): Promise<void> {
-    // No-op in Cloudflare runtime.
+  async syncQueue(_: FeedProtocol.SyncQueueRequest): Promise<Empty> {
+    return EMPTY;
   }
 }

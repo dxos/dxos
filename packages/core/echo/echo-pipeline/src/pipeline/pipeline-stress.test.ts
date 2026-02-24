@@ -12,13 +12,14 @@ import { type FeedStore, type FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type FeedMessageBlock } from '@dxos/protocols';
+import { protoToBuf } from '@dxos/protocols/buf';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Timeframe } from '@dxos/timeframe';
 import { range } from '@dxos/util';
 
 import { TestFeedBuilder } from '../testing';
 
-import { Pipeline } from './pipeline';
+import { Pipeline, type ControlPipelinePayload } from './pipeline';
 
 const NUM_AGENTS = 2;
 const NUM_MESSAGES = 10;
@@ -114,7 +115,7 @@ class Agent {
 
   write(message: FeedMessage.Payload): void {
     const prev = this.writePromise;
-    const promise = this.pipeline.writer!.write(message);
+    const promise = this.pipeline.writer!.write(protoToBuf<ControlPipelinePayload>(message));
     this.writePromise = Promise.all([prev, promise]);
   }
 

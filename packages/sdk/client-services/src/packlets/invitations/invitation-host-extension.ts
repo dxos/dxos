@@ -127,7 +127,7 @@ export class InvitationHostExtension
             // TODO(dmaretskyi): Better error handling.
             return {
               authMethod: Invitation_AuthMethod.NONE,
-            } as IntroductionResponse;
+            } as unknown as IntroductionResponse;
           }
 
           log.verbose('guest introduced themselves', { guestProfile: profile });
@@ -140,7 +140,7 @@ export class InvitationHostExtension
           return {
             authMethod: invitation.authMethod,
             challenge: this._challenge,
-          } as IntroductionResponse;
+          } as unknown as IntroductionResponse;
         },
 
         authenticate: async ({ authCode: code, signedChallenge }) => {

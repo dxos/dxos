@@ -152,7 +152,7 @@ describe('space/control-pipeline', () => {
                 spaceKey,
                 identityKey,
                 deviceKey,
-                designation: AdmittedFeed.Designation.DATA,
+                designation: AdmittedFeed_Designation.DATA,
               },
             }),
           },

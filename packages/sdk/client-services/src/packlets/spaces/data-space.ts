@@ -135,7 +135,7 @@ export class DataSpace {
   public readonly postOpen = new CallbackCollection<AsyncCallback<void>>();
   public readonly preClose = new CallbackCollection<AsyncCallback<void>>();
 
-  public metrics: Space_Metrics = {};
+  public metrics: Space_Metrics = {} as Space_Metrics;
 
   constructor(params: DataSpaceProps) {
     this._inner = params.inner;
@@ -257,7 +257,7 @@ export class DataSpace {
     this._state = SpaceState.SPACE_CONTROL_ONLY;
     log('new state', { state: SpaceState[this._state] });
     this.stateUpdate.emit();
-    this.metrics = {};
+    this.metrics = {} as Space_Metrics;
     this.metrics.open = timestampFromDate(new Date());
 
     await this.postOpen.callSerial();

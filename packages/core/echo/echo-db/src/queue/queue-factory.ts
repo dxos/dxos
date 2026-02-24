@@ -43,7 +43,7 @@ export class QueueFactory extends Resource implements QueueAPI {
     const stringDxn = dxn.toString();
     const queue = this._queues.get(stringDxn);
     if (queue) {
-      return queue as Queue<T>;
+      return queue as unknown as Queue<T>;
     }
 
     const newQueue = new QueueImpl<T>(

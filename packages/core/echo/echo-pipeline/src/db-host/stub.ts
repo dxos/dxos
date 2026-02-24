@@ -3,7 +3,7 @@
 //
 
 import { type Echo } from '@dxos/protocols';
-import { EMPTY } from '@dxos/protocols/buf';
+import { EMPTY, type Empty } from '@dxos/protocols/buf';
 import type {
   DeleteFromQueueRequest,
   InsertIntoQueueRequest,
@@ -30,7 +30,7 @@ export class QueueServiceStub implements Echo.QueueService {
     return Promise.resolve(EMPTY);
   }
 
-  syncQueue(request: SyncQueueRequest): Promise<void> {
+  async syncQueue(request: SyncQueueRequest): Promise<Empty> {
     throw new Error('Not available.');
   }
 }

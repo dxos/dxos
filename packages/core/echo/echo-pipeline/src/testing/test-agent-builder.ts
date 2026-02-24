@@ -13,7 +13,7 @@ import { create } from '@dxos/protocols/buf';
 import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { AdmittedFeed_Designation } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type Storage, StorageType, createStorage } from '@dxos/random-access-storage';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
@@ -252,7 +252,7 @@ export class TestAgent {
     const generator = new CredentialGenerator(this.keyring, this.identityKey, this.deviceKey);
     const credentials = [
       ...(await generator.createSpaceGenesis(space.key, space.controlFeedKey!)),
-      await generator.createFeedAdmission(space.key, space.dataFeedKey!, AdmittedFeed.Designation.DATA),
+      await generator.createFeedAdmission(space.key, space.dataFeedKey!, AdmittedFeed_Designation.DATA),
       await generator.createEpochCredential(space.key),
     ];
 

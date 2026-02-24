@@ -19,6 +19,7 @@ import {
   DeleteFromQueueRequestSchema,
   InsertIntoQueueRequestSchema,
   QueryQueueRequestSchema,
+  SyncQueueRequestSchema,
 } from '@dxos/protocols/buf/dxos/client/queue_pb';
 
 import { Filter, Query, QueryResultImpl } from '../query';
@@ -430,13 +431,15 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
     shouldPush = true,
     shouldPull = true,
   }: { shouldPush?: boolean; shouldPull?: boolean } = {}): Promise<void> {
-    await this._service.syncQueue({
-      subspaceTag: this._subspaceTag,
-      spaceId: this._spaceId,
-      queueId: this._queueId,
-      shouldPush,
-      shouldPull,
-    });
+    await this._service.syncQueue(
+      create(SyncQueueRequestSchema, {
+        subspaceTag: this._subspaceTag,
+        spaceId: this._spaceId,
+        queueId: this._queueId,
+        shouldPush,
+        shouldPull,
+      }),
+    );
   }
 
   /**

@@ -57,6 +57,7 @@ import {
   type UpdateSpaceRequest,
   type WriteCredentialsRequest,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type EdgeReplicationSetting, type SpaceCache } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type GossipMessage } from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
 import { trace } from '@dxos/tracing';
@@ -261,7 +262,7 @@ export class SpacesServiceImpl implements Client.SpacesService {
         invariant(subjectId, 'Subject ID is required');
         const signedCredential = await signer.createCredential({
           subject: subjectId,
-          assertion: credential.subject?.assertion as TypedAssertion,
+          assertion: credential.subject?.assertion as unknown as TypedAssertion,
         });
         await space.controlPipeline.writer.write({ credential: { credential: signedCredential } });
       }
@@ -393,14 +394,14 @@ export class SpacesServiceImpl implements Client.SpacesService {
             },
             role: member.role,
             presence: peers.length > 0 ? SpaceMember_PresenceState.ONLINE : SpaceMember_PresenceState.OFFLINE,
-            peerStates: peers,
+            peerStates: protoToBuf(peers),
           };
         }),
-      )),
+      )) as never,
       creator: space.inner.spaceState.creator ? { data: space.inner.spaceState.creator.key.asUint8Array() } : undefined,
-      cache: protoToBuf(space.cache),
+      cache: protoToBuf<SpaceCache>(space.cache),
       metrics: space.metrics,
-      edgeReplication: protoToBuf(space.getEdgeReplicationSetting()),
+      edgeReplication: protoToBuf<EdgeReplicationSetting>(space.getEdgeReplicationSetting()),
     });
   }
 

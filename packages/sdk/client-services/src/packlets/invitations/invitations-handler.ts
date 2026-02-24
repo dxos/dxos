@@ -319,7 +319,7 @@ export class InvitationsHandler {
                 ...protocol.toJSON(),
                 authMethod: introductionResponse.authMethod,
               });
-              invitation.authMethod = introductionResponse.authMethod as Invitation_AuthMethod;
+              invitation.authMethod = introductionResponse.authMethod as unknown as Invitation_AuthMethod;
 
               // 2. Get authentication code.
               if (isAuthenticationRequired(invitation)) {
