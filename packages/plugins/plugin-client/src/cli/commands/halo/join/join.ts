@@ -41,7 +41,7 @@ export const join = Command.make(
       yield* Console.log(
         JSON.stringify(
           {
-            identityKey: identity.identityKey.toHex(),
+            identityKey: (identity.identityKey as any)?.toHex(),
             displayName: identity.profile?.displayName,
           },
           null,
@@ -49,7 +49,7 @@ export const join = Command.make(
         ),
       );
     } else {
-      yield* Console.log(print(printIdentity(identity)));
+      yield* Console.log(print(printIdentity(identity as any)));
     }
   }),
 ).pipe(Command.withDescription('Join an existing identity using an invitation code.'));

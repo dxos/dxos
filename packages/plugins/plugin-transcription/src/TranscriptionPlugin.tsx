@@ -24,7 +24,7 @@ export const TranscriptionPlugin = Plugin.define(meta).pipe(
         // TODO(wittjosiah): Factor out. Artifact? Separate capability?
         getTextContent: async (transcript: Transcript.Transcript) => {
           const space = getSpace(transcript);
-          const members = space?.members.get().map((member) => member.identity) ?? [];
+          const members = (space?.members.get().map((member) => member.identity) ?? []).filter(Boolean) as any[];
           const queue = space?.queues.get<Message.Message>(transcript.queue.dxn);
           await queue?.refresh();
           const content = queue?.objects

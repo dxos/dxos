@@ -24,6 +24,6 @@ describe('halo update', () => {
       const parsed = TestConsole.parseJson<{ identityKey: string; displayName: string }>(logs[0]);
       expect(parsed).toHaveProperty('identityKey');
       expect(parsed).toHaveProperty('displayName', 'Updated Name');
-      expect(parsed.identityKey).toBe(client.halo.identity.get()?.identityKey.toHex());
+      expect(parsed.identityKey).toBe((client.halo.identity.get()?.identityKey as any)?.toHex());
     }).pipe(Effect.provide(TestLayer), Effect.scoped, runAndForwardErrors));
 });

@@ -67,11 +67,11 @@ const Footer = () => {
       <div className='flex flex-col is-full text-sm text-neutral-500'>
         <div className='grid grid-cols-2 gap-2'>
           <div className='text-neutral-300 text-right'>Identity</div>
-          <div className='font-mono'>{identity?.identityKey.truncate()}</div>
+          <div className='font-mono'>{(identity?.identityKey as any)?.truncate()}</div>
         </div>
         <div className='grid grid-cols-2 gap-2'>
           <div className='text-neutral-300 text-right'>Device</div>
-          <div className='font-mono'>{device?.deviceKey.truncate()}</div>
+          <div className='font-mono'>{(device?.deviceKey as any)?.truncate()}</div>
         </div>
         <div className='grid grid-cols-2 gap-2'>
           <div className='text-neutral-300 text-right'>Version</div>

@@ -58,7 +58,7 @@ export const DevicesContainer = ({ createInvitationUrl }: DevicesContainerProps)
             <Settings.FrameItem title={t('devices label', { ns: meta.id })}>
               <List>
                 {devices.map((device: Device) => (
-                  <DeviceListItem key={device.deviceKey.toHex()} device={device} connectionState={connectionState} />
+                  <DeviceListItem key={(device.deviceKey as any)?.toHex()} device={device} connectionState={connectionState} />
                 ))}
               </List>
             </Settings.FrameItem>

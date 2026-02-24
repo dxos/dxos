@@ -141,7 +141,7 @@ export class OnboardingManager {
   private async _queryRecoveryCredentials(): Promise<Credential[]> {
     const credentials = await queryAllCredentials(this._client);
     return credentials.filter(
-      (credential) => credential.subject.assertion['@type'] === 'dxos.halo.credentials.IdentityRecovery',
+      (credential) => (credential.subject as any)?.assertion?.['@type'] === 'dxos.halo.credentials.IdentityRecovery',
     );
   }
 
@@ -174,7 +174,7 @@ export class OnboardingManager {
 
   private _setCredential(credentials: Credential[]): void {
     const credential = credentials
-      .toSorted((a, b) => b.issuanceDate.getTime() - a.issuanceDate.getTime())
+      .toSorted((a, b) => (b.issuanceDate as any)?.getTime?.() - (a.issuanceDate as any)?.getTime?.())
       .find(matchServiceCredential(['composer:beta']));
     if (credential) {
       this._credential = credential;
@@ -188,10 +188,10 @@ export class OnboardingManager {
       invariant(this._hubUrl);
       // TODO(wittjosiah): If id is required to present credentials, then it should always be present for queried credentials.
       invariant(this._credential?.id, 'beta credential missing id');
-      const presentation = await this._client.halo.presentCredentials({ ids: [this._credential.id] });
+      const presentation = await this._client.halo.presentCredentials({ ids: [this._credential.id as any] });
       const { capabilities } = await getProfile({ hubUrl: this._hubUrl, presentation });
       const newCapabilities = capabilities.filter(
-        (capability) => !this._credential!.subject.assertion.capabilities.includes(capability),
+        (capability) => !(this._credential!.subject as any)?.assertion?.capabilities?.includes(capability),
       );
       if (newCapabilities.length > 0) {
         log('upgrading beta credential', { newCapabilities });

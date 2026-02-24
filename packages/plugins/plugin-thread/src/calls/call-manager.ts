@@ -96,7 +96,7 @@ export class CallManager extends Resource {
 
   /** Derived atom for tracks. */
   get tracksAtom(): Atom.Atom<Tracks> {
-    return this._tracksAtom;
+    return this._tracksAtom as Atom.Atom<Tracks>;
   }
 
   /** Derived atom for users. */

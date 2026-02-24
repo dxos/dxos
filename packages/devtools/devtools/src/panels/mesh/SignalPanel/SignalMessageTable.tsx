@@ -148,9 +148,9 @@ export const SignalMessageTable = () => {
   const devtoolsHost = useDevtools();
   const [messages, setMessages] = useState<SignalResponse[]>([]);
   useEffect(() => {
-    const signalOutput = devtoolsHost.subscribeToSignal();
+    const signalOutput = devtoolsHost.subscribeToSignal({} as any);
     const signalResponses: SignalResponse[] = [];
-    signalOutput.subscribe((response: SignalResponse) => {
+    signalOutput.subscribe((response: any) => {
       signalResponses.push(response);
       setMessages([...signalResponses]);
     });

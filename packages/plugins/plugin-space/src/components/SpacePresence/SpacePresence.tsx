@@ -40,7 +40,8 @@ const ACTIVITY_DURATION = 30_000;
 const noViewers = new ComplexMap<PublicKey, ObjectViewerProps>(PublicKey.hash);
 
 // TODO(wittjosiah): Factor out?
-const getName = (identity: Identity) => identity.profile?.displayName ?? generateName(identity.identityKey.toHex());
+const getName = (identity: Identity) =>
+  identity.profile?.displayName ?? generateName((identity.identityKey as any)?.toHex());
 
 export type SpacePresenceProps = {
   object: Obj.Unknown;
@@ -64,7 +65,8 @@ export const SpacePresence = ({ object, spaceId }: SpacePresenceProps) => {
 
   const memberOnline = useCallback((member: SpaceMember) => member.presence === 1, []);
   const memberIsNotSelf = useCallback(
-    (member: SpaceMember) => !identity?.identityKey.equals(member.identity.identityKey),
+    (member: SpaceMember) =>
+      !(identity?.identityKey as any)?.equals(member.identity?.identityKey),
     [identity?.identityKey],
   );
 
@@ -78,9 +80,13 @@ export const SpacePresence = ({ object, spaceId }: SpacePresenceProps) => {
 
   const membersForObject = spaceMembers
     .filter((member) => memberOnline(member) && memberIsNotSelf(member))
-    .filter((member) => currentObjectViewers.has(member.identity.identityKey))
+    .filter((member) =>
+      member.identity?.identityKey && currentObjectViewers.has(member.identity.identityKey as any),
+    )
     .map((member) => {
-      const objectView = currentObjectViewers.get(member.identity.identityKey);
+      const objectView = member.identity?.identityKey
+        ? currentObjectViewers.get(member.identity.identityKey as any)
+        : undefined;
       const lastSeen = objectView?.lastSeen ?? -Infinity;
       const currentlyAttended = objectView?.currentlyAttended ?? false;
 
@@ -122,13 +128,13 @@ export const FullPresence = (props: MemberPresenceProps) => {
     <div className='dx-avatar-group' data-testid='spacePlugin.presence'>
       {members.slice(0, 3).map((member, i) => (
         <Tooltip.Trigger
-          key={member.identity.identityKey.toHex()}
+          key={(member.identity?.identityKey as any)?.toHex()}
           side='bottom'
-          content={getName(member.identity)}
+          content={getName(member.identity!)}
           className='grid focus:outline-none'
         >
           <PresenceAvatar
-            identity={member.identity}
+            identity={member.identity!}
             match={member.currentlyAttended} // TODO(Zan): Match always true now we're showing 'members viewing current object'.
             index={members.length - i}
             onClick={() => onMemberClick?.(member)}
@@ -157,14 +163,14 @@ export const FullPresence = (props: MemberPresenceProps) => {
                 <List>
                   {members.map((member) => (
                     <ListItem.Root
-                      key={member.identity.identityKey.toHex()}
+                      key={(member.identity?.identityKey as any)?.toHex()}
                       classNames='flex gap-2 items-center cursor-pointer mbe-2'
                       onClick={() => onMemberClick?.(member)}
                       data-testid='identity-list-item'
                     >
                       {/* TODO(Zan): Match always true now we're showing 'members viewing current object'. */}
                       <PresenceAvatar
-                        identity={member.identity}
+                        identity={member.identity!}
                         size={size}
                         showName
                         match={member.currentlyAttended}
@@ -192,18 +198,18 @@ type PresenceAvatarProps = Pick<AvatarContentProps, 'size'> & {
 const PresenceAvatar = forwardRef<DxAvatar, PresenceAvatarProps>(
   ({ identity, showName, match, index, onClick, size }, forwardedRef) => {
     const status = match ? 'current' : 'active';
-    const fallbackValue = keyToFallback(identity.identityKey);
+    const fallbackValue = keyToFallback(identity.identityKey as any);
     return (
       <Avatar.Root>
         <Avatar.Content
           status={status}
-          hue={identity.profile?.data?.hue || fallbackValue.hue}
+          hue={(identity.profile?.data?.hue as string) || fallbackValue.hue}
           data-testid='spacePlugin.presence.member'
           data-status={status}
           size={size}
           {...(index ? { style: { zIndex: index } } : {})}
           onClick={onClick}
-          fallback={identity.profile?.data?.emoji || fallbackValue.emoji}
+          fallback={(identity.profile?.data?.emoji as string) || fallbackValue.emoji}
           ref={forwardedRef}
         />
         <Avatar.Label classNames={showName ? 'text-sm truncate pli-2' : 'sr-only'}>{getName(identity)}</Avatar.Label>

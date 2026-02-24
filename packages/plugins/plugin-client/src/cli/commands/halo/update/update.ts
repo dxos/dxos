@@ -49,7 +49,7 @@ export const handler = Effect.fn(function* ({ displayName }: { displayName: stri
     yield* Console.log(
       JSON.stringify(
         {
-          identityKey: updatedIdentity.identityKey.toHex(),
+          identityKey: (updatedIdentity.identityKey as any)?.toHex(),
           displayName: updatedIdentity.profile?.displayName,
         },
         null,
@@ -57,7 +57,7 @@ export const handler = Effect.fn(function* ({ displayName }: { displayName: stri
       ),
     );
   } else {
-    yield* Console.log(print(printIdentity(updatedIdentity)));
+    yield* Console.log(print(printIdentity(updatedIdentity as any)));
   }
 });
 

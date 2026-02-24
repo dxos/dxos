@@ -16,20 +16,20 @@ import { type Key } from '@dxos/echo';
 
 const mapCredentials = (credentials: Credential[]) => {
   return credentials.map((credential) => ({
-    id: credential.id?.toHex() ?? '<unknown>',
-    issuer: credential.issuer?.toHex() ?? '<unknown>',
-    subject: credential.subject?.id?.toHex() ?? '<unknown>',
-    type: credential.subject.assertion['@type'],
-    assertion: credential.subject.assertion,
+    id: (credential.id as any)?.toHex() ?? '<unknown>',
+    issuer: (credential.issuer as any)?.toHex() ?? '<unknown>',
+    subject: (credential.subject?.id as any)?.toHex() ?? '<unknown>',
+    type: (credential.subject?.assertion as any)?.['@type'],
+    assertion: credential.subject?.assertion,
   }));
 };
 
 const printCredential = (credential: Credential) => {
-  const type = credential.subject.assertion['@type'] ?? '<unknown>';
+  const type = (credential.subject?.assertion as any)?.['@type'] ?? '<unknown>';
   return FormBuilder.make({ title: type }).pipe(
-    FormBuilder.option('id', Option.fromNullable(credential.id?.truncate())),
-    FormBuilder.option('issuer', Option.fromNullable(credential.issuer?.truncate())),
-    FormBuilder.option('subject', Option.fromNullable(credential.subject?.id?.truncate())),
+    FormBuilder.option('id', Option.fromNullable((credential.id as any)?.truncate())),
+    FormBuilder.option('issuer', Option.fromNullable((credential.issuer as any)?.truncate())),
+    FormBuilder.option('subject', Option.fromNullable((credential.subject?.id as any)?.truncate())),
     FormBuilder.build,
   );
 };

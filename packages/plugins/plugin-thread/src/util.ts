@@ -14,16 +14,16 @@ import { hexToFallback } from '@dxos/util';
 export type MessagePropertiesProvider = (identityKey: PublicKey | undefined) => MessageMetadata;
 
 export const getMessageMetadata = (id: string, identity?: Identity): MessageMetadata => {
-  const fallback = hexToFallback(identity?.identityKey.toHex() ?? '0');
+  const fallback = hexToFallback((identity?.identityKey as any)?.toHex() ?? '0');
   return {
     id,
     authorId: identity?.did,
     authorName:
       identity?.profile?.displayName ??
-      (identity?.identityKey ? generateName(identity.identityKey.toHex()) : undefined),
+      (identity?.identityKey ? generateName((identity.identityKey as any).toHex()) : undefined),
     authorAvatarProps: {
-      hue: identity?.profile?.data?.hue ?? fallback.hue,
-      emoji: identity?.profile?.data?.emoji ?? fallback.emoji,
+      hue: (identity?.profile?.data?.hue ?? fallback.hue) as any,
+      emoji: (identity?.profile?.data?.emoji ?? fallback.emoji) as any,
     },
   };
 };

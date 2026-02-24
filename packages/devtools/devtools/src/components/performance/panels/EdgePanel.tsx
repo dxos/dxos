@@ -10,7 +10,8 @@ import { Context } from '@dxos/context';
 import { type EdgeStatus } from '@dxos/protocols';
 import {
   type QueryEdgeStatusResponse,
-  type EdgeStatus_ConnectionState as WsStatus,
+  type EdgeStatus as BufEdgeStatus,
+  EdgeStatus_ConnectionState,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { useClient } from '@dxos/react-client';
 import { IconButton } from '@dxos/react-ui';
@@ -80,7 +81,7 @@ export const EdgePanel = ({ edge, ...props }: CustomPanelProps<{ edge?: QueryEdg
   );
 };
 
-const getHealthReportTable = (status?: EdgeStatus, wsStatus?: WsStatus): TableProps['rows'] => {
+const getHealthReportTable = (status?: EdgeStatus, wsStatus?: BufEdgeStatus): TableProps['rows'] => {
   const isConnected = wsStatus?.state === EdgeStatus_ConnectionState.CONNECTED;
   const rows: TableProps['rows'] = [
     [isConnected ? '✅' : '❌', 'web socket', isConnected ? 'Connected' : 'Disconnected'],

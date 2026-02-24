@@ -28,7 +28,7 @@ export const handler = Effect.fn(function* () {
       yield* Console.log(
         JSON.stringify(
           {
-            identityKey: identity.identityKey.toHex(),
+            identityKey: (identity.identityKey as any)?.toHex(),
             displayName: identity.profile?.displayName,
           },
           null,
@@ -36,7 +36,7 @@ export const handler = Effect.fn(function* () {
         ),
       );
     } else {
-      yield* Console.log(print(printIdentity(identity)));
+      yield* Console.log(print(printIdentity(identity as any)));
     }
   }
 });

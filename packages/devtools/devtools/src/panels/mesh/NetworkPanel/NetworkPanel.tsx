@@ -72,7 +72,7 @@ export const NetworkPanel = (props: { space?: Space }) => {
   const identity = useIdentity();
 
   const isMe = (node: NetworkGraphNode | undefined) =>
-    identity ? node?.member?.identity.identityKey.equals(identity.identityKey) : false;
+    identity ? (node?.member?.identity?.identityKey as any)?.equals(identity.identityKey) : false;
 
   const members = useMembers(space?.key);
   const [model] = useState(() => new NetworkGraphModel());
@@ -131,9 +131,9 @@ export const NetworkPanel = (props: { space?: Space }) => {
           labels={{
             text: (node: GraphLayoutNode<NetworkGraphNode>, highlight) => {
               const identity =
-                node.data!.member?.identity.profile?.displayName ?? node.data!.member?.identity.identityKey.truncate();
+                node.data!.member?.identity?.profile?.displayName ?? (node.data!.member?.identity?.identityKey as any)?.truncate();
 
-              const peer = node.data!.peer?.peerId?.truncate();
+              const peer = (node.data!.peer?.peerId as any)?.truncate();
               return `${peer} [${identity}]`;
             },
           }}

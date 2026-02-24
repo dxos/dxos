@@ -82,5 +82,5 @@ export const getAccessCredential = (identityKey: PublicKey): Credential => {
         capabilities: ['composer:beta'],
       },
     },
-  };
+  } as any;
 };

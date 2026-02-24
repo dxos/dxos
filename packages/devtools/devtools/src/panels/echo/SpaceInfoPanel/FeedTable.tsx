@@ -33,8 +33,8 @@ export const FeedTable: FC<FeedTableProps> = ({ onSelect }) => {
     ...(space?.internal.data.pipeline?.dataFeeds ?? []),
   ];
   const devtoolsHost = useDevtools();
-  const { feeds = [] } = useStream(() => devtoolsHost.subscribeToFeeds({ feedKeys }), {}, [feedKeys]);
-  const maxLength = feeds.reduce((max, feed) => (feed?.length > max ? feed.length : max), 0);
+  const { feeds = [] } = useStream(() => devtoolsHost.subscribeToFeeds({ feedKeys } as any), {} as any, [feedKeys]);
+  const maxLength = feeds.reduce((max: number, feed: any) => (feed?.length > max ? feed.length : max), 0);
 
   const properties: TablePropertyDefinition[] = useMemo(
     () => [
@@ -45,9 +45,9 @@ export const FeedTable: FC<FeedTableProps> = ({ onSelect }) => {
   );
 
   const rows = useMemo(() => {
-    return feeds.map((feed) => ({
-      id: feed.feedKey.toString(),
-      feedKey: feed.feedKey.toString(),
+    return feeds.map((feed: any) => ({
+      id: feed.feedKey!.toString(),
+      feedKey: feed.feedKey!.toString(),
       progress: createTextBitbar(feed.downloaded, maxLength),
       _original: { ...feed, maxLength },
     }));

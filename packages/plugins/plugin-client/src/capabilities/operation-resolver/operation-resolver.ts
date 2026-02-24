@@ -41,10 +41,10 @@ export default Capability.makeModule(
         handler: Effect.fnUntraced(function* (profile) {
           const manager = yield* Capability.get(Capabilities.PluginManager);
           const client = yield* Capability.get(ClientCapabilities.Client);
-          const data = yield* Effect.promise(() => client.halo.createIdentity(profile));
+          const data = yield* Effect.promise(() => client.halo.createIdentity(profile as any));
           yield* Effect.promise(() => runAndForwardErrors(manager.activate(ClientEvents.IdentityCreated)));
           yield* Operation.schedule(ObservabilityOperation.SendEvent, { name: 'identity.create' });
-          return data;
+          return data as any;
         }),
       }),
 
@@ -179,11 +179,9 @@ export default Capability.makeModule(
           invariant(credential, 'Credential not available');
           const recoveryKey = PublicKey.from(
             new Uint8Array(
-              (credential as PublicKeyCredential).response as AuthenticatorAttestationResponse extends {
+              ((credential as PublicKeyCredential).response as AuthenticatorAttestationResponse as unknown as {
                 getPublicKey(): ArrayBuffer;
-              }
-                ? never
-                : ArrayBuffer,
+              }).getPublicKey(),
             ),
           );
           const algorithm =

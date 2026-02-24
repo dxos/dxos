@@ -26,14 +26,14 @@ describe('halo identity', () => {
   it('should print identity if initialized', () =>
     Effect.gen(function* () {
       const client = yield* ClientService;
-      yield* Effect.tryPromise(() => client.halo.createIdentity({ displayName: 'Test' }));
+      yield* Effect.tryPromise(() => client.halo.createIdentity({ displayName: 'Test' } as any));
       yield* handler();
       const logger = yield* TestConsole.TestConsole;
       const logs = logger.logs;
       expect(logs).toHaveLength(1);
       const parsedIdentity = TestConsole.parseJson(logs[0]);
       expect(parsedIdentity).toEqual({
-        identityKey: client.halo.identity.get()?.identityKey.toHex(),
+        identityKey: (client.halo.identity.get()?.identityKey as any)?.toHex(),
         displayName: client.halo.identity.get()?.profile?.displayName,
       });
     }).pipe(Effect.provide(TestLayer), Effect.scoped, runAndForwardErrors));

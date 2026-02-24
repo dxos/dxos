@@ -229,7 +229,7 @@ const PlayerSelector = ({ value, onValueChange, members }: PlayerSelectorProps) 
         <Select.Content>
           <Select.Viewport>
             {members.map((member) => {
-              const memberKey = member.identity.identityKey.toHex();
+              const memberKey = (member.identity?.identityKey as any)?.toHex() ?? '';
               const displayName = member.identity?.profile?.displayName || generateName(memberKey);
               return (
                 <Select.Option key={memberKey} value={memberKey}>

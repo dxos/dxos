@@ -19,7 +19,7 @@ export const RecoveryCredentialsContainer = () => {
   const { invokePromise } = useOperationInvoker();
   const credentials = useCredentials();
   const recoveryCredentials = credentials.filter(
-    (credential) => credential.subject.assertion['@type'] === 'dxos.halo.credentials.IdentityRecovery',
+    (credential) => (credential.subject?.assertion as any)?.['@type'] === 'dxos.halo.credentials.IdentityRecovery',
   );
 
   return (
@@ -53,11 +53,11 @@ export const RecoveryCredentialsContainer = () => {
         ) : (
           <List classNames='container-max-width pli-2'>
             {recoveryCredentials.map((credential) => (
-              <ListItem.Root key={credential.id?.toHex()}>
+              <ListItem.Root key={(credential.id as any)?.toHex()}>
                 <ListItem.Endcap>
                   <Icon icon='ph--key--regular' />
                 </ListItem.Endcap>
-                <ListItem.Heading>{credential.issuanceDate.toLocaleString()}</ListItem.Heading>
+                <ListItem.Heading>{credential.issuanceDate?.toLocaleString()}</ListItem.Heading>
               </ListItem.Root>
             ))}
           </List>

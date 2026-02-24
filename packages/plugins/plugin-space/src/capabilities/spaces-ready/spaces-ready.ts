@@ -184,7 +184,7 @@ export default Capability.makeModule(
 
             void space
               .postMessage('viewing', {
-                identityKey: identity.identityKey.toHex(),
+                identityKey: (identity.identityKey as any)?.toHex(),
                 attended: current,
                 added,
                 removed,
@@ -221,13 +221,14 @@ export default Capability.makeModule(
         spaces.forEach((space) => {
           spaceSubscriptions.add(
             space.listen('viewing', (message) => {
-              const { added, removed, attended } = message.payload;
+              const payload = message.payload as any;
+              const { added, removed, attended } = payload ?? {};
 
-              const identityKey = PublicKey.safeFrom(message.payload.identityKey);
+              const identityKey = PublicKey.safeFrom(payload?.identityKey);
               const currentIdentity = client.halo.identity.get();
               if (
                 identityKey &&
-                !currentIdentity?.identityKey.equals(identityKey) &&
+                !(currentIdentity?.identityKey as any)?.equals(identityKey) &&
                 Array.isArray(added) &&
                 Array.isArray(removed)
               ) {

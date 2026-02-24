@@ -24,6 +24,6 @@ describe('device info', () => {
       const parsed = TestConsole.parseJson<{ deviceKey: string; profile: unknown }>(logs[0]);
       expect(parsed).toHaveProperty('deviceKey');
       expect(parsed).toHaveProperty('profile');
-      expect(parsed.deviceKey).toBe(client.halo.device?.deviceKey.toHex());
+      expect(parsed.deviceKey).toBe((client.halo.device?.deviceKey as any)?.toHex());
     }).pipe(Effect.provide(TestLayer), Effect.scoped, runAndForwardErrors));
 });

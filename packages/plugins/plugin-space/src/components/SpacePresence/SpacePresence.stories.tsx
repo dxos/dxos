@@ -6,7 +6,8 @@ import { type Meta } from '@storybook/react-vite';
 import React from 'react';
 
 import { IdentityDid, PublicKey } from '@dxos/keys';
-import { HaloSpaceMember, SpaceMember } from '@dxos/react-client/echo';
+import { SpaceMember_PresenceState } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { SpaceMember_Role } from '@dxos/react-client/echo';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
@@ -15,12 +16,12 @@ import { FullPresence, type Member, type MemberPresenceProps, SmallPresence } fr
 
 const viewers = (n: number, currentlyAttended = true): Member[] =>
   Array.from({ length: n }, () => ({
-    role: HaloSpaceMember.Role.ADMIN,
+    role: SpaceMember_Role.ADMIN,
     identity: { did: IdentityDid.random(), identityKey: PublicKey.random() },
-    presence: SpaceMember.PresenceState.ONLINE,
+    presence: SpaceMember_PresenceState.ONLINE,
     lastSeen: Date.now(),
     currentlyAttended,
-  }));
+  })) as unknown as Member[];
 
 const meta = {
   title: 'plugins/plugin-space/SpacePresence',

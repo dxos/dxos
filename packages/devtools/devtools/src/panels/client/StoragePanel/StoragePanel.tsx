@@ -115,7 +115,7 @@ export const StoragePanel = () => {
   const [storageInfo, setStorageInfo] = useState<StorageInfo | undefined>();
   const [snapshotInfo, setSnapshotInfo] = useState<GetSnapshotsResponse | undefined>();
   const [blobsInfo, setBlobsInfo] = useState<GetBlobsResponse | undefined>();
-  const feeds = useStream(() => devtoolsHost.subscribeToFeeds({}), {}, []);
+  const feeds = useStream(() => devtoolsHost.subscribeToFeeds({} as any), {} as any, []);
   const client = useClient();
   const services = client.services.services;
   if (!services) {
@@ -133,21 +133,21 @@ export const StoragePanel = () => {
     let blobsInfo: GetBlobsResponse | undefined;
 
     try {
-      storageInfo = await devtoolsHost.getStorageInfo();
+      storageInfo = await devtoolsHost.getStorageInfo({} as any);
     } catch (err) {
       log.catch(err);
       retry = true;
     }
 
     try {
-      snapshotInfo = await devtoolsHost.getSnapshots();
+      snapshotInfo = await devtoolsHost.getSnapshots({} as any);
     } catch (err) {
       log.catch(err);
       retry = true;
     }
 
     try {
-      blobsInfo = await devtoolsHost.getBlobs();
+      blobsInfo = await devtoolsHost.getBlobs({} as any) as any;
     } catch (err) {
       log.catch(err);
       retry = true;
@@ -174,7 +174,7 @@ export const StoragePanel = () => {
           storageUsage: 0,
           usageQuota: 0,
         },
-        feeds,
+        feeds as any,
         snapshotInfo?.snapshots ?? [],
         blobsInfo?.blobs ?? [],
       ),

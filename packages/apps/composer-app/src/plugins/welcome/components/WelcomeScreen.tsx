@@ -114,10 +114,10 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
       if (space) {
         const credentials = client.halo.queryCredentials();
         const spaceCredential = credentials.find((credential) => {
-          if (credential.subject.assertion['@type'] !== 'dxos.halo.credentials.SpaceMember') {
+          if ((credential.subject as any)?.assertion?.['@type'] !== 'dxos.halo.credentials.SpaceMember') {
             return false;
           }
-          const spaceKey = credential.subject.assertion.spaceKey;
+          const spaceKey = (credential.subject as any)?.assertion?.spaceKey;
           return spaceKey instanceof PublicKey && spaceKey.equals(space.key);
         });
 
@@ -131,7 +131,7 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
             await activateAccount({
               hubUrl,
               identity,
-              referrer: spaceCredential.issuer,
+              referrer: spaceCredential.issuer as any,
             });
           } catch (err) {
             log.catch(err);

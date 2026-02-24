@@ -8,11 +8,11 @@ import { EmptySchema } from '@bufbuild/protobuf/wkt';
 import { PublicKey } from '@dxos/keys';
 import { Timeframe } from '@dxos/timeframe';
 
-import * as KeysPb from './proto/gen/dxos/keys_pb';
+import * as KeysPb from './proto/gen/dxos/keys_pb.ts';
 import {
   type TimeframeVector,
   TimeframeVectorSchema,
-} from './proto/gen/dxos/echo/timeframe_pb';
+} from './proto/gen/dxos/echo/timeframe_pb.ts';
 
 export * as buf from '@bufbuild/protobuf';
 export * as bufWkt from '@bufbuild/protobuf/wkt';

@@ -28,7 +28,7 @@ export const TestingPanel = ({ onSpaceCreate, onScriptPluginOpen }: TestingPanel
 
   const handleSpaceCreate = async () => {
     const agentDevice = client.halo.devices.get().find((device) => device.profile?.type === DeviceType.AGENT_MANAGED);
-    const agentKey = agentDevice?.deviceKey.toHex();
+    const agentKey = (agentDevice?.deviceKey as any)?.toHex();
     if (!agentKey) {
       log.warn('no agent key');
       return;

@@ -51,7 +51,7 @@ export default Capability.makeModule(
               disposition: 'user-account',
               testId: 'clientPlugin.account',
               // NOTE: This currently needs to be the identity key because the fallback is generated from hex.
-              userId: identity?.identityKey.toHex(),
+              userId: (identity?.identityKey as any)?.toHex(),
               hue: identity?.profile?.data?.hue,
               emoji: identity?.profile?.data?.emoji,
               status: status.swarm === ConnectionState.OFFLINE ? 'error' : 'active',

@@ -134,15 +134,15 @@ export class CallSwarmSynchronizer extends Resource {
    * @internal
    */
   _setIdentity(identity: Identity): void {
-    this._identityKey = identity.identityKey.toHex();
-    this._displayName = identity.profile?.displayName ?? generateName(identity.identityKey.toHex());
+    this._identityKey = (identity.identityKey as any)?.toHex();
+    this._displayName = identity.profile?.displayName ?? generateName((identity.identityKey as any)?.toHex() ?? '');
   }
 
   /**
    * @internal
    */
   _setDevice(device: Device): void {
-    this._deviceKey = device.deviceKey.toHex();
+    this._deviceKey = (device.deviceKey as any)?.toHex();
   }
 
   /**
@@ -180,7 +180,7 @@ export class CallSwarmSynchronizer extends Resource {
     this._swarmCtx = new Context();
     const topic = getTopic(this._state.roomId);
     log('joining swarm', { topic, peer: { identityKey: this._identityKey, peerKey: this._deviceKey } });
-    const stream = this._networkService.subscribeSwarmState({ topic });
+    const stream = this._networkService.subscribeSwarmState({ topic } as any);
     stream.subscribe((event) => this._processSwarmEvent(event));
 
     const cleanup = () => {
@@ -189,9 +189,9 @@ export class CallSwarmSynchronizer extends Resource {
         log('leaving swarm', { topic, peer: { identityKey: this._identityKey, peerKey: this._deviceKey } });
         void this._networkService
           .leaveSwarm({
-            topic,
+            topic: topic as any,
             peer: { identityKey: this._identityKey, peerKey: this._deviceKey },
-          })
+          } as any)
           .catch((err) => log.catch(err));
       }
       window.removeEventListener('beforeunload', cleanup);
@@ -217,7 +217,7 @@ export class CallSwarmSynchronizer extends Resource {
 
   async querySwarm(roomId: string) {
     const topic = getTopic(roomId);
-    const swarm = await this._networkService.querySwarm({ topic });
+    const swarm = await this._networkService.querySwarm({ topic } as any);
     return swarm.peers ?? [];
   }
 
@@ -251,13 +251,13 @@ export class CallSwarmSynchronizer extends Resource {
     };
 
     await this._networkService.joinSwarm({
-      topic: getTopic(this._state.roomId),
+      topic: getTopic(this._state.roomId) as any,
       peer: {
         identityKey: this._identityKey,
         peerKey: this._deviceKey,
         state: codec.encode(state),
       },
-    });
+    } as any);
   }
 
   private _processSwarmEvent(swarmEvent: SwarmResponse): void {

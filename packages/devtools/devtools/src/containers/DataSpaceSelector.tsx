@@ -21,7 +21,7 @@ export const DataSpaceSelector = () => {
   const handleSelect = (spaceId?: SpaceId) => {
     const space = spaceId ? spaces.find((space) => space.id === spaceId) : undefined;
     // TODO(dmaretskyi): Expose id in space info.
-    const spaceInfo = space ? spacesInfo.find((spaceInfo) => spaceInfo.key.equals(space.key)) : undefined;
+    const spaceInfo = space ? spacesInfo.find((spaceInfo) => (spaceInfo.key as any)?.equals(space.key)) : undefined;
     setState((state) => ({
       ...state,
       space,

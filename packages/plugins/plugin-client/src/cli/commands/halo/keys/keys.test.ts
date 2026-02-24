@@ -23,7 +23,7 @@ describe('halo keys', () => {
       const parsed = TestConsole.parseJson<{ identityKey?: string; deviceKey?: string }>(logs[0]);
       expect(parsed).toHaveProperty('identityKey');
       expect(parsed).toHaveProperty('deviceKey');
-      expect(parsed.identityKey).toBe(client.halo.identity.get()?.identityKey.toHex());
-      expect(parsed.deviceKey).toBe(client.halo.device?.deviceKey.toHex());
+      expect(parsed.identityKey).toBe((client.halo.identity.get()?.identityKey as any)?.toHex());
+      expect(parsed.deviceKey).toBe((client.halo.device?.deviceKey as any)?.toHex());
     }).pipe(Effect.provide(TestLayer), Effect.scoped, runAndForwardErrors));
 });

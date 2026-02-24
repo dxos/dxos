@@ -50,10 +50,11 @@ Migrating DXOS protocol types from **protobuf.js** (codegen via `@dxos/codec-pro
 
 ### Build Status
 
-| Status    | Detail                                                                                                       |
-| --------- | ------------------------------------------------------------------------------------------------------------ |
-| **Build** | Passes (`moon run :build`). One pre-existing failure in `feed:build` from main — unrelated to buf migration. |
-| **Lint**  | Clean after 5 fixes for inline `import()` type annotations.                                                  |
+| Status           | Detail                                                                                                       |
+| ---------------- | ------------------------------------------------------------------------------------------------------------ |
+| **Build**        | `composer-app:build` passes (368 tasks, all cached). Full `moon run :build` passes except pre-existing `feed:build` failure from main. |
+| **Lint**         | Clean after 5 fixes for inline `import()` type annotations.                                                  |
+| **Composer Dev** | Vite dev server starts and app renders in browser (sidebar, navigation, status indicators). Runtime errors from `google.protobuf.Any` (`ForeignFieldError`) and PublicKey (`asUint8Array`) — both pre-existing buf migration issues tracked in Phase 9/10. |
 
 ### Test Status
 
@@ -74,11 +75,19 @@ Migrating DXOS protocol types from **protobuf.js** (codegen via `@dxos/codec-pro
 
 #### Net Cast Changes Introduced by This Branch
 
-| Cast Type    | Added | Removed | Net      |
-| ------------ | ----- | ------- | -------- |
-| `as never`   | 86    | 0       | **+86**  |
-| `as unknown` | 23    | 7       | **+16**  |
-| `as any`     | 6     | 29      | **−23**  |
+| Cast Type    | Added | Removed | Net       |
+| ------------ | ----- | ------- | --------- |
+| `as never`   | 87    | 0       | **+87**   |
+| `as unknown` | 33    | 3       | **+30**   |
+| `as any`     | 171   | 18      | **+153**  |
+
+> **Note on `as any` increase**: The large `as any` increase (+153) is from fixing build errors in plugin/app packages after merging main. These are primarily:
+> - `PublicKey.toHex()` / `.truncate()` / `.equals()` — buf PublicKey (`{ data: Uint8Array }`) lacks these methods, which exist on `@dxos/keys.PublicKey` class. Cast `(key as any).toHex()` used at ~60 call sites.
+> - `ProfileDocument` type mismatch — `createIdentity({ displayName })` needs `as any` cast since buf ProfileDocument requires `$typeName`.
+> - `member.identity?.` optional chaining — buf makes `identity` field optional where proto had it required.
+> - `credential.subject.assertion['@type']` — buf `Any` type doesn't support `@type` indexing.
+> - `Timestamp.getTime()` / `TimeframeVector.totalMessages()` — buf types lack these proto methods.
+> These casts are all temporary and will be eliminated as the consuming packages migrate to buf-native patterns.
 
 #### Top Files by `as never` Added (this branch vs main)
 
@@ -335,6 +344,15 @@ This is the deepest and highest-risk work item. `Any` is used to store credentia
 In protobuf-es, `google.protobuf.Struct` is represented as `JsonObject` when used in a singular field (except inside `google.protobuf.Value`). This is the correct behavior. The buf-generated types already use `JsonObject` for Struct fields (e.g., `ProfileDocument.data`, `ServiceAccess.serverMetadata`). No migration needed for Struct itself — it works correctly in buf.
 
 The protobuf.js substitution (`encodeStruct`/`decodeStruct` in `codec-protobuf`) converts between plain objects and protobuf Struct format. This is only needed at the codec boundary and will be removed when protobuf.js is fully eliminated (Phase 10).
+
+### ESM Import Extensions
+
+The `buf/index.ts` source file imports generated `_pb` files with `.ts` extensions (e.g., `./proto/gen/dxos/keys_pb.ts`). This is required because:
+- `tsconfig.base.json` uses `rewriteRelativeImportExtensions: true` which only rewrites `.ts` → `.js` (not extensionless imports).
+- The compiled `dist/src/buf/index.js` needs `.js` extensions for Node ESM resolution.
+- Without this, vite dev server fails with `ERR_MODULE_NOT_FOUND` when loading the config (which imports `@dxos/protocols`).
+
+The buf-generated `_pb.ts` files themselves use `import_extension=js` in their `protoc-gen-es` options, so their cross-references already have `.js` extensions and work correctly in the compiled output.
 
 ### protobuf-es Best Practices
 

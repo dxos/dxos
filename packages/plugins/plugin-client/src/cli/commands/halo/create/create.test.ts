@@ -31,7 +31,7 @@ describe.skip('halo create', () => {
       expect(logs).toHaveLength(1);
       const parsedIdentity = TestConsole.parseJson(logs[0]);
       expect(parsedIdentity).toEqual({
-        identityKey: client.halo.identity.get()?.identityKey.toHex(),
+        identityKey: (client.halo.identity.get()?.identityKey as any)?.toHex(),
         displayName: client.halo.identity.get()?.profile?.displayName,
       });
     }).pipe(Effect.provide(layer), Effect.scoped, runAndForwardErrors));
@@ -45,7 +45,7 @@ describe.skip('halo create', () => {
       expect(logs).toHaveLength(1);
       const parsedIdentity = TestConsole.parseJson(logs[0]);
       expect(parsedIdentity).toEqual({
-        identityKey: client.halo.identity.get()?.identityKey.toHex(),
+        identityKey: (client.halo.identity.get()?.identityKey as any)?.toHex(),
         displayName: client.halo.identity.get()?.profile?.displayName,
       });
     }).pipe(Effect.provide(layer), Effect.scoped, runAndForwardErrors));

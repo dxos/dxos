@@ -32,7 +32,7 @@ export const handler = Effect.fn(function* () {
     yield* Console.log(
       JSON.stringify(
         {
-          deviceKey: device.deviceKey.toHex(),
+          deviceKey: (device.deviceKey as any)?.toHex(),
           profile: {
             ...device.profile,
             type: device.profile?.type ? DeviceType[device.profile?.type] : 'UNKNOWN',

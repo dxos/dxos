@@ -79,7 +79,7 @@ const properties: TablePropertyDefinition[] = [
 
 export const SwarmPanel = () => {
   const devtoolsHost = useDevtools();
-  const { data: swarms = [] } = useStream(() => devtoolsHost.subscribeToSwarmInfo({}), {});
+  const { data: swarms = [] } = useStream(() => devtoolsHost.subscribeToSwarmInfo({} as any), {} as any);
   const spaces = useSpaces({ all: true });
   const identityMap = new ComplexMap<PublicKey, SpaceMember>(PublicKey.hash);
 
@@ -88,7 +88,7 @@ export const SwarmPanel = () => {
     for (const member of members) {
       // TODO(nf): need to iterate through all the peerstates?
       if (member.peerStates?.length && member.peerStates[0].peerId) {
-        identityMap.set(member.peerStates[0].peerId, member);
+        identityMap.set(member.peerStates[0].peerId as any, member);
       }
     }
   }
@@ -102,37 +102,37 @@ export const SwarmPanel = () => {
     for (const swarm of swarms) {
       if (!swarm.connections?.length) {
         connections.push({
-          id: swarm.id.toHex(), // For table key
-          swarmId: swarm.id,
-          swarmTopic: swarm.topic,
+          id: (swarm.id as any)!.toHex(),
+          swarmId: swarm.id!,
+          swarmTopic: swarm.topic!,
           label: swarm.label,
           isActive: swarm.isActive ? 'true' : 'false',
         });
       } else {
         for (const connection of swarm.connections) {
           let identityDisplay = '';
-          const identity = identityMap.get(connection.remotePeerId)?.identity;
+          const identity = identityMap.get(connection.remotePeerId as any)?.identity;
           if (identity) {
-            identityDisplay = identity.identityKey.truncate();
+            identityDisplay = (identity.identityKey as any)!.truncate();
             if (identity.profile?.displayName) {
               identityDisplay = identityDisplay + ' (' + identity.profile?.displayName + ')';
             }
           }
 
-          connectionMap.set(connection.sessionId, connection);
+          connectionMap.set(connection.sessionId as any, connection as any);
 
-          const stats = getStats(connection);
+          const stats = getStats(connection as any);
           const statsDisplay = stats ? `↑ ${bytes(stats.bytesSent)} ↓ ${bytes(stats.bytesReceived)}` : '';
 
           connections.push({
-            id: `${swarm.id.toHex()}-${connection.sessionId.toHex()}`, // For table key
-            swarmId: swarm.id,
-            swarmTopic: swarm.topic,
+            id: `${(swarm.id as any)!.toHex()}-${(connection.sessionId as any)!.toHex()}`,
+            swarmId: swarm.id!,
+            swarmTopic: swarm.topic!,
             label: swarm.label,
             isActive: swarm.isActive ? 'true' : 'false',
-            connection,
-            session: connection.sessionId.toHex(),
-            remotePeer: connection.remotePeerId?.toHex() ?? '',
+            connection: connection as any,
+            session: (connection.sessionId as any)!.toHex(),
+            remotePeer: (connection.remotePeerId as any)?.toHex() ?? '',
             identity: identityDisplay,
             state: connection.state,
             buffer: `${connection.readBufferSize ?? 0} / ${connection.writeBufferSize ?? 0}`,

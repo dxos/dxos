@@ -45,7 +45,7 @@ export const ChatThread = forwardRef<MarkdownStreamController | null, ChatThread
     );
 
     const userHue = useMemo(
-      () => identity?.profile?.data?.hue || keyToFallback(identity?.identityKey ?? PublicKey.random()).hue,
+      () => identity?.profile?.data?.hue || keyToFallback((identity?.identityKey ?? PublicKey.random()) as any).hue,
       [identity],
     );
 

@@ -23,8 +23,8 @@ export const handler = Effect.fn(function* () {
     yield* Console.log(
       JSON.stringify(
         {
-          identityKey: identity?.identityKey.toHex(),
-          deviceKey: device?.deviceKey.toHex(),
+          identityKey: (identity?.identityKey as any)?.toHex(),
+          deviceKey: (device?.deviceKey as any)?.toHex(),
         },
         null,
         2,
@@ -32,8 +32,8 @@ export const handler = Effect.fn(function* () {
     );
   } else {
     const builder = FormBuilder.make({ title: 'HALO Keys' }).pipe(
-      FormBuilder.option('identityKey', Option.fromNullable(identity?.identityKey.truncate())),
-      FormBuilder.option('deviceKey', Option.fromNullable(device?.deviceKey.truncate())),
+      FormBuilder.option('identityKey', Option.fromNullable((identity?.identityKey as any)?.truncate())),
+      FormBuilder.option('deviceKey', Option.fromNullable((device?.deviceKey as any)?.truncate())),
     );
     yield* Console.log(print(FormBuilder.build(builder)));
   }

@@ -5,7 +5,7 @@
 import React, { type FC, useMemo, useState } from 'react';
 
 import { MulticastObservable } from '@dxos/async';
-import { SpaceState } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { type Space } from '@dxos/react-client/echo';
 import { useMulticastObservable } from '@dxos/react-hooks';
@@ -33,7 +33,7 @@ export const SpaceInfoPanel: FC<SpaceInfoPanelProps> = (props) => {
 
   // TODO(dmaretskyi): We don't need SpaceInfo anymore?
   const spacesInfo = useSpacesInfo();
-  const metadata = space?.key && spacesInfo.find((info) => info.key.equals(space?.key));
+  const metadata = space?.key && spacesInfo.find((info: any) => (info.key as any)?.equals(space?.key));
   const pipelineState = useMulticastObservable(space?.pipeline ?? MulticastObservable.empty());
 
   const toggleActive = async () => {
@@ -84,7 +84,7 @@ export const SpaceInfoPanel: FC<SpaceInfoPanelProps> = (props) => {
         <div>
           <SpaceProperties space={space} metadata={metadata} />
           <div className='bs-24'>
-            <PipelineTable state={pipelineState ?? {}} metadata={metadata} onSelect={props.onSelectPipeline} />
+            <PipelineTable state={(pipelineState ?? {}) as any} metadata={metadata} onSelect={props.onSelectPipeline} />
           </div>
           <div className='bs-48'>
             <FeedTable onSelect={props.onSelectFeed} />

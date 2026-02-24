@@ -31,10 +31,10 @@ export const CredentialsPanel = (props: { space?: Space }) => {
 
   const data = useMemo(
     () =>
-      credentials.map((credential: Credential) => ({
+      credentials.map((credential: any) => ({
         id: credential.id?.toString() ?? '',
-        issuer: credential.issuer.toString(),
-        type: credential.subject.assertion['@type'],
+        issuer: credential.issuer?.toString() ?? '',
+        type: (credential.subject as any)?.assertion?.['@type'],
         issuanceDate: credential.issuanceDate,
         _original: credential,
       })),

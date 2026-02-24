@@ -17,17 +17,17 @@ export const useFeedMessages = ({ feedKey, maxBlocks = 100 }: { feedKey?: Public
   // TODO(wittjosiah): FeedMessageBlock.
   const [messages, setMessages] = useState<SubscribeToFeedBlocksResponse.Block[]>([]);
   const { blocks } = useStream(
-    () => devtoolsHost.subscribeToFeedBlocks({ spaceKey: space?.key, feedKey, maxBlocks }),
-    {},
+    () => devtoolsHost.subscribeToFeedBlocks({ spaceKey: space?.key as any, feedKey: feedKey as any, maxBlocks } as any),
+    {} as any,
     [space, feedKey],
   );
 
   useEffect(() => {
-    setMessages(blocks ?? []);
+    setMessages((blocks as any) ?? []);
   }, [blocks]);
 
   useEffect(() => {
-    setMessages(blocks ?? []);
+    setMessages((blocks as any) ?? []);
   }, [blocks]);
 
   return messages;

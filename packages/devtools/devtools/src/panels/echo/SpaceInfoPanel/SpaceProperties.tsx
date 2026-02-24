@@ -26,23 +26,23 @@ export const SpaceProperties: FC<{ space: Space; metadata: SubscribeToSpacesResp
 
     const pipeline = space?.internal.data?.pipeline;
 
-    const currentEpochNumber = pipeline?.currentEpoch?.subject.assertion.number;
-    const appliedEpochNumber = pipeline?.appliedEpoch?.subject.assertion.number;
-    const epochTimeframe = pipeline?.currentEpoch?.subject.assertion.timeframe ?? new Timeframe();
+    const currentEpochNumber = (pipeline?.currentEpoch?.subject as any)?.assertion?.number;
+    const appliedEpochNumber = (pipeline?.appliedEpoch?.subject as any)?.assertion?.number;
+    const epochTimeframe = (pipeline?.currentEpoch?.subject as any)?.assertion?.timeframe ?? new Timeframe();
 
-    const targetControlMessages = pipeline?.targetControlTimeframe?.totalMessages() ?? 0;
-    const currentControlMessages = pipeline?.currentControlTimeframe?.totalMessages() ?? 0;
+    const targetControlMessages = (pipeline?.targetControlTimeframe as any)?.totalMessages() ?? 0;
+    const currentControlMessages = (pipeline?.currentControlTimeframe as any)?.totalMessages() ?? 0;
     const controlProgress = Math.min(currentControlMessages / targetControlMessages, 1) * 100;
 
-    const startDataMessages = pipeline?.startDataTimeframe?.totalMessages() ?? 0;
-    const targetDataMessages = pipeline?.targetDataTimeframe?.totalMessages() ?? 0;
-    const currentDataMessages = pipeline?.currentDataTimeframe?.totalMessages() ?? 0;
+    const startDataMessages = (pipeline?.startDataTimeframe as any)?.totalMessages() ?? 0;
+    const targetDataMessages = (pipeline?.targetDataTimeframe as any)?.totalMessages() ?? 0;
+    const currentDataMessages = (pipeline?.currentDataTimeframe as any)?.totalMessages() ?? 0;
     const dataProgress =
       Math.min(Math.abs((currentDataMessages - startDataMessages) / (targetDataMessages - startDataMessages) || 1), 1) *
       100;
 
     const { open, ready } = space?.internal.data?.metrics ?? {};
-    const startupTime = open && ready && ready.getTime() - open.getTime();
+    const startupTime = open && ready && (ready as any).getTime() - (open as any).getTime();
 
     return {
       key: metadata.key,
@@ -55,8 +55,8 @@ export const SpaceProperties: FC<{ space: Space; metadata: SubscribeToSpacesResp
           ? currentEpochNumber
           : `${currentEpochNumber} (${appliedEpochNumber})`,
       epochCreated: pipeline?.currentEpoch?.issuanceDate,
-      epochMutations: pipeline?.currentEpoch?.subject.assertion.timeframe.totalMessages(),
-      mutationsSinceEpoch: pipeline?.totalDataTimeframe?.newMessages(epochTimeframe),
+      epochMutations: (pipeline?.currentEpoch?.subject as any)?.assertion?.timeframe?.totalMessages(),
+      mutationsSinceEpoch: (pipeline?.totalDataTimeframe as any)?.newMessages(epochTimeframe),
     };
   }, [space, metadata, pipelineState]);
 

@@ -20,7 +20,7 @@ export type TranscriptionContainerProps = SurfaceComponentProps<Transcript.Trans
 export const TranscriptionContainer = ({ role, subject: transcript }: TranscriptionContainerProps) => {
   const attendableId = Obj.getDXN(transcript).toString();
   const db = Obj.getDatabase(transcript);
-  const members = useMembers(db?.spaceId).map((member) => member.identity);
+  const members = useMembers(db?.spaceId).map((member) => member.identity).filter(Boolean) as any[];
   const queue = useQueue<Message.Message>(transcript.queue.dxn, { pollInterval: 1_000 });
   const model = useQueueModelAdapter(renderByline(members), queue);
 

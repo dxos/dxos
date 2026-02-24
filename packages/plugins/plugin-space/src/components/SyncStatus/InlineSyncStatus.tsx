@@ -5,7 +5,7 @@
 import * as Option from 'effect/Option';
 import React, { useEffect, useState } from 'react';
 
-import { useAppGraph } from '@dxos/app-framework/react';
+import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { EdgeStatus_ConnectionState, type QueryEdgeStatusResponse } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { useClient } from '@dxos/react-client';

@@ -10,7 +10,7 @@ import * as Effect from 'effect/Effect';
 import { CommandConfig } from '@dxos/cli-util';
 import { print } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
-import { type Device } from '@dxos/protocols/proto/dxos/client/services';
+import { type Device } from '@dxos/protocols/buf/dxos/client/services_pb';
 
 import { printDevice } from '../util';
 
@@ -50,7 +50,7 @@ export const handler = Effect.fn(function* ({ label }: { label: string }) {
     yield* Console.log(
       JSON.stringify(
         {
-          deviceKey: updatedDevice.deviceKey.toHex(),
+          deviceKey: (updatedDevice.deviceKey as any)?.toHex(),
           profile: updatedDevice.profile,
         },
         null,

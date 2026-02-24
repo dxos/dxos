@@ -12,11 +12,11 @@ import { codec } from './codec';
 export const matchServiceCredential =
   (capabilities: string[] = []) =>
   (credential: Credential) => {
-    if (credential.subject.assertion['@type'] !== 'dxos.halo.credentials.ServiceAccess') {
+    if ((credential.subject as any)?.assertion?.['@type'] !== 'dxos.halo.credentials.ServiceAccess') {
       return false;
     }
 
-    const { capabilities: credentialCapabilities } = credential.subject.assertion;
+    const { capabilities: credentialCapabilities } = (credential.subject as any).assertion;
     return capabilities.every((capability) => credentialCapabilities.includes(capability));
   };
 
@@ -39,7 +39,7 @@ export const signup = async ({
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       email,
-      identityDid: identity ? `did:key:${identity.identityKey.toHex()}` : undefined,
+      identityDid: identity ? `did:key:${(identity.identityKey as any)?.toHex()}` : undefined,
       redirectUrl,
     }),
   });
@@ -82,7 +82,7 @@ export const activateAccount = async ({
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      identityDid: `did:key:${identity.identityKey.toHex()}`,
+      identityDid: `did:key:${(identity.identityKey as any)?.toHex()}`,
       referrerDid: referrer ? `did:key:${referrer.toHex()}` : undefined,
       token,
     }),
