@@ -149,6 +149,7 @@ export const getPlugins = ({
   isMobile,
 }: PluginConfig): Plugin.Plugin[] => {
   const useSimpleLayout = isPopover || isMobile;
+  const origin = isTauri ? APP_LINK_ORIGIN : window.location.origin;
   return [
     AssistantPlugin(),
     AttentionPlugin(),
@@ -158,7 +159,8 @@ export const getPlugins = ({
     ClientPlugin({
       config,
       services,
-      onReset: handleReset,
+      shareableLinkOrigin: origin,
+      onReset: createResetHandler(origin),
     }),
     ConductorPlugin(),
     DebugPlugin(),
@@ -197,7 +199,7 @@ export const getPlugins = ({
     SketchPlugin(),
     SpacePlugin({
       observability: true,
-      shareableLinkOrigin: isTauri ? APP_LINK_ORIGIN : window.location.origin,
+      shareableLinkOrigin: origin,
     }),
     StackPlugin(),
     StatusBarPlugin(),
@@ -217,14 +219,16 @@ export const getPlugins = ({
     .flat();
 };
 
-const handleReset: ClientPluginOptions['onReset'] = ({ target }) =>
-  Effect.sync(() => {
-    localStorage.clear();
-    if (target === 'deviceInvitation') {
-      window.location.assign(new URL('/?deviceInvitationCode=', window.location.origin));
-    } else if (target === 'recoverIdentity') {
-      window.location.assign(new URL('/?recoverIdentity=true', window.location.origin));
-    } else {
-      window.location.pathname = '/';
-    }
-  });
+const createResetHandler =
+  (origin: string): ClientPluginOptions['onReset'] =>
+  ({ target }) =>
+    Effect.sync(() => {
+      localStorage.clear();
+      if (target === 'deviceInvitation') {
+        window.location.assign(new URL('/?deviceInvitationCode=', origin));
+      } else if (target === 'recoverIdentity') {
+        window.location.assign(new URL('/?recoverIdentity=true', origin));
+      } else {
+        window.location.pathname = '/';
+      }
+    });

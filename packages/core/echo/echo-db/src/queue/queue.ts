@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Predicate from 'effect/Predicate';
+
 import { DeferredTask } from '@dxos/async';
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
@@ -38,7 +40,9 @@ const POLLING_INTERVAL = 1_000;
 export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Queue<T> {
   private readonly _ctx = new Context();
 
-  public readonly updated = new Event();
+  public readonly updated = new Event()
+
+;
 
   private readonly _refreshTask = new DeferredTask(this._ctx, async () => {
     const thisRefreshId = ++this._refreshId;
@@ -64,13 +68,18 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
       }
 
       const decodedObjects = await Promise.all(
-        (objects ?? []).map((obj) =>
-          Obj.fromJSON(obj, {
-            refResolver: this._refResolver,
-            dxn: this._dxn.extend([(obj as { id?: string }).id ?? '']),
-          }),
-        ),
-      );
+        (objects ?? []).map(async (obj) => {
+          try {
+            return await Obj.fromJSON(obj, {
+              refResolver: this._refResolver,
+              dxn: this._dxn.extend([(obj as { id?: string }).id ?? '']),
+            });
+          } catch (err) {
+            log.verbose('schema validation error; object ignored', { obj, error: err });
+            return undefined;
+          }
+        }),
+      ).then((objects) => objects.filter(Predicate.isNotUndefined));
 
       if (thisRefreshId !== this._refreshId) {
         return;
@@ -98,23 +107,53 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
         this.updated.emit();
       }
     }
-  });
+  })
 
-  private readonly _subspaceTag: string;
-  private readonly _spaceId: SpaceId;
-  private readonly _queueId: string;
+;
+
+  private readonly _subspaceTag: string
+
+;
+
+  private readonly _spaceId: SpaceId
+
+;
+
+  private readonly _queueId: string
+
+;
 
   /**
    * Number of active polling handlers.
    */
-  private _pollingHandlers: number = 0;
 
-  private _objectCache = new Map<ObjectId, T>();
-  private _objects: T[] = [];
-  private _isLoading = true;
-  private _error: Error | null = null;
-  private _refreshId = 0;
-  private _querying = false;
+  private _pollingHandlers: number = 0
+
+;
+
+  private _objectCache = new Map<ObjectId, T>()
+
+;
+
+  private _objects: T[] = []
+
+;
+
+  private _isLoading = true
+
+;
+
+  private _error: Error | null = null
+
+;
+
+  private _refreshId = 0
+
+;
+
+  private _querying = false
+
+;
 
   constructor(
     private readonly _service: Echo.QueueService,
@@ -135,6 +174,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
   }
 
   // TODO(burdon): Rename to objects.
+
   get dxn() {
     return this._dxn;
   }
@@ -142,6 +182,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
   /**
    * Subscribe to queue updates.
    */
+
   subscribe(callback: () => void): () => void {
     return this.updated.on(callback);
   }
@@ -149,6 +190,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
   /**
    * @deprecated Use `query` method instead.
    */
+
   get isLoading(): boolean {
     return this._isLoading;
   }
@@ -156,6 +198,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
   /**
    * @deprecated Use `query` method instead.
    */
+
   get error(): Error | null {
     return this._error;
   }
@@ -163,6 +206,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
   /**
    * @deprecated Use `query` method instead.
    */
+
   get objects(): T[] {
     return this.getObjectsSync();
   }
@@ -174,6 +218,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
   /**
    * Insert into queue with optimistic update.
    */
+
   async append(items: T[]): Promise<void> {
     items.forEach((item) => assertObjectModel(item));
 
@@ -235,7 +280,11 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
   }
 
   // Odd way to define method's types from a typedef.
-  declare query: Database.QueryFn;
+
+  declare query: Database.QueryFn
+
+;
+
   static {
     this.prototype.query = this.prototype._query;
   }
@@ -249,10 +298,12 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
   /**
    * @deprecated Use `query` method instead.
    */
+
   async queryObjects(): Promise<T[]> {
     const objects = await this.fetchObjectsJSON();
     const decodedObjects = await Promise.all(
-      objects.map(async (obj) => {
+      objects
+        .map(async (obj) => {
         const decoded = await Obj.fromJSON(obj, {
           refResolver: this._refResolver,
           dxn: this._dxn.extend([(obj as { id?: string }).id ?? '']),
@@ -290,6 +341,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
    * Internal use.
    * Doesn't trigger update events.
    */
+
   getObjectsSync(): T[] {
     return this._objects;
   }
@@ -297,6 +349,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
   /**
    * @deprecated Use `query` method instead.
    */
+
   async getObjectsById(ids: ObjectId[]): Promise<(T | undefined)[]> {
     const missingIds = ids.filter((id) => !this._objectCache.has(id));
     if (missingIds.length > 0) {
@@ -318,12 +371,85 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
    * Overrides optimistic updates.
    * @deprecated Use `query` method instead.
    */
+
   // TODO(dmaretskyi): Split optimistic into separate state so it doesn't get overridden.
+
   async refresh(): Promise<void> {
     await this._refreshTask.runBlocking();
   }
 
-  private _pollingInterval: NodeJS.Timeout | null = null;
+  private _pollingInterval: NodeJS.Timeout | null = null
+
+;
+
+;
+
+;
+
+;
+
+;
+
+;
+
+;
+
+;
+
+;
+
+;
+
+;
+
+;
+
+;
+
+;
+
+  // TODO(burdon): Rename to objects.
+
+  /**
+   * @deprecated Use `query` method instead.
+   */
+
+  /**
+   * @deprecated Use `query` method instead.
+   */
+
+  /**
+   * @deprecated Use `query` method instead.
+   */
+
+  // Odd way to define method's types from a typedef.
+
+;
+
+  async sync({
+    shouldPush = true,
+    shouldPull = true,
+  }: { shouldPush?: boolean; shouldPull?: boolean } = {}): Promise<void> {
+    await this._service.syncQueue({
+      subspaceTag: this._subspaceTag,
+      spaceId: this._spaceId,
+      queueId: this._queueId,
+      shouldPush,
+      shouldPull,
+    });
+  }
+
+  /**
+   * @deprecated Use `query` method instead.
+   */
+
+  /**
+   * @deprecated Use `query` method instead.
+   */
+
+  // TODO(dmaretskyi): Split optimistic into separate state so it doesn't get overridden.
+
+;
 
   beginPolling(): () => void {
     if (this._pollingHandlers++ === 0) {

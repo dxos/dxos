@@ -2,10 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { NotImplementedError, RuntimeServiceError } from '@dxos/errors';
-import { invariant } from '@dxos/invariant';
+import { RuntimeServiceError } from '@dxos/errors';
 import { type Echo, type EdgeFunctionEnv, type FeedProtocol } from '@dxos/protocols';
-import { bufToProto, EMPTY, type Empty } from '@dxos/protocols/buf';
+import { EMPTY, type Empty } from '@dxos/protocols/buf';
 import type {
   DeleteFromQueueRequest,
   InsertIntoQueueRequest,
@@ -20,38 +19,33 @@ export class QueueServiceImpl implements Echo.QueueService {
   ) {}
 
   async queryQueue(request: QueryQueueRequest): Promise<QueueQueryResult> {
-    const { query } = request;
-    const { queueIds, ...filter } = query!;
-    const spaceId = query!.spaceId;
-    const queueId = queueIds?.[0];
-    invariant(request.query!.queuesNamespace);
     try {
-      using result = await this._queueService.query(
-        this._ctx,
-        `dxn:queue:${request.query!.queuesNamespace}:${spaceId}:${queueId}`,
-        bufToProto<Omit<FeedProtocol.QueueQuery, 'queueId'>>(filter),
-      );
+      using result = await this._queueService.queryQueue(this._ctx, request);
+      // Copy to avoid hanging RPC stub (Workers RPC lifecycle).
       return {
-        // Copy returned object to avoid hanging RPC stub
-        // See https://developers.cloudflare.com/workers/runtime-apis/rpc/lifecycle/
         objects: structuredClone(result.objects),
         nextCursor: result.nextCursor,
         prevCursor: result.prevCursor,
       } as QueueQueryResult;
     } catch (error) {
+      const { query } = request;
       throw RuntimeServiceError.wrap({
         message: 'Queue query failed.',
-        context: { subspaceTag: request.query!.queuesNamespace, spaceId, queueId },
+        context: {
+          subspaceTag: query?.queuesNamespace,
+          spaceId: query?.spaceId,
+          queueId: query?.queueIds?.[0],
+        },
         ifTypeDiffers: true,
       })(error);
     }
   }
 
   async insertIntoQueue(request: InsertIntoQueueRequest): Promise<Empty> {
-    const { subspaceTag, spaceId, queueId, objects } = request;
     try {
-      await this._queueService.append(this._ctx, `dxn:queue:${subspaceTag}:${spaceId}:${queueId}`, objects ?? []);
+      using _ = await this._queueService.insertIntoQueue(this._ctx, request);
     } catch (error) {
+      const { subspaceTag, spaceId, queueId } = request;
       throw RuntimeServiceError.wrap({
         message: 'Queue append failed.',
         context: { subspaceTag, spaceId, queueId },
@@ -61,11 +55,20 @@ export class QueueServiceImpl implements Echo.QueueService {
     return EMPTY;
   }
 
-  deleteFromQueue(request: DeleteFromQueueRequest): Promise<Empty> {
-    const { subspaceTag, spaceId, queueId } = request;
-    throw new NotImplementedError({
-      message: 'Deleting from queue is not supported.',
-      context: { subspaceTag, spaceId, queueId },
-    });
+  async deleteFromQueue(request: DeleteFromQueueRequest): Promise<Empty> {
+    try {
+      using _ = await this._queueService.deleteFromQueue(this._ctx, request);
+    } catch (error) {
+      const { subspaceTag, spaceId, queueId } = request;
+      throw RuntimeServiceError.wrap({
+        message: 'Queue delete failed.',
+        context: { subspaceTag, spaceId, queueId },
+        ifTypeDiffers: true,
+      })(error);
+    }
+  }
+
+  async syncQueue(_: FeedProtocol.SyncQueueRequest): Promise<void> {
+    // No-op in Cloudflare runtime.
   }
 }

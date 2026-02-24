@@ -113,4 +113,4 @@ export const Thread = {
   Status: ThreadStatus,
 };
 
-export type { ThreadRootProps, ThreadHeaderProps as ThreadHeadingProps, ThreadStatusProps };
+export type { ThreadRootProps, ThreadHeaderProps, ThreadStatusProps };

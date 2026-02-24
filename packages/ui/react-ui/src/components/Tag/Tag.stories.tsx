@@ -27,11 +27,7 @@ const meta = {
     </div>
   ),
   decorators: [withTheme()],
-  parameters: {
-    chromatic: {
-      disableSnapshot: false,
-    },
-  },
+  parameters: {},
 } satisfies Meta<typeof Tag>;
 
 export default meta;

@@ -1,5 +1,10 @@
 # Agent Guidelines for DXOS
 
+## General Interaction
+
+- If you are unsure about the best way to implement something, ask the user for clarification.
+- When asking the user a question; either make it yes/no, or provide numbered options.
+
 ## Dependencies
 
 - All dependency versions are managed in the default pnpm catalog.

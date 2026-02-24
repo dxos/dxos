@@ -21,7 +21,7 @@ import { type SelectionManager } from '@dxos/react-ui-attention';
 import { AccessToken, type Event, type Message } from '@dxos/types';
 import { kebabize } from '@dxos/util';
 
-import { calendar, gmail } from '../../functions';
+import { CalendarFunctions, GmailFunctions } from '../../functions';
 import { meta } from '../../meta';
 import { Calendar, InboxOperation, Mailbox } from '../../types';
 
@@ -167,7 +167,11 @@ export default Capability.makeModule(
                 invariant(db);
                 const runtime = computeRuntime.getRuntime(db.spaceId);
                 yield* Effect.tryPromise(() =>
-                  runtime.runPromise(invokeFunctionWithTracing(gmail.sync, { mailbox: Ref.make(mailbox) })),
+                  runtime.runPromise(
+                    invokeFunctionWithTracing(GmailFunctions.Sync, {
+                      mailbox: Ref.make(mailbox),
+                    }),
+                  ),
                 );
               }),
               properties: {
@@ -192,7 +196,9 @@ export default Capability.makeModule(
                 const runtime = computeRuntime.getRuntime(db.spaceId);
                 yield* Effect.tryPromise(() =>
                   runtime.runPromise(
-                    invokeFunctionWithTracing(calendar.sync, { calendar: Ref.fromDXN(Obj.getDXN(cal)) }),
+                    invokeFunctionWithTracing(CalendarFunctions.Sync, {
+                      calendar: Ref.make(cal),
+                    }),
                   ),
                 );
               }),

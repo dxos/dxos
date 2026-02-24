@@ -29,7 +29,6 @@ export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/
   {
     // TODO(dmaretskyi): This should take function id instead of the definition object.
     invokeFunction<I, O>(functionDef: FunctionDefinition<I, O>, input: I): Effect.Effect<O, never, InvocationServices>;
-
     resolveFunction(key: string): Effect.Effect<FunctionDefinition.Any, FunctionNotFoundError>;
   }
 >() {
@@ -97,13 +96,13 @@ const invokeFunction = (
     try {
       const assertInput = functionDef.inputSchema.pipe(Schema.asserts);
       (assertInput as any)(input);
-    } catch (e) {
-      throw new FunctionError({ message: 'Invalid function input', context: { name: functionDef.name }, cause: e });
+    } catch (err) {
+      throw new FunctionError({ message: 'Invalid function input', context: { name: functionDef.name }, cause: err });
     }
 
     const context: FunctionContext = {};
 
-    log('invoking function', { name: functionDef.name, input });
+    log.info('invoking function', { name: functionDef.name, input });
 
     // TODO(dmaretskyi): This should be delegated to a function invoker service.
     const data = yield* Effect.gen(function* () {
@@ -157,6 +156,7 @@ export class FunctionImplementationResolver extends Context.Tag('@dxos/functions
         if (!resolved) {
           return Effect.fail(new FunctionNotFoundError(functionDef.name));
         }
+
         return Effect.succeed(resolved);
       },
 

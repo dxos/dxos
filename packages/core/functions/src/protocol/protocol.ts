@@ -173,14 +173,7 @@ class FunctionContext extends Resource {
         )
       : AiService.notAvailable;
 
-    return Layer.mergeAll(
-      dbLayer, //
-      queuesLayer,
-      credentials,
-      functionInvocationService,
-      aiLayer,
-      tracing,
-    );
+    return Layer.mergeAll(dbLayer, queuesLayer, credentials, functionInvocationService, aiLayer, tracing);
   }
 }
 

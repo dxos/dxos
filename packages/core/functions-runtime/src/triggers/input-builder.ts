@@ -33,3 +33,8 @@ export const createInvocationPayload = (trigger: Trigger.Trigger, event: Trigger
   }
   return payload;
 };
+
+export interface TriggerInput {
+  trigger: Trigger.Trigger;
+  event: TriggerEvent.TriggerEvent;
+}

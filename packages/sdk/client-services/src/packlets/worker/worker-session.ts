@@ -115,7 +115,7 @@ export class WorkerSession {
   }
 
   async open(): Promise<void> {
-    log.info('opening...');
+    log('opening...');
     await Promise.all([this._clientRpc.open(), this._iframeRpc.open(), this._maybeOpenShell()]);
 
     // Wait until the worker's RPC service has started.
@@ -126,11 +126,11 @@ export class WorkerSession {
       void this._afterLockReleases(this.lockKey, () => this.close());
     }
 
-    log.info('opened');
+    log('opened');
   }
 
   async close(): Promise<void> {
-    log.info('closing...');
+    log.debug('closing...');
     try {
       await this.onClose.callIfSet();
     } catch (err: any) {
@@ -138,7 +138,7 @@ export class WorkerSession {
     }
 
     await Promise.all([this._clientRpc.close(), this._iframeRpc.close()]);
-    log.info('closed');
+    log.debug('closed');
   }
 
   private async _maybeOpenShell(): Promise<void> {

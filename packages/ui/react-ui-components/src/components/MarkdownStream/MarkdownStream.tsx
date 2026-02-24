@@ -39,7 +39,7 @@ import {
   navigateNextEffect,
   navigatePreviousEffect,
   preview,
-  scrollToBottomEffect,
+  scrollToLineEffect,
   smoothScroll,
   streamer,
   xmlTagContextEffect,
@@ -71,12 +71,13 @@ export type MarkdownStreamProps = ThemedClassName<
   {
     debug?: boolean;
     content?: string;
+    autoScroll?: boolean;
     onEvent?: (event: MarkdownStreamEvent) => void;
   } & (XmlTagsOptions & StreamerOptions & AutoScrollOptions)
 >;
 
 export const MarkdownStream = forwardRef<MarkdownStreamController | null, MarkdownStreamProps>(
-  ({ classNames, debug, content, registry, fadeIn, cursor, onEvent }, forwardedRef) => {
+  ({ classNames, debug, content, autoScroll: autoScrollProp, registry, fadeIn, cursor, onEvent }, forwardedRef) => {
     const { themeMode } = useThemeContext();
 
     // Active widgets.
@@ -94,11 +95,11 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
             slots: {
               scroll: {
                 // NOTE: Child widgets must have `max-is-[100cqi]`.
-                className: 'size-container pli-cardSpacingInline',
+                className: 'size-container p-cardPadding',
               },
             },
           }),
-          createBasicExtensions({ lineWrapping: true, readOnly: true, scrollPastEnd: true }),
+          createBasicExtensions({ lineWrapping: true, readOnly: true, scrollPastEnd: false }),
           extendedMarkdown({ registry }),
           smoothScroll(),
           debug
@@ -110,11 +111,24 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
                 preview(),
                 xmlTags({ registry, setWidgets, bookmarks: ['prompt'] }),
                 streamer({ cursor, fadeIn }),
-                autoScroll({ autoScroll: false }),
+                autoScroll(),
               ],
         ].filter(isNonNullable),
       };
     }, [debug, themeMode, registry]);
+
+    // Autoscroll.
+    useEffect(() => {
+      if (!view) {
+        return;
+      }
+
+      if (autoScrollProp) {
+        view.dispatch({
+          // effects: scrollToLineEffect.of({ line: -1, options: { behavior: 'smooth' } }),
+        });
+      }
+    }, [view, autoScrollProp]);
 
     // Streaming queue.
     const [queue, setQueue, queueRef] = useStateWithRef(Effect.runSync(Queue.unbounded<string>()));
@@ -158,7 +172,7 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
         },
         scrollToBottom: (behavior?: ScrollBehavior) => {
           viewRef.current?.dispatch({
-            effects: scrollToBottomEffect.of(behavior),
+            effects: scrollToLineEffect.of({ line: -1, options: { behavior } }),
           });
         },
         navigatePrevious: () => {

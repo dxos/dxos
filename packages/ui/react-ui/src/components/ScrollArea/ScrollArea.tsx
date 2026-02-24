@@ -46,12 +46,12 @@ type ScrollAreaRootProps = SlottableProps<HTMLDivElement> & Partial<ScrollAreaCo
 const ScrollAreaRoot = forwardRef<HTMLDivElement, ScrollAreaRootProps>(
   (
     {
-      className,
       classNames,
+      className,
       children,
       orientation = 'vertical',
       autoHide = true,
-      margin = false,
+      margin = true, // TODO(burdon): Is this the right default?
       padding = false,
       thin = false,
       snap = false,

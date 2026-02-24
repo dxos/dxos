@@ -91,17 +91,19 @@ type MessageTitleProps = Omit<ThemedClassName<ComponentPropsWithRef<typeof Primi
 const MESSAGE_TITLE_NAME = 'MessageTitle';
 
 const MessageTitle = forwardRef<HTMLHeadingElement, MessageTitleProps>(
-  ({ asChild, classNames, children, icon, ...props }, forwardedRef) => {
+  ({ asChild, classNames, children, icon: iconProp, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const { titleId, valence } = useMessageContext(MESSAGE_TITLE_NAME);
     const Root = asChild ? Slot : Primitive.h2;
-
+    const icon = iconProp ?? messageIcons[valence];
     return (
-      <Root {...props} className={tx('message.title', {}, classNames)} id={titleId} ref={forwardedRef}>
-        {!icon && valence === 'neutral' ? null : (
-          <Icon size={5} icon={icon ?? messageIcons[valence]} classNames={tx('message.icon', { valence })} />
+      <Root {...props} className={tx('message.header', {}, classNames)} id={titleId} ref={forwardedRef}>
+        {!icon && valence === 'neutral' ? (
+          <div />
+        ) : (
+          <Icon size={5} icon={icon} classNames={tx('message.icon', { valence })} />
         )}
-        <span>{children}</span>
+        <span className={tx('message.title', {}, classNames)}>{children}</span>
       </Root>
     );
   },

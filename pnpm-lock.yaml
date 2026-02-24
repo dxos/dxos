@@ -144,6 +144,12 @@ catalogs:
     '@dnd-kit/utilities':
       specifier: ^3.2.0
       version: 3.2.0
+    '@dxos/echo-db':
+      specifier: ^0.8.3
+      version: 0.8.3
+    '@dxos/keys':
+      specifier: ^0.8.3
+      version: 0.8.3
     '@dxos/wa-sqlite':
       specifier: ^0.2.1
       version: 0.2.1
@@ -2721,9 +2727,6 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
-      '@dxos/react-ui-kanban':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-kanban
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../../ui/react-ui-stack
@@ -4239,6 +4242,9 @@ importers:
       parsimmon:
         specifier: 'catalog:'
         version: 1.18.1
+      tokenx:
+        specifier: ^1.3.0
+        version: 1.3.0
     devDependencies:
       '@types/parsimmon':
         specifier: 'catalog:'
@@ -4400,6 +4406,9 @@ importers:
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../../plugins/plugin-markdown
+      '@dxos/react-ui-mosaic':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-mosaic
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../../ui/react-ui-syntax-highlighter
@@ -8222,9 +8231,6 @@ importers:
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
-      '@dxos/react-ui-kanban':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-kanban
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../ui/react-ui-mosaic
@@ -9199,6 +9205,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/echo-atom':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-atom
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -9238,9 +9247,6 @@ importers:
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
-      '@dxos/react-ui-kanban':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-kanban
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../ui/react-ui-mosaic
@@ -9259,10 +9265,19 @@ importers:
       '@effect-atom/atom-react':
         specifier: 'catalog:'
         version: 0.5.0(@effect/experimental@0.58.0(@effect/platform@0.94.4(effect@3.19.16))(effect@3.19.16)(ioredis@5.3.2))(@effect/platform@0.94.4(effect@3.19.16))(@effect/rpc@0.73.0(@effect/platform@0.94.4(effect@3.19.16))(effect@3.19.16))(effect@3.19.16)(react@19.2.3)(scheduler@0.27.0)
+      '@radix-ui/react-context':
+        specifier: 'catalog:'
+        version: 1.1.1(@types/react@19.2.7)(react@19.2.3)
       effect:
         specifier: 3.19.16
         version: 3.19.16
     devDependencies:
+      '@dxos/echo-db':
+        specifier: 'catalog:'
+        version: 0.8.3
+      '@dxos/keys':
+        specifier: 'catalog:'
+        version: 0.8.3
       '@dxos/plugin-preview':
         specifier: workspace:*
         version: link:../plugin-preview
@@ -10422,6 +10437,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/echo-atom':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-atom
       '@dxos/echo-query':
         specifier: workspace:*
         version: link:../../core/echo/echo-query
@@ -15499,6 +15517,9 @@ importers:
       '@phosphor-icons/react':
         specifier: 'catalog:'
         version: 2.1.10(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      '@tanstack/react-virtual':
+        specifier: 'catalog:'
+        version: 3.13.18(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@types/react':
         specifier: ~19.2.7
         version: 19.2.7
@@ -15902,6 +15923,9 @@ importers:
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../react-ui-form
+      '@dxos/react-ui-mosaic':
+        specifier: workspace:*
+        version: link:../react-ui-mosaic
       '@dxos/react-ui-sfx':
         specifier: workspace:*
         version: link:../react-ui-sfx
@@ -17123,97 +17147,6 @@ importers:
       '@types/react-dom':
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.7)
-      react:
-        specifier: ~19.2.3
-        version: 19.2.3
-      react-dom:
-        specifier: ~19.2.3
-        version: 19.2.3(react@19.2.3)
-      vite:
-        specifier: 'catalog:'
-        version: 7.1.9(@types/node@22.10.2)(jiti@2.6.1)(terser@5.19.2)(tsx@4.21.0)(yaml@2.8.2)
-
-  packages/ui/react-ui-kanban:
-    dependencies:
-      '@dxos/app-framework':
-        specifier: workspace:*
-        version: link:../../sdk/app-framework
-      '@dxos/async':
-        specifier: workspace:*
-        version: link:../../common/async
-      '@dxos/context':
-        specifier: workspace:*
-        version: link:../../common/context
-      '@dxos/echo':
-        specifier: workspace:*
-        version: link:../../core/echo/echo
-      '@dxos/effect':
-        specifier: workspace:*
-        version: link:../../common/effect
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../common/invariant
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../common/log
-      '@dxos/plugin-space':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-space
-      '@dxos/react-client':
-        specifier: workspace:*
-        version: link:../../sdk/react-client
-      '@dxos/react-ui-attention':
-        specifier: workspace:*
-        version: link:../react-ui-attention
-      '@dxos/react-ui-form':
-        specifier: workspace:*
-        version: link:../react-ui-form
-      '@dxos/react-ui-mosaic':
-        specifier: workspace:*
-        version: link:../react-ui-mosaic
-      '@dxos/react-ui-stack':
-        specifier: workspace:*
-        version: link:../react-ui-stack
-      '@dxos/schema':
-        specifier: workspace:*
-        version: link:../../sdk/schema
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../common/util
-      '@effect-atom/atom-react':
-        specifier: 'catalog:'
-        version: 0.5.0(@effect/experimental@0.58.0(@effect/platform@0.94.4(effect@3.19.16))(effect@3.19.16)(ioredis@5.3.2))(@effect/platform@0.94.4(effect@3.19.16))(@effect/rpc@0.73.0(@effect/platform@0.94.4(effect@3.19.16))(effect@3.19.16))(effect@3.19.16)(react@19.2.3)(scheduler@0.27.0)
-    devDependencies:
-      '@dxos/plugin-search':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-search
-      '@dxos/random':
-        specifier: workspace:*
-        version: link:../../common/random
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../react-ui
-      '@dxos/react-ui-syntax-highlighter':
-        specifier: workspace:*
-        version: link:../react-ui-syntax-highlighter
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../common/storybook-utils
-      '@dxos/test-utils':
-        specifier: workspace:*
-        version: link:../../common/test-utils
-      '@dxos/ui-theme':
-        specifier: workspace:*
-        version: link:../ui-theme
-      '@types/react':
-        specifier: ~19.2.7
-        version: 19.2.7
-      '@types/react-dom':
-        specifier: ~19.2.3
-        version: 19.2.3(@types/react@19.2.7)
-      effect:
-        specifier: 3.19.16
-        version: 3.19.16
       react:
         specifier: ~19.2.3
         version: 19.2.3
@@ -19429,6 +19362,9 @@ packages:
   '@automerge/automerge-repo-storage-indexeddb@2.5.1':
     resolution: {integrity: sha512-klyemjiwEn2+PW+NTjvBtjmykjJVoaBbQgk5P02jIgvAO7KH8OACldFzPrJdO0o6WAxkiOdtte8RHFKrDPkBlw==}
 
+  '@automerge/automerge-repo@2.0.1':
+    resolution: {integrity: sha512-1V8pyX5s8PtyPDKmkdEaK/lSuwc9j1HWRYxiWwx2/7FYshfKjl3+mMTAEemzKrwQNE3f3+0zKlI4gChBebAevg==}
+
   '@automerge/automerge-repo@2.5.1':
     resolution: {integrity: sha512-w242TXb2TaGHFux7dDtJIUVJMqSSq1iYvNia8FVYgVTUDvbm8chaGMe1kVdKMEINFiB/BNYPtsoJIPjJhQArLg==}
 
@@ -20735,6 +20671,130 @@ packages:
     resolution: {integrity: sha512-h65/pn2IPCCIWwdlR2BMLqRkDxpTEONA+HQW3n765HBijLYGyrnTCLa2YQt8VVjjSQD6EfFlTE6aS2Q/b6nb2g==}
     peerDependencies:
       react: ~19.2.3
+
+  '@dxos/async@0.8.3':
+    resolution: {integrity: sha512-CBeZA9JBEWpZDqFMOmSybo7QuQQAvEC9DQororiZzepRsub/fmZSpV+P5ICn/LgsVyl4lPmg9q185AdmLsXN3w==}
+
+  '@dxos/codec-protobuf@0.8.3':
+    resolution: {integrity: sha512-07kSVuLh3rIrzC3SdiKRUXyTBslRGNaziK0iVMSS4wlwWd0R2M3Mcv1LHka54E5fORCzEd7hTsEcO2EdNJ2ktA==}
+
+  '@dxos/context@0.8.3':
+    resolution: {integrity: sha512-PKpfYpUQNCNtK6oKo1Je0qOI1eBiXcdljEu68GW80427U2Oin/hry/EtsrMq3iXLUgpqjRr9hvKU/d/fXsWNDw==}
+
+  '@dxos/credentials@0.8.3':
+    resolution: {integrity: sha512-CgbuzXSAdRdopouDktoGl24p2nAuDo9zv0gmWXYJ3uz1YCbXfg8QqNhAujxx15tEEC6UFH5H/c+diIm1nzSgTg==}
+
+  '@dxos/crypto@0.8.3':
+    resolution: {integrity: sha512-wIflHRdxNsf5XFbCBV/wnNFD1U6k5rA2xIxupxbISfpIAh6eBLJMed/Loquv2nvGcLYLO9ooKSn1/j/s2LI0Qw==}
+
+  '@dxos/debug@0.8.3':
+    resolution: {integrity: sha512-sDsOvwejoVKdLPpBK3yd4RAX8/sZf3C4ZtmmSJm9rmb8kv6NcyJgiPYZZFOJIArEL6Xm4Z9aHfDhOjrK8p4YtQ==}
+
+  '@dxos/echo-db@0.8.3':
+    resolution: {integrity: sha512-beGc6QeOooHf7OPBoAMz6l2LrXmN5Ae8A6D6MXQ9zdYvp1rH2C6+cESvIEDbf1S8a2h1Jy41wKZJoP6j+nCdZQ==}
+
+  '@dxos/echo-pipeline@0.8.3':
+    resolution: {integrity: sha512-689+aLOaKF6YHVexMDb1mFJVXvu9iToTgq0PTf9lGkm5/BaArI0tZlvxsv6AlNyx5KCQHDrSeqokbKrJuYjA9w==}
+
+  '@dxos/echo-protocol@0.8.3':
+    resolution: {integrity: sha512-lv8FHwhunOEF5FUxiQS+ydpIsNsV96Pzhis+AfhjCEJuL7AobBt8Ikox5MSDjI87m1N6CjTffMRx687J+XeIdA==}
+
+  '@dxos/echo-schema@0.8.3':
+    resolution: {integrity: sha512-SaqZOA8F18ZRQtsQXAKwXrlIoiq8UCA2q/WZpf89cMfIdXxGuy1fqKxRDAtOR8NIIAqJeJeGlYmmEG2PSWh8og==}
+
+  '@dxos/echo-signals@0.8.3':
+    resolution: {integrity: sha512-YJQdEH7KlcJJ8jzEEo9+bWD/gWviCiJg9Y5oZ+XVtSuvfUKhsACHQQJmqvZbOShwkEBeus/W8YH1NUKPymTjrQ==}
+
+  '@dxos/echo@0.8.3':
+    resolution: {integrity: sha512-t7F5zAdM0uWz79DSGS8dn3GYeimJI+JMek3wwjTzUaXNhb0UifbHXENeAmEFj5QxrC5RSMp+/Lze1g8jDBZAEw==}
+
+  '@dxos/edge-client@0.8.3':
+    resolution: {integrity: sha512-S/RSbBWlox7YUWG4HPNBQqnh3wXS4DJqgWQJi6m7ozXRVJYpBefyoaGEvwX7j+hRMA7zOO1y1CHmWHSMT+Ae7g==}
+
+  '@dxos/effect@0.8.3':
+    resolution: {integrity: sha512-tvvEwxnDoyYgqRfUaQUntW1CVUh1d5sC6Kysx+BgT1RjU7hJNzG1GFkO1olf0iPCPwiFDjjMSV9kPVCfe4xWWQ==}
+    peerDependencies:
+      effect: 3.19.16
+
+  '@dxos/errors@0.8.3':
+    resolution: {integrity: sha512-N4fVTt40oc+i23mpft6h74RF6X34S/suRdfjojFNBZa2ReF1laB5z/9WACl7nZR1KkA2zwYkyrqRvJALDfBNVg==}
+
+  '@dxos/feed-store@0.8.3':
+    resolution: {integrity: sha512-uQAq1CdOuvAjf0RsicvmrAmLEYeXHhfAFTIjsOZRYZytyg+DZxItFLRXh27eXznF7zAdnNIIHsLvdViBoCMnjw==}
+
+  '@dxos/hypercore@0.8.3':
+    resolution: {integrity: sha512-lz2xE6vZdpvxl0eA89eIbDmEF3OGpPb+PHzDBtD0YXmXot1Q7dGle3E39q83+Pmi3nLnyUe3c2aQWnfNFHtisw==}
+
+  '@dxos/indexing@0.8.3':
+    resolution: {integrity: sha512-g+MTRkDdJTzjAXpfMNDWzf6etjeoPdmKeuCVGJ6/igeBZ6btstTwT110gMU2wpDz+U2BCFLcUKo66GN91ncbjA==}
+
+  '@dxos/invariant@0.8.3':
+    resolution: {integrity: sha512-PWu7u8LxPwGwOedstv4SfB6q4ZtZpclercV5xERai3HNAf+cl1ExA1KOLjgeKQVZsI7Ip3K5dM4mymhA98+KQg==}
+
+  '@dxos/keyring@0.8.3':
+    resolution: {integrity: sha512-pPeq12VSx8AFqLsz3qI0qrL45BiB0/H8AB6oPHCDeYcXhjTW0BJ0+bwkwhRN8jKNlKrIxE2AJOr6GKLycGqG9g==}
+
+  '@dxos/keys@0.8.3':
+    resolution: {integrity: sha512-+ht+usY5oFawxnZaojtACBRQMj8lLzmh+P0QrJ6MAw8UpCqD+NkTC3IdWnHncUJZyAd597k21Kr1NCn8ukFsAg==}
+
+  '@dxos/kv-store@0.8.3':
+    resolution: {integrity: sha512-KEwzkIdXD82pjne5/yDzgYuBdJSyCUQqQNYq2SABkzHuc5k0PjmeCq0YOhwFm6AcPdT7duHCAyLNnlVki52M6A==}
+
+  '@dxos/live-object@0.8.3':
+    resolution: {integrity: sha512-Oiyz3mJ02EvqefiXugRg36zDuP2D2vlCVeja1zxkXAbx3ffeoaswI5pcMHU3NizJFDvB0ao4OkVRlGDVAXSDvg==}
+
+  '@dxos/log@0.8.3':
+    resolution: {integrity: sha512-DASNu0aGPE2dr2St5SLsGF1hxp26DvYXBlvJuIwHFYF8R3QM8Yv/fFplX3M7imAn9becykMr2GtQ+vXKOB6HdQ==}
+
+  '@dxos/messaging@0.8.3':
+    resolution: {integrity: sha512-hCDfsWkRUMeCRFf4v8s24beVM0A/pD5J2xPOfN1sxXfvbG7G9kV5lqEY89+42A667Q+8JSQmI2x5VLyIg5hvfg==}
+
+  '@dxos/network-manager@0.8.3':
+    resolution: {integrity: sha512-k6H7mHPPGBGrnaQ7XVvxh7K4QbA2SbyCLqcx/t+Kgom3S7ElEPuayTt9fZHruCNNpwxqjZnkp8K+UU/cRZOX/A==}
+
+  '@dxos/node-std@0.8.3':
+    resolution: {integrity: sha512-aR4HR7nd7/xbvl//3XKxUTXtAPywHrW/n0UI1vuutKodRNgmmnnz+doNkCkUQlkVPe6zf/ITAtty9JJdqjQIEA==}
+
+  '@dxos/protocols@0.8.3':
+    resolution: {integrity: sha512-XTyYtnY8WMNsfC6m7766QVTer17bqTmpdZ5SjIKi8+6rm9DTOiQtEhvcI9mwf185QoBsYeqdQAGL9ag9A5iIXA==}
+    peerDependencies:
+      effect: 3.19.16
+
+  '@dxos/random-access-storage@0.8.3':
+    resolution: {integrity: sha512-04+fItZ3Bwe/7FR5n7Oh3GFiaSshOyzCI3qOklrQCdz7dQAFQiRS3HYM9yzsJmfWSftaixlSkusTdvd9CCo3fQ==}
+
+  '@dxos/random@0.8.3':
+    resolution: {integrity: sha512-xMu05+jkzrGjS3k24Z4fO/Kz58y7+erFXqF8nqv45fqgbAjAz0t9g9ElrXxKBOKE04RUuqwhGubSSctRjLmeqg==}
+
+  '@dxos/rpc@0.8.3':
+    resolution: {integrity: sha512-Xk92kbB9WNVfRYIUOupdjaevZ7T/V5QjJ7RUrDY+vQacZsGqST5HnReFNTjWJD6NyIDqc2VmaULR0BUQ7TgkMg==}
+
+  '@dxos/teleport-extension-automerge-replicator@0.8.3':
+    resolution: {integrity: sha512-BAVPqjxIq5/Q0TEWUk6Njl/R9TAwvjaKRWhkhZVNYloS2I21stZadxoB7vSgBekhnLHEe+/lOAAbp/ha003aWA==}
+
+  '@dxos/teleport-extension-gossip@0.8.3':
+    resolution: {integrity: sha512-aXx7Nn8Rg/gGWqDbiao4EsEqcGvsXvkV2yGuQhxrzbinWKqrQlwGAJRzAbe3KmlmWt3pBE3+5dcLRgqE6YDpKw==}
+
+  '@dxos/teleport-extension-object-sync@0.8.3':
+    resolution: {integrity: sha512-1lgGSnT0Ga9eyil9F5+OqoMP5aHmGYI9Mflg/hyfJ1/Mxx/wgdSq46ZwBoa/Js7mYu8on6NXR/qc0rANjUh+Zw==}
+
+  '@dxos/teleport-extension-replicator@0.8.3':
+    resolution: {integrity: sha512-WZ3brYji3pFLdwqxz/tJFi5B12EE803FKrd6kGrZwfIkRzDHbwawwAsiXUdwWNFn7xiCH3woYGvPMOldyiQjFA==}
+
+  '@dxos/teleport@0.8.3':
+    resolution: {integrity: sha512-23A2JhQRUIuU4HokJAXs5y4ID63hsWJ3JBjJKlSwNlvoXNgx2GLNlBCCGamk6RP8N5mGBtXFcEKtuXfkroIrzw==}
+
+  '@dxos/timeframe@0.8.3':
+    resolution: {integrity: sha512-6W+KbidO0NnGUyTT11PDSkbpGe9DgHHGKpS+W4XNaobtllBOyAd4LXHLNKdDdekjqFg1reXP0fS7PPvg8ASxlg==}
+
+  '@dxos/tracing@0.8.3':
+    resolution: {integrity: sha512-iB7glBZzHAPpV41DHgFxuXrN6uXU9Ep64r9+a6bbZS1aNsVMBo+25HiXVjFY7DbhByhJN/W1y8gh4BO6Xex24Q==}
+
+  '@dxos/typings@0.8.3':
+    resolution: {integrity: sha512-fYST4Oi01hPTF3h0qy17xXCf2SaV7Ffcleh/HgmsI8UzMZNzBYTwB6xHwYoC8z08zyMiHs72J6yVcM9WjCpAPQ==}
+
+  '@dxos/util@0.8.3':
+    resolution: {integrity: sha512-g59XyzcFcNx31+Hw/lyWeJaHpWN9qbERlnAeFrcX1Ck0rYKacyiBWLKM7Z7ghXH0xr8eNUCHeGqk7GS+zAuH+g==}
 
   '@dxos/wa-sqlite@0.2.1':
     resolution: {integrity: sha512-RVktTCzwJ1ix1MP/LWDjpO1HOOP0JpnAtjB/Zp/csbrlBEhhYYpwIlgDJzCi1Ri4cWHOo04iy+YtlnjfshM1Zw==}
@@ -23412,6 +23472,10 @@ packages:
     peerDependencies:
       solid-js: ^1.9.9
 
+  '@orama/orama@3.1.18':
+    resolution: {integrity: sha512-a61ljmRVVyG5MC/698C8/FfFDw5a8LOIvyOLW5fztgUXqUpc1jOfQzOitSCbge657OgXXThmY3Tk8fpiDb4UcA==}
+    engines: {node: '>= 20.0.0'}
+
   '@oslojs/encoding@1.1.0':
     resolution: {integrity: sha512-70wQhgYmndg4GCPxPPxPGevRKqTIJ2Nh4OkiMWmDAVYsTQ+Ta7Sq+rPevXyXGdzr30/qZBnyOalCszoMxlyldQ==}
 
@@ -23675,6 +23739,19 @@ packages:
 
   '@posthog/types@1.347.2':
     resolution: {integrity: sha512-aT+r/7jXOzPmUHO6sutoWzczPcYIZyhmWt1f1OvY4zKC7Pwp/ZsJWKFTxjV02p0PZz96AE83eLTe7w7b6tjhIw==}
+
+  '@preact/signals-core@1.13.0':
+    resolution: {integrity: sha512-slT6XeTCAbdql61GVLlGU4x7XHI7kCZV5Um5uhE4zLX4ApgiiXc0UYFvVOKq06xcovzp7p+61l68oPi563ARKg==}
+
+  '@preact/signals-react@3.9.0':
+    resolution: {integrity: sha512-C0Qn4AiAYEAHbg7/UEMgdJd+GNDnP/OxI1tk+8WDco9QFIh4gbW+r9V2K4M6OAB6A/ztHW/uZ8/kwBnxNSB94g==}
+    peerDependencies:
+      react: ~19.2.3
+
+  '@preact/signals@2.8.1':
+    resolution: {integrity: sha512-wX6U0SpcCukZTJBs5ChljvBZb3XmYzA5gd4vKHgX8wZZKaQCo2WHtmThdLx+mcVvlBa5u3XShC7ffbETJD4BiQ==}
+    peerDependencies:
+      preact: '>= 10.25.0 || >=11.0.0-0'
 
   '@protobufjs/aspromise@1.1.2':
     resolution: {integrity: sha512-j+gKExEuLmKwvz3OgROXtrJ2UG2x8Ch2YZUxahh+s1F2HZ+wAceUNLkvy6zKCPVRkU++ZWQrdxsUeQXmcg4uoQ==}
@@ -28869,6 +28946,10 @@ packages:
   complex.js@2.4.2:
     resolution: {integrity: sha512-qtx7HRhPGSCBtGiST4/WGHuW+zeaND/6Ld+db6PbrulIB1i2Ev/2UPiqcmpQNPSyfBKraC0EOvOKCB5dGZKt3g==}
 
+  component-emitter@2.0.0:
+    resolution: {integrity: sha512-4m5s3Me2xxlVKG9PkZpQqHQR7bgpnN7joDMJ4yvVkVXngjoITG76IaZmzmywSeRTeTpc6N6r3H3+KyUurV8OYw==}
+    engines: {node: '>=18'}
+
   component-register@0.8.8:
     resolution: {integrity: sha512-djhwcxjY+X9dacaYUEOkOm7tda8uOEDiMDigWysu3xv54M8o6XDlsjR1qt5Y8QLGiKg51fqXFIR2HUTmt9ys0Q==}
 
@@ -29897,6 +29978,10 @@ packages:
 
   elkjs@0.9.3:
     resolution: {integrity: sha512-f/ZeWvW/BCXbhGEf1Ujp29EASo/lk1FDnETgNKwJrsVvGZhUWCZyg3xLJjAsxfOmt8KjswHmI5EwCQcPMpOYhQ==}
+
+  emittery@0.6.0:
+    resolution: {integrity: sha512-6EMRGr9KzYWp8DzHFZsKVZBsMO6QhAeHMeHND8rhyBNCHKMLpgW9tZv40bwN3rAIKRS5CxcK8oLRKUJSB9h7yQ==}
+    engines: {node: '>=10'}
 
   emoji-mart@5.5.2:
     resolution: {integrity: sha512-Sqc/nso4cjxhOwWJsp9xkVm8OF5c+mJLZJFoFfzRuKO+yWiN7K8c96xmtughYb0d/fZ8UC6cLIQ/p4BR6Pv3/A==}
@@ -33407,6 +33492,12 @@ packages:
   nanoassert@2.0.0:
     resolution: {integrity: sha512-7vO7n28+aYO4J+8w96AzhmU8G+Y/xpPDJz/se19ICsqj/momRbb9mh9ZUtkoJ5X3nTnPdhEJyc0qnM6yAsHBaA==}
 
+  nanocustomassert@1.0.0:
+    resolution: {integrity: sha512-oIezVMlrrzPkCtK32NM5y4gU7JPi12NPWrIsXLyH7KL2D3IFYCtNEHSNgabBzoXCMkXI8AO6SMBUSPvJVf6NCA==}
+
+  nanoerror@1.3.4:
+    resolution: {integrity: sha512-X6APJZ1MCZP+NRjfTv4VWaXZOpVU3qa/PPNGesa7vh2Ovx/bXNQbUzkDaN7d9RaHcrEdX0zxUFBQPuhvIpNxVQ==}
+
   nanoevents@6.0.2:
     resolution: {integrity: sha512-FRS2otuFcPPYDPYViNWQ42+1iZqbXydinkRHTHFxrF4a1CpBfmydR9zkI44WSXAXCyPrkcGtPk5CnpW6Y3lFKQ==}
     engines: {node: ^12.0.0 || ^14.0.0 || >=16.0.0}
@@ -33433,6 +33524,15 @@ packages:
     resolution: {integrity: sha512-c7+7RQ+dMB5dPwwCp4ee1/iV/q2P6aK1mTZcfr1BTuVlyW9hJYiMPybJCcnBlQtuSmTIWNeazm/zqNoZSSElBg==}
     engines: {node: ^18 || >=20}
     hasBin: true
+
+  nanomessage-rpc@3.2.0:
+    resolution: {integrity: sha512-CRY3GzkiXa5th7gSTM45v4EZKIVg8XTbhE30PFFbzloTgiPCYBbywkpHGZ+48H/nb2H9gXhbBGDRXbn2hxjH4w==}
+
+  nanomessage@8.4.0:
+    resolution: {integrity: sha512-jLRsKfedD0AwDDPpwoRvxSfx/G9i51peX09/SvrybSD801Y3YmwuXWkxHSS9bNFucqmjo+7/b/Rx5Lngozq3nw==}
+
+  nanoresource-promise@2.0.0:
+    resolution: {integrity: sha512-C4nHaVqhpRYaSiKfXPC3bOiz5mnS3N1gkDhGaWmYLxr4KTAQdWqOr2pEVw4xVmAHJgA9n9anbfuVOacS/skbIA==}
 
   nanoresource@1.3.0:
     resolution: {integrity: sha512-OI5dswqipmlYfyL3k/YMm7mbERlh4Bd1KuKdMHpeoVD1iVxqxaTMKleB4qaA2mbQZ6/zMNSxCXv9M9P/YbqTuQ==}
@@ -33506,9 +33606,18 @@ packages:
     resolution: {integrity: sha512-1KDc8eMY5ccFBlV9J6xTxBNRKpqsHITV5sfQMNGxrfjyzFVOzdeRxVVH7kvhiOcZeJpGpncsncCF8/VwAZf+8w==}
     engines: {node: '>=18.20.0'}
 
+  node-datachannel@0.9.2:
+    resolution: {integrity: sha512-sknq4EAJcSNHUMiK6Gru3vtwo8QICiFs5xJyaitJy/ZLSUbikaGrDORpIpdGp8++4AYQOYC5vr9VyA6i01KeJQ==}
+    engines: {node: '>=16.0.0'}
+
   node-domexception@1.0.0:
     resolution: {integrity: sha512-/jKZoMpw0F8GRwl4/eLROPA3cfcXtLApP0QzLmUT/HuPCZWyB7IY9ZrMeKw2O/nFIqPQB3PVM9aYm0F312AXDQ==}
     engines: {node: '>=10.5.0'}
+    deprecated: Use your platform's native DOMException instead
+
+  node-domexception@2.0.2:
+    resolution: {integrity: sha512-Qf9vHK9c5MGgUXj8SnucCIS4oEPuUstjRaMplLGeZpbWMfNV1rvEcXuwoXfN51dUfD1b4muPHPQtCx/5Dj/QAA==}
+    engines: {node: '>=16'}
     deprecated: Use your platform's native DOMException instead
 
   node-fetch-native@1.6.7:
@@ -33805,6 +33914,10 @@ packages:
   p-cancelable@3.0.0:
     resolution: {integrity: sha512-mlVgR3PGuzlo0MmTdk4cXqXWlwQDLnONTAg6sm62XkMJEiRxN3GL3SffkYvqwonbkJBcrI7Uvv5Zh9yjvn2iUw==}
     engines: {node: '>=12.20'}
+
+  p-defer@3.0.0:
+    resolution: {integrity: sha512-ugZxsxmtTln604yeYd29EGrNhazN2lywetzpKhfmQjW/VJmhpDmWbiX+h0zL8V91R0UXkhb3KtPmyq9PZw3aYw==}
+    engines: {node: '>=8'}
 
   p-defer@4.0.0:
     resolution: {integrity: sha512-Vb3QRvQ0Y5XnF40ZUWW7JfLogicVh/EnA5gBIvKDJoYpeI82+1E3AlB9yOcKFS0AhHrWVnAQO39fbR0G99IVEQ==}
@@ -34554,6 +34667,9 @@ packages:
   queue-tick@1.0.1:
     resolution: {integrity: sha512-kJt5qhMxoszgU/62PLP1CJytzd2NKetjSRnyuj31fDd3Rlcz3fzlFdFLD1SItunPwyqEOkca6GbV612BWfaBag==}
 
+  quick-format-unescaped@3.0.3:
+    resolution: {integrity: sha512-dy1yjycmn9blucmJLXOfZDx1ikZJUi6E8bBZLnhPG5gBrVhHXx2xVyqqgKBubVNEXmx51dBACMHpoMQK/N/AXQ==}
+
   quick-lru@4.0.1:
     resolution: {integrity: sha512-ARhCpm70fzdcvNQfPoy49IaanKkTlRWF2JMzqhcJbhSFRZv7nPTvZJdcY7301IPmvW+/p0RgIWnQDLJxifsQ7g==}
     engines: {node: '>=8'}
@@ -34571,6 +34687,9 @@ packages:
 
   quote-unquote@1.0.0:
     resolution: {integrity: sha512-twwRO/ilhlG/FIgYeKGFqyHhoEhqgnKVkcmqMKi2r524gz3ZbDTcyFt38E9xjJI2vT+KbRNHVbnJ/e0I25Azwg==}
+
+  race-as-promised@0.0.2:
+    resolution: {integrity: sha512-7BLWiZMSVJDxMTT/QUuEEdd/f/pYDkusGvU0p3NUCDAc6HSlhPpvRS42/GmK79p3Kw4aDA+l+sD8wNpxQdOYTQ==}
 
   race-as-promised@0.0.3:
     resolution: {integrity: sha512-BH1qgNWMG4Mhp4wlX2uYE6reVsIXogb+aPEcosVDmnPjpkQVcWRxqDIlP1hGUiGZG8ohoiyaUlwX3xiu8O7tzw==}
@@ -35958,6 +36077,9 @@ packages:
   stream-to-array@2.3.0:
     resolution: {integrity: sha512-UsZtOYEn4tWU2RGLOXr/o/xjRBftZRlG3dEWoaHr8j4GuypJ3isitGbVyjQKAuMu+xbiop8q224TjiZWc4XTZA==}
 
+  stream@0.0.3:
+    resolution: {integrity: sha512-aMsbn7VKrl4A2T7QAQQbzgN7NVc70vgF5INQrBXqn4dCXN1zy3L9HGgLO5s7PExmdrzTJ8uR/27aviW8or8/+A==}
+
   streamx@2.15.6:
     resolution: {integrity: sha512-q+vQL4AAz+FdfT137VF69Cc/APqUbxy+MDOImRrMvchJpigHj9GksgDU2LYbO9rx7RX6osWgxJB2WxhYv4SZAw==}
 
@@ -36460,6 +36582,9 @@ packages:
   token-types@4.2.1:
     resolution: {integrity: sha512-6udB24Q737UD/SDsKAHI9FCRP7Bqc9D/MQUV02ORQg5iskjtLJlZJNdN4kKtcdtwCeWIwIHDGaUsTsCCAa8sFQ==}
     engines: {node: '>=10'}
+
+  tokenx@1.3.0:
+    resolution: {integrity: sha512-NLdXTEZkKiO0gZuLtMoZKjCXTREXeZZt8nnnNeyoXtNZAfG/GKGSbQtLU5STspc0rMSwcA+UJfWZkbNU01iKmQ==}
 
   toml@3.0.0:
     resolution: {integrity: sha512-y/mWCZinnvxjTKYhJ+pYxwD0mRLVvOtdS2Awbgxln6iEnt4rk0yBxeSBHkGJcPucRiG0e55mwWp+g/05rsrd6w==}
@@ -37898,6 +38023,9 @@ packages:
   xmlchars@2.2.0:
     resolution: {integrity: sha512-JZnDKK8B0RCDw84FNdDAIpZK+JuJw+s7Lz8nksI7SIuU3UXJJslUthsi+uWBUYOwPFwW7W7PRLRfUKpxjtjFCw==}
 
+  xor-distance@2.0.0:
+    resolution: {integrity: sha512-AsAqZfPAuWx7qB/0kyRDUEvoU3QKsHWzHU9smFlkaiprEpGfJ/NBbLze2Uq0rdkxCxkNM9uOLvz/KoNBCbZiLQ==}
+
   xpath@0.0.34:
     resolution: {integrity: sha512-FxF6+rkr1rNSQrhUNYrAFJpRXNzlDoMxeXN5qI84939ylEv3qqPFKa85Oxr6tDaJKqwW6KKyo2v26TSv3k6LeA==}
     engines: {node: '>=0.6.0'}
@@ -38564,6 +38692,19 @@ snapshots:
   '@automerge/automerge-repo-storage-indexeddb@2.5.1':
     dependencies:
       '@automerge/automerge-repo': 2.5.1(patch_hash=be766431e3a6459feb58222ae46cd90e3ad69b2350653ea95d8707259278baa8)
+    transitivePeerDependencies:
+      - supports-color
+
+  '@automerge/automerge-repo@2.0.1':
+    dependencies:
+      '@automerge/automerge': 3.2.3
+      bs58check: 3.0.1
+      cbor-x: 1.5.4
+      debug: 4.4.3
+      eventemitter3: 5.0.1
+      fast-sha256: 1.3.0
+      uuid: 9.0.1
+      xstate: 5.12.0
     transitivePeerDependencies:
       - supports-color
 
@@ -40558,6 +40699,567 @@ snapshots:
     dependencies:
       react: 19.2.3
       tslib: 2.8.1
+
+  '@dxos/async@0.8.3':
+    dependencies:
+      '@dxos/context': 0.8.3
+      '@dxos/debug': 0.8.3
+      '@dxos/invariant': 0.8.3
+      '@dxos/log': 0.8.3
+      '@dxos/node-std': 0.8.3
+      '@dxos/util': 0.8.3
+      zen-observable: 0.10.0
+      zen-push: 0.3.1
+
+  '@dxos/codec-protobuf@0.8.3':
+    dependencies:
+      '@dxos/async': 0.8.3
+      '@dxos/context': 0.8.3
+      '@dxos/invariant': 0.8.3
+      '@dxos/log': 0.8.3
+      '@dxos/node-std': 0.8.3
+      '@dxos/util': 0.8.3
+      compress-json: 2.1.2
+      lodash.merge: 4.6.2
+      protobufjs: 7.3.2
+
+  '@dxos/context@0.8.3':
+    dependencies:
+      '@dxos/debug': 0.8.3
+      '@dxos/log': 0.8.3
+      '@dxos/node-std': 0.8.3
+      '@dxos/util': 0.8.3
+
+  '@dxos/credentials@0.8.3(effect@3.19.16)':
+    dependencies:
+      '@dxos/async': 0.8.3
+      '@dxos/context': 0.8.3
+      '@dxos/crypto': 0.8.3
+      '@dxos/invariant': 0.8.3
+      '@dxos/keyring': 0.8.3(effect@3.19.16)
+      '@dxos/keys': 0.8.3
+      '@dxos/log': 0.8.3
+      '@dxos/node-std': 0.8.3
+      '@dxos/protocols': 0.8.3(effect@3.19.16)
+      '@dxos/timeframe': 0.8.3
+      '@dxos/util': 0.8.3
+      bip39: 3.1.0
+      json-stable-stringify: 1.3.0
+    transitivePeerDependencies:
+      - effect
+
+  '@dxos/crypto@0.8.3':
+    dependencies:
+      '@dxos/invariant': 0.8.3
+      '@dxos/keys': 0.8.3
+      '@dxos/node-std': 0.8.3
+      hypercore-crypto: 2.3.2
+
+  '@dxos/debug@0.8.3':
+    dependencies:
+      '@dxos/node-std': 0.8.3
+
+  '@dxos/echo-db@0.8.3':
+    dependencies:
+      '@automerge/automerge': 3.2.3
+      '@automerge/automerge-repo': 2.0.1
+      '@dxos/async': 0.8.3
+      '@dxos/codec-protobuf': 0.8.3
+      '@dxos/context': 0.8.3
+      '@dxos/crypto': 0.8.3
+      '@dxos/debug': 0.8.3
+      '@dxos/echo': 0.8.3
+      '@dxos/echo-pipeline': 0.8.3
+      '@dxos/echo-protocol': 0.8.3
+      '@dxos/echo-schema': 0.8.3
+      '@dxos/echo-signals': 0.8.3
+      '@dxos/edge-client': 0.8.3(effect@3.19.16)
+      '@dxos/invariant': 0.8.3
+      '@dxos/keys': 0.8.3
+      '@dxos/kv-store': 0.8.3
+      '@dxos/live-object': 0.8.3
+      '@dxos/log': 0.8.3
+      '@dxos/node-std': 0.8.3
+      '@dxos/protocols': 0.8.3(effect@3.19.16)
+      '@dxos/teleport': 0.8.3(effect@3.19.16)
+      '@dxos/tracing': 0.8.3(effect@3.19.16)
+      '@dxos/util': 0.8.3
+      effect: 3.19.16
+      eventemitter3: 5.0.1
+      lodash.isequal: 4.5.0
+    transitivePeerDependencies:
+      - bufferutil
+      - supports-color
+      - utf-8-validate
+
+  '@dxos/echo-pipeline@0.8.3':
+    dependencies:
+      '@automerge/automerge': 3.2.3
+      '@automerge/automerge-repo': 2.0.1
+      '@dxos/async': 0.8.3
+      '@dxos/codec-protobuf': 0.8.3
+      '@dxos/context': 0.8.3
+      '@dxos/credentials': 0.8.3(effect@3.19.16)
+      '@dxos/crypto': 0.8.3
+      '@dxos/debug': 0.8.3
+      '@dxos/echo': 0.8.3
+      '@dxos/echo-protocol': 0.8.3
+      '@dxos/echo-schema': 0.8.3
+      '@dxos/edge-client': 0.8.3(effect@3.19.16)
+      '@dxos/errors': 0.8.3
+      '@dxos/feed-store': 0.8.3(effect@3.19.16)
+      '@dxos/hypercore': 0.8.3(effect@3.19.16)
+      '@dxos/indexing': 0.8.3
+      '@dxos/invariant': 0.8.3
+      '@dxos/keyring': 0.8.3(effect@3.19.16)
+      '@dxos/keys': 0.8.3
+      '@dxos/kv-store': 0.8.3
+      '@dxos/log': 0.8.3
+      '@dxos/messaging': 0.8.3(effect@3.19.16)
+      '@dxos/network-manager': 0.8.3(effect@3.19.16)
+      '@dxos/node-std': 0.8.3
+      '@dxos/protocols': 0.8.3(effect@3.19.16)
+      '@dxos/random-access-storage': 0.8.3(effect@3.19.16)
+      '@dxos/teleport': 0.8.3(effect@3.19.16)
+      '@dxos/teleport-extension-automerge-replicator': 0.8.3(effect@3.19.16)
+      '@dxos/teleport-extension-gossip': 0.8.3(effect@3.19.16)
+      '@dxos/teleport-extension-object-sync': 0.8.3(effect@3.19.16)
+      '@dxos/teleport-extension-replicator': 0.8.3(effect@3.19.16)
+      '@dxos/timeframe': 0.8.3
+      '@dxos/tracing': 0.8.3(effect@3.19.16)
+      '@dxos/typings': 0.8.3
+      '@dxos/util': 0.8.3
+      crc-32: 1.2.2
+      effect: 3.19.16
+      level-transcoder: 1.0.1
+      lodash.isequal: 4.5.0
+    transitivePeerDependencies:
+      - bufferutil
+      - supports-color
+      - utf-8-validate
+
+  '@dxos/echo-protocol@0.8.3':
+    dependencies:
+      '@dxos/crypto': 0.8.3
+      '@dxos/invariant': 0.8.3
+      '@dxos/keys': 0.8.3
+      '@dxos/protocols': 0.8.3(effect@3.19.16)
+      '@dxos/util': 0.8.3
+      effect: 3.19.16
+
+  '@dxos/echo-schema@0.8.3':
+    dependencies:
+      '@dxos/debug': 0.8.3
+      '@dxos/echo-protocol': 0.8.3
+      '@dxos/echo-signals': 0.8.3
+      '@dxos/effect': 0.8.3(effect@3.19.16)
+      '@dxos/invariant': 0.8.3
+      '@dxos/keys': 0.8.3
+      '@dxos/log': 0.8.3
+      '@dxos/node-std': 0.8.3
+      '@dxos/util': 0.8.3
+      '@preact/signals-core': 1.13.0
+      effect: 3.19.16
+
+  '@dxos/echo-signals@0.8.3':
+    dependencies:
+      '@preact/signals': 2.8.1(preact@10.28.3)
+      '@preact/signals-core': 1.13.0
+      '@preact/signals-react': 3.9.0(react@19.2.3)
+    optionalDependencies:
+      preact: 10.28.3
+      react: 19.2.3
+
+  '@dxos/echo@0.8.3':
+    dependencies:
+      '@dxos/debug': 0.8.3
+      '@dxos/echo-protocol': 0.8.3
+      '@dxos/echo-schema': 0.8.3
+      '@dxos/echo-signals': 0.8.3
+      '@dxos/effect': 0.8.3(effect@3.19.16)
+      '@dxos/invariant': 0.8.3
+      '@dxos/keys': 0.8.3
+      '@dxos/live-object': 0.8.3
+      '@dxos/log': 0.8.3
+      '@dxos/node-std': 0.8.3
+      '@dxos/util': 0.8.3
+      '@preact/signals-core': 1.13.0
+      effect: 3.19.16
+
+  '@dxos/edge-client@0.8.3(effect@3.19.16)':
+    dependencies:
+      '@dxos/async': 0.8.3
+      '@dxos/context': 0.8.3
+      '@dxos/credentials': 0.8.3(effect@3.19.16)
+      '@dxos/crypto': 0.8.3
+      '@dxos/debug': 0.8.3
+      '@dxos/invariant': 0.8.3
+      '@dxos/keyring': 0.8.3(effect@3.19.16)
+      '@dxos/keys': 0.8.3
+      '@dxos/log': 0.8.3
+      '@dxos/node-std': 0.8.3
+      '@dxos/protocols': 0.8.3(effect@3.19.16)
+      '@dxos/util': 0.8.3
+      isomorphic-ws: 5.0.0(ws@8.18.3)
+      ws: 8.18.3
+    transitivePeerDependencies:
+      - bufferutil
+      - effect
+      - utf-8-validate
+
+  '@dxos/effect@0.8.3(effect@3.19.16)':
+    dependencies:
+      '@dxos/invariant': 0.8.3
+      '@dxos/node-std': 0.8.3
+      '@dxos/util': 0.8.3
+      effect: 3.19.16
+      jsonpath-plus: 10.2.0
+
+  '@dxos/errors@0.8.3': {}
+
+  '@dxos/feed-store@0.8.3(effect@3.19.16)':
+    dependencies:
+      '@dxos/async': 0.8.3
+      '@dxos/codec-protobuf': 0.8.3
+      '@dxos/context': 0.8.3
+      '@dxos/crypto': 0.8.3
+      '@dxos/debug': 0.8.3
+      '@dxos/hypercore': 0.8.3(effect@3.19.16)
+      '@dxos/invariant': 0.8.3
+      '@dxos/keyring': 0.8.3(effect@3.19.16)
+      '@dxos/keys': 0.8.3
+      '@dxos/log': 0.8.3
+      '@dxos/node-std': 0.8.3
+      '@dxos/random-access-storage': 0.8.3(effect@3.19.16)
+      '@dxos/util': 0.8.3
+      lodash.defaultsdeep: 4.6.1
+      race-as-promised: 0.0.2
+      streamx: 2.15.6
+    optionalDependencies:
+      '@dxos/random': 0.8.3
+    transitivePeerDependencies:
+      - effect
+
+  '@dxos/hypercore@0.8.3(effect@3.19.16)':
+    dependencies:
+      '@dxos/async': 0.8.3
+      '@dxos/codec-protobuf': 0.8.3
+      '@dxos/crypto': 0.8.3
+      '@dxos/debug': 0.8.3
+      '@dxos/invariant': 0.8.3
+      '@dxos/keys': 0.8.3
+      '@dxos/node-std': 0.8.3
+      '@dxos/random-access-storage': 0.8.3(effect@3.19.16)
+      '@dxos/typings': 0.8.3
+      '@dxos/util': 0.8.3
+      readable-stream: 3.6.2
+      sodium-native: 3.4.1
+      sodium-universal: 3.1.0
+      streamx: 2.15.6
+    transitivePeerDependencies:
+      - effect
+
+  '@dxos/indexing@0.8.3':
+    dependencies:
+      '@automerge/automerge': 3.2.3
+      '@dxos/async': 0.8.3
+      '@dxos/codec-protobuf': 0.8.3
+      '@dxos/context': 0.8.3
+      '@dxos/debug': 0.8.3
+      '@dxos/echo-protocol': 0.8.3
+      '@dxos/echo-schema': 0.8.3
+      '@dxos/errors': 0.8.3
+      '@dxos/invariant': 0.8.3
+      '@dxos/keys': 0.8.3
+      '@dxos/kv-store': 0.8.3
+      '@dxos/log': 0.8.3
+      '@dxos/node-std': 0.8.3
+      '@dxos/protocols': 0.8.3(effect@3.19.16)
+      '@dxos/random-access-storage': 0.8.3(effect@3.19.16)
+      '@dxos/tracing': 0.8.3(effect@3.19.16)
+      '@dxos/util': 0.8.3
+      '@orama/orama': 3.1.18
+      '@xenova/transformers': 2.17.2
+      effect: 3.19.16
+      level-transcoder: 1.0.1
+      lodash.isequal: 4.5.0
+
+  '@dxos/invariant@0.8.3': {}
+
+  '@dxos/keyring@0.8.3(effect@3.19.16)':
+    dependencies:
+      '@dxos/async': 0.8.3
+      '@dxos/codec-protobuf': 0.8.3
+      '@dxos/crypto': 0.8.3
+      '@dxos/debug': 0.8.3
+      '@dxos/invariant': 0.8.3
+      '@dxos/keys': 0.8.3
+      '@dxos/node-std': 0.8.3
+      '@dxos/protocols': 0.8.3(effect@3.19.16)
+      '@dxos/random-access-storage': 0.8.3(effect@3.19.16)
+      '@dxos/util': 0.8.3
+    transitivePeerDependencies:
+      - effect
+
+  '@dxos/keys@0.8.3':
+    dependencies:
+      '@dxos/debug': 0.8.3
+      '@dxos/invariant': 0.8.3
+      '@dxos/node-std': 0.8.3
+      effect: 3.19.16
+      ulidx: 2.3.0
+
+  '@dxos/kv-store@0.8.3':
+    dependencies:
+      '@dxos/keys': 0.8.3
+      '@dxos/node-std': 0.8.3
+      abstract-level: 1.0.4
+      level: 8.0.1
+
+  '@dxos/live-object@0.8.3':
+    dependencies:
+      '@dxos/debug': 0.8.3
+      '@dxos/echo-protocol': 0.8.3
+      '@dxos/echo-schema': 0.8.3
+      '@dxos/echo-signals': 0.8.3
+      '@dxos/effect': 0.8.3(effect@3.19.16)
+      '@dxos/invariant': 0.8.3
+      '@dxos/keys': 0.8.3
+      '@dxos/log': 0.8.3
+      '@dxos/node-std': 0.8.3
+      '@dxos/util': 0.8.3
+      '@preact/signals-core': 1.13.0
+      effect: 3.19.16
+
+  '@dxos/log@0.8.3':
+    dependencies:
+      '@dxos/node-std': 0.8.3
+      '@dxos/util': 0.8.3
+      chalk: 4.1.2
+      js-yaml: 4.1.1
+      lodash.defaultsdeep: 4.6.1
+      lodash.omit: 4.5.0
+
+  '@dxos/messaging@0.8.3(effect@3.19.16)':
+    dependencies:
+      '@dxos/async': 0.8.3
+      '@dxos/codec-protobuf': 0.8.3
+      '@dxos/context': 0.8.3
+      '@dxos/edge-client': 0.8.3(effect@3.19.16)
+      '@dxos/invariant': 0.8.3
+      '@dxos/keys': 0.8.3
+      '@dxos/log': 0.8.3
+      '@dxos/node-std': 0.8.3
+      '@dxos/protocols': 0.8.3(effect@3.19.16)
+      '@dxos/rpc': 0.8.3(effect@3.19.16)
+      '@dxos/tracing': 0.8.3(effect@3.19.16)
+      '@dxos/util': 0.8.3
+      isomorphic-ws: 5.0.0(ws@8.18.3)
+      ws: 8.18.3
+    transitivePeerDependencies:
+      - bufferutil
+      - effect
+      - utf-8-validate
+
+  '@dxos/network-manager@0.8.3(effect@3.19.16)':
+    dependencies:
+      '@dxos/async': 0.8.3
+      '@dxos/codec-protobuf': 0.8.3
+      '@dxos/context': 0.8.3
+      '@dxos/debug': 0.8.3
+      '@dxos/invariant': 0.8.3
+      '@dxos/keys': 0.8.3
+      '@dxos/log': 0.8.3
+      '@dxos/messaging': 0.8.3(effect@3.19.16)
+      '@dxos/node-std': 0.8.3
+      '@dxos/protocols': 0.8.3(effect@3.19.16)
+      '@dxos/rpc': 0.8.3(effect@3.19.16)
+      '@dxos/teleport': 0.8.3(effect@3.19.16)
+      '@dxos/tracing': 0.8.3(effect@3.19.16)
+      '@dxos/util': 0.8.3
+      isomorphic-ws: 5.0.0(ws@8.18.3)
+      nanomessage-rpc: 3.2.0
+      node-datachannel: 0.9.2
+      p-defer: 3.0.0
+      stream: 0.0.3
+      tiny-invariant: 1.3.3
+      ws: 8.18.3
+      xor-distance: 2.0.0
+    transitivePeerDependencies:
+      - bufferutil
+      - effect
+      - utf-8-validate
+
+  '@dxos/node-std@0.8.3':
+    dependencies:
+      assert: 2.0.0
+      events: 3.3.0
+      path-browserify: 1.0.1
+      readable-stream: 3.6.2
+      util: 0.12.5
+
+  '@dxos/protocols@0.8.3(effect@3.19.16)':
+    dependencies:
+      '@bufbuild/protobuf': 2.11.0
+      '@dxos/codec-protobuf': 0.8.3
+      '@dxos/effect': 0.8.3(effect@3.19.16)
+      '@dxos/invariant': 0.8.3
+      '@dxos/keys': 0.8.3
+      '@dxos/timeframe': 0.8.3
+      '@dxos/util': 0.8.3
+      effect: 3.19.16
+
+  '@dxos/random-access-storage@0.8.3(effect@3.19.16)':
+    dependencies:
+      '@dxos/async': 0.8.3
+      '@dxos/debug': 0.8.3
+      '@dxos/invariant': 0.8.3
+      '@dxos/log': 0.8.3
+      '@dxos/node-std': 0.8.3
+      '@dxos/tracing': 0.8.3(effect@3.19.16)
+      '@dxos/util': 0.8.3
+      buffer-alloc: 1.2.0
+      buffer-from: 0.1.2
+      del: 5.1.0
+      inherits: 2.0.4
+      next-tick: 1.1.0
+      once: 1.4.0
+      pify: 5.0.0
+      random-access-file: 2.2.1
+      random-access-memory: 4.1.0
+      random-access-storage: 1.4.3
+    transitivePeerDependencies:
+      - effect
+
+  '@dxos/random@0.8.3':
+    dependencies:
+      '@dxos/node-std': 0.8.3
+      '@dxos/util': 0.8.3
+      '@ngneat/falso': 7.1.1
+    optional: true
+
+  '@dxos/rpc@0.8.3(effect@3.19.16)':
+    dependencies:
+      '@dxos/async': 0.8.3
+      '@dxos/codec-protobuf': 0.8.3
+      '@dxos/debug': 0.8.3
+      '@dxos/invariant': 0.8.3
+      '@dxos/log': 0.8.3
+      '@dxos/node-std': 0.8.3
+      '@dxos/protocols': 0.8.3(effect@3.19.16)
+      '@dxos/util': 0.8.3
+    transitivePeerDependencies:
+      - effect
+
+  '@dxos/teleport-extension-automerge-replicator@0.8.3(effect@3.19.16)':
+    dependencies:
+      '@dxos/async': 0.8.3
+      '@dxos/invariant': 0.8.3
+      '@dxos/keys': 0.8.3
+      '@dxos/log': 0.8.3
+      '@dxos/node-std': 0.8.3
+      '@dxos/protocols': 0.8.3(effect@3.19.16)
+      '@dxos/rpc': 0.8.3(effect@3.19.16)
+      '@dxos/teleport': 0.8.3(effect@3.19.16)
+    transitivePeerDependencies:
+      - effect
+
+  '@dxos/teleport-extension-gossip@0.8.3(effect@3.19.16)':
+    dependencies:
+      '@dxos/async': 0.8.3
+      '@dxos/codec-protobuf': 0.8.3
+      '@dxos/context': 0.8.3
+      '@dxos/invariant': 0.8.3
+      '@dxos/keys': 0.8.3
+      '@dxos/log': 0.8.3
+      '@dxos/node-std': 0.8.3
+      '@dxos/protocols': 0.8.3(effect@3.19.16)
+      '@dxos/rpc': 0.8.3(effect@3.19.16)
+      '@dxos/teleport': 0.8.3(effect@3.19.16)
+      '@dxos/util': 0.8.3
+    transitivePeerDependencies:
+      - effect
+
+  '@dxos/teleport-extension-object-sync@0.8.3(effect@3.19.16)':
+    dependencies:
+      '@dxos/async': 0.8.3
+      '@dxos/context': 0.8.3
+      '@dxos/crypto': 0.8.3
+      '@dxos/invariant': 0.8.3
+      '@dxos/keys': 0.8.3
+      '@dxos/log': 0.8.3
+      '@dxos/node-std': 0.8.3
+      '@dxos/protocols': 0.8.3(effect@3.19.16)
+      '@dxos/random-access-storage': 0.8.3(effect@3.19.16)
+      '@dxos/teleport': 0.8.3(effect@3.19.16)
+      '@dxos/util': 0.8.3
+    transitivePeerDependencies:
+      - effect
+
+  '@dxos/teleport-extension-replicator@0.8.3(effect@3.19.16)':
+    dependencies:
+      '@dxos/async': 0.8.3
+      '@dxos/context': 0.8.3
+      '@dxos/debug': 0.8.3
+      '@dxos/feed-store': 0.8.3(effect@3.19.16)
+      '@dxos/invariant': 0.8.3
+      '@dxos/keys': 0.8.3
+      '@dxos/log': 0.8.3
+      '@dxos/node-std': 0.8.3
+      '@dxos/protocols': 0.8.3(effect@3.19.16)
+      '@dxos/rpc': 0.8.3(effect@3.19.16)
+      '@dxos/teleport': 0.8.3(effect@3.19.16)
+      '@dxos/util': 0.8.3
+    transitivePeerDependencies:
+      - effect
+
+  '@dxos/teleport@0.8.3(effect@3.19.16)':
+    dependencies:
+      '@dxos/async': 0.8.3
+      '@dxos/context': 0.8.3
+      '@dxos/debug': 0.8.3
+      '@dxos/invariant': 0.8.3
+      '@dxos/keys': 0.8.3
+      '@dxos/log': 0.8.3
+      '@dxos/node-std': 0.8.3
+      '@dxos/protocols': 0.8.3(effect@3.19.16)
+      '@dxos/rpc': 0.8.3(effect@3.19.16)
+      '@dxos/util': 0.8.3
+      randombytes: 2.1.0
+    transitivePeerDependencies:
+      - effect
+
+  '@dxos/timeframe@0.8.3':
+    dependencies:
+      '@dxos/debug': 0.8.3
+      '@dxos/keys': 0.8.3
+      '@dxos/log': 0.8.3
+      '@dxos/node-std': 0.8.3
+      '@dxos/util': 0.8.3
+
+  '@dxos/tracing@0.8.3(effect@3.19.16)':
+    dependencies:
+      '@dxos/async': 0.8.3
+      '@dxos/codec-protobuf': 0.8.3
+      '@dxos/context': 0.8.3
+      '@dxos/invariant': 0.8.3
+      '@dxos/log': 0.8.3
+      '@dxos/node-std': 0.8.3
+      '@dxos/protocols': 0.8.3(effect@3.19.16)
+      '@dxos/util': 0.8.3
+    transitivePeerDependencies:
+      - effect
+
+  '@dxos/typings@0.8.3': {}
+
+  '@dxos/util@0.8.3':
+    dependencies:
+      '@dxos/debug': 0.8.3
+      '@dxos/invariant': 0.8.3
+      '@dxos/keys': 0.8.3
+      '@dxos/node-std': 0.8.3
+      lodash.get: 4.4.2
+      lodash.set: 4.3.2
 
   '@dxos/wa-sqlite@0.2.1': {}
 
@@ -43389,6 +44091,8 @@ snapshots:
       - typescript
       - web-tree-sitter
 
+  '@orama/orama@3.1.18': {}
+
   '@oslojs/encoding@1.1.0': {}
 
   '@oxc-project/types@0.101.0': {}
@@ -43580,6 +44284,19 @@ snapshots:
       cross-spawn: 7.0.6
 
   '@posthog/types@1.347.2': {}
+
+  '@preact/signals-core@1.13.0': {}
+
+  '@preact/signals-react@3.9.0(react@19.2.3)':
+    dependencies:
+      '@preact/signals-core': 1.13.0
+      react: 19.2.3
+      use-sync-external-store: 1.6.0(react@19.2.3)
+
+  '@preact/signals@2.8.1(preact@10.28.3)':
+    dependencies:
+      '@preact/signals-core': 1.13.0
+      preact: 10.28.3
 
   '@protobufjs/aspromise@1.1.2': {}
 
@@ -49781,6 +50498,8 @@ snapshots:
 
   complex.js@2.4.2: {}
 
+  component-emitter@2.0.0: {}
+
   component-register@0.8.8: {}
 
   compress-commons@2.1.1:
@@ -50904,6 +51623,8 @@ snapshots:
   electron-to-chromium@1.5.45: {}
 
   elkjs@0.9.3: {}
+
+  emittery@0.6.0: {}
 
   emoji-mart@5.5.2: {}
 
@@ -55604,6 +56325,12 @@ snapshots:
 
   nanoassert@2.0.0: {}
 
+  nanocustomassert@1.0.0: {}
+
+  nanoerror@1.3.4:
+    dependencies:
+      quick-format-unescaped: 3.0.3
+
   nanoevents@6.0.2: {}
 
   nanoguard@1.3.0: {}
@@ -55615,6 +56342,26 @@ snapshots:
   nanoid@4.0.2: {}
 
   nanoid@5.1.6: {}
+
+  nanomessage-rpc@3.2.0:
+    dependencies:
+      emittery: 0.6.0
+      end-of-stream: 1.4.4
+      nanocustomassert: 1.0.0
+      nanoerror: 1.3.4
+      nanomessage: 8.4.0
+      nanoresource-promise: 2.0.0
+      varint: 5.0.2
+
+  nanomessage@8.4.0:
+    dependencies:
+      fastq: 1.15.0
+      nanocustomassert: 1.0.0
+      nanoerror: 1.3.4
+      nanoresource-promise: 2.0.0
+      varint: 5.0.2
+
+  nanoresource-promise@2.0.0: {}
 
   nanoresource@1.3.0:
     dependencies:
@@ -55678,7 +56425,14 @@ snapshots:
     dependencies:
       prebuild-install: 7.1.3
 
+  node-datachannel@0.9.2:
+    dependencies:
+      node-domexception: 2.0.2
+      prebuild-install: 7.1.3
+
   node-domexception@1.0.0: {}
+
+  node-domexception@2.0.2: {}
 
   node-fetch-native@1.6.7: {}
 
@@ -56067,6 +56821,8 @@ snapshots:
       '@oxc-resolver/binding-win32-x64-msvc': 11.9.0
 
   p-cancelable@3.0.0: {}
+
+  p-defer@3.0.0: {}
 
   p-defer@4.0.0: {}
 
@@ -56880,6 +57636,8 @@ snapshots:
 
   queue-tick@1.0.1: {}
 
+  quick-format-unescaped@3.0.3: {}
+
   quick-lru@4.0.1: {}
 
   quick-lru@5.1.1: {}
@@ -56897,6 +57655,8 @@ snapshots:
       quickjs-emscripten-core: 0.31.0
 
   quote-unquote@1.0.0: {}
+
+  race-as-promised@0.0.2: {}
 
   race-as-promised@0.0.3: {}
 
@@ -58788,6 +59548,10 @@ snapshots:
     dependencies:
       any-promise: 1.3.0
 
+  stream@0.0.3:
+    dependencies:
+      component-emitter: 2.0.0
+
   streamx@2.15.6:
     dependencies:
       fast-fifo: 1.3.2
@@ -59439,6 +60203,8 @@ snapshots:
     dependencies:
       '@tokenizer/token': 0.3.0
       ieee754: 1.2.1
+
+  tokenx@1.3.0: {}
 
   toml@3.0.0: {}
 
@@ -61012,6 +61778,8 @@ snapshots:
   xmlbuilder@11.0.1: {}
 
   xmlchars@2.2.0: {}
+
+  xor-distance@2.0.0: {}
 
   xpath@0.0.34: {}
 

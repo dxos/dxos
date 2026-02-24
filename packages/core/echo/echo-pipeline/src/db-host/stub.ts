@@ -9,6 +9,7 @@ import type {
   InsertIntoQueueRequest,
   QueryQueueRequest,
   QueueQueryResult,
+  SyncQueueRequest,
 } from '@dxos/protocols/buf/dxos/client/queue_pb';
 
 /**
@@ -27,5 +28,9 @@ export class QueueServiceStub implements Echo.QueueService {
   deleteFromQueue(request: DeleteFromQueueRequest) {
     throw new Error('Not available.');
     return Promise.resolve(EMPTY);
+  }
+
+  syncQueue(request: SyncQueueRequest): Promise<void> {
+    throw new Error('Not available.');
   }
 }

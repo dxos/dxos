@@ -62,7 +62,9 @@ catalog:
   '@dxos/cli-linux-arm64': 0.8.3
   '@dxos/cli-linux-x64': 0.8.3
   '@dxos/cli-win32-x64': 0.8.3
+  '@dxos/echo-db': ^0.8.3
   '@dxos/errors': ^0.8.3
+  '@dxos/keys': ^0.8.3
   '@dxos/protocols': ^0.8.3
   '@dxos/wa-sqlite': ^0.2.1
   '@effect-atom/atom': ^0.5.1
@@ -709,8 +711,8 @@ catalog:
   zone.js: ^0.15.0
   zx: ^8.8.5
 
-strictPeerDependencies: true
-
 peerDependencyRules:
   allowedVersions:
     dfx>@effect/platform: '>=0.93.0'
+
+strictPeerDependencies: true

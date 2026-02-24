@@ -12,7 +12,6 @@ import { log } from '@dxos/log';
 import { FeedProtocol } from '@dxos/protocols';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
-import { DuplicateBlockLamportTimestampError, DuplicateBlockPositionError } from './errors';
 import { FeedStore } from './feed-store';
 
 const Block = FeedProtocol.Block;
@@ -359,7 +358,8 @@ describe('Feed V2', () => {
         },
       ]);
       expect(blocks.length).toBe(1);
-      expect(blocks[0].position).toBeNull();
+      expect(blocks[0].position).toBeDefined();
+      expect(blocks[0].position).toBeGreaterThanOrEqual(0);
       expect(blocks[0].sequence).toBe(0);
       expect(blocks[0].actorId).toBe(ALICE);
       expect(blocks[0].prevActorId).toBeNull();
@@ -367,16 +367,35 @@ describe('Feed V2', () => {
       expect(blocks[0].timestamp).toBeGreaterThan(0);
       expect(blocks[0].data).toEqual(new Uint8Array([1]));
 
-      // Query by feedId
+      // Query by feedId: persisted position matches returned block position.
       const queryRes = yield* feed.query({
         query: { feedIds: [feedId] },
         position: -1,
         spaceId,
         feedNamespace: WellKnownNamespaces.data,
-      }); // Use position '-1' to get everything
+      });
       expect(queryRes.blocks.length).toBe(1);
-      expect(queryRes.blocks.length).toBe(1);
-      expect(queryRes.blocks[0]).toMatchObject({ ...blocks[0], feedId, position: expect.any(Number) });
+      expect(queryRes.blocks[0].position).toBe(blocks[0].position);
+      expect(queryRes.blocks[0]).toMatchObject({ ...blocks[0], feedId });
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('appendLocal returns blocks with positions from append when assignPositions is true', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: true });
+      yield* feed.migrate();
+
+      const blocks = yield* feed.appendLocal([
+        { spaceId, feedId: 'feed-a', feedNamespace: WellKnownNamespaces.data, data: new Uint8Array([1]) },
+        { spaceId, feedId: 'feed-b', feedNamespace: WellKnownNamespaces.data, data: new Uint8Array([2]) },
+        { spaceId, feedId: 'feed-a', feedNamespace: WellKnownNamespaces.data, data: new Uint8Array([3]) },
+      ]);
+
+      expect(blocks.length).toBe(3);
+      expect(blocks.every((block) => block.position != null && block.position >= 0)).toBe(true);
+      expect(blocks[0].position).toBeLessThan(blocks[1].position!);
+      expect(blocks[1].position).toBeLessThan(blocks[2].position!);
     }).pipe(Effect.provide(TestLayer)),
   );
 
@@ -390,13 +409,6 @@ describe('Feed V2', () => {
 
       const nsData = WellKnownNamespaces.data;
       const nsTrace = WellKnownNamespaces.trace;
-      const getPersistedPosition = (spaceId: SpaceId, feedNamespace: string, feedId: string) =>
-        feed.query({
-          query: { feedIds: [feedId] },
-          position: -1,
-          spaceId,
-          feedNamespace,
-        });
 
       // First append in each (spaceId, feedNamespace) pair starts at 0.
       const feedAData = ObjectId.random();
@@ -447,23 +459,12 @@ describe('Feed V2', () => {
         },
       ]);
 
-      expect(firstAData[0].position).toBeNull();
-      expect(firstATrace[0].position).toBeNull();
-      expect(firstBData[0].position).toBeNull();
-      expect(firstBHalo[0].position).toBeNull();
-      expect(secondAData[0].position).toBeNull();
-
-      const posAData = yield* getPersistedPosition(spaceA, nsData, feedAData);
-      const posATrace = yield* getPersistedPosition(spaceA, nsTrace, feedATrace);
-      const posBData = yield* getPersistedPosition(spaceB, nsData, feedBData);
-      const posBTrace = yield* getPersistedPosition(spaceB, nsTrace, feedBTrace);
-      const posAData2 = yield* getPersistedPosition(spaceA, nsData, feedAData2);
-
-      expect(posAData.blocks[0].position).toBe(0);
-      expect(posATrace.blocks[0].position).toBe(0);
-      expect(posBData.blocks[0].position).toBe(0);
-      expect(posBTrace.blocks[0].position).toBe(0);
-      expect(posAData2.blocks[0].position).toBe(1);
+      // appendLocal returns blocks with positions matching persisted values.
+      expect(firstAData[0].position).toBe(0);
+      expect(firstATrace[0].position).toBe(0);
+      expect(firstBData[0].position).toBe(0);
+      expect(firstBHalo[0].position).toBe(0);
+      expect(secondAData[0].position).toBe(1);
     }).pipe(Effect.provide(TestLayer)),
   );
 
@@ -519,87 +520,193 @@ describe('Feed V2', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
-  it.effect('append fails on non-unique position in request', () =>
+  it.effect('countBlocks and deleteOldestBlocks operate per feed within space and namespace', () =>
     Effect.gen(function* () {
-      const spaceId = SpaceId.random();
-      const feedId = ObjectId.random();
-      const feed = new FeedStore({ localActorId: ALICE, assignPositions: false });
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: true });
       yield* feed.migrate();
 
-      const error = yield* feed
-        .append({
-          requestId: 'req-dup-position',
-          spaceId,
-          feedNamespace: WellKnownNamespaces.data,
-          blocks: [
-            Block.make({
-              feedId,
-              actorId: 'actor-1',
-              sequence: 1,
-              prevActorId: null,
-              prevSequence: null,
-              position: 10,
-              timestamp: Date.now(),
-              data: new Uint8Array([1]),
-            }),
-            Block.make({
-              feedId,
-              actorId: 'actor-2',
-              sequence: 1,
-              prevActorId: null,
-              prevSequence: null,
-              position: 10,
-              timestamp: Date.now(),
-              data: new Uint8Array([2]),
-            }),
-          ],
-        })
-        .pipe(Effect.flip);
+      const spaceA = SpaceId.random();
+      const spaceB = SpaceId.random();
+      const nsData = WellKnownNamespaces.data;
+      const nsTrace = WellKnownNamespaces.trace;
+      const targetFeedId = 'feed-target';
 
-      expect(error).toBeInstanceOf(DuplicateBlockPositionError);
-      expect(error.message).toContain('Non-unique block position detected');
+      // Target feed in target namespace/space.
+      yield* feed.appendLocal([
+        { spaceId: spaceA, feedId: targetFeedId, feedNamespace: nsData, data: new Uint8Array([1]) },
+        { spaceId: spaceA, feedId: targetFeedId, feedNamespace: nsData, data: new Uint8Array([2]) },
+        { spaceId: spaceA, feedId: targetFeedId, feedNamespace: nsData, data: new Uint8Array([3]) },
+        { spaceId: spaceA, feedId: targetFeedId, feedNamespace: nsData, data: new Uint8Array([4]) },
+        { spaceId: spaceA, feedId: targetFeedId, feedNamespace: nsData, data: new Uint8Array([5]) },
+      ]);
+
+      // Data that must not be affected by target cleanup.
+      yield* feed.appendLocal([
+        { spaceId: spaceA, feedId: 'feed-other', feedNamespace: nsData, data: new Uint8Array([11]) },
+        { spaceId: spaceA, feedId: 'feed-trace', feedNamespace: nsTrace, data: new Uint8Array([12]) },
+        { spaceId: spaceB, feedId: targetFeedId, feedNamespace: nsData, data: new Uint8Array([13]) },
+      ]);
+
+      const beforeCount = yield* feed.countBlocks({
+        spaceId: spaceA,
+        feedNamespace: nsData,
+        feedId: targetFeedId,
+      });
+      expect(beforeCount).toBe(5);
+
+      const deleted = yield* feed.deleteOldestBlocks({
+        spaceId: spaceA,
+        feedNamespace: nsData,
+        feedId: targetFeedId,
+        count: 3,
+      });
+      expect(deleted).toBe(3);
+
+      const afterCount = yield* feed.countBlocks({
+        spaceId: spaceA,
+        feedNamespace: nsData,
+        feedId: targetFeedId,
+      });
+      expect(afterCount).toBe(2);
+
+      const targetRemaining = yield* feed.query({
+        requestId: 'req-target-remaining',
+        spaceId: spaceA,
+        feedNamespace: nsData,
+        query: { feedIds: [targetFeedId] },
+        position: -1,
+      });
+      expect(targetRemaining.blocks.length).toBe(2);
+      expect(targetRemaining.blocks.map((block) => block.data[0])).toEqual([4, 5]);
+
+      const unaffectedFeed = yield* feed.countBlocks({
+        spaceId: spaceA,
+        feedNamespace: nsData,
+        feedId: 'feed-other',
+      });
+      expect(unaffectedFeed).toBe(1);
+
+      const unaffectedNamespace = yield* feed.countBlocks({
+        spaceId: spaceA,
+        feedNamespace: nsTrace,
+        feedId: 'feed-trace',
+      });
+      expect(unaffectedNamespace).toBe(1);
+
+      const unaffectedSpace = yield* feed.countBlocks({
+        spaceId: spaceB,
+        feedNamespace: nsData,
+        feedId: targetFeedId,
+      });
+      expect(unaffectedSpace).toBe(1);
     }).pipe(Effect.provide(TestLayer)),
   );
 
-  it.effect('append fails on non-unique Lamport timestamp in request', () =>
+  it.effect('deleteOldestBlocks handles non-positive and oversized delete counts', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feedId = 'feed-delete-count';
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: true });
+      yield* feed.migrate();
+
+      yield* feed.appendLocal([
+        { spaceId, feedId, feedNamespace: WellKnownNamespaces.data, data: new Uint8Array([1]) },
+        { spaceId, feedId, feedNamespace: WellKnownNamespaces.data, data: new Uint8Array([2]) },
+      ]);
+
+      const deletedZero = yield* feed.deleteOldestBlocks({
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        feedId,
+        count: 0,
+      });
+      expect(deletedZero).toBe(0);
+
+      const deletedNegative = yield* feed.deleteOldestBlocks({
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        feedId,
+        count: -5,
+      });
+      expect(deletedNegative).toBe(0);
+
+      const deletedOversized = yield* feed.deleteOldestBlocks({
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        feedId,
+        count: 10,
+      });
+      expect(deletedOversized).toBe(2);
+
+      const remainingCount = yield* feed.countBlocks({
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        feedId,
+      });
+      expect(remainingCount).toBe(0);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('append ignores duplicate Lamport timestamp and preserves original data', () =>
     Effect.gen(function* () {
       const spaceId = SpaceId.random();
       const feedId = ObjectId.random();
       const feed = new FeedStore({ localActorId: ALICE, assignPositions: false });
       yield* feed.migrate();
 
-      const error = yield* feed
-        .append({
-          requestId: 'req-dup-lamport',
-          spaceId,
-          feedNamespace: WellKnownNamespaces.data,
-          blocks: [
-            Block.make({
-              feedId,
-              actorId: 'actor-1',
-              sequence: 5,
-              prevActorId: null,
-              prevSequence: null,
-              position: 1,
-              timestamp: Date.now(),
-              data: new Uint8Array([1]),
-            }),
-            Block.make({
-              feedId,
-              actorId: 'actor-1',
-              sequence: 5,
-              prevActorId: null,
-              prevSequence: null,
-              position: 2,
-              timestamp: Date.now(),
-              data: new Uint8Array([2]),
-            }),
-          ],
-        })
-        .pipe(Effect.flip);
+      const actorId = 'actor-1';
+      const sequence = 5;
+      const timestamp = Date.now();
 
-      expect(error).toBeInstanceOf(DuplicateBlockLamportTimestampError);
-      expect(error.message).toContain('Non-unique block Lamport timestamp detected');
+      yield* feed.append({
+        requestId: 'req-first',
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        blocks: [
+          Block.make({
+            feedId,
+            actorId,
+            sequence,
+            prevActorId: null,
+            prevSequence: null,
+            position: null,
+            timestamp,
+            data: new Uint8Array([1]),
+          }),
+        ],
+      });
+
+      // Same Lamport tuple with different data and position should be ignored.
+      yield* feed.append({
+        requestId: 'req-duplicate',
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        blocks: [
+          Block.make({
+            feedId,
+            actorId,
+            sequence,
+            prevActorId: null,
+            prevSequence: null,
+            position: null,
+            timestamp: timestamp + 1,
+            data: new Uint8Array([2]),
+          }),
+        ],
+      });
+
+      const queryRes = yield* feed.query({
+        requestId: 'req-query',
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        query: { feedIds: [feedId] },
+        position: -1,
+      });
+
+      expect(queryRes.blocks.length).toBe(1);
+      expect(queryRes.blocks[0].actorId).toBe(actorId);
+      expect(queryRes.blocks[0].sequence).toBe(sequence);
+      expect(queryRes.blocks[0].data).toEqual(new Uint8Array([1]));
     }).pipe(Effect.provide(TestLayer)),
   );
 });

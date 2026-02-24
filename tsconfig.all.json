@@ -550,9 +550,6 @@
       "path": "packages/ui/react-ui-grid/tsconfig.json"
     },
     {
-      "path": "packages/ui/react-ui-kanban/tsconfig.json"
-    },
-    {
       "path": "packages/ui/react-ui-list/tsconfig.json"
     },
     {

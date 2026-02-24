@@ -71,7 +71,10 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
         const registry = this.#capabilities.get(Capabilities.AtomRegistry);
 
         // TODO(dmaretskyi): Make these reactive.
-        const functions = this.#capabilities.getAll(AppCapabilities.Functions).flat();
+        const functions = [
+          ...this.#capabilities.getAll(AppCapabilities.Functions).flat(),
+          ...this.#capabilities.getAll(AppCapabilities.BlueprintDefinition).flatMap((blueprint) => blueprint.functions),
+        ];
 
         const genericToolkitProvider = Layer.succeed(GenericToolkit.Provider, {
           getToolkit: () => {

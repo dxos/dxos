@@ -17,7 +17,7 @@ import { BlobMeta } from '@dxos/protocols/proto/dxos/echo/blob';
 import { PublicKey, useClient } from '@dxos/react-client';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { useAsyncEffect } from '@dxos/react-hooks';
-import { DropdownMenu, Icon, Toolbar, Tree, TreeItem } from '@dxos/react-ui';
+import { DropdownMenu, Icon, ScrollArea, Toolbar, Tree, TreeItem } from '@dxos/react-ui';
 import { BitField } from '@dxos/util';
 
 import { Bitbar, JsonView, PanelContainer } from '../../../components';
@@ -239,30 +239,32 @@ export const StoragePanel = () => {
       <DataTree items={items} onSelect={setSelected} />
 
       {selectedValue && (
-        <div className='flex flex-col divide-y divide-separator grow overflow-auto scrollbar-thin'>
-          {selectedValue.kind === 'blob' && (
-            <>
-              <div className='p-1'>Downloaded {formatPercent(calculateBlobProgress(selectedValue.blob))}</div>
-              <Bitbar
-                value={selectedValue.blob.bitfield ?? new Uint8Array()}
-                length={Math.ceil(selectedValue.blob.length / selectedValue.blob.chunkSize)}
-                className='m-2'
-              />
-              <JsonView data={selectedValue.blob} />
-            </>
-          )}
+        <ScrollArea.Root thin>
+          <ScrollArea.Viewport classNames='divide-y divide-separator'>
+            {selectedValue.kind === 'blob' && (
+              <>
+                <div className='p-1'>Downloaded {formatPercent(calculateBlobProgress(selectedValue.blob))}</div>
+                <Bitbar
+                  value={selectedValue.blob.bitfield ?? new Uint8Array()}
+                  length={Math.ceil(selectedValue.blob.length / selectedValue.blob.chunkSize)}
+                  className='m-2'
+                />
+                <JsonView data={selectedValue.blob} />
+              </>
+            )}
 
-          {selectedValue.kind === 'feed' && (
-            <>
-              <Bitbar
-                value={selectedValue.feed.downloaded ?? new Uint8Array()}
-                length={Math.ceil(selectedValue.feed.length ?? 0)}
-                className='m-2'
-              />
-              <JsonView data={selectedValue.feed} />
-            </>
-          )}
-        </div>
+            {selectedValue.kind === 'feed' && (
+              <>
+                <Bitbar
+                  value={selectedValue.feed.downloaded ?? new Uint8Array()}
+                  length={Math.ceil(selectedValue.feed.length ?? 0)}
+                  className='m-2'
+                />
+                <JsonView data={selectedValue.feed} />
+              </>
+            )}
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
       )}
     </PanelContainer>
   );

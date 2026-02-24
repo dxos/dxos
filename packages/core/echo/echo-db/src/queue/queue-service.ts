@@ -14,6 +14,7 @@ import {
   type QueryQueueRequest,
   type QueueQueryResult,
   QueueQueryResultSchema,
+  SyncQueueRequest,
 } from '@dxos/protocols/buf/dxos/client/queue_pb';
 import { ComplexMap } from '@dxos/util';
 
@@ -51,6 +52,10 @@ export class QueueServiceImpl implements Echo.QueueService {
       request.objectIds as ObjectId[],
     );
     return create(EmptySchema);
+  }
+
+  async syncQueue(_: SyncQueueRequest): Promise<void> {
+    // no-op
   }
 }
 
@@ -95,6 +100,10 @@ export class MockQueueService implements Echo.QueueService {
       existing.filter((obj) => !objectIds.includes((obj as { id?: string }).id ?? '')),
     );
     return create(EmptySchema);
+  }
+
+  async syncQueue(_: SyncQueueRequest): Promise<void> {
+    // no-op
   }
 }
 

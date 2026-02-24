@@ -1,0 +1,30 @@
+$schema: https://moonrepo.dev/schemas/tasks.json
+tasks:
+  test-storybook:
+    command: pnpm exec dx-killorphans vitest run --passWithNoTests --project=storybook
+    deps:
+      - esbuild-plugins:compile
+      - node-std:compile
+      - storybook-addon-logger:compile
+      - vite-plugin-icons:compile
+      - vite-plugin-import-source:compile
+      - ^:compile
+    inputs:
+      - '@group(sources)'
+      - /tools/storybook-react/.storybook/main.ts
+      - /tools/storybook-react/.storybook/vitest.setup.ts
+      - /vitest.base.config.ts
+      - .storybook/*
+      - vitest.config.ts
+      - $VITEST_COVERAGE
+      - $VITEST_DEBUG
+      - $VITEST_ENV
+      - $VITEST_XML_REPORT
+    outputs:
+      - /coverage/$project/storybook/**
+      - /test-results/$project/storybook/**
+    options:
+      timeout: 600
+
+inheritedBy:
+  tags: ts-test-storybook

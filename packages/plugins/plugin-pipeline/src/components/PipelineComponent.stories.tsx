@@ -2,8 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
+import { RegistryContext } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useContext, useEffect } from 'react';
 
 import { Filter, Ref } from '@dxos/client/echo';
 import { Obj, Query, Type } from '@dxos/echo';
@@ -15,11 +16,12 @@ import { Form, omitId } from '@dxos/react-ui-form';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import { Collection, View } from '@dxos/schema';
 import { createObjectFactory } from '@dxos/schema/testing';
+import { withRegistry } from '@dxos/storybook-utils';
 import { Person, Pipeline } from '@dxos/types';
 
 import { translations } from '../translations';
 
-import { type ItemProps, PipelineComponent as PipelineComponent } from './PipelineComponent';
+import { type ItemProps, PipelineComponent, usePipelineBoardModel } from './PipelineComponent';
 
 const StorybookProjectItem = ({ item, projectionModel }: ItemProps) => {
   if (Obj.instanceOf(Person.Person, item)) {
@@ -40,9 +42,11 @@ const StorybookProjectItem = ({ item, projectionModel }: ItemProps) => {
 };
 
 const DefaultStory = () => {
+  const registry = useContext(RegistryContext);
   const { space } = useClientStory();
   const pipelines = useQuery(space?.db, Filter.type(Pipeline.Pipeline));
   const pipeline = pipelines[0];
+  const model = usePipelineBoardModel(pipeline, registry);
 
   const handleAddColumn = useCallback(() => {
     if (!space || !pipeline) {
@@ -72,17 +76,19 @@ const DefaultStory = () => {
   }
 
   return (
-    <PipelineComponent.Root Item={StorybookProjectItem} onAddColumn={handleAddColumn}>
+    <PipelineComponent.Root Item={StorybookProjectItem} model={model} onAddColumn={handleAddColumn}>
       <PipelineComponent.Content pipeline={pipeline} />
     </PipelineComponent.Root>
   );
 };
 
 const MutationsStory = () => {
+  const registry = useContext(RegistryContext);
   const { space } = useClientStory();
   const pipelines = useQuery(space?.db, Filter.type(Pipeline.Pipeline));
   const contacts = useQuery(space?.db, Filter.type(Person.Person));
   const pipeline = pipelines[0];
+  const model = usePipelineBoardModel(pipeline, registry);
 
   const handleAddColumn = useCallback(() => {
     if (!space || !pipeline) {
@@ -141,7 +147,7 @@ const MutationsStory = () => {
   }
 
   return (
-    <PipelineComponent.Root Item={StorybookProjectItem} onAddColumn={handleAddColumn}>
+    <PipelineComponent.Root Item={StorybookProjectItem} model={model} onAddColumn={handleAddColumn}>
       <PipelineComponent.Content pipeline={pipeline} />
     </PipelineComponent.Root>
   );
@@ -152,6 +158,7 @@ const meta = {
   decorators: [
     withTheme(),
     withLayout({ layout: 'column' }),
+    withRegistry,
     withMosaic(),
     withClientProvider({
       types: [Pipeline.Pipeline, View.View, Collection.Collection, Person.Person],

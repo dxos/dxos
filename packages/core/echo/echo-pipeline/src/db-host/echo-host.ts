@@ -17,6 +17,7 @@ import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
 import type { Echo } from '@dxos/protocols';
+import type { SyncQueueRequest } from '@dxos/protocols/proto/dxos/client/services';
 import type * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { trace } from '@dxos/tracing';
 
@@ -59,6 +60,11 @@ export type EchoHostProps = {
    * @default false
    */
   assignQueuePositions?: boolean;
+
+  /**
+   * Callback to run blocking queue sync.
+   */
+  syncQueue?: (request: SyncQueueRequest) => Promise<void>;
 };
 
 /**
@@ -93,6 +99,7 @@ export class EchoHost extends Resource {
     getSpaceKeyByRootDocumentId,
     runtime,
     assignQueuePositions = false,
+    syncQueue,
   }: EchoHostProps) {
     super();
 
@@ -115,7 +122,7 @@ export class EchoHost extends Resource {
         getSpaceIds: () => this._spaceStateManager.spaceIds,
       });
       // LocalQueueServiceImpl uses proto types; buf QueueService is structurally compatible at runtime.
-      this._queuesService = new LocalQueueServiceImpl(runtime, this._feedStore) as Echo.QueueService;
+      this._queuesService =  new LocalQueueServiceImpl(runtime, this._feedStore, syncQueue) as Echo.QueueService;
     } else {
       this._queuesService = new QueueServiceStub();
     }
