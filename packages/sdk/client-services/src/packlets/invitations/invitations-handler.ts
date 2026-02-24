@@ -12,14 +12,17 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type SwarmConnection, type SwarmNetworkManager, createTeleportProtocolFactory } from '@dxos/network-manager';
 import { InvalidInvitationError, InvalidInvitationExtensionRoleError, trace } from '@dxos/protocols';
+import { create } from '@dxos/protocols/buf';
 import {
   type AdmissionKeypair,
+  AdmissionKeypairSchema,
   type Invitation,
   Invitation_AuthMethod,
   Invitation_Kind,
   Invitation_State,
   Invitation_Type,
 } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { PrivateKeySchema, PublicKeySchema } from '@dxos/protocols/buf/dxos/keys_pb';
 import { InvitationOptions_Role } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { AuthenticationResponse, type IntroductionResponse } from '@dxos/protocols/proto/dxos/halo/invitations';
@@ -316,7 +319,7 @@ export class InvitationsHandler {
                 ...protocol.toJSON(),
                 authMethod: introductionResponse.authMethod,
               });
-              invitation.authMethod = introductionResponse.authMethod as never;
+              invitation.authMethod = introductionResponse.authMethod as Invitation_AuthMethod;
 
               // 2. Get authentication code.
               if (isAuthenticationRequired(invitation)) {
@@ -521,5 +524,8 @@ const checkInvitation = (protocol: InvitationProtocol, invitation: Partial<Invit
 
 export const createAdmissionKeypair = (): AdmissionKeypair => {
   const keypair = createKeyPair();
-  return { publicKey: PublicKey.from(keypair.publicKey), privateKey: keypair.secretKey } as never;
+  return create(AdmissionKeypairSchema, {
+    publicKey: create(PublicKeySchema, { data: keypair.publicKey }),
+    privateKey: create(PrivateKeySchema, { data: keypair.secretKey }),
+  });
 };

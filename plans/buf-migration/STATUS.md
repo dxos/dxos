@@ -50,17 +50,17 @@ Migrating DXOS protocol types from **protobuf.js** (codegen via `@dxos/codec-pro
 
 ### Build Status
 
-| Status | Detail |
-|--------|--------|
+| Status    | Detail                                                                                                       |
+| --------- | ------------------------------------------------------------------------------------------------------------ |
 | **Build** | Passes (`moon run :build`). One pre-existing failure in `feed:build` from main — unrelated to buf migration. |
-| **Lint** | Clean after 5 fixes for inline `import()` type annotations. |
+| **Lint**  | Clean after 5 fixes for inline `import()` type annotations.                                                  |
 
 ### Test Status
 
-| Suite | Result | Root Cause |
-|-------|--------|------------|
-| `credentials:test` | **48/50 PASS** | Fixed: BigInt serialization, `$typeName` skipping in `canonicalStringify`, assertion loss in `create()`. 2 skipped (json-encoding). |
-| `echo-pipeline:test` | **8/112 FAIL** | `value.asUint8Array is not a function` — PublicKey type mismatch in pipeline feed write path (`feed-wrapper.ts` → `test-agent-builder.ts`). Pre-existing from buf migration. |
+| Suite                  | Result               | Root Cause                                                                                                                                                                                 |
+| ---------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `credentials:test`     | **48/50 PASS**       | Fixed: BigInt serialization, `$typeName` skipping in `canonicalStringify`, assertion loss in `create()`. 2 skipped (json-encoding).                                                        |
+| `echo-pipeline:test`   | **8/112 FAIL**       | `value.asUint8Array is not a function` — PublicKey type mismatch in pipeline feed write path (`feed-wrapper.ts` → `test-agent-builder.ts`). Pre-existing from buf migration.               |
 | `client-services:test` | **16/19 files FAIL** | 1 timeout (`notarization-plugin.test.ts`); 15 files fail from pre-existing `feed` package `@dxos/errors` import resolution (infrastructure, not buf). `system-service.test.ts` now passes. |
 
 **Runtime bugs fixed in Phase 3:**
@@ -74,53 +74,54 @@ Migrating DXOS protocol types from **protobuf.js** (codegen via `@dxos/codec-pro
 
 #### Net Cast Changes Introduced by This Branch
 
-| Cast Type | Added | Removed | Net |
-|-----------|-------|---------|-----|
-| `as never` | 154 | 0 | **+154** |
-| `as unknown` | 23 | 7 | **+16** |
-| `as any` | 6 | 29 | **−23** |
+| Cast Type    | Added | Removed | Net      |
+| ------------ | ----- | ------- | -------- |
+| `as never`   | 141   | 0       | **+141** |
+| `as unknown` | 23    | 7       | **+16**  |
+| `as any`     | 6     | 29      | **−23**  |
 
 #### Top Files by `as never` Added (this branch vs main)
 
-| File | Count | Category |
-|------|-------|----------|
-| `client/src/tests/invitations.test.ts` | 12 | Test — InvitationsProxy type mismatch |
-| `client-services/.../space-invitation-protocol.ts` | 6 | Invitation — PublicKey + credential boundary |
-| `client/src/services/agent-hosting-provider.ts` | 5 | Client SDK — edge agent API |
-| `client-services/.../spaces-service.ts` | 4 | Service — GossipMessage, assertion, cache |
-| `client-services/.../notarization-plugin.ts` | 4 | Pipeline — credential notarization |
-| `client-services/.../space-invitation-protocol.test.ts` | 4 | Test — invitation protocol |
-| `tracing/src/trace-sender.ts` | 4 | Tracing — Resource/Span type mismatch |
-| `client/src/tests/lazy-space-loading.test.ts` | 3 | Test |
-| `client/src/client/client.ts` | 3 | Client SDK |
-| `client-services/.../system-service.test.ts` | 3 | Test |
-| `client-services/.../service-context.ts` | 3 | Service wiring |
-| `client-services/.../invitations-manager.ts` | 3 | Invitation |
-| `client-services/.../diagnostics.ts` | 3 | Diagnostics |
-| `client-services/.../devtools/network.ts` | 3 | Devtools |
-| `client-protocol/.../encoder.ts` | 3 | Invitation encoding |
-| `client-protocol/.../encoder.test.ts` | 3 | Test |
-| `devtools/.../TracingPanel.tsx` | 3 | Devtools UI |
-| `functions-runtime-cloudflare/.../service-container.ts` | 3 | Edge functions |
-| `echo-pipeline/.../control-pipeline.ts` | 3 | Pipeline internals |
-| (39 more files with 1–2 casts each) | ~57 | Various |
+| File                                                    | Count | Category                                     |
+| ------------------------------------------------------- | ----- | -------------------------------------------- |
+| `client/src/tests/invitations.test.ts`                  | 12    | Test — InvitationsProxy type mismatch        |
+| `client-services/.../space-invitation-protocol.ts`      | 6     | Invitation — PublicKey + credential boundary |
+| `client/src/services/agent-hosting-provider.ts`         | 5     | Client SDK — edge agent API                  |
+| `client-services/.../spaces-service.ts`                 | 4     | Service — GossipMessage, assertion, cache    |
+| `client-services/.../notarization-plugin.ts`            | 4     | Pipeline — credential notarization           |
+| `client-services/.../space-invitation-protocol.test.ts` | 4     | Test — invitation protocol                   |
+| `tracing/src/trace-sender.ts`                           | 4     | Tracing — Resource/Span type mismatch        |
+| `client/src/tests/lazy-space-loading.test.ts`           | 3     | Test                                         |
+| `client/src/client/client.ts`                           | 3     | Client SDK                                   |
+| `client-services/.../system-service.test.ts`            | 3     | Test                                         |
+| `client-services/.../service-context.ts`                | 3     | Service wiring                               |
+| `client-services/.../invitations-manager.ts`            | 3     | Invitation                                   |
+| `client-services/.../diagnostics.ts`                    | 3     | Diagnostics                                  |
+| `client-services/.../devtools/network.ts`               | 3     | Devtools                                     |
+| `client-protocol/.../encoder.ts`                        | 3     | Invitation encoding                          |
+| `client-protocol/.../encoder.test.ts`                   | 3     | Test                                         |
+| `devtools/.../TracingPanel.tsx`                         | 3     | Devtools UI                                  |
+| `functions-runtime-cloudflare/.../service-container.ts` | 3     | Edge functions                               |
+| `echo-pipeline/.../control-pipeline.ts`                 | 3     | Pipeline internals                           |
+| (39 more files with 1–2 casts each)                     | ~57   | Various                                      |
 
 #### Cast Categories
 
 **`as never` (157 added)** — Proto/buf boundary conversions:
 
-| Category | Est. Count | Description |
-|----------|-----------|-------------|
-| Service response/request boundary | ~45 | Service handlers return buf, internal code consumes protobuf.js (or vice versa). |
-| Invitation protocol | ~20 | Invitation flows bridge credential and PublicKey types across the boundary. |
-| Test assertions & fixtures | ~35 | Tests construct or compare objects that cross the buf/proto boundary. |
-| Client SDK layer | ~15 | `client.ts`, `agent-hosting-provider`, `local-client-services`, proxies. |
-| Pipeline internals | ~15 | `control-pipeline`, `notarization-plugin`, `data-space-manager`. |
-| Devtools & tracing | ~12 | `TracingPanel`, devtools RPC, `trace-sender`. |
-| Network / mesh | ~10 | Signal client, messenger, swarm, RTC transport. |
-| Edge functions | ~5 | Cloudflare function runtime, queue service. |
+| Category                          | Est. Count | Description                                                                      |
+| --------------------------------- | ---------- | -------------------------------------------------------------------------------- |
+| Service response/request boundary | ~45        | Service handlers return buf, internal code consumes protobuf.js (or vice versa). |
+| Invitation protocol               | ~20        | Invitation flows bridge credential and PublicKey types across the boundary.      |
+| Test assertions & fixtures        | ~35        | Tests construct or compare objects that cross the buf/proto boundary.            |
+| Client SDK layer                  | ~15        | `client.ts`, `agent-hosting-provider`, `local-client-services`, proxies.         |
+| Pipeline internals                | ~15        | `control-pipeline`, `notarization-plugin`, `data-space-manager`.                 |
+| Devtools & tracing                | ~12        | `TracingPanel`, devtools RPC, `trace-sender`.                                    |
+| Network / mesh                    | ~10        | Signal client, messenger, swarm, RTC transport.                                  |
+| Edge functions                    | ~5         | Cloudflare function runtime, queue service.                                      |
 
 **`as unknown` (23 added)** — Type bridging:
+
 - `PublicKey` message → `@dxos/keys` class conversions (5).
 - `google.protobuf.Any` assertion field access (8).
 - Service interface implementations (2).
@@ -137,6 +138,7 @@ Migrating DXOS protocol types from **protobuf.js** (codegen via `@dxos/codec-pro
 - **Protobuf.js messages** are class instances with prototype methods (`.toJSON()`, `.encode()`, `.decode()`). Fields may use different casing, enums may be string-keyed, and missing fields may be `undefined` vs default-valued. Integer fields are always `number`.
 
 When a buf object is cast `as never` and passed into protobuf.js code (or vice versa), the receiving code may:
+
 1. Call prototype methods that don't exist on a buf plain object → **runtime crash**.
 2. Read fields that have different default semantics → **silent data corruption**.
 3. Serialize with the wrong codec → **wire-format errors**.
@@ -246,17 +248,17 @@ Fixed bugs that were actively crashing tests.
 - [x] **`$typeName` test assertions** — Updated `system-service.test.ts` to use `create()` for requests and field-level assertions.
 - **Result**: `credentials:test` 48/50 pass (was 2/50). 3 `as never` casts removed from test file.
 
-### Phase 4: Invitation & Identity Layer (~30 casts)
+### Phase 4: Invitation & Identity Layer (Done — 13 casts removed)
 
-The invitation protocol is one of the highest-cast areas.
-
-- [ ] `space-invitation-protocol.ts` (6 casts) — PublicKey conversions + credential boundary.
-- [ ] `invitations-manager.ts` (3), `invitations-service.ts` (2), `invitations-handler.ts` (2), `invitation-host-extension.ts` (2) — invitation flow internals.
-- [ ] `device-invitation-protocol.ts` (2) — device invitation path.
-- [ ] `identity-service.ts` (2), `identity-manager.ts` (2), `identity.ts` (1), `authenticator.ts` (2), `contacts-service.ts` (1).
-- [ ] `client-protocol/invitations/encoder.ts` (3) — invitation encoding/decoding.
-- [ ] Test files: `invitations.test.ts` (12), `space-invitation-protocol.test.ts` (4), `invitations-handler.test.ts` (2), `encoder.test.ts` (3).
-- **Target**: ~30 `as never` casts removed.
+- [x] `setIdentityTags` in `utils.ts` → buf service types. Removed 2 casts each from `local-client-services.ts` and `worker-runtime.ts`.
+- [x] `invitations-handler.ts` — enum casts replaced with proper types, `createAdmissionKeypair` uses `create()`.
+- [x] `invitation-host-extension.ts` — enum cast replaced with typed response.
+- [x] `identity-service.ts` — `create()` with field-by-field construction for recovery challenge.
+- [x] `identity-manager.ts` — buf `DeviceProfileDocumentSchema` for default profile.
+- [x] `invitations-service.ts` — removed 2 unnecessary casts (types already match).
+- [x] `contacts-service.ts` — explicit `protoToBuf` for profile.
+- Remaining: `space-invitation-protocol.ts` (6), `authenticator.ts` (2), `identity.ts` (1), `invitations-manager.ts` (3), `device-invitation-protocol.ts` (2) — proto/buf codec boundary casts that require deeper refactoring.
+- **Result**: 13 `as never` casts removed. `as never` count: 141 (was 154).
 
 ### Phase 5: Client SDK & Service Wiring (~20 casts)
 
@@ -309,18 +311,27 @@ This is the deepest and highest-risk work item. `Any` is used to store credentia
 - [ ] Remove `bufToProto`/`protoToBuf` helpers (no longer needed).
 - [ ] Audit and remove dead proto type imports.
 
+--
+
+## Implementation Notes
+
+- Working with `google.protobuf.Any` is documented here - https://github.com/bufbuild/protobuf-es/blob/main/MANUAL.md#googleprotobufany
+  - For crendetial assertions specifically, `@dxos/credentials` should create a registry via `createRegistry(Schema1, Schema2, ...)` of ONLY the valid assertion type schema, as well as a union type of all the assertion types. Union types don't need an extra `@schema` discriminator field, since `$type` is already present.
+- Make sure offical `google.protobuf.Struct` integration is correctly used - https://github.com/bufbuild/protobuf-es/blob/main/MANUAL.md#googleprotobufstruct
+- Do a comprehensive item-by-item review that the code is using the best practices from protobuf-es: https://github.com/bufbuild/protobuf-es/blob/main/MANUAL.md
+
 ---
 
 ## Known Issues
 
-| Issue | Severity | Notes |
-|-------|----------|-------|
-| ~~BigInt crash in `canonicalStringify`~~ | ~~P0~~ **Fixed** | Fixed in Phase 3: added `bigint` → Number and `$`-prefixed key skipping in `signing.ts` replacer. |
-| ~~`$typeName` in deep equality~~ | ~~P1~~ **Fixed** | Fixed in Phase 3: updated `system-service.test.ts` assertions. |
-| **Assertion loss in `create()` for Any fields** | **P1** | Buf's `create()` recursively initializes nested messages. TypedMessage assertions in `google.protobuf.Any` fields are converted to empty `Any` messages. Fixed in `credential-factory.ts`; other call sites using `create()` with nested credentials may need the same treatment. |
-| **PublicKey type mismatch in echo-pipeline** | **P1** | `value.asUint8Array is not a function` in feed write path. Buf PublicKey messages (plain `{ data: Uint8Array }`) used where `@dxos/keys.PublicKey` class expected. Affects 8 echo-pipeline tests. |
-| **157 `as never` boundary casts** | **P1** | Each is a potential runtime bug. Buf and protobuf.js objects are structurally different. Fix: convert protobuf.js code on the other side to buf. |
-| **23 `as unknown` casts** | **P2** | Type bridging for PublicKey, Any fields, SpaceProxy. Fix: same — migrate consuming code to buf. |
-| `as unknown` for `Any` field access | P2 | 8 sites where `google.protobuf.Any` assertion fields need unsafe access. Fix: use buf `Any.unpack()` or typed wrappers. |
-| `feed:build` failure | Low | Pre-existing from main. New `feed` package has unresolved imports (`@dxos/protocols`, `@dxos/sql-sqlite`). Not related to buf migration. |
-| `@dxos/errors` import in tests | Low | Pre-existing from main. 15 test files in `client-services` fail to import `@dxos/errors` via the `feed` package. Infrastructure issue. |
+| Issue                                           | Severity         | Notes                                                                                                                                                                                                                                                                             |
+| ----------------------------------------------- | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ~~BigInt crash in `canonicalStringify`~~        | ~~P0~~ **Fixed** | Fixed in Phase 3: added `bigint` → Number and `$`-prefixed key skipping in `signing.ts` replacer.                                                                                                                                                                                 |
+| ~~`$typeName` in deep equality~~                | ~~P1~~ **Fixed** | Fixed in Phase 3: updated `system-service.test.ts` assertions.                                                                                                                                                                                                                    |
+| **Assertion loss in `create()` for Any fields** | **P1**           | Buf's `create()` recursively initializes nested messages. TypedMessage assertions in `google.protobuf.Any` fields are converted to empty `Any` messages. Fixed in `credential-factory.ts`; other call sites using `create()` with nested credentials may need the same treatment. |
+| **PublicKey type mismatch in echo-pipeline**    | **P1**           | `value.asUint8Array is not a function` in feed write path. Buf PublicKey messages (plain `{ data: Uint8Array }`) used where `@dxos/keys.PublicKey` class expected. Affects 8 echo-pipeline tests.                                                                                 |
+| **157 `as never` boundary casts**               | **P1**           | Each is a potential runtime bug. Buf and protobuf.js objects are structurally different. Fix: convert protobuf.js code on the other side to buf.                                                                                                                                  |
+| **23 `as unknown` casts**                       | **P2**           | Type bridging for PublicKey, Any fields, SpaceProxy. Fix: same — migrate consuming code to buf.                                                                                                                                                                                   |
+| `as unknown` for `Any` field access             | P2               | 8 sites where `google.protobuf.Any` assertion fields need unsafe access. Fix: use buf `Any.unpack()` or typed wrappers.                                                                                                                                                           |
+| `feed:build` failure                            | Low              | Pre-existing from main. New `feed` package has unresolved imports (`@dxos/protocols`, `@dxos/sql-sqlite`). Not related to buf migration.                                                                                                                                          |
+| `@dxos/errors` import in tests                  | Low              | Pre-existing from main. 15 test files in `client-services` fail to import `@dxos/errors` via the `feed` package. Infrastructure issue.                                                                                                                                            |

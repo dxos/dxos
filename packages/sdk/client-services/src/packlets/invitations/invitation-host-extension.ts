@@ -20,6 +20,7 @@ import {
   type AdmissionRequest,
   type AdmissionResponse,
   AuthenticationResponse,
+  type IntroductionResponse,
   type InvitationHostService,
   InvitationOptions,
 } from '@dxos/protocols/proto/dxos/halo/invitations';
@@ -125,8 +126,8 @@ export class InvitationHostExtension
             scheduleTask(this._ctx, () => this.close());
             // TODO(dmaretskyi): Better error handling.
             return {
-              authMethod: Invitation_AuthMethod.NONE as never,
-            };
+              authMethod: Invitation_AuthMethod.NONE,
+            } as IntroductionResponse;
           }
 
           log.verbose('guest introduced themselves', { guestProfile: profile });
@@ -137,9 +138,9 @@ export class InvitationHostExtension
 
           log.trace('dxos.sdk.invitation-handler.host.introduce', trace.end({ id: traceId }));
           return {
-            authMethod: invitation.authMethod as never,
+            authMethod: invitation.authMethod,
             challenge: this._challenge,
-          };
+          } as IntroductionResponse;
         },
 
         authenticate: async ({ authCode: code, signedChallenge }) => {

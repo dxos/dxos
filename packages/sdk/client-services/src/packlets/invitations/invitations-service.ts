@@ -38,7 +38,7 @@ export class InvitationsServiceImpl implements Halo.InvitationsService {
         .createInvitation(options)
         .then((invitation) => {
           trace.metrics.increment('dxos.invitation.created');
-          invitation.subscribe((inv) => next(inv as never), close, close);
+          invitation.subscribe((inv) => next(inv), close, close);
         })
         .catch(close);
     });
@@ -47,7 +47,7 @@ export class InvitationsServiceImpl implements Halo.InvitationsService {
   acceptInvitation(request: AcceptInvitationRequest): Stream<Invitation> {
     const invitation = this._invitationsManager.acceptInvitation(request);
     return new Stream<Invitation>(({ next, close }) => {
-      invitation.subscribe((inv) => next(inv as never), close, close);
+      invitation.subscribe((inv) => next(inv), close, close);
     });
   }
 

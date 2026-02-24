@@ -4,28 +4,29 @@
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { type DevicesService, type IdentityService } from '@dxos/protocols/proto/dxos/client/services';
-import { DeviceKind } from '@dxos/protocols/proto/dxos/client/services';
+import { type Rpc } from '@dxos/protocols';
+import { EMPTY, decodePublicKey } from '@dxos/protocols/buf';
+import { DeviceKind, DevicesService, IdentityService } from '@dxos/protocols/buf/dxos/client/services_pb';
 
 export const setIdentityTags = ({
   identityService,
   devicesService,
   setTag,
 }: {
-  identityService: IdentityService;
-  devicesService: DevicesService;
+  identityService: Rpc.BufRpcClient<typeof IdentityService>;
+  devicesService: Rpc.BufRpcClient<typeof DevicesService>;
   setTag: (k: string, v: string) => void;
 }) => {
-  identityService.queryIdentity().subscribe((idqr) => {
+  identityService.queryIdentity(EMPTY).subscribe((idqr) => {
     if (!idqr?.identity?.identityKey) {
       log('empty response from identity service', { idqr });
       return;
     }
 
-    setTag('identityKey', idqr.identity.identityKey.truncate());
+    setTag('identityKey', decodePublicKey(idqr.identity.identityKey).truncate());
   });
 
-  devicesService.queryDevices().subscribe((dqr) => {
+  devicesService.queryDevices(EMPTY).subscribe((dqr) => {
     if (!dqr || !dqr.devices || dqr.devices.length === 0) {
       log('empty response from device service', { device: dqr });
       return;
@@ -37,6 +38,7 @@ export const setIdentityTags = ({
       log('no current device', { device: dqr });
       return;
     }
-    setTag('deviceKey', thisDevice.deviceKey.truncate());
+    invariant(thisDevice.deviceKey, 'device key not found');
+    setTag('deviceKey', decodePublicKey(thisDevice.deviceKey).truncate());
   });
 };

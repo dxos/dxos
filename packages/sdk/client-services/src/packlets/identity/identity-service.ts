@@ -10,7 +10,7 @@ import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
 import { log } from '@dxos/log';
 import { type Halo } from '@dxos/protocols';
-import { create } from '@dxos/protocols/buf';
+import { create, encodePublicKey } from '@dxos/protocols/buf';
 import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import {
   type CreateIdentityRequest,
@@ -111,7 +111,11 @@ export class IdentityServiceImpl extends Resource implements Halo.IdentityServic
 
   async requestRecoveryChallenge(): Promise<RequestRecoveryChallengeResponse> {
     const result = await this._recoveryManager.requestRecoveryChallenge();
-    return create(RequestRecoveryChallengeResponseSchema, result as never);
+    return create(RequestRecoveryChallengeResponseSchema, {
+      deviceKey: encodePublicKey(result.deviceKey),
+      controlFeedKey: encodePublicKey(result.controlFeedKey),
+      challenge: result.challenge,
+    });
   }
 
   async recoverIdentity(request: RecoverIdentityRequest): Promise<IdentityProto> {
