@@ -8,9 +8,9 @@ import { ghostHover } from './hover';
 
 export const ghostSelectedCurrent = [
   ghostHover,
-  'aria-[current]:bg-input-surface hover:aria-[current]:bg-hover-surface',
+  'is-current:bg-input-surface hover:is-current:bg-hover-surface',
   'aria-selected:bg-primary-100 dark:aria-selected:bg-primary-850 hover:aria-selected:bg-primary-150 hover:dark:aria-selected:bg-primary-800',
-  'aria-[current]:aria-selected:bg-primary-200 dark:aria-[current]:aria-selected:bg-primary-750 hover:aria-[current]:aria-selected:bg-primary-200 hover:dark:aria-[current]:aria-selected:bg-primary-750',
+  'is-current:aria-selected:bg-primary-200 dark:is-current:aria-selected:bg-primary-750 hover:is-current:aria-selected:bg-primary-200 hover:dark:is-current:aria-selected:bg-primary-750',
 ];
 
 export const ghostHighlighted =

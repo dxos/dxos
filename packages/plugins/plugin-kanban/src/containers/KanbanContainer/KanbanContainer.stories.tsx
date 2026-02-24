@@ -112,7 +112,7 @@ const DefaultComponent = () => {
     [schema, projection],
   );
 
-  if (!kanban || !schema || !kanban.view.target) {
+  if (!schema || !kanban?.view.target) {
     return null;
   }
 

@@ -62,3 +62,4 @@
  */
 @custom-variant pointer-fine (@media (pointer: fine));
 @custom-variant hover-hover (@media (hover: hover));
+@custom-variant is-current (&[aria-current]);
