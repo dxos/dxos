@@ -870,6 +870,9 @@ catalogs:
     ai:
       specifier: ^6.0.97
       version: 6.0.97
+    ajv:
+      specifier: ^8.18.0
+      version: 8.18.0
     alea:
       specifier: ^1.0.1
       version: 1.0.1
@@ -1893,7 +1896,7 @@ overrides:
   '@grpc/grpc-js': '>=1.10.9'
   '@modelcontextprotocol/sdk': '>=1.26.0'
   '@remix-run/router': '>=1.23.2'
-  ajv: '>=8.18.0'
+  ajv@8: '>=8.18.0'
   axios: '>=1.13.5'
   base-x@4: 4.0.1
   brace-expansion: '>=1.1.12'
@@ -16395,7 +16398,7 @@ importers:
         specifier: 'catalog:'
         version: 4.25.2(@codemirror/language@6.11.3)(@codemirror/state@6.5.2)(@codemirror/view@6.38.5)
       ajv:
-        specifier: '>=8.18.0'
+        specifier: 'catalog:'
         version: 8.18.0
       bind-event-listener:
         specifier: 'catalog:'
@@ -18344,7 +18347,7 @@ importers:
         specifier: 'catalog:'
         version: 4.25.2(@codemirror/language@6.11.3)(@codemirror/state@6.5.2)(@codemirror/view@6.38.5)
       ajv:
-        specifier: '>=8.18.0'
+        specifier: 'catalog:'
         version: 8.18.0
       codemirror:
         specifier: 'catalog:'
@@ -26901,6 +26904,9 @@ packages:
     peerDependencies:
       ajv: '>=8.18.0'
 
+  ajv@6.14.0:
+    resolution: {integrity: sha512-IWrosm/yrn43eiKqkfkHis7QioDleaXQHdDVPKg0FSwwd/DuvyX79TZnFOnYpB7dcsFAMmtFztZuXPDvSePkFw==}
+
   ajv@8.18.0:
     resolution: {integrity: sha512-PlXPeEWMXMZ7sPYOHqmDyCJzcfNrUr3fGNKtezX14ykXOEIvyK81d+qydx89KY5O71FKMPaQ2vBfBFI5NHR63A==}
 
@@ -31319,6 +31325,9 @@ packages:
     resolution: {integrity: sha512-Su9oK8DR4xCmDsLlyvadkXzX6+GGXJpbhwoLtOGArAG61dvbW4YQmSEno2y66ahpIdmLMg6YUf/QHLgiwvkrHQ==}
     engines: {node: '>=16.0.0'}
     hasBin: true
+
+  json-schema-traverse@0.4.1:
+    resolution: {integrity: sha512-xbbCH5dCYU5T8LcEhhuh7HJ88HXuW3qsI3Y0zOZFKfZEHcpWiHU/Jxzk629Brsab/mMiHQti9wMP+845RPe3Vg==}
 
   json-schema-traverse@1.0.0:
     resolution: {integrity: sha512-NM8/P9n3XjXhIZn1lLhkFaACTOURQXjWhV4BA/RnOv8xvgqtqpAX9IO4mRQxSx1Rlo4tqzeqb0sOlruaOy3dug==}
@@ -36092,6 +36101,9 @@ packages:
   uqr@0.1.2:
     resolution: {integrity: sha512-MJu7ypHq6QasgF5YRTjqscSzQp/W11zoUk6kvmlH+fmWEs63Y0Eib13hYFwAzagRJcVY8WVnlV+eBDUGMJ5IbA==}
 
+  uri-js@4.4.1:
+    resolution: {integrity: sha512-7rKUyy33Q1yc98pQ1DAmLtwX109F7TIfWlW1Ydo8Wl1ii1SeHieeh0HHfPeL2fMXK6z0s8ecKs9frCuLJvndBg==}
+
   url-join@4.0.1:
     resolution: {integrity: sha512-jk1+QP6ZJqyOiuEI9AEWQfju/nB2Pw466kbA0LEZljHwKeMgd9WrAEgEGxjPDD2+TNbbb37rTyhEfrCXfuKXnA==}
 
@@ -39823,7 +39835,7 @@ snapshots:
 
   '@eslint/eslintrc@3.3.1':
     dependencies:
-      ajv: 8.18.0
+      ajv: 6.14.0
       debug: 4.4.3
       espree: 10.4.0
       globals: 14.0.0
@@ -46991,6 +47003,13 @@ snapshots:
       ajv: 8.18.0
       fast-deep-equal: 3.1.3
 
+  ajv@6.14.0:
+    dependencies:
+      fast-deep-equal: 3.1.3
+      fast-json-stable-stringify: 2.1.0
+      json-schema-traverse: 0.4.1
+      uri-js: 4.4.1
+
   ajv@8.18.0:
     dependencies:
       fast-deep-equal: 3.1.3
@@ -49862,7 +49881,7 @@ snapshots:
       '@humanwhocodes/retry': 0.4.3
       '@types/estree': 1.0.8
       '@types/json-schema': 7.0.15
-      ajv: 8.18.0
+      ajv: 6.14.0
       chalk: 4.1.2
       cross-spawn: 7.0.6
       debug: 4.4.3
@@ -52286,6 +52305,8 @@ snapshots:
       minimist: 1.2.8
       prettier: 3.6.2
       tinyglobby: 0.2.15
+
+  json-schema-traverse@0.4.1: {}
 
   json-schema-traverse@1.0.0: {}
 
@@ -58381,6 +58402,10 @@ snapshots:
 
   uqr@0.1.2: {}
 
+  uri-js@4.4.1:
+    dependencies:
+      punycode: 2.3.1
+
   url-join@4.0.1: {}
 
   url-join@5.0.0: {}
@@ -59493,3 +59518,5 @@ snapshots:
   zwitch@2.0.4: {}
 
   zx@8.8.5: {}
+
+# First generated on 2026-02-24T00:12:31.541Z by jdw

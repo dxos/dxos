@@ -713,7 +713,7 @@ overrides:
   '@grpc/grpc-js': '>=1.10.9'
   '@modelcontextprotocol/sdk': '>=1.26.0'
   '@remix-run/router': '>=1.23.2'
-  ajv: '>=8.18.0'
+  ajv@8: '>=8.18.0'
   axios: '>=1.13.5'
   base-x@4: 4.0.1
   brace-expansion: '>=1.1.12'
