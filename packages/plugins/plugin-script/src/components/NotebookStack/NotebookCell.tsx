@@ -114,9 +114,7 @@ export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: 
 
       // TODO(burdon): Remove app-framework deps (via render prop).
       return (
-        <div
-          className={mx('h-full overflow-hidden grid', explorerGraph && !dragging && 'grid-rows-[min-content_1fr]')}
-        >
+        <div className={mx('h-full overflow-hidden grid', explorerGraph && !dragging && 'grid-rows-[min-content_1fr]')}>
           <QueryEditor
             id={cell.id}
             classNames={[editorStyles, 'border-b border-subdued-separator']}
