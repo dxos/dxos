@@ -40,14 +40,14 @@ catalogs:
       specifier: 3.2.10
       version: 3.2.10
     '@automerge/automerge-repo':
-      specifier: 2.5.1
-      version: 2.5.1
+      specifier: 2.5.3
+      version: 2.5.3
     '@automerge/automerge-repo-network-broadcastchannel':
       specifier: 2.5.1
       version: 2.5.1
     '@automerge/automerge-repo-network-websocket':
-      specifier: 2.5.1
-      version: 2.5.1
+      specifier: 2.5.3
+      version: 2.5.3
     '@automerge/automerge-repo-storage-indexeddb':
       specifier: 2.5.1
       version: 2.5.1
@@ -1981,9 +1981,9 @@ overrides:
 pnpmfileChecksum: sha256-wjQyuGoV+tUt3v7ESmDlZqBpAkltbG8H+T1szikzFeM=
 
 patchedDependencies:
-  '@automerge/automerge-repo@2.5.1':
+  '@automerge/automerge-repo@2.5.3':
     hash: be766431e3a6459feb58222ae46cd90e3ad69b2350653ea95d8707259278baa8
-    path: patches/@automerge__automerge-repo@2.5.1.patch
+    path: patches/@automerge__automerge-repo@2.5.3.patch
   random-access-idb@1.2.2:
     hash: 207ec2404ef8b5e9e6d9de8ce83586d215ef77b94a7d0cadced03125874a1d9e
     path: patches/random-access-idb@1.2.2.patch
@@ -4717,7 +4717,7 @@ importers:
         version: 3.2.3
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.5.1(patch_hash=be766431e3a6459feb58222ae46cd90e3ad69b2350653ea95d8707259278baa8)
+        version: 2.5.3(patch_hash=be766431e3a6459feb58222ae46cd90e3ad69b2350653ea95d8707259278baa8)
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -4851,7 +4851,10 @@ importers:
         version: 3.2.3
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.5.1(patch_hash=be766431e3a6459feb58222ae46cd90e3ad69b2350653ea95d8707259278baa8)
+        version: 2.5.3(patch_hash=be766431e3a6459feb58222ae46cd90e3ad69b2350653ea95d8707259278baa8)
+      '@automerge/automerge-repo-keyhive':
+        specifier: 0.1.0-alpha.17g
+        version: 0.1.0-alpha.17g
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -6791,10 +6794,10 @@ importers:
         version: 3.2.3
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.5.1(patch_hash=be766431e3a6459feb58222ae46cd90e3ad69b2350653ea95d8707259278baa8)
+        version: 2.5.3(patch_hash=be766431e3a6459feb58222ae46cd90e3ad69b2350653ea95d8707259278baa8)
       '@automerge/automerge-repo-network-websocket':
         specifier: 'catalog:'
-        version: 2.5.1
+        version: 2.5.3
       '@automerge/automerge-repo-storage-indexeddb':
         specifier: 'catalog:'
         version: 2.5.1
@@ -13704,7 +13707,7 @@ importers:
         version: 3.2.3
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.5.1(patch_hash=be766431e3a6459feb58222ae46cd90e3ad69b2350653ea95d8707259278baa8)
+        version: 2.5.3(patch_hash=be766431e3a6459feb58222ae46cd90e3ad69b2350653ea95d8707259278baa8)
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -13891,7 +13894,7 @@ importers:
         version: 3.2.3
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.5.1(patch_hash=be766431e3a6459feb58222ae46cd90e3ad69b2350653ea95d8707259278baa8)
+        version: 2.5.3(patch_hash=be766431e3a6459feb58222ae46cd90e3ad69b2350653ea95d8707259278baa8)
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -14166,7 +14169,7 @@ importers:
         version: 3.2.3
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.5.1(patch_hash=be766431e3a6459feb58222ae46cd90e3ad69b2350653ea95d8707259278baa8)
+        version: 2.5.3(patch_hash=be766431e3a6459feb58222ae46cd90e3ad69b2350653ea95d8707259278baa8)
       '@dxos/client':
         specifier: workspace:*
         version: link:../client
@@ -16564,7 +16567,7 @@ importers:
     devDependencies:
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.5.1(patch_hash=be766431e3a6459feb58222ae46cd90e3ad69b2350653ea95d8707259278baa8)
+        version: 2.5.3(patch_hash=be766431e3a6459feb58222ae46cd90e3ad69b2350653ea95d8707259278baa8)
       '@automerge/automerge-repo-network-broadcastchannel':
         specifier: 'catalog:'
         version: 2.5.1
@@ -18519,7 +18522,7 @@ importers:
     devDependencies:
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.5.1(patch_hash=be766431e3a6459feb58222ae46cd90e3ad69b2350653ea95d8707259278baa8)
+        version: 2.5.3(patch_hash=be766431e3a6459feb58222ae46cd90e3ad69b2350653ea95d8707259278baa8)
       '@automerge/automerge-repo-network-broadcastchannel':
         specifier: 'catalog:'
         version: 2.5.1
@@ -19350,11 +19353,14 @@ packages:
     peerDependencies:
       react: ~19.2.3
 
+  '@automerge/automerge-repo-keyhive@0.1.0-alpha.17g':
+    resolution: {integrity: sha512-/ewbtAAsmfte88oh/+dRQB525UQk/63XYJw5MZR17MRLbeKAA813SlqORj0ZyQW1COvfhdYF8OHAPc0ATFlBGw==}
+
   '@automerge/automerge-repo-network-broadcastchannel@2.5.1':
     resolution: {integrity: sha512-htjVAPOzWvaal7jXkXhMBWW1OLHBAmGJp3fujdxgMmHa6/KUmhmHsn7VGvVqrU3vCfbfdu5PAupcla95AwlEbA==}
 
-  '@automerge/automerge-repo-network-websocket@2.5.1':
-    resolution: {integrity: sha512-urvhlmTZ6VoJi5o0T2mtkVd4X1cuUdBC5/C/UY5FFgWczEq7PwCdNhUndv1CQSn8ePPsT59z7ZnRzZJbqqu22Q==}
+  '@automerge/automerge-repo-network-websocket@2.5.3':
+    resolution: {integrity: sha512-p6K1YLo34cyGxJ6oMWqeBbWX9rGvEPGyPdX2eq8S/iWNDjYf8lbjKSOhOD8DX87uAMZN/y1XOY/RckwS8lPJbQ==}
 
   '@automerge/automerge-repo-storage-indexeddb@2.5.1':
     resolution: {integrity: sha512-klyemjiwEn2+PW+NTjvBtjmykjJVoaBbQgk5P02jIgvAO7KH8OACldFzPrJdO0o6WAxkiOdtte8RHFKrDPkBlw==}
@@ -19364,6 +19370,9 @@ packages:
 
   '@automerge/automerge-repo@2.5.1':
     resolution: {integrity: sha512-w242TXb2TaGHFux7dDtJIUVJMqSSq1iYvNia8FVYgVTUDvbm8chaGMe1kVdKMEINFiB/BNYPtsoJIPjJhQArLg==}
+
+  '@automerge/automerge-repo@2.5.3':
+    resolution: {integrity: sha512-5ppzsUlzCs6PY+GeFlquaYLnVnYPz/hWzedep37zjb15tqZju1ukPPkBzT7KGEhEAnA99l4vfhfqSVC+1GktJg==}
 
   '@automerge/automerge@3.2.3':
     resolution: {integrity: sha512-pQJWGGFWZuVC4p4e0ZtRkpYvgGHf8VeT4Vt+LqSdSEA95xHJB/CgyCDW9nC2bugBATL/Qxm8Won1mEYcx7YPEQ==}
@@ -22446,6 +22455,9 @@ packages:
 
   '@juggle/resize-observer@3.4.0':
     resolution: {integrity: sha512-dfLbk+PwWvFzSxwk3n5ySL0hfBog779o8h68wK/7/APo/7cgyWp5jcXockbxdk5kFRkbeXWm4Fbi9FrdN381sA==}
+
+  '@keyhive/keyhive@0.0.0-alpha.54i':
+    resolution: {integrity: sha512-tmYvm950CFP1VFKRZvM7b/xbRlPP8LGadtXIJmnrKjlfgo0iEfiLWjhnO14yoJ7fz7S6XyUKkEjD1at05HtrOg==}
 
   '@kurkle/color@0.3.4':
     resolution: {integrity: sha512-M5UknZPHRu3DEDWoipU6sE8PdkZ6Z/S+v4dD+Ke8IaNlpdSQah50lz1KtcFBa2vsdOnwbbnxJwVM4wty6udA5w==}
@@ -28553,6 +28565,9 @@ packages:
 
   cbor-x@1.5.4:
     resolution: {integrity: sha512-PVKILDn+Rf6MRhhcyzGXi5eizn1i0i3F8Fe6UMMxXBnWkalq9+C5+VTmlIjAYM4iF2IYF2N+zToqAfYOp+3rfw==}
+
+  cbor-x@1.6.0:
+    resolution: {integrity: sha512-0kareyRwHSkL6ws5VXHEf8uY1liitysCVJjlmhaLG+IXLqhSaOO+t63coaso7yjwEzWZzLy8fJo06gZDVQM9Qg==}
 
   cborg@4.0.9:
     resolution: {integrity: sha512-xAuZbCDUOZxCe/ZJuIrnlG1Bk1R0qhwCXdnPYxVmqBSqm9M3BeE3G6Qoj5Zq+8epas36bT3vjiInDTJ6BVH6Rg==}
@@ -38667,16 +38682,28 @@ snapshots:
       - '@types/react'
       - supports-color
 
+  '@automerge/automerge-repo-keyhive@0.1.0-alpha.17g':
+    dependencies:
+      '@automerge/automerge-repo': 2.5.3(patch_hash=be766431e3a6459feb58222ae46cd90e3ad69b2350653ea95d8707259278baa8)
+      '@automerge/automerge-repo-network-websocket': 2.5.3
+      '@keyhive/keyhive': 0.0.0-alpha.54i
+      cbor-x: 1.6.0
+      eventemitter3: 5.0.1
+    transitivePeerDependencies:
+      - bufferutil
+      - supports-color
+      - utf-8-validate
+
   '@automerge/automerge-repo-network-broadcastchannel@2.5.1':
     dependencies:
-      '@automerge/automerge-repo': 2.5.1(patch_hash=be766431e3a6459feb58222ae46cd90e3ad69b2350653ea95d8707259278baa8)
+      '@automerge/automerge-repo': 2.5.1
     transitivePeerDependencies:
       - supports-color
 
-  '@automerge/automerge-repo-network-websocket@2.5.1':
+  '@automerge/automerge-repo-network-websocket@2.5.3':
     dependencies:
-      '@automerge/automerge-repo': 2.5.1(patch_hash=be766431e3a6459feb58222ae46cd90e3ad69b2350653ea95d8707259278baa8)
-      cbor-x: 1.5.4
+      '@automerge/automerge-repo': 2.5.3(patch_hash=be766431e3a6459feb58222ae46cd90e3ad69b2350653ea95d8707259278baa8)
+      cbor-x: 1.6.0
       debug: 4.4.3
       eventemitter3: 5.0.1
       isomorphic-ws: 5.0.0(ws@8.18.3)
@@ -38688,11 +38715,24 @@ snapshots:
 
   '@automerge/automerge-repo-storage-indexeddb@2.5.1':
     dependencies:
-      '@automerge/automerge-repo': 2.5.1(patch_hash=be766431e3a6459feb58222ae46cd90e3ad69b2350653ea95d8707259278baa8)
+      '@automerge/automerge-repo': 2.5.1
     transitivePeerDependencies:
       - supports-color
 
   '@automerge/automerge-repo@2.0.1':
+    dependencies:
+      '@automerge/automerge': 3.2.3
+      bs58check: 3.0.1
+      cbor-x: 1.6.0
+      debug: 4.4.3
+      eventemitter3: 5.0.1
+      fast-sha256: 1.3.0
+      uuid: 9.0.1
+      xstate: 5.12.0
+    transitivePeerDependencies:
+      - supports-color
+
+  '@automerge/automerge-repo@2.5.1':
     dependencies:
       '@automerge/automerge': 3.2.3
       bs58check: 3.0.1
@@ -38705,11 +38745,11 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@automerge/automerge-repo@2.5.1(patch_hash=be766431e3a6459feb58222ae46cd90e3ad69b2350653ea95d8707259278baa8)':
+  '@automerge/automerge-repo@2.5.3(patch_hash=be766431e3a6459feb58222ae46cd90e3ad69b2350653ea95d8707259278baa8)':
     dependencies:
       '@automerge/automerge': 3.2.3
       bs58check: 3.0.1
-      cbor-x: 1.5.4
+      cbor-x: 1.6.0
       debug: 4.4.3
       eventemitter3: 5.0.1
       fast-sha256: 1.3.0
@@ -42645,6 +42685,8 @@ snapshots:
       jsep: 1.4.0
 
   '@juggle/resize-observer@3.4.0': {}
+
+  '@keyhive/keyhive@0.0.0-alpha.54i': {}
 
   '@kurkle/color@0.3.4': {}
 
@@ -50089,6 +50131,10 @@ snapshots:
     optional: true
 
   cbor-x@1.5.4:
+    optionalDependencies:
+      cbor-extract: 2.2.0
+
+  cbor-x@1.6.0:
     optionalDependencies:
       cbor-extract: 2.2.0
 
