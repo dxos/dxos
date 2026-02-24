@@ -9,7 +9,7 @@ import { OperationPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as shellTranslations } from '@dxos/shell/react';
 import { render } from '@dxos/storybook-utils';
 
@@ -37,6 +37,7 @@ const meta = {
   render: render(DefaultStory),
   decorators: [
     withTheme(), // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
+    withLayout({ layout: 'fullscreen' }),
     withPluginManager({ plugins: [OperationPlugin()] }),
     withClientProvider({
       createIdentity: true,

@@ -10,5 +10,5 @@ export type LabelProps = PropsWithChildren<{}>;
 
 export const Label = (props: LabelProps) => {
   const { children } = props;
-  return <span className={mx(descriptionText, 'text-center mli-6 whitespace-normal')}>{children}</span>;
+  return <span className={mx(descriptionText, 'text-center mx-6 whitespace-normal')}>{children}</span>;
 };

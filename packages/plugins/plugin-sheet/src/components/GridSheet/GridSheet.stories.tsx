@@ -10,7 +10,7 @@ import { testFunctionPlugins } from '@dxos/compute/testing';
 import { OperationPlugin, RuntimePlugin } from '@dxos/plugin-testing';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { createTestCells, useTestSheet, withComputeGraphDecorator } from '../../testing';
 import { translations } from '../../translations';
@@ -30,7 +30,7 @@ export const Basic = () => {
 
   return (
     <SheetProvider graph={graph} sheet={sheet} ignoreAttention>
-      <div role='none' className='grid bs-full is-full'>
+      <div role='none' className='grid h-full w-full'>
         <GridSheet />
       </div>
     </SheetProvider>
@@ -42,6 +42,7 @@ const meta = {
   component: GridSheet,
   decorators: [
     withTheme(),
+    withLayout({ layout: 'fullscreen' }),
     withClientProvider({ types: [Sheet.Sheet], createSpace: true }),
     withComputeGraphDecorator({ plugins: testFunctionPlugins }),
     withPluginManager({

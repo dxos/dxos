@@ -162,8 +162,8 @@ export const PipelineObjectSettings = ({ classNames, pipeline }: PipelineObjectS
   }, [space, updateColumns]);
 
   return (
-    <div role='none' className={mx('plb-cardPadding overflow-y-auto', classNames)}>
-      <h2 className='text-sm text-description plb-1'>{t('views label')}</h2>
+    <div role='none' className={mx('py-card-padding overflow-y-auto', classNames)}>
+      <h2 className='text-sm text-description py-1'>{t('views label')}</h2>
 
       <List.Root<Pipeline.Column>
         items={columns}
@@ -181,7 +181,7 @@ export const PipelineObjectSettings = ({ classNames, pipeline }: PipelineObjectS
                   classNames={listItemGrid}
                   aria-expanded={expandedId === column.view.dxn.toString()}
                 >
-                  <div role='none' className={mx(subtleHover, listItemGrid, 'rounded-sm cursor-pointer min-bs-10')}>
+                  <div role='none' className={mx(subtleHover, listItemGrid, 'rounded-xs cursor-pointer min-h-10')}>
                     <List.ItemDragHandle />
                     <List.ItemTitle onClick={() => handleToggleField(column)}>{column.name}</List.ItemTitle>
                     <List.ItemDeleteButton
@@ -233,8 +233,8 @@ export const PipelineObjectSettings = ({ classNames, pipeline }: PipelineObjectS
         )}
       </List.Root>
 
-      <div role='none' className='mlb-cardPadding'>
-        <IconButton icon='ph--plus--regular' label={t('add view label')} onClick={handleAdd} classNames='is-full' />
+      <div role='none' className='my-card-padding'>
+        <IconButton icon='ph--plus--regular' label={t('add view label')} onClick={handleAdd} classNames='w-full' />
       </div>
     </div>
   );

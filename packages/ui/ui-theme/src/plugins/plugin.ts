@@ -4,127 +4,98 @@
 
 /* eslint-disable no-console */
 
-import { readFile, writeFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { existsSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
 
-import chTokens from '@ch-ui/tokens/postcss';
+import tailwindcss from '@tailwindcss/postcss';
 import autoprefixer from 'autoprefixer';
-import postcss from 'postcss';
 import postcssImport from 'postcss-import';
-import tailwindcss from 'tailwindcss';
-import nesting from 'tailwindcss/nesting/index.js';
-import { type ThemeConfig } from 'tailwindcss/types/config';
-import { type Plugin, type UserConfig } from 'vite';
-
-import { tailwindConfig, tokenSet } from '../config';
-
-import { resolveKnownPeers } from './resolveContent';
-
-export type ThemePluginOptions = {
-  jit?: boolean;
-  cssPath?: string;
-  srcCssPath?: string;
-  virtualFileId?: string;
-  content?: string[];
-  root?: string;
-  verbose?: boolean;
-  extensions?: Partial<ThemeConfig>[];
-};
-
-let environment!: string;
+import postcssNesting from 'postcss-nesting';
+import { type HtmlTagDescriptor, type Plugin, type UserConfig } from 'vite';
 
 /**
- * Configures PostCSS pipeline for theme.css processing.
- * @param environment - The current environment (development/production).
- * @param config - Theme plugin configuration options.
- * @returns Array of PostCSS plugins.
+ * CSS cascade layer order. Must be established before any stylesheets load so that
+ * Tailwind's own @layer declarations don't override our ordering. Exported so consuming
+ * apps can reference the canonical list without duplicating it.
  */
-const createPostCSSPipeline = (environment: string, config: ThemePluginOptions): postcss.Transformer[] => [
-  // Handles @import statements in CSS.
-  postcssImport(),
-  // Processes CSS nesting syntax.
-  nesting,
-  // Processes custom design tokens.
-  chTokens({ config: () => tokenSet }),
-  // Processes Tailwind directives and utilities.
-  tailwindcss(
-    tailwindConfig({
-      env: environment,
-      content: config.content,
-      extensions: config.extensions,
-    }),
-  ),
-  // Adds vendor prefixes.
-  autoprefixer as any,
-];
+export const LAYER_ORDER = [
+  'properties',
+  'theme',
+  'dx-tokens',
+  'user-tokens',
+  'base',
+  'tw-base',
+  'dx-base',
+  'components',
+  'tw-components',
+  'dx-components',
+  'utilities',
+] as const;
+
+export type ThemePluginOptions = {
+  srcCssPath?: string;
+  virtualFileId?: string;
+  verbose?: boolean;
+};
 
 /**
  * Vite plugin to configure theme.
  */
 export const ThemePlugin = (options: ThemePluginOptions): Plugin => {
+  // Prefer source CSS if available (monorepo dev), fall back to dist for installed package.
+  const srcThemePath = resolve(import.meta.dirname, '../../../../src/theme.css');
+  const distThemePath = resolve(import.meta.dirname, '../theme.css');
+  const isMonorepo = existsSync(srcThemePath);
+
   const config: ThemePluginOptions = {
-    jit: true,
-    cssPath: resolve(import.meta.dirname, '../theme.css'),
-    srcCssPath: resolve(import.meta.dirname, '../../../../src/theme.css'),
+    srcCssPath: isMonorepo ? srcThemePath : distThemePath,
     virtualFileId: '@dxos-theme',
     ...options,
   };
 
-  if (process.env.DEBUG) {
-    console.log('ThemePlugin config:\n', JSON.stringify(config, null, 2));
+  // In monorepo dev, derive project root from the source theme.css location so Tailwind
+  // scans all packages (not just ui-theme). srcThemePath is always at
+  // packages/ui/ui-theme/src/theme.css, so dirname + 4 levels up = project root.
+  const base = isMonorepo ? resolve(dirname(srcThemePath), '../../../../') : undefined;
+
+  if (process.env.DEBUG || options.verbose) {
+    console.log('ThemePlugin:\n', JSON.stringify(config, null, 2));
   }
 
   return {
     name: 'vite-plugin-dxos-ui-theme',
-    config: async ({ root }, env): Promise<UserConfig> => {
-      environment = env.mode;
-      const content = root ? await resolveKnownPeers(config.content ?? [], root) : config.content;
-      if (options.verbose) {
-        console.log('content', content);
-      }
-
+    config: (): UserConfig => {
       return {
         css: {
           postcss: {
-            plugins: createPostCSSPipeline(environment, config),
+            plugins: [
+              // Handles @import statements in CSS.
+              postcssImport(),
+              // Processes CSS nesting syntax.
+              postcssNesting(),
+              // Processes Tailwind directives and generates utilities from scanned content.
+              // base points to project root so all packages are scanned (not just ui-theme).
+              tailwindcss(base !== undefined ? { base } : {}),
+              // Adds vendor prefixes.
+              autoprefixer,
+            ],
           },
         },
       };
     },
     resolveId: (id) => {
       if (id === config.virtualFileId) {
-        return config.cssPath;
+        return config.srcCssPath;
       }
     },
-    handleHotUpdate: async ({ file, server }) => {
-      // NOTE(ZaymonFC): Changes to *any* CSS file triggers this step. We might want to refine this.
-      //   Ignore the output file to prevent infinite loops.
-      if (file.endsWith('.css') && file !== config.cssPath) {
-        try {
-          // Get reference to the theme virtual module.
-          const module = server.moduleGraph.getModuleById(config.cssPath!);
-          if (module) {
-            // Read the source theme file that imports all other CSS files.
-            const css = await readFile(config.srcCssPath!, 'utf8');
-            const processor = postcss(createPostCSSPipeline(environment, config));
-            console.log('[theme-plugin] Reprocessing CSS with PostCSS.');
-            const result = await processor.process(css, {
-              from: config.srcCssPath,
-              to: config.cssPath,
-            });
-
-            if (result.css) {
-              await writeFile(config.cssPath!, result.css);
-              // Return the module to trigger HMR update.
-              return [];
-            }
-          }
-        } catch (err) {
-          console.error('[theme-plugin] Error:', err);
-        }
-      }
+    transformIndexHtml: () => {
+      const tag: HtmlTagDescriptor = {
+        tag: 'style',
+        attrs: { 'data-dxos-layers': '' },
+        children: `@layer ${LAYER_ORDER.join(', ')};`,
+        injectTo: 'head-prepend',
+      };
+      return [tag];
     },
   };
 };
-
-ThemePlugin.foo = 'bar';

@@ -37,12 +37,12 @@ const meta = {
           <ChatDialog.Header title='Chat' />
           <ChatDialog.Content>
             {items.map((item) => (
-              <div key={item} className='pis-4 pbe-1'>
+              <div key={item} className='ps-4 pb-1'>
                 {item}
               </div>
             ))}
           </ChatDialog.Content>
-          <ChatDialog.Footer classNames='pli-2 items-center'>
+          <ChatDialog.Footer classNames='px-2 items-center'>
             <Input.Root>
               <Input.TextInput classNames='border-none' placeholder='Test' />
             </Input.Root>

@@ -39,7 +39,7 @@ export const VersionNumber = () => {
         <Popover.Content
           side='top'
           role='message'
-          classNames='z-[12] bg-warning-500 max-is-[min(calc(100vw-16px),40ch)]'
+          classNames='z-[12] bg-warning-500 max-w-[min(calc(100vw-16px),40ch)]'
         >
           <Message.Root valence='warning' classNames='rounded-be-none p-5'>
             <Message.Title>{t('warning title')}</Message.Title>
@@ -48,11 +48,11 @@ export const VersionNumber = () => {
               <br />
               <Link href={previewUrl} target='_blank' rel='noreferrer' variant='neutral'>
                 {t('learn more label')}
-                <Icon icon='ph--arrow-square-out--bold' classNames='inline mis-1' />
+                <Icon icon='ph--arrow-square-out--bold' classNames='inline ms-1' />
               </Link>
             </Message.Content>
           </Message.Root>
-          <div role='none' className='plb-4 pli-5 space-b-2 text-baseText'>
+          <div role='none' className='py-4 px-5 space-b-2 text-base-text'>
             {timestamp && (
               <p>
                 {t('released message', {
@@ -61,7 +61,7 @@ export const VersionNumber = () => {
                 <br />
                 <Link href={releaseUrl} target='_blank' rel='noreferrer' variant='neutral'>
                   {t('see release label')}
-                  <Icon icon='ph--arrow-square-out--bold' classNames='inline mis-1' />
+                  <Icon icon='ph--arrow-square-out--bold' classNames='inline ms-1' />
                 </Link>
               </p>
             )}

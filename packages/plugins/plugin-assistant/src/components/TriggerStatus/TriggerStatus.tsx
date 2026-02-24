@@ -35,9 +35,9 @@ const getIcon = (state: TriggerStatusState): string => {
 const getIconClassNames = (state: TriggerStatusState): string | undefined => {
   switch (state) {
     case 'running':
-      return 'animate-pulse text-accentText';
+      return 'animate-pulse text-accent-text';
     case 'error':
-      return 'text-errorText';
+      return 'text-error';
     default:
       return undefined;
   }
@@ -121,7 +121,7 @@ const TriggerStatusPopover = ({
   const { t } = useTranslation(meta.id);
 
   return (
-    <div className='min-is-[240px] p-2 space-y-3'>
+    <div className='min-w-[240px] p-2 space-y-3'>
       {/* Runtime Toggle */}
       <Settings.ItemInput title={t('trigger runtime label')} description={t('trigger runtime description')}>
         <Input.Switch classNames='justify-self-end' checked={isRunning} onCheckedChange={onToggle} />

@@ -106,7 +106,7 @@ const LatLng = ({ latitude = 0, longitude = 0 }: GeoLocation) => {
   const lngHem = longitude >= 0 ? 'E' : 'W';
 
   return (
-    <span className='inline-flex items-center gap-1'>
+    <span className='w-flex items-center gap-1'>
       <span>
         <span>{Math.abs(latitude).toFixed(5)}</span>
         <span className='text-subdued'>°{latHem}</span>

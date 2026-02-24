@@ -34,6 +34,9 @@ type CachedIPData = {
 const getIPData = Effect.fn(function* (config: Config) {
   const httpClient = yield* HttpClient.HttpClient;
 
+  // Disable tracing to avoid CORS errors from traceparent header on cross-origin requests.
+  const httpClientNoTrace = httpClient.pipe(HttpClient.withTracerDisabledWhen(() => true));
+
   // Check cache first.
   const cachedData = yield* Effect.promise(() => localForage.getItem<CachedIPData>('dxos:observability:ipdata'));
   if (cachedData && cachedData.timestamp > Date.now() - IP_DATA_CACHE_TIMEOUT) {
@@ -44,7 +47,7 @@ const getIPData = Effect.fn(function* (config: Config) {
   const IPDATA_API_KEY = config.get('runtime.app.env.DX_IPDATA_API_KEY');
   if (IPDATA_API_KEY) {
     const data = yield* HttpClientRequest.get(`https://api.ipdata.co?api-key=${IPDATA_API_KEY}`).pipe(
-      httpClient.execute,
+      httpClientNoTrace.execute,
       Effect.flatMap((res) => res.json),
       Effect.flatMap(Schema.decodeUnknown(IPData)),
     );

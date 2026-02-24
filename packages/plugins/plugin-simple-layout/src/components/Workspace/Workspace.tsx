@@ -98,7 +98,7 @@ const WorkspaceChildTile: MosaicStackTileComponent<Node.Node> = (props) => {
       fullWidth
       tabIndex={-1} // TODO(burdon): Use Mosaic.Focus.
       data-selected={isSelected}
-      classNames={mx('dx-focus-ring', isSelected && 'bg-hoverOverlay')}
+      classNames={mx('dx-focus-ring', isSelected && 'bg-hover-overlay')}
       onClick={handleSelect}
     >
       <Card.Toolbar density='coarse'>

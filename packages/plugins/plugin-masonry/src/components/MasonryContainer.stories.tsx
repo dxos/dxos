@@ -12,7 +12,7 @@ import { PreviewPlugin } from '@dxos/plugin-preview';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { Filter, useObject, useQuery, useSpaces } from '@dxos/react-client/echo';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { View } from '@dxos/schema';
 import { createObjectFactory } from '@dxos/schema/testing';
 import { Organization } from '@dxos/types';
@@ -38,6 +38,7 @@ const meta = {
   render: () => <StorybookMasonry />,
   decorators: [
     withTheme(),
+    withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [
         ...corePlugins(),

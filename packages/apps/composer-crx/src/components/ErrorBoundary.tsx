@@ -23,7 +23,7 @@ export class ErrorBoundary extends Component<
 
   override render(): ReactNode {
     if (this.state.hasError) {
-      return <div className='min-is-[300px] p-2 text-rose-500'>{this.state.error.message}</div>;
+      return <div className='min-w-[300px] p-2 text-rose-500'>{this.state.error.message}</div>;
     }
 
     return this.props.children;

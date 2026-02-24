@@ -205,9 +205,9 @@ export const NotebookContainer = ({ role, subject: notebook, env }: NotebookCont
           onClick={handleCompute}
         />
       </Toolbar.Root>
-      <div role='none' className='flex bs-full overflow-hidden -mis-[1px] -mie-[1px]'>
+      <div role='none' className='flex h-full overflow-hidden -ms-[1px] -me-[1px]'>
         <NotebookStack
-          classNames='container-max-width border-l border-r border-subduedSeparator'
+          classNames='container-max-width border-l border-r border-subdued-separator'
           db={db}
           notebook={notebook}
           graph={graph}

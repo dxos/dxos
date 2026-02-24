@@ -61,7 +61,7 @@ export const SpaceMemberListImpl = ({ members, onSelect }: SpaceMemberListImplPr
     </List>
   ) : (
     <div role='none' className='grow flex items-center p-2'>
-      <p className={mx(descriptionText, 'text-center is-full mlb-2')}>{t('empty space members message')}</p>
+      <p className={mx(descriptionText, 'text-center w-full my-2')}>{t('empty space members message')}</p>
     </div>
   );
 };

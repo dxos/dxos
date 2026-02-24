@@ -204,7 +204,7 @@ export const links: Completion[] = [
 export const names = ['adam', 'alice', 'alison', 'bob', 'carol', 'charlie', 'sayuri', 'shoko'];
 
 const hover =
-  'rounded-sm text-baseText text-primary-600 hover:text-primary-500 dark:text-primary-300 hover:dark:text-primary-200';
+  'rounded-xs text-base-text text-primary-600 hover:text-primary-500 dark:text-primary-300 hover:dark:text-primary-200';
 
 const LinkTooltip: FC<{ url: string }> = ({ url }) => {
   const web = new URL(url);
@@ -221,7 +221,7 @@ export const renderLinkTooltip = createRenderer(LinkTooltip);
 const LinkButton: FC<{ url: string }> = ({ url }) => {
   return (
     <a href={url} target='_blank' rel='noreferrer' className={mx(hover)}>
-      <Icon icon='ph--arrow-square-out--regular' size={4} classNames='inline-block mis-1 mb-[3px]' />
+      <Icon icon='ph--arrow-square-out--regular' size={4} classNames='w-block ms-1 mb-[3px]' />
     </a>
   );
 };
