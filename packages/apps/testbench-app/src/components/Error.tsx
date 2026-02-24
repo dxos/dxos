@@ -35,9 +35,12 @@ export const Error = ({ noJoke }: ErrorProps) => {
   }, []);
 
   return (
-    <div className='flex flex-col m-8 overflow-hidden border border-separator divide-y divide-separator shadow-md'>
+    <div
+      role='none'
+      className='flex flex-col m-8 overflow-hidden border border-separator divide-y divide-separator shadow-md'
+    >
       {!noJoke && (
-        <div className='flex items-center p-4'>
+        <div role='none' className='flex items-center p-4'>
           <Icon icon={faceIcon} size={12} classNames='text-neutral-500' />
           {joke && (
             <div className='flex flex-col opacity-50'>
@@ -56,11 +59,15 @@ export const Error = ({ noJoke }: ErrorProps) => {
         </div>
       )}
 
-      <div className='flex flex-col p-4 gap-4 font-mono overflow-hidden'>
-        <div className='text-blue-500'>{String(error)}</div>
+      <div role='none' className='flex flex-col p-4 gap-4 font-mono overflow-hidden'>
+        <div role='none' className='text-blue-500'>
+          {String(error)}
+        </div>
         {stack && (
-          <div className='flex overflow-hidden'>
-            <pre className='overflow-x-auto text-sm opacity-75'>{stack}</pre>
+          <div role='none' className='flex overflow-hidden'>
+            <pre role='none' className='overflow-x-auto text-sm opacity-75'>
+              {stack}
+            </pre>
           </div>
         )}
       </div>
