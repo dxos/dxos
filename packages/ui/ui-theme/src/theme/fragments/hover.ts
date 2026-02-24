@@ -2,9 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-/**
- * @deprecated
- */
+/** TODO(burdon): AUDIT AND REPLACE WITH TW CLASSES */
+
 export const hoverColors = 'transition-colors duration-100 linear hover:bg-hover-surface';
 
 export const ghostHover = 'hover:bg-hover-surface';

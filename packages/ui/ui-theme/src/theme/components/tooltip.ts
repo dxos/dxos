@@ -5,7 +5,7 @@
 import { type ComponentFunction, type Elevation, type Theme } from '@dxos/ui-types';
 
 import { mx } from '../../util';
-import { chromeText, surfaceShadow, surfaceZIndex } from '../fragments';
+import { surfaceShadow, surfaceZIndex } from '../fragments';
 
 export type TooltipStyleProps = Partial<{
   elevation: Elevation;
@@ -13,11 +13,9 @@ export type TooltipStyleProps = Partial<{
 
 export const tooltipContent: ComponentFunction<TooltipStyleProps> = ({ elevation }, ...etc) =>
   mx(
-    'inline-flex items-center rounded-xs py-1 px-2 max-w-64 bg-inverse-surface text-inverse-text',
-    // popperMotion,
+    'inline-flex items-center py-1 px-2 max-w-64',
     surfaceShadow({ elevation: 'positioned' }),
     surfaceZIndex({ elevation, level: 'tooltip' }),
-    chromeText,
     ...etc,
   );
 

@@ -95,6 +95,7 @@ const RawTreeItem = <T extends { id: string } = any>({
   const isBranch = !!parentOf;
   const mode: ItemMode = last ? 'last-in-group' : open ? 'expanded' : 'standard';
   const canSelectItem = canSelect?.({ item, path }) ?? true;
+  const data = { id, path, item } satisfies TreeData;
 
   const cancelExpand = useCallback(() => {
     if (cancelExpandRef.current) {
@@ -109,8 +110,6 @@ const RawTreeItem = <T extends { id: string } = any>({
     }
 
     invariant(buttonRef.current);
-
-    const data = { id, path, item } satisfies TreeData;
 
     // https://atlassian.design/components/pragmatic-drag-and-drop/core-package/adapters/element/about
     return combine(
@@ -231,6 +230,12 @@ const RawTreeItem = <T extends { id: string } = any>({
         id={id}
         aria-labelledby={`${id}__label`}
         parentOf={parentOf?.join(Treegrid.PARENT_OF_SEPARATOR)}
+        data-object-id={id}
+        data-testid={testId}
+        // NOTE(thure): This is intentionally an empty string to for descendents to select by in the CSS
+        //   without alerting the user (except for in the correct link element). See also:
+        //   https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-current#description
+        aria-current={current ? ('' as 'page') : undefined}
         classNames={[
           'grid grid-cols-subgrid col-[tree-row] mt-0.5 is-current:bg-active-surface',
           hoverableControls,
@@ -241,12 +246,6 @@ const RawTreeItem = <T extends { id: string } = any>({
           ghostFocusWithin,
           className,
         ]}
-        data-object-id={id}
-        data-testid={testId}
-        // NOTE(thure): This is intentionally an empty string to for descendents to select by in the CSS
-        //   without alerting the user (except for in the correct link element). See also:
-        //   https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-current#description
-        aria-current={current ? ('' as 'page') : undefined}
         onKeyDown={handleKeyDown}
         onContextMenu={(event) => {
           event.preventDefault();

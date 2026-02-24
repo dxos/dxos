@@ -214,14 +214,24 @@ export const baseTheme = EditorView.baseTheme({
   '.cm-link > span': {
     color: 'var(--color-accent-text)',
   },
+  '.cm-link > span:hover': {
+    color: 'var(--color-accent-text-hover)',
+  },
 
   /**
    * Tooltip.
    */
   '.cm-tooltip': {
-    background: 'var(--color-base-surface)',
+    background: 'var(--color-modal-surface)',
   },
   '.cm-tooltip-below': {},
+  '.cm-tooltip-hover': {
+    // background: 'var(--color-red-500)',
+    background: 'var(--color-modal-surface)',
+    border: '1px solid var(--color-separator)',
+    borderRadius: '4px',
+    overflow: 'hidden',
+  },
 
   /**
    * Autocomplete.

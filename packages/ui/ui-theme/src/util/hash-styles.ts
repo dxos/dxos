@@ -6,7 +6,6 @@ import { type ChromaticPalette } from '@dxos/ui-types';
 
 export type Hue = ChromaticPalette | 'neutral';
 
-// TODO(burdon): Rename?
 export type ColorStyles = {
   hue: Hue;
   text: string;
@@ -151,6 +150,7 @@ export const styles: ColorStyles[] = [
   },
 ];
 
+// TODO(burdon): Rename getClassNames.
 export const getStyles = (hue: string): ColorStyles => {
   return styles.find((color) => color.hue === hue) || neutralColor;
 };
@@ -161,8 +161,7 @@ export const getHashHue = (id: string | undefined): Hue => {
 
 // TODO(thure): Reconcile with `to-fallback.ts` which exports `toHue` which overlaps a lot.
 export const getHashStyles = (id: string | undefined): ColorStyles => {
-  const hue = getHashHue(id);
-  return getStyles(hue);
+  return getStyles(getHashHue(id));
 };
 
 const getHash = (id: string): number => id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);

@@ -32,6 +32,7 @@
 @import './config/components/drag-preview.css';
 @import './config/components/focus-ring.css';
 @import './config/components/hues.css';
+@import './config/components/link.css';
 @import './config/components/scrollbar.css';
 @import './config/components/surface.css';
 @import './config/components/tag.css';
@@ -41,6 +42,9 @@
 @import './config/layout/native.css';
 @import './config/layout/positioning.css';
 @import './config/layout/size.css';
+
+/* @layer dx-utilities */
+@import './config/utility/utilities.css';
 
 /* Third-party integrations */
 @import './config/integrations/codemirror.css';
