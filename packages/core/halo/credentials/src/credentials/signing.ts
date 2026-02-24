@@ -43,12 +43,16 @@ export const canonicalStringify = (obj: any): string =>
      */
     // TODO(dmaretskyi): Should we actually skip the @type field?
     replacer: function (this: any, key: any, value: any) {
-      if (key.toString().startsWith('__') || key.toString() === '@type') {
+      if (key.toString().startsWith('__') || key.toString().startsWith('$') || key.toString() === '@type') {
         return undefined;
       }
 
       if (value === null) {
         return undefined;
+      }
+
+      if (typeof value === 'bigint') {
+        return Number(value);
       }
 
       // Value before .toJSON() is called.

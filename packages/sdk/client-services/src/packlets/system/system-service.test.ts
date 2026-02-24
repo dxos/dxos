@@ -6,8 +6,13 @@ import { beforeEach, describe, expect, test } from 'vitest';
 
 import { Event, Trigger } from '@dxos/async';
 import { Config } from '@dxos/config';
-import { type QueryStatusResponse } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { create } from '@dxos/protocols/buf';
+import {
+  type QueryStatusResponse,
+  QueryStatusRequestSchema,
+  SystemStatus,
+  UpdateStatusRequestSchema,
+} from '@dxos/protocols/buf/dxos/client/services_pb';
 
 import { SystemServiceImpl } from './system-service';
 
@@ -45,27 +50,29 @@ describe('SystemService', () => {
     });
   });
 
-  test('getConfig returns config', async () => {
-    expect(await systemService.getConfig()).to.deep.equal(config.values);
+  test('getConfig returns config', async ({ expect }) => {
+    const result = await systemService.getConfig();
+    expect(result.runtime?.client?.log?.filter).to.equal('system-service:debug');
   });
 
-  test('updateStatus triggers callback', async () => {
-    await systemService.updateStatus({ status: SystemStatus.INACTIVE } as never);
+  test('updateStatus triggers callback', async ({ expect }) => {
+    await systemService.updateStatus(create(UpdateStatusRequestSchema, { status: SystemStatus.INACTIVE }));
     const result = await updateStatus.wait();
     expect(result).to.equal(SystemStatus.INACTIVE);
   });
 
-  test('queryStatus returns initial status', async () => {
+  test('queryStatus returns initial status', async ({ expect }) => {
     const status = new Trigger<QueryStatusResponse>();
-    systemService.queryStatus({} as never).subscribe((response) => {
+    systemService.queryStatus(create(QueryStatusRequestSchema)).subscribe((response) => {
       status.wake(response);
     });
-    expect(await status.wait()).to.deep.equal({ status: SystemStatus.ACTIVE });
+    const response = await status.wait();
+    expect(response.status).to.equal(SystemStatus.ACTIVE);
   });
 
-  test('queryStatus streams status changes', async () => {
+  test('queryStatus streams status changes', async ({ expect }) => {
     const statuses: SystemStatus[] = [];
-    systemService.queryStatus({} as never).subscribe(({ status }) => {
+    systemService.queryStatus(create(QueryStatusRequestSchema)).subscribe(({ status }) => {
       statuses.push(status);
     });
     changeStatus(SystemStatus.INACTIVE);

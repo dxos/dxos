@@ -68,13 +68,13 @@ export const createCredential = async ({
   }
 
   // Create the credential with proof value and chain fields missing (for signature payload).
+  // Assertion is set after create() because buf's create() recursively initializes nested message
+  // fields — it would convert the TypedMessage assertion into an empty google.protobuf.Any.
   const credential = create(CredentialSchema, {
     issuer: toBufPublicKey(issuer),
     issuanceDate: timestampFromDate(new Date()),
     subject: {
       id: toBufPublicKey(subject),
-      // TypedMessage is stored at runtime in the buf Any field (decoded by protobuf.js codec).
-      assertion: assertion as unknown as bufWkt.Any,
     },
     parentCredentialIds: parentCredentialIds?.map(toBufPublicKey),
     proof: create(ProofSchema, {
@@ -85,6 +85,7 @@ export const createCredential = async ({
       nonce,
     }),
   });
+  credential.subject!.assertion = assertion as unknown as bufWkt.Any;
 
   // Set proof after creating signature.
   const signedPayload = getCredentialProofPayload(credential);
