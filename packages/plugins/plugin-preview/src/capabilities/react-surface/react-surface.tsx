@@ -82,8 +82,8 @@ export default Capability.makeModule(() =>
         filter: (data): data is { subject: Obj.Unknown } => Obj.isObject(data.subject),
         component: ({ data }) => {
           return (
-            <div role='none' className='flex is-full justify-center'>
-              <div role='none' className='pbs-2 pbe-2 card-min-width card-max-width'>
+            <div role='none' className='flex w-full justify-center'>
+              <div role='none' className='pt-2 pb-2 card-min-width card-max-width'>
                 <Card.Root>
                   <Surface.Surface role='card--content' data={data} limit={1} />
                 </Card.Root>

@@ -139,7 +139,6 @@ export class EchoTestPeer extends Resource {
     this._echoHost = new EchoHost({
       kv: this._kv,
       runtime: this._managedRuntime.runtimeEffect,
-      localQueues: true,
       assignQueuePositions: this._assignQueuePositions,
     });
     this._clients.clear();

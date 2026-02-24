@@ -11,7 +11,7 @@ import { type EchoSchema, Format, type Mutable } from '@dxos/echo/internal';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type ProjectionModel, View, getTypenameFromQuery } from '@dxos/schema';
 import { Employer, Organization, Person, Pipeline } from '@dxos/types';
 
@@ -176,6 +176,7 @@ const meta = {
       },
     }),
     withTheme(),
+    withLayout({ layout: 'fullscreen' }),
   ],
   parameters: {
     layout: 'fullscreen',

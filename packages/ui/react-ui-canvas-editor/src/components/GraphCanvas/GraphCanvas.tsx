@@ -135,7 +135,7 @@ const GraphCanvasInner = ({ classNames, children, graph: graphProp, grid, map }:
 
   return (
     <ReactFlow
-      className={mx('is-full bs-full', classNames)}
+      className={mx('w-full h-full', classNames)}
       colorMode={themeMode}
       edges={edges}
       fitView={true}
@@ -160,7 +160,7 @@ const GraphCanvasInner = ({ classNames, children, graph: graphProp, grid, map }:
           <Background
             id='grid-minor'
             gap={snap}
-            className='[&>*>*.lines]:dark:!stroke-neutral-750 opacity-50'
+            className='[&>*>*.lines]:dark:!stroke-neutral-700 opacity-50'
             variant={BackgroundVariant.Lines}
           />
           <Background

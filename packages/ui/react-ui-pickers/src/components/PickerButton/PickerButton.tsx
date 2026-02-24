@@ -11,7 +11,7 @@ export type PickerButtonProps = ThemedClassName<{
   Component: FC<{ value: string; size?: IconProps['size'] }>;
   label: string;
   icon: string;
-  values: string[];
+  values: readonly string[];
   disabled?: boolean;
   defaultValue?: string;
   value?: string;
@@ -50,7 +50,7 @@ export const PickerButton = ({
     <DropdownMenu.Root modal={false} open={open} onOpenChange={setOpen}>
       <Tooltip.Trigger asChild content={label} side='bottom'>
         <DropdownMenu.Trigger asChild>
-          <TriggerRoot classNames={['gap-2 plb-1', classNames]} disabled={disabled}>
+          <TriggerRoot classNames={['gap-2 py-1', classNames]} disabled={disabled}>
             <span className='sr-only'>{label}</span>
             {(value && <Component value={value} size={iconSize} />) || <Icon icon={icon} size={iconSize} />}
             <Icon icon='ph--caret-down--bold' size={3} />
@@ -58,7 +58,7 @@ export const PickerButton = ({
         </DropdownMenu.Trigger>
       </Tooltip.Trigger>
       <DropdownMenu.Portal>
-        <DropdownMenu.Content side='bottom' classNames='!is-min'>
+        <DropdownMenu.Content side='bottom' classNames='!w-min'>
           <DropdownMenu.Viewport classNames='grid grid-cols-[repeat(6,min-content)]'>
             {values.map((_value) => {
               return (

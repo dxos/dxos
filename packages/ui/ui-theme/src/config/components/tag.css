@@ -1,0 +1,132 @@
+/**
+ * Tag
+ */
+
+@layer dx-components {
+  .dx-tag {
+    @apply inline-block text-xs font-semibold m-0.5 px-1 rounded-xs cursor-default truncate;
+    padding-block: var(--dx-tag-padding-block);
+    user-select: none;
+  }
+
+  .dx-tag--anchor {
+    /* NOTE: Margin offsets padding so that border is flush with text. This should only apply to anchor tags inside of Codemirror. */
+    @apply inline cursor-pointer -mx-[4px] px-[3px] py-0.5 border border-separator rounded-xs bg-group-surface transition-colors;
+
+    &:hover {
+      @apply bg-hover-surface;
+    }
+  }
+
+  /* TODO(burdon): Reconcile with hues.css */
+
+  .dx-tag[data-hue='neutral'],
+  .dx-tag--neutral {
+    @apply bg-separator text-neutral-700 dark:text-neutral-200;
+  }
+
+  .dx-tag[data-hue='red'],
+  .dx-tag--red {
+    @apply bg-red-surface text-red-surface-text;
+  }
+
+  .dx-tag[data-hue='orange'],
+  .dx-tag--orange {
+    @apply bg-orange-surface text-orange-surface-text;
+  }
+
+  .dx-tag[data-hue='amber'],
+  .dx-tag--amber {
+    @apply bg-amber-surface text-amber-surface-text;
+  }
+
+  .dx-tag[data-hue='yellow'],
+  .dx-tag--yellow {
+    @apply bg-yellow-surface text-yellow-surface-text;
+  }
+
+  .dx-tag[data-hue='lime'],
+  .dx-tag--lime {
+    @apply bg-lime-surface text-lime-surface-text;
+  }
+
+  .dx-tag[data-hue='green'],
+  .dx-tag--green {
+    @apply bg-green-surface text-green-surface-text;
+  }
+
+  .dx-tag[data-hue='emerald'],
+  .dx-tag--emerald {
+    @apply bg-emerald-surface text-emerald-surface-text;
+  }
+
+  .dx-tag[data-hue='teal'],
+  .dx-tag--teal {
+    @apply bg-teal-surface text-teal-surface-text;
+  }
+
+  .dx-tag[data-hue='cyan'],
+  .dx-tag--cyan {
+    @apply bg-cyan-surface text-cyan-surface-text;
+  }
+
+  .dx-tag[data-hue='sky'],
+  .dx-tag--sky {
+    @apply bg-sky-surface text-sky-surface-text;
+  }
+
+  .dx-tag[data-hue='blue'],
+  .dx-tag--blue {
+    @apply bg-blue-surface text-blue-surface-text;
+  }
+
+  .dx-tag[data-hue='indigo'],
+  .dx-tag--indigo {
+    @apply bg-indigo-surface text-indigo-surface-text;
+  }
+
+  .dx-tag[data-hue='violet'],
+  .dx-tag--violet {
+    @apply bg-violet-surface text-violet-surface-text;
+  }
+
+  .dx-tag[data-hue='purple'],
+  .dx-tag--purple {
+    @apply bg-purple-surface text-purple-surface-text;
+  }
+
+  .dx-tag[data-hue='fuchsia'],
+  .dx-tag--fuchsia {
+    @apply bg-fuchsia-surface text-fuchsia-surface-text;
+  }
+
+  .dx-tag[data-hue='pink'],
+  .dx-tag--pink {
+    @apply bg-pink-surface text-pink-surface-text;
+  }
+
+  .dx-tag[data-hue='rose'],
+  .dx-tag--rose {
+    @apply bg-rose-surface text-rose-surface-text;
+  }
+
+  .dx-tag[data-hue='info'],
+  .dx-tag--info {
+    @apply bg-cyan-surface text-cyan-surface-text;
+  }
+
+  .dx-tag[data-hue='success'],
+  .dx-tag--success {
+    @apply bg-emerald-surface text-emerald-surface-text;
+  }
+
+  .dx-tag[data-hue='warning'],
+  .dx-tag--warning {
+    @apply bg-amber-surface text-amber-surface-text;
+  }
+
+  .dx-tag[data-hue='error'],
+  .dx-tag--error {
+    @apply bg-rose-surface text-rose-surface-text;
+  }
+}

@@ -132,7 +132,7 @@ export const transcript = ({ model, started }: TranscriptOptions): Extension => 
 
     EditorView.theme({
       '.cm-gutters': {
-        backgroundColor: 'var(--dx-baseSurface)',
+        backgroundColor: 'var(--color-base-surface)',
       },
       '.cm-timestamp-gutter': {
         width: '6rem',
@@ -166,7 +166,7 @@ class TimestampMarker extends GutterMarker {
 
   override toDOM(view: EditorView) {
     const el = document.createElement('div');
-    el.className = 'text-sm text-subdued hover:bg-hoverSurface cursor-pointer';
+    el.className = 'text-sm text-subdued hover:bg-hover-surface cursor-pointer';
     el.textContent = formatTimestamp(this._timestamp, this._started);
     // TODO(burdon): Click to bookmark or copy hyperlink.
     el.onclick = () => {

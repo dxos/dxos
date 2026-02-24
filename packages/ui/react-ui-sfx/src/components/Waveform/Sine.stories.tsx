@@ -4,14 +4,14 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { Sine } from './Sine';
 
 const meta = {
   title: 'ui/react-ui-sfx/Sine',
   component: Sine,
-  decorators: [withTheme()],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'centered',
   },
@@ -23,19 +23,19 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    classNames: 'is-[20rem] bs-[10rem] _outline outline-primary-500 rounded-md',
+    classNames: 'w-[20rem] h-[10rem] _outline outline-primary-500 rounded-md',
   },
 };
 
 export const Mini: Story = {
   args: {
-    classNames: 'is-[4rem] bs-[4rem] border border-neutral-500 rounded-md',
+    classNames: 'w-[4rem] h-[4rem] border border-neutral-500 rounded-md',
   },
 };
 
 export const Fullscreen: Story = {
   args: {
-    classNames: 'fixed inset-0 is-screen bs-screen',
+    classNames: 'fixed inset-0 w-screen h-screen',
   },
   parameters: {
     layout: 'fullscreen',

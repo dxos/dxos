@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { OperationPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { ClientPlugin } from '../ClientPlugin';
 import { translations } from '../translations';
@@ -19,6 +19,7 @@ const meta = {
   component: RecoveryCredentialsContainer,
   decorators: [
     withTheme(),
+    withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [
         ClientPlugin({

@@ -13,7 +13,7 @@ import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { Filter, useDatabase, useQuery } from '@dxos/react-client/echo';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { useAttentionAttributes, useSelected } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
@@ -50,7 +50,7 @@ const WithCompanionStory = () => {
   }
 
   return (
-    <div {...attentionAttrs} className='bs-full is-full grid grid-cols-2 grid-rows-2 overflow-hidden'>
+    <div {...attentionAttrs} className='h-full w-full grid grid-cols-2 grid-rows-2 overflow-hidden'>
       <Surface.Surface role='article' data={mailboxData} />
       <Surface.Surface role='article' data={companionData} />
     </div>
@@ -61,7 +61,7 @@ const meta = {
   title: 'plugins/plugin-inbox/Mailbox',
   component: MailboxComponent as any,
   render: DefaultStory,
-  decorators: [withTheme(), withAttention(), withMosaic()],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withAttention(), withMosaic()],
   parameters: {
     layout: 'fullscreen',
   },

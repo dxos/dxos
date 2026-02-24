@@ -29,7 +29,7 @@ const DefaultStory = ({ title, description, body, openTrigger, cancelTrigger, ac
         <AlertDialog.Content>
           <AlertDialog.Title>{title}</AlertDialog.Title>
           <AlertDialog.Description>{description}</AlertDialog.Description>
-          <p className='mbs-2 mbe-8'>{body}</p>
+          <p className='mt-2 mb-8'>{body}</p>
           <AlertDialog.ActionBar>
             <div className='grow' />
             <AlertDialog.Cancel asChild>

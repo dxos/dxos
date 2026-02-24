@@ -133,7 +133,7 @@ const DefaultStory = () => {
             {...(parentOf && { parentOf: parentOf.join(Treegrid.PARENT_OF_SEPARATOR) })}
           >
             <Treegrid.Cell indent classNames='flex items-center'>
-              {node.icon && <Icon icon={node.icon} classNames='is-[1em] bs-[1em] mlb-1' />}
+              {node.icon && <Icon icon={node.icon} classNames='w-[1em] h-[1em] my-1' />}
               {node.title}
             </Treegrid.Cell>
           </Treegrid.Row>

@@ -19,10 +19,10 @@ type StoryProps = {
 
 const DefaultStory = ({ tooltips, defaultOpen }: StoryProps) => (
   <Tooltip.Provider defaultOpen={defaultOpen}>
-    <div role='none' className='is-32'>
+    <div role='none' className='w-32'>
       {tooltips.map(({ label, content }, i) => (
         <Tooltip.Trigger asChild key={i} content={content} side='right'>
-          <Button classNames='block is-full'>{label}</Button>
+          <Button classNames='block w-full'>{label}</Button>
         </Tooltip.Trigger>
       ))}
     </div>

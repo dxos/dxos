@@ -55,6 +55,9 @@ const createStorybookProject = (dirname: string) =>
       },
       setupFiles: [new URL('./tools/storybook-react/.storybook/vitest.setup.ts', import.meta.url).pathname],
     },
+    optimizeDeps: {
+      include: ['react', 'react-dom', 'react/jsx-runtime'],
+    },
     plugins: [
       storybookTest({
         configDir: path.join(dirname, '.storybook'),

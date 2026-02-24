@@ -101,7 +101,7 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
           <Input.TextInput
             type='number'
             placeholder='Count'
-            classNames='is-[4rem] text-right'
+            classNames='w-[4rem] text-right'
             min={1}
             max={100}
             size={8}
@@ -112,7 +112,7 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
       </Toolbar.Root>
 
       <ScrollArea.Root thin orientation='vertical'>
-        <ScrollArea.Viewport classNames='gap-4 divide-y divide-subduedSeparator'>
+        <ScrollArea.Viewport classNames='gap-4 divide-y divide-subdued-separator'>
           <SchemaTable types={staticTypes} objects={info.objects} label='Static Types' onClick={handleCreateData} />
           <SchemaTable types={recordTypes} objects={info.objects} label='Record Types' onClick={handleCreateData} />
           <SchemaTable types={presets.types} objects={info.objects} label='Presets' onClick={handleCreateData} />

@@ -40,7 +40,7 @@ const NAVIGATION_SIDEBAR_NAME = 'NavigationSidebar';
 const COMPLEMENTARY_SIDEBAR_NAME = 'ComplementarySidebar';
 
 const handleOpenAutoFocus = (event: Event) => {
-  !document.body.hasAttribute('data-is-keyboard') && event.preventDefault();
+  !document.body.hasAttribute('data-w-keyboard') && event.preventDefault();
 };
 
 //
@@ -270,7 +270,7 @@ type MainSidebarProps = ThemedClassName<ComponentPropsWithRef<typeof DialogConte
   state?: SidebarState;
   resizing?: boolean;
   onStateChange?: (nextState: SidebarState) => void;
-  side: 'inline-start' | 'inline-end';
+  side: 'w-start' | 'w-end';
   label: Label;
 };
 
@@ -313,7 +313,7 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
           {...(!isLg && { forceMount: true, tabIndex: -1, onOpenAutoFocus: onOpenAutoFocus ?? handleOpenAutoFocus })}
           {...(state === 'closed' && { inert: true })}
           {...props}
-          data-side={side === 'inline-end' ? 'ie' : 'is'}
+          data-side={side === 'w-end' ? 'ie' : 'is'}
           data-state={state}
           data-resizing={resizing ? 'true' : 'false'}
           className={tx('main.sidebar', {}, classNames)}
@@ -344,7 +344,7 @@ const MainNavigationSidebar = forwardRef<HTMLDivElement, MainNavigationSidebarPr
       state={navigationSidebarState}
       onStateChange={setNavigationSidebarState}
       resizing={resizing}
-      side='inline-start'
+      side='w-start'
       ref={forwardedRef}
     />
   );
@@ -370,7 +370,7 @@ const MainComplementarySidebar = forwardRef<HTMLDivElement, MainComplementarySid
       state={complementarySidebarState}
       onStateChange={setComplementarySidebarState}
       resizing={resizing}
-      side='inline-end'
+      side='w-end'
       ref={forwardedRef}
     />
   );
@@ -401,8 +401,8 @@ const MainContent = forwardRef<HTMLDivElement, MainContentProps>(
         role={role}
         {...(handlesFocus && { ...mover })}
         {...props}
-        data-sidebar-inline-start-state={navigationSidebarState}
-        data-sidebar-inline-end-state={complementarySidebarState}
+        data-sidebar-left-state={navigationSidebarState}
+        data-sidebar-right-state={complementarySidebarState}
         data-handles-focus={handlesFocus}
         className={tx('main.content', { bounce, handlesFocus }, classNames)}
         ref={forwardedRef}

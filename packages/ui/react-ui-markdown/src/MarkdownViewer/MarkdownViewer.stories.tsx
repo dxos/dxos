@@ -69,7 +69,7 @@ const content = trim`
 
 export const Default: Story = {
   args: {
-    classNames: 'p-4 border border-border rounded-md overflow-y-auto bg-baseSurface',
+    classNames: 'p-4 border border-border rounded-md overflow-y-auto bg-base-surface',
     content,
   },
 };

@@ -201,12 +201,12 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
     return (
       <ScrollContainer.Root pin ref={scrollerRef}>
         <ScrollContainer.Viewport
-          classNames={['flex flex-col is-full !outline-none', classNames]}
+          classNames={['flex flex-col w-full outline-hidden!', classNames]}
           tabIndex={0}
           ref={containerRef}
         >
           {commits.length < 1 ? (
-            <p className={mx(descriptionText, 'p-trimMd')}>{t('no commits message')}</p>
+            <p className={mx(descriptionText, 'p-trim-md')}>{t('no commits message')}</p>
           ) : (
             commits.map((commit, index) => {
               // Skip branches that are not whitelisted.
@@ -221,9 +221,9 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
                   data-index={index}
                   aria-current={current === index}
                   className={mx(
-                    'group flex shrink-0 overflow-hidden pli-3 gap-2 items-center',
+                    'group flex shrink-0 overflow-hidden px-3 gap-2 items-center',
                     // TODO(burdon): Factor out fragment.
-                    'aria-[current=true]:bg-activeSurface hover:bg-hoverSurface',
+                    'aria-[current=true]:bg-active-surface hover:bg-hover-surface',
                   )}
                   style={{ height: `${options.lineHeight}px` }}
                   onClick={() => setCurrent(index)}
@@ -239,13 +239,13 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
                     />
                   </div>
                   {showIcon && (
-                    <div className='flex shrink-0 is-6 justify-center'>
+                    <div className='flex shrink-0 w-6 justify-center'>
                       {commit.icon && (
                         <Icon icon={commit.icon} classNames={mx(commit.level && levelColors[commit.level])} size={4} />
                       )}
                     </div>
                   )}
-                  <div className='text-sm truncate cursor-pointer text-subdued group-hover:text-baseText'>
+                  <div className='text-sm truncate cursor-pointer text-subdued group-hover:text-base-text'>
                     {debug ? JSON.stringify({ id: commit.id, parents: commit.parents }) : commit.message}
                   </div>
                 </div>
@@ -367,13 +367,13 @@ const LineVector = ({
         cx={cx(col)}
         cy={halfHeight}
         r={options.nodeRadius}
-        className={mx('fill-baseSurface stroke-baseSurface')}
+        className={mx('fill-base-surface stroke-base-surface')}
       />
       <circle
         cx={cx(col)}
         cy={halfHeight}
         r={options.nodeRadius}
-        className={mx('fill-baseSurface', options.lineStyle, color.stroke, color.fill, opacity(commit.branch))}
+        className={mx('fill-base-surface', options.lineStyle, color.stroke, color.fill, opacity(commit.branch))}
       />
     </svg>
   );

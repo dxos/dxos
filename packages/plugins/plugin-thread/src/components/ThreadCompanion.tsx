@@ -171,12 +171,12 @@ export const ThreadCompanion = ({ subject }: { subject: any }) => {
         value={showResolvedThreads ? 'all' : 'unresolved'}
         orientation='horizontal'
         classNames={[
-          'contents [&_[role="tabpanel"]]:min-bs-0 [&_[role="tabpanel"]]:overflow-y-auto [&_[role="tabpanel"]]:scrollbar-thin',
+          'contents [&_[role="tabpanel"]]:min-h-0 [&_[role="tabpanel"]]:overflow-y-auto [&_[role="tabpanel"]]:scrollbar-thin',
         ]}
         onValueChange={onChangeViewState}
       >
         {/* TODO(burdon): Standardize (like Tollbar). */}
-        <Tabs.Tablist classNames={mx('bg-toolbarSurface border-be border-subduedSeparator')}>
+        <Tabs.Tablist classNames={mx('bg-toolbar-surface border-b border-subdued-separator')}>
           <Tabs.Tab value='unresolved' classNames='text-sm'>
             {t('show unresolved label')}
           </Tabs.Tab>

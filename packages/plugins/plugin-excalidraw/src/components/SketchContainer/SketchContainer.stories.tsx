@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 
 import { createObject } from '@dxos/echo-db';
 import { Diagram } from '@dxos/plugin-sketch/types';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { EXCALIDRAW_SCHEMA } from '../../types';
 
@@ -23,7 +23,7 @@ const meta = {
   title: 'plugins/plugin-excalidraw/SketchComponent',
   component: SketchContainer as any,
   render: DefaultStory,
-  decorators: [withTheme()],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
   },

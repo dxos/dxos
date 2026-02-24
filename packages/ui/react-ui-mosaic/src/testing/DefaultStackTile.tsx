@@ -13,7 +13,7 @@ export const DefaultStackTile: MosaicStackTileComponent<Obj.Any> = (props) => {
   const dragHandleRef = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
   return (
-    <Mosaic.Tile {...props} className='border border-separator rounded-sm font-mono'>
+    <Mosaic.Tile {...props} className='border border-separator rounded-xs font-mono'>
       <Card.Toolbar>
         <Card.DragHandle ref={dragHandleRef} />
         <Card.Title>{Obj.getLabel(props.data) ?? props.data.id}</Card.Title>

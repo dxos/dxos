@@ -12,7 +12,10 @@ export type CleanupFn = () => void;
  */
 export const combine = (...cleanupFns: (CleanupFn | CleanupFn[])[]): CleanupFn => {
   return () => {
-    cleanupFns.flat().forEach((cleanupFn) => cleanupFn());
+    cleanupFns
+      .flat()
+      .filter(Boolean)
+      .forEach((cleanupFn) => cleanupFn());
   };
 };
 
