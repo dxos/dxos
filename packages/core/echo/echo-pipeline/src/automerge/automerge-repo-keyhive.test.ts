@@ -105,6 +105,11 @@ type KeyhivePeer = {
  * When ownerAccessControl is enabled, peer1 (owner) uses keyhive shareConfig for both access and announce.
  * Peer2 (receiver) always accepts to allow replication from authorized owners.
  */
+const PERMISSIVE_SHARE_CONFIG = {
+  access: async () => true,
+  announce: async () => true,
+};
+
 const createKeyhivePeerPair = async (options?: {
   ownerAccessControl?: boolean;
 }): Promise<[KeyhivePeer, KeyhivePeer]> => {
@@ -130,7 +135,7 @@ const createKeyhivePeerPair = async (options?: {
     peerId: kh1.peerId,
     network: [kh1.networkAdapter],
     idFactory: kh1.idFactory,
-    ...(options?.ownerAccessControl ? { shareConfig: makeKeyhiveShareConfig(kh1) } : { sharePolicy: async () => true }),
+    shareConfig: options?.ownerAccessControl ? makeKeyhiveShareConfig(kh1) : PERMISSIVE_SHARE_CONFIG,
   });
   kh1.linkRepo(repo1);
 
@@ -138,7 +143,7 @@ const createKeyhivePeerPair = async (options?: {
     peerId: kh2.peerId,
     network: [kh2.networkAdapter],
     idFactory: kh2.idFactory,
-    sharePolicy: async () => true,
+    shareConfig: PERMISSIVE_SHARE_CONFIG,
   });
   kh2.linkRepo(repo2);
 
@@ -273,6 +278,67 @@ describe('AutomergeRepoKeyhive', () => {
       });
       await sleep(2_000);
       expect(remoteHandle.isReady()).to.be.false;
+    },
+    TIMEOUT,
+  );
+
+  test(
+    'sharePolicy: true on both repos bypasses keyhive access control',
+    async ({ expect }) => {
+      const [testAdapter1, testAdapter2] = createSafeTestAdapterPair();
+      const storage1 = await createStorage();
+      const storage2 = await createStorage();
+
+      const kh1 = await initializeAutomergeRepoKeyhive({
+        storage: storage1,
+        peerIdSuffix: 'peer1',
+        networkAdapter: testAdapter1,
+        periodicallyRequestSync: false,
+      });
+
+      const kh2 = await initializeAutomergeRepoKeyhive({
+        storage: storage2,
+        peerIdSuffix: 'peer2',
+        networkAdapter: testAdapter2,
+        periodicallyRequestSync: false,
+      });
+
+      const repo1 = new Repo({
+        peerId: kh1.peerId,
+        network: [kh1.networkAdapter],
+        idFactory: kh1.idFactory,
+        sharePolicy: async () => true,
+      });
+      kh1.linkRepo(repo1);
+
+      const repo2 = new Repo({
+        peerId: kh2.peerId,
+        network: [kh2.networkAdapter],
+        idFactory: kh2.idFactory,
+        sharePolicy: async () => true,
+      });
+      kh2.linkRepo(repo2);
+
+      onTestFinished(() =>
+        cleanupPeers(
+          { kh: kh1, repo: repo1, adapter: testAdapter1 },
+          { kh: kh2, repo: repo2, adapter: testAdapter2 },
+        ),
+      );
+
+      await exchangeContactCards(kh1, kh2);
+
+      // No keyhive access granted to peer2 — but sharePolicy bypasses access checks.
+      const handle = await repo1.create2<{ text: string }>();
+      handle.change((doc: any) => {
+        doc.text = 'Secret doc';
+      });
+
+      await connectTestAdapters([testAdapter1, testAdapter2]);
+
+      const remoteHandle = await repo2.find<{ text: string }>(handle.url);
+      await asyncTimeout(remoteHandle.whenReady(), 5_000);
+      expect(remoteHandle.doc()?.text).to.equal('Secret doc');
     },
     TIMEOUT,
   );

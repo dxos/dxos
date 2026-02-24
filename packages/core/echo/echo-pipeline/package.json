@@ -46,6 +46,7 @@
   "dependencies": {
     "@automerge/automerge": "catalog:",
     "@automerge/automerge-repo": "catalog:",
+    "@automerge/automerge-repo-keyhive": "0.1.0-alpha.17g",
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/context": "workspace:*",
@@ -89,7 +90,6 @@
     "lodash.isequal": "catalog:"
   },
   "devDependencies": {
-    "@automerge/automerge-repo-keyhive": "0.1.0-alpha.17g",
     "@dxos/test-utils": "workspace:*",
     "@types/lodash.isequal": "catalog:",
     "fast-check": "catalog:",
