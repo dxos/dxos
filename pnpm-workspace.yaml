@@ -12,7 +12,7 @@ packages:
 catalog:
   3d-force-graph: ^1.76.1
   '@1password/op-js': ^0.1.13
-  '@ai-sdk/react': ^2.0.86
+  '@ai-sdk/react': ^3.0.99
   '@antv/graphlib': ^2.0.4
   '@antv/layout': ^1.2.13
   '@ark-ui/solid': ^5.30.0
@@ -36,7 +36,7 @@ catalog:
   '@ch-ui/tailwind-tokens': 2.8.1
   '@ch-ui/tokens': 3.0.1
   '@cloudflare/vitest-pool-workers': ^0.8.61
-  '@cloudflare/workers-types': ^4.20251210.0
+  '@cloudflare/workers-types': ^4.20260302.0
   '@codemirror/autocomplete': ^6.19.0
   '@codemirror/commands': ^6.8.1
   '@codemirror/lang-html': ^6.4.11
@@ -57,15 +57,6 @@ catalog:
   '@dnd-kit/modifiers': ^6.0.0
   '@dnd-kit/sortable': ^7.0.1
   '@dnd-kit/utilities': ^3.2.0
-  '@dxos/cli-darwin-arm64': 0.8.3
-  '@dxos/cli-darwin-x64': 0.8.3
-  '@dxos/cli-linux-arm64': 0.8.3
-  '@dxos/cli-linux-x64': 0.8.3
-  '@dxos/cli-win32-x64': 0.8.3
-  '@dxos/echo-db': ^0.8.3
-  '@dxos/errors': ^0.8.3
-  '@dxos/keys': ^0.8.3
-  '@dxos/protocols': ^0.8.3
   '@dxos/wa-sqlite': ^0.2.1
   '@effect-atom/atom': ^0.5.1
   '@effect-atom/atom-react': ^0.5.0
@@ -84,7 +75,6 @@ catalog:
   '@effect/printer': 0.47.0
   '@effect/printer-ansi': 0.47.0
   '@effect/rpc': 0.73.0
-  '@effect/schema': ^0.75.5
   '@effect/sql': 0.49.0
   '@effect/sql-sqlite-bun': 0.50.2
   '@effect/sql-sqlite-node': 0.50.1
@@ -118,14 +108,8 @@ catalog:
   '@ngneat/falso': ^7.1.1
   '@observablehq/plot': ^0.6.11
   '@obsidize/tar-browserify': ^5.2.0
-  '@oclif/core': ^4.0.30
-  '@oclif/plugin-autocomplete': ^3.2.6
-  '@oclif/plugin-help': ^6.2.16
-  '@oclif/plugin-plugins': ^5.4.15
-  '@oclif/plugin-update': ^4.7.8
-  '@oclif/test': ^4.1.0
-  '@octokit/core': ^4.0.4
-  '@octokit/rest': ^19.0.5
+  '@octokit/core': ^7.0.6
+  '@octokit/rest': ^22.0.1
   '@opentelemetry/api': ^1.9.0
   '@opentelemetry/api-logs': ^0.203.0
   '@opentelemetry/auto-instrumentations-node': ^0.64.1
@@ -149,7 +133,6 @@ catalog:
   '@opentui/core-linux-x64': 0.1.61
   '@opentui/core-win32-x64': 0.1.61
   '@opentui/solid': 0.1.61
-  '@orama/orama': ^3.1.7
   '@peermetrics/webrtc-stats': 5.7.1
   '@phosphor-icons/core': ^2.1.1
   '@phosphor-icons/react': 2.1.10
@@ -196,13 +179,6 @@ catalog:
   '@robloche/chartjs-plugin-streaming': 3.1.0
   '@rollup/plugin-inject': ^5.0.5
   '@rushstack/eslint-patch': ^1.12.0
-  '@segment/analytics-node': ^2.1.0
-  '@segment/snippet': ^4.15.3
-  '@sentry/browser': ^8.8.0
-  '@sentry/node': ^8.8.0
-  '@sentry/react': ^7.100.1
-  '@sentry/types': ^8.8.0
-  '@sentry/vite-plugin': ^4.0.2
   '@solid-primitives/utils': ^6.3.2
   '@solidjs/testing-library': ^0.8.10
   '@storybook/addon-docs': ^10.2.1
@@ -223,7 +199,6 @@ catalog:
   '@tauri-apps/api': ^2.8.0
   '@tauri-apps/cli': ^2.8.4
   '@tauri-apps/plugin-deep-link': ^2.2.0
-  '@tauri-apps/plugin-global-shortcut': ^2.2.0
   '@tauri-apps/plugin-haptics': ^2.3.2
   '@tauri-apps/plugin-opener': ^2.5.3
   '@tauri-apps/plugin-os': ^2.3.1
@@ -243,42 +218,33 @@ catalog:
   '@tldraw/tlschema': ^3.0.0
   '@tldraw/utils': ^3.0.0
   '@trivago/prettier-plugin-sort-imports': ^5.2.2
-  '@trpc/server': ^10.45.2
+  '@trpc/server': ^10.45.3
   '@types/argparse': ^2.0.0
   '@types/bytes': ^3.1.1
   '@types/chai': ^4.2.15
   '@types/chai-dom': ^1.11.0
   '@types/chrome': ^0.0.125
-  '@types/cli-progress': ^3.11.0
   '@types/color-hash': ^1.0.1
   '@types/columnify': ^1.5.1
-  '@types/comment-json': ^2.4.5
   '@types/d3': ^7.4.3
   '@types/d3-hierarchy': ^3.1.6
   '@types/debug': ^4.1.10
   '@types/deep-equal': ^1.0.4
   '@types/dom-speech-recognition': ^0.0.6
-  '@types/fs-extra': ^9.0.4
   '@types/geojson': ^7946.0.14
   '@types/glob': ~7.1.3
   '@types/globrex': ^0.1.4
   '@types/js-yaml': ^4.0.5
   '@types/jsdom': ^21.1.7
   '@types/json-stringify-safe': 5.0.0
-  '@types/jsonpath': ^0.2.4
   '@types/leaflet': ^1.9.16
   '@types/lodash.debounce': ^4.0.9
   '@types/lodash.defaultsdeep': ^4.6.6
   '@types/lodash.flatten': ^4.4.6
-  '@types/lodash.get': ^4.4.9
-  '@types/lodash.isequal': ^4.5.0
   '@types/lodash.isequalwith': ^4.4.0
   '@types/lodash.ismatch': ^4.4.9
   '@types/lodash.merge': ^4.6.6
-  '@types/lodash.omit': ^4.5.7
   '@types/lodash.orderby': ^4.6.9
-  '@types/lodash.pick': ^4.4.7
-  '@types/lodash.set': ^4.3.9
   '@types/lodash.sortby': ^4.7.7
   '@types/minimatch': ^5.1.2
   '@types/mocha': ^10.0.7
@@ -295,7 +261,6 @@ catalog:
   '@types/react-syntax-highlighter': ^15.5.13
   '@types/react-test-renderer': ^17.0.2
   '@types/react-virtualized': ^9.22.3
-  '@types/react-window': ^2.0.0
   '@types/readable-stream': ^2.3.9
   '@types/reveal.js': ^5.0.3
   '@types/seedrandom': ^3.0.5
@@ -336,25 +301,24 @@ catalog:
   JSONStream: ^1.3.5
   abstract-level: ^1.0.2
   adm-zip: ^0.5.16
-  agents: ^0.2.23
-  ai: ^5.0.86
-  ajv: ^8.17.1
+  agents: ^0.3.10
+  ai: ^6.0.97
+  ajv: ^8.18.0
   alea: ^1.0.1
   argparse: ^2.0.1
   aria-hidden: ^1.2.4
   array-iterate: ~2.0.1
   assert: ^2.0.0
-  astro: ^5.13.1
+  astro: ^5.15.9
   autoprefixer: ^10.4.12
-  base-x: ~3.0.9
+  base-x: ~3.0.11
   base32-decode: ^1.0.0
   base32-encode: ^2.0.0
   bind-event-listener: ^3.0.0
   bip39: ^3.1.0
   blockstore-core: ^5.0.1
   blockstore-idb: ^2.0.0
-  body-parser: 1.19.0
-  boolean: ^3.0.1
+  body-parser: ^1.20.3
   buffer: ^6.0.3
   buffer-alloc: ^1.1.0
   buffer-from: ^0.1.1
@@ -372,9 +336,7 @@ catalog:
   chromatic: ^13.0.1
   classnames: ^2.3.2
   cli-highlight: ^2.1.11
-  cli-progress: ^3.11.2
   cli-table3: ^0.6.5
-  cmdk: ^0.2.0
   codemirror: ^6.0.1
   codemirror-lang-spreadsheet: ^1.3.0
   color-hash: ^1.0.3
@@ -399,9 +361,8 @@ catalog:
   del: ^5.1.0
   depcheck: ^1.4.7
   dfx: ^0.127.0
-  diff: ^8.0.2
+  diff: ^8.0.3
   discord.js: ^14.14.1
-  do-wrapper: ^4.5.1
   domain-browser: ^4.22.0
   effect: 3.19.16
   emoji-mart: ^5.5.2
@@ -430,23 +391,21 @@ catalog:
   exa-js: ^1.5.12
   execa: ^5.1.1
   expect: ^27.0.2
-  express: ^4.19.2
+  express: ^4.21.0
   extendable-media-recorder: ^9.2.19
   extendable-media-recorder-wav-encoder: ^7.0.123
   extensionless: ^1.9.9
   fast-check: ^3.19.0
-  fast-xml-parser: ^4.3.2
+  fast-deep-equal: ^3.1.3
+  fast-xml-parser: ^5.3.6
   fetch-mock: ^11.0.0
   find-process: ^1.4.7
   flame-chart-js: ^3.3.0
   force-graph: ^1.49.4
-  fs-extra: ^8.1.0
   fuzzy: ^0.1.3
   geojson: ^0.5.0
   geojson2h3: ^1.2.0
-  get-folder-size: ^2.0.1
   get-port-please: ^3.1.1
-  git-rev-sync: ^3.0.2
   glob: ^7.2.3
   globby: 14.1.0
   globrex: ^0.1.2
@@ -454,7 +413,7 @@ catalog:
   glsl-noise: ^0.0.0
   glslify: ^7.1.1
   handlebars: 4.7.8
-  happy-dom: ^13.3.1
+  happy-dom: ^20.0.0
   hastscript: ^7.1.0
   highlight.js: ^11.9.0
   husky: ^8.0.0
@@ -471,7 +430,6 @@ catalog:
   ink-spinner: ^5.0.0
   ink-table: ^3.1.0
   ink-text-input: ^6.0.0
-  inquirer: ^12.0.0
   interface-blockstore: ^5.2.10
   ioredis: ^5.3.2
   iso-did: ^1.6.0
@@ -486,16 +444,13 @@ catalog:
   json-stringify-safe: ^5.0.1
   json5: ^2.2.3
   jsonata: ^2.1.0
-  jsonpath: ^1.1.1
-  jsonpath-plus: 10.2.0
+  jsonpath-plus: ^10.3.0
   jsonpointer: ^5.0.1
-  jsx-dom: ^8.1.6
   jszip: ^3.10.1
   jwt-decode: ^4.0.0
   keyborg: ^2.5.0
   knip: ^5.64.3
   koffi: ^2.8.0
-  kubo-rpc-client: ^4.1.1
   leaflet: ^1.9.4
   leva: ^0.10.1
   level: ^8.0.1
@@ -507,15 +462,10 @@ catalog:
   lodash.debounce: ^4.0.8
   lodash.defaultsdeep: ^4.6.1
   lodash.flatten: ^4.4.0
-  lodash.get: ^4.4.2
-  lodash.isequal: ^4.5.0
   lodash.isequalwith: ^4.4.0
   lodash.ismatch: ^4.4.0
   lodash.merge: ^4.6.2
-  lodash.omit: ^4.5.0
   lodash.orderby: ^4.6.0
-  lodash.pick: ^4.4.0
-  lodash.set: ^4.3.2
   lodash.sortby: ^4.7.0
   log-update: ^4.0.0
   loupe: 2.3.7
@@ -537,13 +487,11 @@ catalog:
   multiformats: ^13.2.2
   nan: 2.23.0
   next-tick: ^1.0.0
-  node-clipboardy: ^1.0.3
   node-datachannel: ^0.30.0
   node-fetch: ^2.6.0
   node-notifier: ^10.0.1
   noise-protocol: 3.0.1
   nyc: ^15.1.0
-  oclif: ^4.15.12
   ogl: ^1.0.11
   ollama: ^0.5.11
   once: ^1.4.0
@@ -563,7 +511,7 @@ catalog:
   postcss: ^8.4.41
   postcss-import: ^16.1.0
   posthog-js: ^1.347.2
-  preact: ^10.26.9
+  preact: ^10.26.10
   prettier: ^3.6.2
   prettier-plugin-packagejson: ^2.5.19
   protobufjs: ^7.2.5
@@ -595,7 +543,7 @@ catalog:
   react-qr-rounded: ^1.0.0
   react-remove-scroll: ^2.6.0
   react-resize-detector: ^11.0.1
-  react-router-dom: ^6.4.0
+  react-router-dom: ^6.30.3
   react-syntax-highlighter: ^15.6.1
   react-test-renderer: ~19.2.0
   react-use: ^17.5.1
@@ -612,16 +560,14 @@ catalog:
   resize-observer-polyfill: ^1.5.1
   reveal.js: ^5.1.0
   rmdir: ~1.2.0
-  rollup: ^3.20.4
+  rollup: ^3.29.5
   rollup-plugin-sourcemaps: ^0.6.3
   rollup-plugin-visualizer: ^5.12.0
   safe-compare: ~1.1.4
   seedrandom: ^3.0.5
   semver: ^7.5.4
-  sentry-testkit: ^5.0.5
   serve: ^14.1.2
   sharp: ^0.32.5
-  shx: ^0.3.3
   sodium-javascript: ~0.8.0
   sodium-native: ^3.2.0
   sodium-universal: ^3.0.2
@@ -649,7 +595,6 @@ catalog:
   topojson-simplify: ^3.0.3
   transformation-matrix: ^2.16.1
   ts-morph: ^16.0.0
-  ts-node: 10.9.1
   tsdown: ^0.16.7
   tslib: ^2.8.1
   tsx: ^4.21.0
@@ -663,12 +608,10 @@ catalog:
   ua-parser-js: ^1.0.39
   uint8arrays: ^5.1.0
   ulidx: ^2.3.0
-  undici: '*'
   unified: ^11.0.0
   unplugin: ^1.7.1
   unplugin-fonts: ^1.4.0
-  unplugin-swc: ^1.5.1
-  unzip-stream: ^0.3.1
+  unzip-stream: ^0.3.2
   url-join: ^5.0.0
   use-deep-compare-effect: ^1.8.1
   use-resize-observer: ^9.1.0
@@ -676,7 +619,7 @@ catalog:
   uuid: ^9.0.0
   varint: 6.0.0
   versor: ^0.2.0
-  vite: 7.1.9
+  vite: ^7.1.11
   vite-node: ^3.2.4
   vite-plugin-devtools-json: ^0.4.1
   vite-plugin-glslify: ^2.3.0
@@ -694,14 +637,14 @@ catalog:
   webdriverio: ^8.32.4
   webext-bridge: ^6.0.1
   webextension-polyfill: ^0.12.0
-  webpack: ^5.88.2
+  webpack: ^5.104.1
   webrtc-adapter: ^9.0.1
   websocket-stream: ^5.5.2
   wnfs: 0.2.2
   workbox-window: ^7.3.0
   workerize-loader: ^2.0.2
-  wrangler: ^4.51.0
-  ws: ^8.14.2
+  wrangler: ^4.59.1
+  ws: ^8.17.1
   wtfnode: ^0.10.0
   xstate: ^4.37.0
   yaml: ^2.7.0
@@ -714,5 +657,93 @@ catalog:
 peerDependencyRules:
   allowedVersions:
     dfx>@effect/platform: '>=0.93.0'
+  ignoreMissing:
+    - '@cloudflare/ai-chat'
+    - '@cloudflare/codemode'
 
 strictPeerDependencies: true
+
+onlyBuiltDependencies:
+  - '@bufbuild/buf'
+  - '@moonrepo/cli'
+  - '@parcel/watcher'
+  - '@swc/core'
+  - better-sqlite3
+  - canvas
+  - cbor-extract
+  - classic-level
+  - core-js
+  - edgedriver
+  - esbuild
+  - fs-ext
+  - fsctl
+  - geckodriver
+  - msgpackr-extract
+  - node-datachannel
+  - onnxruntime-node
+  - oxc-resolver
+  - protobufjs
+  - sharp
+  - sodium-native
+  - styled-components
+  - unrs-resolver
+  - workerd
+  - yarn
+
+patchedDependencies:
+  '@automerge/automerge-repo@2.5.1': patches/@automerge__automerge-repo@2.5.1.patch
+  'random-access-idb@1.2.2': patches/random-access-idb@1.2.2.patch
+  'uuid@8.3.2': patches/uuid@8.3.2.patch
+
+overrides:
+  # Version alignment overrides.
+  '@automerge/automerge': 'catalog:'
+  '@lezer/lr': 'catalog:'
+  '@types/node': 'catalog:'
+  '@types/react': 'catalog:'
+  '@types/react-dom': 'catalog:'
+  effect: 'catalog:'
+  nan: 'catalog:'
+  react: 'catalog:'
+  react-dom: 'catalog:'
+  typescript: 'catalog:'
+
+  # Security: force patched versions of vulnerable transitive dependencies.
+  # See: pnpm audit, https://github.com/advisories
+  '@grpc/grpc-js': '>=1.10.9'
+  '@modelcontextprotocol/sdk': '>=1.26.0'
+  '@remix-run/router': '>=1.23.2'
+  ajv: '>=8.18.0'
+  axios: '>=1.13.5'
+  base-x@4: 4.0.1
+  brace-expansion: '>=1.1.12'
+  cookie: '>=0.7.0'
+  d3-color: '>=3.1.0'
+  devalue: '>=5.6.3'
+  diff: '>=5.2.2'
+  dompurify: '>=3.2.4'
+  esbuild: '>=0.25.0'
+  fast-xml-parser: '>=5.3.6'
+  form-data: '>=4.0.4'
+  glob: '>=10.5.0'
+  lodash: '>=4.17.23'
+  lodash-es: '>=4.17.23'
+  markdown-it: '>=14.1.1'
+  mdast-util-to-hast: '>=13.2.1'
+  mermaid: '>=10.9.4'
+  minimatch: '>=10.2.1'
+  nanoid: '>=3.3.8'
+  node.extend: '>=1.1.7'
+  nth-check: '>=2.0.1'
+  on-headers: '>=1.1.0'
+  path-to-regexp: '>=3.3.0'
+  prismjs: '>=1.30.0'
+  qs: '>=6.14.2'
+  send: '>=0.19.0'
+  seroval: '>=1.4.1'
+  serve-static: '>=1.16.0'
+  tar: '>=7.5.8'
+  tar-fs: '>=3.1.1'
+  undici: '>=7.18.2'
+  wrangler: '>=4.59.1'
+  ws: '>=8.17.1'

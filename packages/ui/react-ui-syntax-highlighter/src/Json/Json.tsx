@@ -2,8 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-// TODO(burdon): Use to jsonpath-plus.
-import jp from 'jsonpath';
+import { JSONPath } from 'jsonpath-plus';
 import React, { forwardRef, useEffect, useState } from 'react';
 
 import { Input, type ThemedClassName } from '@dxos/react-ui';
@@ -47,7 +46,7 @@ export const JsonFilter = forwardRef<HTMLDivElement, JsonProps>(
         setData(initialData);
       } else {
         try {
-          setData(jp.query(initialData, text));
+          setData(JSONPath({ path: text, json: initialData }));
           setError(null);
         } catch (err) {
           setData(initialData);

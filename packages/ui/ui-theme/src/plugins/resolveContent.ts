@@ -2,11 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { promisify } from 'node:util';
-
-import Glob from 'glob';
-
-const glob = promisify(Glob.glob);
+import { glob } from 'glob';
 
 // TODO(burdon): Comment.
 const knownIndirectPeers = [

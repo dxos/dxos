@@ -30,7 +30,7 @@
   ],
   "dependencies": {
     "@dxos/util": "workspace:*",
-    "jsonpath": "catalog:",
+    "jsonpath-plus": "catalog:",
     "react-syntax-highlighter": "catalog:"
   },
   "devDependencies": {
@@ -39,7 +39,6 @@
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@types/jsonpath": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@types/react-syntax-highlighter": "catalog:",
