@@ -18,6 +18,7 @@
   "dependencies": {
     "@ai-sdk/react": "catalog:",
     "@babel/runtime": "catalog:",
+    "@cloudflare/ai-chat": "catalog:",
     "@dxos/async": "workspace:*",
     "@dxos/brand": "workspace:*",
     "@dxos/client": "workspace:*",

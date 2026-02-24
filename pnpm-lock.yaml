@@ -78,6 +78,9 @@ catalogs:
     '@ch-ui/tokens':
       specifier: 3.0.1
       version: 3.0.1
+    '@cloudflare/ai-chat':
+      specifier: ^0.0.6
+      version: 0.0.6
     '@cloudflare/vitest-pool-workers':
       specifier: ^0.8.61
       version: 0.8.61
@@ -2741,6 +2744,9 @@ importers:
       '@babel/runtime':
         specifier: 'catalog:'
         version: 7.27.1
+      '@cloudflare/ai-chat':
+        specifier: 'catalog:'
+        version: 0.0.6(agents@0.3.10)(ai@6.0.97(zod@4.1.12))(react@19.2.3)(zod@4.1.12)
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -2791,7 +2797,7 @@ importers:
         version: link:../../sdk/shell
       agents:
         specifier: 'catalog:'
-        version: 0.3.10(@ai-sdk/react@3.0.99(react@19.2.3)(zod@4.1.12))(@cloudflare/workers-types@4.20260302.0)(ai@6.0.97(zod@4.1.12))(react@19.2.3)(zod@4.1.12)
+        version: 0.3.10(@ai-sdk/react@3.0.99(react@19.2.3)(zod@4.1.12))(@cloudflare/ai-chat@0.0.6)(@cloudflare/workers-types@4.20260302.0)(ai@6.0.97(zod@4.1.12))(react@19.2.3)(zod@4.1.12)
       ai:
         specifier: 'catalog:'
         version: 6.0.97(zod@4.1.12)
@@ -20128,6 +20134,14 @@ packages:
   '@choojs/findup@0.2.1':
     resolution: {integrity: sha512-YstAqNb0MCN8PjdLCDfRsBcGVRN41f3vgLvaI0IrIcBp4AqILRSS0DeWNGkicC+f/zRIPJLc+9RURVSepwvfBw==}
     hasBin: true
+
+  '@cloudflare/ai-chat@0.0.6':
+    resolution: {integrity: sha512-XDJP7ywORzQd17f09hMY1n3+bQsLw+BmXh7HzuWGb7gBBbD23OlQXccuQQqFNBYHi+IfIpe9YdGbHaUGsfCUwA==}
+    peerDependencies:
+      agents: ^0.3.10
+      ai: ^6.0.0
+      react: ~19.2.3
+      zod: ^3.25.0 || ^4.0.0
 
   '@cloudflare/kv-asset-handler@0.4.2':
     resolution: {integrity: sha512-SIOD2DxrRRwQ+jgzlXCqoEFiKOFqaPjhnNTGKXSRLvp1HiOvapLaFG2kEr9dYQTYe8rKrd9uvDUzmAITeNyaHQ==}
@@ -38992,6 +39006,13 @@ snapshots:
     dependencies:
       commander: 2.20.3
 
+  '@cloudflare/ai-chat@0.0.6(agents@0.3.10)(ai@6.0.97(zod@4.1.12))(react@19.2.3)(zod@4.1.12)':
+    dependencies:
+      agents: 0.3.10(@ai-sdk/react@3.0.99(react@19.2.3)(zod@4.1.12))(@cloudflare/ai-chat@0.0.6)(@cloudflare/workers-types@4.20260302.0)(ai@6.0.97(zod@4.1.12))(react@19.2.3)(zod@4.1.12)
+      ai: 6.0.97(zod@4.1.12)
+      react: 19.2.3
+      zod: 4.1.12
+
   '@cloudflare/kv-asset-handler@0.4.2': {}
 
   '@cloudflare/unenv-preset@2.14.0(unenv@2.0.0-rc.24)(workerd@1.20260302.0)':
@@ -46943,9 +46964,10 @@ snapshots:
 
   agent-base@7.1.3: {}
 
-  agents@0.3.10(@ai-sdk/react@3.0.99(react@19.2.3)(zod@4.1.12))(@cloudflare/workers-types@4.20260302.0)(ai@6.0.97(zod@4.1.12))(react@19.2.3)(zod@4.1.12):
+  agents@0.3.10(@ai-sdk/react@3.0.99(react@19.2.3)(zod@4.1.12))(@cloudflare/ai-chat@0.0.6)(@cloudflare/workers-types@4.20260302.0)(ai@6.0.97(zod@4.1.12))(react@19.2.3)(zod@4.1.12):
     dependencies:
       '@cfworker/json-schema': 4.1.1
+      '@cloudflare/ai-chat': 0.0.6(agents@0.3.10)(ai@6.0.97(zod@4.1.12))(react@19.2.3)(zod@4.1.12)
       '@modelcontextprotocol/sdk': 1.26.0(@cfworker/json-schema@4.1.1)
       ai: 6.0.97(zod@4.1.12)
       cron-schedule: 6.0.0
@@ -59504,5 +59526,3 @@ snapshots:
   zwitch@2.0.4: {}
 
   zx@8.8.5: {}
-
-# First generated on 2026-02-24T12:14:15.525Z by jdw

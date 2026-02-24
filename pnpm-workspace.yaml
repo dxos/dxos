@@ -35,6 +35,7 @@ catalog:
   '@ch-ui/icons': ^1.0.1
   '@ch-ui/tailwind-tokens': 2.8.1
   '@ch-ui/tokens': 3.0.1
+  '@cloudflare/ai-chat': ^0.0.6
   '@cloudflare/vitest-pool-workers': ^0.8.61
   '@cloudflare/workers-types': ^4.20260302.0
   '@codemirror/autocomplete': ^6.19.0
