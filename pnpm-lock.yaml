@@ -9874,6 +9874,12 @@ importers:
         specifier: 'catalog:'
         version: 3.6.0
     devDependencies:
+      '@cloudflare/realtimekit-react':
+        specifier: 1.2.1
+        version: 1.2.1(react@19.2.3)
+      '@cloudflare/realtimekit-react-ui':
+        specifier: 1.0.7
+        version: 1.0.7
       '@dxos/plugin-attention':
         specifier: workspace:*
         version: link:../plugin-attention
@@ -20187,6 +20193,20 @@ packages:
     resolution: {integrity: sha512-Nu8ahitGFFJztxUml9oD/DLb7Z28C8cd8F46IVQ7y5Btz575pvMY8AqZsXkX7Gds29eCKdMgIHjIvzskHgPSFg==}
     engines: {node: '>=18.0.0'}
 
+  '@cloudflare/realtimekit-react-ui@1.0.7':
+    resolution: {integrity: sha512-VIYaBhXPxdg5l5ZMetr5Ve7V28k4wrZYJ6Qb+1jsuVyQMjq6qkfCYvLyIXMotnkGZIE3l9dp64A/ymKKw5CzvA==}
+
+  '@cloudflare/realtimekit-react@1.2.1':
+    resolution: {integrity: sha512-wu022fPdr0INlRzSfLB1HdX6+CwJ3IvVZyjdhEupVJK+DiobwCStpsI4Mtbh2qzW7c/wgn+QrMfKSqraVjagPA==}
+    peerDependencies:
+      react: ~19.2.3
+
+  '@cloudflare/realtimekit-ui@1.0.7':
+    resolution: {integrity: sha512-pic/V5f7RCQMm2+gC/yPJBCLyApNCauGuPHGtOxgrMXH+wTRltuoLxiFfO50tnx58g/nmhbazWILyKLpMWT+Dw==}
+
+  '@cloudflare/realtimekit@1.2.1':
+    resolution: {integrity: sha512-HbFD4LVjyarShADoa/hw1hqmimdx7GIgEOmelNdqx0nH4HgDju9Me8jGd/XWKlg0dUegAh5hzdgupMpIRUWR1g==}
+
   '@cloudflare/unenv-preset@2.6.0':
     resolution: {integrity: sha512-h7Txw0WbDuUbrvZwky6+x7ft+U/Gppfn/rWx6IdR+e9gjygozRJnV26Y2TOr3yrIFa6OsZqqR2lN+jWTrakHXg==}
     peerDependencies:
@@ -23616,6 +23636,9 @@ packages:
     resolution: {integrity: sha512-wX6U0SpcCukZTJBs5ChljvBZb3XmYzA5gd4vKHgX8wZZKaQCo2WHtmThdLx+mcVvlBa5u3XShC7ffbETJD4BiQ==}
     peerDependencies:
       preact: '>= 10.25.0 || >=11.0.0-0'
+
+  '@protobuf-ts/runtime@2.11.1':
+    resolution: {integrity: sha512-KuDaT1IfHkugM2pyz+FwiY80ejWrkH1pAtOBOZFuR6SXEFTsnb/jiQWQ1rCIrcKx2BtyxnxW6BWwsVSA/Ie+WQ==}
 
   '@protobufjs/aspromise@1.1.2':
     resolution: {integrity: sha512-j+gKExEuLmKwvz3OgROXtrJ2UG2x8Ch2YZUxahh+s1F2HZ+wAceUNLkvy6zKCPVRkU++ZWQrdxsUeQXmcg4uoQ==}
@@ -30437,6 +30460,10 @@ packages:
   fast-shallow-equal@1.0.0:
     resolution: {integrity: sha512-HPtaa38cPgWvaCFmRNhlc6NG7pv6NUHqjPgVAkWGoB9mQMwYB27/K0CvOM5Czy+qpT3e8XJ6Q4aPAnzpNpzNaw==}
 
+  fast-unique-numbers@8.0.13:
+    resolution: {integrity: sha512-7OnTFAVPefgw2eBJ1xj2PGGR9FwYzSUso9decayHgCDX4sJkHLdcsYTytTg+tYv+wKF3U8gJuSBz2jJpQV4u/g==}
+    engines: {node: '>=16.1.0'}
+
   fast-unique-numbers@9.0.20:
     resolution: {integrity: sha512-2ym6CEsBN3CDEYBn2QgIfj6zCtOghEHcNU7wjq69W/y3TGr0m5XDZbVJ72CluwqnGwQBI8RZxDuTAjg1Ttphvw==}
     engines: {node: '>=18.2.0'}
@@ -31116,6 +31143,9 @@ packages:
   hard-rejection@2.1.0:
     resolution: {integrity: sha512-VIZB+ibDhx7ObhAe7OVtoEbuP4h/MuOTHJ+J8h/eBXotJYl0fBgR72xDFCKgIh22OJZIOVNxBMWuhAr10r8HdA==}
     engines: {node: '>=6'}
+
+  hark@1.2.3:
+    resolution: {integrity: sha512-u68vz9SCa38ESiFJSDjqK8XbXqWzyot7Cj6Y2b6jk2NJ+II3MY2dIrLMg/kjtIAun4Y1DHF/20hfx4rq1G5GMg==}
 
   has-bigints@1.0.2:
     resolution: {integrity: sha512-tSvCKtBr9lkF0Ex0aQiP9N+OpV4zi2r/Nee5VkRDbaqv35RLYMzbwQfFSZZH0kR+Rd6302UJZ2p/bJCEoR3VoQ==}
@@ -35505,6 +35535,10 @@ packages:
   scrollparent@2.1.0:
     resolution: {integrity: sha512-bnnvJL28/Rtz/kz2+4wpBjHzWoEzXhVg/TE8BeVGJHUqE8THNIRnDxDWMktwM+qahvlRdvlLdsQfYe+cuqfZeA==}
 
+  sdp-transform@2.15.0:
+    resolution: {integrity: sha512-KrOH82c/W+GYQ0LHqtr3caRpM3ITglq3ljGUIb8LTki7ByacJZ9z+piSGiwZDsRyhQbYBOBJgr2k6X4BZXi3Kw==}
+    hasBin: true
+
   sdp@3.2.0:
     resolution: {integrity: sha512-d7wDPgDV3DDiqulJjKiV2865wKsJ34YI+NDREbm+FySq6WuKOikwyNQcm+doLAZ1O6ltdO0SeKle2xMpN3Brgw==}
 
@@ -37710,6 +37744,9 @@ packages:
     resolution: {integrity: sha512-c9bZp7b5YtRj2wOe6dlj32MK+Bx/M/d+9VB2SHM1OtsUHR0aV0tdP6DWh/iMt0kWi1t5g1Iudu6hQRNd1A4PVA==}
     engines: {node: '>=18'}
 
+  wildemitter@1.2.1:
+    resolution: {integrity: sha512-UMmSUoIQSir+XbBpTxOTS53uJ8s/lVhADCkEbhfRjUGFDPme/XGOb0sBWLx5sTz7Wx/2+TlAw1eK9O5lw5PiEw==}
+
   winston-transport@4.7.1:
     resolution: {integrity: sha512-wQCXXVgfv/wUPOfb2x0ruxzwkcZfxcktz6JIMUaPLmcNhO4bZTwA/WtDWK74xV3F2dKu8YadrFv0qhwYjVEwhA==}
     engines: {node: '>= 12.0.0'}
@@ -37779,6 +37816,15 @@ packages:
 
   worker-factory@7.0.41:
     resolution: {integrity: sha512-YZ5T7pzoazUvE+CR5bF+njKQFCLPAeN+yt5xPqUaJhUwpo/xUUSNn8QgvErZNQ79r/TuWEvFMLyl/3i40GDBHQ==}
+
+  worker-timers-broker@6.1.8:
+    resolution: {integrity: sha512-FUCJu9jlK3A8WqLTKXM9E6kAmI/dR1vAJ8dHYLMisLNB/n3GuaFIjJ7pn16ZcD1zCOf7P6H62lWIEBi+yz/zQQ==}
+
+  worker-timers-worker@7.0.71:
+    resolution: {integrity: sha512-ks/5YKwZsto1c2vmljroppOKCivB/ma97g9y77MAAz2TBBjPPgpoOiS1qYQKIgvGTr2QYPT3XhJWIB6Rj2MVPQ==}
+
+  worker-timers@7.0.60:
+    resolution: {integrity: sha512-kom5j7+JQU0uuJAqAeFvxPpKlp21BH09YLMU/JLKA+0Zs3WTGk7WSBFYjdR3G+kjXr6qWD7zIcenv3oXaWBJzw==}
 
   workerd@1.20240320.1:
     resolution: {integrity: sha512-nuavAGGjh0qqM6RF5zxTHyUwEqdLCHchodbrpbh/xlJpFGnJVY5C1YgSi2S9aLkJJoa0/25Ta/+EzXEbApA/3w==}
@@ -40129,6 +40175,31 @@ snapshots:
   '@cloudflare/kv-asset-handler@0.4.1':
     dependencies:
       mime: 3.0.0
+
+  '@cloudflare/realtimekit-react-ui@1.0.7':
+    dependencies:
+      '@cloudflare/realtimekit-ui': 1.0.7
+
+  '@cloudflare/realtimekit-react@1.2.1(react@19.2.3)':
+    dependencies:
+      '@cloudflare/realtimekit': 1.2.1
+      react: 19.2.3
+
+  '@cloudflare/realtimekit-ui@1.0.7':
+    dependencies:
+      '@floating-ui/dom': 1.7.4
+      hark: 1.2.3
+      hls.js: 1.6.15
+      lodash-es: 4.17.21
+      resize-observer-polyfill: 1.5.1
+
+  '@cloudflare/realtimekit@1.2.1':
+    dependencies:
+      '@protobuf-ts/runtime': 2.11.1
+      bowser: 2.11.0
+      sdp-transform: 2.15.0
+      uuid: 8.3.2(patch_hash=7640c94f10973b5716c23b71230b101075a889088080f5eb7b433aa225fc32c9)
+      worker-timers: 7.0.60
 
   '@cloudflare/unenv-preset@2.6.0(unenv@2.0.0-rc.19)(workerd@1.20250803.0)':
     dependencies:
@@ -44214,6 +44285,8 @@ snapshots:
     dependencies:
       '@preact/signals-core': 1.13.0
       preact: 10.28.3
+
+  '@protobuf-ts/runtime@2.11.1': {}
 
   '@protobufjs/aspromise@1.1.2': {}
 
@@ -52436,6 +52509,11 @@ snapshots:
 
   fast-shallow-equal@1.0.0: {}
 
+  fast-unique-numbers@8.0.13:
+    dependencies:
+      '@babel/runtime': 7.27.1
+      tslib: 2.8.1
+
   fast-unique-numbers@9.0.20:
     dependencies:
       '@babel/runtime': 7.27.1
@@ -53283,6 +53361,10 @@ snapshots:
       whatwg-mimetype: 3.0.0
 
   hard-rejection@2.1.0: {}
+
+  hark@1.2.3:
+    dependencies:
+      wildemitter: 1.2.1
 
   has-bigints@1.0.2: {}
 
@@ -58791,6 +58873,8 @@ snapshots:
 
   scrollparent@2.1.0: {}
 
+  sdp-transform@2.15.0: {}
+
   sdp@3.2.0: {}
 
   secretlint@10.2.2:
@@ -61404,6 +61488,8 @@ snapshots:
     dependencies:
       string-width: 7.2.0
 
+  wildemitter@1.2.1: {}
+
   winston-transport@4.7.1:
     dependencies:
       logform: 2.6.1
@@ -61548,6 +61634,25 @@ snapshots:
       '@babel/runtime': 7.27.1
       fast-unique-numbers: 9.0.20
       tslib: 2.8.1
+
+  worker-timers-broker@6.1.8:
+    dependencies:
+      '@babel/runtime': 7.27.1
+      fast-unique-numbers: 8.0.13
+      tslib: 2.8.1
+      worker-timers-worker: 7.0.71
+
+  worker-timers-worker@7.0.71:
+    dependencies:
+      '@babel/runtime': 7.27.1
+      tslib: 2.8.1
+
+  worker-timers@7.0.60:
+    dependencies:
+      '@babel/runtime': 7.27.1
+      tslib: 2.8.1
+      worker-timers-broker: 6.1.8
+      worker-timers-worker: 7.0.71
 
   workerd@1.20240320.1:
     optionalDependencies:
