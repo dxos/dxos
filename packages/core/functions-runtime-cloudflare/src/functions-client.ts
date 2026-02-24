@@ -6,7 +6,8 @@ import { Resource } from '@dxos/context';
 import { EchoClient } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
-import { type EdgeFunctionEnv } from '@dxos/protocols';
+import { type Echo, type EdgeFunctionEnv } from '@dxos/protocols';
+import { protoToBuf } from '@dxos/protocols/buf';
 
 import { ServiceContainer } from './internal';
 import { SpaceProxy } from './space-proxy';
@@ -47,7 +48,7 @@ export class FunctionsClient extends Resource {
 
   protected override async _open() {
     const { dataService, queryService } = await this._serviceContainer.createServices();
-    this._echoClient.connectToService({ dataService: dataService as never, queryService: queryService as never });
+    this._echoClient.connectToService({ dataService: protoToBuf<Echo.DataService>(dataService), queryService: protoToBuf<Echo.QueryService>(queryService) });
     await this._echoClient.open();
   }
 

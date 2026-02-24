@@ -76,7 +76,7 @@ Migrating DXOS protocol types from **protobuf.js** (codegen via `@dxos/codec-pro
 
 | Cast Type    | Added | Removed | Net      |
 | ------------ | ----- | ------- | -------- |
-| `as never`   | 107   | 0       | **+107** |
+| `as never`   | 86    | 0       | **+86**  |
 | `as unknown` | 23    | 7       | **+16**  |
 | `as any`     | 6     | 29      | **−23**  |
 
@@ -287,14 +287,16 @@ Fixed bugs that were actively crashing tests.
 - [x] `swarm.ts` (1), `connection-log.ts` (1), `signal-client.ts` (1), `signal-local-state.ts` (1), `messenger.ts` (1) — All used `protoToBuf`/`bufToProto`.
 - **Result**: 9 casts removed. `as never` count: 107 (was 141, -34).
 
-### Phase 8: Tracing, Devtools & Edge (~20 casts)
+### Phase 8: Tracing, Devtools & Edge (Done — 21 casts removed)
 
-- [ ] `trace-sender.ts` (4) — Resource/Span structural incompatibility.
-- [ ] Devtools: `TracingPanel.tsx` (3), `network.ts` (3), `metadata.ts` (2), `feeds.ts` (1), `spaces.ts` (1), `useCredentials.tsx` (1).
-- [ ] Edge/functions: `service-container.ts` (3), `queue-service-impl.ts` (1), `functions-client.ts` (1).
-- [ ] Other: `protocol.ts` (2), `composer-app/util.ts` (1), `call-manager.ts` (1).
-- [ ] `devtools.ts` (1), `examples/main.tsx` (1), `useEdgeAgentsHandlers.ts` (2).
-- **Target**: ~20 `as never` casts removed.
+- [x] `trace-sender.ts` (4) — `protoToBuf` for Resource/Span types.
+- [x] `TracingPanel.tsx` (3) — `bufToProto` for tracing event display.
+- [x] `network.ts` (3), `metadata.ts` (2), `feeds.ts` (1), `spaces.ts` (1) — `protoToBuf`/`bufToProto` at devtools boundaries.
+- [x] `functions-client.ts` (2), `protocol.ts` (2) — `protoToBuf` for DataService/QueryService.
+- [x] `service-container.ts` (1), `queue-service-impl.ts` (1) — `bufToProto` for Cloudflare workers boundary.
+- [x] `useEdgeAgentsHandlers.ts` (2) — Removed unnecessary casts (same type).
+- Remaining: 2 casts in `service-container.ts` (Cloudflare Workers RPC boundary, not proto↔buf).
+- **Result**: 21 casts removed. `as never` count: 86 (was 107, -21).
 
 ### Phase 9: TypedMessage / `google.protobuf.Any` (~8 `as unknown` casts)
 

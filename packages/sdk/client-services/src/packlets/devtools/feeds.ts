@@ -8,7 +8,7 @@ import { type SpaceManager } from '@dxos/echo-pipeline';
 import { FeedIterator, type FeedStore, type FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { create } from '@dxos/protocols/buf';
+import { create, protoToBuf } from '@dxos/protocols/buf';
 import {
   type SubscribeToFeedBlocksRequest,
   type SubscribeToFeedBlocksResponse,
@@ -138,7 +138,7 @@ export const subscribeToFeedBlocks = (
 
         next(
           create(SubscribeToFeedBlocksResponseSchema, {
-            blocks: blocks.slice(-maxBlocks) as never,
+            blocks: protoToBuf<SubscribeToFeedBlocksResponse['blocks']>(blocks.slice(-maxBlocks)),
           }),
         );
 

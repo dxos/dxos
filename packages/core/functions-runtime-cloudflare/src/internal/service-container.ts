@@ -5,6 +5,7 @@
 import { type AnyEntity } from '@dxos/echo/internal';
 import { type DXN, type SpaceId } from '@dxos/keys';
 import { type EdgeFunctionEnv, type FeedProtocol } from '@dxos/protocols';
+import { bufToProto } from '@dxos/protocols/buf';
 import { type QueryService as QueryServiceProto } from '@dxos/protocols/proto/dxos/echo/query';
 import type { DataService as DataServiceProto } from '@dxos/protocols/proto/dxos/echo/service';
 
@@ -48,7 +49,7 @@ export class ServiceContainer {
     return {
       dataService,
       queryService,
-      queueService: queueService as never,
+      queueService: bufToProto<FeedProtocol.QueueService>(queueService),
       functionsAiService: this._functionsService,
     };
   }

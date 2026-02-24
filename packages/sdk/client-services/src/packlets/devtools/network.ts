@@ -7,7 +7,7 @@ import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { type SignalManager } from '@dxos/messaging';
 import { type SwarmNetworkManager } from '@dxos/network-manager';
-import { create, timestampFromDate } from '@dxos/protocols/buf';
+import { create, protoToBuf, timestampFromDate } from '@dxos/protocols/buf';
 import {
   type GetNetworkPeersRequest,
   type GetNetworkPeersResponse,
@@ -22,13 +22,14 @@ import {
   SubscribeToSwarmInfoResponseSchema,
 } from '@dxos/protocols/buf/dxos/devtools/host_pb';
 import { PublicKeySchema } from '@dxos/protocols/buf/dxos/keys_pb';
+import { type SwarmEvent } from '@dxos/protocols/buf/dxos/mesh/signal_pb';
 
 export const subscribeToNetworkStatus = ({ signalManager }: { signalManager: SignalManager }) =>
   new Stream<SubscribeToSignalStatusResponse>(({ next, close }) => {
     const update = () => {
       try {
         const status = signalManager.getStatus?.();
-        next(create(SubscribeToSignalStatusResponseSchema, { servers: status as never }));
+        next(create(SubscribeToSignalStatusResponseSchema, { servers: protoToBuf<SubscribeToSignalStatusResponse['servers']>(status) }));
       } catch (err: any) {
         close(err);
       }
@@ -74,7 +75,7 @@ export const subscribeToSignal = ({ signalManager }: { signalManager: SignalMana
         create(SignalResponseSchema, {
           data: {
             case: 'swarmEvent',
-            value: swarmEventData as never,
+            value: protoToBuf<SwarmEvent>(swarmEventData),
           },
           topic: swarmEvent.topic!.data,
           receivedAt: timestampFromDate(new Date()),
@@ -110,7 +111,7 @@ export const subscribeToSwarmInfo = ({ networkManager }: { networkManager: Swarm
     const update = () => {
       const info = networkManager.connectionLog?.swarms;
       if (info) {
-        next(create(SubscribeToSwarmInfoResponseSchema, { data: info as never }));
+        next(create(SubscribeToSwarmInfoResponseSchema, { data: info }));
       }
     };
     networkManager.connectionLog?.update.on(update);

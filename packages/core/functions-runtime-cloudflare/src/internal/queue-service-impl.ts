@@ -4,8 +4,8 @@
 
 import { NotImplementedError, RuntimeServiceError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
-import { type Echo, type EdgeFunctionEnv } from '@dxos/protocols';
-import { EMPTY, type Empty } from '@dxos/protocols/buf';
+import { type Echo, type EdgeFunctionEnv, type FeedProtocol } from '@dxos/protocols';
+import { bufToProto, EMPTY, type Empty } from '@dxos/protocols/buf';
 import type {
   DeleteFromQueueRequest,
   InsertIntoQueueRequest,
@@ -29,7 +29,7 @@ export class QueueServiceImpl implements Echo.QueueService {
       using result = await this._queueService.query(
         this._ctx,
         `dxn:queue:${request.query!.queuesNamespace}:${spaceId}:${queueId}`,
-        filter as never,
+        bufToProto<Omit<FeedProtocol.QueueQuery, 'queueId'>>(filter),
       );
       return {
         // Copy returned object to avoid hanging RPC stub

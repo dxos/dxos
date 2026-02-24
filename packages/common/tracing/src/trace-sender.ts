@@ -4,9 +4,11 @@
 
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { type Client } from '@dxos/protocols';
-import { create } from '@dxos/protocols/buf';
+import { create, protoToBuf } from '@dxos/protocols/buf';
 import { type LogEntry } from '@dxos/protocols/buf/dxos/client/logging_pb';
 import {
+  type Resource as BufResource,
+  type Span as BufSpan,
   type StreamTraceEvent,
   StreamTraceEventSchema,
   StreamTraceEvent_LogAddedSchema,
@@ -36,14 +38,14 @@ export class TraceSender implements Client.TracingService {
           for (const id of resources) {
             const entry = this._traceProcessor.resources.get(id);
             if (entry) {
-              resourceAdded.push(create(StreamTraceEvent_ResourceAddedSchema, { resource: entry.data as never }));
+              resourceAdded.push(create(StreamTraceEvent_ResourceAddedSchema, { resource: protoToBuf<BufResource>(entry.data) }));
             } else {
               resourceRemoved.push(create(StreamTraceEvent_ResourceRemovedSchema, { id }));
             }
           }
         } else {
           for (const entry of this._traceProcessor.resources.values()) {
-            resourceAdded.push(create(StreamTraceEvent_ResourceAddedSchema, { resource: entry.data as never }));
+            resourceAdded.push(create(StreamTraceEvent_ResourceAddedSchema, { resource: protoToBuf<BufResource>(entry.data) }));
           }
         }
 
@@ -51,12 +53,12 @@ export class TraceSender implements Client.TracingService {
           for (const id of spans) {
             const span = this._traceProcessor.spans.get(id);
             if (span) {
-              spanAdded.push(create(StreamTraceEvent_SpanAddedSchema, { span: span as never }));
+              spanAdded.push(create(StreamTraceEvent_SpanAddedSchema, { span: protoToBuf<BufSpan>(span) }));
             }
           }
         } else {
           for (const span of this._traceProcessor.spans.values()) {
-            spanAdded.push(create(StreamTraceEvent_SpanAddedSchema, { span: span as never }));
+            spanAdded.push(create(StreamTraceEvent_SpanAddedSchema, { span: protoToBuf<BufSpan>(span) }));
           }
         }
 

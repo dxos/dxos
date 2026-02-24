@@ -50,8 +50,8 @@ export const useEdgeAgentHandlers = ({
   useEffect(() => {
     const stream = client.services.services.EdgeAgentService?.queryAgentStatus();
     stream?.subscribe(({ status }: BufQueryAgentStatusResponse) => {
-      setLastReceivedStatus(status as never);
-      handleStatus(status as never);
+      setLastReceivedStatus(status);
+      handleStatus(status);
     });
     return () => {
       void stream?.close().catch(() => {});
