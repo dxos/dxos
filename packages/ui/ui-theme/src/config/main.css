@@ -2,7 +2,7 @@
  * Main
  */
 
-@layer utilities {
+@layer dx-components {
   /**
    * Main Web app.
    */
@@ -27,26 +27,9 @@
 
   /**
    * Main content padding.
+   * NOTE: This MUST remain outside @layer to override Tailwind v4's base preflight
+   * `* { padding: 0 }` which otherwise wins over layered padding-inline rules.
    */
-  .dx-main-content-padding {
-    @apply pl-0 scroll-pl-0 pr-0 scroll-pr-0;
-
-    @media (min-width: theme('screens.lg')) {
-      &[data-sidebar-left-state='collapsed'] {
-        @apply pl-[--l0-size] scroll-pl-[--l0-size];
-      }
-      &[data-sidebar-left-state='expanded'] {
-        @apply pl-[--nav-sidebar-size] scroll-pl-[--nav-sidebar-size];
-      }
-
-      &[data-sidebar-right-state='collapsed'] {
-        @apply pr-[--r0-size] scroll-pr-[--r0-size];
-      }
-      &[data-sidebar-right-state='expanded'] {
-        @apply pr-[--complementary-sidebar-size] scroll-pr-[--complementary-sidebar-size];
-      }
-    }
-  }
 
   /** TODO(burdon): Reconcile with dx-main-bounce-layout */
   .dx-main-content-padding-transitions {
@@ -139,17 +122,17 @@
       }
 
       @media (min-width: theme('screens.sm')) {
-        @apply inline-[--nav-sidebar-size];
+        @apply w-(--nav-sidebar-size);
       }
 
       @media (min-width: theme('screens.lg')) {
         @apply border-x-0;
 
         &[data-state='collapsed'] {
-          @apply inline-[--l0-size] start-0;
+          @apply w-(--l0-size) start-0;
         }
         &[data-state='expanded'] {
-          @apply inline-[--nav-sidebar-size];
+          @apply w-(--nav-sidebar-size);
         }
       }
     }
@@ -165,21 +148,21 @@
       }
 
       @media (min-width: theme('screens.sm')) {
-        @apply inline-[--complementary-sidebar-size];
+        @apply w-(--complementary-sidebar-size);
       }
 
       @media (min-width: theme('screens.lg')) {
         @apply border-e-0;
+
         &[data-state='collapsed'] {
-          @apply inline-[--r0-size] end-0;
+          @apply w-(--r0-size) end-0;
         }
         &[data-state='expanded'] {
-          @apply inline-[--complementary-sidebar-size];
+          @apply w-(--complementary-sidebar-size);
         }
       }
     }
   }
-
 
   .dx-main-overlay {
     @apply fixed inset-0 bg-scrim-surface;
@@ -195,6 +178,37 @@
       @media (min-width: theme('screens.lg')) {
         @apply opacity-100 hidden;
       }
+    }
+  }
+}
+
+/**
+ * Main content padding.
+ * Unlayered so it overrides Tailwind v4's preflight `* { padding: 0 }`.
+ */
+.dx-main-content-padding {
+  padding-inline-start: 0;
+  scroll-padding-inline-start: 0;
+  padding-inline-end: 0;
+  scroll-padding-inline-end: 0;
+
+  @media (min-width: theme('screens.lg')) {
+    &[data-sidebar-left-state='collapsed'] {
+      padding-inline-start: var(--l0-size);
+      scroll-padding-inline-start: var(--l0-size);
+    }
+    &[data-sidebar-left-state='expanded'] {
+      padding-inline-start: var(--nav-sidebar-size);
+      scroll-padding-inline-start: var(--nav-sidebar-size);
+    }
+
+    &[data-sidebar-right-state='collapsed'] {
+      padding-inline-end: var(--r0-size);
+      scroll-padding-inline-end: var(--r0-size);
+    }
+    &[data-sidebar-right-state='expanded'] {
+      padding-inline-end: var(--complementary-sidebar-size);
+      scroll-padding-inline-end: var(--complementary-sidebar-size);
     }
   }
 }

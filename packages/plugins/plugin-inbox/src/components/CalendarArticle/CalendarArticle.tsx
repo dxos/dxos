@@ -52,7 +52,7 @@ export const CalendarArticle = ({ role, subject: calendar }: SurfaceComponentPro
         <div role='none' className='hidden @2xl:flex'>
           <NaturalCalendar.Root>
             <NaturalCalendar.Viewport classNames='grid grid-rows-[var(--toolbar-size)_1fr]'>
-              <NaturalCalendar.Toolbar classNames='block-full border-b border-subdued-separator' />
+              <NaturalCalendar.Toolbar classNames='h-full border-b border-subdued-separator' />
               <NaturalCalendar.Grid />
             </NaturalCalendar.Viewport>
           </NaturalCalendar.Root>

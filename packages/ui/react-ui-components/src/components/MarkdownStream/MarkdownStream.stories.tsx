@@ -81,10 +81,10 @@ const DefaultStory = ({ content = '', streamOptions = defaultStreamOptions, ...p
 
   return (
     <div
-      className={mx('flex flex-col block-full inline-full')}
+      className={mx('flex flex-col h-full w-full')}
       style={userHue ? ({ '--user-fill': `var(--dx-${userHue}Fill)` } as CSSProperties) : undefined}
     >
-      <Toolbar.Root classNames='border-be border-subdued-separator'>
+      <Toolbar.Root classNames='border-b border-subdued-separator'>
         <Toolbar.Button disabled={streaming} onClick={() => setStreaming(true)}>
           Start
         </Toolbar.Button>
@@ -96,7 +96,7 @@ const DefaultStory = ({ content = '', streamOptions = defaultStreamOptions, ...p
           Append
         </Toolbar.Button>
       </Toolbar.Root>
-      <MarkdownStream ref={setController} classNames='inline-full overflow-hidden' {...props} />
+      <MarkdownStream ref={setController} classNames='w-full overflow-hidden' {...props} />
     </div>
   );
 };

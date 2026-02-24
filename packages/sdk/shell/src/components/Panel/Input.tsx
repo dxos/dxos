@@ -18,7 +18,7 @@ export const Input = ({ validationMessage, label, ...props }: LargeInputProps) =
   return (
     <UiInput.Root>
       <UiInput.Label>{label}</UiInput.Label>
-      <UiInput.TextInput {...props} classNames='py-3 mbs-2 text-center' />
+      <UiInput.TextInput {...props} classNames='py-3 mt-2 text-center' />
       <UiInput.DescriptionAndValidation>
         {validationMessage && <UiInput.Validation>{validationMessage}</UiInput.Validation>}
       </UiInput.DescriptionAndValidation>

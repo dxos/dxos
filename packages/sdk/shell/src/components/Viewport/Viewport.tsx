@@ -63,7 +63,7 @@ const ViewportRoot = ({
       setActiveView={setActiveView}
       scope={__viewportScope}
     >
-      <div role='region' aria-live='polite' {...props} className={mx('inline-full overflow-hidden', classNames)}>
+      <div role='region' aria-live='polite' {...props} className={mx('w-full overflow-hidden', classNames)}>
         {children}
       </div>
     </ViewportProvider>
@@ -105,7 +105,7 @@ const ViewportView = forwardRef<HTMLDivElement, ViewportScopedProps<ViewportView
       <section
         {...props}
         {...(!isActive && { 'aria-hidden': true })}
-        className={mx('min-inline-0 flex-1 flex flex-col', isActive ? 'order-2' : 'order-4 invisible', classNames)}
+        className={mx('min-w-0 flex-1 flex flex-col', isActive ? 'order-2' : 'order-4 invisible', classNames)}
         ref={ref}
       >
         {children}

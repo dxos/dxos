@@ -23,7 +23,7 @@ export const TreeItemToggle = memo(
           variant='ghost'
           density='fine'
           classNames={[
-            'block-full inline-6 px-0',
+            'h-full w-6 px-0',
             '[&_svg]:transition-[transform] [&_svg]:duration-200',
             open && '[&_svg]:rotate-90',
             hidden ? 'hidden' : !isBranch && 'invisible',

@@ -45,7 +45,7 @@ export const MessageRoot = forwardRef<HTMLDivElement, MessageRootProps>(
             />
             {continues && <div role='none' className='w-px grow bg-separator' />}
           </div>
-          <div role='none' className='py-1 min-inline-0'>
+          <div role='none' className='py-1 min-w-0'>
             {children}
           </div>
         </div>

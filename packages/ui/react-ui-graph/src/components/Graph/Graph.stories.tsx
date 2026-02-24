@@ -206,7 +206,7 @@ const DefaultStory = ({
 
   return (
     <Popover.Root open={!!popover} onOpenChange={(state) => !state && setPopover(undefined)}>
-      <div className={mx('block-full inline-full grid divide-x divide-separator', debug && 'grid-cols-[1fr_30rem]')}>
+      <div className={mx('h-full w-full grid divide-x divide-separator', debug && 'grid-cols-[1fr_30rem]')}>
         <SVG.Root ref={context}>
           <SVG.Markers />
           {grid && <SVG.Grid {...(typeof grid === 'boolean' ? { axis: grid } : grid)} />}
@@ -263,7 +263,7 @@ const DefaultStory = ({
           <Card.Root>
             <SyntaxHighlighter
               language='json'
-              classNames='text-xs mlb-card-padding pli-card-padding bg-transparent'
+              classNames='text-xs my-card-padding px-card-padding bg-transparent'
               code={JSON.stringify(popover, null, 2)}
             />
           </Card.Root>

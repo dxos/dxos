@@ -58,7 +58,7 @@ export const PickerButton = ({
         </DropdownMenu.Trigger>
       </Tooltip.Trigger>
       <DropdownMenu.Portal>
-        <DropdownMenu.Content side='bottom' classNames='!inline-min'>
+        <DropdownMenu.Content side='bottom' classNames='!w-min'>
           <DropdownMenu.Viewport classNames='grid grid-cols-[repeat(6,min-content)]'>
             {values.map((_value) => {
               return (

@@ -26,7 +26,7 @@ export const DeviceList = ({
   const { t } = useTranslation(translationKey);
   return (
     <div role='none' className='p-1'>
-      <h2 className={mx(descriptionText, 'text-center mbs-2')}>{t('devices heading')}</h2>
+      <h2 className={mx(descriptionText, 'text-center mt-2')}>{t('devices heading')}</h2>
       {devices.length > 0 && (
         <List>
           {devices.map((device: Device) => {
@@ -43,7 +43,7 @@ export const DeviceList = ({
       )}
       <Button
         variant='ghost'
-        classNames='justify-start gap-2 pl-0 pr-3 inline-full'
+        classNames='justify-start gap-2 pl-0 pr-3 w-full'
         data-testid='devices-panel.create-invitation'
         onClick={onClickAdd}
       >

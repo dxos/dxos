@@ -41,8 +41,8 @@ export const StackItemHeading = ({
         separateOnScroll
           ? 'border-transparent [[data-scroll-separator="true"]_&]:border-subdued-separator'
           : 'border-subdued-separator',
-        orientation === 'horizontal' ? 'block-[--rail-size]' : 'inline-[--rail-size] flex-col',
-        orientation === 'horizontal' ? 'border-be' : 'border-ie',
+        orientation === 'horizontal' ? 'h-(--rail-size)' : 'w-(--rail-size) flex-col',
+        orientation === 'horizontal' ? 'border-b' : 'border-e',
         classNames,
       )}
     >
@@ -53,7 +53,7 @@ export const StackItemHeading = ({
 
 export const StackItemHeadingStickyContent = ({ children }: PropsWithChildren<{}>) => {
   return (
-    <div role='none' className='sticky top-0 bg-[--sticky-bg] p-1 inline-full'>
+    <div role='none' className='sticky top-0 bg-(--sticky-bg) p-1 w-full'>
       {children}
     </div>
   );
@@ -70,7 +70,7 @@ export const StackItemHeadingLabel = forwardRef<HTMLHeadingElement, StackItemHea
         {...props}
         data-attention={((related && isRelated) || hasAttention || isAncestor).toString()}
         className={mx(
-          'px-1 min-inline-0 inline-0 grow truncate font-medium text-base-text data-[attention=true]:text-accent-text self-center',
+          'px-1 min-w-0 w-0 grow truncate font-medium text-base-text data-[attention=true]:text-accent-text self-center',
           classNames,
         )}
         ref={forwardedRef}

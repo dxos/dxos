@@ -29,12 +29,12 @@ export const TasksModule = ({ space }: ComponentProps) => {
 
   return (
     <>
-      <Toolbar.Root classNames='border-be border-subdued-separator'>
+      <Toolbar.Root classNames='border-b border-subdued-separator'>
         <h2>{Obj.getLabel(document)}</h2>
       </Toolbar.Root>
       <EditorContent
         id={document.id}
-        classNames='block-full p-2 overflow-hidden'
+        classNames='h-full p-2 overflow-hidden'
         extensions={[
           createThemeExtensions({ themeMode }),
           createDataExtensions({ id: document.id, text: createDocAccessor(document.content.target, ['content']) }),

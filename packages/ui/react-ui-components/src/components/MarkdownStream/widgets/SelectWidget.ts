@@ -24,7 +24,7 @@ export class SelectWidget extends WidgetType {
   override toDOM() {
     const buttons = this.options.map((option) =>
       Domino.of('button')
-        .classNames('dx-button inline-block max-inline-[100cqi]')
+        .classNames('dx-button inline-block max-w-[100cqi]')
         .attributes({ 'data-action': 'submit', 'data-value': option, 'data-density': 'fine' })
         .text(option),
     );

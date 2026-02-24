@@ -152,12 +152,12 @@ GridContent.displayName = GRID_CONTENT_NAME;
 // Fragments
 //
 
-// NOTE(Zan): These fragments add border to inline-end and block-end of the grid using pseudo-elements.
+// NOTE(Zan): These fragments add border to w-end and h-end of the grid using pseudo-elements.
 // These are offset by 1px to avoid double borders in planks.
 const gridSeparatorInlineEnd =
-  '[&>.dx-grid]:relative [&>.dx-grid]:after:absolute [&>.dx-grid]:after:inset-block-0 [&>.dx-grid]:after:-right-px [&>.dx-grid]:after:w-px [&>.dx-grid]:after:bg-subdued-separator';
+  '[&>.dx-grid]:relative [&>.dx-grid]:after:absolute [&>.dx-grid]:after:inset-y-0 [&>.dx-grid]:after:-right-px [&>.dx-grid]:after:w-px [&>.dx-grid]:after:bg-subdued-separator';
 const gridSeparatorBlockEnd =
-  '[&>.dx-grid]:relative [&>.dx-grid]:before:absolute [&>.dx-grid]:before:inset-x-0 [&>.dx-grid]:before:-bottom-px [&>.dx-grid]:before:block-px [&>.dx-grid]:before:bg-subdued-separator';
+  '[&>.dx-grid]:relative [&>.dx-grid]:before:absolute [&>.dx-grid]:before:inset-x-0 [&>.dx-grid]:before:-bottom-px [&>.dx-grid]:before:h-px [&>.dx-grid]:before:bg-subdued-separator';
 
 //
 // Exports

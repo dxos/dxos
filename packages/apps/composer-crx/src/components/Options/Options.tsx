@@ -66,7 +66,7 @@ export const Options = () => {
             <h1 className='text-[64px] poiret-one-regular'>{t('composer.title')}</h1>
           </div>
           <div className='flex flex-col justify-start items-end'>
-            <div className='flex items-center gap-2 mbs-4'>
+            <div className='flex items-center gap-2 mt-4'>
               <span className='text-subdued'>Powered by</span>
               <a
                 target='_blank'

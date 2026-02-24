@@ -87,7 +87,7 @@ export const BoardCell = ({ classNames, children, item, layout, draggable: isDra
           />
         )}
       </Card.Toolbar>
-      <div role='none' {...{ inert: true }} className='pointer-events-none min-block-0 min-inline-0'>
+      <div role='none' {...{ inert: true }} className='pointer-events-none min-h-0 min-w-0'>
         {children}
       </div>
     </Card.Root>

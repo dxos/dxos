@@ -6,7 +6,7 @@
 @import '@fontsource-variable/jetbrains-mono/wght.css';
 @import '@fontsource/poiret-one';
 
-@layer utilities {
+@layer dx-components {
   /* Font weights & `italic` handling */
   .not-italic {
     font-variation-settings:

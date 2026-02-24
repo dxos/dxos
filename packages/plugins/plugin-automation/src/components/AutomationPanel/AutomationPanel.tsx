@@ -25,7 +25,7 @@ import { isNonNullable } from '@dxos/util';
 import { meta } from '../../meta';
 import { TriggerEditor, type TriggerEditorProps } from '../TriggerEditor';
 
-const grid = 'grid grid-cols-[40px_1fr_32px_32px] min-block-[2.5rem]';
+const grid = 'grid grid-cols-[40px_1fr_32px_32px] min-h-[2.5rem]';
 
 export type AutomationPanelProps = {
   space: Space;
@@ -128,7 +128,7 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
           getId={(field) => field.id}
         >
           {({ items: filteredTriggers }) => (
-            <div role='list' className='flex flex-col inline-full'>
+            <div role='list' className='flex flex-col w-full'>
               {filteredTriggers?.map((trigger) => (
                 <TriggerListItem
                   key={trigger.id}
@@ -226,7 +226,7 @@ const TriggerListItem = ({
       </Input.Root>
 
       <div className={'flex'}>
-        <List.ItemTitle classNames='px-1 cursor-pointer inline-0 shrink truncate' onClick={handleSelect}>
+        <List.ItemTitle classNames='px-1 cursor-pointer w-0 shrink truncate' onClick={handleSelect}>
           {getFunctionName(functions, trigger) ?? '∅'}
           {cursor && <div className='text-xs text-description truncate ml-4'>Position: {cursor}</div>}
         </List.ItemTitle>

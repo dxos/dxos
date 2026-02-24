@@ -81,9 +81,9 @@ export const MasterDetailTable = ({
   );
 
   return (
-    <div className={mx('block-full divide-y divide-separator', gridLayout)}>
+    <div className={mx('h-full divide-y divide-separator', gridLayout)}>
       <DynamicTable properties={properties} rows={data} features={features} onRowClick={handleRowClicked} />
-      <div className={mx('overflow-auto text-sm', detailsPosition === 'right' && 'border-separator border-is')}>
+      <div className={mx('overflow-auto text-sm', detailsPosition === 'right' && 'border-separator border-s')}>
         {selected ? (
           isLoading ? (
             <p className={mx('font-mono text-xs p-1')}>Loading details...</p>

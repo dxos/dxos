@@ -49,7 +49,7 @@ export const ProgressBar = ({
 
   return (
     <AnimatePresence>
-      <div role='none' className={mx('flex items-center inline-full block-[32px] overflow-hidden', classNames)} ref={ref}>
+      <div role='none' className={mx('flex items-center w-full h-[32px] overflow-hidden', classNames)} ref={ref}>
         <div className='flex'>
           {visibleNodes?.map((node, i) => (
             <Node
@@ -147,7 +147,7 @@ const Node = ({ state = 'open', selected, classes, options = defaultOptions, onC
               width: width - radius,
             },
           }}
-          className={mx('absolute left-0 border-be border-subdued-separator box-border', state === 'closed' && 'hidden')}
+          className={mx('absolute left-0 border-b border-subdued-separator box-border', state === 'closed' && 'hidden')}
         />
         <motion.div
           transition={{
@@ -180,7 +180,7 @@ const Node = ({ state = 'open', selected, classes, options = defaultOptions, onC
             onClick={onClick}
           />
           {state === 'active' && (
-            <Notch classNames={['absolute inset-0 inline-full block-full animate-spin', classes?.active, '!bg-transparent']} />
+            <Notch classNames={['absolute inset-0 w-full h-full animate-spin', classes?.active, '!bg-transparent']} />
           )}
         </motion.div>
       </div>

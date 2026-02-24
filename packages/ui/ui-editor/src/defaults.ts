@@ -12,7 +12,7 @@ import { type ThemeExtensionsOptions } from './extensions';
  * 50rem = 800px. Maximum content width for solo mode.
  * NOTE: Max width - 4rem = 2rem left/right margin (or 2rem gutter plus 1rem left/right margin).
  */
-export const editorWidth = '!mx-auto inline-full max-inline-[min(50rem,100%-4rem)]';
+export const editorWidth = '!mx-auto w-full max-w-[min(50rem,100%-4rem)]';
 
 export const editorSlots: ThemeExtensionsOptions['slots'] = {
   scroll: {
@@ -30,5 +30,5 @@ export const editorWithToolbarLayout =
 export const stackItemContentEditorClassNames = (role?: string) =>
   mx(
     'p-0.5 dx-focus-ring-inset attention-surface data-[toolbar=disabled]:pt-2',
-    role === 'section' ? '[&_.cm-scroller]:overflow-hidden [&_.cm-scroller]:min-block-24' : 'min-block-0',
+    role === 'section' ? '[&_.cm-scroller]:overflow-hidden [&_.cm-scroller]:min-h-24' : 'min-h-0',
   );

@@ -8,7 +8,7 @@ import { mx } from '@dxos/ui-theme';
 
 export const Tree: FC<{ data?: object }> = ({ data }) => {
   return (
-    <div className='flex inline-full py-2 overflow-auto'>
+    <div className='flex w-full py-2 overflow-auto'>
       <Node data={data} root />
     </div>
   );

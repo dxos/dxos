@@ -105,7 +105,7 @@ const Test = () => {
 
   return (
     <>
-      <div className='mbe-4 flex gap-2'>
+      <div className='mb-4 flex gap-2'>
         <Button disabled={!!identity} onClick={handleCreateIdentity}>
           Create Identity
         </Button>

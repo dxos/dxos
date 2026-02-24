@@ -157,7 +157,7 @@ const ComboboxContent = forwardRef<HTMLDivElement, ComboboxContentProps>(
           forceMount,
         }}
         classNames={[
-          'inline-[--radix-popover-trigger-width] max-block-[--radix-popover-content-available-height] grid grid-rows-[min-content_1fr]',
+          'w-(--radix-popover-trigger-width) max-h-(--radix-popover-content-available-height) grid grid-rows-[min-content_1fr]',
           classNames,
         ]}
         id={modalId}
@@ -205,7 +205,7 @@ const ComboboxTrigger = forwardRef<HTMLButtonElement, ComboboxTriggerProps>(
             <>
               <span
                 className={mx(
-                  'font-normal text-start flex-1 min-inline-0 truncate mr-2',
+                  'font-normal text-start flex-1 min-w-0 truncate mr-2',
                   !value && staticPlaceholderText,
                 )}
               >
@@ -240,7 +240,7 @@ const ComboboxInput = forwardRef<HTMLInputElement, ComboboxInputProps>(({ classN
   return (
     <SearchList.Input
       {...props}
-      classNames={['m-card-chrome mb-0 inline-[calc(100%-2*var(--dx-card-chrome))]', classNames]}
+      classNames={['m-card-chrome mb-0 w-[calc(100%-2*var(--spacing-card-chrome))]', classNames]}
       ref={forwardedRef}
     />
   );
@@ -253,7 +253,7 @@ const ComboboxInput = forwardRef<HTMLInputElement, ComboboxInputProps>(({ classN
 type ComboboxListProps = SearchListViewportProps;
 
 const ComboboxList = forwardRef<HTMLDivElement, ComboboxListProps>(({ classNames, ...props }, forwardedRef) => {
-  return <SearchList.Viewport {...props} classNames={['plb-card-chrome', classNames]} ref={forwardedRef} />;
+  return <SearchList.Viewport {...props} classNames={['py-card-chrome', classNames]} ref={forwardedRef} />;
 });
 
 //
@@ -282,7 +282,7 @@ const ComboboxItem = forwardRef<HTMLDivElement, ComboboxItemProps>(
       <SearchList.Item
         {...props}
         value={value}
-        classNames={['mli-card-chrome pli-card-chrome', classNames]}
+        classNames={['mx-card-chrome px-card-chrome', classNames]}
         onSelect={handleSelect}
         ref={forwardedRef}
       />

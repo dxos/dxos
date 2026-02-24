@@ -136,8 +136,8 @@ export const ResizeHandle = ({
         'group absolute flex focus-visible:outline-hidden',
         surfaceZIndex({ elevation, level: 'tooltip' }),
         orientation === 'horizontal'
-          ? 'cursor-col-resize inline-4 inset-block-0 data-[side="inline-end"]:end-0 data-[side="inline-end"]:before:end-0 data-[side="inline-start"]:start-0 data-[side="inline-start"]:before:start-0 border-b-0! before:inset-block-0 before:inline-1'
-          : 'cursor-row-resize block-4 inset-x-0 data-[side="block-end"]:bottom-0 data-[side="block-end"]:before:bottom-0 data-[side="block-start"]:top-0 data-[side="block-start"]:before:top-0 border-x-0! before:inset-x-0 before:block-1',
+          ? 'cursor-col-resize w-4 inset-y-0 data-[side="w-end"]:end-0 data-[side="w-end"]:before:end-0 data-[side="w-start"]:start-0 data-[side="w-start"]:before:start-0 border-b-0! before:inset-y-0 before:w-1'
+          : 'cursor-row-resize h-4 inset-x-0 data-[side="h-end"]:bottom-0 data-[side="h-end"]:before:bottom-0 data-[side="h-start"]:top-0 data-[side="h-start"]:before:top-0 border-x-0! before:inset-x-0 before:h-1',
         orientation === 'horizontal'
           ? iconPosition === 'end'
             ? 'align-end'
@@ -159,7 +159,7 @@ export const ResizeHandle = ({
         data-side={side}
         className={mx(
           'grid place-items-center group-hover:opacity-0 group-focus-visible:opacity-0 group-active:opacity-0',
-          orientation === 'horizontal' ? 'block-[--rail-size] inline-4' : 'inline-[--rail-size] block-4',
+          orientation === 'horizontal' ? 'h-(--rail-size) w-4' : 'w-(--rail-size) h-4',
         )}
       >
         <DragHandleSignifier side={side} />
@@ -175,12 +175,12 @@ const DragHandleSignifier = ({ side }: Pick<ResizeHandleProps, 'side'>) => {
       viewBox='0 0 256 256'
       fill='currentColor'
       className={mx(
-        'shrink-0 block-4 inline-4 text-un-accent',
-        side === 'block-end'
+        'shrink-0 h-4 w-4 text-un-accent',
+        side === 'inline-end'
           ? 'rotate-90'
-          : side === 'block-start'
+          : side === 'inline-start'
             ? '-rotate-90'
-            : side === 'inline-start' && 'rotate-180',
+            : side === 'block-start' && 'rotate-180',
       )}
     >
       {/* two pips: <path d='M256,120c-8.8,0-16-7.2-16-16v-56c0-8.8,7.2-16,16-16v88Z' />

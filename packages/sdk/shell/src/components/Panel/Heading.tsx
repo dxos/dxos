@@ -16,7 +16,7 @@ export type PanelHeadingProps = PropsWithChildren<{
 export const Heading = forwardRef<HTMLDivElement, PanelHeadingProps>(
   ({ titleId, title, titleSrOnly, children, corner }, forwardedRef) => {
     return (
-      <div role='none' className='pbe-2 relative' ref={forwardedRef}>
+      <div role='none' className='pb-2 relative' ref={forwardedRef}>
         {corner}
         <h1
           {...(!titleSrOnly && { id: titleId })}

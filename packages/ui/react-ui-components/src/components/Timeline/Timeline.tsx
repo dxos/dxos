@@ -201,12 +201,12 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
     return (
       <ScrollContainer.Root pin ref={scrollerRef}>
         <ScrollContainer.Viewport
-          classNames={['flex flex-col inline-full outline-hidden!', classNames]}
+          classNames={['flex flex-col w-full outline-hidden!', classNames]}
           tabIndex={0}
           ref={containerRef}
         >
           {commits.length < 1 ? (
-            <p className={mx(descriptionText, 'p-trimMd')}>{t('no commits message')}</p>
+            <p className={mx(descriptionText, 'p-trim-md')}>{t('no commits message')}</p>
           ) : (
             commits.map((commit, index) => {
               // Skip branches that are not whitelisted.
@@ -239,7 +239,7 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
                     />
                   </div>
                   {showIcon && (
-                    <div className='flex shrink-0 inline-6 justify-center'>
+                    <div className='flex shrink-0 w-6 justify-center'>
                       {commit.icon && (
                         <Icon icon={commit.icon} classNames={mx(commit.level && levelColors[commit.level])} size={4} />
                       )}

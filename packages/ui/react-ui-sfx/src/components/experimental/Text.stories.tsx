@@ -16,7 +16,7 @@ const Text = ({ children, initial = 'open' }: PropsWithChildren<{ initial?: stri
   };
 
   return (
-    <div className='flex flex-col gap-20 inline-full'>
+    <div className='flex flex-col gap-20 w-full'>
       <div className='flex justify-center text-4xl p-2 rounded-sm border border-separator'>
         <motion.div className='px-2 text-neutral-500'>{'{'}</motion.div>
         <motion.div

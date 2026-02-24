@@ -18,6 +18,12 @@
 @plugin 'tailwindcss-radix';
 
 /**
+ * Class-based dark mode.
+ * The `.dark` class on an ancestor toggles `dark:` utilities.
+ */
+@variant dark (&:where(.dark, .dark *));
+
+/**
  * Custom variants for pointer/hover media queries.
  * Replaces v3 custom screens: pointer-fine, hover-hover.
  * TODO(burdon): ???

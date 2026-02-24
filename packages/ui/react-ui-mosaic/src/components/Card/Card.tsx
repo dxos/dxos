@@ -355,14 +355,14 @@ type CardActionProps = { icon?: string; label: string; actionIcon?: string; onCl
 
 const CardAction = ({ icon, actionIcon = 'ph--arrow-right--regular', label, onClick }: CardActionProps) => {
   return (
-    <div role='none' className='inline-full px-1'>
+    <div role='none' className='w-full px-1'>
       <Button
         variant='ghost'
-        classNames={mx(styles.grid_3, 'p-0! inline-full text-start overflow-hidden')}
+        classNames={mx(styles.grid_3, 'p-0! w-full text-start overflow-hidden')}
         onClick={onClick}
       >
         {icon ? <CardIcon classNames='text-subdued' icon={icon} /> : <div />}
-        <span className={mx('min-inline-0 flex-1 truncate', !actionIcon && 'col-span-2')}>{label}</span>
+        <span className={mx('min-w-0 flex-1 truncate', !actionIcon && 'col-span-2')}>{label}</span>
         {actionIcon && <CardIcon icon={actionIcon} />}
       </Button>
     </div>
@@ -377,16 +377,16 @@ type CardLinkProps = { label: string; href: string };
 
 const CardLink = ({ label, href }: CardLinkProps) => {
   return (
-    <div role='none' className='inline-full px-1'>
+    <div role='none' className='w-full px-1'>
       <a
-        className={mx(styles.grid_3, 'group p-0! dx-button dx-focus-ring min-block-1!')}
+        className={mx(styles.grid_3, 'group p-0! dx-button dx-focus-ring min-h-1!')}
         data-variant='ghost'
         href={href}
         target='_blank'
         rel='noreferrer'
       >
         <CardIcon classNames='text-subdued' icon='ph--link--regular' />
-        <span className={mx('min-inline-0 flex-1 truncate')}>{label}</span>
+        <span className={mx('min-w-0 flex-1 truncate')}>{label}</span>
         <CardIcon classNames='invisible group-hover:visible' icon='ph--arrow-square-out--regular' />
       </a>
     </div>
@@ -407,7 +407,7 @@ const CardIconBlock = ({
     <div
       {...props}
       role={role}
-      className={mx('grid block-[var(--rail-item)] inline-[var(--rail-item)] place-items-center', classNames)}
+      className={mx('grid h-[var(--rail-item)] w-[var(--rail-item)] place-items-center', classNames)}
     >
       {children}
     </div>

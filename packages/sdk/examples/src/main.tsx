@@ -131,7 +131,7 @@ const main = async () => {
 const fallback = () => {
   root.render(
     <ThemeProvider tx={defaultTx}>
-      <div className='flex block-[100dvh] justify-center items-center'>
+      <div className='flex h-[100dvh] justify-center items-center'>
         <Status indeterminate aria-label='Initializing' />
       </div>
     </ThemeProvider>,

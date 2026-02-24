@@ -17,7 +17,7 @@ export const ResearchInputModule = ({ space }: ComponentProps) => {
   const queue = useQueue(researchInput?.queue.dxn);
 
   return (
-    <ul className='flex flex-col gap-4 p-4 block-full overflow-y-auto'>
+    <ul className='flex flex-col gap-4 p-4 h-full overflow-y-auto'>
       {queue?.objects.map((object) => (
         <li key={object.id}>
           <DebugCard object={object} />

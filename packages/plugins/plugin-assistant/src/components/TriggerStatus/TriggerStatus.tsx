@@ -121,7 +121,7 @@ const TriggerStatusPopover = ({
   const { t } = useTranslation(meta.id);
 
   return (
-    <div className='min-inline-[240px] p-2 space-y-3'>
+    <div className='min-w-[240px] p-2 space-y-3'>
       {/* Runtime Toggle */}
       <Settings.ItemInput title={t('trigger runtime label')} description={t('trigger runtime description')}>
         <Input.Switch classNames='justify-self-end' checked={isRunning} onCheckedChange={onToggle} />

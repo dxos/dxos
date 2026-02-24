@@ -41,7 +41,7 @@ export const ChessArticle = ({ role, subject: game }: ChessArticleProps) => {
         </Toolbar.Root>
         <div
           className={mx(
-            'grid block-full inline-full gap-2',
+            'grid h-full w-full gap-2',
             open && '@3xl:grid-cols-[1fr_320px]',
             role === 'section' && 'aspect-square',
             role === 'section' && open && '@3xl:aspect-auto',

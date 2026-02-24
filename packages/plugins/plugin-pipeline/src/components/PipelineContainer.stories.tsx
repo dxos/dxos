@@ -39,9 +39,9 @@ const DefaultStory = () => {
   }
 
   return (
-    <Stack orientation='horizontal' size='split' rail={false} classNames='px-0 block-full'>
+    <Stack orientation='horizontal' size='split' rail={false} classNames='px-0 h-full'>
       <PipelineContainer role='article' subject={pipeline} />
-      <PipelineObjectSettings pipeline={pipeline} classNames='border-is border-separator' />
+      <PipelineObjectSettings pipeline={pipeline} classNames='border-s border-separator' />
     </Stack>
   );
 };

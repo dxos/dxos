@@ -61,14 +61,14 @@ export const TemplateForm = ({ id, template, commandEditable = true, onChange }:
   );
 
   return (
-    <div className={mx('flex flex-col inline-full overflow-hidden gap-4', groupBorder)}>
+    <div className={mx('flex flex-col w-full overflow-hidden gap-4', groupBorder)}>
       {/* {commandEditable && (
         <div className='flex items-center pl-4'>
           <span className='text-neutral-500'>/</span>
           <Input.Root>
             <Input.TextInput
               placeholder={t('command placeholder')}
-              classNames='inline-full bg-transparent m-2'
+              classNames='w-full bg-transparent m-2'
               value={template.command ?? ''}
               onChange={(event) => {
                 onChange?.((t) => {
@@ -93,7 +93,7 @@ export const TemplateForm = ({ id, template, commandEditable = true, onChange }:
                   value={input.kind}
                   onValueChange={(kind) => handleInputKindChange(input.name, kind as Template.InputKind)}
                 >
-                  <Select.TriggerButton placeholder='Type' classNames='inline-full' />
+                  <Select.TriggerButton placeholder='Type' classNames='w-full' />
                   <Select.Portal>
                     <Select.Content>
                       <Select.Viewport>
@@ -115,7 +115,7 @@ export const TemplateForm = ({ id, template, commandEditable = true, onChange }:
                     <Input.Root>
                       <Input.TextInput
                         placeholder={t('command placeholder')}
-                        classNames='inline-full bg-transparent'
+                        classNames='w-full bg-transparent'
                         value={input.default ?? ''}
                         onChange={(event) => handleInputDefaultChange(input.name, event.target.value)}
                       />

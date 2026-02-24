@@ -49,7 +49,7 @@ export const Border: Story = {
 
 export const Column: Story = {
   render: () => (
-    <div className='absolute inset-0 flex block-full justify-center'>
+    <div className='absolute inset-0 flex h-full justify-center'>
       <Calendar.Root>
         <Calendar.Viewport>
           <Calendar.Toolbar />
@@ -62,10 +62,10 @@ export const Column: Story = {
 
 export const Mobile: Story = {
   render: () => (
-    <div className='absolute inset-0 flex block-full justify-center'>
-      <div className='flex block-full inline-[400px] justify-center'>
+    <div className='absolute inset-0 flex h-full justify-center'>
+      <div className='flex h-full w-[400px] justify-center'>
         <Calendar.Root>
-          <Calendar.Viewport classNames='inline-full'>
+          <Calendar.Viewport classNames='w-full'>
             <Calendar.Toolbar />
             <Calendar.Grid />
           </Calendar.Viewport>

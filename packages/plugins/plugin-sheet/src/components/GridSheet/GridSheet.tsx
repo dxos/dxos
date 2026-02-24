@@ -317,8 +317,7 @@ export const GridSheet = () => {
   useSelectThreadOnCellFocus();
 
   return (
-    // TODO(thure): Why are Table’s and Sheet’s editor boxes off by 1px?
-    <div role='none' className='relative min-block-0 [&_.cm-editor]:!border-lb [&_.cm-editor]:!border-transparent'>
+    <div role='none' className='relative min-h-0'>
       <GridCellEditor getCellContent={getCellContent} extensions={extensions} onBlur={handleBlur} />
       <Grid.Content
         initialCells={initialCells}

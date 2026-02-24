@@ -39,7 +39,7 @@ export const VersionNumber = () => {
         <Popover.Content
           side='top'
           role='message'
-          classNames='z-[12] bg-warning-500 max-inline-[min(calc(100vw-16px),40ch)]'
+          classNames='z-[12] bg-warning-500 max-w-[min(calc(100vw-16px),40ch)]'
         >
           <Message.Root valence='warning' classNames='rounded-be-none p-5'>
             <Message.Title>{t('warning title')}</Message.Title>

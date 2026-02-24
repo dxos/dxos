@@ -61,9 +61,9 @@ const authorClasses = 'font-medium text-base leading-[20px]';
 const timestampClasses = 'text-xs leading-[20px] text-description pr-0 tabular-nums';
 const segmentTextClasses = 'text-sm whitespace-normal hyphens-auto';
 const measureClasses = mx(
-  // NOTE(thure): The `inline-start` value must equal `timestampColumnWidth` plus grid’s gap (1px)
+  // NOTE(thure): The `w-start` value must equal `timestampColumnWidth` plus grid’s gap (1px)
   'absolute start-[69px] end-0 invisible z-[-1] border',
-  'px-[--dx-grid-cell-padding-inline] py-[--dx-grid-cell-padding-block] leading-[20px]',
+  'px-(--dx-grid-cell-padding-inline) py-(--dx-grid-cell-padding-block) leading-[20px]',
   segmentTextClasses,
 );
 
@@ -229,7 +229,7 @@ export const Transcript: FC<TranscriptViewProps> = ({ classNames, blocks, attend
   }, [dxGrid, autoScroll]);
 
   return (
-    <div role='none' className={mx('relative min-block-0', classNames)}>
+    <div role='none' className={mx('relative min-h-0', classNames)}>
       <Grid.Root id={`${attendableId}--transcript`}>
         <Grid.Content
           limitColumns={2}
@@ -238,7 +238,7 @@ export const Transcript: FC<TranscriptViewProps> = ({ classNames, blocks, attend
           rows={rows}
           rowDefault={rowDefault}
           onWheel={handleWheel}
-          className='[--dx-grid-base:var(--color-base-surface)] [--dx-grid-lines:var(--color-base-surface)] [&_.dx-grid]:min-block-0 [&_.dx-grid]:min-inline-0 [&_.dx-grid]:select-auto'
+          className='[--dx-grid-base:var(--color-base-surface)] [--dx-grid-lines:var(--color-base-surface)] [&_.dx-grid]:min-h-0 [&_.dx-grid]:min-w-0 [&_.dx-grid]:select-auto'
           ref={setDxGrid}
         />
       </Grid.Root>

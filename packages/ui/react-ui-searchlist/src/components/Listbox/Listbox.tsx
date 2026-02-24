@@ -100,7 +100,7 @@ const ListboxRoot = forwardRef<HTMLUListElement, ListboxRootProps>(
         <ul
           role='listbox'
           {...rootProps}
-          className={mx('inline-full p-card-chrome', classNames)}
+          className={mx('w-full p-card-chrome', classNames)}
           ref={rootRef}
           {...arrowGroup}
         >

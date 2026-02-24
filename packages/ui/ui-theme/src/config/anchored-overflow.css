@@ -2,7 +2,7 @@
  *
  */
  
-@layer utilities {
+@layer dx-components {
   .overflow-anchored * {
     overflow-anchor: none;
   }

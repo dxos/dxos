@@ -81,7 +81,7 @@ const DefaultStory = () => {
   };
 
   return (
-    <div className='flex flex-col inline-full'>
+    <div className='flex flex-col w-full'>
       <Toolbar.Root>
         <Button onClick={handleReset}>Reset</Button>
         <Button onClick={handleReload}>Reload</Button>

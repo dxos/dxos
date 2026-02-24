@@ -89,7 +89,7 @@ export const SearchDialog = ({ pivotId }: SearchDialogProps) => {
     <Dialog.Content>
       <Dialog.Title>{t('search dialog title')}</Dialog.Title>
       <SearchList.Root onSearch={handleSearch}>
-        <SearchList.Content classNames='max-block-[24rem] overflow-auto'>
+        <SearchList.Content classNames='max-h-[24rem] overflow-auto'>
           <SearchList.Input placeholder={t('search placeholder')} />
           <SearchList.Viewport>
             {queryString.length > 0 ? (

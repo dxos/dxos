@@ -81,13 +81,13 @@ export const Default: Story = {
   args: {
     active: true,
     debug: true,
-    classNames: 'inline-[256px] block-[256px]',
+    classNames: 'w-[256px] h-[256px]',
   },
 };
 
 export const Large: Story = {
   args: {
     active: true,
-    classNames: 'inline-[512px] block-[512px]',
+    classNames: 'w-[512px] h-[512px]',
   },
 };

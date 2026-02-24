@@ -198,13 +198,13 @@ export type ThemeExtensionsOptions = {
 
 export const grow: ThemeExtensionsOptions['slots'] = {
   editor: {
-    className: 'block-full inline-full',
+    className: 'h-full w-full',
   },
 } as const;
 
 export const fullWidth: ThemeExtensionsOptions['slots'] = {
   editor: {
-    className: 'inline-full',
+    className: 'w-full',
   },
 } as const;
 

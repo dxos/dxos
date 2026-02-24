@@ -2,7 +2,7 @@
  * Surfaces
  */
 
-@layer utilities {
+@layer dx-components {
   /* TODO(burdon): Are these used as markers; e.g., to change inputSurface? */
 
   .base-surface {

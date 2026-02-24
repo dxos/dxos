@@ -27,7 +27,7 @@ export const Json = forwardRef<HTMLDivElement, JsonProps>((props, forwardedRef) 
   return (
     <SyntaxHighlighter
       language='json'
-      classNames={['inline-full overflow-y-auto text-sm', classNames]}
+      classNames={['w-full overflow-y-auto text-sm', classNames]}
       data-testid={testId}
       ref={forwardedRef}
     >
@@ -57,7 +57,7 @@ export const JsonFilter = forwardRef<HTMLDivElement, JsonProps>(
     }, [initialData, text]); // TODO(burdon): Need structural diff.
 
     return (
-      <div className='flex flex-col block-full overflow-hidden' ref={forwardedRef}>
+      <div className='flex flex-col h-full overflow-hidden' ref={forwardedRef}>
         <Input.Root validationValence={error ? 'error' : 'success'}>
           <Input.TextInput
             classNames={['p-1 px-2 font-mono', error && 'border-rose-500']}
@@ -69,7 +69,7 @@ export const JsonFilter = forwardRef<HTMLDivElement, JsonProps>(
         </Input.Root>
         <SyntaxHighlighter
           language='json'
-          classNames={['inline-full overflow-y-auto text-sm', classNames]}
+          classNames={['w-full overflow-y-auto text-sm', classNames]}
           data-testid={testId}
         >
           {safeStringify(data, replacer && createReplacer(replacer), 2)}

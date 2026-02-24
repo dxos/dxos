@@ -14,7 +14,7 @@
   "sideEffects": false,
   "scripts": {
     "1p-credentials": "bash -c \"op inject -i '$(git rev-parse --show-toplevel)/.env.1password'\"",
-    "audit-classes": "tsx scripts/audit-classes.mts",
+    "audit-classes": "pnpm --filter @dxos/ui-theme audit-classes",
     "beast": "beast docs",
     "build": "moon run :build",
     "changed-packages": "scripts/changed",

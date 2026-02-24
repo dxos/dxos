@@ -93,7 +93,7 @@ const CardStackStory = () => {
   }, []);
 
   return (
-    <CardStack.Root classNames='inline-96'>
+    <CardStack.Root classNames='w-96'>
       <CardStack.Content footer>
         <CardStack.Stack id='story column' onRearrange={handleRearrange} itemsCount={column.length}>
           {column.map((card, cardIndex, cardsArray) => {
@@ -148,7 +148,7 @@ const CardStackStory = () => {
         </CardStack.Stack>
 
         <CardStack.Footer>
-          <IconButton icon='ph--plus--regular' label='Add card' onClick={handleAddCard} classNames='inline-full' />
+          <IconButton icon='ph--plus--regular' label='Add card' onClick={handleAddCard} classNames='w-full' />
         </CardStack.Footer>
 
         <CardStack.Heading>{faker.company.name()}</CardStack.Heading>

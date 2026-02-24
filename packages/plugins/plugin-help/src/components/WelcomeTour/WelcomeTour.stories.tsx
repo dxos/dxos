@@ -23,7 +23,7 @@ const App = () => {
   };
 
   return (
-    <div className='flex flex-col block-full p-4 space-y-8'>
+    <div className='flex flex-col h-full p-4 space-y-8'>
       <div className='flex items-center gap-2 py-2'>
         <Button data-joyride='basic/1' onClick={() => start()}>
           Start

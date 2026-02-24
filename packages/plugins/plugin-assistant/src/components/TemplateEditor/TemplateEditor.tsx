@@ -66,5 +66,5 @@ export const TemplateEditor = ({ id, classNames, template, lineNumbers = true }:
     };
   }, [themeMode, template.source?.target, lineNumbers]);
 
-  return <div ref={parentRef} className={mx('block-full overflow-hidden', classNames)} />;
+  return <div ref={parentRef} className={mx('h-full overflow-hidden', classNames)} />;
 };

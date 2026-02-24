@@ -58,7 +58,7 @@ export const PluginItem = ({
       labelId={labelId}
       data-testid={`pluginList.${id}`}
       aria-describedby={descriptionId}
-      classNames={mx(gridCols, 'block-[12rem] inline-full gap-3 pr-2 border border-separator rounded-md overflow-hidden')}
+      classNames={mx(gridCols, 'h-[12rem] w-full gap-3 pr-2 border border-separator rounded-md overflow-hidden')}
     >
       <div className={mx(gridRows, 'justify-center rounded-l-md', styles.bg)}>
         <div />
@@ -71,7 +71,7 @@ export const PluginItem = ({
         </div>
 
         <div>
-          <p className={mx(descriptionText, 'line-clamp-4 min-inline-0')}>{description}</p>
+          <p className={mx(descriptionText, 'line-clamp-4 min-w-0')}>{description}</p>
         </div>
 
         <div className='flex -ml-0.5 overflow-x-auto scrollbar-none'>

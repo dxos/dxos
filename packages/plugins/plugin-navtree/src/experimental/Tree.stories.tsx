@@ -183,7 +183,7 @@ const Sidebar = ({ mutate }: { mutate?: boolean }) => {
 const meta = {
   title: 'plugins/plugin-navtree/experimental/Tree',
   component: Tree,
-  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'inline-[20rem]' })],
+  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'w-[20rem]' })],
   parameters: {
     layout: 'fullscreen',
   },

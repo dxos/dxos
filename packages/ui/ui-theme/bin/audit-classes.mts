@@ -12,42 +12,45 @@
  *   - UNKNOWN:   not defined anywhere in ui-theme or Tailwind core
  *
  * Usage:
- *   pnpm tsx scripts/audit-classes.mts [options]
+ *   pnpm -w audit-classes [options]
  *
  * Options:
  *   --path <glob>       Restrict scan to files matching this pattern (relative to root)
  *   --class <name>      Check a single class name and exit
  *   --show-css          Print the generated CSS for each valid class (debug)
- *   --no-exit-code      Do not exit with code 1 when findings are present
- *   --all-extensions    Also scan .ts and .js files (higher false-positive rate)
+ *   --exit-code         Exit with code 1 when findings are present
+ *   --extensions <list>  Comma-separated file extensions to scan (default: tsx,jsx,css)
+ *   --verbose            Show file locations for each finding
  *   --top <n>           Show only the top N unknown classes (default: 50)
  */
 
 import { __unstable__loadDesignSystem } from 'tailwindcss';
 import { Scanner } from '@tailwindcss/oxide';
+import { execSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
+
 // minimatch is a transitive CJS dependency — load via createRequire (ESM scope).
 const _req = createRequire(import.meta.url);
 const minimatch = _req('minimatch') as (path: string, pattern: string, opts?: object) => boolean;
 
-// ── Paths ─────────────────────────────────────────────────────────────────────
+//
+// Paths
+//
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const ROOT = path.resolve(__dirname, '..');
-const THEME_CSS_PATH = path.join(ROOT, 'packages/ui/ui-theme/src/theme.css');
-const STYLES_DIR = path.join(ROOT, 'packages/ui/ui-theme/src/config');
+const ROOT = execSync('git rev-parse --show-toplevel', { encoding: 'utf-8' }).trim();
+const THEME_CSS_PATH = path.resolve(__dirname, '../src/theme.css');
+const STYLES_DIR = path.resolve(__dirname, '../src/config');
 const TWIGNORE_PATH = path.join(ROOT, '.twignore');
 
 // Load ignore patterns from `.twignore` in the project root.
-// Each non-empty, non-comment line is treated as a glob pattern matched
-// against file paths relative to the project root.
+// Each non-empty, non-comment line is treated as a glob pattern matched against file paths relative to the project root.
 //
 // Example .twignore:
-//   # Ignore all geo data files
-//   packages/ui/react-ui-geo/data/**
+//   # Ignore test data
 //   packages/**/testing/**
 //   **/*.test.tsx
 function loadIgnorePatterns(): string[] {
@@ -68,26 +71,23 @@ function isIgnored(relPath: string, patterns: string[]): boolean {
 
 // Source globs that are scanned when no --path option is given.
 // Default: only TSX/JSX (React components) and CSS (@apply directives).
-// Pure .ts files generate too much noise (type annotations, identifiers, comments).
-// Use --all-extensions to include .ts/.js files.
-const DEFAULT_SOURCES: Array<{ base: string; pattern: string; negated: boolean }> = [
-  { base: path.join(ROOT, 'packages'), pattern: '**/*.{tsx,jsx,css}', negated: false },
-  { base: path.join(ROOT, 'packages'), pattern: '**/node_modules/**', negated: true },
-  { base: path.join(ROOT, 'packages'), pattern: '**/dist/**', negated: true },
-];
+// Use --extensions to specify custom extensions (e.g., --extensions tsx,ts,css).
+const DEFAULT_EXTENSIONS = 'tsx,jsx,css';
 
-const ALL_EXTENSIONS_SOURCES: Array<{ base: string; pattern: string; negated: boolean }> = [
-  { base: path.join(ROOT, 'packages'), pattern: '**/*.{tsx,ts,jsx,js,css}', negated: false },
-  { base: path.join(ROOT, 'packages'), pattern: '**/node_modules/**', negated: true },
-  { base: path.join(ROOT, 'packages'), pattern: '**/dist/**', negated: true },
-  { base: path.join(ROOT, 'tools'), pattern: '**/*.{tsx,ts,jsx,js}', negated: false },
-  { base: path.join(ROOT, 'tools'), pattern: '**/node_modules/**', negated: true },
-  { base: path.join(ROOT, 'tools'), pattern: '**/dist/**', negated: true },
-];
+/** Build scanner source entries for the given comma-separated extensions. */
+function buildSources(extensions: string): Array<{ base: string; pattern: string; negated: boolean }> {
+  return [
+    { base: path.join(ROOT, 'packages'), pattern: `**/*.{${extensions}}`, negated: false },
+    { base: path.join(ROOT, 'packages'), pattern: '**/node_modules/**', negated: true },
+    { base: path.join(ROOT, 'packages'), pattern: '**/dist/**', negated: true },
+  ];
+}
 
-// ── Custom-class allowlist extraction ────────────────────────────────────────
+//
+// Custom-class allowlist extraction
+//
 
-const MX_TS_PATH = path.join(ROOT, 'packages/ui/ui-theme/src/util/mx.ts');
+const MX_TS_PATH = path.resolve(__dirname, '../src/util/mx.ts');
 const PACKAGES_DIR = path.join(ROOT, 'packages');
 
 /**
@@ -163,7 +163,9 @@ function extractCustomClassNames(stylesDir: string): Set<string> {
   return classes;
 }
 
-// ── Utilities ─────────────────────────────────────────────────────────────────
+//
+// Utilities
+//
 
 /** Convert a byte offset into 1-based line/column numbers. */
 function byteOffsetToLineCol(content: string, offset: number): { line: number; col: number } {
@@ -293,6 +295,8 @@ const EXTRA_NOISE_PATTERNS: RegExp[] = [
   /^eslint-/,                    // ESLint directives in comments
   /^prettier-/,                  // Prettier directives in comments
   /^(?:react|solid|vue|angular)(-[a-z][-a-z0-9]*)+$/, // npm package name patterns
+  // CSS property names that the scanner picks up from inline styles or CSS-in-JS.
+  /^(?:z-index|font-size|font-weight|font-family|line-height|letter-spacing|text-align|text-decoration|text-transform|white-space|word-break|overflow-x|overflow-y|box-sizing|border-radius|border-collapse|border-spacing|background-color|background-image|background-size|background-position|background-repeat|object-fit|object-position|list-style|pointer-events|user-select|vertical-align|inline-size|block-size|min-width|max-width|min-height|max-height|margin-top|margin-bottom|margin-left|margin-right|padding-top|padding-bottom|padding-left|padding-right|flex-direction|flex-wrap|flex-grow|flex-shrink|flex-basis|align-items|align-self|justify-content|justify-items|grid-template|grid-column|grid-row|grid-area|grid-gap|column-gap|row-gap|transition-property|transition-duration|transition-timing|animation-name|animation-duration|transform-origin|text-overflow|will-change|touch-action|scroll-behavior|scroll-padding|overscroll-behavior|aspect-ratio|inset-inline|padding-inline|margin-inline|border-inline|inset-block|padding-block|margin-block|border-block)$/,
 ];
 
 /**
@@ -323,8 +327,6 @@ function extractApplyCandidates(
   return results;
 }
 
-// ── Types ─────────────────────────────────────────────────────────────────────
-
 interface Finding {
   file: string;
   line: number;
@@ -333,8 +335,9 @@ interface Finding {
   kind: 'unknown' | 'malformed';
 }
 
-// ── Main ──────────────────────────────────────────────────────────────────────
-
+/**
+ * Main
+ */
 async function main(): Promise<void> {
   const argv = process.argv.slice(2);
   const get = (flag: string) => {
@@ -346,11 +349,11 @@ async function main(): Promise<void> {
   const filterPath = get('--path');
   const singleClass = get('--class');
   const showCss = has('--show-css');
-  const noExitCode = has('--no-exit-code');
-  const allExtensions = has('--all-extensions');
-  const topN = parseInt(get('--top') ?? '50', 10);
+  const verbose = has('--verbose');
+  const extensions = get('--extensions') ?? DEFAULT_EXTENSIONS;
+  const topN = get('--top') ? parseInt(get('--top')!, 10) : Infinity;
 
-  // ── Load design system ──────────────────────────────────────────────────────
+  // Load design system
   console.log('Loading Tailwind v4 design system from ui-theme…');
   const t0 = Date.now();
   const themeCss = fs.readFileSync(THEME_CSS_PATH, 'utf-8');
@@ -386,7 +389,7 @@ async function main(): Promise<void> {
   } as Parameters<typeof __unstable__loadDesignSystem>[1]);
   console.log(`  Design system ready  (${Date.now() - t0}ms)`);
 
-  // ── Single-class check mode ─────────────────────────────────────────────────
+  // Single-class check mode
   if (singleClass) {
     const [css] = ds.candidatesToCss([singleClass]);
     if (css !== null) {
@@ -407,37 +410,33 @@ async function main(): Promise<void> {
     return;
   }
 
-  // ── Load .twignore patterns ─────────────────────────────────────────────────
+  // Load .twignore patterns
   const ignorePatterns = loadIgnorePatterns();
   if (ignorePatterns.length > 0) {
     console.log(`Loaded ${ignorePatterns.length} ignore pattern${ignorePatterns.length > 1 ? 's' : ''} from .twignore`);
   }
 
-  // ── Extract custom CSS classes ──────────────────────────────────────────────
+  // Extract custom CSS classes
   console.log('Extracting custom class names from ui-theme styles…');
   const customClasses = extractCustomClassNames(STYLES_DIR);
   console.log(`  ${customClasses.size} custom class names collected`);
 
-  // ── Set up scanner ──────────────────────────────────────────────────────────
+  // Set up scanner
   const sources = filterPath
     ? [{ base: ROOT, pattern: filterPath, negated: false }]
-    : allExtensions
-      ? ALL_EXTENSIONS_SOURCES
-      : DEFAULT_SOURCES;
+    : buildSources(extensions);
 
   const scanner = new Scanner({ sources });
 
   const modeLabel = filterPath
     ? `--path ${filterPath}`
-    : allExtensions
-      ? 'all extensions (.tsx, .ts, .jsx, .js, .css)'
-      : 'default (.tsx, .jsx, .css only)';
+    : `extensions: ${extensions}`;
   console.log(`Discovering source files  [${modeLabel}]…`);
   scanner.scan(); // populate scanner.files
   const files = scanner.files;
   console.log(`  ${files.length} files to scan`);
 
-  // ── Per-file candidate extraction ───────────────────────────────────────────
+  // Per-file candidate extraction
   // candidateOccurrences: candidate → list of {file, line, col}
   const candidateOccurrences = new Map<string, Array<{ file: string; line: number; col: number }>>();
 
@@ -483,7 +482,7 @@ async function main(): Promise<void> {
   }
   process.stdout.write('\n');
 
-  // ── Batch validation ────────────────────────────────────────────────────────
+  // Batch validation
   console.log(`Validating ${candidateOccurrences.size} unique candidates…`);
   const candidateList = Array.from(candidateOccurrences.keys());
   const cssResults = ds.candidatesToCss(candidateList);
@@ -493,7 +492,7 @@ async function main(): Promise<void> {
     if (cssResults[i] !== null) validTailwind.add(candidateList[i]);
   }
 
-  // ── Classify ────────────────────────────────────────────────────────────────
+  // Classify
   const findings: Finding[] = [];
 
   for (const [candidate, occurrences] of candidateOccurrences) {
@@ -515,7 +514,7 @@ async function main(): Promise<void> {
     }
   }
 
-  // ── Report ───────────────────────────────────────────────────────────────────
+  // Report
   const malformed = findings.filter((f) => f.kind === 'malformed');
   const unknown = findings.filter((f) => f.kind === 'unknown');
 
@@ -530,21 +529,26 @@ async function main(): Promise<void> {
   // --- Malformed ---
   if (malformed.length > 0) {
     console.log(`\n🔴  MALFORMED  (${malformed.length} occurrence${malformed.length > 1 ? 's' : ''})\n`);
-    let prevFile = '';
-    const sorted = [...malformed].sort((a, b) => a.file.localeCompare(b.file) || a.line - b.line);
-    for (const f of sorted) {
-      if (f.file !== prevFile) {
-        console.log(`  ${f.file}`);
-        prevFile = f.file;
+    if (verbose) {
+      let prevFile = '';
+      const sorted = [...malformed].sort((a, b) => a.file.localeCompare(b.file) || a.line - b.line);
+      for (const f of sorted) {
+        if (f.file !== prevFile) {
+          console.log(`  ${f.file}`);
+          prevFile = f.file;
+        }
+        console.log(`    ${String(f.line).padStart(4)}:${String(f.col).padEnd(4)}  ${f.candidate}`);
       }
-      console.log(`    ${String(f.line).padStart(4)}:${String(f.col).padEnd(4)}  ${f.candidate}`);
+    } else {
+      const uniqueMalformedClasses = [...new Set(malformed.map((f) => f.candidate))].sort();
+      for (const cls of uniqueMalformedClasses) {
+        console.log(`  ${cls}`);
+      }
     }
   }
 
-  // --- Unknown — grouped by class name, sorted by frequency ---
+  // Unknown — grouped by class name, sorted alphabetically
   if (unknown.length > 0) {
-    console.log(`\n🟡  UNKNOWN  (${unknown.length} occurrence${unknown.length > 1 ? 's' : ''})\n`);
-
     const byClass = new Map<string, Array<{ file: string; line: number; col: number }>>();
     for (const f of unknown) {
       const arr = byClass.get(f.candidate) ?? [];
@@ -552,24 +556,33 @@ async function main(): Promise<void> {
       byClass.set(f.candidate, arr);
     }
 
-    const sorted = Array.from(byClass.entries()).sort((a, b) => b[1].length - a[1].length);
+    const sorted = Array.from(byClass.entries()).sort((a, b) => a[0].localeCompare(b[0]));
     const shown = sorted.slice(0, topN);
+    const maxLen = Math.max(...shown.map(([cls]) => cls.length));
 
-    for (const [cls, locs] of shown) {
-      console.log(`  .${cls}  ×${locs.length}`);
-      const shownLocs = locs.slice(0, 3);
-      for (const { file, line, col } of shownLocs) {
-        console.log(`    ${file}:${line}:${col}`);
+    if (verbose) {
+      for (const [cls, locs] of shown) {
+        console.log(`  ${cls.padEnd(maxLen)}  ${String(locs.length).padStart(4)}`);
+        const shownLocs = locs.slice(0, 3);
+        for (const { file, line, col } of shownLocs) {
+          console.log(`    ${file}:${line}:${col}`);
+        }
+        if (locs.length > 3) console.log(`    … and ${locs.length - 3} more`);
       }
-      if (locs.length > 3) console.log(`    … and ${locs.length - 3} more`);
-      console.log();
+    } else {
+      for (const [cls, locs] of shown) {
+        console.log(`  ${cls.padEnd(maxLen)}  ${String(locs.length).padStart(4)}`);
+      }
     }
+
     if (sorted.length > topN) {
-      console.log(`  … and ${sorted.length - topN} more unique classes (use --top N to see more)\n`);
+      console.log(`\n  … and ${sorted.length - topN} more unique classes (use --top N to see more)`);
+    } else {
+      console.log(`\n🟡  UNKNOWN  (${unknown.length} occurrence${unknown.length > 1 ? 's' : ''})\n`);
     }
   }
 
-  // --- Summary ---
+  // Summary
   const uniqueUnknown = new Set(unknown.map((f) => f.candidate)).size;
   const uniqueMalformed = new Set(malformed.map((f) => f.candidate)).size;
   console.log(hr);
@@ -580,7 +593,7 @@ async function main(): Promise<void> {
       `  |  scanned ${scanned} files${ignoredMsg}, ${candidateOccurrences.size} unique candidates\n`,
   );
 
-  if (!noExitCode) process.exit(1);
+  if (has('--exit-code')) process.exit(1);
 }
 
 main().catch((err) => {

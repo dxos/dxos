@@ -53,8 +53,8 @@ export const L1Panel = ({ open, path, item, currentItemId, onBack }: L1PanelProp
       key={item.id}
       value={item.id}
       classNames={[
-        'absolute inset-block-0 end-0',
-        'inline-[calc(100%-var(--l0-size))] lg:inline-[--l1-size] grid-cols-1 grid-rows-[var(--rail-size)_1fr]',
+        'absolute inset-y-0 end-0',
+        'w-[calc(100%-var(--l0-size))] lg:w-(--l1-size) grid-cols-1 grid-rows-[var(--rail-size)_1fr]',
         'py-[env(safe-area-inset-top)]',
         item.id === currentItemId && 'grid',
       ]}
@@ -110,9 +110,9 @@ const L1PanelHeader = ({ item, path, onBack }: L1PanelProps) => {
   useLoadDescendents(item);
 
   return (
-    <div className='flex inline-full items-center border-b border-subdued-separator app-drag density-coarse'>
-      <div className='inline-6' />
-      <h2 className='flex-1 truncate min-inline-0'>{title}</h2>
+    <div className='flex w-full items-center border-b border-subdued-separator app-drag density-coarse'>
+      <div className='w-6' />
+      <h2 className='flex-1 truncate min-w-0'>{title}</h2>
       {/* TODO(wittjosiah): Reconcile with NavTreeItemColumns. */}
       <div role='none' className='contents app-no-drag'>
         {primaryAction?.properties?.disposition === 'list-item-primary' && !primaryAction?.properties?.disabled && (

@@ -104,7 +104,7 @@ const CounterComponent = () => {
           <CountStatus />
         </div>
 
-        <div className='mt-8 pt-4 border-bs border-neutral-200 dark:border-neutral-700 text-center'>
+        <div className='mt-8 pt-4 border-t border-neutral-200 dark:border-neutral-700 text-center'>
           <p className='text-sm text-neutral-500 dark:text-neutral-400'>
             This component accesses the <code>PluginManager</code> via <code>useWebComponentContext</code>.
           </p>

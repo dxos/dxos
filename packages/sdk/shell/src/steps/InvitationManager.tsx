@@ -66,12 +66,12 @@ export const InvitationManager = ({
             <p className='text-sm my-1 font-normal text-center'>
               {t(multiUse ? 'invite many qr label' : 'invite one qr label')}
             </p>
-            <div role='none' className={mx(descriptionText, 'inline-full max-inline-[14rem] relative')}>
+            <div role='none' className={mx(descriptionText, 'w-full max-w-[14rem] relative')}>
               <QR
                 rounding={100}
                 backgroundColor='transparent'
                 color='currentColor'
-                className={mx('inline-full block-full p-2', showAuthCode && 'invisible')}
+                className={mx('w-full h-full p-2', showAuthCode && 'invisible')}
                 aria-labelledby={qrLabel}
                 errorCorrectionLevel='Q'
                 cutout={true}
@@ -102,7 +102,7 @@ export const InvitationManager = ({
           </InvitationManagerView>
         </Viewport.Views>
       </Viewport.Root>
-      <Actions classNames='mbs-4'>
+      <Actions classNames='mt-4'>
         <Action disabled={!active} onClick={() => send?.({ type: 'deselectInvitation' })}>
           {t('back label')}
         </Action>

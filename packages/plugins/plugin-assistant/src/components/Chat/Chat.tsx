@@ -166,7 +166,7 @@ type ChatViewportProps = ThemedClassName<PropsWithChildren>;
 
 const ChatViewport = ({ classNames, children }: ChatViewportProps) => {
   return (
-    <div role='none' className={mx('flex flex-col block-full inline-full', classNames)}>
+    <div role='none' className={mx('flex flex-col h-full w-full', classNames)}>
       {children}
     </div>
   );
@@ -362,7 +362,7 @@ const ChatPrompt = ({
     <div
       role='group'
       className={mx(
-        'flex flex-col inline-full density-fine',
+        'flex flex-col w-full density-fine',
         outline &&
           'bg-group-surface border border-subdued-separator transition transition-border [&:has(.cm-content:focus)]:border-separator rounded-sm',
         classNames,

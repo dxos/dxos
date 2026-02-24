@@ -113,10 +113,10 @@ const GameboardContent = forwardRef<HTMLDivElement, GameboardContentProps>(
     return (
       <div
         role='none'
-        className={mx(grow && 'grid inline-full block-full size-container place-content-center', classNames)}
+        className={mx(grow && 'grid w-full h-full size-container place-content-center', classNames)}
         ref={forwardedRef}
       >
-        {contain ? <div className='inline-[min(100cqw,100cqh)] block-[min(100cqw,100cqh)]'>{children}</div> : children}
+        {contain ? <div className='w-[min(100cqw,100cqh)] h-[min(100cqw,100cqh)]'>{children}</div> : children}
       </div>
     );
   },

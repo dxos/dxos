@@ -270,7 +270,7 @@ type MainSidebarProps = ThemedClassName<ComponentPropsWithRef<typeof DialogConte
   state?: SidebarState;
   resizing?: boolean;
   onStateChange?: (nextState: SidebarState) => void;
-  side: 'inline-start' | 'inline-end';
+  side: 'w-start' | 'w-end';
   label: Label;
 };
 
@@ -313,7 +313,7 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
           {...(!isLg && { forceMount: true, tabIndex: -1, onOpenAutoFocus: onOpenAutoFocus ?? handleOpenAutoFocus })}
           {...(state === 'closed' && { inert: true })}
           {...props}
-          data-side={side === 'inline-end' ? 'ie' : 'is'}
+          data-side={side === 'w-end' ? 'ie' : 'is'}
           data-state={state}
           data-resizing={resizing ? 'true' : 'false'}
           className={tx('main.sidebar', {}, classNames)}
@@ -344,7 +344,7 @@ const MainNavigationSidebar = forwardRef<HTMLDivElement, MainNavigationSidebarPr
       state={navigationSidebarState}
       onStateChange={setNavigationSidebarState}
       resizing={resizing}
-      side='inline-start'
+      side='w-start'
       ref={forwardedRef}
     />
   );
@@ -370,7 +370,7 @@ const MainComplementarySidebar = forwardRef<HTMLDivElement, MainComplementarySid
       state={complementarySidebarState}
       onStateChange={setComplementarySidebarState}
       resizing={resizing}
-      side='inline-end'
+      side='w-end'
       ref={forwardedRef}
     />
   );

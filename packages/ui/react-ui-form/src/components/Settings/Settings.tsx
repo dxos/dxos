@@ -30,9 +30,9 @@ const SETTINGS_ITEM_NAME = 'Settings.Item';
 const SETTINGS_ITEM_INPUT_NAME = 'Settings.ItemInput';
 
 const styles = {
-  title: 'pb-trimMd text-base-text text-lg',
+  title: 'pb-trim-md text-base-text text-lg',
   description: 'text-base text-description',
-  grid: 'grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-x-trimLg',
+  grid: 'grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-x-trim-lg',
 };
 
 //
@@ -44,7 +44,7 @@ type SettingsRootProps = PropsWithChildren;
 const SettingsRoot = ({ children }: SettingsRootProps) => {
   return (
     <ScrollArea.Root orientation='vertical'>
-      <ScrollArea.Viewport classNames='p-trimMd'>{children}</ScrollArea.Viewport>
+      <ScrollArea.Viewport classNames='p-trim-md'>{children}</ScrollArea.Viewport>
     </ScrollArea.Root>
   );
 };
@@ -64,7 +64,7 @@ const SettingsSection = ({ title, description, children }: SettingsSectionProps)
   return (
     <>
       <SettingsSectionHeading title={title} description={description} />
-      <div className='inline-full pt-trimMd space-y-trimMd'>{children}</div>
+      <div className='w-full pt-trim-md space-y-trim-md'>{children}</div>
     </>
   );
 };
@@ -79,9 +79,9 @@ const SettingsSectionHeading = ({ title, description }: Omit<SettingsSectionProp
   const { t } = useTranslation(translationKey);
   return (
     <>
-      <h2 className='pli-trimMd container-max-width text-xl mt-trimMd mb-trimMd'>{toLocalizedString(title, t)}</h2>
+      <h2 className='px-trim-md mt-trim-md mb-trim-md container-max-width text-xl'>{toLocalizedString(title, t)}</h2>
       {description && (
-        <p className='pli-trimMd mlb-trimMd container-max-width text-description'>
+        <p className='px-trim-md my-trim-md container-max-width text-description'>
           {toLocalizedString(description, t)}
         </p>
       )}
@@ -108,7 +108,7 @@ SettingsGroupButton.displayName = SETTINGS_GROUP_BUTTON_NAME;
 type SettingsGroupProps = ThemedClassName<PropsWithChildren>;
 
 const SettingsGroup = ({ children, classNames }: SettingsGroupProps) => (
-  <div role='none' className={mx('group container-max-width space-y-trimMd', classNames)}>
+  <div role='none' className={mx('group container-max-width space-y-trim-md', classNames)}>
     {children}
   </div>
 );
@@ -120,7 +120,7 @@ SettingsGroup.displayName = SETTINGS_GROUP_NAME;
 //
 
 const SettingsFrame = ({ children }: SettingsGroupProps) => (
-  <div role='none' className={mx('container-max-width p-trimMd', 'border border-separator rounded-md')}>
+  <div role='none' className={mx('container-max-width p-trim-md', 'border border-separator rounded-md')}>
     {children}
   </div>
 );
@@ -135,9 +135,9 @@ const SettingsFrameItem = ({ title, description, children }: SettingsItemProps) 
   const { t } = useTranslation(translationKey);
 
   return (
-    <div role='group' className='min-inline-0'>
+    <div role='group' className='min-w-0'>
       <h3 className='text-lg mb-2'>{toLocalizedString(title, t)}</h3>
-      {description && <p className='mlb-trimSm md:mb-0 text-description'>{toLocalizedString(description, t)}</p>}
+      {description && <p className='my-trim-sm md:mb-0 text-description'>{toLocalizedString(description, t)}</p>}
       {children}
     </div>
   );
@@ -155,7 +155,7 @@ const SettingsContainer = ({ classNames, children }: ThemedClassName<PropsWithCh
       role='none'
       className={mx([
         'container-max-width',
-        '*:first:!mt-0 *:last:!mb-0 pli-trimMd plb-trimMd',
+        '*:first:!mt-0 *:last:!mb-0 px-trim-md py-trim-md',
         'border border-separator rounded-md',
         classNames,
       ])}

@@ -94,7 +94,7 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
             syntaxHighlighting: true,
             slots: {
               scroll: {
-                // NOTE: Child widgets must have `max-inline-[100cqi]`.
+                // NOTE: Child widgets must have `max-w-[100cqi]`.
                 className: 'size-container p-card-padding',
               },
             },
@@ -244,7 +244,7 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
     return (
       <>
         {/* Markdown editor. */}
-        <div ref={parentRef} className={mx('block-full inline-full overflow-hidden', classNames)} />
+        <div ref={parentRef} className={mx('h-full w-full overflow-hidden', classNames)} />
 
         {/* React widgets are rendered in portals outside of the editor. */}
         <ErrorBoundary>

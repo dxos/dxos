@@ -61,7 +61,7 @@ const meta = {
   title: 'ui/react-ui-core/components/ScrollContainer',
   component: ScrollContainer.Root,
   render: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'inline-[30rem]' })],
+  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'w-[30rem]' })],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

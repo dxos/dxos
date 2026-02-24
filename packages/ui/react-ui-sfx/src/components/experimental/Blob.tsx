@@ -207,7 +207,7 @@ export const Blob = ({
     enableTransparency,
   ]);
 
-  return <div ref={containerRef} className='inline-full block-full relative' />;
+  return <div ref={containerRef} className='w-full h-full relative' />;
 };
 
 const parseHexColor = (hex: string) => {

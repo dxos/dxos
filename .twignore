@@ -1,12 +1,4 @@
-# .twignore — patterns for audit-classes.mts to skip
-# Syntax: one glob per line, matched against paths relative to the repo root.
-# Lines starting with # are comments. Patterns use ** for any path depth.
+# .twignore
 
-# Geographic data files (city/airport coordinates, not UI)
-packages/ui/react-ui-geo/data/**
-packages/ui/solid-ui-geo/data/**
-packages/ui/react-ui-geo/scripts/**
-packages/ui/solid-ui-geo/scripts/**
-
-# Third-party / generated geo data (topojson, projection names)
-packages/ui/react-ui-graph/src/components/Mesh/**
+**/data/**
+**/scripts/**

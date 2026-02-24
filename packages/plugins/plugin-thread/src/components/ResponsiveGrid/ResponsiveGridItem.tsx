@@ -76,7 +76,7 @@ export const ResponsiveGridItem = <T extends object = any>({
   return (
     <div
       className={mx(
-        'relative inline-full block-full group',
+        'relative w-full h-full group',
         'rounded-md outline outline-2 outline-neutral-900 transition-[outline-color] duration-500',
         speakingIndicator ? 'outline-green-500' : !video && 'outline-separator',
         classNames,
@@ -89,7 +89,7 @@ export const ResponsiveGridItem = <T extends object = any>({
       {onClick && (
         <div className='z-10 absolute top-1 right-1 flex'>
           <IconButton
-            classNames={mx('p-1 min-block-1 rounded-sm', groupHoverControlItemWithTransition)}
+            classNames={mx('p-1 min-h-1 rounded-sm', groupHoverControlItemWithTransition)}
             iconOnly
             icon={pinned ? 'ph--x--regular' : 'ph--arrows-out--regular'}
             size={pinned ? 5 : 4}
@@ -121,7 +121,7 @@ export const ResponsiveGridItem = <T extends object = any>({
         {(speaking && <Waveform active size={pinned ? 5 : 4} />) ||
           (props && (
             <IconButton
-              classNames={mx('p-1 min-block-1 rounded-sm', props?.classNames)}
+              classNames={mx('p-1 min-h-1 rounded-sm', props?.classNames)}
               icon={props?.icon}
               label={props?.label}
               size={pinned ? 5 : 4}

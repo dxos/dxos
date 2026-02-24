@@ -11,11 +11,17 @@
   --spacing-card-min-height: 18rem;
   --spacing-card-max-height: 30rem;
 
+  --spacing-trim-xs: var(--dx-lacuna-3);
+  --spacing-trim-sm: var(--dx-lacuna-4);
+  --spacing-trim-md: var(--dx-lacuna-6);
+  --spacing-trim-lg: var(--dx-lacuna-12);
+
   /**
    * Density: fine
    */
   --spacing-icon-button-padding: var(--dx-input-fine);
-  --spacing-card-padding: var(--dx-trim-sm);
+  --spacing-card-padding: var(--spacing-trim-sm);
+  --spacing-card-chrome: var(--spacing-trim-xs);
 }
 
 @layer dx-tokens {
@@ -24,7 +30,7 @@
    */
   .density-coarse {
     --spacing-icon-button-padding: var(--dx-input-coarse);
-    --spacing-card-padding: var(--dx-trim-md);
+    --spacing-card-padding: var(--spacing-trim-md);
   }
 }
 
@@ -58,16 +64,11 @@
     --dx-no-line: var(--dx-line-0);
     --dx-hair-line: var(--dx-line-1);
     --dx-thick-line: var(--dx-line-2);
-    --dx-trim-xs: var(--dx-lacuna-3);
-    --dx-trim-sm: var(--dx-lacuna-4);
-    --dx-trim-md: var(--dx-lacuna-6);
-    --dx-trim-lg: var(--dx-lacuna-12);
 
     --dx-focus-offset: var(--dx-no-line);
     --dx-focus-line: var(--dx-thick-line);
     --dx-modal-line: var(--dx-hair-line);
     --dx-grid-focus-indicator-width: var(--dx-hair-line);
-    --dx-card-chrome: var(--dx-trim-xs);
 
     --dx-input-fine: var(--dx-lacuna-3);
     --dx-input-coarse: var(--dx-lacuna-4);

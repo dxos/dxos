@@ -15,7 +15,7 @@ export const ActorComponent = ({ actor, classNames }: ThemedClassName<{ actor: A
   const { t } = useTranslation(meta.id);
 
   return (
-    <div role='none' className={mx('flex inline-full items-center gap-2 overflow-hidden', classNames)}>
+    <div role='none' className={mx('flex w-full items-center gap-2 overflow-hidden', classNames)}>
       <IconButton
         variant='ghost'
         disabled={!actor.contact}
@@ -32,7 +32,7 @@ export const ActorComponent = ({ actor, classNames }: ThemedClassName<{ actor: A
 
 export const ActorList = ({ classNames, actors }: ThemedClassName<{ actors: readonly Actor.Actor[] }>) => {
   return (
-    <div role='none' className={mx('flex flex-col inline-full', classNames)}>
+    <div role='none' className={mx('flex flex-col w-full', classNames)}>
       {/* TODO(wittjosiah): Accordion to show all. */}
       {Array.take(actors, 8).map((actor, idx) => (
         <ActorComponent key={idx} actor={actor} />

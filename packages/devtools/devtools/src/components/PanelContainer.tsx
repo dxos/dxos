@@ -16,9 +16,9 @@ type PanelContainerProps = ThemedClassName<
 
 export const PanelContainer = ({ classNames, children, toolbar, footer }: PanelContainerProps) => {
   return (
-    <div className='flex flex-col block-full overflow-hidden divide-y divide-separator'>
+    <div className='flex flex-col h-full overflow-hidden divide-y divide-separator'>
       {toolbar}
-      <div className={mx('flex flex-col block-full overflow-auto', classNames)}>{children}</div>
+      <div className={mx('flex flex-col h-full overflow-auto', classNames)}>{children}</div>
       {footer}
     </div>
   );

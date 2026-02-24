@@ -18,7 +18,7 @@ export type CopyButtonProps = ButtonProps &
     value: string;
   };
 
-const inactiveLabelStyles = 'invisible block-px -mb-px overflow-hidden';
+const inactiveLabelStyles = 'invisible h-px -mb-px overflow-hidden';
 
 export const CopyButton = ({ classNames, value, size = 5, ...props }: CopyButtonProps) => {
   const { t } = useTranslation(osTranslations);
@@ -27,7 +27,7 @@ export const CopyButton = ({ classNames, value, size = 5, ...props }: CopyButton
   return (
     <Button
       {...props}
-      classNames={['inline-flex flex-col justify-center', classNames]}
+      classNames={['w-flex flex-col justify-center', classNames]}
       onClick={() => setTextValue(value)}
       data-testid='copy-invitation'
     >
@@ -67,7 +67,7 @@ export const CopyButtonIconOnly = ({
       icon='ph--copy--regular'
       size={size}
       variant={variant}
-      classNames={['inline-flex flex-col justify-center', classNames]}
+      classNames={['w-flex flex-col justify-center', classNames]}
       onClick={() => setTextValue(value).then(onOpen)}
       data-testid='copy-invitation'
     />

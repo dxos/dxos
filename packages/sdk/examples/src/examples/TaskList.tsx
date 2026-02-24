@@ -28,12 +28,12 @@ const TaskList = ({ id, spaceId }: { id: number; spaceId?: SpaceId }) => {
   };
 
   return (
-    <div className='grow max-w-lg mbs-4 mx-1'>
-      <h2 className='mbe-2 font-bold'>{`Peer ${id + 1}`}</h2>
+    <div className='grow max-w-lg mt-4 mx-1'>
+      <h2 className='mb-2 font-bold'>{`Peer ${id + 1}`}</h2>
       <Input.Root>
         <Input.Label srOnly>Create new item</Input.Label>
         <Input.TextInput
-          classNames='mbe-2'
+          classNames='mb-2'
           placeholder='New item'
           value={value}
           onChange={handleChange}
@@ -42,7 +42,7 @@ const TaskList = ({ id, spaceId }: { id: number; spaceId?: SpaceId }) => {
       </Input.Root>
       <ul>
         {tasks.map((task) => (
-          <li key={task.id} className='flex items-center gap-2 mbe-2 pl-3'>
+          <li key={task.id} className='flex items-center gap-2 mb-2 pl-3'>
             <Input.Root>
               <Input.Label srOnly>Complete {task.title}</Input.Label>
               <Input.Checkbox

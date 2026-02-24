@@ -91,9 +91,9 @@ export const ArrayField = ({
               />
 
               {!readonly && layout !== 'static' && (
-                <div role='none' className='flex flex-col block-full justify-end'>
+                <div role='none' className='flex flex-col h-full justify-end'>
                   {/* NOTE: Aligns with center of last field if multi-field object. */}
-                  <div role='none' className='flex items-center block-[var(--line-height)]'>
+                  <div role='none' className='flex items-center h-[var(--line-height)]'>
                     <IconButton
                       icon='ph--x--regular'
                       iconOnly
@@ -111,7 +111,7 @@ export const ArrayField = ({
 
       {/* TODO(burdon): Get label from schema. */}
       {!readonly && layout !== 'static' && (
-        <IconButton classNames='flex inline-full' icon='ph--plus--regular' label={t('add field')} onClick={handleAdd} />
+        <IconButton classNames='flex w-full' icon='ph--plus--regular' label={t('add field')} onClick={handleAdd} />
       )}
     </>
   );

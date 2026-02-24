@@ -47,7 +47,7 @@ const Root = forwardRef<HTMLDivElement, ScopedProps<RootProps>>(
           role='none'
           {...rootProps}
           ref={forwardedRef}
-          className={mx('relative block-full overflow-hidden', classNames)}
+          className={mx('relative h-full overflow-hidden', classNames)}
         >
           {children}
         </div>

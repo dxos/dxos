@@ -17,7 +17,7 @@ import { ghostHover, mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 
-const grid = 'grid grid-cols-[1fr_1fr_auto] min-block-[2.5rem]';
+const grid = 'grid grid-cols-[1fr_1fr_auto] min-h-[2.5rem]';
 
 type FunctionsRegistryProps = {
   space: Space;
@@ -67,12 +67,12 @@ export const FunctionsRegistry = ({ space }: FunctionsRegistryProps) => {
       {functions.length > 0 && (
         <List.Root<Function.Function> items={functions} isItem={Schema.is(Function.Function)} getId={(func) => func.id}>
           {({ items }) => (
-            <div role='list' className='flex flex-col inline-full'>
+            <div role='list' className='flex flex-col w-full'>
               {items?.map((func) => (
                 <List.Item<Function.Function>
                   key={func.id}
                   item={func}
-                  classNames={mx(grid, ghostHover, 'items-center', 'px-2', 'min-block-[3rem]')}
+                  classNames={mx(grid, ghostHover, 'items-center', 'px-2', 'min-h-[3rem]')}
                 >
                   <div className='flex flex-col truncate'>
                     <List.ItemTitle classNames='truncate'>{func.name}</List.ItemTitle>

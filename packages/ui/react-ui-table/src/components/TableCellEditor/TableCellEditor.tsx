@@ -31,7 +31,7 @@ import { FormCellEditor, type OnCreateHandler } from './FormCellEditor';
 
 const editorSlots = {
   scroll: {
-    className: '!py-[--dx-grid-cell-editor-padding-block]',
+    className: '!py-(--dx-grid-cell-editor-padding-block)',
   },
 };
 

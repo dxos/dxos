@@ -64,10 +64,10 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
   const { t } = useTranslation(translationKey);
 
   return (
-    <div role='none' className={mx('mbs-2 flex gap-px items-center', isFull && 'inline-full')}>
+    <div role='none' className={mx('mt-2 flex gap-px items-center', isFull && 'w-full')}>
       <Button
         {...rest}
-        classNames={['block-11 flex-1 min-inline-0 flex gap-2 rounded-ie-none', classNames]}
+        classNames={['h-11 flex-1 min-w-0 flex gap-2 rounded-ie-none', classNames]}
         ref={forwardedRef}
         variant={variant}
         data-testid={testId}
@@ -83,7 +83,7 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
             size={4}
             label={t('invite options label')}
             iconOnly
-            classNames={['block-11 flex-none rounded-w-none', classNames]}
+            classNames={['h-11 flex-none rounded-w-none', classNames]}
             data-testid={dropdownTestId}
           />
         </DropdownMenu.Trigger>
@@ -103,7 +103,7 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
                     data-testid={action.testId}
                   >
                     {action.icon && <Icon icon={action.icon} size={5} />}
-                    <div role='none' className='flex-1 min-inline-0 space-b-1'>
+                    <div role='none' className='flex-1 min-w-0 space-b-1'>
                       <p id={`${id}__label`}>{action.label}</p>
                       {action.description && (
                         <p id={`${id}__description`} className={descriptionText}>
@@ -132,7 +132,7 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
 export const Action = forwardRef<HTMLButtonElement, LargeButtonProps>((props, forwardedRef) => {
   const { children, classNames, variant, isFull = true, ...rest } = props;
   return (
-    <Button {...rest} classNames={[isFull && 'inline-full', classNames]} ref={forwardedRef} variant={variant}>
+    <Button {...rest} classNames={[isFull && 'w-full', classNames]} ref={forwardedRef} variant={variant}>
       {children}
     </Button>
   );

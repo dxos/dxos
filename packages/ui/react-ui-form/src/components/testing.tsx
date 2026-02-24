@@ -13,10 +13,10 @@ type TestLayoutProps = ThemedClassName<PropsWithChildren<{ json?: any }>>;
 
 export const TestLayout = ({ classNames, children, json }: TestLayoutProps) => {
   return (
-    <div className='inline-full block-full grid grid-cols-[1fr_1fr] p-4 gap-4 overflow-hidden'>
-      <TestPanel classNames={['flex flex-col block-full overflow-y-auto', classNames]}>{children}</TestPanel>
+    <div className='w-full h-full grid grid-cols-[1fr_1fr] p-4 gap-4 overflow-hidden'>
+      <TestPanel classNames={['flex flex-col h-full overflow-y-auto', classNames]}>{children}</TestPanel>
       <TestPanel classNames={'overflow-hidden'}>
-        <JsonFilter testId='debug' data={json} classNames='block-full text-xs' />
+        <JsonFilter testId='debug' data={json} classNames='h-full text-xs' />
       </TestPanel>
     </div>
   );
@@ -25,7 +25,7 @@ export const TestLayout = ({ classNames, children, json }: TestLayoutProps) => {
 type TestPanelProps = ThemedClassName<PropsWithChildren>;
 
 const TestPanel = ({ classNames, children }: TestPanelProps) => {
-  return <Card.Root classNames={['block-full overflow-y-auto', textBlockWidth, classNames]}>{children}</Card.Root>;
+  return <Card.Root classNames={['h-full overflow-y-auto', textBlockWidth, classNames]}>{children}</Card.Root>;
 };
 
 // Symbol for accessing debug objects in tests.

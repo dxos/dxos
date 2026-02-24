@@ -128,7 +128,7 @@ export const SelectOptionField = ({
             readonly={!!readonly}
           >
             {({ items }) => (
-              <div role='list' className='inline-full overflow-auto'>
+              <div role='list' className='w-full overflow-auto'>
                 {items?.map((item) => (
                   <div key={item.id}>
                     <List.Item
@@ -185,7 +185,7 @@ export const SelectOptionField = ({
                   label={t('select option add')}
                   onClick={handleAdd}
                   disabled={!!readonly}
-                  classNames='inline-full'
+                  classNames='w-full'
                 />
               </div>
             )}

@@ -96,7 +96,7 @@ export const SpaceManager = (props: SpaceManagerProps) => {
   return <SpaceManagerImpl {...props} invitations={invitations} inviteActions={inviteActions} />;
 };
 
-const headingFragment = 'pl-3 pr-1 py-1 mbe-1 font-medium';
+const headingFragment = 'pl-3 pr-1 py-1 mb-1 font-medium';
 
 export const SpaceManagerImpl = (props: SpaceManagerImplProps) => {
   const {
@@ -148,7 +148,7 @@ export const SpaceManagerImpl = (props: SpaceManagerImplProps) => {
                 onClickRemove={(invitation) => invitation.cancel()}
                 createInvitationUrl={createInvitationUrl}
               />
-              <h3 className={mx(headingFragment, descriptionText, 'mbs-2')}>{t('space member list heading')}</h3>
+              <h3 className={mx(headingFragment, descriptionText, 'mt-2')}>{t('space member list heading')}</h3>
             </>
           )}
           <SpaceMemberListComponent spaceKey={space.key} includeSelf />

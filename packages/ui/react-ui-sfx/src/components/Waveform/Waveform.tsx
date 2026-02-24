@@ -25,10 +25,10 @@ const createRange = (n: number): Range =>
 const range = createRange(5);
 
 const sizes: Record<number, { range: Range; classNames: string; h: string }> = {
-  3: { range, classNames: 'inline-3 block-3 gap-[1px]', h: 'inline-[1px] block-[12px]' },
-  4: { range, classNames: 'inline-4 block-4 gap-[1px]', h: 'inline-[1.5px] block-[14px]' },
-  5: { range, classNames: 'inline-5 block-5 gap-[2px]', h: 'inline-[1.5px] block-[20px]' },
-  6: { range, classNames: 'inline-6 block-6 gap-[2px]', h: 'inline-[2px] block-[22px]' },
+  3: { range, classNames: 'w-3 h-3 gap-[1px]', h: 'w-[1px] h-[12px]' },
+  4: { range, classNames: 'w-4 h-4 gap-[1px]', h: 'w-[1.5px] h-[14px]' },
+  5: { range, classNames: 'w-5 h-5 gap-[2px]', h: 'w-[1.5px] h-[20px]' },
+  6: { range, classNames: 'w-6 h-6 gap-[2px]', h: 'w-[2px] h-[22px]' },
 };
 
 export type WaveformProps = ThemedClassName<{
@@ -43,7 +43,7 @@ export const Waveform = ({ classNames, active, size: _size = 4 }: WaveformProps)
   return (
     <AnimatePresence>
       <div className={mx('flex p-1 bg-neutral-200 dark:bg-neutral-800 rounded-sm', classNames)}>
-        <div className={mx('flex inline-full block-full items-center justify-center', waveClassNames)}>
+        <div className={mx('flex w-full h-full items-center justify-center', waveClassNames)}>
           {range.map(({ duration, scaleY }, i) => {
             return (
               <motion.div

@@ -51,7 +51,7 @@ const Editor = ({ source, messenger, identity, autoFocus }: EditorProps) => {
     [source, themeMode],
   );
 
-  return <div ref={parentRef} className='flex inline-full' />;
+  return <div ref={parentRef} className='flex w-full' />;
 };
 
 const DefaultStory = () => {
@@ -81,7 +81,7 @@ const DefaultStory = () => {
   }
 
   return (
-    <div className='block-full inline-full grid grid-cols-2 gap-4'>
+    <div className='h-full w-full grid grid-cols-2 gap-4'>
       <Editor source={object1} autoFocus />
       <Editor source={object2} />
     </div>
@@ -117,7 +117,7 @@ const EchoStory = () => {
   }, [objects, source]);
 
   return (
-    <div className='block-full inline-full flex flex-col overflow-hidden'>
+    <div className='h-full w-full flex flex-col overflow-hidden'>
       <pre className='p-2 text-xs text-subdued'>
         {JSON.stringify({ index, identity: identity?.identityKey.truncate(), spaceId, objects }, null, 2)}
       </pre>

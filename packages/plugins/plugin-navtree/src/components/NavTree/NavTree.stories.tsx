@@ -47,7 +47,7 @@ const StoryPlankHeading = ({ attendableId }: { attendableId: string }) => {
         label='Test'
         iconOnly
         variant={hasAttention ? 'primary' : 'ghost'}
-        classNames='inline-[--rail-action] block-[--rail-action]'
+        classNames='w-(--rail-action) h-(--rail-action)'
       />
       <StackItem.ResizeHandle />
     </div>
@@ -70,7 +70,7 @@ const StoryPlank = ({ attendableId }: { attendableId: string }) => {
     <StackItem.Root
       item={{ id: attendableId }}
       {...attentionAttrs}
-      classNames='bg-base-surface border-ie border-separator'
+      classNames='bg-base-surface border-e border-separator'
       size={30}
       onKeyDown={handleKeyDown}
       ref={rootElement}

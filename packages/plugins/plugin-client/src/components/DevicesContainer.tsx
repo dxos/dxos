@@ -183,7 +183,7 @@ const InvitationSection = ({
         icon='ph--plus--regular'
         label={t('create device invitation label')}
         disabled={state >= 0}
-        classNames='inline-full'
+        classNames='w-full'
         data-testid='devicesContainer.createInvitation'
         onClick={onInvitationCreate}
       />
@@ -216,7 +216,7 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
     <>
       <p className='text-description'>{t('qr code description', { ns: meta.id })}</p>
       <div role='group' className='grid grid-cols-[1fr_min-content] my-2 gap-2'>
-        <div role='none' className='inline-full aspect-square relative text-description'>
+        <div role='none' className='w-full aspect-square relative text-description'>
           <QR
             rounding={100}
             backgroundColor='transparent'

@@ -21,13 +21,13 @@ const edgeToOrientationMap: Record<InstructionType, Orientation> = {
 const orientationStyles: Record<Orientation, HTMLAttributes<HTMLElement>['className']> = {
   // TODO(wittjosiah): Stop using left/right here.
   sibling:
-    'block-[--line-thickness] left-[--horizontal-indent] right-0 bg-accent-surface before:left-[--negative-terminal-size]',
-  child: 'inline-full top-0 bottom-0 border-[length:--line-thickness] before:invisible',
+    'h-(--line-thickness) left-(--horizontal-indent) right-0 bg-accent-surface before:left-(--negative-terminal-size)',
+  child: 'w-full top-0 bottom-0 border-[length:--line-thickness] before:invisible',
 };
 
 const instructionStyles: Record<InstructionType, HTMLAttributes<HTMLElement>['className']> = {
-  'reorder-above': 'top-[--line-offset] before:top-[--offset-terminal]',
-  'reorder-below': 'bottom-[--line-offset] before:bottom-[--offset-terminal]',
+  'reorder-above': 'top-(--line-offset) before:top-(--offset-terminal)',
+  'reorder-below': 'bottom-(--line-offset) before:bottom-(--offset-terminal)',
   'make-child': 'border-accent-surface',
   // TODO(wittjosiah): This is not occurring in the current implementation.
   reparent: '',
@@ -64,7 +64,7 @@ export const TreeDropIndicator = ({ instruction, gap = 0 }: DropIndicatorProps) 
           '--horizontal-indent': `${desiredInstruction.currentLevel * desiredInstruction.indentPerLevel + 4}px`,
         } as CSSProperties
       }
-      className={`absolute z-10 pointer-events-none before:inline-[--terminal-size] before:block-[--terminal-size] box-border before:absolute before:border-[length:--line-thickness] before:border-solid before:border-accent-surface before:rounded-full ${orientationStyles[orientation]} ${instructionStyles[desiredInstruction.type]}`}
+      className={`absolute z-10 pointer-events-none before:w-(--terminal-size) before:h-(--terminal-size) box-border before:absolute before:border-[length:--line-thickness] before:border-solid before:border-accent-surface before:rounded-full ${orientationStyles[orientation]} ${instructionStyles[desiredInstruction.type]}`}
     ></div>
   );
 };

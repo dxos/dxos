@@ -165,13 +165,13 @@ export const InvocationTraceContainer = ({
     <PanelContainer
       toolbar={
         showSpaceSelector ? (
-          <Toolbar.Root classNames='border-be border-subdued-separator'>
+          <Toolbar.Root classNames='border-b border-subdued-separator'>
             <DataSpaceSelector />
           </Toolbar.Root>
         ) : undefined
       }
     >
-      <div className={mx('block-full', gridLayout)}>
+      <div className={mx('h-full', gridLayout)}>
         {/* <DynamicTable properties={properties} rows={rows} features={features} onRowClick={handleRowClick} /> */}
         <div className='overflow-auto'>
           <table className='table-fixed min-w-full text-xs border-collapse'>
@@ -238,14 +238,14 @@ const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
   const isLogQueue = 'logs' === contents || objects.length === 0;
 
   return (
-    <div className='grid grid-cols-1 grid-rows-[min-content_1fr] block-full min-block-0 border-separator'>
+    <div className='grid grid-cols-1 grid-rows-[min-content_1fr] h-full min-h-0 border-separator'>
       <Tabs.Root
-        classNames='grid grid-rows-[min-content_1fr] min-block-0 [&>[role="tabpanel"]]:min-block-0 [&>[role="tabpanel"][data-state="active"]]:grid border-bs border-separator'
+        classNames='grid grid-rows-[min-content_1fr] min-h-0 [&>[role="tabpanel"]]:min-h-0 [&>[role="tabpanel"][data-state="active"]]:grid border-t border-separator'
         orientation='horizontal'
         value={activeTab}
         onValueChange={setActiveTab}
       >
-        <Tabs.Tablist classNames='border-be border-separator'>
+        <Tabs.Tablist classNames='border-b border-separator'>
           <Tabs.Tab value='input'>Input</Tabs.Tab>
           {isLogQueue && <Tabs.Tab value='logs'>Logs</Tabs.Tab>}
           {isLogQueue && <Tabs.Tab value='errors'>Error logs</Tabs.Tab>}
@@ -267,7 +267,7 @@ const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
           </Tabs.Tabpanel>
         )}
         {isLogQueue && (
-          <Tabs.Tabpanel value='raw' classNames='min-block-0 min-inline-0 inline-full overflow-auto'>
+          <Tabs.Tabpanel value='raw' classNames='min-h-0 min-w-0 w-full overflow-auto'>
             <RawDataPanel classNames='text-xs' span={span} objects={objects} />
           </Tabs.Tabpanel>
         )}

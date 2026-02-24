@@ -36,10 +36,10 @@ const CommandDialog = ({ onAction }: { onAction: (action?: any) => void }) => {
   };
 
   return (
-    <div className='flex inline-full justify-center'>
+    <div className='flex w-full justify-center'>
       <div
         className={mx(
-          'flex inline-full p-2 gap-2 items-center bg-modal-surface border border-separator rounded-md',
+          'flex w-full p-2 gap-2 items-center bg-modal-surface border border-separator rounded-md',
           editorWidth,
         )}
       >

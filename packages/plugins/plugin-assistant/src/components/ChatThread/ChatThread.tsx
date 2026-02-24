@@ -79,7 +79,7 @@ export const ChatThread = forwardRef<MarkdownStreamController | null, ChatThread
     return (
       <div
         role='none'
-        className={mx('flex block-full inline-full justify-center overflow-hidden', classNames)}
+        className={mx('flex h-full w-full justify-center overflow-hidden', classNames)}
         style={{ '--user-fill': `var(--dx-${userHue}Fill)` } as CSSProperties}
       >
         <MarkdownStream

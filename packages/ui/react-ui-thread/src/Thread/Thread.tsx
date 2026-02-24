@@ -11,7 +11,7 @@ import { translationKey } from '../translations';
 import type { ThreadEntity } from '../types';
 
 // TODO(burdon): Avoid exporting fragments.
-export const threadLayout = 'inline-full place-self-start grid grid-cols-[var(--rail-size)_1fr]';
+export const threadLayout = 'w-full place-self-start grid grid-cols-[var(--rail-size)_1fr]';
 
 //
 // Root
@@ -95,10 +95,10 @@ const ThreadStatus = forwardRef<HTMLDivElement, ThreadStatusProps>(
       >
         <Icon
           icon='ph--spinner--bold'
-          classNames='inline-6 block-4 invisible data-[visible=show]:visible animate-spin-slow'
+          classNames='w-6 h-4 invisible data-[visible=show]:visible animate-spin-slow'
           data-visible={activity ? 'show' : 'hide'}
         />
-        <span className='truncate min-inline-0' aria-live='polite'>
+        <span className='truncate min-w-0' aria-live='polite'>
           {activity ? children : null}
         </span>
         <span className={mx('text-end', hoverableControlItem)}>{t('enter to send message')}</span>

@@ -158,14 +158,14 @@ const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => 
       size='split'
       rail={false}
       itemsCount={modules.length + (showContext ? 1 : 0)}
-      classNames='absolute inset-0 gap-[--stack-gap]'
+      classNames='absolute inset-0 gap-(--stack-gap)'
     >
       {modules.map((Components, i) => {
         return (
           <StackItem.Root key={i} item={{ id: `${i}` }}>
             <Stack
               orientation='vertical'
-              classNames='gap-[--stack-gap]'
+              classNames='gap-(--stack-gap)'
               size={i > 0 ? 'contain' : 'split'}
               itemsCount={Components.length}
               rail={false}
@@ -189,7 +189,7 @@ const StackContainer = ({ objects }: { objects: Obj.Unknown[] }) => {
   return (
     <Stack
       orientation='vertical'
-      classNames='gap-[--stack-gap]'
+      classNames='gap-(--stack-gap)'
       size='contain'
       rail={false}
       itemsCount={objects.length}

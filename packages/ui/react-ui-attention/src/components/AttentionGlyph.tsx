@@ -9,10 +9,10 @@ import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 const attentionGlyphStyles =
-  'inline-block rounded-xs inline-3 block-3 bg-transparent text-accent-text transition-colors [[data-contains-attended=true]_&]:bg-attentionRelated [[data-attention=true]_&]:bg-accent-surface [[data-attention=true]_&]:text-accent-surface-text [[aria-current][data-attention=true]_&]:bg-accent-surface [[aria-current][data-attention=true]_&]:text-accent-surface-text';
+  'w-block rounded-xs w-3 h-3 bg-transparent text-accent-text transition-colors [[data-contains-attended=true]_&]:bg-attentionRelated [[data-attention=true]_&]:bg-accent-surface [[data-attention=true]_&]:text-accent-surface-text [[aria-current][data-attention=true]_&]:bg-accent-surface [[aria-current][data-attention=true]_&]:text-accent-surface-text';
 
 const presenceIconStyles =
-  'inline-3 block-3 group-[[aria-current]_&:hover]/attentionGlyphButton:hidden group-[[aria-current]_&:focus]/attentionGlyphButton:hidden group-[[data-attention=true]_&:hover]/attentionGlyphButton:hidden group-[[data-attention=true]_&:focus]/attentionGlyphButton:hidden group-[[aria-current][data-attention=true]_&:hover]/attentionGlyphButton:hidden group-[[aria-current][data-attention=true]_&:focus]/attentionGlyphButton:hidden';
+  'w-3 h-3 group-[[aria-current]_&:hover]/attentionGlyphButton:hidden group-[[aria-current]_&:focus]/attentionGlyphButton:hidden group-[[data-attention=true]_&:hover]/attentionGlyphButton:hidden group-[[data-attention=true]_&:focus]/attentionGlyphButton:hidden group-[[aria-current][data-attention=true]_&:hover]/attentionGlyphButton:hidden group-[[aria-current][data-attention=true]_&:focus]/attentionGlyphButton:hidden';
 
 const PresenceOne = () => {
   return (

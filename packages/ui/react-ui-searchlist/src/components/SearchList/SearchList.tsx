@@ -238,7 +238,7 @@ const SearchListContent = forwardRef<HTMLDivElement, SearchListContentProps>(
       <div
         role='none'
         // TODO(burdon): Remove p-1 hack.
-        className={mx('flex flex-col gap-2 block-full inline-full min-block-0 overflow-hidden p-1', classNames)}
+        className={mx('flex flex-col gap-2 h-full w-full min-h-0 overflow-hidden p-1', classNames)}
         ref={forwardedRef}
       >
         {children}
@@ -263,7 +263,7 @@ type SearchListViewportProps = ThemedClassName<PropsWithChildren>;
 const SearchListViewport = forwardRef<HTMLDivElement, SearchListViewportProps>(
   ({ classNames, children }, forwardedRef) => {
     return (
-      <div role='listbox' className={mx('block-full inline-full min-block-0 overflow-y-auto', classNames)} ref={forwardedRef}>
+      <div role='listbox' className={mx('h-full w-full min-h-0 overflow-y-auto', classNames)} ref={forwardedRef}>
         {children}
       </div>
     );
@@ -478,7 +478,7 @@ const SearchListItem = forwardRef<HTMLDivElement, SearchListItemProps>(
         onClick={handleClick}
       >
         {icon && <Icon icon={icon} size={5} />}
-        <span className='inline-0 grow truncate'>{label}</span>
+        <span className='w-0 grow truncate'>{label}</span>
         {suffix && <span className={mx('shrink-0', descriptionText)}>{suffix}</span>}
         {checked && <Icon icon='ph--check--regular' size={5} />}
       </div>
@@ -496,7 +496,7 @@ type SearchListEmptyProps = ThemedClassName<PropsWithChildren<{}>>;
 
 const SearchListEmpty = ({ classNames, children }: SearchListEmptyProps) => {
   return (
-    <div role='status' className={mx('flex flex-col inline-full px-2 py-1', classNames)}>
+    <div role='status' className={mx('flex flex-col w-full px-2 py-1', classNames)}>
       {children}
     </div>
   );

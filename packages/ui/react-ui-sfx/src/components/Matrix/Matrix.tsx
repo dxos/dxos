@@ -38,7 +38,7 @@ export const Matrix = ({ classNames, dim = 5, count = 20, size = 5, dotSize = 4 
 
   return (
     <div className={mx('flex shrink-0 items-center', getSize(size), classNames)}>
-      <div className='relative flex inline-full block-full'>
+      <div className='relative flex w-full h-full'>
         <AnimatePresence>
           {Array.from({ length: count }).map((_, i) => (
             <Dot key={i} variants={variants} variant={randomVariant()} size={dotSize} classNames='bg-primary-500' />

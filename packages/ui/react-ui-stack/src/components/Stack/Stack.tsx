@@ -293,7 +293,7 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
 
     const gridClasses = useMemo(() => {
       if (!rail) {
-        return orientation === 'horizontal' ? 'grid-rows-1 px-[--stack-gap]' : 'grid-cols-1 py-[--stack-gap]';
+        return orientation === 'horizontal' ? 'grid-rows-1 px-(--stack-gap)' : 'grid-cols-1 py-(--stack-gap)';
       }
 
       if (orientation === 'horizontal') {
@@ -324,12 +324,12 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
         <div
           {...props}
           className={mx(
-            'grid relative [--stack-gap:var(--dx-trim-xs)]',
+            'grid relative [--stack-gap:var(--spacing-trim-xs)]',
             gridClasses,
             size === 'contain' &&
               (orientation === 'horizontal'
-                ? 'overflow-x-auto overscroll-x-contain min-block-0 max-block-full block-full'
-                : 'overflow-y-auto min-inline-0 max-inline-full inline-full'),
+                ? 'overflow-x-auto overscroll-x-contain min-h-0 max-h-full h-full'
+                : 'overflow-y-auto min-w-0 max-w-full w-full'),
             classNames,
           )}
           onKeyDown={handleKeyDown}

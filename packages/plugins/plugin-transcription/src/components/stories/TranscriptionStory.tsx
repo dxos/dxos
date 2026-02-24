@@ -20,7 +20,7 @@ export const TranscriptionStory: FC<{
   audioRef?: RefObject<HTMLAudioElement | null>;
 }> = ({ model, running, onRunningChange, audioRef, disabled }) => {
   return (
-    <div className='flex flex-col inline-[30rem]'>
+    <div className='flex flex-col w-[30rem]'>
       {audioRef && <audio ref={audioRef} autoPlay />}
       <Toolbar.Root>
         <IconButton

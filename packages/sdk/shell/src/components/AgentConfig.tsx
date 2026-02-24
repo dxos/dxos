@@ -21,7 +21,7 @@ export const AgentConfig = ({
   const { t } = useTranslation(translationKey);
   return (
     <div role='none' className='p-1'>
-      <h2 className={mx(descriptionText, 'text-center mbs-2')}>{t('agent heading')}</h2>
+      <h2 className={mx(descriptionText, 'text-center mt-2')}>{t('agent heading')}</h2>
       {validationMessage && (
         <p role='alert' className={mx(valenceColorText('error'), 'my-2')}>
           {validationMessage}
@@ -60,7 +60,7 @@ export const AgentConfig = ({
               <Tooltip.Trigger asChild content={t('destroy agent label')} side='bottom'>
                 <IconButton
                   variant='ghost'
-                  classNames='px-0 inline-[--rail-action] block-[--rail-action]'
+                  classNames='px-0 w-(--rail-action) h-(--rail-action)'
                   data-testid='agent.destroy'
                   label={t('destroy agent label')}
                   icon='ph--power--regular'
@@ -80,7 +80,7 @@ export const AgentConfig = ({
         <>
           <Button
             variant='ghost'
-            classNames='my-2 inline-full justify-start gap-2 pl-0 pr-3'
+            classNames='my-2 w-full justify-start gap-2 pl-0 pr-3'
             data-testid={agentStatus === 'creatable' ? 'devices-panel.create-agent' : 'devices-panel.agent-error'}
             onClick={agentStatus === 'creatable' ? onAgentCreate : onAgentRefresh}
             aria-describedby='devices-panel.create-agent.description'

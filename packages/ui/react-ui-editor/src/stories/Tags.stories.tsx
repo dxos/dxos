@@ -64,7 +64,7 @@ const DefaultStory = ({ text }: { text?: string }) => {
 
   return (
     <>
-      <div ref={parentRef} className='inline-full p-4' />
+      <div ref={parentRef} className='w-full p-4' />
       {widgets.map(({ id, root, Component, props }) => (
         <div key={id}>{createPortal(<Component {...props} />, root)}</div>
       ))}

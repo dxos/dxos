@@ -247,7 +247,7 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
                     : 'dx-focus-ring-group-y',
             orientation === 'horizontal' ? 'grid-rows-subgrid' : 'grid-cols-subgrid',
             rail && (orientation === 'horizontal' ? 'row-span-2' : 'col-span-2'),
-            role === 'section' && orientation !== 'horizontal' && 'border-be border-subdued-separator',
+            role === 'section' && orientation !== 'horizontal' && 'border-b border-subdued-separator',
             classNames,
           )}
           data-dx-stack-item={stackId}

@@ -24,9 +24,9 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   render: () => {
-    const size = 'inline-[128px] block-[128px]';
+    const size = 'w-[128px] h-[128px]';
     return (
-      <div className='absolute flex inline-full block-full items-center justify-center'>
+      <div className='absolute flex w-full h-full items-center justify-center'>
         <div className='grid grid-cols-3 gap-16'>
           <>
             <div />

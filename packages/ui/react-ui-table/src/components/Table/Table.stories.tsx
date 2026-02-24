@@ -119,8 +119,8 @@ const DefaultStory = () => {
 
   return (
     <div className='grow grid grid-cols-[1fr_350px]'>
-      <div className='grid grid-rows-[min-content_1fr] min-block-0 overflow-hidden'>
-        <TableToolbar classNames='border-be border-subdued-separator' onAdd={handleInsertRow} onSave={handleSaveView} />
+      <div className='grid grid-rows-[min-content_1fr] min-h-0 overflow-hidden'>
+        <TableToolbar classNames='border-b border-subdued-separator' onAdd={handleInsertRow} onSave={handleSaveView} />
         <TableComponent.Root>
           <TableComponent.Main
             ref={tableRef}

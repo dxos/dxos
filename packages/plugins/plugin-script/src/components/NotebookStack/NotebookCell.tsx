@@ -115,7 +115,7 @@ export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: 
       // TODO(burdon): Remove app-framework deps (via render prop).
       return (
         <div
-          className={mx('block-full overflow-hidden grid', explorerGraph && !dragging && 'grid-rows-[min-content_1fr]')}
+          className={mx('h-full overflow-hidden grid', explorerGraph && !dragging && 'grid-rows-[min-content_1fr]')}
         >
           <QueryEditor
             id={cell.id}
@@ -161,7 +161,7 @@ const NotebookCellValue = ({ cell, graph }: NotebookCellProps) => {
   return (
     <div
       className={mx(
-        'flex inline-full bg-group-surface border-y border-subdued-separator text-description font-mono',
+        'flex w-full bg-group-surface border-y border-subdued-separator text-description font-mono',
         valueStyles,
       )}
     >
@@ -187,7 +187,7 @@ const NotebookPromptResult = ({ cell, promptResults }: NotebookCellProps) => {
   }
 
   return (
-    <div className={mx('flex inline-full bg-group-surface text-description border-y border-subdued-separator', valueStyles)}>
+    <div className={mx('flex w-full bg-group-surface text-description border-y border-subdued-separator', valueStyles)}>
       <NotebookTextEditor readOnly value={value} />
     </div>
   );

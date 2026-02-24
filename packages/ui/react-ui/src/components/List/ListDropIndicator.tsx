@@ -16,16 +16,16 @@ const edgeToOrientationMap: Record<Edge, Orientation> = {
 
 const orientationStyles: Record<Orientation, HTMLAttributes<HTMLElement>['className']> = {
   horizontal:
-    'h-[--line-thickness] left-[calc(var(--line-inset)+var(--terminal-radius))] right-[--line-inset] before:left-[--terminal-inset]',
+    'h-(--line-thickness) left-[calc(var(--line-inset)+var(--terminal-radius))] right-(--line-inset) before:left-(--terminal-inset)',
   vertical:
-    'inline-[--line-thickness] top-[calc(var(--line-inset)+var(--terminal-radius))] bottom-[--line-inset] before:top-[--terminal-inset]',
+    'w-(--line-thickness) top-[calc(var(--line-inset)+var(--terminal-radius))] bottom-(--line-inset) before:top-(--terminal-inset)',
 };
 
 const edgeStyles: Record<Edge, HTMLAttributes<HTMLElement>['className']> = {
-  top: 'top-[--line-offset] before:top-[--offset-terminal]',
-  right: 'right-[--line-offset] before:right-[--offset-terminal]',
-  bottom: 'bottom-[--line-offset] before:bottom-[--offset-terminal]',
-  left: 'left-[--line-offset] before:left-[--offset-terminal]',
+  top: 'top-(--line-offset) before:top-(--offset-terminal)',
+  right: 'right-(--line-offset) before:right-(--offset-terminal)',
+  bottom: 'bottom-(--line-offset) before:bottom-(--offset-terminal)',
+  left: 'left-(--line-offset) before:left-(--offset-terminal)',
 };
 
 const strokeSize = 2;
@@ -64,7 +64,7 @@ export const ListDropIndicator = ({
           '--offset-terminal': `${offsetToAlignTerminalWithLine}px`,
         } as CSSProperties
       }
-      className={`absolute z-10 pointer-events-none bg-accent-surface before:content-[''] before:w-[--terminal-size] before:h-[--terminal-size] box-border before:absolute before:border-[length:--line-thickness] before:border-solid before:border-accent-surface before:rounded-full ${orientationStyles[orientation]} ${edgeStyles[edge]}`}
+      className={`absolute z-10 pointer-events-none bg-accent-surface before:content-[''] before:w-(--terminal-size) before:h-(--terminal-size) box-border before:absolute before:border-[length:--line-thickness] before:border-solid before:border-accent-surface before:rounded-full ${orientationStyles[orientation]} ${edgeStyles[edge]}`}
     />
   );
 };

@@ -12,7 +12,7 @@ export type IconStyleProps = {
 };
 
 export const iconRoot: ComponentFunction<IconStyleProps> = ({ size }, etc) =>
-  mx('shrink-0 block-[1em] inline-[1em] text-[var(--icons-color,currentColor)]', size && getSize(size), etc);
+  mx('shrink-0 h-[1em] w-[1em] text-[var(--icons-color,currentColor)]', size && getSize(size), etc);
 
 export const iconTheme: Theme<IconStyleProps> = {
   root: iconRoot,

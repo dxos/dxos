@@ -120,7 +120,7 @@ export const DeckMain = () => {
     () => [
       'grid !top-[env(safe-area-inset-top)]',
       topbar && '!top-[calc(env(safe-area-inset-top)+var(--rail-size))]',
-      hoistStatusbar && 'lg:bottom-[--statusbar-size]',
+      hoistStatusbar && 'lg:bottom-(--statusbar-size)',
     ],
     [topbar, hoistStatusbar],
   );
@@ -182,20 +182,20 @@ export const DeckMain = () => {
           style={
             {
               '--main-spacing': settings?.encapsulatedPlanks ? '0.75rem' : '0',
-              '--dx-main-sidebarWidth':
+              '--dx-main-sidebar-width':
                 sidebarState === 'expanded'
                   ? 'var(--nav-sidebar-size)'
                   : sidebarState === 'collapsed'
                     ? 'var(--l0-size)'
                     : '0',
-              '--dx-main-complementaryWidth':
+              '--dx-main-complementary-width':
                 complementarySidebarState === 'expanded'
                   ? 'var(--complementary-sidebar-size)'
                   : complementarySidebarState === 'collapsed'
                     ? 'var(--rail-size)'
                     : '0',
-              '--dx-main-contentFirstWidth': `${plankSizing[active[0] ?? 'never'] ?? DEFAULT_HORIZONTAL_SIZE}rem`,
-              '--dx-main-contentLastWidth': `${plankSizing[active[(active.length ?? 1) - 1] ?? 'never'] ?? DEFAULT_HORIZONTAL_SIZE}rem`,
+              '--dx-main-content-first-width': `${plankSizing[active[0] ?? 'never'] ?? DEFAULT_HORIZONTAL_SIZE}rem`,
+              '--dx-main-content-last-width': `${plankSizing[active[(active.length ?? 1) - 1] ?? 'never'] ?? DEFAULT_HORIZONTAL_SIZE}rem`,
             } as MainContentProps['style']
           }
         >
@@ -215,7 +215,7 @@ export const DeckMain = () => {
               size='contain'
               itemsCount={itemsCount - 1}
               classNames={[
-                'absolute inset-block-[--main-spacing] -inset-inline-px block-[calc(100%-2*var(--main-spacing))]',
+                'absolute inset-y-(--main-spacing) -inset-w-px h-[calc(100%-2*var(--main-spacing))]',
                 mainPaddingTransitions,
               ]}
               style={padding}
@@ -280,7 +280,7 @@ const PlankSeparator = ({ order, encapsulate }: { order: number; encapsulate?: b
   order > 0 ? (
     <span
       role='separator'
-      className={mx('row-span-2 bg-deck-surface', encapsulate ? 'inline-0' : 'inline-4')}
+      className={mx('row-span-2 bg-deck-surface', encapsulate ? 'w-0' : 'w-4')}
       style={{ gridColumn: order }}
     />
   ) : null;

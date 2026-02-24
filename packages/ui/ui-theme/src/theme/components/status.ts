@@ -13,14 +13,14 @@ export type StatusStyleProps = {
 
 export const statusRoot: ComponentFunction<StatusStyleProps> = ({ variant = 'default' }, ...etc) =>
   mx(
-    'block-1 relative bg-hover-overlay rounded-full overflow-hidden',
-    variant === 'main-bottom' ? 'inline-full block' : 'inline-20 inline-block',
+    'h-1 relative bg-hover-overlay rounded-full overflow-hidden',
+    variant === 'main-bottom' ? 'w-full block' : 'inline-20 inline-block',
     ...etc,
   );
 
 export const statusBar: ComponentFunction<StatusStyleProps> = ({ indeterminate, variant = 'default' }, ...etc) =>
   mx(
-    'absolute inset-block-0 block rounded-full',
+    'absolute inset-y-0 block rounded-full',
     variant === 'main-bottom' ? 'bg-accent-surface' : 'bg-un-accent',
     indeterminate ? 'animate-progress-indeterminate' : 'start-0',
     ...etc,

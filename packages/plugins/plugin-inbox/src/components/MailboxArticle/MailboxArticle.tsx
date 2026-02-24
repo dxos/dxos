@@ -188,11 +188,11 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
           {filterVisible.value && (
             <div
               role='none'
-              className='grid grid-cols-[1fr_min-content] inline-full items-center p-1 gap-1 border-b border-separator'
+              className='grid grid-cols-[1fr_min-content] w-full items-center p-1 gap-1 border-b border-separator'
             >
               <QueryEditor
                 ref={filterEditorRef}
-                classNames='min-inline-0 pl-1'
+                classNames='min-w-0 pl-1'
                 autoFocus
                 db={db}
                 tags={tagMap}

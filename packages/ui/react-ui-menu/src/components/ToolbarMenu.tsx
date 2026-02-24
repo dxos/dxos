@@ -191,7 +191,7 @@ export const ToolbarMenu = ({
   const { hasAttention } = useAttention(attendableId);
   const InnerRoot = textBlockWidthProp ? 'div' : Fragment;
   const innerRootProps = textBlockWidthProp
-    ? { role: 'none', className: mx(textBlockWidth, toolbarLayout, 'block-full') }
+    ? { role: 'none', className: mx(textBlockWidth, toolbarLayout, 'h-full') }
     : {};
 
   return (

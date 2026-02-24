@@ -21,7 +21,7 @@ type StoryProps = {
 };
 
 const DefaultStory = ({ valence, title, body }: StoryProps) => (
-  <div className='inline-[30rem]'>
+  <div className='w-[30rem]'>
     <Message.Root valence={valence}>
       {title && <Message.Title>{title}</Message.Title>}
       {body && <Message.Content>{body}</Message.Content>}

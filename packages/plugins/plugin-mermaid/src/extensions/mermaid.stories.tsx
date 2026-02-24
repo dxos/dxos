@@ -39,7 +39,7 @@ const DefaultStory = ({ text }: StoryProps) => {
     [themeMode],
   );
 
-  return <div className='inline-[50rem]' ref={parentRef} {...focusAttributes} />;
+  return <div className='w-[50rem]' ref={parentRef} {...focusAttributes} />;
 };
 
 const meta = {

@@ -19,9 +19,9 @@ export const scrollAreaRoot: ComponentFunction<ScrollAreaStyleProps> = ({ orient
   mx(
     'overflow-hidden',
 
-    orientation === 'vertical' && 'group/scroll-v block-full inline-full min-block-0',
-    orientation === 'horizontal' && 'group/scroll-h block-full inline-full min-inline-0',
-    orientation === 'all' && 'group/scroll-all block-full inline-full min-block-0 min-inline-0',
+    orientation === 'vertical' && 'group/scroll-v h-full w-full min-h-0',
+    orientation === 'horizontal' && 'group/scroll-h h-full w-full min-w-0',
+    orientation === 'all' && 'group/scroll-all h-full w-full min-h-0 min-w-0',
 
     // Balance left/right, top/bottom "margin" with scrollbar.
     margin && [
@@ -41,15 +41,15 @@ export const scrollAreaViewport: ComponentFunction<ScrollAreaStyleProps> = (
   ...etc
 ) =>
   mx(
-    'block-full inline-full',
+    'h-full w-full',
 
     orientation === 'vertical' && 'flex flex-col overflow-y-scroll',
     orientation === 'horizontal' && 'flex overflow-x-scroll',
     orientation === 'all' && 'overflow-scroll',
 
     thin
-      ? '[&::-webkit-scrollbar]:inline-[4px] [&::-webkit-scrollbar]:block-[4px]'
-      : '[&::-webkit-scrollbar]:inline-[8px] [&::-webkit-scrollbar]:block-[8px]',
+      ? '[&::-webkit-scrollbar]:w-[4px] [&::-webkit-scrollbar]:h-[4px]'
+      : '[&::-webkit-scrollbar]:w-[8px] [&::-webkit-scrollbar]:h-[8px]',
 
     '[&::-webkit-scrollbar-corner]:bg-transparent',
     '[&::-webkit-scrollbar-track]:bg-transparent',

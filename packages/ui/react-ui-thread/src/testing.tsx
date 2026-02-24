@@ -30,7 +30,7 @@ export const MessageStoryText = ({ text, onDelete, authorName, timestamp }: Mess
             iconOnly
             label='Delete'
             variant='ghost'
-            classNames={['p-1.5 min-block-0 mr-1 items-start transition-opacity', hoverableControlItem]}
+            classNames={['p-1.5 min-h-0 mr-1 items-start transition-opacity', hoverableControlItem]}
             onClick={() => onDelete()}
           />
         )}
@@ -50,7 +50,7 @@ export const MessageStoryBlock = <PartValue,>({ part }: MessagePartProps<PartVal
       role='none'
       className={mx('grid grid-cols-subgrid col-span-3', hoverableControls, hoverableFocusedWithinControls)}
     >
-      <pre className='font-mono max-inline-full overflow-x-auto col-span-3'>
+      <pre className='font-mono max-w-full overflow-x-auto col-span-3'>
         <code>{JSON.stringify(part, undefined, 2)}</code>
       </pre>
     </div>

@@ -12,7 +12,7 @@
   }
 }
 
-@layer utilities {
+@layer dx-components {
   body[data-drag-preview] {
     .drag-preview-p-0 {
       padding-inline-start: 0;

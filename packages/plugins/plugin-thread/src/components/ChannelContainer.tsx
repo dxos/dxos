@@ -121,7 +121,7 @@ export const ChannelContainer = ({ role, subject: channel, roomId: roomIdProp, f
   const isJoined = joined && currentRoomId === roomId;
 
   return (
-    <StackItem.Content classNames={isJoined && 'block-full'} toolbar={!isJoined}>
+    <StackItem.Content classNames={isJoined && 'h-full'} toolbar={!isJoined}>
       {isJoined && !isNamed && <DisplayNameMissing />}
       {isJoined && isNamed && (
         <Call.Root>
@@ -155,7 +155,7 @@ const DisplayNameMissing = () => {
           value={displayName}
           onChange={handleChange}
           placeholder={t('display name input placeholder')}
-          classNames='md:min-inline-64'
+          classNames='md:min-w-64'
         />
       </Settings.ItemInput>
       <Settings.GroupButton disabled={!displayName} onClick={handleSave}>

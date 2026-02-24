@@ -47,7 +47,7 @@ const DefaultStory = (props: CellEditorProps) => {
       <div className='text-sm'>
         Last action: <span className='font-mono'>{lastAction}</span>
       </div>
-      <div className='relative border border-separator block-[100px] inline-[300px]'>
+      <div className='relative border border-separator h-[100px] w-[300px]'>
         <CellEditor
           value={value}
           extensions={extensions}

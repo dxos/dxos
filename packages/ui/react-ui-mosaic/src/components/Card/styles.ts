@@ -5,7 +5,7 @@
 import { type ClassNameValue } from '@dxos/react-ui';
 
 export const styles = {
-  root: 'group/card relative min-block-[--rail-item] inline-full card-min-width overflow-hidden',
+  root: 'group/card relative min-h-(--rail-item) w-full card-min-width overflow-hidden',
   border:
     'bg-card-surface border border-separator dark:border-subdued-separator rounded-xs dx-focus-ring-group-y-indicator',
 
@@ -19,5 +19,5 @@ export const styles = {
   // TODO(burdon): Address density.
   grid_3_coarse: 'grid grid-cols-[var(--l0-avatar-size)_minmax(0,1fr)_var(--rail-item)] gap-x-1',
 
-  poster: 'max-block-[200px]',
+  poster: 'max-h-[200px]',
 } satisfies Record<string, ClassNameValue>;

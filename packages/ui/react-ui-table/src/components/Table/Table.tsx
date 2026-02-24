@@ -60,12 +60,12 @@ const TableRoot = ({ children, role = 'article' }: TableRootProps) => {
     <div
       role='none'
       className={mx(
-        'relative border-separator! [&_.dx-grid]:max-inline-[--dx-grid-content-inline-size] [&_.dx-grid]:max-block-[--dx-grid-content-block-size]',
+        'relative border-separator! [&_.dx-grid]:max-w-(--dx-grid-content-w-size) [&_.dx-grid]:max-h-(--dx-grid-content-h-size)',
         // TODO(burdon): Move role-dependent logic to plugin.
         role === 'section' && 'attention-surface',
         role === 'card--content' && 'popover-card-height',
         ['section'].includes(role) && 'overflow-hidden',
-        ['article', 'slide'].includes(role) && 'flex flex-col [&_.dx-grid]:grow [&_.dx-grid]:block-0',
+        ['article', 'slide'].includes(role) && 'flex flex-col [&_.dx-grid]:grow [&_.dx-grid]:h-0',
       )}
     >
       {children}

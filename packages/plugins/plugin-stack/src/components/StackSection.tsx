@@ -17,7 +17,7 @@ import { type StackSectionItem } from '../types';
 import { CaretDownUp } from './CaretDownUp';
 import { useStack } from './StackContext';
 
-const sectionActionDimensions = 'p-1 my-1 shrink-0 min-block-0 inline-[--rail-action] block-min';
+const sectionActionDimensions = 'p-1 my-1 shrink-0 min-h-0 w-(--rail-action) h-min';
 
 export type StackSectionProps = StackSectionItem;
 

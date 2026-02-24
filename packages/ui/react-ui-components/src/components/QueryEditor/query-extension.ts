@@ -212,9 +212,9 @@ const lineHeight = '30px';
  */
 const container = (classNames: string, ...children: Domino<HTMLElement>[]) => {
   const inner = Domino.of('span')
-    .classNames(mx('inline-flex block-[26px] border rounded-xs', classNames))
+    .classNames(mx('inline-flex h-[26px] border rounded-xs', classNames))
     .children(...children);
-  return Domino.of('span').classNames('inline-flex block-[28px] align-middle').children(inner).root;
+  return Domino.of('span').classNames('inline-flex h-[28px] align-middle').children(inner).root;
 };
 
 /**

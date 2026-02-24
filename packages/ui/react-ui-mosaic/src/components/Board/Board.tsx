@@ -106,7 +106,7 @@ const BoardContentInner = forwardRef<HTMLDivElement, BoardContentProps>(
     const items = useAtomValue(model.columns);
 
     return (
-      <div ref={forwardedRef} className={mx('flex block-full inline-full overflow-hidden', classNames)}>
+      <div ref={forwardedRef} className={mx('flex h-full w-full overflow-hidden', classNames)}>
         <Focus.Group asChild orientation='horizontal'>
           <Mosaic.Container
             asChild
@@ -146,7 +146,7 @@ const BoardPlaceholder = (props: MosaicPlaceholderProps<number>) => {
     <Mosaic.Placeholder {...props} classNames={mosaicStyles.placeholder.root}>
       <div
         className={mx(
-          'flex block-full border border-dashed border-separator rounded-xs',
+          'flex h-full border border-dashed border-separator rounded-xs',
           mosaicStyles.placeholder.content,
         )}
       />

@@ -27,7 +27,7 @@ export default Capability.makeModule(
     const themeAtom = Atom.make<{ themeMode: ThemeMode }>({ themeMode: 'dark' }).pipe(Atom.keepAlive);
 
     const setTheme = ({ matches: prefersDark }: { matches?: boolean }) => {
-      document.documentElement.classList[prefersDark ? 'add' : 'remove']('dark');
+      document.body.classList[prefersDark ? 'add' : 'remove']('dark');
       registry.set(themeAtom, { themeMode: prefersDark ? 'dark' : 'light' });
     };
 

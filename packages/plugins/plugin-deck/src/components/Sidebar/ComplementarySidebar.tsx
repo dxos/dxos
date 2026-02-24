@@ -94,19 +94,19 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
       label={label}
       classNames={[
         topbar && 'top-[calc(env(safe-area-inset-top)+var(--rail-size))]',
-        hoistStatusbar && 'bottom-[--statusbar-size]',
+        hoistStatusbar && 'bottom-(--statusbar-size)',
       ]}
     >
       <Tabs.Root orientation='vertical' verticalVariant='stateless' value={internalValue} classNames='contents'>
         <div
           role='none'
           className={mx(
-            'absolute z-[1] inset-block-0 end-0 !inline-[--r0-size]',
-            'py-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] border-is border-subdued-separator',
+            'absolute z-[1] inset-y-0 end-0 !w-(--r0-size)',
+            'py-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] border-s border-subdued-separator',
             'grid grid-cols-1 grid-rows-[1fr_min-content] bg-base-surface contain-layout app-drag',
           )}
         >
-          <Tabs.Tablist classNames='grid grid-cols-1 auto-rows-[--rail-action] p-1 gap-1 overflow-y-auto!'>
+          <Tabs.Tablist classNames='grid grid-cols-1 auto-rows-(--rail-action) p-1 gap-1 overflow-y-auto!'>
             {companions.map((companion) => (
               <Tabs.Tab key={getCompanionId(companion.id)} value={getCompanionId(companion.id)} asChild>
                 <IconButton
@@ -128,11 +128,11 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
             ))}
           </Tabs.Tablist>
           {!hoistStatusbar && (
-            <div role='none' className='grid grid-cols-1 auto-rows-[--rail-item] p-1 overflow-y-auto'>
+            <div role='none' className='grid grid-cols-1 auto-rows-(--rail-item) p-1 overflow-y-auto'>
               <Surface.Surface role='status-bar--r0-footer' limit={1} />
             </div>
           )}
-          <div role='none' className='hidden lg:grid grid-cols-1 auto-rows-[--rail-action] p-1'>
+          <div role='none' className='hidden lg:grid grid-cols-1 auto-rows-(--rail-action) p-1'>
             <ToggleComplementarySidebarButton />
           </div>
         </div>
@@ -143,7 +143,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
               value={getCompanionId(companion.id)}
               classNames={[
                 'absolute data-[state="inactive"]:-z-[1] overflow-hidden',
-                'inset-block-0 start-0 inline-[calc(100%-var(--r0-size))] lg:inline-[--r1-size]',
+                'inset-y-0 start-0 w-[calc(100%-var(--r0-size))] lg:w-(--r1-size)',
                 'grid grid-cols-1 grid-rows-[var(--rail-size)_1fr_min-content] py-[env(safe-area-inset-top)]',
               ]}
               {...(state.complementarySidebarState !== 'expanded' && { inert: true })}
@@ -189,7 +189,7 @@ const ComplementarySidebarPanel = ({ companion, activeId, data, hoistStatusbar }
           iconOnly
           tooltipSide='left'
           data-value={getCompanionId(companion.id)}
-          classNames='block-10 inline-10'
+          classNames='h-10 w-10'
           variant='default'
         />
         <div role='none' className='px-1'>

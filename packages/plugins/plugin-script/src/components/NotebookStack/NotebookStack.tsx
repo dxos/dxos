@@ -14,7 +14,7 @@ import { type TypescriptEditorProps } from '../TypescriptEditor';
 import { NotebookCell, type NotebookCellProps } from './NotebookCell';
 import { NotebookMenu } from './NotebookMenu';
 
-const minSectionHeight = 'min-block-[16rem]';
+const minSectionHeight = 'min-h-[16rem]';
 
 export type NotebookStackProps = ThemedClassName<
   {
@@ -51,7 +51,7 @@ const NotebookSection = ({
 
   return (
     <StackItem.Root role='section' item={cell} draggable classNames={resizable && minSectionHeight}>
-      <StackItem.Heading classNames='block-full p-1 justify-between attention-surface'>
+      <StackItem.Heading classNames='h-full p-1 justify-between attention-surface'>
         <StackItem.DragHandle asChild>
           <IconButton variant='ghost' icon='ph--dots-six-vertical--regular' iconOnly label='Drag handle' />
         </StackItem.DragHandle>

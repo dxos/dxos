@@ -12,7 +12,7 @@
   }
 
   .dx-scrollbar-thin::-webkit-scrollbar {
-    @apply inline-[4px];
+    @apply w-[4px];
   }
   .dx-scrollbar-thin::-webkit-scrollbar-thumb {
     @apply bg-transparent;

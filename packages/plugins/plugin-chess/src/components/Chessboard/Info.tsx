@@ -35,7 +35,7 @@ export const Info = ({ classNames, orientation = 'white', onOrientationChange, o
   return (
     <div
       className={mx(
-        'grid grid-rows-[min-content_1fr_min-content] inline-full min-inline-[18rem] p-2 overflow-hidden bg-group-surface rounded-xs',
+        'grid grid-rows-[min-content_1fr_min-content] w-full min-w-[18rem] p-2 overflow-hidden bg-group-surface rounded-xs',
         classNames,
       )}
     >
@@ -196,7 +196,7 @@ type PlayerIndicatorProps = PropsWithChildren<{
 const PlayerIndicator = ({ children, model, player, icon }: PlayerIndicatorProps) => {
   const turn = player === (model.game.turn() === 'w' ? 'white' : 'black');
   return (
-    <div className='grid grid-cols-[2rem_1fr_2rem] gap-2 block-[--rail-size] px-1 flex items-center overflow-hidden'>
+    <div className='grid grid-cols-[2rem_1fr_2rem] gap-2 h-(--rail-size) px-1 flex items-center overflow-hidden'>
       <div className='place-items-center'>
         <Icon
           icon={turn ? 'ph--circle--fill' : 'ph--circle--thin'}

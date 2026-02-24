@@ -15,7 +15,7 @@ export const CollectionSection = ({ role, subject }: SurfaceComponentProps<Colle
 
   // TODO(wittjosiah): Better placeholder.
   return (
-    <div role={role} className='min-block-[3.5rem] grid grid-rows-subgrid grid-cols-subgrid items-center'>
+    <div role={role} className='min-h-[3.5rem] grid grid-rows-subgrid grid-cols-subgrid items-center'>
       <span className='truncate'>{subject.name ?? t('unnamed collection label')}</span>
     </div>
   );

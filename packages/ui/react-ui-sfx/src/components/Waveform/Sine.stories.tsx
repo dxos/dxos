@@ -23,19 +23,19 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    classNames: 'inline-[20rem] block-[10rem] _outline outline-primary-500 rounded-md',
+    classNames: 'w-[20rem] h-[10rem] _outline outline-primary-500 rounded-md',
   },
 };
 
 export const Mini: Story = {
   args: {
-    classNames: 'inline-[4rem] block-[4rem] border border-neutral-500 rounded-md',
+    classNames: 'w-[4rem] h-[4rem] border border-neutral-500 rounded-md',
   },
 };
 
 export const Fullscreen: Story = {
   args: {
-    classNames: 'fixed inset-0 inline-screen block-screen',
+    classNames: 'fixed inset-0 w-screen h-screen',
   },
   parameters: {
     layout: 'fullscreen',

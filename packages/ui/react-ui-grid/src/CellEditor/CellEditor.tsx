@@ -144,13 +144,13 @@ export const CellEditor = ({ value, extensions, box, gridId, autoFocus, slots, o
           slots: {
             editor: {
               className: mx(
-                'min-inline-full! inline-min! !max-inline-[--dx-grid-cell-editor-max-inline-size] min-block-full! !max-block-[--dx-grid-cell-editor-max-block-size]',
+                'min-w-full! w-min! !max-w-(--dx-grid-cell-editor-max-w-size) min-h-full! !max-h-(--dx-grid-cell-editor-max-h-size)',
                 slots?.editor?.className,
               ),
             },
             scroll: {
               className: mx(
-                'overflow-x-hidden! !py-[max(0,calc(var(--dx-grid-cell-editor-padding-block)-1px))] pr-0! !pl-[--dx-grid-cell-editor-padding-inline]',
+                'overflow-x-hidden! !py-[max(0,calc(var(--dx-grid-cell-editor-padding-block)-1px))] pr-0! !pl-(--dx-grid-cell-editor-padding-inline)',
                 slots?.scroll?.className,
               ),
             },

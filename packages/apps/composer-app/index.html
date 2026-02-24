@@ -32,12 +32,16 @@
     <!-- TODO(wittjosiah): Add hash/nonce and remove unsafe-inline from content security policy. -->
     <!-- TODO(nf): Blob in worker-src needed for Sentry replay. -->
 
-    <!-- Add theme mode at root (before code runs.) -->
+    <!-- Add theme mode to body (before code runs.) -->
     <script>
-      function setTheme(darkMode) {
-        document.documentElement.classList[darkMode ? 'add' : 'remove']('dark');
+      var __dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      function setTheme(dark) {
+        __dark = dark;
+        if (document.body) {
+          document.body.classList[dark ? 'add' : 'remove']('dark');
+        }
       }
-      setTheme(window.matchMedia('(prefers-color-scheme: dark)').matches);
+      document.addEventListener('DOMContentLoaded', function () { setTheme(__dark); });
       window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function (event) {
         setTheme(event.matches);
       });

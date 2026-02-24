@@ -4,7 +4,7 @@
 
 @layer dx-components {
   .dx-dialog__overlay {
-    @apply z-50 fixed grid inset-x-0 top-0 block-dvh py-[env(safe-area-inset-top)] place-items-center overflow-auto bg-scrim-surface;
+    @apply z-50 fixed grid inset-x-0 top-0 h-dvh py-[env(safe-area-inset-top)] place-items-center overflow-auto bg-scrim-surface;
     
     &[data-state='open'] {
       @apply animate-fade-in;
@@ -48,7 +48,7 @@
   }
 
   .dx-dialog__content {
-    @apply flex flex-col inline-dvw max-block-full max-inline-full p-4 overflow-hidden shadow-md backdrop-blur;
+    @apply flex flex-col w-dvw max-h-full max-w-full p-4 overflow-hidden shadow-md backdrop-blur;
 
     &[data-state='open'] {
       @apply animate-slide-up-and-fade;
@@ -61,13 +61,13 @@
 
   @media (min-width: theme('screens.sm')) {
     .dx-dialog__content {
-      @apply inline-[95vw] border rounded-md border-separator;
+      @apply w-[95vw] border rounded-md border-separator;
     }
   }
 
   @media (min-width: theme('screens.md')) {
     .dx-dialog__content {
-      @apply max-inline-[24rem];
+      @apply max-w-[24rem];
     }
   }
 

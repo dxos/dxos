@@ -10,7 +10,7 @@
 
   /* Base styles */
   .dx-button {
-    @apply font-medium shrink-0 inline-flex select-none items-center justify-center overflow-hidden transition-colors duration-100 ease-linear bg-input-surface min-block-[2.5rem] px-3;
+    @apply font-medium shrink-0 inline-flex select-none items-center justify-center overflow-hidden transition-colors duration-100 ease-linear bg-input-surface min-h-[2.5rem] px-3;
     &[aria-pressed='true'],
     &[aria-checked='true'] {
       @apply text-accent-text bg-attention;
@@ -74,7 +74,7 @@
   }
   @media (pointer: fine) {
     .dx-button[data-density='fine'] {
-      @apply min-block-[2rem] px-2.5;
+      @apply min-h-[2rem] px-2.5;
     }
   }
 }

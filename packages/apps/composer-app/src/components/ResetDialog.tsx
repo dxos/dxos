@@ -115,7 +115,7 @@ export const ResetDialog = ({
           <AlertDialog.Description>{t(error ? error.message : 'reset dialog message')}</AlertDialog.Description>
           {error && (
             <>
-              <div role='none' className='mbs-4'>
+              <div role='none' className='mt-4'>
                 <IconButton
                   icon={showStack ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
                   variant='ghost'
@@ -144,7 +144,7 @@ export const ResetDialog = ({
               )}
             </>
           )}
-          <div role='none' className='flex gap-2 mbs-4'>
+          <div role='none' className='flex gap-2 mt-4'>
             {!isDev ? (
               <DropdownMenu.Root>
                 <DropdownMenu.Trigger asChild>

@@ -14,7 +14,7 @@ export type ToastStyleProps = Partial<{
 export const toastViewport: ComponentFunction<ToastStyleProps> = (_props, ...etc) =>
   mx(
     // TODO(burdon): block-end should take into account status bar.
-    'z-40 fixed bottom-[calc(env(safe-area-inset-bottom)+1rem)] inset-start-[calc(env(safe-area-inset-left)+1rem)] inset-end-[calc(env(safe-area-inset-right)+1rem)] inline-auto md:end-[calc(env(safe-area-inset-right)+1rem)] md:left-auto md:inline-full md:max-w-sm',
+    'z-40 fixed bottom-[calc(env(safe-area-inset-bottom)+1rem)] inset-start-[calc(env(safe-area-inset-left)+1rem)] inset-end-[calc(env(safe-area-inset-right)+1rem)] w-auto md:end-[calc(env(safe-area-inset-right)+1rem)] md:left-auto md:w-full md:max-w-sm',
     'rounded-md flex flex-col gap-2',
     ...etc,
   );

@@ -7,8 +7,8 @@ import { type ComponentFunction } from '@dxos/ui-types';
 import { mx } from '../../util';
 
 // Padding to apply to in-flow elements which need to clear the fixed topbar/bottombar.
-export const topbarBlockPaddingStart = 'py-[--topbar-size] sticky-top-from-topbar-bottom';
-export const bottombarBlockPaddingEnd = 'pb-[--statusbar-size] sticky-bottom-from-statusbar-bottom';
+export const topbarBlockPaddingStart = 'py-(--topbar-size) sticky-top-from-topbar-bottom';
+export const bottombarBlockPaddingEnd = 'pb-(--statusbar-size) sticky-bottom-from-statusbar-bottom';
 
 export const mainPadding = 'dx-main-content-padding';
 export const mainPaddingTransitions = 'dx-main-content-padding-transitions';

@@ -12,7 +12,7 @@
 }
 
 .container-max-width {
-  @apply inline-full max-inline-container-max-width mx-auto;
+  @apply w-full max-w-container-max-width mx-auto;
 }
 
 /**
@@ -31,16 +31,16 @@
 }
 
 .card-min-width {
-  @apply min-inline-card-min-width;
+  @apply min-w-card-min-width;
 }
 
 .card-max-width {
-  @apply inline-full max-inline-card-max-width;
+  @apply w-full max-w-card-max-width;
 }
 
 .popover-card {
   @apply inline-card-max-width;
-  max-block-size: min(var(--radix-popper-available-height), var(--dx-card-max-height));
+  max-h-size: min(var(--radix-popper-available-height), var(--dx-card-max-height));
 }
 
 @layer dx-components {
@@ -48,352 +48,352 @@
   /* Block size */
   [data-size='0'],
   [data-block-size='0'] {
-    @apply block-0;
+    @apply h-0;
   }
 
   [data-size='px'],
   [data-block-size='px'] {
-    @apply block-px;
+    @apply h-px;
   }
 
   [data-size='0.5'],
   [data-block-size='0.5'] {
-    @apply block-0.5;
+    @apply h-0.5;
   }
 
   [data-size='1'],
   [data-block-size='1'] {
-    @apply block-1;
+    @apply h-1;
   }
 
   [data-size='1.5'],
   [data-block-size='1.5'] {
-    @apply block-1.5;
+    @apply h-1.5;
   }
 
   [data-size='2'],
   [data-block-size='2'] {
-    @apply block-2;
+    @apply h-2;
   }
 
   [data-size='2.5'],
   [data-block-size='2.5'] {
-    @apply block-2.5;
+    @apply h-2.5;
   }
 
   [data-size='3'],
   [data-block-size='3'] {
-    @apply block-3;
+    @apply h-3;
   }
 
   [data-size='3.5'],
   [data-block-size='3.5'] {
-    @apply block-3.5;
+    @apply h-3.5;
   }
 
   [data-size='4'],
   [data-block-size='4'] {
-    @apply block-4;
+    @apply h-4;
   }
 
   [data-size='5'],
   [data-block-size='5'] {
-    @apply block-5;
+    @apply h-5;
   }
 
   [data-size='6'],
   [data-block-size='6'] {
-    @apply block-6;
+    @apply h-6;
   }
 
   [data-size='7'],
   [data-block-size='7'] {
-    @apply block-7;
+    @apply h-7;
   }
 
   [data-size='8'],
   [data-block-size='8'] {
-    @apply block-8;
+    @apply h-8;
   }
 
   [data-size='9'],
   [data-block-size='9'] {
-    @apply block-9;
+    @apply h-9;
   }
 
   [data-size='10'],
   [data-block-size='10'] {
-    @apply block-10;
+    @apply h-10;
   }
 
   [data-size='11'],
   [data-block-size='11'] {
-    @apply block-11;
+    @apply h-11;
   }
 
   [data-size='12'],
   [data-block-size='12'] {
-    @apply block-12;
+    @apply h-12;
   }
 
   [data-size='14'],
   [data-block-size='14'] {
-    @apply block-14;
+    @apply h-14;
   }
 
   [data-size='16'],
   [data-block-size='16'] {
-    @apply block-16;
+    @apply h-16;
   }
 
   [data-size='20'],
   [data-block-size='20'] {
-    @apply block-20;
+    @apply h-20;
   }
 
   [data-size='24'],
   [data-block-size='24'] {
-    @apply block-24;
+    @apply h-24;
   }
 
   [data-size='28'],
   [data-block-size='28'] {
-    @apply block-28;
+    @apply h-28;
   }
 
   [data-size='32'],
   [data-block-size='32'] {
-    @apply block-32;
+    @apply h-32;
   }
 
   [data-size='36'],
   [data-block-size='36'] {
-    @apply block-36;
+    @apply h-36;
   }
 
   [data-size='40'],
   [data-block-size='40'] {
-    @apply block-40;
+    @apply h-40;
   }
 
   [data-size='44'],
   [data-block-size='44'] {
-    @apply block-44;
+    @apply h-44;
   }
 
   [data-size='48'],
   [data-block-size='48'] {
-    @apply block-48;
+    @apply h-48;
   }
 
   [data-size='52'],
   [data-block-size='52'] {
-    @apply block-52;
+    @apply h-52;
   }
 
   [data-size='56'],
   [data-block-size='56'] {
-    @apply block-56;
+    @apply h-56;
   }
 
   [data-size='60'],
   [data-block-size='60'] {
-    @apply block-60;
+    @apply h-60;
   }
 
   [data-size='64'],
   [data-block-size='64'] {
-    @apply block-64;
+    @apply h-64;
   }
 
   [data-size='72'],
   [data-block-size='72'] {
-    @apply block-72;
+    @apply h-72;
   }
 
   [data-size='80'],
   [data-block-size='80'] {
-    @apply block-80;
+    @apply h-80;
   }
 
   [data-size='96'],
   [data-block-size='96'] {
-    @apply block-96;
+    @apply h-96;
   }
 
   /* Inline size */
   [data-size='0'],
   [data-inline-size='0'] {
-    @apply inline-0;
+    @apply w-0;
   }
 
   [data-size='px'],
   [data-inline-size='px'] {
-    @apply inline-px;
+    @apply w-px;
   }
 
   [data-size='0.5'],
   [data-inline-size='0.5'] {
-    @apply inline-0.5;
+    @apply w-0.5;
   }
 
   [data-size='1'],
   [data-inline-size='1'] {
-    @apply inline-1;
+    @apply w-1;
   }
 
   [data-size='1.5'],
   [data-inline-size='1.5'] {
-    @apply inline-1.5;
+    @apply w-1.5;
   }
 
   [data-size='2'],
   [data-inline-size='2'] {
-    @apply inline-2;
+    @apply w-2;
   }
 
   [data-size='2.5'],
   [data-inline-size='2.5'] {
-    @apply inline-2.5;
+    @apply w-2.5;
   }
 
   [data-size='3'],
   [data-inline-size='3'] {
-    @apply inline-3;
+    @apply w-3;
   }
 
   [data-size='3.5'],
   [data-inline-size='3.5'] {
-    @apply inline-3.5;
+    @apply w-3.5;
   }
 
   [data-size='4'],
   [data-inline-size='4'] {
-    @apply inline-4;
+    @apply w-4;
   }
 
   [data-size='5'],
   [data-inline-size='5'] {
-    @apply inline-5;
+    @apply w-5;
   }
 
   [data-size='6'],
   [data-inline-size='6'] {
-    @apply inline-6;
+    @apply w-6;
   }
 
   [data-size='7'],
   [data-inline-size='7'] {
-    @apply inline-7;
+    @apply w-7;
   }
 
   [data-size='8'],
   [data-inline-size='8'] {
-    @apply inline-8;
+    @apply w-8;
   }
 
   [data-size='9'],
   [data-inline-size='9'] {
-    @apply inline-9;
+    @apply w-9;
   }
 
   [data-size='10'],
   [data-inline-size='10'] {
-    @apply inline-10;
+    @apply w-10;
   }
 
   [data-size='11'],
   [data-inline-size='11'] {
-    @apply inline-11;
+    @apply w-11;
   }
 
   [data-size='12'],
   [data-inline-size='12'] {
-    @apply inline-12;
+    @apply w-12;
   }
 
   [data-size='14'],
   [data-inline-size='14'] {
-    @apply inline-14;
+    @apply w-14;
   }
 
   [data-size='16'],
   [data-inline-size='16'] {
-    @apply inline-16;
+    @apply w-16;
   }
 
   [data-size='20'],
   [data-inline-size='20'] {
-    @apply inline-20;
+    @apply w-20;
   }
 
   [data-size='24'],
   [data-inline-size='24'] {
-    @apply inline-24;
+    @apply w-24;
   }
 
   [data-size='28'],
   [data-inline-size='28'] {
-    @apply inline-28;
+    @apply w-28;
   }
 
   [data-size='32'],
   [data-inline-size='32'] {
-    @apply inline-32;
+    @apply w-32;
   }
 
   [data-size='36'],
   [data-inline-size='36'] {
-    @apply inline-36;
+    @apply w-36;
   }
 
   [data-size='40'],
   [data-inline-size='40'] {
-    @apply inline-40;
+    @apply w-40;
   }
 
   [data-size='44'],
   [data-inline-size='44'] {
-    @apply inline-44;
+    @apply w-44;
   }
 
   [data-size='48'],
   [data-inline-size='48'] {
-    @apply inline-48;
+    @apply w-48;
   }
 
   [data-size='52'],
   [data-inline-size='52'] {
-    @apply inline-52;
+    @apply w-52;
   }
 
   [data-size='56'],
   [data-inline-size='56'] {
-    @apply inline-56;
+    @apply w-56;
   }
 
   [data-size='60'],
   [data-inline-size='60'] {
-    @apply inline-60;
+    @apply w-60;
   }
 
   [data-size='64'],
   [data-inline-size='64'] {
-    @apply inline-64;
+    @apply w-64;
   }
 
   [data-size='72'],
   [data-inline-size='72'] {
-    @apply inline-72;
+    @apply w-72;
   }
 
   [data-size='80'],
   [data-inline-size='80'] {
-    @apply inline-80;
+    @apply w-80;
   }
 
   [data-size='96'],
   [data-inline-size='96'] {
-    @apply inline-96;
+    @apply w-96;
   }
 }

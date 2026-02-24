@@ -200,7 +200,7 @@ const BoardContainer = ({ classNames, children }: BoardContainerProps) => {
       }}
     >
       {/* NOTE: This ensures that the children are centered if they are smaller than the container. */}
-      <div className='max-block-full max-inline-full'>{children}</div>
+      <div className='max-h-full max-w-full'>{children}</div>
     </div>
   );
 };

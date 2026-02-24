@@ -16,7 +16,7 @@ export const RootContainer = () => {
   const { pathname } = useLocation();
 
   return (
-    <div className='flex inline-full block-full overflow-hidden'>
+    <div className='flex w-full h-full overflow-hidden'>
       <Sidebar />
       <div className='flex flex-col grow overflow-hidden'>
         <ErrorBoundary key={pathname}>
@@ -33,7 +33,7 @@ const Sidebar = () => {
   const { pathname } = useLocation();
   const sections = useSections();
   return (
-    <ScrollArea.Root orientation='vertical' classNames='inline-[180px] border-ie border-separator'>
+    <ScrollArea.Root orientation='vertical' classNames='w-[180px] border-e border-separator'>
       <ScrollArea.Viewport classNames='gap-4 divide-y divide-separator'>
         {sections.map((section) => (
           <div key={section.id}>
@@ -64,7 +64,7 @@ const Footer = () => {
 
   return (
     <div className='flex p-2'>
-      <div className='flex flex-col inline-full text-sm text-neutral-500'>
+      <div className='flex flex-col w-full text-sm text-neutral-500'>
         <div className='grid grid-cols-2 gap-2'>
           <div className='text-neutral-300 text-right'>Identity</div>
           <div className='font-mono'>{identity?.identityKey.truncate()}</div>

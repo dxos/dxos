@@ -319,10 +319,10 @@ grep -rn 'grid-cols-\[[0-9a-z]*,[0-9a-z]*\]' packages/ --include="*.tsx" --inclu
 **Sizing Properties:**
 - `bs-*` → `block-*` (block-size)
 - `is-*` → `inline-*` (inline-size)
-- `min-bs-*` → `min-block-*`
-- `max-bs-*` → `max-block-*`
-- `min-is-*` → `min-inline-*`
-- `max-is-*` → `max-inline-*`
+- `min-bs-*` → `min-h-*`
+- `max-bs-*` → `max-h-*`
+- `min-is-*` → `min-w-*`
+- `max-is-*` → `max-w-*`
 
 **Padding Properties:**
 - `pli-*` → `px-*` (padding-inline)
@@ -349,7 +349,7 @@ This aligns with CSS Logical Properties specification for better internationaliz
 Applied bulk find/replace using perl regex with word boundaries to ensure accuracy:
 ```bash
 # Example patterns used:
-s/\bmin-bs-\[/min-block-[/g;
+s/\bmin-bs-\[/min-h-[/g;
 s/\bpli-(\[|[0-9])/px-$1/g;
 s/\bmli-(\[|[0-9]|auto)/mx-$1/g;
 ```

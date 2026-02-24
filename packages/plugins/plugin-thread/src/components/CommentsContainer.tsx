@@ -48,7 +48,7 @@ export const CommentsContainer = ({ anchors, currentId, showResolvedThreads, ...
                 t,
                 i18nKey: 'no comments message',
                 components: {
-                  commentIcon: <Icon icon='ph--chat-text--regular' size={4} classNames='inline-block' />,
+                  commentIcon: <Icon icon='ph--chat-text--regular' size={4} classNames='w-block' />,
                 },
               }}
             />

@@ -122,7 +122,7 @@ export const ToolContainer = ({ items, onChangeOpen }: ToolContainerProps) => {
   }, []);
 
   return (
-    <ToggleContainer.Root classNames='mt-2 inline-full rounded-xs' open={open} onChangeOpen={setOpen}>
+    <ToggleContainer.Root classNames='mt-2 w-full rounded-xs' open={open} onChangeOpen={setOpen}>
       <ToggleContainer.Header classNames='text-sm text-placeholder'>
         <TextCrawl key='status-roll' lines={items.map((item) => item.title)} autoAdvance greedy />
       </ToggleContainer.Header>

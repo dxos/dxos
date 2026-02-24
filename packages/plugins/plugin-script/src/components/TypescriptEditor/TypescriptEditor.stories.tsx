@@ -71,7 +71,7 @@ const DefaultStory = (props: TypescriptEditorProps) => {
       <Toolbar.Root>
         <Toolbar.Button onClick={handleRun}>Run</Toolbar.Button>
       </Toolbar.Root>
-      <div role='none' className='grid grid-rows-[1fr_min-content] block-full overflow-hidden text-sm'>
+      <div role='none' className='grid grid-rows-[1fr_min-content] h-full overflow-hidden text-sm'>
         <TypescriptEditor {...props} initialValue={object.content} extensions={extensions} />
         <Json data={result} classNames='shrink-0 p-2 border-y border-subdued-separator' />
       </div>

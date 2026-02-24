@@ -135,7 +135,7 @@ const GraphCanvasInner = ({ classNames, children, graph: graphProp, grid, map }:
 
   return (
     <ReactFlow
-      className={mx('inline-full block-full', classNames)}
+      className={mx('w-full h-full', classNames)}
       colorMode={themeMode}
       edges={edges}
       fitView={true}

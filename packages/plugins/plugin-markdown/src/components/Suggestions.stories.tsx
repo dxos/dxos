@@ -143,7 +143,7 @@ const DefaultStory = ({ document, chat }: { document: string; chat: string }) =>
   }
 
   return (
-    <div className='grid grid-cols-2 block-full overflow-hidden'>
+    <div className='grid grid-cols-2 h-full overflow-hidden'>
       <MarkdownContainer id={doc.id} subject={doc} settings={settings} editorStateStore={editorState} />
       <TestChat doc={doc} content={chat} />
     </div>

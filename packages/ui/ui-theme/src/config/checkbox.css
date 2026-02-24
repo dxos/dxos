@@ -27,18 +27,18 @@
   }
 
   .dx-checkbox {
-    @apply inline-4 block-4 overflow-hidden shadow-inner transition-colors bg-un-accent accent-un-accent text-accent-surface-text shrink-0 inline-grid place-items-center rounded-xs;
+    @apply w-4 h-4 overflow-hidden shadow-inner transition-colors bg-un-accent accent-un-accent text-accent-surface-text shrink-0 inline-grid place-items-center rounded-xs;
   }
 
   /* TODO(ZaymonFC): Focus is handled by .dx-focus-ring, but should ideally be applied as part of this component.*/
   /* NOTE: This isn't compatible with the Radix switch. */
   .dx-checkbox--switch {
-    @apply inline-block appearance-none relative shrink-0 block-5 inline-8;
+    @apply inline-block appearance-none relative shrink-0 h-5 w-8;
     @apply shadow-inner transition-colors bg-un-accent;
     @apply cursor-pointer rounded-full;
 
     &::before {
-      @apply inline-3 block-3 mx-[0.1875rem] my-[0.1875rem] absolute block bg-white rounded-full border-separator transition-transform duration-100 will-change-transform;
+      @apply w-3 h-3 mx-[0.1875rem] my-[0.1875rem] absolute block bg-white rounded-full border-separator transition-transform duration-100 will-change-transform;
       content: '';
     }
 

@@ -259,7 +259,7 @@ const MosaicContainer = forwardRef<HTMLDivElement, MosaicContainerProps>(
         setActiveLocation={setActiveLocation}
       >
         <Root
-          className={mx('block-full', className, classNames)}
+          className={mx('h-full', className, classNames)}
           style={
             {
               [MOSAIC_CONTAINER_PLACEHOLDER_WIDTH]:

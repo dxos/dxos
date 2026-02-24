@@ -210,7 +210,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
       const targetObj = getValue(obj, field.path)?.target;
       if (targetObj) {
         const dxn = Obj.getDXN(targetObj)?.toString();
-        cell.accessoryHtml = `<div role="none" class="absolute end-0 inset-block-0 p-[--dx-grid-cell-content-padding-block]"><dx-anchor dxn=${dxn} class="dx-button inline-6 aspect-square min-block-0" data-dx-grid-action="accessory"><dx-icon icon="ph--link-simple--regular"/></dx-anchor></div>`;
+        cell.accessoryHtml = `<div role="none" class="absolute end-0 inset-y-0 p-(--dx-grid-cell-content-padding-block)"><dx-anchor dxn=${dxn} class="dx-button w-6 aspect-square min-h-0" data-dx-grid-action="accessory"><dx-icon icon="ph--link-simple--regular"/></dx-anchor></div>`;
       }
     }
 
@@ -335,7 +335,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
         value: '',
         resizeHandle: 'col',
         accessoryHtml: `
-          <span class="grow min-inline-0 truncate">${props.title ?? field.path}</span>
+          <span class="grow min-w-0 truncate">${props.title ?? field.path}</span>
           ${direction !== undefined ? tableButtons.sort.render({ fieldId: field.id, direction }) : ''}
           ${tableButtons.columnSettings.render({ fieldId: field.id })}
         `,

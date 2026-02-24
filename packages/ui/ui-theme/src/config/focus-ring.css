@@ -2,7 +2,7 @@
  * Focus ring
  */
 
-@layer utilities {
+@layer dx-components {
   .dx-focus-ring,
   .dx-focus-ring-inset {
     &:not([disabled]),

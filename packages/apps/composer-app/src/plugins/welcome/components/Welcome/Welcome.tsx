@@ -118,7 +118,7 @@ export const Welcome = ({
             {Object.keys(actions).length > 0 && (
               <>
                 <div className='flex flex-col gap-2'>
-                  <BifurcatedAction actions={actions} classNames='bg-neutral-775' />
+                  <BifurcatedAction actions={actions} classNames='bg-neutral-800' />
                 </div>
                 <div className='flex items-center w-full my-4'>
                   <div className='flex-grow h-px bg-subdued'></div>
@@ -140,7 +140,7 @@ export const Welcome = ({
                     onKeyDown={handleEmailKeyDown}
                   />
                   <Input.DescriptionAndValidation>
-                    <Input.Validation classNames='flex h-4 px-2 py-1 text-rose-550'>
+                    <Input.Validation classNames='flex h-4 px-2 py-1 text-rose-500'>
                       {error && t('email error')}
                     </Input.Validation>
                   </Input.DescriptionAndValidation>
@@ -149,7 +149,7 @@ export const Welcome = ({
               <div>
                 <Button
                   variant='primary'
-                  classNames='disabled:bg-neutral-775'
+                  classNames='disabled:bg-neutral-800'
                   disabled={!validEmail(email) || pending}
                   onClick={handleSignup}
                   data-testid='welcome.login'

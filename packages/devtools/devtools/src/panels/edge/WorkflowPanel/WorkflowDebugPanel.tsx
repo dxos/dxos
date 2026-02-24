@@ -155,7 +155,7 @@ export const WorkflowDebugPanel = (props: WorkflowDebugPanelProps) => {
   };
 
   return (
-    <div className={mx('flex flex-col inline-full block-full overflow-hidden', props.classNames)}>
+    <div className={mx('flex flex-col w-full h-full overflow-hidden', props.classNames)}>
       <MessageThread ref={scrollerRef} history={history} />
 
       <Toolbar.Root>
@@ -199,7 +199,7 @@ const MessageThread = forwardRef<HTMLDivElement, MessageThreadProps>(
     }
 
     return (
-      <div ref={forwardedRef} className='flex flex-col gap-6 block-full p-2 overflow-x-hidden overflow-y-auto'>
+      <div ref={forwardedRef} className='flex flex-col gap-6 h-full p-2 overflow-x-hidden overflow-y-auto'>
         {history.map((message, i) => (
           <div key={i} className='grid grid-cols-[2rem_1fr_2rem]'>
             <div className='p-1'>{message.type === 'response' && <RobotAvatar />}</div>

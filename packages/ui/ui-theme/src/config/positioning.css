@@ -2,7 +2,7 @@
  * Positioning
  */
 
-@layer utilities {
+@layer dx-components {
   .snap-inline {
     scroll-snap-type: inline var(--tw-scroll-snap-strictness);
   }

@@ -25,7 +25,7 @@ const DefaultStory = () => {
   });
 
   return (
-    <div className='mx-auto inline-96 overflow-y-auto'>
+    <div className='mx-auto w-96 overflow-y-auto'>
       <Thread.Root id='t1'>
         <MessageRoot {...message} classNames={[hoverableControls, hoverableFocusedWithinControls]}>
           <MessageStoryText {...message} onDelete={() => console.log('delete')} />

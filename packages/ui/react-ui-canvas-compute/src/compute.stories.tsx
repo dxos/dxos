@@ -122,7 +122,7 @@ const DefaultStory = ({
   }
 
   return (
-    <div className='grid grid-cols-[1fr_360px] inline-full block-full'>
+    <div className='grid grid-cols-[1fr_360px] w-full h-full'>
       <ComputeContext.Provider value={{ controller }}>
         <Container id={id} classNames={['flex grow overflow-hidden', !sidebar && 'col-span-2']}>
           <Editor.Root<ComputeShape>
@@ -146,10 +146,10 @@ const DefaultStory = ({
       </ComputeContext.Provider>
 
       {sidebar && (
-        <Container id='sidebar' classNames='flex flex-col block-full overflow-hidden'>
+        <Container id='sidebar' classNames='flex flex-col h-full overflow-hidden'>
           <Toolbar.Root>
             <Select.Root value={sidebar} onValueChange={(value) => setSidebar(value as RenderProps['sidebar'])}>
-              <Select.TriggerButton classNames='inline-full'>{sidebar}</Select.TriggerButton>
+              <Select.TriggerButton classNames='w-full'>{sidebar}</Select.TriggerButton>
               <Select.Portal>
                 <Select.Content>
                   <Select.Viewport>
@@ -165,7 +165,7 @@ const DefaultStory = ({
             </Select.Root>
           </Toolbar.Root>
 
-          <div className='flex flex-col block-full overflow-hidden divide-y divider-separator'>
+          <div className='flex flex-col h-full overflow-hidden divide-y divider-separator'>
             {/* TODO(burdon): Provide schema. */}
             {sidebar === 'selected' && selected && (
               <Form.Root<ComputeNode> values={getComputeNode(selected.id) ?? {}}>

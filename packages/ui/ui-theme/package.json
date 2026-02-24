@@ -45,6 +45,7 @@
     "src"
   ],
   "scripts": {
+    "audit-classes": "npx tsx bin/audit-classes.mts",
     "tailwind-check": "tailwindcss -i ./dist/plugin/node-esm/theme.css --config ./src/tailwind.ts --content \"./src/**/*.{js,ts,jsx,tsx,vue}\" --check"
   },
   "dependencies": {

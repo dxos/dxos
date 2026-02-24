@@ -33,11 +33,11 @@ const Column = () => (
 );
 
 const Row = () => (
-  <div className='flex gap-2 inline-max'>
+  <div className='flex gap-2 w-max'>
     {Array.from({ length: 50 }).map((_, index) => (
       <div
         key={index}
-        className='shrink-0 block-20 inline-20 cursor-pointer border border-separator rounded-md flex items-center justify-center text-sm hover:bg-hover-surface'
+        className='shrink-0 h-20 w-20 cursor-pointer border border-separator rounded-md flex items-center justify-center text-sm hover:bg-hover-surface'
       >
         {index + 1}
       </div>
@@ -47,7 +47,7 @@ const Row = () => (
 
 export const Vertical = {
   render: () => (
-    <div className='block-72 inline-48 p-2 border border-separator rounded-md'>
+    <div className='h-72 w-48 p-2 border border-separator rounded-md'>
       <ScrollArea.Root orientation='vertical' padding>
         <ScrollArea.Viewport>
           <Column />
@@ -59,7 +59,7 @@ export const Vertical = {
 
 export const VerticalThin = {
   render: () => (
-    <div className='block-72 inline-48 p-2 border border-separator rounded-md'>
+    <div className='h-72 w-48 p-2 border border-separator rounded-md'>
       <ScrollArea.Root orientation='vertical' padding thin>
         <ScrollArea.Viewport>
           <Column />
@@ -71,7 +71,7 @@ export const VerticalThin = {
 
 export const Horizontal = {
   render: () => (
-    <div className='inline-96 p-2 border border-separator rounded-md'>
+    <div className='w-96 p-2 border border-separator rounded-md'>
       <ScrollArea.Root orientation='horizontal' padding>
         <ScrollArea.Viewport>
           <Row />
@@ -83,7 +83,7 @@ export const Horizontal = {
 
 export const HorizontalThin = {
   render: () => (
-    <div className='inline-96 p-2 border border-separator rounded-md'>
+    <div className='w-96 p-2 border border-separator rounded-md'>
       <ScrollArea.Root orientation='horizontal' padding thin>
         <ScrollArea.Viewport>
           <Row />
@@ -95,7 +95,7 @@ export const HorizontalThin = {
 
 export const Both = {
   render: () => (
-    <div className='block-96 inline-96 p-2 border border-separator rounded-md'>
+    <div className='h-96 w-96 p-2 border border-separator rounded-md'>
       <ScrollArea.Root orientation='all' padding>
         <ScrollArea.Viewport>
           <div className='flex flex-col gap-2'>
@@ -104,7 +104,7 @@ export const Both = {
                 {Array.from({ length: 50 }).map((_, colIndex) => (
                   <div
                     key={colIndex}
-                    className='shrink-0 block-20 inline-20 flex items-center justify-center text-sm border border-separator font-mono'
+                    className='shrink-0 h-20 w-20 flex items-center justify-center text-sm border border-separator font-mono'
                   >
                     [{colIndex}:{rowIndex}]
                   </div>
@@ -136,9 +136,9 @@ export const NestedScrollAreas = {
           {columns.map((column) => (
             <section
               key={column.id}
-              className='shrink-0 block-full inline-[16rem] grid grid-rows-[min-content_1fr_min-content] border border-separator'
+              className='shrink-0 h-full w-[16rem] grid grid-rows-[min-content_1fr_min-content] border border-separator'
             >
-              <header className='flex shrink-0 p-2 border-be border-separator'>Column {column.id}</header>
+              <header className='flex shrink-0 p-2 border-b border-separator'>Column {column.id}</header>
               <ScrollArea.Root thin orientation='vertical'>
                 <ScrollArea.Viewport classNames='py-2 px-2 gap-2'>
                   {Array.from({ length: column.count }, (_, i) => (
@@ -148,7 +148,7 @@ export const NestedScrollAreas = {
                   ))}
                 </ScrollArea.Viewport>
               </ScrollArea.Root>
-              <footer className={`p-2 text-subdued border-bs border-separator`}>{column.count}</footer>
+              <footer className={`p-2 text-subdued border-t border-separator`}>{column.count}</footer>
             </section>
           ))}
         </ScrollArea.Viewport>
@@ -159,11 +159,11 @@ export const NestedScrollAreas = {
 
 export const NativeScroll = {
   render: () => (
-    <div className='group block-48 inline-48 border border-separator'>
+    <div className='group h-48 w-48 border border-separator'>
       <div
         className={mx(
-          'group block-full inline-full overflow-y-scroll',
-          '[&::-webkit-scrollbar]:inline-3',
+          'group h-full w-full overflow-y-scroll',
+          '[&::-webkit-scrollbar]:w-3',
           '[&::-webkit-scrollbar-thumb]:rounded-none',
           '[&::-webkit-scrollbar-track]:bg-scrollbarTrack',
           '[&::-webkit-scrollbar-thumb]:bg-scrollbar-thumbSubdued',

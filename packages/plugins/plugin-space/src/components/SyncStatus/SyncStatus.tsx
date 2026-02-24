@@ -86,7 +86,7 @@ const EdgeConnectionPopover = () => {
   const isConnected = status?.state === EdgeStatus.ConnectionState.CONNECTED;
 
   return (
-    <div className='min-inline-[240px] p-2'>
+    <div className='min-w-[240px] p-2'>
       {/* Connection Status Header */}
       <div className='flex items-center gap-2 mb-2'>
         <Icon

@@ -49,8 +49,8 @@ export const Panel = ({
         <div
           style={{ maxHeight: open ? (maxHeight ? `${maxHeight}px` : undefined) : 0 }}
           className={mx(
-            'flex flex-col inline-full transition-all duration-200 ease-in-out',
-            maxHeight ? 'overflow-y-auto' : 'block-full overflow-hidden',
+            'flex flex-col w-full transition-all duration-200 ease-in-out',
+            maxHeight ? 'overflow-y-auto' : 'h-full overflow-hidden',
             padding && 'px-2',
             className,
           )}

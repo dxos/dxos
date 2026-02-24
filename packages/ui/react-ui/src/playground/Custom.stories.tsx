@@ -60,7 +60,7 @@ const DefaultStory = ({ children, ...args }: Omit<ButtonProps, 'ref'>) => {
         {/* Small */}
         <div className='grid grid-cols-3 gap-4'>
           <div className='flex justify-center'>
-            <Button {...args} density='fine' classNames={'!h-[24px] !text-[14px] p-0 px-1.5 min-block-0'}>
+            <Button {...args} density='fine' classNames={'!h-[24px] !text-[14px] p-0 px-1.5 min-h-0'}>
               {children}
             </Button>
           </div>
@@ -71,7 +71,7 @@ const DefaultStory = ({ children, ...args }: Omit<ButtonProps, 'ref'>) => {
               icon='ph--atom--regular'
               density='fine'
               size={4}
-              classNames={'!h-[24px] !text-[14px] p-1 min-block-0 gap-0.5'}
+              classNames={'!h-[24px] !text-[14px] p-1 min-h-0 gap-0.5'}
             />
           </div>
           <div className='flex justify-center'>
@@ -82,21 +82,21 @@ const DefaultStory = ({ children, ...args }: Omit<ButtonProps, 'ref'>) => {
               iconOnly
               density='fine'
               size={4}
-              classNames={'!h-[24px] !text-[14px] p-1 min-block-0'}
+              classNames={'!h-[24px] !text-[14px] p-1 min-h-0'}
             />
           </div>
         </div>
 
         {/* TODO(burdon): Full variant with max width. */}
         <div className='flex justify-center'>
-          <Button classNames='inline-full max-inline-[15rem] rounded-sm' variant='default'>
+          <Button classNames='w-full max-w-[15rem] rounded-sm' variant='default'>
             Test
           </Button>
         </div>
         <div className='flex justify-center'>
           {/* TODO(burdon): Option to have button on RHS. Default size for icon should be 5 for this (medium) density. */}
           <IconButton
-            classNames='inline-full max-inline-[15rem] rounded-sm'
+            classNames='w-full max-w-[15rem] rounded-sm'
             variant='primary'
             icon='ph--arrows-clockwise--regular'
             label='Test'

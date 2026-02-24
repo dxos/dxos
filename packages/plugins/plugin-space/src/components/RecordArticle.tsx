@@ -30,12 +30,12 @@ export const RecordArticle = ({ role, subject }: SurfaceComponentProps) => {
     <Layout.Main role={role}>
       <ScrollArea.Root orientation='vertical'>
         <ScrollArea.Viewport classNames={mx('p-4 gap-4')}>
-          <div role='none' className={mx('flex inline-full card-max-width')}>
+          <div role='none' className={mx('flex w-full card-max-width')}>
             <Surface.Surface role='section' data={data} limit={1} />
           </div>
 
           {related.length > 0 && (
-            <div role='none' className={mx('flex flex-col gap-1', singleColumn ? 'card-max-width' : 'inline-full')}>
+            <div role='none' className={mx('flex flex-col gap-1', singleColumn ? 'card-max-width' : 'w-full')}>
               <label className='mt-2 text-sm text-description'>{t('related objects label')}</label>
               <Masonry.Root<Entity.Unknown>
                 items={related}

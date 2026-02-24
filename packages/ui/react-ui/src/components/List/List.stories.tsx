@@ -130,7 +130,7 @@ export const ManySizesDraggable: Story = {
         text: (
           <p
             className={mx(
-              index % 3 === 0 ? 'block-20' : index % 2 === 0 ? 'block-12' : 'block-8',
+              index % 3 === 0 ? 'h-20' : index % 2 === 0 ? 'h-12' : 'h-8',
               surfaceShadow({ elevation: 'positioned' }),
               'mb-2 p-2 bg-white dark:bg-neutral-800 rounded-sm',
             )}

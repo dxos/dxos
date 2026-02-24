@@ -153,7 +153,7 @@ export const FullPresence = (props: MemberPresenceProps) => {
           <Popover.Portal>
             <Popover.Content side='bottom'>
               <Popover.Arrow />
-              <Popover.Viewport classNames='max-block-56'>
+              <Popover.Viewport classNames='max-h-56'>
                 <List>
                   {members.map((member) => (
                     <ListItem.Root

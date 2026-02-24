@@ -159,7 +159,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
       <div role='none' className={mx(classNames)}>
         {/* If readonly is set, then the callout is not needed. */}
         {schemaReadonly && !readonly && (
-          <Message.Root valence='info' classNames='mlb-formSpacing'>
+          <Message.Root valence='info' classNames='my-formSpacing'>
             <Message.Title>{t('system schema description')}</Message.Title>
           </Message.Root>
         )}
@@ -300,7 +300,7 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
                     className={mx(
                       subtleHover,
                       'grid grid-cols-subgrid col-span-5',
-                      'rounded-xs cursor-pointer min-block-10',
+                      'rounded-xs cursor-pointer min-h-10',
                     )}
                   >
                     <List.ItemDragHandle disabled={readonly || schemaReadonly} />
@@ -351,13 +351,13 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
             })}
           </div>
           {!readonly && !expandedField && (
-            <div role='none' className='mlb-formSpacing'>
+            <div role='none' className='my-formSpacing'>
               <IconButton
                 icon='ph--plus--regular'
                 label={t('add property button label')}
                 onClick={handleAdd}
                 disabled={viewSnapshot.projection.fields.length >= VIEW_FIELD_LIMIT}
-                classNames='inline-full'
+                classNames='w-full'
               />
             </div>
           )}

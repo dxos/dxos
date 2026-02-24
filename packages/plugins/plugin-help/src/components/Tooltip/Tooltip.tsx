@@ -38,7 +38,7 @@ export const Tooltip = forwardRef<HTMLDivElement, TooltipRenderProps>(
 
     return (
       <div
-        className='flex flex-col inline-[15rem] min-block-[10rem] overflow-hidden rounded-md shadow-xl bg-accent-surface text-accent-surface-text'
+        className='flex flex-col w-[15rem] min-h-[10rem] overflow-hidden rounded-md shadow-xl bg-accent-surface text-accent-surface-text'
         role='tooltip'
         data-testid='helpPlugin.tooltip'
         data-step={index + 1}
