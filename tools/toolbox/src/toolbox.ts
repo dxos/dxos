@@ -13,11 +13,13 @@ import { Table } from 'console-table-printer';
 import deepEqual from 'deep-equal';
 import globrex from 'globrex';
 import defaultsDeep from 'lodash.defaultsdeep';
-import pick from 'lodash.pick';
 import sortPackageJson from 'sort-package-json';
 
 import { loadJson, saveJson, sortJson } from './util';
 import { type PackageJson, type Project, ProjectGraph } from './util/project-graph';
+
+const pick = <T extends object>(obj: T, keys: (keyof T)[]): Partial<T> =>
+  keys.reduce((result, key) => (key in obj ? { ...result, [key]: obj[key] } : result), {} as Partial<T>);
 
 const raise = (err: Error) => {
   throw err;

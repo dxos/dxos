@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import type * as Schema from 'effect/Schema';
 import React, { forwardRef, useMemo, useRef, useState } from 'react';
@@ -11,7 +10,7 @@ import { Obj, Query, Type } from '@dxos/echo';
 import { resolveSchemaWithRegistry } from '@dxos/plugin-space';
 import { Filter, getSpace, useObject } from '@dxos/react-client/echo';
 import { useAsyncEffect, useTranslation } from '@dxos/react-ui';
-import { Board, Card, Focus, Mosaic, type MosaicTileProps, useBoard } from '@dxos/react-ui-mosaic';
+import { Board, Card, Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { ProjectionModel, createEchoChangeCallback } from '@dxos/schema';
 import { type Pipeline } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
@@ -31,8 +30,7 @@ export type PipelineColumnProps = Pick<MosaicTileProps<Pipeline.Column>, 'classN
 // TODO(wittjosiah): Support item DnD reordering (ordering needs to be stored on the view presentation collection).
 export const PipelineColumn = ({ data: column, location, classNames, debug }: PipelineColumnProps) => {
   const { t } = useTranslation(meta.id);
-  const { model } = useBoard<Pipeline.Column, Obj.Unknown>(PIPELINE_COLUMN_NAME);
-  const items = useAtomValue(model.items(column));
+  const dragHandleRef = useRef<HTMLButtonElement>(null);
   // Subscribe to the view target for reactivity.
   const [viewSnapshot] = useObject(column.view);
   const view = column.view.target;
@@ -78,8 +76,6 @@ export const PipelineColumn = ({ data: column, location, classNames, debug }: Pi
   if (!view) {
     return null;
   }
-
-  const dragHandleRef = useRef<HTMLButtonElement>(null);
 
   return (
     <Board.Column.Root
