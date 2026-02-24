@@ -134,7 +134,7 @@ export const ComposeEmailPanel = ({
 // ComposeEmailForm
 //
 
-const ComposeEmailForm = Schema.Struct({
+export const ComposeEmailForm = Schema.Struct({
   to: Schema.String.annotations({ description: 'Recipient email address' }),
   cc: Schema.optional(Schema.String.annotations({ description: 'CC recipients' })),
   bcc: Schema.optional(Schema.String.annotations({ description: 'BCC recipients' })),
@@ -145,7 +145,7 @@ const ComposeEmailForm = Schema.Struct({
   ),
 });
 
-type ComposeEmailForm = Schema.Schema.Type<typeof ComposeEmailForm>;
+export type ComposeEmailForm = Schema.Schema.Type<typeof ComposeEmailForm>;
 
 const formatQuotedBody = (message: MessageType.Message): string => {
   const textBlock = message.blocks.find((b) => b._tag === 'text');

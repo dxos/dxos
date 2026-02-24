@@ -111,6 +111,7 @@ export default Capability.makeModule(() =>
           typeof data.props.filter === 'string',
         component: ({ data }) => <PopoverSaveFilter mailbox={data.props.mailbox} filter={data.props.filter} />,
       }),
+      // TODO(burdon): Remove dialog.
       Surface.create({
         id: COMPOSE_EMAIL_DIALOG,
         role: 'dialog',

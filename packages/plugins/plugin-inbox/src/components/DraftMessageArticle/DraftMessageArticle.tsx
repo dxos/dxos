@@ -4,50 +4,37 @@
 
 import React, { useCallback } from 'react';
 
+import { useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { type JsonPath, splitJsonPath } from '@dxos/echo/internal';
+import { AutomationCapabilities, invokeFunctionWithTracing } from '@dxos/plugin-automation';
 import { Layout } from '@dxos/react-ui';
-import { Form, omitId } from '@dxos/react-ui-form';
-import { Message } from '@dxos/types';
+import { type Message } from '@dxos/types';
 
-export type DraftMessageArticleProps = {
-  role?: string;
-  subject: Message.Message;
-};
+import { GmailFunctions } from '../../functions';
+import { ComposeEmailPanel } from '../ComposeEmail';
+
+export type DraftMessageArticleProps = SurfaceComponentProps<Message.Message>;
 
 export const DraftMessageArticle = ({ role, subject }: DraftMessageArticleProps) => {
+  const { invokePromise } = useOperationInvoker();
   const db = Obj.getDatabase(subject);
+  const computeRuntime = useCapability(AutomationCapabilities.ComputeRuntime);
+  const runtime = db?.spaceId ? computeRuntime.getRuntime(db.spaceId) : undefined;
 
-  const handleValuesChanged = useCallback(
-    (values: any, { isValid, changed }: { isValid: boolean; changed: Record<JsonPath, boolean> }) => {
-      if (!isValid) {
-        return;
+  const handleSend = useCallback(
+    async (message: Message.Message) => {
+      if (!runtime) {
+        throw new Error('Runtime not available');
       }
-
-      const changedPaths = Object.keys(changed).filter((path) => changed[path as JsonPath]) as JsonPath[];
-      if (changedPaths.length > 0) {
-        Obj.change(subject, () => {
-          for (const path of changedPaths) {
-            const parts = splitJsonPath(path);
-            const value = Obj.getValue(values, parts);
-            Obj.setValue(subject, parts, value);
-          }
-        });
-      }
+      await runtime.runPromise(invokeFunctionWithTracing(GmailFunctions.Send, { message }));
     },
-    [subject],
+    [runtime, invokePromise],
   );
 
   return (
     <Layout.Main role={role}>
-      {/* TODO(wittjosiah): Replace with draft message UI. */}
-      <Form.Root schema={omitId(Message.Message)} values={subject} db={db} onValuesChanged={handleValuesChanged}>
-        <Form.Viewport>
-          <Form.Content>
-            <Form.FieldSet />
-          </Form.Content>
-        </Form.Viewport>
-      </Form.Root>
+      <ComposeEmailPanel mode='compose' message={subject} onSend={handleSend} />
     </Layout.Main>
   );
 };

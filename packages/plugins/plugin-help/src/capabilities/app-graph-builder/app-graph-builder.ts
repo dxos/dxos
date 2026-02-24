@@ -43,7 +43,6 @@ export default Capability.makeModule(
               yield* Capabilities.updateAtomValue(HelpCapabilities.State, (s) => ({ ...s, showHints: true }));
               yield* Operation.invoke(LayoutOperation.UpdateDialog, {
                 subject: SHORTCUTS_DIALOG,
-                blockAlign: 'center',
               });
             }),
             properties: {

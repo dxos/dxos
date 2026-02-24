@@ -134,12 +134,12 @@ export default Capability.makeModule(
         operation: InboxOperation.RunAssistant,
         handler: () => Effect.fail(new Error('Not implemented')),
       }),
+      // TODO(burdon): Remove dialog.
       OperationResolver.make({
         operation: InboxOperation.OpenComposeEmail,
         handler: (input) =>
           Operation.invoke(LayoutOperation.UpdateDialog, {
             subject: COMPOSE_EMAIL_DIALOG,
-            blockAlign: 'start',
             props: input ?? {},
           }),
       }),
