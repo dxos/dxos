@@ -99,7 +99,7 @@ export const AssistantToolbar = ({ view, from, to, runtime }: AssistantToolbarPr
           </Input.Root>
           <Button
             variant='ghost'
-            classNames='p-1 min-bs-0 bs-6 is-6 rounded-full'
+            classNames='p-1 min-h-0 h-6 w-6 rounded-full'
             onClick={handleEditWithPrompt}
             disabled={!customPrompt || isProcessing}
           >

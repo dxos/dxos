@@ -74,15 +74,12 @@ export const FunctionsPanel = ({ space }: FunctionsPanelProps) => {
       {functions.length > 0 && (
         <List.Root<Function.Function> items={functions} isItem={Schema.is(Function.Function)} getId={(func) => func.id}>
           {({ items }) => (
-            <div role='list' className='flex flex-col is-full'>
+            <div role='list' className='flex flex-col w-full'>
               {items?.map((func) => (
                 <List.Item<Function.Function>
                   key={func.id}
                   item={func}
-                  classNames={mx(
-                    'grid grid-cols-[1fr_auto] min-bs-[2.5rem] min-bs-[3rem] pli-2 items-center',
-                    ghostHover,
-                  )}
+                  classNames={mx('grid grid-cols-[1fr_auto] min-h-[2.5rem] min-h-[3rem] px-2 items-center', ghostHover)}
                 >
                   <div className='flex flex-col truncate'>
                     <List.ItemTitle classNames='truncate'>{func.name}</List.ItemTitle>
@@ -106,7 +103,7 @@ export const FunctionsPanel = ({ space }: FunctionsPanelProps) => {
         </List.Root>
       )}
 
-      {functions.length === 0 && <div className='text-center plb-4 text-description'>{t('no functions found')}</div>}
+      {functions.length === 0 && <div className='text-center py-4 text-description'>{t('no functions found')}</div>}
     </Settings.Container>
   );
 };

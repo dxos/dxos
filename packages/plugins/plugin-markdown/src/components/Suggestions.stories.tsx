@@ -22,7 +22,7 @@ import { faker } from '@dxos/random';
 import { useQueue, useSpace } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { Layout } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { render } from '@dxos/storybook-utils';
 import { Message } from '@dxos/types';
@@ -143,7 +143,7 @@ const DefaultStory = ({ document, chat }: { document: string; chat: string }) =>
   }
 
   return (
-    <div className='grid grid-cols-2 bs-full overflow-hidden'>
+    <div className='grid grid-cols-2 h-full overflow-hidden'>
       <MarkdownContainer id={doc.id} subject={doc} settings={settings} editorStateStore={editorState} />
       <TestChat doc={doc} content={chat} />
     </div>
@@ -155,6 +155,7 @@ const storybook: Meta<typeof DefaultStory> = {
   render: render(DefaultStory),
   decorators: [
     withTheme(),
+    withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [
         ...corePlugins(),

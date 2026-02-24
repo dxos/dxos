@@ -7,7 +7,7 @@ import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'rea
 
 import { faker } from '@dxos/random';
 import { List, ListItem, Toolbar } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type ColorStyles, getHashStyles, mx } from '@dxos/ui-theme';
 
 import { Capabilities } from '../../../common';
@@ -25,7 +25,7 @@ type TestComponentProps = {
 const TestComponent = forwardRef<HTMLDivElement, TestComponentProps>(({ styles, id }, forwardedRef) => {
   return (
     <div
-      className={mx('flex justify-center items-center border rounded', styles.surface, styles.border)}
+      className={mx('flex justify-center items-center border rounded-sm', styles.surface, styles.border)}
       ref={forwardedRef}
     >
       <span className={mx('dx-tag font-mono text-lg', styles.text)}>{id}</span>
@@ -87,7 +87,7 @@ const DefaultStory = () => {
           }
 
           return (
-            <div className='flex justify-center items-center border border-roseFill rounded'>
+            <div className='flex justify-center items-center border border-rose-fill rounded-sm'>
               <span className='font-mono'>Ticking... {count}</span>
             </div>
           );
@@ -104,15 +104,15 @@ const DefaultStory = () => {
   }, [ref]);
 
   return (
-    <div className='flex flex-col bs-full overflow-hidden'>
+    <div className='flex flex-col h-full overflow-hidden'>
       <Toolbar.Root>
         <Toolbar.Button onClick={handleAdd}>Add</Toolbar.Button>
         <Toolbar.Button onClick={handleSelect}>Pick</Toolbar.Button>
         <Toolbar.Button onClick={handleError}>Error</Toolbar.Button>
       </Toolbar.Root>
-      <div className='grid grid-cols-2 bs-full gap-4 overflow-hidden'>
+      <div className='grid grid-cols-2 h-full gap-4 overflow-hidden'>
         <Surface role='item' data={selected ? { id: selected } : undefined} limit={1} ref={ref} />
-        <div className='overflow-y-auto bs-full'>
+        <div className='overflow-y-auto h-full'>
           <List>
             {surfaces.map((surface) => (
               <ListItem.Root key={surface.id} id={surface.id}>
@@ -129,7 +129,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'sdk/app-framework/Surface',
   render: DefaultStory,
-  decorators: [withTheme(), withPluginManager({ capabilities: [] })],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withPluginManager({ capabilities: [] })],
   parameters: {
     layout: 'fullscreen',
   },

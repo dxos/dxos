@@ -218,8 +218,8 @@ const selectionChange = (selectionManager: SelectionManager) => {
 
 // TODO(burdon): Factor out styles.
 const style = {
-  hover: 'rounded-sm text-primary-500 hover:text-primary-600 dark:text-primary-500 hover:dark:text-primary-400',
-  icon: 'inline-block leading-none mis-1 cursor-pointer',
+  hover: 'rounded-xs text-primary-500 hover:text-primary-600 dark:text-primary-500 hover:dark:text-primary-400',
+  icon: 'w-block leading-none ms-1 cursor-pointer',
 };
 
 const createLinkRenderer =

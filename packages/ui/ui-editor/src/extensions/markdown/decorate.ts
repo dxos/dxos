@@ -251,7 +251,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
                 from: mark.from,
                 to: mark.from + len,
                 deco: Decoration.replace({
-                  widget: new TextWidget(num, markdownTheme.heading(level)),
+                  widget: new TextWidget(num, markdownTheme.heading(level).className),
                 }),
               });
             }

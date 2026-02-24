@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
 import { faker } from '@dxos/random';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
 
@@ -41,7 +41,7 @@ const TestCell = ({ item, ...props }: ResponsiveGridItemProps<TestItem>) => {
       {item.type === 'image' && <img className='aspect-video object-contain' src={item.imageUrl} />}
       {item.type === 'video' && (
         <video
-          className='is-full aspect-video object-cover rounded-md'
+          className='w-full aspect-video object-cover rounded-md'
           src={item.videoUrl}
           playsInline
           autoPlay
@@ -92,7 +92,7 @@ const meta = {
   title: 'plugins/plugin-thread/ResponsiveGrid',
   component: ResponsiveGrid as any,
   render: DefaultStory,
-  decorators: [withTheme()],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
     translations,

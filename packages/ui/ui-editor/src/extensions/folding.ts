@@ -19,10 +19,10 @@ export const folding = (): Extension => {
     foldGutter({
       markerDOM: (open) => {
         return Domino.of('div')
-          .classNames('flex bs-full justify-center items-center')
+          .classNames('flex h-full justify-center items-center')
           .children(
             Domino.of('svg', Domino.SVG)
-              .classNames(mx('is-4 bs-4 cursor-pointer', open && 'rotate-90'))
+              .classNames(mx('w-4 h-4 cursor-pointer', open && 'rotate-90'))
               .children(
                 Domino.of('use', Domino.SVG).attributes({
                   href: Domino.icon('ph--caret-right--regular'),

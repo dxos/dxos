@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { OperationPlugin, RuntimePlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as shellTranslations } from '@dxos/shell/react';
 
 import { ClientPlugin } from '../ClientPlugin';
@@ -20,6 +20,7 @@ const meta = {
   component: DevicesContainer,
   decorators: [
     withTheme(),
+    withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [
         ClientPlugin({

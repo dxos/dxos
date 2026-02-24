@@ -23,7 +23,7 @@ export const EventAttendee = ({ attendee, db, onContactCreate }: EventAttendeePr
   return (
     <div role='none' className='grid grid-cols-[2rem_1fr] gap-1 items-center'>
       <UserIconButton title={attendee.name} value={contactDxn} onContactCreate={handleContactCreate} />
-      <h3 className='truncate text-primaryText'>{attendee.name || attendee.email}</h3>
+      <h3 className='truncate text-primary-text'>{attendee.name || attendee.email}</h3>
     </div>
   );
 };

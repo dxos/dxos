@@ -70,7 +70,7 @@ const DefaultStory = (props: ToggleContainerRootProps) => {
   }, [running]);
 
   return (
-    <div className='flex flex-col is-[30rem]'>
+    <div className='flex flex-col w-[30rem]'>
       <Toolbar.Root>
         <Input.Root>
           <Input.Switch checked={running} onCheckedChange={(checked) => setRunning(checked)} />
@@ -89,7 +89,7 @@ const DefaultStory = (props: ToggleContainerRootProps) => {
           >
             Test
           </ToggleContainer.Header>
-          <ToggleContainer.Content classNames='bg-modalSurface'>
+          <ToggleContainer.Content classNames='bg-modal-surface'>
             <MarkdownViewer classNames='p-2 text-sm' content={text.join('\n\n')} />
           </ToggleContainer.Content>
         </ToggleContainer.Root>

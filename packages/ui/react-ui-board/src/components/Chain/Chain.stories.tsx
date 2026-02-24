@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { Chain, type ChainRootProps } from './Chain';
 
@@ -21,7 +21,7 @@ const meta = {
   title: 'ui/react-ui-board/Chain',
   component: Chain.Root,
   render: DefaultStory,
-  decorators: [withTheme()],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
   },

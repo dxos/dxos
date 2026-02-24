@@ -28,7 +28,7 @@ const meta = {
   component: NotebookStackStory,
   decorators: [
     withTheme(),
-    withLayout({ layout: 'column', classNames: 'is-proseMaxWidth' }),
+    withLayout({ layout: 'column', classNames: 'w-prose-max-width' }),
     withPluginManager({
       plugins: [
         ...corePlugins(),

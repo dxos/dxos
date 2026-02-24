@@ -65,7 +65,7 @@ export const MeetingContainer = ({ role, subject: meeting }: MeetingContainerPro
                   label={t('regenerate summary label')}
                   onClick={handleGenerateSummary}
                   tooltipSide='right'
-                  classNames='is-full'
+                  classNames='w-full'
                 />
               )}
             </StackItem.HeadingStickyContent>

@@ -112,7 +112,7 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
               value={getValue()}
               onChange={handleChange}
               placeholder={t('display name input placeholder')}
-              classNames='min-is-64'
+              classNames='min-w-64'
             />
           </Settings.ItemInput>
         );
@@ -184,7 +184,7 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
         description={t('space properties settings description', { ns: meta.id })}
       >
         <Form.Root fieldMap={fieldMap} schema={SpaceFormSchema} values={values} onValuesChanged={handleValuesChanged}>
-          <Form.FieldSet classNames='space-y-trimMd' />
+          <Form.FieldSet classNames='space-y-trim-md' />
         </Form.Root>
       </Settings.Section>
       <Settings.Section title={t('space controls title')} description={t('space controls description')}>

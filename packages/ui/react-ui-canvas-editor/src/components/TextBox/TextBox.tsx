@@ -59,7 +59,7 @@ export const TextBox = forwardRef<TextBoxControl, TextBoxProps>(
             themeMode,
             syntaxHighlighting: !!language,
             slots: {
-              editor: { className: 'is-full bs-full [&>.cm-scroller]:scrollbar-none p-2' },
+              editor: { className: 'w-full h-full [&>.cm-scroller]:scrollbar-none p-2' },
               content: { className: mx(centered && 'text-center') },
             },
           }),
@@ -129,27 +129,16 @@ export const TextBox = forwardRef<TextBoxControl, TextBoxProps>(
       view?.dispatch({ selection: { anchor: view.state.doc.length } });
     }, [view]);
 
-    return (
-      <div
-        ref={parentRef}
-        {...focusAttributes}
-        // style={
-        //   {
-        //     '--dx-cmCursor': 'red',
-        //   } as CSSProperties
-        // }
-        className={mx('bs-full is-full overflow-hidden', classNames)}
-      />
-    );
+    return <div ref={parentRef} {...focusAttributes} className={mx('h-full w-full overflow-hidden', classNames)} />;
   },
 );
 
 export const ReadonlyTextBox = ({ classNames, value = '' }: Pick<TextBoxProps, 'value' | 'classNames'>) => {
   const lines = value.split('\n');
   return (
-    <div role='none' className={mx('is-full overflow-hidden', classNames)}>
+    <div role='none' className={mx('w-full overflow-hidden', classNames)}>
       {lines.map((line, i) => (
-        <div key={i} className='is-full text-center overflow-hidden'>
+        <div key={i} className='w-full text-center overflow-hidden'>
           {line}
         </div>
       ))}
