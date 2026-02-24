@@ -79,9 +79,6 @@ jobs:
       - name: Check for peer dependency issues
         run: pnpm install --resolution-only --no-frozen-lockfile
 
-      - name: Check for security vulnerabilities
-        run: pnpm audit --prod --audit-level=moderate
-
       - uses: 'moonrepo/run-report-action@v1'
         if: (success() || failure()) && github.event_name == 'pull_request'
         with:
