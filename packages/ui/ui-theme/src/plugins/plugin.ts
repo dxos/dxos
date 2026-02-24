@@ -11,7 +11,26 @@ import tailwindcss from '@tailwindcss/postcss';
 import autoprefixer from 'autoprefixer';
 import postcssImport from 'postcss-import';
 import postcssNesting from 'postcss-nesting';
-import { type Plugin, type UserConfig } from 'vite';
+import { type HtmlTagDescriptor, type Plugin, type UserConfig } from 'vite';
+
+/**
+ * CSS cascade layer order. Must be established before any stylesheets load so that
+ * Tailwind's own @layer declarations don't override our ordering. Exported so consuming
+ * apps can reference the canonical list without duplicating it.
+ */
+export const LAYER_ORDER = [
+  'properties',
+  'theme',
+  'dx-tokens',
+  'user-tokens',
+  'base',
+  'tw-base',
+  'dx-base',
+  'components',
+  'tw-components',
+  'dx-components',
+  'utilities',
+] as const;
 
 export type ThemePluginOptions = {
   srcCssPath?: string;
@@ -68,6 +87,15 @@ export const ThemePlugin = (options: ThemePluginOptions): Plugin => {
       if (id === config.virtualFileId) {
         return config.srcCssPath;
       }
+    },
+    transformIndexHtml: () => {
+      const tag: HtmlTagDescriptor = {
+        tag: 'style',
+        attrs: { 'data-dxos-layers': '' },
+        children: `@layer ${LAYER_ORDER.join(', ')};`,
+        injectTo: 'head-prepend',
+      };
+      return [tag];
     },
   };
 };

@@ -25,12 +25,6 @@
     @apply absolute inset-0 overflow-hidden flex flex-col;
   }
 
-  /**
-   * Main content padding.
-   * NOTE: This MUST remain outside @layer to override Tailwind v4's base preflight
-   * `* { padding: 0 }` which otherwise wins over layered padding-inline rules.
-   */
-
   /** TODO(burdon): Reconcile with dx-main-bounce-layout */
   .dx-main-content-padding-transitions {
     transition-duration: 200ms;
@@ -180,35 +174,34 @@
       }
     }
   }
-}
 
-/**
- * Main content padding.
- * Unlayered so it overrides Tailwind v4's preflight `* { padding: 0 }`.
- */
-.dx-main-content-padding {
-  padding-inline-start: 0;
-  scroll-padding-inline-start: 0;
-  padding-inline-end: 0;
-  scroll-padding-inline-end: 0;
+  /**
+   * Main content padding.
+   */
+  .dx-main-content-padding {
+    padding-inline-start: 0;
+    scroll-padding-inline-start: 0;
+    padding-inline-end: 0;
+    scroll-padding-inline-end: 0;
 
-  @media (min-width: theme('screens.lg')) {
-    &[data-sidebar-left-state='collapsed'] {
-      padding-inline-start: var(--l0-size);
-      scroll-padding-inline-start: var(--l0-size);
-    }
-    &[data-sidebar-left-state='expanded'] {
-      padding-inline-start: var(--nav-sidebar-size);
-      scroll-padding-inline-start: var(--nav-sidebar-size);
-    }
+    @media (min-width: theme('screens.lg')) {
+      &[data-sidebar-left-state='collapsed'] {
+        padding-inline-start: var(--l0-size);
+        scroll-padding-inline-start: var(--l0-size);
+      }
+      &[data-sidebar-left-state='expanded'] {
+        padding-inline-start: var(--nav-sidebar-size);
+        scroll-padding-inline-start: var(--nav-sidebar-size);
+      }
 
-    &[data-sidebar-right-state='collapsed'] {
-      padding-inline-end: var(--r0-size);
-      scroll-padding-inline-end: var(--r0-size);
-    }
-    &[data-sidebar-right-state='expanded'] {
-      padding-inline-end: var(--complementary-sidebar-size);
-      scroll-padding-inline-end: var(--complementary-sidebar-size);
+      &[data-sidebar-right-state='collapsed'] {
+        padding-inline-end: var(--r0-size);
+        scroll-padding-inline-end: var(--r0-size);
+      }
+      &[data-sidebar-right-state='expanded'] {
+        padding-inline-end: var(--complementary-sidebar-size);
+        scroll-padding-inline-end: var(--complementary-sidebar-size);
+      }
     }
   }
 }

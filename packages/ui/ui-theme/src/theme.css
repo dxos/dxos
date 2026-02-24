@@ -6,6 +6,12 @@
  * Establish CSS cascade layer order before Tailwind sets its own.
  * First mention of a layer name wins its position in the order.
  * utilities must be last so it overrides all base and component layers.
+ *
+ * NOTE: This must be in sync with the `transformIndexHtml` function in `packages/ui/ui-theme/src/plugins/plugin.ts`.
+ *
+ * dx-base - 
+ * dx-tokens - 
+ * dx-components - 
  */
 @layer properties, theme, dx-tokens, user-tokens, base, tw-base, dx-base, components, tw-components, dx-components, utilities;
 

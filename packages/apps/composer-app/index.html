@@ -25,10 +25,6 @@
 
     <link rel="manifest" href="/site.webmanifest" />
 
-    <style>
-      @layer dx-tokens, user-tokens, tw-base, dx-base, tw-components, dx-components, utilities;
-    </style>
-
     <!-- TODO(wittjosiah): Add hash/nonce and remove unsafe-inline from content security policy. -->
     <!-- TODO(nf): Blob in worker-src needed for Sentry replay. -->
 
@@ -46,6 +42,7 @@
         setTheme(event.matches);
       });
     </script>
+
     <style>
       html {
         font-size: 18px;
