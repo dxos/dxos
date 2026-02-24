@@ -304,14 +304,49 @@ This is the deepest and highest-risk work item. `Any` is used to store credentia
 - [ ] Remove `bufToProto`/`protoToBuf` helpers (no longer needed).
 - [ ] Audit and remove dead proto type imports.
 
---
+---
 
 ## Implementation Notes
 
-- Working with `google.protobuf.Any` is documented here - https://github.com/bufbuild/protobuf-es/blob/main/MANUAL.md#googleprotobufany
-  - For crendetial assertions specifically, `@dxos/credentials` should create a registry via `createRegistry(Schema1, Schema2, ...)` of ONLY the valid assertion type schema, as well as a union type of all the assertion types. Union types don't need an extra `@schema` discriminator field, since `$type` is already present.
-- Make sure offical `google.protobuf.Struct` integration is correctly used - https://github.com/bufbuild/protobuf-es/blob/main/MANUAL.md#googleprotobufstruct
-- Do a comprehensive item-by-item review that the code is using the best practices from protobuf-es: https://github.com/bufbuild/protobuf-es/blob/main/MANUAL.md
+### google.protobuf.Any — Credential Assertions
+
+**Reference**: https://github.com/bufbuild/protobuf-es/blob/main/MANUAL.md#googleprotobufany
+
+**Preparation done** (`assertion-registry.ts` in `@dxos/credentials`):
+- `ASSERTION_REGISTRY` — `buf.createRegistry()` of all 14 assertion schemas.
+- `ASSERTION_SCHEMAS` — Array of all assertion `DescMessage` descriptors.
+- `ASSERTION_SCHEMA_MAP` — Map from `$typeName` to schema for lookup.
+- `CredentialAssertion` — Union type of all assertion message shapes.
+
+**Current state**: Credential assertions are stored at runtime as `TypedMessage` objects (protobuf.js format with `@type` discriminator). They are cast to `bufWkt.Any` on the credential's `subject.assertion` field. The `getCredentialAssertion()` function casts back to `TypedMessage` for consumers.
+
+**Migration plan** (Phase 9):
+1. Switch `createCredential()` to accept buf assertion messages and use `anyPack(schema, message)`.
+2. Switch `getCredentialAssertion()` to use `anyUnpack(any, ASSERTION_REGISTRY)`.
+3. Update all 21 callers to use `$typeName` instead of `@type` for discrimination.
+4. **Backwards compatibility**: `canonicalStringify` must produce identical output for existing signed credentials. This requires the Any-packed assertion to serialize the same way in the signing payload. Strategy options:
+   a. Serialize `Any` fields by unpacking and stringifying the inner message (preserves signature compat).
+   b. Version the signing algorithm (all existing credentials remain valid, new ones use new format).
+
+### google.protobuf.Struct
+
+**Reference**: https://github.com/bufbuild/protobuf-es/blob/main/MANUAL.md#googleprotobufstruct
+
+In protobuf-es, `google.protobuf.Struct` is represented as `JsonObject` when used in a singular field (except inside `google.protobuf.Value`). This is the correct behavior. The buf-generated types already use `JsonObject` for Struct fields (e.g., `ProfileDocument.data`, `ServiceAccess.serverMetadata`). No migration needed for Struct itself — it works correctly in buf.
+
+The protobuf.js substitution (`encodeStruct`/`decodeStruct` in `codec-protobuf`) converts between plain objects and protobuf Struct format. This is only needed at the codec boundary and will be removed when protobuf.js is fully eliminated (Phase 10).
+
+### protobuf-es Best Practices
+
+**Reference**: https://github.com/bufbuild/protobuf-es/blob/main/MANUAL.md
+
+Key practices to follow:
+- Use `create(Schema, init)` for message construction (never plain objects for messages).
+- Use `isMessage(value, Schema)` for type checking, not `$typeName` string comparison.
+- Use `anyPack`/`anyUnpack` for `google.protobuf.Any` fields.
+- Use `toBinary`/`fromBinary` for serialization (not protobuf.js codec).
+- Use `toJson`/`fromJson` with `{ registry }` option when Any fields are present.
+- Struct fields are automatically `JsonObject` — no special handling needed.
 
 ---
 
