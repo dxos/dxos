@@ -297,9 +297,9 @@ const RawTreeItem = <T extends { id: string } = any>({
 export const TreeItem = memo(RawTreeItem) as FC<TreeItemProps>;
 
 /** Resolves a child ID to an item via `useItem` and renders a TreeItem. */
-type TreeItemByIdProps = Omit<TreeItemProps, 'item'> & { id: string };
+export type TreeItemByIdProps = Omit<TreeItemProps, 'item'> & { id: string };
 
-const TreeItemById = <T extends { id: string } = any>({ id, ...props }: TreeItemByIdProps) => {
+export const TreeItemById = <T extends { id: string } = any>({ id, ...props }: TreeItemByIdProps) => {
   const { useItem } = useTree();
   const item = useItem(id) as T | undefined;
   if (!item) {

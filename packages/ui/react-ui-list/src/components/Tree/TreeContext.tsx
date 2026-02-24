@@ -19,8 +19,7 @@ export type TreeItemDataProps = {
   testId?: string;
 };
 
-export type TreeContextType<T = any, O = any> = {
-  useItems: (parent?: T, options?: O) => T[];
+export type TreeContextType<T = any> = {
   getProps: (item: T, parent: string[]) => TreeItemDataProps;
   /** Hook that subscribes to and returns the open state for a tree item. */
   useIsOpen: (path: string[], item: T) => boolean;

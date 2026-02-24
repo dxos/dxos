@@ -36,17 +36,10 @@ export const L1Panel = ({ open, path, item, currentItemId, onBack }: L1PanelProp
   const title = toLocalizedString(item.properties.label, t);
 
   // TODO(wittjosiah): Support multiple alternate trees.
-  const { useItems } = navTreeContext;
-  const alternateTree = useItems(item, { disposition: 'alternate-tree' })[0];
+  const { useFilteredItems } = navTreeContext;
+  const alternateTree = useFilteredItems(item, { disposition: 'alternate-tree' })[0];
   const alternatePath = useMemo(() => [...path, item.id], [item.id, path]);
   const isAlternate = useIsAlternateTree(alternatePath, item);
-  const useAlternateItems = useCallback(
-    (node?: Node.Node, { disposition }: { disposition?: string } = {}) => {
-      // TODO(wittjosiah): Sorting is expensive, limit to necessary items for now.
-      return useItems(node, { disposition, sort: node?.id === alternateTree.id });
-    },
-    [alternateTree, useItems],
-  );
 
   return (
     <Tabs.Tabpanel
@@ -76,7 +69,6 @@ export const L1Panel = ({ open, path, item, currentItemId, onBack }: L1PanelProp
                   levelOffset={5}
                   gridTemplateColumns='[tree-row-start] 1fr min-content min-content min-content [tree-row-end]'
                   renderColumns={NavTreeItemColumns}
-                  useItems={useAlternateItems}
                 />
               ) : (
                 <Tree
@@ -169,11 +161,11 @@ const L1PanelHeader = ({ item, path, onBack }: L1PanelProps) => {
  */
 const useL1MenuActions = ({ item, path }: Pick<L1PanelProps, 'item' | 'path'>) => {
   const { t } = useTranslation(meta.id);
-  const { setAlternateTree, useActions, ...navTreeContext } = useNavTreeContext();
+  const { setAlternateTree, useActions, useFilteredItems } = useNavTreeContext();
   const runAction = useActionRunner();
 
   // TODO(wittjosiah): Support multiple alternate trees.
-  const alternateTree = navTreeContext.useItems(item, { disposition: 'alternate-tree' })[0];
+  const alternateTree = useFilteredItems(item, { disposition: 'alternate-tree' })[0];
   const alternatePath = useMemo(() => [...path, item.id], [item.id, path]);
   const isAlternate = useIsAlternateTree(alternatePath, item);
 

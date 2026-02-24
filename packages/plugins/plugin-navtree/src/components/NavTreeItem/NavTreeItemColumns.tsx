@@ -22,7 +22,18 @@ export const NavTreeItemColumns = memo(({ path, item, open }: NavTreeItemColumns
   const level = path.length - 2;
   const { actions: _actions, groupedActions } = useActions(item);
   const sortedActions = useMemo(
-    () => _actions.toSorted((a, _b) => (a.properties?.disposition === 'list-item-primary' ? -1 : 1)),
+    () =>
+      _actions.toSorted((actionA, actionB) => {
+        const primaryA = actionA.properties?.disposition === 'list-item-primary';
+        const primaryB = actionB.properties?.disposition === 'list-item-primary';
+        if (primaryA && !primaryB) {
+          return -1;
+        }
+        if (primaryB && !primaryA) {
+          return 1;
+        }
+        return 0;
+      }),
     [_actions],
   );
   const [primaryAction, ...secondaryActions] = sortedActions;
@@ -32,7 +43,7 @@ export const NavTreeItemColumns = memo(({ path, item, open }: NavTreeItemColumns
       (primaryAction?.properties?.disposition === 'list-item-primary' ? secondaryActions : sortedActions)
         .flatMap((action) => (Node.isAction(action) ? [action] : []))
         .filter((a) => ['list-item', 'list-item-primary'].includes(a.properties?.disposition)),
-    [primaryAction, secondaryActions, sortedActions],
+    [sortedActions, primaryAction],
   );
 
   const primaryMenuActions = useMemo(

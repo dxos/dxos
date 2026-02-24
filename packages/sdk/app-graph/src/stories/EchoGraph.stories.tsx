@@ -19,7 +19,7 @@ import { Icon, IconButton, Input, Select } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { Path, Tree } from '@dxos/react-ui-list';
 import { getSize, mx } from '@dxos/ui-theme';
-import { byPosition, isNonNullable, safeParseInt } from '@dxos/util';
+import { isNonNullable, safeParseInt } from '@dxos/util';
 
 import * as CreateAtom from '../atoms';
 import * as Graph from '../graph';
@@ -302,10 +302,18 @@ export const TreeView: Story = {
       [],
     );
 
-    const useItems = useCallback(
-      (node?: Node.Node, options?: { disposition?: string; sort?: boolean }) => {
+    const useChildIds = useCallback(
+      (node?: Node.Node) => {
         const connections = useAtomValue(graph.connections(node?.id ?? Node.RootId));
-        return options?.sort ? connections.toSorted((a, b) => byPosition(a.properties, b.properties)) : connections;
+        return connections.map((connection) => connection.id);
+      },
+      [graph],
+    );
+
+    const useItem = useCallback(
+      (itemId: string) => {
+        const node = useAtomValue(graph.node(itemId));
+        return Option.isSome(node) ? node.value : undefined;
       },
       [graph],
     );
@@ -375,7 +383,8 @@ export const TreeView: Story = {
         <Controls />
         <Tree
           id={Node.RootId}
-          useItems={useItems}
+          useChildIds={useChildIds}
+          useItem={useItem}
           getProps={getProps}
           useIsOpen={useIsOpen}
           useIsCurrent={useIsCurrent}

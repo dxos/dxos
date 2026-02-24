@@ -53,7 +53,7 @@ const getItems = (graph: Graph.ReadableGraph, node?: Node.Node, disposition?: st
   );
 };
 
-const useItems = (node?: Node.Node, options?: { disposition?: string; sort?: boolean }) => {
+const useFilteredItems = (node?: Node.Node, options?: { disposition?: string; sort?: boolean }) => {
   const { graph } = useAppGraph();
   const connections = useConnections(graph, node?.id ?? Node.RootId);
   const filtered = connections.filter((node) => filterItems(node, options?.disposition));
@@ -323,7 +323,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
         tab,
         topbar,
         useActions,
-        useItems,
+        useFilteredItems,
         useChildIds,
         useItem: useItemById,
       }),

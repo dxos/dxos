@@ -14,8 +14,7 @@ import type { FlattenedActions, NavTreeItemGraphNode } from '../types';
 import type { L1PanelProps } from './Sidebar';
 
 export type NavTreeContextValue = Pick<
-  TreeProps<NavTreeItemGraphNode, { disposition?: string; sort?: boolean }>,
-  | 'useItems'
+  TreeProps<NavTreeItemGraphNode>,
   | 'getProps'
   | 'useIsCurrent'
   | 'useIsOpen'
@@ -32,6 +31,10 @@ export type NavTreeContextValue = Pick<
     popoverAnchorId?: string;
     renderItemEnd?: FC<{ node: Node.Node; open: boolean }>;
     useActions: (node: Node.Node) => FlattenedActions;
+    useFilteredItems: (
+      node?: NavTreeItemGraphNode,
+      options?: { disposition?: string; sort?: boolean },
+    ) => NavTreeItemGraphNode[];
     loadDescendents?: (node: Node.Node) => MaybePromise<void>;
     useIsAlternateTree?: (path: string[], item: NavTreeItemGraphNode) => boolean;
     setAlternateTree?: (path: string[], open: boolean) => void;

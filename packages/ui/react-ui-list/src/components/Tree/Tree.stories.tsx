@@ -87,11 +87,27 @@ const DefaultStory = ({ draggable }: { draggable?: boolean }) => {
     });
   }, []);
 
+  // Build a lookup map of all items by ID.
+  const itemMap = useMemo(() => {
+    const map = new Map<string, TestItem>();
+    const walk = (item: TestItem) => {
+      map.set(item.id, item);
+      item.items?.forEach(walk);
+    };
+    walk(tree);
+    return map;
+  }, []);
+
+  const useChildIds = useCallback((parent?: TestItem) => (parent?.items ?? tree.items).map((item) => item.id), []);
+
+  const useItem = useCallback((itemId: string) => itemMap.get(itemId), [itemMap]);
+
   return (
     <Tree
       id={tree.id}
       draggable={draggable}
-      useItems={(parent?: TestItem) => parent?.items ?? tree.items}
+      useChildIds={useChildIds}
+      useItem={useItem}
       getProps={(parent: TestItem) => ({
         id: parent.id,
         label: parent.name,

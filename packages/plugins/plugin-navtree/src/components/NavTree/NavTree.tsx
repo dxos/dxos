@@ -17,12 +17,12 @@ export const NAV_TREE_ITEM = 'NavTreeItem';
 export type NavTreeProps = Pick<TreeProps<NavTreeItemGraphNode>, 'id' | 'root'> & Pick<L1TabsProps, 'open'>;
 
 export const NavTree = forwardRef<HTMLDivElement, NavTreeProps>(({ id, root, ...props }, forwardedRef) => {
-  const { tab, useItems, onBack } = useNavTreeContext();
-  const topLevelActions = useItems(root, { disposition: 'menu', sort: true });
-  const topLevelWorkspaces = useItems(root, { disposition: 'workspace' });
+  const { tab, useFilteredItems, onBack } = useNavTreeContext();
+  const topLevelActions = useFilteredItems(root, { disposition: 'menu', sort: true });
+  const topLevelWorkspaces = useFilteredItems(root, { disposition: 'workspace' });
   const l0Items = topLevelWorkspaces;
-  const pinnedItems = useItems(root, { disposition: 'pin-end', sort: true });
-  const userAccountItem = useItems(root, { disposition: 'user-account' })[0];
+  const pinnedItems = useFilteredItems(root, { disposition: 'pin-end', sort: true });
+  const userAccountItem = useFilteredItems(root, { disposition: 'user-account' })[0];
   const topLevelItems = useMemo(
     () => [
       // prettier-ignore
