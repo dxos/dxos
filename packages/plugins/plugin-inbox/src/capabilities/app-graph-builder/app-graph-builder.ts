@@ -197,7 +197,7 @@ export default Capability.makeModule(
                 yield* Effect.tryPromise(() =>
                   runtime.runPromise(
                     invokeFunctionWithTracing(CalendarFunctions.Sync, {
-                      calendar: Ref.fromDXN(Obj.getDXN(cal)),
+                      calendar: Ref.make(cal),
                     }),
                   ),
                 );

@@ -78,7 +78,7 @@ export const InitiativeContainer = ({ subject: initiative }: InitiativeContainer
     <StackItem.Content toolbar>
       <div
         role='none'
-        className='flex flex-1 min-is-0 overflow-x-auto scrollbar-none gap-1 border-b border-subduedSeparator'
+        className='flex flex-1 min-w-0 overflow-x-auto scrollbar-none gap-1 border-b border-subdued-separator'
       >
         {tabs.map((tab) => (
           <IconButton
@@ -203,12 +203,12 @@ const InitiativeForm = ({ initiative }: { initiative: Initiative.Initiative }) =
   // TODO(dmaretskyi): Form breaks if we provide the echo object directly.
   const spreadValue = useMemo(() => ({ ...initiative }), [initiative]);
   return (
-    <Layout.Main>
+    <Layout.Main classNames='overflow-y-auto'>
       <ButtonGroup classNames='h-10'>
         <Button onClick={handleResetHistory}>Reset History</Button>
       </ButtonGroup>
       <h3 className='mb-2'>Input Queue</h3>
-      <div className='border border-subduedSeparator rounded-md p-2 h-64 overflow-y-auto'>
+      <div className='border border-subdued-separator rounded-md p-2 h-64 overflow-y-auto'>
         {inputQueueItems.map((item) => (
           <Surface.Surface key={item.id} role='section' data={{ subject: item }} limit={1} />
         ))}

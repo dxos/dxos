@@ -59,7 +59,7 @@ export const ConfirmReset = ({ active, mode, onCancel, onConfirm }: ConfirmReset
         <Input
           {...{ validationMessage }}
           label={
-            <StepHeading className='text-start mlb-2'>
+            <StepHeading className='text-start my-2'>
               {t(
                 mode === 'join new identity'
                   ? 'join new identity input label'

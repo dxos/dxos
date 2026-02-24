@@ -22,11 +22,6 @@ export default defineConfig({
   },
   plugins: [
     react(),
-    ThemePlugin({
-      content: [
-        resolve(__dirname, './index.html'),
-        resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-      ],
-    }),
+    ThemePlugin({}),
   ],
 });

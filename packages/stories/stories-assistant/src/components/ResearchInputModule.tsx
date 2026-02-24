@@ -17,7 +17,7 @@ export const ResearchInputModule = ({ space }: ComponentProps) => {
   const queue = useQueue(researchInput?.queue.dxn);
 
   return (
-    <ul className='flex flex-col gap-4 p-4 bs-full overflow-y-auto'>
+    <ul className='flex flex-col gap-4 p-4 h-full overflow-y-auto'>
       {queue?.objects.map((object) => (
         <li key={object.id}>
           <DebugCard object={object} />
@@ -40,14 +40,14 @@ const DebugCard = ({ object }: DebugCardProps) => {
           <span className='text-sm font-mono dx-text-hue' data-hue={getHashHue(object.id)}>
             {object.id.slice(-6)}
           </span>
-          <span className='text-sm text-description bg-neutral-800 pli-2 plb-1 rounded'>
+          <span className='text-sm text-description bg-neutral-800 px-2 py-1 rounded-sm'>
             {Entity.getTypename(object)}
           </span>
         </p>
       </div>
       <details className='group'>
         <summary className='cursor-pointer text-sm text-primary hover:text-primaryHover'>View JSON</summary>
-        <pre className='mt-2 text-xs p-3 rounded overflow-x-auto'>{JSON.stringify(object, null, 2)}</pre>
+        <pre className='mt-2 text-xs p-3 rounded-sm overflow-x-auto'>{JSON.stringify(object, null, 2)}</pre>
       </details>
     </div>
   );

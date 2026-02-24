@@ -42,10 +42,7 @@ export default defineConfig({
   plugins: [
     SourceMapsPlugin(),
     ConfigPlugin({ root: __dirname }),
-    ThemePlugin({
-      root: __dirname,
-      content: [resolve(__dirname, './*.html'), resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}')],
-    }),
+    ThemePlugin({}),
 
     WasmPlugin(),
 

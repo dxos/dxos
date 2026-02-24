@@ -41,11 +41,11 @@ export const StackItemContent = forwardRef<HTMLDivElement, StackItemContentProps
         style={style}
         className={mx(
           'group grid grid-cols-[100%] density-coarse',
-          stackItemSize === 'contain' && 'min-bs-0 overflow-hidden',
+          stackItemSize === 'contain' && 'min-h-0 overflow-hidden',
           toolbar &&
             role === 'section' &&
-            '[&_.dx-toolbar]:sticky [&_.dx-toolbar]:z-[1] [&_.dx-toolbar]:block-start-0 [&_.dx-toolbar]:-mbe-px [&_.dx-toolbar]:min-is-0',
-          toolbar && '[&>.dx-toolbar]:relative [&>.dx-toolbar]:border-be [&>.dx-toolbar]:border-subduedSeparator',
+            '[&_.dx-toolbar]:sticky [&_.dx-toolbar]:z-[1] [&_.dx-toolbar]:top-0 [&_.dx-toolbar]:-mb-px [&_.dx-toolbar]:min-w-0',
+          toolbar && '[&>.dx-toolbar]:relative [&>.dx-toolbar]:border-b [&>.dx-toolbar]:border-subdued-separator',
           classNames,
         )}
         data-popover-collision-boundary={true}

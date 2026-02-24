@@ -59,22 +59,22 @@ export const Options = () => {
     <ScrollArea.Root orientation='vertical'>
       <ScrollArea.Viewport>
         <div className={headerGrid}>
-          <a href='https://dxos.org/composer' target='_blank' rel='noreferrer' className='flex justify-end -mie-4'>
-            <Composer className='is-[8rem] bs-[8rem]' />
+          <a href='https://dxos.org/composer' target='_blank' rel='noreferrer' className='flex justify-end -me-4'>
+            <Composer className='w-[8rem] h-[8rem]' />
           </a>
           <div className='flex flex-col justify-end'>
             <h1 className='text-[64px] poiret-one-regular'>{t('composer.title')}</h1>
           </div>
           <div className='flex flex-col justify-start items-end'>
-            <div className='flex items-center gap-2 mbs-4'>
+            <div className='flex items-center gap-2 mt-4'>
               <span className='text-subdued'>Powered by</span>
               <a
                 target='_blank'
                 rel='noreferrer'
                 href='https://dxos.org'
-                className='text-base !text-subdued hover:opacity-50'
+                className='text-base text-subdued! hover:opacity-50'
               >
-                <DXOSHorizontalType className='bs-10 dark:fill-neutral-50' />
+                <DXOSHorizontalType className='h-10 dark:fill-neutral-50' />
               </a>
             </div>
           </div>

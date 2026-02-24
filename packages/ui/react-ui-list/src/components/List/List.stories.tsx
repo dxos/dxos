@@ -7,7 +7,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { useContext, useMemo } from 'react';
 
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 import { ghostHover, mx } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';
@@ -16,7 +16,7 @@ import { List, type ListRootProps } from './List';
 import { TestItemSchema, type TestItemType, type TestList, createList } from './testing';
 
 // TODO(burdon): var-icon-size.
-const grid = 'grid grid-cols-[32px_1fr_32px] min-bs-[2rem] rounded';
+const grid = 'grid grid-cols-[32px_1fr_32px] min-h-[2rem] rounded-sm';
 
 const DefaultStory = (props: Omit<ListRootProps<TestItemType>, 'items'>) => {
   const registry = useContext(RegistryContext);
@@ -45,13 +45,13 @@ const DefaultStory = (props: Omit<ListRootProps<TestItemType>, 'items'>) => {
     <List.Root<TestItemType> dragPreview items={items} getId={(item) => item.id} onMove={handleMove} {...props}>
       {({ items }) => (
         <>
-          <div className='flex flex-col is-full'>
+          <div className='flex flex-col w-full'>
             <div role='none' className={grid}>
               <div />
               <div className='flex items-center text-sm'>Items</div>
             </div>
 
-            <div role='list' className='is-full bs-full overflow-auto'>
+            <div role='list' className='w-full h-full overflow-auto'>
               {items?.map((item) => (
                 <List.Item<TestItemType> key={item.id} item={item} classNames={mx(grid, ghostHover)}>
                   <List.ItemDragHandle />
@@ -69,7 +69,7 @@ const DefaultStory = (props: Omit<ListRootProps<TestItemType>, 'items'>) => {
 
           <List.ItemDragPreview<TestItemType>>
             {({ item }) => (
-              <List.ItemWrapper classNames={mx(grid, 'bg-modalSurface border border-separator')}>
+              <List.ItemWrapper classNames={mx(grid, 'bg-modal-surface border border-separator')}>
                 <List.ItemDragHandle />
                 <div className='flex items-center'>{item.name}</div>
               </List.ItemWrapper>
@@ -89,7 +89,7 @@ const SimpleStory = (props: Omit<ListRootProps<TestItemType>, 'items'>) => {
   return (
     <List.Root<TestItemType> dragPreview items={items} {...props}>
       {({ items }) => (
-        <div role='list' className='is-full bs-full overflow-auto'>
+        <div role='list' className='w-full h-full overflow-auto'>
           {items?.map((item) => (
             <List.Item<TestItemType> key={item.id} item={item} classNames={mx(grid, ghostHover)}>
               <List.ItemDragHandle />
@@ -106,7 +106,7 @@ const SimpleStory = (props: Omit<ListRootProps<TestItemType>, 'items'>) => {
 const meta = {
   title: 'ui/react-ui-list/List',
   component: List.Root,
-  decorators: [withTheme(), withRegistry],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withRegistry],
   parameters: {
     layout: 'fullscreen',
   },

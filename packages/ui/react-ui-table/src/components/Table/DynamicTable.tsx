@@ -98,8 +98,8 @@ export const DynamicTable = <T extends Type.Entity.Any = Type.Entity.Any>({
 
   // TODO(burdon): Do we need the outer divs?
   return (
-    <div role='none' className={mx('is-full bs-full grow grid', classNames)}>
-      <div role='none' className='grid min-bs-0 overflow-hidden'>
+    <div role='none' className={mx('w-full h-full grow grid', classNames)}>
+      <div role='none' className='grid min-h-0 overflow-hidden'>
         <Table.Root>
           <Table.Main
             ref={tableRef}

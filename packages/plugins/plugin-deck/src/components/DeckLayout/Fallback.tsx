@@ -13,12 +13,12 @@ export const Fallback = () => {
   const { t } = useTranslation(meta.id);
 
   return (
-    <div role='none' className='min-bs-screen is-full flex items-center justify-center p-8'>
+    <div role='none' className='min-h-screen w-full flex items-center justify-center p-8'>
       <p
         role='alert'
         className={mx(
           errorText,
-          'border border-roseFill rounded-md flex items-center justify-center p-8 font-normal text-lg',
+          'border border-rose-fill rounded-md flex items-center justify-center p-8 font-normal text-lg',
         )}
       >
         {t('plugin error message')}

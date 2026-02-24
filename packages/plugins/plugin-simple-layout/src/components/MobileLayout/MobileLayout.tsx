@@ -54,7 +54,7 @@ const MobileLayoutRoot = forwardRef<HTMLDivElement, MobileLayoutRootProps>(
           {...props}
           role='none'
           style={{
-            transition: `block-size ${transition}ms ease-out`,
+            transition: `h-size ${transition}ms ease-out`,
             blockSize: 'calc(100vh - var(--kb-height, 0px))',
           }}
           className={mx('absolute top-0 left-0 right-0 flex flex-col', classNames)}
@@ -95,7 +95,7 @@ const MobileLayoutPanel = forwardRef<HTMLDivElement, MobileLayoutPanelProps>(
           paddingTop: safe?.top ? 'env(safe-area-inset-top)' : undefined,
           paddingBottom: safe?.bottom ? `calc((1 - var(--kb-open, 0)) * env(safe-area-inset-bottom))` : undefined,
         }}
-        className={mx('relative bs-full flex flex-col overflow-hidden', classNames)}
+        className={mx('relative h-full flex flex-col overflow-hidden', classNames)}
         ref={forwardedRef}
       >
         {children}

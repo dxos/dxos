@@ -36,16 +36,16 @@ export const MessageRoot = forwardRef<HTMLDivElement, MessageRootProps>(
           className={mx('grid grid-cols-subgrid col-span-2', classNames)}
           ref={forwardedRef}
         >
-          <div role='none' className='flex flex-col items-center gap-2 pbs-1'>
+          <div role='none' className='flex flex-col items-center gap-2 pt-1'>
             <Avatar.Content
               size={avatarSize}
               hue={authorAvatarProps?.hue || hexToHue(authorId ?? '0')}
               fallback={authorAvatarProps?.emoji || hexToEmoji(authorId ?? '0')}
               {...(authorImgSrc && { imgSrc: authorImgSrc })}
             />
-            {continues && <div role='none' className='is-px grow bg-separator' />}
+            {continues && <div role='none' className='w-px grow bg-separator' />}
           </div>
-          <div role='none' className='plb-1 min-is-0'>
+          <div role='none' className='py-1 min-w-0'>
             {children}
           </div>
         </div>
@@ -84,7 +84,7 @@ export const MessageTime = ({ timestamp }: MessageTimeProps) => {
   const { dtLocale } = useTranslation(translationKey);
   const dt = timestamp ? new Date(timestamp) : undefined;
   return (
-    <time className='block text-subdued text-xs pbe-0.5' dateTime={dt?.toISOString()}>
+    <time className='block text-subdued text-xs pb-0.5' dateTime={dt?.toISOString()}>
       {dt ? formatDistanceToNow(dt, { locale: dtLocale, addSuffix: true }) : ''}
     </time>
   );
@@ -167,7 +167,7 @@ export const MessageTextbox = ({
       <div
         role='none'
         ref={parentRef}
-        className={mx('plb-0.5 mie-1 rounded-sm', focusRing, disabled && 'opacity-50')}
+        className={mx('py-0.5 me-1 rounded-xs', focusRing, disabled && 'opacity-50')}
         {...focusAttributes}
       />
     </MessageRoot>

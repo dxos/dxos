@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { Button, IconButton, Toolbar } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { Waveform, type WaveformProps } from './Waveform';
 
@@ -27,28 +27,28 @@ const DefaultStory = ({ active: _active }: WaveformProps) => {
         </div>
         <div className='flex gap-4 items-center'>
           <IconButton
-            classNames='p-1 min-bs-1 rounded'
+            classNames='p-1 min-h-1 rounded-sm'
             label='Waveform'
             iconOnly
             icon='ph--waveform--regular'
             size={3}
           />
           <IconButton
-            classNames='p-1 min-bs-1 rounded'
+            classNames='p-1 min-h-1 rounded-sm'
             label='Waveform'
             iconOnly
             icon='ph--waveform--regular'
             size={4}
           />
           <IconButton
-            classNames='p-1 min-bs-1 rounded'
+            classNames='p-1 min-h-1 rounded-sm'
             label='Waveform'
             iconOnly
             icon='ph--waveform--regular'
             size={5}
           />
           <IconButton
-            classNames='p-1 min-bs-1 rounded'
+            classNames='p-1 min-h-1 rounded-sm'
             label='Waveform'
             iconOnly
             icon='ph--waveform--regular'
@@ -64,7 +64,7 @@ const meta = {
   title: 'ui/react-ui-sfx/Waveform',
   component: Waveform,
   render: DefaultStory,
-  decorators: [withTheme()],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
   },

@@ -56,7 +56,7 @@ export const Ghost = (props: Partial<GhostProps>) => {
   const ghost = useGhost(canvas, props);
   useGhostController(ghost, props);
 
-  return <canvas ref={setCanvas} className='bs-full is-full' />;
+  return <canvas ref={setCanvas} className='h-full w-full' />;
 };
 
 const useGhost = (canvas: HTMLCanvasElement | null, props: Partial<GhostProps>): GhostRenderer | undefined => {

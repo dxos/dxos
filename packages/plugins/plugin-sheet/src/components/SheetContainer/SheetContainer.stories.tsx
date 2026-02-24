@@ -82,8 +82,8 @@ export const Section = () => {
   }
 
   return (
-    <div className='is-full flex justify-center'>
-      <div className='is-[40rem]'>
+    <div className='w-full flex justify-center'>
+      <div className='w-[40rem]'>
         <AttendableContainer id={Obj.getDXN(sheet).toString()} classNames='contents'>
           <SheetContainer role='section' space={space} subject={sheet} ignoreAttention />
         </AttendableContainer>
@@ -102,7 +102,7 @@ export const Spec = () => {
 
   return (
     <AttendableContainer id={Obj.getDXN(sheet).toString()} classNames='contents'>
-      <div role='none' className='is-full grid grid-cols-[1fr_20rem]'>
+      <div role='none' className='w-full grid grid-cols-[1fr_20rem]'>
         <SheetContainer role='article' space={space} subject={sheet} ignoreAttention />
         <div role='none' data-testid='grid.range-list'>
           <RangeList sheet={sheet} />

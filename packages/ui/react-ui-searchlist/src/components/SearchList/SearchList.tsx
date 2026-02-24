@@ -238,7 +238,7 @@ const SearchListContent = forwardRef<HTMLDivElement, SearchListContentProps>(
       <div
         role='none'
         // TODO(burdon): Remove p-1 hack.
-        className={mx('flex flex-col gap-2 bs-full is-full min-bs-0 overflow-hidden p-1', classNames)}
+        className={mx('flex flex-col gap-2 h-full w-full min-h-0 overflow-hidden p-1', classNames)}
         ref={forwardedRef}
       >
         {children}
@@ -263,7 +263,7 @@ type SearchListViewportProps = ThemedClassName<PropsWithChildren>;
 const SearchListViewport = forwardRef<HTMLDivElement, SearchListViewportProps>(
   ({ classNames, children }, forwardedRef) => {
     return (
-      <div role='listbox' className={mx('bs-full is-full min-bs-0 overflow-y-auto', classNames)} ref={forwardedRef}>
+      <div role='listbox' className={mx('h-full w-full min-h-0 overflow-y-auto', classNames)} ref={forwardedRef}>
         {children}
       </div>
     );
@@ -471,14 +471,14 @@ const SearchListItem = forwardRef<HTMLDivElement, SearchListItemProps>(
         tabIndex={-1}
         className={mx(
           'flex gap-2 items-center',
-          'plb-1 pli-2 rounded-sm select-none cursor-pointer data-[selected=true]:bg-hoverOverlay hover:bg-hoverOverlay',
+          'py-1 px-2 rounded-xs select-none cursor-pointer data-[selected=true]:bg-hover-overlay hover:bg-hover-overlay',
           disabled && 'opacity-50 cursor-not-allowed hover:bg-transparent data-[selected=true]:bg-transparent',
           classNames,
         )}
         onClick={handleClick}
       >
         {icon && <Icon icon={icon} size={5} />}
-        <span className='is-0 grow truncate'>{label}</span>
+        <span className='w-0 grow truncate'>{label}</span>
         {suffix && <span className={mx('shrink-0', descriptionText)}>{suffix}</span>}
         {checked && <Icon icon='ph--check--regular' size={5} />}
       </div>
@@ -496,7 +496,7 @@ type SearchListEmptyProps = ThemedClassName<PropsWithChildren<{}>>;
 
 const SearchListEmpty = ({ classNames, children }: SearchListEmptyProps) => {
   return (
-    <div role='status' className={mx('flex flex-col is-full pli-2 plb-1', classNames)}>
+    <div role='status' className={mx('flex flex-col w-full px-2 py-1', classNames)}>
       {children}
     </div>
   );
@@ -523,7 +523,7 @@ const SearchListGroup = forwardRef<HTMLDivElement, SearchListGroupProps>(
     return (
       <div ref={forwardedRef} role='group' className={mx('flex flex-col', classNames)}>
         {heading && (
-          <div role='presentation' className='pli-2 plb-1 text-xs font-medium text-description'>
+          <div role='presentation' className='px-2 py-1 text-xs font-medium text-description'>
             {heading}
           </div>
         )}

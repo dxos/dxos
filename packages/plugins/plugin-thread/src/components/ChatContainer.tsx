@@ -125,8 +125,8 @@ export const ChatContainer = ({
       current={current}
       id={id}
       classNames={[
-        'bs-full grid-rows-[1fr_min-content_min-content] overflow-hidden',
-        'transition-[padding-block-end] [[data-sidebar-inline-start-state=open]_&]:lg:pbe-0',
+        'h-full grid-rows-[1fr_min-content_min-content] overflow-hidden',
+        'transition-[padding-h-end] [[data-sidebar-left-state=open]_&]:lg:pb-0',
         classNames,
       ]}
     >

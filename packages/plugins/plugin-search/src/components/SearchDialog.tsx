@@ -37,7 +37,7 @@ const SearchListResult = forwardRef<HTMLDivElement, SearchListResultProps>(({ no
       value={node!.id}
       label={label}
       icon={node?.properties.icon}
-      classNames='flex gap-2 items-center pli-2'
+      classNames='flex gap-2 items-center px-2'
       onSelect={handleSelect}
       ref={forwardedRef}
     />
@@ -89,7 +89,7 @@ export const SearchDialog = ({ pivotId }: SearchDialogProps) => {
     <Dialog.Content>
       <Dialog.Title>{t('search dialog title')}</Dialog.Title>
       <SearchList.Root onSearch={handleSearch}>
-        <SearchList.Content classNames='max-bs-[24rem] overflow-auto'>
+        <SearchList.Content classNames='max-h-[24rem] overflow-auto'>
           <SearchList.Input placeholder={t('search placeholder')} />
           <SearchList.Viewport>
             {queryString.length > 0 ? (
@@ -99,11 +99,11 @@ export const SearchDialog = ({ pivotId }: SearchDialogProps) => {
                   .filter(Option.isSome)
                   .map((node) => <SearchListResult key={node.value.id} node={node.value} onSelect={handleSelect} />)
               ) : (
-                <p className='pli-1'>{t(pending ? 'pending results message' : 'empty results message')}</p>
+                <p className='px-1'>{t(pending ? 'pending results message' : 'empty results message')}</p>
               )
             ) : (
               <>
-                {closed.length > 0 && <h2 className={mx('mlb-1', descriptionText)}>{t('recently closed heading')}</h2>}
+                {closed.length > 0 && <h2 className={mx('my-1', descriptionText)}>{t('recently closed heading')}</h2>}
                 {closed.filter(Option.isSome).map((node) => (
                   <SearchListResult key={node.value.id} node={node.value} onSelect={handleSelect} />
                 ))}

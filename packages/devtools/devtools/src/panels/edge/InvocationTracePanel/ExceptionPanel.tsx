@@ -32,7 +32,7 @@ export const ExceptionPanel: FC<ExceptionPanelProps> = ({ objects }) => {
 
   if (errorLogs.length === 0) {
     return (
-      <div role='none' className={mx('flex is-full items-center justify-center m-4')}>
+      <div role='none' className={mx('flex w-full items-center justify-center m-4')}>
         <Message.Root>
           <Message.Title>No exceptions.</Message.Title>
         </Message.Root>
@@ -51,7 +51,10 @@ export const ExceptionPanel: FC<ExceptionPanelProps> = ({ objects }) => {
         const stack = context?.stack;
 
         return (
-          <div key={`log-${index}`} className='mb-2 border border-red-200 dark:border-red-900 rounded overflow-hidden'>
+          <div
+            key={`log-${index}`}
+            className='mb-2 border border-red-200 dark:border-red-900 rounded-sm overflow-hidden'
+          >
             <div className='p-2'>
               <div className='flex justify-between items-start'>
                 <div className='font-medium'>{errorName}</div>

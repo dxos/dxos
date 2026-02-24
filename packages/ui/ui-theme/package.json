@@ -45,18 +45,17 @@
     "src"
   ],
   "scripts": {
+    "audit-classes": "npx tsx bin/audit-classes.mts",
     "tailwind-check": "tailwindcss -i ./dist/plugin/node-esm/theme.css --config ./src/tailwind.ts --content \"./src/**/*.{js,ts,jsx,tsx,vue}\" --check"
   },
   "dependencies": {
-    "@ch-ui/tailwind-tokens": "catalog:",
-    "@ch-ui/tokens": "catalog:",
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
     "@fontsource-variable/inter": "catalog:",
     "@fontsource-variable/jetbrains-mono": "catalog:",
     "@fontsource/poiret-one": "catalog:",
-    "@tailwindcss/container-queries": "catalog:",
     "@tailwindcss/forms": "catalog:",
+    "@tailwindcss/postcss": "catalog:",
     "autoprefixer": "catalog:",
     "esbuild-style-plugin": "catalog:",
     "glob": "catalog:",
@@ -64,14 +63,13 @@
     "lodash.merge": "catalog:",
     "postcss": "catalog:",
     "postcss-import": "catalog:",
+    "postcss-nesting": "catalog:",
     "tailwind-merge": "catalog:",
     "tailwind-scrollbar": "catalog:",
     "tailwindcss": "catalog:",
-    "tailwindcss-logical": "catalog:",
     "tailwindcss-radix": "catalog:"
   },
   "devDependencies": {
-    "@ch-ui/colors": "catalog:",
     "@dxos/ui-types": "workspace:*",
     "@types/lodash.merge": "catalog:",
     "@types/postcss-import": "catalog:",

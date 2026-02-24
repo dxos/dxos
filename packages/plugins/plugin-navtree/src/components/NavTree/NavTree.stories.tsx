@@ -16,7 +16,7 @@ import { OperationResolver } from '@dxos/operation';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { IconButton, Input, Main, Toolbar } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { useAttention, useAttentionAttributes } from '@dxos/react-ui-attention';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/ui-theme';
@@ -40,14 +40,14 @@ const StoryPlankHeading = ({ attendableId }: { attendableId: string }) => {
   const { hasAttention } = useAttention(attendableId);
   console.log('hasAttention', hasAttention);
   return (
-    <div className='flex p-1 items-center border-be border-separator'>
+    <div className='flex p-1 items-center border-b border-separator'>
       <IconButton
         density='coarse'
         icon='ph--atom--regular'
         label='Test'
         iconOnly
         variant={hasAttention ? 'primary' : 'ghost'}
-        classNames='is-[--rail-action] bs-[--rail-action]'
+        classNames='w-(--rail-action) h-(--rail-action)'
       />
       <StackItem.ResizeHandle />
     </div>
@@ -70,22 +70,22 @@ const StoryPlank = ({ attendableId }: { attendableId: string }) => {
     <StackItem.Root
       item={{ id: attendableId }}
       {...attentionAttrs}
-      classNames='bg-baseSurface border-ie border-separator'
+      classNames='bg-base-surface border-e border-separator'
       size={30}
       onKeyDown={handleKeyDown}
       ref={rootElement}
     >
       <StoryPlankHeading attendableId={attendableId} />
       <StackItem.Content toolbar>
-        <Toolbar.Root classNames='border-be border-subduedSeparator'>
+        <Toolbar.Root classNames='border-b border-subdued-separator'>
           <Toolbar.Button>Test</Toolbar.Button>
         </Toolbar.Root>
 
-        <div className={mx(container, 'm-2 bg-activeSurface')}>
+        <div className={mx(container, 'm-2 bg-active-surface')}>
           <Input.Root>
             <Input.Label>Level 1 (group)</Input.Label>
           </Input.Root>
-          <div className={mx(container, 'bg-baseSurface')}>
+          <div className={mx(container, 'bg-base-surface')}>
             <Input.Root>
               <Input.Label>Level 2 (base)</Input.Label>
               <Input.TextArea placeholder='Enter text' />
@@ -121,6 +121,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withTheme(),
+    withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [
         ...corePlugins(),

@@ -35,5 +35,5 @@ export const Default: Story = {
 };
 
 export const Responsive: Story = {
-  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'is-[30rem]' }), withAttention()],
+  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'w-[30rem]' }), withAttention()],
 };

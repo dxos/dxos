@@ -21,9 +21,9 @@ export const AgentConfig = ({
   const { t } = useTranslation(translationKey);
   return (
     <div role='none' className='p-1'>
-      <h2 className={mx(descriptionText, 'text-center mbs-2')}>{t('agent heading')}</h2>
+      <h2 className={mx(descriptionText, 'text-center mt-2')}>{t('agent heading')}</h2>
       {validationMessage && (
-        <p role='alert' className={mx(valenceColorText('error'), 'mlb-2')}>
+        <p role='alert' className={mx(valenceColorText('error'), 'my-2')}>
           {validationMessage}
         </p>
       )}
@@ -34,7 +34,7 @@ export const AgentConfig = ({
         <>
           <div
             role='group'
-            className='mlb-2 flex gap-2 items-center'
+            className='my-2 flex gap-2 items-center'
             aria-describedby='devices-panel.create-agent.description'
           >
             <Avatar.Root>
@@ -60,7 +60,7 @@ export const AgentConfig = ({
               <Tooltip.Trigger asChild content={t('destroy agent label')} side='bottom'>
                 <IconButton
                   variant='ghost'
-                  classNames='pli-0 is-[--rail-action] bs-[--rail-action]'
+                  classNames='px-0 w-(--rail-action) h-(--rail-action)'
                   data-testid='agent.destroy'
                   label={t('destroy agent label')}
                   icon='ph--power--regular'
@@ -71,7 +71,7 @@ export const AgentConfig = ({
             )}
           </div>
           {agentStatus === 'created' && (
-            <p id='devices-panel.create-agent.description' className={mx(descriptionText, 'mlb-2')}>
+            <p id='devices-panel.create-agent.description' className={mx(descriptionText, 'my-2')}>
               {t('agent requested description')}
             </p>
           )}
@@ -80,12 +80,12 @@ export const AgentConfig = ({
         <>
           <Button
             variant='ghost'
-            classNames='mlb-2 is-full justify-start gap-2 pis-0 pie-3'
+            classNames='my-2 w-full justify-start gap-2 ps-0 pe-3'
             data-testid={agentStatus === 'creatable' ? 'devices-panel.create-agent' : 'devices-panel.agent-error'}
             onClick={agentStatus === 'creatable' ? onAgentCreate : onAgentRefresh}
             aria-describedby='devices-panel.create-agent.description'
           >
-            <div role='img' className={mx(getSize(8), 'm-1 rounded-sm bg-inputSurface grid place-items-center')}>
+            <div role='img' className={mx(getSize(8), 'm-1 rounded-xs bg-input-surface grid place-items-center')}>
               {agentStatus === 'creatable' ? (
                 <Icon icon='ph--plus--light' size={6} />
               ) : (

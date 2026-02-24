@@ -74,13 +74,13 @@ const InputWrapper = ({
 const DefaultStory = (props: BaseProps) => {
   return (
     <div className='space-b-4'>
-      <div className={mx('bg-baseSurface', 'p-4 rounded-md')}>
+      <div className={mx('bg-base-surface', 'p-4 rounded-md')}>
         <InputWrapper {...props} />
       </div>
-      <div className={mx('bg-cardSurface', 'p-4 rounded-md', surfaceShadow({ elevation: 'positioned' }))}>
+      <div className={mx('bg-card-surface', 'p-4 rounded-md', surfaceShadow({ elevation: 'positioned' }))}>
         <InputWrapper {...props} />
       </div>
-      <div className={mx('bg-modalSurface', 'p-4 rounded-md', surfaceShadow({ elevation: 'dialog' }))}>
+      <div className={mx('bg-modal-surface', 'p-4 rounded-md', surfaceShadow({ elevation: 'dialog' }))}>
         <InputWrapper {...props} />
       </div>
     </div>

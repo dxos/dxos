@@ -86,12 +86,12 @@ const EdgeConnectionPopover = () => {
   const isConnected = status?.state === EdgeStatus.ConnectionState.CONNECTED;
 
   return (
-    <div className='min-is-[240px] p-2'>
+    <div className='min-w-[240px] p-2'>
       {/* Connection Status Header */}
-      <div className='flex items-center gap-2 mbe-2'>
+      <div className='flex items-center gap-2 mb-2'>
         <Icon
           icon={isConnected ? 'ph--check-circle--regular' : 'ph--warning-circle--regular'}
-          classNames={mx(isConnected ? 'text-successText' : 'text-errorText animate-pulse')}
+          classNames={mx(isConnected ? 'text-success' : 'text-error animate-pulse')}
         />
         <span className='font-medium text-sm'>
           {isConnected ? t('sync edge connected label') : t('sync edge disconnected label')}
@@ -146,7 +146,7 @@ const UnitValue = ({ value: input, format, suffix }: { value: number; format: Un
   return (
     <span className='font-mono'>
       {formattedValue}
-      <span className='mis-1 text-subdued'>
+      <span className='ms-1 text-subdued'>
         {unit.symbol}
         {suffix}
       </span>

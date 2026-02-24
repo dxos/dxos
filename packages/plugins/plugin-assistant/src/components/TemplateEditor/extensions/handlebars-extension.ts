@@ -64,7 +64,7 @@ const regex = {
   url: /[\w.-]+\.[\w.-]+\/[\w/]+/g,
 };
 
-const tagPadding = 'mli-0.5 pli-1 rounded-sm';
+const tagPadding = 'mx-0.5 px-1 rounded-xs';
 
 /**
  * ViewPlugin that decorates Handlebars syntax.
@@ -158,14 +158,14 @@ const handlebarsHighlightPlugin = ViewPlugin.fromClass(
               decorations.push({
                 from: idx,
                 to: end,
-                decoration: Decoration.mark({ class: 'text-greenText' }),
+                decoration: Decoration.mark({ class: 'text-green-text' }),
               });
               end = idx;
             }
             decorations.push({
               from: start,
               to: end,
-              decoration: Decoration.mark({ class: 'text-blueText' }),
+              decoration: Decoration.mark({ class: 'text-blue-text' }),
             });
           }
         }
@@ -179,7 +179,7 @@ const handlebarsHighlightPlugin = ViewPlugin.fromClass(
             decorations.push({
               from: start,
               to: end,
-              decoration: Decoration.mark({ class: 'text-greenText' }),
+              decoration: Decoration.mark({ class: 'text-green-text' }),
             });
           }
         }

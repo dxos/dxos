@@ -14,6 +14,7 @@
   "sideEffects": false,
   "scripts": {
     "1p-credentials": "bash -c \"op inject -i '$(git rev-parse --show-toplevel)/.env.1password'\"",
+    "audit-classes": "pnpm --filter @dxos/ui-theme audit-classes",
     "beast": "beast docs",
     "build": "moon run :build",
     "changed-packages": "scripts/changed",
@@ -72,6 +73,7 @@
     "@rushstack/eslint-patch": "catalog:",
     "@swc/core": "catalog:",
     "@swc/types": "catalog:",
+    "@tailwindcss/oxide": "catalog:",
     "@testing-library/dom": "catalog:",
     "@testing-library/jest-dom": "catalog:",
     "@testing-library/react": "catalog:",
@@ -151,6 +153,7 @@
     "semver": "catalog:",
     "serve": "catalog:",
     "storybook": "catalog:",
+    "tailwindcss": "catalog:",
     "ts-morph": "catalog:",
     "tsdown": "catalog:",
     "tsx": "catalog:",

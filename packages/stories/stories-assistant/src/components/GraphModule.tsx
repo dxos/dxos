@@ -44,16 +44,16 @@ export const GraphModule = ({ space }: ComponentProps) => {
   );
 
   return (
-    <StackItem.Content toolbar classNames={['relative bs-full grid', open && 'grid-rows-[min-content_1fr]']}>
+    <StackItem.Content toolbar classNames={['relative h-full grid', open && 'grid-rows-[min-content_1fr]']}>
       <SearchBar space={space} onSubmit={handleSubmit} />
-      <D3ForceGraph classNames='min-bs-[50vh]' model={model} />
+      <D3ForceGraph classNames='min-h-[50vh]' model={model} />
 
       {open && (
         <div
           role='none'
           className={mx(
-            'flex absolute left-2 right-2 bottom-2 bs-[8rem]',
-            'overflow-hidden bg-baseSurface border border-subduedSeparator opacity-80',
+            'flex absolute left-2 right-2 bottom-2 h-[8rem]',
+            'overflow-hidden bg-base-surface border border-subdued-separator opacity-80',
           )}
         >
           <Json classNames='text-sm' data={filter} />
@@ -79,7 +79,7 @@ export const SearchBar = ({ space, onSubmit }: ComponentProps & Pick<ChatEditorP
 
   return (
     <Toolbar.Root>
-      <QueryEditor classNames='p-1 is-full' db={space.db} onChange={onSubmit} />
+      <QueryEditor classNames='p-1 w-full' db={space.db} onChange={onSubmit} />
       <Toolbar.IconButton
         icon='ph--magnifying-glass--regular'
         iconOnly

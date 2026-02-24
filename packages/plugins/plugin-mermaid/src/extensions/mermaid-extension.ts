@@ -112,18 +112,18 @@ export const mermaid = (_options: MermaidOptions = {}): Extension => {
         maring: '4px 0',
         padding: '16px',
         justifyContent: 'center',
-        backgroundColor: 'var(--dx-groupSurface)',
+        backgroundColor: 'var(--color-group-surface)',
         borderRadius: '8px',
       },
       '& .cm-mermaid-label': {
         position: 'absolute',
         right: '16px',
         fontFamily: 'unset',
-        color: 'var(--dx-subdued)',
+        color: 'var(--color-subdued)',
       },
       '& .cm-mermaid-error': {
         display: 'inline-block',
-        color: 'var(--dx-errorText)',
+        color: 'var(--color-error)',
       },
       '& .cm-mermaid-hidden': {
         display: 'none !important',
