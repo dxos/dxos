@@ -11,10 +11,11 @@ import { Obj } from '@dxos/echo';
 import { Message } from '@dxos/types';
 import { bufferToArray } from '@dxos/util';
 
-import { preprocessPrompt } from './AiPreprocessor';
+import { estimateTokens, preprocessPrompt } from './AiPreprocessor';
 import { PromptPreprocessingError } from './errors';
+import { TestData } from './testing';
 
-describe('preprocessor', () => {
+describe('AiPreprocessor.preprocessPrompt', () => {
   it.effect(
     'should preprocess simple user message with text',
     Effect.fn(function* ({ expect }) {
@@ -464,6 +465,73 @@ describe('preprocessor', () => {
       expect(input.content).toHaveLength(2);
       expect(input.content[0].role).toBe('user');
       expect(input.content[1].role).toBe('assistant');
+    }),
+  );
+
+  it.effect(
+    'should trim messages before assistant summary',
+    Effect.fn(function* ({ expect }) {
+      const messages = [
+        Obj.make(Message.Message, {
+          created: new Date().toISOString(),
+          sender: { role: 'user' },
+          blocks: [{ _tag: 'text', text: 'Old question' }],
+        }),
+        Obj.make(Message.Message, {
+          created: new Date().toISOString(),
+          sender: { role: 'assistant' },
+          blocks: [
+            { _tag: 'text', text: 'Old answer' },
+            { _tag: 'summary', content: 'User asked an old question.' },
+          ],
+        }),
+        Obj.make(Message.Message, {
+          created: new Date().toISOString(),
+          sender: { role: 'user' },
+          blocks: [{ _tag: 'text', text: 'New question' }],
+        }),
+      ];
+
+      const input = yield* preprocessPrompt(messages);
+      expect(input.content).toHaveLength(2);
+      expect(input.content[0].role).toBe('assistant');
+      expect((input.content[0] as Prompt.AssistantMessage).content).toEqual([
+        Prompt.makePart('text', { text: '<summary>User asked an old question.</summary>' }),
+      ]);
+      expect(input.content[1].role).toBe('user');
+      expect((input.content[1] as Prompt.UserMessage).content).toEqual([
+        Prompt.makePart('text', { text: 'New question' }),
+      ]);
+    }),
+  );
+
+  it.effect(
+    'should fail when user message contains a summary block',
+    Effect.fn(function* ({ expect }) {
+      const messages = [
+        Obj.make(Message.Message, {
+          created: new Date().toISOString(),
+          sender: { role: 'user' },
+          blocks: [{ _tag: 'summary', content: 'Bad summary' }],
+        }),
+      ];
+
+      const result = yield* Effect.either(preprocessPrompt(messages));
+      expect(Either.isLeft(result)).toBe(true);
+      if (Either.isLeft(result)) {
+        expect(result.left).toBeInstanceOf(PromptPreprocessingError);
+      }
+    }),
+  );
+});
+
+describe('AiPreprocessor.estimateTokens', () => {
+  it.effect(
+    'should estimate tokens for a simple user message with text',
+    Effect.fn(function* ({ expect }) {
+      const prompt = yield* preprocessPrompt(yield* Effect.promise(TestData.internetOrderConversation));
+      const tokens = yield* estimateTokens(prompt);
+      expect(tokens).toBeGreaterThan(0);
     }),
   );
 });

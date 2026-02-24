@@ -327,7 +327,7 @@ const toolCalls = [
         providerExecuted: false,
       },
       {
-        _tag: 'summary',
+        _tag: 'stats',
         model: 'claude-opus-4-20250514',
         duration: 8809,
         message: 'OK',
@@ -360,7 +360,7 @@ const toolCalls = [
         providerExecuted: false,
       },
       {
-        _tag: 'summary',
+        _tag: 'stats',
         model: 'claude-opus-4-20250514',
         duration: 6661,
         message: 'OK',
@@ -413,7 +413,7 @@ const testExecutionGraph = [
         providerExecuted: false,
       },
       {
-        _tag: 'summary',
+        _tag: 'stats',
         model: 'claude-opus-4-20250514',
         duration: 5217,
         message: 'OK',
@@ -507,7 +507,7 @@ const testExecutionGraph = [
       //   },
       // },
       {
-        _tag: 'summary',
+        _tag: 'stats',
         model: 'claude-opus-4-20250514',
         duration: 6617,
         message: 'OK',

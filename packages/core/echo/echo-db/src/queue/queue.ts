@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Predicate from 'effect/Predicate';
+
 import { DeferredTask } from '@dxos/async';
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
@@ -56,13 +58,18 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
       }
 
       const decodedObjects = await Promise.all(
-        (objects ?? []).map((obj) =>
-          Obj.fromJSON(obj, {
-            refResolver: this._refResolver,
-            dxn: this._dxn.extend([(obj as any).id]),
-          }),
-        ),
-      );
+        (objects ?? []).map(async (obj) => {
+          try {
+            return await Obj.fromJSON(obj, {
+              refResolver: this._refResolver,
+              dxn: this._dxn.extend([(obj as any).id]),
+            });
+          } catch (err) {
+            log.verbose('schema validation error; object ignored', { obj, error: err });
+            return undefined;
+          }
+        }),
+      ).then((objects) => objects.filter(Predicate.isNotUndefined));
 
       if (thisRefreshId !== this._refreshId) {
         return;
@@ -252,14 +259,21 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
   async queryObjects(): Promise<T[]> {
     const objects = await this.fetchObjectsJSON();
     const decodedObjects = await Promise.all(
-      objects.map(async (obj) => {
-        const decoded = await Obj.fromJSON(obj, {
-          refResolver: this._refResolver,
-          dxn: this._dxn.extend([(obj as any).id]),
-        });
-        this._objectCache.set(decoded.id, decoded as T);
-        return decoded;
-      }),
+      objects
+        .map(async (obj) => {
+          try {
+            const decoded = await Obj.fromJSON(obj, {
+              refResolver: this._refResolver,
+              dxn: this._dxn.extend([(obj as any).id]),
+            });
+            this._objectCache.set(decoded.id, decoded as T);
+            return decoded;
+          } catch (err) {
+            log.verbose('schema validation error; object ignored', { obj, error: err });
+            return undefined;
+          }
+        })
+        .filter(Predicate.isNotUndefined),
     );
 
     return decodedObjects as T[];
