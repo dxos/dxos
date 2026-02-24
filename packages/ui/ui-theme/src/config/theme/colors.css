@@ -34,11 +34,11 @@
   /* Accent */
 
   --color-accent-surface: light-dark(theme(colors.blue.500), theme(colors.blue.700));
-  --color-accent-surface-hover: light-dark(theme(colors.blue.600), theme(colors.blue.500));
+  --color-accent-surface-hover: light-dark(theme(colors.blue.200), theme(colors.blue.800));
   --color-accent-surface-text: theme(colors.white);
-  --color-accent-text: light-dark(theme(colors.blue.600), theme(colors.blue.400));
-  --color-accent-text-hover: light-dark(theme(colors.blue.500), theme(colors.blue.400));
-  --color-accent-focus-indicator: light-dark(theme(colors.blue.300), theme(colors.blue.500));
+  --color-accent-text: light-dark(theme(colors.blue.400), theme(colors.blue.600));
+  --color-accent-text-hover: light-dark(theme(colors.blue.500), theme(colors.blue.500));
+  --color-accent-focus-indicator: light-dark(theme(colors.blue.300), theme(colors.blue.600));
 
   --color-un-accent: theme(colors.neutral.400);
   --color-un-accent-hover: theme(colors.neutral.500);
