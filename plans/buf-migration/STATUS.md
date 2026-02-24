@@ -86,39 +86,28 @@ Migrating DXOS protocol types from **protobuf.js** (codegen via `@dxos/codec-pro
 | ------------------------------------------------------- | ----- | -------------------------------------------- |
 | `client/src/tests/invitations.test.ts`                  | 12    | Test — InvitationsProxy type mismatch        |
 | `client-services/.../space-invitation-protocol.ts`      | 6     | Invitation — PublicKey + credential boundary |
-| `client/src/services/agent-hosting-provider.ts`         | 5     | Client SDK — edge agent API                  |
-| `client-services/.../spaces-service.ts`                 | 4     | Service — GossipMessage, assertion, cache    |
-| `client-services/.../notarization-plugin.ts`            | 4     | Pipeline — credential notarization           |
-| `client-services/.../space-invitation-protocol.test.ts` | 4     | Test — invitation protocol                   |
-| `tracing/src/trace-sender.ts`                           | 4     | Tracing — Resource/Span type mismatch        |
+| `client/src/services/agent-hosting-provider.ts`         | 6     | Client SDK — proto WebsocketRpcClient boundary |
+| `client-services/.../space-invitation-protocol.test.ts` | 4     | Test — invitation protocol tests              |
+| `client-services/.../invitations-manager.ts`            | 3     | Invitation — proto↔buf boundary              |
+| `client-services/.../diagnostics.ts`                    | 3     | Diagnostics — getFirstStreamValue types      |
+| `client-protocol/.../encoder.ts`                        | 3     | Invitation encoding — proto codec boundary   |
+| `client-protocol/.../encoder.test.ts`                   | 3     | Test — encoder tests                         |
 | `client/src/tests/lazy-space-loading.test.ts`           | 3     | Test                                         |
-| `client/src/client/client.ts`                           | 3     | Client SDK                                   |
-| `client-services/.../system-service.test.ts`            | 3     | Test                                         |
-| `client-services/.../service-context.ts`                | 3     | Service wiring                               |
-| `client-services/.../invitations-manager.ts`            | 3     | Invitation                                   |
-| `client-services/.../diagnostics.ts`                    | 3     | Diagnostics                                  |
-| `client-services/.../devtools/network.ts`               | 3     | Devtools                                     |
-| `client-protocol/.../encoder.ts`                        | 3     | Invitation encoding                          |
-| `client-protocol/.../encoder.test.ts`                   | 3     | Test                                         |
-| `devtools/.../TracingPanel.tsx`                         | 3     | Devtools UI                                  |
-| `functions-runtime-cloudflare/.../service-container.ts` | 3     | Edge functions                               |
-| `echo-pipeline/.../control-pipeline.ts`                 | 3     | Pipeline internals                           |
-| (39 more files with 1–2 casts each)                     | ~57   | Various                                      |
+| (25 more files with 1–2 casts each)                     | ~37   | Various                                      |
 
 #### Cast Categories
 
-**`as never` (157 added)** — Proto/buf boundary conversions:
+**`as never` (86 added)** — Remaining proto/buf boundary conversions:
 
 | Category                          | Est. Count | Description                                                                      |
 | --------------------------------- | ---------- | -------------------------------------------------------------------------------- |
-| Service response/request boundary | ~45        | Service handlers return buf, internal code consumes protobuf.js (or vice versa). |
-| Invitation protocol               | ~20        | Invitation flows bridge credential and PublicKey types across the boundary.      |
-| Test assertions & fixtures        | ~35        | Tests construct or compare objects that cross the buf/proto boundary.            |
-| Client SDK layer                  | ~15        | `client.ts`, `agent-hosting-provider`, `local-client-services`, proxies.         |
-| Pipeline internals                | ~15        | `control-pipeline`, `notarization-plugin`, `data-space-manager`.                 |
-| Devtools & tracing                | ~12        | `TracingPanel`, devtools RPC, `trace-sender`.                                    |
-| Network / mesh                    | ~10        | Signal client, messenger, swarm, RTC transport.                                  |
-| Edge functions                    | ~5         | Cloudflare function runtime, queue service.                                      |
+| Test assertions & fixtures        | ~30        | Tests construct or compare objects that cross the buf/proto boundary.            |
+| Invitation protocol               | ~15        | Space invitation protocol, encoder, handlers still bridge types.                |
+| Client SDK — agent hosting        | ~6         | `agent-hosting-provider.ts` — WebsocketRpcClient proto boundary.                |
+| Proto↔buf codec boundary          | ~10        | `authenticator.ts`, `invitations-manager.ts`, `encoder.ts` — protobuf.js codec. |
+| Diagnostics & service wiring      | ~8         | `diagnostics.ts`, `service-context.ts`, `identity.ts`, etc.                     |
+| Cloudflare functions              | ~2         | `service-container.ts` — Workers RPC boundary.                                  |
+| Other (scattered 1-2 each)        | ~15        | Various files with 1-2 boundary casts.                                          |
 
 **`as unknown` (23 added)** — Type bridging:
 
