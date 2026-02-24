@@ -61,14 +61,14 @@ export const PluginDetail = ({ plugin, enabled, onEnabledChange }: PluginDetailP
                 {homePage && (
                   <Link href={homePage} target='_blank' rel='noreferrer' classNames='text-sm text-description'>
                     {t('home page label')}
-                    <Icon icon='ph--arrow-square-out--bold' size={3} classNames='w-block leading-none mx-1' />
+                    <Icon icon='ph--arrow-square-out--bold' size={3} classNames='inline-block leading-none mx-1' />
                   </Link>
                 )}
 
                 {source && (
                   <Link href={source} target='_blank' rel='noreferrer' classNames='text-sm text-description'>
                     {t('source label')}
-                    <Icon icon='ph--arrow-square-out--bold' size={3} classNames='w-block leading-none mx-1' />
+                    <Icon icon='ph--arrow-square-out--bold' size={3} classNames='inline-block leading-none mx-1' />
                   </Link>
                 )}
               </div>
