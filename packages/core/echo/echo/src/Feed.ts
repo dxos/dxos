@@ -4,13 +4,13 @@
 
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
+import type * as Option from 'effect/Option';
 
-import { DXN } from '@dxos/keys';
-
-import * as Entity from './Entity';
-import * as Err from './Err';
+import type * as Entity from './Entity';
+import type * as Filter from './Filter';
 import * as Obj from './Obj';
+import type * as Query from './Query';
+import type * as QueryResult from './QueryResult';
 import * as Type from './Type';
 
 //
@@ -29,23 +29,18 @@ export type Feed = Obj.Obj<Type.Feed>;
 
 /**
  * Opaque cursor for iterating over feed items.
- * Generic parameter `T` is the expected item type.
  */
 export interface Cursor<T = Obj.Snapshot> {
-  /** Internal: the feed's backing DXN. */
-  readonly _feedDxn: DXN;
-  /** Internal: cached items loaded from the feed. */
-  _items: T[] | null;
-  /** Internal: current position in the items array. */
-  _position: number;
+  readonly _tag: 'Cursor';
 }
 
 /**
  * Retention options for a feed.
  */
 export interface RetentionOptions {
-  /** Maximum number of items to retain. */
-  count?: number;
+  /** Retain items after this cursor position. */
+  // TODO(wittjosiah): Use FeedCursor from @dxos/feed?
+  cursor?: string;
 }
 
 //
@@ -60,6 +55,7 @@ export interface RetentionOptions {
  * const feed = Feed.make({ name: 'notifications', kind: 'dxos.org/plugin/notifications/v1' });
  * ```
  */
+// TODO(wittjosiah): How to control the feed namespace (data/trace)? Why do feeds have namespaces?
 export const make = (props: Obj.MakeProps<typeof Type.Feed>): Feed => Obj.make(Type.Feed, props);
 
 //
@@ -75,50 +71,24 @@ export class Service extends Context.Tag('@dxos/echo/Feed/Service')<
   Service,
   {
     /**
-     * Ensures backing storage exists for the feed, creating it if needed.
-     * Stores the DXN as a meta key on the feed object.
-     * @returns The backing DXN.
-     */
-    ensureBacking(feed: Feed): DXN;
-
-    /**
      * Appends items to a feed.
      */
-    append(feedDxn: DXN, items: Entity.Unknown[]): Promise<void>;
+    append(feed: Feed, items: Entity.Unknown[]): Promise<void>;
 
     /**
      * Removes items from a feed by ID.
      */
-    remove(feedDxn: DXN, ids: string[]): Promise<void>;
+    remove(feed: Feed, ids: string[]): Promise<void>;
 
     /**
-     * Loads all items from a feed.
+     * Queries items in a feed.
      */
-    loadItems(feedDxn: DXN): Promise<Obj.Snapshot[]>;
+    query: {
+      <Q extends Query.Any>(feed: Feed, query: Q): QueryResult.QueryResult<Query.Type<Q>>;
+      <F extends Filter.Any>(feed: Feed, filter: F): QueryResult.QueryResult<Filter.Type<F>>;
+    };
   }
 >() {}
-
-//
-// Helpers
-//
-
-/**
- * Resolves the backing DXN from a feed object's meta key.
- */
-const getDxn = (feed: Feed | Obj.Snapshot): DXN | undefined => {
-  const keys = Entity.getKeys(feed as Entity.Unknown, DXN_KEY);
-  if (keys.length === 0) {
-    return undefined;
-  }
-  return DXN.parse(keys[0].id);
-};
-
-/**
- * Resolves or creates the backing DXN for a feed.
- */
-const resolveDxn = (feed: Feed, service: Context.Tag.Service<Service>): DXN => {
-  return getDxn(feed) ?? service.ensureBacking(feed);
-};
 
 //
 // Operations
@@ -135,75 +105,7 @@ const resolveDxn = (feed: Feed, service: Context.Tag.Service<Service>): DXN => {
 export const append = (feed: Feed, items: Entity.Unknown[]): Effect.Effect<void, never, Service> =>
   Effect.gen(function* () {
     const service = yield* Service;
-    const feedDxn = resolveDxn(feed, service);
-    yield* Effect.promise(() => service.append(feedDxn, items));
-  });
-
-/**
- * Creates a cursor for iterating over feed items.
- * The cursor loads all items on first use and iterates locally.
- * Pass a type parameter for typed iteration.
- *
- * @example
- * ```ts
- * const cursor = yield* Feed.cursor<Person>(feed);
- * const item = yield* Feed.next(cursor); // typed as Person
- * ```
- */
-// TODO(wittjosiah): Should cursor accept a schema and validate items instead of just casting?
-export const cursor = <T = Obj.Snapshot>(feed: Feed): Effect.Effect<Cursor<T>, never, Service> =>
-  Effect.gen(function* () {
-    const service = yield* Service;
-    const feedDxn = resolveDxn(feed, service);
-    return { _feedDxn: feedDxn, _items: null, _position: 0 } as Cursor<T>;
-  });
-
-/**
- * Returns the next item from a feed cursor.
- * Items are returned as immutable snapshots.
- * Fails with `CursorExhaustedError` when the cursor has no more items.
- *
- * @example
- * ```ts
- * const cursor = yield* Feed.cursor(feed);
- * const item = yield* Feed.next(cursor);
- * ```
- */
-export const next = <T = Obj.Snapshot>(feedCursor: Cursor<T>): Effect.Effect<T, Err.CursorExhaustedError, Service> =>
-  Effect.gen(function* () {
-    const result = yield* nextOption(feedCursor);
-    if (Option.isNone(result)) {
-      return yield* Effect.fail(new Err.CursorExhaustedError());
-    }
-    return result.value;
-  });
-
-/**
- * Returns the next item from a feed cursor as an Option.
- * Items are returned as immutable snapshots.
- * Returns `Option.none()` when the cursor is exhausted.
- *
- * @example
- * ```ts
- * const cursor = yield* Feed.cursor(feed);
- * const item = yield* Feed.nextOption(cursor);
- * if (Option.isSome(item)) {
- *   console.log(item.value);
- * }
- * ```
- */
-export const nextOption = <T = Obj.Snapshot>(feedCursor: Cursor<T>): Effect.Effect<Option.Option<T>, never, Service> =>
-  Effect.gen(function* () {
-    if (feedCursor._items === null) {
-      const service = yield* Service;
-      feedCursor._items = (yield* Effect.promise(() => service.loadItems(feedCursor._feedDxn))) as T[];
-    }
-
-    if (feedCursor._position >= feedCursor._items.length) {
-      return Option.none();
-    }
-
-    return Option.some(feedCursor._items[feedCursor._position++]);
+    yield* Effect.promise(() => service.append(feed, items));
   });
 
 /**
@@ -217,10 +119,65 @@ export const nextOption = <T = Obj.Snapshot>(feedCursor: Cursor<T>): Effect.Effe
 export const remove = (feed: Feed, items: (Entity.Unknown | Obj.Snapshot)[]): Effect.Effect<void, never, Service> =>
   Effect.gen(function* () {
     const service = yield* Service;
-    const feedDxn = resolveDxn(feed, service);
     const ids = items.map((item) => item.id);
-    yield* Effect.promise(() => service.remove(feedDxn, ids));
+    yield* Effect.promise(() => service.remove(feed, ids));
   });
+
+/**
+ * Creates a reactive query over items in a feed.
+ *
+ * @example
+ * ```ts
+ * const result = yield* Feed.query(feed, Filter.type(Person));
+ * ```
+ */
+export const query: {
+  <Q extends Query.Any>(feed: Feed, query: Q): Effect.Effect<QueryResult.QueryResult<Query.Type<Q>>, never, Service>;
+  <F extends Filter.Any>(feed: Feed, filter: F): Effect.Effect<QueryResult.QueryResult<Filter.Type<F>>, never, Service>;
+} = (feed: Feed, queryOrFilter: Query.Any | Filter.Any) =>
+  Service.pipe(Effect.map((service) => service.query(feed, queryOrFilter as any) as QueryResult.QueryResult<any>));
+
+/**
+ * Executes a feed query once and returns the results.
+ *
+ * @example
+ * ```ts
+ * const items = yield* Feed.runQuery(feed, Filter.type(Person));
+ * ```
+ */
+export const runQuery: {
+  <Q extends Query.Any>(feed: Feed, query: Q): Effect.Effect<Query.Type<Q>[], never, Service>;
+  <F extends Filter.Any>(feed: Feed, filter: F): Effect.Effect<Filter.Type<F>[], never, Service>;
+} = (feed: Feed, queryOrFilter: Query.Any | Filter.Any) =>
+  query(feed, queryOrFilter as any).pipe(Effect.flatMap((queryResult) => Effect.promise(() => queryResult.run())));
+
+/**
+ * Creates a cursor for iterating over feed items.
+ * Currently stubbed — cursor operations are not yet implemented.
+ *
+ * @example
+ * ```ts
+ * const cursor = yield* Feed.cursor<Person>(feed);
+ * const item = yield* Feed.next(cursor);
+ * ```
+ */
+// TODO(wittjosiah): Implement cursor operations. Use Effect streams?
+export const cursor = <T = Obj.Snapshot>(_feed: Feed): Effect.Effect<Cursor<T>, never, Service> =>
+  Effect.succeed({ _tag: 'Cursor' } as Cursor<T>);
+
+/**
+ * Returns the next item from a feed cursor.
+ * Currently stubbed — cursor operations are not yet implemented.
+ */
+export const next = <T = Obj.Snapshot>(_cursor: Cursor<T>): Effect.Effect<T, never, Service> =>
+  Effect.die('Feed.next is not yet implemented');
+
+/**
+ * Returns the next item from a feed cursor as an Option.
+ * Currently stubbed — cursor operations are not yet implemented.
+ */
+export const nextOption = <T = Obj.Snapshot>(_cursor: Cursor<T>): Effect.Effect<Option.Option<T>, never, Service> =>
+  Effect.die('Feed.nextOption is not yet implemented');
 
 /**
  * Sets the local retention policy for a feed.
