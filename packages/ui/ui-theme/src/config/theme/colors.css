@@ -4,7 +4,6 @@
 
 @theme {
   /* Surfaces */
-  /* TODO(burdon): Audit surfaces. */
 
   --color-base-surface: light-dark(theme(colors.neutral.50), theme(colors.neutral.950));
   --color-base-text: light-dark(theme(colors.neutral.950), theme(colors.neutral.50));

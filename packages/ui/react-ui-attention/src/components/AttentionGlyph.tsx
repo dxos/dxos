@@ -13,8 +13,8 @@ const attentionGlyphStyles = mx(
   '[data-contains-attended=true]_&:bg-attentionRelated',
   '[data-attention=true]_&:bg-accent-surface',
   '[data-attention=true]_&:text-accent-surface-text',
-  '.is-current[data-attention=true]_&:bg-accent-surface',
-  '.is-current[data-attention=true]_&:text-accent-surface-text',
+  '[aria-current][data-attention=true]_&:bg-accent-surface',
+  '[aria-current][data-attention=true]_&:text-accent-surface-text',
 );
 
 const presenceIconStyles = mx('w-3 h-3');
