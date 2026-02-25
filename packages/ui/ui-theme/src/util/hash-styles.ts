@@ -6,7 +6,6 @@ import { type ChromaticPalette } from '@dxos/ui-types';
 
 export type Hue = ChromaticPalette | 'neutral';
 
-// TODO(burdon): Rename?
 export type ColorStyles = {
   hue: Hue;
   text: string;
@@ -18,11 +17,11 @@ export type ColorStyles = {
 
 const neutralColor: ColorStyles = {
   hue: 'neutral',
-  text: 'text-neutralFill',
-  icon: 'text-neutralSurfaceText',
-  bg: 'bg-neutralFill',
-  surface: 'bg-neutralSurface',
-  border: 'border-neutralFill',
+  text: 'text-neutral-fill',
+  icon: 'text-neutral-surface-text',
+  bg: 'bg-neutral-fill',
+  surface: 'bg-neutral-surface',
+  border: 'border-neutral-fill',
 };
 
 // NOTE: Don't include blue/red which are used as system colors.
@@ -31,126 +30,127 @@ const neutralColor: ColorStyles = {
 export const styles: ColorStyles[] = [
   {
     hue: 'orange',
-    text: 'text-orangeFill',
-    icon: 'text-orangeSurfaceText',
-    bg: 'bg-orangeFill',
-    surface: 'bg-orangeSurface',
-    border: 'border-orangeFill',
+    text: 'text-orange-fill',
+    icon: 'text-orange-surface-text',
+    bg: 'bg-orange-fill',
+    surface: 'bg-orange-surface',
+    border: 'border-orange-fill',
   },
   {
     hue: 'amber',
-    text: 'text-amberFill',
-    icon: 'text-amberSurfaceText',
-    bg: 'bg-amberFill',
-    surface: 'bg-amberSurface',
-    border: 'border-amberFill',
+    text: 'text-amber-fill',
+    icon: 'text-amber-surface-text',
+    bg: 'bg-amber-fill',
+    surface: 'bg-amber-surface',
+    border: 'border-amber-fill',
   },
   {
     hue: 'yellow',
-    text: 'text-yellowFill',
-    icon: 'text-yellowSurfaceText',
-    bg: 'bg-yellowFill',
-    surface: 'bg-yellowSurface',
-    border: 'border-yellowFill',
+    text: 'text-yellow-fill',
+    icon: 'text-yellow-surface-text',
+    bg: 'bg-yellow-fill',
+    surface: 'bg-yellow-surface',
+    border: 'border-yellow-fill',
   },
   {
     hue: 'lime',
-    text: 'text-limeFill',
-    icon: 'text-limeSurfaceText',
-    bg: 'bg-limeFill',
-    surface: 'bg-limeSurface',
-    border: 'border-limeFill',
+    text: 'text-lime-fill',
+    icon: 'text-lime-surface-text',
+    bg: 'bg-lime-fill',
+    surface: 'bg-lime-surface',
+    border: 'border-lime-fill',
   },
   {
     hue: 'green',
-    text: 'text-greenFill',
-    icon: 'text-greenSurfaceText',
-    bg: 'bg-greenFill',
-    surface: 'bg-greenSurface',
-    border: 'border-greenFill',
+    text: 'text-green-fill',
+    icon: 'text-green-surface-text',
+    bg: 'bg-green-fill',
+    surface: 'bg-green-surface',
+    border: 'border-green-fill',
   },
   {
     hue: 'emerald',
-    text: 'text-emeraldFill',
-    icon: 'text-emeraldSurfaceText',
-    bg: 'bg-emeraldFill',
-    surface: 'bg-emeraldSurface',
-    border: 'border-emeraldFill',
+    text: 'text-emerald-fill',
+    icon: 'text-emerald-surface-text',
+    bg: 'bg-emerald-fill',
+    surface: 'bg-emerald-surface',
+    border: 'border-emerald-fill',
   },
   {
     hue: 'teal',
-    text: 'text-tealFill',
-    icon: 'text-tealSurfaceText',
-    bg: 'bg-tealFill',
-    surface: 'bg-tealSurface',
-    border: 'border-tealFill',
+    text: 'text-teal-fill',
+    icon: 'text-teal-surface-text',
+    bg: 'bg-teal-fill',
+    surface: 'bg-teal-surface',
+    border: 'border-teal-fill',
   },
   {
     hue: 'cyan',
-    text: 'text-cyanFill',
-    icon: 'text-cyanSurfaceText',
-    bg: 'bg-cyanFill',
-    surface: 'bg-cyanSurface',
-    border: 'border-cyanFill',
+    text: 'text-cyan-fill',
+    icon: 'text-cyan-surface-text',
+    bg: 'bg-cyan-fill',
+    surface: 'bg-cyan-surface',
+    border: 'border-cyan-fill',
   },
   {
     hue: 'sky',
-    text: 'text-skyFill',
-    icon: 'text-skySurfaceText',
-    bg: 'bg-skyFill',
-    surface: 'bg-skySurface',
-    border: 'border-skyFill',
+    text: 'text-sky-fill',
+    icon: 'text-sky-surface-text',
+    bg: 'bg-sky-fill',
+    surface: 'bg-sky-surface',
+    border: 'border-sky-fill',
   },
   {
     hue: 'indigo',
-    text: 'text-indigoFill',
-    icon: 'text-indigoSurfaceText',
-    bg: 'bg-indigoFill',
-    surface: 'bg-indigoSurface',
-    border: 'border-indigoFill',
+    text: 'text-indigo-fill',
+    icon: 'text-indigo-surface-text',
+    bg: 'bg-indigo-fill',
+    surface: 'bg-indigo-surface',
+    border: 'border-indigo-fill',
   },
   {
     hue: 'violet',
-    text: 'text-violetFill',
-    icon: 'text-violetSurfaceText',
-    bg: 'bg-violetFill',
-    surface: 'bg-violetSurface',
-    border: 'border-violetFill',
+    text: 'text-violet-fill',
+    icon: 'text-violet-surface-text',
+    bg: 'bg-violet-fill',
+    surface: 'bg-violet-surface',
+    border: 'border-violet-fill',
   },
   {
     hue: 'purple',
-    text: 'text-purpleFill',
-    icon: 'text-purpleSurfaceText',
-    bg: 'bg-purpleFill',
-    surface: 'bg-purpleSurface',
-    border: 'border-purpleFill',
+    text: 'text-purple-fill',
+    icon: 'text-purple-surface-text',
+    bg: 'bg-purple-fill',
+    surface: 'bg-purple-surface',
+    border: 'border-purple-fill',
   },
   {
     hue: 'fuchsia',
-    text: 'text-fuchsiaFill',
-    icon: 'text-fuchsiaSurfaceText',
-    bg: 'bg-fuchsiaFill',
-    surface: 'bg-fuchsiaSurface',
-    border: 'border-fuchsiaFill',
+    text: 'text-fuchsia-fill',
+    icon: 'text-fuchsia-surface-text',
+    bg: 'bg-fuchsia-fill',
+    surface: 'bg-fuchsia-surface',
+    border: 'border-fuchsia-fill',
   },
   {
     hue: 'rose',
-    text: 'text-roseFill',
-    icon: 'text-roseSurfaceText',
-    bg: 'bg-roseFill',
-    surface: 'bg-roseSurface',
-    border: 'border-roseFill',
+    text: 'text-rose-fill',
+    icon: 'text-rose-surface-text',
+    bg: 'bg-rose-fill',
+    surface: 'bg-rose-surface',
+    border: 'border-rose-fill',
   },
   {
     hue: 'pink',
-    text: 'text-pinkFill',
-    icon: 'text-pinkSurfaceText',
-    bg: 'bg-pinkFill',
-    surface: 'bg-pinkSurface',
-    border: 'border-pinkFill',
+    text: 'text-pink-fill',
+    icon: 'text-pink-surface-text',
+    bg: 'bg-pink-fill',
+    surface: 'bg-pink-surface',
+    border: 'border-pink-fill',
   },
 ];
 
+// TODO(burdon): Rename getClassNames.
 export const getStyles = (hue: string): ColorStyles => {
   return styles.find((color) => color.hue === hue) || neutralColor;
 };
@@ -161,8 +161,7 @@ export const getHashHue = (id: string | undefined): Hue => {
 
 // TODO(thure): Reconcile with `to-fallback.ts` which exports `toHue` which overlaps a lot.
 export const getHashStyles = (id: string | undefined): ColorStyles => {
-  const hue = getHashHue(id);
-  return getStyles(hue);
+  return getStyles(getHashHue(id));
 };
 
 const getHash = (id: string): number => id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);

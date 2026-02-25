@@ -9,7 +9,7 @@ import { Filter } from '@dxos/client/echo';
 import { faker } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Card } from '@dxos/react-ui-mosaic';
 import { createObjectFactory } from '@dxos/schema/testing';
 import { Organization } from '@dxos/types';
@@ -34,7 +34,7 @@ const DefaultStory = () => {
     <Masonry.Root<Organization.Organization>
       items={organizations}
       render={StoryItem}
-      classNames='is-full max-is-full bs-full max-bs-full overflow-y-auto p-4'
+      classNames='w-full max-w-full h-full max-h-full overflow-y-auto p-4'
     />
   );
 };
@@ -43,6 +43,7 @@ const meta = {
   title: 'ui/react-ui-masonry/Masonry',
   decorators: [
     withTheme(),
+    withLayout({ layout: 'fullscreen' }),
     withClientProvider({
       types: [Organization.Organization],
       createIdentity: true,

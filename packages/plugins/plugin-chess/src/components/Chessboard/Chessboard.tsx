@@ -15,7 +15,7 @@ import React, {
 } from 'react';
 
 import { addEventListener } from '@dxos/async';
-import { Obj } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
 import { type ThemedClassName } from '@dxos/react-ui';
 import {
   type ChessModel,
@@ -50,6 +50,7 @@ const Root = forwardRef<ChessboardController, RootProps>(({ game, children }, fo
   const registry = useContext(RegistryContext);
   const model = useMemo(() => new ExtendedChessModel(registry, game), [registry]);
   const click = useSoundEffect('Click');
+  const [pgn, updatePgn] = useObject(game, 'pgn');
 
   // Controller.
   useImperativeHandle(forwardedRef, () => {
@@ -58,17 +59,21 @@ const Root = forwardRef<ChessboardController, RootProps>(({ game, children }, fo
     };
   }, [model]);
 
+  // TODO(wittjosiah): Rather than useEffect to sync ECHO object to model, create an alternative model implementation.
+  //   This model would take the ECHO object and derive game state directly from that.
+  //   Mutation methods would mutate the ECHO object and other state would be derived from that.
+
   // External change.
   // NOTE: Warning if user has not interacted with the board.
   useEffect(() => {
-    if (model.pgn !== getRawPgn(game.pgn ?? '')) {
+    if (model.pgn !== getRawPgn(pgn ?? '')) {
       const silent = model.pgn === '*';
-      model.update(game.pgn);
+      model.update(pgn);
       if (!silent) {
         void click.play();
       }
     }
-  }, [game.pgn]);
+  }, [pgn]);
 
   // Move.
   const handleDrop = useCallback<NonNullable<GameboardRootProps<ChessModel>['onDrop']>>(
@@ -78,9 +83,7 @@ const Root = forwardRef<ChessboardController, RootProps>(({ game, children }, fo
       }
 
       void click.play();
-      Obj.change(game, (game) => {
-        game.pgn = model.pgn;
-      });
+      updatePgn(() => model.pgn);
       return true;
     },
     [model],

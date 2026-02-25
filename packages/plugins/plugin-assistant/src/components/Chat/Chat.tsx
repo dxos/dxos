@@ -166,7 +166,7 @@ type ChatViewportProps = ThemedClassName<PropsWithChildren>;
 
 const ChatViewport = ({ classNames, children }: ChatViewportProps) => {
   return (
-    <div role='none' className={mx('flex flex-col bs-full is-full', classNames)}>
+    <div role='none' className={mx('flex flex-col h-full w-full', classNames)}>
       {children}
     </div>
   );
@@ -362,9 +362,9 @@ const ChatPrompt = ({
     <div
       role='group'
       className={mx(
-        'flex flex-col is-full density-fine',
+        'flex flex-col w-full density-fine',
         outline &&
-          'bg-groupSurface border border-subduedSeparator transition transition-border [&:has(.cm-content:focus)]:border-separator rounded',
+          'bg-group-surface border border-subdued-separator transition transition-border [&:has(.cm-content:focus)]:border-separator rounded-sm',
         classNames,
       )}
     >
@@ -374,7 +374,7 @@ const ChatPrompt = ({
           ref={editorRef}
           autoFocus
           lineWrapping
-          classNames='col-span-2 pbs-0.5'
+          classNames='col-span-2 pt-0.5'
           placeholder={placeholder ?? t('prompt placeholder')}
           extensions={extensions}
           onSubmit={handleSubmit}
@@ -407,7 +407,7 @@ const ChatPrompt = ({
             {online !== undefined && (
               <Input.Root>
                 <Input.Label srOnly>{t('online switch label')}</Input.Label>
-                <Input.Switch classNames='mli-2' checked={online} onCheckedChange={onOnlineChange} />
+                <Input.Switch classNames='mx-2' checked={online} onCheckedChange={onOnlineChange} />
               </Input.Root>
             )}
           </ChatActions>

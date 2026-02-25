@@ -23,9 +23,9 @@ export class SuggestionWidget extends WidgetType {
     const textEl = Domino.of('span').classNames('truncate').text(this.text);
     const button = Domino.of('button')
       .attributes({ 'data-action': 'submit', 'data-density': 'fine', 'data-value': this.text })
-      .classNames(mx('dx-button max-is-[100cqi] gap-2'))
+      .classNames(mx('dx-button max-w-[100cqi] gap-2'))
       .children(icon, textEl);
     // NOTE: Scroll container must have `size-container`.
-    return Domino.of('span').classNames(mx('inline-flex max-is-[100cqi] mlb-1 pie-2')).children(button).root;
+    return Domino.of('span').classNames(mx('inline-flex max-w-[100cqi] my-1 pe-2')).children(button).root;
   }
 }

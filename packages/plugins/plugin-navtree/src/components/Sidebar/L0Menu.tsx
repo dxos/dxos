@@ -100,9 +100,9 @@ const l0Breakpoints: Record<string, string> = {
 };
 
 const l0ItemRoot =
-  'group/l0item flex is-full justify-center items-center relative data[type!="collection"]:cursor-pointer app-no-drag dx-focus-ring-group';
+  'group/l0item flex w-full justify-center items-center relative data[type!="collection"]:cursor-pointer app-no-drag dx-focus-ring-group';
 
-const l0ItemContent = 'flex justify-center items-center dx-focus-ring-group-indicator transition-colors rounded-sm';
+const l0ItemContent = 'flex justify-center items-center dx-focus-ring-group-indicator transition-colors rounded-xs';
 
 const L0ItemRoot = forwardRef<HTMLElement, PropsWithChildren<L0ItemRootProps>>(
   ({ item, parent, path, children }, forwardedRef) => {
@@ -139,7 +139,7 @@ export const L0ItemActiveTabIndicator = ({ classNames }: ThemedClassName<{}>) =>
   <div
     role='none'
     className={mx(
-      'hidden group-aria-selected/l0item:block absolute inline-start-0 inset-block-2 is-1 bg-accentSurface rounded-ie',
+      'hidden group-aria-selected/l0item:block absolute start-0 inset-y-2 w-1 bg-accent-surface rounded-ie',
       classNames,
     )}
   />
@@ -214,12 +214,12 @@ const L0Item = ({ item, parent, path, pinned, onRearrange }: L0ItemProps) => {
       <div
         role='none'
         data-frame={true}
-        {...(hue && { style: { background: `var(--dx-${hue}Surface)` } })}
+        {...(hue && { style: { background: `var(--color-${hue}-surface)` } })}
         className={mx(
           l0ItemContent,
           pinned
-            ? 'p-2 group-hover/l0item:bg-activeSurface'
-            : 'is-[--l0-avatar-size] bs-[--l0-avatar-size] bg-activeSurface',
+            ? 'p-2 group-hover/l0item:bg-active-surface'
+            : 'w-(--l0-avatar-size) h-(--l0-avatar-size) bg-active-surface',
         )}
       >
         <ItemAvatar item={item} />
@@ -238,7 +238,7 @@ const ItemAvatar = ({ item }: Pick<L0ItemProps, 'item'>) => {
   const type = l0ItemType(item);
   if (item.properties.icon) {
     const hue = item.properties.hue ?? null;
-    const hueFgStyle = hue && { style: { color: `var(--dx-${hue}SurfaceText)` } };
+    const hueFgStyle = hue && { style: { color: `var(--color-${hue}-surface-text)` } };
     return <Icon icon={item.properties.icon} size={6} {...hueFgStyle} />;
   }
 
@@ -300,9 +300,9 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
   return (
     <Tabs.Tablist
       classNames={[
-        'group/l0 absolute z-[1] inset-block-0 inline-start-0 rounded-is',
+        'group/l0 absolute z-[1] inset-y-0 start-0 rounded-is',
         'grid grid-cols-[var(--l0-size)] grid-rows-[var(--rail-size)_1fr_min-content_var(--l0-size)] contain-layout',
-        '!is-[--l0-size] bg-baseSurface border-ie border-subduedSeparator app-drag pbe-[env(safe-area-inset-bottom)]',
+        '!w-(--l0-size) bg-base-surface border-e border-subdued-separator app-drag pb-[env(safe-area-inset-bottom)]',
       ]}
     >
       {/* TODO(wittjosiah): Use L0Item trigger. */}
@@ -322,7 +322,7 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
                   role='none'
                   className={mx(
                     l0ItemContent,
-                    'bs-[--rail-action] is-[--rail-action] group-hover/l0item:bg-hoverSurface',
+                    'h-(--rail-action) w-(--rail-action) group-hover/l0item:bg-hover-surface',
                   )}
                 >
                   <Icon icon='ph--list--regular' size={5} />
@@ -339,9 +339,9 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
           <div
             role='none'
             className={mx([
-              'flex flex-col gap-1 pbs-1',
-              '[body[data-platform="macos"]_&]:pbs-[30px]',
-              '[body[data-platform="ios"]_&]:pbs-[max(env(safe-area-inset-top),0.25rem)]',
+              'flex flex-col gap-1 pt-1',
+              '[body[data-platform="macos"]_&]:py-[30px]',
+              '[body[data-platform="ios"]_&]:py-[max(env(safe-area-inset-top),0.25rem)]',
             ])}
           >
             {topLevelItems.map((item) => (
@@ -358,7 +358,7 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
       </ScrollArea.Root>
 
       {/* Actions. */}
-      <div role='none' className='grid grid-cols-1 auto-rows-[--rail-action] pbs-2'>
+      <div role='none' className='grid grid-cols-1 auto-rows-(--rail-action) pt-2'>
         {pinnedItems.map((item) => (
           <L0Item key={item.id} item={item} parent={parent} path={path} pinned />
         ))}

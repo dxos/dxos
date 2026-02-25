@@ -79,8 +79,8 @@
     "effect": "catalog:"
   },
   "devDependencies": {
-    "@dxos/echo-db": "catalog:",
-    "@dxos/keys": "catalog:",
+    "@dxos/echo-db": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/plugin-preview": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/plugin-theme": "workspace:*",

@@ -36,7 +36,7 @@ export const SimpleLayout = () => {
   return (
     <Mosaic.Root classNames='contents'>
       <MobileLayout.Root
-        classNames='bg-toolbarSurface'
+        classNames='bg-toolbar-surface'
         onKeyboardOpenChange={(keyboardOpen: boolean) => setKeyboardOpen(keyboardOpen)}
       >
         <MobileLayout.Panel safe={{ top: true, bottom: splitterMode === 'upper' }}>

@@ -133,7 +133,7 @@ const StackContainer = ({ id, subject: collection }: StackContainerProps) => {
   return (
     <StackItem.Content
       toolbar
-      classNames='container-max-width overflow-hidden border-l border-r border-subduedSeparator'
+      classNames='container-max-width overflow-hidden border-l border-r border-subdued-separator'
     >
       <Toolbar.Root>
         <Toolbar.IconButton

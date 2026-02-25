@@ -1,0 +1,9 @@
+/**
+ * Link component styles.
+ */
+
+@layer dx-components {
+  .dx-link {
+    @apply text-accent-text hover:text-accent-text-hover;
+  }
+}

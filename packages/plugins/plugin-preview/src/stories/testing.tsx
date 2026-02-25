@@ -23,10 +23,10 @@ export const DefaultStory = <T extends Obj.Any>({ Component, createObject, image
   const roles: CardContainerProps['role'][] = ['intrinsic', 'popover'];
 
   return (
-    <div className='bs-full grid grid-rows-2 p-16 gap-16'>
+    <div className='h-full grid grid-rows-2 p-16 gap-16'>
       {roles.map((role, i) => (
-        <div key={i} className='flex bs-full justify-center overflow-hidden'>
-          <div className='flex flex-col gap-4 is-full items-center'>
+        <div key={i} className='flex h-full justify-center overflow-hidden'>
+          <div className='flex flex-col gap-4 w-full items-center'>
             <label className='text-sm text-description'>{role}</label>
             <CardContainer role={role}>
               <Card.Root border={false}>

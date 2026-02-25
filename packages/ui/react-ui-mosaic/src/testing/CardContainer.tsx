@@ -78,7 +78,7 @@ export const IntrinsicCardContainer = ({
 
   return (
     <div
-      className='relative border border-dashed border-subduedSeparator p-4 rounded-lg overflow-x-auto'
+      className='relative p-4 border border-dashed border-subdued-separator rounded-lg overflow-x-auto'
       style={sizeStyle(size, 'horizontal')}
       {...resizeAttributes}
     >

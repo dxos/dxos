@@ -178,12 +178,12 @@ const InvitationSection = ({
           : 'qr-code';
   return activeView === 'init' ? (
     <>
-      <p className='text-description mbe-2'>{t('add device description')}</p>
+      <p className='text-description mb-2'>{t('add device description')}</p>
       <IconButton
         icon='ph--plus--regular'
         label={t('create device invitation label')}
         disabled={state >= 0}
-        classNames='is-full'
+        classNames='w-full'
         data-testid='devicesContainer.createInvitation'
         onClick={onInvitationCreate}
       />
@@ -215,8 +215,8 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
   return (
     <>
       <p className='text-description'>{t('qr code description', { ns: meta.id })}</p>
-      <div role='group' className='grid grid-cols-[1fr_min-content] mlb-2 gap-2'>
-        <div role='none' className='is-full aspect-square relative text-description'>
+      <div role='group' className='grid grid-cols-[1fr_min-content] my-2 gap-2'>
+        <div role='none' className='w-full aspect-square relative text-description'>
           <QR
             rounding={100}
             backgroundColor='transparent'
@@ -255,9 +255,9 @@ const InvitationAuthCode = ({ id, code, onCancel }: { id: string; code: string; 
   return (
     <>
       <p className='text-description'>{t('auth other device emoji message')}</p>
-      {emoji && <Emoji text={emoji} className='mli-auto mlb-2 text-center' />}
+      {emoji && <Emoji text={emoji} className='mx-auto my-2 text-center' />}
       <p className='text-description'>{t('auth code message')}</p>
-      <AuthCode code={code} large classNames='mli-auto mlb-2 text-center grow' />
+      <AuthCode code={code} large classNames='mx-auto my-2 text-center grow' />
       <Button variant='ghost' onClick={onCancel}>
         {t('cancel label')}
       </Button>

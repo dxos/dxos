@@ -156,8 +156,8 @@ export class FormFieldErrorBoundary extends Component<FormFieldErrorBoundaryProp
   override render() {
     if (this.state.error) {
       return (
-        <div className='flex gap-2 border border-roseFill font-mono text-sm'>
-          <span className='bg-roseFill text-surfaceText pli-1 font-thin'>ERROR</span>
+        <div className='flex gap-2 border border-rose-fill font-mono text-sm'>
+          <span className='bg-rose-fill text-surface-text px-1 font-thin'>ERROR</span>
           {String(this.props.path?.join('.'))}
         </div>
       );

@@ -5,7 +5,60 @@
 import { type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 
-import { fontBody, fontMono } from './tokens';
+import { mx } from '@dxos/ui-theme';
+
+export type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
+
+// https://tailwindcss.com/docs/font-weight
+const headings: Record<HeadingLevel, { className: string; fontSize: string; lineHeight: string }> = {
+  1: {
+    className: 'text-4xl',
+    fontSize: 'var(--text-4xl)',
+    lineHeight: 'var(--text-4xl--line-height)',
+  },
+  2: {
+    className: 'text-3xl',
+    fontSize: 'var(--text-3xl)',
+    lineHeight: 'var(--text-3xl--line-height)',
+  },
+  3: {
+    className: 'text-2xl',
+    fontSize: 'var(--text-2xl)',
+    lineHeight: 'var(--text-2xl--line-height)',
+  },
+  4: {
+    className: 'text-xl',
+    fontSize: 'var(--text-xl)',
+    lineHeight: 'var(--text-xl--line-height)',
+  },
+  5: {
+    className: 'text-lg',
+    fontSize: 'var(--text-lg)',
+    lineHeight: 'var(--text-lg--line-height)',
+  },
+  6: {
+    className: 'text-base',
+    fontSize: 'var(--text-base)',
+    lineHeight: 'var(--text-base--line-height)',
+  },
+};
+
+export const markdownTheme = {
+  code: 'font-mono no-underline! text-cm-code',
+  codeMark: 'font-mono text-cm-code-mark',
+  mark: 'opacity-50',
+  heading: (level: HeadingLevel) => ({
+    className: mx(headings[level].className, 'font-light text-cm-heading'),
+    color: 'var(--color-cm-heading) !important',
+    lineHeight: headings[level].lineHeight,
+    fontSize: headings[level].fontSize,
+    fontWeight: '100 !important',
+  }),
+};
+
+// Font families matching --font-body and --font-mono in theme.css.
+export const fontBody = 'Inter Variable, ui-sans-serif, system-ui, sans-serif';
+export const fontMono = 'JetBrains Mono Variable, ui-monospace, Cascadia Code, Source Code Pro, monospace';
 
 /**
  * Global base theme.
@@ -64,7 +117,7 @@ export const baseTheme = EditorView.baseTheme({
     transition: 'background 0.15s',
   },
   '&:hover .cm-scroller::-webkit-scrollbar-thumb': {
-    background: 'var(--dx-scrollbarThumb)',
+    background: 'var(--color-scrollbar-thumb)',
   },
 
   /**
@@ -88,8 +141,8 @@ export const baseTheme = EditorView.baseTheme({
   '.cm-gutter': {},
   '.cm-gutter.cm-lineNumbers': {
     paddingRight: '4px',
-    borderRight: '1px solid var(--dx-subduedSeparator)',
-    color: 'var(--dx-subduedText)',
+    borderRight: '1px solid var(--color-subdued-separator)',
+    color: 'var(--color-subdued)',
   },
   '.cm-gutter.cm-lineNumbers .cm-gutterElement': {
     minWidth: '40px',
@@ -110,27 +163,27 @@ export const baseTheme = EditorView.baseTheme({
     paddingInline: 0,
   },
   '.cm-activeLine': {
-    background: 'var(--dx-cmActiveLine)',
+    background: 'var(--color-cm-active-line)',
   },
 
   /**
    * Cursor (layer).
    */
   '.cm-cursor, .cm-dropCursor': {
-    borderLeft: '2px solid var(--dx-cmCursor)',
+    borderLeft: '2px solid var(--color-cm-cursor)',
   },
   '.cm-placeholder': {
-    color: 'var(--dx-placeholder)',
+    color: 'var(--color-placeholder)',
   },
 
   /**
    * Selection (layer).
    */
   '.cm-selectionBackground': {
-    background: 'var(--dx-cmSelection)',
+    background: 'var(--color-cm-selection)',
   },
   '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground': {
-    background: 'var(--dx-cmFocusedSelection)',
+    background: 'var(--color-cm-focused-selection)',
   },
 
   /**
@@ -141,8 +194,8 @@ export const baseTheme = EditorView.baseTheme({
     margin: '0 -3px',
     padding: '3px',
     borderRadius: '3px',
-    background: 'var(--dx-cmHighlightSurface)',
-    color: 'var(--dx-cmHighlight)',
+    background: 'var(--color-cm-highlight-surface)',
+    color: 'var(--color-cm-highlight)',
   },
   '.cm-searchMatch-selected': {
     textDecoration: 'underline',
@@ -154,21 +207,30 @@ export const baseTheme = EditorView.baseTheme({
   '.cm-link': {
     textDecorationLine: 'underline',
     textDecorationThickness: '1px',
-    textDecorationColor: 'var(--dx-separator)',
+    textDecorationColor: 'var(--color-separator)',
     textUnderlineOffset: '2px',
     borderRadius: '.125rem',
   },
   '.cm-link > span': {
-    color: 'var(--dx-accentText)',
+    color: 'var(--color-accent-text)',
+  },
+  '.cm-link > span:hover': {
+    color: 'var(--color-accent-text-hover)',
   },
 
   /**
    * Tooltip.
    */
   '.cm-tooltip': {
-    background: 'var(--dx-baseSurface)',
+    background: 'var(--color-modal-surface)',
   },
   '.cm-tooltip-below': {},
+  '.cm-tooltip-hover': {
+    background: 'var(--color-modal-surface)',
+    border: '1px solid var(--color-separator)',
+    borderRadius: '4px',
+    overflow: 'hidden',
+  },
 
   /**
    * Autocomplete.
@@ -177,7 +239,7 @@ export const baseTheme = EditorView.baseTheme({
   '.cm-tooltip.cm-tooltip-autocomplete': {
     marginTop: '6px',
     marginLeft: '-10px',
-    border: '2px solid var(--dx-separator)',
+    border: '2px solid var(--color-separator)',
     borderRadius: '4px',
   },
   '.cm-tooltip.cm-tooltip-autocomplete > ul': {
@@ -187,7 +249,7 @@ export const baseTheme = EditorView.baseTheme({
     padding: '4px',
   },
   '.cm-tooltip.cm-tooltip-autocomplete > ul > li[aria-selected]': {
-    background: 'var(--dx-activeSurface)',
+    background: 'var(--color-active-surface)',
     color: 'var(--dx-activeSurfaceText)',
   },
   '.cm-tooltip.cm-tooltip-autocomplete > ul > completion-section': {
@@ -202,17 +264,17 @@ export const baseTheme = EditorView.baseTheme({
     width: '360px !important',
     margin: '-10px 1px 0 1px',
     padding: '8px !important',
-    borderColor: 'var(--dx-separator)',
+    borderColor: 'var(--color-separator)',
   },
   '.cm-completionIcon': {
     display: 'none',
   },
   '.cm-completionLabel': {
-    color: 'var(--dx-description)',
+    color: 'var(--color-description)',
     padding: '0 4px',
   },
   '.cm-completionMatchedText': {
-    color: 'var(--dx-baseText)',
+    color: 'var(--color-base-text)',
     textDecoration: 'none !important',
   },
 
@@ -237,7 +299,7 @@ export const baseTheme = EditorView.baseTheme({
     backgroundColor: 'var(--surface-bg)',
   },
   '.cm-panel input, .cm-panel button, .cm-panel label': {
-    color: 'var(--dx-subdued)',
+    color: 'var(--color-subdued)',
     fontSize: '14px',
     all: 'unset',
     margin: '3px !important',
@@ -245,10 +307,10 @@ export const baseTheme = EditorView.baseTheme({
     outline: '1px solid transparent',
   },
   '.cm-panel input, .cm-panel button': {
-    backgroundColor: 'var(--dx-inputSurface)',
+    backgroundColor: 'var(--color-input-surface)',
   },
   '.cm-panel input:focus, .cm-panel button:focus': {
-    outline: '1px solid var(--dx-neutralFocusIndicator)',
+    outline: '1px solid var(--color-neutral-focus-indicator)',
   },
   '.cm-panel label': {
     display: 'inline-flex',
@@ -261,27 +323,27 @@ export const baseTheme = EditorView.baseTheme({
     height: '8px',
     marginRight: '6px !important',
     padding: '2px !important',
-    color: 'var(--dx-neutralFocusIndicator)',
+    color: 'var(--color-neutral-focus-indicator)',
   },
   '.cm-panel button': {
     '&:hover': {
-      // TODO(burdon): Replace with layer and @apply bg-accentSurfaceHover
-      backgroundColor: 'var(--dx-accentSurfaceHover) !important',
+      // TODO(burdon): Replace with layer and @apply bg-accent-surface-hover
+      backgroundColor: 'var(--color-accent-surface-hover) !important',
     },
     '&:active': {
-      backgroundColor: 'var(--dx-accentSurfaceHover)',
+      backgroundColor: 'var(--color-accent-surface-hover)',
     },
   },
   '.cm-panel.cm-search': {
     padding: '4px',
-    borderTop: '1px solid var(--dx-separator)',
+    borderTop: '1px solid var(--color-separator)',
   },
 });
 
 export const editorGutter: Extension = EditorView.theme({
   '.cm-gutters': {
     // NOTE: Non-transparent background required to cover content if scrolling horizontally.
-    background: 'var(--dx-baseSurface) !important',
+    background: 'var(--color-base-surface) !important',
     paddingRight: '1rem',
   },
 });

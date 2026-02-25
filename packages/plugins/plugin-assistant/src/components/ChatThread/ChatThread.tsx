@@ -79,8 +79,8 @@ export const ChatThread = forwardRef<MarkdownStreamController | null, ChatThread
     return (
       <div
         role='none'
-        className={mx('flex bs-full is-full justify-center overflow-hidden', classNames)}
-        style={{ '--user-fill': `var(--dx-${userHue}Fill)` } as CSSProperties}
+        className={mx('flex h-full w-full justify-center overflow-hidden', classNames)}
+        style={{ '--user-fill': `var(--color-${userHue}-fill)` } as CSSProperties}
       >
         <MarkdownStream
           ref={refCallback}
