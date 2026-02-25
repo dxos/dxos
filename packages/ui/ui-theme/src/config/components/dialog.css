@@ -29,19 +29,19 @@
     }
   }
 
-  @media (min-width: theme('screens.sm')) {
+  @media (width >= theme(--breakpoint-sm)) {
     .dx-dialog__overlay {
       @apply p-[calc(env(safe-area-inset-top)+.6rem)];
     }
   }
 
-  @media (min-width: theme('screens.md')) {
+  @media (width >= theme(--breakpoint-md)) {
     .dx-dialog__overlay {
       @apply p-[calc(env(safe-area-inset-top)+1.2rem)];
     }
   }
 
-  @media (min-width: theme('screens.lg')) {
+  @media (width >= theme(--breakpoint-lg)) {
     .dx-dialog__overlay {
       @apply p-[calc(env(safe-area-inset-top)+2.4rem)];
     }
@@ -59,13 +59,13 @@
     }
   }
 
-  @media (min-width: theme('screens.sm')) {
+  @media (width >= theme(--breakpoint-sm)) {
     .dx-dialog__content {
       @apply w-[95vw] border rounded-md border-separator;
     }
   }
 
-  @media (min-width: theme('screens.md')) {
+  @media (width >= theme(--breakpoint-md)) {
     .dx-dialog__content {
       @apply max-w-[24rem];
     }

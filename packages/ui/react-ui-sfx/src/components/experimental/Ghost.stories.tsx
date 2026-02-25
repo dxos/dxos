@@ -174,6 +174,63 @@ const rectangleTrajectory = (framePx: number): Trajectory => ({
   },
 });
 
+/**
+ * Lemniscate (∞) orbit: x(t) = rx·sin(t), y(t) = ry·sin(2t)/2, t ∈ [0, 2π).
+ * Arc-length parameterised via a precomputed lookup table (recomputed when canvas size changes).
+ */
+const infinityTrajectory = (rx = 0.35, ry = 0.25): Trajectory => {
+  const N = 1000;
+  const dt = (2 * Math.PI) / N;
+  let cacheW = 0;
+  let cacheH = 0;
+  let cumLens: number[] = [];
+  let totalLen = 0;
+
+  const rebuild = (width: number, height: number) => {
+    if (width === cacheW && height === cacheH) return;
+    cacheW = width;
+    cacheH = height;
+    cumLens = [0];
+    totalLen = 0;
+    for (let i = 1; i <= N; i++) {
+      const t0 = (i - 1) * dt;
+      const t1 = i * dt;
+      const dx = rx * width * (Math.sin(t1) - Math.sin(t0));
+      const dy = (ry * height * (Math.sin(2 * t1) - Math.sin(2 * t0))) / 2;
+      totalLen += Math.hypot(dx, dy);
+      cumLens.push(totalLen);
+    }
+  };
+
+  return {
+    length: (width, height) => {
+      rebuild(width, height);
+      return totalLen;
+    },
+    point: (dist, width, height) => {
+      rebuild(width, height);
+      const s = ((dist % totalLen) + totalLen) % totalLen;
+      let lo = 0;
+      let hi = N;
+      while (hi - lo > 1) {
+        const mid = (lo + hi) >> 1;
+        if (cumLens[mid] <= s) lo = mid;
+        else hi = mid;
+      }
+      const segLen = cumLens[lo + 1] - cumLens[lo];
+      const alpha = segLen > 0 ? (s - cumLens[lo]) / segLen : 0;
+      const t = (lo + alpha) * dt;
+      const x = 0.5 + rx * Math.sin(t);
+      const y = 0.5 + (ry * Math.sin(2 * t)) / 2;
+      // Tangent in pixel space; normal is tangent rotated 90° CCW.
+      const txPx = rx * width * Math.cos(t);
+      const tyPx = ry * height * Math.cos(2 * t);
+      const tLen = Math.hypot(txPx, tyPx) || 1;
+      return { x, y, nx: -tyPx / (tLen * width), ny: txPx / (tLen * height) };
+    },
+  };
+};
+
 /** Circle orbit centered at canvas center, radius = min(width, height) * radiusFraction. */
 const circleTrajectory = (radiusFraction = 0.4): Trajectory => ({
   length: (width, height) => 2 * Math.PI * Math.min(width, height) * radiusFraction,
@@ -252,7 +309,20 @@ export const FrameTrail: Story = {
 
 export const CircleTrail: Story = {
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
-  render: (props) => <TrailStory {...props} trajectory={circleTrajectory(0.38)} speed={10} wiggleAmplitude={15} />,
+  render: (props) => <TrailStory {...props} trajectory={circleTrajectory(0.2)} speed={20} wiggleAmplitude={15} />,
+  args: {
+    DENSITY_DISSIPATION: 1.5,
+    VELOCITY_DISSIPATION: 20,
+    CURL: 100,
+    COLOR_UPDATE_SPEED: 0.1,
+  },
+};
+
+export const InfinityTrail: Story = {
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
+  render: (props) => (
+    <TrailStory {...props} trajectory={infinityTrajectory(0.35, 0.25)} speed={25} wiggleAmplitude={12} />
+  ),
   args: {
     DENSITY_DISSIPATION: 1.5,
     VELOCITY_DISSIPATION: 20,

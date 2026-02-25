@@ -41,7 +41,7 @@
     transition-duration: 200ms;
     transition-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
 
-    @media (min-width: theme('screens.lg')) {
+    @media (width >= theme(--breakpoint-lg)) {
       &[data-sidebar-left-state='closed'][data-sidebar-right-state='closed'] {
         inline-size: calc(100dvw - 2 * var(--main-spacing));
       }
@@ -96,7 +96,7 @@
     inline-size: calc(100dvw - 3rem);
     z-index: 7;
 
-    @media (min-width: theme('screens.lg')) {
+    @media (width >= theme(--breakpoint-lg)) {
       @apply top-0 bottom-0 rounded-none border-y-0;
     }
 
@@ -112,16 +112,16 @@
 
       &[data-state='expanded'] {
         inset-inline-start: max(0.5rem, env(safe-area-inset-left));
-        @media (min-width: theme('screens.lg')) {
+        @media (width >= theme(--breakpoint-lg)) {
           @apply start-0;
         }
       }
 
-      @media (min-width: theme('screens.sm')) {
+      @media (width >= theme(--breakpoint-sm)) {
         @apply w-(--nav-sidebar-size);
       }
 
-      @media (min-width: theme('screens.lg')) {
+      @media (width >= theme(--breakpoint-lg)) {
         border-inline-start-width: 0;
         border-inline-end-width: 0;
 
@@ -141,16 +141,16 @@
 
       &[data-state='expanded'] {
         inset-inline-end: max(0.5rem, env(safe-area-inset-right));
-        @media (min-width: theme('screens.lg')) {
+        @media (width >= theme(--breakpoint-lg)) {
           @apply end-0;
         }
       }
 
-      @media (min-width: theme('screens.sm')) {
+      @media (width >= theme(--breakpoint-sm)) {
         @apply w-(--complementary-sidebar-size);
       }
 
-      @media (min-width: theme('screens.lg')) {
+      @media (width >= theme(--breakpoint-lg)) {
         border-inline-end-width: 0;
 
         &[data-state='collapsed'] {
@@ -174,7 +174,7 @@
     &[data-state='open'] {
       @apply opacity-100 block;
 
-      @media (min-width: theme('screens.lg')) {
+      @media (width >= theme(--breakpoint-lg)) {
         @apply opacity-100 hidden;
       }
     }
@@ -189,7 +189,7 @@
     padding-inline-end: 0;
     scroll-padding-inline-end: 0;
 
-    @media (min-width: theme('screens.lg')) {
+    @media (width >= theme(--breakpoint-lg)) {
       &[data-sidebar-left-state='collapsed'] {
         padding-inline-start: var(--l0-size);
         scroll-padding-inline-start: var(--l0-size);

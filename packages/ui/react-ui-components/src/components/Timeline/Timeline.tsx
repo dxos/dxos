@@ -8,7 +8,7 @@ import { addEventListener } from '@dxos/async';
 import { LogLevel } from '@dxos/log';
 import { Icon, type ThemedClassName, useDynamicRef, useForwardedRef, useTranslation } from '@dxos/react-ui';
 import { ScrollContainer, type ScrollController } from '@dxos/react-ui';
-import { descriptionText, mx } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
 import { trim } from '@dxos/util';
 
 import { translationKey } from '../../translations';
@@ -206,7 +206,7 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
           ref={containerRef}
         >
           {commits.length < 1 ? (
-            <p className={mx(descriptionText, 'p-trim-md')}>{t('no commits message')}</p>
+            <p className={mx('text-description', 'p-trim-md')}>{t('no commits message')}</p>
           ) : (
             commits.map((commit, index) => {
               // Skip branches that are not whitelisted.

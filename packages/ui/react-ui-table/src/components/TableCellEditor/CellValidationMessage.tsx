@@ -30,7 +30,7 @@ export const CellValidationMessage = ({
       role='none'
       className={`absolute ${bgClass} ${textClass} rounded-h-sm text-xs p-1`}
       style={{
-        ...{ '--dx-gridCellWidth': `${box?.inlineSize ?? 200}px` },
+        ...{ '--dx-grid-cell-width': `${box?.inlineSize ?? 200}px` },
         zIndex: 10,
         insetBlockEnd: `calc(100% - ${box.insetBlockStart}px)`,
         insetInlineStart: box.insetInlineStart,

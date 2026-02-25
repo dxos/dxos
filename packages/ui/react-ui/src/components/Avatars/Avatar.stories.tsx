@@ -5,8 +5,7 @@
 import { type Meta } from '@storybook/react-vite';
 import React, { type PropsWithChildren } from 'react';
 
-import { type HuePalette } from '@dxos/ui-theme';
-import { type Size } from '@dxos/ui-types';
+import { type ChromaticPalette, type Size } from '@dxos/ui-types';
 import { hexToFallback } from '@dxos/util';
 
 import { withTheme } from '../../testing';
@@ -23,7 +22,7 @@ type StoryProps = PropsWithChildren<{
   variant?: AvatarVariant;
   animation?: AvatarAnimation;
   size?: Size;
-  hue?: HuePalette;
+  hue?: ChromaticPalette;
 }>;
 
 const DefaultStory = (props: StoryProps) => {

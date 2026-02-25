@@ -13,7 +13,7 @@ import { findAnnotation } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { DxAnchor } from '@dxos/lit-ui/react';
 import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
-import { descriptionText, mx } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../../translations';
 import { ObjectPicker, type ObjectPickerContentProps, type RefOption } from '../../ObjectPicker';
@@ -143,7 +143,7 @@ export const RefField = (props: RefFieldProps) => {
       <div>
         {readonly ? (
           !item ? (
-            <p className={mx(descriptionText, 'mb-2')}>{t('empty readonly ref field label')}</p>
+            <p className={mx('text-description', 'mb-2')}>{t('empty readonly ref field label')}</p>
           ) : (
             <DxAnchor key={item.id} dxn={item.id} rootclassname='me-1'>
               {item.label}

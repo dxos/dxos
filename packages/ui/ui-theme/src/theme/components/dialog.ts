@@ -5,7 +5,6 @@
 import { type ComponentFunction, type Elevation, type Theme } from '@dxos/ui-types';
 
 import { mx } from '../../util';
-import { descriptionText } from '../fragments';
 
 export type DialogSize = 'sm' | 'md' | 'lg' | 'xl';
 
@@ -47,7 +46,7 @@ export const dialogTitle: ComponentFunction<DialogStyleProps> = ({ srOnly }, ...
   mx('dx-dialog__title', srOnly && 'sr-only', ...etc);
 
 export const dialogDescription: ComponentFunction<DialogStyleProps> = ({ srOnly }, ...etc) =>
-  mx('dx-dialog__description', descriptionText, srOnly && 'sr-only', ...etc);
+  mx('dx-dialog__description', 'text-description', srOnly && 'sr-only', ...etc);
 
 export const dialogTheme: Theme<DialogStyleProps> = {
   overlay: dialogOverlay,
