@@ -65,12 +65,11 @@
     "@effect/sql-sqlite-node": "catalog:",
     "effect": "catalog:",
     "eventemitter3": "catalog:",
-    "lodash.isequal": "catalog:"
+    "fast-deep-equal": "catalog:"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",
-    "@dxos/test-utils": "workspace:*",
-    "@types/lodash.isequal": "catalog:"
+    "@dxos/test-utils": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

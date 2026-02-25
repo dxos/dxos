@@ -16,21 +16,15 @@
   "type": "module",
   "exports": {
     ".": {
+      "default": "./dist/lib/browser/index.mjs",
       "source": "./src/index.ts",
-      "types": "./dist/types/src/index.d.ts",
-      "default": "./dist/lib/browser/index.mjs"
-    },
-    "./esbuild-plugin": {
-      "source": "./src/plugins/esbuild-plugin.ts",
-      "types": "./dist/types/src/plugins/esbuild-plugin.d.ts",
-      "import": "./dist/plugin/node-esm/plugins/esbuild-plugin.mjs",
-      "require": "./dist/plugin/node-cjs/plugins/esbuild-plugin.cjs"
+      "types": "./dist/types/src/index.d.ts"
     },
     "./plugin": {
-      "source": "./src/plugins/plugin.ts",
-      "types": "./dist/types/src/plugins/plugin.d.ts",
       "import": "./dist/plugin/node-esm/plugins/plugin.mjs",
-      "require": "./dist/plugin/node-cjs/plugins/plugin.cjs"
+      "require": "./dist/plugin/node-cjs/plugins/plugin.cjs",
+      "source": "./src/plugins/plugin.ts",
+      "types": "./dist/types/src/plugins/plugin.d.ts"
     }
   },
   "typesVersions": {

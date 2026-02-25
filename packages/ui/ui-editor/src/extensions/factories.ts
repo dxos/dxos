@@ -271,8 +271,8 @@ export const createDataExtensions = <T>({ id, text, messenger, identity }: DataE
           channel: `awareness.${id}`,
           peerId: identity.identityKey.toHex(),
           info: {
-            darkColor: `var(--dx-${hue}Cursor)`,
-            lightColor: `var(--dx-${hue}Cursor)`,
+            darkColor: `var(--color-${hue}-cursor)`,
+            lightColor: `var(--color-${hue}-cursor)`,
             displayName: identity.profile?.displayName ?? generateName(identity.identityKey.toHex()),
           },
         }),

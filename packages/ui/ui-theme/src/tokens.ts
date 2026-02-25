@@ -29,6 +29,7 @@ export const hues = [
  * Card size constants (Tailwind spacing units).
  * Cards should be no larger than 320px per WCAG 2.1 SC 1.4.10.
  */
+// TODO(burdon): Remove these.
 export const cardMinInlineSize = 18;
 export const cardDefaultInlineSize = 20; // 320px
 export const cardMaxInlineSize = 22;

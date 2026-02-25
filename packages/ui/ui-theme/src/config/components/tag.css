@@ -18,8 +18,6 @@
     }
   }
 
-  /* TODO(burdon): Reconcile with hues.css */
-
   .dx-tag[data-hue='neutral'],
   .dx-tag--neutral {
     @apply bg-separator text-neutral-700 dark:text-neutral-200;

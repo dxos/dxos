@@ -4,6 +4,7 @@
 
 import { Invitation } from '@dxos/react-client/invitations';
 
+// TODO(burdon): Remove and use semantic tokens.
 export const inactiveBgColor = 'bg-neutral-100 dark:bg-neutral-600';
 export const activeBgColor = 'bg-primary-500 dark:bg-primary-400';
 export const successBgColor = 'bg-success-500 dark:bg-success-400';

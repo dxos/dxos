@@ -82,7 +82,7 @@
     @apply fixed overscroll-contain overflow-x-hidden overflow-y-auto;
     transition-duration: 200ms;
     transition-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
-    @apply border-subdued-separator rounded-md;
+    @apply border-primary-separator rounded-md;
     @apply backdrop-blur-md;
     .dark & {
       @apply backdrop-blur-lg;

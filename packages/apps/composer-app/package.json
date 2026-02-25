@@ -129,7 +129,6 @@
     "@effect/cli": "catalog:",
     "@effect/platform": "catalog:",
     "@effect/platform-node": "catalog:",
-    "@sentry/vite-plugin": "catalog:",
     "@tauri-apps/cli": "catalog:",
     "@types/jsdom": "catalog:",
     "@types/react": "catalog:",
