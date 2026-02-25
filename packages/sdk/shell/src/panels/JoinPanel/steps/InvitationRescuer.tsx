@@ -6,7 +6,6 @@ import React from 'react';
 
 import { type Invitation } from '@dxos/react-client/invitations';
 import { useTranslation } from '@dxos/react-ui';
-import { descriptionText } from '@dxos/ui-theme';
 
 import { Action, Actions, StepHeading } from '../../../components';
 import { translationKey } from '../../../translations';
@@ -35,7 +34,7 @@ const InvitationActions = ({
   if (failReason) {
     return (
       <>
-        <StepHeading className={descriptionText}>
+        <StepHeading className='text-description'>
           {t(
             failReason === 'timeout'
               ? 'timeout status label'
@@ -59,7 +58,7 @@ const InvitationActions = ({
   } else {
     return (
       <>
-        <StepHeading className={descriptionText}>{t('connecting status label')}</StepHeading>
+        <StepHeading className='text-description'>{t('connecting status label')}</StepHeading>
         <div role='none' className='grow' />
         <Actions>
           <Action disabled classNames='order-2' data-testid='next'>
@@ -83,7 +82,7 @@ export const InvitationRescuer = (props: InvitationRescuerProps) => {
       {typeof invitationState === 'undefined' ? (
         <>
           <div role='none' className='grow flex flex-col justify-center'>
-            <StepHeading className={descriptionText}>There was a problem joining the space</StepHeading>
+            <StepHeading className='text-description'>There was a problem joining the space</StepHeading>
           </div>
           <Actions>
             <Action

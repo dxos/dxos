@@ -173,7 +173,7 @@ export const CellEditor = ({ value, extensions, box, gridId, autoFocus, slots, o
         insetBlockStart: box?.insetBlockStart ?? '0px',
         minInlineSize: box?.inlineSize ?? '180px',
         minBlockSize: box?.blockSize ?? '30px',
-        ...{ '--dx-gridCellWidth': `${box?.inlineSize ?? 200}px` },
+        ...{ '--dx-grid-cell-width': `${box?.inlineSize ?? 200}px` },
       }}
       {...(gridId && { 'data-grid': gridId })}
     />

@@ -9,7 +9,7 @@ import { useConfig } from '@dxos/react-client';
 import { useSpaceInvitations } from '@dxos/react-client/echo';
 import { type CancellableInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { ScrollArea, useTranslation } from '@dxos/react-ui';
-import { descriptionText, mx } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import {
   type ActionMenuItem,
@@ -140,7 +140,7 @@ export const SpaceManagerImpl = (props: SpaceManagerImplProps) => {
         <ScrollArea.Viewport>
           {!!visibleInvitations?.length && (
             <>
-              <h3 className={mx(headingFragment, descriptionText)}>{t('invitation list heading')}</h3>
+              <h3 className={mx(headingFragment, 'text-description')}>{t('invitation list heading')}</h3>
               <InvitationListComponent
                 className='mb-2'
                 send={send}
@@ -148,7 +148,7 @@ export const SpaceManagerImpl = (props: SpaceManagerImplProps) => {
                 onClickRemove={(invitation) => invitation.cancel()}
                 createInvitationUrl={createInvitationUrl}
               />
-              <h3 className={mx(headingFragment, descriptionText, 'mt-2')}>{t('space member list heading')}</h3>
+              <h3 className={mx(headingFragment, 'text-description', 'mt-2')}>{t('space member list heading')}</h3>
             </>
           )}
           <SpaceMemberListComponent spaceKey={space.key} includeSelf />

@@ -36,7 +36,7 @@ export const PluginDetail = ({ plugin, enabled, onEnabledChange }: PluginDetailP
       <ScrollArea.Viewport>
         <div role='none' className='grid grid-cols-[min-content_1fr] gap-4 container-max-width p-4'>
           <div role='none'>
-            <Icon classNames={mx('p-1 rounded-sm', styles.bg, styles.icon)} icon={icon} size={14} />
+            <Icon classNames={mx('p-1 rounded-sm', styles.fill, styles.icon)} icon={icon} size={14} />
           </div>
           <div role='none' className='flex flex-col gap-6'>
             <div role='none' className='grid grid-cols-[1fr_min-content] gap-x-3 w-full pt-1'>

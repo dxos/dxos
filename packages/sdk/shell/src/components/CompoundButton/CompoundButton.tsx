@@ -5,7 +5,7 @@
 import React, { type ComponentPropsWithoutRef, type ReactNode } from 'react';
 
 import { type ButtonProps, useElevationContext, useId, useThemeContext } from '@dxos/react-ui';
-import { descriptionText, descriptionTextPrimary, mx } from '@dxos/ui-theme';
+import { descriptionTextPrimary, mx } from '@dxos/ui-theme';
 
 export interface CompoundButtonSlots {
   root: ComponentPropsWithoutRef<'button'>;
@@ -66,7 +66,7 @@ export const CompoundButton = ({
             {...slots.description}
             className={mx(
               'text-xs mb-1 font-normal',
-              variant === 'primary' ? descriptionTextPrimary : descriptionText,
+              variant === 'primary' ? descriptionTextPrimary : 'text-description',
               slots.description?.className,
             )}
           >

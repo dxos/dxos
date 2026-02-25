@@ -4,43 +4,32 @@
 
 import { type MessageValence } from '@dxos/ui-types';
 
-export const successText = 'text-xs font-medium text-success';
-export const infoText = 'text-xs font-medium text-info';
-export const warningText = 'text-xs font-medium text-warning';
-export const errorText = 'text-xs font-medium text-error';
-
 export const valenceColorText = (valence?: MessageValence) => {
   switch (valence) {
     case 'success':
-      return successText;
+      return 'text-xs font-medium text-success-text';
     case 'info':
-      return infoText;
+      return 'text-xs font-medium text-info-text';
     case 'warning':
-      return warningText;
+      return 'text-xs font-medium text-warning-text';
     case 'error':
-      return errorText;
+      return 'text-xs font-medium text-error-text';
     default:
       return undefined;
   }
 };
 
-export const neutralMessageColors = 'border border-dashed border-separator text-subdued';
-export const successMessageColors = 'text-success-surface-text bg-success-surface';
-export const infoMessageColors = 'text-info-surface-text bg-info-surface';
-export const warningMessageColors = 'text-warning-surface-text bg-warning-surface';
-export const errorMessageColors = 'text-error-surface-text bg-error-surface';
-
 export const messageValence = (valence?: MessageValence) => {
   switch (valence) {
     case 'success':
-      return successMessageColors;
+      return 'text-xs font-medium border border-dashed text-success-text border-success-text bg-success-surface';
     case 'info':
-      return infoMessageColors;
+      return 'text-xs font-medium border border-dashed text-info-text border-info-text bg-info-surface';
     case 'warning':
-      return warningMessageColors;
+      return 'text-xs font-medium border border-dashed text-warning-text border-warning-text bg-warning-surface';
     case 'error':
-      return errorMessageColors;
+      return 'text-xs font-medium border border-dashed text-error-text border-error-text bg-error-surface';
     default:
-      return neutralMessageColors;
+      return 'text-xs font-medium border border-dashed text-neutral-text border-neutral-text bg-neutral-surface';
   }
 };
