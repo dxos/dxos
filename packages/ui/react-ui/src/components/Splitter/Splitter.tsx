@@ -47,7 +47,7 @@ const Root = forwardRef<HTMLDivElement, ScopedProps<RootProps>>(
           role='none'
           {...rootProps}
           ref={forwardedRef}
-          className={mx('relative bs-full overflow-hidden', classNames)}
+          className={mx('relative h-full overflow-hidden', classNames)}
         >
           {children}
         </div>
@@ -93,7 +93,7 @@ const Panel = forwardRef<HTMLDivElement, ScopedProps<PanelProps>>(
       <div
         {...panelProps}
         ref={forwardedRef}
-        className={mx('absolute inset-inline-0 flex flex-col overflow-hidden', classNames)}
+        className={mx('absolute inset-x-0 flex flex-col overflow-hidden', classNames)}
         style={{
           top,
           height,

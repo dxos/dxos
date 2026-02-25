@@ -79,7 +79,7 @@ export const TokensContainer = ({ db }: { db: Database.Database }) => {
         ) : (
           <Settings.Group>
             <TokenManager tokens={tokens} onDelete={handleDelete} />
-            {tokens.length > 0 && <Separator classNames='mlb-4' />}
+            {tokens.length > 0 && <Separator classNames='my-4' />}
             <NewTokenSelector spaceId={db.spaceId} onAddAccessToken={handleAddAccessToken} onCustomToken={handleNew} />
           </Settings.Group>
         )}

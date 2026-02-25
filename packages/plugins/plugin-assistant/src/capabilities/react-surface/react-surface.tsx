@@ -23,6 +23,7 @@ import {
   ChatContainer,
   ChatDialog,
   InitiativeContainer,
+  InitiativeSettings,
   PromptArticle,
   TriggerStatus,
 } from '../../components';
@@ -55,6 +56,13 @@ export default Capability.makeModule(() =>
         filter: (data): data is { subject: Initiative.Initiative } =>
           Obj.instanceOf(Initiative.Initiative, data.subject),
         component: ({ data, role }) => <InitiativeContainer role={role} subject={data.subject} />,
+      }),
+      Surface.create({
+        id: `${meta.id}/initiative/companion/settings`,
+        role: 'object-settings',
+        filter: (data): data is { subject: Initiative.Initiative } =>
+          Obj.instanceOf(Initiative.Initiative, data.subject),
+        component: ({ data }) => <InitiativeSettings subject={data.subject} />,
       }),
       // TODO(wittjosiah): This is flashing when chat changes.
       Surface.create({

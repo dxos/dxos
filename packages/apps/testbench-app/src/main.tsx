@@ -4,7 +4,6 @@
 
 import '@dxos-theme';
 
-import { withProfiler } from '@sentry/react';
 import React, { StrictMode, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
@@ -66,14 +65,14 @@ const useThemeWatcher = () => {
   return themeMode;
 };
 
-const App = withProfiler(() => {
+const App = () => {
   const themeMode = useThemeWatcher();
   return (
     <ThemeProvider tx={defaultTx} themeMode={themeMode} resourceExtensions={translations} noCache>
       <RouterProvider router={router} />
     </ThemeProvider>
   );
-});
+};
 
 const main = async () => {
   const config = await getConfig();

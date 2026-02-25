@@ -54,7 +54,7 @@ export const RecoveryCredentialsContainer = () => {
             <Message.Content>{t('no credentials message')}</Message.Content>
           </Message.Root>
         ) : (
-          <List classNames='container-max-width pli-2'>
+          <List classNames='container-max-width px-2'>
             {recoveryCredentials.map((credential) => (
               <ListItem.Root key={credential.id ? decodePublicKey(credential.id).toHex() : 'unknown'}>
                 <ListItem.Endcap>

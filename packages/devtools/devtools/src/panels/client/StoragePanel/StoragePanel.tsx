@@ -320,7 +320,7 @@ const DataItems: FC<{ items: Node[]; onSelect: (item: Node) => void }> = ({ item
               <Icon icon={iconName} />
               {Element}
             </div>
-            <TreeItem.Body className='pis-4'>
+            <TreeItem.Body className='ps-4'>
               <Tree.Branch>{items && <DataItems items={items} onSelect={onSelect} />}</Tree.Branch>
             </TreeItem.Body>
           </TreeItem.Root>

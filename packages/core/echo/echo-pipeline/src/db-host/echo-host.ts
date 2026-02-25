@@ -41,7 +41,6 @@ import { LocalQueueServiceImpl } from './local-queue-service';
 import { QueryServiceImpl } from './query-service';
 import { QueueDataSource } from './queue-data-source';
 import { SpaceStateManager } from './space-state-manager';
-import { QueueServiceStub } from './stub';
 
 export type EchoHostProps = {
   kv: LevelDB;
@@ -49,12 +48,6 @@ export type EchoHostProps = {
   getSpaceKeyByRootDocumentId?: RootDocumentSpaceKeyProvider;
 
   runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>;
-
-  /**
-   * Use SQLite-backed local-first durable queues.
-   * Otherwise defaults to in-memory impl.
-   */
-  localQueues?: boolean;
 
   /**
    * This peer is allowed to assign positions (global-order) to items appended to the queue.
@@ -84,8 +77,8 @@ export class EchoHost extends Resource {
   private readonly _automergeDataSource: AutomergeDataSource;
   private readonly _indexEngine: IndexEngine;
   private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>;
-  private readonly _feedStore?: FeedStore;
-  private readonly _queueDataSource?: QueueDataSource;
+  private readonly _feedStore: FeedStore;
+  private readonly _queueDataSource: QueueDataSource;
 
   private _updateIndexes!: DeferredTask;
 
@@ -95,7 +88,6 @@ export class EchoHost extends Resource {
 
   constructor({
     kv,
-    localQueues,
     peerIdProvider,
     getSpaceKeyByRootDocumentId,
     runtime,
@@ -115,17 +107,13 @@ export class EchoHost extends Resource {
     this._runtime = runtime;
     this._automergeDataSource = new AutomergeDataSource(this._automergeHost);
 
-    if (localQueues) {
-      this._feedStore = new FeedStore({ assignPositions: assignQueuePositions, localActorId: crypto.randomUUID() });
-      this._queueDataSource = new QueueDataSource({
-        feedStore: this._feedStore,
-        runtime: this._runtime,
-        getSpaceIds: () => this._spaceStateManager.spaceIds,
-      });
-      this._queuesService = protoToBuf<Echo.QueueService>(new LocalQueueServiceImpl(runtime, this._feedStore, syncQueue));
-    } else {
-      this._queuesService = new QueueServiceStub();
-    }
+    this._feedStore = new FeedStore({ assignPositions: assignQueuePositions, localActorId: crypto.randomUUID() });
+    this._queueDataSource = new QueueDataSource({
+      feedStore: this._feedStore,
+      runtime: this._runtime,
+      getSpaceIds: () => this._spaceStateManager.spaceIds,
+    });
+    this._queuesService = protoToBuf<Echo.QueueService>(new LocalQueueServiceImpl(runtime, this._feedStore, syncQueue));
 
     // SQLite-based index engine for all queries.
     this._indexEngine = new IndexEngine();
@@ -208,7 +196,7 @@ export class EchoHost extends Resource {
     return this._spaceStateManager.roots;
   }
 
-  get feedStore(): FeedStore | undefined {
+  get feedStore(): FeedStore {
     return this._feedStore;
   }
 
@@ -224,16 +212,14 @@ export class EchoHost extends Resource {
     await this._queryService.open(ctx);
     await this._spaceStateManager.open(ctx);
 
-    if (this._feedStore) {
-      await RuntimeProvider.runPromise(this._runtime)(this._feedStore.migrate());
-      this._feedStore.onNewBlocks.on(this._ctx, () => {
-        this._queryService.invalidateQueries();
-        this._updateIndexes.schedule();
-      });
-    }
-
     await RuntimeProvider.runPromise(this._runtime)(this._indexEngine.migrate());
     this._updateIndexes = new DeferredTask(this._ctx, this._runUpdateIndexes);
+
+    await RuntimeProvider.runPromise(this._runtime)(this._feedStore.migrate());
+    this._feedStore.onNewBlocks.on(this._ctx, () => {
+      this._queryService.invalidateQueries();
+      this._updateIndexes.schedule();
+    });
 
     this._spaceStateManager.spaceDocumentListUpdated.on(this._ctx, (e) => {
       if (e.previousRootId) {
@@ -379,7 +365,7 @@ export class EchoHost extends Resource {
       });
     }
 
-    if (this._queueDataSource) {
+    {
       performance.mark('indexEngine.update.queue:start');
       const { updated, done } = await this._indexEngine
         .update(this._queueDataSource, { spaceId: null, limit: 50 })

@@ -12,7 +12,7 @@ import { Filter, Obj, Ref, Relation, type Type } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Card } from '@dxos/react-ui-mosaic';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { type ValueGenerator, createAsyncGenerator } from '@dxos/schema/testing';
@@ -43,6 +43,7 @@ const meta = {
   render: render(DefaultStory),
   decorators: [
     withTheme(),
+    withLayout({ layout: 'fullscreen' }),
     // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
     withPluginManager({
       capabilities: [

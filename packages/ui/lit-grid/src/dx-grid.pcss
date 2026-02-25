@@ -4,10 +4,10 @@
 @layer dx-tokens {
   :root {
     --dx-grid-cell-padding-block: 0.2rem;
-    --dx-grid-cell-content-padding-block: calc(var(--dx-grid-cell-padding-block) - var(--dx-gridFocusIndicatorWidth));
+    --dx-grid-cell-content-padding-block: calc(var(--dx-grid-cell-padding-block) - var(--dx-grid-focus-indicator-width));
     --dx-grid-cell-editor-padding-block: var(--dx-grid-cell-content-padding-block);
     --dx-grid-cell-padding-inline: 0.25rem;
-    --dx-grid-cell-content-padding-inline: calc(var(--dx-grid-cell-padding-inline) - var(--dx-gridFocusIndicatorWidth));
+    --dx-grid-cell-content-padding-inline: calc(var(--dx-grid-cell-padding-inline) - var(--dx-grid-focus-indicator-width));
     --dx-grid-cell-editor-padding-inline: var(--dx-grid-cell-content-padding-inline);
   }
 }
@@ -54,7 +54,7 @@
       position: absolute;
       inset: 0;
       pointer-events: none;
-      border: var(--dx-gridFocusIndicatorWidth) solid var(--dx-gridFocusIndicatorColor);
+      border: var(--dx-grid-focus-indicator-width) solid var(--dx-gridFocusIndicatorColor);
     }
   }
 
@@ -67,7 +67,7 @@
   }
 
   .dx-grid {
-    --dx-grid-cell-surface: var(--dx-grid-base, var(--dx-baseSurface));
+    --dx-grid-cell-surface: var(--dx-grid-base, var(--color-base-surface));
 
     [role='gridcell'],
     [role='columnheader'],
@@ -98,7 +98,7 @@
         white-space: nowrap;
         block-size: 100%;
         position: relative;
-        border: var(--dx-gridFocusIndicatorWidth) solid transparent;
+        border: var(--dx-grid-focus-indicator-width) solid transparent;
         border-radius: 2px;
 
         &:has(.dx-tag), &:has(dx-tag-picker-item) {
@@ -110,7 +110,7 @@
       }
 
       &.dx-grid__cell--commented {
-        background: var(--dx-grid-commented, var(--dx-gridCommented));
+        background: var(--color-grid-commented);
       }
     }
 
@@ -119,7 +119,7 @@
       [role='columnheader'],
       [role='rowheader'] {
         &[aria-selected] {
-          --dx-grid-cell-surface: var(--dx-gridSelectionOverlay);
+          --dx-grid-cell-surface: var(--color-grid-selection-overlay);
 
           &:focus:not([aria-readonly='true']),
           &:focus-visible, &:focus-within {
@@ -140,7 +140,7 @@
     }
 
     &:has(.dx-grid__row--cta__cell:hover) .dx-grid__row--cta__cell {
-      background: var(--dx-hoverOverlay);
+      background: var(--color-grid-hover-overlay);
     }
   }
 
@@ -192,8 +192,8 @@
     hyphens: auto;
     overflow-wrap: break-word;
 
-    background: var(--dx-grid-base, var(--dx-baseSurface));
-    border: var(--dx-gridFocusIndicatorWidth) solid var(--dx-gridFocusIndicatorColor);
+    background: var(--dx-grid-base, var(--color-base-surface));
+    border: var(--dx-grid-focus-indicator-width) solid var(--dx-gridFocusIndicatorColor);
     border-radius: 2px;
 
     --dx-grid-cell-editor-max-block-size: min(12em, 50vh);

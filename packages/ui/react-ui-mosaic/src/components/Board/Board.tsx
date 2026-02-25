@@ -106,7 +106,7 @@ const BoardContentInner = forwardRef<HTMLDivElement, BoardContentProps>(
     const items = useAtomValue(model.columns);
 
     return (
-      <div ref={forwardedRef} className={mx('flex bs-full is-full overflow-hidden', classNames)}>
+      <div ref={forwardedRef} className={mx('flex h-full w-full overflow-hidden', classNames)}>
         <Focus.Group asChild orientation='horizontal'>
           <Mosaic.Container
             asChild
@@ -116,7 +116,7 @@ const BoardContentInner = forwardRef<HTMLDivElement, BoardContentProps>(
             eventHandler={eventHandler}
             debug={debugHandler}
           >
-            <ScrollArea.Root orientation='horizontal' classNames='md:pbs-3' margin padding>
+            <ScrollArea.Root orientation='horizontal' classNames='md:pt-3' margin padding>
               <ScrollArea.Viewport classNames='snap-mandatory snap-x md:snap-none' ref={setViewport}>
                 <Mosaic.Stack items={items} getId={model.getColumnId} Tile={Tile} debug={debug} />
               </ScrollArea.Viewport>
@@ -145,10 +145,7 @@ const BoardPlaceholder = (props: MosaicPlaceholderProps<number>) => {
   return (
     <Mosaic.Placeholder {...props} classNames={mosaicStyles.placeholder.root}>
       <div
-        className={mx(
-          'flex bs-full border border-dashed border-separator rounded-sm',
-          mosaicStyles.placeholder.content,
-        )}
+        className={mx('flex h-full border border-dashed border-separator rounded-xs', mosaicStyles.placeholder.content)}
       />
     </Mosaic.Placeholder>
   );

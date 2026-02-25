@@ -15,7 +15,7 @@ import { PreviewPlugin } from '@dxos/plugin-preview';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { useDatabase, useQuery } from '@dxos/react-client/echo';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as stackTranslations } from '@dxos/react-ui-stack';
 import { Stack } from '@dxos/react-ui-stack';
 import { Collection, View } from '@dxos/schema';
@@ -39,9 +39,9 @@ const DefaultStory = () => {
   }
 
   return (
-    <Stack orientation='horizontal' size='split' rail={false} classNames='pli-0 bs-full'>
+    <Stack orientation='horizontal' size='split' rail={false} classNames='px-0 h-full'>
       <PipelineContainer role='article' subject={pipeline} />
-      <PipelineObjectSettings pipeline={pipeline} classNames='border-is border-separator' />
+      <PipelineObjectSettings pipeline={pipeline} classNames='border-s border-separator' />
     </Stack>
   );
 };
@@ -51,6 +51,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withTheme(),
+    withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [
         ...corePlugins(),

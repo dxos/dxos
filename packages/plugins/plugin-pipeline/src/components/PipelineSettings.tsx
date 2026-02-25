@@ -5,8 +5,8 @@
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { DXN, Filter, Query, type QueryAST, Ref, Tag, Type } from '@dxos/echo';
-import { type Mutable } from '@dxos/echo/internal';
+import { DXN, Filter, Obj, Query, type QueryAST, Ref, Tag, Type } from '@dxos/echo';
+import { type JsonPath, type Mutable } from '@dxos/echo/internal';
 import { useTypeOptions } from '@dxos/plugin-space';
 import { resolveSchemaWithRegistry } from '@dxos/plugin-space';
 import { getSpace, useObject, useQuery } from '@dxos/react-client/echo';
@@ -95,12 +95,28 @@ export const PipelineObjectSettings = ({ classNames, pipeline }: PipelineObjectS
         jsonSchema: Type.toJsonSchema(newSchema),
       });
       updateView((view) => {
-        view.projection = newView.projection as Mutable<typeof view.projection>;
+        view.projection = Obj.getSnapshot(newView).projection as Mutable<typeof view.projection>;
       });
 
       setSchema(() => newSchema);
     },
     [view, updateView, schema],
+  );
+
+  const handleColumnValuesChanged = useCallback(
+    (column: Pipeline.Column) =>
+      (newValues: { name?: string }, { changed }: { changed: Record<JsonPath, boolean> }) => {
+        if (changed['name' as JsonPath]) {
+          const columnIndex = columns.findIndex((c) => c === column);
+          if (columnIndex === -1) {
+            return;
+          }
+          updateColumns((cols) => {
+            cols[columnIndex].name = newValues.name ?? '';
+          });
+        }
+      },
+    [columns, updateColumns],
   );
 
   const handleToggleField = useCallback((column: Pipeline.Column) => {
@@ -145,21 +161,9 @@ export const PipelineObjectSettings = ({ classNames, pipeline }: PipelineObjectS
     setExpandedId(newView.id);
   }, [space, updateColumns]);
 
-  const handleColumnSave = useCallback(
-    (values: Schema.Schema.Type<typeof ColumnFormSchema>) => {
-      if (column) {
-        const columnIndex = columns.findIndex((c) => c === column);
-        updateColumns((columns) => {
-          columns[columnIndex].name = values.name;
-        });
-      }
-    },
-    [column, columns, updateColumns],
-  );
-
   return (
-    <div role='none' className={mx('plb-cardPadding overflow-y-auto', classNames)}>
-      <h2 className='text-sm text-description plb-1'>{t('views label')}</h2>
+    <div role='none' className={mx('py-card-padding overflow-y-auto', classNames)}>
+      <h2 className='text-sm text-description py-1'>{t('views label')}</h2>
 
       <List.Root<Pipeline.Column>
         items={columns}
@@ -177,7 +181,7 @@ export const PipelineObjectSettings = ({ classNames, pipeline }: PipelineObjectS
                   classNames={listItemGrid}
                   aria-expanded={expandedId === column.view.dxn.toString()}
                 >
-                  <div role='none' className={mx(subtleHover, listItemGrid, 'rounded-sm cursor-pointer min-bs-10')}>
+                  <div role='none' className={mx(subtleHover, listItemGrid, 'rounded-xs cursor-pointer min-h-10')}>
                     <List.ItemDragHandle />
                     <List.ItemTitle onClick={() => handleToggleField(column)}>{column.name}</List.ItemTitle>
                     <List.ItemDeleteButton
@@ -199,8 +203,12 @@ export const PipelineObjectSettings = ({ classNames, pipeline }: PipelineObjectS
                     />
                   </div>
                   {expandedId === column.view.dxn.toString() && column?.view.target && (
-                    <div role='none' className='col-span-5 mlb-2 border border-separator rounded-md'>
-                      <Form.Root schema={ColumnFormSchema} values={column} autoSave onSave={handleColumnSave}>
+                    <div role='none' className='col-span-5 my-2 border border-separator rounded-md'>
+                      <Form.Root
+                        schema={ColumnFormSchema}
+                        values={column}
+                        onValuesChanged={handleColumnValuesChanged(column)}
+                      >
                         <Form.Content>
                           <Form.FieldSet />
                         </Form.Content>
@@ -225,8 +233,8 @@ export const PipelineObjectSettings = ({ classNames, pipeline }: PipelineObjectS
         )}
       </List.Root>
 
-      <div role='none' className='mlb-cardPadding'>
-        <IconButton icon='ph--plus--regular' label={t('add view label')} onClick={handleAdd} classNames='is-full' />
+      <div role='none' className='my-card-padding'>
+        <IconButton icon='ph--plus--regular' label={t('add view label')} onClick={handleAdd} classNames='w-full' />
       </div>
     </div>
   );

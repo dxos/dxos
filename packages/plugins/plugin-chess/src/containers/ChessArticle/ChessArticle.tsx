@@ -41,14 +41,14 @@ export const ChessArticle = ({ role, subject: game }: ChessArticleProps) => {
         </Toolbar.Root>
         <div
           className={mx(
-            'grid bs-full is-full gap-2',
+            'grid h-full w-full gap-2',
             open && '@3xl:grid-cols-[1fr_320px]',
             role === 'section' && 'aspect-square',
             role === 'section' && open && '@3xl:aspect-auto',
           )}
         >
           <Chessboard.Content>
-            <Chessboard.Board classNames='m-4 rounded-sm overflow-hidden' orientation={orientation} />
+            <Chessboard.Board classNames='m-4 rounded-xs overflow-hidden' orientation={orientation} />
           </Chessboard.Content>
           {open && (
             <div className='hidden @3xl:flex flex-col p-8 justify-center items-center overflow-hidden'>

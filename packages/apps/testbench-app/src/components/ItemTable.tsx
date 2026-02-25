@@ -16,7 +16,7 @@ export type ItemTableProps<T> = {
 export const ItemTable = <T extends object>({ schema, objects = [] }: ItemTableProps<T>) => {
   const jsonSchema = useMemo(() => Type.toJsonSchema(schema), [schema]);
   return (
-    <div role='none' className='is-full bs-full'>
+    <div role='none' className='w-full h-full'>
       <DynamicTable jsonSchema={jsonSchema} rows={objects} />
     </div>
   );

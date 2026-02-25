@@ -14,7 +14,7 @@ const preventDefault = (event: Event) => event.preventDefault();
 // TODO(burdon): Factor out.
 const Endcap = ({ children }: PropsWithChildren) => {
   return (
-    <div className='grid is-[var(--rail-action)] bs-[var(--rail-action)] items-center justify-center'>{children}</div>
+    <div className='grid w-[var(--rail-action)] h-[var(--rail-action)] items-center justify-center'>{children}</div>
   );
 };
 
@@ -69,12 +69,12 @@ const ChatDialogRoot = ({
       setSize={setSize}
     >
       <Dialog.Root modal={false} open={open} onOpenChange={setOpen}>
-        <div role='none' className='dx-dialog__overlay bg-transparent pointer-events-none' data-block-align='end'>
+        <div role='none' className='dx-dialog__overlay bg-transparent pointer-events-none' data-h-align='end'>
           <Dialog.Content
             inOverlayLayout
             classNames={[
               'grid grid-rows-[var(--rail-action)_1fr_min-content] p-0 overflow-hidden',
-              'box-content md:is-[35rem] md:max-is-none pointer-events-auto',
+              'box-content md:w-[35rem] md:max-w-none pointer-events-auto',
             ]}
             onEscapeKeyDown={onEscape}
             onInteractOutside={preventDefault}
@@ -110,7 +110,7 @@ const ChatDialogHeader = ({ classNames, title }: ChatDialogHeaderProps) => {
         </Dialog.Close>
       </Endcap>
       <Dialog.Title
-        classNames='flex is-full justify-center text-sm text-subdued select-none cursor-pointer'
+        classNames='flex w-full justify-center text-sm text-subdued select-none cursor-pointer'
         onClick={() => setExpanded((expanded) => !expanded)}
       >
         {title}
@@ -120,7 +120,7 @@ const ChatDialogHeader = ({ classNames, title }: ChatDialogHeaderProps) => {
           variant='ghost'
           icon='ph--caret-up--regular'
           iconOnly
-          classNames={mx('!p-1 [&>svg]:transition [&>svg]:duration-200', expanded && '[&>svg]:rotate-180')}
+          classNames={mx('p-1! [&>svg]:transition [&>svg]:duration-200', expanded && '[&>svg]:rotate-180')}
           label={expanded ? 'Close' : 'Open'}
           onClick={() => setExpanded((expanded) => !expanded)}
         />
@@ -148,8 +148,8 @@ const ChatDialogContent = ({ children, classNames }: ChatDialogContentProps) => 
   return (
     <div
       className={mx(
-        'border-bs border-be border-subduedSeparator',
-        'transition-[block-size] ease-in-out duration-0 [&:not([data-dx-resizing="true"])]:duration-200',
+        'border-t border-b border-subdued-separator',
+        'transition ease-in-out duration-0 [&:not([data-dx-resizing="true"])]:duration-200',
         classNames,
       )}
       style={{

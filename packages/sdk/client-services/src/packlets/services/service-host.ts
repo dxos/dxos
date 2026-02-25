@@ -246,9 +246,6 @@ export class ClientServicesHost {
       if (this._runtimeProps.enableVectorIndexing === undefined) {
         this._runtimeProps.enableVectorIndexing = config?.get('runtime.client.enableVectorIndexing', false);
       }
-      if (this._runtimeProps.enableLocalQueues === undefined) {
-        this._runtimeProps.enableLocalQueues = config?.get('runtime.client.enableLocalQueues', false);
-      }
 
       invariant(!this._config, 'config already set');
       this._config = config;

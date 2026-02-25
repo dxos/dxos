@@ -1,0 +1,56 @@
+/**
+ * CodeMirror
+ * Uses @theme (not @layer) so Tailwind generates text-cm-* / bg-cm-* utility classes
+ * consumed by ui-editor. Compare: tldraw.css uses @layer to map tokens onto tldraw's
+ * own variables without generating utilities.
+ * TODO(burdon): This could move into the ui-editor package (similar to graph.css).
+ */
+
+@theme {
+  --color-cm-codeblock: theme(colors.neutral.500 / 0.1);
+  --color-cm-active-line: light-dark(
+    theme(colors.neutral.200 / 0.5),
+    theme(colors.neutral.800 / 0.5)
+  );
+  --color-cm-separator: theme(colors.blue.500);
+  --color-cm-cursor: light-dark(
+    theme(colors.neutral.900),
+    theme(colors.neutral.100)
+  );
+  --color-cm-selection: light-dark(
+    theme(colors.blue.400 / 0.5),
+    theme(colors.blue.600 / 0.5)
+  );
+  --color-cm-focused-selection: light-dark(
+    theme(colors.blue.400),
+    theme(colors.blue.600)
+  );
+  --color-cm-highlight: light-dark(
+    theme(colors.neutral.950),
+    theme(colors.neutral.50)
+  );
+  --color-cm-highlight-surface: light-dark(
+    theme(colors.sky.200),
+    theme(colors.cyan.800)
+  );
+  --color-cm-comment-text: light-dark(
+    theme(colors.neutral.50),
+    theme(colors.neutral.950)
+  );
+  --color-cm-comment-surface: light-dark(
+    theme(colors.amber.800),
+    theme(colors.amber.200)
+  );
+
+  /* Markdown syntax highlighting */
+  --color-cm-code: light-dark(
+    theme(colors.neutral.700),
+    theme(colors.neutral.300)
+  );
+  --color-cm-code-mark: theme(colors.blue.500);
+  --color-cm-mark-opacity: 0.5;
+  --color-cm-heading: light-dark(
+    theme(colors.neutral.900),
+    theme(colors.neutral.400)
+  );
+}

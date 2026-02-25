@@ -15,8 +15,8 @@ import { meta } from '../meta';
 type SchemaPanelProps = { space: Space };
 
 const itemClasses = mx([
-  'container-max-width grid md:col-span-2 grid-cols-subgrid gap-trimSm items-center',
-  '*:first:!mbs-0 *:last:!mbe-0 pli-trimMd plb-trimMd',
+  'container-max-width grid md:col-span-2 grid-cols-subgrid gap-trim-sm items-center',
+  '*:first:!mt-0 *:last:!mb-0 px-trim-md py-trim-md',
   'border border-separator rounded-md',
 ]);
 
@@ -28,7 +28,7 @@ export const SchemaContainer = ({ space }: SchemaPanelProps) => {
     <Settings.Root>
       <Settings.Section title={t('schema verbose label')} description={t('schema description')}>
         <div role='none' className={itemClasses}>
-          {schemas.length === 0 && <div className='text-center plb-4'>{t('no schemas found message')}</div>}
+          {schemas.length === 0 && <div className='text-center py-4'>{t('no schemas found message')}</div>}
           {schemas.map((schema) => (
             <div role='none' key={schema.id}>
               {schema.typename}

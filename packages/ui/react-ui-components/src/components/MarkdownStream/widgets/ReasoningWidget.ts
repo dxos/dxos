@@ -19,6 +19,6 @@ export class ReasoningWidget extends WidgetType {
   }
 
   override toDOM() {
-    return Domino.of('div').classNames('mbs-2 mbe-4 pli-2 text-sm text-placeholder').text(this.text).root;
+    return Domino.of('div').classNames('mt-2 mb-4 px-2 text-sm text-placeholder').text(this.text).root;
   }
 }

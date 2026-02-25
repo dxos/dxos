@@ -144,7 +144,7 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
             </Settings.FrameItem>
             {locked && (
               <Settings.FrameItem title={t('invitations label')}>
-                <p className='text-description mbe-2'>{t('locked space description')}</p>
+                <p className='text-description mb-2'>{t('locked space description')}</p>
               </Settings.FrameItem>
             )}
             {!locked && (
@@ -152,7 +152,7 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
                 {selectedInvitation && <InvitationSection {...selectedInvitation} onBack={handleBack} />}
                 {!selectedInvitation && (
                   <>
-                    <p className='text-description mbe-2'>{t('space invitation description')}</p>
+                    <p className='text-description mb-2'>{t('space invitation description')}</p>
                     <InvitationList
                       className='mb-2'
                       send={handleSend}
@@ -172,7 +172,7 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
             )}
           </Settings.Frame>
           {/* TODO(wittjosiah): Make Settings.ItemInput & Settings.Frame compatible. */}
-          <div className='justify-center p-0 mbs-4 container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content]'>
+          <div className='justify-center p-0 mt-4 container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content]'>
             <Settings.ItemInput title={t('space locked label')} description={t('space locked description')}>
               <Input.Switch checked={locked} onCheckedChange={handleChangeLocked} classNames='justify-self-end' />
             </Settings.ItemInput>
@@ -235,8 +235,8 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
   return (
     <>
       <p className='text-description'>{t('qr code description', { ns: meta.id })}</p>
-      <div role='group' className='grid grid-cols-[1fr_min-content] mlb-2 gap-2'>
-        <div role='none' className='is-full aspect-square relative text-description'>
+      <div role='group' className='grid grid-cols-[1fr_min-content] my-2 gap-2'>
+        <div role='none' className='w-full aspect-square relative text-description'>
           <QR
             rounding={100}
             backgroundColor='transparent'
@@ -270,9 +270,9 @@ const InvitationAuthCode = ({ id, code, onCancel }: { id: string; code: string; 
   return (
     <>
       <p className='text-description'>{t('auth other device emoji message')}</p>
-      {emoji && <Emoji text={emoji} className='mli-auto mlb-2 text-center' />}
+      {emoji && <Emoji text={emoji} className='mx-auto my-2 text-center' />}
       <p className='text-description'>{t('auth code message')}</p>
-      <AuthCode code={code} large classNames='mli-auto mlb-2 text-center grow' />
+      <AuthCode code={code} large classNames='mx-auto my-2 text-center grow' />
       <Button variant='ghost' onClick={onCancel}>
         {t('cancel label')}
       </Button>

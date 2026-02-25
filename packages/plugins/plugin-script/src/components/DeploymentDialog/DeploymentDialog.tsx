@@ -69,14 +69,14 @@ export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDia
           <IconButton icon='ph--x--regular' size={4} label='Close' iconOnly density='fine' variant='ghost' />
         </Dialog.Close>
       </div>
-      <div role='none' className='plb-4'>
+      <div role='none' className='py-4'>
         {/* TODO: Implement deployment logic and UI. */}
         <p>
           {t('deployment dialog scripts found message', {
             count: scriptTemplates.length,
           })}
         </p>
-        <ul className='pbs-2'>
+        <ul className='pt-2'>
           {scriptTemplates.map((template) => {
             return <li key={template.id}>{template.name}</li>;
           })}

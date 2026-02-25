@@ -51,7 +51,7 @@ import { TranscriptionPlugin } from '@dxos/plugin-transcription';
 import { TranscriptionBlueprint } from '@dxos/plugin-transcription/blueprints';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
 import { Table } from '@dxos/react-ui-table/types';
 import { Text, View } from '@dxos/schema';
@@ -102,7 +102,7 @@ import {
   testTypes,
 } from '../testing';
 
-const panelClassNames = 'bg-baseSurface rounded-sm border border-separator overflow-hidden';
+const panelClassNames = 'bg-base-surface rounded-xs border border-separator overflow-hidden';
 
 type StoryProps = {
   modules: FC<ComponentProps>[][];
@@ -159,14 +159,14 @@ const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => 
       size='split'
       rail={false}
       itemsCount={modules.length + (showContext ? 1 : 0)}
-      classNames='absolute inset-0 gap-[--stack-gap]'
+      classNames='absolute inset-0 gap-(--stack-gap)'
     >
       {modules.map((Components, i) => {
         return (
           <StackItem.Root key={i} item={{ id: `${i}` }}>
             <Stack
               orientation='vertical'
-              classNames='gap-[--stack-gap]'
+              classNames='gap-(--stack-gap)'
               size={i > 0 ? 'contain' : 'split'}
               itemsCount={Components.length}
               rail={false}
@@ -190,7 +190,7 @@ const StackContainer = ({ objects }: { objects: Obj.Unknown[] }) => {
   return (
     <Stack
       orientation='vertical'
-      classNames='gap-[--stack-gap]'
+      classNames='gap-(--stack-gap)'
       size='contain'
       rail={false}
       itemsCount={objects.length}
@@ -207,7 +207,7 @@ const StackContainer = ({ objects }: { objects: Obj.Unknown[] }) => {
 const storybook: Meta<typeof DefaultStory> = {
   title: 'stories/stories-assistant/Chat',
   render: render(DefaultStory),
-  decorators: [withTheme()],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
     translations,

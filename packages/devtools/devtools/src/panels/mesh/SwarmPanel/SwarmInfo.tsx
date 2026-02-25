@@ -34,7 +34,7 @@ export const SwarmInfoView = ({ swarmInfo, onConnectionClick, onReturn }: SwarmI
           key={connection.sessionId ? toPublicKey(connection.sessionId).toHex() : ''}
           className='grow overflow-hidden'
         >
-          <div className='inline-flex is-[100]'>
+          <div className='inline-flex w-[100px]'>
             {connection.remotePeerId ? toPublicKey(connection.remotePeerId).toHex() : ''}
           </div>
           <div className='inline-flex m-1'>

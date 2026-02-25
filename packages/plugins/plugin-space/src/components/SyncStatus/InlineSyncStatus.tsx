@@ -55,7 +55,7 @@ export const InlineSyncStatus = ({ space, open }: { space: Space; open?: boolean
         syncing={syncing}
         attended={isAttended}
         containsAttended={containsAttended}
-        classNames='self-center mie-1'
+        classNames='self-center mx-1'
       />
     </Tooltip.Trigger>
   );

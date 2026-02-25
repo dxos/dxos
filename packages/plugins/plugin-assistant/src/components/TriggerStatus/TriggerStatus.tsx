@@ -10,7 +10,7 @@ import { type InvocationsState } from '@dxos/functions-runtime';
 import { useTriggerRuntimeControls } from '@dxos/plugin-automation';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { StatusBar } from '@dxos/plugin-status-bar';
-import { parseId } from '@dxos/react-client/echo';
+import { type Database, parseId } from '@dxos/react-client/echo';
 import { Icon, Input, Popover, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
 import { mx } from '@dxos/ui-theme';
@@ -35,9 +35,9 @@ const getIcon = (state: TriggerStatusState): string => {
 const getIconClassNames = (state: TriggerStatusState): string | undefined => {
   switch (state) {
     case 'running':
-      return 'animate-pulse text-accentText';
+      return 'animate-pulse text-accent-text';
     case 'error':
-      return 'text-errorText';
+      return 'text-error';
     default:
       return undefined;
   }
@@ -54,6 +54,14 @@ const useCurrentSpace = () => {
 export const TriggerStatus = () => {
   const space = useCurrentSpace();
   const db = space?.db;
+  if (!db) {
+    return null;
+  }
+
+  return <SpaceStatusMain db={db} />;
+};
+
+const SpaceStatusMain = ({ db }: { db: Database.Database }) => {
   const { state, start, stop } = useTriggerRuntimeControls(db);
   const isRunning = state?.enabled ?? false;
 
@@ -121,7 +129,7 @@ const TriggerStatusPopover = ({
   const { t } = useTranslation(meta.id);
 
   return (
-    <div className='min-is-[240px] p-2 space-y-3'>
+    <div className='min-w-[240px] p-2 space-y-3'>
       {/* Runtime Toggle */}
       <Settings.ItemInput title={t('trigger runtime label')} description={t('trigger runtime description')}>
         <Input.Switch classNames='justify-self-end' checked={isRunning} onCheckedChange={onToggle} />

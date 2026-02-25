@@ -15,7 +15,7 @@ const MIN_HEIGHT = 3;
 
 export type StackItemResizeHandleProps = {};
 
-export const StackItemResizeHandle = () => {
+export const StackItemResizeHandle = (_: StackItemResizeHandleProps) => {
   const { orientation } = useStack();
   const { setSize, size } = useStackItem();
 
