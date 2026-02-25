@@ -53,7 +53,7 @@ export const Initiative = Schema.Struct({
    * Schema must have the QueueAnnotation.
    */
   // TODO(dmaretskyi): Turn into an array of objects when form-data
-  subscriptions: Schema.Array(Type.Ref(Type.Obj)),
+  subscriptions: Schema.Array(Type.Ref(Type.Obj)).pipe(FormInputAnnotation.set(false)),
 
   useQualifyingAgent: Schema.optional(Schema.Boolean).annotations({
     title: 'Use qualifying agent on subscriptions',
