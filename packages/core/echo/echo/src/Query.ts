@@ -12,6 +12,8 @@ import { getTypeDXNFromSpecifier } from './internal';
 import type * as Order from './Order';
 import type * as Ref from './Ref';
 import type * as Type$ from './Type';
+import type * as Database from './Database';
+import type * as Feed from './Feed';
 
 // TODO(dmaretskyi): Split up into interfaces for objects and relations so they can have separate verbs.
 // TODO(dmaretskyi): Undirected relation traversals.
@@ -128,6 +130,44 @@ export interface Query<T> {
    * @returns Query for the limited results.
    */
   limit(limit: number): Query<T>;
+
+  /**
+   * Query from selected databases only.
+   *
+   * Example:
+   *
+   * ```ts
+   * Query.select(Filter.type(Person)).from(db);
+   * ```
+   *
+   * @param options.includeFeeds [false] - Whether to include feeds in the query. Default is to query from automerge documents only.
+   */
+  from(database: Database.Database | Database.Database[], options?: { includeFeeds?: boolean }): Query<T>;
+
+  /**
+   * Query from selected feeds only.
+   *
+   * Example:
+   *
+   * ```ts
+   * Query.select(Filter.type(Person)).from(feed);
+   * ```
+   *
+   */
+  from(feeds: Feed.Feed | Feed.Feed[]): Query<T>;
+
+  /**
+   * Query from all accessible spaces.
+   *
+   * Example:
+   *
+   * ```ts
+   * Query.select(Filter.type(Person)).from('all-accessible-spaces');
+   * ```
+   * 
+   * @param options.includeFeeds [false] - Whether to include feeds in the query. Default is to query from automerge documents only.
+   */
+  from(allSpaces: 'all-accessible-spaces', options?: { includeFeeds?: boolean }): Query<T>;
 
   /**
    * Add options to a query.
