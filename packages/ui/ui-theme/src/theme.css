@@ -66,6 +66,6 @@
 /**
  * Custom variants.
  */
-@custom-variant is-current (&[aria-current]);
+@custom-variant is-current (&[aria-current]:not([aria-current="false"]));
 @custom-variant hover-hover (@media (hover: hover));
 @custom-variant pointer-fine (@media (pointer: fine));

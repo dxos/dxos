@@ -3,5 +3,5 @@
  */
 
 @utility dx-icon-inline {
-  @apply inline-block align-[-0.125em]
+  @apply inline-block align-[-0.125em];
 }
