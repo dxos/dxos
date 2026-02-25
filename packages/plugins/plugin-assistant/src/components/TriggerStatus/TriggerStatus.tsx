@@ -10,7 +10,7 @@ import { type InvocationsState } from '@dxos/functions-runtime';
 import { useTriggerRuntimeControls } from '@dxos/plugin-automation';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { StatusBar } from '@dxos/plugin-status-bar';
-import { parseId } from '@dxos/react-client/echo';
+import { parseId, type Database, type Space, type SpaceId } from '@dxos/react-client/echo';
 import { Icon, Input, Popover, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
 import { mx } from '@dxos/ui-theme';
@@ -54,6 +54,14 @@ const useCurrentSpace = () => {
 export const TriggerStatus = () => {
   const space = useCurrentSpace();
   const db = space?.db;
+  if (!db) {
+    return null;
+  }
+
+  return <SpaceStatusMain db={db} />;
+};
+
+const SpaceStatusMain = ({ db }: { db: Database.Database }) => {
   const { state, start, stop } = useTriggerRuntimeControls(db);
   const isRunning = state?.enabled ?? false;
 
