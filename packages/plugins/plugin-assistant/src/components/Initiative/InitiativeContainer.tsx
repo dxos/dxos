@@ -8,10 +8,9 @@ import React, { forwardRef, useMemo, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { type Initiative, InitiativeFunctions } from '@dxos/assistant-toolkit';
-import { DXN, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { type Initiative } from '@dxos/assistant-toolkit';
+import { Filter, Obj, Query } from '@dxos/echo';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';
-import { FunctionDefinition, Trigger } from '@dxos/functions';
 import { useQuery } from '@dxos/react-client/echo';
 import { ElevationProvider, IconButton, Layout, ScrollArea } from '@dxos/react-ui';
 import { Toolbar } from '@dxos/react-ui';

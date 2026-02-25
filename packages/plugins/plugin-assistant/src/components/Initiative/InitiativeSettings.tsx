@@ -2,30 +2,28 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useAtom, useAtomValue } from '@effect-atom/atom-react';
+import { Atom } from '@effect-atom/atom';
+import { useAtomValue } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 import React, { useCallback, useEffect, useMemo, useSyncExternalStore } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Initiative } from '@dxos/assistant-toolkit';
-import { InitiativeFunctions } from '@dxos/assistant-toolkit';
-import { Annotation, Obj, Query, Ref, type Database, Type } from '@dxos/echo';
+import { type Database, Obj, Query, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/echo';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';
-import { Trigger } from '@dxos/functions';
-import { FunctionDefinition, QueueService } from '@dxos/functions';
+import { QueueService } from '@dxos/functions';
 import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { MarkdownEditor } from '@dxos/plugin-markdown';
-import { Filter, useQuery, useSchema } from '@dxos/react-client/echo';
+import { Filter, useQuery } from '@dxos/react-client/echo';
 import { useObject } from '@dxos/react-client/echo';
 import { Button } from '@dxos/react-ui';
 import { ButtonGroup, Input } from '@dxos/react-ui';
-import { syncTriggers } from './triggers';
 import { QueueAnnotation } from '@dxos/schema';
-import * as Option from 'effect/Option';
-import { dbg } from '@dxos/log';
-import { Atom } from '@effect-atom/atom';
+
+import { syncTriggers } from './triggers';
 
 export const InitiativeSettings = ({ subject: initiative }: SurfaceComponentProps<Initiative.Initiative>) => {
   const computeRuntime = useCapability(AutomationCapabilities.ComputeRuntime);

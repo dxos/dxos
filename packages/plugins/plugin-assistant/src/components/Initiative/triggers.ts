@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Initiative, InitiativeFunctions } from '@dxos/assistant-toolkit';
+import { type Initiative, InitiativeFunctions } from '@dxos/assistant-toolkit';
 import { DXN, Obj, Ref } from '@dxos/echo';
 import { FunctionDefinition, Trigger } from '@dxos/functions';
 import { Filter } from '@dxos/react-client/echo';
