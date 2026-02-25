@@ -25,7 +25,7 @@
 @import './config/base/base.css';
 @import './config/base/typography.css';
 
-/* @layer dx-components — components */
+/* @layer dx-components (components) */
 @import './config/components/button.css';
 @import './config/components/checkbox.css';
 @import './config/components/dialog.css';
@@ -37,7 +37,7 @@
 @import './config/components/surface.css';
 @import './config/components/tag.css';
 
-/* @layer dx-components — layout */
+/* @layer dx-components (layout) */
 @import './config/layout/main.css';
 @import './config/layout/native.css';
 @import './config/layout/positioning.css';
@@ -50,6 +50,9 @@
 @import './config/integrations/codemirror.css';
 @import './config/integrations/tldraw.css';
 
+/**
+ * Plugins must come after all imports.
+ */
 @plugin '@tailwindcss/forms';
 @plugin 'tailwind-scrollbar';
 @plugin 'tailwindcss-radix';
@@ -61,9 +64,8 @@
 @variant dark (&:where(.dark, .dark *));
 
 /**
- * Custom variants for pointer/hover media queries.
- * Replaces v3 custom screens: pointer-fine, hover-hover.
+ * Custom variants.
  */
-@custom-variant pointer-fine (@media (pointer: fine));
-@custom-variant hover-hover (@media (hover: hover));
 @custom-variant is-current (&[aria-current]);
+@custom-variant hover-hover (@media (hover: hover));
+@custom-variant pointer-fine (@media (pointer: fine));

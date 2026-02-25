@@ -242,8 +242,8 @@ const RawTreeItem = <T extends { id: string } = any>({
           hoverableFocusedKeyboardControls,
           hoverableFocusedWithinControls,
           hoverableDescriptionIcons,
-          ghostHover,
           ghostFocusWithin,
+          ghostHover,
           className,
         ]}
         onKeyDown={handleKeyDown}
