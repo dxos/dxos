@@ -54,7 +54,7 @@
 
   /* Scrollbar */
 
-  --color-scrollbar-track: light-dark(var(--color-neutral-50), var(--color-neutral-950));
+  --color-scrollbar-track: light-dark(theme(colors.neutral.50), theme(colors.neutral.950));
   --color-scrollbar-thumb: light-dark(theme(colors.neutral.200), theme(colors.neutral.700));
   --color-scrollbar-thumb-active: light-dark(theme(colors.neutral.200), theme(colors.neutral.600));
   --color-scrollbar-thumb-hover: light-dark(theme(colors.neutral.200), theme(colors.neutral.600));
@@ -68,20 +68,20 @@
 
   /* Grid */
 
-  --color-grid-selection-overlay: oklch(from var(--color-blue-500) l c h / 0.2);
-  --color-grid-highlight: oklch(from var(--color-emerald-500) l c h / 0.5);
-  --color-grid-commented: light-dark(var(--color-green-200), var(--color-green-600));
-  --color-grid-commented-active: light-dark(theme(colors.green.200 / 0.5), theme(colors.green.600 / 0.5));
-  --color-grid-hover-overlay: oklch(from var(--color-neutral-500) l c h / 0.1);
-  --color-grid-focus-indicator: light-dark(theme(colors.neutral.100), theme(colors.neutral.800));
-  --color-grid-cell-surface: light-dark(theme(colors.neutral.100), theme(colors.neutral.800));
-  --color-grid-line: light-dark(theme(colors.neutral.100), theme(colors.neutral.800));
+  --color-grid-surface: light-dark(theme(colors.neutral.50), theme(colors.neutral.950));
+  --color-grid-selection-overlay: theme(colors.orange.500 / 0.5);
+  --color-grid-highlight: theme(colors.emerald.500 / 0.5);
+  --color-grid-commented: light-dark(theme(colors.green.400), theme(colors.green.600));
+  --color-grid-commented-active: light-dark(theme(colors.green.400 / 0.5), theme(colors.green.600 / 0.5));
+  --color-grid-hover-overlay: theme(colors.neutral.500 / 0.1);
+  --color-grid-focus-indicator: light-dark(theme(colors.green.200), theme(colors.green.600));
+  --color-grid-line: light-dark(theme(colors.neutral.200), theme(colors.neutral.800));
 
   /* Text */
 
-  --color-placeholder: light-dark(var(--color-neutral-600), var(--color-neutral-400));
-  --color-description: light-dark(var(--color-neutral-600), var(--color-neutral-400));
-  --color-subdued: light-dark(var(--color-neutral-800), var(--color-neutral-200));
+  --color-placeholder: light-dark(theme(colors.neutral.600), theme(colors.neutral.400));
+  --color-description: light-dark(theme(colors.neutral.600), theme(colors.neutral.400));
+  --color-subdued: light-dark(theme(colors.neutral.800), theme(colors.neutral.200));
 }
 
 @layer dx-tokens {

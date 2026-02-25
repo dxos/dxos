@@ -60,7 +60,7 @@ export const PluginItem = ({
       aria-describedby={descriptionId}
       classNames={mx(gridCols, 'h-[12rem] w-full gap-3 pe-2 border border-separator rounded-md overflow-hidden')}
     >
-      <div className={mx(gridRows, 'justify-center rounded-l-md', styles.bg)}>
+      <div className={mx(gridRows, 'justify-center rounded-l-md', styles.fill)}>
         <div />
         <Icon classNames={mx('cursor-pointer', styles.icon)} icon={icon} size={14} onClick={handleClick} />
       </div>

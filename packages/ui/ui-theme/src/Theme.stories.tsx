@@ -176,10 +176,19 @@ export const Tags = {
   render: () => {
     return (
       <div className='p-4'>
-        <div className='flex gap-2'>
+        <div className='flex flex-col gap-1'>
           {['neutral', ...hues].map((hue) => (
-            <div key={hue} className='dx-tag' data-hue={hue}>
-              {hue}
+            <div key={hue} className='grid grid-cols-[8rem_8rem]'>
+              <div>
+                <span className='dx-tag' data-hue={hue}>
+                  {hue}
+                </span>
+              </div>
+              <div>
+                <span className='dx-text-hue text-sm' data-hue={hue}>
+                  {hue}
+                </span>
+              </div>
             </div>
           ))}
         </div>
