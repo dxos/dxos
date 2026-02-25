@@ -321,7 +321,7 @@ export const CircleTrail: Story = {
 export const InfinityTrail: Story = {
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   render: (props) => (
-    <TrailStory {...props} trajectory={infinityTrajectory(0.35, 0.25)} speed={15} wiggleAmplitude={12} />
+    <TrailStory {...props} trajectory={infinityTrajectory(0.35, 0.25)} speed={25} wiggleAmplitude={12} />
   ),
   args: {
     DENSITY_DISSIPATION: 1.5,
