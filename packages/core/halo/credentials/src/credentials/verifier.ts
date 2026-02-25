@@ -14,8 +14,9 @@ export const SIGNATURE_TYPE_ED25519 = 'ED25519Signature';
 
 export type VerificationResult = { kind: 'pass' } | { kind: 'fail'; errors: string[] };
 
-/** Helper to convert buf PublicKey message to @dxos/keys PublicKey. */
-const fromBufPublicKey = (key: BufPublicKey): PublicKey => PublicKey.from(key.data);
+/** Helper to convert buf PublicKey message (or @dxos/keys PublicKey) to @dxos/keys PublicKey. */
+const fromBufPublicKey = (key: BufPublicKey | PublicKey): PublicKey =>
+  key instanceof PublicKey ? key : PublicKey.from(key.data);
 
 /** Check if two buf PublicKey messages are equal. */
 const bufPublicKeysEqual = (a?: BufPublicKey, b?: BufPublicKey): boolean => {

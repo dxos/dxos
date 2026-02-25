@@ -43,7 +43,11 @@ export class DeviceStateMachine implements CredentialProcessor {
 
     // Save device keychain credential when processed by the space state machine.
     if (isValidAuthorizedDeviceCredential(credential, this._params.identityKey, this._params.deviceKey)) {
-      this.deviceCredentialChain = create(ChainSchema, { credential });
+      // Avoid create(ChainSchema, { credential }) which deep-processes the credential
+      // and strips @dxos/keys.PublicKey instances from proto-decoded credentials.
+      const chain = create(ChainSchema, {});
+      chain.credential = credential;
+      this.deviceCredentialChain = chain;
       this.deviceChainReady.wake();
     }
 

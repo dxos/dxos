@@ -1,7 +1,7 @@
 # Buf Migration — Status, Plan & Principles
 
 > Branch: `cursor/DX-745-buf-rpc-client-1bd0`
-> Last updated: 2026-02-25 (Phase 9.5 completed)
+> Last updated: 2026-02-25 (Phase 9.5 + merge main + boundary fixes)
 
 ---
 
@@ -52,17 +52,19 @@ Migrating DXOS protocol types from **protobuf.js** (codegen via `@dxos/codec-pro
 
 | Status           | Detail                                                                                                       |
 | ---------------- | ------------------------------------------------------------------------------------------------------------ |
-| **Build**        | `composer-app:build` passes (368 tasks, all cached). Full `moon run :build` passes except pre-existing `feed:build` failure from main. |
+| **Build**        | Full `moon run :build` passes. Merged `origin/main` (11 commits, 2 conflicts resolved). |
 | **Lint**         | Clean after 5 fixes for inline `import()` type annotations.                                                  |
-| **Composer Dev** | Vite dev server starts and app renders in browser (sidebar, navigation, status indicators). Runtime errors from `google.protobuf.Any` (`ForeignFieldError`) and PublicKey (`asUint8Array`) — both pre-existing buf migration issues tracked in Phase 9/10. |
+| **Composer Dev** | Vite dev server starts and app renders in browser. |
 
 ### Test Status
 
 | Suite                  | Result               | Root Cause                                                                                                                                                                                 |
 | ---------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `credentials:test`     | **48/50 PASS**       | Fixed: BigInt serialization, `$typeName` skipping in `canonicalStringify`, assertion loss in `create()`. 2 skipped (json-encoding).                                                        |
-| `echo-pipeline:test`   | **8/112 FAIL**       | `value.asUint8Array is not a function` — PublicKey type mismatch in pipeline feed write path (`feed-wrapper.ts` → `test-agent-builder.ts`). Pre-existing from buf migration.               |
-| `client-services:test` | **16/19 files FAIL** | 1 timeout (`notarization-plugin.test.ts`); 15 files fail from pre-existing `feed` package `@dxos/errors` import resolution (infrastructure, not buf). `system-service.test.ts` now passes. |
+| `echo-pipeline:test`   | **110/112 PASS**     | All passing after boundary fixes (proto codec substitutions, canonical stringify, PublicKey/Timestamp/Chain handling). 2 skipped. |
+| `messaging:test`       | **13/19 PASS**       | All passing after `any.ts` typeUrl/type_url fix. 6 skipped. |
+| `codec-protobuf:test`  | **11/11 PASS**       | All passing. |
+| `client-services:test` | **56/87 PASS** (17 fail) | Down from 34 failures. Remaining failures from buf/proto boundary type mismatches in deep integration tests (device invitations, space sync, notarization). |
 
 **Runtime bugs fixed in Phase 3:**
 
@@ -70,6 +72,16 @@ Migrating DXOS protocol types from **protobuf.js** (codegen via `@dxos/codec-pro
 2. **`$typeName`/`$unknown` metadata in canonical strings** (fixed) — Added `$`-prefixed key skipping in the replacer. These buf metadata fields must not be part of signature payloads.
 3. **Assertion loss in `create()` for credential factory** (fixed) — Buf's `create()` recursively initializes nested message fields, converting TypedMessage assertions into empty `google.protobuf.Any`. Fixed by setting assertion AFTER `create()`.
 4. **`$typeName` in test assertions** (fixed) — Updated `system-service.test.ts` to use `create()` for request params and field-level assertions instead of `deep.equal` against plain objects.
+
+**Runtime bugs fixed post-merge (main merge + boundary fixes):**
+
+1. **`typeUrl`/`type_url` Any field name mismatch** (fixed) — Buf uses camelCase `typeUrl`, protobuf.js uses snake_case `type_url`. Fixed in `any.ts` substitution (encode normalizes, decode reads both), plus `bufAnyToProtoAny`/`protoAnyToBufAny` boundary helpers.
+2. **Proto codec PublicKey substitution crash** (fixed) — `asUint8Array()` fails on buf `{ data: Uint8Array }` objects. Fixed in `substitutions.ts` to handle both types.
+3. **Proto codec Timestamp substitution crash** (fixed) — `getTime()` fails on buf `{ seconds: bigint, nanos: number }` objects. Fixed in `timestamp.ts` to handle both types.
+4. **`fromBufPublicKey` double-conversion** (fixed) — After proto round-trip, PublicKey is already `@dxos/keys.PublicKey`, not buf. Fixed both instances to check `instanceof PublicKey` first.
+5. **`canonicalStringify` inconsistency** (fixed) — Buf Timestamps and PublicKeys serialize differently than proto. Added normalization for both in `signing.ts` replacer.
+6. **`create()` deep-processing in DeviceStateMachine** (fixed) — `create(ChainSchema, { credential })` strips proto PublicKey instances from decoded credentials. Fixed to assign credential after empty `create()`.
+7. **`credential-factory.ts` assumes buf PublicKey on chain** (fixed) — `chain.credential.issuer.data` fails on proto-decoded PublicKey. Fixed to use `toPublicKey()`.
 
 ### Cast Audit
 
@@ -79,7 +91,7 @@ Migrating DXOS protocol types from **protobuf.js** (codegen via `@dxos/codec-pro
 | ------------ | ----- | ------- | --------- |
 | `as never`   | 87    | 0       | **+87**   |
 | `as unknown` | 28    | 3       | **+25**   |
-| `as any`     | 63    | 18      | **+45**   |
+| `as any`     | 61    | 18      | **+43**   |
 
 > **Note on `as any` count**: Down from +142 after Phase 9 to +45 after Phase 9.5. Phase 9.5 eliminated ~79 `as any` casts across categories 1-4 (PublicKey methods, ProfileDocument, Identity optional fields, Timestamp/Timeframe). Remaining ~45 `as any` casts are primarily:
 > - Devtools RPC call patterns (`{} as any` for Empty args) (~20).
@@ -454,9 +466,14 @@ Key practices to follow:
 | ~~BigInt crash in `canonicalStringify`~~        | ~~P0~~ **Fixed** | Fixed in Phase 3: added `bigint` → Number and `$`-prefixed key skipping in `signing.ts` replacer.                                                                                                                                                                                 |
 | ~~`$typeName` in deep equality~~                | ~~P1~~ **Fixed** | Fixed in Phase 3: updated `system-service.test.ts` assertions.                                                                                                                                                                                                                    |
 | **Assertion loss in `create()` for Any fields** | **P1**           | Buf's `create()` recursively initializes nested messages. TypedMessage assertions in `google.protobuf.Any` fields are converted to empty `Any` messages. Fixed in `credential-factory.ts`; other call sites using `create()` with nested credentials may need the same treatment. |
-| **PublicKey type mismatch in echo-pipeline**    | **P1**           | `value.asUint8Array is not a function` in feed write path. Buf PublicKey messages (plain `{ data: Uint8Array }`) used where `@dxos/keys.PublicKey` class expected. Affects 8 echo-pipeline tests.                                                                                 |
+| ~~PublicKey type mismatch in echo-pipeline~~    | ~~P1~~ **Fixed** | Fixed: proto codec substitutions updated to handle both buf `{ data: Uint8Array }` and `@dxos/keys.PublicKey`; `toPublicKey()` in space-manager; `fromBufPublicKey()` handles both types; `canonicalStringify` normalizes both. |
 | **87 `as never` boundary casts**                | **P1**           | Each is a potential runtime bug. Buf and protobuf.js objects are structurally different. Fix: convert protobuf.js code on the other side to buf.                                                                                                                                  |
 | **25 `as unknown` casts**                       | **P2**           | Type bridging for PublicKey, Any fields, SpaceProxy. Fix: migrate consuming code to buf.                                                                                                                                                                                          |
 | ~~`as unknown` for `Any` field access~~         | ~~P2~~ **Fixed** | Fixed in Phase 9: 6 `as unknown` casts removed via `getCredentialAssertion()`. 2 remaining in `assertions.ts`/`credential-factory.ts` are inherent to protobuf.js codec bridge (Phase 10).                                                                                        |
+| **`typeUrl`/`type_url` mismatch in Any fields** | ~~P0~~ **Fixed** | Fixed: `any.ts` substitution encode path normalizes `typeUrl` → `type_url` for protobuf.js; decode path reads both. Boundary helpers `bufAnyToProtoAny`/`protoAnyToBufAny` in signal client/messenger. |
+| **Timestamp type mismatch in proto codec**      | ~~P1~~ **Fixed** | Fixed: `timestamp.ts` substitution encode handles both `Date` and buf `{ seconds: bigint, nanos: number }`. |
+| **`create()` deep-processes proto-decoded credentials** | ~~P1~~ **Fixed** | Fixed: `device-state-machine.ts` avoids `create(ChainSchema, { credential })` which strips proto PublicKey instances. Uses `create({})` then assigns credential. |
+| **`credential-factory.ts` assumes buf PublicKey on chain** | ~~P1~~ **Fixed** | Fixed: `getIssuer` uses `toPublicKey()` instead of `chain.credential.issuer.data` which fails on proto-decoded PublicKey instances. |
+| **client-services integration test failures**   | **P1**           | 17 tests fail from buf/proto boundary mismatches in deep integration paths (device invitations, space sync, notarization). Same root cause family as above — needs systematic boundary conversion. |
 | `feed:build` failure                            | Low              | Pre-existing from main. New `feed` package has unresolved imports (`@dxos/protocols`, `@dxos/sql-sqlite`). Not related to buf migration.                                                                                                                                          |
 | `@dxos/errors` import in tests                  | Low              | Pre-existing from main. 15 test files in `client-services` fail to import `@dxos/errors` via the `feed` package. Infrastructure issue.                                                                                                                                            |

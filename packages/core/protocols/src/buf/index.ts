@@ -72,6 +72,17 @@ export const bufToProto = <T>(value: unknown): T => value as T;
 /** Cast proto type to buf equivalent after codec/feed decoding. */
 export const protoToBuf = <T>(value: unknown): T => value as T;
 
+/** Proto Any uses snake_case `type_url`, buf Any uses camelCase `typeUrl`. */
+type ProtoAny = { type_url: string; value: Uint8Array };
+
+/** Convert buf Any (typeUrl) to proto Any (type_url) at a boundary. */
+export const bufAnyToProtoAny = (any?: { typeUrl?: string; value?: Uint8Array }): ProtoAny | undefined =>
+  any ? { type_url: any.typeUrl ?? '', value: any.value ?? new Uint8Array() } : undefined;
+
+/** Convert proto Any (type_url) to buf Any (typeUrl) at a boundary. */
+export const protoAnyToBufAny = (any?: { type_url?: string; value?: Uint8Array }): { typeUrl: string; value: Uint8Array } | undefined =>
+  any ? { typeUrl: any.type_url ?? '', value: any.value ?? new Uint8Array() } : undefined;
+
 /** Convert a Timeframe instance to buf TimeframeVector message. */
 export const timeframeToBuf = (timeframe: Timeframe): TimeframeVector =>
   create(TimeframeVectorSchema, {

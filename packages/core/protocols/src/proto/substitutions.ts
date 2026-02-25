@@ -8,7 +8,9 @@ import { Timeframe } from '@dxos/timeframe';
 
 export const substitutions = {
   'dxos.keys.PublicKey': {
-    encode: (value: PublicKey) => ({ data: value.asUint8Array() }),
+    encode: (value: PublicKey | { data: Uint8Array }) => ({
+      data: value instanceof PublicKey ? value.asUint8Array() : value.data,
+    }),
     decode: (value: any) => PublicKey.from(value.data),
   },
 
@@ -20,7 +22,10 @@ export const substitutions = {
 
   'dxos.echo.timeframe.TimeframeVector': {
     encode: (timeframe: Timeframe) => ({
-      frames: timeframe.frames().map(([feedKey, seq]) => ({ feedKey: feedKey.asUint8Array(), seq })),
+      frames: timeframe.frames().map(([feedKey, seq]) => ({
+        feedKey: feedKey instanceof PublicKey ? feedKey.asUint8Array() : feedKey,
+        seq,
+      })),
     }),
 
     decode: (vector: any) =>

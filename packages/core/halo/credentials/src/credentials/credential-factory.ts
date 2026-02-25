@@ -5,7 +5,7 @@
 import { type Signer, subtleCrypto } from '@dxos/crypto';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { type bufWkt, create, timestampFromDate } from '@dxos/protocols/buf';
+import { type bufWkt, create, timestampFromDate, toPublicKey } from '@dxos/protocols/buf';
 import {
   type Chain,
   type Credential,
@@ -140,11 +140,11 @@ export const createCredentialSignerWithChain = (
   chain: Chain,
   signingKey: PublicKey,
 ): CredentialSigner => ({
-  getIssuer: () => PublicKey.from(chain.credential!.issuer!.data),
+  getIssuer: () => toPublicKey(chain.credential!.issuer!),
   createCredential: ({ subject, assertion, nonce, parentCredentialIds }) =>
     createCredential({
       signer,
-      issuer: PublicKey.from(chain.credential!.issuer!.data),
+      issuer: toPublicKey(chain.credential!.issuer!),
       signingKey,
       chain,
       subject,

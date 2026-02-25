@@ -8,7 +8,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { TimeoutError as ProtocolTimeoutError, trace } from '@dxos/protocols';
-import { type bufWkt, create, protoToBuf } from '@dxos/protocols/buf';
+import { type bufWkt, create, protoAnyToBufAny } from '@dxos/protocols/buf';
 import { MessageSchema } from '@dxos/protocols/buf/dxos/edge/signal_pb';
 import { schema } from '@dxos/protocols/proto';
 import { type ReliablePayload } from '@dxos/protocols/proto/dxos/mesh/messaging';
@@ -267,7 +267,7 @@ export class Messenger {
       create(MessageSchema, {
         author,
         recipient,
-        payload: protoToBuf<bufWkt.Any>(reliablePayload.payload),
+        payload: protoAnyToBufAny(reliablePayload.payload) as bufWkt.Any,
       }),
     );
   }

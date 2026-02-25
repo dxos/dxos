@@ -7,9 +7,9 @@ import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type PublicKey as BufPublicKey } from '@dxos/protocols/buf/dxos/keys_pb';
 import { type TYPES, type TypedMessage } from '@dxos/protocols/proto';
 
-/** Helper to convert buf PublicKey message to @dxos/keys PublicKey. */
-export const fromBufPublicKey = (key?: BufPublicKey): PublicKey | undefined =>
-  key ? PublicKey.from(key.data) : undefined;
+/** Helper to convert buf PublicKey message (or @dxos/keys PublicKey) to @dxos/keys PublicKey. */
+export const fromBufPublicKey = (key?: BufPublicKey | PublicKey): PublicKey | undefined =>
+  key ? (key instanceof PublicKey ? key : PublicKey.from(key.data)) : undefined;
 
 /**
  * Extract the assertion from a credential as a TypedMessage.

@@ -12,6 +12,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type SwarmNetworkManager } from '@dxos/network-manager';
 import { trace } from '@dxos/protocols';
+import { toPublicKey } from '@dxos/protocols/buf';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import type { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -103,10 +104,10 @@ export class SpaceManager {
     log.trace('dxos.echo.space-manager.construct-space', trace.begin({ id: this._instanceId }));
     log('constructing space...', { spaceKey: metadata.genesisFeedKey });
 
-    // The genesis feed will be the same as the control feed if the space was created by the local agent.
-    const genesisFeed = await this._feedStore.openFeed(metadata.genesisFeedKey ?? failUndefined());
+    // Convert metadata keys from potential buf PublicKey objects to @dxos/keys.PublicKey instances.
+    const genesisFeed = await this._feedStore.openFeed(toPublicKey(metadata.genesisFeedKey ?? failUndefined()));
 
-    const spaceKey = metadata.key;
+    const spaceKey = toPublicKey(metadata.key);
     const spaceId = await createIdFromSpaceKey(spaceKey);
     const protocol = new SpaceProtocol({
       topic: spaceKey,

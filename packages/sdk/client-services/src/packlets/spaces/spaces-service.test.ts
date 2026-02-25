@@ -40,7 +40,7 @@ describe('SpacesService', () => {
       await serviceContext.createIdentity();
       const space = await spacesService.createSpace();
       expect(space).to.exist;
-      expect(space.spaceKey).to.be.instanceof(PublicKey);
+      expect(space.spaceKey?.data).to.be.instanceof(Uint8Array);
     });
   });
 

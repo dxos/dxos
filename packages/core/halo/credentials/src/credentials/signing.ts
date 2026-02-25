@@ -58,9 +58,27 @@ export const canonicalStringify = (obj: any): string =>
       // Value before .toJSON() is called.
       const original = this[key];
 
+      // Normalize buf Timestamp objects to ISO date strings (matching proto Date serialization).
+      if (
+        typeof original === 'object' &&
+        original !== null &&
+        'seconds' in original &&
+        'nanos' in original &&
+        !(original instanceof Date)
+      ) {
+        return new Date(Number(original.seconds) * 1000 + (original.nanos ?? 0) / 1e6).toISOString();
+      }
+
       if (value) {
         if (PublicKey.isPublicKey(value)) {
           return value.toHex();
+        }
+        // Buf PublicKey messages are `{ data: Uint8Array }` — normalize to hex like @dxos/keys PublicKey.
+        if (original && typeof original === 'object' && original.data instanceof Uint8Array && !Array.isArray(original)) {
+          const nonMetaKeys = Object.keys(original).filter((k: string) => !k.startsWith('$'));
+          if (nonMetaKeys.length === 1 && nonMetaKeys[0] === 'data') {
+            return PublicKey.from(original.data).toHex();
+          }
         }
         if (Buffer.isBuffer(value)) {
           return value.toString('hex');
