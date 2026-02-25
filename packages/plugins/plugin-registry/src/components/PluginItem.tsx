@@ -6,7 +6,7 @@ import React, { type MouseEvent, useCallback } from 'react';
 
 import { type Plugin } from '@dxos/app-framework';
 import { type ChromaticPalette, Icon, IconButton, Input, Link, ListItem, Tag, useTranslation } from '@dxos/react-ui';
-import { descriptionText, mx } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
 import { getStyles } from '@dxos/ui-theme';
 
 import { meta } from '../meta';
@@ -71,7 +71,7 @@ export const PluginItem = ({
         </div>
 
         <div>
-          <p className={mx(descriptionText, 'line-clamp-4 min-w-0')}>{description}</p>
+          <p className={mx('text-description', 'line-clamp-4 min-w-0')}>{description}</p>
         </div>
 
         <div className='flex -ms-0.5 overflow-x-auto scrollbar-none'>

@@ -7,7 +7,7 @@ import { QR } from 'react-qr-rounded';
 
 import { type InvitationStatus } from '@dxos/react-client/invitations';
 import { Clipboard, Icon, useId, useTranslation } from '@dxos/react-ui';
-import { descriptionText, getSize, mx } from '@dxos/ui-theme';
+import { getSize, mx } from '@dxos/ui-theme';
 import { hexToEmoji } from '@dxos/util';
 
 import { Action, Actions, AuthCode, Centered, Emoji, Label, Viewport, type ViewportViewProps } from '../components';
@@ -66,7 +66,7 @@ export const InvitationManager = ({
             <p className='text-sm my-1 font-normal text-center'>
               {t(multiUse ? 'invite many qr label' : 'invite one qr label')}
             </p>
-            <div role='none' className={mx(descriptionText, 'w-full max-w-[14rem] relative')}>
+            <div role='none' className={mx('text-description', 'w-full max-w-[14rem] relative')}>
               <QR
                 rounding={100}
                 backgroundColor='transparent'

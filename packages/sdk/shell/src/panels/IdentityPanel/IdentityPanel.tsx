@@ -14,7 +14,6 @@ import { type CancellableInvitationObservable } from '@dxos/react-client/invitat
 import { ConnectionState, useNetworkStatus } from '@dxos/react-client/mesh';
 import { Avatar, Clipboard, Input, Toolbar, useId, useTranslation } from '@dxos/react-ui';
 import { EmojiPickerToolbarButton, HuePicker } from '@dxos/react-ui-pickers';
-import { errorText } from '@dxos/ui-theme';
 import { hexToEmoji, hexToHue, keyToFallback } from '@dxos/util';
 
 import { CloseButton, Heading, Viewport } from '../../components';
@@ -150,7 +149,7 @@ const IdentityHeading = ({
             label={t(isConnected ? 'disconnect label' : 'connect label')}
             iconOnly
             tooltipSide='bottom'
-            classNames={['h-(--rail-action)', !isConnected && errorText]}
+            classNames={['h-(--rail-action)', !isConnected && 'text-error-text']}
             onClick={() => onChangeConnectionState?.(isConnected ? ConnectionState.OFFLINE : ConnectionState.ONLINE)}
           />
         </Toolbar.Root>

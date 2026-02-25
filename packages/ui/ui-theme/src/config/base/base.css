@@ -22,7 +22,7 @@
 
 @layer dx-tokens {
   :root {
-    --dx-tag-padding-block: 0.125rem;
+    --dx-tag-padding-block: var(--spacing-tag-padding-block);
   }
 
   .dark {

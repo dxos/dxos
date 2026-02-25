@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Avatar, Button, Icon, IconButton, Link, Tooltip, Trans, useTranslation } from '@dxos/react-ui';
-import { descriptionText, getSize, mx, valenceColorText } from '@dxos/ui-theme';
+import { getSize, mx, valenceColorText } from '@dxos/ui-theme';
 
 import { translationKey } from '../translations';
 
@@ -21,7 +21,7 @@ export const AgentConfig = ({
   const { t } = useTranslation(translationKey);
   return (
     <div role='none' className='p-1'>
-      <h2 className={mx(descriptionText, 'text-center mt-2')}>{t('agent heading')}</h2>
+      <h2 className={mx('text-description', 'text-center mt-2')}>{t('agent heading')}</h2>
       {validationMessage && (
         <p role='alert' className={mx(valenceColorText('error'), 'my-2')}>
           {validationMessage}
@@ -71,7 +71,7 @@ export const AgentConfig = ({
             )}
           </div>
           {agentStatus === 'created' && (
-            <p id='devices-panel.create-agent.description' className={mx(descriptionText, 'my-2')}>
+            <p id='devices-panel.create-agent.description' className={mx('text-description', 'my-2')}>
               {t('agent requested description')}
             </p>
           )}
@@ -98,7 +98,7 @@ export const AgentConfig = ({
           </Button>
           {agentStatus === 'creatable' && (
             <div role='none' className='space-y-2' id='devices-panel.create-agent.description'>
-              <p className={descriptionText}>
+              <p className='text-description'>
                 <Trans
                   {...{
                     t,
@@ -109,7 +109,7 @@ export const AgentConfig = ({
                   }}
                 />
               </p>
-              <p className={descriptionText}>{t('create agent description')}</p>
+              <p className='text-description'>{t('create agent description')}</p>
             </div>
           )}
         </>

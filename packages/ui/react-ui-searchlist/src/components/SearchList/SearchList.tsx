@@ -27,7 +27,7 @@ import {
   useThemeContext,
   useTranslation,
 } from '@dxos/react-ui';
-import { descriptionText, mx } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
 
@@ -479,7 +479,7 @@ const SearchListItem = forwardRef<HTMLDivElement, SearchListItemProps>(
       >
         {icon && <Icon icon={icon} size={5} />}
         <span className='w-0 grow truncate'>{label}</span>
-        {suffix && <span className={mx('shrink-0', descriptionText)}>{suffix}</span>}
+        {suffix && <span className={mx('shrink-0', 'text-description')}>{suffix}</span>}
         {checked && <Icon icon='ph--check--regular' size={5} />}
       </div>
     );

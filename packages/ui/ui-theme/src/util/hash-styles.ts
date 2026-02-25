@@ -6,6 +6,7 @@ import { type ChromaticPalette } from '@dxos/ui-types';
 
 export type Hue = ChromaticPalette | 'neutral';
 
+// TODO(burdon): Reconcile with ui-theme/theme/roles.css
 export type ColorStyles = {
   hue: Hue;
   text: string;
