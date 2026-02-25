@@ -27,6 +27,16 @@ typeof feed === Feed.Feed;
 ```
 
 - Entity module defines APIs useful for both objects and relations, but Obj and Relation can specialize and alias those APIs.
+- Snaphots are deined as a higher-order type so that a snapshot type can be derived any type.
+
+```ts
+Entity.Snapshot<Person>;
+Entity.Snapshot<Relation.AnchoredTo>;
+Entity.Snapshot<Obj.Unknown>;
+Entity.Snapshot<Entity.Unknown>;
+```
+
+- Snapshots cannot be mutated or used with `db.add` or `db.remove`.
 
 ### `Type` module
 
