@@ -55,7 +55,12 @@ const defaultConfig: GhostProps = {
   TRANSPARENT: true,
 };
 
-export interface GhostController {}
+export interface GhostController {
+  /** Move the trail to (x, y) in normalized canvas coordinates (0–1, top-left origin). */
+  move: (x: number, y: number) => void;
+  /** Emit a burst splat at (x, y) in normalized canvas coordinates (0–1, top-left origin). */
+  splatAt: (x: number, y: number) => void;
+}
 
 export const Ghost = forwardRef<GhostController, Partial<GhostProps>>(
   ({ classNames, frame, ...props }, forwardedRef) => {
@@ -63,9 +68,14 @@ export const Ghost = forwardRef<GhostController, Partial<GhostProps>>(
     const ghost = useGhost(canvas, props);
     useGhostController(ghost, props);
 
-    useImperativeHandle(forwardedRef, () => {
-      return {};
-    }, []);
+    useImperativeHandle(
+      forwardedRef,
+      () => ({
+        move: (x: number, y: number) => ghost?.move(x, y),
+        splatAt: (x: number, y: number) => ghost?.splatAt(x, y),
+      }),
+      [ghost],
+    );
 
     const frameStyle: React.CSSProperties | undefined = frame
       ? {
@@ -119,6 +129,10 @@ export type GhostRenderer = {
   start: () => void;
   stop: () => void;
   splat: (pointer: Pointer) => void;
+  /** Move the primary pointer trail to (x, y) in normalized canvas coordinates (0–1, top-left origin). */
+  move: (x: number, y: number) => void;
+  /** Emit a burst splat at (x, y) in normalized canvas coordinates (0–1, top-left origin). */
+  splatAt: (x: number, y: number) => void;
 };
 
 export const createRenderer = (canvas: HTMLCanvasElement, _config: Partial<GhostProps>): GhostRenderer => {
@@ -970,6 +984,30 @@ export const createRenderer = (canvas: HTMLCanvasElement, _config: Partial<Ghost
     splat(pointer.texcoordX, pointer.texcoordY, dx, dy, color);
   };
 
+  // Move the primary pointer to normalized (0–1, top-left) coordinates, creating a trail.
+  const movePointer = (x: number, y: number) => {
+    const pointer = pointers[0];
+    const aspectRatio = canvas.width / canvas.height;
+    pointer.prevTexcoordX = pointer.texcoordX;
+    pointer.prevTexcoordY = pointer.texcoordY;
+    pointer.texcoordX = x;
+    pointer.texcoordY = 1.0 - y;
+    const dx = pointer.texcoordX - pointer.prevTexcoordX;
+    const dy = pointer.texcoordY - pointer.prevTexcoordY;
+    pointer.deltaX = aspectRatio < 1 ? dx * aspectRatio : dx;
+    pointer.deltaY = aspectRatio > 1 ? dy / aspectRatio : dy;
+    pointer.moved = Math.abs(pointer.deltaX) > 0 || Math.abs(pointer.deltaY) > 0;
+  };
+
+  // Emit a burst splat at normalized (0–1, top-left) coordinates.
+  const splatAt = (x: number, y: number) => {
+    const pointer = new Pointer();
+    pointer.texcoordX = x;
+    pointer.texcoordY = 1.0 - y;
+    pointer.color = generateColor(config.COLOR_MASK);
+    clickSplat(pointer);
+  };
+
   return {
     canvas,
     getPointer: () => pointers.at(-1)!,
@@ -982,6 +1020,8 @@ export const createRenderer = (canvas: HTMLCanvasElement, _config: Partial<Ghost
     start,
     stop,
     splat: clickSplat,
+    move: movePointer,
+    splatAt,
   };
 };
 
