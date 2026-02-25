@@ -20,7 +20,6 @@ import {
   createMarkdownExtensions,
   createThemeExtensions,
   debugTree,
-  decorateMarkdown,
   editorSlots,
 } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
@@ -119,7 +118,6 @@ const EditorComponent = forwardRef<EditorController, StoryProps>(
           createBasicExtensions({ readOnly, placeholder, lineNumbers, scrollPastEnd: true, search: true }),
           createThemeExtensions({ monospace, themeMode, syntaxHighlighting: true, slots }),
           createMarkdownExtensions(),
-          decorateMarkdown(),
           extensions || [],
         ],
       }),

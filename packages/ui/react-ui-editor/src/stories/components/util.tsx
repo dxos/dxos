@@ -4,12 +4,12 @@
 
 import { type Completion } from '@codemirror/autocomplete';
 import { type Extension } from '@codemirror/state';
-import React, { type FC } from 'react';
 
 import { faker } from '@dxos/random';
-import { Icon } from '@dxos/react-ui';
+import { Domino } from '@dxos/ui';
 import {
   type EditorSelectionState,
+  type RenderCallback,
   decorateMarkdown,
   folding,
   formattingKeymap,
@@ -17,9 +17,9 @@ import {
   linkTooltip,
   table,
 } from '@dxos/ui-editor';
-import { mx } from '@dxos/ui-theme';
+import { safeUrl } from '@dxos/util';
 
-import { createRenderer, str } from '../../util';
+import { str } from '../../util';
 
 export const num = () => faker.number.int({ min: 0, max: 9999 }).toLocaleString();
 
@@ -206,27 +206,24 @@ export const names = ['adam', 'alice', 'alison', 'bob', 'carol', 'charlie', 'say
 const hover =
   'rounded-xs text-base-text text-primary-600 hover:text-primary-500 dark:text-primary-300 hover:dark:text-primary-200';
 
-const LinkTooltip: FC<{ url: string }> = ({ url }) => {
-  const web = new URL(url);
-  return (
-    <a href={url} target='_blank' rel='noreferrer' className={mx(hover, 'flex items-center gap-2')}>
-      {web.origin}
-      <Icon icon='ph--arrow-square-out--regular' size={4} />
-    </a>
+export const renderLinkTooltip: RenderCallback<{ url: string }> = (el, { url }) => {
+  el.appendChild(
+    Domino.of('a')
+      .attributes({ href: url, target: '_blank', rel: 'noreferrer', 'aria-label': 'Open link' })
+      .classNames(hover, 'flex items-center gap-2')
+      .text(safeUrl(url)?.origin ?? url)
+      .children(Domino.svg('ph--arrow-square-out--regular')).root,
   );
 };
 
-export const renderLinkTooltip = createRenderer(LinkTooltip);
-
-const LinkButton: FC<{ url: string }> = ({ url }) => {
-  return (
-    <a href={url} target='_blank' rel='noreferrer' className={mx(hover)}>
-      <Icon icon='ph--arrow-square-out--regular' size={4} classNames='w-block ms-1 mb-[3px]' />
-    </a>
+export const renderLinkButton: RenderCallback<{ url: string }> = (el, { url }) => {
+  el.appendChild(
+    Domino.of('a')
+      .attributes({ href: url, target: '_blank', rel: 'noreferrer', 'aria-label': 'Open link' })
+      .classNames(hover, 'inline-block ms-1 align-[-0.125em]')
+      .children(Domino.svg('ph--arrow-square-out--regular')).root,
   );
 };
-
-export const renderLinkButton = createRenderer(LinkButton);
 
 // Shared extensions.
 export const defaultExtensions: Extension[] = [

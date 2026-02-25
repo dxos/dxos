@@ -203,7 +203,7 @@ export const PipelineObjectSettings = ({ classNames, pipeline }: PipelineObjectS
                     />
                   </div>
                   {expandedId === column.view.dxn.toString() && column?.view.target && (
-                    <div role='none' className='col-span-5 mlb-2 border border-separator rounded-md'>
+                    <div role='none' className='col-span-5 my-2 border border-separator rounded-md'>
                       <Form.Root
                         schema={ColumnFormSchema}
                         values={column}

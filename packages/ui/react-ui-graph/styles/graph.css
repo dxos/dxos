@@ -1,11 +1,11 @@
-/* TODO(burdon): Move into theme. */
+/* TODO(burdon): Move into theme? */
 @reference "../../ui-theme/src/theme.css";
 
 /**
  * Graph styles.
  */
 
-/* TODO(burdon): Implement light/dark theme or use semantic tokens. */
+/* TODO(burdon): Implement light/dark theme or use semantic tokens. light-dark. */
 
 svg {
   marker {

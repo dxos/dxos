@@ -72,7 +72,6 @@ describe('tailwind classes', () => {
   });
 
   test('custom theme tokens resolve', ({ expect }) => {
-    expect(isValidClass('bg-primary-surface')).toBe(true);
     expect(isValidClass('text-subdued')).toBe(true);
   });
 

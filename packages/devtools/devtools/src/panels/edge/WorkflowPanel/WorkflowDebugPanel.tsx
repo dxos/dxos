@@ -221,7 +221,7 @@ const MessageItem = ({ classNames, message }: ThemedClassName<{ message: Message
       {error && <div className={mx(wrapper, 'whitespace-pre', errorText)}>{String(error)}</div>}
 
       {text !== undefined && (
-        <div className={mx(wrapper, type === 'request' && 'bg-primary-400 dark:bg-primary-600')}>
+        <div className={mx(wrapper, type === 'request' && 'bg-primary-500 dark:bg-primary-600')}>
           {text || '\u00D8'}
         </div>
       )}

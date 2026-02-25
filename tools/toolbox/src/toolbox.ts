@@ -310,13 +310,7 @@ export class Toolbox {
     for (const project of this.graph.projects) {
       const packagePath = join(project.path, 'package.json');
       const packageJson = await loadJson<PackageJson>(packagePath);
-
-      // if (project.path.includes('dxos/packages')) {
-      //   packageJson.type = 'module';
-      // }
-
-      const commonKeys = pick(this.rootPackage, this.config.package?.commonKeys ?? []);
-      // TODO(burdon): Investigate util: https://github.com/JamieMason/syncpack
+      const commonKeys = pick(this.rootPackage, (this.config.package?.commonKeys as (keyof PackageJson)[]) ?? []);
       const merged = defaultsDeep(packageJson, commonKeys);
 
       // Enforce repository field format for npm provenance.
