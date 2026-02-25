@@ -51,6 +51,13 @@
 @import './config/integrations/tldraw.css';
 
 /**
+ * Force-emit CSS variables for the full color palette so all --color-{hue}-{shade}
+ * custom properties are available in :root regardless of which utility classes are
+ * detected in source files.
+ */
+@source inline("bg-{neutral,red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose}-{50,100,200,300,400,500,600,700,800,900,950}");
+
+/**
  * Plugins must come after all imports.
  */
 @plugin '@tailwindcss/forms';

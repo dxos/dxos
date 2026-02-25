@@ -44,7 +44,7 @@ const ColorSwatch = ({ hue }: { hue: string }) => {
   return (
     <div
       className={mx(
-        'shrink-0 aspect-square w-36 flex flex-col overflow-hidden border rounded-sm',
+        'shrink-0 aspect-square w-36 flex flex-col overflow-hidden border-4 rounded-md',
         colors?.bg,
         colors?.border,
       )}
