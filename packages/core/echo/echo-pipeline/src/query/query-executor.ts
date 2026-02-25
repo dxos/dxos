@@ -434,7 +434,13 @@ export class QueryExecutor extends Resource {
       case 'TypeSelector': {
         const beginIndexQuery = performance.now();
         const queueIds = extractQueueIds(step.queues);
-        const metas = await this._queryTypesFromSqlIndex(step.spaces, step.selector.typename, step.selector.inverted, step.allQueuesFromSpaces, queueIds);
+        const metas = await this._queryTypesFromSqlIndex(
+          step.spaces,
+          step.selector.typename,
+          step.selector.inverted,
+          step.allQueuesFromSpaces,
+          queueIds,
+        );
         trace.indexHits = metas.length;
         trace.indexQueryTime += performance.now() - beginIndexQuery;
 
@@ -998,7 +1004,9 @@ export class QueryExecutor extends Resource {
     includeAllQueues: boolean,
     queueIds: readonly ObjectId[] | null,
   ): Promise<readonly ObjectMeta[]> {
-    return await this._runInRuntime(this._indexEngine.queryTypes({ spaceIds, typeDxns, inverted, includeAllQueues, queueIds }));
+    return await this._runInRuntime(
+      this._indexEngine.queryTypes({ spaceIds, typeDxns, inverted, includeAllQueues, queueIds }),
+    );
   }
 
   private async _queryIncomingReferencesFromSqlIndex(
