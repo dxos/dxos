@@ -6,6 +6,7 @@ import { type Capabilities } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { SubscriptionList, type Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { getCredentialAssertion } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Account, ClientOperation } from '@dxos/plugin-client/types';
@@ -141,7 +142,8 @@ export class OnboardingManager {
   private async _queryRecoveryCredentials(): Promise<Credential[]> {
     const credentials = await queryAllCredentials(this._client);
     return credentials.filter(
-      (credential) => (credential.subject as any)?.assertion?.['@type'] === 'dxos.halo.credentials.IdentityRecovery',
+      (credential) =>
+        credential.subject && getCredentialAssertion(credential)['@type'] === 'dxos.halo.credentials.IdentityRecovery',
     );
   }
 
@@ -191,7 +193,8 @@ export class OnboardingManager {
       const presentation = await this._client.halo.presentCredentials({ ids: [this._credential.id as any] });
       const { capabilities } = await getProfile({ hubUrl: this._hubUrl, presentation });
       const newCapabilities = capabilities.filter(
-        (capability) => !(this._credential!.subject as any)?.assertion?.capabilities?.includes(capability),
+        (capability) =>
+          !(getCredentialAssertion(this._credential!) as { capabilities?: string[] }).capabilities?.includes(capability),
       );
       if (newCapabilities.length > 0) {
         log('upgrading beta credential', { newCapabilities });

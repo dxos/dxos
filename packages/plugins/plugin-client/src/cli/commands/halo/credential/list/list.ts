@@ -12,6 +12,7 @@ import * as Option from 'effect/Option';
 import { CommandConfig, Common, FormBuilder, getSpace, printList, spaceIdWithDefault } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import type { Credential } from '@dxos/client/halo';
+import { getCredentialAssertion } from '@dxos/credentials';
 import { type Key } from '@dxos/echo';
 
 const mapCredentials = (credentials: Credential[]) => {
@@ -19,13 +20,13 @@ const mapCredentials = (credentials: Credential[]) => {
     id: (credential.id as any)?.toHex() ?? '<unknown>',
     issuer: (credential.issuer as any)?.toHex() ?? '<unknown>',
     subject: (credential.subject?.id as any)?.toHex() ?? '<unknown>',
-    type: (credential.subject?.assertion as any)?.['@type'],
+    type: credential.subject ? getCredentialAssertion(credential)['@type'] : undefined,
     assertion: credential.subject?.assertion,
   }));
 };
 
 const printCredential = (credential: Credential) => {
-  const type = (credential.subject?.assertion as any)?.['@type'] ?? '<unknown>';
+  const type = credential.subject ? getCredentialAssertion(credential)['@type'] : '<unknown>';
   return FormBuilder.make({ title: type }).pipe(
     FormBuilder.option('id', Option.fromNullable((credential.id as any)?.truncate())),
     FormBuilder.option('issuer', Option.fromNullable((credential.issuer as any)?.truncate())),

@@ -34,6 +34,12 @@ import {
   type SpaceMember,
   SpaceMemberSchema,
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import {
+  type CancelDelegatedInvitation,
+  CancelDelegatedInvitationSchema,
+  type DelegateSpaceInvitation,
+  DelegateSpaceInvitationSchema,
+} from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 
 /**
  * All valid credential assertion message types.
@@ -53,7 +59,9 @@ export type CredentialAssertion =
   | DefaultSpace
   | KubeAccess
   | ServiceAccess
-  | Auth;
+  | Auth
+  | DelegateSpaceInvitation
+  | CancelDelegatedInvitation;
 
 /**
  * All assertion schemas, ordered to match the CredentialAssertion union.
@@ -73,6 +81,8 @@ export const ASSERTION_SCHEMAS = [
   KubeAccessSchema,
   ServiceAccessSchema,
   AuthSchema,
+  DelegateSpaceInvitationSchema,
+  CancelDelegatedInvitationSchema,
 ] as const satisfies readonly DescMessage[];
 
 /**

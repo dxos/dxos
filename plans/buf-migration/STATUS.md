@@ -1,7 +1,7 @@
 # Buf Migration — Status, Plan & Principles
 
 > Branch: `cursor/DX-745-buf-rpc-client-1bd0`
-> Last updated: 2026-02-24
+> Last updated: 2026-02-25
 
 ---
 
@@ -78,10 +78,10 @@ Migrating DXOS protocol types from **protobuf.js** (codegen via `@dxos/codec-pro
 | Cast Type    | Added | Removed | Net       |
 | ------------ | ----- | ------- | --------- |
 | `as never`   | 87    | 0       | **+87**   |
-| `as unknown` | 33    | 3       | **+30**   |
-| `as any`     | 171   | 18      | **+153**  |
+| `as unknown` | 28    | 3       | **+25**   |
+| `as any`     | 160   | 18      | **+142**  |
 
-> **Note on `as any` increase**: The large `as any` increase (+153) is from fixing build errors in plugin/app packages after merging main. These are primarily:
+> **Note on `as any` increase**: The `as any` increase (+142, down from +153 after Phase 9) is from fixing build errors in plugin/app packages after merging main. These are primarily:
 > - `PublicKey.toHex()` / `.truncate()` / `.equals()` — buf PublicKey (`{ data: Uint8Array }`) lacks these methods, which exist on `@dxos/keys.PublicKey` class. Cast `(key as any).toHex()` used at ~60 call sites.
 > - `ProfileDocument` type mismatch — `createIdentity({ displayName })` needs `as any` cast since buf ProfileDocument requires `$typeName`.
 > - `member.identity?.` optional chaining — buf makes `identity` field optional where proto had it required.
@@ -118,15 +118,23 @@ Migrating DXOS protocol types from **protobuf.js** (codegen via `@dxos/codec-pro
 | Cloudflare functions              | ~2         | `service-container.ts` — Workers RPC boundary.                                  |
 | Other (scattered 1-2 each)        | ~15        | Various files with 1-2 boundary casts.                                          |
 
-**`as unknown` (23 added)** — Type bridging:
+**`as unknown` (28 added, 3 removed = net +25)** — Type bridging:
 
-- `PublicKey` message → `@dxos/keys` class conversions (5).
-- `google.protobuf.Any` assertion field access (8).
-- Service interface implementations (2).
-- `SpaceProxy` internal method access (4).
-- Other structural conversions (4).
+- `SpaceProxy`/`space-list.ts` internal method access (4).
+- `client.ts` service interface wiring (3).
+- `memory-shell-runtime.ts` invitation types (2).
+- `invitation-host-extension.ts` proto↔buf (2).
+- `assertions.ts` + `credential-factory.ts` TypedMessage↔Any (3, Phase 10).
+- Other scattered codec/type boundary points (14).
 
-**`as any` (6 added, 29 removed)** — Mostly pre-existing; net reduction of 23.
+**`as any` (160 added, 18 removed = net +142)** — Buf type mismatches in plugin/app code:
+
+- PublicKey methods (`.toHex()`, `.truncate()`, `.equals()`) on buf PublicKey (~60).
+- ProfileDocument type mismatch (~8).
+- Identity optional field chaining (~4).
+- Timestamp/Timeframe method calls (~3).
+- Swarm/network service types (~4).
+- Other scattered devtools/CLI patterns (~63).
 
 ### Why Casts Are Dangerous
 
@@ -296,14 +304,92 @@ Fixed bugs that were actively crashing tests.
 - Remaining: 2 casts in `service-container.ts` (Cloudflare Workers RPC boundary, not proto↔buf).
 - **Result**: 21 casts removed. `as never` count: 86 (was 107, -21).
 
-### Phase 9: TypedMessage / `google.protobuf.Any` (~8 `as unknown` casts)
+### Phase 9: TypedMessage / `google.protobuf.Any` Assertion Safety (~8 `as unknown` + ~12 `as any` casts)
 
-This is the deepest and highest-risk work item. `Any` is used to store credential assertions. The current code uses `as unknown` to access typed fields from `Any` values.
+Credential assertions are stored as `TypedMessage` objects (protobuf.js format with `@type` discriminator) in the `google.protobuf.Any` field of credentials. The protobuf.js codec's `anySubstitutions.encode` **requires** `@type` on the assertion to look up the codec, and its `decode` **produces** TypedMessage objects with `@type`. Therefore we **cannot** switch to `anyPack()`/`anyUnpack()` until the protobuf.js codec is replaced (Phase 10). This phase focuses on providing type-safe access and eliminating unsafe casts.
 
-- [ ] Implement buf-native `Any.unpack()` / `Any.pack()` wrappers.
-- [ ] Migrate credential assertion field access away from unsafe casts.
-- [ ] Migrate `space-invitation-protocol.ts`, `spaces-service.ts`, and other assertion consumers.
-- **Target**: 8 `as unknown` casts removed.
+- [x] Complete assertion registry — add `DelegateSpaceInvitationSchema`, `CancelDelegatedInvitationSchema` from invitations_pb.
+- [x] Add type-safe assertion helpers (`getTypedAssertion`, `isAssertionType`) to `assertions.ts`.
+- [x] Migrate 6 `as unknown` cast sites for Any assertion access (`halo-proxy.ts`, `agent-hosting-provider.ts`, `halo-credentials.node.test.ts`).
+- [x] Migrate ~12 `as any` cast sites for assertion `@type` access in plugin/app/devtools files to use `getCredentialAssertion()`.
+- [x] Document remaining 2 `as unknown` casts in `credential-factory.ts` and `assertions.ts` as inherent to the protobuf.js codec bridge (removed in Phase 10).
+- **Target**: 6 `as unknown` + ~12 `as any` casts removed.
+
+### Phase 9.5: Type Safety Cleanup (before protobuf.js removal)
+
+Cast audit vs `origin/main` after Phase 9: `as never` +87, `as unknown` +25, `as any` +142. These casts were introduced during the buf migration to keep the build passing while types propagated. Each is a potential runtime bug. This phase eliminates them by converting the surrounding code to buf-native patterns.
+
+#### Category 1: PublicKey (proto class vs buf message) — ~60 `as any` casts
+
+**Root cause**: Buf `PublicKey` is `{ data: Uint8Array }`. Code calls `@dxos/keys.PublicKey` methods (`.toHex()`, `.truncate()`, `.equals()`) which don't exist on the buf type.
+
+**Fix**: Use `decodePublicKey(bufKey)` to convert buf PublicKey to `@dxos/keys.PublicKey` at each call site, or use the helper from `assertions.ts` (`fromBufPublicKey`).
+
+**Top files**: `FeedsPanel.tsx` (14), `SwarmPanel.tsx` (11), `SpaceProperties.tsx` (11), `call-swarm-synchronizer.ts` (9), `SpacePresence.tsx` (7), CLI commands in `plugin-client` (~20).
+
+- [ ] Migrate devtools panels (`FeedsPanel`, `SwarmPanel`, `SpaceProperties`, `SpaceInfoPanel`, `SpaceListPanel`, `NetworkPanel`, `StoragePanel`).
+- [ ] Migrate plugin-client CLI commands (`list.ts`, `keys.ts`, `identity.ts`, `update.ts`, `recover.ts`, `join.ts`, `create.test.ts`).
+- [ ] Migrate plugin-thread (`call-swarm-synchronizer.ts`, `util.ts`).
+- [ ] Migrate plugin-space (`SpacePresence.tsx`, `spaces-ready.ts`, `members/util.ts`).
+- [ ] Migrate plugin-client components (`ProfileContainer.tsx`, `operation-resolver.ts`).
+
+#### Category 2: ProfileDocument type mismatch — ~8 `as any` casts
+
+**Root cause**: `createIdentity({ displayName })` and `updateProfile({ displayName })` expect buf `ProfileDocument` (which includes `$typeName`), but call sites pass plain `{ displayName: string }` objects.
+
+**Fix**: Use `create(ProfileDocumentSchema, { displayName })` at call sites to create proper buf messages.
+
+**Files**: `ChannelContainer.tsx`, `stories.ts`, CLI `create.test.ts`, `identity.test.ts`.
+
+- [ ] Update all `createIdentity`/`updateProfile` call sites to use `create(ProfileDocumentSchema, ...)`.
+
+#### Category 3: Identity optional fields — ~4 `as any` casts
+
+**Root cause**: `member.identity` became optional in buf types. Code like `members.map(m => m.identity).filter(Boolean)` produces `(Identity | undefined)[]` which is cast to `any[]`.
+
+**Fix**: Use proper type narrowing: `.filter((id): id is Identity => id != null)`.
+
+**Files**: `TranscriptionPlugin.tsx`, `TranscriptContainer.tsx`, `Transcript.stories.tsx`, `MicrophoneTranscription.stories.tsx`.
+
+- [ ] Replace `.filter(Boolean) as any[]` with proper type guard.
+
+#### Category 4: Timestamp/Timeframe methods — ~3 `as any` casts
+
+**Root cause**: Buf `Timestamp` is `{ seconds: bigint, nanos: number }`, not a `Date`. Code calls `.getTime()` on it. Buf `TimeframeVector` lacks `.totalMessages()`.
+
+**Fix**: Use `timestampMs()` helper from `@dxos/protocols/buf` for timestamp conversion. For TimeframeVector, compute total from frames array.
+
+**Files**: `onboarding-manager.ts`, devtools panels.
+
+- [ ] Replace `(issuanceDate as any).getTime()` with `timestampMs(issuanceDate)`.
+- [ ] Replace `timeframe.totalMessages()` with buf-native calculation.
+
+#### Category 5: Remaining `as never` boundary casts — 87 casts
+
+**Root cause**: Proto↔buf codec boundaries where protobuf.js objects are passed to buf-typed functions or vice versa.
+
+**Top categories**:
+- Test assertions & fixtures (~30): Tests construct or compare objects across buf/proto boundary.
+- Invitation protocol (~15): `space-invitation-protocol.ts`, encoder, handlers bridge types.
+- Agent hosting (~6): `agent-hosting-provider.ts` — WebsocketRpcClient proto boundary.
+- Proto↔buf codec boundary (~10): `authenticator.ts`, `invitations-manager.ts`, `encoder.ts`.
+- Diagnostics & service wiring (~8): `diagnostics.ts`, `service-context.ts`, `identity.ts`.
+- Other scattered (~18): 1-2 casts per file.
+
+**Fix**: These require deeper refactoring — converting the protobuf.js code on the other side of each cast to use buf types. Deferred to Phase 10 when the protobuf.js codec itself is replaced.
+
+#### Category 6: Remaining `as unknown` — 25 casts
+
+**Breakdown**:
+- `space-list.ts` (4): SpaceProxy internal field access.
+- `client.ts` (3): Client service interface wiring.
+- `memory-shell-runtime.ts` (2): Shell runtime invitation types.
+- `invitation-host-extension.ts` (2): Invitation host proto↔buf.
+- `assertions.ts` (2): Central TypedMessage extraction (Phase 10).
+- `credential-factory.ts` (1): TypedAssertion to Any cast (Phase 10).
+- Other scattered (11): Various codec/type boundary points.
+
+**Fix**: Most require converting surrounding proto code to buf. The `assertions.ts` and `credential-factory.ts` casts are removed in Phase 10 with `anyPack`/`anyUnpack`.
 
 ### Phase 10: Full Protobuf.js Removal
 
@@ -322,20 +408,21 @@ This is the deepest and highest-risk work item. `Any` is used to store credentia
 **Reference**: https://github.com/bufbuild/protobuf-es/blob/main/MANUAL.md#googleprotobufany
 
 **Preparation done** (`assertion-registry.ts` in `@dxos/credentials`):
-- `ASSERTION_REGISTRY` — `buf.createRegistry()` of all 14 assertion schemas.
+- `ASSERTION_REGISTRY` — `buf.createRegistry()` of all 16 assertion schemas (14 credentials + 2 invitations).
 - `ASSERTION_SCHEMAS` — Array of all assertion `DescMessage` descriptors.
 - `ASSERTION_SCHEMA_MAP` — Map from `$typeName` to schema for lookup.
 - `CredentialAssertion` — Union type of all assertion message shapes.
 
-**Current state**: Credential assertions are stored at runtime as `TypedMessage` objects (protobuf.js format with `@type` discriminator). They are cast to `bufWkt.Any` on the credential's `subject.assertion` field. The `getCredentialAssertion()` function casts back to `TypedMessage` for consumers.
+**Current state**: Credential assertions are stored at runtime as `TypedMessage` objects (protobuf.js format with `@type` discriminator). They are cast to `bufWkt.Any` on the credential's `subject.assertion` field. The `getCredentialAssertion()` function casts back to `TypedMessage` for consumers. Type-safe helpers (`getTypedAssertion`, `checkCredentialType`, `credentialTypeFilter`) provide safe access without per-site casts.
 
-**Migration plan** (Phase 9):
-1. Switch `createCredential()` to accept buf assertion messages and use `anyPack(schema, message)`.
-2. Switch `getCredentialAssertion()` to use `anyUnpack(any, ASSERTION_REGISTRY)`.
-3. Update all 21 callers to use `$typeName` instead of `@type` for discrimination.
-4. **Backwards compatibility**: `canonicalStringify` must produce identical output for existing signed credentials. This requires the Any-packed assertion to serialize the same way in the signing payload. Strategy options:
-   a. Serialize `Any` fields by unpacking and stringifying the inner message (preserves signature compat).
-   b. Version the signing algorithm (all existing credentials remain valid, new ones use new format).
+**Why `anyPack`/`anyUnpack` is deferred to Phase 10**: The protobuf.js codec's `anySubstitutions.encode` requires `@type` on the assertion object to find the right codec. Its `anySubstitutions.decode` produces TypedMessage with `@type`. Switching to buf-native `Any` (with `typeUrl` + binary `value`) would break feed encoding/decoding. The switch happens when protobuf.js is fully replaced.
+
+**Phase 10 migration plan**:
+1. Replace protobuf.js codec for feed encoding with buf `toBinary`/`fromBinary`.
+2. Switch `createCredential()` to accept buf assertion messages and use `anyPack(schema, message)`.
+3. Switch `getCredentialAssertion()` to use `anyUnpack(any, ASSERTION_REGISTRY)`.
+4. Update all callers to use `$typeName` instead of `@type` for discrimination.
+5. **Backwards compatibility**: `canonicalStringify` must produce identical output for existing signed credentials. Strategy: unpack Any before stringifying.
 
 ### google.protobuf.Struct
 
@@ -376,8 +463,8 @@ Key practices to follow:
 | ~~`$typeName` in deep equality~~                | ~~P1~~ **Fixed** | Fixed in Phase 3: updated `system-service.test.ts` assertions.                                                                                                                                                                                                                    |
 | **Assertion loss in `create()` for Any fields** | **P1**           | Buf's `create()` recursively initializes nested messages. TypedMessage assertions in `google.protobuf.Any` fields are converted to empty `Any` messages. Fixed in `credential-factory.ts`; other call sites using `create()` with nested credentials may need the same treatment. |
 | **PublicKey type mismatch in echo-pipeline**    | **P1**           | `value.asUint8Array is not a function` in feed write path. Buf PublicKey messages (plain `{ data: Uint8Array }`) used where `@dxos/keys.PublicKey` class expected. Affects 8 echo-pipeline tests.                                                                                 |
-| **157 `as never` boundary casts**               | **P1**           | Each is a potential runtime bug. Buf and protobuf.js objects are structurally different. Fix: convert protobuf.js code on the other side to buf.                                                                                                                                  |
-| **23 `as unknown` casts**                       | **P2**           | Type bridging for PublicKey, Any fields, SpaceProxy. Fix: same — migrate consuming code to buf.                                                                                                                                                                                   |
-| `as unknown` for `Any` field access             | P2               | 8 sites where `google.protobuf.Any` assertion fields need unsafe access. Fix: use buf `Any.unpack()` or typed wrappers.                                                                                                                                                           |
+| **87 `as never` boundary casts**                | **P1**           | Each is a potential runtime bug. Buf and protobuf.js objects are structurally different. Fix: convert protobuf.js code on the other side to buf.                                                                                                                                  |
+| **25 `as unknown` casts**                       | **P2**           | Type bridging for PublicKey, Any fields, SpaceProxy. Fix: migrate consuming code to buf.                                                                                                                                                                                          |
+| ~~`as unknown` for `Any` field access~~         | ~~P2~~ **Fixed** | Fixed in Phase 9: 6 `as unknown` casts removed via `getCredentialAssertion()`. 2 remaining in `assertions.ts`/`credential-factory.ts` are inherent to protobuf.js codec bridge (Phase 10).                                                                                        |
 | `feed:build` failure                            | Low              | Pre-existing from main. New `feed` package has unresolved imports (`@dxos/protocols`, `@dxos/sql-sqlite`). Not related to buf migration.                                                                                                                                          |
 | `@dxos/errors` import in tests                  | Low              | Pre-existing from main. 15 test files in `client-services` fail to import `@dxos/errors` via the `feed` package. Infrastructure issue.                                                                                                                                            |

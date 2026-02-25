@@ -13,11 +13,27 @@ export const fromBufPublicKey = (key?: BufPublicKey): PublicKey | undefined =>
 
 /**
  * Extract the assertion from a credential as a TypedMessage.
+ *
  * At runtime, the `assertion` field (typed as google.protobuf.Any in buf schema)
- * contains a TypedMessage object from the protobuf.js codec.
+ * contains a TypedMessage object from the protobuf.js codec — a plain object with
+ * an `@type` discriminator string and the decoded assertion fields. The `as unknown`
+ * cast here is safe because the protobuf.js codec always produces this shape when
+ * decoding `google.protobuf.Any` fields. This cast is removed in Phase 10 when
+ * protobuf.js is replaced with buf-native `anyPack`/`anyUnpack`.
  */
 export const getCredentialAssertion = (credential: Credential): TypedMessage =>
   credential.subject!.assertion as unknown as TypedMessage;
+
+/**
+ * Extract a typed assertion from a credential, returning undefined if the type doesn't match.
+ */
+export const getTypedAssertion = <K extends keyof TYPES>(
+  credential: Credential,
+  type: K,
+): (TYPES[K] & { '@type': K }) | undefined => {
+  const assertion = getCredentialAssertion(credential);
+  return assertion['@type'] === type ? (assertion as TYPES[K] & { '@type': K }) : undefined;
+};
 
 export const isValidAuthorizedDeviceCredential = (
   credential: Credential,

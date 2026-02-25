@@ -4,6 +4,7 @@
 
 import { type PublicKey } from '@dxos/client';
 import { type Credential, type Identity, type Presentation } from '@dxos/client/halo';
+import { getCredentialAssertion } from '@dxos/credentials';
 
 import { codec } from './codec';
 
@@ -12,12 +13,14 @@ import { codec } from './codec';
 export const matchServiceCredential =
   (capabilities: string[] = []) =>
   (credential: Credential) => {
-    if ((credential.subject as any)?.assertion?.['@type'] !== 'dxos.halo.credentials.ServiceAccess') {
+    if (!credential.subject || getCredentialAssertion(credential)['@type'] !== 'dxos.halo.credentials.ServiceAccess') {
       return false;
     }
 
-    const { capabilities: credentialCapabilities } = (credential.subject as any).assertion;
-    return capabilities.every((capability) => credentialCapabilities.includes(capability));
+    const { capabilities: credentialCapabilities } = getCredentialAssertion(credential) as {
+      capabilities?: string[];
+    };
+    return capabilities.every((capability) => credentialCapabilities?.includes(capability) ?? false);
   };
 
 /**

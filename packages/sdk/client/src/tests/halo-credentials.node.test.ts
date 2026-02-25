@@ -6,7 +6,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { Config } from '@dxos/config';
-import { verifyPresentation } from '@dxos/credentials';
+import { getCredentialAssertion, verifyPresentation } from '@dxos/credentials';
 import { PublicKey } from '@dxos/keys';
 import { decodePublicKey } from '@dxos/protocols/buf';
 import { type Credential, type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
@@ -42,8 +42,7 @@ describe('Halo', () => {
       let credentials: Credential[] = [];
       client.halo.credentials.subscribe((creds) => {
         credentials = creds.filter(
-          ({ subject }) =>
-            (subject?.assertion as unknown as { '@type'?: string })['@type'] === 'dxos.halo.credentials.SpaceMember',
+          (credential) => getCredentialAssertion(credential)['@type'] === 'dxos.halo.credentials.SpaceMember',
         );
         if (credentials.length >= 2) {
           trigger.wake();
@@ -77,8 +76,7 @@ describe('Halo', () => {
     let credentials: Credential[] = [];
     client.halo.credentials.subscribe((scredentials) => {
       credentials = scredentials.filter(
-        ({ subject }) =>
-          (subject?.assertion as unknown as { '@type'?: string })['@type'] === 'dxos.halo.credentials.AdmittedFeed',
+        (credential) => getCredentialAssertion(credential)['@type'] === 'dxos.halo.credentials.AdmittedFeed',
       );
       if (credentials.length >= 2) {
         trigger.wake();
@@ -88,9 +86,7 @@ describe('Halo', () => {
 
     expect(
       credentials.every(
-        (cred) =>
-          (cred.subject?.assertion as unknown as { '@type'?: string })['@type'] ===
-          'dxos.halo.credentials.AdmittedFeed',
+        (credential) => getCredentialAssertion(credential)['@type'] === 'dxos.halo.credentials.AdmittedFeed',
       ),
     ).to.be.true;
   });

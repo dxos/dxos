@@ -85,6 +85,7 @@ export const createCredential = async ({
       nonce,
     }),
   });
+  // Phase 10: replace with anyPack() when protobuf.js codec is removed.
   credential.subject!.assertion = assertion as unknown as bufWkt.Any;
 
   // Set proof after creating signature.

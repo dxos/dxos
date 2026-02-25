@@ -144,6 +144,9 @@ catalogs:
     '@dnd-kit/utilities':
       specifier: ^3.2.0
       version: 3.2.0
+    '@dxos/credentials':
+      specifier: ^0.8.3
+      version: 0.8.3
     '@dxos/echo-db':
       specifier: ^0.8.3
       version: 0.8.3
@@ -2459,6 +2462,9 @@ importers:
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
+      '@dxos/credentials':
+        specifier: 'catalog:'
+        version: 0.8.3(effect@3.19.16)
       '@dxos/devtools':
         specifier: workspace:*
         version: link:../../devtools/devtools
@@ -3431,7 +3437,7 @@ importers:
     dependencies:
       debug:
         specifier: 'catalog:'
-        version: 4.4.3(supports-color@5.5.0)
+        version: 4.4.3(supports-color@8.1.1)
       domain-browser:
         specifier: 'catalog:'
         version: 4.22.0
@@ -6430,6 +6436,9 @@ importers:
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
+      '@dxos/credentials':
+        specifier: 'catalog:'
+        version: 0.8.3(effect@3.19.16)
       '@dxos/display-name':
         specifier: workspace:*
         version: link:../../common/display-name
@@ -6905,7 +6914,7 @@ importers:
         version: 5.0.0(chart.js@4.5.0)
       debug:
         specifier: 'catalog:'
-        version: 4.4.3(supports-color@5.5.0)
+        version: 4.4.3(supports-color@8.1.1)
       effect:
         specifier: 3.19.16
         version: 3.19.16
@@ -7911,6 +7920,9 @@ importers:
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
+      '@dxos/credentials':
+        specifier: 'catalog:'
+        version: 0.8.3(effect@3.19.16)
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -14286,7 +14298,7 @@ importers:
         version: 1.37.0
       debug:
         specifier: 'catalog:'
-        version: 4.4.3(supports-color@5.5.0)
+        version: 4.4.3(supports-color@8.1.1)
       js-yaml:
         specifier: 'catalog:'
         version: 4.1.1
