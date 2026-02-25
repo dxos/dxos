@@ -10,7 +10,7 @@ import { type InvocationsState } from '@dxos/functions-runtime';
 import { useTriggerRuntimeControls } from '@dxos/plugin-automation';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { StatusBar } from '@dxos/plugin-status-bar';
-import { parseId, type Database, type Space, type SpaceId } from '@dxos/react-client/echo';
+import { type Database, parseId } from '@dxos/react-client/echo';
 import { Icon, Input, Popover, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
 import { mx } from '@dxos/ui-theme';
