@@ -103,7 +103,9 @@ export const SearchDialog = ({ pivotId }: SearchDialogProps) => {
               )
             ) : (
               <>
-                {closed.length > 0 && <h2 className={mx('my-1', 'text-description')}>{t('recently closed heading')}</h2>}
+                {closed.length > 0 && (
+                  <h2 className={mx('my-1', 'text-description')}>{t('recently closed heading')}</h2>
+                )}
                 {closed.filter(Option.isSome).map((node) => (
                   <SearchListResult key={node.value.id} node={node.value} onSelect={handleSelect} />
                 ))}
