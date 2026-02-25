@@ -33,32 +33,13 @@ export class QueryPlanner {
   }
 
   createPlan(query: QueryAST.Query): QueryPlan.Plan {
+    this._validateQueryQualified(query);
     let plan = this._generate(query, { ...DEFAULT_CONTEXT, originalQuery: query });
     plan = this._optimizeEmptyFilters(plan);
     plan = this._optimizeSoloUnions(plan);
     plan = this._ensureOrderStep(plan);
     plan = this._optimizeLimits(plan);
     return plan;
-  }
-
-  /**
-   * Creates a plan, throwing if the query has no options clause qualifying where to query from.
-   */
-  createPlanStrict(query: QueryAST.Query): QueryPlan.Plan {
-    let hasOptions = false;
-    QueryAST.visit(query, (node) => {
-      if (node.type === 'options') {
-        hasOptions = true;
-      }
-    });
-    if (!hasOptions) {
-      throw new QueryError({
-        message: 'Query must be qualified with a from() or options() clause',
-        context: { query },
-      });
-    }
-
-    return this.createPlan(query);
   }
 
   private _generate(query: QueryAST.Query, context: GenerationContext): QueryPlan.Plan {
@@ -491,6 +472,21 @@ export class QueryPlanner {
       },
       ...this._generateDeletedHandlingSteps(context),
     ]);
+  }
+
+  private _validateQueryQualified(query: QueryAST.Query): void {
+    let hasOptions = false;
+    QueryAST.visit(query, (node) => {
+      if (node.type === 'options') {
+        hasOptions = true;
+      }
+    });
+    if (!hasOptions) {
+      throw new QueryError({
+        message: 'Query must be qualified with a from() or options() clause',
+        context: { query },
+      });
+    }
   }
 
   /**
