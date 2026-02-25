@@ -56,7 +56,7 @@ const Swatch = ({ hue }: { hue: string }) => {
  */
 // prettier-ignore
 const paletteShades: Record<string, Record<number, string>> = {
-  neutral: { 50: 'bg-neutral-50', 100: 'bg-neutral-100', 200: 'bg-neutral-200', 300: 'bg-neutral-300', 400: 'bg-neutral-400', 500: 'bg-neutral-500', 600: 'bg-neutral-600', 700: 'bg-neutral-700', 800: 'bg-neutral-800', 900: 'bg-neutral-900', 925: 'bg-neutral-925', 950: 'bg-neutral-950', 975: 'bg-neutral-975' },
+  neutral: { 50: 'bg-neutral-50', 100: 'bg-neutral-100', 200: 'bg-neutral-200', 300: 'bg-neutral-300', 400: 'bg-neutral-400', 500: 'bg-neutral-500', 600: 'bg-neutral-600', 700: 'bg-neutral-700', 800: 'bg-neutral-800', 900: 'bg-neutral-900', 950: 'bg-neutral-925' },
   red:     { 50: 'bg-red-50',     100: 'bg-red-100',     200: 'bg-red-200',     300: 'bg-red-300',     400: 'bg-red-400',     500: 'bg-red-500',     600: 'bg-red-600',     700: 'bg-red-700',     800: 'bg-red-800',     900: 'bg-red-900',     950: 'bg-red-950' },
   orange:  { 50: 'bg-orange-50',  100: 'bg-orange-100',  200: 'bg-orange-200',  300: 'bg-orange-300',  400: 'bg-orange-400',  500: 'bg-orange-500',  600: 'bg-orange-600',  700: 'bg-orange-700',  800: 'bg-orange-800',  900: 'bg-orange-900',  950: 'bg-orange-950' },
   amber:   { 50: 'bg-amber-50',   100: 'bg-amber-100',   200: 'bg-amber-200',   300: 'bg-amber-300',   400: 'bg-amber-400',   500: 'bg-amber-500',   600: 'bg-amber-600',   700: 'bg-amber-700',   800: 'bg-amber-800',   900: 'bg-amber-900',   950: 'bg-amber-950' },
@@ -75,6 +75,25 @@ const paletteShades: Record<string, Record<number, string>> = {
   pink:    { 50: 'bg-pink-50',    100: 'bg-pink-100',    200: 'bg-pink-200',    300: 'bg-pink-300',    400: 'bg-pink-400',    500: 'bg-pink-500',    600: 'bg-pink-600',    700: 'bg-pink-700',    800: 'bg-pink-800',    900: 'bg-pink-900',    950: 'bg-pink-950' },
   rose:    { 50: 'bg-rose-50',    100: 'bg-rose-100',    200: 'bg-rose-200',    300: 'bg-rose-300',    400: 'bg-rose-400',    500: 'bg-rose-500',    600: 'bg-rose-600',    700: 'bg-rose-700',    800: 'bg-rose-800',    900: 'bg-rose-900',    950: 'bg-rose-950' },
 };
+
+// prettier-ignore
+const neutralShades = [
+  { shade:  50, className: 'bg-neutral-50' },
+  { shade:  75, className: 'bg-neutral-75' },
+  { shade: 100, className: 'bg-neutral-100' },
+  { shade: 200, className: 'bg-neutral-200' },
+  { shade: 250, className: 'bg-neutral-250' },
+  { shade: 300, className: 'bg-neutral-300' },
+  { shade: 400, className: 'bg-neutral-400' },
+  { shade: 500, className: 'bg-neutral-500' },
+  { shade: 600, className: 'bg-neutral-600' },
+  { shade: 700, className: 'bg-neutral-700' },
+  { shade: 750, className: 'bg-neutral-750' },
+  { shade: 800, className: 'bg-neutral-800' },
+  { shade: 900, className: 'bg-neutral-900' },
+  { shade: 925, className: 'bg-neutral-925' },
+  { shade: 950, className: 'bg-neutral-950' },
+];
 
 const PaletteSwatch = ({ hue, shades }: { hue: string; shades: number[] }) => (
   <div className='flex gap-1'>
@@ -125,9 +144,31 @@ export const Palette = {
     return (
       <div className='p-4'>
         <div className='flex flex-col gap-1'>
-          <PaletteSwatch hue={'neutral'} shades={[50, 75, 100, 200, 300, 400, 500, 600, 700, 800, 900, 925, 950]} />
-          {hues.map((hue) => (
+          {['neutral', ...hues].map((hue) => (
             <PaletteSwatch key={hue} hue={hue} shades={[50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950]} />
+          ))}
+        </div>
+      </div>
+    );
+  },
+};
+
+export const NeutralPalette = {
+  render: () => {
+    return (
+      <div className='p-4'>
+        <div className='flex flex-col items-center'>
+          {neutralShades.map(({ shade, className }) => (
+            <div
+              key={shade}
+              className={mx(
+                className,
+                'h-12 w-48 p-2 text-right text-sm',
+                shade <= 500 ? 'text-neutral-950' : 'text-neutral-50',
+              )}
+            >
+              {shade}
+            </div>
           ))}
         </div>
       </div>
@@ -141,16 +182,18 @@ export const Surfaces = {
       <div className='absolute inset-0 h-full p-4 bg-white dark:bg-black'>
         <div className='flex flex-wrap gap-2'>
           {[
-            { className: 'bg-deck-surface', label: 'deck' },
             { className: 'bg-scrim-surface', label: 'scrim' },
             { className: 'bg-base-surface', label: 'base' },
+            { className: 'bg-deck-surface', label: 'deck' },
+            { className: 'bg-group-surface', label: 'group' },
             { className: 'bg-sidebar-surface', label: 'sidebar' },
             { className: 'bg-header-surface', label: 'header' },
             { className: 'bg-card-surface', label: 'card' },
             { className: 'bg-modal-surface', label: 'modal' },
-            { className: 'bg-group-surface', label: 'group' },
-            { className: 'bg-active-surface', label: 'active' },
             { className: 'bg-input-surface', label: 'input' },
+            { className: 'bg-active-surface', label: 'active' },
+            { className: 'bg-hover-surface', label: 'hover' },
+            { className: 'bg-inverse-surface text-inverse-text', label: 'inverse' },
           ].map(({ className, label }) => (
             <div key={className} className={mx('shrink-0 p-2 aspect-square w-48 rounded-md', className)}>
               {label}

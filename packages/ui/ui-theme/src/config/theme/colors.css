@@ -25,8 +25,8 @@
   --color-input-surface: light-dark(theme(colors.neutral.100), theme(colors.neutral.900));
   --color-text-input-surface: light-dark(theme(colors.neutral.50), theme(colors.neutral.900));
 
-  --color-hover-surface: light-dark(theme(colors.neutral.200), theme(colors.neutral.800));
-  --color-active-surface: light-dark(theme(colors.neutral.250), theme(colors.neutral.750));
+  --color-active-surface: light-dark(theme(colors.neutral.200), theme(colors.neutral.800));
+  --color-hover-surface: light-dark(theme(colors.neutral.250), theme(colors.neutral.750));
 
   --color-attention: light-dark(theme(colors.neutral.50), theme(colors.neutral.950));
   --color-focus-surface: light-dark(theme(colors.neutral.50), theme(colors.neutral.950));
@@ -87,22 +87,21 @@
   --color-placeholder: light-dark(var(--color-neutral-600), var(--color-neutral-400))
 }
 
-/* TODO(burdon): Layer names. */
 @layer dx-tokens {
 
   /* TODO(burdon): Are these used? See surfaces.css */
-  .sidebar-surface, .dark .sidebar-surface, .bg-group-surface, .dark .bg-group-surface, .bg-sidebar-surface, .dark .bg-sidebar-surface, .bg-header-surface, .dark .bg-header-surface, .bg-toolbar-surface, .dark .bg-toolbar-surface, .bg-card-surface, .dark .bg-card-surface {
+  /* .sidebar-surface, .dark .sidebar-surface, .bg-group-surface, .dark .bg-group-surface, .bg-sidebar-surface, .dark .bg-sidebar-surface, .bg-header-surface, .dark .bg-header-surface, .bg-toolbar-surface, .dark .bg-toolbar-surface, .bg-card-surface, .dark .bg-card-surface {
     --color-text-input-surface: light-dark(var(--color-neutral-50), var(--color-neutral-800));
     --color-input-surface: light-dark(var(--color-neutral-100), var(--color-neutral-800));
     --color-hover-surface: light-dark(var(--color-neutral-100), var(--color-neutral-700));
     --color-separator: light-dark(var(--color-neutral-200), var(--color-neutral-700));
-  }
+  } */
 
   /* TODO(burdon): Are these used? See surfaces.css */
-  .modal-surface, .dark .modal-surface, .bg-modal-surface, .dark .bg-modal-surface, .bg-current-related, .dark .bg-current-related {
+  /* .modal-surface, .dark .modal-surface, .bg-modal-surface, .dark .bg-modal-surface, .bg-current-related, .dark .bg-current-related {
     --color-text-input-surface: light-dark(var(--color-neutral-50), var(--color-neutral-800));
     --color-input-surface: light-dark(var(--color-neutral-100), var(--color-neutral-800));
     --color-hover-surface: light-dark(var(--color-neutral-100), var(--color-neutral-700));
     --color-separator: light-dark(var(--color-neutral-200), var(--color-neutral-700));
-  }
+  } */
 }
