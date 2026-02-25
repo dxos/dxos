@@ -3,7 +3,7 @@
 //
 
 import { Order } from '@dxos/echo';
-import { type QueryAST } from '@dxos/echo-protocol';
+import { QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import type { DXN, SpaceId } from '@dxos/keys';
 
@@ -39,6 +39,26 @@ export class QueryPlanner {
     plan = this._ensureOrderStep(plan);
     plan = this._optimizeLimits(plan);
     return plan;
+  }
+
+  /**
+   * Creates a plan, throwing if the query has no options clause qualifying where to query from.
+   */
+  createPlanStrict(query: QueryAST.Query): QueryPlan.Plan {
+    let hasOptions = false;
+    QueryAST.visit(query, (node) => {
+      if (node.type === 'options') {
+        hasOptions = true;
+      }
+    });
+    if (!hasOptions) {
+      throw new QueryError({
+        message: 'Query must be qualified with a from() or options() clause',
+        context: { query },
+      });
+    }
+
+    return this.createPlan(query);
   }
 
   private _generate(query: QueryAST.Query, context: GenerationContext): QueryPlan.Plan {

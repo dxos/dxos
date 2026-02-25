@@ -1326,6 +1326,132 @@ describe('QueryPlanner', () => {
       }
     `);
   });
+  test('throws when query has no options clause (strict mode)', () => {
+    const query = Query.select(Filter.type(TestSchema.Person));
+    expect(() => planner.createPlanStrict(query.ast)).toThrow(
+      'Query must be qualified with a from() or options() clause',
+    );
+  });
+
+  test('from all accessible spaces', () => {
+    const query = Query.select(Filter.type(TestSchema.Person)).from('all-accessible-spaces');
+
+    const plan = planner.createPlan(query.ast);
+    expect(plan).toMatchInlineSnapshot(`
+      {
+        "steps": [
+          {
+            "_tag": "SelectStep",
+            "allQueuesFromSpaces": false,
+            "queues": [],
+            "selector": {
+              "_tag": "TypeSelector",
+              "inverted": false,
+              "typename": [
+                "dxn:type:example.com/type/Person:0.1.0",
+              ],
+            },
+            "spaces": [],
+          },
+          {
+            "_tag": "FilterDeletedStep",
+            "mode": "only-non-deleted",
+          },
+          {
+            "_tag": "FilterStep",
+            "filter": {
+              "id": undefined,
+              "props": {},
+              "type": "object",
+              "typename": "dxn:type:example.com/type/Person:0.1.0",
+            },
+          },
+          {
+            "_tag": "OrderStep",
+            "order": [
+              {
+                "kind": "natural",
+              },
+            ],
+          },
+        ],
+      }
+    `);
+  });
+
+  test('from all accessible spaces with feeds', () => {
+    const query = Query.select(Filter.type(TestSchema.Person)).from('all-accessible-spaces', {
+      includeFeeds: true,
+    });
+
+    const plan = planner.createPlan(query.ast);
+    expect(plan).toMatchInlineSnapshot(`
+      {
+        "steps": [
+          {
+            "_tag": "SelectStep",
+            "allQueuesFromSpaces": true,
+            "queues": [],
+            "selector": {
+              "_tag": "TypeSelector",
+              "inverted": false,
+              "typename": [
+                "dxn:type:example.com/type/Person:0.1.0",
+              ],
+            },
+            "spaces": [],
+          },
+          {
+            "_tag": "FilterDeletedStep",
+            "mode": "only-non-deleted",
+          },
+          {
+            "_tag": "FilterStep",
+            "filter": {
+              "id": undefined,
+              "props": {},
+              "type": "object",
+              "typename": "dxn:type:example.com/type/Person:0.1.0",
+            },
+          },
+          {
+            "_tag": "OrderStep",
+            "order": [
+              {
+                "kind": "natural",
+              },
+            ],
+          },
+        ],
+      }
+    `);
+  });
+
+  test('from specific feed via queues option', () => {
+    const query = Query.select(Filter.type(TestSchema.Task)).options({ queues: [QUEUE_DXN] });
+
+    const plan = planner.createPlan(query.ast);
+    expect(plan.steps[0]).toMatchObject({
+      _tag: 'SelectStep',
+      spaces: [],
+      queues: [QUEUE_DXN],
+      allQueuesFromSpaces: false,
+    });
+  });
+
+  test('from specific space with feeds', () => {
+    const query = Query.select(Filter.type(TestSchema.Person)).options({
+      spaceIds: [SPACE_ID],
+      allQueuesFromSpaces: true,
+    });
+
+    const plan = planner.createPlan(query.ast);
+    expect(plan.steps[0]).toMatchObject({
+      _tag: 'SelectStep',
+      spaces: [SPACE_ID],
+      allQueuesFromSpaces: true,
+    });
+  });
 });
 
 const SPACE_ID = SpaceId.make('B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO'); // Stable id for inline snapshots.

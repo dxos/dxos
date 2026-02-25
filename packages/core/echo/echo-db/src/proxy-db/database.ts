@@ -7,7 +7,7 @@ import { inspect } from 'node:util';
 import { type CleanupFn, Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
-import { Database, type Entity, Obj, type QueryAST, Ref } from '@dxos/echo';
+import { Database, type Entity, Obj, QueryAST, Ref } from '@dxos/echo';
 import { type AnyProperties, assertObjectModel, setRefResolver } from '@dxos/echo/internal';
 import { getProxyTarget, isProxy } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
@@ -229,6 +229,18 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
 
   private _query(query: Query.Any | Filter.Any, options?: Database.QueryOptions & QueryAST.QueryOptions) {
     query = Filter.is(query) ? Query.select(query) : query;
+
+    let hasSpaceIds = false;
+    QueryAST.visit(query.ast, (node) => {
+      if (node.type === 'options' && node.options.spaceIds !== undefined) {
+        hasSpaceIds = true;
+      }
+    });
+
+    if (hasSpaceIds) {
+      return this._coreDatabase.graph.query(query, options);
+    }
+
     return this._coreDatabase.graph.query(query, {
       ...options,
       spaceIds: [this.spaceId],

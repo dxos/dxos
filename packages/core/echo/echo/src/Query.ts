@@ -7,13 +7,14 @@ import type * as Schema from 'effect/Schema';
 
 import { type QueryAST } from '@dxos/echo-protocol';
 
+import * as Database from './Database';
+import * as Entity from './Entity';
+import * as Feed from './Feed';
 import * as Filter from './Filter';
 import { getTypeDXNFromSpecifier } from './internal';
 import type * as Order from './Order';
 import type * as Ref from './Ref';
 import type * as Type$ from './Type';
-import type * as Database from './Database';
-import type * as Feed from './Feed';
 
 // TODO(dmaretskyi): Split up into interfaces for objects and relations so they can have separate verbs.
 // TODO(dmaretskyi): Undirected relation traversals.
@@ -164,7 +165,7 @@ export interface Query<T> {
    * ```ts
    * Query.select(Filter.type(Person)).from('all-accessible-spaces');
    * ```
-   * 
+   *
    * @param options.includeFeeds [false] - Whether to include feeds in the query. Default is to query from automerge documents only.
    */
   from(allSpaces: 'all-accessible-spaces', options?: { includeFeeds?: boolean }): Query<T>;
@@ -283,6 +284,51 @@ class QueryClass implements Any {
       type: 'limit',
       query: this.ast,
       limit,
+    });
+  }
+
+  from(
+    arg: Database.Database | Database.Database[] | Feed.Feed | Feed.Feed[] | 'all-accessible-spaces',
+    options?: { includeFeeds?: boolean },
+  ): Any {
+    if (arg === 'all-accessible-spaces') {
+      return new QueryClass({
+        type: 'options',
+        query: this.ast,
+        options: {
+          ...(options?.includeFeeds ? { allQueuesFromSpaces: true } : {}),
+        },
+      });
+    }
+
+    const items = Array.isArray(arg) ? arg : [arg];
+
+    if (items.length > 0 && Database.isDatabase(items[0])) {
+      const databases = items as Database.Database[];
+      return new QueryClass({
+        type: 'options',
+        query: this.ast,
+        options: {
+          spaceIds: databases.map((db) => db.spaceId),
+          ...(options?.includeFeeds ? { allQueuesFromSpaces: true } : {}),
+        },
+      });
+    }
+
+    const feeds = items as Feed.Feed[];
+    const queueDxns = feeds.map((feed) => {
+      const keys = Entity.getKeys(feed as Entity.Unknown, Feed.DXN_KEY);
+      if (keys.length === 0) {
+        throw new Error('Feed does not have a backing DXN key');
+      }
+      return keys[0].id;
+    });
+    return new QueryClass({
+      type: 'options',
+      query: this.ast,
+      options: {
+        queues: queueDxns,
+      },
     });
   }
 
