@@ -134,7 +134,12 @@ export class ObjectMetaIndex implements Index {
         }
 
         const sql = yield* SqlClient.SqlClient;
-        const sourceCondition = buildSourceCondition(sql, query.spaceIds, query.includeAllQueues ?? false, query.queueIds ?? null);
+        const sourceCondition = buildSourceCondition(
+          sql,
+          query.spaceIds,
+          query.includeAllQueues ?? false,
+          query.queueIds ?? null,
+        );
         const rows = yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE ${sourceCondition}`;
         return rows.map((row) => ({
           ...row,
