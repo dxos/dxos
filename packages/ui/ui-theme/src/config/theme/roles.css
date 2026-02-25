@@ -11,25 +11,25 @@
   --color-info-surface: var(--color-cyan-surface);
   --color-info-surface-text: var(--color-cyan-surface-text);
   --color-info-text: var(--color-cyan-text);
-  --color-info-border: light-dark(var(--color-cyan-400), var(--color-cyan-300));
+  --color-info-border: var(--color-cyan-border);
 
   --color-success-fill: var(--color-emerald-fill);
   --color-success-surface: var(--color-emerald-surface);
   --color-success-surface-text: var(--color-emerald-surface-text);
   --color-success-text: var(--color-emerald-text);
-  --color-success-border: light-dark(var(--color-emerald-400), var(--color-emerald-300));
+  --color-success-border: var(--color-emerald-border);
 
   --color-warning-fill: var(--color-amber-fill);
   --color-warning-surface: var(--color-amber-surface);
   --color-warning-surface-text: var(--color-amber-surface-text);
   --color-warning-text: var(--color-amber-text);
-  --color-warning-border: light-dark(var(--color-amber-400), var(--color-amber-300));
+  --color-warning-border: var(--color-amber-border);
 
   --color-error-fill: var(--color-rose-fill);
   --color-error-surface: var(--color-rose-surface);
   --color-error-surface-text: var(--color-rose-surface-text);
   --color-error-text: var(--color-rose-text);
-  --color-error-border: light-dark(var(--color-rose-400), var(--color-rose-300));
+  --color-error-border: var(--color-rose-border);
 
   /**
    * Hue
@@ -39,107 +39,107 @@
   --color-neutral-surface: light-dark(theme(colors.neutral.200), theme(colors.neutral.800));
   --color-neutral-surface-text: light-dark(theme(colors.neutral.800), theme(colors.neutral.200));
   --color-neutral-text: light-dark(theme(colors.neutral.600), theme(colors.neutral.400));
-  --color-neutral-border: light-dark(theme(colors.neutral.400), theme(colors.neutral.300));
+  --color-neutral-border: light-dark(theme(colors.neutral.400), theme(colors.neutral.600));
 
   --color-red-fill: theme(colors.red.500);
   --color-red-surface: light-dark(theme(colors.red.200), theme(colors.red.800));
   --color-red-surface-text: light-dark(theme(colors.red.800), theme(colors.red.200));
   --color-red-text: light-dark(theme(colors.red.600), theme(colors.red.400));
-  --color-red-border: light-dark(theme(colors.red.400), theme(colors.red.300));
+  --color-red-border: light-dark(theme(colors.red.400), theme(colors.red.600));
 
   --color-orange-fill: theme(colors.orange.500);
   --color-orange-surface: light-dark(theme(colors.orange.200), theme(colors.orange.800));
   --color-orange-surface-text: light-dark(theme(colors.orange.800), theme(colors.orange.200));
   --color-orange-text: light-dark(theme(colors.orange.600), theme(colors.orange.400));
-  --color-orange-border: light-dark(theme(colors.orange.400), theme(colors.orange.300));
+  --color-orange-border: light-dark(theme(colors.orange.400), theme(colors.orange.600));
 
   --color-amber-fill: theme(colors.amber.500);
   --color-amber-surface: light-dark(theme(colors.amber.200), theme(colors.amber.800));
   --color-amber-surface-text: light-dark(theme(colors.amber.800), theme(colors.amber.200));
   --color-amber-text: light-dark(theme(colors.amber.600), theme(colors.amber.400));
-  --color-amber-border: light-dark(theme(colors.amber.400), theme(colors.amber.300));
+  --color-amber-border: light-dark(theme(colors.amber.400), theme(colors.amber.600));
 
   --color-yellow-fill: theme(colors.yellow.500);
   --color-yellow-surface: light-dark(theme(colors.yellow.200), theme(colors.yellow.800));
   --color-yellow-surface-text: light-dark(theme(colors.yellow.800), theme(colors.yellow.200));
   --color-yellow-text: light-dark(theme(colors.yellow.600), theme(colors.yellow.400));
-  --color-yellow-border: light-dark(theme(colors.yellow.400), theme(colors.yellow.300));
+  --color-yellow-border: light-dark(theme(colors.yellow.400), theme(colors.yellow.600));
 
   --color-lime-fill: theme(colors.lime.500);
   --color-lime-surface: light-dark(theme(colors.lime.200), theme(colors.lime.800));
   --color-lime-surface-text: light-dark(theme(colors.lime.800), theme(colors.lime.200));
   --color-lime-text: light-dark(theme(colors.lime.600), theme(colors.lime.400));
-  --color-lime-border: light-dark(theme(colors.lime.400), theme(colors.lime.300));
+  --color-lime-border: light-dark(theme(colors.lime.400), theme(colors.lime.600));
 
   --color-green-fill: theme(colors.green.500);
   --color-green-surface: light-dark(theme(colors.green.200), theme(colors.green.800));
   --color-green-surface-text: light-dark(theme(colors.green.800), theme(colors.green.200));
   --color-green-text: light-dark(theme(colors.green.600), theme(colors.green.400));
-  --color-green-border: light-dark(theme(colors.green.400), theme(colors.green.300));
+  --color-green-border: light-dark(theme(colors.green.400), theme(colors.green.600));
 
   --color-emerald-fill: theme(colors.emerald.500);
   --color-emerald-surface: light-dark(theme(colors.emerald.200), theme(colors.emerald.800));
   --color-emerald-surface-text: light-dark(theme(colors.emerald.800), theme(colors.emerald.200));
   --color-emerald-text: light-dark(theme(colors.emerald.600), theme(colors.emerald.400));
-  --color-emerald-border: light-dark(theme(colors.emerald.400), theme(colors.emerald.300));
+  --color-emerald-border: light-dark(theme(colors.emerald.400), theme(colors.emerald.600));
 
   --color-teal-fill: theme(colors.teal.500);
   --color-teal-surface: light-dark(theme(colors.teal.200), theme(colors.teal.800));
   --color-teal-surface-text: light-dark(theme(colors.teal.800), theme(colors.teal.200));
   --color-teal-text: light-dark(theme(colors.teal.600), theme(colors.teal.400));
-  --color-teal-border: light-dark(theme(colors.teal.400), theme(colors.teal.300));
+  --color-teal-border: light-dark(theme(colors.teal.400), theme(colors.teal.600));
 
   --color-cyan-fill: theme(colors.cyan.500);
   --color-cyan-surface: light-dark(theme(colors.cyan.200), theme(colors.cyan.800));
   --color-cyan-surface-text: light-dark(theme(colors.cyan.800), theme(colors.cyan.200));
   --color-cyan-text: light-dark(theme(colors.cyan.600), theme(colors.cyan.400));
-  --color-cyan-border: light-dark(theme(colors.cyan.400), theme(colors.cyan.300));
+  --color-cyan-border: light-dark(theme(colors.cyan.400), theme(colors.cyan.600));
 
   --color-sky-fill: theme(colors.sky.500);
   --color-sky-surface: light-dark(theme(colors.sky.200), theme(colors.sky.800));
   --color-sky-surface-text: light-dark(theme(colors.sky.800), theme(colors.sky.200));
   --color-sky-text: light-dark(theme(colors.sky.600), theme(colors.sky.400));
-  --color-sky-border: light-dark(theme(colors.sky.400), theme(colors.sky.300));
+  --color-sky-border: light-dark(theme(colors.sky.400), theme(colors.sky.600));
 
   --color-blue-fill: theme(colors.blue.500);
   --color-blue-surface: light-dark(theme(colors.blue.200), theme(colors.blue.800));
   --color-blue-surface-text: light-dark(theme(colors.blue.800), theme(colors.blue.200));
   --color-blue-text: light-dark(theme(colors.blue.600), theme(colors.blue.400));
-  --color-blue-border: light-dark(theme(colors.blue.400), theme(colors.blue.300));
+  --color-blue-border: light-dark(theme(colors.blue.400), theme(colors.blue.600));
 
   --color-indigo-fill: theme(colors.indigo.500);
   --color-indigo-surface: light-dark(theme(colors.indigo.200), theme(colors.indigo.800));
   --color-indigo-surface-text: light-dark(theme(colors.indigo.800), theme(colors.indigo.200));
   --color-indigo-text: light-dark(theme(colors.indigo.600), theme(colors.indigo.400));
-  --color-indigo-border: light-dark(theme(colors.indigo.400), theme(colors.indigo.300));
+  --color-indigo-border: light-dark(theme(colors.indigo.400), theme(colors.indigo.600));
 
   --color-violet-fill: theme(colors.violet.500);
   --color-violet-surface: light-dark(theme(colors.violet.200), theme(colors.violet.800));
   --color-violet-surface-text: light-dark(theme(colors.violet.800), theme(colors.violet.200));
   --color-violet-text: light-dark(theme(colors.violet.600), theme(colors.violet.400));
-  --color-violet-border: light-dark(theme(colors.violet.400), theme(colors.violet.300));
+  --color-violet-border: light-dark(theme(colors.violet.400), theme(colors.violet.600));
 
   --color-purple-fill: theme(colors.purple.500);
   --color-purple-surface: light-dark(theme(colors.purple.200), theme(colors.purple.800));
   --color-purple-surface-text: light-dark(theme(colors.purple.800), theme(colors.purple.200));
   --color-purple-text: light-dark(theme(colors.purple.600), theme(colors.purple.400));
-  --color-purple-border: light-dark(theme(colors.purple.400), theme(colors.purple.300));
+  --color-purple-border: light-dark(theme(colors.purple.400), theme(colors.purple.600));
 
   --color-fuchsia-fill: theme(colors.fuchsia.500);
   --color-fuchsia-surface: light-dark(theme(colors.fuchsia.200), theme(colors.fuchsia.800));
   --color-fuchsia-surface-text: light-dark(theme(colors.fuchsia.800), theme(colors.fuchsia.200));
   --color-fuchsia-text: light-dark(theme(colors.fuchsia.600), theme(colors.fuchsia.400));
-  --color-fuchsia-border: light-dark(theme(colors.fuchsia.400), theme(colors.fuchsia.300));
+  --color-fuchsia-border: light-dark(theme(colors.fuchsia.400), theme(colors.fuchsia.600));
 
   --color-pink-fill: theme(colors.pink.500);
   --color-pink-surface: light-dark(theme(colors.pink.200), theme(colors.pink.800));
   --color-pink-surface-text: light-dark(theme(colors.pink.800), theme(colors.pink.200));
   --color-pink-text: light-dark(theme(colors.pink.600), theme(colors.pink.400));
-  --color-pink-border: light-dark(theme(colors.pink.400), theme(colors.pink.300));
+  --color-pink-border: light-dark(theme(colors.pink.400), theme(colors.pink.600));
 
   --color-rose-fill: theme(colors.rose.500);
   --color-rose-surface: light-dark(theme(colors.rose.200), theme(colors.rose.800));
   --color-rose-surface-text: light-dark(theme(colors.rose.800), theme(colors.rose.200));
   --color-rose-text: light-dark(theme(colors.rose.600), theme(colors.rose.400));
-  --color-rose-border: light-dark(theme(colors.rose.400), theme(colors.rose.300));
+  --color-rose-border: light-dark(theme(colors.rose.400), theme(colors.rose.600));
 }

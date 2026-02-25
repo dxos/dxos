@@ -33,7 +33,7 @@ const ColorSwatch = ({ hue }: { hue: string }) => {
       style={{
         borderColor: `var(--color-${hue}-border)`,
       }}
-      className={mx('shrink-0 aspect-square w-36 grid grid-rows-3 border-4 overflow-hidden rounded-md')}
+      className={mx('shrink-0 aspect-square w-36 grid grid-rows-3 border-2 overflow-hidden rounded-md')}
     >
       <div
         style={{
@@ -92,7 +92,7 @@ const meta = {
 
 export default meta;
 
-export const Hues = {
+export const Roles = {
   render: () => {
     return (
       <div className='p-4'>
