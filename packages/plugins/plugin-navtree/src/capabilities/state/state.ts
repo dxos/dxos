@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
+import { Graph } from '@dxos/plugin-graph';
 import { Path } from '@dxos/react-ui-list';
 
 import { meta } from '../../meta';
@@ -108,6 +109,24 @@ export default Capability.makeModule(
       handleUpdate();
       return () => clearTimeout(timeout);
     });
+
+    // Once graph is ready, expand every node marked open in state so the graph has children loaded for rendering.
+    yield* Effect.gen(function* () {
+      const { graph } = yield* Capability.waitFor(AppCapabilities.AppGraph);
+      const openPaths = Array.from(backingState.entries())
+        .filter(([, state]) => state.open)
+        .map(([pathString]) => Path.parts(pathString));
+      for (const path of openPaths) {
+        const nodeId = path[path.length - 1];
+        if (!nodeId) {
+          continue;
+        }
+        Graph.expand(graph, nodeId, 'outbound');
+        for (const child of Graph.getConnections(graph, nodeId, 'outbound')) {
+          Graph.expand(graph, child.id, 'outbound');
+        }
+      }
+    }).pipe(Effect.forkDaemon);
 
     return Capability.contributes(
       NavTreeCapabilities.State,

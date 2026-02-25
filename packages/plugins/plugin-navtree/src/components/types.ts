@@ -21,7 +21,10 @@ export type NavTreeContextValue = {
   // Callbacks.
   setAlternateTree?: (path: string[], open: boolean) => void;
   onTabChange?: (node: NavTreeItemGraphNode) => void;
-} & Pick<TreeProps<NavTreeItemGraphNode>, 'blockInstruction' | 'canDrop' | 'canSelect' | 'onOpenChange' | 'onSelect'> &
+} & Pick<
+  TreeProps<NavTreeItemGraphNode>,
+  'blockInstruction' | 'canDrop' | 'canSelect' | 'onOpenChange' | 'onSelect' | 'onItemHover'
+> &
   Pick<L1PanelProps, 'onBack'>;
 
 export type NavTreeItemColumnsProps = {

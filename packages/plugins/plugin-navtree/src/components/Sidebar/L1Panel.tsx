@@ -86,6 +86,7 @@ const L1PanelContent = ({ path, item, currentItemId, onBack }: L1PanelProps) => 
               canSelect={navTreeContext.canSelect}
               onOpenChange={navTreeContext.onOpenChange}
               onSelect={navTreeContext.onSelect}
+              onItemHover={navTreeContext.onItemHover}
             />
           ) : (
             <Tree
@@ -95,13 +96,14 @@ const L1PanelContent = ({ path, item, currentItemId, onBack }: L1PanelProps) => 
               path={path}
               levelOffset={5}
               gridTemplateColumns='[tree-row-start] 1fr min-content min-content min-content [tree-row-end]'
+              draggable
               renderColumns={NavTreeItemColumns}
               blockInstruction={navTreeContext.blockInstruction}
               canDrop={navTreeContext.canDrop}
               canSelect={navTreeContext.canSelect}
               onOpenChange={navTreeContext.onOpenChange}
               onSelect={navTreeContext.onSelect}
-              draggable
+              onItemHover={navTreeContext.onItemHover}
             />
           )}
         </ScrollArea.Viewport>

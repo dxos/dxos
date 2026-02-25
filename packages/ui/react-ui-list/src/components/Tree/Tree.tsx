@@ -24,6 +24,7 @@ export type TreeProps<T extends { id: string } = any> = {
     | 'canSelect'
     | 'onOpenChange'
     | 'onSelect'
+    | 'onItemHover'
     | 'levelOffset'
   >;
 
@@ -42,6 +43,7 @@ export const Tree = <T extends { id: string } = any>({
   canSelect,
   onOpenChange,
   onSelect,
+  onItemHover,
 }: TreeProps<T>) => {
   const childIds = useAtomValue(model.childIds(rootId));
   const treePath = useMemo(() => (path ? [...path, id] : [id]), [id, path]);
@@ -56,6 +58,7 @@ export const Tree = <T extends { id: string } = any>({
     canSelect,
     onOpenChange,
     onSelect,
+    onItemHover,
   };
 
   return (

@@ -12,7 +12,17 @@ import {
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import { useAtomValue } from '@effect-atom/atom-react';
 import * as Schema from 'effect/Schema';
-import React, { type FC, type KeyboardEvent, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  type FC,
+  type KeyboardEvent,
+  type MouseEvent,
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { TreeItem as NaturalTreeItem, Treegrid } from '@dxos/react-ui';
@@ -22,6 +32,7 @@ import {
   hoverableControls,
   hoverableFocusedKeyboardControls,
   hoverableFocusedWithinControls,
+  mx,
 } from '@dxos/ui-theme';
 
 import { DEFAULT_INDENTATION, paddingIndentation } from './helpers';
@@ -63,6 +74,7 @@ export type TreeItemProps<T extends { id: string } = any> = {
   canSelect?: (params: { item: T; path: string[] }) => boolean;
   onOpenChange?: (params: { item: T; path: string[]; open: boolean }) => void;
   onSelect?: (params: { item: T; path: string[]; current: boolean; option: boolean }) => void;
+  onItemHover?: (params: { item: T }) => void;
 };
 
 const RawTreeItem = <T extends { id: string } = any>({
@@ -77,6 +89,7 @@ const RawTreeItem = <T extends { id: string } = any>({
   canSelect,
   onOpenChange,
   onSelect,
+  onItemHover,
 }: TreeItemProps<T>) => {
   const rowRef = useRef<HTMLDivElement | null>(null);
   const buttonRef = useRef<HTMLButtonElement | null>(null);
@@ -232,6 +245,18 @@ const RawTreeItem = <T extends { id: string } = any>({
     [isBranch, open, handleOpenToggle, handleSelect],
   );
 
+  const handleItemHover = useCallback(() => {
+    onItemHover?.({ item });
+  }, [onItemHover, item]);
+
+  const handleContextMenu = useCallback(
+    (event: MouseEvent) => {
+      event.preventDefault();
+      setMenuOpen(true);
+    },
+    [setMenuOpen],
+  );
+
   const childProps = {
     draggable: _draggable,
     renderColumns: Columns,
@@ -256,7 +281,7 @@ const RawTreeItem = <T extends { id: string } = any>({
         //   without alerting the user (except for in the correct link element). See also:
         //   https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-current#description
         aria-current={current ? ('' as 'page') : undefined}
-        classNames={[
+        classNames={mx(
           'grid grid-cols-subgrid col-[tree-row] mt-0.5 is-current:bg-active-surface',
           hoverableControls,
           hoverableFocusedKeyboardControls,
@@ -265,12 +290,10 @@ const RawTreeItem = <T extends { id: string } = any>({
           ghostFocusWithin,
           ghostHover,
           className,
-        ]}
+        )}
         onKeyDown={handleKeyDown}
-        onContextMenu={(event) => {
-          event.preventDefault();
-          setMenuOpen(true);
-        }}
+        onMouseEnter={handleItemHover}
+        onContextMenu={handleContextMenu}
       >
         <div
           role='none'

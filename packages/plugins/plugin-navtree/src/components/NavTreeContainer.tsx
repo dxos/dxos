@@ -59,7 +59,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
         setItem(path, 'open', open);
         Graph.expand(graph, id, 'outbound');
       },
-      [graph],
+      [graph, setItem],
     );
 
     // Ref for volatile values that callbacks need but shouldn't depend on.
@@ -213,6 +213,11 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
       [setItem],
     );
 
+    const onItemHover = useCallback(
+      ({ item }: { item: Node.Node }) => Graph.expand(graph, item.id, 'outbound'),
+      [graph],
+    );
+
     const navTreeContextValue = useMemo(
       () => ({
         model,
@@ -226,6 +231,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
         onOpenChange: handleOpenChange,
         onSelect: handleSelect,
         onTabChange: handleTabChange,
+        onItemHover,
       }),
       [
         model,
@@ -238,6 +244,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
         handleOpenChange,
         handleSelect,
         handleTabChange,
+        onItemHover,
       ],
     );
 

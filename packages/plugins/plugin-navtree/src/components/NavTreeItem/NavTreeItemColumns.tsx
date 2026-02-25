@@ -7,7 +7,7 @@ import React, { Fragment, memo, useMemo } from 'react';
 import { Node } from '@dxos/app-graph';
 import { Popover, Treegrid, toLocalizedString, useTranslation } from '@dxos/react-ui';
 
-import { useActions, useLoadDescendents } from '../../hooks';
+import { useActions } from '../../hooks';
 import { meta } from '../../meta';
 import { NAV_TREE_ITEM } from '../NavTree';
 import { useNavTreeContext } from '../NavTreeContext';
@@ -55,9 +55,6 @@ export const NavTreeItemColumns = memo(({ path, item, open }: NavTreeItemColumns
         : undefined,
     [primaryAction, groupedActions],
   );
-
-  useLoadDescendents(item);
-  useLoadDescendents(primaryAction && !Node.isAction(primaryAction) ? (primaryAction as Node.Node) : undefined);
 
   const ActionRoot = popoverAnchorId === `dxos.org/ui/${NAV_TREE_ITEM}/${item.id}` ? Popover.Anchor : Fragment;
 
