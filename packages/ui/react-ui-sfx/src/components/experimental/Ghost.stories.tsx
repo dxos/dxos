@@ -252,7 +252,7 @@ export const FrameTrail: Story = {
 
 export const CircleTrail: Story = {
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
-  render: (props) => <TrailStory {...props} trajectory={circleTrajectory(0.38)} speed={10} wiggleAmplitude={15} />,
+  render: (props) => <TrailStory {...props} trajectory={circleTrajectory(0.2)} speed={20} wiggleAmplitude={15} />,
   args: {
     DENSITY_DISSIPATION: 1.5,
     VELOCITY_DISSIPATION: 20,
