@@ -1,6 +1,47 @@
 {
-  "author": "DXOS.org",
+  "name": "@dxos/ui-theme",
+  "version": "0.8.3",
+  "description": "A set of design system tokens to use with DXOS UI.",
+  "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "MIT",
+  "author": "DXOS.org",
+  "sideEffects": [
+    "*.css"
+  ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "default": "./dist/lib/browser/index.mjs"
+    },
+    "./plugin": {
+      "source": "./src/plugins/plugin.ts",
+      "types": "./dist/types/src/plugins/plugin.d.ts",
+      "import": "./dist/plugin/node-esm/plugins/plugin.mjs",
+      "require": "./dist/plugin/node-cjs/plugins/plugin.cjs"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "plugin": [
+        "dist/types/src/plugins/plugin.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "audit-classes": "npx tsx bin/audit-classes.mts",
+    "tailwind-check": "tailwindcss -i ./dist/plugin/node-esm/theme.css --config ./src/tailwind.ts --content \"./src/**/*.{js,ts,jsx,tsx,vue}\" --check"
+  },
   "dependencies": {
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
@@ -22,7 +63,6 @@
     "tailwindcss": "catalog:",
     "tailwindcss-radix": "catalog:"
   },
-  "description": "A set of design system tokens to use with DXOS UI.",
   "devDependencies": {
     "@dxos/ui-types": "workspace:*",
     "@types/lodash.merge": "catalog:",
@@ -30,47 +70,7 @@
     "esbuild": "catalog:",
     "vite": "catalog:"
   },
-  "exports": {
-    ".": {
-      "source": "./src/index.ts",
-      "types": "./dist/types/src/index.d.ts",
-      "default": "./dist/lib/browser/index.mjs"
-    },
-    "./plugin": {
-      "source": "./src/plugins/plugin.ts",
-      "types": "./dist/types/src/plugins/plugin.d.ts",
-      "import": "./dist/plugin/node-esm/plugins/plugin.mjs",
-      "require": "./dist/plugin/node-cjs/plugins/plugin.cjs"
-    }
-  },
-  "files": [
-    "dist",
-    "src"
-  ],
-  "homepage": "https://dxos.org",
-  "license": "MIT",
-  "name": "@dxos/ui-theme",
   "publishConfig": {
     "access": "public"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/dxos/dxos"
-  },
-  "scripts": {
-    "audit-classes": "npx tsx bin/audit-classes.mts",
-    "tailwind-check": "tailwindcss -i ./dist/plugin/node-esm/theme.css --config ./src/tailwind.ts --content \"./src/**/*.{js,ts,jsx,tsx,vue}\" --check"
-  },
-  "sideEffects": [
-    "*.css"
-  ],
-  "type": "module",
-  "typesVersions": {
-    "*": {
-      "plugin": [
-        "dist/types/src/plugins/plugin.d.ts"
-      ]
-    }
-  },
-  "version": "0.8.3"
+  }
 }
