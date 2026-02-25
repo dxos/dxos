@@ -15,10 +15,9 @@ import { useSelected, useSelectionActions } from '@dxos/react-ui-attention';
 import { Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
 import { Event } from '@dxos/types';
 
+import { EventList } from '../../components/CalendarArticle/EventList';
 import { meta } from '../../meta';
 import { type Calendar } from '../../types';
-
-import { EventList } from './EventList';
 
 const byDate =
   (direction = -1) =>

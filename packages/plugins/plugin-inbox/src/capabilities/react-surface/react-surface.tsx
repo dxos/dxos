@@ -10,6 +10,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { Obj } from '@dxos/echo';
 import { Event, Message, Organization, Person } from '@dxos/types';
 
+import { POPOVER_SAVE_FILTER } from '../../constants';
 import {
   CalendarArticle,
   DraftMessageArticle,
@@ -22,8 +23,7 @@ import {
   PopoverSaveFilter,
   RelatedToContact,
   RelatedToOrganization,
-} from '../../components';
-import { POPOVER_SAVE_FILTER } from '../../constants';
+} from '../../containers';
 import { meta } from '../../meta';
 import { Calendar, Mailbox } from '../../types';
 

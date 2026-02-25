@@ -11,9 +11,8 @@ import { AutomationCapabilities, invokeFunctionWithTracing } from '@dxos/plugin-
 import { Layout } from '@dxos/react-ui';
 import { type Message } from '@dxos/types';
 
+import { ComposeEmailPanel } from '../../components/DraftMessageArticle/ComposeEmailPanel';
 import { GmailFunctions } from '../../functions';
-
-import { ComposeEmailPanel } from './ComposeEmailPanel';
 
 export type DraftMessageArticleProps = SurfaceComponentProps<Message.Message>;
 

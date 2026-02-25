@@ -4,7 +4,7 @@
 
 import { format, formatDistance, isThisWeek, isToday } from 'date-fns';
 
-import { Obj } from '@dxos/echo';
+import { type Obj } from '@dxos/echo';
 import { type Message } from '@dxos/types';
 import { toHue } from '@dxos/util';
 

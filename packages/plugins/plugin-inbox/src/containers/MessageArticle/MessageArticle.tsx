@@ -10,11 +10,10 @@ import { Obj } from '@dxos/echo';
 import { Layout } from '@dxos/react-ui';
 import { type Message as MessageType } from '@dxos/types';
 
+import { Message, type MessageHeaderProps } from '../../components/MessageArticle/Message';
+import { type ViewMode } from '../../components/MessageArticle/useToolbar';
 import { useActorContact } from '../../hooks';
 import { InboxOperation, type Mailbox } from '../../types';
-
-import { Message, type MessageHeaderProps } from './Message';
-import { type ViewMode } from './useToolbar';
 
 export type MessageArticleProps = SurfaceComponentProps<
   MessageType.Message,

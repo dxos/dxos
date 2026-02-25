@@ -32,25 +32,19 @@ const DefaultStory = () => {
   return <MailboxComponent id='story' messages={messages} ignoreAttention labels={LABELS} />;
 };
 
-const WithCompanionStory = () => {
+const CompanionStory = () => {
   const db = useDatabase();
   const [mailbox] = useQuery(db, Filter.type(Mailbox.Mailbox));
-
-  const selected = useSelected(Obj.getDXN(mailbox).toString(), 'single');
+  const contextId = mailbox ? Obj.getDXN(mailbox).toString() : undefined;
+  const selected = useSelected(contextId, 'single');
   const message = useQuery(mailbox?.queue.target, selected ? Filter.id(selected) : Filter.nothing())[0];
 
   const mailboxData = useMemo(() => ({ subject: mailbox }), [mailbox]);
   const companionData = useMemo(() => ({ subject: message ?? 'message', companionTo: mailbox }), [message, mailbox]);
-
-  // NOTE: Attention required for scrolling.
-  const attentionAttrs = useAttentionAttributes(mailbox ? Obj.getDXN(mailbox).toString() : undefined);
-
-  if (!db || !mailbox) {
-    return null;
-  }
+  const attentionAttrs = useAttentionAttributes(contextId);
 
   return (
-    <div {...attentionAttrs} className='h-full w-full grid grid-cols-2 grid-rows-2 overflow-hidden'>
+    <div role='none' {...attentionAttrs} className='grid grid-cols-[1fr_1fr]'>
       <Surface.Surface role='article' data={mailboxData} />
       <Surface.Surface role='article' data={companionData} />
     </div>
@@ -61,7 +55,7 @@ const meta = {
   title: 'plugins/plugin-inbox/Mailbox',
   component: MailboxComponent as any,
   render: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withAttention(), withMosaic()],
+  decorators: [withTheme(), withLayout({ layout: 'column' }), withAttention(), withMosaic()],
   parameters: {
     layout: 'fullscreen',
   },
@@ -74,8 +68,9 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 export const WithCompanion: Story = {
-  render: render(WithCompanionStory),
+  render: render(CompanionStory),
   decorators: [
+    withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [
         ...corePlugins(),

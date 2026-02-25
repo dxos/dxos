@@ -8,7 +8,7 @@ import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Card } from '@dxos/react-ui-mosaic';
 import { type Event } from '@dxos/types';
 
-import { DateComponent } from '../common';
+import { DateComponent } from '../../components/common';
 
 export const EventCard = ({ subject: event }: SurfaceComponentProps<Event.Event>) => {
   return (

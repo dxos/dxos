@@ -12,10 +12,9 @@ import { Layout } from '@dxos/react-ui';
 import { Text } from '@dxos/schema';
 import { Event as EventType } from '@dxos/types';
 
+import { Event, type EventHeaderProps } from '../../components/EventArticle/Event';
 import { useShadowObject } from '../../hooks';
 import { type Calendar, InboxOperation } from '../../types';
-
-import { Event, type EventHeaderProps } from './Event';
 
 export type EventArticleProps = SurfaceComponentProps<
   EventType.Event,

@@ -15,10 +15,9 @@ import { useActiveSpace } from '@dxos/plugin-space';
 import { useQuery, useQueue } from '@dxos/react-client/echo';
 import { Event, Message, type Person } from '@dxos/types';
 
+import { RelatedEvents } from '../../components/Related/RelatedEvents';
+import { RelatedMessages } from '../../components/Related/RelatedMessages';
 import { Calendar, Mailbox } from '../../types';
-
-import { RelatedEvents } from './RelatedEvents';
-import { RelatedMessages } from './RelatedMessages';
 
 export const RelatedToContact = ({ subject: contact }: SurfaceComponentProps<Person.Person>) => {
   const { invokePromise } = useOperationInvoker();

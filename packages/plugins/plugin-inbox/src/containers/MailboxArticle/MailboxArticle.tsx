@@ -23,13 +23,12 @@ import { MenuBuilder, createGapSeparator, useMenuActions } from '@dxos/react-ui-
 import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
 import { HasSubject, Message } from '@dxos/types';
 
+import { type MailboxActionHandler, Mailbox as MailboxComponent } from '../../components/MailboxArticle/Mailbox';
+import { MailboxEmpty } from '../../components/MailboxArticle/MailboxEmpty';
 import { POPOVER_SAVE_FILTER } from '../../constants';
 import { meta } from '../../meta';
 import { InboxOperation, type Mailbox } from '../../types';
 import { sortByCreated } from '../../util';
-
-import { type MailboxActionHandler, Mailbox as MailboxComponent } from './Mailbox';
-import { MailboxEmpty } from './MailboxEmpty';
 
 export type MailboxArticleProps = SurfaceComponentProps<
   Mailbox.Mailbox,
