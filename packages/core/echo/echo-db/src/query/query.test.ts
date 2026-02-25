@@ -341,7 +341,7 @@ describe('Query', () => {
           )
           .run();
         const titles = results.map((r: TestSchema.Task) => r.title).sort();
-        expect(titles).toEqual(['space1-task', 'space2-task']);
+        expect(titles).toEqual([spaceTask1.title, spaceTask2.title]);
       }
 
       {
@@ -355,7 +355,7 @@ describe('Query', () => {
           )
           .run();
         const titles = results.map((r: TestSchema.Task) => r.title).sort();
-        expect(titles).toEqual(['queue1-task', 'queue2-task', 'space1-task', 'space2-task']);
+        expect(titles).toEqual([queueTask1.title, queueTask2.title, spaceTask1.title, spaceTask2.title]);
       }
 
       {
@@ -369,7 +369,7 @@ describe('Query', () => {
           )
           .run();
         const titles = results.map((r: TestSchema.Task) => r.title).sort();
-        expect(titles).toEqual(['queue1-task', 'space1-task', 'space2-task']);
+        expect(titles).toEqual([queueTask1.title, spaceTask1.title, spaceTask2.title]);
       }
 
       {
@@ -383,7 +383,7 @@ describe('Query', () => {
           )
           .run();
         const titles = results.map((r: TestSchema.Task) => r.title).sort();
-        expect(titles).toEqual(['queue2-task', 'space1-task', 'space2-task']);
+        expect(titles).toEqual([queueTask2.title, spaceTask1.title, spaceTask2.title]);
       }
 
       {
@@ -397,7 +397,7 @@ describe('Query', () => {
           )
           .run();
         const titles = results.map((r: TestSchema.Task) => r.title).sort();
-        expect(titles).toEqual(['queue1-task', 'queue2-task', 'space1-task', 'space2-task']);
+        expect(titles).toEqual([queueTask1.title, queueTask2.title, spaceTask1.title, spaceTask2.title]);
       }
 
       {
@@ -411,7 +411,7 @@ describe('Query', () => {
           )
           .run();
         const titles = results.map((r: TestSchema.Task) => r.title).sort();
-        expect(titles).toEqual(['queue1-task', 'space1-task']);
+        expect(titles).toEqual([queueTask1.title, spaceTask1.title]);
       }
 
       {
@@ -425,7 +425,7 @@ describe('Query', () => {
           )
           .run();
         expect(results).toHaveLength(1);
-        expect((results[0] as TestSchema.Person).name).toEqual('space1-person');
+        expect((results[0] as TestSchema.Person).name).toEqual(spacePerson1.name);
       }
     });
   });
