@@ -3,7 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React, { useCallback, useMemo } from 'react';
+import React, { Activity, useCallback, useMemo } from 'react';
 
 import { Node } from '@dxos/app-graph';
 import { useActionRunner } from '@dxos/plugin-graph';
@@ -13,7 +13,7 @@ import { DropdownMenu, type MenuItem, MenuProvider } from '@dxos/react-ui-menu';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
 
-import { useIsAlternateTree, useLoadDescendents } from '../../hooks';
+import { useActions, useFilteredItems, useIsAlternateTree, useLoadDescendents } from '../../hooks';
 import { meta } from '../../meta';
 import { NAV_TREE_ITEM } from '../NavTree';
 import { useNavTreeContext } from '../NavTreeContext';
@@ -29,17 +29,11 @@ export type L1PanelProps = {
 
 /**
  * Space or settings panel.
+ * Only the active panel renders its content tree to avoid subscription/effect cascades from hidden panels.
  */
 export const L1Panel = ({ open, path, item, currentItemId, onBack }: L1PanelProps) => {
   const { t } = useTranslation(meta.id);
-  const navTreeContext = useNavTreeContext();
   const title = toLocalizedString(item.properties.label, t);
-
-  // TODO(wittjosiah): Support multiple alternate trees.
-  const { useFilteredItems } = navTreeContext;
-  const alternateTree = useFilteredItems(item, { disposition: 'alternate-tree' })[0];
-  const alternatePath = useMemo(() => [...path, item.id], [item.id, path]);
-  const isAlternate = useIsAlternateTree(alternatePath, item);
 
   return (
     <Tabs.Tabpanel
@@ -55,38 +49,64 @@ export const L1Panel = ({ open, path, item, currentItemId, onBack }: L1PanelProp
       aria-label={title}
       {...(!open && { inert: true })}
     >
-      {item.id === currentItemId && (
-        <DensityProvider density='fine'>
-          <L1PanelHeader path={path} item={item} currentItemId={currentItemId} onBack={onBack} />
-          <ScrollArea.Root thin orientation='vertical'>
-            <ScrollArea.Viewport>
-              {isAlternate ? (
-                <Tree
-                  {...navTreeContext}
-                  id={alternateTree.id}
-                  root={alternateTree}
-                  path={alternatePath}
-                  levelOffset={5}
-                  gridTemplateColumns='[tree-row-start] 1fr min-content min-content min-content [tree-row-end]'
-                  renderColumns={NavTreeItemColumns}
-                />
-              ) : (
-                <Tree
-                  {...navTreeContext}
-                  id={item.id}
-                  root={item}
-                  path={path}
-                  levelOffset={5}
-                  gridTemplateColumns='[tree-row-start] 1fr min-content min-content min-content [tree-row-end]'
-                  renderColumns={NavTreeItemColumns}
-                  draggable
-                />
-              )}
-            </ScrollArea.Viewport>
-          </ScrollArea.Root>
-        </DensityProvider>
-      )}
+      <Activity mode={item.id === currentItemId ? 'visible' : 'hidden'}>
+        <L1PanelContent open={open} path={path} item={item} currentItemId={currentItemId} onBack={onBack} />
+      </Activity>
     </Tabs.Tabpanel>
+  );
+};
+
+/**
+ * Active panel content — only mounted for the current tab to avoid effect cascades.
+ */
+const L1PanelContent = ({ path, item, currentItemId, onBack }: L1PanelProps) => {
+  const navTreeContext = useNavTreeContext();
+
+  // TODO(wittjosiah): Support multiple alternate trees.
+  const alternateTree = useFilteredItems(item, { disposition: 'alternate-tree' })[0];
+  const alternatePath = useMemo(() => [...path, item.id], [item.id, path]);
+  const isAlternate = useIsAlternateTree(alternatePath, item);
+
+  return (
+    <DensityProvider density='fine'>
+      <L1PanelHeader path={path} item={item} currentItemId={currentItemId} onBack={onBack} />
+      <ScrollArea.Root thin orientation='vertical'>
+        <ScrollArea.Viewport>
+          {isAlternate ? (
+            <Tree
+              model={navTreeContext.model}
+              id={alternateTree.id}
+              rootId={alternateTree.id}
+              path={alternatePath}
+              levelOffset={5}
+              gridTemplateColumns='[tree-row-start] 1fr min-content min-content min-content [tree-row-end]'
+              renderColumns={NavTreeItemColumns}
+              blockInstruction={navTreeContext.blockInstruction}
+              canDrop={navTreeContext.canDrop}
+              canSelect={navTreeContext.canSelect}
+              onOpenChange={navTreeContext.onOpenChange}
+              onSelect={navTreeContext.onSelect}
+            />
+          ) : (
+            <Tree
+              model={navTreeContext.model}
+              id={item.id}
+              rootId={item.id}
+              path={path}
+              levelOffset={5}
+              gridTemplateColumns='[tree-row-start] 1fr min-content min-content min-content [tree-row-end]'
+              renderColumns={NavTreeItemColumns}
+              blockInstruction={navTreeContext.blockInstruction}
+              canDrop={navTreeContext.canDrop}
+              canSelect={navTreeContext.canSelect}
+              onOpenChange={navTreeContext.onOpenChange}
+              onSelect={navTreeContext.onSelect}
+              draggable
+            />
+          )}
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
+    </DensityProvider>
   );
 };
 
@@ -161,7 +181,7 @@ const L1PanelHeader = ({ item, path, onBack }: L1PanelProps) => {
  */
 const useL1MenuActions = ({ item, path }: Pick<L1PanelProps, 'item' | 'path'>) => {
   const { t } = useTranslation(meta.id);
-  const { setAlternateTree, useActions, useFilteredItems } = useNavTreeContext();
+  const { setAlternateTree } = useNavTreeContext();
   const runAction = useActionRunner();
 
   // TODO(wittjosiah): Support multiple alternate trees.

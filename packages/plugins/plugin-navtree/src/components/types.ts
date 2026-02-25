@@ -6,40 +6,23 @@ import type { FC } from 'react';
 
 import { type Node } from '@dxos/app-graph';
 import type { Density } from '@dxos/react-ui';
-import type { TreeProps } from '@dxos/react-ui-list';
-import type { MaybePromise } from '@dxos/util';
+import type { TreeModel, TreeProps } from '@dxos/react-ui-list';
 
-import type { FlattenedActions, NavTreeItemGraphNode } from '../types';
+import type { NavTreeItemGraphNode } from '../types';
 
 import type { L1PanelProps } from './Sidebar';
 
-export type NavTreeContextValue = Pick<
-  TreeProps<NavTreeItemGraphNode>,
-  | 'getProps'
-  | 'useIsCurrent'
-  | 'useIsOpen'
-  | 'useChildIds'
-  | 'useItem'
-  | 'blockInstruction'
-  | 'canDrop'
-  | 'onOpenChange'
-  | 'onSelect'
-> &
-  Pick<L1PanelProps, 'onBack'> & {
-    tab: string;
-    topbar?: boolean;
-    popoverAnchorId?: string;
-    renderItemEnd?: FC<{ node: Node.Node; open: boolean }>;
-    useActions: (node: Node.Node) => FlattenedActions;
-    useFilteredItems: (
-      node?: NavTreeItemGraphNode,
-      options?: { disposition?: string; sort?: boolean },
-    ) => NavTreeItemGraphNode[];
-    loadDescendents?: (node: Node.Node) => MaybePromise<void>;
-    useIsAlternateTree?: (path: string[], item: NavTreeItemGraphNode) => boolean;
-    setAlternateTree?: (path: string[], open: boolean) => void;
-    onTabChange?: (node: NavTreeItemGraphNode) => void;
-  };
+export type NavTreeContextValue = {
+  // Data.
+  model: TreeModel<NavTreeItemGraphNode>;
+  popoverAnchorId?: string;
+  renderItemEnd?: FC<{ node: Node.Node; open: boolean }>;
+
+  // Callbacks.
+  setAlternateTree?: (path: string[], open: boolean) => void;
+  onTabChange?: (node: NavTreeItemGraphNode) => void;
+} & Pick<TreeProps<NavTreeItemGraphNode>, 'blockInstruction' | 'canDrop' | 'canSelect' | 'onOpenChange' | 'onSelect'> &
+  Pick<L1PanelProps, 'onBack'>;
 
 export type NavTreeItemColumnsProps = {
   path: string[];

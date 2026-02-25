@@ -10,6 +10,7 @@ import {
   attachInstruction,
   extractInstruction,
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
+import { useAtomValue } from '@effect-atom/atom-react';
 import * as Schema from 'effect/Schema';
 import React, { type FC, type KeyboardEvent, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -31,7 +32,7 @@ import { TreeItemToggle } from './TreeItemToggle';
 const hoverableDescriptionIcons =
   '[--icons-color:inherit] hover-hover:[--icons-color:var(--description-text)] hover-hover:hover:[--icons-color:inherit] focus-within:[--icons-color:inherit]';
 
-type TreeItemState = 'idle' | 'dragging' | 'preview' | 'parent-of-instruction';
+type TreeItemDragState = 'idle' | 'dragging' | 'preview' | 'parent-of-instruction';
 
 export const TreeDataSchema = Schema.Struct({
   id: Schema.String,
@@ -81,17 +82,25 @@ const RawTreeItem = <T extends { id: string } = any>({
   const buttonRef = useRef<HTMLButtonElement | null>(null);
   const openRef = useRef(false);
   const cancelExpandRef = useRef<NodeJS.Timeout | null>(null);
-  const [_state, setState] = useState<TreeItemState>('idle');
+  const [_state, setState] = useState<TreeItemDragState>('idle');
   const [instruction, setInstruction] = useState<Instruction | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const { useChildIds, getProps, useIsOpen, useIsCurrent } = useTree();
-  const childIds = useChildIds(item);
+  const {
+    itemProps: itemPropsAtom,
+    childIds: childIdsAtom,
+    itemOpen: itemOpenAtom,
+    itemCurrent: itemCurrentAtom,
+  } = useTree();
+  const path = useMemo(() => [..._path, item.id], [_path, item.id]);
 
-  const { id, parentOf, label, className, headingClassName, icon, iconHue, disabled, testId } = getProps(item, _path);
-  const path = useMemo(() => [..._path, id], [_path, id]);
-  const open = useIsOpen(path, item);
-  const current = useIsCurrent(path, item);
+  const { id, parentOf, label, className, headingClassName, icon, iconHue, disabled, testId } = useAtomValue(
+    itemPropsAtom(path),
+  );
+  const childIds = useAtomValue(childIdsAtom(item.id));
+  const open = useAtomValue(itemOpenAtom(path));
+  const current = useAtomValue(itemCurrentAtom(path));
+
   const level = path.length - levelOffset;
   const isBranch = !!parentOf;
   const mode: ItemMode = last ? 'last-in-group' : open ? 'expanded' : 'standard';
@@ -296,14 +305,16 @@ const RawTreeItem = <T extends { id: string } = any>({
 
 export const TreeItem = memo(RawTreeItem) as FC<TreeItemProps>;
 
-/** Resolves a child ID to an item via `useItem` and renders a TreeItem. */
+/** Resolves a child ID to an item via the `item` atom and renders a TreeItem. */
 export type TreeItemByIdProps = Omit<TreeItemProps, 'item'> & { id: string };
 
-export const TreeItemById = <T extends { id: string } = any>({ id, ...props }: TreeItemByIdProps) => {
-  const { useItem } = useTree();
-  const item = useItem(id) as T | undefined;
+const RawTreeItemById = <T extends { id: string } = any>({ id, ...props }: TreeItemByIdProps) => {
+  const { item: itemAtom } = useTree();
+  const item = useAtomValue(itemAtom(id)) as T | undefined;
   if (!item) {
     return null;
   }
   return <TreeItem item={item} {...props} />;
 };
+
+export const TreeItemById = memo(RawTreeItemById) as FC<TreeItemByIdProps>;

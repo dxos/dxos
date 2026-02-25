@@ -11,10 +11,12 @@ import {
   attachClosestEdge,
   extractClosestEdge,
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
+import { useAtomValue } from '@effect-atom/atom-react';
 import React, {
   type MouseEvent,
   type PropsWithChildren,
   forwardRef,
+  memo,
   useCallback,
   useLayoutEffect,
   useMemo,
@@ -71,7 +73,7 @@ type L0ItemProps = L0ItemRootProps & {
 };
 
 const useL0ItemClick = ({ item, parent, path }: L0ItemProps, type: string) => {
-  const { tab, onSelect, onTabChange } = useNavTreeContext();
+  const { onSelect, onTabChange } = useNavTreeContext();
   const { getItem } = useNavTreeState();
   const [isLg] = useMediaQuery('lg');
   const runAction = useActionRunner();
@@ -91,7 +93,7 @@ const useL0ItemClick = ({ item, parent, path }: L0ItemProps, type: string) => {
           return onSelect?.({ item, path, current: !getItem(path).current, option: event.altKey });
       }
     },
-    [item, parent, type, tab, getItem, onSelect, onTabChange, isLg, runAction],
+    [item, parent, type, getItem, onSelect, onTabChange, isLg, runAction],
   );
 };
 
@@ -104,12 +106,12 @@ const l0ItemRoot =
 
 const l0ItemContent = 'flex justify-center items-center dx-focus-ring-group-indicator transition-colors rounded-xs';
 
-const L0ItemRoot = forwardRef<HTMLElement, PropsWithChildren<L0ItemRootProps>>(
-  ({ item, parent, path, children }, forwardedRef) => {
-    const { getProps } = useNavTreeContext();
-    const { id, testId } = getProps?.(item, path) ?? {};
-    const type = l0ItemType(item);
+const L0ItemRoot = memo(
+  forwardRef<HTMLElement, PropsWithChildren<L0ItemRootProps>>(({ item, parent, path, children }, forwardedRef) => {
+    const { model } = useNavTreeContext();
     const itemPath = useMemo(() => [...path, item.id], [item.id, path]);
+    const { id, testId } = useAtomValue(model.itemProps(itemPath));
+    const type = l0ItemType(item);
 
     const { t } = useTranslation(meta.id);
     const localizedString = toLocalizedString(item.properties.label, t);
@@ -132,7 +134,7 @@ const L0ItemRoot = forwardRef<HTMLElement, PropsWithChildren<L0ItemRootProps>>(
         </Tabs.TabPrimitive>
       </Tooltip.Trigger>
     );
-  },
+  }),
 );
 
 export const L0ItemActiveTabIndicator = ({ classNames }: ThemedClassName<{}>) => (
@@ -146,7 +148,7 @@ export const L0ItemActiveTabIndicator = ({ classNames }: ThemedClassName<{}>) =>
 );
 
 // TODO(burdon): Factor out pinned (non-draggable) items.
-const L0Item = ({ item, parent, path, pinned, onRearrange }: L0ItemProps) => {
+const L0Item = memo(({ item, parent, path, pinned, onRearrange }: L0ItemProps) => {
   const { t } = useTranslation(meta.id);
   const itemElement = useRef<HTMLElement | null>(null);
   const [closestEdge, setEdge] = useState<Edge | null>(null);
@@ -231,7 +233,7 @@ const L0Item = ({ item, parent, path, pinned, onRearrange }: L0ItemProps) => {
       {closestEdge && <ListItem.DropIndicator edge={closestEdge} />}
     </L0ItemRoot>
   );
-};
+});
 
 const ItemAvatar = ({ item }: Pick<L0ItemProps, 'item'>) => {
   const { t } = useTranslation(meta.id);

@@ -4,20 +4,20 @@
 
 import React, { forwardRef, useMemo } from 'react';
 
-import { type TreeProps } from '@dxos/react-ui-list';
+import { type Node } from '@dxos/app-graph';
 import { Tabs } from '@dxos/react-ui-tabs';
 
-import { useLoadDescendents } from '../../hooks';
-import { type NavTreeItemGraphNode } from '../../types';
+import { useFilteredItems, useLoadDescendents } from '../../hooks';
 import { useNavTreeContext } from '../NavTreeContext';
 import { L0Menu, L1Tabs, type L1TabsProps } from '../Sidebar';
 
 export const NAV_TREE_ITEM = 'NavTreeItem';
 
-export type NavTreeProps = Pick<TreeProps<NavTreeItemGraphNode>, 'id' | 'root'> & Pick<L1TabsProps, 'open'>;
+export type NavTreeProps = { id: string; root?: Node.Node; tab: string } & Pick<L1TabsProps, 'open'>;
 
-export const NavTree = forwardRef<HTMLDivElement, NavTreeProps>(({ id, root, ...props }, forwardedRef) => {
-  const { tab, useFilteredItems, onBack } = useNavTreeContext();
+// TODO(wittjosiah): Refactor to Radix-style.
+export const NavTree = forwardRef<HTMLDivElement, NavTreeProps>(({ id, root, tab, ...props }, forwardedRef) => {
+  const { onBack } = useNavTreeContext();
   const topLevelActions = useFilteredItems(root, { disposition: 'menu', sort: true });
   const topLevelWorkspaces = useFilteredItems(root, { disposition: 'workspace' });
   const l0Items = topLevelWorkspaces;

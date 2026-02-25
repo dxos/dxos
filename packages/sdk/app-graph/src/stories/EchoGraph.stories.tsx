@@ -17,9 +17,9 @@ import { type Client, useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Icon, IconButton, Input, Select } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
-import { Path, Tree } from '@dxos/react-ui-list';
+import { Path, Tree, type TreeModel } from '@dxos/react-ui-list';
 import { getSize, mx } from '@dxos/ui-theme';
-import { isNonNullable, safeParseInt } from '@dxos/util';
+import { safeParseInt } from '@dxos/util';
 
 import * as CreateAtom from '../atoms';
 import * as Graph from '../graph';
@@ -291,68 +291,97 @@ export const TreeView: Story = {
     const stateRef = useRef(new Map<string, Atom.Writable<{ open: boolean; current: boolean }>>());
 
     const getOrCreateState = useMemo(
-      () => (path: string) => {
-        let atom = stateRef.current.get(path);
+      () => (pathKey: string) => {
+        let atom = stateRef.current.get(pathKey);
         if (!atom) {
           atom = Atom.make({ open: true, current: false }).pipe(Atom.keepAlive);
-          stateRef.current.set(path, atom);
+          stateRef.current.set(pathKey, atom);
         }
         return atom;
       },
       [],
     );
 
-    const useChildIds = useCallback(
-      (node?: Node.Node) => {
-        const connections = useAtomValue(graph.connections(node?.id ?? Node.RootId));
-        return connections.map((connection) => connection.id);
-      },
+    const childIdsFamily = useMemo(
+      () =>
+        Atom.family((id: string) =>
+          Atom.make((get) => {
+            const connections = get(graph.connections(id));
+            return connections.map((connection) => connection.id);
+          }),
+        ),
       [graph],
     );
 
-    const useItem = useCallback(
-      (itemId: string) => {
-        const node = useAtomValue(graph.node(itemId));
-        return Option.isSome(node) ? node.value : undefined;
-      },
+    const itemFamily = useMemo(
+      () =>
+        Atom.family((id: string) =>
+          Atom.make((get) => {
+            const node = get(graph.node(id));
+            return Option.isSome(node) ? node.value : undefined;
+          }),
+        ),
       [graph],
     );
 
-    const getProps = useCallback(
-      (node: Node.Node, path: string[]) => {
-        const children = Graph.getConnections(graph, node.id, 'outbound')
-          .map((n) => {
-            // Break cycles.
-            const nextPath = [...path, node.id];
-            return nextPath.includes(n.id) ? undefined : (n as Node.Node);
-          })
-          .filter(isNonNullable) as Node.Node[];
-        const parentOf =
-          children.length > 0 ? children.map(({ id }) => id) : node.properties.role === 'branch' ? [] : undefined;
-        return {
-          id: node.id,
-          label: node.id,
-          icon: node.type === 'dxos.org/type/Space' ? 'ph--planet--regular' : 'ph--placeholder--regular',
-          parentOf,
-        };
-      },
+    const itemPropsFamily = useMemo(
+      () =>
+        Atom.family((pathKey: string) => {
+          const path = pathKey.split('~');
+          const id = path[path.length - 1];
+          return Atom.make((get) => {
+            const nodeOpt = get(graph.node(id));
+            const node = Option.isSome(nodeOpt) ? nodeOpt.value : undefined;
+            if (!node) {
+              return { id, label: id };
+            }
+            const connections = get(graph.connections(node.id, 'outbound'));
+            const safeChildren = connections.filter((n) => !path.includes(n.id));
+            const parentOf =
+              safeChildren.length > 0
+                ? safeChildren.map(({ id }) => id)
+                : node.properties.role === 'branch'
+                  ? []
+                  : undefined;
+            return {
+              id: node.id,
+              label: node.id,
+              icon: node.type === 'dxos.org/type/Space' ? 'ph--planet--regular' : 'ph--placeholder--regular',
+              parentOf,
+            };
+          });
+        }),
       [graph],
     );
 
-    // Hook that subscribes to item state via Atom.
-    const useItemState = (_path: string[]) => {
-      const path = useMemo(() => Path.create(..._path), [_path.join('~')]);
-      const atom = getOrCreateState(path);
-      return useAtomValue(atom);
-    };
+    const itemOpenFamily = useMemo(
+      () =>
+        Atom.family((pathKey: string) => {
+          const stateAtom = getOrCreateState(pathKey);
+          return Atom.make((get) => get(stateAtom).open);
+        }),
+      [getOrCreateState],
+    );
 
-    const useIsOpen = (_path: string[]) => {
-      return useItemState(_path).open;
-    };
+    const itemCurrentFamily = useMemo(
+      () =>
+        Atom.family((pathKey: string) => {
+          const stateAtom = getOrCreateState(pathKey);
+          return Atom.make((get) => get(stateAtom).current);
+        }),
+      [getOrCreateState],
+    );
 
-    const useIsCurrent = (_path: string[]) => {
-      return useItemState(_path).current;
-    };
+    const model: TreeModel<Node.Node> = useMemo(
+      () => ({
+        childIds: (parentId?: string) => childIdsFamily(parentId ?? Node.RootId),
+        item: (id: string) => itemFamily(id),
+        itemProps: (path: string[]) => itemPropsFamily(path.join('~')),
+        itemOpen: (path: string[]) => itemOpenFamily(Path.create(...path)),
+        itemCurrent: (path: string[]) => itemCurrentFamily(Path.create(...path)),
+      }),
+      [childIdsFamily, itemFamily, itemPropsFamily, itemOpenFamily, itemCurrentFamily],
+    );
 
     const onOpenChange = useCallback(
       ({ path: _path, open }: { path: string[]; open: boolean }) => {
@@ -382,12 +411,8 @@ export const TreeView: Story = {
       <>
         <Controls />
         <Tree
+          model={model}
           id={Node.RootId}
-          useChildIds={useChildIds}
-          useItem={useItem}
-          getProps={getProps}
-          useIsOpen={useIsOpen}
-          useIsCurrent={useIsCurrent}
           onOpenChange={onOpenChange}
           onSelect={onSelect}
         />

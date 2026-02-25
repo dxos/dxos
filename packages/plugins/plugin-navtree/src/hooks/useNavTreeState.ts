@@ -3,23 +3,11 @@
 //
 
 import { type Atom, useAtomValue } from '@effect-atom/atom-react';
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
-import { type Node } from '@dxos/app-graph';
 
-import { useNavTreeContext } from './components';
-import { NavTreeCapabilities } from './types';
-
-export const useLoadDescendents = (root?: Node.Node) => {
-  const { loadDescendents } = useNavTreeContext();
-  useEffect(() => {
-    if (!root || !loadDescendents) {
-      return;
-    }
-    loadDescendents(root);
-  }, [root]);
-};
+import { NavTreeCapabilities } from '../types';
 
 export type UseNavTreeStateResult = {
   getItem: (path: string[]) => NavTreeCapabilities.NavTreeItemState;
@@ -41,26 +29,9 @@ export const useNavTreeState = (): UseNavTreeStateResult => {
  */
 export const useNavTreeItemState = (path: string[]): NavTreeCapabilities.NavTreeItemState => {
   const { getItemAtom } = useCapability(NavTreeCapabilities.State);
-  // Memoize the path to avoid creating new atoms on every render.
   const pathKey = useMemo(() => path.join('~'), [path]);
   const atom = useMemo(() => getItemAtom(path), [getItemAtom, pathKey]);
   return useAtomValue(atom);
-};
-
-/**
- * Hook that subscribes to the open state for a tree item.
- * Designed to be passed to Tree component as useIsOpen prop.
- */
-export const useIsOpen = (path: string[], _item?: any): boolean => {
-  return useNavTreeItemState(path).open;
-};
-
-/**
- * Hook that subscribes to the current state for a tree item.
- * Designed to be passed to Tree component as useIsCurrent prop.
- */
-export const useIsCurrent = (path: string[], _item?: any): boolean => {
-  return useNavTreeItemState(path).current;
 };
 
 /**
