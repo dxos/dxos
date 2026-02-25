@@ -28,7 +28,8 @@
   --color-active-surface: light-dark(theme(colors.neutral.200), theme(colors.neutral.800));
   --color-hover-surface: light-dark(theme(colors.neutral.250), theme(colors.neutral.750));
 
-  --color-attention: light-dark(theme(colors.neutral.50), theme(colors.neutral.950));
+  /* Map attention to focus-surface logic so that elements acting as active attention zones highlight correctly on focus. */
+  --color-attention: var(--color-focus-surface);
   --color-focus-surface: light-dark(theme(colors.neutral.50), theme(colors.neutral.950));
   --color-neutral-focus-indicator: light-dark(theme(colors.neutral.400), theme(colors.neutral.600));
 

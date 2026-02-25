@@ -8,11 +8,21 @@ import React, { type CSSProperties, type ComponentPropsWithRef, forwardRef, useM
 import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-const attentionGlyphStyles =
-  'inline-block rounded-xs w-3 h-3 bg-transparent text-accent-text transition-colors group-data-[contains-attended=true]:bg-attentionRelated group-data-[attention=true]:bg-accent-surface group-data-[attention=true]:text-accent-surface-text group-[[aria-current][data-attention=true]]:bg-accent-surface group-[[aria-current][data-attention=true]]:text-accent-surface-text';
+const attentionGlyphStyles = mx(
+  'inline-block rounded-xs w-3 h-3 bg-transparent text-accent-text transition-colors',
+  'group-data-[contains-attended=true]:bg-attentionRelated',
+  'group-data-[attention=true]:bg-accent-surface',
+  'group-data-[attention=true]:text-accent-surface-text',
+  'group-is-current:group-data-[attention=true]:bg-accent-surface',
+  'group-is-current:group-data-[attention=true]:text-accent-surface-text',
+);
 
-const presenceIconStyles =
-  'w-3 h-3 group-aria-[current]:group-hover/attentionGlyphButton:hidden group-aria-[current]:group-focus/attentionGlyphButton:hidden group-data-[attention=true]:group-hover/attentionGlyphButton:hidden group-data-[attention=true]:group-focus/attentionGlyphButton:hidden group-[[aria-current][data-attention=true]]:group-hover/attentionGlyphButton:hidden group-[[aria-current][data-attention=true]]:group-focus/attentionGlyphButton:hidden';
+const presenceIconStyles = mx(
+  'w-3 h-3',
+  'group-is-current:hidden',
+  'group-data-[attention=true]:hidden',
+  'group-is-current:group-data-[attention=true]:hidden',
+);
 
 const PresenceOne = () => {
   return (
