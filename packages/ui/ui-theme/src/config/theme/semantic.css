@@ -69,7 +69,7 @@
   /* Grid */
 
   --color-grid-surface: light-dark(theme(colors.neutral.50), theme(colors.neutral.950));
-  --color-grid-selection-overlay: theme(colors.orange.500 / 0.5);
+  --color-grid-selection-overlay: theme(colors.blue.500);
   --color-grid-highlight: theme(colors.emerald.500 / 0.5);
   --color-grid-commented: light-dark(theme(colors.green.400), theme(colors.green.600));
   --color-grid-commented-active: light-dark(theme(colors.green.400 / 0.5), theme(colors.green.600 / 0.5));
@@ -82,22 +82,4 @@
   --color-placeholder: light-dark(theme(colors.neutral.600), theme(colors.neutral.400));
   --color-description: light-dark(theme(colors.neutral.600), theme(colors.neutral.400));
   --color-subdued: light-dark(theme(colors.neutral.800), theme(colors.neutral.200));
-}
-
-@layer dx-tokens {
-  /* TODO(burdon): Are these used? See surfaces.css */
-  /* .sidebar-surface, .dark .sidebar-surface, .bg-group-surface, .dark .bg-group-surface, .bg-sidebar-surface, .dark .bg-sidebar-surface, .bg-header-surface, .dark .bg-header-surface, .bg-toolbar-surface, .dark .bg-toolbar-surface, .bg-card-surface, .dark .bg-card-surface {
-    --color-text-input-surface: light-dark(var(--color-neutral-50), var(--color-neutral-800));
-    --color-input-surface: light-dark(var(--color-neutral-100), var(--color-neutral-800));
-    --color-hover-surface: light-dark(var(--color-neutral-100), var(--color-neutral-700));
-    --color-separator: light-dark(var(--color-neutral-200), var(--color-neutral-700));
-  } */
-
-  /* TODO(burdon): Are these used? See surfaces.css */
-  /* .modal-surface, .dark .modal-surface, .bg-modal-surface, .dark .bg-modal-surface, .bg-current-related, .dark .bg-current-related {
-    --color-text-input-surface: light-dark(var(--color-neutral-50), var(--color-neutral-800));
-    --color-input-surface: light-dark(var(--color-neutral-100), var(--color-neutral-800));
-    --color-hover-surface: light-dark(var(--color-neutral-100), var(--color-neutral-700));
-    --color-separator: light-dark(var(--color-neutral-200), var(--color-neutral-700));
-  } */
 }
