@@ -15,8 +15,8 @@ import { SpaceOperation } from '@dxos/plugin-space/types';
 import { Collection } from '@dxos/schema';
 import { Message, Organization, Person } from '@dxos/types';
 
-import { COMPOSE_EMAIL_DIALOG } from '../../constants';
 import { Calendar, InboxOperation, Mailbox } from '../../types';
+import { buildDraftMessageProps } from '../../util';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -131,17 +131,24 @@ export default Capability.makeModule(
         }),
       }),
       OperationResolver.make({
-        operation: InboxOperation.RunAssistant,
-        handler: () => Effect.fail(new Error('Not implemented')),
-      }),
-      // TODO(burdon): Remove dialog.
-      OperationResolver.make({
-        operation: InboxOperation.OpenComposeEmail,
-        handler: (input) =>
-          Operation.invoke(LayoutOperation.UpdateDialog, {
-            subject: COMPOSE_EMAIL_DIALOG,
-            props: input ?? {},
-          }),
+        operation: InboxOperation.CreateDraft,
+        handler: Effect.fnUntraced(function* ({ db, mode, replyToMessage, subject, body }) {
+          const props = buildDraftMessageProps({
+            mode,
+            replyToMessage: replyToMessage as Message.Message | undefined,
+            subject,
+            body,
+          });
+          const draft = Obj.make(Message.Message, props);
+          yield* Operation.invoke(SpaceOperation.AddObject, {
+            object: draft,
+            target: db,
+            hidden: true,
+          });
+          yield* Operation.invoke(LayoutOperation.Open, {
+            subject: [Obj.getDXN(draft).toString()],
+          });
+        }),
       }),
     ]);
   }),

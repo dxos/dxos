@@ -42,6 +42,7 @@ export type MailboxArticleProps = SurfaceComponentProps<
 export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendableId }: MailboxArticleProps) => {
   const { t } = useTranslation(meta.id);
   const id = attendableId ?? Obj.getDXN(mailbox).toString();
+  const db = Obj.getDatabase(mailbox);
   const { invokePromise } = useOperationInvoker();
   const layout = useLayout();
   const currentMessageId = useSelected(id, 'single');
@@ -53,6 +54,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   const sortDescending = useAtomState(true);
   const filterVisible = useAtomState(false);
   const menuActions = useMailboxActions({
+    db,
     sortDescending: sortDescending.atom,
     filterVisible: filterVisible.atom,
   });
@@ -72,7 +74,6 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   );
 
   // Parse filter.
-  const db = Obj.getDatabase(mailbox);
   const tags = useQuery(db, Filter.type(Tag.Tag));
   const tagMap = useMemo(() => {
     return tags.reduce((acc, tag) => {
@@ -292,9 +293,11 @@ const useMessageTagsMap = (queue: Database.Queryable | undefined): Record<string
 };
 
 const useMailboxActions = ({
+  db,
   sortDescending,
   filterVisible,
 }: {
+  db?: Database.Database;
   sortDescending: Atom.Writable<boolean>;
   filterVisible: Atom.Writable<boolean>;
 }) => {
@@ -332,7 +335,7 @@ const useMailboxActions = ({
               icon: 'ph--paper-plane-right--regular',
               label: ['compose email label', { ns: meta.id }],
             },
-            () => invokePromise(InboxOperation.OpenComposeEmail, {}),
+            () => db && invokePromise(InboxOperation.CreateDraft, { db }),
           )
           .build();
 
@@ -350,7 +353,7 @@ const useMailboxActions = ({
           ],
         };
       }),
-    [sortDescending, filterVisible, invokePromise],
+    [sortDescending, filterVisible, invokePromise, db],
   );
 
   return useMenuActions(menu);

@@ -11,19 +11,17 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { AtomObj, AtomQuery, AtomRef } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
-import { Operation } from '@dxos/operation';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { AutomationCapabilities, invokeFunctionWithTracing } from '@dxos/plugin-automation';
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
-import { Markdown } from '@dxos/plugin-markdown/types';
 import { type SelectionManager } from '@dxos/react-ui-attention';
-import { AccessToken, type Event, type Message } from '@dxos/types';
+import { type Event, type Message } from '@dxos/types';
 import { kebabize } from '@dxos/util';
 
 import { CalendarFunctions, GmailFunctions } from '../../functions';
 import { meta } from '../../meta';
-import { Calendar, InboxOperation, Mailbox } from '../../types';
+import { Calendar, Mailbox } from '../../types';
 
 /**
  * Atom family to derive the selected item ID from selection state.
@@ -209,40 +207,6 @@ export default Capability.makeModule(
               },
             },
           ]),
-      }),
-      GraphBuilder.createTypeExtension({
-        id: `${meta.id}/send-document-as-email`,
-        type: Markdown.Document,
-        actions: (doc, get) => {
-          const db = Obj.getDatabase(doc);
-          if (!db) {
-            return Effect.succeed([]);
-          }
-
-          // Single function call - no family creation inside callback.
-          const tokens = get(AtomQuery.make(db, Filter.type(AccessToken.AccessToken)));
-          const hasGoogleToken = tokens.some((token) => token.source?.includes('google'));
-          if (!hasGoogleToken) {
-            return Effect.succeed([]);
-          }
-
-          return Effect.succeed([
-            {
-              id: `${Obj.getDXN(doc).toString()}-send-as-email`,
-              data: Effect.fnUntraced(function* () {
-                const text = yield* Effect.tryPromise(() => doc.content.load());
-                const subject = doc.name ?? doc.fallbackName ?? '';
-                const body = text?.content ?? '';
-                yield* Operation.invoke(InboxOperation.OpenComposeEmail, { subject, body });
-              }),
-              properties: {
-                label: ['send as email label', { ns: meta.id }],
-                icon: 'ph--envelope--regular',
-                disposition: 'list-item',
-              },
-            },
-          ]);
-        },
       }),
     ]);
 

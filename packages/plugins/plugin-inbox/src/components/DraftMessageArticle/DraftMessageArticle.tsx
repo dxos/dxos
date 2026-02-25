@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import { useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import { useCapability } from '@dxos/app-framework/ui';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { AutomationCapabilities, invokeFunctionWithTracing } from '@dxos/plugin-automation';
@@ -12,12 +12,12 @@ import { Layout } from '@dxos/react-ui';
 import { type Message } from '@dxos/types';
 
 import { GmailFunctions } from '../../functions';
-import { ComposeEmailPanel } from '../ComposeEmail';
+
+import { ComposeEmailPanel } from './ComposeEmailPanel';
 
 export type DraftMessageArticleProps = SurfaceComponentProps<Message.Message>;
 
 export const DraftMessageArticle = ({ role, subject }: DraftMessageArticleProps) => {
-  const { invokePromise } = useOperationInvoker();
   const db = Obj.getDatabase(subject);
   const computeRuntime = useCapability(AutomationCapabilities.ComputeRuntime);
   const runtime = db?.spaceId ? computeRuntime.getRuntime(db.spaceId) : undefined;
@@ -29,12 +29,12 @@ export const DraftMessageArticle = ({ role, subject }: DraftMessageArticleProps)
       }
       await runtime.runPromise(invokeFunctionWithTracing(GmailFunctions.Send, { message }));
     },
-    [runtime, invokePromise],
+    [runtime],
   );
 
   return (
     <Layout.Main role={role}>
-      <ComposeEmailPanel mode='compose' message={subject} onSend={handleSend} />
+      <ComposeEmailPanel draft={subject} onSend={handleSend} />
     </Layout.Main>
   );
 };

@@ -3,21 +3,15 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React, { useCallback } from 'react';
+import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Surface, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import { Surface } from '@dxos/app-framework/ui';
 import { Obj } from '@dxos/echo';
-import { log } from '@dxos/log';
-import { AutomationCapabilities, invokeFunctionWithTracing } from '@dxos/plugin-automation';
-import { useActiveSpace } from '@dxos/plugin-space';
 import { Event, Message, Organization, Person } from '@dxos/types';
 
 import {
   CalendarArticle,
-  ComposeEmailDialog,
-  type ComposeEmailDialogProps,
   DraftMessageArticle,
   EventArticle,
   EventCard,
@@ -29,8 +23,7 @@ import {
   RelatedToContact,
   RelatedToOrganization,
 } from '../../components';
-import { COMPOSE_EMAIL_DIALOG, POPOVER_SAVE_FILTER } from '../../constants';
-import { GmailFunctions } from '../../functions';
+import { POPOVER_SAVE_FILTER } from '../../constants';
 import { meta } from '../../meta';
 import { Calendar, Mailbox } from '../../types';
 
@@ -110,38 +103,6 @@ export default Capability.makeModule(() =>
           Obj.instanceOf(Mailbox.Mailbox, data.props.mailbox) &&
           typeof data.props.filter === 'string',
         component: ({ data }) => <PopoverSaveFilter mailbox={data.props.mailbox} filter={data.props.filter} />,
-      }),
-      // TODO(burdon): Remove dialog.
-      Surface.create({
-        id: COMPOSE_EMAIL_DIALOG,
-        role: 'dialog',
-        filter: (data): data is { component: string; props?: ComposeEmailDialogProps } =>
-          data.component === COMPOSE_EMAIL_DIALOG,
-        component: ({ data }) => {
-          const { invokePromise } = useOperationInvoker();
-          const space = useActiveSpace();
-          const computeRuntime = useCapability(AutomationCapabilities.ComputeRuntime);
-          const runtime = space?.id ? computeRuntime.getRuntime(space.id) : undefined;
-
-          const handleSend = useCallback(
-            async (message: Message.Message) => {
-              if (!runtime) {
-                throw new Error('Runtime not available');
-              }
-              await runtime.runPromise(invokeFunctionWithTracing(GmailFunctions.Send, { message }));
-              log.info('email sent');
-              await invokePromise(LayoutOperation.UpdateDialog, { state: false });
-            },
-            [runtime, invokePromise],
-          );
-
-          const handleCancel = useCallback(
-            () => invokePromise(LayoutOperation.UpdateDialog, { state: false }),
-            [invokePromise],
-          );
-
-          return <ComposeEmailDialog {...(data.props ?? {})} onSend={handleSend} onCancel={handleCancel} />;
-        },
       }),
       Surface.create({
         id: `${meta.id}/mailbox/companion/settings`,
