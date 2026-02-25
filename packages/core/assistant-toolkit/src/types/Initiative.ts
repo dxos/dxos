@@ -11,6 +11,7 @@ import { type Blueprint } from '@dxos/blueprints';
 import { Type } from '@dxos/echo';
 import { Database, Obj, Ref, Relation } from '@dxos/echo';
 import { type ObjectNotFoundError } from '@dxos/echo/Err';
+import { FormInputAnnotation } from '@dxos/echo/internal';
 import { Queue } from '@dxos/echo-db';
 import { acquireReleaseResource } from '@dxos/effect';
 import { QueueService } from '@dxos/functions';
@@ -27,8 +28,8 @@ import * as Plan from './Plan';
 export const Initiative = Schema.Struct({
   name: Schema.String,
 
-  spec: Type.Ref(Text.Text),
-  plan: Type.Ref(Plan.Plan),
+  spec: Type.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
+  plan: Type.Ref(Plan.Plan).pipe(FormInputAnnotation.set(false)),
 
   artifacts: Schema.Array(
     Schema.Struct({
@@ -36,26 +37,33 @@ export const Initiative = Schema.Struct({
       name: Schema.String,
       data: Type.Ref(Type.Obj),
     }),
-  ),
+  ).pipe(FormInputAnnotation.set(false)),
 
   /**
    * Incoming queue that the agent processes.
    */
   // NOTE: Named `queue` to conform to subscribable schema (see QueueAnnotation).
-  queue: Schema.optional(Type.Ref(Queue)),
+  queue: Schema.optional(Type.Ref(Queue).pipe(FormInputAnnotation.set(false))),
 
   // TODO(dmaretskyi): Multiple chats.
-  chat: Schema.optional(Type.Ref(Chat.Chat)),
+  chat: Schema.optional(Type.Ref(Chat.Chat).pipe(FormInputAnnotation.set(false))),
 
   /**
    * References to objects with a canonical queue property.
    * Schema must have the QueueAnnotation.
    */
   // TODO(dmaretskyi): Turn into an array of objects when form-data
-  subscriptions: Schema.Array(Type.Ref(Type.Obj)),
+  subscriptions: Schema.Array(Type.Ref(Type.Obj)).pipe(FormInputAnnotation.set(false)),
 
-  useQualifyingAgent: Schema.optional(Schema.Boolean),
-  newChatOnEveryEvent: Schema.optional(Schema.Boolean),
+  useQualifyingAgent: Schema.optional(Schema.Boolean).annotations({
+    title: 'Use qualifying agent on subscriptions',
+    description:
+      'If enabled, the qualifying agent will be used to determine if the event is relevant to the initiative. Related events will be added to the input queue of the initiative. It is recommended to enable this.',
+  }),
+
+  newChatOnEveryEvent: Schema.optional(Schema.Boolean).annotations({
+    title: 'Wipe chat history on every event (deprecated)',
+  }),
 
   // TODO(dmaretskyi): input queue?
 }).pipe(
@@ -92,6 +100,7 @@ export const makeInitialized = (
       plan: Ref.make(Plan.makePlan({ tasks: [] })),
       artifacts: props.artifacts ?? [],
       subscriptions: props.subscriptions ?? [],
+      useQualifyingAgent: props.useQualifyingAgent ?? true,
     });
     yield* Database.add(initiative);
     const queue = yield* QueueService.createQueue<Message.Message | ContextBinding>();
