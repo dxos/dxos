@@ -226,7 +226,6 @@ export const baseTheme = EditorView.baseTheme({
   },
   '.cm-tooltip-below': {},
   '.cm-tooltip-hover': {
-    // background: 'var(--color-red-500)',
     background: 'var(--color-modal-surface)',
     border: '1px solid var(--color-separator)',
     borderRadius: '4px',

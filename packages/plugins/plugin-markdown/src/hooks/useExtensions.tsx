@@ -38,7 +38,7 @@ import {
   selectionState,
   typewriter,
 } from '@dxos/ui-editor';
-import { isTruthy } from '@dxos/util';
+import { isTruthy, safeUrl } from '@dxos/util';
 
 import { Markdown } from '../types';
 import { setFallbackName } from '../util';
@@ -237,7 +237,7 @@ const renderLinkTooltip: RenderCallback<{ url: string }> = (el, { url }) => {
     Domino.of('a')
       .attributes({ href: url, target: '_blank', rel: 'noreferrer' })
       .classNames('dx-link flex items-center gap-2')
-      .text(new URL(url).origin)
+      .text(safeUrl(url)?.origin ?? url)
       .children(Domino.svg('ph--arrow-square-out--regular')).root,
   );
 };

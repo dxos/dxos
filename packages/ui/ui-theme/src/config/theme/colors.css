@@ -73,13 +73,6 @@
   --color-grid-hover-overlay: oklch(from var(--color-neutral-500) l c h / 0.1);
   --color-grid-line: light-dark(theme(colors.neutral.100), theme(colors.neutral.800));
 
-  /* Cursors */
-
-  --color-success-cursor: light-dark(var(--color-emerald-400), var(--color-emerald-300));
-  --color-info-cursor: light-dark(var(--color-cyan-400), var(--color-cyan-300));
-  --color-warning-cursor: light-dark(var(--color-amber-400), var(--color-amber-300));
-  --color-error-cursor: light-dark(var(--color-rose-400), var(--color-rose-300));
-
   /* Text */
 
   --color-description: light-dark(var(--color-neutral-600), var(--color-neutral-400));
