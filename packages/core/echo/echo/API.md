@@ -57,12 +57,14 @@ Types:
 - type `Type.UnknownObj` - instance of a schema for object, but instance type is not known.
 - type `Type.Relation<T extends Relation.Unknown>` - instance of a schema for a relation of instance type `T`.
 - type `Type.UnknownRelation` - instance of a schema for a relation, but instance type is not known.
+- type `Type.Ref<T>` - instance of a schema for a reference to an object of instance type `T`.
 
 Functions:
 
 - function `Type.object(...)` - defines a new object schema; returns `Type.Obj<T>`.
 - function `Type.relation(...)` - defines a new relation schema; returns `Type.Relation<T>`.
 - function `Type.get*(schema: Type.UnknownEntity)` - getters for schema metadata.
+- function `Type.Ref(...)` define a schema for a reference to an object of instance type `T`.
 
 Worth mentioning:
 
@@ -153,7 +155,12 @@ Functions:
 - function `Relation.snapshot(relation: Relation.Relation<T>)` - get a snapshot of a relation of instance type `T`.
 - function `Relation.change(relation: Relation.Relation<T>, callback: (relation: Relation.Mutable<T>) => void)` - mutate a relation of instance type `T`.
 
-### Feed module
+### `Ref` module
+
+- type `Ref.Ref<T>` - instance of a reference to an object of instance type `T`.
+- function `Ref.make(object: Obj.Obj<T>)` - create a new reference to an object of instance type `T`.
+
+### `Feed` module
 
 Used when working with instances of feeds.
 
