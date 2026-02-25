@@ -17,6 +17,7 @@ import {
   linkTooltip,
   table,
 } from '@dxos/ui-editor';
+import { safeUrl } from '@dxos/util';
 
 import { str } from '../../util';
 

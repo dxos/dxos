@@ -81,7 +81,6 @@
 }
 
 @layer dx-tokens {
-
   /* TODO(burdon): Are these used? See surfaces.css */
   /* .sidebar-surface, .dark .sidebar-surface, .bg-group-surface, .dark .bg-group-surface, .bg-sidebar-surface, .dark .bg-sidebar-surface, .bg-header-surface, .dark .bg-header-surface, .bg-toolbar-surface, .dark .bg-toolbar-surface, .bg-card-surface, .dark .bg-card-surface {
     --color-text-input-surface: light-dark(var(--color-neutral-50), var(--color-neutral-800));

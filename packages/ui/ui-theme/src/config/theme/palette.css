@@ -21,7 +21,7 @@
   --color-primary-900: var(--color-blue-900);
   --color-primary-950: var(--color-blue-950);
 
-  --color-neutral-75: color-mix(in oklch, var(--color-neutral-50) 50%, var(--color-neutral-100) 50%);
+  --color-neutral-75:  color-mix(in oklch, var(--color-neutral-50)  50%, var(--color-neutral-100) 50%);
   --color-neutral-250: color-mix(in oklch, var(--color-neutral-200) 50%, var(--color-neutral-300) 50%);
   --color-neutral-750: color-mix(in oklch, var(--color-neutral-700) 50%, var(--color-neutral-800) 50%);
   --color-neutral-925: color-mix(in oklch, var(--color-neutral-900) 50%, var(--color-neutral-950) 50%);
