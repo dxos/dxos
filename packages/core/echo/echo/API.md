@@ -179,6 +179,31 @@ const Foo = Schema.Struct({
 Query.select(Filter.type(Feed.Feed));
 ```
 
+### Query APIs
+
+```ts
+// Query scopes:
+Database.query(Query.type(Contact)); // Query a database + feeds. BREAKING CHANGE: Currently it only queries feeds.
+Database.query(Query.type(Contact).options({ queryFeeds: false })); // Query a database only (no feeds).
+Feed.query(Query.type(Contact)); // Query a specific feed.
+Database.schemaQuery({ ... }); // Query schema (static and/or stored)
+
+graph.query(Query.type(Contact)); // Query all spaces and feeds.
+client.edge.query(Query.type(Contact)); // Query all spaces and feeds from EDGE.
+
+// Query execution:
+
+const result = yield* Database.query(Query.type(Contact)); // QueryResult
+result.subscribe(...)
+const objects = yield* Database.query(Query.type(Contact)).run;
+const object = yield* Database.query(Query.type(Contact)).first;
+
+const result = yield* Database.schemaQuery({ ... }); // SchemaQueryResult
+result.subscribe(...)
+const schemas = yield* Database.schemaQuery({ ... }).run;
+const schema = yield* Database.schemaQuery({ ... }).first;
+```
+
 ## Core Modules
 
 The `@dxos/echo` package exports these primary namespaces:
