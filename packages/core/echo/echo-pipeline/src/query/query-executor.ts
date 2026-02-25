@@ -397,7 +397,8 @@ export class QueryExecutor extends Resource {
     switch (step.selector._tag) {
       case 'WildcardSelector': {
         const beginIndexQuery = performance.now();
-        const metas = await this._queryAllFromSqlIndex(step.spaces);
+        const queueIds = extractQueueIds(step.queues);
+        const metas = await this._queryAllFromSqlIndex(step.spaces, step.allQueuesFromSpaces, queueIds);
         trace.indexHits = metas.length;
         trace.indexQueryTime += performance.now() - beginIndexQuery;
 
@@ -432,7 +433,8 @@ export class QueryExecutor extends Resource {
 
       case 'TypeSelector': {
         const beginIndexQuery = performance.now();
-        const metas = await this._queryTypesFromSqlIndex(step.spaces, step.selector.typename, step.selector.inverted);
+        const queueIds = extractQueueIds(step.queues);
+        const metas = await this._queryTypesFromSqlIndex(step.spaces, step.selector.typename, step.selector.inverted, step.allQueuesFromSpaces, queueIds);
         trace.indexHits = metas.length;
         trace.indexQueryTime += performance.now() - beginIndexQuery;
 
@@ -463,11 +465,7 @@ export class QueryExecutor extends Resource {
         // Full-text search using SQLite FTS5.
         const beginIndexQuery = performance.now();
         invariant(step.spaces.length <= 1, 'Multiple spaces are not supported for full-text search');
-        // Extract queue IDs from DXN strings.
-        const queueIds =
-          step.queues.length > 0
-            ? (step.queues.map((dxnStr) => DXN.parse(dxnStr).asQueueDXN()?.queueId).filter(Boolean) as ObjectId[])
-            : null;
+        const queueIds = extractQueueIds(step.queues);
         const textResults = await this._runInRuntime(
           this._indexEngine.queryText({
             query: step.selector.text,
@@ -985,16 +983,22 @@ export class QueryExecutor extends Resource {
     return await unwrapExit(await effect.pipe(Runtime.runPromiseExit(runtime)));
   }
 
-  private async _queryAllFromSqlIndex(spaceIds: readonly SpaceId[]): Promise<readonly ObjectMeta[]> {
-    return await this._runInRuntime(this._indexEngine.queryAll({ spaceIds }));
+  private async _queryAllFromSqlIndex(
+    spaceIds: readonly SpaceId[],
+    includeAllQueues: boolean,
+    queueIds: readonly ObjectId[] | null,
+  ): Promise<readonly ObjectMeta[]> {
+    return await this._runInRuntime(this._indexEngine.queryAll({ spaceIds, includeAllQueues, queueIds }));
   }
 
   private async _queryTypesFromSqlIndex(
     spaceIds: readonly SpaceId[],
     typeDxns: readonly string[],
     inverted: boolean,
+    includeAllQueues: boolean,
+    queueIds: readonly ObjectId[] | null,
   ): Promise<readonly ObjectMeta[]> {
-    return await this._runInRuntime(this._indexEngine.queryTypes({ spaceIds, typeDxns, inverted }));
+    return await this._runInRuntime(this._indexEngine.queryTypes({ spaceIds, typeDxns, inverted, includeAllQueues, queueIds }));
   }
 
   private async _queryIncomingReferencesFromSqlIndex(
@@ -1373,4 +1377,11 @@ const prettyQuery = (query: QueryAST.Query): string => {
     case 'limit':
       return `${prettyQuery(query.query)}.limit(${query.limit})`;
   }
+};
+
+const extractQueueIds = (queues: readonly DXN.String[]): ObjectId[] | null => {
+  if (queues.length === 0) {
+    return null;
+  }
+  return queues.map((dxnStr) => DXN.parse(dxnStr).asQueueDXN()?.queueId).filter(Boolean) as ObjectId[];
 };

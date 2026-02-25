@@ -304,6 +304,130 @@ describe('Query', () => {
       expect(obj.title).toEqual('Queue type selector task');
       expect(Obj.getDXN(obj)?.toString().startsWith(queue.dxn.toString())).toBe(true);
     });
+
+    test('query options with 2 spaces and 2 queues', async () => {
+      const peer = await builder.createPeer({ types: [TestSchema.Task, TestSchema.Person] });
+
+      const db1 = await peer.createDatabase();
+      const queueFactory1 = peer.client.constructQueueFactory(db1.spaceId);
+      const queue1 = queueFactory1.create();
+
+      const db2 = await peer.createDatabase();
+      const queueFactory2 = peer.client.constructQueueFactory(db2.spaceId);
+      const queue2 = queueFactory2.create();
+
+      const spaceTask1 = db1.add(Obj.make(TestSchema.Task, { title: 'space1-task' }));
+      const spacePerson1 = db1.add(Obj.make(TestSchema.Person, { name: 'space1-person' }));
+      const queueTask1 = Obj.make(TestSchema.Task, { title: 'queue1-task' });
+      await queue1.append([queueTask1]);
+
+      const spaceTask2 = db2.add(Obj.make(TestSchema.Task, { title: 'space2-task' }));
+      const queueTask2 = Obj.make(TestSchema.Task, { title: 'queue2-task' });
+      await queue2.append([queueTask2]);
+
+      await db1.flush({ indexes: true });
+      await db2.flush({ indexes: true });
+
+      const graph = peer.client.graph;
+      const bothSpaces = [db1.spaceId, db2.spaceId];
+
+      {
+        // Default: no queue options → only space objects.
+        const results = await graph
+          .query(
+            Query.select(Filter.type(TestSchema.Task)).options({
+              spaceIds: bothSpaces,
+            }),
+          )
+          .run();
+        const titles = results.map((r: TestSchema.Task) => r.title).sort();
+        expect(titles).toEqual(['space1-task', 'space2-task']);
+      }
+
+      {
+        // allQueuesFromSpaces: true → space + all queue objects.
+        const results = await graph
+          .query(
+            Query.select(Filter.type(TestSchema.Task)).options({
+              spaceIds: bothSpaces,
+              allQueuesFromSpaces: true,
+            }),
+          )
+          .run();
+        const titles = results.map((r: TestSchema.Task) => r.title).sort();
+        expect(titles).toEqual(['queue1-task', 'queue2-task', 'space1-task', 'space2-task']);
+      }
+
+      {
+        // Specific queue → space objects + only that queue's objects.
+        const results = await graph
+          .query(
+            Query.select(Filter.type(TestSchema.Task)).options({
+              spaceIds: bothSpaces,
+              queues: [queue1.dxn.toString()],
+            }),
+          )
+          .run();
+        const titles = results.map((r: TestSchema.Task) => r.title).sort();
+        expect(titles).toEqual(['queue1-task', 'space1-task', 'space2-task']);
+      }
+
+      {
+        // Other specific queue → space objects + only that queue's objects.
+        const results = await graph
+          .query(
+            Query.select(Filter.type(TestSchema.Task)).options({
+              spaceIds: bothSpaces,
+              queues: [queue2.dxn.toString()],
+            }),
+          )
+          .run();
+        const titles = results.map((r: TestSchema.Task) => r.title).sort();
+        expect(titles).toEqual(['queue2-task', 'space1-task', 'space2-task']);
+      }
+
+      {
+        // Both queues explicitly → same as allQueuesFromSpaces.
+        const results = await graph
+          .query(
+            Query.select(Filter.type(TestSchema.Task)).options({
+              spaceIds: bothSpaces,
+              queues: [queue1.dxn.toString(), queue2.dxn.toString()],
+            }),
+          )
+          .run();
+        const titles = results.map((r: TestSchema.Task) => r.title).sort();
+        expect(titles).toEqual(['queue1-task', 'queue2-task', 'space1-task', 'space2-task']);
+      }
+
+      {
+        // Single space with allQueuesFromSpaces → only that space's objects + queues.
+        const results = await graph
+          .query(
+            Query.select(Filter.type(TestSchema.Task)).options({
+              spaceIds: [db1.spaceId],
+              allQueuesFromSpaces: true,
+            }),
+          )
+          .run();
+        const titles = results.map((r: TestSchema.Task) => r.title).sort();
+        expect(titles).toEqual(['queue1-task', 'space1-task']);
+      }
+
+      {
+        // Different type filter → queue options don't affect non-matching types.
+        const results = await graph
+          .query(
+            Query.select(Filter.type(TestSchema.Person)).options({
+              spaceIds: bothSpaces,
+              allQueuesFromSpaces: true,
+            }),
+          )
+          .run();
+        expect(results).toHaveLength(1);
+        expect((results[0] as TestSchema.Person).name).toEqual('space1-person');
+      }
+    });
   });
 
   test('query.run() queries everything after restart', async () => {
