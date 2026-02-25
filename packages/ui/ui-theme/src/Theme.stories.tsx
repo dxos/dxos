@@ -9,7 +9,25 @@ import { hues } from './tokens';
 import { mx } from './util';
 
 const colorShades = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950];
-const neutralShades = [50, 75, 100, 200, 250, 300, 400, 500, 600, 700, 750, 800, 900, 925, 950];
+
+// prettier-ignore
+const neutralShades: [number, string][] = [
+  [50,  'bg-neutral-50'],
+  [75,  'bg-neutral-75'],
+  [100, 'bg-neutral-100'],
+  [200, 'bg-neutral-200'],
+  [250, 'bg-neutral-250'],
+  [300, 'bg-neutral-300'],
+  [400, 'bg-neutral-400'],
+  [500, 'bg-neutral-500'],
+  [600, 'bg-neutral-600'],
+  [700, 'bg-neutral-700'],
+  [750, 'bg-neutral-750'],
+  [800, 'bg-neutral-800'],
+  [900, 'bg-neutral-900'],
+  [925, 'bg-neutral-925'],
+  [950, 'bg-neutral-950'],
+];
 
 /**
  * Hue swatch classes for the Hues story.
@@ -116,13 +134,14 @@ export const Neutral = {
     return (
       <div className='p-4'>
         <div className='flex flex-col items-center'>
-          {neutralShades.map((value) => (
+          {neutralShades.map(([value, className]) => (
             <div
               key={value}
-              style={{
-                backgroundColor: `var(--color-neutral-${value})`,
-              }}
-              className={mx('h-12 w-48 p-2 text-right text-sm', value <= 500 ? 'text-neutral-950' : 'text-neutral-50')}
+              className={mx(
+                'h-12 w-48 p-2 text-right text-sm',
+                className,
+                value <= 500 ? 'text-neutral-950' : 'text-neutral-50',
+              )}
             >
               {value}
             </div>
