@@ -83,3 +83,25 @@ export const Atomic: Story = {
     COLOR_UPDATE_SPEED: 0.1,
   },
 };
+
+export const Column: Story = {
+  decorators: [withTheme(), withLayout({ layout: 'column' })],
+  render: () => {
+    return <Ghost classNames='border border-separator' />;
+  },
+};
+
+export const Frame: Story = {
+  decorators: [withTheme(), withLayout({ layout: 'column' })],
+  render: (props) => (
+    <>
+      <Ghost {...props} classNames='border border-separator' />
+      <div className='inset-0 absolute grid place-content-center'>
+        <DXOS className='w-[40rem] h-[40rem] opacity-20' />
+      </div>
+    </>
+  ),
+  args: {
+    frame: 48,
+  },
+};

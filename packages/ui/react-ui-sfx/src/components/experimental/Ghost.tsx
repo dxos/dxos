@@ -4,18 +4,20 @@
 // Based on https://reactbits.dev/animations/splash-cursor
 //
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useState } from 'react';
 
 import { addEventListener, combine } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { type ThemedClassName } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
 
 // TODO(burdon): Particle effects.
 // TODO(burdon): Spring: https://examples.motion.dev/react/follow-pointer-with-spring
 // TODO(burdon): Magnets: https://examples.motion.dev/react/magnetic-filings
 // TODO(burdon): Grid: https://examples.motion.dev/react/staggered-grid
 
-export type GhostProps = {
+export type GhostProps = ThemedClassName<{
   SIM_RESOLUTION: number;
   DYE_RESOLUTION: number;
   CAPTURE_RESOLUTION: number;
@@ -31,7 +33,9 @@ export type GhostProps = {
   COLOR_MASK: Color;
   BACK_COLOR: Color;
   TRANSPARENT: boolean;
-};
+  /** Border width in pixels for the transparent-center picture-frame effect. */
+  frame?: number;
+}>;
 
 const defaultConfig: GhostProps = {
   SIM_RESOLUTION: 128,
@@ -51,13 +55,39 @@ const defaultConfig: GhostProps = {
   TRANSPARENT: true,
 };
 
-export const Ghost = (props: Partial<GhostProps>) => {
-  const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null);
-  const ghost = useGhost(canvas, props);
-  useGhostController(ghost, props);
+export interface GhostController {}
 
-  return <canvas ref={setCanvas} className='h-full w-full' />;
-};
+export const Ghost = forwardRef<GhostController, Partial<GhostProps>>(
+  ({ classNames, frame, ...props }, forwardedRef) => {
+    const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null);
+    const ghost = useGhost(canvas, props);
+    useGhostController(ghost, props);
+
+    useImperativeHandle(forwardedRef, () => {
+      return {};
+    }, []);
+
+    const frameStyle: React.CSSProperties | undefined = frame
+      ? {
+          // Layer 1 (source) = center hole, layer 2 (backdrop) = full canvas.
+          // Standard `exclude` (XOR): shows pixels covered by exactly one layer = border ring.
+          // Webkit `destination-out`: shows backdrop (full) only where source (center) is absent = border ring.
+          maskImage: 'linear-gradient(black, black), linear-gradient(black, black)',
+          maskSize: `calc(100% - ${frame * 2}px) calc(100% - ${frame * 2}px), 100% 100%`,
+          maskPosition: 'center, 0 0',
+          maskRepeat: 'no-repeat',
+          maskComposite: 'exclude',
+          WebkitMaskImage: 'linear-gradient(black, black), linear-gradient(black, black)',
+          WebkitMaskSize: `calc(100% - ${frame * 2}px) calc(100% - ${frame * 2}px), 100% 100%`,
+          WebkitMaskPosition: 'center, 0 0',
+          WebkitMaskRepeat: 'no-repeat',
+          WebkitMaskComposite: 'destination-out',
+        }
+      : undefined;
+
+    return <canvas ref={setCanvas} className={mx('h-full w-full', classNames)} style={frameStyle} />;
+  },
+);
 
 const useGhost = (canvas: HTMLCanvasElement | null, props: Partial<GhostProps>): GhostRenderer | undefined => {
   const ghost = useMemo(() => {
@@ -1020,16 +1050,18 @@ export const useGhostController = (ghost: GhostRenderer | undefined, config: Par
 
       addEventListener(window, 'mousedown', (e) => {
         const pointer = ghost.addPointer();
-        const x = scaleByPixelRatio(e.clientX);
-        const y = scaleByPixelRatio(e.clientY);
+        const rect = canvas.getBoundingClientRect();
+        const x = scaleByPixelRatio(e.clientX - rect.left);
+        const y = scaleByPixelRatio(e.clientY - rect.top);
         updatePointerDownData(pointer, -1, x, y);
         ghost.splat(pointer);
         playExplosion();
       }),
       addEventListener(window, 'mousemove', (e) => {
         const pointer = ghost.getPointer();
-        const x = scaleByPixelRatio(e.clientX);
-        const y = scaleByPixelRatio(e.clientY);
+        const rect = canvas.getBoundingClientRect();
+        const x = scaleByPixelRatio(e.clientX - rect.left);
+        const y = scaleByPixelRatio(e.clientY - rect.top);
         updatePointerMoveData(pointer, x, y, pointer.color);
       }),
 
@@ -1037,18 +1069,20 @@ export const useGhostController = (ghost: GhostRenderer | undefined, config: Par
       addEventListener(window, 'touchstart', (e) => {
         const pointer = ghost.getPointer();
         const touches = e.targetTouches;
+        const rect = canvas.getBoundingClientRect();
         for (let i = 0; i < touches.length; i++) {
-          const x = scaleByPixelRatio(touches[i].clientX);
-          const y = scaleByPixelRatio(touches[i].clientY);
+          const x = scaleByPixelRatio(touches[i].clientX - rect.left);
+          const y = scaleByPixelRatio(touches[i].clientY - rect.top);
           updatePointerDownData(pointer, touches[i].identifier, x, y);
         }
       }),
       addEventListener(window, 'touchmove', (e) => {
         const pointer = ghost.getPointer();
         const touches = e.targetTouches;
+        const rect = canvas.getBoundingClientRect();
         for (let i = 0; i < touches.length; i++) {
-          const x = scaleByPixelRatio(touches[i].clientX);
-          const y = scaleByPixelRatio(touches[i].clientY);
+          const x = scaleByPixelRatio(touches[i].clientX - rect.left);
+          const y = scaleByPixelRatio(touches[i].clientY - rect.top);
           updatePointerMoveData(pointer, x, y, pointer.color);
         }
       }),
