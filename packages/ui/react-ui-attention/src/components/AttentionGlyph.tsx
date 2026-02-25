@@ -10,19 +10,14 @@ import { mx } from '@dxos/ui-theme';
 
 const attentionGlyphStyles = mx(
   'inline-block rounded-xs w-3 h-3 bg-transparent text-accent-text transition-colors',
-  'group-data-[contains-attended=true]:bg-attentionRelated',
-  'group-data-[attention=true]:bg-accent-surface',
-  'group-data-[attention=true]:text-accent-surface-text',
-  'group-is-current:group-data-[attention=true]:bg-accent-surface',
-  'group-is-current:group-data-[attention=true]:text-accent-surface-text',
+  '[data-contains-attended=true]_&:bg-attentionRelated',
+  '[data-attention=true]_&:bg-accent-surface',
+  '[data-attention=true]_&:text-accent-surface-text',
+  '.is-current[data-attention=true]_&:bg-accent-surface',
+  '.is-current[data-attention=true]_&:text-accent-surface-text',
 );
 
-const presenceIconStyles = mx(
-  'w-3 h-3',
-  'group-is-current:hidden',
-  'group-data-[attention=true]:hidden',
-  'group-is-current:group-data-[attention=true]:hidden',
-);
+const presenceIconStyles = mx('w-3 h-3');
 
 const PresenceOne = () => {
   return (
