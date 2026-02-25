@@ -5,7 +5,12 @@
 import * as Effect from 'effect/Effect';
 import * as Queue from 'effect/Queue';
 
-import { type AuthenticatingInvitationObservable, Invitation } from '@dxos/client/invitations';
+import {
+  type AuthenticatingInvitationObservable,
+  type Invitation,
+  Invitation_AuthMethod,
+  Invitation_State,
+} from '@dxos/client/invitations';
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { AlreadyJoinedError } from '@dxos/protocols';
@@ -38,13 +43,13 @@ export const acceptInvitation = ({ observable, callbacks }: AcceptInvitationProp
     const subscription = observable.subscribe(
       (invitation) => {
         switch (invitation.state) {
-          case Invitation.State.CONNECTING: {
+          case Invitation_State.CONNECTING: {
             runCallback(callbacks?.onConnecting?.(invitation));
             break;
           }
 
-          case Invitation.State.READY_FOR_AUTHENTICATION: {
-            if (invitation.authMethod === Invitation.AuthMethod.SHARED_SECRET) {
+          case Invitation_State.READY_FOR_AUTHENTICATION: {
+            if (invitation.authMethod === Invitation_AuthMethod.SHARED_SECRET) {
               const callbackEffect = callbacks?.onReadyForAuth?.(invitation) ?? Effect.succeed(undefined);
               Effect.gen(function* () {
                 const callbackResult = yield* callbackEffect;
@@ -60,7 +65,7 @@ export const acceptInvitation = ({ observable, callbacks }: AcceptInvitationProp
             break;
           }
 
-          case Invitation.State.SUCCESS: {
+          case Invitation_State.SUCCESS: {
             runCallback(callbacks?.onSuccess?.(invitation));
             runAndForwardErrors(Queue.offer(doneQueue, invitation)).catch(() => {});
             break;

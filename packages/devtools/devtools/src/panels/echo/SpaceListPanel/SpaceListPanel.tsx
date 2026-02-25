@@ -50,7 +50,7 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
         name: space.isOpen ? space.properties.name : undefined,
         objects: -1, // TODO(dmaretskyi): Fix this.
         members: space.members.get().length,
-        startup: open && ready ? ready.getTime() - open.getTime() : -1,
+        startup: open && ready ? (ready as any).getTime() - (open as any).getTime() : -1,
         isDefault: client.spaces.default === space,
         isOpen: space.isOpen,
       };
@@ -122,7 +122,7 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
             const archive = {
               filename: backup.name,
               contents: new Uint8Array(await backup.arrayBuffer()),
-            } satisfies SpaceArchive;
+            } as any satisfies SpaceArchive;
             await client.spaces.import(archive);
           } else {
             throw new Error('Invalid backup type');

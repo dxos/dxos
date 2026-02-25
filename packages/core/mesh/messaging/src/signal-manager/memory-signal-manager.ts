@@ -3,19 +3,26 @@
 //
 
 import { Event, Trigger } from '@dxos/async';
-import { type Any } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { create, timestampFromDate } from '@dxos/protocols/buf';
+import { type SwarmResponse } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import { type QueryRequest, SwarmEventSchema } from '@dxos/protocols/buf/dxos/edge/signal_pb';
+import { PublicKeySchema } from '@dxos/protocols/buf/dxos/keys_pb';
 import { schema } from '@dxos/protocols/proto';
-import { type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
-import { type QueryRequest } from '@dxos/protocols/proto/dxos/edge/signal';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { type Message, type PeerInfo, PeerInfoHash, type SignalStatus, type SwarmEvent } from '../signal-methods';
 
 import { type SignalManager } from './signal-manager';
+
+/** Convert @dxos/keys PublicKey to buf PublicKey message. */
+const toBufKey = (key: PublicKey) => create(PublicKeySchema, { data: key.asUint8Array() });
+
+/** Convert buf PublicKey message to @dxos/keys PublicKey. */
+const fromBufKey = (key?: { data: Uint8Array }): PublicKey | undefined => (key ? PublicKey.from(key.data) : undefined);
 
 /**
  * Common signaling context that connects multiple MemorySignalManager instances.
@@ -63,7 +70,9 @@ export class MemorySignalManager implements SignalManager {
     this._ctx = new Context();
     this._ctx.onDispose(this._context.swarmEvent.on((data) => this.swarmEvent.emit(data)));
 
-    await Promise.all([...this._joinedSwarms.values()].map((value) => this.join(value)));
+    await Promise.all(
+      [...this._joinedSwarms.values()].map(({ topic, peer }) => this.join({ topic: toBufKey(topic), peer })),
+    );
   }
 
   async close(): Promise<void> {
@@ -76,7 +85,9 @@ export class MemorySignalManager implements SignalManager {
       [...this._joinedSwarms.values()],
     );
 
-    await Promise.all([...this._joinedSwarms.values()].map((value) => this.leave(value)));
+    await Promise.all(
+      [...this._joinedSwarms.values()].map(({ topic, peer }) => this.leave({ topic: toBufKey(topic), peer })),
+    );
 
     // assign joined swarms back because .leave() deletes it.
     this._joinedSwarms = joinedSwarmsCopy;
@@ -88,8 +99,10 @@ export class MemorySignalManager implements SignalManager {
     return [];
   }
 
-  async join({ topic, peer }: { topic: PublicKey; peer: PeerInfo }): Promise<void> {
+  async join(request: { topic?: { data: Uint8Array }; peer?: PeerInfo }): Promise<void> {
     invariant(!this._ctx.disposed, 'Closed');
+    const topic = fromBufKey(request.topic)!;
+    const peer = request.peer!;
 
     this._joinedSwarms.add({ topic, peer });
 
@@ -98,30 +111,42 @@ export class MemorySignalManager implements SignalManager {
     }
 
     this._context.swarms.get(topic)!.add(peer);
-    this._context.swarmEvent.emit({
-      topic,
-      peerAvailable: {
-        peer,
-        since: new Date(),
-      },
-    });
+    this._context.swarmEvent.emit(
+      create(SwarmEventSchema, {
+        topic: toBufKey(topic),
+        event: {
+          case: 'peerAvailable',
+          value: {
+            peer,
+            since: timestampFromDate(new Date()),
+          },
+        },
+      }),
+    );
 
     // Emitting swarm events for each peer.
-    for (const [topic, peers] of this._context.swarms) {
-      Array.from(peers).forEach((peer) => {
-        this.swarmEvent.emit({
-          topic,
-          peerAvailable: {
-            peer,
-            since: new Date(),
-          },
-        });
+    for (const [swarmTopic, peers] of this._context.swarms) {
+      Array.from(peers).forEach((swarmPeer) => {
+        this.swarmEvent.emit(
+          create(SwarmEventSchema, {
+            topic: toBufKey(swarmTopic),
+            event: {
+              case: 'peerAvailable',
+              value: {
+                peer: swarmPeer,
+                since: timestampFromDate(new Date()),
+              },
+            },
+          }),
+        );
       });
     }
   }
 
-  async leave({ topic, peer }: { topic: PublicKey; peer: PeerInfo }): Promise<void> {
+  async leave(request: { topic?: { data: Uint8Array }; peer?: PeerInfo }): Promise<void> {
     invariant(!this._ctx.disposed, 'Closed');
+    const topic = fromBufKey(request.topic)!;
+    const peer = request.peer!;
 
     this._joinedSwarms.delete({ topic, peer });
 
@@ -131,29 +156,22 @@ export class MemorySignalManager implements SignalManager {
 
     this._context.swarms.get(topic)!.delete(peer);
 
-    const swarmEvent: SwarmEvent = {
-      topic,
-      peerLeft: {
-        peer,
-      },
-    };
-
-    this._context.swarmEvent.emit(swarmEvent);
+    this._context.swarmEvent.emit(
+      create(SwarmEventSchema, {
+        topic: toBufKey(topic),
+        event: {
+          case: 'peerLeft',
+          value: { peer },
+        },
+      }),
+    );
   }
 
   async query(request: QueryRequest): Promise<SwarmResponse> {
     throw new Error('Not implemented');
   }
 
-  async sendMessage({
-    author,
-    recipient,
-    payload,
-  }: {
-    author: PeerInfo;
-    recipient: PeerInfo;
-    payload: Any;
-  }): Promise<void> {
+  async sendMessage({ author, recipient, payload }: Message): Promise<void> {
     log('send message', { author, recipient, ...dec(payload) });
 
     invariant(recipient);
@@ -182,7 +200,7 @@ export class MemorySignalManager implements SignalManager {
 
         log('receive message', { author, recipient, ...dec(payload) });
 
-        remote.onMessage.emit({ author, recipient, payload });
+        remote.onMessage.emit({ author, recipient, payload } as Message);
       })
       .catch((err) => {
         log.error('error while waiting for freeze', { err });
@@ -207,12 +225,13 @@ export class MemorySignalManager implements SignalManager {
     this._freezeTrigger.wake();
   }
 }
-const dec = (payload: Any) => {
-  if (!payload.type_url.endsWith('ReliablePayload')) {
+
+const dec = (payload?: { typeUrl?: string; value?: Uint8Array }) => {
+  if (!payload?.typeUrl?.endsWith('ReliablePayload')) {
     return {};
   }
 
-  const relPayload = schema.getCodecForType('dxos.mesh.messaging.ReliablePayload').decode(payload.value);
+  const relPayload = schema.getCodecForType('dxos.mesh.messaging.ReliablePayload').decode(payload.value!);
 
   if (typeof relPayload?.payload?.data === 'object') {
     return { payload: Object.keys(relPayload?.payload?.data)[0], sessionId: relPayload?.payload?.sessionId };

@@ -15,7 +15,7 @@ export const useStatus = (space?: Space, channel?: string) => {
     }
 
     const unsubscribe = space.listen(`status/${channel}`, (status) => {
-      const { event } = status.payload ?? {};
+      const { event } = (status.payload ?? {}) as any;
       setProcessing(event === 'processing');
     });
 

@@ -5,17 +5,22 @@
 import { Event as AsyncEvent } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { type Config } from '@dxos/config';
+import { type Client } from '@dxos/protocols';
+import { create, timestampFromDate } from '@dxos/protocols/buf';
 import {
   type ClearSnapshotsRequest,
-  type DevtoolsHost, // TODO(burdon): Rename DevtoolsService
   type EnableDebugLoggingRequest,
   type EnableDebugLoggingResponse,
   type Event,
+  EventSchema,
   type GetBlobsResponse,
+  GetBlobsResponseSchema,
   type GetConfigResponse,
+  GetConfigResponseSchema,
   type GetNetworkPeersRequest,
   type GetNetworkPeersResponse,
   type GetSnapshotsResponse,
+  GetSnapshotsResponseSchema,
   type GetSpaceSnapshotRequest,
   type GetSpaceSnapshotResponse,
   type ResetStorageRequest,
@@ -23,6 +28,7 @@ import {
   type SaveSpaceSnapshotResponse,
   type SignalResponse,
   type StorageInfo,
+  StorageInfoSchema,
   type SubscribeToCredentialMessagesRequest,
   type SubscribeToCredentialMessagesResponse,
   type SubscribeToFeedBlocksRequest,
@@ -39,7 +45,9 @@ import {
   type SubscribeToSpacesRequest,
   type SubscribeToSpacesResponse,
   type SubscribeToSwarmInfoResponse,
-} from '@dxos/protocols/proto/dxos/devtools/host';
+} from '@dxos/protocols/buf/dxos/devtools/host_pb';
+import { type BlobMeta, BlobMetaSchema, BlobMeta_State } from '@dxos/protocols/buf/dxos/echo/blob_pb';
+import { type BlobMeta as ProtobufBlobMeta } from '@dxos/protocols/proto/dxos/echo/blob';
 
 import { type ServiceContext } from '../services';
 
@@ -62,19 +70,19 @@ export type DevtoolsServiceProps = {
 /**
  * @deprecated
  */
-export class DevtoolsServiceImpl implements DevtoolsHost {
+export class DevtoolsServiceImpl implements Client.DevtoolsHost {
   constructor(private readonly params: DevtoolsServiceProps) {}
 
-  events(_request: void): Stream<Event> {
+  events(): Stream<Event> {
     return new Stream<Event>(({ next }) => {
       this.params.events.ready.on(() => {
-        next({ ready: {} });
+        next(create(EventSchema, { payload: { case: 'ready', value: {} } }));
       });
     });
   }
 
-  async getConfig(_request: void): Promise<GetConfigResponse> {
-    return { config: JSON.stringify(this.params.config.values) }; // 😨
+  async getConfig(): Promise<GetConfigResponse> {
+    return create(GetConfigResponseSchema, { config: JSON.stringify(this.params.config.values) }); // 😨
   }
 
   async getStorageInfo(): Promise<StorageInfo> {
@@ -82,27 +90,37 @@ export class DevtoolsServiceImpl implements DevtoolsHost {
 
     const navigatorInfo = typeof navigator === 'object' ? await navigator.storage.estimate() : undefined;
 
-    return {
+    return create(StorageInfoSchema, {
       type: this.params.context.storage.type,
       storageUsage: storageUsage.used,
-      originUsage: navigatorInfo?.usage ?? 0,
-      usageQuota: navigatorInfo?.quota ?? 0,
-    };
+      originUsage: Number(navigatorInfo?.usage ?? 0),
+      usageQuota: Number(navigatorInfo?.quota ?? 0),
+    });
   }
 
   async getBlobs(): Promise<GetBlobsResponse> {
-    return {
-      blobs: await this.params.context.blobStore.list(),
-    };
+    const protobufBlobs = await this.params.context.blobStore.list();
+    const blobs: BlobMeta[] = protobufBlobs.map((blob: ProtobufBlobMeta) =>
+      create(BlobMetaSchema, {
+        id: blob.id,
+        state: blob.state === 1 ? BlobMeta_State.FULLY_PRESENT : BlobMeta_State.PARTIALLY_PRESENT,
+        length: blob.length,
+        chunkSize: blob.chunkSize,
+        bitfield: blob.bitfield,
+        created: blob.created ? timestampFromDate(blob.created) : undefined,
+        updated: blob.updated ? timestampFromDate(blob.updated) : undefined,
+      }),
+    );
+    return create(GetBlobsResponseSchema, { blobs });
   }
 
   async getSnapshots(): Promise<GetSnapshotsResponse> {
-    return {
+    return create(GetSnapshotsResponseSchema, {
       snapshots: [],
-    };
+    });
   }
 
-  resetStorage(_request: ResetStorageRequest): Promise<void> {
+  resetStorage(_request: ResetStorageRequest): Promise<never> {
     throw new Error();
   }
 
@@ -148,7 +166,7 @@ export class DevtoolsServiceImpl implements DevtoolsHost {
     throw new Error();
   }
 
-  clearSnapshots(_request: ClearSnapshotsRequest): Promise<void> {
+  clearSnapshots(_request: ClearSnapshotsRequest): Promise<never> {
     throw new Error();
   }
 
@@ -156,11 +174,11 @@ export class DevtoolsServiceImpl implements DevtoolsHost {
     throw new Error();
   }
 
-  subscribeToNetworkTopics(_request: void): Stream<SubscribeToNetworkTopicsResponse> {
+  subscribeToNetworkTopics(): Stream<SubscribeToNetworkTopicsResponse> {
     throw new Error();
   }
 
-  subscribeToSignalStatus(_request: void): Stream<SubscribeToSignalStatusResponse> {
+  subscribeToSignalStatus(): Stream<SubscribeToSignalStatusResponse> {
     return subscribeToNetworkStatus({ signalManager: this.params.context.signalManager });
   }
 

@@ -13,6 +13,10 @@ import {
   type PeerInfo,
   type SignalManager,
 } from '@dxos/messaging';
+import { create, timestampFromDate } from '@dxos/protocols/buf';
+import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import { SwarmEventSchema } from '@dxos/protocols/buf/dxos/edge/signal_pb';
+import { PublicKeySchema } from '@dxos/protocols/buf/dxos/keys_pb';
 import { ComplexSet } from '@dxos/util';
 
 import { TestWireProtocol } from '../testing/test-wire-protocol';
@@ -37,7 +41,7 @@ describe.skip('Swarm', () => {
 
   const setupSwarm = async ({
     topic = PublicKey.random(),
-    peer = { peerKey: PublicKey.random().toHex() },
+    peer = create(PeerSchema, { peerKey: PublicKey.random().toHex() }),
     connectionLimiter = new ConnectionLimiter(),
     signalManager = new MemorySignalManager(context),
     initiationDelay = 100,
@@ -98,8 +102,8 @@ describe.skip('Swarm', () => {
   test('with simultaneous connections one of the peers drops initiated connection', async () => {
     const topic = PublicKey.random();
 
-    const peerInfo1 = { peerKey: '39ba0e42' };
-    const peerInfo2 = { peerKey: '7d2bc6ab' };
+    const peerInfo1 = create(PeerSchema, { peerKey: '39ba0e42' });
+    const peerInfo2 = create(PeerSchema, { peerKey: '7d2bc6ab' });
 
     const peer1 = await setupSwarm({ peer: peerInfo1, topic, initiationDelay: 0 });
     const peer2 = await setupSwarm({ peer: peerInfo2, topic, initiationDelay: 0 });
@@ -147,9 +151,9 @@ describe.skip('Swarm', () => {
   test('connection limiter', async () => {
     // remotePeer1 <--> peer (connectionLimiter: max = 1) <--> remotePeer2
 
-    const localPeerInfo = { peerKey: '7701dc2d' };
-    const remotePeerInfo1 = { peerKey: '7d2bc6aa' };
-    const remotePeerInfo2 = { peerKey: '39ba0e41' };
+    const localPeerInfo = create(PeerSchema, { peerKey: '7701dc2d' });
+    const remotePeerInfo1 = create(PeerSchema, { peerKey: '7d2bc6aa' });
+    const remotePeerInfo2 = create(PeerSchema, { peerKey: '39ba0e41' });
 
     const topic = PublicKey.random();
     const connectionLimiter = new ConnectionLimiter({ maxConcurrentInitConnections: 1 });
@@ -160,7 +164,7 @@ describe.skip('Swarm', () => {
       ({ author, recipient }) => author.peerKey + recipient.peerKey,
     );
     signalManager.sendMessage = async (message) => {
-      messages.add({ author: message.author, recipient: message.recipient });
+      messages.add({ author: message.author!, recipient: message.recipient! });
       return sendOriginal(message);
     };
     // Stop signaling to stop connection in initiation state.
@@ -207,23 +211,33 @@ const connectSwarms = async (peer1: TestPeer, peer2: TestPeer, delay = async () 
   const connect1 = peer1.swarm.connected.waitForCount(1);
   const connect2 = peer2.swarm.connected.waitForCount(1);
 
-  void peer1.swarm.onSwarmEvent({
-    topic: peer2.topic,
-    peerAvailable: {
-      peer: peer2.peer,
-      since: new Date(),
-    },
-  });
+  void peer1.swarm.onSwarmEvent(
+    create(SwarmEventSchema, {
+      topic: create(PublicKeySchema, { data: peer2.topic.asUint8Array() }),
+      event: {
+        case: 'peerAvailable',
+        value: {
+          peer: peer2.peer,
+          since: timestampFromDate(new Date()),
+        },
+      },
+    }),
+  );
 
   await delay();
 
-  void peer2.swarm.onSwarmEvent({
-    topic: peer1.topic,
-    peerAvailable: {
-      peer: peer1.peer,
-      since: new Date(),
-    },
-  });
+  void peer2.swarm.onSwarmEvent(
+    create(SwarmEventSchema, {
+      topic: create(PublicKeySchema, { data: peer1.topic.asUint8Array() }),
+      event: {
+        case: 'peerAvailable',
+        value: {
+          peer: peer1.peer,
+          since: timestampFromDate(new Date()),
+        },
+      },
+    }),
+  );
 
   if (
     !(

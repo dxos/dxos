@@ -32,14 +32,16 @@ import { failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ApiError, trace as Trace } from '@dxos/protocols';
+import { EMPTY, decodePublicKey, encodePublicKey } from '@dxos/protocols/buf';
+import { type Invitation, Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import {
-  Invitation,
+  type QuerySpacesResponse,
   type Space as SerializedSpace,
   type SpaceArchive,
-  SpaceState,
-} from '@dxos/protocols/proto/dxos/client/services';
-import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
-import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+} from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type IndexConfig } from '@dxos/protocols/buf/dxos/echo/indexing_pb';
+import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { trace } from '@dxos/tracing';
 
 import { RPC_TIMEOUT } from '../common';
@@ -124,7 +126,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
       // Notify all existing spaces that reconnection is starting.
       // They will ignore state updates until the backend reaches READY again.
       for (const space of this._spaces) {
-        (space as SpaceProxy)._notifyReconnecting();
+        (space as unknown as SpaceProxy)._notifyReconnecting();
       }
 
       await this._setupInvitationProxy();
@@ -151,10 +153,10 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     await this._invitationProxy?.close();
     invariant(this._serviceProvider.services.InvitationsService, 'InvitationsService is not available.');
     this._invitationProxy = new InvitationsProxy(
-      this._serviceProvider.services.InvitationsService,
+      this._serviceProvider.services.InvitationsService!,
       this._serviceProvider.services.IdentityService,
       () => ({
-        kind: Invitation.Kind.SPACE,
+        kind: Invitation_Kind.SPACE,
       }),
     );
     await this._invitationProxy.open();
@@ -172,22 +174,25 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     let isFirstDataAfterReconnect = isReconnect;
 
     invariant(this._serviceProvider.services.SpacesService, 'SpacesService is not available.');
-    const spacesStream = this._serviceProvider.services.SpacesService.querySpaces(undefined, { timeout: RPC_TIMEOUT });
-    spacesStream.subscribe((data) => {
+    const spacesStream = this._serviceProvider.services.SpacesService.querySpaces(EMPTY, { timeout: RPC_TIMEOUT });
+    spacesStream.subscribe((data: QuerySpacesResponse) => {
       let emitUpdate = false;
-      const newSpaces = this.get() as SpaceProxy[];
+      const newSpaces = this.get() as unknown as SpaceProxy[];
 
       for (const space of data.spaces ?? []) {
         if (this._ctx.disposed) {
           return;
         }
 
-        let spaceProxy = newSpaces.find(({ key }) => key.equals(space.spaceKey)) as SpaceProxy | undefined;
+        const spaceKeyDecoded = space.spaceKey ? decodePublicKey(space.spaceKey) : undefined;
+        let spaceProxy = spaceKeyDecoded
+          ? (newSpaces.find(({ key }) => key.equals(spaceKeyDecoded)) as SpaceProxy | undefined)
+          : undefined;
         if (!spaceProxy) {
           spaceProxy = new SpaceProxy(this._serviceProvider, space, this._echoClient);
 
           if (this._shouldOpenSpace(space)) {
-            this._openSpaceAsync(spaceProxy);
+            this._openSpaceAsync(spaceProxy as Space);
           }
 
           // Propagate space state updates to the space list observable.
@@ -281,7 +286,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   async _close(): Promise<void> {
     this._streamSubscriptions.clear();
     await this._ctx.dispose();
-    await Promise.all(this.get().map((space) => (space as SpaceProxy)._destroy()));
+    await Promise.all(this.get().map((space) => (space as unknown as SpaceProxy)._destroy()));
     this._spacesStream.next([]);
     await this._invitationProxy?.close();
     this._invitationProxy = undefined;
@@ -343,10 +348,11 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     invariant(this._serviceProvider.services.SpacesService, 'SpacesService is not available.');
     const traceId = PublicKey.random().toHex();
     log.trace('dxos.sdk.echo-proxy.create-space', Trace.begin({ id: traceId }));
-    const space = await this._serviceProvider.services.SpacesService.createSpace(undefined, { timeout: RPC_TIMEOUT });
+    const space = await this._serviceProvider.services.SpacesService.createSpace(EMPTY, { timeout: RPC_TIMEOUT });
 
+    const spaceKeyDecoded = space.spaceKey ? decodePublicKey(space.spaceKey) : undefined;
     await this._spaceCreated.waitForCondition(() => {
-      return this.get().some(({ key }) => key.equals(space.spaceKey));
+      return spaceKeyDecoded ? this.get().some(({ key }) => key.equals(spaceKeyDecoded)) : false;
     });
     const spaceProxy = this._findProxy(space);
 
@@ -388,7 +394,9 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   }
 
   async joinBySpaceKey(spaceKey: PublicKey): Promise<Space> {
-    const response = await this._serviceProvider.services.SpacesService!.joinBySpaceKey({ spaceKey });
+    const response = await this._serviceProvider.services.SpacesService!.joinBySpaceKey({
+      spaceKey: encodePublicKey(spaceKey),
+    });
     return this._findProxy(response.space);
   }
 
@@ -404,6 +412,11 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   }
 
   private _findProxy(space: SerializedSpace): SpaceProxy {
-    return (this.get().find(({ key }) => key.equals(space.spaceKey)) as SpaceProxy) ?? failUndefined();
+    const spaceKeyDecoded = space.spaceKey ? decodePublicKey(space.spaceKey) : undefined;
+    return (
+      (this.get().find(({ key }) => spaceKeyDecoded && key.equals(spaceKeyDecoded)) as unknown as
+        | SpaceProxy
+        | undefined) ?? failUndefined()
+    );
   }
 }

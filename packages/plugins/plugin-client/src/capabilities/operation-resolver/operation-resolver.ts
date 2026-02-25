@@ -12,6 +12,12 @@ import { invariant } from '@dxos/invariant';
 import { OperationResolver } from '@dxos/operation';
 import { Operation } from '@dxos/operation';
 import { ObservabilityOperation } from '@dxos/plugin-observability/types';
+import { create } from '@dxos/protocols/buf';
+import {
+  type CreateRecoveryCredentialResponse,
+  type RequestRecoveryChallengeResponse,
+} from '@dxos/protocols/buf/dxos/client/services_pb';
+import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type JoinPanelProps } from '@dxos/shell/react';
 
 import { JOIN_DIALOG, RECOVERY_CODE_DIALOG, RESET_DIALOG } from '../../constants';
@@ -37,10 +43,10 @@ export default Capability.makeModule(
         handler: Effect.fnUntraced(function* (profile) {
           const manager = yield* Capability.get(Capabilities.PluginManager);
           const client = yield* Capability.get(ClientCapabilities.Client);
-          const data = yield* Effect.promise(() => client.halo.createIdentity(profile));
+          const data = yield* Effect.promise(() => client.halo.createIdentity(create(ProfileDocumentSchema, profile)));
           yield* Effect.promise(() => runAndForwardErrors(manager.activate(ClientEvents.IdentityCreated)));
           yield* Operation.schedule(ObservabilityOperation.SendEvent, { name: 'identity.create' });
-          return data;
+          return data as any;
         }),
       }),
 
@@ -127,9 +133,9 @@ export default Capability.makeModule(
         handler: Effect.fnUntraced(function* () {
           const client = yield* Capability.get(ClientCapabilities.Client);
           invariant(client.services.services.IdentityService, 'IdentityService not available');
-          const { recoveryCode } = yield* Effect.promise(() =>
+          const { recoveryCode } = (yield* Effect.promise(() =>
             client.services.services.IdentityService!.createRecoveryCredential({}),
-          );
+          )) as CreateRecoveryCredentialResponse;
           yield* Operation.invoke(LayoutOperation.UpdateDialog, {
             subject: RECOVERY_CODE_DIALOG,
             blockAlign: 'start',
@@ -173,8 +179,21 @@ export default Capability.makeModule(
           );
 
           invariant(credential, 'Credential not available');
-          const recoveryKey = PublicKey.from(new Uint8Array((credential as any).response.getPublicKey()));
-          const algorithm = (credential as any).response.getPublicKeyAlgorithm() === -7 ? 'ES256' : 'ED25519';
+          const recoveryKey = PublicKey.from(
+            new Uint8Array(
+              ((credential as PublicKeyCredential).response as AuthenticatorAttestationResponse as unknown as {
+                getPublicKey(): ArrayBuffer;
+              }).getPublicKey(),
+            ),
+          );
+          const algorithm =
+            (
+              (credential as PublicKeyCredential).response as AuthenticatorAttestationResponse & {
+                getPublicKeyAlgorithm(): number;
+              }
+            ).getPublicKeyAlgorithm() === -7
+              ? 'ES256'
+              : 'ED25519';
 
           invariant(client.services.services.IdentityService, 'IdentityService not available');
           yield* Effect.promise(() =>
@@ -197,9 +216,9 @@ export default Capability.makeModule(
         handler: Effect.fnUntraced(function* () {
           const client = yield* Capability.get(ClientCapabilities.Client);
           invariant(client.services.services.IdentityService, 'IdentityService not available');
-          const { deviceKey, controlFeedKey, challenge } = yield* Effect.promise(() =>
+          const { deviceKey, controlFeedKey, challenge } = (yield* Effect.promise(() =>
             client.services.services.IdentityService!.requestRecoveryChallenge(),
-          );
+          )) as RequestRecoveryChallengeResponse;
           const credential = yield* Effect.promise(() =>
             navigator.credentials.get({
               publicKey: {
@@ -209,7 +228,11 @@ export default Capability.makeModule(
               },
             }),
           );
-          const lookupKey = PublicKey.from(new Uint8Array((credential as any).response.userHandle));
+          const lookupKey = PublicKey.from(
+            new Uint8Array(
+              ((credential as PublicKeyCredential).response as AuthenticatorAssertionResponse).userHandle!,
+            ),
+          );
           yield* Effect.promise(() =>
             client.services.services.IdentityService!.recoverIdentity(
               {
@@ -217,9 +240,15 @@ export default Capability.makeModule(
                   lookupKey,
                   deviceKey,
                   controlFeedKey,
-                  signature: Buffer.from((credential as any).response.signature),
-                  clientDataJson: Buffer.from((credential as any).response.clientDataJSON),
-                  authenticatorData: Buffer.from((credential as any).response.authenticatorData),
+                  signature: Buffer.from(
+                    ((credential as PublicKeyCredential).response as AuthenticatorAssertionResponse).signature,
+                  ),
+                  clientDataJson: Buffer.from(
+                    ((credential as PublicKeyCredential).response as AuthenticatorAssertionResponse).clientDataJSON,
+                  ),
+                  authenticatorData: Buffer.from(
+                    ((credential as PublicKeyCredential).response as AuthenticatorAssertionResponse).authenticatorData,
+                  ),
                 },
               },
               { timeout: RECOVER_IDENTITY_RPC_TIMEOUT },

@@ -5,6 +5,7 @@
 import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { log } from '@dxos/log';
+import { decodePublicKey } from '@dxos/protocols/buf';
 import { useClient, useMulticastObservable } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useId, useThemeContext } from '@dxos/react-ui';
@@ -410,20 +411,24 @@ export const JoinPanel = ({
   );
 
   const onHaloDone = useCallback(() => {
+    const haloInv = joinState.context.halo.invitation;
+    const identKey = joinState.context.identity?.identityKey ?? haloInv?.identityKey;
+    const spaceKey = joinState.context.identity?.spaceKey ?? haloInv?.spaceKey;
     propsOnDone?.({
-      identityKey: joinState.context.identity?.identityKey ?? joinState.context.halo.invitation?.identityKey ?? null,
-      swarmKey: joinState.context.halo.invitation?.swarmKey ?? null,
-      spaceKey: joinState.context.identity?.spaceKey ?? joinState.context.halo.invitation?.spaceKey ?? null,
-      target: joinState.context.halo.invitation?.target ?? null,
+      identityKey: identKey ? decodePublicKey(identKey) : null,
+      swarmKey: haloInv?.swarmKey ? decodePublicKey(haloInv.swarmKey) : null,
+      spaceKey: spaceKey ? decodePublicKey(spaceKey) : null,
+      target: haloInv?.target ?? null,
     });
   }, [joinState, propsOnDone]);
 
   const onSpaceDone = useCallback(() => {
+    const spaceInv = joinState.context.space.invitation;
     propsOnDone?.({
-      identityKey: joinState.context.space.invitation?.identityKey ?? null,
-      swarmKey: joinState.context.space.invitation?.swarmKey ?? null,
-      spaceKey: joinState.context.space.invitation?.spaceKey ?? null,
-      target: joinState.context.space.invitation?.target ?? null,
+      identityKey: spaceInv?.identityKey ? decodePublicKey(spaceInv.identityKey) : null,
+      swarmKey: spaceInv?.swarmKey ? decodePublicKey(spaceInv.swarmKey) : null,
+      spaceKey: spaceInv?.spaceKey ? decodePublicKey(spaceInv.spaceKey) : null,
+      target: spaceInv?.target ?? null,
     });
   }, [joinState, propsOnDone]);
 

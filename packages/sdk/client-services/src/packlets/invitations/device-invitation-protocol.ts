@@ -7,7 +7,8 @@ import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';
 import { AlreadyJoinedError } from '@dxos/protocols';
-import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { encodePublicKey } from '@dxos/protocols/buf';
+import { type Invitation, Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import type { DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import {
   type AdmissionRequest,
@@ -38,7 +39,7 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
 
   getInvitationContext(): Partial<Invitation> & Pick<Invitation, 'kind'> {
     return {
-      kind: Invitation.Kind.DEVICE,
+      kind: Invitation_Kind.DEVICE,
     };
   }
 
@@ -54,7 +55,7 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
     invariant(request.device);
     const identity = this._getIdentity();
     const credential = await identity.admitDevice(request.device);
-    invariant(getCredentialAssertion(credential)['@type'] === 'dxos.halo.credentials.AuthorizedDevice');
+    invariant(getCredentialAssertion(credential as never)['@type'] === 'dxos.halo.credentials.AuthorizedDevice');
 
     return {
       device: {
@@ -114,10 +115,10 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
       controlFeedKey,
       dataFeedKey,
       controlTimeframe,
-      deviceProfile: profile,
+      deviceProfile: profile as never,
       authorizedDeviceCredential: response.device.credential,
     });
 
-    return { identityKey };
+    return { identityKey: encodePublicKey(identityKey) };
   }
 }

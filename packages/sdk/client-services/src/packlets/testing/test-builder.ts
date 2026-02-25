@@ -17,7 +17,10 @@ import { type LevelDB } from '@dxos/kv-store';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { MemorySignalManager, MemorySignalManagerContext, type SignalManager } from '@dxos/messaging';
 import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
-import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { create, decodePublicKey } from '@dxos/protocols/buf';
+import { Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import { ChainSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type Storage, StorageType, createStorage } from '@dxos/random-access-storage';
 import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
@@ -231,8 +234,13 @@ export class TestPeer {
     return (this._props.invitationsManager ??= new InvitationsManager(
       new InvitationsHandler(this.networkManager),
       (invitation) => {
-        if (invitation.kind === Invitation.Kind.SPACE) {
-          return new SpaceInvitationProtocol(this.dataSpaceManager, this.identity!, this.keyring, invitation.spaceKey!);
+        if (invitation.kind === Invitation_Kind.SPACE) {
+          return new SpaceInvitationProtocol(
+            this.dataSpaceManager,
+            this.identity!,
+            this.keyring,
+            decodePublicKey(invitation.spaceKey!),
+          );
         } else {
           throw new Error('not implemented');
         }
@@ -243,10 +251,12 @@ export class TestPeer {
 
   async createIdentity(): Promise<void> {
     this._props.signingContext ??= await createSigningContext(this.keyring);
-    this.networkManager.setPeerInfo({
-      identityKey: this._props.signingContext.identityKey.toHex(),
-      peerKey: this._props.signingContext.deviceKey.toHex(),
-    });
+    this.networkManager.setPeerInfo(
+      create(PeerSchema, {
+        identityKey: this._props.signingContext.identityKey.toHex(),
+        peerKey: this._props.signingContext.deviceKey.toHex(),
+      }),
+    );
   }
 
   async destroy(): Promise<void> {
@@ -265,9 +275,11 @@ export const createSigningContext = async (keyring: Keyring): Promise<SigningCon
     deviceKey,
     credentialSigner: createCredentialSignerWithChain(
       keyring,
-      {
-        credential: await new CredentialGenerator(keyring, identityKey, deviceKey).createDeviceAuthorization(deviceKey),
-      },
+      create(ChainSchema, {
+        credential: (await new CredentialGenerator(keyring, identityKey, deviceKey).createDeviceAuthorization(
+          deviceKey,
+        )) as never,
+      }),
       deviceKey,
     ),
     recordCredential: async () => {}, // No-op.

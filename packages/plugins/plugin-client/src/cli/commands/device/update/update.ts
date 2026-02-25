@@ -10,6 +10,8 @@ import * as Effect from 'effect/Effect';
 import { CommandConfig } from '@dxos/cli-util';
 import { print } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
+import { decodePublicKey } from '@dxos/protocols/buf';
+import { type Device } from '@dxos/protocols/buf/dxos/client/services_pb';
 
 import { printDevice } from '../util';
 
@@ -43,13 +45,13 @@ export const handler = Effect.fn(function* ({ label }: { label: string }) {
     return;
   }
 
-  const updatedDevice = yield* Effect.tryPromise(() => devicesService.updateDevice(updatedProfile));
+  const updatedDevice = (yield* Effect.tryPromise(() => devicesService.updateDevice(updatedProfile))) as Device;
 
   if (json) {
     yield* Console.log(
       JSON.stringify(
         {
-          deviceKey: updatedDevice.deviceKey.toHex(),
+          deviceKey: updatedDevice.deviceKey ? decodePublicKey(updatedDevice.deviceKey).toHex() : undefined,
           profile: updatedDevice.profile,
         },
         null,

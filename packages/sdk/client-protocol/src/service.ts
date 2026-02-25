@@ -3,26 +3,25 @@
 //
 
 import { type Event } from '@dxos/async';
-import { schema } from '@dxos/protocols/proto';
-import type {
-  ContactsService,
-  DevicesService,
-  EdgeAgentService,
-  IdentityService,
-  InvitationsService,
-  LoggingService,
-  NetworkService,
-  QueueService,
-  SpacesService,
-  SystemService,
-} from '@dxos/protocols/proto/dxos/client/services';
-import type { DevtoolsHost } from '@dxos/protocols/proto/dxos/devtools/host';
-import type { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
-import type { DataService } from '@dxos/protocols/proto/dxos/echo/service';
-import type { AppService, ShellService, WorkerService } from '@dxos/protocols/proto/dxos/iframe';
-import type { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
-import type { TracingService } from '@dxos/protocols/proto/dxos/tracing';
-import { type ServiceBundle, createServiceBundle } from '@dxos/rpc';
+import { type Client, type Mesh, type Rpc } from '@dxos/protocols';
+import * as ClientLoggingPb from '@dxos/protocols/buf/dxos/client/logging_pb';
+import * as ClientQueuePb from '@dxos/protocols/buf/dxos/client/queue_pb';
+import * as ClientServicesPb from '@dxos/protocols/buf/dxos/client/services_pb';
+import * as DevtoolsHostPb from '@dxos/protocols/buf/dxos/devtools/host_pb';
+import * as EchoQueryPb from '@dxos/protocols/buf/dxos/echo/query_pb';
+import * as EchoServicePb from '@dxos/protocols/buf/dxos/echo/service_pb';
+import * as IframePb from '@dxos/protocols/buf/dxos/iframe_pb';
+import * as MeshBridgePb from '@dxos/protocols/buf/dxos/mesh/bridge_pb';
+import * as TracingPb from '@dxos/protocols/buf/dxos/tracing_pb';
+import { createBufServiceBundle } from '@dxos/rpc';
+
+// Transitive type imports required for declaration emit (TS2742).
+import type {} from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import type {} from '@dxos/protocols/buf/dxos/config_pb';
+import type {} from '@dxos/protocols/buf/dxos/echo/indexing_pb';
+import type {} from '@dxos/protocols/buf/dxos/edge/signal_pb';
+import type {} from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import type {} from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
 
 export type { QueueService } from '@dxos/protocols/proto/dxos/client/services';
 
@@ -30,28 +29,34 @@ export type { QueueService } from '@dxos/protocols/proto/dxos/client/services';
 // NOTE: Should contain client/proxy dependencies only.
 //
 
-export type ClientServices = {
-  SystemService: SystemService;
-  NetworkService: NetworkService;
-  LoggingService: LoggingService;
+/**
+ * Services supported by host.
+ */
+export const clientServiceBundle = createBufServiceBundle({
+  SystemService: ClientServicesPb.SystemService,
+  NetworkService: ClientServicesPb.NetworkService,
+  LoggingService: ClientLoggingPb.LoggingService,
 
-  IdentityService: IdentityService;
-  InvitationsService: InvitationsService;
-  DevicesService: DevicesService;
-  SpacesService: SpacesService;
-
-  DataService: DataService;
-  QueryService: QueryService;
-  QueueService: QueueService;
-
-  ContactsService: ContactsService;
-  EdgeAgentService: EdgeAgentService;
+  IdentityService: ClientServicesPb.IdentityService,
+  QueryService: EchoQueryPb.QueryService,
+  InvitationsService: ClientServicesPb.InvitationsService,
+  DevicesService: ClientServicesPb.DevicesService,
+  SpacesService: ClientServicesPb.SpacesService,
+  DataService: EchoServicePb.DataService,
+  ContactsService: ClientServicesPb.ContactsService,
+  EdgeAgentService: ClientServicesPb.EdgeAgentService,
+  QueueService: ClientQueuePb.QueueService,
 
   // TODO(burdon): Deprecated.
-  DevtoolsHost: DevtoolsHost;
+  DevtoolsHost: DevtoolsHostPb.DevtoolsHost,
+  TracingService: TracingPb.TracingService,
+});
 
-  TracingService: TracingService;
-};
+/**
+ * Client services type derived from the service bundle.
+ * This represents the client-side RPC interface for all services.
+ */
+export type ClientServices = Rpc.BufRpcClientServices<typeof clientServiceBundle>;
 
 /**
  * Provide access to client services definitions and service handler.
@@ -76,7 +81,7 @@ export interface ClientServicesProvider {
    */
   onReconnect?: (callback: () => Promise<void>) => void;
 
-  descriptors: ServiceBundle<ClientServices>;
+  descriptors: typeof clientServiceBundle;
   services: Partial<ClientServices>;
 
   // TODO(burdon): Should take context from parent?
@@ -84,57 +89,34 @@ export interface ClientServicesProvider {
   close(): Promise<unknown>;
 }
 
-/**
- * Services supported by host.
- */
-export const clientServiceBundle = createServiceBundle<ClientServices>({
-  SystemService: schema.getService('dxos.client.services.SystemService'),
-  NetworkService: schema.getService('dxos.client.services.NetworkService'),
-  LoggingService: schema.getService('dxos.client.services.LoggingService'),
+export type IframeServiceBundle = {
+  BridgeService: Mesh.BridgeService;
+};
 
-  IdentityService: schema.getService('dxos.client.services.IdentityService'),
-  QueryService: schema.getService('dxos.echo.query.QueryService'),
-  InvitationsService: schema.getService('dxos.client.services.InvitationsService'),
-  DevicesService: schema.getService('dxos.client.services.DevicesService'),
-  SpacesService: schema.getService('dxos.client.services.SpacesService'),
-  DataService: schema.getService('dxos.echo.service.DataService'),
-  ContactsService: schema.getService('dxos.client.services.ContactsService'),
-  EdgeAgentService: schema.getService('dxos.client.services.EdgeAgentService'),
-  QueueService: schema.getService('dxos.client.services.QueueService'),
-
-  // TODO(burdon): Deprecated.
-  DevtoolsHost: schema.getService('dxos.devtools.host.DevtoolsHost'),
-  TracingService: schema.getService('dxos.tracing.TracingService'),
+export const iframeServiceBundle = createBufServiceBundle({
+  BridgeService: MeshBridgePb.BridgeService,
 });
 
-export type IframeServiceBundle = {
-  BridgeService: BridgeService;
-};
-
-export const iframeServiceBundle: ServiceBundle<IframeServiceBundle> = {
-  BridgeService: schema.getService('dxos.mesh.bridge.BridgeService'),
-};
-
 export type WorkerServiceBundle = {
-  WorkerService: WorkerService;
+  WorkerService: Client.WorkerService;
 };
 
-export const workerServiceBundle: ServiceBundle<WorkerServiceBundle> = {
-  WorkerService: schema.getService('dxos.iframe.WorkerService'),
-};
+export const workerServiceBundle = createBufServiceBundle({
+  WorkerService: IframePb.WorkerService,
+});
 
 export type AppServiceBundle = {
-  AppService: AppService;
+  AppService: Client.AppService;
 };
 
-export const appServiceBundle: ServiceBundle<AppServiceBundle> = {
-  AppService: schema.getService('dxos.iframe.AppService'),
-};
+export const appServiceBundle = createBufServiceBundle({
+  AppService: IframePb.AppService,
+});
 
 export type ShellServiceBundle = {
-  ShellService: ShellService;
+  ShellService: Client.ShellService;
 };
 
-export const shellServiceBundle: ServiceBundle<ShellServiceBundle> = {
-  ShellService: schema.getService('dxos.iframe.ShellService'),
-};
+export const shellServiceBundle = createBufServiceBundle({
+  ShellService: IframePb.ShellService,
+});

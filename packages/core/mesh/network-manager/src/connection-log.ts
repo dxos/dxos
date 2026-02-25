@@ -5,7 +5,9 @@
 import { Event } from '@dxos/async';
 import { raise } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
-import { type ConnectionInfo, type SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
+import { create, protoToBuf, timestampFromDate, timestampMs } from '@dxos/protocols/buf';
+import { ConnectionInfoSchema, type SwarmInfo, SwarmInfoSchema } from '@dxos/protocols/buf/dxos/devtools/swarm_pb';
+import { PublicKeySchema } from '@dxos/protocols/buf/dxos/keys_pb';
 import { type MuxerStats } from '@dxos/teleport';
 import { ComplexMap } from '@dxos/util';
 
@@ -21,6 +23,9 @@ export enum EventType {
   PROTOCOL_EXTENSIONS_HANDSHAKE = 'PROTOCOL_EXTENSIONS_HANDSHAKE',
   PROTOCOL_HANDSHAKE = 'PROTOCOL_HANDSHAKE',
 }
+
+/** Helper to convert @dxos/keys PublicKey to buf PublicKey message. */
+const toBufPublicKey = (key: PublicKey) => create(PublicKeySchema, { data: key.asUint8Array() });
 
 export class ConnectionLog {
   /**
@@ -39,36 +44,37 @@ export class ConnectionLog {
   }
 
   joinedSwarm(swarm: Swarm): void {
-    const info: SwarmInfo = {
-      id: PublicKey.from(swarm._instanceId),
-      topic: swarm.topic,
+    const info = create(SwarmInfoSchema, {
+      id: toBufPublicKey(PublicKey.from(swarm._instanceId)),
+      topic: toBufPublicKey(swarm.topic),
       isActive: true,
       label: swarm.label,
       connections: [],
-    };
+    });
 
     this._swarms.set(PublicKey.from(swarm._instanceId), info);
     this.update.emit();
 
     swarm.connectionAdded.on((connection) => {
-      const connectionInfo: ConnectionInfo = {
+      const connectionInfo = create(ConnectionInfoSchema, {
         state: ConnectionState.CREATED,
         closeReason: connection.closeReason,
-        remotePeerId: PublicKey.from(connection.remoteInfo.peerKey),
-        sessionId: connection.sessionId,
+        remotePeerId: toBufPublicKey(PublicKey.from(connection.remoteInfo.peerKey)),
+        sessionId: connection.sessionId ? toBufPublicKey(connection.sessionId) : undefined,
         transport: connection.transport && Object.getPrototypeOf(connection.transport).constructor.name,
         protocolExtensions: [], // TODO(dmaretskyi): Fix.
         events: [],
-        lastUpdate: new Date(),
-      };
-      info.connections!.push(connectionInfo);
+        lastUpdate: timestampFromDate(new Date()),
+      });
+      info.connections.push(connectionInfo);
       this.update.emit();
 
       connection.stateChanged.on(async (state) => {
         connectionInfo.state = state;
         connectionInfo.closeReason = connection.closeReason;
-        connectionInfo.lastUpdate = new Date();
-        connectionInfo.events!.push({
+        connectionInfo.lastUpdate = timestampFromDate(new Date());
+        connectionInfo.events.push({
+          $typeName: 'dxos.devtools.swarm.ConnectionEvent',
           type: EventType.CONNECTION_STATE_CHANGED,
           newState: state,
         });
@@ -84,8 +90,8 @@ export class ConnectionLog {
       (connection.protocol as WireProtocol & { stats: Event<MuxerStats> })?.stats?.on((stats) => {
         connectionInfo.readBufferSize = stats.readBufferSize;
         connectionInfo.writeBufferSize = stats.writeBufferSize;
-        connectionInfo.streams = stats.channels;
-        connectionInfo.lastUpdate = new Date();
+        connectionInfo.streams = protoToBuf(stats.channels);
+        connectionInfo.lastUpdate = timestampFromDate(new Date());
         this.update.emit();
       });
 
@@ -99,26 +105,26 @@ export class ConnectionLog {
       gcSwarm(info);
 
       // connection.protocol.protocol?.error.on((error) => {
-      //   connectionInfo.events!.push({
+      //   connectionInfo.events.push({
       //     type: EventType.PROTOCOL_ERROR,
       //     error: error.stack ?? error.message
       //   });
       //   this.update.emit();
       // });
       // connection.protocol.protocol?.extensionsInitialized.on(() => {
-      //   connectionInfo.events!.push({
+      //   connectionInfo.events.push({
       //     type: EventType.PROTOCOL_EXTENSIONS_INITIALIZED
       //   });
       //   this.update.emit();
       // });
       // connection.protocol.protocol?.extensionsHandshake.on(() => {
-      //   connectionInfo.events!.push({
+      //   connectionInfo.events.push({
       //     type: EventType.PROTOCOL_EXTENSIONS_HANDSHAKE
       //   });
       //   this.update.emit();
       // });
       // connection.protocol.protocol?.handshake.on(() => {
-      //   connectionInfo.events!.push({
+      //   connectionInfo.events.push({
       //     type: EventType.PROTOCOL_HANDSHAKE
       //   });
       //   this.update.emit();
@@ -133,7 +139,7 @@ export class ConnectionLog {
 }
 
 const gcSwarm = (swarm: SwarmInfo) => {
-  swarm.connections = swarm.connections?.filter((connection) => {
-    return connection.lastUpdate ? Date.now() - connection.lastUpdate.getTime() < CONNECTION_GC_THRESHOLD : true;
+  swarm.connections = swarm.connections.filter((connection) => {
+    return connection.lastUpdate ? Date.now() - timestampMs(connection.lastUpdate) < CONNECTION_GC_THRESHOLD : true;
   });
 };

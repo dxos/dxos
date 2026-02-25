@@ -4,6 +4,7 @@
 
 import React from 'react';
 
+import { decodePublicKey } from '@dxos/protocols/buf';
 import { type Device } from '@dxos/react-client/halo';
 import { Button, Icon, List, useTranslation } from '@dxos/react-ui';
 import { descriptionText, getSize, mx } from '@dxos/ui-theme';
@@ -32,7 +33,7 @@ export const DeviceList = ({
           {devices.map((device: Device) => {
             return (
               <DeviceListItem
-                key={device.deviceKey.toHex()}
+                key={device.deviceKey ? decodePublicKey(device.deviceKey).toHex() : 'unknown'}
                 device={device}
                 onClickEdit={() => onClickEdit?.(device)}
                 {...{ onClickReset, onClickRecover, onClickJoinExisting, connectionState, onAgentDestroy }}

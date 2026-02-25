@@ -8,7 +8,7 @@ export {
   type Contact,
   type Identity,
   type Halo,
-  Device,
+  type Device,
   DeviceKind,
   DeviceType,
 } from '@dxos/client/halo';

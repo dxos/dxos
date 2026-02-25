@@ -3,7 +3,9 @@
 //
 
 import { type PublicKey } from '@dxos/client';
+import { decodePublicKey } from '@dxos/protocols/buf';
 import { type Credential, type Identity, type Presentation } from '@dxos/client/halo';
+import { getCredentialAssertion } from '@dxos/credentials';
 
 import { codec } from './codec';
 
@@ -12,12 +14,14 @@ import { codec } from './codec';
 export const matchServiceCredential =
   (capabilities: string[] = []) =>
   (credential: Credential) => {
-    if (credential.subject.assertion['@type'] !== 'dxos.halo.credentials.ServiceAccess') {
+    if (!credential.subject || getCredentialAssertion(credential)['@type'] !== 'dxos.halo.credentials.ServiceAccess') {
       return false;
     }
 
-    const { capabilities: credentialCapabilities } = credential.subject.assertion;
-    return capabilities.every((capability) => credentialCapabilities.includes(capability));
+    const { capabilities: credentialCapabilities } = getCredentialAssertion(credential) as {
+      capabilities?: string[];
+    };
+    return capabilities.every((capability) => credentialCapabilities?.includes(capability) ?? false);
   };
 
 /**
@@ -39,7 +43,7 @@ export const signup = async ({
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       email,
-      identityDid: identity ? `did:key:${identity.identityKey.toHex()}` : undefined,
+      identityDid: identity?.identityKey ? `did:key:${decodePublicKey(identity.identityKey).toHex()}` : undefined,
       redirectUrl,
     }),
   });
@@ -82,7 +86,7 @@ export const activateAccount = async ({
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      identityDid: `did:key:${identity.identityKey.toHex()}`,
+      identityDid: `did:key:${identity.identityKey ? decodePublicKey(identity.identityKey).toHex() : ''}`,
       referrerDid: referrer ? `did:key:${referrer.toHex()}` : undefined,
       token,
     }),

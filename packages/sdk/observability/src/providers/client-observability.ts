@@ -11,13 +11,29 @@ import { DeviceKind } from '@dxos/client/halo';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { type Timestamp } from '@dxos/protocols/buf';
 import { ConnectionState, type NetworkStatus, Platform } from '@dxos/protocols/proto/dxos/client/services';
+import { type TimeframeVector } from '@dxos/protocols/buf/dxos/echo/timeframe_pb';
 
 import { type DataProvider } from '../observability';
 
 const SPACE_METRICS_MIN_INTERVAL = 1000 * 60 * 10; // 10 minutes
 const NETWORK_METRICS_MIN_INTERVAL = 1000 * 60 * 10; // 10 minutes
 const RUNTIME_METRICS_MIN_INTERVAL = 1000 * 60 * 10; // 10 minutes
+
+const timestampToMs = (ts: Timestamp | undefined): number | undefined => {
+  if (!ts) {
+    return undefined;
+  }
+  return Number(ts.seconds) * 1000 + Math.floor(ts.nanos / 1_000_000);
+};
+
+const timeframeVectorTotalMessages = (tf: TimeframeVector | undefined): number => {
+  if (!tf?.frames) {
+    return 0;
+  }
+  return tf.frames.reduce((total, frame) => total + frame.seq + 1, 0);
+};
 
 // TODO(wittjosiah): Improve privacy of telemetry identifiers.
 //  - Identifier should be generated client-side with no attachment to identity.
@@ -28,7 +44,7 @@ const RUNTIME_METRICS_MIN_INTERVAL = 1000 * 60 * 10; // 10 minutes
 export const identityProvider = (clientServices: Partial<ClientServices>): DataProvider =>
   Effect.fn(function* (observability) {
     // TODO(wittjosiah): RPC subscribe returns void; cleanup requires upstream API change.
-    clientServices.IdentityService!.queryIdentity().subscribe((idqr) => {
+    clientServices.IdentityService!.queryIdentity().subscribe((idqr: any) => {
       if (!idqr?.identity?.did) {
         return;
       }
@@ -38,12 +54,12 @@ export const identityProvider = (clientServices: Partial<ClientServices>): DataP
     });
 
     // TODO(wittjosiah): RPC subscribe returns void; cleanup requires upstream API change.
-    clientServices.DevicesService!.queryDevices().subscribe((dqr) => {
+    clientServices.DevicesService!.queryDevices().subscribe((dqr: any) => {
       if (!dqr?.devices || dqr.devices.length === 0) {
         return;
       }
 
-      const thisDevice = dqr.devices.find((device) => device.kind === DeviceKind.CURRENT);
+      const thisDevice = dqr.devices.find((device: any) => device.kind === DeviceKind.CURRENT);
       if (!thisDevice) {
         return;
       }
@@ -103,7 +119,7 @@ export const networkMetricsProvider = (clientServices: Partial<ClientServices>):
       });
     });
 
-    clientServices.NetworkService!.queryStatus().subscribe((networkStatus) => {
+    clientServices.NetworkService!.queryStatus().subscribe((networkStatus: any) => {
       lastNetworkStatus = networkStatus;
       updateSignalMetrics.emit();
     });
@@ -122,11 +138,12 @@ export const runtimeMetricsProvider = (clientServices: Partial<ClientServices>):
     const platform = yield* Effect.promise(() => clientServices.SystemService!.getPlatform());
     invariant(platform, 'platform is required');
 
+    const platformAny = platform as any;
     observability.setTags({
-      platformType: Platform.PLATFORM_TYPE[platform.type as number].toLowerCase(),
-      platform: platform.platform,
-      arch: platform.arch,
-      runtime: platform.runtime,
+      platformType: Platform.PLATFORM_TYPE[platformAny.type as number]?.toLowerCase(),
+      platform: platformAny.platform,
+      arch: platformAny.arch,
+      runtime: platformAny.runtime,
     });
 
     scheduleTaskInterval(
@@ -142,14 +159,14 @@ export const runtimeMetricsProvider = (clientServices: Partial<ClientServices>):
         }
 
         clientServices.SystemService?.getPlatform()
-          .then((platform) => {
+          .then((platform: any) => {
             if (platform.memory) {
               observability.metrics.gauge('dxos.client.services.runtime.rss', platform.memory.rss);
               observability.metrics.gauge('dxos.client.services.runtime.heapTotal', platform.memory.heapTotal);
               observability.metrics.gauge('dxos.client.services.runtime.heapUsed', platform.memory.heapUsed);
             }
           })
-          .catch((error) => log('platform error', { error }));
+          .catch((error: any) => log('platform error', { error }));
       },
       RUNTIME_METRICS_MIN_INTERVAL,
     );
@@ -216,29 +233,27 @@ type MapSpacesOptions = {
 
 const mapSpaces = (spaces: Space[], options: MapSpacesOptions = { verbose: false, truncateKeys: false }) => {
   return spaces.map((space) => {
-    // TODO(burdon): Factor out.
-    // TODO(burdon): Agent needs to restart before `ready` is available.
-    const { open, ready } = space.internal.data.metrics ?? {};
-    const startup = open && ready && ready.getTime() - open.getTime();
+    const { open, ready } = space.internal.data.metrics ?? ({} as any);
+    const openMs = timestampToMs(open);
+    const readyMs = timestampToMs(ready);
+    const startup = openMs && readyMs ? readyMs - openMs : undefined;
 
-    // TODO(burdon): Get feeds from client-services if verbose (factor out from devtools/diagnostics).
-    // const host = client.services.services.DevtoolsHost!;
     const pipeline = space.internal.data.pipeline;
-    const startDataMutations = pipeline?.currentEpoch?.subject.assertion.timeframe.totalMessages() ?? 0;
-    const epoch = pipeline?.currentEpoch?.subject.assertion.number;
-    // const appliedEpoch = pipeline?.appliedEpoch?.subject.assertion.number;
-    const currentDataMutations = pipeline?.currentDataTimeframe?.totalMessages() ?? 0;
-    const totalDataMutations = pipeline?.targetDataTimeframe?.totalMessages() ?? 0;
+    const assertion = pipeline?.currentEpoch?.subject?.assertion as any;
+    const startDataMutations = assertion?.timeframe
+      ? timeframeVectorTotalMessages(assertion.timeframe)
+      : 0;
+    const epoch = assertion?.number;
+    const currentDataMutations = timeframeVectorTotalMessages(pipeline?.currentDataTimeframe);
+    const totalDataMutations = timeframeVectorTotalMessages(pipeline?.targetDataTimeframe);
 
     return {
-      // TODO(nf): truncate keys for DD?
       key: space.key.truncate(),
       open: space.isOpen,
       members: space.members.get().length,
       objects: space.internal.db.coreDatabase.getAllObjectIds().length,
       startup,
       epoch,
-      // appliedEpoch,
       startDataMutations,
       currentDataMutations,
       totalDataMutations,

@@ -4,7 +4,8 @@
 
 import { MulticastObservable, type Observable, type Subscriber } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
-import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { timestampDate } from '@dxos/protocols/buf';
+import { type Invitation, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 
 export const AUTHENTICATION_CODE_LENGTH = 6;
 
@@ -87,7 +88,7 @@ export const wrapObservable = async (observable: CancellableInvitation): Promise
     const subscription = observable.subscribe(
       (invitation: Invitation | undefined) => {
         // TODO(burdon): Throw error if auth requested.
-        invariant(invitation?.state === Invitation.State.SUCCESS);
+        invariant(invitation?.state === Invitation_State.SUCCESS);
         subscription.unsubscribe();
         resolve(invitation);
       },
@@ -103,5 +104,5 @@ export const getExpirationTime = (invitation: Partial<Invitation>): Date | undef
   if (!(invitation.created && invitation.lifetime)) {
     return;
   }
-  return new Date(invitation.created.getTime() + invitation.lifetime * 1000);
+  return new Date(timestampDate(invitation.created).getTime() + invitation.lifetime * 1000);
 };

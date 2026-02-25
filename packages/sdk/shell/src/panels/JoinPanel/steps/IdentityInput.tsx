@@ -5,6 +5,8 @@
 import React, { useCallback, useState } from 'react';
 
 import { log } from '@dxos/log';
+import { create } from '@dxos/protocols/buf';
+import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { useClient } from '@dxos/react-client';
 import { useTranslation } from '@dxos/react-ui';
 import { type MaybePromise } from '@dxos/util';
@@ -42,7 +44,7 @@ export const IdentityInput = (props: IdentityInputProps) => {
         },
       );
     } else {
-      await client.halo.createIdentity({ displayName: value }).then(
+      await client.halo.createIdentity(create(ProfileDocumentSchema, { displayName: value })).then(
         (identity) => {
           send?.({ type: 'selectIdentity' as const, identity });
         },

@@ -3,11 +3,12 @@
 //
 
 import { Event } from '@dxos/async';
+import { type PublicKey } from '@dxos/keys';
+import { decodePublicKey } from '@dxos/protocols/buf';
 import {
   type AppContextRequest,
   type InvitationUrlRequest,
   type LayoutRequest,
-  type PublicKey,
   ShellLayout,
   type ShellRuntime,
 } from '@dxos/react-client';
@@ -34,7 +35,11 @@ export class MemoryShellRuntime implements ShellRuntime {
   }: Partial<LayoutRequest> & Partial<AppContextRequest> & Partial<InvitationUrlRequest> = {}) {
     this._layout = layout ?? ShellLayout.DEFAULT;
     this._invitationCode = invitationCode;
-    this._spaceKey = spaceKey;
+    this._spaceKey = spaceKey
+      ? '$typeName' in (spaceKey as object)
+        ? decodePublicKey(spaceKey as Parameters<typeof decodePublicKey>[0])
+        : (spaceKey as unknown as PublicKey)
+      : undefined;
     this._invitationUrl = invitationUrl ?? window.location.origin;
     this._deviceInvitationParam = deviceInvitationParam ?? 'deviceInvitationCode';
     this._spaceInvitationParam = spaceInvitationParam ?? 'spaceInvitationCode';
@@ -67,7 +72,12 @@ export class MemoryShellRuntime implements ShellRuntime {
   setLayout(request: LayoutRequest): void {
     this._layout = request.layout;
     this._invitationCode = request.invitationCode;
-    this._spaceKey = request.spaceKey;
+    const sk = request.spaceKey;
+    this._spaceKey = sk
+      ? '$typeName' in (sk as object)
+        ? decodePublicKey(sk as Parameters<typeof decodePublicKey>[0])
+        : (sk as unknown as PublicKey)
+      : undefined;
     this.layoutUpdate.emit(request);
   }
 

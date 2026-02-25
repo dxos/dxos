@@ -14,7 +14,7 @@ import { MasterDetailTable } from '../../../components';
 
 export const KeyringPanel = () => {
   const devtoolsHost = useDevtools();
-  const { keys } = useStream(() => devtoolsHost.subscribeToKeyringKeys({}), {});
+  const { keys } = useStream(() => devtoolsHost.subscribeToKeyringKeys({} as any), {} as any);
 
   const properties: TablePropertyDefinition[] = useMemo(
     () => [{ name: 'publicKey', title: 'Public Key', format: Format.TypeFormat.DID }],

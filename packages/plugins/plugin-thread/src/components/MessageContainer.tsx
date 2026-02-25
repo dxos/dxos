@@ -78,8 +78,8 @@ export const MessageContainer = ({
 
   const senderIdentity = members.find(
     (member) =>
-      (message.sender.identityDid && member.identity.did === message.sender.identityDid) ||
-      (message.sender.identityKey && PublicKey.equals(member.identity.identityKey, message.sender.identityKey)),
+      (message.sender.identityDid && member.identity?.did === message.sender.identityDid) ||
+      (message.sender.identityKey && PublicKey.equals(member.identity?.identityKey as any, message.sender.identityKey)),
   )?.identity;
   const messageMetadata = getMessageMetadata(message.id, senderIdentity);
   const userIsAuthor = identity?.did === messageMetadata.authorId;

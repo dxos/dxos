@@ -5,6 +5,7 @@
 import * as Match from 'effect/Match';
 
 import { generateName } from '@dxos/display-name';
+import { decodePublicKey } from '@dxos/protocols/buf';
 import { type Selection } from '@dxos/plugin-attention';
 import { type PublicKey } from '@dxos/react-client';
 import { type Identity } from '@dxos/react-client/halo';
@@ -14,16 +15,16 @@ import { hexToFallback } from '@dxos/util';
 export type MessagePropertiesProvider = (identityKey: PublicKey | undefined) => MessageMetadata;
 
 export const getMessageMetadata = (id: string, identity?: Identity): MessageMetadata => {
-  const fallback = hexToFallback(identity?.identityKey.toHex() ?? '0');
+  const fallback = hexToFallback(identity?.identityKey ? decodePublicKey(identity.identityKey).toHex() : '0');
   return {
     id,
     authorId: identity?.did,
     authorName:
       identity?.profile?.displayName ??
-      (identity?.identityKey ? generateName(identity.identityKey.toHex()) : undefined),
+      (identity?.identityKey ? generateName(decodePublicKey(identity.identityKey).toHex()) : undefined),
     authorAvatarProps: {
-      hue: identity?.profile?.data?.hue ?? fallback.hue,
-      emoji: identity?.profile?.data?.emoji ?? fallback.emoji,
+      hue: (identity?.profile?.data?.hue ?? fallback.hue) as any,
+      emoji: (identity?.profile?.data?.emoji ?? fallback.emoji) as any,
     },
   };
 };

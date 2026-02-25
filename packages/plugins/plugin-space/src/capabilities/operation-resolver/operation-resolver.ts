@@ -15,7 +15,7 @@ import { OperationResolver } from '@dxos/operation';
 import { Operation } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { ObservabilityOperation } from '@dxos/plugin-observability/types';
-import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention/types';
 import { iconValues } from '@dxos/react-ui-pickers/icons';
 import { Collection, ProjectionModel, createEchoChangeCallback, getTypenameFromQuery } from '@dxos/schema';
@@ -538,14 +538,13 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: SpaceOperation.GetShareLink,
           handler: Effect.fnUntraced(function* (input) {
-            const { Invitation, InvitationEncoder } = yield* Effect.promise(
-              () => import('@dxos/react-client/invitations'),
-            );
+            const { Invitation_Type, Invitation_AuthMethod, Invitation_State, InvitationEncoder } =
+              yield* Effect.promise(() => import('@dxos/react-client/invitations'));
 
             const invitation = yield* Operation.invoke(SpaceOperation.Share, {
               space: input.space,
-              type: Invitation.Type.DELEGATED,
-              authMethod: Invitation.AuthMethod.KNOWN_PUBLIC_KEY,
+              type: Invitation_Type.DELEGATED,
+              authMethod: Invitation_AuthMethod.KNOWN_PUBLIC_KEY,
               multiUse: true,
               target: input.target,
             });
@@ -555,7 +554,7 @@ export default Capability.makeModule(
               () =>
                 new Promise<string>((resolve) => {
                   invitation.subscribe((inv) => {
-                    if (inv.state === Invitation.State.CONNECTING) {
+                    if (inv.state === Invitation_State.CONNECTING) {
                       resolve(InvitationEncoder.encode(inv));
                     }
                   });

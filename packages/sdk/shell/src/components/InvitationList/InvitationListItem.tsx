@@ -6,8 +6,8 @@ import React, { type ComponentPropsWithoutRef, useCallback } from 'react';
 
 import {
   type CancellableInvitationObservable,
-  Invitation,
   type InvitationStatus,
+  Invitation_State,
   useInvitationStatus,
 } from '@dxos/react-client/invitations';
 import {
@@ -104,15 +104,15 @@ export const InvitationListItemImpl = ({
   const { cancel, status: invitationStatus, invitationCode, authCode, multiUse, shareable } = propsInvitationStatus;
 
   const isCancellable = !(
-    [Invitation.State.ERROR, Invitation.State.TIMEOUT, Invitation.State.CANCELLED].indexOf(invitationStatus) >= 0
+    [Invitation_State.ERROR, Invitation_State.TIMEOUT, Invitation_State.CANCELLED].indexOf(invitationStatus) >= 0
   );
 
   const showShare =
     shareable &&
     (multiUse ||
-      [Invitation.State.INIT, Invitation.State.CONNECTING, Invitation.State.CONNECTED].indexOf(invitationStatus) >= 0);
+      [Invitation_State.INIT, Invitation_State.CONNECTING, Invitation_State.CONNECTED].indexOf(invitationStatus) >= 0);
 
-  const showAuthCode = invitationStatus === Invitation.State.READY_FOR_AUTHENTICATION;
+  const showAuthCode = invitationStatus === Invitation_State.READY_FOR_AUTHENTICATION;
 
   const handleClickRemove = useCallback(() => onClickRemove?.(invitation), [invitation, onClickRemove]);
 
@@ -124,24 +124,24 @@ export const InvitationListItemImpl = ({
     : undefined;
 
   const avatarAnimation = [
-    Invitation.State.INIT,
-    Invitation.State.CONNECTING,
-    Invitation.State.CONNECTED,
-    Invitation.State.READY_FOR_AUTHENTICATION,
-    Invitation.State.AUTHENTICATING,
+    Invitation_State.INIT,
+    Invitation_State.CONNECTING,
+    Invitation_State.CONNECTED,
+    Invitation_State.READY_FOR_AUTHENTICATION,
+    Invitation_State.AUTHENTICATING,
   ].includes(invitationStatus)
     ? 'pulse'
     : 'none';
 
-  const avatarError = [Invitation.State.ERROR, Invitation.State.TIMEOUT, Invitation.State.CANCELLED].includes(
+  const avatarError = [Invitation_State.ERROR, Invitation_State.TIMEOUT, Invitation_State.CANCELLED].includes(
     invitationStatus,
   );
 
   const avatarGreen = [
-    Invitation.State.CONNECTED,
-    Invitation.State.READY_FOR_AUTHENTICATION,
-    Invitation.State.AUTHENTICATING,
-    Invitation.State.SUCCESS,
+    Invitation_State.CONNECTED,
+    Invitation_State.READY_FOR_AUTHENTICATION,
+    Invitation_State.AUTHENTICATING,
+    Invitation_State.SUCCESS,
   ].includes(invitationStatus);
 
   const avatarStatus = avatarError ? 'error' : avatarGreen ? 'active' : 'inactive';
@@ -191,15 +191,15 @@ export const InvitationListItemImpl = ({
         </>
       ) : showAuthCode ? (
         <AuthCode code={authCode} classNames='grow' />
-      ) : invitationStatus === Invitation.State.CONNECTING ? (
+      ) : invitationStatus === Invitation_State.CONNECTING ? (
         <span className='px-2 grow text-neutral-500'>Connecting...</span>
-      ) : invitationStatus === Invitation.State.AUTHENTICATING ? (
+      ) : invitationStatus === Invitation_State.AUTHENTICATING ? (
         <span className='px-2 grow text-neutral-500'>Authenticating...</span>
-      ) : invitationStatus === Invitation.State.ERROR || invitationStatus === Invitation.State.TIMEOUT ? (
+      ) : invitationStatus === Invitation_State.ERROR || invitationStatus === Invitation_State.TIMEOUT ? (
         <span className='px-2 grow text-neutral-500'>Failed</span>
-      ) : invitationStatus === Invitation.State.CANCELLED ? (
+      ) : invitationStatus === Invitation_State.CANCELLED ? (
         <span className='px-2 grow text-neutral-500'>Cancelled</span>
-      ) : invitationStatus === Invitation.State.SUCCESS ? (
+      ) : invitationStatus === Invitation_State.SUCCESS ? (
         <span className='px-2 grow truncate'>User joined</span>
       ) : !shareable ? (
         <span className='px-2 grow text-neutral-500'>Pending Invitation</span>

@@ -15,9 +15,11 @@ import { type FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type FeedMessageBlock } from '@dxos/protocols';
+import { bufToProto, protoToBuf } from '@dxos/protocols/buf';
+import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type ControlPipelineSnapshot } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { AdmittedFeed, type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Timeframe } from '@dxos/timeframe';
 import { TimeSeriesCounter, TimeUsageCounter, trace } from '@dxos/tracing';
 import { type AsyncCallback, Callback, tracer } from '@dxos/util';
@@ -141,7 +143,7 @@ export class ControlPipeline {
     await this._pipeline.setCursor(snapshot.timeframe);
 
     for (const message of snapshot.messages ?? []) {
-      const result = await this._spaceStateMachine.process(message.credential, {
+      const result = await this._spaceStateMachine.process(protoToBuf<Credential>(message.credential), {
         sourceFeed: message.feedKey,
         skipVerification: true,
       });
@@ -158,7 +160,7 @@ export class ControlPipeline {
       timeframe: this._pipeline.state.timeframe,
       messages: this._spaceStateMachine.credentialEntries.map((entry) => ({
         feedKey: entry.sourceFeed,
-        credential: entry.credential,
+        credential: bufToProto(entry.credential),
       })),
     };
     await this._pipeline.unpause();
@@ -188,7 +190,7 @@ export class ControlPipeline {
     log('processing', { key: msg.feedKey, seq: msg.seq });
     if (msg.data.payload.credential) {
       const timer = tracer.mark('dxos.echo.pipeline.control');
-      const result = await this._spaceStateMachine.process(msg.data.payload.credential.credential, {
+      const result = await this._spaceStateMachine.process(protoToBuf<Credential>(msg.data.payload.credential.credential), {
         sourceFeed: PublicKey.from(msg.feedKey),
       });
 

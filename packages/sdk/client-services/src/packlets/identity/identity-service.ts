@@ -9,17 +9,25 @@ import { createCredential, signPresentation } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
 import { log } from '@dxos/log';
+import { type Halo } from '@dxos/protocols';
+import { create, encodePublicKey } from '@dxos/protocols/buf';
+import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import {
   type CreateIdentityRequest,
   type CreateRecoveryCredentialRequest,
+  type CreateRecoveryCredentialResponse,
+  CreateRecoveryCredentialResponseSchema,
   type Identity as IdentityProto,
-  type IdentityService,
+  IdentitySchema,
   type QueryIdentityResponse,
+  QueryIdentityResponseSchema,
   type RecoverIdentityRequest,
+  type RequestRecoveryChallengeResponse,
+  RequestRecoveryChallengeResponseSchema,
   type SignPresentationRequest,
-  SpaceState,
-} from '@dxos/protocols/proto/dxos/client/services';
-import { type Presentation, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+} from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type Credential, type Presentation, type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { PublicKeySchema } from '@dxos/protocols/buf/dxos/keys_pb';
 import { safeAwaitAll } from '@dxos/util';
 
 import { type DataSpaceManager } from '../spaces';
@@ -30,7 +38,7 @@ import { type EdgeIdentityRecoveryManager } from './identity-recovery-manager';
 
 const DEFAULT_SPACE_SEARCH_TIMEOUT = 10_000;
 
-export class IdentityServiceImpl extends Resource implements IdentityService {
+export class IdentityServiceImpl extends Resource implements Halo.IdentityService {
   constructor(
     private readonly _identityManager: IdentityManager,
     private readonly _recoveryManager: EdgeIdentityRecoveryManager,
@@ -65,7 +73,7 @@ export class IdentityServiceImpl extends Resource implements IdentityService {
 
   queryIdentity(): Stream<QueryIdentityResponse> {
     return new Stream(({ next }) => {
-      const emitNext = () => next({ identity: this._getIdentity() });
+      const emitNext = () => next(create(QueryIdentityResponseSchema, { identity: this._getIdentity() }));
 
       emitNext();
       return this._identityManager.stateUpdate.on(emitNext);
@@ -77,62 +85,76 @@ export class IdentityServiceImpl extends Resource implements IdentityService {
       return undefined;
     }
 
-    return {
+    return create(IdentitySchema, {
       did: this._identityManager.identity.did,
-      identityKey: this._identityManager.identity.identityKey,
-      spaceKey: this._identityManager.identity.space.key,
+      identityKey: create(PublicKeySchema, {
+        data: this._identityManager.identity.identityKey.asUint8Array(),
+      }),
+      spaceKey: create(PublicKeySchema, {
+        data: this._identityManager.identity.space.key.asUint8Array(),
+      }),
       profile: this._identityManager.identity.profileDocument,
-    };
+    });
   }
 
   async updateProfile(profile: ProfileDocument): Promise<IdentityProto> {
     invariant(this._identityManager.identity, 'Identity not initialized.');
     await this._identityManager.updateProfile(profile);
-    await this._onProfileUpdate?.(this._identityManager.identity.profileDocument);
+    await this._onProfileUpdate?.(this._identityManager.identity.profileDocument as never);
     return this._getIdentity()!;
   }
 
-  async createRecoveryCredential(request: CreateRecoveryCredentialRequest) {
-    return this._recoveryManager.createRecoveryCredential(request);
+  async createRecoveryCredential(request: CreateRecoveryCredentialRequest): Promise<CreateRecoveryCredentialResponse> {
+    const result = await this._recoveryManager.createRecoveryCredential(request);
+    return create(CreateRecoveryCredentialResponseSchema, result);
   }
 
-  async requestRecoveryChallenge() {
-    return this._recoveryManager.requestRecoveryChallenge();
+  async requestRecoveryChallenge(): Promise<RequestRecoveryChallengeResponse> {
+    const result = await this._recoveryManager.requestRecoveryChallenge();
+    return create(RequestRecoveryChallengeResponseSchema, {
+      deviceKey: encodePublicKey(result.deviceKey),
+      controlFeedKey: encodePublicKey(result.controlFeedKey),
+      challenge: result.challenge,
+    });
   }
 
   async recoverIdentity(request: RecoverIdentityRequest): Promise<IdentityProto> {
-    if (request.recoveryCode) {
-      await this._recoveryManager.recoverIdentity({ recoveryCode: request.recoveryCode });
-    } else if (request.external) {
-      await this._recoveryManager.recoverIdentityWithExternalSignature(request.external);
-    } else if (request.token) {
-      await this._recoveryManager.recoverIdentityWithToken({ token: request.token });
-    } else {
-      throw new Error('Invalid request.');
+    switch (request.request.case) {
+      case 'recoveryCode':
+        await this._recoveryManager.recoverIdentity({ recoveryCode: request.request.value });
+        break;
+      case 'external':
+        await this._recoveryManager.recoverIdentityWithExternalSignature(request.request.value);
+        break;
+      case 'token':
+        await this._recoveryManager.recoverIdentityWithToken({ token: request.request.value });
+        break;
+      default:
+        throw new Error('Invalid request.');
     }
 
     return this._getIdentity()!;
   }
 
   // TODO(burdon): Rename createPresentation?
-  async signPresentation({ presentation, nonce }: SignPresentationRequest): Promise<Presentation> {
+  async signPresentation(request: SignPresentationRequest): Promise<Presentation> {
     invariant(this._identityManager.identity, 'Identity not initialized.');
 
-    return await signPresentation({
-      presentation,
+    return signPresentation({
+      presentation: request.presentation!,
       signer: this._keyring,
       signerKey: this._identityManager.identity.deviceKey,
       chain: this._identityManager.identity.deviceCredentialChain,
-      nonce,
+      nonce: request.nonce,
     });
   }
 
-  async createAuthCredential() {
+  async createAuthCredential(): Promise<Credential> {
     const identity = this._identityManager.identity;
 
     invariant(identity, 'Identity not initialized.');
 
-    return await createCredential({
+    return createCredential({
       assertion: { '@type': 'dxos.halo.credentials.Auth' },
       issuer: identity.identityKey,
       subject: identity.identityKey,

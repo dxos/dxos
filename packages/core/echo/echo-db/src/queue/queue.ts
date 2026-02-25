@@ -13,7 +13,14 @@ import { defineHiddenProperty } from '@dxos/echo/internal';
 import { assertArgument, failedInvariant } from '@dxos/invariant';
 import { type DXN, type ObjectId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type FeedProtocol } from '@dxos/protocols';
+import { type Echo } from '@dxos/protocols';
+import { create } from '@dxos/protocols/buf';
+import {
+  DeleteFromQueueRequestSchema,
+  InsertIntoQueueRequestSchema,
+  QueryQueueRequestSchema,
+  SyncQueueRequestSchema,
+} from '@dxos/protocols/buf/dxos/client/queue_pb';
 
 import { Filter, Query, QueryResultImpl } from '../query';
 
@@ -34,7 +41,9 @@ const POLLING_INTERVAL = 1_000;
 export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Queue<T> {
   private readonly _ctx = new Context();
 
-  public readonly updated = new Event();
+  public readonly updated = new Event()
+
+;
 
   private readonly _refreshTask = new DeferredTask(this._ctx, async () => {
     const thisRefreshId = ++this._refreshId;
@@ -42,13 +51,15 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
     try {
       TRACE_QUEUE_LOAD &&
         log.info('queue refresh begin', { currentObjects: this._objects.length, refreshId: thisRefreshId });
-      const { objects } = await this._service.queryQueue({
-        query: {
-          queuesNamespace: this._subspaceTag,
-          spaceId: this._spaceId,
-          queueIds: [this._queueId],
-        },
-      });
+      const { objects } = await this._service.queryQueue(
+        create(QueryQueueRequestSchema, {
+          query: {
+            queuesNamespace: this._subspaceTag,
+            spaceId: this._spaceId,
+            queueIds: [this._queueId],
+          },
+        }),
+      );
       TRACE_QUEUE_LOAD && log.info('items fetched', { refreshId: thisRefreshId, count: objects?.length ?? 0 });
       if (thisRefreshId !== this._refreshId) {
         return;
@@ -62,7 +73,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
           try {
             return await Obj.fromJSON(obj, {
               refResolver: this._refResolver,
-              dxn: this._dxn.extend([(obj as any).id]),
+              dxn: this._dxn.extend([(obj as { id?: string }).id ?? '']),
             });
           } catch (err) {
             log.verbose('schema validation error; object ignored', { obj, error: err });
@@ -97,26 +108,56 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
         this.updated.emit();
       }
     }
-  });
+  })
 
-  private readonly _subspaceTag: string;
-  private readonly _spaceId: SpaceId;
-  private readonly _queueId: string;
+;
+
+  private readonly _subspaceTag: string
+
+;
+
+  private readonly _spaceId: SpaceId
+
+;
+
+  private readonly _queueId: string
+
+;
 
   /**
    * Number of active polling handlers.
    */
-  private _pollingHandlers: number = 0;
 
-  private _objectCache = new Map<ObjectId, T>();
-  private _objects: T[] = [];
-  private _isLoading = true;
-  private _error: Error | null = null;
-  private _refreshId = 0;
-  private _querying = false;
+  private _pollingHandlers: number = 0
+
+;
+
+  private _objectCache = new Map<ObjectId, T>()
+
+;
+
+  private _objects: T[] = []
+
+;
+
+  private _isLoading = true
+
+;
+
+  private _error: Error | null = null
+
+;
+
+  private _refreshId = 0
+
+;
+
+  private _querying = false
+
+;
 
   constructor(
-    private readonly _service: FeedProtocol.QueueService,
+    private readonly _service: Echo.QueueService,
     private readonly _refResolver: Ref.Resolver,
     private readonly _dxn: DXN,
   ) {
@@ -134,6 +175,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
   }
 
   // TODO(burdon): Rename to objects.
+
   get dxn() {
     return this._dxn;
   }
@@ -141,6 +183,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
   /**
    * Subscribe to queue updates.
    */
+
   subscribe(callback: () => void): () => void {
     return this.updated.on(callback);
   }
@@ -148,6 +191,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
   /**
    * @deprecated Use `query` method instead.
    */
+
   get isLoading(): boolean {
     return this._isLoading;
   }
@@ -155,6 +199,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
   /**
    * @deprecated Use `query` method instead.
    */
+
   get error(): Error | null {
     return this._error;
   }
@@ -162,6 +207,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
   /**
    * @deprecated Use `query` method instead.
    */
+
   get objects(): T[] {
     return this.getObjectsSync();
   }
@@ -173,6 +219,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
   /**
    * Insert into queue with optimistic update.
    */
+
   async append(items: T[]): Promise<void> {
     items.forEach((item) => assertObjectModel(item));
 
@@ -192,12 +239,15 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
 
     try {
       for (let i = 0; i < json.length; i += QUEUE_APPEND_BATCH_SIZE) {
-        await this._service.insertIntoQueue({
-          subspaceTag: this._subspaceTag,
-          spaceId: this._spaceId,
-          queueId: this._queueId,
-          objects: json.slice(i, i + QUEUE_APPEND_BATCH_SIZE) as any,
-        });
+        await this._service.insertIntoQueue(
+          create(InsertIntoQueueRequestSchema, {
+            subspaceTag: this._subspaceTag,
+            spaceId: this._spaceId,
+            queueId: this._queueId,
+            // ObjectJSON[] is structurally compatible with google.protobuf.Struct[] at runtime.
+            objects: json.slice(i, i + QUEUE_APPEND_BATCH_SIZE) as never,
+          }),
+        );
       }
     } catch (err) {
       log.catch(err);
@@ -209,19 +259,21 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
   async delete(ids: string[]): Promise<void> {
     // Optimistic update.
     // TODO(dmaretskyi): Restrict types.
-    this._objects = this._objects.filter((item) => !ids.includes((item as any).id));
+    this._objects = this._objects.filter((item) => !ids.includes(item.id));
     for (const id of ids) {
       this._objectCache.delete(id);
     }
     this.updated.emit();
 
     try {
-      await this._service.deleteFromQueue({
-        subspaceTag: this._subspaceTag,
-        spaceId: this._spaceId,
-        queueId: this._queueId,
-        objectIds: ids,
-      });
+      await this._service.deleteFromQueue(
+        create(DeleteFromQueueRequestSchema, {
+          subspaceTag: this._subspaceTag,
+          spaceId: this._spaceId,
+          queueId: this._queueId,
+          objectIds: ids,
+        }),
+      );
     } catch (err) {
       this._error = err as Error;
       this.updated.emit();
@@ -229,7 +281,11 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
   }
 
   // Odd way to define method's types from a typedef.
-  declare query: Database.QueryFn;
+
+  declare query: Database.QueryFn
+
+;
+
   static {
     this.prototype.query = this.prototype._query;
   }
@@ -244,60 +300,44 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
     return new QueryResultImpl(new QueueQueryContext(this), queryWithOptions);
   }
 
-  async sync({
-    shouldPush = true,
-    shouldPull = true,
-  }: { shouldPush?: boolean; shouldPull?: boolean } = {}): Promise<void> {
-    await this._service.syncQueue({
-      subspaceTag: this._subspaceTag,
-      spaceId: this._spaceId,
-      queueId: this._queueId,
-      shouldPush,
-      shouldPull,
-    });
-  }
-
   /**
    * @deprecated Use `query` method instead.
    */
+
   async queryObjects(): Promise<T[]> {
     const objects = await this.fetchObjectsJSON();
     const decodedObjects = await Promise.all(
       objects
         .map(async (obj) => {
-          try {
-            const decoded = await Obj.fromJSON(obj, {
-              refResolver: this._refResolver,
-              dxn: this._dxn.extend([(obj as any).id]),
-            });
-            this._objectCache.set(decoded.id, decoded as T);
-            return decoded;
-          } catch (err) {
-            log.verbose('schema validation error; object ignored', { obj, error: err });
-            return undefined;
-          }
-        })
-        .filter(Predicate.isNotUndefined),
+        const decoded = await Obj.fromJSON(obj, {
+          refResolver: this._refResolver,
+          dxn: this._dxn.extend([(obj as { id?: string }).id ?? '']),
+        });
+        this._objectCache.set(decoded.id, decoded as T);
+        return decoded;
+      }),
     );
 
     return decodedObjects as T[];
   }
 
   async fetchObjectsJSON(): Promise<ObjectJSON[]> {
-    const { objects } = await this._service.queryQueue({
-      query: {
-        queuesNamespace: this._subspaceTag,
-        spaceId: this._spaceId,
-        queueIds: [this._queueId],
-      },
-    });
+    const { objects } = await this._service.queryQueue(
+      create(QueryQueueRequestSchema, {
+        query: {
+          queuesNamespace: this._subspaceTag,
+          spaceId: this._spaceId,
+          queueIds: [this._queueId],
+        },
+      }),
+    );
     return objects as ObjectJSON[];
   }
 
   async hydrateObject(obj: ObjectJSON): Promise<Entity.Unknown> {
     const decoded = await Obj.fromJSON(obj, {
       refResolver: this._refResolver,
-      dxn: this._dxn.extend([(obj as any).id]),
+      dxn: this._dxn.extend([(obj as { id?: string }).id ?? '']),
     });
     return decoded;
   }
@@ -306,6 +346,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
    * Internal use.
    * Doesn't trigger update events.
    */
+
   getObjectsSync(): T[] {
     return this._objects;
   }
@@ -313,6 +354,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
   /**
    * @deprecated Use `query` method instead.
    */
+
   async getObjectsById(ids: ObjectId[]): Promise<(T | undefined)[]> {
     const missingIds = ids.filter((id) => !this._objectCache.has(id));
     if (missingIds.length > 0) {
@@ -334,12 +376,87 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
    * Overrides optimistic updates.
    * @deprecated Use `query` method instead.
    */
+
   // TODO(dmaretskyi): Split optimistic into separate state so it doesn't get overridden.
+
   async refresh(): Promise<void> {
     await this._refreshTask.runBlocking();
   }
 
-  private _pollingInterval: NodeJS.Timeout | null = null;
+  private _pollingInterval: NodeJS.Timeout | null = null
+
+;
+
+;
+
+;
+
+;
+
+;
+
+;
+
+;
+
+;
+
+;
+
+;
+
+;
+
+;
+
+;
+
+;
+
+  // TODO(burdon): Rename to objects.
+
+  /**
+   * @deprecated Use `query` method instead.
+   */
+
+  /**
+   * @deprecated Use `query` method instead.
+   */
+
+  /**
+   * @deprecated Use `query` method instead.
+   */
+
+  // Odd way to define method's types from a typedef.
+
+;
+
+  async sync({
+    shouldPush = true,
+    shouldPull = true,
+  }: { shouldPush?: boolean; shouldPull?: boolean } = {}): Promise<void> {
+    await this._service.syncQueue(
+      create(SyncQueueRequestSchema, {
+        subspaceTag: this._subspaceTag,
+        spaceId: this._spaceId,
+        queueId: this._queueId,
+        shouldPush,
+        shouldPull,
+      }),
+    );
+  }
+
+  /**
+   * @deprecated Use `query` method instead.
+   */
+
+  /**
+   * @deprecated Use `query` method instead.
+   */
+
+  // TODO(dmaretskyi): Split optimistic into separate state so it doesn't get overridden.
+
+;
 
   beginPolling(): () => void {
     if (this._pollingHandlers++ === 0) {
@@ -375,4 +492,7 @@ const objectSetChanged = (before: Entity.Unknown[], after: Entity.Unknown[]) => 
   return before.some((item, index) => item.id !== after[index].id);
 };
 
-const isSqliteNotOpenError = (err: any) => err.cause?.message?.includes('The database connection is not open');
+const isSqliteNotOpenError = (err: unknown) =>
+  err instanceof Error &&
+  'cause' in err &&
+  (err.cause as Error)?.message?.includes('The database connection is not open');

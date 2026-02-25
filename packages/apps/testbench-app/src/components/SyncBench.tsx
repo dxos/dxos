@@ -10,7 +10,7 @@ import * as Schema from 'effect/Schema';
 import React, { useEffect, useState } from 'react';
 
 import { scheduleTaskInterval } from '@dxos/async';
-import { Invitation, InvitationEncoder } from '@dxos/client/invitations';
+import { InvitationEncoder, Invitation_AuthMethod } from '@dxos/client/invitations';
 import { Context } from '@dxos/context';
 import { Filter, Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
@@ -73,7 +73,7 @@ export const SyncBench = () => {
     }
     const invitation = space.share({
       multiUse: true,
-      authMethod: Invitation.AuthMethod.NONE,
+      authMethod: Invitation_AuthMethod.NONE,
     });
     const code = InvitationEncoder.encode(invitation.get());
     const url = new URL(`?spaceInvitation=${code}`, location.href);

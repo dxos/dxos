@@ -2,13 +2,14 @@
 // Copyright 2020 DXOS.org
 //
 
-import { type Any } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Message, type PeerInfo } from '@dxos/messaging';
 import { TimeoutError } from '@dxos/protocols';
+import { bufWkt, create } from '@dxos/protocols/buf';
+import { MessageSchema } from '@dxos/protocols/buf/dxos/edge/signal_pb';
 import { schema } from '@dxos/protocols/proto';
 import { type Answer, type SwarmMessage } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { ComplexMap, type MakeOptional } from '@dxos/util';
@@ -55,9 +56,9 @@ export class SwarmMessenger implements SignalMessenger {
   }: {
     author: PeerInfo;
     recipient: PeerInfo;
-    payload: Any;
+    payload: { typeUrl: string; value: Uint8Array };
   }): Promise<void> {
-    if (payload.type_url !== 'dxos.mesh.swarm.SwarmMessage') {
+    if (payload.typeUrl !== 'dxos.mesh.swarm.SwarmMessage') {
       // Ignore not swarm messages.
       return;
     }
@@ -123,14 +124,16 @@ export class SwarmMessenger implements SignalMessenger {
     };
 
     log('sending', { from: author, to: recipient, msg: networkMessage });
-    await this._sendMessage({
-      author,
-      recipient,
-      payload: {
-        type_url: 'dxos.mesh.swarm.SwarmMessage',
-        value: SwarmMessage.encode(networkMessage),
-      },
-    });
+    await this._sendMessage(
+      create(MessageSchema, {
+        author,
+        recipient,
+        payload: create(bufWkt.AnySchema, {
+          typeUrl: 'dxos.mesh.swarm.SwarmMessage',
+          value: SwarmMessage.encode(networkMessage),
+        }),
+      }),
+    );
   }
 
   private async _resolveAnswers(message: SwarmMessage): Promise<void> {

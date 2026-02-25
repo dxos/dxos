@@ -5,6 +5,7 @@
 import React, { Suspense } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 
+import { decodePublicKey } from '@dxos/protocols/buf';
 import { DeviceKind, useDevices, useIdentity } from '@dxos/react-client/halo';
 import { Icon, ScrollArea } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
@@ -67,11 +68,15 @@ const Footer = () => {
       <div className='flex flex-col w-full text-sm text-neutral-500'>
         <div className='grid grid-cols-2 gap-2'>
           <div className='text-neutral-300 text-right'>Identity</div>
-          <div className='font-mono'>{identity?.identityKey.truncate()}</div>
+          <div className='font-mono'>
+            {identity?.identityKey ? decodePublicKey(identity.identityKey).truncate() : undefined}
+          </div>
         </div>
         <div className='grid grid-cols-2 gap-2'>
           <div className='text-neutral-300 text-right'>Device</div>
-          <div className='font-mono'>{device?.deviceKey.truncate()}</div>
+          <div className='font-mono'>
+            {device?.deviceKey ? decodePublicKey(device.deviceKey).truncate() : undefined}
+          </div>
         </div>
         <div className='grid grid-cols-2 gap-2'>
           <div className='text-neutral-300 text-right'>Version</div>

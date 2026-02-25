@@ -15,9 +15,15 @@ import {
 } from 'xstate';
 
 import { log } from '@dxos/log';
+import { decodePublicKey } from '@dxos/protocols/buf';
 import { AlreadyJoinedError, type Client } from '@dxos/react-client';
 import { type Identity } from '@dxos/react-client/halo';
-import { type AuthenticatingInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
+import {
+  type AuthenticatingInvitationObservable,
+  type Invitation,
+  InvitationEncoder,
+  Invitation_State,
+} from '@dxos/react-client/invitations';
 
 import { type FailReason } from '../../types';
 
@@ -98,38 +104,38 @@ const getInvitationSubscribable = (
       invitation.subscribe(
         (invitation: Invitation) => {
           switch (invitation.state) {
-            case Invitation.State.CONNECTING: {
+            case Invitation_State.CONNECTING: {
               log('[invitation connecting]', { Kind, invitation });
               return next({ type: `connecting${Kind}Invitation`, invitation });
             }
 
-            case Invitation.State.CONNECTED: {
+            case Invitation_State.CONNECTED: {
               log('[invitation connected]', { Kind, invitation });
               return next({ type: `connected${Kind}Invitation`, invitation });
             }
 
-            case Invitation.State.READY_FOR_AUTHENTICATION: {
+            case Invitation_State.READY_FOR_AUTHENTICATION: {
               log('[invitation ready for authentication]', { Kind, invitation });
               return next({ type: `readyForAuthentication${Kind}Invitation`, invitation });
             }
 
-            case Invitation.State.AUTHENTICATING: {
+            case Invitation_State.AUTHENTICATING: {
               log('[invitation authenticating]', { Kind, invitation });
               return next({ type: `authenticating${Kind}Invitation`, invitation });
             }
 
-            case Invitation.State.SUCCESS: {
+            case Invitation_State.SUCCESS: {
               log('[invitation success]', { Kind, invitation });
               next({ type: `success${Kind}Invitation`, invitation });
               return complete?.();
             }
 
-            case Invitation.State.CANCELLED: {
+            case Invitation_State.CANCELLED: {
               log.warn('[invitation cancelled]', { Kind });
               return next({ type: `fail${Kind}Invitation`, reason: 'cancelled' } as FailInvitationEvent);
             }
 
-            case Invitation.State.TIMEOUT: {
+            case Invitation_State.TIMEOUT: {
               log.error('[invitation timeout]', { Kind });
               return next({ type: `fail${Kind}Invitation`, reason: 'timeout' } as FailInvitationEvent);
             }
@@ -185,7 +191,9 @@ const acceptingInvitationTemplate = (Kind: Kind, successTarget: string) => {
                   if (Kind !== 'Space') {
                     return false;
                   } else {
-                    const spaceKey = context.space.invitation?.spaceKey?.toHex();
+                    const spaceKey = context.space.invitation?.spaceKey
+                      ? decodePublicKey(context.space.invitation.spaceKey).toHex()
+                      : undefined;
                     const succeededKeys = context.space.succeededKeys;
                     return spaceKey ? !!succeededKeys?.has(spaceKey) : false;
                   }
@@ -196,7 +204,7 @@ const acceptingInvitationTemplate = (Kind: Kind, successTarget: string) => {
               {
                 cond: (context) => {
                   const invitation = context[Kind.toLowerCase() as Lowercase<Kind>].invitation;
-                  return !invitation || invitation?.state === Invitation.State.CONNECTING;
+                  return !invitation || invitation?.state === Invitation_State.CONNECTING;
                 },
                 target: `connecting${Kind}Invitation`,
                 actions: 'log',

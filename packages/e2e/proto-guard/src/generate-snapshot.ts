@@ -15,7 +15,7 @@ import { Ref } from '@dxos/echo/internal';
 import { TestSchema } from '@dxos/echo/testing';
 import { log } from '@dxos/log';
 import { STORAGE_VERSION } from '@dxos/protocols';
-import { CreateEpochRequest } from '@dxos/protocols/proto/dxos/client/services';
+import { CreateEpochRequest_Migration } from '@dxos/protocols/buf/dxos/client/services_pb';
 
 import { type SnapshotDescription, SnapshotsRegistry } from './snapshots-registry';
 import { SpacesDumper } from './space-json-dump';
@@ -93,7 +93,7 @@ const main = async () => {
 
     // Generate epoch.
     const promise = space.internal.db.coreDatabase.rootChanged.waitForCount(1);
-    await space.internal.createEpoch({ migration: CreateEpochRequest.Migration.PRUNE_AUTOMERGE_ROOT_HISTORY });
+    await space.internal.createEpoch({ migration: CreateEpochRequest_Migration.PRUNE_AUTOMERGE_ROOT_HISTORY });
     await promise;
     await space.db.flush();
 

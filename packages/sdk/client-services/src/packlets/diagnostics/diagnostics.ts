@@ -10,20 +10,28 @@ import { createDidFromIdentityKey, credentialTypeFilter } from '@dxos/credential
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { STORAGE_VERSION } from '@dxos/protocols';
+import { protoToBuf, timestampMs } from '@dxos/protocols/buf';
 import {
-  type Device,
+  type Device as BufDevice,
+  type NetworkStatus as BufNetworkStatus,
+  type Platform,
+  type QueryDevicesResponse,
+  type Space_Metrics,
+} from '@dxos/protocols/buf/dxos/client/services_pb';
+import {
+  type SubscribeToFeedsResponse,
+  type SubscribeToFeedsResponse_Feed,
+} from '@dxos/protocols/buf/dxos/devtools/host_pb';
+import { type SwarmInfo } from '@dxos/protocols/buf/dxos/devtools/swarm_pb';
+import { type Credential, type Epoch } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type Resource, type Span } from '@dxos/protocols/buf/dxos/tracing_pb';
+import {
   type Identity,
   type LogEntry,
   type Metrics,
-  type NetworkStatus,
-  type Platform,
   SpaceMember,
-  type Space as SpaceProto,
 } from '@dxos/protocols/proto/dxos/client/services';
-import { type SubscribeToFeedsResponse } from '@dxos/protocols/proto/dxos/devtools/host';
-import { type SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
-import { type Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { type Resource, type Span } from '@dxos/protocols/proto/dxos/tracing';
+import { Timeframe } from '@dxos/timeframe';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { DXOS_VERSION } from '../../version';
@@ -50,11 +58,11 @@ export type Diagnostics = {
       };
     };
     identity?: Identity;
-    devices?: Device[];
+    devices?: BufDevice[];
     spaces?: SpaceStats[];
-    networkStatus?: NetworkStatus;
+    networkStatus?: BufNetworkStatus;
     swarms?: SwarmInfo[];
-    feeds?: Partial<SubscribeToFeedsResponse.Feed>[];
+    feeds?: Partial<SubscribeToFeedsResponse_Feed>[];
     metrics?: Metrics;
     storage?: { file: string; count: number }[];
   };
@@ -75,12 +83,19 @@ export type SpaceStats = {
   db?: {
     objects: number;
   };
-  metrics?: SpaceProto.Metrics & {
+  metrics?: Space_Metrics & {
     startupTime?: number;
   };
   epochs?: (Epoch & { id?: PublicKey })[];
   members?: SpaceMember[];
-  pipeline?: SpaceProto.PipelineState;
+  pipeline?: {
+    currentEpoch?: Credential;
+    appliedEpoch?: Credential;
+    controlFeeds?: PublicKey[];
+    currentControlTimeframe?: Timeframe;
+    targetControlTimeframe?: Timeframe;
+    totalControlTimeframe?: Timeframe;
+  };
 };
 
 /**
@@ -100,7 +115,7 @@ export const createDiagnostics = async (
         version: STORAGE_VERSION,
       },
     },
-    trace: TRACE_PROCESSOR.getDiagnostics(),
+    trace: TRACE_PROCESSOR.getDiagnostics() as never,
   };
 
   await Promise.all([
@@ -108,9 +123,9 @@ export const createDiagnostics = async (
       // Trace metrics.
       // TODO(burdon): Move here from logging service?
       invariant(clientServices.LoggingService, 'SystemService is not available.');
-      diagnostics.metrics = await getFirstStreamValue(clientServices.LoggingService.queryMetrics({}), {
+      diagnostics.metrics = (await getFirstStreamValue(clientServices.LoggingService.queryMetrics({}), {
         timeout: DEFAULT_TIMEOUT,
-      }).catch(() => undefined);
+      }).catch(() => undefined)) as never;
     })(),
     (async () => {
       diagnostics.storage = await asyncTimeout(getStorageDiagnostics(), DEFAULT_TIMEOUT).catch(() => undefined);
@@ -127,10 +142,9 @@ export const createDiagnostics = async (
         };
 
         // Devices.
-        const { devices } =
-          (await getFirstStreamValue(clientServices.DevicesService!.queryDevices(), {
-            timeout: DEFAULT_TIMEOUT,
-          }).catch(() => undefined)) ?? {};
+        const { devices } = ((await getFirstStreamValue(clientServices.DevicesService!.queryDevices(), {
+          timeout: DEFAULT_TIMEOUT,
+        }).catch(() => undefined)) ?? {}) as Partial<QueryDevicesResponse>;
         diagnostics.devices = devices;
 
         // TODO(dmaretskyi): Add metrics for halo space.
@@ -143,10 +157,9 @@ export const createDiagnostics = async (
         }
 
         // Feeds.
-        const { feeds = [] } =
-          (await getFirstStreamValue(clientServices.DevtoolsHost!.subscribeToFeeds({}), {
-            timeout: DEFAULT_TIMEOUT,
-          }).catch(() => undefined)) ?? {};
+        const { feeds = [] } = ((await getFirstStreamValue(clientServices.DevtoolsHost!.subscribeToFeeds({}), {
+          timeout: DEFAULT_TIMEOUT,
+        }).catch(() => undefined)) ?? {}) as Partial<SubscribeToFeedsResponse>;
         diagnostics.feeds = feeds.map(({ feedKey, bytes, length }) => ({ feedKey, bytes, length }));
 
         // Signal servers.
@@ -154,7 +167,7 @@ export const createDiagnostics = async (
         const status = await getFirstStreamValue(clientServices.NetworkService!.queryStatus(), {
           timeout: DEFAULT_TIMEOUT,
         }).catch(() => undefined);
-        diagnostics.networkStatus = status;
+        diagnostics.networkStatus = protoToBuf<BufNetworkStatus>(status);
 
         // Networking.
 
@@ -176,11 +189,11 @@ const getSpaceStats = async (space: DataSpace): Promise<SpaceStats> => {
     epochs: space.inner.spaceState.credentials
       .filter(credentialTypeFilter('dxos.halo.credentials.Epoch'))
       .map((credential) => ({
-        ...credential.subject.assertion,
+        ...(credential.subject.assertion as unknown as Record<string, unknown>),
         id: credential.id,
-      })),
+      })) as never,
 
-    members: await Promise.all(
+    members: protoToBuf<SpaceMember[]>(await Promise.all(
       Array.from(space.inner.spaceState.members.values()).map(async (member) => ({
         role: member.role,
         identity: {
@@ -195,7 +208,7 @@ const getSpaceStats = async (space: DataSpace): Promise<SpaceStats> => {
             ? SpaceMember.PresenceState.ONLINE
             : SpaceMember.PresenceState.OFFLINE,
       })),
-    ),
+    )),
 
     pipeline: {
       // TODO(burdon): Pick properties from credentials if needed.
@@ -212,7 +225,7 @@ const getSpaceStats = async (space: DataSpace): Promise<SpaceStats> => {
   // TODO(burdon): Factor out.
   if (stats.metrics) {
     const { open, ready } = stats.metrics;
-    stats.metrics.startupTime = open && ready && ready.getTime() - open.getTime();
+    stats.metrics.startupTime = open && ready ? Number(timestampMs(ready) - timestampMs(open)) : undefined;
   }
 
   return stats;

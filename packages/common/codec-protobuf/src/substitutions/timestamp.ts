@@ -4,11 +4,17 @@
 
 export const timestampSubstitutions = {
   'google.protobuf.Timestamp': {
-    encode: (value: Date): any => {
-      const unixMilliseconds = value.getTime();
+    encode: (value: Date | { seconds: bigint; nanos: number }): any => {
+      if (value instanceof Date) {
+        const unixMilliseconds = value.getTime();
+        return {
+          seconds: Math.floor(unixMilliseconds / 1000).toString(),
+          nanos: (unixMilliseconds % 1000) * 1e6,
+        };
+      }
       return {
-        seconds: Math.floor(unixMilliseconds / 1000).toString(),
-        nanos: (unixMilliseconds % 1000) * 1e6,
+        seconds: value.seconds.toString(),
+        nanos: value.nanos ?? 0,
       };
     },
 

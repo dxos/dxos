@@ -23,9 +23,11 @@ import { Keyring } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
-import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
+import { create } from '@dxos/protocols/buf';
+import { EdgeStatus_ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { AdmittedFeed_Designation } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
 
@@ -109,7 +111,7 @@ describe('identity/identity', () => {
 
   test('edge feed replicator', async () => {
     let replicationStarted = false;
-    let status = EdgeStatus.ConnectionState.NOT_CONNECTED;
+    let status = EdgeStatus_ConnectionState.NOT_CONNECTED;
     const listeners: Array<() => void> = [];
     const setup = await setupIdentity({
       edgeConnection: {
@@ -117,8 +119,8 @@ describe('identity/identity', () => {
         get status() {
           return { state: status };
         },
-        onReconnected: (listener) => {
-          if (status === EdgeStatus.ConnectionState.CONNECTED) {
+        onReconnected: (listener: () => void) => {
+          if (status === EdgeStatus_ConnectionState.CONNECTED) {
             listener();
           } else {
             listeners.push(listener);
@@ -130,15 +132,15 @@ describe('identity/identity', () => {
         onMessage: (_: MessageListener): (() => void) => {
           return () => {};
         },
-        send: async (_) => {
+        send: async (_: unknown) => {
           replicationStarted = true;
         },
-      } as EdgeConnection,
+      } as unknown as EdgeConnection,
     });
 
     await writeGenesisCredential(setup);
     listeners.forEach((callback) => callback());
-    status = EdgeStatus.ConnectionState.CONNECTED;
+    status = EdgeStatus_ConnectionState.CONNECTED;
 
     await expect.poll(() => replicationStarted).toBeTruthy();
   });
@@ -187,7 +189,7 @@ describe('identity/identity', () => {
       networkManager: new SwarmNetworkManager({
         signalManager: new MemorySignalManager(args?.signalContext ?? new MemorySignalManagerContext()),
         transportFactory: MemoryTransportFactory,
-        peerInfo: { identityKey: identityKey.toHex(), peerKey: deviceKey.toHex() },
+        peerInfo: create(PeerSchema, { identityKey: identityKey.toHex(), peerKey: deviceKey.toHex() }),
       }),
     });
 
@@ -228,7 +230,7 @@ describe('identity/identity', () => {
     const credentials = [
       ...(await generator.createSpaceGenesis(setup.spaceKey, setup.controlFeed.key)),
       await generator.createDeviceAuthorization(setup.deviceKey),
-      await generator.createFeedAdmission(setup.spaceKey, setup.dataFeed.key, AdmittedFeed.Designation.DATA),
+      await generator.createFeedAdmission(setup.spaceKey, setup.dataFeed.key, AdmittedFeed_Designation.DATA),
     ];
 
     for (const credential of credentials) {

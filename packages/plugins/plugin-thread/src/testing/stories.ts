@@ -10,6 +10,8 @@ import { GraphPlugin } from '@dxos/plugin-graph';
 import { SettingsPlugin } from '@dxos/plugin-settings';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { ThemePlugin } from '@dxos/plugin-theme';
+import { create } from '@dxos/protocols/buf';
+import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Config } from '@dxos/react-client';
 import { defaultTx } from '@dxos/ui-theme';
 
@@ -21,7 +23,7 @@ export const createThreadPlugins = async (): Promise<Array<Plugin.Plugin>> => [
   ClientPlugin({
     onClientInitialized: ({ client }) =>
       Effect.gen(function* () {
-        yield* Effect.promise(() => client.halo.createIdentity({ displayName: 'Test User' }));
+        yield* Effect.promise(() => client.halo.createIdentity(create(ProfileDocumentSchema, { displayName: 'Test User' })));
       }),
     onSpacesReady: ({ client }) =>
       Effect.gen(function* () {

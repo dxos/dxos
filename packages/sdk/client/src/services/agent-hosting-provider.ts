@@ -7,12 +7,16 @@ import { jwtDecode } from 'jwt-decode';
 import { synchronized } from '@dxos/async';
 import { type Halo } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
+import { getCredentialAssertion } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { decodePublicKey, timestampMs } from '@dxos/protocols/buf';
+import type { GenService, GenServiceMethods } from '@dxos/protocols/buf';
+import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { schema } from '@dxos/protocols/proto';
-import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { type AgentManager, InitAuthSequenceResponse } from '@dxos/protocols/proto/dxos/service/agentmanager';
+import { InitAuthSequenceResponse } from '@dxos/protocols/proto/dxos/service/agentmanager';
+import type { AgentManager } from '@dxos/protocols/proto/dxos/service/agentmanager';
 import { type WebsocketRpcClient } from '@dxos/websocket-rpc';
 
 export type AgentHostingProvider = {
@@ -62,7 +66,10 @@ export class AgentManagerClient implements AgentHostingProviderClient {
   private readonly _config: AgentHostingProvider;
   private readonly DXRPC_PATH = 'dxrpc';
   private readonly _wsDxrpcUrl: string;
-  private _rpc: WebsocketRpcClient<{ AgentManager: AgentManager }, {}> | undefined;
+  // AgentManager is a proto service, not a buf GenService. All `as never` casts in this class are at proto↔buf boundaries.
+  private _rpc:
+    | WebsocketRpcClient<Record<string, GenService<GenServiceMethods>>, Record<string, GenService<GenServiceMethods>>>
+    | undefined;
   private _rpcState: 'connected' | 'disconnected' = 'disconnected';
   private _authToken: string | null = null;
 
@@ -161,7 +168,10 @@ export class AgentManagerClient implements AgentHostingProviderClient {
     // TODO: ensure we use the newest credential?
     return this._halo
       .queryCredentials()
-      .toSorted((a, b) => b.issuanceDate.getTime() - a.issuanceDate.getTime())
+      .toSorted(
+        (a, b) =>
+          (b.issuanceDate ? timestampMs(b.issuanceDate) : 0) - (a.issuanceDate ? timestampMs(a.issuanceDate) : 0),
+      )
       .find(matchServiceCredential([HUB_SERVICE_ACCESS_CAPABILITY]));
   }
 
@@ -194,7 +204,7 @@ export class AgentManagerClient implements AgentHostingProviderClient {
 
     invariant(deviceKey, 'deviceKey not found');
     const authDeviceCreds = await this._queryCredentials('dxos.halo.credentials.AuthorizedDevice', (cred) =>
-      PublicKey.equals(cred.subject.id, deviceKey),
+      PublicKey.equals(decodePublicKey(cred.subject!.id!), decodePublicKey(deviceKey)),
     );
 
     invariant(authDeviceCreds.length === 1, 'Improper number of authorized devices');
@@ -210,7 +220,8 @@ export class AgentManagerClient implements AgentHostingProviderClient {
     const { WebsocketRpcClient } = await import('@dxos/websocket-rpc');
     this._rpc = new WebsocketRpcClient({
       url: this._wsDxrpcUrl,
-      requested: { AgentManager: schema.getService('dxos.service.agentmanager.AgentManager') },
+      // Proto service descriptor cast to buf GenService at proto↔buf boundary.
+      requested: { AgentManager: schema.getService('dxos.service.agentmanager.AgentManager') } as never,
       noHandshake: true,
     });
 
@@ -238,17 +249,19 @@ export class AgentManagerClient implements AgentHostingProviderClient {
   async _agentManagerAuth(authDeviceCreds: Credential, agentAuthzCredential?: Credential): Promise<void> {
     await this._openRpc();
     invariant(this._rpc, 'RPC not initialized');
-    const { result, nonce, agentmanagerKey, initAuthResponseReason } =
-      await this._rpc.rpc.AgentManager.initAuthSequence({
-        authToken: agentAuthzCredential ? HUB_SERVICE_ACCESS_MAGIC : this._getComposerBetaCookie(),
-      });
+    // Proto AgentManager accessed from buf RPC peer at proto↔buf boundary.
+    const { result, nonce, agentmanagerKey, initAuthResponseReason } = await (
+      this._rpc.rpc.AgentManager as never as AgentManager
+    ).initAuthSequence({
+      authToken: agentAuthzCredential ? HUB_SERVICE_ACCESS_MAGIC : this._getComposerBetaCookie(),
+    });
 
     if (result !== InitAuthSequenceResponse.InitAuthSequenceResult.SUCCESS || !nonce || !agentmanagerKey) {
       log('auth init failed', { result, nonce, agentmanagerKey, initAuthResponseReason });
       throw new Error('Failed to initialize auth sequence');
     }
     const agentmanagerAccessCreds = await this._queryCredentials('dxos.halo.credentials.ServiceAccess', (cred) =>
-      PublicKey.equals(cred.issuer, agentmanagerKey),
+      PublicKey.equals(decodePublicKey(cred.issuer!), PublicKey.from(agentmanagerKey)),
     );
     if (!agentmanagerAccessCreds.length) {
       log.info('no access credentials - requesting...');
@@ -256,15 +269,20 @@ export class AgentManagerClient implements AgentHostingProviderClient {
       log.info('access credentials found - requesting session token..');
     }
 
-    const credsToPresent = [authDeviceCreds.id, agentmanagerAccessCreds[0]?.id, agentAuthzCredential?.id].filter(
-      Boolean,
-    );
+    const credsToPresent = [
+      decodePublicKey(authDeviceCreds.id!),
+      agentmanagerAccessCreds[0]?.id ? decodePublicKey(agentmanagerAccessCreds[0].id) : undefined,
+      agentAuthzCredential?.id ? decodePublicKey(agentAuthzCredential.id) : undefined,
+    ].filter((key): key is PublicKey => key != null);
     const presentation = await this._halo.presentCredentials({
-      ids: credsToPresent as PublicKey[],
+      ids: credsToPresent,
       nonce,
     });
 
-    const { token, credential } = await this._rpc.rpc.AgentManager.authenticate({ presentation });
+    // Proto AgentManager accessed from buf RPC peer; buf Presentation passed to proto method at proto↔buf boundary.
+    const { token, credential } = await (this._rpc.rpc.AgentManager as never as AgentManager).authenticate({
+      presentation: presentation as never,
+    });
     if (token) {
       this._authToken = token;
       if (!this._validAuthToken()) {
@@ -274,7 +292,8 @@ export class AgentManagerClient implements AgentHostingProviderClient {
     } else {
       invariant(credential, 'No credential or token received');
       log('received credential, writing to HALO', { credential });
-      await this._halo.writeCredentials([credential]);
+      // Proto credential from AgentManager cast to buf Credential at proto↔buf boundary.
+      await this._halo.writeCredentials([credential as never as Credential]);
       // re-do authentication now that we have a agentmanager serviceAccess credential.
       await this._agentManagerAuth(authDeviceCreds, agentAuthzCredential);
     }
@@ -301,7 +320,7 @@ export class AgentManagerClient implements AgentHostingProviderClient {
     const haloCredentials = this._halo.credentials.get();
 
     return haloCredentials.filter((cred) => {
-      if (type && cred.subject.assertion['@type'] !== type) {
+      if (type && getCredentialAssertion(cred)['@type'] !== type) {
         return false;
       }
       if (predicate && !predicate(cred)) {
@@ -415,10 +434,11 @@ export class AgentManagerClient implements AgentHostingProviderClient {
 export const matchServiceCredential =
   (capabilities: string[] = []) =>
   (credential: Credential) => {
-    if (credential.subject.assertion['@type'] !== 'dxos.halo.credentials.ServiceAccess') {
+    const assertion = getCredentialAssertion(credential);
+    if (assertion['@type'] !== 'dxos.halo.credentials.ServiceAccess') {
       return false;
     }
 
-    const { capabilities: credentialCapabilities } = credential.subject.assertion;
+    const credentialCapabilities = (assertion as { capabilities?: string[] }).capabilities ?? [];
     return capabilities.every((capability) => credentialCapabilities.includes(capability));
   };

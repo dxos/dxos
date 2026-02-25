@@ -4,6 +4,7 @@
 
 import React from 'react';
 
+import { decodePublicKey } from '@dxos/protocols/buf';
 import { useIdentity } from '@dxos/react-client/halo';
 import { IconButton } from '@dxos/react-ui';
 
@@ -41,7 +42,7 @@ export const AppToolbar = ({ onHome, onProfile, onDevtools }: AppToolbarProps) =
       />
       <div className='grow' />
       <div className='flex gap-2 items-center'>
-        <div className='font-mono'>{identity?.identityKey.truncate()}</div>
+        <div className='font-mono'>{identity?.identityKey ? decodePublicKey(identity.identityKey).truncate() : ''}</div>
         <IconButton classNames='px-[7px]' icon='ph--user--regular' iconOnly label='Profile' onClick={onProfile} />
       </div>
     </div>

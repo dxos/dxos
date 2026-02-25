@@ -5,7 +5,9 @@
 import React from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { getCredentialAssertion } from '@dxos/credentials';
 import { useCredentials } from '@dxos/react-client/halo';
+import { decodePublicKey } from '@dxos/protocols/buf';
 import { Icon, IconButton, List, ListItem, Message, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
 
@@ -19,7 +21,8 @@ export const RecoveryCredentialsContainer = () => {
   const { invokePromise } = useOperationInvoker();
   const credentials = useCredentials();
   const recoveryCredentials = credentials.filter(
-    (credential) => credential.subject.assertion['@type'] === 'dxos.halo.credentials.IdentityRecovery',
+    (credential) =>
+      credential.subject && getCredentialAssertion(credential)['@type'] === 'dxos.halo.credentials.IdentityRecovery',
   );
 
   return (
@@ -53,11 +56,11 @@ export const RecoveryCredentialsContainer = () => {
         ) : (
           <List classNames='container-max-width px-2'>
             {recoveryCredentials.map((credential) => (
-              <ListItem.Root key={credential.id?.toHex()}>
+              <ListItem.Root key={credential.id ? decodePublicKey(credential.id).toHex() : 'unknown'}>
                 <ListItem.Endcap>
                   <Icon icon='ph--key--regular' />
                 </ListItem.Endcap>
-                <ListItem.Heading>{credential.issuanceDate.toLocaleString()}</ListItem.Heading>
+                <ListItem.Heading>{credential.issuanceDate?.toLocaleString()}</ListItem.Heading>
               </ListItem.Root>
             ))}
           </List>

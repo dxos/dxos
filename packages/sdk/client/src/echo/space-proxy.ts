@@ -42,28 +42,29 @@ import {
   type SpaceSyncState,
 } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
-import { type PublicKey, type SpaceId } from '@dxos/keys';
+import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { EdgeService, decodeError } from '@dxos/protocols';
+import { decodePublicKey, encodePublicKey } from '@dxos/protocols/buf';
+import { create } from '@dxos/protocols/buf';
+import { type Invitation, Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import {
   type Contact,
-  CreateEpochRequest,
-  Invitation,
+  CreateEpochRequest_Migration,
   type SpaceArchive,
   type Space as SpaceData,
   type SpaceMember,
-  SpaceState,
+  type Space_PipelineState,
+  Space_PipelineStateSchema,
   type UpdateMemberRoleRequest,
-} from '@dxos/protocols/proto/dxos/client/services';
+} from '@dxos/protocols/buf/dxos/client/services_pb';
+import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
+import { type SpaceSyncState_PeerState } from '@dxos/protocols/buf/dxos/echo/service_pb';
+import { type SpaceSnapshot } from '@dxos/protocols/buf/dxos/echo/snapshot_pb';
+import { type Credential, type Epoch, SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type GossipMessage } from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
-import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
-import {
-  type Credential,
-  type Epoch,
-  SpaceMember as HaloSpaceMember,
-} from '@dxos/protocols/proto/dxos/halo/credentials';
-import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
 
@@ -90,7 +91,7 @@ export class SpaceProxy implements Space, CustomInspectable {
   // TODO(dmaretskyi): Make private.
   public readonly _stateUpdate = new Event<SpaceState>();
 
-  private readonly _pipelineUpdate = new Event<SpaceData.PipelineState>();
+  private readonly _pipelineUpdate = new Event<Space_PipelineState>();
 
   // TODO(dmaretskyi): Reconcile initialization states.
 
@@ -120,7 +121,7 @@ export class SpaceProxy implements Space, CustomInspectable {
   private readonly _invitationsProxy: InvitationsProxy;
 
   private readonly _state = MulticastObservable.from(this._stateUpdate, SpaceState.SPACE_CLOSED);
-  private readonly _pipeline = MulticastObservable.from(this._pipelineUpdate, {});
+  private readonly _pipeline = MulticastObservable.from(this._pipelineUpdate, create(Space_PipelineStateSchema, {}));
   private readonly _membersUpdate = new Event<SpaceMember[]>();
   private readonly _members = MulticastObservable.from(this._membersUpdate, []);
 
@@ -144,18 +145,19 @@ export class SpaceProxy implements Space, CustomInspectable {
   ) {
     log('construct', { key: _data.spaceKey, state: SpaceState[_data.state] });
     invariant(this._clientServices.services.InvitationsService, 'InvitationsService not available');
+    invariant(this._data.spaceKey, 'Space key not available');
     this._invitationsProxy = new InvitationsProxy(
-      this._clientServices.services.InvitationsService,
+      this._clientServices.services.InvitationsService!,
       this._clientServices.services.IdentityService,
       () => ({
-        kind: Invitation.Kind.SPACE,
-        spaceKey: this.key,
+        kind: Invitation_Kind.SPACE,
+        spaceKey: this._data.spaceKey,
       }),
     );
 
     this._db = echoClient.constructDatabase({
       spaceId: this.id,
-      spaceKey: this.key,
+      spaceKey: decodePublicKey(this._data.spaceKey!),
       owningObject: this,
     });
     this._queues = echoClient.constructQueueFactory(this.id);
@@ -182,7 +184,7 @@ export class SpaceProxy implements Space, CustomInspectable {
 
     // Update observables.
     this._stateUpdate.emit(this._currentState);
-    this._pipelineUpdate.emit(_data.pipeline ?? {});
+    this._pipelineUpdate.emit(_data.pipeline ?? create(Space_PipelineStateSchema, {}));
     this._membersUpdate.emit(_data.members ?? []);
   }
 
@@ -199,8 +201,9 @@ export class SpaceProxy implements Space, CustomInspectable {
   }
 
   @trace.info()
-  get key() {
-    return this._data.spaceKey;
+  get key(): PublicKey {
+    invariant(this._data.spaceKey, 'Space key not available');
+    return decodePublicKey(this._data.spaceKey);
   }
 
   get db(): EchoDatabase {
@@ -367,7 +370,7 @@ export class SpaceProxy implements Space, CustomInspectable {
       this._stateUpdate.emit(this._currentState);
     }
     if (emitPipelineEvent) {
-      this._pipelineUpdate.emit(space.pipeline ?? {});
+      this._pipelineUpdate.emit(space.pipeline ?? create(Space_PipelineStateSchema, {}));
     }
     if (emitMembersEvent) {
       this._membersUpdate.emit(space.members!);
@@ -464,7 +467,7 @@ export class SpaceProxy implements Space, CustomInspectable {
 
   async open(): Promise<void> {
     await this._clientServices.services.SpacesService!.updateSpace(
-      { spaceKey: this.key, state: SpaceState.SPACE_ACTIVE },
+      { spaceKey: encodePublicKey(this.key), state: SpaceState.SPACE_ACTIVE },
       { timeout: RPC_TIMEOUT },
     );
   }
@@ -474,7 +477,7 @@ export class SpaceProxy implements Space, CustomInspectable {
       await this._db.flush();
     }
     await this._clientServices.services.SpacesService!.updateSpace(
-      { spaceKey: this.key, state: SpaceState.SPACE_INACTIVE },
+      { spaceKey: encodePublicKey(this.key), state: SpaceState.SPACE_INACTIVE },
       { timeout: RPC_TIMEOUT },
     );
   }
@@ -494,7 +497,7 @@ export class SpaceProxy implements Space, CustomInspectable {
     invariant(this._clientServices.services.SpacesService, 'SpacesService not available');
     await this._clientServices.services.SpacesService.postMessage(
       {
-        spaceKey: this.key,
+        spaceKey: encodePublicKey(this.key),
         channel,
         message: {
           ...message,
@@ -508,14 +511,16 @@ export class SpaceProxy implements Space, CustomInspectable {
   /**
    * Listen for messages posted to the space.
    */
-  listen(channel: string, callback: (message: GossipMessage) => void): () => Promise<void> {
+  listen(channel: string, callback: (message: GossipMessage) => void): () => void {
     invariant(this._clientServices.services.SpacesService, 'SpacesService not available');
     const stream = this._clientServices.services.SpacesService.subscribeMessages(
-      { spaceKey: this.key, channel },
+      { spaceKey: encodePublicKey(this.key), channel },
       { timeout: RPC_TIMEOUT },
     );
     stream.subscribe(callback);
-    return () => stream.close();
+    return () => {
+      void stream.close();
+    };
   }
 
   /**
@@ -524,13 +529,13 @@ export class SpaceProxy implements Space, CustomInspectable {
   share(options?: Partial<Invitation>) {
     this._throwIfNotInitialized();
     log('create invitation', options);
-    return this._invitationsProxy.share({ ...options, spaceKey: this.key });
+    return this._invitationsProxy.share({ ...options, spaceKey: this._data.spaceKey });
   }
 
   async admitContact(contact: Contact): Promise<void> {
     await this._clientServices.services.SpacesService!.admitContact({
-      spaceKey: this.key,
-      role: HaloSpaceMember.Role.ADMIN,
+      spaceKey: encodePublicKey(this.key),
+      role: SpaceMember_Role.ADMIN,
       contact,
     });
   }
@@ -541,7 +546,7 @@ export class SpaceProxy implements Space, CustomInspectable {
   updateMemberRole(request: Omit<UpdateMemberRoleRequest, 'spaceKey'>): Promise<void> {
     this._throwIfNotInitialized();
     return this._clientServices.services.SpacesService!.updateMemberRole({
-      spaceKey: this.key,
+      spaceKey: encodePublicKey(this.key),
       memberKey: request.memberKey,
       newRole: request.newRole,
     });
@@ -557,9 +562,9 @@ export class SpaceProxy implements Space, CustomInspectable {
 
   private async _removeMember(memberKey: PublicKey): Promise<void> {
     return this._clientServices.services.SpacesService!.updateMemberRole({
-      spaceKey: this.key,
-      memberKey,
-      newRole: HaloSpaceMember.Role.REMOVED,
+      spaceKey: encodePublicKey(this.key),
+      memberKey: encodePublicKey(memberKey),
+      newRole: SpaceMember_Role.REMOVED,
     });
   }
 
@@ -567,13 +572,13 @@ export class SpaceProxy implements Space, CustomInspectable {
     migration,
     automergeRootUrl,
   }: {
-    migration?: CreateEpochRequest.Migration;
+    migration?: CreateEpochRequest_Migration;
     automergeRootUrl?: string;
   } = {}): Promise<void> {
     log('create epoch', { migration, automergeRootUrl });
     const { controlTimeframe: targetTimeframe } = await this._clientServices.services.SpacesService!.createEpoch(
       {
-        spaceKey: this.key,
+        spaceKey: encodePublicKey(this.key),
         migration,
         automergeRootUrl,
       },
@@ -581,10 +586,23 @@ export class SpaceProxy implements Space, CustomInspectable {
     );
 
     if (targetTimeframe) {
+      const targetTf = new Timeframe(
+        (targetTimeframe.frames ?? [])
+          .filter((f: { feedKey?: Uint8Array; seq?: number }) => f.feedKey != null && f.seq != null)
+          .map((f: { feedKey: Uint8Array; seq: number }) => [PublicKey.from(f.feedKey), f.seq] as [PublicKey, number]),
+      );
       await warnAfterTimeout(5_000, 'Waiting for the created epoch to be applied', () =>
         this._anySpaceUpdate.waitForCondition(() => {
           const currentTimeframe = this._data.pipeline?.currentControlTimeframe;
-          return (currentTimeframe && Timeframe.dependencies(targetTimeframe, currentTimeframe).isEmpty()) ?? false;
+          if (!currentTimeframe) return false;
+          const currentTf = new Timeframe(
+            (currentTimeframe.frames ?? [])
+              .filter((f: { feedKey?: Uint8Array; seq?: number }) => f.feedKey != null && f.seq != null)
+              .map(
+                (f: { feedKey: Uint8Array; seq: number }) => [PublicKey.from(f.feedKey), f.seq] as [PublicKey, number],
+              ),
+          );
+          return Timeframe.dependencies(targetTf, currentTf).isEmpty();
         }),
       );
     }
@@ -592,7 +610,7 @@ export class SpaceProxy implements Space, CustomInspectable {
 
   private async _getCredentials(): Promise<Credential[]> {
     const stream = this._clientServices.services.SpacesService?.queryCredentials({
-      spaceKey: this.key,
+      spaceKey: encodePublicKey(this.key),
       noTail: true,
     });
     invariant(stream, 'SpacesService not available');
@@ -601,12 +619,14 @@ export class SpaceProxy implements Space, CustomInspectable {
 
   private async _getEpochs(): Promise<SpecificCredential<Epoch>[]> {
     const credentials = await this._getCredentials();
-    return credentials.filter((credential) => checkCredentialType(credential, 'dxos.halo.credentials.Epoch'));
+    return credentials.filter((credential) =>
+      checkCredentialType(credential, 'dxos.halo.credentials.Epoch'),
+    ) as SpecificCredential<Epoch>[];
   }
 
   private async _migrate(): Promise<void> {
     await this._createEpoch({
-      migration: CreateEpochRequest.Migration.MIGRATE_REFERENCES_TO_DXN,
+      migration: CreateEpochRequest_Migration.MIGRATE_REFERENCES_TO_DXN,
     });
 
     // Needed to have space root set to be able to make next check.
@@ -614,7 +634,7 @@ export class SpaceProxy implements Space, CustomInspectable {
 
     if (this._db.coreDatabase.getNumberOfInlineObjects() > 1) {
       await this._createEpoch({
-        migration: CreateEpochRequest.Migration.FRAGMENT_AUTOMERGE_ROOT,
+        migration: CreateEpochRequest_Migration.FRAGMENT_AUTOMERGE_ROOT,
       });
     }
   }
@@ -622,7 +642,7 @@ export class SpaceProxy implements Space, CustomInspectable {
   private async _setEdgeReplicationPreference(setting: EdgeReplicationSetting): Promise<void> {
     await this._clientServices.services.SpacesService!.updateSpace(
       {
-        spaceKey: this.key,
+        spaceKey: encodePublicKey(this.key),
         edgeReplication: setting,
       },
       { timeout: RPC_TIMEOUT },
@@ -639,7 +659,7 @@ export class SpaceProxy implements Space, CustomInspectable {
 
   private async _syncToEdge(opts?: {
     timeout?: number;
-    onProgress: (state: SpaceSyncState.PeerState | undefined) => void;
+    onProgress: (state: SpaceSyncState_PeerState | undefined) => void;
   }): Promise<void> {
     await using ctx = Context.default();
 

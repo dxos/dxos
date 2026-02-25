@@ -8,6 +8,7 @@ import * as Effect from 'effect/Effect';
 
 import { CommandConfig } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
+import { type CreateRecoveryCredentialResponse } from '@dxos/protocols/buf/dxos/client/services_pb';
 
 export const handler = Effect.fn(function* () {
   const { json } = yield* CommandConfig;
@@ -24,7 +25,9 @@ export const handler = Effect.fn(function* () {
     return;
   }
 
-  const result = yield* Effect.tryPromise(() => identityService.createRecoveryCredential({}));
+  const result = (yield* Effect.tryPromise(() =>
+    identityService.createRecoveryCredential({}),
+  )) as CreateRecoveryCredentialResponse;
 
   if (json) {
     yield* Console.log(JSON.stringify({ recoveryCode: result.recoveryCode }, null, 2));

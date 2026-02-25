@@ -6,7 +6,9 @@ import { type Capabilities } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { SubscriptionList, type Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { getCredentialAssertion } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
+import { timestampMs } from '@dxos/protocols/buf';
 import { log } from '@dxos/log';
 import { Account, ClientOperation } from '@dxos/plugin-client/types';
 import { HelpOperation } from '@dxos/plugin-help/types';
@@ -141,7 +143,8 @@ export class OnboardingManager {
   private async _queryRecoveryCredentials(): Promise<Credential[]> {
     const credentials = await queryAllCredentials(this._client);
     return credentials.filter(
-      (credential) => credential.subject.assertion['@type'] === 'dxos.halo.credentials.IdentityRecovery',
+      (credential) =>
+        credential.subject && getCredentialAssertion(credential)['@type'] === 'dxos.halo.credentials.IdentityRecovery',
     );
   }
 
@@ -174,7 +177,7 @@ export class OnboardingManager {
 
   private _setCredential(credentials: Credential[]): void {
     const credential = credentials
-      .toSorted((a, b) => b.issuanceDate.getTime() - a.issuanceDate.getTime())
+      .toSorted((a, b) => (b.issuanceDate ? timestampMs(b.issuanceDate) : 0) - (a.issuanceDate ? timestampMs(a.issuanceDate) : 0))
       .find(matchServiceCredential(['composer:beta']));
     if (credential) {
       this._credential = credential;
@@ -188,10 +191,11 @@ export class OnboardingManager {
       invariant(this._hubUrl);
       // TODO(wittjosiah): If id is required to present credentials, then it should always be present for queried credentials.
       invariant(this._credential?.id, 'beta credential missing id');
-      const presentation = await this._client.halo.presentCredentials({ ids: [this._credential.id] });
+      const presentation = await this._client.halo.presentCredentials({ ids: [this._credential.id as any] });
       const { capabilities } = await getProfile({ hubUrl: this._hubUrl, presentation });
       const newCapabilities = capabilities.filter(
-        (capability) => !this._credential!.subject.assertion.capabilities.includes(capability),
+        (capability) =>
+          !(getCredentialAssertion(this._credential!) as { capabilities?: string[] }).capabilities?.includes(capability),
       );
       if (newCapabilities.length > 0) {
         log('upgrading beta credential', { newCapabilities });

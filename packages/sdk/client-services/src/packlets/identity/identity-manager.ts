@@ -14,17 +14,19 @@ import { type Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
+import { create } from '@dxos/protocols/buf';
+import {
+  type DeviceProfileDocument,
+  DeviceProfileDocumentSchema,
+  DeviceType,
+  type ProfileDocument,
+} from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Device, DeviceKind } from '@dxos/protocols/proto/dxos/client/services';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type IdentityRecord, type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
-import {
-  AdmittedFeed,
-  type Credential,
-  type DeviceProfileDocument,
-  DeviceType,
-  type ProfileDocument,
-} from '@dxos/protocols/proto/dxos/halo/credentials';
+import { AdmittedFeed_Designation } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
 import { Timeframe } from '@dxos/timeframe';
 import { trace as Trace } from '@dxos/tracing';
@@ -167,7 +169,7 @@ export class IdentityManager {
         await generator.createFeedAdmission(
           identityRecord.haloSpace.key,
           identityRecord.haloSpace.dataFeedKey,
-          AdmittedFeed.Designation.DATA,
+          AdmittedFeed_Designation.DATA,
         ),
       ];
 
@@ -227,14 +229,14 @@ export class IdentityManager {
       }
     }
 
-    return {
+    return create(DeviceProfileDocumentSchema, {
       type,
       platform: platform.name,
       platformVersion: platform.version,
       architecture: typeof platform.os?.architecture === 'number' ? String(platform.os.architecture) : undefined,
       os: platform.os?.family,
       osVersion: platform.os?.version,
-    };
+    });
   }
 
   /**
@@ -302,7 +304,9 @@ export class IdentityManager {
       },
     });
 
-    const receipt = await this._identity.controlPipeline.writer.write({ credential: { credential } });
+    const receipt = await this._identity.controlPipeline.writer.write({
+      credential: { credential },
+    });
     await this._identity.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
     this.stateUpdate.emit();
     return profile;
@@ -323,14 +327,16 @@ export class IdentityManager {
       },
     });
 
-    const receipt = await this._identity.controlPipeline.writer.write({ credential: { credential } });
+    const receipt = await this._identity.controlPipeline.writer.write({
+      credential: { credential },
+    });
     await this._identity.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
     this.stateUpdate.emit();
     return {
       deviceKey: this._identity.deviceKey,
       kind: DeviceKind.CURRENT,
       presence: Device.PresenceState.ONLINE,
-      profile,
+      profile: profile as never,
     };
   }
 

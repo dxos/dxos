@@ -5,8 +5,11 @@
 import React, { useEffect, useState } from 'react';
 
 import { StatusBar } from '@dxos/plugin-status-bar';
-import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
-import { type QueryEdgeStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
+import {
+  type EdgeStatus,
+  EdgeStatus_ConnectionState,
+  type QueryEdgeStatusResponse,
+} from '@dxos/protocols/buf/dxos/client/services_pb';
 import { useClient } from '@dxos/react-client';
 import { useStream } from '@dxos/react-client/devtools';
 import { type SpaceSyncStateMap, getSyncSummary, useSyncState } from '@dxos/react-client/echo';
@@ -83,7 +86,7 @@ const EdgeConnectionPopover = () => {
   const status = useEdgeStatus();
   const { t } = useTranslation(meta.id);
 
-  const isConnected = status?.state === EdgeStatus.ConnectionState.CONNECTED;
+  const isConnected = status?.state === EdgeStatus_ConnectionState.CONNECTED;
 
   return (
     <div className='min-w-[240px] p-2'>
@@ -99,14 +102,14 @@ const EdgeConnectionPopover = () => {
       </div>
 
       {/* Connection Details */}
-      {status?.state === EdgeStatus.ConnectionState.NOT_CONNECTED && (
+      {status?.state === EdgeStatus_ConnectionState.NOT_CONNECTED && (
         <div className='flex items-center gap-2 text-sm text-description'>
           <Icon icon='ph--cloud-x--regular' />
           <span>{t('sync no connection label')}</span>
         </div>
       )}
 
-      {status?.state === EdgeStatus.ConnectionState.CONNECTED && (
+      {status?.state === EdgeStatus_ConnectionState.CONNECTED && (
         <div className='space-y-2'>
           {/* Latency */}
           <div className='flex items-center justify-between text-sm'>

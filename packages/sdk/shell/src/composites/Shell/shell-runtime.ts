@@ -3,16 +3,18 @@
 //
 
 import { Event } from '@dxos/async';
-import { type AppServiceBundle, type ShellRuntime, appServiceBundle, shellServiceBundle } from '@dxos/client-protocol';
+import { type ShellRuntime, appServiceBundle, shellServiceBundle } from '@dxos/client-protocol';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
+import { create, decodePublicKey } from '@dxos/protocols/buf';
+import { InvitationUrlRequestSchema, LayoutRequestSchema } from '@dxos/protocols/buf/dxos/iframe_pb';
 import {
   type AppContextRequest,
   type InvitationUrlRequest,
   type LayoutRequest,
   ShellLayout,
-} from '@dxos/protocols/proto/dxos/iframe';
-import { type ProtoRpcPeer, type RpcPort, createProtoRpcPeer } from '@dxos/rpc';
+} from '@dxos/protocols/buf/dxos/iframe_pb';
+import { type BufProtoRpcPeer, type RpcPort, createBufProtoRpcPeer } from '@dxos/rpc';
 
 /**
  * Endpoint that handles shell services.
@@ -21,7 +23,7 @@ export class ShellRuntimeImpl implements ShellRuntime {
   readonly layoutUpdate = new Event<LayoutRequest>();
   readonly invitationUrlUpdate = new Event<InvitationUrlRequest>();
 
-  private _appRpc?: ProtoRpcPeer<AppServiceBundle>;
+  private _appRpc?: BufProtoRpcPeer<typeof appServiceBundle>;
   private _layout = ShellLayout.DEFAULT;
   private _spaceKey?: PublicKey;
   private _spaceId?: string;
@@ -67,16 +69,18 @@ export class ShellRuntimeImpl implements ShellRuntime {
   setLayout({ layout, invitationCode, spaceKey, spaceId }: LayoutRequest): void {
     this._layout = layout;
     this._invitationCode = invitationCode;
-    this._spaceKey = spaceKey;
+    this._spaceKey = spaceKey ? decodePublicKey(spaceKey) : undefined;
     this._spaceId = spaceId;
-    this.layoutUpdate.emit({ layout, invitationCode, spaceKey, spaceId });
+    this.layoutUpdate.emit(create(LayoutRequestSchema, { layout, invitationCode, spaceKey, spaceId }));
   }
 
   setInvitationUrl({ invitationUrl, deviceInvitationParam, spaceInvitationParam }: InvitationUrlRequest): void {
     this._invitationUrl = invitationUrl;
     this._deviceInvitationParam = deviceInvitationParam;
     this._spaceInvitationParam = spaceInvitationParam;
-    this.invitationUrlUpdate.emit({ invitationUrl, deviceInvitationParam, spaceInvitationParam });
+    this.invitationUrlUpdate.emit(
+      create(InvitationUrlRequestSchema, { invitationUrl, deviceInvitationParam, spaceInvitationParam }),
+    );
   }
 
   async setAppContext(context: AppContextRequest): Promise<void> {
@@ -86,19 +90,19 @@ export class ShellRuntimeImpl implements ShellRuntime {
   }
 
   async open(): Promise<void> {
-    this._appRpc = createProtoRpcPeer({
+    this._appRpc = createBufProtoRpcPeer({
       requested: appServiceBundle,
       exposed: shellServiceBundle,
       handlers: {
         ShellService: {
-          setLayout: async (request) => {
+          setLayout: async (request: LayoutRequest) => {
             this._layout = request.layout;
             this._invitationCode = request.invitationCode;
-            this._spaceKey = request.spaceKey;
+            this._spaceKey = request.spaceKey ? decodePublicKey(request.spaceKey) : undefined;
             this._spaceId = request.spaceId;
             this.layoutUpdate.emit(request);
           },
-          setInvitationUrl: async (request) => {
+          setInvitationUrl: async (request: InvitationUrlRequest) => {
             this._invitationUrl = request.invitationUrl;
             this._deviceInvitationParam = request.deviceInvitationParam;
             this._spaceInvitationParam = request.spaceInvitationParam;

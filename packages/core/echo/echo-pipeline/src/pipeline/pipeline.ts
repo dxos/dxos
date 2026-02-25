@@ -10,6 +10,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type FeedMessageBlock } from '@dxos/protocols';
+import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Timeframe } from '@dxos/timeframe';
 import { ComplexMap } from '@dxos/util';
@@ -175,10 +176,20 @@ export class PipelineState {
   }
 }
 
+/**
+ * Payload written to the control pipeline.
+ * Uses buf Credential type to avoid casts at call sites.
+ */
+export type ControlPipelinePayload = {
+  credential?: {
+    credential: Credential;
+  };
+};
+
 // TODO(mykola): Extract to `@dxos/echo-protocol`
 export interface PipelineAccessor {
   state: PipelineState;
-  writer: FeedWriter<FeedMessage.Payload>;
+  writer: FeedWriter<ControlPipelinePayload>;
 }
 
 /**
@@ -230,8 +241,8 @@ export class Pipeline implements PipelineAccessor {
   // Inbound feed stream.
   private _feedSetIterator?: FeedSetIterator<FeedMessage>;
 
-  // Outbound feed writer.
-  private _writer: FeedWriter<FeedMessage.Payload> | undefined;
+  // Outbound feed writer (accepts buf types, maps to protobuf.js for feed codec).
+  private _writer: FeedWriter<ControlPipelinePayload> | undefined;
 
   private _isStopping = false;
   private _isStarted = false;
@@ -242,7 +253,7 @@ export class Pipeline implements PipelineAccessor {
     return this._state;
   }
 
-  get writer(): FeedWriter<FeedMessage.Payload> {
+  get writer(): FeedWriter<ControlPipelinePayload> {
     invariant(this._writer, 'Writer not set.');
     return this._writer;
   }
@@ -273,10 +284,11 @@ export class Pipeline implements PipelineAccessor {
     invariant(!this._writer, 'Writer already set.');
     invariant(feed.properties.writable, 'Feed must be writable.');
 
-    this._writer = createMappedFeedWriter<FeedMessage.Payload, FeedMessage>(
-      (payload: FeedMessage.Payload) => ({
+    this._writer = createMappedFeedWriter<ControlPipelinePayload, FeedMessage>(
+      (payload: ControlPipelinePayload) => ({
         timeframe: this._timeframeClock.timeframe,
-        payload,
+        // Buf Credential objects are structurally compatible with protobuf.js codec serialization.
+        payload: payload as FeedMessage.Payload,
       }),
       feed.createFeedWriter(),
     );

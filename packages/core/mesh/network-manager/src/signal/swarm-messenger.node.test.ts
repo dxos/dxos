@@ -7,11 +7,19 @@ import { afterAll, beforeAll, beforeEach, describe, expect, onTestFinished, test
 import { type Awaited } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { Messenger, WebsocketSignalManager } from '@dxos/messaging';
+import { create } from '@dxos/protocols/buf';
+import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import { JoinRequestSchema } from '@dxos/protocols/buf/dxos/edge/signal_pb';
+import { PublicKeySchema } from '@dxos/protocols/buf/dxos/keys_pb';
 import { type Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { runTestSignalServer } from '@dxos/signal';
 
 import { type OfferMessage, type SignalMessage } from './signal-messenger';
 import { SwarmMessenger } from './swarm-messenger';
+
+const toBufKey = (key: PublicKey) => create(PublicKeySchema, { data: key.asUint8Array() });
+const joinReq = (topic: PublicKey, peer: ReturnType<typeof create<typeof PeerSchema>>) =>
+  create(JoinRequestSchema, { topic: toBufKey(topic), peer });
 
 describe('SwarmMessenger', { timeout: 7000 }, () => {
   let topic: PublicKey;
@@ -41,7 +49,7 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
     onOffer?: (msg: OfferMessage) => Promise<Answer>;
     topic: PublicKey;
   }) => {
-    const peer = { peerKey: PublicKey.random().toHex() };
+    const peer = create(PeerSchema, { peerKey: PublicKey.random().toHex() });
     const signalManager = new WebsocketSignalManager([{ server: signalApiUrl }]);
     await signalManager.open();
     onTestFinished(async () => {
@@ -52,7 +60,12 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
     await messenger.listen({
       peer,
       payloadType: 'dxos.mesh.swarm.SwarmMessage',
-      onMessage: async (message) => await router.receiveMessage(message),
+      onMessage: async (message) =>
+        await router.receiveMessage({
+          author: message.author!,
+          recipient: message.recipient!,
+          payload: message.payload as never,
+        }),
     });
 
     const router: SwarmMessenger = new SwarmMessenger({
@@ -89,8 +102,8 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
       topic,
     });
 
-    await signalManager1.join({ topic, peer: peer1 });
-    await signalManager2.join({ topic, peer: peer2 });
+    await signalManager1.join(joinReq(topic, peer1));
+    await signalManager2.join(joinReq(topic, peer2));
 
     const msg: SignalMessage = {
       author: peer2,
@@ -125,8 +138,8 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
       topic,
     });
 
-    await signalManager1.join({ topic, peer: peer1 });
-    await signalManager2.join({ topic, peer: peer2 });
+    await signalManager1.join(joinReq(topic, peer1));
+    await signalManager2.join(joinReq(topic, peer2));
     const answer = await router1.offer({
       author: peer1,
       recipient: peer2,
@@ -181,9 +194,9 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
       topic,
     });
 
-    await signalManager1.join({ topic, peer: peer1 });
-    await signalManager2.join({ topic, peer: peer2 });
-    await signalManager3.join({ topic, peer: peer3 });
+    await signalManager1.join(joinReq(topic, peer1));
+    await signalManager2.join(joinReq(topic, peer2));
+    await signalManager3.join(joinReq(topic, peer3));
 
     // sending signal from peer1 to peer3.
     const msg1to3: SignalMessage = {
@@ -241,8 +254,8 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
       topic,
     });
 
-    await signalManager1.join({ topic, peer: peer1 });
-    await signalManager2.join({ topic, peer: peer2 });
+    await signalManager1.join(joinReq(topic, peer1));
+    await signalManager2.join(joinReq(topic, peer2));
 
     // sending offer from peer1 to peer2.
     const answer1 = await router1.offer({

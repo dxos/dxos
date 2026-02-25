@@ -5,6 +5,7 @@
 import React from 'react';
 
 import { type PublicKey } from '@dxos/keys';
+import { toPublicKey } from '@dxos/protocols/buf';
 import { type SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { Button } from '@dxos/react-ui';
 import { humanize } from '@dxos/util';
@@ -27,7 +28,10 @@ export const SwarmTable = ({ swarms, onClick }: SwarmListProps) => (
     </div>
     <div>
       {swarms.map((swarm) => (
-        <div key={swarm.id.toHex()} className='inline-flex w-full border-b border-separator'>
+        <div
+          key={swarm.id ? toPublicKey(swarm.id).toHex() : ''}
+          className='inline-flex w-full border-b border-separator'
+        >
           <div className='flex w-[30rem] overflow-hidden'>{swarm.label && humanize(swarm.label)}</div>
           <div className='flex w-[30rem] overflow-hidden'>{humanize(swarm.topic)}</div>
           <div className='flex w-[30rem] m-1'>

@@ -23,7 +23,9 @@ import {
   createRtcTransportFactory,
 } from '@dxos/network-manager';
 import { trace } from '@dxos/protocols';
-import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
+import { create } from '@dxos/protocols/buf';
+import { SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { type Storage } from '@dxos/random-access-storage';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import type * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
@@ -97,7 +99,7 @@ export class ClientServicesHost {
   private _storage?: Storage;
   private _level?: LevelDB;
   private _callbacks?: ClientServicesHostCallbacks;
-  private _devtoolsProxy?: WebsocketRpcClient<{}, ClientServices>;
+  private _devtoolsProxy?: WebsocketRpcClient<any, any>;
   private _edgeConnection?: EdgeConnection = undefined;
   private _edgeHttpClient?: EdgeHttpClient = undefined;
 
@@ -192,7 +194,7 @@ export class ClientServicesHost {
     return this._serviceContext;
   }
 
-  get serviceRegistry() {
+  get serviceRegistry(): ServiceRegistry<ClientServices> {
     return this._serviceRegistry;
   }
 
@@ -200,7 +202,7 @@ export class ClientServicesHost {
     return this._serviceRegistry.descriptors;
   }
 
-  get services() {
+  get services(): Partial<ClientServices> {
     return this._serviceRegistry.services;
   }
 
@@ -282,10 +284,10 @@ export class ClientServicesHost {
       transportFactory,
       signalManager,
       peerInfo: this._edgeConnection
-        ? {
+        ? create(PeerSchema, {
             identityKey: this._edgeConnection.identityKey,
             peerKey: this._edgeConnection.peerKey,
-          }
+          })
         : undefined,
     });
 

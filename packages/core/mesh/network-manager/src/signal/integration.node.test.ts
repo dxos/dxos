@@ -6,6 +6,10 @@ import { afterAll, beforeAll, describe, expect, onTestFinished, test } from 'vit
 
 import { PublicKey } from '@dxos/keys';
 import { Messenger, type PeerInfo, WebsocketSignalManager } from '@dxos/messaging';
+import { create } from '@dxos/protocols/buf';
+import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import { JoinRequestSchema } from '@dxos/protocols/buf/dxos/edge/signal_pb';
+import { PublicKeySchema } from '@dxos/protocols/buf/dxos/keys_pb';
 import { type SignalServerRunner, runTestSignalServer } from '@dxos/signal';
 
 import { type SignalMessage } from './signal-messenger';
@@ -23,7 +27,7 @@ describe('Signal Integration Test', () => {
   });
 
   const setupPeer = async ({
-    peer = { peerKey: PublicKey.random().toHex() },
+    peer = create(PeerSchema, { peerKey: PublicKey.random().toHex() }),
     topic = PublicKey.random(),
   }: {
     peer?: PeerInfo;
@@ -42,7 +46,12 @@ describe('Signal Integration Test', () => {
     onTestFinished(() => messenger.close());
     await messenger.listen({
       peer,
-      onMessage: async (message) => await messageRouter.receiveMessage(message),
+      onMessage: async (message) =>
+        await messageRouter.receiveMessage({
+          author: message.author!,
+          recipient: message.recipient!,
+          payload: message.payload as never,
+        }),
     });
 
     const receivedSignals: SignalMessage[] = [];
@@ -71,15 +80,20 @@ describe('Signal Integration Test', () => {
 
     const peerNetworking1 = await setupPeer({ topic });
     const peerNetworking2 = await setupPeer({ topic });
+    const toBufKey = (key: PublicKey) => create(PublicKeySchema, { data: key.asUint8Array() });
     const promise1 = peerNetworking1.signalManager.swarmEvent.waitFor(
-      ({ peerAvailable }) => !!peerAvailable && peerNetworking2.peer.peerKey === peerAvailable.peer.peerKey,
+      (evt) => evt.event.case === 'peerAvailable' && peerNetworking2.peer.peerKey === evt.event.value.peer!.peerKey,
     );
     const promise2 = peerNetworking1.signalManager.swarmEvent.waitFor(
-      ({ peerAvailable }) => !!peerAvailable && peerNetworking1.peer.peerKey === peerAvailable.peer.peerKey,
+      (evt) => evt.event.case === 'peerAvailable' && peerNetworking1.peer.peerKey === evt.event.value.peer!.peerKey,
     );
 
-    await peerNetworking1.signalManager.join({ topic, peer: peerNetworking1.peer });
-    await peerNetworking2.signalManager.join({ topic, peer: peerNetworking2.peer });
+    await peerNetworking1.signalManager.join(
+      create(JoinRequestSchema, { topic: toBufKey(topic), peer: peerNetworking1.peer }),
+    );
+    await peerNetworking2.signalManager.join(
+      create(JoinRequestSchema, { topic: toBufKey(topic), peer: peerNetworking2.peer }),
+    );
 
     await promise1;
     await promise2;

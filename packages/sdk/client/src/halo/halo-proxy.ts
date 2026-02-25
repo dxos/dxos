@@ -7,24 +7,29 @@ import { inspect } from 'node:util';
 import { Event, MulticastObservable, SubscriptionList, Trigger, asyncTimeout } from '@dxos/async';
 import { AUTH_TIMEOUT, type ClientServicesProvider, type Halo } from '@dxos/client-protocol';
 import type { Stream } from '@dxos/codec-protobuf/stream';
+import { getCredentialAssertion } from '@dxos/credentials';
 import { inspectObject } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ApiError, trace as Trace } from '@dxos/protocols';
+import { EMPTY, decodePublicKey } from '@dxos/protocols/buf';
+import { type Invitation, Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import {
   type Contact,
+  type ContactBook,
   type Device,
   DeviceKind,
   type Identity,
-  Invitation,
-} from '@dxos/protocols/proto/dxos/client/services';
+  type QueryDevicesResponse,
+  type QueryIdentityResponse,
+} from '@dxos/protocols/buf/dxos/client/services_pb';
 import {
   type Credential,
   type DeviceProfileDocument,
   type Presentation,
   type ProfileDocument,
-} from '@dxos/protocols/proto/dxos/halo/credentials';
+} from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { trace } from '@dxos/tracing';
 
 import { RPC_TIMEOUT } from '../common';
@@ -66,9 +71,11 @@ export class HaloProxy implements Halo {
 
   @trace.info({ depth: null })
   toJSON(): { identityKey: string | undefined; deviceKey: string | undefined } {
+    const identity = this._identity.get();
+    const dev = this.device;
     return {
-      identityKey: this._identity.get()?.identityKey.truncate(),
-      deviceKey: this.device?.deviceKey.truncate(),
+      identityKey: identity?.identityKey ? decodePublicKey(identity.identityKey).truncate() : undefined,
+      deviceKey: dev?.deviceKey ? decodePublicKey(dev.deviceKey).truncate() : undefined,
     };
   }
 
@@ -148,10 +155,10 @@ export class HaloProxy implements Halo {
     await this._invitationProxy?.close();
     invariant(this._serviceProvider.services.InvitationsService, 'InvitationsService not available');
     this._invitationProxy = new InvitationsProxy(
-      this._serviceProvider.services.InvitationsService,
+      this._serviceProvider.services.InvitationsService!,
       this._serviceProvider.services.IdentityService,
       () => ({
-        kind: Invitation.Kind.DEVICE,
+        kind: Invitation_Kind.DEVICE,
       }),
     );
     await this._invitationProxy.open();
@@ -168,7 +175,7 @@ export class HaloProxy implements Halo {
       },
       { timeout: RPC_TIMEOUT },
     );
-    this._haloCredentialStream.subscribe((data) => {
+    this._haloCredentialStream!.subscribe((data) => {
       this._credentialsChanged.emit([...this._credentials.get(), data]);
     });
     this._streamSubscriptions.add(() => this._haloCredentialStream?.close());
@@ -189,10 +196,10 @@ export class HaloProxy implements Halo {
     }
 
     invariant(this._serviceProvider.services.IdentityService, 'IdentityService not available');
-    const identityStream = this._serviceProvider.services.IdentityService.queryIdentity(undefined, {
+    const identityStream = this._serviceProvider.services.IdentityService.queryIdentity(EMPTY, {
       timeout: RPC_TIMEOUT,
     });
-    identityStream.subscribe((data) => {
+    identityStream.subscribe((data: QueryIdentityResponse) => {
       // Set tracing identity. For early stage debugging.
       data.identity &&
         log.trace('dxos.halo.identity', {
@@ -203,22 +210,22 @@ export class HaloProxy implements Halo {
     });
     this._streamSubscriptions.add(() => identityStream.close());
 
-    const contactsStream = this._serviceProvider.services.ContactsService!.queryContacts(undefined, {
+    const contactsStream = this._serviceProvider.services.ContactsService!.queryContacts(EMPTY, {
       timeout: RPC_TIMEOUT,
     });
-    contactsStream.subscribe((data) => {
+    contactsStream.subscribe((data: ContactBook) => {
       this._contactsChanged.emit(data.contacts ?? []);
     });
     this._streamSubscriptions.add(() => contactsStream.close());
 
     invariant(this._serviceProvider.services.DevicesService, 'DevicesService not available');
-    const devicesStream = this._serviceProvider.services.DevicesService.queryDevices(undefined, {
+    const devicesStream = this._serviceProvider.services.DevicesService.queryDevices(EMPTY, {
       timeout: RPC_TIMEOUT,
     });
-    devicesStream.subscribe((data) => {
+    devicesStream.subscribe((data: QueryDevicesResponse) => {
       if (data.devices) {
         this._devicesChanged.emit(data.devices);
-        const current = data.devices.find((device) => device.kind === DeviceKind.CURRENT);
+        const current = data.devices.find((device: Device) => device.kind === DeviceKind.CURRENT);
         log.trace('dxos.halo.device', {
           deviceKey: current?.deviceKey,
           profile: current?.profile,
@@ -257,13 +264,16 @@ export class HaloProxy implements Halo {
    * @param profile - optional display name
    * @param deviceProfile - optional device profile that will be merged with defaults
    */
-  async createIdentity(profile: ProfileDocument = {}, deviceProfile?: DeviceProfileDocument): Promise<Identity> {
+  async createIdentity(
+    profile: ProfileDocument = {} as ProfileDocument,
+    deviceProfile?: DeviceProfileDocument,
+  ): Promise<Identity> {
     invariant(this._serviceProvider.services.IdentityService, 'IdentityService not available');
     invariant(!this.identity.get(), 'Identity already exists');
     const deviceProfileWithDefaults = {
       ...deviceProfile,
       ...(deviceProfile?.label ? { label: deviceProfile.label } : { label: 'initial identity device' }),
-    };
+    } as DeviceProfileDocument;
     const identity = await this._serviceProvider.services.IdentityService.createIdentity(
       {
         profile,
@@ -299,10 +309,10 @@ export class HaloProxy implements Halo {
    */
   queryCredentials({ ids, type }: { ids?: PublicKey[]; type?: string } = {}): Credential[] {
     return this._credentials.get().filter((credential) => {
-      if (ids && !ids.some((id) => id.equals(credential.id!))) {
+      if (ids && !ids.some((id) => id.equals(decodePublicKey(credential.id!)))) {
         return false;
       }
-      if (type && credential.subject.assertion['@type'] !== type) {
+      if (type && getCredentialAssertion(credential)['@type'] !== type) {
         return false;
       }
       return true;
@@ -335,7 +345,7 @@ export class HaloProxy implements Halo {
     const deviceProfileWithDefaults = {
       ...deviceProfile,
       ...(deviceProfile?.label ? { label: deviceProfile.label } : { label: 'additional device' }),
-    };
+    } as DeviceProfileDocument;
     return this._invitationProxy!.join(invitation, deviceProfileWithDefaults);
   }
 
@@ -371,7 +381,9 @@ export class HaloProxy implements Halo {
     const trigger = new Trigger<Credential[]>();
 
     this._credentials.subscribe((credentials) => {
-      const credentialsToPresent = credentials.filter((credential) => ids.some((id) => id.equals(credential.id!)));
+      const credentialsToPresent = credentials.filter((credential) =>
+        ids.some((id) => id.equals(decodePublicKey(credential.id!))),
+      );
       if (credentialsToPresent.length === ids.length) {
         trigger.wake(credentialsToPresent);
       }

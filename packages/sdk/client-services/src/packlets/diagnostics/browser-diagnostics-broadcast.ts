@@ -4,7 +4,9 @@
 
 import { Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
-import { type SystemService } from '@dxos/protocols/proto/dxos/client/services';
+import type { Client } from '@dxos/protocols';
+import { create } from '@dxos/protocols/buf';
+import { GetDiagnosticsRequestSchema } from '@dxos/protocols/buf/dxos/client/services_pb';
 
 import {
   type CollectDiagnosticsBroadcastHandler,
@@ -56,7 +58,7 @@ export const createCollectDiagnosticsBroadcastSender = (): CollectDiagnosticsBro
 };
 
 export const createCollectDiagnosticsBroadcastHandler = (
-  systemService: SystemService,
+  systemService: Client.SystemService,
 ): CollectDiagnosticsBroadcastHandler => {
   let channel: BroadcastChannel | undefined;
   return {
@@ -67,7 +69,7 @@ export const createCollectDiagnosticsBroadcastHandler = (
           if (message.data.type === MessageType.PROBE) {
             channel?.postMessage({ type: MessageType.PROBE_ACK });
           } else if (message.data.type === MessageType.REQUEST_DIAGNOSTICS) {
-            const diagnostics = await systemService.getDiagnostics({});
+            const diagnostics = await systemService.getDiagnostics(create(GetDiagnosticsRequestSchema, {}));
             channel?.postMessage({
               type: MessageType.RECEIVE_DIAGNOSTICS,
               payload: diagnostics,

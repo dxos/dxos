@@ -8,24 +8,35 @@ import { type SpaceManager } from '@dxos/echo-pipeline';
 import { FeedIterator, type FeedStore, type FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { create, protoToBuf } from '@dxos/protocols/buf';
 import {
   type SubscribeToFeedBlocksRequest,
   type SubscribeToFeedBlocksResponse,
+  SubscribeToFeedBlocksResponseSchema,
   type SubscribeToFeedsRequest,
   type SubscribeToFeedsResponse,
-} from '@dxos/protocols/proto/dxos/devtools/host';
+  SubscribeToFeedsResponseSchema,
+  SubscribeToFeedsResponse_FeedSchema,
+} from '@dxos/protocols/buf/dxos/devtools/host_pb';
+import { PublicKeySchema } from '@dxos/protocols/buf/dxos/keys_pb';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { ComplexMap } from '@dxos/util';
 
+type FeedOwner = {
+  identity?: PublicKey;
+  device?: PublicKey;
+};
+
 type FeedInfo = {
   feed: FeedWrapper<FeedMessage>;
-  owner?: SubscribeToFeedsResponse.FeedOwner;
+  owner?: FeedOwner;
 };
 
 export const subscribeToFeeds = (
   { feedStore, spaceManager }: { feedStore: FeedStore<FeedMessage>; spaceManager: SpaceManager },
-  { feedKeys }: SubscribeToFeedsRequest,
+  request: SubscribeToFeedsRequest,
 ) => {
+  const feedKeys = request.feedKeys?.map((k) => PublicKey.from(k.data));
   return new Stream<SubscribeToFeedsResponse>(({ next }) => {
     const subscriptions = new SubscriptionList();
     const feedMap = new ComplexMap<PublicKey, FeedInfo>(PublicKey.hash);
@@ -45,15 +56,26 @@ export const subscribeToFeeds = (
           }
         });
 
-      next({
-        feeds: Array.from(feedMap.values()).map(({ feed, owner }) => ({
-          feedKey: feed.key,
-          length: feed.properties.length,
-          bytes: feed.core.byteLength,
-          downloaded: feed.core.bitfield?.data.toBuffer() ?? new Uint8Array(),
-          owner,
-        })),
-      });
+      next(
+        create(SubscribeToFeedsResponseSchema, {
+          feeds: Array.from(feedMap.values()).map(({ feed, owner }) =>
+            create(SubscribeToFeedsResponse_FeedSchema, {
+              feedKey: create(PublicKeySchema, { data: feed.key.asUint8Array() }),
+              length: feed.properties.length,
+              bytes: feed.core.byteLength,
+              downloaded: feed.core.bitfield?.data.toBuffer() ?? new Uint8Array(),
+              owner: owner
+                ? {
+                    identity: owner.identity
+                      ? create(PublicKeySchema, { data: owner.identity.asUint8Array() })
+                      : undefined,
+                    device: owner.device ? create(PublicKeySchema, { data: owner.device.asUint8Array() }) : undefined,
+                  }
+                : undefined,
+            }),
+          ),
+        }),
+      );
     };
 
     subscriptions.add(feedStore.feedOpened.on(update));
@@ -65,10 +87,7 @@ export const subscribeToFeeds = (
   });
 };
 
-const findFeedOwner = (
-  spaceManager: SpaceManager,
-  feedKey: PublicKey,
-): SubscribeToFeedsResponse.FeedOwner | undefined => {
+const findFeedOwner = (spaceManager: SpaceManager, feedKey: PublicKey): FeedOwner | undefined => {
   const feedInfo = [...spaceManager.spaces.values()]
     .flatMap((space) => [...space.spaceState.feeds.values()])
     .find((feed) => feed.key.equals(feedKey));
@@ -84,8 +103,10 @@ const findFeedOwner = (
 
 export const subscribeToFeedBlocks = (
   { feedStore }: { feedStore: FeedStore<FeedMessage> },
-  { feedKey, maxBlocks = 10 }: SubscribeToFeedBlocksRequest,
+  request: SubscribeToFeedBlocksRequest,
 ) => {
+  const feedKey = request.feedKey?.data ? PublicKey.from(request.feedKey.data) : undefined;
+  const maxBlocks = request.maxBlocks ?? 10;
   return new Stream<SubscribeToFeedBlocksResponse>(({ next }) => {
     if (!feedKey) {
       return;
@@ -101,7 +122,7 @@ export const subscribeToFeedBlocks = (
 
       const update = async () => {
         if (!feed.properties.length) {
-          next({ blocks: [] });
+          next(create(SubscribeToFeedBlocksResponseSchema, { blocks: [] }));
           return;
         }
 
@@ -115,9 +136,11 @@ export const subscribeToFeedBlocks = (
           }
         }
 
-        next({
-          blocks: blocks.slice(-maxBlocks),
-        });
+        next(
+          create(SubscribeToFeedBlocksResponseSchema, {
+            blocks: protoToBuf<SubscribeToFeedBlocksResponse['blocks']>(blocks.slice(-maxBlocks)),
+          }),
+        );
 
         await iterator.close();
       };

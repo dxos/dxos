@@ -13,12 +13,15 @@ import { QueryAST } from '@dxos/echo-protocol';
 import { type RuntimeProvider } from '@dxos/effect';
 import { type IndexEngine } from '@dxos/index-core';
 import { log } from '@dxos/log';
+import type { Echo } from '@dxos/protocols';
+import { type Empty, EmptySchema, create } from '@dxos/protocols/buf';
+import { type IndexConfig } from '@dxos/protocols/buf/dxos/echo/indexing_pb';
 import {
   type QueryRequest,
   type QueryResponse,
-  type QueryResult,
-  type QueryService,
-} from '@dxos/protocols/proto/dxos/echo/query';
+  QueryResponseSchema,
+  QueryResultSchema,
+} from '@dxos/protocols/buf/dxos/echo/query_pb';
 import { trace } from '@dxos/tracing';
 
 import { type AutomergeHost } from '../automerge';
@@ -37,6 +40,7 @@ export type QueryServiceProps = {
  * Represents an active query (stream and query state connected to that stream).
  */
 type ActiveQuery = {
+  queryId: string;
   executor: QueryExecutor;
   /**
    * Schedule re-execution of the query if true.
@@ -47,14 +51,14 @@ type ActiveQuery = {
 
   firstResult: boolean;
 
-  sendResults: (results: QueryResult[]) => void;
+  sendResults: (results: QueryResponse) => void;
   onError: (err: Error) => void;
 
   close: () => Promise<void>;
 };
 
 @trace.resource()
-export class QueryServiceImpl extends Resource implements QueryService {
+export class QueryServiceImpl extends Resource implements Echo.QueryService {
   // TODO(dmaretskyi): We need to implement query deduping. Idle composer has 80 queries with only 10 being unique.
   private readonly _queries = new Set<ActiveQuery>();
 
@@ -92,16 +96,18 @@ export class QueryServiceImpl extends Resource implements QueryService {
   /**
    * @deprecated No longer needed with SQL-based indexing.
    */
-  async setConfig(): Promise<void> {
+  async setConfig(_config: IndexConfig): Promise<Empty> {
     // No-op: SQL indexer doesn't need explicit configuration.
+    return create(EmptySchema);
   }
 
   /**
    * @deprecated No longer needed with SQL-based indexing.
    */
-  async reindex(): Promise<void> {
+  async reindex(): Promise<Empty> {
     // No-op: SQL indexer handles re-indexing automatically.
     log.warn('reindex() is deprecated and no longer has any effect');
+    return create(EmptySchema);
   }
 
   execQuery(request: QueryRequest): Stream<QueryResponse> {
@@ -133,13 +139,15 @@ export class QueryServiceImpl extends Resource implements QueryService {
     onError: (err: Error) => void,
     onClose: () => void,
   ): ActiveQuery {
+    const queryId = request.queryId ?? raise(new Error('query id required'));
     const parsedQuery = QueryAST.Query.pipe(Schema.decodeUnknownSync)(JSON.parse(request.query));
     const queryEntry: ActiveQuery = {
+      queryId,
       executor: new QueryExecutor({
         indexEngine: this._params.indexEngine,
         runtime: this._params.runtime,
         automergeHost: this._params.automergeHost,
-        queryId: request.queryId ?? raise(new Error('query id required')),
+        queryId,
         query: parsedQuery,
         reactivity: request.reactivity,
         spaceStateManager: this._params.spaceStateManager,
@@ -147,11 +155,11 @@ export class QueryServiceImpl extends Resource implements QueryService {
       dirty: true,
       open: false,
       firstResult: true,
-      sendResults: (results) => {
+      sendResults: (response) => {
         if (ctx.disposed) {
           return;
         }
-        onResults({ queryId: request.queryId, results });
+        onResults(response);
       },
       onError,
       close: async () => {
@@ -181,7 +189,22 @@ export class QueryServiceImpl extends Resource implements QueryService {
           query.dirty = false;
           if (changed || query.firstResult) {
             query.firstResult = false;
-            query.sendResults(query.executor.getResults());
+            // Convert protobuf.js QueryResult to buf QueryResult.
+            const results = query.executor.getResults();
+            const bufResults = results.map((r) =>
+              create(QueryResultSchema, {
+                id: r.id,
+                spaceId: r.spaceId,
+                documentId: r.documentId,
+                queueId: r.queueId,
+                queueNamespace: r.queueNamespace,
+                rank: r.rank,
+                documentJson: r.documentJson,
+                documentAutomerge: r.documentAutomerge,
+                spaceKey: r.spaceKey ? { data: r.spaceKey.asUint8Array() } : undefined,
+              }),
+            );
+            query.sendResults(create(QueryResponseSchema, { queryId: query.queryId, results: bufResults }));
           }
         } catch (err) {
           log.catch(err);

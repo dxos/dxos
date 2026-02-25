@@ -23,7 +23,9 @@ export const anySubstitutions = {
             'Can only encode google.protobuf.Any with @type set to google.protobuf.Any in preserveAny mode.',
           );
         }
-        return value;
+        // Normalize to snake_case type_url for protobuf.js wire encoding.
+        const v = value as any;
+        return { type_url: v.type_url ?? v.typeUrl ?? '', value: v.value ?? new Uint8Array() };
       }
 
       if (typeof value['@type'] !== 'string') {
@@ -53,27 +55,28 @@ export const anySubstitutions = {
       if (options.preserveAny || field.getOption('preserve_any')) {
         return {
           '@type': 'google.protobuf.Any',
-          type_url: value.type_url ?? '',
+          type_url: value.type_url ?? value.typeUrl ?? '',
           value: value.value ?? new Uint8Array(),
         };
       }
 
-      if (!schema.hasType(value.type_url)) {
+      const typeUrl = value.type_url ?? value.typeUrl ?? '';
+      if (!schema.hasType(typeUrl)) {
         return {
           '@type': 'google.protobuf.Any',
           ...value,
         };
       }
-      const codec = schema.tryGetCodecForType(value.type_url);
+      const codec = schema.tryGetCodecForType(typeUrl);
       let data = codec.decode(value.value);
 
-      if (value.type_url === 'google.protobuf.Struct') {
+      if (typeUrl === 'google.protobuf.Struct') {
         data = structSubstitutions['google.protobuf.Struct'].decode(data);
       }
 
       return {
         ...data,
-        '@type': value.type_url,
+        '@type': typeUrl,
       };
     },
   },

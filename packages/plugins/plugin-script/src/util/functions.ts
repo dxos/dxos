@@ -7,7 +7,7 @@ import { type Function, type Script, getUserFunctionIdInMetadata } from '@dxos/f
 import { getInvocationUrl } from '@dxos/functions-runtime';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { getSpace } from '@dxos/react-client/echo';
 /**
  * Get the function URL for a given script and client configuration
@@ -82,5 +82,5 @@ export const getAccessCredential = (identityKey: PublicKey): Credential => {
         capabilities: ['composer:beta'],
       },
     },
-  };
+  } as any;
 };

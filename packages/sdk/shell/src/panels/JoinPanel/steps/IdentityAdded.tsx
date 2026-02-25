@@ -5,6 +5,7 @@
 import React, { cloneElement } from 'react';
 
 import { generateName } from '@dxos/display-name';
+import { decodePublicKey } from '@dxos/protocols/buf';
 import type { Identity } from '@dxos/react-client/halo';
 import { Avatar, useId, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
@@ -24,7 +25,7 @@ export const IdentityAdded = (props: IdentityAddedProps) => {
   const disabled = !active;
   const { t } = useTranslation(translationKey);
 
-  const addedIdentityHex = addedIdentity?.identityKey.toHex() ?? '0';
+  const addedIdentityHex = addedIdentity?.identityKey ? decodePublicKey(addedIdentity.identityKey).toHex() : '0';
   const fallbackValue = hexToFallback(addedIdentityHex);
   const labelId = useId('identityListItem__label');
   const displayName = addedIdentity?.profile?.displayName ?? (addedIdentity && generateName(addedIdentityHex));
@@ -47,8 +48,15 @@ export const IdentityAdded = (props: IdentityAddedProps) => {
         <Avatar.Root labelId={labelId}>
           <Avatar.Content
             status='active'
-            hue={addedIdentity?.profile?.data?.hue || fallbackValue.hue}
-            fallback={addedIdentity?.profile?.data?.emoji || fallbackValue.emoji}
+            hue={
+              (typeof addedIdentity?.profile?.data?.hue === 'string' ? addedIdentity.profile?.data?.hue : undefined) ||
+              fallbackValue.hue
+            }
+            fallback={
+              (typeof addedIdentity?.profile?.data?.emoji === 'string'
+                ? addedIdentity.profile?.data?.emoji
+                : undefined) || fallbackValue.emoji
+            }
           />
           <Avatar.Label classNames={mx('text-lg truncate', !addedIdentity?.profile?.displayName && 'font-mono')}>
             {displayName}

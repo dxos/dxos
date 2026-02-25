@@ -7,6 +7,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { generateName } from '@dxos/display-name';
 import { Format } from '@dxos/echo/internal';
 import { type PublicKey } from '@dxos/keys';
+import { toPublicKey } from '@dxos/protocols/buf';
 import { type Contact } from '@dxos/protocols/proto/dxos/client/services';
 import {
   type SubscribeToFeedBlocksResponse,
@@ -43,16 +44,18 @@ export const FeedsPanel = (props: { space?: Space }) => {
     ...(space?.internal.data.pipeline?.controlFeeds ?? []),
     ...(space?.internal.data.pipeline?.dataFeeds ?? []),
   ];
-  const { feeds } = useStream(() => devtoolsHost.subscribeToFeeds({ feedKeys }), {}, [refreshCount]);
-  const feed = feeds?.find((feed) => feedKey && feed.feedKey.equals(feedKey));
-  const tableRows = mapToRows(client, space?.key, contacts, feedMessages);
+  const { feeds } = useStream(() => devtoolsHost.subscribeToFeeds({ feedKeys } as any), {} as any, [refreshCount]);
+  const feed = feeds?.find(
+    (feed: any) => feedKey && feed.feedKey && toPublicKey(feed.feedKey).equals(toPublicKey(feedKey)),
+  );
+  const tableRows = mapToRows(client, space?.key, contacts as any, feedMessages);
 
   // TODO(burdon): Not updated in realtime.
   // Hack to select and refresh first feed.
   const key = feedKey ?? feedKeys[0];
   useEffect(() => {
     if (key && !feedKey) {
-      handleSelect(key);
+      handleSelect(key as any);
       setTimeout(() => {
         handleRefresh();
       });
@@ -60,8 +63,12 @@ export const FeedsPanel = (props: { space?: Space }) => {
   }, [key]);
 
   useEffect(() => {
-    if (feedKey && feedKeys.length > 0 && !feedKeys.find((feed) => feed.equals(feedKey))) {
-      handleSelect(feedKeys[0]);
+    if (
+      feedKey &&
+      feedKeys.length > 0 &&
+      !feedKeys.find((fk: any) => fk && toPublicKey(fk).equals(toPublicKey(feedKey)))
+    ) {
+      handleSelect(feedKeys[0] as any);
     }
   }, [JSON.stringify(feedKeys), feedKey]); // TODO(burdon): Avoid stringify.
 
@@ -77,9 +84,9 @@ export const FeedsPanel = (props: { space?: Space }) => {
   };
 
   const getLabel = (key: PublicKey) => {
-    const feed = feeds?.find((feed) => feed.feedKey.equals(key));
+    const feed = feeds?.find((feed: any) => feed.feedKey && key && toPublicKey(feed.feedKey).equals(toPublicKey(key)));
     const feedLength = feed ? ` (${feed.length})` : '';
-    return `${formatIdentity(client, contacts, feed?.owner)}${feedLength}`;
+    return `${formatIdentity(client, contacts as any, feed?.owner)}${feedLength}`;
   };
 
   const properties: TablePropertyDefinition[] = useMemo(
@@ -94,7 +101,7 @@ export const FeedsPanel = (props: { space?: Space }) => {
 
   const tableData = useMemo(() => {
     return tableRows.map((row) => ({
-      id: `${row.feedKey.toHex()}-${row.seq}`,
+      id: `${toPublicKey(row.feedKey).toHex()}-${row.seq}`,
       ...row,
     }));
   }, [tableRows]);
@@ -107,8 +114,8 @@ export const FeedsPanel = (props: { space?: Space }) => {
           <PublicKeySelector
             placeholder='Select feed'
             getLabel={getLabel}
-            keys={feedKeys}
-            value={key}
+            keys={feedKeys as any}
+            value={key as any}
             onChange={handleSelect}
           />
 
@@ -151,11 +158,26 @@ const formatIdentity = (
     return 'unknown';
   }
   let identityName;
-  if (client.halo.identity.get()?.identityKey?.equals(identityInfo.identity)) {
-    identityName = client.halo.device?.deviceKey.equals(identityInfo.device) ? 'this device' : 'my device';
+  const identityKey = client.halo.identity.get()?.identityKey;
+  if (identityKey && identityInfo.identity && toPublicKey(identityKey).equals(toPublicKey(identityInfo.identity))) {
+    identityName =
+      identityInfo.device &&
+      client.halo.device?.deviceKey &&
+      toPublicKey(client.halo.device.deviceKey).equals(toPublicKey(identityInfo.device))
+        ? 'this device'
+        : 'my device';
   } else {
-    const ownerContact = identityInfo && contacts.find((contact) => contact.identityKey.equals(identityInfo.identity));
-    identityName = ownerContact?.profile?.displayName ?? generateName(identityInfo.identity.toHex());
+    const ownerContact =
+      identityInfo &&
+      contacts.find(
+        (contact) =>
+          contact.identityKey &&
+          identityInfo.identity &&
+          toPublicKey(contact.identityKey).equals(toPublicKey(identityInfo.identity)),
+      );
+    identityName =
+      ownerContact?.profile?.displayName ??
+      generateName(identityInfo.identity ? toPublicKey(identityInfo.identity).toHex() : '');
   }
-  return `${identityName} (${identityInfo.device.truncate()})`;
+  return `${identityName} (${identityInfo.device ? toPublicKey(identityInfo.device).truncate() : ''})`;
 };

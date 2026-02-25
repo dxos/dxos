@@ -6,7 +6,8 @@ import { createCredential } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import { type Space } from '@dxos/echo-pipeline';
 import { type Keyring } from '@dxos/keyring';
-import { AdmittedFeed, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { AdmittedFeed_Designation, SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Timeframe } from '@dxos/timeframe';
 
 import { type SigningContext } from './data-space-manager';
@@ -16,7 +17,7 @@ export const spaceGenesis = async (
   signingContext: SigningContext,
   space: Space,
   automergeRoot?: string,
-) => {
+): Promise<Credential[]> => {
   // TODO(dmaretskyi): Find a way to reconcile with credential generator.
   const credentials = [
     await createCredential({
@@ -36,7 +37,7 @@ export const spaceGenesis = async (
       assertion: {
         '@type': 'dxos.halo.credentials.SpaceMember',
         spaceKey: space.key,
-        role: SpaceMember.Role.OWNER,
+        role: SpaceMember_Role.OWNER,
         profile: signingContext.getProfile(),
         genesisFeedKey: space.controlFeedKey ?? failUndefined(),
       },
@@ -49,7 +50,7 @@ export const spaceGenesis = async (
         spaceKey: space.key,
         identityKey: signingContext.identityKey,
         deviceKey: signingContext.deviceKey,
-        designation: AdmittedFeed.Designation.CONTROL,
+        designation: AdmittedFeed_Designation.CONTROL,
       },
     }),
 
@@ -60,7 +61,7 @@ export const spaceGenesis = async (
         spaceKey: space.key,
         identityKey: signingContext.identityKey,
         deviceKey: signingContext.deviceKey,
-        designation: AdmittedFeed.Designation.DATA,
+        designation: AdmittedFeed_Designation.DATA,
       },
     }),
 

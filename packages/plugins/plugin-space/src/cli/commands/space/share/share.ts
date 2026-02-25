@@ -19,7 +19,7 @@ import {
 } from '@dxos/cli-util';
 import { FormBuilder } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
-import { Invitation, InvitationEncoder, hostInvitation } from '@dxos/client/invitations';
+import { InvitationEncoder, Invitation_AuthMethod, Invitation_State, hostInvitation } from '@dxos/client/invitations';
 import { type Key } from '@dxos/echo';
 
 export const handler = Effect.fn(function* ({
@@ -41,7 +41,7 @@ export const handler = Effect.fn(function* ({
 
   // Always use persistent and delegated (auth required) due to P2P limitations
   const observable = space.share({
-    authMethod: Invitation.AuthMethod.SHARED_SECRET,
+    authMethod: Invitation_AuthMethod.SHARED_SECRET,
     persistent: true,
     multiUse: multiple,
   });
@@ -79,7 +79,7 @@ export const handler = Effect.fn(function* ({
         {
           invitationCode: InvitationEncoder.encode(invitation),
           authCode: invitation.authCode,
-          state: Invitation.State[invitation.state],
+          state: Invitation_State[invitation.state],
         },
         null,
         2,
@@ -89,7 +89,7 @@ export const handler = Effect.fn(function* ({
     const builder = FormBuilder.make({ title: 'Space Invitation' }).pipe(
       FormBuilder.set('invitationCode', InvitationEncoder.encode(invitation)),
       FormBuilder.set('authCode', invitation.authCode ?? '<none>'),
-      FormBuilder.set('state', Invitation.State[invitation.state]),
+      FormBuilder.set('state', Invitation_State[invitation.state]),
     );
     yield* Console.log(print(FormBuilder.build(builder)));
   }

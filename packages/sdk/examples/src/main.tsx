@@ -40,7 +40,9 @@ const setupPeersInSpace = async (options: PeersInSpaceProps = {}) => {
   await Promise.all(clients.map((client) => client.halo.createIdentity()));
   const space = await clients[0].spaces.create({ name: faker.commerce.productName() });
   await onCreateSpace?.({ space });
-  await Promise.all(clients.slice(1).map((client) => performInvitation({ host: space, guest: client.spaces })));
+  await Promise.all(
+    clients.slice(1).map((client) => performInvitation({ host: space as never, guest: client.spaces as never })),
+  );
   return { spaceId: space.id, clients };
 };
 

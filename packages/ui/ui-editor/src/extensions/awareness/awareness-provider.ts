@@ -7,7 +7,7 @@ import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type Messenger } from '@dxos/protocols';
-import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
+import { type GossipMessage } from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
 
 import { type AwarenessInfo, type AwarenessPosition, type AwarenessProvider, type AwarenessState } from './awareness';
 
@@ -70,13 +70,17 @@ export class SpaceAwarenessProvider implements AwarenessProvider {
 
     this._ctx.onDispose(
       this._messenger.listen(this._channel, (message: GossipMessage) => {
-        switch (message.payload.kind) {
+        const payload = message.payload as unknown as ProtocolMessage | undefined;
+        if (!payload) {
+          return;
+        }
+        switch (payload.kind) {
           case 'query': {
             this._handleQueryMessage();
             break;
           }
           case 'post': {
-            this._handlePostMessage(message.payload);
+            this._handlePostMessage(payload);
             break;
           }
         }

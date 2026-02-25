@@ -11,6 +11,7 @@ import { Config } from '@dxos/config';
 import { Obj } from '@dxos/echo';
 import { Ref } from '@dxos/echo/internal';
 import { Filter } from '@dxos/echo-db';
+import { type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { isNode } from '@dxos/util';
 
@@ -112,7 +113,7 @@ describe('Client', () => {
       // Create identity.
       await client.initialize();
       expect(client.halo.identity.get()).not.to.exist;
-      const identity = await client.halo.createIdentity({ displayName });
+      const identity = await client.halo.createIdentity({ displayName } as ProfileDocument);
       expect(client.halo.identity.get()).to.deep.eq(identity);
       await client.spaces.waitUntilReady();
       await client.destroy();
@@ -123,7 +124,7 @@ describe('Client', () => {
       await client.initialize();
       expect(client.halo.identity).to.exist;
       // TODO(burdon): Error type.
-      await expect(client.halo.createIdentity({ displayName })).rejects.toBeInstanceOf(Error);
+      await expect(client.halo.createIdentity({ displayName } as ProfileDocument)).rejects.toBeInstanceOf(Error);
       await client.spaces.waitUntilReady();
     }
     {
@@ -158,7 +159,7 @@ describe('Client', () => {
 
     await client.initialize();
     onTestFinished(() => client.destroy());
-    await client.halo.createIdentity({ displayName: 'reset-check' });
+    await client.halo.createIdentity({ displayName: 'reset-check' } as ProfileDocument);
     await client.spaces.waitUntilReady();
 
     // Close client.
@@ -224,7 +225,7 @@ describe('Client', () => {
       },
       { fire: true },
     );
-    await Promise.all(performInvitation({ host: space1, guest: client2.spaces }));
+    await Promise.all(performInvitation({ host: space1 as never, guest: client2.spaces as never }));
 
     // Create Thread on second client.
     const space2 = client2.spaces.get(spaceKey)!;

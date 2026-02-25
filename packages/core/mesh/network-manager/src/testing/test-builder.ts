@@ -10,10 +10,12 @@ import {
   type SignalManager,
   WebsocketSignalManager,
 } from '@dxos/messaging';
-import { schema } from '@dxos/protocols/proto';
+import { create } from '@dxos/protocols/buf';
+import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import * as MeshBridgePb from '@dxos/protocols/buf/dxos/mesh/bridge_pb';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
-import { type ProtoRpcPeer, createLinkedPorts, createProtoRpcPeer } from '@dxos/rpc';
+import { type BufProtoRpcPeer, createBufProtoRpcPeer, createBufServiceBundle, createLinkedPorts } from '@dxos/rpc';
 import { ComplexMap } from '@dxos/util';
 
 import { TcpTransportFactory } from '#tcp-transport';
@@ -80,8 +82,8 @@ export class TestPeer {
    */
   readonly _networkManager: SwarmNetworkManager;
 
-  private _proxy?: ProtoRpcPeer<any>;
-  private _service?: ProtoRpcPeer<any>;
+  private _proxy?: BufProtoRpcPeer<{ BridgeService: typeof MeshBridgePb.BridgeService }>;
+  private _service?: BufProtoRpcPeer<any>;
 
   constructor(
     private readonly testBuilder: TestBuilder,
@@ -92,7 +94,7 @@ export class TestPeer {
   ) {
     this._signalManager = this.testBuilder.createSignalManager();
     this._networkManager = this.createNetworkManager(this.transport);
-    this._networkManager.setPeerInfo({ identityKey: peerId.toHex(), peerKey: peerId.toHex() });
+    this._networkManager.setPeerInfo(create(PeerSchema, { identityKey: peerId.toHex(), peerKey: peerId.toHex() }));
   }
 
   // TODO(burdon): Move to TestBuilder.
@@ -113,28 +115,21 @@ export class TestPeer {
           {
             // Simulates bridge to shared worker.
             const [proxyPort, servicePort] = createLinkedPorts();
-
-            this._proxy = createProtoRpcPeer({
-              port: proxyPort,
-              requested: {
-                BridgeService: schema.getService('dxos.mesh.bridge.BridgeService'),
-              },
-              noHandshake: true,
-              encodingOptions: {
-                preserveAny: true,
-              },
+            const bridgeBundle = createBufServiceBundle({
+              BridgeService: MeshBridgePb.BridgeService,
             });
 
-            this._service = createProtoRpcPeer({
+            this._proxy = createBufProtoRpcPeer({
+              port: proxyPort,
+              requested: bridgeBundle,
+              noHandshake: true,
+            });
+
+            this._service = createBufProtoRpcPeer({
               port: servicePort,
-              exposed: {
-                BridgeService: schema.getService('dxos.mesh.bridge.BridgeService'),
-              },
+              exposed: bridgeBundle,
               handlers: { BridgeService: new RtcTransportService() },
               noHandshake: true,
-              encodingOptions: {
-                preserveAny: true,
-              },
             });
 
             transportFactory = new RtcTransportProxyFactory().setBridgeService(this._proxy.rpc.BridgeService);
@@ -220,7 +215,7 @@ export class TestSwarmConnection {
   async join(topology = new FullyConnectedTopology()): Promise<this> {
     await this.peer._networkManager.joinSwarm({
       topic: this.topic,
-      peerInfo: { peerKey: this.peer.peerId.toHex(), identityKey: this.peer.peerId.toHex() },
+      peerInfo: create(PeerSchema, { peerKey: this.peer.peerId.toHex(), identityKey: this.peer.peerId.toHex() }),
       protocolProvider: this.protocol.factory,
       topology,
     });

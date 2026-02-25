@@ -9,7 +9,9 @@ import { createAdmissionCredentials } from '@dxos/credentials';
 import { AuthStatus } from '@dxos/echo-pipeline';
 import { writeMessages } from '@dxos/feed-store';
 import { log } from '@dxos/log';
-import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
+import { protoToBuf } from '@dxos/protocols/buf';
+import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { openAndClose } from '@dxos/test-utils';
 
 import { TestBuilder, type TestPeer } from '../testing';
@@ -49,14 +51,15 @@ describe('DataSpaceManager', () => {
     await space1.inner.controlPipeline.state.waitUntilTimeframe(space1.inner.controlPipeline.state.endTimeframe);
 
     // Admit peer2 to space1.
+    const admissionCredentials = await createAdmissionCredentials(
+      peer1.identity.credentialSigner,
+      peer2.identity.identityKey,
+      space1.key,
+      space1.inner.genesisFeedKey,
+    );
     await writeMessages(
       space1.inner.controlPipeline.writer,
-      await createAdmissionCredentials(
-        peer1.identity.credentialSigner,
-        peer2.identity.identityKey,
-        space1.key,
-        space1.inner.genesisFeedKey,
-      ),
+      admissionCredentials.map((credential) => ({ credential: { credential: protoToBuf<Credential>(credential) } })),
     );
 
     // Accept must be called after admission so that the peer can authenticate for notarization.
@@ -119,14 +122,15 @@ describe('DataSpaceManager', () => {
     await space1.inner.controlPipeline.state.waitUntilTimeframe(space1.inner.controlPipeline.state.endTimeframe);
 
     // Admit peer2 to space1.
+    const admissionCreds = await createAdmissionCredentials(
+      peer1.identity.credentialSigner,
+      peer2.identity.identityKey,
+      space1.key,
+      space1.inner.genesisFeedKey,
+    );
     await writeMessages(
       space1.inner.controlPipeline.writer,
-      await createAdmissionCredentials(
-        peer1.identity.credentialSigner,
-        peer2.identity.identityKey,
-        space1.key,
-        space1.inner.genesisFeedKey,
-      ),
+      admissionCreds.map((credential) => ({ credential: { credential: protoToBuf<Credential>(credential) } })),
     );
 
     // Accept must be called after admission so that the peer can authenticate for notarization.

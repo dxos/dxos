@@ -3,23 +3,30 @@
 //
 
 import { RuntimeServiceError } from '@dxos/errors';
-import { type EdgeFunctionEnv, type FeedProtocol } from '@dxos/protocols';
+import { type Echo, type EdgeFunctionEnv, type FeedProtocol } from '@dxos/protocols';
+import { bufToProto, EMPTY, type Empty } from '@dxos/protocols/buf';
+import type {
+  DeleteFromQueueRequest,
+  InsertIntoQueueRequest,
+  QueryQueueRequest,
+  QueueQueryResult,
+} from '@dxos/protocols/buf/dxos/client/queue_pb';
 
-export class QueueServiceImpl implements FeedProtocol.QueueService {
+export class QueueServiceImpl implements Echo.QueueService {
   constructor(
     protected _ctx: EdgeFunctionEnv.ExecutionContext,
     private readonly _queueService: EdgeFunctionEnv.QueueService,
   ) {}
 
-  async queryQueue(request: FeedProtocol.QueryQueueRequest): Promise<FeedProtocol.QueryResult> {
+  async queryQueue(request: QueryQueueRequest): Promise<QueueQueryResult> {
     try {
-      using result = await this._queueService.queryQueue(this._ctx, request);
+      using result = await this._queueService.queryQueue(this._ctx, bufToProto(request));
       // Copy to avoid hanging RPC stub (Workers RPC lifecycle).
       return {
         objects: structuredClone(result.objects),
         nextCursor: result.nextCursor,
         prevCursor: result.prevCursor,
-      };
+      } as QueueQueryResult;
     } catch (error) {
       const { query } = request;
       throw RuntimeServiceError.wrap({
@@ -34,7 +41,7 @@ export class QueueServiceImpl implements FeedProtocol.QueueService {
     }
   }
 
-  async insertIntoQueue(request: FeedProtocol.InsertIntoQueueRequest): Promise<void> {
+  async insertIntoQueue(request: InsertIntoQueueRequest): Promise<Empty> {
     try {
       using _ = await this._queueService.insertIntoQueue(this._ctx, request);
     } catch (error) {
@@ -45,9 +52,10 @@ export class QueueServiceImpl implements FeedProtocol.QueueService {
         ifTypeDiffers: true,
       })(error);
     }
+    return EMPTY;
   }
 
-  async deleteFromQueue(request: FeedProtocol.DeleteFromQueueRequest): Promise<void> {
+  async deleteFromQueue(request: DeleteFromQueueRequest): Promise<Empty> {
     try {
       using _ = await this._queueService.deleteFromQueue(this._ctx, request);
     } catch (error) {
@@ -58,9 +66,10 @@ export class QueueServiceImpl implements FeedProtocol.QueueService {
         ifTypeDiffers: true,
       })(error);
     }
+    return EMPTY;
   }
 
-  async syncQueue(_: FeedProtocol.SyncQueueRequest): Promise<void> {
-    // No-op in Cloudflare runtime.
+  async syncQueue(_: FeedProtocol.SyncQueueRequest): Promise<Empty> {
+    return EMPTY;
   }
 }

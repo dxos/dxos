@@ -53,7 +53,7 @@ export const handler = Effect.fn(function* ({ credential }: { credential: Option
     });
 
     yield* Effect.tryPromise({
-      try: () => client.halo.writeCredentials([credentialObj]),
+      try: () => client.halo.writeCredentials([credentialObj as any]),
       catch: (error) => new Error(`Failed to write credential: ${error}`),
     });
 

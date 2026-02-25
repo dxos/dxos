@@ -8,6 +8,7 @@ import React, { type ChangeEvent, useCallback, useMemo, useState } from 'react';
 import { debounce } from '@dxos/async';
 import { useClient } from '@dxos/react-client';
 import { type Identity, useIdentity } from '@dxos/react-client/halo';
+import { decodePublicKey } from '@dxos/protocols/buf';
 import { ButtonGroup, Clipboard, Input, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap, type FormUpdateMeta, Settings } from '@dxos/react-ui-form';
 import { EmojiPickerBlock, HuePicker } from '@dxos/react-ui-pickers';
@@ -27,10 +28,14 @@ const UserProfile = Schema.Struct({
 type UserProfile = Schema.Schema.Type<typeof UserProfile>;
 
 // TODO(thure): Factor out?
-const getDefaultHueValue = (identity: Identity | null) => hexToHue(identity?.identityKey.toHex() ?? '0');
-const getHueValue = (identity: Identity | null) => identity?.profile?.data?.hue || getDefaultHueValue(identity);
-const getDefaultEmojiValue = (identity: Identity | null) => hexToEmoji(identity?.identityKey.toHex() ?? '0');
-const getEmojiValue = (identity: Identity | null) => identity?.profile?.data?.emoji || getDefaultEmojiValue(identity);
+const getDefaultHueValue = (identity: Identity | null) =>
+  hexToHue(identity?.identityKey ? decodePublicKey(identity.identityKey).toHex() : '0');
+const getHueValue = (identity: Identity | null) =>
+  (identity?.profile?.data?.hue as string) || getDefaultHueValue(identity);
+const getDefaultEmojiValue = (identity: Identity | null) =>
+  hexToEmoji(identity?.identityKey ? decodePublicKey(identity.identityKey).toHex() : '0');
+const getEmojiValue = (identity: Identity | null) =>
+  (identity?.profile?.data?.emoji as string) || getDefaultEmojiValue(identity);
 
 export const ProfileContainer = () => {
   const { t } = useTranslation(meta.id);
@@ -47,10 +52,10 @@ export const ProfileContainer = () => {
           client.halo.updateProfile({
             displayName: profile.displayName,
             data: {
-              emoji: profile.emoji,
-              hue: profile.hue,
+              emoji: profile.emoji as any,
+              hue: profile.hue as any,
             },
-          }),
+          } as any),
         2_000,
       ),
     [],

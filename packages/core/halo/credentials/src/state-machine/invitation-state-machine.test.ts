@@ -6,8 +6,9 @@ import { beforeEach, describe, expect, test } from 'vitest';
 
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
+import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import { type Credential, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type DelegateSpaceInvitation } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { range } from '@dxos/util';
 
@@ -137,18 +138,20 @@ describe('InvitationStateMachine', () => {
   };
 
   const cancelInvitation = async (invitation: Credential): Promise<Credential> => {
+    const credentialId = PublicKey.from(invitation.id!.data);
     return createCredential({
       issuer: space,
       subject: identity,
       assertion: {
         '@type': 'dxos.halo.invitations.CancelDelegatedInvitation',
-        credentialId: invitation.id!,
+        credentialId,
       },
       signer: keyring,
     });
   };
 
   const admitMember = (invitation: Credential) => {
+    const invitationCredentialId = invitation.id ? PublicKey.from(invitation.id.data) : undefined;
     return createCredential({
       issuer: space,
       subject: identity,
@@ -157,7 +160,7 @@ describe('InvitationStateMachine', () => {
         spaceKey: space,
         role: SpaceMember.Role.ADMIN,
         genesisFeedKey: PublicKey.random(),
-        invitationCredentialId: invitation.id,
+        invitationCredentialId,
       },
       signer: keyring,
     });

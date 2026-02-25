@@ -7,6 +7,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { debounce } from '@dxos/async';
 import { generateName } from '@dxos/display-name';
 import { log } from '@dxos/log';
+import { create, type JsonObject } from '@dxos/protocols/buf';
+import { decodePublicKey } from '@dxos/protocols/buf';
+import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { useClient } from '@dxos/react-client';
 import { type Identity, useDevices, useHaloInvitations, useIdentity } from '@dxos/react-client/halo';
 import { useInvitationStatus } from '@dxos/react-client/invitations';
@@ -15,7 +18,7 @@ import { ConnectionState, useNetworkStatus } from '@dxos/react-client/mesh';
 import { Avatar, Clipboard, Input, Toolbar, useId, useTranslation } from '@dxos/react-ui';
 import { EmojiPickerToolbarButton, HuePicker } from '@dxos/react-ui-pickers';
 import { errorText } from '@dxos/ui-theme';
-import { hexToEmoji, hexToHue, keyToFallback } from '@dxos/util';
+import { hexToEmoji, hexToFallback, hexToHue, keyToFallback } from '@dxos/util';
 
 import { CloseButton, Heading, Viewport } from '../../components';
 import { ConfirmReset, InvitationManager } from '../../steps';
@@ -33,10 +36,16 @@ import { useAgentHandlers } from './useAgentHandlers';
 const viewStyles = 'pt-1 pb-3 px-3';
 
 // TODO(thure): Factor out?
-const getHueValue = (identity?: Identity) =>
-  identity?.profile?.data?.hue || hexToHue(identity?.identityKey.toHex() ?? '0');
-const getEmojiValue = (identity?: Identity) =>
-  identity?.profile?.data?.emoji || hexToEmoji(identity?.identityKey.toHex() ?? '0');
+const getHueValue = (identity?: Identity) => {
+  const hue = identity?.profile?.data?.hue;
+  const hex = identity?.identityKey ? decodePublicKey(identity.identityKey).toHex() : '0';
+  return (typeof hue === 'string' ? hue : undefined) || hexToHue(hex);
+};
+const getEmojiValue = (identity?: Identity) => {
+  const emoji = identity?.profile?.data?.emoji;
+  const hex = identity?.identityKey ? decodePublicKey(identity.identityKey).toHex() : '0';
+  return (typeof emoji === 'string' ? emoji : undefined) || hexToEmoji(hex);
+};
 
 const IdentityHeading = ({
   titleId,
@@ -48,7 +57,8 @@ const IdentityHeading = ({
   onChangeConnectionState,
   onManageCredentials,
 }: IdentityPanelHeadingProps) => {
-  const fallbackValue = keyToFallback(identity.identityKey);
+  const identityKeyPk = identity.identityKey ? decodePublicKey(identity.identityKey) : undefined;
+  const fallbackValue = identityKeyPk ? keyToFallback(identityKeyPk) : hexToFallback('0');
   const { t } = useTranslation(translationKey);
   const [displayName, setDisplayNameDirectly] = useState(identity.profile?.displayName ?? '');
   const [emoji, setEmojiDirectly] = useState<string>(getEmojiValue(identity));
@@ -58,10 +68,12 @@ const IdentityHeading = ({
     () =>
       debounce(
         (nextDisplayName: string) =>
-          onUpdateProfile?.({
-            ...identity.profile,
-            displayName: nextDisplayName,
-          }),
+          onUpdateProfile?.(
+            create(ProfileDocumentSchema, {
+              ...identity.profile,
+              displayName: nextDisplayName,
+            }),
+          ),
         3_000,
       ),
     [onUpdateProfile, identity.profile],
@@ -74,18 +86,25 @@ const IdentityHeading = ({
 
   const setEmoji = (nextEmoji: string) => {
     setEmojiDirectly(nextEmoji);
-    void onUpdateProfile?.({
-      ...identity.profile,
-      data: { ...identity.profile?.data, emoji: nextEmoji },
-    });
+    void onUpdateProfile?.(
+      create(ProfileDocumentSchema, {
+        ...identity.profile,
+        data: { ...(identity.profile?.data as Record<string, unknown>), emoji: nextEmoji },
+      }),
+    );
   };
 
   const setHue = (nextHue: string | undefined) => {
     setHueDirectly(nextHue);
-    void onUpdateProfile?.({
-      ...identity.profile,
-      data: { ...identity.profile?.data, hue: nextHue },
-    });
+    void onUpdateProfile?.(
+      create(ProfileDocumentSchema, {
+        ...identity.profile,
+        data: {
+          ...(identity.profile?.data as Record<string, unknown>),
+          ...(nextHue !== undefined && { hue: nextHue }),
+        } as JsonObject,
+      }),
+    );
   };
 
   const isConnected = connectionState === ConnectionState.ONLINE;
@@ -98,14 +117,14 @@ const IdentityHeading = ({
             size={16}
             variant='circle'
             status={isConnected ? 'active' : 'error'}
-            hue={hue || fallbackValue.hue}
-            fallback={emoji || fallbackValue.emoji}
+            hue={(typeof hue === 'string' ? hue : undefined) || fallbackValue.hue}
+            fallback={(typeof emoji === 'string' ? emoji : undefined) || fallbackValue.emoji}
             classNames='relative z-[2] -mx-4 chromatic-ignore'
           />
         </Toolbar.Root>
 
         <Avatar.Label classNames='sr-only' data-testid='identityHeading.displayName'>
-          {identity.profile?.displayName ?? generateName(identity.identityKey.toHex())}
+          {identity.profile?.displayName ?? (identityKeyPk ? generateName(identityKeyPk.toHex()) : 'Unknown')}
         </Avatar.Label>
 
         <Input.Root>
@@ -133,7 +152,7 @@ const IdentityHeading = ({
             classNames='h-(--rail-action)'
             data-testid='update-profile-form-copy-key'
             label={t('copy self did label')}
-            value={identity.did}
+            value={identity.did ?? ''}
           />
           {onManageCredentials && (
             <Toolbar.IconButton

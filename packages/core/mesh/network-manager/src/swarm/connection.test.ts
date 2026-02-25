@@ -6,6 +6,8 @@ import { describe, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
+import { create } from '@dxos/protocols/buf';
+import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 
 import { TestWireProtocol } from '../testing/test-wire-protocol';
 import { createRtcTransportFactory } from '../transport';
@@ -33,8 +35,8 @@ describe.skip('Connection', () => {
 
   const connectionTest = async (setup: { fastConnectionKey: PublicKey; slowConnectionKey: PublicKey }) => {
     const [topic, sessionId] = PublicKey.randomSequence();
-    const slowPeer = { peerKey: setup.slowConnectionKey.toHex() };
-    const fastPeer = { peerKey: setup.fastConnectionKey.toHex() };
+    const slowPeer = create(PeerSchema, { peerKey: setup.slowConnectionKey.toHex() });
+    const fastPeer = create(PeerSchema, { peerKey: setup.fastConnectionKey.toHex() });
 
     const slowPeerProtocol = new TestWireProtocol();
     const slowConnection = new Connection(

@@ -11,8 +11,9 @@ import * as Match from 'effect/Match';
 
 import { CommandConfig, print } from '@dxos/cli-util';
 import { type Client, ClientService } from '@dxos/client';
-import { type AuthenticatingInvitationObservable, Invitation, InvitationEncoder } from '@dxos/client/invitations';
+import { type AuthenticatingInvitationObservable, InvitationEncoder, Invitation_State } from '@dxos/client/invitations';
 import { invariant } from '@dxos/invariant';
+import { decodePublicKey } from '@dxos/protocols/buf';
 
 import { printIdentity } from '../util';
 
@@ -41,7 +42,7 @@ export const join = Command.make(
       yield* Console.log(
         JSON.stringify(
           {
-            identityKey: identity.identityKey.toHex(),
+            identityKey: identity.identityKey ? decodePublicKey(identity.identityKey).toHex() : undefined,
             displayName: identity.profile?.displayName,
           },
           null,
@@ -68,15 +69,15 @@ const sendInvitation = Effect.fn(function* ({
 
   const invitationCode = InvitationEncoder.decode(encoded);
   const invitation = client.halo.join(invitationCode);
-  yield* waitForState(invitation, Invitation.State.READY_FOR_AUTHENTICATION);
+  yield* waitForState(invitation, Invitation_State.READY_FOR_AUTHENTICATION);
 
   const authCode = yield* Prompt.text({ message: 'Enter the authentication code' }).pipe(Prompt.run);
   yield* Effect.tryPromise(() => invitation.authenticate(authCode));
-  yield* waitForState(invitation, Invitation.State.SUCCESS);
+  yield* waitForState(invitation, Invitation_State.SUCCESS);
   return client.halo.identity.get();
 });
 
-const waitForState = (invitation: AuthenticatingInvitationObservable, state: Invitation.State) =>
+const waitForState = (invitation: AuthenticatingInvitationObservable, state: Invitation_State) =>
   Effect.gen(function* () {
     const latch = yield* Effect.makeLatch();
     const subscription = invitation.subscribe((invitation) => {

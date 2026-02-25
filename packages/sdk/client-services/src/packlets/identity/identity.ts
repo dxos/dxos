@@ -19,6 +19,7 @@ import { type FeedWrapper, writeMessages } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type IdentityDid, PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { type Chain } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import {
@@ -179,7 +180,7 @@ export class Identity {
     return this.space.genesisFeedKey;
   }
 
-  get deviceCredentialChain() {
+  get deviceCredentialChain(): Chain | undefined {
     return this._deviceStateMachine.deviceCredentialChain;
   }
 
@@ -261,10 +262,10 @@ export class Identity {
             designation: AdmittedFeed.Designation.DATA,
           },
         }),
-      ].map((credential): FeedMessage.Payload => ({ credential: { credential } })),
+      ].map((credential) => ({ credential: { credential } })),
     );
 
-    return deviceCredential;
+    return deviceCredential as never;
   }
 
   private _onFeedAdded = async (feed: FeedWrapper<any>) => {

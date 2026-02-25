@@ -4,6 +4,7 @@
 
 import React from 'react';
 
+import { getCredentialAssertion } from '@dxos/credentials';
 import { PublicKey, useClient, useMulticastObservable } from '@dxos/react-client';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { arrayToString, deepMapValues } from '@dxos/util';
@@ -15,7 +16,7 @@ export const EdgeDashboardPanel = () => {
 
   const credentials = useMulticastObservable(client.halo.credentials);
   const serviceCredentials = credentials.filter(
-    (cred) => cred.subject.assertion['@type'] === 'dxos.halo.credentials.ServiceAccess',
+    (cred) => cred.subject && getCredentialAssertion(cred)['@type'] === 'dxos.halo.credentials.ServiceAccess',
   );
 
   return (

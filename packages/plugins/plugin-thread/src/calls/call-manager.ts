@@ -8,7 +8,7 @@ import { Event, synchronized } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
-import { type Tracks } from '@dxos/protocols/proto/dxos/edge/calls';
+import { type Tracks } from '@dxos/protocols/buf/dxos/edge/calls_pb';
 import { isNonNullable } from '@dxos/util';
 
 import { type CallState, CallSwarmSynchronizer } from './call-swarm-synchronizer';
@@ -96,7 +96,7 @@ export class CallManager extends Resource {
 
   /** Derived atom for tracks. */
   get tracksAtom(): Atom.Atom<Tracks> {
-    return this._tracksAtom;
+    return this._tracksAtom as Atom.Atom<Tracks>;
   }
 
   /** Derived atom for users. */
@@ -178,7 +178,7 @@ export class CallManager extends Resource {
     this._client.config.getOrThrow('runtime.services.edge.url');
     const networkService = this._client.services.services.NetworkService;
     invariant(networkService, 'network service not found');
-    this._swarmSynchronizer = new CallSwarmSynchronizer({ networkService });
+    this._swarmSynchronizer = new CallSwarmSynchronizer({ networkService: networkService as never });
     this._mediaManager = new MediaManager();
   }
 

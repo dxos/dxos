@@ -5,6 +5,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { type Graph, GraphModel } from '@dxos/graph';
+import { toPublicKey } from '@dxos/protocols/buf';
 import { type PeerState } from '@dxos/protocols/proto/dxos/mesh/presence';
 import { type Space, type SpaceMember, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -72,7 +73,9 @@ export const NetworkPanel = (props: { space?: Space }) => {
   const identity = useIdentity();
 
   const isMe = (node: NetworkGraphNode | undefined) =>
-    identity ? node?.member?.identity.identityKey.equals(identity.identityKey) : false;
+    identity && node?.member?.identity?.identityKey && identity.identityKey
+      ? toPublicKey(node.member.identity.identityKey).equals(toPublicKey(identity.identityKey))
+      : false;
 
   const members = useMembers(space?.key);
   const [model] = useState(() => new NetworkGraphModel());
@@ -131,9 +134,12 @@ export const NetworkPanel = (props: { space?: Space }) => {
           labels={{
             text: (node: GraphLayoutNode<NetworkGraphNode>, highlight) => {
               const identity =
-                node.data!.member?.identity.profile?.displayName ?? node.data!.member?.identity.identityKey.truncate();
+                node.data!.member?.identity?.profile?.displayName ??
+                (node.data!.member?.identity?.identityKey
+                  ? toPublicKey(node.data!.member.identity.identityKey).truncate()
+                  : '');
 
-              const peer = node.data!.peer?.peerId?.truncate();
+              const peer = node.data!.peer?.peerId ? toPublicKey(node.data!.peer.peerId).truncate() : '';
               return `${peer} [${identity}]`;
             },
           }}

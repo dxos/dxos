@@ -12,16 +12,21 @@ import {
   getContextFromEntry,
   log,
 } from '@dxos/log';
+import { type Client } from '@dxos/protocols';
+import { create, timestampFromDate } from '@dxos/protocols/buf';
 import {
   type ControlMetricsRequest,
   type ControlMetricsResponse,
+  ControlMetricsResponseSchema,
   type LogEntry,
-  type LoggingService,
-  type Metrics,
-  QueryLogsRequest,
+  LogEntrySchema,
+  MetricsSchema,
+  type QueryLogsRequest,
+  QueryLogsRequest_MatchingOptions,
   type QueryMetricsRequest,
   type QueryMetricsResponse,
-} from '@dxos/protocols/proto/dxos/client/services';
+  QueryMetricsResponseSchema,
+} from '@dxos/protocols/buf/dxos/client/logging_pb';
 import { getDebugName, jsonify, numericalValues, tracer } from '@dxos/util';
 
 /**
@@ -31,7 +36,7 @@ import { getDebugName, jsonify, numericalValues, tracer } from '@dxos/util';
  * seen in the main window console without opening the shared worker DevTools. Shared worker client
  * services is deprecated; dedicated worker logs already show in the main window console.
  */
-export class LoggingServiceImpl implements LoggingService {
+export class LoggingServiceImpl implements Client.LoggingService {
   private readonly _logs = new Event<NaturalLogEntry>();
   private readonly _started = Date.now();
   private readonly _sessionId = PublicKey.random().toHex();
@@ -45,24 +50,25 @@ export class LoggingServiceImpl implements LoggingService {
     log.runtimeConfig.processors.splice(index, 1);
   }
 
-  async controlMetrics({ reset, record }: ControlMetricsRequest): Promise<ControlMetricsResponse> {
-    if (reset) {
+  async controlMetrics(request: ControlMetricsRequest): Promise<ControlMetricsResponse> {
+    if (request.reset) {
       tracer.clear();
     }
 
-    if (record === true) {
+    if (request.record === true) {
       tracer.start();
-    } else if (record === false) {
+    } else if (request.record === false) {
       tracer.stop();
     }
 
-    return { recording: tracer.recording };
+    return create(ControlMetricsResponseSchema, { recording: tracer.recording });
   }
 
   /**
    * @deprecated (Move to diagnostics).
    */
-  queryMetrics({ interval = 5_000 }: QueryMetricsRequest): Stream<QueryMetricsResponse> {
+  queryMetrics(request: QueryMetricsRequest): Stream<QueryMetricsResponse> {
+    const interval = request.interval ?? 5_000;
     // TODO(burdon): Map all traces; how to bind to reducer/metrics shape (e.g., numericalValues)?
     const getNumericalValues = (key: string) => {
       const events = tracer.get(key) ?? [];
@@ -71,18 +77,17 @@ export class LoggingServiceImpl implements LoggingService {
 
     return new Stream(({ next }) => {
       const update = () => {
-        const metrics: Metrics = {
-          timestamp: new Date(),
-          values: [
-            getNumericalValues('dxos.echo.pipeline.control'),
-            getNumericalValues('dxos.echo.pipeline.data'),
-          ].filter(Boolean) as Metrics.KeyPair[],
-        };
-
-        next({
-          timestamp: new Date(),
-          metrics,
+        const metrics = create(MetricsSchema, {
+          timestamp: timestampFromDate(new Date()),
+          values: [getNumericalValues('dxos.echo.pipeline.control'), getNumericalValues('dxos.echo.pipeline.data')],
         });
+
+        next(
+          create(QueryMetricsResponseSchema, {
+            timestamp: timestampFromDate(new Date()),
+            metrics,
+          }),
+        );
       };
 
       update();
@@ -114,11 +119,11 @@ export class LoggingServiceImpl implements LoggingService {
           return;
         }
 
-        const record: LogEntry = {
-          ...entry,
+        const record = create(LogEntrySchema, {
+          level: entry.level,
           message: entry.message ?? (entry.error ? (entry.error.message ?? String(entry.error)) : ''),
           context: jsonify(getContextFromEntry(entry)),
-          timestamp: new Date(),
+          timestamp: timestampFromDate(new Date()),
           meta: {
             // TODO(dmaretskyi): Fix proto.
             file: entry.meta?.F ?? '',
@@ -129,7 +134,7 @@ export class LoggingServiceImpl implements LoggingService {
               name: getDebugName(entry.meta?.S),
             },
           },
-        };
+        });
 
         try {
           LOG_PROCESSING++;
@@ -148,16 +153,18 @@ export class LoggingServiceImpl implements LoggingService {
   };
 }
 
+type QueryLogsFilter = NonNullable<QueryLogsRequest['filters']>[number];
+
 const matchFilter = (
-  filter: QueryLogsRequest.Filter,
+  filter: QueryLogsFilter,
   level: LogLevel,
   path: string,
-  options: QueryLogsRequest.MatchingOptions,
+  options: QueryLogsRequest_MatchingOptions,
 ) => {
   switch (options) {
-    case QueryLogsRequest.MatchingOptions.INCLUSIVE:
+    case QueryLogsRequest_MatchingOptions.INCLUSIVE:
       return level >= filter.level && (!filter.pattern || path.includes(filter.pattern));
-    case QueryLogsRequest.MatchingOptions.EXPLICIT:
+    case QueryLogsRequest_MatchingOptions.EXPLICIT:
       return level === filter.level && (!filter.pattern || path.includes(filter.pattern));
   }
 };
@@ -166,9 +173,9 @@ const matchFilter = (
  * Determines if the current line should be logged (called by the processor).
  */
 const shouldLog = (entry: NaturalLogEntry, request: QueryLogsRequest): boolean => {
-  const options = request.options ?? QueryLogsRequest.MatchingOptions.INCLUSIVE;
+  const options = request.options ?? QueryLogsRequest_MatchingOptions.INCLUSIVE;
   if (request.filters === undefined) {
-    return options === QueryLogsRequest.MatchingOptions.INCLUSIVE;
+    return options === QueryLogsRequest_MatchingOptions.INCLUSIVE;
   } else {
     return request.filters.some((filter) => matchFilter(filter, entry.level, entry.meta?.F ?? '', options));
   }

@@ -21,7 +21,6 @@ import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { type SignalManager } from '@dxos/messaging';
 import { type SwarmNetworkManagerOptions, type TransportFactory, createIceProvider } from '@dxos/network-manager';
-import { type ServiceBundle } from '@dxos/rpc';
 import { layerFile, layerMemory, sqlExportLayer } from '@dxos/sql-sqlite/platform';
 import type * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
@@ -126,7 +125,7 @@ export class LocalClientServices implements ClientServicesProvider {
     SqlTransaction.SqlTransaction | SqlClient.SqlClient | SqlExport.SqlExport,
     never
   >;
-  signalMetadataTags: any = {
+  signalMetadataTags: Record<string, string> = {
     runtime: 'local-client-services',
   };
 
@@ -143,7 +142,7 @@ export class LocalClientServices implements ClientServicesProvider {
       this.signalMetadataTags.origin = 'undefined';
     } else {
       // SocketSupply native app
-      if ((globalThis as any).__args) {
+      if ((globalThis as { __args?: unknown }).__args) {
         this.signalMetadataTags.runtime = 'native';
         this.signalMetadataTags.origin = window.location.origin;
         // TODO(nf): access socket app metadata?
@@ -153,7 +152,7 @@ export class LocalClientServices implements ClientServicesProvider {
     }
   }
 
-  get descriptors(): ServiceBundle<ClientServices> {
+  get descriptors() {
     return clientServiceBundle;
   }
 

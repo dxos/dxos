@@ -4,10 +4,11 @@
 
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { Trigger, chain } from '@dxos/async';
+import { type MulticastObservable, Trigger, chain } from '@dxos/async';
 import { raise } from '@dxos/debug';
 import { AlreadyJoinedError } from '@dxos/protocols';
-import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { decodePublicKey, encodePublicKey } from '@dxos/protocols/buf';
+import { type Invitation, Invitation_Kind, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 
 import { type ServiceContext } from '../services';
 import { createIdentity, createPeers } from '../testing';
@@ -46,7 +47,9 @@ describe('services/space-invitations-protocol', () => {
     const space1 = await host.dataSpaceManager!.createSpace();
     const spaceKey = space1.key;
 
-    await Promise.all(performInvitation({ host, guest, options: { kind: Invitation.Kind.SPACE, spaceKey } }));
+    await Promise.all(
+      performInvitation({ host, guest, options: { kind: Invitation_Kind.SPACE, spaceKey: encodePublicKey(spaceKey) } }),
+    );
 
     {
       const space1 = host.dataSpaceManager!.spaces.get(spaceKey)!;
@@ -70,7 +73,9 @@ describe('services/space-invitations-protocol', () => {
     const space1 = await host.dataSpaceManager!.createSpace();
     const spaceKey = space1.key;
 
-    await Promise.all(performInvitation({ host, guest, options: { kind: Invitation.Kind.SPACE, spaceKey } }));
+    await Promise.all(
+      performInvitation({ host, guest, options: { kind: Invitation_Kind.SPACE, spaceKey: encodePublicKey(spaceKey) } }),
+    );
 
     {
       const space1 = host.dataSpaceManager!.spaces.get(spaceKey)!;
@@ -85,7 +90,7 @@ describe('services/space-invitations-protocol', () => {
     const [_, guestResult] = performInvitation({
       host,
       guest,
-      options: { kind: Invitation.Kind.SPACE, spaceKey },
+      options: { kind: Invitation_Kind.SPACE, spaceKey: encodePublicKey(spaceKey) },
     });
 
     expect((await guestResult).error).to.be.instanceOf(AlreadyJoinedError);
@@ -102,7 +107,7 @@ describe('services/space-invitations-protocol', () => {
       performInvitation({
         host,
         guest,
-        options: { kind: Invitation.Kind.SPACE, spaceKey: space1.key },
+        options: { kind: Invitation_Kind.SPACE, spaceKey: encodePublicKey(space1.key) },
         hooks: {
           guest: {
             onReady: (invitation) => {
@@ -133,8 +138,8 @@ describe('services/space-invitations-protocol', () => {
     expect(invitation1?.spaceKey).to.deep.eq(invitation2?.spaceKey);
 
     {
-      const space1 = host.dataSpaceManager!.spaces.get(invitation1!.spaceKey!)!;
-      const space2 = guest.dataSpaceManager!.spaces.get(invitation2!.spaceKey!)!;
+      const space1 = host.dataSpaceManager!.spaces.get(decodePublicKey(invitation1!.spaceKey!))!;
+      const space2 = guest.dataSpaceManager!.spaces.get(decodePublicKey(invitation2!.spaceKey!))!;
       expect(space1).not.to.be.undefined;
       expect(space2).not.to.be.undefined;
 
@@ -156,17 +161,17 @@ describe('services/space-invitations-protocol', () => {
     const [host, guest] = await chain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
     const space = await host.dataSpaceManager!.createSpace();
     const hostInvitation = await createInvitation(host, {
-      kind: Invitation.Kind.SPACE,
-      spaceKey: space.key,
+      kind: Invitation_Kind.SPACE,
+      spaceKey: encodePublicKey(space.key),
       timeout: 100,
     });
     const invitation = hostInvitation.get();
     await host.close();
 
     const guestTimeout = new Trigger();
-    const guestInvitation = await acceptInvitation(guest, invitation);
-    guestInvitation.subscribe((invitation) => {
-      if (invitation.state === Invitation.State.TIMEOUT) {
+    const guestInvitation = await acceptInvitation(guest, invitation as never);
+    (guestInvitation as never as MulticastObservable<Invitation>).subscribe((invitation: Invitation) => {
+      if (invitation.state === Invitation_State.TIMEOUT) {
         guestTimeout.wake();
       }
     });
@@ -185,11 +190,11 @@ describe('services/space-invitations-protocol', () => {
     const invitationPromises = performInvitation({
       host,
       guest,
-      options: { kind: Invitation.Kind.SPACE, spaceKey: space1.key },
+      options: { kind: Invitation_Kind.SPACE, spaceKey: encodePublicKey(space1.key) },
       hooks: {
         host: {
           onConnecting: (invitation) => {
-            hostConnected.wake(invitation.get());
+            hostConnected.wake(invitation.get() as never);
           },
           onConnected: (invitation) => {
             void invitation.cancel();
@@ -199,7 +204,7 @@ describe('services/space-invitations-protocol', () => {
         },
         guest: {
           onConnecting: (invitation) => {
-            guestConnected.wake(invitation.get());
+            guestConnected.wake(invitation.get() as never);
           },
         },
       },
@@ -210,7 +215,7 @@ describe('services/space-invitations-protocol', () => {
     expect(swarmKey1).to.deep.eq(swarmKey2);
 
     const [{ invitation: invitation1 }, { error }] = await Promise.all(invitationPromises);
-    expect(invitation1?.state).to.eq(Invitation.State.CANCELLED);
+    expect(invitation1?.state).to.eq(Invitation_State.CANCELLED);
     expect(error).to.exist;
 
     await space1.close();
@@ -227,7 +232,7 @@ describe('services/space-invitations-protocol', () => {
   //   const swarmKey = PublicKey.random();
   //   const hostObservable = await host.spaceInvitations!.createInvitation(hostSpace, {
   //     swarmKey,
-  //     type: Invitation.Type.MULTIUSE_TESTING
+  //     type: Invitation_Type.MULTIUSE_TESTING
   //   });
 
   //   const [done, count] = latch({ count: GUEST_COUNT });
@@ -246,7 +251,7 @@ describe('services/space-invitations-protocol', () => {
   //     range(GUEST_COUNT).map(async (idx) => {
   //       const observable = await guests[idx].spaceInvitations!.acceptInvitation({
   //         swarmKey,
-  //         type: Invitation.Type.MULTIUSE_TESTING
+  //         type: Invitation_Type.MULTIUSE_TESTING
   //       });
   //       const success = new Trigger();
   //       observable.subscribe({

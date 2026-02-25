@@ -5,15 +5,30 @@
 import { type Signer, subtleCrypto } from '@dxos/crypto';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { type TypedMessage } from '@dxos/protocols/proto';
-import { type Chain, type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
-
+import { type bufWkt, create, timestampFromDate, toPublicKey } from '@dxos/protocols/buf';
+import {
+  type Chain,
+  type Credential,
+  CredentialSchema,
+  ProofSchema,
+} from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { PublicKeySchema } from '@dxos/protocols/buf/dxos/keys_pb';
 import { getCredentialProofPayload } from './signing';
 import { SIGNATURE_TYPE_ED25519, verifyChain } from './verifier';
 
+/** Helper to convert @dxos/keys PublicKey to buf PublicKey message. */
+const toBufPublicKey = (key: PublicKey) => create(PublicKeySchema, { data: key.asUint8Array() });
+
+/**
+ * Structural type for credential assertions.
+ * Accepts both protobuf.js TypedMessage and plain objects with buf enum values.
+ * The `@type` field is the fully-qualified protobuf type name (e.g., 'dxos.halo.credentials.SpaceMember').
+ */
+export type TypedAssertion = { '@type': string } & Record<string, unknown>;
+
 export type CreateCredentialSignerProps = {
   subject: PublicKey;
-  assertion: TypedMessage;
+  assertion: TypedAssertion;
   nonce?: Uint8Array;
   parentCredentialIds?: PublicKey[];
 };
@@ -27,7 +42,7 @@ export type CreateCredentialProps = {
   chain?: Chain;
 
   subject: PublicKey;
-  assertion: TypedMessage;
+  assertion: TypedAssertion;
   nonce?: Uint8Array;
   parentCredentialIds?: PublicKey[];
 };
@@ -53,22 +68,25 @@ export const createCredential = async ({
   }
 
   // Create the credential with proof value and chain fields missing (for signature payload).
-  const credential: Credential = {
-    issuer,
-    issuanceDate: new Date(),
+  // Assertion is set after create() because buf's create() recursively initializes nested message
+  // fields — it would convert the TypedMessage assertion into an empty google.protobuf.Any.
+  const credential = create(CredentialSchema, {
+    issuer: toBufPublicKey(issuer),
+    issuanceDate: timestampFromDate(new Date()),
     subject: {
-      id: subject,
-      assertion,
+      id: toBufPublicKey(subject),
     },
-    parentCredentialIds,
-    proof: {
+    parentCredentialIds: parentCredentialIds?.map(toBufPublicKey),
+    proof: create(ProofSchema, {
       type: SIGNATURE_TYPE_ED25519,
-      creationDate: new Date(),
-      signer: signingKey ?? issuer,
+      creationDate: timestampFromDate(new Date()),
+      signer: toBufPublicKey(signingKey ?? issuer),
       value: new Uint8Array(),
       nonce,
-    },
-  };
+    }),
+  });
+  // Phase 10: replace with anyPack() when protobuf.js codec is removed.
+  credential.subject!.assertion = assertion as unknown as bufWkt.Any;
 
   // Set proof after creating signature.
   const signedPayload = getCredentialProofPayload(credential);
@@ -77,7 +95,9 @@ export const createCredential = async ({
     credential.proof!.chain = chain;
   }
 
-  credential.id = PublicKey.from(await subtleCrypto.digest('SHA-256', signedPayload as Uint8Array<ArrayBuffer>));
+  credential.id = toBufPublicKey(
+    PublicKey.from(await subtleCrypto.digest('SHA-256', signedPayload as Uint8Array<ArrayBuffer>)),
+  );
 
   return credential;
 };
@@ -120,11 +140,11 @@ export const createCredentialSignerWithChain = (
   chain: Chain,
   signingKey: PublicKey,
 ): CredentialSigner => ({
-  getIssuer: () => chain.credential.issuer,
+  getIssuer: () => toPublicKey(chain.credential!.issuer!),
   createCredential: ({ subject, assertion, nonce, parentCredentialIds }) =>
     createCredential({
       signer,
-      issuer: chain.credential.issuer,
+      issuer: toPublicKey(chain.credential!.issuer!),
       signingKey,
       chain,
       subject,

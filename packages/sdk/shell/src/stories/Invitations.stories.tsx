@@ -6,11 +6,14 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 
 import { log } from '@dxos/log';
+import { create } from '@dxos/protocols/buf';
+import { SpaceMember_PresenceState } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
-import { type Space, type SpaceMember, useSpaces } from '@dxos/react-client/echo';
+import { type Space, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
+import { type Invitation, InvitationEncoder, Invitation_State } from '@dxos/react-client/invitations';
 import { ConnectionState, useNetworkStatus } from '@dxos/react-client/mesh';
 import { useClientStory, withMultiClientProvider } from '@dxos/react-client/testing';
 import { ButtonGroup, Clipboard, IconButton, List } from '@dxos/react-ui';
@@ -36,7 +39,7 @@ const Panel = ({ id, panel, setPanel }: { id: number; panel?: PanelType; setPane
 
         invitation.subscribe((invitation) => {
           const invitationCode = InvitationEncoder.encode(invitation);
-          if (invitation.state === Invitation.State.CONNECTING) {
+          if (invitation.state === Invitation_State.CONNECTING) {
             log.info(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
           }
         });
@@ -127,7 +130,7 @@ const Invitations = () => {
 
       invitation.subscribe((invitation) => {
         const invitationCode = InvitationEncoder.encode(invitation);
-        if (invitation.state === Invitation.State.CONNECTING) {
+        if (invitation.state === Invitation_State.CONNECTING) {
           log.info(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
         }
       });
@@ -143,7 +146,9 @@ const Invitations = () => {
         size={6}
         label='Create Identity'
         iconOnly
-        onClick={() => client.halo.createIdentity({ displayName: faker.person.firstName() })}
+        onClick={() =>
+          client.halo.createIdentity(create(ProfileDocumentSchema, { displayName: faker.person.firstName() }))
+        }
         disabled={Boolean(identity)}
         data-testid='invitations.create-identity'
       />
@@ -204,7 +209,14 @@ const Invitations = () => {
         <div data-testid='invitations.identity-header'>{controls}</div>
         {identity ? (
           <List>
-            <IdentityListItem identity={identity} presence={networkStatus as unknown as SpaceMember.PresenceState} />
+            <IdentityListItem
+              identity={identity}
+              presence={
+                networkStatus === ConnectionState.ONLINE
+                  ? SpaceMember_PresenceState.ONLINE
+                  : SpaceMember_PresenceState.OFFLINE
+              }
+            />
           </List>
         ) : (
           <div className='text-center'>No identity</div>

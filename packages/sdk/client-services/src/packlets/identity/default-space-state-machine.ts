@@ -2,10 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type CredentialProcessor, getCredentialAssertion } from '@dxos/credentials';
+import { type CredentialProcessor, fromBufPublicKey, getCredentialAssertion } from '@dxos/credentials';
 import { type PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 type DefaultSpaceStateMachineProps = {
   identityKey: PublicKey;
@@ -28,7 +28,7 @@ export class DefaultSpaceStateMachine implements CredentialProcessor {
     const assertion = getCredentialAssertion(credential);
     switch (assertion['@type']) {
       case 'dxos.halo.credentials.DefaultSpace': {
-        if (!credential.subject.id.equals(this._params.identityKey)) {
+        if (!fromBufPublicKey(credential.subject!.id!)!.equals(this._params.identityKey)) {
           log.warn('Invalid default space credential', { expectedIdentity: this._params.identityKey, credential });
           return;
         }

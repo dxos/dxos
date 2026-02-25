@@ -21,7 +21,7 @@ describe('IdentityService', () => {
   beforeEach(async () => {
     serviceContext = await createServiceContext();
     await serviceContext.open(new Context());
-    identityService = createIdentityService(serviceContext);
+    identityService = createIdentityService(serviceContext) as never;
   });
 
   afterEach(async () => {

@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type Invitation } from '@dxos/react-client/invitations';
+import { type Invitation_State } from '@dxos/react-client/invitations';
 import { useTranslation } from '@dxos/react-ui';
 import { descriptionText } from '@dxos/ui-theme';
 
@@ -15,7 +15,7 @@ import { type JoinStepProps } from '../JoinPanelProps';
 
 export interface InvitationRescuerProps extends JoinStepProps {
   Kind: 'Space' | 'Halo';
-  invitationState?: Invitation.State;
+  invitationState?: Invitation_State;
   onInvitationCancel?: () => Promise<void> | undefined;
   failReason?: FailReason | null;
 }

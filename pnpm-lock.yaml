@@ -138,6 +138,9 @@ catalogs:
     '@dnd-kit/utilities':
       specifier: ^3.2.0
       version: 3.2.0
+    '@dxos/credentials':
+      specifier: ^0.8.3
+      version: 0.8.3
     '@dxos/wa-sqlite':
       specifier: ^0.2.1
       version: 0.2.1
@@ -2401,6 +2404,9 @@ importers:
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
+      '@dxos/credentials':
+        specifier: 'catalog:'
+        version: 0.8.3(effect@3.19.16)
       '@dxos/devtools':
         specifier: workspace:*
         version: link:../../devtools/devtools
@@ -4821,6 +4827,9 @@ importers:
       '@dxos/random-access-storage':
         specifier: workspace:*
         version: link:../../../common/random-access-storage
+      '@dxos/rpc':
+        specifier: workspace:*
+        version: link:../../mesh/rpc
       '@dxos/sql-sqlite':
         specifier: workspace:*
         version: link:../../../common/sql-sqlite
@@ -6318,6 +6327,9 @@ importers:
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
+      '@dxos/credentials':
+        specifier: 'catalog:'
+        version: 0.8.3(effect@3.19.16)
       '@dxos/display-name':
         specifier: workspace:*
         version: link:../../common/display-name
@@ -7705,6 +7717,9 @@ importers:
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../core/protocols
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
@@ -7793,6 +7808,9 @@ importers:
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
+      '@dxos/credentials':
+        specifier: 'catalog:'
+        version: 0.8.3(effect@3.19.16)
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -20369,6 +20387,61 @@ packages:
     peerDependencies:
       react: ~19.2.3
 
+  '@dxos/async@0.8.3':
+    resolution: {integrity: sha512-CBeZA9JBEWpZDqFMOmSybo7QuQQAvEC9DQororiZzepRsub/fmZSpV+P5ICn/LgsVyl4lPmg9q185AdmLsXN3w==}
+
+  '@dxos/codec-protobuf@0.8.3':
+    resolution: {integrity: sha512-07kSVuLh3rIrzC3SdiKRUXyTBslRGNaziK0iVMSS4wlwWd0R2M3Mcv1LHka54E5fORCzEd7hTsEcO2EdNJ2ktA==}
+
+  '@dxos/context@0.8.3':
+    resolution: {integrity: sha512-PKpfYpUQNCNtK6oKo1Je0qOI1eBiXcdljEu68GW80427U2Oin/hry/EtsrMq3iXLUgpqjRr9hvKU/d/fXsWNDw==}
+
+  '@dxos/credentials@0.8.3':
+    resolution: {integrity: sha512-CgbuzXSAdRdopouDktoGl24p2nAuDo9zv0gmWXYJ3uz1YCbXfg8QqNhAujxx15tEEC6UFH5H/c+diIm1nzSgTg==}
+
+  '@dxos/crypto@0.8.3':
+    resolution: {integrity: sha512-wIflHRdxNsf5XFbCBV/wnNFD1U6k5rA2xIxupxbISfpIAh6eBLJMed/Loquv2nvGcLYLO9ooKSn1/j/s2LI0Qw==}
+
+  '@dxos/debug@0.8.3':
+    resolution: {integrity: sha512-sDsOvwejoVKdLPpBK3yd4RAX8/sZf3C4ZtmmSJm9rmb8kv6NcyJgiPYZZFOJIArEL6Xm4Z9aHfDhOjrK8p4YtQ==}
+
+  '@dxos/effect@0.8.3':
+    resolution: {integrity: sha512-tvvEwxnDoyYgqRfUaQUntW1CVUh1d5sC6Kysx+BgT1RjU7hJNzG1GFkO1olf0iPCPwiFDjjMSV9kPVCfe4xWWQ==}
+    peerDependencies:
+      effect: 3.19.16
+
+  '@dxos/invariant@0.8.3':
+    resolution: {integrity: sha512-PWu7u8LxPwGwOedstv4SfB6q4ZtZpclercV5xERai3HNAf+cl1ExA1KOLjgeKQVZsI7Ip3K5dM4mymhA98+KQg==}
+
+  '@dxos/keyring@0.8.3':
+    resolution: {integrity: sha512-pPeq12VSx8AFqLsz3qI0qrL45BiB0/H8AB6oPHCDeYcXhjTW0BJ0+bwkwhRN8jKNlKrIxE2AJOr6GKLycGqG9g==}
+
+  '@dxos/keys@0.8.3':
+    resolution: {integrity: sha512-+ht+usY5oFawxnZaojtACBRQMj8lLzmh+P0QrJ6MAw8UpCqD+NkTC3IdWnHncUJZyAd597k21Kr1NCn8ukFsAg==}
+
+  '@dxos/log@0.8.3':
+    resolution: {integrity: sha512-DASNu0aGPE2dr2St5SLsGF1hxp26DvYXBlvJuIwHFYF8R3QM8Yv/fFplX3M7imAn9becykMr2GtQ+vXKOB6HdQ==}
+
+  '@dxos/node-std@0.8.3':
+    resolution: {integrity: sha512-aR4HR7nd7/xbvl//3XKxUTXtAPywHrW/n0UI1vuutKodRNgmmnnz+doNkCkUQlkVPe6zf/ITAtty9JJdqjQIEA==}
+
+  '@dxos/protocols@0.8.3':
+    resolution: {integrity: sha512-XTyYtnY8WMNsfC6m7766QVTer17bqTmpdZ5SjIKi8+6rm9DTOiQtEhvcI9mwf185QoBsYeqdQAGL9ag9A5iIXA==}
+    peerDependencies:
+      effect: 3.19.16
+
+  '@dxos/random-access-storage@0.8.3':
+    resolution: {integrity: sha512-04+fItZ3Bwe/7FR5n7Oh3GFiaSshOyzCI3qOklrQCdz7dQAFQiRS3HYM9yzsJmfWSftaixlSkusTdvd9CCo3fQ==}
+
+  '@dxos/timeframe@0.8.3':
+    resolution: {integrity: sha512-6W+KbidO0NnGUyTT11PDSkbpGe9DgHHGKpS+W4XNaobtllBOyAd4LXHLNKdDdekjqFg1reXP0fS7PPvg8ASxlg==}
+
+  '@dxos/tracing@0.8.3':
+    resolution: {integrity: sha512-iB7glBZzHAPpV41DHgFxuXrN6uXU9Ep64r9+a6bbZS1aNsVMBo+25HiXVjFY7DbhByhJN/W1y8gh4BO6Xex24Q==}
+
+  '@dxos/util@0.8.3':
+    resolution: {integrity: sha512-g59XyzcFcNx31+Hw/lyWeJaHpWN9qbERlnAeFrcX1Ck0rYKacyiBWLKM7Z7ghXH0xr8eNUCHeGqk7GS+zAuH+g==}
+
   '@dxos/wa-sqlite@0.2.1':
     resolution: {integrity: sha512-RVktTCzwJ1ix1MP/LWDjpO1HOOP0JpnAtjB/Zp/csbrlBEhhYYpwIlgDJzCi1Ri4cWHOo04iy+YtlnjfshM1Zw==}
 
@@ -31303,6 +31376,11 @@ packages:
     resolution: {integrity: sha512-POQXvpdL69+CluYsillJ7SUhKvytYjW9vG/GKpnf+xP8UWgYEM/RaMzHHofbALDiKbbP1W8UEYmgGl39WkPZsg==}
     engines: {'0': node >= 0.2.0}
 
+  jsonpath-plus@10.2.0:
+    resolution: {integrity: sha512-T9V+8iNYKFL2n2rF+w02LBOT2JjDnTjioaNFrxRy0Bv1y/hNsqR/EBK7Ojy2ythRHwmz2cRIls+9JitQGZC/sw==}
+    engines: {node: '>=18.0.0'}
+    hasBin: true
+
   jsonpath-plus@10.4.0:
     resolution: {integrity: sha512-T92WWatJXmhBbKsgH/0hl+jxjdXrifi5IKeMY02DWggRxX0UElcbVzPlmgLTbvsPeW1PasQ6xE2Q75stkhGbsA==}
     engines: {node: '>=18.0.0'}
@@ -31626,6 +31704,10 @@ packages:
   lodash.flattendeep@4.4.0:
     resolution: {integrity: sha512-uHaJFihxmJcEX3kT4I23ABqKKalJ/zDrDg0lsFtc1h+3uw49SIJ5beyhx5ExVRti3AvKoOJngIj7xz3oylPdWQ==}
 
+  lodash.get@4.4.2:
+    resolution: {integrity: sha512-z+Uw/vLuy6gQe8cfaFWD7p0wVv8fJl3mbzXh33RS+0oW2wvUqiRXiQ69gLWSLpgB5/6sU+r6BlQR0MBILadqTQ==}
+    deprecated: This package is deprecated. Use the optional chaining (?.) operator instead.
+
   lodash.includes@4.3.0:
     resolution: {integrity: sha512-W3Bx6mdkRTGtlJISOvVD/lbqjTlPPUDTMnlXZFnVwi9NKJ6tiAk6LVdlhZMm17VZisqhKcgzpO5Wz91PCt5b0w==}
 
@@ -31663,11 +31745,18 @@ packages:
   lodash.merge@4.6.2:
     resolution: {integrity: sha512-0KpjqXRVvrYyCsX1swR/XTK0va6VQkQM6MNo7PqW77ByjAhoARA8EfrP1N4+KlKj8YS0ZUCtRT/YUuhyYDujIQ==}
 
+  lodash.omit@4.5.0:
+    resolution: {integrity: sha512-XeqSp49hNGmlkj2EJlfrQFIzQ6lXdNro9sddtQzcJY8QaoC2GO0DT7xaIokHeyM+mIT0mPMlPvkYzg2xCuHdZg==}
+    deprecated: This package is deprecated. Use destructuring assignment syntax instead.
+
   lodash.once@4.1.1:
     resolution: {integrity: sha512-Sb487aTOCr9drQVL8pIxOzVhafOjZN9UU54hiN8PU3uAiSV7lx1yYNpbNmex2PK6dSJoNTSJUUswT651yww3Mg==}
 
   lodash.orderby@4.6.0:
     resolution: {integrity: sha512-T0rZxKmghOOf5YPnn8EY5iLYeWCpZq8G41FfqoVHH5QDTAFaghJRmAdLiadEDq+ztgM2q5PjA+Z1fOwGrLgmtg==}
+
+  lodash.set@4.3.2:
+    resolution: {integrity: sha512-4hNPN5jlm/N/HLMCO43v8BXKq9Z7QdAGc/VGrRD61w8gN9g/6jF9A4L1pbUgBLCffi0w9VsXfTOij5x8iTyFvg==}
 
   lodash.snakecase@4.1.1:
     resolution: {integrity: sha512-QZ1d4xoBHYUeuouhEq3lk3Uq7ldgyFXGBhg04+oRLnIz8o9T65Eh+8YdroUwn846zchkA9yDsDl5CVVaV2nqYw==}
@@ -39385,6 +39474,178 @@ snapshots:
       react: 19.2.3
       tslib: 2.8.1
 
+  '@dxos/async@0.8.3':
+    dependencies:
+      '@dxos/context': 0.8.3
+      '@dxos/debug': 0.8.3
+      '@dxos/invariant': 0.8.3
+      '@dxos/log': 0.8.3
+      '@dxos/node-std': 0.8.3
+      '@dxos/util': 0.8.3
+      zen-observable: 0.10.0
+      zen-push: 0.3.1
+
+  '@dxos/codec-protobuf@0.8.3':
+    dependencies:
+      '@dxos/async': 0.8.3
+      '@dxos/context': 0.8.3
+      '@dxos/invariant': 0.8.3
+      '@dxos/log': 0.8.3
+      '@dxos/node-std': 0.8.3
+      '@dxos/util': 0.8.3
+      compress-json: 2.1.2
+      lodash.merge: 4.6.2
+      protobufjs: 7.5.4
+
+  '@dxos/context@0.8.3':
+    dependencies:
+      '@dxos/debug': 0.8.3
+      '@dxos/log': 0.8.3
+      '@dxos/node-std': 0.8.3
+      '@dxos/util': 0.8.3
+
+  '@dxos/credentials@0.8.3(effect@3.19.16)':
+    dependencies:
+      '@dxos/async': 0.8.3
+      '@dxos/context': 0.8.3
+      '@dxos/crypto': 0.8.3
+      '@dxos/invariant': 0.8.3
+      '@dxos/keyring': 0.8.3(effect@3.19.16)
+      '@dxos/keys': 0.8.3
+      '@dxos/log': 0.8.3
+      '@dxos/node-std': 0.8.3
+      '@dxos/protocols': 0.8.3(effect@3.19.16)
+      '@dxos/timeframe': 0.8.3
+      '@dxos/util': 0.8.3
+      bip39: 3.1.0
+      json-stable-stringify: 1.3.0
+    transitivePeerDependencies:
+      - effect
+
+  '@dxos/crypto@0.8.3':
+    dependencies:
+      '@dxos/invariant': 0.8.3
+      '@dxos/keys': 0.8.3
+      '@dxos/node-std': 0.8.3
+      hypercore-crypto: 2.3.2
+
+  '@dxos/debug@0.8.3':
+    dependencies:
+      '@dxos/node-std': 0.8.3
+
+  '@dxos/effect@0.8.3(effect@3.19.16)':
+    dependencies:
+      '@dxos/invariant': 0.8.3
+      '@dxos/node-std': 0.8.3
+      '@dxos/util': 0.8.3
+      effect: 3.19.16
+      jsonpath-plus: 10.2.0
+
+  '@dxos/invariant@0.8.3': {}
+
+  '@dxos/keyring@0.8.3(effect@3.19.16)':
+    dependencies:
+      '@dxos/async': 0.8.3
+      '@dxos/codec-protobuf': 0.8.3
+      '@dxos/crypto': 0.8.3
+      '@dxos/debug': 0.8.3
+      '@dxos/invariant': 0.8.3
+      '@dxos/keys': 0.8.3
+      '@dxos/node-std': 0.8.3
+      '@dxos/protocols': 0.8.3(effect@3.19.16)
+      '@dxos/random-access-storage': 0.8.3(effect@3.19.16)
+      '@dxos/util': 0.8.3
+    transitivePeerDependencies:
+      - effect
+
+  '@dxos/keys@0.8.3':
+    dependencies:
+      '@dxos/debug': 0.8.3
+      '@dxos/invariant': 0.8.3
+      '@dxos/node-std': 0.8.3
+      effect: 3.19.16
+      ulidx: 2.3.0
+
+  '@dxos/log@0.8.3':
+    dependencies:
+      '@dxos/node-std': 0.8.3
+      '@dxos/util': 0.8.3
+      chalk: 4.1.2
+      js-yaml: 4.1.1
+      lodash.defaultsdeep: 4.6.1
+      lodash.omit: 4.5.0
+
+  '@dxos/node-std@0.8.3':
+    dependencies:
+      assert: 2.0.0
+      events: 3.3.0
+      path-browserify: 1.0.1
+      readable-stream: 3.6.2
+      util: 0.12.5
+
+  '@dxos/protocols@0.8.3(effect@3.19.16)':
+    dependencies:
+      '@bufbuild/protobuf': 2.11.0
+      '@dxos/codec-protobuf': 0.8.3
+      '@dxos/effect': 0.8.3(effect@3.19.16)
+      '@dxos/invariant': 0.8.3
+      '@dxos/keys': 0.8.3
+      '@dxos/timeframe': 0.8.3
+      '@dxos/util': 0.8.3
+      effect: 3.19.16
+
+  '@dxos/random-access-storage@0.8.3(effect@3.19.16)':
+    dependencies:
+      '@dxos/async': 0.8.3
+      '@dxos/debug': 0.8.3
+      '@dxos/invariant': 0.8.3
+      '@dxos/log': 0.8.3
+      '@dxos/node-std': 0.8.3
+      '@dxos/tracing': 0.8.3(effect@3.19.16)
+      '@dxos/util': 0.8.3
+      buffer-alloc: 1.2.0
+      buffer-from: 0.1.2
+      del: 5.1.0
+      inherits: 2.0.4
+      next-tick: 1.1.0
+      once: 1.4.0
+      pify: 5.0.0
+      random-access-file: 2.2.1
+      random-access-memory: 4.1.0
+      random-access-storage: 1.4.3
+    transitivePeerDependencies:
+      - effect
+
+  '@dxos/timeframe@0.8.3':
+    dependencies:
+      '@dxos/debug': 0.8.3
+      '@dxos/keys': 0.8.3
+      '@dxos/log': 0.8.3
+      '@dxos/node-std': 0.8.3
+      '@dxos/util': 0.8.3
+
+  '@dxos/tracing@0.8.3(effect@3.19.16)':
+    dependencies:
+      '@dxos/async': 0.8.3
+      '@dxos/codec-protobuf': 0.8.3
+      '@dxos/context': 0.8.3
+      '@dxos/invariant': 0.8.3
+      '@dxos/log': 0.8.3
+      '@dxos/node-std': 0.8.3
+      '@dxos/protocols': 0.8.3(effect@3.19.16)
+      '@dxos/util': 0.8.3
+    transitivePeerDependencies:
+      - effect
+
+  '@dxos/util@0.8.3':
+    dependencies:
+      '@dxos/debug': 0.8.3
+      '@dxos/invariant': 0.8.3
+      '@dxos/keys': 0.8.3
+      '@dxos/node-std': 0.8.3
+      lodash.get: 4.4.2
+      lodash.set: 4.3.2
+
   '@dxos/wa-sqlite@0.2.1': {}
 
   '@effect-atom/atom-react@0.5.0(@effect/experimental@0.58.0(@effect/platform@0.94.4(effect@3.19.16))(effect@3.19.16)(ioredis@5.3.2))(@effect/platform@0.94.4(effect@3.19.16))(@effect/rpc@0.73.0(@effect/platform@0.94.4(effect@3.19.16))(effect@3.19.16))(effect@3.19.16)(react@19.2.3)(scheduler@0.27.0)':
@@ -41711,7 +41972,7 @@ snapshots:
       '@opentelemetry/sdk-logs': 0.205.0(@opentelemetry/api@1.9.0)
       '@opentelemetry/sdk-metrics': 2.1.0(@opentelemetry/api@1.9.0)
       '@opentelemetry/sdk-trace-base': 2.1.0(@opentelemetry/api@1.9.0)
-      protobufjs: 7.3.2
+      protobufjs: 7.5.4
 
   '@opentelemetry/otlp-transformer@0.208.0(@opentelemetry/api@1.9.0)':
     dependencies:
@@ -41722,7 +41983,7 @@ snapshots:
       '@opentelemetry/sdk-logs': 0.208.0(@opentelemetry/api@1.9.0)
       '@opentelemetry/sdk-metrics': 2.2.0(@opentelemetry/api@1.9.0)
       '@opentelemetry/sdk-trace-base': 2.2.0(@opentelemetry/api@1.9.0)
-      protobufjs: 7.3.2
+      protobufjs: 7.5.4
 
   '@opentelemetry/propagator-b3@2.0.1(@opentelemetry/api@1.9.0)':
     dependencies:
@@ -52291,6 +52552,12 @@ snapshots:
 
   jsonparse@1.3.1: {}
 
+  jsonpath-plus@10.2.0:
+    dependencies:
+      '@jsep-plugin/assignment': 1.3.0(jsep@1.4.0)
+      '@jsep-plugin/regex': 1.0.4(jsep@1.4.0)
+      jsep: 1.4.0
+
   jsonpath-plus@10.4.0:
     dependencies:
       '@jsep-plugin/assignment': 1.3.0(jsep@1.4.0)
@@ -52617,6 +52884,8 @@ snapshots:
 
   lodash.flattendeep@4.4.0: {}
 
+  lodash.get@4.4.2: {}
+
   lodash.includes@4.3.0: {}
 
   lodash.isarguments@3.1.0: {}
@@ -52641,9 +52910,13 @@ snapshots:
 
   lodash.merge@4.6.2: {}
 
+  lodash.omit@4.5.0: {}
+
   lodash.once@4.1.1: {}
 
   lodash.orderby@4.6.0: {}
+
+  lodash.set@4.3.2: {}
 
   lodash.snakecase@4.1.1: {}
 

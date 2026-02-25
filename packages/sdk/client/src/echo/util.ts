@@ -3,8 +3,9 @@
 //
 
 import { type Space } from '@dxos/client-protocol';
-import { type SpaceSyncState, getDatabaseFromObject } from '@dxos/echo-db';
+import { getDatabaseFromObject } from '@dxos/echo-db';
 import { type ObjectId, type SpaceId } from '@dxos/keys';
+import { type SpaceSyncState_PeerState } from '@dxos/protocols/buf/dxos/echo/service_pb';
 
 import { SpaceProxy } from './space-proxy';
 
@@ -62,7 +63,7 @@ export const parseId = (id?: string): { spaceId?: SpaceId; objectId?: ObjectId }
 
 export type Progress = { count: number; total: number };
 
-export type PeerSyncState = Omit<SpaceSyncState.PeerState, 'peerId'>;
+export type PeerSyncState = Omit<SpaceSyncState_PeerState, 'peerId' | '$typeName' | '$unknown'>;
 
 export type SpaceSyncStateMap = Record<SpaceId, PeerSyncState>;
 

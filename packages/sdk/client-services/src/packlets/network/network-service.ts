@@ -4,23 +4,26 @@
 
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { type EdgeConnection } from '@dxos/edge-client';
+import { PublicKey } from '@dxos/keys';
 import { type SignalManager } from '@dxos/messaging';
 import { type SwarmNetworkManager } from '@dxos/network-manager';
+import { type Client } from '@dxos/protocols';
+import { type Empty, EmptySchema, create } from '@dxos/protocols/buf';
 import {
-  type NetworkService,
   type NetworkStatus,
+  NetworkStatusSchema,
   type SubscribeSwarmStateRequest,
   type UpdateConfigRequest,
-} from '@dxos/protocols/proto/dxos/client/services';
-import { type Peer, type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
+} from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type Peer, type SwarmResponse } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import {
   type JoinRequest,
   type LeaveRequest,
   type Message,
   type QueryRequest,
-} from '@dxos/protocols/proto/dxos/edge/signal';
+} from '@dxos/protocols/buf/dxos/edge/signal_pb';
 
-export class NetworkServiceImpl implements NetworkService {
+export class NetworkServiceImpl implements Client.NetworkService {
   constructor(
     private readonly networkManager: SwarmNetworkManager,
     private readonly signalManager: SignalManager,
@@ -30,11 +33,13 @@ export class NetworkServiceImpl implements NetworkService {
   queryStatus(): Stream<NetworkStatus> {
     return new Stream<NetworkStatus>(({ ctx, next }) => {
       const update = () => {
-        next({
-          swarm: this.networkManager.connectionState,
-          connectionInfo: this.networkManager.connectionLog?.swarms,
-          signaling: this.signalManager.getStatus?.().map(({ host, state }) => ({ server: host, state })),
-        });
+        next(
+          create(NetworkStatusSchema, {
+            swarm: this.networkManager.connectionState,
+            connectionInfo: this.networkManager.connectionLog?.swarms,
+            signaling: this.signalManager.getStatus?.().map(({ host, state }) => ({ server: host, state })),
+          }),
+        );
       };
 
       this.networkManager.connectionStateChanged.on(ctx, () => update());
@@ -43,16 +48,19 @@ export class NetworkServiceImpl implements NetworkService {
     });
   }
 
-  async updateConfig(request: UpdateConfigRequest): Promise<void> {
+  async updateConfig(request: UpdateConfigRequest): Promise<Empty> {
     await this.networkManager.setConnectionState(request.swarm);
+    return create(EmptySchema);
   }
 
-  async joinSwarm(request: JoinRequest): Promise<void> {
-    return this.signalManager.join(request);
+  async joinSwarm(request: JoinRequest): Promise<Empty> {
+    await this.signalManager.join(request);
+    return create(EmptySchema);
   }
 
-  async leaveSwarm(request: LeaveRequest): Promise<void> {
-    return this.signalManager.leave(request);
+  async leaveSwarm(request: LeaveRequest): Promise<Empty> {
+    await this.signalManager.leave(request);
+    return create(EmptySchema);
   }
 
   async querySwarm(request: QueryRequest): Promise<SwarmResponse> {
@@ -62,21 +70,22 @@ export class NetworkServiceImpl implements NetworkService {
   subscribeSwarmState(request: SubscribeSwarmStateRequest): Stream<SwarmResponse> {
     return new Stream<SwarmResponse>(({ ctx, next }) => {
       this.signalManager.swarmState?.on(ctx, (state) => {
-        if (request.topic.equals(state.swarmKey)) {
+        if (request.topic?.data && state.swarmKey && PublicKey.from(request.topic.data).toHex() === state.swarmKey) {
           next(state);
         }
       });
     });
   }
 
-  async sendMessage(message: Message): Promise<void> {
-    return this.signalManager.sendMessage(message);
+  async sendMessage(message: Message): Promise<Empty> {
+    await this.signalManager.sendMessage(message);
+    return create(EmptySchema);
   }
 
   subscribeMessages(peer: Peer): Stream<Message> {
     return new Stream<Message>(({ ctx, next }) => {
       this.signalManager.onMessage.on(ctx, (message) => {
-        if (message.recipient.peerKey === peer.peerKey) {
+        if (message.recipient?.peerKey === peer.peerKey) {
           next(message);
         }
       });

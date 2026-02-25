@@ -11,6 +11,7 @@ import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context'
 import type { SpecificCredential } from '@dxos/credentials';
 import { timed, warnAfterTimeout } from '@dxos/debug';
 import {
+  type ControlPipelinePayload,
   type DatabaseRoot,
   type EchoHost,
   type MetadataStore,
@@ -25,20 +26,21 @@ import { type Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { CancelledError, SystemError } from '@dxos/protocols';
-import {
-  type CreateEpochRequest,
-  type Space as SpaceProto,
-  SpaceState,
-} from '@dxos/protocols/proto/dxos/client/services';
+import { timestampFromDate } from '@dxos/protocols/buf';
+import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { type CreateEpochRequest_Migration, type Space_Metrics } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type CreateEpochRequest } from '@dxos/protocols/proto/dxos/client/services';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type SpaceCache } from '@dxos/protocols/proto/dxos/echo/metadata';
 import {
-  AdmittedFeed,
   type Credential,
+  SpaceMember_Role,
+} from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import {
+  AdmittedFeed,
   type Epoch,
   type ProfileDocument,
-  SpaceMember,
 } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { type Gossip, type Presence } from '@dxos/teleport-extension-gossip';
@@ -90,7 +92,7 @@ export type DataSpaceProps = {
 };
 
 export type CreateEpochOptions = {
-  migration?: CreateEpochRequest.Migration;
+  migration?: CreateEpochRequest.Migration | CreateEpochRequest_Migration;
   newAutomergeRoot?: string;
 };
 
@@ -133,7 +135,7 @@ export class DataSpace {
   public readonly postOpen = new CallbackCollection<AsyncCallback<void>>();
   public readonly preClose = new CallbackCollection<AsyncCallback<void>>();
 
-  public metrics: SpaceProto.Metrics = {};
+  public metrics: Space_Metrics = {} as Space_Metrics;
 
   constructor(params: DataSpaceProps) {
     this._inner = params.inner;
@@ -159,7 +161,7 @@ export class DataSpace {
         new ComplexSet(
           PublicKey.hash,
           Array.from(this._inner.spaceState.members.values())
-            .filter((member) => member.role !== SpaceMember.Role.REMOVED)
+            .filter((member) => member.role !== SpaceMember_Role.REMOVED)
             .map((member) => member.key),
         ),
       update: this._inner.stateUpdate,
@@ -255,8 +257,8 @@ export class DataSpace {
     this._state = SpaceState.SPACE_CONTROL_ONLY;
     log('new state', { state: SpaceState[this._state] });
     this.stateUpdate.emit();
-    this.metrics = {};
-    this.metrics.open = new Date();
+    this.metrics = {} as Space_Metrics;
+    this.metrics.open = timestampFromDate(new Date());
 
     await this.postOpen.callSerial();
   }
@@ -308,7 +310,7 @@ export class DataSpace {
   initializeDataPipelineAsync(): void {
     scheduleTask(this._ctx, async () => {
       try {
-        this.metrics.pipelineInitBegin = new Date();
+        this.metrics.pipelineInitBegin = timestampFromDate(new Date());
         await this.initializeDataPipeline();
       } catch (err) {
         if (err instanceof CancelledError || err instanceof ContextDisposedError) {
@@ -322,7 +324,7 @@ export class DataSpace {
         this.error = err as Error;
         this.stateUpdate.emit();
       } finally {
-        this.metrics.ready = new Date();
+        this.metrics.ready = timestampFromDate(new Date());
       }
     });
   }
@@ -383,7 +385,7 @@ export class DataSpace {
       breakOnStall: false,
     });
 
-    this.metrics.controlPipelineReady = new Date();
+    this.metrics.controlPipelineReady = timestampFromDate(new Date());
 
     await this._createWritableFeeds();
     log('writable feeds created');
@@ -391,7 +393,7 @@ export class DataSpace {
 
     if (!this.notarizationPlugin.hasWriter) {
       this.notarizationPlugin.setWriter(
-        createMappedFeedWriter<Credential, FeedMessage.Payload>(
+        createMappedFeedWriter<Credential, ControlPipelinePayload>(
           (credential) => ({
             credential: { credential },
           }),
@@ -541,13 +543,15 @@ export class DataSpace {
       echoHost: this._echoHost,
       spaceId: this.id,
       spaceKey: this.key,
-      migration: options.migration,
+      migration: options.migration as CreateEpochRequest_Migration,
       currentRoot: this._automergeSpaceState.rootUrl ?? null,
       newAutomergeRoot: options.newAutomergeRoot,
     });
 
     const epoch: Epoch = {
-      previousId: this._automergeSpaceState.lastEpoch?.id,
+      previousId: this._automergeSpaceState.lastEpoch?.id
+        ? PublicKey.from(this._automergeSpaceState.lastEpoch.id.data)
+        : undefined,
       number: (this._automergeSpaceState.lastEpoch?.subject.assertion.number ?? -1) + 1,
       timeframe: this._automergeSpaceState.lastEpoch?.subject.assertion.timeframe ?? new Timeframe(),
       automergeRoot: newRoot ?? this._automergeSpaceState.rootUrl,

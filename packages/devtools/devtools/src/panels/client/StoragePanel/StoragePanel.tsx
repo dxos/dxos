@@ -6,6 +6,7 @@ import bytes from 'bytes';
 import React, { type FC, type ReactNode, useEffect, useMemo, useState } from 'react';
 
 import { log } from '@dxos/log';
+import { toPublicKey } from '@dxos/protocols/buf';
 import {
   type GetBlobsResponse,
   type GetSnapshotsResponse,
@@ -73,9 +74,14 @@ const getInfoTree = (
             iconName: 'ph--queue--regular',
             Element: <TreeItemText primary='feeds' secondary={feedInfo.feeds?.length ?? 0} />,
             items: feedInfo.feeds?.map((feed) => ({
-              id: feed.feedKey.toHex(),
+              id: feed.feedKey ? toPublicKey(feed.feedKey).toHex() : '',
               iconName: 'ph--rows--regular',
-              Element: <TreeItemText primary={feed.feedKey.truncate()} secondary={bytes.format(feed.bytes)} />,
+              Element: (
+                <TreeItemText
+                  primary={feed.feedKey ? toPublicKey(feed.feedKey).truncate() : ''}
+                  secondary={bytes.format(feed.bytes)}
+                />
+              ),
               value: { kind: 'feed', feed },
             })),
           },
@@ -115,7 +121,7 @@ export const StoragePanel = () => {
   const [storageInfo, setStorageInfo] = useState<StorageInfo | undefined>();
   const [snapshotInfo, setSnapshotInfo] = useState<GetSnapshotsResponse | undefined>();
   const [blobsInfo, setBlobsInfo] = useState<GetBlobsResponse | undefined>();
-  const feeds = useStream(() => devtoolsHost.subscribeToFeeds({}), {}, []);
+  const feeds = useStream(() => devtoolsHost.subscribeToFeeds({} as any), {} as any, []);
   const client = useClient();
   const services = client.services.services;
   if (!services) {
@@ -133,21 +139,21 @@ export const StoragePanel = () => {
     let blobsInfo: GetBlobsResponse | undefined;
 
     try {
-      storageInfo = await devtoolsHost.getStorageInfo();
+      storageInfo = await devtoolsHost.getStorageInfo({} as any);
     } catch (err) {
       log.catch(err);
       retry = true;
     }
 
     try {
-      snapshotInfo = await devtoolsHost.getSnapshots();
+      snapshotInfo = await devtoolsHost.getSnapshots({} as any);
     } catch (err) {
       log.catch(err);
       retry = true;
     }
 
     try {
-      blobsInfo = await devtoolsHost.getBlobs();
+      blobsInfo = (await devtoolsHost.getBlobs({} as any)) as any;
     } catch (err) {
       log.catch(err);
       retry = true;
@@ -174,7 +180,7 @@ export const StoragePanel = () => {
           storageUsage: 0,
           usageQuota: 0,
         },
-        feeds,
+        feeds as any,
         snapshotInfo?.snapshots ?? [],
         blobsInfo?.blobs ?? [],
       ),

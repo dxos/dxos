@@ -8,8 +8,8 @@ import { describe, test } from 'vitest';
 
 import { randomBytes } from '@dxos/crypto';
 import { Keyring } from '@dxos/keyring';
-import { buf } from '@dxos/protocols/buf';
-import { PresentationSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { buf, create } from '@dxos/protocols/buf';
+import { ChainSchema, PresentationSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { schema } from '@dxos/protocols/proto';
 
 import { createCredential } from '../credentials';
@@ -48,16 +48,17 @@ describe('json encoding', () => {
     });
 
     const presentation = await signPresentation({
-      presentation: { credentials: [serviceAccessCredential] },
+      presentation: create(PresentationSchema, { credentials: [serviceAccessCredential] }),
       signer: keyring,
       signerKey: device,
-      chain: { credential: deviceAuthorization },
+      chain: create(ChainSchema, { credential: deviceAuthorization }),
       nonce: randomBytes(32),
     });
 
     console.log('original (codec-protobuf object):', inspect(presentation, false, null, true));
 
-    const json = schema.getCodecForType('dxos.halo.credentials.Presentation').encodeToJson(presentation);
+    // TODO(dmaretskyi): This test exercises codec interop between buf and protobuf.js; types differ at boundary.
+    const json = schema.getCodecForType('dxos.halo.credentials.Presentation').encodeToJson(presentation as never);
     console.log('json (pb.js):', inspect(json, false, null, true));
 
     // TODO(dmaretskyi): Fails because protobuf.js encodes timestamp as object.

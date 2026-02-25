@@ -24,7 +24,8 @@ import { log } from '@dxos/log';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { IndexKind, useSpace } from '@dxos/react-client/echo';
+import { useSpace } from '@dxos/react-client/echo';
+import { IndexKind_Kind } from '@dxos/protocols/buf/dxos/echo/indexing_pb';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { TestSchema } from '@dxos/schema/testing';
 import { Message, Organization, Person } from '@dxos/types';
@@ -214,9 +215,9 @@ const meta = {
                   enabled: true,
                   indexes: [
                     //
-                    { kind: IndexKind.Kind.SCHEMA_MATCH },
-                    { kind: IndexKind.Kind.GRAPH },
-                    { kind: IndexKind.Kind.VECTOR },
+                    { kind: IndexKind_Kind.SCHEMA_MATCH },
+                    { kind: IndexKind_Kind.GRAPH },
+                    { kind: IndexKind_Kind.VECTOR },
                   ],
                 }),
               );

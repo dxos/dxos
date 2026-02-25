@@ -5,6 +5,7 @@
 import { type Trigger, scheduleTask } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { ProtocolError } from '@dxos/protocols';
+import { bufToProto } from '@dxos/protocols/buf';
 import { schema } from '@dxos/protocols/proto';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import {
@@ -83,7 +84,7 @@ export class CredentialServerExtension extends RpcExtension<
           if (!memberInfo?.credential) {
             throw new ProtocolError({ message: 'Space member not found.', context: { ...request } });
           }
-          return { admissionCredential: memberInfo.credential };
+          return { admissionCredential: bufToProto(memberInfo.credential) };
         },
       },
     };

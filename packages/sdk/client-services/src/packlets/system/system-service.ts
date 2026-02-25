@@ -5,15 +5,21 @@
 import { type Event } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { type Config } from '@dxos/config';
+import { type Client } from '@dxos/protocols';
+import { type Empty, EmptySchema, create, timestampFromDate } from '@dxos/protocols/buf';
 import {
-  GetDiagnosticsRequest,
+  type GetDiagnosticsRequest,
+  GetDiagnosticsRequest_KEY_OPTION,
+  type GetDiagnosticsResponse,
+  GetDiagnosticsResponseSchema,
   type Platform,
   type QueryStatusRequest,
   type QueryStatusResponse,
-  type SystemService,
+  QueryStatusResponseSchema,
   type SystemStatus,
   type UpdateStatusRequest,
-} from '@dxos/protocols/proto/dxos/client/services';
+} from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type Config as ConfigProto, ConfigSchema } from '@dxos/protocols/buf/dxos/config_pb';
 import { type MaybePromise, jsonKeyReplacer } from '@dxos/util';
 
 import { type Diagnostics } from '../diagnostics';
@@ -28,7 +34,7 @@ export type SystemServiceOptions = {
   onReset: () => MaybePromise<void>;
 };
 
-export class SystemServiceImpl implements SystemService {
+export class SystemServiceImpl implements Client.SystemService {
   private readonly _config?: SystemServiceOptions['config'];
   private readonly _statusUpdate: SystemServiceOptions['statusUpdate'];
   private readonly _getCurrentStatus: SystemServiceOptions['getCurrentStatus'];
@@ -52,42 +58,50 @@ export class SystemServiceImpl implements SystemService {
     this._onReset = onReset;
   }
 
-  async getConfig() {
-    return (await this._config?.())?.values ?? {};
+  async getConfig(): Promise<ConfigProto> {
+    const config = await this._config?.();
+    // Config values from @dxos/config are compatible with buf Config schema.
+    return create(ConfigSchema, {
+      version: config?.values.version,
+      package: config?.values.package,
+      runtime: config?.values.runtime as never,
+    });
   }
 
   /**
    * NOTE: Since this is serialized as a JSON object, we allow the option to serialize keys.
    */
-  async getDiagnostics({ keys }: GetDiagnosticsRequest = {}) {
+  async getDiagnostics(request: GetDiagnosticsRequest): Promise<GetDiagnosticsResponse> {
     const diagnostics = await this._getDiagnostics();
-    return {
-      timestamp: new Date(),
+    return create(GetDiagnosticsResponseSchema, {
+      timestamp: timestampFromDate(new Date()),
       diagnostics: JSON.parse(
         JSON.stringify(
           diagnostics,
           jsonKeyReplacer({
-            truncate: keys === GetDiagnosticsRequest.KEY_OPTION.TRUNCATE,
-            humanize: keys === GetDiagnosticsRequest.KEY_OPTION.HUMANIZE,
+            truncate: request.keys === GetDiagnosticsRequest_KEY_OPTION.TRUNCATE,
+            humanize: request.keys === GetDiagnosticsRequest_KEY_OPTION.HUMANIZE,
           }),
         ),
       ),
-    };
+    });
   }
 
   async getPlatform(): Promise<Platform> {
     return getPlatform();
   }
 
-  async updateStatus({ status }: UpdateStatusRequest): Promise<void> {
+  async updateStatus({ status }: UpdateStatusRequest): Promise<Empty> {
     await this._onUpdateStatus(status);
+    return create(EmptySchema);
   }
 
   // TODO(burdon): Standardize interval option in stream request?
-  queryStatus({ interval = 3_000 }: QueryStatusRequest = {}): Stream<QueryStatusResponse> {
+  queryStatus(request: QueryStatusRequest): Stream<QueryStatusResponse> {
+    const interval = request.interval ?? 3_000;
     return new Stream(({ next }) => {
       const update = () => {
-        next({ status: this._getCurrentStatus() });
+        next(create(QueryStatusResponseSchema, { status: this._getCurrentStatus() }));
       };
 
       update();
@@ -100,7 +114,8 @@ export class SystemServiceImpl implements SystemService {
     });
   }
 
-  async reset(): Promise<void> {
+  async reset(): Promise<Empty> {
     await this._onReset();
+    return create(EmptySchema);
   }
 }

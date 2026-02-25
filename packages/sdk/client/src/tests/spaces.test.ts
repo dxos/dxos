@@ -15,11 +15,13 @@ import { getObjectCore } from '@dxos/echo-db';
 import { EncodedReference } from '@dxos/echo-protocol';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { decodePublicKey } from '@dxos/protocols/buf';
+import { type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { range } from '@dxos/util';
 
 import { Client } from '../client';
 import { SpaceState, getSpace } from '../echo';
-import { CreateEpochRequest } from '../halo';
+import { CreateEpochRequest_Migration } from '../halo';
 import { TestSchema } from '../testing';
 import {
   type CreateInitializedClientsOptions,
@@ -72,7 +74,7 @@ describe('Spaces', () => {
     await client.initialize();
     onTestFinished(() => client.destroy());
 
-    await client.halo.createIdentity({ displayName: 'test-user' });
+    await client.halo.createIdentity({ displayName: 'test-user' } as ProfileDocument);
 
     // TODO(burdon): Extend basic queries.
     const space = await client.spaces.create();
@@ -130,7 +132,7 @@ describe('Spaces', () => {
     const [, { invitation: guestInvitation }] = await Promise.all(
       performInvitation({ host: space1, guest: client2.spaces }),
     );
-    const space2 = await waitForSpace(client2, guestInvitation!.spaceKey!, {
+    const space2 = await waitForSpace(client2, decodePublicKey(guestInvitation!.spaceKey!), {
       ready: true,
     });
 
@@ -170,8 +172,8 @@ describe('Spaces', () => {
     onTestFinished(() => client1.destroy());
     await client2.initialize();
     onTestFinished(() => client2.destroy());
-    await client1.halo.createIdentity({ displayName: 'Peer 1' });
-    await client2.halo.createIdentity({ displayName: 'Peer 2' });
+    await client1.halo.createIdentity({ displayName: 'Peer 1' } as ProfileDocument);
+    await client2.halo.createIdentity({ displayName: 'Peer 2' } as ProfileDocument);
     const space1 = await client1.spaces.create();
     await space1.waitUntilReady();
 
@@ -294,7 +296,7 @@ describe('Spaces', () => {
 
     log.info('ready');
 
-    await client1.halo.createIdentity({ displayName: 'test-user' });
+    await client1.halo.createIdentity({ displayName: 'test-user' } as ProfileDocument);
 
     const space1 = await client1.spaces.create();
     const obj = space1.db.add(createObject({ data: 'test' }));
@@ -532,7 +534,7 @@ describe('Spaces', () => {
 
     const space = await client.spaces.create();
     await space.internal.createEpoch({
-      migration: CreateEpochRequest.Migration.PRUNE_AUTOMERGE_ROOT_HISTORY,
+      migration: CreateEpochRequest_Migration.PRUNE_AUTOMERGE_ROOT_HISTORY,
     });
     const epochs = await space.internal.getEpochs();
     expect(epochs.length).to.eq(2);

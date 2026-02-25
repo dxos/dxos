@@ -8,9 +8,10 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
-import { type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
-import { type JoinRequest, type LeaveRequest, type QueryRequest } from '@dxos/protocols/proto/dxos/edge/signal';
-import { SignalState } from '@dxos/protocols/proto/dxos/mesh/signal';
+import { bufAnyToProtoAny } from '@dxos/protocols/buf';
+import { type SwarmResponse } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import { type JoinRequest, type LeaveRequest, type QueryRequest } from '@dxos/protocols/buf/dxos/edge/signal_pb';
+import { SignalState } from '@dxos/protocols/buf/dxos/mesh/signal_pb';
 
 import {
   type Message,
@@ -174,16 +175,16 @@ export class SignalClient extends Resource implements SignalClientMethods {
   }
 
   async join(args: JoinRequest): Promise<void> {
-    log('joining', { topic: args.topic, peerId: args.peer.peerKey });
+    log('joining', { topic: args.topic, peerId: args.peer?.peerKey });
     this._monitor.recordJoin();
-    this.localState.join({ topic: args.topic, peerId: PublicKey.from(args.peer.peerKey) });
+    this.localState.join({ topic: PublicKey.from(args.topic!.data), peerId: PublicKey.from(args.peer!.peerKey) });
     this._reconcileTask?.schedule();
   }
 
   async leave(args: LeaveRequest): Promise<void> {
-    log('leaving', { topic: args.topic, peerId: args.peer.peerKey });
+    log('leaving', { topic: args.topic, peerId: args.peer?.peerKey });
     this._monitor.recordLeave();
-    this.localState.leave({ topic: args.topic, peerId: PublicKey.from(args.peer.peerKey) });
+    this.localState.leave({ topic: PublicKey.from(args.topic!.data), peerId: PublicKey.from(args.peer!.peerKey) });
   }
 
   async query(params: QueryRequest): Promise<SwarmResponse> {
@@ -194,12 +195,12 @@ export class SignalClient extends Resource implements SignalClientMethods {
     return this._monitor.recordMessageSending(msg, async () => {
       await this._clientReady.wait();
       invariant(this._state === SignalState.CONNECTED, 'Not connected to Signal Server');
-      invariant(msg.author.peerKey, 'Author key required');
-      invariant(msg.recipient.peerKey, 'Recipient key required');
+      invariant(msg.author?.peerKey, 'Author key required');
+      invariant(msg.recipient?.peerKey, 'Recipient key required');
       await this._client!.sendMessage({
         author: PublicKey.from(msg.author.peerKey),
         recipient: PublicKey.from(msg.recipient.peerKey),
-        payload: msg.payload,
+        payload: bufAnyToProtoAny(msg.payload)!,
       });
     });
   }

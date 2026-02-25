@@ -4,7 +4,7 @@
 
 import { MulticastObservable } from '@dxos/async';
 import { PublicKey, type PublicKeyLike } from '@dxos/client';
-import { HaloSpaceMember, type SpaceMember } from '@dxos/client/echo';
+import { type SpaceMember, SpaceMember_Role } from '@dxos/client/echo';
 import { useMulticastObservable } from '@dxos/react-hooks';
 
 import { useSpaces } from './useSpaces';
@@ -18,5 +18,5 @@ export const useMembers = (spaceKey: PublicKeyLike | undefined): SpaceMember[] =
 
   // EMPTY_OBSERVABLE needs to be a stable reference to avoid re-subscribing on every render.
   const members = useMulticastObservable(space?.members ?? MulticastObservable.empty()) ?? [];
-  return members.filter((member) => member.role !== HaloSpaceMember.Role.REMOVED);
+  return members.filter((member) => member.role !== SpaceMember_Role.REMOVED);
 };

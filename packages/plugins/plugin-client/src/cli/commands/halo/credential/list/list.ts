@@ -12,24 +12,26 @@ import * as Option from 'effect/Option';
 import { CommandConfig, Common, FormBuilder, getSpace, printList, spaceIdWithDefault } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import type { Credential } from '@dxos/client/halo';
+import { getCredentialAssertion } from '@dxos/credentials';
 import { type Key } from '@dxos/echo';
+import { decodePublicKey } from '@dxos/protocols/buf';
 
 const mapCredentials = (credentials: Credential[]) => {
   return credentials.map((credential) => ({
-    id: credential.id?.toHex() ?? '<unknown>',
-    issuer: credential.issuer?.toHex() ?? '<unknown>',
-    subject: credential.subject?.id?.toHex() ?? '<unknown>',
-    type: credential.subject.assertion['@type'],
-    assertion: credential.subject.assertion,
+    id: credential.id ? decodePublicKey(credential.id).toHex() : '<unknown>',
+    issuer: credential.issuer ? decodePublicKey(credential.issuer).toHex() : '<unknown>',
+    subject: credential.subject?.id ? decodePublicKey(credential.subject.id).toHex() : '<unknown>',
+    type: credential.subject ? getCredentialAssertion(credential)['@type'] : undefined,
+    assertion: credential.subject?.assertion,
   }));
 };
 
 const printCredential = (credential: Credential) => {
-  const type = credential.subject.assertion['@type'] ?? '<unknown>';
+  const type = credential.subject ? getCredentialAssertion(credential)['@type'] : '<unknown>';
   return FormBuilder.make({ title: type }).pipe(
-    FormBuilder.option('id', Option.fromNullable(credential.id?.truncate())),
-    FormBuilder.option('issuer', Option.fromNullable(credential.issuer?.truncate())),
-    FormBuilder.option('subject', Option.fromNullable(credential.subject?.id?.truncate())),
+    FormBuilder.option('id', Option.fromNullable(credential.id ? decodePublicKey(credential.id).truncate() : undefined)),
+    FormBuilder.option('issuer', Option.fromNullable(credential.issuer ? decodePublicKey(credential.issuer).truncate() : undefined)),
+    FormBuilder.option('subject', Option.fromNullable(credential.subject?.id ? decodePublicKey(credential.subject.id).truncate() : undefined)),
     FormBuilder.build,
   );
 };

@@ -14,3 +14,8 @@ export * from './tracing.ts';
 export type * from './types.ts';
 export * as FunctionProtocol from './FunctionProtocol.ts';
 export * as FeedProtocol from './FeedProtocol.ts';
+export * as Rpc from './Rpc.ts';
+export * as Echo from './Echo.ts';
+export * as Halo from './Halo.ts';
+export * as Client from './Client.ts';
+export * as Mesh from './Mesh.ts';

@@ -10,7 +10,7 @@ import { Keyring } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { AdmittedFeed_Designation } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { Timeframe } from '@dxos/timeframe';
 
@@ -89,7 +89,8 @@ describe('space/control-pipeline', () => {
     {
       await controlPipeline.pipeline.writer!.write({
         credential: {
-          credential: await createCredential({
+          // buf Credential cast to proto Credential for feed encoding.
+          credential: (await createCredential({
             signer: keyring,
             issuer: identityKey,
             subject: controlFeed2.key,
@@ -98,9 +99,9 @@ describe('space/control-pipeline', () => {
               spaceKey,
               identityKey,
               deviceKey,
-              designation: AdmittedFeed.Designation.CONTROL,
+              designation: AdmittedFeed_Designation.CONTROL,
             },
-          }),
+          })),
         },
       });
 
@@ -113,7 +114,8 @@ describe('space/control-pipeline', () => {
     {
       await controlPipeline.pipeline.writer!.write({
         credential: {
-          credential: await createCredential({
+          // buf Credential cast to proto Credential for feed encoding.
+          credential: (await createCredential({
             signer: keyring,
             issuer: identityKey,
             subject: dataFeed1.key,
@@ -122,9 +124,9 @@ describe('space/control-pipeline', () => {
               spaceKey,
               identityKey,
               deviceKey,
-              designation: AdmittedFeed.Designation.DATA,
+              designation: AdmittedFeed_Designation.DATA,
             },
-          }),
+          })),
         },
       });
 
@@ -150,7 +152,7 @@ describe('space/control-pipeline', () => {
                 spaceKey,
                 identityKey,
                 deviceKey,
-                designation: AdmittedFeed.Designation.DATA,
+                designation: AdmittedFeed_Designation.DATA,
               },
             }),
           },

@@ -8,10 +8,14 @@ import { type PublicKey } from '@dxos/client';
 import {
   type AuthenticatingInvitationObservable,
   type CancellableInvitationObservable,
-  Invitation,
+  type Invitation,
   InvitationEncoder,
+  Invitation_AuthMethod,
+  Invitation_State,
+  type Invitation_Type,
 } from '@dxos/client/invitations';
 import { log } from '@dxos/log';
+import { decodePublicKey } from '@dxos/protocols/buf';
 
 export type InvitationResult = {
   spaceKey: PublicKey | null;
@@ -21,8 +25,8 @@ export type InvitationResult = {
 };
 
 interface InvitationReducerState {
-  status: Invitation.State; // TODO(burdon): Rename state.
-  haltedAt?: Invitation.State;
+  status: Invitation_State; // TODO(burdon): Rename state.
+  haltedAt?: Invitation_State;
   result: InvitationResult;
   error?: Error;
   id?: string;
@@ -30,8 +34,8 @@ interface InvitationReducerState {
   shareable?: boolean;
   invitationCode?: string;
   authCode?: string;
-  authMethod?: Invitation.AuthMethod;
-  type?: Invitation.Type;
+  authMethod?: Invitation_AuthMethod;
+  type?: Invitation_Type;
 }
 
 type InvitationPayload = { invitation: Invitation };
@@ -39,37 +43,37 @@ type InvitationPayload = { invitation: Invitation };
 export type InvitationAction =
   | ({
       status:
-        | Invitation.State.INIT
-        | Invitation.State.CONNECTED
-        | Invitation.State.READY_FOR_AUTHENTICATION
-        | Invitation.State.AUTHENTICATING;
+        | Invitation_State.INIT
+        | Invitation_State.CONNECTED
+        | Invitation_State.READY_FOR_AUTHENTICATION
+        | Invitation_State.AUTHENTICATING;
     } & InvitationPayload)
   | ({
-      status: Invitation.State.CONNECTING;
+      status: Invitation_State.CONNECTING;
       observable: CancellableInvitationObservable;
     } & InvitationPayload)
   | ({
-      status: Invitation.State.SUCCESS;
+      status: Invitation_State.SUCCESS;
       result: InvitationResult;
     } & InvitationPayload)
   | ({
-      status: Invitation.State.CANCELLED | Invitation.State.TIMEOUT;
-      haltedAt: Invitation.State;
+      status: Invitation_State.CANCELLED | Invitation_State.TIMEOUT;
+      haltedAt: Invitation_State;
     } & InvitationPayload)
   | {
-      status: Invitation.State.ERROR;
+      status: Invitation_State.ERROR;
       error?: Error;
-      haltedAt: Invitation.State;
+      haltedAt: Invitation_State;
     };
 
 export type InvitationStatus = {
   id?: string;
   invitationCode?: string;
   authCode?: string;
-  authMethod?: Invitation.AuthMethod;
-  type?: Invitation.Type;
-  status: Invitation.State;
-  haltedAt?: Invitation.State;
+  authMethod?: Invitation_AuthMethod;
+  type?: Invitation_Type;
+  status: Invitation_State;
+  haltedAt?: Invitation_State;
   multiUse?: boolean;
   shareable?: boolean;
   result: InvitationResult;
@@ -83,7 +87,7 @@ export type InvitationStatus = {
 // Without private key, the invitation code cannot be created.
 // These invitations are only available to be accepted but not shared.
 const isShareableInvitation = (invitation: Invitation) =>
-  invitation.authMethod !== Invitation.AuthMethod.KNOWN_PUBLIC_KEY || !!invitation.guestKeypair?.privateKey;
+  invitation.authMethod !== Invitation_AuthMethod.KNOWN_PUBLIC_KEY || !!invitation.guestKeypair?.privateKey;
 
 export const useInvitationStatus = (observable?: CancellableInvitationObservable): InvitationStatus => {
   const [state, dispatch] = useReducer(
@@ -107,13 +111,13 @@ export const useInvitationStatus = (observable?: CancellableInvitationObservable
         // TODO(burdon): State.
         status: action.status,
         // `invitationObservable`, `secret`, and `result` is persisted between the status-actions that set them.
-        result: action.status === Invitation.State.SUCCESS ? action.result : prev.result,
+        result: action.status === Invitation_State.SUCCESS ? action.result : prev.result,
         // `error` gets set each time we enter the error state
-        ...(action.status === Invitation.State.ERROR && { error: action.error }),
+        ...(action.status === Invitation_State.ERROR && { error: action.error }),
         // `haltedAt` gets set on only the first error/cancelled/timeout action and reset on any others.
-        ...((action.status === Invitation.State.ERROR ||
-          action.status === Invitation.State.CANCELLED ||
-          action.status === Invitation.State.TIMEOUT) && {
+        ...((action.status === Invitation_State.ERROR ||
+          action.status === Invitation_State.CANCELLED ||
+          action.status === Invitation_State.TIMEOUT) && {
           haltedAt: typeof prev.haltedAt === 'undefined' ? action.haltedAt : prev.haltedAt,
         }),
       };
@@ -122,7 +126,7 @@ export const useInvitationStatus = (observable?: CancellableInvitationObservable
     (_arg: null): InvitationReducerState => {
       const invitation = observable?.get();
       return {
-        status: Invitation.State.INIT,
+        status: Invitation_State.INIT,
         result: { spaceKey: null, identityKey: null, swarmKey: null, target: null },
         id: invitation?.invitationId,
         multiUse: invitation?.multiUse,
@@ -140,10 +144,10 @@ export const useInvitationStatus = (observable?: CancellableInvitationObservable
   useEffect(() => {
     const update = (invitation: Invitation) => {
       switch (invitation.state) {
-        case Invitation.State.INIT:
-        case Invitation.State.CONNECTED:
-        case Invitation.State.READY_FOR_AUTHENTICATION:
-        case Invitation.State.AUTHENTICATING: {
+        case Invitation_State.INIT:
+        case Invitation_State.CONNECTED:
+        case Invitation_State.READY_FOR_AUTHENTICATION:
+        case Invitation_State.AUTHENTICATING: {
           dispatch({
             invitation,
             status: invitation.state,
@@ -151,22 +155,22 @@ export const useInvitationStatus = (observable?: CancellableInvitationObservable
           break;
         }
 
-        case Invitation.State.SUCCESS: {
+        case Invitation_State.SUCCESS: {
           dispatch({
             invitation,
             status: invitation.state,
             result: {
-              spaceKey: invitation.spaceKey || null,
-              identityKey: invitation.identityKey || null,
-              swarmKey: invitation.swarmKey || null,
+              spaceKey: invitation.spaceKey ? decodePublicKey(invitation.spaceKey) : null,
+              identityKey: invitation.identityKey ? decodePublicKey(invitation.identityKey) : null,
+              swarmKey: invitation.swarmKey ? decodePublicKey(invitation.swarmKey) : null,
               target: invitation.target || null,
             },
           });
           break;
         }
 
-        case Invitation.State.CANCELLED:
-        case Invitation.State.TIMEOUT: {
+        case Invitation_State.CANCELLED:
+        case Invitation_State.TIMEOUT: {
           dispatch({ invitation, status: invitation.state, haltedAt: state.status });
           break;
         }
@@ -174,7 +178,7 @@ export const useInvitationStatus = (observable?: CancellableInvitationObservable
     };
 
     const subscription = observable?.subscribe(update, (err: Error) => {
-      dispatch({ status: Invitation.State.ERROR, error: err, haltedAt: state.status });
+      dispatch({ status: Invitation_State.ERROR, error: err, haltedAt: state.status });
     });
 
     const currentState = observable?.get();
@@ -188,7 +192,7 @@ export const useInvitationStatus = (observable?: CancellableInvitationObservable
   // Return memoized callbacks & values.
 
   const connect = useCallback((observable: CancellableInvitationObservable) => {
-    dispatch({ invitation: observable.get(), status: Invitation.State.CONNECTING, observable });
+    dispatch({ invitation: observable.get(), status: Invitation_State.CONNECTING, observable });
   }, []);
 
   const authenticate = useCallback(

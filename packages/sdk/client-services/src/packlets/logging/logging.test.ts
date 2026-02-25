@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { LogLevel, log } from '@dxos/log';
-import { type LogEntry } from '@dxos/protocols/proto/dxos/client/services';
+import { type LogEntry } from '@dxos/protocols/buf/dxos/client/logging_pb';
 
 import { LoggingServiceImpl } from './logging-service';
 
@@ -24,7 +24,7 @@ describe('LoggingService', () => {
 
   test('queryLogs streams logs', async () => {
     const trigger = new Trigger<LogEntry>();
-    loggingService.queryLogs({}).subscribe((entry) => {
+    loggingService.queryLogs({} as never).subscribe((entry) => {
       trigger.wake(entry);
     });
     const message = 'Hello World!';
@@ -36,7 +36,7 @@ describe('LoggingService', () => {
 
   test('queryLogs filters logs', async () => {
     const trigger = new Trigger<LogEntry>();
-    loggingService.queryLogs({ filters: [{ level: LogLevel.ERROR }] }).subscribe((entry) => {
+    loggingService.queryLogs({ filters: [{ level: LogLevel.ERROR }] } as never).subscribe((entry) => {
       trigger.wake(entry);
     });
     log('debugging something');

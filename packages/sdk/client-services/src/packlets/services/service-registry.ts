@@ -2,19 +2,23 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type ServiceBundle } from '@dxos/rpc';
+import { type Rpc } from '@dxos/protocols';
+import { type GenService, type GenServiceMethods } from '@dxos/protocols/buf';
 
 /**
  * Registry of operational services.
  */
-export class ServiceRegistry<Services> {
+export class ServiceRegistry<
+  Services,
+  Descriptors extends Record<string, GenService<GenServiceMethods>> = Record<string, GenService<GenServiceMethods>>,
+> {
   // prettier-ignore
   constructor (
-    private readonly _serviceBundle: ServiceBundle<Services>,
+    private readonly _serviceBundle: Rpc.BufServiceBundle<Descriptors>,
     private _handlers: Partial<Services> = {}
   ) {}
 
-  get descriptors() {
+  get descriptors(): Rpc.BufServiceBundle<Descriptors> {
     return this._serviceBundle;
   }
 

@@ -8,6 +8,8 @@ import { test } from 'vitest';
 
 import { todo } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
+import { create } from '@dxos/protocols/buf';
+import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { ComplexMap, ComplexSet, range } from '@dxos/util';
 
 import { type SwarmNetworkManager } from '../network-manager';
@@ -120,10 +122,10 @@ export const propertyTestSuite = () => {
         // const protocol = createProtocolFactory(model.topic, this.peerId, [presence]);
 
         await peer.networkManager.joinSwarm({
-          peerInfo: {
+          peerInfo: create(PeerSchema, {
             peerKey: this.peerId.toHex(),
             identityKey: this.peerId.toHex(),
-          },
+          }),
           topic: model.topic,
           protocolProvider: todo(),
           topology: new FullyConnectedTopology(),
