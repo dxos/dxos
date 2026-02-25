@@ -15,6 +15,8 @@ const attentionGlyphStyles = mx(
   '[data-attention=true]_&:text-accent-surface-text',
   '[aria-current][data-attention=true]_&:bg-accent-surface',
   '[aria-current][data-attention=true]_&:text-accent-surface-text',
+  '[aria-selected="true"][data-attention=true]_&:bg-accent-surface',
+  '[aria-selected="true"][data-attention=true]_&:text-accent-surface-text',
 );
 
 const presenceIconStyles = mx('w-3 h-3');
