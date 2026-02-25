@@ -9,8 +9,8 @@
     font-synthesis: none;
     font-variation-settings: 'wght' 400,
     'slnt' 0;
-    scroll-padding-block-start: theme(spacing.14);
-    scroll-padding-block-end: theme(spacing.2);
+    scroll-padding-block-start: var(--spacing-14);
+    scroll-padding-block-end: var(--spacing-2);
     @apply font-body;
   }
 

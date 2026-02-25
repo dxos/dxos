@@ -46,10 +46,15 @@ const ColorSwatch = ({ hue }: { hue: string }) => {
       </div>
       <div
         style={{
+          color: `var(--color-${hue}-border)`,
           backgroundColor: `var(--color-${hue}-fill)`,
         }}
-        className='p-2 text-sm'
-      ></div>
+        className='p-2 text-sm flex items-center'
+      >
+        <svg className='h-6 w-6'>
+          <use href='/icons.svg#ph--aperture--regular' />
+        </svg>
+      </div>
       <div
         style={{
           color: `var(--color-${hue}-surface-text)`,
