@@ -9,9 +9,9 @@ import { createEdgeIdentity } from '@dxos/client/edge';
 import { Context } from '@dxos/context';
 import { type EdgeStatus } from '@dxos/protocols';
 import {
-  type QueryEdgeStatusResponse,
   type EdgeStatus as BufEdgeStatus,
   EdgeStatus_ConnectionState,
+  type QueryEdgeStatusResponse,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { useClient } from '@dxos/react-client';
 import { IconButton } from '@dxos/react-ui';

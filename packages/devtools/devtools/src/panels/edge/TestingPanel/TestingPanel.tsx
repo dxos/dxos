@@ -8,6 +8,7 @@ import { waitForCondition } from '@dxos/async';
 import { type Space, type SpaceId } from '@dxos/client/echo';
 import { DeviceType } from '@dxos/client/halo';
 import { log } from '@dxos/log';
+import { decodePublicKey } from '@dxos/protocols/buf';
 import { useClient } from '@dxos/react-client';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 
@@ -28,7 +29,7 @@ export const TestingPanel = ({ onSpaceCreate, onScriptPluginOpen }: TestingPanel
 
   const handleSpaceCreate = async () => {
     const agentDevice = client.halo.devices.get().find((device) => device.profile?.type === DeviceType.AGENT_MANAGED);
-    const agentKey = (agentDevice?.deviceKey as any)?.toHex();
+    const agentKey = agentDevice?.deviceKey ? decodePublicKey(agentDevice.deviceKey).toHex() : undefined;
     if (!agentKey) {
       log.warn('no agent key');
       return;

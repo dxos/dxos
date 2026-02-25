@@ -13,6 +13,7 @@ import { log } from '@dxos/log';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Graph } from '@dxos/plugin-graph';
+import { decodePublicKey } from '@dxos/protocols/buf';
 import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { PublicKey } from '@dxos/react-client';
 import { SPACE_ID_LENGTH, SpaceState, parseId } from '@dxos/react-client/echo';
@@ -184,7 +185,7 @@ export default Capability.makeModule(
 
             void space
               .postMessage('viewing', {
-                identityKey: (identity.identityKey as any)?.toHex(),
+                identityKey: identity.identityKey ? decodePublicKey(identity.identityKey).toHex() : undefined,
                 attended: current,
                 added,
                 removed,
@@ -228,7 +229,7 @@ export default Capability.makeModule(
               const currentIdentity = client.halo.identity.get();
               if (
                 identityKey &&
-                !(currentIdentity?.identityKey as any)?.equals(identityKey) &&
+                !(currentIdentity?.identityKey && decodePublicKey(currentIdentity.identityKey).equals(identityKey)) &&
                 Array.isArray(added) &&
                 Array.isArray(removed)
               ) {

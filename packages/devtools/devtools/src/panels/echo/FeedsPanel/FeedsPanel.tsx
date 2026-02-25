@@ -7,6 +7,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { generateName } from '@dxos/display-name';
 import { Format } from '@dxos/echo/internal';
 import { type PublicKey } from '@dxos/keys';
+import { toPublicKey } from '@dxos/protocols/buf';
 import { type Contact } from '@dxos/protocols/proto/dxos/client/services';
 import {
   type SubscribeToFeedBlocksResponse,
@@ -44,7 +45,9 @@ export const FeedsPanel = (props: { space?: Space }) => {
     ...(space?.internal.data.pipeline?.dataFeeds ?? []),
   ];
   const { feeds } = useStream(() => devtoolsHost.subscribeToFeeds({ feedKeys } as any), {} as any, [refreshCount]);
-  const feed = feeds?.find((feed: any) => feedKey && (feed.feedKey as any)?.equals(feedKey));
+  const feed = feeds?.find(
+    (feed: any) => feedKey && feed.feedKey && toPublicKey(feed.feedKey).equals(toPublicKey(feedKey)),
+  );
   const tableRows = mapToRows(client, space?.key, contacts as any, feedMessages);
 
   // TODO(burdon): Not updated in realtime.
@@ -60,7 +63,11 @@ export const FeedsPanel = (props: { space?: Space }) => {
   }, [key]);
 
   useEffect(() => {
-    if (feedKey && feedKeys.length > 0 && !feedKeys.find((feed: any) => feed.equals(feedKey))) {
+    if (
+      feedKey &&
+      feedKeys.length > 0 &&
+      !feedKeys.find((fk: any) => fk && toPublicKey(fk).equals(toPublicKey(feedKey)))
+    ) {
       handleSelect(feedKeys[0] as any);
     }
   }, [JSON.stringify(feedKeys), feedKey]); // TODO(burdon): Avoid stringify.
@@ -77,7 +84,7 @@ export const FeedsPanel = (props: { space?: Space }) => {
   };
 
   const getLabel = (key: PublicKey) => {
-    const feed = feeds?.find((feed: any) => (feed.feedKey as any)?.equals(key));
+    const feed = feeds?.find((feed: any) => feed.feedKey && key && toPublicKey(feed.feedKey).equals(toPublicKey(key)));
     const feedLength = feed ? ` (${feed.length})` : '';
     return `${formatIdentity(client, contacts as any, feed?.owner)}${feedLength}`;
   };
@@ -94,7 +101,7 @@ export const FeedsPanel = (props: { space?: Space }) => {
 
   const tableData = useMemo(() => {
     return tableRows.map((row) => ({
-      id: `${row.feedKey.toHex()}-${row.seq}`,
+      id: `${toPublicKey(row.feedKey).toHex()}-${row.seq}`,
       ...row,
     }));
   }, [tableRows]);
@@ -151,11 +158,26 @@ const formatIdentity = (
     return 'unknown';
   }
   let identityName;
-  if ((client.halo.identity.get()?.identityKey as any)?.equals(identityInfo.identity)) {
-    identityName = (client.halo.device?.deviceKey as any)?.equals(identityInfo.device) ? 'this device' : 'my device';
+  const identityKey = client.halo.identity.get()?.identityKey;
+  if (identityKey && identityInfo.identity && toPublicKey(identityKey).equals(toPublicKey(identityInfo.identity))) {
+    identityName =
+      identityInfo.device &&
+      client.halo.device?.deviceKey &&
+      toPublicKey(client.halo.device.deviceKey).equals(toPublicKey(identityInfo.device))
+        ? 'this device'
+        : 'my device';
   } else {
-    const ownerContact = identityInfo && contacts.find((contact) => (contact.identityKey as any)?.equals(identityInfo.identity));
-    identityName = ownerContact?.profile?.displayName ?? generateName((identityInfo.identity as any).toHex());
+    const ownerContact =
+      identityInfo &&
+      contacts.find(
+        (contact) =>
+          contact.identityKey &&
+          identityInfo.identity &&
+          toPublicKey(contact.identityKey).equals(toPublicKey(identityInfo.identity)),
+      );
+    identityName =
+      ownerContact?.profile?.displayName ??
+      generateName(identityInfo.identity ? toPublicKey(identityInfo.identity).toHex() : '');
   }
-  return `${identityName} (${(identityInfo.device as any).truncate()})`;
+  return `${identityName} (${identityInfo.device ? toPublicKey(identityInfo.device).truncate() : ''})`;
 };

@@ -52,9 +52,13 @@ export const encodePublicKey = (publicKey: PublicKey): KeysPb.PublicKey => {
   });
 };
 
-export const decodePublicKey = (publicKey: KeysPb.PublicKey): PublicKey => {
+export const decodePublicKey = (publicKey: KeysPb.PublicKey | { data: Uint8Array }): PublicKey => {
   return new PublicKey(publicKey.data);
 };
+
+/** Converts buf PublicKey or @dxos/keys PublicKey to @dxos/keys PublicKey. Use when key type may be either. */
+export const toPublicKey = (key: KeysPb.PublicKey | PublicKey | { data: Uint8Array }): PublicKey =>
+  key instanceof PublicKey ? key : decodePublicKey(key);
 
 //
 // Proto/buf boundary cast helpers.
@@ -73,3 +77,25 @@ export const timeframeToBuf = (timeframe: Timeframe): TimeframeVector =>
   create(TimeframeVectorSchema, {
     frames: timeframe.frames().map(([feedKey, seq]) => ({ feedKey: feedKey.asUint8Array(), seq })),
   });
+
+/** Convert a buf TimeframeVector message to Timeframe instance. */
+export const bufToTimeframe = (vector?: TimeframeVector): Timeframe =>
+  new Timeframe(vector?.frames?.map((frame) => [PublicKey.from(frame.feedKey), frame.seq]) ?? []);
+
+/** Compute total messages represented by a TimeframeVector (equivalent to Timeframe.totalMessages). */
+export const timeframeVectorTotalMessages = (vector?: TimeframeVector): number =>
+  vector?.frames?.reduce((total, frame) => total + frame.seq + 1, 0) ?? 0;
+
+/** Compute new messages in a TimeframeVector relative to a base (equivalent to Timeframe.newMessages). */
+export const timeframeVectorNewMessages = (vector?: TimeframeVector, base?: TimeframeVector): number => {
+  if (!vector?.frames) {
+    return 0;
+  }
+  const baseMap = new Map<string, number>(
+    base?.frames?.map((frame) => [PublicKey.from(frame.feedKey).toHex(), frame.seq]) ?? [],
+  );
+  return vector.frames.reduce(
+    (total, frame) => total + Math.max(frame.seq - (baseMap.get(PublicKey.from(frame.feedKey).toHex()) ?? -1), 0),
+    0,
+  );
+};

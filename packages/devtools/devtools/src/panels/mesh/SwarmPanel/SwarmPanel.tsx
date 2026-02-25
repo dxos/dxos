@@ -7,6 +7,7 @@ import React, { useMemo } from 'react';
 
 import { Format } from '@dxos/echo/internal';
 import { PublicKey } from '@dxos/keys';
+import { decodePublicKey } from '@dxos/protocols/buf';
 import { type ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { type SpaceMember, useMembers, useSpaces } from '@dxos/react-client/echo';
@@ -88,7 +89,7 @@ export const SwarmPanel = () => {
     for (const member of members) {
       // TODO(nf): need to iterate through all the peerstates?
       if (member.peerStates?.length && member.peerStates[0].peerId) {
-        identityMap.set(member.peerStates[0].peerId as any, member);
+        identityMap.set(decodePublicKey(member.peerStates[0].peerId), member);
       }
     }
   }
@@ -102,7 +103,7 @@ export const SwarmPanel = () => {
     for (const swarm of swarms) {
       if (!swarm.connections?.length) {
         connections.push({
-          id: (swarm.id as any)!.toHex(),
+          id: swarm.id ? decodePublicKey(swarm.id).toHex() : '',
           swarmId: swarm.id!,
           swarmTopic: swarm.topic!,
           label: swarm.label,
@@ -111,28 +112,30 @@ export const SwarmPanel = () => {
       } else {
         for (const connection of swarm.connections) {
           let identityDisplay = '';
-          const identity = identityMap.get(connection.remotePeerId as any)?.identity;
+          const identity = connection.remotePeerId
+            ? identityMap.get(decodePublicKey(connection.remotePeerId))?.identity
+            : undefined;
           if (identity) {
-            identityDisplay = (identity.identityKey as any)!.truncate();
+            identityDisplay = identity.identityKey ? decodePublicKey(identity.identityKey).truncate() : '';
             if (identity.profile?.displayName) {
               identityDisplay = identityDisplay + ' (' + identity.profile?.displayName + ')';
             }
           }
 
-          connectionMap.set(connection.sessionId as any, connection as any);
+          connection.sessionId && connectionMap.set(decodePublicKey(connection.sessionId), connection);
 
           const stats = getStats(connection as any);
           const statsDisplay = stats ? `↑ ${bytes(stats.bytesSent)} ↓ ${bytes(stats.bytesReceived)}` : '';
 
           connections.push({
-            id: `${(swarm.id as any)!.toHex()}-${(connection.sessionId as any)!.toHex()}`,
+            id: `${swarm.id ? decodePublicKey(swarm.id).toHex() : ''}-${connection.sessionId ? decodePublicKey(connection.sessionId).toHex() : ''}`,
             swarmId: swarm.id!,
             swarmTopic: swarm.topic!,
             label: swarm.label,
             isActive: swarm.isActive ? 'true' : 'false',
             connection: connection as any,
-            session: (connection.sessionId as any)!.toHex(),
-            remotePeer: (connection.remotePeerId as any)?.toHex() ?? '',
+            session: connection.sessionId ? decodePublicKey(connection.sessionId).toHex() : '',
+            remotePeer: connection.remotePeerId ? decodePublicKey(connection.remotePeerId).toHex() : '',
             identity: identityDisplay,
             state: connection.state,
             buffer: `${connection.readBufferSize ?? 0} / ${connection.writeBufferSize ?? 0}`,

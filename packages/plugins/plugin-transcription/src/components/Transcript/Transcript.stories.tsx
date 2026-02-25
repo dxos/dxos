@@ -13,6 +13,7 @@ import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
+import { type Identity } from '@dxos/react-client/halo';
 import { useMembers, useSpace } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
@@ -137,7 +138,7 @@ const QueueStory = ({
 }: StoryProps & { queueId: Key.ObjectId; onReset: () => void }) => {
   const [running, setRunning] = useState(true);
   const space = useSpace();
-  const members = useMembers(space?.id).map((member) => member.identity).filter(Boolean) as any[];
+  const members = useMembers(space?.id).map((member) => member.identity).filter((identity): identity is Identity => identity != null);
   const queue = useTestTranscriptionQueue(space, queueId, running, 2_000);
   const model = useQueueModelAdapter(renderByline(members), queue, initialMessages);
 
@@ -150,7 +151,7 @@ const QueueStory = ({
 const EntityExtractionQueueStory = () => {
   const [running, setRunning] = useState(true);
   const space = useSpace();
-  const members = useMembers(space?.key).map((member) => member.identity).filter(Boolean) as any[];
+  const members = useMembers(space?.key).map((member) => member.identity).filter((identity): identity is Identity => identity != null);
   const queue = useTestTranscriptionQueueWithEntityExtraction(space, undefined, running, 2_000);
   const model = useQueueModelAdapter(renderByline(members), queue, []);
 

@@ -9,6 +9,7 @@ import * as Effect from 'effect/Effect';
 import { CommandConfig } from '@dxos/cli-util';
 import { print } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
+import { decodePublicKey } from '@dxos/protocols/buf';
 import { DeviceType } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { printDevice } from '../util';
@@ -32,7 +33,7 @@ export const handler = Effect.fn(function* () {
     yield* Console.log(
       JSON.stringify(
         {
-          deviceKey: (device.deviceKey as any)?.toHex(),
+          deviceKey: device.deviceKey ? decodePublicKey(device.deviceKey).toHex() : undefined,
           profile: {
             ...device.profile,
             type: device.profile?.type ? DeviceType[device.profile?.type] : 'UNKNOWN',

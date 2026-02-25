@@ -10,6 +10,7 @@ import * as Effect from 'effect/Effect';
 import { CommandConfig, print } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
+import { decodePublicKey } from '@dxos/protocols/buf';
 
 import { printIdentity } from '../util';
 
@@ -29,7 +30,7 @@ export const recover = Command.make(
       yield* Console.log(
         JSON.stringify(
           {
-            identityKey: (identity.identityKey as any)?.toHex(),
+            identityKey: identity.identityKey ? decodePublicKey(identity.identityKey).toHex() : undefined,
             displayName: identity.profile?.displayName,
           },
           null,
@@ -38,7 +39,7 @@ export const recover = Command.make(
       );
     } else {
       yield* Console.log('Identity recovered successfully');
-      yield* Console.log(print(printIdentity(identity as any)));
+      yield* Console.log(print(printIdentity(identity)));
     }
   }),
 ).pipe(Command.withDescription('Recover an existing identity using a recovery code.'));

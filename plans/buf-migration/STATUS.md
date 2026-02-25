@@ -1,7 +1,7 @@
 # Buf Migration — Status, Plan & Principles
 
 > Branch: `cursor/DX-745-buf-rpc-client-1bd0`
-> Last updated: 2026-02-25
+> Last updated: 2026-02-25 (Phase 9.5 completed)
 
 ---
 
@@ -79,15 +79,14 @@ Migrating DXOS protocol types from **protobuf.js** (codegen via `@dxos/codec-pro
 | ------------ | ----- | ------- | --------- |
 | `as never`   | 87    | 0       | **+87**   |
 | `as unknown` | 28    | 3       | **+25**   |
-| `as any`     | 160   | 18      | **+142**  |
+| `as any`     | 63    | 18      | **+45**   |
 
-> **Note on `as any` increase**: The `as any` increase (+142, down from +153 after Phase 9) is from fixing build errors in plugin/app packages after merging main. These are primarily:
-> - `PublicKey.toHex()` / `.truncate()` / `.equals()` — buf PublicKey (`{ data: Uint8Array }`) lacks these methods, which exist on `@dxos/keys.PublicKey` class. Cast `(key as any).toHex()` used at ~60 call sites.
-> - `ProfileDocument` type mismatch — `createIdentity({ displayName })` needs `as any` cast since buf ProfileDocument requires `$typeName`.
-> - `member.identity?.` optional chaining — buf makes `identity` field optional where proto had it required.
-> - `credential.subject.assertion['@type']` — buf `Any` type doesn't support `@type` indexing.
-> - `Timestamp.getTime()` / `TimeframeVector.totalMessages()` — buf types lack these proto methods.
-> These casts are all temporary and will be eliminated as the consuming packages migrate to buf-native patterns.
+> **Note on `as any` count**: Down from +142 after Phase 9 to +45 after Phase 9.5. Phase 9.5 eliminated ~79 `as any` casts across categories 1-4 (PublicKey methods, ProfileDocument, Identity optional fields, Timestamp/Timeframe). Remaining ~45 `as any` casts are primarily:
+> - Devtools RPC call patterns (`{} as any` for Empty args) (~20).
+> - Proto↔buf boundary types in devtools panels (feed, pipeline, swarm types) (~15).
+> - Assertion field access via `getCredentialAssertion()` which returns untyped `TypedMessage` (~5).
+> - Other scattered patterns (docs snippet, return types, connection types) (~5).
+> These remaining casts require deeper refactoring (devtools RPC signature migration, protobuf.js codec replacement) and are deferred to Phase 10.
 
 #### Top Files by `as never` Added (this branch vs main)
 
@@ -127,14 +126,16 @@ Migrating DXOS protocol types from **protobuf.js** (codegen via `@dxos/codec-pro
 - `assertions.ts` + `credential-factory.ts` TypedMessage↔Any (3, Phase 10).
 - Other scattered codec/type boundary points (14).
 
-**`as any` (160 added, 18 removed = net +142)** — Buf type mismatches in plugin/app code:
+**`as any` (63 added, 18 removed = net +45)** — Remaining buf type mismatches:
 
-- PublicKey methods (`.toHex()`, `.truncate()`, `.equals()`) on buf PublicKey (~60).
-- ProfileDocument type mismatch (~8).
-- Identity optional field chaining (~4).
-- Timestamp/Timeframe method calls (~3).
-- Swarm/network service types (~4).
-- Other scattered devtools/CLI patterns (~63).
+- Devtools RPC calls with Empty args (`{} as any`) (~20).
+- Proto↔buf boundary types in devtools (feed, pipeline, swarm, contacts) (~15).
+- Assertion field access on TypedMessage (~5).
+- Other scattered patterns (docs, return types, connection types) (~5).
+- ~~PublicKey methods~~ — eliminated in Phase 9.5 via `decodePublicKey()`/`toPublicKey()`.
+- ~~ProfileDocument type mismatch~~ — eliminated in Phase 9.5 via `create(ProfileDocumentSchema, ...)`.
+- ~~Identity optional field chaining~~ — eliminated in Phase 9.5 via proper type guards.
+- ~~Timestamp/Timeframe method calls~~ — eliminated in Phase 9.5 via `timestampMs()`/`timeframeVectorTotalMessages()`.
 
 ### Why Casts Are Dangerous
 
@@ -315,54 +316,45 @@ Credential assertions are stored as `TypedMessage` objects (protobuf.js format w
 - [x] Document remaining 2 `as unknown` casts in `credential-factory.ts` and `assertions.ts` as inherent to the protobuf.js codec bridge (removed in Phase 10).
 - **Target**: 6 `as unknown` + ~12 `as any` casts removed.
 
-### Phase 9.5: Type Safety Cleanup (before protobuf.js removal)
+### Phase 9.5: Type Safety Cleanup (Done — ~79 `as any` casts eliminated)
 
-Cast audit vs `origin/main` after Phase 9: `as never` +87, `as unknown` +25, `as any` +142. These casts were introduced during the buf migration to keep the build passing while types propagated. Each is a potential runtime bug. This phase eliminates them by converting the surrounding code to buf-native patterns.
+Cast audit vs `origin/main` after Phase 9: `as never` +87, `as unknown` +25, `as any` +142. This phase eliminated ~79 `as any` casts by converting surrounding code to buf-native patterns. Final: `as any` +45.
 
-#### Category 1: PublicKey (proto class vs buf message) — ~60 `as any` casts
+**New helpers added to `@dxos/protocols/buf`:**
+- `toPublicKey(key)` — converts buf PublicKey or `@dxos/keys.PublicKey` to `@dxos/keys.PublicKey`.
+- `bufToTimeframe(vector)` — converts buf `TimeframeVector` to `Timeframe` instance.
+- `timeframeVectorTotalMessages(vector)` — equivalent to `Timeframe.totalMessages()`.
+- `timeframeVectorNewMessages(vector, base)` — equivalent to `Timeframe.newMessages(base)`.
 
-**Root cause**: Buf `PublicKey` is `{ data: Uint8Array }`. Code calls `@dxos/keys.PublicKey` methods (`.toHex()`, `.truncate()`, `.equals()`) which don't exist on the buf type.
+#### Category 1: PublicKey (proto class vs buf message) — ~60 `as any` casts → Done
 
-**Fix**: Use `decodePublicKey(bufKey)` to convert buf PublicKey to `@dxos/keys.PublicKey` at each call site, or use the helper from `assertions.ts` (`fromBufPublicKey`).
+- [x] Migrate devtools panels (`FeedsPanel`, `SwarmPanel`, `SpaceProperties`, `SpaceInfoPanel`, `NetworkPanel`, `StoragePanel`, `SwarmInfo`, `SwarmTable`, `DataSpaceSelector`, `SpaceSelector`, `RootContainer`, `TestingPanel`).
+- [x] Migrate plugin-client CLI commands (`list.ts`, `keys.ts`, `identity.ts`, `update.ts`, `recover.ts`, `join.ts`, `info.ts`, `device/update.ts`, `device/util.ts`, `halo/util.ts`).
+- [x] Migrate plugin-client components (`ProfileContainer.tsx`, `DevicesContainer.tsx`, `RecoveryCredentialsContainer.tsx`, `app-graph-builder.ts`).
+- [x] Migrate plugin-thread (`call-swarm-synchronizer.ts`, `util.ts`).
+- [x] Migrate plugin-space (`SpacePresence.tsx`, `spaces-ready.ts`, `members/util.ts`).
+- [x] Migrate other packages (`composer-app credentials/util.ts`, `plugin-chess Info.tsx`, `plugin-assistant ChatThread.tsx`, `react-ui-editor Automerge.stories.tsx`).
+- [x] Fix additional build errors (`testbench-app AppToolbar.tsx`, `testbench-app main.tsx`, `cli options.ts`, `stories-assistant Chat.stories.tsx`).
+- [x] Test files updated (`keys.test.ts`, `identity.test.ts`, `create.test.ts`, `update.test.ts`, `info.test.ts`).
 
-**Top files**: `FeedsPanel.tsx` (14), `SwarmPanel.tsx` (11), `SpaceProperties.tsx` (11), `call-swarm-synchronizer.ts` (9), `SpacePresence.tsx` (7), CLI commands in `plugin-client` (~20).
+#### Category 2: ProfileDocument type mismatch — ~8 `as any` casts → Done
 
-- [ ] Migrate devtools panels (`FeedsPanel`, `SwarmPanel`, `SpaceProperties`, `SpaceInfoPanel`, `SpaceListPanel`, `NetworkPanel`, `StoragePanel`).
-- [ ] Migrate plugin-client CLI commands (`list.ts`, `keys.ts`, `identity.ts`, `update.ts`, `recover.ts`, `join.ts`, `create.test.ts`).
-- [ ] Migrate plugin-thread (`call-swarm-synchronizer.ts`, `util.ts`).
-- [ ] Migrate plugin-space (`SpacePresence.tsx`, `spaces-ready.ts`, `members/util.ts`).
-- [ ] Migrate plugin-client components (`ProfileContainer.tsx`, `operation-resolver.ts`).
+- [x] `operation-resolver.ts` — `create(ProfileDocumentSchema, profile)`.
+- [x] `stories.ts` — `create(ProfileDocumentSchema, { displayName: 'Test User' })`.
+- [x] `ChannelContainer.tsx` — `create(ProfileDocumentSchema, { displayName })`.
+- [x] `identity.test.ts` — `create(ProfileDocumentSchema, { displayName: 'Test' })`.
+- [x] `testbench-app/main.tsx` — `create(ProfileDocumentSchema, { displayName: 'Testbench User' })`.
 
-#### Category 2: ProfileDocument type mismatch — ~8 `as any` casts
+#### Category 3: Identity optional fields — ~4 `as any` casts → Done
 
-**Root cause**: `createIdentity({ displayName })` and `updateProfile({ displayName })` expect buf `ProfileDocument` (which includes `$typeName`), but call sites pass plain `{ displayName: string }` objects.
+- [x] `TranscriptionPlugin.tsx` — `.filter((identity): identity is Identity => identity != null)`.
+- [x] `TranscriptContainer.tsx` — same fix.
+- [x] `Transcript.stories.tsx` — 2 instances fixed.
 
-**Fix**: Use `create(ProfileDocumentSchema, { displayName })` at call sites to create proper buf messages.
+#### Category 4: Timestamp/Timeframe methods — ~12 `as any` casts → Done
 
-**Files**: `ChannelContainer.tsx`, `stories.ts`, CLI `create.test.ts`, `identity.test.ts`.
-
-- [ ] Update all `createIdentity`/`updateProfile` call sites to use `create(ProfileDocumentSchema, ...)`.
-
-#### Category 3: Identity optional fields — ~4 `as any` casts
-
-**Root cause**: `member.identity` became optional in buf types. Code like `members.map(m => m.identity).filter(Boolean)` produces `(Identity | undefined)[]` which is cast to `any[]`.
-
-**Fix**: Use proper type narrowing: `.filter((id): id is Identity => id != null)`.
-
-**Files**: `TranscriptionPlugin.tsx`, `TranscriptContainer.tsx`, `Transcript.stories.tsx`, `MicrophoneTranscription.stories.tsx`.
-
-- [ ] Replace `.filter(Boolean) as any[]` with proper type guard.
-
-#### Category 4: Timestamp/Timeframe methods — ~3 `as any` casts
-
-**Root cause**: Buf `Timestamp` is `{ seconds: bigint, nanos: number }`, not a `Date`. Code calls `.getTime()` on it. Buf `TimeframeVector` lacks `.totalMessages()`.
-
-**Fix**: Use `timestampMs()` helper from `@dxos/protocols/buf` for timestamp conversion. For TimeframeVector, compute total from frames array.
-
-**Files**: `onboarding-manager.ts`, devtools panels.
-
-- [ ] Replace `(issuanceDate as any).getTime()` with `timestampMs(issuanceDate)`.
-- [ ] Replace `timeframe.totalMessages()` with buf-native calculation.
+- [x] `SpaceProperties.tsx` — `timeframeVectorTotalMessages()`, `timeframeVectorNewMessages()`, `timestampMs()`.
+- [x] `onboarding-manager.ts` — `timestampMs(issuanceDate)` for credential sorting.
 
 #### Category 5: Remaining `as never` boundary casts — 87 casts
 

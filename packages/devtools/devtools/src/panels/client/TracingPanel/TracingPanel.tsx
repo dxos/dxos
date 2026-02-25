@@ -50,7 +50,11 @@ export const TracingPanel = () => {
           for (const event of data.resourceAdded ?? []) {
             const existing = newResources.get(event.resource!.id);
             if (!existing) {
-              newResources.set(event.resource!.id, { resource: bufToProto<Resource>(event.resource!), spans: [], logs: [] });
+              newResources.set(event.resource!.id, {
+                resource: bufToProto<Resource>(event.resource!),
+                spans: [],
+                logs: [],
+              });
             } else {
               existing.resource = bufToProto<Resource>(event.resource!);
             }

@@ -5,8 +5,8 @@
 import React, { useMemo } from 'react';
 
 import { Format } from '@dxos/echo/internal';
-import { useMembers } from '@dxos/react-client/echo';
 import { SpaceMember_PresenceState } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { useMembers } from '@dxos/react-client/echo';
 import { type Space } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';

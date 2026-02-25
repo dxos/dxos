@@ -6,10 +6,11 @@ import React, { type FC, useMemo } from 'react';
 
 import { MulticastObservable } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
+import { getCredentialAssertion } from '@dxos/credentials';
+import { timeframeVectorNewMessages, timeframeVectorTotalMessages, timestampMs } from '@dxos/protocols/buf';
 import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { type SubscribeToSpacesResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { useMulticastObservable } from '@dxos/react-hooks';
-import { Timeframe } from '@dxos/timeframe';
 
 import { PropertiesTable, PropertySchemaFormat } from '../../../components';
 
@@ -26,23 +27,29 @@ export const SpaceProperties: FC<{ space: Space; metadata: SubscribeToSpacesResp
 
     const pipeline = space?.internal.data?.pipeline;
 
-    const currentEpochNumber = (pipeline?.currentEpoch?.subject as any)?.assertion?.number;
-    const appliedEpochNumber = (pipeline?.appliedEpoch?.subject as any)?.assertion?.number;
-    const epochTimeframe = (pipeline?.currentEpoch?.subject as any)?.assertion?.timeframe ?? new Timeframe();
+    const currentEpochAssertion = pipeline?.currentEpoch?.subject
+      ? getCredentialAssertion(pipeline.currentEpoch)
+      : undefined;
+    const appliedEpochAssertion = pipeline?.appliedEpoch?.subject
+      ? getCredentialAssertion(pipeline.appliedEpoch)
+      : undefined;
+    const currentEpochNumber = (currentEpochAssertion as any)?.number;
+    const appliedEpochNumber = (appliedEpochAssertion as any)?.number;
+    const epochTimeframeVector = (currentEpochAssertion as any)?.timeframe;
 
-    const targetControlMessages = (pipeline?.targetControlTimeframe as any)?.totalMessages() ?? 0;
-    const currentControlMessages = (pipeline?.currentControlTimeframe as any)?.totalMessages() ?? 0;
+    const targetControlMessages = timeframeVectorTotalMessages(pipeline?.targetControlTimeframe);
+    const currentControlMessages = timeframeVectorTotalMessages(pipeline?.currentControlTimeframe);
     const controlProgress = Math.min(currentControlMessages / targetControlMessages, 1) * 100;
 
-    const startDataMessages = (pipeline?.startDataTimeframe as any)?.totalMessages() ?? 0;
-    const targetDataMessages = (pipeline?.targetDataTimeframe as any)?.totalMessages() ?? 0;
-    const currentDataMessages = (pipeline?.currentDataTimeframe as any)?.totalMessages() ?? 0;
+    const startDataMessages = timeframeVectorTotalMessages(pipeline?.startDataTimeframe);
+    const targetDataMessages = timeframeVectorTotalMessages(pipeline?.targetDataTimeframe);
+    const currentDataMessages = timeframeVectorTotalMessages(pipeline?.currentDataTimeframe);
     const dataProgress =
       Math.min(Math.abs((currentDataMessages - startDataMessages) / (targetDataMessages - startDataMessages) || 1), 1) *
       100;
 
     const { open, ready } = space?.internal.data?.metrics ?? {};
-    const startupTime = open && ready && (ready as any).getTime() - (open as any).getTime();
+    const startupTime = open && ready ? timestampMs(ready) - timestampMs(open) : undefined;
 
     return {
       key: metadata.key,
@@ -55,8 +62,8 @@ export const SpaceProperties: FC<{ space: Space; metadata: SubscribeToSpacesResp
           ? currentEpochNumber
           : `${currentEpochNumber} (${appliedEpochNumber})`,
       epochCreated: pipeline?.currentEpoch?.issuanceDate,
-      epochMutations: (pipeline?.currentEpoch?.subject as any)?.assertion?.timeframe?.totalMessages(),
-      mutationsSinceEpoch: (pipeline?.totalDataTimeframe as any)?.newMessages(epochTimeframe),
+      epochMutations: timeframeVectorTotalMessages(epochTimeframeVector),
+      mutationsSinceEpoch: timeframeVectorNewMessages(pipeline?.totalDataTimeframe, epochTimeframeVector),
     };
   }, [space, metadata, pipelineState]);
 

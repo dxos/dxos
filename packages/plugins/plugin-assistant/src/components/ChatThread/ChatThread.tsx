@@ -5,6 +5,7 @@
 import React, { type CSSProperties, forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
+import { decodePublicKey } from '@dxos/protocols/buf';
 import { type Identity } from '@dxos/react-client/halo';
 import { type ThemedClassName, useForwardedRef } from '@dxos/react-ui';
 import { MarkdownStream, type MarkdownStreamController, type MarkdownStreamProps } from '@dxos/react-ui-components';
@@ -45,7 +46,9 @@ export const ChatThread = forwardRef<MarkdownStreamController | null, ChatThread
     );
 
     const userHue = useMemo(
-      () => identity?.profile?.data?.hue || keyToFallback((identity?.identityKey ?? PublicKey.random()) as any).hue,
+      () =>
+        identity?.profile?.data?.hue ||
+        keyToFallback(identity?.identityKey ? decodePublicKey(identity.identityKey) : PublicKey.random()).hue,
       [identity],
     );
 

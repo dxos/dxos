@@ -10,6 +10,7 @@ import * as Effect from 'effect/Effect';
 import { CommandConfig } from '@dxos/cli-util';
 import { print } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
+import { toPublicKey } from '@dxos/protocols/buf';
 import { type Identity } from '@dxos/protocols/proto/dxos/client/services';
 
 import { printIdentity } from '../util';
@@ -49,7 +50,7 @@ export const handler = Effect.fn(function* ({ displayName }: { displayName: stri
     yield* Console.log(
       JSON.stringify(
         {
-          identityKey: (updatedIdentity.identityKey as any)?.toHex(),
+          identityKey: updatedIdentity.identityKey ? toPublicKey(updatedIdentity.identityKey).toHex() : undefined,
           displayName: updatedIdentity.profile?.displayName,
         },
         null,
@@ -57,7 +58,7 @@ export const handler = Effect.fn(function* ({ displayName }: { displayName: stri
       ),
     );
   } else {
-    yield* Console.log(print(printIdentity(updatedIdentity as any)));
+    yield* Console.log(print(printIdentity(updatedIdentity)));
   }
 });
 

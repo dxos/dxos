@@ -3,6 +3,7 @@
 //
 
 import { type PublicKey } from '@dxos/client';
+import { decodePublicKey } from '@dxos/protocols/buf';
 import { type Credential, type Identity, type Presentation } from '@dxos/client/halo';
 import { getCredentialAssertion } from '@dxos/credentials';
 
@@ -42,7 +43,7 @@ export const signup = async ({
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       email,
-      identityDid: identity ? `did:key:${(identity.identityKey as any)?.toHex()}` : undefined,
+      identityDid: identity?.identityKey ? `did:key:${decodePublicKey(identity.identityKey).toHex()}` : undefined,
       redirectUrl,
     }),
   });
@@ -85,7 +86,7 @@ export const activateAccount = async ({
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      identityDid: `did:key:${(identity.identityKey as any)?.toHex()}`,
+      identityDid: `did:key:${identity.identityKey ? decodePublicKey(identity.identityKey).toHex() : ''}`,
       referrerDid: referrer ? `did:key:${referrer.toHex()}` : undefined,
       token,
     }),

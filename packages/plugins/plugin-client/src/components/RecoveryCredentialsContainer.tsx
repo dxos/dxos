@@ -7,6 +7,7 @@ import React from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { getCredentialAssertion } from '@dxos/credentials';
 import { useCredentials } from '@dxos/react-client/halo';
+import { decodePublicKey } from '@dxos/protocols/buf';
 import { Icon, IconButton, List, ListItem, Message, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
 
@@ -55,7 +56,7 @@ export const RecoveryCredentialsContainer = () => {
         ) : (
           <List classNames='container-max-width pli-2'>
             {recoveryCredentials.map((credential) => (
-              <ListItem.Root key={(credential.id as any)?.toHex()}>
+              <ListItem.Root key={credential.id ? decodePublicKey(credential.id).toHex() : 'unknown'}>
                 <ListItem.Endcap>
                   <Icon icon='ph--key--regular' />
                 </ListItem.Endcap>

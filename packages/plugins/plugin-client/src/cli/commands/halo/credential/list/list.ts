@@ -14,12 +14,13 @@ import { ClientService } from '@dxos/client';
 import type { Credential } from '@dxos/client/halo';
 import { getCredentialAssertion } from '@dxos/credentials';
 import { type Key } from '@dxos/echo';
+import { decodePublicKey } from '@dxos/protocols/buf';
 
 const mapCredentials = (credentials: Credential[]) => {
   return credentials.map((credential) => ({
-    id: (credential.id as any)?.toHex() ?? '<unknown>',
-    issuer: (credential.issuer as any)?.toHex() ?? '<unknown>',
-    subject: (credential.subject?.id as any)?.toHex() ?? '<unknown>',
+    id: credential.id ? decodePublicKey(credential.id).toHex() : '<unknown>',
+    issuer: credential.issuer ? decodePublicKey(credential.issuer).toHex() : '<unknown>',
+    subject: credential.subject?.id ? decodePublicKey(credential.subject.id).toHex() : '<unknown>',
     type: credential.subject ? getCredentialAssertion(credential)['@type'] : undefined,
     assertion: credential.subject?.assertion,
   }));
@@ -28,9 +29,9 @@ const mapCredentials = (credentials: Credential[]) => {
 const printCredential = (credential: Credential) => {
   const type = credential.subject ? getCredentialAssertion(credential)['@type'] : '<unknown>';
   return FormBuilder.make({ title: type }).pipe(
-    FormBuilder.option('id', Option.fromNullable((credential.id as any)?.truncate())),
-    FormBuilder.option('issuer', Option.fromNullable((credential.issuer as any)?.truncate())),
-    FormBuilder.option('subject', Option.fromNullable((credential.subject?.id as any)?.truncate())),
+    FormBuilder.option('id', Option.fromNullable(credential.id ? decodePublicKey(credential.id).truncate() : undefined)),
+    FormBuilder.option('issuer', Option.fromNullable(credential.issuer ? decodePublicKey(credential.issuer).truncate() : undefined)),
+    FormBuilder.option('subject', Option.fromNullable(credential.subject?.id ? decodePublicKey(credential.subject.id).truncate() : undefined)),
     FormBuilder.build,
   );
 };

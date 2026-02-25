@@ -5,8 +5,8 @@
 import React, { useMemo } from 'react';
 
 import { Format } from '@dxos/echo/internal';
-import { DeviceKind, DeviceType, useDevices } from '@dxos/react-client/halo';
 import { Device_PresenceState } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { DeviceKind, DeviceType, useDevices } from '@dxos/react-client/halo';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
 
 import { MasterDetailTable, PanelContainer } from '../../../components';

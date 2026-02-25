@@ -40,6 +40,7 @@ import { createLocationSchema } from '@dxos/plugin-map/testing';
 import { Markdown, MarkdownPlugin } from '@dxos/plugin-markdown';
 import { PipelinePlugin } from '@dxos/plugin-pipeline';
 import { PreviewPlugin } from '@dxos/plugin-preview';
+import { decodePublicKey } from '@dxos/protocols/buf';
 import { ScriptPlugin, getAccessCredential } from '@dxos/plugin-script';
 import { templates } from '@dxos/plugin-script/templates';
 import { TablePlugin } from '@dxos/plugin-table';
@@ -938,7 +939,7 @@ export const WithScript: Story = {
     types: [Script.Script, Text.Text],
     onInit: async ({ client, space }) => {
       const { identityKey } = client.halo.identity.get()!;
-      await client.halo.writeCredentials([getAccessCredential(identityKey)]);
+      await client.halo.writeCredentials([getAccessCredential(decodePublicKey(identityKey!))]);
 
       const template = templates.find((template) => template.id === 'dxos.org/script/forex-effect');
       invariant(template, 'Template not found');

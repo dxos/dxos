@@ -3437,7 +3437,7 @@ importers:
     dependencies:
       debug:
         specifier: 'catalog:'
-        version: 4.4.3(supports-color@8.1.1)
+        version: 4.4.3(supports-color@5.5.0)
       domain-browser:
         specifier: 'catalog:'
         version: 4.22.0
@@ -6914,7 +6914,7 @@ importers:
         version: 5.0.0(chart.js@4.5.0)
       debug:
         specifier: 'catalog:'
-        version: 4.4.3(supports-color@8.1.1)
+        version: 4.4.3(supports-color@5.5.0)
       effect:
         specifier: 3.19.16
         version: 3.19.16
@@ -7832,6 +7832,9 @@ importers:
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../core/protocols
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
@@ -14298,7 +14301,7 @@ importers:
         version: 1.37.0
       debug:
         specifier: 'catalog:'
-        version: 4.4.3(supports-color@8.1.1)
+        version: 4.4.3(supports-color@5.5.0)
       js-yaml:
         specifier: 'catalog:'
         version: 4.1.1

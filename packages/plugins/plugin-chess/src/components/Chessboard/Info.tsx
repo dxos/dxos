@@ -6,6 +6,7 @@ import { useAtomValue } from '@effect-atom/atom-react';
 import React, { type JSX, type PropsWithChildren, useEffect, useMemo, useRef } from 'react';
 
 import { generateName } from '@dxos/display-name';
+import { decodePublicKey } from '@dxos/protocols/buf';
 import { Obj } from '@dxos/echo';
 import { type SpaceMember, useMembers } from '@dxos/react-client/echo';
 import { Icon, IconButton, Select, type ThemedClassName, useTranslation } from '@dxos/react-ui';
@@ -229,7 +230,7 @@ const PlayerSelector = ({ value, onValueChange, members }: PlayerSelectorProps) 
         <Select.Content>
           <Select.Viewport>
             {members.map((member) => {
-              const memberKey = (member.identity?.identityKey as any)?.toHex() ?? '';
+              const memberKey = member.identity?.identityKey ? decodePublicKey(member.identity.identityKey).toHex() : '';
               const displayName = member.identity?.profile?.displayName || generateName(memberKey);
               return (
                 <Select.Option key={memberKey} value={memberKey}>

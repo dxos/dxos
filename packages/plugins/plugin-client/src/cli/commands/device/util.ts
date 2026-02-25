@@ -4,10 +4,13 @@
 
 import { FormBuilder } from '@dxos/cli-util';
 import { type Device, DeviceKind, DeviceType } from '@dxos/client/halo';
+import { toPublicKey } from '@dxos/protocols/buf';
 import { Device_PresenceState } from '@dxos/protocols/buf/dxos/client/services_pb';
 
-const maybeTruncateKey = (key: any, truncate = false) =>
-  truncate ? key?.truncate() : key?.toHex();
+type PublicKeyLike = Parameters<typeof toPublicKey>[0];
+
+const maybeTruncateKey = (key: PublicKeyLike | undefined, truncate = false) =>
+  key ? (truncate ? toPublicKey(key).truncate() : toPublicKey(key).toHex()) : undefined;
 
 const getDeviceTitle = (device: Device): string => {
   if (device.profile?.label) {
@@ -35,7 +38,7 @@ export const mapDevices = (devices: Device[], truncateKeys = false) => {
 
 export const printDevice = (device: Device) =>
   FormBuilder.make({ title: getDeviceTitle(device) }).pipe(
-    FormBuilder.set('deviceKey', (device.deviceKey as any)?.truncate()),
+    FormBuilder.set('deviceKey', device.deviceKey ? toPublicKey(device.deviceKey).truncate() : undefined),
     FormBuilder.set('label', device.profile?.label ?? '<none>'),
     FormBuilder.set('type', device.profile?.type ? DeviceType[device.profile?.type] : 'UNKNOWN'),
     FormBuilder.set('kind', DeviceKind[device.kind]),

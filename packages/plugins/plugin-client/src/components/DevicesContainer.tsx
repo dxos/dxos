@@ -8,6 +8,7 @@ import { QR } from 'react-qr-rounded';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { log } from '@dxos/log';
 import { useClient, useMulticastObservable } from '@dxos/react-client';
+import { decodePublicKey } from '@dxos/protocols/buf';
 import { type Device, useDevices } from '@dxos/react-client/halo';
 import {
   type CancellableInvitationObservable,
@@ -58,7 +59,7 @@ export const DevicesContainer = ({ createInvitationUrl }: DevicesContainerProps)
             <Settings.FrameItem title={t('devices label', { ns: meta.id })}>
               <List>
                 {devices.map((device: Device) => (
-                  <DeviceListItem key={(device.deviceKey as any)?.toHex()} device={device} connectionState={connectionState} />
+                  <DeviceListItem key={device.deviceKey ? decodePublicKey(device.deviceKey).toHex() : 'unknown'} device={device} connectionState={connectionState} />
                 ))}
               </List>
             </Settings.FrameItem>

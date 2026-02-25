@@ -12,10 +12,12 @@ import { invariant } from '@dxos/invariant';
 import { OperationResolver } from '@dxos/operation';
 import { Operation } from '@dxos/operation';
 import { ObservabilityOperation } from '@dxos/plugin-observability/types';
+import { create } from '@dxos/protocols/buf';
 import {
   type CreateRecoveryCredentialResponse,
   type RequestRecoveryChallengeResponse,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type JoinPanelProps } from '@dxos/shell/react';
 
 import { JOIN_DIALOG, RECOVERY_CODE_DIALOG, RESET_DIALOG } from '../../constants';
@@ -41,7 +43,7 @@ export default Capability.makeModule(
         handler: Effect.fnUntraced(function* (profile) {
           const manager = yield* Capability.get(Capabilities.PluginManager);
           const client = yield* Capability.get(ClientCapabilities.Client);
-          const data = yield* Effect.promise(() => client.halo.createIdentity(profile as any));
+          const data = yield* Effect.promise(() => client.halo.createIdentity(create(ProfileDocumentSchema, profile)));
           yield* Effect.promise(() => runAndForwardErrors(manager.activate(ClientEvents.IdentityCreated)));
           yield* Operation.schedule(ObservabilityOperation.SendEvent, { name: 'identity.create' });
           return data as any;

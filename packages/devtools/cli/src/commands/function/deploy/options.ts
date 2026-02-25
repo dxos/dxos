@@ -10,6 +10,7 @@ import { ClientService } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { type Key } from '@dxos/echo';
 import { type Function } from '@dxos/functions';
+import { decodePublicKey } from '@dxos/protocols/buf';
 
 import { getNextVersion, loadFunctionObject } from './echo';
 
@@ -31,7 +32,7 @@ export const parseOptions = Effect.fn(function* (options: {
   });
 
   const ownerPublicKey = Option.match(space, {
-    onNone: () => identity.identityKey.toString(),
+    onNone: () => identity.identityKey ? decodePublicKey(identity.identityKey).toHex() : '',
     onSome: (space) => space.key.toString(),
   });
 

@@ -7,6 +7,7 @@ import { BroadcastChannelNetworkAdapter } from '@automerge/automerge-repo-networ
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useState } from 'react';
 
+import { decodePublicKey } from '@dxos/protocols/buf';
 import { Obj, Ref } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { DocAccessor, createDocAccessor } from '@dxos/echo-db';
@@ -119,7 +120,7 @@ const EchoStory = () => {
   return (
     <div className='bs-full is-full flex flex-col overflow-hidden'>
       <pre className='p-2 text-xs text-subdued'>
-        {JSON.stringify({ index, identity: (identity?.identityKey as any)?.truncate?.() ?? String(identity?.identityKey), spaceId, objects }, null, 2)}
+        {JSON.stringify({ index, identity: identity?.identityKey ? decodePublicKey(identity.identityKey).truncate() : String(identity?.identityKey), spaceId, objects }, null, 2)}
       </pre>
       {identity && source ? (
         <div className='p-2 flex grow overflow-hidden'>

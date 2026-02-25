@@ -13,6 +13,7 @@ import { CommandConfig, print } from '@dxos/cli-util';
 import { type Client, ClientService } from '@dxos/client';
 import { type AuthenticatingInvitationObservable, InvitationEncoder, Invitation_State } from '@dxos/client/invitations';
 import { invariant } from '@dxos/invariant';
+import { decodePublicKey } from '@dxos/protocols/buf';
 
 import { printIdentity } from '../util';
 
@@ -41,7 +42,7 @@ export const join = Command.make(
       yield* Console.log(
         JSON.stringify(
           {
-            identityKey: (identity.identityKey as any)?.toHex(),
+            identityKey: identity.identityKey ? decodePublicKey(identity.identityKey).toHex() : undefined,
             displayName: identity.profile?.displayName,
           },
           null,
@@ -49,7 +50,7 @@ export const join = Command.make(
         ),
       );
     } else {
-      yield* Console.log(print(printIdentity(identity as any)));
+      yield* Console.log(print(printIdentity(identity)));
     }
   }),
 ).pipe(Command.withDescription('Join an existing identity using an invitation code.'));

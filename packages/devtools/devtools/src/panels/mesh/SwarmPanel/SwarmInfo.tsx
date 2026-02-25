@@ -5,6 +5,7 @@
 import React from 'react';
 
 import { type PublicKey } from '@dxos/keys';
+import { toPublicKey } from '@dxos/protocols/buf';
 import { ConnectionState } from '@dxos/network-manager';
 import { type SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { Button } from '@dxos/react-ui';
@@ -18,7 +19,7 @@ export interface SwarmInfoViewProps {
 // TODO(burdon): Convert to table.
 export const SwarmInfoView = ({ swarmInfo, onConnectionClick, onReturn }: SwarmInfoViewProps) => (
   <div>
-    <div>Topic: {swarmInfo.topic.toHex()}</div>
+    <div>Topic: {swarmInfo.topic ? toPublicKey(swarmInfo.topic).toHex() : ''}</div>
     <div>Label: {swarmInfo.label ? swarmInfo.label : 'No label'}</div>
     <div>Active: {swarmInfo.isActive ? 'yes' : 'no'}</div>
     <div>
@@ -29,8 +30,13 @@ export const SwarmInfoView = ({ swarmInfo, onConnectionClick, onReturn }: SwarmI
     <div>Connections:</div>
     <div className='grow overflow-hidden'>
       {swarmInfo.connections?.map((connection) => (
-        <div key={connection.sessionId.toHex()} className='grow overflow-hidden'>
-          <div className='inline-flex is-[100]'>{connection.remotePeerId.toHex()}</div>
+        <div
+          key={connection.sessionId ? toPublicKey(connection.sessionId).toHex() : ''}
+          className='grow overflow-hidden'
+        >
+          <div className='inline-flex is-[100]'>
+            {connection.remotePeerId ? toPublicKey(connection.remotePeerId).toHex() : ''}
+          </div>
           <div className='inline-flex m-1'>
             <Button onClick={() => onConnectionClick?.(connection.sessionId)} title='Details'>
               Details

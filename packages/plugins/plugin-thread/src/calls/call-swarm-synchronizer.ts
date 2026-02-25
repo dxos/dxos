@@ -12,7 +12,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { Client } from '@dxos/protocols';
-import { buf } from '@dxos/protocols/buf';
+import { buf, decodePublicKey } from '@dxos/protocols/buf';
 import { type Device } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { ActivitySchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';
 import { ConnectionState, type SwarmResponse } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
@@ -134,15 +134,15 @@ export class CallSwarmSynchronizer extends Resource {
    * @internal
    */
   _setIdentity(identity: Identity): void {
-    this._identityKey = (identity.identityKey as any)?.toHex();
-    this._displayName = identity.profile?.displayName ?? generateName((identity.identityKey as any)?.toHex() ?? '');
+    this._identityKey = identity.identityKey ? decodePublicKey(identity.identityKey).toHex() : undefined;
+    this._displayName = identity.profile?.displayName ?? generateName(identity.identityKey ? decodePublicKey(identity.identityKey).toHex() : '');
   }
 
   /**
    * @internal
    */
   _setDevice(device: Device): void {
-    this._deviceKey = (device.deviceKey as any)?.toHex();
+    this._deviceKey = device.deviceKey ? decodePublicKey(device.deviceKey).toHex() : undefined;
   }
 
   /**

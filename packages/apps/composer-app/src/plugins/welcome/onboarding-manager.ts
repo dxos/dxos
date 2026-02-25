@@ -8,6 +8,7 @@ import { SubscriptionList, type Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { getCredentialAssertion } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
+import { timestampMs } from '@dxos/protocols/buf';
 import { log } from '@dxos/log';
 import { Account, ClientOperation } from '@dxos/plugin-client/types';
 import { HelpOperation } from '@dxos/plugin-help/types';
@@ -176,7 +177,7 @@ export class OnboardingManager {
 
   private _setCredential(credentials: Credential[]): void {
     const credential = credentials
-      .toSorted((a, b) => (b.issuanceDate as any)?.getTime?.() - (a.issuanceDate as any)?.getTime?.())
+      .toSorted((a, b) => (b.issuanceDate ? timestampMs(b.issuanceDate) : 0) - (a.issuanceDate ? timestampMs(a.issuanceDate) : 0))
       .find(matchServiceCredential(['composer:beta']));
     if (credential) {
       this._credential = credential;

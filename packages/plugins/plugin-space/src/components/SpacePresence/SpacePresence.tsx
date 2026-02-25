@@ -9,7 +9,7 @@ import { useAtomCapability } from '@dxos/app-framework/ui';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { generateName } from '@dxos/display-name';
 import { type Key, Obj } from '@dxos/echo';
-import { PublicKey } from '@dxos/react-client';
+import { PublicKey } from '@dxos/keys';
 import { type SpaceMember, useMembers, useSpace } from '@dxos/react-client/echo';
 import { type Identity, useIdentity } from '@dxos/react-client/halo';
 import {
@@ -26,6 +26,7 @@ import {
   useTranslation,
 } from '@dxos/react-ui';
 import { AttentionGlyph, type AttentionGlyphProps, useAttended, useAttention } from '@dxos/react-ui-attention';
+import { decodePublicKey } from '@dxos/protocols/buf';
 import { ComplexMap, keyToFallback } from '@dxos/util';
 
 import { usePath } from '../../hooks';
@@ -41,7 +42,7 @@ const noViewers = new ComplexMap<PublicKey, ObjectViewerProps>(PublicKey.hash);
 
 // TODO(wittjosiah): Factor out?
 const getName = (identity: Identity) =>
-  identity.profile?.displayName ?? generateName((identity.identityKey as any)?.toHex());
+  identity.profile?.displayName ?? generateName(identity.identityKey ? decodePublicKey(identity.identityKey).toHex() : '');
 
 export type SpacePresenceProps = {
   object: Obj.Unknown;
@@ -66,7 +67,7 @@ export const SpacePresence = ({ object, spaceId }: SpacePresenceProps) => {
   const memberOnline = useCallback((member: SpaceMember) => member.presence === 1, []);
   const memberIsNotSelf = useCallback(
     (member: SpaceMember) =>
-      !(identity?.identityKey as any)?.equals(member.identity?.identityKey),
+      !(identity?.identityKey && member.identity?.identityKey && decodePublicKey(identity.identityKey).equals(decodePublicKey(member.identity.identityKey))),
     [identity?.identityKey],
   );
 
@@ -81,11 +82,11 @@ export const SpacePresence = ({ object, spaceId }: SpacePresenceProps) => {
   const membersForObject = spaceMembers
     .filter((member) => memberOnline(member) && memberIsNotSelf(member))
     .filter((member) =>
-      member.identity?.identityKey && currentObjectViewers.has(member.identity.identityKey as any),
+      member.identity?.identityKey && currentObjectViewers.has(decodePublicKey(member.identity.identityKey)),
     )
     .map((member) => {
       const objectView = member.identity?.identityKey
-        ? currentObjectViewers.get(member.identity.identityKey as any)
+        ? currentObjectViewers.get(decodePublicKey(member.identity.identityKey))
         : undefined;
       const lastSeen = objectView?.lastSeen ?? -Infinity;
       const currentlyAttended = objectView?.currentlyAttended ?? false;
@@ -128,7 +129,7 @@ export const FullPresence = (props: MemberPresenceProps) => {
     <div className='dx-avatar-group' data-testid='spacePlugin.presence'>
       {members.slice(0, 3).map((member, i) => (
         <Tooltip.Trigger
-          key={(member.identity?.identityKey as any)?.toHex()}
+          key={member.identity?.identityKey ? decodePublicKey(member.identity.identityKey).toHex() : ''}
           side='bottom'
           content={getName(member.identity!)}
           className='grid focus:outline-none'
@@ -163,7 +164,7 @@ export const FullPresence = (props: MemberPresenceProps) => {
                 <List>
                   {members.map((member) => (
                     <ListItem.Root
-                      key={(member.identity?.identityKey as any)?.toHex()}
+                      key={member.identity?.identityKey ? decodePublicKey(member.identity.identityKey).toHex() : ''}
                       classNames='flex gap-2 items-center cursor-pointer mbe-2'
                       onClick={() => onMemberClick?.(member)}
                       data-testid='identity-list-item'
@@ -198,7 +199,7 @@ type PresenceAvatarProps = Pick<AvatarContentProps, 'size'> & {
 const PresenceAvatar = forwardRef<DxAvatar, PresenceAvatarProps>(
   ({ identity, showName, match, index, onClick, size }, forwardedRef) => {
     const status = match ? 'current' : 'active';
-    const fallbackValue = keyToFallback(identity.identityKey as any);
+    const fallbackValue = keyToFallback(identity.identityKey ? decodePublicKey(identity.identityKey) : PublicKey.random());
     return (
       <Avatar.Root>
         <Avatar.Content

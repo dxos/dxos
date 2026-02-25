@@ -5,6 +5,7 @@
 import React, { type FC, useMemo, useState } from 'react';
 
 import { MulticastObservable } from '@dxos/async';
+import { decodePublicKey } from '@dxos/protocols/buf';
 import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { type Space } from '@dxos/react-client/echo';
@@ -33,7 +34,8 @@ export const SpaceInfoPanel: FC<SpaceInfoPanelProps> = (props) => {
 
   // TODO(dmaretskyi): We don't need SpaceInfo anymore?
   const spacesInfo = useSpacesInfo();
-  const metadata = space?.key && spacesInfo.find((info: any) => (info.key as any)?.equals(space?.key));
+  const metadata =
+    space?.key && spacesInfo.find((info: any) => info.key && decodePublicKey(info.key).equals(space.key));
   const pipelineState = useMulticastObservable(space?.pipeline ?? MulticastObservable.empty());
 
   const toggleActive = async () => {
