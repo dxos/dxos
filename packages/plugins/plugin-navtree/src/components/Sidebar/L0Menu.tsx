@@ -216,7 +216,7 @@ const L0Item = memo(({ item, parent, path, pinned, onRearrange }: L0ItemProps) =
       <div
         role='none'
         data-frame={true}
-        {...(hue && { style: { background: `var(--dx-${hue}Surface)` } })}
+        {...(hue && { style: { background: `var(--color-${hue}-surface)` } })}
         className={mx(
           l0ItemContent,
           pinned
@@ -240,7 +240,7 @@ const ItemAvatar = ({ item }: Pick<L0ItemProps, 'item'>) => {
   const type = l0ItemType(item);
   if (item.properties.icon) {
     const hue = item.properties.hue ?? null;
-    const hueFgStyle = hue && { style: { color: `var(--dx-${hue}SurfaceText)` } };
+    const hueFgStyle = hue && { style: { color: `var(--color-${hue}-surface-text)` } };
     return <Icon icon={item.properties.icon} size={6} {...hueFgStyle} />;
   }
 

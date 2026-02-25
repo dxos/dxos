@@ -13,14 +13,14 @@
   "type": "module",
   "exports": {
     ".": {
-      "default": "./dist/lib/neutral/index.mjs",
       "source": "./src/index.ts",
-      "types": "./dist/types/src/index.d.ts"
+      "types": "./dist/types/src/index.d.ts",
+      "default": "./dist/lib/neutral/index.mjs"
     },
     "./testing": {
-      "default": "./dist/lib/neutral/testing/index.mjs",
       "source": "./src/testing/index.ts",
-      "types": "./dist/types/src/testing/index.d.ts"
+      "types": "./dist/types/src/testing/index.d.ts",
+      "default": "./dist/lib/neutral/testing/index.mjs"
     }
   },
   "files": [

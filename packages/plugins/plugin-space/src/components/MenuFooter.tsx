@@ -24,7 +24,7 @@ export const MenuFooter = ({ object }: { object: Obj.Unknown }) => {
       <dl className='ps-2 mb-2 text-xs grid grid-cols-[max-content_1fr] gap-2'>
         <dt className='uppercase text-[.75em] tracking-wide font-medium mt-px self-start'>{t('location label')}</dt>
         <dd className='line-clamp-3'>
-          <Icon icon='ph--planet--regular' classNames='w-block me-1' />
+          <Icon icon='ph--planet--regular' classNames='inline-block me-1' />
           {toLocalizedString(spaceName, t)}
         </dd>
       </dl>

@@ -266,7 +266,7 @@ export const SmallPresence = ({ count = 0, attended, containsAttended }: SmallPr
         attended={attended}
         containsAttended={containsAttended}
         presence={count > 1 ? 'many' : count === 1 ? 'one' : 'none'}
-        classNames='self-center me-1'
+        classNames='self-center mx-1'
       />
     </Tooltip.Trigger>
   );

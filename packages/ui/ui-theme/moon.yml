@@ -15,7 +15,6 @@ tasks:
   compile-node:
     command: pnpm exec dx-compile
     args:
-      - '--entryPoint=src/plugins/esbuild-plugin.ts'
       - '--entryPoint=src/plugins/plugin.ts'
       - '--entryPoint=src/theme.css'
       - '--outputPath=dist/plugin'
@@ -29,15 +28,6 @@ tasks:
       mergeArgs: replace
     outputs:
       - dist/plugin/
-  process-theme-css:
-    command: node
-    args:
-      - 'scripts/process-theme-css.mjs'
-    deps:
-      - compile-node
-    outputs:
-      - dist/plugin/node-esm/theme.css
-      - dist/plugin/node-cjs/theme.css
   test:
     deps:
       - compile-node

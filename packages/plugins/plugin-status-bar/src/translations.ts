@@ -14,7 +14,7 @@ export const translations = [
         'warning title': 'WARNING',
         'technology preview message': 'Composer is currently in beta.',
         'learn more label': 'Learn more',
-        'released message': 'This version released {{released}}.',
+        'released message': 'This version was released {{released}}.',
         'see release label': 'See release on GitHub',
         'powered by dxos message': 'Powered by <dxos>DXOS</dxos>',
         'discord label': 'Discord',

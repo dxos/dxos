@@ -3,7 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React, { Activity, useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import { Node } from '@dxos/app-graph';
 import { useActionRunner } from '@dxos/plugin-graph';
@@ -49,9 +49,9 @@ export const L1Panel = ({ open, path, item, currentItemId, onBack }: L1PanelProp
       aria-label={title}
       {...(!open && { inert: true })}
     >
-      <Activity mode={item.id === currentItemId ? 'visible' : 'hidden'}>
+      {item.id === currentItemId && (
         <L1PanelContent open={open} path={path} item={item} currentItemId={currentItemId} onBack={onBack} />
-      </Activity>
+      )}
     </Tabs.Tabpanel>
   );
 };
@@ -113,7 +113,7 @@ const L1PanelContent = ({ path, item, currentItemId, onBack }: L1PanelProps) => 
 /**
  * Header row.
  */
-const L1PanelHeader = ({ item, path, onBack }: L1PanelProps) => {
+const L1PanelHeader = ({ item, path }: L1PanelProps) => {
   const { t } = useTranslation(meta.id);
   const { renderItemEnd: ItemEnd } = useNavTreeContext();
   const title = toLocalizedString(item.properties.label, t);
@@ -122,7 +122,7 @@ const L1PanelHeader = ({ item, path, onBack }: L1PanelProps) => {
   useLoadDescendents(item);
 
   return (
-    <div className='flex w-full items-center border-b border-subdued-separator app-drag density-coarse'>
+    <div className='flex w-full items-center border-b border-subdued-separator app-drag density-coarse pe-1'>
       <div className='w-6' />
       <h2 className='flex-1 truncate min-w-0'>{title}</h2>
       {/* TODO(wittjosiah): Reconcile with NavTreeItemColumns. */}

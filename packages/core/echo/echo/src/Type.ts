@@ -490,3 +490,32 @@ export type Meta = TypeAnnotation;
 export const getMeta = (schema: Entity.Any): Meta | undefined => {
   return getTypeAnnotation(schema);
 };
+
+//
+// Feed
+//
+
+/**
+ * Runtime schema for a Feed object.
+ *
+ * @example
+ * ```ts
+ * const feed = Obj.make(Type.Feed, { name: 'notifications', kind: 'dxos.org/plugin/notifications/v1' });
+ * ```
+ */
+export const Feed = Schema.Struct({
+  /** User-facing display name. */
+  name: Schema.optional(Schema.String),
+  /** Identifier for the feed's kind (e.g., plugin id). */
+  kind: Schema.optional(Schema.String),
+}).pipe(
+  object({
+    typename: 'dxos.org/type/Feed',
+    version: '0.1.0',
+  }),
+);
+
+/**
+ * TypeScript instance type for a Feed object.
+ */
+export interface Feed extends Schema.Schema.Type<typeof Feed> {}

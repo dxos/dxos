@@ -9,6 +9,7 @@ export * from './Chat';
 export * from './TemplateEditor';
 export * from './Toolbox';
 export * from './TriggerStatus';
+export * from './Initiative';
 
 export const BlueprintArticle = lazy(() => import('./BlueprintArticle'));
 export const ChatCompanion = lazy(() => import('./ChatCompanion'));
@@ -18,7 +19,6 @@ export const ChatContainer: LazyExoticComponent<typeof import('./ChatContainer')
   () => import('./ChatContainer'),
 );
 export const ChatDialog = lazy(() => import('./ChatDialog'));
-export const InitiativeContainer = lazy(() => import('./InitiativeContainer'));
 export const PromptArticle = lazy(() => import('./PromptArticle'));
 
 export type { ChatContainerProps } from './ChatContainer';

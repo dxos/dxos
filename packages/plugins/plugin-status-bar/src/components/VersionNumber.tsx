@@ -41,14 +41,14 @@ export const VersionNumber = () => {
           role='message'
           classNames='z-[12] bg-warning-500 max-w-[min(calc(100vw-16px),40ch)]'
         >
-          <Message.Root valence='warning' classNames='rounded-be-none p-5'>
+          <Message.Root valence='warning' classNames='rounded-b-none p-5'>
             <Message.Title>{t('warning title')}</Message.Title>
             <Message.Content>
               {t('technology preview message')}
               <br />
               <Link href={previewUrl} target='_blank' rel='noreferrer' variant='neutral'>
                 {t('learn more label')}
-                <Icon icon='ph--arrow-square-out--bold' classNames='inline ms-1' />
+                <Icon icon='ph--arrow-square-out--bold' classNames='dx-icon-inline ms-1' />
               </Link>
             </Message.Content>
           </Message.Root>
@@ -61,7 +61,7 @@ export const VersionNumber = () => {
                 <br />
                 <Link href={releaseUrl} target='_blank' rel='noreferrer' variant='neutral'>
                   {t('see release label')}
-                  <Icon icon='ph--arrow-square-out--bold' classNames='inline ms-1' />
+                  <Icon icon='ph--arrow-square-out--bold' classNames='dx-icon-inline ms-1' />
                 </Link>
               </p>
             )}
