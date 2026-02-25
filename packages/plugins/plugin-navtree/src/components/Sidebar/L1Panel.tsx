@@ -65,7 +65,7 @@ export const L1Panel = ({ open, path, item, currentItemId, onBack }: L1PanelProp
       {item.id === currentItemId && (
         <DensityProvider density='fine'>
           <L1PanelHeader path={path} item={item} currentItemId={currentItemId} onBack={onBack} />
-          <ScrollArea.Root thin orientation='vertical'>
+          <ScrollArea.Root margin={false} thin orientation='vertical'>
             <ScrollArea.Viewport>
               {isAlternate ? (
                 <Tree
@@ -110,7 +110,7 @@ const L1PanelHeader = ({ item, path }: L1PanelProps) => {
   useLoadDescendents(item);
 
   return (
-    <div className='flex w-full items-center border-b border-subdued-separator app-drag density-coarse'>
+    <div className='flex w-full items-center border-b border-subdued-separator app-drag density-coarse pe-1'>
       <div className='w-6' />
       <h2 className='flex-1 truncate min-w-0'>{title}</h2>
       {/* TODO(wittjosiah): Reconcile with NavTreeItemColumns. */}
@@ -158,11 +158,7 @@ const L1PanelHeader = ({ item, path }: L1PanelProps) => {
             </DropdownMenu.Root>
           </MenuProvider>
         )}
-        {ItemEnd && (
-          <div role='none' className='p-icon-button-padding'>
-            <ItemEnd node={item} open />
-          </div>
-        )}
+        {ItemEnd && <ItemEnd node={item} open />}
       </div>
     </div>
   );

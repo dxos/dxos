@@ -315,7 +315,7 @@ export class Toolbox {
       //   packageJson.type = 'module';
       // }
 
-      const commonKeys = pick(this.rootPackage, this.config.package?.commonKeys ?? []);
+      const commonKeys = pick(this.rootPackage, (this.config.package?.commonKeys as (keyof PackageJson)[]) ?? []);
       // TODO(burdon): Investigate util: https://github.com/JamieMason/syncpack
       const merged = defaultsDeep(packageJson, commonKeys);
 
