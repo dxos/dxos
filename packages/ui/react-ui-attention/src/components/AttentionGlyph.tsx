@@ -9,10 +9,10 @@ import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 const attentionGlyphStyles =
-  'inline-block rounded-xs w-3 h-3 bg-transparent text-accent-text transition-colors [[data-contains-attended=true]_&]:bg-attentionRelated [[data-attention=true]_&]:bg-accent-surface [[data-attention=true]_&]:text-accent-surface-text [[aria-current][data-attention=true]_&]:bg-accent-surface [[aria-current][data-attention=true]_&]:text-accent-surface-text';
+  'inline-block rounded-xs w-3 h-3 bg-transparent text-accent-text transition-colors group-data-[contains-attended=true]:bg-attentionRelated group-data-[attention=true]:bg-accent-surface group-data-[attention=true]:text-accent-surface-text group-[[aria-current][data-attention=true]]:bg-accent-surface group-[[aria-current][data-attention=true]]:text-accent-surface-text';
 
 const presenceIconStyles =
-  'w-3 h-3 group-[[aria-current]_&:hover]/attentionGlyphButton:hidden group-[[aria-current]_&:focus]/attentionGlyphButton:hidden group-[[data-attention=true]_&:hover]/attentionGlyphButton:hidden group-[[data-attention=true]_&:focus]/attentionGlyphButton:hidden group-[[aria-current][data-attention=true]_&:hover]/attentionGlyphButton:hidden group-[[aria-current][data-attention=true]_&:focus]/attentionGlyphButton:hidden';
+  'w-3 h-3 group-aria-[current]:group-hover/attentionGlyphButton:hidden group-aria-[current]:group-focus/attentionGlyphButton:hidden group-data-[attention=true]:group-hover/attentionGlyphButton:hidden group-data-[attention=true]:group-focus/attentionGlyphButton:hidden group-[[aria-current][data-attention=true]]:group-hover/attentionGlyphButton:hidden group-[[aria-current][data-attention=true]]:group-focus/attentionGlyphButton:hidden';
 
 const PresenceOne = () => {
   return (
@@ -87,7 +87,7 @@ export const AttentionGlyph = forwardRef<HTMLSpanElement, AttentionGlyphProps>(
     ) : null;
 
     return (
-      <div role='none' className='flex' data-attention={attended} data-contains-attended={containsAttended}>
+      <div role='none' className='flex group' data-attention={attended} data-contains-attended={containsAttended}>
         <span role='none' {...props} className={mx(attentionGlyphStyles, classNames)} ref={forwardedRef}>
           {icon}
         </span>
