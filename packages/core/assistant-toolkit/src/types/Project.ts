@@ -60,12 +60,6 @@ export const Project = Schema.Struct({
     description:
       'If enabled, the qualifying agent will be used to determine if the event is relevant to the project. Related events will be added to the input queue of the project. It is recommended to enable this.',
   }),
-
-  newChatOnEveryEvent: Schema.optional(Schema.Boolean).annotations({
-    title: 'Wipe chat history on every event (deprecated)',
-  }),
-
-  // TODO(dmaretskyi): input queue?
 }).pipe(
   Type.object({
     typename: 'dxos.org/type/Project',

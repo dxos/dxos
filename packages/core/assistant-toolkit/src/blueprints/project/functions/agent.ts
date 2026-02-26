@@ -33,10 +33,6 @@ export default defineFunction({
       invariant(Obj.instanceOf(Project.Project, project));
       invariant(project.chat, 'Project has no chat.');
 
-      if (project.newChatOnEveryEvent) {
-        yield* Project.resetChatHistory(project);
-      }
-
       const chatQueue = yield* project.chat.pipe(
         Database.load,
         Effect.flatMap((chat) => Database.load(chat.queue)),
