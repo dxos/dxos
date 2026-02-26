@@ -12,9 +12,8 @@ import { Flex, type FlexProps, Layout } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { isTauri } from '@dxos/util';
 
-import { type Diagram, type SketchSettingsProps } from '../types';
-
-import { Sketch } from './Sketch';
+import { Sketch } from '../../components/Sketch';
+import { type Diagram, type SketchSettingsProps } from '../../types';
 
 export type SketchContainerProps = SurfaceComponentProps<
   Diagram.Diagram,
@@ -58,5 +57,3 @@ export const SketchContainer = ({ role, subject: sketch, settings }: SketchConta
 };
 
 const Container = (props: FlexProps) => <Flex {...props} classNames='aspect-square' />;
-
-export default SketchContainer;

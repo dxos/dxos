@@ -74,7 +74,7 @@ NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
 - [x] plugin-search
 - [ ] plugin-settings
 - [x] plugin-sheet
-- [ ] plugin-sketch
+- [x] plugin-sketch
 - [ ] plugin-space
 - [ ] plugin-stack
 - [ ] plugin-status-bar
@@ -311,3 +311,11 @@ NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
 - `SheetContainer` → already in `containers/SheetContainer/`; `react-surface.tsx` was wrapping it in `ComputeGraphContextProvider` from `components/` — refactored to absorb provider into `SheetContainer` accepting a `registry` prop, so `react-surface.tsx` imports only from `../../containers`
 - `ComputeGraph`, `FunctionEditor`, `GridSheet`, `SheetContext`, `SheetToolbar` → primitives; stay in `components/`
 - Time: 2026-02-25, ~5 min
+
+## plugin-sketch
+
+- `SketchContainer` → already in `containers/SketchContainer/`; removed stale `components/SketchContainer.tsx` duplicate
+- `SketchSettings` → already in `containers/SketchSettings/`
+- `Sketch` → primitive; stays in `components/Sketch/`
+- `components/index.ts` is empty (no primitives remain)
+- Time: 2026-02-25, ~3 min
