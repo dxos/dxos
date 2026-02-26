@@ -11,11 +11,9 @@ import { getSpace } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { Layout } from '@dxos/react-ui';
 
-import { filePath, getBlobUrl, loadWnfs, wnfsUrl } from '../helpers';
-import { WnfsCapabilities } from '../types';
-import { type WnfsFile } from '../types';
-
-import { FilePreview } from './FilePreview';
+import { FilePreview } from '../../components/FilePreview';
+import { filePath, getBlobUrl, loadWnfs, wnfsUrl } from '../../helpers';
+import { WnfsCapabilities, type WnfsFile } from '../../types';
 
 export type FileContainerProps = SurfaceComponentProps<WnfsFile.File>;
 

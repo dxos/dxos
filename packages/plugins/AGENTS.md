@@ -83,7 +83,7 @@ NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
 - [x] plugin-token-manager
 - [x] plugin-transcription
 - [ ] plugin-transformer
-- [ ] plugin-wnfs
+- [x] plugin-wnfs
 
 ## Observations
 
@@ -365,3 +365,9 @@ NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
 - `TranscriptionContainer` → already in `containers/TranscriptionContainer/`
 - `Transcript` → primitive; stays in `components/Transcript/`
 - Time: 2026-02-25, ~2 min
+
+## plugin-wnfs
+
+- `FileContainer` → moved from flat `components/FileContainer.tsx` to `containers/FileContainer/`; imports `FilePreview` from `../../components/FilePreview`
+- `FileInput`, `FilePreview` → primitives; stay in `components/`
+- Time: 2026-02-25, ~5 min
