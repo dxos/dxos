@@ -12,7 +12,7 @@ import { type AnyProperties, assertObjectModel, setRefResolver } from '@dxos/ech
 import { getProxyTarget, isProxy } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { DXN, type PublicKey, type SpaceId } from '@dxos/keys';
-import { log } from '@dxos/log';
+import { dbg, log } from '@dxos/log';
 import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { type DataService, type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 import { defaultMap } from '@dxos/util';
@@ -230,14 +230,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   private _query(query: Query.Any | Filter.Any, options?: Database.QueryOptions & QueryAST.QueryOptions) {
     query = Filter.is(query) ? Query.select(query) : query;
 
-    let hasSpaceIds = false;
-    QueryAST.visit(query.ast, (node) => {
-      if (node.type === 'options' && node.options.spaceIds !== undefined) {
-        hasSpaceIds = true;
-      }
-    });
-
-    if (hasSpaceIds) {
+    if (isQueryQualified(query.ast)) {
       return this._coreDatabase.graph.query(query, options);
     }
 
@@ -391,4 +384,14 @@ const createSchemaNotRegisteredError = (schema?: any) => {
   }
 
   return new Error(message);
+};
+
+const isQueryQualified = (query: QueryAST.Query): boolean => {
+  let isQualified = false;
+  QueryAST.visit(query, (node) => {
+    if (node.type === 'options' && (node.options.spaceIds !== undefined || node.options.queues !== undefined)) {
+      isQualified = true;
+    }
+  });
+  return isQualified;
 };

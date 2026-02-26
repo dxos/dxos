@@ -30,14 +30,18 @@ export const getTargetSpacesForQuery = (query: QueryAST.Query): SpaceId[] => {
  */
 export const isSimpleSelectionQuery = (
   query: QueryAST.Query,
-): { filter: QueryAST.Filter; options?: QueryAST.QueryOptions } | null => {
+): { filter: QueryAST.Filter; options?: QueryAST.QueryOptions; hasQueues?: boolean } | null => {
   switch (query.type) {
     case 'options': {
       const maybeFilter = isSimpleSelectionQuery(query.query);
       if (!maybeFilter) {
         return null;
       }
-      return { filter: maybeFilter.filter, options: query.options };
+      return {
+        filter: maybeFilter.filter,
+        options: query.options,
+        hasQueues: (query.options.queues && query.options.queues.length > 0) || maybeFilter.hasQueues,
+      };
     }
     case 'select': {
       return { filter: query.filter, options: undefined };
