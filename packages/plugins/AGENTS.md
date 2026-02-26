@@ -75,7 +75,7 @@ NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
 - [ ] plugin-settings
 - [x] plugin-sheet
 - [x] plugin-sketch
-- [ ] plugin-space
+- [x] plugin-space
 - [ ] plugin-stack
 - [ ] plugin-status-bar
 - [ ] plugin-table
@@ -304,6 +304,14 @@ NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
 - `components/` has no primitives (empty index)
 - ISSUE: import order in `react-surface.tsx` was wrong (`../../containers` before `../../constants`) — fixed
 - Time: 2026-02-25, ~3 min
+
+## plugin-space
+
+- `CollectionArticle`, `CollectionSection`, `CreateObjectDialog`, `CreateSpaceDialog`, `InlineSyncStatus`, `JoinDialog`, `MembersContainer`, `MenuFooter`, `ObjectCardStack`, `ObjectDetails`, `ObjectRenamePopover`, `RecordArticle`, `SchemaContainer`, `SmallPresenceLive`, `SpacePluginSettings`, `SpacePresence`, `SpaceRenamePopover`, `SpaceSettingsContainer`, `SyncStatus`, `ViewEditor` → all already in `containers/`
+- `CreateObjectDialogProps` → re-exported from `containers/index.ts`; `react-surface.tsx` updated to import from `../../containers` only
+- `AwaitingObject` → stays as flat file primitive in `components/`; uses `useOperationInvoker` from app-framework but kept as primitive per task spec
+- `CreateDialog/CreateObjectPanel`, `ObjectCardStack/ObjectForm`, `ObjectDetails/BaseObjectSettings`, `ObjectDetails/ForeignKeys`, `SyncStatus/save-tracker`, `SyncStatus/status` → primitive subdirs; stay in `components/`
+- Time: 2026-02-25, ~5 min
 
 ## plugin-sheet
 
