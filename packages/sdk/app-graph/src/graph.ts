@@ -18,6 +18,9 @@ import * as Node from './node';
 
 const graphSymbol = Symbol('graph');
 
+/** Separator for expand keys (id + relation). */
+const EXPAND_KEY_SEPARATOR = '\0';
+
 type DeepWriteable<T> = {
   -readonly [K in keyof T]: T[K] extends object ? DeepWriteable<T[K]> : T[K];
 };
@@ -699,7 +702,7 @@ const expandImpl = <T extends ExpandableGraph | WritableGraph>(
   relation: Node.Relation = 'outbound',
 ): T => {
   const internal = getInternal(graph);
-  const key = `${id}~${relation}`;
+  const key = `${id}${EXPAND_KEY_SEPARATOR}${relation}`;
   const nodeOpt = internal._registry.get(internal._node(id));
   if (Option.isNone(nodeOpt)) {
     // Node not yet in graph: record expand to run when the node is added.
@@ -885,7 +888,7 @@ const addNodeImpl = <T extends WritableGraph>(graph: T, nodeArg: Node.NodeArg<an
       graph.onNodeChanged.emit({ id, node: newNode });
 
       // Apply any expands that were deferred because this node did not exist yet.
-      const prefix = `${id}~`;
+      const prefix = `${id}${EXPAND_KEY_SEPARATOR}`;
       const toApply = [...internal._pendingExpands].filter((k) => k.startsWith(prefix));
       for (const pendingKey of toApply) {
         internal._pendingExpands.delete(pendingKey);
