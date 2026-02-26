@@ -93,6 +93,8 @@ export class IndexEngine {
 
   queryAll(query: {
     spaceIds: readonly SpaceId[];
+    includeAllQueues?: boolean;
+    queueIds?: readonly string[] | null;
   }): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> {
     return this.#objectMetaIndex.queryAll(query);
   }
@@ -125,6 +127,8 @@ export class IndexEngine {
     spaceIds: readonly SpaceId[];
     typeDxns: readonly ObjectMeta['typeDxn'][];
     inverted?: boolean;
+    includeAllQueues?: boolean;
+    queueIds?: readonly string[] | null;
   }): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> {
     return this.#objectMetaIndex.queryTypes(query);
   }

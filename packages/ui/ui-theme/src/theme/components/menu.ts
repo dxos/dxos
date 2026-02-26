@@ -5,7 +5,7 @@
 import { type ComponentFunction, type Elevation, type Theme } from '@dxos/ui-types';
 
 import { mx } from '../../util';
-import { dataDisabled, descriptionText, modalSurface, subduedFocus, surfaceShadow, surfaceZIndex } from '../fragments';
+import { dataDisabled, modalSurface, subduedFocus, surfaceShadow, surfaceZIndex } from '../fragments';
 
 export type MenuStyleProps = Partial<{
   constrainBlockSize: boolean;
@@ -38,7 +38,7 @@ export const menuSeparator: ComponentFunction<MenuStyleProps> = (_props, ...etc)
   mx('my-1 mx-2 h-px bg-separator', ...etc);
 
 export const menuGroupLabel: ComponentFunction<MenuStyleProps> = (_props, ...etc) =>
-  mx(descriptionText, 'select-none px-2 py-2', ...etc);
+  mx('text-description', 'select-none px-2 py-2', ...etc);
 
 export const menuArrow: ComponentFunction<MenuStyleProps> = (_props, ...etc) => mx('fill-separator', ...etc);
 

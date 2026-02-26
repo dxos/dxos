@@ -34,7 +34,7 @@
     touch-action: none;
     user-select: none;
 
-    background: var(--dx-grid-lines, var(--dx-gridLine));
+    background: var(--color-grid-line);
   }
 
   .dx-grid__plane--frozen-row,
@@ -54,7 +54,7 @@
       position: absolute;
       inset: 0;
       pointer-events: none;
-      border: var(--dx-grid-focus-indicator-width) solid var(--dx-gridFocusIndicatorColor);
+      border: var(--dx-grid-focus-indicator-width) solid var(--color-grid-focus-indicator);
     }
   }
 
@@ -67,12 +67,12 @@
   }
 
   .dx-grid {
-    --dx-grid-cell-surface: var(--dx-grid-base, var(--color-base-surface));
+    --grid-cell-surface: var(--color-grid-surface);
 
     [role='gridcell'],
     [role='columnheader'],
     [role='rowheader'] {
-      background: var(--dx-grid-cell-surface);
+      background: var(--grid-cell-surface);
       cursor: pointer;
       position: relative;
 
@@ -119,7 +119,7 @@
       [role='columnheader'],
       [role='rowheader'] {
         &[aria-selected] {
-          --dx-grid-cell-surface: var(--color-grid-selection-overlay);
+          --grid-cell-surface: var(--color-grid-selection-overlay);
 
           &:focus:not([aria-readonly='true']),
           &:focus-visible, &:focus-within {
@@ -171,17 +171,17 @@
 
             z-index: 1;
 
-            background: var(--dx-grid-cell-surface);
+            background: var(--grid-cell-surface);
           }
 
           &:not([aria-readonly='true']) > .dx-grid__cell__content {
-            border-color: var(--dx-gridFocusIndicatorColor);
+            border-color: var(--color-grid-focus-indicator);
           }
         }
       }
 
       &:focus-visible > .dx-grid__cell__content {
-        border-color: var(--dx-gridFocusIndicatorColor);
+        border-color: var(--color-grid-focus-indicator);
       }
     }
   }
@@ -193,7 +193,7 @@
     overflow-wrap: break-word;
 
     background: var(--dx-grid-base, var(--color-base-surface));
-    border: var(--dx-grid-focus-indicator-width) solid var(--dx-gridFocusIndicatorColor);
+    border: var(--dx-grid-focus-indicator-width) solid var(--color-grid-focus-indicator);
     border-radius: 2px;
 
     --dx-grid-cell-editor-max-block-size: min(12em, 50vh);
@@ -218,7 +218,7 @@
     [role='columnheader'],
     [role='rowheader'] {
       &[data-dx-active]:not([aria-readonly='true']) > .dx-grid__cell__content {
-        border-color: var(--dx-gridFocusIndicatorColor);
+        border-color: var(--color-grid-focus-indicator);
       }
     }
   }
@@ -246,7 +246,7 @@
       inline-size: 0;
       block-size: 0;
       border-inline-start: 0.5em solid transparent;
-      border-block-start: 0.5em solid var(--dx-warningText);
+      border-block-start: 0.5em solid var(--color-warning-text);
       z-index: 1;
     }
   }

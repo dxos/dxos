@@ -22,7 +22,7 @@ import { useConfig } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { Avatar, Input, type ThemedClassName, Toolbar, useAsyncEffect } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { errorText, mx } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { useDevtoolsState } from '../../../hooks';
 
@@ -218,7 +218,7 @@ const MessageItem = ({ classNames, message }: ThemedClassName<{ message: Message
   const wrapper = 'p-1 px-2 rounded-md bg-hover-surface overflow-auto';
   return (
     <div className={mx('flex', type === 'request' ? 'ml-[1rem] justify-end' : 'mr-[1rem]', classNames)}>
-      {error && <div className={mx(wrapper, 'whitespace-pre', errorText)}>{String(error)}</div>}
+      {error && <div className={mx(wrapper, 'whitespace-pre text-error-text')}>{String(error)}</div>}
 
       {text !== undefined && (
         <div className={mx(wrapper, type === 'request' && 'bg-primary-500 dark:bg-primary-600')}>
