@@ -73,7 +73,7 @@ NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
 - [x] plugin-script
 - [x] plugin-search
 - [ ] plugin-settings
-- [ ] plugin-sheet
+- [x] plugin-sheet
 - [ ] plugin-sketch
 - [ ] plugin-space
 - [ ] plugin-stack
@@ -304,3 +304,10 @@ NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
 - `components/` has no primitives (empty index)
 - ISSUE: import order in `react-surface.tsx` was wrong (`../../containers` before `../../constants`) — fixed
 - Time: 2026-02-25, ~3 min
+
+## plugin-sheet
+
+- `RangeList` → already in `containers/RangeList/`
+- `SheetContainer` → already in `containers/SheetContainer/`; `react-surface.tsx` was wrapping it in `ComputeGraphContextProvider` from `components/` — refactored to absorb provider into `SheetContainer` accepting a `registry` prop, so `react-surface.tsx` imports only from `../../containers`
+- `ComputeGraph`, `FunctionEditor`, `GridSheet`, `SheetContext`, `SheetToolbar` → primitives; stay in `components/`
+- Time: 2026-02-25, ~5 min

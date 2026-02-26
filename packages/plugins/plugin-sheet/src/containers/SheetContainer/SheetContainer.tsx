@@ -5,26 +5,30 @@
 import React, { Fragment } from 'react';
 
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { type ComputeGraphRegistry } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
 import { Flex, type FlexProps, Layout } from '@dxos/react-ui';
 
+import { FunctionEditor, GridSheet, SheetProvider, SheetToolbar } from '../../components';
+import { ComputeGraphContextProvider, useComputeGraph } from '../../components/ComputeGraph';
 import { type Sheet } from '../../types';
-import { useComputeGraph } from '../ComputeGraph';
-import { FunctionEditor } from '../FunctionEditor';
-import { GridSheet } from '../GridSheet';
-import { SheetProvider } from '../SheetContext';
-import { SheetToolbar } from '../SheetToolbar';
 
 export type SheetContainerProps = SurfaceComponentProps<
   Sheet.Sheet,
   {
     space: Space;
+    registry: ComputeGraphRegistry;
     ignoreAttention?: boolean;
   }
 >;
 
-export const SheetContainer = ({ role, subject: sheet, space, ignoreAttention }: SheetContainerProps) => {
+const SheetContainerInner = ({
+  role,
+  subject: sheet,
+  space,
+  ignoreAttention,
+}: Omit<SheetContainerProps, 'registry'>) => {
   const graph = useComputeGraph(space);
   if (!graph) {
     return null;
@@ -44,5 +48,11 @@ export const SheetContainer = ({ role, subject: sheet, space, ignoreAttention }:
     </SheetProvider>
   );
 };
+
+export const SheetContainer = ({ registry, ...props }: SheetContainerProps) => (
+  <ComputeGraphContextProvider registry={registry}>
+    <SheetContainerInner {...props} />
+  </ComputeGraphContextProvider>
+);
 
 const Container = (props: FlexProps) => <Flex {...props} classNames='aspect-square' />;
