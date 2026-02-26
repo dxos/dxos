@@ -105,5 +105,3 @@ const useGraphController = (canvas: CanvasBoard.CanvasBoard) => {
 
   return controller;
 };
-
-export default CanvasContainer;

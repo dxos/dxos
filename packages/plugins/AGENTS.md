@@ -47,7 +47,7 @@ NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
 - [x] plugin-board
 - [x] plugin-chess
 - [x] plugin-client
-- [ ] plugin-conductor
+- [x] plugin-conductor
 - [x] plugin-debug
 - [x] plugin-deck
 - [x] plugin-excalidraw
@@ -149,6 +149,11 @@ NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
 - `RecoveryCredentialsContainer` → moved from flat `components/RecoveryCredentialsContainer.tsx` to `containers/RecoveryCredentialsContainer/`
 - `ResetDialog` → moved from flat `components/ResetDialog.tsx` to `containers/ResetDialog/`; `ResetDialogProps` re-exported from containers
 - ISSUE: no storybooks for containers — require auth/identity context, deferred.
+- Time: 2026-02-25, ~5 min
+
+## plugin-conductor
+
+- `CanvasContainer` → moved from flat `components/CanvasContainer.tsx` to `containers/CanvasContainer/`
 - Time: 2026-02-25, ~5 min
 
 ## plugin-markdown
