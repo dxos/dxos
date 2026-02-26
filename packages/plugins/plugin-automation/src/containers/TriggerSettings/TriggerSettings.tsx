@@ -8,8 +8,8 @@ import { type Database } from '@dxos/echo';
 import { Input, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
 
-import { useTriggerRuntimeControls } from '../hooks';
-import { meta } from '../meta';
+import { useTriggerRuntimeControls } from '../../hooks';
+import { meta } from '../../meta';
 
 export const TriggersSettings = ({ db }: { db: Database.Database }) => {
   const { state, start, stop } = useTriggerRuntimeControls(db);

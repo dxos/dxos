@@ -12,6 +12,7 @@ Instructions for creating, maintaining and refactoring plugins.
 - Surface components should not use classNames or implement custom styling; flag as an issue if you see this.
 - Surface components should have lazy exports.
 - Surface components should end with the following suffixes if there is an unambiguous matching role: Article, Card, Dialog, Popover, Settings.
+- `src/components` and `src/containers` should contain only index files and directories.
 
 ### General Code style
 
@@ -33,13 +34,13 @@ Instructions for creating, maintaining and refactoring plugins.
 - For each plugin maintain a concise single bullet summary of actions taken per component (sorted alphabetically) and any issues, which should be in the form ISSUE: <issue description>
 - Update this document with recommendations based on best practices; these might include future refacoring.
 - At the end of each plugin update the observations section with any generalizable insights or patterns.
-- At the end of each plugin note the time, date, and time you spent on it.
+- At the end of each plugin note the time, date, and time you spent on it, then commit and push the current branch.
 
 ## Plugins
 
 - [x] plugin-assistant
 - [ ] plugin-attention
-- [ ] plugin-automation
+- [x] plugin-automation
 - [ ] plugin-board
 - [x] plugin-chess
 - [ ] plugin-client
@@ -79,6 +80,7 @@ Instructions for creating, maintaining and refactoring plugins.
 - [ ] plugin-token-manager
 - [ ] plugin-transcription
 - [ ] plugin-transformer
+- [ ] plugin-wnfs
 
 ## Observations
 
@@ -106,6 +108,14 @@ Instructions for creating, maintaining and refactoring plugins.
 - `InitiativeSettings` → moved from `components/Initiative/` to `containers/InitiativeSettings/`; `triggers.ts` co-located in same container directory
 - `PromptArticle` → moved from flat `components/PromptArticle.tsx` to `containers/PromptArticle/`
 - `TriggerStatus` → moved from `components/TriggerStatus/` to `containers/TriggerStatus/`
+
+## plugin-automation
+
+- `AutomationSettings` → moved from flat `components/AutomationSettings.tsx` to `containers/AutomationSettings/`; uses `AutomationPanel` and `TriggersSettings` from `components/`
+- `FunctionsContainer` → moved from flat `components/FunctionsContainer.tsx` to `containers/FunctionsContainer/`; uses `FunctionsPanel` and `FunctionsRegistry` from `components/`
+- `TriggerSettings` → moved from flat `components/TriggerSettings.tsx` to `containers/TriggerSettings/`
+- ISSUE: no storybooks for containers — require space/db context, deferred.
+- Time: 2026-02-25, ~10 min
 
 ## plugin-inbox
 
