@@ -78,7 +78,7 @@ NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
 - [x] plugin-space
 - [x] plugin-stack
 - [x] plugin-status-bar
-- [ ] plugin-table
+- [x] plugin-table
 - [x] plugin-thread
 - [x] plugin-token-manager
 - [x] plugin-transcription
@@ -364,6 +364,14 @@ NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
 
 - `TranscriptionContainer` → already in `containers/TranscriptionContainer/`
 - `Transcript` → primitive; stays in `components/Transcript/`
+- Time: 2026-02-25, ~2 min
+
+## plugin-table
+
+- `TableCard` → already in `containers/TableCard/` with stories
+- `TableContainer` → already in `containers/TableContainer/`; uses `ForwardRefExoticComponent` annotation (pre-existing pattern for this plugin)
+- `react-surface.tsx` already imports only from `../../containers`
+- ISSUE: `containers/index.ts` uses `ForwardRefExoticComponent<TableContainerProps>` instead of `ComponentType<any>` for `TableContainer` — acceptable pre-existing pattern, noted.
 - Time: 2026-02-25, ~2 min
 
 ## plugin-wnfs
