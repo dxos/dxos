@@ -12,16 +12,14 @@ export const createResearchProject = async (
   db: Database.Database,
   name?: string,
 ): Promise<Pipeline.Pipeline | null> => {
-  const mailboxes = await db.query(Filter.type(Mailbox.Mailbox)).run();
-  if (!mailboxes.length) {
+  const feeds = await db.query(Filter.type(Type.Feed)).run();
+  const mailbox = feeds.find((feed) => feed.kind === Mailbox.kind);
+  if (!mailbox) {
     return null;
   }
 
-  const mailbox = mailboxes[0];
   const mailboxView = View.make({
-    query: Query.select(Filter.type(Message.Message)).options({
-      queues: [mailbox.queue.dxn.toString()],
-    }),
+    query: Query.select(Filter.type(Message.Message)).from(mailbox),
     jsonSchema: Type.toJsonSchema(Message.Message),
   });
 
