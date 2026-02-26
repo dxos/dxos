@@ -22,7 +22,7 @@ import {
   ChatCompanion,
   ChatContainer,
   ChatDialog,
-  ProjectContainer,
+  ProjectArticle,
   ProjectSettings,
   PromptArticle,
   TriggerStatus,
@@ -54,7 +54,7 @@ export default Capability.makeModule(() =>
         id: `${meta.id}/project`,
         role: 'article',
         filter: (data): data is { subject: Project.Project } => Obj.instanceOf(Project.Project, data.subject),
-        component: ({ data, role }) => <ProjectContainer role={role} subject={data.subject} />,
+        component: ({ data, role }) => <ProjectArticle role={role} subject={data.subject} />,
       }),
       Surface.create({
         id: `${meta.id}/project/companion/settings`,
