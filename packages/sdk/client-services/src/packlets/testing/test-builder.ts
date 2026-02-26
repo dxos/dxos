@@ -17,7 +17,7 @@ import { type LevelDB } from '@dxos/kv-store';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { MemorySignalManager, MemorySignalManagerContext, type SignalManager } from '@dxos/messaging';
 import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
-import { create, decodePublicKey } from '@dxos/protocols/buf';
+import { create, toPublicKey } from '@dxos/protocols/buf';
 import { Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { ChainSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
@@ -239,7 +239,7 @@ export class TestPeer {
             this.dataSpaceManager,
             this.identity!,
             this.keyring,
-            decodePublicKey(invitation.spaceKey!),
+            toPublicKey(invitation.spaceKey!),
           );
         } else {
           throw new Error('not implemented');
@@ -273,15 +273,13 @@ export const createSigningContext = async (keyring: Keyring): Promise<SigningCon
   return {
     identityKey,
     deviceKey,
-    credentialSigner: createCredentialSignerWithChain(
-      keyring,
-      create(ChainSchema, {
-        credential: (await new CredentialGenerator(keyring, identityKey, deviceKey).createDeviceAuthorization(
-          deviceKey,
-        )) as never,
-      }),
-      deviceKey,
-    ),
+    credentialSigner: await (async () => {
+      const chain = create(ChainSchema, {});
+      chain.credential = await new CredentialGenerator(keyring, identityKey, deviceKey).createDeviceAuthorization(
+        deviceKey,
+      );
+      return createCredentialSignerWithChain(keyring, chain, deviceKey);
+    })(),
     recordCredential: async () => {}, // No-op.
     getProfile: () => undefined,
   };

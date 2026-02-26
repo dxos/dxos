@@ -13,7 +13,7 @@ import { type Keyring } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AlreadyJoinedError, AuthorizationError, InvalidInvitationError, SpaceNotFoundError } from '@dxos/protocols';
-import { bufToProto, decodePublicKey, encodePublicKey, protoToBuf } from '@dxos/protocols/buf';
+import { bufToProto, decodePublicKey, encodePublicKey, protoToBuf, toPublicKey } from '@dxos/protocols/buf';
 import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import {
   type Invitation,
@@ -115,7 +115,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
       {
         invitationId: invitation.invitationId,
         authMethod: bufToProto(invitation.authMethod),
-        swarmKey: decodePublicKey(invitation.swarmKey!),
+        swarmKey: toPublicKey(invitation.swarmKey!),
         role: (invitation.role ?? SpaceMember_Role.ADMIN) as never,
         expiresOn: computeExpirationTime(invitation),
         multiUse: invitation.multiUse ?? false,
@@ -152,7 +152,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     if (invitation.spaceKey == null) {
       return new InvalidInvitationError({ message: 'No spaceKey was provided for a space invitation.' });
     }
-    if (this._spaceManager.spaces.has(decodePublicKey(invitation.spaceKey!))) {
+    if (this._spaceManager.spaces.has(toPublicKey(invitation.spaceKey!))) {
       return new AlreadyJoinedError({ message: 'Already joined space.' });
     }
   }

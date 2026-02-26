@@ -9,9 +9,7 @@ import { createAdmissionCredentials } from '@dxos/credentials';
 import { AuthStatus } from '@dxos/echo-pipeline';
 import { writeMessages } from '@dxos/feed-store';
 import { log } from '@dxos/log';
-import { protoToBuf } from '@dxos/protocols/buf';
 import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
-import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { openAndClose } from '@dxos/test-utils';
 
 import { TestBuilder, type TestPeer } from '../testing';
@@ -57,10 +55,7 @@ describe('DataSpaceManager', () => {
       space1.key,
       space1.inner.genesisFeedKey,
     );
-    await writeMessages(
-      space1.inner.controlPipeline.writer,
-      admissionCredentials.map((credential) => ({ credential: { credential: protoToBuf<Credential>(credential) } })),
-    );
+    await writeMessages(space1.inner.controlPipeline.writer, admissionCredentials as never);
 
     // Accept must be called after admission so that the peer can authenticate for notarization.
     const space2 = await peer2.dataSpaceManager.acceptSpace({
@@ -128,10 +123,7 @@ describe('DataSpaceManager', () => {
       space1.key,
       space1.inner.genesisFeedKey,
     );
-    await writeMessages(
-      space1.inner.controlPipeline.writer,
-      admissionCreds.map((credential) => ({ credential: { credential: protoToBuf<Credential>(credential) } })),
-    );
+    await writeMessages(space1.inner.controlPipeline.writer, admissionCreds as never);
 
     // Accept must be called after admission so that the peer can authenticate for notarization.
     const space2 = await peer2.dataSpaceManager.acceptSpace({

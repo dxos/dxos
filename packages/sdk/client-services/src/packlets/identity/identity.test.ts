@@ -23,7 +23,7 @@ import { Keyring } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
-import { create } from '@dxos/protocols/buf';
+import { create, toPublicKey } from '@dxos/protocols/buf';
 import { EdgeStatus_ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
@@ -64,7 +64,7 @@ describe('identity/identity', () => {
       },
     });
 
-    expect(credential.issuer).toEqual(setup.identityKey);
+    expect(toPublicKey(credential.issuer!).equals(setup.identityKey)).toBe(true);
     expect(await verifyCredential(credential)).toEqual({ kind: 'pass' });
   });
 

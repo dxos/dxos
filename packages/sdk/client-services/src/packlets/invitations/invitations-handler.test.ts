@@ -7,7 +7,7 @@ import { beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 import { type PushStream, Trigger, sleep, waitForCondition } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
-import { decodePublicKey, encodePublicKey } from '@dxos/protocols/buf';
+import { encodePublicKey, toPublicKey } from '@dxos/protocols/buf';
 import {
   type Invitation,
   Invitation_AuthMethod,
@@ -241,7 +241,7 @@ describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
         await hostInvitation(host, invitation);
         const guests = await Promise.all(
           range(5).map(async () => {
-            const guest = await createPeer(decodePublicKey(invitation.spaceKey!));
+            const guest = await createPeer(toPublicKey(invitation.spaceKey!));
             const authCodeInput2 = await acceptInvitation(guest, invitation);
             authCodeInput2.wake(invitation.authCode!);
             return guest;
@@ -322,7 +322,7 @@ describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
     };
 
     const createNewHost = async (invitation: Invitation): Promise<PeerSetup> => {
-      const newHost = await createPeer(decodePublicKey(invitation.spaceKey!));
+      const newHost = await createPeer(toPublicKey(invitation.spaceKey!));
       await performAuth(newHost, invitation);
       await sleep(30);
       await hostInvitation(newHost, invitation);

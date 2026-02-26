@@ -28,7 +28,7 @@ import { log } from '@dxos/log';
 import { type SignalManager } from '@dxos/messaging';
 import { type SwarmNetworkManager } from '@dxos/network-manager';
 import { FeedProtocol, InvalidStorageVersionError, STORAGE_VERSION, trace } from '@dxos/protocols';
-import { create, decodePublicKey } from '@dxos/protocols/buf';
+import { create, toPublicKey } from '@dxos/protocols/buf';
 import { type Invitation, Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { ChainSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
@@ -380,7 +380,7 @@ export class ServiceContext extends Resource {
         this.dataSpaceManager,
         signingContext,
         this.keyring,
-        invitation.spaceKey ? decodePublicKey(invitation.spaceKey) : undefined,
+        invitation.spaceKey ? toPublicKey(invitation.spaceKey) : undefined,
       );
     });
     this.initialized.wake();
@@ -435,8 +435,8 @@ export class ServiceContext extends Resource {
           identity.signer,
           identity.identityKey,
           identity.deviceKey,
-          // Proto Credential from JoinIdentityProps passed to buf ChainSchema at proto↔buf codec boundary.
-          params?.deviceCredential && create(ChainSchema, { credential: params.deviceCredential as never }),
+          // Avoid create(ChainSchema, { credential }) which deep-processes proto-decoded credentials.
+          (() => { const chain = create(ChainSchema, {}); chain.credential = params.deviceCredential as never; return chain; })(),
           [], // TODO(dmaretskyi): Service access credentials.
         );
       } else {

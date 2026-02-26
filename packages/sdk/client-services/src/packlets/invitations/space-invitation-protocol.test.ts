@@ -7,7 +7,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { type MulticastObservable, Trigger, chain } from '@dxos/async';
 import { raise } from '@dxos/debug';
 import { AlreadyJoinedError } from '@dxos/protocols';
-import { decodePublicKey, encodePublicKey } from '@dxos/protocols/buf';
+import { encodePublicKey, toPublicKey } from '@dxos/protocols/buf';
 import { type Invitation, Invitation_Kind, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 
 import { type ServiceContext } from '../services';
@@ -138,8 +138,8 @@ describe('services/space-invitations-protocol', () => {
     expect(invitation1?.spaceKey).to.deep.eq(invitation2?.spaceKey);
 
     {
-      const space1 = host.dataSpaceManager!.spaces.get(decodePublicKey(invitation1!.spaceKey!))!;
-      const space2 = guest.dataSpaceManager!.spaces.get(decodePublicKey(invitation2!.spaceKey!))!;
+      const space1 = host.dataSpaceManager!.spaces.get(toPublicKey(invitation1!.spaceKey!))!;
+      const space2 = guest.dataSpaceManager!.spaces.get(toPublicKey(invitation2!.spaceKey!))!;
       expect(space1).not.to.be.undefined;
       expect(space2).not.to.be.undefined;
 
@@ -212,7 +212,7 @@ describe('services/space-invitations-protocol', () => {
 
     const { swarmKey: swarmKey1 } = await hostConnected.wait();
     const { swarmKey: swarmKey2 } = await guestConnected.wait();
-    expect(swarmKey1).to.deep.eq(swarmKey2);
+    expect(toPublicKey(swarmKey1!).equals(toPublicKey(swarmKey2!))).to.be.true;
 
     const [{ invitation: invitation1 }, { error }] = await Promise.all(invitationPromises);
     expect(invitation1?.state).to.eq(Invitation_State.CANCELLED);

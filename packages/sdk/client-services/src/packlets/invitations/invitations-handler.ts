@@ -12,7 +12,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type SwarmConnection, type SwarmNetworkManager, createTeleportProtocolFactory } from '@dxos/network-manager';
 import { InvalidInvitationError, InvalidInvitationExtensionRoleError, trace } from '@dxos/protocols';
-import { create } from '@dxos/protocols/buf';
+import { create, toPublicKey } from '@dxos/protocols/buf';
 import {
   type AdmissionKeypair,
   AdmissionKeypairSchema,
@@ -444,11 +444,11 @@ export class InvitationsHandler {
     } else if (invitation.kind === Invitation_Kind.DEVICE) {
       label = 'invitation host for device';
     } else {
-      label = `invitation host for space ${invitation.spaceKey ? PublicKey.from(invitation.spaceKey.data).truncate() : undefined}`;
+      label = `invitation host for space ${invitation.spaceKey ? toPublicKey(invitation.spaceKey).truncate() : undefined}`;
     }
     invariant(invitation.swarmKey);
     const swarmConnection = await this._networkManager.joinSwarm({
-      topic: PublicKey.from(invitation.swarmKey.data),
+      topic: toPublicKey(invitation.swarmKey!),
       protocolProvider: createTeleportProtocolFactory(async (teleport) => {
         teleport.addExtension('dxos.halo.invitations', extensionFactory());
       }, this._connectionProps?.teleport),
