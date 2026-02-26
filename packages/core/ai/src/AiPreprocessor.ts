@@ -414,8 +414,20 @@ const fixMissingToolResults = (prompt: Prompt.Prompt): Prompt.Prompt => {
         }
       }
 
+    // Check if the next message satisfies remaining tool calls.
     if (unsatisfiedToolCalls.length > 0) {
-      // Insert first part of the assistant message before the current part.
+      const nextMessage = prompt.content[messageIndex + 1];
+      if (nextMessage?.role === 'tool') {
+        for (const toolResult of nextMessage.content) {
+          const idx = unsatisfiedToolCalls.findIndex((call) => call.id === toolResult.id);
+          if (idx !== -1) {
+            unsatisfiedToolCalls.splice(idx, 1);
+          }
+        }
+      }
+    }
+
+    if (unsatisfiedToolCalls.length > 0) {
       result.push(
         Prompt.makeMessage('assistant', {
           content: message.content.slice(startPartIndex, message.content.length),
@@ -423,7 +435,6 @@ const fixMissingToolResults = (prompt: Prompt.Prompt): Prompt.Prompt => {
       );
       startPartIndex = message.content.length;
 
-      // Insert missing tool results.
       result.push(
         Prompt.makeMessage('tool', {
           content: unsatisfiedToolCalls.map((call) =>

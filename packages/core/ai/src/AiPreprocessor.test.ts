@@ -14,6 +14,7 @@ import { bufferToArray } from '@dxos/util';
 import { estimateTokens, preprocessPrompt } from './AiPreprocessor';
 import { PromptPreprocessingError } from './errors';
 import { TestData } from './testing';
+import { dbg } from '@dxos/log';
 
 describe('AiPreprocessor.preprocessPrompt', () => {
   it.effect(
@@ -473,6 +474,28 @@ describe('AiPreprocessor.preprocessPrompt', () => {
 
       const input = yield* preprocessPrompt(messages);
       expect(input.content.map((x) => x.role)).toEqual(['assistant', 'tool']);
+    }),
+  );
+
+  it.effect(
+    'doesnt compensate for satisfied tool calls',
+    Effect.fn(function* ({ expect }) {
+      const messages = [
+        makeMessage('assistant', [
+          { _tag: 'text', text: 'I need to calculate something.' },
+          { _tag: 'toolCall', toolCallId: 'call_1', name: 'calculator', input: '{}', providerExecuted: false },
+          { _tag: 'toolCall', toolCallId: 'call_2', name: 'calculator', input: '{}', providerExecuted: false },
+        ]),
+        makeMessage('tool', [
+          { _tag: 'toolResult', toolCallId: 'call_1', name: 'calculator', result: '10', providerExecuted: false },
+          { _tag: 'toolResult', toolCallId: 'call_2', name: 'calculator', result: '10', providerExecuted: false },
+        ]),
+        makeMessage('assistant', [{ _tag: 'text', text: 'The result is 10.' }]),
+      ];
+
+      const input = yield* preprocessPrompt(messages);
+      expect(input.content.map((x) => x.role)).toEqual(['assistant', 'tool', 'assistant']);
+      expect(input.content[1].content.length).toEqual(2);
     }),
   );
 });
