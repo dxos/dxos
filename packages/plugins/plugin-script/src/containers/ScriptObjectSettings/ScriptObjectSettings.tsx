@@ -35,24 +35,6 @@ export const ScriptObjectSettings = ({ object }: ScriptObjectSettingsProps) => {
   );
 };
 
-export const ScriptProperties = ({ object }: ScriptObjectSettingsProps) => {
-  const { t } = useTranslation(meta.id);
-  return (
-    <Input.Root>
-      <Input.Label>{t('description label')}</Input.Label>
-      <Input.TextInput
-        placeholder={t('description placeholder')}
-        value={object.description ?? ''}
-        onChange={(event) => {
-          Obj.change(object, (o) => {
-            o.description = event.target.value;
-          });
-        }}
-      />
-    </Input.Root>
-  );
-};
-
 const BlueprintEditor = ({ object }: ScriptObjectSettingsProps) => {
   const { t } = useTranslation(meta.id);
   const db = Obj.getDatabase(object);

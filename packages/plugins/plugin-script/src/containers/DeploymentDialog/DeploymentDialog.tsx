@@ -14,8 +14,6 @@ import { useCreateAndDeployScriptTemplates } from '../../hooks';
 import { meta } from '../../meta';
 import { type Template } from '../../templates';
 
-export const DEPLOYMENT_DIALOG = `${meta.id}/deployment/dialog`;
-
 // TODO(ZaymonFC):
 //  - Show activity and feedback to the user.
 //  - Only take an array of templateIds and get the name from the data.
@@ -99,5 +97,3 @@ export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDia
     </Dialog.Content>
   );
 };
-
-export default DeploymentDialog;

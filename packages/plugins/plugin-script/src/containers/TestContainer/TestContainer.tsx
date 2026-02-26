@@ -7,9 +7,8 @@ import React from 'react';
 import { type Script } from '@dxos/functions';
 import { Layout } from '@dxos/react-ui';
 
+import { TestPanel } from '../../components/TestPanel';
 import { useDeployState, useToolbarState } from '../../hooks';
-
-import { TestPanel } from './TestPanel';
 
 export type TestContainerProps = {
   role: string;

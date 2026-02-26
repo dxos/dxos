@@ -13,11 +13,10 @@ import { useIdentity } from '@dxos/react-client/halo';
 import { Layout } from '@dxos/react-ui';
 import { createDataExtensions, listener, stackItemContentEditorClassNames } from '@dxos/ui-editor';
 
-import { useDeployState, useToolbarState } from '../hooks';
-import { type ScriptSettings } from '../types';
-
-import { ScriptToolbar } from './ScriptToolbar';
-import { TypescriptEditor, type TypescriptEditorProps } from './TypescriptEditor';
+import { ScriptToolbar } from '../../components/ScriptToolbar';
+import { TypescriptEditor, type TypescriptEditorProps } from '../../components/TypescriptEditor';
+import { useDeployState, useToolbarState } from '../../hooks';
+import { type ScriptSettings } from '../../types';
 
 export type ScriptEditorProps = SurfaceComponentProps<
   Script.Script,
@@ -80,5 +79,3 @@ export const ScriptContainer = ({
     </Layout.Main>
   );
 };
-
-export default ScriptContainer;

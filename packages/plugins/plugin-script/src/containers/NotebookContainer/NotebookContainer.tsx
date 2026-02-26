@@ -25,12 +25,11 @@ import { useAttention } from '@dxos/react-ui-attention';
 import { Text, View } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
-import { meta } from '../meta';
-import { ComputeGraph } from '../notebook';
-import { type Notebook } from '../types';
-
-import { NotebookMenu, NotebookStack, type NotebookStackProps } from './NotebookStack';
-import { type TypescriptEditorProps } from './TypescriptEditor';
+import { NotebookMenu, NotebookStack, type NotebookStackProps } from '../../components/NotebookStack';
+import { type TypescriptEditorProps } from '../../components/TypescriptEditor';
+import { meta } from '../../meta';
+import { ComputeGraph } from '../../notebook';
+import { type Notebook } from '../../types';
 
 const INCLUDE_BLUEPRINTS = ['dxos.org/blueprint/assistant', 'dxos.org/blueprint/markdown'];
 
@@ -221,8 +220,6 @@ export const NotebookContainer = ({ role, subject: notebook, env }: NotebookCont
     </Layout.Main>
   );
 };
-
-export default NotebookContainer;
 
 // TODO(wittjosiah): Factor out. Copied from PromptArticle in plugin-assistant.
 const runPrompt = Effect.fn(function* ({

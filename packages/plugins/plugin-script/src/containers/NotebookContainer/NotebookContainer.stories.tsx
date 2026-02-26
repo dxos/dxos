@@ -22,9 +22,9 @@ import { useQuery } from '@dxos/react-client/echo';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { DataTypes } from '@dxos/schema';
 
-import { createNotebook } from '../testing';
-import { translations } from '../translations';
-import { Notebook } from '../types';
+import { createNotebook } from '../../testing';
+import { translations } from '../../translations';
+import { Notebook } from '../../types';
 
 import { NotebookContainer } from './NotebookContainer';
 

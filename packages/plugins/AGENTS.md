@@ -70,7 +70,7 @@ NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
 - [x] plugin-presenter
 - [ ] plugin-preview
 - [x] plugin-registry
-- [ ] plugin-script
+- [x] plugin-script
 - [ ] plugin-search
 - [ ] plugin-settings
 - [ ] plugin-sheet
@@ -282,3 +282,15 @@ NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
 - `RegistryContainer` → already in `containers/RegistryContainer/`
 - `PluginItem`, `PluginList` → primitives; stay in `components/`
 - Time: 2026-02-25, ~2 min
+
+## plugin-script
+
+- `DeploymentDialog` → already in `containers/DeploymentDialog/` with stories; `DEPLOYMENT_DIALOG` constant in `src/constants.ts`
+- `NotebookContainer` → already in `containers/NotebookContainer/` with stories
+- `ScriptContainer` → already in `containers/ScriptContainer/`
+- `ScriptObjectSettings` → already in `containers/ScriptObjectSettings/`
+- `ScriptPluginSettings` → already in `containers/ScriptPluginSettings/`
+- `ScriptProperties` → already in `containers/ScriptProperties/`
+- `TestContainer` → already in `containers/TestContainer/`
+- `FrameContainer`, `NotebookStack`, `QueryEditor`, `ScriptToolbar`, `TestPanel`, `TypescriptEditor` → primitives; stay in `components/`
+- Time: 2026-02-25, ~3 min
