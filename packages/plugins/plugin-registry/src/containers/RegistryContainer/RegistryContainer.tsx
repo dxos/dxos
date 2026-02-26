@@ -13,7 +13,7 @@ import { runAndForwardErrors } from '@dxos/effect';
 import { ObservabilityOperation } from '@dxos/plugin-observability/types';
 import { ScrollArea } from '@dxos/react-ui';
 
-import { PluginList } from './PluginList';
+import { PluginList } from '../../components';
 
 const sortByPluginMeta = ({ meta: { name: a = '' } }: Plugin.Plugin, { meta: { name: b = '' } }: Plugin.Plugin) =>
   a.localeCompare(b);

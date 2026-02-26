@@ -9,7 +9,7 @@ import { Icon, Input, Link, useTranslation } from '@dxos/react-ui';
 import { ScrollArea } from '@dxos/react-ui';
 import { getStyles, mx } from '@dxos/ui-theme';
 
-import { meta } from '../meta';
+import { meta } from '../../meta';
 
 export type PluginDetailProps = {
   plugin: Plugin.Plugin;

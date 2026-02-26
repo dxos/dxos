@@ -69,7 +69,7 @@ NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
 - [x] plugin-pipeline
 - [x] plugin-presenter
 - [ ] plugin-preview
-- [ ] plugin-registry
+- [x] plugin-registry
 - [ ] plugin-script
 - [ ] plugin-search
 - [ ] plugin-settings
@@ -275,3 +275,10 @@ NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
 - `PresenterSettings` → already in `containers/PresenterSettings/`
 - `Markdown`, `Presenter`, `RevealPlayer` → primitives; stay in `components/`; fixed empty `components/index.ts` to re-export all primitives (caused TS2306 build error)
 - Time: 2026-02-25, ~3 min
+
+## plugin-registry
+
+- `PluginDetail` → already in `containers/PluginDetail/` with stories
+- `RegistryContainer` → already in `containers/RegistryContainer/`
+- `PluginItem`, `PluginList` → primitives; stay in `components/`
+- Time: 2026-02-25, ~2 min
