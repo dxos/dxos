@@ -386,7 +386,7 @@ type SearchListViewportProps = ThemedClassName<PropsWithChildren>;
 const SearchListViewport = forwardRef<HTMLDivElement, SearchListViewportProps>(
   ({ classNames, children }, forwardedRef) => {
     return (
-      <ScrollArea.Root classNames={mx(classNames)} ref={forwardedRef} thin>
+      <ScrollArea.Root role='listbox' classNames={mx(classNames)} ref={forwardedRef} thin>
         <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
       </ScrollArea.Root>
     );
