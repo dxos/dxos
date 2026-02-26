@@ -8,7 +8,7 @@ import { type Database } from '@dxos/react-client/echo';
 import { type Actor } from '@dxos/types';
 
 import { useActorContact } from '../../hooks';
-import { UserIconButton } from '../common';
+import { UserIconButton } from '../UserIconButton';
 
 export type EventAttendeeProps = {
   attendee: Actor.Actor;

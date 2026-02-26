@@ -20,7 +20,7 @@ import {
 import { mx } from '@dxos/ui-theme';
 
 import { formatDateTime } from '../../util';
-import { UserIconButton } from '../common';
+import { UserIconButton } from '../UserIconButton';
 
 import { type ViewMode, useMessageToolbarActions } from './useToolbar';
 

@@ -17,7 +17,7 @@ import { Table } from '@dxos/react-ui-table/types';
 import { getTypenameFromQuery } from '@dxos/schema';
 import { type Organization, Person } from '@dxos/types';
 
-import { RelatedContacts } from '../../components/Related/RelatedContacts';
+import { RelatedContacts } from '../../components/RelatedContacts';
 
 export const RelatedToOrganization = ({ subject: organization }: SurfaceComponentProps<Organization.Organization>) => {
   const { invokePromise } = useOperationInvoker();

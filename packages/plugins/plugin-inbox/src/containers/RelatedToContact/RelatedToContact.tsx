@@ -15,8 +15,8 @@ import { useActiveSpace } from '@dxos/plugin-space';
 import { useQuery, useQueue } from '@dxos/react-client/echo';
 import { Event, Message, type Person } from '@dxos/types';
 
-import { RelatedEvents } from '../../components/Related/RelatedEvents';
-import { RelatedMessages } from '../../components/Related/RelatedMessages';
+import { RelatedEvents } from '../../components/RelatedEvents';
+import { RelatedMessages } from '../../components/RelatedMessages';
 import { Calendar, Mailbox } from '../../types';
 
 export const RelatedToContact = ({ subject: contact }: SurfaceComponentProps<Person.Person>) => {

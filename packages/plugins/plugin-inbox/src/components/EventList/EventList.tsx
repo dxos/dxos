@@ -8,7 +8,8 @@ import { List, ListItem, type ThemedClassName } from '@dxos/react-ui';
 import { type Event } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
-import { ActorList, DateComponent } from '../common';
+import { ActorList } from '../Actor';
+import { DateComponent } from '../DateComponent';
 
 // TODO(burdon): Event/Message Articles (in companion); with cards (1-UP).
 // TODO(burdon): Common Actor reference (lookup on demand).

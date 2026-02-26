@@ -10,8 +10,7 @@ import { Obj } from '@dxos/echo';
 import { Layout } from '@dxos/react-ui';
 import { type Message as MessageType } from '@dxos/types';
 
-import { Message, type MessageHeaderProps } from '../../components/MessageArticle/Message';
-import { type ViewMode } from '../../components/MessageArticle/useToolbar';
+import { Message, type MessageHeaderProps, type ViewMode } from '../../components/Message';
 import { useActorContact } from '../../hooks';
 import { InboxOperation, type Mailbox } from '../../types';
 

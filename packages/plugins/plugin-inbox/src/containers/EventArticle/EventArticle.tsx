@@ -12,7 +12,7 @@ import { Layout } from '@dxos/react-ui';
 import { Text } from '@dxos/schema';
 import { Event as EventType } from '@dxos/types';
 
-import { Event, type EventHeaderProps } from '../../components/EventArticle/Event';
+import { Event, type EventHeaderProps } from '../../components/Event';
 import { useShadowObject } from '../../hooks';
 import { type Calendar, InboxOperation } from '../../types';
 
