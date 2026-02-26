@@ -32,9 +32,10 @@ Instructions for refactoring plugins.
 
 ## Progress
 
-- [x] plugin-kanban
+- [x] plugin-assistant
 - [x] plugin-chess
 - [x] plugin-inbox
+- [x] plugin-kanban
 
 ## Learnings
 
@@ -50,6 +51,18 @@ Instructions for refactoring plugins.
 
 - `MailboxSettings`, `RelatedToContact`, `RelatedToOrganization` lack storybooks — these require
   complex database/trigger context and are deferred.
+
+## plugin-assistant
+
+- `AssistantSettings` → moved to `containers/AssistantSettings/`; no primitive sub-components
+- `BlueprintArticle` → moved from flat `components/BlueprintArticle.tsx` to `containers/BlueprintArticle/`
+- `ChatCompanion` → moved from flat `components/ChatCompanion.tsx` to `containers/ChatCompanion/`; imports `ChatContainer` as sibling container
+- `ChatContainer` → moved from flat `components/ChatContainer.tsx` to `containers/ChatContainer/`
+- `ChatDialog` → moved from flat `components/ChatDialog.tsx` to `containers/ChatDialog/`
+- `InitiativeContainer` → moved from `components/Initiative/` to `containers/InitiativeContainer/`
+- `InitiativeSettings` → moved from `components/Initiative/` to `containers/InitiativeSettings/`; `triggers.ts` co-located in same container directory
+- `PromptArticle` → moved from flat `components/PromptArticle.tsx` to `containers/PromptArticle/`
+- `TriggerStatus` → moved from `components/TriggerStatus/` to `containers/TriggerStatus/`
 
 ## plugin-inbox
 
