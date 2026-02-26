@@ -7,8 +7,8 @@ import React from 'react';
 import { Input, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
 
-import { meta } from '../meta';
-import { type PresenterSettingsProps } from '../types';
+import { meta } from '../../meta';
+import { type PresenterSettingsProps } from '../../types';
 
 export type PresenterSettingsComponentProps = {
   settings: PresenterSettingsProps;

@@ -6,13 +6,13 @@ import React from 'react';
 
 import { type Markdown } from '@dxos/plugin-markdown/types';
 
-import { Container, Slide } from './Markdown';
+import { Container, Slide } from '../../components/Markdown';
 
 type MarkdownSlideProps = {
   document: Markdown.Document;
 };
 
-const MarkdownSlide = ({ document }: MarkdownSlideProps) => {
+export const MarkdownSlide = ({ document }: MarkdownSlideProps) => {
   const content = document.content.target?.content;
   if (!content) {
     return null;
@@ -24,5 +24,3 @@ const MarkdownSlide = ({ document }: MarkdownSlideProps) => {
     </Container>
   );
 };
-
-export default MarkdownSlide;

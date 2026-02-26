@@ -67,7 +67,7 @@ NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
 - [x] plugin-observability
 - [x] plugin-outliner
 - [x] plugin-pipeline
-- [ ] plugin-presenter
+- [x] plugin-presenter
 - [ ] plugin-preview
 - [ ] plugin-registry
 - [ ] plugin-script
@@ -266,3 +266,12 @@ NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
 - `PipelineObjectSettings` → moved from flat `components/PipelineObjectSettings.tsx` to `containers/PipelineObjectSettings/`
 - `PipelineColumn`, `PipelineComponent` → primitives with stories; stay in `components/`
 - Time: 2026-02-25, ~5 min
+
+## plugin-presenter
+
+- `CollectionPresenterContainer` → already in `containers/CollectionPresenterContainer/`
+- `DocumentPresenterContainer` → already in `containers/DocumentPresenterContainer/`
+- `MarkdownSlide` → already in `containers/MarkdownSlide/`
+- `PresenterSettings` → already in `containers/PresenterSettings/`
+- `Markdown`, `Presenter`, `RevealPlayer` → primitives; stay in `components/`; fixed empty `components/index.ts` to re-export all primitives (caused TS2306 build error)
+- Time: 2026-02-25, ~3 min

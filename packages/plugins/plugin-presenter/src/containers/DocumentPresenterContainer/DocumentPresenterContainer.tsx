@@ -1,16 +1,16 @@
 //
 // Copyright 2023 DXOS.org
 //
+
 import React, { type FC } from 'react';
 
 import { type Markdown } from '@dxos/plugin-markdown/types';
 import { Layout } from '@dxos/react-ui';
 
-import { useExitPresenter } from '../useExitPresenter';
+import { RevealPlayer } from '../../components/RevealPlayer';
+import { useExitPresenter } from '../../useExitPresenter';
 
-import { RevealPlayer } from './RevealPlayer';
-
-const DocumentPresenterContainer: FC<{ document: Markdown.Document }> = ({ document }) => {
+export const DocumentPresenterContainer: FC<{ document: Markdown.Document }> = ({ document }) => {
   const handleExit = useExitPresenter(document);
 
   return (
@@ -19,5 +19,3 @@ const DocumentPresenterContainer: FC<{ document: Markdown.Document }> = ({ docum
     </Layout.Main>
   );
 };
-
-export default DocumentPresenterContainer;

@@ -9,14 +9,13 @@ import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Layout } from '@dxos/react-ui';
 import { type Collection } from '@dxos/schema';
 
-import { PresenterContext } from '../types';
-import { useExitPresenter } from '../useExitPresenter';
-
-import { PageNumber, Pager, Layout as PresenterLayout } from './Presenter';
+import { PageNumber, Pager, Layout as PresenterLayout } from '../../components/Presenter';
+import { PresenterContext } from '../../types';
+import { useExitPresenter } from '../../useExitPresenter';
 
 type CollectionPresenterContainerProps = SurfaceComponentProps<Collection.Collection>;
 
-const CollectionPresenterContainer = ({ role, subject: collection }: CollectionPresenterContainerProps) => {
+export const CollectionPresenterContainer = ({ role, subject: collection }: CollectionPresenterContainerProps) => {
   const [slide, setSlide] = useState(0);
   const { running } = useContext(PresenterContext);
   const handleExit = useExitPresenter(collection);
@@ -40,5 +39,3 @@ const CollectionPresenterContainer = ({ role, subject: collection }: CollectionP
     </Layout.Main>
   );
 };
-
-export default CollectionPresenterContainer;
