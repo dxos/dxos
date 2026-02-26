@@ -2,6 +2,8 @@
 
 Instructions for creating, maintaining and refactoring plugins.
 
+NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
+
 ## Guide
 
 - Treat plugin-kanban as an exemplar.
@@ -48,9 +50,9 @@ Instructions for creating, maintaining and refactoring plugins.
 - [ ] plugin-conductor
 - [x] plugin-debug
 - [x] plugin-deck
-- [ ] plugin-excalidraw
-- [ ] plugin-explorer
-- [ ] plugin-files
+- [x] plugin-excalidraw
+- [x] plugin-explorer
+- [x] plugin-files
 - [ ] plugin-graph
 - [x] plugin-help
 - [x] plugin-inbox
