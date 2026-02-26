@@ -130,11 +130,15 @@ export const useFormHandler = <T extends AnyProperties>({
     prop: valuesProp,
     defaultProp: defaultValues,
     onChange: () => {
-      setValues(valuesProp ?? defaultValues);
-      setChanged({});
-      setTouched({});
-      setErrors({});
-      setSaving(false);
+      // Only reset when controlled: parent passed new values.
+      // Uncontrolled updates come from setValues in onValueChange.
+      if (valuesProp !== undefined) {
+        setValues(valuesProp ?? defaultValues);
+        setChanged({});
+        setTouched({});
+        setErrors({});
+        setSaving(false);
+      }
     },
   });
   // TODO(wittjosiah): Upgrade @radix-ui/react-use-controllable-state.

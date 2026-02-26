@@ -34,11 +34,13 @@ export const KanbanViewEditor = ({ subject: object }: KanbanViewEditorProps) => 
     [fieldProjections],
   );
 
-  const handleSave = useCallback(
+  const handleValuesChanged = useCallback(
     (values: Partial<{ columnFieldId: string }>) => {
-      updateView((view) => {
-        view.projection.pivotFieldId = values.columnFieldId;
-      });
+      if (values.columnFieldId != null) {
+        updateView((view) => {
+          view.projection.pivotFieldId = values.columnFieldId;
+        });
+      }
     },
     [updateView],
   );
@@ -54,7 +56,12 @@ export const KanbanViewEditor = ({ subject: object }: KanbanViewEditorProps) => 
   );
 
   return (
-    <Form.Root schema={SettingsSchema} values={initialValues} fieldMap={fieldMap} autoSave onSave={handleSave}>
+    <Form.Root
+      schema={SettingsSchema}
+      values={initialValues}
+      fieldMap={fieldMap}
+      onValuesChanged={handleValuesChanged}
+    >
       <Form.FieldSet />
     </Form.Root>
   );
