@@ -9,9 +9,13 @@ import { mx } from '../../util';
 export type ScrollAreaStyleProps = {
   orientation?: AllowedAxis;
   autoHide?: boolean;
+  /** Balance left/right, top/bottom "margin" with scrollbar. */
   margin?: boolean;
+  /** Add default padding. */
   padding?: boolean;
+  /** Use thin scrollbars. */
   thin?: boolean;
+  /** Enable snap scrolling. */
   snap?: boolean;
 };
 
@@ -24,7 +28,6 @@ export const scrollAreaRoot: ComponentFunction<ScrollAreaStyleProps> = ({ orient
     orientation === 'horizontal' && 'group/scroll-h w-full min-w-0 h-full',
     orientation === 'all' && 'group/scroll-all h-full min-h-0 w-full min-w-0',
 
-    // Balance left/right, top/bottom "margin" with scrollbar.
     margin && [
       orientation === 'vertical' && (thin ? 'pl-[4px]' : 'pl-[8px]'),
       orientation === 'horizontal' && (thin ? 'py-[4px]' : 'py-[8px]'),
