@@ -555,16 +555,16 @@ export const constructObjectActions = ({
 
   const getId = (id: string) => `${id}/${Obj.getDXN(object).toString()}`;
 
-  const managedCollection = Obj.instanceOf(Collection.Managed, object) ? object : undefined;
-  const managedMetadataKey = Match.value(typename).pipe(
-    Match.when(Type.getTypename(Collection.Managed), () => {
-      const [, feedKind] = managedCollection!.key.split('~') ?? [];
-      return feedKind ?? managedCollection!.key;
+  const metadataKey = Match.value(object).pipe(
+    Match.when(Obj.instanceOf(Type.Feed), (feed: Type.Feed) => feed.kind ?? Obj.getTypename(feed)!),
+    Match.when(Obj.instanceOf(Collection.Managed), (managed) => {
+      const [, feedKind] = managed.key.split('~') ?? [];
+      return feedKind ?? managed.key;
     }),
-    Match.when(Type.Feed.typename, () => (object as Type.Feed).kind ?? typename),
-    Match.orElse((name) => name),
+    Match.orElse((obj) => Obj.getTypename(obj)!),
   );
-  const metadata = managedMetadataKey ? resolve(managedMetadataKey) : {};
+  const managedCollection = Obj.parse(Collection.Managed, object);
+  const metadata = metadataKey ? resolve(metadataKey) : {};
   const createObject = metadata.createObject;
   const inputSchema = metadata.inputSchema;
 
@@ -633,7 +633,7 @@ export const constructObjectActions = ({
               if (inputSchema) {
                 yield* Operation.invoke(SpaceOperation.OpenCreateObject, {
                   target: db,
-                  typename: managedCollection ? managedMetadataKey : undefined,
+                  typename: managedCollection ? metadataKey : undefined,
                 });
               } else {
                 const createdObject = yield* createObject({}, { db, capabilities }) as Effect.Effect<
@@ -669,7 +669,7 @@ export const constructObjectActions = ({
             data: (params?: Node.InvokeProps) =>
               Operation.invoke(SpaceOperation.RenameObject, { object, caller: params?.caller }),
             properties: {
-              label: ['rename object label', { ns: typename }],
+              label: ['rename object label', { ns: metadataKey }],
               icon: 'ph--pencil-simple-line--regular',
               disposition: 'list-item',
               // TODO(wittjosiah): Not working.
@@ -690,7 +690,7 @@ export const constructObjectActions = ({
               yield* Operation.invoke(SpaceOperation.RemoveObjects, { objects: [object], target: collection });
             }),
             properties: {
-              label: ['delete object label', { ns: typename }],
+              label: ['delete object label', { ns: metadataKey }],
               icon: 'ph--trash--regular',
               disposition: 'list-item',
               disabled: !deletable,
