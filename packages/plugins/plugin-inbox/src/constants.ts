@@ -4,4 +4,4 @@
 
 import { meta } from './meta';
 
-export const POPOVER_SAVE_FILTER = `${meta.id}/PopoverSaveFilter`;
+export const POPOVER_SAVE_FILTER = `${meta.id}/SaveFilterPopover`;

@@ -20,9 +20,9 @@ import {
   MailboxSettings,
   MessageArticle,
   MessageCard,
-  PopoverSaveFilter,
   RelatedToContact,
   RelatedToOrganization,
+  SaveFilterPopover,
 } from '../../containers';
 import { meta } from '../../meta';
 import { Calendar, Mailbox } from '../../types';
@@ -102,7 +102,7 @@ export default Capability.makeModule(() =>
           'filter' in data.props &&
           Obj.instanceOf(Mailbox.Mailbox, data.props.mailbox) &&
           typeof data.props.filter === 'string',
-        component: ({ data }) => <PopoverSaveFilter mailbox={data.props.mailbox} filter={data.props.filter} />,
+        component: ({ data }) => <SaveFilterPopover mailbox={data.props.mailbox} filter={data.props.filter} />,
       }),
       Surface.create({
         id: `${meta.id}/mailbox/companion/settings`,
