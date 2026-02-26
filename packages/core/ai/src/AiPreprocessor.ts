@@ -14,6 +14,7 @@ import { ContentBlock, type Message } from '@dxos/types';
 import { bufferToArray } from '@dxos/util';
 
 import { PromptPreprocessingError as PromptPreprocesorError } from './errors';
+import { flow, pipe } from 'effect/Function';
 
 export type CacheControl = 'no-cache' | 'ephemeral';
 
@@ -35,15 +36,10 @@ export const preprocessPrompt: (
   messages,
   { system, cacheControl = 'no-cache' } = {},
 ) {
-  let prompt = yield* Function.pipe(
+  return yield* Function.pipe(
     messages,
     applySummaryTrimming,
-    Effect.map((messages) =>
-      Array.isNonEmptyReadonlyArray(messages)
-        ? Array.groupWith((a: Message.Message, b: Message.Message) => a.sender.role === b.sender.role)(messages)
-        : [],
-    ),
-    Effect.map(Array.map(mergeMessages)),
+    Effect.map(groupAssistantMessages),
     Effect.flatMap(
       Effect.forEach(
         Effect.fnUntraced(function* (msg) {
@@ -89,39 +85,10 @@ export const preprocessPrompt: (
     Effect.map(Array.flatten),
     Effect.map(Array.filter((_) => _.content.length > 0)),
     Effect.map(Prompt.fromMessages),
+    Effect.map(fixMissingToolResults),
+    Effect.map(system ? Prompt.setSystem(system) : Function.identity),
+    Effect.map(setCacheControl(cacheControl)),
   );
-
-  if (system) {
-    prompt = Prompt.setSystem(prompt, system);
-  }
-
-  if (cacheControl === 'ephemeral') {
-    prompt = Prompt.fromMessages(
-      prompt.content.map((message, index) =>
-        index !== prompt.content.length - 1
-          ? message
-          : {
-              ...message,
-              options: {
-                anthropic: {
-                  cacheControl: {
-                    ttl: '5m',
-                    type: 'ephemeral',
-                  },
-                },
-              },
-            },
-      ),
-    );
-  }
-
-  // TODO(dmaretskyi): Pull this out to the session?
-  // if (prompt.content.at(-1)?.role === 'assistant') {
-  //   // Insert empty user message so that the assistant can continue the conversation.
-  //   prompt = prompt.pipe(Prompt.merge('Continue'));
-  // }
-
-  return prompt;
 });
 
 /**
@@ -392,3 +359,131 @@ const mergeMessages = (messages: Message.Message[]): Message.Message => ({
   ...messages[0],
   blocks: messages.flatMap((msg) => msg.blocks),
 });
+
+/**
+ * Detects missing tool call results which can arise due to the conversation being interrupted.
+ * Notifies the model to retry the tool call.
+ */
+const fixMissingToolResults = (prompt: Prompt.Prompt): Prompt.Prompt => {
+  let result: Prompt.Message[] = [];
+  for (let messageIndex = 0; messageIndex < prompt.content.length; messageIndex++) {
+    const message = prompt.content[messageIndex];
+    if (message.role !== 'assistant') {
+      result.push(message);
+      continue;
+    }
+
+    const unsatisfiedToolCalls: Prompt.ToolCallPart[] = [];
+    let startPartIndex = 0;
+    for (let partIndex = 0; partIndex < message.content.length; partIndex++) {
+      const part = message.content[partIndex];
+      if (part.type === 'tool-call' && !part.providerExecuted) {
+        unsatisfiedToolCalls.push(part);
+      } else if (part.type === 'tool-result' && !part.providerExecuted) {
+        const idx = unsatisfiedToolCalls.findIndex((call) => call.id === part.id);
+        if (idx !== -1) {
+          unsatisfiedToolCalls.splice(idx, 1);
+        }
+      } else {
+        if (unsatisfiedToolCalls.length > 0) {
+          // Insert first part of the assistant message before the current part.
+          result.push(
+            Prompt.makeMessage('assistant', {
+              content: message.content.slice(startPartIndex, partIndex),
+            }),
+          );
+          startPartIndex = partIndex;
+
+            // Insert missing tool results.
+            result.push(
+              Prompt.makeMessage('tool', {
+                content: unsatisfiedToolCalls.map((call) =>
+                  Prompt.makePart('tool-result', {
+                    id: call.id,
+                    name: call.name,
+                    result:
+                      'Tool result is missing from the conversation. This is likely a bug in the agent framework. Retry tool call; try calling tools one by one.',
+                    isFailure: true,
+                    providerExecuted: false,
+                  }),
+                ),
+              }),
+            );
+            unsatisfiedToolCalls.length = 0;
+          }
+        }
+      }
+
+    if (unsatisfiedToolCalls.length > 0) {
+      // Insert first part of the assistant message before the current part.
+      result.push(
+        Prompt.makeMessage('assistant', {
+          content: message.content.slice(startPartIndex, message.content.length),
+        }),
+      );
+      startPartIndex = message.content.length;
+
+      // Insert missing tool results.
+      result.push(
+        Prompt.makeMessage('tool', {
+          content: unsatisfiedToolCalls.map((call) =>
+            Prompt.makePart('tool-result', {
+              id: call.id,
+              name: call.name,
+              result:
+                'Tool result is missing from the conversation. This is likely a bug in the agent framework. Retry tool call; try calling tools one by one.',
+              isFailure: true,
+              providerExecuted: false,
+            }),
+          ),
+        }),
+      );
+    }
+
+    if (startPartIndex < message.content.length) {
+      result.push(
+        Prompt.makeMessage('assistant', {
+          content: message.content.slice(startPartIndex),
+        }),
+      );
+    }
+  }
+
+  return Prompt.fromMessages(result);
+};
+
+/**
+ * Groups consecutive assistant messages into a single message.
+ */
+const groupAssistantMessages: (messages: readonly Message.Message[]) => readonly Message.Message[] = flow(
+  (messages) =>
+    Array.isNonEmptyReadonlyArray(messages)
+      ? Array.groupWith((a: Message.Message, b: Message.Message) => a.sender.role === b.sender.role)(messages)
+      : [],
+  Array.map(mergeMessages),
+);
+
+const setCacheControl: (cacheControl: CacheControl) => (prompt: Prompt.Prompt) => Prompt.Prompt =
+  (cacheControl) => (prompt) => {
+    if (cacheControl === 'ephemeral') {
+      return Prompt.fromMessages(
+        prompt.content.map((message, index) =>
+          index !== prompt.content.length - 1
+            ? message
+            : {
+                ...message,
+                options: {
+                  anthropic: {
+                    cacheControl: {
+                      ttl: '5m',
+                      type: 'ephemeral',
+                    },
+                  },
+                },
+              },
+        ),
+      );
+    } else {
+      return prompt;
+    }
+  };
