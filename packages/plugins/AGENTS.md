@@ -45,16 +45,16 @@ Instructions for creating, maintaining and refactoring plugins.
 - [x] plugin-chess
 - [x] plugin-client
 - [ ] plugin-conductor
-- [ ] plugin-debug
-- [ ] plugin-deck
+- [x] plugin-debug
+- [x] plugin-deck
 - [ ] plugin-excalidraw
 - [ ] plugin-explorer
 - [ ] plugin-files
 - [ ] plugin-graph
-- [ ] plugin-help
+- [x] plugin-help
 - [x] plugin-inbox
 - [x] plugin-kanban
-- [ ] plugin-map
+- [x] plugin-map
 - [x] plugin-markdown
 - [ ] plugin-masonry
 - [ ] plugin-meeting
@@ -156,3 +156,40 @@ Instructions for creating, maintaining and refactoring plugins.
 - `MarkdownEditor` → primitive; stays in `components/MarkdownEditor/`
 - ISSUE: `Suggestions.stories.tsx` in `components/` referenced deleted `MarkdownContainer` — deleted stale story file.
 - Time: 2026-02-25, ~10 min
+
+## plugin-debug
+
+- `DebugGraph` → moved to `containers/DebugGraph/`
+- `DebugObjectPanel` → moved to `containers/DebugObjectPanel/`
+- `DebugSettings` → moved to `containers/DebugSettings/`
+- `DebugStatus` → moved to `containers/DebugStatus/`
+- `DevtoolsOverviewContainer` → moved to `containers/DevtoolsOverviewContainer/`
+- `SpaceGenerator` → moved to `containers/SpaceGenerator/`; `ObjectGenerator`, `presets`, `SchemaTable` primitives restored to `components/SpaceGenerator/` (accidentally deleted)
+- `Wireframe` → moved to `containers/Wireframe/`
+- ISSUE: `components/SpaceGenerator/` primitives were over-deleted during bulk refactor; restored from git and removed only the surface file.
+- ISSUE: no storybooks for containers — require space/device context, deferred.
+- Time: 2026-02-25, ~10 min
+
+## plugin-deck
+
+- `Banner` → moved from flat `components/Banner.tsx` to `containers/Banner/`
+- `DeckSettings` → moved from flat `components/DeckSettings.tsx` to `containers/DeckSettings/`
+- `DeckLayout`, `Plank`, `Sidebar` → primitives; stay in `components/`
+- Time: 2026-02-25, ~5 min
+
+## plugin-help
+
+- `ShortcutsDialogContent` → moved from `components/Shortcuts/ShortcutsDialog.tsx` to `containers/ShortcutsDialogContent/`; `Shortcuts`, `ShortcutsHints`, `ShortcutsList` primitives stay in `components/Shortcuts/`
+- `ShortcutsHints` → moved to `containers/ShortcutsHints/`
+- `ShortcutsList` → moved to `containers/ShortcutsList/`
+- `SHORTCUTS_DIALOG` constant → extracted to `src/constants.ts`
+- `Tooltip`, `WelcomeTour` → primitives; stay in `components/`
+- Time: 2026-02-25, ~10 min
+
+## plugin-map
+
+- `MapContainer` → moved to `containers/MapContainer/`; `MapContainerProps` and `MapControlType` re-exported from containers
+- `MapViewEditor` → moved to `containers/MapViewEditor/`
+- `Globe`, `Map` → primitives; stay in `components/`
+- ISSUE: `types/capabilities.ts` imported `MapControlType` from `../components` — fixed to import from `../containers`.
+- Time: 2026-02-25, ~5 min

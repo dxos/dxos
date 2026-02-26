@@ -14,11 +14,10 @@ import { type GeoMarker, type MapRootProps } from '@dxos/react-ui-geo';
 import { getTypenameFromQuery } from '@dxos/schema';
 import { getDeep } from '@dxos/util';
 
-import { type Map } from '../types';
-
-import { GlobeControl } from './Globe';
-import { MapControl } from './Map';
-import { type GeoControlProps } from './types';
+import { GlobeControl } from '../../components/Globe';
+import { MapControl } from '../../components/Map';
+import { type GeoControlProps } from '../../components/types';
+import { type Map } from '../../types';
 
 export type MapControlType = 'globe' | 'map';
 
@@ -79,5 +78,3 @@ export const MapContainer = ({ role, subject: object, type: typeProp = 'map', ..
 };
 
 const Container = (props: FlexProps) => <Flex {...props} classNames='aspect-square' />;
-
-export default MapContainer;

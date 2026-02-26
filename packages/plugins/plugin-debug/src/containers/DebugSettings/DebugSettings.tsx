@@ -13,8 +13,8 @@ import { Icon, IconButton, Input, Select, Toast, useFileDownload, useTranslation
 import { Settings } from '@dxos/react-ui-form';
 import { setDeep } from '@dxos/util';
 
-import { meta } from '../meta';
-import { type DebugSettingsProps } from '../types';
+import { meta } from '../../meta';
+import { type DebugSettingsProps } from '../../types';
 
 type Toast = {
   title: string;

@@ -11,5 +11,3 @@ export type DebugGraphProps = { graph: Graph.Graph; root: string };
 export const DebugGraph: FC<DebugGraphProps> = ({ graph, root }) => {
   return <Tree data={Graph.toJSON(graph, root)} />;
 };
-
-export default DebugGraph;

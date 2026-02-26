@@ -16,5 +16,3 @@ export const DevtoolsOverviewContainer = () => {
     </StatsPanel>
   );
 };
-
-export default DevtoolsOverviewContainer;

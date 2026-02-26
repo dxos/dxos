@@ -17,9 +17,13 @@ import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { Organization, Person, Task } from '@dxos/types';
 import { jsonKeyReplacer, sortKeys } from '@dxos/util';
 
-import { type ObjectGenerator, createGenerator, staticGenerators } from './ObjectGenerator';
-import { generator } from './presets';
-import { SchemaTable } from './SchemaTable';
+import {
+  type ObjectGenerator,
+  createGenerator,
+  staticGenerators,
+} from '../../components/SpaceGenerator/ObjectGenerator';
+import { generator } from '../../components/SpaceGenerator/presets';
+import { SchemaTable } from '../../components/SpaceGenerator/SchemaTable';
 
 export type SpaceGeneratorProps = {
   space: Space;
