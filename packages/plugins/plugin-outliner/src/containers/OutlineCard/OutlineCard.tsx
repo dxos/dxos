@@ -7,9 +7,8 @@ import React from 'react';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Card } from '@dxos/react-ui-mosaic';
 
-import { type Outline as OutlineType } from '../types';
-
-import { Outline } from './Outline';
+import { Outline } from '../../components/Outline';
+import { type Outline as OutlineType } from '../../types';
 
 export const OutlineCard = ({ subject }: SurfaceComponentProps<OutlineType.Outline>) => {
   if (!subject.content.target) {
@@ -22,5 +21,3 @@ export const OutlineCard = ({ subject }: SurfaceComponentProps<OutlineType.Outli
     </Card.Root>
   );
 };
-
-export default OutlineCard;

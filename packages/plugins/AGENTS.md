@@ -65,7 +65,7 @@ NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
 - [ ] plugin-native
 - [x] plugin-navtree
 - [x] plugin-observability
-- [ ] plugin-outliner
+- [x] plugin-outliner
 - [ ] plugin-pipeline
 - [ ] plugin-presenter
 - [ ] plugin-preview
@@ -250,4 +250,12 @@ NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
 - `HelpContainer` → moved from flat `components/HelpContainer.tsx` to `containers/HelpContainer/`; uses `FeedbackForm` primitive from `components/`
 - `ObservabilitySettings` → moved from flat `components/ObservabilitySettings.tsx` to `containers/ObservabilitySettings/`; `ObservabilitySettingsSchema`, `ObservabilitySettingsProps`, `ObservabilitySettingsComponentProps` re-exported from `containers/index.ts`
 - `FeedbackForm` → primitive; stays in `components/`
+- Time: 2026-02-25, ~5 min
+
+## plugin-outliner
+
+- `JournalContainer` → moved from flat `components/JournalContainer.tsx` to `containers/JournalContainer/`; uses `Journal` primitive from `components/Journal/`
+- `OutlineCard` → moved from flat `components/OutlineCard.tsx` to `containers/OutlineCard/`; uses `Outline` primitive from `components/Outline/`
+- `OutlineContainer` → moved from flat `components/OutlineContainer.tsx` to `containers/OutlineContainer/`; uses `Outline` primitive from `components/Outline/`
+- `Journal`, `Outline` → primitives with stories; stay in `components/`
 - Time: 2026-02-25, ~5 min

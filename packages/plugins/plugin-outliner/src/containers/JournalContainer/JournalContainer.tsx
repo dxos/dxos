@@ -10,9 +10,8 @@ import { Layout } from '@dxos/react-ui';
 import { Calendar, type CalendarController } from '@dxos/react-ui-calendar';
 import { mx } from '@dxos/ui-theme';
 
-import { type Journal } from '../types';
-
-import { Journal as JournalComponent, type JournalProps } from './Journal';
+import { Journal as JournalComponent, type JournalProps } from '../../components/Journal';
+import { type Journal } from '../../types';
 
 export type JournalContainerProps = SurfaceComponentProps<Journal.Journal> & { showCalendar?: boolean };
 
@@ -51,5 +50,3 @@ export const JournalContainer = ({ role, subject: journal, showCalendar = true }
     </Layout.Main>
   );
 };
-
-export default JournalContainer;

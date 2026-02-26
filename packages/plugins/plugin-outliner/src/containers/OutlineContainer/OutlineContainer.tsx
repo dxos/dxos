@@ -7,11 +7,10 @@ import React from 'react';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Layout } from '@dxos/react-ui';
 
-import { type Outline as OutlineType } from '../types';
+import { Outline } from '../../components/Outline';
+import { type Outline as OutlineType } from '../../types';
 
-import { Outline } from './Outline';
-
-export const OutlinerContainer = ({ role, subject: outline }: SurfaceComponentProps<OutlineType.Outline>) => {
+export const OutlineContainer = ({ role, subject: outline }: SurfaceComponentProps<OutlineType.Outline>) => {
   if (!outline.content.target) {
     return null;
   }
@@ -22,5 +21,3 @@ export const OutlinerContainer = ({ role, subject: outline }: SurfaceComponentPr
     </Layout.Main>
   );
 };
-
-export default OutlinerContainer;
