@@ -13,7 +13,7 @@ import { Form, type FormFieldMap, type FormUpdateMeta, Settings } from '@dxos/re
 import { EmojiPickerBlock, HuePicker } from '@dxos/react-ui-pickers';
 import { hexToEmoji, hexToHue } from '@dxos/util';
 
-import { meta } from '../meta';
+import { meta } from '../../meta';
 
 // TOOD(burdon): Factor out?
 // TODO(wittjosiah): Integrate annotations with translations.

@@ -22,9 +22,9 @@ import { Text } from '@dxos/schema';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { Organization, Person } from '@dxos/types';
 
-import { MarkdownPlugin } from '../MarkdownPlugin';
-import { translations } from '../translations';
-import { Markdown } from '../types';
+import { MarkdownPlugin } from '../../MarkdownPlugin';
+import { translations } from '../../translations';
+import { Markdown } from '../../types';
 
 faker.seed(1);
 

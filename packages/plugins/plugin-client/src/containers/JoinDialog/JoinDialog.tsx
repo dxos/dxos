@@ -12,8 +12,8 @@ import { Dialog, useTranslation } from '@dxos/react-ui';
 import { JoinPanel, type JoinPanelProps } from '@dxos/shell/react';
 import { osTranslations } from '@dxos/ui-theme';
 
-import { meta } from '../meta';
-import { ClientOperation } from '../types';
+import { meta } from '../../meta';
+import { ClientOperation } from '../../types';
 
 export const JoinDialog = (props: JoinPanelProps) => {
   const { invokePromise } = useOperationInvoker();

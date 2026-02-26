@@ -9,8 +9,8 @@ import { useCredentials } from '@dxos/react-client/halo';
 import { Icon, IconButton, List, ListItem, Message, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
 
-import { meta } from '../meta';
-import { ClientOperation } from '../types';
+import { meta } from '../../meta';
+import { ClientOperation } from '../../types';
 
 export const MANAGE_CREDENTIALS_DIALOG = `${meta.id}/ManageCredentialsDialog`;
 

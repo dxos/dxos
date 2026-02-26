@@ -9,10 +9,10 @@ import { useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-mosaic';
 import { Text } from '@dxos/schema';
 
+import { MarkdownEditor } from '../../components/MarkdownEditor';
 import { meta } from '../../meta';
 import { Markdown } from '../../types';
 import { getContentSnippet, getFallbackName } from '../../util';
-import { MarkdownEditor } from '../MarkdownEditor';
 
 export type MarkdownCardProps = { subject: Markdown.Document | Text.Text };
 

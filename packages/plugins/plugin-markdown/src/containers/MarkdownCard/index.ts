@@ -4,6 +4,4 @@
 
 import { MarkdownCard } from './MarkdownCard';
 
-export * from './MarkdownCard';
-
 export default MarkdownCard;

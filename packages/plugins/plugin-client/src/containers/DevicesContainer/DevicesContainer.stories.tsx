@@ -5,18 +5,19 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 
-import { OperationPlugin } from '@dxos/app-framework';
+import { OperationPlugin, RuntimePlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { translations as shellTranslations } from '@dxos/shell/react';
 
-import { ClientPlugin } from '../ClientPlugin';
-import { translations } from '../translations';
+import { ClientPlugin } from '../../ClientPlugin';
+import { translations } from '../../translations';
 
-import { RecoveryCredentialsContainer } from './RecoveryCredentialsContainer';
+import { DevicesContainer } from './DevicesContainer';
 
 const meta = {
-  title: 'plugins/plugin-client/RecoveryCredentialsContainer',
-  component: RecoveryCredentialsContainer,
+  title: 'plugins/plugin-client/DevicesContainer',
+  component: DevicesContainer,
   decorators: [
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
@@ -29,17 +30,22 @@ const meta = {
             }),
         }),
         OperationPlugin(),
+        RuntimePlugin(),
       ],
     }),
   ],
   parameters: {
     layout: 'fullscreen',
-    translations,
+    translations: [...translations, ...shellTranslations],
   },
-} satisfies Meta<typeof RecoveryCredentialsContainer>;
+} satisfies Meta<typeof DevicesContainer>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  args: {
+    createInvitationUrl: () => 'https://example.com',
+  },
+};

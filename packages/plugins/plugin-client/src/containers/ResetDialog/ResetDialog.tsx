@@ -13,8 +13,8 @@ import { useClient } from '@dxos/react-client';
 import { Dialog, useTranslation } from '@dxos/react-ui';
 import { ConfirmReset, type ConfirmResetProps } from '@dxos/shell/react';
 
-import { meta } from '../meta';
-import { type ClientPluginOptions } from '../types';
+import { meta } from '../../meta';
+import { type ClientPluginOptions } from '../../types';
 
 export type ResetDialogProps = Pick<ConfirmResetProps, 'mode'> &
   Pick<ClientPluginOptions, 'onReset'> & {

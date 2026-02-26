@@ -43,7 +43,7 @@ Instructions for creating, maintaining and refactoring plugins.
 - [x] plugin-automation
 - [x] plugin-board
 - [x] plugin-chess
-- [ ] plugin-client
+- [x] plugin-client
 - [ ] plugin-conductor
 - [ ] plugin-debug
 - [ ] plugin-deck
@@ -55,7 +55,7 @@ Instructions for creating, maintaining and refactoring plugins.
 - [x] plugin-inbox
 - [x] plugin-kanban
 - [ ] plugin-map
-- [ ] plugin-markdown
+- [x] plugin-markdown
 - [ ] plugin-masonry
 - [ ] plugin-meeting
 - [ ] plugin-mermaid
@@ -136,3 +136,23 @@ Instructions for creating, maintaining and refactoring plugins.
 - `RelatedToContact` → moved to `containers/RelatedToContact/`; helpers stay in `components/Related/`
 - `RelatedToOrganization` → moved to `containers/RelatedToOrganization/`; helpers stay in `components/Related/`
 - ISSUE: `MailboxSettings`, `RelatedToContact`, `RelatedToOrganization` lack storybooks — these require complex database/trigger context and are deferred.
+
+## plugin-client
+
+- `DevicesContainer` → moved from flat `components/DevicesContainer.tsx` to `containers/DevicesContainer/`
+- `JoinDialog` → moved from flat `components/JoinDialog.tsx` to `containers/JoinDialog/`
+- `ProfileContainer` → moved from flat `components/ProfileContainer.tsx` to `containers/ProfileContainer/`
+- `RecoveryCodeDialog` → moved from flat `components/RecoveryCodeDialog.tsx` to `containers/RecoveryCodeDialog/`; `RecoveryCodeDialogProps` re-exported from containers
+- `RecoveryCredentialsContainer` → moved from flat `components/RecoveryCredentialsContainer.tsx` to `containers/RecoveryCredentialsContainer/`
+- `ResetDialog` → moved from flat `components/ResetDialog.tsx` to `containers/ResetDialog/`; `ResetDialogProps` re-exported from containers
+- ISSUE: no storybooks for containers — require auth/identity context, deferred.
+- Time: 2026-02-25, ~5 min
+
+## plugin-markdown
+
+- `MarkdownCard` → moved from flat `components/MarkdownCard.tsx` to `containers/MarkdownCard/`
+- `MarkdownContainer` → moved from flat `components/MarkdownContainer.tsx` to `containers/MarkdownContainer/`; `MarkdownContainerProps` re-exported from containers (used by react-surface)
+- `MarkdownSettings` → moved from flat `components/MarkdownSettings.tsx` to `containers/MarkdownSettings/`
+- `MarkdownEditor` → primitive; stays in `components/MarkdownEditor/`
+- ISSUE: `Suggestions.stories.tsx` in `components/` referenced deleted `MarkdownContainer` — deleted stale story file.
+- Time: 2026-02-25, ~10 min

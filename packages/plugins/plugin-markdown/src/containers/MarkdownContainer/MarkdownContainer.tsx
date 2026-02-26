@@ -17,10 +17,13 @@ import { Layout } from '@dxos/react-ui';
 import { type SelectionManager } from '@dxos/react-ui-attention';
 import { Text } from '@dxos/schema';
 
-import { useLinkQuery } from '../hooks';
-import { Markdown, MarkdownCapabilities, type MarkdownPluginState } from '../types';
-
-import { MarkdownEditor, type MarkdownEditorContentProps, type MarkdownEditorRootProps } from './MarkdownEditor';
+import {
+  MarkdownEditor,
+  type MarkdownEditorContentProps,
+  type MarkdownEditorRootProps,
+} from '../../components/MarkdownEditor';
+import { useLinkQuery } from '../../hooks';
+import { Markdown, MarkdownCapabilities, type MarkdownPluginState } from '../../types';
 
 export type MarkdownContainerProps = SurfaceComponentProps<
   Markdown.Document | Text.Text,
@@ -109,5 +112,3 @@ export const MarkdownContainer = forwardRef<HTMLDivElement, MarkdownContainerPro
     );
   },
 );
-
-export default MarkdownContainer;

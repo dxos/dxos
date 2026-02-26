@@ -17,8 +17,8 @@ import { AuthCode, Centered, DeviceListItem, Emoji, Viewport, translationKey } f
 import { osTranslations } from '@dxos/ui-theme';
 import { hexToEmoji } from '@dxos/util';
 
-import { meta } from '../meta';
-import { ClientOperation } from '../types';
+import { meta } from '../../meta';
+import { ClientOperation } from '../../types';
 
 export type DevicesContainerProps = {
   createInvitationUrl?: (invitationCode: string) => string;

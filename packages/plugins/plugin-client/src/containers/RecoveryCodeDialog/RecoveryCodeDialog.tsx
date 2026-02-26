@@ -6,7 +6,7 @@ import React, { useCallback, useState } from 'react';
 
 import { AlertDialog, Button, Clipboard, Input, useTranslation } from '@dxos/react-ui';
 
-import { meta } from '../meta';
+import { meta } from '../../meta';
 
 export type RecoveryCodeDialogProps = {
   code: string;

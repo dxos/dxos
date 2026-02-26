@@ -10,7 +10,7 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { AlertDialog, useAsyncEffect } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { translations } from '../translations';
+import { translations } from '../../translations';
 
 import { RecoveryCodeDialog } from './RecoveryCodeDialog';
 

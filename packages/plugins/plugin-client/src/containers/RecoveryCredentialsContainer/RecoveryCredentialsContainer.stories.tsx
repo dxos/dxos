@@ -5,19 +5,18 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 
-import { OperationPlugin, RuntimePlugin } from '@dxos/app-framework';
+import { OperationPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { translations as shellTranslations } from '@dxos/shell/react';
 
-import { ClientPlugin } from '../ClientPlugin';
-import { translations } from '../translations';
+import { ClientPlugin } from '../../ClientPlugin';
+import { translations } from '../../translations';
 
-import { DevicesContainer } from './DevicesContainer';
+import { RecoveryCredentialsContainer } from './RecoveryCredentialsContainer';
 
 const meta = {
-  title: 'plugins/plugin-client/DevicesContainer',
-  component: DevicesContainer,
+  title: 'plugins/plugin-client/RecoveryCredentialsContainer',
+  component: RecoveryCredentialsContainer,
   decorators: [
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
@@ -30,22 +29,17 @@ const meta = {
             }),
         }),
         OperationPlugin(),
-        RuntimePlugin(),
       ],
     }),
   ],
   parameters: {
     layout: 'fullscreen',
-    translations: [...translations, ...shellTranslations],
+    translations,
   },
-} satisfies Meta<typeof DevicesContainer>;
+} satisfies Meta<typeof RecoveryCredentialsContainer>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
-  args: {
-    createInvitationUrl: () => 'https://example.com',
-  },
-};
+export const Default: Story = {};
