@@ -11,10 +11,10 @@ import {
   AgentFunctions,
   DiscordBlueprint,
   EntityExtractionFunctions,
-  ProjectBlueprint,
-  ProjectFunctions,
   LinearBlueprint,
   PlanningBlueprint,
+  ProjectBlueprint,
+  ProjectFunctions,
   ResearchBlueprint,
   WebSearchBlueprint,
 } from '@dxos/assistant-toolkit';

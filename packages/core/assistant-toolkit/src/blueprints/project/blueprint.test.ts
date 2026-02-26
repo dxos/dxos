@@ -25,7 +25,7 @@ import { Collection, Text } from '@dxos/schema';
 import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { Chat, Project, Plan } from '../../types';
+import { Chat, Plan, Project } from '../../types';
 import { PlanningBlueprint } from '../planning';
 
 import ProjectBlueprintDef from './blueprint';

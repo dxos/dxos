@@ -10,7 +10,7 @@ import { Database, Obj } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { trim } from '@dxos/util';
 
-import { Project, Plan } from '../../../types';
+import { Plan, Project } from '../../../types';
 
 const INSTRUCTIONS = trim`
 TASK MANAGEMENT TOOL - USAGE GUIDELINES

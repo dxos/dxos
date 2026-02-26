@@ -9,7 +9,7 @@ import { AiContextService } from '@dxos/assistant';
 import { Database, Obj } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 
-import { Project, Plan } from '../../../types';
+import { Plan, Project } from '../../../types';
 
 export default defineFunction({
   key: 'dxos.org/function/project/get-context',

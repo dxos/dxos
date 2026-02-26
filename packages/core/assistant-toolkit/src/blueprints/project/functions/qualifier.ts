@@ -13,7 +13,7 @@ import { TriggerEvent, defineFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { trim } from '@dxos/util';
 
-import { Project, Plan } from '../../../types';
+import { Plan, Project } from '../../../types';
 
 export default defineFunction({
   key: 'dxos.org/function/project/qualifier',
