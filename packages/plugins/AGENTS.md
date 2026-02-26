@@ -8,9 +8,10 @@ Instructions for creating, maintaining and refactoring plugins.
 - Primitive components are in `src/components`.
 - Primitive components should not use hooks from `@dxos/app-framework`.
 - Surface components are in `src/containers` and are referenced by `src/capabilities/react-surface`.
-- Surface components should define a `SurfaceComponentProps` input type.
+- Surface components should define and export a `SurfaceComponentProps` properties type.
 - Surface components should not use classNames or implement custom styling; flag as an issue if you see this.
 - Surface components should have lazy exports.
+- Surface components should end with the following suffixes if there is an unambiguous matching role: Article, Card, Dialog, Popover, Settings.
 
 ### General Code style
 
@@ -32,7 +33,7 @@ Instructions for creating, maintaining and refactoring plugins.
 - For each plugin maintain a concise single bullet summary of actions taken per component (sorted alphabetically) and any issues, which should be in the form ISSUE: <issue description>
 - Update this document with recommendations based on best practices; these might include future refacoring.
 - At the end of each plugin update the observations section with any generalizable insights or patterns.
-- At the end of each plugin note the time you spent on it.
+- At the end of each plugin note the time, date, and time you spent on it.
 
 ## Plugins
 
