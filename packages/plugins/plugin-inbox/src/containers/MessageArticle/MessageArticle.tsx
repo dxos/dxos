@@ -44,20 +44,23 @@ export const MessageArticle = ({
     [db, invokePromise],
   );
 
-  const handleReply = useCallback(
-    () => db && invokePromise(InboxOperation.CreateDraft, { db, mode: 'reply', replyToMessage: message }),
-    [db, invokePromise, message],
-  );
+  const handleReply = useCallback(() => {
+    if (db) {
+      void invokePromise(InboxOperation.CreateDraft, { db, mode: 'reply', replyToMessage: message });
+    }
+  }, [db, invokePromise, message]);
 
-  const handleReplyAll = useCallback(
-    () => db && invokePromise(InboxOperation.CreateDraft, { db, mode: 'reply-all', replyToMessage: message }),
-    [db, invokePromise, message],
-  );
+  const handleReplyAll = useCallback(() => {
+    if (db) {
+      void invokePromise(InboxOperation.CreateDraft, { db, mode: 'reply-all', replyToMessage: message });
+    }
+  }, [db, invokePromise, message]);
 
-  const handleForward = useCallback(
-    () => db && invokePromise(InboxOperation.CreateDraft, { db, mode: 'forward', replyToMessage: message }),
-    [db, invokePromise, message],
-  );
+  const handleForward = useCallback(() => {
+    if (db) {
+      void invokePromise(InboxOperation.CreateDraft, { db, mode: 'forward', replyToMessage: message });
+    }
+  }, [db, invokePromise, message]);
 
   return (
     <Layout.Main role={role} toolbar>

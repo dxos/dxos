@@ -52,7 +52,10 @@ export const buildDraftMessageProps = (options: CreateDraftOptions): Obj.MakePro
         const originalTo = replyToMessage.properties?.to ?? '';
         const originalCc = replyToMessage.properties?.cc ?? '';
         const senderEmail = replyToMessage.sender?.email ?? '';
-        cc = [originalTo, originalCc].filter((r) => r && r !== senderEmail).join(', ') || undefined;
+        const allRecipients = [originalTo, originalCc]
+          .flatMap((r: string) => r.split(',').map((e: string) => e.trim()))
+          .filter((r: string) => r && r !== senderEmail);
+        cc = allRecipients.join(', ') || undefined;
         draftSubject = originalSubject.startsWith('Re:') ? originalSubject : `Re: ${originalSubject}`;
         draftBody = quotedBody;
         break;

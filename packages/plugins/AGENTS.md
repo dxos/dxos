@@ -21,23 +21,24 @@ NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
 
 - Follow the project coding styles.
 - Containers should be in their own directory together with their stories.
-- Top-level components used by containers should be in their own directory; together with auxilliary components and stories.
+- Top-level components used by containers should be in their own directory; together with auxiliary components and stories.
 - Ensure the story names matches the plugin and component name.
 - Use invariant over throwing Errors to assert function preconditions.
-- Use barrel imports (from components/index) and avoid default exports.
+- Use barrel imports (from components/index) and avoid default exports in `src/components/`.
+- Containers in `src/containers/` use default exports specifically for React.lazy (each subdirectory's `index.ts` bridges named→default; the top-level `containers/index.ts` uses `lazy(() => import('./X'))`). This is the only exception to the no-default-exports rule.
 
 ## Tasks
 
 - Move components that are directly referenced `src/capabilities/react-surface` to `src/containers`.
-- Audit components that currenlty use `@dxos/app-framework` hooks and consider if they can be simply split into primitive components and surface components.
+- Audit components that currently use `@dxos/app-framework` hooks and consider if they can be simply split into primitive components and surface components.
 - Ensure that all surface components are lazy exports.
-- Ensure all commponents have very basic single Default storybooks.
+- Ensure all components have very basic single Default storybooks.
 - Update this document with the current list of addressed plugins.
 - Check the plugin builds correctly and run lint at the end of each stage, then commit.
-- For each plugin maintain a concise single bullet summary of actions taken per component (sorted alphabetically) and any issues, which should be in the form ISSUE: <issue description>
-- Update this document with recommendations based on best practices; these might include future refacoring.
+- For each plugin maintain a concise single-bullet summary of actions taken per component (sorted alphabetically) and any issues, which should be in the form ISSUE: <issue description>
+- Update this document with recommendations based on best practices; these might include future refactoring.
 - At the end of each plugin update the observations section with any generalizable insights or patterns.
-- At the end of each plugin note the time, date, and time you spent on it, then commit and push the current branch.
+- At the end of each plugin note the date and time you spent on it, then commit and push the current branch.
 
 ## Plugins
 

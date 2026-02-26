@@ -8,7 +8,7 @@ import { Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Ref, Type } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
-import { ClientEvents } from '@dxos/plugin-client';
+import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { type CreateObject } from '@dxos/plugin-space/types';
@@ -75,7 +75,7 @@ export const ThreadPlugin = Plugin.define(meta).pipe(
   AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
   AppPlugin.addReactRootModule({ activate: ReactRoot }),
   AppPlugin.addSchemaModule({
-    schema: [AnchoredTo.AnchoredTo, Channel.Channel, Message.Message, Thread.Thread],
+    schema: [AnchoredTo.AnchoredTo, Channel.Channel, Message.Message, Message.MessageV1, Thread.Thread],
   }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations: [...translations, ...threadTranslations] }),
@@ -97,6 +97,11 @@ export const ThreadPlugin = Plugin.define(meta).pipe(
     //   Should settings store be renamed to be more generic?
     activatesOn: AppActivationEvents.SetupSettings,
     activate: ThreadState,
+  }),
+  Plugin.addModule({
+    id: 'migration',
+    activatesOn: ClientEvents.SetupMigration,
+    activate: () => Effect.succeed(Capability.contributes(ClientCapabilities.Migration, [Message.MessageV1ToV2])),
   }),
   Plugin.addModule({
     id: 'on-space-created',

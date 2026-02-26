@@ -52,6 +52,9 @@ describe('buildDraftMessageProps', () => {
     expect(props.properties?.to).toBe('alice@example.com');
     expect(props.properties?.cc).toContain('bob@example.com');
     expect(props.properties?.cc).toContain('carol@example.com');
+    // Sender must not appear in cc.
+    const ccAddresses = (props.properties?.cc ?? '').split(',').map((s: string) => s.trim());
+    expect(ccAddresses).not.toContain('alice@example.com');
   });
 
   test('forward mode sets Fwd: subject and quoted body', ({ expect }) => {
