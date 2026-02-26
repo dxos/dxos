@@ -68,7 +68,7 @@ NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
 - [x] plugin-outliner
 - [x] plugin-pipeline
 - [x] plugin-presenter
-- [ ] plugin-preview
+- [x] plugin-preview
 - [x] plugin-registry
 - [x] plugin-script
 - [x] plugin-search
@@ -364,6 +364,12 @@ NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
 
 - `TranscriptionContainer` → already in `containers/TranscriptionContainer/`
 - `Transcript` → primitive; stays in `components/Transcript/`
+- Time: 2026-02-25, ~2 min
+
+## plugin-preview
+
+- `FormCard`, `OrganizationCard`, `PersonCard`, `ProjectCard`, `TaskCard` → in `src/cards/` (pre-existing pattern); used synchronously inline in `react-surface.tsx` surface callbacks — not lazy
+- ISSUE: cards live in `src/cards/` instead of `src/containers/`; `react-surface.tsx` imports from `../../cards` rather than `../../containers` — pre-existing pattern, not restructured per task spec
 - Time: 2026-02-25, ~2 min
 
 ## plugin-table
