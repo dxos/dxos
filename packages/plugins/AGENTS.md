@@ -11,10 +11,14 @@ Instructions for refactoring plugins.
 - Surface components should define a `SurfaceComponentProps` input type.
 - Surface components should not use classNames or implement custom styling; flag as an issue if you see this.
 - Surface components should have lazy exports.
+
+### General Code style
+
 - Containers should be in their own directory together with their stories.
-- Ensure the story names matches the plugin and component name.
 - Top-level components used by containers should be in their own directory; together with auxilliary components and stories.
-- Use barrel imports and avoid default exports.
+- Ensure the story names matches the plugin and component name.
+- Use invariant over throwing Errors to assert function preconditions.
+- Use barrel imports (from components/index) and avoid default exports.
 
 ## Tasks
 
@@ -24,7 +28,7 @@ Instructions for refactoring plugins.
 - Ensure all commponents have very basic single Default storybooks.
 - Update this document with learnings and issues.
 - For each plugin maintain a very concise single bullet summary of actions taken per component (sorted alphabetically).
-- Check the plugin builds correctly and run lint at the end of each stage.
+- Check the plugin builds correctly and run lint at the end of each stage, then commit.
 
 ## Progress
 
@@ -49,14 +53,14 @@ Instructions for refactoring plugins.
 
 ## plugin-inbox
 
-- `MailboxArticle` → moved to `containers/MailboxArticle/`; primitives (`Mailbox`, `MailboxEmpty`) stay in `components/MailboxArticle/`
-- `PopoverSaveFilter` → moved from `components/MailboxArticle/` to `containers/PopoverSaveFilter/`
-- `MessageArticle` → moved to `containers/MessageArticle/`; `Message` primitive stays in `components/MessageArticle/`
+- `CalendarArticle` → moved to `containers/CalendarArticle/`; `EventList` stays in `components/CalendarArticle/`
 - `DraftMessageArticle` → moved to `containers/DraftMessageArticle/`; `ComposeEmailPanel` stays in `components/DraftMessageArticle/`
 - `EventArticle` → moved to `containers/EventArticle/`; `Event`, `EventToolbar` etc. stay in `components/EventArticle/`
-- `CalendarArticle` → moved to `containers/CalendarArticle/`; `EventList` stays in `components/CalendarArticle/`
-- `MessageCard` → moved to `containers/MessageCard/` with stories
 - `EventCard` → moved to `containers/EventCard/` with stories
+- `MailboxArticle` → moved to `containers/MailboxArticle/`; primitives (`Mailbox`, `MailboxEmpty`) stay in `components/MailboxArticle/`
 - `MailboxSettings` → moved to `containers/MailboxSettings/`
+- `MessageArticle` → moved to `containers/MessageArticle/`; `Message` primitive stays in `components/MessageArticle/`
+- `MessageCard` → moved to `containers/MessageCard/` with stories
+- `PopoverSaveFilter` → moved from `components/MailboxArticle/` to `containers/PopoverSaveFilter/`
 - `RelatedToContact` → moved to `containers/RelatedToContact/`; helpers stay in `components/Related/`
 - `RelatedToOrganization` → moved to `containers/RelatedToOrganization/`; helpers stay in `components/Related/`

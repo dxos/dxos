@@ -7,11 +7,12 @@ import React, { useCallback } from 'react';
 import { useCapability } from '@dxos/app-framework/ui';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
+import { invariant } from '@dxos/invariant';
 import { AutomationCapabilities, invokeFunctionWithTracing } from '@dxos/plugin-automation';
 import { Layout } from '@dxos/react-ui';
 import { type Message } from '@dxos/types';
 
-import { ComposeEmailPanel } from '../../components/ComposeEmailPanel';
+import { ComposeEmailPanel } from '../../components';
 import { GmailFunctions } from '../../functions';
 
 export type DraftMessageArticleProps = SurfaceComponentProps<Message.Message>;
@@ -23,9 +24,7 @@ export const DraftMessageArticle = ({ role, subject }: DraftMessageArticleProps)
 
   const handleSend = useCallback(
     async (message: Message.Message) => {
-      if (!runtime) {
-        throw new Error('Runtime not available');
-      }
+      invariant(runtime);
       await runtime.runPromise(invokeFunctionWithTracing(GmailFunctions.Send, { message }));
     },
     [runtime],

@@ -23,7 +23,7 @@ import { MenuBuilder, createGapSeparator, useMenuActions } from '@dxos/react-ui-
 import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
 import { HasSubject, Message } from '@dxos/types';
 
-import { type MailboxActionHandler, Mailbox as MailboxComponent, MailboxEmpty } from '../../components/Mailbox';
+import { type MailboxActionHandler, Mailbox as MailboxComponent, MailboxEmpty } from '../../components';
 import { POPOVER_SAVE_FILTER } from '../../constants';
 import { meta } from '../../meta';
 import { InboxOperation, type Mailbox } from '../../types';
