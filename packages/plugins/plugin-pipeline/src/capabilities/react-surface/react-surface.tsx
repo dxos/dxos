@@ -12,7 +12,7 @@ import { Obj } from '@dxos/echo';
 import { Layout } from '@dxos/react-ui';
 import { Pipeline } from '@dxos/types';
 
-import { PipelineContainer, PipelineObjectSettings } from '../../components';
+import { PipelineContainer, PipelineObjectSettings } from '../../containers';
 import { meta } from '../../meta';
 
 export default Capability.makeModule(() =>

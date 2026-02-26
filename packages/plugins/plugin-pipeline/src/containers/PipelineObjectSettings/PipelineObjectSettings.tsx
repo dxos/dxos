@@ -18,7 +18,7 @@ import { Pipeline, Task } from '@dxos/types';
 import { mx, osTranslations, subtleHover } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';
 
-import { meta } from '../meta';
+import { meta } from '../../meta';
 
 const listGrid = 'grid grid-cols-[min-content_1fr_min-content_min-content_min-content]';
 const listItemGrid = 'grid grid-cols-subgrid col-span-5';
@@ -239,5 +239,3 @@ export const PipelineObjectSettings = ({ classNames, pipeline }: PipelineObjectS
     </div>
   );
 };
-
-export default PipelineObjectSettings;

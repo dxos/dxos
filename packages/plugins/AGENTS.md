@@ -66,7 +66,7 @@ NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
 - [x] plugin-navtree
 - [x] plugin-observability
 - [x] plugin-outliner
-- [ ] plugin-pipeline
+- [x] plugin-pipeline
 - [ ] plugin-presenter
 - [ ] plugin-preview
 - [ ] plugin-registry
@@ -258,4 +258,11 @@ NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
 - `OutlineCard` → moved from flat `components/OutlineCard.tsx` to `containers/OutlineCard/`; uses `Outline` primitive from `components/Outline/`
 - `OutlineContainer` → moved from flat `components/OutlineContainer.tsx` to `containers/OutlineContainer/`; uses `Outline` primitive from `components/Outline/`
 - `Journal`, `Outline` → primitives with stories; stay in `components/`
+- Time: 2026-02-25, ~5 min
+
+## plugin-pipeline
+
+- `PipelineContainer` → moved from flat `components/PipelineContainer.tsx` to `containers/PipelineContainer/` with stories; uses `PipelineComponent`, `PipelineColumn`, `usePipelineBoardModel` primitives from `components/`
+- `PipelineObjectSettings` → moved from flat `components/PipelineObjectSettings.tsx` to `containers/PipelineObjectSettings/`
+- `PipelineColumn`, `PipelineComponent` → primitives with stories; stay in `components/`
 - Time: 2026-02-25, ~5 min

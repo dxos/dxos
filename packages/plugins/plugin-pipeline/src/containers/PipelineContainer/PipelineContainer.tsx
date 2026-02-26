@@ -15,7 +15,7 @@ import { Layout } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { type Pipeline as PipelineType } from '@dxos/types';
 
-import { type ItemProps, PipelineComponent, usePipelineBoardModel } from './PipelineComponent';
+import { type ItemProps, PipelineComponent, usePipelineBoardModel } from '../../components';
 
 export type PipelineContainerProps = SurfaceComponentProps<PipelineType.Pipeline>;
 
@@ -57,5 +57,3 @@ const PipelineItem = ({ item, projectionModel }: ItemProps) => {
     />
   );
 };
-
-export default PipelineContainer;

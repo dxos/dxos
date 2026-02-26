@@ -22,10 +22,10 @@ import { Collection, View } from '@dxos/schema';
 import { createObjectFactory } from '@dxos/schema/testing';
 import { Message, Organization, Person, Pipeline, Task } from '@dxos/types';
 
-import { translations } from '../translations';
+import { translations } from '../../translations';
+import PipelineObjectSettings from '../PipelineObjectSettings';
 
 import { PipelineContainer } from './PipelineContainer';
-import { PipelineObjectSettings } from './PipelineSettings';
 
 faker.seed(0);
 
