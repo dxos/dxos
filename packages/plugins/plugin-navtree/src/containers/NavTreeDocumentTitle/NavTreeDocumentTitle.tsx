@@ -7,7 +7,7 @@ import { type Node } from '@dxos/app-graph';
 import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { osTranslations } from '@dxos/ui-theme';
 
-import { meta } from '../meta';
+import { meta } from '../../meta';
 
 export const NavTreeDocumentTitle = ({ node }: { node?: Node.Node }) => {
   const { t } = useTranslation(meta.id);

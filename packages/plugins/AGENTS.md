@@ -63,7 +63,7 @@ NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
 - [x] plugin-meeting
 - [ ] plugin-mermaid
 - [ ] plugin-native
-- [ ] plugin-navtree
+- [x] plugin-navtree
 - [ ] plugin-observability
 - [ ] plugin-outliner
 - [ ] plugin-pipeline
@@ -234,4 +234,13 @@ NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
 - `MeetingContainer` → moved from flat `components/MeetingContainer.tsx` to `containers/MeetingContainer/` with stories
 - `MeetingSettings` → moved from `components/MeetingSettings/` subdirectory to `containers/MeetingSettings/`
 - `MeetingsList` → moved from flat `components/MeetingsList.tsx` to `containers/MeetingsList/`; `components/` cleared (no primitives remain).
+- Time: 2026-02-25, ~3 min
+
+## plugin-navtree
+
+- `CommandsDialogContent` → moved from `components/CommandsDialog/CommandsDialog.tsx` to `containers/CommandsDialogContent/`
+- `CommandsTrigger` → moved from `components/CommandsDialog/CommandsTrigger.tsx` to `containers/CommandsTrigger/`
+- `NavTreeContainer` → moved from flat `components/NavTreeContainer.tsx` to `containers/NavTreeContainer/`; re-exports `NODE_TYPE` via `containers/index.ts` (used by `NavTreePlugin.tsx`)
+- `NavTreeDocumentTitle` → moved from flat `components/NavTreeDocumentTitle.tsx` to `containers/NavTreeDocumentTitle/`
+- `NavTree`, `NavTreeContext`, `NavTreeItem`, `Sidebar`, `UserAccountAvatar` → primitives; stay in `components/`
 - Time: 2026-02-25, ~3 min

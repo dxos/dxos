@@ -17,14 +17,13 @@ import { type TreeData, type TreeItemDataProps, isTreeData } from '@dxos/react-u
 import { mx } from '@dxos/ui-theme';
 import { arrayMove, byPosition } from '@dxos/util';
 
-import { useIsAlternateTree, useIsCurrent, useIsOpen, useNavTreeState } from '../hooks';
-import { meta } from '../meta';
-import { type FlattenedActions, type NavTreeItemGraphNode } from '../types';
-import { getChildren, getParent, resolveMigrationOperation } from '../util';
-
-import { NAV_TREE_ITEM, NavTree } from './NavTree';
-import { NavTreeContext } from './NavTreeContext';
-import { type NavTreeContextValue } from './types';
+import { NAV_TREE_ITEM, NavTree } from '../../components/NavTree';
+import { NavTreeContext } from '../../components/NavTreeContext';
+import { type NavTreeContextValue } from '../../components/types';
+import { useIsAlternateTree, useIsCurrent, useIsOpen, useNavTreeState } from '../../hooks';
+import { meta } from '../../meta';
+import { type FlattenedActions, type NavTreeItemGraphNode } from '../../types';
+import { getChildren, getParent, resolveMigrationOperation } from '../../util';
 
 // TODO(thure): Is NavTree truly authoritative in this regard?
 export const NODE_TYPE = 'dxos/app-graph/node';
