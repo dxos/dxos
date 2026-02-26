@@ -32,6 +32,7 @@ Instructions for creating, maintaining and refactoring plugins.
 - For each plugin maintain a concise single bullet summary of actions taken per component (sorted alphabetically) and any issues, which should be in the form ISSUE: <issue description>
 - Update this document with recommendations based on best practices; these might include future refacoring.
 - At the end of each plugin update the observations section with any generalizable insights or patterns.
+- At the end of each plugin note the time you spent on it.
 
 ## Plugins
 
