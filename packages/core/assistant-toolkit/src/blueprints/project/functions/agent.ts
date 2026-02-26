@@ -14,14 +14,14 @@ import { TriggerEvent, defineFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { type Message } from '@dxos/types';
 
-import { Initiative } from '../../../types';
+import { Project } from '../../../types';
 
 export default defineFunction({
-  key: 'dxos.org/function/initiative/agent',
-  name: 'Initiative Agent',
-  description: 'Agentic worker that drives the initiative autonomously.',
+  key: 'dxos.org/function/project/agent',
+  name: 'Project Agent',
+  description: 'Agentic worker that drives the project autonomously.',
   inputSchema: Schema.Struct({
-    initiative: Schema.suspend(() => Type.Ref(Initiative.Initiative)),
+    project: Schema.suspend(() => Type.Ref(Project.Project)),
     prompt: Schema.optional(Schema.String),
     event: Schema.optional(TriggerEvent.TriggerEvent),
   }),
@@ -29,26 +29,22 @@ export default defineFunction({
   services: [AiContextService],
   handler: Effect.fnUntraced(
     function* ({ data }) {
-      const initiative = yield* Database.load(data.initiative);
-      invariant(Obj.instanceOf(Initiative.Initiative, initiative));
-      invariant(initiative.chat, 'Initiative has no chat.');
+      const project = yield* Database.load(data.project);
+      invariant(Obj.instanceOf(Project.Project, project));
+      invariant(project.chat, 'Project has no chat.');
 
-      if (initiative.newChatOnEveryEvent) {
-        yield* Initiative.resetChatHistory(initiative);
-      }
-
-      const chatQueue = yield* initiative.chat.pipe(
+      const chatQueue = yield* project.chat.pipe(
         Database.load,
         Effect.flatMap((chat) => Database.load(chat.queue)),
       );
-      invariant(chatQueue, 'Initiative chat queue not found.');
+      invariant(chatQueue, 'Project chat queue not found.');
       const conversation = yield* acquireReleaseResource(
         () => new AiConversation({ queue: chatQueue as Queue<Message.Message | ContextBinding> }),
       );
 
-      const iniativesInContext = conversation.context.getObjects().filter(Obj.instanceOf(Initiative.Initiative));
+      const iniativesInContext = conversation.context.getObjects().filter(Obj.instanceOf(Project.Project));
       if (iniativesInContext.length !== 1) {
-        throw new Error('There should be exactly one initiative in context. Got: ' + iniativesInContext.length);
+        throw new Error('There should be exactly one project in context. Got: ' + iniativesInContext.length);
       }
 
       if (!data.prompt && !data.event) {

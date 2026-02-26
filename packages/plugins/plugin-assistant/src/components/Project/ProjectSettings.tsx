@@ -23,7 +23,7 @@ import { Button } from '@dxos/react-ui';
 import { ButtonGroup, Input } from '@dxos/react-ui';
 import { QueueAnnotation } from '@dxos/schema';
 
-import { syncTriggers } from '../../components/Project/triggers';
+import { syncTriggers } from './triggers';
 
 export const ProjectSettings = ({ subject: project }: SurfaceComponentProps<Project.Project>) => {
   const computeRuntime = useCapability(AutomationCapabilities.ComputeRuntime);

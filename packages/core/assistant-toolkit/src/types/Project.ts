@@ -23,9 +23,9 @@ import * as Chat from './Chat';
 import * as Plan from './Plan';
 
 /**
- * Initiative schema definition.
+ * Project schema definition.
  */
-export const Initiative = Schema.Struct({
+export const Project = Schema.Struct({
   name: Schema.String,
 
   spec: Type.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
@@ -58,43 +58,37 @@ export const Initiative = Schema.Struct({
   useQualifyingAgent: Schema.optional(Schema.Boolean).annotations({
     title: 'Use qualifying agent on subscriptions',
     description:
-      'If enabled, the qualifying agent will be used to determine if the event is relevant to the initiative. Related events will be added to the input queue of the initiative. It is recommended to enable this.',
+      'If enabled, the qualifying agent will be used to determine if the event is relevant to the project. Related events will be added to the input queue of the project. It is recommended to enable this.',
   }),
-
-  newChatOnEveryEvent: Schema.optional(Schema.Boolean).annotations({
-    title: 'Wipe chat history on every event (deprecated)',
-  }),
-
-  // TODO(dmaretskyi): input queue?
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Initiative',
+    typename: 'dxos.org/type/Project',
     version: '0.1.0',
   }),
   QueueAnnotation.set(true),
 );
 
-export interface Initiative extends Schema.Schema.Type<typeof Initiative> {}
+export interface Project extends Schema.Schema.Type<typeof Project> {}
 
 /**
- * Creates a fully initialized Initiative with chat, queue, and context bindings.
+ * Creates a fully initialized Project with chat, queue, and context bindings.
  *
- * @param props - Initiative properties including spec, plan, blueprints, and context objects.
- * @param blueprint - The blueprint to use for the initiative context.
- * @returns An Effect that yields the initialized Initiative.
+ * @param props - Project properties including spec, plan, blueprints, and context objects.
+ * @param blueprint - The blueprint to use for the project context.
+ * @returns An Effect that yields the initialized Project.
  */
-// TODO(burdon): Rename make and move into Initiative.ts?
+// TODO(burdon): Rename make and move into Project.ts?
 export const makeInitialized = (
-  props: Omit<Obj.MakeProps<typeof Initiative>, 'spec' | 'plan' | 'artifacts' | 'subscriptions' | 'chat'> &
-    Partial<Pick<Obj.MakeProps<typeof Initiative>, 'artifacts' | 'subscriptions'>> & {
+  props: Omit<Obj.MakeProps<typeof Project>, 'spec' | 'plan' | 'artifacts' | 'subscriptions' | 'chat'> &
+    Partial<Pick<Obj.MakeProps<typeof Project>, 'artifacts' | 'subscriptions'>> & {
       spec: string;
       blueprints?: Ref.Ref<Blueprint.Blueprint>[];
       contextObjects?: Ref.Ref<Obj.Any>[];
     },
   blueprint: Blueprint.Blueprint,
-): Effect.Effect<Initiative, never, QueueService | Database.Service> =>
+): Effect.Effect<Project, never, QueueService | Database.Service> =>
   Effect.gen(function* () {
-    const initiative = Obj.make(Initiative, {
+    const project = Obj.make(Project, {
       ...props,
       spec: Ref.make(Text.make(props.spec)),
       plan: Ref.make(Plan.makePlan({ tasks: [] })),
@@ -102,15 +96,15 @@ export const makeInitialized = (
       subscriptions: props.subscriptions ?? [],
       useQualifyingAgent: props.useQualifyingAgent ?? true,
     });
-    yield* Database.add(initiative);
+    yield* Database.add(project);
     const queue = yield* QueueService.createQueue<Message.Message | ContextBinding>();
     const contextBinder = new AiContextBinder({ queue });
     // TODO(dmaretskyi): Blueprint registry.
-    const initiativeBlueprint = yield* Database.add(Obj.clone(blueprint, { deep: true }));
+    const projectBlueprint = yield* Database.add(Obj.clone(blueprint, { deep: true }));
     yield* Effect.promise(() =>
       contextBinder.bind({
-        blueprints: [Ref.make(initiativeBlueprint), ...(props.blueprints ?? [])],
-        objects: [Ref.make(initiative), ...(props.contextObjects ?? [])],
+        blueprints: [Ref.make(projectBlueprint), ...(props.blueprints ?? [])],
+        objects: [Ref.make(project), ...(props.contextObjects ?? [])],
       }),
     );
     const chat = yield* Database.add(
@@ -121,34 +115,34 @@ export const makeInitialized = (
     yield* Database.add(
       Relation.make(Chat.CompanionTo, {
         [Relation.Source]: chat,
-        [Relation.Target]: initiative,
+        [Relation.Target]: project,
       }),
     );
 
     const inputQueue = yield* QueueService.createQueue();
 
-    Obj.change(initiative, (initiative) => {
-      initiative.chat = Ref.make(chat);
-      initiative.queue = Ref.fromDXN(inputQueue.dxn);
+    Obj.change(project, (project) => {
+      project.chat = Ref.make(chat);
+      project.queue = Ref.fromDXN(inputQueue.dxn);
     });
 
-    return initiative;
+    return project;
   });
 
 /**
- * Resets the initiative chat history by rebuilding the chat context.
+ * Resets the project chat history by rebuilding the chat context.
  * Preserves the existing blueprints and objects from the current chat context.
  *
- * @param initiative - The initiative whose chat history should be reset. Must have an existing chat.
+ * @param project - The project whose chat history should be reset. Must have an existing chat.
  * @returns An Effect that resets the chat history.
  */
 export const resetChatHistory = (
-  initiative: Initiative,
+  project: Project,
 ): Effect.Effect<void, ObjectNotFoundError, QueueService | Database.Service> =>
   Effect.gen(function* () {
-    invariant(initiative.chat, 'Initiative must have an existing chat to reset.');
+    invariant(project.chat, 'Project must have an existing chat to reset.');
 
-    const existingQueue = yield* initiative.chat.pipe(Database.load).pipe(
+    const existingQueue = yield* project.chat.pipe(Database.load).pipe(
       Effect.map((_) => _.queue),
       Effect.flatMap(Database.load),
     );
@@ -175,23 +169,23 @@ export const resetChatHistory = (
       }),
     );
 
-    Obj.change(initiative, (initiative) => {
-      initiative.chat = Ref.make(chat);
+    Obj.change(project, (project) => {
+      project.chat = Ref.make(chat);
     });
 
     yield* Database.add(
       Relation.make(Chat.CompanionTo, {
         [Relation.Source]: chat,
-        [Relation.Target]: initiative,
+        [Relation.Target]: project,
       }),
     );
   }).pipe(Effect.scoped);
 
-export const getFromChatContext: Effect.Effect<Initiative, never, AiContextService> = Effect.gen(function* () {
-  const initiatives = yield* Function.pipe(AiContextService.findObjects(Initiative));
-  if (initiatives.length !== 1) {
-    throw new Error('There should be exactly one initiative in context. Got: ' + initiatives.length);
+export const getFromChatContext: Effect.Effect<Project, never, AiContextService> = Effect.gen(function* () {
+  const projects = yield* Function.pipe(AiContextService.findObjects(Project));
+  if (projects.length !== 1) {
+    throw new Error('There should be exactly one project in context. Got: ' + projects.length);
   }
-  const initiative = initiatives[0];
-  return initiative;
+  const project = projects[0];
+  return project;
 });

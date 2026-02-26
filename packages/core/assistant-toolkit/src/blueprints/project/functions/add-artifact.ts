@@ -9,10 +9,10 @@ import { AiContextService } from '@dxos/assistant';
 import { Database, Obj, Type } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 
-import { Initiative } from '../../../types';
+import { Project } from '../../../types';
 
 export default defineFunction({
-  key: 'dxos.org/function/initiative/add-artifact',
+  key: 'dxos.org/function/project/add-artifact',
   name: 'Add artifact',
   description: 'Adds a new artifact.',
   inputSchema: Schema.Struct({
@@ -29,10 +29,10 @@ export default defineFunction({
       throw new Error('Artifact not found.');
     }
 
-    const initiative = yield* Initiative.getFromChatContext;
+    const project = yield* Project.getFromChatContext;
 
-    Obj.change(initiative, (initiative) => {
-      initiative.artifacts.push({
+    Obj.change(project, (project) => {
+      project.artifacts.push({
         name: data.name,
         data: data.artifact,
       });

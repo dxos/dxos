@@ -5,3 +5,4 @@
 export * from './Chat';
 export * from './TemplateEditor';
 export * from './Toolbox';
+export * from './Project';

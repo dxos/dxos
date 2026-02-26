@@ -2,6 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { InitiativeSettings } from './InitiativeSettings';
+import { ProjectSettings } from './InitiativeSettings';
 
-export default InitiativeSettings;
+export default ProjectSettings;

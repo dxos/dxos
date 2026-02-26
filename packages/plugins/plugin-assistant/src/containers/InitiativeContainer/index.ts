@@ -2,6 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { InitiativeContainer } from './InitiativeContainer';
+import { ProjectArticle } from './InitiativeContainer';
 
-export default InitiativeContainer;
+export default ProjectArticle;
