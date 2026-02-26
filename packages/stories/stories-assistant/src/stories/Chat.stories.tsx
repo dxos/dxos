@@ -891,9 +891,7 @@ export const WithProject: Story = {
       space.db.add(researchTrigger);
 
       const mailboxView = View.make({
-        query: Query.select(Filter.type(Message.Message))
-          .select(Filter.tag(tagDxn))
-          .from(mailbox),
+        query: Query.select(Filter.type(Message.Message)).select(Filter.tag(tagDxn)).from(mailbox),
         jsonSchema: Type.toJsonSchema(Message.Message),
       });
       const contactsView = View.make({
