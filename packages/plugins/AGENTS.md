@@ -42,7 +42,7 @@ NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
 ## Plugins
 
 - [x] plugin-assistant
-- [ ] plugin-attention
+- [x] plugin-attention
 - [x] plugin-automation
 - [x] plugin-board
 - [x] plugin-chess
@@ -53,7 +53,7 @@ NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
 - [x] plugin-excalidraw
 - [x] plugin-explorer
 - [x] plugin-files
-- [ ] plugin-graph
+- [x] plugin-graph
 - [x] plugin-help
 - [x] plugin-inbox
 - [x] plugin-kanban
@@ -61,8 +61,8 @@ NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
 - [x] plugin-markdown
 - [x] plugin-masonry
 - [x] plugin-meeting
-- [ ] plugin-mermaid
-- [ ] plugin-native
+- [x] plugin-mermaid
+- [x] plugin-native
 - [x] plugin-navtree
 - [x] plugin-observability
 - [x] plugin-outliner
@@ -72,7 +72,7 @@ NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
 - [x] plugin-registry
 - [x] plugin-script
 - [x] plugin-search
-- [ ] plugin-settings
+- [x] plugin-settings
 - [x] plugin-sheet
 - [x] plugin-sketch
 - [x] plugin-space
@@ -82,7 +82,7 @@ NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
 - [x] plugin-thread
 - [x] plugin-token-manager
 - [x] plugin-transcription
-- [ ] plugin-transformer
+- [x] plugin-transformer
 - [x] plugin-wnfs
 
 ## Observations
@@ -95,10 +95,18 @@ NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
 - Top-level `containers/index.ts` uses `lazy(() => import('./X'))` — no `.then()` needed.
 - When `ComponentType<any>` annotation is needed on lazy exports (TypeScript TS2742 "inferred type cannot be named"), add `: ComponentType<any>` to each exported constant.
 - Container-to-container imports (e.g. `ChatCompanion` using `ChatContainer`) use default import: `import X from '../X';`
+- `plugin-preview` uses a `src/cards/` pattern with synchronously-rendered surface components instead of lazy containers — this is an existing deviation; surfaces are not lazy-loaded.
+- `plugin-table`'s `containers/index.ts` uses `ForwardRefExoticComponent<TableContainerProps>` instead of `ComponentType<any>` — valid when the component uses `forwardRef`.
+- Type re-exports: when lazy `ComponentType<any>` hides prop types needed externally, add `export type { XProps } from './X/X'` to `containers/index.ts`.
+- Primitive subdirectory preservation: when a subdirectory contains both a surface component and primitives, only the surface file moves to `containers/`; primitives stay with an updated subdir `index.ts`.
+- Constants extraction: string constants for dialog/surface role IDs should live in `src/constants.ts`, not inline in `react-surface.tsx`.
+- The `Surface` component in app-framework provides the top-level `<Suspense>` boundary for all lazy containers; individual containers only need their own Suspense if they use `React.use()` or render lazy sub-components internally.
 
 ## Recommendations
 
-
+- Audit all containers for `className` / inline styling (flagged as issues in individual plugins but not yet fixed).
+- Consider adding storybooks with mock providers for containers requiring space/db context.
+- `plugin-preview`'s `cards/` pattern should be migrated to `containers/` with lazy exports for consistency.
 
 ## plugin-assistant
 
@@ -385,3 +393,43 @@ NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
 - `FileContainer` → moved from flat `components/FileContainer.tsx` to `containers/FileContainer/`; imports `FilePreview` from `../../components/FilePreview`
 - `FileInput`, `FilePreview` → primitives; stay in `components/`
 - Time: 2026-02-25, ~5 min
+
+## plugin-attention
+
+- No react-surface capability exists; no containers needed.
+- Capabilities present: `keyboard`, `operation-resolver`, `react-context`.
+- `src/` has no `components/` directory; plugin is a pure behavioral plugin.
+- Time: 2026-02-25, ~1 min
+
+## plugin-graph
+
+- No react-surface capability exists; no containers needed.
+- `src/` has no `capabilities/` directory; plugin provides graph-building utilities only.
+- Time: 2026-02-25, ~1 min
+
+## plugin-mermaid
+
+- No react-surface capability exists; no containers needed.
+- `src/` has an `extensions/` directory but no `components/` or `capabilities/react-surface`.
+- Time: 2026-02-25, ~1 min
+
+## plugin-native
+
+- No react-surface capability exists; no containers needed.
+- Capabilities present: `ollama`, `updater`, `window`.
+- `src/` has no `components/` directory; plugin handles native window/system integration only.
+- Time: 2026-02-25, ~1 min
+
+## plugin-settings
+
+- No react-surface capability exists; no containers needed.
+- Capabilities present: `app-graph-builder`, `operation-resolver`.
+- `src/` has no `components/` directory; plugin manages settings routing only.
+- Time: 2026-02-25, ~1 min
+
+## plugin-transformer
+
+- No react-surface capability exists; no containers needed.
+- `src/components/` contains `DebugInfo` and `Voice` — these are primitives used only in storybooks, not referenced by any react-surface or containers.
+- `src/capabilities/` is effectively empty (only an `index.ts`); the `IntentResolver` capability is commented out.
+- Time: 2026-02-25, ~2 min
