@@ -316,12 +316,9 @@ class QueryClass implements Any {
     }
 
     const feeds = items as Feed.Feed[];
-    const queueDxns = feeds.map((feed) => {
+    const queueDxns = feeds.flatMap((feed) => {
       const keys = Entity.getKeys(feed as Entity.Unknown, Feed.DXN_KEY);
-      if (keys.length === 0) {
-        throw new Error('Feed does not have a backing DXN key');
-      }
-      return keys[0].id;
+      return keys.length > 0 ? [keys[0].id] : [];
     });
     return new QueryClass({
       type: 'options',

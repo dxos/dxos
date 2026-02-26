@@ -11,7 +11,7 @@ import { Calendar, Mailbox } from './types';
 export const translations = [
   {
     'en-US': {
-      [Mailbox.Mailbox.typename]: {
+      [Mailbox.kind]: {
         'typename label': 'Mailbox',
         'typename label_zero': 'Mailboxes',
         'typename label_one': 'Mailbox',
@@ -21,7 +21,7 @@ export const translations = [
         'delete object label': 'Delete mailbox',
         'object deleted label': 'Mailbox deleted',
       },
-      [Calendar.Calendar.typename]: {
+      [Calendar.kind]: {
         'typename label': 'Calendar',
         'typename label_zero': 'Calendars',
         'typename label_one': 'Calendar',

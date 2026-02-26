@@ -9,7 +9,7 @@ import React, { useCallback, useRef } from 'react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { Filter } from '@dxos/echo';
+import { Feed, Filter, Obj, Type } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
@@ -91,19 +91,20 @@ const meta = {
         ...corePlugins(),
         StorybookPlugin({}),
         ClientPlugin({
-          types: [Mailbox.Mailbox, Message.Message, Person.Person, Organization.Organization],
+          types: [Type.Feed, Mailbox.Config, Message.Message, Person.Person, Organization.Organization],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               yield* Effect.promise(() => client.halo.createIdentity());
               yield* Effect.promise(() => client.spaces.waitUntilReady());
               yield* Effect.promise(() => client.spaces.default.waitUntilReady());
               const space = client.spaces.default;
-              const mailbox = Mailbox.make({ space });
+              const feed = space.db.add(Mailbox.make());
               const { emails } = yield* Effect.promise(() => seedTestData(space));
-              const queueDxn = mailbox.queue.dxn;
-              const queue = space.queues.get<Message.Message>(queueDxn);
+              const queue = space.queues.create<Message.Message>();
+              Obj.change(feed, (mutable) => {
+                Obj.getMeta(mutable).keys.push({ source: Feed.DXN_KEY, id: queue.dxn.toString() });
+              });
               yield* Effect.promise(() => queue.append(emails));
-              space.db.add(mailbox);
             }),
         }),
 

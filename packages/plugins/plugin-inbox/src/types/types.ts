@@ -5,15 +5,13 @@
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
-import { Database } from '@dxos/echo';
+import { Database, Type } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { SpaceSchema } from '@dxos/react-client/echo';
 import { Collection } from '@dxos/schema';
 import { Actor, Message } from '@dxos/types';
 
 import { meta } from '../meta';
-
-import * as Mailbox from './Mailbox';
 
 const INBOX_OPERATION = `${meta.id}/operation`;
 
@@ -49,7 +47,7 @@ export namespace InboxOperation {
     services: [Capability.Service],
     schema: {
       input: Schema.Struct({
-        mailbox: Mailbox.Mailbox,
+        feed: Type.Feed,
       }),
       output: Schema.Void,
     },

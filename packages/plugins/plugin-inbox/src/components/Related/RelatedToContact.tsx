@@ -9,10 +9,10 @@ import React, { useCallback } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { Filter, Obj } from '@dxos/echo';
+import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { AttentionOperation } from '@dxos/plugin-attention/types';
 import { useActiveSpace } from '@dxos/plugin-space';
-import { useQuery, useQueue } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/react-client/echo';
 import { Event, Message, type Person } from '@dxos/types';
 
 import { Calendar, Mailbox } from '../../types';
@@ -23,12 +23,17 @@ import { RelatedMessages } from './RelatedMessages';
 export const RelatedToContact = ({ subject: contact }: SurfaceComponentProps<Person.Person>) => {
   const { invokePromise } = useOperationInvoker();
   const space = useActiveSpace();
-  const [mailbox] = useQuery(space?.db, Filter.type(Mailbox.Mailbox));
-  const [calendar] = useQuery(space?.db, Filter.type(Calendar.Calendar));
-  const messageQueue = useQueue(mailbox?.queue.dxn);
-  const eventQueue = useQueue(calendar?.queue.dxn);
-  const messages = useQuery(messageQueue, Filter.type(Message.Message));
-  const events = useQuery(eventQueue, Filter.type(Event.Event));
+  const feeds = useQuery(space?.db, Filter.type(Type.Feed));
+  const mailbox = feeds.find((f) => f.kind === Mailbox.kind);
+  const calendar = feeds.find((f) => f.kind === Calendar.kind);
+  const messages: Message.Message[] = useQuery(
+    space?.db,
+    mailbox ? Query.select(Filter.type(Message.Message)).from(mailbox) : Query.select(Filter.nothing()),
+  ) as Message.Message[];
+  const events: Event.Event[] = useQuery(
+    space?.db,
+    calendar ? Query.select(Filter.type(Event.Event)).from(calendar) : Query.select(Filter.nothing()),
+  ) as Event.Event[];
   const relatedMessages = messages
     .filter(
       (message) =>
@@ -57,6 +62,9 @@ export const RelatedToContact = ({ subject: contact }: SurfaceComponentProps<Per
 
   const handleMessageClick = useCallback(
     async (message: Message.Message) => {
+      if (!mailbox) {
+        return;
+      }
       await invokePromise(LayoutOperation.UpdatePopover, { state: false, anchorId: '' });
       await invokePromise(LayoutOperation.Open, {
         subject: [Obj.getDXN(mailbox).toString()],
@@ -72,6 +80,9 @@ export const RelatedToContact = ({ subject: contact }: SurfaceComponentProps<Per
 
   const handleEventClick = useCallback(
     async (event: Event.Event) => {
+      if (!calendar) {
+        return;
+      }
       await invokePromise(LayoutOperation.UpdatePopover, { state: false, anchorId: '' });
       await invokePromise(LayoutOperation.Open, {
         subject: [Obj.getDXN(calendar).toString()],

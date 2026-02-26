@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { Filter, Obj, Ref } from '@dxos/echo';
+import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Operation, OperationResolver } from '@dxos/operation';
@@ -24,8 +24,12 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: InboxOperation.OnCreateSpace,
         handler: Effect.fnUntraced(function* ({ rootCollection }) {
-          const mailboxCollection = Collection.makeManaged({ key: Mailbox.Mailbox.typename });
-          const calendarCollection = Collection.makeManaged({ key: Calendar.Calendar.typename });
+          const mailboxCollection = Collection.makeManaged({
+            key: `${Type.getTypename(Type.Feed)}~${Mailbox.kind}`,
+          });
+          const calendarCollection = Collection.makeManaged({
+            key: `${Type.getTypename(Type.Feed)}~${Calendar.kind}`,
+          });
           Obj.change(rootCollection, (c) => {
             c.objects.push(Ref.make(mailboxCollection), Ref.make(calendarCollection));
           });

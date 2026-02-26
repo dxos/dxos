@@ -4,6 +4,7 @@
 
 import { type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import * as Effect from 'effect/Effect';
+import * as Match from 'effect/Match';
 
 import { type CapabilityManager } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
@@ -126,9 +127,11 @@ const getSystemCollectionNodePartials = ({
   db: Database.Database;
   resolve: (typename: string) => Record<string, any>;
 }) => {
-  const metadata = resolve(collection.key);
+  const [, feedKind] = collection.key.split('~');
+  const metadataKey = feedKind ?? collection.key;
+  const metadata = resolve(metadataKey);
   return {
-    label: ['typename label', { ns: collection.key, count: 2 }],
+    label: ['typename label', { ns: metadataKey, count: 2 }],
     icon: metadata.icon,
     iconHue: metadata.iconHue,
     acceptPersistenceClass: new Set(['echo']),
@@ -461,7 +464,9 @@ export const createObjectNode = ({
     return null;
   }
 
-  const metadata = resolve(type);
+  // For feeds, use the kind property for metadata lookup instead of the generic Feed typename.
+  const metadataKey = Obj.instanceOf(Type.Feed, object) ? (object.kind ?? type) : type;
+  const metadata = resolve(metadataKey);
   const partials = Obj.instanceOf(Collection.Collection, object)
     ? getCollectionGraphNodePartials({ collection: object, db, resolve })
     : Obj.instanceOf(Collection.Managed, object)
@@ -475,7 +480,7 @@ export const createObjectNode = ({
   const label = (object as any).name ||
     Obj.getLabel(object) ||
     // TODO(wittjosiah): Remove metadata labels.
-    metadata.label?.(object) || ['object name placeholder', { ns: type, default: 'New item' }];
+    metadata.label?.(object) || ['object name placeholder', { ns: metadataKey, default: 'New item' }];
 
   const selectable =
     (!Obj.instanceOf(Type.PersistentType, object) &&
@@ -551,7 +556,15 @@ export const constructObjectActions = ({
   const getId = (id: string) => `${id}/${Obj.getDXN(object).toString()}`;
 
   const managedCollection = Obj.instanceOf(Collection.Managed, object) ? object : undefined;
-  const metadata = managedCollection ? resolve(managedCollection.key) : {};
+  const managedMetadataKey = Match.value(typename).pipe(
+    Match.when(Type.getTypename(Collection.Managed), () => {
+      const [, feedKind] = managedCollection!.key.split('~') ?? [];
+      return feedKind ?? managedCollection!.key;
+    }),
+    Match.when(Type.Feed.typename, () => (object as Type.Feed).kind ?? typename),
+    Match.orElse((name) => name),
+  );
+  const metadata = managedMetadataKey ? resolve(managedMetadataKey) : {};
   const createObject = metadata.createObject;
   const inputSchema = metadata.inputSchema;
 
@@ -620,7 +633,7 @@ export const constructObjectActions = ({
               if (inputSchema) {
                 yield* Operation.invoke(SpaceOperation.OpenCreateObject, {
                   target: db,
-                  typename: managedCollection ? managedCollection.key : undefined,
+                  typename: managedCollection ? managedMetadataKey : undefined,
                 });
               } else {
                 const createdObject = yield* createObject({}, { db, capabilities }) as Effect.Effect<

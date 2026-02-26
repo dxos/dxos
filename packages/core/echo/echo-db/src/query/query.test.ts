@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout, sleep } from '@dxos/async';
-import { type Entity, type Hypergraph, Obj, Order, Ref, Relation, Type } from '@dxos/echo';
+import { type Entity, Feed, type Hypergraph, Obj, Order, Ref, Relation, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { DXN, PublicKey } from '@dxos/keys';
@@ -555,6 +555,58 @@ describe('Query', () => {
 
       const result = await db.query(Query.select(Filter.type(TestSchema.Person)).limit(2).from(db)).run();
       expect(result).toHaveLength(2);
+    });
+
+    test('from(feed) scopes query to feed items', async () => {
+      const peer = await builder.createPeer({ types: [Type.Feed, TestSchema.Task] });
+      const db = await peer.createDatabase();
+      const queues = peer.client.constructQueueFactory(db.spaceId);
+      const queue = queues.create();
+
+      // Create a feed object and bind it to the queue.
+      const feed = db.add(Feed.make({ name: 'test-feed' }));
+      Obj.change(feed, (mutable) => {
+        Obj.getMeta(mutable).keys.push({ source: Feed.DXN_KEY, id: queue.dxn.toString() });
+      });
+
+      // Add items to the queue and a separate item to the space.
+      db.add(Obj.make(TestSchema.Task, { title: 'Space Task' }));
+      await queue.append([
+        Obj.make(TestSchema.Task, { title: 'Feed Task 1' }),
+        Obj.make(TestSchema.Task, { title: 'Feed Task 2' }),
+      ]);
+      await db.flush({ indexes: true });
+
+      // Query from feed should only return feed items.
+      const feedResults = await db.query(Query.select(Filter.type(TestSchema.Task)).from(feed)).run();
+      expect(feedResults).toHaveLength(2);
+      expect(feedResults.map((obj: any) => obj.title).sort()).toEqual(['Feed Task 1', 'Feed Task 2']);
+    });
+
+    test('from(feed) with Filter.id scopes to feed', async () => {
+      const peer = await builder.createPeer({ types: [Type.Feed, TestSchema.Task] });
+      const db = await peer.createDatabase();
+      const queues = peer.client.constructQueueFactory(db.spaceId);
+      const queue = queues.create();
+
+      const feed = db.add(Feed.make({ name: 'test-feed' }));
+      Obj.change(feed, (mutable) => {
+        Obj.getMeta(mutable).keys.push({ source: Feed.DXN_KEY, id: queue.dxn.toString() });
+      });
+
+      const feedItem = Obj.make(TestSchema.Task, { title: 'Feed Task' });
+      const spaceItem = db.add(Obj.make(TestSchema.Task, { title: 'Space Task' }));
+      await queue.append([feedItem]);
+      await db.flush({ indexes: true });
+
+      // Filter.id for a feed item should find it when scoped to feed.
+      const feedResult = await db.query(Query.select(Filter.id(feedItem.id)).from(feed)).run();
+      expect(feedResult).toHaveLength(1);
+      expect((feedResult[0] as any).title).toBe('Feed Task');
+
+      // Filter.id for a space item should NOT find it when scoped to feed.
+      const spaceResult = await db.query(Query.select(Filter.id(spaceItem.id)).from(feed)).run();
+      expect(spaceResult).toHaveLength(0);
     });
   });
 

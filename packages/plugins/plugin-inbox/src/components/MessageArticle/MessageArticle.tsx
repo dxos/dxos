@@ -6,12 +6,12 @@ import React, { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { Obj } from '@dxos/echo';
+import { type Feed, Obj } from '@dxos/echo';
 import { Layout } from '@dxos/react-ui';
 import { type Message as MessageType } from '@dxos/types';
 
 import { useActorContact } from '../../hooks';
-import { InboxOperation, type Mailbox } from '../../types';
+import { InboxOperation } from '../../types';
 
 import { Message, type MessageHeaderProps } from './Message';
 import { type ViewMode } from './useToolbar';
@@ -19,21 +19,21 @@ import { type ViewMode } from './useToolbar';
 export type MessageArticleProps = SurfaceComponentProps<
   MessageType.Message,
   {
-    mailbox: Mailbox.Mailbox;
+    feed: Feed.Feed;
   }
 >;
 
 export const MessageArticle = ({
   role,
   subject: message,
-  mailbox, // TODO(burdon): companionTo?
+  feed, // TODO(burdon): companionTo?
 }: MessageArticleProps) => {
   const viewMode = useMemo<ViewMode>(() => {
     const textBlocks = message?.blocks.filter((block) => 'text' in block) ?? [];
     return textBlocks.length > 1 && !!textBlocks[1]?.text ? 'enriched' : 'plain-only';
   }, [message]);
 
-  const db = Obj.getDatabase(mailbox);
+  const db = Obj.getDatabase(feed);
   const sender = useActorContact(db, message.sender);
 
   const { invokePromise } = useOperationInvoker();
@@ -70,7 +70,7 @@ export const MessageArticle = ({
   return (
     <Layout.Main role={role} toolbar>
       <Message.Root
-        attendableId={Obj.getDXN(mailbox).toString()}
+        attendableId={Obj.getDXN(feed).toString()}
         viewMode={viewMode}
         message={message}
         sender={sender}
