@@ -220,6 +220,7 @@ export const PipelineObjectSettings = ({ classNames, pipeline }: PipelineObjectS
                         schema={schema}
                         view={column.view.target}
                         registry={space?.db.schemaRegistry}
+                        db={space?.db}
                         tags={tags}
                         types={types}
                         onQueryChanged={handleQueryChanged}

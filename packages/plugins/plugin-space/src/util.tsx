@@ -624,7 +624,7 @@ export const constructObjectActions = ({
           },
         ]
       : []),
-    ...(createObject
+    ...(createObject && managedCollection
       ? [
           {
             id: getId(SpaceOperation.OpenCreateObject.meta.key),

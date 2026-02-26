@@ -92,6 +92,7 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
       schema={schema}
       view={view}
       mode='tag'
+      db={space.db}
       tags={tags}
       types={types}
       onQueryChanged={handleQueryChanged}
