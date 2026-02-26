@@ -59,7 +59,7 @@ NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
 - [x] plugin-kanban
 - [x] plugin-map
 - [x] plugin-markdown
-- [ ] plugin-masonry
+- [x] plugin-masonry
 - [ ] plugin-meeting
 - [ ] plugin-mermaid
 - [ ] plugin-native
@@ -223,3 +223,8 @@ NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
 - `LocalFileContainer` → moved from flat `components/LocalFileContainer.tsx` to `containers/LocalFileContainer/`
 - `components/` cleared (no primitives remain).
 - Time: 2026-02-25, ~5 min
+
+## plugin-masonry
+
+- `MasonryContainer` → moved from flat `components/MasonryContainer.tsx` to `containers/MasonryContainer/` with stories; `components/` cleared (no primitives remain).
+- Time: 2026-02-25, ~2 min
