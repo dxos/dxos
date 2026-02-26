@@ -26,7 +26,7 @@ import {
   InitiativeSettings,
   PromptArticle,
   TriggerStatus,
-} from '../../components';
+} from '../../containers';
 import { ASSISTANT_DIALOG, meta } from '../../meta';
 import { type Assistant } from '../../types';
 
