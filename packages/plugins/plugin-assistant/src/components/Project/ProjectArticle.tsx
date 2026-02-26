@@ -12,62 +12,13 @@ import { type Project } from '@dxos/assistant-toolkit';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';
 import { useQuery } from '@dxos/react-client/echo';
-import { ElevationProvider, IconButton, Layout, ScrollArea } from '@dxos/react-ui';
-import { Toolbar } from '@dxos/react-ui';
+import { Layout, ScrollArea } from '@dxos/react-ui';
 import { Card, Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
-import { StackItem } from '@dxos/react-ui-stack';
 import { isNonNullable } from '@dxos/util';
 
-const TAB_INITATIVE = 'Project';
-const TAB_CHAT = 'Chat';
+export type ProjectArticleProps = SurfaceComponentProps<Project.Project>;
 
-export type ProjectContainerProps = SurfaceComponentProps<Project.Project>;
-
-// TODO(dmaretskyi): Rename InitaitveArticle.
-// TODO(dmaretskyi): Remove Chat and only leave stack. Currently chat companion is struggling with multiple chats associated with an project.
-export const ProjectContainer = ({ subject: project }: ProjectContainerProps) => {
-  const [selectedTab, setSelectedTab] = useState<string>(TAB_INITATIVE);
-
-  const chat = useAtomValue(
-    useMemo(
-      () =>
-        AtomObj.make(project).pipe((project) =>
-          Atom.make((get) => {
-            const chat = get(project).chat;
-            return chat ? get(AtomRef.make(chat)) : undefined;
-          }),
-        ),
-      [project],
-    ),
-  );
-
-  return (
-    <StackItem.Content toolbar>
-      <ElevationProvider elevation='positioned'>
-        <Toolbar.Root>
-          <IconButton
-            icon='ph--sparkle--regular'
-            label='Project'
-            variant={selectedTab === TAB_INITATIVE ? 'primary' : 'ghost'}
-            onClick={() => setSelectedTab(TAB_INITATIVE)}
-          />
-          <IconButton
-            icon='ph--chat--regular'
-            label='Chat'
-            variant={selectedTab === TAB_CHAT ? 'primary' : 'ghost'}
-            onClick={() => setSelectedTab(TAB_CHAT)}
-          />
-        </Toolbar.Root>
-      </ElevationProvider>
-      {selectedTab === TAB_INITATIVE && <ProjectStack project={project} />}
-      {selectedTab === TAB_CHAT && <Surface.Surface role='article' data={{ subject: chat }} limit={1} />}
-    </StackItem.Content>
-  );
-};
-
-export default ProjectContainer;
-
-const ProjectStack = ({ project }: { project: Project.Project }) => {
+export const ProjectArticle = ({ subject: project }: ProjectArticleProps) => {
   const inputQueue = useAtomValue(
     AtomObj.make(project).pipe((_) =>
       Atom.make((get) =>
@@ -144,3 +95,5 @@ const StackTile = forwardRef<HTMLDivElement, MosaicTileProps<Obj.Unknown>>(
   },
 );
 StackTile.displayName = 'StackTile';
+
+export default ProjectArticle;
