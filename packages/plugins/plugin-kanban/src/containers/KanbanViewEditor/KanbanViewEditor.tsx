@@ -56,12 +56,7 @@ export const KanbanViewEditor = ({ subject: object }: KanbanViewEditorProps) => 
   );
 
   return (
-    <Form.Root
-      schema={SettingsSchema}
-      values={initialValues}
-      fieldMap={fieldMap}
-      onValuesChanged={handleValuesChanged}
-    >
+    <Form.Root schema={SettingsSchema} values={initialValues} fieldMap={fieldMap} onValuesChanged={handleValuesChanged}>
       <Form.FieldSet />
     </Form.Root>
   );
