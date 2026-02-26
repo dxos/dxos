@@ -11,8 +11,8 @@ import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Layout } from '@dxos/react-ui';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
 
-import { meta } from '../meta';
-import { type Meeting, MeetingOperation } from '../types';
+import { meta } from '../../meta';
+import { type Meeting, MeetingOperation } from '../../types';
 
 export type MeetingContainerProps = SurfaceComponentProps<Meeting.Meeting>;
 
@@ -88,5 +88,3 @@ export const MeetingContainer = ({ role, subject: meeting }: MeetingContainerPro
     </Layout.Main>
   );
 };
-
-export default MeetingContainer;

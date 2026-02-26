@@ -16,8 +16,8 @@ import { Button, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/ui-theme';
 
-import { meta } from '../meta';
-import { Meeting, MeetingOperation } from '../types';
+import { meta } from '../../meta';
+import { Meeting, MeetingOperation } from '../../types';
 
 // TODO(wittjosiah): Add a story which renders meetings alongside call?
 
@@ -111,5 +111,3 @@ export const MeetingsList = ({ channel }: MeetingsListProps) => {
     </div>
   );
 };
-
-export default MeetingsList;

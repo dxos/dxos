@@ -60,7 +60,7 @@ NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
 - [x] plugin-map
 - [x] plugin-markdown
 - [x] plugin-masonry
-- [ ] plugin-meeting
+- [x] plugin-meeting
 - [ ] plugin-mermaid
 - [ ] plugin-native
 - [ ] plugin-navtree
@@ -228,3 +228,10 @@ NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
 
 - `MasonryContainer` → moved from flat `components/MasonryContainer.tsx` to `containers/MasonryContainer/` with stories; `components/` cleared (no primitives remain).
 - Time: 2026-02-25, ~2 min
+
+## plugin-meeting
+
+- `MeetingContainer` → moved from flat `components/MeetingContainer.tsx` to `containers/MeetingContainer/` with stories
+- `MeetingSettings` → moved from `components/MeetingSettings/` subdirectory to `containers/MeetingSettings/`
+- `MeetingsList` → moved from flat `components/MeetingsList.tsx` to `containers/MeetingsList/`; `components/` cleared (no primitives remain).
+- Time: 2026-02-25, ~3 min
