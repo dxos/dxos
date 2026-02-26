@@ -2,6 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-import { DraftMessageArticle } from './DraftMessageArticle';
-
-export default DraftMessageArticle;
+export { DraftMessageArticle } from './DraftMessageArticle';

@@ -37,5 +37,3 @@ export const DraftMessageArticle = ({ role, subject }: DraftMessageArticleProps)
     </Layout.Main>
   );
 };
-
-export default DraftMessageArticle;

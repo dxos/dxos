@@ -11,8 +11,10 @@ Instructions for refactoring plugins.
 - Surface components should define a `SurfaceComponentProps` input type.
 - Surface components should not use classNames or implement custom styling; flag as an issue if you see this.
 - Surface components should have lazy exports.
-- Components and containers should be in their own directory together with their stories and auxilliary components.
-- Use barrel imports.
+- Containers should be in their own directory together with their stories.
+- Ensure the story names matches the plugin and component name.
+- Top-level components used by containers should be in their own directory; together with auxilliary components and stories.
+- Use barrel imports and avoid default exports.
 
 ## Tasks
 
@@ -21,7 +23,8 @@ Instructions for refactoring plugins.
 - Ensure that all surface components are lazy exports.
 - Ensure all commponents have very basic single Default storybooks.
 - Update this document with learnings and issues.
-- For each plugin maintain a very concise single bullet summary of actions taken per component.
+- For each plugin maintain a very concise single bullet summary of actions taken per component (sorted alphabetically).
+- Check the plugin builds correctly and run lint at the end of each stage.
 
 ## Progress
 
@@ -37,7 +40,7 @@ Instructions for refactoring plugins.
   primitive sub-components stay in `components/` with updated import paths.
 - `PopoverSaveFilter` lived inside `MailboxArticle/` but is an independent surface;
   it gets its own `containers/PopoverSaveFilter/` directory.
-- Container `index.ts` files must use default exports for `React.lazy` compatibility.
+- Container `index.ts` files use named exports; `containers/index.ts` uses `.then(m => ({ default: m.X }))` to satisfy `React.lazy` without default exports.
 
 ## Issues
 
