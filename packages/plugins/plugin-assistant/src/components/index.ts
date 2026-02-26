@@ -9,7 +9,7 @@ export * from './Chat';
 export * from './TemplateEditor';
 export * from './Toolbox';
 export * from './TriggerStatus';
-export * from './Initiative';
+export * from './Project';
 
 export const BlueprintArticle = lazy(() => import('./BlueprintArticle'));
 export const ChatCompanion = lazy(() => import('./ChatCompanion'));

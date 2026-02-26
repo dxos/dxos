@@ -10,7 +10,7 @@ import React, { useCallback, useEffect, useMemo, useSyncExternalStore } from 're
 
 import { useCapability } from '@dxos/app-framework/ui';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { Initiative } from '@dxos/assistant-toolkit';
+import { Project } from '@dxos/assistant-toolkit';
 import { type Database, Obj, Query, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/echo';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';
@@ -25,41 +25,41 @@ import { QueueAnnotation } from '@dxos/schema';
 
 import { syncTriggers } from './triggers';
 
-export const InitiativeSettings = ({ subject: initiative }: SurfaceComponentProps<Initiative.Initiative>) => {
+export const ProjectSettings = ({ subject: project }: SurfaceComponentProps<Project.Project>) => {
   const computeRuntime = useCapability(AutomationCapabilities.ComputeRuntime);
 
   const handleResetHistory = useCallback(async () => {
-    const runtime = computeRuntime.getRuntime(Obj.getDatabase(initiative)!.spaceId);
+    const runtime = computeRuntime.getRuntime(Obj.getDatabase(project)!.spaceId);
 
-    await runtime.runPromise(Initiative.resetChatHistory(initiative));
+    await runtime.runPromise(Project.resetChatHistory(project));
 
-    if (!initiative.queue) {
+    if (!project.queue) {
       await runtime.runPromise(
         Effect.gen(function* () {
           const queue = yield* QueueService.createQueue();
-          Obj.change(initiative, (initiative) => {
-            initiative.queue = Ref.fromDXN(queue.dxn);
+          Obj.change(project, (project) => {
+            project.queue = Ref.fromDXN(queue.dxn);
           });
         }),
       );
     }
-  }, [initiative, computeRuntime]);
+  }, [project, computeRuntime]);
 
-  const spec = useAtomValue(AtomRef.make(initiative.spec));
+  const spec = useAtomValue(AtomRef.make(project.spec));
   const [specInitialValue] = useObject(spec, 'content');
 
   useEffect(() => {
-    return Obj.subscribe(initiative, () => {
-      queueMicrotask(() => syncTriggers(initiative));
+    return Obj.subscribe(project, () => {
+      queueMicrotask(() => syncTriggers(project));
     });
-  }, [initiative]);
+  }, [project]);
 
-  const subscribableSchemaList = useSchemaList(Obj.getDatabase(initiative)).filter(
+  const subscribableSchemaList = useSchemaList(Obj.getDatabase(project)).filter(
     (schema) =>
-      QueueAnnotation.get(schema).pipe(Option.isSome) && Type.getTypename(schema) !== Initiative.Initiative.typename,
+      QueueAnnotation.get(schema).pipe(Option.isSome) && Type.getTypename(schema) !== Project.Project.typename,
   );
   const subscribableObjects = useQuery(
-    Obj.getDatabase(initiative),
+    Obj.getDatabase(project),
     subscribableSchemaList.length === 0
       ? Query.select(Filter.nothing())
       : Query.all(...subscribableSchemaList.map((schema) => Query.select(Filter.type(schema)))),
@@ -68,24 +68,24 @@ export const InitiativeSettings = ({ subject: initiative }: SurfaceComponentProp
   const existingSubscripts = useAtomValue(
     useMemo(
       () =>
-        AtomObj.make(initiative).pipe((_) =>
+        AtomObj.make(project).pipe((_) =>
           Atom.make((get) => {
             const initative = get(_);
             const selectedSubscriptions: Obj.Unknown[] = subscribableObjects.filter((object) =>
-              initiative.subscriptions.some((subscription) => DXN.equals(subscription.dxn, Obj.getDXN(object))),
+              project.subscriptions.some((subscription) => DXN.equals(subscription.dxn, Obj.getDXN(object))),
             );
 
             return selectedSubscriptions;
           }),
         ),
-      [initiative, subscribableObjects],
+      [project, subscribableObjects],
     ),
   );
 
   return (
     <div className='flex flex-col gap-4'>
       <Input.Root>
-        <Input.Label>Spec (what is the goal of the initiative?)</Input.Label>
+        <Input.Label>Spec (what is the goal of the project?)</Input.Label>
         <MarkdownEditor.Root id={spec?.id ?? ''} object={spec}>
           <MarkdownEditor.Content initialValue={specInitialValue} />
         </MarkdownEditor.Root>
@@ -102,11 +102,11 @@ export const InitiativeSettings = ({ subject: initiative }: SurfaceComponentProp
                 <Input.Checkbox
                   checked={existingSubscripts.includes(object)}
                   onCheckedChange={(checked) => {
-                    Obj.change(initiative, (initiative) => {
+                    Obj.change(project, (project) => {
                       if (checked) {
-                        initiative.subscriptions.push(Ref.fromDXN(Obj.getDXN(object)));
+                        project.subscriptions.push(Ref.fromDXN(Obj.getDXN(object)));
                       } else {
-                        initiative.subscriptions = initiative.subscriptions.filter(
+                        project.subscriptions = project.subscriptions.filter(
                           (subscription) => !DXN.equals(subscription.dxn, Obj.getDXN(object)),
                         );
                       }
@@ -123,7 +123,7 @@ export const InitiativeSettings = ({ subject: initiative }: SurfaceComponentProp
   );
 };
 
-export default InitiativeSettings;
+export default ProjectSettings;
 
 const EMPTY_ARRAY: never[] = [];
 

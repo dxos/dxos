@@ -10,7 +10,7 @@ import { Database, Obj } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { trim } from '@dxos/util';
 
-import { Initiative, Plan } from '../../../types';
+import { Plan, Project } from '../../../types';
 
 const INSTRUCTIONS = trim`
 TASK MANAGEMENT TOOL - USAGE GUIDELINES
@@ -132,8 +132,8 @@ export default defineFunction({
     tasks: Schema.Array(TaskProps),
   }),
   handler: Effect.fn(function* ({ data: { tasks: newTasks } }) {
-    const initiative = yield* Initiative.getFromChatContext;
-    const plan = yield* Database.load(initiative.plan);
+    const project = yield* Project.getFromChatContext;
+    const plan = yield* Database.load(project.plan);
 
     Obj.change(plan, (plan) => {
       for (const task of newTasks) {

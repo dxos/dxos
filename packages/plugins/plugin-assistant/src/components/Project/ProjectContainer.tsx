@@ -8,7 +8,7 @@ import React, { forwardRef, useMemo, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { type Initiative } from '@dxos/assistant-toolkit';
+import { type Project } from '@dxos/assistant-toolkit';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';
 import { useQuery } from '@dxos/react-client/echo';
@@ -18,26 +18,26 @@ import { Card, Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic
 import { StackItem } from '@dxos/react-ui-stack';
 import { isNonNullable } from '@dxos/util';
 
-const TAB_INITATIVE = 'Initiative';
+const TAB_INITATIVE = 'Project';
 const TAB_CHAT = 'Chat';
 
-export type InitiativeContainerProps = SurfaceComponentProps<Initiative.Initiative>;
+export type ProjectContainerProps = SurfaceComponentProps<Project.Project>;
 
 // TODO(dmaretskyi): Rename InitaitveArticle.
-// TODO(dmaretskyi): Remove Chat and only leave stack. Currently chat companion is struggling with multiple chats associated with an initiative.
-export const InitiativeContainer = ({ subject: initiative }: InitiativeContainerProps) => {
+// TODO(dmaretskyi): Remove Chat and only leave stack. Currently chat companion is struggling with multiple chats associated with an project.
+export const ProjectContainer = ({ subject: project }: ProjectContainerProps) => {
   const [selectedTab, setSelectedTab] = useState<string>(TAB_INITATIVE);
 
   const chat = useAtomValue(
     useMemo(
       () =>
-        AtomObj.make(initiative).pipe((initiative) =>
+        AtomObj.make(project).pipe((project) =>
           Atom.make((get) => {
-            const chat = get(initiative).chat;
+            const chat = get(project).chat;
             return chat ? get(AtomRef.make(chat)) : undefined;
           }),
         ),
-      [initiative],
+      [project],
     ),
   );
 
@@ -47,7 +47,7 @@ export const InitiativeContainer = ({ subject: initiative }: InitiativeContainer
         <Toolbar.Root>
           <IconButton
             icon='ph--sparkle--regular'
-            label='Initiative'
+            label='Project'
             variant={selectedTab === TAB_INITATIVE ? 'primary' : 'ghost'}
             onClick={() => setSelectedTab(TAB_INITATIVE)}
           />
@@ -59,17 +59,17 @@ export const InitiativeContainer = ({ subject: initiative }: InitiativeContainer
           />
         </Toolbar.Root>
       </ElevationProvider>
-      {selectedTab === TAB_INITATIVE && <InitiativeStack initiative={initiative} />}
+      {selectedTab === TAB_INITATIVE && <ProjectStack project={project} />}
       {selectedTab === TAB_CHAT && <Surface.Surface role='article' data={{ subject: chat }} limit={1} />}
     </StackItem.Content>
   );
 };
 
-export default InitiativeContainer;
+export default ProjectContainer;
 
-const InitiativeStack = ({ initiative }: { initiative: Initiative.Initiative }) => {
+const ProjectStack = ({ project }: { project: Project.Project }) => {
   const inputQueue = useAtomValue(
-    AtomObj.make(initiative).pipe((_) =>
+    AtomObj.make(project).pipe((_) =>
       Atom.make((get) =>
         Option.fromNullable(get(_).queue).pipe(Option.map(AtomRef.make), Option.map(get), Option.getOrUndefined),
       ),
@@ -81,12 +81,12 @@ const InitiativeStack = ({ initiative }: { initiative: Initiative.Initiative }) 
   const artifacts = useAtomValue(
     useMemo(
       () =>
-        AtomObj.make(initiative).pipe((initiative) =>
+        AtomObj.make(project).pipe((project) =>
           Atom.make((get) => {
-            return get(initiative).artifacts.map((artifact) => get(AtomRef.make(artifact.data)) as Obj.Unknown);
+            return get(project).artifacts.map((artifact) => get(AtomRef.make(artifact.data)) as Obj.Unknown);
           }),
         ),
-      [initiative],
+      [project],
     ),
   );
 
@@ -98,12 +98,12 @@ const InitiativeStack = ({ initiative }: { initiative: Initiative.Initiative }) 
     <Layout.Main classNames='overflow-y-auto'>
       {stackObjects.length === 0 && (
         <div className='text-subdued'>
-          Initiative has no objects associated with it.
+          Project has no objects associated with it.
           <br />
           <br />
           To get started:
-          <br />- Write the initative spec: what is the goal of the initiative?
-          <br />- subscribe initiative to your email.
+          <br />- Write the initative spec: what is the goal of the project?
+          <br />- subscribe project to your email.
           <br />- Chat with the agent.
         </div>
       )}
