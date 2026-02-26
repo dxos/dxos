@@ -3,4 +3,3 @@
 //
 
 export * from './TokenManager';
-export * from './TokensContainer';

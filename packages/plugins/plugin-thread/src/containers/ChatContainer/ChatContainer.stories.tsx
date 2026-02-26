@@ -19,8 +19,8 @@ import { Thread as ThreadComponent } from '@dxos/react-ui-thread';
 import { render } from '@dxos/storybook-utils';
 import { Message, Thread } from '@dxos/types';
 
-import { translations } from '../translations';
-import { Channel } from '../types';
+import { translations } from '../../translations';
+import { Channel } from '../../types';
 
 import { ChatContainer } from './ChatContainer';
 

@@ -20,12 +20,11 @@ import { MenuProvider, ToolbarMenu, createMenuAction, createMenuItemGroup, useMe
 import { useSoundEffect } from '@dxos/react-ui-sfx';
 import { StackItem } from '@dxos/react-ui-stack';
 
-import { meta } from '../meta';
-import { ThreadCapabilities } from '../types';
-import { type Channel } from '../types';
-
-import { Call } from './Call';
-import ChatContainer from './ChatContainer';
+import { Call } from '../../components/Call';
+import { meta } from '../../meta';
+import { ThreadCapabilities } from '../../types';
+import { type Channel } from '../../types';
+import ChatContainer from '../ChatContainer';
 
 export type ChannelContainerProps = SurfaceComponentProps<
   Channel.Channel | undefined,
@@ -138,8 +137,6 @@ export const ChannelContainer = ({ role, subject: channel, roomId: roomIdProp, f
     </StackItem.Content>
   );
 };
-
-export default ChannelContainer;
 
 const DisplayNameMissing = () => {
   const { t } = useTranslation(meta.id);

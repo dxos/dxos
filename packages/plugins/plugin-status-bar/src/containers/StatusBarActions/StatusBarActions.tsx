@@ -4,16 +4,16 @@
 
 import React, { useState } from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
 import { useConfig } from '@dxos/react-client';
 import { Icon, Popover, useTranslation } from '@dxos/react-ui';
 
-import { meta } from '../meta';
+import { StatusBar } from '../../components/StatusBar';
+import { meta } from '../../meta';
+import VersionNumber from '../VersionNumber';
 
-import { StatusBar } from './StatusBar';
-import { VersionNumber } from './VersionNumber';
+export type StatusBarActionsProps = {};
 
-export const StatusBarActions = () => {
+export const StatusBarActions = (_props: StatusBarActionsProps) => {
   const { t } = useTranslation(meta.id);
   const [open, setOpen] = useState(false);
 
@@ -34,16 +34,6 @@ export const StatusBarActions = () => {
         </a>
       </StatusBar.Button>
     </Popover.Root>
-  );
-};
-
-export const StatusBarPanel = () => {
-  return (
-    <>
-      <StatusBarActions />
-      <span role='separator' className='grow' />
-      <Surface.Surface role='status' />
-    </>
   );
 };
 

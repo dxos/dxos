@@ -10,8 +10,8 @@ import { JsonView, Panel } from '@dxos/devtools';
 import { log } from '@dxos/log';
 import { IconButton, Input, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 
-import { type EncodedTrackName, type GlobalState } from '../calls';
-import { meta } from '../meta';
+import { type EncodedTrackName, type GlobalState } from '../../calls';
+import { meta } from '../../meta';
 
 export type CallDebugPanelProps = ThemedClassName<{ state?: GlobalState }>;
 

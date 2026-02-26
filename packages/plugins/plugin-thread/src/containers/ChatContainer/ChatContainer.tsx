@@ -21,12 +21,11 @@ import { createBasicExtensions, createThemeExtensions, listener } from '@dxos/ui
 import { mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
-import { useStatus } from '../hooks';
-import { meta } from '../meta';
-import { getMessageMetadata } from '../util';
-
-import { command } from './command-extension';
-import { MessageContainer } from './MessageContainer';
+import { MessageContainer } from '../../components';
+import { command } from '../../components/command-extension';
+import { useStatus } from '../../hooks';
+import { meta } from '../../meta';
+import { getMessageMetadata } from '../../util';
 
 export const ChatHeading = ({ attendableId }: { attendableId?: string }) => {
   const { t } = useTranslation(meta.id);
@@ -148,5 +147,3 @@ export const ChatContainer = ({
     </ThreadComponent.Root>
   );
 };
-
-export default ChatContainer;

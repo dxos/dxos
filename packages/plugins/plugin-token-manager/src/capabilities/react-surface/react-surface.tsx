@@ -10,7 +10,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { useLayout } from '@dxos/app-toolkit/ui';
 import { parseId, useDatabase } from '@dxos/react-client/echo';
 
-import { TokensContainer } from '../../components';
+import { TokensContainer } from '../../containers';
 import { meta } from '../../meta';
 
 export default Capability.makeModule(() =>

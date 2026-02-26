@@ -10,10 +10,9 @@ import { useMembers, useQueue } from '@dxos/react-client/echo';
 import { Layout } from '@dxos/react-ui';
 import { type Message, type Transcript } from '@dxos/types';
 
-import { useQueueModelAdapter } from '../hooks';
-import { renderByline } from '../util';
-
-import { TranscriptView } from './Transcript';
+import { TranscriptView } from '../../components/Transcript';
+import { useQueueModelAdapter } from '../../hooks';
+import { renderByline } from '../../util';
 
 export type TranscriptionContainerProps = SurfaceComponentProps<Transcript.Transcript>;
 
@@ -30,5 +29,3 @@ export const TranscriptionContainer = ({ role, subject: transcript }: Transcript
     </Layout.Main>
   );
 };
-
-export default TranscriptionContainer;

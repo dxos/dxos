@@ -7,8 +7,8 @@ import React from 'react';
 import { useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
 
-import { meta } from '../meta';
-import type { ThreadSettingsProps } from '../types';
+import { meta } from '../../meta';
+import type { ThreadSettingsProps } from '../../types';
 
 export type ThreadSettingsComponentProps = {
   settings: ThreadSettingsProps;

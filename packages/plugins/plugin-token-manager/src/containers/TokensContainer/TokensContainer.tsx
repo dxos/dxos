@@ -13,11 +13,10 @@ import { Separator, useTranslation } from '@dxos/react-ui';
 import { Form, Settings } from '@dxos/react-ui-form';
 import { AccessToken } from '@dxos/types';
 
-import { meta } from '../meta';
-import { TokenManagerOperation } from '../types';
-
-import { NewTokenSelector } from './NewTokenSelector';
-import { TokenManager } from './TokenManager';
+import { NewTokenSelector } from '../../components/NewTokenSelector';
+import { TokenManager } from '../../components/TokenManager';
+import { meta } from '../../meta';
+import { TokenManagerOperation } from '../../types';
 
 const initialValues = {
   note: '',

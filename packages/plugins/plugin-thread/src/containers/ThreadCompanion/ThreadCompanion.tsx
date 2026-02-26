@@ -18,9 +18,9 @@ import { Tabs } from '@dxos/react-ui-tabs';
 import { AnchoredTo, Thread } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
-import { CommentsContainer, type CommentsContainerProps } from '../components';
-import { meta } from '../meta';
-import { ThreadCapabilities, ThreadOperation, type ViewState } from '../types';
+import { CommentsContainer, type CommentsContainerProps } from '../../components';
+import { meta } from '../../meta';
+import { ThreadCapabilities, ThreadOperation, type ViewState } from '../../types';
 
 const initialViewState: ViewState = { showResolvedThreads: false };
 

@@ -77,11 +77,11 @@ NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
 - [x] plugin-sketch
 - [x] plugin-space
 - [x] plugin-stack
-- [ ] plugin-status-bar
+- [x] plugin-status-bar
 - [ ] plugin-table
-- [ ] plugin-thread
-- [ ] plugin-token-manager
-- [ ] plugin-transcription
+- [x] plugin-thread
+- [x] plugin-token-manager
+- [x] plugin-transcription
 - [ ] plugin-transformer
 - [ ] plugin-wnfs
 
@@ -333,4 +333,35 @@ NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
 - `StackContainer` → already in `containers/StackContainer/`
 - `StackContext`, `StackSection`, `StackSettings` → primitives; stay as flat files in `components/`; exported from `components/index.ts`
 - `CaretDownUp` → primitive helper; stays in `components/`
+- Time: 2026-02-25, ~2 min
+
+## plugin-status-bar
+
+- `StatusBarActions` → already in `containers/StatusBarActions/`
+- `StatusBarPanel` → already in `containers/StatusBarPanel/`
+- `VersionNumber` → already in `containers/VersionNumber/`
+- `StatusBar` → primitive; stays in `components/`
+- Time: 2026-02-25, ~2 min
+
+## plugin-thread
+
+- `CallDebugPanel` → already in `containers/CallDebugPanel/`; imports `GlobalState` from `../../calls`, cross-container uses default import
+- `CallSidebar` → already in `containers/CallSidebar/`; imports `ChannelContainer` from `../ChannelContainer` (default import)
+- `ChannelContainer` → already in `containers/ChannelContainer/` with stories; imports `ChatContainer` from `../ChatContainer` (default import)
+- `ChatContainer` → already in `containers/ChatContainer/` with stories; imports `MessageContainer` from `../../components`
+- `ThreadCompanion` → already in `containers/ThreadCompanion/`; imports `CommentsContainer` from `../../components`
+- `ThreadSettings` → already in `containers/ThreadSettings/`
+- `Call`, `CommentsContainer`, `CommentsThreadContainer`, `MessageContainer`, `Lobby`, `Media`, `Participant`, `ResponsiveGrid` → primitives; stay in `components/`
+- Time: 2026-02-25, ~3 min
+
+## plugin-token-manager
+
+- `TokensContainer` → already in `containers/TokensContainer/`
+- `NewTokenSelector`, `SpaceSelector`, `TokenManager` → primitives; stay in `components/`
+- Time: 2026-02-25, ~2 min
+
+## plugin-transcription
+
+- `TranscriptionContainer` → already in `containers/TranscriptionContainer/`
+- `Transcript` → primitive; stays in `components/Transcript/`
 - Time: 2026-02-25, ~2 min

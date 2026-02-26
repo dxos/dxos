@@ -8,15 +8,16 @@ import React from 'react';
 import { useConfig } from '@dxos/react-client';
 import { Icon, Link, Message, Popover, Trans, useTranslation } from '@dxos/react-ui';
 
-import { meta } from '../meta';
+import { StatusBar } from '../../components/StatusBar';
+import { meta } from '../../meta';
 
-import { StatusBar } from './StatusBar';
+export type VersionNumberProps = {};
 
 const repo = 'https://github.com/dxos/dxos';
 
 const VERSION_REGEX = /([\d.]+)/;
 
-export const VersionNumber = () => {
+export const VersionNumber = (_props: VersionNumberProps) => {
   const { t } = useTranslation(meta.id);
   const config = useConfig();
   const { version, timestamp, commitHash } = config.values.runtime?.app?.build ?? {};
