@@ -16,7 +16,7 @@ import { Board, type BoardController, type BoardRootProps, type Position } from 
 import { ObjectPicker, type ObjectPickerContentProps } from '@dxos/react-ui-form';
 import { isNonNullable } from '@dxos/util';
 
-import { type Board as BoardType } from '../types';
+import { type Board as BoardType } from '../../types';
 
 const DEFAULT_POSITION = { x: 0, y: 0 } satisfies Position;
 

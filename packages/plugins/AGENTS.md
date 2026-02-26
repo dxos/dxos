@@ -41,7 +41,7 @@ Instructions for creating, maintaining and refactoring plugins.
 - [x] plugin-assistant
 - [ ] plugin-attention
 - [x] plugin-automation
-- [ ] plugin-board
+- [x] plugin-board
 - [x] plugin-chess
 - [ ] plugin-client
 - [ ] plugin-conductor
@@ -108,6 +108,11 @@ Instructions for creating, maintaining and refactoring plugins.
 - `InitiativeSettings` → moved from `components/Initiative/` to `containers/InitiativeSettings/`; `triggers.ts` co-located in same container directory
 - `PromptArticle` → moved from flat `components/PromptArticle.tsx` to `containers/PromptArticle/`
 - `TriggerStatus` → moved from `components/TriggerStatus/` to `containers/TriggerStatus/`
+
+## plugin-board
+
+- `BoardContainer` → moved from flat `components/BoardContainer.tsx` to `containers/BoardContainer/` with stories
+- Time: 2026-02-25, ~5 min
 
 ## plugin-automation
 

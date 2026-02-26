@@ -17,8 +17,8 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as stackTranslations } from '@dxos/react-ui-stack';
 import { Organization, Person } from '@dxos/types';
 
-import { translations } from '../translations';
-import { Board } from '../types';
+import { translations } from '../../translations';
+import { Board } from '../../types';
 
 import { BoardContainer } from './BoardContainer';
 
@@ -69,7 +69,7 @@ const DefaultStory = () => {
 //
 
 const meta = {
-  title: 'plugins/plugin-board/Board',
+  title: 'plugins/plugin-board/BoardContainer',
   render: DefaultStory,
   decorators: [
     withTheme(),
