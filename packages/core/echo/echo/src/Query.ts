@@ -317,8 +317,8 @@ class QueryClass implements Any {
 
     const feeds = items as Feed.Feed[];
     const queueDxns = feeds.flatMap((feed) => {
-      const keys = Entity.getKeys(feed as Entity.Unknown, Feed.DXN_KEY);
-      return keys.length > 0 ? [keys[0].id] : [];
+      const dxn = Feed.getQueueDxn(feed);
+      return dxn ? [dxn.toString()] : [];
     });
     return new QueryClass({
       type: 'options',

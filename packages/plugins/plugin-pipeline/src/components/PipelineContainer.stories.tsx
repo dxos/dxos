@@ -9,7 +9,7 @@ import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter, Ref } from '@dxos/client/echo';
-import { Database, Entity, Feed, Obj, Query, Tag, Type } from '@dxos/echo';
+import { Database, Feed, Obj, Query, Tag, Type } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { InboxPlugin } from '@dxos/plugin-inbox';
@@ -114,7 +114,7 @@ const meta = {
               );
               yield* Feed.append(messageFeed, messages);
 
-              const messageQueueDxn = Entity.getKeys(messageFeed, Feed.DXN_KEY)[0].id;
+              const messageQueueDxn = Feed.getQueueDxn(messageFeed)!.toString();
               const messageView = View.make({
                 query: Query.select(Filter.type(Message.Message)).options({
                   queues: [messageQueueDxn],

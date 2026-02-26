@@ -7,6 +7,8 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import type * as Option from 'effect/Option';
 
+import { DXN } from '@dxos/keys';
+
 import type * as Entity from './Entity';
 import type * as Filter from './Filter';
 import * as Obj from './Obj';
@@ -58,6 +60,17 @@ export interface RetentionOptions {
  */
 // TODO(wittjosiah): How to control the feed namespace (data/trace)? Why do feeds have namespaces?
 export const make = (props: Obj.MakeProps<typeof Type.Feed>): Feed => Obj.make(Type.Feed, props);
+
+/**
+ * Reads the queue DXN from feed metadata.
+ *
+ * @deprecated
+ */
+// TODO(wittjosiah): Align backing feed dxn's with object DXN.
+export const getQueueDxn = (feed: Feed): DXN | undefined => {
+  const keys = Obj.getKeys(feed, DXN_KEY);
+  return keys.length === 0 ? undefined : DXN.parse(keys[0].id);
+};
 
 //
 // Service

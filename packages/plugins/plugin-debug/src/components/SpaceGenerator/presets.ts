@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { AgentFunctions, EntityExtractionFunctions, ResearchBlueprint } from '@dxos/assistant-toolkit';
 import { Prompt } from '@dxos/blueprints';
 import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
-import { DXN, Entity, Feed, Filter, Key, Obj, Query, type QueryAST, Ref, Tag, Type } from '@dxos/echo';
+import { DXN, Feed, Filter, Key, Obj, Query, type QueryAST, Ref, Tag, Type } from '@dxos/echo';
 import { Trigger, serializeFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { GmailFunctions } from '@dxos/plugin-inbox';
@@ -117,9 +117,8 @@ export const generator = () => ({
         const feeds = await space.db.query(Filter.type(Type.Feed)).run();
         const mailbox = feeds.find((feed) => feed.kind === Mailbox.kind);
         invariant(mailbox, 'Mailbox feed not found');
-        const queueDxnKey = Entity.getKeys(mailbox as Entity.Unknown, Feed.DXN_KEY)[0];
-        invariant(queueDxnKey, 'Mailbox feed missing queue DXN key');
-        const queueDxn = queueDxnKey.id;
+        const queueDxn = Feed.getQueueDxn(mailbox)?.toString();
+        invariant(queueDxn, 'Mailbox feed missing queue DXN key');
         const tag = await space.db.query(Filter.type(Tag.Tag, { label: 'Investor' })).first();
         const tagDxn = Obj.getDXN(tag).toString();
 

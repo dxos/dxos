@@ -112,10 +112,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
       if (!queueTarget) {
         return undefined;
       }
-      const feed = feeds.find((feed) => {
-        const keys = Entity.getKeys(feed, Feed.DXN_KEY);
-        return keys.some((key) => key.id === queueTarget);
-      });
+      const feed = feeds.find((feed) => Feed.getQueueDxn(feed)?.toString() === queueTarget);
       return feed ? Ref.fromDXN(Entity.getDXN(feed)) : undefined;
     }, [queueTarget, feeds]);
 
@@ -161,8 +158,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
           const feedDxn = targetValue.dxn.toString();
           const feed = feeds.find((feed) => Obj.getDXN(feed).toString() === feedDxn);
           if (feed) {
-            const keys = Entity.getKeys(feed, Feed.DXN_KEY);
-            queueDxn = keys[0]?.id;
+            queueDxn = Feed.getQueueDxn(feed)?.toString();
           }
         }
 

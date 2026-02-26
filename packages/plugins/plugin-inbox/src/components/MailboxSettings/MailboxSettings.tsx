@@ -7,11 +7,10 @@ import React, { useCallback, useMemo } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { Entity, type Feed, Obj, Ref } from '@dxos/echo';
+import { type Feed, Obj, Ref } from '@dxos/echo';
 import { Feed as FeedModule } from '@dxos/echo';
 import { Trigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
 import { AutomationOperation } from '@dxos/plugin-automation/types';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { Filter, useQuery } from '@dxos/react-client/echo';
@@ -26,13 +25,7 @@ export const MailboxSettings = ({ subject }: SurfaceComponentProps<Feed.Feed>) =
   const triggers = useQuery(db, Filter.type(Trigger.Trigger));
 
   // Get the feed's queue DXN from meta keys.
-  const queueDxn = useMemo(() => {
-    const keys = Entity.getKeys(subject as Entity.Unknown, FeedModule.DXN_KEY);
-    if (keys.length === 0) {
-      return undefined;
-    }
-    return DXN.parse(keys[0].id);
-  }, [subject]);
+  const queueDxn = useMemo(() => FeedModule.getQueueDxn(subject), [subject]);
 
   const handleConfigureSync = useCallback(() => {
     invariant(db);

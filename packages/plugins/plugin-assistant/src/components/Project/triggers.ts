@@ -3,7 +3,7 @@
 //
 
 import { type Project, ProjectFunctions } from '@dxos/assistant-toolkit';
-import { DXN, Obj, Ref } from '@dxos/echo';
+import { Feed, Obj, Ref, Type } from '@dxos/echo';
 import { FunctionDefinition, Trigger } from '@dxos/functions';
 import { Filter } from '@dxos/react-client/echo';
 
@@ -22,7 +22,6 @@ const PROJECT_TRIGGER_TARGET_EXTENSION_KEY = 'dxos.org/extension/ProjectTriggerT
 /**
  * Syncs triggers in the database with the project subscriptions.
  */
-
 export const syncTriggers = async (project: Project.Project) => {
   const db = Obj.getDatabase(project);
   if (!db) {
@@ -53,7 +52,13 @@ export const syncTriggers = async (project: Project.Project) => {
     }
 
     const target = await subscription.tryLoad();
-    if (!target || !target.queue || !(target.queue.dxn instanceof DXN) || target.queue.dxn.kind !== DXN.kind.QUEUE) {
+    if (!target) {
+      continue;
+    }
+
+    const feed = Obj.parse(Type.Feed, target);
+    const queueDxn = feed && Feed.getQueueDxn(feed);
+    if (!queueDxn) {
       continue;
     }
 
@@ -68,7 +73,7 @@ export const syncTriggers = async (project: Project.Project) => {
         enabled: true,
         spec: {
           kind: 'queue',
-          queue: target.queue.dxn.toString(),
+          queue: queueDxn.toString(),
         },
         function: Ref.make(
           FunctionDefinition.serialize(

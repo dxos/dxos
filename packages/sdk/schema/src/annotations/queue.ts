@@ -10,4 +10,5 @@ import { createAnnotationHelper } from '@dxos/echo/internal';
  *  (i.e., a reference to a queue in the queue property).
  */
 export const QueueAnnotationId = Symbol.for('@dxos/schema/annotation/Queue');
+/** @deprecated Use `Feed` objects instead. */
 export const QueueAnnotation = createAnnotationHelper<boolean>(QueueAnnotationId);

@@ -11,14 +11,14 @@ import { sleep } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { configPreset } from '@dxos/config';
-import { Entity, Feed as FeedModule, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+import { Feed as FeedModule, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { Function } from '@dxos/functions';
 import { Trigger } from '@dxos/functions';
 import { InvocationTraceEndEvent, InvocationTraceStartEvent } from '@dxos/functions-runtime';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { bundleFunction } from '@dxos/functions-runtime/native';
 import { failedInvariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
+
 import { log } from '@dxos/log';
 import { ErrorCodec, FunctionRuntimeKind } from '@dxos/protocols';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
@@ -188,12 +188,11 @@ const deployFunction = async (space: Space, functionsServiceClient: FunctionsSer
 };
 
 const checkEmails = async (feed: FeedModule.Feed, space: Space) => {
-  const keys = Entity.getKeys(feed as Entity.Unknown, FeedModule.DXN_KEY);
-  if (keys.length === 0) {
+  const queueDxn = FeedModule.getQueueDxn(feed);
+  if (!queueDxn) {
     console.log('Messages in mailbox: 0');
     return [];
   }
-  const queueDxn = DXN.parse(keys[0].id);
   const queue = space.queues.get<Message.Message>(queueDxn);
   const messages = await queue.query(Query.type(Message.Message)).run();
   console.log(`Messages in mailbox: ${messages.length}`);
