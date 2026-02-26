@@ -57,6 +57,9 @@ export default Capability.makeModule(
 
     const getItemAtom = (path: string[]): Atom.Atom<NC.NavTreeItemState> => {
       const pathString = Path.create(...path);
+      if (!backingState.has(pathString)) {
+        backingState.set(pathString, { ...defaultItemState });
+      }
       return itemAtomFamily(pathString);
     };
 
@@ -122,7 +125,8 @@ export default Capability.makeModule(
           continue;
         }
         Graph.expand(graph, nodeId, 'outbound');
-        for (const child of Graph.getConnections(graph, nodeId, 'outbound')) {
+        const children = Graph.getConnections(graph, nodeId, 'outbound');
+        for (const child of children) {
           Graph.expand(graph, child.id, 'outbound');
         }
       }

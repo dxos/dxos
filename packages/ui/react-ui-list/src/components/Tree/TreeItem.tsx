@@ -263,6 +263,7 @@ const RawTreeItem = <T extends { id: string } = any>({
     blockInstruction,
     canDrop,
     canSelect,
+    onItemHover,
     onOpenChange,
     onSelect,
   };

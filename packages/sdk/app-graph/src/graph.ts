@@ -148,6 +148,7 @@ class GraphImpl implements WritableGraph {
 
   readonly _registry: Registry.Registry;
   readonly _expanded = Record.empty<string, boolean>();
+  readonly _pendingExpands = new Set<string>();
   readonly _initialized = Record.empty<string, boolean>();
   readonly _initialEdges = Record.empty<string, Edges>();
   readonly _initialNodes = Record.fromEntries([
@@ -690,6 +691,7 @@ export function initialize<T extends ExpandableGraph | WritableGraph>(
 
 /**
  * Implementation helper for expand.
+ * If the node does not exist yet, the expand is recorded as pending and applied when the node is added.
  */
 const expandImpl = <T extends ExpandableGraph | WritableGraph>(
   graph: T,
@@ -697,7 +699,15 @@ const expandImpl = <T extends ExpandableGraph | WritableGraph>(
   relation: Node.Relation = 'outbound',
 ): T => {
   const internal = getInternal(graph);
-  const key = `${id}$${relation}`;
+  const key = `${id}~${relation}`;
+  const nodeOpt = internal._registry.get(internal._node(id));
+  if (Option.isNone(nodeOpt)) {
+    // Node not yet in graph: record expand to run when the node is added.
+    internal._pendingExpands.add(key);
+    log('expand', { key, deferred: true });
+    return graph;
+  }
+
   const expanded = Record.get(internal._expanded, key).pipe(Option.getOrElse(() => false));
   log('expand', { key, expanded });
   if (!expanded) {
@@ -873,6 +883,16 @@ const addNodeImpl = <T extends WritableGraph>(graph: T, nodeArg: Node.NodeArg<an
       const newNode = internal._constructNode({ id, type, data, properties, ...rest });
       internal._registry.set(nodeAtom, newNode);
       graph.onNodeChanged.emit({ id, node: newNode });
+
+      // Apply any expands that were deferred because this node did not exist yet.
+      const prefix = `${id}~`;
+      const toApply = [...internal._pendingExpands].filter((k) => k.startsWith(prefix));
+      for (const pendingKey of toApply) {
+        internal._pendingExpands.delete(pendingKey);
+        const relation = pendingKey.slice(prefix.length) as Node.Relation;
+        internal._onExpand?.(id, relation);
+        Record.set(internal._expanded, pendingKey, true);
+      }
     },
   });
 
