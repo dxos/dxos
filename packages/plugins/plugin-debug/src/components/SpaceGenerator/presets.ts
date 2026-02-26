@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { AgentFunctions, EntityExtractionFunctions, ResearchBlueprint } from '@dxos/assistant-toolkit';
 import { Prompt } from '@dxos/blueprints';
 import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
-import { DXN, Filter, Key, Obj, Query, type QueryAST, Ref, Tag, Type } from '@dxos/echo';
+import { DXN, Entity, Feed, Filter, Key, Obj, Query, type QueryAST, Ref, Tag, Type } from '@dxos/echo';
 import { Trigger, serializeFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { GmailFunctions } from '@dxos/plugin-inbox';
@@ -114,7 +114,12 @@ export const generator = () => ({
     [
       PresetName.ORG_RESEARCH_PROJECT,
       async (space, n, cb) => {
-        const mailbox = await space.db.query(Filter.type(Mailbox.Mailbox)).first();
+        const feeds = await space.db.query(Filter.type(Type.Feed)).run();
+        const mailbox = feeds.find((feed) => feed.kind === Mailbox.kind);
+        invariant(mailbox, 'Mailbox feed not found');
+        const queueDxnKey = Entity.getKeys(mailbox as Entity.Unknown, Feed.DXN_KEY)[0];
+        invariant(queueDxnKey, 'Mailbox feed missing queue DXN key');
+        const queueDxn = queueDxnKey.id;
         const tag = await space.db.query(Filter.type(Tag.Tag, { label: 'Investor' })).first();
         const tagDxn = Obj.getDXN(tag).toString();
 
@@ -143,7 +148,7 @@ export const generator = () => ({
               // TODO(wittjosiah): Queue trigger doesn't support matching query of the column.
               spec: {
                 kind: 'queue',
-                queue: mailbox.queue.dxn.toString(),
+                queue: queueDxn,
               },
               function: Ref.make(serializeFunction(EntityExtractionFunctions.Extract)),
               input: {
@@ -195,7 +200,7 @@ export const generator = () => ({
                 properties: { labels: Filter.contains('investor') },
               }),
             ).options({
-              queues: [mailbox.queue.dxn.toString()],
+              queues: [queueDxn],
             }),
             jsonSchema: Type.toJsonSchema(Message.Message),
           });
