@@ -9,12 +9,12 @@ import { AiContextService } from '@dxos/assistant';
 import { Database, Obj } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 
-import { Initiative, Plan } from '../../../types';
+import { Project, Plan } from '../../../types';
 
 export default defineFunction({
-  key: 'dxos.org/function/initiative/get-context',
-  name: 'Get Initiative Context',
-  description: 'Get the context of an initiative.',
+  key: 'dxos.org/function/project/get-context',
+  name: 'Get Project Context',
+  description: 'Get the context of an project.',
   inputSchema: Schema.Struct({}),
   outputSchema: Schema.Struct({
     id: Schema.String,
@@ -31,20 +31,20 @@ export default defineFunction({
   }),
   services: [AiContextService],
   handler: Effect.fnUntraced(function* ({ data: _data }) {
-    const initiative = yield* Initiative.getFromChatContext;
+    const project = yield* Project.getFromChatContext;
 
     return {
-      id: initiative.id,
-      name: initiative.name,
-      spec: yield* initiative.spec.pipe(Database.load).pipe(
+      id: project.id,
+      name: project.name,
+      spec: yield* project.spec.pipe(Database.load).pipe(
         Effect.map((_) => _.content),
         Effect.catchTag('ObjectNotFoundError', () => Effect.succeed('No spec found.')),
       ),
-      plan: yield* initiative.plan?.pipe(Database.load).pipe(
+      plan: yield* project.plan?.pipe(Database.load).pipe(
         Effect.map(Plan.formatPlan),
         Effect.catchTag('ObjectNotFoundError', () => Effect.succeed('No plan found.')),
       ) ?? Effect.succeed('No plan found.'),
-      artifacts: yield* Effect.forEach(initiative.artifacts, (artifact) =>
+      artifacts: yield* Effect.forEach(project.artifacts, (artifact) =>
         Effect.gen(function* () {
           return {
             name: artifact.name,

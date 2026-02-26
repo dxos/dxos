@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { Chat, Initiative, InitiativeBlueprint, Plan, ResearchGraph } from '@dxos/assistant-toolkit';
+import { Chat, Project, ProjectBlueprint, Plan, ResearchGraph } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
 import { Obj, Type } from '@dxos/echo';
@@ -78,17 +78,17 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
         },
       },
       {
-        id: Type.getTypename(Initiative.Initiative),
+        id: Type.getTypename(Project.Project),
         metadata: {
           icon: 'ph--circuitry--regular',
           iconHue: 'sky',
           createObject: ((_, { db }) =>
-            Initiative.makeInitialized(
+            Project.makeInitialized(
               {
-                name: 'New Initiative',
+                name: 'New Project',
                 spec: 'Not specified yet',
               },
-              InitiativeBlueprint.make(),
+              ProjectBlueprint.make(),
             ).pipe(withComputeRuntime(db.spaceId))) satisfies CreateObject,
           addToCollectionOnCreate: true,
         },
@@ -104,7 +104,7 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
       HasSubject.HasSubject,
       Prompt.Prompt,
       ResearchGraph.ResearchGraph,
-      Initiative.Initiative,
+      Project.Project,
       Plan.Plan,
       Sequence,
     ],

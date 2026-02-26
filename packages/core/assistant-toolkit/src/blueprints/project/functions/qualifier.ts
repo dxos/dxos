@@ -13,32 +13,32 @@ import { TriggerEvent, defineFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { trim } from '@dxos/util';
 
-import { Initiative, Plan } from '../../../types';
+import { Project, Plan } from '../../../types';
 
 export default defineFunction({
-  key: 'dxos.org/function/initiative/qualifier',
-  name: 'Initiative Qualifier',
+  key: 'dxos.org/function/project/qualifier',
+  name: 'Project Qualifier',
   description:
-    'Qualifier that determines if the event is relevant to the initiative. Puts the data into the input queue of the initiative.',
+    'Qualifier that determines if the event is relevant to the project. Puts the data into the input queue of the project.',
   inputSchema: Schema.Struct({
-    initiative: Schema.suspend(() => Type.Ref(Initiative.Initiative)),
+    project: Schema.suspend(() => Type.Ref(Project.Project)),
     event: TriggerEvent.TriggerEvent,
   }),
   outputSchema: Schema.Void,
   services: [],
   handler: Effect.fnUntraced(
     function* ({ data }) {
-      const initiative = yield* Database.load(data.initiative);
-      invariant(Obj.instanceOf(Initiative.Initiative, initiative));
-      invariant(initiative.chat, 'Initiative has no chat.');
+      const project = yield* Database.load(data.project);
+      invariant(Obj.instanceOf(Project.Project, project));
+      invariant(project.chat, 'Project has no chat.');
 
-      const { id, name, queue } = initiative;
+      const { id, name, queue } = project;
       if (!queue) {
-        throw new Error('Initiative has no queue.');
+        throw new Error('Project has no queue.');
       }
 
-      const plan = yield* Database.load(initiative.plan);
-      const spec = yield* Database.load(initiative.spec);
+      const plan = yield* Database.load(project.plan);
+      const spec = yield* Database.load(project.spec);
 
       const {
         value: { isRelevant },
@@ -49,18 +49,18 @@ export default defineFunction({
         prompt: Prompt.fromMessages([
           Prompt.systemMessage({
             content: trim`
-              You are a qualifying agent that determines if the event is relevant to the initiative.
-              Respond with true if the event is relevant to the initiative, false otherwise.
+              You are a qualifying agent that determines if the event is relevant to the project.
+              Respond with true if the event is relevant to the project, false otherwise.
               If you are not sure, return true.
               The qualified events will be forwarded to the larger agent that will process them.
-              <initiative id="${id}" name="${name}">
+              <project id="${id}" name="${name}">
                 <spec>
                 ${spec.content}
                 </spec>
                 <plan>
                   ${Plan.formatPlan(plan)}
                 </plan>
-              </initiative>
+              </project>
             `,
           }),
           Prompt.userMessage({

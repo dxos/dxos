@@ -25,19 +25,19 @@ import { Collection, Text } from '@dxos/schema';
 import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { Chat, Initiative, Plan } from '../../types';
+import { Chat, Project, Plan } from '../../types';
 import { PlanningBlueprint } from '../planning';
 
-import InitiativeBlueprintDef from './blueprint';
-import { InitiativeFunctions } from './functions';
+import ProjectBlueprintDef from './blueprint';
+import { ProjectFunctions } from './functions';
 
 ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayerWithTriggers({
   aiServicePreset: 'edge-remote',
-  functions: [...Object.values(InitiativeFunctions), ...MarkdownBlueprint.functions],
+  functions: [...Object.values(ProjectFunctions), ...MarkdownBlueprint.functions],
   types: [
-    Initiative.Initiative,
+    Project.Project,
     Plan.Plan,
     Chat.CompanionTo,
     Chat.Chat,
@@ -58,14 +58,14 @@ const SYSTEM = trim`
   DO NOT PRETEND TO DO SOMETHING YOU CAN'T DO.
 `;
 
-describe.runIf(TestHelpers.tagEnabled('flaky'))('Initiative', () => {
-  const blueprint = InitiativeBlueprintDef.make();
+describe.runIf(TestHelpers.tagEnabled('flaky'))('Project', () => {
+  const blueprint = ProjectBlueprintDef.make();
   it.scoped(
     'shopping list',
     Effect.fnUntraced(
       function* (_) {
-        const initiative = yield* Database.add(
-          yield* Initiative.makeInitialized(
+        const project = yield* Database.add(
+          yield* Project.makeInitialized(
             {
               name: 'Shopping list',
               spec: 'Keep a shopping list of items to buy.',
@@ -74,8 +74,8 @@ describe.runIf(TestHelpers.tagEnabled('flaky'))('Initiative', () => {
             blueprint,
           ),
         );
-        const chatQueue = initiative.chat?.target?.queue?.target as any;
-        invariant(chatQueue, 'Initiative chat queue not found.');
+        const chatQueue = project.chat?.target?.queue?.target as any;
+        invariant(chatQueue, 'Project chat queue not found.');
         yield* Database.flush({ indexes: true });
         const conversation = yield* acquireReleaseResource(() => new AiConversation({ queue: chatQueue }));
         yield* Effect.promise(() => conversation.context.open());
@@ -85,7 +85,7 @@ describe.runIf(TestHelpers.tagEnabled('flaky'))('Initiative', () => {
           prompt: `List ingredients for a scrambled eggs on a toast breakfast.`,
         });
 
-        console.log(yield* Effect.promise(() => dumpInitiative(initiative)));
+        console.log(yield* Effect.promise(() => dumpProject(project)));
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -97,8 +97,8 @@ describe.runIf(TestHelpers.tagEnabled('flaky'))('Initiative', () => {
     'expense tracking list',
     Effect.fnUntraced(
       function* (_) {
-        const initiative = yield* Database.add(
-          yield* Initiative.makeInitialized(
+        const project = yield* Database.add(
+          yield* Project.makeInitialized(
             {
               name: 'Expense tracking',
               spec: trim`
@@ -126,9 +126,9 @@ describe.runIf(TestHelpers.tagEnabled('flaky'))('Initiative', () => {
               kind: 'queue',
               queue: inboxQueue.dxn.toString(),
             },
-            function: Ref.make(FunctionDefinition.serialize(InitiativeFunctions.Agent)),
+            function: Ref.make(FunctionDefinition.serialize(ProjectFunctions.Agent)),
             input: {
-              initiative: Ref.make(initiative),
+              project: Ref.make(project),
               event: '{{event}}',
             },
           }),
@@ -143,7 +143,7 @@ describe.runIf(TestHelpers.tagEnabled('flaky'))('Initiative', () => {
         const invocations = yield* dispatcher.invokeScheduledTriggers({ kinds: ['queue'], untilExhausted: true });
         expect(invocations.every((invocation) => Exit.isSuccess(invocation.result))).toBe(true);
 
-        console.log(yield* Effect.promise(() => dumpInitiative(initiative)));
+        console.log(yield* Effect.promise(() => dumpProject(project)));
       },
       WithProperties,
       Effect.provide(TestLayer),
@@ -156,8 +156,8 @@ describe.runIf(TestHelpers.tagEnabled('flaky'))('Initiative', () => {
     'planning',
     Effect.fnUntraced(
       function* (_) {
-        const initiative = yield* Database.add(
-          yield* Initiative.makeInitialized(
+        const project = yield* Database.add(
+          yield* Project.makeInitialized(
             {
               name: 'Egg making',
               spec: trim`
@@ -189,8 +189,8 @@ describe.runIf(TestHelpers.tagEnabled('flaky'))('Initiative', () => {
         );
         yield* Database.flush({ indexes: true });
 
-        const chatQueue = initiative.chat?.target?.queue?.target as any;
-        invariant(chatQueue, 'Initiative chat queue not found.');
+        const chatQueue = project.chat?.target?.queue?.target as any;
+        invariant(chatQueue, 'Project chat queue not found.');
         yield* Database.flush({ indexes: true });
         const conversation = yield* acquireReleaseResource(() => new AiConversation({ queue: chatQueue }));
         yield* Effect.promise(() => conversation.context.open());
@@ -200,7 +200,7 @@ describe.runIf(TestHelpers.tagEnabled('flaky'))('Initiative', () => {
           prompt: `Go`,
         });
 
-        console.log(yield* Effect.promise(() => dumpInitiative(initiative)));
+        console.log(yield* Effect.promise(() => dumpProject(project)));
       },
       WithProperties,
       Effect.provide(TestLayer),
@@ -210,15 +210,15 @@ describe.runIf(TestHelpers.tagEnabled('flaky'))('Initiative', () => {
   );
 });
 
-const dumpInitiative = async (initiative: Initiative.Initiative) => {
+const dumpProject = async (project: Project.Project) => {
   let text = '';
-  text += `============== Initiative: ${initiative.name} ==============\n\n`;
+  text += `============== Project: ${project.name} ==============\n\n`;
   text += `============== Spec ==============\n\n`;
-  text += `${await initiative.spec.load().then((_) => _.content)}\n`;
+  text += `${await project.spec.load().then((_) => _.content)}\n`;
   text += `============== Plan ==============\n\n`;
-  text += `${await initiative.plan?.load().then((_) => Plan.formatPlan(_))}\n`;
+  text += `${await project.plan?.load().then((_) => Plan.formatPlan(_))}\n`;
   text += `============== Artifacts ==============\n\n`;
-  for (const artifact of initiative.artifacts) {
+  for (const artifact of project.artifacts) {
     const data = await artifact.data.load();
     text += `============== ${artifact.name} (${Obj.getTypename(data)}) ==============\n`;
     if (Obj.instanceOf(Markdown.Document, data)) {
