@@ -76,7 +76,7 @@ NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
 - [x] plugin-sheet
 - [x] plugin-sketch
 - [x] plugin-space
-- [ ] plugin-stack
+- [x] plugin-stack
 - [ ] plugin-status-bar
 - [ ] plugin-table
 - [ ] plugin-thread
@@ -327,3 +327,10 @@ NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
 - `Sketch` → primitive; stays in `components/Sketch/`
 - `components/index.ts` is empty (no primitives remain)
 - Time: 2026-02-25, ~3 min
+
+## plugin-stack
+
+- `StackContainer` → already in `containers/StackContainer/`
+- `StackContext`, `StackSection`, `StackSettings` → primitives; stay as flat files in `components/`; exported from `components/index.ts`
+- `CaretDownUp` → primitive helper; stays in `components/`
+- Time: 2026-02-25, ~2 min

@@ -18,23 +18,21 @@ import { Stack, StackItem } from '@dxos/react-ui-stack';
 import { type Collection } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
-import { meta } from '../meta';
+import { StackContext, StackSection } from '../../components';
+import { meta } from '../../meta';
 import {
   type AddSectionPosition,
   type CollapsedSections,
   type StackSectionItem,
   type StackSectionMetadata,
   type StackSectionView,
-} from '../types';
-
-import { StackContext } from './StackContext';
-import { StackSection } from './StackSection';
+} from '../../types';
 
 type StackContainerProps = SurfaceComponentProps<Collection.Collection> & {
   id: string;
 };
 
-const StackContainer = ({ id, subject: collection }: StackContainerProps) => {
+export const StackContainer = ({ id, subject: collection }: StackContainerProps) => {
   const { invokePromise } = useOperationInvoker();
   const { graph } = useAppGraph();
   const { t } = useTranslation(meta.id);
@@ -163,5 +161,3 @@ const StackContainer = ({ id, subject: collection }: StackContainerProps) => {
     </StackItem.Content>
   );
 };
-
-export default StackContainer;
