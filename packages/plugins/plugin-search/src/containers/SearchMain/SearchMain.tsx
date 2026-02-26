@@ -13,9 +13,9 @@ import { Card, Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosa
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { Text } from '@dxos/schema';
 
-import { useGlobalSearch, useGlobalSearchResults, useWebSearch } from '../hooks';
-import { meta } from '../meta';
-import { type SearchResult } from '../types';
+import { useGlobalSearch, useGlobalSearchResults, useWebSearch } from '../../hooks';
+import { meta } from '../../meta';
+import { type SearchResult } from '../../types';
 
 export const SearchMain = ({ space }: { space?: Space }) => {
   const { t } = useTranslation(meta.id);

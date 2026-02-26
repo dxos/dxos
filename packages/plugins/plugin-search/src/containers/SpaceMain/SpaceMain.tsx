@@ -17,7 +17,7 @@ import { SearchList } from '@dxos/react-ui-searchlist';
 import { Text } from '@dxos/schema';
 import { getStyles } from '@dxos/ui-theme';
 
-import { meta } from '../meta';
+import { meta } from '../../meta';
 
 /**
  *

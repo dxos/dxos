@@ -16,10 +16,8 @@ import { Button, Dialog, toLocalizedString, useTranslation } from '@dxos/react-u
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { mx, osTranslations } from '@dxos/ui-theme';
 
-import { useSearchResults } from '../hooks';
-import { meta } from '../meta';
-
-export const SEARCH_DIALOG = `${meta.id}/SearchDialog`;
+import { useSearchResults } from '../../hooks';
+import { meta } from '../../meta';
 
 type SearchListResultProps = {
   node: Node.Node;

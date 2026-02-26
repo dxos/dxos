@@ -71,7 +71,7 @@ NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
 - [ ] plugin-preview
 - [x] plugin-registry
 - [x] plugin-script
-- [ ] plugin-search
+- [x] plugin-search
 - [ ] plugin-settings
 - [ ] plugin-sheet
 - [ ] plugin-sketch
@@ -293,4 +293,14 @@ NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
 - `ScriptProperties` → already in `containers/ScriptProperties/`
 - `TestContainer` → already in `containers/TestContainer/`
 - `FrameContainer`, `NotebookStack`, `QueryEditor`, `ScriptToolbar`, `TestPanel`, `TypescriptEditor` → primitives; stay in `components/`
+- Time: 2026-02-25, ~3 min
+
+## plugin-search
+
+- `SearchDialog` → already in `containers/SearchDialog/`; `SearchDialogProps` re-exported from `containers/index.ts`
+- `SearchMain` → already in `containers/SearchMain/`
+- `SpaceMain` → already in `containers/SpaceMain/`
+- `SEARCH_DIALOG` constant → already in `src/constants.ts`
+- `components/` has no primitives (empty index)
+- ISSUE: import order in `react-surface.tsx` was wrong (`../../containers` before `../../constants`) — fixed
 - Time: 2026-02-25, ~3 min
