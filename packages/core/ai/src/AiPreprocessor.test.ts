@@ -8,13 +8,12 @@ import * as Effect from 'effect/Effect';
 import * as Either from 'effect/Either';
 
 import { Obj } from '@dxos/echo';
-import { Message, type ContentBlock } from '@dxos/types';
+import { type ContentBlock, Message } from '@dxos/types';
 import { bufferToArray } from '@dxos/util';
 
 import { estimateTokens, preprocessPrompt } from './AiPreprocessor';
 import { PromptPreprocessingError } from './errors';
 import { TestData } from './testing';
-import { dbg } from '@dxos/log';
 
 describe('AiPreprocessor.preprocessPrompt', () => {
   it.effect(

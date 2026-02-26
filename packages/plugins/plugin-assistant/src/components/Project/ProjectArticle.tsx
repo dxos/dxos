@@ -12,10 +12,8 @@ import { type Project } from '@dxos/assistant-toolkit';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';
 import { useQuery } from '@dxos/react-client/echo';
-import { ElevationProvider, IconButton, Layout, ScrollArea } from '@dxos/react-ui';
-import { Toolbar } from '@dxos/react-ui';
+import { Layout, ScrollArea } from '@dxos/react-ui';
 import { Card, Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
-import { StackItem } from '@dxos/react-ui-stack';
 import { isNonNullable } from '@dxos/util';
 
 export type ProjectArticleProps = SurfaceComponentProps<Project.Project>;

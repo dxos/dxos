@@ -6,6 +6,7 @@ import * as Prompt from '@effect/ai/Prompt';
 import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
+import { flow } from 'effect/Function';
 import * as Predicate from 'effect/Predicate';
 import * as TokenX from 'tokenx';
 
@@ -14,7 +15,6 @@ import { ContentBlock, type Message } from '@dxos/types';
 import { bufferToArray } from '@dxos/util';
 
 import { PromptPreprocessingError as PromptPreprocesorError } from './errors';
-import { flow, pipe } from 'effect/Function';
 
 export type CacheControl = 'no-cache' | 'ephemeral';
 
@@ -365,7 +365,7 @@ const mergeMessages = (messages: Message.Message[]): Message.Message => ({
  * Notifies the model to retry the tool call.
  */
 const fixMissingToolResults = (prompt: Prompt.Prompt): Prompt.Prompt => {
-  let result: Prompt.Message[] = [];
+  const result: Prompt.Message[] = [];
   for (let messageIndex = 0; messageIndex < prompt.content.length; messageIndex++) {
     const message = prompt.content[messageIndex];
     if (message.role !== 'assistant') {
@@ -394,25 +394,25 @@ const fixMissingToolResults = (prompt: Prompt.Prompt): Prompt.Prompt => {
           );
           startPartIndex = partIndex;
 
-            // Insert missing tool results.
-            result.push(
-              Prompt.makeMessage('tool', {
-                content: unsatisfiedToolCalls.map((call) =>
-                  Prompt.makePart('tool-result', {
-                    id: call.id,
-                    name: call.name,
-                    result:
-                      'Tool result is missing from the conversation. This is likely a bug in the agent framework. Retry tool call; try calling tools one by one.',
-                    isFailure: true,
-                    providerExecuted: false,
-                  }),
-                ),
-              }),
-            );
-            unsatisfiedToolCalls.length = 0;
-          }
+          // Insert missing tool results.
+          result.push(
+            Prompt.makeMessage('tool', {
+              content: unsatisfiedToolCalls.map((call) =>
+                Prompt.makePart('tool-result', {
+                  id: call.id,
+                  name: call.name,
+                  result:
+                    'Tool result is missing from the conversation. This is likely a bug in the agent framework. Retry tool call; try calling tools one by one.',
+                  isFailure: true,
+                  providerExecuted: false,
+                }),
+              ),
+            }),
+          );
+          unsatisfiedToolCalls.length = 0;
         }
       }
+    }
 
     // Check if the next message satisfies remaining tool calls.
     if (unsatisfiedToolCalls.length > 0) {
