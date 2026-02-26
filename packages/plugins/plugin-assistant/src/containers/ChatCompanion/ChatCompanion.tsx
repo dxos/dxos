@@ -20,7 +20,7 @@ import { useAsyncEffect } from '@dxos/react-ui';
 import { type ChatEvent } from '../../components';
 import { useBlueprintRegistry, useContextBinder } from '../../hooks';
 import { Assistant, AssistantCapabilities, AssistantOperation } from '../../types';
-import { ChatContainer } from '../ChatContainer';
+import ChatContainer from '../ChatContainer';
 
 export type ChatCompanionProps = {
   role?: string;

@@ -2,4 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-export { MessageCard } from './MessageCard';
+import { MessageCard } from './MessageCard';
+
+export default MessageCard;

@@ -2,4 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-export { RelatedToContact } from './RelatedToContact';
+import { RelatedToContact } from './RelatedToContact';
+
+export default RelatedToContact;

@@ -2,4 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-export { TriggerStatus } from './TriggerStatus';
+import { TriggerStatus } from './TriggerStatus';
+
+export default TriggerStatus;

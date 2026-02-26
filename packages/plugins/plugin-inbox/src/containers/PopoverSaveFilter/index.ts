@@ -2,4 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-export { PopoverSaveFilter } from './PopoverSaveFilter';
+import { PopoverSaveFilter } from './PopoverSaveFilter';
+
+export default PopoverSaveFilter;

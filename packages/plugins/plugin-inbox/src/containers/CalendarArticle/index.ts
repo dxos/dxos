@@ -2,4 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-export { CalendarArticle } from './CalendarArticle';
+import { CalendarArticle } from './CalendarArticle';
+
+export default CalendarArticle;

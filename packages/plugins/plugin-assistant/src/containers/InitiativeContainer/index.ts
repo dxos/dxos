@@ -1,6 +1,7 @@
 //
-// Copyright 2026 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
-export { InitiativeContainer } from './InitiativeContainer';
-export type { InitiativeContainerProps } from './InitiativeContainer';
+import { InitiativeContainer } from './InitiativeContainer';
+
+export default InitiativeContainer;

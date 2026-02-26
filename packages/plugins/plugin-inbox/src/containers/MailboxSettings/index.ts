@@ -2,4 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-export { MailboxSettings } from './MailboxSettings';
+import { MailboxSettings } from './MailboxSettings';
+
+export default MailboxSettings;

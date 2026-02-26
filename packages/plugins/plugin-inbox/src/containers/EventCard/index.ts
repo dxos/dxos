@@ -2,4 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-export { EventCard } from './EventCard';
+import { EventCard } from './EventCard';
+
+export default EventCard;

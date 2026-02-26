@@ -14,6 +14,7 @@ Instructions for refactoring plugins.
 
 ### General Code style
 
+- Follow the project coding styles.
 - Containers should be in their own directory together with their stories.
 - Top-level components used by containers should be in their own directory; together with auxilliary components and stories.
 - Ensure the story names matches the plugin and component name.
@@ -45,7 +46,10 @@ Instructions for refactoring plugins.
   primitive sub-components stay in `components/` with updated import paths.
 - `PopoverSaveFilter` lived inside `MailboxArticle/` but is an independent surface;
   it gets its own `containers/PopoverSaveFilter/` directory.
-- Container `index.ts` files use named exports; `containers/index.ts` uses `.then(m => ({ default: m.X }))` to satisfy `React.lazy` without default exports.
+- Container `index.ts` files bridge named exports to default: `import { X } from './X'; export default X;`
+- Top-level `containers/index.ts` uses `lazy(() => import('./X'))` — no `.then()` needed.
+- When `ComponentType<any>` annotation is needed on lazy exports (TypeScript TS2742 "inferred type cannot be named"), add `: ComponentType<any>` to each exported constant.
+- Container-to-container imports (e.g. `ChatCompanion` using `ChatContainer`) use default import: `import X from '../X';`
 
 ## Issues
 

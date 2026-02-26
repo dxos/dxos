@@ -2,4 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-export { EventArticle } from './EventArticle';
+import { EventArticle } from './EventArticle';
+
+export default EventArticle;

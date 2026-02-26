@@ -2,4 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-export { RelatedToOrganization } from './RelatedToOrganization';
+import { RelatedToOrganization } from './RelatedToOrganization';
+
+export default RelatedToOrganization;

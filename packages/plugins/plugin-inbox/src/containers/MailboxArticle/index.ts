@@ -2,4 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-export { MailboxArticle } from './MailboxArticle';
+import { MailboxArticle } from './MailboxArticle';
+
+export default MailboxArticle;
