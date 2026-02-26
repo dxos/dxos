@@ -9,8 +9,8 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Input, Message, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
 
-import { meta } from '../meta';
-import { ObservabilityOperation } from '../types';
+import { meta } from '../../meta';
+import { ObservabilityOperation } from '../../types';
 
 export const ObservabilitySettingsSchema = Schema.mutable(
   Schema.Struct({

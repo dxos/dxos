@@ -64,7 +64,7 @@ NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
 - [ ] plugin-mermaid
 - [ ] plugin-native
 - [x] plugin-navtree
-- [ ] plugin-observability
+- [x] plugin-observability
 - [ ] plugin-outliner
 - [ ] plugin-pipeline
 - [ ] plugin-presenter
@@ -244,3 +244,10 @@ NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
 - `NavTreeDocumentTitle` → moved from flat `components/NavTreeDocumentTitle.tsx` to `containers/NavTreeDocumentTitle/`
 - `NavTree`, `NavTreeContext`, `NavTreeItem`, `Sidebar`, `UserAccountAvatar` → primitives; stay in `components/`
 - Time: 2026-02-25, ~3 min
+
+## plugin-observability
+
+- `HelpContainer` → moved from flat `components/HelpContainer.tsx` to `containers/HelpContainer/`; uses `FeedbackForm` primitive from `components/`
+- `ObservabilitySettings` → moved from flat `components/ObservabilitySettings.tsx` to `containers/ObservabilitySettings/`; `ObservabilitySettingsSchema`, `ObservabilitySettingsProps`, `ObservabilitySettingsComponentProps` re-exported from `containers/index.ts`
+- `FeedbackForm` → primitive; stays in `components/`
+- Time: 2026-02-25, ~5 min
