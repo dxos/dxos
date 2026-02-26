@@ -1,6 +1,6 @@
 # Plugins
 
-Instructions for refactoring plugins.
+Instructions for creating, maintaining and refactoring plugins.
 
 ## Guide
 
@@ -27,34 +27,71 @@ Instructions for refactoring plugins.
 - Audit components that currenlty use `@dxos/app-framework` hooks and consider if they can be simply split into primitive components and surface components.
 - Ensure that all surface components are lazy exports.
 - Ensure all commponents have very basic single Default storybooks.
-- Update this document with learnings and issues.
-- For each plugin maintain a very concise single bullet summary of actions taken per component (sorted alphabetically).
+- Update this document with the current list of addressed plugins.
 - Check the plugin builds correctly and run lint at the end of each stage, then commit.
+- For each plugin maintain a concise single bullet summary of actions taken per component (sorted alphabetically) and any issues, which should be in the form ISSUE: <issue description>
+- Update this document with recommendations based on best practices; these might include future refacoring.
+- At the end of each plugin update the observations section with any generalizable insights or patterns.
 
-## Progress
+## Plugins
 
 - [x] plugin-assistant
+- [ ] plugin-attention
+- [ ] plugin-automation
+- [ ] plugin-board
 - [x] plugin-chess
+- [ ] plugin-client
+- [ ] plugin-conductor
+- [ ] plugin-debug
+- [ ] plugin-deck
+- [ ] plugin-excalidraw
+- [ ] plugin-explorer
+- [ ] plugin-files
+- [ ] plugin-graph
+- [ ] plugin-help
 - [x] plugin-inbox
 - [x] plugin-kanban
+- [ ] plugin-map
+- [ ] plugin-markdown
+- [ ] plugin-masonry
+- [ ] plugin-meeting
+- [ ] plugin-mermaid
+- [ ] plugin-native
+- [ ] plugin-navtree
+- [ ] plugin-observability
+- [ ] plugin-outliner
+- [ ] plugin-pipeline
+- [ ] plugin-presenter
+- [ ] plugin-preview
+- [ ] plugin-registry
+- [ ] plugin-script
+- [ ] plugin-search
+- [ ] plugin-settings
+- [ ] plugin-sheet
+- [ ] plugin-sketch
+- [ ] plugin-space
+- [ ] plugin-stack
+- [ ] plugin-status-bar
+- [ ] plugin-table
+- [ ] plugin-thread
+- [ ] plugin-token-manager
+- [ ] plugin-transcription
+- [ ] plugin-transformer
 
-## Learnings
+## Observations
 
-- `MessageCard` and `EventCard` have no `@dxos/app-framework` hooks but are still surfaces
-  (referenced by react-surface) and must live in `containers/`.
+- `MessageCard` and `EventCard` have no `@dxos/app-framework` hooks but are still surfaces (referenced by react-surface) and must live in `containers/`.
 - Surface components with sub-directories: only the surface file moves to `containers/`;
   primitive sub-components stay in `components/` with updated import paths.
-- `PopoverSaveFilter` lived inside `MailboxArticle/` but is an independent surface;
-  it gets its own `containers/PopoverSaveFilter/` directory.
+- `PopoverSaveFilter` lived inside `MailboxArticle/` but is an independent surface; it gets its own `containers/PopoverSaveFilter/` directory.
 - Container `index.ts` files bridge named exports to default: `import { X } from './X'; export default X;`
 - Top-level `containers/index.ts` uses `lazy(() => import('./X'))` — no `.then()` needed.
 - When `ComponentType<any>` annotation is needed on lazy exports (TypeScript TS2742 "inferred type cannot be named"), add `: ComponentType<any>` to each exported constant.
 - Container-to-container imports (e.g. `ChatCompanion` using `ChatContainer`) use default import: `import X from '../X';`
 
-## Issues
+## Recommendations
 
-- `MailboxSettings`, `RelatedToContact`, `RelatedToOrganization` lack storybooks — these require
-  complex database/trigger context and are deferred.
+
 
 ## plugin-assistant
 
@@ -81,3 +118,4 @@ Instructions for refactoring plugins.
 - `PopoverSaveFilter` → moved from `components/MailboxArticle/` to `containers/PopoverSaveFilter/`
 - `RelatedToContact` → moved to `containers/RelatedToContact/`; helpers stay in `components/Related/`
 - `RelatedToOrganization` → moved to `containers/RelatedToOrganization/`; helpers stay in `components/Related/`
+- ISSUE: `MailboxSettings`, `RelatedToContact`, `RelatedToOrganization` lack storybooks — these require complex database/trigger context and are deferred.
