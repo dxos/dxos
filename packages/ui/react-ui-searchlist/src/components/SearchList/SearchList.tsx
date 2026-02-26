@@ -21,6 +21,7 @@ import {
   type Density,
   type Elevation,
   Icon,
+  ScrollArea,
   type ThemedClassName,
   useDensityContext,
   useElevationContext,
@@ -235,12 +236,7 @@ type SearchListContentProps = ThemedClassName<PropsWithChildren<{}>>;
 const SearchListContent = forwardRef<HTMLDivElement, SearchListContentProps>(
   ({ classNames, children }, forwardedRef) => {
     return (
-      <div
-        role='none'
-        // TODO(burdon): Remove p-1 hack.
-        className={mx('flex flex-col gap-2 h-full w-full min-h-0 overflow-hidden p-1', classNames)}
-        ref={forwardedRef}
-      >
+      <div role='none' className={mx('grid h-full w-full min-h-0', classNames)} ref={forwardedRef}>
         {children}
       </div>
     );
@@ -248,29 +244,6 @@ const SearchListContent = forwardRef<HTMLDivElement, SearchListContentProps>(
 );
 
 SearchListContent.displayName = 'SearchList.Content';
-
-//
-// Viewport
-//
-
-type SearchListViewportProps = ThemedClassName<PropsWithChildren>;
-
-/**
- * Scrollable viewport wrapper for Content.
- * Only Content wrapped in Viewport will be scrollable.
- */
-// TODO(burdon): Reconcile with Mosaic.Viewport (factor out common core?).
-const SearchListViewport = forwardRef<HTMLDivElement, SearchListViewportProps>(
-  ({ classNames, children }, forwardedRef) => {
-    return (
-      <div role='listbox' className={mx('h-full w-full min-h-0 overflow-y-auto', classNames)} ref={forwardedRef}>
-        {children}
-      </div>
-    );
-  },
-);
-
-SearchListViewport.displayName = 'SearchList.Viewport';
 
 //
 // Input
@@ -376,31 +349,51 @@ const SearchListInput = forwardRef<HTMLInputElement, SearchListInputProps>(
     );
 
     return (
-      <input
-        {...props}
-        {...(props.autoFocus && !hasIosKeyboard && { autoFocus: true })}
-        type='text'
-        placeholder={placeholder ?? defaultPlaceholder}
-        className={tx(
-          'input.input',
-          {
-            variant,
-            disabled: props.disabled,
-            density,
-            elevation,
-          },
-          classNames,
-        )}
-        value={query}
-        onChange={handleChange}
-        onKeyDown={handleKeyDown}
-        ref={forwardedRef}
-      />
+      <div className='p-1'>
+        <input
+          {...props}
+          {...(props.autoFocus && !hasIosKeyboard && { autoFocus: true })}
+          type='text'
+          placeholder={placeholder ?? defaultPlaceholder}
+          className={tx(
+            'input.input',
+            {
+              variant,
+              disabled: props.disabled,
+              density,
+              elevation,
+            },
+            classNames,
+          )}
+          value={query}
+          onChange={handleChange}
+          onKeyDown={handleKeyDown}
+          ref={forwardedRef}
+        />
+      </div>
     );
   },
 );
 
 SearchListInput.displayName = 'SearchList.Input';
+
+//
+// Viewport
+//
+
+type SearchListViewportProps = ThemedClassName<PropsWithChildren>;
+
+const SearchListViewport = forwardRef<HTMLDivElement, SearchListViewportProps>(
+  ({ classNames, children }, forwardedRef) => {
+    return (
+      <ScrollArea.Root classNames={mx(classNames)} ref={forwardedRef} thin>
+        <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
+      </ScrollArea.Root>
+    );
+  },
+);
+
+SearchListViewport.displayName = 'SearchList.Viewport';
 
 //
 // Item
