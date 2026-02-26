@@ -8,7 +8,6 @@ import type * as Schema from 'effect/Schema';
 import { type QueryAST } from '@dxos/echo-protocol';
 
 import * as Database from './Database';
-import * as Entity from './Entity';
 import * as Feed from './Feed';
 import * as Filter from './Filter';
 import { getTypeDXNFromSpecifier } from './internal';
