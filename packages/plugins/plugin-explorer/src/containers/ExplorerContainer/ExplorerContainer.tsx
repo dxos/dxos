@@ -13,13 +13,12 @@ import { Layout, Toolbar } from '@dxos/react-ui';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
 import { type View } from '@dxos/schema';
 
-import { useGraphModel } from '../hooks';
-
-import { D3ForceGraph } from './Graph';
+import { D3ForceGraph } from '../../components/Graph';
+import { useGraphModel } from '../../hooks';
 
 export type ExplorerContainerProps = SurfaceComponentProps<View.View>;
 
-const ExplorerContainer = ({ role, subject: view }: ExplorerContainerProps) => {
+export const ExplorerContainer = ({ role, subject: view }: ExplorerContainerProps) => {
   useObject(view);
   const space = view && getSpace(view);
   const [filter, setFilter] = useState<Filter.Any>();
@@ -48,5 +47,3 @@ const ExplorerContainer = ({ role, subject: view }: ExplorerContainerProps) => {
     </Layout.Main>
   );
 };
-
-export default ExplorerContainer;

@@ -11,6 +11,7 @@ Instructions for creating, maintaining and refactoring plugins.
 - Surface components should define and export a `SurfaceComponentProps` properties type.
 - Surface components should not use classNames or implement custom styling; flag as an issue if you see this.
 - Surface components should have lazy exports.
+- Surface should implement appropriate `<Suspense>` boundaries.
 - Surface components should end with the following suffixes if there is an unambiguous matching role: Article, Card, Dialog, Popover, Settings.
 - `src/components` and `src/containers` should contain only index files and directories.
 
@@ -192,4 +193,26 @@ Instructions for creating, maintaining and refactoring plugins.
 - `MapViewEditor` → moved to `containers/MapViewEditor/`
 - `Globe`, `Map` → primitives; stay in `components/`
 - ISSUE: `types/capabilities.ts` imported `MapControlType` from `../components` — fixed to import from `../containers`.
+- Time: 2026-02-25, ~5 min
+
+## plugin-excalidraw
+
+- `SketchContainer` → moved from flat `components/SketchContainer.tsx` to `containers/SketchContainer/`
+- `SketchSettings` → moved from flat `components/SketchSettings.tsx` to `containers/SketchSettings/`
+- `components/` cleared (no primitives remain).
+- Time: 2026-02-25, ~5 min
+
+## plugin-explorer
+
+- `ExplorerContainer` → moved from flat `components/ExplorerContainer.tsx` to `containers/ExplorerContainer/`
+- `Chart`, `Globe`, `Graph`, `Tree` → primitives; stay in `components/`
+- ISSUE: trailing newline in `components/index.ts` — fixed by prettier.
+- Time: 2026-02-25, ~5 min
+
+## plugin-files
+
+- `ExportStatus` → moved from flat `components/ExportStatus.tsx` to `containers/ExportStatus/`
+- `FilesSettings` → moved from flat `components/FilesSettings.tsx` to `containers/FilesSettings/`
+- `LocalFileContainer` → moved from flat `components/LocalFileContainer.tsx` to `containers/LocalFileContainer/`
+- `components/` cleared (no primitives remain).
 - Time: 2026-02-25, ~5 min

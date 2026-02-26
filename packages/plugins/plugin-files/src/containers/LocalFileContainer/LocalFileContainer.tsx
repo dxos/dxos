@@ -11,10 +11,14 @@ import { Graph, Node, useActionRunner } from '@dxos/plugin-graph';
 import { Button, Layout, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { descriptionMessage, mx } from '@dxos/ui-theme';
 
-import { meta } from '../meta';
-import { type LocalEntity, type LocalFile, LocalFilesOperation } from '../types';
+import { meta } from '../../meta';
+import { type LocalEntity, type LocalFile, LocalFilesOperation } from '../../types';
 
-const LocalFileContainer: FC<{ file: LocalFile }> = ({ file }) => {
+export type LocalFileContainerProps = {
+  file: LocalFile;
+};
+
+export const LocalFileContainer: FC<LocalFileContainerProps> = ({ file }) => {
   const transformedData = useMemo(
     () => ({ subject: file.text ? { id: file.id, text: file.text } : file }),
     [file.id, Boolean(file.text)],
@@ -58,5 +62,3 @@ const PermissionsGate = ({ entity }: { entity: LocalEntity }) => {
     </Layout.Main>
   );
 };
-
-export default LocalFileContainer;

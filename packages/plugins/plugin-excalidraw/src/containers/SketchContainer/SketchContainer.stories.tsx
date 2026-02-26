@@ -20,7 +20,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-excalidraw/SketchComponent',
+  title: 'plugins/plugin-excalidraw/SketchContainer',
   component: SketchContainer as any,
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],

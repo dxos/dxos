@@ -8,8 +8,8 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { IconButton, Input, Message, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
 
-import { meta } from '../meta';
-import { type FilesSettingsProps, type FilesState, LocalFilesOperation } from '../types';
+import { meta } from '../../meta';
+import { type FilesSettingsProps, type FilesState, LocalFilesOperation } from '../../types';
 
 export type FilesSettingsComponentProps = {
   settings: FilesSettingsProps;
