@@ -97,7 +97,7 @@ const meta = {
 
 export default meta;
 
-export const Roles = {
+export const Styles = {
   render: () => {
     return (
       <div className='p-4'>

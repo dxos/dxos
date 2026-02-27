@@ -54,7 +54,7 @@ import {
   DevtoolsOverviewContainer,
   SpaceGenerator,
   Wireframe,
-} from '../../components';
+} from '../../containers';
 import { meta } from '../../meta';
 import { DebugCapabilities, type DebugSettingsProps, Devtools } from '../../types';
 

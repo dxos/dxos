@@ -8,7 +8,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useAtomCapability, useSettingsState } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
 
-import { ExportStatus, FilesSettings, LocalFileContainer } from '../../components';
+import { ExportStatus, FilesSettings, LocalFileContainer } from '../../containers';
 import { meta } from '../../meta';
 import { FileCapabilities, type FilesSettingsProps, type LocalFile } from '../../types';
 import { isLocalFile } from '../../util';

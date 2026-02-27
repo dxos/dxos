@@ -2,5 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './KanbanContainer';
-export * from './KanbanViewEditor';
+import { type ComponentType, lazy } from 'react';
+
+export const KanbanContainer: ComponentType<any> = lazy(() => import('./KanbanContainer'));
+export const KanbanViewEditor: ComponentType<any> = lazy(() => import('./KanbanViewEditor'));

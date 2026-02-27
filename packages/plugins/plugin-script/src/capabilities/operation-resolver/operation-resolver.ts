@@ -12,7 +12,7 @@ import { Script } from '@dxos/functions';
 import { Operation, OperationResolver } from '@dxos/operation';
 import { TokenManagerOperation } from '@dxos/plugin-token-manager/types';
 
-import { DEPLOYMENT_DIALOG } from '../../components';
+import { DEPLOYMENT_DIALOG } from '../../constants';
 import { defaultScriptsForIntegration } from '../../meta';
 import { templates } from '../../templates';
 import { ScriptOperation } from '../../types';
