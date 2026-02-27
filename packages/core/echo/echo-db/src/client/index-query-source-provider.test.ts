@@ -9,7 +9,7 @@ import { type Hypergraph } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { SpaceId } from '@dxos/keys';
 import { type Echo } from '@dxos/protocols';
-import { QueryReactivity, type QueryRequest } from '@dxos/protocols/proto/dxos/echo/query';
+import { QueryReactivity, type QueryRequest } from '@dxos/protocols/buf/dxos/echo/query_pb';
 
 import { IndexQuerySource } from './index-query-source-provider';
 

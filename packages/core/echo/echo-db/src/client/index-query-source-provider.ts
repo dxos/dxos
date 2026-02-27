@@ -13,7 +13,7 @@ import { log } from '@dxos/log';
 import { type Echo, RpcClosedError } from '@dxos/protocols';
 import { create } from '@dxos/protocols/buf';
 import * as QueryPb from '@dxos/protocols/buf/dxos/echo/query_pb';
-import { QueryReactivity } from '@dxos/protocols/proto/dxos/echo/query';
+import { QueryReactivity } from '@dxos/protocols/buf/dxos/echo/query_pb';
 import { isNonNullable } from '@dxos/util';
 
 import { OBJECT_DIAGNOSTICS, type QuerySourceProvider } from '../hypergraph';

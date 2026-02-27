@@ -1,7 +1,7 @@
 # Buf Migration — Status, Plan & Principles
 
 > Branch: `cursor/DX-745-buf-rpc-client-1bd0`
-> Last updated: 2026-02-23 (Phase 10 — test fixes, API ergonomics, cast reduction, assertion migration)
+> Last updated: 2026-02-27 (Phase 11 — proto→buf import migration: initial assessment and partial conversion)
 
 ---
 
@@ -530,6 +530,50 @@ Key practices to follow:
 - Use `toBinary`/`fromBinary` for serialization (not protobuf.js codec).
 - Use `toJson`/`fromJson` with `{ registry }` option when Any fields are present.
 - Struct fields are automatically `JsonObject` — no special handling needed.
+
+---
+
+## Phase 11: Proto→Buf Import Migration (In Progress)
+
+### 11.1 — Mechanical Import Path Conversion (Done — partial)
+
+Attempted to convert all `@dxos/protocols/proto/dxos/...` imports to `@dxos/protocols/buf/dxos/..._pb` across ~152 files. Results:
+
+**Successfully converted (6 files):**
+- `packages/apps/testbench-app/src/components/status/NetworkIndicator.tsx` — `ConnectionState` enum
+- `packages/core/echo/echo-db/src/client/index-query-source-provider.ts` — `QueryReactivity` enum (already had buf import)
+- `packages/core/echo/echo-db/src/client/index-query-source-provider.test.ts` — same
+- `packages/core/functions-testing/src/testing/util.ts` — `EdgeReplicationSetting` enum
+- `packages/core/protocols/src/FunctionProtocol.ts` — switched to internal `Echo.ts` barrel (already buf)
+- `packages/sdk/client-protocol/src/service.ts` — re-export of `QueueService` (note: mapped to `queue_pb` not `services_pb`)
+
+**Reverted (~146 files):** Mechanical conversion fails due to fundamental type incompatibilities:
+
+1. **`$typeName` requirement** — Buf types extend `Message<T>` which mandates `$typeName`. Any file constructing plain objects (e.g., `{ name: 'foo', value: 42 }`) without `create(Schema, {...})` fails type-checking. Affects: tracing, config, edge-client, devtools, many tests.
+2. **`PublicKey` type mismatch** — `@dxos/keys.PublicKey` (class with `.toHex()`, `.equals()`) is incompatible with buf `PublicKey` (plain `Message & { data: Uint8Array }`). Affects: messaging, network-manager, client-services, virtually all code using keys.
+3. **Oneof field access** — Proto uses direct property access (`msg.request`, `msg.response`), buf uses discriminated union (`msg.payload.case === 'request'`). Affects: rpc, muxer, signal-local-state.
+4. **Enum namespace access** — Proto uses `EnumType.Nested.VALUE`, buf uses flat `EnumType_Nested.VALUE`. Affects: config (`Runtime.Services.XXX`), observability, edge-client, many more.
+5. **Proto codec type boundaries** — `schema.getCodecForType()` returns `ProtoCodec<ProtoType>`, so decoded values are proto-typed. Type annotations changed to buf create mismatches. Affects: keyring, credential state machines, all codec users.
+6. **Proto service interfaces** — RPC service interfaces (`AdmissionDiscoveryService`, `TestService`, etc.) exist as interfaces in proto gen but as `GenService` values in buf. Used by `RpcExtension` and `schema.getService()`. Cannot convert until RPC layer migrates.
+
+### 11.2 — Findings & Remaining Work
+
+The proto→buf import migration is NOT a simple path substitution. Each file needs individual analysis and may require:
+
+- **Object construction**: Replace `{ field: value }` with `create(Schema, { field: value })`.
+- **Enum access**: Replace `Enum.Nested.VALUE` with `Enum_Nested_VALUE`.
+- **Oneof access**: Replace `msg.field` with `msg.payload.case === 'field' ? msg.payload.value : undefined`.
+- **PublicKey bridging**: Add `toPublicKey()` / `encodePublicKey()` calls at boundaries.
+- **Codec types**: Keep proto types for codec-decoded values or add explicit conversion.
+- **Service interfaces**: Keep proto until RPC layer migrates to buf.
+
+**Priority order for remaining migration:**
+1. Files using only enum values (simplest — just rename imports)
+2. Files using only type annotations (add `$typeName` tolerance or use `Partial<>`)
+3. Files constructing objects (need `create()` calls)
+4. Files at codec boundaries (need conversion helpers)
+5. Files with oneof access patterns (need structural refactoring)
+6. RPC service files (blocked on RPC layer migration)
 
 ---
 

@@ -3,9 +3,8 @@
 //
 
 import { type SpaceId } from '@dxos/keys';
-import type * as QueryProto from '@dxos/protocols/proto/dxos/echo/query';
-import type * as DataProto from '@dxos/protocols/proto/dxos/echo/service';
 
+import { type DataService, type QueryService } from './Echo';
 import { type EdgeFunctionEnv } from './edge';
 import type * as FeedProtocol from './FeedProtocol';
 
@@ -63,13 +62,13 @@ export interface Context {
      * Query service.
      * Available if the function is invoked in context of a space.
      */
-    queryService?: QueryProto.QueryService;
+    queryService?: QueryService;
 
     /**
      * Data service.
      * Available if the function is invoked in context of a space.
      */
-    dataService?: DataProto.DataService;
+    dataService?: DataService;
 
     /**
      * Queue service.

@@ -23,7 +23,7 @@ import type {} from '@dxos/protocols/buf/dxos/edge/signal_pb';
 import type {} from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import type {} from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
 
-export type { QueueService } from '@dxos/protocols/proto/dxos/client/services';
+export type { QueueService } from '@dxos/protocols/buf/dxos/client/queue_pb';
 
 //
 // NOTE: Should contain client/proxy dependencies only.
