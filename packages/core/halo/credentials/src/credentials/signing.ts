@@ -13,6 +13,8 @@ import { arrayToBuffer } from '@dxos/util';
  * @returns The input message to be signed for a given credential.
  */
 // TODO(nf): rename, this returns not the proof itself, but the payload for verifying against the proof.
+// TODO(dmaretskyi): Add storage-compatibility tests verifying that credentials signed with the old
+// protobuf.js codec can be verified after migrating to buf-native anyPack/anyUnpack.
 export const getCredentialProofPayload = (credential: Credential): Uint8Array => {
   const copy: any = {
     ...credential,

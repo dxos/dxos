@@ -14,15 +14,19 @@ export const fromBufPublicKey = (key?: BufPublicKey | PublicKey): PublicKey | un
 /**
  * Extract the assertion from a credential as a TypedMessage.
  *
- * At runtime, the `assertion` field (typed as google.protobuf.Any in buf schema)
- * contains a TypedMessage object from the protobuf.js codec — a plain object with
- * an `@type` discriminator string and the decoded assertion fields. The `as unknown`
- * cast here is safe because the protobuf.js codec always produces this shape when
- * decoding `google.protobuf.Any` fields. This cast is removed in Phase 10 when
- * protobuf.js is replaced with buf-native `anyPack`/`anyUnpack`.
+ * At runtime, the `assertion` field may contain either:
+ * - A TypedMessage with `@type` discriminator (from protobuf.js codec `Any` decoding)
+ * - A buf message with `$typeName` discriminator (from buf-native handling)
+ *
+ * This function normalizes both formats so callers can consistently use `@type`.
  */
-export const getCredentialAssertion = (credential: Credential): TypedMessage =>
-  credential.subject!.assertion as unknown as TypedMessage;
+export const getCredentialAssertion = (credential: Credential): TypedMessage => {
+  const assertion = credential.subject!.assertion as any;
+  if (!assertion['@type'] && assertion.$typeName) {
+    assertion['@type'] = assertion.$typeName;
+  }
+  return assertion as TypedMessage;
+};
 
 /**
  * Extract a typed assertion from a credential, returning undefined if the type doesn't match.
