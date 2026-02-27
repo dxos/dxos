@@ -9,7 +9,7 @@ import { type Space } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { Context } from '@dxos/context';
 import { AlreadyJoinedError, AuthorizationError } from '@dxos/protocols';
-import { decodePublicKey } from '@dxos/protocols/buf';
+import { toPublicKey } from '@dxos/protocols/buf';
 import { Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import {
   ConnectionState,
@@ -154,7 +154,7 @@ const findMember = (space: Space, client: Client) => {
       (m) =>
         m.identity?.identityKey &&
         clientIdentityKey &&
-        decodePublicKey(m.identity.identityKey).equals(decodePublicKey(clientIdentityKey)),
+        toPublicKey(m.identity.identityKey).equals(toPublicKey(clientIdentityKey)),
     );
 };
 

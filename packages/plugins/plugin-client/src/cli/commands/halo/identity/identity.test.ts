@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import { TestConsole, TestLayer } from '@dxos/cli-util/testing';
 import { ClientService } from '@dxos/client';
 import { runAndForwardErrors } from '@dxos/effect';
-import { create, decodePublicKey } from '@dxos/protocols/buf';
+import { create, toPublicKey } from '@dxos/protocols/buf';
 import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { handler } from './identity';
@@ -36,7 +36,7 @@ describe('halo identity', () => {
       const parsedIdentity = TestConsole.parseJson(logs[0]);
       const identityKey = client.halo.identity.get()?.identityKey;
       expect(parsedIdentity).toEqual({
-        identityKey: identityKey ? decodePublicKey(identityKey).toHex() : undefined,
+        identityKey: identityKey ? toPublicKey(identityKey).toHex() : undefined,
         displayName: client.halo.identity.get()?.profile?.displayName,
       });
     }).pipe(Effect.provide(TestLayer), Effect.scoped, runAndForwardErrors));

@@ -298,7 +298,9 @@ export class SpacesServiceImpl implements Client.SpacesService {
     const dataSpaceManager = await this._getDataSpaceManager();
     const spaceKeyPk = toPublicKey(spaceKey!);
     const credential = await dataSpaceManager.requestSpaceAdmissionCredential(spaceKeyPk);
-    return this._joinByAdmission(create(ContactAdmissionSchema, { credential }));
+    const admission = create(ContactAdmissionSchema);
+    admission.credential = credential;
+    return this._joinByAdmission(admission);
   }
 
   async exportSpace(request: ExportSpaceRequest): Promise<ExportSpaceResponse> {

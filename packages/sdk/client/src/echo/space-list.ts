@@ -32,7 +32,7 @@ import { failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ApiError, trace as Trace } from '@dxos/protocols';
-import { EMPTY, decodePublicKey, encodePublicKey } from '@dxos/protocols/buf';
+import { EMPTY, toPublicKey, encodePublicKey } from '@dxos/protocols/buf';
 import { type Invitation, Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import {
@@ -184,7 +184,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
           return;
         }
 
-        const spaceKeyDecoded = space.spaceKey ? decodePublicKey(space.spaceKey) : undefined;
+        const spaceKeyDecoded = space.spaceKey ? toPublicKey(space.spaceKey) : undefined;
         let spaceProxy = spaceKeyDecoded
           ? (newSpaces.find(({ key }) => key.equals(spaceKeyDecoded)) as SpaceProxy | undefined)
           : undefined;
@@ -350,7 +350,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     log.trace('dxos.sdk.echo-proxy.create-space', Trace.begin({ id: traceId }));
     const space = await this._serviceProvider.services.SpacesService.createSpace(EMPTY, { timeout: RPC_TIMEOUT });
 
-    const spaceKeyDecoded = space.spaceKey ? decodePublicKey(space.spaceKey) : undefined;
+    const spaceKeyDecoded = space.spaceKey ? toPublicKey(space.spaceKey) : undefined;
     await this._spaceCreated.waitForCondition(() => {
       return spaceKeyDecoded ? this.get().some(({ key }) => key.equals(spaceKeyDecoded)) : false;
     });
@@ -412,7 +412,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   }
 
   private _findProxy(space: SerializedSpace): SpaceProxy {
-    const spaceKeyDecoded = space.spaceKey ? decodePublicKey(space.spaceKey) : undefined;
+    const spaceKeyDecoded = space.spaceKey ? toPublicKey(space.spaceKey) : undefined;
     return (
       (this.get().find(({ key }) => spaceKeyDecoded && key.equals(spaceKeyDecoded)) as unknown as
         | SpaceProxy

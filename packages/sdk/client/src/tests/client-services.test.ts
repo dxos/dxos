@@ -12,7 +12,7 @@ import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
-import { decodePublicKey } from '@dxos/protocols/buf';
+import { toPublicKey } from '@dxos/protocols/buf';
 import { Invitation_AuthMethod, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import type { ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Device, DeviceKind, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
@@ -151,8 +151,8 @@ describe('Client services', () => {
 
     // Check same identity.
     expect(hostInvitation!.identityKey).not.to.exist;
-    expect(guestInvitation?.identityKey).to.deep.eq(client1.halo.identity.get()!.identityKey);
-    expect(guestInvitation?.identityKey).to.deep.eq(client2.halo.identity.get()!.identityKey);
+    expect(toPublicKey(guestInvitation!.identityKey!).equals(toPublicKey(client1.halo.identity.get()!.identityKey!))).to.be.true;
+    expect(toPublicKey(guestInvitation!.identityKey!).equals(toPublicKey(client2.halo.identity.get()!.identityKey!))).to.be.true;
     expect(hostInvitation?.state).to.eq(Invitation_State.SUCCESS);
     expect(guestInvitation?.state).to.eq(Invitation_State.SUCCESS);
 
@@ -232,8 +232,8 @@ describe('Client services', () => {
       }),
     );
 
-    expect(guestInvitation?.spaceKey).to.deep.eq(hostSpace.key);
-    expect(hostInvitation?.spaceKey).to.deep.eq(guestInvitation?.spaceKey);
+    expect(toPublicKey(guestInvitation!.spaceKey!).equals(hostSpace.key)).to.be.true;
+    expect(toPublicKey(hostInvitation!.spaceKey!).equals(toPublicKey(guestInvitation!.spaceKey!))).to.be.true;
     expect(hostInvitation?.state).to.eq(Invitation_State.SUCCESS);
     log('invitation complete');
 
@@ -241,7 +241,7 @@ describe('Client services', () => {
     const trigger = new Trigger<Space>();
     await expect
       .poll(() => {
-        const guestSpace = client2.spaces.get(decodePublicKey(guestInvitation!.spaceKey!));
+        const guestSpace = client2.spaces.get(toPublicKey(guestInvitation!.spaceKey!));
         invariant(guestSpace);
         trigger.wake(guestSpace);
         return guestSpace;
@@ -256,7 +256,7 @@ describe('Client services', () => {
         members.sort((m1, m2) => {
           const m1IdentityKey = m1.identity?.identityKey;
           if (!client1IdentityKey || !m1IdentityKey) return 0;
-          return decodePublicKey(client1IdentityKey).equals(decodePublicKey(m1IdentityKey)) ? -1 : 1;
+          return toPublicKey(client1IdentityKey).equals(toPublicKey(m1IdentityKey)) ? -1 : 1;
         });
         return members;
       };

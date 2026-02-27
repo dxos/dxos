@@ -13,7 +13,7 @@ import { CommandConfig, print } from '@dxos/cli-util';
 import { type Client, ClientService } from '@dxos/client';
 import { type AuthenticatingInvitationObservable, InvitationEncoder, Invitation_State } from '@dxos/client/invitations';
 import { invariant } from '@dxos/invariant';
-import { decodePublicKey } from '@dxos/protocols/buf';
+import { toPublicKey } from '@dxos/protocols/buf';
 
 import { printIdentity } from '../util';
 
@@ -42,7 +42,7 @@ export const join = Command.make(
       yield* Console.log(
         JSON.stringify(
           {
-            identityKey: identity.identityKey ? decodePublicKey(identity.identityKey).toHex() : undefined,
+            identityKey: identity.identityKey ? toPublicKey(identity.identityKey).toHex() : undefined,
             displayName: identity.profile?.displayName,
           },
           null,

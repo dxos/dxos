@@ -15,7 +15,7 @@ import { getObjectCore } from '@dxos/echo-db';
 import { EncodedReference } from '@dxos/echo-protocol';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { decodePublicKey } from '@dxos/protocols/buf';
+import { toPublicKey } from '@dxos/protocols/buf';
 import { type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { range } from '@dxos/util';
 
@@ -132,7 +132,7 @@ describe('Spaces', () => {
     const [, { invitation: guestInvitation }] = await Promise.all(
       performInvitation({ host: space1, guest: client2.spaces }),
     );
-    const space2 = await waitForSpace(client2, decodePublicKey(guestInvitation!.spaceKey!), {
+    const space2 = await waitForSpace(client2, toPublicKey(guestInvitation!.spaceKey!), {
       ready: true,
     });
 

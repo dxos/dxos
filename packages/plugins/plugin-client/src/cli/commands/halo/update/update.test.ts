@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import { TestConsole, TestLayer } from '@dxos/cli-util/testing';
 import { ClientService } from '@dxos/client';
 import { runAndForwardErrors } from '@dxos/effect';
-import { decodePublicKey } from '@dxos/protocols/buf';
+import { toPublicKey } from '@dxos/protocols/buf';
 
 import { handler } from './update';
 
@@ -26,7 +26,7 @@ describe('halo update', () => {
       expect(parsed).toHaveProperty('identityKey');
       expect(parsed).toHaveProperty('displayName', 'Updated Name');
       expect(parsed.identityKey).toBe(
-        client.halo.identity.get()?.identityKey ? decodePublicKey(client.halo.identity.get()!.identityKey!).toHex() : undefined,
+        client.halo.identity.get()?.identityKey ? toPublicKey(client.halo.identity.get()!.identityKey!).toHex() : undefined,
       );
     }).pipe(Effect.provide(TestLayer), Effect.scoped, runAndForwardErrors));
 });

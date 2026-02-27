@@ -4,7 +4,7 @@
 
 import type { MulticastObservable } from '@dxos/async';
 import { type PublicKey } from '@dxos/keys';
-import { decodePublicKey, encodePublicKey } from '@dxos/protocols/buf';
+import { toPublicKey, encodePublicKey } from '@dxos/protocols/buf';
 import {
   type InvitationUrlRequest,
   type LayoutRequest,
@@ -176,7 +176,7 @@ export class Shell {
       this._devices
         .get()
         .filter((device) => device.deviceKey)
-        .map((device) => decodePublicKey(device.deviceKey!)),
+        .map((device) => toPublicKey(device.deviceKey!)),
     );
     await this._shellManager.setLayout({ layout: ShellLayout.SHARE_IDENTITY } as LayoutRequest);
     return new Promise((resolve) => {
@@ -184,7 +184,7 @@ export class Shell {
         if (context.display === ShellDisplay.NONE) {
           const device = this._devices
             .get()
-            .find((device) => device.deviceKey && !initialDevices.has(decodePublicKey(device.deviceKey)));
+            .find((device) => device.deviceKey && !initialDevices.has(toPublicKey(device.deviceKey)));
           resolve({ device, cancelled: !device });
         }
       });
@@ -248,7 +248,7 @@ export class Shell {
       space.members
         .get()
         .filter((member) => member.identity?.identityKey)
-        .map((member) => decodePublicKey(member.identity!.identityKey!)),
+        .map((member) => toPublicKey(member.identity!.identityKey!)),
     );
     await this._shellManager.setLayout({
       layout: ShellLayout.SPACE,
@@ -263,7 +263,7 @@ export class Shell {
             .get()
             .filter(
               (member) =>
-                member.identity?.identityKey && !initialMembers.has(decodePublicKey(member.identity.identityKey)),
+                member.identity?.identityKey && !initialMembers.has(toPublicKey(member.identity.identityKey)),
             );
           resolve({ members, cancelled: members.length === 0 });
         }
@@ -296,7 +296,7 @@ export class Shell {
     return new Promise((resolve) => {
       this._shellManager.contextUpdate.on((context) => {
         const space =
-          context.spaceKey && this._spaces.get().find((space) => decodePublicKey(context.spaceKey!).equals(space.key));
+          context.spaceKey && this._spaces.get().find((space) => toPublicKey(context.spaceKey!).equals(space.key));
         if (space) {
           resolve({ space, target: context.target, cancelled: false });
         }

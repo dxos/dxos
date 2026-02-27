@@ -45,7 +45,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { EdgeService, decodeError } from '@dxos/protocols';
-import { decodePublicKey, encodePublicKey } from '@dxos/protocols/buf';
+import { toPublicKey, encodePublicKey } from '@dxos/protocols/buf';
 import { create } from '@dxos/protocols/buf';
 import { type Invitation, Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
@@ -157,7 +157,7 @@ export class SpaceProxy implements Space, CustomInspectable {
 
     this._db = echoClient.constructDatabase({
       spaceId: this.id,
-      spaceKey: decodePublicKey(this._data.spaceKey!),
+      spaceKey: toPublicKey(this._data.spaceKey!),
       owningObject: this,
     });
     this._queues = echoClient.constructQueueFactory(this.id);
@@ -203,7 +203,7 @@ export class SpaceProxy implements Space, CustomInspectable {
   @trace.info()
   get key(): PublicKey {
     invariant(this._data.spaceKey, 'Space key not available');
-    return decodePublicKey(this._data.spaceKey);
+    return toPublicKey(this._data.spaceKey);
   }
 
   get db(): EchoDatabase {

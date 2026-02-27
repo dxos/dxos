@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import { TestConsole, TestLayer } from '@dxos/cli-util/testing';
 import { ClientService } from '@dxos/client';
 import { runAndForwardErrors } from '@dxos/effect';
-import { decodePublicKey } from '@dxos/protocols/buf';
+import { toPublicKey } from '@dxos/protocols/buf';
 
 import { handler } from './keys';
 
@@ -25,10 +25,10 @@ describe('halo keys', () => {
       expect(parsed).toHaveProperty('identityKey');
       expect(parsed).toHaveProperty('deviceKey');
       expect(parsed.identityKey).toBe(
-        client.halo.identity.get()?.identityKey ? decodePublicKey(client.halo.identity.get()!.identityKey!).toHex() : undefined,
+        client.halo.identity.get()?.identityKey ? toPublicKey(client.halo.identity.get()!.identityKey!).toHex() : undefined,
       );
       expect(parsed.deviceKey).toBe(
-        client.halo.device?.deviceKey ? decodePublicKey(client.halo.device.deviceKey).toHex() : undefined,
+        client.halo.device?.deviceKey ? toPublicKey(client.halo.device.deviceKey).toHex() : undefined,
       );
     }).pipe(Effect.provide(TestLayer), Effect.scoped, runAndForwardErrors));
 });

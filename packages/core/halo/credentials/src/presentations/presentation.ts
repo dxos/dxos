@@ -45,8 +45,8 @@ export const signPresentation = async ({
     proof.chain = chain;
   }
 
-  return create(PresentationSchema, {
-    credentials: presentation.credentials,
-    proofs: [...(presentation.proofs ?? []), proof],
-  });
+  const signedPresentation = create(PresentationSchema);
+  signedPresentation.credentials = presentation.credentials ?? [];
+  signedPresentation.proofs = [...(presentation.proofs ?? []), proof];
+  return signedPresentation;
 };

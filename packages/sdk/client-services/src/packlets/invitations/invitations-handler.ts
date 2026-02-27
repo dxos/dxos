@@ -501,10 +501,9 @@ export class InvitationsHandler {
       throw new Error('challenge missing in the introduction');
     }
     log('sending authentication request');
-    const signature = sign(
-      Buffer.from(introductionResponse.challenge),
-      Buffer.from(invitation.guestKeypair.privateKey!.data),
-    );
+    const privateKey = invitation.guestKeypair.privateKey!;
+    const privateKeyBytes = privateKey instanceof Uint8Array ? privateKey : (privateKey as any).data;
+    const signature = sign(Buffer.from(introductionResponse.challenge), Buffer.from(privateKeyBytes));
     const response = await extension.rpc.InvitationHostService.authenticate({
       signedChallenge: signature,
     });

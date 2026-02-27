@@ -26,7 +26,7 @@ import { type Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { CancelledError, SystemError } from '@dxos/protocols';
-import { timestampFromDate } from '@dxos/protocols/buf';
+import { timestampFromDate, toPublicKey } from '@dxos/protocols/buf';
 import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type CreateEpochRequest_Migration, type Space_Metrics } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type CreateEpochRequest } from '@dxos/protocols/proto/dxos/client/services';
@@ -550,7 +550,7 @@ export class DataSpace {
 
     const epoch: Epoch = {
       previousId: this._automergeSpaceState.lastEpoch?.id
-        ? PublicKey.from(this._automergeSpaceState.lastEpoch.id.data)
+        ? toPublicKey(this._automergeSpaceState.lastEpoch.id)
         : undefined,
       number: (this._automergeSpaceState.lastEpoch?.subject.assertion.number ?? -1) + 1,
       timeframe: this._automergeSpaceState.lastEpoch?.subject.assertion.timeframe ?? new Timeframe(),

@@ -12,7 +12,7 @@ import { Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { decodePublicKey, encodePublicKey } from '@dxos/protocols/buf';
+import { toPublicKey, encodePublicKey } from '@dxos/protocols/buf';
 import { SpaceMember_PresenceState } from '@dxos/protocols/buf/dxos/client/services_pb';
 
 import { type Client } from '../client';
@@ -88,7 +88,7 @@ describe('Lazy Space Loading', () => {
         (m) =>
           m.identity?.identityKey &&
           client2IdentityKey &&
-          decodePublicKey(m.identity.identityKey).equals(decodePublicKey(client2IdentityKey)),
+          toPublicKey(m.identity.identityKey).equals(toPublicKey(client2IdentityKey)),
       );
       if (client2State?.presence === SpaceMember_PresenceState.ONLINE) {
         connectionEstablished.wake();

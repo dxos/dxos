@@ -8,7 +8,7 @@ import { waitForCondition } from '@dxos/async';
 import type { Space } from '@dxos/client-protocol';
 import { Obj } from '@dxos/echo';
 import { type PublicKey } from '@dxos/keys';
-import { decodePublicKey } from '@dxos/protocols/buf';
+import { toPublicKey } from '@dxos/protocols/buf';
 import { Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type Contact } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
@@ -98,7 +98,7 @@ describe('ContactBook', () => {
       await waitForCondition({ condition: allSpacesReflected });
       const contact = expectInContactBook(client1.halo.contacts.get(), client2);
       const expectedSpaces = spaces.map((s) => s.key.toHex()).sort();
-      expect(contact.commonSpaces?.map((k) => decodePublicKey(k).toHex()).sort()).to.deep.eq(expectedSpaces);
+      expect(contact.commonSpaces?.map((k) => toPublicKey(k).toHex()).sort()).to.deep.eq(expectedSpaces);
     });
 
     test('different contacts in different spaces', async () => {
@@ -158,7 +158,7 @@ describe('ContactBook', () => {
     const clientIdentityKey = client.halo.identity.get()?.identityKey;
     const contact = contacts.find((c) =>
       c.identityKey && clientIdentityKey
-        ? decodePublicKey(c.identityKey).equals(decodePublicKey(clientIdentityKey))
+        ? toPublicKey(c.identityKey).equals(toPublicKey(clientIdentityKey))
         : false,
     );
     expect(contact).not.to.be.undefined;

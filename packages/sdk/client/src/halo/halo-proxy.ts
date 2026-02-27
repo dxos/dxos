@@ -13,7 +13,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ApiError, trace as Trace } from '@dxos/protocols';
-import { EMPTY, decodePublicKey } from '@dxos/protocols/buf';
+import { EMPTY, toPublicKey } from '@dxos/protocols/buf';
 import { type Invitation, Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import {
   type Contact,
@@ -74,8 +74,8 @@ export class HaloProxy implements Halo {
     const identity = this._identity.get();
     const dev = this.device;
     return {
-      identityKey: identity?.identityKey ? decodePublicKey(identity.identityKey).truncate() : undefined,
-      deviceKey: dev?.deviceKey ? decodePublicKey(dev.deviceKey).truncate() : undefined,
+      identityKey: identity?.identityKey ? toPublicKey(identity.identityKey).truncate() : undefined,
+      deviceKey: dev?.deviceKey ? toPublicKey(dev.deviceKey).truncate() : undefined,
     };
   }
 
@@ -309,7 +309,7 @@ export class HaloProxy implements Halo {
    */
   queryCredentials({ ids, type }: { ids?: PublicKey[]; type?: string } = {}): Credential[] {
     return this._credentials.get().filter((credential) => {
-      if (ids && !ids.some((id) => id.equals(decodePublicKey(credential.id!)))) {
+      if (ids && !ids.some((id) => id.equals(toPublicKey(credential.id!)))) {
         return false;
       }
       if (type && getCredentialAssertion(credential)['@type'] !== type) {
@@ -382,7 +382,7 @@ export class HaloProxy implements Halo {
 
     this._credentials.subscribe((credentials) => {
       const credentialsToPresent = credentials.filter((credential) =>
-        ids.some((id) => id.equals(decodePublicKey(credential.id!))),
+        ids.some((id) => id.equals(toPublicKey(credential.id!))),
       );
       if (credentialsToPresent.length === ids.length) {
         trigger.wake(credentialsToPresent);

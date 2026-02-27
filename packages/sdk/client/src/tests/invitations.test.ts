@@ -24,7 +24,7 @@ import { MetadataStore } from '@dxos/echo-pipeline';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { AlreadyJoinedError } from '@dxos/protocols';
-import { decodePublicKey, encodePublicKey } from '@dxos/protocols/buf';
+import { toPublicKey, encodePublicKey } from '@dxos/protocols/buf';
 import {
   type Invitation,
   Invitation_AuthMethod,
@@ -70,14 +70,14 @@ const successfulInvitation = async ({
       expect(guestInvitation!.spaceKey).to.exist;
       expect(hostInvitation!.spaceKey).to.deep.eq(guestInvitation!.spaceKey);
 
-      expect(host.dataSpaceManager!.spaces.get(decodePublicKey(hostInvitation!.spaceKey!))).to.exist;
-      expect(guest.dataSpaceManager!.spaces.get(decodePublicKey(guestInvitation!.spaceKey!))).to.exist;
+      expect(host.dataSpaceManager!.spaces.get(toPublicKey(hostInvitation!.spaceKey!))).to.exist;
+      expect(guest.dataSpaceManager!.spaces.get(toPublicKey(guestInvitation!.spaceKey!))).to.exist;
       break;
 
     case Invitation_Kind.DEVICE:
       expect(hostInvitation!.identityKey).not.to.exist;
-      expect(guestInvitation!.identityKey).to.deep.eq(host.identityManager.identity!.identityKey);
-      expect(guestInvitation!.identityKey).to.deep.eq(guest.identityManager.identity!.identityKey);
+      expect(toPublicKey(guestInvitation!.identityKey!).equals(host.identityManager.identity!.identityKey)).to.be.true;
+      expect(toPublicKey(guestInvitation!.identityKey!).equals(guest.identityManager.identity!.identityKey)).to.be.true;
 
       // Check devices.
       await expect.poll(() => host.identityManager.identity!.authorizedDeviceKeys.size).toEqual(2);
@@ -400,7 +400,7 @@ describe('Invitations', () => {
         // TODO: assumes too much about implementation.
         expect(hostMetadata.getInvitations()).to.have.lengthOf(0);
         const swarmTopic = hostContext.networkManager.topics.find((topic) =>
-          topic.equals(decodePublicKey(invitation.get().swarmKey!)),
+          topic.equals(toPublicKey(invitation.get().swarmKey!)),
         );
         expect(swarmTopic).to.be.undefined;
       });
@@ -444,10 +444,10 @@ describe('Invitations', () => {
           await savedTrigger.wait();
           await waitForCondition({
             condition: () =>
-              hostContext.networkManager.topics.includes(decodePublicKey(persistentInvitation.get().swarmKey!)),
+              hostContext.networkManager.topics.includes(toPublicKey(persistentInvitation.get().swarmKey!)),
           });
           // TODO(nf): expose this in API as suspendInvitation()/SuspendableInvitation?
-          await hostContext.networkManager.leaveSwarm(decodePublicKey(persistentInvitation.get().swarmKey!));
+          await hostContext.networkManager.leaveSwarm(toPublicKey(persistentInvitation.get().swarmKey!));
         }
 
         const { service: newHostService, manager: newHostManager } = createInvitationsApi(

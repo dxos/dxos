@@ -11,7 +11,7 @@ import { getCredentialAssertion } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { decodePublicKey, timestampMs } from '@dxos/protocols/buf';
+import { toPublicKey, timestampMs } from '@dxos/protocols/buf';
 import type { GenService, GenServiceMethods } from '@dxos/protocols/buf';
 import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { schema } from '@dxos/protocols/proto';
@@ -204,7 +204,7 @@ export class AgentManagerClient implements AgentHostingProviderClient {
 
     invariant(deviceKey, 'deviceKey not found');
     const authDeviceCreds = await this._queryCredentials('dxos.halo.credentials.AuthorizedDevice', (cred) =>
-      PublicKey.equals(decodePublicKey(cred.subject!.id!), decodePublicKey(deviceKey)),
+      PublicKey.equals(toPublicKey(cred.subject!.id!), toPublicKey(deviceKey)),
     );
 
     invariant(authDeviceCreds.length === 1, 'Improper number of authorized devices');
@@ -261,7 +261,7 @@ export class AgentManagerClient implements AgentHostingProviderClient {
       throw new Error('Failed to initialize auth sequence');
     }
     const agentmanagerAccessCreds = await this._queryCredentials('dxos.halo.credentials.ServiceAccess', (cred) =>
-      PublicKey.equals(decodePublicKey(cred.issuer!), PublicKey.from(agentmanagerKey)),
+      PublicKey.equals(toPublicKey(cred.issuer!), PublicKey.from(agentmanagerKey)),
     );
     if (!agentmanagerAccessCreds.length) {
       log.info('no access credentials - requesting...');
@@ -270,9 +270,9 @@ export class AgentManagerClient implements AgentHostingProviderClient {
     }
 
     const credsToPresent = [
-      decodePublicKey(authDeviceCreds.id!),
-      agentmanagerAccessCreds[0]?.id ? decodePublicKey(agentmanagerAccessCreds[0].id) : undefined,
-      agentAuthzCredential?.id ? decodePublicKey(agentAuthzCredential.id) : undefined,
+      toPublicKey(authDeviceCreds.id!),
+      agentmanagerAccessCreds[0]?.id ? toPublicKey(agentmanagerAccessCreds[0].id) : undefined,
+      agentAuthzCredential?.id ? toPublicKey(agentAuthzCredential.id) : undefined,
     ].filter((key): key is PublicKey => key != null);
     const presentation = await this._halo.presentCredentials({
       ids: credsToPresent,

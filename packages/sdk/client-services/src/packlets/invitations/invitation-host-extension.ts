@@ -9,6 +9,7 @@ import { InvariantViolation, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { InvalidInvitationExtensionRoleError, trace } from '@dxos/protocols';
+import { toPublicKey } from '@dxos/protocols/buf';
 import {
   type Invitation,
   Invitation_AuthMethod,
@@ -179,12 +180,14 @@ export class InvitationHostExtension
                 break;
               }
               invariant(invitation.guestKeypair.publicKey);
+              const pubKey = invitation.guestKeypair.publicKey;
+              const pubKeyBytes = pubKey instanceof Uint8Array ? pubKey : (pubKey as any).data ?? toPublicKey(pubKey).asUint8Array();
               const isSignatureValid =
                 this._challenge &&
                 verify(
                   this._challenge,
                   Buffer.from(signedChallenge ?? []),
-                  Buffer.from(invitation.guestKeypair.publicKey.data),
+                  Buffer.from(pubKeyBytes),
                 );
               if (isSignatureValid) {
                 this.authenticationPassed = true;

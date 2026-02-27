@@ -8,7 +8,7 @@ import { Trigger, asyncTimeout } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { getCredentialAssertion, verifyPresentation } from '@dxos/credentials';
 import { PublicKey } from '@dxos/keys';
-import { decodePublicKey } from '@dxos/protocols/buf';
+import { toPublicKey } from '@dxos/protocols/buf';
 import { type Credential, type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { Client } from '../client';
@@ -53,7 +53,7 @@ describe('Halo', () => {
 
       const nonce = new Uint8Array([0, 0, 0, 0]);
       const presentation = await client.halo.presentCredentials({
-        ids: credentials.map(({ id }) => decodePublicKey(id!)),
+        ids: credentials.map(({ id }) => toPublicKey(id!)),
         nonce: new Uint8Array([0, 0, 0, 0]),
       });
       expect(presentation.credentials?.length).to.equal(2);

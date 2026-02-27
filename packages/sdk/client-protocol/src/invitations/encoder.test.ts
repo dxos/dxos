@@ -5,7 +5,6 @@
 import { describe, expect, test } from 'vitest';
 
 import { PublicKey, SpaceId } from '@dxos/keys';
-import { timestampFromDate } from '@dxos/protocols/buf';
 import {
   type Invitation,
   Invitation_AuthMethod,
@@ -16,10 +15,9 @@ import {
 
 import { InvitationEncoder } from './encoder';
 
-const CREATED = timestampFromDate(new Date(1739956589 * 1000));
+// Proto codec round-trips Timestamp as Date, so use Date directly.
+const CREATED = new Date(1739956589 * 1000);
 
-// Test data uses proto-shaped objects (PublicKey from @dxos/keys, Timestamp)
-// since the InvitationEncoder uses the proto codec for serialization.
 const baseInvitation = {
   invitationId: PublicKey.random().toHex(),
   type: Invitation_Type.INTERACTIVE,

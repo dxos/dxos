@@ -16,7 +16,9 @@ export const substitutions = {
 
   // TODO(dmaretskyi): Shouldn't be substituted to PublicKey.
   'dxos.keys.PrivateKey': {
-    encode: (value: Buffer) => ({ data: new Uint8Array(value) }),
+    encode: (value: Buffer | { data: Uint8Array }) => ({
+      data: value instanceof Uint8Array ? new Uint8Array(value) : value.data,
+    }),
     decode: (value: any) => PublicKey.from(new Uint8Array(value.data)).asBuffer(),
   },
 
