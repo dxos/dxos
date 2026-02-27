@@ -81,8 +81,6 @@ export const inputValence = (valence?: MessageValence) => {
   }
 };
 
-// TODO(burdon): Factor out color defs?
-
 const sharedSubduedInputStyles: ComponentFragment<InputStyleProps> = (props) => [
   'py-0 w-full bg-transparent text-current [[data-drag-autoscroll="active"]_&]:pointer-events-none',
   props.density === 'fine' ? fineBlockSize : coarseBlockSize,
