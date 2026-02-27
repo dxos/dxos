@@ -219,7 +219,7 @@ const MenuItem = ({ item, current, onSelect }: MenuItemProps) => {
   const handleSelect = useCallback(() => onSelect?.(item), [item, onSelect]);
 
   return (
-    <li ref={listRef} className={tx('menu.item', {}, [current && 'bg-hoverSurface'])} onClick={handleSelect}>
+    <li ref={listRef} className={tx('menu.item', {}, [current && 'bg-hover-surface'])} onClick={handleSelect}>
       {item.icon && <Icon icon={item.icon} size={5} />}
       <span className='grow truncate'>{toLocalizedString(item.label, t)}</span>
     </li>

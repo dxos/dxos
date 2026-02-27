@@ -6,7 +6,6 @@ import React, { type ChangeEvent, useState } from 'react';
 
 import { Invitation } from '@dxos/react-client/invitations';
 import { Input, useTranslation } from '@dxos/react-ui';
-import { descriptionText } from '@dxos/ui-theme';
 import { hexToEmoji } from '@dxos/util';
 
 import { Action, Actions, Emoji, Label, StepHeading } from '../../../components';
@@ -60,7 +59,7 @@ export const InvitationAuthenticator = ({
               <StepHeading>{t('auth code input label')}</StepHeading>
             ) : (
               <>
-                <StepHeading className={descriptionText}>{t('authenticating label')}</StepHeading>
+                <StepHeading className='text-description'>{t('authenticating label')}</StepHeading>
                 <div role='none' className='grow' />
               </>
             )}

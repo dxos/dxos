@@ -3,8 +3,7 @@
 //
 
 import { type ViewUpdate } from '@codemirror/view';
-import React, { type AnchorHTMLAttributes, type ReactNode, useMemo } from 'react';
-import { createRoot } from 'react-dom/client';
+import { useMemo } from 'react';
 
 import { type Capabilities } from '@dxos/app-framework';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
@@ -15,9 +14,9 @@ import { createDocAccessor } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { getSpace, useObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Icon, ThemeProvider } from '@dxos/react-ui';
 import { type SelectionManager } from '@dxos/react-ui-attention';
 import { Text } from '@dxos/schema';
+import { Domino } from '@dxos/ui';
 import {
   Cursor,
   type EditorStateStore,
@@ -39,8 +38,7 @@ import {
   selectionState,
   typewriter,
 } from '@dxos/ui-editor';
-import { defaultTx } from '@dxos/ui-theme';
-import { isTruthy } from '@dxos/util';
+import { isTruthy, safeUrl } from '@dxos/util';
 
 import { Markdown } from '../types';
 import { setFallbackName } from '../util';
@@ -167,17 +165,13 @@ const createBaseExtensions = ({
         decorateMarkdown({
           selectionChangeDelay: 100,
           numberedHeadings: settings?.numberedHeadings ? { from: 2 } : undefined,
-          // TODO(wittjosiah): For internal links, consider ignoring the link text and rendering the label of the object being linked to.
-          // TODO(burdon): Create dx-tag.
-          renderLinkButton:
-            invokePromise && (object || id)
-              ? createLinkRenderer((targetId: string) => {
-                  void invokePromise(LayoutOperation.Open, {
-                    subject: [targetId],
-                    pivotId: object && Obj.isObject(object) ? Obj.getDXN(object).toString() : id,
-                  });
-                })
-              : undefined,
+          // TODO(wittjosiah): For internal links render the label of the object.
+          renderLinkButton: createRenderLink((targetId: string) => {
+            void invokePromise?.(LayoutOperation.Open, {
+              subject: [targetId],
+              pivotId: object && Obj.isObject(object) ? Obj.getDXN(object).toString() : id,
+            });
+          }),
         }),
         linkTooltip(renderLinkTooltip),
         preview(previewOptions),
@@ -216,60 +210,34 @@ const selectionChange = (selectionManager: SelectionManager) => {
   );
 };
 
-// TODO(burdon): Factor out styles.
-const style = {
-  hover: 'rounded-sm text-primary-500 hover:text-primary-600 dark:text-primary-500 hover:dark:text-primary-400',
-  icon: 'inline-block leading-none mis-1 cursor-pointer',
-};
-
-const createLinkRenderer =
+const createRenderLink =
   (onSelectObject: (id: string) => void): RenderCallback<{ url: string }> =>
   (el, { url }) => {
     // TODO(burdon): Formalize/document internal link format.
-    const isInternal =
-      url.startsWith('/') ||
-      // TODO(wittjosiah): This should probably be parsed out on paste?
-      url.startsWith(window.location.origin);
+    const isInternal = url.startsWith('/') || url.startsWith(window.location.origin);
+    const anchor = Domino.of('a')
+      .classNames('dx-link dx-icon-inline ms-1')
+      .children(Domino.svg(isInternal ? 'ph--arrow-square-down--regular' : 'ph--arrow-square-out--regular'));
 
-    const options: AnchorHTMLAttributes<any> = isInternal
-      ? {
-          onClick: () => {
-            const qualifiedId = url.split('/').at(-1);
-            invariant(qualifiedId, 'Invalid link format.');
-            onSelectObject(qualifiedId);
-          },
-        }
-      : {
-          href: url,
-          rel: 'noreferrer',
-          target: '_blank',
-        };
+    if (isInternal) {
+      anchor.on('click', () => {
+        const qualifiedId = url.split('/').at(-1);
+        invariant(qualifiedId, 'Invalid link format.');
+        onSelectObject(qualifiedId);
+      });
+    } else {
+      anchor.attributes({ href: url, rel: 'noreferrer', target: '_blank' });
+    }
 
-    renderRoot(
-      el,
-      <a {...options} className={style.hover}>
-        <Icon
-          icon={isInternal ? 'ph--arrow-square-down--bold' : 'ph--arrow-square-out--bold'}
-          size={4}
-          classNames={style.icon}
-        />
-      </a>,
-    );
+    el.appendChild(anchor.root);
   };
 
 const renderLinkTooltip: RenderCallback<{ url: string }> = (el, { url }) => {
-  const web = new URL(url);
-  renderRoot(
-    el,
-    <a href={url} rel='noreferrer' target='_blank' className={style.hover}>
-      {web.origin}
-      <Icon icon='ph--arrow-square-out--bold' size={4} classNames={style.icon} />
-    </a>,
+  el.appendChild(
+    Domino.of('a')
+      .attributes({ href: url, target: '_blank', rel: 'noreferrer' })
+      .classNames('dx-link flex items-center gap-2')
+      .text(safeUrl(url)?.origin ?? url)
+      .children(Domino.svg('ph--arrow-square-out--regular')).root,
   );
-};
-
-// TODO(burdon): REMOVE.
-const renderRoot = <T extends Element>(root: T, node: ReactNode): T => {
-  createRoot(root).render(<ThemeProvider tx={defaultTx}>{node}</ThemeProvider>);
-  return root;
 };

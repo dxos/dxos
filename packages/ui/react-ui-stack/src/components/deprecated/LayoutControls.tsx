@@ -39,7 +39,7 @@ export const LayoutControls = forwardRef<HTMLDivElement, LayoutControlsProps>(
     forwardedRef,
   ) => {
     const { t } = useTranslation(translationKey);
-    const buttonClassNames = variant === 'hide-disabled' ? 'disabled:hidden !p-1' : '!p-1';
+    const buttonClassNames = variant === 'hide-disabled' ? 'disabled:hidden p-1!' : 'p-1!';
 
     return (
       <ButtonGroup {...props} ref={forwardedRef}>

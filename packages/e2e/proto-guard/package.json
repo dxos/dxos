@@ -41,12 +41,11 @@
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
-    "lodash.isequal": "catalog:",
+    "fast-deep-equal": "catalog:",
     "pkg-up": "catalog:",
     "yargs": "catalog:"
   },
   "devDependencies": {
-    "@types/lodash.isequal": "catalog:",
     "@types/yargs": "catalog:"
   },
   "publishConfig": {

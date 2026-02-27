@@ -14,7 +14,7 @@ const CardDragPreviewRoot = ({ children }: PropsWithChildren<{}>) => {
 };
 
 const CardDragPreviewContent = ({ children }: PropsWithChildren<{}>) => {
-  return <div className={mx(styles.root, 'ring-focusLine ring-neutralFocusIndicator')}>{children}</div>;
+  return <div className={mx(styles.root, 'ring-focus-line ring-neutral-focus-indicator')}>{children}</div>;
 };
 
 export const CardDragPreview = {

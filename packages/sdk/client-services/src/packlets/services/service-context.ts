@@ -67,7 +67,6 @@ export type ServiceContextRuntimeProps = Pick<
     invitationConnectionDefaultProps?: InvitationConnectionProps;
     disableP2pReplication?: boolean;
     enableVectorIndexing?: boolean;
-    enableLocalQueues?: boolean;
   };
 /**
  * Shared backend for all client services.
@@ -170,7 +169,6 @@ export class ServiceContext extends Resource {
       peerIdProvider: () => this.identityManager.identity?.deviceKey?.toHex(),
       getSpaceKeyByRootDocumentId: (documentId) => this.spaceManager.findSpaceByRootDocumentId(documentId)?.key,
       runtime: this._runtime,
-      localQueues: this._runtimeProps?.enableLocalQueues,
       syncQueue: async (request) => {
         return this._feedSyncer?.syncBlocking({
           spaceId: request.spaceId as SpaceId,

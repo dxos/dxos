@@ -101,7 +101,6 @@
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/platform": "catalog:",
-    "boolean": "catalog:",
     "effect": "catalog:",
     "localforage": "catalog:",
     "lodash.defaultsdeep": "catalog:",

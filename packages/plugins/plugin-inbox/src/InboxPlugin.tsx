@@ -45,6 +45,7 @@ export const InboxPlugin = Plugin.define(meta).pipe(
         metadata: {
           icon: 'ph--note--regular',
           iconHue: 'rose',
+          createObject: (() => Effect.succeed(Message.make({ sender: 'user' }))) satisfies CreateObject,
         },
       },
       {

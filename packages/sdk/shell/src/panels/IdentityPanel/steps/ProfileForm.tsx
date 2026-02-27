@@ -68,7 +68,7 @@ const ProfileFormImpl = (props: ProfileFormImplProps) => {
           value={displayName}
           onChange={({ target: { value } }) => setDisplayName(value)}
         />
-        <StepHeading className='mbe-2'>{t('emoji and color label')}</StepHeading>
+        <StepHeading className='mb-2'>{t('emoji and color label')}</StepHeading>
         <div role='none' className='grid grid-cols-[1fr_min-content] gap-y-2'>
           <EmojiPickerBlock
             emoji={emoji}

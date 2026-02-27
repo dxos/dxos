@@ -20,7 +20,7 @@ import {
   ChatContainer,
   ThreadCompanion,
   ThreadSettings,
-} from '../../components';
+} from '../../containers';
 import { meta } from '../../meta';
 import { Channel, ThreadCapabilities, type ThreadSettingsProps } from '../../types';
 

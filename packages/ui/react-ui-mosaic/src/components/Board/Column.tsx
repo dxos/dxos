@@ -56,7 +56,7 @@ const BoardColumnRootInner = forwardRef<HTMLDivElement, PropsWithChildren<BoardC
         <Focus.Group
           classNames={mx(
             // NOTE: Reserves 2px for outer Focus.Group border.
-            'bs-full overflow-hidden is-[calc(100vw-2px)] md:is-card-default-width snap-center bg-deckSurface',
+            'h-full overflow-hidden w-[calc(100vw-2px)] md:w-card-default-width snap-center bg-deck-surface',
             classNames,
           )}
           ref={forwardedRef}
@@ -97,7 +97,7 @@ const BOARD_COLUMN_GRID_NAME = 'Board.Column.Grid';
 type BoardColumnGridProps = ThemedClassName<PropsWithChildren>;
 
 const BoardColumnGrid = ({ classNames, children }: BoardColumnGridProps) => (
-  <div role='none' data-testid='board-column' className={mx('group/column grid bs-full overflow-hidden', classNames)}>
+  <div role='none' data-testid='board-column' className={mx('group/column grid h-full overflow-hidden', classNames)}>
     {children}
   </div>
 );
@@ -116,7 +116,7 @@ const BoardColumnHeader = forwardRef<HTMLDivElement, BoardColumnHeaderProps>(
   ({ classNames, label, dragHandleRef }, forwardedRef) => {
     return (
       <Card.Toolbar
-        classNames={mx('border-be border-separator', classNames)}
+        classNames={mx('border-b border-separator', classNames)}
         data-testid='board-column-header'
         ref={forwardedRef}
       >
@@ -203,7 +203,7 @@ const BoardColumnFooter = forwardRef<HTMLDivElement, BoardColumnFooterProps>(
     const handleAdd = onAdd ?? (model.onItemCreate && data ? () => void model.onItemCreate?.(data) : undefined);
 
     return (
-      <Toolbar.Root classNames={mx('rounded-b-sm border-bs border-separator', classNames)} ref={forwardedRef}>
+      <Toolbar.Root classNames={mx('rounded-b-sm border-t border-separator', classNames)} ref={forwardedRef}>
         {handleAdd && (
           <IconButton
             data-testid='board-column-add-item'

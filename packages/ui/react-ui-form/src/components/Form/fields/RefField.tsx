@@ -13,7 +13,7 @@ import { findAnnotation } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { DxAnchor } from '@dxos/lit-ui/react';
 import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
-import { descriptionText, mx } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../../translations';
 import { ObjectPicker, type ObjectPickerContentProps, type RefOption } from '../../ObjectPicker';
@@ -143,9 +143,9 @@ export const RefField = (props: RefFieldProps) => {
       <div>
         {readonly ? (
           !item ? (
-            <p className={mx(descriptionText, 'mbe-2')}>{t('empty readonly ref field label')}</p>
+            <p className={mx('text-description', 'mb-2')}>{t('empty readonly ref field label')}</p>
           ) : (
-            <DxAnchor key={item.id} dxn={item.id} rootclassname='mie-1'>
+            <DxAnchor key={item.id} dxn={item.id} rootclassname='me-1'>
               {item.label}
             </DxAnchor>
           )
@@ -153,13 +153,13 @@ export const RefField = (props: RefFieldProps) => {
           <ObjectPicker.Root>
             <ObjectPicker.Trigger asChild classNames='p-0'>
               {item ? (
-                <div className='flex gap-2 is-full'>
+                <div className='flex gap-2 w-full'>
                   <Input.Root key={item.id}>
-                    <Input.TextInput value={item.label} readOnly classNames='is-full' />
+                    <Input.TextInput value={item.label} readOnly classNames='w-full' />
                   </Input.Root>
                 </div>
               ) : (
-                <Button classNames='is-full text-start gap-2'>
+                <Button classNames='w-full text-start gap-2'>
                   <div role='none' className='grow overflow-hidden'>
                     <span className='flex truncate text-description'>{placeholder ?? t('ref field placeholder')}</span>
                   </div>

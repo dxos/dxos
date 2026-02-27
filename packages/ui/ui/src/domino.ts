@@ -16,6 +16,18 @@ export class Domino<T extends HTMLElement | SVGElement> {
 
   static icon = (icon: string) => ICONS_URL + '#' + icon;
 
+  /**
+   * Creates an SVG icon element from the icon sprite sheet.
+   */
+  static svg = (icon: string) =>
+    Domino.of('svg', Domino.SVG)
+      .classNames('shrink-0 h-[1em] w-[1em]')
+      .attributes({ viewBox: '0 0 256 256' })
+      .children(Domino.of('use', Domino.SVG).attributes({ href: Domino.icon(icon) }));
+
+  /**
+   * Create builder from DOM node.
+   */
   static of<K extends keyof HTMLElementTagNameMap>(tag: K): Domino<HTMLElementTagNameMap[K]>;
   static of<K extends keyof SVGElementTagNameMap>(tag: K, namespace: string): Domino<SVGElementTagNameMap[K]>;
   static of(tag: string, namespace?: string): Domino<HTMLElement | SVGElement> {

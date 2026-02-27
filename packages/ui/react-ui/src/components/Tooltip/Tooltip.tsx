@@ -3,6 +3,7 @@
 //
 
 // This is based upon `@radix-ui/react-tooltip` fetched 17 March 2025 at https://github.com/radix-ui/primitives at commit 6e75e11.
+// TODO(burdon): Replace with https://ui.shadcn.com/docs/components/radix/tooltip
 
 import { composeEventHandlers } from '@radix-ui/primitive';
 import { useComposedRefs } from '@radix-ui/react-compose-refs';

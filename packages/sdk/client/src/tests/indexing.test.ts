@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import isEqual from 'lodash.isequal';
+import isEqual from 'fast-deep-equal';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, TriggerState, asyncTimeout } from '@dxos/async';

@@ -409,9 +409,6 @@
       "path": "packages/plugins/plugin-theme/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-theme-editor/tsconfig.json"
-    },
-    {
       "path": "packages/plugins/plugin-thread/tsconfig.json"
     },
     {
@@ -485,9 +482,6 @@
     },
     {
       "path": "packages/ui/lit-grid/tsconfig.json"
-    },
-    {
-      "path": "packages/ui/lit-theme-editor/tsconfig.json"
     },
     {
       "path": "packages/ui/lit-ui/tsconfig.json"

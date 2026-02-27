@@ -1,5 +1,6 @@
 {
   "enabledPlugins": {
-    "planning-with-files@planning-with-files": true
+    "superpowers@claude-plugins-official": true,
+    "context7@claude-plugins-official": true
   }
 }

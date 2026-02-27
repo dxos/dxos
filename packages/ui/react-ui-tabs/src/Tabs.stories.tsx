@@ -36,7 +36,7 @@ export const DefaultStory = () => {
                       <Icon icon='ph--arrow-left--bold' size={4} />
                       <span>Back to tab list</span>
                     </NaturalTabs.BackButton>
-                    <p className='pli-1'>{panel}</p>
+                    <p className='px-1'>{panel}</p>
                   </NaturalTabs.Tabpanel>
                 );
               })}

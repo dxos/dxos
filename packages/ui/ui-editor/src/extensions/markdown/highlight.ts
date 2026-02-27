@@ -9,6 +9,12 @@ import { type MarkdownConfig, Table } from '@lezer/markdown';
 
 import { fontBody, markdownTheme } from '../../styles';
 
+const styles = {
+  code: 'font-mono no-underline! text-cm-code',
+  codeMark: 'font-mono text-cm-code-mark',
+  mark: 'opacity-50',
+};
+
 /**
  * Custom tags defined and processed by the GFM lezer extension.
  * https://github.com/lezer-parser/markdown
@@ -114,7 +120,7 @@ export const markdownHighlightStyle = (_options: HighlightOptions = {}) => {
           markdownTags.LinkReference,
           markdownTags.ListMark,
         ],
-        class: markdownTheme.mark,
+        class: styles.mark,
       },
 
       // Markdown marks.
@@ -126,7 +132,7 @@ export const markdownHighlightStyle = (_options: HighlightOptions = {}) => {
           markdownTags.QuoteMark,
           markdownTags.EmphasisMark,
         ],
-        class: markdownTheme.mark,
+        class: styles.mark,
       },
 
       // E.g., code block language (after ```).
@@ -136,7 +142,7 @@ export const markdownHighlightStyle = (_options: HighlightOptions = {}) => {
           tags.function(tags.variableName),
           tags.labelName,
         ],
-        class: markdownTheme.codeMark,
+        class: styles.codeMark,
       },
 
       // Fonts.
@@ -145,13 +151,21 @@ export const markdownHighlightStyle = (_options: HighlightOptions = {}) => {
         class: 'font-mono',
       },
 
-      // Headings.
-      { tag: tags.heading1, class: markdownTheme.heading(1) },
-      { tag: tags.heading2, class: markdownTheme.heading(2) },
-      { tag: tags.heading3, class: markdownTheme.heading(3) },
-      { tag: tags.heading4, class: markdownTheme.heading(4) },
-      { tag: tags.heading5, class: markdownTheme.heading(5) },
-      { tag: tags.heading6, class: markdownTheme.heading(6) },
+      // Headings — use CSS properties only (no class:) so CodeMirror generates scoped CSS via
+      // StyleModule that overrides vscodeDarkStyle's t.heading rule. When class: is present,
+      // HighlightStyle silently ignores all other CSS properties (they're mutually exclusive).
+      // Font sizes use Tailwind v4 CSS variables so nothing is hardcoded.
+      {
+        tag: tags.heading,
+        color: 'var(--color-cm-heading) !important',
+        fontWeight: '300',
+      },
+      { tag: tags.heading1, ...markdownTheme.heading(1) },
+      { tag: tags.heading2, ...markdownTheme.heading(2) },
+      { tag: tags.heading3, ...markdownTheme.heading(3) },
+      { tag: tags.heading4, ...markdownTheme.heading(4) },
+      { tag: tags.heading5, ...markdownTheme.heading(5) },
+      { tag: tags.heading6, ...markdownTheme.heading(6) },
 
       // Emphasis.
       { tag: tags.emphasis, class: 'italic' },
@@ -165,7 +179,7 @@ export const markdownHighlightStyle = (_options: HighlightOptions = {}) => {
       // IMPORTANT: Therefore, the fenced code block will use the base editor font unless changed by an extension.
       {
         tag: [markdownTags.CodeText, markdownTags.InlineCode],
-        class: markdownTheme.code,
+        class: styles.code,
       },
 
       {

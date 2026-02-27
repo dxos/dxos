@@ -128,13 +128,13 @@ export const SelectOptionField = ({
             readonly={!!readonly}
           >
             {({ items }) => (
-              <div role='list' className='is-full overflow-auto'>
+              <div role='list' className='w-full overflow-auto'>
                 {items?.map((item) => (
                   <div key={item.id}>
                     <List.Item
                       role='button'
                       item={item}
-                      classNames={[subtleHover, 'flex flex-col cursor-pointer rounded-sm']}
+                      classNames={[subtleHover, 'flex flex-col cursor-pointer rounded-xs']}
                       aria-expanded={selected === item.id}
                     >
                       <div className='flex items-center'>
@@ -185,7 +185,7 @@ export const SelectOptionField = ({
                   label={t('select option add')}
                   onClick={handleAdd}
                   disabled={!!readonly}
-                  classNames='is-full'
+                  classNames='w-full'
                 />
               </div>
             )}

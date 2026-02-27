@@ -43,7 +43,7 @@ const registry = {
         return () => clearInterval(interval);
       }, []);
 
-      return <div className='p-2 border border-separator rounded'>Test {count}</div>;
+      return <div className='p-2 border border-separator rounded-sm'>Test {count}</div>;
     },
   },
 } satisfies XmlWidgetRegistry;
@@ -64,7 +64,7 @@ const DefaultStory = ({ text }: { text?: string }) => {
 
   return (
     <>
-      <div ref={parentRef} className='is-full p-4' />
+      <div ref={parentRef} className='w-full p-4' />
       {widgets.map(({ id, root, Component, props }) => (
         <div key={id}>{createPortal(<Component {...props} />, root)}</div>
       ))}

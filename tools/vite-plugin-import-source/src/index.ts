@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import Minimatch from 'minimatch';
+import { minimatch as Minimatch } from 'minimatch';
 import { ResolverFactory } from 'oxc-resolver';
 import { type Plugin, type ResolvedConfig } from 'vite';
 
@@ -78,6 +78,10 @@ const PluginImportSource = ({
 
           if (resolved.error || !resolved.path) {
             return null;
+          }
+
+          if (resolved.packageJsonPath) {
+            this.addWatchFile(resolved.packageJsonPath);
           }
 
           this.addWatchFile(resolved.path);

@@ -13,7 +13,7 @@ import { type Size } from '../defs';
 export type ImageLoadingStatus = 'idle' | 'loading' | 'loaded' | 'error';
 
 export type AvatarVariant = 'square' | 'circle';
-export type AvatarStatus = 'active' | 'inactive' | 'current' | 'error' | 'warning' | 'internal';
+export type AvatarStatus = 'active' | 'inactive' | 'current' | 'internal' | 'error' | 'warning';
 export type AvatarAnimation = 'pulse' | 'none';
 
 const rx = '0.125rem';
@@ -118,11 +118,13 @@ export class DxAvatar extends LitElement {
         ? 'transparent'
         : this.hue
           ? this.hueVariant === 'surface'
-            ? `var(--dx-${this.hue}Surface)`
-            : `var(--dx-${this.hue === 'neutral' ? 'inputSurface' : `${this.hue}Fill`})`
+            ? `var(--color-${this.hue}-surface)`
+            : `var(--color-${this.hue === 'neutral' ? 'input-surface' : `${this.hue}-fill`})`
           : 'var(--surface-bg)';
     const fg =
-      this.hue && this.hueVariant === 'surface' ? `var(--dx-${this.hue}SurfaceText)` : 'var(--dx-accentSurfaceText)';
+      this.hue && this.hueVariant === 'surface'
+        ? `var(--color-${this.hue}-surface-text)`
+        : 'var(--color-accent-surface-text)';
 
     return html`<span
       role="none"

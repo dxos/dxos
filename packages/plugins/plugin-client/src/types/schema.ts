@@ -202,9 +202,14 @@ export namespace ClientOperation {
 
 export type ClientPluginOptions = ClientOptions & {
   /**
-   * Base URL for the invitation link.
+   * Base origin for the invitation link.
    */
-  invitationUrl?: string;
+  shareableLinkOrigin?: string;
+
+  /**
+   * Path for the invitation link.
+   */
+  invitationPath?: string;
 
   /**
    * Query parameter for the invitation code.

@@ -157,7 +157,7 @@ const ComboboxContent = forwardRef<HTMLDivElement, ComboboxContentProps>(
           forceMount,
         }}
         classNames={[
-          'is-[--radix-popover-trigger-width] max-bs-[--radix-popover-content-available-height] grid grid-rows-[min-content_1fr]',
+          'w-(--radix-popover-trigger-width) max-h-(--radix-popover-content-available-height) grid grid-rows-[min-content_1fr]',
           classNames,
         ]}
         id={modalId}
@@ -204,7 +204,7 @@ const ComboboxTrigger = forwardRef<HTMLButtonElement, ComboboxTriggerProps>(
           {children ?? (
             <>
               <span
-                className={mx('font-normal text-start flex-1 min-is-0 truncate mie-2', !value && staticPlaceholderText)}
+                className={mx('font-normal text-start flex-1 min-w-0 truncate me-2', !value && staticPlaceholderText)}
               >
                 {value || placeholder}
               </span>
@@ -237,7 +237,7 @@ const ComboboxInput = forwardRef<HTMLInputElement, ComboboxInputProps>(({ classN
   return (
     <SearchList.Input
       {...props}
-      classNames={['m-cardChrome mbe-0 is-[calc(100%-2*var(--dx-cardChrome))]', classNames]}
+      classNames={['m-card-chrome mb-0 w-[calc(100%-2*var(--spacing-card-chrome))]', classNames]}
       ref={forwardedRef}
     />
   );
@@ -250,7 +250,7 @@ const ComboboxInput = forwardRef<HTMLInputElement, ComboboxInputProps>(({ classN
 type ComboboxListProps = SearchListViewportProps;
 
 const ComboboxList = forwardRef<HTMLDivElement, ComboboxListProps>(({ classNames, ...props }, forwardedRef) => {
-  return <SearchList.Viewport {...props} classNames={['plb-cardChrome', classNames]} ref={forwardedRef} />;
+  return <SearchList.Viewport {...props} classNames={['py-card-chrome', classNames]} ref={forwardedRef} />;
 });
 
 //
@@ -279,7 +279,7 @@ const ComboboxItem = forwardRef<HTMLDivElement, ComboboxItemProps>(
       <SearchList.Item
         {...props}
         value={value}
-        classNames={['mli-cardChrome pli-cardChrome', classNames]}
+        classNames={['mx-card-chrome px-card-chrome', classNames]}
         onSelect={handleSelect}
         ref={forwardedRef}
       />

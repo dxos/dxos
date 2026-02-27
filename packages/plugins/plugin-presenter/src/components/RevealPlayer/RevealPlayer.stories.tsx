@@ -4,7 +4,7 @@
 
 import { type Meta } from '@storybook/react-vite';
 
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import CONTENT from '../../../testing/deck.md?raw';
 import { translations } from '../../translations';
@@ -22,7 +22,7 @@ import { RevealPlayer } from './RevealPlayer';
 const meta = {
   title: 'plugins/plugin-presenter/RevealPlayer',
   component: RevealPlayer,
-  decorators: [withTheme()],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
     translations,

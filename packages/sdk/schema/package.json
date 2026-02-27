@@ -54,17 +54,14 @@
     "@dxos/random": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
-    "@effect/schema": "catalog:",
     "date-fns": "catalog:",
-    "effect": "catalog:",
-    "jsonpath": "catalog:"
+    "effect": "catalog:"
   },
   "devDependencies": {
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@types/jsonpath": "catalog:",
     "fast-check": "catalog:",
     "vite": "catalog:"
   },

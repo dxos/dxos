@@ -43,7 +43,6 @@
     "@dxos/config": "workspace:*",
     "@dxos/esbuild-plugins": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
-    "@sentry/vite-plugin": "catalog:",
     "@types/chrome": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

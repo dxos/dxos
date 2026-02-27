@@ -15,6 +15,7 @@ tasks:
       - '--entryPoint=src/Annotation.ts'
       - '--entryPoint=src/Database.ts'
       - '--entryPoint=src/Err.ts'
+      - '--entryPoint=src/Feed.ts'
       - '--entryPoint=src/Filter.ts'
       - '--entryPoint=src/Format.ts'
       - '--entryPoint=src/Relation.ts'

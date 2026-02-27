@@ -42,18 +42,25 @@ export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
     activatesBefore: [ClientEvents.SetupMigration],
     activate: Migrations,
   }),
-  Plugin.addModule(({ invitationUrl = window.location.origin, invitationProp = 'deviceInvitationCode', onReset }) => {
-    const createInvitationUrl = (invitationCode: string) => {
-      const baseUrl = new URL(invitationUrl);
-      baseUrl.searchParams.set(invitationProp, invitationCode);
-      return baseUrl.toString();
-    };
+  Plugin.addModule(
+    ({
+      shareableLinkOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost',
+      invitationPath = '/',
+      invitationProp = 'deviceInvitationCode',
+      onReset,
+    }) => {
+      const createInvitationUrl = (invitationCode: string) => {
+        const baseUrl = new URL(invitationPath || '/', shareableLinkOrigin);
+        baseUrl.searchParams.set(invitationProp, invitationCode);
+        return baseUrl.toString();
+      };
 
-    return {
-      id: Capability.getModuleTag(ReactSurface),
-      activatesOn: ActivationEvents.SetupReactSurface,
-      activate: () => ReactSurface({ createInvitationUrl, onReset }),
-    };
-  }),
+      return {
+        id: Capability.getModuleTag(ReactSurface),
+        activatesOn: ActivationEvents.SetupReactSurface,
+        activate: () => ReactSurface({ createInvitationUrl, onReset }),
+      };
+    },
+  ),
   Plugin.make,
 );

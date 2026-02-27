@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useRef, useState } from 'react';
 
 import { faker } from '@dxos/random';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Card } from '@dxos/react-ui-mosaic';
 import { translations as stackTranslations } from '@dxos/react-ui-stack';
 
@@ -75,7 +75,7 @@ const DefaultStory = ({ layout: _layout, items: _items, grid, ...props }: StoryP
       onMove={handleMove}
       ref={controller}
     >
-      <Board.Toolbar classNames='absolute top-3 left-3 z-10 min-bs-0 !is-auto' />
+      <Board.Toolbar classNames='absolute top-3 left-3 z-10 min-h-0 w-auto!' />
       <Board.Container>
         <Board.Viewport>
           <Board.Backdrop />
@@ -97,7 +97,7 @@ const DefaultStory = ({ layout: _layout, items: _items, grid, ...props }: StoryP
 const meta = {
   title: 'ui/react-ui-board/Board',
   render: DefaultStory,
-  decorators: [withTheme()],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
     translations: [...translations, ...stackTranslations],

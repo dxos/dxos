@@ -40,7 +40,7 @@ export const CommentsContainer = ({ anchors, currentId, showResolvedThreads, ...
 
   if (filteredAnchors.length === 0) {
     return (
-      <div role='none' className='p-cardPadding'>
+      <div role='none' className='p-card-padding'>
         <Message.Root>
           <Message.Title>
             <Trans
@@ -48,7 +48,7 @@ export const CommentsContainer = ({ anchors, currentId, showResolvedThreads, ...
                 t,
                 i18nKey: 'no comments message',
                 components: {
-                  commentIcon: <Icon icon='ph--chat-text--regular' size={4} classNames='inline-block' />,
+                  commentIcon: <Icon icon='ph--chat-text--regular' size={4} classNames='w-block' />,
                 },
               }}
             />

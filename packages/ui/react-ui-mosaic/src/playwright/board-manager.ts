@@ -49,12 +49,22 @@ export class ColumnManager {
 
   async dragTo(target: Locator, offset = { x: 0, y: 0 }): Promise<void> {
     const handle = this.header().getByTestId('card-drag-handle');
+    const handleBox = await handle.boundingBox();
+    if (!handleBox) {
+      return;
+    }
+
+    await handle.hover();
+    await this._page.mouse.down();
+    // Small initial movement to trigger the native drag start.
+    await this._page.mouse.move(handleBox.x + handleBox.width / 2 + 1, handleBox.y + handleBox.height / 2, {
+      steps: 1,
+    });
+    // Allow the drag monitor to register and the DOM to settle
+    // (the dragged column is removed from visible items, shifting remaining columns).
+    await this._page.waitForTimeout(200);
     const box = await target.boundingBox();
     if (box) {
-      await handle.hover();
-      await this._page.mouse.down();
-      // Allow the drag monitor to register the grab before moving.
-      await this._page.waitForTimeout(100);
       await this._page.mouse.move(offset.x + box.x + box.width / 2, offset.y + box.y + box.height / 2, { steps: 4 });
       // Allow the drop target to process the hover before releasing.
       await this._page.waitForTimeout(100);

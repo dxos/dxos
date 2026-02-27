@@ -64,7 +64,7 @@ export const ColumnSettings = ({ registry, model, modals, onNewColumn }: ColumnS
     <Popover.Root modal={false} open={state?.type === 'columnSettings'}>
       <Popover.VirtualTrigger virtualRef={modals.trigger} />
       <Popover.Portal>
-        <Popover.Content classNames='md:is-64'>
+        <Popover.Content classNames='md:w-64'>
           <Popover.Viewport>
             <FieldEditor
               projection={model.projection}

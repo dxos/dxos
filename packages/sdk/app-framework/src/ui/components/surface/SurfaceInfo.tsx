@@ -76,7 +76,7 @@ export const SurfaceInfo = forwardRef<HTMLElement, SurfaceInfoProps>(({ children
           >
             {expand ? (
               <div
-                className='absolute inset-0 bg-deckSurface border border-green-500 cursor-pointer pointer-events-auto overflow-auto'
+                className='absolute inset-0 bg-deck-surface border border-green-500 cursor-pointer pointer-events-auto overflow-auto'
                 onPointerDown={(ev) => ev.stopPropagation()}
                 onClick={(ev) => {
                   ev.stopPropagation();

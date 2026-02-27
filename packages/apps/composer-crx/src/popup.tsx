@@ -16,7 +16,7 @@ import { Chat, type ChatProps, Container, ErrorBoundary, Thumbnail } from './com
 import { THUMBNAIL_PROP, getConfig } from './config';
 
 // NOTE: Keep in sync with popup.html initial layout.
-const rootClasses = 'flex flex-col is-[500px] opacity-0 [animation:popup-fade-in_0.5s_ease-out_forwards]';
+const rootClasses = 'flex flex-col w-[500px] opacity-0 [animation:popup-fade-in_0.5s_ease-out_forwards]';
 
 /**
  * Root component.

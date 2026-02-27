@@ -20,8 +20,8 @@ export const DECK_COMPANION_TYPE = `${meta.id}/deck-companion`;
 export const NewPlankPositions = ['start', 'end'] as const;
 export type NewPlankPositioning = (typeof NewPlankPositions)[number];
 
-export const OverscrollOptions = ['none', 'centering'] as const;
-export type Overscroll = (typeof OverscrollOptions)[number];
+export const OverScrollToProps = ['none', 'centering'] as const;
+export type Overscroll = (typeof OverScrollToProps)[number];
 
 export type Part = 'solo' | 'deck' | 'complementary';
 export type ResolvedPart = Part | 'solo-primary' | 'solo-companion';
@@ -32,7 +32,7 @@ export const DeckSettingsSchema = Schema.Struct({
   enableStatusbar: Schema.optional(Schema.Boolean),
   enableNativeRedirect: Schema.optional(Schema.Boolean),
   newPlankPositioning: Schema.optional(Schema.Literal(...NewPlankPositions)),
-  overscroll: Schema.optional(Schema.Literal(...OverscrollOptions)),
+  overscroll: Schema.optional(Schema.Literal(...OverScrollToProps)),
   // TODO(burdon): Rename layoutMode? (e.g., bento | encapsulated?)
   encapsulatedPlanks: Schema.optional(Schema.Boolean),
 }).pipe(Schema.mutable);

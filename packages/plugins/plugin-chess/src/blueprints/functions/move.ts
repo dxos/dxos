@@ -30,18 +30,18 @@ export default defineFunction({
     }),
   }),
   handler: Effect.fn(function* ({ data: { game, move } }) {
-    const object = yield* Database.load(game);
+    const obj = yield* Database.load(game);
     const chess = new ChessJS();
-    if (object.pgn) {
-      chess.loadPgn(object.pgn);
-    } else if (object.fen) {
-      chess.load(object.fen);
+    if (obj.pgn) {
+      chess.loadPgn(obj.pgn);
+    } else if (obj.fen) {
+      chess.load(obj.fen);
     }
 
     chess.move(move, { strict: false });
     const pgn = chess.pgn();
-    Obj.change(object, (o) => {
-      o.pgn = pgn;
+    Obj.change(obj, (obj) => {
+      obj.pgn = pgn;
     });
     return { pgn };
   }),

@@ -162,7 +162,7 @@ const extractLastTextBlock = (result: Message.Message[]) => {
       Function.flow(
         (_: Message.Message) => _.blocks,
         Array.reverse,
-        Array.dropWhile((_: any) => _._tag === 'summary'),
+        Array.dropWhile((_: any) => _._tag === 'stats'),
         Array.takeWhile((_: any) => _._tag === 'text'),
         Array.reverse,
         Array.map((_: any) => _.text),

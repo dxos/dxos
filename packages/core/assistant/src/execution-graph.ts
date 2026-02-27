@@ -412,7 +412,7 @@ const createBlockCommit = (
         message: block.error ? 'Tool error: ' + block.error : 'Tool call succeeded',
       } satisfies Commit;
 
-    case 'summary':
+    case 'stats':
       return {
         id: getGenericBlockId(message.id, idx),
         branch,
@@ -420,7 +420,7 @@ const createBlockCommit = (
         timestamp,
         icon: IconType.ROCKET,
         level: LogLevel.INFO,
-        message: ContentBlock.createSummaryMessage(block),
+        message: ContentBlock.createStatsMessage(block),
       } satisfies Commit;
 
     case 'status':

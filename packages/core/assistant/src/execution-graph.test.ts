@@ -619,7 +619,7 @@ describe('ExecutionGraph', () => {
           { _tag: 'reasoning', reasoningText: 'I need to think about this' },
           { _tag: 'toolCall', toolCallId: 'tool1', name: 'analyze', input: '{}', providerExecuted: false },
           {
-            _tag: 'summary',
+            _tag: 'stats',
             message: 'OK',
             duration: 1000,
             toolCalls: 1,

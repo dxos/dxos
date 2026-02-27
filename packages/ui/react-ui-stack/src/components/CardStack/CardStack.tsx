@@ -42,7 +42,7 @@ const CardStackRoot = forwardRef<HTMLDivElement, SharedCardStackProps>(
 // TODO(burdon): Rename Viewport (should be the component that scrolls).
 //
 
-const cardStackContent = 'shrink min-bs-0 grid dx-focus-ring-group-x-indicator bg-baseSurface';
+const cardStackContent = 'shrink min-h-0 grid dx-focus-ring-group-x-indicator bg-base-surface';
 
 type CardStackContentProps = SharedCardStackProps & {
   footer?: boolean;
@@ -85,7 +85,7 @@ const CardStackStack = forwardRef<
       rail={false}
       classNames={
         /* NOTE(thure): Do not let this element have zero intrinsic size, otherwise the drop indicator will not display. See #9035. */
-        ['plb-2', classNames]
+        ['py-2', classNames]
       }
       itemsCount={itemsCount}
       separatorOnScroll={9}
@@ -102,7 +102,7 @@ const CardStackStack = forwardRef<
 // Item
 //
 
-const cardStackItem = 'contain-layout pli-2 plb-1 first-of-type:pbs-0 last-of-type:pbe-0';
+const cardStackItem = 'contain-layout px-2 py-1 first-of-type:pt-0 last-of-type:pb-0';
 
 const CardStackItem = forwardRef<HTMLDivElement, SharedCardStackProps>(
   ({ children, classNames, asChild, role = 'none', ...props }, forwardedRef) => {
@@ -123,7 +123,7 @@ const CardStackItem = forwardRef<HTMLDivElement, SharedCardStackProps>(
 // Heading
 //
 
-const cardStackHeading = 'mli-2 order-first bg-transparent rounded-bs-md flex items-center';
+const cardStackHeading = 'mx-2 order-first bg-transparent rounded-h-md flex items-center';
 
 const CardStackHeading = forwardRef<HTMLDivElement, SharedCardStackProps>(
   ({ children, classNames, asChild, role = 'heading', ...props }, forwardedRef) => {
@@ -145,7 +145,7 @@ const CardStackHeading = forwardRef<HTMLDivElement, SharedCardStackProps>(
 //
 
 const cardStackFooter =
-  'plb-2 mli-2 border-bs border-transparent [[data-scroll-separator-end="true"]_&]:border-subduedSeparator';
+  'py-2 mx-2 border-t border-transparent [[data-scroll-separator-end="true"]_&]:border-subdued-separator';
 
 const CardStackFooter = forwardRef<HTMLDivElement, SharedCardStackProps>(
   ({ children, classNames, asChild, role = 'none', ...props }, forwardedRef) => {

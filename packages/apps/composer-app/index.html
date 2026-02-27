@@ -25,32 +25,33 @@
 
     <link rel="manifest" href="/site.webmanifest" />
 
-    <style>
-      @layer dx-tokens, user-tokens, tw-base, dx-base, tw-components, dx-components, utilities;
-    </style>
-
     <!-- TODO(wittjosiah): Add hash/nonce and remove unsafe-inline from content security policy. -->
     <!-- TODO(nf): Blob in worker-src needed for Sentry replay. -->
 
-    <!-- Add theme mode at root (before code runs.) -->
+    <!-- Add theme mode to body (before code runs.) -->
     <script>
-      function setTheme(darkMode) {
-        document.documentElement.classList[darkMode ? 'add' : 'remove']('dark');
+      var __dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      function setTheme(dark) {
+        __dark = dark;
+        if (document.body) {
+          document.body.classList[dark ? 'add' : 'remove']('dark');
+        }
       }
-      setTheme(window.matchMedia('(prefers-color-scheme: dark)').matches);
+      document.addEventListener('DOMContentLoaded', function () { setTheme(__dark); });
       window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function (event) {
         setTheme(event.matches);
       });
     </script>
+
     <style>
       html {
         font-size: 18px;
-        /* Hardcoded to match --dx-baseSurface (neutral 0 in light, neutral 855 in dark) before CSS loads. */
+        /* Hardcoded to match --color-base-surface (neutral 0 in light, neutral 855 in dark) before CSS loads. */
         background-color: color(display-p3 1 1 1);
       }
       @media (prefers-color-scheme: dark) {
         html {
-          /* Hardcoded to match --dx-baseSurface (neutral 0 in light, neutral 855 in dark) before CSS loads. */
+          /* Hardcoded to match --color-base-surface (neutral 0 in light, neutral 855 in dark) before CSS loads. */
           background-color: color(display-p3 0.04142 0.03847 0.03926);
         }
       }

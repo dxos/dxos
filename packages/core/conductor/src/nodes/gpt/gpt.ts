@@ -132,9 +132,7 @@ export const gptNode = defineComputeNode({
 
     log.info('generating', { systemPrompt, prompt, historyMessages, tools });
 
-    const session = new AiSession({
-      operationModel: 'configured',
-    });
+    const session = new AiSession();
 
     const tokenPubSub = yield* PubSub.unbounded<Response.StreamPart<any>>();
     const observer = GenerationObserver.make({

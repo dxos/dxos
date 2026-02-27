@@ -9,7 +9,7 @@ import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } 
 
 import { type Graph, type GraphModel, SelectionModel } from '@dxos/graph';
 import { IconButton, Popover, Toolbar } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Card } from '@dxos/react-ui-mosaic';
 import { JsonFilter, SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withRegistry } from '@dxos/storybook-utils';
@@ -206,7 +206,7 @@ const DefaultStory = ({
 
   return (
     <Popover.Root open={!!popover} onOpenChange={(state) => !state && setPopover(undefined)}>
-      <div className={mx('bs-full is-full grid divide-x divide-separator', debug && 'grid-cols-[1fr_30rem]')}>
+      <div className={mx('h-full w-full grid divide-x divide-separator', debug && 'grid-cols-[1fr_30rem]')}>
         <SVG.Root ref={context}>
           <SVG.Markers />
           {grid && <SVG.Grid {...(typeof grid === 'boolean' ? { axis: grid } : grid)} />}
@@ -263,7 +263,7 @@ const DefaultStory = ({
           <Card.Root>
             <SyntaxHighlighter
               language='json'
-              classNames='text-xs mlb-cardPadding pli-cardPadding bg-transparent'
+              classNames='text-xs my-card-padding px-card-padding bg-transparent'
               code={JSON.stringify(popover, null, 2)}
             />
           </Card.Root>
@@ -328,7 +328,7 @@ const Debug = ({
 const meta = {
   title: 'ui/react-ui-graph/Graph',
   render: DefaultStory,
-  decorators: [withRegistry, withTheme()],
+  decorators: [withRegistry, withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
     controls: { disable: true },

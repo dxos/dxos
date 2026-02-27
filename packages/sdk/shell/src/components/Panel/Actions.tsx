@@ -19,7 +19,7 @@ const Actions = forwardRef<HTMLDivElement, ActionsProps>(({ classNames, children
     <div
       {...props}
       className={mx(
-        'flex flex-col gap-2 mbs-2',
+        'flex flex-col gap-2 mt-2',
         Array.isArray(children) && children.length > 1 ? 'justify-between' : 'justify-center',
         classNames,
       )}

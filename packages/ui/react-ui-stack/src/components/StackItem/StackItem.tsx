@@ -143,7 +143,7 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
           onDragStart: () => {
             document.body.removeAttribute('data-drag-preview');
             itemElement?.closest('[data-drag-autoscroll]')?.setAttribute('data-drag-autoscroll', 'active');
-            setDragState({ type: 'is-dragging', item });
+            setDragState({ type: 'w-dragging', item });
           },
           onDrop: () => {
             itemElement?.closest('[data-drag-autoscroll]')?.setAttribute('data-drag-autoscroll', 'idle');
@@ -247,7 +247,7 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
                     : 'dx-focus-ring-group-y',
             orientation === 'horizontal' ? 'grid-rows-subgrid' : 'grid-cols-subgrid',
             rail && (orientation === 'horizontal' ? 'row-span-2' : 'col-span-2'),
-            role === 'section' && orientation !== 'horizontal' && 'border-be border-subduedSeparator',
+            role === 'section' && orientation !== 'horizontal' && 'border-b border-subdued-separator',
             classNames,
           )}
           data-dx-stack-item={stackId}

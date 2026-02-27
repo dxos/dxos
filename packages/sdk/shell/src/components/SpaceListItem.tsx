@@ -17,7 +17,7 @@ export const SpaceListItem = forwardRef(
 
     return (
       <li
-        className={mx('flex gap-2 items-center mbe-2', onClick && 'cursor-pointer')}
+        className={mx('flex gap-2 items-center mb-2', onClick && 'cursor-pointer')}
         onClick={() => onClick?.()}
         ref={ref}
         data-testid='space-list-item'

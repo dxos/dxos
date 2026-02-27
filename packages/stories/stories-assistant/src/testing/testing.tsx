@@ -54,16 +54,12 @@ export const config = {
         storage: {
           persistent: true,
         },
-        enableLocalQueues: true,
       },
       services: SERVICES_CONFIG.REMOTE,
     },
   }),
   local: new Config({
     runtime: {
-      client: {
-        enableLocalQueues: true,
-      },
       services: SERVICES_CONFIG.LOCAL,
     },
   }),

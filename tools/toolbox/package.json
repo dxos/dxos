@@ -30,14 +30,12 @@
     "console-table-printer": "catalog:",
     "deep-equal": "catalog:",
     "lodash.defaultsdeep": "catalog:",
-    "lodash.pick": "catalog:",
     "lodash.sortby": "catalog:",
     "sort-package-json": "catalog:"
   },
   "devDependencies": {
     "@types/deep-equal": "catalog:",
     "@types/lodash.defaultsdeep": "catalog:",
-    "@types/lodash.pick": "catalog:",
     "@types/lodash.sortby": "catalog:"
   },
   "executors": "./executors.json"

@@ -8,7 +8,7 @@ import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { createKvsStore } from '@dxos/effect';
 
-import { ObservabilitySettingsSchema } from '../../components';
+import { ObservabilitySettingsSchema } from '../../containers';
 import { meta } from '../../meta';
 import { ObservabilityCapabilities } from '../../types';
 

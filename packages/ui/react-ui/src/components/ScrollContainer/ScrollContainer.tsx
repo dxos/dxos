@@ -126,20 +126,20 @@ const Root = forwardRef<ScrollController, RootProps>(
 
     return (
       <ScrollContainerProvider pinned={pinned} controller={controller} scrollToBottom={scrollToBottom}>
-        <div className='relative grid flex-1 min-bs-0 overflow-hidden'>
+        <div className='relative grid flex-1 min-h-0 overflow-hidden'>
           {fade && (
             <div
               role='none'
               data-visible={overflow}
               className={mx(
                 // NOTE: Gradients may not be visible with dark reader extensions.
-                'z-10 absolute block-start-0 inset-inline-0 bs-24 is-full',
+                'z-10 absolute top-0 inset-x-0 h-24 w-full',
                 'opacity-0 duration-200 transition-opacity data-[visible="true"]:opacity-100',
-                'bg-gradient-to-b from-[--surface-bg] to-transparent pointer-events-none',
+                'bg-gradient-to-b from-(--surface-bg) to-transparent pointer-events-none',
               )}
             />
           )}
-          <ScrollArea.Root classNames={mx('min-bs-0', classNames)} thin>
+          <ScrollArea.Root classNames={mx('min-h-0', classNames)} thin>
             <ScrollArea.Viewport ref={scrollerRef}>{children}</ScrollArea.Viewport>
           </ScrollArea.Root>
         </div>
@@ -177,7 +177,7 @@ const Viewport = forwardRef<HTMLDivElement, ViewportProps>(({ classNames, childr
   }, [pinned, scrollToBottom]);
 
   return (
-    <div className={mx('is-full', classNames)} {...props} ref={contentRef}>
+    <div className={mx('w-full', classNames)} {...props} ref={contentRef}>
       {children}
     </div>
   );

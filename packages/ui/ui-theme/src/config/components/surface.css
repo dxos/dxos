@@ -1,0 +1,29 @@
+/**
+ * Surfaces
+ */
+
+/* TODO(burdon): Prefix component classes with dx- */
+
+@layer dx-components {
+  /* If an element should apply attention-related color tokens, it should use this class. */
+  .attention-surface {
+    --surface-separator: transparent;
+    background-color: var(--color-base-surface);
+    border-color: var(--color-separator);
+  }
+
+  .base-surface {
+    background-color: var(--color-base-surface);
+    --surface-bg: var(--color-base-surface);
+  }
+
+  .sidebar-surface {
+    background-color: var(--color-sidebar-surface);
+    --surface-bg: var(--color-sidebar-surface);
+  }
+
+  .modal-surface {
+    background-color: var(--color-modal-surface);
+    --surface-bg: var(--color-modal-surface);
+  }
+}

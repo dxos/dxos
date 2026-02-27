@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren, type ReactNode, forwardRef } from 'react';
 
-import { descriptionText, mx } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 export type PanelHeadingProps = PropsWithChildren<{
   titleId: string;
@@ -16,11 +16,11 @@ export type PanelHeadingProps = PropsWithChildren<{
 export const Heading = forwardRef<HTMLDivElement, PanelHeadingProps>(
   ({ titleId, title, titleSrOnly, children, corner }, forwardedRef) => {
     return (
-      <div role='none' className='pbe-2 relative' ref={forwardedRef}>
+      <div role='none' className='pb-2 relative' ref={forwardedRef}>
         {corner}
         <h1
           {...(!titleSrOnly && { id: titleId })}
-          className={mx(descriptionText, 'text-center mlb-2', titleSrOnly && 'invisible')}
+          className={mx('text-description', 'text-center my-2', titleSrOnly && 'invisible')}
         >
           {title}
         </h1>

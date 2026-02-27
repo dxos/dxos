@@ -56,7 +56,6 @@ class LinkButton extends WidgetType {
     return this.url === other.url;
   }
 
-  // TODO(burdon): Create icon and link directly without react?
   override toDOM(view: EditorView) {
     const el = document.createElement('span');
     this.render(el, { url: this.url }, view);
@@ -251,7 +250,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
                 from: mark.from,
                 to: mark.from + len,
                 deco: Decoration.replace({
-                  widget: new TextWidget(num, markdownTheme.heading(level)),
+                  widget: new TextWidget(num, markdownTheme.heading(level).className),
                 }),
               });
             }
@@ -457,7 +456,9 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
               from: marks[1].from,
               to: node.to,
               deco: options.renderLinkButton
-                ? Decoration.replace({ widget: new LinkButton(url, options.renderLinkButton) })
+                ? Decoration.replace({
+                    widget: new LinkButton(url, options.renderLinkButton),
+                  })
                 : hide,
             });
           }

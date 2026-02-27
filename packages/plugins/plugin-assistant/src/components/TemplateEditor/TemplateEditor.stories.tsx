@@ -57,7 +57,7 @@ const DefaultStory = ({ source }: TemplateEditorProps & { source: string }) => {
 
   return (
     <TemplateEditor
-      classNames='bg-baseSurface is-full max-is-proseMaxWidth'
+      classNames='bg-base-surface w-full max-w-prose-max-width'
       id={blueprint.id}
       template={blueprint.instructions}
     />

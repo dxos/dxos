@@ -116,7 +116,7 @@ export const FeedsPanel = (props: { space?: Space }) => {
         </Toolbar.Root>
       }
     >
-      <div className='bs-full'>
+      <div className='h-full'>
         <Bitbar value={feed?.downloaded ?? new Uint8Array()} length={feed?.length ?? 0} className='m-4' />
         <MasterDetailTable properties={properties} data={tableData} detailsPosition='bottom' />
       </div>

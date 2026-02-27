@@ -33,7 +33,7 @@ export type ItemDragState =
       item: any;
     }
   | {
-      type: 'is-dragging';
+      type: 'w-dragging';
       item: any;
     };
 

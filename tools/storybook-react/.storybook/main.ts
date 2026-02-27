@@ -191,10 +191,7 @@ export const createConfig = ({
             symbolPattern: 'ph--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
           }),
 
-          ThemePlugin({
-            root: __dirname,
-            content,
-          }),
+          ThemePlugin({}),
         ],
       },
     ) as InlineConfig;

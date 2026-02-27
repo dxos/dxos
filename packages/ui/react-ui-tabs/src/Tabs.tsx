@@ -147,8 +147,8 @@ const TabsViewport = ({ classNames, children, ...props }: TabsViewportProps) => 
       className={mx(
         orientation === 'vertical' &&
           verticalVariant === 'stateful' && [
-            'grid is-[200%] grid-cols-2 data-[active=panel]:mis-[-100%]',
-            '@md:is-auto @md:data-[active=panel]:mis-0 @md:grid-cols-[minmax(min-content,1fr)_3fr] @md:gap-1',
+            'grid w-[200%] grid-cols-2 data-[active=panel]:ms-[-100%]',
+            '@md:w-auto @md:data-[active=panel]:ms-0 @md:grid-cols-[minmax(min-content,1fr)_3fr] @md:gap-1',
           ],
         classNames,
       )}
@@ -167,7 +167,7 @@ const TabsTablist = ({ children, classNames, ...props }: TabsTablistProps) => {
       {...props}
       data-arrow-keys={orientation === 'vertical' ? 'up down' : 'left right'}
       className={mx(
-        'max-bs-full is-full',
+        'max-h-full w-full',
         // NOTE: Padding should be common to Toolbar.
         orientation === 'vertical' ? 'overflow-y-auto' : 'flex items-stretch justify-start overflow-x-auto p-1 gap-1',
         orientation === 'vertical' && verticalVariant === 'stateful' && 'place-self-start p-1',
@@ -189,14 +189,14 @@ const TabsBackButton = ({ onClick, classNames, ...props }: ButtonProps) => {
     [onClick, setActivePart],
   );
 
-  return <Button {...props} classNames={['is-full text-start @md:hidden mbe-2', classNames]} onClick={handleClick} />;
+  return <Button {...props} classNames={['w-full text-start @md:hidden mb-2', classNames]} onClick={handleClick} />;
 };
 
 type TabsTabGroupHeadingProps = ThemedClassName<ComponentPropsWithoutRef<'h2'>>;
 
 const TabsTabGroupHeading = ({ children, classNames, ...props }: ThemedClassName<TabsTabGroupHeadingProps>) => {
   return (
-    <h2 {...props} className={mx('mlb-1 pli-2 text-sm text-unAccent', classNames)}>
+    <h2 {...props} className={mx('my-1 px-2 text-sm text-un-accent', classNames)}>
       {children}
     </h2>
   );
@@ -227,7 +227,7 @@ const TabsTab = ({ value, classNames, children, onClick, ...props }: TabsTabProp
         {...props}
         onClick={handleClick}
         classNames={[
-          orientation === 'vertical' && 'block justify-start text-start is-full',
+          orientation === 'vertical' && 'block justify-start text-start w-full',
           orientation === 'vertical' && ghostSelectedContainerMd,
           classNames,
         ]}
@@ -263,7 +263,7 @@ const TabsIconTab = ({ value, classNames, onClick, ...props }: TabsIconTabProps)
         {...props}
         onClick={handleClick}
         classNames={[
-          orientation === 'vertical' && 'justify-start text-start is-full',
+          orientation === 'vertical' && 'justify-start text-start w-full',
           orientation === 'vertical' && ghostSelectedContainerMd,
           classNames,
         ]}

@@ -75,7 +75,7 @@ export const Default = {
                 <div
                   key={virtualItem.key}
                   role='list'
-                  className='grid grid-cols-[3rem_1fr] overflow-hidden border border-separator rounded-sm'
+                  className='grid grid-cols-[3rem_1fr] overflow-hidden border border-separator rounded-xs'
                   style={{
                     position: 'absolute',
                     top: 0,

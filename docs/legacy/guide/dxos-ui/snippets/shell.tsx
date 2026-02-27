@@ -12,6 +12,7 @@ const Component = () => {
 
   return (
     <div
+      role='none'
       onClick={async () => {
         // open the profile panel
         await client.shell.open();

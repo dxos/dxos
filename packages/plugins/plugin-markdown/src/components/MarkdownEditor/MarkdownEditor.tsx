@@ -226,7 +226,7 @@ const PreviewBlock = ({ el, link }: PreviewBlock) => {
   const subject = client.graph.makeRef(dxn).target;
   const data = useMemo(() => ({ subject }), [subject]);
 
-  return createPortal(<Surface.Surface role='card--transclusion' data={data} limit={1} />, el);
+  return createPortal(<Surface.Surface role='card--content' data={data} limit={1} />, el);
 };
 
 //

@@ -97,7 +97,7 @@ export const FormFieldSet = forwardRef<HTMLDivElement, FormFieldSetProps<any>>(
     return (
       <div
         role='form'
-        className={mx('is-full', layout === 'inline' && 'flex flex-col gap-2', classNames)}
+        className={mx('w-full', layout === 'inline' && 'flex flex-col gap-2', classNames)}
         ref={forwardRef}
       >
         {layout !== 'inline' && label && <FormFieldLabel label={label} asChild />}

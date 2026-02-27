@@ -9,7 +9,7 @@ import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { Surface, usePluginManager } from '@dxos/app-framework/ui';
 import { runAndForwardErrors } from '@dxos/effect';
 
-import { PluginDetail, RegistryContainer } from '../../components';
+import { PluginDetail, RegistryContainer } from '../../containers';
 import { REGISTRY_KEY, meta } from '../../meta';
 
 export default Capability.makeModule(() =>

@@ -2,7 +2,6 @@
 // Copyright 2021 DXOS.org
 //
 
-import { boolean } from 'boolean';
 import defaultsDeep from 'lodash.defaultsdeep';
 import isMatch from 'lodash.ismatch';
 
@@ -39,7 +38,7 @@ export const mapFromKeyValues = (spec: MappingSpec, values: Record<string, any>)
       if (type) {
         switch (type) {
           case 'boolean': {
-            value = boolean(value);
+            value = String(value).toLowerCase() === 'true' || value === '1';
             break;
           }
 

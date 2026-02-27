@@ -17,17 +17,19 @@ type StoryProps = {
   defaultOpen?: boolean;
 };
 
-const DefaultStory = ({ tooltips, defaultOpen }: StoryProps) => (
-  <Tooltip.Provider defaultOpen={defaultOpen}>
-    <div role='none' className='is-32'>
-      {tooltips.map(({ label, content }, i) => (
-        <Tooltip.Trigger asChild key={i} content={content} side='right'>
-          <Button classNames='block is-full'>{label}</Button>
-        </Tooltip.Trigger>
-      ))}
-    </div>
-  </Tooltip.Provider>
-);
+const DefaultStory = ({ tooltips, defaultOpen }: StoryProps) => {
+  return (
+    <Tooltip.Provider defaultOpen={defaultOpen}>
+      <div role='none' className='w-32'>
+        {tooltips.map(({ label, content }, i) => (
+          <Tooltip.Trigger asChild key={i} content={content} side='right'>
+            <Button classNames='block w-full'>{label}</Button>
+          </Tooltip.Trigger>
+        ))}
+      </div>
+    </Tooltip.Provider>
+  );
+};
 
 const meta = {
   title: 'ui/react-ui-core/components/Tooltip',

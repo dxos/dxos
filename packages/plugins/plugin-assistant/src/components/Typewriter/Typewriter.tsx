@@ -41,7 +41,7 @@ export const Typewriter = ({ initialContent = '', extensions = [], runtime }: Ty
   return (
     <ThemeProvider>
       <DensityProvider density='fine'>
-        <div className='is-full bs-full grid overflow-hidden'>
+        <div className='w-full h-full grid overflow-hidden'>
           <Editor.Root ref={editorRef}>
             <Editor.Viewport>
               <Editor.Content initialValue={initialContent} extensions={extension} />

@@ -2,9 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import omit from 'lodash.omit';
-
-import { pick } from '@dxos/util';
+import { omit, pick } from '@dxos/util';
 
 export { omit, pick };
 

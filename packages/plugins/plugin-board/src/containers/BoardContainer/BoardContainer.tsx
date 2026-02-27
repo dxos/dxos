@@ -1,0 +1,151 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import React, { useCallback, useMemo, useRef, useState } from 'react';
+
+import { Surface } from '@dxos/app-framework/ui';
+import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { Filter, Obj, Ref } from '@dxos/echo';
+import { useObject, useObjects } from '@dxos/echo-react';
+import { invariant } from '@dxos/invariant';
+import { useQuery } from '@dxos/react-client/echo';
+import { Layout } from '@dxos/react-ui';
+import { useAttention } from '@dxos/react-ui-attention';
+import { Board, type BoardController, type BoardRootProps, type Position } from '@dxos/react-ui-board';
+import { ObjectPicker, type ObjectPickerContentProps } from '@dxos/react-ui-form';
+import { isNonNullable } from '@dxos/util';
+
+import { type Board as BoardType } from '../../types';
+
+const DEFAULT_POSITION = { x: 0, y: 0 } satisfies Position;
+
+type PickerState = {
+  position: Position;
+};
+
+export type BoardContainerProps = SurfaceComponentProps<BoardType.Board>;
+
+export const BoardContainer = ({ role, subject: board }: BoardContainerProps) => {
+  const controller = useRef<BoardController>(null);
+  const [boardItems] = useObject(board, 'items');
+  const items = useObjects(boardItems ?? []);
+  const addTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const [pickerState, setPickerState] = useState<PickerState | null>(null);
+  const attendableId = Obj.getDXN(board).toString();
+  const { hasAttention } = useAttention(attendableId);
+
+  const db = Obj.getDatabase(board);
+  // TODO(burdon): Use search.
+  const objects = useQuery(db, Filter.everything());
+  const options = useMemo<ObjectPickerContentProps['options']>(
+    () =>
+      objects
+        .filter((obj) => obj.id !== board.id)
+        .map((obj) => {
+          const label = Obj.getLabel(obj);
+          if (label) {
+            return {
+              id: obj.id,
+              label,
+              hue: 'neutral' as const,
+            };
+          }
+        })
+        .filter(isNonNullable)
+        .sort(({ label: a }, { label: b }) => a.toLocaleLowerCase().localeCompare(b.toLocaleLowerCase())),
+    [objects],
+  );
+
+  const handleAdd = useCallback<NonNullable<BoardRootProps['onAdd']>>(
+    async (anchor, position = DEFAULT_POSITION) => {
+      const db = Obj.getDatabase(board);
+      invariant(db);
+      addTriggerRef.current = anchor;
+      setPickerState({
+        position,
+      });
+    },
+    [board],
+  );
+
+  // TODO(burdon): Use intents so can be undone.
+  const handleDelete = useCallback<NonNullable<BoardRootProps['onDelete']>>(
+    (id) => {
+      // TODO(burdon): Impl. DXN.equals and pass in DXN from `id`.
+      const idx = board.items.findIndex((ref) => ref.dxn.asEchoDXN()?.echoId === id);
+      Obj.change(board, (b) => {
+        if (idx !== -1) {
+          b.items.splice(idx, 1);
+        }
+        delete b.layout.cells[id];
+      });
+    },
+    [board],
+  );
+
+  const handleMove = useCallback<NonNullable<BoardRootProps['onMove']>>(
+    (id, position) => {
+      const layout = board.layout.cells[id];
+      Obj.change(board, (b) => {
+        b.layout.cells[id] = { ...layout, ...position };
+      });
+    },
+    [board],
+  );
+
+  const handleSelect = useCallback<NonNullable<ObjectPickerContentProps['onSelect']>>(
+    (id) => {
+      if (!pickerState) {
+        return;
+      }
+
+      // Find the selected object by id from the space.
+      const selectedObject = objects.find((obj) => obj.id === id);
+      if (!Obj.isObject(selectedObject)) {
+        return;
+      }
+
+      // Create a reference to the selected object and add it to the board.
+      Obj.change(board, (b) => {
+        b.items.push(Ref.make(selectedObject));
+
+        // Set the layout position for the new item.
+        b.layout.cells[selectedObject.id.toString()] = pickerState.position;
+      });
+
+      // Close the picker.
+      setPickerState(null);
+    },
+    [pickerState, objects, board],
+  );
+
+  return (
+    <Board.Root ref={controller} layout={board.layout} onAdd={handleAdd} onDelete={handleDelete} onMove={handleMove}>
+      <ObjectPicker.Root
+        open={!!pickerState}
+        onOpenChange={(nextOpen: boolean) => {
+          setPickerState(nextOpen ? { position: DEFAULT_POSITION } : null);
+        }}
+      >
+        <Layout.Main role={role} toolbar>
+          <Board.Toolbar disabled={!hasAttention} />
+          <Board.Container>
+            <Board.Viewport classNames='border-none'>
+              <Board.Backdrop />
+              <Board.Content>
+                {items?.map((item, index) => (
+                  <Board.Cell item={item} key={index} layout={board.layout?.cells[item.id] ?? { x: 0, y: 0 }}>
+                    <Surface.Surface role='card--content' data={{ subject: item }} limit={1} />
+                  </Board.Cell>
+                ))}
+              </Board.Content>
+            </Board.Viewport>
+          </Board.Container>
+        </Layout.Main>
+        <ObjectPicker.Content options={options} onSelect={handleSelect} classNames='popover-card-width' />
+        <ObjectPicker.VirtualTrigger virtualRef={addTriggerRef} />
+      </ObjectPicker.Root>
+    </Board.Root>
+  );
+};

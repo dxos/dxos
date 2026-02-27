@@ -4,7 +4,7 @@
 
 import { createContext } from '@radix-ui/react-context';
 import * as Schema from 'effect/Schema';
-import type * as SchemaAST from 'effect/SchemaAST';
+import * as SchemaAST from 'effect/SchemaAST';
 import React, { type PropsWithChildren, useEffect, useMemo, useRef } from 'react';
 
 import { type AnyProperties } from '@dxos/echo/internal';
@@ -20,7 +20,6 @@ import {
   useKeyHandler,
 } from '../../hooks';
 import { translationKey } from '../../translations';
-import { setValueEchoAware } from '../../util';
 
 import { FormFieldLabel, type FormFieldLabelProps, type FormFieldStateProps } from './FormFieldComponent';
 import {
@@ -83,19 +82,25 @@ const useFormValues: {
     path: (string | number)[] | undefined,
     defaultValue: () => T,
   ): T | undefined;
-} = (componentName: string, path: (string | number)[] = [], defaultValue?: () => any) => {
-  const jsonPath = createJsonPath(path);
+} = (componentName: string, path?: (string | number)[], defaultValue?: () => any) => {
+  const stablePath = useMemo(() => path ?? [], [path ? path.join('.') : undefined]);
+  const jsonPath = createJsonPath(stablePath);
   const {
-    form: { values },
+    form: { values, onValueChange },
   } = useFormContext(componentName);
 
   const value = getValue$(values, jsonPath);
 
+  // Apply default value once when the field has no value. lastAppliedPathRef prevents
+  // re-applying on every render (e.g. when defaultValue() returns null) and ensures
+  // we apply per path when the hook is used for different fields.
+  const lastAppliedPathRef = useRef<string | null>(null);
   useEffect(() => {
-    if (!value && defaultValue) {
-      setValueEchoAware(values, jsonPath, defaultValue());
+    if (value == null && defaultValue && lastAppliedPathRef.current !== jsonPath) {
+      lastAppliedPathRef.current = jsonPath;
+      onValueChange(stablePath, SchemaAST.stringKeyword, defaultValue());
     }
-  }, [value, defaultValue]);
+  }, [value, defaultValue, onValueChange, stablePath, jsonPath]);
 
   return value;
 };
@@ -196,7 +201,7 @@ const FormContent = ({ classNames, children }: FormContentProps) => {
     <div
       ref={ref}
       role='form'
-      className={mx('is-full flex flex-col gap-cardPadding pli-cardPadding', classNames)}
+      className={mx('w-full flex flex-col gap-card-padding px-card-padding', classNames)}
       data-testid={testId}
     >
       {children}
@@ -246,7 +251,7 @@ const FormActions = ({ classNames }: FormActionsProps) => {
   //   Deprecate FormSubmit ans use FormActions without Cancel button if no callback is supplied.
 
   return (
-    <div role='none' className={mx('grid grid-flow-col gap-2 auto-cols-fr plb-cardPadding', classNames)}>
+    <div role='none' className={mx('grid grid-flow-col gap-2 auto-cols-fr py-card-padding', classNames)}>
       {onCancel && (
         <IconButton
           icon='ph--x--regular'
@@ -295,9 +300,9 @@ const FormSubmit = ({ classNames, label, icon, disabled }: FormSubmitProps) => {
   }
 
   return (
-    <div role='none' className={mx('flex is-full pbs-formSpacing', classNames)}>
+    <div role='none' className={mx('flex w-full pt-formSpacing', classNames)}>
       <IconButton
-        classNames='is-full'
+        classNames='w-full'
         type='submit'
         variant='primary'
         disabled={disabled ?? !canSave}

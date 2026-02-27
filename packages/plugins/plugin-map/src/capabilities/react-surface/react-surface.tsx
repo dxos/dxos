@@ -15,7 +15,7 @@ import { type FormFieldComponentProps, SelectField, useFormValues } from '@dxos/
 import { type LatLngLiteral } from '@dxos/react-ui-geo';
 import { type Collection } from '@dxos/schema';
 
-import { MapContainer, MapViewEditor } from '../../components';
+import { MapContainer, MapViewEditor } from '../../containers';
 import { meta } from '../../meta';
 import { LocationAnnotationId, Map, MapCapabilities } from '../../types';
 
@@ -48,15 +48,6 @@ export default Capability.makeModule(() =>
           );
         },
       }),
-      // createSurface({
-      //   id: 'plugin-map',
-      //   role: 'card--extrinsic',
-      //   filter: (data) => Obj.instanceOf(MapType, data),
-      //   component: ({ data }) => {
-      //     const [lng = 0, lat = 0] = data?.coordinates ?? [];
-      //     return <MapControl center={{ lat, lng }} zoom={8} />;
-      //   },
-      // }),
       Surface.create({
         id: `${meta.id}/surface/object-settings`,
         role: 'object-settings',

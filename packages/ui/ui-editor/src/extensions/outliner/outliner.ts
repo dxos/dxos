@@ -61,7 +61,7 @@ export const outliner = (_options: OutlinerProps = {}): Extension => [
   decorateMarkdown({ listPaddingLeft: 8 }),
 
   // Researve space for menu.
-  EditorView.contentAttributes.of({ class: 'is-full !mr-[3rem]' }),
+  EditorView.contentAttributes.of({ class: 'w-full !mr-[3rem]' }),
 ];
 
 /**
@@ -157,10 +157,10 @@ const decorations = () => [
       },
 
       '.cm-list-item-focused': {
-        borderColor: 'var(--dx-neutralFocusIndicator)',
+        borderColor: 'var(--color-neutral-focus-indicator)',
       },
       '&:focus-within .cm-list-item-selected': {
-        borderColor: 'var(--dx-separator)',
+        borderColor: 'var(--color-separator)',
       },
     }),
   ),

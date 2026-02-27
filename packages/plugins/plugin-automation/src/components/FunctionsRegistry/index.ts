@@ -2,4 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-export { FunctionsRegistry } from './FunctionsRegistry';
+import { FunctionsRegistry } from './FunctionsRegistry';
+
+export { FunctionsRegistry };
+export default FunctionsRegistry;

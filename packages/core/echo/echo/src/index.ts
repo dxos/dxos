@@ -10,6 +10,7 @@ export * as Annotation from './Annotation';
 export * as Database from './Database';
 export * as Entity from './Entity';
 export * as Err from './Err';
+export * as Feed from './Feed';
 export * as Filter from './Filter';
 export * as Format from './Format';
 export * as Hypergraph from './Hypergraph';

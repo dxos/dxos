@@ -36,7 +36,7 @@ export const translations = [
 
         'meeting companion label': 'Meeting Notes',
         'notes label': 'Notes',
-        'summary label': 'Summary',
+        'stats label': 'Stats',
         'regenerate summary label': 'Regenerate Summary',
         'generate summary label': 'Generate Summary',
 

@@ -155,8 +155,6 @@ message Runtime {
     optional bool enable_vector_indexing = 12;
 
     optional EdgeFeatures edge_features = 11;
-
-    optional bool enable_local_queues = 13;
   }
 
   message App {

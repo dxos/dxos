@@ -10,7 +10,7 @@ import { Surface, useCapability } from '@dxos/app-framework/ui';
 import { Obj } from '@dxos/echo';
 import { getSpace } from '@dxos/react-client/echo';
 
-import { ComputeGraphContextProvider, RangeList, SheetContainer } from '../../components';
+import { RangeList, SheetContainer } from '../../containers';
 import { meta } from '../../meta';
 import { Sheet, SheetCapabilities } from '../../types';
 
@@ -26,9 +26,12 @@ export default Capability.makeModule(() =>
           const computeGraphRegistry = useCapability(SheetCapabilities.ComputeGraphRegistry);
 
           return (
-            <ComputeGraphContextProvider registry={computeGraphRegistry}>
-              <SheetContainer role={role} subject={data.subject} space={getSpace(data.subject)!} />
-            </ComputeGraphContextProvider>
+            <SheetContainer
+              role={role}
+              subject={data.subject}
+              space={getSpace(data.subject)!}
+              registry={computeGraphRegistry}
+            />
           );
         },
       }),

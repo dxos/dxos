@@ -62,17 +62,7 @@ export const config = ({ stories: baseStories, ...baseConfig }: Partial<Storyboo
           contentPaths: [join(packages, '/**/src/**/*.{ts,tsx}')],
         }),
 
-        ThemePlugin({
-          root: __dirname,
-          content: [
-            resolve(packages, 'apps/*/src/**', contentFiles),
-            resolve(packages, 'devtools/*/src/**', contentFiles),
-            resolve(packages, 'experimental/*/src/**', contentFiles),
-            resolve(packages, 'plugins/*/src/**', contentFiles),
-            resolve(packages, 'sdk/*/src/**', contentFiles),
-            resolve(packages, 'ui/*/src/**', contentFiles),
-          ],
-        }),
+        ThemePlugin({}),
       ],
     });
   },

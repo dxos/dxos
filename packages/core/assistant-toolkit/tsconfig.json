@@ -48,6 +48,9 @@
       "path": "../../sdk/types"
     },
     {
+      "path": "../../ui/react-ui-mosaic"
+    },
+    {
       "path": "../../ui/react-ui-syntax-highlighter"
     },
     {

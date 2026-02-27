@@ -14,7 +14,7 @@ import { type TypescriptEditorProps } from '../TypescriptEditor';
 import { NotebookCell, type NotebookCellProps } from './NotebookCell';
 import { NotebookMenu } from './NotebookMenu';
 
-const minSectionHeight = 'min-bs-[16rem]';
+const minSectionHeight = 'min-h-[16rem]';
 
 export type NotebookStackProps = ThemedClassName<
   {
@@ -51,7 +51,7 @@ const NotebookSection = ({
 
   return (
     <StackItem.Root role='section' item={cell} draggable classNames={resizable && minSectionHeight}>
-      <StackItem.Heading classNames='bs-full p-1 justify-between attention-surface'>
+      <StackItem.Heading classNames='h-full p-1 justify-between attention-surface'>
         <StackItem.DragHandle asChild>
           <IconButton variant='ghost' icon='ph--dots-six-vertical--regular' iconOnly label='Drag handle' />
         </StackItem.DragHandle>
@@ -72,7 +72,7 @@ const NotebookSection = ({
       {/* TODO(burdon): Move drag preview to outer stack (uniformly). */}
       <StackItem.DragPreview>
         {({ item: cell }) => (
-          <StackItem.Content classNames='overflow-visible bg-groupSurface border border-subduedSeparator'>
+          <StackItem.Content classNames='overflow-visible bg-group-surface border border-subdued-separator'>
             <NotebookCell db={db} cell={cell} env={env} dragging />
           </StackItem.Content>
         )}

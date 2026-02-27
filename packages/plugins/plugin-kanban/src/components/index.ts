@@ -3,4 +3,3 @@
 //
 
 export * from './KanbanBoard';
-export * from './KanbanCardTile';

@@ -78,8 +78,8 @@ export const ThemeProvider = ({
 
 const handleInputModalityChange = (isUsingKeyboard: boolean) => {
   if (isUsingKeyboard) {
-    document.body.setAttribute('data-is-keyboard', 'true');
+    document.body.setAttribute('data-w-keyboard', 'true');
   } else {
-    document.body.removeAttribute('data-is-keyboard');
+    document.body.removeAttribute('data-w-keyboard');
   }
 };

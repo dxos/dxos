@@ -16,7 +16,7 @@ const DefaultStory = (props: BreadcrumbRootProps) => {
       <Breadcrumb.List>
         <Breadcrumb.ListItem>
           <Breadcrumb.Link asChild>
-            <Button variant='ghost' density='fine' classNames='pli-0 text-baseText font-normal'>
+            <Button variant='ghost' density='fine' classNames='px-0 text-base-text font-normal'>
               Grocery
             </Button>
           </Breadcrumb.Link>

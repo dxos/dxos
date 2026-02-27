@@ -29,7 +29,6 @@ Phase 4
 
 ### Phase 4: Audit and refactor other plugins
 - [ ] plugin-pipeline — raw grid div in PipelineColumn.tsx (2-row variant)
-- [ ] plugin-table, plugin-sheet, plugin-thread, others
 - **Status:** in_progress
 
 ### Phase 5: Lint & PR

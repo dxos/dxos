@@ -105,7 +105,7 @@ const Test = () => {
 
   return (
     <>
-      <div className='mbe-4 flex gap-2'>
+      <div className='mb-4 flex gap-2'>
         <Button disabled={!!identity} onClick={handleCreateIdentity}>
           Create Identity
         </Button>
@@ -116,7 +116,7 @@ const Test = () => {
           Authenticate with Passkey
         </Button>
       </div>
-      <div className='flex flex-col min-w-[28rem] divide-y divide-separator border border-separator rounded'>
+      <div className='flex flex-col min-w-[28rem] divide-y divide-separator border border-separator rounded-sm'>
         <SyntaxHighlighter language='json'>
           {JSON.stringify({ identity, credentials: credentials.length }, null, 2)}
         </SyntaxHighlighter>

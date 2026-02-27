@@ -36,3 +36,11 @@ export const safeParseJson: {
 
   return defaultValue;
 };
+
+export const safeUrl = (str: string | undefined | null): URL | undefined => {
+  try {
+    return new URL(str ?? '');
+  } catch {
+    return undefined;
+  }
+};

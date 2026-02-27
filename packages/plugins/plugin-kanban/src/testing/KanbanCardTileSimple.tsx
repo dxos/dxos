@@ -8,13 +8,13 @@ import { Obj } from '@dxos/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { Card, Focus, Mosaic, useBoard } from '@dxos/react-ui-mosaic';
 
-import { type KanbanCardTileProps, useKanbanBoard } from '../components';
+import { type KanbanCardProps, useKanbanBoard } from '../components';
 import { meta } from '../meta';
 
 const KANBAN_CARD_TILE_SIMPLE_NAME = 'KanbanCardTileSimple';
 
 /** Card tile without Surface; for stories and tests when plugin manager is not available. */
-export const KanbanCardTileSimple = forwardRef<HTMLDivElement, KanbanCardTileProps>(
+export const KanbanCardTileSimple = forwardRef<HTMLDivElement, KanbanCardProps>(
   ({ data, location, debug }, forwardedRef) => {
     const { t } = useTranslation(meta.id);
     const { model } = useBoard(KANBAN_CARD_TILE_SIMPLE_NAME);

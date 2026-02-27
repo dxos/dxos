@@ -20,9 +20,8 @@ import { Config, SaveConfig } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { type Hypergraph, Type } from '@dxos/echo';
-import { EchoClient, QueueServiceImpl } from '@dxos/echo-db';
-import { MockQueueService } from '@dxos/echo-db';
-import { EdgeHttpClient } from '@dxos/edge-client';
+import { EchoClient } from '@dxos/echo-db';
+import { type EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -418,25 +417,10 @@ export class Client {
     });
     await this._services.open();
 
-    const edgeUrl = this._config!.get('runtime.services.edge.url');
-    const useLocalFirstQueues = this._config!.get('runtime.client.enableLocalQueues');
-    if (useLocalFirstQueues) {
-      log.verbose('running with local-first queues');
-      invariant(this._services.services.QueueService, 'QueueService not available.');
-      this._queuesService = this._services.services.QueueService;
-    } else if (edgeUrl) {
-      log.verbose('running with edge queues');
-      this._edgeClient = new EdgeHttpClient(edgeUrl);
-      this._queuesService = new QueueServiceImpl(this._edgeClient);
-    } else {
-      log.verbose('running with mock queues');
-      this._queuesService = new MockQueueService();
-    }
-
     this._echoClient.connectToService({
       dataService: this._services.services.DataService ?? raise(new Error('DataService not available')),
       queryService: this._services.services.QueryService ?? raise(new Error('QueryService not available')),
-      queueService: this._queuesService,
+      queueService: this._services.services.QueueService ?? raise(new Error('QueueService not available')),
     });
     await this._echoClient.open(this._ctx);
 

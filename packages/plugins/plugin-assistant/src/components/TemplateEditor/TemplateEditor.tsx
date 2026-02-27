@@ -53,7 +53,7 @@ export const TemplateEditor = ({ id, classNames, template, lineNumbers = true }:
         }),
         createThemeExtensions({
           themeMode,
-          slots: { content: { className: '!pie-4' } },
+          slots: { content: { className: '!pe-4' } },
         }),
         createMarkdownExtensions(),
         decorateMarkdown(),
@@ -66,5 +66,5 @@ export const TemplateEditor = ({ id, classNames, template, lineNumbers = true }:
     };
   }, [themeMode, template.source?.target, lineNumbers]);
 
-  return <div ref={parentRef} className={mx('bs-full overflow-hidden', classNames)} />;
+  return <div ref={parentRef} className={mx('h-full overflow-hidden', classNames)} />;
 };

@@ -135,7 +135,7 @@ export const Delayed: Story = {
 
 export const Raw: Story = {
   render: () => (
-    <div className='contents' style={{ '--user-fill': 'var(--dx-amberFill)' } as CSSProperties}>
+    <div className='contents' style={{ '--user-fill': 'var(--color-amber-fill)' } as CSSProperties}>
       <MarkdownStream content={TEXT} />
     </div>
   ),
@@ -143,7 +143,7 @@ export const Raw: Story = {
 
 export const Static: Story = {
   render: () => (
-    <div className='contents' style={{ '--user-fill': 'var(--dx-amberFill)' } as CSSProperties}>
+    <div className='contents' style={{ '--user-fill': 'var(--color-amber-fill)' } as CSSProperties}>
       <MarkdownStream content={TEXT} registry={componentRegistry} />
     </div>
   ),

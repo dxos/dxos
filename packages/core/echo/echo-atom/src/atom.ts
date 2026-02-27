@@ -26,7 +26,7 @@ const objectFamily = Atom.family(<T extends Obj.Unknown>(obj: T): Atom.Atom<Obj.
     get.addFinalizer(() => unsubscribe());
 
     return Obj.getSnapshot(obj);
-  });
+  }).pipe(Atom.keepAlive);
 });
 
 /**
@@ -51,7 +51,7 @@ const refFamily = Atom.family(<T extends Obj.Unknown>(ref: Ref.Ref<T>): Atom.Ato
     });
 
     return loadRefTarget(ref, get, setupTargetSubscription);
-  });
+  }).pipe(Atom.keepAlive);
 });
 
 /**
@@ -94,7 +94,7 @@ const propertyFamily = Atom.family(<T extends Obj.Unknown>(obj: T) =>
 
       // Return a snapshot copy so React sees a new reference.
       return snapshotForComparison(obj[key]);
-    });
+    }).pipe(Atom.keepAlive);
   }),
 );
 
@@ -175,7 +175,7 @@ const objectWithReactiveFamily = Atom.family(<T extends Obj.Unknown>(obj: T): At
     get.addFinalizer(() => unsubscribe());
 
     return obj;
-  });
+  }).pipe(Atom.keepAlive);
 });
 
 /**

@@ -49,7 +49,7 @@ export const ProgressBar = ({
 
   return (
     <AnimatePresence>
-      <div role='none' className={mx('flex items-center is-full bs-[32px] overflow-hidden', classNames)} ref={ref}>
+      <div role='none' className={mx('flex items-center w-full h-[32px] overflow-hidden', classNames)} ref={ref}>
         <div className='flex'>
           {visibleNodes?.map((node, i) => (
             <Node
@@ -80,7 +80,7 @@ type NodeState = 'closed' | 'open' | 'active' | 'terminal' | 'error';
 type Slots = Partial<Record<NodeState | 'default' | 'selected', string>>;
 
 const defaultSlots = {
-  default: 'bg-baseSurface border-subduedSeparator',
+  default: 'bg-base-surface border-subdued-separator',
   active: 'bg-amber-500 border-transparent text-amber-500',
   terminal: 'bg-primary-500 border-transparent',
   selected: 'bg-neutral-500 border-transparent',
@@ -147,7 +147,7 @@ const Node = ({ state = 'open', selected, classes, options = defaultOptions, onC
               width: width - radius,
             },
           }}
-          className={mx('absolute left-0 border-be border-subduedSeparator box-border', state === 'closed' && 'hidden')}
+          className={mx('absolute left-0 border-b border-subdued-separator box-border', state === 'closed' && 'hidden')}
         />
         <motion.div
           transition={{
@@ -180,7 +180,7 @@ const Node = ({ state = 'open', selected, classes, options = defaultOptions, onC
             onClick={onClick}
           />
           {state === 'active' && (
-            <Notch classNames={['absolute inset-0 is-full bs-full animate-spin', classes?.active, '!bg-transparent']} />
+            <Notch classNames={['absolute inset-0 w-full h-full animate-spin', classes?.active, '!bg-transparent']} />
           )}
         </motion.div>
       </div>

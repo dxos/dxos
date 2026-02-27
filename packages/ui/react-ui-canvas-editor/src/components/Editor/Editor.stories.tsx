@@ -63,7 +63,7 @@ const DefaultStory = ({ id = 'test', init, sidebar, children, ...props }: Render
   const [selection, selected] = useSelection(graph);
 
   return (
-    <div className='grid grid-cols-[1fr,360px] is-full bs-full'>
+    <div className='grid grid-cols-[1fr_360px] w-full h-full'>
       <Container id={id} classNames={['flex grow overflow-hidden', !sidebar && 'col-span-2']}>
         <Editor.Root ref={editorRef} id={id} graph={graph} selection={selection} autoZoom {...props}>
           <Editor.Canvas>{children}</Editor.Canvas>

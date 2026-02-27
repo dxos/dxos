@@ -5,7 +5,7 @@
 import React, { type ComponentPropsWithoutRef, type ReactNode } from 'react';
 
 import { type ButtonProps, useElevationContext, useId, useThemeContext } from '@dxos/react-ui';
-import { descriptionText, descriptionTextPrimary, mx } from '@dxos/ui-theme';
+import { descriptionTextPrimary, mx } from '@dxos/ui-theme';
 
 export interface CompoundButtonSlots {
   root: ComponentPropsWithoutRef<'button'>;
@@ -37,7 +37,7 @@ export const CompoundButton = ({
   const { tx } = useThemeContext();
   const elevation = useElevationContext(propsElevation);
   const styleProps = { ...buttonProps, variant, elevation, textWrap: true };
-  const buttonClassName = tx('button.root', styleProps, 'flex items-center gap-4 plb-2.5', slots.root?.className);
+  const buttonClassName = tx('button.root', styleProps, 'flex items-center gap-4 py-2.5', slots.root?.className);
 
   return (
     <button
@@ -65,8 +65,8 @@ export const CompoundButton = ({
             id={descriptionId}
             {...slots.description}
             className={mx(
-              'text-xs mbe-1 font-normal',
-              variant === 'primary' ? descriptionTextPrimary : descriptionText,
+              'text-xs mb-1 font-normal',
+              variant === 'primary' ? descriptionTextPrimary : 'text-description',
               slots.description?.className,
             )}
           >

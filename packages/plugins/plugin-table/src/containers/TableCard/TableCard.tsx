@@ -1,0 +1,69 @@
+//
+// Copyright 2024 DXOS.org
+//
+
+import { RegistryContext } from '@effect-atom/atom-react';
+import React, { useContext, useMemo, useRef } from 'react';
+
+import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { Filter, Obj } from '@dxos/echo';
+import { useGlobalFilteredObjects } from '@dxos/plugin-search';
+import { useQuery, useSchema } from '@dxos/react-client/echo';
+import { Card } from '@dxos/react-ui-mosaic';
+import {
+  Table as TableComponent,
+  type TableController,
+  type TableFeatures,
+  TablePresentation,
+  useProjectionModel,
+  useTableModel,
+} from '@dxos/react-ui-table';
+import { type Table } from '@dxos/react-ui-table/types';
+import { getTypenameFromQuery } from '@dxos/schema';
+
+export type TableCardProps = SurfaceComponentProps<Table.Table>;
+
+export const TableCard = ({ role, subject: object }: TableCardProps) => {
+  const registry = useContext(RegistryContext);
+  const tableRef = useRef<TableController>(null);
+
+  const db = Obj.getDatabase(object);
+  const typename = object.view.target?.query ? getTypenameFromQuery(object.view.target?.query.ast) : undefined;
+  const schema = useSchema(db, typename);
+  const queriedObjects = useQuery(db, schema ? Filter.type(schema) : Filter.nothing());
+  const filteredObjects = useGlobalFilteredObjects(queriedObjects);
+
+  const features: Partial<TableFeatures> = useMemo(
+    () => ({
+      selection: { enabled: false },
+      dataEditable: false,
+      schemaEditable: false,
+    }),
+    [],
+  );
+
+  const projection = useProjectionModel(schema, object, registry);
+  const model = useTableModel({
+    object,
+    projection,
+    features,
+    rows: filteredObjects,
+    onCellUpdate: (cell) => tableRef.current?.update?.(cell),
+  });
+
+  const presentation = useMemo(() => (model ? new TablePresentation(registry, model) : undefined), [registry, model]);
+
+  return (
+    <Card.Content>
+      <TableComponent.Root role={role}>
+        <TableComponent.Main
+          key={Obj.getDXN(object).toString()}
+          ref={tableRef}
+          model={model}
+          presentation={presentation}
+          schema={schema}
+        />
+      </TableComponent.Root>
+    </Card.Content>
+  );
+};

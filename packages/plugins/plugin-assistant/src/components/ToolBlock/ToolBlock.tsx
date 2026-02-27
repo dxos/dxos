@@ -30,7 +30,7 @@ export const ToolBlock = ({ view, blocks = [] }: ToolBlockProps) => {
     // TODO(burdon): Get from context?
     const tools: Tool.Any[] = []; //processor.conversation.toolkit?.tools ?? [];
     return blocks
-      .filter((block) => block._tag === 'toolCall' || block._tag === 'toolResult' || block._tag === 'summary')
+      .filter((block) => block._tag === 'toolCall' || block._tag === 'toolResult' || block._tag === 'stats')
       .map((block) => {
         switch (block._tag) {
           case 'toolCall': {
@@ -70,13 +70,13 @@ export const ToolBlock = ({ view, blocks = [] }: ToolBlockProps) => {
             };
           }
 
-          case 'summary': {
+          case 'stats': {
             if (!lastToolCall) {
               return null;
             }
 
             return {
-              title: t('summary label'),
+              title: t('stats label'),
               content: block,
             };
           }
@@ -122,7 +122,7 @@ export const ToolContainer = ({ items, onChangeOpen }: ToolContainerProps) => {
   }, []);
 
   return (
-    <ToggleContainer.Root classNames='mbs-2 is-full rounded-sm' open={open} onChangeOpen={setOpen}>
+    <ToggleContainer.Root classNames='mt-2 w-full rounded-xs' open={open} onChangeOpen={setOpen}>
       <ToggleContainer.Header classNames='text-sm text-placeholder'>
         <TextCrawl key='status-roll' lines={items.map((item) => item.title)} autoAdvance greedy />
       </ToggleContainer.Header>

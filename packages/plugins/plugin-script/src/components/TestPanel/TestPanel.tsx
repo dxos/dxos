@@ -7,7 +7,7 @@ import React, { forwardRef, useEffect, useRef, useState } from 'react';
 import { log } from '@dxos/log';
 import { Avatar, Icon, Input, ScrollArea, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { errorText, mx } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 
@@ -174,7 +174,7 @@ export const TestPanel = ({ classNames, functionUrl }: TestPanelProps) => {
   };
 
   return (
-    <div className={mx('flex flex-col bs-full overflow-hidden', classNames)}>
+    <div className={mx('flex flex-col h-full overflow-hidden', classNames)}>
       {/* TODO(burdon): Replace with Thread. */}
       <MessageThread ref={scrollerRef} state={state} result={result} history={history} />
       {/* TODO(burdon): Replace with Form based on the function's input schema. */}
@@ -219,7 +219,7 @@ type MessageThreadProps = {
 const MessageThread = forwardRef<HTMLDivElement, MessageThreadProps>(
   ({ state, history, result }: MessageThreadProps, forwardedRef) => {
     return (
-      <ScrollArea.Root orientation='vertical' classNames='bs-full' ref={forwardedRef}>
+      <ScrollArea.Root orientation='vertical' classNames='h-full' ref={forwardedRef}>
         <ScrollArea.Viewport classNames='gap-6 p-2'>
           {history.map((message, i) => (
             <div key={i} className='grid grid-cols-[2rem_1fr_2rem]'>
@@ -250,13 +250,13 @@ const MessageThread = forwardRef<HTMLDivElement, MessageThreadProps>(
 
 const MessageItem = ({ classNames, message }: ThemedClassName<{ message: Message }>) => {
   const { type, text, data, error } = message;
-  const wrapper = 'p-1 pli-2 rounded-md bg-hoverSurface overflow-auto';
+  const wrapper = 'p-1 px-2 rounded-md bg-hover-surface overflow-auto';
   return (
     <div className={mx('flex', type === 'request' ? 'ml-[1rem] justify-end' : 'mr-[1rem]', classNames)}>
-      {error && <div className={mx(wrapper, 'whitespace-pre', errorText)}>{String(error)}</div>}
+      {error && <div className={mx(wrapper, 'whitespace-pre text-error-text')}>{String(error)}</div>}
 
       {text !== undefined && (
-        <div className={mx(wrapper, type === 'request' && 'bg-primary-400 dark:bg-primary-600')}>
+        <div className={mx(wrapper, type === 'request' && 'bg-primary-500 dark:bg-primary-600')}>
           {text || '\u00D8'}
         </div>
       )}

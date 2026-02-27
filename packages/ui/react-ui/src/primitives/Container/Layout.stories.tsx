@@ -21,9 +21,9 @@ const DefaultStory = ({ count }: { count: number }) => {
         <Toolbar.IconButton icon='ph--dots-three-vertical--regular' iconOnly label='Menu' />
       </Toolbar.Root>
       <ScrollArea.Root thin orientation='vertical'>
-        <ScrollArea.Viewport classNames='pli-2 plb-1 gap-1'>
+        <ScrollArea.Viewport classNames='px-2 py-1 gap-1'>
           {Array.from({ length: count }).map((_, index) => (
-            <div key={index} role='listitem' className='pli-2 plb-1 border border-separator'>
+            <div key={index} role='listitem' className='px-2 py-1 border border-separator'>
               {index}
             </div>
           ))}

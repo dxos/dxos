@@ -7,7 +7,7 @@ import React from 'react';
 import { type Node } from '@dxos/app-graph';
 import { keySymbols } from '@dxos/keyboard';
 import { type TFunction, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { descriptionText, mx } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
 import { type MenuActionProperties } from '@dxos/ui-types';
 
 import { translationKey } from '../translations';
@@ -21,7 +21,7 @@ export const ActionLabel = ({ action }: { action: Action }) => {
   return (
     <>
       <span className='grow truncate'>{toLocalizedString(action.properties!.label, t)}</span>
-      {shortcut && <span className={mx('shrink-0', descriptionText)}>{keySymbols(shortcut).join('')}</span>}
+      {shortcut && <span className={mx('shrink-0', 'text-description')}>{keySymbols(shortcut).join('')}</span>}
     </>
   );
 };

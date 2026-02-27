@@ -93,7 +93,12 @@ export default defineFunction({
     if (text) {
       query = Query.all(...text.split(' ').map((term) => Query.select(Filter.text(term, { type: 'full-text' }))));
       if (typename !== undefined) {
-        query = query.select(Filter.type(typename));
+        const schema = yield* Database.runSchemaQuery({ typename, location: ['database', 'runtime'] });
+        if (schema.length === 0) {
+          return yield* Effect.fail(new Error(`Schema ${typename} not found`));
+        }
+        // NOTE: Query by typename string doesn't work for dynamic schemas.
+        query = query.select(Filter.type(schema[0]));
       }
     } else if (typename) {
       query = Query.select(Filter.type(typename));

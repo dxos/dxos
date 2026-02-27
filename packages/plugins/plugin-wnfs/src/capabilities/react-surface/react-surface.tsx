@@ -12,7 +12,8 @@ import { Obj } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
 import { type FormFieldComponentProps } from '@dxos/react-ui-form';
 
-import { FileContainer, FileInput } from '../../components';
+import { FileInput } from '../../components';
+import { FileContainer } from '../../containers';
 import { meta } from '../../meta';
 import { WnfsAction, WnfsFile } from '../../types';
 

@@ -1,3 +1,5 @@
+.worktrees/
+
 # Logs
 logs/
 npm-debug.log*

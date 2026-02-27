@@ -85,7 +85,7 @@ export const WorkflowPanel = (props: { space?: Space }) => {
         </Toolbar.Root>
       }
     >
-      <div className={'bs-full grid grid-rows-[4fr_3fr]'}>
+      <div className={'h-full grid grid-rows-[4fr_3fr]'}>
         <MasterDetailTable
           properties={properties}
           data={tableData}
@@ -93,7 +93,7 @@ export const WorkflowPanel = (props: { space?: Space }) => {
           onSelectionChanged={setSelectedId}
         />
 
-        <div className={mx('bs-full')}>
+        <div className={mx('h-full')}>
           {selected && <WorkflowDebugPanel loader={loader} graph={selected} mode={executionMode} />}
         </div>
       </div>

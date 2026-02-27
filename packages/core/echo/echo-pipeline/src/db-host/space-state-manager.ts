@@ -3,7 +3,7 @@
 //
 
 import { type DocHandle, type DocumentId, interpretAsDocumentId } from '@automerge/automerge-repo';
-import isEqual from 'lodash.isequal';
+import isEqual from 'fast-deep-equal';
 
 import { Event, UpdateScheduler } from '@dxos/async';
 import { Context, LifecycleState, Resource } from '@dxos/context';

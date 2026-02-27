@@ -183,8 +183,8 @@ export const ObjectsPanel = (props: { space?: Space }) => {
         </Toolbar.Root>
       }
     >
-      <div className='bs-full grid grid-cols-[4fr_3fr] overflow-hidden'>
-        <div className='flex flex-col is-full overflow-hidden'>
+      <div className='h-full grid grid-cols-[4fr_3fr] overflow-hidden'>
+        <div className='flex flex-col w-full overflow-hidden'>
           <DynamicTable
             properties={dataProperties}
             rows={dataRows}
@@ -193,17 +193,17 @@ export const ObjectsPanel = (props: { space?: Space }) => {
           />
           <div
             className={mx(
-              'bs-[--statusbar-size]',
+              'h-(--statusbar-size)',
               'flex shrink-0 justify-end items-center gap-2',
-              'bg-baseSurface text-description',
+              'bg-base-surface text-description',
             )}
           >
-            <div className='text-sm pie-2'>Objects: {items.length}</div>
+            <div className='text-sm pe-2'>Objects: {items.length}</div>
           </div>
         </div>
 
-        <div className='min-bs-0 bs-full grid grid-rows-[1fr_16rem] !border-separator border-is border-bs'>
-          <div className={mx('p-1 min-bs-0 overflow-auto')}>
+        <div className='min-h-0 h-full grid grid-rows-[1fr_16rem] border-separator! border-s border-t'>
+          <div className={mx('p-1 min-h-0 overflow-auto')}>
             {selected ? (
               <ObjectViewer
                 object={selectedVersionObject ?? selected}
@@ -214,7 +214,7 @@ export const ObjectsPanel = (props: { space?: Space }) => {
               <Placeholder label='Data' />
             )}
           </div>
-          <div className={mx(!selected && 'p-1 border-bs !border-separator')}>
+          <div className={mx(!selected && 'p-1 border-t border-separator!')}>
             {selected ? (
               <DynamicTable properties={historyProperties} rows={historyRows} onRowClick={handleHistoryRowClicked} />
             ) : (

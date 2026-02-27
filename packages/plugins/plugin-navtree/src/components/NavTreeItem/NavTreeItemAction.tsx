@@ -49,7 +49,7 @@ export const NavTreeItemActionDropdownMenu = ({
         <DropdownMenu.Trigger asChild>
           <IconButton
             {...(density === 'coarse' ? coarseActionButtonProps : fineActionButtonProps)}
-            classNames={['shrink-0 pli-2 pointer-fine:pli-1', hoverableControlItem, hoverableOpenControlItem]}
+            classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
             variant='ghost'
             icon={icon ?? fallbackIcon}
             iconOnly
@@ -80,7 +80,7 @@ export const NavTreeItemMonolithicAction = (
         'shrink-0',
         hoverableControlItem,
         hoverableOpenControlItem,
-        iconOnly ? 'pli-2 pointer-fine:pli-1' : 'p-2 pointer-fine:p-2 mie-1',
+        iconOnly ? 'px-2 pointer-fine:px-1' : 'p-2 pointer-fine:p-2 me-1',
       ]}
       icon={icon ?? fallbackIcon}
       iconOnly={iconOnly}

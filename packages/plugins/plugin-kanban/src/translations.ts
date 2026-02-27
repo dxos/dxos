@@ -36,6 +36,7 @@ export const translations = [
         'delete column label': 'Delete column',
         'card field deleted label': 'Card field deleted',
         'card deleted label': 'Card deleted',
+        'select pivot placeholder': 'Select a pivot column in board settings to display columns.',
       },
     },
   },

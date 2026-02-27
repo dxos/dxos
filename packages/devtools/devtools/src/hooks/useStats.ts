@@ -14,7 +14,7 @@ import { useClient } from '@dxos/react-client';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import { type Diagnostics, type DiagnosticsRequest, TRACE_PROCESSOR } from '@dxos/tracing';
 import { DiagnosticsChannel } from '@dxos/tracing';
-import { get } from '@dxos/util';
+import { getDeep } from '@dxos/util';
 
 // TODO(burdon): Factor out.
 
@@ -143,8 +143,8 @@ export const useStats = (): [Stats, () => void] => {
     const diagnostics = await client.diagnostics();
 
     // const s = TRACE_PROCESSOR.findResourcesByClassName('QueryState');
-    const resources = get(diagnostics, 'services.diagnostics.trace.resources') as Record<string, Resource>;
-    const queries: QueryInfo[] = Object.values(resources)
+    const resources = getDeep<Record<string, Resource>>(diagnostics, ['services', 'diagnostics', 'trace', 'resources']);
+    const queries: QueryInfo[] = Object.values(resources ?? {})
       .filter((res) => res.className === 'QueryState')
       .map((res) => {
         return res.info as QueryInfo;

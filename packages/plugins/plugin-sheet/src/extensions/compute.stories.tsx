@@ -11,7 +11,7 @@ import { PublicKey } from '@dxos/keys';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useThemeContext } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import {
   createBasicExtensions,
@@ -63,7 +63,7 @@ const DefaultStory = ({ text }: EditorProps) => {
     [computeGraph, themeMode],
   );
 
-  return <div className='is-[40rem] overflow-hidden' ref={parentRef} {...focusAttributes} />;
+  return <div className='w-[40rem] overflow-hidden' ref={parentRef} {...focusAttributes} />;
 };
 
 const Grid = () => {
@@ -87,7 +87,7 @@ const Grid = () => {
   }
 
   return (
-    <div className='flex is-[40rem] overflow-hidden'>
+    <div className='flex w-[40rem] overflow-hidden'>
       <SheetProvider graph={graph} sheet={sheet}>
         <GridSheet />
       </SheetProvider>
@@ -108,6 +108,7 @@ const meta = {
   title: 'plugins/plugin-sheet/extensions',
   decorators: [
     withTheme(),
+    withLayout({ layout: 'fullscreen' }),
     withClientProvider({
       types: [Sheet.Sheet],
       createIdentity: true,

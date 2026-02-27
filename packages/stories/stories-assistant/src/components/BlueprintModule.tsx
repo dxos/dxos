@@ -18,10 +18,10 @@ export const BlueprintModule = ({ space }: ComponentProps) => {
   const { t } = useTranslation(meta.id);
 
   return !blueprint?.instructions ? (
-    <p className={mx(descriptionMessage, 'm-trimMd')}>{t('no blueprint message')}</p>
+    <p className={mx(descriptionMessage, 'm-trim-md')}>{t('no blueprint message')}</p>
   ) : (
-    <div className='flex flex-col bs-full'>
-      <Toolbar.Root classNames='border-be border-subduedSeparator'>
+    <div className='flex flex-col h-full'>
+      <Toolbar.Root classNames='border-b border-subdued-separator'>
         <h2>{Obj.getLabel(blueprint)}</h2>
         <div className='flex-1' />
         <Toolbar.IconButton icon='ph--arrow-clockwise--regular' iconOnly label='Refresh' />

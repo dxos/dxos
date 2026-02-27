@@ -11,7 +11,7 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
 import { Diagram } from '@dxos/plugin-sketch/types';
 
-import { SketchContainer, SketchSettings } from '../../components';
+import { SketchContainer, SketchSettings } from '../../containers';
 import { meta } from '../../meta';
 import { EXCALIDRAW_SCHEMA, ExcalidrawCapabilities, type SketchSettingsProps } from '../../types';
 

@@ -15,7 +15,7 @@ import React, {
 
 import { type Format } from '@dxos/echo/internal';
 import { Icon, Input, Tooltip } from '@dxos/react-ui';
-import { errorText, inputTextLabel } from '@dxos/ui-theme';
+import { inputTextLabel } from '@dxos/ui-theme';
 
 import { type FormFieldStatus } from '../../hooks';
 
@@ -82,7 +82,7 @@ export const FormFieldLabel = ({ label, error, readonly, asChild }: FormFieldLab
       <Label className={inputTextLabel}>{label}</Label>
       {error && (
         <Tooltip.Trigger asChild content={error} side='bottom'>
-          <Icon icon='ph--warning--regular' size={4} classNames={errorText} />
+          <Icon icon='ph--warning--regular' size={4} classNames='text-error-text' />
         </Tooltip.Trigger>
       )}
     </div>
@@ -156,8 +156,8 @@ export class FormFieldErrorBoundary extends Component<FormFieldErrorBoundaryProp
   override render() {
     if (this.state.error) {
       return (
-        <div className='flex gap-2 border border-roseFill font-mono text-sm'>
-          <span className='bg-roseFill text-surfaceText pli-1 font-thin'>ERROR</span>
+        <div className='flex gap-2 border border-rose-fill font-mono text-sm'>
+          <span className='bg-rose-fill text-surface-text px-1 font-thin'>ERROR</span>
           {String(this.props.path?.join('.'))}
         </div>
       );

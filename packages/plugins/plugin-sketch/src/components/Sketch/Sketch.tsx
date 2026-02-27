@@ -217,14 +217,14 @@ export const Sketch = ({
       role='none'
       ref={containerRef}
       style={{ visibility: ready ? 'visible' : 'hidden' }}
-      className={mx('is-full bs-full', classNames)}
+      className={mx('w-full h-full', classNames)}
     >
       <Tldraw
         key={Obj.getDXN(sketch).toString()}
         store={adapter.store}
         hideUi={hideUi}
         inferDarkMode
-        className='!outline-none'
+        className='outline-hidden!'
         maxAssetSize={1024 * 1024}
         assetUrls={assetUrls}
         overrides={overrides}

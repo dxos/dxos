@@ -45,14 +45,7 @@ export default defineConfig({
     },
   },
   plugins: [
-    ThemePlugin({
-      root: dirname,
-      content: [
-        path.resolve(dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        path.resolve(dirname, './node_modules/@dxos/react-ui/dist/**/*.mjs'),
-        path.resolve(dirname, './node_modules/@dxos/ui-theme/dist/**/*.mjs'),
-      ],
-    }),
+    ThemePlugin({}),
     ReactPlugin(),
     // https://www.bundle-buddy.com/rollup
     {

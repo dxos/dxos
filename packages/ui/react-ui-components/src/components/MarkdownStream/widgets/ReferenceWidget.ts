@@ -23,6 +23,6 @@ export class ReferenceWidget extends WidgetType {
       .classNames('dx-tag--anchor')
       .attributes({ dxn: this.dxn })
       .text(this.text);
-    return Domino.of('div').classNames('mbs-2 mbe-2').children(anchor).root;
+    return Domino.of('div').classNames('mt-2 mb-2').children(anchor).root;
   }
 }

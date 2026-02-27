@@ -12,11 +12,11 @@ import { type ThemeExtensionsOptions } from './extensions';
  * 50rem = 800px. Maximum content width for solo mode.
  * NOTE: Max width - 4rem = 2rem left/right margin (or 2rem gutter plus 1rem left/right margin).
  */
-export const editorWidth = '!mli-auto is-full max-is-[min(50rem,100%-4rem)]';
+export const editorWidth = '!mx-auto w-full max-w-[min(50rem,100%-4rem)]';
 
 export const editorSlots: ThemeExtensionsOptions['slots'] = {
   scroll: {
-    className: 'pbs-2',
+    className: 'pt-2',
   },
   content: {
     className: editorWidth,
@@ -29,6 +29,6 @@ export const editorWithToolbarLayout =
 // NOTE: Padding is added to the editor to account for the focus ring (since otherwise the CM gutter will clip it)
 export const stackItemContentEditorClassNames = (role?: string) =>
   mx(
-    'p-0.5 dx-focus-ring-inset attention-surface data-[toolbar=disabled]:pbs-2',
-    role === 'section' ? '[&_.cm-scroller]:overflow-hidden [&_.cm-scroller]:min-bs-24' : 'min-bs-0',
+    'p-0.5 dx-focus-ring-inset attention-surface data-[toolbar=disabled]:pt-2',
+    role === 'section' ? '[&_.cm-scroller]:overflow-hidden [&_.cm-scroller]:min-h-24' : 'min-h-0',
   );

@@ -32,7 +32,6 @@
     "@radix-ui/react-primitive": "catalog:",
     "@radix-ui/react-slot": "catalog:",
     "@radix-ui/react-use-controllable-state": "catalog:",
-    "lodash.omit": "catalog:",
     "rci": "catalog:"
   },
   "devDependencies": {

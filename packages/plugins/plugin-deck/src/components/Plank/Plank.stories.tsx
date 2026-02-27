@@ -9,7 +9,7 @@ import { Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { corePlugins } from '@dxos/plugin-testing';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Stack } from '@dxos/react-ui-stack';
 
 import { DeckState } from '../../capabilities';
@@ -39,6 +39,7 @@ const meta = {
   },
   decorators: [
     withTheme(),
+    withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [...corePlugins(), TestPlugin()],
     }),
