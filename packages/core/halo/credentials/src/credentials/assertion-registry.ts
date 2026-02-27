@@ -83,7 +83,7 @@ export const ASSERTION_SCHEMAS = [
   AuthSchema,
   DelegateSpaceInvitationSchema,
   CancelDelegatedInvitationSchema,
-] as const satisfies readonly DescMessage[];
+] as const;
 
 /**
  * Registry for credential assertion types.

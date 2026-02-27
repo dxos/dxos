@@ -16,6 +16,7 @@ import { runTestSignalServer } from '@dxos/signal';
 
 import { type OfferMessage, type SignalMessage } from './signal-messenger';
 import { SwarmMessenger } from './swarm-messenger';
+import { failedInvariant } from '@dxos/invariant';
 
 const toBufKey = (key: PublicKey) => create(PublicKeySchema, { data: key.asUint8Array() });
 const joinReq = (topic: PublicKey, peer: ReturnType<typeof create<typeof PeerSchema>>) =>
@@ -64,7 +65,7 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
         await router.receiveMessage({
           author: message.author!,
           recipient: message.recipient!,
-          payload: message.payload as never,
+          payload: message.payload ?? failedInvariant(),
         }),
     });
 

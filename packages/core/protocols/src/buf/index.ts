@@ -9,10 +9,7 @@ import { PublicKey } from '@dxos/keys';
 import { Timeframe } from '@dxos/timeframe';
 
 import * as KeysPb from './proto/gen/dxos/keys_pb.ts';
-import {
-  type TimeframeVector,
-  TimeframeVectorSchema,
-} from './proto/gen/dxos/echo/timeframe_pb.ts';
+import { type TimeframeVector, TimeframeVectorSchema } from './proto/gen/dxos/echo/timeframe_pb.ts';
 
 export * as buf from '@bufbuild/protobuf';
 export * as bufWkt from '@bufbuild/protobuf/wkt';
@@ -20,6 +17,7 @@ export * as bufCodegen from '@bufbuild/protobuf/codegenv2';
 
 // Re-export commonly used types and functions.
 export {
+  type MessageInitShape,
   create,
   fromBinary,
   toBinary,
@@ -80,7 +78,10 @@ export const bufAnyToProtoAny = (any?: { typeUrl?: string; value?: Uint8Array })
   any ? { type_url: any.typeUrl ?? '', value: any.value ?? new Uint8Array() } : undefined;
 
 /** Convert proto Any (type_url) to buf Any (typeUrl) at a boundary. */
-export const protoAnyToBufAny = (any?: { type_url?: string; value?: Uint8Array }): { typeUrl: string; value: Uint8Array } | undefined =>
+export const protoAnyToBufAny = (any?: {
+  type_url?: string;
+  value?: Uint8Array;
+}): { typeUrl: string; value: Uint8Array } | undefined =>
   any ? { typeUrl: any.type_url ?? '', value: any.value ?? new Uint8Array() } : undefined;
 
 /** Convert a Timeframe instance to buf TimeframeVector message. */

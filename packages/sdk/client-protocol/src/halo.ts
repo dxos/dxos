@@ -4,16 +4,23 @@
 
 import { type MulticastObservable } from '@dxos/async';
 import { type PublicKey } from '@dxos/keys';
-import { type Invitation } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { type MessageInitShape } from '@dxos/protocols/buf';
+import { type Invitation, type InvitationSchema } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type Contact, type Device, type Identity } from '@dxos/protocols/buf/dxos/client/services_pb';
 import {
+  ProfileDocumentSchema,
   type Credential,
   type DeviceProfileDocument,
+  type DeviceProfileDocumentSchema,
   type Presentation,
   type ProfileDocument,
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { type AuthenticatingInvitation, type CancellableInvitation } from './invitations';
+
+export type ProfileDocumentInit = MessageInitShape<typeof ProfileDocumentSchema>;
+export type DeviceProfileDocumentInit = MessageInitShape<typeof DeviceProfileDocumentSchema>;
+export type InvitationInit = MessageInitShape<typeof InvitationSchema>;
 
 /**
  * TODO(burdon): Public API (move comments here).
@@ -26,12 +33,12 @@ export interface Halo {
   get invitations(): MulticastObservable<CancellableInvitation[]>;
   get credentials(): MulticastObservable<Credential[]>;
 
-  createIdentity(options?: ProfileDocument, deviceProfile?: DeviceProfileDocument): Promise<Identity>;
+  createIdentity(options?: ProfileDocumentInit, deviceProfile?: DeviceProfileDocumentInit): Promise<Identity>;
   recoverIdentity(args: { recoveryCode: string }): Promise<Identity>;
-  updateProfile(profile: ProfileDocument): Promise<Identity>;
+  updateProfile(profile: ProfileDocumentInit): Promise<Identity>;
 
-  share(options?: Partial<Invitation>): CancellableInvitation;
-  join(invitation: Invitation, deviceProfile?: DeviceProfileDocument): AuthenticatingInvitation;
+  share(options?: Partial<InvitationInit>): CancellableInvitation;
+  join(invitation: Invitation, deviceProfile?: DeviceProfileDocumentInit): AuthenticatingInvitation;
 
   /*
    * query Credentials currently known to the identity.

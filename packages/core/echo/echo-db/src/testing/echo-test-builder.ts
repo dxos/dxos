@@ -158,7 +158,6 @@ export class EchoTestPeer extends Resource {
   protected override async _open(ctx: Context): Promise<void> {
     await this._kv.open();
     this._initEcho();
-    // Type assertions needed because buf implementations are structurally compatible.
     this._echoClient.connectToService({
       dataService: this._echoHost.dataService,
       queryService: this._echoHost.queryService,
@@ -199,7 +198,6 @@ export class EchoTestPeer extends Resource {
     const client = new EchoClient();
     await client.graph.schemaRegistry.register(this._types);
     this._clients.add(client);
-    // Type assertions needed because buf implementations are structurally compatible.
     client.connectToService({
       dataService: this._echoHost.dataService,
       queryService: this._echoHost.queryService,

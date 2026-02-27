@@ -14,7 +14,7 @@ import { arrayToBuffer } from '@dxos/util';
  */
 // TODO(nf): rename, this returns not the proof itself, but the payload for verifying against the proof.
 export const getCredentialProofPayload = (credential: Credential): Uint8Array => {
-  const copy = {
+  const copy: any = {
     ...credential,
     proof: {
       ...credential.proof,
@@ -23,9 +23,9 @@ export const getCredentialProofPayload = (credential: Credential): Uint8Array =>
     },
   };
   if (copy.parentCredentialIds?.length === 0) {
-    delete (copy as { parentCredentialIds?: unknown }).parentCredentialIds;
+    delete copy.parentCredentialIds;
   }
-  delete (copy as { id?: unknown }).id; // ID is not part of the signature payload.
+  delete copy.id; // ID is not part of the signature payload.
 
   return Buffer.from(canonicalStringify(copy));
 };
@@ -74,7 +74,12 @@ export const canonicalStringify = (obj: any): string =>
           return value.toHex();
         }
         // Buf PublicKey messages are `{ data: Uint8Array }` — normalize to hex like @dxos/keys PublicKey.
-        if (original && typeof original === 'object' && original.data instanceof Uint8Array && !Array.isArray(original)) {
+        if (
+          original &&
+          typeof original === 'object' &&
+          original.data instanceof Uint8Array &&
+          !Array.isArray(original)
+        ) {
           const nonMetaKeys = Object.keys(original).filter((k: string) => !k.startsWith('$'));
           if (nonMetaKeys.length === 1 && nonMetaKeys[0] === 'data') {
             return PublicKey.from(original.data).toHex();

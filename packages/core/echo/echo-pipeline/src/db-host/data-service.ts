@@ -69,7 +69,6 @@ export class DataServiceImpl implements Echo.DataService {
       const synchronizer = new DocumentsSynchronizer({
         automergeHost: this._automergeHost,
         sendUpdates: (updates) => {
-          // Convert to buf message format.
           next(
             create(BatchedDocumentUpdatesSchema, {
               updates: updates.updates?.map((u) => ({
@@ -186,16 +185,7 @@ export class DataServiceImpl implements Echo.DataService {
 
         next(
           create(SpaceSyncStateSchema, {
-            peers: peers.map((p) => ({
-              peerId: p.peerId,
-              missingOnRemote: p.missingOnRemote,
-              missingOnLocal: p.missingOnLocal,
-              differentDocuments: p.differentDocuments,
-              localDocumentCount: p.localDocumentCount,
-              remoteDocumentCount: p.remoteDocumentCount,
-              totalDocumentCount: p.totalDocumentCount,
-              unsyncedDocumentCount: p.unsyncedDocumentCount,
-            })),
+            peers,
           }),
         );
       });

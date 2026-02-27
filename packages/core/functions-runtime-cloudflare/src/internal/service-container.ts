@@ -71,7 +71,7 @@ export class ServiceContainer {
       objects: structuredClone(result.objects),
       nextCursor: result.nextCursor ?? null,
       prevCursor: result.prevCursor ?? null,
-    } as never;
+    };
   }
 
   async insertIntoQueue(queue: DXN, objects: AnyEntity[]): Promise<void> {
