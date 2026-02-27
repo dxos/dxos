@@ -15,8 +15,10 @@ import { timestampMs, toPublicKey } from '@dxos/protocols/buf';
 import type { GenService, GenServiceMethods } from '@dxos/protocols/buf';
 import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { schema } from '@dxos/protocols/proto';
-import { InitAuthSequenceResponse } from '@dxos/protocols/proto/dxos/service/agentmanager';
-import type { AgentManager } from '@dxos/protocols/proto/dxos/service/agentmanager';
+import {
+  InitAuthSequenceResponse,
+  type AgentManager,
+} from '@dxos/protocols/proto/dxos/service/agentmanager';
 import { type WebsocketRpcClient } from '@dxos/websocket-rpc';
 
 export type AgentHostingProvider = {

@@ -15,8 +15,9 @@ import { EdgeCallFailedError } from '@dxos/protocols';
 import { bufToProto, protoToBuf } from '@dxos/protocols/buf';
 import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
 import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type NotarizeRequest } from '@dxos/protocols/buf/dxos/mesh/teleport/notarization_pb';
 import { schema } from '@dxos/protocols/proto';
-import { type NotarizationService, type NotarizeRequest } from '@dxos/protocols/proto/dxos/mesh/teleport/notarization';
+import { type NotarizationService } from '@dxos/protocols/proto/dxos/mesh/teleport/notarization';
 import { type ExtensionContext, RpcExtension } from '@dxos/teleport';
 import { ComplexMap, ComplexSet, entry } from '@dxos/util';
 
@@ -351,8 +352,7 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
     if (!this._writer) {
       throw new Error(WRITER_NOT_SET_ERROR_CODE);
     }
-    // Proto RPC boundary: proto request credentials cast to buf for internal processing.
-    await this._notarizeCredentials(this._writer, protoToBuf<Credential[]>(request.credentials ?? []));
+    await this._notarizeCredentials(this._writer, request.credentials ?? []);
   }
 
   private async _notarizeCredentials(writer: FeedWriter<Credential>, credentials: Credential[]): Promise<void> {
@@ -432,7 +432,7 @@ export class NotarizationTeleportExtension extends RpcExtension<Services, Servic
     return {
       NotarizationService: {
         notarize: async (request) => {
-          await this._params.onNotarize(request);
+          await this._params.onNotarize(protoToBuf<NotarizeRequest>(request));
         },
       },
     };

@@ -26,12 +26,12 @@ import {
   type SubscribeToFeedsResponse_Feed,
 } from '@dxos/protocols/buf/dxos/devtools/host_pb';
 import { type SwarmInfo } from '@dxos/protocols/buf/dxos/devtools/swarm_pb';
-import { type Credential, type Epoch } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { type Resource, type Span } from '@dxos/protocols/buf/dxos/tracing_pb';
 import {
   type LogEntry,
   type Metrics,
-} from '@dxos/protocols/proto/dxos/client/services';
+} from '@dxos/protocols/buf/dxos/client/logging_pb';
+import { type Credential, type Epoch } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type Resource, type Span } from '@dxos/protocols/buf/dxos/tracing_pb';
 import { Timeframe } from '@dxos/timeframe';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 
