@@ -1,4 +1,4 @@
-type: library
+layer: library
 language: typescript
 tags:
   - ts-build
@@ -12,6 +12,7 @@ tasks:
       - '--entryPoint=src/index.ts'
       - '--entryPoint=src/native/index.ts'
       - '--entryPoint=src/testing/index.ts'
+      - '--platform=neutral'
     deps:
       - prebuild
 

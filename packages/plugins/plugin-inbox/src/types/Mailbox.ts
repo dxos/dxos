@@ -4,12 +4,11 @@
 
 import * as Schema from 'effect/Schema';
 
-import { type Space } from '@dxos/client/echo';
-import { Obj, Ref, Type } from '@dxos/echo';
+import { Feed, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/internal';
-import { Queue } from '@dxos/echo-db';
-import { QueueAnnotation } from '@dxos/schema';
 import { AccessToken } from '@dxos/types';
+
+import { meta } from '../meta';
 
 // TODO(burdon): Implement as labels?
 export enum MessageState {
@@ -26,11 +25,20 @@ export const Labels = Schema.Record({
 
 export type Labels = Schema.Schema.Type<typeof Labels>;
 
-// TODO(burdon): Rename MessageBox? (not email specific).
-export const Mailbox = Schema.Struct({
-  name: Schema.optional(Schema.String),
-  queue: Type.Ref(Queue).pipe(FormInputAnnotation.set(false)),
-  labels: Labels.pipe(Schema.mutable, FormInputAnnotation.set(false), Schema.optional),
+/** Feed kind identifier for mailbox feeds. */
+export const kind = `${meta.id}/mailbox`;
+
+/** Checks if a value is a mailbox feed. */
+export const instanceOf = (value: unknown): value is Feed.Feed =>
+  Obj.instanceOf(Type.Feed, value) && value.kind === kind;
+
+/** Creates a mailbox feed. */
+export const make = (props?: Omit<Obj.MakeProps<typeof Type.Feed>, 'kind'>): Feed.Feed => Feed.make({ kind, ...props });
+
+/** Configuration schema for a mailbox feed. */
+export const Config = Schema.Struct({
+  feed: Type.Ref(Type.Feed),
+  labels: Labels.pipe(FormInputAnnotation.set(false), Schema.optional),
   // TODO(wittjosiah): Factor out to relation?
   filters: Schema.Array(
     Schema.Struct({
@@ -45,14 +53,13 @@ export const Mailbox = Schema.Struct({
     }),
   ),
 }).pipe(
-  Type.Obj({
-    typename: 'dxos.org/type/Mailbox',
+  Type.object({
+    typename: 'dxos.org/type/MailboxConfig',
     version: '0.1.0',
   }),
-  QueueAnnotation.set(true),
 );
 
-export type Mailbox = Schema.Schema.Type<typeof Mailbox>;
+export interface Config extends Schema.Schema.Type<typeof Config> {}
 
 export const CreateMailboxSchema = Schema.Struct({
   name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
@@ -64,17 +71,14 @@ export const CreateMailboxSchema = Schema.Struct({
   ),
 });
 
-type MailboxProps = Omit<Obj.MakeProps<typeof Mailbox>, 'queue' | 'filters'> & {
-  space: Space;
+type ConfigProps = Omit<Obj.MakeProps<typeof Config>, 'filters'> & {
   filters?: { name: string; filter: string }[];
 };
 
-export const make = ({ space, ...props }: MailboxProps) => {
-  const queue = space.queues.create();
-  return Obj.make(Mailbox, {
-    queue: Ref.fromDXN(queue.dxn),
+/** Creates a mailbox config object linked to a feed. */
+export const makeConfig = (props: ConfigProps) =>
+  Obj.make(Config, {
     labels: {},
     filters: [],
     ...props,
   });
-};

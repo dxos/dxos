@@ -1,8 +1,10 @@
-type: library
+layer: library
 language: typescript
 tags:
+  - e2e
   - ts-build
   - ts-test
+  - ts-test-storybook
   - pack
   - storybook
 tasks:
@@ -10,8 +12,9 @@ tasks:
     args:
       - '--entryPoint=src/index.ts'
       - '--entryPoint=src/testing/index.ts'
+      - '--entryPoint=src/playwright/index.ts'
       - '--platform=browser'
       - '--platform=node'
-  test:
+  e2e:
     inputs:
-      - .storybook/*
+      - /tools/storybook-react/.storybook/main.ts

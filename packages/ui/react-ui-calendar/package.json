@@ -4,6 +4,10 @@
   "description": "A calendar component.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "DXOS.org",
   "type": "module",
@@ -43,7 +47,6 @@
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@types/react-virtualized": "catalog:",
-    "@types/react-window": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",

@@ -4,13 +4,13 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Agent, EntityExtraction, ResearchBlueprint } from '@dxos/assistant-toolkit';
+import { AgentFunctions, EntityExtractionFunctions, ResearchBlueprint } from '@dxos/assistant-toolkit';
 import { Prompt } from '@dxos/blueprints';
 import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
-import { DXN, Filter, Key, Obj, Query, Ref, Tag, Type } from '@dxos/echo';
+import { DXN, Feed, Filter, Key, Obj, Query, type QueryAST, Ref, Tag, Type } from '@dxos/echo';
 import { Trigger, serializeFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { gmail } from '@dxos/plugin-inbox';
+import { GmailFunctions } from '@dxos/plugin-inbox';
 import { Mailbox } from '@dxos/plugin-inbox/types';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { type Space } from '@dxos/react-client/echo';
@@ -29,15 +29,9 @@ import {
   createText,
   createTrigger,
 } from '@dxos/react-ui-canvas-compute';
-import {
-  CanvasBoardType,
-  CanvasGraphModel,
-  pointMultiply,
-  pointsToRect,
-  rectToPoints,
-} from '@dxos/react-ui-canvas-editor';
+import { CanvasBoard, CanvasGraphModel, pointMultiply, pointsToRect, rectToPoints } from '@dxos/react-ui-canvas-editor';
 import { View } from '@dxos/schema';
-import { Message, Organization, Person, Project } from '@dxos/types';
+import { Message, Organization, Person, Pipeline } from '@dxos/types';
 import { range, trim } from '@dxos/util';
 
 import { type ObjectGenerator } from './ObjectGenerator';
@@ -57,7 +51,7 @@ export enum PresetName {
 }
 
 export const generator = () => ({
-  schemas: [CanvasBoardType, Trigger.Trigger] as any[],
+  schemas: [CanvasBoard.CanvasBoard, Trigger.Trigger] as any[],
   types: Object.values(PresetName).map((name) => ({ typename: name })),
   items: [
     [
@@ -79,8 +73,8 @@ export const generator = () => ({
 
           const tag = space.db.add(Tag.make({ label: 'Investor' }));
           const tagDxn = Obj.getDXN(tag).toString();
-          Obj.change(doc, () => {
-            Obj.getMeta(doc).tags = [tagDxn];
+          Obj.change(doc, (d) => {
+            Obj.getMeta(d).tags = [tagDxn];
           });
 
           // space.db.add(
@@ -120,7 +114,11 @@ export const generator = () => ({
     [
       PresetName.ORG_RESEARCH_PROJECT,
       async (space, n, cb) => {
-        const mailbox = await space.db.query(Filter.type(Mailbox.Mailbox)).first();
+        const feeds = await space.db.query(Filter.type(Type.Feed)).run();
+        const mailbox = feeds.find((feed) => feed.kind === Mailbox.kind);
+        invariant(mailbox, 'Mailbox feed not found');
+        const queueDxn = Feed.getQueueDxn(mailbox)?.toString();
+        invariant(queueDxn, 'Mailbox feed missing queue DXN key');
         const tag = await space.db.query(Filter.type(Tag.Tag, { label: 'Investor' })).first();
         const tagDxn = Obj.getDXN(tag).toString();
 
@@ -136,9 +134,9 @@ export const generator = () => ({
                 kind: 'timer',
                 cron: '* * * * *', // Every minute.
               },
-              function: Ref.make(serializeFunction(gmail.sync)),
+              function: Ref.make(serializeFunction(GmailFunctions.Sync)),
               input: {
-                mailboxId: Obj.getDXN(mailbox).toString(),
+                mailbox: Ref.make(mailbox),
               },
             }),
           );
@@ -149,9 +147,9 @@ export const generator = () => ({
               // TODO(wittjosiah): Queue trigger doesn't support matching query of the column.
               spec: {
                 kind: 'queue',
-                queue: mailbox.queue.dxn.toString(),
+                queue: queueDxn,
               },
-              function: Ref.make(serializeFunction(EntityExtraction.extract)),
+              function: Ref.make(serializeFunction(EntityExtractionFunctions.Extract)),
               input: {
                 source: '{{event.item}}',
               },
@@ -174,7 +172,7 @@ export const generator = () => ({
                 Create a research note for it at the end.
                 NOTE: Do mocked reseach (set mockSearch to true).
               `,
-              blueprints: [Ref.make(ResearchBlueprint)],
+              blueprints: [Ref.make(ResearchBlueprint.make())],
             }),
           );
 
@@ -187,7 +185,7 @@ export const generator = () => ({
                   ast: organizationsQuery.ast,
                 },
               },
-              function: Ref.make(serializeFunction(Agent.prompt)),
+              function: Ref.make(serializeFunction(AgentFunctions.Prompt)),
               input: {
                 prompt: Ref.make(researchPrompt),
                 input: '{{event.subject}}',
@@ -201,7 +199,7 @@ export const generator = () => ({
                 properties: { labels: Filter.contains('investor') },
               }),
             ).options({
-              queues: [mailbox.queue.dxn.toString()],
+              queues: [queueDxn],
             }),
             jsonSchema: Type.toJsonSchema(Message.Message),
           });
@@ -219,7 +217,7 @@ export const generator = () => ({
           });
 
           return space.db.add(
-            Project.make({
+            Pipeline.make({
               name: 'Investor Research',
               columns: [
                 {
@@ -313,7 +311,7 @@ export const generator = () => ({
             'subscription',
             (triggerSpec) =>
               (triggerSpec.query = {
-                ast: Query.select(Filter.typename('dxos.org/type/Chess')).ast,
+                ast: Query.select(Filter.typename('dxos.org/type/Chess')).ast as Obj.Mutable<QueryAST.Query>,
               }),
             'type',
           );
@@ -712,7 +710,7 @@ export const generator = () => ({
 const createQueueSinkPreset = <SpecType extends Trigger.Kind>(
   space: Space,
   triggerKind: SpecType,
-  initSpec: (spec: Extract<Trigger.Spec, { kind: SpecType }>) => void,
+  initSpec: (spec: Obj.Mutable<Extract<Trigger.Spec, { kind: SpecType }>>) => void,
   triggerOutputName: string,
 ) => {
   const canvasModel = CanvasGraphModel.create<ComputeShape>();
@@ -760,7 +758,9 @@ const createQueueSinkPreset = <SpecType extends Trigger.Kind>(
     functionTrigger = triggerShape.functionTrigger!.target!;
     const triggerSpec = functionTrigger.spec;
     invariant(triggerSpec && triggerSpec.kind === triggerKind, 'No trigger spec.');
-    initSpec(triggerSpec as any);
+    Obj.change(functionTrigger, (ft) => {
+      initSpec(ft.spec as any);
+    });
   });
 
   const computeModel = createComputeGraph(canvasModel);
@@ -777,7 +777,7 @@ const createQueueSinkPreset = <SpecType extends Trigger.Kind>(
 
 const addToSpace = (name: string, space: Space, canvas: CanvasGraphModel, compute: ComputeGraphModel) => {
   return space.db.add(
-    Obj.make(CanvasBoardType, {
+    Obj.make(CanvasBoard.CanvasBoard, {
       name,
       computeGraph: Ref.make(compute.root),
       layout: canvas.graph,

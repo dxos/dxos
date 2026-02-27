@@ -1,0 +1,10 @@
+layer: application
+language: typescript
+
+tasks:
+  build:
+    command: esbuild ./src/worker.ts --bundle --format=esm --outfile=./dist/worker.js
+    inputs:
+      - src/**/*
+    outputs:
+      - dist/worker.js

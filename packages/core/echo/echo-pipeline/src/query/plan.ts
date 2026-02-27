@@ -3,7 +3,7 @@
 //
 
 import type { QueryAST } from '@dxos/echo-protocol';
-import type { EscapedPropPath } from '@dxos/indexing';
+import type { EscapedPropPath } from '@dxos/index-core';
 import type { DXN, ObjectId, SpaceId } from '@dxos/keys';
 
 export namespace QueryPlan {
@@ -170,7 +170,7 @@ export namespace QueryPlan {
   /**
    * Describes a traversal of the object graph.
    */
-  export type Traversal = ReferenceTraversal | RelationTraversal;
+  export type Traversal = ReferenceTraversal | RelationTraversal | HierarchyTraversal;
 
   /**
    * Traverse a reference connection.
@@ -202,6 +202,19 @@ export namespace QueryPlan {
      * There are for variants since each relation has two connectors (source & target) and there are two directions to traverse each.
      */
     direction: 'source-to-relation' | 'relation-to-source' | 'target-to-relation' | 'relation-to-target';
+  };
+
+  /**
+   * Traverse parent-child hierarchy.
+   */
+  export type HierarchyTraversal = {
+    _tag: 'HierarchyTraversal';
+
+    /**
+     * to-parent: traverse from child to parent.
+     * to-children: traverse from parent to children.
+     */
+    direction: 'to-parent' | 'to-children';
   };
 
   /**
@@ -238,6 +251,7 @@ export namespace QueryPlan {
      * Optional limit on the number of results to return after ordering.
      * When set, the sorting can be optimized to only track the top N elements.
      */
+    // TODO(dmaretskyi): Remove. This doesn't belong here.
     limit?: number;
   };
 

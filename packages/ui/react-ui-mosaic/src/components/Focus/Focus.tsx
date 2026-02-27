@@ -3,7 +3,6 @@
 //
 
 import {
-  type UseArrowNavigationGroupOptions,
   useArrowNavigationGroup,
   useFocusableGroup,
   useMergedTabsterAttributes_unstable,
@@ -13,7 +12,7 @@ import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import React, { type PropsWithChildren, createContext, forwardRef, useContext, useRef, useState } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import { type Axis, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { styles } from './styles';
@@ -39,15 +38,16 @@ const useFocus = () => useContext(FocusContext);
 //
 
 type GroupProps = ThemedClassName<
-  PropsWithChildren<
-    {
-      asChild?: boolean;
-    } & Pick<UseArrowNavigationGroupOptions, 'axis'>
-  >
+  PropsWithChildren<{
+    asChild?: boolean;
+    orientation?: Axis;
+  }>
 > & { className?: string };
 
+// TODO(wittjosiah): Consider how this could integrate with with react-ui-attention.
+//   Perhaps react-ui-attention comes under the mosaic umbrella as it supports selection?
 const Group = forwardRef<HTMLDivElement, GroupProps>(
-  ({ classNames, className, children, asChild, axis = 'vertical', ...props }: GroupProps, forwardedRef) => {
+  ({ classNames, className, children, asChild, orientation = 'vertical', ...props }: GroupProps, forwardedRef) => {
     const rootRef = useRef<HTMLDivElement>(null);
     const composedRef = useComposedRefs<HTMLDivElement>(rootRef, forwardedRef);
     const Root = asChild ? Slot : Primitive.div;
@@ -57,7 +57,7 @@ const Group = forwardRef<HTMLDivElement, GroupProps>(
       tabBehavior: 'limited-trap-focus',
     });
     const arrowNavigationAttrs = useArrowNavigationGroup({
-      axis,
+      axis: orientation,
       memorizeCurrent: true,
     });
     const tabsterAttrs = useMergedTabsterAttributes_unstable(focusableGroupAttrs, arrowNavigationAttrs);

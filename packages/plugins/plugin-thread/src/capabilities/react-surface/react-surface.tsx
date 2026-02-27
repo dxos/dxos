@@ -6,8 +6,9 @@ import { useAtomValue } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { Capability, Common } from '@dxos/app-framework';
-import { useCapability, useSettingsState } from '@dxos/app-framework/react';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { Surface, useCapability, useSettingsState } from '@dxos/app-framework/ui';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { Obj, type Ref } from '@dxos/echo';
 import { getSpace } from '@dxos/react-client/echo';
 import { Thread } from '@dxos/types';
@@ -19,20 +20,20 @@ import {
   ChatContainer,
   ThreadCompanion,
   ThreadSettings,
-} from '../../components';
+} from '../../containers';
 import { meta } from '../../meta';
 import { Channel, ThreadCapabilities, type ThreadSettingsProps } from '../../types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(Common.Capability.ReactSurface, [
-      Common.createSurface({
+    Capability.contributes(Capabilities.ReactSurface, [
+      Surface.create({
         id: `${meta.id}/channel`,
         role: 'article',
         filter: (data): data is { subject: Channel.Channel } => Obj.instanceOf(Channel.Channel, data.subject),
-        component: ({ data: { subject }, role }) => <ChannelContainer channel={subject} role={role} />,
+        component: ({ data: { subject }, role }) => <ChannelContainer role={role} subject={subject} />,
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/chat-companion`,
         role: 'article',
         filter: (data): data is { companionTo: Channel.Channel; subject: 'chat' } =>
@@ -47,7 +48,7 @@ export default Capability.makeModule(() =>
           return <ChatContainer thread={thread} space={space} />;
         },
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/thread`,
         role: 'article',
         filter: (data): data is { subject: Thread.Thread } => Obj.instanceOf(Thread.Thread, data.subject),
@@ -60,7 +61,7 @@ export default Capability.makeModule(() =>
           return <ChatContainer thread={subject} space={space} />;
         },
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/comments`,
         role: 'article',
         filter: (data): data is { companionTo: { threads: Ref.Ref<Thread.Thread>[] } } =>
@@ -68,22 +69,22 @@ export default Capability.makeModule(() =>
         // TODO(wittjosiah): This isn't scrolling properly in a plank.
         component: ({ data }) => <ThreadCompanion subject={data.companionTo} />,
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/plugin-settings`,
         role: 'article',
-        filter: (data): data is { subject: Common.Capability.Settings } =>
-          Common.Capability.isSettings(data.subject) && data.subject.prefix === meta.id,
+        filter: (data): data is { subject: AppCapabilities.Settings } =>
+          AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.id,
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<ThreadSettingsProps>(subject.atom);
           return <ThreadSettings settings={settings} onSettingsChange={updateSettings} />;
         },
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/assistant`,
         role: 'deck-companion--active-call',
         component: () => <CallSidebar />,
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/devtools-overview`,
         role: 'devtools-overview',
         component: () => {

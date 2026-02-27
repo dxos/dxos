@@ -11,11 +11,12 @@ import { D3ForceGraph, useGraphModel } from '@dxos/plugin-explorer';
 import { faker } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { withTheme } from '@dxos/react-ui/testing';
+import { ScrollArea } from '@dxos/react-ui';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { QueryEditor, type QueryEditorProps, useQueryBuilder } from '@dxos/react-ui-components';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { render } from '@dxos/storybook-utils';
-import { Employer, Organization, Person, Project } from '@dxos/types';
+import { Employer, Organization, Person, Pipeline } from '@dxos/types';
 
 // TODO(burdon): Move.
 
@@ -30,22 +31,24 @@ const DefaultStory = ({ value: valueProp }: QueryEditorProps) => {
   const model = useGraphModel(space, filter);
 
   return (
-    <div role='none' className='grid grid-cols-2 grow divide-x divide-subduedSeparator overflow-hidden'>
+    <div role='none' className='grid grid-cols-2 grow divide-x divide-subdued-separator overflow-hidden'>
       <div className='flex flex-col overflow-hidden'>
-        <QueryEditor classNames='p-2 is-full border-be border-subduedSeparator' db={space?.db} onChange={setQuery} />
-        <div className='bs-full overflow-y-auto'>
-          {objects.map((object) => (
-            <div
-              key={object.id}
-              className='grid grid-cols-3 gap-2 p-2 border-be border-subduedSeparator overflow-hidden'
-            >
-              <span className='truncate text-sm font-mono'>{object.id}</span>
-              <span className='truncate text-sm font-mono'>{Obj.getTypename(object)}</span>
-              <span className='truncate'>{Obj.getLabel(object)}</span>
-            </div>
-          ))}
-        </div>
-        <div className='p-2 text-right text-infoText text-xs'>{objects.length}</div>
+        <QueryEditor classNames='p-2 w-full border-b border-subdued-separator' db={space?.db} onChange={setQuery} />
+        <ScrollArea.Root orientation='vertical'>
+          <ScrollArea.Viewport>
+            {objects.map((object) => (
+              <div
+                key={object.id}
+                className='grid grid-cols-3 gap-2 p-2 border-b border-subdued-separator overflow-hidden'
+              >
+                <span className='truncate text-sm font-mono'>{object.id}</span>
+                <span className='truncate text-sm font-mono'>{Obj.getTypename(object)}</span>
+                <span className='truncate'>{Obj.getLabel(object)}</span>
+              </div>
+            ))}
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+        <div className='p-2 text-right text-info-text text-xs'>{objects.length}</div>
       </div>
       <D3ForceGraph model={model} />
     </div>
@@ -63,20 +66,23 @@ const meta: Meta<typeof QueryEditor> = {
   component: QueryEditor,
   render: render(DefaultStory),
   decorators: [
-    withTheme,
+    withTheme(),
+    withLayout({ layout: 'fullscreen' }),
     withClientProvider({
-      types: [Organization.Organization, Person.Person, Project.Project, Employer.Employer],
+      types: [Organization.Organization, Person.Person, Pipeline.Pipeline, Employer.Employer],
       createIdentity: true,
       onCreateIdentity: async ({ client }) => {
         const space = client.spaces.default;
         const createObjects = createObjectFactory(space.db, generator);
         const objects = await createObjects([
           { type: Organization.Organization, count: 30 },
-          { type: Project.Project, count: 20 },
+          { type: Pipeline.Pipeline, count: 20 },
           { type: Person.Person, count: 50 },
         ]);
         objects.forEach((obj) => {
-          Obj.getMeta(obj).tags = faker.helpers.uniqueArray(Object.keys(tags), faker.number.int(3));
+          Obj.change(obj, (o) => {
+            Obj.getMeta(o).tags = faker.helpers.uniqueArray(Object.keys(tags), faker.number.int(3));
+          });
         });
       },
     }),

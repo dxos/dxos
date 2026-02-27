@@ -5,7 +5,7 @@
 import type * as SchemaAST from 'effect/SchemaAST';
 import React, { useCallback, useMemo } from 'react';
 
-import { type Database, Ref, Type } from '@dxos/echo';
+import { type Database, Obj, Ref, Type } from '@dxos/echo';
 import { type JsonPath } from '@dxos/echo/internal';
 import { type Function } from '@dxos/functions';
 import { useOnTransition, useTranslation } from '@dxos/react-ui';
@@ -50,7 +50,10 @@ export const FunctionInputEditor = ({ type, functions, db, getValue, onValueChan
   const inputSchema = useMemo(() => selectedFunction?.inputSchema, [selectedFunction]);
   const effectSchema = useMemo(() => (inputSchema ? Type.toEffectSchema(inputSchema) : undefined), [inputSchema]);
   const propertyCount = inputSchema?.properties ? Object.keys(inputSchema.properties).length : 0;
-  const values = useMemo(() => getValue() ?? {}, [getValue]);
+  const defaultValues = useMemo(() => {
+    const raw = getValue() ?? {};
+    return Obj.isObject(raw) ? { ...Obj.getSnapshot(raw) } : { ...raw };
+  }, [getValue]);
 
   const handleValuesChanged = useCallback<NonNullable<FormRootProps['onValuesChanged']>>(
     (values) => {
@@ -66,7 +69,13 @@ export const FunctionInputEditor = ({ type, functions, db, getValue, onValueChan
   return (
     <>
       <Form.Label label={t('function parameters label')} asChild />
-      <Form.Root schema={effectSchema} values={values} db={db} onValuesChanged={handleValuesChanged}>
+      <Form.Root
+        key={selectedFunction.id}
+        schema={effectSchema}
+        defaultValues={defaultValues}
+        db={db}
+        onValuesChanged={handleValuesChanged}
+      >
         <Form.FieldSet />
       </Form.Root>
     </>

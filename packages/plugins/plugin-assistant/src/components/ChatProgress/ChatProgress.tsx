@@ -4,26 +4,12 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { type Chat } from '@dxos/assistant-toolkit';
 import { addEventListener } from '@dxos/async';
-import { Flex, ProgressBar, type ProgressBarProps, TextCrawl, useExecutionGraph } from '@dxos/react-ui-components';
-
-import { type Assistant } from '../../types';
-
-// TODO(burdon): Reset after each session.
-// TODO(burdon): Show after delay.
-// TODO(burdon): Test with errors.
-// TODO(burdon): Filter out empty trace messages.
-
-// {
-//   "id": "01K3TE3C2VAXETP500QKDHK3C4_block_3",
-//   "branch": "main",
-//   "parents": [],
-//   "icon": "ph--robot--regular",
-//   "message": "\n"
-// }
+import { ProgressBar, type ProgressBarProps, TextCrawl, useExecutionGraph } from '@dxos/react-ui-components';
 
 export type ChatProgressProps = {
-  chat: Assistant.Chat;
+  chat: Chat.Chat;
 };
 
 export const ChatProgress = ({ chat }: ChatProgressProps) => {
@@ -59,9 +45,9 @@ export const ChatProgress = ({ chat }: ChatProgressProps) => {
   }, [nodes.length]);
 
   return (
-    <Flex column tabIndex={0} ref={ref} classNames='outline-none'>
+    <div role='none' tabIndex={0} ref={ref} className='flex flex-col outline-hidden'>
       <ProgressBar nodes={nodes} index={index} onSelect={handleSelect} />
-      <TextCrawl classNames='pis-4 text-sm text-description' lines={lines} autoAdvance />
-    </Flex>
+      <TextCrawl classNames='ps-4 text-sm text-description' lines={lines} autoAdvance />
+    </div>
   );
 };

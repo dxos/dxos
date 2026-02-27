@@ -4,15 +4,14 @@
 
 import { RegistryContext } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import type * as Schema from 'effect/Schema';
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { Obj, Type } from '@dxos/echo';
+import { invariant } from '@dxos/invariant';
 import { type DxGrid } from '@dxos/lit-grid';
 import '@dxos/lit-ui/dx-tag-picker.pcss';
 import { faker } from '@dxos/random';
-import { useClient } from '@dxos/react-client';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -83,20 +82,21 @@ const useTestModel = <S extends Type.Obj.Any>(schema: S, count: number) => {
 };
 
 const DefaultStory = () => {
-  const client = useClient();
   const { model: orgModel, presentation: orgPresentation } = useTestModel(Organization.Organization, 50);
   const { model: contactModel, presentation: contactPresentation } = useTestModel(Person.Person, 50);
   const { space } = useClientStory();
 
   const handleCreate = useCallback(
-    (schema: Schema.Schema.AnyNoContext, values: any) => {
-      return client.spaces.default.db.add(Obj.make(schema, values));
+    (schema: Type.Entity.Any, values: any) => {
+      invariant(Type.isObjectSchema(schema));
+      invariant(space);
+      return space.db.add(Obj.make(schema, values));
     },
     [space],
   );
 
   return (
-    <div className='is-full bs-full grid grid-cols-2 divide-x divide-separator'>
+    <div className='w-full h-full grid grid-cols-2 divide-x divide-separator'>
       <TableComponent.Root>
         <TableComponent.Main
           model={orgModel}
@@ -125,7 +125,7 @@ const meta = {
   title: 'ui/react-ui-table/Relations',
   render: DefaultStory,
   decorators: [
-    withTheme,
+    withTheme(),
     withRegistry,
     // TODO(thure): Shouldn't `layout: 'fullscreen'` below make this unnecessary?
     withLayout({ classNames: 'fixed inset-0' }),
@@ -195,8 +195,9 @@ export const Default: Story = {
     const saveButton = await body.findByTestId('save-button');
     await userEvent.click(saveButton);
 
-    // Verify the relation was set (cell should now contain the org name)
-    await expect(targetCell).toHaveTextContent(orgName.substring(0, 4));
+    // Verify the relation was set (cell should now contain the org name).
+    const updatedCell = within(secondGrid).getByTestId('grid.4.0');
+    await expect(updatedCell).toHaveTextContent(orgName.substring(0, 4));
 
     // Test object creation (new relations) - equivalent to "new relations work as expected" test
     // Find a different cell to test object creation (second row, relations column)
@@ -231,7 +232,8 @@ export const Default: Story = {
     const saveObjectButton = await within(createReferencedObjectForm).findByTestId('save-button');
     await userEvent.click(saveObjectButton);
 
-    // Verify the new object was created and relation was set
-    await expect(newTargetCell).toHaveTextContent(newOrgName);
+    // Verify the new object was created and relation was set.
+    const updatedNewCell = within(secondGrid).getByTestId('grid.4.1');
+    await expect(updatedNewCell).toHaveTextContent(newOrgName);
   },
 } as any;

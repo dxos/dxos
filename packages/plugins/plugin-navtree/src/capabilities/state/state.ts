@@ -5,7 +5,9 @@
 import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { AppCapabilities } from '@dxos/app-toolkit';
+import { Graph } from '@dxos/plugin-graph';
 import { Path } from '@dxos/react-ui-list';
 
 import { meta } from '../../meta';
@@ -18,11 +20,7 @@ const defaultItemState: NC.NavTreeItemState = { open: false, current: false, alt
 
 /** Default state entries for initial tree structure. */
 // TODO(thure): Initialize these dynamically.
-const defaultStateEntries: [string, NC.NavTreeItemState][] = [
-  ['root', { open: true, current: false }],
-  ['root~dxos.org/plugin/space-spaces', { open: true, current: false }],
-  ['root~dxos.org/plugin/files', { open: true, current: false }],
-];
+const defaultStateEntries: [string, NC.NavTreeItemState][] = [['root', { open: true, current: false }]];
 
 const getInitialState = (): Map<string, NC.NavTreeItemState> => {
   const stringified = localStorage.getItem(KEY);
@@ -40,19 +38,24 @@ const getInitialState = (): Map<string, NC.NavTreeItemState> => {
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const registry = yield* Capability.get(Common.Capability.AtomRegistry);
-    const layoutAtom = yield* Capability.get(Common.Capability.Layout);
+    const registry = yield* Capability.get(Capabilities.AtomRegistry);
+    const layoutAtom = yield* Capability.get(AppCapabilities.Layout);
 
     // Backing state for persistence (not reactive).
     const backingState = getInitialState();
 
     // Per-path atom family for fine-grained reactivity.
+    // keepAlive prevents atoms from being garbage collected when components unmount,
+    // ensuring state is preserved across deletion/restoration cycles.
     const itemAtomFamily = Atom.family((pathString: string) =>
-      Atom.make<NC.NavTreeItemState>(backingState.get(pathString) ?? { ...defaultItemState }),
+      Atom.make<NC.NavTreeItemState>(backingState.get(pathString) ?? { ...defaultItemState }).pipe(Atom.keepAlive),
     );
 
     const getItemAtom = (path: string[]): Atom.Atom<NC.NavTreeItemState> => {
       const pathString = Path.create(...path);
+      if (!backingState.has(pathString)) {
+        backingState.set(pathString, { ...defaultItemState });
+      }
       return itemAtomFamily(pathString);
     };
 
@@ -105,6 +108,25 @@ export default Capability.makeModule(
       handleUpdate();
       return () => clearTimeout(timeout);
     });
+
+    // Once graph is ready, expand every node marked open in state so the graph has children loaded for rendering.
+    yield* Effect.gen(function* () {
+      const { graph } = yield* Capability.waitFor(AppCapabilities.AppGraph);
+      const openPaths = Array.from(backingState.entries())
+        .filter(([, state]) => state.open)
+        .map(([pathString]) => Path.parts(pathString));
+      for (const path of openPaths) {
+        const nodeId = path[path.length - 1];
+        if (!nodeId) {
+          continue;
+        }
+        Graph.expand(graph, nodeId, 'outbound');
+        const children = Graph.getConnections(graph, nodeId, 'outbound');
+        for (const child of children) {
+          Graph.expand(graph, child.id, 'outbound');
+        }
+      }
+    }).pipe(Effect.forkDaemon);
 
     return Capability.contributes(
       NavTreeCapabilities.State,

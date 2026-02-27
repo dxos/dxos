@@ -3,7 +3,7 @@
 //
 
 import { SpaceProperties } from '@dxos/client-protocol';
-import { Type } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 import { Filter, type SerializedSpace, Serializer, decodeDXNFromJSON } from '@dxos/echo-db';
 import { type EchoDatabase } from '@dxos/echo-db';
 
@@ -17,10 +17,12 @@ export const importSpace = async (db: EchoDatabase, data: SerializedSpace) => {
       const typename = typeDXN?.asTypeDXN()?.type;
       // Handle Space Properties.
       if (properties && typename === Type.getTypename(SpaceProperties)) {
-        Object.entries(data).forEach(([name, value]) => {
-          if (!name.startsWith('@')) {
-            properties[name] = value;
-          }
+        Obj.change(properties, (props: any) => {
+          Object.entries(data).forEach(([name, value]) => {
+            if (!name.startsWith('@')) {
+              props[name] = value;
+            }
+          });
         });
         return false;
       }

@@ -16,7 +16,7 @@ import {
 } from '@dxos/plugin-assistant';
 import { useQuery } from '@dxos/react-client/echo';
 import { IconButton, Popover, Toolbar } from '@dxos/react-ui';
-import { StackItem } from '@dxos/react-ui-stack';
+import { Layout } from '@dxos/react-ui';
 
 import { ExecutionGraphModule } from './ExecutionGraphModule';
 import { type ComponentProps } from './types';
@@ -37,12 +37,12 @@ export const ChatModule = ({ space }: ComponentProps) => {
   }
 
   return (
-    <StackItem.Content toolbar>
+    <Layout.Main toolbar>
       <Chat.Root chat={chat} processor={processor}>
         <Chat.Toolbar />
         <Chat.Viewport classNames='relative container-max-width'>
-          <Toolbar.Root classNames='border-be border-subduedSeparator'>
-            <div className='pli-1 grow truncate text-subdued'>{chat?.name}</div>
+          <Toolbar.Root classNames='border-b border-subdued-separator'>
+            <div className='px-1 grow truncate text-subdued'>{chat?.name}</div>
             <Popover.Root>
               <Popover.Trigger asChild>
                 <IconButton icon='ph--sort-ascending--regular' label='Logs' variant='ghost' />
@@ -62,6 +62,6 @@ export const ChatModule = ({ space }: ComponentProps) => {
           </div>
         </Chat.Viewport>
       </Chat.Root>
-    </StackItem.Content>
+    </Layout.Main>
   );
 };

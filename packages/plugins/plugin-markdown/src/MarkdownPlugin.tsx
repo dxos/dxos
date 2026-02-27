@@ -4,9 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Common, Plugin } from '@dxos/app-framework';
+import { Capability, Plugin } from '@dxos/app-framework';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { type Obj, Ref } from '@dxos/echo';
 import { createDocAccessor, getTextInRange } from '@dxos/echo-db';
+import { Operation } from '@dxos/operation';
+import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { type CreateObject } from '@dxos/plugin-space/types';
 import { translations as editorTranslations } from '@dxos/react-ui-editor';
 import { Text } from '@dxos/schema';
@@ -23,37 +26,24 @@ import {
 } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { MarkdownEvents } from './types';
-import { Markdown } from './types';
+import { Markdown, MarkdownEvents, MarkdownOperation } from './types';
 import { serializer } from './util';
 
 export const MarkdownPlugin = Plugin.define(meta).pipe(
-  Common.Plugin.addTranslationsModule({ translations: [...translations, ...editorTranslations] }),
-  Plugin.addModule({
-    activatesOn: Common.ActivationEvent.SetupSettings,
-    activate: MarkdownSettings,
-  }),
-  Plugin.addModule({
-    id: 'state',
-    // TODO(wittjosiah): Does not integrate with settings store.
-    //   Should this be a different event?
-    //   Should settings store be renamed to be more generic?
-    activatesOn: Common.ActivationEvent.SetupSettings,
-    activate: MarkdownState,
-  }),
-  Common.Plugin.addMetadataModule({
+  AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+  AppPlugin.addMetadataModule({
     metadata: {
       id: Markdown.Document.typename,
       metadata: {
         label: (object: Markdown.Document) => object.name || object.fallbackName,
         icon: 'ph--text-aa--regular',
         iconHue: 'indigo',
-        blueprints: [MarkdownBlueprint.Key],
+        blueprints: [MarkdownBlueprint.key],
         graphProps: {
           managesAutofocus: true,
         },
         // TODO(wittjosiah): Move out of metadata.
-        loadReferences: async (doc: Markdown.Document) => await Ref.Array.loadAll<Obj.Any>([doc.content]),
+        loadReferences: async (doc: Markdown.Document) => await Ref.Array.loadAll<Obj.Unknown>([doc.content]),
         serializer,
         // TODO(wittjosiah): Consider how to do generic comments without these.
         comments: 'anchored',
@@ -65,25 +55,46 @@ export const MarkdownPlugin = Plugin.define(meta).pipe(
           }
         },
         createObject: ((props) => Effect.sync(() => Markdown.make(props))) satisfies CreateObject,
-        addToCollectionOnCreate: true,
       },
     },
   }),
-  Common.Plugin.addSchemaModule({ schema: [Markdown.Document, Text.Text] }),
-  Common.Plugin.addSurfaceModule({
+  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addSchemaModule({ schema: [Markdown.Document, Text.Text] }),
+  AppPlugin.addSurfaceModule({
     activate: ReactSurface,
     activatesBefore: [MarkdownEvents.SetupExtensions],
   }),
-  Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addTranslationsModule({ translations: [...translations, ...editorTranslations] }),
   Plugin.addModule({
-    activatesOn: Common.ActivationEvent.AppGraphReady,
+    activatesOn: AppActivationEvents.SetupSettings,
+    activate: MarkdownSettings,
+  }),
+  Plugin.addModule({
+    id: 'state',
+    // TODO(wittjosiah): Does not integrate with settings store.
+    //   Should this be a different event?
+    //   Should settings store be renamed to be more generic?
+    activatesOn: AppActivationEvents.SetupSettings,
+    activate: MarkdownState,
+  }),
+  Plugin.addModule({
+    id: 'on-space-created',
+    activatesOn: SpaceEvents.SpaceCreated,
+    activate: () =>
+      Effect.succeed(
+        Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) =>
+          Operation.invoke(MarkdownOperation.OnCreateSpace, params),
+        ),
+      ),
+  }),
+  Plugin.addModule({
+    activatesOn: AppActivationEvents.AppGraphReady,
     activate: AppGraphSerializer,
   }),
   Plugin.addModule({
     // TODO(wittjosiah): More relevant event?
-    activatesOn: Common.ActivationEvent.AppGraphReady,
+    activatesOn: AppActivationEvents.AppGraphReady,
     activate: AnchorSort,
   }),
-  Common.Plugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   Plugin.make,
 );

@@ -4,13 +4,13 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 
 import { ClientCapabilities } from '../../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const registry = yield* Capability.get(Common.Capability.AtomRegistry);
+    const registry = yield* Capability.get(Capabilities.AtomRegistry);
     const client = yield* Capability.get(ClientCapabilities.Client);
     const migrationsAtom = yield* Capability.atom(ClientCapabilities.Migration);
 
@@ -25,6 +25,6 @@ export default Capability.makeModule(
       { immediate: true },
     );
 
-    return Capability.contributes(Common.Capability.Null, null, () => Effect.sync(() => cancel()));
+    return Capability.contributes(Capabilities.Null, null, () => Effect.sync(() => cancel()));
   }),
 );

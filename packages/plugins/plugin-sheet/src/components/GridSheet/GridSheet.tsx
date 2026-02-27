@@ -13,8 +13,9 @@ import React, {
   useState,
 } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type CellRange, rangeToA1Notation } from '@dxos/compute';
+import { Obj } from '@dxos/echo';
 import { defaultColSize, defaultRowSize } from '@dxos/lit-grid';
 import { DropdownMenu, Icon, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
@@ -127,15 +128,17 @@ export const GridSheet = () => {
 
   const handleAxisResize = useCallback<NonNullable<GridContentProps['onAxisResize']>>(
     ({ axis, size, index: numericIndex }) => {
-      if (axis === 'row') {
-        const rowId = model.sheet.rows[parseInt(numericIndex)];
-        model.sheet.rowMeta[rowId] ??= {};
-        model.sheet.rowMeta[rowId].size = size;
-      } else {
-        const columnId = model.sheet.columns[parseInt(numericIndex)];
-        model.sheet.columnMeta[columnId] ??= {};
-        model.sheet.columnMeta[columnId].size = size;
-      }
+      Obj.change(model.sheet, (sheet) => {
+        if (axis === 'row') {
+          const rowId = sheet.rows[parseInt(numericIndex)];
+          sheet.rowMeta[rowId] ??= {};
+          sheet.rowMeta[rowId].size = size;
+        } else {
+          const columnId = sheet.columns[parseInt(numericIndex)];
+          sheet.columnMeta[columnId] ??= {};
+          sheet.columnMeta[columnId].size = size;
+        }
+      });
     },
     [model],
   );
@@ -314,8 +317,7 @@ export const GridSheet = () => {
   useSelectThreadOnCellFocus();
 
   return (
-    // TODO(thure): Why are Table’s and Sheet’s editor boxes off by 1px?
-    <div role='none' className='relative min-bs-0 [&_.cm-editor]:!border-lb [&_.cm-editor]:!border-transparent'>
+    <div role='none' className='relative min-h-0'>
       <GridCellEditor getCellContent={getCellContent} extensions={extensions} onBlur={handleBlur} />
       <Grid.Content
         initialCells={initialCells}
@@ -335,7 +337,7 @@ export const GridSheet = () => {
         onContextMenu={handleContextMenu}
         onClick={handleClick}
         overscroll='trap'
-        className='[--dx-grid-base:var(--baseSurface)] [&_.dx-grid]:absolute [&_.dx-grid]:inset-0'
+        className='[--dx-grid-base:var(--base-surface)] [&_.dx-grid]:absolute [&_.dx-grid]:inset-0'
         activeRefs={activeRefs}
         ref={setDxGrid}
       />

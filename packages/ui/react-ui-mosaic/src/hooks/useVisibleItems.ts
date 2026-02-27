@@ -4,29 +4,37 @@
 
 import { useMemo } from 'react';
 
-import { type Obj } from '@dxos/echo';
+import { type GetId, type MosaicTileData } from '../components';
 
-import { type MosaicTileData } from '../components';
-
-export type UseVisibleItemsProps<T extends Obj.Any> = {
+export type UseVisibleItemsProps<TItem = any> = {
   /** Container id. */
   id: string;
+
   /** Current items. */
-  items?: T[];
+  items?: readonly TItem[] | TItem[];
+
   /** Currently dragging item. */
-  dragging: MosaicTileData | undefined;
+  dragging: MosaicTileData<TItem> | undefined;
+
+  /** ID getter */
+  getId: GetId<TItem>;
 };
 
 /**
  * Returns items with the dragging item removed.
  */
-export const useVisibleItems = <T extends Obj.Any>({ id, items, dragging }: UseVisibleItemsProps<T>): T[] => {
+export const useVisibleItems = <TItem = any>({
+  id,
+  items,
+  dragging,
+  getId,
+}: UseVisibleItemsProps<TItem>): readonly TItem[] | TItem[] => {
   const visibleItems = useMemo(() => {
     if (!items || !dragging || id !== dragging.containerId) {
       return items ?? [];
     }
 
-    const idx = items.findIndex((item) => item.id === dragging.object.id);
+    const idx = items.findIndex((item) => getId(item) === dragging.id);
     if (idx === -1) {
       return items;
     }
@@ -34,7 +42,7 @@ export const useVisibleItems = <T extends Obj.Any>({ id, items, dragging }: UseV
     const visibleItems = items.slice();
     visibleItems.splice(idx, 1);
     return visibleItems;
-  }, [id, items, dragging]);
+  }, [id, items, dragging, getId]);
 
   return visibleItems;
 };

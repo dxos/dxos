@@ -18,6 +18,9 @@ import * as Node from './node';
 
 const graphSymbol = Symbol('graph');
 
+// TODO(wittjosiah): Reconcile all separators across the codebase.
+const EXPAND_KEY_SEPARATOR = '\0';
+
 type DeepWriteable<T> = {
   -readonly [K in keyof T]: T[K] extends object ? DeepWriteable<T[K]> : T[K];
 };
@@ -148,6 +151,7 @@ class GraphImpl implements WritableGraph {
 
   readonly _registry: Registry.Registry;
   readonly _expanded = Record.empty<string, boolean>();
+  readonly _pendingExpands = new Set<string>();
   readonly _initialized = Record.empty<string, boolean>();
   readonly _initialEdges = Record.empty<string, Edges>();
   readonly _initialNodes = Record.fromEntries([
@@ -690,6 +694,7 @@ export function initialize<T extends ExpandableGraph | WritableGraph>(
 
 /**
  * Implementation helper for expand.
+ * If the node does not exist yet, the expand is recorded as pending and applied when the node is added.
  */
 const expandImpl = <T extends ExpandableGraph | WritableGraph>(
   graph: T,
@@ -697,7 +702,15 @@ const expandImpl = <T extends ExpandableGraph | WritableGraph>(
   relation: Node.Relation = 'outbound',
 ): T => {
   const internal = getInternal(graph);
-  const key = `${id}$${relation}`;
+  const key = `${id}${EXPAND_KEY_SEPARATOR}${relation}`;
+  const nodeOpt = internal._registry.get(internal._node(id));
+  if (Option.isNone(nodeOpt)) {
+    // Node not yet in graph: record expand to run when the node is added.
+    internal._pendingExpands.add(key);
+    log('expand', { key, deferred: true });
+    return graph;
+  }
+
   const expanded = Record.get(internal._expanded, key).pipe(Option.getOrElse(() => false));
   log('expand', { key, expanded });
   if (!expanded) {
@@ -748,10 +761,17 @@ const sortEdgesImpl = <T extends ExpandableGraph | WritableGraph>(
   const internal = getInternal(graph);
   const edgesAtom = internal._edges(id);
   const edges = internal._registry.get(edgesAtom);
-  const unsorted = edges[relation].filter((id) => !order.includes(id)) ?? [];
-  const sorted = order.filter((id) => edges[relation].includes(id)) ?? [];
-  edges[relation].splice(0, edges[relation].length, ...[...sorted, ...unsorted]);
-  internal._registry.set(edgesAtom, edges);
+  const current = edges[relation];
+  const unsorted = current.filter((id) => !order.includes(id)) ?? [];
+  const sorted = order.filter((id) => current.includes(id)) ?? [];
+  const newOrder = [...sorted, ...unsorted];
+  if (newOrder.length === current.length && newOrder.every((id, i) => id === current[i])) {
+    return graph;
+  }
+  internal._registry.set(edgesAtom, {
+    ...edges,
+    [relation]: newOrder,
+  });
   return graph;
 };
 
@@ -868,6 +888,16 @@ const addNodeImpl = <T extends WritableGraph>(graph: T, nodeArg: Node.NodeArg<an
       const newNode = internal._constructNode({ id, type, data, properties, ...rest });
       internal._registry.set(nodeAtom, newNode);
       graph.onNodeChanged.emit({ id, node: newNode });
+
+      // Apply any expands that were deferred because this node did not exist yet.
+      const prefix = `${id}${EXPAND_KEY_SEPARATOR}`;
+      const toApply = [...internal._pendingExpands].filter((k) => k.startsWith(prefix));
+      for (const pendingKey of toApply) {
+        internal._pendingExpands.delete(pendingKey);
+        const relation = pendingKey.slice(prefix.length) as Node.Relation;
+        internal._onExpand?.(id, relation);
+        Record.set(internal._expanded, pendingKey, true);
+      }
     },
   });
 

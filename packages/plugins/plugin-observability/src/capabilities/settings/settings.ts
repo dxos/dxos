@@ -4,10 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { createKvsStore } from '@dxos/effect';
 
-import { ObservabilitySettingsSchema } from '../../components';
+import { ObservabilitySettingsSchema } from '../../containers';
 import { meta } from '../../meta';
 import { ObservabilityCapabilities } from '../../types';
 
@@ -23,7 +24,7 @@ export default Capability.makeModule(() =>
 
     return [
       Capability.contributes(ObservabilityCapabilities.Settings, settingsAtom),
-      Capability.contributes(Common.Capability.Settings, {
+      Capability.contributes(AppCapabilities.Settings, {
         prefix: meta.id,
         schema: ObservabilitySettingsSchema,
         atom: settingsAtom,

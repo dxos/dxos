@@ -6,7 +6,7 @@ import React, { Fragment, useCallback } from 'react';
 
 import { Icon, Toolbar as NaturalToolbar, type ToolbarRootProps, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { mx, textBlockWidth, toolbarInactive, toolbarLayout } from '@dxos/ui-theme';
+import { mx, textBlockWidth, toolbarLayout } from '@dxos/ui-theme';
 import { type MenuActionProperties } from '@dxos/ui-types';
 
 import { translationKey } from '../translations';
@@ -113,7 +113,7 @@ const DropdownMenuToolbarItem = ({
         children: (
           <>
             <ActionLabel action={labelAction} />
-            <Icon size={3} icon='ph--caret-down--bold' classNames='mis-1' />
+            <Icon size={3} icon='ph--caret-down--bold' classNames='ms-1' />
           </>
         ),
       };
@@ -187,17 +187,18 @@ export const ToolbarMenu = ({
   ...props
 }: MenuScopedProps<ToolbarMenuProps>) => {
   const items = useMenuItems(undefined, undefined, 'ToolbarMenu', __menuScope);
-  const { attendableId } = useMenu('ToolbarMenu', __menuScope);
+  const { attendableId, alwaysActive } = useMenu('ToolbarMenu', __menuScope);
   const { hasAttention } = useAttention(attendableId);
   const InnerRoot = textBlockWidthProp ? 'div' : Fragment;
   const innerRootProps = textBlockWidthProp
-    ? { role: 'none', className: mx(textBlockWidth, toolbarLayout, 'bs-full') }
+    ? { role: 'none', className: mx(textBlockWidth, toolbarLayout, 'h-full') }
     : {};
 
   return (
     <NaturalToolbar.Root
       {...props}
-      classNames={[attendableId && !hasAttention && toolbarInactive, classNames]}
+      classNames={[attendableId, classNames]}
+      disabled={!alwaysActive && !hasAttention}
       layoutManaged={textBlockWidthProp}
     >
       <InnerRoot {...innerRootProps}>

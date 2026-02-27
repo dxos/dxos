@@ -13,6 +13,9 @@ import { View } from '@dxos/schema';
 
 import { meta } from '../meta';
 
+// Re-export Table namespace for portable type references
+export { Table };
+
 export const CreateTableSchema = Schema.Struct({
   name: Schema.optional(Schema.String),
   // TODO(wittjosiah): This should be a query input instead.

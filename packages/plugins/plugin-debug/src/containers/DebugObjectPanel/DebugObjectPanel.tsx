@@ -1,0 +1,32 @@
+//
+// Copyright 2024 DXOS.org
+//
+
+import React from 'react';
+
+import { type Obj } from '@dxos/echo';
+import { Clipboard, Input, Layout, Toolbar } from '@dxos/react-ui';
+import { Json } from '@dxos/react-ui-syntax-highlighter';
+
+export type DebugObjectPanelProps = {
+  object: Obj.Unknown;
+};
+
+// TODO(burdon): Get schema and traverse references.
+export const DebugObjectPanel = ({ object }: DebugObjectPanelProps) => {
+  const dxn = `dxn:echo:@:${object.id}`;
+
+  return (
+    <Clipboard.Provider>
+      <Layout.Main toolbar>
+        <Toolbar.Root>
+          <Input.Root>
+            <Input.TextInput disabled value={dxn} />
+            <Clipboard.IconButton value={dxn} />
+          </Input.Root>
+        </Toolbar.Root>
+        <Json data={object} />
+      </Layout.Main>
+    </Clipboard.Provider>
+  );
+};

@@ -9,7 +9,7 @@ import { withTheme } from '../testing';
 
 const DefaultStory = () => {
   return (
-    <div className='mli-auto p-8 max-is-[60rem] space-b-4'>
+    <div className='mx-auto p-8 max-w-[60rem] space-b-4'>
       <h1 className='text-4xl font-medium'>
         Việc <span className='italic'>thừa</span> nhận{' '}
         <span className='font-mono bg-neutral-500/10'>
@@ -43,9 +43,9 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'ui/react-ui-core/Playground/Typography',
+  title: 'ui/react-ui-core/playground/Typography',
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

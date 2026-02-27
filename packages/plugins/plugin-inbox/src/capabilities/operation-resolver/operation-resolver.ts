@@ -4,21 +4,37 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common } from '@dxos/app-framework';
-import { Filter, Obj, Ref } from '@dxos/echo';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { LayoutOperation } from '@dxos/app-toolkit';
+import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Operation, OperationResolver } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { SpaceOperation } from '@dxos/plugin-space/types';
-import { Organization, Person } from '@dxos/types';
+import { Collection } from '@dxos/schema';
+import { Message, Organization, Person } from '@dxos/types';
 
-import { COMPOSE_EMAIL_DIALOG } from '../../constants';
-import { InboxOperation } from '../../types';
+import { Calendar, InboxOperation, Mailbox } from '../../types';
+import { buildDraftMessageProps } from '../../util';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(Common.Capability.OperationResolver, [
+    return Capability.contributes(Capabilities.OperationResolver, [
+      OperationResolver.make({
+        operation: InboxOperation.OnCreateSpace,
+        handler: Effect.fnUntraced(function* ({ rootCollection }) {
+          const mailboxCollection = Collection.makeManaged({
+            key: `${Type.getTypename(Type.Feed)}~${Mailbox.kind}`,
+          });
+          const calendarCollection = Collection.makeManaged({
+            key: `${Type.getTypename(Type.Feed)}~${Calendar.kind}`,
+          });
+          Obj.change(rootCollection, (c) => {
+            c.objects.push(Ref.make(mailboxCollection), Ref.make(calendarCollection));
+          });
+        }),
+      }),
       OperationResolver.make({
         operation: InboxOperation.ExtractContact,
         handler: Effect.fnUntraced(function* ({ db, actor }) {
@@ -48,7 +64,9 @@ export default Capability.makeModule(
             emails: [{ value: email }],
           });
           if (name) {
-            newContact.fullName = name;
+            Obj.change(newContact, (c) => {
+              c.fullName = name;
+            });
           }
 
           const emailDomain = email.split('@')[1]?.toLowerCase();
@@ -95,7 +113,9 @@ export default Capability.makeModule(
             log.info('found matching organization', {
               organization: matchingOrg,
             });
-            newContact.organization = Ref.make(matchingOrg);
+            Obj.change(newContact, (c) => {
+              c.organization = Ref.make(matchingOrg);
+            });
           }
 
           if (!space.properties.staticRecords.includes(Person.Person.typename)) {
@@ -114,17 +134,24 @@ export default Capability.makeModule(
         }),
       }),
       OperationResolver.make({
-        operation: InboxOperation.RunAssistant,
-        handler: () => Effect.fail(new Error('Not implemented')),
-      }),
-      OperationResolver.make({
-        operation: InboxOperation.OpenComposeEmail,
-        handler: (input) =>
-          Operation.invoke(Common.LayoutOperation.UpdateDialog, {
-            subject: COMPOSE_EMAIL_DIALOG,
-            blockAlign: 'start',
-            props: input ?? {},
-          }),
+        operation: InboxOperation.CreateDraft,
+        handler: Effect.fnUntraced(function* ({ db, mode, replyToMessage, subject, body }) {
+          const props = buildDraftMessageProps({
+            mode,
+            replyToMessage: replyToMessage as Message.Message | undefined,
+            subject,
+            body,
+          });
+          const draft = Obj.make(Message.Message, props);
+          yield* Operation.invoke(SpaceOperation.AddObject, {
+            object: draft,
+            target: db,
+            hidden: true,
+          });
+          yield* Operation.invoke(LayoutOperation.Open, {
+            subject: [Obj.getDXN(draft).toString()],
+          });
+        }),
       }),
     ]);
   }),

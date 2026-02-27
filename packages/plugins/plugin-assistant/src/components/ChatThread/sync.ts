@@ -73,6 +73,12 @@ export class MessageSyncer {
    * Syncs messages with the editor.
    */
   append(messages: Message.Message[], flush = false): boolean {
+    // TODO(dmaretskyi): MarkdownStream currently does not support streaming XML tags, so we need to remove pending non-text blocks.
+    messages = messages.map((message) => ({
+      ...message,
+      blocks: message.blocks.filter((block) => !block.pending || block._tag === 'text'),
+    }));
+
     // Check if new set of messages.
     if (this._initialMessageId !== messages[0]?.id) {
       this.reset();
@@ -108,13 +114,13 @@ export class MessageSyncer {
   }
 
   private process(messages: Message.Message[], append: (content: string) => void) {
-    log('sync', {
-      doc: this._model.view?.state.doc.length,
-      messages: messages.map((message) => message.blocks.length),
-      currentMessageIndex: this._currentMessageIndex,
-      currentBlockIndex: this._currentBlockIndex,
-      currentBlockContent: this._currentBlockContent,
-    });
+    // console.log('sync', {
+    //   doc: this._model.view?.state.doc.length,
+    //   messages: messages.map((message) => message.blocks.length),
+    //   currentMessageIndex: this._currentMessageIndex,
+    //   currentBlockIndex: this._currentBlockIndex,
+    //   currentBlockContent: this._currentBlockContent,
+    // });
 
     let i = this._currentMessageIndex;
     for (const message of messages.slice(this._currentMessageIndex)) {
@@ -135,7 +141,7 @@ export class MessageSyncer {
             content = currentBlockContent;
           }
 
-          log('append', { message: i, block: j, content });
+          // console.log('append', { message: i, block: j, content });
           this._currentBlockContent = currentBlockContent;
           append(content);
         }

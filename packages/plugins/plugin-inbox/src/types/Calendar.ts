@@ -4,16 +4,25 @@
 
 import * as Schema from 'effect/Schema';
 
-import { type Space } from '@dxos/client/echo';
-import { Obj, Ref, Type } from '@dxos/echo';
+import { Feed, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/internal';
-import { Queue } from '@dxos/echo-db';
-import { QueueAnnotation } from '@dxos/schema';
 import { AccessToken } from '@dxos/types';
 
-export const Calendar = Schema.Struct({
-  name: Schema.String.pipe(Schema.optional),
-  queue: Type.Ref(Queue).pipe(FormInputAnnotation.set(false)),
+import { meta } from '../meta';
+
+/** Feed kind identifier for calendar feeds. */
+export const kind = `${meta.id}/calendar`;
+
+/** Checks if a value is a calendar feed. */
+export const instanceOf = (value: unknown): value is Feed.Feed =>
+  Obj.instanceOf(Type.Feed, value) && value.kind === kind;
+
+/** Creates a calendar feed. */
+export const make = (props?: Omit<Obj.MakeProps<typeof Type.Feed>, 'kind'>): Feed.Feed => Feed.make({ kind, ...props });
+
+/** Configuration schema for a calendar feed. */
+export const Config = Schema.Struct({
+  feed: Type.Ref(Type.Feed),
   // Track the last synced update timestamp to handle out-of-order event updates.
   lastSyncedUpdate: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
   accessToken: Schema.optional(
@@ -23,14 +32,13 @@ export const Calendar = Schema.Struct({
     }),
   ),
 }).pipe(
-  Type.Obj({
-    typename: 'dxos.org/type/Calendar',
+  Type.object({
+    typename: 'dxos.org/type/CalendarConfig',
     version: '0.1.0',
   }),
-  QueueAnnotation.set(true),
 );
 
-export interface Calendar extends Schema.Schema.Type<typeof Calendar> {}
+export interface Config extends Schema.Schema.Type<typeof Config> {}
 
 export const CreateCalendarSchema = Schema.Struct({
   name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
@@ -42,14 +50,5 @@ export const CreateCalendarSchema = Schema.Struct({
   ),
 });
 
-type CalendarProps = Omit<Obj.MakeProps<typeof Calendar>, 'queue' | 'lastSyncedUpdate'> & {
-  space: Space;
-};
-
-export const make = ({ space, ...props }: CalendarProps) => {
-  const queue = space.queues.create();
-  return Obj.make(Calendar, {
-    queue: Ref.fromDXN(queue.dxn),
-    ...props,
-  });
-};
+/** Creates a calendar config object linked to a feed. */
+export const makeConfig = (props: Obj.MakeProps<typeof Config>) => Obj.make(Config, props);

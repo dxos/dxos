@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Common, Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
+import { AppPlugin } from '@dxos/app-toolkit';
 import { type CreateObject } from '@dxos/plugin-space/types';
 
 import { meta } from '../meta';
@@ -12,8 +13,7 @@ import { Chess } from '../types';
 
 // TODO(wittjosiah): Factor out shared modules.
 export const ChessPlugin = Plugin.define(meta).pipe(
-  Common.Plugin.addSchemaModule({ schema: [Chess.Game] }),
-  Common.Plugin.addMetadataModule({
+  AppPlugin.addMetadataModule({
     metadata: {
       id: Chess.Game.typename,
       metadata: {
@@ -22,5 +22,6 @@ export const ChessPlugin = Plugin.define(meta).pipe(
       },
     },
   }),
+  AppPlugin.addSchemaModule({ schema: [Chess.Game] }),
   Plugin.make,
 );

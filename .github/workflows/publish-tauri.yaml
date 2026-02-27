@@ -140,6 +140,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          lfs: true
 
       - name: Install Linux dependencies
         if: matrix.os == 'depot-ubuntu-24.04-4'
@@ -165,6 +168,9 @@ jobs:
           run_install: true
 
       - uses: moonrepo/setup-toolchain@v0
+        with:
+          # IMPORTANT: Keep in-sync with .prototools
+          moon-version: '2.0.0-rc.2'
 
       - name: Install Rust toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
@@ -227,7 +233,6 @@ jobs:
           APPLE_SIGNING_IDENTITY: ${{ matrix.os == 'depot-macos-latest' && env.CERT_ID || '' }}
           # Omit DEPOT_TOKEN if branch is 'production', otherwise include it.
           DEPOT_TOKEN: ${{ github.ref == 'refs/heads/production' && '' || secrets.DEPOT_TOKEN }}
-          DX_HOST: true
           NODE_ENV: production
           NODE_OPTIONS: '--max_old_space_size=12288'
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
@@ -248,10 +253,13 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          lfs: true
 
       - uses: tecolicom/actions-use-homebrew-tools@v1
         with:
-          tools: cairo giflib git-lfs jpeg jq libpng librsvg pango pkg-config python-setuptools git unzip gzip xz
+          tools: cairo giflib git-lfs jpeg jq libpng librsvg pango pkg-config python-setuptools git unzip gzip xz xcodegen
 
       - name: Update tauri.conf.json
         uses: ./.github/actions/cn-config
@@ -266,6 +274,9 @@ jobs:
           run_install: true
 
       - uses: moonrepo/setup-toolchain@v0
+        with:
+          # IMPORTANT: Keep in-sync with .prototools
+          moon-version: '2.0.0-rc.2'
 
       - name: Install stable toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
@@ -295,6 +306,12 @@ jobs:
           APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
           APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
 
+      - name: Initialize iOS project
+        run: |
+          pnpm tauri ios init --ci
+          ./scripts/ios-init.sh
+        working-directory: ./packages/apps/composer-app
+
       - name: Build Tauri app for iOS
         run: moon run composer-app:tauri-ios-build -- --export-method=app-store-connect
         env:
@@ -303,7 +320,6 @@ jobs:
           APPLE_DEVELOPMENT_TEAM: ${{ secrets.APPLE_TEAM_ID }}
           # Omit DEPOT_TOKEN if branch is 'production', otherwise include it.
           DEPOT_TOKEN: ${{ github.ref == 'refs/heads/production' && '' || secrets.DEPOT_TOKEN }}
-          DX_HOST: true
           IOS_CERTIFICATE: ${{ secrets.IOS_CERTIFICATE }}
           IOS_CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
           IOS_MOBILE_PROVISION: ${{ secrets.IOS_MOBILE_PROVISION }}

@@ -83,10 +83,10 @@ export const SpaceInfoPanel: FC<SpaceInfoPanelProps> = (props) => {
       {space && metadata && (
         <div>
           <SpaceProperties space={space} metadata={metadata} />
-          <div className='bs-24'>
+          <div className='h-24'>
             <PipelineTable state={pipelineState ?? {}} metadata={metadata} onSelect={props.onSelectPipeline} />
           </div>
-          <div className='bs-48'>
+          <div className='h-48'>
             <FeedTable onSelect={props.onSelectFeed} />
           </div>
           <div className='border-t border-separator'>

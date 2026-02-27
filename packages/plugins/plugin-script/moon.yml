@@ -1,8 +1,9 @@
-type: library
+layer: library
 language: typescript
 tags:
   - ts-build
   - ts-test
+  - ts-test-storybook
   - pack
   - storybook
 tasks:
@@ -12,10 +13,6 @@ tasks:
       - '--entryPoint=src/blueprints/index.ts'
       - '--entryPoint=src/types/index.ts'
       - '--entryPoint=src/templates/index.ts'
-  test:
-    inputs:
-      - .storybook/*
-
   e2e:
     env:
       DX_TEST_TAGS: functions-e2e

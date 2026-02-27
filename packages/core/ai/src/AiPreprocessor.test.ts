@@ -8,26 +8,23 @@ import * as Effect from 'effect/Effect';
 import * as Either from 'effect/Either';
 
 import { Obj } from '@dxos/echo';
-import { Message } from '@dxos/types';
+import { type ContentBlock, Message } from '@dxos/types';
 import { bufferToArray } from '@dxos/util';
 
-import { preprocessPrompt } from './AiPreprocessor';
+import { estimateTokens, preprocessPrompt } from './AiPreprocessor';
 import { PromptPreprocessingError } from './errors';
+import { TestData } from './testing';
 
-describe('preprocessor', () => {
+describe('AiPreprocessor.preprocessPrompt', () => {
   it.effect(
     'should preprocess simple user message with text',
     Effect.fn(function* ({ expect }) {
-      const message = Obj.make(Message.Message, {
-        created: new Date().toISOString(),
-        sender: { role: 'user' },
-        blocks: [
-          {
-            _tag: 'text',
-            text: 'What is 2 + 2?',
-          },
-        ],
-      });
+      const message = makeMessage('user', [
+        {
+          _tag: 'text',
+          text: 'What is 2 + 2?',
+        },
+      ]);
       const input = yield* preprocessPrompt([message]);
       expect(input).toEqual(
         Prompt.fromMessages([
@@ -42,26 +39,22 @@ describe('preprocessor', () => {
   it.effect(
     'should handle multiple tool results at the start of a message',
     Effect.fn(function* ({ expect }) {
-      const message = Obj.make(Message.Message, {
-        created: new Date().toISOString(),
-        sender: { role: 'tool' },
-        blocks: [
-          {
-            _tag: 'toolResult',
-            toolCallId: 'call_1',
-            name: 'calculator',
-            result: JSON.stringify('Result of tool 1'),
-            providerExecuted: false,
-          },
-          {
-            _tag: 'toolResult',
-            toolCallId: 'call_2',
-            name: 'calculator',
-            result: JSON.stringify('Result of tool 2'),
-            providerExecuted: false,
-          },
-        ],
-      });
+      const message = makeMessage('tool', [
+        {
+          _tag: 'toolResult',
+          toolCallId: 'call_1',
+          name: 'calculator',
+          result: JSON.stringify('Result of tool 1'),
+          providerExecuted: false,
+        },
+        {
+          _tag: 'toolResult',
+          toolCallId: 'call_2',
+          name: 'calculator',
+          result: JSON.stringify('Result of tool 2'),
+          providerExecuted: false,
+        },
+      ]);
 
       const input = yield* preprocessPrompt([message]);
       expect(input.content).toHaveLength(1);
@@ -76,6 +69,7 @@ describe('preprocessor', () => {
           name: 'calculator',
           result: 'Result of tool 1',
           isFailure: false,
+          providerExecuted: false,
         }),
       );
       expect(toolMessage.content[1]).toEqual(
@@ -84,6 +78,7 @@ describe('preprocessor', () => {
           name: 'calculator',
           result: 'Result of tool 2',
           isFailure: false,
+          providerExecuted: false,
         }),
       );
     }),
@@ -92,27 +87,23 @@ describe('preprocessor', () => {
   it.effect(
     'should handle assistant message with tool calls',
     Effect.fn(function* ({ expect }) {
-      const message = Obj.make(Message.Message, {
-        created: new Date().toISOString(),
-        sender: { role: 'assistant' },
-        blocks: [
-          {
-            _tag: 'text',
-            text: 'I need to calculate something.',
-          },
-          {
-            _tag: 'toolCall',
-            toolCallId: 'call_1',
-            name: 'calculator',
-            input: JSON.stringify({ operation: 'add', a: 2, b: 2 }),
-            providerExecuted: false,
-          },
-          {
-            _tag: 'text',
-            text: 'Let me process that for you.',
-          },
-        ],
-      });
+      const message = makeMessage('assistant', [
+        {
+          _tag: 'text',
+          text: 'I need to calculate something.',
+        },
+        {
+          _tag: 'toolCall',
+          toolCallId: 'call_1',
+          name: 'calculator',
+          input: JSON.stringify({ operation: 'add', a: 2, b: 2 }),
+          providerExecuted: true,
+        },
+        {
+          _tag: 'text',
+          text: 'Let me process that for you.',
+        },
+      ]);
 
       const input = yield* preprocessPrompt([message]);
       expect(input.content).toHaveLength(1);
@@ -125,7 +116,7 @@ describe('preprocessor', () => {
           id: 'call_1',
           name: 'calculator',
           params: { operation: 'add', a: 2, b: 2 },
-          providerExecuted: false,
+          providerExecuted: true,
         }),
       );
       expect(assistantMessage.content[2]).toEqual(Prompt.makePart('text', { text: 'Let me process that for you.' }));
@@ -135,21 +126,17 @@ describe('preprocessor', () => {
   it.effect(
     'should handle assistant message with reasoning',
     Effect.fn(function* ({ expect }) {
-      const message = Obj.make(Message.Message, {
-        created: new Date().toISOString(),
-        sender: { role: 'assistant' },
-        blocks: [
-          {
-            _tag: 'reasoning',
-            reasoningText: 'Let me think about this step by step...',
-            signature: 'reasoning_sig_1',
-          },
-          {
-            _tag: 'text',
-            text: 'Based on my reasoning, the answer is 4.',
-          },
-        ],
-      });
+      const message = makeMessage('assistant', [
+        {
+          _tag: 'reasoning',
+          reasoningText: 'Let me think about this step by step...',
+          signature: 'reasoning_sig_1',
+        },
+        {
+          _tag: 'text',
+          text: 'Based on my reasoning, the answer is 4.',
+        },
+      ]);
 
       const input = yield* preprocessPrompt([message]);
       const assistantMessage = input.content[0] as Prompt.AssistantMessage;
@@ -170,16 +157,12 @@ describe('preprocessor', () => {
   it.effect(
     'should handle redacted reasoning',
     Effect.fn(function* ({ expect }) {
-      const message = Obj.make(Message.Message, {
-        created: new Date().toISOString(),
-        sender: { role: 'assistant' },
-        blocks: [
-          {
-            _tag: 'reasoning',
-            redactedText: '[Reasoning redacted]',
-          },
-        ],
-      });
+      const message = makeMessage('assistant', [
+        {
+          _tag: 'reasoning',
+          redactedText: '[Reasoning redacted]',
+        },
+      ]);
 
       const input = yield* preprocessPrompt([message]);
       const assistantMessage = input.content[0] as Prompt.AssistantMessage;
@@ -198,22 +181,38 @@ describe('preprocessor', () => {
   );
 
   it.effect(
+    'should handle reasoning without signature or redacted text',
+    Effect.fn(function* ({ expect }) {
+      const message = makeMessage('assistant', [
+        {
+          _tag: 'reasoning',
+          reasoningText: 'Thinking without a signature...',
+        },
+      ]);
+
+      const input = yield* preprocessPrompt([message]);
+      const assistantMessage = input.content[0] as Prompt.AssistantMessage;
+      expect(assistantMessage.content[0]).toEqual(
+        Prompt.makePart('reasoning', {
+          text: 'Thinking without a signature...',
+        }),
+      );
+    }),
+  );
+
+  it.effect(
     'should handle user message with image (base64)',
     Effect.fn(function* ({ expect }) {
-      const message = Obj.make(Message.Message, {
-        created: new Date().toISOString(),
-        sender: { role: 'user' },
-        blocks: [
-          {
-            _tag: 'image',
-            source: {
-              type: 'base64',
-              mediaType: 'image/png',
-              data: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAGA', // 1x1 transparent PNG
-            },
+      const message = makeMessage('user', [
+        {
+          _tag: 'image',
+          source: {
+            type: 'base64',
+            mediaType: 'image/png',
+            data: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAGA', // 1x1 transparent PNG
           },
-        ],
-      });
+        },
+      ]);
 
       const input = yield* preprocessPrompt([message]);
       const userMessage = input.content[0] as Prompt.UserMessage;
@@ -231,20 +230,15 @@ describe('preprocessor', () => {
   it.effect(
     'should handle user message with image (URL)',
     Effect.fn(function* ({ expect }) {
-      const message = Obj.make(Message.Message, {
-        created: new Date().toISOString(),
-        sender: { role: 'user' },
-        blocks: [
-          {
-            _tag: 'image',
-            source: {
-              type: 'http',
-
-              url: 'https://example.com/image.png',
-            },
+      const message = makeMessage('user', [
+        {
+          _tag: 'image',
+          source: {
+            type: 'http',
+            url: 'https://example.com/image.png',
           },
-        ],
-      });
+        },
+      ]);
 
       const input = yield* preprocessPrompt([message]);
       const userMessage = input.content[0] as Prompt.UserMessage;
@@ -260,17 +254,13 @@ describe('preprocessor', () => {
   it.effect(
     'should handle user message with file reference',
     Effect.fn(function* ({ expect }) {
-      const message = Obj.make(Message.Message, {
-        created: new Date().toISOString(),
-        sender: { role: 'user' },
-        blocks: [
-          {
-            _tag: 'file',
-            mediaType: 'application/pdf',
-            url: 'https://example.com/document.pdf',
-          },
-        ],
-      });
+      const message = makeMessage('user', [
+        {
+          _tag: 'file',
+          mediaType: 'application/pdf',
+          url: 'https://example.com/document.pdf',
+        },
+      ]);
 
       const input = yield* preprocessPrompt([message]);
       const userMessage = input.content[0] as Prompt.UserMessage;
@@ -286,17 +276,13 @@ describe('preprocessor', () => {
   it.effect(
     'should handle user message with transcript',
     Effect.fn(function* ({ expect }) {
-      const message = Obj.make(Message.Message, {
-        created: new Date().toISOString(),
-        sender: { role: 'user' },
-        blocks: [
-          {
-            _tag: 'transcript',
-            text: 'This is a transcript of the conversation.',
-            started: new Date().toISOString(),
-          },
-        ],
-      });
+      const message = makeMessage('user', [
+        {
+          _tag: 'transcript',
+          text: 'This is a transcript of the conversation.',
+          started: new Date().toISOString(),
+        },
+      ]);
 
       const input = yield* preprocessPrompt([message]);
       const userMessage = input.content[0] as Prompt.UserMessage;
@@ -311,18 +297,14 @@ describe('preprocessor', () => {
   it.effect(
     'should handle assistant message with various block types',
     Effect.fn(function* ({ expect }) {
-      const message = Obj.make(Message.Message, {
-        created: new Date().toISOString(),
-        sender: { role: 'assistant' },
-        blocks: [
-          { _tag: 'status', statusText: 'Processing...' },
-          { _tag: 'suggestion', text: 'Try this approach' },
-          { _tag: 'select', options: ['Option A', 'Option B'] },
-          { _tag: 'proposal', text: 'I propose we do this' },
-          { _tag: 'toolkit' },
-          { _tag: 'json', data: '{"key": "value"}' },
-        ],
-      });
+      const message = makeMessage('assistant', [
+        { _tag: 'status', statusText: 'Processing...' },
+        { _tag: 'suggestion', text: 'Try this approach' },
+        { _tag: 'select', options: ['Option A', 'Option B'] },
+        { _tag: 'proposal', text: 'I propose we do this' },
+        { _tag: 'toolkit' },
+        { _tag: 'json', data: '{"key": "value"}' },
+      ]);
 
       const input = yield* preprocessPrompt([message]);
       const assistantMessage = input.content[0] as Prompt.AssistantMessage;
@@ -364,19 +346,15 @@ describe('preprocessor', () => {
   it.effect(
     'should fail when user message contains invalid blocks',
     Effect.fn(function* ({ expect }) {
-      const message = Obj.make(Message.Message, {
-        created: new Date().toISOString(),
-        sender: { role: 'user' },
-        blocks: [
-          {
-            _tag: 'toolCall',
-            toolCallId: 'call_1',
-            name: 'test',
-            input: '{}',
-            providerExecuted: false,
-          },
-        ],
-      });
+      const message = makeMessage('user', [
+        {
+          _tag: 'toolCall',
+          toolCallId: 'call_1',
+          name: 'test',
+          input: '{}',
+          providerExecuted: false,
+        },
+      ]);
 
       const result = yield* Effect.either(preprocessPrompt([message]));
       expect(Either.isLeft(result)).toBe(true);
@@ -389,19 +367,15 @@ describe('preprocessor', () => {
   it.effect(
     'handles provider-executed tool results',
     Effect.fn(function* ({ expect }) {
-      const message = Obj.make(Message.Message, {
-        created: new Date().toISOString(),
-        sender: { role: 'assistant' },
-        blocks: [
-          {
-            _tag: 'toolResult',
-            toolCallId: 'call_1',
-            name: 'test',
-            result: JSON.stringify('Testing'),
-            providerExecuted: true,
-          },
-        ],
-      });
+      const message = makeMessage('assistant', [
+        {
+          _tag: 'toolResult',
+          toolCallId: 'call_1',
+          name: 'test',
+          result: JSON.stringify('Testing'),
+          providerExecuted: true,
+        },
+      ]);
 
       const result = yield* preprocessPrompt([message]);
       expect(result.content).toHaveLength(1);
@@ -412,6 +386,7 @@ describe('preprocessor', () => {
           name: 'test',
           result: 'Testing',
           isFailure: false,
+          providerExecuted: false,
         }),
       ]);
     }),
@@ -421,16 +396,8 @@ describe('preprocessor', () => {
     'should handle multiple messages',
     Effect.fn(function* ({ expect }) {
       const messages = [
-        Obj.make(Message.Message, {
-          created: new Date().toISOString(),
-          sender: { role: 'user' },
-          blocks: [{ _tag: 'text', text: 'Hello' }],
-        }),
-        Obj.make(Message.Message, {
-          created: new Date().toISOString(),
-          sender: { role: 'assistant' },
-          blocks: [{ _tag: 'text', text: 'Hi there!' }],
-        }),
+        makeMessage('user', [{ _tag: 'text', text: 'Hello' }]),
+        makeMessage('assistant', [{ _tag: 'text', text: 'Hi there!' }]),
       ];
 
       const input = yield* preprocessPrompt(messages);
@@ -439,4 +406,114 @@ describe('preprocessor', () => {
       expect(input.content[1].role).toBe('assistant');
     }),
   );
+
+  it.effect(
+    'should trim messages before assistant summary',
+    Effect.fn(function* ({ expect }) {
+      const messages = [
+        makeMessage('user', [{ _tag: 'text', text: 'Old question' }]),
+        makeMessage('assistant', [
+          { _tag: 'text', text: 'Old answer' },
+          { _tag: 'summary', content: 'User asked an old question.' },
+        ]),
+        makeMessage('user', [{ _tag: 'text', text: 'New question' }]),
+      ];
+
+      const input = yield* preprocessPrompt(messages);
+      expect(input.content).toHaveLength(2);
+      expect(input.content[0].role).toBe('assistant');
+      expect((input.content[0] as Prompt.AssistantMessage).content).toEqual([
+        Prompt.makePart('text', { text: '<summary>User asked an old question.</summary>' }),
+      ]);
+      expect(input.content[1].role).toBe('user');
+      expect((input.content[1] as Prompt.UserMessage).content).toEqual([
+        Prompt.makePart('text', { text: 'New question' }),
+      ]);
+    }),
+  );
+
+  it.effect(
+    'should fail when user message contains a summary block',
+    Effect.fn(function* ({ expect }) {
+      const messages = [makeMessage('user', [{ _tag: 'summary', content: 'Bad summary' }])];
+
+      const result = yield* Effect.either(preprocessPrompt(messages));
+      expect(Either.isLeft(result)).toBe(true);
+      if (Either.isLeft(result)) {
+        expect(result.left).toBeInstanceOf(PromptPreprocessingError);
+      }
+    }),
+  );
+
+  it.effect(
+    'should compensate for missing tool results in the middle of a message',
+    Effect.fn(function* ({ expect }) {
+      const messages = [
+        makeMessage('assistant', [
+          { _tag: 'text', text: 'I need to calculate something.' },
+          { _tag: 'toolCall', toolCallId: 'call_1', name: 'calculator', input: '{}', providerExecuted: false }, // missing tool result
+          { _tag: 'text', text: 'Let me process that for you.' },
+        ]),
+      ];
+
+      const input = yield* preprocessPrompt(messages);
+      expect(input.content.map((x) => x.role)).toEqual(['assistant', 'tool', 'assistant']);
+    }),
+  );
+
+  it.effect(
+    'should compensate for missing tool results at the end of a message',
+    Effect.fn(function* ({ expect }) {
+      const messages = [
+        makeMessage('assistant', [
+          { _tag: 'text', text: 'I need to calculate something.' },
+          { _tag: 'toolCall', toolCallId: 'call_1', name: 'calculator', input: '{}', providerExecuted: false }, // missing tool result
+        ]),
+      ];
+
+      const input = yield* preprocessPrompt(messages);
+      expect(input.content.map((x) => x.role)).toEqual(['assistant', 'tool']);
+    }),
+  );
+
+  it.effect(
+    'doesnt compensate for satisfied tool calls',
+    Effect.fn(function* ({ expect }) {
+      const messages = [
+        makeMessage('assistant', [
+          { _tag: 'text', text: 'I need to calculate something.' },
+          { _tag: 'toolCall', toolCallId: 'call_1', name: 'calculator', input: '{}', providerExecuted: false },
+          { _tag: 'toolCall', toolCallId: 'call_2', name: 'calculator', input: '{}', providerExecuted: false },
+        ]),
+        makeMessage('tool', [
+          { _tag: 'toolResult', toolCallId: 'call_1', name: 'calculator', result: '10', providerExecuted: false },
+          { _tag: 'toolResult', toolCallId: 'call_2', name: 'calculator', result: '10', providerExecuted: false },
+        ]),
+        makeMessage('assistant', [{ _tag: 'text', text: 'The result is 10.' }]),
+      ];
+
+      const input = yield* preprocessPrompt(messages);
+      expect(input.content.map((x) => x.role)).toEqual(['assistant', 'tool', 'assistant']);
+      expect(input.content[1].content.length).toEqual(2);
+    }),
+  );
 });
+
+describe('AiPreprocessor.estimateTokens', () => {
+  it.effect(
+    'should estimate tokens for a simple user message with text',
+    Effect.fn(function* ({ expect }) {
+      const prompt = yield* preprocessPrompt(yield* Effect.promise(TestData.internetOrderConversation));
+      const tokens = yield* estimateTokens(prompt);
+      expect(tokens).toBeGreaterThan(0);
+    }),
+  );
+});
+
+const makeMessage = (role: 'user' | 'assistant' | 'tool', blocks: ContentBlock.Any[]): Message.Message => {
+  return Obj.make(Message.Message, {
+    created: new Date().toISOString(),
+    sender: { role },
+    blocks,
+  });
+};

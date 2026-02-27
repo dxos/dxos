@@ -3,6 +3,7 @@
 //
 
 // This is based upon `@radix-ui/react-tooltip` fetched 17 March 2025 at https://github.com/radix-ui/primitives at commit 6e75e11.
+// TODO(burdon): Replace with https://ui.shadcn.com/docs/components/radix/tooltip
 
 import { composeEventHandlers } from '@radix-ui/primitive';
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
@@ -41,9 +42,9 @@ type TooltipScopedProps<P = {}> = P & { __scopeTooltip?: Scope };
 const [createTooltipContext, createTooltipScope] = createContextScope('Tooltip', [createPopperScope]);
 const usePopperScope = createPopperScope();
 
-/* -------------------------------------------------------------------------------------------------
- * Tooltip
- * ----------------------------------------------------------------------------------------------- */
+//
+// Tooltip
+//
 
 const DEFAULT_DELAY_DURATION = 700;
 const TOOLTIP_OPEN = 'tooltip.open';
@@ -215,9 +216,9 @@ const TooltipProvider: FC<TooltipProviderProps> = (props: TooltipScopedProps<Too
           isPointerInTransitRef.current = inTransit;
         }, [])}
       >
-        <TooltipContent side={side} className={tx('tooltip.content', 'tooltip', { elevation })}>
+        <TooltipContent side={side} className={tx('tooltip.content', { elevation })}>
           {content}
-          <TooltipArrow className={tx('tooltip.arrow', 'tooltip__arrow')} />
+          <TooltipArrow className={tx('tooltip.arrow')} />
         </TooltipContent>
         <TooltipVirtualTrigger virtualRef={triggerRef as RefObject<HTMLButtonElement>} />
         {children}
@@ -228,9 +229,9 @@ const TooltipProvider: FC<TooltipProviderProps> = (props: TooltipScopedProps<Too
 
 TooltipProvider.displayName = TOOLTIP_NAME;
 
-/* -------------------------------------------------------------------------------------------------
- * TooltipVirtualTrigger
- * ----------------------------------------------------------------------------------------------- */
+//
+// TooltipVirtualTrigger
+//
 
 const TooltipVirtualTrigger = ({
   virtualRef,
@@ -240,9 +241,9 @@ const TooltipVirtualTrigger = ({
   return <PopperPrimitive.Anchor asChild {...popperScope} virtualRef={virtualRef} />;
 };
 
-/* -------------------------------------------------------------------------------------------------
- * TooltipTrigger
- * ----------------------------------------------------------------------------------------------- */
+//
+// TooltipTrigger
+//
 
 const TRIGGER_NAME = 'TooltipTrigger';
 
@@ -322,9 +323,9 @@ const TooltipTrigger = forwardRef<TooltipTriggerElement, TooltipTriggerProps>(
 
 TooltipTrigger.displayName = TRIGGER_NAME;
 
-/* -------------------------------------------------------------------------------------------------
- * TooltipPortal
- * ----------------------------------------------------------------------------------------------- */
+//
+// TooltipPortal
+//
 
 const PORTAL_NAME = 'TooltipPortal';
 
@@ -363,9 +364,9 @@ const TooltipPortal: FC<TooltipPortalProps> = (props: TooltipScopedProps<Tooltip
 
 TooltipPortal.displayName = PORTAL_NAME;
 
-/* -------------------------------------------------------------------------------------------------
- * TooltipContent
- * ----------------------------------------------------------------------------------------------- */
+//
+// TooltipContent
+//
 
 const CONTENT_NAME = 'TooltipContent';
 
@@ -574,9 +575,9 @@ const TooltipContentImpl = forwardRef<TooltipContentImplElement, TooltipContentI
 
 TooltipContent.displayName = CONTENT_NAME;
 
-/* -------------------------------------------------------------------------------------------------
- * TooltipArrow
- * ----------------------------------------------------------------------------------------------- */
+//
+// TooltipArrow
+//
 
 const ARROW_NAME = 'TooltipArrow';
 
@@ -598,8 +599,6 @@ const TooltipArrow = forwardRef<TooltipArrowElement, TooltipArrowProps>(
 );
 
 TooltipArrow.displayName = ARROW_NAME;
-
-/* ----------------------------------------------------------------------------------------------- */
 
 type TooltipSide = NonNullable<TooltipContentProps['side']>;
 
@@ -754,6 +753,10 @@ const getHullPresorted = <P extends Point>(points: Readonly<Array<P>>): Array<P>
     return upperHull.concat(lowerHull);
   }
 };
+
+//
+// Tooltip
+//
 
 export const Tooltip = {
   Provider: TooltipProvider,

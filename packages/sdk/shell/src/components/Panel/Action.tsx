@@ -6,7 +6,7 @@ import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { type Dispatch, type SetStateAction, forwardRef } from 'react';
 
 import { Button, type ButtonProps, DropdownMenu, Icon, IconButton, useTranslation } from '@dxos/react-ui';
-import { descriptionText, mx } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
 
@@ -64,10 +64,10 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
   const { t } = useTranslation(translationKey);
 
   return (
-    <div role='none' className={mx('mbs-2 flex gap-px items-center', isFull && 'is-full')}>
+    <div role='none' className={mx('mt-2 flex gap-px items-center', isFull && 'w-full')}>
       <Button
         {...rest}
-        classNames={['bs-11 flex-1 min-is-0 flex gap-2 rounded-ie-none', classNames]}
+        classNames={['h-11 flex-1 min-w-0 flex gap-2 rounded-ie-none', classNames]}
         ref={forwardedRef}
         variant={variant}
         data-testid={testId}
@@ -83,7 +83,7 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
             size={4}
             label={t('invite options label')}
             iconOnly
-            classNames={['bs-11 flex-none rounded-is-none', classNames]}
+            classNames={['h-11 flex-none rounded-w-none', classNames]}
             data-testid={dropdownTestId}
           />
         </DropdownMenu.Trigger>
@@ -103,10 +103,10 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
                     data-testid={action.testId}
                   >
                     {action.icon && <Icon icon={action.icon} size={5} />}
-                    <div role='none' className='flex-1 min-is-0 space-b-1'>
+                    <div role='none' className='flex-1 min-w-0 space-b-1'>
                       <p id={`${id}__label`}>{action.label}</p>
                       {action.description && (
-                        <p id={`${id}__description`} className={descriptionText}>
+                        <p id={`${id}__description`} className='text-description'>
                           {action.description}
                         </p>
                       )}
@@ -126,15 +126,13 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
   );
 });
 
+/**
+ * @deprecated
+ */
 export const Action = forwardRef<HTMLButtonElement, LargeButtonProps>((props, forwardedRef) => {
   const { children, classNames, variant, isFull = true, ...rest } = props;
   return (
-    <Button
-      {...rest}
-      classNames={[isFull && 'is-full', 'bs-11 flex gap-2 mbs-2', classNames]}
-      ref={forwardedRef}
-      variant={variant}
-    >
+    <Button {...rest} classNames={[isFull && 'w-full', classNames]} ref={forwardedRef} variant={variant}>
       {children}
     </Button>
   );

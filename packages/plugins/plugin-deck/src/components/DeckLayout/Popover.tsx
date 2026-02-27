@@ -5,7 +5,8 @@
 import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useCallback, useEffect, useRef, useState } from 'react';
 
-import { Surface } from '@dxos/app-framework/react';
+import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { Popover, type PopoverContentInteractOutsideEvent, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-mosaic';
 
@@ -59,11 +60,12 @@ export const PopoverContent = () => {
   const { t } = useTranslation(meta.id);
   const { state, updateEphemeral } = useDeckState();
   const { setOpen } = useDeckPopoverContext('PopoverContent');
+  const { invokeSync } = useOperationInvoker();
 
   const handleClose = useCallback(() => {
     setOpen(false);
-    updateEphemeral((s) => ({
-      ...s,
+    updateEphemeral((state) => ({
+      ...state,
       popoverOpen: false,
       popoverAnchor: undefined,
       popoverAnchorId: undefined,
@@ -96,18 +98,32 @@ export const PopoverContent = () => {
         onEscapeKeyDown={handleInteractOutside}
       >
         <Popover.Viewport>
+          {/* TODO(burdon): Set/disable column context. */}
+          {state.popoverKind === 'base' && <Surface.Surface role='popover' data={state.popoverContent} limit={1} />}
           {state.popoverKind === 'card' && (
-            <Card.Root>
+            <Card.Root border={false} classNames='popover-card'>
               <Card.Toolbar>
                 {/* TODO(wittjosiah): Cleaner way to handle no drag handle in toolbar? */}
-                <span />
+                {state.popoverContentRef ? (
+                  <Card.ToolbarIconButton
+                    icon='ph--arrow-square-out--regular'
+                    iconOnly
+                    label={t('open item label')}
+                    onClick={() => {
+                      invokeSync(LayoutOperation.Open, {
+                        subject: [state.popoverContentRef!],
+                      });
+                    }}
+                  />
+                ) : (
+                  <div />
+                )}
                 {state.popoverTitle ? <Card.Title>{toLocalizedString(state.popoverTitle, t)}</Card.Title> : <span />}
-                <Card.Close onClose={handleClose} />
+                <Card.Close onClick={handleClose} />
               </Card.Toolbar>
-              <Surface role='card--content' data={state.popoverContent} limit={1} />
+              <Surface.Surface role='card--content' data={state.popoverContent} limit={1} />
             </Card.Root>
           )}
-          {state.popoverKind === 'base' && <Surface role='popover' data={state.popoverContent} limit={1} />}
         </Popover.Viewport>
         <Popover.Arrow />
       </Popover.Content>

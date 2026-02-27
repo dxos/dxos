@@ -7,15 +7,19 @@
 import type { ChangeFn, ChangeOptions, Doc, Heads } from '@automerge/automerge';
 
 import { type EncodedReference } from '@dxos/echo-protocol';
-import { get } from '@dxos/util';
+import { getDeep } from '@dxos/util';
 
+/**
+ * Values that can be encoded/decoded from Automerge documents.
+ * Uses readonly modifiers so that both mutable and readonly types can be accepted.
+ */
 export type DecodedAutomergePrimaryValue =
   | undefined
   | string
   | number
   | boolean
-  | DecodedAutomergePrimaryValue[]
-  | { [key: string]: DecodedAutomergePrimaryValue }
+  | readonly DecodedAutomergePrimaryValue[]
+  | { readonly [key: string]: DecodedAutomergePrimaryValue }
   | EncodedReference;
 
 //
@@ -41,7 +45,7 @@ export interface DocAccessor<T = any> {
 
 // TODO(burdon): Extract function.
 export const DocAccessor = {
-  getValue: <T>(accessor: DocAccessor): T => get(accessor.handle.doc(), accessor.path) as T,
+  getValue: <T>(accessor: DocAccessor): T => getDeep(accessor.handle.doc(), accessor.path) as T,
 };
 
 export const isValidKeyPath = (value: unknown): value is KeyPath =>

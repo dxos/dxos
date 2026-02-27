@@ -6,7 +6,7 @@ import type { State as AmState } from '@automerge/automerge';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { type DXN, Filter, Format, Obj, Query, Type } from '@dxos/echo';
-import { type AnyLiveObject, checkoutVersion, getEditHistory } from '@dxos/echo-db';
+import { checkoutVersion, getEditHistory } from '@dxos/echo-db';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { DynamicTable, type TableFeatures } from '@dxos/react-ui-table';
@@ -23,7 +23,7 @@ const textFilter = (text?: string) => {
 
   // TODO(burdon): Structured query (e.g., "type:Text").
   const matcher = new RegExp(text, 'i');
-  return (item: AnyLiveObject<any>) => {
+  return (item: Obj.Any) => {
     let match = false;
     match ||= !!Obj.getTypename(item)?.match(matcher);
     match ||= !!String((item as any).title ?? '').match(matcher);
@@ -53,7 +53,7 @@ export const ObjectsPanel = (props: { space?: Space }) => {
   // TODO(burdon): Sort by type?
   const items = useQuery(space?.db, Query.select(Filter.everything()).options({ deleted: 'include' }));
   const [filter, setFilter] = useState('');
-  const [selected, setSelected] = useState<AnyLiveObject<any>>();
+  const [selected, setSelected] = useState<Obj.Any>();
   const [selectedVersion, setSelectedVersion] = useState<HistoryRow | null>(null);
   const [selectedVersionObject, setSelectedVersionObject] = useState<any | null>(null);
 
@@ -68,7 +68,7 @@ export const ObjectsPanel = (props: { space?: Space }) => {
     }
   };
 
-  const objectSelect = (object: AnyLiveObject<any>) => {
+  const objectSelect = (object: Obj.Any) => {
     setSelectedVersionObject(null);
     setSelected(object);
   };
@@ -183,8 +183,8 @@ export const ObjectsPanel = (props: { space?: Space }) => {
         </Toolbar.Root>
       }
     >
-      <div className='bs-full grid grid-cols-[4fr_3fr] overflow-hidden'>
-        <div className='flex flex-col is-full overflow-hidden'>
+      <div className='h-full grid grid-cols-[4fr_3fr] overflow-hidden'>
+        <div className='flex flex-col w-full overflow-hidden'>
           <DynamicTable
             properties={dataProperties}
             rows={dataRows}
@@ -193,17 +193,17 @@ export const ObjectsPanel = (props: { space?: Space }) => {
           />
           <div
             className={mx(
-              'bs-[--statusbar-size]',
+              'h-(--statusbar-size)',
               'flex shrink-0 justify-end items-center gap-2',
-              'bg-baseSurface text-description',
+              'bg-base-surface text-description',
             )}
           >
-            <div className='text-sm pie-2'>Objects: {items.length}</div>
+            <div className='text-sm pe-2'>Objects: {items.length}</div>
           </div>
         </div>
 
-        <div className='min-bs-0 bs-full grid grid-rows-[1fr_16rem] !border-separator border-is border-bs'>
-          <div className={mx('p-1 min-bs-0 overflow-auto')}>
+        <div className='min-h-0 h-full grid grid-rows-[1fr_16rem] border-separator! border-s border-t'>
+          <div className={mx('p-1 min-h-0 overflow-auto')}>
             {selected ? (
               <ObjectViewer
                 object={selectedVersionObject ?? selected}
@@ -214,7 +214,7 @@ export const ObjectsPanel = (props: { space?: Space }) => {
               <Placeholder label='Data' />
             )}
           </div>
-          <div className={mx(!selected && 'p-1 border-bs !border-separator')}>
+          <div className={mx(!selected && 'p-1 border-t border-separator!')}>
             {selected ? (
               <DynamicTable properties={historyProperties} rows={historyRows} onRowClick={handleHistoryRowClicked} />
             ) : (

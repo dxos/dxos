@@ -1,15 +1,21 @@
 {
   "name": "@dxos/stories-assistant",
   "version": "0.8.3",
+  "private": true,
   "description": "Chat integration tests",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": true,
   "dependencies": {
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-toolkit": "workspace:*",
     "@dxos/assistant": "workspace:*",
     "@dxos/assistant-toolkit": "workspace:*",
     "@dxos/async": "workspace:*",
@@ -47,8 +53,8 @@
     "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-map": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
+    "@dxos/plugin-pipeline": "workspace:*",
     "@dxos/plugin-preview": "workspace:*",
-    "@dxos/plugin-project": "workspace:*",
     "@dxos/plugin-script": "workspace:*",
     "@dxos/plugin-sketch": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
@@ -74,6 +80,7 @@
     "@dxos/react-ui-graph": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
+    "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-searchlist": "workspace:*",
     "@dxos/react-ui-sfx": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
@@ -98,8 +105,8 @@
     "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-map": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
+    "@dxos/plugin-pipeline": "workspace:*",
     "@dxos/plugin-preview": "workspace:*",
-    "@dxos/plugin-project": "workspace:*",
     "@dxos/plugin-script": "workspace:*",
     "@dxos/plugin-sketch": "workspace:*",
     "@dxos/plugin-stack": "workspace:*",
@@ -126,8 +133,5 @@
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
-  },
-  "publishConfig": {
-    "access": "public"
   }
 }

@@ -5,6 +5,10 @@
   "description": "Tools.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "info@dxos.org",
   "sideEffects": true,
@@ -26,7 +30,6 @@
     "cosmiconfig": "catalog:",
     "js-yaml": "catalog:",
     "lodash.defaultsdeep": "catalog:",
-    "lodash.pick": "catalog:",
     "minimatch": "catalog:",
     "ts-morph": "catalog:",
     "yargs": "catalog:"
@@ -35,7 +38,6 @@
     "@babel/core": "catalog:",
     "@types/color-hash": "catalog:",
     "@types/lodash.defaultsdeep": "catalog:",
-    "@types/lodash.pick": "catalog:",
     "@types/minimatch": "catalog:",
     "@types/yargs": "catalog:"
   }

@@ -4,6 +4,10 @@
   "description": "A syntax highlighter wrapper.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": false,
@@ -26,7 +30,7 @@
   ],
   "dependencies": {
     "@dxos/util": "workspace:*",
-    "jsonpath": "catalog:",
+    "jsonpath-plus": "catalog:",
     "react-syntax-highlighter": "catalog:"
   },
   "devDependencies": {
@@ -35,7 +39,6 @@
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@types/jsonpath": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@types/react-syntax-highlighter": "catalog:",

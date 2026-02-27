@@ -8,10 +8,12 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { invariant } from '@dxos/invariant';
 import { type ObjectId } from '@dxos/keys';
 
+import type * as Type from '../../Type';
 import { type SchemaMeta, SchemaMetaSymbol, type TypeAnnotation, getTypeAnnotation } from '../annotations';
 import { type JsonSchemaType, toEffectSchema, toJsonSchema } from '../json-schema';
 import { type TypedObject, type TypedObjectPrototype, getSnapshot } from '../object';
 import { ChangeId } from '../proxy';
+import { EntityKind, SchemaKindId } from '../types';
 
 import {
   addFieldsToSchema,
@@ -82,6 +84,10 @@ export class ImmutableSchema<A = any, I = any> implements BaseSchema<A, I> {
   //
   // TypedObject
   //
+
+  get kind(): EntityKind {
+    return this._objectAnnotation.kind;
+  }
 
   get typename(): string {
     return this._objectAnnotation.typename;
@@ -172,7 +178,7 @@ const schemaVariance = {
  *
  * @example
  * ```ts
- * export class TableType extends Schema.Struct({...}).pipe(Type.Obj({ typename: 'example.org/type/Table', version: '0.1.0' })){
+ * export class TableType extends Schema.Struct({...}).pipe(Type.object({ typename: 'example.org/type/Table', version: '0.1.0' })){
  *   title: Schema.String,
  *   schema: Schema.optional(ref(EchoSchema)),
  *   props: Schema.mutable(S.Array(TablePropSchema)),
@@ -184,6 +190,12 @@ const schemaVariance = {
 export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implements BaseSchema<A, I> {
   private _schema: Schema.Schema.AnyNoContext | undefined;
   private _isDirty = true;
+
+  /**
+   * Schema kind key that marks this as an ECHO schema.
+   * Makes EchoSchema satisfy the Type.Obj.Any type.
+   */
+  readonly [SchemaKindId]: EntityKind.Object = EntityKind.Object;
 
   constructor(private readonly _persistentSchema: PersistentSchema) {
     super();
@@ -228,6 +240,11 @@ export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implem
   //
   // BaseSchema
   //
+
+  public get kind(): EntityKind.Object {
+    // Dynamic schemas are always object schemas.
+    return EntityKind.Object;
+  }
 
   public get typename(): string {
     return this._persistentSchema.typename;
@@ -288,8 +305,8 @@ export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implem
   /**
    * Reference to the underlying persistent schema object.
    */
-  public get persistentSchema(): PersistentSchema {
-    return this._persistentSchema;
+  public get persistentSchema(): Type.PersistentType {
+    return this._persistentSchema as Type.PersistentType;
   }
 
   public getProperties(): SchemaAST.PropertySignature[] {

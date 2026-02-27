@@ -7,8 +7,10 @@ import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 
-import { Capability, Common } from '@dxos/app-framework';
-import { Surface, useAtomCapability, useLayout, useSettingsState } from '@dxos/app-framework/react';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { Surface, useAtomCapability, useSettingsState } from '@dxos/app-framework/ui';
+import { AppCapabilities } from '@dxos/app-toolkit';
+import { useLayout } from '@dxos/app-toolkit/ui';
 import { Database, Obj, type Ref } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
 import { type Space, SpaceState, getSpace, isSpace, parseId, useSpace } from '@dxos/react-client/echo';
@@ -18,6 +20,13 @@ import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 import { Collection, type View, ViewAnnotation } from '@dxos/schema';
 import { type JoinPanelProps } from '@dxos/shell/react';
 
+import {
+  CREATE_OBJECT_DIALOG,
+  CREATE_SPACE_DIALOG,
+  JOIN_DIALOG,
+  OBJECT_RENAME_POPOVER,
+  SPACE_RENAME_POPOVER,
+} from '../../constants';
 import {
   CollectionArticle,
   CollectionSection,
@@ -40,14 +49,7 @@ import {
   SpaceSettingsContainer,
   SyncStatus,
   ViewEditor,
-} from '../../components';
-import {
-  CREATE_OBJECT_DIALOG,
-  CREATE_SPACE_DIALOG,
-  JOIN_DIALOG,
-  OBJECT_RENAME_POPOVER,
-  SPACE_RENAME_POPOVER,
-} from '../../constants';
+} from '../../containers';
 import { useTypeOptions } from '../../hooks';
 import { meta } from '../../meta';
 import {
@@ -67,15 +69,15 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* (props?: ReactSurfaceOptions) {
     const { createInvitationUrl } = props!;
 
-    return Capability.contributes(Common.Capability.ReactSurface, [
-      Common.createSurface({
+    return Capability.contributes(Capabilities.ReactSurface, [
+      Surface.create({
         id: `${meta.id}/article`,
         role: 'article',
         filter: (data): data is { subject: Space } =>
           // TODO(wittjosiah): Need to avoid shotgun parsing space state everywhere.
           isSpace(data.subject) && data.subject.state.get() === SpaceState.SPACE_READY,
         component: ({ data, role, ...rest }) => (
-          <Surface
+          <Surface.Surface
             data={{
               id: data.subject.id,
               subject: data.subject.properties[Collection.Collection.typename]?.target,
@@ -85,39 +87,39 @@ export default Capability.makeModule(
           />
         ),
       }),
-      Common.createSurface({
-        id: `${meta.id}/record-article`,
-        role: 'article',
-        position: 'fallback',
-        filter: (data): data is { subject: Obj.Any } => Obj.isObject(data.subject),
-        component: ({ data }) => <RecordArticle subject={data.subject} />,
-      }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/collection-fallback`,
         role: 'article',
         position: 'fallback',
-        filter: (data): data is { subject: Collection.Collection } =>
-          Obj.instanceOf(Collection.Collection, data.subject),
+        filter: (data): data is { subject: Collection.Collection | Collection.Managed } =>
+          Obj.instanceOf(Collection.Collection, data.subject) || Obj.instanceOf(Collection.Managed, data.subject),
         component: ({ data }) => <CollectionArticle subject={data.subject} />,
       }),
-      Common.createSurface({
+      Surface.create({
+        id: `${meta.id}/record-article`,
+        role: 'article',
+        position: 'fallback',
+        filter: (data): data is { subject: Obj.Unknown } => Obj.isObject(data.subject),
+        component: ({ data }) => <RecordArticle subject={data.subject} />,
+      }),
+      Surface.create({
         id: `${meta.id}/plugin-settings`,
         role: 'article',
-        filter: (data): data is { subject: Common.Capability.Settings } =>
-          Common.Capability.isSettings(data.subject) && data.subject.prefix === meta.id,
+        filter: (data): data is { subject: AppCapabilities.Settings } =>
+          AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.id,
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<SpaceSettingsProps>(subject.atom);
           return <SpacePluginSettings settings={settings} onSettingsChange={updateSettings} />;
         },
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/companion/object-settings`,
         role: 'article',
-        filter: (data): data is { companionTo: Obj.Any } =>
+        filter: (data): data is { companionTo: Obj.Unknown } =>
           Obj.isObject(data.companionTo) && data.subject === 'settings',
-        component: ({ ref, data, role }) => <ObjectDetails object={data.companionTo} role={role} ref={ref} />,
+        component: ({ ref, data, role }) => <ObjectDetails subject={data.companionTo} role={role} ref={ref} />,
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/space-settings-properties`,
         role: 'article',
         filter: (data): data is { subject: string } => data.subject === `${meta.id}/properties`,
@@ -129,10 +131,10 @@ export default Capability.makeModule(
             return null;
           }
 
-          return <SpaceSettingsContainer space={space} ref={ref} />;
+          return <SpaceSettingsContainer space={space} />;
         },
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/space-settings-members`,
         role: 'article',
         position: 'hoist',
@@ -148,7 +150,7 @@ export default Capability.makeModule(
           return <MembersContainer space={space} createInvitationUrl={createInvitationUrl} />;
         },
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/space-settings-schema`,
         role: 'article',
         filter: (data): data is { subject: string } => data.subject === `${meta.id}/schema`,
@@ -163,7 +165,7 @@ export default Capability.makeModule(
           return <SchemaContainer space={space} />;
         },
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/selected-objects`,
         role: 'article',
         filter: (data): data is { companionTo: Obj.Obj<{ view: Ref.Ref<View.View> }>; subject: 'selected-objects' } => {
@@ -187,25 +189,25 @@ export default Capability.makeModule(
           />
         ),
       }),
-      Common.createSurface({
+      Surface.create({
         id: JOIN_DIALOG,
         role: 'dialog',
         filter: (data): data is { props: JoinPanelProps } => data.component === JOIN_DIALOG,
         component: ({ data }) => <JoinDialog {...data.props} />,
       }),
-      Common.createSurface({
+      Surface.create({
         id: CREATE_SPACE_DIALOG,
         role: 'dialog',
         filter: (data): data is any => data.component === CREATE_SPACE_DIALOG,
         component: () => <CreateSpaceDialog />,
       }),
-      Common.createSurface({
+      Surface.create({
         id: CREATE_OBJECT_DIALOG,
         role: 'dialog',
         filter: (data): data is { props: CreateObjectDialogProps } => data.component === CREATE_OBJECT_DIALOG,
         component: ({ data }) => <CreateObjectDialog {...data.props} />,
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/create-initial-space-form-[hue]`,
         role: 'form-input',
         filter: (data): data is { prop: string; schema: Schema.Schema<any> } => {
@@ -224,7 +226,7 @@ export default Capability.makeModule(
           );
         },
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/create-initial-space-form-[icon]`,
         role: 'form-input',
         filter: (data): data is { prop: string; schema: Schema.Schema<any> } => {
@@ -248,7 +250,7 @@ export default Capability.makeModule(
           );
         },
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/typename-form-input`,
         role: 'form-input',
         filter: (
@@ -275,7 +277,7 @@ export default Capability.makeModule(
           return <SelectField {...props} options={options} />;
         },
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/object-settings`,
         role: 'object-settings',
         filter: (data): data is { subject: { view: Ref.Ref<View.View> } } => {
@@ -298,29 +300,29 @@ export default Capability.makeModule(
           return <ViewEditor view={view} />;
         },
       }),
-      Common.createSurface({
+      Surface.create({
         id: SPACE_RENAME_POPOVER,
         role: 'popover',
         filter: (data): data is { props: Space } => data.component === SPACE_RENAME_POPOVER && isSpace(data.props),
         component: ({ data }) => <SpaceRenamePopover space={data.props} />,
       }),
-      Common.createSurface({
+      Surface.create({
         id: OBJECT_RENAME_POPOVER,
         role: 'popover',
-        filter: (data): data is { props: Obj.Any } =>
+        filter: (data): data is { props: Obj.Unknown } =>
           data.component === OBJECT_RENAME_POPOVER && Obj.isObject(data.props),
         component: ({ data }) => <ObjectRenamePopover object={data.props} />,
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/menu-footer`,
         role: 'menu-footer',
-        filter: (data): data is { subject: Obj.Any } => Obj.isObject(data.subject),
+        filter: (data): data is { subject: Obj.Unknown } => Obj.isObject(data.subject),
         component: ({ data }) => <MenuFooter object={data.subject} />,
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/navtree-presence`,
         role: 'navtree-item-end',
-        filter: (data): data is { id: string; subject: Obj.Any; open?: boolean } =>
+        filter: (data): data is { id: string; subject: Obj.Unknown; open?: boolean } =>
           typeof data.id === 'string' && Obj.isObject(data.subject),
         component: ({ data }) => {
           const ephemeral = useAtomCapability(SpaceCapabilities.EphemeralState);
@@ -328,7 +330,7 @@ export default Capability.makeModule(
         },
       }),
       // TODO(wittjosiah): Attention glyph for non-echo items should be handled elsewhere.
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/navtree-presence-fallback`,
         role: 'navtree-item-end',
         position: 'fallback',
@@ -336,17 +338,17 @@ export default Capability.makeModule(
         component: ({ data }) => <SmallPresenceLive id={data.id} open={data.open} />,
       }),
       // TODO(wittjosiah): Broken?
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/navtree-sync-status`,
         role: 'navtree-item-end',
         filter: (data): data is { subject: Space; open?: boolean } => isSpace(data.subject),
         component: ({ data }) => <InlineSyncStatus space={data.subject} open={data.open} />,
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/navbar-presence`,
         role: 'navbar-end',
         position: 'hoist',
-        filter: (data): data is { subject: Space | Obj.Any } => isSpace(data.subject) || Obj.isObject(data.subject),
+        filter: (data): data is { subject: Space | Obj.Unknown } => isSpace(data.subject) || Obj.isObject(data.subject),
         component: ({ data }) => {
           const space = isSpace(data.subject) ? data.subject : getSpace(data.subject);
           const object = isSpace(data.subject)
@@ -358,14 +360,14 @@ export default Capability.makeModule(
           return object ? <SpacePresence object={object} /> : null;
         },
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/collection-section`,
         role: 'section',
         filter: (data): data is { subject: Collection.Collection } =>
           Obj.instanceOf(Collection.Collection, data.subject),
         component: ({ data }) => <CollectionSection subject={data.subject} />,
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/status`,
         role: 'status',
         component: () => <SyncStatus />,

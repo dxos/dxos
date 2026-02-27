@@ -7,12 +7,13 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 
 import { Annotation, type Database, Format, Obj, type QueryAST, Type } from '@dxos/echo';
-import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
+import { type Mutable, PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 import { PublicKey } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { withTheme } from '@dxos/react-ui/testing';
+import { ScrollArea } from '@dxos/react-ui';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { ViewEditor, translations as formTranslations } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { View, getSchemaFromPropertyDefinitions, getTypenameFromQuery } from '@dxos/schema';
@@ -51,7 +52,7 @@ const Example = Schema.Struct({
     title: 'Parent',
   }),
 }).pipe(
-  Type.Obj({ typename: `example.com/type/${PublicKey.random().truncate()}`, version: '0.1.0' }),
+  Type.object({ typename: `example.com/type/${PublicKey.random().truncate()}`, version: '0.1.0' }),
   Annotation.LabelAnnotation.set(['name']),
 );
 interface Example extends Schema.Schema.Type<typeof Example> {}
@@ -73,7 +74,9 @@ const StoryViewEditor = ({
       invariant(Type.isMutable(schema));
       schema.updateTypename(getTypenameFromQuery(newQuery));
       invariant(view);
-      view.query.ast = newQuery;
+      Obj.change(view, (v) => {
+        v.query.ast = newQuery as Mutable<typeof newQuery>;
+      });
     },
     [schema, view],
   );
@@ -101,30 +104,42 @@ const DefaultStory = () => {
   const { db, schema, table, tableRef, model, presentation, handleInsertRow, handleSaveView, handleDeleteColumn } =
     useTestTableModel();
 
+  const handleRowClick = useCallback(
+    (row: any) => {
+      if (model?.getDraftRowCount() === 0 && ['frozenRowsEnd', 'fixedEndStart', 'fixedEndEnd'].includes(row?.plane)) {
+        handleInsertRow();
+      }
+    },
+    [model, handleInsertRow],
+  );
+
   if (!schema || !table?.view.target) {
     return <div />;
   }
 
   return (
     <div className='grow grid grid-cols-[1fr_350px]'>
-      <div className='grid grid-rows-[min-content_1fr] min-bs-0 overflow-hidden'>
-        <TableToolbar classNames='border-be border-subduedSeparator' onAdd={handleInsertRow} onSave={handleSaveView} />
+      <div className='grid grid-rows-[min-content_1fr] min-h-0 overflow-hidden'>
+        <TableToolbar classNames='border-b border-subdued-separator' onAdd={handleInsertRow} onSave={handleSaveView} />
         <TableComponent.Root>
           <TableComponent.Main
             ref={tableRef}
             schema={schema}
             model={model}
             presentation={presentation}
+            onRowClick={handleRowClick}
             ignoreAttention
           />
         </TableComponent.Root>
       </div>
-      <div className='flex flex-col bs-full border-l border-separator overflow-y-auto'>
-        <StoryViewEditor view={table.view.target} schema={schema} db={db} handleDeleteColumn={handleDeleteColumn} />
-        <SyntaxHighlighter language='json' className='text-xs'>
-          {JSON.stringify({ view: table.view.target, schema }, null, 2)}
-        </SyntaxHighlighter>
-      </div>
+      <ScrollArea.Root orientation='vertical' classNames='border-l border-separator'>
+        <ScrollArea.Viewport>
+          <StoryViewEditor view={table.view.target} schema={schema} db={db} handleDeleteColumn={handleDeleteColumn} />
+          <SyntaxHighlighter language='json' className='text-xs'>
+            {JSON.stringify({ view: table.view.target, schema }, null, 2)}
+          </SyntaxHighlighter>
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
     </div>
   );
 };
@@ -141,7 +156,8 @@ const meta = {
   title: 'ui/react-ui-table/Table',
   render: DefaultStory,
   decorators: [
-    withTheme,
+    withTheme(),
+    withLayout({ layout: 'fullscreen' }),
     withRegistry,
     withClientProvider({
       types: [View.View, Table.Table],
@@ -151,10 +167,12 @@ const meta = {
         const [schema] = await space.db.schemaRegistry.register([Example]);
         const { view, jsonSchema } = await View.makeFromDatabase({ db: space.db, typename: schema.typename });
         const table = Table.make({ view, jsonSchema });
-        view.projection.fields = [
-          view.projection.fields.find((field: any) => field.path === 'name')!,
-          ...view.projection.fields.filter((field: any) => field.path !== 'name'),
-        ];
+        Obj.change(view, (v) => {
+          v.projection.fields = [
+            v.projection.fields.find((field) => field.path === 'name')!,
+            ...v.projection.fields.filter((field) => field.path !== 'name'),
+          ];
+        });
 
         space.db.add(table);
 
@@ -225,7 +243,7 @@ const ContactWithArrayOfEmails = Schema.Struct({
     ),
   ),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/ContactWithArrayOfEmails',
     version: '0.1.0',
   }),

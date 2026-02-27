@@ -5,8 +5,8 @@
 import * as Effect from 'effect/Effect';
 import { useCallback, useEffect, useMemo } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { useOperationInvoker, useOperationResolver } from '@dxos/app-framework/react';
+import { useOperationInvoker, useOperationResolver } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { debounce } from '@dxos/async';
 import { type CellAddress, type CompleteCellRange, inRange } from '@dxos/compute';
 import { Obj, Relation } from '@dxos/echo';
@@ -44,7 +44,7 @@ export const useUpdateFocusedCellOnThreadSelection = (grid: DxGridElement | null
   const scrollIntoViewHandler = useMemo(
     () =>
       OperationResolver.make({
-        operation: Common.LayoutOperation.ScrollIntoView,
+        operation: LayoutOperation.ScrollIntoView,
         position: 'hoist',
         filter: (input) => input.subject === sheetId && !!input.cursor,
         handler: (input) =>
@@ -90,7 +90,7 @@ export const useSelectThreadOnCellFocus = () => {
       if (closestThread) {
         const primary = Obj.getDXN(model.sheet).toString();
         void (async () => {
-          await invokePromise(ThreadOperation.Select, { current: Obj.getDXN(closestThread).toString() });
+          await invokePromise(ThreadOperation.Select, { current: Relation.getDXN(closestThread).toString() });
           await invokePromise(DeckOperation.ChangeCompanion, {
             primary,
             companion: `${primary}${ATTENDABLE_PATH_SEPARATOR}comments`,

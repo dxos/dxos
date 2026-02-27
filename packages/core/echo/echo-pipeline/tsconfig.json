@@ -55,6 +55,9 @@
       "path": "../../../common/random-access-storage"
     },
     {
+      "path": "../../../common/sql-sqlite"
+    },
+    {
       "path": "../../../common/test-utils"
     },
     {
@@ -113,9 +116,6 @@
     },
     {
       "path": "../index-core"
-    },
-    {
-      "path": "../indexing"
     }
   ]
 }

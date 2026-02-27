@@ -34,7 +34,7 @@ export const useFunctionNameResolver = ({ db }: { db?: Database.Database }) => {
   );
 };
 
-export const useInvocationTargetsForScript = (target: Obj.Any | undefined) => {
+export const useInvocationTargetsForScript = (target: Obj.Unknown | undefined) => {
   const db = Obj.instanceOf(Script.Script, target) ? Obj.getDatabase(target) : undefined;
   const functions = useQuery(db, Filter.type(Function.Function));
 
@@ -51,7 +51,7 @@ export const useInvocationTargetsForScript = (target: Obj.Any | undefined) => {
   }, [functions, target]);
 };
 
-export const useInvocationSpans = ({ queueDxn, target }: { queueDxn?: DXN; target?: Obj.Any }) => {
+export const useInvocationSpans = ({ queueDxn, target }: { queueDxn?: DXN; target?: Obj.Unknown }) => {
   const functionsForScript = useInvocationTargetsForScript(target);
   const invocationsQueue = useQueue<InvocationTraceEvent>(queueDxn, {
     pollInterval: 1000,

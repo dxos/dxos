@@ -22,8 +22,10 @@ import React, {
   useState,
 } from 'react';
 
+import { addEventListener } from '@dxos/async';
 import { log } from '@dxos/log';
 import { useForwardedRef, useMediaQuery } from '@dxos/react-hooks';
+import { type MainStyleProps } from '@dxos/ui-theme';
 
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
@@ -33,9 +35,17 @@ import { useSwipeToDismiss } from './useSwipeToDismiss';
 
 const MAIN_NAME = 'Main';
 const MAIN_ROOT_NAME = 'MainRoot';
+const MAIN_OVERLAY_NAME = 'MainOverlay';
 const NAVIGATION_SIDEBAR_NAME = 'NavigationSidebar';
 const COMPLEMENTARY_SIDEBAR_NAME = 'ComplementarySidebar';
-const GENERIC_CONSUMER_NAME = 'GenericConsumer';
+
+const handleOpenAutoFocus = (event: Event) => {
+  !document.body.hasAttribute('data-w-keyboard') && event.preventDefault();
+};
+
+//
+// Landmark
+//
 
 const landmarkAttr = 'data-main-landmark';
 
@@ -67,40 +77,54 @@ const useLandmarkMover = (propsOnKeyDown: ComponentPropsWithoutRef<'div'>['onKey
   const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited', ignoreDefaultKeydown: { Tab: true } });
 
   return {
-    onKeyDown: handleKeyDown,
     [landmarkAttr]: landmark,
     tabIndex: 0,
+    onKeyDown: handleKeyDown,
     ...focusableGroupAttrs,
   };
 };
 
+//
+// Context
+//
+
+// TODO(burdon): Define collapsed state.
 type SidebarState = 'expanded' | 'collapsed' | 'closed';
 
 type MainContextValue = {
   resizing: boolean;
+
+  // Navigation
   navigationSidebarState: SidebarState;
   setNavigationSidebarState: Dispatch<SetStateAction<SidebarState | undefined>>;
+
+  // Complementary
   complementarySidebarState: SidebarState;
   setComplementarySidebarState: Dispatch<SetStateAction<SidebarState | undefined>>;
 };
 
 const [MainProvider, useMainContext] = createContext<MainContextValue>(MAIN_NAME, {
   resizing: false,
+
   navigationSidebarState: 'closed',
   setNavigationSidebarState: (_nextState) => {
-    // TODO(burdon): Standardize with other context missing errors using raise.
-    log.warn('Attempt to set sidebar state without initializing `MainRoot`');
+    log.warn('Not initialized');
   },
+
   complementarySidebarState: 'closed',
   setComplementarySidebarState: (_nextState) => {
-    // TODO(burdon): Standardize with other context missing errors using raise.
-    log.warn('Attempt to set sidebar state without initializing `MainRoot`');
+    log.warn('Not initialized');
   },
 });
 
-const useSidebars = (consumerName = GENERIC_CONSUMER_NAME) => {
-  const { setNavigationSidebarState, navigationSidebarState, setComplementarySidebarState, complementarySidebarState } =
-    useMainContext(consumerName);
+const useSidebars = (consumerName: string) => {
+  const {
+    navigationSidebarState,
+    setNavigationSidebarState,
+
+    complementarySidebarState,
+    setComplementarySidebarState,
+  } = useMainContext(consumerName);
 
   return {
     navigationSidebarState,
@@ -112,6 +136,7 @@ const useSidebars = (consumerName = GENERIC_CONSUMER_NAME) => {
     openNavigationSidebar: useCallback(() => setNavigationSidebarState('expanded'), []),
     collapseNavigationSidebar: useCallback(() => setNavigationSidebarState('collapsed'), []),
     closeNavigationSidebar: useCallback(() => setNavigationSidebarState('closed'), []),
+
     complementarySidebarState,
     setComplementarySidebarState,
     toggleComplementarySidebar: useCallback(
@@ -124,24 +149,29 @@ const useSidebars = (consumerName = GENERIC_CONSUMER_NAME) => {
   };
 };
 
+//
+// Root
+//
+
 type MainRootProps = PropsWithChildren<{
   navigationSidebarState?: SidebarState;
   defaultNavigationSidebarState?: SidebarState;
   onNavigationSidebarStateChange?: (nextState: SidebarState) => void;
+
   complementarySidebarState?: SidebarState;
   defaultComplementarySidebarState?: SidebarState;
   onComplementarySidebarStateChange?: (nextState: SidebarState) => void;
 }>;
 
-const resizeDebounce = 3000;
-
 const MainRoot = ({
   navigationSidebarState: propsNavigationSidebarState,
-  defaultNavigationSidebarState,
+  defaultNavigationSidebarState = 'closed',
   onNavigationSidebarStateChange,
+
   complementarySidebarState: propsComplementarySidebarState,
-  defaultComplementarySidebarState,
+  defaultComplementarySidebarState = 'closed',
   onComplementarySidebarStateChange,
+
   children,
   ...props
 }: MainRootProps) => {
@@ -161,22 +191,21 @@ const MainRoot = ({
 
   const [resizing, setResizing] = useState(false);
   const resizeInterval = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () =>
+      addEventListener(window, 'resize', () => {
+        setResizing(true);
+        if (resizeInterval.current) {
+          clearTimeout(resizeInterval.current);
+        }
 
-  const handleResize = useCallback(() => {
-    setResizing(true);
-    if (resizeInterval.current) {
-      clearTimeout(resizeInterval.current);
-    }
-    resizeInterval.current = setTimeout(() => {
-      setResizing(false);
-      resizeInterval.current = null;
-    }, resizeDebounce);
-  }, []);
-
-  useEffect(() => {
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [handleResize]);
+        resizeInterval.current = setTimeout(() => {
+          setResizing(false);
+          resizeInterval.current = null;
+        }, 3_000);
+      }),
+    [],
+  );
 
   return (
     <MainProvider
@@ -196,16 +225,52 @@ const MainRoot = ({
 
 MainRoot.displayName = MAIN_ROOT_NAME;
 
-const handleOpenAutoFocus = (event: Event) => {
-  !document.body.hasAttribute('data-is-keyboard') && event.preventDefault();
-};
+//
+// Overlay
+//
+
+type MainOverlayProps = ThemedClassName<Omit<ComponentPropsWithRef<typeof Primitive.div>, 'children' | 'onClick'>>;
+
+const MainOverlay = forwardRef<HTMLDivElement, MainOverlayProps>(({ classNames, ...props }, forwardedRef) => {
+  const [isLg] = useMediaQuery('lg');
+  const { navigationSidebarState, setNavigationSidebarState, complementarySidebarState, setComplementarySidebarState } =
+    useMainContext(MAIN_OVERLAY_NAME);
+  const { tx } = useThemeContext();
+  return (
+    <div
+      {...props}
+      onClick={() => {
+        setNavigationSidebarState('collapsed');
+        setComplementarySidebarState('collapsed');
+      }}
+      className={tx(
+        'main.overlay',
+        {
+          isLg,
+          inlineStartSidebarOpen: navigationSidebarState,
+          inlineEndSidebarOpen: complementarySidebarState,
+        },
+        classNames,
+      )}
+      data-state={navigationSidebarState === 'expanded' || complementarySidebarState === 'expanded' ? 'open' : 'closed'}
+      aria-hidden='true'
+      ref={forwardedRef}
+    />
+  );
+});
+
+MainOverlay.displayName = MAIN_OVERLAY_NAME;
+
+//
+// Sidebar
+//
 
 type MainSidebarProps = ThemedClassName<ComponentPropsWithRef<typeof DialogContent>> & {
   swipeToDismiss?: boolean;
   state?: SidebarState;
   resizing?: boolean;
   onStateChange?: (nextState: SidebarState) => void;
-  side: 'inline-start' | 'inline-end';
+  side: 'w-start' | 'w-end';
   label: Label;
 };
 
@@ -219,9 +284,11 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
     const { t } = useTranslation();
     const ref = useForwardedRef(forwardedRef);
     const noopRef = useRef(null);
+
     useSwipeToDismiss(swipeToDismiss ? ref : noopRef, {
       onDismiss: () => onStateChange?.('closed'),
     });
+
     // NOTE(thure): This is a workaround for something further down the tree grabbing focus on Escape. Adding this
     //   intervention to `Tabs.Root` or `Tabs.Tabpenel` instances is somehow ineffectual.
     const handleKeyDown = useCallback(
@@ -236,6 +303,7 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
       },
       [props.onKeyDown],
     );
+
     const Root = isLg ? Primitive.div : DialogContent;
 
     return (
@@ -243,13 +311,13 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
         {!isLg && <DialogTitle className='sr-only'>{toLocalizedString(label, t)}</DialogTitle>}
         <Root
           {...(!isLg && { forceMount: true, tabIndex: -1, onOpenAutoFocus: onOpenAutoFocus ?? handleOpenAutoFocus })}
+          {...(state === 'closed' && { inert: true })}
           {...props}
-          data-side={side === 'inline-end' ? 'ie' : 'is'}
+          data-side={side === 'w-end' ? 'ie' : 'is'}
           data-state={state}
           data-resizing={resizing ? 'true' : 'false'}
-          className={tx('main.sidebar', 'main__sidebar', {}, classNames)}
+          className={tx('main.sidebar', {}, classNames)}
           onKeyDownCapture={handleKeyDown}
-          {...(state === 'closed' && { inert: true })}
           ref={ref}
         >
           {children}
@@ -258,6 +326,10 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
     );
   },
 );
+
+//
+// Navigation Sidebar
+//
 
 type MainNavigationSidebarProps = Omit<MainSidebarProps, 'expanded' | 'side'>;
 
@@ -272,13 +344,17 @@ const MainNavigationSidebar = forwardRef<HTMLDivElement, MainNavigationSidebarPr
       state={navigationSidebarState}
       onStateChange={setNavigationSidebarState}
       resizing={resizing}
-      side='inline-start'
+      side='w-start'
       ref={forwardedRef}
     />
   );
 });
 
 MainNavigationSidebar.displayName = NAVIGATION_SIDEBAR_NAME;
+
+//
+// Complementary Sidebar
+//
 
 type MainComplementarySidebarProps = Omit<MainSidebarProps, 'expanded' | 'side'>;
 
@@ -294,26 +370,30 @@ const MainComplementarySidebar = forwardRef<HTMLDivElement, MainComplementarySid
       state={complementarySidebarState}
       onStateChange={setComplementarySidebarState}
       resizing={resizing}
-      side='inline-end'
+      side='w-end'
       ref={forwardedRef}
     />
   );
 });
 
-MainNavigationSidebar.displayName = NAVIGATION_SIDEBAR_NAME;
+MainComplementarySidebar.displayName = COMPLEMENTARY_SIDEBAR_NAME;
 
-type MainProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>> & {
-  asChild?: boolean;
-  bounce?: boolean;
-  handlesFocus?: boolean;
-};
+//
+// Content
+//
 
-const MainContent = forwardRef<HTMLDivElement, MainProps>(
-  ({ asChild, classNames, bounce, handlesFocus, children, role, ...props }: MainProps, forwardedRef) => {
+type MainContentProps = ThemedClassName<
+  ComponentPropsWithRef<typeof Primitive.div> &
+    MainStyleProps & {
+      asChild?: boolean;
+    }
+>;
+
+const MainContent = forwardRef<HTMLDivElement, MainContentProps>(
+  ({ asChild, classNames, bounce, handlesFocus, children, role, ...props }: MainContentProps, forwardedRef) => {
     const { navigationSidebarState, complementarySidebarState } = useMainContext(MAIN_NAME);
     const { tx } = useThemeContext();
     const Root = asChild ? Slot : role ? 'div' : 'main';
-
     const mover = useLandmarkMover(props.onKeyDown, '1');
 
     return (
@@ -321,10 +401,10 @@ const MainContent = forwardRef<HTMLDivElement, MainProps>(
         role={role}
         {...(handlesFocus && { ...mover })}
         {...props}
-        data-sidebar-inline-start-state={navigationSidebarState}
-        data-sidebar-inline-end-state={complementarySidebarState}
+        data-sidebar-left-state={navigationSidebarState}
+        data-sidebar-right-state={complementarySidebarState}
         data-handles-focus={handlesFocus}
-        className={tx('main.content', 'main', { bounce, handlesFocus }, classNames)}
+        className={tx('main.content', { bounce, handlesFocus }, classNames)}
         ref={forwardedRef}
       >
         {children}
@@ -335,41 +415,18 @@ const MainContent = forwardRef<HTMLDivElement, MainProps>(
 
 MainContent.displayName = MAIN_NAME;
 
-type MainOverlayProps = ThemedClassName<Omit<ComponentPropsWithRef<typeof Primitive.div>, 'children'>>;
-
-const MainOverlay = forwardRef<HTMLDivElement, MainOverlayProps>(({ classNames, ...props }, forwardedRef) => {
-  const [isLg] = useMediaQuery('lg');
-  const { navigationSidebarState, setNavigationSidebarState, complementarySidebarState, setComplementarySidebarState } =
-    useMainContext(MAIN_NAME);
-  const { tx } = useThemeContext();
-  return (
-    <div
-      onClick={() => {
-        setNavigationSidebarState('collapsed');
-        setComplementarySidebarState('collapsed');
-      }}
-      {...props}
-      className={tx(
-        'main.overlay',
-        'main__overlay',
-        { isLg, inlineStartSidebarOpen: navigationSidebarState, inlineEndSidebarOpen: complementarySidebarState },
-        classNames,
-      )}
-      data-state={navigationSidebarState === 'expanded' || complementarySidebarState === 'expanded' ? 'open' : 'closed'}
-      aria-hidden='true'
-      ref={forwardedRef}
-    />
-  );
-});
+//
+// Main
+//
 
 export const Main = {
   Root: MainRoot,
-  Content: MainContent,
   Overlay: MainOverlay,
+  Content: MainContent,
   NavigationSidebar: MainNavigationSidebar,
   ComplementarySidebar: MainComplementarySidebar,
 };
 
 export { useMainContext, useSidebars, useLandmarkMover };
 
-export type { MainRootProps, MainProps, MainOverlayProps, MainNavigationSidebarProps, SidebarState };
+export type { MainRootProps, MainOverlayProps, MainContentProps, MainNavigationSidebarProps, SidebarState };

@@ -11,7 +11,7 @@ import { Arrow, createPath } from './svg';
 import { testId } from './util';
 
 const DefaultStory = () => (
-  <svg className='border border-separator is-[30rem] bs-[400px]'>
+  <svg className='border border-separator w-[30rem] h-[400px]'>
     <defs>
       <Arrow id='arrow-start' classNames='fill-none stroke-red-500' dir='start' />
       <Arrow id='arrow-end' classNames='fill-none stroke-red-500' dir='end' />
@@ -32,7 +32,7 @@ const DefaultStory = () => (
 const meta = {
   title: 'ui/react-ui-canvas/svg',
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'centered',
   },

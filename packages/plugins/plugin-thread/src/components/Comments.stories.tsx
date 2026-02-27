@@ -6,9 +6,10 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { OperationPlugin } from '@dxos/app-framework';
+import { OperationPlugin, RuntimePlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Obj, Query, Relation, Type } from '@dxos/echo';
+import { Obj, Query, Relation } from '@dxos/echo';
+import { TestSchema } from '@dxos/echo/testing';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { faker } from '@dxos/random';
 import { useDatabase, useQuery } from '@dxos/react-client/echo';
@@ -32,7 +33,7 @@ const DefaultStory = () => {
 
   useAsyncEffect(async () => {
     if (identity && db) {
-      const object = db.add(Obj.make(Type.Expando, {}));
+      const object = db.add(Obj.make(TestSchema.Expando, {}));
       const thread1 = db.add(createCommentThread(identity));
       const thread2 = db.add(createProposalThread(identity));
       db.add(
@@ -63,13 +64,14 @@ const meta = {
   title: 'plugins/plugin-thread/Comments',
   render: render(DefaultStory),
   decorators: [
-    withTheme,
-    withLayout({ layout: 'column', scroll: true }),
+    withTheme(),
+    withLayout({ layout: 'column' }),
     // TODO(wittjosiah): This shouldn't depend on app framework (use withClientProvider instead).
     //  Currently this is required due to useOnEditAnalytics.
     withPluginManager({
       plugins: [
         OperationPlugin(),
+        RuntimePlugin(),
         ClientPlugin({
           types: [Message.Message, Thread.Thread, AnchoredTo.AnchoredTo],
           onClientInitialized: ({ client }) =>

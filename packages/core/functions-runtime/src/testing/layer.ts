@@ -5,12 +5,10 @@
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import type * as Schema from 'effect/Schema';
 
-import { Database } from '@dxos/echo';
+import { Database, type Type } from '@dxos/echo';
 import { type EchoDatabaseImpl, type QueueFactory } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import type { EchoHostIndexingConfig } from '@dxos/echo-pipeline';
 import { acquireReleaseResource } from '@dxos/effect';
 import { QueueService } from '@dxos/functions';
 import { PublicKey } from '@dxos/keys';
@@ -27,8 +25,7 @@ export const testStoragePath = ({ name = PublicKey.random().toHex() }: { name?: 
 const FIXED_SPACE_KEY = PublicKey.from('665c420e0dec9aa36c2bedca567afb0778701920e346eaf83ab2bd3403859723');
 
 export type TestDatabaseOptions = {
-  indexing?: Partial<EchoHostIndexingConfig>;
-  types?: Schema.Schema.AnyNoContext[];
+  types?: Type.Entity.Any[];
   /**
    * Setting this to fixed will use the same space key for all tests.
    * Important for tests with memoization.
@@ -38,7 +35,7 @@ export type TestDatabaseOptions = {
   onInit?: () => Effect.Effect<void, never, Database.Service | QueueService>;
 };
 
-export const TestDatabaseLayer = ({ indexing, types, spaceKey, storagePath, onInit }: TestDatabaseOptions = {}) =>
+export const TestDatabaseLayer = ({ types, spaceKey, storagePath, onInit }: TestDatabaseOptions = {}) =>
   Layer.scopedContext(
     Effect.gen(function* () {
       const key = spaceKey === 'fixed' ? FIXED_SPACE_KEY : (spaceKey ?? PublicKey.random());
@@ -52,7 +49,7 @@ export const TestDatabaseLayer = ({ indexing, types, spaceKey, storagePath, onIn
         // const keyCount = yield* Effect.promise(async () => (await kv!.iterator({ values: false }).all()).length);
         // log.info('opened test db', { storagePath, keyCount });
       }
-      const peer = yield* Effect.promise(() => builder.createPeer({ indexing, types, kv, assignQueuePositions: true }));
+      const peer = yield* Effect.promise(() => builder.createPeer({ types, kv, assignQueuePositions: true }));
 
       let db: EchoDatabaseImpl | undefined;
       let queues: QueueFactory | undefined;
@@ -79,7 +76,7 @@ export const TestDatabaseLayer = ({ indexing, types, spaceKey, storagePath, onIn
 
           if (onInit) {
             yield* onInit().pipe(
-              Effect.provideService(Database.Service, Database.Service.make(db)),
+              Effect.provideService(Database.Service, Database.makeService(db)),
               Effect.provideService(QueueService, QueueService.make(queues, undefined)),
             );
           }
@@ -88,13 +85,15 @@ export const TestDatabaseLayer = ({ indexing, types, spaceKey, storagePath, onIn
           const rootUrl = (testMetadata as any).rootUrl;
           db = yield* Effect.promise(() => peer.openDatabase(key, rootUrl));
           queues = peer.client.constructQueueFactory(db.spaceId);
+          // Rebuild index after reopening since in-memory SQLite is recreated.
+          yield* Effect.promise(() => db!.flush({ indexes: true }));
         }
       } else {
         db = yield* Effect.promise(() => peer.createDatabase(key));
         queues = peer.client.constructQueueFactory(db.spaceId);
         if (onInit) {
           yield* onInit().pipe(
-            Effect.provideService(Database.Service, Database.Service.make(db)),
+            Effect.provideService(Database.Service, Database.makeService(db)),
             Effect.provideService(QueueService, QueueService.make(queues, undefined)),
           );
         }
@@ -114,7 +113,7 @@ export const TestDatabaseLayer = ({ indexing, types, spaceKey, storagePath, onIn
       );
 
       return Context.mergeAll(
-        Context.make(Database.Service, Database.Service.make(db)),
+        Context.make(Database.Service, Database.makeService(db)),
         Context.make(QueueService, QueueService.make(queues, undefined)),
       );
     }),

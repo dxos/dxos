@@ -45,10 +45,10 @@ const DefaultStory = ({ title, description, actionTriggers, openTrigger, closeTr
 };
 
 const meta = {
-  title: 'ui/react-ui-core/Toast',
+  title: 'ui/react-ui-core/components/Toast',
   component: Toast as any,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

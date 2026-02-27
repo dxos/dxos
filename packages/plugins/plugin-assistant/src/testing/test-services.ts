@@ -2,13 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as Schema from 'effect/Schema';
-
-import { Obj } from '@dxos/echo';
+import { Obj, type Type } from '@dxos/echo';
 
 import { type ApiAuthorization, type BaseServiceRegistry, ServiceType, categoryIcons } from '../types';
 
-const ServiceTypeSchema = ServiceType as unknown as Schema.Schema.AnyNoContext;
+const ServiceTypeSchema = ServiceType as unknown as Type.Obj.Any;
 
 export class MockServiceRegistry implements BaseServiceRegistry {
   async queryServices(): Promise<ServiceType[]> {

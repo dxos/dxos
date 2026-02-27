@@ -6,59 +6,33 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { AiService, ConsolePrinter } from '@dxos/ai';
-import { MemoizedAiService, TestAiService } from '@dxos/ai/testing';
-import {
-  AiConversation,
-  type ContextBinding,
-  GenerationObserver,
-  makeToolExecutionServiceFromFunctions,
-  makeToolResolverFromFunctions,
-} from '@dxos/assistant';
+import { MemoizedAiService } from '@dxos/ai/testing';
+import { AiContextService, AiConversationService } from '@dxos/assistant';
+import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { Blueprint } from '@dxos/blueprints';
 import { SpaceProperties } from '@dxos/client-protocol';
-import { Obj, Query, Ref } from '@dxos/echo';
-import { Database } from '@dxos/echo';
-import { acquireReleaseResource } from '@dxos/effect';
+import { Database, Obj, Query, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { CredentialsService, FunctionInvocationService, QueueService, TracingService } from '@dxos/functions';
-import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
+import { FunctionInvocationService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { Collection } from '@dxos/schema';
-import { HasSubject, type Message } from '@dxos/types';
+import { HasSubject } from '@dxos/types';
+import { trim } from '@dxos/util';
 
-import { WithProperties, testToolkit } from '../../testing';
-import * as MarkdownBlueprint from '../markdown-blueprint';
+import { WithProperties } from '../../testing';
+import MarkdownBlueprint from '../markdown-blueprint';
 
 import update from './update';
 
 ObjectId.dangerouslyDisableRandomness();
 
-const TestLayer = Layer.mergeAll(
-  AiService.model('@anthropic/claude-opus-4-0'),
-  makeToolResolverFromFunctions(MarkdownBlueprint.functions, testToolkit),
-  makeToolExecutionServiceFromFunctions(testToolkit, testToolkit.toLayer({}) as any),
-).pipe(
-  Layer.provideMerge(
-    FunctionInvocationServiceLayerTest({
-      functions: MarkdownBlueprint.functions,
-    }),
-  ),
-  Layer.provideMerge(
-    Layer.mergeAll(
-      TestAiService(),
-      TestDatabaseLayer({
-        spaceKey: 'fixed',
-        indexing: { vector: true },
-        types: [SpaceProperties, Collection.Collection, Blueprint.Blueprint, Markdown.Document, HasSubject.HasSubject],
-      }),
-      CredentialsService.configuredLayer([]),
-      TracingService.layerNoop,
-    ),
-  ),
-);
+const TestLayer = AssistantTestLayer({
+  functions: [...MarkdownBlueprint.functions],
+  types: [SpaceProperties, Collection.Collection, Blueprint.Blueprint, Markdown.Document, HasSubject.HasSubject],
+  tracing: 'pretty',
+});
 
 describe('update', () => {
   it.effect(
@@ -69,16 +43,16 @@ describe('update', () => {
           name: 'BlueYard',
           content: 'Founders and portfolio of BlueYard.',
         });
-        yield* Database.Service.add(doc);
+        yield* Database.add(doc);
 
         yield* FunctionInvocationService.invokeFunction(update, {
-          id: doc.id,
-          diffs: ['- Founders', '+ # Founders'],
+          doc: Ref.make(doc),
+          edits: [{ oldString: 'Founders', newString: '# Founders' }],
         });
 
-        const updatedDoc = yield* Database.Service.resolve(Obj.getDXN(doc), Markdown.Document);
+        const updatedDoc = yield* Database.resolve(Obj.getDXN(doc), Markdown.Document);
         expect(updatedDoc.name).toBe(doc.name);
-        const text = yield* Database.Service.load(updatedDoc.content);
+        const text = yield* Database.load(updatedDoc.content);
         expect(text.content).toBe('# Founders and portfolio of BlueYard.');
       },
       WithProperties,
@@ -91,25 +65,16 @@ describe('update', () => {
     'create and update a markdown document',
     Effect.fnUntraced(
       function* (_) {
-        const queue = yield* QueueService.createQueue<Message.Message | ContextBinding>();
-        const conversation = yield* acquireReleaseResource(() => new AiConversation({ queue }));
+        const markdownBlueprint = yield* Database.add(Obj.clone(MarkdownBlueprint.make()));
+        yield* AiContextService.bindContext({
+          blueprints: [Ref.make(markdownBlueprint)],
+        });
 
-        yield* Database.Service.flush({ indexes: true });
-        const markdownBlueprint = yield* Database.Service.add(Obj.clone(MarkdownBlueprint.make()));
-        yield* Effect.promise(() =>
-          conversation.context.bind({
-            blueprints: [Ref.make(markdownBlueprint)],
-          }),
-        );
-
-        const observer = GenerationObserver.fromPrinter(new ConsolePrinter());
-
-        yield* conversation.createRequest({
-          observer,
+        yield* AiConversationService.run({
           prompt: `Create a document with a cookie recipe.`,
         });
         {
-          const docs = yield* Database.Service.runQuery(Query.type(Markdown.Document));
+          const docs = yield* Database.runQuery(Query.type(Markdown.Document));
           if (docs.length !== 1) {
             throw new Error(`Expected 1 document; got ${docs.length}: ${docs.map((_) => _.name)}`);
           }
@@ -118,16 +83,15 @@ describe('update', () => {
           invariant(Obj.instanceOf(Markdown.Document, doc));
           console.log({
             name: doc.name,
-            content: yield* Database.Service.load(doc.content).pipe(Effect.map((_) => _.content)),
+            content: yield* Database.load(doc.content).pipe(Effect.map((_) => _.content)),
           });
         }
 
-        yield* conversation.createRequest({
-          observer,
+        yield* AiConversationService.run({
           prompt: 'Add a section with a holiday-themed variation.',
         });
         {
-          const docs = yield* Database.Service.runQuery(Query.type(Markdown.Document));
+          const docs = yield* Database.runQuery(Query.type(Markdown.Document));
           if (docs.length !== 1) {
             throw new Error(`Expected 1 document; got ${docs.length}: ${docs.map((_) => _.name)}`);
           }
@@ -136,12 +100,114 @@ describe('update', () => {
           invariant(Obj.instanceOf(Markdown.Document, doc));
           console.log({
             name: doc.name,
-            content: yield* Database.Service.load(doc.content).pipe(Effect.map((_) => _.content)),
+            content: yield* Database.load(doc.content).pipe(Effect.map((_) => _.content)),
           });
         }
       },
       WithProperties,
-      Effect.provide(TestLayer),
+      Effect.provide(AiConversationService.layerNewQueue().pipe(Layer.provideMerge(TestLayer))),
+      TestHelpers.provideTestContext,
+    ),
+    MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000,
+  );
+
+  it.scoped(
+    'update existing document',
+    Effect.fnUntraced(
+      function* (_) {
+        const document = yield* Database.add(
+          Markdown.make({
+            name: 'Cookie Recipe',
+            content: trim`
+                Ingredients: 
+                  - 2 cups of ???
+                  - 1 cup of sugar
+                  - 1 cup of butter
+                  - 1 cup of eggs
+          `,
+          }),
+        );
+        const markdownBlueprint = yield* Database.add(Obj.clone(MarkdownBlueprint.make()));
+        yield* AiContextService.bindContext({
+          blueprints: [Ref.make(markdownBlueprint)],
+          objects: [Ref.make(document)],
+        });
+
+        yield* AiConversationService.run({
+          prompt: 'Add the missing ingredient (its flour).',
+        });
+
+        {
+          const docs = yield* Database.runQuery(Query.type(Markdown.Document));
+          if (docs.length !== 1) {
+            throw new Error(`Expected 1 document; got ${docs.length}: ${docs.map((_) => _.name)}`);
+          }
+
+          const doc = docs[0];
+          invariant(Obj.instanceOf(Markdown.Document, doc));
+          const content = yield* Database.load(doc.content).pipe(Effect.map((_) => _.content));
+          console.log({
+            name: doc.name,
+            content: yield* Database.load(doc.content).pipe(Effect.map((_) => _.content)),
+          });
+          expect(content.toLowerCase()).toContain('flour');
+        }
+      },
+      WithProperties,
+      Effect.provide(AiConversationService.layerNewQueue().pipe(Layer.provideMerge(TestLayer))),
+      TestHelpers.provideTestContext,
+    ),
+    MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000,
+  );
+
+  it.scoped(
+    'add lines to document one by one',
+    Effect.fnUntraced(
+      function* (_) {
+        const document = yield* Database.add(
+          Markdown.make({
+            name: 'Shopping list',
+            content: trim`
+              # Shopping list
+            `,
+          }),
+        );
+        const markdownBlueprint = yield* Database.add(Obj.clone(MarkdownBlueprint.make()));
+        yield* AiContextService.bindContext({
+          blueprints: [Ref.make(markdownBlueprint)],
+          objects: [Ref.make(document)],
+        });
+
+        yield* AiConversationService.run({
+          prompt: 'Add milk to the shopping list.',
+        });
+        yield* AiConversationService.run({
+          prompt: 'Add bread to the shopping list.',
+        });
+        yield* AiConversationService.run({
+          prompt: 'Add eggs to the shopping list.',
+        });
+
+        {
+          const docs = yield* Database.runQuery(Query.type(Markdown.Document));
+          if (docs.length !== 1) {
+            throw new Error(`Expected 1 document; got ${docs.length}: ${docs.map((_) => _.name)}`);
+          }
+
+          const doc = docs[0];
+          invariant(Obj.instanceOf(Markdown.Document, doc));
+          const content = yield* Database.load(doc.content).pipe(Effect.map((_) => _.content));
+          console.log({
+            name: doc.name,
+            content: yield* Database.load(doc.content).pipe(Effect.map((_) => _.content)),
+          });
+          expect(content.toLowerCase()).toContain('milk');
+          expect(content.toLowerCase()).toContain('bread');
+          expect(content.toLowerCase()).toContain('eggs');
+        }
+      },
+      WithProperties,
+      Effect.provide(AiConversationService.layerNewQueue().pipe(Layer.provideMerge(TestLayer))),
       TestHelpers.provideTestContext,
     ),
     MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000,

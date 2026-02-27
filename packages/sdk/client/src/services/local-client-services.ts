@@ -22,14 +22,20 @@ import { log } from '@dxos/log';
 import { type SignalManager } from '@dxos/messaging';
 import { type SwarmNetworkManagerOptions, type TransportFactory, createIceProvider } from '@dxos/network-manager';
 import { type ServiceBundle } from '@dxos/rpc';
-import { layerMemory, sqlExportLayer } from '@dxos/sql-sqlite/platform';
+import { layerFile, layerMemory, sqlExportLayer } from '@dxos/sql-sqlite/platform';
 import type * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
+import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { trace } from '@dxos/tracing';
 import { isBun } from '@dxos/util';
 
 export type LocalClientServicesParams = Omit<ClientServicesHostProps, 'runtime'> & {
   createOpfsWorker?: () => Worker;
+  /**
+   * Path to SQLite database file for persistent indexing in Node/Bun.
+   * If not provided, falls back to in-memory SQLite (indexes lost on restart).
+   */
+  sqlitePath?: string;
 };
 
 /**
@@ -113,9 +119,13 @@ export class LocalClientServices implements ClientServicesProvider {
   private readonly _ctx = new Context();
   private readonly _params: LocalClientServicesParams;
   private readonly _createOpfsWorker?: () => Worker;
+  private readonly _sqlitePath?: string;
   private _host?: ClientServicesHost;
   private _opfsWorker?: Worker;
-  private _runtime?: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient | SqlExport.SqlExport, never>;
+  private _runtime?: ManagedRuntime.ManagedRuntime<
+    SqlTransaction.SqlTransaction | SqlClient.SqlClient | SqlExport.SqlExport,
+    never
+  >;
   signalMetadataTags: any = {
     runtime: 'local-client-services',
   };
@@ -126,6 +136,7 @@ export class LocalClientServices implements ClientServicesProvider {
   constructor(params: LocalClientServicesParams) {
     this._params = params;
     this._createOpfsWorker = params.createOpfsWorker;
+    this._sqlitePath = params.sqlitePath;
     // TODO(nf): extract
     if (typeof window === 'undefined' || typeof window.location === 'undefined') {
       // TODO(nf): collect ClientServices metadata as param?
@@ -169,15 +180,25 @@ export class LocalClientServices implements ClientServicesProvider {
     //   cleaning up _opfsWorker and _runtime. Consider wrapping in try/catch to clean up on failure.
     let sqliteLayer;
     if (this._createOpfsWorker) {
+      // Browser: use OPFS worker for persistent storage.
       this._opfsWorker = this._createOpfsWorker();
       sqliteLayer = SqliteClient.layer({ worker: Effect.succeed(this._opfsWorker) });
+    } else if (this._sqlitePath) {
+      // Node/Bun: use file-based SQLite for persistent indexing.
+      sqliteLayer = layerFile(this._sqlitePath);
     } else {
-      // Fallback to in-memory SQLite.
+      // Fallback to in-memory SQLite (indexes lost on restart).
+      log.warn('Using in-memory SQLite; indexes will be lost on restart. Consider setting sqlitePath for Node/Bun.');
       sqliteLayer = layerMemory;
     }
 
     this._runtime = ManagedRuntime.make(
-      sqlExportLayer.pipe(Layer.provideMerge(sqliteLayer), Layer.provideMerge(Reactivity.layer), Layer.orDie),
+      SqlTransaction.layer.pipe(
+        Layer.provideMerge(sqlExportLayer),
+        Layer.provideMerge(sqliteLayer),
+        Layer.provideMerge(Reactivity.layer),
+        Layer.orDie,
+      ),
     );
 
     this._host = new ClientServicesHost({

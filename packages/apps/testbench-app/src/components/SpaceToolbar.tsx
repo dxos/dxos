@@ -51,9 +51,9 @@ export const SpaceToolbar = ({
   return (
     <Toolbar.Root>
       <Toolbar.IconButton icon='ph--plus--regular' label='Create space.' onClick={() => onCreate()} />
-      <div className='flex is-32'>
+      <div className='flex w-32'>
         <Select.Root value={selected?.toHex()} onValueChange={handleChange}>
-          <Select.TriggerButton classNames='is-full' />
+          <Select.TriggerButton classNames='w-full' />
           <Select.Portal>
             <Select.Content>
               <Select.Viewport>

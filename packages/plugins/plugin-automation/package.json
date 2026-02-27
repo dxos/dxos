@@ -4,6 +4,10 @@
   "description": "Prompt chain plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": true,
@@ -52,6 +56,7 @@
   "dependencies": {
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-toolkit": "workspace:*",
     "@dxos/assistant": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/cli-util": "workspace:*",
@@ -59,6 +64,8 @@
     "@dxos/conductor": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/echo-atom": "workspace:*",
+    "@dxos/echo-db": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/functions": "workspace:*",
     "@dxos/functions-runtime": "workspace:*",
@@ -80,6 +87,7 @@
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect-atom/atom": "catalog:",
     "@effect/ai": "catalog:",
     "@effect/cli": "catalog:",
     "@effect/platform-browser": "catalog:",

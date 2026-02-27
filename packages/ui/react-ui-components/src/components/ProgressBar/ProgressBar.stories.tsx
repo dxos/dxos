@@ -9,7 +9,6 @@ import { faker } from '@dxos/random';
 import { Toolbar } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { Flex } from '../Flex';
 import { TextCrawl } from '../TextCrawl';
 
 import { ProgressBar, type ProgressBarProps } from './ProgressBar';
@@ -46,7 +45,7 @@ const DefaultStory = ({ items, ...props }: StoryProps) => {
   }, [running]);
 
   return (
-    <Flex column classNames='is-[400px] gap-8 overflow-hidden'>
+    <div role='none' className='flex flex-col w-[400px] gap-8 overflow-hidden'>
       <Toolbar.Root>
         <Toolbar.Button onClick={() => setRunning(true)}>Start</Toolbar.Button>
         <Toolbar.Button onClick={() => setRunning(false)}>Stop</Toolbar.Button>
@@ -57,7 +56,7 @@ const DefaultStory = ({ items, ...props }: StoryProps) => {
         <div className='p-2 text-subdued'>{nodes.length}</div>
       </Toolbar.Root>
 
-      <Flex column classNames='gap-1'>
+      <div role='none' className='flex flex-col gap-1'>
         <ProgressBar
           nodes={nodes}
           index={index}
@@ -65,16 +64,16 @@ const DefaultStory = ({ items, ...props }: StoryProps) => {
           onSelect={(node) => setIndex((index) => (index === node.index ? undefined : node.index))}
           {...props}
         />
-        <TextCrawl lines={lines} index={index} autoAdvance classNames='pis-4 text-sm text-subdued' />
-      </Flex>
-    </Flex>
+        <TextCrawl lines={lines} index={index} autoAdvance classNames='ps-4 text-sm text-subdued' />
+      </div>
+    </div>
   );
 };
 
 const meta = {
   title: 'ui/react-ui-components/ProgressBar',
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'centered',
   },

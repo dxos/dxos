@@ -27,9 +27,7 @@ describe('schema-validator', () => {
       const TestSchema: Schema.Schema.AnyNoContext = Schema.Struct({
         name: Schema.String.annotations({ [annotationId]: annotationValue }),
         parent: Schema.optional(Schema.suspend(() => TestSchema.annotations({ [annotationId]: annotationValue }))),
-        friends: Schema.suspend(() =>
-          Schema.mutable(Schema.Array(TestSchema.annotations({ [annotationId]: annotationValue }))),
-        ),
+        friends: Schema.suspend(() => Schema.Array(TestSchema.annotations({ [annotationId]: annotationValue }))),
       });
       expect(SchemaValidator.hasTypeAnnotation(TestSchema, 'name', annotationId)).to.be.true;
       expect(SchemaValidator.hasTypeAnnotation(TestSchema, 'parent', annotationId)).to.be.true;
@@ -41,7 +39,7 @@ describe('schema-validator', () => {
       const Person: Schema.Schema.AnyNoContext = Schema.Struct({
         name: Schema.String,
         parent: Schema.optional(Schema.suspend(() => Person)),
-        friends: Schema.suspend(() => Schema.mutable(Schema.Array(Person))),
+        friends: Schema.suspend(() => Schema.Array(Person)),
       });
       expect(SchemaValidator.hasTypeAnnotation(Person, 'name', annotationId)).to.be.false;
       expect(SchemaValidator.hasTypeAnnotation(Person, 'parent', annotationId)).to.be.false;
@@ -87,9 +85,7 @@ describe('schema-validator', () => {
       const annotationValue = 'bar';
       const Person: Schema.Schema.AnyNoContext = Schema.Struct({
         parent: Schema.optional(Schema.suspend(() => Person.annotations({ [annotationId]: annotationValue }))),
-        friends: Schema.suspend(() =>
-          Schema.mutable(Schema.Array(Person.annotations({ [annotationId]: annotationValue }))),
-        ),
+        friends: Schema.suspend(() => Schema.Array(Person.annotations({ [annotationId]: annotationValue }))),
       });
       expect(SchemaValidator.getPropertySchema(Person, ['parent']).ast.annotations[annotationId]).to.eq(
         annotationValue,

@@ -42,7 +42,7 @@ export const diff = <A, B = A>(
   return result;
 };
 
-export const intersection = <A, B = A>(a: A[], b: B[], comparator: Comparator<A, B>): A[] =>
+export const intersection = <A, B = A>(a: readonly A[], b: readonly B[], comparator: Comparator<A, B>): A[] =>
   a.filter((a) => b.find((b) => comparator(a, b)) !== undefined);
 
 /**

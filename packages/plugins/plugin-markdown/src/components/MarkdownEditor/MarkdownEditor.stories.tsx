@@ -11,10 +11,10 @@ import { Filter, Obj } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { corePlugins } from '@dxos/plugin-testing';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
+import { Layout } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { translations as editorTranslations } from '@dxos/react-ui-editor';
-import { StackItem } from '@dxos/react-ui-stack';
 
 import { translations } from '../../translations';
 import { Markdown } from '../../types';
@@ -30,19 +30,18 @@ const DefaultStory = (props: StoryProps) => {
   const [doc] = useQuery(space?.db, Filter.type(Markdown.Document));
   const id = doc && Obj.getDXN(doc).toString();
   const attentionAttrs = useAttentionAttributes(id);
-
   if (!id) {
     return null;
   }
 
   return (
     <div className='contents' {...attentionAttrs}>
-      <StackItem.Content toolbar>
+      <Layout.Main toolbar>
         <MarkdownEditor.Root id={id} object={doc} {...props}>
           <MarkdownEditor.Toolbar id={id} />
           <MarkdownEditor.Content />
         </MarkdownEditor.Root>
-      </StackItem.Content>
+      </Layout.Main>
     </div>
   );
 };
@@ -52,7 +51,7 @@ const meta: Meta<typeof DefaultStory> = {
   component: DefaultStory,
   render: DefaultStory as any,
   decorators: [
-    withTheme,
+    withTheme(),
     withLayout({ layout: 'column' }),
     withPluginManager({
       plugins: [

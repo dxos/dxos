@@ -3,10 +3,12 @@
 //
 
 import * as Atom from '@effect-atom/atom/Atom';
-import isEqual from 'lodash.isequal';
+import * as Result from '@effect-atom/atom/Result';
+import * as Effect from 'effect/Effect';
+import * as Function from 'effect/Function';
+import * as Option from 'effect/Option';
 
-import { type Entity, Obj, Ref } from '@dxos/echo';
-import { getSnapshot, isProxy } from '@dxos/echo/internal';
+import { Obj, Ref } from '@dxos/echo';
 import { assertArgument } from '@dxos/invariant';
 
 import { loadRefTarget } from './ref-utils';
@@ -15,39 +17,41 @@ import { loadRefTarget } from './ref-utils';
  * Atom family for ECHO objects.
  * Uses object reference as key - same object returns same atom.
  */
-const objectFamily = Atom.family(<T extends Entity.Unknown>(obj: T): Atom.Atom<T> => {
-  return Atom.make<T>((get) => {
+const objectFamily = Atom.family(<T extends Obj.Unknown>(obj: T): Atom.Atom<Obj.Snapshot<T>> => {
+  return Atom.make<Obj.Snapshot<T>>((get) => {
     const unsubscribe = Obj.subscribe(obj, () => {
-      get.setSelf(getSnapshot(obj) as T);
+      get.setSelf(Obj.getSnapshot(obj));
     });
 
     get.addFinalizer(() => unsubscribe());
 
-    return getSnapshot(obj) as T;
-  });
+    return Obj.getSnapshot(obj);
+  }).pipe(Atom.keepAlive);
 });
 
 /**
- * Internal helper to create an atom from a Ref.
- * Handles async loading and subscribes to the target for reactive updates.
- * Uses Atom.family internally - same ref reference returns same atom instance.
+ * Atom family for ECHO refs.
+ * RefImpl implements Effect's Hash/Equal traits using DXN, so different Ref instances
+ * pointing to the same object resolve to the same atom.
  */
-const refFamily = Atom.family(<T extends Entity.Unknown>(ref: Ref.Ref<T>): Atom.Atom<T | undefined> => {
-  return Atom.make<T | undefined>((get) => {
+const refFamily = Atom.family(<T extends Obj.Unknown>(ref: Ref.Ref<T>): Atom.Atom<Obj.Snapshot<T> | undefined> => {
+  return Atom.make<Obj.Snapshot<T> | undefined>((get) => {
     let unsubscribeTarget: (() => void) | undefined;
 
-    const setupTargetSubscription = (target: T): T => {
+    const setupTargetSubscription = (target: T): Obj.Snapshot<T> => {
       unsubscribeTarget?.();
       unsubscribeTarget = Obj.subscribe(target, () => {
-        get.setSelf(getSnapshot(target) as T);
+        get.setSelf(Obj.getSnapshot(target));
       });
-      return getSnapshot(target) as T;
+      return Obj.getSnapshot(target);
     };
 
-    get.addFinalizer(() => unsubscribeTarget?.());
+    get.addFinalizer(() => {
+      unsubscribeTarget?.();
+    });
 
     return loadRefTarget(ref, get, setupTargetSubscription);
-  });
+  }).pipe(Atom.keepAlive);
 });
 
 /**
@@ -71,7 +75,7 @@ const snapshotForComparison = <V>(value: V): V => {
  * Uses nested families: outer keyed by object, inner keyed by property key.
  * Same object+key combination returns same atom instance.
  */
-const propertyFamily = Atom.family(<T extends Entity.Unknown>(obj: T) =>
+const propertyFamily = Atom.family(<T extends Obj.Unknown>(obj: T) =>
   Atom.family(<K extends keyof T>(key: K): Atom.Atom<T[K]> => {
     return Atom.make<T[K]>((get) => {
       // Snapshot the initial value for comparison (arrays/objects need copying).
@@ -79,7 +83,7 @@ const propertyFamily = Atom.family(<T extends Entity.Unknown>(obj: T) =>
 
       const unsubscribe = Obj.subscribe(obj, () => {
         const newValue = obj[key];
-        if (!isEqual(previousSnapshot, newValue)) {
+        if (previousSnapshot !== newValue) {
           previousSnapshot = snapshotForComparison(newValue);
           // Return a snapshot copy so React sees a new reference.
           get.setSelf(snapshotForComparison(newValue));
@@ -90,27 +94,31 @@ const propertyFamily = Atom.family(<T extends Entity.Unknown>(obj: T) =>
 
       // Return a snapshot copy so React sees a new reference.
       return snapshotForComparison(obj[key]);
-    });
+    }).pipe(Atom.keepAlive);
   }),
 );
 
 /**
- * Create a read-only atom for a reactive object or ref.
- * Works with Echo objects, plain live objects (from Obj.make), and Refs.
- * Returns immutable snapshots of the object data.
+ * Create a read-only atom for a single reactive object or ref.
+ * Returns {@link Obj.Snapshot} (immutable plain data), not the live reactive object.
+ * Use this when you need one object's data for display or React dependency tracking.
  * The atom updates automatically when the object is mutated.
  * For refs, automatically handles async loading.
- * Uses Atom.family internally - same object/ref reference returns same atom instance.
+ * Uses Atom.family internally - same object/ref returns same atom instance.
  *
  * @param objOrRef - The reactive object or ref to create an atom for, or undefined.
- * @returns An atom that returns the object snapshot. Returns undefined only for refs (async loading) or undefined input.
+ * @returns An atom that returns the object snapshot (plain data). Returns undefined only for refs (async loading) or undefined input.
  */
-export function make<T extends Entity.Unknown>(obj: T): Atom.Atom<T>;
-export function make<T extends Entity.Unknown>(ref: Ref.Ref<T>): Atom.Atom<T | undefined>;
-export function make<T extends Entity.Unknown>(objOrRef: T | Ref.Ref<T> | undefined): Atom.Atom<T | undefined>;
-export function make<T extends Entity.Unknown>(objOrRef: T | Ref.Ref<T> | undefined): Atom.Atom<T | undefined> {
+export function make<T extends Obj.Unknown>(obj: T): Atom.Atom<Obj.Snapshot<T>>;
+export function make<T extends Obj.Unknown>(ref: Ref.Ref<T>): Atom.Atom<Obj.Snapshot<T> | undefined>;
+export function make<T extends Obj.Unknown>(
+  objOrRef: T | Ref.Ref<T> | undefined,
+): Atom.Atom<Obj.Snapshot<T> | undefined>;
+export function make<T extends Obj.Unknown>(
+  objOrRef: T | Ref.Ref<T> | undefined,
+): Atom.Atom<Obj.Snapshot<T> | undefined> {
   if (objOrRef === undefined) {
-    return Atom.make<T | undefined>(() => undefined);
+    return Atom.make<Obj.Snapshot<T> | undefined>(() => undefined);
   }
 
   // Handle Ref inputs.
@@ -120,9 +128,9 @@ export function make<T extends Entity.Unknown>(objOrRef: T | Ref.Ref<T> | undefi
 
   // At this point, objOrRef is definitely T (not a Ref).
   const obj = objOrRef as T;
-  assertArgument(isProxy(obj), 'obj', 'Object must be a reactive object');
+  assertArgument(Obj.isObject(obj), 'obj', 'Object must be a reactive object');
 
-  return objectFamily(obj) as Atom.Atom<T | undefined>;
+  return objectFamily(obj);
 }
 
 /**
@@ -136,12 +144,12 @@ export function make<T extends Entity.Unknown>(objOrRef: T | Ref.Ref<T> | undefi
  * @param key - The property key to subscribe to.
  * @returns An atom that returns the property value, or undefined if obj is undefined.
  */
-export function makeProperty<T extends Entity.Unknown, K extends keyof T>(obj: T, key: K): Atom.Atom<T[K]>;
-export function makeProperty<T extends Entity.Unknown, K extends keyof T>(
+export function makeProperty<T extends Obj.Unknown, K extends keyof T>(obj: T, key: K): Atom.Atom<T[K]>;
+export function makeProperty<T extends Obj.Unknown, K extends keyof T>(
   obj: T | undefined,
   key: K,
 ): Atom.Atom<T[K] | undefined>;
-export function makeProperty<T extends Entity.Unknown, K extends keyof T>(
+export function makeProperty<T extends Obj.Unknown, K extends keyof T>(
   obj: T | undefined,
   key: K,
 ): Atom.Atom<T[K] | undefined> {
@@ -149,7 +157,69 @@ export function makeProperty<T extends Entity.Unknown, K extends keyof T>(
     return Atom.make<T[K] | undefined>(() => undefined);
   }
 
-  assertArgument(isProxy(obj), 'obj', 'Object must be a reactive object');
+  assertArgument(Obj.isObject(obj), 'obj', 'Object must be a reactive object');
   assertArgument(key in obj, 'key', 'Property must exist on object');
   return propertyFamily(obj)(key);
+}
+
+/**
+ * Atom family for ECHO objects - returns the live object, not a snapshot.
+ * Same as objectFamily but returns T instead of Obj.Snapshot<T>.
+ */
+const objectWithReactiveFamily = Atom.family(<T extends Obj.Unknown>(obj: T): Atom.Atom<T> => {
+  return Atom.make<T>((get) => {
+    const unsubscribe = Obj.subscribe(obj, () => {
+      get.setSelf(obj);
+    });
+
+    get.addFinalizer(() => unsubscribe());
+
+    return obj;
+  }).pipe(Atom.keepAlive);
+});
+
+/**
+ * Atom family for ECHO refs - returns the live reactive object, not a snapshot.
+ * Resolves the ref via the database; returns undefined while loading or if unresolved.
+ */
+const refWithReactiveFamily = Atom.family(<T extends Obj.Unknown>(ref: Ref.Ref<T>): Atom.Atom<T | undefined> => {
+  const effect = (get: Atom.Context) =>
+    Effect.gen(function* () {
+      const snapshot = get(make(ref));
+      if (snapshot == null) return undefined;
+      const option = yield* Obj.getReactiveOption(snapshot);
+      return Option.getOrElse(option, () => undefined);
+    });
+
+  return Function.pipe(
+    Atom.make(effect),
+    Atom.map((result) => Result.getOrElse(result, () => undefined)),
+  );
+});
+
+/**
+ * Like {@link make} but returns the live reactive object instead of a snapshot.
+ * Same input: Obj or Ref.Ref. Same output shape: Atom that updates when the object mutates.
+ * Prefer {@link make} (snapshot) unless you need the live Obj.Obj for generic mutations (e.g. Obj.change).
+ *
+ * @param objOrRef - The reactive object or ref.
+ * @returns An atom that returns the live object. Returns undefined for refs (async loading) or undefined input.
+ */
+export function makeWithReactive<T extends Obj.Unknown>(obj: T): Atom.Atom<T>;
+export function makeWithReactive<T extends Obj.Unknown>(ref: Ref.Ref<T>): Atom.Atom<T | undefined>;
+export function makeWithReactive<T extends Obj.Unknown>(objOrRef: T | Ref.Ref<T> | undefined): Atom.Atom<T | undefined>;
+export function makeWithReactive<T extends Obj.Unknown>(
+  objOrRef: T | Ref.Ref<T> | undefined,
+): Atom.Atom<T | undefined> {
+  if (objOrRef === undefined) {
+    return Atom.make<T | undefined>(() => undefined);
+  }
+
+  if (Ref.isRef(objOrRef)) {
+    return refWithReactiveFamily(objOrRef as Ref.Ref<T>);
+  }
+
+  const obj = objOrRef as T;
+  assertArgument(Obj.isObject(obj), 'obj', 'Object must be a reactive object');
+  return objectWithReactiveFamily(obj);
 }

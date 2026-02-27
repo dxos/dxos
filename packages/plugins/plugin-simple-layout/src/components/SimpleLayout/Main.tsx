@@ -2,84 +2,80 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { Activity, useMemo } from 'react';
+import React, { useMemo } from 'react';
 
-import { Surface, useAppGraph } from '@dxos/app-framework/react';
+import { Surface } from '@dxos/app-framework/ui';
+import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { useNode } from '@dxos/plugin-graph';
-import { Main as NaturalMain } from '@dxos/react-ui';
-import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
+import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/ui-theme';
 
-import { useSimpleLayoutState } from '../../hooks';
+import { useAppBarProps, useNavbarActions, useSimpleLayoutState } from '../../hooks';
 import { ContentError } from '../ContentError';
 import { ContentLoading } from '../ContentLoading';
-import { Home } from '../Home';
+import { useLoadDescendents } from '../hooks';
+import { useMobileLayout } from '../MobileLayout/MobileLayout';
 
-import { Banner } from './Banner';
+import { AppBar } from './AppBar';
 import { NavBar } from './NavBar';
 
+const MAIN_NAME = 'SimpleLayout.Main';
+
+/**
+ * Main content component.
+ */
 export const Main = () => {
   const { state } = useSimpleLayoutState();
   const id = state.active ?? state.workspace;
-  const { graph } = useAppGraph();
-  const node = useNode(graph, id);
+  const attentionAttrs = useAttentionAttributes(id);
+  const { keyboardOpen } = useMobileLayout(MAIN_NAME);
+  const { actions, onAction } = useNavbarActions();
+  const appBarProps = useAppBarProps();
 
   const placeholder = useMemo(() => <ContentLoading />, []);
 
-  const { variant } = parseEntryId(id);
-  const data = useMemo(
-    () =>
+  const { graph } = useAppGraph();
+  const node = useNode(graph, id);
+  const data = useMemo(() => {
+    return (
       node && {
         attendableId: id,
         subject: node.data,
         properties: node.properties,
-        variant,
         popoverAnchorId: state.popoverAnchorId,
-      },
-    [node, node?.data, node?.properties, state.popoverAnchorId, variant, id],
-  );
+      }
+    );
+  }, [id, node, node?.data, node?.properties, state.popoverAnchorId]);
 
-  const handleActiveIdChange = (nextActiveId: string | null) => {
-    // eslint-disable-next-line no-console
-    console.log('[navigate]', nextActiveId);
-  };
+  // Ensures that children are loaded so that they are available to navigate to.
+  useLoadDescendents(id);
 
-  const showNavBar = !state.isPopover;
+  // TODO(burdon): BUG: When showing ANY statusbar the size progressively shrinks when the keyboard opens/closes.
+  const showNavBar = !keyboardOpen && !state.isPopover && state.drawerState === 'closed';
 
   return (
-    <NaturalMain.Root complementarySidebarState='closed' navigationSidebarState='closed'>
-      <NaturalMain.Content bounce classNames='dx-mobile-main dx-mobile-main-scroll-area--flush !overflow-y-auto'>
-        <div
-          className={mx(
-            'bs-full overflow-hidden grid',
-            showNavBar ? 'grid-rows-[min-content_1fr_min-content]' : 'grid-rows-[min-content_1fr]',
-          )}
-        >
-          <Banner node={node} />
-          <Activity mode={id === 'default' ? 'visible' : 'hidden'}>
-            <Home />
-          </Activity>
-          <Activity mode={id !== 'default' ? 'visible' : 'hidden'}>
-            <section>
-              <Surface
-                key={id}
-                role='article'
-                data={data}
-                limit={1}
-                fallback={ContentError}
-                placeholder={placeholder}
-              />
-            </section>
-          </Activity>
-          {showNavBar && <NavBar activeId={id} onActiveIdChange={handleActiveIdChange} />}
-        </div>
-      </NaturalMain.Content>
-    </NaturalMain.Root>
+    <div
+      role='none'
+      className={mx(
+        'h-full grid overflow-hidden bg-toolbar-surface',
+        showNavBar ? 'grid-rows-[var(--rail-action)_1fr_var(--toolbar-size)]' : 'grid-rows-[var(--rail-action)_1fr]',
+      )}
+      {...attentionAttrs}
+    >
+      <AppBar {...appBarProps} />
+      <article className='h-full overflow-hidden bg-base-surface'>
+        <Surface.Surface
+          key={id}
+          role='article'
+          data={data}
+          limit={1}
+          fallback={ContentError}
+          placeholder={placeholder}
+        />
+      </article>
+      {showNavBar && <NavBar classNames='border-y border-subdued-separator' actions={actions} onAction={onAction} />}
+    </div>
   );
 };
 
-// TODO(wittjosiah): Factor out. Copied from deck plugin.
-const parseEntryId = (entryId: string) => {
-  const [id, variant] = entryId.split(ATTENDABLE_PATH_SEPARATOR);
-  return { id, variant };
-};
+Main.displayName = MAIN_NAME;

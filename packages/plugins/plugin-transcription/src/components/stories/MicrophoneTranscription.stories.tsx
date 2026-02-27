@@ -4,11 +4,10 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import type * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Common } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { AppActivationEvents } from '@dxos/app-toolkit';
 import {
   type ExtractionFunction,
   extractionAnthropicFunction,
@@ -75,8 +74,7 @@ const DefaultStory = ({
   // Queue.
   // TODO(dmaretskyi): Use space.queues.create() instead.
   const queueDxn = useMemo(() => createQueueDXN(), []);
-  // TODO(wittjosiah): Find a simpler way to define this type.
-  const queue = useMemo(() => new MemoryQueue<Schema.Schema.Type<typeof Message.Message>>(queueDxn), [queueDxn]);
+  const queue = useMemo(() => new MemoryQueue<Message.Message>(queueDxn), [queueDxn]);
   const model = useQueueModelAdapter(renderByline([]), queue);
   const space = useSpace();
 
@@ -95,7 +93,7 @@ const DefaultStory = ({
 
     let executor: FunctionExecutor | undefined;
     let extractionFunction: ExtractionFunction | undefined;
-    let objects: Promise<Obj.Any[]> | undefined;
+    let objects: Promise<Obj.Unknown[]> | undefined;
 
     if (entityExtraction === 'ner') {
       // Init model loading. Takes time.
@@ -195,7 +193,7 @@ const meta = {
   title: 'plugins/plugin-transcription/MicrophoneTranscription',
   render: DefaultStory,
   decorators: [
-    withTheme,
+    withTheme(),
     withLayout({ layout: 'column' }),
     withPluginManager({
       plugins: [
@@ -230,7 +228,7 @@ const meta = {
         PreviewPlugin(),
         TranscriptionPlugin(),
       ],
-      fireEvents: [Common.ActivationEvent.SetupAppGraph],
+      fireEvents: [AppActivationEvents.SetupAppGraph],
     }),
   ],
 } satisfies Meta<typeof DefaultStory>;

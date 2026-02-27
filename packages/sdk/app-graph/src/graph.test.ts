@@ -615,6 +615,23 @@ describe('Graph', () => {
     expect(expandCalled).to.be.true;
   });
 
+  test('expand defers for non-existent node and applies when node is added', () => {
+    const registry = Registry.make();
+    const expandCalls: [string, Node.Relation][] = [];
+    const graph = Graph.make({
+      registry,
+      onExpand: (id, relation) => expandCalls.push([id, relation]),
+    });
+    const childId = 'child';
+    expect(Option.isNone(registry.get(graph.node(childId)))).to.be.true;
+
+    Graph.expand(graph, childId, 'outbound');
+    expect(expandCalls).to.deep.equal([]);
+
+    Graph.addNode(graph, { id: childId, type: EXAMPLE_TYPE });
+    expect(expandCalls).to.deep.equal([[childId, 'outbound']]);
+  });
+
   test('initialize curried', async () => {
     const registry = Registry.make();
     const builder = GraphBuilder.make({ registry });

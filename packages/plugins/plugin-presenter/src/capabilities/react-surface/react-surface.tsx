@@ -5,8 +5,9 @@
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { Capability, Common } from '@dxos/app-framework';
-import { useSettingsState } from '@dxos/app-framework/react';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { Surface, useSettingsState } from '@dxos/app-framework/ui';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { Collection } from '@dxos/schema';
@@ -16,14 +17,14 @@ import {
   DocumentPresenterContainer,
   MarkdownSlide,
   PresenterSettings,
-} from '../../components';
+} from '../../containers';
 import { meta } from '../../meta';
 import { type PresenterSettingsProps } from '../../types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(Common.Capability.ReactSurface, [
-      Common.createSurface({
+    Capability.contributes(Capabilities.ReactSurface, [
+      Surface.create({
         id: `${meta.id}/document`,
         role: 'article',
         position: 'hoist',
@@ -36,7 +37,7 @@ export default Capability.makeModule(() =>
           Obj.instanceOf(Markdown.Document, data.subject.object),
         component: ({ data }) => <DocumentPresenterContainer document={data.subject.object} />,
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/collection`,
         role: 'article',
         position: 'hoist',
@@ -47,19 +48,19 @@ export default Capability.makeModule(() =>
           'object' in data.subject &&
           data.subject.type === meta.id &&
           Obj.instanceOf(Collection.Collection, data.subject.object),
-        component: ({ data }) => <CollectionPresenterContainer collection={data.subject.object} />,
+        component: ({ role, data }) => <CollectionPresenterContainer role={role} subject={data.subject.object} />,
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/slide`,
         role: 'slide',
         filter: (data): data is { subject: Markdown.Document } => Obj.instanceOf(Markdown.Document, data.subject),
         component: ({ data }) => <MarkdownSlide document={data.subject} />,
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/plugin-settings`,
         role: 'article',
-        filter: (data): data is { subject: Common.Capability.Settings } =>
-          Common.Capability.isSettings(data.subject) && data.subject.prefix === meta.id,
+        filter: (data): data is { subject: AppCapabilities.Settings } =>
+          AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.id,
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<PresenterSettingsProps>(subject.atom);
           return <PresenterSettings settings={settings} onSettingsChange={updateSettings} />;

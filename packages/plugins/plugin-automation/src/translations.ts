@@ -33,6 +33,8 @@ export const translations = [
         'function parameters label': 'Function parameters',
 
         'trigger editor title': 'Configure Trigger',
+        'trigger editor description':
+          'Triggers are used to run functions at specific times or when specific events occur.',
         'new trigger label': 'Add Trigger',
         'trigger type timer': 'Timer',
         'trigger type webhook': 'Webhook',

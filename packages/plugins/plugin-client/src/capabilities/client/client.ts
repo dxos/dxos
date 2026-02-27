@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, Plugin } from '@dxos/app-framework';
+import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { Client, ClientService } from '@dxos/client';
 import { runAndForwardErrors } from '@dxos/effect';
 import { log } from '@dxos/log';
@@ -12,7 +12,10 @@ import { log } from '@dxos/log';
 import { ClientEvents } from '../../types';
 import { ClientCapabilities, type ClientPluginOptions } from '../../types';
 
-type ClientCapabilityOptions = Omit<ClientPluginOptions, 'appKey' | 'invitationUrl' | 'invitationParam' | 'onReset'>;
+type ClientCapabilityOptions = Omit<
+  ClientPluginOptions,
+  'appKey' | 'shareableLinkOrigin' | 'invitationPath' | 'invitationParam' | 'onReset'
+>;
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* (props?: ClientCapabilityOptions) {
@@ -69,7 +72,7 @@ export default Capability.makeModule(
           yield* Effect.tryPromise(() => client.destroy());
         }),
       ),
-      Capability.contributes(Common.Capability.Layer, ClientService.fromClient(client)),
+      Capability.contributes(Capabilities.Layer, ClientService.fromClient(client)),
     ];
   }),
 );

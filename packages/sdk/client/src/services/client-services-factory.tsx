@@ -8,7 +8,7 @@ import { type ClientServicesProvider } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 
 import { type DedeciatedWorkerClientServicesOptions, DedicatedWorkerClientServices } from './dedicated';
-import { SharedWorkerCoordinator } from './dedicated';
+import { SharedWorkerCoordinator, SingleClientCoordinator } from './dedicated';
 import { type LocalClientServicesParams, fromHost } from './local-client-services';
 import { fromSocket } from './socket';
 import { type WorkerClientServicesProps, fromWorker } from './worker-client-services';
@@ -18,12 +18,21 @@ export type CreateClientServicesOptions = {
   createWorker?: WorkerClientServicesProps['createWorker'];
   /** Factory for creating a dedicated worker. */
   createDedicatedWorker?: DedeciatedWorkerClientServicesOptions['createWorker'];
+  /** Factory for creating the coordinator SharedWorker (for dedicated worker mode). Use for a custom entrypoint that e.g. initializes observability. */
+  createCoordinatorWorker?: () => SharedWorker;
   /** Factory for creating an OPFS worker. */
   createOpfsWorker?: LocalClientServicesParams['createOpfsWorker'];
+  /**
+   * Use single-client mode for the dedicated worker coordinator.
+   * This bypasses SharedWorker which doesn't work on iOS WKWebView.
+   */
+  singleClientMode?: boolean;
   /** Observability group sent with signaling metadata. */
   observabilityGroup?: string;
   /** Enable telemetry metadata sent with signaling requests. */
   signalTelemetryEnabled?: boolean;
+  /** Path to SQLite database file for persistent indexing in Node/Bun. */
+  sqlitePath?: LocalClientServicesParams['sqlitePath'];
 };
 
 /**
@@ -33,7 +42,16 @@ export const createClientServices = async (
   config: Config,
   options: CreateClientServicesOptions = {},
 ): Promise<ClientServicesProvider> => {
-  const { createWorker, createDedicatedWorker, createOpfsWorker, observabilityGroup, signalTelemetryEnabled } = options;
+  const {
+    createWorker,
+    createDedicatedWorker,
+    createCoordinatorWorker,
+    singleClientMode,
+    createOpfsWorker,
+    observabilityGroup,
+    signalTelemetryEnabled,
+    sqlitePath,
+  } = options;
   const remote = config.values.runtime?.client?.remoteSource;
   if (remote) {
     const url = new URL(remote);
@@ -63,7 +81,12 @@ export const createClientServices = async (
   return createDedicatedWorker
     ? new DedicatedWorkerClientServices({
         createWorker: createDedicatedWorker,
-        createCoordinator: () => new SharedWorkerCoordinator(),
+        createCoordinator: () =>
+          singleClientMode
+            ? new SingleClientCoordinator()
+            : createCoordinatorWorker
+              ? new SharedWorkerCoordinator(createCoordinatorWorker)
+              : new SharedWorkerCoordinator(),
         config,
       })
     : createWorker && useWorker
@@ -72,7 +95,7 @@ export const createClientServices = async (
           config,
           {
             createOpfsWorker,
-            runtimeProps: { enableFullTextIndexing: true },
+            sqlitePath,
           },
           observabilityGroup,
           signalTelemetryEnabled,

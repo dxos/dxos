@@ -4,6 +4,10 @@
   "description": "Modular UI components.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": false,
@@ -15,6 +19,12 @@
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
+    "./playwright": {
+      "source": "./src/playwright/index.ts",
+      "types": "./dist/types/src/playwright/index.d.ts",
+      "browser": "./dist/lib/browser/playwright/index.mjs",
+      "node": "./dist/lib/node-esm/playwright/index.mjs"
+    },
     "./testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
@@ -24,7 +34,14 @@
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
-    "*": {}
+    "*": {
+      "playwright": [
+        "dist/types/src/playwright/index.d.ts"
+      ],
+      "testing": [
+        "dist/types/src/testing/index.d.ts"
+      ]
+    }
   },
   "files": [
     "dist",
@@ -57,11 +74,10 @@
     "@radix-ui/react-slot": "catalog:",
     "@radix-ui/react-use-controllable-state": "catalog:",
     "@tanstack/react-virtual": "catalog:",
-    "bind-event-listener": "catalog:",
-    "overlayscrollbars": "catalog:",
-    "overlayscrollbars-react": "catalog:"
+    "bind-event-listener": "catalog:"
   },
   "devDependencies": {
+    "@dxos/echo-atom": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
@@ -70,6 +86,7 @@
     "@dxos/test-utils": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@effect-atom/atom-react": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "effect": "catalog:",
@@ -81,6 +98,7 @@
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@effect-atom/atom-react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"

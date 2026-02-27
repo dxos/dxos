@@ -8,7 +8,6 @@ import { fileURLToPath } from 'node:url';
 
 import { type StorybookConfig } from '@storybook/react-vite';
 import { type InlineConfig } from 'vite';
-import topLevelAwait from 'vite-plugin-top-level-await';
 import turbosnap from 'vite-plugin-turbosnap';
 import wasm from 'vite-plugin-wasm';
 
@@ -115,10 +114,14 @@ export const createConfig = ({
             'node-fetch': 'isomorphic-fetch',
             'tiktoken/lite': resolve(__dirname, './stub.mjs'),
             'node:util': '@dxos/node-std/util',
+            // Storybook builds from source; ensure worker entrypoints resolve without `dist/` artifacts.
+            '@dxos/client/opfs-worker': resolve(rootDir, 'packages/sdk/client/src/worker/opfs-worker.ts'),
           },
         },
         build: {
           assetsInlineLimit: 0,
+          // Target modern browsers that support top-level await natively.
+          target: ['chrome108', 'edge107', 'firefox104', 'safari16'],
           rollupOptions: {
             output: {
               assetFileNames: 'assets/[name].[hash][extname]', // Unique asset names
@@ -140,7 +143,7 @@ export const createConfig = ({
         },
         worker: {
           format: 'es',
-          plugins: () => [wasm(), topLevelAwait()],
+          plugins: () => [wasm()],
         },
         plugins: [
           //
@@ -149,24 +152,20 @@ export const createConfig = ({
 
           importSource({
             exclude: [
-              '**/node_modules/**',
-              '**/common/random-access-storage/**',
-              '**/common/lock-file/**',
-              '**/mesh/network-manager/**',
-              '**/mesh/teleport/**',
-              '**/sdk/config/**',
-              '**/sdk/client-services/**',
-              '**/sdk/observability/**',
+              '@dxos/random-access-storage',
+              '@dxos/lock-file',
+              '@dxos/network-manager',
+              '@dxos/teleport',
+              '@dxos/config',
+              '@dxos/client-services',
+              '@dxos/observability',
               // TODO(dmaretskyi): Decorators break in lit.
-              '**/ui/lit-*/**',
+              '@dxos/lit-*',
             ],
           }),
 
           // https://www.npmjs.com/package/vite-plugin-wasm
           wasm(),
-
-          // https://www.npmjs.com/package/vite-plugin-top-level-await
-          topLevelAwait(),
 
           // https://www.npmjs.com/package/@vitejs/plugin-react-swc
           react({ tsDecorators: true }),
@@ -192,10 +191,7 @@ export const createConfig = ({
             symbolPattern: 'ph--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
           }),
 
-          ThemePlugin({
-            root: __dirname,
-            content,
-          }),
+          ThemePlugin({}),
         ],
       },
     ) as InlineConfig;

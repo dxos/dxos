@@ -81,6 +81,9 @@
       "path": "../../sdk/app-framework"
     },
     {
+      "path": "../../sdk/app-toolkit"
+    },
+    {
       "path": "../../sdk/client-services"
     },
     {
@@ -114,7 +117,7 @@
       "path": "../../ui/react-ui-form"
     },
     {
-      "path": "../../ui/react-ui-kanban"
+      "path": "../../ui/react-ui-mosaic"
     },
     {
       "path": "../../ui/react-ui-stack"

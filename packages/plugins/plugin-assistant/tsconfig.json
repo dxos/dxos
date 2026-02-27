@@ -104,6 +104,9 @@
       "path": "../../sdk/app-framework"
     },
     {
+      "path": "../../sdk/app-toolkit"
+    },
+    {
       "path": "../../sdk/client"
     },
     {
@@ -212,7 +215,13 @@
       "path": "../plugin-map"
     },
     {
+      "path": "../plugin-markdown"
+    },
+    {
       "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-status-bar"
     },
     {
       "path": "../plugin-table"

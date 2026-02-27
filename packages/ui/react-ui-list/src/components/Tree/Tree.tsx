@@ -1,21 +1,20 @@
 //
 // Copyright 2024 DXOS.org
-//
 
+import { useAtomValue } from '@effect-atom/atom-react';
 import React, { useMemo } from 'react';
 
-import { type HasId } from '@dxos/echo/internal';
 import { Treegrid, type TreegridRootProps } from '@dxos/react-ui';
 
-import { type TreeContextType, TreeProvider } from './TreeContext';
-import { TreeItem, type TreeItemProps } from './TreeItem';
+import { type TreeModel, TreeProvider } from './TreeContext';
+import { TreeItemById, type TreeItemByIdProps, type TreeItemProps } from './TreeItem';
 
-export type TreeProps<T extends HasId = any, O = any> = {
-  root?: T;
+export type TreeProps<T extends { id: string } = any> = {
+  model: TreeModel<T>;
+  rootId?: string;
   path?: string[];
   id: string;
-} & TreeContextType<T, O> &
-  Partial<Pick<TreegridRootProps, 'gridTemplateColumns' | 'classNames'>> &
+} & Partial<Pick<TreegridRootProps, 'gridTemplateColumns' | 'classNames'>> &
   Pick<
     TreeItemProps<T>,
     | 'draggable'
@@ -25,17 +24,15 @@ export type TreeProps<T extends HasId = any, O = any> = {
     | 'canSelect'
     | 'onOpenChange'
     | 'onSelect'
+    | 'onItemHover'
     | 'levelOffset'
   >;
 
-export const Tree = <T extends HasId = any, O = any>({
-  root,
+export const Tree = <T extends { id: string } = any>({
+  model,
+  rootId,
   path,
   id,
-  useItems,
-  getProps,
-  useIsOpen,
-  useIsCurrent,
   draggable = false,
   gridTemplateColumns = '[tree-row-start] 1fr min-content [tree-row-end]',
   classNames,
@@ -46,37 +43,29 @@ export const Tree = <T extends HasId = any, O = any>({
   canSelect,
   onOpenChange,
   onSelect,
-}: TreeProps<T, O>) => {
-  const context = useMemo(
-    () => ({
-      useItems,
-      getProps,
-      useIsOpen,
-      useIsCurrent,
-    }),
-    [useItems, getProps, useIsOpen, useIsCurrent],
-  );
-  const items = useItems(root);
+  onItemHover,
+}: TreeProps<T>) => {
+  const childIds = useAtomValue(model.childIds(rootId));
   const treePath = useMemo(() => (path ? [...path, id] : [id]), [id, path]);
+
+  const childProps: Omit<TreeItemByIdProps, 'id' | 'last'> = {
+    path: treePath,
+    levelOffset,
+    draggable,
+    renderColumns,
+    blockInstruction,
+    canDrop,
+    canSelect,
+    onOpenChange,
+    onSelect,
+    onItemHover,
+  };
 
   return (
     <Treegrid.Root gridTemplateColumns={gridTemplateColumns} classNames={classNames}>
-      <TreeProvider value={context}>
-        {items.map((item, index) => (
-          <TreeItem
-            key={item.id}
-            item={item}
-            last={index === items.length - 1}
-            path={treePath}
-            levelOffset={levelOffset}
-            draggable={draggable}
-            renderColumns={renderColumns}
-            blockInstruction={blockInstruction}
-            canDrop={canDrop}
-            canSelect={canSelect}
-            onOpenChange={onOpenChange}
-            onSelect={onSelect}
-          />
+      <TreeProvider value={model}>
+        {childIds.map((childId, index) => (
+          <TreeItemById key={childId} id={childId} last={index === childIds.length - 1} {...childProps} />
         ))}
       </TreeProvider>
     </Treegrid.Root>

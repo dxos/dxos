@@ -5,14 +5,16 @@
 import * as Schema from 'effect/Schema';
 import React from 'react';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { Surface } from '@dxos/app-framework/ui';
 import { Format, type Obj, Type } from '@dxos/echo';
+import { Card } from '@dxos/react-ui-mosaic';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 
 export const MapSchema = Schema.Struct({
   coordinates: Format.GeoPoint,
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'example.com/type/Map',
     version: '0.1.0',
   }),
@@ -22,9 +24,9 @@ export type MapSchema = Schema.Schema.Type<typeof MapSchema>;
 
 // TODO(burdon): Move to ECHO def.
 export type ArtifactsContext = {
-  items: Obj.Any[];
-  getArtifacts: () => Obj.Any[];
-  addArtifact: (artifact: Obj.Any) => void;
+  items: Obj.Unknown[];
+  getArtifacts: () => Obj.Unknown[];
+  addArtifact: (artifact: Obj.Unknown) => void;
 };
 
 declare global {
@@ -38,31 +40,33 @@ const isImage = (data: any): data is any => false;
 
 export const capabilities: Capability.Any[] = [
   Capability.contributes(
-    Common.Capability.ReactSurface,
-    Common.createSurface({
+    Capabilities.ReactSurface,
+    Surface.create({
       id: 'plugin-image',
-      role: 'card--extrinsic',
+      role: 'card--content',
       filter: (data: any): data is any => isImage(data.value),
       component: ({ data }) => (
-        <img
-          className='grow object-cover'
-          src={`data:image/jpeg;base64,${data.value.source.data}`}
-          alt={data.value.prompt ?? `Generated image [id=${data.value.id}]`}
-        />
+        <Card.Content>
+          <img
+            className='grow object-cover'
+            src={`data:image/jpeg;base64,${data.value.source.data}`}
+            alt={data.value.prompt ?? `Generated image [id=${data.value.id}]`}
+          />
+        </Card.Content>
       ),
     }),
   ),
-
-  //
-  // Default
-  //
   Capability.contributes(
-    Common.Capability.ReactSurface,
-    Common.createSurface({
+    Capabilities.ReactSurface,
+    Surface.create({
       id: 'plugin-default',
-      role: 'card--extrinsic',
+      role: 'card--content',
       position: 'fallback',
-      component: ({ data }) => <JsonFilter data={data} />,
+      component: ({ data }) => (
+        <Card.Content>
+          <JsonFilter data={data} />
+        </Card.Content>
+      ),
     }),
   ),
 ];

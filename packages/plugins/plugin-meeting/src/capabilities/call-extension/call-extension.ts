@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import type * as Schema from 'effect/Schema';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 import { extractionAnthropicFunction, processTranscriptMessage } from '@dxos/assistant/extraction';
 import { Filter, type Obj, Query, Type } from '@dxos/echo';
 import { FunctionExecutor } from '@dxos/functions-runtime';
@@ -62,7 +62,7 @@ export default Capability.makeModule(
         store.updateState(() => ({}));
       },
       onCallStateUpdated: async (callState: CallState) => {
-        const { invokePromise } = capabilities.get(Common.Capability.OperationInvoker);
+        const { invokePromise } = capabilities.get(Capabilities.OperationInvoker);
         const typename = Type.getTypename(Meeting.Meeting);
         const activity = typename ? callState.activities?.[typename] : undefined;
         if (!activity?.payload) {
@@ -91,7 +91,9 @@ const _createEntityExtractionEnricher = ({ contextTypes, space }: EntityExtracti
 
   return async (message: Message.Message) => {
     const objects = await space.db
-      .query(Query.select(Filter.or(...contextTypes.map((schema) => Filter.type(schema as Schema.Schema<Obj.Any>)))))
+      .query(
+        Query.select(Filter.or(...contextTypes.map((schema) => Filter.type(schema as Schema.Schema<Obj.Unknown>)))),
+      )
       .run();
 
     log.info('context', { objects });
@@ -112,7 +114,7 @@ const _createEntityExtractionEnricher = ({ contextTypes, space }: EntityExtracti
 };
 
 // TODO(dmaretskyi): Use Type.Any
-const processContextObject = async (object: Obj.Any): Promise<any> => {
+const processContextObject = async (object: Obj.Unknown): Promise<any> => {
   // TODO(dmaretskyi): Documents need special processing is the content is behind a ref.
   // TODO(dmaretskyi): Think about a way to handle this serialization with a decorator.
   // if (Obj.instanceOf(DocumentType, object)) {

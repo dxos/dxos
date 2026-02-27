@@ -13,7 +13,7 @@ import { type Size } from '../defs';
 export type ImageLoadingStatus = 'idle' | 'loading' | 'loaded' | 'error';
 
 export type AvatarVariant = 'square' | 'circle';
-export type AvatarStatus = 'active' | 'inactive' | 'current' | 'error' | 'warning' | 'internal';
+export type AvatarStatus = 'active' | 'inactive' | 'current' | 'internal' | 'error' | 'warning';
 export type AvatarAnimation = 'pulse' | 'none';
 
 const rx = '0.125rem';
@@ -71,7 +71,7 @@ export class DxAvatar extends LitElement {
   hue: string | undefined = undefined;
 
   @property({ type: String })
-  hueVariant: 'fill' | 'surface' = 'fill';
+  hueVariant: 'fill' | 'surface' | 'transparent' = 'fill';
 
   @property({ type: String })
   size: Size = 10;
@@ -113,13 +113,18 @@ export class DxAvatar extends LitElement {
     const r = sizePx / 2 - ringGap - ringWidth;
     const isTextOnly = Boolean(this.fallback && /[0-9a-zA-Z]+/.test(this.fallback));
     const fontScale = (isTextOnly ? 3 : 3.6) * (1 / 1.612);
-    const bg = this.hue
-      ? this.hueVariant === 'surface'
-        ? `var(--dx-${this.hue}Surface)`
-        : `var(--dx-${this.hue === 'neutral' ? 'inputSurface' : `${this.hue}Fill`})`
-      : 'var(--surface-bg)';
+    const bg =
+      this.hueVariant === 'transparent'
+        ? 'transparent'
+        : this.hue
+          ? this.hueVariant === 'surface'
+            ? `var(--color-${this.hue}-surface)`
+            : `var(--color-${this.hue === 'neutral' ? 'input-surface' : `${this.hue}-fill`})`
+          : 'var(--surface-bg)';
     const fg =
-      this.hue && this.hueVariant === 'surface' ? `var(--dx-${this.hue}SurfaceText)` : 'var(--dx-accentSurfaceText)';
+      this.hue && this.hueVariant === 'surface'
+        ? `var(--color-${this.hue}-surface-text)`
+        : 'var(--color-accent-surface-text)';
 
     return html`<span
       role="none"

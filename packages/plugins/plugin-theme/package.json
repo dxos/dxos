@@ -4,6 +4,10 @@
   "description": "DXOS Surface plugin for providing the application theme.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": true,
@@ -34,6 +38,7 @@
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-toolkit": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/operation": "workspace:*",
     "@dxos/util": "workspace:*",

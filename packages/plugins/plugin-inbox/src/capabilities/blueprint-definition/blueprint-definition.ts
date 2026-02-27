@@ -4,25 +4,16 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
+import { AppCapabilities } from '@dxos/app-toolkit';
 
-import { CalendarBlueprint, InboxBlueprint } from '../../blueprints';
+import { CalendarBlueprint, InboxBlueprint, InboxSendBlueprint } from '../../blueprints';
 
-export { CalendarBlueprint, InboxBlueprint };
-
-export type BlueprintCapabilities = [
-  Capability.Capability<typeof Common.Capability.Functions>,
-  Capability.Capability<typeof Common.Capability.BlueprintDefinition>,
-  Capability.Capability<typeof Common.Capability.Functions>,
-  Capability.Capability<typeof Common.Capability.BlueprintDefinition>,
-];
-
-const blueprintDefinition = Capability.makeModule<[], BlueprintCapabilities>(() =>
+const blueprintDefinition = Capability.makeModule(() =>
   Effect.succeed([
-    Capability.contributes(Common.Capability.Functions, InboxBlueprint.functions),
-    Capability.contributes(Common.Capability.BlueprintDefinition, InboxBlueprint.make()),
-    Capability.contributes(Common.Capability.Functions, CalendarBlueprint.functions),
-    Capability.contributes(Common.Capability.BlueprintDefinition, CalendarBlueprint.make()),
+    Capability.contributes(AppCapabilities.BlueprintDefinition, InboxBlueprint),
+    Capability.contributes(AppCapabilities.BlueprintDefinition, InboxSendBlueprint),
+    Capability.contributes(AppCapabilities.BlueprintDefinition, CalendarBlueprint),
   ]),
 );
 

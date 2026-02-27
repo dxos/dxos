@@ -58,6 +58,9 @@
       "path": "../../sdk/app-framework"
     },
     {
+      "path": "../../sdk/app-toolkit"
+    },
+    {
       "path": "../../sdk/react-client"
     },
     {
@@ -77,6 +80,9 @@
     },
     {
       "path": "../../ui/react-ui-geo"
+    },
+    {
+      "path": "../../ui/react-ui-mosaic"
     },
     {
       "path": "../../ui/react-ui-stack"

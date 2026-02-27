@@ -133,7 +133,7 @@ const DefaultStory = () => {
             {...(parentOf && { parentOf: parentOf.join(Treegrid.PARENT_OF_SEPARATOR) })}
           >
             <Treegrid.Cell indent classNames='flex items-center'>
-              {node.icon && <Icon icon={node.icon} classNames='is-[1em] bs-[1em] mlb-1' />}
+              {node.icon && <Icon icon={node.icon} classNames='w-[1em] h-[1em] my-1' />}
               {node.title}
             </Treegrid.Cell>
           </Treegrid.Row>
@@ -144,10 +144,10 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'ui/react-ui-core/Treegrid',
+  title: 'ui/react-ui-core/components/Treegrid',
   component: Treegrid.Root as any,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

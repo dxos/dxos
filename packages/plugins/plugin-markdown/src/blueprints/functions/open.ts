@@ -5,8 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { ArtifactId } from '@dxos/assistant';
-import { Database } from '@dxos/echo';
+import { Database, Type } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 
 import { Markdown } from '../../types';
@@ -16,18 +15,19 @@ export default defineFunction({
   name: 'Open',
   description: 'Opens and reads the contents of a new markdown document.',
   inputSchema: Schema.Struct({
-    id: ArtifactId.annotations({
+    doc: Type.Ref(Markdown.Document).annotations({
       description: 'The ID of the markdown document.',
     }),
   }),
   outputSchema: Schema.Struct({
     content: Schema.String,
   }),
-  handler: Effect.fn(function* ({ data: { id } }) {
-    const object = yield* Database.Service.resolve(ArtifactId.toDXN(id), Markdown.Document);
-    const { content } = yield* Effect.promise(() => object.content.load());
-    return {
-      content,
-    };
+  handler: Effect.fn(function* ({ data: { doc } }) {
+    const { content } = yield* doc.pipe(
+      Database.load,
+      Effect.map((_) => _.content),
+      Effect.flatMap(Database.load),
+    );
+    return { content };
   }),
 });

@@ -8,6 +8,7 @@ import { log } from '@dxos/log';
 import { ToggleContainer } from '@dxos/react-ui-components';
 import {
   PromptWidget,
+  ReasoningWidget,
   ReferenceWidget,
   SelectWidget,
   SuggestionWidget,
@@ -23,11 +24,20 @@ import { type BlockRenderer, type MessageThreadContext } from './sync';
 
 const Fallback = ({ _tag, ...props }: XmlWidgetProps<MessageThreadContext>) => {
   return (
-    <ToggleContainer.Root classNames='rounded-sm'>
-      <ToggleContainer.Header classNames='bg-groupSurface'>{_tag}</ToggleContainer.Header>
-      <ToggleContainer.Content classNames='bg-modalSurface'>
-        <Json classNames='!p-2 text-sm' data={props} />
+    <ToggleContainer.Root classNames='rounded-xs'>
+      <ToggleContainer.Header classNames='bg-group-surface'>{_tag}</ToggleContainer.Header>
+      <ToggleContainer.Content classNames='bg-modal-surface'>
+        <Json classNames='p-2! text-sm' data={props} />
       </ToggleContainer.Content>
+    </ToggleContainer.Root>
+  );
+};
+
+const Summary = ({ text }: { text: string }) => {
+  return (
+    <ToggleContainer.Root classNames='rounded-sm'>
+      <ToggleContainer.Header classNames='bg-groupSurface'>Conversation summarized</ToggleContainer.Header>
+      <ToggleContainer.Content classNames='bg-modalSurface'>{text}</ToggleContainer.Content>
     </ToggleContainer.Root>
   );
 };
@@ -45,6 +55,13 @@ export const componentRegistry: XmlWidgetRegistry = {
     factory: ({ children }) => {
       const text = getXmlTextChild(children);
       return text ? new PromptWidget(text) : null;
+    },
+  },
+  ['reasoning' as const]: {
+    block: true,
+    factory: ({ children }) => {
+      const text = getXmlTextChild(children);
+      return text ? new ReasoningWidget(text) : null;
     },
   },
   ['reference' as const]: {
@@ -70,7 +87,7 @@ export const componentRegistry: XmlWidgetRegistry = {
       return text ? new SuggestionWidget(text) : null;
     },
   },
-  ['summary' as const]: {
+  ['stats' as const]: {
     block: true,
     factory: ({ children }) => {
       const text = getXmlTextChild(children);
@@ -93,6 +110,10 @@ export const componentRegistry: XmlWidgetRegistry = {
   ['toolkit' as const]: {
     block: true,
     Component: Fallback,
+  },
+  ['summary' as const]: {
+    block: true,
+    Component: Summary,
   },
 
   //
@@ -158,13 +179,25 @@ const blockToMarkdownImpl = (context: MessageThreadContext, message: Message.Mes
       return `<toolCall id="${block.toolCallId}" />`;
     }
     case 'toolResult': {
-      context.updateWidget<{ blocks: ContentBlock.Any[] }>(block.toolCallId, ({ blocks = [] }) => ({
+      // TODO(dmaretskyi): the parameter could be undefined, perhaps tool blocks are not arriving in order.
+      context.updateWidget<{ blocks: ContentBlock.Any[] }>(block.toolCallId, ({ blocks = [] } = { blocks: [] }) => ({
         blocks: [...blocks, block],
       }));
       break;
     }
+    case 'stats': {
+      return `<stats>${ContentBlock.createStatsMessage(block)}</stats>`;
+    }
+    case 'reasoning': {
+      const text = block.reasoningText ?? block.redactedText;
+      if (!text) {
+        return;
+      }
+      // TODO(dmaretskyi): The mixed Markdown/XML parser does not support parsing multi-line XML tags.
+      return `<reasoning>${text.replace(/\n/g, ' ').trim()}</reasoning>`;
+    }
     case 'summary': {
-      return `<summary>${ContentBlock.createSummaryMessage(block)}</summary>`;
+      return `<summary>${block.content}</summary>`;
     }
     default: {
       // TODO(burdon): Needs stable ID.

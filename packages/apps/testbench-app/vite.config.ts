@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-// import { sentryVitePlugin } from '@sentry/vite-plugin';
 import ReactPlugin from '@vitejs/plugin-react-swc';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
@@ -38,9 +37,9 @@ export default defineConfig(
         https:
           process.env.HTTPS === 'true'
             ? {
-              key: '../../../key.pem',
-              cert: '../../../cert.pem',
-            }
+                key: '../../../key.pem',
+                cert: '../../../cert.pem',
+              }
             : undefined,
         fs: {
           strict: false,
@@ -90,20 +89,19 @@ export default defineConfig(
           WasmPlugin(),
           sourceMaps(),
           env.command === 'serve' &&
-          PluginImportSource({
-            exclude: [
-              '**/node_modules/**',
-              '**/common/random-access-storage/**',
-              '**/common/lock-file/**',
-              '**/mesh/network-manager/**',
-              '**/mesh/teleport/**',
-              '**/sdk/config/**',
-              '**/sdk/client-services/**',
-              '**/sdk/observability/**',
-              // TODO(dmaretskyi): Decorators break in lit.
-              '**/ui/lit-*/**',
-            ],
-          }),
+            PluginImportSource({
+              exclude: [
+                '@dxos/random-access-storage',
+                '@dxos/lock-file',
+                '@dxos/network-manager',
+                '@dxos/teleport',
+                '@dxos/config',
+                '@dxos/client-services',
+                '@dxos/observability',
+                // TODO(dmaretskyi): Decorators break in lit.
+                '@dxos/lit-*',
+              ],
+            }),
         ],
       },
       plugins: [
@@ -111,29 +109,25 @@ export default defineConfig(
 
         // Building from dist when creating a prod bundle.
         env.command === 'serve' &&
-        PluginImportSource({
-          exclude: [
-            '**/node_modules/**',
-            '**/common/random-access-storage/**',
-            '**/common/lock-file/**',
-            '**/mesh/network-manager/**',
-            '**/mesh/teleport/**',
-            '**/sdk/config/**',
-            '**/sdk/client-services/**',
-            '**/sdk/observability/**',
-            // TODO(dmaretskyi): Decorators break in lit.
-            '**/ui/lit-*/**',
-          ],
-        }),
+          PluginImportSource({
+            exclude: [
+              '@dxos/random-access-storage',
+              '@dxos/lock-file',
+              '@dxos/network-manager',
+              '@dxos/teleport',
+              '@dxos/config',
+              '@dxos/client-services',
+              '@dxos/observability',
+              // TODO(dmaretskyi): Decorators break in lit.
+              '@dxos/lit-*',
+            ],
+          }),
 
         ConfigPlugin({
           root: dirname,
           env: ['DX_VAULT'],
         }),
-        ThemePlugin({
-          root: dirname,
-          content: [path.resolve(dirname, './index.html'), path.resolve(dirname, './src/**/*.{js,ts,jsx,tsx}')],
-        }),
+        ThemePlugin({}),
         WasmPlugin(),
         ReactPlugin({
           tsDecorators: true,
@@ -149,6 +143,14 @@ export default defineConfig(
                     include_args: false,
                     include_call_site: true,
                     include_scope: true,
+                  },
+                  {
+                    name: 'dbg',
+                    package: '@dxos/log',
+                    param_index: 1,
+                    include_args: true,
+                    include_call_site: false,
+                    include_scope: false,
                   },
                   {
                     name: 'invariant',
@@ -171,17 +173,6 @@ export default defineConfig(
             ],
           ],
         }),
-        // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite
-        // https://www.npmjs.com/package/@sentry/vite-plugin
-        // sentryVitePlugin({
-        //   org: 'dxos',
-        //   project: 'testbench-app',
-        //   sourcemaps: {
-        //     assets: './packages/apps/testbench-app/out/testbench-app/**',
-        //   },
-        //   authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN,
-        //   disable: process.env.DX_ENVIRONMENT !== 'production',
-        // }),
         // https://www.bundle-buddy.com/rollup
         {
           name: 'bundle-buddy',

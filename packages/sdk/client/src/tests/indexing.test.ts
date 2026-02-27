@@ -2,21 +2,23 @@
 // Copyright 2024 DXOS.org
 //
 
-import isEqual from 'lodash.isequal';
+import isEqual from 'fast-deep-equal';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, TriggerState, asyncTimeout } from '@dxos/async';
 import { type ClientServicesProvider, type Space, SpaceProperties } from '@dxos/client-protocol';
-import { type Entity, Obj, type QueryResult, Type } from '@dxos/echo';
-import { Expando, Ref } from '@dxos/echo/internal';
-import { type AnyLiveObject, Filter } from '@dxos/echo-db';
+import { type Entity, Obj, type QueryResult } from '@dxos/echo';
+import { Ref } from '@dxos/echo/internal';
+import { TestSchema as TestSchema$ } from '@dxos/echo/testing';
+import { Filter } from '@dxos/echo-db';
 import { type PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 
 import { Client } from '../client';
-import { TestBuilder, TestSchema } from '../testing';
+import { TestSchema } from '../testing';
+import { TestBuilder } from '../testing';
 
 describe('Index queries', () => {
   const createObjects = () => ({
@@ -53,9 +55,9 @@ describe('Index queries', () => {
       }),
     ],
     expandos: [
-      Obj.make(Expando, { org: 'DXOS' }), //
-      Obj.make(Expando, { name: 'Mykola' }),
-      Obj.make(Expando, { height: 185 }),
+      Obj.make(TestSchema$.Expando, { org: 'DXOS' }), //
+      Obj.make(TestSchema$.Expando, { name: 'Mykola' }),
+      Obj.make(TestSchema$.Expando, { height: 185 }),
     ],
   });
 
@@ -64,7 +66,7 @@ describe('Index queries', () => {
   const initClient = async (services: ClientServicesProvider) => {
     const client = new Client({
       services,
-      types: [Type.Expando, TestSchema.ContactType, TestSchema.DocumentType, TestSchema.TextV0Type],
+      types: [TestSchema$.Expando, TestSchema.ContactType, TestSchema.DocumentType, TestSchema.TextV0Type],
     });
     await client.initialize();
     return client;
@@ -80,12 +82,11 @@ describe('Index queries', () => {
     return objectsInDataBase;
   };
 
-  // TODO(burdon): Remove AnyLiveObject.
   const matchObjects = async <T extends Entity.Unknown = Entity.Unknown>(
     query: QueryResult.QueryResult<T>,
-    objects: AnyLiveObject<any>[],
+    objects: Entity.Unknown[],
   ) => {
-    const receivedIndexedObject = new Trigger<AnyLiveObject<any>[]>();
+    const receivedIndexedObject = new Trigger<T[]>();
     const unsubscribe = query.subscribe(
       (query) => {
         const indexResults = query.entries;
@@ -135,7 +136,7 @@ describe('Index queries', () => {
   test('indexes persists between client restarts', async () => {
     let spaceKey: PublicKey;
 
-    const { builder } = createTestBuilder();
+    const { builder, sqlitePath } = createTestBuilder();
     onTestFinished(async () => {
       await builder.destroy();
     });
@@ -143,7 +144,7 @@ describe('Index queries', () => {
     const { contacts } = createObjects();
 
     {
-      const client = await initClient(builder.createLocalClientServices());
+      const client = await initClient(builder.createLocalClientServices({ sqlitePath }));
       await client.halo.createIdentity();
       const space = await client.spaces.create();
       spaceKey = space.key;
@@ -155,7 +156,7 @@ describe('Index queries', () => {
     }
 
     {
-      const client = await initClient(builder.createLocalClientServices());
+      const client = await initClient(builder.createLocalClientServices({ sqlitePath }));
       onTestFinished(() => client.destroy());
       await asyncTimeout(client.spaces.waitUntilReady(), 5000);
       const space = client.spaces.get(spaceKey)!;
@@ -166,7 +167,7 @@ describe('Index queries', () => {
   });
 
   test('index available data', async () => {
-    const { builder, level } = createTestBuilder();
+    const { builder, level, sqlitePath } = createTestBuilder();
     onTestFinished(async () => {
       await builder.destroy();
     });
@@ -174,7 +175,7 @@ describe('Index queries', () => {
     const { contacts } = createObjects();
     let spaceKey: PublicKey;
     {
-      const client = await initClient(builder.createLocalClientServices());
+      const client = await initClient(builder.createLocalClientServices({ sqlitePath }));
       await client.halo.createIdentity();
       const space = await client.spaces.create();
       spaceKey = space.key;
@@ -189,7 +190,7 @@ describe('Index queries', () => {
     await level.sublevel('index-storage').clear();
 
     {
-      const client = await initClient(builder.createLocalClientServices());
+      const client = await initClient(builder.createLocalClientServices({ sqlitePath }));
       onTestFinished(() => client.destroy());
       await asyncTimeout(client.spaces.waitUntilReady(), TIMEOUT);
       const space = client.spaces.get(spaceKey)!;
@@ -199,47 +200,11 @@ describe('Index queries', () => {
     }
   });
 
-  test('re-index', async () => {
-    const { builder, level } = createTestBuilder();
-    onTestFinished(async () => {
-      await builder.destroy();
-    });
-
-    const { contacts } = createObjects();
-    let spaceKey: PublicKey;
-    {
-      const client = await initClient(builder.createLocalClientServices());
-      await client.halo.createIdentity();
-
-      const space = await client.spaces.create();
-      spaceKey = space.key;
-
-      await addObjects(space, contacts);
-      await matchObjects(space.db.query(Filter.type(TestSchema.ContactType)), contacts);
-
-      await client.destroy();
-    }
-
-    await level.open();
-    await level.sublevel('index-storage').clear();
-    await level.sublevel('index-metadata').clear();
-
-    {
-      const client = await initClient(builder.createLocalClientServices());
-      onTestFinished(() => client.destroy());
-      await client.spaces.waitUntilReady();
-      const space = client.spaces.get(spaceKey)!;
-      await asyncTimeout(space.waitUntilReady(), TIMEOUT);
-
-      await client.services.services.QueryService?.reindex();
-      await matchObjects(space.db.query(Filter.type(TestSchema.ContactType)), contacts);
-    }
-  });
-
   test('`or` query', async () => {
     const builder = new TestBuilder();
     onTestFinished(async () => await builder.destroy());
     const client = await initClient(builder.createLocalClientServices());
+    onTestFinished(() => client.destroy());
     await client.halo.createIdentity();
     const space = await client.spaces.create();
     const { contacts, documents } = createObjects();
@@ -271,6 +236,7 @@ describe('Index queries', () => {
 
     onTestFinished(async () => await builder.destroy());
     const client = await initClient(builder.createLocalClientServices());
+    onTestFinished(() => client.destroy());
 
     await client.halo.createIdentity();
     const space = await client.spaces.create();
@@ -299,12 +265,13 @@ describe('Index queries', () => {
     const builder = new TestBuilder();
     onTestFinished(async () => await builder.destroy());
     const client = await initClient(builder.createLocalClientServices());
+    onTestFinished(() => client.destroy());
     await client.halo.createIdentity();
     const space = await client.spaces.create();
     const { expandos } = createObjects();
 
     await addObjects(space, expandos);
-    const query = space.db.query(Filter.type(Type.Expando));
+    const query = space.db.query(Filter.type(TestSchema$.Expando));
     await matchObjects(query, expandos);
   });
 
@@ -312,6 +279,7 @@ describe('Index queries', () => {
     const builder = new TestBuilder();
     onTestFinished(async () => await builder.destroy());
     const client = await initClient(builder.createLocalClientServices());
+    onTestFinished(() => client.destroy());
     await client.halo.createIdentity();
     const space = await client.spaces.create();
     const { contacts, documents } = createObjects();
@@ -353,7 +321,9 @@ describe('Index queries', () => {
     const builder = new TestBuilder();
     builder.storage = () => storage;
     builder.level = () => level;
-    return { builder, level };
+    // Use file-based SQLite for index persistence tests.
+    const sqlitePath = `/tmp/dxos-test-${Date.now()}-${Math.random().toString(36).slice(2)}.db`;
+    return { builder, level, sqlitePath };
   };
 });
 

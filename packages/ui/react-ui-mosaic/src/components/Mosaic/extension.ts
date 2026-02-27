@@ -123,7 +123,7 @@ const dropField = StateField.define<DecorationSet>({
               toDOM() {
                 const dom = document.createElement('span');
                 dom.className = 'cm-drop-cursor';
-                dom.style.borderLeft = '2px solid var(--dx-accentSurface)';
+                dom.style.borderLeft = '2px solid var(--color-accent-surface)';
                 dom.style.display = 'inline-block';
                 dom.style.height = '1em';
                 dom.style.verticalAlign = 'middle';
@@ -137,5 +137,5 @@ const dropField = StateField.define<DecorationSet>({
     }
     return decorations.map(tr.changes);
   },
-  provide: (f) => EditorView.decorations.from(f),
+  provide: (field) => EditorView.decorations.from(field),
 });

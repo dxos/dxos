@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 import { Capability, Plugin } from '@dxos/app-framework';
 import { type PublicKey } from '@dxos/client';
 // TODO(wittjosiah): This pulls in full client.
-import { EchoObjectSchema, ReactiveObjectSchema, SpaceSchema } from '@dxos/client/echo';
+import { SpaceSchema } from '@dxos/client/echo';
 import { CancellableInvitationObservable, Invitation } from '@dxos/client/invitations';
 import { Database, type Obj, QueryAST, Type } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
@@ -25,12 +25,19 @@ export const SPACE_TYPE = 'dxos.org/type/Space';
 
 export type SpacePluginOptions = {
   /**
-   * Base URL for the invitation link.
+   * Origin used for shareable links (object copy-link and invitation base).
+   * Defaults to window.location.origin.
    */
-  invitationUrl?: string;
+  shareableLinkOrigin?: string;
 
   /**
-   * Query parameter for the invitation code.
+   * Path appended to shareableLinkOrigin to form the invitation base URL.
+   * Defaults to '/'.
+   */
+  invitationPath?: string;
+
+  /**
+   * Query parameter name for the invitation code.
    */
   invitationProp?: string;
 
@@ -102,7 +109,7 @@ export type SpaceSettingsProps = Schema.Schema.Type<typeof SpaceSettingsSchema>;
 
 export type SerializerMap = Record<string, TypedObjectSerializer>;
 
-export interface TypedObjectSerializer<T extends Obj.Any = Obj.Any> {
+export interface TypedObjectSerializer<T extends Obj.Unknown = Obj.Unknown> {
   serialize(params: { object: T }): Promise<string>;
 
   /**
@@ -123,7 +130,7 @@ export interface TypedObjectSerializer<T extends Obj.Any = Obj.Any> {
 export type CreateObject = (
   props: any,
   options: { db: Database.Database },
-) => Effect.Effect<Obj.Any, Error, Capability.Service | Operation.Service>;
+) => Effect.Effect<Obj.Unknown, Error, Capability.Service | Operation.Service>;
 
 // TODO(burdon): Move to FormatEnum or SDK.
 export const IconAnnotationId = Symbol.for('@dxos/plugin-space/annotation/Icon');
@@ -313,7 +320,7 @@ export namespace SpaceOperation {
     services: [Capability.Service],
     schema: {
       input: Schema.Struct({
-        object: ReactiveObjectSchema.annotations({ description: 'The object to add.' }),
+        object: Type.Obj.annotations({ description: 'The object to add.' }),
         target: Schema.Union(Database.Database, Collection.Collection).annotations({
           description: 'The database or collection to add to.',
         }),
@@ -322,16 +329,16 @@ export namespace SpaceOperation {
       output: Schema.Struct({
         id: Schema.String,
         subject: Schema.Array(Schema.String),
-        object: EchoObjectSchema,
+        object: Type.Obj,
       }),
     },
   });
 
   export const RemoveObjectsOutput = Schema.Struct({
-    objects: Schema.Array(EchoObjectSchema).annotations({ description: 'The removed objects.' }),
+    objects: Schema.Array(Type.Obj).annotations({ description: 'The removed objects.' }),
     parentCollection: Collection.Collection.annotations({ description: 'The collection removed from.' }),
     indices: Schema.Array(Schema.Number).annotations({ description: 'The indices the objects were at.' }),
-    nestedObjectsList: Schema.Array(Schema.Array(EchoObjectSchema)).annotations({
+    nestedObjectsList: Schema.Array(Schema.Array(Type.Obj)).annotations({
       description: 'Nested objects that were removed.',
     }),
     wasActive: Schema.Array(Schema.String).annotations({
@@ -350,7 +357,7 @@ export namespace SpaceOperation {
     services: [Capability.Service],
     schema: {
       input: Schema.Struct({
-        objects: Schema.Array(ReactiveObjectSchema).annotations({ description: 'The objects to remove.' }),
+        objects: Schema.Array(Type.Obj).annotations({ description: 'The objects to remove.' }),
         target: Schema.optional(Collection.Collection).annotations({ description: 'The collection to remove from.' }),
       }),
       output: RemoveObjectsOutput,
@@ -477,7 +484,7 @@ export namespace SpaceOperation {
     services: [Capability.Service],
     schema: {
       input: Schema.Struct({
-        object: EchoObjectSchema,
+        object: Type.Obj,
         caller: Schema.optional(Schema.String),
       }),
       output: Schema.Void,
@@ -583,8 +590,8 @@ export namespace SpaceOperation {
         db: Database.Database,
         // TODO(wittjosiah): Relation schema.
         schema: Schema.Any,
-        source: Type.Expando,
-        target: Type.Expando,
+        source: Type.Obj,
+        target: Type.Obj,
         // TODO(wittjosiah): Type based on relation schema.
         fields: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
       }),
@@ -604,7 +611,7 @@ export namespace SpaceOperation {
     services: [Capability.Service],
     schema: {
       input: Schema.Struct({
-        object: EchoObjectSchema,
+        object: Type.Obj,
         target: Schema.Union(Database.Database, Collection.Collection),
       }),
       output: Schema.Void,
@@ -645,10 +652,10 @@ export namespace SpaceOperation {
     services: [Capability.Service],
     schema: {
       input: Schema.Struct({
-        objects: Schema.Array(EchoObjectSchema).annotations({ description: 'The objects to restore.' }),
+        objects: Schema.Array(Type.Obj).annotations({ description: 'The objects to restore.' }),
         parentCollection: Collection.Collection.annotations({ description: 'The collection to restore to.' }),
         indices: Schema.Array(Schema.Number).annotations({ description: 'The indices to restore at.' }),
-        nestedObjectsList: Schema.Array(Schema.Array(EchoObjectSchema)).annotations({
+        nestedObjectsList: Schema.Array(Schema.Array(Type.Obj)).annotations({
           description: 'Nested objects to restore.',
         }),
         wasActive: Schema.Array(Schema.String).annotations({

@@ -38,7 +38,7 @@ export const Example = Schema.Struct({
   admin: Schema.optional(Schema.Boolean),
   rating: Schema.optional(Schema.Number),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'example.com/type/Example',
     version: '0.1.0',
   }),

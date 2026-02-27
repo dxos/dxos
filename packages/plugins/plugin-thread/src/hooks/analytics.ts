@@ -4,18 +4,26 @@
 
 import { useCallback } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Obj } from '@dxos/echo';
 import { ObservabilityOperation } from '@dxos/plugin-observability/types';
 import { useOnTransition } from '@dxos/react-ui';
 import { type ContentBlock } from '@dxos/types';
 
-export const useOnEditAnalytics = (message: any, textBlock: ContentBlock.Text | undefined, editing: boolean) => {
+export const useOnEditAnalytics = (
+  message: any | undefined,
+  textBlock: ContentBlock.Text | undefined,
+  editing: boolean,
+) => {
   const { invokePromise } = useOperationInvoker();
 
   const onEdit = useCallback(() => {
+    if (!message || !textBlock) {
+      return;
+    }
+
     const db = Obj.getDatabase(message);
-    if (!db || !textBlock) {
+    if (!db) {
       return;
     }
 

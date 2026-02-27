@@ -35,6 +35,8 @@ export type MenuContextValue = {
   useGroupItems: MenuItemsResolver;
   iconSize: IconButtonProps['size'];
   attendableId?: string;
+  /** If true, the menu is always active regardless of attention state. */
+  alwaysActive?: boolean;
   /** Optional action executor. If provided, will be used instead of default execution. */
   onAction?: ActionExecutor;
 };

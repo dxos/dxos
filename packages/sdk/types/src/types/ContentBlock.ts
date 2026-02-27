@@ -29,7 +29,7 @@ export const Text = Schema.TaggedStruct('text', {
   disposition: Schema.optional(Schema.String),
 
   ...Base.fields,
-}).pipe(Schema.mutable);
+});
 
 export interface Text extends Schema.Schema.Type<typeof Text> {}
 
@@ -53,7 +53,7 @@ export const Reasoning = Schema.TaggedStruct('reasoning', {
   signature: Schema.optional(Schema.String),
 
   ...Base.fields,
-}).pipe(Schema.mutable);
+});
 
 export interface Reasoning extends Schema.Schema.Type<typeof Reasoning> {}
 
@@ -85,7 +85,7 @@ export const ToolCall = Schema.TaggedStruct('toolCall', {
   providerExecuted: Schema.Boolean,
 
   ...Base.fields,
-}).pipe(Schema.mutable);
+});
 
 export interface ToolCall extends Schema.Schema.Type<typeof ToolCall> {}
 
@@ -126,14 +126,14 @@ export const ToolResult = Schema.TaggedStruct('toolResult', {
   providerExecuted: Schema.Boolean,
 
   ...Base.fields,
-}).pipe(Schema.mutable);
+});
 
 export interface ToolResult extends Schema.Schema.Type<typeof ToolResult> {}
 
 /**
  * GPT Summary
  */
-export const Summary = Schema.TaggedStruct('summary', {
+export const Stats = Schema.TaggedStruct('stats', {
   mimeType: Schema.optional(Schema.String),
   message: Schema.optional(Schema.String),
   model: Schema.optional(Schema.String),
@@ -151,9 +151,9 @@ export const Summary = Schema.TaggedStruct('summary', {
     description: 'Duration in ms.',
   }),
   ...Base.fields,
-}).pipe(Schema.mutable);
+});
 
-export interface Summary extends Schema.Schema.Type<typeof Summary> {}
+export interface Stats extends Schema.Schema.Type<typeof Stats> {}
 
 /**
  * Claude-like message
@@ -161,7 +161,7 @@ export interface Summary extends Schema.Schema.Type<typeof Summary> {}
  */
 // TODO(burdon): String builder.
 // TODO(burdon): Move to UI (and use translations).
-export const createSummaryMessage = ({ message, model, usage, toolCalls, duration }: Summary, verbose = false) => {
+export const createStatsMessage = ({ message, model, usage, toolCalls, duration }: Stats, verbose = false) => {
   const paren = (str: string) => `(${str})`;
   const parts = [
     verbose && model,
@@ -189,12 +189,12 @@ export const Base64ImageSource = Schema.Struct({
   type: Schema.Literal('base64'),
   mediaType: Schema.String,
   data: Schema.String,
-}).pipe(Schema.mutable);
+});
 
 export const HttpImageSource = Schema.Struct({
   type: Schema.Literal('http'),
   url: Schema.String,
-}).pipe(Schema.mutable);
+});
 
 export const ImageSource = Schema.Union(Base64ImageSource, HttpImageSource);
 
@@ -208,7 +208,7 @@ export const Image = Schema.TaggedStruct('image', {
   source: Schema.optional(ImageSource),
 
   ...Base.fields,
-}).pipe(Schema.mutable);
+});
 
 export interface Image extends Schema.Schema.Type<typeof Image> {}
 
@@ -233,7 +233,7 @@ export const File = Schema.TaggedStruct('file', {
   mediaType: Schema.optional(Schema.String),
 
   ...Base.fields,
-}).pipe(Schema.mutable);
+});
 
 export interface File extends Schema.Schema.Type<typeof File> {}
 
@@ -243,10 +243,10 @@ export interface File extends Schema.Schema.Type<typeof File> {}
  * Non-text content embedded in the message (e.g., files, polls, etc.).
  */
 export const Reference = Schema.TaggedStruct('reference', {
-  reference: Type.Ref(Obj.Any),
+  reference: Type.Ref(Type.Obj),
 
   ...Base.fields,
-}).pipe(Schema.mutable);
+});
 
 export interface Reference extends Schema.Schema.Type<typeof Reference> {}
 
@@ -258,7 +258,7 @@ export const Transcript = Schema.TaggedStruct('transcript', {
   text: Schema.String,
 
   ...Base.fields,
-}).pipe(Schema.mutable);
+});
 
 export interface Transcript extends Schema.Schema.Type<typeof Transcript> {}
 
@@ -269,7 +269,7 @@ export const Status = Schema.TaggedStruct('status', {
   statusText: Schema.String,
 
   ...Base.fields,
-}).pipe(Schema.mutable);
+});
 
 export interface Status extends Schema.Schema.Type<typeof Status> {}
 
@@ -280,7 +280,7 @@ export const Suggestion = Schema.TaggedStruct('suggestion', {
   text: Schema.String,
 
   ...Base.fields,
-}).pipe(Schema.mutable);
+});
 
 export interface Suggestion extends Schema.Schema.Type<typeof Suggestion> {}
 
@@ -293,7 +293,7 @@ export const Select = Schema.TaggedStruct('select', {
   options: Schema.mutable(Schema.Array(Schema.String)),
 
   ...Base.fields,
-}).pipe(Schema.mutable);
+});
 
 export interface Select extends Schema.Schema.Type<typeof Select> {}
 
@@ -310,7 +310,7 @@ const Anchor = Schema.TaggedStruct('anchor', {
   version: Schema.Unknown,
 
   ...Base.fields,
-}).pipe(Schema.mutable);
+});
 
 export interface Anchor extends Schema.Schema.Type<typeof Anchor> {}
 
@@ -323,16 +323,29 @@ export const Proposal = Schema.TaggedStruct('proposal', {
   text: Schema.String,
 
   ...Base.fields,
-}).pipe(Schema.mutable);
+});
 
 export interface Proposal extends Schema.Schema.Type<typeof Proposal> {}
 
 /**
+ * Summary of the conversation prior to this point.
+ * Used to compress context.
+ */
+export const Summary = Schema.TaggedStruct('summary', {
+  content: Schema.String,
+
+  ...Base.fields,
+});
+
+export interface Summary extends Schema.Schema.Type<typeof Summary> {}
+
+/**
  * Model printing info about the list of available tools.
  */
+// TODO(dmaretskyi): Deprecate. Allow injecting html for rendering UI components.
 export const Toolkit = Schema.TaggedStruct('toolkit', {
   ...Base.fields,
-}).pipe(Schema.mutable);
+});
 
 export interface Toolkit extends Schema.Schema.Type<typeof Toolkit> {}
 
@@ -345,7 +358,7 @@ export const Json = Schema.TaggedStruct('json', {
   data: Schema.String,
 
   ...Base.fields,
-}).pipe(Schema.mutable);
+});
 
 export interface Json extends Schema.Schema.Type<typeof Json> {}
 
@@ -360,8 +373,9 @@ export const Any = Schema.Union(
   Select,
   Status,
   Suggestion,
-  Summary,
+  Stats,
   Text,
+  Summary,
   Toolkit,
   ToolCall,
   ToolResult,
@@ -369,3 +383,9 @@ export const Any = Schema.Union(
 );
 
 export type Any = Schema.Schema.Type<typeof Any>;
+
+export const is =
+  <T extends Any['_tag']>(tag: T) =>
+  (block: Any): block is Extract<Any, { _tag: T }> => {
+    return block._tag === tag;
+  };

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type CSSProperties, forwardRef, useCallback, useEffect, useMemo } from 'react';
+import React, { type CSSProperties, forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
 import { type Identity } from '@dxos/react-client/halo';
@@ -27,13 +27,22 @@ export type ChatThreadProps = ThemedClassName<
 >;
 
 // TODO(burdon): Memo thread position.
-export const ChatThread = forwardRef<MarkdownStreamController, ChatThreadProps>(
+export const ChatThread = forwardRef<MarkdownStreamController | null, ChatThreadProps>(
   (
     { classNames, identity, messages = [], error, cursor = false, fadeIn = true, debug = false, onEvent },
     forwardedRef,
   ) => {
     const controllerRef = useForwardedRef(forwardedRef);
-    const controller = controllerRef.current;
+    const [controller, setController] = useState<MarkdownStreamController | null>(null);
+
+    // Callback ref to capture when MarkdownStream is mounted and trigger re-render.
+    const refCallback = useCallback(
+      (node: MarkdownStreamController | null) => {
+        controllerRef.current = node;
+        setController(node);
+      },
+      [controllerRef],
+    );
 
     const userHue = useMemo(
       () => identity?.profile?.data?.hue || keyToFallback(identity?.identityKey ?? PublicKey.random()).hue,
@@ -70,11 +79,11 @@ export const ChatThread = forwardRef<MarkdownStreamController, ChatThreadProps>(
     return (
       <div
         role='none'
-        className={mx('flex bs-full is-full justify-center overflow-hidden', classNames)}
-        style={{ '--user-fill': `var(--dx-${userHue}Fill)` } as CSSProperties}
+        className={mx('flex h-full w-full justify-center overflow-hidden', classNames)}
+        style={{ '--user-fill': `var(--color-${userHue}-fill)` } as CSSProperties}
       >
         <MarkdownStream
-          ref={controllerRef}
+          ref={refCallback}
           registry={componentRegistry}
           cursor={cursor}
           fadeIn={fadeIn}

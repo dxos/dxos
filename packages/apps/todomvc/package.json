@@ -5,7 +5,10 @@
   "description": "Collaborative TodoMVC using DXOS",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "repository": "github:dxos/dxos",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": true,
@@ -20,7 +23,6 @@
     "@dxos/util": "workspace:*",
     "@effect-atom/atom": "catalog:",
     "@effect-atom/atom-react": "catalog:",
-    "@sentry/react": "catalog:",
     "classnames": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
@@ -31,7 +33,6 @@
   "devDependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/test-utils": "workspace:*",
-    "@sentry/vite-plugin": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "vite": "catalog:",

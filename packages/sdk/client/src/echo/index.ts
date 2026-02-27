@@ -39,8 +39,6 @@ export {
   FQ_ID_LENGTH,
   OBJECT_ID_LENGTH,
   SPACE_ID_LENGTH,
-  EchoObjectSchema,
-  ReactiveObjectSchema,
   type Progress,
   type PeerSyncState,
   type SpaceSyncStateMap,

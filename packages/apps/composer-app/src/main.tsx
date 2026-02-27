@@ -9,17 +9,18 @@ import * as Match from 'effect/Match';
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { useApp } from '@dxos/app-framework/react';
+import { useApp } from '@dxos/app-framework/ui';
+import { AppActivationEvents } from '@dxos/app-toolkit';
 import { runAndForwardErrors } from '@dxos/effect';
 import { LogLevel, log } from '@dxos/log';
-import { getObservabilityGroup, initializeAppObservability, isObservabilityDisabled } from '@dxos/observability';
+import { Observability } from '@dxos/observability';
 import { ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { defaultTx } from '@dxos/ui-theme';
 import { getHostPlatform, isMobile as isMobile$, isTauri as isTauri$ } from '@dxos/util';
 
 import { Placeholder, ResetDialog } from './components';
-import { setupConfig } from './config';
+import { initializeObservability, setupConfig } from './config';
 import { PARAM_LOG_LEVEL, PARAM_SAFE_MODE, setSafeModeUrl } from './config';
 import { APP_KEY } from './constants';
 import { type PluginConfig, getCore, getDefaults, getPlugins } from './plugin-defs';
@@ -68,45 +69,16 @@ const main = async () => {
     config = await setupConfig();
   }
 
-  // Intentionally do not await; i.e., don't block app startup for telemetry.
-  // The namespace has to match the value passed to sentryVitePlugin in vite.config.ts for sourcemaps to work.
-  const observability = initializeAppObservability({
-    namespace: APP_KEY,
-    config,
-    replayEnable: true,
-  });
-  const observabilityDisabled = await isObservabilityDisabled(APP_KEY);
-  const observabilityGroup = await getObservabilityGroup(APP_KEY);
-
-  const useLocalServices = config.values.runtime?.app?.env?.DX_HOST;
-  const useSharedWorker = config.values.runtime?.app?.env?.DX_SHARED_WORKER;
-  const services = await createClientServices(config, {
-    createWorker:
-      useLocalServices || !useSharedWorker
-        ? undefined
-        : () =>
-            new SharedWorker(new URL('./shared-worker', import.meta.url), {
-              type: 'module',
-              name: 'dxos-client-worker',
-            }),
-    createDedicatedWorker:
-      useLocalServices || useSharedWorker
-        ? undefined
-        : () =>
-            new Worker(new URL('@dxos/client/dedicated-worker', import.meta.url), {
-              type: 'module',
-              name: 'dxos-client-worker',
-            }),
-    createOpfsWorker: () => new Worker(new URL('@dxos/client/opfs-worker', import.meta.url), { type: 'module' }),
-    observabilityGroup,
-    signalTelemetryEnabled: !observabilityDisabled,
-  });
-
   const isTauri = isTauri$();
   if (isTauri) {
     const platform = getHostPlatform();
     document.body.setAttribute('data-platform', platform);
   }
+
+  // Intentionally do not await; i.e., don't block app startup for telemetry.
+  const observability = initializeObservability(config, isTauri);
+  const observabilityDisabled = await Observability.isObservabilityDisabled(APP_KEY);
+  const observabilityGroup = await Observability.getObservabilityGroup(APP_KEY);
 
   // Detect if this is the popover window in Tauri.
   const isPopover = await Match.value(isTauri).pipe(
@@ -138,6 +110,43 @@ const main = async () => {
     runAndForwardErrors,
   );
 
+  // Use single-client mode on mobile Tauri apps where SharedWorker crashes on WKWebView.
+  const useSingleClientMode = isTauri && isMobile;
+
+  const useLocalServices = config.values.runtime?.app?.env?.DX_HOST;
+  const useSharedWorker = config.values.runtime?.app?.env?.DX_SHARED_WORKER;
+  const services = await createClientServices(config, {
+    createWorker:
+      useLocalServices || !useSharedWorker
+        ? undefined
+        : () =>
+            new SharedWorker(new URL('./shared-worker', import.meta.url), {
+              type: 'module',
+              name: 'dxos-client-worker',
+            }),
+    createDedicatedWorker:
+      useLocalServices || useSharedWorker
+        ? undefined
+        : () =>
+            new Worker(new URL('./dedicated-worker', import.meta.url), {
+              type: 'module',
+              name: 'dxos-client-worker',
+            }),
+    createCoordinatorWorker:
+      useLocalServices || useSharedWorker || useSingleClientMode
+        ? undefined
+        : () =>
+            new SharedWorker(new URL('./coordinator-worker', import.meta.url), {
+              type: 'module',
+              name: 'dxos-coordinator-worker',
+            }),
+    // TODO(wittjosiah): Instrument opfs worker?
+    createOpfsWorker: () => new Worker(new URL('@dxos/client/opfs-worker', import.meta.url), { type: 'module' }),
+    singleClientMode: useSingleClientMode,
+    observabilityGroup,
+    signalTelemetryEnabled: !observabilityDisabled,
+  });
+
   const conf: PluginConfig = {
     appKey: APP_KEY,
     config,
@@ -156,6 +165,7 @@ const main = async () => {
   const plugins = getPlugins(conf);
   const core = getCore(conf);
   const defaults = getDefaults(conf);
+  const setupEvents = [AppActivationEvents.SetupSettings];
 
   const Fallback = ({ error }: { error: Error }) => (
     <ThemeProvider tx={defaultTx} resourceExtensions={translations}>
@@ -172,6 +182,7 @@ const main = async () => {
       plugins,
       core,
       defaults,
+      setupEvents,
       cacheEnabled: true,
       safeMode,
       debounce: 1_000,

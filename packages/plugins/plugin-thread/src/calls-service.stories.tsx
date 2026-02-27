@@ -175,7 +175,7 @@ const meta = {
   title: 'plugins/plugin-thread/calls-service',
   render: DefaultStory,
   decorators: [
-    withTheme,
+    withTheme(),
     withClientProvider({
       config: new Config({
         runtime: {

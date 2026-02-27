@@ -5,6 +5,7 @@
 import type * as PlatformError from '@effect/platform/Error';
 import * as FileSystem from '@effect/platform/FileSystem';
 import * as BunKeyValueStore from '@effect/platform-bun/BunKeyValueStore';
+import { Registry } from '@effect-atom/atom';
 import type * as ConfigError from 'effect/ConfigError';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
@@ -12,14 +13,14 @@ import * as Layer from 'effect/Layer';
 import type * as Option from 'effect/Option';
 
 import { type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
-import { GenericToolkit, makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
+import { GenericToolkit, ToolExecutionServices } from '@dxos/assistant';
 import { type ClientService, type ConfigService } from '@dxos/client';
 import { getProfilePath } from '@dxos/client-protocol';
 import { DX_DATA } from '@dxos/client-protocol';
 import { Database, Query } from '@dxos/echo';
 import { type Key } from '@dxos/echo';
-import { Function, FunctionDefinition } from '@dxos/functions';
-import { InvocationTracer, TriggerDispatcher, TriggerStateStore } from '@dxos/functions-runtime';
+import { Function, FunctionDefinition, TracingService } from '@dxos/functions';
+import { FunctionImplementationResolver, TriggerDispatcher, TriggerStateStore } from '@dxos/functions-runtime';
 
 import { functions as blueprintFunctions, toolkits } from './blueprints';
 import { type AiChatServices, chatLayer } from './runtime';
@@ -29,7 +30,7 @@ export type TriggerRuntimeServices =
   | TriggerStateStore
   | ToolResolverService
   | ToolExecutionService
-  | InvocationTracer
+  | TracingService
   | AiChatServices;
 
 export type TriggerRuntimeLayerOptions = {
@@ -72,13 +73,13 @@ export const triggerRuntimeLayer = ({
   return Layer.unwrapEffect(
     Effect.gen(function* () {
       // Load functions from the database
-      const functionObjects = yield* Database.Service.runQuery(Query.type(Function.Function));
+      const functionObjects = yield* Database.runQuery(Query.type(Function.Function));
       const dbFunctions = functionObjects.map((fn) => FunctionDefinition.deserialize(fn));
 
       // Merge database functions with blueprint functions
       const functions = [...dbFunctions, ...blueprintFunctions];
 
-      // Use the same merged toolkit as chat (AssistantToolkit, SystemToolkit, etc.)
+      // Use the same merged toolkit as chat.
       const toolkit = GenericToolkit.merge(...toolkits);
 
       // Use chat layer as the base (with 'edge' provider since we're using Edge AI service)
@@ -87,10 +88,12 @@ export const triggerRuntimeLayer = ({
       // Add trigger-specific services on top
       // Note: Tool services use the merged toolkit, matching how ChatProcessor.execute() does it
       return TriggerDispatcher.layer({ timeControl: 'natural', livePollInterval }).pipe(
+        Layer.provide(Registry.layer),
         Layer.provideMerge(triggerStateStoreLayer),
-        Layer.provideMerge(InvocationTracer.layerTest),
-        Layer.provideMerge(makeToolResolverFromFunctions(functions, toolkit.toolkit)),
-        Layer.provideMerge(makeToolExecutionServiceFromFunctions(toolkit.toolkit, toolkit.layer)),
+        Layer.provideMerge(TracingService.layerNoop),
+        Layer.provideMerge(ToolExecutionServices),
+        Layer.provideMerge(GenericToolkit.providerLayer(toolkit)),
+        Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions })),
         Layer.provideMerge(baseChatLayer),
       );
     }),

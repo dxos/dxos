@@ -6,6 +6,8 @@ export * as AiModelResolver from './AiModelResolver';
 export * as AiParser from './AiParser';
 export * as AiPreprocessor from './AiPreprocessor';
 export * as AiService from './AiService';
+export * as AiSummarizer from './AiSummarizer';
+export * as ToolFormatter from './ToolFormatter';
 
 export * from './defs';
 export * from './errors';

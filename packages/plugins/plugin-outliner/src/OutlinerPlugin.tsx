@@ -4,17 +4,20 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Common, Plugin } from '@dxos/app-framework';
+import { Capability, Plugin } from '@dxos/app-framework';
+import { AppPlugin } from '@dxos/app-toolkit';
+import { Operation } from '@dxos/operation';
+import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { type CreateObject } from '@dxos/plugin-space/types';
 
 import { AppGraphBuilder, OperationResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { Journal, Outline } from './types';
+import { Journal, Outline, OutlinerOperation } from './types';
 
 export const OutlinerPlugin = Plugin.define(meta).pipe(
-  Common.Plugin.addTranslationsModule({ translations }),
-  Common.Plugin.addMetadataModule({
+  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
+  AppPlugin.addMetadataModule({
     metadata: [
       {
         id: Journal.Journal.typename,
@@ -22,7 +25,6 @@ export const OutlinerPlugin = Plugin.define(meta).pipe(
           icon: 'ph--calendar-check--regular',
           iconHue: 'indigo',
           createObject: ((props) => Effect.sync(() => Journal.make(props))) satisfies CreateObject,
-          addToCollectionOnCreate: true,
         },
       },
       {
@@ -31,16 +33,25 @@ export const OutlinerPlugin = Plugin.define(meta).pipe(
           icon: 'ph--tree-structure--regular',
           iconHue: 'indigo',
           createObject: ((props) => Effect.sync(() => Outline.make(props))) satisfies CreateObject,
-          addToCollectionOnCreate: true,
         },
       },
     ],
   }),
-  Common.Plugin.addSchemaModule({
+  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addSchemaModule({
     schema: [Journal.JournalEntry, Journal.Journal, Outline.Outline],
   }),
-  Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
-  Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addModule({
+    id: 'on-space-created',
+    activatesOn: SpaceEvents.SpaceCreated,
+    activate: () =>
+      Effect.succeed(
+        Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) =>
+          Operation.invoke(OutlinerOperation.OnCreateSpace, params),
+        ),
+      ),
+  }),
   Plugin.make,
 );

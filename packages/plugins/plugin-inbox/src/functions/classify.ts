@@ -10,7 +10,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
-import { AiSession, ArtifactId, GenerationObserver } from '@dxos/assistant';
+import { AiSession, GenerationObserver } from '@dxos/assistant';
 import { Database, Filter, Obj, Relation, Tag, Type } from '@dxos/echo';
 import { ContextQueueService, QueueService, TracingService, defineFunction } from '@dxos/functions';
 import { DXN } from '@dxos/keys';
@@ -32,7 +32,7 @@ export default defineFunction({
   }),
   outputSchema: Schema.Union(
     Schema.Struct({
-      tagId: ArtifactId.annotations({
+      tagId: Schema.String.annotations({
         description: 'The ID of the selected tag.',
       }),
       tagLabel: Schema.String.annotations({
@@ -54,7 +54,7 @@ export default defineFunction({
       log.info('classify message', { message });
 
       // Query all Tag objects
-      const tags = yield* Database.Service.runQuery(Filter.type(Tag.Tag));
+      const tags = yield* Database.runQuery(Filter.type(Tag.Tag));
       log.info('tags', { count: tags.length });
 
       if (tags.length === 0) {
@@ -136,7 +136,7 @@ export default defineFunction({
       yield* QueueService.append(queue, [relation]).pipe(Effect.provide(ContextQueueService.layer(queue)));
 
       // TODO(wittjosiah): Flush queue?
-      yield* Database.Service.flush();
+      yield* Database.flush();
 
       return {
         tagId: Obj.getDXN(selectedTag).toString(),

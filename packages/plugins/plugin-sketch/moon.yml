@@ -1,8 +1,9 @@
-type: library
+layer: library
 language: typescript
 tags:
   - ts-build
   - ts-test
+  - ts-test-storybook
   - pack
   - storybook
 tasks:
@@ -17,13 +18,10 @@ tasks:
       - prebuild
   prebuild:
     command: bash ./scripts/copy_assets.sh
-    platform: node # enforce that deps are installed
+    toolchains: node # enforce that deps are installed
     inputs:
       - scripts/copy_assets.sh
       - package.json
       - moon.yml
     outputs:
       - dist/assets
-  test:
-    inputs:
-      - .storybook/*

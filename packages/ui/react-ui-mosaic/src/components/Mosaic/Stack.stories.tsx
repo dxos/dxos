@@ -3,36 +3,45 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
+import { useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { faker } from '@dxos/random';
-import { Toolbar } from '@dxos/react-ui';
+import { ScrollArea, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { TestItem } from '../../testing';
-import { Mosaic } from '../Mosaic';
+import { useContainerDebug } from '../../hooks';
+import { DefaultStackTile, TestItem } from '../../testing';
 
-import { Stack, VirtualStack } from './Stack';
+import { Mosaic } from './Mosaic';
+import { MosaicStack } from './Stack';
 
 faker.seed(999);
 
-const meta: Meta<typeof Stack> = {
+const NUM_ITEMS = 50;
+
+// Create test items factory (deferred to render time).
+const createTestItems = (n: number) =>
+  Array.from({ length: n }, () =>
+    Obj.make(TestItem, {
+      name: faker.lorem.sentence(3),
+      description: faker.lorem.paragraph(),
+    }),
+  );
+
+const meta: Meta<typeof MosaicStack<Obj.Any>> = {
   title: 'ui/react-ui-mosaic/Stack',
-  component: Stack,
-  decorators: [withLayout({ layout: 'column' }), withTheme],
+  component: MosaicStack,
+  decorators: [withLayout({ layout: 'column' }), withTheme()],
   parameters: {
     layout: 'fullscreen',
   },
   args: {
-    axis: 'vertical',
-    className: 'pli-3',
-    items: Array.from({ length: 100 }, () =>
-      Obj.make(TestItem, {
-        name: faker.lorem.sentence(3),
-        description: faker.lorem.paragraph(),
-      }),
-    ),
+    orientation: 'vertical',
+    getId: (item) => item.id,
+    Tile: DefaultStackTile,
+    // debug: true,
   },
 };
 
@@ -42,48 +51,69 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   render: (props) => {
-    const viewportRef = useRef<HTMLElement | null>(null);
+    // Create items at render time to avoid Storybook serialization issues with ECHO objects.
+    const items = useMemo(() => createTestItems(NUM_ITEMS), []);
+    const [DebugInfo, debugHandler] = useContainerDebug(props.debug);
+    const [viewport, setViewport] = useState<HTMLElement | null>(null);
     return (
-      <>
-        <Toolbar.Root>
-          <div className='flex grow justify-center'>Items: {props.items?.length}</div>
+      <Mosaic.Root debug={props.debug} classNames='h-full grid grid-rows-[min-content_1fr_min-content]'>
+        <Toolbar.Root classNames='border-b border-separator'>
+          <div className='flex grow justify-center'>Items: {items.length}</div>
         </Toolbar.Root>
-        <Mosaic.Root asChild>
-          <Mosaic.Container asChild axis='vertical' autoScroll={viewportRef.current} eventHandler={{ id: 'test' }}>
-            <Mosaic.Viewport options={{ overflow: { y: 'scroll' } }} viewportRef={viewportRef}>
-              <Stack {...props} />
-            </Mosaic.Viewport>
-          </Mosaic.Container>
-        </Mosaic.Root>
-      </>
+        <Mosaic.Container
+          asChild
+          orientation='vertical'
+          autoScroll={viewport}
+          eventHandler={{ id: 'test', canDrop: () => true }}
+          debug={debugHandler}
+        >
+          <ScrollArea.Root orientation='vertical'>
+            <ScrollArea.Viewport classNames='p-2' ref={setViewport}>
+              <Mosaic.Stack {...props} items={items} />
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
+        </Mosaic.Container>
+        <DebugInfo classNames='border-t border-separator' />
+      </Mosaic.Root>
     );
   },
 };
 
 export const Virtual: Story = {
   render: (props) => {
-    const viewportRef = useRef<HTMLDivElement | null>(null);
+    // Create items at render time to avoid Storybook serialization issues with ECHO objects.
+    const items = useMemo(() => createTestItems(NUM_ITEMS), []);
     const [info, setInfo] = useState<any>(null);
+    const [DebugInfo, debugHandler] = useContainerDebug(props.debug);
+    const [viewport, setViewport] = useState<HTMLElement | null>(null);
     return (
-      <>
+      <Mosaic.Root debug={props.debug} classNames='grid grid-rows-[min-content_1fr_min-content]'>
         <Toolbar.Root>
           <div className='flex grow justify-center'>{JSON.stringify(info)}</div>
         </Toolbar.Root>
-        <Mosaic.Root asChild>
-          <Mosaic.Container asChild axis='vertical' autoScroll={viewportRef.current} eventHandler={{ id: 'test' }}>
-            <Mosaic.Viewport options={{ overflow: { y: 'scroll' } }} viewportRef={viewportRef}>
-              <VirtualStack
+        <Mosaic.Container
+          asChild
+          orientation='vertical'
+          autoScroll={viewport}
+          eventHandler={{ id: 'test', canDrop: () => true }}
+          debug={debugHandler}
+        >
+          <ScrollArea.Root orientation='vertical'>
+            <ScrollArea.Viewport classNames='p-2' ref={setViewport}>
+              <Mosaic.VirtualStack
                 {...props}
-                getScrollElement={() => viewportRef.current}
+                items={items}
+                getScrollElement={() => viewport}
                 estimateSize={() => 40}
                 onChange={(virtualizer) => {
                   setInfo({ range: virtualizer.range });
                 }}
               />
-            </Mosaic.Viewport>
-          </Mosaic.Container>
-        </Mosaic.Root>
-      </>
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
+        </Mosaic.Container>
+        <DebugInfo />
+      </Mosaic.Root>
     );
   },
 };

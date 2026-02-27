@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { type AiService } from '@dxos/ai';
-import { Obj, Type } from '@dxos/echo';
+import { type Feed, Obj, Type } from '@dxos/echo';
 import { type Database } from '@dxos/echo';
 import { assertArgument, failedInvariant } from '@dxos/invariant';
 import { Operation } from '@dxos/operation';
@@ -39,7 +39,9 @@ export type FunctionServices =
   | AiService.AiService
   | CredentialsService
   | Database.Service
+  // TODO(wittjosiah): Remove QueueService — use Feed.Service instead.
   | QueueService
+  | Feed.Service
   | FunctionInvocationService;
 
 /**
@@ -68,13 +70,17 @@ export interface FunctionContext {
 
 const typeId = Symbol.for('@dxos/functions/FunctionDefinition');
 
-export type FunctionDefinition<T = any, O = any, S extends FunctionServices = FunctionServices> = {
+/**
+ * Deployable function definition.
+ */
+export type FunctionDefinition<TInput = any, TOutput = any, S extends FunctionServices = FunctionServices> = {
   [typeId]: true;
+
   key: string;
   name: string;
   description?: string;
-  inputSchema: Schema.Schema<T, any>;
-  outputSchema?: Schema.Schema<O, any>;
+  inputSchema: Schema.Schema<TInput, any>;
+  outputSchema?: Schema.Schema<TOutput, any>;
 
   /**
    * List of types the function uses.
@@ -87,7 +93,6 @@ export type FunctionDefinition<T = any, O = any, S extends FunctionServices = Fu
    */
   services: readonly string[];
 
-  handler: FunctionHandler<T, O, S>;
   meta?: {
     /**
      * Tools that are projected from functions have this annotation.
@@ -100,6 +105,8 @@ export type FunctionDefinition<T = any, O = any, S extends FunctionServices = Fu
      */
     deployedFunctionId?: string;
   };
+
+  handler: FunctionHandler<TInput, TOutput, S>;
 };
 
 export declare namespace FunctionDefinition {
@@ -121,6 +128,7 @@ export type FunctionProps<T, O> = {
    * This is used to ensure that the types are available when the function is executed.
    */
   types?: readonly Type.Entity.Any[];
+
   // TODO(dmaretskyi): This currently doesn't cause a compile-time error if the handler requests a service that is not specified
   services?: readonly Context.Tag<any, any>[];
 
@@ -177,7 +185,7 @@ export const defineFunction: {
     handler: handlerWithSpan,
     types: types ?? [],
     services: !services ? [] : getServiceKeys(services),
-  } satisfies FunctionDefinition.Any;
+  };
 };
 
 const getServiceKeys = (services: readonly Context.Tag<any, any>[]) => {
@@ -264,7 +272,7 @@ export const serializeFunction = (functionDef: FunctionDefinition.Any): Function
     services: functionDef.services,
   });
   if (functionDef.meta?.deployedFunctionId) {
-    setUserFunctionIdInMetadata(Obj.getMeta(fn), functionDef.meta.deployedFunctionId);
+    Obj.change(fn, (fn) => setUserFunctionIdInMetadata(Obj.getMeta(fn), functionDef.meta!.deployedFunctionId!));
   }
   return fn;
 };

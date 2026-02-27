@@ -2,4 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-export * as KanbanBlueprint from './kanban-blueprint';
+export { default as KanbanBlueprint } from './kanban-blueprint';

@@ -21,12 +21,14 @@ export type ResolverMap = Record<string, ResolverType<any, any>>;
 export class Resolver extends Context.Tag('PluginInbox/Resolver')<
   Resolver,
   {
-    resolve<T, I>(schema: Schema.Schema<T, any>, input: I): Effect.Effect<T | undefined>;
+    resolve<T, I>(schema: Type.Entity.Any & Schema.Schema<T, any>, input: I): Effect.Effect<T | undefined>;
   }
 >() {}
 
-export const resolve = <T, I>(schema: Schema.Schema<T, any>, input: I) =>
-  Effect.flatMap(Resolver, (service) => service.resolve(schema, input));
+export const resolve = <T, I>(schema: Type.Entity.Any & Schema.Schema<T, any>, input: I) =>
+  Effect.flatMap(Resolver, (service) =>
+    Effect.map(service.resolve<T, I>(schema, input), (result) => result ?? undefined),
+  );
 
 export const fromResolvers = (resolvers: ResolverMap) =>
   Layer.succeed(

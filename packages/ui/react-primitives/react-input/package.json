@@ -4,6 +4,10 @@
   "description": "Input primitive components for React.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": false,
@@ -28,7 +32,6 @@
     "@radix-ui/react-primitive": "catalog:",
     "@radix-ui/react-slot": "catalog:",
     "@radix-ui/react-use-controllable-state": "catalog:",
-    "lodash.omit": "catalog:",
     "rci": "catalog:"
   },
   "devDependencies": {

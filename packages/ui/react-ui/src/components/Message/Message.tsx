@@ -65,7 +65,7 @@ const MessageRoot = forwardRef<HTMLDivElement, MessageRootProps>(
         <Root
           role={valence === 'neutral' ? 'paragraph' : 'alert'}
           {...props}
-          className={tx('message.root', 'message', { valence, elevation }, classNames)}
+          className={tx('message.root', { valence, elevation }, classNames)}
           aria-labelledby={titleId}
           aria-describedby={descriptionId}
           ref={forwardedRef}
@@ -91,26 +91,19 @@ type MessageTitleProps = Omit<ThemedClassName<ComponentPropsWithRef<typeof Primi
 const MESSAGE_TITLE_NAME = 'MessageTitle';
 
 const MessageTitle = forwardRef<HTMLHeadingElement, MessageTitleProps>(
-  ({ asChild, classNames, children, icon, ...props }, forwardedRef) => {
+  ({ asChild, classNames, children, icon: iconProp, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const { titleId, valence } = useMessageContext(MESSAGE_TITLE_NAME);
     const Root = asChild ? Slot : Primitive.h2;
-
+    const icon = iconProp ?? messageIcons[valence];
     return (
-      <Root
-        {...props}
-        className={tx('message.title', 'message__title', {}, classNames)}
-        id={titleId}
-        ref={forwardedRef}
-      >
-        {!icon && valence === 'neutral' ? null : (
-          <Icon
-            size={5}
-            icon={icon ?? messageIcons[valence]}
-            classNames={tx('message.icon', 'message__icon', { valence })}
-          />
+      <Root {...props} className={tx('message.header', {}, classNames)} id={titleId} ref={forwardedRef}>
+        {!icon && valence === 'neutral' ? (
+          <div />
+        ) : (
+          <Icon size={5} icon={icon} classNames={tx('message.icon', { valence })} />
         )}
-        <span>{children}</span>
+        <span className={tx('message.title', {}, classNames)}>{children}</span>
       </Root>
     );
   },
@@ -134,12 +127,7 @@ const MessageContent = forwardRef<HTMLParagraphElement, MessageContentProps>(
     const { descriptionId } = useMessageContext(MESSAGE_CONTENT_NAME);
     const Root = asChild ? Slot : Primitive.p;
     return (
-      <Root
-        {...props}
-        className={tx('message.content', 'message__content', {}, classNames)}
-        id={descriptionId}
-        ref={forwardedRef}
-      >
+      <Root {...props} className={tx('message.content', {}, classNames)} id={descriptionId} ref={forwardedRef}>
         {children}
       </Root>
     );

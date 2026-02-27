@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import type * as Tool from '@effect/ai/Tool';
 import { Atom, Registry } from '@effect-atom/atom-react';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
@@ -19,16 +20,19 @@ import {
   type ToolResolverService,
 } from '@dxos/ai';
 import {
+  AiContextService,
   type AiConversation,
   type AiConversationRunProps,
   ArtifactDiffResolver,
   GenerationObserver,
   createSystemPrompt,
 } from '@dxos/assistant';
+import { formatSystemPrompt } from '@dxos/assistant';
+import { type Chat } from '@dxos/assistant-toolkit';
 import { type Blueprint } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
 import { type Database } from '@dxos/echo';
-import { runAndForwardErrors, throwCause } from '@dxos/effect';
+import { runAndForwardErrors, throwCause, unwrapExit } from '@dxos/effect';
 import {
   type CredentialsService,
   type FunctionInvocationService,
@@ -37,8 +41,6 @@ import {
 } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { type ContentBlock, Message } from '@dxos/types';
-
-import { type Assistant } from '../types';
 
 import { updateName } from './update-name';
 
@@ -86,7 +88,7 @@ export class AiChatProcessor {
   private readonly _pending = Atom.make<Message.Message[]>([]);
 
   /** Currently streaming message (from the AI service). */
-  private readonly _streaming = Atom.make<Option.Option<Message.Message>>(Option.none());
+  private readonly _streaming = Atom.make<Message.Message[]>([]);
 
   /** Currently active request fiber. */
   private _fiber: Fiber.Fiber<void, any> | undefined;
@@ -95,18 +97,13 @@ export class AiChatProcessor {
   private _lastRequest: AiRequest | undefined;
 
   /** Streaming state. */
-  public readonly streaming = Atom.make<boolean>((get) => Option.isSome(get(this._streaming)));
+  public readonly streaming = Atom.make<boolean>((get) => get(this._streaming).length > 0);
 
   /** Active state. */
   public readonly active = Atom.make(false);
 
   /** Array of Messages (incl. the current message being streamed). */
-  public readonly messages = Atom.make<Message.Message[]>((get) =>
-    Option.match(get(this._streaming), {
-      onNone: () => get(this._pending),
-      onSome: (streaming) => [...get(this._pending), streaming],
-    }),
-  );
+  public readonly messages = Atom.make<Message.Message[]>((get) => [...get(this._pending), ...get(this._streaming)]);
 
   /** Last error. */
   public readonly error = Atom.make<Option.Option<Error>>(Option.none());
@@ -139,6 +136,30 @@ export class AiChatProcessor {
 
   get blueprintRegistry() {
     return this._options.blueprintRegistry;
+  }
+
+  get system(): string {
+    return this._options.system ?? '';
+  }
+
+  async getTools(): Promise<Record<string, Tool.Any>> {
+    return unwrapExit(await this._conversation.getTools().pipe(await Runtime.runPromiseExit(await this._services())));
+  }
+
+  async getSystemPrompt(): Promise<string> {
+    return unwrapExit(
+      await Effect.gen(this, function* () {
+        const blueprints = this.context.getBlueprints();
+        const objects = this.context.getObjects();
+        const system = yield* formatSystemPrompt({ system: this._options.system, blueprints, objects });
+        return system;
+      }).pipe(
+        Effect.provideService(AiContextService, {
+          binder: this.context,
+        }),
+        await Runtime.runPromiseExit(await this._services()),
+      ),
+    );
   }
 
   /**
@@ -218,7 +239,7 @@ export class AiChatProcessor {
   /**
    * Update the current chat's name.
    */
-  async updateName(chat: Assistant.Chat): Promise<void> {
+  async updateName(chat: Chat.Chat): Promise<void> {
     const runtime = await this._services();
     await updateName(runtime, this._conversation, chat, this._options.model);
   }
@@ -247,29 +268,29 @@ export class AiChatProcessor {
     },
   };
 
-  private _onMessage = Effect.fn(
-    function* (this: AiChatProcessor, message: Message.Message) {
-      this._registry.set(this._streaming, Option.none());
-      this._registry.update(this._pending, (pending) => [...pending, message]);
-    }.bind(this),
-  );
-
+  // TODO(dmaretskyi): Due to the way effect streams do buffering, we cannot rely on _onBlock and _onMessage to be called in order.
   private _onBlock = Effect.fn(
     function* (this: AiChatProcessor, block: ContentBlock.Any) {
       this._registry.update(this._streaming, (streaming) => {
-        const blocks = streaming.pipe(
-          Option.map((streaming) => streaming.blocks.filter((b: ContentBlock.Any) => !b.pending)),
-          Option.getOrElse(() => []),
-        );
+        const blocks = streaming.filter((message) => message.blocks.every((block) => !block.pending));
 
-        return Option.some(
+        // AiSession emits a message per each assistant content-block, so we do the same.
+        return [
+          ...blocks,
           Obj.make(Message.Message, {
             created: new Date().toISOString(),
             sender: { role: 'assistant' },
-            blocks: [...blocks, block],
+            blocks: [block],
           }),
-        );
+        ];
       });
+    }.bind(this),
+  );
+
+  private _onMessage = Effect.fn(
+    function* (this: AiChatProcessor, message: Message.Message) {
+      this._registry.set(this._streaming, []);
+      this._registry.update(this._pending, (pending) => [...pending, message]);
     }.bind(this),
   );
 }

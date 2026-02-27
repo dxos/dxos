@@ -5,7 +5,7 @@
 import { useAtomValue } from '@effect-atom/atom-react';
 import React, { type FC, type PropsWithChildren } from 'react';
 
-import { useCapability } from '@dxos/app-framework/react';
+import { useCapability } from '@dxos/app-framework/ui';
 import { type ThemedClassName } from '@dxos/react-ui';
 
 import { useDebugMode } from '../../hooks';

@@ -4,20 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
+import { AppCapabilities } from '@dxos/app-toolkit';
 
 import { TranscriptionBlueprint } from '../../blueprints';
 
-export type BlueprintCapabilities = [
-  Capability.Capability<typeof Common.Capability.Functions>,
-  Capability.Capability<typeof Common.Capability.BlueprintDefinition>,
-];
-
-const blueprintDefinition = Capability.makeModule<[], BlueprintCapabilities>(() =>
-  Effect.succeed([
-    Capability.contributes(Common.Capability.Functions, TranscriptionBlueprint.functions),
-    Capability.contributes(Common.Capability.BlueprintDefinition, TranscriptionBlueprint.make()),
-  ]),
-);
+const blueprintDefinition = Capability.makeModule<
+  [],
+  Capability.Capability<typeof AppCapabilities.BlueprintDefinition>[]
+>(() => Effect.succeed([Capability.contributes(AppCapabilities.BlueprintDefinition, TranscriptionBlueprint)]));
 
 export default blueprintDefinition;

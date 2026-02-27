@@ -5,8 +5,10 @@
 import * as Effect from 'effect/Effect';
 import React, { useCallback } from 'react';
 
-import { Capability, Common } from '@dxos/app-framework';
-import { useCapability, useLayout, useOperationInvoker, useSettingsState } from '@dxos/app-framework/react';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { Surface, useCapability, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
+import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
+import { useLayout } from '@dxos/app-toolkit/ui';
 import {
   AutomergePanel,
   ConfigPanel,
@@ -41,7 +43,7 @@ import { type Graph } from '@dxos/plugin-graph';
 import { ScriptOperation } from '@dxos/plugin-script/types';
 import { SpaceOperation } from '@dxos/plugin-space/types';
 import { type Space, SpaceState, isSpace, parseId } from '@dxos/react-client/echo';
-import { StackItem } from '@dxos/react-ui-stack';
+import { Layout } from '@dxos/react-ui';
 import { Collection } from '@dxos/schema';
 
 import {
@@ -52,7 +54,7 @@ import {
   DevtoolsOverviewContainer,
   SpaceGenerator,
   Wireframe,
-} from '../../components';
+} from '../../containers';
 import { meta } from '../../meta';
 import { DebugCapabilities, type DebugSettingsProps, Devtools } from '../../types';
 
@@ -69,7 +71,9 @@ type GraphDebug = {
 const isSpaceDebug = (data: any): data is SpaceDebug => data?.type === `${meta.id}/space` && isSpace(data.space);
 const isGraphDebug = (data: any): data is GraphDebug => {
   const graph = data?.graph;
-  return graph != null && typeof graph === 'object' && 'toJSON' in graph && typeof data?.root === 'string';
+  return (
+    graph != null && typeof graph === 'object' && typeof graph.json === 'function' && typeof data?.root === 'string'
+  );
 };
 
 // TODO(wittjosiah): Factor out?
@@ -84,29 +88,29 @@ const useCurrentSpace = () => {
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilities = yield* Capability.Service;
-    const registry = capabilities.get(Common.Capability.AtomRegistry);
+    const registry = capabilities.get(Capabilities.AtomRegistry);
     const settingsAtom = capabilities.get(DebugCapabilities.Settings);
 
-    return Capability.contributes(Common.Capability.ReactSurface, [
-      Common.createSurface({
+    return Capability.contributes(Capabilities.ReactSurface, [
+      Surface.create({
         id: `${meta.id}/plugin-settings`,
         role: 'article',
-        filter: (data): data is { subject: Common.Capability.Settings } =>
-          Common.Capability.isSettings(data.subject) && data.subject.prefix === meta.id,
+        filter: (data): data is { subject: AppCapabilities.Settings } =>
+          AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.id,
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<DebugSettingsProps>(subject.atom);
           return <DebugSettings settings={settings} onSettingsChange={updateSettings} />;
         },
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/space`,
         role: 'article',
         filter: (data): data is { subject: SpaceDebug } => isSpaceDebug(data.subject),
-        component: ({ data }) => {
+        component: ({ role, data }) => {
           const { invokePromise } = useOperationInvoker();
 
           const handleCreateObject = useCallback(
-            (objects: Obj.Any[]) => {
+            (objects: Obj.Unknown[]) => {
               if (!isSpace(data.subject.space)) {
                 return;
               }
@@ -129,23 +133,23 @@ export default Capability.makeModule(
           );
 
           return (
-            <StackItem.Content>
+            <Layout.Main role={role}>
               <SpaceGenerator space={data.subject.space} onCreateObjects={handleCreateObject} />
-            </StackItem.Content>
+            </Layout.Main>
           );
         },
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/app-graph`,
         role: 'article',
         filter: (data): data is { subject: GraphDebug } => isGraphDebug(data.subject),
         component: ({ data }) => <DebugGraph graph={data.subject.graph} root={data.subject.root} />,
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/wireframe`,
         role: ['article', 'section'],
         position: 'hoist',
-        filter: (data): data is { subject: Obj.Any } => {
+        filter: (data): data is { subject: Obj.Unknown } => {
           const settings = registry.get(settingsAtom);
           return Obj.isObject(data.subject) && !!settings.wireframe;
         },
@@ -153,18 +157,19 @@ export default Capability.makeModule(
           <Wireframe label={`${role}:${name}`} object={data.subject} classNames='row-span-2 overflow-hidden' />
         ),
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/object-debug`,
         role: 'article',
-        filter: (data): data is { companionTo: Obj.Any } => data.subject === 'debug' && Obj.isObject(data.companionTo),
+        filter: (data): data is { companionTo: Obj.Unknown } =>
+          data.subject === 'debug' && Obj.isObject(data.companionTo),
         component: ({ data }) => <DebugObjectPanel object={data.companionTo} />,
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/devtools-overview`,
         role: 'deck-companion--devtools',
         component: () => <DevtoolsOverviewContainer />,
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/status`,
         role: 'status',
         component: () => <DebugStatus />,
@@ -174,55 +179,55 @@ export default Capability.makeModule(
       // Devtools
       //
 
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/client/config`,
         role: 'article',
         filter: (data): data is any => data.subject === Devtools.Client.Config,
         component: () => <ConfigPanel vaultSelector={false} />,
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/client/storage`,
         role: 'article',
         filter: (data): data is any => data.subject === Devtools.Client.Storage,
         component: () => <StoragePanel />,
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/client/logs`,
         role: 'article',
         filter: (data): data is any => data.subject === Devtools.Client.Logs,
         component: () => <LoggingPanel />,
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/client/diagnostics`,
         role: 'article',
         filter: (data): data is any => data.subject === Devtools.Client.Diagnostics,
         component: () => <DiagnosticsPanel />,
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/client/tracing`,
         role: 'article',
         filter: (data): data is any => data.subject === Devtools.Client.Tracing,
         component: () => <TracingPanel />,
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/halo/identity`,
         role: 'article',
         filter: (data): data is any => data.subject === Devtools.Halo.Identity,
         component: () => <IdentityPanel />,
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/halo/devices`,
         role: 'article',
         filter: (data): data is any => data.subject === Devtools.Halo.Devices,
         component: () => <DeviceListPanel />,
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/halo/keyring`,
         role: 'article',
         filter: (data): data is any => data.subject === Devtools.Halo.Keyring,
         component: () => <KeyringPanel />,
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/halo/credentials`,
         role: 'article',
         filter: (data): data is any => data.subject === Devtools.Halo.Credentials,
@@ -231,20 +236,20 @@ export default Capability.makeModule(
           return <CredentialsPanel space={space} />;
         },
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/echo/spaces`,
         role: 'article',
         filter: (data): data is any => data.subject === Devtools.Echo.Spaces,
         component: () => {
           const { invokePromise } = useOperationInvoker();
           const handleSelect = useCallback(
-            () => invokePromise(Common.LayoutOperation.Open, { subject: [Devtools.Echo.Space] }),
+            () => invokePromise(LayoutOperation.Open, { subject: [Devtools.Echo.Space] }),
             [invokePromise],
           );
           return <SpaceListPanel onSelect={handleSelect} />;
         },
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/echo/space`,
         role: 'article',
         filter: (data): data is any => data.subject === Devtools.Echo.Space,
@@ -252,13 +257,13 @@ export default Capability.makeModule(
           const space = useCurrentSpace();
           const { invokePromise } = useOperationInvoker();
           const handleSelect = useCallback(
-            () => invokePromise(Common.LayoutOperation.Open, { subject: [Devtools.Echo.Feeds] }),
+            () => invokePromise(LayoutOperation.Open, { subject: [Devtools.Echo.Feeds] }),
             [invokePromise],
           );
           return <SpaceInfoPanel space={space} onSelectFeed={handleSelect} onSelectPipeline={handleSelect} />;
         },
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/echo/feeds`,
         role: 'article',
         filter: (data): data is any => data.subject === Devtools.Echo.Feeds,
@@ -267,7 +272,7 @@ export default Capability.makeModule(
           return <FeedsPanel space={space} />;
         },
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/echo/objects`,
         role: 'article',
         filter: (data): data is any => data.subject === Devtools.Echo.Objects,
@@ -276,7 +281,7 @@ export default Capability.makeModule(
           return <ObjectsPanel space={space} />;
         },
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/echo/schema`,
         role: 'article',
         filter: (data): data is any => data.subject === Devtools.Echo.Schema,
@@ -285,7 +290,7 @@ export default Capability.makeModule(
           return <SchemaPanel space={space} />;
         },
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/echo/automerge`,
         role: 'article',
         filter: (data): data is any => data.subject === Devtools.Echo.Automerge,
@@ -294,13 +299,13 @@ export default Capability.makeModule(
           return <AutomergePanel space={space} />;
         },
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/echo/queues`,
         role: 'article',
         filter: (data): data is any => data.subject === Devtools.Echo.Queues,
         component: () => <QueuesPanel />,
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/echo/members`,
         role: 'article',
         filter: (data): data is any => data.subject === Devtools.Echo.Members,
@@ -309,25 +314,25 @@ export default Capability.makeModule(
           return <MembersPanel space={space} />;
         },
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/echo/metadata`,
         role: 'article',
         filter: (data): data is any => data.subject === Devtools.Echo.Metadata,
         component: () => <MetadataPanel />,
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/mesh/signal`,
         role: 'article',
         filter: (data): data is any => data.subject === Devtools.Mesh.Signal,
         component: () => <SignalPanel />,
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/mesh/swarm`,
         role: 'article',
         filter: (data): data is any => data.subject === Devtools.Mesh.Swarm,
         component: () => <SwarmPanel />,
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/mesh/network`,
         role: 'article',
         filter: (data): data is any => data.subject === Devtools.Mesh.Network,
@@ -343,13 +348,13 @@ export default Capability.makeModule(
       //   filter: (data): data is any => data.subject === Devtools.Agent.Dashboard,
       //   component: () => <DashboardPanel />,
       // }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/edge/dashboard`,
         role: 'article',
         filter: (data): data is any => data.subject === Devtools.Edge.Dashboard,
         component: () => <EdgeDashboardPanel />,
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/edge/workflows`,
         role: 'article',
         filter: (data): data is any => data.subject === Devtools.Edge.Workflows,
@@ -358,7 +363,7 @@ export default Capability.makeModule(
           return <WorkflowPanel space={space} />;
         },
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/edge/traces`,
         role: 'article',
         filter: (data): data is any => data.subject === Devtools.Edge.Traces,
@@ -368,7 +373,7 @@ export default Capability.makeModule(
           return <InvocationTraceContainer db={space?.db} queueDxn={queueDxn} detailAxis='block' />;
         },
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/edge/testing`,
         role: 'article',
         filter: (data): data is any => data.subject === Devtools.Edge.Testing,
@@ -391,7 +396,7 @@ export default Capability.makeModule(
               }
               log.info('script created', { result: createResult });
               if (createResult.data?.object?.id) {
-                await invokePromise(Common.LayoutOperation.Open, {
+                await invokePromise(LayoutOperation.Open, {
                   subject: [`${space.id}:${createResult.data.object.id}`],
                 });
               }

@@ -1,15 +1,11 @@
-type: library
+layer: library
 language: typescript
 tags:
   - ts-build
-  - ts-test
+  - ts-test-browser
   - pack
 tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
-  # TODO(wittjosiah): Get working with vitest.base.config.ts.
-  test:
-    options:
-      mergeOutputs: replace
-    outputs: []
+      - '--platform=neutral'

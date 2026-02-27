@@ -5,17 +5,18 @@
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { Capability, Common } from '@dxos/app-framework';
-import { useLayout } from '@dxos/app-framework/react';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { Surface } from '@dxos/app-framework/ui';
+import { useLayout } from '@dxos/app-toolkit/ui';
 import { parseId, useDatabase } from '@dxos/react-client/echo';
 
-import { TokensContainer } from '../../components';
+import { TokensContainer } from '../../containers';
 import { meta } from '../../meta';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(Common.Capability.ReactSurface, [
-      Common.createSurface({
+    Capability.contributes(Capabilities.ReactSurface, [
+      Surface.create({
         id: meta.id,
         role: 'article',
         filter: (data): data is { subject: string } => data.subject === `${meta.id}/space-settings`,

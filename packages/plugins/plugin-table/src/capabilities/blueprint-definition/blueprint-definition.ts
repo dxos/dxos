@@ -4,21 +4,15 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
+import { AppCapabilities } from '@dxos/app-toolkit';
 
 import { TableBlueprint } from '../../blueprints';
 
-export type BlueprintCapabilities = [
-  Capability.Capability<typeof Common.Capability.Functions>,
-  Capability.Capability<typeof Common.Capability.BlueprintDefinition>,
-];
-
 // TODO(wittjosiah): Remove? All table ops other than resizing columns are more generically handled as schema ops.
-const blueprintDefinition = Capability.makeModule<[], BlueprintCapabilities>(() =>
-  Effect.succeed([
-    Capability.contributes(Common.Capability.Functions, TableBlueprint.functions),
-    Capability.contributes(Common.Capability.BlueprintDefinition, TableBlueprint.make()),
-  ]),
-);
+const blueprintDefinition = Capability.makeModule<
+  [],
+  Capability.Capability<typeof AppCapabilities.BlueprintDefinition>[]
+>(() => Effect.succeed([Capability.contributes(AppCapabilities.BlueprintDefinition, TableBlueprint)]));
 
 export default blueprintDefinition;

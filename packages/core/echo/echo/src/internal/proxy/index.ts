@@ -2,7 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
+export * from './change-context';
 export * from './define-hidden-property';
+export * from './errors';
 export * from './event-batch';
 export * from './json-serializer';
 export * from './make-object';

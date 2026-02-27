@@ -20,7 +20,7 @@ import { translations } from '../../translations';
 import { Toolbox, type ToolboxProps } from './Toolbox';
 
 const DefaultStory = (props: ToolboxProps) => {
-  return <Toolbox {...props} classNames='is-[30rem] bs-[15rem] rounded-sm border border-separator plb-1' />;
+  return <Toolbox {...props} classNames='h-[15rem] w-[30rem] py-1 rounded-xs border border-separator' />;
 };
 
 const meta = {
@@ -28,7 +28,7 @@ const meta = {
   component: Toolbox as any,
   render: DefaultStory,
   decorators: [
-    withTheme,
+    withTheme(),
     withPluginManager({
       plugins: [
         ...corePlugins(),

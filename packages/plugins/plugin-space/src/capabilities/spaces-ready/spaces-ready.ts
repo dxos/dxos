@@ -5,16 +5,18 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { SubscriptionList } from '@dxos/async';
-import { Filter, Obj, Type } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Graph } from '@dxos/plugin-graph';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { PublicKey } from '@dxos/react-client';
-import { SpaceState, parseId } from '@dxos/react-client/echo';
+import { SPACE_ID_LENGTH, SpaceState, parseId } from '@dxos/react-client/echo';
+import { Expando } from '@dxos/schema';
 import { ComplexMap, reduceGroupBy } from '@dxos/util';
 
 import { SpaceCapabilities, SpaceOperation } from '../../types';
@@ -31,10 +33,10 @@ export default Capability.makeModule(
     const subscriptions = new SubscriptionList();
     const spaceSubscriptions = new SubscriptionList();
 
-    const { invoke, invokePromise } = yield* Capability.get(Common.Capability.OperationInvoker);
-    const { graph } = yield* Capability.get(Common.Capability.AppGraph);
-    const registry = yield* Capability.get(Common.Capability.AtomRegistry);
-    const layoutAtom = yield* Capability.get(Common.Capability.Layout);
+    const { invoke, invokePromise } = yield* Capability.get(Capabilities.OperationInvoker);
+    const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
+    const registry = yield* Capability.get(Capabilities.AtomRegistry);
+    const layoutAtom = yield* Capability.get(AppCapabilities.Layout);
     const attention = yield* Capability.get(AttentionCapabilities.Attention);
     const stateAtom = yield* Capability.get(SpaceCapabilities.State);
     const ephemeralAtom = yield* Capability.get(SpaceCapabilities.EphemeralState);
@@ -46,7 +48,7 @@ export default Capability.makeModule(
     // Check if deck state indicates we should switch to default space.
     const layout = registry.get(layoutAtom);
     if (layout.workspace === 'default') {
-      yield* invoke(Common.LayoutOperation.SwitchWorkspace, { subject: defaultSpace.id });
+      yield* invoke(LayoutOperation.SwitchWorkspace, { subject: defaultSpace.id });
     }
 
     // Initialize space sharing lock in default space.
@@ -57,43 +59,47 @@ export default Capability.makeModule(
     }
 
     const queryResults = yield* Effect.tryPromise(() =>
-      defaultSpace.db.query(Filter.type(Type.Expando, { key: SHARED })).run(),
+      defaultSpace.db.query(Filter.type(Expando.Expando, { key: SHARED })).run(),
     );
     const spacesOrder = queryResults[0];
     if (!spacesOrder) {
       // TODO(wittjosiah): Cannot be a Folder because Spaces are not TypedObjects so can't be saved in the database.
       //  Instead, we store order as an array of space ids.
-      defaultSpace.db.add(Obj.make(Type.Expando, { key: SHARED, order: [] }));
+      defaultSpace.db.add(Obj.make(Expando.Expando, { key: SHARED, order: [] }));
     }
 
     // Await missing objects - subscribe to layout atom changes.
+    // NOTE: Use immediate: true to check initial state (URL handler may have already set active).
     let lastActiveCleanup: (() => void) | undefined;
     subscriptions.add(
-      registry.subscribe(layoutAtom, () => {
-        // Clean up previous effect.
-        lastActiveCleanup?.();
-        lastActiveCleanup = undefined;
+      registry.subscribe(
+        layoutAtom,
+        (layout) => {
+          // Clean up previous effect.
+          lastActiveCleanup?.();
+          lastActiveCleanup = undefined;
 
-        const layout = registry.get(layoutAtom);
-        const active = layout.active;
-        if (active.length !== 1) {
-          return;
-        }
+          // Determine the ID to check - either from active item or workspace.
+          const id = layout.active.length === 1 ? layout.active[0] : layout.workspace;
+          if (!id) {
+            return;
+          }
 
-        const id = active[0];
-        const node = Graph.getNode(graph, id).pipe(Option.getOrNull);
-        if (!node && id.length === ECHO_DXN_LENGTH) {
-          void Graph.initialize(graph, id);
-          const timeout = setTimeout(async () => {
-            const node = Graph.getNode(graph, id).pipe(Option.getOrNull);
-            if (!node) {
-              await invokePromise(SpaceOperation.WaitForObject, { id });
-            }
-          }, WAIT_FOR_OBJECT_TIMEOUT);
+          const node = Graph.getNode(graph, id).pipe(Option.getOrNull);
+          if (!node && (id.length === ECHO_DXN_LENGTH || id.length === SPACE_ID_LENGTH)) {
+            void Graph.initialize(graph, id);
+            const timeout = setTimeout(async () => {
+              const node = Graph.getNode(graph, id).pipe(Option.getOrNull);
+              if (!node) {
+                await invokePromise(SpaceOperation.WaitForObject, { id });
+              }
+            }, WAIT_FOR_OBJECT_TIMEOUT);
 
-          lastActiveCleanup = () => clearTimeout(timeout);
-        }
-      }),
+            lastActiveCleanup = () => clearTimeout(timeout);
+          }
+        },
+        { immediate: true },
+      ),
     );
     // Also add cleanup for the last effect.
     subscriptions.add(() => lastActiveCleanup?.());
@@ -274,7 +280,7 @@ export default Capability.makeModule(
       log.catch(err);
     }
 
-    return Capability.contributes(Common.Capability.Null, null, () =>
+    return Capability.contributes(Capabilities.Null, null, () =>
       Effect.sync(() => {
         spaceSubscriptions.clear();
         subscriptions.clear();

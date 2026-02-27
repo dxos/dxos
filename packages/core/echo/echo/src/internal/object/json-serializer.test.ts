@@ -6,12 +6,14 @@ import { describe, expect, test } from 'vitest';
 
 import { DXN } from '@dxos/keys';
 
+import * as Obj from '../../Obj';
 import { TestSchema } from '../../testing';
 import { getSchemaDXN, getSchemaTypename, getTypeDXN, getTypename } from '../annotations';
+import { getMetaChecked } from '../api';
 import { RelationSourceId, RelationTargetId, getObjectDXN } from '../entities';
 import { makeObject } from '../proxy';
 import { Ref, StaticRefResolver } from '../ref';
-import { ATTR_TYPE, EntityKind, KindId, MetaId, TypeId, getMeta, getSchema } from '../types';
+import { ATTR_TYPE, EntityKind, KindId, MetaId, TypeId, getSchema } from '../types';
 
 import { createObject } from './create-object';
 import { objectFromJSON, objectToJSON } from './json-serializer';
@@ -19,7 +21,9 @@ import { objectFromJSON, objectToJSON } from './json-serializer';
 describe('Object JSON serializer', () => {
   test('should serialize and deserialize object', async () => {
     const contact = makeObject(TestSchema.Person, { name: 'Alice' });
-    getMeta(contact).keys.push({ id: '12345', source: 'example.com' });
+    Obj.change(contact, (c) => {
+      getMetaChecked(c).keys.push({ id: '12345', source: 'example.com' });
+    });
 
     const task = createObject(TestSchema.Task, {
       title: 'Fix the tests',
@@ -90,5 +94,28 @@ describe('Object JSON serializer', () => {
     expect(getTypename(contactFromJson)).toEqual(getSchemaTypename(TestSchema.Person));
     expect(getObjectDXN(contactFromJson)).toEqual(getObjectDXN(contact));
     expect(getTypeDXN(contactFromJson)).toEqual(getSchemaDXN(TestSchema.Person));
+  });
+
+  test('deserializes expando without leaking internal json keys', async () => {
+    const expando = Obj.make(TestSchema.Expando, { message: 'local-only' });
+    const expandoJson = objectToJSON(expando);
+
+    const refResolver = new StaticRefResolver().addSchema(TestSchema.Expando);
+    const expandoFromJson = (await objectFromJSON(expandoJson, { refResolver })) as TestSchema.Expando;
+
+    expect(expandoFromJson.id).toBe(expando.id);
+    expect(expandoFromJson.message).toBe('local-only');
+    expect((expandoFromJson as any)[ATTR_TYPE]).toBeUndefined();
+  });
+
+  test('deserializes expando without schema resolver and without leaking internal json keys', async () => {
+    const expando = Obj.make(TestSchema.Expando, { message: 'local-only' });
+    const expandoJson = objectToJSON(expando);
+
+    const expandoFromJson = (await objectFromJSON(expandoJson)) as TestSchema.Expando;
+
+    expect(expandoFromJson.id).toBe(expando.id);
+    expect(expandoFromJson.message).toBe('local-only');
+    expect((expandoFromJson as any)[ATTR_TYPE]).toBeUndefined();
   });
 });

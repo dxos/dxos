@@ -4,6 +4,7 @@
 
 import { Client } from '@dxos/client';
 import { Obj, Type } from '@dxos/echo';
+import { TestSchema } from '@dxos/echo/testing';
 
 const client = new Client();
 
@@ -16,7 +17,7 @@ async () => {
 
   const space = await client.spaces.create();
 
-  const object = Obj.make(Type.Expando, { type: 'task', name: 'buy milk' });
+  const object = Obj.make(TestSchema.Expando, { type: 'task', name: 'buy milk' });
   space.db.add(object);
 
   const names: string[] = [object.name];
@@ -25,8 +26,8 @@ async () => {
     names.push(object.name);
   });
 
-  Obj.change(object, (o) => {
-    o.name = 'buy cookies';
+  Obj.change(object, (obj) => {
+    obj.name = 'buy cookies';
   });
 
   if (names.join() === ['buy milk', 'buy cookies'].join()) {

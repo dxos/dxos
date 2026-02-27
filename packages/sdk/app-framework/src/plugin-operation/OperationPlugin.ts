@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Common from '../common';
+import { ActivationEvents } from '../common';
 import { Capability, Plugin } from '../core';
 
 import { meta } from './meta';
@@ -12,13 +12,13 @@ const HistoryCapabilities = Capability.lazy('HistoryCapabilities', () => import(
 
 export const OperationPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
-    activatesOn: Common.ActivationEvent.ManagedRuntimeReady,
-    activatesBefore: [Common.ActivationEvent.SetupOperationResolver],
-    activatesAfter: [Common.ActivationEvent.OperationInvokerReady],
+    activatesOn: ActivationEvents.ManagedRuntimeReady,
+    activatesBefore: [ActivationEvents.SetupOperationResolver],
+    activatesAfter: [ActivationEvents.OperationInvokerReady],
     activate: OperationInvoker,
   }),
   Plugin.addModule({
-    activatesOn: Common.ActivationEvent.OperationInvokerReady,
+    activatesOn: ActivationEvents.OperationInvokerReady,
     activate: HistoryCapabilities,
   }),
   Plugin.make,

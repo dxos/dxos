@@ -3,10 +3,10 @@
 //
 
 import { type EditorView } from '@codemirror/view';
-import type * as Schema from 'effect/Schema';
 import React, { type ReactNode, forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 
-import { Obj, Type } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
+import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -20,7 +20,6 @@ import {
   createMarkdownExtensions,
   createThemeExtensions,
   debugTree,
-  decorateMarkdown,
   editorSlots,
 } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
@@ -39,8 +38,7 @@ export type StoryProps = Pick<UseTextEditorProps, 'id' | 'scrollTo' | 'selection
     debug?: DebugMode;
     debugCustom?: (view: EditorView) => ReactNode;
     text?: string;
-    // TODO(wittjosiah): Find a simpler way to define this type.
-    object?: Obj.Obj<Schema.Schema.Type<typeof Type.Expando>>;
+    object?: Obj.Obj<TestSchema.Expando>;
     readOnly?: boolean;
     placeholder?: string;
     lineNumbers?: boolean;
@@ -55,7 +53,7 @@ export const EditorStory = forwardRef<EditorController, StoryProps>(
 
     const attentionAttrs = useAttentionAttributes('test-panel');
     const [tree, setTree] = useState<DebugNode>();
-    const [object] = useState(Obj.make(Type.Expando, { content: text ?? '' }));
+    const [object] = useState(Obj.make(TestSchema.Expando, { content: text ?? '' }));
 
     const extensions = useMemo(
       () => (debug ? [extensionsProp, debugTree(setTree)].filter(isNonNullable) : extensionsProp),
@@ -64,12 +62,12 @@ export const EditorStory = forwardRef<EditorController, StoryProps>(
 
     const view = controllerRef.current?.view;
     return (
-      <div className={mx('is-full bs-full grid overflow-hidden', debug && 'grid-cols-2 lg:grid-cols-[1fr_600px]')}>
+      <div className={mx('w-full h-full grid overflow-hidden', debug && 'grid-cols-2 lg:grid-cols-[1fr_600px]')}>
         <EditorComponent ref={mergedRef} object={object} text={text} extensions={extensions} {...props} />
 
         {debug && (
           <div
-            className='grid bs-full auto-rows-fr border-l border-separator divide-y divide-separator overflow-hidden'
+            className='grid h-full auto-rows-fr border-l border-separator divide-y divide-separator overflow-hidden'
             {...attentionAttrs}
           >
             {view && debugCustom?.(view)}
@@ -120,7 +118,6 @@ const EditorComponent = forwardRef<EditorController, StoryProps>(
           createBasicExtensions({ readOnly, placeholder, lineNumbers, scrollPastEnd: true, search: true }),
           createThemeExtensions({ monospace, themeMode, syntaxHighlighting: true, slots }),
           createMarkdownExtensions(),
-          decorateMarkdown(),
           extensions || [],
         ],
       }),

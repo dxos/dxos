@@ -3,39 +3,79 @@
 //
 
 import { type ReactVirtualizerOptions, useVirtualizer } from '@tanstack/react-virtual';
-import React, { type FC, Fragment, type ReactElement, type Ref, forwardRef, useRef, useState } from 'react';
+import React, { type FC, Fragment, type ReactElement, type Ref, forwardRef } from 'react';
 
-import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { type SlottableClassName } from '@dxos/react-ui';
+import { type Axis, type SlottableClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { useVisibleItems } from '../../hooks';
-import { Card } from '../Card';
-import { Mosaic, type MosiacPlaceholderProps, useMosaicContainer } from '../Mosaic';
 
+import { useMosaicContainerContext } from './Container';
+import { MosaicPlaceholder, type MosaicPlaceholderProps } from './Placeholder';
 import { styles } from './styles';
-import { type Axis } from './types';
+import { type MosaicTileProps } from './Tile';
+import { type GetId } from './types';
 
-type StackProps<T extends Obj.Any = Obj.Any> = SlottableClassName<{
-  role?: string;
-  axis?: Axis;
-  items?: T[];
-  Component?: FC<{ object: T; location: number }>;
-}>;
+//
+// Mosaic Drag-and-drop
+//
+// Drop targets:
+// - Placeholders exist to allow gaps but prevent deadspace when dragging within a container.
+// - When dragging over a Tile, the placeholder next to the closest edge is activated.
+// - Placeholders expand when active; event handlers are disabled while the container is scrolling.
+//
+// [Container]
+// - [Placeholder 0.5]
+// - [Tile        1  ]
+// - [Placeholder 1.5]
+// - [Tile        2  ]
+// - [Placeholder 2.5]
+// - [Tile        3  ]
+// - [Placeholder 3.5]
+//
+// Implementation Notes
+// - We use [Radix composition](https://www.radix-ui.com/primitives/docs/guides/composition) to factor out composible aspects (e.g., Focus, Mosaic, etc.)
+// - NOTE: Use Slottable only if needed to disambiguate; otherwise a suspected Radix bug causes compositional problems.
+
+const MOSAIC_STACK_NAME = 'MosaicStack';
+
+type MosaicStackTileComponent<TData = any> = FC<MosaicTileProps<TData>>;
+
+type MosaicStackProps<TData = any> = SlottableClassName<
+  {
+    Tile: MosaicStackTileComponent<TData>;
+    getId: GetId<TData>;
+    role?: string;
+    orientation?: Axis;
+    items?: readonly TData[];
+  } & Pick<MosaicTileProps<TData>, 'draggable' | 'debug'>
+>;
 
 /**
  * Linear layout of Mosaic tiles.
  * NOTE: This is a low-level component and should be wrapped by a scrollable container.
  */
-const StackInner = forwardRef<HTMLDivElement, StackProps>(
+const MosaicStackInner = forwardRef<HTMLDivElement, MosaicStackProps>(
   (
-    { className, classNames, role = 'list', axis = 'vertical', items, Component = DefaultComponent, ...props },
+    {
+      classNames,
+      className,
+      role = 'list',
+      orientation: orientationProp = 'vertical',
+      draggable = true,
+      items,
+      getId,
+      Tile,
+      debug,
+      ...props
+    },
     forwardedRef,
   ) => {
-    invariant(Component);
-    const { id, dragging } = useMosaicContainer(StackInner.displayName!);
-    const visibleItems = useVisibleItems({ id, items, dragging: dragging?.source.data });
+    invariant(Tile);
+    const { id, orientation = orientationProp, dragging } = useMosaicContainerContext(MOSAIC_STACK_NAME);
+    const visibleItems = useVisibleItems({ id, items, dragging: dragging?.source.data, getId });
+    invariant(orientation === 'vertical' || orientation === 'horizontal', `Invalid orientation: ${orientation}`);
 
     return (
       <div
@@ -43,18 +83,18 @@ const StackInner = forwardRef<HTMLDivElement, StackProps>(
         role={role}
         className={mx(
           'flex',
-          axis === 'horizontal' && 'bs-full [&>*]:shrink-0',
-          axis === 'vertical' && 'flex-col',
+          orientation === 'horizontal' && 'h-full [&>*]:shrink-0',
+          orientation === 'vertical' && 'flex-col',
           classNames,
           className,
         )}
         ref={forwardedRef}
       >
-        <Placeholder axis={axis} location={0.5} />
+        <InternalPlaceholder orientation={orientation} location={0.5} />
         {visibleItems?.map((item, index) => (
-          <Fragment key={item.id}>
-            <Component object={item} location={index + 1} />
-            <Placeholder axis={axis} location={index + 1.5} />
+          <Fragment key={getId(item)}>
+            <Tile id={getId(item)} data={item} location={index + 1} draggable={draggable} debug={debug} />
+            <InternalPlaceholder orientation={orientation} location={index + 1.5} />
           </Fragment>
         ))}
       </div>
@@ -62,42 +102,46 @@ const StackInner = forwardRef<HTMLDivElement, StackProps>(
   },
 );
 
-StackInner.displayName = 'Stack';
+MosaicStackInner.displayName = MOSAIC_STACK_NAME;
 
-const Stack = StackInner as <T extends Obj.Any = Obj.Any>(
-  props: StackProps<T> & { ref?: Ref<HTMLDivElement> },
+const MosaicStack = MosaicStackInner as <TData = any>(
+  props: MosaicStackProps<TData> & { ref?: Ref<HTMLDivElement> },
 ) => ReactElement;
 
 //
 // VirtualStack
 //
 
-type VirtualStackProps<T extends Obj.Any = Obj.Any> = StackProps<T> &
+const MOSAIC_VIRTUAL_STACK_NAME = 'MosaicVirtualStack';
+
+type MosaicVirtualStackProps<TData = any> = MosaicStackProps<TData> &
   Pick<
-    ReactVirtualizerOptions<HTMLDivElement, HTMLDivElement>,
+    ReactVirtualizerOptions<HTMLElement, HTMLDivElement>,
     'estimateSize' | 'getScrollElement' | 'overscan' | 'onChange'
   >;
 
-const VirtualStackInner = forwardRef<HTMLDivElement, VirtualStackProps>(
+const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackProps>(
   (
     {
-      className,
       classNames,
+      className,
       role = 'list',
-      axis = 'vertical',
+      orientation = 'vertical',
       items,
-      Component = DefaultComponent,
+      getId,
+      Tile,
       estimateSize,
       getScrollElement,
       overscan = 8,
       onChange,
+      debug,
       ...props
     },
     forwardedRef,
   ) => {
-    invariant(Component);
-    const { id, dragging } = useMosaicContainer(VirtualStackInner.displayName!);
-    const visibleItems = useVisibleItems({ id, items, dragging: dragging?.source.data });
+    invariant(Tile);
+    const { id, dragging } = useMosaicContainerContext(MOSAIC_VIRTUAL_STACK_NAME);
+    const visibleItems = useVisibleItems({ id, items, dragging: dragging?.source.data, getId });
     const virtualizer = useVirtualizer({
       count: visibleItems.length * 2 + 1,
       estimateSize,
@@ -114,14 +158,14 @@ const VirtualStackInner = forwardRef<HTMLDivElement, VirtualStackProps>(
         role={role}
         className={mx(
           'flex',
-          axis === 'horizontal' && 'bs-full [&>*]:shrink-0',
-          axis === 'vertical' && 'flex-col',
+          orientation === 'horizontal' && 'h-full [&>*]:shrink-0',
+          orientation === 'vertical' && 'flex-col',
           classNames,
           className,
         )}
         style={{
           position: 'relative',
-          ...(axis === 'vertical'
+          ...(orientation === 'vertical'
             ? {
                 width: '100%',
                 height: virtualizer.getTotalSize(),
@@ -133,102 +177,70 @@ const VirtualStackInner = forwardRef<HTMLDivElement, VirtualStackProps>(
         }}
         ref={forwardedRef}
       >
-        {virtualItems.map((virtualItem) => (
-          <div
-            key={virtualItem.key}
-            data-index={virtualItem.index}
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              ...(axis === 'vertical'
-                ? {
-                    width: '100%',
-                    transform: `translateY(${virtualItem.start}px)`,
-                  }
-                : {
-                    height: '100%',
-                    transform: `translateX(${virtualItem.start}px)`,
-                  }),
-            }}
-            ref={virtualizer.measureElement}
-          >
-            {virtualItem.index % 2 === 0 ? (
-              <Placeholder axis={axis} location={Math.floor(virtualItem.index / 2) + 0.5} />
-            ) : (
-              <Component
-                object={visibleItems![Math.floor(virtualItem.index / 2)]}
-                location={Math.floor(virtualItem.index / 2) + 1}
-              />
-            )}
-          </div>
-        ))}
+        {virtualItems.map((virtualItem) => {
+          const data = visibleItems![Math.floor(virtualItem.index / 2)];
+          return (
+            <div
+              key={virtualItem.key}
+              data-index={virtualItem.index}
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                ...(orientation === 'vertical'
+                  ? {
+                      width: '100%',
+                      transform: `translateY(${virtualItem.start}px)`,
+                    }
+                  : {
+                      height: '100%',
+                      transform: `translateX(${virtualItem.start}px)`,
+                    }),
+              }}
+              ref={virtualizer.measureElement}
+            >
+              {virtualItem.index % 2 === 0 ? (
+                <InternalPlaceholder orientation={orientation} location={Math.floor(virtualItem.index / 2) + 0.5} />
+              ) : (
+                <Tile id={getId(data)} data={data} location={Math.floor(virtualItem.index / 2) + 1} debug={debug} />
+              )}
+            </div>
+          );
+        })}
       </div>
     );
   },
 );
 
-VirtualStackInner.displayName = 'VirtualStackInner';
+MosaicVirtualStackInner.displayName = MOSAIC_VIRTUAL_STACK_NAME;
 
-const VirtualStack = VirtualStackInner as <T extends Obj.Any = Obj.Any>(
-  props: VirtualStackProps<T> & { ref?: Ref<HTMLDivElement> },
+const MosaicVirtualStack = MosaicVirtualStackInner as <TData = any>(
+  props: MosaicVirtualStackProps<TData> & { ref?: Ref<HTMLDivElement> },
 ) => ReactElement;
 
 //
-// DefaultComponent
+// InternalPlaceholder
 //
 
-const DefaultComponent: StackProps['Component'] = (props) => {
-  const dragHandleRef = useRef<HTMLButtonElement>(null);
-  const [open, setOpen] = useState(false);
+const InternalPlaceholder = (props: MosaicPlaceholderProps<number>) => {
   return (
-    <Mosaic.Tile {...props} className='border border-separator rounded-sm font-mono'>
-      <Card.Toolbar>
-        <Card.DragHandle ref={dragHandleRef} />
-        <Card.Title>{Obj.getLabel(props.object) ?? props.object.id}</Card.Title>
-        <Card.Menu
-          items={[
-            {
-              label: open ? 'Hide details' : 'Show details',
-              onSelect: () => setOpen((open) => !open),
-            },
-          ]}
-        />
-      </Card.Toolbar>
-      {open && (
-        <Card.Row>
-          <pre className='text-xs whitespace-pre-wrap text-description'>{JSON.stringify(props.object, null, 2)}</pre>
-        </Card.Row>
-      )}
-    </Mosaic.Tile>
-  );
-};
-
-DefaultComponent.displayName = 'DefaultComponent';
-
-//
-// Placeholder
-//
-
-const Placeholder = (props: MosiacPlaceholderProps<number>) => {
-  return (
-    <Mosaic.Placeholder {...props} classNames={styles.placeholder.root}>
+    <MosaicPlaceholder {...props} classNames={styles.placeholder.root}>
       <div
         className={mx(
-          'flex bs-full bg-baseSurface border border-dashed border-separator rounded-sm',
+          'flex h-full bg-base-surface border border-dashed border-separator rounded-xs',
           styles.placeholder.content,
         )}
       />
-    </Mosaic.Placeholder>
+    </MosaicPlaceholder>
   );
 };
 
-Placeholder.displayName = 'Placeholder';
+InternalPlaceholder.displayName = 'InternalPlaceholder';
 
 //
-// Stack
+// Exports
 //
 
-export { Stack, VirtualStack };
+export { MosaicStack, MosaicVirtualStack };
 
-export type { StackProps, VirtualStackProps };
+export type { MosaicStackTileComponent, MosaicStackProps, MosaicVirtualStackProps };

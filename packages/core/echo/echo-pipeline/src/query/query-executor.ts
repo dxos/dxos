@@ -4,31 +4,29 @@
 
 import type { AutomergeUrl, DocumentId } from '@automerge/automerge-repo';
 import type * as SqlClient from '@effect/sql/SqlClient';
-import * as Match from 'effect/Match';
+import type * as Effect from 'effect/Effect';
 import * as Runtime from 'effect/Runtime';
 
 import { Context, ContextDisposedError, LifecycleState, Resource } from '@dxos/context';
 import type { Obj } from '@dxos/echo';
-import { ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET } from '@dxos/echo/internal';
+import { ATTR_PARENT, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET } from '@dxos/echo/internal';
 import {
   DatabaseDirectory,
+  EncodedReference,
   type ObjectPropPath,
   ObjectStructure,
   type QueryAST,
   isEncodedReference,
 } from '@dxos/echo-protocol';
 import { type RuntimeProvider, runAndForwardErrors, unwrapExit } from '@dxos/effect';
-import { type IndexEngine } from '@dxos/index-core';
-import { EscapedPropPath, type FindResult, type Indexer } from '@dxos/indexing';
+import { EscapedPropPath, type IndexEngine, type ObjectMeta, type ReverseRef } from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';
-import { DXN, type ObjectId, PublicKey, type SpaceId } from '@dxos/keys';
+import { DXN, type ObjectId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { objectPointerCodec } from '@dxos/protocols';
 import { type QueryReactivity, type QueryResult } from '@dxos/protocols/proto/dxos/echo/query';
 import { getDeep, isNonNullable } from '@dxos/util';
 
 import type { AutomergeHost } from '../automerge';
-import { createIdFromSpaceKey } from '../common';
 import type { SpaceStateManager } from '../db-host';
 import { filterMatchObject, filterMatchObjectJSON } from '../filter';
 
@@ -36,9 +34,8 @@ import type { QueryPlan } from './plan';
 import { QueryPlanner } from './query-planner';
 
 type QueryExecutorOptions = {
-  indexer: Indexer;
-  indexer2?: IndexEngine;
-  runtime?: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
+  indexEngine: IndexEngine;
+  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
   automergeHost: AutomergeHost;
   spaceStateManager: SpaceStateManager;
 
@@ -82,6 +79,10 @@ type QueryItem = {
 };
 
 const QueryItem = Object.freeze({
+  /**
+   * Checks if the item is deleted.
+   * Only applies to this item, not its parents.
+   */
   isDeleted: (item: QueryItem) => {
     if (item.doc) {
       return ObjectStructure.isDeleted(item.doc);
@@ -102,9 +103,19 @@ const QueryItem = Object.freeze({
     }
   },
 
-  getRelationSource: (item: QueryItem): DXN.String => {
+  getParent: (item: QueryItem): DXN.String | undefined => {
     if (item.doc) {
-      return ObjectStructure.getRelationSource(item.doc)?.['/'] as DXN.String;
+      return ObjectStructure.getParent(item.doc)?.['/'] as DXN.String | undefined;
+    } else if (item.data) {
+      return item.data[ATTR_PARENT] as DXN.String;
+    } else {
+      throw new Error('Invalid query item');
+    }
+  },
+
+  getRelationSource: (item: QueryItem): DXN.String | undefined => {
+    if (item.doc) {
+      return ObjectStructure.getRelationSource(item.doc)?.['/'] as DXN.String | undefined;
     } else if (item.data) {
       return item.data[ATTR_RELATION_SOURCE] as DXN.String;
     } else {
@@ -112,9 +123,9 @@ const QueryItem = Object.freeze({
     }
   },
 
-  getRelationTarget: (item: QueryItem): DXN.String => {
+  getRelationTarget: (item: QueryItem): DXN.String | undefined => {
     if (item.doc) {
-      return ObjectStructure.getRelationTarget(item.doc)?.['/'] as DXN.String;
+      return ObjectStructure.getRelationTarget(item.doc)?.['/'] as DXN.String | undefined;
     } else if (item.data) {
       return item.data[ATTR_RELATION_TARGET] as DXN.String;
     } else {
@@ -205,10 +216,20 @@ type StepExecutionResult = {
   trace: ExecutionTrace;
 };
 
-const TRACE_QUERY_EXECUTION = false;
+declare global {
+  interface ImportMeta {
+    env: {
+      DX_TRACE_QUERY_EXECUTION: string;
+    };
+  }
+}
+
+const TRACE_QUERY_EXECUTION = !!import.meta.env.DX_TRACE_QUERY_EXECUTION;
+
+const MAX_DEPTH_FOR_DELETION_TRACING = 10;
 
 /**
- * Executes query plans against the Indexer and AutomergeHost.
+ * Executes query plans against the IndexEngine and AutomergeHost.
  *
  * The QueryExecutor is responsible for:
  * - Executing query plans step by step
@@ -218,9 +239,8 @@ const TRACE_QUERY_EXECUTION = false;
  * - Handling different types of query operations (select, filter, traverse, etc.)
  */
 export class QueryExecutor extends Resource {
-  private readonly _indexer: Indexer;
-  private readonly _indexer2?: IndexEngine;
-  private readonly _runtime?: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
+  private readonly _indexEngine: IndexEngine;
+  private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
   private readonly _automergeHost: AutomergeHost;
   private readonly _spaceStateManager: SpaceStateManager;
   /**
@@ -238,8 +258,7 @@ export class QueryExecutor extends Resource {
   constructor(options: QueryExecutorOptions) {
     super();
 
-    this._indexer = options.indexer;
-    this._indexer2 = options.indexer2;
+    this._indexEngine = options.indexEngine;
     this._runtime = options.runtime;
     this._automergeHost = options.automergeHost;
     this._spaceStateManager = options.spaceStateManager;
@@ -264,10 +283,6 @@ export class QueryExecutor extends Resource {
     return this._trace;
   }
 
-  protected override async _open(ctx: Context): Promise<void> {}
-
-  protected override async _close(ctx: Context): Promise<void> {}
-
   getResults(): QueryResult[] {
     return this._lastResultSet.map(
       (item): QueryResult => ({
@@ -291,7 +306,7 @@ export class QueryExecutor extends Resource {
     const { workingSet, trace } = await this._execPlan(this._plan, []);
     this._lastResultSet = workingSet;
     trace.name = 'Root';
-    trace.details = JSON.stringify({ id: this._id });
+    trace.details = JSON.stringify({ id: this._id, query: prettyQuery(this._query) });
     this._trace = trace;
 
     const changed =
@@ -318,7 +333,6 @@ export class QueryExecutor extends Resource {
 
   private async _execPlan(plan: QueryPlan.Plan, workingSet: QueryItem[]): Promise<StepExecutionResult> {
     const trace = ExecutionTrace.makeEmpty();
-    const begin = performance.now();
     for (const step of plan.steps) {
       if (this._ctx.disposed) {
         throw new ContextDisposedError();
@@ -391,11 +405,9 @@ export class QueryExecutor extends Resource {
     switch (step.selector._tag) {
       case 'WildcardSelector': {
         const beginIndexQuery = performance.now();
-        const indexHits = await this._indexer.execQuery({
-          typenames: [],
-          inverted: false,
-        });
-        trace.indexHits = +indexHits.length;
+        const queueIds = extractQueueIds(step.queues);
+        const metas = await this._queryAllFromSqlIndex(step.spaces, step.allQueuesFromSpaces, queueIds);
+        trace.indexHits = metas.length;
         trace.indexQueryTime += performance.now() - beginIndexQuery;
 
         if (this._ctx.disposed) {
@@ -403,11 +415,11 @@ export class QueryExecutor extends Resource {
         }
 
         const documentLoadStart = performance.now();
-        const results = await this._loadDocumentsAfterIndexQuery(indexHits);
+        const results = await this._loadDocumentsAfterSqlQuery(metas);
         trace.documentsLoaded += results.length;
         trace.documentLoadTime += performance.now() - documentLoadStart;
 
-        workingSet.push(...results.filter(isNonNullable).filter((item) => step.spaces.includes(item.spaceId)));
+        workingSet.push(...results.filter(isNonNullable));
         trace.objectCount = workingSet.length;
 
         break;
@@ -415,10 +427,18 @@ export class QueryExecutor extends Resource {
 
       case 'IdSelector': {
         const beginLoad = performance.now();
+
         const items = await Promise.all(
-          step.selector.objectIds.map((id) =>
-            this._loadFromDXN(DXN.fromLocalObjectId(id), { sourceSpaceId: step.spaces[0] }),
-          ),
+          step.selector.objectIds.map((id) => {
+            if (step.queues.length > 0) {
+              const { spaceId } = DXN.parse(step.queues[0]).asQueueDXN()!;
+              return this._loadFromDXN(DXN.parse(step.queues[0]).extend([id]), { sourceSpaceId: spaceId });
+            } else if (step.spaces.length > 0) {
+              return this._loadFromDXN(DXN.fromLocalObjectId(id), { sourceSpaceId: step.spaces[0] });
+            } else {
+              return null; // Unknown scope.
+            }
+          }),
         );
         trace.documentLoadTime += performance.now() - beginLoad;
 
@@ -429,11 +449,15 @@ export class QueryExecutor extends Resource {
 
       case 'TypeSelector': {
         const beginIndexQuery = performance.now();
-        const indexHits = await this._indexer.execQuery({
-          typenames: step.selector.typename,
-          inverted: step.selector.inverted,
-        });
-        trace.indexHits = +indexHits.length;
+        const queueIds = extractQueueIds(step.queues);
+        const metas = await this._queryTypesFromSqlIndex(
+          step.spaces,
+          step.selector.typename,
+          step.selector.inverted,
+          step.allQueuesFromSpaces,
+          queueIds,
+        );
+        trace.indexHits = metas.length;
         trace.indexQueryTime += performance.now() - beginIndexQuery;
 
         if (this._ctx.disposed) {
@@ -441,11 +465,11 @@ export class QueryExecutor extends Resource {
         }
 
         const documentLoadStart = performance.now();
-        const results = await this._loadDocumentsAfterIndexQuery(indexHits);
+        const results = await this._loadDocumentsAfterSqlQuery(metas);
         trace.documentsLoaded += results.length;
         trace.documentLoadTime += performance.now() - documentLoadStart;
 
-        workingSet.push(...results.filter(isNonNullable).filter((item) => step.spaces.includes(item.spaceId)));
+        workingSet.push(...results.filter(isNonNullable));
         trace.objectCount = workingSet.length;
 
         break;
@@ -454,121 +478,100 @@ export class QueryExecutor extends Resource {
       case 'TextSelector': {
         // TODO(dmaretskyi): type + FTS queries would be very common so we should support those, maybe chunk the fts index.
         // TODO(dmaretskyi): nice to have matched text snippets/highlighting.
-        if (step.selector.searchKind === 'full-text' && this._indexer2 && this._runtime) {
-          // Use indexer2 for full-text search.
-          const beginIndexQuery = performance.now();
-          const runtime = await runAndForwardErrors(this._runtime);
-          invariant(step.spaces.length <= 1, 'Multiple spaces are not supported for full-text search');
-          // Extract queue IDs from DXN strings.
-          const queueIds =
-            step.queues.length > 0
-              ? (step.queues.map((dxnStr) => DXN.parse(dxnStr).asQueueDXN()?.queueId).filter(Boolean) as ObjectId[])
-              : null;
-          const textResults = await unwrapExit(
-            await this._indexer2
-              .queryText({
-                query: step.selector.text,
-                spaceId: step.spaces,
-                includeAllQueues: step.allQueuesFromSpaces,
-                queueIds,
-              })
-              .pipe(Runtime.runPromiseExit(runtime)),
-          );
-          trace.indexHits = textResults.length;
-          trace.indexQueryTime += performance.now() - beginIndexQuery;
-
-          if (this._ctx.disposed) {
-            return { workingSet, trace };
-          }
-
-          // Load documents from the results.
-          const documentLoadStart = performance.now();
-
-          // Separate queue items from space items.
-          const queueResults = textResults.filter((r) => r.queueId);
-          const spaceResults = textResults.filter((r) => !r.queueId);
-
-          // Build a map from recordId to rank for all FTS results.
-          const rankMap = new Map(textResults.map((r) => [r.recordId, r.rank]));
-
-          // Load queue items from indexed snapshots.
-          let queueItems: QueryItem[] = [];
-          if (queueResults.length > 0) {
-            const snapshots = await unwrapExit(
-              await this._indexer2
-                .querySnapshotsJSON(queueResults.map((r) => r.recordId))
-                .pipe(Runtime.runPromiseExit(runtime)),
-            );
-            const snapshotMap = new Map(snapshots.map((s) => [s.recordId, s.snapshot]));
-            queueItems = queueResults
-              .map((result): QueryItem | null => {
-                const snapshot = snapshotMap.get(result.recordId);
-                if (!snapshot || typeof snapshot !== 'object') {
-                  return null;
-                }
-                return {
-                  objectId: result.objectId as ObjectId,
-                  spaceId: result.spaceId as SpaceId,
-                  queueId: result.queueId as ObjectId,
-                  queueNamespace: 'data',
-                  documentId: null,
-                  doc: null,
-                  data: snapshot as Obj.JSON,
-                  rank: rankMap.get(result.recordId) ?? 1,
-                };
-              })
-              .filter(isNonNullable);
-          }
-
-          // Load space items from documents.
-          const spaceItems = await Promise.all(
-            spaceResults.map(async (result): Promise<QueryItem | null> => {
-              const dxn = DXN.fromLocalObjectId(result.objectId);
-              const item = await this._loadFromDXN(dxn, { sourceSpaceId: result.spaceId as SpaceId });
-              if (item) {
-                // Override the default rank with the FTS rank.
-                item.rank = rankMap.get(result.recordId) ?? 1;
-              }
-              return item;
-            }),
-          );
-
-          const items = [...queueItems, ...spaceItems.filter(isNonNullable)];
-          trace.documentsLoaded += items.length;
-          trace.documentLoadTime += performance.now() - documentLoadStart;
-
-          workingSet.push(...items.filter((item) => step.spaces.includes(item.spaceId)));
-          trace.objectCount = workingSet.length;
-        } else {
-          // Fall back to old indexer for vector search.
-          const beginIndexQuery = performance.now();
-          const indexHits = await this._indexer.execQuery({
-            typenames: [],
-            text: {
-              query: step.selector.text,
-              kind: Match.type<QueryPlan.TextSearchKind>().pipe(
-                Match.withReturnType<'text' | 'vector'>(),
-                Match.when('full-text', () => 'text'),
-                Match.when('vector', () => 'vector'),
-                Match.orElseAbsurd,
-              )(step.selector.searchKind),
-            },
-          });
-          trace.indexHits = +indexHits.length;
-          trace.indexQueryTime += performance.now() - beginIndexQuery;
-
-          if (this._ctx.disposed) {
-            return { workingSet, trace };
-          }
-
-          const documentLoadStart = performance.now();
-          const results = await this._loadDocumentsAfterIndexQuery(indexHits);
-          trace.documentsLoaded += results.length;
-          trace.documentLoadTime += performance.now() - documentLoadStart;
-
-          workingSet.push(...results.filter(isNonNullable).filter((item) => step.spaces.includes(item.spaceId)));
-          trace.objectCount = workingSet.length;
+        if (step.selector.searchKind === 'vector') {
+          // Vector search is not currently supported.
+          log.warn('Vector search is not supported');
+          break;
         }
+
+        // Full-text search using SQLite FTS5.
+        const beginIndexQuery = performance.now();
+        invariant(step.spaces.length <= 1, 'Multiple spaces are not supported for full-text search');
+        const queueIds = extractQueueIds(step.queues);
+        const textResults = await this._runInRuntime(
+          this._indexEngine.queryText({
+            query: step.selector.text,
+            spaceId: step.spaces,
+            includeAllQueues: step.allQueuesFromSpaces,
+            queueIds,
+          }),
+        );
+        trace.indexHits = textResults.length;
+        trace.indexQueryTime += performance.now() - beginIndexQuery;
+
+        if (this._ctx.disposed) {
+          return { workingSet, trace };
+        }
+
+        // Load documents from the results.
+        const documentLoadStart = performance.now();
+
+        // Separate queue items from space items.
+        const queueResults = textResults.filter((r) => r.queueId);
+        const spaceResults = textResults.filter((r) => !r.queueId);
+
+        // Build a map from recordId to rank for all FTS results.
+        const rankMap = new Map(textResults.map((r) => [r.recordId, r.rank]));
+
+        // Load queue items from indexed snapshots.
+        let queueItems: QueryItem[] = [];
+        if (queueResults.length > 0) {
+          const snapshots = await this._runInRuntime(
+            this._indexEngine.querySnapshotsJSON(queueResults.map((r) => r.recordId)),
+          );
+          const snapshotMap = new Map(snapshots.map((s) => [s.recordId, s.snapshot]));
+          queueItems = queueResults
+            .map((result): QueryItem | null => {
+              const snapshot = snapshotMap.get(result.recordId);
+              if (!snapshot || typeof snapshot !== 'object') {
+                return null;
+              }
+              return {
+                objectId: result.objectId as ObjectId,
+                spaceId: result.spaceId as SpaceId,
+                queueId: result.queueId as ObjectId,
+                queueNamespace: 'data',
+                documentId: null,
+                doc: null,
+                data: snapshot as Obj.JSON,
+                rank: rankMap.get(result.recordId) ?? 1,
+              };
+            })
+            .filter(isNonNullable);
+        }
+
+        // Load space items from documents.
+        const spaceItems = await Promise.all(
+          spaceResults.map(async (result): Promise<QueryItem | null> => {
+            const dxn = DXN.fromLocalObjectId(result.objectId);
+            const item = await this._loadFromDXN(dxn, { sourceSpaceId: result.spaceId as SpaceId });
+            if (item) {
+              // Override the default rank with the FTS rank.
+              item.rank = rankMap.get(result.recordId) ?? 1;
+            }
+            return item;
+          }),
+        );
+
+        const items = [...queueItems, ...spaceItems.filter(isNonNullable)];
+        trace.documentsLoaded += items.length;
+        trace.documentLoadTime += performance.now() - documentLoadStart;
+
+        workingSet.push(
+          ...items.filter((item) => {
+            if (step.spaces.includes(item.spaceId)) {
+              return true;
+            }
+            if (item.queueId) {
+              return step.queues.some((dxn) => {
+                const { queueId, spaceId } = DXN.parse(dxn).asQueueDXN()!;
+                return queueId === item.queueId && spaceId === item.spaceId;
+              });
+            }
+            return false;
+          }),
+        );
+        trace.objectCount = workingSet.length;
         break;
       }
 
@@ -596,6 +599,7 @@ export class QueryExecutor extends Resource {
       } else if (item.data) {
         return filterMatchObjectJSON(step.filter, item.data);
       } else {
+        return false;
       }
     });
 
@@ -615,8 +619,20 @@ export class QueryExecutor extends Resource {
     workingSet: QueryItem[],
   ): Promise<StepExecutionResult> {
     const expected = step.mode === 'only-deleted';
+
+    const deletedState = workingSet.map((item) => QueryItem.isDeleted(item));
+    await Promise.all(
+      workingSet.map(async (item, index) => {
+        if (deletedState[index]) {
+          return;
+        }
+        deletedState[index] ||= await this._getTransitiveDeletionState(item, MAX_DEPTH_FOR_DELETION_TRACING);
+      }),
+    );
+
+    const result = workingSet.filter((item, index) => deletedState[index] === expected);
+
     // TODO(dmaretskyi): How do we handle items with parents and cascade deletions? -- perhaps we forbid queue items from having parents -- i.e. queue is their parent.
-    const result = workingSet.filter((item) => QueryItem.isDeleted(item) === expected);
     return {
       workingSet: result,
       trace: {
@@ -677,19 +693,13 @@ export class QueryExecutor extends Resource {
             break;
           }
           case 'incoming': {
-            const indexHits = await this._indexer.execQuery({
-              typenames: [],
-              inverted: false,
-              graph: {
-                kind: 'inbound-reference',
-                property: step.traversal.property,
-                anchors: workingSet.map((item) => item.objectId),
-              },
-            });
-            trace.indexHits += indexHits.length;
+            const beginIndexQuery = performance.now();
+            const metas = await this._queryIncomingReferencesFromSqlIndex(workingSet, step.traversal.property);
+            trace.indexHits += metas.length;
+            trace.indexQueryTime += performance.now() - beginIndexQuery;
 
             const documentLoadStart = performance.now();
-            const results = await this._loadDocumentsAfterIndexQuery(indexHits);
+            const results = await this._loadDocumentsAfterSqlQuery(metas);
             trace.documentsLoaded += results.length;
             trace.documentLoadTime += performance.now() - documentLoadStart;
 
@@ -711,6 +721,9 @@ export class QueryExecutor extends Resource {
                   step.traversal.direction === 'relation-to-source'
                     ? QueryItem.getRelationSource(item)
                     : QueryItem.getRelationTarget(item);
+                if (!dxn) {
+                  return null;
+                }
                 try {
                   return {
                     ref: DXN.parse(dxn),
@@ -737,26 +750,101 @@ export class QueryExecutor extends Resource {
 
           case 'source-to-relation':
           case 'target-to-relation': {
-            const indexHits = await this._indexer.execQuery({
-              typenames: [],
-              inverted: false,
-              graph: {
-                kind: step.traversal.direction === 'source-to-relation' ? 'relation-source' : 'relation-target',
-                anchors: workingSet.map((item) => item.objectId),
-                property: null,
-              },
-            });
-
-            trace.indexHits += indexHits.length;
+            const beginIndexQuery = performance.now();
+            const metas = await this._queryRelationsFromSqlIndex(
+              workingSet,
+              step.traversal.direction === 'source-to-relation' ? 'source' : 'target',
+            );
+            trace.indexHits += metas.length;
+            trace.indexQueryTime += performance.now() - beginIndexQuery;
 
             const documentLoadStart = performance.now();
-            const results = await this._loadDocumentsAfterIndexQuery(indexHits);
+            const results = await this._loadDocumentsAfterSqlQuery(metas);
             trace.documentsLoaded += results.length;
             trace.documentLoadTime += performance.now() - documentLoadStart;
 
             newWorkingSet.push(...results.filter(isNonNullable));
             trace.objectCount = newWorkingSet.length;
 
+            break;
+          }
+        }
+        break;
+      }
+      case 'HierarchyTraversal': {
+        switch (step.traversal.direction) {
+          case 'to-parent': {
+            // Traverse from child to parent using the parent reference in the document.
+            const refs = workingSet
+              .map((item) => {
+                if (!item.doc) {
+                  return null; // TODO(dmaretskyi): Queue items not supported here.
+                }
+                const ref = ObjectStructure.getParent(item.doc);
+                if (!EncodedReference.isEncodedReference(ref)) {
+                  return null;
+                }
+                try {
+                  return {
+                    ref: DXN.parse(ref['/']),
+                    spaceId: item.spaceId,
+                  };
+                } catch {
+                  log.warn('invalid parent reference', { ref: ref['/'] });
+                  return null;
+                }
+              })
+              .filter(isNonNullable);
+
+            const beginLoad = performance.now();
+            const items = await Promise.all(
+              refs.map(({ ref, spaceId }) => this._loadFromDXN(ref, { sourceSpaceId: spaceId })),
+            );
+            trace.documentLoadTime += performance.now() - beginLoad;
+
+            newWorkingSet.push(...items.filter(isNonNullable));
+            trace.objectCount = newWorkingSet.length;
+            break;
+          }
+
+          case 'to-children': {
+            // Traverse from parent to children using the SQL index.
+            // Group working set by spaceId.
+            const bySpace = new Map<SpaceId, ObjectId[]>();
+            for (const item of workingSet) {
+              const existing = bySpace.get(item.spaceId);
+              if (existing) {
+                existing.push(item.objectId);
+              } else {
+                bySpace.set(item.spaceId, [item.objectId]);
+              }
+            }
+
+            // Query children for each space.
+            const allChildren: { spaceId: SpaceId; objectId: ObjectId }[] = [];
+            for (const [spaceId, parentIds] of bySpace) {
+              const children = await this._runInRuntime(
+                this._indexEngine.queryChildren({ spaceId: [spaceId], parentIds }),
+              );
+
+              for (const child of children) {
+                allChildren.push({ spaceId, objectId: child.objectId as ObjectId });
+              }
+            }
+
+            trace.indexHits += allChildren.length;
+
+            const documentLoadStart = performance.now();
+            const results = await Promise.all(
+              allChildren.map(({ spaceId, objectId }) =>
+                this._loadFromDXN(DXN.fromLocalObjectId(objectId), { sourceSpaceId: spaceId }),
+              ),
+            );
+            trace.documentsLoaded += results.filter(isNonNullable).length;
+            trace.documentLoadTime += performance.now() - documentLoadStart;
+
+            newWorkingSet.push(...results.filter(isNonNullable));
+            trace.objectCount = newWorkingSet.length;
             break;
           }
         }
@@ -923,119 +1011,445 @@ export class QueryExecutor extends Resource {
     return String(aValue).localeCompare(String(bValue));
   }
 
-  private async _loadDocumentsAfterIndexQuery(indexHits: FindResult[]): Promise<(QueryItem | null)[]> {
-    return Promise.all(
-      indexHits.map(async (hit): Promise<QueryItem | null> => {
-        return this._loadFromIndexHit(hit);
+  private async _runInRuntime<T>(effect: Effect.Effect<T, unknown, SqlClient.SqlClient>): Promise<T> {
+    const runtimeProvider = this._runtime;
+    invariant(runtimeProvider, 'SQL runtime is required.');
+    const runtime = await runAndForwardErrors(runtimeProvider);
+    return await unwrapExit(await effect.pipe(Runtime.runPromiseExit(runtime)));
+  }
+
+  private async _queryAllFromSqlIndex(
+    spaceIds: readonly SpaceId[],
+    includeAllQueues: boolean,
+    queueIds: readonly ObjectId[] | null,
+  ): Promise<readonly ObjectMeta[]> {
+    return await this._runInRuntime(this._indexEngine.queryAll({ spaceIds, includeAllQueues, queueIds }));
+  }
+
+  private async _queryTypesFromSqlIndex(
+    spaceIds: readonly SpaceId[],
+    typeDxns: readonly string[],
+    inverted: boolean,
+    includeAllQueues: boolean,
+    queueIds: readonly ObjectId[] | null,
+  ): Promise<readonly ObjectMeta[]> {
+    return await this._runInRuntime(
+      this._indexEngine.queryTypes({ spaceIds, typeDxns, inverted, includeAllQueues, queueIds }),
+    );
+  }
+
+  private async _queryIncomingReferencesFromSqlIndex(
+    workingSet: QueryItem[],
+    property: EscapedPropPath | null,
+  ): Promise<readonly ObjectMeta[]> {
+    const anchorDxns = workingSet.map((item) => DXN.fromLocalObjectId(item.objectId).toString());
+    const rows: readonly ReverseRef[] = (
+      await Promise.all(
+        anchorDxns.map((targetDxn) => this._runInRuntime(this._indexEngine.queryReverseRef({ targetDxn }))),
+      )
+    ).flat();
+
+    const recordIds = rows
+      .filter((row) => {
+        if (property === null) {
+          return true;
+        }
+
+        const queryPath = EscapedPropPath.unescape(property);
+        const rowPath = EscapedPropPath.unescape(row.propPath);
+        return QueryExecutor._matchesReferencePropertyPath(rowPath, queryPath);
+      })
+      .map((row) => row.recordId);
+
+    const uniqueRecordIds = Array.from(new Set<number>(recordIds));
+    return await this._runInRuntime(this._indexEngine.lookupByRecordIds(uniqueRecordIds));
+  }
+
+  /**
+   * Matches a reverse-reference row path against a query property path.
+   * Allows numeric segments in the row path (array indices) that are not present in the query.
+   *
+   * Examples:
+   * - query: ['assignee'] matches row: ['assignee'] and ['assignee', '0'].
+   * - query: ['items', 'assignee'] matches row: ['items', '0', 'assignee'].
+   * - query: ['a', 'b'] does NOT match row: ['a'].
+   * - query: ['a'] does NOT match row: ['a', 'b'].
+   */
+  private static _matchesReferencePropertyPath(rowPath: readonly string[], queryPath: readonly string[]): boolean {
+    const isNumericSegment = (segment: string) => /^[0-9]+$/.test(segment);
+
+    let i = 0; // queryPath index.
+    let j = 0; // rowPath index.
+
+    while (i < queryPath.length && j < rowPath.length) {
+      if (rowPath[j] === queryPath[i]) {
+        i++;
+        j++;
+        continue;
+      }
+
+      // Row may contain array indices that aren't present in the query path.
+      if (isNumericSegment(rowPath[j])) {
+        j++;
+        continue;
+      }
+
+      return false;
+    }
+
+    // Must consume full query path.
+    if (i !== queryPath.length) {
+      return false;
+    }
+
+    // Any remaining row segments must be numeric (array indices).
+    for (; j < rowPath.length; j++) {
+      if (!isNumericSegment(rowPath[j])) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  private async _queryRelationsFromSqlIndex(
+    workingSet: QueryItem[],
+    endpoint: 'source' | 'target',
+  ): Promise<readonly ObjectMeta[]> {
+    const anchorDxns = workingSet.map((item) => DXN.fromLocalObjectId(item.objectId).toString());
+    return await this._runInRuntime(this._indexEngine.queryRelations({ endpoint, anchorDxns }));
+  }
+
+  private async _loadDocumentsAfterSqlQuery(metas: readonly ObjectMeta[]): Promise<(QueryItem | null)[]> {
+    const snapshotMap = await this._loadQueueSnapshotMap(metas);
+    return await Promise.all(
+      metas.map(async (meta) => {
+        // Branch 1: Document-backed object.
+        if (meta.documentId) {
+          return this._loadFromAutomerge(meta);
+        }
+
+        // Branch 2: Queue-backed object.
+        if (meta.queueId) {
+          return this._loadFromQueue(meta, snapshotMap);
+        }
+
+        return null;
       }),
     );
   }
 
+  private async _loadQueueSnapshotMap(metas: readonly ObjectMeta[]): Promise<Map<number, unknown>> {
+    const queueMetas = metas.filter((meta) => !meta.documentId && !!meta.queueId);
+    if (queueMetas.length === 0) {
+      return new Map();
+    }
+
+    const snapshots = await this._runInRuntime(
+      this._indexEngine.querySnapshotsJSON(queueMetas.map((meta) => meta.recordId)),
+    );
+    return new Map(snapshots.map((s) => [s.recordId, s.snapshot]));
+  }
+
   /**
-   * Space key hex -> SpaceId.
+   * Loads a queue-backed object from an indexed snapshot (by `recordId`).
+   * Returns `null` when the snapshot is missing or is not a JSON object.
    */
-  private readonly _spaceIdCache = new Map<string, SpaceId>();
-
-  private async _loadFromIndexHit(hit: FindResult): Promise<QueryItem | null> {
-    const { objectId, documentId, spaceKey: spaceKeyInIndex } = objectPointerCodec.decode(hit.id);
-
-    const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(Context.default(), documentId as DocumentId, {
-      fetchFromNetwork: true,
-    });
-    const doc = handle.doc();
-    if (!doc) {
-      return null;
-    }
-
-    const spaceKey = spaceKeyInIndex ?? DatabaseDirectory.getSpaceKey(doc);
-    if (!spaceKey) {
-      return null;
-    }
-
-    let spaceId = this._spaceIdCache.get(spaceKey);
-    if (!spaceId) {
-      spaceId = await createIdFromSpaceKey(PublicKey.from(spaceKey));
-      this._spaceIdCache.set(spaceKey, spaceId);
-    }
-
-    const object = DatabaseDirectory.getInlineObject(doc, objectId);
-    if (!object) {
+  private _loadFromQueue(meta: ObjectMeta, snapshotMap: Map<number, unknown>): QueryItem | null {
+    const snapshot = snapshotMap.get(meta.recordId);
+    if (!snapshot || typeof snapshot !== 'object') {
       return null;
     }
 
     return {
-      objectId,
-      documentId: documentId as DocumentId,
-      spaceId,
+      objectId: meta.objectId as ObjectId,
+      spaceId: meta.spaceId as SpaceId,
+      queueId: meta.queueId as ObjectId,
+      queueNamespace: 'data',
+      documentId: null,
+      doc: null,
+      data: snapshot as Obj.JSON,
+      rank: 1,
+    };
+  }
+
+  /**
+   * Loads a document-backed object from an Automerge `DatabaseDirectory`.
+   * Returns `null` if the document can't be loaded, the inline object isn't present, or if the meta does not have a
+   * document id (e.g. queue-backed objects).
+   */
+  private async _loadFromAutomerge(meta: ObjectMeta): Promise<QueryItem | null> {
+    if (!meta.documentId) {
+      return null;
+    }
+    const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(
+      Context.default(),
+      meta.documentId as DocumentId,
+      {
+        fetchFromNetwork: true,
+      },
+    );
+    const doc = handle.doc();
+    if (!doc) {
+      return null;
+    }
+    const object = DatabaseDirectory.getInlineObject(doc, meta.objectId);
+    if (!object) {
+      return null;
+    }
+    return {
+      objectId: meta.objectId,
+      documentId: meta.documentId as DocumentId,
+      spaceId: meta.spaceId as SpaceId,
       queueId: null,
       queueNamespace: null,
-      data: null,
       doc: object,
-      rank: hit.rank,
+      data: null,
+      rank: 1,
     };
   }
 
   private async _loadFromDXN(dxn: DXN, { sourceSpaceId }: { sourceSpaceId: SpaceId }): Promise<QueryItem | null> {
-    const echoDxn = dxn.asEchoDXN();
-    if (!echoDxn) {
-      log.warn('unable to resolve DXN', { dxn });
-      return null;
+    switch (dxn.kind) {
+      case DXN.kind.ECHO: {
+        const echoDxn = dxn.asEchoDXN();
+        if (!echoDxn) {
+          log.warn('unable to resolve DXN', { dxn });
+          return null;
+        }
+
+        const spaceId = echoDxn.spaceId ?? sourceSpaceId;
+
+        const spaceRoot = this._spaceStateManager.getRootBySpaceId(spaceId);
+        if (!spaceRoot) {
+          log.warn('no space state found for', { spaceId });
+          return null;
+        }
+        const dbDirectory = spaceRoot.doc();
+        if (!dbDirectory) {
+          log.warn('no space state found for', { spaceId });
+          return null;
+        }
+
+        const inlineObject = DatabaseDirectory.getInlineObject(dbDirectory, echoDxn.echoId);
+        if (inlineObject) {
+          return {
+            objectId: echoDxn.echoId,
+            documentId: spaceRoot.documentId,
+            spaceId,
+            queueId: null,
+            queueNamespace: null,
+            data: null,
+            doc: inlineObject,
+            rank: 1,
+          };
+        }
+
+        const link = DatabaseDirectory.getLink(dbDirectory, echoDxn.echoId);
+        if (!link) {
+          return null;
+        }
+
+        const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(Context.default(), link as AutomergeUrl, {
+          fetchFromNetwork: true,
+        });
+        const doc = handle.doc();
+        if (!doc) {
+          return null;
+        }
+
+        const object = DatabaseDirectory.getInlineObject(doc, echoDxn.echoId);
+        if (!object) {
+          return null;
+        }
+
+        return {
+          objectId: echoDxn.echoId,
+          documentId: handle.documentId,
+          spaceId,
+          queueId: null,
+          queueNamespace: null,
+          data: null,
+          doc: object,
+          rank: 1,
+        };
+        break;
+      }
+      case DXN.kind.QUEUE: {
+        const queueDxn = dxn.asQueueDXN();
+        if (!queueDxn || !queueDxn.objectId) {
+          log.warn('unable to resolve queue DXN', { dxn });
+          return null;
+        }
+
+        const { spaceId, queueId, objectId } = queueDxn;
+        const meta = await this._runInRuntime(
+          this._indexEngine.lookupByObjectId({
+            objectId,
+            spaceId,
+            queueId,
+          }),
+        );
+        if (!meta) {
+          return null;
+        }
+
+        const snapshotMap = await this._loadQueueSnapshotMap([meta]);
+        return this._loadFromQueue(meta, snapshotMap);
+      }
+      default: {
+        log.warn('unable to resolve DXN', { dxn });
+        return null;
+      }
+    }
+  }
+
+  private async _getTransitiveDeletionState(item: QueryItem, remainingDepth: number): Promise<boolean> {
+    const strongDeps = [
+      QueryItem.getParent(item),
+      QueryItem.getRelationSource(item),
+      QueryItem.getRelationTarget(item),
+    ].filter((x) => x !== undefined);
+
+    if (strongDeps.length === 0) {
+      return false;
     }
 
-    const spaceId = echoDxn.spaceId ?? sourceSpaceId;
+    // TODO(dmaretskyi): This could be optimized to bail early if any of the dependencies are deleted.
+    const strongDepStates = await Promise.all(
+      strongDeps.map(async (dxn) => {
+        const dep = await this._loadFromDXN(DXN.parse(dxn), { sourceSpaceId: item.spaceId });
+        if (!dep) {
+          return false;
+        }
+        if (QueryItem.isDeleted(dep)) {
+          return true;
+        }
+        if (remainingDepth > 0) {
+          return this._getTransitiveDeletionState(dep, remainingDepth - 1);
+        }
+        return false;
+      }),
+    );
 
-    const spaceRoot = this._spaceStateManager.getRootBySpaceId(spaceId);
-    if (!spaceRoot) {
-      log.warn('no space state found for', { spaceId });
-      return null;
-    }
-    const dbDirectory = spaceRoot.doc();
-    if (!dbDirectory) {
-      log.warn('no space state found for', { spaceId });
-      return null;
-    }
-
-    const inlineObject = DatabaseDirectory.getInlineObject(dbDirectory, echoDxn.echoId);
-    if (inlineObject) {
-      return {
-        objectId: echoDxn.echoId,
-        documentId: spaceRoot.documentId,
-        spaceId,
-        queueId: null,
-        queueNamespace: null,
-        data: null,
-        doc: inlineObject,
-        rank: 1,
-      };
-    }
-
-    const link = DatabaseDirectory.getLink(dbDirectory, echoDxn.echoId);
-    if (!link) {
-      return null;
-    }
-
-    const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(Context.default(), link as AutomergeUrl, {
-      fetchFromNetwork: true,
-    });
-    const doc = handle.doc();
-    if (!doc) {
-      return null;
-    }
-
-    const object = DatabaseDirectory.getInlineObject(doc, echoDxn.echoId);
-    if (!object) {
-      return null;
-    }
-
-    return {
-      objectId: echoDxn.echoId,
-      documentId: handle.documentId,
-      spaceId,
-      queueId: null,
-      queueNamespace: null,
-      data: null,
-      doc: object,
-      rank: 1,
-    };
+    return strongDepStates.some((x) => x);
   }
 }
+
+const prettyFilter = (filter: QueryAST.Filter): string => {
+  switch (filter.type) {
+    case 'object': {
+      const parts: string[] = [];
+      if (filter.typename !== null) {
+        parts.push(String(filter.typename));
+      }
+      if (filter.id !== undefined && filter.id.length > 0) {
+        parts.push(`id: [${filter.id.join(', ')}]`);
+      }
+      const propEntries = Object.entries(filter.props);
+      if (propEntries.length > 0) {
+        const propsStr = propEntries.map(([k, v]) => `${k}: ${prettyFilter(v)}`).join(', ');
+        parts.push(`{ ${propsStr} }`);
+      }
+      if (filter.foreignKeys !== undefined && filter.foreignKeys.length > 0) {
+        parts.push(`foreignKeys: [${filter.foreignKeys.map((fk) => JSON.stringify(fk)).join(', ')}]`);
+      }
+      return parts.length > 0 ? `Filter.type(${parts.join(', ')})` : 'Filter.everything()';
+    }
+    case 'compare':
+      return `Filter.${filter.operator}(${JSON.stringify(filter.value)})`;
+    case 'in':
+      return `Filter.in([${filter.values.map((v) => JSON.stringify(v)).join(', ')}])`;
+    case 'contains':
+      return `Filter.contains(${JSON.stringify(filter.value)})`;
+    case 'tag':
+      return `Filter.tag(${JSON.stringify(filter.tag)})`;
+    case 'range':
+      return `Filter.range(${JSON.stringify(filter.from)}, ${JSON.stringify(filter.to)})`;
+    case 'text-search':
+      return filter.searchKind
+        ? `Filter.textSearch(${JSON.stringify(filter.text)}, ${JSON.stringify(filter.searchKind)})`
+        : `Filter.textSearch(${JSON.stringify(filter.text)})`;
+    case 'not':
+      return `Filter.not(${prettyFilter(filter.filter)})`;
+    case 'and':
+      return `Filter.and(${filter.filters.map(prettyFilter).join(', ')})`;
+    case 'or':
+      return `Filter.or(${filter.filters.map(prettyFilter).join(', ')})`;
+  }
+};
+
+const prettyQuery = (query: QueryAST.Query): string => {
+  switch (query.type) {
+    case 'select':
+      return `Query.select(${prettyFilter(query.filter)})`;
+    case 'filter':
+      return `${prettyQuery(query.selection)}.select(${prettyFilter(query.filter)})`;
+    case 'reference-traversal':
+      return `${prettyQuery(query.anchor)}.reference(${JSON.stringify(query.property)})`;
+    case 'incoming-references': {
+      const args: string[] = [];
+      if (query.typename !== null) {
+        args.push(String(query.typename));
+      }
+      if (query.property !== null) {
+        args.push(JSON.stringify(query.property));
+      }
+      return `${prettyQuery(query.anchor)}.referencedBy(${args.join(', ')})`;
+    }
+    case 'relation': {
+      const method =
+        query.direction === 'outgoing' ? 'sourceOf' : query.direction === 'incoming' ? 'targetOf' : 'relationOf';
+      const filterStr = query.filter !== undefined ? prettyFilter(query.filter) : '';
+      return `${prettyQuery(query.anchor)}.${method}(${filterStr})`;
+    }
+    case 'relation-traversal':
+      return `${prettyQuery(query.anchor)}.${query.direction}()`;
+    case 'hierarchy-traversal':
+      return query.direction === 'to-parent'
+        ? `${prettyQuery(query.anchor)}.parent()`
+        : `${prettyQuery(query.anchor)}.children()`;
+    case 'union':
+      return `Query.all(${query.queries.map(prettyQuery).join(', ')})`;
+    case 'set-difference':
+      return `Query.without(${prettyQuery(query.source)}, ${prettyQuery(query.exclude)})`;
+    case 'order': {
+      const orders = query.order.map((o) => {
+        if (o.kind === 'natural') {
+          return 'Order.natural()';
+        } else if (o.kind === 'rank') {
+          return `Order.rank(${JSON.stringify(o.direction)})`;
+        } else {
+          return `Order.property(${JSON.stringify(o.property)}, ${JSON.stringify(o.direction)})`;
+        }
+      });
+      return `${prettyQuery(query.query)}.orderBy(${orders.join(', ')})`;
+    }
+    case 'options': {
+      const opts = query.options;
+      const parts: string[] = [];
+      if (opts.spaceIds !== undefined) {
+        parts.push(`spaceIds: [${opts.spaceIds.map((s) => JSON.stringify(s)).join(', ')}]`);
+      }
+      if (opts.queues !== undefined) {
+        parts.push(`queues: [${opts.queues.map(String).join(', ')}]`);
+      }
+      if (opts.deleted !== undefined) {
+        parts.push(`deleted: ${JSON.stringify(opts.deleted)}`);
+      }
+      if (opts.allQueuesFromSpaces !== undefined) {
+        parts.push(`allQueuesFromSpaces: ${opts.allQueuesFromSpaces}`);
+      }
+      return `${prettyQuery(query.query)}.options({ ${parts.join(', ')} })`;
+    }
+    case 'limit':
+      return `${prettyQuery(query.query)}.limit(${query.limit})`;
+  }
+};
+
+const extractQueueIds = (queues: readonly DXN.String[]): ObjectId[] | null => {
+  if (queues.length === 0) {
+    return null;
+  }
+  return queues.map((dxnStr) => DXN.parse(dxnStr).asQueueDXN()?.queueId).filter(Boolean) as ObjectId[];
+};

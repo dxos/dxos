@@ -13,10 +13,10 @@ import { IconButton, type IconButtonProps } from './IconButton';
 const DefaultStory = (props: IconButtonProps) => {
   return (
     <Tooltip.Provider>
-      <div className='mbe-4'>
+      <div className='mb-4'>
         <IconButton {...props} />
       </div>
-      <div className='mbe-4'>
+      <div className='mb-4'>
         <IconButton iconOnly {...props} />
       </div>
     </Tooltip.Provider>
@@ -24,10 +24,10 @@ const DefaultStory = (props: IconButtonProps) => {
 };
 
 const meta = {
-  title: 'ui/react-ui-core/IconButton',
+  title: 'ui/react-ui-core/components/IconButton',
   component: IconButton,
   render: DefaultStory as any,
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof IconButton>;
 
 export default meta;

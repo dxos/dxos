@@ -11,7 +11,8 @@ import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 
 // eslint-disable-next-line unused-imports/no-unused-imports
-import { Common as AppFrameworkCommon, type Capability, Plugin } from '@dxos/app-framework';
+import { type Capability, Plugin } from '@dxos/app-framework';
+import { AppActivationEvents, AppCapabilities } from '@dxos/app-toolkit';
 import { CommandConfig, Common, flushAndSync, print, spaceLayer } from '@dxos/cli-util';
 import { SpaceProperties } from '@dxos/client/echo';
 import { Database, Filter, Obj, Ref, Type } from '@dxos/echo';
@@ -42,19 +43,17 @@ export const add = Command.make(
       const manager = yield* Plugin.Service;
       const { db } = yield* Database.Service;
 
-      yield* manager.activate(AppFrameworkCommon.ActivationEvent.SetupMetadata);
+      yield* manager.activate(AppActivationEvents.SetupMetadata);
 
       const resolve = (typename: string) => {
         const metadata = manager.capabilities
-          .getAll(AppFrameworkCommon.Capability.Metadata)
+          .getAll(AppCapabilities.Metadata)
           .find(({ id }) => id === typename)?.metadata;
         return metadata?.createObject ? (metadata as Metadata) : undefined;
       };
 
-      const [properties] = yield* Database.Service.runQuery(Filter.type(SpaceProperties));
-      const collection = yield* Database.Service.load<Collection.Collection>(
-        properties[Collection.Collection.typename],
-      );
+      const [properties] = yield* Database.runQuery(Filter.type(SpaceProperties));
+      const collection = yield* Database.load<Collection.Collection>(properties[Collection.Collection.typename]);
 
       const selectedTypename = yield* Option.match(typename, {
         onNone: () => selectTypename(resolve),
@@ -92,7 +91,7 @@ export const add = Command.make(
  * Prompts for typename selection if not provided.
  */
 const selectTypename = Effect.fn(function* (resolve: (typename: string) => Metadata | undefined) {
-  const schemas = yield* Database.Service.runSchemaQuery({
+  const schemas = yield* Database.runSchemaQuery({
     location: ['database', 'runtime'],
     includeSystem: false,
   }).pipe(

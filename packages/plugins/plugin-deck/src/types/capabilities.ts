@@ -5,7 +5,7 @@
 import { type Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 
 import { meta } from '../meta';
@@ -25,7 +25,7 @@ export namespace DeckCapabilities {
   /** Get the current active deck from state. */
   export const getDeck = (): Effect.Effect<DeckState, Error, Capability.Service> =>
     Effect.gen(function* () {
-      const state = yield* Common.Capability.getAtomValue(State);
+      const state = yield* Capabilities.getAtomValue(State);
       const deck = state.decks[state.activeDeck];
       invariant(deck, `Deck not found: ${state.activeDeck}`);
       return deck;

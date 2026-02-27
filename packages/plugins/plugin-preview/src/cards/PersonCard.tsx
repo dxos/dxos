@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type SurfaceComponentProps } from '@dxos/app-framework/react';
+import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Avatar } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-mosaic';
 import { type Person } from '@dxos/types';
@@ -16,7 +16,7 @@ export const PersonCard = ({ subject }: SurfaceComponentProps<Person.Person>) =>
     <Avatar.Root>
       <Card.Content>
         {image && (
-          <Card.Row className='plb-1'>
+          <Card.Row className='py-1'>
             <Avatar.Content
               imgSrc={image}
               icon='ph--user--regular'
@@ -36,7 +36,7 @@ export const PersonCard = ({ subject }: SurfaceComponentProps<Person.Person>) =>
         )}
         {emails.map(({ value }) => (
           <Card.Row key={value} icon='ph--at--regular'>
-            <Card.Text truncate className='text-primaryText'>
+            <Card.Text truncate className='text-primary-text'>
               {value}
             </Card.Text>
           </Card.Row>

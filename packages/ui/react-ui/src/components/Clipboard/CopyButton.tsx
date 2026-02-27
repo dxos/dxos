@@ -18,7 +18,7 @@ export type CopyButtonProps = ButtonProps &
     value: string;
   };
 
-const inactiveLabelStyles = 'invisible bs-px -mbe-px overflow-hidden';
+const inactiveLabelStyles = 'invisible h-px -mb-px overflow-hidden';
 
 export const CopyButton = ({ classNames, value, size = 5, ...props }: CopyButtonProps) => {
   const { t } = useTranslation(osTranslations);
@@ -32,11 +32,11 @@ export const CopyButton = ({ classNames, value, size = 5, ...props }: CopyButton
       data-testid='copy-invitation'
     >
       <div role='none' className={mx('flex gap-1 items-center', isCopied && inactiveLabelStyles)}>
-        <span className='pli-1'>{t('copy label')}</span>
+        <span className='px-1'>{t('copy label')}</span>
         <Icon icon='ph--copy--regular' size={size} />
       </div>
       <div role='none' className={mx('flex gap-1 items-center', !isCopied && inactiveLabelStyles)}>
-        <span className='pli-1'>{t('copy success label')}</span>
+        <span className='px-1'>{t('copy success label')}</span>
         <Icon icon='ph--check--regular' size={size} />
       </div>
     </Button>

@@ -7,15 +7,28 @@ import * as Schema from 'effect/Schema';
 import { Capability } from '@dxos/app-framework';
 import { Database } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
-import { Actor, Message } from '@dxos/types';
+import { SpaceSchema } from '@dxos/react-client/echo';
+import { Collection } from '@dxos/schema';
+import { Actor } from '@dxos/types';
 
 import { meta } from '../meta';
-
-import * as Mailbox from './Mailbox';
 
 const INBOX_OPERATION = `${meta.id}/operation`;
 
 export namespace InboxOperation {
+  export const OnCreateSpace = Operation.make({
+    meta: { key: `${INBOX_OPERATION}/on-create-space`, name: 'On Create Space' },
+    services: [Capability.Service],
+    schema: {
+      input: Schema.Struct({
+        space: SpaceSchema,
+        rootCollection: Collection.Collection,
+        isDefault: Schema.optional(Schema.Boolean),
+      }),
+      output: Schema.Void,
+    },
+  });
+
   export const ExtractContact = Operation.make({
     meta: { key: `${INBOX_OPERATION}/extract-contact`, name: 'Extract Contact' },
     services: [Capability.Service],
@@ -28,36 +41,17 @@ export namespace InboxOperation {
     },
   });
 
-  // TODO(wittjosiah): This appears to be unused.
-  export const RunAssistant = Operation.make({
-    meta: { key: `${INBOX_OPERATION}/run-assistant`, name: 'Run Inbox Assistant' },
+  export const CreateDraft = Operation.make({
+    meta: { key: `${INBOX_OPERATION}/create-draft`, name: 'Create Draft' },
     services: [Capability.Service],
     schema: {
       input: Schema.Struct({
-        mailbox: Mailbox.Mailbox,
+        db: Database.Database,
+        mode: Schema.optional(Schema.Literal('compose', 'reply', 'reply-all', 'forward')),
+        replyToMessage: Schema.optional(Schema.Any),
+        subject: Schema.optional(Schema.String),
+        body: Schema.optional(Schema.String),
       }),
-      output: Schema.Void,
-    },
-  });
-
-  export const ComposeEmailMode = Schema.Literal('compose', 'reply', 'reply-all', 'forward');
-  export type ComposeEmailMode = Schema.Schema.Type<typeof ComposeEmailMode>;
-
-  export const OpenComposeEmailInputStruct = Schema.Struct({
-    mode: Schema.optional(ComposeEmailMode),
-    originalMessage: Schema.optional(Message.Message),
-    subject: Schema.optional(Schema.String),
-    body: Schema.optional(Schema.String),
-  });
-
-  export const OpenComposeEmailInput = Schema.UndefinedOr(OpenComposeEmailInputStruct);
-  export type OpenComposeEmailInput = Schema.Schema.Type<typeof OpenComposeEmailInputStruct>;
-
-  export const OpenComposeEmail = Operation.make({
-    meta: { key: `${INBOX_OPERATION}/open-compose-email`, name: 'Open Compose Email' },
-    services: [Capability.Service],
-    schema: {
-      input: OpenComposeEmailInput,
       output: Schema.Void,
     },
   });

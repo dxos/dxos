@@ -7,7 +7,7 @@ import React, { useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { TraceEvent as TraceEventSchema, type TraceEvent as TraceEventType } from '@dxos/functions-runtime';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { LogPanel } from './LogPanel';
 
@@ -67,7 +67,7 @@ const meta = {
   title: 'devtools/devtools/InvocationTrace/LogPanel',
   component: LogPanel,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
   },

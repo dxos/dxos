@@ -1,9 +1,13 @@
 {
   "name": "@dxos/app-solid",
-  "version": "0.1.0",
+  "version": "0.8.3",
   "description": "SolidJS integration for @dxos/app-framework",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": false,
@@ -26,6 +30,7 @@
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-toolkit": "workspace:*",
     "@dxos/effect-atom-solid": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/operation": "workspace:*",

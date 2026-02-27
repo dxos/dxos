@@ -8,7 +8,7 @@ const path = require('path');
 module.exports = {
   plugins: {
     autoprefixer: {},
-    tailwindcss: {
+    '@tailwindcss/postcss': {
       config: path.join(__dirname, 'tailwind.config.js'),
     },
   },

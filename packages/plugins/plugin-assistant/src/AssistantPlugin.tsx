@@ -4,12 +4,15 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, Plugin } from '@dxos/app-framework';
-import { ResearchGraph } from '@dxos/assistant-toolkit';
+import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { Chat, Plan, Project, ProjectBlueprint, ResearchGraph } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
 import { Obj, Type } from '@dxos/echo';
+import { type SpaceId } from '@dxos/keys';
 import { Operation } from '@dxos/operation';
+import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { ClientEvents } from '@dxos/plugin-client/types';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space/types';
 import { type CreateObject } from '@dxos/plugin-space/types';
@@ -30,27 +33,22 @@ import {
 } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { AssistantEvents } from './types';
-import { Assistant, AssistantOperation } from './types';
+import { AssistantEvents, AssistantOperation } from './types';
 
 export const AssistantPlugin = Plugin.define(meta).pipe(
-  Common.Plugin.addTranslationsModule({ translations }),
-  Common.Plugin.addSettingsModule({ activate: Settings }),
-  Plugin.addModule({
-    // TODO(wittjosiah): Does not integrate with settings store.
-    //   Should this be a different event?
-    //   Should settings store be renamed to be more generic?
-    activatesOn: Common.ActivationEvent.SetupSettings,
-    activate: AssistantState,
-  }),
-  Common.Plugin.addMetadataModule({
+  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
+  AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+  AppPlugin.addMetadataModule({
     metadata: [
       {
-        id: Type.getTypename(Assistant.Chat),
+        id: Type.getTypename(Chat.Chat),
         metadata: {
           icon: 'ph--atom--regular',
           iconHue: 'sky',
-          createObject: ((props) => Effect.sync(() => Assistant.make(props))) satisfies CreateObject,
+          createObject: ((props, { db }) =>
+            Operation.invoke(AssistantOperation.CreateChat, { db, name: props?.name }).pipe(
+              Effect.map(({ object }) => object),
+            )) satisfies CreateObject,
         },
       },
       {
@@ -79,18 +77,50 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
           addToCollectionOnCreate: true,
         },
       },
+      {
+        id: Type.getTypename(Project.Project),
+        metadata: {
+          icon: 'ph--circuitry--regular',
+          iconHue: 'sky',
+          createObject: ((_, { db }) =>
+            Project.makeInitialized(
+              {
+                name: 'New Project',
+                spec: 'Not specified yet',
+              },
+              ProjectBlueprint.make(),
+            ).pipe(withComputeRuntime(db.spaceId))) satisfies CreateObject,
+          addToCollectionOnCreate: true,
+        },
+      },
     ],
   }),
-  Common.Plugin.addSchemaModule({
+  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addSchemaModule({
     schema: [
-      Assistant.Chat,
-      Assistant.CompanionTo,
+      Chat.Chat,
+      Chat.CompanionTo,
       Blueprint.Blueprint,
       HasSubject.HasSubject,
       Prompt.Prompt,
-      ResearchGraph,
+      ResearchGraph.ResearchGraph,
+      Project.Project,
+      Plan.Plan,
       Sequence,
     ],
+  }),
+  AppPlugin.addSettingsModule({ activate: Settings }),
+  AppPlugin.addSurfaceModule({
+    activate: ReactSurface,
+    activatesBefore: [AppActivationEvents.SetupArtifactDefinition],
+  }),
+  AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addModule({
+    // TODO(wittjosiah): Does not integrate with settings store.
+    //   Should this be a different event?
+    //   Should settings store be renamed to be more generic?
+    activatesOn: AppActivationEvents.SetupSettings,
+    activate: AssistantState,
   }),
   Plugin.addModule({
     id: 'on-space-created',
@@ -106,12 +136,6 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
     activatesOn: ClientEvents.SpacesReady,
     activate: Repair,
   }),
-  Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
-  Common.Plugin.addSurfaceModule({
-    activate: ReactSurface,
-    activatesBefore: [Common.ActivationEvent.SetupArtifactDefinition],
-  }),
   Plugin.addModule({
     activatesOn: AssistantEvents.SetupAiServiceProviders,
     activate: EdgeModelResolver,
@@ -123,14 +147,26 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     activatesBefore: [AssistantEvents.SetupAiServiceProviders],
     // TODO(dmaretskyi): This should activate lazily when the AI chat is used.
-    activatesOn: Common.ActivationEvent.Startup,
+    activatesOn: ActivationEvents.Startup,
     activate: AiService,
   }),
-  Common.Plugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   Plugin.addModule({
     // TODO(wittjosiah): Use a different event.
-    activatesOn: Common.ActivationEvent.Startup,
+    activatesOn: ActivationEvents.Startup,
     activate: Toolkit,
   }),
   Plugin.make,
 );
+
+// TODO(dmaretskyi): Extract to a helper module.
+const withComputeRuntime =
+  (spaceId: SpaceId) =>
+  <A, E, R>(
+    effect: Effect.Effect<A, E, R>,
+  ): Effect.Effect<A, E, Exclude<R, AutomationCapabilities.ComputeServices> | Capability.Service> =>
+    Effect.gen(function* () {
+      // TODO(dmaretskyi): Capability.get has `Error` in the error channel. We should throw those as defects instead.
+      const provider = yield* Capability.get(AutomationCapabilities.ComputeRuntime).pipe(Effect.orDie);
+      const runtime = yield* provider.getRuntime(spaceId).runtimeEffect;
+      return yield* effect.pipe(Effect.provide(runtime));
+    });

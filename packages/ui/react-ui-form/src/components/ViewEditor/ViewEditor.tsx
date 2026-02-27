@@ -9,10 +9,11 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import React, { forwardRef, useCallback, useContext, useImperativeHandle, useMemo, useState } from 'react';
 
-import { Filter, Format, Obj, Query, QueryAST, type SchemaRegistry } from '@dxos/echo';
+import { Entity, Feed, Filter, Format, Obj, Query, QueryAST, Ref, type SchemaRegistry, Type } from '@dxos/echo';
 import { EchoSchema, type JsonProp, isMutable, toJsonSchema } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { Callout, IconButton, Input, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { useObject, useQuery } from '@dxos/react-client/echo';
+import { IconButton, Input, Message, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { QueryForm, type QueryFormProps } from '@dxos/react-ui-components';
 import { List } from '@dxos/react-ui-list';
 import {
@@ -21,7 +22,6 @@ import {
   ProjectionModel,
   VIEW_FIELD_LIMIT,
   type View,
-  createDirectChangeCallback,
   createEchoChangeCallback,
   getTypenameFromQuery,
 } from '@dxos/schema';
@@ -35,10 +35,8 @@ import {
   type FormFieldComponentProps,
   FormFieldLabel,
   type FormFieldMap,
+  type FormRootProps,
 } from '../Form';
-
-const listGrid = 'grid grid-cols-[min-content_1fr_min-content_min-content_min-content]';
-const listItemGrid = 'grid grid-cols-subgrid col-span-5';
 
 export type ViewEditorProps = ThemedClassName<
   {
@@ -46,11 +44,11 @@ export type ViewEditorProps = ThemedClassName<
     view: View.View;
     mode?: 'schema' | 'tag';
     registry?: SchemaRegistry.SchemaRegistry;
-    readonly?: boolean;
     showHeading?: boolean;
     onQueryChanged?: (query: QueryAST.Query, target?: string) => void;
     onDelete?: (fieldId: string) => void;
-  } & Pick<QueryFormProps, 'types' | 'tags'>
+  } & Pick<QueryFormProps, 'types' | 'tags'> &
+    Pick<FormRootProps<any>, 'readonly' | 'db'>
 >;
 
 /**
@@ -64,6 +62,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
       view,
       mode = 'schema',
       registry,
+      db,
       readonly,
       showHeading = false,
       types,
@@ -81,11 +80,9 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
       // Use reactive and mutable version of json schema when schema is mutable.
       const jsonSchema = schema instanceof EchoSchema ? schema.jsonSchema : toJsonSchema(schema);
 
-      // Use createEchoChangeCallback for mutable schemas (EchoSchema), otherwise use direct mutation.
-      const change =
-        schema instanceof EchoSchema
-          ? createEchoChangeCallback(view, schema)
-          : createDirectChangeCallback(view.projection, jsonSchema);
+      // Always use createEchoChangeCallback since the view is ECHO-backed.
+      // Pass schema only when mutable to allow schema mutations.
+      const change = createEchoChangeCallback(view, schema instanceof EchoSchema ? schema : undefined);
 
       const model = new ProjectionModel({
         registry: atomRegistry,
@@ -98,7 +95,6 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
     }, [atomRegistry, schema, view]);
 
     useImperativeHandle(forwardedRef, () => projectionModel, [projectionModel]);
-    const [expandedField, setExpandedField] = useState<FieldType['id']>();
 
     const queueTarget = Match.value(view.query.ast).pipe(
       Match.when({ type: 'options' }, ({ options }) => {
@@ -109,6 +105,16 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
       }),
       Match.orElse(() => undefined),
     );
+
+    const feeds = useQuery(db, Filter.type(Type.Feed));
+
+    const targetRef = useMemo(() => {
+      if (!queueTarget) {
+        return undefined;
+      }
+      const feed = feeds.find((feed) => Feed.getQueueDxn(feed)?.toString() === queueTarget);
+      return feed ? Ref.fromDXN(Entity.getDXN(feed)) : undefined;
+    }, [queueTarget, feeds]);
 
     const viewSchema = useMemo(() => {
       const base = Schema.Struct({
@@ -121,7 +127,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
       if (mode === 'tag') {
         return Schema.Struct({
           ...base.fields,
-          target: Schema.optional(Schema.String.annotations({ title: 'Target Queue' })),
+          target: Schema.optional(Type.Ref(Type.Feed).annotations({ title: 'Target Feed' })),
         }).pipe(Schema.mutable);
       }
 
@@ -133,9 +139,9 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
     const viewValues = useMemo(
       () => ({
         query: mode === 'schema' ? getTypenameFromQuery(view.query.ast) : view.query.ast,
-        target: queueTarget,
+        target: targetRef,
       }),
-      [mode, view.query.ast, queueTarget],
+      [mode, view.query.ast, targetRef],
     );
 
     const fieldMap = useMemo<FormFieldMap | undefined>(
@@ -143,46 +149,48 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
       [mode, types, tags],
     );
 
-    // TODO(burdon): Check if mutable.
-    const handleAdd = useCallback(() => {
-      invariant(!readonly);
-      const field = projectionModel.createFieldProjection();
-      setExpandedField(field.id);
-    }, [projectionModel, readonly]);
-
     const handleUpdate = useCallback(
       (values: any) => {
-        requestAnimationFrame(() => {
-          const query = mode === 'schema' ? Query.select(Filter.typename(values.query)).ast : values.query;
-          onQueryChanged?.(query, values.target);
-        });
+        const targetValue = values.target;
+        let queueDxn: string | undefined;
+
+        if (Ref.isRef(targetValue)) {
+          const feedDxn = targetValue.dxn.toString();
+          const feed = feeds.find((feed) => Obj.getDXN(feed).toString() === feedDxn);
+          if (feed) {
+            queueDxn = Feed.getQueueDxn(feed)?.toString();
+          }
+        }
+
+        // TODO(wittjosiah): Deep-clone the AST to plain JS or ECHO proxy arrays become objects with numeric keys.
+        const query =
+          mode === 'schema'
+            ? Query.select(Filter.typename(values.query)).ast
+            : JSON.parse(JSON.stringify(values.query));
+        onQueryChanged?.(query, queueDxn);
       },
-      [onQueryChanged, view, queueTarget, mode],
+      [onQueryChanged, mode, feeds],
     );
 
     const handleDelete = useCallback(
       (fieldId: string) => {
         invariant(!readonly);
-        if (fieldId === expandedField) {
-          setExpandedField(undefined);
-        }
-
         onDelete?.(fieldId);
       },
-      [expandedField, onDelete, readonly],
+      [onDelete, readonly],
     );
 
     return (
       <div role='none' className={mx(classNames)}>
         {/* If readonly is set, then the callout is not needed. */}
         {schemaReadonly && !readonly && (
-          <Callout.Root valence='info' classNames='mlb-cardSpacingBlock'>
-            <Callout.Title>{t('system schema description')}</Callout.Title>
-          </Callout.Root>
+          <Message.Root valence='info' classNames='my-formSpacing'>
+            <Message.Title>{t('system schema description')}</Message.Title>
+          </Message.Root>
         )}
 
         {/* TODO(burdon): Is the form read-only or just the schema? */}
-        <Form.Root schema={viewSchema} values={viewValues} fieldMap={fieldMap} autoSave onSave={handleUpdate}>
+        <Form.Root schema={viewSchema} values={viewValues} fieldMap={fieldMap} db={db} onValuesChanged={handleUpdate}>
           <Form.FieldSet />
 
           <FormFieldLabel label={t('fields label')} asChild />
@@ -195,19 +203,6 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
             onDelete={handleDelete}
           />
         </Form.Root>
-
-        {!readonly && !expandedField && (
-          <div role='none' className='mlb-cardSpacingBlock'>
-            <IconButton
-              icon='ph--plus--regular'
-              label={t('add property button label')}
-              onClick={readonly ? undefined : handleAdd}
-              // TODO(burdon): Show field limit in ux (not tooltip).
-              disabled={view.projection.fields.length >= VIEW_FIELD_LIMIT}
-              classNames='is-full'
-            />
-          </div>
-        )}
       </div>
     );
   },
@@ -220,15 +215,16 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
   const schemaReadonly = !isMutable(schema);
   const { t } = useTranslation(translationKey);
 
+  // Subscribe to view changes for reactivity.
+  const [viewSnapshot] = useObject(view);
+
   const projectionModel = useMemo(() => {
     // Use reactive and mutable version of json schema when schema is mutable.
     const jsonSchema = schema instanceof EchoSchema ? schema.jsonSchema : toJsonSchema(schema);
 
-    // Use createEchoChangeCallback for mutable schemas (EchoSchema), otherwise use direct mutation.
-    const change =
-      schema instanceof EchoSchema
-        ? createEchoChangeCallback(view, schema)
-        : createDirectChangeCallback(view.projection, jsonSchema);
+    // Always use createEchoChangeCallback since the view is ECHO-backed.
+    // Pass schema only when mutable to allow schema mutations.
+    const change = createEchoChangeCallback(view, schema instanceof EchoSchema ? schema : undefined);
 
     const model = new ProjectionModel({
       registry: atomRegistry,
@@ -241,6 +237,12 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
   }, [atomRegistry, schema, view]);
 
   const [expandedField, setExpandedField] = useState<FieldType['id']>();
+
+  const handleAdd = useCallback(() => {
+    invariant(!readonly);
+    const field = projectionModel.createFieldProjection();
+    setExpandedField(field.id);
+  }, [projectionModel, readonly]);
 
   const handleToggleField = useCallback(
     (field: FieldType) => {
@@ -264,15 +266,15 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
   const handleMove = useCallback(
     (fromIndex: number, toIndex: number) => {
       invariant(!readonly);
-      // NOTE(ZaymonFC): Using arrayMove here causes a race condition with the kanban model.
-      const fields = [...view.projection.fields];
-      const [moved] = fields.splice(fromIndex, 1);
-      fields.splice(toIndex, 0, moved);
       Obj.change(view, (v) => {
+        // NOTE(ZaymonFC): Using arrayMove here causes a race condition with the kanban model.
+        const fields = [...v.projection.fields];
+        const [moved] = fields.splice(fromIndex, 1);
+        fields.splice(toIndex, 0, moved);
         v.projection.fields = fields;
       });
     },
-    [view.projection.fields, readonly],
+    [view, readonly],
   );
 
   const handleClose = useCallback(() => setExpandedField(undefined), []);
@@ -293,9 +295,13 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
     [projectionModel],
   );
 
+  if (!viewSnapshot) {
+    return null;
+  }
+
   return (
     <List.Root<FieldType>
-      items={view.projection.fields}
+      items={viewSnapshot.projection.fields as FieldType[]}
       isItem={Schema.is(FieldSchema)}
       getId={(field) => field.id}
       onMove={readonly ? undefined : handleMove}
@@ -304,17 +310,24 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
       {({ items: fields }) => (
         <>
           {showHeading && <h3 className='text-sm'>{t('field path label')}</h3>}
-          <div role='list' className={listGrid}>
+          <div role='list' className='grid grid-cols-[min-content_1fr_min-content_min-content_min-content]'>
             {fields?.map((field) => {
               const hidden = field.visible === false;
               return (
                 <List.Item<FieldType>
                   key={field.id}
                   item={field}
-                  classNames={listItemGrid}
+                  classNames={'grid grid-cols-subgrid col-span-5'}
                   aria-expanded={expandedField === field.id}
                 >
-                  <div role='none' className={mx(subtleHover, listItemGrid, 'rounded-sm cursor-pointer min-bs-10')}>
+                  <div
+                    role='none'
+                    className={mx(
+                      subtleHover,
+                      'grid grid-cols-subgrid col-span-5',
+                      'rounded-xs cursor-pointer min-h-10',
+                    )}
+                  >
                     <List.ItemDragHandle disabled={readonly || schemaReadonly} />
                     <List.ItemTitle classNames={hidden && 'text-subdued'} onClick={() => handleToggleField(field)}>
                       {field.path}
@@ -332,7 +345,7 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
                         <List.ItemDeleteButton
                           label={t('delete field label')}
                           autoHide={false}
-                          disabled={readonly || schemaReadonly || view.projection.fields.length <= 1}
+                          disabled={readonly || schemaReadonly || viewSnapshot.projection.fields.length <= 1}
                           onClick={() => handleDelete(field.id)}
                           data-testid='field.delete'
                         />
@@ -348,7 +361,7 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
                     )}
                   </div>
                   {expandedField === field.id && !readonly && (
-                    <div role='none' className='col-span-5 mbs-1 mbe-1 border border-separator rounded-md'>
+                    <div role='none' className='col-span-5 mt-1 mb-1 border border-separator rounded-md'>
                       <FieldEditor
                         readonly={readonly || schemaReadonly}
                         registry={registry}
@@ -362,6 +375,17 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
               );
             })}
           </div>
+          {!readonly && !expandedField && (
+            <div role='none' className='my-formSpacing'>
+              <IconButton
+                icon='ph--plus--regular'
+                label={t('add property button label')}
+                onClick={handleAdd}
+                disabled={viewSnapshot.projection.fields.length >= VIEW_FIELD_LIMIT}
+                classNames='w-full'
+              />
+            </div>
+          )}
         </>
       )}
     </List.Root>

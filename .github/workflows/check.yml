@@ -70,7 +70,7 @@ jobs:
 
       - name: Check Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
-        run: moon run :lint :build --affected --remote
+        run: moon run :lint :build --affected remote
 
       - name: Check All
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
@@ -126,11 +126,11 @@ jobs:
 
       - name: Test Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
-        run: moon run :test --affected --remote -- --no-file-parallelism
+        run: moon run :test :test-browser :test-storybook --affected remote -- --no-file-parallelism
 
       - name: Test All
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
-        run: moon run :test -- --no-file-parallelism
+        run: moon run :test :test-browser :test-storybook -- --no-file-parallelism
 
       - uses: 'moonrepo/run-report-action@v1'
         if: (success() || failure()) && github.event_name == 'pull_request'
@@ -199,15 +199,21 @@ jobs:
 
       - name: Bundle Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
-        run: moon run :bundle --affected --remote
+        run: moon run :bundle --affected remote
 
       - name: Bundle All
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
         run: moon run :bundle
 
+      # Clear Storybook Vite cache in every package so Storybook dev server does a fresh optimizeDeps run.
+      # Avoids 504 Outdated Optimize Dep when graph differs from bundle step.
+      # Storybook puts cache under node_modules/.cache/storybook/<hash>/sb-vite per package.
+      - name: Clear Storybook Vite cache
+        run: find . -type d -path '*/node_modules/.cache/storybook' -prune -print0 | xargs -0 rm -rf
+
       - name: Test Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
-        run: PLAYWRIGHT_BROWSER=all moon run :e2e --affected --remote --concurrency=2
+        run: PLAYWRIGHT_BROWSER=all moon run :e2e --affected remote --concurrency=2
 
       - name: Test All
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
@@ -220,7 +226,7 @@ jobs:
 
       - name: Upload Traces
         uses: actions/upload-artifact@v4
-        if: ${{ success() || failure() }}
+        if: always()
         with:
           name: playwright-report
           path: test-results/playwright

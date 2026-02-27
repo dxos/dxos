@@ -4,6 +4,10 @@
   "description": "DXOS Surface plugin for constructing knowledge graphs",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": true,
@@ -27,6 +31,7 @@
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-graph": "workspace:*",
+    "@dxos/app-toolkit": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/effect": "workspace:*",

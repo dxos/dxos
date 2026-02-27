@@ -8,6 +8,7 @@ import { describe, expect, test } from 'vitest';
 import { Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { createObject } from '@dxos/echo-db';
+import { arrayMove } from '@dxos/util';
 
 import * as AtomObj from './atom';
 
@@ -166,7 +167,9 @@ describe('Echo Atom - Reactivity', () => {
     });
 
     actions.push('before');
-    obj.name = 'Updated';
+    Obj.change(obj, (o) => {
+      o.name = 'Updated';
+    });
     actions.push('after');
 
     // Updates must be synchronous: before -> update -> after.
@@ -188,7 +191,9 @@ describe('Echo Atom - Reactivity', () => {
     });
 
     actions.push('before');
-    obj.stringArray!.splice(1, 1);
+    Obj.change(obj, (o) => {
+      o.stringArray!.splice(1, 1);
+    });
     actions.push('after');
 
     // Updates must be synchronous: before -> update -> after.
@@ -198,5 +203,31 @@ describe('Echo Atom - Reactivity', () => {
     expect(obj.stringArray).toEqual(['a', 'c', 'd']);
 
     unsubscribe();
+  });
+
+  test('property atom for array property updates when array is reordered in place', () => {
+    // Verifies that makeProperty(obj, 'columns')-style atoms subscribe to in-place
+    // array mutations (e.g. arrayMove), so UI stays in sync after column reorder.
+    const obj = createObject(Obj.make(TestSchema.Example, { stringArray: ['a', 'b', 'c'] }));
+
+    const registry = Registry.make();
+    const atom = AtomObj.makeProperty(obj, 'stringArray');
+
+    const initial = registry.get(atom);
+    expect(initial).toEqual(['a', 'b', 'c']);
+
+    let updateCount = 0;
+    registry.subscribe(atom, () => {
+      updateCount++;
+    });
+
+    // Reorder in place (e.g. move first to last).
+    Obj.change(obj, (obj) => {
+      arrayMove(obj.stringArray!, 0, 2);
+    });
+
+    expect(updateCount).toBe(1);
+    const afterReorder = registry.get(atom);
+    expect(afterReorder).toEqual(['b', 'c', 'a']);
   });
 });

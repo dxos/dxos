@@ -3,12 +3,17 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Equal from 'effect/Equal';
+import * as Hash from 'effect/Hash';
 import * as Option from 'effect/Option';
 import * as ParseResult from 'effect/ParseResult';
+import * as Pipeable from 'effect/Pipeable';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
+import type * as Types from 'effect/Types';
 
 import { Event } from '@dxos/async';
+import { type CustomInspectFunction, inspectCustom } from '@dxos/debug';
 import { EncodedReference } from '@dxos/echo-protocol';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
@@ -16,7 +21,7 @@ import { DXN, ObjectId } from '@dxos/keys';
 import * as Database from '../../Database';
 import { ReferenceAnnotationId, getSchemaDXN, getTypeAnnotation, getTypeIdentifierAnnotation } from '../annotations';
 import { type JsonSchemaType } from '../json-schema';
-import type { AnyProperties, WithId } from '../types';
+import type { AnyEntity, AnyProperties } from '../types';
 
 /**
  * The `$id` and `$ref` fields for an ECHO reference schema.
@@ -30,7 +35,7 @@ export const getSchemaReference = (property: JsonSchemaType): { typename: string
   }
 };
 
-export const createSchemaReference = (typename: string): JsonSchemaType => {
+export const createSchemaReference = (typename: string): Types.DeepMutable<JsonSchemaType> => {
   return {
     $id: JSON_SCHEMA_ECHO_REF_ID,
     reference: {
@@ -71,7 +76,7 @@ export const RefTypeId: unique symbol = Symbol('@dxos/echo/internal/Ref');
 /**
  * Reference Schema.
  */
-export interface RefSchema<T extends WithId> extends Schema.SchemaClass<Ref<T>, EncodedReference> {}
+export interface RefSchema<T extends AnyEntity> extends Schema.SchemaClass<Ref<T>, EncodedReference> {}
 
 /**
  * Type of the `Ref` function and extra methods attached to it.
@@ -102,8 +107,8 @@ export interface RefFn {
   /**
    * Constructs a reference that points to the given object.
    */
-  // TODO(burdon): Narrow to Obj.Any?
-  make: <T extends WithId>(object: T) => Ref<T>;
+  // TODO(burdon): Narrow to Obj.Unknown?
+  make: <T extends AnyEntity>(object: T) => Ref<T>;
 
   /**
    * Constructs a reference that points to the object specified by the provided DXN.
@@ -128,7 +133,7 @@ export const Ref: RefFn = <S extends Schema.Schema.Any>(schema: S): RefSchema<Sc
  * Represents materialized reference to a target.
  * This is the data type for the fields marked as ref.
  */
-export interface Ref<T> {
+export interface Ref<T> extends Pipeable.Pipeable {
   /**
    * Target object DXN.
    */
@@ -451,7 +456,26 @@ export class RefImpl<T> implements Ref<T> {
     return `Ref(${this.#dxn.toString()})`;
   }
 
+  [inspectCustom]: CustomInspectFunction = (depth, options, inspect) => {
+    return this.toString();
+  };
+
   [RefTypeId] = refVariance;
+
+  /**
+   * Effect Hash trait. Required for MutableHashMap-based caches (e.g., Atom.family)
+   * to deduplicate Ref instances that point to the same object.
+   * ECHO proxies return new RefImpl instances on every property access,
+   * so without this, each access would create a separate cache entry.
+   */
+  [Hash.symbol](): number {
+    return Hash.hash(this.#dxn.toString());
+  }
+
+  /** Effect Equal trait. See {@link Hash.symbol} for rationale. */
+  [Equal.symbol](that: Equal.Equal): boolean {
+    return that instanceof RefImpl && this.#dxn.toString() === that.dxn.toString();
+  }
 
   /**
    * Internal method to set the resolver.
@@ -467,6 +491,11 @@ export class RefImpl<T> implements Ref<T> {
    */
   _getSavedTarget(): T | undefined {
     return this.#target;
+  }
+
+  pipe() {
+    // eslint-disable-next-line prefer-rest-params
+    return Pipeable.pipeArguments(this, arguments);
   }
 }
 

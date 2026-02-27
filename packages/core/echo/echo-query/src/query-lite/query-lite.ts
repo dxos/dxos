@@ -449,6 +449,22 @@ class QueryClass implements Query$.Any {
     });
   }
 
+  parent(): Query$.Any {
+    return new QueryClass({
+      type: 'hierarchy-traversal',
+      anchor: this.ast,
+      direction: 'to-parent',
+    });
+  }
+
+  children(): Query$.Any {
+    return new QueryClass({
+      type: 'hierarchy-traversal',
+      anchor: this.ast,
+      direction: 'to-children',
+    });
+  }
+
   orderBy(...order: Order$.Any[]): Query$.Any {
     return new QueryClass({
       type: 'order',
@@ -463,6 +479,20 @@ class QueryClass implements Query$.Any {
       query: this.ast,
       limit,
     });
+  }
+
+  from(arg: any, options?: { includeFeeds?: boolean }): Query$.Any {
+    if (arg === 'all-accessible-spaces') {
+      return new QueryClass({
+        type: 'options',
+        query: this.ast,
+        options: {
+          ...(options?.includeFeeds ? { allQueuesFromSpaces: true } : {}),
+        },
+      });
+    }
+
+    throw new TypeError('Database and Feed objects are not supported in query-lite sandbox');
   }
 
   options(options: QueryAST.QueryOptions): Query$.Any {

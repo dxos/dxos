@@ -30,7 +30,7 @@ const meta = {
   title: 'ui/react-ui-pickers/HuePicker',
   component: HuePicker,
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ layout: 'column' })],
+  decorators: [withTheme(), withLayout({ layout: 'column' })],
 } satisfies Meta<typeof HuePicker>;
 
 export default meta;

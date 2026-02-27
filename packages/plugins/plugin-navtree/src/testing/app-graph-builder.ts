@@ -90,30 +90,10 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
             },
           ]),
       }),
-      // TODO(wittjosiah): This group node probably is unnecessary now with the flat L0 structure.
-      // Create spaces group node.
-      GraphBuilder.createExtension({
-        id: 'spaces-root',
-        match: NodeMatcher.whenRoot,
-        position: 'hoist',
-        connector: () =>
-          Effect.succeed([
-            {
-              id: 'spaces-root',
-              type: 'spaces-root',
-              properties: {
-                label: 'Spaces',
-                icon: 'ph--planet--regular',
-                role: 'branch',
-                disposition: 'collection',
-              },
-            },
-          ]),
-      }),
-      // Create space nodes.
+      // Create space (workspace) nodes directly under root.
       GraphBuilder.createExtension({
         id: 'spaces',
-        match: NodeMatcher.whenNodeType('spaces-root'),
+        match: NodeMatcher.whenRoot,
         connector: (_, get) =>
           Effect.sync(() => {
             const count = Atom.make((get) => {
@@ -138,6 +118,7 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
                 label: `Space ${i}`,
                 icon: faker.properties.icon(),
                 hue: faker.properties.hue(),
+                disposition: 'workspace',
               }),
             }));
           }),

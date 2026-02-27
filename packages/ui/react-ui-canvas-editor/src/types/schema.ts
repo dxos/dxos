@@ -4,8 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { ComputeGraph } from '@dxos/conductor';
-import { Type } from '@dxos/echo';
+import { ComputeGraph, ComputeGraphModel } from '@dxos/conductor';
+import { Obj, Ref, Type } from '@dxos/echo';
 import { Graph } from '@dxos/graph';
 
 // TODO(burdon): Consider interop with TLDraw and GeoJSON standards?
@@ -40,13 +40,13 @@ export type Connection = Schema.Schema.Type<typeof Connection>;
 
 // TODO(burdon): Rename scene?
 export const Layout = Schema.Struct({
-  shapes: Schema.mutable(Schema.Array(Shape)),
+  shapes: Schema.Array(Shape),
 });
 
 export type Layout = Schema.Schema.Type<typeof Layout>;
 
 // TODO(wittjosiah): Rename WorkflowType?
-export const CanvasBoardType = Schema.Struct({
+export const CanvasBoard = Schema.Struct({
   name: Schema.optional(Schema.String),
 
   computeGraph: Schema.optional(Type.Ref(ComputeGraph)),
@@ -56,10 +56,21 @@ export const CanvasBoardType = Schema.Struct({
    */
   layout: Graph.Graph,
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/CanvasBoard',
     version: '0.1.0',
   }),
 );
 
-export type CanvasBoardType = Schema.Schema.Type<typeof CanvasBoardType>;
+export type CanvasBoard = Schema.Schema.Type<typeof CanvasBoard>;
+
+/**
+ * Creates a CanvasBoard with default empty layout and compute graph when not provided.
+ */
+export const make = (props: Partial<Obj.MakeProps<typeof CanvasBoard>> = {}) => {
+  return Obj.make(CanvasBoard, {
+    ...props,
+    layout: props.layout ?? { nodes: [], edges: [] },
+    computeGraph: props.computeGraph ?? Ref.make(ComputeGraphModel.create().root),
+  });
+};

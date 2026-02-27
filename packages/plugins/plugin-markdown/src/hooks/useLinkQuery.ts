@@ -5,8 +5,8 @@
 import * as Option from 'effect/Option';
 import { useCallback, useMemo } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { usePluginManager } from '@dxos/app-framework/react';
+import { usePluginManager } from '@dxos/app-framework/ui';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { type Database, Filter, Obj, Query, Type } from '@dxos/echo';
 import { EntityKind, SystemTypeAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
 import { toLocalizedString, useTranslation } from '@dxos/react-ui';
@@ -19,7 +19,7 @@ export const useLinkQuery = (db: Database.Database | undefined) => {
   const manager = usePluginManager();
   const resolve = useCallback(
     (typename: string) =>
-      manager.capabilities.getAll(Common.Capability.Metadata).find(({ id }) => id === typename)?.metadata ?? {},
+      manager.capabilities.getAll(AppCapabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {},
     [manager],
   );
 
@@ -39,7 +39,7 @@ export const useLinkQuery = (db: Database.Database | undefined) => {
       const name = query?.startsWith('@') ? query.slice(1).toLowerCase() : (query?.toLowerCase() ?? '');
       const results = await db?.query(Query.select(filter)).run();
 
-      // TODO(wittjosiah): Use `Obj.Any` type.
+      // TODO(wittjosiah): Use `Obj.Unknown` type.
       const getLabel = (object: any) => {
         const label = Obj.getLabel(object);
         if (label) {

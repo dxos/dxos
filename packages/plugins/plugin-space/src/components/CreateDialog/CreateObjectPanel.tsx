@@ -11,7 +11,6 @@ import { type AnyProperties, type TypeAnnotation, getTypeAnnotation } from '@dxo
 import { type Space, type SpaceId } from '@dxos/react-client/echo';
 import { toLocalizedString, useDefaultValue, useTranslation } from '@dxos/react-ui';
 import { Form, omitId } from '@dxos/react-ui-form';
-import { dialogStyles } from '@dxos/react-ui-mosaic';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-searchlist';
 import { type Collection, ViewAnnotation } from '@dxos/schema';
 import { type MaybePromise, isNonNullable } from '@dxos/util';
@@ -58,6 +57,8 @@ export const CreateObjectPanel = ({
   const { t } = useTranslation(meta.id);
   const initialFormValues = useDefaultValue(_initialFormValues, () => ({}));
   const metadata = typename && resolve?.(typename);
+
+  // TODO(burdon): Message appears twice (v1 and v2).
   const options: TypeAnnotation[] = schemas
     .filter((schema) => {
       if (views == null) {
@@ -114,7 +115,7 @@ export const CreateObjectPanel = ({
       testId='create-object-form'
       autoFocus
       schema={omitId(metadata.inputSchema)}
-      values={initialFormValues}
+      defaultValues={initialFormValues}
       db={Obj.isObject(target) ? Obj.getDatabase(target) : target}
       fieldProvider={inputSurfaceLookup}
       onSave={handleCreateObject}
@@ -128,6 +129,8 @@ export const CreateObjectPanel = ({
     </Form.Root>
   ) : null;
 };
+
+CreateObjectPanel.displayName = 'CreateObjectPanel';
 
 const SelectSpace = ({
   spaces,
@@ -167,14 +170,15 @@ const SelectSpace = ({
       ),
   });
 
+  // TODO(burdon): Replace with Combobox.
   return (
-    <SearchList.Root label={t('space input label')} onSearch={handleSearch} classNames={dialogStyles.searchListRoot}>
-      <SearchList.Input
-        autoFocus
-        data-testid='create-object-form.space-input'
-        placeholder={t('space input placeholder')}
-      />
-      <SearchList.Content classNames={dialogStyles.paddedOverflow}>
+    <SearchList.Root onSearch={handleSearch}>
+      <SearchList.Content>
+        <SearchList.Input
+          autoFocus
+          data-testid='create-object-form.space-input'
+          placeholder={t('space input placeholder')}
+        />
         <SearchList.Viewport>
           {results.map((space) => (
             <SearchList.Item
@@ -216,13 +220,13 @@ const SelectSchema = ({
   });
 
   return (
-    <SearchList.Root label={t('schema input label')} onSearch={handleSearch} classNames={dialogStyles.searchListRoot}>
-      <SearchList.Input
-        autoFocus
-        data-testid='create-object-form.schema-input'
-        placeholder={t('schema input placeholder')}
-      />
-      <SearchList.Content classNames={dialogStyles.paddedOverflow}>
+    <SearchList.Root onSearch={handleSearch}>
+      <SearchList.Content>
+        <SearchList.Input
+          autoFocus
+          data-testid='create-object-form.schema-input'
+          placeholder={t('schema input placeholder')}
+        />
         <SearchList.Viewport>
           {results.map((option) => (
             <SearchList.Item
@@ -233,8 +237,8 @@ const SelectSchema = ({
                 defaultValue: option.typename,
               })}
               icon={resolve?.(option.typename)?.icon ?? 'ph--placeholder--regular'}
-              onSelect={() => onChange(option.typename)}
               classNames='flex items-center gap-2'
+              onSelect={() => onChange(option.typename)}
             />
           ))}
         </SearchList.Viewport>

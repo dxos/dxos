@@ -95,6 +95,9 @@
       "path": "../../sdk/app-framework"
     },
     {
+      "path": "../../sdk/app-toolkit"
+    },
+    {
       "path": "../../sdk/client"
     },
     {
@@ -120,6 +123,9 @@
     },
     {
       "path": "../../ui/react-ui-list"
+    },
+    {
+      "path": "../../ui/react-ui-mosaic"
     },
     {
       "path": "../../ui/react-ui-stack"

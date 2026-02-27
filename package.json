@@ -5,12 +5,16 @@
   "description": "A decentralized alternative to the commercial cloud for privacy preserving software.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "repository": "github:dxos/dxos",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "info@dxos.org",
   "sideEffects": false,
   "scripts": {
     "1p-credentials": "bash -c \"op inject -i '$(git rev-parse --show-toplevel)/.env.1password'\"",
+    "audit-classes": "pnpm --filter @dxos/ui-theme audit-classes",
     "beast": "beast docs",
     "build": "moon run :build",
     "changed-packages": "scripts/changed",
@@ -22,16 +26,19 @@
     "killorphans": "./scripts/killorphans",
     "knip": "knip",
     "lint": "moon run :lint -- --fix",
-    "lint-changed": "moon :lint --affected --remote -- --fix",
+    "lint-changed": "moon run :lint --affected remote -- --fix",
     "lockfile": "vite-node scripts/lockfile.ts",
     "moonx": "./scripts/moonx",
     "pkg-inspect": "./scripts/pkg-inspect.mjs",
     "pre-ci": "./scripts/pre-ci.mjs",
     "prepare": "[ \"$HUSKY\" != \"0\" ] && husky install || true",
-    "test": "MOON_CONCURRENCY=4 moon run :test -- --no-file-parallelism",
+    "test": "moon run :test -- --no-file-parallelism",
+    "test-browser": "MOON_CONCURRENCY=4 moon run :test-browser -- --no-file-parallelism",
+    "test-storybook": "MOON_CONCURRENCY=4 moon run :test-storybook -- --no-file-parallelism",
     "toolbox": "vite-node tools/toolbox/src/main.ts"
   },
   "dependencies": {
+    "@dxos/app-toolkit": "workspace:*",
     "js-yaml": "catalog:",
     "tslib": "catalog:"
   },
@@ -61,10 +68,12 @@
     "@octokit/rest": "catalog:",
     "@phosphor-icons/core": "catalog:",
     "@playwright/test": "catalog:",
+    "@posthog/cli": "catalog:",
     "@rollup/plugin-inject": "catalog:",
     "@rushstack/eslint-patch": "catalog:",
     "@swc/core": "catalog:",
     "@swc/types": "catalog:",
+    "@tailwindcss/oxide": "catalog:",
     "@testing-library/dom": "catalog:",
     "@testing-library/jest-dom": "catalog:",
     "@testing-library/react": "catalog:",
@@ -144,6 +153,7 @@
     "semver": "catalog:",
     "serve": "catalog:",
     "storybook": "catalog:",
+    "tailwindcss": "catalog:",
     "ts-morph": "catalog:",
     "tsdown": "catalog:",
     "tsx": "catalog:",
@@ -171,54 +181,5 @@
   "packageManager": "pnpm@10.28.0",
   "engines": {
     "node": "^24.0.0"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "@bufbuild/buf",
-      "@moonrepo/cli",
-      "@parcel/watcher",
-      "@sentry/cli",
-      "@swc/core",
-      "better-sqlite3",
-      "canvas",
-      "cbor-extract",
-      "classic-level",
-      "core-js",
-      "edgedriver",
-      "esbuild",
-      "fs-ext",
-      "fsctl",
-      "geckodriver",
-      "msgpackr-extract",
-      "node-datachannel",
-      "onnxruntime-node",
-      "oxc-resolver",
-      "protobufjs",
-      "sharp",
-      "sodium-native",
-      "styled-components",
-      "unrs-resolver",
-      "workerd",
-      "yarn"
-    ],
-    "overrides": {
-      "typescript": "^5.9.3",
-      "@automerge/automerge": "3.2.1",
-      "better-sqlite3": "12.6.0",
-      "@lezer/lr": "^1.4.2",
-      "@types/node": "22.10.2",
-      "@types/react": "~19.2.7",
-      "@types/react-dom": "~19.2.3",
-      "ipfs-utils": "9.0.14",
-      "micromatch": "^4.0.8",
-      "nan": "2.19.0",
-      "react": "~19.2.3",
-      "react-dom": "~19.2.3"
-    },
-    "patchedDependencies": {
-      "random-access-idb@1.2.2": "patches/random-access-idb@1.2.2.patch",
-      "uuid@8.3.2": "patches/uuid@8.3.2.patch",
-      "@automerge/automerge-repo@2.5.1": "patches/@automerge__automerge-repo@2.5.1.patch"
-    }
   }
 }

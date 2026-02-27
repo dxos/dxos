@@ -5,7 +5,7 @@
 import * as Registry from '@effect-atom/atom/Registry';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Obj, Ref, Type } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { type EchoDatabase } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
@@ -128,7 +128,7 @@ describe('AtomRef - Referential Equality', () => {
     expect(atom1).not.toBe(atom2);
   });
 
-  test('AtomRef.make returns different atoms for refs created separately to same target', async () => {
+  test('AtomRef.make returns same atom for refs created separately to same target', async () => {
     await db.graph.schemaRegistry.register([TestSchema.Person]);
 
     const targetObj = Obj.make(TestSchema.Person, { name: 'Target', username: 'target', email: 'target@example.com' });
@@ -145,10 +145,10 @@ describe('AtomRef - Referential Equality', () => {
     const atom1 = AtomRef.make(ref1);
     const atom2 = AtomRef.make(ref2);
 
-    // Different ref objects mean different atoms (keyed by ref reference).
-    expect(atom1).not.toBe(atom2);
+    // Refs with the same DXN resolve to the same atom via Hash/Equal traits.
+    expect(atom1).toBe(atom2);
 
-    // But both atoms should return the same target data.
+    // Both atoms should return the same target data.
     expect(registry.get(atom1)?.name).toBe('Target');
     expect(registry.get(atom2)?.name).toBe('Target');
   });
@@ -195,7 +195,7 @@ describe('AtomRef - Expando Objects', () => {
   });
 
   test('works with Expando objects', async () => {
-    const targetObj = Obj.make(Type.Expando, { name: 'Expando Target', value: 42 });
+    const targetObj = Obj.make(TestSchema.Expando, { name: 'Expando Target', value: 42 });
     db.add(targetObj);
     await db.flush({ indexes: true });
 

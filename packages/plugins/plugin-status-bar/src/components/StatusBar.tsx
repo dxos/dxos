@@ -21,9 +21,9 @@ type StatusBarButtonProps = ThemedClassName<ComponentPropsWithRef<'button'> & { 
 const StatusBarButton = forwardRef<HTMLButtonElement, StatusBarButtonProps>(
   ({ classNames, children, asChild, ...props }, forwardedRef) => {
     const classes = mx(
-      'flex items-center justify-center gap-2 p-1 pli-2 rounded-sm',
+      'flex items-center justify-center gap-2 p-1 px-2 rounded-xs',
       'select-none cursor-pointer dx-focus-ring text-description text-xs',
-      'hover:bg-neutral-75 active:bg-neutral-150 dark:hover:bg-neutral-750 dark:active:bg-neutral-700',
+      'hover:bg-neutral-100 active:bg-neutral-200 dark:hover:bg-neutral-700 dark:active:bg-neutral-600',
       classNames,
     );
 
@@ -47,7 +47,7 @@ const StatusBarItem = forwardRef<HTMLDivElement, StatusBarItemProps>(
   ({ classNames, children, ...props }, forwardedRef) => (
     <div
       role='menuitem'
-      className={mx('flex items-center justify-center gap-2 p-1 pli-2 rounded-sm select-none', classNames)}
+      className={mx('flex items-center justify-center gap-2 p-1 px-2 rounded-xs select-none', classNames)}
       ref={forwardedRef}
       {...props}
     >

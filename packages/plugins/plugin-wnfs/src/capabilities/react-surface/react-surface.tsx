@@ -6,25 +6,27 @@ import * as Effect from 'effect/Effect';
 import type * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { Surface } from '@dxos/app-framework/ui';
 import { Obj } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
 import { type FormFieldComponentProps } from '@dxos/react-ui-form';
 
-import { FileContainer, FileInput } from '../../components';
+import { FileInput } from '../../components';
+import { FileContainer } from '../../containers';
 import { meta } from '../../meta';
 import { WnfsAction, WnfsFile } from '../../types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(Common.Capability.ReactSurface, [
-      Common.createSurface({
+    Capability.contributes(Capabilities.ReactSurface, [
+      Surface.create({
         id: `${meta.id}/article`,
         role: ['article', 'section', 'slide'],
         filter: (data): data is { subject: WnfsFile.File } => Obj.instanceOf(WnfsFile.File, data.subject),
-        component: ({ data, role }) => <FileContainer role={role} file={data.subject} />,
+        component: ({ data, role }) => <FileContainer role={role} subject={data.subject} />,
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/create-form`,
         role: 'form-input',
         filter: (data): data is { prop: string; schema: Schema.Schema.Any } => {

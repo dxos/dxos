@@ -1,8 +1,10 @@
-type: library
+layer: library
 language: typescript
 tags:
   - ts-build
+  - ts-test-storybook
   - pack
+  - storybook
 tasks:
   compile:
     args:

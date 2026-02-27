@@ -6,34 +6,34 @@ import * as Effect from 'effect/Effect';
 import type * as Schema from 'effect/Schema';
 import React, { useMemo } from 'react';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { Surface } from '@dxos/app-framework/ui';
 import { Database, Obj, Type } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
 import { type FormFieldComponentProps, SelectField, useFormValues } from '@dxos/react-ui-form';
-import { Kanban } from '@dxos/react-ui-kanban/types';
 import { type Collection } from '@dxos/schema';
 
-import { KanbanContainer, KanbanViewEditor } from '../../components';
+import { KanbanContainer, KanbanViewEditor } from '../../containers';
 import { meta } from '../../meta';
-import { PivotColumnAnnotationId } from '../../types';
+import { Kanban, PivotColumnAnnotationId } from '../../types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(Common.Capability.ReactSurface, [
-      Common.createSurface({
+    Capability.contributes(Capabilities.ReactSurface, [
+      Surface.create({
         id: meta.id,
         role: ['article', 'section'],
         filter: (data): data is { subject: Kanban.Kanban } => Obj.instanceOf(Kanban.Kanban, data.subject),
-        component: ({ data, role }) => <KanbanContainer object={data.subject} role={role} />,
+        component: ({ data, role }) => <KanbanContainer role={role} subject={data.subject} />,
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/object-settings`,
         role: 'object-settings',
         position: 'hoist',
         filter: (data): data is { subject: Kanban.Kanban } => Obj.instanceOf(Kanban.Kanban, data.subject),
-        component: ({ data }) => <KanbanViewEditor object={data.subject} />,
+        component: ({ data }) => <KanbanViewEditor subject={data.subject} />,
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/create-initial-schema-form-[pivot-column]`,
         role: 'form-input',
         filter: (

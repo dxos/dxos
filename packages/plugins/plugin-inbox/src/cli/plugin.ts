@@ -4,8 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, Plugin } from '@dxos/app-framework';
-import { ClientCapabilities } from '@dxos/plugin-client/types';
+import { Plugin } from '@dxos/app-framework';
+import { AppPlugin } from '@dxos/app-toolkit';
 import { type CreateObject } from '@dxos/plugin-space/types';
 import { Event, Message } from '@dxos/types';
 
@@ -15,37 +15,27 @@ import { Calendar, Mailbox } from '../types';
 
 // TODO(wittjosiah): Factor out shared modules.
 export const InboxPlugin = Plugin.define(meta).pipe(
-  Common.Plugin.addSchemaModule({
-    schema: [Calendar.Calendar, Event.Event, Mailbox.Mailbox, Message.Message],
-  }),
-  Common.Plugin.addMetadataModule({
+  AppPlugin.addMetadataModule({
     metadata: [
       {
-        id: Mailbox.Mailbox.typename,
+        id: Mailbox.kind,
         metadata: {
-          createObject: ((props, { db }) =>
-            Effect.gen(function* () {
-              const client = yield* Capability.get(ClientCapabilities.Client);
-              const space = client.spaces.get(db.spaceId);
-              return Mailbox.make({ ...props, space });
-            })) satisfies CreateObject,
+          createObject: ((props) => Effect.succeed(Mailbox.make(props))) satisfies CreateObject,
           addToCollectionOnCreate: true,
         },
       },
       {
-        id: Calendar.Calendar.typename,
+        id: Calendar.kind,
         metadata: {
-          createObject: ((props, { db }) =>
-            Effect.gen(function* () {
-              const client = yield* Capability.get(ClientCapabilities.Client);
-              const space = client.spaces.get(db.spaceId);
-              return Calendar.make({ ...props, space });
-            })) satisfies CreateObject,
+          createObject: ((props) => Effect.succeed(Calendar.make(props))) satisfies CreateObject,
           addToCollectionOnCreate: true,
         },
       },
     ],
   }),
-  Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addSchemaModule({
+    schema: [Event.Event, Mailbox.Config, Calendar.Config, Message.Message],
+  }),
   Plugin.make,
 );

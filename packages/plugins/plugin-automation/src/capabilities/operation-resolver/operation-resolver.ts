@@ -4,8 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common } from '@dxos/app-framework';
-import { Ref } from '@dxos/echo';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { LayoutOperation } from '@dxos/app-toolkit';
+import { Obj, Ref } from '@dxos/echo';
 import { Function, Script, Trigger } from '@dxos/functions';
 import { type DXN } from '@dxos/keys';
 import { Operation, OperationResolver } from '@dxos/operation';
@@ -17,7 +18,7 @@ import { AutomationOperation } from '../../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(Common.Capability.OperationResolver, [
+    return Capability.contributes(Capabilities.OperationResolver, [
       OperationResolver.make({
         operation: AutomationOperation.CreateTriggerFromTemplate,
         handler: Effect.fnUntraced(function* ({ db, template, enabled = false, scriptName, input }) {
@@ -35,21 +36,27 @@ export default Capability.makeModule(
               );
               const [fn] = functions;
               if (fn) {
-                trigger.function = Ref.make(fn);
+                Obj.change(trigger, (t) => {
+                  t.function = Ref.make(fn);
+                });
               }
             }
           }
 
           switch (template.type) {
             case 'timer': {
-              trigger.spec = { kind: 'timer', cron: template.cron };
+              Obj.change(trigger, (t) => {
+                t.spec = { kind: 'timer', cron: template.cron };
+              });
               break;
             }
             case 'queue': {
-              trigger.spec = {
-                kind: 'queue',
-                queue: (template.queueDXN as DXN).toString(),
-              };
+              Obj.change(trigger, (t) => {
+                t.spec = {
+                  kind: 'queue',
+                  queue: (template.queueDXN as DXN).toString(),
+                };
+              });
               break;
             }
             default: {
@@ -62,7 +69,7 @@ export default Capability.makeModule(
             target: db,
             hidden: true,
           });
-          yield* Operation.invoke(Common.LayoutOperation.Open, {
+          yield* Operation.invoke(LayoutOperation.Open, {
             subject: [`automation-settings${ATTENDABLE_PATH_SEPARATOR}${db.spaceId}`],
             workspace: db.spaceId,
           });

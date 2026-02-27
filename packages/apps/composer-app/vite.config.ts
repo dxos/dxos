@@ -3,7 +3,6 @@
 //
 
 import importSource from '@dxos/vite-plugin-import-source';
-import { sentryVitePlugin } from '@sentry/vite-plugin';
 import react from '@vitejs/plugin-react-swc';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
@@ -42,16 +41,15 @@ const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
   env.command === 'serve' &&
     importSource({
       exclude: [
-        '**/node_modules/**',
-        '**/common/random-access-storage/**',
-        '**/common/lock-file/**',
-        '**/mesh/network-manager/**',
-        '**/mesh/teleport/**',
-        '**/sdk/config/**',
-        '**/sdk/client-services/**',
-        '**/sdk/observability/**',
+        '@dxos/random-access-storage',
+        '@dxos/lock-file',
+        '@dxos/network-manager',
+        '@dxos/teleport',
+        '@dxos/config',
+        '@dxos/client-services',
+        '@dxos/observability',
         // TODO(dmaretskyi): Decorators break in lit.
-        '**/ui/lit-*/**',
+        '@dxos/lit-*',
       ],
     }),
   wasm(),
@@ -142,7 +140,7 @@ export default defineConfig((env) => ({
     // Handle .md?raw imports.
     {
       name: 'raw-md-loader',
-      load(id) {
+      load(id: string) {
         if (id.endsWith('.md?raw')) {
           const filePath = id.replace(/\?raw$/, '');
           const content = readFileSync(filePath, 'utf-8');
@@ -191,6 +189,14 @@ export default defineConfig((env) => ({
                 include_args: false,
                 include_call_site: true,
                 include_scope: true,
+              },
+              {
+                name: 'dbg',
+                package: '@dxos/log',
+                param_index: 1,
+                include_args: true,
+                include_call_site: false,
+                include_scope: false,
               },
               {
                 name: 'invariant',
@@ -286,21 +292,6 @@ export default defineConfig((env) => ({
       },
     }),
 
-    // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite
-    // https://www.npmjs.com/package/@sentry/vite-plugin
-    sentryVitePlugin({
-      org: 'dxos',
-      project: 'composer-app',
-      sourcemaps: {
-        assets: './packages/apps/composer-app/out/composer/**',
-      },
-      authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN,
-      disable: process.env.DX_ENVIRONMENT !== 'production',
-      release: {
-        name: `${APP_KEY}@${process.env.npm_package_version}`,
-      },
-    }),
-
     // https://github.com/antfu-collective/vite-plugin-inspect#readme
     // Open: http://localhost:5173/__inspect
     isTrue(process.env.DX_INSPECT) && inspect(),
@@ -362,18 +353,7 @@ export default defineConfig((env) => ({
       // verbose: true,
     }),
 
-    ThemePlugin({
-      root: dirname,
-      content: [
-        path.resolve(dirname, './index.html'),
-        path.resolve(dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        path.join(rootDir, '/packages/devtools/*/src/**/*.{js,ts,jsx,tsx}'),
-        path.join(rootDir, '/packages/experimental/*/src/**/*.{js,ts,jsx,tsx}'),
-        path.join(rootDir, '/packages/plugins/*/src/**/*.{js,ts,jsx,tsx}'),
-        path.join(rootDir, '/packages/sdk/*/src/**/*.{js,ts,jsx,tsx}'),
-        path.join(rootDir, '/packages/ui/*/src/**/*.{js,ts,jsx,tsx}'),
-      ],
-    }),
+    ThemePlugin({}),
   ]
     .filter(isNonNullable)
     .flat(), // Plugins

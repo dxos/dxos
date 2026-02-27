@@ -25,6 +25,7 @@ import { type RpcPort } from '@dxos/rpc';
 import * as OpfsWorker from '@dxos/sql-sqlite/OpfsWorker';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
+import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { type MaybePromise } from '@dxos/util';
 
 import { ClientServicesHost } from '../services';
@@ -36,6 +37,7 @@ export type CreateSessionProps = {
   appPort: RpcPort;
   systemPort: RpcPort;
   shellPort?: RpcPort;
+  onClose?: () => Promise<void>;
 };
 
 export type WorkerRuntimeOptions = {
@@ -49,7 +51,11 @@ export type WorkerRuntimeOptions = {
    */
   automaticallyConnectWebrtc?: boolean;
 
-  enableFullTextIndexing?: boolean;
+  /**
+   * Optional SQLite layer for Effect. Defaults to LocalSqliteOpfsLayer.
+   * For testing in Node.js, use `sqliteLayerMemory` from `@dxos/sql-sqlite/platform`.
+   */
+  sqliteLayer?: Layer.Layer<SqlClient.SqlClient | SqlExport.SqlExport, unknown>;
 };
 
 /**
@@ -74,7 +80,10 @@ export class WorkerRuntime {
   private _config!: Config;
   private _signalMetadataTags: any = { runtime: 'worker-runtime' };
   private _signalTelemetryEnabled: boolean = false;
-  private _runtime!: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient | SqlExport.SqlExport, never>;
+  private _runtime!: ManagedRuntime.ManagedRuntime<
+    SqlTransaction.SqlTransaction | SqlClient.SqlClient | SqlExport.SqlExport,
+    never
+  >;
 
   constructor({
     channel = DEFAULT_WORKER_BROADCAST_CHANNEL,
@@ -83,21 +92,27 @@ export class WorkerRuntime {
     releaseLock,
     onStop,
     automaticallyConnectWebrtc = true,
-    enableFullTextIndexing,
+    sqliteLayer,
   }: WorkerRuntimeOptions) {
     this._configProvider = configProvider;
     this._acquireLock = acquireLock;
     this._releaseLock = releaseLock;
     this._onStop = onStop;
     this._channel = channel;
-    this._runtime = ManagedRuntime.make(Layer.merge(LocalSqliteOpfsLayer, Reactivity.layer).pipe(Layer.orDie));
+    if (sqliteLayer) {
+      log.warn('Using testing SQLite layer');
+    }
+    this._runtime = ManagedRuntime.make(
+      SqlTransaction.layer
+        .pipe(Layer.provideMerge(sqliteLayer ?? LocalSqliteOpfsLayer), Layer.provideMerge(Reactivity.layer))
+        .pipe(Layer.orDie),
+    );
     this._clientServices = new ClientServicesHost({
       callbacks: {
         onReset: async () => this.stop(),
       },
       runtime: this._runtime.runtimeEffect,
       runtimeProps: {
-        enableFullTextIndexing: enableFullTextIndexing,
         // Auto-activate spaces that were previously active after leader changeover.
         autoActivateSpaces: true,
       },
@@ -170,7 +185,7 @@ export class WorkerRuntime {
   /**
    * Create a new session.
    */
-  async createSession({ appPort, systemPort, shellPort }: CreateSessionProps): Promise<WorkerSession> {
+  async createSession({ appPort, systemPort, shellPort, onClose }: CreateSessionProps): Promise<WorkerSession> {
     const session = new WorkerSession({
       serviceHost: this._clientServices,
       appPort,
@@ -190,6 +205,7 @@ export class WorkerRuntime {
           this._reconnectWebrtc();
         }
       }
+      await onClose?.();
     });
 
     await session.open();

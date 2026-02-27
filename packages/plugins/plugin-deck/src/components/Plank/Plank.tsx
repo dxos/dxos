@@ -13,8 +13,9 @@ import React, {
   useRef,
 } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { Surface, useAppGraph, useOperationInvoker } from '@dxos/app-framework/react';
+import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
+import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { debounce } from '@dxos/async';
 import { type Node, useNode } from '@dxos/plugin-graph';
 import { ATTENDABLE_PATH_SEPARATOR, useAttentionAttributes } from '@dxos/react-ui-attention';
@@ -112,8 +113,8 @@ const PlankContainer = ({ children, solo, companion, encapsulate }: PlankContain
       role='none'
       data-popover-collision-boundary={true}
       className={mx(
-        'absolute inset-[--main-spacing] grid',
-        encapsulate && 'border border-separator rounded overflow-hidden',
+        'absolute inset-(--main-spacing) grid',
+        encapsulate && 'border border-separator rounded-sm overflow-hidden',
         companion && 'grid-cols-[6fr_4fr]', // TODO(burdon): Resize.
         railGridHorizontal,
         mainIntrinsicSize,
@@ -200,7 +201,7 @@ const PlankComponent = memo(
       if (scrollIntoView === id) {
         layoutMode === 'deck' && rootElement.current?.scrollIntoView({ behavior: 'smooth', inline: 'center' });
         // Clear the scroll into view state once it has been actioned.
-        void invokePromise(Common.LayoutOperation.ScrollIntoView, { subject: undefined });
+        void invokePromise(LayoutOperation.ScrollIntoView, { subject: undefined });
       }
     }, [id, scrollIntoView, layoutMode, invokePromise]);
 
@@ -235,13 +236,13 @@ const PlankComponent = memo(
       isSolo && mainIntrinsicSize,
       railGridHorizontal,
       part.startsWith('solo') && 'grid',
-      part.startsWith('solo-') && 'grid-rows-subgrid row-span-2 min-is-0',
+      part.startsWith('solo-') && 'grid-rows-subgrid row-span-2 min-w-0',
       fullscreen && 'grid-rows-1',
-      part === 'deck' && (companioned === 'companion' ? '!border-separator border-ie' : '!border-separator border-li'),
-      part === 'solo-companion' && '!border-separator border-is',
+      part === 'deck' && (companioned === 'companion' ? 'border-separator! border-e' : 'border-separator! border-x'),
+      part === 'solo-companion' && 'border-separator! border-s',
       settings?.encapsulatedPlanks &&
         !part.startsWith('solo') &&
-        'mli-[--main-spacing] !border-separator border rounded overflow-hidden',
+        'mx-(--main-spacing) border-separator! border rounded-sm overflow-hidden',
     );
 
     return (
@@ -280,7 +281,7 @@ const PlankComponent = memo(
                 companions={companions}
               />
             )}
-            <Surface
+            <Surface.Surface
               key={node.id}
               role='article'
               data={data}

@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 import type * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { Capability, Common } from '@dxos/app-framework';
-import { useAtomCapability } from '@dxos/app-framework/react';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { Surface, useAtomCapability } from '@dxos/app-framework/ui';
 import { Database, JsonSchema, Obj } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
 import { findAnnotation } from '@dxos/effect';
@@ -15,14 +15,14 @@ import { type FormFieldComponentProps, SelectField, useFormValues } from '@dxos/
 import { type LatLngLiteral } from '@dxos/react-ui-geo';
 import { type Collection } from '@dxos/schema';
 
-import { MapContainer, MapViewEditor } from '../../components';
+import { MapContainer, MapViewEditor } from '../../containers';
 import { meta } from '../../meta';
 import { LocationAnnotationId, Map, MapCapabilities } from '../../types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(Common.Capability.ReactSurface, [
-      Common.createSurface({
+    Capability.contributes(Capabilities.ReactSurface, [
+      Surface.create({
         id: `${meta.id}/surface/map`,
         role: ['article', 'section'],
         filter: (data): data is { subject: Map.Map } => Obj.instanceOf(Map.Map, data.subject),
@@ -39,8 +39,8 @@ export default Capability.makeModule(() =>
           return (
             <MapContainer
               role={role}
+              subject={data.subject}
               type={state.type}
-              object={data.subject}
               center={center}
               zoom={zoom}
               onChange={handleChange}
@@ -48,23 +48,14 @@ export default Capability.makeModule(() =>
           );
         },
       }),
-      // createSurface({
-      //   id: 'plugin-map',
-      //   role: 'card--extrinsic',
-      //   filter: (data) => Obj.instanceOf(MapType, data),
-      //   component: ({ data }) => {
-      //     const [lng = 0, lat = 0] = data?.coordinates ?? [];
-      //     return <MapControl center={{ lat, lng }} zoom={8} />;
-      //   },
-      // }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/surface/object-settings`,
         role: 'object-settings',
         position: 'hoist',
         filter: (data): data is { subject: Map.Map } => Obj.instanceOf(Map.Map, data.subject),
         component: ({ data }) => <MapViewEditor object={data.subject} />,
       }),
-      Common.createSurface({
+      Surface.create({
         // TODO(burdon): Why this title?
         id: `${meta.id}/surface/create-initial-schema-form-[property-of-interest]`,
         role: 'form-input',

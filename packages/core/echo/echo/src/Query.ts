@@ -7,6 +7,8 @@ import type * as Schema from 'effect/Schema';
 
 import { type QueryAST } from '@dxos/echo-protocol';
 
+import * as Database from './Database';
+import * as Feed from './Feed';
 import * as Filter from './Filter';
 import { getTypeDXNFromSpecifier } from './internal';
 import type * as Order from './Order';
@@ -46,9 +48,9 @@ export interface Query<T> {
   reference<K extends RefPropKey<T>>(
     key: K,
   ): Query<
-    T[K] extends Ref.Any
+    T[K] extends Ref.Unknown
       ? Ref.Target<T[K]>
-      : T[K] extends Ref.Any | undefined
+      : T[K] extends Ref.Unknown | undefined
         ? Ref.Target<Exclude<T[K], undefined>>
         : never
   >;
@@ -103,6 +105,18 @@ export interface Query<T> {
   target(): Query<Type$.Relation.Target<T>>;
 
   /**
+   * Get the parent object of the current selection.
+   * @returns Query for the parent objects.
+   */
+  parent(): Query<any>;
+
+  /**
+   * Get all child objects of the current selection.
+   * @returns Query for the child objects.
+   */
+  children(): Query<any>;
+
+  /**
    * Order the query results.
    * Orders are specified in priority order. The first order will be applied first, etc.
    * @param order - Order to sort the results.
@@ -116,6 +130,44 @@ export interface Query<T> {
    * @returns Query for the limited results.
    */
   limit(limit: number): Query<T>;
+
+  /**
+   * Query from selected databases only.
+   *
+   * Example:
+   *
+   * ```ts
+   * Query.select(Filter.type(Person)).from(db);
+   * ```
+   *
+   * @param options.includeFeeds [false] - Whether to include feeds in the query. Default is to query from automerge documents only.
+   */
+  from(database: Database.Database | Database.Database[], options?: { includeFeeds?: boolean }): Query<T>;
+
+  /**
+   * Query from selected feeds only.
+   *
+   * Example:
+   *
+   * ```ts
+   * Query.select(Filter.type(Person)).from(feed);
+   * ```
+   *
+   */
+  from(feeds: Feed.Feed | Feed.Feed[]): Query<T>;
+
+  /**
+   * Query from all accessible spaces.
+   *
+   * Example:
+   *
+   * ```ts
+   * Query.select(Filter.type(Person)).from('all-accessible-spaces');
+   * ```
+   *
+   * @param options.includeFeeds [false] - Whether to include feeds in the query. Default is to query from automerge documents only.
+   */
+  from(allSpaces: 'all-accessible-spaces', options?: { includeFeeds?: boolean }): Query<T>;
 
   /**
    * Add options to a query.
@@ -202,6 +254,22 @@ class QueryClass implements Any {
     });
   }
 
+  parent(): Any {
+    return new QueryClass({
+      type: 'hierarchy-traversal',
+      anchor: this.ast,
+      direction: 'to-parent',
+    });
+  }
+
+  children(): Any {
+    return new QueryClass({
+      type: 'hierarchy-traversal',
+      anchor: this.ast,
+      direction: 'to-children',
+    });
+  }
+
   orderBy(...order: Order.Order<any>[]): Any {
     return new QueryClass({
       type: 'order',
@@ -215,6 +283,48 @@ class QueryClass implements Any {
       type: 'limit',
       query: this.ast,
       limit,
+    });
+  }
+
+  from(
+    arg: Database.Database | Database.Database[] | Feed.Feed | Feed.Feed[] | 'all-accessible-spaces',
+    options?: { includeFeeds?: boolean },
+  ): Any {
+    if (arg === 'all-accessible-spaces') {
+      return new QueryClass({
+        type: 'options',
+        query: this.ast,
+        options: {
+          ...(options?.includeFeeds ? { allQueuesFromSpaces: true } : {}),
+        },
+      });
+    }
+
+    const items = Array.isArray(arg) ? arg : [arg];
+
+    if (items.length > 0 && Database.isDatabase(items[0])) {
+      const databases = items as Database.Database[];
+      return new QueryClass({
+        type: 'options',
+        query: this.ast,
+        options: {
+          spaceIds: databases.map((db) => db.spaceId),
+          ...(options?.includeFeeds ? { allQueuesFromSpaces: true } : {}),
+        },
+      });
+    }
+
+    const feeds = items as Feed.Feed[];
+    const queueDxns = feeds.flatMap((feed) => {
+      const dxn = Feed.getQueueDxn(feed);
+      return dxn ? [dxn.toString()] : [];
+    });
+    return new QueryClass({
+      type: 'options',
+      query: this.ast,
+      options: {
+        queues: queueDxns,
+      },
     });
   }
 

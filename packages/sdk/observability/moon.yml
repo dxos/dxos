@@ -1,4 +1,4 @@
-type: library
+layer: library
 language: typescript
 tags:
   - ts-build
@@ -8,14 +8,6 @@ tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
-      - '--entryPoint=src/segment/index.ts'
-      - '--entryPoint=src/segment/browser.ts'
-      - '--entryPoint=src/segment/node.ts'
-      - '--entryPoint=src/sentry/index.ts'
-      - '--entryPoint=src/sentry/browser.ts'
-      - '--entryPoint=src/sentry/node.ts'
-      - '--entryPoint=src/otel/traces.ts'
-      - '--entryPoint=src/otel/traces-browser.ts'
     deps:
       - prebuild
   prebuild:
@@ -24,9 +16,7 @@ tasks:
       - scripts/inject_api_keys.mjs
       - $DX_IPDATA_API_KEY
       - $DX_OTEL_ENDPOINT
-      - $DX_OTEL_AUTHORIZATION
-      - $DX_SENTRY_DESTINATION
-      - $DX_TELEMETRY_API_KEY
+      - $DX_OTEL_HEADERS
       - $NODE_ENV
     outputs:
       - src/cli-observability-secrets.json

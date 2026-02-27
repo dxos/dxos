@@ -420,6 +420,72 @@ describe('query api', () => {
       `);
     });
 
+    test('from all accessible spaces', () => {
+      const query = Query.select(Filter.type(TestSchema.Person)).from('all-accessible-spaces');
+
+      Schema.validateSync(QueryAST.Query)(query.ast);
+      expect(query.ast).toMatchInlineSnapshot(`
+        {
+          "options": {},
+          "query": {
+            "filter": {
+              "id": undefined,
+              "props": {},
+              "type": "object",
+              "typename": "dxn:type:example.com/type/Person:0.1.0",
+            },
+            "type": "select",
+          },
+          "type": "options",
+        }
+      `);
+    });
+
+    test('from all accessible spaces with feeds', () => {
+      const query = Query.select(Filter.type(TestSchema.Person)).from('all-accessible-spaces', {
+        includeFeeds: true,
+      });
+
+      Schema.validateSync(QueryAST.Query)(query.ast);
+      expect(query.ast).toMatchInlineSnapshot(`
+        {
+          "options": {
+            "allQueuesFromSpaces": true,
+          },
+          "query": {
+            "filter": {
+              "id": undefined,
+              "props": {},
+              "type": "object",
+              "typename": "dxn:type:example.com/type/Person:0.1.0",
+            },
+            "type": "select",
+          },
+          "type": "options",
+        }
+      `);
+    });
+
+    test('from all accessible spaces with ordering and limit', () => {
+      const query = Query.select(Filter.type(TestSchema.Person))
+        .orderBy(Order.property('name', 'asc'))
+        .limit(10)
+        .from('all-accessible-spaces');
+
+      Schema.validateSync(QueryAST.Query)(query.ast);
+      expect(query.ast).toMatchObject({
+        type: 'options',
+        options: {},
+        query: {
+          type: 'limit',
+          limit: 10,
+          query: {
+            type: 'order',
+          },
+        },
+      });
+    });
+
     test.skip('chain', () => {
       // NOTE: Can't support props without type since they can't be inferred.
       // const f1: Filter<Person> = Filter.props({ name: 'Fred' });
@@ -459,7 +525,7 @@ describe('query api', () => {
     test('Filter.or(Filter.typename(...))', () => {
       const filter = Filter.or(Filter.typename('example.com/type/Person'));
       // TODO(dmaretskyi): Give vitest type-tests a try.
-      const _isAssignable: Obj.Any = null as any as Filter.Type<typeof filter>;
+      const _isAssignable: Obj.Unknown = null as any as Filter.Type<typeof filter>;
     });
   });
 });

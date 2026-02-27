@@ -26,6 +26,7 @@ import { trace } from '@dxos/protocols';
 import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { type Storage } from '@dxos/random-access-storage';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
+import type * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { TRACE_PROCESSOR, trace as Trace } from '@dxos/tracing';
 import { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
@@ -62,7 +63,7 @@ export type ClientServicesHostProps = {
   level?: LevelDB;
   lockKey?: string;
   callbacks?: ClientServicesHostCallbacks;
-  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlExport.SqlExport>;
+  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlExport.SqlExport | SqlTransaction.SqlTransaction>;
   runtimeProps?: ServiceContextRuntimeProps;
 };
 
@@ -101,7 +102,9 @@ export class ClientServicesHost {
   private _edgeHttpClient?: EdgeHttpClient = undefined;
 
   private _serviceContext!: ServiceContext;
-  private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlExport.SqlExport>;
+  private readonly _runtime: RuntimeProvider.RuntimeProvider<
+    SqlClient.SqlClient | SqlExport.SqlExport | SqlTransaction.SqlTransaction
+  >;
   private readonly _runtimeProps: ServiceContextRuntimeProps;
   private diagnosticsBroadcastHandler: CollectDiagnosticsBroadcastHandler;
 
@@ -240,9 +243,6 @@ export class ClientServicesHost {
       }
       if (this._runtimeProps.enableVectorIndexing === undefined) {
         this._runtimeProps.enableVectorIndexing = config?.get('runtime.client.enableVectorIndexing', false);
-      }
-      if (this._runtimeProps.enableLocalQueues === undefined) {
-        this._runtimeProps.enableLocalQueues = config?.get('runtime.client.enableLocalQueues', false);
       }
 
       invariant(!this._config, 'config already set');

@@ -1,8 +1,9 @@
-type: library
+layer: library
 language: typescript
 tags:
   - ts-build
   - ts-test
+  - ts-test-storybook
   - pack
   - storybook
 tasks:
@@ -12,6 +13,3 @@ tasks:
       - '--entryPoint=src/testing/index.ts'
       - '--platform=browser'
       - '--platform=node'
-  test:
-    inputs:
-      - .storybook/*

@@ -13,11 +13,13 @@ import { Table } from 'console-table-printer';
 import deepEqual from 'deep-equal';
 import globrex from 'globrex';
 import defaultsDeep from 'lodash.defaultsdeep';
-import pick from 'lodash.pick';
 import sortPackageJson from 'sort-package-json';
 
 import { loadJson, saveJson, sortJson } from './util';
 import { type PackageJson, type Project, ProjectGraph } from './util/project-graph';
+
+const pick = <T extends object>(obj: T, keys: (keyof T)[]): Partial<T> =>
+  keys.reduce((result, key) => (key in obj ? { ...result, [key]: obj[key] } : result), {} as Partial<T>);
 
 const raise = (err: Error) => {
   throw err;
@@ -308,14 +310,15 @@ export class Toolbox {
     for (const project of this.graph.projects) {
       const packagePath = join(project.path, 'package.json');
       const packageJson = await loadJson<PackageJson>(packagePath);
+      const commonKeys = pick(this.rootPackage, (this.config.package?.commonKeys as (keyof PackageJson)[]) ?? []);
+      const merged = defaultsDeep(packageJson, commonKeys);
 
-      // if (project.path.includes('dxos/packages')) {
-      //   packageJson.type = 'module';
-      // }
+      // Enforce repository field format for npm provenance.
+      if (this.rootPackage.repository) {
+        merged.repository = this.rootPackage.repository;
+      }
 
-      const commonKeys = pick(this.rootPackage, this.config.package?.commonKeys ?? []);
-      // TODO(burdon): Investigate util: https://github.com/JamieMason/syncpack
-      const updated = sortPackageJson(defaultsDeep(packageJson, commonKeys));
+      const updated = sortPackageJson(merged);
       await saveJson(packagePath, updated, this.options.verbose);
     }
   }

@@ -4,8 +4,6 @@
 
 import { inspect } from 'node:util';
 
-import type * as Schema from 'effect/Schema';
-
 import { Event, MulticastObservable, Trigger, synchronized } from '@dxos/async';
 import {
   type ClientServices,
@@ -22,13 +20,12 @@ import { Config, SaveConfig } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { type Hypergraph, Type } from '@dxos/echo';
-import { EchoClient, QueueServiceImpl } from '@dxos/echo-db';
-import { MockQueueService } from '@dxos/echo-db';
-import { EdgeHttpClient } from '@dxos/edge-client';
+import { EchoClient } from '@dxos/echo-db';
+import { type EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type QueueService } from '@dxos/protocols';
+import { type FeedProtocol } from '@dxos/protocols';
 import {
   ApiError,
   AuthorizationError,
@@ -59,7 +56,7 @@ export type ClientOptions = {
   /** Custom services provider. */
   services?: MaybePromise<ClientServicesProvider>;
   /** ECHO schema. */
-  types?: Schema.Schema.AnyNoContext[];
+  types?: Type.Entity.Any[];
   /** Shell path. */
   shell?: string;
   /** Create client worker. */
@@ -67,6 +64,9 @@ export type ClientOptions = {
 
   /** When running in the host mode, a factory to create the worker for OPFS sqlite database. */
   createOpfsWorker?: () => Worker;
+
+  /** Path to SQLite database file for persistent indexing in Node/Bun. */
+  sqlitePath?: string;
 };
 
 /**
@@ -118,7 +118,7 @@ export class Client {
   private _shellManager?: ShellManager;
   private _shellClientProxy?: ProtoRpcPeer<ClientServices>;
   private _edgeClient?: EdgeHttpClient = undefined;
-  private _queuesService?: QueueService = undefined;
+  private _queuesService?: FeedProtocol.QueueService = undefined;
 
   constructor(options: ClientOptions = {}) {
     if (
@@ -254,7 +254,7 @@ export class Client {
    * Add schema types to the client.
    */
   // TODO(burdon): Check if already registered (and remove downstream checks).
-  async addTypes(types: Schema.Schema.AnyNoContext[]) {
+  async addTypes(types: Type.Entity.Any[]) {
     log('addTypes', { schema: types.map((type) => Type.getTypename(type)) });
 
     // TODO(dmaretskyi): Uncomment after release.
@@ -368,6 +368,7 @@ export class Client {
       createClientServices(this._config, {
         createWorker: this._options.createWorker,
         createOpfsWorker: this._options.createOpfsWorker,
+        sqlitePath: this._options.sqlitePath,
       }));
     this._iframeManager = this._options.shell
       ? new IFrameManager({ source: new URL(this._options.shell, window.location.origin) })
@@ -416,25 +417,10 @@ export class Client {
     });
     await this._services.open();
 
-    const edgeUrl = this._config!.get('runtime.services.edge.url');
-    const useLocalFirstQueues = this._config!.get('runtime.client.enableLocalQueues');
-    if (useLocalFirstQueues) {
-      log.verbose('running with local-first queues');
-      invariant(this._services.services.QueueService, 'QueueService not available.');
-      this._queuesService = this._services.services.QueueService;
-    } else if (edgeUrl) {
-      log.verbose('running with edge queues');
-      this._edgeClient = new EdgeHttpClient(edgeUrl);
-      this._queuesService = new QueueServiceImpl(this._edgeClient);
-    } else {
-      log.verbose('running with mock queues');
-      this._queuesService = new MockQueueService();
-    }
-
     this._echoClient.connectToService({
       dataService: this._services.services.DataService ?? raise(new Error('DataService not available')),
       queryService: this._services.services.QueryService ?? raise(new Error('QueryService not available')),
-      queueService: this._queuesService,
+      queueService: this._services.services.QueueService ?? raise(new Error('QueueService not available')),
     });
     await this._echoClient.open(this._ctx);
 

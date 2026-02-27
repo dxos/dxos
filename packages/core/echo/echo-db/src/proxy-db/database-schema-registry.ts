@@ -8,7 +8,7 @@ import type * as Types from 'effect/Types';
 
 import { type CleanupFn, Event } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
-import { JsonSchema, type QueryResult, type SchemaRegistry, Type } from '@dxos/echo';
+import { JsonSchema, Obj, type QueryResult, type SchemaRegistry, Type } from '@dxos/echo';
 import {
   PersistentSchema,
   TypeAnnotationId,
@@ -114,7 +114,7 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
     type Entry =
       | {
           source: 'runtime';
-          schema: Schema.Schema.AnyNoContext;
+          schema: Type.Entity.Any;
         }
       | {
           source: 'database';
@@ -280,7 +280,9 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
         );
         results.push(schema);
         if (input.name) {
-          schema.persistentSchema.name = input.name;
+          Obj.change(schema.persistentSchema, (persistentSchema) => {
+            persistentSchema.name = input.name;
+          });
         }
       } else {
         throw new TypeError('Invalid schema');
@@ -362,8 +364,9 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
   }
 
   // TODO(dmaretskyi): Figure out how to migrate the usages to the async `register` method.
-  private _addSchema(schema: Type.Entity.Any): Type.RuntimeType {
+  private _addSchema(schema: Schema.Schema.AnyNoContext): Type.RuntimeType {
     if (schema instanceof Type.RuntimeType) {
+      // The snapshot preserves typename/version in annotations.
       schema = schema.snapshot.annotations({
         [TypeIdentifierAnnotationId]: undefined,
       });

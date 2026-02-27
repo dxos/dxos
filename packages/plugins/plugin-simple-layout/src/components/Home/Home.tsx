@@ -4,94 +4,109 @@
 
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { useAppGraph, useOperationInvoker } from '@dxos/app-framework/react';
-import { Graph, Node, useConnections } from '@dxos/plugin-graph';
-import { Avatar, Icon, type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Card } from '@dxos/react-ui-mosaic';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
+import { useAppGraph } from '@dxos/app-toolkit/ui';
+import { Node, useConnections } from '@dxos/plugin-graph';
+import { Avatar, Icon, Layout, ScrollArea, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Card, Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchList, useSearchListItem, useSearchListResults } from '@dxos/react-ui-searchlist';
 import { mx } from '@dxos/ui-theme';
+import { byPosition } from '@dxos/util';
 
 import { meta } from '../../meta';
+import { useLoadDescendents } from '../hooks';
 
-type HomeProps = ThemedClassName;
+export type HomeProps = {};
 
-export const Home = ({ classNames }: HomeProps) => {
+/**
+ * Home screen.
+ */
+export const Home = (_: HomeProps) => {
   const { t } = useTranslation(meta.id);
-  const workspaces = useWorkspaces();
+  const userAccountItem = useItemsByDisposition('user-account')[0];
+  const pinnedItems = useItemsByDisposition('pin-end', true);
+  const workspaceItems = useItemsByDisposition('workspace');
   useLoadDescendents(Node.RootId);
 
+  const items = useMemo(
+    () => [...(userAccountItem ? [userAccountItem] : []), ...pinnedItems, ...workspaceItems],
+    [userAccountItem, pinnedItems, workspaceItems],
+  );
+
   const { results, handleSearch } = useSearchListResults({
-    items: workspaces,
+    items,
     extract: (node) => toLocalizedString(node.properties.label, t),
   });
 
   return (
-    <div className={mx('flex flex-col pli-3', classNames)}>
-      {/* <div className='container-max-width'>{t('workspaces heading')}</div> */}
-      <SearchList.Root onSearch={handleSearch} classNames='container-max-width'>
-        <div className='plb-3'>
+    <Layout.Main toolbar>
+      <SearchList.Root onSearch={handleSearch}>
+        <Toolbar.Root>
           <SearchList.Input placeholder={t('search placeholder')} autoFocus />
-        </div>
+        </Toolbar.Root>
         <SearchList.Content>
-          <SearchList.Viewport classNames='flex flex-col gap-1'>
-            {results.map((node) => (
-              <Workspace key={node.id} node={node} />
-            ))}
-          </SearchList.Viewport>
+          <Mosaic.Container asChild>
+            <ScrollArea.Root orientation='vertical'>
+              <ScrollArea.Viewport classNames='p-2'>
+                <Mosaic.Stack items={results} getId={(node) => node.id} Tile={WorkspaceTile} />
+              </ScrollArea.Viewport>
+            </ScrollArea.Root>
+          </Mosaic.Container>
         </SearchList.Content>
       </SearchList.Root>
-    </div>
+    </Layout.Main>
   );
 };
 
-const Workspace = ({ node }: { node: Node.Node }) => {
+const WorkspaceTile: MosaicStackTileComponent<Node.Node> = (props) => {
+  const data = props.data;
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const { selectedValue, registerItem, unregisterItem } = useSearchListItem();
-  const ref = useRef<HTMLDivElement>(null);
+  const name = toLocalizedString(data.properties.label, t);
+  const isSelected = selectedValue === data.id;
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  useLoadDescendents(data.id);
 
   const handleSelect = useCallback(
-    () => invokePromise(Common.LayoutOperation.SwitchWorkspace, { subject: node.id }),
-    [invokePromise, node.id],
+    () => invokePromise(LayoutOperation.SwitchWorkspace, { subject: data.id }),
+    [invokePromise, data.id],
   );
-
-  useLoadDescendents(node.id);
-
-  const name = toLocalizedString(node.properties.label, t);
-  const isSelected = selectedValue === node.id;
 
   // Register this workspace with the search context.
   useEffect(() => {
-    if (ref.current) {
-      registerItem(node.id, ref.current, handleSelect);
+    if (cardRef.current) {
+      registerItem(data.id, cardRef.current, handleSelect);
     }
 
-    return () => unregisterItem(node.id);
-  }, [node.id, handleSelect, registerItem, unregisterItem]);
+    return () => unregisterItem(data.id);
+  }, [data.id, handleSelect, registerItem, unregisterItem]);
 
   // Scroll into view when selected.
   useEffect(() => {
-    if (isSelected && ref.current) {
-      ref.current.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    if (isSelected && cardRef.current) {
+      cardRef.current.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     }
   }, [isSelected]);
 
   return (
     <Card.Root
-      ref={ref}
       role='button'
-      tabIndex={-1}
+      fullWidth
+      tabIndex={-1} // TODO(burdon): Use Mosaic.Focus.
       data-selected={isSelected}
-      classNames={mx('dx-focus-ring', isSelected && 'bg-hoverOverlay')}
+      classNames={mx('dx-focus-ring', isSelected && 'bg-hover-overlay')}
       onClick={handleSelect}
+      ref={cardRef}
     >
-      <Card.Toolbar>
+      <Card.Toolbar density='coarse'>
         <Avatar.Root>
           <Avatar.Content
-            hue={node.properties.hue}
-            icon={node.properties.icon}
-            hueVariant='surface'
+            icon={data.properties.icon}
+            hue={data.properties.hue}
+            hueVariant='transparent'
             variant='square'
             size={12}
             fallback={name}
@@ -104,35 +119,15 @@ const Workspace = ({ node }: { node: Node.Node }) => {
   );
 };
 
-const useLoadDescendents = (nodeId?: string) => {
-  const { graph } = useAppGraph();
-
-  useEffect(() => {
-    const frame = requestAnimationFrame(() => {
-      if (nodeId) {
-        Graph.expand(graph, nodeId, 'outbound');
-        Graph.getConnections(graph, nodeId, 'outbound').forEach((child) => {
-          Graph.expand(graph, child.id, 'outbound');
-        });
-      }
-    });
-
-    return () => cancelAnimationFrame(frame);
-  }, [nodeId, graph]);
+/** Filters nodes by disposition. */
+const filterItems = (node: Node.Node, disposition: string) => {
+  return node.properties.disposition === disposition;
 };
 
-const useWorkspaces = () => {
+/** Returns root-level items filtered by disposition. */
+const useItemsByDisposition = (disposition: string, sort = false) => {
   const { graph } = useAppGraph();
-
-  // Get root connections to find collections.
-  const rootConnections = useConnections(graph, Node.RootId);
-  const collections = useMemo(
-    () => rootConnections.filter((node) => node.properties.disposition === 'collection'),
-    [rootConnections],
-  );
-
-  // Get first collection's children as workspaces.
-  // TODO(wittjosiah): Support multiple collections or nested workspaces if needed.
-  const firstCollection = collections[0];
-  return useConnections(graph, firstCollection?.id);
+  const connections = useConnections(graph, Node.RootId);
+  const filtered = connections.filter((node) => filterItems(node, disposition));
+  return sort ? filtered.toSorted((a, b) => byPosition(a.properties, b.properties)) : filtered;
 };

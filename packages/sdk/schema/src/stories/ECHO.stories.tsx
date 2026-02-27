@@ -13,7 +13,7 @@ import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Button, Toolbar } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 
@@ -81,7 +81,7 @@ const DefaultStory = () => {
   };
 
   return (
-    <div className='flex flex-col is-full'>
+    <div className='flex flex-col w-full'>
       <Toolbar.Root>
         <Button onClick={handleReset}>Reset</Button>
         <Button onClick={handleReload}>Reload</Button>
@@ -99,7 +99,8 @@ const meta = {
   title: 'sdk/schema/ECHO',
   render: DefaultStory,
   decorators: [
-    withTheme,
+    withTheme(),
+    withLayout({ layout: 'fullscreen' }),
     withClientProvider({
       createIdentity: true,
       config: new Config({

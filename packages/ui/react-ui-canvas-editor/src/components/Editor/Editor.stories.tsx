@@ -52,7 +52,9 @@ const DefaultStory = ({ id = 'test', init, sidebar, children, ...props }: Render
     // Load objects.
     const objects = await space.db.query(Filter.everything()).run();
     const model = await doLayout(
-      createGraph(objects.filter((object: Obj.Any) => types.some((type) => type.typename === Obj.getTypename(object)))),
+      createGraph(
+        objects.filter((object: Obj.Unknown) => types.some((type) => type.typename === Obj.getTypename(object))),
+      ),
     );
     setGraph(model);
   }, [space, init]);
@@ -61,7 +63,7 @@ const DefaultStory = ({ id = 'test', init, sidebar, children, ...props }: Render
   const [selection, selected] = useSelection(graph);
 
   return (
-    <div className='grid grid-cols-[1fr,360px] is-full bs-full'>
+    <div className='grid grid-cols-[1fr_360px] w-full h-full'>
       <Container id={id} classNames={['flex grow overflow-hidden', !sidebar && 'col-span-2']}>
         <Editor.Root ref={editorRef} id={id} graph={graph} selection={selection} autoZoom {...props}>
           <Editor.Canvas>{children}</Editor.Canvas>
@@ -104,7 +106,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withRegistry,
-    withTheme,
+    withTheme(),
     withLayout(),
     withClientProvider({
       createIdentity: true,
@@ -115,7 +117,7 @@ const meta = {
             // Replace all schema in the spec with the registered schema.
             const registeredSchema = await space.db.schemaRegistry.register([
               ...new Set(spec.map((schema: any) => schema.type)),
-            ] as Schema.Schema.AnyNoContext[]);
+            ] as Type.Entity.Any[]);
 
             spec = spec.map((schema: any) => ({
               ...schema,
@@ -131,7 +133,7 @@ const meta = {
         }
       },
     }),
-    withAttention,
+    withAttention(),
   ],
   parameters: {
     layout: 'fullscreen',

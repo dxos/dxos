@@ -7,7 +7,7 @@ import { useMemo } from 'react';
 import { type ComputeEdge, ComputeGraphModel, type ComputeNode, DEFAULT_INPUT, DEFAULT_OUTPUT } from '@dxos/conductor';
 import { Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { type CanvasGraphModel, type Connection, type GraphMonitor } from '@dxos/react-ui-canvas-editor';
+import { type CanvasBoard, type CanvasGraphModel, type GraphMonitor } from '@dxos/react-ui-canvas-editor';
 import { isNonNullable } from '@dxos/util';
 
 import { createComputeNode, isValidComputeNode } from '../graph';
@@ -18,7 +18,7 @@ import { type ComputeShape, type TriggerShape } from '../shapes';
  */
 export const mapEdge = (
   graph: CanvasGraphModel,
-  { source, target, output = DEFAULT_OUTPUT, input = DEFAULT_INPUT }: Connection,
+  { source, target, output = DEFAULT_OUTPUT, input = DEFAULT_INPUT }: CanvasBoard.Connection,
 ): ComputeEdge => {
   const sourceNode = graph.findNode(source) as ComputeShape;
   const targetNode = graph.findNode(target) as ComputeShape;
@@ -112,8 +112,10 @@ export const createComputeGraph = (graph?: CanvasGraphModel<ComputeShape>) => {
 const linkTriggerToCompute = (graph: ComputeGraphModel, computeNode: ComputeNode, triggerData: TriggerShape) => {
   const functionTrigger = triggerData.functionTrigger?.target;
   invariant(functionTrigger);
-  functionTrigger.function = Ref.make(graph.root);
-  functionTrigger.inputNodeId = computeNode.id;
+  Obj.change(functionTrigger, (t) => {
+    t.function = Ref.make(graph.root);
+    t.inputNodeId = computeNode.id;
+  });
 };
 
 const deleteTriggerObjects = (computeGraph: ComputeGraphModel, deleted: CanvasGraphModel) => {

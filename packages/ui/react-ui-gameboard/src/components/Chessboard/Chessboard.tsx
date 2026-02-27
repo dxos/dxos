@@ -27,6 +27,11 @@ import { type ChessModel, type ChessPiece, ChessPieces, boardStyles, getSquareCo
 /** Fallback atom for when model is undefined. */
 const EMPTY_PIECES_ATOM = Atom.make<PieceMap<ChessPiece>>({});
 
+/**
+ * Chessboard layout.
+ */
+const CHESSBOARD_NAME = 'Chessboard';
+
 export type ChessboardProps = ThemedClassName<
   PropsWithChildren<{
     orientation?: Player;
@@ -37,14 +42,11 @@ export type ChessboardProps = ThemedClassName<
   }>
 >;
 
-/**
- * Chessboard layout.
- */
 const ChessboardComponent = forwardRef<HTMLDivElement, ChessboardProps>(
   ({ classNames, orientation, showLabels, debug, rows = 8, cols = 8 }, forwardedRef) => {
     const targetRef = useForwardedRef(forwardedRef);
     const { width, height } = useResizeDetector({ targetRef, refreshRate: 200 });
-    const { model, promoting, onPromotion } = useGameboardContext<ChessModel>(Chessboard.displayName!);
+    const { model, promoting, onPromotion } = useGameboardContext<ChessModel>(CHESSBOARD_NAME);
     const pieces = useAtomValue(model?.pieces ?? EMPTY_PIECES_ATOM);
 
     // Board squares.
@@ -103,7 +105,7 @@ const ChessboardComponent = forwardRef<HTMLDivElement, ChessboardProps>(
     }, [grid, pieces, promoting]);
 
     return (
-      <div ref={targetRef} tabIndex={0} className={mx('relative outline-none', classNames)}>
+      <div ref={targetRef} tabIndex={0} className={mx('relative outline-hidden', classNames)}>
         {/* DOM Layout. */}
         <div ref={gridRef} className='grid grid-rows-8 grid-cols-8 aspect-square select-none'>
           {layout}
@@ -153,7 +155,7 @@ const ChessboardComponent = forwardRef<HTMLDivElement, ChessboardProps>(
   },
 );
 
-ChessboardComponent.displayName = 'Chessboard';
+ChessboardComponent.displayName = CHESSBOARD_NAME;
 
 export const Chessboard = memo(ChessboardComponent);
 

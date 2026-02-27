@@ -24,7 +24,7 @@ import { mx } from '@dxos/ui-theme';
 import { type ActionHandler } from '../../actions';
 import { DragMonitor, type EditingState, EditorContext, type EditorContextType, type EditorOptions } from '../../hooks';
 import { defaultShapes } from '../../shapes';
-import { CanvasGraphModel, type Shape } from '../../types';
+import { type CanvasBoard, CanvasGraphModel } from '../../types';
 import { Canvas, ShapeLayout, ShapeRegistry } from '../Canvas';
 import { type TestId } from '../defs';
 import { UI } from '../UI';
@@ -42,7 +42,7 @@ interface EditorController {
   update(): void;
 }
 
-type EditorRootProps<S extends Shape = Shape> = ThemedClassName<
+type EditorRootProps<S extends CanvasBoard.Shape = CanvasBoard.Shape> = ThemedClassName<
   PropsWithChildren<
     Pick<EditorContextType<S>, 'id'> &
       Partial<
@@ -64,7 +64,7 @@ type EditorRootProps<S extends Shape = Shape> = ThemedClassName<
   >
 >;
 
-const RootInner = <S extends Shape = Shape>(
+const RootInner = <S extends CanvasBoard.Shape = CanvasBoard.Shape>(
   {
     children,
     classNames,
@@ -177,7 +177,7 @@ const RootInner = <S extends Shape = Shape>(
         tabIndex={0}
         style={{ contain: 'layout' }}
         className={mx(
-          'relative is-full bs-full overflow-hidden',
+          'relative w-full h-full overflow-hidden',
           ready ? 'transition-opacity delay-[0.5s] duration-[0.5s] opacity-100' : 'opacity-0',
           classNames,
         )}
@@ -188,7 +188,7 @@ const RootInner = <S extends Shape = Shape>(
   );
 };
 
-export const Root = forwardRef(RootInner) as <S extends Shape>(
+export const Root = forwardRef(RootInner) as <S extends CanvasBoard.Shape>(
   props: EditorRootProps<S> & { ref?: ForwardedRef<EditorController> },
 ) => ReturnType<typeof RootInner>;
 

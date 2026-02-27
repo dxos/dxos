@@ -1,8 +1,9 @@
-type: library
+layer: library
 language: typescript
 tags:
   - ts-build
   - ts-test
+  - ts-test-storybook
   - pack
   - storybook
 tasks:
@@ -12,9 +13,6 @@ tasks:
       - '--entryPoint=src/blueprints/index.ts'
       - '--entryPoint=src/cli/index.ts'
       - '--entryPoint=src/types/index.ts'
-  test:
-    inputs:
-      - .storybook/*
   deploy-functions:
     command: $workspaceRoot/scripts/dxnext --profile main function deploy --runtime worker-loader $workspaceRoot/packages/plugins/plugin-chess/src/blueprints/functions/commentary.ts
-    local: true
+    preset: server

@@ -4,15 +4,17 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, UndoMapping } from '@dxos/app-framework';
+import { Capabilities, Capability, UndoMapping } from '@dxos/app-framework';
+import { Obj, Ref, Type } from '@dxos/echo';
 import { OperationResolver } from '@dxos/operation';
+import { Collection } from '@dxos/schema';
 
 import { meta } from '../../meta';
-import { SheetOperation } from '../../types';
+import { Sheet, SheetOperation } from '../../types';
 
 export default Capability.makeModule(() =>
   Effect.succeed([
-    Capability.contributes(Common.Capability.UndoMapping, [
+    Capability.contributes(Capabilities.UndoMapping, [
       UndoMapping.make({
         operation: SheetOperation.DropAxis,
         inverse: SheetOperation.RestoreAxis,
@@ -27,7 +29,16 @@ export default Capability.makeModule(() =>
         message: ['axis dropped label', { ns: meta.id }],
       }),
     ]),
-    Capability.contributes(Common.Capability.OperationResolver, [
+    Capability.contributes(Capabilities.OperationResolver, [
+      OperationResolver.make({
+        operation: SheetOperation.OnCreateSpace,
+        handler: Effect.fnUntraced(function* ({ rootCollection }) {
+          const collection = Collection.makeManaged({ key: Type.getTypename(Sheet.Sheet) });
+          Obj.change(rootCollection, (c) => {
+            c.objects.push(Ref.make(collection));
+          });
+        }),
+      }),
       OperationResolver.make({
         operation: SheetOperation.InsertAxis,
         handler: ({ model, axis, index, count }) =>

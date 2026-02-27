@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 
 import { Event } from '@dxos/async';
 import { type DevtoolsFormatter, devtoolsFormatter, inspectCustom } from '@dxos/debug';
-import { type Entity, Obj } from '@dxos/echo';
+import { Entity, Obj } from '@dxos/echo';
 import {
   ATTR_DELETED,
   ATTR_META,
@@ -20,16 +20,18 @@ import {
   ChangeId,
   EchoSchema,
   EntityKind,
-  type HasId,
-  KindId,
+  EventId,
   MetaId,
   ObjectDatabaseId,
   ObjectDeletedId,
   type ObjectJSON,
   type ObjectMeta,
+  type ObjectMetaJSON,
   ObjectMetaSchema,
   ObjectVersionId,
+  ParentId,
   PersistentSchema,
+  type ReactiveHandler,
   Ref,
   RefImpl,
   RelationSourceDXNId,
@@ -42,22 +44,21 @@ import {
   SelfDXNId,
   TypeId,
   assertObjectModel,
-  getEntityKind,
-  getRefSavedTarget,
-  getSchemaDXN,
-  getTypeAnnotation,
-  isInstanceOf,
-  setRefResolver,
-} from '@dxos/echo/internal';
-import {
-  EventId,
-  type ReactiveHandler,
   createProxy,
   defineHiddenProperty,
+  executeChange,
+  getEntityKind,
   getProxyHandler,
   getProxySlot,
   getProxyTarget,
+  getRefSavedTarget,
+  getSchemaDXN,
+  getTypeAnnotation,
+  isInChangeContext,
+  isInstanceOf,
   isProxy,
+  queueNotification,
+  setRefResolver,
   symbolIsProxy,
 } from '@dxos/echo/internal';
 import {
@@ -68,21 +69,13 @@ import {
   isEncodedReference,
 } from '@dxos/echo-protocol';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
+import { DXN, ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { deepMapValues, defaultMap, getDeep, setDeep } from '@dxos/util';
 
-import {
-  type DecodedAutomergePrimaryValue,
-  type KeyPath,
-  META_NAMESPACE,
-  ObjectCore,
-  isInChangeContext,
-  queueNotification,
-} from '../core-db';
+import { type DecodedAutomergePrimaryValue, type KeyPath, META_NAMESPACE, ObjectCore } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
 
-import { changeInternal } from './change-impl';
 import { getBody, getHeader } from './devtools-formatter';
 import { EchoArray } from './echo-array';
 import { getObjectCore, isEchoObject, isRootDataObject } from './echo-object-utils';
@@ -190,14 +183,16 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
             return DXN.fromLocalObjectId(target[symbolInternals].core.id);
           }
         }
-        case KindId: {
+        case Entity.KindId: {
           return target[symbolInternals].core.getKind();
         }
+        case ParentId:
+          return this._getParent(target);
         case ChangeId: {
           // Return a function that allows mutations within a controlled context.
-          return (callback: (mutableObj: any) => void) => {
-            changeInternal(receiver, callback);
-          };
+          // Uses ObjectCore as context key (what mutation checks use), target for events.
+          const core = target[symbolInternals].core;
+          return (callback: (mutableObj: any) => void) => executeChange(core, target, receiver, callback);
         }
         case RelationSourceDXNId: {
           const sourceRef = target[symbolInternals].core.getSource();
@@ -226,7 +221,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       }
     } else {
       switch (prop) {
-        case KindId:
+        case Entity.KindId:
         case RelationSourceDXNId:
         case RelationTargetDXNId:
         case RelationSourceId:
@@ -271,6 +266,17 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   // TODO(burdon): arg `receiver` not used.
   set(target: ProxyTarget, prop: string | symbol, value: any, receiver: any): boolean {
     invariant(Array.isArray(target[symbolPath]));
+    if (prop === ParentId) {
+      if (value === undefined) {
+        target[symbolInternals].core.setParent(undefined);
+      } else {
+        const objectId = value.id ?? value;
+        // TODO(dmaretskyi): Validate object is from the same space.
+        invariant(ObjectId.isValid(objectId));
+        target[symbolInternals].core.setParent(EncodedReference.fromDXN(DXN.fromLocalObjectId(objectId)));
+      }
+      return true;
+    }
     invariant(typeof prop === 'string');
 
     // Check readonly enforcement for ECHO objects.
@@ -307,6 +313,30 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return (schema as any)[SchemaMetaSymbol].typename;
     }
     return this.getTypeDXN(target)?.asEchoDXN()?.echoId ?? this.getTypeDXN(target)?.asTypeDXN()?.type;
+  }
+
+  private _getParent(target: ProxyTarget): any {
+    const parentRef = target[symbolInternals].core.getParent();
+    if (parentRef === undefined) {
+      return undefined;
+    }
+    const parentDXN = EncodedReference.toDXN(parentRef);
+    const database = target[symbolInternals].database;
+    if (database) {
+      // TODO(dmaretskyi): Put refs into proxy cache.
+      return database.graph
+        .createRefResolver({
+          context: {
+            space: database.spaceId,
+          },
+        })
+        .resolveSync(parentDXN, false);
+    } else {
+      invariant(target[symbolInternals].linkCache);
+      const echoId = parentDXN.asEchoDXN()?.echoId;
+      invariant(echoId);
+      return target[symbolInternals].linkCache.get(echoId);
+    }
   }
 
   private _getRelationSource(target: ProxyTarget): any {
@@ -737,7 +767,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       // Can be caused not using `object(Expando, { ... })` constructor.
       // TODO(dmaretskyi): Add better validation.
       invariant(otherObjId != null);
-      target[symbolInternals].linkCache.set(otherObjId, otherEchoObj as AnyLiveObject<any>);
+      target[symbolInternals].linkCache.set(otherObjId, otherEchoObj as Entity.Unknown);
       return DXN.fromLocalObjectId(otherObjId);
     }
 
@@ -878,7 +908,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     const obj: Partial<ObjectJSON> = {
       id: target[symbolInternals].core.id,
       [ATTR_TYPE]: typeRef ? (EncodedReference.getReferenceString(typeRef) as DXN.String) : undefined,
-      [ATTR_META]: { ...this.getMeta(target) },
+      [ATTR_META]: { ...this.getMeta(target) } as ObjectMetaJSON,
     };
 
     if (target[symbolInternals].core.isDeleted()) {
@@ -974,7 +1004,7 @@ export { getObjectCore };
  * @returns Automerge document (or a part of it) that backs the object.
  * Mostly used for debugging.
  */
-export const getObjectDocument = (obj: AnyLiveObject<any>): A.Doc<ObjectStructure> => {
+export const getObjectDocument = (obj: Obj.Any): A.Doc<ObjectStructure> => {
   const core = getObjectCore(obj);
   return getDeep(core.getDoc(), core.mountPath)!;
 };
@@ -999,13 +1029,6 @@ interface DecodedValueAtPath {
   dataPath: KeyPath;
 }
 
-/** @deprecated */
-// TODO(burdon): Remove.
-export type AnyLiveObject<T extends AnyProperties = any> = T & HasId & AnyProperties;
-
-// Re-export from echo-object-utils for backward compatibility.
-export { isEchoObject };
-
 /**
  * Used to determine if the value should be placed at the root of a separate ECHO object.
  *
@@ -1028,7 +1051,7 @@ export const isTypedObjectProxy = (value: any): value is any => {
 /**
  * Helper type to preserve Obj<Props> types, otherwise return Entity.Entity<T>.
  */
-type CreateObjectReturn<T> = T extends Obj.Any ? T : Entity.Entity<T>;
+type CreateObjectReturn<T> = T extends Obj.Unknown ? T : Entity.Entity<T>;
 
 /**
  * Creates a reactive ECHO object backed by a CRDT.
@@ -1041,12 +1064,14 @@ export const createObject = <T extends AnyProperties>(obj: T): CreateObjectRetur
   if (schema != null) {
     validateSchema(schema);
   }
-  validateInitialProps(obj);
+  // Validate initial props on the raw target to avoid change context restrictions.
+  const rawTarget = isProxy(obj) ? getProxyTarget(obj) : obj;
+  validateInitialProps(rawTarget);
 
   const core = new ObjectCore();
   if (isProxy(obj)) {
     // Already an echo-schema reactive object.
-    const meta = getProxyTarget<ObjectMeta>(Obj.getMeta(obj));
+    const meta = getProxyTarget<ObjectMeta>(Entity.getMeta(obj as unknown as Entity.Unknown));
 
     // TODO(burdon): Requires comment.
     const slot = getProxySlot(obj);
@@ -1121,7 +1146,7 @@ const metaNotEmpty = (meta: ObjectMeta) => meta.keys.length > 0 || (meta.tags &&
  * @internal
  */
 // TODO(burdon): Call and remove subscriptions.
-export const destroyObject = <T extends AnyProperties>(proxy: AnyLiveObject<T>) => {
+export const destroyObject = <T extends Obj.Unknown>(proxy: T) => {
   invariant(isEchoObject(proxy));
   const target: ProxyTarget = getProxyTarget(proxy);
   const internals: ObjectInternals = target[symbolInternals];
@@ -1138,12 +1163,22 @@ const initCore = (core: ObjectCore, target: ProxyTarget) => {
   }
 
   core.initNewObject(linkAllNestedProperties(target));
+
+  // Handle parent reference set via [Obj.Parent] in Obj.make.
+  const parentValue = (target as any)[ParentId];
+  if (parentValue !== undefined) {
+    const parentId = parentValue.id ?? parentValue;
+    if (ObjectId.isValid(parentId)) {
+      core.setParent(EncodedReference.fromDXN(DXN.fromLocalObjectId(parentId)));
+    }
+    delete (target as any)[ParentId];
+  }
 };
 
 /**
  * @internal
  */
-export const initEchoReactiveObjectRootProxy = (core: ObjectCore, database?: EchoDatabase): AnyLiveObject<any> => {
+export const initEchoReactiveObjectRootProxy = (core: ObjectCore, database?: EchoDatabase): Entity.Unknown => {
   const target: ProxyTarget = {
     [symbolInternals]: new ObjectInternals(core, database),
     [symbolPath]: [],

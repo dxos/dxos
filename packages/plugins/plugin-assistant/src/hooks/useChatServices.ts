@@ -6,7 +6,8 @@ import * as Effect from 'effect/Effect';
 import type * as Runtime from 'effect/Runtime';
 import { useMemo } from 'react';
 
-import { useCapability } from '@dxos/app-framework/react';
+import { useCapability } from '@dxos/app-framework/ui';
+import { type Chat } from '@dxos/assistant-toolkit';
 import { type Key } from '@dxos/echo';
 import { TracingService } from '@dxos/functions';
 import { TracingServiceExt } from '@dxos/functions-runtime';
@@ -14,11 +15,10 @@ import { AutomationCapabilities } from '@dxos/plugin-automation';
 import { useClient } from '@dxos/react-client';
 
 import { type AiChatServices } from '../processor';
-import { type Assistant } from '../types';
 
 export type UseChatServicesProps = {
   id?: Key.SpaceId;
-  chat?: Assistant.Chat;
+  chat?: Chat.Chat;
 };
 
 /**

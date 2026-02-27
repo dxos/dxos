@@ -4,6 +4,10 @@
   "description": "Data components.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "DXOS.org",
   "type": "module",
@@ -53,7 +57,6 @@
     "@radix-ui/react-context": "catalog:",
     "@radix-ui/react-use-controllable-state": "catalog:",
     "date-fns": "catalog:",
-    "jsonpath": "catalog:",
     "tabster": "catalog:"
   },
   "devDependencies": {
@@ -63,7 +66,6 @@
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
-    "@types/jsonpath": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "effect": "catalog:",

@@ -2,19 +2,23 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Atom, useAtomValue } from '@effect-atom/atom-react';
+import type * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import { useEffect, useState } from 'react';
 
 import { type Database, Filter } from '@dxos/echo';
 import { Trigger } from '@dxos/functions';
-import { TriggerDispatcher } from '@dxos/functions-runtime';
+import { TriggerDispatcher, type TriggerDispatcherState } from '@dxos/functions-runtime';
 import { useQuery } from '@dxos/react-client/echo';
-import { useAsyncState } from '@dxos/react-ui';
 
 import { useComputeRuntimeCallback } from './useComputeRuntimeCallback';
 
 interface TriggerRuntimeControls {
   triggers: Trigger.Trigger[];
-  isRunning: boolean;
+
+  state: TriggerDispatcherState | undefined;
+
   start: () => void;
   stop: () => void;
 }
@@ -22,16 +26,27 @@ interface TriggerRuntimeControls {
 export const useTriggerRuntimeControls = (db: Database.Database | undefined): TriggerRuntimeControls => {
   const triggers = useQuery(db, Filter.type(Trigger.Trigger));
 
-  const [isRunningState, setIsRunningState] = useAsyncState(
-    useComputeRuntimeCallback(db?.spaceId, () => TriggerDispatcher.pipe(Effect.map((t) => t.running))),
+  const [dispatcher, setDispatcher] = useState<Context.Tag.Service<TriggerDispatcher> | undefined>(undefined);
+
+  const init = useComputeRuntimeCallback(
+    db?.spaceId,
+    Effect.fnUntraced(function* () {
+      const dispatcher = yield* TriggerDispatcher;
+      setDispatcher(dispatcher);
+    }),
   );
+
+  useEffect(() => {
+    void init();
+  }, []);
+
+  const state = useAtomValue(dispatcher?.state ?? Atom.make(undefined));
 
   const start = useComputeRuntimeCallback(
     db?.spaceId,
     Effect.fnUntraced(function* () {
       const dispatcher = yield* TriggerDispatcher;
       yield* dispatcher.start();
-      setIsRunningState(true);
     }),
   );
 
@@ -40,13 +55,12 @@ export const useTriggerRuntimeControls = (db: Database.Database | undefined): Tr
     Effect.fnUntraced(function* () {
       const dispatcher = yield* TriggerDispatcher;
       yield* dispatcher.stop();
-      setIsRunningState(false);
     }),
   );
 
   return {
     triggers,
-    isRunning: isRunningState ?? false,
+    state,
     start: () => void start(),
     stop: () => void stop(),
   };

@@ -8,13 +8,7 @@ import type * as SchemaAST from 'effect/SchemaAST';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { type AnyProperties } from '@dxos/echo/internal';
-import {
-  type JsonPath,
-  createJsonPath,
-  fromEffectValidationPath,
-  getValue as getValue$,
-  setValue as setValue$,
-} from '@dxos/effect';
+import { type JsonPath, createJsonPath, fromEffectValidationPath, getValue as getValue$ } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { useDefaultValue } from '@dxos/react-ui';
 import { type ValidationError, validateSchema } from '@dxos/schema';
@@ -136,11 +130,15 @@ export const useFormHandler = <T extends AnyProperties>({
     prop: valuesProp,
     defaultProp: defaultValues,
     onChange: () => {
-      setValues(valuesProp ?? defaultValues);
-      setChanged({});
-      setTouched({});
-      setErrors({});
-      setSaving(false);
+      // Only reset when controlled: parent passed new values.
+      // Uncontrolled updates come from setValues in onValueChange.
+      if (valuesProp !== undefined) {
+        setValues(valuesProp ?? defaultValues);
+        setChanged({});
+        setTouched({});
+        setErrors({});
+        setSaving(false);
+      }
     },
   });
   // TODO(wittjosiah): Upgrade @radix-ui/react-use-controllable-state.
@@ -256,6 +254,7 @@ export const useFormHandler = <T extends AnyProperties>({
       log('onValueChange', { path, value });
 
       const jsonPath = createJsonPath(path);
+      const pathArray = path;
       let parsedValue = value as any;
       try {
         if (type._tag === 'NumberKeyword') {
@@ -266,21 +265,25 @@ export const useFormHandler = <T extends AnyProperties>({
         parsedValue = undefined;
       }
 
-      // Update.
-      const newValues = { ...setValue$(values, jsonPath, parsedValue) };
-      setValues(newValues);
+      // Create merged values for validation and callback. Form never mutates; parent applies via onValuesChanged.
+      const newValues = mergeAtPath(values, pathArray as (string | number)[], parsedValue) as Partial<T>;
 
       // TODO(burdon): Check value has changed from original.
       const newChanged = { [jsonPath]: true };
-      setChanged({ ...changed, ...newChanged });
+      setChanged((prev) => ({ ...prev, ...newChanged }));
 
       // Validate.
       const isValid = validate(newValues);
 
-      // Callback.
+      // Notify parent; parent is responsible for applying the change.
       onValuesChanged?.(newValues, { isValid, changed: newChanged });
+
+      // For uncontrolled mode, update internal state. Controlled mode relies on parent to pass new values.
+      if (valuesProp === undefined) {
+        setValues(newValues);
+      }
     },
-    [values, changed, validate, onValuesChanged],
+    [values, validate, onValuesChanged, valuesProp],
   );
 
   const onBlur = useCallback(
@@ -339,6 +342,27 @@ export const useFormHandler = <T extends AnyProperties>({
       onCancel,
     ],
   );
+};
+
+/**
+ * Creates a new object with value at path. Does not mutate source.
+ * Preserves arrays when path segments are numeric indices.
+ */
+const mergeAtPath = (obj: any, path: readonly (string | number)[], value: any): any => {
+  if (path.length === 0) {
+    return value;
+  }
+
+  const [head, ...rest] = path;
+  const child = rest.length === 0 ? value : mergeAtPath(obj?.[head], rest, value);
+
+  if (Array.isArray(obj)) {
+    const copy = [...obj];
+    copy[head as number] = child;
+    return copy;
+  }
+
+  return { ...obj, [head]: child };
 };
 
 const flatMap = (errors: ValidationError[]) => {

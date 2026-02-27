@@ -15,7 +15,6 @@ import React, {
   useState,
 } from 'react';
 
-// TODO(burdon): Move these deps to @dxos/dom-util.
 import { addEventListener, combine } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { useForwardedRef } from '@dxos/react-hooks';
@@ -23,6 +22,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { type ThemedClassName } from '../../util';
 import { IconButton } from '../Button';
+import { ScrollArea } from '../ScrollArea';
 
 const isBottom = (el: HTMLElement | null) => {
   return !!(el && el.scrollHeight - el.scrollTop === el.clientHeight);
@@ -68,7 +68,7 @@ const Root = forwardRef<ScrollController, RootProps>(
     const timeoutRef = useRef<NodeJS.Timeout>(undefined);
     const scrollToBottom = useCallback((behavior: ScrollBehavior = behaviorProp) => {
       if (scrollerRef.current) {
-        // Temporarily hide scrollbar to prevent flicker.
+        // Temporarily hide scrollbar to prevent flickering.
         autoScrollRef.current = true;
         scrollerRef.current.classList.add('scrollbar-none');
         scrollerRef.current.scrollTo({
@@ -83,6 +83,7 @@ const Root = forwardRef<ScrollController, RootProps>(
             autoScrollRef.current = false;
           }, 500);
         }
+
         setPinned(true);
       }
     }, []);
@@ -125,22 +126,22 @@ const Root = forwardRef<ScrollController, RootProps>(
 
     return (
       <ScrollContainerProvider pinned={pinned} controller={controller} scrollToBottom={scrollToBottom}>
-        <div className='relative grid flex-1 min-bs-0 overflow-hidden'>
+        <div className='relative grid flex-1 min-h-0 overflow-hidden'>
           {fade && (
             <div
               role='none'
               data-visible={overflow}
               className={mx(
                 // NOTE: Gradients may not be visible with dark reader extensions.
-                'z-10 absolute block-start-0 inset-inline-0 bs-24 is-full',
+                'z-10 absolute top-0 inset-x-0 h-24 w-full',
                 'opacity-0 duration-200 transition-opacity data-[visible="true"]:opacity-100',
-                'bg-gradient-to-b from-[--surface-bg] to-transparent pointer-events-none',
+                'bg-gradient-to-b from-(--surface-bg) to-transparent pointer-events-none',
               )}
             />
           )}
-          <div className={mx('flex flex-col min-bs-0 overflow-y-auto scrollbar-thin', classNames)} ref={scrollerRef}>
-            {children}
-          </div>
+          <ScrollArea.Root classNames={mx('min-h-0', classNames)} thin>
+            <ScrollArea.Viewport ref={scrollerRef}>{children}</ScrollArea.Viewport>
+          </ScrollArea.Root>
         </div>
       </ScrollContainerProvider>
     );
@@ -153,11 +154,13 @@ Root.displayName = 'ScrollContainer.Root';
 // Viewport
 //
 
+const VIEWPORT_NAME = 'ScrollContainer.Viewport';
+
 type ViewportProps = ThemedClassName<PropsWithChildren<Omit<HTMLAttributes<HTMLDivElement>, 'className'>>>;
 
 const Viewport = forwardRef<HTMLDivElement, ViewportProps>(({ classNames, children, ...props }, forwardedRef) => {
   const contentRef = useForwardedRef(forwardedRef);
-  const { pinned, scrollToBottom } = useScrollContainerContext(Viewport.displayName!);
+  const { pinned, scrollToBottom } = useScrollContainerContext(VIEWPORT_NAME);
 
   useEffect(() => {
     if (!pinned || !contentRef.current) {
@@ -174,22 +177,24 @@ const Viewport = forwardRef<HTMLDivElement, ViewportProps>(({ classNames, childr
   }, [pinned, scrollToBottom]);
 
   return (
-    <div className={mx('is-full', classNames)} {...props} ref={contentRef}>
+    <div className={mx('w-full', classNames)} {...props} ref={contentRef}>
       {children}
     </div>
   );
 });
 
-Viewport.displayName = 'ScrollContainer.Viewport';
+Viewport.displayName = VIEWPORT_NAME;
 
 //
 // ScrollDownButton
 //
 
+const SCROLL_DOWN_BUTTON_NAME = 'ScrollContainer.ScrollDownButton';
+
 type ScrollDownButtonProps = ThemedClassName;
 
 const ScrollDownButton = ({ classNames }: ScrollDownButtonProps) => {
-  const { pinned, scrollToBottom } = useScrollContainerContext(ScrollDownButton.displayName!);
+  const { pinned, scrollToBottom } = useScrollContainerContext(SCROLL_DOWN_BUTTON_NAME);
 
   return (
     <div
@@ -212,7 +217,7 @@ const ScrollDownButton = ({ classNames }: ScrollDownButtonProps) => {
   );
 };
 
-ScrollDownButton.displayName = 'ScrollContainer.ScrollDownButton';
+ScrollDownButton.displayName = SCROLL_DOWN_BUTTON_NAME;
 
 //
 // ScrollContainer

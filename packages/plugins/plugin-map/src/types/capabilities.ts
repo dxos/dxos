@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 import { Capability } from '@dxos/app-framework';
 import { type LatLngLiteral } from '@dxos/react-ui-geo';
 
-import { type MapControlType } from '../components';
+import { type MapControlType } from '../containers';
 import { meta } from '../meta';
 
 const LatLngLiteralSchema = Schema.Struct({

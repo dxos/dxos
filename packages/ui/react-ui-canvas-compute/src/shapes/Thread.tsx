@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import React, { useEffect, useRef } from 'react';
 
 import { createInputSchema, createOutputSchema } from '@dxos/conductor';
-import { type ThemedClassName } from '@dxos/react-ui';
+import { ScrollArea, type ThemedClassName } from '@dxos/react-ui';
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
 import { Message } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
@@ -42,18 +42,24 @@ export const ThreadComponent = ({ shape }: ShapeComponentProps<ThreadShape>) => 
 
   return (
     <Box shape={shape}>
-      <div ref={scrollRef} className='flex flex-col is-full overflow-y-auto gap-2 p-2'>
-        {[...items].map((item, i) => (
-          <ThreadItem key={i} item={item} />
-        ))}
-      </div>
+      <ScrollArea.Root orientation='vertical'>
+        <ScrollArea.Viewport classNames='gap-2 p-2' ref={scrollRef}>
+          {[...items].map((item, i) => (
+            <ThreadItem key={i} item={item} />
+          ))}
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
     </Box>
   );
 };
 
 export const ThreadItem = ({ classNames, item }: ThemedClassName<{ item: any }>) => {
   if (typeof item !== 'object') {
-    return <div className={mx(classNames)}>{item}</div>;
+    return (
+      <div role='none' className={mx(classNames)}>
+        {item}
+      </div>
+    );
   }
 
   // TODO(burdon): Hack; introspect type.
@@ -63,7 +69,7 @@ export const ThreadItem = ({ classNames, item }: ThemedClassName<{ item: any }>)
     <div className={mx('flex', classNames, role === 'user' && 'justify-end')}>
       <div
         className={mx(
-          'block rounded-md p-1 pli-2 text-sm',
+          'block rounded-md p-1 px-2 text-sm',
           role === 'user'
             ? 'bg-blue-100 dark:bg-blue-800'
             : role === 'system'

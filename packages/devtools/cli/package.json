@@ -5,6 +5,10 @@
   "description": "DXOS CLI",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "info@dxos.org",
   "sideEffects": false,
@@ -45,7 +49,6 @@
     "@dxos/plugin-kanban": "workspace:*",
     "@dxos/plugin-map": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
-    "@dxos/plugin-observability": "workspace:*",
     "@dxos/plugin-registry": "workspace:*",
     "@dxos/plugin-script": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
@@ -58,6 +61,7 @@
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect-atom/atom": "catalog:",
     "@effect-atom/atom-react": "catalog:",
     "@effect/ai": "catalog:",
     "@effect/ai-anthropic": "catalog:",

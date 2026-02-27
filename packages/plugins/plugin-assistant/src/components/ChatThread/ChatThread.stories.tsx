@@ -56,7 +56,7 @@ const DefaultStory = ({ generator = [], delay = 0, wait, ...props }: StoryProps)
           }
         }
         setDone(true);
-      }).pipe(Effect.provide(Layer.mergeAll(Database.Service.layer(space.db), ContextQueueService.layer(queue)))),
+      }).pipe(Effect.provide(Layer.mergeAll(Database.layer(space.db), ContextQueueService.layer(queue)))),
     );
 
     return () => {
@@ -69,7 +69,7 @@ const DefaultStory = ({ generator = [], delay = 0, wait, ...props }: StoryProps)
   }
 
   return (
-    <EditorPreviewProvider onLookup={async ({ label, ref }) => ({ label, text: ref })}>
+    <EditorPreviewProvider onLookup={async ({ dxn, label }) => ({ label, text: dxn })}>
       <ChatThread {...props} messages={queue?.objects} />
       <PreviewCard />
     </EditorPreviewProvider>
@@ -99,7 +99,7 @@ const meta = {
   component: ChatThread,
   render: render(DefaultStory),
   decorators: [
-    withTheme,
+    withTheme(),
     withLayout({ layout: 'column' }),
     withClientProvider({
       createIdentity: true,
@@ -135,7 +135,7 @@ export const Delayed: Story = {
 
 export const Raw: Story = {
   render: () => (
-    <div className='contents' style={{ '--user-fill': 'var(--dx-amberFill)' } as CSSProperties}>
+    <div className='contents' style={{ '--user-fill': 'var(--color-amber-fill)' } as CSSProperties}>
       <MarkdownStream content={TEXT} />
     </div>
   ),
@@ -143,7 +143,7 @@ export const Raw: Story = {
 
 export const Static: Story = {
   render: () => (
-    <div className='contents' style={{ '--user-fill': 'var(--dx-amberFill)' } as CSSProperties}>
+    <div className='contents' style={{ '--user-fill': 'var(--color-amber-fill)' } as CSSProperties}>
       <MarkdownStream content={TEXT} registry={componentRegistry} />
     </div>
   ),

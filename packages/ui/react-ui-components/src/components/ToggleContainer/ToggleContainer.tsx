@@ -9,7 +9,7 @@ import { Icon, type ThemedClassName, useControlledState } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 const IconBlock = ({ children }: PropsWithChildren) => {
-  return <div className='grid bs-[24px] is-[24px] place-items-center'>{children}</div>;
+  return <div className='grid h-[24px] w-[24px] place-items-center'>{children}</div>;
 };
 
 //
@@ -91,7 +91,7 @@ const Root = ({
       open={open}
       setOpen={setOpen}
     >
-      <div role='none' className={mx('overflow-hidden', !shrink && 'is-full', classNames)}>
+      <div role='none' className={mx('overflow-hidden', !shrink && 'w-full', classNames)}>
         {children}
       </div>
     </ToggleContainerContext>
@@ -102,6 +102,8 @@ const Root = ({
 // Header
 //
 
+const HEADER_NAME = 'ToggleContainer.Header';
+
 type HeaderProps = ThemedClassName<
   PropsWithChildren<{
     icon?: JSX.Element;
@@ -110,11 +112,11 @@ type HeaderProps = ThemedClassName<
 >;
 
 const Header = ({ classNames, children, icon }: HeaderProps) => {
-  const { open, setOpen, shrink, duration } = useToggleContainerContext(Header.displayName);
+  const { open, setOpen, shrink, duration } = useToggleContainerContext(HEADER_NAME);
 
   return (
     <div
-      className={mx('is-full p-1 grid grid-cols-[24px_1fr_24px] gap-1 cursor-pointer select-none', classNames)}
+      className={mx('w-full p-1 grid grid-cols-[24px_1fr_24px] gap-1 cursor-pointer select-none', classNames)}
       onClick={() => setOpen(!open)}
     >
       <IconBlock>
@@ -131,16 +133,18 @@ const Header = ({ classNames, children, icon }: HeaderProps) => {
   );
 };
 
-Header.displayName = 'ToggleContainer.Header';
+Header.displayName = HEADER_NAME;
 
 //
 // Content
 //
 
+const CONTENT_NAME = 'ToggleContainer.Content';
+
 type ContentProps = ThemedClassName<PropsWithChildren>;
 
 const Content = ({ classNames, children }: ContentProps) => {
-  const { duration, expandX, expandY } = useToggleContainerContext(Content.displayName);
+  const { duration, expandX, expandY } = useToggleContainerContext(CONTENT_NAME);
 
   return (
     <div
@@ -167,7 +171,7 @@ const Content = ({ classNames, children }: ContentProps) => {
   );
 };
 
-Content.displayName = 'ToggleContainer.Content';
+Content.displayName = CONTENT_NAME;
 
 //
 // ToggleContainer

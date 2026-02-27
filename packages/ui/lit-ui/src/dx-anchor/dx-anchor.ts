@@ -18,7 +18,7 @@ export class DxAnchor extends LitElement {
   //   should be unnecessary, and it isn’t an issue for `DxAvatar` or `DxGrid`. What’s going on?
 
   @property({ type: String })
-  refid: string = '';
+  dxn: string = '';
 
   @property({ type: String })
   rootclassname: string | undefined = undefined;
@@ -26,8 +26,8 @@ export class DxAnchor extends LitElement {
   override connectedCallback (): void {
     super.connectedCallback();
     this.tabIndex = 0;
-    this.classList.add(this.getAttribute('data-visible-focus')==='false' ? 'outline-none' : 'dx-focus-ring');
-    if(this.rootclassname){
+    this.classList.add(this.getAttribute('data-visible-focus')==='false' ? 'outline-hidden' : 'dx-focus-ring');
+    if (this.rootclassname){
       this.classList.add(this.rootclassname);
     }
     this.setAttribute('role', 'button');
@@ -41,7 +41,7 @@ export class DxAnchor extends LitElement {
 
   private handleActivate(event: { type: string }): void {
     this.dispatchEvent(
-      new DxAnchorActivate({ refId: this.refid, label: this.textContent ?? '', trigger: this }),
+      new DxAnchorActivate({ dxn: this.dxn, label: this.textContent ?? '', trigger: this }),
     );
   }
 

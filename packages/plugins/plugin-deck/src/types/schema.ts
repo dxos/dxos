@@ -4,7 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
+import { Label, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/operation';
 import { type DeepReadonly } from '@dxos/util';
 
@@ -19,8 +20,8 @@ export const DECK_COMPANION_TYPE = `${meta.id}/deck-companion`;
 export const NewPlankPositions = ['start', 'end'] as const;
 export type NewPlankPositioning = (typeof NewPlankPositions)[number];
 
-export const OverscrollOptions = ['none', 'centering'] as const;
-export type Overscroll = (typeof OverscrollOptions)[number];
+export const OverScrollToProps = ['none', 'centering'] as const;
+export type Overscroll = (typeof OverScrollToProps)[number];
 
 export type Part = 'solo' | 'deck' | 'complementary';
 export type ResolvedPart = Part | 'solo-primary' | 'solo-companion';
@@ -31,7 +32,7 @@ export const DeckSettingsSchema = Schema.Struct({
   enableStatusbar: Schema.optional(Schema.Boolean),
   enableNativeRedirect: Schema.optional(Schema.Boolean),
   newPlankPositioning: Schema.optional(Schema.Literal(...NewPlankPositions)),
-  overscroll: Schema.optional(Schema.Literal(...OverscrollOptions)),
+  overscroll: Schema.optional(Schema.Literal(...OverScrollToProps)),
   // TODO(burdon): Rename layoutMode? (e.g., bento | encapsulated?)
   encapsulatedPlanks: Schema.optional(Schema.Boolean),
 }).pipe(Schema.mutable);
@@ -90,6 +91,7 @@ export const DeckStateSchema = Schema.Struct({
 }).pipe(Schema.mutable);
 export type DeckStateProps = Schema.Schema.Type<typeof DeckStateSchema>;
 
+// TODO(burdon): Factor out state (in common with other layouts?)
 // Transient/ephemeral plugin state (not persisted).
 export const DeckEphemeralStateSchema = Schema.Struct({
   dialogOpen: Schema.Boolean,
@@ -105,11 +107,13 @@ export const DeckEphemeralStateSchema = Schema.Struct({
   popoverAnchor: Schema.optional(Schema.Any),
   popoverAnchorId: Schema.optional(Schema.String),
   popoverKind: Schema.optional(Schema.Literal('base', 'card')),
-  popoverTitle: Schema.optional(Common.Label.annotations({ description: 'The title of the popover.' })),
+  popoverTitle: Schema.optional(Label.annotations({ description: 'The title of the popover.' })),
+  /** Ref of the subject to be passed to the popover Surface. */
+  popoverContentRef: Schema.optional(Schema.String),
   /** Data to be passed to the popover Surface. */
   popoverContent: Schema.optional(Schema.Any),
 
-  toasts: Schema.mutable(Schema.Array(Common.LayoutOperation.Toast)),
+  toasts: Schema.mutable(Schema.Array(LayoutOperation.Toast)),
   currentUndoId: Schema.optional(Schema.String),
 
   /** The identifier of a component to scroll into view when it is mounted. */

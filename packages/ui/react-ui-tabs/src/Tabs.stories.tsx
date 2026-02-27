@@ -17,7 +17,7 @@ export const DefaultStory = () => {
   return (
     <Dialog.Root open>
       <Dialog.Overlay blockAlign='start'>
-        <Dialog.Content classNames='is-[calc(100dvw-4rem)] !max-is-full'>
+        <Dialog.Content size='xl'>
           <NaturalTabs.Root orientation='vertical' defaultValue={Object.keys(content)[3]} defaultActivePart='list'>
             <NaturalTabs.Viewport>
               <NaturalTabs.Tablist>
@@ -36,7 +36,7 @@ export const DefaultStory = () => {
                       <Icon icon='ph--arrow-left--bold' size={4} />
                       <span>Back to tab list</span>
                     </NaturalTabs.BackButton>
-                    <p className='pli-1'>{panel}</p>
+                    <p className='px-1'>{panel}</p>
                   </NaturalTabs.Tabpanel>
                 );
               })}
@@ -60,7 +60,7 @@ const meta = {
   title: 'ui/react-ui-tabs/Tabs',
   component: NaturalTabs.Root,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

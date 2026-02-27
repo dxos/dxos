@@ -91,9 +91,9 @@ export const ArrayField = ({
               />
 
               {!readonly && layout !== 'static' && (
-                <div role='none' className='flex flex-col bs-full justify-end'>
+                <div role='none' className='flex flex-col h-full justify-end'>
                   {/* NOTE: Aligns with center of last field if multi-field object. */}
-                  <div role='none' className='flex items-center bs-[var(--line-height)]'>
+                  <div role='none' className='flex items-center h-[var(--line-height)]'>
                     <IconButton
                       icon='ph--x--regular'
                       iconOnly
@@ -111,12 +111,7 @@ export const ArrayField = ({
 
       {/* TODO(burdon): Get label from schema. */}
       {!readonly && layout !== 'static' && (
-        <IconButton
-          classNames='flex is-full _mlb-cardSpacingBlock'
-          icon='ph--plus--regular'
-          label={t('add field')}
-          onClick={handleAdd}
-        />
+        <IconButton classNames='flex w-full' icon='ph--plus--regular' label={t('add field')} onClick={handleAdd} />
       )}
     </>
   );
@@ -139,6 +134,9 @@ export const getDefaultValue = (ast?: SchemaAST.AST): any => {
     }
     case 'BooleanKeyword': {
       return false;
+    }
+    case 'Suspend': {
+      return getDefaultValue(ast.f());
     }
     default: {
       if (ast && isNestedType(ast)) {

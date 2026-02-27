@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Obj, Relation } from '@dxos/echo';
-import { useObject, useObjects } from '@dxos/echo-react';
+import { useObject } from '@dxos/echo-react';
 import { getSpace, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { IconButton, Tag, Tooltip, useThemeContext, useTranslation } from '@dxos/react-ui';
@@ -54,7 +54,6 @@ export const CommentsThreadContainer = ({
   const detached = !anchor.anchor;
   const thread = Relation.getSource(anchor) as Thread.Thread;
   const [messages] = useObject(thread, 'messages');
-  const loadedMessages = useObjects(messages ?? []);
   const activity = useStatus(space, Obj.getDXN(thread).toString());
   const threadScrollRef = useRef<HTMLDivElement | null>(null);
 
@@ -99,7 +98,7 @@ export const CommentsThreadContainer = ({
   return (
     <ThreadComponent.Root
       id={Obj.getDXN(thread).toString()}
-      classNames='pbs-2 border-be border-subduedSeparator last:border-none'
+      classNames='pt-2 border-b border-subdued-separator last:border-none'
       current={current}
       onClickCapture={handleAttend}
       onFocusCapture={handleAttend}
@@ -146,11 +145,11 @@ export const CommentsThreadContainer = ({
         </div>
       </div>
 
-      {loadedMessages.map((message) => (
+      {messages?.map((ref) => (
         <MessageContainer
-          key={message.id}
+          key={ref.dxn.toString()}
           editable
-          message={message}
+          message={ref}
           members={members}
           onDelete={handleMessageDelete}
           onAcceptProposal={handleAcceptProposal}
@@ -168,7 +167,7 @@ export const CommentsThreadContainer = ({
       <ThreadComponent.Status activity={activity}>{t('activity message')}</ThreadComponent.Status>
 
       {/* NOTE(thure): This can’t also be the `overflow-anchor` because `ScrollArea` injects an interceding node that contains this necessary ref’d element. */}
-      <div role='none' className='bs-px -mbs-px' ref={threadScrollRef} />
+      <div role='none' className='h-px -mt-px' ref={threadScrollRef} />
     </ThreadComponent.Root>
   );
 };

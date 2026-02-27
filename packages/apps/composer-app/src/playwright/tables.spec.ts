@@ -26,7 +26,7 @@ test.describe.skip('Table tests', () => {
   });
 
   test('create', async () => {
-    await host.createObject({ type: 'Table', nth: 0 });
+    await host.createObject({ type: 'Table' });
 
     const title = faker.lorem.sentence();
     await Table.createTable(host.page, title);
@@ -35,7 +35,7 @@ test.describe.skip('Table tests', () => {
   });
 
   test('can add rows', async () => {
-    await host.createObject({ type: 'Table', nth: 0 });
+    await host.createObject({ type: 'Table' });
 
     const title = faker.lorem.sentence();
     await Table.createTable(host.page, title);
@@ -58,7 +58,7 @@ test.describe.skip('Table tests', () => {
   });
 
   test('can delete rows', async () => {
-    await host.createObject({ type: 'Table', nth: 0 });
+    await host.createObject({ type: 'Table' });
     const title = faker.lorem.sentence();
     await Table.createTable(host.page, title);
     await expect(Table.getDataRow(host.page)).toHaveCount(1);
@@ -83,7 +83,7 @@ test.describe.skip('Table tests', () => {
   });
 
   test('can add columns', async () => {
-    await host.createObject({ type: 'Table', nth: 0 });
+    await host.createObject({ type: 'Table' });
     const title = faker.lorem.sentence();
     await Table.createTable(host.page, title);
     await expect(Table.getHeaderCell(host.page)).toHaveCount(2);
@@ -94,7 +94,7 @@ test.describe.skip('Table tests', () => {
   });
 
   test('can delete columns', async () => {
-    await host.createObject({ type: 'Table', nth: 0 });
+    await host.createObject({ type: 'Table' });
     const title = faker.lorem.sentence();
     await Table.createTable(host.page, title);
 
@@ -119,7 +119,7 @@ test.describe.skip('Table tests', () => {
   });
 
   test('can rename columns', async () => {
-    await host.createObject({ type: 'Table', nth: 0 });
+    await host.createObject({ type: 'Table' });
     const title = faker.lorem.sentence();
 
     await Table.createTable(host.page, title);

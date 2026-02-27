@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { baseSurface, modalSurface, mx, surfaceShadow } from '@dxos/ui-theme';
+import { mx, surfaceShadow } from '@dxos/ui-theme';
 import { type MessageValence } from '@dxos/ui-types';
 
 import { withTheme } from '../../testing';
@@ -39,7 +39,7 @@ type BaseProps = Partial<{
   validationMessage: string;
 }>;
 
-const Wrapper = ({
+const InputWrapper = ({
   kind,
   label,
   description,
@@ -74,31 +74,31 @@ const Wrapper = ({
 const DefaultStory = (props: BaseProps) => {
   return (
     <div className='space-b-4'>
-      <div className={mx(baseSurface, 'p-4 rounded-md')}>
-        <Wrapper {...props} />
+      <div className={mx('bg-base-surface', 'p-4 rounded-md')}>
+        <InputWrapper {...props} />
       </div>
-      <div className={mx('bg-cardSurface', 'p-4 rounded-md', surfaceShadow({ elevation: 'positioned' }))}>
-        <Wrapper {...props} />
+      <div className={mx('bg-card-surface', 'p-4 rounded-md', surfaceShadow({ elevation: 'positioned' }))}>
+        <InputWrapper {...props} />
       </div>
-      <div className={mx(modalSurface, 'p-4 rounded-md', surfaceShadow({ elevation: 'dialog' }))}>
-        <Wrapper {...props} />
+      <div className={mx('bg-modal-surface', 'p-4 rounded-md', surfaceShadow({ elevation: 'dialog' }))}>
+        <InputWrapper {...props} />
       </div>
     </div>
   );
 };
 
 const meta = {
-  title: 'ui/react-ui-core/Input',
+  title: 'ui/react-ui-core/components/Input',
   component: Input.Root as any,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
 type Story = StoryObj<BaseProps & Variant>;
 
-export const Default: Story = {
+export const DensityCoarse: Story = {
   args: {
     kind: 'text',
     label: 'Hello',
@@ -109,6 +109,7 @@ export const Default: Story = {
     descriptionVisuallyHidden: false,
     validationMessage: '',
     validationValence: undefined,
+    density: 'coarse',
   },
 };
 

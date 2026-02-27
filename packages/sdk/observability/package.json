@@ -4,47 +4,26 @@
   "description": "Provides a common interface for app and platform observability",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": false,
   "type": "module",
   "exports": {
     ".": {
-      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
-    },
-    "./segment": {
-      "source": "./src/segment/index.ts",
-      "types": "./dist/types/src/segment/index.d.ts",
-      "browser": "./dist/lib/browser/segment/index.mjs",
-      "node": "./dist/lib/node-esm/segment/index.mjs"
-    },
-    "./sentry": {
-      "source": "./src/sentry/index.ts",
-      "types": "./dist/types/src/sentry/index.d.ts",
-      "browser": "./dist/lib/browser/sentry/index.mjs",
-      "node": "./dist/lib/node-esm/sentry/index.mjs"
     }
   },
   "browser": {
-    "./src/segment/node.ts": "./src/segment/browser.ts",
-    "./src/sentry/node.ts": "./src/sentry/browser.ts",
-    "./src/otel/traces.ts": "./src/otel/traces-browser.ts",
-    "./src/testing/testkit/index.ts": "./src/testing/testkit/browser.ts"
+    "./src/storage/node.ts": "./src/storage/browser.ts",
+    "./src/extensions/otel/traces.ts": "./src/extensions/otel/traces-browser.ts"
   },
   "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "segment": [
-        "dist/types/src/segment/index.d.ts"
-      ],
-      "sentry": [
-        "dist/types/src/sentry/index.d.ts"
-      ]
-    }
-  },
   "files": [
     "dist",
     "src"
@@ -77,21 +56,21 @@
     "@opentelemetry/sdk-trace-base": "catalog:",
     "@opentelemetry/sdk-trace-web": "catalog:",
     "@opentelemetry/semantic-conventions": "catalog:",
-    "@segment/analytics-node": "catalog:",
-    "@segment/snippet": "catalog:",
-    "@sentry/browser": "catalog:",
-    "@sentry/node": "catalog:",
     "debug": "catalog:",
     "js-yaml": "catalog:",
     "localforage": "catalog:",
+    "posthog-js": "catalog:",
     "uuid": "catalog:"
   },
   "devDependencies": {
-    "@sentry/types": "catalog:",
+    "@effect/platform": "catalog:",
     "@types/debug": "catalog:",
     "@types/js-yaml": "catalog:",
-    "sentry-testkit": "catalog:",
     "zone.js": "catalog:"
+  },
+  "peerDependencies": {
+    "@effect/platform": "catalog:",
+    "effect": "catalog:"
   },
   "publishConfig": {
     "access": "public"

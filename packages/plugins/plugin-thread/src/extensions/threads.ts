@@ -114,7 +114,7 @@ export const threads = (
       onDelete: ({ id }) => {
         const drafts = registry.get(stateAtom).drafts[objectId];
         if (drafts) {
-          const index = drafts.findIndex((thread) => Obj.getDXN(thread).toString() === id);
+          const index = drafts.findIndex((draft) => Relation.getDXN(draft).toString() === id);
           if (index !== -1) {
             const current = registry.get(stateAtom);
             registry.set(stateAtom, {
@@ -129,19 +129,19 @@ export const threads = (
 
         const thread = query.results.find((object) => Relation.getSource(object).id === id);
         if (thread) {
-          Obj.change(thread, (t) => {
+          Relation.change(thread, (t) => {
             t.anchor = undefined;
           });
         }
       },
       onUpdate: ({ id, cursor }) => {
-        const draft = registry.get(stateAtom).drafts[objectId]?.find((thread) => Obj.getDXN(thread).toString() === id);
+        const draft = registry.get(stateAtom).drafts[objectId]?.find((d) => Relation.getDXN(d).toString() === id);
         if (draft) {
           const thread = Relation.getSource(draft) as Thread.Thread;
           Obj.change(thread, (t) => {
             t.name = getName(doc, cursor);
           });
-          Obj.change(draft, (d) => {
+          Relation.change(draft, (d) => {
             d.anchor = cursor;
           });
         }
@@ -153,7 +153,7 @@ export const threads = (
             Obj.change(thread, (t) => {
               t.name = getName(doc, cursor);
             });
-            Obj.change(relation, (r) => {
+            Relation.change(relation, (r) => {
               r.anchor = cursor;
             });
           }

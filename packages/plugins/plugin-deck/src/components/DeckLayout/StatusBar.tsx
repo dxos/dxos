@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Surface } from '@dxos/app-framework/react';
+import { Surface } from '@dxos/app-framework/ui';
 import { useLandmarkMover } from '@dxos/react-ui';
 
 export const StatusBar = ({ showHints }: { showHints?: boolean }) => {
@@ -12,11 +12,11 @@ export const StatusBar = ({ showHints }: { showHints?: boolean }) => {
   return (
     <div
       role='contentinfo'
-      className='fixed block-end-0 inset-inline-0 bs-[--statusbar-size] border-bs border-separator z-[2] flex text-description'
+      className='fixed bottom-0 inset-x-0 h-(--statusbar-size) border-y border-separator z-[2] flex text-description'
       {...mover}
     >
-      {showHints && <Surface role='hints' limit={1} />}
-      <Surface role='status-bar' limit={1} />
+      {showHints && <Surface.Surface role='hints' limit={1} />}
+      <Surface.Surface role='status-bar' limit={1} />
     </div>
   );
 };

@@ -5,9 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { ArtifactId } from '@dxos/assistant';
-import { Obj } from '@dxos/echo';
-import { Database } from '@dxos/echo';
+import { Database, Obj, Type } from '@dxos/echo';
 import { QueueService, defineFunction } from '@dxos/functions';
 import { Message, Transcript } from '@dxos/types';
 
@@ -18,16 +16,16 @@ export default defineFunction({
   name: 'Open',
   description: 'Opens and reads the contents of a transcription object.',
   inputSchema: Schema.Struct({
-    id: ArtifactId.annotations({
+    transcript: Type.Ref(Transcript.Transcript).annotations({
       description: 'The ID of the transcription object.',
     }),
   }),
   outputSchema: Schema.Struct({
     content: Schema.String,
   }),
-  handler: Effect.fn(function* ({ data: { id } }) {
-    const transcript = yield* Database.Service.resolve(ArtifactId.toDXN(id), Transcript.Transcript);
-    const { dxn } = yield* Effect.promise(() => transcript.queue.load());
+  handler: Effect.fn(function* ({ data: { transcript } }) {
+    const transcriptObj = yield* Database.load(transcript);
+    const { dxn } = yield* Effect.promise(() => transcriptObj.queue.load());
     const queue = yield* QueueService.getQueue(dxn);
     yield* Effect.promise(() => queue?.queryObjects());
     const content = queue?.objects

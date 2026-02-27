@@ -29,12 +29,14 @@ import { attachTypedJsonSerializer, defineHiddenProperty, typedJsonSerializer } 
 import { Ref, type RefResolver, refFromEncodedReference, setRefResolver } from '../ref';
 import {
   ATTR_META,
+  ATTR_PARENT,
   ATTR_TYPE,
-  type AnyEchoObject,
+  type AnyEntity,
   EntityKind,
   KindId,
   MetaId,
   ObjectMetaSchema,
+  ParentId,
   setSchema,
 } from '../types';
 
@@ -57,7 +59,7 @@ type SerializedObject<T extends { id: string }> = {
 /**
  * Converts object to it's JSON representation.
  */
-export const objectToJSON = <T extends AnyEchoObject>(obj: T): SerializedObject<T> => {
+export const objectToJSON = <T extends AnyEntity>(obj: T): SerializedObject<T> => {
   const typename = getTypeDXN(obj)?.toString();
   invariant(typename && typeof typename === 'string');
   return typedJsonSerializer.call(obj);
@@ -72,7 +74,7 @@ export const objectToJSON = <T extends AnyEchoObject>(obj: T): SerializedObject<
 export const objectFromJSON = async (
   jsonData: unknown,
   { refResolver, dxn }: { refResolver?: RefResolver; dxn?: DXN } = {},
-): Promise<AnyEchoObject> => {
+): Promise<AnyEntity> => {
   assumeType<ObjectJSON>(jsonData);
   assertArgument(typeof jsonData === 'object' && jsonData !== null, 'jsonData', 'expect object');
   assertArgument(typeof jsonData[ATTR_TYPE] === 'string', 'jsonData[ATTR_TYPE]', 'expected object to have a type');
@@ -81,15 +83,16 @@ export const objectFromJSON = async (
   const type = DXN.parse(jsonData[ATTR_TYPE]);
   const schema = await refResolver?.resolveSchema(type);
   invariant(schema === undefined || Schema.isSchema(schema));
+  const decodedInput = stripInternalJsonKeys(jsonData);
 
   let obj: any;
   if (schema != null) {
-    obj = await schema.pipe(Schema.decodeUnknownPromise)(jsonData);
+    obj = await schema.pipe(Schema.decodeUnknownPromise)(decodedInput);
     if (refResolver) {
       setRefResolverOnData(obj, refResolver);
     }
   } else {
-    obj = decodeGeneric(jsonData, { refResolver });
+    obj = decodeGeneric(decodedInput, { refResolver });
   }
 
   invariant(ObjectId.isValid(obj.id), 'Invalid object id');
@@ -104,8 +107,8 @@ export const objectFromJSON = async (
     const sourceDxn: DXN = DXN.parse(jsonData[ATTR_RELATION_SOURCE] ?? raise(new TypeError('Missing relation source')));
     const targetDxn: DXN = DXN.parse(jsonData[ATTR_RELATION_TARGET] ?? raise(new TypeError('Missing relation target')));
 
-    const source = (await refResolver?.resolve(sourceDxn)) as AnyEchoObject | undefined;
-    const target = (await refResolver?.resolve(targetDxn)) as AnyEchoObject | undefined;
+    const source = (await refResolver?.resolve(sourceDxn)) as AnyEntity | undefined;
+    const target = (await refResolver?.resolve(targetDxn)) as AnyEntity | undefined;
 
     defineHiddenProperty(obj, KindId, EntityKind.Relation);
     defineHiddenProperty(obj, RelationSourceDXNId, sourceDxn);
@@ -126,6 +129,12 @@ export const objectFromJSON = async (
     });
   }
 
+  if (jsonData[ATTR_PARENT]) {
+    const parentDxn = DXN.parse(jsonData[ATTR_PARENT]);
+    const parent = (await refResolver?.resolve(parentDxn)) as Obj.Unknown | undefined;
+    defineHiddenProperty(obj, ParentId, parent);
+  }
+
   if (dxn) {
     defineHiddenProperty(obj, SelfDXNId, dxn);
   }
@@ -141,15 +150,7 @@ export const objectFromJSON = async (
 };
 
 const decodeGeneric = (jsonData: unknown, options: { refResolver?: RefResolver }) => {
-  const {
-    [ATTR_TYPE]: _type,
-    [ATTR_META]: _meta,
-    [ATTR_DELETED]: _deleted,
-    [ATTR_SELF_DXN]: _selfDxn,
-    [ATTR_RELATION_SOURCE]: _relationSource,
-    [ATTR_RELATION_TARGET]: _relationTarget,
-    ...props
-  } = jsonData as any;
+  const props = stripInternalJsonKeys(jsonData);
 
   return deepMapValues(props, (value, visitor) => {
     if (isEncodedReference(value)) {
@@ -160,7 +161,21 @@ const decodeGeneric = (jsonData: unknown, options: { refResolver?: RefResolver }
   });
 };
 
-export const setRefResolverOnData = (obj: AnyEchoObject, refResolver: RefResolver) => {
+const stripInternalJsonKeys = (jsonData: unknown) => {
+  const {
+    [ATTR_TYPE]: _type,
+    [ATTR_META]: _meta,
+    [ATTR_DELETED]: _deleted,
+    [ATTR_SELF_DXN]: _selfDxn,
+    [ATTR_RELATION_SOURCE]: _relationSource,
+    [ATTR_RELATION_TARGET]: _relationTarget,
+    ...props
+  } = jsonData as any;
+
+  return props;
+};
+
+export const setRefResolverOnData = (obj: AnyEntity, refResolver: RefResolver) => {
   const visitor = (value: unknown) => {
     if (Ref.isRef(value)) {
       setRefResolver(value, refResolver);
@@ -182,6 +197,7 @@ export const objectStructureToJson = (objectId: string, structure: ObjectStructu
     id: objectId,
     [ATTR_TYPE]: (ObjectStructure.getTypeReference(structure)?.['/'] ?? '') as DXN.String,
     [ATTR_DELETED]: ObjectStructure.isDeleted(structure),
+    [ATTR_PARENT]: ObjectStructure.getParent(structure)?.['/'] as DXN.String | undefined,
     [ATTR_RELATION_SOURCE]: ObjectStructure.getRelationSource(structure)?.['/'] as DXN.String | undefined,
     [ATTR_RELATION_TARGET]: ObjectStructure.getRelationTarget(structure)?.['/'] as DXN.String | undefined,
   };

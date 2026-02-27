@@ -62,36 +62,28 @@ const AvatarStackEffect = ({
       <span
         role='none'
         className={mx(
-          'absolute inline-end-auto opacity-20',
-          reverseEffects ? 'inline-start-3' : 'inline-start-1',
+          'absolute right-auto opacity-20',
+          reverseEffects ? 'left-3' : 'left-1',
           getSize(avatarProps.size!),
         )}
       >
         <span
           role='none'
-          className={tx('avatar.ring', 'avatar__ring', {
-            ...avatarProps,
-            status,
-            animation,
-          })}
+          className={tx('avatar.ring', { ...avatarProps, status, animation })}
           style={{ animationDelay: '400ms' }}
         />
       </span>
       <span
         role='none'
         className={mx(
-          'absolute inline-end-auto opacity-50',
-          reverseEffects ? 'inline-start-2' : 'inline-start-2',
+          'absolute right-auto opacity-50',
+          reverseEffects ? 'left-2' : 'left-2',
           getSize(avatarProps.size!),
         )}
       >
         <span
           role='none'
-          className={tx('avatar.ring', 'avatar__ring', {
-            ...avatarProps,
-            status,
-            animation,
-          })}
+          className={tx('avatar.ring', { ...avatarProps, status, animation })}
           style={{ animationDelay: '200ms' }}
         />
       </span>
@@ -158,7 +150,7 @@ export const InvitationListItemImpl = ({
     <ListItem.Root
       id={invitationCode}
       {...props}
-      classNames={['flex gap-2 pis-3 pie-1 items-center relative', props.classNames]}
+      classNames={['flex gap-2 ps-3 pe-1 items-center relative', props.classNames]}
     >
       <ListItem.Heading classNames='sr-only'>
         {t(multiUse ? 'invite many list item label' : 'invite one list item label')}
@@ -200,17 +192,17 @@ export const InvitationListItemImpl = ({
       ) : showAuthCode ? (
         <AuthCode code={authCode} classNames='grow' />
       ) : invitationStatus === Invitation.State.CONNECTING ? (
-        <span className='pli-2 grow text-neutral-500'>Connecting...</span>
+        <span className='px-2 grow text-neutral-500'>Connecting...</span>
       ) : invitationStatus === Invitation.State.AUTHENTICATING ? (
-        <span className='pli-2 grow text-neutral-500'>Authenticating...</span>
+        <span className='px-2 grow text-neutral-500'>Authenticating...</span>
       ) : invitationStatus === Invitation.State.ERROR || invitationStatus === Invitation.State.TIMEOUT ? (
-        <span className='pli-2 grow text-neutral-500'>Failed</span>
+        <span className='px-2 grow text-neutral-500'>Failed</span>
       ) : invitationStatus === Invitation.State.CANCELLED ? (
-        <span className='pli-2 grow text-neutral-500'>Cancelled</span>
+        <span className='px-2 grow text-neutral-500'>Cancelled</span>
       ) : invitationStatus === Invitation.State.SUCCESS ? (
-        <span className='pli-2 grow truncate'>User joined</span>
+        <span className='px-2 grow truncate'>User joined</span>
       ) : !shareable ? (
-        <span className='pli-2 grow text-neutral-500'>Pending Invitation</span>
+        <span className='px-2 grow text-neutral-500'>Pending Invitation</span>
       ) : (
         <span className='grow'> </span>
       )}
@@ -221,7 +213,7 @@ export const InvitationListItemImpl = ({
           label={t('cancel invitation label')}
           iconOnly
           variant='ghost'
-          classNames='flex gap-1 pli-0'
+          classNames='flex gap-1 px-0'
           onClick={cancel}
           data-testid='cancel-invitation'
         />
@@ -232,7 +224,7 @@ export const InvitationListItemImpl = ({
           label={t('remove invitation label')}
           iconOnly
           variant='ghost'
-          classNames='flex gap-1 pli-0'
+          classNames='flex gap-1 px-0'
           onClick={handleClickRemove}
           data-testid='remove-invitation'
         />

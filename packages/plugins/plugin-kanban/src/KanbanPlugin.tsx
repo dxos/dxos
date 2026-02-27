@@ -4,21 +4,20 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Common, Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
+import { AppPlugin } from '@dxos/app-toolkit';
 import { Type } from '@dxos/echo';
 import { type CreateObject } from '@dxos/plugin-space/types';
-import { translations as kanbanTranslations } from '@dxos/react-ui-kanban';
-import { Kanban } from '@dxos/react-ui-kanban/types';
 import { View } from '@dxos/schema';
 
 import { BlueprintDefinition, OperationResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { CreateKanbanSchema } from './types';
+import { CreateKanbanSchema, Kanban } from './types';
 
 export const KanbanPlugin = Plugin.define(meta).pipe(
-  Common.Plugin.addTranslationsModule({ translations: [...translations, ...kanbanTranslations] }),
-  Common.Plugin.addMetadataModule({
+  AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+  AppPlugin.addMetadataModule({
     metadata: {
       id: Type.getTypename(Kanban.Kanban),
       metadata: {
@@ -37,9 +36,9 @@ export const KanbanPlugin = Plugin.define(meta).pipe(
       },
     },
   }),
-  Common.Plugin.addSchemaModule({ schema: [Kanban.Kanban] }),
-  Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
-  Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
-  Common.Plugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addSchemaModule({ schema: [Kanban.Kanban] }),
+  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addTranslationsModule({ translations }),
   Plugin.make,
 );

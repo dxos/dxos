@@ -2,11 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import { LogicalPosition, LogicalSize, getCurrentWindow } from '@tauri-apps/api/window';
+import { getCurrentWindow } from '@tauri-apps/api/window';
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 
+/**
+ * Window capability module.
+ * Sets up window drag regions for Tauri windows.
+ * Note: Window state persistence (size/position) is handled on the Rust side
+ * in src-tauri/src/window_state.rs for instant restoration on startup.
+ */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const appWindow = getCurrentWindow();
@@ -14,51 +20,11 @@ export default Capability.makeModule(
     // Set up drag regions for window dragging.
     const cleanupDragRegions = setupWindowDrag(appWindow);
 
-    // Save window state to localStorage.
-    async function saveWindowState() {
-      const size = await appWindow.innerSize();
-      const position = await appWindow.innerPosition();
-      localStorage.setItem(
-        'windowState',
-        JSON.stringify({
-          width: size.width,
-          height: size.height,
-          x: position.x,
-          y: position.y,
-        }),
-      );
-    }
-
-    // Restore window state from localStorage.
-    async function restoreWindowState() {
-      const savedState = localStorage.getItem('windowState');
-      if (savedState) {
-        const state = JSON.parse(savedState);
-
-        await appWindow.setSize(new LogicalSize(state.width, state.height));
-        await appWindow.setPosition(new LogicalPosition(state.x, state.y));
-      }
-    }
-
-    // Listen for window events and save state.
-    const unsubscribeResize = yield* Effect.tryPromise(() => appWindow.listen('tauri://resize', saveWindowState));
-    const unsubscribeMove = yield* Effect.tryPromise(() => appWindow.listen('tauri://move', saveWindowState));
-
-    // Restore state when app loads.
-    document.addEventListener('DOMContentLoaded', restoreWindowState);
-
-    // Save state before closing.
-    window.addEventListener('beforeunload', saveWindowState);
-
     return Capability.contributes(
-      Common.Capability.Null,
+      Capabilities.Null,
       null,
       Effect.fnUntraced(function* () {
         cleanupDragRegions();
-        document.removeEventListener('DOMContentLoaded', restoreWindowState);
-        window.removeEventListener('beforeunload', saveWindowState);
-        unsubscribeResize();
-        unsubscribeMove();
       }),
     );
   }),

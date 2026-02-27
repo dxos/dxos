@@ -160,7 +160,7 @@ async function main() {
   // Step 5: Run lint with fixes and commit changes if any
   console.log(chalk.blue('Step 5: Running linting with auto-fix...'));
   try {
-    await $`moon run :lint --no-bail --quiet -- --fix`;
+    await $`moon exec --on-failure continue --quiet :lint -- --fix`;
 
     if (await hasUncommittedChanges()) {
       await commitChanges('style: fix linting issues');
@@ -185,13 +185,13 @@ async function main() {
   // Step 7: Run build and test
   console.log(chalk.blue('Step 7: Running build and tests...'));
   try {
-    await $`moon run :build --no-bail --quiet`;
+    await $`moon exec --on-failure continue --quiet :build`;
     await $({
       env: {
         ...process.env,
         CI: 1,
       },
-    })`moon run :test --no-bail --quiet -- --no-file-parallelism --project=node`;
+    })`moon exec --on-failure continue --quiet :test :test-browser -- --no-file-parallelism`;
     console.log(chalk.green('Build and tests completed successfully.'));
   } catch (error) {
     console.error(chalk.red('Build or tests failed:'), error.message);

@@ -4,22 +4,26 @@
   "description": "Chess for new plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
   "exports": {
     ".": {
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs",
       "source": "./src/index.ts",
-      "types": "./dist/types/src/index.d.ts"
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node-esm/index.mjs"
     },
     "./blueprints": {
-      "browser": "./dist/lib/browser/blueprints/index.mjs",
-      "node": "./dist/lib/node-esm/blueprints/index.mjs",
       "source": "./src/blueprints/index.ts",
-      "types": "./dist/types/src/blueprints/index.d.ts"
+      "types": "./dist/types/src/blueprints/index.d.ts",
+      "browser": "./dist/lib/browser/blueprints/index.mjs",
+      "node": "./dist/lib/node-esm/blueprints/index.mjs"
     },
     "./cli": {
       "source": "./src/cli/index.ts",
@@ -28,10 +32,10 @@
       "node": "./dist/lib/node-esm/cli/index.mjs"
     },
     "./types": {
-      "browser": "./dist/lib/browser/types/index.mjs",
-      "node": "./dist/lib/node-esm/types/index.mjs",
       "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts"
+      "types": "./dist/types/src/types/index.d.ts",
+      "browser": "./dist/lib/browser/types/index.mjs",
+      "node": "./dist/lib/node-esm/types/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -50,6 +54,7 @@
     "@automerge/automerge": "catalog:",
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-toolkit": "workspace:*",
     "@dxos/assistant": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/blueprints": "workspace:*",

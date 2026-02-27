@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, Plugin, UndoMapping } from '@dxos/app-framework';
+import { Capabilities, Capability, Plugin, UndoMapping } from '@dxos/app-framework';
+import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { SpaceState, getSpace } from '@dxos/client/echo';
 import { Database, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { EchoDatabaseImpl, Serializer } from '@dxos/echo-db';
@@ -20,7 +21,6 @@ import { iconValues } from '@dxos/react-ui-pickers/icons';
 import { Collection, ProjectionModel, createEchoChangeCallback, getTypenameFromQuery } from '@dxos/schema';
 import { hues } from '@dxos/ui-theme';
 
-import { type JoinDialogProps } from '../../components';
 import {
   CREATE_OBJECT_DIALOG,
   CREATE_SPACE_DIALOG,
@@ -28,6 +28,8 @@ import {
   OBJECT_RENAME_POPOVER,
   SPACE_RENAME_POPOVER,
 } from '../../constants';
+import { type JoinDialogProps } from '../../containers/JoinDialog/JoinDialog';
+import { meta } from '../../meta';
 import { SpaceEvents } from '../../types';
 import { SpaceCapabilities, SpaceOperation } from '../../types';
 import { COMPOSER_SPACE_LOCK, cloneObject, getNestedObjects } from '../../util';
@@ -43,11 +45,11 @@ export default Capability.makeModule(
     const capabilityManager = yield* Capability.Service;
 
     const resolve = (typename: string) =>
-      capabilityManager.getAll(Common.Capability.Metadata).find(({ id }: { id: string }) => id === typename)
-        ?.metadata ?? {};
+      capabilityManager.getAll(AppCapabilities.Metadata).find(({ id }: { id: string }) => id === typename)?.metadata ??
+      {};
 
     return [
-      Capability.contributes(Common.Capability.UndoMapping, [
+      Capability.contributes(Capabilities.UndoMapping, [
         UndoMapping.make({
           operation: SpaceOperation.DeleteField,
           inverse: SpaceOperation.RestoreField,
@@ -57,7 +59,7 @@ export default Capability.makeModule(
             props: output.props,
             index: output.index,
           }),
-          message: ['field deleted label', { ns: 'dxos.org/plugin/space' }],
+          message: ['field deleted label', { ns: meta.id }],
         }),
         UndoMapping.make({
           operation: SpaceOperation.RemoveObjects,
@@ -72,12 +74,12 @@ export default Capability.makeModule(
           message: (input, _output) => {
             const ns = Obj.getTypename(input.objects[0]);
             return ns && input.objects.length === 1
-              ? ['object deleted label', { ns }]
-              : ['objects deleted label', { ns: 'plugin-space' }];
+              ? ['object deleted label', { ns: meta.id }]
+              : ['objects deleted label', { ns: meta.id }];
           },
         }),
       ]),
-      Capability.contributes(Common.Capability.OperationResolver, [
+      Capability.contributes(Capabilities.OperationResolver, [
         //
         // Open
         //
@@ -106,7 +108,7 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: SpaceOperation.Join,
           handler: Effect.fnUntraced(function* (input) {
-            yield* Operation.invoke(Common.LayoutOperation.UpdateDialog, {
+            yield* Operation.invoke(LayoutOperation.UpdateDialog, {
               subject: JOIN_DIALOG,
               blockAlign: 'start',
               props: {
@@ -123,7 +125,7 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: SpaceOperation.WaitForObject,
           handler: Effect.fnUntraced(function* (input) {
-            yield* Common.Capability.updateAtomValue(SpaceCapabilities.EphemeralState, (current) => ({
+            yield* Capabilities.updateAtomValue(SpaceCapabilities.EphemeralState, (current) => ({
               ...current,
               awaiting: input.id,
             }));
@@ -136,7 +138,7 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: SpaceOperation.OpenSettings,
           handler: Effect.fnUntraced(function* (input) {
-            yield* Operation.invoke(Common.LayoutOperation.Open, {
+            yield* Operation.invoke(LayoutOperation.Open, {
               subject: [`properties-settings${ATTENDABLE_PATH_SEPARATOR}${input.space.id}`],
               workspace: input.space.id,
             });
@@ -149,8 +151,8 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: SpaceOperation.RemoveObjects,
           handler: Effect.fnUntraced(function* (input) {
-            const layout = yield* Common.Capability.getAtomValue(Common.Capability.Layout);
-            const objects = input.objects as Obj.Any[];
+            const layout = yield* Capabilities.getAtomValue(AppCapabilities.Layout);
+            const objects = input.objects as Obj.Unknown[];
 
             // All objects must be a member of the same space.
             const space = getSpace(objects[0]);
@@ -205,7 +207,7 @@ export default Capability.makeModule(
             }
 
             if (wasActive.length > 0) {
-              yield* Operation.invoke(Common.LayoutOperation.Close, { subject: wasActive });
+              yield* Operation.invoke(LayoutOperation.Close, { subject: wasActive });
             }
 
             // Return data needed for undo.
@@ -225,7 +227,7 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: SpaceOperation.DeleteField,
           handler: Effect.fnUntraced(function* (input) {
-            const registry = yield* Capability.get(Common.Capability.AtomRegistry);
+            const registry = yield* Capability.get(Capabilities.AtomRegistry);
             const view = input.view as any;
             const db = Obj.getDatabase(view);
             invariant(db);
@@ -259,9 +261,9 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: SpaceOperation.OpenCreateObject,
           handler: Effect.fnUntraced(function* (input) {
-            const ephemeralState = yield* Common.Capability.getAtomValue(SpaceCapabilities.EphemeralState);
+            const ephemeralState = yield* Capabilities.getAtomValue(SpaceCapabilities.EphemeralState);
             const navigable = input.navigable ?? true;
-            yield* Operation.invoke(Common.LayoutOperation.UpdateDialog, {
+            yield* Operation.invoke(LayoutOperation.UpdateDialog, {
               subject: CREATE_OBJECT_DIALOG,
               blockAlign: 'start',
               props: {
@@ -271,7 +273,7 @@ export default Capability.makeModule(
                 initialFormValues: input.initialFormValues,
                 onCreateObject: input.onCreateObject,
                 shouldNavigate: navigable
-                  ? (object: Obj.Any) => {
+                  ? (object: Obj.Unknown) => {
                       const isCollection = Obj.instanceOf(Collection.Collection, object);
                       const isSystemCollection = Obj.instanceOf(Collection.Managed, object);
                       return (!isCollection && !isSystemCollection) || ephemeralState.navigableCollections;
@@ -289,7 +291,7 @@ export default Capability.makeModule(
           operation: SpaceOperation.AddObject,
           handler: Effect.fnUntraced(function* (input) {
             const target = input.target as any;
-            const object = input.object as Obj.Any;
+            const object = input.object as Obj.Unknown;
             const db = Database.isDatabase(target) ? target : Obj.getDatabase(target);
             invariant(db, 'Database not found.');
 
@@ -297,13 +299,14 @@ export default Capability.makeModule(
               object,
               target: Database.isDatabase(target) ? undefined : target,
               hidden: input.hidden,
-            }).pipe(Effect.provide(Database.Service.layer(db)));
+            }).pipe(Effect.provide(Database.layer(db)));
 
             yield* Operation.schedule(ObservabilityOperation.SendEvent, {
               name: 'space.object.add',
               properties: {
                 spaceId: db.spaceId,
                 objectId: object.id,
+                typename: Obj.getTypename(object),
               },
             });
 
@@ -381,7 +384,7 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: SpaceOperation.OpenCreateSpace,
           handler: Effect.fnUntraced(function* () {
-            yield* Operation.invoke(Common.LayoutOperation.UpdateDialog, {
+            yield* Operation.invoke(LayoutOperation.UpdateDialog, {
               subject: CREATE_SPACE_DIALOG,
               blockAlign: 'start',
             });
@@ -447,12 +450,12 @@ export default Capability.makeModule(
             const { space, version: targetVersion } = input;
 
             if (space.state.get() === SpaceState.SPACE_REQUIRES_MIGRATION) {
-              yield* Common.Capability.updateAtomValue(SpaceCapabilities.EphemeralState, (current) => ({
+              yield* Capabilities.updateAtomValue(SpaceCapabilities.EphemeralState, (current) => ({
                 ...current,
                 sdkMigrationRunning: { ...current.sdkMigrationRunning, [space.id]: true },
               }));
               yield* Effect.promise(() => space.internal.migrate());
-              yield* Common.Capability.updateAtomValue(SpaceCapabilities.EphemeralState, (current) => ({
+              yield* Capabilities.updateAtomValue(SpaceCapabilities.EphemeralState, (current) => ({
                 ...current,
                 sdkMigrationRunning: { ...current.sdkMigrationRunning, [space.id]: false },
               }));
@@ -494,7 +497,7 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: SpaceOperation.Rename,
           handler: Effect.fnUntraced(function* (input) {
-            yield* Operation.invoke(Common.LayoutOperation.UpdatePopover, {
+            yield* Operation.invoke(LayoutOperation.UpdatePopover, {
               subject: SPACE_RENAME_POPOVER,
               anchorId: `dxos.org/ui/${input.caller}/${input.space.id}`,
               props: input.space,
@@ -508,8 +511,8 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: SpaceOperation.RenameObject,
           handler: Effect.fnUntraced(function* (input) {
-            const object = input.object as Obj.Any;
-            yield* Operation.invoke(Common.LayoutOperation.UpdatePopover, {
+            const object = input.object as Obj.Unknown;
+            yield* Operation.invoke(LayoutOperation.UpdatePopover, {
               subject: OBJECT_RENAME_POPOVER,
               anchorId: `dxos.org/ui/${input.caller}/${Obj.getDXN(object).toString()}`,
               props: object,
@@ -523,7 +526,7 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: SpaceOperation.OpenMembers,
           handler: Effect.fnUntraced(function* (input) {
-            yield* Operation.invoke(Common.LayoutOperation.Open, {
+            yield* Operation.invoke(LayoutOperation.Open, {
               subject: [`members-settings${ATTENDABLE_PATH_SEPARATOR}${input.space.id}`],
               workspace: input.space.id,
             });
@@ -615,10 +618,10 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: SpaceOperation.AddSchema,
           handler: Effect.fnUntraced(function* (input) {
-            const db = input.db as any;
-            const schemas = (yield* Effect.promise(() => db.schemaRegistry.register([input.schema]))) as any[];
+            const db = input.db;
+            const schemas = yield* Effect.promise(() => db.schemaRegistry.register([input.schema]));
             const schema = schemas[0];
-            Obj.change(schema.storedSchema, (s) => {
+            Obj.change(schema.persistentSchema, (s) => {
               if (input.name) {
                 s.name = input.name;
               }
@@ -646,7 +649,7 @@ export default Capability.makeModule(
               },
             });
 
-            return { id: schema.id, object: schema.storedSchema, schema };
+            return { id: schema.id, object: schema.persistentSchema, schema };
           }),
         }),
 
@@ -676,7 +679,7 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: SpaceOperation.DuplicateObject,
           handler: Effect.fnUntraced(function* (input) {
-            const object = input.object as Obj.Any;
+            const object = input.object as Obj.Unknown;
             const db = Obj.getDatabase(object);
             invariant(db, 'Database not found.');
             const newObject = yield* Effect.promise(() => cloneObject(object, resolve, db));
@@ -690,7 +693,7 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: SpaceOperation.RestoreField,
           handler: Effect.fnUntraced(function* (input) {
-            const registry = yield* Capability.get(Common.Capability.AtomRegistry);
+            const registry = yield* Capability.get(Capabilities.AtomRegistry);
             const view = input.view as any;
             const db = Obj.getDatabase(view);
             invariant(db);
@@ -717,10 +720,10 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: SpaceOperation.RestoreObjects,
           handler: Effect.fnUntraced(function* (input) {
-            const objects = input.objects as Obj.Any[];
+            const objects = input.objects as Obj.Unknown[];
             const parentCollection = input.parentCollection as Collection.Collection;
             const indices = input.indices as number[];
-            const nestedObjectsList = input.nestedObjectsList as Obj.Any[][];
+            const nestedObjectsList = input.nestedObjectsList as Obj.Unknown[][];
             const wasActive = input.wasActive as string[];
 
             // Get the space from the first object.
@@ -728,10 +731,10 @@ export default Capability.makeModule(
             invariant(space);
 
             // Restore objects to the space.
-            const restoredObjects = objects.map((obj: Obj.Any) => space.db.add(obj));
+            const restoredObjects = objects.map((obj: Obj.Unknown) => space.db.add(obj));
 
             // Restore nested objects to the space.
-            nestedObjectsList.flat().forEach((obj: Obj.Any) => {
+            nestedObjectsList.flat().forEach((obj: Obj.Unknown) => {
               if (Obj.isObject(obj)) {
                 space.db.add(obj);
               } else if (Relation.isRelation(obj)) {
@@ -743,14 +746,14 @@ export default Capability.makeModule(
             Obj.change(parentCollection, (c) => {
               indices.forEach((index: number, i: number) => {
                 if (index !== -1) {
-                  c.objects.splice(index, 0, Ref.make(restoredObjects[i] as Obj.Any));
+                  c.objects.splice(index, 0, Ref.make(restoredObjects[i] as Obj.Unknown));
                 }
               });
             });
 
             // Re-open objects that were active.
             if (wasActive.length > 0) {
-              yield* Operation.invoke(Common.LayoutOperation.Open, { subject: wasActive });
+              yield* Operation.invoke(LayoutOperation.Open, { subject: wasActive });
             }
           }),
         }),

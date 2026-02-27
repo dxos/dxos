@@ -4,8 +4,9 @@
 
 import React, { Fragment, type MouseEvent, memo, useCallback, useEffect, useMemo } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { Surface, useAppGraph, useOperationInvoker } from '@dxos/app-framework/react';
+import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
+import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Graph, type Node, useActionRunner } from '@dxos/plugin-graph';
 import { Icon, IconButton, Popover, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { StackItem, type StackItemSigilAction } from '@dxos/react-ui-stack';
@@ -121,9 +122,9 @@ export const PlankHeading = memo(
           return invokePromise(DeckOperation.Adjust, { type: eventType, id });
         } else if (eventType === 'close') {
           if (part === 'complementary') {
-            return invokeSync(Common.LayoutOperation.UpdateComplementary, { state: 'collapsed' });
+            return invokeSync(LayoutOperation.UpdateComplementary, { state: 'collapsed' });
           } else {
-            return invokeSync(Common.LayoutOperation.Close, { subject: [id] });
+            return invokeSync(LayoutOperation.Close, { subject: [id] });
           }
         } else {
           return invokePromise(DeckOperation.Adjust, { type: eventType, id });
@@ -151,14 +152,14 @@ export const PlankHeading = memo(
     return (
       <StackItem.Heading
         classNames={[
-          'plb-1 items-stretch gap-1 sticky inline-start-12 app-drag min-is-0 contain-layout density-coarse',
-          part === 'solo' ? soloInlinePadding : 'pli-1',
+          'py-1 items-stretch gap-1 sticky left-12 app-drag min-w-0 contain-layout density-coarse',
+          part === 'solo' ? soloInlinePadding : 'px-1',
           ...(layoutMode === 'solo--fullscreen'
             ? [
                 hoverableControls,
                 hoverableFocusedWithinControls,
-                '*:transition-opacity *:opacity-[--controls-opacity] bg-transparent border-transparent transition-[background-color,border-color]',
-                'hover-hover:hover:bg-headerSurface focus-within:bg-headerSurface hover-hover:hover:border-subduedSeparator focus-within:border-subduedSeparator',
+                '*:transition-opacity *:opacity-(--controls-opacity) bg-transparent border-transparent transition-[background-color,border-color]',
+                'hover-hover:hover:bg-header-surface focus-within:bg-header-surface hover-hover:hover:border-subdued-separator focus-within:border-subdued-separator',
               ]
             : []),
         ]}
@@ -166,7 +167,7 @@ export const PlankHeading = memo(
       >
         {companions && isCompanionNode ? (
           /* TODO(thure): IMPORTANT: This is a tablist; it should be implemented as such. */
-          <div role='none' className='flex-1 min-is-0 overflow-x-auto scrollbar-none flex gap-1'>
+          <div role='none' className='flex-1 min-w-0 overflow-x-auto scrollbar-none flex gap-1'>
             {companions.map(({ id, properties: { icon, label } }) => (
               <IconButton
                 key={id}
@@ -191,7 +192,7 @@ export const PlankHeading = memo(
                   actions={sigilActions}
                   onAction={handleAction}
                 >
-                  <Surface role='menu-footer' data={{ subject: node.data }} />
+                  <Surface.Surface role='menu-footer' data={{ subject: node.data }} />
                 </StackItem.Sigil>
               ) : (
                 <StackItem.SigilButton>
@@ -211,7 +212,7 @@ export const PlankHeading = memo(
             </TextTooltip>
           </>
         )}
-        {node && part !== 'complementary' && <Surface role='navbar-end' data={{ subject: node.data }} />}
+        {node && part !== 'complementary' && <Surface.Surface role='navbar-end' data={{ subject: node.data }} />}
         {companioned === 'companion' ? (
           <PlankCompanionControls primary={primaryId} />
         ) : (

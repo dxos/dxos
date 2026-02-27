@@ -5,7 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useRef, useState } from 'react';
 
-import { withTheme } from '@dxos/react-ui/testing';
+import { faker } from '@dxos/random';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Card } from '@dxos/react-ui-mosaic';
 import { translations as stackTranslations } from '@dxos/react-ui-stack';
 
@@ -18,6 +19,7 @@ import { type BoardLayout } from './types';
 type TestItem = {
   id: string;
   title: string;
+  description: string;
 };
 
 type StoryProps = BoardRootProps & BoardContentProps & { items: TestItem[] };
@@ -31,7 +33,7 @@ const DefaultStory = ({ layout: _layout, items: _items, grid, ...props }: StoryP
   const handleAdd = useCallback<NonNullable<BoardRootProps['onAdd']>>(
     (_element, position = { x: 0, y: 0 }) => {
       const id = items.length.toString();
-      setItems([...items, { id, title: 'New item' }]);
+      setItems([...items, { id, title: 'New item', description: 'New description' }]);
       setLayout((layout) => ({
         ...layout,
         cells: { ...layout.cells, [id]: position },
@@ -73,14 +75,16 @@ const DefaultStory = ({ layout: _layout, items: _items, grid, ...props }: StoryP
       onMove={handleMove}
       ref={controller}
     >
-      <Board.Toolbar classNames='absolute top-3 left-3 z-10 min-bs-0 !is-auto' />
+      <Board.Toolbar classNames='absolute top-3 left-3 z-10 min-h-0 w-auto!' />
       <Board.Container>
         <Board.Viewport>
           <Board.Backdrop />
           <Board.Content>
             {items.map((item: TestItem, index: number) => (
               <Board.Cell item={item} key={index} layout={layout?.cells[item.id] ?? { x: 0, y: 0 }}>
-                <Card.Heading>{item.title}</Card.Heading>
+                <Card.Row>
+                  <Card.Heading>{item.description}</Card.Heading>
+                </Card.Row>
               </Board.Cell>
             ))}
           </Board.Content>
@@ -93,7 +97,7 @@ const DefaultStory = ({ layout: _layout, items: _items, grid, ...props }: StoryP
 const meta = {
   title: 'ui/react-ui-board/Board',
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
     translations: [...translations, ...stackTranslations],
@@ -107,13 +111,13 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     items: [
-      { id: '0', title: 'Item 0' },
-      { id: '1', title: 'Item 1' },
-      { id: '2', title: 'Item 2' },
-      { id: '3', title: 'Item 3' },
-      { id: '4', title: 'Item 4' },
-      { id: '5', title: 'Item 5' },
-      { id: '6', title: 'Item 6' },
+      { id: '0', title: 'Item 0', description: faker.lorem.paragraph(3) },
+      { id: '1', title: 'Item 1', description: faker.lorem.paragraph(3) },
+      { id: '2', title: 'Item 2', description: faker.lorem.paragraph(3) },
+      { id: '3', title: 'Item 3', description: faker.lorem.paragraph(3) },
+      { id: '4', title: 'Item 4', description: faker.lorem.paragraph(3) },
+      { id: '5', title: 'Item 5', description: faker.lorem.paragraph(3) },
+      { id: '6', title: 'Item 6', description: faker.lorem.paragraph(3) },
     ],
     grid: defaultGrid,
     layout: {

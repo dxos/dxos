@@ -4,6 +4,10 @@
   "description": "ECHO database.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "info@dxos.org",
   "sideEffects": false,
@@ -12,14 +16,12 @@
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
+      "default": "./dist/lib/neutral/index.mjs"
     },
     "./testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
-      "browser": "./dist/lib/browser/testing/index.mjs",
-      "node": "./dist/lib/node-esm/testing/index.mjs"
+      "default": "./dist/lib/neutral/testing/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -63,13 +65,11 @@
     "@effect/sql-sqlite-node": "catalog:",
     "effect": "catalog:",
     "eventemitter3": "catalog:",
-    "lodash.isequal": "catalog:"
+    "fast-deep-equal": "catalog:"
   },
   "devDependencies": {
-    "@dxos/indexing": "workspace:*",
     "@dxos/random": "workspace:*",
-    "@dxos/test-utils": "workspace:*",
-    "@types/lodash.isequal": "catalog:"
+    "@dxos/test-utils": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

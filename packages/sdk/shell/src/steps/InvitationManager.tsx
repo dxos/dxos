@@ -7,7 +7,7 @@ import { QR } from 'react-qr-rounded';
 
 import { type InvitationStatus } from '@dxos/react-client/invitations';
 import { Clipboard, Icon, useId, useTranslation } from '@dxos/react-ui';
-import { descriptionText, getSize, mx } from '@dxos/ui-theme';
+import { getSize, mx } from '@dxos/ui-theme';
 import { hexToEmoji } from '@dxos/util';
 
 import { Action, Actions, AuthCode, Centered, Emoji, Label, Viewport, type ViewportViewProps } from '../components';
@@ -57,20 +57,21 @@ export const InvitationManager = ({
         return 'showing qr';
     }
   }, [statusValue]);
+
   return (
     <>
-      <Viewport.Root activeView={activeView} classNames='grow plb-1'>
+      <Viewport.Root activeView={activeView} classNames='grow py-1'>
         <Viewport.Views>
           <InvitationManagerView id='showing qr' emoji={emoji}>
-            <p className='text-sm mlb-1 font-normal text-center'>
+            <p className='text-sm my-1 font-normal text-center'>
               {t(multiUse ? 'invite many qr label' : 'invite one qr label')}
             </p>
-            <div role='none' className={mx(descriptionText, 'is-full max-is-[14rem] relative')}>
+            <div role='none' className={mx('text-description', 'w-full max-w-[14rem] relative')}>
               <QR
                 rounding={100}
                 backgroundColor='transparent'
                 color='currentColor'
-                className={mx('is-full bs-full p-2', showAuthCode && 'invisible')}
+                className={mx('w-full h-full p-2', showAuthCode && 'invisible')}
                 aria-labelledby={qrLabel}
                 errorCorrectionLevel='Q'
                 cutout={true}
@@ -101,7 +102,7 @@ export const InvitationManager = ({
           </InvitationManagerView>
         </Viewport.Views>
       </Viewport.Root>
-      <Actions classNames='mbs-4'>
+      <Actions classNames='mt-4'>
         <Action disabled={!active} onClick={() => send?.({ type: 'deselectInvitation' })}>
           {t('back label')}
         </Action>

@@ -101,27 +101,31 @@ const CalendarRoot = forwardRef<CalendarController, CalendarRootProps>(
 // Viewport
 //
 
+const CALENDAR_VIEWPORT_NAME = 'CalendarContent';
+
 type CalendarViewportProps = PropsWithChildren<ThemedClassName>;
 
 const CalendarViewport = ({ children, classNames }: CalendarViewportProps) => {
   return (
-    <div role='none' className={mx('flex flex-col items-center overflow-hidden bg-inputSurface', classNames)}>
+    <div role='none' className={mx('flex flex-col items-center overflow-hidden bg-input-surface', classNames)}>
       {children}
     </div>
   );
 };
 
-CalendarViewport.displayName = 'CalendarContent';
+CalendarViewport.displayName = CALENDAR_VIEWPORT_NAME;
 
 //
 // Header
 //
 
+const CALENDAR_TOOLBAR_NAME = 'CalendarHeader';
+
 type CalendarToolbarProps = ThemedClassName;
 
 const CalendarToolbar = ({ classNames }: CalendarToolbarProps) => {
   const { t } = useTranslation(translationKey);
-  const { weekStartsOn, event, index, selected } = useCalendarContext(CalendarToolbar.displayName);
+  const { weekStartsOn, event, index, selected } = useCalendarContext(CALENDAR_TOOLBAR_NAME);
   const top = useMemo(() => getDate(start, index ?? 0, 6, weekStartsOn), [index, weekStartsOn]);
   const today = useMemo(() => new Date(), []);
 
@@ -132,7 +136,7 @@ const CalendarToolbar = ({ classNames }: CalendarToolbarProps) => {
   return (
     <div
       role='none'
-      className={mx('shink-0 is-full grid grid-cols-3 items-center bg-barSurface', classNames)}
+      className={mx('shink-0 w-full grid grid-cols-3 items-center bg-barSurface', classNames)}
       style={{ width: defaultWidth }}
     >
       <div className='flex justify-start'>
@@ -152,7 +156,7 @@ const CalendarToolbar = ({ classNames }: CalendarToolbarProps) => {
   );
 };
 
-CalendarToolbar.displayName = 'CalendarHeader';
+CalendarToolbar.displayName = CALENDAR_TOOLBAR_NAME;
 
 //
 // Grid
@@ -160,13 +164,15 @@ CalendarToolbar.displayName = 'CalendarHeader';
 // TODO(burdon): Drag range.
 //
 
+const CALENDAR_GRID_NAME = 'CalendarGrid';
+
 type CalendarGridProps = ThemedClassName<{
   rows?: number;
   onSelect?: (event: { date: Date }) => void;
 }>;
 
 const CalendarGrid = ({ classNames, rows, onSelect }: CalendarGridProps) => {
-  const { weekStartsOn, event, setIndex, selected, setSelected } = useCalendarContext(CalendarGrid.displayName);
+  const { weekStartsOn, event, setIndex, selected, setSelected } = useCalendarContext(CALENDAR_GRID_NAME);
   const { ref: containerRef, width = 0, height = 0 } = useResizeDetector();
   const maxHeight = rows ? rows * size : undefined;
   const listRef = useRef<List>(null);
@@ -219,9 +225,9 @@ const CalendarGrid = ({ classNames, rows, onSelect }: CalendarGridProps) => {
 
   const rowRenderer = useCallback<ListRowRenderer>(
     ({ key, index, style }) => {
-      const getBgColor = (date: Date) => date.getMonth() % 2 === 0 && 'bg-modalSurface';
+      const getBgColor = (date: Date) => date.getMonth() % 2 === 0 && 'bg-modal-surface';
       return (
-        <div key={key} role='none' style={style} className='is-full grid grid-cols-[1fr_max-content_1fr] snap-center'>
+        <div key={key} role='none' style={style} className='w-full grid grid-cols-[1fr_max-content_1fr] snap-center'>
           <div role='none' className={mx(getBgColor(getDate(start, index, 0, weekStartsOn)))} />
           <div role='none' className='grid grid-cols-7' style={{ gridTemplateColumns: `repeat(7, ${size}px)` }}>
             {Array.from({ length: 7 }).map((_, i) => {
@@ -247,7 +253,7 @@ const CalendarGrid = ({ classNames, rows, onSelect }: CalendarGridProps) => {
                   {border && (
                     <div
                       role='none'
-                      className={mx('absolute top-0 left-0 is-full bs-full border-2 rounded-full', border)}
+                      className={mx('absolute top-0 left-0 w-full h-full border-2 rounded-full', border)}
                     />
                   )}
                   {num > 0 && (
@@ -269,10 +275,10 @@ const CalendarGrid = ({ classNames, rows, onSelect }: CalendarGridProps) => {
   );
 
   return (
-    <div role='none' className={mx('flex flex-col bs-full is-full justify-center overflow-hidden', classNames)}>
+    <div role='none' className={mx('flex flex-col h-full w-full justify-center overflow-hidden', classNames)}>
       {/* Day labels */}
-      <div role='none' className='flex justify-center bg-groupSurface'>
-        <div role='none' className='flex is-full grid grid-cols-7' style={{ width: defaultWidth }}>
+      <div role='none' className='flex justify-center bg-group-surface'>
+        <div role='none' className='flex w-full grid grid-cols-7' style={{ width: defaultWidth }}>
           {days.map((date, i) => (
             <div key={i} role='none' className='flex justify-center p-2 text-sm font-thin'>
               {date}
@@ -282,12 +288,12 @@ const CalendarGrid = ({ classNames, rows, onSelect }: CalendarGridProps) => {
       </div>
 
       {/* Grid */}
-      <div role='none' className='flex flex-col bs-full is-full justify-center overflow-hidden' ref={containerRef}>
+      <div role='none' className='flex flex-col h-full w-full justify-center overflow-hidden' ref={containerRef}>
         <List
           ref={listRef}
           role='none'
           // TODO(burdon): Snap isn't working.
-          className='[&>div]:snap-y scrollbar-none outline-none'
+          className='[&>div]:snap-y scrollbar-none outline-hidden'
           width={width}
           height={maxHeight ?? height}
           rowCount={maxRows}
@@ -302,7 +308,7 @@ const CalendarGrid = ({ classNames, rows, onSelect }: CalendarGridProps) => {
   );
 };
 
-CalendarGrid.displayName = 'CalendarGrid';
+CalendarGrid.displayName = CALENDAR_GRID_NAME;
 
 //
 // Calendar

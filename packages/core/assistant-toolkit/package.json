@@ -4,6 +4,10 @@
   "description": "Assistant toolkit, definitions, and utilities.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "DXOS.org",
   "type": "module",
@@ -11,22 +15,12 @@
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
+      "default": "./dist/lib/neutral/index.mjs"
     },
     "./testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
-      "browser": "./dist/lib/browser/testing/index.mjs",
-      "node": "./dist/lib/node-esm/testing/index.mjs"
-    }
-  },
-  "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "testing": [
-        "./dist/types/src/testing/index.d.ts"
-      ]
+      "default": "./dist/lib/neutral/testing/index.mjs"
     }
   },
   "files": [
@@ -38,6 +32,7 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/assistant": "workspace:*",
     "@dxos/blueprints": "workspace:*",
+    "@dxos/client-protocol": "workspace:*",
     "@dxos/conductor": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/echo": "workspace:*",
@@ -52,6 +47,7 @@
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
+    "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
