@@ -156,6 +156,10 @@ export const WithTree: Story = {
     if (!space) {
       return <div>No space</div>;
     }
-    return <ObjectsTree db={space.db} />;
+    return (
+      <div>
+        <ObjectsTree db={space.db} />
+      </div>
+    );
   },
 };

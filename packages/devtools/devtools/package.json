@@ -61,6 +61,7 @@
     "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-components": "workspace:*",
     "@dxos/react-ui-graph": "workspace:*",
+    "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/react-ui-table": "workspace:*",
     "@dxos/react-ui-tabs": "workspace:*",

@@ -1,15 +1,20 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import { Filter, Query, type Database, Entity, Relation, Obj } from '@dxos/echo';
-import { createContext, useContext, useEffect, useState, type Context } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import { Atom } from '@effect-atom/atom';
 import { useAtomValue, useAtomSet } from '@effect-atom/atom-react';
 import { raise } from '@dxos/debug';
 import { ObjectId } from '@dxos/keys';
 import { invariant } from '@dxos/invariant';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
-import { Array, Effect, pipe } from 'effect';
-import { snapshot } from 'effect/Metric';
-import * as Registry from '@effect-atom/atom/Registry';
+import { Icon, Treegrid, TreeItem } from '@dxos/react-ui';
+import { Array, Match, pipe } from 'effect';
 import React from 'react';
+import { paddingIndentation, TreeItemToggle } from '@dxos/react-ui-list';
+import { dbg } from '@dxos/log';
 
 export interface ObjectsTreeProps {
   db: Database.Database;
@@ -19,42 +24,66 @@ export interface ObjectsTreeProps {
 export const ObjectsTree = ({ db, root }: ObjectsTreeProps) => {
   const [model, setModel] = useState(() => new ObjectsTreeModel(db, root ?? null));
   useEffect(() => {
-    setModel((model) =>
-      model.database === db && model.root === (root ?? null) ? model : new ObjectsTreeModel(db, root ?? null),
+    setModel((prev) =>
+      prev.database === db && prev.root === (root ?? null) ? prev : new ObjectsTreeModel(db, root ?? null),
     );
   }, [db, root]);
 
   const rootNodes = useAtomValue(model.rootNodes);
 
+  dbg(rootNodes);
+
   return (
     <ObjectsTreeContext.Provider value={model}>
-      <div className='grid grid-cols-1 gap-2'>
+      <Treegrid.Root
+        gridTemplateColumns='[tree-row-start] 1fr min-content [tree-row-end]'
+        classNames='grid-cols-1 gap-0'
+      >
         {rootNodes.map((node) => (
-          <ObjectsTreeItem key={node.id} node={node} />
+          <ObjectsTreeRow key={node.id} node={node} level={0} />
         ))}
-      </div>
+      </Treegrid.Root>
     </ObjectsTreeContext.Provider>
   );
 };
 
-const ObjectsTreeItem = ({ node }: { node: ObjectsTreeItem }) => {
+const ObjectsTreeRow = ({ node, level }: { node: ObjectsTreeItem; level: number }) => {
   const model = useContext(ObjectsTreeContext) ?? raise(new Error('ObjectsTreeContext not found'));
   const expanded = useAtomValue(model.expanded(node.id));
   const setExpanded = useAtomSet(model.expanded(node.id));
   const children = useAtomValue(model.getChildren(node.id));
+  const hasChildren = children.length > 0;
+  const parentOf = hasChildren ? children.map((child) => child.id).join(Treegrid.PARENT_OF_SEPARATOR) : undefined;
+
   return (
-    <div>
-      <div onClick={() => setExpanded((expanded) => !expanded)}>
-        {children.length > 0 && (expanded ? '-' : '+')} {node.label}
-      </div>
-      <div className='pl-2'>{expanded && children.map((child) => <ObjectsTreeItem key={child.id} node={child} />)}</div>
-    </div>
+    <>
+      <Treegrid.Row
+        id={node.id}
+        open={expanded}
+        onOpenChange={setExpanded}
+        {...(parentOf && { parentOf })}
+        classNames='grid grid-cols-subgrid col-[tree-row]'
+      >
+        <div
+          role='none'
+          className='indent relative grid grid-cols-subgrid col-[tree-row]'
+          style={paddingIndentation(level)}
+        >
+          <Treegrid.Cell indent classNames='flex items-center gap-1 min-w-0'>
+            <TreeItemToggle isBranch={hasChildren} open={expanded} onClick={() => setExpanded((prev) => !prev)} />
+            <Icon icon={node.icon} classNames='shrink-0 w-4 h-4 opacity-70' />
+            <span className={node.deleted ? 'line-through opacity-60' : 'truncate'}>{node.label}</span>
+          </Treegrid.Cell>
+        </div>
+      </Treegrid.Row>
+      {expanded && children.map((child, index) => <ObjectsTreeRow key={child.id} node={child} level={level + 1} />)}
+    </>
   );
 };
 
 const ObjectsTreeContext = createContext<ObjectsTreeModel | null>(null);
 
-type ObjectsTreeItem = {
+export type ObjectsTreeItem = {
   id: string;
   type: 'object' | 'outgoing-relation' | 'incoming-relation';
   deleted: boolean;
@@ -136,13 +165,16 @@ class ObjectsTreeModel {
   }
 
   #mapEntityToTreeItems(entity: Entity.Snapshot, anchor: string | null): ObjectsTreeItem {
+    dbg((entity as any)[Relation.Source]);
     return {
       id: entity.id,
-      type: Obj.isObject(entity)
-        ? 'object'
-        : Relation.isRelation(entity) && Relation.getSource(entity).id === anchor
-          ? 'outgoing-relation'
-          : 'incoming-relation',
+      type:
+        // TODO(dmaretskyi): ECHO APIs around snapshots are bad.
+        entity[Entity.SnapshotKindId] === 'object'
+          ? 'object'
+          : (entity as any)[Relation.Source].id === anchor
+            ? 'outgoing-relation'
+            : 'incoming-relation',
       deleted: Entity.isDeleted(entity),
       label:
         Entity.getLabel(entity) ??
@@ -150,7 +182,6 @@ class ObjectsTreeModel {
         `${Obj.isObject(entity) ? 'Object' : 'Relation'}-${entity.id.slice(-4)}`,
       icon: Obj.isObject(entity) ? 'ph--cube--regular' : 'ph--arrow-right--regular',
       iconHue: 'blue',
-      // TODO(dmaretskyi): Get original object from snapshot.
     };
   }
 }
