@@ -39,8 +39,6 @@ export {
 } from '@bufbuild/protobuf/wkt';
 export { type GenService, type GenServiceMethods } from '@bufbuild/protobuf/codegenv2';
 
-/** @deprecated Use `create` instead. */
-export { create as createBuf } from '@bufbuild/protobuf';
 
 export const EMPTY = create(EmptySchema);
 

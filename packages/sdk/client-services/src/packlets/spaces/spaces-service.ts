@@ -27,7 +27,7 @@ import {
   SpaceNotFoundError,
   encodeError,
 } from '@dxos/protocols';
-import { type Empty, EmptySchema, create, protoToBuf, timeframeToBuf, toPublicKey } from '@dxos/protocols/buf';
+import { type Empty, EmptySchema, create, timeframeToBuf, toPublicKey } from '@dxos/protocols/buf';
 import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import {
   type AdmitContactRequest,
@@ -219,7 +219,7 @@ export class SpacesServiceImpl implements Client.SpacesService {
         const spaceKeyPk = toPublicKey(spaceKey!);
         const space = dataSpaceManager.spaces.get(spaceKeyPk) ?? raise(new SpaceNotFoundError(spaceKeyPk));
         const handle = space.listen(getChannelId(channel), (message) => {
-          next(protoToBuf<GossipMessage>(message));
+          next(message as unknown as GossipMessage);
         });
         ctx.onDispose(() => handle.unsubscribe());
       });
@@ -396,14 +396,14 @@ export class SpacesServiceImpl implements Client.SpacesService {
             },
             role: member.role,
             presence: peers.length > 0 ? SpaceMember_PresenceState.ONLINE : SpaceMember_PresenceState.OFFLINE,
-            peerStates: protoToBuf(peers),
+            peerStates: peers as any,
           };
         }),
       )) as never,
       creator: space.inner.spaceState.creator ? { data: space.inner.spaceState.creator.key.asUint8Array() } : undefined,
-      cache: protoToBuf<SpaceCache>(space.cache),
+      cache: space.cache as SpaceCache,
       metrics: space.metrics,
-      edgeReplication: protoToBuf<EdgeReplicationSetting>(space.getEdgeReplicationSetting()),
+      edgeReplication: space.getEdgeReplicationSetting() as EdgeReplicationSetting,
     });
   }
 

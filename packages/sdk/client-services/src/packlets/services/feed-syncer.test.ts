@@ -16,7 +16,7 @@ import { FeedStore, SyncServer } from '@dxos/feed';
 import { ObjectId, SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 import { EdgeService } from '@dxos/protocols';
-import { createBuf } from '@dxos/protocols/buf';
+import { create } from '@dxos/protocols/buf';
 import { type Message as RouterMessage } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { SqlTransaction } from '@dxos/sql-sqlite';
@@ -107,7 +107,7 @@ const createFeedSyncHarness = async ({
     feedStore: serverFeedStore,
     sendMessage: (message) =>
       Effect.promise(async () => {
-        const routerMessage = createBuf(MessageSchema, {
+        const routerMessage = create(MessageSchema, {
           source: {
             identityKey: 'server-identity',
             peerKey: 'server-peer',

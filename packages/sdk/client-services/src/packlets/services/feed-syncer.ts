@@ -16,7 +16,7 @@ import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 import { EdgeService } from '@dxos/protocols';
-import { createBuf } from '@dxos/protocols/buf';
+import { create } from '@dxos/protocols/buf';
 import { type Message as RouterMessage } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import type { SqlTransaction } from '@dxos/sql-sqlite';
 import { bufferToArray } from '@dxos/util';
@@ -238,7 +238,7 @@ export class FeedSyncer extends Resource {
       const encoded = encoder.encode(message);
       yield* Effect.tryPromise(async () =>
         this.#edgeClient.send(
-          createBuf(MessageSchema, {
+          create(MessageSchema, {
             source: {
               identityKey: this.#edgeClient.identityKey,
               peerKey: this.#edgeClient.peerKey,

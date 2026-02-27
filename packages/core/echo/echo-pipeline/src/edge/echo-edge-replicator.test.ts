@@ -12,7 +12,7 @@ import { createTestEdgeWsServer } from '@dxos/edge-client/testing';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { EdgeService } from '@dxos/protocols';
 import type { AutomergeProtocolMessage } from '@dxos/protocols';
-import { createBuf } from '@dxos/protocols/buf';
+import { create } from '@dxos/protocols/buf';
 import type { Peer } from '@dxos/protocols/proto/dxos/edge/messenger';
 import { openAndClose } from '@dxos/test-utils';
 
@@ -129,7 +129,7 @@ const createMockContext = (args?: {
 };
 
 const createForbiddenMessage = (target: Peer, spaceId: SpaceId) =>
-  createBuf(MessageSchema, {
+  create(MessageSchema, {
     target: [target],
     serviceId: `${EdgeService.AUTOMERGE_REPLICATOR}:${spaceId}`,
     payload: {
