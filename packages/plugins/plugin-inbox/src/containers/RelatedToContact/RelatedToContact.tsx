@@ -24,6 +24,7 @@ export const RelatedToContact = ({ subject: contact }: SurfaceComponentProps<Per
   const feeds = useQuery(space?.db, Filter.type(Type.Feed));
   const mailbox = feeds.find((f) => f.kind === Mailbox.kind);
   const calendar = feeds.find((f) => f.kind === Calendar.kind);
+  // TODO(wittjosiah): Way to structure this query that does not require type assertions?
   const messages: Message.Message[] = useQuery(
     space?.db,
     mailbox ? Query.select(Filter.type(Message.Message)).from(mailbox) : Query.select(Filter.nothing()),

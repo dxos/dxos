@@ -98,8 +98,8 @@ export default defineFunction({
       // Update the config's last synced update timestamp.
       const lastUpdate = yield* Ref.get(latestUpdate);
       if (lastUpdate && config) {
-        Obj.change(config, (c: any) => {
-          c.lastSyncedUpdate = lastUpdate;
+        Obj.change(config, (config) => {
+          config.lastSyncedUpdate = lastUpdate;
         });
         log('updated lastSyncedUpdate', { lastUpdate });
       }
