@@ -33,7 +33,7 @@ test.describe('Stack tests', () => {
 
   test('create', async () => {
     await host.createSpace();
-    await host.createObject({ type: 'Collection', nth: 0 });
+    await host.createObject({ type: 'Collection' });
     const stack = Stack.getStack(host.page);
     await expect(stack.sections()).toHaveCount(0);
     await expect(host.getObjectLinks()).toHaveCount(INITIAL_OBJECT_COUNT + 1);
@@ -41,7 +41,7 @@ test.describe('Stack tests', () => {
 
   test('create new document section', async () => {
     await host.createSpace();
-    await host.createObject({ type: 'Collection', nth: 0 });
+    await host.createObject({ type: 'Collection' });
     await host.toggleCollectionCollapsed(INITIAL_OBJECT_COUNT);
     await Stack.addSection(host.page, 'Document');
     const stack = Stack.getStack(host.page);
@@ -56,8 +56,8 @@ test.describe('Stack tests', () => {
   // TODO(wittjosiah): This feature has been disabled.
   test.skip('create section from existing document', async () => {
     await host.createSpace();
-    await host.createObject({ type: 'Document', nth: 0 });
-    await host.createObject({ type: 'Collection', nth: 0 });
+    await host.createObject({ type: 'Document' });
+    await host.createObject({ type: 'Collection' });
     const stack = Stack.getStack(host.page);
     const doc = host.getObjectLinks().nth(1);
 
@@ -78,7 +78,7 @@ test.describe('Stack tests', () => {
   // TODO(wittjosiah): This feature has been disabled.
   test.skip('reorder sections', async () => {
     await host.createSpace();
-    await host.createObject({ type: 'Collection', nth: 0 });
+    await host.createObject({ type: 'Collection' });
     await host.toggleCollectionCollapsed(2);
     await Stack.addSection(host.page, 'Document');
     await Stack.addSection(host.page, 'Document');
