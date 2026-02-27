@@ -190,6 +190,7 @@ export const isPlugin = (value: unknown): value is Plugin => {
  * A collection of modules that are be enabled/disabled as a unit.
  * Plugins provide things such as components, state, actions, etc. to the application.
  */
+// TODO(burdon): Convert to ECHO schema.
 export interface Plugin {
   readonly [PluginTypeId]: PluginTypeId;
   readonly meta: Readonly<Meta>;

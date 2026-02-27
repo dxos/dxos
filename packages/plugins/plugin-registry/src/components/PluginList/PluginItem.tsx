@@ -9,8 +9,8 @@ import { type ChromaticPalette, Icon, IconButton, Input, Link, ListItem, Tag, us
 import { mx } from '@dxos/ui-theme';
 import { getStyles } from '@dxos/ui-theme';
 
-import { meta } from '../meta';
-import { type RegistryTagType } from '../types';
+import { meta } from '../../meta';
+import { type RegistryTagType } from '../../types';
 
 export type PluginItemProps = {
   plugin: Plugin.Plugin;
@@ -58,11 +58,15 @@ export const PluginItem = ({
       labelId={labelId}
       data-testid={`pluginList.${id}`}
       aria-describedby={descriptionId}
-      classNames={mx(gridCols, 'h-[12rem] w-full gap-3 pe-2 border border-separator rounded-md overflow-hidden')}
+      classNames={mx(gridCols, 'h-[12rem] w-full gap-3 pe-2 bg-modal-surface rounded-md overflow-hidden')}
     >
-      <div className={mx(gridRows, 'justify-center rounded-l-md', styles.fill)}>
-        <div />
-        <Icon classNames={mx('cursor-pointer', styles.icon)} icon={icon} size={14} onClick={handleClick} />
+      <div className={mx(gridRows, 'justify-center rounded-l-md', styles.surface)}>
+        <Icon
+          classNames={mx('row-start-2 cursor-pointer', styles.surfaceText)}
+          icon={icon}
+          size={14}
+          onClick={handleClick}
+        />
       </div>
 
       <div className={mx(gridRows)}>
