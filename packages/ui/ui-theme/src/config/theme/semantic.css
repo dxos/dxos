@@ -8,11 +8,14 @@
   --color-base-surface: light-dark(var(--color-neutral-50), var(--color-neutral-950));
   --color-base-text: light-dark(var(--color-neutral-950), var(--color-neutral-50));
 
-  --color-inverse-surface: light-dark(var(--color-neutral-900), var(--color-neutral-100));
+  --color-inverse-surface: light-dark(var(--color-neutral-800), var(--color-neutral-200));
   --color-inverse-text: light-dark(var(--color-neutral-50), var(--color-neutral-950));
 
   --color-deck-surface: light-dark(var(--color-neutral-50), var(--color-neutral-950));
-  --color-scrim-surface: light-dark(oklch(from var(--color-neutral-50) l c h / 0.5), oklch(from var(--color-neutral-950) l c h / 0.5));
+  --color-scrim-surface: light-dark(
+    oklch(from var(--color-neutral-50) l c h / 0.5), 
+    oklch(from var(--color-neutral-950) l c h / 0.25)
+  );
   --color-group-surface: light-dark(var(--color-neutral-50), var(--color-neutral-950));
 
   --color-modal-surface: light-dark(var(--color-neutral-100), var(--color-neutral-900));
@@ -26,6 +29,8 @@
 
   --color-active-surface: light-dark(var(--color-neutral-200), var(--color-neutral-800));
   --color-active-surface-text: light-dark(var(--color-neutral-950), var(--color-neutral-50));
+  /** TODO(burdon): Merge overlay/surface? */
+  --color-hover-overlay: light-dark(var(--color-neutral-250), var(--color-neutral-750));
   --color-hover-surface: light-dark(var(--color-neutral-250), var(--color-neutral-750));
   --color-hover-surface-text: light-dark(var(--color-neutral-950), var(--color-neutral-50));
 

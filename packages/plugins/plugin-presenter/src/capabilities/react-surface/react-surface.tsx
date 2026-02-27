@@ -17,7 +17,7 @@ import {
   DocumentPresenterContainer,
   MarkdownSlide,
   PresenterSettings,
-} from '../../components';
+} from '../../containers';
 import { meta } from '../../meta';
 import { type PresenterSettingsProps } from '../../types';
 

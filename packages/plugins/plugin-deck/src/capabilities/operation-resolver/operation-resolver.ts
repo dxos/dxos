@@ -105,7 +105,12 @@ export default Capability.makeModule(
             dialogBlockAlign: input.blockAlign ?? 'center',
             dialogOverlayClasses: input.overlayClasses,
             dialogOverlayStyle: input.overlayStyle,
-            dialogContent: input.subject ? { component: input.subject, props: input.props } : null,
+            dialogContent: input.subject
+              ? {
+                  component: input.subject,
+                  props: input.props,
+                }
+              : null,
           }));
         }),
       }),

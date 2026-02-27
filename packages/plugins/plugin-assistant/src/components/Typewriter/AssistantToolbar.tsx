@@ -12,12 +12,12 @@ import { runInRuntime } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { Button, Icon, Input, ThemeProvider } from '@dxos/react-ui';
 
-export interface AssistantToolbarProps {
+export type AssistantToolbarProps = {
   view: EditorView;
   from: number;
   to: number;
   runtime: Runtime.Runtime<LanguageModel.LanguageModel>;
-}
+};
 
 export const AssistantToolbar = ({ view, from, to, runtime }: AssistantToolbarProps) => {
   const [isProcessing, setIsProcessing] = useState(false);

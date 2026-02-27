@@ -124,7 +124,6 @@ export const ProjectSettings = ({ subject: project }: SurfaceComponentProps<Proj
 };
 
 export default ProjectSettings;
-
 const EMPTY_ARRAY: never[] = [];
 
 /**

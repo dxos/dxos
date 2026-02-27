@@ -21,10 +21,10 @@ import { useAttention, useAttentionAttributes } from '@dxos/react-ui-attention';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/ui-theme';
 
+import { NavTreeContainer } from '../../containers';
 import { NavTreePlugin } from '../../NavTreePlugin';
 import { storybookGraphBuilders } from '../../testing';
 import { translations } from '../../translations';
-import { NavTreeContainer } from '../NavTreeContainer';
 
 faker.seed(1234);
 
@@ -161,7 +161,7 @@ export default meta;
 type Story = StoryObj<typeof NavTreeContainer>;
 
 export const Default: Story = {
-  play: async ({ canvasElement }) => {
+  play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
     const canvas = within(canvasElement);
 
     // Find the element with treegrid role and click on its parent

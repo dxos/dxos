@@ -13,10 +13,10 @@ import { Operation, OperationResolver } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { SpaceOperation } from '@dxos/plugin-space/types';
 import { Collection } from '@dxos/schema';
-import { Organization, Person } from '@dxos/types';
+import { Message, Organization, Person } from '@dxos/types';
 
-import { COMPOSE_EMAIL_DIALOG } from '../../constants';
 import { Calendar, InboxOperation, Mailbox } from '../../types';
+import { buildDraftMessageProps } from '../../util';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -26,8 +26,9 @@ export default Capability.makeModule(
         handler: Effect.fnUntraced(function* ({ rootCollection }) {
           const mailboxCollection = Collection.makeManaged({ key: Mailbox.Mailbox.typename });
           const calendarCollection = Collection.makeManaged({ key: Calendar.Calendar.typename });
+          const messageCollection = Collection.makeManaged({ key: Message.Message.typename });
           Obj.change(rootCollection, (c) => {
-            c.objects.push(Ref.make(mailboxCollection), Ref.make(calendarCollection));
+            c.objects.push(Ref.make(mailboxCollection), Ref.make(calendarCollection), Ref.make(messageCollection));
           });
         }),
       }),
@@ -130,17 +131,24 @@ export default Capability.makeModule(
         }),
       }),
       OperationResolver.make({
-        operation: InboxOperation.RunAssistant,
-        handler: () => Effect.fail(new Error('Not implemented')),
-      }),
-      OperationResolver.make({
-        operation: InboxOperation.OpenComposeEmail,
-        handler: (input) =>
-          Operation.invoke(LayoutOperation.UpdateDialog, {
-            subject: COMPOSE_EMAIL_DIALOG,
-            blockAlign: 'start',
-            props: input ?? {},
-          }),
+        operation: InboxOperation.CreateDraft,
+        handler: Effect.fnUntraced(function* ({ db, mode, replyToMessage, subject, body }) {
+          const props = buildDraftMessageProps({
+            mode,
+            replyToMessage: replyToMessage as Message.Message | undefined,
+            subject,
+            body,
+          });
+          const draft = Obj.make(Message.Message, props);
+          yield* Operation.invoke(SpaceOperation.AddObject, {
+            object: draft,
+            target: db,
+            hidden: true,
+          });
+          yield* Operation.invoke(LayoutOperation.Open, {
+            subject: [Obj.getDXN(draft).toString()],
+          });
+        }),
       }),
     ]);
   }),

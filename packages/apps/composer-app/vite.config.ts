@@ -140,7 +140,7 @@ export default defineConfig((env) => ({
     // Handle .md?raw imports.
     {
       name: 'raw-md-loader',
-      load(id) {
+      load(id: string) {
         if (id.endsWith('.md?raw')) {
           const filePath = id.replace(/\?raw$/, '');
           const content = readFileSync(filePath, 'utf-8');

@@ -9,7 +9,7 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { Observability } from '@dxos/observability';
 import { OperationResolver } from '@dxos/operation';
 
-import { type ObservabilitySettingsProps } from '../../components';
+import { type ObservabilitySettingsProps } from '../../containers';
 import { meta } from '../../meta';
 import { ObservabilityCapabilities, ObservabilityOperation } from '../../types';
 

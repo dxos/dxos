@@ -10,7 +10,7 @@ import { Graph } from '@dxos/plugin-graph';
 import { type TreeData } from '@dxos/react-ui-list';
 
 import { AppGraphBuilder, Keyboard, OperationResolver, ReactSurface, State } from './capabilities';
-import { NODE_TYPE } from './components';
+import { NODE_TYPE } from './containers';
 import { meta } from './meta';
 import { translations } from './translations';
 import { NavTreeEvents } from './types';

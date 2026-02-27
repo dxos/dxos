@@ -4,6 +4,7 @@
 
 import { type Resource } from '@dxos/react-ui';
 import { translations as componentsTranslations } from '@dxos/react-ui-components';
+import { Message } from '@dxos/types';
 
 import { meta } from './meta';
 import { Calendar, Mailbox } from './types';
@@ -20,6 +21,16 @@ export const translations = [
         'rename object label': 'Rename mailbox',
         'delete object label': 'Delete mailbox',
         'object deleted label': 'Mailbox deleted',
+      },
+      [Message.Message.typename]: {
+        'typename label': 'Message',
+        'typename label_zero': 'Messages',
+        'typename label_one': 'Message',
+        'typename label_other': 'Messages',
+        'object name placeholder': 'New message',
+        'rename object label': 'Rename message',
+        'delete object label': 'Delete message',
+        'object deleted label': 'Message deleted',
       },
       [Calendar.Calendar.typename]: {
         'typename label': 'Calendar',
@@ -95,6 +106,11 @@ export const translations = [
         'send email error unknown': 'An unknown error occurred',
 
         'send as email label': 'Send as email',
+
+        'draft subject label': 'Subject',
+        'draft subject placeholder': 'Message subject',
+        'draft body label': 'Body',
+        'draft body placeholder': 'Write your message...',
       },
     },
   },

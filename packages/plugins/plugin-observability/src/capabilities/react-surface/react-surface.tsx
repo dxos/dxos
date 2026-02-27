@@ -9,7 +9,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useSettingsState } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
 
-import { HelpContainer, ObservabilitySettings, type ObservabilitySettingsProps } from '../../components';
+import { HelpContainer, ObservabilitySettings, type ObservabilitySettingsProps } from '../../containers';
 import { meta } from '../../meta';
 
 export default Capability.makeModule(() =>

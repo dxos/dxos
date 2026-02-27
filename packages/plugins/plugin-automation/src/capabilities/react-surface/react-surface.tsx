@@ -11,7 +11,7 @@ import { useLayout } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { getSpace, parseId, useSpace } from '@dxos/react-client/echo';
 
-import { AutomationSettings, FunctionsContainer } from '../../components';
+import { AutomationSettings, FunctionsContainer } from '../../containers';
 import { meta } from '../../meta';
 
 export default Capability.makeModule(() =>

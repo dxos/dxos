@@ -10,7 +10,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 
-import { JournalContainer, OutlineCard, OutlineContainer } from '../../components';
+import { JournalContainer, OutlineCard, OutlineContainer } from '../../containers';
 import { meta } from '../../meta';
 import { Journal, Outline } from '../../types';
 

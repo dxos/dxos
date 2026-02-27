@@ -57,6 +57,8 @@ export const CreateObjectPanel = ({
   const { t } = useTranslation(meta.id);
   const initialFormValues = useDefaultValue(_initialFormValues, () => ({}));
   const metadata = typename && resolve?.(typename);
+
+  // TODO(burdon): Message appears twice (v1 and v2).
   const options: TypeAnnotation[] = schemas
     .filter((schema) => {
       if (views == null) {
@@ -235,8 +237,8 @@ const SelectSchema = ({
                 defaultValue: option.typename,
               })}
               icon={resolve?.(option.typename)?.icon ?? 'ph--placeholder--regular'}
-              onSelect={() => onChange(option.typename)}
               classNames='flex items-center gap-2'
+              onSelect={() => onChange(option.typename)}
             />
           ))}
         </SearchList.Viewport>
