@@ -8,7 +8,7 @@ import React, { useMemo } from 'react';
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { Surface, usePluginManager } from '@dxos/app-framework/ui';
 
-import { PluginArticle, RegistryArticle } from '../../containers';
+import { PluginArticle, PluginRegistry } from '../../containers';
 import { REGISTRY_KEY, meta } from '../../meta';
 
 export default Capability.makeModule(() =>
@@ -25,7 +25,7 @@ export default Capability.makeModule(() =>
             [],
           );
 
-          return <RegistryArticle id={`${REGISTRY_KEY}+all`} plugins={filtered} />;
+          return <PluginRegistry id={`${REGISTRY_KEY}+all`} plugins={filtered} />;
         },
       }),
       Surface.create({
@@ -43,7 +43,7 @@ export default Capability.makeModule(() =>
             [],
           );
 
-          return <RegistryArticle id={`${REGISTRY_KEY}+installed`} plugins={filtered} />;
+          return <PluginRegistry id={`${REGISTRY_KEY}+installed`} plugins={filtered} />;
         },
       }),
       Surface.create({
@@ -61,7 +61,7 @@ export default Capability.makeModule(() =>
             [],
           );
 
-          return <RegistryArticle id={`${REGISTRY_KEY}+recommended`} plugins={filtered} />;
+          return <PluginRegistry id={`${REGISTRY_KEY}+recommended`} plugins={filtered} />;
         },
       }),
       Surface.create({
@@ -72,7 +72,7 @@ export default Capability.makeModule(() =>
           const manager = usePluginManager();
           const filtered = useMemo(() => manager.getPlugins().filter(({ meta }) => meta.tags?.includes('labs')), []);
 
-          return <RegistryArticle id={`${REGISTRY_KEY}+labs`} plugins={filtered} />;
+          return <PluginRegistry id={`${REGISTRY_KEY}+labs`} plugins={filtered} />;
         },
       }),
       Surface.create({

@@ -215,21 +215,23 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
   return (
     <>
       <p className='text-description'>{t('qr code description', { ns: meta.id })}</p>
-      <div role='group' className='grid grid-cols-[1fr_min-content] my-2 gap-2'>
-        <div role='none' className='w-full aspect-square relative text-description'>
-          <QR
-            rounding={100}
-            backgroundColor='transparent'
-            color='currentColor'
-            aria-labelledby={qrLabel}
-            errorCorrectionLevel='Q'
-            cutout={true}
-          >
-            {url ?? 'never'}
-          </QR>
-          <Centered>
-            <Emoji text={emoji} />
-          </Centered>
+      <div role='group' className='grid grid-cols-[1fr_min-content]'>
+        <div className='flex justify-center py-4'>
+          <div role='none' className='w-full md:max-w-80 aspect-square relative text-description'>
+            <QR
+              rounding={100}
+              backgroundColor='transparent'
+              color='currentColor'
+              aria-labelledby={qrLabel}
+              errorCorrectionLevel='Q'
+              cutout={true}
+            >
+              {url ?? 'never'}
+            </QR>
+            <Centered>
+              <Emoji text={emoji} />
+            </Centered>
+          </div>
         </div>
         <span id={qrLabel} className='sr-only'>
           {t('qr label')}

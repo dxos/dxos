@@ -302,7 +302,7 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
       classNames={[
         'group/l0 absolute z-[1] inset-y-0 start-0 rounded-is',
         'grid grid-cols-[var(--l0-size)] grid-rows-[var(--rail-size)_1fr_min-content_var(--l0-size)] contain-layout',
-        '!w-(--l0-size) bg-base-surface border-e border-subdued-separator app-drag pb-[env(safe-area-inset-bottom)]',
+        '!w-(--l0-size) bg-toolbar-surface border-e border-subdued-separator app-drag pb-[env(safe-area-inset-bottom)]',
       ]}
     >
       {/* TODO(wittjosiah): Use L0Item trigger. */}
