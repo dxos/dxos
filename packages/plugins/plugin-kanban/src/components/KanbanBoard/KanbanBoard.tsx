@@ -7,10 +7,12 @@ import { createContext } from '@radix-ui/react-context';
 import React, { type ComponentType, type PropsWithChildren, useCallback, useContext, useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
+import { useTranslation } from '@dxos/react-ui';
 import { Board, useBoard } from '@dxos/react-ui-mosaic';
 import type { ProjectionModel } from '@dxos/schema';
 
 import { useKanbanBoardModel, useKanbanColumnEventHandler } from '../../hooks';
+import { meta } from '../../meta';
 import { type Kanban, type KanbanChangeCallback, UNCATEGORIZED_ATTRIBUTES, UNCATEGORIZED_VALUE } from '../../types';
 
 import { KanbanCard, type KanbanCardProps } from './KanbanCard';
@@ -80,8 +82,9 @@ export const KanbanBoardRoot = ({
   onCardRemove,
 }: KanbanBoardRootProps) => {
   const registry = useContext(RegistryContext);
+  const { t } = useTranslation(meta.id);
   const model = useKanbanBoardModel(kanban, projection, items, registry);
-
+  const columns = model?.getColumns?.() ?? [];
   const view = kanban?.view?.target;
   const pivotFieldId = view?.projection?.pivotFieldId;
   const columnFieldPath = useMemo(() => {
@@ -104,6 +107,14 @@ export const KanbanBoardRoot = ({
     },
     [projection, pivotFieldId],
   );
+
+  if (columns.length === 0) {
+    return (
+      <div className='flex flex-1 items-center justify-center p-8 text-center text-description'>
+        {t('select pivot placeholder')}
+      </div>
+    );
+  }
 
   return (
     <KanbanBoardContext
