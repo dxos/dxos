@@ -141,6 +141,9 @@ catalogs:
     '@dxos/credentials':
       specifier: ^0.8.3
       version: 0.8.3
+    '@dxos/protocols':
+      specifier: ^0.8.3
+      version: 0.8.3
     '@dxos/wa-sqlite':
       specifier: ^0.2.1
       version: 0.2.1
@@ -14280,6 +14283,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/protocols':
+        specifier: 'catalog:'
+        version: 0.8.3(effect@3.19.16)
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random

@@ -6,7 +6,7 @@ import React, { useMemo } from 'react';
 
 import { Format } from '@dxos/echo/internal';
 import { PublicKey } from '@dxos/keys';
-import { type KeyRecord } from '@dxos/protocols/proto/dxos/halo/keyring';
+import { type KeyRecord } from '@dxos/protocols/buf/dxos/halo/keyring_pb';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
 

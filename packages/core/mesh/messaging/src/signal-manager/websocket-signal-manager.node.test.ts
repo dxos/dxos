@@ -7,6 +7,7 @@ import { afterAll, beforeAll, describe, test } from 'vitest';
 import { asyncTimeout, sleep } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { create } from '@dxos/protocols/buf';
+import { Runtime_Services_SignalSchema } from '@dxos/protocols/buf/dxos/config_pb';
 import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { JoinRequestSchema } from '@dxos/protocols/buf/dxos/edge/signal_pb';
 import { PublicKeySchema } from '@dxos/protocols/buf/dxos/keys_pb';
@@ -17,7 +18,8 @@ import { createMessage, expectPeerAvailable, expectReceivedMessage } from '../te
 
 import { WebsocketSignalManager } from './websocket-signal-manager';
 
-/** Helper to create a buf JoinRequest from @dxos/keys PublicKey and peer key string. */
+const signalHost = (server: string) => create(Runtime_Services_SignalSchema, { server });
+
 const joinReq = (topic: PublicKey, peerKey: string) =>
   create(JoinRequestSchema, {
     topic: create(PublicKeySchema, { data: topic.asUint8Array() }),
@@ -39,9 +41,9 @@ describe.skip('WebSocketSignalManager', () => {
   });
 
   test('join swarm with two brokers', { timeout: 1_000 }, async () => {
-    const client1 = new WebsocketSignalManager([{ server: broker1.url() }, { server: broker2.url() }]);
-    const client2 = new WebsocketSignalManager([{ server: broker1.url() }]);
-    const client3 = new WebsocketSignalManager([{ server: broker2.url() }]);
+    const client1 = new WebsocketSignalManager([signalHost(broker1.url()), signalHost(broker2.url())]);
+    const client2 = new WebsocketSignalManager([signalHost(broker1.url())]);
+    const client3 = new WebsocketSignalManager([signalHost(broker2.url())]);
     await openAndClose(client1, client2, client3);
 
     const [topic, peer1, peer2, peer3] = PublicKey.randomSequence();
@@ -59,8 +61,8 @@ describe.skip('WebSocketSignalManager', () => {
   });
 
   test('join single swarm with doubled brokers', { timeout: 1_000 }, async () => {
-    const client1 = new WebsocketSignalManager([{ server: broker1.url() }, { server: broker2.url() }]);
-    const client2 = new WebsocketSignalManager([{ server: broker1.url() }, { server: broker2.url() }]);
+    const client1 = new WebsocketSignalManager([signalHost(broker1.url()), signalHost(broker2.url())]);
+    const client2 = new WebsocketSignalManager([signalHost(broker1.url()), signalHost(broker2.url())]);
     await openAndClose(client1, client2);
 
     const [topic, peer1, peer2] = PublicKey.randomSequence();
@@ -86,8 +88,8 @@ describe.skip('WebSocketSignalManager', () => {
   });
 
   test('works with one broken server', { timeout: 1_000 }, async () => {
-    const client1 = new WebsocketSignalManager([{ server: 'ws://broken.server/signal' }, { server: broker1.url() }]);
-    const client2 = new WebsocketSignalManager([{ server: 'ws://broken.server/signal' }, { server: broker1.url() }]);
+    const client1 = new WebsocketSignalManager([signalHost('ws://broken.server/signal'), signalHost(broker1.url())]);
+    const client2 = new WebsocketSignalManager([signalHost('ws://broken.server/signal'), signalHost(broker1.url())]);
     await openAndClose(client1, client2);
 
     const [topic, peer1, peer2] = PublicKey.randomSequence();
@@ -102,8 +104,8 @@ describe.skip('WebSocketSignalManager', () => {
   });
 
   test('join two swarms with a broken signal server', { timeout: 1_000 }, async () => {
-    const client1 = new WebsocketSignalManager([{ server: 'ws://broken.server/signal' }, { server: broker1.url() }]);
-    const client2 = new WebsocketSignalManager([{ server: 'ws://broken.server/signal' }, { server: broker1.url() }]);
+    const client1 = new WebsocketSignalManager([signalHost('ws://broken.server/signal'), signalHost(broker1.url())]);
+    const client2 = new WebsocketSignalManager([signalHost('ws://broken.server/signal'), signalHost(broker1.url())]);
     await openAndClose(client1, client2);
 
     const [topic1, topic2, peer1, peer2] = PublicKey.randomSequence();

@@ -106,13 +106,10 @@ const meta = {
       config: new Config({
         runtime: {
           client: {
-            storage: {
-              persistent: true,
-            },
-            // enableVectorIndexing: true,
+            storage: { persistent: true } as any,
           },
         },
-      }),
+      } as any),
       types: [...DataTypes, TestSchema.Organization],
     }),
   ],

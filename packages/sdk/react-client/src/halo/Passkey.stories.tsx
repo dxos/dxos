@@ -6,6 +6,16 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback } from 'react';
 
 import { Config, PublicKey } from '@dxos/client';
+import { create } from '@dxos/protocols/buf';
+import {
+  ConfigSchema,
+  RuntimeSchema,
+  Runtime_ClientSchema,
+  Runtime_Client_EdgeFeaturesSchema,
+  Runtime_ServicesSchema,
+  Runtime_Services_EdgeSchema,
+  Runtime_Services_IceProviderSchema,
+} from '@dxos/protocols/buf/dxos/config_pb';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Button } from '@dxos/react-ui';
@@ -125,25 +135,30 @@ const Test = () => {
   );
 };
 
-const config = new Config({
-  runtime: {
-    client: {
-      edgeFeatures: {
-        agents: true,
-        echoReplicator: true,
-        feedReplicator: true,
-        signaling: true,
-      },
-    },
-    services: {
-      edge: {
-        url: 'wss://edge-main.dxos.workers.dev/',
-        // url: 'ws://localhost:8787',
-      },
-      iceProviders: [{ urls: 'https://edge-production.dxos.workers.dev/ice' }],
-    },
-  },
-});
+const config = new Config(
+  create(ConfigSchema, {
+    runtime: create(RuntimeSchema, {
+      client: create(Runtime_ClientSchema, {
+        edgeFeatures: create(Runtime_Client_EdgeFeaturesSchema, {
+          agents: true,
+          echoReplicator: true,
+          feedReplicator: true,
+          signaling: true,
+        }),
+      }),
+      services: create(Runtime_ServicesSchema, {
+        edge: create(Runtime_Services_EdgeSchema, {
+          url: 'wss://edge-main.dxos.workers.dev/',
+        }),
+        iceProviders: [
+          create(Runtime_Services_IceProviderSchema, {
+            urls: 'https://edge-production.dxos.workers.dev/ice',
+          }),
+        ],
+      }),
+    }),
+  }),
+);
 
 const meta = {
   title: 'sdk/react-client/Passkeys',

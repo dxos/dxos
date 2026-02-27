@@ -67,9 +67,9 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
     _headers ??
     Match.value(isNode()).pipe(
       Match.when(true, () => Option.fromNullable(process.env.DX_OTEL_HEADERS ?? buildSecrets.OTEL_HEADERS)),
-      Match.when(false, () => Option.fromNullable(config.values.runtime?.app?.env?.DX_OTEL_HEADERS)),
+      Match.when(false, () => Option.fromNullable(config.values.runtime?.app?.env?.DX_OTEL_HEADERS as string | undefined)),
       Match.exhaustive,
-      Option.map((raw) => parseHeaders(raw)),
+      Option.map((raw) => parseHeaders(raw as string)),
       Option.getOrElse(() => undefined),
     );
 
@@ -88,7 +88,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
 
   const logs = logsEnabled
     ? new OtelLogs({
-        endpoint,
+        endpoint: endpoint as string,
         headers,
         resource,
         getTags: () => Object.fromEntries(tags),
@@ -98,7 +98,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
 
   const metrics = metricsEnabled
     ? new OtelMetrics({
-        endpoint,
+        endpoint: endpoint as string,
         headers,
         resource,
         getTags: () => Object.fromEntries(tags),
@@ -107,7 +107,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
 
   const traces = tracesEnabled
     ? new OtelTraces({
-        endpoint,
+        endpoint: endpoint as string,
         headers,
         resource,
         getTags: () => Object.fromEntries(tags),

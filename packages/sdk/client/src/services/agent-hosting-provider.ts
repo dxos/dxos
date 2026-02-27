@@ -11,7 +11,7 @@ import { getCredentialAssertion } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { toPublicKey, timestampMs } from '@dxos/protocols/buf';
+import { timestampMs, toPublicKey } from '@dxos/protocols/buf';
 import type { GenService, GenServiceMethods } from '@dxos/protocols/buf';
 import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { schema } from '@dxos/protocols/proto';
@@ -84,7 +84,7 @@ export class AgentManagerClient implements AgentHostingProviderClient {
     this._config = {
       ...defaultConfig,
       baseUrl: runtimeAgentHostingConfig.server,
-      password: this._clientConfig.get('runtime.app.env.DX_AGENTHOSTING_PASSWORD'),
+      password: this._clientConfig.get('runtime.app.env.DX_AGENTHOSTING_PASSWORD' as any) as string | undefined,
     };
 
     // Ensure trailing slash to ensure proper path joining with URL() constructor.

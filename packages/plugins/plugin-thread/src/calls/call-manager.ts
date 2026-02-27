@@ -216,7 +216,7 @@ export class CallManager extends Resource {
     this._swarmSynchronizer.setJoined(true);
     await this._swarmSynchronizer.join();
     await this._mediaManager.join({
-      iceServers: this._client.config.get('runtime.services.ice'),
+      iceServers: this._client.config.get('runtime.services.ice' as any) as RTCIceServer[] | undefined,
       apiBase: `${CALLS_URL}/api/calls`,
     });
   }

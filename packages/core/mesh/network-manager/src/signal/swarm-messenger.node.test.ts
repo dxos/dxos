@@ -8,10 +8,11 @@ import { type Awaited } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { Messenger, WebsocketSignalManager } from '@dxos/messaging';
 import { create } from '@dxos/protocols/buf';
+import { Runtime_Services_SignalSchema } from '@dxos/protocols/buf/dxos/config_pb';
 import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { JoinRequestSchema } from '@dxos/protocols/buf/dxos/edge/signal_pb';
 import { PublicKeySchema } from '@dxos/protocols/buf/dxos/keys_pb';
-import { type Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
+import { type Answer, AnswerSchema, OfferSchema, SignalSchema } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 import { runTestSignalServer } from '@dxos/signal';
 
 import { type OfferMessage, type SignalMessage } from './signal-messenger';
@@ -42,7 +43,7 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
   const createSignalClientAndMessageRouter = async ({
     signalApiUrl,
     onSignal = (async () => {}) as any,
-    onOffer = async () => ({ accept: true }),
+    onOffer = async () => create(AnswerSchema, { accept: true }),
     topic,
   }: {
     signalApiUrl: string;
@@ -51,7 +52,7 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
     topic: PublicKey;
   }) => {
     const peer = create(PeerSchema, { peerKey: PublicKey.random().toHex() });
-    const signalManager = new WebsocketSignalManager([{ server: signalApiUrl }]);
+    const signalManager = new WebsocketSignalManager([create(Runtime_Services_SignalSchema, { server: signalApiUrl })]);
     await signalManager.open();
     onTestFinished(async () => {
       await signalManager.close();
@@ -112,7 +113,7 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
       sessionId: PublicKey.random(),
       topic,
       data: {
-        signal: { payload: { msg: 'Some info' } },
+        signal: create(SignalSchema, { payload: { msg: 'Some info' } }),
         signalBatch: undefined,
       },
     };
@@ -129,13 +130,13 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
     } = await createSignalClientAndMessageRouter({
       signalApiUrl: broker1.url(),
       onSignal: (async () => {}) as any,
-      onOffer: async () => ({ accept: true }),
+      onOffer: async () => create(AnswerSchema, { accept: true }),
       topic,
     });
     const { signalManager: signalManager2, peer: peer2 } = await createSignalClientAndMessageRouter({
       signalApiUrl: broker1.url(),
       onSignal: (async () => {}) as any,
-      onOffer: async () => ({ accept: true }),
+      onOffer: async () => create(AnswerSchema, { accept: true }),
       topic,
     });
 
@@ -146,7 +147,7 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
       recipient: peer2,
       sessionId: PublicKey.random(),
       topic,
-      data: { offer: {} },
+      data: { offer: create(OfferSchema) },
     });
     expect(answer.accept).toEqual(true);
   });
@@ -163,7 +164,7 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
     } = await createSignalClientAndMessageRouter({
       signalApiUrl: broker1.url(),
       onSignal: signalMock1,
-      onOffer: async () => ({ accept: true }),
+      onOffer: async () => create(AnswerSchema, { accept: true }),
       topic,
     });
     const received2: SignalMessage[] = [];
@@ -177,7 +178,7 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
     } = await createSignalClientAndMessageRouter({
       signalApiUrl: broker1.url(),
       onSignal: signalMock2,
-      onOffer: async () => ({ accept: true }),
+      onOffer: async () => create(AnswerSchema, { accept: true }),
       topic,
     });
     const received3: SignalMessage[] = [];
@@ -191,7 +192,7 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
     } = await createSignalClientAndMessageRouter({
       signalApiUrl: broker1.url(),
       onSignal: signalMock3,
-      onOffer: async () => ({ accept: true }),
+      onOffer: async () => create(AnswerSchema, { accept: true }),
       topic,
     });
 
@@ -205,7 +206,7 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
       recipient: peer3,
       sessionId: PublicKey.random(),
       topic,
-      data: { signal: { payload: { msg: '1to3' } }, signalBatch: undefined },
+      data: { signal: create(SignalSchema, { payload: { msg: '1to3' } }), signalBatch: undefined },
     };
     await router1.signal(msg1to3);
     await expect.poll(() => received3[0]).toEqual(expect.objectContaining(msg1to3));
@@ -216,7 +217,7 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
       recipient: peer3,
       sessionId: PublicKey.random(),
       topic,
-      data: { signal: { payload: { msg: '2to3' } }, signalBatch: undefined },
+      data: { signal: create(SignalSchema, { payload: { msg: '2to3' } }), signalBatch: undefined },
     };
     await router2.signal(msg2to3);
     await expect.poll(() => received3[1]).toEqual(expect.objectContaining(msg2to3));
@@ -227,7 +228,7 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
       recipient: peer1,
       sessionId: PublicKey.random(),
       topic,
-      data: { signal: { payload: { msg: '3to1' } }, signalBatch: undefined },
+      data: { signal: create(SignalSchema, { payload: { msg: '3to1' } }), signalBatch: undefined },
     };
     await router3.signal(msg3to1);
     await expect.poll(() => received1[0]).toEqual(expect.objectContaining(msg3to1));
@@ -241,7 +242,7 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
     } = await createSignalClientAndMessageRouter({
       signalApiUrl: broker1.url(),
       onSignal: (async () => {}) as any,
-      onOffer: async () => ({ accept: true }),
+      onOffer: async () => create(AnswerSchema, { accept: true }),
       topic,
     });
     const {
@@ -251,7 +252,7 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
     } = await createSignalClientAndMessageRouter({
       signalApiUrl: broker1.url(),
       onSignal: (async () => {}) as any,
-      onOffer: async () => ({ accept: true }),
+      onOffer: async () => create(AnswerSchema, { accept: true }),
       topic,
     });
 
@@ -264,7 +265,7 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
       recipient: peer2,
       sessionId: PublicKey.random(),
       topic,
-      data: { offer: {} },
+      data: { offer: create(OfferSchema) },
     });
     expect(answer1.accept).toEqual(true);
 
@@ -274,7 +275,7 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
       recipient: peer1,
       sessionId: PublicKey.random(),
       topic,
-      data: { offer: {} },
+      data: { offer: create(OfferSchema) },
     });
     expect(answer2.accept).toEqual(true);
   });

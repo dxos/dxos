@@ -44,7 +44,7 @@ const getIPData = Effect.fn(function* (config: Config) {
   }
 
   // Fetch data if not cached.
-  const IPDATA_API_KEY = config.get('runtime.app.env.DX_IPDATA_API_KEY');
+  const IPDATA_API_KEY = config.get('runtime.app.env.DX_IPDATA_API_KEY' as any) as string | undefined;
   if (IPDATA_API_KEY) {
     const data = yield* HttpClientRequest.get(`https://api.ipdata.co?api-key=${IPDATA_API_KEY}`).pipe(
       httpClientNoTrace.execute,

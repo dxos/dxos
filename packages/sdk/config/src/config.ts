@@ -6,8 +6,9 @@ import defaultsDeep from 'lodash.defaultsdeep';
 import isMatch from 'lodash.ismatch';
 
 import { InvalidConfigError } from '@dxos/protocols';
+import { create } from '@dxos/protocols/buf';
+import { type Config as ConfigProto, ConfigSchema } from '@dxos/protocols/buf/dxos/config_pb';
 import { schema } from '@dxos/protocols/proto';
-import { type Config as ConfigProto } from '@dxos/protocols/proto/dxos/config';
 import { trace } from '@dxos/tracing';
 import { getDeep, setDeep } from '@dxos/util';
 
@@ -127,7 +128,10 @@ export class Config {
    * Creates an immutable instance.
    * @constructor
    */
-  constructor(config: ConfigProto = {}, ...objects: ConfigProto[]) {
+  constructor(
+    config: Partial<ConfigProto> | ConfigProto = create(ConfigSchema, { version: 1 }),
+    ...objects: (Partial<ConfigProto> | ConfigProto)[]
+  ) {
     this._config = validateConfig(defaultsDeep(config, ...objects, { version: 1 }));
   }
 
@@ -170,10 +174,10 @@ export class Config {
    * @param key A key in the config object. Can be a nested property with keys separated by dots: 'services.signal.server'.
    */
   getOrThrow<K extends ConfigKey>(key: K): Exclude<DeepIndex<ConfigProto, ParseKey<K>>, undefined> {
-    const value: DeepIndex<ConfigProto, ParseKey<K>> | undefined = getDeep(this._config, key.split('.'));
+    const value = getDeep(this._config, key.split('.')) as DeepIndex<ConfigProto, ParseKey<K>> | undefined;
     if (!value) {
       throw new Error(`Config option not present: ${key}`);
     }
-    return value;
+    return value as Exclude<DeepIndex<ConfigProto, ParseKey<K>>, undefined>;
   }
 }

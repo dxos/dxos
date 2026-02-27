@@ -10,6 +10,13 @@ import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Config, useConfig } from '@dxos/react-client';
+import { create } from '@dxos/protocols/buf';
+import {
+  ConfigSchema,
+  RuntimeSchema,
+  Runtime_ServicesSchema,
+  Runtime_Services_IceProviderSchema,
+} from '@dxos/protocols/buf/dxos/config_pb';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Button } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
@@ -24,7 +31,7 @@ import { useBlackCanvasStreamTrack, useInaudibleAudioStreamTrack, useVideoStream
 const pushAndPullTrack = (mediaStreamTrack?: MediaStreamTrack) => {
   const config = useConfig();
   const callsConfig = {
-    iceServers: config.get('runtime.services.ice'),
+    iceServers: config.get('runtime.services.ice' as any) as RTCIceServer[] | undefined,
     apiBase: `${CALLS_URL}/api/calls`,
   };
   const peerPush = useMemo(() => new CallsServicePeer(callsConfig), []);
@@ -177,13 +184,19 @@ const meta = {
   decorators: [
     withTheme(),
     withClientProvider({
-      config: new Config({
-        runtime: {
-          services: {
-            iceProviders: [{ urls: 'https://edge.dxos.workers.dev/ice' }],
-          },
-        },
-      }),
+      config: new Config(
+        create(ConfigSchema, {
+          runtime: create(RuntimeSchema, {
+            services: create(Runtime_ServicesSchema, {
+              iceProviders: [
+                create(Runtime_Services_IceProviderSchema, {
+                  urls: 'https://edge.dxos.workers.dev/ice',
+                }),
+              ],
+            }),
+          }),
+        }),
+      ),
     }),
   ],
   parameters: {

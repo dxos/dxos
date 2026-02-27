@@ -10,7 +10,7 @@ import { ErrorStream } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ConnectivityError } from '@dxos/protocols';
-import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
+import { type Signal } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 
 import { type Transport, type TransportOptions, type TransportStats } from '../transport';
 

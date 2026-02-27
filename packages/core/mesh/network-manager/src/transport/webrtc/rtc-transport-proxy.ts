@@ -12,7 +12,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ConnectionResetError, ConnectivityError, type Mesh, TimeoutError } from '@dxos/protocols';
-import { bufToProto, create, protoToBuf } from '@dxos/protocols/buf';
+import { create } from '@dxos/protocols/buf';
 import { PublicKeySchema } from '@dxos/protocols/buf/dxos/keys_pb';
 import {
   type BridgeEvent,
@@ -27,8 +27,7 @@ import {
   SignalRequestSchema,
   StatsRequestSchema,
 } from '@dxos/protocols/buf/dxos/mesh/bridge_pb';
-import { type Signal as BufSignal } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
-import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
+import { type Signal } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 import { arrayToBuffer } from '@dxos/util';
 
 import { type Transport, type TransportFactory, type TransportOptions, type TransportStats } from '../transport';
@@ -160,7 +159,7 @@ export class RtcTransportProxy extends Resource implements Transport {
 
   async onSignal(signal: Signal): Promise<void> {
     this._options.bridgeService
-      .sendSignal(create(SignalRequestSchema, { proxyId: toBufKey(this._proxyId), signal: protoToBuf<BufSignal>(signal) }), {
+      .sendSignal(create(SignalRequestSchema, { proxyId: toBufKey(this._proxyId), signal: signal }), {
         timeout: RPC_TIMEOUT,
       })
       .catch((err) => this._raiseIfOpen(decodeError(err)));
@@ -195,7 +194,7 @@ export class RtcTransportProxy extends Resource implements Transport {
 
   private async _handleSignal(signalEvent: BridgeEvent_SignalEvent): Promise<void> {
     try {
-      await this._options.sendSignal(bufToProto(signalEvent.payload));
+      await this._options.sendSignal(signalEvent.payload!);
     } catch (error) {
       const data = signalEvent.payload?.payload?.data;
       const type =

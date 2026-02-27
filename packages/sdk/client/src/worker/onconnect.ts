@@ -5,6 +5,8 @@
 import { Trigger } from '@dxos/async';
 import { Config, Defaults, Envs, Local, Storage } from '@dxos/config';
 import { log } from '@dxos/log';
+import { create } from '@dxos/protocols/buf';
+import { ConfigSchema } from '@dxos/protocols/buf/dxos/config_pb';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
 import { layerMemory } from '@dxos/sql-sqlite/platform';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
@@ -27,7 +29,13 @@ const setupRuntime = async () => {
 
   const workerRuntime = new WorkerRuntime({
     configProvider: async () => {
-      const config = new Config(await Storage(), Envs(), Local(), Defaults());
+      const config = new Config(
+        create(ConfigSchema, { version: 1 }),
+        (await Storage()) as any,
+        Envs() as any,
+        Local() as any,
+        Defaults() as any,
+      );
       log.config({ filter: config.get('runtime.client.log.filter'), prefix: config.get('runtime.client.log.prefix') });
       return config;
     },

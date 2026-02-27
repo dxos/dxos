@@ -19,7 +19,7 @@ import {
   MessageSchema as RouterMessageSchema,
 } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import type { FeedBlock, ProtocolMessage } from '@dxos/protocols/feed-replication';
-import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
+import { EdgeStatus_ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { ComplexMap, arrayToBuffer, bufferToArray, defaultMap, rangeFromTo } from '@dxos/util';
 
 export type EdgeFeedReplicatorProps = {
@@ -87,7 +87,7 @@ export class EdgeFeedReplicator extends Resource {
 
   private async _handleReconnect(): Promise<void> {
     await this._resetConnection();
-    if (this._messenger.status.state === EdgeStatus.ConnectionState.CONNECTED) {
+    if (this._messenger.status.state === EdgeStatus_ConnectionState.CONNECTED) {
       this._startReplication();
     }
   }

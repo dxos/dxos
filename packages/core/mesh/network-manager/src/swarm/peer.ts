@@ -9,7 +9,8 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type PeerInfo } from '@dxos/messaging';
 import { CancelledError, SystemError } from '@dxos/protocols';
-import { type Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
+import { type Answer, AnswerSchema, OfferSchema } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
+import { create } from '@dxos/protocols/buf';
 
 import { type OfferMessage, type SignalMessage, type SignalMessenger } from '../signal';
 import { type TransportFactory } from '../transport';
@@ -114,7 +115,7 @@ export class Peer {
       ![ConnectionState.CREATED, ConnectionState.INITIAL, ConnectionState.CONNECTING].includes(this.connection.state)
     ) {
       log.info(`received offer when connection already in ${this.connection.state} state`);
-      return { accept: false };
+      return create(AnswerSchema, { accept: false });
     }
     // Check if we are already trying to connect to that peer.
     if (this.connection || this.initiating) {
@@ -135,7 +136,7 @@ export class Peer {
         }
       } else {
         // Continue with our origination attempt, the remote peer will close its connection and accept ours.
-        return { accept: false };
+        return create(AnswerSchema, { accept: false });
       }
     }
 
@@ -159,11 +160,11 @@ export class Peer {
           await this.closeConnection(err);
         }
 
-        return { accept: true };
+        return create(AnswerSchema, { accept: true });
       }
     }
 
-    return { accept: false };
+    return create(AnswerSchema, { accept: false });
   }
 
   /**
@@ -188,7 +189,7 @@ export class Peer {
         recipient: this.remoteInfo,
         sessionId,
         topic: this.topic,
-        data: { offer: {} },
+        data: { offer: create(OfferSchema) },
       });
       log('received', { answer, topic: this.topic, local: this.localInfo, remote: this.remoteInfo });
       if (connection.state !== ConnectionState.INITIAL) {

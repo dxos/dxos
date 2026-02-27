@@ -45,7 +45,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { EdgeService, decodeError } from '@dxos/protocols';
-import { toPublicKey, encodePublicKey } from '@dxos/protocols/buf';
+import { encodePublicKey, toPublicKey } from '@dxos/protocols/buf';
 import { create } from '@dxos/protocols/buf';
 import { type Invitation, Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';

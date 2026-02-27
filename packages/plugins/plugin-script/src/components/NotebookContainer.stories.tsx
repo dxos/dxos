@@ -47,9 +47,9 @@ const meta: Meta<typeof NotebookContainer> = {
           // TODO(wittjosiah): ComputeRuntime requires edge to be configured or it will throw.
           config: new Config({
             runtime: {
-              services: SERVICES_CONFIG.REMOTE,
+              services: SERVICES_CONFIG.REMOTE as any,
             },
-          }),
+          } as any),
           types: [...DataTypes, Notebook.Notebook, Function.Function, Markdown.Document],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {

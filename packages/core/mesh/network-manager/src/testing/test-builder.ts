@@ -13,8 +13,8 @@ import {
 import { create } from '@dxos/protocols/buf';
 import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import * as MeshBridgePb from '@dxos/protocols/buf/dxos/mesh/bridge_pb';
-import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
-import { type Runtime } from '@dxos/protocols/proto/dxos/config';
+import { ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type Runtime_Services_Signal, Runtime_Services_SignalSchema } from '@dxos/protocols/buf/dxos/config_pb';
 import { type BufProtoRpcPeer, createBufProtoRpcPeer, createBufServiceBundle, createLinkedPorts } from '@dxos/rpc';
 import { ComplexMap } from '@dxos/util';
 
@@ -35,12 +35,12 @@ import { type TestTeleportExtensionFactory, TestWireProtocol } from './test-wire
 
 // Signal server will be started by the setup script.
 const port = process.env.SIGNAL_PORT ?? 4000;
-export const TEST_SIGNAL_HOSTS: Runtime.Services.Signal[] = [
-  { server: `ws://localhost:${port}/.well-known/dx/signal` },
+export const TEST_SIGNAL_HOSTS: Runtime_Services_Signal[] = [
+  create(Runtime_Services_SignalSchema, { server: `ws://localhost:${port}/.well-known/dx/signal` }),
 ];
 
 export type TestBuilderOptions = {
-  signalHosts?: Runtime.Services.Signal[];
+  signalHosts?: Runtime_Services_Signal[];
   bridge?: boolean;
   transport?: TransportKind;
 };

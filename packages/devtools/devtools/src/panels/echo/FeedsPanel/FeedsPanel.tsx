@@ -8,11 +8,12 @@ import { generateName } from '@dxos/display-name';
 import { Format } from '@dxos/echo/internal';
 import { type PublicKey } from '@dxos/keys';
 import { toPublicKey } from '@dxos/protocols/buf';
-import { type Contact } from '@dxos/protocols/proto/dxos/client/services';
+import { type Contact } from '@dxos/protocols/buf/dxos/client/services_pb';
 import {
-  type SubscribeToFeedBlocksResponse,
+  type SubscribeToFeedBlocksResponse_Block,
   type SubscribeToFeedsResponse,
-} from '@dxos/protocols/proto/dxos/devtools/host';
+  type SubscribeToFeedsResponse_FeedOwner,
+} from '@dxos/protocols/buf/dxos/devtools/host_pb';
 import { type Client, useClient } from '@dxos/react-client';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { type Space } from '@dxos/react-client/echo';
@@ -24,7 +25,7 @@ import { Bitbar, MasterDetailTable, PanelContainer, PublicKeySelector } from '..
 import { DataSpaceSelector } from '../../../containers';
 import { useDevtoolsDispatch, useDevtoolsState, useFeedMessages } from '../../../hooks';
 
-type FeedTableRow = SubscribeToFeedBlocksResponse.Block & {
+type FeedTableRow = SubscribeToFeedBlocksResponse_Block & {
   type: string;
   issuer: string;
 };
@@ -101,7 +102,7 @@ export const FeedsPanel = (props: { space?: Space }) => {
 
   const tableData = useMemo(() => {
     return tableRows.map((row) => ({
-      id: `${toPublicKey(row.feedKey).toHex()}-${row.seq}`,
+      id: `${row.feedKey ? toPublicKey(row.feedKey).toHex() : 'unknown'}-${row.seq}`,
       ...row,
     }));
   }, [tableRows]);
@@ -135,12 +136,16 @@ const mapToRows = (
   client: Client,
   spaceKey: PublicKey | undefined,
   contacts: Contact[],
-  blocks: SubscribeToFeedBlocksResponse.Block[],
+  blocks: SubscribeToFeedBlocksResponse_Block[],
 ): FeedTableRow[] => {
   return blocks.map((block) => {
-    const credential = block.data.payload.credential?.credential;
-    const type = (credential?.subject?.assertion?.['@type'] as string) ?? 'unknown_type';
-    const issuerKeys = credential ? { identity: credential.issuer, device: credential.proof!.signer } : undefined;
+    const credentialMsg =
+      block.data?.payload?.payload.case === 'credential' ? block.data.payload.payload.value : undefined;
+    const credential = credentialMsg?.credential;
+    const type = (credential?.subject?.assertion as any)?.['@type'] ?? 'unknown_type';
+    const issuerKeys = credential
+      ? ({ identity: credential.issuer, device: credential.proof?.signer } as any)
+      : undefined;
     return {
       type,
       issuer: issuerKeys ? formatIdentity(client, contacts, issuerKeys) : 'unknown',
@@ -152,7 +157,7 @@ const mapToRows = (
 const formatIdentity = (
   client: Client,
   contacts: Contact[],
-  identityInfo: SubscribeToFeedsResponse.FeedOwner | undefined,
+  identityInfo: SubscribeToFeedsResponse_FeedOwner | undefined,
 ): string => {
   if (!identityInfo) {
     return 'unknown';

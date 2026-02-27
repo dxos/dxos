@@ -45,24 +45,22 @@ import { trim } from '@dxos/util';
 export const config = {
   remote: new Config({
     runtime: {
-      services: SERVICES_CONFIG.REMOTE,
+      services: SERVICES_CONFIG.REMOTE as any,
     },
-  }),
+  } as any),
   persistent: new Config({
     runtime: {
       client: {
-        storage: {
-          persistent: true,
-        },
+        storage: { persistent: true } as any,
       },
-      services: SERVICES_CONFIG.REMOTE,
+      services: SERVICES_CONFIG.REMOTE as any,
     },
-  }),
+  } as any),
   local: new Config({
     runtime: {
-      services: SERVICES_CONFIG.LOCAL,
+      services: SERVICES_CONFIG.LOCAL as any,
     },
-  }),
+  } as any),
 };
 
 const Toolkit$ = Toolkit.make(

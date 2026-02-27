@@ -8,6 +8,13 @@ import { afterEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout, latch } from '@dxos/async';
 import { Config } from '@dxos/config';
+import { create } from '@dxos/protocols/buf';
+import {
+  ConfigSchema,
+  RuntimeSchema,
+  Runtime_ClientSchema,
+  Runtime_Client_StorageSchema,
+} from '@dxos/protocols/buf/dxos/config_pb';
 import { Context } from '@dxos/context';
 import { verifyPresentation } from '@dxos/credentials';
 import { type PublicKey } from '@dxos/keys';
@@ -118,9 +125,15 @@ describe('ClientServicesHost', () => {
   });
 
   test('storage reset', async () => {
-    const config = new Config({
-      runtime: { client: { storage: { persistent: true, dataRoot } } },
-    });
+    const config = new Config(
+      create(ConfigSchema, {
+        runtime: create(RuntimeSchema, {
+          client: create(Runtime_ClientSchema, {
+            storage: create(Runtime_Client_StorageSchema, { persistent: true, dataRoot }),
+          }),
+        }),
+      }),
+    );
     {
       const host = createServiceHost(config, new MemorySignalManagerContext());
       await host.open(new Context());

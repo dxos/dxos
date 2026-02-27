@@ -7,7 +7,8 @@
 import localforage from 'localforage';
 
 import { log } from '@dxos/log';
-import { type Config as ConfigProto } from '@dxos/protocols/proto/dxos/config';
+import { create } from '@dxos/protocols/buf';
+import { type Config as ConfigProto, ConfigSchema } from '@dxos/protocols/buf/dxos/config_pb';
 
 declare const __DXOS_CONFIG__: { publicUrl?: string; dynamic?: boolean };
 declare const __CONFIG_ENVS__: Partial<ConfigProto> | undefined;
@@ -70,7 +71,7 @@ export const Remote = (target: string | undefined, authenticationToken?: string)
     const url = new URL(target);
     const protocol = url.protocol.slice(0, -1);
 
-    return {
+    return create(ConfigSchema, {
       runtime: {
         client: {
           // TODO(burdon): Remove vault.html.
@@ -78,7 +79,7 @@ export const Remote = (target: string | undefined, authenticationToken?: string)
           remoteSourceAuthenticationToken: authenticationToken,
         },
       },
-    };
+    });
   } catch (err) {
     log.catch(err);
     return {};

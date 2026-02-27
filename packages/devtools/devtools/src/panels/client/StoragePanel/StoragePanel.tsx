@@ -6,15 +6,17 @@ import bytes from 'bytes';
 import React, { type FC, type ReactNode, useEffect, useMemo, useState } from 'react';
 
 import { log } from '@dxos/log';
-import { toPublicKey } from '@dxos/protocols/buf';
+import { create, toPublicKey } from '@dxos/protocols/buf';
 import {
   type GetBlobsResponse,
   type GetSnapshotsResponse,
   type StorageInfo,
+  StorageInfoSchema,
   type StoredSnapshotInfo,
   type SubscribeToFeedsResponse,
-} from '@dxos/protocols/proto/dxos/devtools/host';
-import { BlobMeta } from '@dxos/protocols/proto/dxos/echo/blob';
+  type SubscribeToFeedsResponse_Feed,
+} from '@dxos/protocols/buf/dxos/devtools/host_pb';
+import { type BlobMeta, BlobMeta_State } from '@dxos/protocols/buf/dxos/echo/blob_pb';
 import { PublicKey, useClient } from '@dxos/react-client';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { useAsyncEffect } from '@dxos/react-hooks';
@@ -28,7 +30,7 @@ import { Bitbar, JsonView, PanelContainer } from '../../../components';
 type SelectionValue =
   | {
       kind: 'feed';
-      feed: SubscribeToFeedsResponse.Feed;
+      feed: SubscribeToFeedsResponse_Feed;
     }
   | {
       kind: 'blob';
@@ -174,12 +176,12 @@ export const StoragePanel = () => {
   const items = useMemo(
     () =>
       getInfoTree(
-        storageInfo ?? {
+        storageInfo ?? create(StorageInfoSchema, {
           type: '',
           originUsage: 0,
           storageUsage: 0,
           usageQuota: 0,
-        },
+        }),
         feeds as any,
         snapshotInfo?.snapshots ?? [],
         blobsInfo?.blobs ?? [],
@@ -277,7 +279,7 @@ export const StoragePanel = () => {
 };
 
 const calculateBlobProgress = (blob: BlobMeta) => {
-  if (blob.state === BlobMeta.State.FULLY_PRESENT) {
+  if (blob.state === BlobMeta_State.FULLY_PRESENT) {
     return 1;
   }
 

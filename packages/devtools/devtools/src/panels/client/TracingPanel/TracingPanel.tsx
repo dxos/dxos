@@ -8,9 +8,8 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Format } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
 import { bufToProto } from '@dxos/protocols/buf';
-import { type StreamTraceEvent } from '@dxos/protocols/buf/dxos/tracing_pb';
-import { type LogEntry } from '@dxos/protocols/proto/dxos/client/services';
-import { type Resource, type Span } from '@dxos/protocols/proto/dxos/tracing';
+import { type LogEntry } from '@dxos/protocols/buf/dxos/client/logging_pb';
+import { type Resource, type Span, type StreamTraceEvent } from '@dxos/protocols/buf/dxos/tracing_pb';
 import { useClient } from '@dxos/react-client';
 import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
 

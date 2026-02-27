@@ -8,13 +8,13 @@ import { MulticastObservable } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
 import { getCredentialAssertion } from '@dxos/credentials';
 import { timeframeVectorNewMessages, timeframeVectorTotalMessages, timestampMs } from '@dxos/protocols/buf';
-import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
-import { type SubscribeToSpacesResponse } from '@dxos/protocols/proto/dxos/devtools/host';
+import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { type SubscribeToSpacesResponse_SpaceInfo } from '@dxos/protocols/buf/dxos/devtools/host_pb';
 import { useMulticastObservable } from '@dxos/react-hooks';
 
 import { PropertiesTable, PropertySchemaFormat } from '../../../components';
 
-export const SpaceProperties: FC<{ space: Space; metadata: SubscribeToSpacesResponse.SpaceInfo }> = ({
+export const SpaceProperties: FC<{ space: Space; metadata: SubscribeToSpacesResponse_SpaceInfo }> = ({
   space,
   metadata,
 }) => {

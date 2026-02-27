@@ -7,8 +7,8 @@ import { type Context } from '@dxos/context';
 import { LogLevel, type LogProcessor, getContextFromEntry, log } from '@dxos/log';
 import { type JsonObject, create, timestampFromDate } from '@dxos/protocols/buf';
 import { type LogEntry, LogEntrySchema, LogEntry_MetaSchema } from '@dxos/protocols/buf/dxos/client/logging_pb';
-import { type Error as SerializedError } from '@dxos/protocols/proto/dxos/error';
-import { type Metric, type Resource, type Span } from '@dxos/protocols/proto/dxos/tracing';
+import { type Error as SerializedError, ErrorSchema } from '@dxos/protocols/buf/dxos/error_pb';
+import { type Metric, type Resource, type Span, ResourceSchema, SpanSchema } from '@dxos/protocols/buf/dxos/tracing_pb';
 import { getPrototypeSpecificInstanceId } from '@dxos/util';
 
 import type { AddLinkOptions, TimeAware } from './api';
@@ -133,14 +133,14 @@ export class TraceProcessor {
     }
 
     const entry = new ResourceEntry(
-      {
+      create(ResourceSchema, {
         id,
         className: params.constructor.name,
         instanceId: getPrototypeSpecificInstanceId(params.instance),
         info: this.getResourceInfo(params.instance),
         links: [],
         metrics: this.getResourceMetrics(params.instance),
-      },
+      }),
       new WeakRef(params.instance),
       params.annotation,
     );
@@ -434,7 +434,7 @@ export class TracingSpan {
   }
 
   serialize(): Span {
-    return {
+    return create(SpanSchema, {
       id: this.id,
       resourceId: this.resourceId ?? undefined,
       methodName: this.methodName,
@@ -442,7 +442,7 @@ export class TracingSpan {
       startTs: this.startTs.toFixed(3),
       endTs: this.endTs?.toFixed(3) ?? undefined,
       error: this.error ?? undefined,
-    };
+    });
   }
 
   private _markInBrowserTimeline(): void {
@@ -455,15 +455,15 @@ export class TracingSpan {
 // TODO(burdon): Log cause.
 const serializeError = (err: unknown): SerializedError => {
   if (err instanceof Error) {
-    return {
+    return create(ErrorSchema, {
       name: err.name,
       message: err.message,
-    };
+    });
   }
 
-  return {
+  return create(ErrorSchema, {
     message: String(err),
-  };
+  });
 };
 
 // TODO(burdon): Rename singleton and move out of package.

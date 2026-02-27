@@ -6,7 +6,7 @@ import React, { useMemo } from 'react';
 
 import { Format } from '@dxos/echo/internal';
 import { levels } from '@dxos/log';
-import { type LogEntry } from '@dxos/protocols/proto/dxos/client/services';
+import { type LogEntry } from '@dxos/protocols/buf/dxos/client/logging_pb';
 import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table';
 
 // Deliberately not using the common components export to aid in code-splitting.

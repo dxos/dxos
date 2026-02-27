@@ -8,7 +8,7 @@ import { Obj } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
+import { type SpaceArchive } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { useClient } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { useFileDownload } from '@dxos/react-ui';

@@ -10,7 +10,9 @@ import { Event as AsyncEvent, TestStream, Trigger, sleep } from '@dxos/async';
 import { ErrorStream } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { type Mesh } from '@dxos/protocols';
+import { create } from '@dxos/protocols/buf';
 import * as MeshBridgePb from '@dxos/protocols/buf/dxos/mesh/bridge_pb';
+import { SignalSchema } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 import { type RpcPort, createBufProtoRpcPeer, createBufServiceBundle, createLinkedPorts } from '@dxos/rpc';
 
 import { type Transport, type TransportFactory, type TransportOptions, type TransportStats } from '../transport';
@@ -123,7 +125,7 @@ describe.skip('RtcPeerTransportProxy', () => {
     );
     await peer.proxy.open();
     await connectAndWaitProxy(peer, mockTransport);
-    await mockTransport.sendSignalFromTransport({ payload: { data: { type: 'candidate' } } });
+    await mockTransport.sendSignalFromTransport(create(SignalSchema, { payload: { data: { type: 'candidate' } } }));
     await failed.wait();
 
     await sleep(20);
@@ -147,7 +149,7 @@ describe.skip('RtcPeerTransportProxy', () => {
       await peer.proxy.open();
       const errors = handleChannelErrors(peer.proxy);
       await connectAndWaitProxy(peer, mockTransport);
-      await mockTransport.sendSignalFromTransport({ payload: { data: { type } } });
+      await mockTransport.sendSignalFromTransport(create(SignalSchema, { payload: { data: { type } } }));
       await failed.wait();
 
       await sleep(20);
@@ -168,7 +170,7 @@ describe.skip('RtcPeerTransportProxy', () => {
     await peer.proxy.open();
     const errors = handleChannelErrors(peer.proxy);
     await connectAndWaitProxy(peer, mockTransport);
-    await peer.proxy.onSignal({ payload: { data: { type: 'offer' } } });
+    await peer.proxy.onSignal(create(SignalSchema, { payload: { data: { type: 'offer' } } }));
     await failed.wait();
 
     await sleep(20);

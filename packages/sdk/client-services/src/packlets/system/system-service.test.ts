@@ -8,6 +8,12 @@ import { Event, Trigger } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { create } from '@dxos/protocols/buf';
 import {
+  ConfigSchema,
+  RuntimeSchema,
+  Runtime_ClientSchema,
+  Runtime_Client_LogSchema,
+} from '@dxos/protocols/buf/dxos/config_pb';
+import {
   type QueryStatusResponse,
   QueryStatusRequestSchema,
   SystemStatus,
@@ -30,7 +36,15 @@ describe('SystemService', () => {
   };
 
   beforeEach(() => {
-    config = new Config({ runtime: { client: { log: { filter: 'system-service:debug' } } } });
+    config = new Config(
+      create(ConfigSchema, {
+        runtime: create(RuntimeSchema, {
+          client: create(Runtime_ClientSchema, {
+            log: create(Runtime_Client_LogSchema, { filter: 'system-service:debug' }),
+          }),
+        }),
+      }),
+    );
     statusUpdate = new Event<void>();
     currentStatus = SystemStatus.ACTIVE;
     updateStatus = new Trigger<SystemStatus>();

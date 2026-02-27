@@ -4,7 +4,7 @@
 
 import React, { type FC } from 'react';
 
-import { type Resource } from '@dxos/protocols/proto/dxos/tracing';
+import { type Resource } from '@dxos/protocols/buf/dxos/tracing_pb';
 import { sanitizeClassName } from '@dxos/tracing';
 
 export const ResourceName: FC<{ className?: string; resource: Resource }> = ({ className, resource }) => (

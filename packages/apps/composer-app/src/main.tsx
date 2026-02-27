@@ -62,10 +62,10 @@ const main = async () => {
     await SaveConfig({
       runtime: {
         client: {
-          storage: { dataStore: defs.Runtime.Client.Storage.StorageDriver.IDB },
+          storage: { dataStore: defs.Runtime_Client_Storage_StorageDriver.IDB },
         },
       },
-    });
+    } as any);
     config = await setupConfig();
   }
 
@@ -105,7 +105,13 @@ const main = async () => {
         return platform === 'android' || platform === 'ios';
       }),
     ),
-    Match.when(false, () => Effect.sync(() => isTrue(config.values.runtime?.app?.env?.DX_MOBILE) || isMobile$())),
+    Match.when(
+      false,
+      () =>
+        Effect.sync(
+          () => isTrue(config.values.runtime?.app?.env?.DX_MOBILE as string | undefined) || isMobile$(),
+        ),
+    ),
     Match.exhaustive,
     runAndForwardErrors,
   );
@@ -113,8 +119,8 @@ const main = async () => {
   // Use single-client mode on mobile Tauri apps where SharedWorker crashes on WKWebView.
   const useSingleClientMode = isTauri && isMobile;
 
-  const useLocalServices = config.values.runtime?.app?.env?.DX_HOST;
-  const useSharedWorker = config.values.runtime?.app?.env?.DX_SHARED_WORKER;
+  const useLocalServices = config.values.runtime?.app?.env?.DX_HOST as string | undefined;
+  const useSharedWorker = config.values.runtime?.app?.env?.DX_SHARED_WORKER as string | undefined;
   const services = await createClientServices(config, {
     createWorker:
       useLocalServices || !useSharedWorker
@@ -153,13 +159,15 @@ const main = async () => {
     services,
     observability,
 
-    isDev: !['production', 'staging'].includes(config.values.runtime?.app?.env?.DX_ENVIRONMENT),
-    isPwa: !isFalse(config.values.runtime?.app?.env?.DX_PWA),
+    isDev: !['production', 'staging'].includes(
+      (config.values.runtime?.app?.env?.DX_ENVIRONMENT as string | undefined) ?? '',
+    ),
+    isPwa: !isFalse(config.values.runtime?.app?.env?.DX_PWA as string | undefined),
     isTauri,
     isPopover,
     isMobile,
-    isLabs: isTrue(config.values.runtime?.app?.env?.DX_LABS),
-    isStrict: !isFalse(config.values.runtime?.app?.env?.DX_STRICT),
+    isLabs: isTrue(config.values.runtime?.app?.env?.DX_LABS as string | undefined),
+    isStrict: !isFalse(config.values.runtime?.app?.env?.DX_STRICT as string | undefined),
   };
 
   const plugins = getPlugins(conf);

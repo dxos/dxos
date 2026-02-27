@@ -8,7 +8,14 @@ import { Trigger, asyncTimeout } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { getCredentialAssertion, verifyPresentation } from '@dxos/credentials';
 import { PublicKey } from '@dxos/keys';
+import { create } from '@dxos/protocols/buf';
 import { toPublicKey } from '@dxos/protocols/buf';
+import {
+  ConfigSchema,
+  RuntimeSchema,
+  Runtime_ClientSchema,
+  Runtime_Client_StorageSchema,
+} from '@dxos/protocols/buf/dxos/config_pb';
 import { type Credential, type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { Client } from '../client';
@@ -16,17 +23,19 @@ import { TestBuilder } from '../testing';
 
 describe('Halo', () => {
   test('presentation', async () => {
-    const config = new Config({
-      version: 1,
-      runtime: {
-        client: {
-          storage: {
-            persistent: true,
-            dataRoot: `/tmp/dxos/client/${PublicKey.random().toHex()}`,
-          },
-        },
-      },
-    });
+    const config = new Config(
+      create(ConfigSchema, {
+        version: 1,
+        runtime: create(RuntimeSchema, {
+          client: create(Runtime_ClientSchema, {
+            storage: create(Runtime_Client_StorageSchema, {
+              persistent: true,
+              dataRoot: `/tmp/dxos/client/${PublicKey.random().toHex()}`,
+            }),
+          }),
+        }),
+      }),
+    );
 
     const testBuilder = new TestBuilder(config);
 

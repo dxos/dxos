@@ -16,7 +16,7 @@ export default Capability.makeModule(
     const { invokePromise } = yield* Capability.get(Capabilities.OperationInvoker);
     const client = yield* Capability.get(ClientCapabilities.Client);
     const searchProps = new URLSearchParams(window.location.search);
-    const hubUrl = client.config.values?.runtime?.app?.env?.DX_HUB_URL;
+    const hubUrl = client.config.values?.runtime?.app?.env?.DX_HUB_URL as string | undefined;
 
     const token = searchProps.get('token') ?? undefined;
     const type = searchProps.get('type');

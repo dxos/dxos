@@ -151,8 +151,10 @@ describe('Client services', () => {
 
     // Check same identity.
     expect(hostInvitation!.identityKey).not.to.exist;
-    expect(toPublicKey(guestInvitation!.identityKey!).equals(toPublicKey(client1.halo.identity.get()!.identityKey!))).to.be.true;
-    expect(toPublicKey(guestInvitation!.identityKey!).equals(toPublicKey(client2.halo.identity.get()!.identityKey!))).to.be.true;
+    expect(toPublicKey(guestInvitation!.identityKey!).equals(toPublicKey(client1.halo.identity.get()!.identityKey!))).to
+      .be.true;
+    expect(toPublicKey(guestInvitation!.identityKey!).equals(toPublicKey(client2.halo.identity.get()!.identityKey!))).to
+      .be.true;
     expect(hostInvitation?.state).to.eq(Invitation_State.SUCCESS);
     expect(guestInvitation?.state).to.eq(Invitation_State.SUCCESS);
 

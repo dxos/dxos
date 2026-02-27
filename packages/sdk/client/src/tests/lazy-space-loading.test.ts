@@ -12,8 +12,10 @@ import { Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { toPublicKey, encodePublicKey } from '@dxos/protocols/buf';
+import { create } from '@dxos/protocols/buf';
+import { encodePublicKey, toPublicKey } from '@dxos/protocols/buf';
 import { SpaceMember_PresenceState } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { ConfigSchema, RuntimeSchema, Runtime_ClientSchema } from '@dxos/protocols/buf/dxos/config_pb';
 
 import { type Client } from '../client';
 import { SpaceState } from '../echo';
@@ -135,7 +137,13 @@ describe('Lazy Space Loading', () => {
       await context.dispose();
     });
     return createInitializedClientsWithContext(context, count, {
-      config: new Config({ runtime: { client: { lazySpaceOpen: true } } }),
+      config: new Config(
+        create(ConfigSchema, {
+          runtime: create(RuntimeSchema, {
+            client: create(Runtime_ClientSchema, { lazySpaceOpen: true }),
+          }),
+        }),
+      ),
       serviceConfig: options?.fastPresence ? { fastPeerPresenceUpdate: true } : undefined,
       storage: true,
     });

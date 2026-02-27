@@ -14,6 +14,8 @@ import * as Option from 'effect/Option';
 import { CommandConfig } from '@dxos/cli-util';
 import { ConfigService } from '@dxos/config';
 import { log } from '@dxos/log';
+import { create } from '@dxos/protocols/buf';
+import { Runtime_Client_StorageSchema } from '@dxos/protocols/buf/dxos/config_pb';
 import type { Runtime } from '@dxos/protocols/proto/dxos/config';
 
 export const handler = Effect.fn(function* ({
@@ -47,14 +49,14 @@ export const handler = Effect.fn(function* ({
         return;
       }
     }
-    storageConfig = config.values.runtime!.client!.storage!;
+    storageConfig = config.values.runtime!.client!.storage! as Runtime.Client.Storage;
   } else {
     const fullPath = path.resolve(dataDirValue);
     yield* Console.log(`Importing into: ${fullPath}`);
-    storageConfig = {
+    storageConfig = create(Runtime_Client_StorageSchema, {
       persistent: true,
       dataRoot: fullPath,
-    };
+    }) as Runtime.Client.Storage;
   }
 
   if (yield* fs.exists(storageConfig.dataRoot!)) {

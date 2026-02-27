@@ -8,6 +8,7 @@ import { sleep } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { create } from '@dxos/protocols/buf';
 import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import { AnswerSchema } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 
 import { TestWireProtocol } from '../testing/test-wire-protocol';
 import { createRtcTransportFactory } from '../transport';
@@ -46,7 +47,7 @@ describe.skip('Connection', () => {
       sessionId,
       true,
       {
-        offer: async (msg) => ({ accept: true }),
+        offer: async (msg) => create(AnswerSchema, { accept: true }),
         signal: async (msg) => {
           await fastConnection.signal(msg);
         },
@@ -68,7 +69,7 @@ describe.skip('Connection', () => {
       sessionId,
       false,
       {
-        offer: async (msg) => ({ accept: true }),
+        offer: async (msg) => create(AnswerSchema, { accept: true }),
         signal: async (msg) => {
           await slowConnection.signal(msg);
         },

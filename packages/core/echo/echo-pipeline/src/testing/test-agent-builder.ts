@@ -10,6 +10,7 @@ import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import { MemoryTransportFactory, SwarmNetworkManager, createRtcTransportFactory } from '@dxos/network-manager';
 import { create } from '@dxos/protocols/buf';
+import { Runtime_Services_SignalSchema } from '@dxos/protocols/buf/dxos/config_pb';
 import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
@@ -38,7 +39,7 @@ export const WebsocketNetworkManagerProvider =
   (signalUrl: string): NetworkManagerProvider =>
   () =>
     new SwarmNetworkManager({
-      signalManager: new WebsocketSignalManager([{ server: signalUrl }]),
+      signalManager: new WebsocketSignalManager([create(Runtime_Services_SignalSchema, { server: signalUrl })]),
       transportFactory: createRtcTransportFactory(),
     });
 

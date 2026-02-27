@@ -59,6 +59,7 @@ catalog:
   '@dnd-kit/sortable': ^7.0.1
   '@dnd-kit/utilities': ^3.2.0
   '@dxos/credentials': ^0.8.3
+  '@dxos/protocols': ^0.8.3
   '@dxos/wa-sqlite': ^0.2.1
   '@effect-atom/atom': ^0.5.1
   '@effect-atom/atom-react': ^0.5.0
@@ -196,6 +197,8 @@ catalog:
   '@swc/core': 1.13.5
   '@swc/types': ^0.1.25
   '@tailwindcss/forms': ^0.5.9
+  '@tailwindcss/oxide': ^4.2.0
+  '@tailwindcss/postcss': ^4.2.0
   '@tanstack/react-virtual': ^3.13.18
   '@tauri-apps/api': ^2.8.0
   '@tauri-apps/cli': ^2.8.4
@@ -585,8 +588,6 @@ catalog:
   tabster: ^8.5.5
   tailwind-merge: ^3.5.0
   tailwind-scrollbar: ^4.0.0
-  '@tailwindcss/postcss': ^4.2.0
-  '@tailwindcss/oxide': ^4.2.0
   tailwindcss: ^4.2.0
   tailwindcss-radix: ^4.0.2
   tauri-plugin-web-auth-api: ^1.0.0
@@ -657,15 +658,6 @@ catalog:
   zone.js: ^0.15.0
   zx: ^8.8.5
 
-peerDependencyRules:
-  allowedVersions:
-    dfx>@effect/platform: '>=0.93.0'
-  ignoreMissing:
-    - '@cloudflare/ai-chat'
-    - '@cloudflare/codemode'
-
-strictPeerDependencies: true
-
 onlyBuiltDependencies:
   - '@bufbuild/buf'
   - '@moonrepo/cli'
@@ -693,30 +685,15 @@ onlyBuiltDependencies:
   - workerd
   - yarn
 
-patchedDependencies:
-  '@automerge/automerge-repo@2.5.1': patches/@automerge__automerge-repo@2.5.1.patch
-  'random-access-idb@1.2.2': patches/random-access-idb@1.2.2.patch
-  'uuid@8.3.2': patches/uuid@8.3.2.patch
-
 overrides:
-  # Version alignment overrides.
   '@automerge/automerge': 'catalog:'
+  '@grpc/grpc-js': '>=1.10.9'
   '@lezer/lr': 'catalog:'
+  '@modelcontextprotocol/sdk': '>=1.26.0'
+  '@remix-run/router': '>=1.23.2'
   '@types/node': 'catalog:'
   '@types/react': 'catalog:'
   '@types/react-dom': 'catalog:'
-  effect: 'catalog:'
-  nan: 'catalog:'
-  react: 'catalog:'
-  react-dom: 'catalog:'
-  typescript: 'catalog:'
-
-  # Security: force patched versions of vulnerable transitive dependencies.
-  # See: pnpm audit, https://github.com/advisories
-  # TODO(wittjosiah): Review these overrides and try bumping direct dependencies instead.
-  '@grpc/grpc-js': '>=1.10.9'
-  '@modelcontextprotocol/sdk': '>=1.26.0'
-  '@remix-run/router': '>=1.23.2'
   ajv@8: '>=8.18.0'
   axios: '>=1.13.5'
   base-x@4: 4.0.1
@@ -725,6 +702,7 @@ overrides:
   devalue: '>=5.6.3'
   diff: '>=5.2.2'
   dompurify: '>=3.2.4'
+  effect: 'catalog:'
   esbuild: '>=0.25.0'
   fast-xml-parser: '>=5.3.6'
   glob: '>=10.5.0'
@@ -733,6 +711,7 @@ overrides:
   mdast-util-to-hast: '>=13.2.1'
   mermaid: '>=10.9.4'
   minimatch: '>=10.2.1'
+  nan: 'catalog:'
   nanoid: '>=3.3.8'
   node.extend: '>=1.1.7'
   nth-check: '>=2.0.1'
@@ -740,9 +719,26 @@ overrides:
   path-to-regexp: '>=3.3.0'
   prismjs: '>=1.30.0'
   qs: '>=6.14.1'
+  react: 'catalog:'
+  react-dom: 'catalog:'
   tar: '>=7.5.7'
   tar-fs: '>=3.1.1'
+  typescript: 'catalog:'
   undici: '>=7.18.2'
   vite: '>=7.1.11'
   wrangler: '>=4.59.1'
   ws: '>=8.17.1'
+
+patchedDependencies:
+  '@automerge/automerge-repo@2.5.1': patches/@automerge__automerge-repo@2.5.1.patch
+  random-access-idb@1.2.2: patches/random-access-idb@1.2.2.patch
+  uuid@8.3.2: patches/uuid@8.3.2.patch
+
+peerDependencyRules:
+  allowedVersions:
+    dfx>@effect/platform: '>=0.93.0'
+  ignoreMissing:
+    - '@cloudflare/ai-chat'
+    - '@cloudflare/codemode'
+
+strictPeerDependencies: true

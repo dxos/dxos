@@ -10,7 +10,7 @@ import { log } from '@dxos/log';
 import { RateLimitExceededError, TimeoutError, trace } from '@dxos/protocols';
 import { type SwarmResponse } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { type JoinRequest, type LeaveRequest, type QueryRequest } from '@dxos/protocols/buf/dxos/edge/signal_pb';
-import { type Runtime } from '@dxos/protocols/proto/dxos/config';
+import { type Runtime_Services_Signal } from '@dxos/protocols/buf/dxos/config_pb';
 import { BitField, safeAwaitAll } from '@dxos/util';
 
 import { SignalClient } from '../signal-client';
@@ -52,7 +52,7 @@ export class WebsocketSignalManager extends Resource implements SignalManager {
   private readonly _instanceId = PublicKey.random().toHex();
 
   constructor(
-    private readonly _hosts: Runtime.Services.Signal[],
+    private readonly _hosts: Runtime_Services_Signal[],
     private readonly _getMetadata?: () => any,
   ) {
     super();

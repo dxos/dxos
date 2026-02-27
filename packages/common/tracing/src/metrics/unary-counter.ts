@@ -2,7 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Metric } from '@dxos/protocols/proto/dxos/tracing';
+import { create } from '@dxos/protocols/buf';
+import { type Metric, MetricSchema } from '@dxos/protocols/buf/dxos/tracing_pb';
 
 import { BaseCounter } from './base';
 
@@ -20,12 +21,15 @@ export class UnaryCounter extends BaseCounter {
   }
 
   getData(): Metric {
-    return {
+    return create(MetricSchema, {
       name: this.name!,
-      counter: {
-        value: this.value,
-        units: this.units,
+      Value: {
+        case: 'counter',
+        value: {
+          value: this.value,
+          units: this.units,
+        },
       },
-    };
+    });
   }
 }

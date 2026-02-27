@@ -6,6 +6,12 @@ import { describe, expect, test } from 'vitest';
 
 import { Event } from '@dxos/async';
 import { Config } from '@dxos/config';
+import { create } from '@dxos/protocols/buf';
+import {
+  ConfigSchema,
+  RuntimeSchema,
+  Runtime_ClientSchema,
+} from '@dxos/protocols/buf/dxos/config_pb';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { type Client } from '@dxos/protocols';
@@ -37,7 +43,14 @@ describe('service registry', () => {
 
     const serviceRegistry = new ServiceRegistry<TestServices, typeof serviceBundle>(serviceBundle, {
       SystemService: new SystemServiceImpl({
-        config: () => new Config({ runtime: { client: { remoteSource } } }),
+        config: () =>
+          new Config(
+            create(ConfigSchema, {
+              runtime: create(RuntimeSchema, {
+                client: create(Runtime_ClientSchema, { remoteSource }),
+              }),
+            }),
+          ),
         getCurrentStatus: () => SystemStatus.ACTIVE,
         getDiagnostics: async () => ({}),
         onReset: () => {},

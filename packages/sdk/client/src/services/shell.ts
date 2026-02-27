@@ -4,7 +4,7 @@
 
 import type { MulticastObservable } from '@dxos/async';
 import { type PublicKey } from '@dxos/keys';
-import { toPublicKey, encodePublicKey } from '@dxos/protocols/buf';
+import { encodePublicKey, toPublicKey } from '@dxos/protocols/buf';
 import {
   type InvitationUrlRequest,
   type LayoutRequest,
@@ -262,8 +262,7 @@ export class Shell {
           const members = space.members
             .get()
             .filter(
-              (member) =>
-                member.identity?.identityKey && !initialMembers.has(toPublicKey(member.identity.identityKey)),
+              (member) => member.identity?.identityKey && !initialMembers.has(toPublicKey(member.identity.identityKey)),
             );
           resolve({ members, cancelled: members.length === 0 });
         }

@@ -6,7 +6,8 @@ import { Mutex, Trigger, synchronized } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log, logInfo } from '@dxos/log';
 import { ConnectivityError } from '@dxos/protocols';
-import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
+import { create, type JsonObject } from '@dxos/protocols/buf';
+import { type Signal, SignalSchema } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 import { trace } from '@dxos/tracing';
 
 import type { IceProvider } from '../../signal';
@@ -273,16 +274,17 @@ export class RtcPeerConnection {
   @synchronized
   public async onSignal(signal: Signal): Promise<void> {
     const connection = this._connection;
+    const data = signal.payload?.data as JsonObject | null | undefined;
     if (!connection) {
-      log.warn('a signal ignored because the connection was closed', { type: signal.payload.data.type });
+      log.warn('a signal ignored because the connection was closed', { type: (data as any)?.type });
       return;
     }
 
-    const data = signal.payload.data;
-    switch (data.type) {
+    switch ((data as any)?.type) {
       case 'offer': {
+        const typedData = data as any;
         await this._offerProcessingMutex.executeSynchronized(async () => {
-          if (isRemoteDescriptionSet(connection, data)) {
+          if (isRemoteDescriptionSet(connection, typedData)) {
             return;
           }
           if (connection.connectionState !== 'new') {
@@ -291,7 +293,7 @@ export class RtcPeerConnection {
           }
 
           try {
-            await connection.setRemoteDescription({ type: data.type, sdp: data.sdp });
+            await connection.setRemoteDescription({ type: typedData.type, sdp: typedData.sdp });
             const answer = await connection.createAnswer();
             await connection.setLocalDescription(answer);
             await this._sendDescription(connection, answer);
@@ -305,8 +307,9 @@ export class RtcPeerConnection {
 
       case 'answer':
         await this._offerProcessingMutex.executeSynchronized(async () => {
+          const typedData = data as any;
           try {
-            if (isRemoteDescriptionSet(connection, data)) {
+            if (isRemoteDescriptionSet(connection, typedData)) {
               return;
             }
             if (connection.signalingState !== 'have-local-offer') {
@@ -316,7 +319,7 @@ export class RtcPeerConnection {
               );
               return;
             }
-            await connection.setRemoteDescription({ type: data.type, sdp: data.sdp });
+            await connection.setRemoteDescription({ type: typedData.type, sdp: typedData.sdp });
             this._onSessionNegotiated(connection);
           } catch (err) {
             this._abortConnection(connection, new Error('Error handling a remote answer.', { cause: err }));
@@ -325,15 +328,15 @@ export class RtcPeerConnection {
         break;
 
       case 'candidate':
-        void this._processIceCandidate(connection, data.candidate);
+        void this._processIceCandidate(connection, (data as any).candidate);
         break;
 
       default:
-        this._abortConnection(connection, new Error(`Unknown signal type ${data.type}.`));
+        this._abortConnection(connection, new Error(`Unknown signal type ${(data as any)?.type}.`));
         break;
     }
 
-    log('signal processed', { type: data.type });
+    log('signal processed', { type: (data as any)?.type });
   }
 
   private async _processIceCandidate(connection: RTCPeerConnection, candidate: RTCIceCandidate): Promise<void> {
@@ -400,19 +403,18 @@ export class RtcPeerConnection {
 
   private async _sendIceCandidate(candidate: RTCIceCandidate): Promise<void> {
     try {
-      await this._options.sendSignal({
+      await this._options.sendSignal(create(SignalSchema, {
         payload: {
           data: {
             type: 'candidate',
             candidate: {
               candidate: candidate.candidate,
-              // These fields never seem to be not null, but connecting to Chrome doesn't work if they are.
               sdpMLineIndex: candidate.sdpMLineIndex ?? '0',
               sdpMid: candidate.sdpMid ?? '0',
             },
           },
         },
-      });
+      }));
     } catch (err) {
       log.warn('signaling error', { err });
     }
@@ -423,9 +425,8 @@ export class RtcPeerConnection {
       // Connection was closed while description was being created.
       return;
     }
-    // Type is 'offer' | 'answer'.
-    const data = { type: description.type, sdp: description.sdp };
-    await this._options.sendSignal({ payload: { data } });
+    const data = { type: description.type, sdp: description.sdp ?? '' };
+    await this._options.sendSignal(create(SignalSchema, { payload: { data } }));
   }
 
   @trace.info()

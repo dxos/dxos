@@ -22,8 +22,8 @@ type Toast = {
 };
 
 const StorageAdapters = {
-  opfs: defs.Runtime.Client.Storage.StorageDriver.WEBFS,
-  idb: defs.Runtime.Client.Storage.StorageDriver.IDB,
+  opfs: defs.Runtime_Client_Storage_StorageDriver.WEBFS,
+  idb: defs.Runtime_Client_Storage_StorageDriver.IDB,
 } as const;
 
 export type DebugSettingsComponentProps = {
@@ -37,11 +37,11 @@ export const DebugSettings = ({ settings, onSettingsChange }: DebugSettingsCompo
   const client = useClient();
   const download = useFileDownload();
   // TODO(mykola): Get updates from other places that change Config.
-  const [storageConfig, setStorageConfig] = useState<ConfigProto>({});
+  const [storageConfig, setStorageConfig] = useState<Partial<ConfigProto>>({});
   const [upload] = useCapabilities(AppCapabilities.FileUploader);
 
   useEffect(() => {
-    void Storage().then((config) => setStorageConfig(config));
+    void Storage().then((config) => setStorageConfig(config ?? {}));
   }, []);
 
   const handleToast = (toast: Toast) => {
@@ -83,7 +83,7 @@ export const DebugSettings = ({ settings, onSettingsChange }: DebugSettingsCompo
   const handleRepair = async () => {
     try {
       const info = await client.repair();
-      setStorageConfig(await Storage());
+      setStorageConfig((await Storage()) ?? {});
       handleToast({
         title: t('settings repair success'),
         description: JSON.stringify(info, undefined, 2),
@@ -175,7 +175,12 @@ export const DebugSettings = ({ settings, onSettingsChange }: DebugSettingsCompo
   );
 };
 
-const updateConfig = (config: ConfigProto, setConfig: (newConfig: ConfigProto) => void, path: string[], value: any) => {
+const updateConfig = (
+  config: Partial<ConfigProto>,
+  setConfig: (newConfig: Partial<ConfigProto>) => void,
+  path: string[],
+  value: any,
+) => {
   const storageConfigCopy = JSON.parse(JSON.stringify(config ?? {}));
   setDeep(storageConfigCopy, path, value);
   setConfig(storageConfigCopy);

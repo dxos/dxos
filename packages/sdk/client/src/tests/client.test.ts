@@ -11,8 +11,14 @@ import { Config } from '@dxos/config';
 import { Obj } from '@dxos/echo';
 import { Ref } from '@dxos/echo/internal';
 import { Filter } from '@dxos/echo-db';
+import { create } from '@dxos/protocols/buf';
+import {
+  ConfigSchema,
+  RuntimeSchema,
+  Runtime_ClientSchema,
+  Runtime_Client_StorageSchema,
+} from '@dxos/protocols/buf/dxos/config_pb';
 import { type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { isNode } from '@dxos/util';
 
 import { Client } from '../client';
@@ -96,14 +102,16 @@ describe('Client', () => {
   });
 
   test('creates identity then resets', async () => {
-    const config = new Config({
-      version: 1,
-      runtime: {
-        client: {
-          storage: { persistent: true, dataRoot },
-        },
-      },
-    });
+    const config = new Config(
+      create(ConfigSchema, {
+        version: 1,
+        runtime: create(RuntimeSchema, {
+          client: create(Runtime_ClientSchema, {
+            storage: create(Runtime_Client_StorageSchema, { persistent: true, dataRoot }),
+          }),
+        }),
+      }),
+    );
     const testBuilder = new TestBuilder(config);
     const client = new Client({
       services: testBuilder.createLocalClientServices(),
@@ -144,14 +152,15 @@ describe('Client', () => {
   });
 
   test('leveldb is cleared after client.reset', async () => {
-    const storageConfig = {
-      persistent: true,
-      dataRoot,
-    } satisfies Runtime.Client.Storage;
-    const config = new Config({
-      version: 1,
-      runtime: { client: { storage: storageConfig } },
-    });
+    const storageConfig = create(Runtime_Client_StorageSchema, { persistent: true, dataRoot });
+    const config = new Config(
+      create(ConfigSchema, {
+        version: 1,
+        runtime: create(RuntimeSchema, {
+          client: create(Runtime_ClientSchema, { storage: storageConfig }),
+        }),
+      }),
+    );
     const testBuilder = new TestBuilder(config);
 
     const services = testBuilder.createLocalClientServices();
@@ -168,7 +177,7 @@ describe('Client', () => {
     const { createLevel } = await import('@dxos/client-services');
     // Level DB should have data in it after client is closed.
     {
-      const level = await createLevel(storageConfig);
+      const level = await createLevel(storageConfig as any);
       const keys = await level.keys().all();
       expect(keys.length).not.toEqual(0);
       await level.close();
@@ -180,7 +189,7 @@ describe('Client', () => {
 
     // Level DB should have no data in it after client is reset.
     {
-      const level = await createLevel(storageConfig);
+      const level = await createLevel(storageConfig as any);
       const keys = await level.keys().all();
       expect(keys.length).toEqual(0);
       await level.close();

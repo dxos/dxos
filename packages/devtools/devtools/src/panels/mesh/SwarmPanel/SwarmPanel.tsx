@@ -8,7 +8,7 @@ import React, { useMemo } from 'react';
 import { Format } from '@dxos/echo/internal';
 import { PublicKey } from '@dxos/keys';
 import { decodePublicKey } from '@dxos/protocols/buf';
-import { type ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
+import { type ConnectionInfo } from '@dxos/protocols/buf/dxos/devtools/swarm_pb';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { type SpaceMember, useMembers, useSpaces } from '@dxos/react-client/echo';
 import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table';

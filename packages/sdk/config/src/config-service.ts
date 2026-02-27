@@ -14,54 +14,66 @@ import * as Yaml from 'yaml';
 import { DX_CONFIG, DX_DATA } from '@dxos/client-protocol';
 import { getProfilePath } from '@dxos/client-protocol';
 import { invariant } from '@dxos/invariant';
+import { create } from '@dxos/protocols/buf';
+import {
+  ConfigSchema,
+  RuntimeSchema,
+  Runtime_ClientSchema,
+  Runtime_Client_EdgeFeaturesSchema,
+  Runtime_Client_StorageSchema,
+  Runtime_ServicesSchema,
+  Runtime_Services_AiSchema,
+  Runtime_Services_EdgeSchema,
+  Runtime_Services_IceProviderSchema,
+  Runtime_Services_IpfsSchema,
+} from '@dxos/protocols/buf/dxos/config_pb';
 
 import { Config } from './config';
 
-export const memoryConfig = new Config({
-  runtime: {
-    client: {
-      edgeFeatures: {
-        echoReplicator: true,
-        feedReplicator: true,
-        signaling: true,
-        agents: true,
-      },
-    },
-  },
+const defaultEdgeFeatures = create(Runtime_Client_EdgeFeaturesSchema, {
+  echoReplicator: true,
+  feedReplicator: true,
+  signaling: true,
+  agents: true,
 });
 
-export const defaultConfig = new Config({
-  runtime: {
-    client: {
-      edgeFeatures: {
-        echoReplicator: true,
-        feedReplicator: true,
-        signaling: true,
-        agents: true,
-      },
-      storage: {
-        persistent: true,
-      },
-    },
-    services: {
-      edge: {
-        url: 'wss://edge-production.dxos.workers.dev/',
-      },
-      iceProviders: [
-        {
-          urls: 'https://edge-production.dxos.workers.dev/ice',
-        },
-      ],
-      ai: {
-        server: 'https://ai-service.dxos.workers.dev',
-      },
-      ipfs: {
-        server: 'https://api.ipfs.dxos.network/api/v0',
-        gateway: 'https://gateway.ipfs.dxos.network/ipfs',
-      },
-    },
-  },
-});
+export const memoryConfig = new Config(
+  create(ConfigSchema, {
+    runtime: create(RuntimeSchema, {
+      client: create(Runtime_ClientSchema, {
+        edgeFeatures: defaultEdgeFeatures,
+      }),
+    }),
+  }),
+);
+
+export const defaultConfig = new Config(
+  create(ConfigSchema, {
+    runtime: create(RuntimeSchema, {
+      client: create(Runtime_ClientSchema, {
+        edgeFeatures: defaultEdgeFeatures,
+        storage: create(Runtime_Client_StorageSchema, { persistent: true }),
+      }),
+      services: create(Runtime_ServicesSchema, {
+        edge: create(Runtime_Services_EdgeSchema, {
+          url: 'wss://edge-production.dxos.workers.dev/',
+        }),
+        iceProviders: [
+          create(Runtime_Services_IceProviderSchema, {
+            urls: 'https://edge-production.dxos.workers.dev/ice',
+          }),
+        ],
+        ai: create(Runtime_Services_AiSchema, {
+          server: 'https://ai-service.dxos.workers.dev',
+        }),
+        ipfs: create(Runtime_Services_IpfsSchema, {
+          server: 'https://api.ipfs.dxos.network/api/v0',
+          gateway: 'https://gateway.ipfs.dxos.network/ipfs',
+        }),
+      }),
+    }),
+  }),
+);
 
 export class ConfigService extends Context.Tag('ConfigService')<ConfigService, Config>() {
   static layerMemory = Layer.effect(ConfigService, Effect.succeed(memoryConfig));
@@ -99,20 +111,17 @@ export class ConfigService extends Context.Tag('ConfigService')<ConfigService, C
 const profileBuiltinDefaults = (profile: string) => {
   invariant(!profile.endsWith('.yml'));
 
-  return new Config({
-    runtime: {
-      client: {
-        edgeFeatures: {
-          echoReplicator: true,
-          feedReplicator: true,
-          signaling: true,
-          agents: true,
-        },
-        storage: {
-          persistent: true,
-          dataRoot: getProfilePath(DX_DATA, profile),
-        },
-      },
-    },
-  });
+  return new Config(
+    create(ConfigSchema, {
+      runtime: create(RuntimeSchema, {
+        client: create(Runtime_ClientSchema, {
+          edgeFeatures: defaultEdgeFeatures,
+          storage: create(Runtime_Client_StorageSchema, {
+            persistent: true,
+            dataRoot: getProfilePath(DX_DATA, profile),
+          }),
+        }),
+      }),
+    }),
+  );
 };

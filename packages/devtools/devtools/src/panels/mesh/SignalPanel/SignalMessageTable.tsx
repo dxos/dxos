@@ -5,8 +5,9 @@
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 
 import { Format } from '@dxos/echo/internal';
-import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
-import { type SignalResponse } from '@dxos/protocols/proto/dxos/devtools/host';
+import { timestampMs } from '@dxos/protocols/buf';
+import { ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type SignalResponse } from '@dxos/protocols/buf/dxos/devtools/host_pb';
 import { PublicKey, useClient } from '@dxos/react-client';
 import { useDevtools } from '@dxos/react-client/devtools';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
@@ -14,6 +15,17 @@ import { Toolbar } from '@dxos/react-ui';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
 
 import { MasterDetailTable, Searchbar, Select } from '../../../components';
+
+/** Access oneof `data.swarmEvent` from both buf and proto-shaped SignalResponse. */
+const getSwarmEvent = (response: SignalResponse) =>
+  response.data?.case === 'swarmEvent' ? response.data.value : undefined;
+
+/** Access oneof `data.message` from both buf and proto-shaped SignalResponse. */
+const getSignalMessage = (response: SignalResponse) =>
+  response.data?.case === 'message' ? response.data.value : undefined;
+
+const getReceivedAtMs = (response: SignalResponse) =>
+  response.receivedAt ? timestampMs(response.receivedAt) : 0;
 
 export type View<T> = {
   id: string;
@@ -29,7 +41,7 @@ const views: View<SignalResponse>[] = [
     id: 'swarm-event',
     title: 'SwarmEvent',
     filter: (response: SignalResponse) => {
-      return !!response.swarmEvent;
+      return !!getSwarmEvent(response);
     },
 
     // TODO(burdon): Fixed width for date.
@@ -58,23 +70,28 @@ const views: View<SignalResponse>[] = [
       { name: 'since', format: Format.TypeFormat.DateTime, size: 194 },
       { name: 'topic', format: Format.TypeFormat.DID },
     ],
-    dataTransform: (response: SignalResponse) => ({
-      id: `${response.receivedAt?.getTime()}-${Math.random()}`,
-      receivedAt: response.receivedAt,
-      response: response.swarmEvent?.peerAvailable ? 'Available' : response.swarmEvent?.peerLeft ? 'Left' : undefined,
-      peer:
-        (response.swarmEvent!.peerAvailable && PublicKey.from(response.swarmEvent!.peerAvailable.peer).toString()) ||
-        (response.swarmEvent!.peerLeft && PublicKey.from(response.swarmEvent!.peerLeft.peer).toString()),
-      since: response.swarmEvent!.peerAvailable?.since ?? new Date(),
-      topic: response.topic && PublicKey.from(response.topic).toString(),
-      _original: response,
-    }),
+    dataTransform: (response: SignalResponse) => {
+      const swarmEvent = getSwarmEvent(response);
+      const peerAvailable = swarmEvent?.event.case === 'peerAvailable' ? swarmEvent.event.value : undefined;
+      const peerLeft = swarmEvent?.event.case === 'peerLeft' ? swarmEvent.event.value : undefined;
+      return {
+        id: `${getReceivedAtMs(response)}-${Math.random()}`,
+        receivedAt: response.receivedAt ? new Date(timestampMs(response.receivedAt)) : undefined,
+        response: peerAvailable ? 'Available' : peerLeft ? 'Left' : undefined,
+        peer:
+          (peerAvailable && PublicKey.from(peerAvailable.peer).toString()) ||
+          (peerLeft && PublicKey.from(peerLeft.peer).toString()),
+        since: peerAvailable?.since ? new Date(timestampMs(peerAvailable.since)) : new Date(),
+        topic: response.topic && PublicKey.from(response.topic).toString(),
+        _original: response,
+      };
+    },
   },
   {
     id: 'message',
     title: 'Message',
     filter: (response: SignalResponse) => {
-      return !!response.message;
+      return !!getSignalMessage(response);
     },
     properties: [
       {
@@ -88,21 +105,25 @@ const views: View<SignalResponse>[] = [
       { name: 'message', format: Format.TypeFormat.DID },
       { name: 'topic', format: Format.TypeFormat.DID },
     ],
-    dataTransform: (response: SignalResponse) => ({
-      id: `${response.receivedAt?.getTime()}-${Math.random()}`,
-      receivedAt: response.receivedAt,
-      author: PublicKey.from(response.message!.author).toString(),
-      recipient: PublicKey.from(response.message!.recipient).toString(),
-      message: response.message!.payload.messageId,
-      topic: response.message!.payload?.payload?.topic,
-      _original: response,
-    }),
+    dataTransform: (response: SignalResponse) => {
+      const msg = getSignalMessage(response)!;
+      return {
+        id: `${getReceivedAtMs(response)}-${Math.random()}`,
+        receivedAt: response.receivedAt ? new Date(timestampMs(response.receivedAt)) : undefined,
+        author: PublicKey.from(msg.author).toString(),
+        recipient: PublicKey.from(msg.recipient).toString(),
+        message: (msg.payload as any)?.messageId,
+        topic: (msg.payload as any)?.payload?.topic,
+        _original: response,
+      };
+    },
   },
   {
     id: 'ack',
     title: 'Acknowledgement',
     filter: (response: SignalResponse) => {
-      return response.message?.payload['@type'] === 'dxos.mesh.messaging.Acknowledgement';
+      const msg = getSignalMessage(response);
+      return (msg?.payload as any)?.['@type'] === 'dxos.mesh.messaging.Acknowledgement';
     },
     properties: [
       {
@@ -115,14 +136,17 @@ const views: View<SignalResponse>[] = [
       { name: 'recipient', format: Format.TypeFormat.DID },
       { name: 'message', format: Format.TypeFormat.DID },
     ],
-    dataTransform: (response: SignalResponse) => ({
-      id: `${response.receivedAt?.getTime()}-${Math.random()}`,
-      receivedAt: response.receivedAt,
-      author: PublicKey.from(response.message!.author).toString(),
-      recipient: PublicKey.from(response.message!.recipient).toString(),
-      message: response.message!.payload.messageId,
-      _original: response,
-    }),
+    dataTransform: (response: SignalResponse) => {
+      const msg = getSignalMessage(response)!;
+      return {
+        id: `${getReceivedAtMs(response)}-${Math.random()}`,
+        receivedAt: response.receivedAt ? new Date(timestampMs(response.receivedAt)) : undefined,
+        author: PublicKey.from(msg.author).toString(),
+        recipient: PublicKey.from(msg.recipient).toString(),
+        message: (msg.payload as any)?.messageId,
+        _original: response,
+      };
+    },
   },
 ];
 

@@ -75,9 +75,11 @@ const setupNetworking = async (
   const { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } = await import('@dxos/messaging');
   const { createRtcTransportFactory, MemoryTransportFactory } = await import('@dxos/network-manager');
 
-  const signals = config.get('runtime.services.signaling');
-  const edgeFeatures = config.get('runtime.client.edgeFeatures');
+  const signals = config.get('runtime.services.signaling' as any);
+  const edgeFeatures = config.get('runtime.client.edgeFeatures' as any);
   if (signals || edgeFeatures?.signaling) {
+    const iceServers = config.get('runtime.services.ice' as any) as RTCIceServer[] | undefined;
+    const iceProviders = config.get('runtime.services.iceProviders' as any);
     const {
       signalManager = edgeFeatures?.signaling || !signals
         ? undefined // EdgeSignalManager needs EdgeConnection and will be created in service-host
@@ -85,11 +87,7 @@ const setupNetworking = async (
       // TODO(wittjosiah): P2P networking causes seg fault in bun currently.
       transportFactory = isBun()
         ? MemoryTransportFactory
-        : createRtcTransportFactory(
-            { iceServers: config.get('runtime.services.ice') },
-            config.get('runtime.services.iceProviders') &&
-              createIceProvider(config.get('runtime.services.iceProviders')!),
-          ),
+        : createRtcTransportFactory({ iceServers }, iceProviders && createIceProvider(iceProviders)),
     } = options;
 
     return {

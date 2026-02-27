@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Metric } from '@dxos/protocols/proto/dxos/tracing';
+import { type Metric } from '@dxos/protocols/buf/dxos/tracing_pb';
 
 export abstract class BaseCounter {
   /**

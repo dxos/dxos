@@ -7,7 +7,8 @@ import { type AddressInfo, type Server, Socket } from 'node:net';
 import { Event } from '@dxos/async';
 import { ErrorStream } from '@dxos/debug';
 import { log } from '@dxos/log';
-import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
+import { create, type JsonObject } from '@dxos/protocols/buf';
+import { type Signal, SignalSchema } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 
 import { type Transport, type TransportFactory, type TransportOptions, type TransportStats } from '../transport';
 
@@ -55,9 +56,9 @@ export class TcpTransport implements Transport {
           const { port } = this._server!.address() as AddressInfo;
           log('listening', { port });
           void this.options
-            .sendSignal({
+            .sendSignal(create(SignalSchema, {
               payload: { port },
-            })
+            }))
             .catch((err) => {
               if (!this._closed) {
                 this.errors.raise(err);
@@ -91,7 +92,7 @@ export class TcpTransport implements Transport {
 
     const socket = new Socket();
     this._handleSocket(socket);
-    socket.connect({ port: payload.port, host: 'localhost' });
+    socket.connect({ port: payload!.port as number, host: 'localhost' });
   }
 
   async getDetails(): Promise<string> {

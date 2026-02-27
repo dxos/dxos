@@ -6,7 +6,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { type Graph, GraphModel } from '@dxos/graph';
 import { toPublicKey } from '@dxos/protocols/buf';
-import { type PeerState } from '@dxos/protocols/proto/dxos/mesh/presence';
+import { type PeerState } from '@dxos/protocols/buf/dxos/mesh/presence_pb';
 import { type Space, type SpaceMember, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Toolbar } from '@dxos/react-ui';

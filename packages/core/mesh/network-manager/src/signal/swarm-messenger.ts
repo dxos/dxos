@@ -11,7 +11,8 @@ import { TimeoutError } from '@dxos/protocols';
 import { bufWkt, create } from '@dxos/protocols/buf';
 import { MessageSchema } from '@dxos/protocols/buf/dxos/edge/signal_pb';
 import { schema } from '@dxos/protocols/proto';
-import { type Answer, type SwarmMessage } from '@dxos/protocols/proto/dxos/mesh/swarm';
+import { type Answer } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
+import { type SwarmMessage } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { ComplexMap, type MakeOptional } from '@dxos/util';
 
 import { type OfferMessage, type SignalMessage, type SignalMessenger } from './signal-messenger';
@@ -89,7 +90,7 @@ export class SwarmMessenger implements SignalMessenger {
     await this._sendReliableMessage({
       author: message.author,
       recipient: message.recipient,
-      message,
+      message: message as any,
     });
   }
 
@@ -143,7 +144,7 @@ export class SwarmMessenger implements SignalMessenger {
       this._offerRecords.delete(message.data.answer.offerMessageId);
       invariant(message.data?.answer, 'No answer');
       log('resolving', { answer: message.data.answer });
-      offerRecord.resolve(message.data.answer);
+      offerRecord.resolve(message.data.answer as any);
     }
   }
 
@@ -161,10 +162,10 @@ export class SwarmMessenger implements SignalMessenger {
       author,
       recipient,
       ...message,
-      data: { offer: message.data.offer },
+      data: { offer: message.data.offer as any },
     };
     const answer = await this._onOffer(offerMessage);
-    answer.offerMessageId = message.messageId;
+    (answer as any).offerMessageId = message.messageId;
     try {
       await this._sendReliableMessage({
         author: recipient,
@@ -172,7 +173,7 @@ export class SwarmMessenger implements SignalMessenger {
         message: {
           topic: message.topic,
           sessionId: message.sessionId,
-          data: { answer },
+          data: { answer: answer as any },
         },
       });
     } catch (err) {
@@ -200,8 +201,8 @@ export class SwarmMessenger implements SignalMessenger {
       recipient,
       ...message,
       data: {
-        signal: message.data.signal,
-        signalBatch: message.data.signalBatch,
+        signal: message.data.signal as any,
+        signalBatch: message.data.signalBatch as any,
       },
     };
 

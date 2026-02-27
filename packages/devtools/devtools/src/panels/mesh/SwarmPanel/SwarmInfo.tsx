@@ -7,7 +7,7 @@ import React from 'react';
 import { type PublicKey } from '@dxos/keys';
 import { toPublicKey } from '@dxos/protocols/buf';
 import { ConnectionState } from '@dxos/network-manager';
-import { type SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
+import { type SwarmInfo } from '@dxos/protocols/buf/dxos/devtools/swarm_pb';
 import { Button } from '@dxos/react-ui';
 
 export interface SwarmInfoViewProps {
@@ -38,7 +38,7 @@ export const SwarmInfoView = ({ swarmInfo, onConnectionClick, onReturn }: SwarmI
             {connection.remotePeerId ? toPublicKey(connection.remotePeerId).toHex() : ''}
           </div>
           <div className='inline-flex m-1'>
-            <Button onClick={() => onConnectionClick?.(connection.sessionId)} title='Details'>
+            <Button onClick={() => connection.sessionId && onConnectionClick?.(toPublicKey(connection.sessionId))} title='Details'>
               Details
             </Button>
           </div>

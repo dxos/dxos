@@ -90,7 +90,7 @@ export const ShellProvider = ({
   );
 
   const shellRuntime = useMemo(() => {
-    if (client.config.get('runtime.app.env.DX_VAULT') !== 'false') {
+    if ((client.config.get('runtime.app.env.DX_VAULT' as any) as string | undefined) !== 'false') {
       return;
     }
 

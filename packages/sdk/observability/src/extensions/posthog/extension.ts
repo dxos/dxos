@@ -53,9 +53,9 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
     return stubExtension;
   }
 
-  const feedbackSurveyId = config.get('runtime.app.env.DX_POSTHOG_FEEDBACK_SURVEY_ID');
-  const apiKey = config.get('runtime.app.env.DX_POSTHOG_API_KEY');
-  const api_host = config.get('runtime.app.env.DX_POSTHOG_API_HOST');
+  const feedbackSurveyId = config.get('runtime.app.env.DX_POSTHOG_FEEDBACK_SURVEY_ID' as any) as string | undefined;
+  const apiKey = config.get('runtime.app.env.DX_POSTHOG_API_KEY' as any) as string | undefined;
+  const api_host = config.get('runtime.app.env.DX_POSTHOG_API_HOST' as any) as string | undefined;
   if (!apiKey || !api_host) {
     log.info('Missing POSTHOG_API_KEY or POSTHOG_API_HOST');
     return stubExtension;
@@ -86,8 +86,8 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
     initialize: () =>
       Effect.sync(() => {
         // https://posthog.com/docs/libraries/js/config
-        posthog.init(apiKey, {
-          api_host,
+        posthog.init(apiKey as string, {
+          api_host: api_host as string,
           mask_all_text: true,
           capture_exceptions: true,
           ...posthogConfig,

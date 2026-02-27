@@ -13,10 +13,14 @@ export const isTrue = (str?: string | null, strict = true): boolean =>
   strict ? str === 'true' || str === '1' : str != null && !isFalse(str);
 export const isFalse = (str?: string | null): boolean => str === 'false' || str === '0';
 
-export const defaultStorageIsEmpty = async (config?: defs.Runtime.Client.Storage): Promise<boolean> => {
+export const defaultStorageIsEmpty = async (
+  config?: defs.Runtime_Client_Storage,
+): Promise<boolean> => {
   try {
     const { createStorageObjects } = await import('@dxos/client-services');
-    const storage = createStorageObjects(config ?? {}).storage;
+    const storage = createStorageObjects(
+      (config ?? {}) as import('@dxos/protocols/proto/dxos/config').Runtime.Client.Storage,
+    ).storage;
     const metadataDir = storage.createDirectory('metadata');
     const echoMetadata = metadataDir.getOrCreateFile('EchoMetadata');
     const { size } = await echoMetadata.stat();

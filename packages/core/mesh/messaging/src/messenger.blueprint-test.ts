@@ -6,6 +6,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout, latch, sleep } from '@dxos/async';
 import { bufWkt, create } from '@dxos/protocols/buf';
+import { Runtime_Services_SignalSchema } from '@dxos/protocols/buf/dxos/config_pb';
 import { MessageSchema } from '@dxos/protocols/buf/dxos/edge/signal_pb';
 import { range } from '@dxos/util';
 
@@ -279,7 +280,7 @@ export const messengerTests = (signalManagerFactory: TestBuilder['createSignalMa
     test('many connections to KUBE', { timeout: 5_000 }, async () => {
       const builder = new TestBuilder({
         signalManagerFactory: async () =>
-          new WebsocketSignalManager([{ server: 'wss://dev.kube.dxos.org/.well-known/dx/signal' }]),
+          new WebsocketSignalManager([create(Runtime_Services_SignalSchema, { server: 'wss://dev.kube.dxos.org/.well-known/dx/signal' })]),
       });
       void range(100).map(async () => {
         const peer = await builder.createPeer();

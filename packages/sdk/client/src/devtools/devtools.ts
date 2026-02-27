@@ -13,6 +13,8 @@ import { Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { PublicKey } from '@dxos/keys';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { create } from '@dxos/protocols/buf';
+import { Runtime_Client_StorageSchema } from '@dxos/protocols/buf/dxos/config_pb';
 import { type BufProtoRpcPeer, type RpcPort, createBufProtoRpcPeer } from '@dxos/rpc';
 import { type DiagnosticMetadata, TRACE_PROCESSOR, type TraceProcessor } from '@dxos/tracing';
 import { joinTables } from '@dxos/util';
@@ -237,10 +239,13 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
     hook.exportProfile = async () => {
       const { createLevel, createStorageObjects, exportProfileData } = await import('@dxos/client-services');
 
-      const storageConfig = client.config.get('runtime.client.storage', {})!;
+      const storageConfig = client.config.get(
+        'runtime.client.storage' as any,
+        create(Runtime_Client_StorageSchema, {}),
+      )!;
 
-      const { storage } = createStorageObjects(storageConfig);
-      const level = await createLevel(storageConfig);
+      const { storage } = createStorageObjects(storageConfig as any);
+      const level = await createLevel(storageConfig as any);
 
       log.info('begin profile export', { storageConfig });
       const archive = await exportProfileData({ storage, level });
@@ -259,13 +264,16 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
         '@dxos/client-services'
       );
 
-      const storageConfig = client.config.get('runtime.client.storage', {})!;
+      const storageConfig = client.config.get(
+        'runtime.client.storage' as any,
+        create(Runtime_Client_StorageSchema, {}),
+      )!;
 
       // Kill client so it doesn't interfere.
       await client.destroy().catch(() => {});
 
-      const { storage } = createStorageObjects(storageConfig);
-      const level = await createLevel(storageConfig);
+      const { storage } = createStorageObjects(storageConfig as any);
+      const level = await createLevel(storageConfig as any);
 
       const archive = decodeProfileArchive(data);
       log.info('begin profile import', { storageConfig, storageEntries: archive.storage.length });

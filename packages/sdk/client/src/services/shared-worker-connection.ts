@@ -46,10 +46,11 @@ export class SharedWorkerConnection {
 
     this._config = await getAsyncProviderValue(this._configProvider);
 
+    const iceServers = this._config.get('runtime.services.ice' as any) ?? [];
+    const iceProviders = this._config.get('runtime.services.iceProviders' as any);
     this._transportService = new RtcTransportService(
-      { iceServers: [...(this._config.get('runtime.services.ice') ?? [])] },
-      this._config.get('runtime.services.iceProviders') &&
-        createIceProvider(this._config.get('runtime.services.iceProviders')!),
+      { iceServers: Array.isArray(iceServers) ? [...iceServers] : [] },
+      iceProviders && createIceProvider(iceProviders),
     );
 
     this._systemRpc = createBufProtoRpcPeer({

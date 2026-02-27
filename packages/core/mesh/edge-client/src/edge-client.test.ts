@@ -7,7 +7,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { Trigger } from '@dxos/async';
 import { Keyring } from '@dxos/keyring';
 import { TextMessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
-import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
+import { EdgeStatus_ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { openAndClose } from '@dxos/test-utils';
 
 import { createEphemeralEdgeIdentity, createTestHaloEdgeIdentity } from './auth';
@@ -41,17 +41,17 @@ describe('EdgeClient', () => {
 
     const { client } = await openNewClient(endpoint);
 
-    expect(client.status.state).toBe(EdgeStatus.ConnectionState.NOT_CONNECTED);
+    expect(client.status.state).toBe(EdgeStatus_ConnectionState.NOT_CONNECTED);
     admitConnection.wake();
-    await expect.poll(() => client.status.state).toBe(EdgeStatus.ConnectionState.CONNECTED);
+    await expect.poll(() => client.status.state).toBe(EdgeStatus_ConnectionState.CONNECTED);
 
     admitConnection.reset();
     await closeConnection();
     expect(client.isOpen).is.true;
-    await expect.poll(() => client.status.state).toBe(EdgeStatus.ConnectionState.NOT_CONNECTED);
+    await expect.poll(() => client.status.state).toBe(EdgeStatus_ConnectionState.NOT_CONNECTED);
 
     admitConnection.wake();
-    await expect.poll(() => client.status.state).toBe(EdgeStatus.ConnectionState.CONNECTED);
+    await expect.poll(() => client.status.state).toBe(EdgeStatus_ConnectionState.CONNECTED);
   });
 
   test('set identity reconnects', async () => {

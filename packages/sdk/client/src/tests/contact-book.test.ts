@@ -157,9 +157,7 @@ describe('ContactBook', () => {
   const expectInContactBook = (contacts: Contact[], client: Client) => {
     const clientIdentityKey = client.halo.identity.get()?.identityKey;
     const contact = contacts.find((c) =>
-      c.identityKey && clientIdentityKey
-        ? toPublicKey(c.identityKey).equals(toPublicKey(clientIdentityKey))
-        : false,
+      c.identityKey && clientIdentityKey ? toPublicKey(c.identityKey).equals(toPublicKey(clientIdentityKey)) : false,
     );
     expect(contact).not.to.be.undefined;
     return contact!;

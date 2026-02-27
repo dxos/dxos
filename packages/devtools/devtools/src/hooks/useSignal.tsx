@@ -4,7 +4,7 @@
 
 import { useMemo } from 'react';
 
-import { type SignalResponse } from '@dxos/protocols/proto/dxos/devtools/host';
+import { type SignalResponse } from '@dxos/protocols/buf/dxos/devtools/host_pb';
 import { useDevtools } from '@dxos/react-client/devtools';
 
 export const useSignal = () => {

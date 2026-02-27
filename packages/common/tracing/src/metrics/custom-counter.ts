@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Metric } from '@dxos/protocols/proto/dxos/tracing';
+import { create, type JsonObject } from '@dxos/protocols/buf';
+import { type Metric, MetricSchema } from '@dxos/protocols/buf/dxos/tracing_pb';
 
 import { BaseCounter } from './base';
 
@@ -12,11 +13,14 @@ export class CustomCounter extends BaseCounter {
   }
 
   override getData(): Metric {
-    return {
+    return create(MetricSchema, {
       name: this.name!,
-      custom: {
-        payload: this._getData(),
+      Value: {
+        case: 'custom',
+        value: {
+          payload: this._getData() as JsonObject,
+        },
       },
-    };
+    });
   }
 }

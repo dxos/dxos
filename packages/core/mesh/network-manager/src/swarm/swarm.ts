@@ -12,7 +12,7 @@ import { type ListeningHandle, type Messenger, type PeerInfo, PeerInfoHash, type
 import { trace } from '@dxos/protocols';
 import { create, protoToBuf } from '@dxos/protocols/buf';
 import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
-import { type Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
+import { type Answer, AnswerSchema } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 import { ComplexMap, isNonNullable } from '@dxos/util';
 
 import { type OfferMessage, type SignalMessage, SwarmMessenger } from '../signal';
@@ -216,18 +216,18 @@ export class Swarm {
     log('offer', { message });
     if (this._ctx.disposed) {
       log('ignored for disposed swarm');
-      return { accept: false };
+      return create(AnswerSchema, { accept: false });
     }
 
     // Id of the peer offering us the connection.
     invariant(message.author);
     if (message.recipient.peerKey !== this._ownPeer.peerKey) {
       log('rejecting offer with incorrect peerId', { message });
-      return { accept: false };
+      return create(AnswerSchema, { accept: false });
     }
     if (!message.topic?.equals(this._topic)) {
       log('rejecting offer with incorrect topic', { message });
-      return { accept: false };
+      return create(AnswerSchema, { accept: false });
     }
 
     const peer = this._getOfferSenderPeer(message.author);
