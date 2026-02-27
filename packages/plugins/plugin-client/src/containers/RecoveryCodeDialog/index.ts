@@ -4,4 +4,5 @@
 
 import { RecoveryCodeDialog } from './RecoveryCodeDialog';
 
+export * from './RecoveryCodeDialog';
 export default RecoveryCodeDialog;

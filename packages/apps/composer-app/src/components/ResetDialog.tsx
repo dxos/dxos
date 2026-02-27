@@ -72,10 +72,10 @@ export const ResetDialog = ({
     void navigator.clipboard.writeText(JSON.stringify(error));
   }, [error]);
 
-  const handleReset = async () => {
+  const handleReset = useCallback(async () => {
     localStorage.clear();
     window.location.href = window.location.origin;
-  };
+  }, []);
 
   const handleSaveFeedback = useCallback(
     async (values: UserFeedback) => {
@@ -109,8 +109,7 @@ export const ResetDialog = ({
         : { defaultOpen, open, onOpenChange })}
     >
       <AlertDialog.Overlay>
-        {/* TODO(burdon): Replace max-w-[40rem] with standard size. */}
-        <AlertDialog.Content classNames='md:max-w-[40rem]' data-testid='resetDialog'>
+        <AlertDialog.Content size='md' data-testid='resetDialog'>
           <AlertDialog.Title>{t(error ? error.title : 'reset dialog label')}</AlertDialog.Title>
           <AlertDialog.Description>{t(error ? error.message : 'reset dialog message')}</AlertDialog.Description>
           {error && (
