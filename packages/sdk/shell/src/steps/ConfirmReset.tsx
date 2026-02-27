@@ -56,27 +56,29 @@ export const ConfirmReset = ({ active, mode, onCancel, onConfirm }: ConfirmReset
           <Message.Title>{t('sign out chooser title')}</Message.Title>
           <Message.Content>{t('sign out chooser message')}</Message.Content>
         </Message.Root>
-        <Input
-          {...{ validationMessage }}
-          label={
-            <StepHeading className='text-start my-2'>
-              {t(
-                mode === 'join new identity'
-                  ? 'join new identity input label'
-                  : mode === 'recover'
-                    ? 'recover reset input label'
-                    : 'reset storage input label',
-                {
-                  confirmationValue,
-                },
-              )}
-            </StepHeading>
-          }
-          disabled={disabled}
-          data-testid={`${testIdAffix}.reset-identity-input`}
-          placeholder={t('confirmation placeholder', { confirmationValue })}
-          onChange={({ target: { value } }) => setInputValue(value)}
-        />
+        <div className='p-card-chrome'>
+          <Input
+            {...{ validationMessage }}
+            label={
+              <StepHeading className='text-start my-2'>
+                {t(
+                  mode === 'join new identity'
+                    ? 'join new identity input label'
+                    : mode === 'recover'
+                      ? 'recover reset input label'
+                      : 'reset storage input label',
+                  {
+                    confirmationValue,
+                  },
+                )}
+              </StepHeading>
+            }
+            disabled={disabled}
+            data-testid={`${testIdAffix}.reset-identity-input`}
+            placeholder={t('confirmation placeholder', { confirmationValue })}
+            onChange={({ target: { value } }) => setInputValue(value)}
+          />
+        </div>
       </Dialog.Body>
       <Dialog.ActionBar classNames='grid grid-cols-2 gap-2'>
         {onCancel && (

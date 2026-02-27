@@ -17,9 +17,9 @@
 @import './config/theme/animation.css';
 @import './config/theme/border.css';
 @import './config/theme/palette.css';
-@import './config/theme/roles.css';
 @import './config/theme/semantic.css';
 @import './config/theme/spacing.css';
+@import './config/theme/styles.css';
 @import './config/theme/text.css';
 
 /* @layer dx-base, dx-tokens */
@@ -54,7 +54,7 @@
 /**
  * Force-emit CSS variables for the full color palette for all: 
  * --color-{hue}-{shade}
- * --color-{hue}-{role}
+ * --color-{hue}-{style}
  */
 @source inline("bg-{neutral,red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose}-{50,100,200,300,400,500,600,700,800,900,950}");
 @source inline("bg-{neutral,red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose}-{fill,surface,surface-text,text,border}");
