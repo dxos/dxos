@@ -4,8 +4,10 @@
 
 import { MulticastObservable, type Observable, type Subscriber } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
-import { timestampDate } from '@dxos/protocols/buf';
-import { type Invitation, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { type MessageInitShape, timestampDate } from '@dxos/protocols/buf';
+import { type Invitation, type InvitationSchema, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+
+export type InvitationInit = MessageInitShape<typeof InvitationSchema>;
 
 export const AUTHENTICATION_CODE_LENGTH = 6;
 
@@ -14,7 +16,7 @@ export const INVITATION_TIMEOUT = 3 * 60_000; // 3 mins.
 export interface Invitations {
   created: MulticastObservable<CancellableInvitation[]>;
   accepted: MulticastObservable<AuthenticatingInvitation[]>;
-  share(options?: Partial<Invitation>): CancellableInvitation;
+  share(options?: Partial<InvitationInit>): CancellableInvitation;
   join(invitation: Invitation): AuthenticatingInvitation;
 }
 

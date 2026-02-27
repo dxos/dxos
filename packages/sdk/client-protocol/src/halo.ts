@@ -5,7 +5,7 @@
 import { type MulticastObservable } from '@dxos/async';
 import { type PublicKey } from '@dxos/keys';
 import { type MessageInitShape } from '@dxos/protocols/buf';
-import { type Invitation, type InvitationSchema } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { type Invitation } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type Contact, type Device, type Identity } from '@dxos/protocols/buf/dxos/client/services_pb';
 import {
   ProfileDocumentSchema,
@@ -16,11 +16,10 @@ import {
   type ProfileDocument,
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { type AuthenticatingInvitation, type CancellableInvitation } from './invitations';
+import { type AuthenticatingInvitation, type CancellableInvitation, type InvitationInit } from './invitations';
 
 export type ProfileDocumentInit = MessageInitShape<typeof ProfileDocumentSchema>;
 export type DeviceProfileDocumentInit = MessageInitShape<typeof DeviceProfileDocumentSchema>;
-export type InvitationInit = MessageInitShape<typeof InvitationSchema>;
 
 /**
  * TODO(burdon): Public API (move comments here).

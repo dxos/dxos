@@ -10,7 +10,6 @@ import { type Database, type Obj } from '@dxos/echo';
 import { type EchoDatabase, type QueueFactory } from '@dxos/echo-db';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { type Messenger } from '@dxos/protocols';
-import { type Invitation } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import {
   type Contact,
@@ -26,7 +25,7 @@ import { type SpaceSyncState_PeerState } from '@dxos/protocols/buf/dxos/echo/ser
 import { type SpaceSnapshot } from '@dxos/protocols/buf/dxos/echo/snapshot_pb';
 import { type Credential, type Epoch } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { type CancellableInvitation } from './invitations';
+import { type CancellableInvitation, type InvitationInit } from './invitations';
 import { type SpaceProperties } from './types';
 
 export type CreateEpochOptions = {
@@ -145,7 +144,7 @@ export interface Space extends Messenger {
 
   // TODO(burdon): Create invitation?
   // TODO(burdon): Factor out membership, etc.
-  share(options?: Partial<Invitation>): CancellableInvitation;
+  share(options?: Partial<InvitationInit>): CancellableInvitation;
   admitContact(contact: Contact): Promise<void>;
   updateMemberRole(request: Omit<UpdateMemberRoleRequest, 'spaceKey'>): Promise<void>;
 }

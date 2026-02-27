@@ -176,21 +176,20 @@ export class InvitationsProxy implements Invitations {
   }
 
   getInvitationOptions(): Invitation {
-    const context = this._getInvitationContext() as Record<string, unknown>;
-    const { $typeName, $unknown, ...rest } = context;
+    const { $typeName, $unknown, ...context } = this._getInvitationContext() as Record<string, unknown>;
     return create(InvitationSchema, {
       invitationId: PublicKey.random().toHex(),
       type: Invitation_Type.INTERACTIVE,
       authMethod: Invitation_AuthMethod.SHARED_SECRET,
       state: Invitation_State.INIT,
       swarmKey: encodePublicKey(PublicKey.random()),
-      ...rest,
+      ...context,
     });
   }
 
   // TODO(nf): Some way to retrieve observables for resumed invitations?
   share(options?: Partial<Invitation>): CancellableInvitation {
-    const invitation: Invitation = { ...this.getInvitationOptions(), ...options };
+    const invitation: Invitation = { ...this.getInvitationOptions(), ...options } as Invitation;
     this._invitations.add(invitation.invitationId);
 
     const existing = this._created.get().find((created) => created.get().invitationId === invitation.invitationId);
