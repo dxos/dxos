@@ -7,8 +7,9 @@ import { fileURLToPath } from 'node:url';
 
 import { createConfig } from '../../../vitest.base.config';
 
+const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
+
 export default createConfig({
-  dirname: typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url)),
-  node: true,
-  storybook: true,
+  dirname,
+  browser: 'chromium',
 });

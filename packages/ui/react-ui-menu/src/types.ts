@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type Atom } from '@effect-atom/atom-react';
+
 import { Node } from '@dxos/app-graph';
 import { type IconButtonProps, type ToolbarSeparatorProps } from '@dxos/react-ui';
 import { type MenuActionProperties } from '@dxos/ui-types';
@@ -35,4 +37,34 @@ export type MenuContextValue = {
   attendableId?: string;
   /** Optional action executor. If provided, will be used instead of default execution. */
   onAction?: ActionExecutor;
+};
+
+//
+// Menu Contribution types.
+//
+
+/** Mode for how a contribution is applied. */
+export type MenuContributionMode = 'additive' | 'replacement';
+
+/** Input for useMenuContribution hook - accepts either static items or an atom. */
+export type MenuContributionInput = {
+  /** Unique identifier for deterministic ordering. */
+  id: string;
+  /** How the contribution is applied. 'additive' appends, 'replacement' overwrites. */
+  mode: MenuContributionMode;
+  /** Priority for ordering (lower = first). Default: 100. */
+  priority?: number;
+  /** Items to contribute - can be static array or reactive atom. */
+  items: MenuItem[] | Atom.Atom<MenuItem[]>;
+  /** Optional filter to scope contribution to specific groups. */
+  groupFilter?: (group?: MenuItemGroup) => boolean;
+};
+
+/** Internal representation of a contribution with normalized atom. */
+export type MenuContribution = {
+  id: string;
+  mode: MenuContributionMode;
+  priority: number;
+  items: Atom.Atom<MenuItem[]>;
+  groupFilter?: (group?: MenuItemGroup) => boolean;
 };
