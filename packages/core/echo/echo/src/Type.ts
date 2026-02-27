@@ -22,6 +22,7 @@ import {
   type EchoRelationSchemaOptions,
   EchoSchema,
   EntityKind,
+  FormInputAnnotation,
   PersistentSchema,
   Ref as Ref$,
   type RefFn,
@@ -505,9 +506,9 @@ export const getMeta = (schema: Entity.Any): Meta | undefined => {
  */
 export const Feed = Schema.Struct({
   /** User-facing display name. */
-  name: Schema.optional(Schema.String),
+  name: Schema.String.pipe(Schema.optional),
   /** Identifier for the feed's kind (e.g., plugin id). */
-  kind: Schema.optional(Schema.String),
+  kind: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
   object({
     typename: 'dxos.org/type/Feed',

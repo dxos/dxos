@@ -4,6 +4,8 @@
 
 import { type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import * as Effect from 'effect/Effect';
+import * as Match from 'effect/Match';
+import * as Option from 'effect/Option';
 
 import { type CapabilityManager } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
@@ -94,12 +96,6 @@ function createFactory<TArgs extends any[], T>(
   };
 }
 
-/** Dynamic label tuples keyed by composite key string. */
-const getDynamicLabel = createFactory(
-  (key: string, ns: string, extra?: Record<string, any>): Label => [key, { ns, ...extra }],
-  (key: string, ns: string, extra?: Record<string, any>) => `${key}\0${ns}${extra ? `\0${JSON.stringify(extra)}` : ''}`,
-);
-
 /** Stable Set instances keyed by spaceId. */
 const getAcceptPersistenceKey = createFactory((spaceId: string) => new Set([spaceId]));
 
@@ -117,6 +113,12 @@ const spaceActionsCache = new Map<
     actions: Node.NodeArg<Node.ActionData<Operation.Service>>[];
   }
 >();
+
+/** Dynamic label tuples keyed by composite key string. */
+const getDynamicLabel = createFactory(
+  (key: string, ns: string, extra?: Record<string, any>): Label => [key, { ns, ...extra }],
+  (key: string, ns: string, extra?: Record<string, any>) => `${key}\0${ns}${extra ? `\0${JSON.stringify(extra)}` : ''}`,
+);
 
 //
 // Node Constructors
@@ -268,7 +270,9 @@ export const createObjectNode = ({
     return null;
   }
 
-  const metadata = resolve(type);
+  // For feeds, use the kind property for metadata lookup instead of the generic Feed typename.
+  const metadataKey = Obj.instanceOf(Type.Feed, object) ? (object.kind ?? type) : type;
+  const metadata = resolve(metadataKey);
   const partials = Obj.instanceOf(Collection.Collection, object)
     ? getCollectionGraphNodePartials({ collection: object, db, resolve })
     : Obj.instanceOf(Collection.Managed, object)
@@ -284,7 +288,7 @@ export const createObjectNode = ({
     Obj.getLabel(object) ||
     // TODO(wittjosiah): Remove metadata labels.
     metadata.label?.(object) ||
-    getDynamicLabel('object name placeholder', type, { default: 'New item' });
+    getDynamicLabel('object name placeholder', metadataKey, { default: 'New item' });
 
   const selectable =
     (!Obj.instanceOf(Type.PersistentType, object) &&
@@ -555,8 +559,19 @@ export const constructObjectActions = ({
 
   const getId = (id: string) => `${id}/${Obj.getDXN(object).toString()}`;
 
-  const managedCollection = Obj.instanceOf(Collection.Managed, object) ? object : undefined;
-  const metadata = managedCollection ? resolve(managedCollection.key) : {};
+  const metadataKey = Match.value(object).pipe(
+    Match.when(Obj.instanceOf(Type.Feed), (feed: Type.Feed) => feed.kind ?? Obj.getTypename(feed)!),
+    Match.when(Obj.instanceOf(Collection.Managed), (managed) => {
+      const [, feedKind] = managed.key.split('~') ?? [];
+      return feedKind ?? managed.key;
+    }),
+    Match.orElse((obj) => Obj.getTypename(obj)!),
+  );
+  const managedCollection = Option.some(object).pipe(
+    Option.filter(Obj.instanceOf(Collection.Managed)),
+    Option.getOrUndefined,
+  );
+  const metadata = metadataKey ? resolve(metadataKey) : {};
   const createObject = metadata.createObject;
   const inputSchema = metadata.inputSchema;
 
@@ -616,7 +631,7 @@ export const constructObjectActions = ({
           },
         ]
       : []),
-    ...(createObject
+    ...(createObject && managedCollection
       ? [
           {
             id: getId(SpaceOperation.OpenCreateObject.meta.key),
@@ -625,7 +640,7 @@ export const constructObjectActions = ({
               if (inputSchema) {
                 yield* Operation.invoke(SpaceOperation.OpenCreateObject, {
                   target: db,
-                  typename: managedCollection ? managedCollection.key : undefined,
+                  typename: managedCollection ? metadataKey : undefined,
                 });
               } else {
                 const createdObject = yield* createObject({}, { db, capabilities }) as Effect.Effect<
@@ -661,7 +676,7 @@ export const constructObjectActions = ({
             data: (params?: Node.InvokeProps) =>
               Operation.invoke(SpaceOperation.RenameObject, { object, caller: params?.caller }),
             properties: {
-              label: getDynamicLabel('rename object label', typename),
+              label: getDynamicLabel('rename object label', metadataKey),
               icon: 'ph--pencil-simple-line--regular',
               disposition: 'list-item',
               // TODO(wittjosiah): Not working.
@@ -682,7 +697,7 @@ export const constructObjectActions = ({
               yield* Operation.invoke(SpaceOperation.RemoveObjects, { objects: [object], target: collection });
             }),
             properties: {
-              label: getDynamicLabel('delete object label', typename),
+              label: getDynamicLabel('delete object label', metadataKey),
               icon: 'ph--trash--regular',
               disposition: 'list-item',
               disabled: !deletable,
@@ -839,9 +854,11 @@ const getSystemCollectionNodePartials = ({
   db: Database.Database;
   resolve: (typename: string) => Record<string, any>;
 }) => {
-  const metadata = resolve(collection.key);
+  const [, feedKind] = collection.key.split('~');
+  const metadataKey = feedKind ?? collection.key;
+  const metadata = resolve(metadataKey);
   return {
-    label: getDynamicLabel('typename label', collection.key, { count: 2 }),
+    label: getDynamicLabel('typename label', metadataKey, { count: 2 }),
     icon: metadata.icon,
     iconHue: metadata.iconHue,
     acceptPersistenceClass: ACCEPT_ECHO_CLASS,

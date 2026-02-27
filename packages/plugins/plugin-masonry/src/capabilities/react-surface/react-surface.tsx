@@ -10,7 +10,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { Obj } from '@dxos/echo';
 import { View } from '@dxos/schema';
 
-import { MasonryContainer } from '../../components/MasonryContainer';
+import { MasonryContainer } from '../../containers';
 import { meta } from '../../meta';
 import { Masonry } from '../../types';
 

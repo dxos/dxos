@@ -6,7 +6,7 @@ import type * as ManagedRuntime from 'effect/ManagedRuntime';
 
 import { type AiService, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
 import { Capability } from '@dxos/app-framework';
-import { type Database } from '@dxos/echo';
+import { type Database, type Feed } from '@dxos/echo';
 import type { CredentialsService, FunctionInvocationService, QueueService, TracingService } from '@dxos/functions';
 import type { TriggerDispatcher, TriggerStateStore } from '@dxos/functions-runtime';
 import type { SpaceId } from '@dxos/keys';
@@ -22,6 +22,7 @@ export namespace AutomationCapabilities {
     | TriggerStateStore
     | AiService.AiService
     | Database.Service
+    | Feed.Service
     | QueueService
     | CredentialsService
     | FunctionInvocationService

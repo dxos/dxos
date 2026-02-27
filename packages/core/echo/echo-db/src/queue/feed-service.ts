@@ -4,27 +4,16 @@
 
 import * as Layer from 'effect/Layer';
 
-import { Entity, Feed, type Filter, Obj, type Query } from '@dxos/echo';
-import { DXN } from '@dxos/keys';
+import { type Entity, Feed, type Filter, Obj, type Query } from '@dxos/echo';
+import { type DXN } from '@dxos/keys';
 
 import type { QueueFactory } from './queue-factory';
-
-/**
- * Resolves the backing DXN from a feed object's meta key.
- */
-const getDxn = (feed: Feed.Feed): DXN | undefined => {
-  const keys = Entity.getKeys(feed as Entity.Unknown, Feed.DXN_KEY);
-  if (keys.length === 0) {
-    return undefined;
-  }
-  return DXN.parse(keys[0].id);
-};
 
 /**
  * Resolves or creates the backing DXN for a feed.
  */
 const resolveDxn = (feed: Feed.Feed, queues: QueueFactory): DXN => {
-  const existing = getDxn(feed);
+  const existing = Feed.getQueueDxn(feed);
   if (existing) {
     return existing;
   }

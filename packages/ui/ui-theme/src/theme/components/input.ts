@@ -16,7 +16,6 @@ import {
   coarseBlockSize,
   coarseDimensions,
   computeSize,
-  descriptionText,
   fineBlockSize,
   fineDimensions,
   focusRing,
@@ -157,13 +156,13 @@ const inputLabel: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
   mx('block', inputTextLabel, props.srOnly && 'sr-only', ...etc);
 
 const inputDescription: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
-  mx(descriptionText, props.srOnly && 'sr-only', ...etc);
+  mx('text-description', props.srOnly && 'sr-only', ...etc);
 
 const inputDescriptionAndValidation: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
   mx('leading-none my-1.5', props.srOnly && 'sr-only', ...etc);
 
 const inputValidation: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
-  mx(descriptionText, props.srOnly ? 'sr-only' : valenceColorText(props.validationValence), ...etc);
+  mx('text-description', props.srOnly ? 'sr-only' : valenceColorText(props.validationValence), ...etc);
 
 export const inputTheme = {
   input: inputInput,

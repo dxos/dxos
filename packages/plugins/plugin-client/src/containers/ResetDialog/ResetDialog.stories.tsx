@@ -1,0 +1,73 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
+import React from 'react';
+
+import { OperationPlugin, RuntimePlugin } from '@dxos/app-framework';
+import { withPluginManager } from '@dxos/app-framework/testing';
+import { usePluginManager } from '@dxos/app-framework/ui';
+import { Dialog } from '@dxos/react-ui';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
+
+import { ClientPlugin } from '../../ClientPlugin';
+import { translations } from '../../translations';
+
+import { ResetDialog, type ResetDialogProps } from './ResetDialog';
+
+const DefaultStory = (props: Omit<ResetDialogProps, 'capabilityManager'>) => {
+  const manager = usePluginManager();
+
+  return (
+    <Dialog.Root open>
+      <Dialog.Overlay>
+        <ResetDialog
+          capabilityManager={manager.capabilities}
+          onReset={() => Effect.sync(() => console.log('reset'))}
+          {...props}
+        />
+      </Dialog.Overlay>
+    </Dialog.Root>
+  );
+};
+
+const meta = {
+  title: 'plugins/plugin-client/ResetDialog',
+  component: ResetDialog,
+  render: DefaultStory,
+  decorators: [
+    withTheme(),
+    withLayout({ layout: 'fullscreen' }),
+    withPluginManager({
+      plugins: [RuntimePlugin(), OperationPlugin(), ClientPlugin({})],
+    }),
+  ],
+  parameters: {
+    layout: 'fullscreen',
+    translations,
+  },
+} satisfies Meta<typeof ResetDialog>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
+  args: {
+    mode: 'reset storage' as const,
+  } as any,
+};
+
+export const JoinNewIdentity: Story = {
+  args: {
+    mode: 'join new identity' as const,
+  } as any,
+};
+
+export const Recover: Story = {
+  args: {
+    mode: 'recover' as const,
+  } as any,
+};

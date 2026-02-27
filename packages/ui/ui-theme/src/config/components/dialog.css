@@ -4,8 +4,9 @@
 
 @layer dx-components {
   .dx-dialog__overlay {
-    @apply z-50 fixed grid inset-x-0 top-0 h-dvh py-[env(safe-area-inset-top)] place-items-center overflow-auto bg-scrim-surface;
-    
+    @apply z-50 fixed grid inset-x-0 top-0 h-dvh py-[env(safe-area-inset-top)] place-items-center;
+    @apply bg-scrim-surface backdrop-blur-xs;
+
     &[data-state='open'] {
       @apply animate-fade-in;
     }
@@ -29,26 +30,26 @@
     }
   }
 
-  @media (min-width: theme('screens.sm')) {
+  @media (width >= theme(--breakpoint-sm)) {
     .dx-dialog__overlay {
       @apply p-[calc(env(safe-area-inset-top)+.6rem)];
     }
   }
 
-  @media (min-width: theme('screens.md')) {
+  @media (width >= theme(--breakpoint-md)) {
     .dx-dialog__overlay {
       @apply p-[calc(env(safe-area-inset-top)+1.2rem)];
     }
   }
 
-  @media (min-width: theme('screens.lg')) {
+  @media (width >= theme(--breakpoint-lg)) {
     .dx-dialog__overlay {
       @apply p-[calc(env(safe-area-inset-top)+2.4rem)];
     }
   }
 
   .dx-dialog__content {
-    @apply flex flex-col w-dvw max-h-full max-w-full p-4 overflow-hidden shadow-md backdrop-blur;
+    @apply flex flex-col w-dvw min-w-[24rem] max-w-full max-h-full p-4 overflow-hidden shadow-md;
 
     &[data-state='open'] {
       @apply animate-slide-up-and-fade;
@@ -59,13 +60,13 @@
     }
   }
 
-  @media (min-width: theme('screens.sm')) {
+  @media (width >= theme(--breakpoint-sm)) {
     .dx-dialog__content {
       @apply w-[95vw] border rounded-md border-separator;
     }
   }
 
-  @media (min-width: theme('screens.md')) {
+  @media (width >= theme(--breakpoint-md)) {
     .dx-dialog__content {
       @apply max-w-[24rem];
     }

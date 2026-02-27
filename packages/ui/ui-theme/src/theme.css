@@ -17,8 +17,9 @@
 @import './config/theme/animation.css';
 @import './config/theme/border.css';
 @import './config/theme/palette.css';
-@import './config/theme/colors.css';
+@import './config/theme/semantic.css';
 @import './config/theme/spacing.css';
+@import './config/theme/styles.css';
 @import './config/theme/text.css';
 
 /* @layer dx-base, dx-tokens */
@@ -51,11 +52,13 @@
 @import './config/integrations/tldraw.css';
 
 /**
- * Force-emit CSS variables for the full color palette so all --color-{hue}-{shade}
- * custom properties are available in :root regardless of which utility classes are
- * detected in source files.
+ * Force-emit CSS variables for the full color palette for all: 
+ * --color-{hue}-{shade}
+ * --color-{hue}-{style}
  */
 @source inline("bg-{neutral,red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose}-{50,100,200,300,400,500,600,700,800,900,950}");
+@source inline("bg-{neutral,red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose}-{fill,surface,surface-text,text,border}");
+@source inline("bg-{info,success,warning,error}-{fill,surface,surface-text,text,border}");
 
 /**
  * Plugins must come after all imports.

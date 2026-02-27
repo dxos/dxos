@@ -481,6 +481,20 @@ class QueryClass implements Query$.Any {
     });
   }
 
+  from(arg: any, options?: { includeFeeds?: boolean }): Query$.Any {
+    if (arg === 'all-accessible-spaces') {
+      return new QueryClass({
+        type: 'options',
+        query: this.ast,
+        options: {
+          ...(options?.includeFeeds ? { allQueuesFromSpaces: true } : {}),
+        },
+      });
+    }
+
+    throw new TypeError('Database and Feed objects are not supported in query-lite sandbox');
+  }
+
   options(options: QueryAST.QueryOptions): Query$.Any {
     return new QueryClass({
       type: 'options',

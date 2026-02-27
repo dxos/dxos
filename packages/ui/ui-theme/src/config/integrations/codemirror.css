@@ -7,50 +7,50 @@
  */
 
 @theme {
-  --color-cm-codeblock: theme(colors.neutral.500 / 0.1);
+  --color-cm-codeblock: oklch(from var(--color-neutral-500) l c h / 0.1);
   --color-cm-active-line: light-dark(
-    theme(colors.neutral.200 / 0.5),
-    theme(colors.neutral.800 / 0.5)
+    oklch(from var(--color-neutral-200) l c h / 0.5),
+    oklch(from var(--color-neutral-800) l c h / 0.5)
   );
-  --color-cm-separator: theme(colors.blue.500);
+  --color-cm-separator: var(--color-blue-500);
   --color-cm-cursor: light-dark(
-    theme(colors.neutral.900),
-    theme(colors.neutral.100)
+    var(--color-neutral-900),
+    var(--color-neutral-100)
   );
   --color-cm-selection: light-dark(
-    theme(colors.blue.400 / 0.5),
-    theme(colors.blue.600 / 0.5)
+    oklch(from var(--color-blue-400) l c h / 0.5),
+    oklch(from var(--color-blue-600) l c h / 0.5)
   );
   --color-cm-focused-selection: light-dark(
-    theme(colors.blue.400),
-    theme(colors.blue.600)
+    var(--color-blue-400),
+    var(--color-blue-600)
   );
   --color-cm-highlight: light-dark(
-    theme(colors.neutral.950),
-    theme(colors.neutral.50)
+    var(--color-neutral-950),
+    var(--color-neutral-50)
   );
   --color-cm-highlight-surface: light-dark(
-    theme(colors.sky.200),
-    theme(colors.cyan.800)
+    var(--color-sky-200),
+    var(--color-cyan-800)
   );
   --color-cm-comment-text: light-dark(
-    theme(colors.neutral.50),
-    theme(colors.neutral.950)
+    var(--color-neutral-50),
+    var(--color-neutral-950)
   );
   --color-cm-comment-surface: light-dark(
-    theme(colors.amber.800),
-    theme(colors.amber.200)
+    var(--color-amber-800),
+    var(--color-amber-200)
   );
 
   /* Markdown syntax highlighting */
   --color-cm-code: light-dark(
-    theme(colors.neutral.700),
-    theme(colors.neutral.300)
+    var(--color-neutral-700),
+    var(--color-neutral-300)
   );
-  --color-cm-code-mark: theme(colors.blue.500);
+  --color-cm-code-mark: var(--color-blue-500);
   --color-cm-mark-opacity: 0.5;
   --color-cm-heading: light-dark(
-    theme(colors.neutral.900),
-    theme(colors.neutral.400)
+    var(--color-neutral-900),
+    var(--color-neutral-400)
   );
 }

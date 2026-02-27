@@ -48,7 +48,7 @@ export const annotations = ({ match }: AnnotationOptions = {}): Extension => {
       '.cm-annotation': {
         textDecoration: 'underline',
         textDecorationStyle: 'wavy',
-        textDecorationColor: 'var(--dx-errorText)',
+        textDecorationColor: 'var(--color-error-text)',
       },
     }),
   ];

@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { type AiService } from '@dxos/ai';
-import { Obj, Type } from '@dxos/echo';
+import { type Feed, Obj, Type } from '@dxos/echo';
 import { type Database } from '@dxos/echo';
 import { assertArgument, failedInvariant } from '@dxos/invariant';
 import { Operation } from '@dxos/operation';
@@ -39,7 +39,9 @@ export type FunctionServices =
   | AiService.AiService
   | CredentialsService
   | Database.Service
+  // TODO(wittjosiah): Remove QueueService — use Feed.Service instead.
   | QueueService
+  | Feed.Service
   | FunctionInvocationService;
 
 /**

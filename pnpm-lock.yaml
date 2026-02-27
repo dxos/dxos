@@ -5776,6 +5776,9 @@ importers:
       '@dxos/teleport':
         specifier: workspace:*
         version: link:../teleport
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../../common/util
 
   packages/core/mesh/teleport-extension-gossip:
     dependencies:
@@ -7406,6 +7409,9 @@ importers:
       '@dxos/echo-atom':
         specifier: workspace:*
         version: link:../../core/echo/echo-atom
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-db
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -10392,6 +10398,9 @@ importers:
         specifier: 3.19.16
         version: 3.19.16
     devDependencies:
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-db
       '@dxos/plugin-attention':
         specifier: workspace:*
         version: link:../plugin-attention

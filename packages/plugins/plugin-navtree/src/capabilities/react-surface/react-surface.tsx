@@ -9,7 +9,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { Node } from '@dxos/plugin-graph';
 
-import { CommandsDialogContent, CommandsTrigger, NavTreeContainer, NavTreeDocumentTitle } from '../../components';
+import { CommandsDialogContent, CommandsTrigger, NavTreeContainer, NavTreeDocumentTitle } from '../../containers';
 import { COMMANDS_DIALOG, meta } from '../../meta';
 
 export default Capability.makeModule(() =>

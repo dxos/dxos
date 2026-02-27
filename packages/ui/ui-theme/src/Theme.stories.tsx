@@ -5,10 +5,8 @@
 import { type Meta } from '@storybook/react-vite';
 import React from 'react';
 
-import { hues } from './tokens';
+import { hueShades, hues } from './defs';
 import { mx } from './util';
-
-const colorShades = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950];
 
 // prettier-ignore
 const neutralShades: [number, string][] = [
@@ -29,50 +27,48 @@ const neutralShades: [number, string][] = [
   [950, 'bg-neutral-950'],
 ];
 
-/**
- * Hue swatch classes for the Hues story.
- * Class names must be full literal strings for Tailwind v4's scanner.
- */
-// prettier-ignore
-const hueSwatches = [
-  { hue: 'neutral', bg: 'bg-neutral-surface', border: 'border-neutral-fill', text: 'text-neutral-surface-text' },
-  { hue: 'red',     bg: 'bg-red-surface',     border: 'border-red-fill',     text: 'text-red-surface-text' },
-  { hue: 'orange',  bg: 'bg-orange-surface',  border: 'border-orange-fill',  text: 'text-orange-surface-text' },
-  { hue: 'amber',   bg: 'bg-amber-surface',   border: 'border-amber-fill',   text: 'text-amber-surface-text' },
-  { hue: 'yellow',  bg: 'bg-yellow-surface',  border: 'border-yellow-fill',  text: 'text-yellow-surface-text' },
-  { hue: 'lime',    bg: 'bg-lime-surface',    border: 'border-lime-fill',    text: 'text-lime-surface-text' },
-  { hue: 'green',   bg: 'bg-green-surface',   border: 'border-green-fill',   text: 'text-green-surface-text' },
-  { hue: 'emerald', bg: 'bg-emerald-surface', border: 'border-emerald-fill', text: 'text-emerald-surface-text' },
-  { hue: 'teal',    bg: 'bg-teal-surface',    border: 'border-teal-fill',    text: 'text-teal-surface-text' },
-  { hue: 'cyan',    bg: 'bg-cyan-surface',    border: 'border-cyan-fill',    text: 'text-cyan-surface-text' },
-  { hue: 'sky',     bg: 'bg-sky-surface',     border: 'border-sky-fill',     text: 'text-sky-surface-text' },
-  { hue: 'blue',    bg: 'bg-blue-surface',    border: 'border-blue-fill',    text: 'text-blue-surface-text' },
-  { hue: 'indigo',  bg: 'bg-indigo-surface',  border: 'border-indigo-fill',  text: 'text-indigo-surface-text' },
-  { hue: 'violet',  bg: 'bg-violet-surface',  border: 'border-violet-fill',  text: 'text-violet-surface-text' },
-  { hue: 'purple',  bg: 'bg-purple-surface',  border: 'border-purple-fill',  text: 'text-purple-surface-text' },
-  { hue: 'fuchsia', bg: 'bg-fuchsia-surface', border: 'border-fuchsia-fill', text: 'text-fuchsia-surface-text' },
-  { hue: 'pink',    bg: 'bg-pink-surface',    border: 'border-pink-fill',    text: 'text-pink-surface-text' },
-  { hue: 'rose',    bg: 'bg-rose-surface',    border: 'border-rose-fill',    text: 'text-rose-surface-text' },
-] as const;
-
-const hueSwatchMap = Object.fromEntries(hueSwatches.map((entry) => [entry.hue, entry]));
-
 const ColorSwatch = ({ hue }: { hue: string }) => {
-  const colors = hueSwatchMap[hue];
   return (
     <div
-      className={mx(
-        'shrink-0 aspect-square w-36 flex flex-col overflow-hidden border-4 rounded-md',
-        colors?.bg,
-        colors?.border,
-      )}
+      style={{
+        borderColor: `var(--color-${hue}-border)`,
+      }}
+      className={mx('shrink-0 aspect-square w-36 grid grid-rows-3 border-2 overflow-hidden rounded-md')}
     >
-      <span className={mx('text-sm p-2', colors?.text)}>{hue}</span>
+      <div
+        style={{
+          color: `var(--color-${hue}-text)`,
+          backgroundColor: `var(--color-base-surface)`,
+        }}
+        className='p-2 text-sm'
+      >
+        {hue}
+      </div>
+      <div
+        style={{
+          color: `var(--color-${hue}-border)`,
+          backgroundColor: `var(--color-${hue}-fill)`,
+        }}
+        className='p-2 text-sm flex items-center'
+      >
+        <svg className='h-6 w-6'>
+          <use href='/icons.svg#ph--aperture--regular' />
+        </svg>
+      </div>
+      <div
+        style={{
+          color: `var(--color-${hue}-surface-text)`,
+          backgroundColor: `var(--color-${hue}-surface)`,
+        }}
+        className='p-2 text-sm'
+      >
+        {hue}
+      </div>
     </div>
   );
 };
 
-const HueSwatch = ({ hue, shades }: { hue: string; shades: number[] }) => (
+const HueSwatch = ({ hue, shades }: { hue: string; shades: readonly number[] }) => (
   <div className='flex gap-1'>
     {shades.map((shade) => (
       <div
@@ -101,7 +97,7 @@ const meta = {
 
 export default meta;
 
-export const Hues = {
+export const Styles = {
   render: () => {
     return (
       <div className='p-4'>
@@ -121,7 +117,7 @@ export const Colors = {
       <div className='p-4'>
         <div className='flex flex-col gap-1'>
           {['neutral', ...hues].map((hue) => (
-            <HueSwatch key={hue} hue={hue} shades={colorShades} />
+            <HueSwatch key={hue} hue={hue} shades={hueShades} />
           ))}
         </div>
       </div>
@@ -185,10 +181,19 @@ export const Tags = {
   render: () => {
     return (
       <div className='p-4'>
-        <div className='flex gap-2'>
+        <div className='flex flex-col gap-1'>
           {['neutral', ...hues].map((hue) => (
-            <div key={hue} className='dx-tag' data-hue={hue}>
-              {hue}
+            <div key={hue} className='grid grid-cols-[8rem_8rem]'>
+              <div>
+                <span className='dx-tag' data-hue={hue}>
+                  {hue}
+                </span>
+              </div>
+              <div>
+                <span className='dx-text-hue text-sm' data-hue={hue}>
+                  {hue}
+                </span>
+              </div>
             </div>
           ))}
         </div>
@@ -208,9 +213,9 @@ export const Animation = {
               'p-card-padding w-card-min-width grid grid-cols-[min-content_1fr_min-content]',
             )}
           >
-            <span className='animate-blink text-error'>*</span>
+            <span className='animate-blink text-error-text'>*</span>
             <span className='text-center'>experimental</span>
-            <span className='animate-blink text-error'>*</span>
+            <span className='animate-blink text-error-text'>*</span>
           </div>
         </div>
       </div>

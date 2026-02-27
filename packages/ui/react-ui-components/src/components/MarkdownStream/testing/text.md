@@ -63,4 +63,3 @@ No ornate fonts, no tricks of light,
 Just structure drawn in plainest white.
 Yet from that spare, unmoving art,
 A document can find its heart.
-

@@ -174,6 +174,143 @@ const rectangleTrajectory = (framePx: number): Trajectory => ({
   },
 });
 
+/**
+ * Lemniscate (∞) orbit: x(t) = rx·sin(t), y(t) = ry·sin(2t)/2, t ∈ [0, 2π).
+ * Arc-length parameterised via a precomputed lookup table (recomputed when canvas size changes).
+ */
+const infinityTrajectory = (rx = 0.35, ry = 0.25): Trajectory => {
+  const N = 1000;
+  const dt = (2 * Math.PI) / N;
+  let cacheW = 0;
+  let cacheH = 0;
+  let cumLens: number[] = [];
+  let totalLen = 0;
+
+  const rebuild = (width: number, height: number) => {
+    if (width === cacheW && height === cacheH) return;
+    cacheW = width;
+    cacheH = height;
+    cumLens = [0];
+    totalLen = 0;
+    for (let i = 1; i <= N; i++) {
+      const t0 = (i - 1) * dt;
+      const t1 = i * dt;
+      const dx = rx * width * (Math.sin(t1) - Math.sin(t0));
+      const dy = (ry * height * (Math.sin(2 * t1) - Math.sin(2 * t0))) / 2;
+      totalLen += Math.hypot(dx, dy);
+      cumLens.push(totalLen);
+    }
+  };
+
+  return {
+    length: (width, height) => {
+      rebuild(width, height);
+      return totalLen;
+    },
+    point: (dist, width, height) => {
+      rebuild(width, height);
+      const s = ((dist % totalLen) + totalLen) % totalLen;
+      let lo = 0;
+      let hi = N;
+      while (hi - lo > 1) {
+        const mid = (lo + hi) >> 1;
+        if (cumLens[mid] <= s) lo = mid;
+        else hi = mid;
+      }
+      const segLen = cumLens[lo + 1] - cumLens[lo];
+      const alpha = segLen > 0 ? (s - cumLens[lo]) / segLen : 0;
+      const t = (lo + alpha) * dt;
+      const x = 0.5 + rx * Math.sin(t);
+      const y = 0.5 + (ry * Math.sin(2 * t)) / 2;
+      // Tangent in pixel space; normal is tangent rotated 90° CCW.
+      const txPx = rx * width * Math.cos(t);
+      const tyPx = ry * height * Math.cos(2 * t);
+      const tLen = Math.hypot(txPx, tyPx) || 1;
+      return { x, y, nx: -tyPx / (tLen * width), ny: txPx / (tLen * height) };
+    },
+  };
+};
+
+/**
+ * DXOS-logo orbit: polyline through the 12 vertices of the combined outer
+ * silhouette of the two overlapping outlined chevrons in the DXOS icon
+ * (packages/ui/brand/src/icons/DXOS.tsx, 256×256 viewBox).
+ *
+ * The two outer chevron boundaries intersect at two "waist" crossing points
+ * at x≈0.638/0.362, y=0.500. Above the crossings the silhouette follows
+ * Path 2 (upward chevron); below it follows Path 1 (downward chevron).
+ * Vertices are listed clockwise in screen coordinates.
+ */
+const dxosTrajectory = (scale = 1): Trajectory => {
+  const vertices: [number, number][] = [
+    [0.5, 0.317], // top notch   – Path 2 apex
+    [0.937, 0.044], // top-right outer
+    [0.955, 0.064], // top-right corner
+    [0.638, 0.5], // right waist – P2/P1 crossing
+    [0.955, 0.936], // bottom-right corner
+    [0.937, 0.956], // bottom-right outer
+    [0.5, 0.683], // bottom notch – Path 1 V-point
+    [0.063, 0.956], // bottom-left outer
+    [0.044, 0.936], // bottom-left corner
+    [0.362, 0.5], // left waist  – P1/P2 crossing
+    [0.044, 0.064], // top-left corner
+    [0.063, 0.044], // top-left outer
+  ];
+
+  const n = vertices.length;
+  let cacheW = 0;
+  let cacheH = 0;
+  let cumLens: number[] = [];
+  let totalLen = 0;
+
+  const rebuild = (width: number, height: number) => {
+    if (width === cacheW && height === cacheH) return;
+    cacheW = width;
+    cacheH = height;
+    // Use the square side so arc-lengths are isotropic regardless of canvas aspect ratio.
+    const sq = Math.min(width, height) * scale;
+    cumLens = [0];
+    totalLen = 0;
+    for (let i = 0; i < n; i++) {
+      const [x0, y0] = vertices[i];
+      const [x1, y1] = vertices[(i + 1) % n];
+      totalLen += Math.hypot((x1 - x0) * sq, (y1 - y0) * sq);
+      cumLens.push(totalLen);
+    }
+  };
+
+  return {
+    length: (width, height) => {
+      rebuild(width, height);
+      return totalLen;
+    },
+    point: (dist, width, height) => {
+      rebuild(width, height);
+      // Center a scaled square region on the canvas.
+      const sq = Math.min(width, height) * scale;
+      const ox = (width - sq) / 2;
+      const oy = (height - sq) / 2;
+      const s = ((dist % totalLen) + totalLen) % totalLen;
+      let seg = 0;
+      while (seg < n - 1 && cumLens[seg + 1] <= s) seg++;
+      const segLen = cumLens[seg + 1] - cumLens[seg];
+      const alpha = segLen > 0 ? (s - cumLens[seg]) / segLen : 0;
+      const [x0, y0] = vertices[seg];
+      const [x1, y1] = vertices[(seg + 1) % n];
+      const lx = x0 + alpha * (x1 - x0); // logo coords [0,1]
+      const ly = y0 + alpha * (y1 - y0);
+      // Map to canvas-normalized coords preserving the square aspect ratio.
+      const x = (ox + lx * sq) / width;
+      const y = (oy + ly * sq) / height;
+      // Tangent and inward normal in isotropic square-pixel space.
+      const txPx = (x1 - x0) * sq;
+      const tyPx = (y1 - y0) * sq;
+      const tLen = Math.hypot(txPx, tyPx) || 1;
+      return { x, y, nx: -tyPx / (tLen * width), ny: txPx / (tLen * height) };
+    },
+  };
+};
+
 /** Circle orbit centered at canvas center, radius = min(width, height) * radiusFraction. */
 const circleTrajectory = (radiusFraction = 0.4): Trajectory => ({
   length: (width, height) => 2 * Math.PI * Math.min(width, height) * radiusFraction,
@@ -215,9 +352,8 @@ const TrailStory = ({ trajectory, speed = 10, wiggleAmplitude = 10, ...props }: 
         const { width, height } = wrapper.getBoundingClientRect();
         const traj = trajectoryRef.current;
         const pathLength = traj.length(width, height);
-        const jitter = 0; // (Math.random() - 0.5) * speed * 4;
         const state = stateRef.current;
-        state.dist = (((state.dist + speed + jitter) % pathLength) + pathLength) % pathLength;
+        state.dist = (((state.dist + speed) % pathLength) + pathLength) % pathLength;
         state.wt += 0.08;
         const { x, y, nx, ny } = traj.point(state.dist, width, height);
         const wiggle = Math.sin(state.wt - state.dist * 0.012) * wiggleAmplitude;
@@ -252,10 +388,41 @@ export const FrameTrail: Story = {
 
 export const CircleTrail: Story = {
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
-  render: (props) => <TrailStory {...props} trajectory={circleTrajectory(0.38)} speed={10} wiggleAmplitude={15} />,
+  render: (props) => <TrailStory {...props} trajectory={circleTrajectory(0.2)} speed={20} wiggleAmplitude={15} />,
   args: {
     DENSITY_DISSIPATION: 1.5,
     VELOCITY_DISSIPATION: 20,
+    CURL: 100,
+    COLOR_UPDATE_SPEED: 0.1,
+  },
+};
+
+export const InfinityTrail: Story = {
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
+  render: (props) => (
+    <TrailStory {...props} trajectory={infinityTrajectory(0.35, 0.25)} speed={25} wiggleAmplitude={12} />
+  ),
+  args: {
+    DENSITY_DISSIPATION: 1.5,
+    VELOCITY_DISSIPATION: 20,
+    CURL: 100,
+    COLOR_UPDATE_SPEED: 0.1,
+  },
+};
+
+export const DXOSTrail: Story = {
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
+  render: (props) => (
+    <>
+      <div className='inset-0 absolute z-10 grid place-content-center pointer-events-none [transform:translateZ(0)] blur-sm'>
+        <DXOS className='w-[40rem] h-[40rem] fill-neutral-50 dark:fill-neutral-950' />
+      </div>
+      <TrailStory {...props} trajectory={dxosTrajectory(0.7)} speed={5} wiggleAmplitude={10} />
+    </>
+  ),
+  args: {
+    DENSITY_DISSIPATION: 1.5,
+    VELOCITY_DISSIPATION: 10,
     CURL: 100,
     COLOR_UPDATE_SPEED: 0.1,
   },

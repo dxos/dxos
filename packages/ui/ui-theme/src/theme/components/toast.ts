@@ -5,7 +5,7 @@
 import { type ComponentFunction, type Theme } from '@dxos/ui-types';
 
 import { mx } from '../../util';
-import { descriptionText, focusRing, modalSurface, surfaceShadow } from '../fragments';
+import { focusRing, modalSurface, surfaceShadow } from '../fragments';
 
 export type ToastStyleProps = Partial<{
   srOnly: boolean;
@@ -43,7 +43,7 @@ export const toastTitle: ComponentFunction<ToastStyleProps> = ({ srOnly }, ...et
   mx('shrink-0 font-medium', srOnly && 'sr-only', ...etc);
 
 export const toastDescription: ComponentFunction<ToastStyleProps> = ({ srOnly }, ...etc) =>
-  mx(descriptionText, 'shrink-0', srOnly && 'sr-only', ...etc);
+  mx('text-description', 'shrink-0', srOnly && 'sr-only', ...etc);
 
 export const toastTheme: Theme<ToastStyleProps> = {
   viewport: toastViewport,
