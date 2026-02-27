@@ -116,17 +116,14 @@ const DialogContent: ForwardRefExoticComponent<DialogContentProps> = forwardRef<
 
     return (
       <DialogContentPrimitive
+        {...props}
         // NOTE: Radix warning unless set to undefined.
         // https://www.radix-ui.com/primitives/docs/components/dialog#description
         aria-describedby={undefined}
-        {...props}
         className={tx('dialog.content', { inOverlayLayout: propsInOverlayLayout || inOverlayLayout, size }, classNames)}
         ref={forwardedRef}
       >
-        {/* TODO(burdon): @container causing problems; move style to dialog.css */}
-        <div role='none' className='@container h-full flex flex-col gap-[inherit]'>
-          {children}
-        </div>
+        {children}
       </DialogContentPrimitive>
     );
   },

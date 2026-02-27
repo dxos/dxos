@@ -359,6 +359,31 @@ export class ObjectMetaIndex implements Index {
   );
 
   /**
+   * Look up object metadata by objectId, spaceId, and queueId.
+   */
+  lookupByObjectId = Effect.fn('ObjectMetaIndex.lookupByObjectId')(
+    (query: {
+      objectId: string;
+      spaceId: string;
+      queueId: string;
+    }): Effect.Effect<ObjectMeta | null, SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        const rows =
+          yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId} AND queueId = ${query.queueId} AND objectId = ${query.objectId} LIMIT 1`;
+
+        if (rows.length === 0) {
+          return null;
+        }
+
+        return {
+          ...rows[0],
+          deleted: !!rows[0].deleted,
+        };
+      }),
+  );
+
+  /**
    * Query children by parent object ids.
    */
   queryChildren = Effect.fn('ObjectMetaIndex.queryChildren')(

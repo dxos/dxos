@@ -4,8 +4,8 @@
 
 import { type ComponentType, lazy } from 'react';
 
-export { type RecoveryCodeDialogProps } from './RecoveryCodeDialog/RecoveryCodeDialog';
-export { type ResetDialogProps } from './ResetDialog/ResetDialog';
+export { type RecoveryCodeDialogProps } from './RecoveryCodeDialog';
+export { type ResetDialogProps } from './ResetDialog';
 
 export const DevicesContainer: ComponentType<any> = lazy(() => import('./DevicesContainer'));
 export const JoinDialog: ComponentType<any> = lazy(() => import('./JoinDialog'));

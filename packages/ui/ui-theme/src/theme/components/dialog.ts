@@ -9,10 +9,10 @@ import { mx } from '../../util';
 export type DialogSize = 'sm' | 'md' | 'lg' | 'xl';
 
 const sizeMap: Record<DialogSize, string> = {
-  sm: 'w-full md:max-w-[24rem]',
-  md: 'w-full md:max-w-[32rem]',
-  lg: 'w-full md:max-w-[40rem]',
-  xl: 'w-full md:max-w-[60rem]',
+  sm: 'md:max-w-[24rem]',
+  md: 'md:max-w-[32rem]!',
+  lg: 'md:max-w-[40rem]!',
+  xl: 'md:max-w-[60rem]!',
 };
 
 export type DialogStyleProps = {
@@ -26,7 +26,8 @@ export const dialogOverlay: ComponentFunction<DialogStyleProps> = (_props, ...et
 
 export const dialogContent: ComponentFunction<DialogStyleProps> = ({ inOverlayLayout, size = 'md' }, ...etc) => {
   return mx(
-    'dx-dialog__content dx-focus-ring modal-surface density-coarse w-full gap-4',
+    '@container',
+    'dx-dialog__content dx-focus-ring modal-surface density-coarse',
     !inOverlayLayout && 'fixed z-50 top-[50%] left-[50%] -translate-x-[50%] -translate-y-[50%]',
     sizeMap[size],
     ...etc,

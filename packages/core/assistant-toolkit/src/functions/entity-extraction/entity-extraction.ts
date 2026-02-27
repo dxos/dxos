@@ -9,8 +9,7 @@ import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import { AiSession, GenericToolkit, ToolExecutionServices } from '@dxos/assistant';
-import { Filter, Obj, Ref, Type } from '@dxos/echo';
-import { Database } from '@dxos/echo';
+import { Database, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { FunctionInvocationServiceLayerTest } from '@dxos/functions-runtime/testing';
 import { type DXN } from '@dxos/keys';

@@ -72,10 +72,10 @@ export const ResetDialog = ({
     void navigator.clipboard.writeText(JSON.stringify(error));
   }, [error]);
 
-  const handleReset = async () => {
+  const handleReset = useCallback(async () => {
     localStorage.clear();
     window.location.href = window.location.origin;
-  };
+  }, []);
 
   const handleSaveFeedback = useCallback(
     async (values: UserFeedback) => {

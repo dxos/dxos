@@ -9,7 +9,7 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
-import { Database, Query } from '@dxos/echo';
+import { Database, Feed, Query } from '@dxos/echo';
 import { Function } from '@dxos/functions';
 import {
   CredentialsService,
@@ -41,6 +41,7 @@ export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/
       const credentials = yield* CredentialsService;
       const database = yield* Database.Service;
       const queues = yield* QueueService;
+      const feedService = yield* Feed.Service;
       const functionInvocationService = yield* FunctionInvocationService;
       return {
         // TODO(dmaretskyi): Better error types.
@@ -57,6 +58,7 @@ export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/
             Effect.provideService(CredentialsService, credentials),
             Effect.provideService(Database.Service, database),
             Effect.provideService(QueueService, queues),
+            Effect.provideService(Feed.Service, feedService),
             Effect.provideService(FunctionInvocationService, functionInvocationService),
           ),
         resolveFunction: (key: string) =>

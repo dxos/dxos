@@ -142,6 +142,14 @@ export class IndexEngine {
     return this.#objectMetaIndex.lookupByRecordIds(recordIds);
   }
 
+  lookupByObjectId(query: {
+    objectId: string;
+    spaceId: string;
+    queueId: string;
+  }): Effect.Effect<ObjectMeta | null, SqlError.SqlError, SqlClient.SqlClient> {
+    return this.#objectMetaIndex.lookupByObjectId(query);
+  }
+
   update(
     dataSource: IndexDataSource,
     opts: { spaceId: SpaceId | null; limit?: number },

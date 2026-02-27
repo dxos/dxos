@@ -67,6 +67,7 @@ const Root = () => {
     }
 
     try {
+
       const result = await sendMessage(
         'ping',
         {

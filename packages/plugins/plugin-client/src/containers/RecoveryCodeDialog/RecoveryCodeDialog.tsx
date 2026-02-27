@@ -12,6 +12,7 @@ export type RecoveryCodeDialogProps = {
   code: string;
 };
 
+// TODO(burdon): Should have cancel button.
 export const RecoveryCodeDialog = ({ code }: RecoveryCodeDialogProps) => {
   const { t } = useTranslation(meta.id);
   const [confirmation, setConfirmation] = useState(false);
@@ -19,7 +20,7 @@ export const RecoveryCodeDialog = ({ code }: RecoveryCodeDialogProps) => {
   const handleConfirmation = useCallback((checked: boolean) => setConfirmation(checked), []);
 
   return (
-    <AlertDialog.Content size='md' classNames='h-content min-h-[15rem] max-h-full overflow-hidden'>
+    <AlertDialog.Content size='md' classNames='min-h-[15rem]'>
       <AlertDialog.Title>{t('recovery code dialog title')}</AlertDialog.Title>
       <p className='py-4'>{t('recovery code dialog description')}</p>
       <Clipboard.Provider>
