@@ -7,12 +7,12 @@ import * as Array from 'effect/Array';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
-import React, { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useMemo, useState } from 'react';
+import React, { forwardRef, useCallback, useContext, useImperativeHandle, useMemo, useState } from 'react';
 
-import { DXN, Filter, Format, Obj, Query, QueryAST, type SchemaRegistry } from '@dxos/echo';
+import { Entity, Feed, Filter, Format, Obj, Query, QueryAST, Ref, type SchemaRegistry, Type } from '@dxos/echo';
 import { EchoSchema, type JsonProp, isMutable, toJsonSchema } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { useObject } from '@dxos/react-client/echo';
+import { useObject, useQuery } from '@dxos/react-client/echo';
 import { IconButton, Input, Message, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { QueryForm, type QueryFormProps } from '@dxos/react-ui-components';
 import { List } from '@dxos/react-ui-list';
@@ -35,6 +35,7 @@ import {
   type FormFieldComponentProps,
   FormFieldLabel,
   type FormFieldMap,
+  type FormRootProps,
 } from '../Form';
 
 export type ViewEditorProps = ThemedClassName<
@@ -43,11 +44,11 @@ export type ViewEditorProps = ThemedClassName<
     view: View.View;
     mode?: 'schema' | 'tag';
     registry?: SchemaRegistry.SchemaRegistry;
-    readonly?: boolean;
     showHeading?: boolean;
     onQueryChanged?: (query: QueryAST.Query, target?: string) => void;
     onDelete?: (fieldId: string) => void;
-  } & Pick<QueryFormProps, 'types' | 'tags'>
+  } & Pick<QueryFormProps, 'types' | 'tags'> &
+    Pick<FormRootProps<any>, 'readonly' | 'db'>
 >;
 
 /**
@@ -61,6 +62,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
       view,
       mode = 'schema',
       registry,
+      db,
       readonly,
       showHeading = false,
       types,
@@ -104,14 +106,15 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
       Match.orElse(() => undefined),
     );
 
-    // TODO(wittjosiah): Find a better approach. Target override is necessary because the query AST schema
-    //   validates the target as a DXN, so invalid intermediate input (e.g. while backspacing) cannot be
-    //   stored in the view and would reset the field.
-    const [targetOverride, setTargetOverride] = useState<string | null>(null);
-    const targetDisplay = targetOverride !== null ? targetOverride : queueTarget;
-    useEffect(() => {
-      setTargetOverride(null);
-    }, [queueTarget]);
+    const feeds = useQuery(db, Filter.type(Type.Feed));
+
+    const targetRef = useMemo(() => {
+      if (!queueTarget) {
+        return undefined;
+      }
+      const feed = feeds.find((feed) => Feed.getQueueDxn(feed)?.toString() === queueTarget);
+      return feed ? Ref.fromDXN(Entity.getDXN(feed)) : undefined;
+    }, [queueTarget, feeds]);
 
     const viewSchema = useMemo(() => {
       const base = Schema.Struct({
@@ -124,7 +127,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
       if (mode === 'tag') {
         return Schema.Struct({
           ...base.fields,
-          target: Schema.optional(Schema.String.annotations({ title: 'Target Queue' })),
+          target: Schema.optional(Type.Ref(Type.Feed).annotations({ title: 'Target Feed' })),
         }).pipe(Schema.mutable);
       }
 
@@ -136,9 +139,9 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
     const viewValues = useMemo(
       () => ({
         query: mode === 'schema' ? getTypenameFromQuery(view.query.ast) : view.query.ast,
-        target: targetDisplay,
+        target: targetRef,
       }),
-      [mode, view.query.ast, targetDisplay],
+      [mode, view.query.ast, targetRef],
     );
 
     const fieldMap = useMemo<FormFieldMap | undefined>(
@@ -148,23 +151,25 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
 
     const handleUpdate = useCallback(
       (values: any) => {
-        const target = values.target;
-        const parsed = typeof target === 'string' ? DXN.tryParse(target) : undefined;
-        // For queue DXNs, only commit when asQueueDXN() succeeds (subspaceTag + spaceId + queueId).
-        // Incomplete/backspaced queue DXNs parse but fail asQueueDXN, causing view to reject and reset.
-        const isValidDXN = parsed?.kind === DXN.kind.QUEUE ? !!parsed.asQueueDXN() : !!parsed;
-        const isValidOrEmpty = target === '' || target === undefined || isValidDXN;
-        if (isValidOrEmpty) {
-          // When committing empty, keep override as '' so we show empty until view updates.
-          // Otherwise targetDisplay falls back to queueTarget (still the old DXN) and reverts.
-          setTargetOverride(target === '' || target === undefined ? '' : null);
-          const query = mode === 'schema' ? Query.select(Filter.typename(values.query)).ast : values.query;
-          onQueryChanged?.(query, target || undefined);
-        } else {
-          setTargetOverride(target ?? null);
+        const targetValue = values.target;
+        let queueDxn: string | undefined;
+
+        if (Ref.isRef(targetValue)) {
+          const feedDxn = targetValue.dxn.toString();
+          const feed = feeds.find((feed) => Obj.getDXN(feed).toString() === feedDxn);
+          if (feed) {
+            queueDxn = Feed.getQueueDxn(feed)?.toString();
+          }
         }
+
+        // TODO(wittjosiah): Deep-clone the AST to plain JS or ECHO proxy arrays become objects with numeric keys.
+        const query =
+          mode === 'schema'
+            ? Query.select(Filter.typename(values.query)).ast
+            : JSON.parse(JSON.stringify(values.query));
+        onQueryChanged?.(query, queueDxn);
       },
-      [onQueryChanged, mode],
+      [onQueryChanged, mode, feeds],
     );
 
     const handleDelete = useCallback(
@@ -185,7 +190,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
         )}
 
         {/* TODO(burdon): Is the form read-only or just the schema? */}
-        <Form.Root schema={viewSchema} values={viewValues} fieldMap={fieldMap} onValuesChanged={handleUpdate}>
+        <Form.Root schema={viewSchema} values={viewValues} fieldMap={fieldMap} db={db} onValuesChanged={handleUpdate}>
           <Form.FieldSet />
 
           <FormFieldLabel label={t('fields label')} asChild />

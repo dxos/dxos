@@ -6,17 +6,16 @@ import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { Obj } from '@dxos/echo';
+import { type Feed, Obj } from '@dxos/echo';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { Filter, useQuery } from '@dxos/react-client/echo';
 import { Button, useTranslation } from '@dxos/react-ui';
 import { AccessToken } from '@dxos/types';
 
 import { meta } from '../../meta';
-import { type Mailbox } from '../../types';
 
-export const MailboxEmpty = ({ mailbox }: { mailbox: Mailbox.Mailbox }) => {
-  const db = Obj.getDatabase(mailbox);
+export const MailboxEmpty = ({ feed }: { feed: Feed.Feed }) => {
+  const db = Obj.getDatabase(feed);
   const tokens = useQuery(db, Filter.type(AccessToken.AccessToken));
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();

@@ -8,7 +8,7 @@ import * as Match from 'effect/Match';
 
 import { AiService, type ModelName } from '@dxos/ai';
 import { TestAiService } from '@dxos/ai/testing';
-import type { Type } from '@dxos/echo';
+import { Feed, type Type } from '@dxos/echo';
 import { CredentialsService, type FunctionDefinition, type ServiceCredential, TracingService } from '@dxos/functions';
 import { TracingServiceExt, TriggerDispatcher, TriggerStateStore } from '@dxos/functions-runtime';
 import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
@@ -57,6 +57,7 @@ export const AssistantTestLayer = ({
           types,
         }),
         CredentialsService.configuredLayer(credentials),
+        Feed.notAvailable,
         Match.value(tracing).pipe(
           Match.when('noop', () => TracingService.layerNoop),
           Match.when('console', () => TracingServiceExt.layerLogInfo()),

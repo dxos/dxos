@@ -4,6 +4,8 @@
 
 import { type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import * as Effect from 'effect/Effect';
+import * as Match from 'effect/Match';
+import * as Option from 'effect/Option';
 
 import { type CapabilityManager } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
@@ -126,9 +128,11 @@ const getSystemCollectionNodePartials = ({
   db: Database.Database;
   resolve: (typename: string) => Record<string, any>;
 }) => {
-  const metadata = resolve(collection.key);
+  const [, feedKind] = collection.key.split('~');
+  const metadataKey = feedKind ?? collection.key;
+  const metadata = resolve(metadataKey);
   return {
-    label: ['typename label', { ns: collection.key, count: 2 }],
+    label: ['typename label', { ns: metadataKey, count: 2 }],
     icon: metadata.icon,
     iconHue: metadata.iconHue,
     acceptPersistenceClass: new Set(['echo']),
@@ -461,7 +465,9 @@ export const createObjectNode = ({
     return null;
   }
 
-  const metadata = resolve(type);
+  // For feeds, use the kind property for metadata lookup instead of the generic Feed typename.
+  const metadataKey = Obj.instanceOf(Type.Feed, object) ? (object.kind ?? type) : type;
+  const metadata = resolve(metadataKey);
   const partials = Obj.instanceOf(Collection.Collection, object)
     ? getCollectionGraphNodePartials({ collection: object, db, resolve })
     : Obj.instanceOf(Collection.Managed, object)
@@ -475,7 +481,7 @@ export const createObjectNode = ({
   const label = (object as any).name ||
     Obj.getLabel(object) ||
     // TODO(wittjosiah): Remove metadata labels.
-    metadata.label?.(object) || ['object name placeholder', { ns: type, default: 'New item' }];
+    metadata.label?.(object) || ['object name placeholder', { ns: metadataKey, default: 'New item' }];
 
   const selectable =
     (!Obj.instanceOf(Type.PersistentType, object) &&
@@ -550,8 +556,19 @@ export const constructObjectActions = ({
 
   const getId = (id: string) => `${id}/${Obj.getDXN(object).toString()}`;
 
-  const managedCollection = Obj.instanceOf(Collection.Managed, object) ? object : undefined;
-  const metadata = managedCollection ? resolve(managedCollection.key) : {};
+  const metadataKey = Match.value(object).pipe(
+    Match.when(Obj.instanceOf(Type.Feed), (feed: Type.Feed) => feed.kind ?? Obj.getTypename(feed)!),
+    Match.when(Obj.instanceOf(Collection.Managed), (managed) => {
+      const [, feedKind] = managed.key.split('~') ?? [];
+      return feedKind ?? managed.key;
+    }),
+    Match.orElse((obj) => Obj.getTypename(obj)!),
+  );
+  const managedCollection = Option.some(object).pipe(
+    Option.filter(Obj.instanceOf(Collection.Managed)),
+    Option.getOrUndefined,
+  );
+  const metadata = metadataKey ? resolve(metadataKey) : {};
   const createObject = metadata.createObject;
   const inputSchema = metadata.inputSchema;
 
@@ -611,7 +628,7 @@ export const constructObjectActions = ({
           },
         ]
       : []),
-    ...(createObject
+    ...(createObject && managedCollection
       ? [
           {
             id: getId(SpaceOperation.OpenCreateObject.meta.key),
@@ -620,7 +637,7 @@ export const constructObjectActions = ({
               if (inputSchema) {
                 yield* Operation.invoke(SpaceOperation.OpenCreateObject, {
                   target: db,
-                  typename: managedCollection ? managedCollection.key : undefined,
+                  typename: managedCollection ? metadataKey : undefined,
                 });
               } else {
                 const createdObject = yield* createObject({}, { db, capabilities }) as Effect.Effect<
@@ -656,7 +673,7 @@ export const constructObjectActions = ({
             data: (params?: Node.InvokeProps) =>
               Operation.invoke(SpaceOperation.RenameObject, { object, caller: params?.caller }),
             properties: {
-              label: ['rename object label', { ns: typename }],
+              label: ['rename object label', { ns: metadataKey }],
               icon: 'ph--pencil-simple-line--regular',
               disposition: 'list-item',
               // TODO(wittjosiah): Not working.
@@ -677,7 +694,7 @@ export const constructObjectActions = ({
               yield* Operation.invoke(SpaceOperation.RemoveObjects, { objects: [object], target: collection });
             }),
             properties: {
-              label: ['delete object label', { ns: typename }],
+              label: ['delete object label', { ns: metadataKey }],
               icon: 'ph--trash--regular',
               disposition: 'list-item',
               disabled: !deletable,

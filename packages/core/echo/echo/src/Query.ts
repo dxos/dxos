@@ -8,7 +8,6 @@ import type * as Schema from 'effect/Schema';
 import { type QueryAST } from '@dxos/echo-protocol';
 
 import * as Database from './Database';
-import * as Entity from './Entity';
 import * as Feed from './Feed';
 import * as Filter from './Filter';
 import { getTypeDXNFromSpecifier } from './internal';
@@ -316,12 +315,9 @@ class QueryClass implements Any {
     }
 
     const feeds = items as Feed.Feed[];
-    const queueDxns = feeds.map((feed) => {
-      const keys = Entity.getKeys(feed as Entity.Unknown, Feed.DXN_KEY);
-      if (keys.length === 0) {
-        throw new Error('Feed does not have a backing DXN key');
-      }
-      return keys[0].id;
+    const queueDxns = feeds.flatMap((feed) => {
+      const dxn = Feed.getQueueDxn(feed);
+      return dxn ? [dxn.toString()] : [];
     });
     return new QueryClass({
       type: 'options',

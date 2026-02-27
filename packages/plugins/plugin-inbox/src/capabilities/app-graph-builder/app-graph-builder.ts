@@ -8,14 +8,13 @@ import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { Filter, Obj, Ref } from '@dxos/echo';
-import { AtomObj, AtomQuery, AtomRef } from '@dxos/echo-atom';
+import { DXN, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { AtomQuery } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { AutomationCapabilities, invokeFunctionWithTracing } from '@dxos/plugin-automation';
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
-import { type SelectionManager } from '@dxos/react-ui-attention';
 import { type Event, type Message } from '@dxos/types';
 import { kebabize } from '@dxos/util';
 
@@ -23,51 +22,59 @@ import { CalendarFunctions, GmailFunctions } from '../../functions';
 import { meta } from '../../meta';
 import { Calendar, Mailbox } from '../../types';
 
-/**
- * Atom family to derive the selected item ID from selection state.
- * Keyed by (selectionManager, nodeId) to ensure proper caching.
- */
-const selectedIdFamily = Atom.family((selectionManager: SelectionManager) =>
-  Atom.family((nodeId: string) =>
-    Atom.make((get) => {
-      const state = get(selectionManager.state);
-      const selection = state.selections[nodeId];
-      return selection?.mode === 'single' ? selection.id : undefined;
-    }),
-  ),
-);
-
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const capabilities = yield* Capability.Service;
+    const selectionManager = yield* Capability.get(AttentionCapabilities.Selection);
+    const selectedId = Atom.family((nodeId: string) =>
+      Atom.make((get) => {
+        const state = get(selectionManager.state);
+        const selection = state.selections[nodeId];
+        return selection?.mode === 'single' ? selection.id : undefined;
+      }),
+    );
 
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
         id: `${meta.id}/mailbox-filters`,
-        match: (node) =>
-          Obj.instanceOf(Mailbox.Mailbox, node.data) &&
-          node.data.filters?.length > 0 &&
-          node.properties.filter === undefined
-            ? Option.some(node.data)
-            : Option.none(),
-        connector: (mailbox, get) => {
-          // Subscribe to mailbox changes to track filter updates.
-          const mailboxSnapshot = get(AtomObj.make(mailbox));
+        match: (node) => {
+          if (!Mailbox.instanceOf(node.data)) {
+            return Option.none();
+          }
+          const feed = node.data;
+          const db = Obj.getDatabase(feed);
+          if (!db || node.properties.filter !== undefined) {
+            return Option.none();
+          }
+          return Option.some(feed);
+        },
+        connector: (feed, get) => {
+          const db = Obj.getDatabase(feed);
+          if (!db) {
+            return Effect.succeed([]);
+          }
+
+          // TODO(wittjosiah): Not possible to filter by references yet.
+          const configs = get(AtomQuery.make(db, Filter.type(Mailbox.Config)));
+          const config = configs.find((config) => DXN.equals(config.feed.dxn, Obj.getDXN(feed)));
+          if (!config?.filters?.length) {
+            return Effect.succeed([]);
+          }
+
           return Effect.succeed([
             {
-              id: `${Obj.getDXN(mailbox).toString()}-unfiltered`,
-              type: `${Mailbox.Mailbox.typename}-filter`,
-              data: mailbox,
+              id: `${Obj.getDXN(feed).toString()}-unfiltered`,
+              type: `${Mailbox.kind}-filter`,
+              data: feed,
               properties: {
                 label: ['inbox label', { ns: meta.id }],
                 icon: 'ph--tray--regular',
                 filter: null,
               },
             },
-            ...(mailboxSnapshot.filters?.map(({ name, filter }: { name: string; filter: any }) => ({
-              id: `${Obj.getDXN(mailbox).toString()}-filter-${kebabize(name)}`,
-              type: `${Mailbox.Mailbox.typename}-filter`,
-              data: mailbox,
+            ...(config.filters?.map(({ name, filter }: { name: string; filter: any }) => ({
+              id: `${Obj.getDXN(feed).toString()}-filter-${kebabize(name)}`,
+              type: `${Mailbox.kind}-filter`,
+              data: feed,
               properties: {
                 label: name,
                 icon: 'ph--tray--regular',
@@ -75,12 +82,12 @@ export default Capability.makeModule(
               },
               nodes: [
                 {
-                  id: `${Obj.getDXN(mailbox).toString()}-filter-${kebabize(name)}-delete`,
+                  id: `${Obj.getDXN(feed).toString()}-filter-${kebabize(name)}-delete`,
                   type: Node.ActionType,
                   data: Effect.fnUntraced(function* () {
-                    const index = mailbox.filters.findIndex((f: any) => f.name === name);
-                    Obj.change(mailbox, (m) => {
-                      m.filters.splice(index, 1);
+                    const index = config.filters.findIndex((f: any) => f.name === name);
+                    Obj.change(config, (c: any) => {
+                      c.filters.splice(index, 1);
                     });
                   }),
                   properties: {
@@ -94,21 +101,22 @@ export default Capability.makeModule(
           ]);
         },
       }),
-      GraphBuilder.createTypeExtension({
+      GraphBuilder.createExtension({
         id: `${meta.id}/mailbox-message`,
-        type: Mailbox.Mailbox,
-        connector: (mailbox, get) => {
-          // Subscribe to queue ref to reactively load the target.
-          const queue = get(AtomRef.make(mailbox.queue));
-          if (!queue) {
+        match: (node) => (Mailbox.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
+        connector: (feed, get) => {
+          const db = Obj.getDatabase(feed);
+          if (!db) {
             return Effect.succeed([]);
           }
 
-          const selectionManager = capabilities.get(AttentionCapabilities.Selection);
-          const nodeId = Obj.getDXN(mailbox).toString();
-          const messageId = get(selectedIdFamily(selectionManager)(nodeId));
+          const nodeId = Obj.getDXN(feed).toString();
+          const messageId = get(selectedId(nodeId));
           const message = get(
-            AtomQuery.make<Message.Message>(queue, messageId ? Filter.id(messageId) : Filter.nothing()),
+            AtomQuery.make<Message.Message>(
+              db,
+              Query.select(messageId ? Filter.id(messageId) : Filter.nothing()).from(feed),
+            ),
           )[0];
           return Effect.succeed([
             {
@@ -124,20 +132,20 @@ export default Capability.makeModule(
           ]);
         },
       }),
-      GraphBuilder.createTypeExtension({
+      GraphBuilder.createExtension({
         id: `${meta.id}/calendar-event`,
-        type: Calendar.Calendar,
-        connector: (cal, get) => {
-          // Subscribe to queue ref to reactively load the target.
-          const queue = get(AtomRef.make(cal.queue));
-          if (!queue) {
+        match: (node) => (Calendar.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
+        connector: (feed, get) => {
+          const db = Obj.getDatabase(feed);
+          if (!db) {
             return Effect.succeed([]);
           }
 
-          const selectionManager = capabilities.get(AttentionCapabilities.Selection);
-          const nodeId = Obj.getDXN(cal).toString();
-          const eventId = get(selectedIdFamily(selectionManager)(nodeId));
-          const event = get(AtomQuery.make<Event.Event>(queue, eventId ? Filter.id(eventId) : Filter.nothing()))[0];
+          const nodeId = Obj.getDXN(feed).toString();
+          const eventId = get(selectedId(nodeId));
+          const event = get(
+            AtomQuery.make<Event.Event>(db, Query.select(eventId ? Filter.id(eventId) : Filter.nothing()).from(feed)),
+          )[0];
           return Effect.succeed([
             {
               id: `${nodeId}${ATTENDABLE_PATH_SEPARATOR}event`,
@@ -152,22 +160,22 @@ export default Capability.makeModule(
           ]);
         },
       }),
-      GraphBuilder.createTypeExtension({
+      GraphBuilder.createExtension({
         id: `${meta.id}/sync-mailbox`,
-        type: Mailbox.Mailbox,
-        actions: (mailbox) =>
+        match: (node) => (Mailbox.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
+        actions: (feed) =>
           Effect.succeed([
             {
-              id: `${Obj.getDXN(mailbox).toString()}-sync`,
+              id: `${Obj.getDXN(feed).toString()}-sync`,
               data: Effect.fnUntraced(function* () {
                 const computeRuntime = yield* Capability.get(AutomationCapabilities.ComputeRuntime);
-                const db = Obj.getDatabase(mailbox);
+                const db = Obj.getDatabase(feed);
                 invariant(db);
                 const runtime = computeRuntime.getRuntime(db.spaceId);
                 yield* Effect.tryPromise(() =>
                   runtime.runPromise(
                     invokeFunctionWithTracing(GmailFunctions.Sync, {
-                      mailbox: Ref.make(mailbox),
+                      feed: Ref.make(feed),
                     }),
                   ),
                 );
@@ -180,22 +188,22 @@ export default Capability.makeModule(
             },
           ]),
       }),
-      GraphBuilder.createTypeExtension({
+      GraphBuilder.createExtension({
         id: `${meta.id}/sync-calendar`,
-        type: Calendar.Calendar,
-        actions: (cal) =>
+        match: (node) => (Calendar.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
+        actions: (feed) =>
           Effect.succeed([
             {
-              id: `${Obj.getDXN(cal).toString()}-sync`,
+              id: `${Obj.getDXN(feed).toString()}-sync`,
               data: Effect.fnUntraced(function* () {
                 const computeRuntime = yield* Capability.get(AutomationCapabilities.ComputeRuntime);
-                const db = Obj.getDatabase(cal);
+                const db = Obj.getDatabase(feed);
                 invariant(db);
                 const runtime = computeRuntime.getRuntime(db.spaceId);
                 yield* Effect.tryPromise(() =>
                   runtime.runPromise(
                     invokeFunctionWithTracing(CalendarFunctions.Sync, {
-                      calendar: Ref.make(cal),
+                      feed: Ref.make(feed),
                     }),
                   ),
                 );
