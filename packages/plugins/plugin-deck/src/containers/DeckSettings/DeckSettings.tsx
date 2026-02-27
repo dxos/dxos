@@ -12,8 +12,8 @@ import {
   type DeckSettingsProps,
   type NewPlankPositioning,
   NewPlankPositions,
-  type Overscroll,
   OverScrollToProps,
+  type Overscroll,
 } from '../../types';
 
 const isSocket = !!(globalThis as any).__args;
