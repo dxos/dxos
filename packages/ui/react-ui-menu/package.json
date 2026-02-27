@@ -33,7 +33,7 @@
     "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keyboard": "workspace:*",
-    "@dxos/log": "catalog:",
+    "@dxos/log": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
