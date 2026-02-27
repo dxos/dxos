@@ -110,7 +110,7 @@ type DialogContentProps = ThemedClassName<ComponentPropsWithRef<typeof DialogCon
 };
 
 const DialogContent: ForwardRefExoticComponent<DialogContentProps> = forwardRef<HTMLDivElement, DialogContentProps>(
-  ({ classNames, children, size, inOverlayLayout: propsInOverlayLayout, ...props }, forwardedRef) => {
+  ({ classNames, children, size = 'md', inOverlayLayout: propsInOverlayLayout, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const { inOverlayLayout } = useOverlayLayoutContext(DIALOG_CONTENT_NAME);
 
@@ -123,7 +123,10 @@ const DialogContent: ForwardRefExoticComponent<DialogContentProps> = forwardRef<
         className={tx('dialog.content', { inOverlayLayout: propsInOverlayLayout || inOverlayLayout, size }, classNames)}
         ref={forwardedRef}
       >
-        {children}
+        {/* TODO(burdon): @container causing problems; move style to dialog.css */}
+        <div role='none' className='@container h-full flex flex-col gap-[inherit]'>
+          {children}
+        </div>
       </DialogContentPrimitive>
     );
   },

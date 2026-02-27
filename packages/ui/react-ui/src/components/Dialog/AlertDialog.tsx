@@ -30,6 +30,8 @@ import React, {
   forwardRef,
 } from 'react';
 
+import { type DialogSize } from '@dxos/ui-theme';
+
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 import { ElevationProvider } from '../ElevationProvider';
@@ -169,18 +171,18 @@ AlertDialogOverlay.displayName = ALERT_DIALOG_OVERLAY_NAME;
 // Content
 //
 
-type AlertDialogContentProps = ThemedClassName<AlertDialogContentPrimitiveProps>;
+type AlertDialogContentProps = ThemedClassName<AlertDialogContentPrimitiveProps> & { size?: DialogSize };
 
 const AlertDialogContent: ForwardRefExoticComponent<AlertDialogContentProps> = forwardRef<
   HTMLDivElement,
   AlertDialogContentProps
->(({ classNames, children, ...props }, forwardedRef) => {
+>(({ classNames, children, size = 'md', ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   const { inOverlayLayout } = useOverlayLayoutContext(ALERT_DIALOG_CONTENT_NAME);
   return (
     <AlertDialogContentPrimitive
       {...props}
-      className={tx('dialog.content', { inOverlayLayout }, classNames)}
+      className={tx('dialog.content', { inOverlayLayout, size }, classNames)}
       ref={forwardedRef}
     >
       {children}

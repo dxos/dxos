@@ -19,7 +19,7 @@ export const RecoveryCodeDialog = ({ code }: RecoveryCodeDialogProps) => {
   const handleConfirmation = useCallback((checked: boolean) => setConfirmation(checked), []);
 
   return (
-    <AlertDialog.Content classNames='h-content min-h-[15rem] max-h-full md:max-w-[40rem] overflow-hidden'>
+    <AlertDialog.Content size='md' classNames='h-content min-h-[15rem] max-h-full overflow-hidden'>
       <AlertDialog.Title>{t('recovery code dialog title')}</AlertDialog.Title>
       <p className='py-4'>{t('recovery code dialog description')}</p>
       <Clipboard.Provider>
