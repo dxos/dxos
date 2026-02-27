@@ -8,7 +8,7 @@ import { type Any } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols/proto';
-import { type Message as SignalMessage, type SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
+import { type Message as SignalMessage, type SwarmEvent } from '@dxos/protocols/buf/dxos/mesh/signal_pb';
 import { type SignalServerRunner, runTestSignalServer } from '@dxos/signal';
 
 import { SignalRPCClient } from './signal-rpc-client';
@@ -78,9 +78,10 @@ describe('SignalRPCClient', () => {
     const topic = PublicKey.random();
 
     const stream1 = await client1.join({ topic, peerId: peerId1 });
-    const promise = new Promise<SwarmEvent>((resolve) => {
+    const promise = new Promise<any>((resolve) => {
       stream1.subscribe(
-        (event: SwarmEvent) => {
+        (event: any) => {
+          // Proto codec returns proto-shaped oneof (direct fields); access via `as any` at boundary.
           if (event.peerAvailable && peerId2.equals(event.peerAvailable.peer!)) {
             resolve(event);
           }

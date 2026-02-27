@@ -8,9 +8,9 @@ import { getFirstStreamValue } from '@dxos/codec-protobuf';
 import { type Config, type ConfigProto } from '@dxos/config';
 import { createDidFromIdentityKey, credentialTypeFilter } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
-import { type PublicKey } from '@dxos/keys';
+import { PublicKey } from '@dxos/keys';
 import { STORAGE_VERSION } from '@dxos/protocols';
-import { protoToBuf, timestampMs } from '@dxos/protocols/buf';
+import { protoToBuf, timestampMs, toPublicKey } from '@dxos/protocols/buf';
 import {
   type Device as BufDevice,
   type Identity,
@@ -205,7 +205,7 @@ const getSpaceStats = async (space: DataSpace): Promise<SpaceStats> => {
           },
         },
         presence:
-          space.presence.getPeersOnline().filter(({ identityKey }) => identityKey.equals(member.key)).length > 0
+          space.presence.getPeersOnline().filter(({ identityKey }) => identityKey && toPublicKey(identityKey).equals(member.key)).length > 0
             ? SpaceMember_PresenceState.ONLINE
             : SpaceMember_PresenceState.OFFLINE,
       })),

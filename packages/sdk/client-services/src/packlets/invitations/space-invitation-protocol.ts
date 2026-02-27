@@ -125,7 +125,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
           invitation.authMethod === Invitation_AuthMethod.KNOWN_PUBLIC_KEY
             ? (invitation.guestKeypair!.publicKey as never)
             : undefined,
-      },
+      } as any,
     );
 
     invariant(credential.credential);

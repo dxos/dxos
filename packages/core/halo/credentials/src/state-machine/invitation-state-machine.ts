@@ -4,7 +4,7 @@
 
 import { PublicKey } from '@dxos/keys';
 import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { type DelegateSpaceInvitation } from '@dxos/protocols/proto/dxos/halo/invitations';
+import { type DelegateSpaceInvitation } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 import { type AsyncCallback, Callback, ComplexMap, ComplexSet } from '@dxos/util';
 
 import { fromBufPublicKey, getCredentialAssertion } from '../credentials';
@@ -57,7 +57,7 @@ export class InvitationStateMachine {
           if (isExpired || wasCancelled || wasUsed) {
             return;
           }
-          const invitation: DelegateSpaceInvitation = { ...assertion };
+          const invitation = { ...assertion } as any as DelegateSpaceInvitation;
           this._invitations.set(credentialId, invitation);
           await this.onDelegatedInvitation.callIfSet({
             credentialId,

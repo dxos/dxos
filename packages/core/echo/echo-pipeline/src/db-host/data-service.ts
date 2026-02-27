@@ -119,13 +119,13 @@ export class DataServiceImpl implements Echo.DataService {
       request.updates.map((u) => ({
         documentId: u.documentId,
         mutation: u.mutation,
-      })),
+      })) as any,
     );
     return create(EmptySchema);
   }
 
   async flush(request: FlushRequest): Promise<Empty> {
-    await this._automergeHost.flush({ documentIds: request.documentIds });
+    await this._automergeHost.flush({ documentIds: request.documentIds } as any);
     return create(EmptySchema);
   }
 
@@ -137,7 +137,7 @@ export class DataServiceImpl implements Echo.DataService {
     const heads = await this._automergeHost.getHeads(documentIds as DocumentId[]);
     return create(GetDocumentHeadsResponseSchema, {
       heads: create(DocHeadsListSchema, {
-        entries: heads.map((h, idx) => ({ documentId: documentIds[idx], heads: h })),
+        entries: heads.map((h, idx) => ({ documentId: documentIds[idx], heads: h }) as any),
       }),
     });
   }
@@ -149,7 +149,7 @@ export class DataServiceImpl implements Echo.DataService {
           documentId: e.documentId,
           heads: e.heads,
         })),
-      });
+      } as any);
     }
     return create(EmptySchema);
   }

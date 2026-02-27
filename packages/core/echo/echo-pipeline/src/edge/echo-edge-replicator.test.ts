@@ -13,7 +13,7 @@ import { PublicKey, SpaceId } from '@dxos/keys';
 import { EdgeService } from '@dxos/protocols';
 import type { AutomergeProtocolMessage } from '@dxos/protocols';
 import { create } from '@dxos/protocols/buf';
-import type { Peer } from '@dxos/protocols/proto/dxos/edge/messenger';
+import type { Peer } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { openAndClose } from '@dxos/test-utils';
 
 import type { AutomergeReplicatorConnection, AutomergeReplicatorContext } from '../automerge';
@@ -33,7 +33,7 @@ describe('EchoEdgeReplicator', () => {
     client.setIdentity(await createEphemeralEdgeIdentity());
     await connectionOpen.waitForCount(1);
 
-    const forbidden = createForbiddenMessage({ identityKey: client.identityKey, peerKey: client.peerKey }, spaceId);
+    const forbidden = createForbiddenMessage({ identityKey: client.identityKey, peerKey: client.peerKey } as any, spaceId);
     await server.sendMessage(forbidden);
     await connectionOpen.waitForCount(1);
 

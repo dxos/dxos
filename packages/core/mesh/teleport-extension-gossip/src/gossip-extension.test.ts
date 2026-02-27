@@ -6,7 +6,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
-import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
+import { type GossipMessage } from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
 import { TestBuilder, TestPeer } from '@dxos/teleport/testing';
 
 import { GossipExtension } from './gossip-extension';
@@ -34,6 +34,7 @@ describe('GossipExtension', () => {
     });
     connection2.teleport.addExtension('dxos.mesh.teleport.gossip', extension2);
 
+    // Proto codec handles @dxos/keys PublicKey and Date at runtime; cast at boundary.
     await extension1.sendAnnounce({
       peerId: peer1.peerId,
       channelId: 'dxos.mesh.teleport.gossip',
@@ -44,7 +45,7 @@ describe('GossipExtension', () => {
         connections: [peer2.peerId],
         identityKey: PublicKey.random(),
       },
-    });
+    } as any);
 
     await extension2.sendAnnounce({
       peerId: peer2.peerId,
@@ -56,9 +57,9 @@ describe('GossipExtension', () => {
         connections: [peer1.peerId],
         identityKey: PublicKey.random(),
       },
-    });
+    } as any);
 
-    expect((await trigger1.wait({ timeout: 50 })).peerId.toHex()).toEqual(peer2.peerId.toHex());
-    expect((await trigger2.wait({ timeout: 50 })).peerId.toHex()).toEqual(peer1.peerId.toHex());
+    expect(((await trigger1.wait({ timeout: 50 })) as any).peerId.toHex()).toEqual(peer2.peerId.toHex());
+    expect(((await trigger2.wait({ timeout: 50 })) as any).peerId.toHex()).toEqual(peer1.peerId.toHex());
   });
 });

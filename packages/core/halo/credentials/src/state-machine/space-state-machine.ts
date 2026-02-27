@@ -7,8 +7,8 @@ import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Credential, SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type DelegateSpaceInvitation } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 import { type TypedMessage } from '@dxos/protocols/proto';
-import { type DelegateSpaceInvitation } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { type AsyncCallback, Callback, ComplexMap, ComplexSet } from '@dxos/util';
 
 import { fromBufPublicKey, getCredentialAssertion, verifyCredential } from '../credentials';

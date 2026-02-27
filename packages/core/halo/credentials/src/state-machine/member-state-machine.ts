@@ -5,8 +5,12 @@
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type Credential, SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { type ProfileDocument, type SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import {
+  type Credential,
+  type ProfileDocument,
+  type SpaceMember,
+  SpaceMember_Role,
+} from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { ComplexMap } from '@dxos/util';
 
 import { fromBufPublicKey, getCredentialAssertion } from '../credentials';
@@ -74,19 +78,19 @@ export class MemberStateMachine implements CredentialGraphStateHandler<SpaceMemb
           this._ownerKey = subjectId;
         }
         if (assertion.profile != null) {
-          this._memberProfiles.set(subjectId, assertion.profile);
+          this._memberProfiles.set(subjectId, assertion.profile as any as ProfileDocument);
         }
-        await this._hashgraph.addVertex(credential, assertion);
+        await this._hashgraph.addVertex(credential, assertion as any as SpaceMember);
         break;
       }
       case 'dxos.halo.credentials.MemberProfile': {
         const member = this._hashgraph.getSubjectState(subjectId);
         if (member) {
-          member.profile = assertion.profile;
+          member.profile = assertion.profile as any as ProfileDocument;
         } else {
           log.warn('Member not found', { id: subjectId });
         }
-        this._memberProfiles.set(subjectId, assertion.profile);
+        this._memberProfiles.set(subjectId, assertion.profile as any as ProfileDocument);
         break;
       }
       default:
@@ -116,7 +120,7 @@ export class MemberStateMachine implements CredentialGraphStateHandler<SpaceMemb
     if (isChangingOwnRole) {
       return false;
     }
-    if (issuer.equals(assertion.spaceKey)) {
+    if (assertion.spaceKey && issuer.equals(fromBufPublicKey(assertion.spaceKey)!)) {
       return true;
     }
     const issuerRole = this._getRole(scope, issuer);

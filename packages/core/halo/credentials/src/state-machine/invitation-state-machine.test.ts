@@ -6,9 +6,9 @@ import { beforeEach, describe, expect, test } from 'vitest';
 
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
+import { Invitation_AuthMethod } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type Credential, SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import { type DelegateSpaceInvitation } from '@dxos/protocols/proto/dxos/halo/invitations';
+import { type DelegateSpaceInvitation } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 import { range } from '@dxos/util';
 
 import {
@@ -23,13 +23,13 @@ describe('InvitationStateMachine', () => {
   const keyring = new Keyring();
   let space: PublicKey;
   let identity: PublicKey;
-  const baseInvitation: DelegateSpaceInvitation = {
+  const baseInvitation = {
     invitationId: PublicKey.random().toHex(),
     swarmKey: PublicKey.random(),
-    role: SpaceMember_Role.ADMIN as any,
-    authMethod: Invitation.AuthMethod.KNOWN_PUBLIC_KEY,
+    role: SpaceMember_Role.ADMIN,
+    authMethod: Invitation_AuthMethod.KNOWN_PUBLIC_KEY,
     multiUse: false,
-  };
+  } as any as DelegateSpaceInvitation;
 
   beforeEach(async () => {
     space = await keyring.createKey();
@@ -58,7 +58,7 @@ describe('InvitationStateMachine', () => {
     await stateMachine.process(
       await delegateInvitation({
         ...baseInvitation,
-        expiresOn: new Date(Date.now() - 1),
+        expiresOn: new Date(Date.now() - 1) as any,
       }),
     );
     expectNoInvitation(stateMachine, baseInvitation);

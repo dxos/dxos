@@ -44,7 +44,7 @@ export class TestAgent extends TestPeerBase {
     invariant(agents.length > 0, 'At least one agent is required.'); // We will wait for .updated event from the agent itself. And with zero connections it will never happen.
     return asyncTimeout(
       this.presence.updated.waitFor(() => {
-        const connections = this.presence.getPeersOnline().map((state) => state.identityKey.toHex());
+        const connections = this.presence.getPeersOnline().map((state) => (state.identityKey as any).toHex());
         const expectedConnections = agents.map((agent) => agent.peerId.toHex());
         return expectedConnections.every((value) => connections.includes(value));
       }),

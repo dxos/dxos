@@ -96,8 +96,8 @@ const findFeedOwner = (spaceManager: SpaceManager, feedKey: PublicKey): FeedOwne
     return undefined;
   }
   return {
-    identity: feedInfo.assertion.identityKey,
-    device: feedInfo.assertion.deviceKey,
+    identity: feedInfo.assertion.identityKey as any,
+    device: feedInfo.assertion.deviceKey as any,
   };
 };
 

@@ -381,7 +381,7 @@ export class SpacesServiceImpl implements Client.SpacesService {
       },
       members: (await Promise.all(
         Array.from(space.inner.spaceState.members.values()).map(async (member) => {
-          const peers = space.presence.getPeersOnline().filter(({ identityKey }) => identityKey.equals(member.key));
+          const peers = space.presence.getPeersOnline().filter(({ identityKey }) => identityKey && toPublicKey(identityKey).equals(member.key));
           const isMe = this._identityManager.identity?.identityKey.equals(member.key);
 
           if (isMe) {

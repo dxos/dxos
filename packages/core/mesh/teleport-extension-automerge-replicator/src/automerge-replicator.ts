@@ -7,12 +7,9 @@ import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError } from '@dxos/protocols';
+import { type PeerInfo, type SyncMessage } from '@dxos/protocols/buf/dxos/mesh/teleport/automerge_pb';
 import { schema } from '@dxos/protocols/proto';
-import {
-  type AutomergeReplicatorService,
-  type PeerInfo,
-  type SyncMessage,
-} from '@dxos/protocols/proto/dxos/mesh/teleport/automerge';
+import { type AutomergeReplicatorService } from '@dxos/protocols/proto/dxos/mesh/teleport/automerge';
 import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 import { type ExtensionContext, type TeleportExtension } from '@dxos/teleport';
 
@@ -85,11 +82,12 @@ export class AutomergeReplicator implements TeleportExtension {
       },
       handlers: {
         AutomergeReplicatorService: {
-          startReplication: async (info: PeerInfo): Promise<void> => {
+          // Proto RPC passes proto-typed objects; cast at boundary.
+          startReplication: async (info: any): Promise<void> => {
             log('startReplication', { localPeerId: context.localPeerId, remotePeerId: context.remotePeerId, info });
             await this._callbacks.onStartReplication?.(info, context.remotePeerId);
           },
-          sendSyncMessage: async (message: SyncMessage): Promise<void> => {
+          sendSyncMessage: async (message: any): Promise<void> => {
             await this._callbacks.onSyncMessage?.(message);
           },
         },

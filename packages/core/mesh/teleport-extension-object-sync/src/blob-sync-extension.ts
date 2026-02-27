@@ -9,8 +9,9 @@ import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { RpcClosedError } from '@dxos/protocols';
+import { type BlobChunk, type WantList } from '@dxos/protocols/buf/dxos/mesh/teleport/blobsync_pb';
 import { schema } from '@dxos/protocols/proto';
-import { type BlobChunk, type BlobSyncService, type WantList } from '@dxos/protocols/proto/dxos/mesh/teleport/blobsync';
+import { type BlobSyncService } from '@dxos/protocols/proto/dxos/mesh/teleport/blobsync';
 import { type ExtensionContext, RpcExtension } from '@dxos/teleport';
 import { BitField } from '@dxos/util';
 
@@ -35,7 +36,7 @@ export class BlobSyncExtension extends RpcExtension<ServiceBundle, ServiceBundle
   private readonly _ctx = new Context({ onError: (err) => log.catch(err) });
 
   private _lastWantListUpdate = 0;
-  private _localWantList: WantList = { blobs: [] };
+  private _localWantList: WantList = { blobs: [] } as any;
 
   private readonly _updateWantList = new DeferredTask(this._ctx, async () => {
     // Throttle want list updates.
@@ -85,7 +86,7 @@ export class BlobSyncExtension extends RpcExtension<ServiceBundle, ServiceBundle
   /**
    * Set of id's remote peer wants.
    */
-  public remoteWantList: WantList = { blobs: [] };
+  public remoteWantList: WantList = { blobs: [] } as any;
 
   constructor(
     private readonly _params: BlobSyncExtensionProps, // to not conflict with the base class
@@ -127,12 +128,13 @@ export class BlobSyncExtension extends RpcExtension<ServiceBundle, ServiceBundle
   protected async getHandlers(): Promise<ServiceBundle> {
     return {
       BlobSyncService: {
-        want: async (wantList) => {
+        // Proto RPC passes proto-typed objects; cast at boundary.
+        want: async (wantList: any) => {
           log('remote want', { remoteWantList: wantList });
           this.remoteWantList = wantList;
           this.reconcileUploads();
         },
-        push: async (data) => {
+        push: async (data: any) => {
           log('received', { data });
           await this._params.onPush(data);
         },
@@ -209,7 +211,7 @@ export class BlobSyncExtension extends RpcExtension<ServiceBundle, ServiceBundle
           chunkSize: meta.chunkSize,
           chunkOffset: idx * meta.chunkSize,
           payload: chunkData,
-        });
+        } as any);
 
         if (chunks.length >= amount) {
           return chunks;

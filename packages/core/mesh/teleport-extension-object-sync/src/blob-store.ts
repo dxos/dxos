@@ -9,8 +9,8 @@ import { subtleCrypto } from '@dxos/crypto';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { schema } from '@dxos/protocols/proto';
-import { BlobMeta } from '@dxos/protocols/proto/dxos/echo/blob';
-import { type BlobChunk } from '@dxos/protocols/proto/dxos/mesh/teleport/blobsync';
+import { type BlobMeta, BlobMeta_State } from '@dxos/protocols/buf/dxos/echo/blob_pb';
+import { type BlobChunk } from '@dxos/protocols/buf/dxos/mesh/teleport/blobsync_pb';
 import { type Directory } from '@dxos/random-access-storage';
 import { BitField, arrayToBuffer } from '@dxos/util';
 
@@ -48,7 +48,7 @@ export class BlobStore {
       throw new Error('Invalid range');
     }
 
-    if (metadata.state === BlobMeta.State.FULLY_PRESENT) {
+    if (metadata.state === BlobMeta_State.FULLY_PRESENT) {
       const file = this._getDataFile(id);
       return file.read(offset, length);
     } else if (options.offset === undefined && options.length === undefined) {
@@ -100,15 +100,16 @@ export class BlobStore {
     const id = new Uint8Array(await subtleCrypto.digest('SHA-256', data as Uint8Array<ArrayBuffer>));
     const bitfield = BitField.ones(data.length / DEFAULT_CHUNK_SIZE);
 
-    const meta: BlobMeta = {
+    // Proto codec handles Date at runtime for Timestamp fields; cast at boundary.
+    const meta = {
       id,
-      state: BlobMeta.State.FULLY_PRESENT,
+      state: BlobMeta_State.FULLY_PRESENT,
       length: data.length,
       chunkSize: DEFAULT_CHUNK_SIZE,
       bitfield,
       created: new Date(),
       updated: new Date(),
-    };
+    } as any as BlobMeta;
 
     await this._getDataFile(id).write(0, arrayToBuffer(data));
     await this._writeMeta(id, meta);
@@ -118,45 +119,43 @@ export class BlobStore {
   // TODO(dmaretskyi): Optimize locking.
   @synchronized
   async setChunk(chunk: BlobChunk): Promise<BlobMeta> {
-    // Init metadata.
-    let meta = await this._getMeta(chunk.id);
+    // Proto codec uses @dxos/keys PublicKey, Date, etc.; operate via `any` internally.
+    const chk: any = chunk;
+    let meta: any = await this._getMeta(chk.id);
     if (!meta) {
-      invariant(chunk.totalLength, 'totalLength is not present');
+      invariant(chk.totalLength, 'totalLength is not present');
       meta = {
-        id: chunk.id,
-        state: BlobMeta.State.PARTIALLY_PRESENT,
-        length: chunk.totalLength,
-        chunkSize: chunk.chunkSize ?? DEFAULT_CHUNK_SIZE,
+        id: chk.id,
+        state: BlobMeta_State.PARTIALLY_PRESENT,
+        length: chk.totalLength,
+        chunkSize: chk.chunkSize ?? DEFAULT_CHUNK_SIZE,
         created: new Date(),
       };
       meta.bitfield = BitField.zeros(meta.length / meta.chunkSize);
     }
 
-    if (chunk.chunkSize && chunk.chunkSize !== meta.chunkSize) {
+    if (chk.chunkSize && chk.chunkSize !== meta.chunkSize) {
       throw new Error('Invalid chunk size');
     }
 
     invariant(meta.bitfield, 'Bitfield not present');
-    invariant(chunk.chunkOffset !== undefined, 'chunkOffset is not present');
+    invariant(chk.chunkOffset !== undefined, 'chunkOffset is not present');
 
-    // Write chunk.
-    await this._getDataFile(chunk.id).write(chunk.chunkOffset, arrayToBuffer(chunk.payload));
+    await this._getDataFile(chk.id).write(chk.chunkOffset, arrayToBuffer(chk.payload));
 
-    // Update bitfield.
-    BitField.set(meta.bitfield, Math.floor(chunk.chunkOffset / meta.chunkSize), true);
+    BitField.set(meta.bitfield, Math.floor(chk.chunkOffset / meta.chunkSize), true);
 
-    // Update metadata.
     if (BitField.count(meta.bitfield, 0, meta.length) * meta.chunkSize >= meta.length) {
-      meta.state = BlobMeta.State.FULLY_PRESENT;
+      meta.state = BlobMeta_State.FULLY_PRESENT;
     }
     meta.updated = new Date();
 
-    await this._writeMeta(chunk.id, meta);
+    await this._writeMeta(chk.id, meta);
 
     return meta;
   }
 
-  private async _writeMeta(id: Uint8Array, meta: BlobMeta): Promise<void> {
+  private async _writeMeta(id: Uint8Array, meta: any): Promise<void> {
     const encoded = arrayToBuffer(BlobMetaCodec.encode(meta));
     const data = Buffer.alloc(encoded.length + 4);
     data.writeUInt32LE(encoded.length, 0);
@@ -166,7 +165,7 @@ export class BlobStore {
     await this._getMetaFile(id).write(0, data);
   }
 
-  private async _getMeta(id: Uint8Array): Promise<BlobMeta | undefined> {
+  private async _getMeta(id: Uint8Array): Promise<any | undefined> {
     const file = this._getMetaFile(id);
     const size = (await file.stat()).size;
     if (size === 0) {

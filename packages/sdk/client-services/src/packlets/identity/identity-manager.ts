@@ -406,7 +406,7 @@ export class IdentityManager {
       metadata: {
         key: spaceRecord.key as any,
         genesisFeedKey: spaceRecord.genesisFeedKey as any,
-      },
+      } as any,
       swarmIdentity,
       onAuthorizedConnection: (session) => {
         session.addExtension(

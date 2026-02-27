@@ -22,6 +22,6 @@ export const changeStorageVersionInMetadata = async (storage: Storage, version: 
   const echoMetadata = metadata.metadata;
   echoMetadata.version = version;
   const file = metadata._directory.getOrCreateFile('EchoMetadata');
-  await metadata._writeFile(file, EchoMetadata, echoMetadata);
+  await metadata._writeFile(file, EchoMetadata, echoMetadata as any);
   await metadata._directory.flush();
 };

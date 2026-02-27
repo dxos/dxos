@@ -13,8 +13,8 @@ import { log } from '@dxos/log';
 import { type SwarmNetworkManager } from '@dxos/network-manager';
 import { trace } from '@dxos/protocols';
 import { toPublicKey } from '@dxos/protocols/buf';
-import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
+import type { FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
+import { type SpaceMetadata } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import type { Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type Teleport } from '@dxos/teleport';
 import { type BlobStore } from '@dxos/teleport-extension-object-sync';
@@ -107,7 +107,7 @@ export class SpaceManager {
     // Convert metadata keys from potential buf PublicKey objects to @dxos/keys.PublicKey instances.
     const genesisFeed = await this._feedStore.openFeed(toPublicKey(metadata.genesisFeedKey ?? failUndefined()));
 
-    const spaceKey = toPublicKey(metadata.key);
+    const spaceKey = toPublicKey(metadata.key ?? failUndefined());
     const spaceId = await createIdFromSpaceKey(spaceKey);
     const protocol = new SpaceProtocol({
       topic: spaceKey,

@@ -7,7 +7,7 @@ import { Stream } from '@dxos/codec-protobuf/stream';
 import { type EdgeConnection } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { type Halo } from '@dxos/protocols';
-import { create } from '@dxos/protocols/buf';
+import { create, toPublicKey } from '@dxos/protocols/buf';
 import {
   type Device,
   DeviceKind,
@@ -59,7 +59,7 @@ export class DevicesServiceImpl implements Halo.DevicesService {
                       ? Device_PresenceState.ONLINE
                       : Device_PresenceState.OFFLINE;
                 } else {
-                  presence = peers.some((peer) => peer.identityKey.equals(key))
+                  presence = peers.some((peer) => peer.identityKey && toPublicKey(peer.identityKey).equals(key))
                     ? Device_PresenceState.ONLINE
                     : Device_PresenceState.OFFLINE;
                 }

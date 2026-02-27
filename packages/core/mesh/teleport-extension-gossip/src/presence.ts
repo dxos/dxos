@@ -8,8 +8,8 @@ import { Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type PeerState } from '@dxos/protocols/proto/dxos/mesh/presence';
-import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
+import { type PeerState } from '@dxos/protocols/buf/dxos/mesh/presence_pb';
+import { type GossipMessage } from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
 import { ComplexMap } from '@dxos/util';
 
 import { type Gossip } from './gossip';
@@ -67,11 +67,12 @@ export class Presence extends Resource {
     scheduleTaskInterval(
       this._ctx,
       async () => {
-        const peerState: WithTypeUrl<PeerState> = {
+        // Proto codec handles @dxos/keys PublicKey at runtime; cast at boundary.
+        const peerState = {
           '@type': 'dxos.mesh.presence.PeerState',
           identityKey: this._params.identityKey,
           connections: this._params.gossip.getConnections(),
-        };
+        } as any as WithTypeUrl<PeerState>;
         this._params.gossip.postMessage(PRESENCE_CHANNEL_ID, peerState);
       },
       this._params.announceInterval,
@@ -102,21 +103,23 @@ export class Presence extends Resource {
   }
 
   getPeers(): PeerState[] {
-    return Array.from(this._peerStates.values()).map((message) => message.payload);
+    // Proto codec returns proto-typed payloads at runtime; cast at boundary.
+    return Array.from(this._peerStates.values()).map((message) => message.payload) as any;
   }
 
   getPeersByIdentityKey(key: PublicKey): PeerState[] {
-    return (this._peersByIdentityKey.get(key) ?? []).filter(this._isOnline).map((m) => m.payload);
+    return (this._peersByIdentityKey.get(key) ?? []).filter(this._isOnline).map((m) => m.payload) as any;
   }
 
   getPeersOnline(): PeerState[] {
     return Array.from(this._peerStates.values())
       .filter(this._isOnline)
-      .map((message) => message.payload);
+      .map((message) => message.payload) as any;
   }
 
   private _isOnline = (message: GossipMessage): boolean => {
-    return message.timestamp.getTime() > Date.now() - this._params.offlineTimeout;
+    // Proto codec returns Date at runtime for Timestamp fields; cast at boundary.
+    return (message.timestamp as any).getTime() > Date.now() - this._params.offlineTimeout;
   };
 
   getLocalState(): PeerState {
@@ -124,43 +127,42 @@ export class Presence extends Resource {
       identityKey: this._params.identityKey,
       connections: this._params.gossip.getConnections(),
       peerId: this._params.gossip.localPeerId,
-    };
+    } as any;
   }
 
   private _receiveAnnounces(message: GossipMessage): void {
     invariant(message.channelId === PRESENCE_CHANNEL_ID, `Invalid channel ID: ${message.channelId}`);
-    const oldPeerState = this._peerStates.get(message.peerId);
-    if (!oldPeerState || oldPeerState.timestamp.getTime() < message.timestamp.getTime()) {
-      // Assign peer id to payload.
-      (message.payload as PeerState).peerId = message.peerId;
-
-      this._peerStates.set(message.peerId, message);
+    // Proto codec returns @dxos/keys PublicKey at runtime; cast at boundary.
+    const oldPeerState = this._peerStates.get(message.peerId as any);
+    if (!oldPeerState || (oldPeerState.timestamp as any).getTime() < (message.timestamp as any).getTime()) {
+      (message.payload as any).peerId = message.peerId;
+      this._peerStates.set(message.peerId as any, message);
       this._updatePeerInIdentityKeyIndex(message);
       this.updated.emit();
     }
   }
 
   private _removePeerFromIdentityKeyIndex(peerState: GossipMessage): void {
-    const identityPeerList = this._peersByIdentityKey.get((peerState.payload as PeerState).identityKey) ?? [];
-    const peerIdIndex = identityPeerList.findIndex((id) => id.peerId?.equals(peerState.peerId));
+    const identityPeerList = this._peersByIdentityKey.get((peerState.payload as any).identityKey) ?? [];
+    const peerIdIndex = identityPeerList.findIndex((id) => (id.peerId as any)?.equals(peerState.peerId));
     if (peerIdIndex >= 0) {
       identityPeerList.splice(peerIdIndex, 1);
     }
   }
 
   private _updatePeerInIdentityKeyIndex(newState: GossipMessage): void {
-    const identityKey = (newState.payload as PeerState).identityKey;
+    const identityKey = (newState.payload as any).identityKey;
     const identityKeyPeers = this._peersByIdentityKey.get(identityKey) ?? [];
-    const existingIndex = identityKeyPeers.findIndex((p) => p.peerId && newState.peerId?.equals(p.peerId));
+    const existingIndex = identityKeyPeers.findIndex((p) => p.peerId && (newState.peerId as any)?.equals(p.peerId));
     if (existingIndex >= 0) {
       const oldState = identityKeyPeers.splice(existingIndex, 1, newState)[0];
       if (!this._isOnline(oldState)) {
-        this.newPeer.emit(newState.payload);
+        this.newPeer.emit(newState.payload as any);
       }
     } else {
       this._peersByIdentityKey.set(identityKey, identityKeyPeers);
       identityKeyPeers.push(newState);
-      this.newPeer.emit(newState.payload);
+      this.newPeer.emit(newState.payload as any);
     }
   }
 }

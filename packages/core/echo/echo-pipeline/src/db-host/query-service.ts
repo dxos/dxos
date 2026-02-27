@@ -201,7 +201,7 @@ export class QueryServiceImpl extends Resource implements Echo.QueryService {
                 rank: r.rank,
                 documentJson: r.documentJson,
                 documentAutomerge: r.documentAutomerge,
-                spaceKey: r.spaceKey ? { data: r.spaceKey.asUint8Array() } : undefined,
+                spaceKey: r.spaceKey ? { data: (r.spaceKey as any).asUint8Array() } : undefined,
               }),
             );
             query.sendResults(create(QueryResponseSchema, { queryId: query.queryId, results: bufResults }));

@@ -10,9 +10,8 @@ import { type Message, type PeerInfo } from '@dxos/messaging';
 import { TimeoutError } from '@dxos/protocols';
 import { bufWkt, create } from '@dxos/protocols/buf';
 import { MessageSchema } from '@dxos/protocols/buf/dxos/edge/signal_pb';
+import { type Answer, type SwarmMessage } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 import { schema } from '@dxos/protocols/proto';
-import { type Answer } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
-import { type SwarmMessage } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { ComplexMap, type MakeOptional } from '@dxos/util';
 
 import { type OfferMessage, type SignalMessage, type SignalMessenger } from './signal-messenger';
@@ -63,10 +62,10 @@ export class SwarmMessenger implements SignalMessenger {
       // Ignore not swarm messages.
       return;
     }
-    const message: SwarmMessage = SwarmMessage.decode(payload.value);
+    // Proto codec returns proto-shaped objects (direct oneof fields); access via `as any` at boundary.
+    const message: any = SwarmMessage.decode(payload.value);
 
     if (!this._topic.equals(message.topic)) {
-      // Ignore messages from wrong topics.
       return;
     }
 
@@ -86,7 +85,7 @@ export class SwarmMessenger implements SignalMessenger {
   }
 
   async signal(message: SignalMessage): Promise<void> {
-    invariant(message.data?.signal || message.data?.signalBatch, 'Invalid message');
+    invariant((message as any).data?.signal || (message as any).data?.signalBatch, 'Invalid message');
     await this._sendReliableMessage({
       author: message.author,
       recipient: message.recipient,
@@ -95,7 +94,7 @@ export class SwarmMessenger implements SignalMessenger {
   }
 
   async offer(message: OfferMessage): Promise<Answer> {
-    const networkMessage: SwarmMessage = {
+    const networkMessage: any = {
       ...message,
       messageId: PublicKey.random(),
     };
@@ -116,11 +115,10 @@ export class SwarmMessenger implements SignalMessenger {
   }: {
     author: PeerInfo;
     recipient: PeerInfo;
-    message: MakeOptional<SwarmMessage, 'messageId'>;
+    message: any;
   }): Promise<void> {
-    const networkMessage: SwarmMessage = {
+    const networkMessage: any = {
       ...message,
-      // Setting unique message_id if it not specified yet.
       messageId: message.messageId ?? PublicKey.random(),
     };
 
@@ -137,7 +135,7 @@ export class SwarmMessenger implements SignalMessenger {
     );
   }
 
-  private async _resolveAnswers(message: SwarmMessage): Promise<void> {
+  private async _resolveAnswers(message: any): Promise<void> {
     invariant(message.data?.answer?.offerMessageId, 'No offerMessageId');
     const offerRecord = this._offerRecords.get(message.data.answer.offerMessageId);
     if (offerRecord) {
@@ -155,7 +153,7 @@ export class SwarmMessenger implements SignalMessenger {
   }: {
     author: PeerInfo;
     recipient: PeerInfo;
-    message: SwarmMessage;
+    message: any;
   }): Promise<void> {
     invariant(message.data.offer, 'No offer');
     const offerMessage: OfferMessage = {
@@ -192,7 +190,7 @@ export class SwarmMessenger implements SignalMessenger {
   }: {
     author: PeerInfo;
     recipient: PeerInfo;
-    message: SwarmMessage;
+    message: any;
   }): Promise<void> {
     invariant(message.messageId);
     invariant(message.data.signal || message.data.signalBatch, 'Invalid message');

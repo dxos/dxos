@@ -23,7 +23,7 @@ import { EscapedPropPath, type IndexEngine, type ObjectMeta, type ReverseRef } f
 import { invariant } from '@dxos/invariant';
 import { DXN, type ObjectId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type QueryReactivity, type QueryResult } from '@dxos/protocols/proto/dxos/echo/query';
+import { type QueryReactivity, type QueryResult } from '@dxos/protocols/buf/dxos/echo/query_pb';
 import { getDeep, isNonNullable } from '@dxos/util';
 
 import type { AutomergeHost } from '../automerge';
@@ -277,7 +277,7 @@ export class QueryExecutor extends Resource {
 
   getResults(): QueryResult[] {
     return this._lastResultSet.map(
-      (item): QueryResult => ({
+      (item) => ({
         id: item.objectId,
         documentId: item.documentId ?? undefined,
         queueId: item.queueId ?? undefined,
@@ -287,7 +287,7 @@ export class QueryExecutor extends Resource {
         rank: item.rank,
 
         documentJson: item.doc ? JSON.stringify(item.doc) : item.data ? JSON.stringify(item.data) : undefined,
-      }),
+      }) as any as QueryResult,
     );
   }
 

@@ -4,8 +4,7 @@
 
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Credential, type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { fromBufPublicKey, getCredentialAssertion } from '../credentials';
 
@@ -37,7 +36,7 @@ export class ProfileStateMachine implements CredentialProcessor {
         }
 
         // TODO(dmaretskyi): Extra validation for the credential?
-        this.profile = assertion.profile;
+        this.profile = assertion.profile as any as ProfileDocument;
         log('updated profile', {
           identityKey: this._params.identityKey,
           profile: this.profile,

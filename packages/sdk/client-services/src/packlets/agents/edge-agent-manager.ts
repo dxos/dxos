@@ -11,6 +11,7 @@ import { log } from '@dxos/log';
 import { EdgeAgentStatus, EdgeCallFailedError } from '@dxos/protocols';
 import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
+import { toPublicKey } from '@dxos/protocols/buf';
 import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 
 import { type Identity } from '../identity';
@@ -156,7 +157,7 @@ export class EdgeAgentManager extends Resource {
         continue;
       }
       const agentFeedNeedsNotarization = ![...space.inner.spaceState.feeds.values()].some((feed) =>
-        feed.assertion.deviceKey.equals(agentDeviceKey),
+        feed.assertion.deviceKey && toPublicKey(feed.assertion.deviceKey).equals(agentDeviceKey),
       );
       space.notarizationPlugin.setActiveEdgePollingEnabled(agentFeedNeedsNotarization);
       activePollingEnabled = activePollingEnabled || agentFeedNeedsNotarization;

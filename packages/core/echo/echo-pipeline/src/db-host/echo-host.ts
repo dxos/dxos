@@ -18,7 +18,7 @@ import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
 import type { Echo } from '@dxos/protocols';
 import { protoToBuf } from '@dxos/protocols/buf';
-import type { SyncQueueRequest } from '@dxos/protocols/proto/dxos/client/services';
+import type { SyncQueueRequest } from '@dxos/protocols/buf/dxos/client/queue_pb';
 import type * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { trace } from '@dxos/tracing';
 
@@ -293,7 +293,7 @@ export class EchoHost extends Resource {
       links: {},
     });
 
-    await this._automergeHost.flush({ documentIds: [automergeRoot.documentId] });
+    await this._automergeHost.flush({ documentIds: [automergeRoot.documentId] } as any);
 
     return await this.openSpaceRoot(spaceId, automergeRoot.url);
   }

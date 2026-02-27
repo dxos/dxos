@@ -10,7 +10,7 @@ import { Context, LifecycleState, Resource } from '@dxos/context';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { type BatchedDocumentUpdates, type DocumentUpdate } from '@dxos/protocols/proto/dxos/echo/service';
+import { type BatchedDocumentUpdates, type DocumentUpdate } from '@dxos/protocols/buf/dxos/echo/service_pb';
 import { retry } from '@dxos/util';
 
 import type { AutomergeHost } from '../automerge';
@@ -105,7 +105,7 @@ export class DocumentsSynchronizer extends Resource {
       await this._writeMutation(documentId as DocumentId, mutation);
     }
     // TODO(mykola): This should not be required.
-    await this._params.automergeHost.flush({ documentIds: updates.map(({ documentId }) => documentId as DocumentId) });
+    await this._params.automergeHost.flush({ documentIds: updates.map(({ documentId }) => documentId as DocumentId) } as any);
   }
 
   private _startSync(doc: DocHandle<DatabaseDirectory>) {
@@ -141,12 +141,12 @@ export class DocumentsSynchronizer extends Resource {
         updates.push({
           documentId,
           mutation: update,
-        });
+        } as any);
       }
     }
 
     if (updates.length > 0) {
-      this._params.sendUpdates({ updates });
+      this._params.sendUpdates({ updates } as any);
     }
   }
 

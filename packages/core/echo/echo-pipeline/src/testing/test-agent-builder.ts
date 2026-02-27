@@ -12,8 +12,8 @@ import { MemoryTransportFactory, SwarmNetworkManager, createRtcTransportFactory 
 import { create } from '@dxos/protocols/buf';
 import { Runtime_Services_SignalSchema } from '@dxos/protocols/buf/dxos/config_pb';
 import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
-import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { type FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
+import { type SpaceMetadata } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { AdmittedFeed_Designation } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type Storage, StorageType, createStorage } from '@dxos/random-access-storage';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
@@ -176,12 +176,12 @@ export class TestAgent {
       sparse: true,
     });
 
-    const metadata: SpaceMetadata = {
+    const metadata = {
       key: spaceKey,
       genesisFeedKey: genesisKey,
       controlFeedKey: controlFeed.key,
       dataFeedKey: dataFeed.key,
-    };
+    } as any as SpaceMetadata;
     if (saveMetadata) {
       await this.metadataStore.addSpace(metadata);
     }

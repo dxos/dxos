@@ -14,8 +14,9 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
 import { RpcClosedError, TimeoutError } from '@dxos/protocols';
+import { type FeedInfo } from '@dxos/protocols/buf/dxos/mesh/teleport/replicator_pb';
 import { schema } from '@dxos/protocols/proto';
-import { type FeedInfo, type ReplicatorService } from '@dxos/protocols/proto/dxos/mesh/teleport/replicator';
+import { type ReplicatorService } from '@dxos/protocols/proto/dxos/mesh/teleport/replicator';
 import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 import { type ExtensionContext, type TeleportExtension } from '@dxos/teleport';
 import { ComplexMap } from '@dxos/util';
@@ -110,7 +111,8 @@ export class ReplicatorExtension implements TeleportExtension {
             invariant(this._extensionContext!.initiator === true, 'Invalid call');
             this._updateTask.schedule();
           },
-          startReplication: async ({ info }) => {
+          // Proto RPC passes proto-typed objects; cast at boundary.
+          startReplication: async ({ info }: any) => {
             log('starting replication...', { info });
             invariant(this._extensionContext!.initiator === false, 'Invalid call');
 
@@ -119,9 +121,8 @@ export class ReplicatorExtension implements TeleportExtension {
               streamTag,
             };
           },
-          stopReplication: async ({ info }) => {
+          stopReplication: async ({ info }: any) => {
             log('stopping replication...', { info });
-            // TODO(dmaretskyi): Make sure any peer can stop replication.
             invariant(this._extensionContext!.initiator === false, 'Invalid call');
 
             await this._stopReplication(info.feedKey);
@@ -176,11 +177,12 @@ export class ReplicatorExtension implements TeleportExtension {
         return;
       }
       if (!this._streams.has(feedKey)) {
+        // Proto codec handles @dxos/keys PublicKey at runtime; cast at boundary.
         await this._initiateReplication({
           feedKey,
           download: true,
           upload: this._options.upload,
-        });
+        } as any);
       }
     }
   }
@@ -191,8 +193,9 @@ export class ReplicatorExtension implements TeleportExtension {
   private async _initiateReplication(feedInfo: FeedInfo): Promise<void> {
     log('initiating replication', { feedInfo });
     invariant(this._extensionContext!.initiator === true, 'Invalid call');
-    invariant(!this._streams.has(feedInfo.feedKey), `Replication already in progress for feed: ${feedInfo.feedKey}`);
-    const { streamTag } = await this._rpc!.rpc.ReplicatorService.startReplication({ info: feedInfo });
+    // Proto codec handles @dxos/keys PublicKey at runtime; cast at boundary.
+    invariant(!this._streams.has((feedInfo as any).feedKey), `Replication already in progress for feed: ${(feedInfo as any).feedKey}`);
+    const { streamTag } = await this._rpc!.rpc.ReplicatorService.startReplication({ info: feedInfo as any });
     if (!streamTag) {
       return;
     }
@@ -207,21 +210,24 @@ export class ReplicatorExtension implements TeleportExtension {
   @synchronized
   private async _acceptReplication(feedInfo: FeedInfo): Promise<string | undefined> {
     invariant(this._extensionContext!.initiator === false, 'Invalid call');
-
-    if (!this._feeds.has(feedInfo.feedKey) || this._streams.has(feedInfo.feedKey)) {
-      return undefined; // We don't have the feed or we are already replicating it.
+    // Proto codec handles @dxos/keys PublicKey at runtime; cast at boundary.
+    const fk: any = feedInfo.feedKey;
+    if (!this._feeds.has(fk) || this._streams.has(fk)) {
+      return undefined;
     }
 
-    const tag = `feed-${feedInfo.feedKey.toHex()}-${PublicKey.random().toHex().slice(0, 8)}`; // Generate a unique tag for the stream.
+    const tag = `feed-${fk.toHex()}-${PublicKey.random().toHex().slice(0, 8)}`;
     await this._replicateFeed(feedInfo, tag);
     return tag;
   }
 
   private async _replicateFeed(info: FeedInfo, streamTag: string): Promise<void> {
     log('replicate', { info, streamTag });
-    invariant(!this._streams.has(info.feedKey), `Replication already in progress for feed: ${info.feedKey}`);
+    // Proto codec handles @dxos/keys PublicKey at runtime; cast at boundary.
+    const infoFeedKey: any = info.feedKey;
+    invariant(!this._streams.has(infoFeedKey), `Replication already in progress for feed: ${infoFeedKey}`);
 
-    const feed = this._feeds.get(info.feedKey) ?? failUndefined();
+    const feed = this._feeds.get(infoFeedKey) ?? failUndefined();
     const networkStream = await this._extensionContext!.createStream(streamTag, {
       contentType: 'application/x-hypercore',
     });
@@ -271,12 +277,12 @@ export class ReplicatorExtension implements TeleportExtension {
       if (replicationStreamErrors === 0) {
         log.info('replication stream error', { err, info });
       } else {
-        log.info('replication stream error', { err, feedKey: info.feedKey, count: replicationStreamErrors });
+        log.info('replication stream error', { err, feedKey: infoFeedKey, count: replicationStreamErrors });
       }
       replicationStreamErrors++;
     });
 
-    this._streams.set(info.feedKey, {
+    this._streams.set(infoFeedKey, {
       streamTag,
       networkStream,
       replicationStream,

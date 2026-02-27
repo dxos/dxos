@@ -11,7 +11,7 @@ import { TimeoutError as ProtocolTimeoutError, trace } from '@dxos/protocols';
 import { type bufWkt, create, protoAnyToBufAny } from '@dxos/protocols/buf';
 import { MessageSchema } from '@dxos/protocols/buf/dxos/edge/signal_pb';
 import { schema } from '@dxos/protocols/proto';
-import { type ReliablePayload } from '@dxos/protocols/proto/dxos/mesh/messaging';
+import { type ReliablePayload } from '@dxos/protocols/buf/dxos/mesh/messaging_pb';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { MessengerMonitor } from './messenger-monitor';
@@ -106,11 +106,12 @@ export class Messenger {
     invariant(!this._closed, 'Closed');
     const messageContext = this._ctx.derive();
 
+    // Proto codec accepts @dxos/keys PublicKey at runtime; cast at boundary.
     const reliablePayload: ReliablePayload = {
-      messageId: PublicKey.random(),
-      payload,
-    };
-    invariant(!this._onAckCallbacks.has(reliablePayload.messageId!));
+      messageId: PublicKey.random() as any,
+      payload: payload as any,
+    } as any;
+    invariant(!this._onAckCallbacks.has(reliablePayload.messageId as any));
     log('send message', { messageId: reliablePayload.messageId, author, recipient });
 
     let messageReceived: () => void;
@@ -139,7 +140,7 @@ export class Messenger {
       messageContext,
       () => {
         log('message not delivered', { messageId: reliablePayload.messageId });
-        this._onAckCallbacks.delete(reliablePayload.messageId!);
+        this._onAckCallbacks.delete(reliablePayload.messageId as any);
         timeoutHit(
           new ProtocolTimeoutError({
             message: 'signaling message not delivered',
@@ -152,9 +153,9 @@ export class Messenger {
       MESSAGE_TIMEOUT,
     );
 
-    this._onAckCallbacks.set(reliablePayload.messageId, () => {
+    this._onAckCallbacks.set(reliablePayload.messageId as any, () => {
       messageReceived();
-      this._onAckCallbacks.delete(reliablePayload.messageId!);
+      this._onAckCallbacks.delete(reliablePayload.messageId as any);
       void messageContext.dispose();
       this._monitor.recordReliableMessage({ sendAttempts, sent: true });
     });
@@ -220,7 +221,7 @@ export class Messenger {
         recipient,
         payload: {
           typeUrl: 'dxos.mesh.messaging.ReliablePayload',
-          value: ReliablePayload.encode(reliablePayload, { preserveAny: true }),
+          value: ReliablePayload.encode(reliablePayload as any, { preserveAny: true }),
         },
       }),
     );
@@ -241,7 +242,8 @@ export class Messenger {
 
   private async _handleReliablePayload({ author, recipient, payload }: Message): Promise<void> {
     invariant(payload?.typeUrl === 'dxos.mesh.messaging.ReliablePayload');
-    const reliablePayload: ReliablePayload = ReliablePayload.decode(payload.value, { preserveAny: true });
+    // Proto codec returns proto-shaped objects; cast at boundary.
+    const reliablePayload: ReliablePayload = ReliablePayload.decode(payload.value, { preserveAny: true }) as any;
 
     log('handling message', { messageId: reliablePayload.messageId });
 
@@ -249,19 +251,18 @@ export class Messenger {
       await this._sendAcknowledgement({
         author: author!,
         recipient: recipient!,
-        messageId: reliablePayload.messageId,
+        messageId: reliablePayload.messageId as any,
       });
     } catch (err) {
       this._monitor.recordMessageAckFailed();
       throw err;
     }
 
-    // Ignore message if it was already received, i.e. from multiple signal servers.
-    if (this._receivedMessages.has(reliablePayload.messageId!)) {
+    if (this._receivedMessages.has(reliablePayload.messageId as any)) {
       return;
     }
 
-    this._receivedMessages.add(reliablePayload.messageId!);
+    this._receivedMessages.add(reliablePayload.messageId as any);
 
     await this._callListeners(
       create(MessageSchema, {

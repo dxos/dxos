@@ -10,7 +10,7 @@ import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
 import { AdmittedFeed_Designation, type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import type { FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { type Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
 import { type AsyncCallback, Callback } from '@dxos/util';

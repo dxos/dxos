@@ -10,10 +10,10 @@ import type { ProtoCodec } from '@dxos/codec-protobuf';
 import type { BatchLevel, SublevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols/proto';
-import type { Heads as HeadsProto } from '@dxos/protocols/proto/dxos/echo/query';
+import type { Heads as HeadsProto } from '@dxos/protocols/buf/dxos/echo/query_pb';
 
 // NOTE: Lazy so that code that doesn't use indexing doesn't need to load the codec (breaks in workerd).
-let headsCodec: ProtoCodec<HeadsProto>;
+let headsCodec: ProtoCodec<any>;
 const getHeadsCodec = () => (headsCodec ??= schema.getCodecForType('dxos.echo.query.Heads'));
 
 const headsEncoding: MixedEncoding<Heads, Uint8Array, Heads> = {

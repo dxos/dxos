@@ -13,7 +13,7 @@ import { PublicKeySchema } from '@dxos/protocols/buf/dxos/keys_pb';
 import {
   type Message as SignalMessage,
   type SwarmEvent as SwarmEventProto,
-} from '@dxos/protocols/proto/dxos/mesh/signal';
+} from '@dxos/protocols/buf/dxos/mesh/signal_pb';
 import { ComplexMap, ComplexSet, safeAwaitAll } from '@dxos/util';
 
 import type { Message, SwarmEvent } from '../signal-methods';
@@ -114,18 +114,19 @@ export class SignalLocalState {
       const swarmStream = await asyncTimeout(cancelWithContext(ctx, client.join({ topic, peerId })), 5_000);
       // Subscribing to swarm events.
       // TODO(mykola): What happens when the swarm stream is closed? Maybe send leave event for each peer?
-      swarmStream.subscribe(async (swarmEvent: SwarmEventProto) => {
+      swarmStream.subscribe(async (rawSwarmEvent: any) => {
         if (this._joinedTopics.has({ topic, peerId })) {
-          log('swarm event', { swarmEvent });
+          log('swarm event', { swarmEvent: rawSwarmEvent });
           const bufTopic = create(PublicKeySchema, { data: topic.asUint8Array() });
-          const event: SwarmEvent = swarmEvent.peerAvailable
+          // Proto codec returns proto-shaped oneof (direct fields); access via `as any` at boundary.
+          const event: SwarmEvent = rawSwarmEvent.peerAvailable
             ? create(SwarmEventSchema, {
                 topic: bufTopic,
                 event: {
                   case: 'peerAvailable',
                   value: {
-                    peer: { peerKey: PublicKey.from(swarmEvent.peerAvailable.peer).toHex() },
-                    since: timestampFromDate(swarmEvent.peerAvailable.since ?? new Date()),
+                    peer: { peerKey: PublicKey.from(rawSwarmEvent.peerAvailable.peer).toHex() },
+                    since: timestampFromDate(rawSwarmEvent.peerAvailable.since ?? new Date()),
                   },
                 },
               })
@@ -134,7 +135,7 @@ export class SignalLocalState {
                 event: {
                   case: 'peerLeft',
                   value: {
-                    peer: { peerKey: PublicKey.from(swarmEvent.peerLeft!.peer).toHex() },
+                    peer: { peerKey: PublicKey.from(rawSwarmEvent.peerLeft!.peer).toHex() },
                   },
                 },
               });
@@ -142,8 +143,8 @@ export class SignalLocalState {
         }
       });
 
-      // Saving swarm stream.
-      this._swarmStreams.set({ topic, peerId }, swarmStream);
+      // Saving swarm stream. Proto RPC returns proto-typed stream; cast at boundary.
+      this._swarmStreams.set({ topic, peerId }, swarmStream as any);
     }
   }
 
@@ -166,12 +167,13 @@ export class SignalLocalState {
       }
 
       const messageStream = await asyncTimeout(cancelWithContext(ctx, client.receiveMessages(peerId)), 5_000);
-      messageStream.subscribe(async (signalMessage: SignalMessage) => {
+      messageStream.subscribe(async (rawSignalMessage: any) => {
         if (this._subscribedMessages.has({ peerId })) {
+          // Proto codec returns proto-shaped objects; access via `as any` at boundary.
           const message: Message = create(MessageSchema, {
-            author: { peerKey: PublicKey.from(signalMessage.author).toHex() },
-            recipient: { peerKey: PublicKey.from(signalMessage.recipient).toHex() },
-            payload: protoAnyToBufAny(signalMessage.payload) as bufWkt.Any,
+            author: { peerKey: PublicKey.from(rawSignalMessage.author).toHex() },
+            recipient: { peerKey: PublicKey.from(rawSignalMessage.recipient).toHex() },
+            payload: protoAnyToBufAny(rawSignalMessage.payload) as bufWkt.Any,
           });
           await this._onMessage(message);
         }

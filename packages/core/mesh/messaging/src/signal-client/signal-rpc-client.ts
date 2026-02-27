@@ -11,8 +11,9 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
+import { type Message as SignalMessage } from '@dxos/protocols/buf/dxos/mesh/signal_pb';
 import { schema } from '@dxos/protocols/proto';
-import { type Signal, type Message as SignalMessage } from '@dxos/protocols/proto/dxos/mesh/signal';
+import { type Signal } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 
 import { SignalRpcClientMonitor } from './signal-rpc-client-monitor';
@@ -195,7 +196,8 @@ export class SignalRPCClient {
       peer: peerId.asUint8Array(),
     });
     await messageStream.waitUntilReady();
-    return messageStream;
+    // Proto RPC returns proto-typed stream; cast at boundary.
+    return messageStream as any;
   }
 
   async sendMessage({

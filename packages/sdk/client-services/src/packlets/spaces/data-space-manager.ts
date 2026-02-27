@@ -45,7 +45,7 @@ import { type Keyring } from '@dxos/keyring';
 import { ObjectId, PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AlreadyJoinedError, trace as Trace } from '@dxos/protocols';
-import { create, encodePublicKey, protoToBuf } from '@dxos/protocols/buf';
+import { create, encodePublicKey, protoToBuf, toPublicKey } from '@dxos/protocols/buf';
 import { AdmissionKeypairSchema, type Invitation_AuthMethod, Invitation_Kind, Invitation_Type, SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
 import { type FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
@@ -654,10 +654,16 @@ export class DataSpaceManager extends Resource {
   private _handleMemberRoleChanges(presence: Presence, spaceProtocol: SpaceProtocol, memberInfo: MemberInfo[]): void {
     let closedSessions = 0;
     for (const member of memberInfo) {
-      if (member.key.equals(presence.getLocalState().identityKey)) {
+      const localIdentityKey = presence.getLocalState().identityKey;
+      const memberKeyBytes =
+        (member.key as { data?: Uint8Array }).data ?? (member.key as PublicKey).asUint8Array();
+      invariant(memberKeyBytes);
+      const memberKey = PublicKey.from(memberKeyBytes);
+      if (localIdentityKey && memberKey.equals(toPublicKey(localIdentityKey))) {
         continue;
       }
-      const peers = presence.getPeersByIdentityKey(member.key);
+      const keyForLookup = memberKey as any;
+      const peers = presence.getPeersByIdentityKey(keyForLookup);
       const sessions = peers.map((p) => p.peerId && spaceProtocol.sessions.get(p.peerId));
       const sessionsToClose = sessions.filter((s): s is SpaceProtocolSession => {
         return (s && (member.role === SpaceMember_Role.REMOVED) !== (s.authStatus === AuthStatus.FAILURE)) ?? false;

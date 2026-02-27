@@ -4,8 +4,7 @@
 
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { type AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type AdmittedFeed, type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type AsyncCallback, Callback, ComplexMap } from '@dxos/util';
 
 import { fromBufPublicKey, getCredentialAssertion } from '../credentials';
@@ -52,7 +51,7 @@ export class FeedStateMachine {
     const info: FeedInfo = {
       key: subjectId,
       credential,
-      assertion,
+      assertion: assertion as any as AdmittedFeed,
       parent: fromFeed,
     };
 

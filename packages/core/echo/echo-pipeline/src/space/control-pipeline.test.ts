@@ -9,7 +9,7 @@ import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import type { FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { AdmittedFeed_Designation } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { Timeframe } from '@dxos/timeframe';
@@ -44,7 +44,7 @@ describe('space/control-pipeline', () => {
     // TODO(dmaretskyi): Separate test for cold start after genesis.
     const genesisFeed = await createFeed();
     const metadata = new MetadataStore(createStorage({ type: StorageType.RAM }).createDirectory());
-    await metadata.addSpace({ key: spaceKey, genesisFeedKey: genesisFeed.key, controlFeedKey: genesisFeed.key });
+    await metadata.addSpace({ key: spaceKey, genesisFeedKey: genesisFeed.key, controlFeedKey: genesisFeed.key } as any);
     const controlPipeline = new ControlPipeline({
       spaceKey,
       genesisFeed,

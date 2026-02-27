@@ -11,7 +11,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type FeedMessageBlock } from '@dxos/protocols';
 import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import type { FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { Timeframe } from '@dxos/timeframe';
 import { ComplexMap } from '@dxos/util';
 
@@ -287,9 +287,8 @@ export class Pipeline implements PipelineAccessor {
     this._writer = createMappedFeedWriter<ControlPipelinePayload, FeedMessage>(
       (payload: ControlPipelinePayload) => ({
         timeframe: this._timeframeClock.timeframe,
-        // Buf Credential objects are structurally compatible with protobuf.js codec serialization.
-        payload: payload as FeedMessage.Payload,
-      }),
+        payload: payload,
+      }) as any,
       feed.createFeedWriter(),
     );
   }
@@ -398,7 +397,7 @@ export class Pipeline implements PipelineAccessor {
       // Will be canceled when the iterator gets closed.
       const { done, value } = await iterable.next();
       if (!done) {
-        const block = value ?? failUndefined();
+        const block = (value ?? failUndefined()) as unknown as FeedMessageBlock;
         this._processingTrigger.reset();
         this._timeframeClock.updatePendingTimeframe(PublicKey.from(block.feedKey), block.seq);
         yield block;

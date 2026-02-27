@@ -9,8 +9,8 @@ import {
   type Credential,
   SpaceMember_Role,
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { type DeviceProfileDocument, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { type DelegateSpaceInvitation } from '@dxos/protocols/proto/dxos/halo/invitations';
+import { type DeviceProfileDocument, type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type DelegateSpaceInvitation } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 import { Timeframe } from '@dxos/timeframe';
 
 import { type CredentialSigner, createCredential } from './credential-factory';

@@ -7,8 +7,12 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { create } from '@dxos/protocols/buf';
-import { type Chain, ChainSchema, type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import {
+  type Chain,
+  ChainSchema,
+  type Credential,
+  type DeviceProfileDocument,
+} from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { ComplexMap } from '@dxos/util';
 
 import { fromBufPublicKey, getCredentialAssertion, isValidAuthorizedDeviceCredential } from '../credentials';
@@ -58,7 +62,7 @@ export class DeviceStateMachine implements CredentialProcessor {
       case 'dxos.halo.credentials.AuthorizedDevice': {
         // We don't need to validate that the device is already added since the credentials are considered idempotent.
         // In the future, when we will have device-specific attributes, we should join them from all concurrent credentials.
-        this.authorizedDeviceKeys.set(assertion.deviceKey, this.authorizedDeviceKeys.get(assertion.deviceKey) ?? {});
+        this.authorizedDeviceKeys.set(assertion.deviceKey, this.authorizedDeviceKeys.get(assertion.deviceKey) ?? ({} as any as DeviceProfileDocument));
 
         log('added device', {
           localDeviceKey: this._params.deviceKey,
@@ -79,7 +83,7 @@ export class DeviceStateMachine implements CredentialProcessor {
           });
         }
 
-        this.authorizedDeviceKeys.set(subjectId, assertion.profile);
+        this.authorizedDeviceKeys.set(subjectId, assertion.profile as any as DeviceProfileDocument);
         this._params.onUpdate?.();
         break;
       }
