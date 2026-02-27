@@ -8,6 +8,7 @@ import { Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { type PublicKey as BufPublicKey } from '@dxos/protocols/buf/dxos/keys_pb';
 import { type PeerState } from '@dxos/protocols/buf/dxos/mesh/presence_pb';
 import { type GossipMessage } from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
 import { ComplexMap } from '@dxos/util';
@@ -107,8 +108,9 @@ export class Presence extends Resource {
     return Array.from(this._peerStates.values()).map((message) => message.payload) as any;
   }
 
-  getPeersByIdentityKey(key: PublicKey): PeerState[] {
-    return (this._peersByIdentityKey.get(key) ?? []).filter(this._isOnline).map((m) => m.payload) as any;
+  getPeersByIdentityKey(key: PublicKey | BufPublicKey | { data: Uint8Array }): PeerState[] {
+    const keyToUse = key instanceof PublicKey ? key : PublicKey.from(key.data);
+    return (this._peersByIdentityKey.get(keyToUse) ?? []).filter(this._isOnline).map((m) => m.payload) as any;
   }
 
   getPeersOnline(): PeerState[] {

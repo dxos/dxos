@@ -11,6 +11,7 @@ import { Context, LifecycleState, Resource, cancelWithContext } from '@dxos/cont
 import {
   type CredentialSigner,
   type DelegateInvitationCredential,
+  fromBufPublicKey,
   type MemberInfo,
   createAdmissionCredentials,
   getCredentialAssertion,
@@ -64,6 +65,7 @@ import { type InvitationsManager } from '../invitations';
 
 import { DataSpace } from './data-space';
 import { spaceGenesis } from './genesis';
+
 
 const PRESENCE_ANNOUNCE_INTERVAL = 10_000;
 const PRESENCE_OFFLINE_TIMEOUT = 20_000;
@@ -655,16 +657,13 @@ export class DataSpaceManager extends Resource {
     let closedSessions = 0;
     for (const member of memberInfo) {
       const localIdentityKey = presence.getLocalState().identityKey;
-      const memberKeyBytes =
-        (member.key as { data?: Uint8Array }).data ?? (member.key as PublicKey).asUint8Array();
-      invariant(memberKeyBytes);
-      const memberKey = PublicKey.from(memberKeyBytes);
+      const memberKey = fromBufPublicKey(member.key);
+      invariant(memberKey);
       if (localIdentityKey && memberKey.equals(toPublicKey(localIdentityKey))) {
         continue;
       }
-      const keyForLookup = memberKey as any;
-      const peers = presence.getPeersByIdentityKey(keyForLookup);
-      const sessions = peers.map((p) => p.peerId && spaceProtocol.sessions.get(p.peerId));
+      const peers = presence.getPeersByIdentityKey(memberKey as any);
+      const sessions = peers.map((p) => p.peerId && spaceProtocol.sessions.get(toPublicKey(p.peerId)));
       const sessionsToClose = sessions.filter((s): s is SpaceProtocolSession => {
         return (s && (member.role === SpaceMember_Role.REMOVED) !== (s.authStatus === AuthStatus.FAILURE)) ?? false;
       });
