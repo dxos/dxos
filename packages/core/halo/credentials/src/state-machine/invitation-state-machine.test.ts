@@ -6,9 +6,8 @@ import { beforeEach, describe, expect, test } from 'vitest';
 
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
-import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type Credential, SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import { SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type DelegateSpaceInvitation } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { range } from '@dxos/util';
 
@@ -27,7 +26,7 @@ describe('InvitationStateMachine', () => {
   const baseInvitation: DelegateSpaceInvitation = {
     invitationId: PublicKey.random().toHex(),
     swarmKey: PublicKey.random(),
-    role: SpaceMember.Role.ADMIN,
+    role: SpaceMember_Role.ADMIN as any,
     authMethod: Invitation.AuthMethod.KNOWN_PUBLIC_KEY,
     multiUse: false,
   };
@@ -158,7 +157,7 @@ describe('InvitationStateMachine', () => {
       assertion: {
         '@type': 'dxos.halo.credentials.SpaceMember',
         spaceKey: space,
-        role: SpaceMember.Role.ADMIN,
+        role: SpaceMember_Role.ADMIN,
         genesisFeedKey: PublicKey.random(),
         invitationCredentialId,
       },

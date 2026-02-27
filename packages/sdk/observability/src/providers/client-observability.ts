@@ -12,7 +12,7 @@ import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type Timestamp } from '@dxos/protocols/buf';
-import { ConnectionState, type NetworkStatus, Platform } from '@dxos/protocols/proto/dxos/client/services';
+import { ConnectionState, type NetworkStatus, type NetworkStatus_Signal, Platform_PLATFORM_TYPE } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type TimeframeVector } from '@dxos/protocols/buf/dxos/echo/timeframe_pb';
 
 import { type DataProvider } from '../observability';
@@ -81,7 +81,7 @@ export const networkMetricsProvider = (clientServices: Partial<ClientServices>):
     const updateSignalMetrics = new Event<NetworkStatus>().debounce(NETWORK_METRICS_MIN_INTERVAL);
     updateSignalMetrics.on(ctx, async () => {
       log('send signal metrics');
-      (lastNetworkStatus?.signaling as NetworkStatus.Signal[])?.forEach(({ server, state }) => {
+      (lastNetworkStatus?.signaling as NetworkStatus_Signal[])?.forEach(({ server, state }) => {
         observability.metrics.gauge('dxos.client.network.signal.connectionState', state, { server });
       });
 
@@ -140,7 +140,7 @@ export const runtimeMetricsProvider = (clientServices: Partial<ClientServices>):
 
     const platformAny = platform as any;
     observability.setTags({
-      platformType: Platform.PLATFORM_TYPE[platformAny.type as number]?.toLowerCase(),
+      platformType: Platform_PLATFORM_TYPE[platformAny.type as number]?.toLowerCase(),
       platform: platformAny.platform,
       arch: platformAny.arch,
       runtime: platformAny.runtime,

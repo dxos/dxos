@@ -128,7 +128,7 @@ export class EdgeIdentityRecoveryManager {
     const response = await this._edgeClient.recoverIdentity(request);
 
     await this._acceptRecoveredIdentity({
-      authorizedDeviceCredential: decodeCredential(response.deviceAuthCredential),
+      authorizedDeviceCredential: decodeCredential(response.deviceAuthCredential) as any,
       haloGenesisFeedKey: PublicKey.fromHex(response.genesisFeedKey),
       haloSpaceKey: PublicKey.fromHex(response.haloSpaceKey),
       identityKey: PublicKey.fromHex(response.identityKey),
@@ -155,7 +155,7 @@ export class EdgeIdentityRecoveryManager {
     const response = await this._edgeClient.recoverIdentity(request);
 
     await this._acceptRecoveredIdentity({
-      authorizedDeviceCredential: decodeCredential(response.deviceAuthCredential),
+      authorizedDeviceCredential: decodeCredential(response.deviceAuthCredential) as any,
       haloGenesisFeedKey: PublicKey.fromHex(response.genesisFeedKey),
       haloSpaceKey: PublicKey.fromHex(response.haloSpaceKey),
       identityKey: PublicKey.fromHex(response.identityKey),
@@ -195,7 +195,7 @@ export class EdgeIdentityRecoveryManager {
     log.info('recovering identity', response);
 
     await this._acceptRecoveredIdentity({
-      authorizedDeviceCredential: decodeCredential(response.deviceAuthCredential),
+      authorizedDeviceCredential: decodeCredential(response.deviceAuthCredential) as any,
       haloGenesisFeedKey: PublicKey.fromHex(response.genesisFeedKey),
       haloSpaceKey: PublicKey.fromHex(response.haloSpaceKey),
       identityKey: PublicKey.fromHex(response.identityKey),

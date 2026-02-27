@@ -38,7 +38,7 @@ const setupDevtools = () => {
     const config = client.config;
     await client.destroy();
     const { storage } = createStorageObjects(
-      (config.values?.runtime?.client?.storage ?? {}) as import('@dxos/protocols/proto/dxos/config').Runtime.Client.Storage,
+      (config.values?.runtime?.client?.storage ?? {}) as any,
     );
     await changeStorageVersionInMetadata(storage, version);
     location.pathname = '/';

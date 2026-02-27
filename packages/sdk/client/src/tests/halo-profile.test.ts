@@ -7,8 +7,13 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { performInvitation } from '@dxos/client-services/testing';
 import { invariant } from '@dxos/invariant';
-import { type DeviceProfileDocument, type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { DeviceKind } from '@dxos/protocols/proto/dxos/client/services';
+import { create } from '@dxos/protocols/buf';
+import {
+  type DeviceProfileDocument,
+  DeviceProfileDocumentSchema,
+  type ProfileDocument,
+} from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { DeviceKind } from '@dxos/protocols/buf/dxos/client/services_pb';
 
 import { Client } from '../client';
 import { TestBuilder } from '../testing';
@@ -99,7 +104,7 @@ describe('Halo', () => {
       performInvitation({
         host: client1.halo,
         guest: client2.halo,
-        guestDeviceProfile: { label: 'guest-device-label' },
+        guestDeviceProfile: create(DeviceProfileDocumentSchema, { label: 'guest-device-label' }),
       }),
     );
 
@@ -143,7 +148,7 @@ describe('Halo', () => {
       performInvitation({
         host: client1.halo,
         guest: client2.halo,
-        guestDeviceProfile: { label: 'guest-device-profile' },
+        guestDeviceProfile: create(DeviceProfileDocumentSchema, { label: 'guest-device-profile' }),
       }),
     );
 

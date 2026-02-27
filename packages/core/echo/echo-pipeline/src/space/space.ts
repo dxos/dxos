@@ -9,9 +9,8 @@ import { type FeedOptions, type FeedWrapper } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
-import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { AdmittedFeed_Designation, type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
 import { type AsyncCallback, Callback } from '@dxos/util';
@@ -87,7 +86,7 @@ export class Space extends Resource {
     // TODO(dmaretskyi): Feed set abstraction.
     this._controlPipeline.onFeedAdmitted.set(async (info) => {
       // Enable sparse replication to not download mutations covered by prior epochs.
-      const sparse = info.assertion.designation === AdmittedFeed.Designation.DATA;
+      const sparse = (info.assertion.designation as number) === AdmittedFeed_Designation.DATA;
 
       if (!info.key.equals(params.genesisFeed.key)) {
         scheduleMicroTask(this._ctx, async () => {

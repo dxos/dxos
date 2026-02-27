@@ -25,8 +25,8 @@ import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging
 import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
 import { create, toPublicKey } from '@dxos/protocols/buf';
 import { EdgeStatus_ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
-import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed_Designation } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
@@ -193,21 +193,21 @@ describe('identity/identity', () => {
       }),
     });
 
-    await metadataStore.setIdentityRecord({ haloSpace: { key: spaceKey }, identityKey, deviceKey });
+    await metadataStore.setIdentityRecord({ haloSpace: { key: spaceKey }, identityKey, deviceKey } as any);
     const space: Space = new Space({
       id: await createIdFromSpaceKey(spaceKey),
       spaceKey,
       protocol,
-      genesisFeed: args?.genesisFeedKey ? await feedStore.openFeed(args.genesisFeedKey) : controlFeed,
-      feedProvider: (feedKey) => feedStore.openFeed(feedKey),
+      genesisFeed: args?.genesisFeedKey ? await feedStore.openFeed(args.genesisFeedKey) as any : controlFeed as any,
+      feedProvider: (feedKey) => feedStore.openFeed(feedKey) as any,
       memberKey: identityKey,
       metadataStore,
       snapshotId: undefined,
       onDelegatedInvitationStatusChange: async () => {},
       onMemberRolesChanged: async () => {},
     });
-    await space.setControlFeed(controlFeed);
-    await space.setDataFeed(dataFeed);
+    await space.setControlFeed(controlFeed as any);
+    await space.setDataFeed(dataFeed as any);
 
     const identity = new Identity({
       signer: keyring,
@@ -215,7 +215,7 @@ describe('identity/identity', () => {
       identityKey,
       deviceKey,
       space,
-      edgeFeatures: args?.edgeConnection && { feedReplicator: true },
+      edgeFeatures: args?.edgeConnection ? { feedReplicator: true } as any : undefined,
       edgeConnection: args?.edgeConnection,
     });
 

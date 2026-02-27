@@ -14,20 +14,18 @@ import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AlreadyJoinedError, AuthorizationError, InvalidInvitationError, SpaceNotFoundError } from '@dxos/protocols';
 import { bufToProto, decodePublicKey, encodePublicKey, protoToBuf, toPublicKey } from '@dxos/protocols/buf';
-import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import {
   type Invitation,
   Invitation_AuthMethod,
   Invitation_Kind,
   Invitation_Type,
 } from '@dxos/protocols/buf/dxos/client/invitation_pb';
-import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Credential, type ProfileDocument, SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import {
   type AdmissionRequest,
   type AdmissionResponse,
   type IntroductionRequest,
-} from '@dxos/protocols/proto/dxos/halo/invitations';
+} from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 
 import { type DataSpaceManager, type SigningContext } from '../spaces';
 
@@ -80,12 +78,13 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     request: AdmissionRequest,
     guestProfile?: ProfileDocument | undefined,
   ): Promise<AdmissionResponse> {
-    invariant(this._spaceKey && request.space);
-    log('writing guest credentials', { host: this._signingContext.deviceKey, guest: request.space.deviceKey });
+    const spaceRequest = (request as any).space ?? (request.kind?.case === 'space' ? request.kind.value : undefined);
+    invariant(this._spaceKey && spaceRequest);
+    log('writing guest credentials', { host: this._signingContext.deviceKey, guest: spaceRequest.deviceKey });
 
     const spaceMemberCredential = await this._spaceManager.admitMember({
       spaceKey: this._spaceKey,
-      identityKey: request.space.identityKey,
+      identityKey: spaceRequest.identityKey,
       role: invitation.role ?? SpaceMember_Role.ADMIN,
       profile: guestProfile,
       delegationCredentialId: invitation.delegationCredentialId as never,
@@ -93,11 +92,14 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
 
     const space = this._spaceManager.spaces.get(this._spaceKey);
     return {
-      space: {
-        credential: bufToProto(spaceMemberCredential),
-        controlTimeframe: space?.inner.controlPipeline.state.timeframe,
+      kind: {
+        case: 'space',
+        value: {
+          credential: bufToProto(spaceMemberCredential),
+          controlTimeframe: space?.inner.controlPipeline.state.timeframe,
+        },
       },
-    };
+    } as any;
   }
 
   async delegate(invitation: Invitation): Promise<PublicKey> {
@@ -160,7 +162,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
   createIntroduction(): IntroductionRequest {
     return {
       profile: this._signingContext.getProfile(),
-    };
+    } as any;
   }
 
   async createAdmissionRequest(): Promise<AdmissionRequest> {
@@ -169,18 +171,22 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     const dataFeedKey = await this._keyring.createKey();
 
     return {
-      space: {
-        identityKey: this._signingContext.identityKey,
-        deviceKey: this._signingContext.deviceKey,
-        controlFeedKey,
-        dataFeedKey,
+      kind: {
+        case: 'space',
+        value: {
+          identityKey: this._signingContext.identityKey as any,
+          deviceKey: this._signingContext.deviceKey as any,
+          controlFeedKey: controlFeedKey as any,
+          dataFeedKey: dataFeedKey as any,
+        },
       },
-    };
+    } as any;
   }
 
   async accept(response: AdmissionResponse): Promise<Partial<Invitation>> {
-    invariant(response.space);
-    const { credential, controlTimeframe, dataTimeframe } = response.space;
+    const spaceResponse = (response as any).space ?? (response.kind?.case === 'space' ? response.kind.value : undefined);
+    invariant(spaceResponse);
+    const { credential, controlTimeframe, dataTimeframe } = spaceResponse;
     const assertion = getCredentialAssertion(credential as never);
     invariant(assertion['@type'] === 'dxos.halo.credentials.SpaceMember', 'Invalid credential');
     invariant(credential.subject.id.equals(this._signingContext.identityKey));

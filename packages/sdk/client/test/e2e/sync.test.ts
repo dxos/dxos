@@ -3,7 +3,7 @@ import { Client, Config } from '@dxos/client';
 import { Obj, Type, Database } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import type { SpaceSyncState } from '@dxos/echo-db';
-import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import type { SpaceId } from '@dxos/keys';
 import { EdgeService } from '@dxos/protocols';
 import { sleep } from '@dxos/async';

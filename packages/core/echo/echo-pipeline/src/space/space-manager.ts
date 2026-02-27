@@ -15,7 +15,7 @@ import { trace } from '@dxos/protocols';
 import { toPublicKey } from '@dxos/protocols/buf';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
-import type { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import type { Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type Teleport } from '@dxos/teleport';
 import { type BlobStore } from '@dxos/teleport-extension-object-sync';
 import { ComplexMap } from '@dxos/util';

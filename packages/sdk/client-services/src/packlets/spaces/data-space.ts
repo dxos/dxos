@@ -28,21 +28,18 @@ import { log } from '@dxos/log';
 import { CancelledError, SystemError } from '@dxos/protocols';
 import { timestampFromDate, toPublicKey } from '@dxos/protocols/buf';
 import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
-import { type CreateEpochRequest_Migration, type Space_Metrics } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { type CreateEpochRequest } from '@dxos/protocols/proto/dxos/client/services';
-import { type Runtime } from '@dxos/protocols/proto/dxos/config';
-import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { type SpaceCache } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { type CreateEpochRequest, type CreateEpochRequest_Migration, type Space_Metrics } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
+import { type FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
+import { type SpaceCache } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import {
+  AdmittedFeed_Designation,
   type Credential,
-  SpaceMember_Role,
-} from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import {
-  AdmittedFeed,
   type Epoch,
   type ProfileDocument,
-} from '@dxos/protocols/proto/dxos/halo/credentials';
-import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
+  SpaceMember_Role,
+} from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type GossipMessage } from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
 import { type Gossip, type Presence } from '@dxos/teleport-extension-gossip';
 import { Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
@@ -87,12 +84,12 @@ export type DataSpaceProps = {
   cache?: SpaceCache;
   edgeConnection?: EdgeConnection;
   edgeHttpClient?: EdgeHttpClient;
-  edgeFeatures?: Runtime.Client.EdgeFeatures;
+  edgeFeatures?: Runtime_Client_EdgeFeatures;
   activeEdgeNotarizationPollingInterval?: number;
 };
 
 export type CreateEpochOptions = {
-  migration?: CreateEpochRequest.Migration | CreateEpochRequest_Migration;
+  migration?: CreateEpochRequest_Migration;
   newAutomergeRoot?: string;
 };
 
@@ -301,7 +298,7 @@ export class DataSpace {
   }
 
   listen(channel: string, callback: (message: GossipMessage) => void): { unsubscribe: () => void } {
-    return this._gossip.listen(channel, callback);
+    return this._gossip.listen(channel, callback as any);
   }
 
   /**
@@ -408,7 +405,7 @@ export class DataSpace {
     const credentials: Credential[] = [];
     if (!this.inner.controlFeedKey) {
       const controlFeed = await this._feedStore.openFeed(await this._keyring.createKey(), { writable: true });
-      await this.inner.setControlFeed(controlFeed);
+      await this.inner.setControlFeed(controlFeed as any);
 
       credentials.push(
         await this._signingContext.credentialSigner.createCredential({
@@ -418,7 +415,7 @@ export class DataSpace {
             spaceKey: this.key,
             deviceKey: this._signingContext.deviceKey,
             identityKey: this._signingContext.identityKey,
-            designation: AdmittedFeed.Designation.CONTROL,
+            designation: AdmittedFeed_Designation.CONTROL,
           },
         }),
       );
@@ -428,7 +425,7 @@ export class DataSpace {
         writable: true,
         sparse: true,
       });
-      await this.inner.setDataFeed(dataFeed);
+      await this.inner.setDataFeed(dataFeed as any);
 
       credentials.push(
         await this._signingContext.credentialSigner.createCredential({
@@ -438,7 +435,7 @@ export class DataSpace {
             spaceKey: this.key,
             deviceKey: this._signingContext.deviceKey,
             identityKey: this._signingContext.identityKey,
-            designation: AdmittedFeed.Designation.DATA,
+            designation: AdmittedFeed_Designation.DATA,
           },
         }),
       );
@@ -548,14 +545,15 @@ export class DataSpace {
       newAutomergeRoot: options.newAutomergeRoot,
     });
 
-    const epoch: Epoch = {
-      previousId: this._automergeSpaceState.lastEpoch?.id
-        ? toPublicKey(this._automergeSpaceState.lastEpoch.id)
+    const lastEpoch = this._automergeSpaceState.lastEpoch as any;
+    const epoch = {
+      previousId: lastEpoch?.id
+        ? toPublicKey(lastEpoch.id)
         : undefined,
-      number: (this._automergeSpaceState.lastEpoch?.subject.assertion.number ?? -1) + 1,
-      timeframe: this._automergeSpaceState.lastEpoch?.subject.assertion.timeframe ?? new Timeframe(),
+      number: (lastEpoch?.subject.assertion.number ?? -1) + 1,
+      timeframe: lastEpoch?.subject.assertion.timeframe ?? new Timeframe(),
       automergeRoot: newRoot ?? this._automergeSpaceState.rootUrl,
-    };
+    } as any as Epoch;
 
     const credential = (await this._signingContext.credentialSigner.createCredential({
       subject: this.key,

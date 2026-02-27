@@ -7,7 +7,8 @@ import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'v
 import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
-import { type Identity, type IdentityService } from '@dxos/protocols/proto/dxos/client/services';
+import { type Identity } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type IdentityService } from '@dxos/protocols/proto/dxos/client/services';
 
 import { type ServiceContext } from '../services';
 import { createServiceContext } from '../testing';
@@ -66,7 +67,7 @@ describe('IdentityService', () => {
     test('returns undefined if no identity is available', async () => {
       const query = identityService.queryIdentity();
       const result = new Trigger<Identity | undefined>();
-      query.subscribe(({ identity }) => {
+      query.subscribe(({ identity }: any) => {
         result.wake(identity);
       });
       onTestFinished(() => query.close());
@@ -76,7 +77,7 @@ describe('IdentityService', () => {
     test('updates when identity is created', async () => {
       const query = identityService.queryIdentity();
       let result = new Trigger<Identity | undefined>();
-      query.subscribe(({ identity }) => {
+      query.subscribe(({ identity }: any) => {
         result.wake(identity);
       });
       onTestFinished(() => query.close());

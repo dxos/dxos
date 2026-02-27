@@ -7,7 +7,7 @@ import { type Context } from '@dxos/context';
 import { sign } from '@dxos/crypto';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
-import { SpaceId } from '@dxos/keys';
+import { PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
   EdgeAuthChallengeError,
@@ -21,13 +21,13 @@ import {
   Invitation_State,
   Invitation_Type,
 } from '@dxos/protocols/buf/dxos/client/invitation_pb';
-import { schema } from '@dxos/protocols/proto';
-import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type DeviceProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import {
   type AdmissionRequest,
   type AdmissionResponse,
   type SpaceAdmissionRequest,
-} from '@dxos/protocols/proto/dxos/halo/invitations';
+} from '@dxos/protocols/buf/dxos/halo/invitations_pb';
+import { schema } from '@dxos/protocols/proto';
 
 import { type InvitationProtocol } from './invitation-protocol';
 import { type FlowLockHolder, type GuardedInvitationState } from './invitation-state';
@@ -95,9 +95,10 @@ export class EdgeInvitationHandler implements FlowLockHolder {
     const tryHandleInvitation = async () => {
       requestCount++;
       const admissionRequest = await protocol.createAdmissionRequest(deviceProfile);
-      if (admissionRequest.space) {
+      const spaceRequest = (admissionRequest as any).space ?? (admissionRequest.kind?.case === 'space' ? admissionRequest.kind.value : undefined);
+      if (spaceRequest) {
         try {
-          await this._handleSpaceInvitationFlow(ctx, guardedState, admissionRequest.space, spaceId);
+          await this._handleSpaceInvitationFlow(ctx, guardedState, spaceRequest, spaceId);
         } catch (error) {
           if (error instanceof EdgeCallFailedError) {
             log.info('join space with edge unsuccessful', {
@@ -131,13 +132,15 @@ export class EdgeInvitationHandler implements FlowLockHolder {
 
       guardedState.set(this, Invitation_State.CONNECTING);
 
+      const identityKey = admissionRequest.identityKey;
+      const identityKeyHex = identityKey && ('toHex' in identityKey ? (identityKey as any).toHex() : PublicKey.from((identityKey as any).data).toHex());
       const response = await this._joinSpaceByInvitation(guardedState, spaceId, {
-        identityKey: admissionRequest.identityKey.toHex(),
+        identityKey: identityKeyHex!,
         invitationId: guardedState.current.invitationId,
       });
 
       const admissionResponse = await this._mapToAdmissionResponse(response);
-      await this._callbacks.onInvitationSuccess(admissionResponse, { space: admissionRequest });
+      await this._callbacks.onInvitationSuccess(admissionResponse, { kind: { case: 'space', value: admissionRequest } } as any);
     } catch (error) {
       guardedState.set(this, Invitation_State.ERROR);
       throw error;
@@ -151,10 +154,13 @@ export class EdgeInvitationHandler implements FlowLockHolder {
     const credentialBytes = Buffer.from(edgeResponse.spaceMemberCredential, 'base64');
     const codec = schema.getCodecForType('dxos.halo.credentials.Credential');
     return {
-      space: {
-        credential: codec.decode(credentialBytes),
+      kind: {
+        case: 'space',
+        value: {
+          credential: codec.decode(credentialBytes),
+        },
       },
-    };
+    } as any;
   }
 
   private async _joinSpaceByInvitation(

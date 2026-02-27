@@ -15,7 +15,7 @@ import { log } from '@dxos/log';
 import { toPublicKey } from '@dxos/protocols/buf';
 import { Invitation_AuthMethod, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import type { ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { Device, DeviceKind, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
+import { Device_PresenceState, DeviceKind, SpaceMember_PresenceState } from '@dxos/protocols/buf/dxos/client/services_pb';
 
 import { Client } from '../client';
 import { TestBuilder, syncItemsAutomerge } from '../testing';
@@ -167,12 +167,12 @@ describe('Client services', () => {
       .poll(() => client1.halo.devices.get().find((device) => device?.kind === DeviceKind.TRUSTED)?.presence, {
         timeout: 2000,
       })
-      .toEqual(Device.PresenceState.ONLINE);
+      .toEqual(Device_PresenceState.ONLINE);
     await expect
       .poll(() => client2.halo.devices.get().find((device) => device?.kind === DeviceKind.TRUSTED)?.presence, {
         timeout: 2000,
       })
-      .toEqual(Device.PresenceState.ONLINE);
+      .toEqual(Device_PresenceState.ONLINE);
 
     // Ensure peer2 shows up as offline to peer1.
     await client2.destroy();
@@ -183,7 +183,7 @@ describe('Client services', () => {
       .poll(() => client1.halo.devices.get().find((device) => device?.kind === DeviceKind.TRUSTED)?.presence, {
         timeout: 2000,
       })
-      .toEqual(Device.PresenceState.OFFLINE);
+      .toEqual(Device_PresenceState.OFFLINE);
   });
 
   test('synchronizes data between two spaces after completing invitation', { timeout: 20_000 }, async () => {
@@ -275,7 +275,7 @@ describe('Client services', () => {
                 displayName: 'Peer 1',
               },
             },
-            presence: SpaceMember.PresenceState.ONLINE,
+            presence: SpaceMember_PresenceState.ONLINE,
           }),
         );
       await expect
@@ -289,7 +289,7 @@ describe('Client services', () => {
                 displayName: 'Peer 2',
               },
             },
-            presence: SpaceMember.PresenceState.ONLINE,
+            presence: SpaceMember_PresenceState.ONLINE,
           }),
         );
     }

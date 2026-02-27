@@ -7,7 +7,8 @@ import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'v
 import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
-import { type Device, type DevicesService } from '@dxos/protocols/proto/dxos/client/services';
+import { type Device } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type DevicesService } from '@dxos/protocols/proto/dxos/client/services';
 
 import { type ServiceContext } from '../services';
 import { createServiceContext } from '../testing';
@@ -33,7 +34,7 @@ describe('DevicesService', () => {
       const query = devicesService.queryDevices();
       const device = await devicesService.updateDevice({ label: 'test-device' });
       const result = new Trigger<Device[] | undefined>();
-      query.subscribe(({ devices }) => {
+      query.subscribe(({ devices }: any) => {
         result.wake(devices);
       });
       onTestFinished(() => query.close());
@@ -46,7 +47,7 @@ describe('DevicesService', () => {
       const query = devicesService.queryDevices();
       const result = new Trigger<Device[] | undefined>();
       query.subscribe(
-        ({ devices }) => {
+        ({ devices }: any) => {
           result.wake(devices);
         },
         (err) => log.catch(err),
@@ -58,7 +59,7 @@ describe('DevicesService', () => {
     test('updates when identity is created', async () => {
       const query = devicesService.queryDevices();
       let result = new Trigger<Device[] | undefined>();
-      query.subscribe(({ devices }) => {
+      query.subscribe(({ devices }: any) => {
         result.wake(devices);
       });
       onTestFinished(() => query.close());

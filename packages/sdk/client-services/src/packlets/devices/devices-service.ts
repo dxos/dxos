@@ -31,7 +31,7 @@ export class DevicesServiceImpl implements Halo.DevicesService {
   async updateDevice(profile: DeviceProfileDocument): Promise<Device> {
     const result = await this._identityManager.updateDeviceProfile(profile);
     return create(DeviceSchema, {
-      deviceKey: create(PublicKeySchema, { data: result.deviceKey.asUint8Array() }),
+      deviceKey: create(PublicKeySchema, { data: (result.deviceKey as any).asUint8Array() }),
       kind: DeviceKind.CURRENT,
       profile: result.profile,
     });

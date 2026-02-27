@@ -9,7 +9,7 @@ import { checkType, raise } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Message, WebsocketSignalManager } from '@dxos/messaging';
-import { type Runtime } from '@dxos/protocols/proto/dxos/config';
+import { type Runtime_Services, type Runtime_Services_Signal } from '@dxos/protocols/buf/dxos/config_pb';
 import { type SignalServerRunner } from '@dxos/signal';
 import { ComplexMap } from '@dxos/util';
 
@@ -54,14 +54,14 @@ export class TestBuilder {
 }
 
 export type TestAgentProps = {
-  signals: Runtime.Services.Signal[];
+  signals: Runtime_Services_Signal[];
   peerId?: PublicKey;
 };
 
 export class TestPeer {
   public readonly signalManager;
   public peerId: PublicKey;
-  public readonly signalServers: Runtime.Services.Signal[];
+  public readonly signalServers: Runtime_Services_Signal[];
   private readonly _ctx = new Context();
   constructor({ signals, peerId = PublicKey.random() }: TestAgentProps) {
     this.signalServers = signals;

@@ -47,7 +47,6 @@ import {
   type SubscribeToSwarmInfoResponse,
 } from '@dxos/protocols/buf/dxos/devtools/host_pb';
 import { type BlobMeta, BlobMetaSchema, BlobMeta_State } from '@dxos/protocols/buf/dxos/echo/blob_pb';
-import { type BlobMeta as ProtobufBlobMeta } from '@dxos/protocols/proto/dxos/echo/blob';
 
 import { type ServiceContext } from '../services';
 
@@ -100,15 +99,15 @@ export class DevtoolsServiceImpl implements Client.DevtoolsHost {
 
   async getBlobs(): Promise<GetBlobsResponse> {
     const protobufBlobs = await this.params.context.blobStore.list();
-    const blobs: BlobMeta[] = protobufBlobs.map((blob: ProtobufBlobMeta) =>
+    const blobs: BlobMeta[] = protobufBlobs.map((blob: any) =>
       create(BlobMetaSchema, {
         id: blob.id,
         state: blob.state === 1 ? BlobMeta_State.FULLY_PRESENT : BlobMeta_State.PARTIALLY_PRESENT,
         length: blob.length,
         chunkSize: blob.chunkSize,
         bitfield: blob.bitfield,
-        created: blob.created ? timestampFromDate(blob.created) : undefined,
-        updated: blob.updated ? timestampFromDate(blob.updated) : undefined,
+        created: blob.created ? timestampFromDate(blob.created instanceof Date ? blob.created : new Date(blob.created)) : undefined,
+        updated: blob.updated ? timestampFromDate(blob.updated instanceof Date ? blob.updated : new Date(blob.updated)) : undefined,
       }),
     );
     return create(GetBlobsResponseSchema, { blobs });

@@ -22,14 +22,14 @@ import {
   createIceProvider,
   createRtcTransportFactory,
 } from '@dxos/network-manager';
+import { trace } from '@dxos/protocols';
+import { create } from '@dxos/protocols/buf';
+import { SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
 import type {
+  Runtime_Client_Storage,
   Runtime_Services_IceProvider,
   Runtime_Services_Signal,
 } from '@dxos/protocols/buf/dxos/config_pb';
-import { trace } from '@dxos/protocols';
-import type { Runtime } from '@dxos/protocols/proto/dxos/config';
-import { create } from '@dxos/protocols/buf';
-import { SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { type Storage } from '@dxos/random-access-storage';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
@@ -256,9 +256,9 @@ export class ClientServicesHost {
       this._config = config;
       if (!this._storage) {
         const storageConfig = config.get('runtime.client.storage' as any, undefined) as
-          | Runtime.Client.Storage
+          | Runtime_Client_Storage
           | undefined;
-        this._storage = createStorageObjects(storageConfig ?? ({} as Runtime.Client.Storage)).storage;
+        this._storage = createStorageObjects(storageConfig ?? ({} as Runtime_Client_Storage)).storage;
       }
     }
 
@@ -330,9 +330,9 @@ export class ClientServicesHost {
 
     if (!this._level) {
       const storageConfig = this._config.get('runtime.client.storage' as any, undefined) as
-        | Runtime.Client.Storage
+        | Runtime_Client_Storage
         | undefined;
-      this._level = await createLevel(storageConfig ?? ({} as Runtime.Client.Storage));
+      this._level = await createLevel(storageConfig ?? ({} as Runtime_Client_Storage));
     }
     await this._level.open();
 

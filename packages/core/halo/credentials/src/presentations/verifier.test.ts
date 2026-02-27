@@ -8,9 +8,8 @@ import { randomBytes } from '@dxos/crypto';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { create, timestampFromDate } from '@dxos/protocols/buf';
-import { ChainSchema, PresentationSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { ChainSchema, PresentationSchema, SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { PublicKeySchema } from '@dxos/protocols/buf/dxos/keys_pb';
-import { SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { createCredential } from '../credentials';
 
@@ -43,7 +42,7 @@ describe('presentation verifier', () => {
         assertion: {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
-          role: SpaceMember.Role.ADMIN,
+          role: SpaceMember_Role.ADMIN,
           genesisFeedKey: PublicKey.random(),
         },
         issuer,
@@ -128,7 +127,7 @@ describe('presentation verifier', () => {
         assertion: {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
-          role: SpaceMember.Role.ADMIN,
+          role: SpaceMember_Role.ADMIN,
           genesisFeedKey: PublicKey.random(),
         },
         issuer,
@@ -172,7 +171,7 @@ describe('presentation verifier', () => {
         assertion: {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
-          role: SpaceMember.Role.ADMIN,
+          role: SpaceMember_Role.ADMIN,
           genesisFeedKey: PublicKey.random(),
         },
         issuer: identity,
@@ -213,7 +212,7 @@ describe('presentation verifier', () => {
         assertion: {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
-          role: SpaceMember.Role.ADMIN,
+          role: SpaceMember_Role.ADMIN,
           genesisFeedKey: PublicKey.random(),
         },
         issuer: signingKey,
@@ -241,7 +240,7 @@ describe('presentation verifier', () => {
         assertion: {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
-          role: SpaceMember.Role.ADMIN,
+          role: SpaceMember_Role.ADMIN,
           genesisFeedKey: PublicKey.random(),
         },
         issuer: signingKey,

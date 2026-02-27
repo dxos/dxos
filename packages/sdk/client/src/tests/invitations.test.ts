@@ -32,7 +32,7 @@ import {
   Invitation_State,
 } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
+import { ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 
 import { Client } from '../client';

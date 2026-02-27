@@ -8,7 +8,7 @@ import { type Context, Resource } from '@dxos/context';
 import { assertArgument, assertState } from '@dxos/invariant';
 import type { IdentityDid, SpaceId } from '@dxos/keys';
 import { SpaceArchiveFileStructure, type SpaceArchiveMetadata, SpaceArchiveVersion } from '@dxos/protocols';
-import type { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
+import type { SpaceArchive } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { createFilename } from '@dxos/util';
 
 export type SpaceArchiveBeginProps = {
@@ -80,6 +80,6 @@ export class SpaceArchiveWriter extends Resource {
     return {
       filename: createFilename({ parts: [this._meta.spaceId], ext: 'tar' }),
       contents: binary,
-    };
+    } as any;
   }
 }

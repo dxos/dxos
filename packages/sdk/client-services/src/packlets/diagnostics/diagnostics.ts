@@ -13,9 +13,12 @@ import { STORAGE_VERSION } from '@dxos/protocols';
 import { protoToBuf, timestampMs } from '@dxos/protocols/buf';
 import {
   type Device as BufDevice,
+  type Identity,
   type NetworkStatus as BufNetworkStatus,
   type Platform,
   type QueryDevicesResponse,
+  type SpaceMember,
+  SpaceMember_PresenceState,
   type Space_Metrics,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
 import {
@@ -26,10 +29,8 @@ import { type SwarmInfo } from '@dxos/protocols/buf/dxos/devtools/swarm_pb';
 import { type Credential, type Epoch } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type Resource, type Span } from '@dxos/protocols/buf/dxos/tracing_pb';
 import {
-  type Identity,
   type LogEntry,
   type Metrics,
-  SpaceMember,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { Timeframe } from '@dxos/timeframe';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
@@ -139,7 +140,7 @@ export const createDiagnostics = async (
           identityKey: identity.identityKey,
           spaceKey: identity.space.key,
           profile: identity.profileDocument,
-        };
+        } as any;
 
         // Devices.
         const { devices } = ((await getFirstStreamValue(clientServices.DevicesService!.queryDevices(), {
@@ -205,8 +206,8 @@ const getSpaceStats = async (space: DataSpace): Promise<SpaceStats> => {
         },
         presence:
           space.presence.getPeersOnline().filter(({ identityKey }) => identityKey.equals(member.key)).length > 0
-            ? SpaceMember.PresenceState.ONLINE
-            : SpaceMember.PresenceState.OFFLINE,
+            ? SpaceMember_PresenceState.ONLINE
+            : SpaceMember_PresenceState.OFFLINE,
       })),
     )),
 

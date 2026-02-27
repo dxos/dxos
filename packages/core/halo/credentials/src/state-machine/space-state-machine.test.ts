@@ -7,8 +7,7 @@ import { describe, expect, test } from 'vitest';
 import { Keyring } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';
 import { create } from '@dxos/protocols/buf';
-import { ChainSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { AdmittedFeed, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { AdmittedFeed_Designation, ChainSchema, SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { createCredential, fromBufPublicKey, getCredentialAssertion, verifyCredential } from '../credentials';
 
@@ -47,7 +46,7 @@ describe('SpaceStateMachine', () => {
           assertion: {
             '@type': 'dxos.halo.credentials.SpaceMember',
             spaceKey: space,
-            role: SpaceMember.Role.ADMIN,
+            role: SpaceMember_Role.ADMIN,
             genesisFeedKey: feed,
           },
           signer: keyring,
@@ -79,7 +78,7 @@ describe('SpaceStateMachine', () => {
             spaceKey: space,
             identityKey: identity,
             deviceKey: device,
-            designation: AdmittedFeed.Designation.CONTROL,
+            designation: AdmittedFeed_Designation.CONTROL,
           },
           signer: keyring,
           signingKey: device,
@@ -95,7 +94,7 @@ describe('SpaceStateMachine', () => {
         key: identity,
         assertion: {
           spaceKey: space,
-          role: SpaceMember.Role.ADMIN,
+          role: SpaceMember_Role.ADMIN,
         },
       },
     ]);
@@ -106,7 +105,7 @@ describe('SpaceStateMachine', () => {
           spaceKey: space,
           identityKey: identity,
           deviceKey: device,
-          designation: AdmittedFeed.Designation.CONTROL,
+          designation: AdmittedFeed_Designation.CONTROL,
         },
       },
     ]);
@@ -148,7 +147,7 @@ describe('SpaceStateMachine', () => {
           assertion: {
             '@type': 'dxos.halo.credentials.SpaceMember',
             spaceKey: space,
-            role: SpaceMember.Role.ADMIN,
+            role: SpaceMember_Role.ADMIN,
             genesisFeedKey: feed,
           },
           signer: keyring,
@@ -178,7 +177,7 @@ describe('SpaceStateMachine', () => {
           assertion: {
             '@type': 'dxos.halo.credentials.SpaceMember',
             spaceKey: space,
-            role: SpaceMember.Role.EDITOR,
+            role: SpaceMember_Role.EDITOR,
             genesisFeedKey: feed,
           },
           signer: keyring,
@@ -197,14 +196,14 @@ describe('SpaceStateMachine', () => {
           key: identity,
           assertion: {
             spaceKey: space,
-            role: SpaceMember.Role.ADMIN,
+            role: SpaceMember_Role.ADMIN,
           },
         },
         {
           key: identity2,
           assertion: {
             spaceKey: space,
-            role: SpaceMember.Role.EDITOR,
+            role: SpaceMember_Role.EDITOR,
           },
         },
       ].sort(comparator),
@@ -248,7 +247,7 @@ describe('SpaceStateMachine', () => {
           assertion: {
             '@type': 'dxos.halo.credentials.SpaceMember',
             spaceKey: haloSpace,
-            role: SpaceMember.Role.ADMIN,
+            role: SpaceMember_Role.ADMIN,
             genesisFeedKey: feed,
           },
           signer: keyring,
@@ -323,7 +322,7 @@ describe('SpaceStateMachine', () => {
         '@type': 'dxos.halo.credentials.AdmittedFeed',
         spaceKey: haloSpace,
         deviceKey: device2,
-        designation: AdmittedFeed.Designation.CONTROL,
+        designation: AdmittedFeed_Designation.CONTROL,
         identityKey: identity,
       },
       issuer: identity,

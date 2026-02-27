@@ -6,8 +6,8 @@ import { type Trigger, scheduleTask } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { ProtocolError } from '@dxos/protocols';
 import { bufToProto } from '@dxos/protocols/buf';
+import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { schema } from '@dxos/protocols/proto';
-import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import {
   type AdmissionDiscoveryService,
   type GetAdmissionCredentialRequest,
@@ -46,7 +46,7 @@ export class CredentialRetrieverExtension extends RpcExtension<
     scheduleTask(this._ctx, async () => {
       try {
         const result = await this.rpc.AdmissionDiscoveryService.getAdmissionCredential(this._request);
-        this._onResult.wake(result.admissionCredential);
+        this._onResult.wake(result.admissionCredential as any);
       } catch (err: any) {
         context.close(err);
       }

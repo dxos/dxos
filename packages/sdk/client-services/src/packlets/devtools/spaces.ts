@@ -13,8 +13,8 @@ import {
   SubscribeToSpacesResponseSchema,
   SubscribeToSpacesResponse_SpaceInfoSchema,
 } from '@dxos/protocols/buf/dxos/devtools/host_pb';
+import { type SpaceMetadata } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { PublicKeySchema } from '@dxos/protocols/buf/dxos/keys_pb';
-import { type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 
 import { type ServiceContext } from '../services';
 
@@ -32,8 +32,8 @@ export const subscribeToSpaces = (context: ServiceContext, request: SubscribeToS
       next(
         create(SubscribeToSpacesResponseSchema, {
           spaces: filteredSpaces.map((space) => {
-            const spaceMetadata = context.metadataStore.spaces.find((spaceMetadata: SpaceMetadata) =>
-              spaceMetadata.key.equals(space.key),
+            const spaceMetadata = (context.metadataStore.spaces as any[]).find((spaceMetadata: any) =>
+              spaceMetadata.key && PublicKey.from(spaceMetadata.key.data ?? spaceMetadata.key).equals(space.key),
             );
 
             return create(SubscribeToSpacesResponse_SpaceInfoSchema, {

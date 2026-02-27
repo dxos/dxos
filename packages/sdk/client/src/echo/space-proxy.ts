@@ -64,7 +64,7 @@ import { type SpaceSyncState_PeerState } from '@dxos/protocols/buf/dxos/echo/ser
 import { type SpaceSnapshot } from '@dxos/protocols/buf/dxos/echo/snapshot_pb';
 import { type Credential, type Epoch, SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type GossipMessage } from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
-import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
+import { QueryOptions_DataLocation } from '@dxos/protocols/buf/dxos/echo/filter_pb';
 import { Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
 
@@ -421,7 +421,7 @@ export class SpaceProxy implements Space, CustomInspectable {
     {
       const unsubscribe = this._db
         .query(Filter.type(SpaceProperties), {
-          dataLocation: QueryOptions.DataLocation.LOCAL,
+          dataLocation: QueryOptions_DataLocation.LOCAL,
         })
         .subscribe(
           (query) => {

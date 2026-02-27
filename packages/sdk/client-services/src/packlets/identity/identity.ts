@@ -19,16 +19,16 @@ import { type FeedWrapper, writeMessages } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type IdentityDid, PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type Chain } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { type Runtime } from '@dxos/protocols/proto/dxos/config';
-import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
+import { type FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import {
-  AdmittedFeed,
+  AdmittedFeed_Designation,
+  type Chain,
   type Credential,
   type DeviceProfileDocument,
   type ProfileDocument,
-} from '@dxos/protocols/proto/dxos/halo/credentials';
-import { type DeviceAdmissionRequest } from '@dxos/protocols/proto/dxos/halo/invitations';
+} from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type DeviceAdmissionRequest } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 import { type Presence } from '@dxos/teleport-extension-gossip';
 import { Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
@@ -48,7 +48,7 @@ export type IdentityProps = {
   presence?: Presence;
 
   edgeConnection?: EdgeConnection;
-  edgeFeatures?: Runtime.Client.EdgeFeatures;
+  edgeFeatures?: Runtime_Client_EdgeFeatures;
 };
 
 /**
@@ -110,7 +110,7 @@ export class Identity {
 
   // TODO(burdon): Expose state object?
   get authorizedDeviceKeys(): ComplexMap<PublicKey, DeviceProfileDocument> {
-    return this._deviceStateMachine.authorizedDeviceKeys;
+    return this._deviceStateMachine.authorizedDeviceKeys as any;
   }
 
   get defaultSpaceId(): SpaceId | undefined {
@@ -158,7 +158,7 @@ export class Identity {
   }
 
   get profileDocument(): ProfileDocument | undefined {
-    return this._profileStateMachine.profile;
+    return this._profileStateMachine.profile as any;
   }
 
   /**
@@ -230,12 +230,15 @@ export class Identity {
       dataFeedKey,
     });
     const signer = this.getIdentityCredentialSigner();
+    const dk = deviceKey! as any;
+    const cfk = controlFeedKey! as any;
+    const dfk = dataFeedKey! as any;
     const deviceCredential = await signer.createCredential({
-      subject: deviceKey,
+      subject: dk,
       assertion: {
         '@type': 'dxos.halo.credentials.AuthorizedDevice',
         identityKey: this.identityKey,
-        deviceKey,
+        deviceKey: dk,
       },
     });
     await writeMessages(
@@ -243,23 +246,23 @@ export class Identity {
       [
         deviceCredential,
         await signer.createCredential({
-          subject: controlFeedKey,
+          subject: cfk,
           assertion: {
             '@type': 'dxos.halo.credentials.AdmittedFeed',
             spaceKey: this.haloSpaceKey,
-            deviceKey,
+            deviceKey: dk,
             identityKey: this.identityKey,
-            designation: AdmittedFeed.Designation.CONTROL,
+            designation: AdmittedFeed_Designation.CONTROL,
           },
         }),
         await signer.createCredential({
-          subject: dataFeedKey,
+          subject: dfk,
           assertion: {
             '@type': 'dxos.halo.credentials.AdmittedFeed',
             spaceKey: this.haloSpaceKey,
-            deviceKey,
+            deviceKey: dk,
             identityKey: this.identityKey,
-            designation: AdmittedFeed.Designation.DATA,
+            designation: AdmittedFeed_Designation.DATA,
           },
         }),
       ].map((credential) => ({ credential: { credential } })),

@@ -16,10 +16,9 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type FeedMessageBlock } from '@dxos/protocols';
 import { bufToProto, protoToBuf } from '@dxos/protocols/buf';
-import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { AdmittedFeed_Designation, type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type ControlPipelineSnapshot } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Timeframe } from '@dxos/timeframe';
 import { TimeSeriesCounter, TimeUsageCounter, trace } from '@dxos/tracing';
 import { type AsyncCallback, Callback, tracer } from '@dxos/util';
@@ -84,7 +83,7 @@ export class ControlPipeline {
       log('feed admitted', { key: info.key });
 
       // TODO(burdon): Check not stopping.
-      if (info.assertion.designation === AdmittedFeed.Designation.CONTROL && !info.key.equals(genesisFeed.key)) {
+      if ((info.assertion.designation as number) === AdmittedFeed_Designation.CONTROL && !info.key.equals(genesisFeed.key)) {
         scheduleMicroTask(this._ctx, async () => {
           try {
             const feed = await feedProvider(info.key);

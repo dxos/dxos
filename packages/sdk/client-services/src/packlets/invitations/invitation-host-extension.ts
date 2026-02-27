@@ -15,16 +15,15 @@ import {
   Invitation_AuthMethod,
   Invitation_State,
 } from '@dxos/protocols/buf/dxos/client/invitation_pb';
-import { schema } from '@dxos/protocols/proto';
-import { type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import {
   type AdmissionRequest,
   type AdmissionResponse,
-  AuthenticationResponse,
+  AuthenticationResponse_Status,
   type IntroductionResponse,
-  type InvitationHostService,
-  InvitationOptions,
-} from '@dxos/protocols/proto/dxos/halo/invitations';
+} from '@dxos/protocols/buf/dxos/halo/invitations_pb';
+import { schema } from '@dxos/protocols/proto';
+import { type InvitationHostService, InvitationOptions } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { type ExtensionContext, RpcExtension } from '@dxos/teleport';
 
 import type { FlowLockHolder } from './invitation-state';
@@ -114,7 +113,7 @@ export class InvitationHostExtension
           this._remoteOptionsTrigger.wake();
         },
 
-        introduce: async (request) => {
+        introduce: (async (request: any) => {
           const { profile, invitationId } = request;
           const traceId = PublicKey.random().toHex();
           log.trace('dxos.sdk.invitation-handler.host.introduce', trace.begin({ id: traceId }));
@@ -132,7 +131,7 @@ export class InvitationHostExtension
           }
 
           log.verbose('guest introduced themselves', { guestProfile: profile });
-          this.guestProfile = profile;
+          this.guestProfile = profile as any;
           this._callbacks.onStateUpdate(Invitation_State.READY_FOR_AUTHENTICATION);
           this._challenge =
             invitation.authMethod === Invitation_AuthMethod.KNOWN_PUBLIC_KEY ? randomBytes(32) : undefined;
@@ -142,15 +141,15 @@ export class InvitationHostExtension
             authMethod: invitation.authMethod,
             challenge: this._challenge,
           } as unknown as IntroductionResponse;
-        },
+        }) as any,
 
-        authenticate: async ({ authCode: code, signedChallenge }) => {
+        authenticate: (async ({ authCode: code, signedChallenge }: any) => {
           const traceId = PublicKey.random().toHex();
           log.trace('dxos.sdk.invitation-handler.host.authenticate', trace.begin({ id: traceId }));
 
           const invitation = this._requireActiveInvitation();
           log.verbose('received authentication request', { authCode: code });
-          let status = AuthenticationResponse.Status.OK;
+          let status = AuthenticationResponse_Status.OK;
 
           this._assertInvitationState([Invitation_State.AUTHENTICATING, Invitation_State.READY_FOR_AUTHENTICATION]);
           this._callbacks.onStateUpdate(Invitation_State.AUTHENTICATING);
@@ -158,15 +157,15 @@ export class InvitationHostExtension
           switch (invitation.authMethod) {
             case Invitation_AuthMethod.NONE: {
               log('authentication not required');
-              return { status: AuthenticationResponse.Status.OK };
+              return { status: AuthenticationResponse_Status.OK };
             }
 
             case Invitation_AuthMethod.SHARED_SECRET: {
               if (invitation.authCode) {
                 if (this.authenticationRetry++ > MAX_OTP_ATTEMPTS) {
-                  status = AuthenticationResponse.Status.INVALID_OPT_ATTEMPTS;
+                  status = AuthenticationResponse_Status.INVALID_OPT_ATTEMPTS;
                 } else if (code !== invitation.authCode) {
-                  status = AuthenticationResponse.Status.INVALID_OTP;
+                  status = AuthenticationResponse_Status.INVALID_OTP;
                 } else {
                   this.authenticationPassed = true;
                 }
@@ -176,7 +175,7 @@ export class InvitationHostExtension
 
             case Invitation_AuthMethod.KNOWN_PUBLIC_KEY: {
               if (!invitation.guestKeypair) {
-                status = AuthenticationResponse.Status.INTERNAL_ERROR;
+                status = AuthenticationResponse_Status.INTERNAL_ERROR;
                 break;
               }
               invariant(invitation.guestKeypair.publicKey);
@@ -192,19 +191,19 @@ export class InvitationHostExtension
               if (isSignatureValid) {
                 this.authenticationPassed = true;
               } else {
-                status = AuthenticationResponse.Status.INVALID_SIGNATURE;
+                status = AuthenticationResponse_Status.INVALID_SIGNATURE;
               }
               break;
             }
 
             default: {
               log.error('invalid authentication method', { authMethod: invitation.authMethod });
-              status = AuthenticationResponse.Status.INTERNAL_ERROR;
+              status = AuthenticationResponse_Status.INTERNAL_ERROR;
               break;
             }
           }
 
-          if (![AuthenticationResponse.Status.OK, AuthenticationResponse.Status.INVALID_OTP].includes(status)) {
+          if (![AuthenticationResponse_Status.OK, AuthenticationResponse_Status.INVALID_OTP].includes(status)) {
             this._callbacks.onError(new Error(`Authentication failed, with status=${status}`));
             scheduleTask(this._ctx, () => this.close());
             return { status };
@@ -212,9 +211,9 @@ export class InvitationHostExtension
 
           log.trace('dxos.sdk.invitation-handler.host.authenticate', trace.end({ id: traceId, data: { status } }));
           return { status };
-        },
+        }) as any,
 
-        admit: async (request) => {
+        admit: (async (request: any) => {
           const traceId = PublicKey.random().toHex();
           log.trace('dxos.sdk.invitation-handler.host.admit', trace.begin({ id: traceId }));
           const invitation = this._requireActiveInvitation();
@@ -228,7 +227,7 @@ export class InvitationHostExtension
               }
             }
 
-            const response = await this._callbacks.admit(request);
+            const response = await this._callbacks.admit(request as any);
 
             log.trace('dxos.sdk.invitation-handler.host.admit', trace.end({ id: traceId }));
             return response;
@@ -236,7 +235,7 @@ export class InvitationHostExtension
             this._callbacks.onError(err);
             throw err;
           }
-        },
+        }) as any,
       },
     };
   }

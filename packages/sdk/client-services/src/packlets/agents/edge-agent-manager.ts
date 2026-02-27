@@ -9,9 +9,9 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { EdgeAgentStatus, EdgeCallFailedError } from '@dxos/protocols';
-import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
-import { type Runtime } from '@dxos/protocols/proto/dxos/config';
-import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
+import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 
 import { type Identity } from '../identity';
 import { type DataSpaceManager } from '../spaces';
@@ -33,7 +33,7 @@ export class EdgeAgentManager extends Resource {
   private _fetchAgentStatusTask: DeferredTask | undefined;
 
   constructor(
-    private readonly _edgeFeatures: Runtime.Client.EdgeFeatures | undefined,
+    private readonly _edgeFeatures: Runtime_Client_EdgeFeatures | undefined,
     private readonly _edgeHttpClient: EdgeHttpClient | undefined,
     private readonly _dataSpaceManager: DataSpaceManager,
     private readonly _identity: Identity,
@@ -70,11 +70,10 @@ export class EdgeAgentManager extends Resource {
     }
 
     await this._identity.admitDevice({
-      deviceKey,
+      deviceKey: deviceKey,
       controlFeedKey: PublicKey.fromHex(response.feedKey),
-      // TODO: agents don't have data feed, should be removed
       dataFeedKey: PublicKey.random(),
-    });
+    } as any);
 
     log('agent created', response);
 

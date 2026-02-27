@@ -7,7 +7,7 @@ import type { DocumentId } from '@automerge/automerge-repo';
 import { assertArgument, failedInvariant, invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { SpaceArchiveFileStructure, type SpaceArchiveMetadata } from '@dxos/protocols';
-import type { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
+import type { SpaceArchive } from '@dxos/protocols/buf/dxos/client/services_pb';
 
 export type ExtractedSpaceArchive = {
   metadata: SpaceArchiveMetadata;

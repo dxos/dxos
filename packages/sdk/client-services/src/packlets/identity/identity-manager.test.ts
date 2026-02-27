@@ -11,9 +11,9 @@ import { Keyring } from '@dxos/keyring';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
 import { bufToProto, create } from '@dxos/protocols/buf';
+import { type FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
-import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import type { Credential as ProtoCredential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Credential as ProtoCredential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type Storage, StorageType, createStorage } from '@dxos/random-access-storage';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
 
@@ -48,12 +48,12 @@ describe('identity/identity-manager', () => {
       transportFactory: MemoryTransportFactory,
     });
     const spaceManager = new SpaceManager({
-      feedStore,
+      feedStore: feedStore as any,
       networkManager,
       blobStore,
       metadataStore,
     });
-    const identityManager = new IdentityManager({ metadataStore, keyring, feedStore, spaceManager });
+    const identityManager = new IdentityManager({ metadataStore, keyring, feedStore: feedStore as any, spaceManager } as any);
 
     return {
       networkManager,

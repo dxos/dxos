@@ -22,10 +22,9 @@ import {
   Invitation_State,
   Invitation_Type,
 } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { type DeviceProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { AuthenticationResponse_Status, type IntroductionResponse, InvitationOptions_Role } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 import { PrivateKeySchema, PublicKeySchema } from '@dxos/protocols/buf/dxos/keys_pb';
-import { InvitationOptions_Role } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
-import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { AuthenticationResponse, type IntroductionResponse } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { type ExtensionContext, type TeleportExtension, type TeleportProps } from '@dxos/teleport';
 import { trace as _trace } from '@dxos/tracing';
 import { ComplexSet } from '@dxos/util';
@@ -118,7 +117,7 @@ export class InvitationsHandler {
               invitationId: invitation.invitationId,
               ...protocol.toJSON(),
             });
-            const deviceKey = admissionRequest.device?.deviceKey ?? admissionRequest.space?.deviceKey;
+            const deviceKey = (admissionRequest as any).device?.deviceKey ?? (admissionRequest as any).space?.deviceKey ?? (admissionRequest.kind?.case === 'device' ? admissionRequest.kind.value?.deviceKey : admissionRequest.kind?.case === 'space' ? admissionRequest.kind.value?.deviceKey : undefined);
             invariant(deviceKey);
             const admissionResponse = await protocol.admit(invitation, admissionRequest, extension.guestProfile);
 
@@ -310,7 +309,7 @@ export class InvitationsHandler {
                 invitationId: invitation.invitationId,
                 ...protocol.toJSON(),
               });
-              const introductionResponse = await extension.rpc.InvitationHostService.introduce({
+              const introductionResponse: any = await extension.rpc.InvitationHostService.introduce({
                 invitationId: invitation.invitationId,
                 ...protocol.createIntroduction(),
               });
@@ -349,13 +348,13 @@ export class InvitationsHandler {
                 ...protocol.toJSON(),
               });
               const admissionRequest = await protocol.createAdmissionRequest(deviceProfile);
-              const admissionResponse = await extension.rpc.InvitationHostService.admit(admissionRequest);
+              const admissionResponse = await extension.rpc.InvitationHostService.admit(admissionRequest as any);
 
               // Remote connection no longer needed.
               admitted = true;
 
               // 4. Record credential in our HALO.
-              const result = await protocol.accept(admissionResponse, admissionRequest);
+              const result = await protocol.accept(admissionResponse as any, admissionRequest);
 
               // 5. Success.
               log.verbose('dxos.sdk.invitations-handler.guest.admitted-by-host', {
@@ -473,11 +472,11 @@ export class InvitationsHandler {
       log('sending authentication request');
       setState(Invitation_State.AUTHENTICATING);
       const response = await extension.rpc.InvitationHostService.authenticate({ authCode });
-      if (response.status === undefined || response.status === AuthenticationResponse.Status.OK) {
+      if ((response as any).status === undefined || (response as any).status === AuthenticationResponse_Status.OK) {
         break;
       }
 
-      if (response.status === AuthenticationResponse.Status.INVALID_OTP) {
+      if ((response as any).status === AuthenticationResponse_Status.INVALID_OTP) {
         if (attempt === MAX_OTP_ATTEMPTS) {
           throw new Error(`Maximum retry attempts: ${MAX_OTP_ATTEMPTS}`);
         } else {
@@ -507,7 +506,7 @@ export class InvitationsHandler {
     const response = await extension.rpc.InvitationHostService.authenticate({
       signedChallenge: signature,
     });
-    if (response.status !== AuthenticationResponse.Status.OK) {
+    if ((response as any).status !== AuthenticationResponse_Status.OK) {
       throw new Error(`Authentication failed with code: ${response.status}`);
     }
   }

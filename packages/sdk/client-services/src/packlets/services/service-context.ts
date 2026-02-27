@@ -30,11 +30,10 @@ import { type SwarmNetworkManager } from '@dxos/network-manager';
 import { FeedProtocol, InvalidStorageVersionError, STORAGE_VERSION, trace } from '@dxos/protocols';
 import { create, toPublicKey } from '@dxos/protocols/buf';
 import { type Invitation, Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { type Runtime_Client_EdgeFeatures, type Runtime_Client_Storage } from '@dxos/protocols/buf/dxos/config_pb';
+import { type FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
-import { ChainSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { type Runtime } from '@dxos/protocols/proto/dxos/config';
-import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { type Credential, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { ChainSchema, type Credential, type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type Storage } from '@dxos/random-access-storage';
 import type * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
@@ -117,7 +116,7 @@ export class ServiceContext extends Resource {
     private readonly _edgeHttpClient: EdgeHttpClient | undefined,
     private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>,
     public readonly _runtimeProps?: ServiceContextRuntimeProps,
-    private readonly _edgeFeatures?: Runtime.Client.EdgeFeatures,
+    private readonly _edgeFeatures?: Runtime_Client_EdgeFeatures,
   ) {
     super();
 
@@ -141,7 +140,7 @@ export class ServiceContext extends Resource {
     });
 
     this.spaceManager = new SpaceManager({
-      feedStore: this.feedStore,
+      feedStore: this.feedStore as any,
       networkManager: this.networkManager,
       blobStore: this.blobStore,
       metadataStore: this.metadataStore,
@@ -151,7 +150,7 @@ export class ServiceContext extends Resource {
     this.identityManager = new IdentityManager({
       metadataStore: this.metadataStore,
       keyring: this.keyring,
-      feedStore: this.feedStore,
+      feedStore: this.feedStore as any,
       spaceManager: this.spaceManager,
       devicePresenceOfflineTimeout: this._runtimeProps?.devicePresenceOfflineTimeout,
       devicePresenceAnnounceInterval: this._runtimeProps?.devicePresenceAnnounceInterval,

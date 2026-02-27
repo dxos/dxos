@@ -19,7 +19,7 @@ export const defaultStorageIsEmpty = async (
   try {
     const { createStorageObjects } = await import('@dxos/client-services');
     const storage = createStorageObjects(
-      (config ?? {}) as import('@dxos/protocols/proto/dxos/config').Runtime.Client.Storage,
+      (config ?? {}) as any,
     ).storage;
     const metadataDir = storage.createDirectory('metadata');
     const echoMetadata = metadataDir.getOrCreateFile('EchoMetadata');

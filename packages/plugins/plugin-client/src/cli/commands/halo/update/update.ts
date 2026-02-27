@@ -11,7 +11,7 @@ import { CommandConfig } from '@dxos/cli-util';
 import { print } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import { toPublicKey } from '@dxos/protocols/buf';
-import { type Identity } from '@dxos/protocols/proto/dxos/client/services';
+import { type Identity } from '@dxos/protocols/buf/dxos/client/services_pb';
 
 import { printIdentity } from '../util';
 

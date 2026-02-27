@@ -46,15 +46,13 @@ import { ObjectId, PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AlreadyJoinedError, trace as Trace } from '@dxos/protocols';
 import { create, encodePublicKey, protoToBuf } from '@dxos/protocols/buf';
-import { AdmissionKeypairSchema, type Invitation_AuthMethod, Invitation_Kind, Invitation_Type } from '@dxos/protocols/buf/dxos/client/invitation_pb';
-import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
-import { type Runtime } from '@dxos/protocols/proto/dxos/config';
-import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { EdgeReplicationSetting, type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { type Credential, SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { type DelegateSpaceInvitation } from '@dxos/protocols/proto/dxos/halo/invitations';
-import { type PeerState } from '@dxos/protocols/proto/dxos/mesh/presence';
+import { AdmissionKeypairSchema, type Invitation_AuthMethod, Invitation_Kind, Invitation_Type, SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
+import { type FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
+import { EdgeReplicationSetting, type SpaceMetadata } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
+import { type Credential, type ProfileDocument, SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type DelegateSpaceInvitation } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
+import { type PeerState } from '@dxos/protocols/buf/dxos/mesh/presence_pb';
 import { type Teleport } from '@dxos/teleport';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
 import { type Timeframe } from '@dxos/timeframe';
@@ -120,7 +118,7 @@ export type DataSpaceManagerProps = {
   meshReplicator?: MeshEchoReplicator;
   echoEdgeReplicator?: EchoEdgeReplicator;
   runtimeProps?: DataSpaceManagerRuntimeProps;
-  edgeFeatures?: Runtime.Client.EdgeFeatures;
+  edgeFeatures?: Runtime_Client_EdgeFeatures;
 };
 
 export type DataSpaceManagerRuntimeProps = {
@@ -157,7 +155,7 @@ export class DataSpaceManager extends Resource {
   private readonly _invitationsManager: InvitationsManager;
   private readonly _edgeConnection?: EdgeConnection = undefined;
   private readonly _edgeHttpClient?: EdgeHttpClient = undefined;
-  private readonly _edgeFeatures?: Runtime.Client.EdgeFeatures = undefined;
+  private readonly _edgeFeatures?: Runtime_Client_EdgeFeatures = undefined;
   private readonly _meshReplicator?: MeshEchoReplicator = undefined;
   private readonly _echoEdgeReplicator?: EchoEdgeReplicator = undefined;
   private readonly _runtimeProps?: DataSpaceManagerRuntimeProps = undefined;
@@ -229,7 +227,7 @@ export class DataSpaceManager extends Resource {
     await forEachAsync(this._metadataStore.spaces, async (spaceMetadata) => {
       try {
         log('load space', { spaceMetadata });
-        const space = await this._constructSpace(spaceMetadata);
+        const space = await this._constructSpace(spaceMetadata as any);
         // Track spaces that were previously active for auto-activation (used in dedicated worker mode).
         if (this._runtimeProps?.autoActivateSpaces && spaceMetadata.state === SpaceState.SPACE_ACTIVE) {
           spacesToActivate.push(space);
@@ -279,13 +277,13 @@ export class DataSpaceManager extends Resource {
 
     const spaceId = await createIdFromSpaceKey(spaceKey);
 
-    const metadata: SpaceMetadata = {
+    const metadata = {
       key: spaceKey,
       genesisFeedKey: controlFeedKey,
       controlFeedKey,
       dataFeedKey,
       state: SpaceState.SPACE_ACTIVE,
-    };
+    } as any as SpaceMetadata;
 
     log('creating space...', { spaceId, spaceKey });
 
@@ -339,7 +337,7 @@ export class DataSpaceManager extends Resource {
     log('adding space...', { spaceKey });
 
     const credentials = await spaceGenesis(this._keyring, this._signingContext, space.inner, root.url);
-    await this._metadataStore.addSpace(metadata);
+    await this._metadataStore.addSpace(metadata as any);
 
     const memberCredential = credentials[1];
     invariant(getCredentialAssertion(memberCredential)['@type'] === 'dxos.halo.credentials.SpaceMember');
@@ -422,16 +420,16 @@ export class DataSpaceManager extends Resource {
     invariant(this._lifecycleState === LifecycleState.OPEN, 'Not open.');
     invariant(!this._spaces.has(opts.spaceKey), 'Space already exists.');
 
-    const metadata: SpaceMetadata = {
+    const metadata = {
       key: opts.spaceKey,
       genesisFeedKey: opts.genesisFeedKey,
       controlTimeframe: opts.controlTimeframe,
       dataTimeframe: opts.dataTimeframe,
-    };
+    } as any as SpaceMetadata;
 
     const space = await this._constructSpace(metadata);
     await space.open();
-    await this._metadataStore.addSpace(metadata);
+    await this._metadataStore.addSpace(metadata as any);
     space.initializeDataPipelineAsync();
 
     this.updated.emit();
@@ -529,16 +527,16 @@ export class DataSpaceManager extends Resource {
     });
 
     const controlFeed =
-      metadata.controlFeedKey && (await this._feedStore.openFeed(metadata.controlFeedKey, { writable: true }));
+      metadata.controlFeedKey && (await this._feedStore.openFeed(metadata.controlFeedKey as any, { writable: true }));
     const dataFeed =
       metadata.dataFeedKey &&
-      (await this._feedStore.openFeed(metadata.dataFeedKey, {
+      (await this._feedStore.openFeed(metadata.dataFeedKey as any, {
         writable: true,
         sparse: true,
       }));
 
     const space: Space = await this._spaceManager.constructSpace({
-      metadata,
+      metadata: metadata as any,
       swarmIdentity: {
         identityKey: this._signingContext.identityKey,
         peerKey: this._signingContext.deviceKey,
@@ -576,8 +574,8 @@ export class DataSpaceManager extends Resource {
         return this._handleInvitationStatusChange(dataSpace, invitation, isActive);
       },
     });
-    controlFeed && (await space.setControlFeed(controlFeed));
-    dataFeed && (await space.setDataFeed(dataFeed));
+    controlFeed && (await space.setControlFeed(controlFeed as any));
+    dataFeed && (await space.setDataFeed(dataFeed as any));
 
     const dataSpace = new DataSpace({
       inner: space,
@@ -596,7 +594,7 @@ export class DataSpaceManager extends Resource {
         afterReady: async () => {
           log('after space ready', { space: space.key, open: this._lifecycleState === LifecycleState.OPEN });
           if (this._lifecycleState === LifecycleState.OPEN) {
-            await this._createDelegatedInvitations(dataSpace, [...space.spaceState.invitations.entries()]);
+            await this._createDelegatedInvitations(dataSpace, [...space.spaceState.invitations.entries()] as any);
             this._handleMemberRoleChanges(presence, space.protocol, [...space.spaceState.members.values()]);
             this.updated.emit();
           }
@@ -626,17 +624,17 @@ export class DataSpaceManager extends Resource {
       }
     });
 
-    presence.newPeer.on((peerState) => {
+    presence.newPeer.on((peerState: any) => {
       if (dataSpace.state === SpaceState.SPACE_READY) {
         this._handleNewPeerConnected(space, peerState);
       }
     });
 
     if (metadata.controlTimeframe) {
-      dataSpace.inner.controlPipeline.state.setTargetTimeframe(metadata.controlTimeframe);
+      dataSpace.inner.controlPipeline.state.setTargetTimeframe(metadata.controlTimeframe as any);
     }
 
-    this._spaces.set(metadata.key, dataSpace);
+    this._spaces.set(metadata.key as any, dataSpace);
     return dataSpace;
   }
 
@@ -679,9 +677,9 @@ export class DataSpaceManager extends Resource {
   }
 
   private _handleNewPeerConnected(space: Space, peerState: PeerState): void {
-    const role = space.spaceState.getMemberRole(peerState.identityKey);
+    const role = space.spaceState.getMemberRole(peerState.identityKey as any);
     if (role === SpaceMember_Role.REMOVED) {
-      const session = peerState.peerId && space.protocol.sessions.get(peerState.peerId);
+      const session = peerState.peerId && space.protocol.sessions.get(peerState.peerId as any);
       if (session != null) {
         log('closing a session with a removed peer', { peerId: peerState.peerId });
         void session.close().catch(log.error);
@@ -699,7 +697,7 @@ export class DataSpaceManager extends Resource {
     }
     if (isActive) {
       await this._createDelegatedInvitations(dataSpace, [
-        [delegatedInvitation.credentialId, delegatedInvitation.invitation],
+        [delegatedInvitation.credentialId, delegatedInvitation.invitation as any],
       ]);
     } else {
       await this._invitationsManager.cancelInvitation(delegatedInvitation.invitation);
@@ -717,11 +715,11 @@ export class DataSpaceManager extends Resource {
         spaceKey: encodePublicKey(space.key),
         authMethod: protoToBuf<Invitation_AuthMethod>(invitation.authMethod),
         invitationId: invitation.invitationId,
-        swarmKey: encodePublicKey(invitation.swarmKey),
-        guestKeypair: invitation.guestKey ? create(AdmissionKeypairSchema, { publicKey: encodePublicKey(invitation.guestKey) }) : undefined,
-        lifetime: invitation.expiresOn ? (invitation.expiresOn.getTime() - Date.now()) / 1000 : undefined,
+        swarmKey: encodePublicKey(invitation.swarmKey as any),
+        guestKeypair: invitation.guestKey ? create(AdmissionKeypairSchema, { publicKey: encodePublicKey(invitation.guestKey as any) }) : undefined,
+        lifetime: invitation.expiresOn ? ((invitation.expiresOn as any).getTime?.() ?? new Date(invitation.expiresOn as any).getTime()) - Date.now() / 1000 : undefined,
         multiUse: invitation.multiUse,
-        delegationCredentialId: encodePublicKey(credentialId),
+        delegationCredentialId: encodePublicKey(credentialId as any),
         persistent: false,
       });
     });

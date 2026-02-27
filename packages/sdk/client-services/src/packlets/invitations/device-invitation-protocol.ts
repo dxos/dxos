@@ -9,12 +9,12 @@ import { type PublicKey } from '@dxos/keys';
 import { AlreadyJoinedError } from '@dxos/protocols';
 import { encodePublicKey } from '@dxos/protocols/buf';
 import { type Invitation, Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
-import type { DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import type { DeviceProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import {
   type AdmissionRequest,
   type AdmissionResponse,
   type IntroductionRequest,
-} from '@dxos/protocols/proto/dxos/halo/invitations';
+} from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 
 import { type Identity, type JoinIdentityProps } from '../identity';
 
@@ -52,20 +52,24 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
   }
 
   async admit(_: Invitation, request: AdmissionRequest): Promise<AdmissionResponse> {
-    invariant(request.device);
+    const deviceRequest = (request as any).device ?? (request.kind?.case === 'device' ? request.kind.value : undefined);
+    invariant(deviceRequest);
     const identity = this._getIdentity();
-    const credential = await identity.admitDevice(request.device);
+    const credential = await identity.admitDevice(deviceRequest);
     invariant(getCredentialAssertion(credential as never)['@type'] === 'dxos.halo.credentials.AuthorizedDevice');
 
     return {
-      device: {
-        identityKey: identity.identityKey,
-        haloSpaceKey: identity.haloSpaceKey,
-        genesisFeedKey: identity.haloGenesisFeedKey,
-        controlTimeframe: identity.controlPipeline.state.timeframe,
-        credential,
+      kind: {
+        case: 'device',
+        value: {
+          identityKey: identity.identityKey as any,
+          haloSpaceKey: identity.haloSpaceKey as any,
+          genesisFeedKey: identity.haloGenesisFeedKey as any,
+          controlTimeframe: identity.controlPipeline.state.timeframe as any,
+          credential,
+        },
       },
-    };
+    } as any;
   }
 
   checkInvitation(invitation: Partial<Invitation>): AlreadyJoinedError | undefined {
@@ -80,7 +84,7 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
   }
 
   createIntroduction(): IntroductionRequest {
-    return {};
+    return {} as any;
   }
 
   async createAdmissionRequest(deviceProfile?: DeviceProfileDocument): Promise<AdmissionRequest> {
@@ -89,21 +93,26 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
     const dataFeedKey = await this._keyring.createKey();
 
     return {
-      device: {
-        deviceKey,
-        controlFeedKey,
-        dataFeedKey,
-        profile: deviceProfile,
+      kind: {
+        case: 'device',
+        value: {
+          deviceKey: deviceKey as any,
+          controlFeedKey: controlFeedKey as any,
+          dataFeedKey: dataFeedKey as any,
+          profile: deviceProfile,
+        },
       },
-    };
+    } as any;
   }
 
   async accept(response: AdmissionResponse, request: AdmissionRequest): Promise<Partial<Invitation>> {
-    invariant(response.device);
-    const { identityKey, haloSpaceKey, genesisFeedKey, controlTimeframe } = response.device;
+    const deviceResponse = (response as any).device ?? (response.kind?.case === 'device' ? response.kind.value : undefined);
+    invariant(deviceResponse);
+    const { identityKey, haloSpaceKey, genesisFeedKey, controlTimeframe } = deviceResponse;
 
-    invariant(request.device);
-    const { deviceKey, controlFeedKey, dataFeedKey, profile } = request.device;
+    const deviceRequest = (request as any).device ?? (request.kind?.case === 'device' ? request.kind.value : undefined);
+    invariant(deviceRequest);
+    const { deviceKey, controlFeedKey, dataFeedKey, profile } = deviceRequest;
 
     // TODO(wittjosiah): When multiple identities are supported, verify identity doesn't already exist before accepting.
 
@@ -116,7 +125,7 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
       dataFeedKey,
       controlTimeframe,
       deviceProfile: profile as never,
-      authorizedDeviceCredential: response.device.credential,
+      authorizedDeviceCredential: deviceResponse.credential,
     });
 
     return { identityKey: encodePublicKey(identityKey) };

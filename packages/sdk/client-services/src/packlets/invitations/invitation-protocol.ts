@@ -4,12 +4,12 @@
 
 import { type PublicKey } from '@dxos/keys';
 import type { Invitation } from '@dxos/protocols/buf/dxos/client/invitation_pb';
-import type { DeviceProfileDocument, ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import type { DeviceProfileDocument, ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import type {
   AdmissionRequest,
   AdmissionResponse,
   IntroductionRequest,
-} from '@dxos/protocols/proto/dxos/halo/invitations';
+} from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 
 export interface InvitationProtocol {
   //
