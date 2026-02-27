@@ -55,7 +55,6 @@ const EXPOSE_OBJECT_LABEL: Label = ['expose object label', META_NS];
 const CAN_DROP_FALSE = () => false;
 const CAN_DROP_SPACE = (source: TreeData) => Obj.isObject(source.item.data) || isSpace(source.item.data);
 const CAN_DROP_OBJECT = (source: TreeData) => Node.isGraphNode(source.item) && Obj.isObject(source.item.data);
-const CAN_DROP_OBJECT_DISABLED = () => false;
 
 export const SPACES = `${meta.id}-spaces`;
 export const COMPOSER_SPACE_LOCK = `${meta.id}/lock`;
@@ -104,6 +103,17 @@ const rearrangeCache = new Map<string, (nextOrder: unknown[]) => void>();
 const blockInstructionCache = new Map<string, (source: TreeData, instruction: Instruction) => boolean>();
 const spaceRearrangeCache = new Map<string, (nextOrder: Space[]) => void>();
 const collectionPartialsCache = new Map<string, ReturnType<typeof buildCollectionPartials>>();
+const systemCollectionPartialsCache = new Map<
+  string,
+  {
+    label: Label;
+    icon?: string;
+    iconHue?: string;
+    acceptPersistenceClass: Set<string>;
+    acceptPersistenceKey: Set<string>;
+    role: string;
+  }
+>();
 const spaceActionsCache = new Map<
   string,
   {
@@ -124,6 +134,18 @@ const getDynamicLabel = createFactory(
 // Node Constructors
 //
 
+/**
+ * Builds an app-graph node for a space (workspace), including settings children and optional rearrange handler.
+ *
+ * @param space - Space to wrap as a graph node.
+ * @param navigable - Whether the space node is navigable; affects disabled state.
+ * @param personal - Passed to display name resolution (e.g. "Personal space" fallback).
+ * @param namesCache - Optional cache of space id to display name.
+ * @param resolve - Metadata resolver for typename.
+ * @param graph - Optional expandable graph for sorting edges on rearrange.
+ * @param spacesOrder - Optional ECHO object holding workspace order; used with graph for persist on rearrange.
+ * @returns A graph node for the space.
+ */
 export const constructSpaceNode = ({
   space,
   navigable = false,
@@ -245,6 +267,19 @@ export const constructSpaceNode = ({
   };
 };
 
+/**
+ * Builds an app-graph node for an ECHO object (collection, managed feed, schema, or generic object).
+ *
+ * @param db - Database for the object's space.
+ * @param object - ECHO object to wrap.
+ * @param disposition - Optional UI disposition.
+ * @param droppable - Whether the node accepts drops.
+ * @param navigable - Whether the node is navigable.
+ * @param managedCollectionChild - Whether the object is a managed collection child (affects blockInstruction).
+ * @param resolve - Metadata resolver for typename.
+ * @param parentCollection - Parent collection for rearranging objects.
+ * @returns A graph node or null if the object has no typename.
+ */
 export const createObjectNode = ({
   db,
   object,
@@ -326,7 +361,7 @@ export const createObjectNode = ({
     blockInstructionCache.set(blockInstructionKey, blockInstruction);
   }
 
-  const canDrop = droppable ? CAN_DROP_OBJECT : CAN_DROP_OBJECT_DISABLED;
+  const canDrop = droppable ? CAN_DROP_OBJECT : CAN_DROP_FALSE;
 
   return {
     id: Obj.getDXN(object).toString(),
@@ -351,6 +386,13 @@ export const createObjectNode = ({
   };
 };
 
+/**
+ * Builds a static schema node for the app graph.
+ *
+ * @param schema - ECHO schema entity.
+ * @param space - Space that owns the schema.
+ * @returns A graph node for the schema.
+ */
 export const createStaticSchemaNode = ({ schema, space }: { schema: Type.Entity.Any; space: Space }): Node.Node => {
   return {
     id: `${space.id}/${Type.getTypename(schema)}`,
@@ -375,15 +417,15 @@ export const createStaticSchemaNode = ({ schema, space }: { schema: Type.Entity.
 // Action Constructors
 //
 
-export const constructSpaceActions = ({
-  space,
-  personal,
-  migrating,
-}: {
-  space: Space;
-  personal?: boolean;
-  migrating?: boolean;
-}) => {
+/**
+ * Builds the action list for a space node (migrate, create object, rename).
+ * Results are cached by space id and state flags.
+ *
+ * @param space - Space to build actions for.
+ * @param migrating - When true, treats the space as currently migrating (disables migrate action).
+ * @returns Array of graph action descriptors for the space.
+ */
+export const constructSpaceActions = ({ space, migrating }: { space: Space; migrating?: boolean }) => {
   const state = space.state.get();
   const hasPendingMigration = checkPendingMigration(space);
   const isMigrating = migrating || Migrations.running(space);
@@ -448,6 +490,14 @@ export const constructSpaceActions = ({
   return actions;
 };
 
+/**
+ * Builds the action list for a static schema node (add view, rename, delete, snapshot).
+ *
+ * @param schema - ECHO schema entity (e.g. static record type).
+ * @param space - Space that owns the schema.
+ * @param deletable - Whether the delete/snapshot actions are enabled.
+ * @returns Array of graph action descriptors for the schema.
+ */
 export const createStaticSchemaActions = ({
   schema,
   space,
@@ -535,6 +585,18 @@ export const createStaticSchemaActions = ({
   return actions;
 };
 
+/**
+ * Builds the action list for an ECHO object node (create, rename, delete, copy link, etc.).
+ *
+ * @param object - ECHO object to build actions for.
+ * @param graph - Readable app graph (used for action wiring).
+ * @param resolve - Metadata resolver for typename.
+ * @param capabilities - Capability manager for feature checks.
+ * @param shareableLinkOrigin - Origin URL for shareable links.
+ * @param deletable - Whether delete action is included. Defaults to true.
+ * @param navigable - Whether the object is navigable (affects available actions). Defaults to false.
+ * @returns Array of graph action descriptors for the object.
+ */
 export const constructObjectActions = ({
   object,
   graph,
@@ -759,7 +821,15 @@ const checkPendingMigration = (space: Space) => {
   );
 };
 
-// TODO(wittjosiah): Factor out? Expose via capability?
+/**
+ * Returns the display label for a space (name, namesCache entry, or fallback).
+ *
+ * @param space - Space to label.
+ * @param options.personal - If true, use personal-space fallback when unnamed.
+ * @param options.namesCache - Optional cache of space id to display name.
+ * @returns Label tuple (translation key or string, and namespace).
+ */
+// TODO(wittjosiah): Factor out? Exposer via capability?
 export const getSpaceDisplayName = (
   space: Space,
   { personal, namesCache = {} }: { personal?: boolean; namesCache?: Record<string, string> } = {},
@@ -854,17 +924,23 @@ const getSystemCollectionNodePartials = ({
   db: Database.Database;
   resolve: (typename: string) => Record<string, any>;
 }) => {
-  const [, feedKind] = collection.key.split('~');
-  const metadataKey = feedKind ?? collection.key;
-  const metadata = resolve(metadataKey);
-  return {
-    label: getDynamicLabel('typename label', metadataKey, { count: 2 }),
-    icon: metadata.icon,
-    iconHue: metadata.iconHue,
-    acceptPersistenceClass: ACCEPT_ECHO_CLASS,
-    acceptPersistenceKey: getAcceptPersistenceKey(db.spaceId),
-    role: 'branch',
-  };
+  const cacheKey = `${db.spaceId}:${collection.key}`;
+  let cached = systemCollectionPartialsCache.get(cacheKey);
+  if (!cached) {
+    const [, feedKind] = collection.key.split('~');
+    const metadataKey = feedKind ?? collection.key;
+    const metadata = resolve(metadataKey);
+    cached = {
+      label: getDynamicLabel('typename label', metadataKey, { count: 2 }),
+      icon: metadata.icon,
+      iconHue: metadata.iconHue,
+      acceptPersistenceClass: ACCEPT_ECHO_CLASS,
+      acceptPersistenceKey: getAcceptPersistenceKey(db.spaceId),
+      role: 'branch',
+    };
+    systemCollectionPartialsCache.set(cacheKey, cached);
+  }
+  return cached;
 };
 
 //

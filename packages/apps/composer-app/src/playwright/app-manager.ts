@@ -196,7 +196,7 @@ export class AppManager {
   }
 
   async createObject({ type, name, nth }: { type: string; name?: string; nth?: number }): Promise<void> {
-    if (nth) {
+    if (nth !== undefined) {
       const object = this.page.getByTestId('spacePlugin.object').nth(nth);
       await object.hover();
       await object.getByTestId('spacePlugin.createObject').click();
