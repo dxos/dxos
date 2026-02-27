@@ -768,8 +768,10 @@ const sortEdgesImpl = <T extends ExpandableGraph | WritableGraph>(
   if (newOrder.length === current.length && newOrder.every((id, i) => id === current[i])) {
     return graph;
   }
-  current.splice(0, current.length, ...newOrder);
-  internal._registry.set(edgesAtom, edges);
+  internal._registry.set(edgesAtom, {
+    ...edges,
+    [relation]: newOrder,
+  });
   return graph;
 };
 

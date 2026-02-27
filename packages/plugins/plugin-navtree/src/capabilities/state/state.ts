@@ -20,11 +20,7 @@ const defaultItemState: NC.NavTreeItemState = { open: false, current: false, alt
 
 /** Default state entries for initial tree structure. */
 // TODO(thure): Initialize these dynamically.
-const defaultStateEntries: [string, NC.NavTreeItemState][] = [
-  ['root', { open: true, current: false }],
-  ['root~dxos.org/plugin/space-spaces', { open: true, current: false }],
-  ['root~dxos.org/plugin/files', { open: true, current: false }],
-];
+const defaultStateEntries: [string, NC.NavTreeItemState][] = [['root', { open: true, current: false }]];
 
 const getInitialState = (): Map<string, NC.NavTreeItemState> => {
   const stringified = localStorage.getItem(KEY);

@@ -115,17 +115,32 @@ const L1PanelContent = ({ path, item, currentItemId, onBack }: L1PanelProps) => 
 /**
  * Header row.
  */
-const L1PanelHeader = ({ item, path }: L1PanelProps) => {
+const L1PanelHeader = ({ item, path, onBack }: L1PanelProps) => {
   const { t } = useTranslation(meta.id);
   const { renderItemEnd: ItemEnd } = useNavTreeContext();
   const title = toLocalizedString(item.properties.label, t);
+  const backCapableWorkspace = item.id.startsWith('!');
 
   const { primaryAction, groupedActions, menuActions, onAction } = useL1MenuActions({ item, path });
   useLoadDescendents(item);
 
   return (
     <div className='flex w-full items-center border-b border-subdued-separator app-drag density-coarse pe-1'>
-      <div className='w-6' />
+      {backCapableWorkspace ? (
+        <IconButton
+          size={5}
+          density='coarse'
+          classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
+          variant='ghost'
+          icon='ph--caret-left--regular'
+          iconOnly
+          label={t('button back')}
+          data-testid='treeView.primaryTreeButton'
+          onClick={() => onBack?.()}
+        />
+      ) : (
+        <div className='w-6' />
+      )}
       <h2 className='flex-1 truncate min-w-0'>{title}</h2>
       {/* TODO(wittjosiah): Reconcile with NavTreeItemColumns. */}
       <div role='none' className='contents app-no-drag'>

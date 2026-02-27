@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import * as Option from 'effect/Option';
 import React, { useCallback, useState } from 'react';
 
@@ -9,7 +10,8 @@ import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
-import { Obj } from '@dxos/echo';
+import { Obj, type Ref } from '@dxos/echo';
+import { AtomObj } from '@dxos/echo-atom';
 import { Graph } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space/types';
 import { Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
@@ -29,6 +31,18 @@ import {
 
 import { StackContext } from './StackContext';
 import { StackSection } from './StackSection';
+
+const collectionObjectsFamily = Atom.family((collection: Collection.Collection) =>
+  Atom.make((get) => {
+    const snapshot = get(AtomObj.make(collection));
+    return (
+      snapshot.objects
+        // TODO(wittjosiah): Why isn't this type inferred correctly?
+        .map((ref: Ref.Ref<Obj.Unknown>) => get(AtomObj.makeWithReactive(ref)))
+        .filter(isNonNullable)
+    );
+  }),
+);
 
 type StackContainerProps = SurfaceComponentProps<Collection.Collection> & {
   id: string;
@@ -50,28 +64,23 @@ const StackContainer = ({ id, subject: collection }: StackContainerProps) => {
   //   }
   // }, [collection, stack]);
 
-  const items =
-    collection.objects
-      // TODO(wittjosiah): Should the database handle this differently?
-      // TODO(wittjosiah): Render placeholders for missing objects so they can be removed from the stack?
-      .map((object) => object.target)
-      .filter(isNonNullable)
-      .map((object) => {
-        const metadata = allMetadata.find((m) => m.id === (Obj.getTypename(object) ?? 'never'))
-          ?.metadata as StackSectionMetadata;
-        const view = {
-          // ...stack.sections[object.id],
-          collapsed: collapsedSections[Obj.getDXN(object).toString()],
-          title:
-            (object as any)?.title ??
-            // TODO(wittjosiah): `getNode` is not reactive.
-            toLocalizedString(
-              Graph.getNode(graph, Obj.getDXN(object).toString()).pipe(Option.getOrNull)?.properties.label,
-              t,
-            ),
-        } as StackSectionView;
-        return { id: Obj.getDXN(object).toString(), object, metadata, view } satisfies StackSectionItem;
-      }) ?? [];
+  const collectionObjects = useAtomValue(collectionObjectsFamily(collection));
+  const items = collectionObjects.map((object: Obj.Unknown) => {
+    const metadata = allMetadata.find((m) => m.id === (Obj.getTypename(object) ?? 'never'))
+      ?.metadata as StackSectionMetadata;
+    const view = {
+      // ...stack.sections[object.id],
+      collapsed: collapsedSections[Obj.getDXN(object).toString()],
+      title:
+        (object as any)?.title ??
+        // TODO(wittjosiah): `getNode` is not reactive.
+        toLocalizedString(
+          Graph.getNode(graph, Obj.getDXN(object).toString()).pipe(Option.getOrNull)?.properties.label,
+          t,
+        ),
+    } as StackSectionView;
+    return { id: Obj.getDXN(object).toString(), object, metadata, view } satisfies StackSectionItem;
+  });
 
   const handleDelete = useCallback(
     async (id: string) => {

@@ -18,7 +18,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}/all`,
         role: 'article',
-        filter: (data): data is any => data.subject === `${REGISTRY_KEY}+all`,
+        filter: (data): data is any => data.subject === `${REGISTRY_KEY}>all`,
         component: () => {
           const manager = usePluginManager();
           const filtered = useMemo(
@@ -26,13 +26,13 @@ export default Capability.makeModule(() =>
             [],
           );
 
-          return <RegistryContainer id={`${REGISTRY_KEY}+all`} plugins={filtered} />;
+          return <RegistryContainer id={`${REGISTRY_KEY}>all`} plugins={filtered} />;
         },
       }),
       Surface.create({
         id: `${meta.id}/installed`,
         role: 'article',
-        filter: (data): data is any => data.subject === `${REGISTRY_KEY}+installed`,
+        filter: (data): data is any => data.subject === `${REGISTRY_KEY}>installed`,
         component: () => {
           const manager = usePluginManager();
           const filtered = useMemo(
@@ -44,13 +44,13 @@ export default Capability.makeModule(() =>
             [],
           );
 
-          return <RegistryContainer id={`${REGISTRY_KEY}+installed`} plugins={filtered} />;
+          return <RegistryContainer id={`${REGISTRY_KEY}>installed`} plugins={filtered} />;
         },
       }),
       Surface.create({
         id: `${meta.id}/recommended`,
         role: 'article',
-        filter: (data): data is any => data.subject === `${REGISTRY_KEY}+recommended`,
+        filter: (data): data is any => data.subject === `${REGISTRY_KEY}>recommended`,
         component: () => {
           const manager = usePluginManager();
           const filtered = useMemo(
@@ -62,18 +62,18 @@ export default Capability.makeModule(() =>
             [],
           );
 
-          return <RegistryContainer id={`${REGISTRY_KEY}+recommended`} plugins={filtered} />;
+          return <RegistryContainer id={`${REGISTRY_KEY}>recommended`} plugins={filtered} />;
         },
       }),
       Surface.create({
         id: `${meta.id}/labs`,
         role: 'article',
-        filter: (data): data is any => data.subject === `${REGISTRY_KEY}+labs`,
+        filter: (data): data is any => data.subject === `${REGISTRY_KEY}>labs`,
         component: () => {
           const manager = usePluginManager();
           const filtered = useMemo(() => manager.getPlugins().filter(({ meta }) => meta.tags?.includes('labs')), []);
 
-          return <RegistryContainer id={`${REGISTRY_KEY}+labs`} plugins={filtered} />;
+          return <RegistryContainer id={`${REGISTRY_KEY}>labs`} plugins={filtered} />;
         },
       }),
       Surface.create({
