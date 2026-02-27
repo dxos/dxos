@@ -233,7 +233,6 @@ export default Capability.makeModule(
           return Effect.succeed(
             constructSpaceActions({
               space,
-              personal: space === client.spaces.default,
               migrating: ephemeralState.sdkMigrationRunning[space.id],
             }),
           );
