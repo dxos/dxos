@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
-import { Obj, Ref } from '@dxos/echo';
+import { Obj, Ref, type Entity, Relation } from '@dxos/echo';
 import { assertArgument } from '@dxos/invariant';
 
 import { loadRefTarget } from './ref-utils';
@@ -110,27 +110,30 @@ const propertyFamily = Atom.family(<T extends Obj.Unknown>(obj: T) =>
  * @returns An atom that returns the object snapshot (plain data). Returns undefined only for refs (async loading) or undefined input.
  */
 export function make<T extends Obj.Unknown>(obj: T): Atom.Atom<Obj.Snapshot<T>>;
+export function make<T extends Relation.Unknown>(relation: T): Atom.Atom<Relation.Snapshot<T>>;
+export function make<T extends Entity.Unknown>(entity: T): Atom.Atom<Entity.Snapshot>;
 export function make<T extends Obj.Unknown>(ref: Ref.Ref<T>): Atom.Atom<Obj.Snapshot<T> | undefined>;
 export function make<T extends Obj.Unknown>(
   objOrRef: T | Ref.Ref<T> | undefined,
 ): Atom.Atom<Obj.Snapshot<T> | undefined>;
-export function make<T extends Obj.Unknown>(
+export function make<T extends Entity.Unknown>(
   objOrRef: T | Ref.Ref<T> | undefined,
-): Atom.Atom<Obj.Snapshot<T> | undefined> {
+): Atom.Atom<Entity.Snapshot | undefined> {
   if (objOrRef === undefined) {
-    return Atom.make<Obj.Snapshot<T> | undefined>(() => undefined);
+    return Atom.make<Entity.Snapshot | undefined>(() => undefined);
   }
 
   // Handle Ref inputs.
   if (Ref.isRef(objOrRef)) {
-    return refFamily(objOrRef as Ref.Ref<T>);
+    return refFamily(objOrRef as any);
   }
 
   // At this point, objOrRef is definitely T (not a Ref).
   const obj = objOrRef as T;
-  assertArgument(Obj.isObject(obj), 'obj', 'Object must be a reactive object');
+  assertArgument(Obj.isObject(obj) || Relation.isRelation(obj), 'obj', 'Object must be a reactive object');
 
-  return objectFamily(obj);
+  // TODO(dmaretskyi): Fix echo types during review.
+  return objectFamily(obj as any);
 }
 
 /**

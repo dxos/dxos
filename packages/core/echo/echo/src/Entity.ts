@@ -89,6 +89,7 @@ export interface Any extends OfKind<Kind> {
   [key: string]: unknown;
 }
 
+// TODO(dmaretskyi): Type introspection -- move to kind.
 export const getKind = getEntityKind;
 
 //
