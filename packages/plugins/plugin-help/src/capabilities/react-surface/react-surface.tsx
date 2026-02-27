@@ -5,25 +5,27 @@
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { Surface } from '@dxos/app-framework/ui';
 
-import { SHORTCUTS_DIALOG, ShortcutsDialogContent, ShortcutsHints, ShortcutsList } from '../../components';
+import { SHORTCUTS_DIALOG } from '../../constants';
+import { ShortcutsDialogContent, ShortcutsHints, ShortcutsList } from '../../containers';
 import { meta } from '../../meta';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(Common.Capability.ReactSurface, [
-      Common.createSurface({
+    Capability.contributes(Capabilities.ReactSurface, [
+      Surface.create({
         id: `${meta.id}/hints`,
         role: 'hints',
         component: () => <ShortcutsHints />,
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/keyshortcuts`,
         role: 'keyshortcuts',
         component: () => <ShortcutsList />,
       }),
-      Common.createSurface({
+      Surface.create({
         id: SHORTCUTS_DIALOG,
         role: 'dialog',
         filter: (data): data is { component: string } => data.component === SHORTCUTS_DIALOG,

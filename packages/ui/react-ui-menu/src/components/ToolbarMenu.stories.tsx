@@ -21,7 +21,7 @@ faker.seed(1234);
 const meta = {
   title: 'ui/react-ui-menu/ToolbarMenu',
   component: ToolbarMenu,
-  decorators: [withTheme, withRegistry],
+  decorators: [withTheme(), withRegistry],
   parameters: {
     translations,
   },

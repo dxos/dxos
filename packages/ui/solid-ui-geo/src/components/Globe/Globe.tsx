@@ -205,9 +205,9 @@ const GlobeCanvas = (props: GlobeCanvasProps) => {
         },
         translation,
         rotation,
-        setZoom: (s) => {
-          if (typeof s === 'function') {
-            const is = interpolateNumber(zoomValue, s(zoomValue));
+        setZoom: (state) => {
+          if (typeof state === 'function') {
+            const is = interpolateNumber(zoomValue, state(zoomValue));
             // Stop easing if already zooming.
             transition()
               .ease(zooming ? easeLinear : easeSinOut)
@@ -221,8 +221,8 @@ const GlobeCanvas = (props: GlobeCanvasProps) => {
                 zooming = false;
               });
           } else {
-            zoomValue = s;
-            setZoom(s);
+            zoomValue = state;
+            setZoom(state);
           }
         },
         setTranslation,
@@ -278,7 +278,7 @@ const GlobeDebug = (props: { position?: ControlPosition }) => {
   const { size, zoom, translation, rotation } = useGlobeContext();
   return (
     <div
-      class={`z-10 absolute w-96 p-2 overflow-hidden border border-green-700 rounded ${
+      class={`z-10 absolute w-96 p-2 overflow-hidden border border-green-700 rounded-sm ${
         controlPositions[props.position ?? 'topleft']
       }`}
     >

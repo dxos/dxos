@@ -18,7 +18,7 @@ const meta: Meta<typeof Test> = {
   title: 'common/storybook-utils/Test',
   component: Test,
   render: (args) => <Test {...{ 'data-testid': TEST_ID }} {...args} />,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   tags: ['test'],
 };
 

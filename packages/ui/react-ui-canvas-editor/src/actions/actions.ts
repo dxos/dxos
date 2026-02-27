@@ -5,7 +5,7 @@
 import { type Graph } from '@dxos/graph';
 
 import { type LayoutKind } from '../layout';
-import { type Connection, type Shape } from '../types';
+import { type CanvasBoard } from '../types';
 
 export type Action =
   | { type: 'debug' }
@@ -31,8 +31,8 @@ export type Action =
   | { type: 'cut'; ids?: string[] }
   | { type: 'copy'; ids?: string[] }
   | { type: 'paste' }
-  | { type: 'create'; shape?: Shape }
-  | { type: 'link'; connection: Omit<Connection, 'id'> }
+  | { type: 'create'; shape?: CanvasBoard.Shape }
+  | { type: 'link'; connection: Omit<CanvasBoard.Connection, 'id'> }
   | { type: 'delete'; ids?: string[]; all?: boolean }
 
   //

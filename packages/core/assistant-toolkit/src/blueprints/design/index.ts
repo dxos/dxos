@@ -2,6 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-import { blueprint } from './design-blueprint';
-
-export default blueprint;
+export { default as DesignBlueprint } from './blueprint';

@@ -6,7 +6,7 @@ import React from 'react';
 
 import { Obj } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
-import { IconButton, Input, useThemeContext } from '@dxos/react-ui';
+import { IconButton, Input, ScrollArea, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { mapSchemaToFields } from '@dxos/schema';
 import { automerge, createBasicExtensions, createMarkdownExtensions, createThemeExtensions } from '@dxos/ui-editor';
@@ -18,8 +18,8 @@ export type ItemListProps<T> = { objects: T[] } & Pick<ItemProps<T>, 'debug' | '
 
 export const ItemList = ({ objects, debug, ...props }: ItemListProps<Obj.Any>) => {
   return (
-    <div className='flex flex-col grow overflow-hidden'>
-      <div className='flex flex-col overflow-y-auto pr-2'>
+    <ScrollArea.Root padding>
+      <ScrollArea.Viewport>
         {objects
           .slice(0, MAX_RENDERED_COUNT)
           .map(
@@ -31,12 +31,12 @@ export const ItemList = ({ objects, debug, ...props }: ItemListProps<Obj.Any>) =
         {objects.length > MAX_RENDERED_COUNT && (
           <div className='text-xs text-gray-400'>({objects.length - MAX_RENDERED_COUNT} more items)</div>
         )}
-      </div>
-    </div>
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
   );
 };
 
-const labelProps = 'shrink-0 is-20 text-right text-primary-500 pli-2 plb-[2px]';
+const labelProps = 'shrink-0 w-20 text-right text-primary-500 px-2 py-[2px]';
 
 export type ItemProps<T> = {
   object: T;
@@ -68,7 +68,7 @@ export const Item = ({ object, onDelete }: ItemProps<Obj.Any>) => {
             {property === 'id' && (
               <Input.Root>
                 <Input.Label classNames={labelProps}>{property}</Input.Label>
-                <div className='font-mono text-xs plb-1'>{getValue(object, property).slice(0, 8)}</div>
+                <div className='font-mono text-xs py-1'>{getValue(object, property).slice(0, 8)}</div>
               </Input.Root>
             )}
             {type === 'boolean' && (
@@ -120,7 +120,7 @@ export const DebugItem = ({ object, onDelete }: Pick<ItemProps<Obj.Any>, 'object
   const meta = Obj.getMeta(object);
   const deleted = JSON.stringify(object).indexOf('@deleted') !== -1; // TODO(burdon): [API] Missing API.
   return (
-    <div className='flex is-full pli-1.5 plb-1 text-sm font-thin font-mono'>
+    <div className='flex w-full px-1.5 py-1 text-sm font-thin font-mono'>
       <pre className='grow'>{JSON.stringify({ id: object.id.slice(0, 8), deleted, ...meta }, undefined, 2)}</pre>
       <IconButton icon='ph--x--regular' variant='ghost' iconOnly onClick={() => onDelete(object.id)} label='Delete' />
     </div>

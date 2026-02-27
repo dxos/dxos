@@ -32,6 +32,7 @@ export const useMenuActions = (props: Atom.Atom<ActionGraphProps>): MenuActions 
     newGraph.pipe(Graph.addNodes(menuGraphProps.nodes as Node.NodeArg<any>[]), Graph.addEdges(menuGraphProps.edges));
     graphRef.current = { graph: newGraph, props: menuGraphProps };
   }
+
   const graph = graphRef.current.graph;
 
   const useGroupItems = useCallback(

@@ -2,5 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-export * as InboxBlueprint from './inbox-blueprint';
-export * as CalendarBlueprint from './calendar-blueprint';
+export { default as CalendarBlueprint } from './calendar';
+export { default as InboxBlueprint } from './inbox';
+export { default as InboxSendBlueprint } from './inbox-send';

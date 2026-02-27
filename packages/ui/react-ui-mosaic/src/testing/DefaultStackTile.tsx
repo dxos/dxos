@@ -7,13 +7,13 @@ import React, { useRef, useState } from 'react';
 import { Obj } from '@dxos/echo';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 
-import { Card, Mosaic, type StackTileComponent } from '../components';
+import { Card, Mosaic, type MosaicStackTileComponent } from '../components';
 
-export const DefaultStackTile: StackTileComponent<Obj.Any> = (props) => {
+export const DefaultStackTile: MosaicStackTileComponent<Obj.Any> = (props) => {
   const dragHandleRef = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
   return (
-    <Mosaic.Tile {...props} className='border border-separator rounded-sm font-mono'>
+    <Mosaic.Tile {...props} className='border border-separator rounded-xs font-mono'>
       <Card.Toolbar>
         <Card.DragHandle ref={dragHandleRef} />
         <Card.Title>{Obj.getLabel(props.data) ?? props.data.id}</Card.Title>

@@ -4,12 +4,12 @@
 
 import React, { type FC, useMemo } from 'react';
 
-import { type SurfaceComponentProps } from '@dxos/app-framework/react';
+import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { Card } from '@dxos/react-ui-mosaic';
-import { CardContainer } from '@dxos/react-ui-mosaic/testing';
-import { Organization, Person, Project, Task } from '@dxos/types';
+import { CardContainer, type CardContainerProps } from '@dxos/react-ui-mosaic/testing';
+import { Organization, Person, Pipeline, Task } from '@dxos/types';
 
 export type DefaultStoryProps<T extends Obj.Any> = {
   Component: FC<SurfaceComponentProps<T>>;
@@ -20,16 +20,16 @@ export type DefaultStoryProps<T extends Obj.Any> = {
 export const DefaultStory = <T extends Obj.Any>({ Component, createObject, image }: DefaultStoryProps<T>) => {
   // TODO(wittjosiah): ECHO objects don't work when passed via Storybook args.
   const object = useMemo(() => createObject(), [createObject]);
-  const roles: SurfaceComponentProps['role'][] = ['card--popover', 'card--intrinsic'];
+  const roles: CardContainerProps['role'][] = ['intrinsic', 'popover'];
 
   return (
-    <div className='grid grid-rows-4 gap-16 plb-8'>
+    <div className='h-full grid grid-rows-2 p-16 gap-16'>
       {roles.map((role, i) => (
-        <div key={i} className='flex justify-center'>
-          <div className='flex flex-col gap-4 is-full items-center'>
+        <div key={i} className='flex h-full justify-center overflow-hidden'>
+          <div className='flex flex-col gap-4 w-full items-center'>
             <label className='text-sm text-description'>{role}</label>
             <CardContainer role={role}>
-              <Card.Root>
+              <Card.Root border={false}>
                 <Component role={role} subject={image ? object : omitImage(object)} />
               </Card.Root>
             </CardContainer>
@@ -69,8 +69,8 @@ export const createPerson = (): Person.Person => {
   });
 };
 
-export const createProject = (): Project.Project =>
-  Obj.make(Project.Project, {
+export const createProject = (): Pipeline.Pipeline =>
+  Obj.make(Pipeline.Pipeline, {
     name: faker.person.fullName(),
     image: 'https://dxos.network/dxos-logotype-blue.png',
     description: faker.lorem.paragraph(),

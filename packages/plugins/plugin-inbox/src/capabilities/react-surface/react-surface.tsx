@@ -5,119 +5,123 @@
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { Capability, Common } from '@dxos/app-framework';
-import { Obj } from '@dxos/echo';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { Surface } from '@dxos/app-framework/ui';
+import { type Feed, Obj } from '@dxos/echo';
 import { Event, Message, Organization, Person } from '@dxos/types';
 
+import { POPOVER_SAVE_FILTER } from '../../constants';
 import {
   CalendarArticle,
-  ComposeEmailDialog,
-  type ComposeEmailDialogProps,
+  DraftMessageArticle,
   EventArticle,
   EventCard,
   MailboxArticle,
   MailboxSettings,
   MessageArticle,
   MessageCard,
-  PopoverSaveFilter,
   RelatedToContact,
   RelatedToOrganization,
-} from '../../components';
-import { COMPOSE_EMAIL_DIALOG, POPOVER_SAVE_FILTER } from '../../constants';
+  SaveFilterPopover,
+} from '../../containers';
 import { meta } from '../../meta';
 import { Calendar, Mailbox } from '../../types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(Common.Capability.ReactSurface, [
-      Common.createSurface({
+    Capability.contributes(Capabilities.ReactSurface, [
+      Surface.create({
         id: `${meta.id}/mailbox`,
         role: ['article'],
         filter: (
           data,
         ): data is {
           attendableId?: string;
-          subject: Mailbox.Mailbox;
+          subject: Feed.Feed;
           properties: { filter?: string };
-        } => Obj.instanceOf(Mailbox.Mailbox, data.subject),
+        } => Mailbox.instanceOf(data.subject),
         component: ({ data }) => {
           return (
             <MailboxArticle subject={data.subject} filter={data.properties?.filter} attendableId={data.attendableId} />
           );
         },
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/message`,
         role: ['article', 'section'],
-        filter: (data): data is { subject: Message.Message; companionTo: Mailbox.Mailbox } =>
-          Obj.instanceOf(Message.Message, data.subject) && Obj.instanceOf(Mailbox.Mailbox, data.companionTo),
+        filter: (data): data is { subject: Message.Message; companionTo: Feed.Feed } =>
+          Obj.instanceOf(Message.Message, data.subject) && Mailbox.instanceOf(data.companionTo),
         component: ({ data: { companionTo, subject }, role }) => {
-          return <MessageArticle role={role} subject={subject} mailbox={companionTo} />;
+          return <MessageArticle role={role} subject={subject} feed={companionTo} />;
         },
       }),
-      Common.createSurface({
+      Surface.create({
+        id: `${meta.id}/draft-message`,
+        role: ['article'],
+        filter: (data): data is { subject: Message.Message } =>
+          Obj.instanceOf(Message.Message, data.subject) && !Mailbox.instanceOf(data.companionTo),
+        component: ({ data: { subject }, role }) => {
+          return <DraftMessageArticle role={role} subject={subject} />;
+        },
+      }),
+      Surface.create({
         id: `${meta.id}/event`,
         role: ['article', 'section'],
-        filter: (data): data is { subject: Event.Event; companionTo: Calendar.Calendar } =>
-          Obj.instanceOf(Event.Event, data.subject) && Obj.instanceOf(Calendar.Calendar, data.companionTo),
+        filter: (data): data is { subject: Event.Event; companionTo: Feed.Feed } =>
+          Obj.instanceOf(Event.Event, data.subject) && Calendar.instanceOf(data.companionTo),
         component: ({ data: { companionTo, subject }, role }) => {
-          return <EventArticle role={role} subject={subject} calendar={companionTo} />;
+          return <EventArticle role={role} subject={subject} feed={companionTo} />;
         },
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/calendar`,
         role: ['article'],
-        filter: (data): data is { subject: Calendar.Calendar } => Obj.instanceOf(Calendar.Calendar, data.subject),
+        filter: (data): data is { subject: Feed.Feed } => Calendar.instanceOf(data.subject),
         component: ({ data, role }) => <CalendarArticle role={role} subject={data.subject} />,
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/message-card`,
         role: 'card--content',
         filter: (data): data is { subject: Message.Message } => Obj.instanceOf(Message.Message, data?.subject),
         component: ({ data: { subject }, role }) => <MessageCard subject={subject} role={role} />,
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/event-card`,
         role: 'card--content',
         filter: (data): data is { subject: Event.Event } => Obj.instanceOf(Event.Event, data?.subject),
         component: ({ data: { subject }, role }) => <EventCard subject={subject} role={role} />,
       }),
-      Common.createSurface({
+      Surface.create({
         id: POPOVER_SAVE_FILTER,
         role: 'popover',
-        filter: (data): data is { props: { mailbox: Mailbox.Mailbox; filter: string } } =>
+        filter: (data): data is { props: { feed: Feed.Feed; config?: Mailbox.Config; filter: string } } =>
           data.component === POPOVER_SAVE_FILTER &&
           data.props !== null &&
           typeof data.props === 'object' &&
-          'mailbox' in data.props &&
+          'feed' in data.props &&
           'filter' in data.props &&
-          Obj.instanceOf(Mailbox.Mailbox, data.props.mailbox) &&
+          Mailbox.instanceOf(data.props.feed) &&
           typeof data.props.filter === 'string',
-        component: ({ data }) => <PopoverSaveFilter mailbox={data.props.mailbox} filter={data.props.filter} />,
+        component: ({ data }) => (
+          <SaveFilterPopover feed={data.props.feed} config={data.props.config} filter={data.props.filter} />
+        ),
       }),
-      Common.createSurface({
-        id: COMPOSE_EMAIL_DIALOG,
-        role: 'dialog',
-        filter: (data): data is { component: string; props?: ComposeEmailDialogProps } =>
-          data.component === COMPOSE_EMAIL_DIALOG,
-        component: ({ data }) => <ComposeEmailDialog {...(data.props ?? {})} />,
-      }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/mailbox/companion/settings`,
         role: 'object-settings',
-        filter: (data): data is { subject: Mailbox.Mailbox } => Obj.instanceOf(Mailbox.Mailbox, data.subject),
+        filter: (data): data is { subject: Feed.Feed } => Mailbox.instanceOf(data.subject),
         component: ({ data }) => <MailboxSettings subject={data.subject} />,
       }),
 
       // TODO(card-cleanup): Remove.
       // TODO(wittjosiah): Generalize the mess below.
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/contact-related`,
         role: 'related',
         filter: (data): data is { subject: Person.Person } => Obj.instanceOf(Person.Person, data.subject),
         component: ({ data: { subject } }) => <RelatedToContact subject={subject} />,
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/organization-related`,
         role: 'related',
         filter: (data): data is { subject: Organization.Organization } =>

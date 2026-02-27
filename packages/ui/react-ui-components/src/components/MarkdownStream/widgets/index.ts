@@ -7,3 +7,4 @@ export * from './ReferenceWidget';
 export * from './SelectWidget';
 export * from './SuggestionWidget';
 export * from './SummaryWidget';
+export * from './ReasoningWidget';

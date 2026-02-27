@@ -5,31 +5,31 @@
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { Capability, Common } from '@dxos/app-framework';
-import { Surface } from '@dxos/app-framework/react';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { Surface } from '@dxos/app-framework/ui';
 
-import { StatusBarActions, StatusBarPanel, VersionNumber } from '../../components';
+import { StatusBarActions, StatusBarPanel, VersionNumber } from '../../containers';
 import { meta } from '../../meta';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(Common.Capability.ReactSurface, [
-      Common.createSurface({
+    Capability.contributes(Capabilities.ReactSurface, [
+      Surface.create({
         id: `${meta.id}/status-bar`,
         role: 'status-bar',
         component: () => <StatusBarPanel />,
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/status-bar--r0-footer`,
         role: 'status-bar--r0-footer',
-        component: () => <Surface role='status' />,
+        component: () => <Surface.Surface role='status' />,
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/status-bar--r1-footer`,
         role: 'status-bar--r1-footer',
         component: () => <StatusBarActions />,
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/header-end`,
         role: 'header-end',
         component: () => <VersionNumber />,

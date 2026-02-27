@@ -4,8 +4,8 @@
 
 import React, { Fragment, type UIEvent, useCallback, useEffect, useMemo, useRef } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { useAtomCapability, useOperationInvoker, usePluginManager } from '@dxos/app-framework/react';
+import { useAtomCapability, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { Main, type MainContentProps, useMediaQuery, useOnTransition } from '@dxos/react-ui';
 import { DEFAULT_HORIZONTAL_SIZE, Stack, StackContext } from '@dxos/react-ui-stack';
@@ -61,9 +61,9 @@ export const DeckMain = () => {
       const attended = attention.getCurrent();
 
       shouldRevert.current = true;
-      invokeSync(Common.LayoutOperation.SetLayoutMode, { subject: attended[0], mode: 'solo' });
+      invokeSync(LayoutOperation.SetLayoutMode, { subject: attended[0], mode: 'solo' });
     } else if (isNotMobile && layoutMode === 'solo' && shouldRevert.current) {
-      invokeSync(Common.LayoutOperation.SetLayoutMode, { revert: true });
+      invokeSync(LayoutOperation.SetLayoutMode, { revert: true });
     }
     // NOTE: Using `layoutMode` instead of `deck` to avoid infinite loops caused by object reference changes.
   }, [isNotMobile, layoutMode, invokeSync]);
@@ -72,7 +72,7 @@ export const DeckMain = () => {
   // TODO(thure): Applying this as an effect should be avoided over emitting the operation only when the setting changes.
   useEffect(() => {
     if (!settings?.enableDeck && layoutMode === 'deck') {
-      invokeSync(Common.LayoutOperation.SetLayoutMode, { subject: active[0], mode: 'solo' });
+      invokeSync(LayoutOperation.SetLayoutMode, { subject: active[0], mode: 'solo' });
     }
   }, [settings?.enableDeck, invokeSync, active, layoutMode]);
 
@@ -118,9 +118,9 @@ export const DeckMain = () => {
 
   const mainPosition = useMemo(
     () => [
-      'grid !block-start-[env(safe-area-inset-top)]',
-      topbar && '!block-start-[calc(env(safe-area-inset-top)+var(--rail-size))]',
-      hoistStatusbar && 'lg:block-end-[--statusbar-size]',
+      'grid !top-[env(safe-area-inset-top)]',
+      topbar && '!top-[calc(env(safe-area-inset-top)+var(--rail-size))]',
+      hoistStatusbar && 'lg:bottom-(--statusbar-size)',
     ],
     [topbar, hoistStatusbar],
   );
@@ -182,27 +182,27 @@ export const DeckMain = () => {
           style={
             {
               '--main-spacing': settings?.encapsulatedPlanks ? '0.75rem' : '0',
-              '--dx-main-sidebarWidth':
+              '--dx-main-sidebar-width':
                 sidebarState === 'expanded'
                   ? 'var(--nav-sidebar-size)'
                   : sidebarState === 'collapsed'
                     ? 'var(--l0-size)'
                     : '0',
-              '--dx-main-complementaryWidth':
+              '--dx-main-complementary-width':
                 complementarySidebarState === 'expanded'
                   ? 'var(--complementary-sidebar-size)'
                   : complementarySidebarState === 'collapsed'
                     ? 'var(--rail-size)'
                     : '0',
-              '--dx-main-contentFirstWidth': `${plankSizing[active[0] ?? 'never'] ?? DEFAULT_HORIZONTAL_SIZE}rem`,
-              '--dx-main-contentLastWidth': `${plankSizing[active[(active.length ?? 1) - 1] ?? 'never'] ?? DEFAULT_HORIZONTAL_SIZE}rem`,
+              '--dx-main-content-first-width': `${plankSizing[active[0] ?? 'never'] ?? DEFAULT_HORIZONTAL_SIZE}rem`,
+              '--dx-main-content-last-width': `${plankSizing[active[(active.length ?? 1) - 1] ?? 'never'] ?? DEFAULT_HORIZONTAL_SIZE}rem`,
             } as MainContentProps['style']
           }
         >
           {/* Deck mode. */}
           <div
             role='none'
-            className={!solo ? 'relative bg-deckSurface overflow-hidden' : 'sr-only'}
+            className={!solo ? 'relative bg-deck-surface overflow-hidden' : 'sr-only'}
             {...(solo && { inert: true })}
           >
             {!topbar && !fullscreen && <ToggleSidebarButton classNames={fixedSidebarToggleStyles} />}
@@ -215,7 +215,7 @@ export const DeckMain = () => {
               size='contain'
               itemsCount={itemsCount - 1}
               classNames={[
-                'absolute inset-block-[--main-spacing] -inset-inline-px bs-[calc(100%-2*var(--main-spacing))]',
+                'absolute inset-y-(--main-spacing) -inset-w-px h-[calc(100%-2*var(--main-spacing))]',
                 mainPaddingTransitions,
               ]}
               style={padding}
@@ -241,7 +241,7 @@ export const DeckMain = () => {
           {/* Solo mode. */}
           <div
             role='none'
-            className={solo ? 'relative overflow-hidden bg-deckSurface' : 'sr-only'}
+            className={solo ? 'relative overflow-hidden bg-deck-surface' : 'sr-only'}
             {...(!solo && { inert: true })}
           >
             {!topbar && !fullscreen && <ToggleSidebarButton classNames={fixedSidebarToggleStyles} />}
@@ -280,7 +280,7 @@ const PlankSeparator = ({ order, encapsulate }: { order: number; encapsulate?: b
   order > 0 ? (
     <span
       role='separator'
-      className={mx('row-span-2 bg-deckSurface', encapsulate ? 'is-0' : 'is-4')}
+      className={mx('row-span-2 bg-deck-surface', encapsulate ? 'w-0' : 'w-4')}
       style={{ gridColumn: order }}
     />
   ) : null;

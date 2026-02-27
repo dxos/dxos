@@ -2,6 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Atom } from '@effect-atom/atom';
+import { Registry } from '@effect-atom/atom';
+import * as Array from 'effect/Array';
 import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Cron from 'effect/Cron';
@@ -10,19 +13,27 @@ import * as Effect from 'effect/Effect';
 import * as Either from 'effect/Either';
 import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
+import { pipe } from 'effect/Function';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Record from 'effect/Record';
 import * as Schedule from 'effect/Schedule';
+import * as Struct from 'effect/Struct';
 
 import { DXN, Entity, Filter, Obj, Query } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { causeToError } from '@dxos/effect';
-import { FunctionInvocationService, QueueService, TracingService, deserializeFunction } from '@dxos/functions';
+import {
+  type FunctionDefinition,
+  FunctionInvocationService,
+  QueueService,
+  TracingService,
+  deserializeFunction,
+} from '@dxos/functions';
 import { Function, Trigger, type TriggerEvent } from '@dxos/functions';
-import { invariant } from '@dxos/invariant';
+import { failedInvariant, invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { KEY_QUEUE_POSITION } from '@dxos/protocols';
+import { FeedProtocol, type ObjectId } from '@dxos/protocols';
 
 import { createInvocationPayload } from './input-builder';
 import { type TriggerState, TriggerStateStore } from './trigger-state-store';
@@ -30,6 +41,8 @@ import { type TriggerState, TriggerStateStore } from './trigger-state-store';
 export type TimeControl = 'natural' | 'manual';
 
 export interface TriggerDispatcherOptions {
+  registry: Registry.Registry;
+
   /**
    * Time control mode.
    * - 'natural': Use real time.
@@ -48,6 +61,13 @@ export interface TriggerDispatcherOptions {
    * @default 1 second
    */
   livePollInterval?: Duration.Duration;
+
+  /**
+   * Maximum concurrency for triggers.
+   * Also limited by per-trigger concurrency.
+   * @default 5
+   */
+  maxConcurrency?: number;
 }
 
 export interface InvokeTriggerOptions {
@@ -57,6 +77,11 @@ export interface InvokeTriggerOptions {
 export interface TriggerExecutionResult {
   triggerId: string;
   result: Exit.Exit<unknown>;
+
+  /**
+   * Only for queue triggers.
+   */
+  queueCursor?: string;
 }
 
 /**
@@ -77,10 +102,29 @@ type TriggerDispatcherServices =
   | QueueService
   | Database.Service;
 
+export type InvocationsState = {
+  invocationId: ObjectId;
+  trigger: Trigger.Trigger;
+  function: FunctionDefinition.Any | null;
+  event: TriggerEvent.TriggerEvent;
+  result: Exit.Exit<unknown> | null;
+};
+
+export type TriggerDispatcherState = {
+  enabled: boolean;
+  invocations: InvocationsState[];
+  errors: Error[];
+};
+
+const MAX_TRACKED_INVOCATIONS = 10;
+const MAX_TRACKED_ERRORS = 10;
+
 export class TriggerDispatcher extends Context.Tag('@dxos/functions/TriggerDispatcher')<
   TriggerDispatcher,
   {
     readonly timeControl: TimeControl;
+
+    readonly state: Atom.Atom<TriggerDispatcherState>;
 
     get running(): boolean;
 
@@ -129,32 +173,50 @@ export class TriggerDispatcher extends Context.Tag('@dxos/functions/TriggerDispa
     getCurrentTime(): Date;
   }
 >() {
-  static layer = (options: Omit<TriggerDispatcherOptions, 'database'>) =>
+  static layer = (
+    options: Omit<TriggerDispatcherOptions, 'registry'>,
+  ): Layer.Layer<TriggerDispatcher, never, Registry.AtomRegistry> =>
     Layer.effect(
       TriggerDispatcher,
       Effect.gen(function* () {
-        return new TriggerDispatcherImpl(options);
+        const registry = yield* Registry.AtomRegistry;
+        return new TriggerDispatcherImpl({ ...options, registry });
       }),
     );
 }
+
+const DEFAULT_MAX_CONCURRENCY = 5;
 
 class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
   readonly livePollInterval: Duration.Duration;
   readonly timeControl: TimeControl;
 
+  protected _registry: Registry.Registry;
   private _running = false;
   private _internalTime: Date;
   private _timerFiber: Fiber.Fiber<void, void> | undefined;
   private _scheduledTriggers = new Map<string, ScheduledTrigger>();
+  private _state: Atom.Writable<TriggerDispatcherState> = Atom.make<TriggerDispatcherState>({
+    enabled: false,
+    invocations: [],
+    errors: [],
+  });
+  private _maxConcurrency: number;
 
   constructor(options: TriggerDispatcherOptions) {
+    this._registry = options.registry;
     this.timeControl = options.timeControl;
     this.livePollInterval = options.livePollInterval ?? Duration.seconds(1);
     this._internalTime = options.startingTime ?? new Date();
+    this._maxConcurrency = options.maxConcurrency ?? DEFAULT_MAX_CONCURRENCY;
   }
 
   get running(): boolean {
     return this._running;
+  }
+
+  get state(): Atom.Atom<TriggerDispatcherState> {
+    return this._state;
   }
 
   start = (): Effect.Effect<void, never, TriggerDispatcherServices> =>
@@ -164,6 +226,13 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
       }
 
       this._running = true;
+      this._registry.update(
+        this._state,
+        Struct.evolve({
+          enabled: () => true,
+          errors: () => [],
+        }),
+      );
 
       // Start natural time processing if enabled
       if (this.timeControl === 'natural') {
@@ -172,6 +241,13 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
             const error = causeToError(cause);
             log.error('trigger dispatcher error', { error });
             this._running = false;
+            this._registry.update(
+              this._state,
+              Struct.evolve({
+                enabled: () => false,
+                errors: (errors) => [...errors, error].slice(-MAX_TRACKED_ERRORS),
+              }),
+            );
             return Effect.void;
           }),
           Effect.forkDaemon,
@@ -190,6 +266,12 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
       }
 
       this._running = false;
+      this._registry.update(
+        this._state,
+        Struct.evolve({
+          enabled: () => false,
+        }),
+      );
 
       // Stop timer processing
       if (this._timerFiber) {
@@ -223,6 +305,21 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
         },
       });
 
+      const invocation: InvocationsState = {
+        invocationId: trace.invocationId,
+        trigger,
+        function: null,
+        event,
+        result: null,
+      };
+
+      this._registry.update(
+        this._state,
+        Struct.evolve({
+          invocations: (invocations) => [...invocations, invocation].slice(-MAX_TRACKED_INVOCATIONS),
+        }),
+      );
+
       // Sandboxed section.
       const result = yield* Effect.gen(this, function* () {
         if (!trigger.enabled) {
@@ -238,6 +335,15 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
         invariant(Obj.instanceOf(Function.Function, serialiedFunction));
         const functionDef = deserializeFunction(serialiedFunction);
 
+        this._registry.update(
+          this._state,
+          Struct.evolve({
+            invocations: Array.map((_) =>
+              _.invocationId === invocation.invocationId ? { ..._, function: functionDef } : _,
+            ),
+          }),
+        );
+
         // Prepare input data
         const inputData = this._prepareInputData(trigger, event);
 
@@ -250,6 +356,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
       const triggerExecutionResult: TriggerExecutionResult = {
         triggerId: trigger.id,
         result,
+        queueCursor: trigger.spec?.kind === 'queue' && 'cursor' in event ? event.cursor : undefined,
       };
       if (Exit.isSuccess(result)) {
         log('trigger execution success', {
@@ -265,6 +372,15 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
         // TODO(dmaretskyi): Might miss errors.
         exception: Exit.isFailure(result) ? Cause.prettyErrors(result.cause)[0] : undefined,
       });
+      this._registry.update(
+        this._state,
+        Struct.evolve({
+          invocations: Array.map((_) =>
+            _.invocationId === invocation.invocationId ? { ..._, result: () => result } : _,
+          ),
+        }),
+      );
+
       return triggerExecutionResult;
     });
 
@@ -315,32 +431,58 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
               const cursor = Obj.getKeys(trigger, KEY_QUEUE_CURSOR).at(0)?.id;
               const queue = yield* QueueService.getQueue(DXN.parse(spec.queue));
 
+              const concurrency = Math.min(trigger.concurrency ?? 1, this._maxConcurrency);
+
               // TODO(dmaretskyi): Include cursor & limit in the query.
-              const objects = yield* Effect.promise(() => queue.queryObjects());
-              for (const object of objects) {
-                const objectPos = Entity.getKeys(object, KEY_QUEUE_POSITION).at(0)?.id;
-                // TODO(dmaretskyi): Extract methods for managing queue position.
-                if (!objectPos || (cursor && parseInt(cursor) >= parseInt(objectPos))) {
-                  continue;
-                }
-
-                invocations.push(
-                  yield* this.invokeTrigger({
-                    trigger,
-                    event: {
-                      queue: spec.queue,
-                      item: object,
-                      cursor: objectPos,
-                    } satisfies TriggerEvent.QueueEvent,
+              const chunks = yield* Effect.promise(() => queue.queryObjects()).pipe(
+                Effect.map(
+                  Array.dropWhile((object) => {
+                    const objectPos = Entity.getKeys(object, FeedProtocol.KEY_QUEUE_POSITION).at(0)?.id;
+                    // TODO(dmaretskyi): Extract methods for managing queue position.
+                    return objectPos === undefined || (cursor !== undefined && parseInt(cursor) >= parseInt(objectPos));
                   }),
-                );
+                ),
+                Effect.map(Array.chunksOf(concurrency)),
+              );
 
-                // Update trigger cursor.
-                Obj.change(trigger, (trigger) => {
-                  Obj.deleteKeys(trigger, KEY_QUEUE_CURSOR);
-                  Obj.getMeta(trigger).keys.push({ source: KEY_QUEUE_CURSOR, id: objectPos });
-                });
-                yield* Database.flush();
+              for (const chunk of chunks) {
+                const invocationsThisIteration = yield* Effect.forEach(
+                  chunk,
+                  (object) =>
+                    Effect.gen(this, function* () {
+                      const objectPos = Entity.getKeys(object, FeedProtocol.KEY_QUEUE_POSITION).at(0)!.id;
+
+                      return yield* this.invokeTrigger({
+                        trigger,
+                        event: {
+                          queue: spec.queue,
+                          item: object,
+                          cursor: objectPos,
+                        } satisfies TriggerEvent.QueueEvent,
+                      });
+                    }),
+                  { concurrency: 'unbounded' },
+                );
+                invocations.push(...invocationsThisIteration);
+
+                // Update trigger cursor only if the invocation was successful.
+                const lastSuccessfulInvocation = pipe(
+                  invocationsThisIteration,
+                  Array.takeWhile((invocation) => Exit.isSuccess(invocation.result)),
+                  Array.last,
+                );
+                if (Option.isSome(lastSuccessfulInvocation)) {
+                  Obj.change(trigger, (trigger) => {
+                    Obj.deleteKeys(trigger, KEY_QUEUE_CURSOR);
+                    Obj.getMeta(trigger).keys.push({
+                      source: KEY_QUEUE_CURSOR,
+                      id: lastSuccessfulInvocation.value.queueCursor ?? failedInvariant(),
+                    });
+                  });
+                  yield* Database.flush();
+                } else {
+                  break;
+                }
 
                 // We only invoke one trigger for each queue at a time.
                 if (!untilExhausted) {
@@ -512,4 +654,4 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
 /**
  * Key for the current queue cursor for queue triggers.
  */
-const KEY_QUEUE_CURSOR = 'dxos.org/key/local-trigger-dispatcher/queue-cursor';
+export const KEY_QUEUE_CURSOR = 'dxos.org/key/local-trigger-dispatcher/queue-cursor';

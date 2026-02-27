@@ -66,7 +66,7 @@ const GridStory = () => {
   }, []);
 
   return (
-    <div className='bs-full aspect-square mx-auto'>
+    <div className='h-full aspect-square mx-auto'>
       <div className='grid grid-cols-3 gap-2'>
         {models.map((model, i) => (
           <div key={i} className='aspect-square'>
@@ -84,7 +84,7 @@ const meta = {
   title: 'ui/react-ui-gameboard/Chessboard',
   component: Chessboard,
   render: DefaultStory,
-  decorators: [withRegistry, withTheme, withLayout({ layout: 'column' })],
+  decorators: [withRegistry, withTheme(), withLayout({ layout: 'column' })],
 } satisfies Meta<typeof Chessboard>;
 
 export default meta;

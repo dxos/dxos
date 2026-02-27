@@ -5,6 +5,7 @@
 import { Atom, Registry } from '@effect-atom/atom-react';
 import * as EArray from 'effect/Array';
 import * as Context from 'effect/Context';
+import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 
@@ -12,6 +13,7 @@ import { Blueprint } from '@dxos/blueprints';
 import { Resource } from '@dxos/context';
 import { DXN, Obj, Query, type Ref, Type } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
+import { assertArgument } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ComplexSet, isTruthy } from '@dxos/util';
 
@@ -74,6 +76,7 @@ export class AiContextBinder extends Resource {
 
   constructor(options: AiContextBinderOptions) {
     super();
+    assertArgument(options.queue, 'options.queue', 'Queue is required');
     this._queue = options.queue;
     this._registry = options.registry ?? Registry.make();
   }
@@ -278,7 +281,7 @@ export class AiContextBinder extends Resource {
     const refArray = [...refs];
 
     // Load all refs that need loading.
-    await Promise.all(refArray.map((ref) => ref.load()));
+    await Promise.all(refArray.map((ref) => ref.tryLoad()));
 
     return refArray
       .map((ref) => {
@@ -300,4 +303,28 @@ export class AiContextService extends Context.Tag('@dxos/assistant/AiContextServ
   {
     binder: AiContextBinder;
   }
->() {}
+>() {
+  static bindContext = ({ blueprints, objects }: BindingProps): Effect.Effect<void, never, AiContextService> =>
+    Effect.gen(function* () {
+      const { binder } = yield* AiContextService;
+      yield* Effect.promise(() => binder.bind({ blueprints, objects }));
+    });
+
+  static findObjects = <T extends Type.Entity.Any>(
+    type: T,
+  ): Effect.Effect<Schema.Schema.Type<T>[], never, AiContextService> => {
+    return Effect.gen(function* () {
+      const { binder } = yield* AiContextService;
+      return binder.getObjects().filter(Obj.instanceOf(type));
+    });
+  };
+
+  /**
+   * Glorified type cast until we figure out function service typing.
+   * For context, the AiContextService is provided to functions called from tool calls, but it's not implemented in types yet.
+   * @deprecated
+   */
+  static fixFunctionHandlerType = <A, E, R>(
+    eff: Effect.Effect<A, E, R>,
+  ): Effect.Effect<A, E, Exclude<R, AiContextService>> => eff as any;
+}

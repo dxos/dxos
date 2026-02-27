@@ -15,7 +15,7 @@ const Icon = () => null;
 const meta = {
   title: 'ui/brand/LogoTypes',
   component: Icon,
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof Icon>;
 
 export default meta;
@@ -31,27 +31,27 @@ const Cell: FC<{ children: ReactNode; dark?: boolean }> = ({ children, dark }) =
 export const Default: Story = {
   render: () => {
     return (
-      <div className='absolute flex is-full bs-full items-center justify-center'>
+      <div className='absolute flex w-full h-full items-center justify-center'>
         <div className='flex grid grid-cols-2 gap-16'>
           <Cell>
-            <DXOSType className='is-[256px]' />
+            <DXOSType className='w-[256px]' />
           </Cell>
           <Cell dark>
-            <DXOSType className='is-[128px]' />
+            <DXOSType className='w-[128px]' />
           </Cell>
 
           <Cell>
-            <DXOSHorizontalType className='is-[256px]' />
+            <DXOSHorizontalType className='w-[256px]' />
           </Cell>
           <Cell dark>
-            <DXOSHorizontalType className='is-[128px]' />
+            <DXOSHorizontalType className='w-[128px]' />
           </Cell>
 
           <Cell>
-            <DXOSVerticalType className='is-[256px]' />
+            <DXOSVerticalType className='w-[256px]' />
           </Cell>
           <Cell dark>
-            <DXOSVerticalType className='is-[128px]' />
+            <DXOSVerticalType className='w-[128px]' />
           </Cell>
         </div>
       </div>

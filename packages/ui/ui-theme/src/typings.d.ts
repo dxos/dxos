@@ -5,4 +5,3 @@
 declare module 'fast-glob';
 declare module 'tailwindcss/stubs/config.full.js';
 declare module 'tailwindcss-radix';
-declare module 'tailwindcss-logical';

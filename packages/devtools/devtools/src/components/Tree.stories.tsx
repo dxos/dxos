@@ -12,7 +12,7 @@ import { Tree } from './Tree';
 const meta = {
   title: 'devtools/devtools/Tree',
   component: Tree,
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof Tree>;
 
 export default meta;

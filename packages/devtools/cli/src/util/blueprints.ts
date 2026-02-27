@@ -9,15 +9,14 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { ArtifactId, GenericToolkit } from '@dxos/assistant';
-import { AssistantToolkit, SystemToolkit, WebSearchToolkit } from '@dxos/assistant-toolkit';
+import { Chat, WebSearchToolkit } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
-import { Tag, type Type } from '@dxos/echo';
+import { Tag, Type } from '@dxos/echo';
 import { type FunctionDefinition } from '@dxos/functions';
-import { blueprints as AssistantBlueprints, functions as AssistantFunctions } from '@dxos/plugin-assistant/blueprints';
-import { Assistant } from '@dxos/plugin-assistant/types';
+import { AssistantBlueprint } from '@dxos/plugin-assistant/blueprints';
 import { ChessBlueprint } from '@dxos/plugin-chess/blueprints';
 import { Chess } from '@dxos/plugin-chess/types';
-import { CalendarBlueprint, InboxBlueprint } from '@dxos/plugin-inbox/blueprints';
+import { CalendarBlueprint, InboxBlueprint, InboxSendBlueprint } from '@dxos/plugin-inbox/blueprints';
 import { Calendar, Mailbox } from '@dxos/plugin-inbox/types';
 import { KanbanBlueprint } from '@dxos/plugin-kanban/blueprints';
 import { MapBlueprint } from '@dxos/plugin-map/blueprints';
@@ -37,7 +36,7 @@ import {
   HasSubject,
   Organization,
   Person,
-  Project,
+  Pipeline,
   Task,
 } from '@dxos/types';
 
@@ -45,10 +44,11 @@ import * as TestToolkit from './test-toolkit';
 
 export const blueprintRegistry = new Blueprint.Registry([
   // Blueprints available to the chat.
-  ...AssistantBlueprints,
+  AssistantBlueprint.make(),
   CalendarBlueprint.make(),
   ChessBlueprint.make(),
   InboxBlueprint.make(),
+  InboxSendBlueprint.make(),
   KanbanBlueprint.make(),
   MapBlueprint.make(),
   MarkdownBlueprint.make(),
@@ -65,10 +65,11 @@ export const blueprintRegistry = new Blueprint.Registry([
 
 export const functions: FunctionDefinition.Any[] = [
   // NOTE: Functions referenced by blueprints above need to be added here.
-  ...AssistantFunctions,
+  ...AssistantBlueprint.functions,
   ...CalendarBlueprint.functions,
   ...ChessBlueprint.functions,
   ...InboxBlueprint.functions,
+  ...InboxSendBlueprint.functions,
   ...KanbanBlueprint.functions,
   ...MapBlueprint.functions,
   ...MarkdownBlueprint.functions,
@@ -89,8 +90,6 @@ const StubDeckToolkit = Toolkit.make(
 
 export const toolkits: GenericToolkit.GenericToolkit[] = [
   // NOTE: Toolkits referenced by blueprints above need to be added here.
-  GenericToolkit.make(AssistantToolkit.AssistantToolkit, AssistantToolkit.layer()),
-  GenericToolkit.make(SystemToolkit.SystemToolkit, SystemToolkit.layer()),
   GenericToolkit.make(WebSearchToolkit, Layer.empty),
 
   // TODO(burdon): Remove?
@@ -108,13 +107,13 @@ export const toolkits: GenericToolkit.GenericToolkit[] = [
 export const types: Type.Entity.Any[] = [
   // NOTE: Types referenced by blueprints above need to be added here.
   DataTypes,
-  [Assistant.Chat],
+  [Chat.Chat],
   [Chess.Game],
   [Markdown.Document],
-  [Mailbox.Mailbox, Calendar.Calendar],
+  [Mailbox.Config, Calendar.Config, Type.Feed],
   [Blueprint.Blueprint],
   [Tag.Tag],
-  [Event.Event, Organization.Organization, Person.Person, Project.Project, Task.Task],
+  [Event.Event, Organization.Organization, Person.Person, Pipeline.Pipeline, Task.Task],
   [
     AnchoredTo.AnchoredTo,
     Employer.Employer,

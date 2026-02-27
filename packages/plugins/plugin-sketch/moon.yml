@@ -3,6 +3,7 @@ language: typescript
 tags:
   - ts-build
   - ts-test
+  - ts-test-storybook
   - pack
   - storybook
 tasks:
@@ -24,6 +25,3 @@ tasks:
       - moon.yml
     outputs:
       - dist/assets
-  test:
-    inputs:
-      - .storybook/*

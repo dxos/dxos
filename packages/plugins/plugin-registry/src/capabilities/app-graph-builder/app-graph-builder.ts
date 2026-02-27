@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, SettingsOperation } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { AppCapabilities, SettingsOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/operation';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 
@@ -47,9 +48,9 @@ export default Capability.makeModule(
               },
               nodes: [
                 {
-                  id: `${REGISTRY_KEY}+all`,
-                  type: 'category',
-                  data: `${REGISTRY_KEY}+all`,
+                  id: `${REGISTRY_KEY}>all`,
+                  type: 'category' as const,
+                  data: `${REGISTRY_KEY}>all`,
                   properties: {
                     label: ['all plugins label', { ns: meta.id }],
                     icon: 'ph--squares-four--regular',
@@ -58,9 +59,9 @@ export default Capability.makeModule(
                   },
                 },
                 {
-                  id: `${REGISTRY_KEY}+installed`,
-                  type: 'category',
-                  data: `${REGISTRY_KEY}+installed`,
+                  id: `${REGISTRY_KEY}>installed`,
+                  type: 'category' as const,
+                  data: `${REGISTRY_KEY}>installed`,
                   properties: {
                     label: ['installed plugins label', { ns: meta.id }],
                     icon: 'ph--check--regular',
@@ -69,9 +70,9 @@ export default Capability.makeModule(
                   },
                 },
                 {
-                  id: `${REGISTRY_KEY}+recommended`,
-                  type: 'category',
-                  data: `${REGISTRY_KEY}+recommended`,
+                  id: `${REGISTRY_KEY}>recommended`,
+                  type: 'category' as const,
+                  data: `${REGISTRY_KEY}>recommended`,
                   properties: {
                     label: ['recommended plugins label', { ns: meta.id }],
                     icon: 'ph--star--regular',
@@ -80,9 +81,9 @@ export default Capability.makeModule(
                   },
                 },
                 {
-                  id: `${REGISTRY_KEY}+labs`,
-                  type: 'category',
-                  data: `${REGISTRY_KEY}+labs`,
+                  id: `${REGISTRY_KEY}>labs`,
+                  type: 'category' as const,
+                  data: `${REGISTRY_KEY}>labs`,
                   properties: {
                     label: ['labs plugins label', { ns: meta.id }],
                     icon: 'ph--flask--regular',
@@ -114,7 +115,7 @@ export default Capability.makeModule(
         id: `${meta.id}/plugins`,
         match: NodeMatcher.whenId(REGISTRY_ID),
         connector: () => {
-          const manager = capabilities.get(Common.Capability.PluginManager);
+          const manager = capabilities.get(Capabilities.PluginManager);
           return Effect.succeed(
             manager.getPlugins().map((plugin) => ({
               id: plugin.meta.id.replaceAll('/', ':'),
@@ -131,6 +132,6 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return Capability.contributes(Common.Capability.AppGraphBuilder, extensions);
+    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );

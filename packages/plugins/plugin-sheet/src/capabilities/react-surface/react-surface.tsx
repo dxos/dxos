@@ -5,19 +5,19 @@
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { Capability, Common } from '@dxos/app-framework';
-import { useCapability } from '@dxos/app-framework/react';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { Surface, useCapability } from '@dxos/app-framework/ui';
 import { Obj } from '@dxos/echo';
 import { getSpace } from '@dxos/react-client/echo';
 
-import { ComputeGraphContextProvider, RangeList, SheetContainer } from '../../components';
+import { RangeList, SheetContainer } from '../../containers';
 import { meta } from '../../meta';
 import { Sheet, SheetCapabilities } from '../../types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(Common.Capability.ReactSurface, [
-      Common.createSurface({
+    Capability.contributes(Capabilities.ReactSurface, [
+      Surface.create({
         id: `${meta.id}/sheet`,
         role: ['article', 'section'],
         filter: (data): data is { subject: Sheet.Sheet } =>
@@ -26,13 +26,16 @@ export default Capability.makeModule(() =>
           const computeGraphRegistry = useCapability(SheetCapabilities.ComputeGraphRegistry);
 
           return (
-            <ComputeGraphContextProvider registry={computeGraphRegistry}>
-              <SheetContainer role={role} subject={data.subject} space={getSpace(data.subject)!} />
-            </ComputeGraphContextProvider>
+            <SheetContainer
+              role={role}
+              subject={data.subject}
+              space={getSpace(data.subject)!}
+              registry={computeGraphRegistry}
+            />
           );
         },
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/object-settings`,
         role: 'object-settings',
         filter: (data): data is { subject: Sheet.Sheet } => Obj.instanceOf(Sheet.Sheet, data.subject),

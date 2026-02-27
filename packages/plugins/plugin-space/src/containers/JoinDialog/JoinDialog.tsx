@@ -1,0 +1,105 @@
+//
+// Copyright 2024 DXOS.org
+//
+
+import React, { useCallback } from 'react';
+
+import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
+import { useAppGraph } from '@dxos/app-toolkit/ui';
+import { Trigger } from '@dxos/async';
+import { Graph } from '@dxos/plugin-graph';
+import { ObservabilityOperation } from '@dxos/plugin-observability/types';
+import { useClient } from '@dxos/react-client';
+import { type Space } from '@dxos/react-client/echo';
+import { type InvitationResult } from '@dxos/react-client/invitations';
+import { Dialog, useTranslation } from '@dxos/react-ui';
+import { JoinPanel, type JoinPanelProps } from '@dxos/shell/react';
+import { osTranslations } from '@dxos/ui-theme';
+
+import { meta } from '../../meta';
+
+export const JOIN_DIALOG = `${meta.id}/JoinDialog`;
+
+export type JoinDialogProps = JoinPanelProps & {
+  navigableCollections?: boolean;
+};
+
+export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialogProps) => {
+  const { invokePromise } = useOperationInvoker();
+  const client = useClient();
+  const { graph } = useAppGraph();
+  const { t } = useTranslation(meta.id);
+
+  const handleDone = useCallback(
+    async (result: InvitationResult | null) => {
+      const spaceKey = result?.spaceKey;
+      if (!spaceKey) {
+        return;
+      }
+
+      await Promise.all([
+        invokePromise(LayoutOperation.AddToast, {
+          id: `${meta.id}/join-success`,
+          duration: 5_000,
+          title: ['join success label', { ns: meta.id }],
+          closeLabel: ['dismiss label', { ns: meta.id }],
+        }),
+        invokePromise(LayoutOperation.UpdateDialog, { state: false }),
+      ]);
+
+      let space = client.spaces.get(spaceKey);
+      if (!space) {
+        // TODO(wittjosiah): Add api to wait for a space.
+        const trigger = new Trigger<Space>();
+        client.spaces.subscribe(() => {
+          const space = client.spaces.get(spaceKey);
+          if (space) {
+            trigger.wake(space);
+          }
+        });
+        space = await trigger.wait();
+      }
+
+      await invokePromise(LayoutOperation.SwitchWorkspace, { subject: space.id });
+
+      // TODO(wittjosiah): If navigableCollections is false and there's no target,
+      //   should try to navigate to the first object of the space replicates.
+      //   Potentially this could also be done on the inviters side to ensure there's always a target.
+      const target = result?.target || (navigableCollections ? space?.id : undefined);
+      if (target) {
+        // Wait before navigating to the target node.
+        // If the target has not yet replicated, this will trigger a loading toast.
+        await Graph.waitForPath(graph, { target }).catch(() => {});
+        await Promise.all([
+          invokePromise(LayoutOperation.Open, { subject: [target] }),
+          invokePromise(LayoutOperation.Expose, { subject: target }),
+        ]);
+      }
+
+      await onDone?.(result);
+
+      if (space) {
+        await invokePromise(ObservabilityOperation.SendEvent, {
+          name: 'space.join',
+          properties: {
+            spaceId: space.id,
+          },
+        });
+      }
+    },
+    [invokePromise, client, graph, navigableCollections, onDone],
+  );
+
+  return (
+    <Dialog.Content>
+      <Dialog.Title classNames='sr-only'>{t('join space label', { ns: osTranslations })}</Dialog.Title>
+      <JoinPanel
+        {...props}
+        exitActionParent={<Dialog.Close asChild />}
+        doneActionParent={<Dialog.Close asChild />}
+        onDone={handleDone}
+      />
+    </Dialog.Content>
+  );
+};

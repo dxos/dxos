@@ -5,18 +5,19 @@
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { Capability, Common } from '@dxos/app-framework';
-import { useLayout } from '@dxos/app-framework/react';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { Surface } from '@dxos/app-framework/ui';
+import { useLayout } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { getSpace, parseId, useSpace } from '@dxos/react-client/echo';
 
-import { AutomationSettings, FunctionsContainer } from '../../components';
+import { AutomationSettings, FunctionsContainer } from '../../containers';
 import { meta } from '../../meta';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(Common.Capability.ReactSurface, [
-      Common.createSurface({
+    Capability.contributes(Capabilities.ReactSurface, [
+      Surface.create({
         id: `${meta.id}/space-settings-functions`,
         role: 'article',
         filter: (data): data is { subject: string } => data.subject === `${meta.id}/space-settings-functions`,
@@ -31,7 +32,7 @@ export default Capability.makeModule(() =>
           return <FunctionsContainer space={space} />;
         },
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/space-settings-automation`,
         role: 'article',
         filter: (data): data is { subject: string } => data.subject === `${meta.id}/space-settings-automation`,
@@ -46,7 +47,7 @@ export default Capability.makeModule(() =>
           return <AutomationSettings space={space} />;
         },
       }),
-      Common.createSurface({
+      Surface.create({
         id: `${meta.id}/companion/automation`,
         role: 'article',
         filter: (data): data is { companionTo: Obj.Unknown; subject: 'automation' } =>

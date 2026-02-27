@@ -4,11 +4,12 @@
 
 import * as SqlClient from '@effect/sql/SqlClient';
 import type * as SqlError from '@effect/sql/SqlError';
+import type * as Statement from '@effect/sql/Statement';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { ATTR_DELETED, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, ATTR_TYPE } from '@dxos/echo/internal';
-import { DXN } from '@dxos/keys';
+import { ATTR_DELETED, ATTR_PARENT, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, ATTR_TYPE } from '@dxos/echo/internal';
+import { DXN, type ObjectId, type SpaceId } from '@dxos/keys';
 
 import type { IndexerObject } from './interface';
 import type { Index } from './interface';
@@ -33,10 +34,43 @@ export const ObjectMeta = Schema.Struct({
   deleted: Schema.Boolean,
   source: Schema.NullOr(Schema.String),
   target: Schema.NullOr(Schema.String),
+  /** Parent object id (nullable). */
+  parent: Schema.NullOr(Schema.String),
   /** Monotonically increasing sequence number assigned on insert/update for tracking indexing order. */
   version: Schema.Number,
 });
 export interface ObjectMeta extends Schema.Schema.Type<typeof ObjectMeta> {}
+
+/**
+ * Builds a SQL condition for filtering by space and queue source.
+ * When `includeAllQueues` is false and no `queueIds`, only non-queue objects are returned.
+ */
+const buildSourceCondition = (
+  sql: SqlClient.SqlClient,
+  spaceIds: readonly string[],
+  includeAllQueues: boolean,
+  queueIds: readonly string[] | null,
+): Statement.Fragment => {
+  const conditions: Statement.Fragment[] = [];
+
+  if (spaceIds.length > 0) {
+    if (includeAllQueues) {
+      conditions.push(sql`${sql.in('spaceId', spaceIds)}`);
+    } else {
+      conditions.push(sql`(${sql.in('spaceId', spaceIds)} AND queueId = '')`);
+    }
+  }
+
+  if (queueIds && queueIds.length > 0) {
+    conditions.push(sql`${sql.in('queueId', queueIds)}`);
+  }
+
+  if (conditions.length === 0) {
+    return sql`1 = 0`;
+  }
+
+  return sql.or(conditions);
+};
 
 export class ObjectMetaIndex implements Index {
   migrate = Effect.fn('ObjectMetaIndex.runMigrations')(function* () {
@@ -53,15 +87,20 @@ export class ObjectMetaIndex implements Index {
       deleted INTEGER NOT NULL,
       source TEXT,
       target TEXT,
+      parent TEXT,
       version INTEGER NOT NULL
     )`;
+
+    // Add `parent` column for tables created before it was introduced.
+    yield* Effect.catchAll(sql`ALTER TABLE objectMeta ADD COLUMN parent TEXT`, () => Effect.void);
 
     yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_objectId ON objectMeta(spaceId, objectId)`;
     yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_typeDxn ON objectMeta(spaceId, typeDxn)`;
     yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_version ON objectMeta(version)`;
+    yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_parent ON objectMeta(spaceId, parent)`;
   });
 
-  query = Effect.fn('ObjectMetaIndex.queryType')(
+  query = Effect.fn('ObjectMetaIndex.query')(
     (
       query: Pick<ObjectMeta, 'spaceId' | 'typeDxn'>,
     ): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
@@ -86,14 +125,22 @@ export class ObjectMetaIndex implements Index {
   queryAll = Effect.fn('ObjectMetaIndex.queryAll')(
     (query: {
       spaceIds: readonly ObjectMeta['spaceId'][];
+      includeAllQueues?: boolean;
+      queueIds?: readonly string[] | null;
     }): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
       Effect.gen(function* () {
-        if (query.spaceIds.length === 0) {
+        if (query.spaceIds.length === 0 && (!query.queueIds || query.queueIds.length === 0)) {
           return [];
         }
 
         const sql = yield* SqlClient.SqlClient;
-        const rows = yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE ${sql.in('spaceId', query.spaceIds)}`;
+        const sourceCondition = buildSourceCondition(
+          sql,
+          query.spaceIds,
+          query.includeAllQueues ?? false,
+          query.queueIds ?? null,
+        );
+        const rows = yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE ${sourceCondition}`;
         return rows.map((row) => ({
           ...row,
           deleted: !!row.deleted,
@@ -106,13 +153,17 @@ export class ObjectMetaIndex implements Index {
       spaceIds,
       typeDxns,
       inverted = false,
+      includeAllQueues = false,
+      queueIds = null,
     }: {
       spaceIds: readonly ObjectMeta['spaceId'][];
       typeDxns: readonly ObjectMeta['typeDxn'][];
       inverted?: boolean;
+      includeAllQueues?: boolean;
+      queueIds?: readonly string[] | null;
     }): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
       Effect.gen(function* () {
-        if (spaceIds.length === 0) {
+        if (spaceIds.length === 0 && (!queueIds || queueIds.length === 0)) {
           return [];
         }
 
@@ -122,14 +173,15 @@ export class ObjectMetaIndex implements Index {
           }
 
           const sql = yield* SqlClient.SqlClient;
-          const rows = yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE ${sql.in('spaceId', spaceIds)}`;
+          const sourceCondition = buildSourceCondition(sql, spaceIds, includeAllQueues, queueIds);
+          const rows = yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE ${sourceCondition}`;
           return rows.map((row) => ({
             ...row,
             deleted: !!row.deleted,
           }));
         }
         const sql = yield* SqlClient.SqlClient;
-        const spaceWhere = sql.in('spaceId', spaceIds);
+        const sourceCondition = buildSourceCondition(sql, spaceIds, includeAllQueues, queueIds);
         const typeWhere = sql.or(
           typeDxns.map((typeDxn) => {
             const parsedType = DXN.tryParse(typeDxn)?.asTypeDXN();
@@ -139,8 +191,8 @@ export class ObjectMetaIndex implements Index {
           }),
         );
         const rows = inverted
-          ? yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE ${spaceWhere} AND NOT ${typeWhere}`
-          : yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE ${spaceWhere} AND ${typeWhere}`;
+          ? yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE ${sourceCondition} AND NOT ${typeWhere}`
+          : yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE ${sourceCondition} AND ${typeWhere}`;
         return rows.map((row) => ({
           ...row,
           deleted: !!row.deleted,
@@ -216,6 +268,8 @@ export class ObjectMetaIndex implements Index {
               // Relations.
               const source = entityKind === 'relation' ? (castData[ATTR_RELATION_SOURCE] ?? null) : null;
               const target = entityKind === 'relation' ? (castData[ATTR_RELATION_TARGET] ?? null) : null;
+              // Parent (nullable).
+              const parent = castData[ATTR_PARENT] ?? null;
 
               if (existing.length > 0) {
                 yield* sql`
@@ -225,18 +279,19 @@ export class ObjectMetaIndex implements Index {
                     typeDxn = ${typeDxn},
                     deleted = ${deleted},
                     source = ${source},
-                    target = ${target}
+                    target = ${target},
+                    parent = ${parent}
                   WHERE recordId = ${existing[0].recordId}
                 `;
               } else {
                 yield* sql`
                   INSERT INTO objectMeta (
                     objectId, queueId, spaceId, documentId, 
-                    entityKind, typeDxn, deleted, source, target, version
+                    entityKind, typeDxn, deleted, source, target, parent, version
                   ) VALUES (
                     ${objectId}, ${queueId ?? ''}, ${spaceId}, ${documentId ?? ''}, 
                     ${entityKind}, ${typeDxn}, ${deleted}, 
-                    ${source}, ${target}, ${version}
+                    ${source}, ${target}, ${parent}, ${version}
                   )
                 `;
               }
@@ -274,7 +329,7 @@ export class ObjectMetaIndex implements Index {
 
           if (result.length === 0) {
             // TODO(mykola): Handle this case gracefully.
-            yield* Effect.die(
+            return yield* Effect.die(
               new Error(`Object not found in ObjectMetaIndex: ${spaceId}/${documentId ?? queueId}/${objectId}`),
             );
           }
@@ -295,6 +350,55 @@ export class ObjectMetaIndex implements Index {
 
         const sql = yield* SqlClient.SqlClient;
         const rows = yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE ${sql.in('recordId', recordIds)}`;
+
+        return rows.map((row) => ({
+          ...row,
+          deleted: !!row.deleted,
+        }));
+      }),
+  );
+
+  /**
+   * Look up object metadata by objectId, spaceId, and queueId.
+   */
+  lookupByObjectId = Effect.fn('ObjectMetaIndex.lookupByObjectId')(
+    (query: {
+      objectId: string;
+      spaceId: string;
+      queueId: string;
+    }): Effect.Effect<ObjectMeta | null, SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        const rows =
+          yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId} AND queueId = ${query.queueId} AND objectId = ${query.objectId} LIMIT 1`;
+
+        if (rows.length === 0) {
+          return null;
+        }
+
+        return {
+          ...rows[0],
+          deleted: !!rows[0].deleted,
+        };
+      }),
+  );
+
+  /**
+   * Query children by parent object ids.
+   */
+  queryChildren = Effect.fn('ObjectMetaIndex.queryChildren')(
+    (query: {
+      spaceId: SpaceId[];
+      parentIds: ObjectId[];
+    }): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(function* () {
+        if (query.parentIds.length === 0) {
+          return [];
+        }
+
+        const sql = yield* SqlClient.SqlClient;
+        const rows =
+          yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE spaceId IN ${sql.in(query.spaceId)} AND parent IN ${sql.in(query.parentIds.map((id) => DXN.fromLocalObjectId(id).toString()))}`;
 
         return rows.map((row) => ({
           ...row,

@@ -20,6 +20,7 @@ export type ThemeContextValue = {
   hasIosKeyboard: boolean;
   safeAreaPadding?: SafeAreaPadding;
   noCache?: boolean;
+  platform?: 'mobile' | 'desktop';
 };
 
 /**
@@ -39,7 +40,7 @@ export const ThemeProvider = ({
   fallback = null,
   resourceExtensions,
   appNs,
-  tx = (_path, defaultClassName, _styleProps, ..._options) => defaultClassName,
+  tx = (_path, _styleProps, ..._options) => undefined,
   themeMode = 'dark',
   rootDensity = 'fine',
   ...rest
@@ -77,8 +78,8 @@ export const ThemeProvider = ({
 
 const handleInputModalityChange = (isUsingKeyboard: boolean) => {
   if (isUsingKeyboard) {
-    document.body.setAttribute('data-is-keyboard', 'true');
+    document.body.setAttribute('data-w-keyboard', 'true');
   } else {
-    document.body.removeAttribute('data-is-keyboard');
+    document.body.removeAttribute('data-w-keyboard');
   }
 };

@@ -11,9 +11,9 @@ import { type EchoSchema, Format, type Mutable } from '@dxos/echo/internal';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type ProjectionModel, View, getTypenameFromQuery } from '@dxos/schema';
-import { Employer, Organization, Person, Project } from '@dxos/types';
+import { Employer, Organization, Person, Pipeline } from '@dxos/types';
 
 import { translations } from '../../translations';
 import { TestLayout, VIEW_EDITOR_DEBUG_SYMBOL } from '../testing';
@@ -24,7 +24,7 @@ const types = [
   // TODO(burdon): Get label from annotation.
   { value: Organization.Organization.typename, label: 'Organization' },
   { value: Person.Person.typename, label: 'Person' },
-  { value: Project.Project.typename, label: 'Project' },
+  { value: Pipeline.Pipeline.typename, label: 'Project' },
   { value: Employer.Employer.typename, label: 'Employer' },
 ];
 
@@ -175,7 +175,8 @@ const meta = {
         space.db.add(Tag.make({ label: 'New' }));
       },
     }),
-    withTheme,
+    withTheme(),
+    withLayout({ layout: 'fullscreen' }),
   ],
   parameters: {
     layout: 'fullscreen',

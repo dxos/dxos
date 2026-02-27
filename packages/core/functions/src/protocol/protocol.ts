@@ -11,9 +11,9 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { AiModelResolver, AiService } from '@dxos/ai';
 import { AnthropicResolver } from '@dxos/ai/resolvers';
 import { LifecycleState, Resource } from '@dxos/context';
-import { Database, Ref, Type } from '@dxos/echo';
+import { Database, Feed, Ref, Type } from '@dxos/echo';
 import { refFromEncodedReference } from '@dxos/echo/internal';
-import { EchoClient, type EchoDatabaseImpl, type QueueFactory } from '@dxos/echo-db';
+import { EchoClient, type EchoDatabaseImpl, type QueueFactory, createFeedServiceLayer } from '@dxos/echo-db';
 import { runAndForwardErrors } from '@dxos/effect';
 import { assertState, failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -44,7 +44,9 @@ export const wrapFunctionHandler = (func: FunctionDefinition): FunctionProtocol.
     },
     handler: async ({ data, context }) => {
       if (
-        (func.services.includes(Database.Service.key) || func.services.includes(QueueService.key)) &&
+        (func.services.includes(Database.Service.key) ||
+          func.services.includes(QueueService.key) ||
+          func.services.includes(Feed.Service.key)) &&
         (!context.services.dataService || !context.services.queryService)
       ) {
         throw new FunctionError({
@@ -151,6 +153,7 @@ class FunctionContext extends Resource {
 
     const dbLayer = this.db ? Database.layer(this.db) : Database.notAvailable;
     const queuesLayer = this.queues ? QueueService.layer(this.queues) : QueueService.notAvailable;
+    const feedLayer = this.queues ? createFeedServiceLayer(this.queues) : Feed.notAvailable;
     const credentials = dbLayer
       ? CredentialsService.layerFromDatabase({ caching: true }).pipe(Layer.provide(dbLayer))
       : CredentialsService.configuredLayer([]);
@@ -172,14 +175,7 @@ class FunctionContext extends Resource {
         )
       : AiService.notAvailable;
 
-    return Layer.mergeAll(
-      dbLayer, //
-      queuesLayer,
-      credentials,
-      functionInvocationService,
-      aiLayer,
-      tracing,
-    );
+    return Layer.mergeAll(dbLayer, queuesLayer, feedLayer, credentials, functionInvocationService, aiLayer, tracing);
   }
 }
 

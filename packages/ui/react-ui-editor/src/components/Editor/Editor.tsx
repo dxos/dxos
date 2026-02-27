@@ -84,6 +84,8 @@ EditorRoot.displayName = 'Editor.Root';
 // Viewport
 //
 
+const EDITOR_VIEWPORT_NAME = 'Editor.Viewport';
+
 type EditorViewportProps = ThemedClassName<PropsWithChildren<{}>>;
 
 /**
@@ -91,17 +93,19 @@ type EditorViewportProps = ThemedClassName<PropsWithChildren<{}>>;
  */
 const EditorViewport = ({ classNames, children }: EditorViewportProps) => {
   return (
-    <div role='none' className={mx('grid grid-rows-[min-content_1fr] bs-full overflow-hidden', classNames)}>
+    <div role='none' className={mx('grid grid-rows-[min-content_1fr] h-full overflow-hidden', classNames)}>
       {children}
     </div>
   );
 };
 
-EditorViewport.displayName = 'Editor.Viewport';
+EditorViewport.displayName = EDITOR_VIEWPORT_NAME;
 
 //
 // Content
 //
+
+const EDITOR_CONTENT_NAME = 'Editor.Content';
 
 type EditorContentProps = Omit<NaturalEditorContentProps, 'ref'>;
 
@@ -110,7 +114,7 @@ type EditorContentProps = Omit<NaturalEditorContentProps, 'ref'>;
  * Automatically registers the editor controller with the context.
  */
 const EditorContent = ({ extensions: providedExtensions, ...props }: EditorContentProps) => {
-  const { extensions: additionalExtensions = [], setController } = useEditorContext(EditorContent.displayName);
+  const { extensions: additionalExtensions = [], setController } = useEditorContext(EDITOR_CONTENT_NAME);
 
   const extensions = useMemo(
     () => [additionalExtensions, providedExtensions].filter(isNonNullable).flat(),
@@ -120,11 +124,13 @@ const EditorContent = ({ extensions: providedExtensions, ...props }: EditorConte
   return <NaturalEditorContent {...props} extensions={extensions} ref={setController} />;
 };
 
-EditorContent.displayName = 'Editor.Content';
+EditorContent.displayName = EDITOR_CONTENT_NAME;
 
 //
 // Toolbar
 //
+
+const EDITOR_TOOLBAR_NAME = 'Editor.Toolbar';
 
 type EditorToolbarProps = Omit<NaturalEditorToolbarProps, 'getView' | 'state'>;
 
@@ -133,7 +139,7 @@ type EditorToolbarProps = Omit<NaturalEditorToolbarProps, 'getView' | 'state'>;
  * Automatically connects to the editor view through context.
  */
 const EditorToolbar = (props: EditorToolbarProps) => {
-  const { controller, state } = useEditorContext(EditorToolbar.displayName);
+  const { controller, state } = useEditorContext(EDITOR_TOOLBAR_NAME);
 
   // TODO(burdon): Fix invariant.
   const getView = useCallback(() => {
@@ -144,7 +150,7 @@ const EditorToolbar = (props: EditorToolbarProps) => {
   return <NaturalEditorToolbar {...props} getView={getView} state={state} />;
 };
 
-EditorToolbar.displayName = 'Editor.Toolbar';
+EditorToolbar.displayName = EDITOR_TOOLBAR_NAME;
 
 //
 // Editor

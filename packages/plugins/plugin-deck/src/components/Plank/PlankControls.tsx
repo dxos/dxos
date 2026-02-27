@@ -4,7 +4,7 @@
 
 import React, { forwardRef, useCallback } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { invariant } from '@dxos/invariant';
 import { ButtonGroup, type ButtonGroupProps, type ButtonProps, IconButton, useTranslation } from '@dxos/react-ui';
 
@@ -35,7 +35,7 @@ const PlankControl = ({ icon, label, ...props }: Omit<ButtonProps, 'children'> &
   return <IconButton label={label} icon={icon} iconOnly variant='ghost' tooltipSide='bottom' {...props} />;
 };
 
-const plankControlSpacing = 'pli-2';
+const plankControlSpacing = 'px-2';
 
 type PlankComplimentControlsProps = {
   primary?: string;
@@ -78,7 +78,7 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
     const layoutIsAnySolo = !!layoutMode?.startsWith('solo');
 
     return (
-      <ButtonGroup {...props} classNames={['app-no-drag !opacity-100', classNames]} ref={forwardedRef}>
+      <ButtonGroup {...props} classNames={['app-no-drag opacity-100!', classNames]} ref={forwardedRef}>
         {capabilities.deck ? (
           <>
             {capabilities.solo && (

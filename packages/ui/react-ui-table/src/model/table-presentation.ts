@@ -210,7 +210,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
       const targetObj = getValue(obj, field.path)?.target;
       if (targetObj) {
         const dxn = Obj.getDXN(targetObj)?.toString();
-        cell.accessoryHtml = `<div role="none" class="absolute inline-end-0 inset-block-0 p-[--dx-grid-cell-content-padding-block]"><dx-anchor refId=${dxn} class="dx-button is-6 aspect-square min-bs-0" data-dx-grid-action="accessory"><dx-icon icon="ph--link-simple--regular"/></dx-anchor></div>`;
+        cell.accessoryHtml = `<div role="none" class="absolute end-0 inset-y-0 p-(--dx-grid-cell-content-padding-block)"><dx-anchor dxn=${dxn} class="dx-button w-6 aspect-square min-h-0" data-dx-grid-action="accessory"><dx-icon icon="ph--link-simple--regular"/></dx-anchor></div>`;
       }
     }
 
@@ -335,11 +335,11 @@ export class TablePresentation<T extends TableRow = TableRow> {
         value: '',
         resizeHandle: 'col',
         accessoryHtml: `
-          <span class="grow min-is-0 truncate">${props.title ?? field.path}</span>
+          <span class="grow min-w-0 truncate">${props.title ?? field.path}</span>
           ${direction !== undefined ? tableButtons.sort.render({ fieldId: field.id, direction }) : ''}
           ${tableButtons.columnSettings.render({ fieldId: field.id })}
         `,
-        className: '!bg-toolbarSurface !text-description [&>div]:flex [&>div]:items-stretch',
+        className: '!bg-toolbar-surface text-description! [&>div]:flex [&>div]:items-stretch',
       };
     }
 
@@ -382,7 +382,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
     if (!this.model.features.selection.enabled || this.model.selection.selectionMode === 'single') {
       return {
         [toPlaneCellIndex({ col: 0, row: 0 })]: {
-          className: '!bg-toolbarSurface',
+          className: '!bg-toolbar-surface',
           readonly: true,
           value: '',
         },
@@ -396,7 +396,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
           header: true,
           checked: this.model.selection.allRowsSelected,
         }),
-        className: '!bg-toolbarSurface',
+        className: '!bg-toolbar-surface',
         readonly: true,
         value: '',
       },
@@ -411,7 +411,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
               disabled: (this.model.projection?.getFields()?.length ?? 0) >= VIEW_FIELD_LIMIT,
             })
           : undefined,
-        className: '!bg-toolbarSurface',
+        className: '!bg-toolbar-surface',
         readonly: true,
         value: '',
       },
@@ -465,7 +465,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
 export const cellClassesForRowSelection = (selected: boolean, selectionMode: SelectionMode) => {
   if (!selected) {
     if (selectionMode === 'single') {
-      return ['!cursor-pointer'];
+      return ['cursor-pointer!'];
     } else {
       return undefined;
     }
@@ -473,8 +473,8 @@ export const cellClassesForRowSelection = (selected: boolean, selectionMode: Sel
 
   switch (selectionMode) {
     case 'single':
-      return ['!bg-currentRelated dx-grid__cell--no-focus-unfurl hover:bg-hoverSurface !cursor-pointer'];
+      return ['!bg-currentRelated dx-grid__cell--no-focus-unfurl hover:bg-hover-surface cursor-pointer!'];
     case 'multiple':
-      return ['!bg-gridCellSelected'];
+      return ['!bg-grid-cell-selected'];
   }
 };

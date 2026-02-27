@@ -87,6 +87,8 @@
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/test-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@testing-library/react": "catalog:",
+    "@testing-library/user-event": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "catalog:",
@@ -101,7 +103,9 @@
   },
   "optionalDependencies": {
     "@dxos/react-ui": "workspace:*",
-    "@dxos/ui-theme": "workspace:*"
+    "@dxos/ui-theme": "workspace:*",
+    "@testing-library/react": "catalog:",
+    "@testing-library/user-event": "catalog:"
   },
   "publishConfig": {
     "access": "public"

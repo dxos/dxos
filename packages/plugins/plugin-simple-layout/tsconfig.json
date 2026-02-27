@@ -5,6 +5,9 @@
   ],
   "references": [
     {
+      "path": "../../common/async"
+    },
+    {
       "path": "../../common/log"
     },
     {
@@ -21,6 +24,9 @@
     },
     {
       "path": "../../sdk/app-graph"
+    },
+    {
+      "path": "../../sdk/app-toolkit"
     },
     {
       "path": "../../sdk/schema"

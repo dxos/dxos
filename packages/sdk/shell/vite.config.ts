@@ -10,8 +10,6 @@ import { defineConfig } from 'vite';
 
 import { ThemePlugin } from '@dxos/ui-theme/plugin';
 
-import { createConfig as createTestConfig } from '../../../vitest.base.config';
-
 const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
 
 // https://vitejs.dev/config
@@ -47,14 +45,7 @@ export default defineConfig({
     },
   },
   plugins: [
-    ThemePlugin({
-      root: dirname,
-      content: [
-        path.resolve(dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        path.resolve(dirname, './node_modules/@dxos/react-ui/dist/**/*.mjs'),
-        path.resolve(dirname, './node_modules/@dxos/ui-theme/dist/**/*.mjs'),
-      ],
-    }),
+    ThemePlugin({}),
     ReactPlugin(),
     // https://www.bundle-buddy.com/rollup
     {
@@ -78,5 +69,4 @@ export default defineConfig({
       },
     },
   ],
-  ...createTestConfig({ dirname, node: true, storybook: true }),
 });

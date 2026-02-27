@@ -821,10 +821,23 @@ export class CoreDatabase {
         }
       }
     }
-    for (const dep of this._strongDepsIndex.get(objectId) ?? []) {
-      const core = this._objects.get(dep);
-      if (core && this._areDepsSatisfied(core)) {
-        this._scheduleThrottledUpdate([core.id]);
+    const queue = [objectId],
+      seen = new Set<string>();
+    while (queue.length > 0) {
+      const id = queue.shift()!;
+      if (seen.has(id)) {
+        continue;
+      }
+      seen.add(id);
+
+      if (this._objects.has(id)) {
+        for (const dep of this._strongDepsIndex.get(id) ?? []) {
+          queue.push(dep);
+          const core = this._objects.get(dep);
+          if (core && this._areDepsSatisfied(core)) {
+            this._scheduleThrottledUpdate([core.id]);
+          }
+        }
       }
     }
   }
@@ -972,6 +985,12 @@ export type LoadObjectOptions = {
    * Will not eagerly preload strong deps.
    */
   returnWithUnsatisfiedDeps?: boolean;
+
+  /**
+   * Allow deleted objects to be returned.
+   * @default false
+   */
+  allowDeleted?: boolean;
 };
 
 enum CoreDatabaseState {

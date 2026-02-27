@@ -5,18 +5,18 @@
 import { RegistryContext, useAtomValue } from '@effect-atom/atom-react';
 import { useCallback, useContext } from 'react';
 
-import { useCapability } from '@dxos/app-framework/react';
+import { useCapability } from '@dxos/app-framework/ui';
 
-import { type SimpleLayoutState, SimpleLayoutState as SimpleLayoutStateCapability } from '../types';
+import { SimpleLayoutState } from '../types';
 
-export type SimpleLayoutStateHook = {
+export type UseSimpleLayoutState = {
   state: SimpleLayoutState;
   updateState: (fn: (current: SimpleLayoutState) => SimpleLayoutState) => void;
 };
 
-export const useSimpleLayoutState = (): SimpleLayoutStateHook => {
+export const useSimpleLayoutState = (): UseSimpleLayoutState => {
   const registry = useContext(RegistryContext);
-  const stateAtom = useCapability(SimpleLayoutStateCapability);
+  const stateAtom = useCapability(SimpleLayoutState);
   const state = useAtomValue(stateAtom);
 
   const updateState = useCallback(

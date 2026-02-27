@@ -10,15 +10,14 @@ import { Function } from '@dxos/functions';
 import { getDeployedFunctions } from '@dxos/functions-runtime/edge';
 import { useClient } from '@dxos/react-client';
 import { Filter, Query, type Space, useQuery } from '@dxos/react-client/echo';
-import { useAsyncEffect } from '@dxos/react-ui';
-import { IconButton, useTranslation } from '@dxos/react-ui';
-import { controlItemClasses } from '@dxos/react-ui-form';
+import { IconButton, useAsyncEffect, useTranslation } from '@dxos/react-ui';
+import { Settings } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 
-const grid = 'grid grid-cols-[1fr_1fr_auto] min-bs-[2.5rem]';
+const grid = 'grid grid-cols-[1fr_1fr_auto] min-h-[2.5rem]';
 
 type FunctionsRegistryProps = {
   space: Space;
@@ -64,16 +63,16 @@ export const FunctionsRegistry = ({ space }: FunctionsRegistryProps) => {
   );
 
   return (
-    <div role='none' className={mx(controlItemClasses)}>
+    <Settings.Container>
       {functions.length > 0 && (
         <List.Root<Function.Function> items={functions} isItem={Schema.is(Function.Function)} getId={(func) => func.id}>
           {({ items }) => (
-            <div role='list' className='flex flex-col is-full'>
+            <div role='list' className='flex flex-col w-full'>
               {items?.map((func) => (
                 <List.Item<Function.Function>
                   key={func.id}
                   item={func}
-                  classNames={mx(grid, ghostHover, 'items-center', 'pli-2', 'min-bs-[3rem]')}
+                  classNames={mx(grid, ghostHover, 'items-center', 'px-2', 'min-h-[3rem]')}
                 >
                   <div className='flex flex-col truncate'>
                     <List.ItemTitle classNames='truncate'>{func.name}</List.ItemTitle>
@@ -103,9 +102,9 @@ export const FunctionsRegistry = ({ space }: FunctionsRegistryProps) => {
       )}
 
       {functions.length === 0 && !loading && (
-        <div className='text-center plb-4 text-gray-500'>{t('no functions found')}</div>
+        <div className='text-center py-4 text-gray-500'>{t('no functions found')}</div>
       )}
-      {loading && <div className='text-center plb-4 text-gray-500'>{t('loading functions')}</div>}
-    </div>
+      {loading && <div className='text-center py-4 text-gray-500'>{t('loading functions')}</div>}
+    </Settings.Container>
   );
 };

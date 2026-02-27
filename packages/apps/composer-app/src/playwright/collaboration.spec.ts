@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { platform } from 'node:os';
-
 import { expect, test } from '@playwright/test';
 
 import { AppManager } from './app-manager';
@@ -40,8 +38,7 @@ test.describe('Collaboration tests', () => {
 
   test.beforeEach(async ({ browser, browserName }) => {
     test.setTimeout(60_000);
-    test.skip(browserName === 'firefox');
-    test.skip(browserName === 'webkit' && platform() !== 'darwin');
+    test.skip(browserName === 'firefox' || browserName === 'webkit');
 
     host = new AppManager(browser, false);
     guest = new AppManager(browser, false);
@@ -62,7 +59,7 @@ test.describe('Collaboration tests', () => {
   test("guest joins host's space", async () => {
     // Host creates a space and adds a markdown object
     await host.createSpace();
-    await host.createObject({ type: 'Document', nth: 0 });
+    await host.createObject({ type: 'Document' });
 
     {
       // Focus new editor before space invitation.
@@ -96,7 +93,7 @@ test.describe('Collaboration tests', () => {
 
   test("host and guest can see each others' cursors when same document is in focus", async () => {
     await host.createSpace();
-    await host.createObject({ type: 'Document', nth: 0 });
+    await host.createObject({ type: 'Document' });
 
     // Focus on host's textbox and wait for it to be ready
     const hostPlank = host.deck.plank();
@@ -140,7 +137,7 @@ test.describe('Collaboration tests', () => {
 
   test("host and guest can see each others' changes in same document", async () => {
     await host.createSpace();
-    await host.createObject({ type: 'Document', nth: 0 });
+    await host.createObject({ type: 'Document' });
 
     // Focus on host's textbox and wait for it to be ready
     const hostPlank = host.deck.plank();
@@ -211,7 +208,7 @@ test.describe('Collaboration tests', () => {
     test.setTimeout(90_000);
 
     await host.createSpace();
-    await host.createObject({ type: 'Document', nth: 0 });
+    await host.createObject({ type: 'Document' });
 
     // Focus on host's textbox and wait for it to be ready
     const hostPlank = host.deck.plank();

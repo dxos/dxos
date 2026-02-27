@@ -3,6 +3,7 @@
 //
 
 // This is based upon `@radix-ui/react-tooltip` fetched 17 March 2025 at https://github.com/radix-ui/primitives at commit 6e75e11.
+// TODO(burdon): Replace with https://ui.shadcn.com/docs/components/radix/tooltip
 
 import { composeEventHandlers } from '@radix-ui/primitive';
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
@@ -215,9 +216,9 @@ const TooltipProvider: FC<TooltipProviderProps> = (props: TooltipScopedProps<Too
           isPointerInTransitRef.current = inTransit;
         }, [])}
       >
-        <TooltipContent side={side} className={tx('tooltip.content', 'tooltip', { elevation })}>
+        <TooltipContent side={side} className={tx('tooltip.content', { elevation })}>
           {content}
-          <TooltipArrow className={tx('tooltip.arrow', 'tooltip__arrow')} />
+          <TooltipArrow className={tx('tooltip.arrow')} />
         </TooltipContent>
         <TooltipVirtualTrigger virtualRef={triggerRef as RefObject<HTMLButtonElement>} />
         {children}

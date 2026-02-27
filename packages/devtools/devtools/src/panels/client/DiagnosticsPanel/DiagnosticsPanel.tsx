@@ -74,10 +74,14 @@ export const DiagnosticsPanel = () => {
         info && (
           <div className='flex p-2 items-center text-sm font-mono gap-2'>
             {info.map((text, i) => (
-              <div key={i} className='inline-flex items-center gap-1 cursor-pointer' onClick={() => handleCopy(text)}>
+              <button
+                key={i}
+                className='inline-flex items-center gap-1 cursor-pointer'
+                onClick={() => handleCopy(text)}
+              >
                 <Icon icon='ph--clipboard-text--regular' />
                 {text}
-              </div>
+              </button>
             ))}
           </div>
         )

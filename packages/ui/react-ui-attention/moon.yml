@@ -3,6 +3,7 @@ language: typescript
 tags:
   - ts-build
   - ts-test
+  - ts-test-storybook
   - pack
   - storybook
 tasks:
@@ -11,6 +12,3 @@ tasks:
       - '--entryPoint=src/index.ts'
       - '--entryPoint=src/types.ts'
       - '--entryPoint=src/testing/index.ts'
-  test:
-    inputs:
-      - .storybook/*

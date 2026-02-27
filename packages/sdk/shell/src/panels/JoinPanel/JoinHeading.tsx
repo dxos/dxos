@@ -5,7 +5,7 @@
 import React, { type ForwardedRef, cloneElement, forwardRef } from 'react';
 
 import { Button, Icon, useTranslation } from '@dxos/react-ui';
-import { descriptionText, mx } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { Heading } from '../../components';
 import { translationKey } from '../../translations';
@@ -28,7 +28,7 @@ export const JoinHeading = forwardRef(
       <Button
         variant='ghost'
         {...(onExit && { onClick: onExit })}
-        classNames={mx(descriptionText, 'plb-0 pli-2 absolute block-start-0 inline-end-0 z-[1]')}
+        classNames={mx('text-description', 'py-0 px-2 absolute top-0 right-0 z-[1]')}
         data-testid='join-exit'
       >
         <Icon icon='ph--x--bold' size={4} />

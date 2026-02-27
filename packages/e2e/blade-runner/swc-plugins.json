@@ -11,6 +11,14 @@
           "include_call_site": true
         },
         {
+          "function": "dbg",
+          "package": "@dxos/log",
+          "param_index": 1,
+          "include_args": true,
+          "include_call_site": false,
+          "include_scope": false
+        },
+        {
           "function": "invariant",
           "package": "@dxos/invariant",
           "param_index": 2,

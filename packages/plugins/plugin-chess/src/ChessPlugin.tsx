@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Common, Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
+import { AppPlugin } from '@dxos/app-toolkit';
 import { type CreateObject } from '@dxos/plugin-space/types';
 
 import { ChessBlueprint } from './blueprints';
@@ -14,21 +15,21 @@ import { translations } from './translations';
 import { Chess } from './types';
 
 export const ChessPlugin = Plugin.define(meta).pipe(
-  Common.Plugin.addTranslationsModule({ translations }),
-  Common.Plugin.addMetadataModule({
+  AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+  AppPlugin.addMetadataModule({
     metadata: {
       id: Chess.Game.typename,
       metadata: {
         icon: 'ph--shield-chevron--regular',
         iconHue: 'amber',
-        blueprints: [ChessBlueprint.Key],
+        blueprints: [ChessBlueprint.key],
         createObject: ((props) => Effect.sync(() => Chess.make(props))) satisfies CreateObject,
         addToCollectionOnCreate: true,
       },
     },
   }),
-  Common.Plugin.addSchemaModule({ schema: [Chess.Game] }),
-  Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
-  Common.Plugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+  AppPlugin.addSchemaModule({ schema: [Chess.Game] }),
+  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addTranslationsModule({ translations }),
   Plugin.make,
 );

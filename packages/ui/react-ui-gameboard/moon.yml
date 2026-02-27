@@ -3,6 +3,7 @@ language: typescript
 tags:
   - ts-build
   - ts-test
+  - ts-test-storybook
   - pack
   - storybook
 tasks:
@@ -17,6 +18,3 @@ tasks:
       - assets/*.*
     outputs:
       - src/gen
-  test:
-    inputs:
-      - .storybook/*

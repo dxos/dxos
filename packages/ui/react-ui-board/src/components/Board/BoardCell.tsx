@@ -19,6 +19,8 @@ import { type CellLayout, type Position } from './types';
 
 type DragState = 'idle' | 'dragging';
 
+const BOARD_CELL_NAME = 'Board.Cell';
+
 export type BoardCellProps<T extends Type.Obj.Any = any> = ThemedClassName<
   PropsWithChildren<{
     item: T;
@@ -30,7 +32,7 @@ export type BoardCellProps<T extends Type.Obj.Any = any> = ThemedClassName<
 // TODO(burdon): Reconcile with Mosaic.Tile.
 export const BoardCell = ({ classNames, children, item, layout, draggable: isDraggable }: BoardCellProps) => {
   const { t } = useTranslation(translationKey);
-  const { grid: board, zoom, onSelect, onDelete, onMove } = useBoardContext(BoardCell.displayName);
+  const { grid: board, zoom, onSelect, onDelete, onMove } = useBoardContext(BOARD_CELL_NAME);
 
   const rootRef = useRef<HTMLDivElement | null>(null);
   const dragHandleRef = useRef<HTMLButtonElement | null>(null);
@@ -85,11 +87,11 @@ export const BoardCell = ({ classNames, children, item, layout, draggable: isDra
           />
         )}
       </Card.Toolbar>
-      <div role='none' {...{ inert: true }} className='pointer-events-none min-bs-0 min-is-0'>
+      <div role='none' {...{ inert: true }} className='pointer-events-none min-h-0 min-w-0'>
         {children}
       </div>
     </Card.Root>
   );
 };
 
-BoardCell.displayName = 'Board.Cell';
+BoardCell.displayName = BOARD_CELL_NAME;

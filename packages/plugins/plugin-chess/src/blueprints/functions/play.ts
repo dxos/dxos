@@ -6,8 +6,7 @@ import { Chess as ChessJS } from 'chess.js';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { ArtifactId } from '@dxos/assistant';
-import { Database, Obj } from '@dxos/echo';
+import { Database, Obj, Type } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 
 import { Chess } from '../../types';
@@ -17,7 +16,7 @@ export default defineFunction({
   name: 'Play',
   description: 'Uses the chess engine to play the next move.',
   inputSchema: Schema.Struct({
-    id: ArtifactId.annotations({
+    game: Type.Ref(Chess.Game).annotations({
       description: 'The ID of the chess object.',
     }),
     side: Schema.optional(Schema.Literal('white', 'black', 'any')).annotations({
@@ -33,8 +32,8 @@ export default defineFunction({
       description: 'The move that was played.',
     }),
   }),
-  handler: Effect.fn(function* ({ data: { id, side = 'any' } }) {
-    const object = yield* Database.resolve(ArtifactId.toDXN(id), Chess.Game);
+  handler: Effect.fn(function* ({ data: { game, side = 'any' } }) {
+    const object = yield* Database.load(game);
     const chess = new ChessJS();
     if (object.pgn) {
       chess.loadPgn(object.pgn);

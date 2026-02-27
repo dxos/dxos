@@ -21,13 +21,14 @@ import {
   type Density,
   type Elevation,
   Icon,
+  ScrollArea,
   type ThemedClassName,
   useDensityContext,
   useElevationContext,
   useThemeContext,
   useTranslation,
 } from '@dxos/react-ui';
-import { descriptionText, mx } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
 
@@ -227,44 +228,15 @@ const SearchListRoot = ({
 SearchListRoot.displayName = 'SearchList.Root';
 
 //
-// Viewport
-//
-
-type SearchListViewportProps = ThemedClassName<PropsWithChildren<{}>>;
-
-/**
- * Scrollable viewport wrapper for Content.
- * Only Content wrapped in Viewport will be scrollable.
- */
-// TODO(burdon): Reconcile with Mosaic.Viewport.
-const SearchListViewport = ({ classNames, children }: SearchListViewportProps) => {
-  return (
-    <div role='none' className={mx('is-full min-bs-0 grow overflow-y-auto', classNames)}>
-      {children}
-    </div>
-  );
-};
-
-SearchListViewport.displayName = 'SearchList.Viewport';
-
-//
 // Content
 //
 
 type SearchListContentProps = ThemedClassName<PropsWithChildren<{}>>;
 
-/**
- * Container for search results. Does not scroll by default.
- * Wrap in Viewport for scrollable content.
- */
 const SearchListContent = forwardRef<HTMLDivElement, SearchListContentProps>(
   ({ classNames, children }, forwardedRef) => {
     return (
-      <div
-        ref={forwardedRef}
-        role='listbox'
-        className={mx('flex flex-col is-full min-bs-0 grow overflow-hidden', classNames)}
-      >
+      <div role='none' className={mx('grid h-full w-full min-h-0', classNames)} ref={forwardedRef}>
         {children}
       </div>
     );
@@ -377,32 +349,51 @@ const SearchListInput = forwardRef<HTMLInputElement, SearchListInputProps>(
     );
 
     return (
-      <input
-        {...props}
-        {...(props.autoFocus && !hasIosKeyboard && { autoFocus: true })}
-        type='text'
-        value={query}
-        placeholder={placeholder ?? defaultPlaceholder}
-        className={tx(
-          'input.input',
-          'input',
-          {
-            variant,
-            disabled: props.disabled,
-            density,
-            elevation,
-          },
-          classNames,
-        )}
-        onChange={handleChange}
-        onKeyDown={handleKeyDown}
-        ref={forwardedRef}
-      />
+      <div className='p-card-chrome'>
+        <input
+          {...props}
+          {...(props.autoFocus && !hasIosKeyboard && { autoFocus: true })}
+          type='text'
+          placeholder={placeholder ?? defaultPlaceholder}
+          className={tx(
+            'input.input',
+            {
+              variant,
+              disabled: props.disabled,
+              density,
+              elevation,
+            },
+            classNames,
+          )}
+          value={query}
+          onChange={handleChange}
+          onKeyDown={handleKeyDown}
+          ref={forwardedRef}
+        />
+      </div>
     );
   },
 );
 
 SearchListInput.displayName = 'SearchList.Input';
+
+//
+// Viewport
+//
+
+type SearchListViewportProps = ThemedClassName<PropsWithChildren>;
+
+const SearchListViewport = forwardRef<HTMLDivElement, SearchListViewportProps>(
+  ({ classNames, children }, forwardedRef) => {
+    return (
+      <ScrollArea.Root role='listbox' classNames={mx(classNames)} ref={forwardedRef} thin>
+        <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
+      </ScrollArea.Root>
+    );
+  },
+);
+
+SearchListViewport.displayName = 'SearchList.Viewport';
 
 //
 // Item
@@ -473,15 +464,15 @@ const SearchListItem = forwardRef<HTMLDivElement, SearchListItemProps>(
         tabIndex={-1}
         className={mx(
           'flex gap-2 items-center',
-          'plb-1 pli-2 rounded-sm select-none cursor-pointer data-[selected=true]:bg-hoverOverlay hover:bg-hoverOverlay',
+          'py-1 px-2 rounded-xs select-none cursor-pointer data-[selected=true]:bg-hover-overlay hover:bg-hover-overlay',
           disabled && 'opacity-50 cursor-not-allowed hover:bg-transparent data-[selected=true]:bg-transparent',
           classNames,
         )}
         onClick={handleClick}
       >
         {icon && <Icon icon={icon} size={5} />}
-        <span className='is-0 grow truncate'>{label}</span>
-        {suffix && <span className={mx('shrink-0', descriptionText)}>{suffix}</span>}
+        <span className='w-0 grow truncate'>{label}</span>
+        {suffix && <span className='shrink-0 text-description'>{suffix}</span>}
         {checked && <Icon icon='ph--check--regular' size={5} />}
       </div>
     );
@@ -498,7 +489,7 @@ type SearchListEmptyProps = ThemedClassName<PropsWithChildren<{}>>;
 
 const SearchListEmpty = ({ classNames, children }: SearchListEmptyProps) => {
   return (
-    <div role='status' className={mx('flex flex-col is-full pli-2 plb-1', classNames)}>
+    <div role='status' className={mx('flex flex-col w-full px-2 py-1', classNames)}>
       {children}
     </div>
   );
@@ -525,7 +516,7 @@ const SearchListGroup = forwardRef<HTMLDivElement, SearchListGroupProps>(
     return (
       <div ref={forwardedRef} role='group' className={mx('flex flex-col', classNames)}>
         {heading && (
-          <div role='presentation' className='pli-2 plb-1 text-xs font-medium text-description'>
+          <div role='presentation' className='px-2 py-1 text-xs font-medium text-description'>
             {heading}
           </div>
         )}
@@ -543,8 +534,8 @@ SearchListGroup.displayName = 'SearchList.Group';
 
 export const SearchList = {
   Root: SearchListRoot,
-  Viewport: SearchListViewport,
   Content: SearchListContent,
+  Viewport: SearchListViewport,
   Input: SearchListInput,
   Item: SearchListItem,
   Empty: SearchListEmpty,
@@ -553,8 +544,8 @@ export const SearchList = {
 
 export type {
   SearchListRootProps,
-  SearchListViewportProps,
   SearchListContentProps,
+  SearchListViewportProps,
   SearchListInputProps,
   SearchListItemProps,
   SearchListEmptyProps,

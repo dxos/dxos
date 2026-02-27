@@ -16,7 +16,7 @@ const DefaultStory = (props: BreadcrumbRootProps) => {
       <Breadcrumb.List>
         <Breadcrumb.ListItem>
           <Breadcrumb.Link asChild>
-            <Button variant='ghost' density='fine' classNames='pli-0 text-baseText font-normal'>
+            <Button variant='ghost' density='fine' classNames='px-0 text-base-text font-normal'>
               Grocery
             </Button>
           </Breadcrumb.Link>
@@ -39,10 +39,10 @@ const DefaultStory = (props: BreadcrumbRootProps) => {
 };
 
 const meta = {
-  title: 'ui/react-ui-core/Breadcrumb',
+  title: 'ui/react-ui-core/components/Breadcrumb',
   component: Breadcrumb.Root as any,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

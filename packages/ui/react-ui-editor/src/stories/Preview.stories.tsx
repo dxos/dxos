@@ -11,7 +11,7 @@ import { createPortal } from 'react-dom';
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 import { Popover } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Card } from '@dxos/react-ui-mosaic';
 import {
   type PreviewBlock,
@@ -28,9 +28,9 @@ import { type EditorController, EditorPreviewProvider, useEditorPreview } from '
 
 import { EditorStory } from './components';
 
-const handlePreviewLookup = async ({ label, ref }: PreviewLinkRef): Promise<PreviewLinkTarget> => {
+const handlePreviewLookup = async ({ dxn, label }: PreviewLinkRef): Promise<PreviewLinkTarget> => {
   // Random text.
-  faker.seed(ref.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 1));
+  faker.seed(dxn.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 1));
   const text = Array.from({ length: 2 }, () => faker.lorem.paragraphs()).join('\n\n');
   return {
     label,
@@ -51,6 +51,9 @@ const useRefTarget = (link: PreviewLinkRef): PreviewLinkTarget | undefined => {
 
 const PreviewCard = () => {
   const { target } = useEditorPreview('PreviewCard');
+  if (!target) {
+    return null;
+  }
 
   return (
     <Popover.Portal>
@@ -59,16 +62,14 @@ const PreviewCard = () => {
           <Card.Root border={false}>
             <Card.Toolbar>
               <Card.Icon toolbar icon='ph--file-text--regular' />
-              <Card.Title>{target?.label}</Card.Title>
+              <Card.Title>{target.label}</Card.Title>
               <Popover.Close asChild>
                 <Card.Close />
               </Popover.Close>
             </Card.Toolbar>
-            {target && (
-              <Card.Row>
-                <Card.Text variant='description'>{target.text}</Card.Text>
-              </Card.Row>
-            )}
+            <Card.Row>
+              <Card.Text variant='description'>{target.text}</Card.Text>
+            </Card.Row>
           </Card.Root>
         </Popover.Viewport>
         <Popover.Arrow />
@@ -101,7 +102,7 @@ const PreviewBlockComponent = ({ link, el, view }: { link: PreviewLinkRef; el: H
       }
 
       const link = getLinkRef(view.state, node);
-      if (link?.ref !== action.link.ref) {
+      if (link?.dxn !== action.link.dxn) {
         return;
       }
 
@@ -180,7 +181,7 @@ const PreviewBlockComponent = ({ link, el, view }: { link: PreviewLinkRef; el: H
 const meta = {
   title: 'ui/react-ui-editor/Preview',
   component: EditorStory,
-  decorators: [withTheme],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
   },
@@ -217,7 +218,7 @@ export const Default: Story = {
             setPreviewBlocks((prev) => [...prev, block]);
           },
           removeBlockContainer: (block) => {
-            setPreviewBlocks((prev) => prev.filter(({ link: prevLink }) => prevLink.ref !== block.link.ref));
+            setPreviewBlocks((prev) => prev.filter(({ link: prevLink }) => prevLink.dxn !== block.link.dxn));
           },
         }),
       ];
@@ -230,7 +231,7 @@ export const Default: Story = {
         <PreviewCard />
         {controller?.view &&
           previewBlocks.map(({ link, el }) => (
-            <PreviewBlockComponent key={link.ref} link={link} el={el} view={controller.view!} />
+            <PreviewBlockComponent key={link.dxn} link={link} el={el} view={controller.view!} />
           ))}
       </EditorPreviewProvider>
     );

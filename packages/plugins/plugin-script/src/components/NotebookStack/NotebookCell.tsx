@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { Surface } from '@dxos/app-framework/react';
+import { Surface } from '@dxos/app-framework/ui';
 import { type Database, Obj } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
@@ -30,8 +30,8 @@ import { TypescriptEditor, type TypescriptEditorProps } from '../TypescriptEdito
 
 import { type NotebookMenuProps } from './NotebookMenu';
 
-const editorStyles = 'p-2 pis-3';
-const valueStyles = 'p-1 pis-3';
+const editorStyles = 'p-2 ps-3';
+const valueStyles = 'p-1 ps-3';
 
 export type NotebookCellProps = {
   db?: Database.Database;
@@ -114,17 +114,15 @@ export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: 
 
       // TODO(burdon): Remove app-framework deps (via render prop).
       return (
-        <div
-          className={mx('bs-full overflow-hidden grid', explorerGraph && !dragging && 'grid-rows-[min-content_1fr]')}
-        >
+        <div className={mx('h-full overflow-hidden grid', explorerGraph && !dragging && 'grid-rows-[min-content_1fr]')}>
           <QueryEditor
             id={cell.id}
-            classNames={[editorStyles, 'border-be border-subduedSeparator']}
+            classNames={[editorStyles, 'border-b border-subdued-separator']}
             db={db}
             value={cell.source.target.content}
             onChange={handleQueryChange}
           />
-          {explorerGraph && !dragging && <Surface role='section' limit={1} data={{ subject: explorerGraph }} />}
+          {explorerGraph && !dragging && <Surface.Surface role='section' limit={1} data={{ subject: explorerGraph }} />}
         </div>
       );
 
@@ -161,13 +159,13 @@ const NotebookCellValue = ({ cell, graph }: NotebookCellProps) => {
   return (
     <div
       className={mx(
-        'flex is-full bg-groupSurface border-bs border-subduedSeparator text-description font-mono',
+        'flex w-full bg-group-surface border-y border-subdued-separator text-description font-mono',
         valueStyles,
       )}
     >
       {name && (
         <>
-          <span className='text-successText'>{name}</span>
+          <span className='text-success-text'>{name}</span>
           <span className='text-description'>&nbsp;=&nbsp;</span>
         </>
       )}
@@ -187,7 +185,7 @@ const NotebookPromptResult = ({ cell, promptResults }: NotebookCellProps) => {
   }
 
   return (
-    <div className={mx('flex is-full bg-groupSurface text-description border-bs border-subduedSeparator', valueStyles)}>
+    <div className={mx('flex w-full bg-group-surface text-description border-y border-subdued-separator', valueStyles)}>
       <NotebookTextEditor readOnly value={value} />
     </div>
   );

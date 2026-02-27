@@ -42,7 +42,9 @@ test.describe('Basic tests', () => {
 
   test('create document', async () => {
     await host.createSpace();
-    await host.createObject({ type: 'Document', nth: 0 });
+    // Expand the Documents collection.
+    await host.toggleCollectionCollapsed(3);
+    await host.createObject({ type: 'Document' });
 
     const plank = host.deck.plank();
     const textBox = Markdown.getMarkdownTextboxWithLocator(plank.locator);

@@ -14,9 +14,9 @@ import { InvitationManager } from '../../steps';
 import { stepStyles } from '../../styles';
 import { translationKey } from '../../translations';
 
-import { useSpaceMachine } from './spaceMachine';
+import { useSpaceMachine } from './space-machine';
+import { SpaceManager } from './SpaceManager';
 import { type SpacePanelHeadingProps, type SpacePanelImplProps, type SpacePanelProps } from './SpacePanelProps';
-import { SpaceManager } from './steps';
 
 const SpacePanelHeading = ({ titleId, space, onDone }: SpacePanelHeadingProps) => {
   const { t } = useTranslation(translationKey);
@@ -27,7 +27,7 @@ const SpacePanelHeading = ({ titleId, space, onDone }: SpacePanelHeadingProps) =
       title={t('space panel heading')}
       corner={<CloseButton data-testid='identity-panel-done' onDone={onDone} />}
     >
-      <div role='none' className='flex gap-4 items-center justify-center mlb-4'>
+      <div role='none' className='flex gap-4 items-center justify-center my-4'>
         <Icon icon='ph--planet--light' size={8} />
         <div className='block text-start font-light text-xl'>{name ?? space.key.truncate()}</div>
       </div>

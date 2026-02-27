@@ -37,11 +37,17 @@ const testRegistry: XmlWidgetRegistry = {
   },
 };
 
-type StoryProps = MarkdownStreamProps & { streamOptions?: TextStreamOptions };
+type StoryProps = MarkdownStreamProps & { initialContent?: string; streamOptions?: TextStreamOptions };
 
-const DefaultStory = ({ content = '', streamOptions = defaultStreamOptions, ...props }: StoryProps) => {
+const DefaultStory = ({ initialContent, content, streamOptions = defaultStreamOptions, ...props }: StoryProps) => {
   const [controller, setController] = useState<MarkdownStreamController | null>(null);
   const [streaming, setStreaming] = useState(false);
+
+  useEffect(() => {
+    if (initialContent) {
+      void controller?.append(initialContent);
+    }
+  }, [controller, initialContent]);
 
   useEffect(() => {
     if (!controller || !streaming) {
@@ -50,7 +56,7 @@ const DefaultStory = ({ content = '', streamOptions = defaultStreamOptions, ...p
 
     let cancelled = false;
     void (async () => {
-      for await (const chunk of textStream(content, streamOptions)) {
+      for await (const chunk of textStream(content + '\n', streamOptions)) {
         if (cancelled) {
           break;
         }
@@ -73,18 +79,16 @@ const DefaultStory = ({ content = '', streamOptions = defaultStreamOptions, ...p
 
   const handleAppend = useCallback(() => {
     void controller?.append(
-      [faker.lorem.paragraph(), `<suggestion>${faker.lorem.word()}</suggestion>`, faker.lorem.paragraph(), ''].join(
-        '\n\n',
-      ),
+      ['', faker.lorem.paragraph(), `<suggestion>${faker.lorem.word()}</suggestion>`, faker.lorem.paragraph()].join(),
     );
   }, [controller]);
 
   return (
     <div
-      className={mx('flex flex-col bs-full is-full')}
-      style={userHue ? ({ '--user-fill': `var(--dx-${userHue}Fill)` } as CSSProperties) : undefined}
+      className={mx('flex flex-col h-full w-full')}
+      style={userHue ? ({ '--user-fill': `var(--color-${userHue}-fill)` } as CSSProperties) : undefined}
     >
-      <Toolbar.Root classNames='border-be border-subduedSeparator'>
+      <Toolbar.Root classNames='border-b border-subdued-separator'>
         <Toolbar.Button disabled={streaming} onClick={() => setStreaming(true)}>
           Start
         </Toolbar.Button>
@@ -96,15 +100,18 @@ const DefaultStory = ({ content = '', streamOptions = defaultStreamOptions, ...p
           Append
         </Toolbar.Button>
       </Toolbar.Root>
-      <MarkdownStream ref={setController} classNames='is-full overflow-hidden' {...props} />
+      <MarkdownStream ref={setController} classNames='w-full overflow-hidden' {...props} />
     </div>
   );
 };
 
 const meta = {
-  title: 'ui/react-ui-markdown/MarkdownStream',
+  title: 'ui/react-ui-components/MarkdownStream',
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ layout: 'column' })],
+  decorators: [withTheme(), withLayout({ layout: 'column' })],
+  parameters: {
+    layout: 'fullscreen',
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
@@ -113,6 +120,16 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
+    content: TEXT,
+    registry: testRegistry,
+    fadeIn: true,
+    cursor: false,
+  },
+};
+
+export const WithInitialContent: Story = {
+  args: {
+    initialContent: TEXT,
     content: TEXT,
     registry: testRegistry,
     fadeIn: true,

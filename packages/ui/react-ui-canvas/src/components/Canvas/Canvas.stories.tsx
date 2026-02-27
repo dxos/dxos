@@ -5,7 +5,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { useCanvasContext, useDrag, useWheel } from '../../hooks';
 import { type Point } from '../../types';
@@ -32,14 +32,14 @@ const DefaultStory = (props: GridProps) => {
 
 const TwoCanvases = (props: GridProps) => {
   return (
-    <div className='grid grid-cols-2 gap-2 is-full bs-full'>
-      <div className='bs-full relative'>
+    <div className='grid grid-cols-2 gap-2 w-full h-full'>
+      <div className='h-full relative'>
         <Canvas>
           <Grid {...props} />
           <Content />
         </Canvas>
       </div>
-      <div className='bs-full relative'>
+      <div className='h-full relative'>
         <Canvas>
           <Grid {...props} />
           <Content />
@@ -92,7 +92,7 @@ const meta = {
   title: 'ui/react-ui-canvas/Canvas',
   component: Grid,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
   },

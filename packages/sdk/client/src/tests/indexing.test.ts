@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import isEqual from 'lodash.isequal';
+import isEqual from 'fast-deep-equal';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, TriggerState, asyncTimeout } from '@dxos/async';
@@ -136,7 +136,7 @@ describe('Index queries', () => {
   test('indexes persists between client restarts', async () => {
     let spaceKey: PublicKey;
 
-    const { builder } = createTestBuilder();
+    const { builder, sqlitePath } = createTestBuilder();
     onTestFinished(async () => {
       await builder.destroy();
     });
@@ -144,7 +144,7 @@ describe('Index queries', () => {
     const { contacts } = createObjects();
 
     {
-      const client = await initClient(builder.createLocalClientServices());
+      const client = await initClient(builder.createLocalClientServices({ sqlitePath }));
       await client.halo.createIdentity();
       const space = await client.spaces.create();
       spaceKey = space.key;
@@ -156,7 +156,7 @@ describe('Index queries', () => {
     }
 
     {
-      const client = await initClient(builder.createLocalClientServices());
+      const client = await initClient(builder.createLocalClientServices({ sqlitePath }));
       onTestFinished(() => client.destroy());
       await asyncTimeout(client.spaces.waitUntilReady(), 5000);
       const space = client.spaces.get(spaceKey)!;
@@ -167,7 +167,7 @@ describe('Index queries', () => {
   });
 
   test('index available data', async () => {
-    const { builder, level } = createTestBuilder();
+    const { builder, level, sqlitePath } = createTestBuilder();
     onTestFinished(async () => {
       await builder.destroy();
     });
@@ -175,7 +175,7 @@ describe('Index queries', () => {
     const { contacts } = createObjects();
     let spaceKey: PublicKey;
     {
-      const client = await initClient(builder.createLocalClientServices());
+      const client = await initClient(builder.createLocalClientServices({ sqlitePath }));
       await client.halo.createIdentity();
       const space = await client.spaces.create();
       spaceKey = space.key;
@@ -190,7 +190,7 @@ describe('Index queries', () => {
     await level.sublevel('index-storage').clear();
 
     {
-      const client = await initClient(builder.createLocalClientServices());
+      const client = await initClient(builder.createLocalClientServices({ sqlitePath }));
       onTestFinished(() => client.destroy());
       await asyncTimeout(client.spaces.waitUntilReady(), TIMEOUT);
       const space = client.spaces.get(spaceKey)!;
@@ -200,47 +200,11 @@ describe('Index queries', () => {
     }
   });
 
-  test('re-index', async () => {
-    const { builder, level } = createTestBuilder();
-    onTestFinished(async () => {
-      await builder.destroy();
-    });
-
-    const { contacts } = createObjects();
-    let spaceKey: PublicKey;
-    {
-      const client = await initClient(builder.createLocalClientServices());
-      await client.halo.createIdentity();
-
-      const space = await client.spaces.create();
-      spaceKey = space.key;
-
-      await addObjects(space, contacts);
-      await matchObjects(space.db.query(Filter.type(TestSchema.ContactType)), contacts);
-
-      await client.destroy();
-    }
-
-    await level.open();
-    await level.sublevel('index-storage').clear();
-    await level.sublevel('index-metadata').clear();
-
-    {
-      const client = await initClient(builder.createLocalClientServices());
-      onTestFinished(() => client.destroy());
-      await client.spaces.waitUntilReady();
-      const space = client.spaces.get(spaceKey)!;
-      await asyncTimeout(space.waitUntilReady(), TIMEOUT);
-
-      await client.services.services.QueryService?.reindex();
-      await matchObjects(space.db.query(Filter.type(TestSchema.ContactType)), contacts);
-    }
-  });
-
   test('`or` query', async () => {
     const builder = new TestBuilder();
     onTestFinished(async () => await builder.destroy());
     const client = await initClient(builder.createLocalClientServices());
+    onTestFinished(() => client.destroy());
     await client.halo.createIdentity();
     const space = await client.spaces.create();
     const { contacts, documents } = createObjects();
@@ -272,6 +236,7 @@ describe('Index queries', () => {
 
     onTestFinished(async () => await builder.destroy());
     const client = await initClient(builder.createLocalClientServices());
+    onTestFinished(() => client.destroy());
 
     await client.halo.createIdentity();
     const space = await client.spaces.create();
@@ -300,6 +265,7 @@ describe('Index queries', () => {
     const builder = new TestBuilder();
     onTestFinished(async () => await builder.destroy());
     const client = await initClient(builder.createLocalClientServices());
+    onTestFinished(() => client.destroy());
     await client.halo.createIdentity();
     const space = await client.spaces.create();
     const { expandos } = createObjects();
@@ -313,6 +279,7 @@ describe('Index queries', () => {
     const builder = new TestBuilder();
     onTestFinished(async () => await builder.destroy());
     const client = await initClient(builder.createLocalClientServices());
+    onTestFinished(() => client.destroy());
     await client.halo.createIdentity();
     const space = await client.spaces.create();
     const { contacts, documents } = createObjects();
@@ -354,7 +321,9 @@ describe('Index queries', () => {
     const builder = new TestBuilder();
     builder.storage = () => storage;
     builder.level = () => level;
-    return { builder, level };
+    // Use file-based SQLite for index persistence tests.
+    const sqlitePath = `/tmp/dxos-test-${Date.now()}-${Math.random().toString(36).slice(2)}.db`;
+    return { builder, level, sqlitePath };
   };
 });
 

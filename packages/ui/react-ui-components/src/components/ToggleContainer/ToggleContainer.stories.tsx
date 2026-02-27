@@ -8,7 +8,7 @@ import React, { useContext, useEffect, useMemo, useState } from 'react';
 
 import { faker } from '@dxos/random';
 import { Icon, Input, Toolbar } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { MarkdownViewer } from '@dxos/react-ui-markdown';
 import { withRegistry } from '@dxos/storybook-utils';
 
@@ -70,7 +70,7 @@ const DefaultStory = (props: ToggleContainerRootProps) => {
   }, [running]);
 
   return (
-    <div className='flex flex-col is-[30rem]'>
+    <div className='flex flex-col w-[30rem]'>
       <Toolbar.Root>
         <Input.Root>
           <Input.Switch checked={running} onCheckedChange={(checked) => setRunning(checked)} />
@@ -89,7 +89,7 @@ const DefaultStory = (props: ToggleContainerRootProps) => {
           >
             Test
           </ToggleContainer.Header>
-          <ToggleContainer.Content classNames='bg-modalSurface'>
+          <ToggleContainer.Content classNames='bg-modal-surface'>
             <MarkdownViewer classNames='p-2 text-sm' content={text.join('\n\n')} />
           </ToggleContainer.Content>
         </ToggleContainer.Root>
@@ -102,9 +102,9 @@ const meta = {
   title: 'ui/react-ui-components/ToggleContainer',
   component: ToggleContainer.Root,
   render: DefaultStory,
-  decorators: [withRegistry, withTheme],
+  decorators: [withRegistry, withTheme(), withLayout({ layout: 'column' })],
   parameters: {
-    layout: 'centered',
+    layout: 'fullscreen',
   },
 } satisfies Meta<typeof ToggleContainer.Root>;
 

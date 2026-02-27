@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, Plugin } from '@dxos/app-framework';
+import { Capability, Plugin } from '@dxos/app-framework';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Ref, Type } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
@@ -35,27 +36,9 @@ import { Channel, ThreadOperation } from './types';
 // TODO(wittjosiah): Rename to ChatPlugin.
 // TODO(wittjosiah): Enabling comments should likely be factored out of this plugin but depend on it's capabilities.
 export const ThreadPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule({
-    id: 'call-manager',
-    activatesOn: ClientEvents.ClientReady,
-    activate: CallManager,
-  }),
-  // TODO(wittjosiah): Currently not used but leaving because there will likely be settings for threads again.
-  // Plugin.addModule({
-  //   id: 'settings',
-  //   activatesOn: Events.SetupSettings,
-  //   activate: ThreadSettings,
-  // }),
-  Plugin.addModule({
-    id: 'state',
-    // TODO(wittjosiah): Does not integrate with settings store.
-    //   Should this be a different event?
-    //   Should settings store be renamed to be more generic?
-    activatesOn: Common.ActivationEvent.SetupSettings,
-    activate: ThreadState,
-  }),
-  Common.Plugin.addTranslationsModule({ translations: [...translations, ...threadTranslations] }),
-  Common.Plugin.addMetadataModule({
+  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
+  AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+  AppPlugin.addMetadataModule({
     metadata: [
       {
         id: Type.getTypename(Channel.Channel),
@@ -70,13 +53,6 @@ export const ThreadPlugin = Plugin.define(meta).pipe(
         metadata: {
           // TODO(wittjosiah): Move out of metadata.
           loadReferences: async (thread: Thread.Thread) => await Ref.Array.loadAll(thread.messages ?? []),
-        },
-      },
-      {
-        id: Message.Message.typename,
-        metadata: {
-          // TODO(wittjosiah): Move out of metadata.
-          loadReferences: () => [], // loadObjectReferences(message, (message) => [...message.parts, message.context]),
         },
       },
       {
@@ -96,8 +72,31 @@ export const ThreadPlugin = Plugin.define(meta).pipe(
       },
     ],
   }),
-  Common.Plugin.addSchemaModule({
+  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addReactRootModule({ activate: ReactRoot }),
+  AppPlugin.addSchemaModule({
     schema: [AnchoredTo.AnchoredTo, Channel.Channel, Message.Message, Message.MessageV1, Thread.Thread],
+  }),
+  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addTranslationsModule({ translations: [...translations, ...threadTranslations] }),
+  Plugin.addModule({
+    id: 'call-manager',
+    activatesOn: ClientEvents.ClientReady,
+    activate: CallManager,
+  }),
+  // TODO(wittjosiah): Currently not used but leaving because there will likely be settings for threads again.
+  // Plugin.addModule({
+  //   id: 'settings',
+  //   activatesOn: Events.SetupSettings,
+  //   activate: ThreadSettings,
+  // }),
+  Plugin.addModule({
+    id: 'state',
+    // TODO(wittjosiah): Does not integrate with settings store.
+    //   Should this be a different event?
+    //   Should settings store be renamed to be more generic?
+    activatesOn: AppActivationEvents.SetupSettings,
+    activate: ThreadState,
   }),
   Plugin.addModule({
     id: 'migration',
@@ -124,10 +123,5 @@ export const ThreadPlugin = Plugin.define(meta).pipe(
     activatesOn: MarkdownEvents.SetupExtensions,
     activate: Markdown,
   }),
-  Common.Plugin.addReactRootModule({ activate: ReactRoot }),
-  Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
-  Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
-  Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  Common.Plugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   Plugin.make,
 );

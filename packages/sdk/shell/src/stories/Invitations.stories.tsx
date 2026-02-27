@@ -64,7 +64,7 @@ const Panel = ({ id, panel, setPanel }: { id: number; panel?: PanelType; setPane
     default: {
       // TODO(wittjosiah): Tooltips make playwright (webkit) flakier.
       const controls = (
-        <ButtonGroup classNames='mbe-4'>
+        <ButtonGroup classNames='mb-4'>
           {/* <Tooltip content='Create Space'> */}
           <IconButton
             icon='ph--plus-circle--regular'
@@ -136,7 +136,7 @@ const Invitations = () => {
 
   // TODO(wittjosiah): Tooltips make playwright (webkit) flakier.
   const controls = (
-    <ButtonGroup classNames='mbe-4'>
+    <ButtonGroup classNames='mb-4'>
       {/* <Tooltip content='Create Identity'> */}
       <IconButton
         icon='ph--plus--regular'
@@ -200,7 +200,7 @@ const Invitations = () => {
 
   return (
     <div className={'flex flex-col m-4 flex-1 min-w-0'} data-testid={`peer-${id}`}>
-      <div className={`${activeSurface} rounded p-2 mbe-2`}>
+      <div className={`${activeSurface} rounded-sm p-2 mb-2`}>
         <div data-testid='invitations.identity-header'>{controls}</div>
         {identity ? (
           <List>
@@ -211,7 +211,7 @@ const Invitations = () => {
         )}
       </div>
       {identity || panel ? (
-        <div className={`${activeSurface} rounded p-2`}>
+        <div className={`${activeSurface} rounded-sm p-2`}>
           <Panel id={id} panel={panel} setPanel={setPanel} />
         </div>
       ) : null}
@@ -221,7 +221,7 @@ const Invitations = () => {
 
 const meta = {
   title: 'sdk/shell/Invitations',
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta;
 
 export default meta;
@@ -241,6 +241,7 @@ export const Default: Story = {
     );
   },
   decorators: [withMultiClientProvider({ numClients: 3 }), withLayout({ classNames: 'grid grid-cols-3' })],
+  tags: ['test'],
   parameters: {
     layout: 'fullscreen',
     chromatic: {

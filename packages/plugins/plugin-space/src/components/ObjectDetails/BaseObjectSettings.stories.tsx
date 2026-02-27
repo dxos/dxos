@@ -9,7 +9,7 @@ import { type Obj, Tag } from '@dxos/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
 import { render } from '@dxos/storybook-utils';
-import { Project } from '@dxos/types';
+import { Pipeline } from '@dxos/types';
 
 import { translations } from '../../translations';
 
@@ -21,7 +21,7 @@ const DefaultStory = () => {
 
   useEffect(() => {
     if (space && !object) {
-      const object = space.db.add(Project.make());
+      const object = space.db.add(Pipeline.make());
       setObject(object);
     }
   }, [space, object]);
@@ -30,7 +30,7 @@ const DefaultStory = () => {
     return null;
   }
 
-  return <BaseObjectSettings object={object} classNames='is-[20rem]' />;
+  return <BaseObjectSettings object={object} classNames='w-[20rem]' />;
 };
 
 const meta = {
@@ -38,11 +38,11 @@ const meta = {
   component: BaseObjectSettings as any,
   render: render(DefaultStory),
   decorators: [
-    withTheme,
+    withTheme(),
     withClientProvider({
       createIdentity: true,
       createSpace: true,
-      types: [Project.Project, Tag.Tag],
+      types: [Pipeline.Pipeline, Tag.Tag],
       onCreateSpace: async ({ space }) => {
         space.db.add(Tag.make({ label: 'Tag 1' }));
         space.db.add(Tag.make({ label: 'Tag 2' }));

@@ -10,6 +10,7 @@ import * as Stream from 'effect/Stream';
 import { describe } from 'vitest';
 
 import { TestAiService } from '@dxos/ai/testing';
+import { Feed } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { CredentialsService, TracingService } from '@dxos/functions';
 import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
@@ -26,6 +27,7 @@ const TestLayer = Layer.empty.pipe(
       TestAiService(),
       TestDatabaseLayer(),
       CredentialsService.configuredLayer([]),
+      Feed.notAvailable,
       TracingService.layerNoop,
     ),
   ),

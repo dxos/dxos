@@ -43,7 +43,7 @@ export type AccordionItemHeaderProps = ThemedClassName<AccordionPrimitive.Accord
 export const AccordionItemHeader = ({ classNames, children, ...props }: AccordionItemHeaderProps) => {
   return (
     <AccordionPrimitive.Header {...props} className={mx(classNames)}>
-      <AccordionPrimitive.Trigger className='group flex items-center p-2 dx-focus-ring-inset is-full text-start'>
+      <AccordionPrimitive.Trigger className='group flex items-center p-2 dx-focus-ring-inset w-full text-start'>
         {children}
         <Icon
           icon='ph--caret-right--regular'

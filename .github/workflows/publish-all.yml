@@ -38,27 +38,28 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
         with:
+          fetch-depth: 0
           lfs: true
       # TODO: read secrets directly from 1p?
       - name: Set environment variables from secrets, env files. Also set DX_ENVIRONMENT and BRANCH
         run: .github/workflows/scripts/populate-env.sh ${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}} >> $GITHUB_ENV
         env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_API_KEY }}
+          COMPOSER_APP_PROD_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}
+          COMPOSER_APP_PROD_POSTHOG_PROJECT_ID: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_PROJECT_ID }}
+          COMPOSER_APP_PROD_POSTHOG_FEEDBACK_SURVEY_ID: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_FEEDBACK_SURVEY_ID }}
+          COMPOSER_APP_TEST_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_TEST_POSTHOG_API_KEY }}
+          COMPOSER_APP_TEST_POSTHOG_PROJECT_ID: ${{ secrets.COMPOSER_APP_TEST_POSTHOG_PROJECT_ID }}
+          COMPOSER_APP_TEST_POSTHOG_FEEDBACK_SURVEY_ID: ${{ secrets.COMPOSER_APP_TEST_POSTHOG_FEEDBACK_SURVEY_ID }}
+          DX_DISCORD_WEBHOOK_URL: ${{ secrets.DX_DISCORD_WEBHOOK_URL }}
+          DX_OTEL_ENDPOINT: ${{ secrets.DX_OTEL_ENDPOINT }}
+          DX_OTEL_HEADERS: ${{ secrets.DX_OTEL_HEADERS }}
+          DX_POSTHOG_API_HOST: ${{ secrets.DX_POSTHOG_API_HOST }}
           IPDATA_API_KEY: ${{ secrets.IPDATA_API_KEY }}
           IPFS_API_SECRET: ${{ secrets.IPFS_API_SECRET }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          SENTRY_RELEASE_AUTH_TOKEN: ${{ secrets.SENTRY_RELEASE_AUTH_TOKEN }}
-          CLI_SENTRY_DESTINATION: ${{ secrets.CLI_SENTRY_DESTINATION }}
-          CLI_SEGMENT_API_KEY: ${{ secrets.CLI_SEGMENT_API_KEY }}
-          COMPOSER_APP_SENTRY_DESTINATION: ${{ secrets.COMPOSER_APP_SENTRY_DESTINATION }}
-          COMPOSER_APP_SEGMENT_API_KEY: ${{ secrets.COMPOSER_APP_SEGMENT_API_KEY }}
-          DX_DISCORD_WEBHOOK_URL: ${{ secrets.DX_DISCORD_WEBHOOK_URL }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          DX_OTEL_ENDPOINT: ${{ secrets.DX_OTEL_ENDPOINT }}
-          DX_OTEL_AUTHORIZATION: ${{ secrets.DX_OTEL_AUTHORIZATION }}
-          DX_LOKI_ENDPOINT: ${{ secrets.DX_LOKI_ENDPOINT }}
-          DX_LOKI_AUTHORIZATION: ${{ secrets.DX_LOKI_AUTHORIZATION }}
 
       - name: Setup
         uses: ./.github/actions/setup
@@ -70,9 +71,6 @@ jobs:
       - name: Build
         run: moon run :build
         env:
-          # NOTE: @dxos/cli is the only thing consuming these at build time, the apps all consume them at bundle.
-          DX_SENTRY_DESTINATION: ${{ env.CLI_SENTRY_DESTINATION }}
-          DX_TELEMETRY_API_KEY: ${{ env.CLI_SEGMENT_API_KEY }}
           NODE_ENV: production
 
       # NOTE: Shell must be bundled before npm publish.

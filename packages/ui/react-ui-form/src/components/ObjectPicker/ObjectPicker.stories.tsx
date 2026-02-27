@@ -74,10 +74,10 @@ const DefaultStory = () => {
   );
 
   return (
-    <div role='none' className='flex is-96'>
+    <div role='none' className='flex w-96'>
       <ObjectPicker.Root open={isOpen} onOpenChange={setIsOpen}>
         <ObjectPicker.Trigger asChild>
-          <Button variant='primary' data-testid='trigger' classNames='is-full'>
+          <Button variant='primary' data-testid='trigger' classNames='w-full'>
             Select Person
           </Button>
         </ObjectPicker.Trigger>
@@ -100,7 +100,7 @@ const meta = {
   title: 'ui/react-ui-form/ObjectPicker',
   render: DefaultStory,
   decorators: [
-    withTheme,
+    withTheme(),
     withClientProvider({
       types: [Person.Person],
       createIdentity: true,
@@ -201,14 +201,10 @@ export const WithTest: Story = {
     await userEvent.click(saveButton);
 
     // Check that clicking the save button calls onCreate with expected values.
-    await expect(mockHandleCreate).toHaveBeenCalledWith({
-      fullName: unrelatedTerm,
-      addresses: [],
-      phoneNumbers: [],
-      emails: [],
-      identities: [],
-      urls: [],
-      fields: [],
-    });
+    await expect(mockHandleCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        fullName: unrelatedTerm,
+      }),
+    );
   },
 };

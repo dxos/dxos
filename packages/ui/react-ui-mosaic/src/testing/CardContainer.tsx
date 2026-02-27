@@ -15,21 +15,21 @@ const MIN_BLOCK_SIZE = 8;
 // Card container.
 //
 
-export const CardContainer = ({
-  children,
-  icon = 'ph--placeholder--regular',
-  role,
-}: PropsWithChildren<{ icon?: string; role?: string }>) => {
+export type CardContainerProps = PropsWithChildren<{ role?: 'popover' | 'intrinsic'; icon?: string }>;
+
+export const CardContainer = ({ children, role, icon = 'ph--arrow-line-down--regular' }: CardContainerProps) => {
   switch (role) {
-    case 'card--popover':
-      return <PopoverCardContainer icon={icon}>{children}</PopoverCardContainer>;
-    case 'card--intrinsic':
+    case 'popover':
+      return (
+        <div role='none' className='flex justify-center'>
+          <PopoverCardContainer icon={icon}>{children}</PopoverCardContainer>
+        </div>
+      );
+    case 'intrinsic':
     default:
       return <IntrinsicCardContainer>{children}</IntrinsicCardContainer>;
   }
 };
-
-const border = 'relative border border-dashed border-subduedSeparator p-4 rounded-lg overflow-x-auto';
 
 //
 // Popover
@@ -37,11 +37,14 @@ const border = 'relative border border-dashed border-subduedSeparator p-4 rounde
 
 export type PopoverCardContainerProps = PropsWithChildren<{ icon?: string }>;
 
-export const PopoverCardContainer = ({ children, icon = 'ph--placeholder--regular' }: PopoverCardContainerProps) => {
+export const PopoverCardContainer = ({
+  children,
+  icon = 'ph--arrow-line-down--regular',
+}: PopoverCardContainerProps) => {
   return (
     <Popover.Root open>
-      <Popover.Content onOpenAutoFocus={(event) => event.preventDefault()}>
-        <Popover.Viewport classNames='popover-card-width'>{children}</Popover.Viewport>
+      <Popover.Content onOpenAutoFocus={(event: Event) => event.preventDefault()}>
+        <Popover.Viewport classNames='popover-card'>{children}</Popover.Viewport>
         <Popover.Arrow />
       </Popover.Content>
       <Popover.Trigger asChild>
@@ -74,7 +77,11 @@ export const IntrinsicCardContainer = ({
   });
 
   return (
-    <div className={border} style={sizeStyle(size, 'horizontal')} {...resizeAttributes}>
+    <div
+      className='relative p-4 border border-dashed border-subdued-separator rounded-lg overflow-x-auto'
+      style={sizeStyle(size, 'horizontal')}
+      {...resizeAttributes}
+    >
       {children}
       <ResizeHandle
         side='inline-end'

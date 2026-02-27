@@ -16,7 +16,7 @@ import { View } from '@dxos/schema';
 import { type ValueGenerator } from '@dxos/schema/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 import { render } from '@dxos/storybook-utils';
-import { HasRelationship, Organization, Person, Project } from '@dxos/types';
+import { HasRelationship, Organization, Person, Pipeline } from '@dxos/types';
 
 import { useGraphModel } from '../../hooks';
 import { Graph } from '../../types';
@@ -57,7 +57,7 @@ const meta = {
   render: render(DefaultStory),
   decorators: [
     withRegistry,
-    withTheme,
+    withTheme(),
     withLayout(),
     withClientProvider({
       createSpace: true,
@@ -66,7 +66,7 @@ const meta = {
         View.View,
         HasRelationship.HasRelationship,
         Organization.Organization,
-        Project.Project,
+        Pipeline.Pipeline,
         Person.Person,
       ],
     }),

@@ -5,7 +5,8 @@
 import { useAtomValue } from '@effect-atom/atom-react';
 import React from 'react';
 
-import { useAppGraph, useCapability } from '@dxos/app-framework/react';
+import { useCapability } from '@dxos/app-framework/ui';
+import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { Node, useActionRunner } from '@dxos/plugin-graph';
 import { useActions, useNode } from '@dxos/plugin-graph';
@@ -62,7 +63,7 @@ export const Toolbar = ({
   // TODO(wittjosiah): In order to use toolbar, need to update to actually use the graph action callbacks directly.
   return (
     <div className={mx('z-20 flex justify-center m-8', autoHideControls && groupHoverControlItemWithTransition)}>
-      <NaturalToolbar.Root classNames={['p-2 bg-modalSurface rounded-md shadow-md', classNames]}>
+      <NaturalToolbar.Root classNames={['p-2 bg-modal-surface rounded-md shadow-md', classNames]}>
         <ToggleButton
           active={media.audioEnabled}
           state={{
@@ -70,7 +71,7 @@ export const Toolbar = ({
               icon: 'ph--microphone--regular',
               label: t('mic off'),
               onClick: () => call.turnAudioOff(),
-              classNames: 'bg-callActive',
+              classNames: 'bg-call-active',
             },
             off: {
               icon: 'ph--microphone-slash--duotone',
@@ -97,7 +98,7 @@ export const Toolbar = ({
         />
 
         {(participants !== undefined && (
-          <div className='flex justify-center items-center gap-2 is-[5rem] text-xs text-subdued'>
+          <div className='flex justify-center items-center gap-2 w-[5rem] text-xs text-subdued'>
             <Icon icon='ph--users--regular' size={4} />
             <div>{participants}</div>
           </div>
@@ -182,7 +183,7 @@ const defaultButtonProps: Partial<IconButtonProps> = {
 const ToggleButton = ({ active, state }: ToolbarButtonProps) => (
   <IconButton
     {...defaultButtonProps}
-    classNames={[active ? (state.on.classNames ?? 'bg-callActive') : state.off.classNames]}
+    classNames={[active ? (state.on.classNames ?? 'bg-call-active') : state.off.classNames]}
     icon={active ? state.on.icon : state.off.icon}
     label={active ? state.on.label : state.off.label}
     onClick={active ? state.on.onClick : state.off.onClick}

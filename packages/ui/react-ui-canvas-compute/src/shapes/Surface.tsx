@@ -5,10 +5,11 @@
 import * as Schema from 'effect/Schema';
 import React from 'react';
 
-import { Surface } from '@dxos/app-framework/react';
+import { Surface } from '@dxos/app-framework/ui';
 import { DEFAULT_INPUT } from '@dxos/conductor';
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
 import { createAnchorMap } from '@dxos/react-ui-canvas-editor';
+import { Card } from '@dxos/react-ui-mosaic';
 
 import { useComputeNodeState } from '../hooks';
 
@@ -44,9 +45,10 @@ export const SurfaceComponent = ({ shape }: ShapeComponentProps<SurfaceShape>) =
     }
   };
 
+  // TODO(burdon): Subject property?
   return (
     <Box shape={shape} onAction={handleAction}>
-      {value !== null && <Surface role='card--extrinsic' data={{ value }} limit={1} />}
+      <Card.Root>{value !== null && <Surface.Surface role='card--content' data={{ value }} limit={1} />}</Card.Root>
     </Box>
   );
 };

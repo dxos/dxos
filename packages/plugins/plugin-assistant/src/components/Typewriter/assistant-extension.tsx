@@ -111,9 +111,7 @@ const assistantLinter = (runtime: Runtime.Runtime<LanguageModel.LanguageModel>) 
         if (match) {
           suggestions = JSON.parse(match[0]);
         }
-      } catch (e) {
-        // failed to parse
-      }
+      } catch {}
 
       const diagnostics: Diagnostic[] = [];
       for (const s of suggestions) {
@@ -137,8 +135,8 @@ const assistantLinter = (runtime: Runtime.Runtime<LanguageModel.LanguageModel>) 
         }
       }
       return diagnostics;
-    } catch (e) {
-      log.error('Proofreading failed', { error: e });
+    } catch (error) {
+      log.catch(error);
       return [];
     }
   });

@@ -9,7 +9,7 @@ import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { Surface } from '@dxos/app-framework/react';
+import { Surface } from '@dxos/app-framework/ui';
 import { DXN } from '@dxos/keys';
 import { useClient } from '@dxos/react-client';
 import {
@@ -92,7 +92,7 @@ const MarkdownEditorRoot = ({
         setPreviewBlocks((prev) => [...prev, block]);
       },
       removeBlockContainer: ({ link }) => {
-        setPreviewBlocks((prev) => prev.filter(({ link: prevLink }) => prevLink.ref !== link.ref));
+        setPreviewBlocks((prev) => prev.filter(({ link: prevLink }) => prevLink.dxn !== link.dxn));
       },
     }),
     [],
@@ -148,6 +148,8 @@ MarkdownEditorRoot.displayName = 'MarkdownEditor.Root';
 // MarkdownEditor.Main
 //
 
+const MARKDOWN_EDITOR_CONTENT_NAME = 'MarkdownEditor.Content';
+
 type MarkdownEditorContentProps = Omit<NaturalMarkdownEditorContentProps, 'id' | 'extensions' | 'toolbarState'>;
 
 const MarkdownEditorContent = (props: MarkdownEditorContentProps) => {
@@ -159,7 +161,7 @@ const MarkdownEditorContent = (props: MarkdownEditorContentProps) => {
     toolbarState,
     extensions,
     popoverMenu: { groupsRef, ...menuProps },
-  } = useMarkdownEditorContext(MarkdownEditorContent.displayName);
+  } = useMarkdownEditorContext(MARKDOWN_EDITOR_CONTENT_NAME);
 
   return (
     <EditorMenuProvider view={editorView} groups={groupsRef.current} {...menuProps}>
@@ -175,11 +177,13 @@ const MarkdownEditorContent = (props: MarkdownEditorContentProps) => {
   );
 };
 
-MarkdownEditorContent.displayName = 'MarkdownEditor.Content';
+MarkdownEditorContent.displayName = MARKDOWN_EDITOR_CONTENT_NAME;
 
 //
 // MarkdownEditor.Toolbar
 //
+
+const MARKDOWN_EDITOR_TOOLBAR_NAME = 'MarkdownEditor.Toolbar';
 
 type MarkdownEditorToolbarProps = Omit<
   NaturalMarkdownToolbarProps,
@@ -187,40 +191,42 @@ type MarkdownEditorToolbarProps = Omit<
 >;
 
 const MarkdownEditorToolbar = (props: MarkdownEditorToolbarProps) => {
-  const { toolbarState, ...rootProps } = useMarkdownEditorContext(MarkdownEditorToolbar.displayName);
+  const { toolbarState, ...rootProps } = useMarkdownEditorContext(MARKDOWN_EDITOR_TOOLBAR_NAME);
 
   return <NaturalMarkdownToolbar {...props} {...rootProps} state={toolbarState} />;
 };
 
-MarkdownEditorToolbar.displayName = 'MarkdownEditor.Toolbar';
+MarkdownEditorToolbar.displayName = MARKDOWN_EDITOR_TOOLBAR_NAME;
 
 //
 // MarkdownEditor.Blocks (embedded objects)
 //
 
+const MARKDOWN_EDITOR_BLOCKS_NAME = 'MarkdownEditor.Blocks';
+
 type MarkdownEditorBlocksProps = {};
 
 const MarkdownEditorBlocks = (_props: MarkdownEditorBlocksProps) => {
-  const { previewBlocks } = useMarkdownEditorContext(MarkdownEditorBlocks.displayName);
+  const { previewBlocks } = useMarkdownEditorContext(MARKDOWN_EDITOR_BLOCKS_NAME);
 
   return (
     <>
       {previewBlocks.map(({ link, el }) => (
-        <PreviewBlock key={link.ref} link={link} el={el} />
+        <PreviewBlock key={link.dxn} link={link} el={el} />
       ))}
     </>
   );
 };
 
-MarkdownEditorBlocks.displayName = 'MarkdownEditor.Blocks';
+MarkdownEditorBlocks.displayName = MARKDOWN_EDITOR_BLOCKS_NAME;
 
 const PreviewBlock = ({ el, link }: PreviewBlock) => {
   const client = useClient();
-  const dxn = DXN.parse(link.ref);
+  const dxn = DXN.parse(link.dxn);
   const subject = client.graph.makeRef(dxn).target;
   const data = useMemo(() => ({ subject }), [subject]);
 
-  return createPortal(<Surface role='card--transclusion' data={data} limit={1} />, el);
+  return createPortal(<Surface.Surface role='card--content' data={data} limit={1} />, el);
 };
 
 //

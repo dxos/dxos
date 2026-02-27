@@ -13,7 +13,7 @@ import { AttentionGlyph, type AttentionGlyphProps } from './AttentionGlyph';
 
 const DefaultStory = (props: AttentionGlyphProps) => {
   return (
-    <ul className='flex gap-2 mbe-2'>
+    <ul className='flex gap-2 mb-2'>
       <li>
         <AttentionGlyph presence='none' {...props} />
       </li>
@@ -31,7 +31,7 @@ const meta = {
   title: 'ui/react-ui-attention/AttentionGlyph',
   component: AttentionGlyph as any,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
@@ -76,7 +76,7 @@ export const Syncing: Story = {
     });
 
     return (
-      <div className='flex flex-col p-2 is-[200px]'>
+      <div className='flex flex-col p-2 w-[200px]'>
         <Button onClick={handleChangeAttended}>Change attended</Button>
         {Array.from(spaces.entries()).map(([space, sync]) => (
           <div key={space} className='flex items-center'>

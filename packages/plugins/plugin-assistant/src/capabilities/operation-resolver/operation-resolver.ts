@@ -4,9 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 import { AiContextBinder, AiConversation } from '@dxos/assistant';
-import { Agent } from '@dxos/assistant-toolkit';
+import { AgentFunctions, Chat } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { type Queue } from '@dxos/client/echo';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
@@ -18,17 +18,17 @@ import { ClientCapabilities } from '@dxos/plugin-client';
 import { Collection } from '@dxos/schema';
 import { type Message } from '@dxos/types';
 
+import { AssistantBlueprint } from '../../blueprints';
 import { type AiChatServices, updateName } from '../../processor';
-import { Assistant, AssistantCapabilities, AssistantOperation } from '../../types';
-import { AssistantBlueprint, createBlueprint } from '../blueprint-definition/blueprint-definition';
+import { AssistantCapabilities, AssistantOperation } from '../../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(Common.Capability.OperationResolver, [
+    return Capability.contributes(Capabilities.OperationResolver, [
       OperationResolver.make({
         operation: AssistantOperation.OnCreateSpace,
         handler: Effect.fnUntraced(function* ({ space, rootCollection }) {
-          const chatCollection = Collection.makeManaged({ key: Assistant.Chat.typename });
+          const chatCollection = Collection.makeManaged({ key: Chat.Chat.typename });
           const blueprintCollection = Collection.makeManaged({ key: Blueprint.Blueprint.typename });
           const promptCollection = Collection.makeManaged({ key: Type.getTypename(Prompt.Prompt) });
           Obj.change(rootCollection, (c) => {
@@ -36,7 +36,7 @@ export default Capability.makeModule(
           });
 
           // TODO(wittjosiah): Remove once function registry is avaiable.
-          space.db.add(serializeFunction(Agent.prompt));
+          space.db.add(serializeFunction(AgentFunctions.Prompt));
 
           // Create default chat.
           const { object: chat } = yield* Operation.invoke(AssistantOperation.CreateChat, { db: space.db });
@@ -46,12 +46,12 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: AssistantOperation.CreateChat,
         handler: Effect.fnUntraced(function* ({ db, name, addToSpace = true }) {
-          const registry = yield* Capability.get(Common.Capability.AtomRegistry);
+          const registry = yield* Capability.get(Capabilities.AtomRegistry);
           const client = yield* Capability.get(ClientCapabilities.Client);
           const space = client.spaces.get(db.spaceId);
           invariant(space, 'Space not found');
           const queue = space.queues.create();
-          const chat = Assistant.make({ name, queue: Ref.fromDXN(queue.dxn) });
+          const chat = Chat.make({ name, queue: db.makeRef<any>(queue.dxn) });
           if (addToSpace) {
             space.db.add(chat);
           }
@@ -59,9 +59,9 @@ export default Capability.makeModule(
           // TODO(wittjosiah): This should be a space-level setting.
           // TODO(burdon): Clone when activated. Copy-on-write for template.
           const blueprints = yield* Effect.promise(() => db.query(Filter.type(Blueprint.Blueprint)).run());
-          let defaultBlueprint = blueprints.find((blueprint) => blueprint.key === AssistantBlueprint.Key);
+          let defaultBlueprint = blueprints.find((blueprint) => blueprint.key === AssistantBlueprint.key);
           if (!defaultBlueprint) {
-            defaultBlueprint = db.add(createBlueprint());
+            defaultBlueprint = db.add(AssistantBlueprint.make());
           }
 
           const binder = new AiContextBinder({ queue, registry });
@@ -75,7 +75,7 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: AssistantOperation.UpdateChatName,
         handler: Effect.fnUntraced(function* ({ chat }) {
-          const registry = yield* Capability.get(Common.Capability.AtomRegistry);
+          const registry = yield* Capability.get(Capabilities.AtomRegistry);
           const db = Obj.getDatabase(chat);
           const queue = chat.queue.target as Queue<Message.Message>;
           if (!db || !queue) {
@@ -101,7 +101,7 @@ export default Capability.makeModule(
         handler: Effect.fnUntraced(function* ({ companionTo, chat }) {
           const companionToId = Obj.getDXN(companionTo).toString();
           const chatId = chat && Obj.getDXN(chat).toString();
-          yield* Common.Capability.updateAtomValue(AssistantCapabilities.State, (current) => ({
+          yield* Capabilities.updateAtomValue(AssistantCapabilities.State, (current) => ({
             ...current,
             currentChat: { ...current.currentChat, [companionToId]: chatId },
           }));

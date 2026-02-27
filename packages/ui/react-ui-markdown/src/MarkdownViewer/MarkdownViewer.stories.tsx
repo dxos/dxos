@@ -15,7 +15,7 @@ faker.seed(0);
 const meta = {
   title: 'ui/react-ui-markdown/MarkdownViewer',
   component: MarkdownViewer,
-  decorators: [withTheme, withLayout({ layout: 'column' })],
+  decorators: [withTheme(), withLayout({ layout: 'column' })],
 } satisfies Meta<typeof MarkdownViewer>;
 
 export default meta;
@@ -69,7 +69,7 @@ const content = trim`
 
 export const Default: Story = {
   args: {
-    classNames: 'p-4 border border-border rounded-md overflow-y-auto bg-baseSurface',
+    classNames: 'p-4 border border-border rounded-md overflow-y-auto bg-base-surface',
     content,
   },
 };

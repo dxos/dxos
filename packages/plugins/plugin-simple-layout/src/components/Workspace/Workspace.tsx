@@ -4,11 +4,12 @@
 
 import React, { useCallback, useEffect, useRef } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { useAppGraph, useOperationInvoker } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
+import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { type Node, useConnections } from '@dxos/plugin-graph';
-import { Avatar, Icon, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Card, Layout, Mosaic, type StackTileComponent } from '@dxos/react-ui-mosaic';
+import { Avatar, Icon, Layout, ScrollArea, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Card, Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchList, useSearchListItem, useSearchListResults } from '@dxos/react-ui-searchlist';
 import { mx } from '@dxos/ui-theme';
 
@@ -47,9 +48,11 @@ export const Workspace = ({ id }: WorkspaceProps) => {
         </Toolbar.Root>
         <SearchList.Content>
           <Mosaic.Container asChild>
-            <Mosaic.Viewport padding>
-              <Mosaic.Stack items={results} getId={(child) => child.id} Tile={WorkspaceChildTile} />
-            </Mosaic.Viewport>
+            <ScrollArea.Root orientation='vertical'>
+              <ScrollArea.Viewport classNames='p-2'>
+                <Mosaic.Stack items={results} getId={(child) => child.id} Tile={WorkspaceChildTile} />
+              </ScrollArea.Viewport>
+            </ScrollArea.Root>
           </Mosaic.Container>
         </SearchList.Content>
       </SearchList.Root>
@@ -57,7 +60,8 @@ export const Workspace = ({ id }: WorkspaceProps) => {
   );
 };
 
-const WorkspaceChildTile: StackTileComponent<Node.Node> = ({ data }) => {
+const WorkspaceChildTile: MosaicStackTileComponent<Node.Node> = (props) => {
+  const data = props.data;
   const { t } = useTranslation(meta.id);
   const { invokeSync } = useOperationInvoker();
   const ref = useRef<HTMLDivElement>(null);
@@ -67,7 +71,7 @@ const WorkspaceChildTile: StackTileComponent<Node.Node> = ({ data }) => {
   const name = toLocalizedString(data.properties.label, t);
 
   const handleSelect = useCallback(
-    () => invokeSync(Common.LayoutOperation.Open, { subject: [data.id] }),
+    () => invokeSync(LayoutOperation.Open, { subject: [data.id] }),
     [invokeSync, data.id],
   );
 
@@ -94,7 +98,7 @@ const WorkspaceChildTile: StackTileComponent<Node.Node> = ({ data }) => {
       fullWidth
       tabIndex={-1} // TODO(burdon): Use Mosaic.Focus.
       data-selected={isSelected}
-      classNames={mx('dx-focus-ring', isSelected && 'bg-hoverOverlay')}
+      classNames={mx('dx-focus-ring', isSelected && 'bg-hover-overlay')}
       onClick={handleSelect}
     >
       <Card.Toolbar density='coarse'>

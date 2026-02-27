@@ -2,39 +2,58 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
-import { type DrawerState, Main as NaturalMain } from '@dxos/react-ui';
+import { Splitter, type SplitterMode } from '@dxos/react-ui';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 
 import { useSimpleLayoutState } from '../../hooks';
 import { Dialog } from '../Dialog';
+import { MobileLayout } from '../MobileLayout';
 import { PopoverContent, PopoverRoot } from '../Popover';
 
 import { Drawer } from './Drawer';
 import { Main } from './Main';
 
+// TODO(burdon): Mobile/Desktop variance?
 export const SimpleLayout = () => {
-  const { state, updateState } = useSimpleLayoutState();
+  const { state } = useSimpleLayoutState();
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
+  const [splitterMode, setSplitterMode] = useState<SplitterMode>('upper');
 
-  const handleDrawerStateChange = useCallback(
-    (nextState: DrawerState) => {
-      // Sync all drawer state changes to state.
-      updateState((state) => ({ ...state, drawerState: nextState }));
-    },
-    [updateState],
-  );
+  const drawerRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (keyboardOpen) {
+      // Determine which panel has focus and expand that one.
+      const activeElement = document.activeElement;
+      const drawerHasFocus = drawerRef.current?.contains(activeElement);
+      setSplitterMode(drawerHasFocus ? 'lower' : 'upper');
+    } else {
+      setSplitterMode(state.drawerState === 'closed' ? 'upper' : state.drawerState === 'open' ? 'both' : 'lower');
+    }
+  }, [state.drawerState, keyboardOpen]);
 
   return (
-    <Mosaic.Root asChild>
-      <NaturalMain.Root drawerState={state.drawerState ?? 'closed'} onDrawerStateChange={handleDrawerStateChange}>
-        <PopoverRoot>
-          <Main />
-          <Drawer />
-          <Dialog />
-          <PopoverContent />
-        </PopoverRoot>
-      </NaturalMain.Root>
+    <Mosaic.Root classNames='contents'>
+      <MobileLayout.Root
+        classNames='bg-toolbar-surface'
+        onKeyboardOpenChange={(keyboardOpen: boolean) => setKeyboardOpen(keyboardOpen)}
+      >
+        <MobileLayout.Panel safe={{ top: true, bottom: splitterMode === 'upper' }}>
+          <PopoverRoot>
+            <Splitter.Root mode={splitterMode} ratio={0.55}>
+              <Splitter.Panel position='upper'>
+                <Main />
+              </Splitter.Panel>
+              <Splitter.Panel position='lower' ref={drawerRef}>
+                <Drawer />
+              </Splitter.Panel>
+            </Splitter.Root>
+            <Dialog />
+            <PopoverContent />
+          </PopoverRoot>
+        </MobileLayout.Panel>
+      </MobileLayout.Root>
     </Mosaic.Root>
   );
 };

@@ -16,7 +16,7 @@ faker.seed(1234);
 const meta = {
   title: 'ui/react-ui-components/TextCrawl',
   component: TextCrawl,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'centered',
   },
@@ -33,7 +33,7 @@ type Story = StoryObj<typeof TextCrawl>;
 
 export const Default: Story = {
   args: {
-    classNames: 'is-[20rem] pli-1',
+    classNames: 'w-[20rem] px-1',
     lines: createLines(),
     autoAdvance: true,
   },
@@ -41,7 +41,7 @@ export const Default: Story = {
 
 export const Cyclic: Story = {
   args: {
-    classNames: 'is-[20rem] pli-1',
+    classNames: 'w-[20rem] px-1',
     lines: createLines(),
     autoAdvance: true,
     cyclic: true,
@@ -52,7 +52,7 @@ export const Controlled: Story = {
   render: () => {
     const [lines, setLines] = useState<string[]>(createLines());
     return (
-      <div className='flex flex-col is-[20rem] gap-4'>
+      <div className='flex flex-col w-[20rem] gap-4'>
         <Toolbar.Root>
           <Toolbar.Button
             onClick={() =>
@@ -66,7 +66,7 @@ export const Controlled: Story = {
           <Toolbar.Button onClick={() => setLines(createLines())}>Generate</Toolbar.Button>
           <Toolbar.Button onClick={() => setLines([])}>Clear</Toolbar.Button>
         </Toolbar.Root>
-        <TextCrawl classNames='border-be border-separator' lines={lines} autoAdvance greedy />
+        <TextCrawl classNames='border-b border-separator' lines={lines} autoAdvance greedy />
       </div>
     );
   },

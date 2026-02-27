@@ -9,14 +9,22 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
-import { ActivationEvent, Capability, type CapabilityManager, Common, Plugin } from '@dxos/app-framework';
+import {
+  ActivationEvent,
+  ActivationEvents,
+  Capabilities,
+  Capability,
+  type CapabilityManager,
+  Plugin,
+} from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { AppActivationEvents, AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { AiContextBinder, ArtifactId, GenericToolkit } from '@dxos/assistant';
-import { Agent, DesignBlueprint, Document, PlanningBlueprint, Research, Tasks } from '@dxos/assistant-toolkit';
+import { AgentFunctions, DesignBlueprint, MarkdownBlueprint, PlanningBlueprint } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
 import { Obj, Ref } from '@dxos/echo';
-import { Example, Function, Trigger } from '@dxos/functions';
+import { ExampleFunctions, Function, Trigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { OperationResolver } from '@dxos/operation';
@@ -46,16 +54,12 @@ export const config = {
         storage: {
           persistent: true,
         },
-        enableLocalQueues: true,
       },
       services: SERVICES_CONFIG.REMOTE,
     },
   }),
   local: new Config({
     runtime: {
-      client: {
-        enableLocalQueues: true,
-      },
       services: SERVICES_CONFIG.LOCAL,
     },
   }),
@@ -190,26 +194,28 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
 }).pipe(
   Plugin.addModule({
     id: 'example.com/plugin/testing/module/testing',
-    activatesOn: Common.ActivationEvent.SetupArtifactDefinition,
+    activatesOn: AppActivationEvents.SetupArtifactDefinition,
     activate: () =>
       Effect.succeed([
-        Capability.contributes(Common.Capability.BlueprintDefinition, DesignBlueprint),
-        Capability.contributes(Common.Capability.BlueprintDefinition, PlanningBlueprint),
-        Capability.contributes(Common.Capability.Functions, [Agent.prompt]),
-        Capability.contributes(Common.Capability.Functions, [Document.read, Document.update]),
-        Capability.contributes(Common.Capability.Functions, [Tasks.read, Tasks.update]),
-        Capability.contributes(Common.Capability.Functions, [Research.create, Research.research]),
-        Capability.contributes(Common.Capability.Functions, [Example.reply]),
+        // TODO(burdon): Needs attention!!!
+        Capability.contributes(AppCapabilities.BlueprintDefinition, MarkdownBlueprint),
+        Capability.contributes(AppCapabilities.BlueprintDefinition, DesignBlueprint),
+        Capability.contributes(AppCapabilities.BlueprintDefinition, PlanningBlueprint),
+        Capability.contributes(AppCapabilities.Functions, MarkdownBlueprint.functions),
+        Capability.contributes(AppCapabilities.Functions, DesignBlueprint.functions),
+        Capability.contributes(AppCapabilities.Functions, PlanningBlueprint.functions),
+        Capability.contributes(AppCapabilities.Functions, Object.values(AgentFunctions)),
+        Capability.contributes(AppCapabilities.Functions, Object.values(ExampleFunctions)),
       ]),
   }),
   Plugin.addModule({
     id: 'example.com/plugin/testing/module/toolkit',
-    activatesOn: Common.ActivationEvent.Startup,
+    activatesOn: ActivationEvents.Startup,
     activate: Effect.fnUntraced(function* () {
       const capabilities = yield* Capability.Service;
       return [
         Capability.contributes(
-          Common.Capability.Toolkit,
+          AppCapabilities.Toolkit,
           GenericToolkit.make(TestingToolkit.Toolkit, TestingToolkit.createLayer(capabilities)),
         ),
       ];
@@ -217,14 +223,14 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
   }),
   Plugin.addModule({
     id: 'example.com/plugin/testing/module/setup',
-    activatesOn: ActivationEvent.allOf(Common.ActivationEvent.OperationInvokerReady, ClientEvents.SpacesReady),
+    activatesOn: ActivationEvent.allOf(ActivationEvents.OperationInvokerReady, ClientEvents.SpacesReady),
     activate: Effect.fnUntraced(function* () {
-      const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
+      const { invoke } = yield* Capability.get(Capabilities.OperationInvoker);
       const client = yield* Capability.get(ClientCapabilities.Client);
       const space = client.spaces.default;
 
       // Ensure workspace is set.
-      yield* invoke(Common.LayoutOperation.SwitchWorkspace, { subject: space.id });
+      yield* invoke(LayoutOperation.SwitchWorkspace, { subject: space.id });
 
       // Create initial chat.
       yield* invoke(AssistantOperation.CreateChat, { db: space.db });
@@ -232,10 +238,10 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
   }),
   Plugin.addModule(({ onChatCreated }) => ({
     id: 'example.com/plugin/testing/module/operation-resolver',
-    activatesOn: Common.ActivationEvent.SetupOperationResolver,
+    activatesOn: ActivationEvents.SetupOperationResolver,
     activate: Effect.fnUntraced(function* () {
       const client = yield* Capability.get(ClientCapabilities.Client);
-      return Capability.contributes(Common.Capability.OperationResolver, [
+      return Capability.contributes(Capabilities.OperationResolver, [
         OperationResolver.make({
           operation: DeckOperation.ChangeCompanion,
           handler: () => Effect.void,
@@ -245,7 +251,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
           position: 'hoist',
           handler: ({ db, name }) =>
             Effect.gen(function* () {
-              const registry = yield* Capability.get(Common.Capability.AtomRegistry);
+              const registry = yield* Capability.get(Capabilities.AtomRegistry);
               const space = client.spaces.get(db.spaceId);
               invariant(space, 'Space not found');
 

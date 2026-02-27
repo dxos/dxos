@@ -7,7 +7,7 @@ import React, { useMemo } from 'react';
 
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
 import { translations } from '../../translations';
@@ -34,7 +34,8 @@ const meta = {
   title: 'plugins/plugin-outliner/Outline',
   component: OutlineStory,
   decorators: [
-    withTheme,
+    withTheme(),
+    withLayout({ layout: 'fullscreen' }),
     // TODO(burdon): Can we create a storybook for the Outliner without the database?
     withClientProvider({
       createIdentity: true,

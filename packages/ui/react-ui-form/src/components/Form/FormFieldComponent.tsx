@@ -15,11 +15,9 @@ import React, {
 
 import { type Format } from '@dxos/echo/internal';
 import { Icon, Input, Tooltip } from '@dxos/react-ui';
-import { errorText, mx } from '@dxos/ui-theme';
+import { inputTextLabel } from '@dxos/ui-theme';
 
 import { type FormFieldStatus } from '../../hooks';
-
-const labelSpacing = 'mbs-inputSpacingBlock mbe-labelSpacingBlock';
 
 /**
  * Dynamic props passed to input components.
@@ -79,14 +77,12 @@ export type FormFieldLabelProps = {
 
 export const FormFieldLabel = ({ label, error, readonly, asChild }: FormFieldLabelProps) => {
   const Label = readonly || asChild ? 'span' : Input.Label;
-  const labelProps = readonly || asChild ? { className: 'text-description text-sm' } : { classNames: '!mlb-0 text-sm' };
-
   return (
-    <div role='none' className={mx('flex justify-between items-center', labelSpacing)}>
-      <Label {...labelProps}>{label}</Label>
+    <div role='none' className='flex items-center justify-between'>
+      <Label className={inputTextLabel}>{label}</Label>
       {error && (
         <Tooltip.Trigger asChild content={error} side='bottom'>
-          <Icon icon='ph--warning--regular' size={4} classNames={errorText} />
+          <Icon icon='ph--warning--regular' size={4} classNames='text-error-text' />
         </Tooltip.Trigger>
       )}
     </div>
@@ -118,15 +114,17 @@ export const FormFieldWrapper = <T,>(props: FormFieldWrapperProps<T>) => {
   const str = String(value ?? '');
 
   return (
-    <Input.Root validationValence={status}>
-      {layout !== 'inline' && <FormFieldLabel error={error} readonly={readonly} label={label} />}
-      {layout === 'static' ? <p>{str}</p> : children ? children({ value }) : null}
-      {layout === 'full' && (
-        <Input.DescriptionAndValidation>
-          <Input.Validation>{error}</Input.Validation>
-        </Input.DescriptionAndValidation>
-      )}
-    </Input.Root>
+    <div role='none' className='contents'>
+      <Input.Root validationValence={status}>
+        {layout !== 'inline' && <FormFieldLabel error={error} readonly={readonly} label={label} />}
+        {layout === 'static' ? <p>{str}</p> : children ? children({ value }) : null}
+        {layout === 'full' && (
+          <Input.DescriptionAndValidation>
+            <Input.Validation>{error}</Input.Validation>
+          </Input.DescriptionAndValidation>
+        )}
+      </Input.Root>
+    </div>
   );
 };
 
@@ -158,8 +156,8 @@ export class FormFieldErrorBoundary extends Component<FormFieldErrorBoundaryProp
   override render() {
     if (this.state.error) {
       return (
-        <div className='flex gap-2 border border-roseFill font-mono text-sm'>
-          <span className='bg-roseFill text-surfaceText pli-1 font-thin'>ERROR</span>
+        <div className='flex gap-2 border border-rose-fill font-mono text-sm'>
+          <span className='bg-rose-fill text-surface-text px-1 font-thin'>ERROR</span>
           {String(this.props.path?.join('.'))}
         </div>
       );

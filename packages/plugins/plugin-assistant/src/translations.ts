@@ -2,13 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Chat, Project } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from './meta';
-import { Assistant } from './types';
 
 // TODO(burdon): Standardize translation names.
 export const translations = [
@@ -46,12 +46,22 @@ export const translations = [
         'delete object label': 'Delete sequence',
         'object deleted label': 'Sequence deleted',
       },
-      [Assistant.Chat.typename]: {
+      [Chat.Chat.typename]: {
         'typename label': 'AI Chat',
         'object name placeholder': 'New AI Chat',
         'rename object label': 'Rename AI Chat',
         'delete object label': 'Delete AI Chat',
         'object deleted label': 'AI Chat deleted',
+      },
+      [Project.Project.typename]: {
+        'typename label': 'Project',
+        'typename label_zero': 'Projects',
+        'typename label_one': 'Project',
+        'typename label_other': 'Projects',
+        'object name placeholder': 'New project',
+        'rename object label': 'Rename project',
+        'delete object label': 'Delete project',
+        'object deleted label': 'Project deleted',
       },
       // TODO(burdon): Reconcile with react-ui-chat.
       [meta.id]: {
@@ -83,6 +93,7 @@ export const translations = [
 
         'assistant dialog title': 'Assistant',
         'open assistant label': 'Open assistant',
+        'reset blueprints label': 'Reset blueprints',
 
         'no tools': 'No tools are configured',
         'no results': 'No results',
@@ -95,7 +106,7 @@ export const translations = [
         'chat update name label': 'Update AI Chat name',
 
         'toolkit label': 'Toolkit',
-        'summary label': 'Summary',
+        'stats label': 'Stats',
 
         'search placeholder': 'Search...',
         'prompt placeholder': 'Enter question or command...',
@@ -113,6 +124,16 @@ export const translations = [
         'settings llm provider label': 'LLM provider',
         'settings edge llm model label': 'Remote language model',
         'settings ollama llm model label': 'Ollama language model',
+
+        // Trigger status
+        'trigger status disabled label': 'Triggers disabled',
+        'trigger status idle label': 'Triggers idle',
+        'trigger status running label': 'Trigger running',
+        'trigger status error label': 'Trigger error',
+        'trigger runtime label': 'Trigger Runtime',
+        'trigger runtime description': 'Enable automatic trigger execution',
+        'trigger last invocation label': 'Last run',
+        'trigger duration label': 'Duration',
       },
     },
   },

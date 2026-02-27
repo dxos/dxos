@@ -9,8 +9,8 @@ import { createDocAccessor } from '@dxos/echo-db';
 import { QuerySandbox } from '@dxos/echo-query';
 import { createObject } from '@dxos/react-client/echo';
 import { Toolbar, useAsyncEffect } from '@dxos/react-ui';
+import { Layout } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { Layout } from '@dxos/react-ui-mosaic';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { createDataExtensions } from '@dxos/ui-editor';
 import { trim } from '@dxos/util';
@@ -68,9 +68,9 @@ const DefaultStory = (props: QueryEditorProps) => {
       <Toolbar.Root>
         <Toolbar.Button onClick={handleRun}>Run</Toolbar.Button>
       </Toolbar.Root>
-      <div role='none' className='grid grid-rows-[1fr_min-content] bs-full overflow-hidden text-sm'>
+      <div role='none' className='grid grid-rows-[1fr_min-content] h-full overflow-hidden text-sm'>
         <QueryEditor {...props} initialValue={object.content} extensions={extensions} />
-        <Json data={result} classNames='shrink-0 p-2 border-bs border-subduedSeparator' />
+        <Json data={result} classNames='shrink-0 p-2 border-y border-subdued-separator' />
       </div>
     </Layout.Main>
   );
@@ -81,10 +81,10 @@ const meta = {
   component: QueryEditor,
   render: DefaultStory,
   decorators: [
-    withTheme,
+    withTheme(),
     withLayout({
       layout: 'column',
-      classNames: 'is-proseMaxWidth',
+      classNames: 'w-prose-max-width',
     }),
   ],
 } satisfies Meta<typeof DefaultStory>;

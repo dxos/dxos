@@ -4,6 +4,7 @@ tags:
   - e2e
   - ts-build
   - ts-test
+  - ts-test-storybook
   - pack
   - storybook
 tasks:
@@ -13,6 +14,6 @@ tasks:
       - '--entryPoint=src/types/index.ts'
       - '--platform=browser'
       - '--platform=node'
-  test:
+  e2e:
     inputs:
-      - .storybook/*
+      - /tools/storybook-react/.storybook/main.ts

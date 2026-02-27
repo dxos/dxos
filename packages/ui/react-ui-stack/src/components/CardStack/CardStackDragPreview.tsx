@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren } from 'react';
 
-import { IconButton, useTranslation } from '@dxos/react-ui';
+import { IconButton, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
@@ -13,7 +13,7 @@ import { type StackProps } from '../Stack';
 const CardStackDragPreviewRoot = ({ children }: PropsWithChildren<{}>) => {
   return (
     <div className='p-2'>
-      <div className='rounded-md max-bs-[calc(100dvh-1rem)] overflow-hidden bg-baseSurface border border-separator ring-focusLine ring-neutralFocusIndicator flex flex-col'>
+      <div className='rounded-md max-h-[calc(100dvh-1rem)] overflow-hidden bg-base-surface border border-separator ring-focus-line ring-neutral-focus-indicator flex flex-col'>
         {children}
       </div>
     </div>
@@ -29,7 +29,7 @@ const CardStackDragPreviewHeading = ({ children }: PropsWithChildren<{}>) => {
         icon='ph--dots-six-vertical--regular'
         variant='ghost'
         label={t('column drag handle label')}
-        classNames='pli-2'
+        classNames='px-2'
       />
       {children}
     </div>
@@ -41,18 +41,21 @@ const CardStackDragPreviewContent = ({
   itemsCount = 0,
 }: PropsWithChildren<Pick<StackProps, 'itemsCount'>>) => {
   return (
-    <div
-      className={mx('overflow-y-auto flex-1 pli-2 flex flex-col gap-2', 'plb-1', itemsCount > 0 ? 'plb-2' : 'plb-1')}
-    >
-      {children}
-    </div>
+    <ScrollArea.Root orientation='vertical'>
+      <ScrollArea.Viewport classNames={mx('px-2 py-1 gap-2', itemsCount > 0 ? 'py-2' : 'py-1')}>
+        {children}
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
   );
 };
 
 const CardStackDragPreviewFooter = ({ children }: PropsWithChildren<{}>) => {
-  return <div className='p-2 border-bs border-separator'>{children}</div>;
+  return <div className='p-2 border-t border-separator'>{children}</div>;
 };
 
+/**
+ * @deprecated
+ */
 export const CardStackDragPreview = {
   Root: CardStackDragPreviewRoot,
   Heading: CardStackDragPreviewHeading,

@@ -10,7 +10,7 @@ import { QueryBuilder } from '@dxos/echo-query';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
-import { Employer, Organization, Person, Project } from '@dxos/types';
+import { Employer, Organization, Person, Pipeline } from '@dxos/types';
 
 import { translations } from '../../translations';
 
@@ -43,7 +43,7 @@ const meta = {
       <div role='none' className='flex flex-col gap-2'>
         <QueryEditor
           {...args}
-          classNames='p-2 border border-subduedSeparator rounded-sm'
+          classNames='p-2 border border-subdued-separator rounded-xs'
           db={space?.db}
           onChange={handleChange}
         />
@@ -53,10 +53,10 @@ const meta = {
     );
   },
   decorators: [
-    withTheme,
+    withTheme(),
     withLayout({ layout: 'column', classNames: 'p-2', scroll: true }),
     withClientProvider({
-      types: [Organization.Organization, Person.Person, Project.Project, Employer.Employer],
+      types: [Organization.Organization, Person.Person, Pipeline.Pipeline, Employer.Employer],
       createIdentity: true,
     }),
   ],

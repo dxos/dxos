@@ -8,7 +8,7 @@ import React, { useCallback, useState } from 'react';
 
 import { faker } from '@dxos/random';
 import { IconButton } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Card, CardDragPreview } from '@dxos/react-ui-mosaic';
 
 import { StackItem } from '../StackItem';
@@ -93,7 +93,7 @@ const CardStackStory = () => {
   }, []);
 
   return (
-    <CardStack.Root classNames='is-96'>
+    <CardStack.Root classNames='w-96'>
       <CardStack.Content footer>
         <CardStack.Stack id='story column' onRearrange={handleRearrange} itemsCount={column.length}>
           {column.map((card, cardIndex, cardsArray) => {
@@ -148,7 +148,7 @@ const CardStackStory = () => {
         </CardStack.Stack>
 
         <CardStack.Footer>
-          <IconButton icon='ph--plus--regular' label='Add card' onClick={handleAddCard} classNames='is-full' />
+          <IconButton icon='ph--plus--regular' label='Add card' onClick={handleAddCard} classNames='w-full' />
         </CardStack.Footer>
 
         <CardStack.Heading>{faker.company.name()}</CardStack.Heading>
@@ -160,7 +160,7 @@ const CardStackStory = () => {
 const meta = {
   title: 'ui/react-ui-stack/CardStack',
   component: CardStackStory,
-  decorators: [withTheme],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
   },

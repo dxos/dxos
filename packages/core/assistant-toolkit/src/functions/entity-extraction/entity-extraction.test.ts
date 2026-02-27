@@ -4,50 +4,31 @@
 
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
 
-import { AiService } from '@dxos/ai';
-import { MemoizedAiService, TestAiService } from '@dxos/ai/testing';
-import { makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
+import { MemoizedAiService } from '@dxos/ai/testing';
+import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { Blueprint } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { CredentialsService, FunctionInvocationService, TracingService } from '@dxos/functions';
-import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
+import { FunctionInvocationService } from '@dxos/functions';
 import { ObjectId } from '@dxos/keys';
 import { Message, Organization, Person } from '@dxos/types';
 
-import { testToolkit } from '../../blueprints/testing';
-import { ResearchGraph } from '../research';
+import { ResearchGraph } from '../../blueprints';
 
 import { default as entityExtraction } from './entity-extraction';
 
 ObjectId.dangerouslyDisableRandomness();
 
-const TestLayer = Layer.mergeAll(
-  AiService.model('@anthropic/claude-opus-4-0'),
-  makeToolResolverFromFunctions([], testToolkit),
-  makeToolExecutionServiceFromFunctions(testToolkit, testToolkit.toLayer({}) as any),
-).pipe(
-  Layer.provideMerge(FunctionInvocationServiceLayerTest({ functions: [entityExtraction] })),
-  Layer.provideMerge(
-    Layer.mergeAll(
-      TestAiService(),
-      TestDatabaseLayer({
-        spaceKey: 'fixed',
-        indexing: { vector: true },
-        types: [Blueprint.Blueprint, Message.Message, Person.Person, Organization.Organization, ResearchGraph],
-      }),
-      CredentialsService.configuredLayer([]),
-      TracingService.layerNoop,
-    ),
-  ),
-);
+const TestLayer = AssistantTestLayer({
+  functions: [entityExtraction],
+  types: [Blueprint.Blueprint, Message.Message, Person.Person, Organization.Organization, ResearchGraph.ResearchGraph],
+});
 
 describe('Entity extraction', () => {
   it.effect(
-    'call a function to generate a research report',
+    'calls a function to generate a research report',
     Effect.fnUntraced(
       function* (_) {
         const email = yield* Database.add(

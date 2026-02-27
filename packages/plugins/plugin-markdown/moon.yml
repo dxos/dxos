@@ -3,8 +3,10 @@ language: typescript
 tags:
   - ts-build
   - ts-test
+  - ts-test-storybook
   - pack
   - storybook
+  - memoized-llm
 tasks:
   compile:
     args:
@@ -12,6 +14,3 @@ tasks:
       - '--entryPoint=src/blueprints/index.ts'
       - '--entryPoint=src/cli/index.ts'
       - '--entryPoint=src/types/index.ts'
-  test:
-    inputs:
-      - .storybook/*

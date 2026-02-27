@@ -11,7 +11,7 @@ import { TextBox, type TextBoxProps } from './TextBox';
 
 const DefaultStory = (props: TextBoxProps) => {
   return (
-    <div className='flex is-[300px] rounded-sm border border-primary-500'>
+    <div className='flex w-[300px] rounded-xs border border-primary-500'>
       <TextBox {...props} onEnter={console.log} />
     </div>
   );
@@ -21,7 +21,7 @@ const meta = {
   title: 'ui/react-ui-canvas-editor/TextBox',
   component: TextBox,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'centered',
   },

@@ -5,7 +5,7 @@
 import { expect, test } from '@playwright/test';
 
 import { AppManager } from './app-manager';
-import { INITIAL_CREATE_ACTION_COUNT, INITIAL_OBJECT_COUNT } from './constants';
+import { INITIAL_OBJECT_COUNT } from './constants';
 
 test.describe('Collection tests', () => {
   let host: AppManager;
@@ -21,7 +21,7 @@ test.describe('Collection tests', () => {
 
   test('create collection', async () => {
     await host.createSpace();
-    await host.createObject({ type: 'Collection', nth: 0 });
+    await host.createObject({ type: 'Collection' });
     await expect(host.getObject(INITIAL_OBJECT_COUNT)).toContainText('New collection');
   });
 
@@ -30,8 +30,8 @@ test.describe('Collection tests', () => {
     test.skip(browserName !== 'chromium');
 
     await host.createSpace();
-    await host.createObject({ type: 'Collection', nth: 0 });
-    await host.createObject({ type: 'Collection', nth: 0 });
+    await host.createObject({ type: 'Collection' });
+    await host.createObject({ type: 'Collection' });
     await host.renameObject('Collection 1', INITIAL_OBJECT_COUNT);
     await host.renameObject('Collection 2', INITIAL_OBJECT_COUNT + 1);
 
@@ -48,8 +48,8 @@ test.describe('Collection tests', () => {
     test.skip(browserName !== 'chromium');
 
     await host.createSpace();
-    await host.createObject({ type: 'Collection', nth: 0 });
-    await host.createObject({ type: 'Collection', nth: 0 });
+    await host.createObject({ type: 'Collection' });
+    await host.createObject({ type: 'Collection' });
     await host.renameObject('Collection 1', INITIAL_OBJECT_COUNT);
     await host.renameObject('Collection 2', INITIAL_OBJECT_COUNT + 1);
 
@@ -62,10 +62,10 @@ test.describe('Collection tests', () => {
 
   test('delete a collection', async () => {
     await host.createSpace();
-    await host.createObject({ type: 'Collection', nth: 0 });
+    await host.createObject({ type: 'Collection' });
     await host.toggleCollectionCollapsed(INITIAL_OBJECT_COUNT);
     // Create an item inside the collection.
-    await host.createObject({ type: 'Collection', nth: INITIAL_CREATE_ACTION_COUNT + 1 });
+    await host.createObject({ type: 'Collection', nth: INITIAL_OBJECT_COUNT });
     await expect(host.getObjectLinks()).toHaveCount(INITIAL_OBJECT_COUNT + 2);
 
     // Delete the containing collection.
@@ -75,13 +75,13 @@ test.describe('Collection tests', () => {
 
   test('deletion undo restores collection', async () => {
     await host.createSpace();
-    await host.createObject({ type: 'Collection', nth: 0 });
+    await host.createObject({ type: 'Collection' });
     await host.toggleCollectionCollapsed(INITIAL_OBJECT_COUNT);
     // Create a collection inside the collection.
-    await host.createObject({ type: 'Collection', nth: INITIAL_CREATE_ACTION_COUNT + 1 });
+    await host.createObject({ type: 'Collection', nth: INITIAL_OBJECT_COUNT });
     await host.toggleCollectionCollapsed(INITIAL_OBJECT_COUNT + 1);
     // Create an item inside the contained collection.
-    await host.createObject({ type: 'Collection', nth: INITIAL_CREATE_ACTION_COUNT + 2 });
+    await host.createObject({ type: 'Collection', nth: INITIAL_OBJECT_COUNT + 1 });
     await expect(host.getObjectLinks()).toHaveCount(INITIAL_OBJECT_COUNT + 3);
 
     // Delete the containing collection.

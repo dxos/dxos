@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 import React, { useEffect, useState } from 'react';
 
 import { GptInput, GptOutput } from '@dxos/conductor';
+import { ScrollArea } from '@dxos/react-ui';
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
 
 import { useComputeNodeState } from '../hooks';
@@ -74,7 +75,11 @@ export const GptComponent = ({ shape }: ShapeComponentProps<GptShape>) => {
   return (
     <FunctionBody
       shape={shape}
-      content={<div className='pli-2 plb-1 overflow-y-auto'>{text}</div>}
+      content={
+        <ScrollArea.Root orientation='vertical' thin>
+          <ScrollArea.Viewport>{text}</ScrollArea.Viewport>
+        </ScrollArea.Root>
+      }
       status={`${tokens} tokens`}
       inputSchema={meta.input}
       outputSchema={meta.output}

@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { OperationPlugin } from '@dxos/app-framework';
+import { OperationPlugin, RuntimePlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Query, Relation } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
@@ -64,13 +64,14 @@ const meta = {
   title: 'plugins/plugin-thread/Comments',
   render: render(DefaultStory),
   decorators: [
-    withTheme,
-    withLayout({ layout: 'column', scroll: true }),
+    withTheme(),
+    withLayout({ layout: 'column' }),
     // TODO(wittjosiah): This shouldn't depend on app framework (use withClientProvider instead).
     //  Currently this is required due to useOnEditAnalytics.
     withPluginManager({
       plugins: [
         OperationPlugin(),
+        RuntimePlugin(),
         ClientPlugin({
           types: [Message.Message, Thread.Thread, AnchoredTo.AnchoredTo],
           onClientInitialized: ({ client }) =>

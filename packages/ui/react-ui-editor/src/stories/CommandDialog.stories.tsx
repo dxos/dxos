@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type KeyboardEvent, useState } from 'react';
 
 import { type Button, IconButton, Input } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { editorWidth, join } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
@@ -36,10 +36,10 @@ const CommandDialog = ({ onAction }: { onAction: (action?: any) => void }) => {
   };
 
   return (
-    <div className='flex is-full justify-center'>
+    <div className='flex w-full justify-center'>
       <div
         className={mx(
-          'flex is-full p-2 gap-2 items-center bg-modalSurface border border-separator rounded-md',
+          'flex w-full p-2 gap-2 items-center bg-modal-surface border border-separator rounded-md',
           editorWidth,
         )}
       >
@@ -57,7 +57,7 @@ const CommandDialog = ({ onAction }: { onAction: (action?: any) => void }) => {
           label='Cancel'
           iconOnly
           variant='ghost'
-          classNames='pli-0'
+          classNames='px-0'
           onClick={() => onAction({ type: 'cancel' })}
         />
       </div>
@@ -68,7 +68,7 @@ const CommandDialog = ({ onAction }: { onAction: (action?: any) => void }) => {
 const meta = {
   title: 'ui/react-ui-editor/CommandDialog',
   render: () => <EditorStory text={join('# Command', '', '')} extensions={[]} />,
-  decorators: [withTheme],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
   },

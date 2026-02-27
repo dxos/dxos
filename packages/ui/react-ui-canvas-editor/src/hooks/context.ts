@@ -9,11 +9,11 @@ import { type Dimension } from '@dxos/react-ui-canvas';
 
 import { type ActionHandler } from '../actions';
 import { type ShapeLayout, type ShapeRegistry } from '../components';
-import { type CanvasGraphModel, type Connection, type Shape } from '../types';
+import { type CanvasBoard, type CanvasGraphModel } from '../types';
 
 import { type DragMonitor } from './useDragMonitor';
 
-export type EditingState<S extends Shape> = {
+export type EditingState<S extends CanvasBoard.Shape> = {
   shape: S;
 };
 
@@ -27,13 +27,13 @@ export type EditorOptions = {
 /**
  * Model callback.
  */
-export interface GraphMonitor<S extends Shape = Shape> {
+export interface GraphMonitor<S extends CanvasBoard.Shape = CanvasBoard.Shape> {
   onCreate: (props: { graph: CanvasGraphModel<S>; node: S }) => void;
-  onLink: (props: { graph: CanvasGraphModel<S>; edge: Connection }) => void;
+  onLink: (props: { graph: CanvasGraphModel<S>; edge: CanvasBoard.Connection }) => void;
   onDelete: (props: { graph: CanvasGraphModel<S>; subgraph: CanvasGraphModel<S> }) => void;
 }
 
-export type EditorContextType<S extends Shape = Shape> = {
+export type EditorContextType<S extends CanvasBoard.Shape = CanvasBoard.Shape> = {
   id: string;
   options: EditorOptions;
   registry: ShapeRegistry;

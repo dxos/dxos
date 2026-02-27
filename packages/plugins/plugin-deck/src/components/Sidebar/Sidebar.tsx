@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { Surface } from '@dxos/app-framework/react';
+import { Surface } from '@dxos/app-framework/ui';
 import { type Label, Main } from '@dxos/react-ui';
 
 import { useBreakpoints, useDeckState, useHoistStatusbar } from '../../hooks';
@@ -32,11 +32,11 @@ export const Sidebar = () => {
       label={label}
       classNames={[
         'grid',
-        topbar && 'block-start-[calc(env(safe-area-inset-top)+var(--rail-size))]',
-        hoistStatusbar && 'block-end-[--statusbar-size]',
+        topbar && 'top-[calc(env(safe-area-inset-top)+var(--rail-size))]',
+        hoistStatusbar && 'bottom-(--statusbar-size)',
       ]}
     >
-      <Surface role='navigation' data={navigationData} limit={1} />
+      <Surface.Surface role='navigation' data={navigationData} limit={1} />
     </Main.NavigationSidebar>
   );
 };

@@ -8,7 +8,7 @@ import React, { type JSX, useRef, useState } from 'react';
 
 import { VoidInput, VoidOutput } from '@dxos/conductor';
 import { useCanvasContext } from '@dxos/react-ui-canvas';
-import { type Polygon, type Shape } from '@dxos/react-ui-canvas-editor';
+import { type CanvasBoard, type Polygon } from '@dxos/react-ui-canvas-editor';
 import { createAnchors, getParentShapeElement, rowHeight } from '@dxos/react-ui-canvas-editor';
 
 import { Box, type BoxProps, footerHeight, headerHeight } from '../common';
@@ -18,7 +18,7 @@ const bodyPadding = 8;
 const expandedHeight = 200;
 
 export type FunctionBodyProps = {
-  shape: Shape;
+  shape: CanvasBoard.Shape;
   name?: string;
   content?: JSX.Element;
   inputSchema?: Schema.Schema.Any;
@@ -82,7 +82,7 @@ export const FunctionBody = ({
         {(inputs?.length ?? 0) > 0 && (
           <div className='flex flex-col'>
             {inputs?.map(({ name }) => (
-              <div key={name} className='pli-2 truncate text-sm font-mono items-center' style={{ height: rowHeight }}>
+              <div key={name} className='px-2 truncate text-sm font-mono items-center' style={{ height: rowHeight }}>
                 {name}
               </div>
             ))}
@@ -93,7 +93,7 @@ export const FunctionBody = ({
             {outputs?.map(({ name }) => (
               <div
                 key={name}
-                className='pli-2 truncate text-sm font-mono items-center text-right'
+                className='px-2 truncate text-sm font-mono items-center text-right'
                 style={{ height: rowHeight }}
               >
                 {name}

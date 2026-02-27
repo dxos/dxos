@@ -96,7 +96,7 @@ const DefaultStory = () => {
   );
 
   return (
-    <div className='is-full bs-full grid grid-cols-2 divide-x divide-separator'>
+    <div className='w-full h-full grid grid-cols-2 divide-x divide-separator'>
       <TableComponent.Root>
         <TableComponent.Main
           model={orgModel}
@@ -125,7 +125,7 @@ const meta = {
   title: 'ui/react-ui-table/Relations',
   render: DefaultStory,
   decorators: [
-    withTheme,
+    withTheme(),
     withRegistry,
     // TODO(thure): Shouldn't `layout: 'fullscreen'` below make this unnecessary?
     withLayout({ classNames: 'fixed inset-0' }),
@@ -195,8 +195,9 @@ export const Default: Story = {
     const saveButton = await body.findByTestId('save-button');
     await userEvent.click(saveButton);
 
-    // Verify the relation was set (cell should now contain the org name)
-    await expect(targetCell).toHaveTextContent(orgName.substring(0, 4));
+    // Verify the relation was set (cell should now contain the org name).
+    const updatedCell = within(secondGrid).getByTestId('grid.4.0');
+    await expect(updatedCell).toHaveTextContent(orgName.substring(0, 4));
 
     // Test object creation (new relations) - equivalent to "new relations work as expected" test
     // Find a different cell to test object creation (second row, relations column)
@@ -231,7 +232,8 @@ export const Default: Story = {
     const saveObjectButton = await within(createReferencedObjectForm).findByTestId('save-button');
     await userEvent.click(saveObjectButton);
 
-    // Verify the new object was created and relation was set
-    await expect(newTargetCell).toHaveTextContent(newOrgName);
+    // Verify the new object was created and relation was set.
+    const updatedNewCell = within(secondGrid).getByTestId('grid.4.1');
+    await expect(updatedNewCell).toHaveTextContent(newOrgName);
   },
 } as any;

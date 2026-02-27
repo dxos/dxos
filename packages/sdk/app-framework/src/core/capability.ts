@@ -220,7 +220,7 @@ export const getModuleTag = (capability: unknown): string | undefined => {
  * // Module with additional options (context accessed via layer)
  * export default Capability.makeModule(
  *   Effect.fnUntraced(function* ({ observability }: { observability?: boolean }) {
- *     const invoker = yield* Capability.get(Common.Capability.OperationInvoker);
+ *     const invoker = yield* Capability.get(Capabilities.OperationInvoker);
  *     return contributes(Capabilities.IntentResolver, ...);
  *   })
  * );

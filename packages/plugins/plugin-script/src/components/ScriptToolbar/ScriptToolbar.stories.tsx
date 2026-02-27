@@ -51,8 +51,8 @@ const meta = {
   component: ScriptToolbarStory,
   // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
   decorators: [
-    withTheme,
-    withLayout({ classNames: 'is-proseMaxWidth' }),
+    withTheme(),
+    withLayout({ classNames: 'w-prose-max-width' }),
     withPluginManager({
       plugins: [OperationPlugin(), ClientPlugin({})],
     }),

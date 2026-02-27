@@ -45,7 +45,7 @@ const DefaultStory = ({ items, ...props }: StoryProps) => {
   }, [running]);
 
   return (
-    <div role='none' className='flex flex-col is-[400px] gap-8 overflow-hidden'>
+    <div role='none' className='flex flex-col w-[400px] gap-8 overflow-hidden'>
       <Toolbar.Root>
         <Toolbar.Button onClick={() => setRunning(true)}>Start</Toolbar.Button>
         <Toolbar.Button onClick={() => setRunning(false)}>Stop</Toolbar.Button>
@@ -64,7 +64,7 @@ const DefaultStory = ({ items, ...props }: StoryProps) => {
           onSelect={(node) => setIndex((index) => (index === node.index ? undefined : node.index))}
           {...props}
         />
-        <TextCrawl lines={lines} index={index} autoAdvance classNames='pis-4 text-sm text-subdued' />
+        <TextCrawl lines={lines} index={index} autoAdvance classNames='ps-4 text-sm text-subdued' />
       </div>
     </div>
   );
@@ -73,7 +73,7 @@ const DefaultStory = ({ items, ...props }: StoryProps) => {
 const meta = {
   title: 'ui/react-ui-components/ProgressBar',
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'centered',
   },

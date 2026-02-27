@@ -4,7 +4,7 @@
 
 import { useCallback } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Obj } from '@dxos/echo';
 import { ObservabilityOperation } from '@dxos/plugin-observability/types';
 import { useOnTransition } from '@dxos/react-ui';
@@ -21,6 +21,7 @@ export const useOnEditAnalytics = (
     if (!message || !textBlock) {
       return;
     }
+
     const db = Obj.getDatabase(message);
     if (!db) {
       return;

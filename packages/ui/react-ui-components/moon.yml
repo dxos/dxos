@@ -4,11 +4,9 @@ tags:
   - ts-build
   - pack
   - ts-test
+  - ts-test-storybook
   - storybook
 tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
-  test:
-    inputs:
-      - .storybook/*

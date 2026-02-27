@@ -4,18 +4,18 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 import { OperationResolver } from '@dxos/operation';
 
-import { MapCapabilities, MapOperation } from '../../types';
+import { MapAction, MapCapabilities } from '../../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(Common.Capability.OperationResolver, [
+    return Capability.contributes(Capabilities.OperationResolver, [
       OperationResolver.make({
-        operation: MapOperation.Toggle,
+        operation: MapAction.MapOperation.Toggle,
         handler: Effect.fnUntraced(function* () {
-          yield* Common.Capability.updateAtomValue(MapCapabilities.State, (state) => ({
+          yield* Capabilities.updateAtomValue(MapCapabilities.State, (state) => ({
             ...state,
             type: state.type === 'globe' ? ('map' as const) : ('globe' as const),
           }));

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import Minimatch from 'minimatch';
+import { minimatch as Minimatch } from 'minimatch';
 import { ResolverFactory } from 'oxc-resolver';
 import { type Plugin, type ResolvedConfig } from 'vite';
 
@@ -56,7 +56,7 @@ const PluginImportSource = ({
       async handler(source, importer) {
         // Check if source looks like an npm package name or a subpath import (#).
         if (!source.match(/^[a-zA-Z@#][a-zA-Z0-9._-]*(\/[a-zA-Z0-9._-]+)*$/)) {
-          return null;
+          return null; // Skip to next resolver.
         }
 
         // Filter by package name pattern before resolving.
@@ -80,6 +80,10 @@ const PluginImportSource = ({
             return null;
           }
 
+          if (resolved.packageJsonPath) {
+            this.addWatchFile(resolved.packageJsonPath);
+          }
+
           this.addWatchFile(resolved.path);
           verbose && console.log(`[plugin-import-source] ${source} -> ${resolved.path}`);
           return resolved.path;
@@ -100,10 +104,8 @@ const PluginImportSource = ({
       // Strip query params (e.g., ?v=123).
       const filePath = id.split('?')[0];
 
-      if (isMatch(filePath)) {
-        this.addWatchFile(filePath);
-        verbose && console.log(`[watch] ${filePath}`);
-      }
+      this.addWatchFile(filePath);
+      verbose && console.log(`[watch] ${filePath}`);
 
       // Return null to let Vite load the file normally.
       return null;

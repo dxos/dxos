@@ -5,8 +5,9 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type FC, useCallback } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { Surface, useCapabilities, useCapability } from '@dxos/app-framework/react';
+import { Capabilities } from '@dxos/app-framework';
+import { Surface, useCapabilities, useCapability } from '@dxos/app-framework/ui';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { AiContextBinder } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { Filter, Obj, Ref } from '@dxos/echo';
@@ -16,7 +17,7 @@ import { Assistant } from '@dxos/plugin-assistant/types';
 import { MarkdownPlugin } from '@dxos/plugin-markdown';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
 import { render } from '@dxos/storybook-utils';
 import { isNonNullable } from '@dxos/util';
@@ -24,17 +25,17 @@ import { isNonNullable } from '@dxos/util';
 import { ChatModule, type ComponentProps } from '../components';
 import { config, getDecorators } from '../testing';
 
-const panelClassNames = 'bg-baseSurface rounded-sm border border-separator overflow-hidden';
+const panelClassNames = 'bg-base-surface rounded-xs border border-separator overflow-hidden';
 
 type StoryProps = {
   modules: FC<ComponentProps>[][];
-  showContext?: boolean;
   blueprints?: string[];
+  showContext?: boolean;
 };
 
 const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => {
-  const blueprintsDefinitions = useCapabilities(Common.Capability.BlueprintDefinition);
-  const atomRegistry = useCapability(Common.Capability.AtomRegistry);
+  const blueprintsDefinitions = useCapabilities(AppCapabilities.BlueprintDefinition);
+  const atomRegistry = useCapability(Capabilities.AtomRegistry);
 
   const space = useSpace();
   useAsyncEffect(async () => {
@@ -49,7 +50,7 @@ const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => 
     }
 
     // Add blueprints to context.
-    const blueprintRegistry = new Blueprint.Registry(blueprintsDefinitions);
+    const blueprintRegistry = new Blueprint.Registry(blueprintsDefinitions.map((blueprint) => blueprint.make()));
     const blueprintObjects = blueprints
       .map((key) => {
         const blueprint = blueprintRegistry.getByKey(key);
@@ -81,14 +82,14 @@ const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => 
       size='split'
       rail={false}
       itemsCount={modules.length + (showContext ? 1 : 0)}
-      classNames='absolute inset-0 gap-[--stack-gap]'
+      classNames='absolute inset-0 gap-(--stack-gap)'
     >
       {modules.map((Components, i) => {
         return (
           <StackItem.Root key={i} item={{ id: `${i}` }}>
             <Stack
               orientation='vertical'
-              classNames='gap-[--stack-gap]'
+              classNames='gap-(--stack-gap)'
               size={i > 0 ? 'contain' : 'split'}
               itemsCount={Components.length}
               rail={false}
@@ -112,14 +113,14 @@ const StackContainer = ({ objects }: { objects: Obj.Any[] }) => {
   return (
     <Stack
       orientation='vertical'
-      classNames='gap-[--stack-gap]'
+      classNames='gap-(--stack-gap)'
       size='contain'
       rail={false}
       itemsCount={objects.length}
     >
       {objects.map((object) => (
         <StackItem.Root key={object.id} item={object} classNames={panelClassNames}>
-          <Surface role='section' limit={1} data={{ subject: object }} />
+          <Surface.Surface role='section' limit={1} data={{ subject: object }} />
         </StackItem.Root>
       ))}
     </Stack>
@@ -127,9 +128,9 @@ const StackContainer = ({ objects }: { objects: Obj.Any[] }) => {
 };
 
 const storybook: Meta<typeof DefaultStory> = {
-  title: 'stories/stories-assistant/Initiatives',
+  title: 'stories/stories-assistant/Projects',
   render: render(DefaultStory),
-  decorators: [withTheme],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
     translations,

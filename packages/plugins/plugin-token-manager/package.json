@@ -42,11 +42,13 @@
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-toolkit": "workspace:*",
     "@dxos/cli-util": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/functions": "workspace:*",
     "@dxos/functions-runtime": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
@@ -67,8 +69,11 @@
     "@effect/cli": "catalog:",
     "@effect/platform-bun": "catalog:",
     "@tauri-apps/api": "catalog:",
-    "@tauri-apps/plugin-shell": "catalog:",
-    "get-port-please": "catalog:"
+    "@tauri-apps/plugin-deep-link": "catalog:",
+    "@tauri-apps/plugin-opener": "catalog:",
+    "@tauri-apps/plugin-os": "catalog:",
+    "get-port-please": "catalog:",
+    "tauri-plugin-web-auth-api": "catalog:"
   },
   "devDependencies": {
     "@dxos/echo-generator": "workspace:*",

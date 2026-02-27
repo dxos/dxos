@@ -20,11 +20,11 @@ import { mx, staticPlaceholderText } from '@dxos/ui-theme';
 
 import {
   SearchList,
-  type SearchListContentProps,
   type SearchListEmptyProps,
   type SearchListInputProps,
   type SearchListItemProps,
   type SearchListRootProps,
+  type SearchListViewportProps,
 } from '../SearchList';
 
 const COMBOBOX_NAME = 'Combobox';
@@ -157,16 +157,14 @@ const ComboboxContent = forwardRef<HTMLDivElement, ComboboxContentProps>(
           forceMount,
         }}
         classNames={[
-          'is-[--radix-popover-trigger-width] max-bs-[--radix-popover-content-available-height] grid grid-rows-[min-content_1fr]',
+          'w-(--radix-popover-trigger-width) max-h-(--radix-popover-content-available-height) grid grid-rows-[min-content_1fr]',
           classNames,
         ]}
         id={modalId}
         ref={forwardedRef}
       >
         <SearchList.Root onSearch={onSearch} value={value} defaultValue={defaultValue} debounceMs={debounceMs}>
-          <div className='contents density-fine' aria-label={label} role='combobox' aria-expanded='true'>
-            {children}
-          </div>
+          <SearchList.Content>{children}</SearchList.Content>
         </SearchList.Root>
       </Popover.Content>
     );
@@ -206,7 +204,7 @@ const ComboboxTrigger = forwardRef<HTMLButtonElement, ComboboxTriggerProps>(
           {children ?? (
             <>
               <span
-                className={mx('font-normal text-start flex-1 min-is-0 truncate mie-2', !value && staticPlaceholderText)}
+                className={mx('font-normal text-start flex-1 min-w-0 truncate me-2', !value && staticPlaceholderText)}
               >
                 {value || placeholder}
               </span>
@@ -239,10 +237,7 @@ const ComboboxInput = forwardRef<HTMLInputElement, ComboboxInputProps>(({ classN
   return (
     <SearchList.Input
       {...props}
-      classNames={[
-        'mli-cardSpacingChrome mbs-cardSpacingChrome mbe-0 is-[calc(100%-2*var(--dx-cardSpacingChrome))]',
-        classNames,
-      ]}
+      classNames={['m-card-chrome mb-0 w-[calc(100%-2*var(--spacing-card-chrome))]', classNames]}
       ref={forwardedRef}
     />
   );
@@ -252,16 +247,10 @@ const ComboboxInput = forwardRef<HTMLInputElement, ComboboxInputProps>(({ classN
 // List
 //
 
-type ComboboxListProps = SearchListContentProps;
+type ComboboxListProps = SearchListViewportProps;
 
 const ComboboxList = forwardRef<HTMLDivElement, ComboboxListProps>(({ classNames, ...props }, forwardedRef) => {
-  return (
-    <SearchList.Content
-      {...props}
-      classNames={['min-bs-0 overflow-y-auto plb-cardSpacingChrome', classNames]}
-      ref={forwardedRef}
-    />
-  );
+  return <SearchList.Viewport {...props} classNames={['py-card-chrome', classNames]} ref={forwardedRef} />;
 });
 
 //
@@ -290,7 +279,7 @@ const ComboboxItem = forwardRef<HTMLDivElement, ComboboxItemProps>(
       <SearchList.Item
         {...props}
         value={value}
-        classNames={['mli-cardSpacingChrome pli-cardSpacingChrome', classNames]}
+        classNames={['mx-card-chrome px-card-chrome', classNames]}
         onSelect={handleSelect}
         ref={forwardedRef}
       />

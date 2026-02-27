@@ -29,7 +29,6 @@ export class FunctionExecutor {
     (assertInput as any)(input);
 
     const context: FunctionContext = {};
-
     const result = functionDef.handler({ context, data: input });
 
     let data: unknown;

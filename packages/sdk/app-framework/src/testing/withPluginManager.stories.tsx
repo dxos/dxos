@@ -7,9 +7,9 @@ import React from 'react';
 
 import { withTheme } from '@dxos/react-ui/testing';
 
-import * as Common from '../common';
+import { Capabilities } from '../common';
 import { Capability } from '../core';
-import { Surface } from '../react';
+import { Surface } from '../ui';
 
 import { withPluginManager } from './withPluginManager';
 
@@ -18,7 +18,7 @@ const DefaultStory = () => {
   return (
     <div>
       <div>Hello</div>
-      <Surface role='main' />
+      <Surface.Surface role='main' />
     </div>
   );
 };
@@ -27,12 +27,12 @@ const meta = {
   title: 'sdk/app-framework/withPluginManager',
   render: DefaultStory,
   decorators: [
-    withTheme,
+    withTheme(),
     withPluginManager({
       capabilities: [
         Capability.contributes(
-          Common.Capability.ReactSurface,
-          Common.createSurface({
+          Capabilities.ReactSurface,
+          Surface.create({
             id: 'test',
             role: 'main',
             component: ({ role }) => <span>{JSON.stringify({ role })}</span>,

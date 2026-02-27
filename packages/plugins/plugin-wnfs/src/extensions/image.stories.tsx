@@ -86,7 +86,7 @@ const DefaultStory = () => {
       <div className='mb-2'>
         <input type='file' accept='image/*' onChange={onFileChange} />
       </div>
-      <div className='is-[50rem]' ref={parentRef} {...focusAttributes} />
+      <div className='w-[50rem]' ref={parentRef} {...focusAttributes} />
     </>
   );
 };
@@ -94,7 +94,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'plugins/plugin-wnfs/image',
   render: DefaultStory,
-  decorators: [withTheme, withClientProvider({ createIdentity: true, createSpace: true })],
+  decorators: [withTheme(), withClientProvider({ createIdentity: true, createSpace: true })],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

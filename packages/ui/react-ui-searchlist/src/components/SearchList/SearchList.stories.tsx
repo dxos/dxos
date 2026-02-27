@@ -39,28 +39,26 @@ const DefaultStory = ({ items = defaultItems }: DefaultStoryProps) => {
   const { results, handleSearch } = useSearchListResults({ items });
 
   return (
-    <div className='flex flex-col is-full bs-[400px]'>
-      <SearchList.Root onSearch={handleSearch}>
+    <SearchList.Root onSearch={handleSearch}>
+      <SearchList.Content classNames='h-[400px]'>
         <SearchList.Input placeholder='Search items...' autoFocus />
-        <SearchList.Content>
-          <SearchList.Viewport>
-            {results.length > 0 ? (
-              results.map((item) => (
-                <SearchList.Item
-                  key={item.id}
-                  value={item.id}
-                  label={item.label}
-                  icon={item.icon}
-                  onSelect={() => console.log('[SearchList.Item.onSelect]', item.id, item.label)}
-                />
-              ))
-            ) : (
-              <SearchList.Empty>No results found</SearchList.Empty>
-            )}
-          </SearchList.Viewport>
-        </SearchList.Content>
-      </SearchList.Root>
-    </div>
+        <SearchList.Viewport>
+          {results.length > 0 ? (
+            results.map((item) => (
+              <SearchList.Item
+                key={item.id}
+                value={item.id}
+                label={item.label}
+                icon={item.icon}
+                onSelect={() => console.log('[SearchList.Item.onSelect]', item.id, item.label)}
+              />
+            ))
+          ) : (
+            <SearchList.Empty>No results found</SearchList.Empty>
+          )}
+        </SearchList.Viewport>
+      </SearchList.Content>
+    </SearchList.Root>
   );
 };
 
@@ -87,7 +85,7 @@ const ControlledStory = ({ items = defaultItems }: DefaultStoryProps) => {
   };
 
   return (
-    <div className='is-full bs-[400px] flex flex-col gap-2'>
+    <div className='w-full h-[400px] flex flex-col gap-2'>
       <div className='text-sm text-description'>Controlled query: &quot;{query}&quot;</div>
       <SearchList.Root onSearch={handleSearch} value={query}>
         <SearchList.Input placeholder='Controlled search...' onChange={(e) => handleQueryChange(e.target.value)} />
@@ -105,7 +103,7 @@ const ControlledStory = ({ items = defaultItems }: DefaultStoryProps) => {
           </SearchList.Viewport>
         </SearchList.Content>
       </SearchList.Root>
-      <button className='pli-2 plb-1 rounded bg-accentSurface text-accentText' onClick={() => handleQueryChange('')}>
+      <button className='px-2 py-1 rounded-sm bg-accent-surface text-accent-text' onClick={() => handleQueryChange('')}>
         Clear Query
       </button>
     </div>
@@ -146,7 +144,7 @@ const CustomItem = ({ value, label, description, onSelect }: CustomItemProps) =>
       role='option'
       aria-selected={isSelected}
       data-selected={isSelected}
-      className={`p-2 border-be border-separator cursor-pointer ${isSelected ? 'bg-hoverOverlay' : 'hover:bg-hoverOverlay'}`}
+      className={`p-2 border-b border-separator cursor-pointer ${isSelected ? 'bg-hover-overlay' : 'hover:bg-hover-overlay'}`}
       onClick={onSelect}
     >
       <div className='font-medium'>{label}</div>
@@ -159,7 +157,7 @@ const CustomRenderingStory = ({ items = defaultItems }: DefaultStoryProps) => {
   const { results, handleSearch } = useSearchListResults({ items });
 
   return (
-    <div className='is-full bs-[400px] flex flex-col'>
+    <div className='w-full h-[400px] flex flex-col'>
       <SearchList.Root onSearch={handleSearch}>
         <SearchList.Input placeholder='Search with custom rendering...' autoFocus />
         <SearchList.Content>
@@ -192,7 +190,7 @@ const WithEmptyStory = () => {
   };
 
   return (
-    <div className='is-full bs-[400px] flex flex-col'>
+    <div className='w-full h-[400px] flex flex-col'>
       <SearchList.Root onSearch={handleSearch}>
         <SearchList.Input placeholder='Try searching for anything...' />
         <SearchList.Content>
@@ -221,7 +219,7 @@ const WithoutViewportStory = ({ items = defaultItems }: DefaultStoryProps) => {
   const { results, handleSearch } = useSearchListResults({ items });
 
   return (
-    <div className='is-full bs-[300px] flex flex-col'>
+    <div className='w-full h-[300px] flex flex-col'>
       <SearchList.Root onSearch={handleSearch}>
         <SearchList.Input placeholder='Search without viewport (no scroll)...' classNames='shrink-0' />
         <SearchList.Content>
@@ -254,7 +252,7 @@ const iconsItems: StoryItem[] = [
 
 const WithIconsStory = () => {
   return (
-    <div className='is-full flex flex-col'>
+    <div className='w-full flex flex-col'>
       <SearchList.Root>
         <SearchList.Input placeholder='Search items with icons...' />
         <SearchList.Content>
@@ -331,17 +329,17 @@ const CustomInput = () => {
   };
 
   return (
-    <div className='flex gap-2 items-center p-2 bg-input rounded'>
+    <div className='flex gap-2 items-center p-2 bg-input rounded-sm'>
       <input
         type='text'
         value={query}
         onChange={(ev) => onQueryChange(ev.target.value)}
         onKeyDown={handleKeyDown}
         placeholder='Custom input...'
-        className='bg-transparent outline-none grow'
+        className='bg-transparent outline-hidden grow'
       />
       {query && (
-        <button onClick={() => onQueryChange('')} className='text-description hover:text-baseText'>
+        <button onClick={() => onQueryChange('')} className='text-description hover:text-base-text'>
           ✕
         </button>
       )}
@@ -353,7 +351,7 @@ const CustomInputStory = ({ items = defaultItems }: DefaultStoryProps) => {
   const { results, handleSearch } = useSearchListResults({ items });
 
   return (
-    <div className='is-full bs-[400px] flex flex-col border border-separator'>
+    <div className='w-full h-[400px] flex flex-col border border-separator'>
       <SearchList.Root onSearch={handleSearch}>
         <CustomInput />
         <SearchList.Content>
@@ -388,7 +386,7 @@ const disabledItems: StoryItem[] = [
 
 const WithDisabledItemsStory = () => {
   return (
-    <div className='is-full flex flex-col'>
+    <div className='w-full flex flex-col'>
       <SearchList.Root>
         <SearchList.Input placeholder='Arrow keys skip disabled items...' autoFocus />
         <SearchList.Content>
@@ -438,7 +436,7 @@ const WithGroupsStory = () => {
   );
 
   return (
-    <div className='is-full bs-[400px] flex flex-col'>
+    <div className='w-full h-[400px] flex flex-col'>
       <SearchList.Root onSearch={handleSearch}>
         <SearchList.Input placeholder='Search grouped items...' autoFocus />
         <SearchList.Content>
@@ -471,7 +469,7 @@ const WithGroupsStory = () => {
 const meta = {
   title: 'ui/react-ui-searchlist/SearchList',
   component: SearchList.Root as any,
-  decorators: [withTheme, withLayout({ layout: 'column' })],
+  decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {
     layout: 'fullscreen',
     translations,

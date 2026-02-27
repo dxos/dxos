@@ -6,7 +6,8 @@ import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
@@ -59,7 +60,7 @@ export default Capability.makeModule(
     const capabilities = yield* Capability.Service;
 
     const resolve = (typename: string) =>
-      capabilities.getAll(Common.Capability.Metadata).find(({ id }: { id: string }) => id === typename)?.metadata ?? {};
+      capabilities.getAll(AppCapabilities.Metadata).find(({ id }: { id: string }) => id === typename)?.metadata ?? {};
 
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
@@ -196,6 +197,6 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return Capability.contributes(Common.Capability.AppGraphBuilder, extensions);
+    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );

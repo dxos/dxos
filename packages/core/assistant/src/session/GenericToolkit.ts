@@ -4,6 +4,7 @@
 
 import type * as Tool from '@effect/ai/Tool';
 import * as Toolkit from '@effect/ai/Toolkit';
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Pipeable from 'effect/Pipeable';
@@ -84,6 +85,11 @@ export const make = <Tools extends Record<string, Tool.Any>, E, R>(
 };
 
 /**
+ * Empty generic toolkit.
+ */
+export const empty = make(Toolkit.empty, Layer.empty);
+
+/**
  * Merges multiple portable toolkits into a single portable toolkit.
  */
 export const merge = <const Toolkits extends ReadonlyArray<Any>>(
@@ -129,3 +135,26 @@ export interface AnyStructSchemaNoContext extends Pipeable.Pipeable {
   readonly fields: Schema.Struct.Fields;
   readonly annotations: any;
 }
+
+/**
+ * Provides a generic toolkit to the agent.
+ */
+export class Provider extends Context.Tag('@dxos/assistant/GenericToolkit.Provider')<
+  Provider,
+  {
+    readonly getToolkit: () => GenericToolkit;
+  }
+>() {}
+
+/**
+ * Layer for providing a generic toolkit to the agent.
+ */
+export const providerLayer = (toolkit: GenericToolkit) =>
+  Layer.succeed(Provider, {
+    getToolkit: () => toolkit,
+  });
+
+/**
+ * Layer for providing an empty generic toolkit to the agent.
+ */
+export const providerEmpty = providerLayer(empty);

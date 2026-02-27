@@ -3,7 +3,7 @@
 //
 
 import { Order } from '@dxos/echo';
-import { type QueryAST } from '@dxos/echo-protocol';
+import { QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import type { DXN, SpaceId } from '@dxos/keys';
 
@@ -33,6 +33,7 @@ export class QueryPlanner {
   }
 
   createPlan(query: QueryAST.Query): QueryPlan.Plan {
+    this._validateQueryQualified(query);
     let plan = this._generate(query, { ...DEFAULT_CONTEXT, originalQuery: query });
     plan = this._optimizeEmptyFilters(plan);
     plan = this._optimizeSoloUnions(plan);
@@ -57,6 +58,8 @@ export class QueryPlanner {
         return this._generateRelationTraversalClause(query, context);
       case 'reference-traversal':
         return this._generateReferenceTraversalClause(query, context);
+      case 'hierarchy-traversal':
+        return this._generateHierarchyTraversalClause(query, context);
       case 'union':
         return this._generateUnionClause(query, context);
       case 'set-difference':
@@ -452,6 +455,38 @@ export class QueryPlanner {
         filter: query.filter,
       },
     ]);
+  }
+
+  private _generateHierarchyTraversalClause(
+    query: QueryAST.QueryHierarchyTraversalClause,
+    context: GenerationContext,
+  ): QueryPlan.Plan {
+    return QueryPlan.Plan.make([
+      ...this._generate(query.anchor, context).steps,
+      {
+        _tag: 'TraverseStep',
+        traversal: {
+          _tag: 'HierarchyTraversal',
+          direction: query.direction,
+        },
+      },
+      ...this._generateDeletedHandlingSteps(context),
+    ]);
+  }
+
+  private _validateQueryQualified(query: QueryAST.Query): void {
+    let hasOptions = false;
+    QueryAST.visit(query, (node) => {
+      if (node.type === 'options') {
+        hasOptions = true;
+      }
+    });
+    if (!hasOptions) {
+      throw new QueryError({
+        message: 'Query must be qualified with a from() or options() clause',
+        context: { query },
+      });
+    }
   }
 
   /**

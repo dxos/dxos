@@ -19,10 +19,10 @@ const DefaultStory = (props: ToggleProps) => {
 };
 
 const meta = {
-  title: 'ui/react-ui-core/Toggle',
+  title: 'ui/react-ui-core/components/Toggle',
   component: Toggle,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'centered',
   },
