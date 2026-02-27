@@ -39,7 +39,7 @@ export type FunctionServices =
   | AiService.AiService
   | CredentialsService
   | Database.Service
-  // TODO: Remove QueueService — use Feed.Service instead.
+  // TODO(wittjosiah): Remove QueueService — use Feed.Service instead.
   | QueueService
   | Feed.Service
   | FunctionInvocationService;

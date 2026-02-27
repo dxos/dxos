@@ -5,6 +5,7 @@
 import { type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
+import * as Option from 'effect/Option';
 
 import { type CapabilityManager } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
@@ -563,7 +564,10 @@ export const constructObjectActions = ({
     }),
     Match.orElse((obj) => Obj.getTypename(obj)!),
   );
-  const managedCollection = Obj.parse(Collection.Managed, object);
+  const managedCollection = Option.some(object).pipe(
+    Option.filter(Obj.instanceOf(Collection.Managed)),
+    Option.getOrUndefined,
+  );
   const metadata = metadataKey ? resolve(metadataKey) : {};
   const createObject = metadata.createObject;
   const inputSchema = metadata.inputSchema;

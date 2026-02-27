@@ -107,31 +107,6 @@ describe('Obj', () => {
     });
   });
 
-  describe('parse', () => {
-    test('returns value when instance matches schema', ({ expect }) => {
-      const person = Obj.make(TestSchema.Person, { name: 'Test' });
-
-      expect(Obj.parse(TestSchema.Person, person)).toBe(person);
-      expect(Obj.parse(TestSchema.Organization, person)).toBeUndefined();
-    });
-
-    test('returns undefined for non-matching value', ({ expect }) => {
-      const org = Obj.make(TestSchema.Organization, { name: 'Acme' });
-
-      expect(Obj.parse(TestSchema.Person, org)).toBeUndefined();
-      expect(Obj.parse(TestSchema.Person, null)).toBeUndefined();
-      expect(Obj.parse(TestSchema.Person, {})).toBeUndefined();
-    });
-
-    test('curried form works', ({ expect }) => {
-      const person = Obj.make(TestSchema.Person, { name: 'Test' });
-      const parsePerson = Obj.parse(TestSchema.Person);
-
-      expect(parsePerson(person)).toBe(person);
-      expect(parsePerson(Obj.make(TestSchema.Organization, { name: 'Acme' }))).toBeUndefined();
-    });
-  });
-
   describe('getKeys', () => {
     const SOURCE = 'test-source';
 

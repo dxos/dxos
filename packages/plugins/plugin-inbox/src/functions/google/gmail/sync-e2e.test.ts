@@ -11,7 +11,7 @@ import { sleep } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { configPreset } from '@dxos/config';
-import { Feed as FeedModule, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+import { Feed, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { Function } from '@dxos/functions';
 import { Trigger } from '@dxos/functions';
 import { InvocationTraceEndEvent, InvocationTraceStartEvent } from '@dxos/functions-runtime';
@@ -186,10 +186,10 @@ const deployFunction = async (space: Space, functionsServiceClient: FunctionsSer
   return func;
 };
 
-const checkEmails = async (feed: FeedModule.Feed, space: Space) => {
-  const queueDxn = FeedModule.getQueueDxn(feed);
+const checkEmails = async (feed: Feed.Feed, space: Space) => {
+  const queueDxn = Feed.getQueueDxn(feed);
   if (!queueDxn) {
-    console.log('Messages in mailbox: 0');
+    console.log('No feed found for mailbox');
     return [];
   }
   const queue = space.queues.get<Message.Message>(queueDxn);

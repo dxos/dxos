@@ -426,26 +426,6 @@ export const instanceOf: {
 }) as any;
 
 /**
- * Parse a value as an instance of a schema, or return undefined.
- * @example
- * ```ts
- * const managed = Obj.parse(Collection.Managed, object);
- * if (managed) {
- *   // managed is Collection.Managed
- * }
- * ```
- */
-export const parse: {
-  <S extends Type.Entity.Any>(schema: S): (value: unknown) => Schema.Schema.Type<S> | undefined;
-  <S extends Type.Entity.Any>(schema: S, value: unknown): Schema.Schema.Type<S> | undefined;
-} = ((...args: [schema: Type.Entity.Any, value?: unknown]) => {
-  if (args.length === 1) {
-    return (entity: unknown) => (isInstanceOf(args[0], entity) ? entity : undefined);
-  }
-  return isInstanceOf(args[0], args[1]) ? args[1] : undefined;
-}) as any;
-
-/**
  * Test if a snapshot is an instance of a schema.
  * Mirrors `instanceOf` but only accepts values branded with SnapshotKindId.
  * Use when the value is known to be a snapshot (e.g. from `getSnapshot` or `useObject`).

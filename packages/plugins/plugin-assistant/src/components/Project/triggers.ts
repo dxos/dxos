@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Option from 'effect/Option';
+
 import { type Project, ProjectFunctions } from '@dxos/assistant-toolkit';
 import { Feed, Obj, Ref, Type } from '@dxos/echo';
 import { FunctionDefinition, Trigger } from '@dxos/functions';
@@ -56,8 +58,7 @@ export const syncTriggers = async (project: Project.Project) => {
       continue;
     }
 
-    const feed = Obj.parse(Type.Feed, target);
-    const queueDxn = feed && Feed.getQueueDxn(feed);
+    const queueDxn = Option.some(target).pipe(Option.filter(Obj.instanceOf(Type.Feed)), Option.map(Feed.getQueueDxn));
     if (!queueDxn) {
       continue;
     }
