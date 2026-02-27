@@ -13,7 +13,7 @@ import {
   type NewPlankPositioning,
   NewPlankPositions,
   type Overscroll,
-  OverscrollOptions,
+  OverScrollToProps,
 } from '../../types';
 
 const isSocket = !!(globalThis as any).__args;
@@ -75,7 +75,7 @@ export const DeckSettings = ({ settings, onSettingsChange }: DeckSettingsCompone
               <Select.Portal>
                 <Select.Content>
                   <Select.Viewport>
-                    {OverscrollOptions.map((option) => (
+                    {OverScrollToProps.map((option) => (
                       <Select.Option key={option} value={option}>
                         {t(`settings overscroll ${option} label`)}
                       </Select.Option>
