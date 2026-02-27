@@ -8,6 +8,10 @@ import { type Node } from '@dxos/app-graph';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Graph } from '@dxos/plugin-graph';
 
+/**
+ * Eagerly expands a root node and its immediate children in the app graph.
+ * Avoid using within the tree items as it is heavy.
+ */
 export const useLoadDescendents = (root?: Node.Node) => {
   const { graph } = useAppGraph();
   useEffect(() => {

@@ -29,7 +29,6 @@ export type L1PanelProps = {
 
 /**
  * Space or settings panel.
- * Only the active panel renders its content tree to avoid subscription/effect cascades from hidden panels.
  */
 export const L1Panel = ({ open, path, item, currentItemId, onBack }: L1PanelProps) => {
   const { t } = useTranslation(meta.id);

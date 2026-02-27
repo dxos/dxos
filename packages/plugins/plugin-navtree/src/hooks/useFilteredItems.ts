@@ -8,6 +8,9 @@ import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Node, useConnections } from '@dxos/plugin-graph';
 import { byPosition } from '@dxos/util';
 
+/**
+ * Determines whether a node should be visible based on its disposition.
+ */
 export const filterItems = (node: Node.Node, disposition?: string) => {
   if (!disposition && (node.properties.disposition === 'hidden' || node.properties.disposition === 'alternate-tree')) {
     return false;
@@ -19,6 +22,9 @@ export const filterItems = (node: Node.Node, disposition?: string) => {
   }
 };
 
+/**
+ * Returns the outbound connections of a node, filtered by disposition and optionally sorted by position.
+ */
 export const useFilteredItems = (node?: Node.Node, options?: { disposition?: string; sort?: boolean }) => {
   const { graph } = useAppGraph();
   const connections = useConnections(graph, node?.id ?? Node.RootId);

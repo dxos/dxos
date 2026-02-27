@@ -18,7 +18,7 @@ import * as Node from './node';
 
 const graphSymbol = Symbol('graph');
 
-/** Separator for expand keys (id + relation). */
+// TODO(wittjosiah): Reconcile all separators across the codebase.
 const EXPAND_KEY_SEPARATOR = '\0';
 
 type DeepWriteable<T> = {

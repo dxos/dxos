@@ -255,6 +255,7 @@ const meta = {
     withTheme(),
     withClientProvider({
       createIdentity: true,
+      types: [TestSchema.Expando],
       onCreateIdentity: async ({ client }) => {
         await client.spaces.create();
         await client.spaces.create();
@@ -410,12 +411,7 @@ export const TreeView: Story = {
     return (
       <>
         <Controls />
-        <Tree
-          model={model}
-          id={Node.RootId}
-          onOpenChange={onOpenChange}
-          onSelect={onSelect}
-        />
+        <Tree model={model} id={Node.RootId} onOpenChange={onOpenChange} onSelect={onSelect} />
       </>
     );
   },

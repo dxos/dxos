@@ -4,7 +4,7 @@
 
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { type Instruction, extractInstruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
-import React, { forwardRef, memo, useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { forwardRef, memo, useCallback, useEffect, useMemo } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
@@ -25,6 +25,7 @@ import { NavTreeContext } from './NavTreeContext';
 // TODO(thure): Is NavTree truly authoritative in this regard?
 export const NODE_TYPE = 'dxos/app-graph/node';
 
+// TODO(wittjosiah): Avoid using Surface within the navtree, prefer declarative data flow.
 const NavTreeItemEnd = ({ node, open }: { node: Node.Node; open: boolean }) => {
   const data = useMemo(() => ({ id: node.id, subject: node.data, open }), [node.id, node.data, open]);
   return <Surface.Surface role='navtree-item-end' data={data} limit={1} />;
@@ -62,16 +63,11 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
       [graph, setItem],
     );
 
-    // Ref for volatile values that callbacks need but shouldn't depend on.
-    const stateRef = useRef({ tab, navigationSidebarState, isLg, layoutActive: layout.active });
-    stateRef.current = { tab, navigationSidebarState, isLg, layoutActive: layout.active };
-
     const handleTabChange = useCallback(
       (node: NavTreeItemGraphNode) => {
-        const { tab: currentTab, navigationSidebarState, isLg, layoutActive } = stateRef.current;
         invokeSync(LayoutOperation.UpdateSidebar, {
           state:
-            node.id === currentTab
+            node.id === tab
               ? navigationSidebarState === 'expanded'
                 ? isLg
                   ? 'collapsed'
@@ -83,14 +79,14 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
         invokeSync(LayoutOperation.SwitchWorkspace, { subject: node.id });
 
         // Open the first item if the workspace is empty.
-        if (layoutActive.length === 0) {
+        if (layout.active.length === 0) {
           const [item] = getItems(graph, node).filter((node) => !Node.isActionLike(node));
           if (item && item.data) {
             invokeSync(LayoutOperation.Open, { subject: [item.id] });
           }
         }
       },
-      [invokeSync, graph],
+      [invokeSync, graph, tab, layout.active],
     );
 
     const blockInstruction = useCallback(
@@ -138,11 +134,11 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
           void runAction(defaultAction);
         }
 
-        if (!stateRef.current.isLg) {
+        if (!isLg) {
           invokeSync(LayoutOperation.UpdateSidebar, { state: 'closed' });
         }
       },
-      [graph, invokeSync, invokePromise, getItem, runAction],
+      [graph, invokeSync, invokePromise, getItem, runAction, isLg],
     );
 
     const handleBack = useCallback(() => invokeSync(LayoutOperation.RevertWorkspace), [invokeSync]);
