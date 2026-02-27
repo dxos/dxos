@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import { AiSession, GenericToolkit, ToolExecutionServices } from '@dxos/assistant';
-import { Database, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
+import { Database, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { FunctionInvocationServiceLayerTest } from '@dxos/functions-runtime/testing';
 import { type DXN } from '@dxos/keys';
@@ -95,7 +95,7 @@ export default defineFunction({
       ).pipe(
         Layer.provide(
           // TODO(dmaretskyi): This should be provided by environment.
-          Layer.mergeAll(GenericToolkit.providerEmpty, FunctionInvocationServiceLayerTest(), Feed.notAvailable),
+          Layer.mergeAll(GenericToolkit.providerEmpty, FunctionInvocationServiceLayerTest()),
         ),
       ),
     ),
