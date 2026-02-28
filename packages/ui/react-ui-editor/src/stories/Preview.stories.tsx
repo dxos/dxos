@@ -58,7 +58,7 @@ const PreviewCard = () => {
   return (
     <Popover.Portal>
       <Popover.Content onOpenAutoFocus={(event) => event.preventDefault()}>
-        <Popover.Viewport classNames='popover-card-width'>
+        <Popover.Viewport classNames='card-popover-width'>
           <Card.Root border={false}>
             <Card.Toolbar>
               <Card.Icon toolbar icon='ph--file-text--regular' />

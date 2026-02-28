@@ -13,12 +13,6 @@
 }
 
 @layer dx-components {
-  .snap-inline {
-    scroll-snap-type: inline var(--tw-scroll-snap-strictness);
-  }
-  .snap-block {
-    scroll-snap-type: block var(--tw-scroll-snap-strictness);
-  }
   .sticky-top-0 {
     --sticky-top: 0;
   }

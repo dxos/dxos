@@ -19,6 +19,8 @@
 
   --spacing-tag-padding-block: 0.125rem;
 
+  --spacing-text-content: calc(50rem - env(safe-area-inset-left) - env(safe-area-inset-right));
+
   /** Minimal trim to allow for ring/outline. */
   --spacing-form-chrome: var(--spacing-trim-xs);
 
@@ -78,13 +80,12 @@
     --dx-grid-focus-indicator-width: var(--dx-thick-line);
   }
 
+  /** TODO(burdon): Add either spacing- or dx- prefix */
   :root {
     /** TODO(burdon): Remove? */
     --sticky-top: 0;
 
-    /** TODO(burdon): Add dx- prefix */
     --line-height: 32px;
-    --text-content: calc(50rem - env(safe-area-inset-left) - env(safe-area-inset-right));
 
     --rail-content: 3rem;
     --rail-size: calc(var(--rail-content) + 1px);
@@ -95,7 +96,7 @@
     --toolbar-size: var(--rail-content);
     --statusbar-size: var(--rail-content);
 
-    --nav-sidebar-size: 22.5rem;
+    --nav-sidebar-size: 25rem;
     --complementary-sidebar-size: 25rem;
     --drawer-size: 50dvh;
 

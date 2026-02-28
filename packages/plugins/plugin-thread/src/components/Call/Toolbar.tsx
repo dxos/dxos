@@ -77,7 +77,6 @@ export const Toolbar = ({
               icon: 'ph--microphone-slash--duotone',
               label: t('mic on'),
               onClick: () => call.turnAudioOn(),
-              classNames: [joined && 'bg-callAlert'],
             },
           }}
         />
@@ -144,7 +143,6 @@ export const Toolbar = ({
                   icon: 'ph--hand-waving--regular',
                   label: t('lower hand'),
                   onClick: () => call.setRaisedHand(false),
-                  classNames: [joined && 'bg-callAlert'],
                 },
                 off: {
                   icon: 'ph--hand-palm--duotone',
