@@ -13,7 +13,7 @@
     @apply font-medium shrink-0 inline-flex select-none items-center justify-center overflow-hidden transition-colors duration-100 ease-linear bg-input-surface min-h-[2.5rem] px-3;
     &[aria-pressed='true'],
     &[aria-checked='true'] {
-      @apply text-accent-text bg-attention;
+      @apply text-accent-text bg-attention-surface;
     }
 
     /* Disabled styles */

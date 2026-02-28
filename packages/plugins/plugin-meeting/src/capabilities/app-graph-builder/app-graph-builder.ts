@@ -185,7 +185,7 @@ export default Capability.makeModule(
                   : ['start transcription label', { ns: meta.id }],
                 icon: 'ph--subtitles--regular',
                 disposition: 'toolbar',
-                classNames: enabled ? 'bg-callAlert' : '',
+                classNames: enabled ? 'bg-error-surface' : '',
               },
             },
           ];

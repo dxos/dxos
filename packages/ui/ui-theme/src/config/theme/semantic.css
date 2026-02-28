@@ -31,6 +31,8 @@
   --color-sidebar-surface: light-dark(var(--color-neutral-100), var(--color-neutral-900));
   --color-header-surface: light-dark(var(--color-neutral-100), var(--color-neutral-900));
 
+  /** TODO(burdon): current vs active vs selected */
+  --color-current-surface: light-dark(var(--color-neutral-200), var(--color-neutral-800));
   --color-active-surface: light-dark(var(--color-neutral-200), var(--color-neutral-800));
   --color-active-text: light-dark(var(--color-neutral-950), var(--color-neutral-50));
   /** TODO(burdon): Merge overlay/surface? */
@@ -39,7 +41,7 @@
   --color-hover-surface-text: light-dark(var(--color-neutral-950), var(--color-neutral-50));
 
   /* Map attention to focus-surface logic so that elements acting as active attention zones highlight correctly on focus. */
-  --color-attention: var(--color-focus-surface);
+  --color-attention-surface: var(--color-focus-surface);
   --color-focus-surface: light-dark(var(--color-neutral-50), var(--color-neutral-950));
   --color-neutral-focus-indicator: light-dark(var(--color-neutral-400), var(--color-neutral-600));
 
@@ -79,8 +81,8 @@
 
   --color-grid-surface: light-dark(var(--color-neutral-50), var(--color-neutral-950));
   --color-grid-highlight: oklch(from var(--color-emerald-500) l c h / 0.5);
-  --color-grid-commented: light-dark(var(--color-green-400), var(--color-green-600));
-  --color-grid-commented-active: light-dark(oklch(from var(--color-green-400) l c h / 0.5), oklch(from var(--color-green-600) l c h / 0.5));
+  --color-grid-comment: light-dark(var(--color-green-400), var(--color-green-600));
+  --color-grid-comment-active: light-dark(oklch(from var(--color-green-400) l c h / 0.5), oklch(from var(--color-green-600) l c h / 0.5));
   --color-grid-hover-overlay: oklch(from var(--color-neutral-500) l c h / 0.1);
   --color-grid-selection-overlay: var(--color-blue-500);
   --color-grid-focus-indicator: light-dark(var(--color-green-200), var(--color-green-600));

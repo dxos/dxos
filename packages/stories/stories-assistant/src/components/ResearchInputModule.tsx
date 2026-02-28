@@ -46,7 +46,7 @@ const DebugCard = ({ object }: DebugCardProps) => {
         </p>
       </div>
       <details className='group'>
-        <summary className='cursor-pointer text-sm text-primary hover:text-primaryHover'>View JSON</summary>
+        <summary className='cursor-pointer text-sm text-accent-text hover:text-accent-text-hover'>View JSON</summary>
         <pre className='mt-2 text-xs p-3 rounded-sm overflow-x-auto'>{JSON.stringify(object, null, 2)}</pre>
       </details>
     </div>

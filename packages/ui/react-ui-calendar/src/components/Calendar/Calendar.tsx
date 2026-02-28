@@ -136,7 +136,7 @@ const CalendarToolbar = ({ classNames }: CalendarToolbarProps) => {
   return (
     <div
       role='none'
-      className={mx('shink-0 w-full grid grid-cols-3 items-center bg-barSurface', classNames)}
+      className={mx('shrink-0 w-full grid grid-cols-3 items-center bg-toolbar-surface', classNames)}
       style={{ width: defaultWidth }}
     >
       <div className='flex justify-start'>

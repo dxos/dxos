@@ -1,33 +1,49 @@
-# Token audit
-
-## Rules
-
-- Color tokens are in the form --color-{hue}-{shade}
-- Spacing tokens are in the form --spacing-{size}
+# Tailwind Token audit
 
 ## Tasks
 
-- [x] Check old color token references in the form --dx-hue-xxx are now --color-hue-xxx
-- [x] Check old spacing token references in the form --dx-xxx are now --spacing-xxx
-- [x] Convert all CSS vars from --dx-camelCase to --dx-kebab-case
-- [ ] Add either --spacing or --dx prefix to custom spacing tokens (e.g., --rail-content) and define.
+The following tasks apply to the entire codebase.
+Update this document with the results of the following tasks:
 
-## Notes
+- [x] Find invalid tailwind classes (e.g., any camelCase classes)
+- [x] Compile list of used and unused custom utility classes from our theme
+- [x] Compile list of used and unused component classes from our theme
+- [x] Compile list of unused fragment (exported consts and functions in `ui-theme/src/theme/fragments`)
 
-### Task 1 — color tokens
-No `--dx-{hue}-xxx` references found in source files. Complete.
+## Results
 
-### Task 2 — spacing tokens
-- `spacing.css`: Inlined `--dx-lacuna-*` values directly into `@theme` (`--spacing-trim-xs/sm/md/lg`).
-- `spacing.css`: Replaced `var(--dx-input-fine/coarse)` with `var(--spacing-trim-xs/sm)` for `--spacing-icon-button-padding`.
-- `spacing.css`: Added `--spacing-tag-padding-block: 0.125rem` to `@theme`.
-- `tag.css`, `dx-tag-picker.pcss`: Replaced `var(--dx-tag-padding-block)` → `var(--spacing-tag-padding-block)`.
-- `base.css`: Removed `--dx-tag-padding-block` definition.
+### Invalid classes
 
-### Task 3 — camelCase to kebab-case
-- `annotations.ts`: `--dx-errorText` → `--color-error-text`
-- `semantic.css`: Added `--color-active-text` and `--color-hover-surface-text` definitions.
-- `theme.ts`: `--dx-activeSurfaceText` → `--color-active-text`, `--dx-hoverSurfaceText` → `--color-hover-surface-text`
-- `base.css`: Restored `--dx-tag-padding-block` as bridge pointing to `var(--spacing-tag-padding-block)`.
-- `CellValidationMessage.tsx`, `CellEditor.tsx`: `--dx-gridCellWidth` → `--dx-grid-cell-width`
-- `dx-grid-axis-resize-handle.pcss`: `--dx-accentSurface` → `--color-accent-surface`, `--dx-hoverSurface` → `--color-hover-surface`
+### Utility classes
+
+#### Used
+
+- `dx-icon-inline`
+
+#### Unused
+
+_(None — only one utility class exists and it's used)_
+
+### Component classes
+
+#### Used
+
+`dx-button`, `dx-checkbox`, `dx-checkbox--switch`, `dx-dialog__overlay`, `dx-dialog__content`, `dx-dialog__title`, `dx-focus-ring` (all variants), `dx-text-hue`, `dx-link`, `dx-modal-surface`, `dx-attention-surface`, `dx-tag` (all variants), `dx-main-bounce-layout`, `dx-main-mobile-layout`, `dx-main-content-padding-transitions`, `dx-main-intrinsic-size`, `dx-main-sidebar`, `dx-main-overlay`, `dx-main-content-padding`, 
+
+#### Used (no dx- prefix)
+
+`app-drag`, `app-no-drag`, `overflow-anchored`, `overflow-anchor`, `contain-layout`, `sticky-top-from-topbar-bottom`, `sticky-bottom-from-statusbar-bottom`, `size-container`, `container-max-width`, `card-square`, `card-default-width`, `card-min-width`, `card-max-width`, `popover-card`, `density-coarse`
+
+#### Unused
+
+| Class | File |
+|---|---|
+| `drag-preview-p-0`    | `config/components/drag-preview.css`  |
+| `dx-scrollbar-thin`   | `config/components/scrollbar.css`     |
+| `dx-base-surface`     | `config/components/surface.css`       |
+| `dx-sidebar-surface`  | `config/components/surface.css`       |
+| `snap-inline`         | `config/layout/positioning.css`       |
+| `snap-block`          | `config/layout/positioning.css`       |
+| `sticky-top-0`        | `config/layout/positioning.css`       |
+
+### Unused Fragments

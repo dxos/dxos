@@ -5,7 +5,7 @@
 import { type ComponentFunction, type Elevation, type Theme } from '@dxos/ui-types';
 
 import { mx } from '../../util';
-import { blockSeparator, ghostHighlighted, surfaceShadow, surfaceZIndex } from '../fragments';
+import { ghostHighlighted, surfaceShadow, surfaceZIndex } from '../fragments';
 
 export type SelectStyleProps = Partial<{
   elevation: Elevation;
@@ -37,7 +37,7 @@ export const selectItemIndicator: ComponentFunction<SelectStyleProps> = (_props,
 export const selectArrow: ComponentFunction<SelectStyleProps> = (_props, ...etc) => mx('fill-separator', ...etc);
 
 export const selectSeparator: ComponentFunction<SelectStyleProps> = (_props, ...etc) =>
-  mx(blockSeparator, 'border-separator', ...etc);
+  mx('self-stretch border-b my-1 border-separator', ...etc);
 
 export const selectScrollButton: ComponentFunction<SelectStyleProps> = (_props, ...etc) =>
   mx('dx-modal-surface flex items-center justify-center cursor-default h-6 w-full', ...etc);
