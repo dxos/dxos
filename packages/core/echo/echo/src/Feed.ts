@@ -23,6 +23,7 @@ import * as Type from './Type';
 /**
  * Meta key source for storing the backing DXN bound to a feed object.
  */
+// TODO(dmaretskyi): Enforce that Feed ObjectId = feed storage ID. And remove this key.
 export const DXN_KEY = 'dxos.org/key/feed';
 
 /**
@@ -33,6 +34,7 @@ export type Feed = Obj.Obj<Type.Feed>;
 /**
  * Opaque cursor for iterating over feed items.
  */
+// TODO(dmaretskyi): T needs to be referenced in the type structure for typescript to respect it during inference and type-checking.
 export interface Cursor<T = Obj.Snapshot> {
   readonly _tag: 'Cursor';
 }
@@ -92,6 +94,7 @@ export class Service extends Context.Tag('@dxos/echo/Feed/Service')<
     /**
      * Removes items from a feed by ID.
      */
+    // TODO(dmaretskyi): Change type to ObjectId.
     remove(feed: Feed, ids: string[]): Promise<void>;
 
     /**
@@ -146,6 +149,7 @@ export const append = (feed: Feed, items: Entity.Unknown[]): Effect.Effect<void,
  * yield* Feed.remove(feed, [item]);
  * ```
  */
+// TODO(dmaretskyi): Should we allow snapshots here? - what does it mean to remove a snapshot?
 export const remove = (feed: Feed, items: (Entity.Unknown | Obj.Snapshot)[]): Effect.Effect<void, never, Service> =>
   Effect.gen(function* () {
     const service = yield* Service;
@@ -161,6 +165,11 @@ export const remove = (feed: Feed, items: (Entity.Unknown | Obj.Snapshot)[]): Ef
  * const result = yield* Feed.query(feed, Filter.type(Person));
  * ```
  */
+// TODO(dmaretskyi): Suport chained queries:
+//                   const result = yield* feed.pipe(Feed.query(Filter.type(Person))); result.subscribe(...)
+//                   const objects = yield* feed.pipe(Feed.query(Filter.type(Person))).run;
+//                   const object = yield* feed.pipe(Feed.query(Filter.type(Person))).first;
+// ... unify for Database and schema queries.
 export const query: {
   <Q extends Query.Any>(feed: Feed, query: Q): Effect.Effect<QueryResult.QueryResult<Query.Type<Q>>, never, Service>;
   <F extends Filter.Any>(feed: Feed, filter: F): Effect.Effect<QueryResult.QueryResult<Filter.Type<F>>, never, Service>;
