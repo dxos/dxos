@@ -145,6 +145,3 @@ export const Default: Story = {
     columns: 3,
   },
 };
-function PreviewPlugin() {
-  throw new Error('Function not implemented.');
-}
