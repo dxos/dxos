@@ -28,7 +28,7 @@ type VariantMap = {
 
 type Variant = { [K in keyof VariantMap]: { type: K } & VariantMap[K] }[keyof VariantMap];
 
-type BaseProps = Partial<{
+type StoryProps = Partial<{
   kind: keyof VariantMap;
   label: string;
   labelVisuallyHidden: boolean;
@@ -38,7 +38,7 @@ type BaseProps = Partial<{
   validationMessage: string;
 }>;
 
-const InputWrapper = ({
+const DefaultStory = ({
   kind,
   label,
   description,
@@ -47,7 +47,7 @@ const InputWrapper = ({
   validationValence,
   validationMessage,
   ...props
-}: BaseProps) => {
+}: StoryProps) => {
   return (
     <Input.Root {...{ validationValence }}>
       <Input.Label srOnly={labelVisuallyHidden}>{label}</Input.Label>
@@ -66,14 +66,6 @@ const InputWrapper = ({
   );
 };
 
-const DefaultStory = (props: BaseProps) => {
-  return (
-    <div className='p-4'>
-      <InputWrapper {...props} />
-    </div>
-  );
-};
-
 const meta = {
   title: 'ui/react-ui-core/components/Input',
   component: Input.Root as any,
@@ -83,7 +75,7 @@ const meta = {
 
 export default meta;
 
-type Story = StoryObj<BaseProps & Variant>;
+type Story = StoryObj<StoryProps & Variant>;
 
 export const DensityCoarse: Story = {
   args: {

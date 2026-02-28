@@ -13,7 +13,7 @@ import { Button, ButtonGroup, type ButtonProps } from './Button';
 
 const DefaultStory = ({ children, ...args }: Omit<ButtonProps, 'ref'>) => {
   return (
-    <div className='flex items-center gap-2 p-2'>
+    <div className='flex items-center gap-2'>
       <Button {...args}>{children}</Button>
       <Button {...args} disabled>
         {children}
