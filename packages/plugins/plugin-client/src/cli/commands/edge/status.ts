@@ -15,8 +15,8 @@ export const getStatus = () =>
   Effect.gen(function* () {
     const client = yield* ClientService;
     const identity = createEdgeIdentity(client);
-    client.edge.setIdentity(identity);
-    const status = yield* Effect.tryPromise(() => client.edge.getStatus());
+    client.edge.http.setIdentity(identity);
+    const status = yield* Effect.tryPromise(() => client.edge.http.getStatus());
 
     if (yield* CommandConfig.isJson) {
       yield* Console.log(JSON.stringify(status, null, 2));
