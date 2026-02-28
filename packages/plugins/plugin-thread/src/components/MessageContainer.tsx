@@ -6,7 +6,6 @@ import { EditorView } from '@codemirror/view';
 import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { useObjectMenuContributions } from '@dxos/app-toolkit/ui';
 import { type Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { PublicKey } from '@dxos/react-client';
@@ -200,8 +199,6 @@ const ProposalBlock = ({ block }: { block: ContentBlock.Proposal }) => {
 };
 
 const MessageBlockObjectTile = forwardRef<HTMLDivElement, { subject: Obj.Unknown }>(({ subject }, forwardedRef) => {
-  useObjectMenuContributions(subject);
-
   // TODO(burdon): Use annotation to get title.
   let title = (subject as any).name ?? (subject as any).title ?? (subject as any).type ?? 'Object';
   if (typeof title !== 'string') {

@@ -12,4 +12,5 @@ const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(file
 export default createConfig({
   dirname,
   browser: 'chromium',
+  storybook: true,
 });

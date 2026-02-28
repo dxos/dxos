@@ -3,12 +3,7 @@
 //
 
 import { Slot } from '@radix-ui/react-slot';
-import React, {
-  type ComponentPropsWithoutRef,
-  type HTMLAttributes,
-  type PropsWithChildren,
-  forwardRef,
-} from 'react';
+import React, { type ComponentPropsWithoutRef, type HTMLAttributes, type PropsWithChildren, forwardRef } from 'react';
 
 import {
   Button,

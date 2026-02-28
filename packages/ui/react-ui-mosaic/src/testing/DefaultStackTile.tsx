@@ -20,14 +20,10 @@ export const DefaultStackTile: MosaicStackTileComponent<Obj.Any> = (props) => {
         <Card.Title>{Obj.getLabel(props.data) ?? props.data.id}</Card.Title>
         <Card.Menu
           items={[
-            createMenuAction(
-              'toggle-details',
-              () => setOpen((open) => !open),
-              {
-                label: open ? 'Hide details' : 'Show details',
-                icon: 'ph--placeholder--regular',
-              },
-            ),
+            createMenuAction('toggle-details', () => setOpen((open) => !open), {
+              label: open ? 'Hide details' : 'Show details',
+              icon: 'ph--placeholder--regular',
+            }),
           ]}
         />
       </Card.Toolbar>

@@ -111,7 +111,11 @@ export const PopoverContent = () => {
               <Card.Toolbar>
                 {/* TODO(wittjosiah): Cleaner way to handle no drag handle in toolbar? */}
                 <span />
-                {state.popoverTitle ? <Card.Title onClick={handleNavigate}>{toLocalizedString(state.popoverTitle, t)}</Card.Title> : <span />}
+                {state.popoverTitle ? (
+                  <Card.Title onClick={handleNavigate}>{toLocalizedString(state.popoverTitle, t)}</Card.Title>
+                ) : (
+                  <span />
+                )}
                 <Card.Close onClick={handleClose} />
               </Card.Toolbar>
               <Surface.Surface role='card--content' data={state.popoverContent} limit={1} />
