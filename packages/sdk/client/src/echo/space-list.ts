@@ -235,7 +235,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
       type: 'dxos.halo.credentials.DefaultSpace',
     })[0];
     const defaultSpaceAssertion = defaultSpaceCredential && getCredentialAssertion(defaultSpaceCredential);
-    if (defaultSpaceAssertion?.['@type'] !== 'dxos.halo.credentials.DefaultSpace') {
+    if (defaultSpaceAssertion?.$typeName !== 'dxos.halo.credentials.DefaultSpace') {
       return false;
     }
     if (!SpaceId.isValid(defaultSpaceAssertion.spaceId)) {

@@ -26,7 +26,7 @@ export class DefaultSpaceStateMachine implements CredentialProcessor {
 
   async processCredential(credential: Credential): Promise<void> {
     const assertion = getCredentialAssertion(credential);
-    switch (assertion['@type']) {
+    switch (assertion.$typeName) {
       case 'dxos.halo.credentials.DefaultSpace': {
         if (!fromBufPublicKey(credential.subject!.id!)!.equals(this._params.identityKey)) {
           log.warn('Invalid default space credential', { expectedIdentity: this._params.identityKey, credential });

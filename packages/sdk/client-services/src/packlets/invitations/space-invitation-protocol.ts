@@ -188,23 +188,24 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     invariant(spaceResponse);
     const { credential, controlTimeframe, dataTimeframe } = spaceResponse;
     const assertion = getCredentialAssertion(credential as never);
-    invariant(assertion['@type'] === 'dxos.halo.credentials.SpaceMember', 'Invalid credential');
+    invariant(assertion.$typeName === 'dxos.halo.credentials.SpaceMember', 'Invalid credential');
     invariant(credential.subject.id.equals(this._signingContext.identityKey));
 
-    if (this._spaceManager.spaces.has(assertion.spaceKey)) {
+    const spaceKey = assertion.spaceKey ? toPublicKey(assertion.spaceKey) : undefined;
+    if (spaceKey && this._spaceManager.spaces.has(spaceKey)) {
       throw new AlreadyJoinedError({ message: 'Already joined space.' });
     }
 
     // Create local space.
     await this._spaceManager.acceptSpace({
-      spaceKey: assertion.spaceKey,
-      genesisFeedKey: assertion.genesisFeedKey,
+      spaceKey: spaceKey!,
+      genesisFeedKey: assertion.genesisFeedKey ? toPublicKey(assertion.genesisFeedKey) : undefined!,
       controlTimeframe,
       dataTimeframe,
     });
 
     await this._signingContext.recordCredential(protoToBuf<Credential>(credential));
 
-    return { spaceKey: encodePublicKey(assertion.spaceKey) };
+    return { spaceKey: spaceKey ? encodePublicKey(spaceKey) : undefined! };
   }
 }

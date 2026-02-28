@@ -7,7 +7,9 @@ import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'v
 import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
-import { type Identity } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { create } from '@dxos/protocols/buf';
+import { CreateIdentityRequestSchema, type Identity } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { type ServiceContext } from '../services';
 import { createServiceContext } from '../testing';
@@ -30,14 +32,16 @@ describe('IdentityService', () => {
 
   describe('createIdentity', () => {
     test('creates a new identity', async () => {
-      const identity = await identityService.createIdentity({});
+      const identity = await identityService.createIdentity(create(CreateIdentityRequestSchema));
 
       expect(identity.identityKey).to.exist;
       expect(identity.spaceKey).to.exist;
     });
 
     test('creates a new identity with a display name', async () => {
-      const identity = await identityService.createIdentity({ profile: { displayName: 'Example' } });
+      const identity = await identityService.createIdentity(
+        create(CreateIdentityRequestSchema, { profile: create(ProfileDocumentSchema, { displayName: 'Example' }) }),
+      );
 
       expect(identity.identityKey).to.exist;
       expect(identity.spaceKey).to.exist;
@@ -45,8 +49,8 @@ describe('IdentityService', () => {
     });
 
     test('fails to create identity if one already exists', async () => {
-      await identityService.createIdentity({});
-      await expect(identityService.createIdentity({})).rejects.toThrowError('Identity already exists');
+      await identityService.createIdentity(create(CreateIdentityRequestSchema));
+      await expect(identityService.createIdentity(create(CreateIdentityRequestSchema))).rejects.toThrowError('Identity already exists');
     });
   });
 
@@ -54,10 +58,10 @@ describe('IdentityService', () => {
 
   describe('updateProfile', () => {
     test('updates profile', async () => {
-      const identity = await identityService.createIdentity({});
+      const identity = await identityService.createIdentity(create(CreateIdentityRequestSchema));
       expect(identity.profile?.displayName).to.be.undefined;
 
-      const updatedIdentity = await identityService.updateProfile({ displayName: 'Example' });
+      const updatedIdentity = await identityService.updateProfile(create(ProfileDocumentSchema, { displayName: 'Example' }));
       expect(updatedIdentity.profile?.displayName).to.equal('Example');
     });
   });
@@ -83,7 +87,7 @@ describe('IdentityService', () => {
       expect(await result.wait()).to.be.undefined;
 
       result = new Trigger<Identity | undefined>();
-      const identity = await identityService.createIdentity({});
+      const identity = await identityService.createIdentity(create(CreateIdentityRequestSchema));
       expect(await result.wait()).to.deep.equal(identity);
     });
   });

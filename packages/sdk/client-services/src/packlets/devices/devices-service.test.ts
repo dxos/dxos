@@ -7,7 +7,9 @@ import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'v
 import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
+import { create } from '@dxos/protocols/buf';
 import { type Device } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { DeviceProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { type ServiceContext } from '../services';
 import { createServiceContext } from '../testing';
@@ -31,7 +33,7 @@ describe('DevicesService', () => {
   describe('updateDevice', () => {
     test.skip('updates device profile', async () => {
       const query = devicesService.queryDevices();
-      const device = await devicesService.updateDevice({ label: 'test-device' });
+      const device = await devicesService.updateDevice(create(DeviceProfileDocumentSchema, { label: 'test-device' }));
       const result = new Trigger<Device[] | undefined>();
       query.subscribe(({ devices }: any) => {
         result.wake(devices);
