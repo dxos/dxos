@@ -30,7 +30,7 @@ const ThreadRoot = forwardRef<HTMLDivElement, ThreadRootProps>(
         className={mx(
           threadLayout,
           hoverableFocusedWithinControls,
-          'bg-[var(--surface-bg)] current-related attention-surface [--controls-opacity:0]',
+          'bg-[var(--surface-bg)] current-related dx-attention-surface [--controls-opacity:0]',
           classNames,
         )}
         ref={forwardedRef}

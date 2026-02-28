@@ -22,7 +22,7 @@ import {
   formattingKeymap,
   formattingListener,
 } from '@dxos/ui-editor';
-import { attentionSurface, mx } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { EditorToolbar, type EditorToolbarState, useEditorToolbar } from '../components';
 import { type UseTextEditorProps, useTextEditor } from '../hooks';
@@ -81,7 +81,7 @@ const DefaultStory = ({ autoFocus, initialValue, placeholder }: StoryProps) => {
   return (
     <div role='none' className={mx('fixed inset-0 flex flex-col')}>
       {toolbarState && <EditorToolbar state={toolbarState} getView={getView} onViewModeChange={handleViewModeChange} />}
-      <div role='none' className={mx('grow overflow-hidden', attentionSurface)}>
+      <div role='none' className='grow overflow-hidden'>
         <div className={mx(editorWidth)} ref={parentRef} />
       </div>
     </div>

@@ -231,7 +231,7 @@ const PlankComponent = memo(
     const Root = part.startsWith('solo') ? 'article' : StackItem.Root;
     const fullscreen = layoutMode === 'solo--fullscreen';
     const className = mx(
-      'attention-surface relative dx-focus-ring-inset-over-all density-coarse',
+      'dx-attention-surface relative dx-focus-ring-inset-over-all density-coarse',
       isSolo && 'absolute inset-0',
       isSolo && mainIntrinsicSize,
       railGridHorizontal,

@@ -165,7 +165,7 @@ export const Surfaces = {
             { className: 'bg-input-surface', label: 'input' },
             { className: 'bg-active-surface', label: 'active' },
             { className: 'bg-hover-surface', label: 'hover' },
-            { className: 'bg-inverse-surface text-inverse-text', label: 'inverse' },
+            { className: 'bg-inverse-surface text-inverse-surface-text', label: 'inverse' },
           ].map(({ className, label }) => (
             <div key={className} className={mx('shrink-0 p-2 aspect-square w-48 rounded-md', className)}>
               {label}
