@@ -2,9 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-export const placeholderText = 'placeholder-neutral-300 dark:placeholder-neutral-500';
-export const staticPlaceholderText = 'text-neutral-300 dark:text-neutral-500';
-
 export const descriptionTextPrimary = 'text-sm font-normal text-base-text';
 export const descriptionMessage = ['text-description', 'border border-dashed border-separator rounded-sm p-4'];
 

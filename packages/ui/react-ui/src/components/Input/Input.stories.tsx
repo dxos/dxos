@@ -5,10 +5,9 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { mx, surfaceShadow } from '@dxos/ui-theme';
 import { type MessageValence } from '@dxos/ui-types';
 
-import { withTheme } from '../../testing';
+import { withLayoutVariants, withTheme } from '../../testing';
 
 import {
   type CheckboxProps,
@@ -60,7 +59,7 @@ const InputWrapper = ({
       {kind === 'switch' && <Input.Switch {...props} />}
 
       <Input.DescriptionAndValidation srOnly={descriptionVisuallyHidden}>
-        {validationMessage && <Input.Validation>{validationMessage}</Input.Validation>}
+        {validationMessage && <Input.Validation classNames='block'>{validationMessage}</Input.Validation>}
         <Input.Description>{description}</Input.Description>
       </Input.DescriptionAndValidation>
     </Input.Root>
@@ -69,16 +68,8 @@ const InputWrapper = ({
 
 const DefaultStory = (props: BaseProps) => {
   return (
-    <div className='flex flex-col gap-4'>
-      <div className={mx('bg-base-surface p-4 rounded-md')}>
-        <InputWrapper {...props} />
-      </div>
-      <div className={mx('bg-group-surface p-4 rounded-md', surfaceShadow({ elevation: 'positioned' }))}>
-        <InputWrapper {...props} />
-      </div>
-      <div className={mx('bg-modal-surface p-4 rounded-md', surfaceShadow({ elevation: 'dialog' }))}>
-        <InputWrapper {...props} />
-      </div>
+    <div className='p-4'>
+      <InputWrapper {...props} />
     </div>
   );
 };
@@ -87,7 +78,7 @@ const meta = {
   title: 'ui/react-ui-core/components/Input',
   component: Input.Root as any,
   render: DefaultStory,
-  decorators: [withTheme()],
+  decorators: [withTheme(), withLayoutVariants()],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
