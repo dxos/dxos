@@ -47,19 +47,19 @@ export const LoggingPanel = ({ maxLines = 100, ...props }: CustomPanelProps<{ ma
         </Input.Root>
         <Toolbar.IconButton icon='ph--x--regular' iconOnly label='Clear' onClick={handleClear} />
       </Toolbar.Root>
-      <ScrollArea.Root orientation='vertical' classNames='max-bs-[240px]'>
+      <ScrollArea.Root orientation='vertical' classNames='max-h-[240px]'>
         <ScrollArea.Viewport classNames='text-xs'>
           {entries.map((entry, index) => (
-            <div key={index} className='group pli-1 grid grid-cols-[1rem_1fr_1fr_min-content] items-center'>
+            <div key={index} className='group px-1 grid grid-cols-[1rem_1fr_1fr_min-content] items-center'>
               <div
                 className={mx(
                   entry.level > LogLevel.WARN
-                    ? 'text-errorText'
+                    ? 'text-error-text'
                     : entry.level > LogLevel.INFO
-                      ? 'text-warningText'
+                      ? 'text-warning-text'
                       : entry.level > LogLevel.VERBOSE
-                        ? 'text-infoText'
-                        : 'text-successText',
+                        ? 'text-info-text'
+                        : 'text-success-text',
                 )}
               >
                 {shortLevelName[entry.level]}

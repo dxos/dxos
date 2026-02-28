@@ -12,7 +12,7 @@ import { type SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
-import { DuplicateBlockLamportTimestampError, DuplicateBlockPositionError, PositionConflictError } from './errors';
+import { PositionConflictError } from './errors';
 
 type AppendRequest = FeedProtocol.AppendRequest;
 type AppendResponse = FeedProtocol.AppendResponse;
@@ -355,115 +355,72 @@ export class FeedStore {
     }).pipe(Effect.withSpan('FeedStore.setSyncState'));
 
   /**
-   * Validates that appended blocks do not introduce position or Lamport conflicts.
+   * Returns the number of stored blocks for a single feed in a space/namespace.
+   * Intended as a low-level primitive for callers (for example Cloudflare Worker code)
+   * that need to make retention decisions under constrained storage resources.
    */
-  #validateAppendBlocks = Effect.fn('FeedStore.validateAppendBlocks')(
-    (
-      blocks: readonly Block[],
-      feedPrivateIds: Map<string, number>,
-    ): Effect.Effect<
-      void,
-      SqlError.SqlError | DuplicateBlockPositionError | DuplicateBlockLamportTimestampError,
-      SqlClient.SqlClient
-    > =>
-      Effect.gen(this, function* () {
-        const sql = yield* SqlClient.SqlClient;
+  countBlocks = (opts: {
+    spaceId: SpaceId;
+    feedNamespace: string;
+    feedId: string;
+  }): Effect.Effect<number, SqlError.SqlError, SqlClient.SqlClient> =>
+    Effect.gen(this, function* () {
+      const sql = yield* SqlClient.SqlClient;
+      const rows = yield* sql<{ count: number }>`
+        SELECT COUNT(*) AS count
+        FROM blocks
+        JOIN feeds ON blocks.feedPrivateId = feeds.feedPrivateId
+        WHERE feeds.spaceId = ${opts.spaceId}
+          AND feeds.feedNamespace = ${opts.feedNamespace}
+          AND feeds.feedId = ${opts.feedId}
+      `;
+      return rows[0]?.count ?? 0;
+    }).pipe(Effect.withSpan('FeedStore.countBlocks'));
 
-        // Validate request-level uniqueness before writing.
-        const positionFeedIdByKey = new Map<string, string>();
-        const lamportFeedIdByKey = new Map<string, string>();
-        for (const block of blocks) {
-          const feedPrivateId = feedPrivateIds.get(block.feedId!)!;
-          if (!this.#options.assignPositions && block.position != null) {
-            const positionKey = `${feedPrivateId}|${block.position}`;
-            if (positionFeedIdByKey.has(positionKey)) {
-              yield* Effect.fail(
-                new DuplicateBlockPositionError({
-                  feedId: block.feedId!,
-                  position: block.position,
-                }),
-              );
-            }
-            positionFeedIdByKey.set(positionKey, block.feedId!);
-          }
+  /**
+   * Deletes the oldest blocks for a single feed in a space/namespace.
+   * This API intentionally does not enforce any retention policy (such as max size);
+   * callers decide when and how much to prune, which is useful for constrained
+   * environments like Cloudflare Workers.
+   *
+   * @returns Number of deleted rows.
+   */
+  deleteOldestBlocks = (opts: {
+    spaceId: SpaceId;
+    feedNamespace: string;
+    feedId: string;
+    count: number;
+  }): Effect.Effect<number, SqlError.SqlError, SqlClient.SqlClient> =>
+    Effect.gen(this, function* () {
+      const sql = yield* SqlClient.SqlClient;
+      if (opts.count <= 0) {
+        return 0;
+      }
 
-          const lamportKey = `${feedPrivateId}|${block.actorId}|${block.sequence}`;
-          if (lamportFeedIdByKey.has(lamportKey)) {
-            yield* Effect.fail(
-              new DuplicateBlockLamportTimestampError({
-                feedId: block.feedId!,
-                actorId: block.actorId,
-                sequence: block.sequence,
-              }),
-            );
-          }
-          lamportFeedIdByKey.set(lamportKey, block.feedId!);
-        }
+      const deletedRows = yield* sql<{ insertionId: number }>`
+        DELETE FROM blocks
+        WHERE insertionId IN (
+          SELECT blocks.insertionId
+          FROM blocks
+          JOIN feeds ON blocks.feedPrivateId = feeds.feedPrivateId
+          WHERE feeds.spaceId = ${opts.spaceId}
+            AND feeds.feedNamespace = ${opts.feedNamespace}
+            AND feeds.feedId = ${opts.feedId}
+          ORDER BY blocks.insertionId ASC
+          LIMIT ${opts.count}
+        )
+        RETURNING insertionId
+      `;
 
-        // Bulk-validate against persisted rows with exact tuple matching.
-        const lamportConditions = blocks.map((block) => {
-          const feedPrivateId = feedPrivateIds.get(block.feedId!)!;
-          return sql`(feedPrivateId = ${feedPrivateId} AND actorId = ${block.actorId} AND sequence = ${block.sequence})`;
-        });
-        if (lamportConditions.length > 0) {
-          const existingLamports = yield* sql<{ feedPrivateId: number; actorId: string; sequence: number }>`
-            SELECT feedPrivateId, actorId, sequence
-            FROM blocks
-            WHERE ${sql.or(lamportConditions)}
-            LIMIT 1
-          `;
-          const lamportConflict = existingLamports[0];
-          if (lamportConflict) {
-            const key = `${lamportConflict.feedPrivateId}|${lamportConflict.actorId}|${lamportConflict.sequence}`;
-            yield* Effect.fail(
-              new DuplicateBlockLamportTimestampError({
-                feedId: lamportFeedIdByKey.get(key)!,
-                actorId: lamportConflict.actorId,
-                sequence: lamportConflict.sequence,
-              }),
-            );
-          }
-        }
-
-        if (!this.#options.assignPositions) {
-          const positionedBlocks = blocks.filter((block) => block.position != null);
-          const positionConditions = positionedBlocks.map((block) => {
-            const feedPrivateId = feedPrivateIds.get(block.feedId!)!;
-            return sql`(feedPrivateId = ${feedPrivateId} AND position = ${block.position})`;
-          });
-          if (positionConditions.length > 0) {
-            const existingPositions = yield* sql<{ feedPrivateId: number; position: number }>`
-              SELECT feedPrivateId, position
-              FROM blocks
-              WHERE position IS NOT NULL
-                AND (${sql.or(positionConditions)})
-              LIMIT 1
-            `;
-            const positionConflict = existingPositions[0];
-            if (positionConflict) {
-              const key = `${positionConflict.feedPrivateId}|${positionConflict.position}`;
-              yield* Effect.fail(
-                new DuplicateBlockPositionError({
-                  feedId: positionFeedIdByKey.get(key)!,
-                  position: positionConflict.position,
-                }),
-              );
-            }
-          }
-        }
-      }),
-  );
+      return deletedRows.length;
+    }).pipe(Effect.withSpan('FeedStore.deleteOldestBlocks'));
 
   /**
    * Appends blocks for a space/namespace and optionally assigns global positions.
    */
   append = (
     request: AppendRequest,
-  ): Effect.Effect<
-    AppendResponse,
-    SqlError.SqlError | DuplicateBlockPositionError | DuplicateBlockLamportTimestampError,
-    SqlClient.SqlClient | SqlTransaction.SqlTransaction
-  > =>
+  ): Effect.Effect<AppendResponse, SqlError.SqlError, SqlClient.SqlClient | SqlTransaction.SqlTransaction> =>
     Effect.gen(this, function* () {
       if (!request.spaceId) {
         return yield* Effect.die(new Error('spaceId required for append'));
@@ -505,8 +462,6 @@ export class FeedStore {
               }),
             { concurrency: 'unbounded' },
           );
-
-          yield* this.#validateAppendBlocks(request.blocks, feedPrivateIds);
 
           // 2. Get max position per namespace ONCE (not per block).
           const maxPositions = new Map<string, number>();
@@ -562,11 +517,7 @@ export class FeedStore {
   appendLocal = Effect.fn('Feed.appendLocal')(
     (
       messages: { spaceId: string; feedId: string; feedNamespace: string; data: Uint8Array }[],
-    ): Effect.Effect<
-      Block[],
-      SqlError.SqlError | DuplicateBlockPositionError | DuplicateBlockLamportTimestampError,
-      SqlClient.SqlClient | SqlTransaction.SqlTransaction
-    > =>
+    ): Effect.Effect<Block[], SqlError.SqlError, SqlClient.SqlClient | SqlTransaction.SqlTransaction> =>
       Effect.gen(this, function* () {
         const sql = yield* SqlClient.SqlClient;
 
@@ -661,17 +612,24 @@ export class FeedStore {
           blocksBySpaceNamespace.get(spaceNamespaceKey)!.blocks.push(block);
         }
 
-        // 4. Call append once per (spaceId, namespace) batch.
-        for (const { spaceId, feedNamespace, blocks } of blocksBySpaceNamespace.values()) {
-          yield* this.append({
+        // 4. Call append once per (spaceId, namespace) batch and assign returned positions.
+        const positionByBlock = new Map<Block, number | null>();
+        for (const { spaceId, feedNamespace, blocks: batchBlocks } of blocksBySpaceNamespace.values()) {
+          const { positions } = yield* this.append({
             requestId: 'local-append',
-            blocks,
+            blocks: batchBlocks,
             spaceId,
             feedNamespace,
           });
+          for (let i = 0; i < batchBlocks.length; i++) {
+            positionByBlock.set(batchBlocks[i], positions[i] ?? null);
+          }
         }
 
-        return blocks;
+        return blocks.map((block) => ({
+          ...block,
+          position: positionByBlock.get(block) ?? block.position,
+        }));
       }).pipe(Effect.withSpan('FeedStore.appendLocal')),
   );
 

@@ -9,7 +9,7 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { type Node, useConnections } from '@dxos/plugin-graph';
 import { Avatar, Icon, Layout, ScrollArea, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Card, Mosaic, type StackTileComponent } from '@dxos/react-ui-mosaic';
+import { Card, Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchList, useSearchListItem, useSearchListResults } from '@dxos/react-ui-searchlist';
 import { mx } from '@dxos/ui-theme';
 
@@ -60,7 +60,8 @@ export const Workspace = ({ id }: WorkspaceProps) => {
   );
 };
 
-const WorkspaceChildTile: StackTileComponent<Node.Node> = ({ data }) => {
+const WorkspaceChildTile: MosaicStackTileComponent<Node.Node> = (props) => {
+  const data = props.data;
   const { t } = useTranslation(meta.id);
   const { invokeSync } = useOperationInvoker();
   const ref = useRef<HTMLDivElement>(null);
@@ -97,7 +98,7 @@ const WorkspaceChildTile: StackTileComponent<Node.Node> = ({ data }) => {
       fullWidth
       tabIndex={-1} // TODO(burdon): Use Mosaic.Focus.
       data-selected={isSelected}
-      classNames={mx('dx-focus-ring', isSelected && 'bg-hoverOverlay')}
+      classNames={mx('dx-focus-ring', isSelected && 'bg-hover-overlay')}
       onClick={handleSelect}
     >
       <Card.Toolbar density='coarse'>

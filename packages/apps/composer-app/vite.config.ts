@@ -140,7 +140,7 @@ export default defineConfig((env) => ({
     // Handle .md?raw imports.
     {
       name: 'raw-md-loader',
-      load(id) {
+      load(id: string) {
         if (id.endsWith('.md?raw')) {
           const filePath = id.replace(/\?raw$/, '');
           const content = readFileSync(filePath, 'utf-8');
@@ -353,18 +353,7 @@ export default defineConfig((env) => ({
       // verbose: true,
     }),
 
-    ThemePlugin({
-      root: dirname,
-      content: [
-        path.resolve(dirname, './index.html'),
-        path.resolve(dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        path.join(rootDir, '/packages/devtools/*/src/**/*.{js,ts,jsx,tsx}'),
-        path.join(rootDir, '/packages/experimental/*/src/**/*.{js,ts,jsx,tsx}'),
-        path.join(rootDir, '/packages/plugins/*/src/**/*.{js,ts,jsx,tsx}'),
-        path.join(rootDir, '/packages/sdk/*/src/**/*.{js,ts,jsx,tsx}'),
-        path.join(rootDir, '/packages/ui/*/src/**/*.{js,ts,jsx,tsx}'),
-      ],
-    }),
+    ThemePlugin({}),
   ]
     .filter(isNonNullable)
     .flat(), // Plugins

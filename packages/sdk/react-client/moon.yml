@@ -3,6 +3,7 @@ language: typescript
 tags:
   - ts-build
   - ts-test
+  - ts-test-storybook
   - typedoc
   - pack
   - storybook
@@ -17,7 +18,3 @@ tasks:
       - '--entryPoint=src/mesh/index.ts'
       - '--entryPoint=src/testing/index.ts'
       - '--entryPoint=src/worker.ts'
-  test:
-    inputs:
-      - .storybook/*
-      - /tools/storybook-react/.storybook/main.ts

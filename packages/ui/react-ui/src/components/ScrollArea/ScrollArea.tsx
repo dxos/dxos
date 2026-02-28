@@ -46,8 +46,8 @@ type ScrollAreaRootProps = SlottableProps<HTMLDivElement> & Partial<ScrollAreaCo
 const ScrollAreaRoot = forwardRef<HTMLDivElement, ScrollAreaRootProps>(
   (
     {
-      className,
       classNames,
+      className,
       children,
       orientation = 'vertical',
       autoHide = true,

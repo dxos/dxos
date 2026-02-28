@@ -35,6 +35,7 @@ export const ObjectMetaSchema = Schema.Struct({
    */
   // TODO(dmaretskyi): Has to be optional for compatibility with old data.
   // Defaulting to an empty array is possible but requires a bit more work.
+  // TODO(dmaretskyi): In automerge this should be a map of { [tag]: boolean } for uniqueness and conflict resolution.
   tags: Schema.optional(Schema.Array(Schema.String)),
 });
 

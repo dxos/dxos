@@ -26,7 +26,9 @@ export class Resolver extends Context.Tag('PluginInbox/Resolver')<
 >() {}
 
 export const resolve = <T, I>(schema: Type.Entity.Any & Schema.Schema<T, any>, input: I) =>
-  Effect.flatMap(Resolver, (service) => service.resolve<T, I>(schema, input));
+  Effect.flatMap(Resolver, (service) =>
+    Effect.map(service.resolve<T, I>(schema, input), (result) => result ?? undefined),
+  );
 
 export const fromResolvers = (resolvers: ResolverMap) =>
   Layer.succeed(

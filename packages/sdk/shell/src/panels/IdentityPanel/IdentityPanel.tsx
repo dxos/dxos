@@ -14,7 +14,6 @@ import { type CancellableInvitationObservable } from '@dxos/react-client/invitat
 import { ConnectionState, useNetworkStatus } from '@dxos/react-client/mesh';
 import { Avatar, Clipboard, Input, Toolbar, useId, useTranslation } from '@dxos/react-ui';
 import { EmojiPickerToolbarButton, HuePicker } from '@dxos/react-ui-pickers';
-import { errorText } from '@dxos/ui-theme';
 import { hexToEmoji, hexToHue, keyToFallback } from '@dxos/util';
 
 import { CloseButton, Heading, Viewport } from '../../components';
@@ -30,7 +29,7 @@ import {
 import { IdentityActionChooser } from './steps';
 import { useAgentHandlers } from './useAgentHandlers';
 
-const viewStyles = 'pbs-1 pbe-3 pli-3';
+const viewStyles = 'pt-1 pb-3 px-3';
 
 // TODO(thure): Factor out?
 const getHueValue = (identity?: Identity) =>
@@ -100,7 +99,7 @@ const IdentityHeading = ({
             status={isConnected ? 'active' : 'error'}
             hue={hue || fallbackValue.hue}
             fallback={emoji || fallbackValue.emoji}
-            classNames='relative z-[2] -mli-4 chromatic-ignore'
+            classNames='relative z-[2] -mx-4 chromatic-ignore'
           />
         </Toolbar.Root>
 
@@ -114,23 +113,23 @@ const IdentityHeading = ({
             variant='subdued'
             data-testid='display-name-input'
             placeholder={t('display name input placeholder')}
-            classNames='mbs-2 text-center font-light text-xl'
+            classNames='mt-2 text-center font-light text-xl'
             value={displayName}
             onChange={({ target: { value } }) => setDisplayName(value)}
           />
         </Input.Root>
 
         <Toolbar.Root classNames='justify-center pt-3'>
-          <EmojiPickerToolbarButton emoji={emoji} onChangeEmoji={setEmoji} classNames='bs-[--rail-action]' />
+          <EmojiPickerToolbarButton emoji={emoji} onChangeEmoji={setEmoji} classNames='h-(--rail-action)' />
           <HuePicker
             value={hue}
             onChange={setHue}
             onReset={() => setHue(undefined)}
-            classNames='bs-[--rail-action]'
+            classNames='h-(--rail-action)'
             rootVariant='toolbar-button'
           />
           <Clipboard.IconButton
-            classNames='bs-[--rail-action]'
+            classNames='h-(--rail-action)'
             data-testid='update-profile-form-copy-key'
             label={t('copy self did label')}
             value={identity.did}
@@ -141,7 +140,7 @@ const IdentityHeading = ({
               label={t('manage credentials label')}
               iconOnly
               tooltipSide='bottom'
-              classNames='bs-[--rail-action]'
+              classNames='h-(--rail-action)'
               onClick={onManageCredentials}
             />
           )}
@@ -150,7 +149,7 @@ const IdentityHeading = ({
             label={t(isConnected ? 'disconnect label' : 'connect label')}
             iconOnly
             tooltipSide='bottom'
-            classNames={['bs-[--rail-action]', !isConnected && errorText]}
+            classNames={['h-(--rail-action)', !isConnected && 'text-error-text']}
             onClick={() => onChangeConnectionState?.(isConnected ? ConnectionState.OFFLINE : ConnectionState.ONLINE)}
           />
         </Toolbar.Root>

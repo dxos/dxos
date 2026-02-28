@@ -5,6 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
+import { Invitation } from '@dxos/react-client/invitations';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { ConfirmReset } from '../../steps';
@@ -15,11 +16,13 @@ import { JoinPanelImpl } from './JoinPanel';
 import { type JoinPanelImplProps } from './JoinPanelProps';
 import { IdentityInputImpl } from './steps';
 
-const DefaultStory = (props: JoinPanelImplProps) => (
-  <StorybookDialog inOverlayLayout>
-    <JoinPanelImpl {...props} IdentityInput={IdentityInputImpl} ConfirmReset={ConfirmReset} />
-  </StorybookDialog>
-);
+const DefaultStory = (props: JoinPanelImplProps) => {
+  return (
+    <StorybookDialog inOverlayLayout>
+      <JoinPanelImpl {...props} IdentityInput={IdentityInputImpl} ConfirmReset={ConfirmReset} />
+    </StorybookDialog>
+  );
+};
 
 const meta = {
   title: 'sdk/shell/JoinPanel',
@@ -29,9 +32,6 @@ const meta = {
   parameters: {
     layout: 'centered',
     translations,
-    chromatic: {
-      disableSnapshot: false,
-    },
   },
   args: {
     titleId: 'storybookJoinPanel__title',
@@ -92,6 +92,16 @@ export const HaloInvitationAuthenticator: Story = {
   args: {
     mode: 'halo-only',
     activeView: 'halo invitation authenticator',
+    invitationAuthMethods: { Halo: Invitation.AuthMethod.SHARED_SECRET },
+  },
+};
+
+export const HaloInvitationAuthenticatorFailed: Story = {
+  args: {
+    mode: 'halo-only',
+    activeView: 'halo invitation authenticator',
+    invitationAuthMethods: { Halo: Invitation.AuthMethod.SHARED_SECRET },
+    failed: new Set<'Halo' | 'Space'>(['Halo']),
   },
 };
 

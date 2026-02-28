@@ -6,7 +6,7 @@ import type * as Context from 'effect/Context';
 import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
-import { Database } from '@dxos/echo';
+import { Database, Feed } from '@dxos/echo';
 import {
   ComputeEventLogger,
   ConfiguredCredentialsService,
@@ -32,6 +32,7 @@ const SERVICES = {
   functionInvocationService: FunctionInvocationService,
   functionCallService: RemoteFunctionExecutionService,
   queues: QueueService,
+  feeds: Feed.Service,
   tracing: TracingService,
 } as const satisfies Record<string, Context.TagClass<any, string, any>>;
 
@@ -109,6 +110,7 @@ export class ServiceContainer {
         : Database.notAvailable;
     const queues =
       this._services.queues != null ? Layer.succeed(QueueService, this._services.queues) : QueueService.notAvailable;
+    const feeds = this._services.feeds != null ? Layer.succeed(Feed.Service, this._services.feeds) : Feed.notAvailable;
     const tracing = Layer.succeed(TracingService, this._services.tracing ?? TracingService.noop);
     const eventLogger = Layer.succeed(ComputeEventLogger, this._services.eventLogger ?? ComputeEventLogger.noop);
     const functionCallService = Layer.succeed(
@@ -116,6 +118,6 @@ export class ServiceContainer {
       this._services.functionCallService ?? RemoteFunctionExecutionService.mock(),
     );
 
-    return Layer.mergeAll(ai, credentials, database, queues, tracing, eventLogger, functionCallService) as any;
+    return Layer.mergeAll(ai, credentials, database, queues, feeds, tracing, eventLogger, functionCallService) as any;
   }
 }

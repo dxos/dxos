@@ -10,6 +10,8 @@ import { createConfig } from './options';
 
 /**
  * Accessible from browser console.
+ * Example: `DX_LOG.config({ filter: 'ERROR' })`
+ * NOTE: File level filtering isn't supported in storybooks.
  */
 declare global {
   const DX_LOG: Log;
@@ -24,7 +26,7 @@ type LogFunction = (message: string, context?: LogContext, meta?: CallMetadata) 
  * Logging methods.
  */
 export interface LogMethods {
-  config: (options: LogOptions) => Log;
+  config: (options?: LogOptions) => Log;
   addProcessor: (processor: LogProcessor, addDefault?: boolean) => () => void;
 
   trace: LogFunction;
@@ -116,7 +118,7 @@ export const createLog = (): LogImp => {
      * NOTE: Preserves any processors that were already added to this logger instance
      * unless an explicit processor option is provided.
      */
-    config: ({ processor, ...options }) => {
+    config: ({ processor, ...options } = {}) => {
       const config = createConfig(options);
       // TODO(burdon): This could be buggy since the behavior is not reentrant.
       const processors = processor ? config.processors : log._config.processors;

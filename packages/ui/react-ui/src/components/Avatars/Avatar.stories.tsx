@@ -5,8 +5,7 @@
 import { type Meta } from '@storybook/react-vite';
 import React, { type PropsWithChildren } from 'react';
 
-import { type HuePalette } from '@dxos/ui-theme';
-import { type Size } from '@dxos/ui-types';
+import { type ChromaticPalette, type Size } from '@dxos/ui-types';
 import { hexToFallback } from '@dxos/util';
 
 import { withTheme } from '../../testing';
@@ -23,7 +22,7 @@ type StoryProps = PropsWithChildren<{
   variant?: AvatarVariant;
   animation?: AvatarAnimation;
   size?: Size;
-  hue?: HuePalette;
+  hue?: ChromaticPalette;
 }>;
 
 const DefaultStory = (props: StoryProps) => {
@@ -65,7 +64,7 @@ const meta = {
 export default meta;
 
 const sampleImage =
-  'https://png.pngtree.com/thumb_back/fh260/background/20230614/pngtree-the-photo-of-a-woman-with-red-sunglasses-is-surrounded-by-image_2931163.jpg';
+  'https://png.pngtree.com/thumb_back/fh260/background/20230614/pngtree-the-photo-of-a-woman-with-red-sunglasses-w-surrounded-by-image_2931163.jpg';
 
 const brokenImage = 'https://png.pngtree.com/potato_squirrel.png';
 

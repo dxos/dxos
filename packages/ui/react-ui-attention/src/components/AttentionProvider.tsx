@@ -27,7 +27,7 @@ import { ATTENDABLE_PATH_SEPARATOR, type Attention } from '../types';
 
 const ATTENTION_NAME = 'Attention';
 const ATTENDABLE_ATTRIBUTE = 'data-attendable-id';
-const ATTENTION_SOURCE_ATTRIBUTE = 'data-is-attention-source';
+const ATTENTION_SOURCE_ATTRIBUTE = 'data-w-attention-source';
 
 type AttentionContextValue = {
   attention: AttentionManager;

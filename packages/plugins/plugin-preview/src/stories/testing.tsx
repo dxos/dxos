@@ -8,7 +8,7 @@ import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { Card } from '@dxos/react-ui-mosaic';
-import { CardContainer } from '@dxos/react-ui-mosaic/testing';
+import { CardContainer, type CardContainerProps } from '@dxos/react-ui-mosaic/testing';
 import { Organization, Person, Pipeline, Task } from '@dxos/types';
 
 export type DefaultStoryProps<T extends Obj.Any> = {
@@ -20,13 +20,13 @@ export type DefaultStoryProps<T extends Obj.Any> = {
 export const DefaultStory = <T extends Obj.Any>({ Component, createObject, image }: DefaultStoryProps<T>) => {
   // TODO(wittjosiah): ECHO objects don't work when passed via Storybook args.
   const object = useMemo(() => createObject(), [createObject]);
-  const roles: SurfaceComponentProps['role'][] = ['card--intrinsic', 'card--popover'];
+  const roles: CardContainerProps['role'][] = ['intrinsic', 'popover'];
 
   return (
-    <div className='bs-full grid grid-rows-2 p-16 gap-16'>
+    <div className='h-full grid grid-rows-2 p-16 gap-16'>
       {roles.map((role, i) => (
-        <div key={i} className='flex bs-full justify-center overflow-hidden'>
-          <div className='flex flex-col gap-4 is-full items-center'>
+        <div key={i} className='flex h-full justify-center overflow-hidden'>
+          <div className='flex flex-col gap-4 w-full items-center'>
             <label className='text-sm text-description'>{role}</label>
             <CardContainer role={role}>
               <Card.Root border={false}>

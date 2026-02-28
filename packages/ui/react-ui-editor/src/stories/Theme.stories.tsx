@@ -32,7 +32,7 @@ const DefaultStory = () => {
   );
 
   return (
-    <div className='is-full grid grid-cols-2 gap-2'>
+    <div className='w-full grid grid-cols-2 gap-2'>
       <Editor.Root>
         <Editor.Content classNames='p-2' extensions={ext1} initialValue={createText(false)} />
       </Editor.Root>
@@ -46,7 +46,7 @@ const DefaultStory = () => {
 const meta: Meta<typeof DefaultStory> = {
   title: 'ui/react-ui-editor/Theme',
   component: DefaultStory,
-  decorators: [withTheme(), withLayout()],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
   },

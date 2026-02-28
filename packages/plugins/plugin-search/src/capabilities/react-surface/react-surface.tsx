@@ -10,7 +10,8 @@ import { Surface } from '@dxos/app-framework/ui';
 import { useActiveSpace } from '@dxos/plugin-space';
 import { type Space, SpaceState, isSpace } from '@dxos/react-client/echo';
 
-import { SEARCH_DIALOG, SearchDialog, type SearchDialogProps, SearchMain, SpaceMain } from '../../components';
+import { SEARCH_DIALOG } from '../../constants';
+import { SearchDialog, type SearchDialogProps, SearchMain, SpaceMain } from '../../containers';
 import { SearchContextProvider } from '../../hooks';
 import { meta } from '../../meta';
 

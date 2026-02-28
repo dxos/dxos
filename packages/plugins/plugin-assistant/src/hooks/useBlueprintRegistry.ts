@@ -17,8 +17,11 @@ import { distinctBy } from '@dxos/util';
  */
 // TODO(burdon): Reconcile with eventual public registry.
 export const useBlueprintRegistry = () => {
-  const blueprints = useCapabilities(AppCapabilities.BlueprintDefinition);
-  return useMemo(() => new Blueprint.Registry(blueprints), [blueprints]);
+  const blueprintDefinitions = useCapabilities(AppCapabilities.BlueprintDefinition);
+  return useMemo(
+    () => new Blueprint.Registry(blueprintDefinitions.map((blueprint) => blueprint.make())),
+    [blueprintDefinitions],
+  );
 };
 
 export const useBlueprints = ({

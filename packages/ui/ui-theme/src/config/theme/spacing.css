@@ -1,0 +1,126 @@
+/**
+ * Tokens
+ */
+
+@theme {
+  --spacing-prose-max-width: 50rem;
+  --spacing-container-max-width: 50rem;
+
+  --spacing-card-default-width: 20rem;
+  --spacing-card-min-width: 18rem;
+  --spacing-card-max-width: 22rem;
+  --spacing-card-min-height: 18rem;
+  --spacing-card-max-height: 30rem;
+
+  --spacing-trim-xs: 0.375rem;
+  --spacing-trim-sm: 0.5rem;
+  --spacing-trim-md: 0.75rem;
+  --spacing-trim-lg: 1.5rem;
+
+  --spacing-tag-padding-block: 0.125rem;
+
+  /** Minimal trim to allow for ring/outline. */
+  --spacing-form-chrome: var(--spacing-trim-xs);
+
+  /**
+   * Density: fine
+   */
+  --spacing-form-padding: var(--spacing-trim-sm);
+  --spacing-icon-button-padding: var(--spacing-trim-xs);
+  --spacing-scroll-padding: 4px;
+}
+
+@layer dx-tokens {
+  /**
+   * Density: coarse
+   */
+  .density-coarse {
+    --spacing-form-padding: var(--spacing-trim-md);
+    --spacing-icon-button-padding: var(--spacing-trim-sm);
+    --spacing-scroll-padding: 8px;
+  }
+}
+
+@layer dx-tokens {
+  :root {
+    --dx-line-0: 0.000px;
+    --dx-line-1: 1.000px;
+    --dx-line-2: 2.000px;
+
+    --dx-lacuna-12: 1.500rem;
+    --dx-lacuna-3: 0.375rem;
+    --dx-lacuna-4: 0.500rem;
+    --dx-lacuna-6: 0.750rem;
+  }
+
+  :root {
+    --dx-hair-line: 1px;
+    --dx-landmark-line: 1px;
+    --dx-modal-line: 1px;
+    --dx-no-line: 0px;
+    --dx-thick-line: 2px;
+    --dx-focus-line: 2px;
+
+    --dx-no-line: var(--dx-line-0);
+    --dx-hair-line: var(--dx-line-1);
+    --dx-thick-line: var(--dx-line-2);
+
+    --dx-focus-offset: var(--dx-no-line);
+    --dx-focus-line: var(--dx-thick-line);
+    --dx-modal-line: var(--dx-hair-line);
+    --dx-grid-focus-indicator-width: var(--dx-hair-line);
+
+    --dx-input-fine: var(--dx-lacuna-3);
+    --dx-input-coarse: var(--dx-lacuna-4);
+  }
+
+  [data-grid-focus-indicator-variant="stack"] {
+    --dx-grid-focus-indicator-width: var(--dx-thick-line);
+  }
+
+  :root {
+    /** TODO(burdon): Remove? */
+    --sticky-top: 0;
+
+    /** TODO(burdon): Add dx- prefix */
+    --line-height: 32px;
+    --text-content: calc(50rem - env(safe-area-inset-left) - env(safe-area-inset-right));
+
+    --rail-content: 3rem;
+    --rail-size: calc(var(--rail-content) + 1px);
+    --rail-item: calc(var(--rail-content) - 1rem);
+    --rail-action: calc(var(--rail-content) - 0.5rem + 1px);
+ 
+    --topbar-size: var(--rail-size);
+    --toolbar-size: var(--rail-content);
+    --statusbar-size: var(--rail-content);
+
+    --nav-sidebar-size: 22.5rem;
+    --complementary-sidebar-size: 25rem;
+    --drawer-size: 50dvh;
+
+    --l0-size: 74px; /* MacOS windowing controls. */
+    --l0-avatar-size: 3rem;
+    --l1-size: calc(var(--nav-sidebar-size) - var(--l0-size));
+    --r0-size: var(--rail-size);
+    --r1-size: calc(var(--complementary-sidebar-size) - var(--r0-size));
+  }
+
+  :root {
+    --dx-calc-auto: auto;
+    --dx-calc-min: min-content;
+    --dx-calc-fit: fit-content;
+    --dx-calc-max: max-content;
+    --dx-calc-content: content;
+  }
+
+  @supports (block-size: calc-size(fit-content, size)) {
+    :root {
+      --dx-calc-auto: calc-size(auto, size);
+      --dx-calc-min: calc-size(min-content, size);
+      --dx-calc-fit: calc-size(fit-content, size);
+      --dx-calc-max: calc-size(max-content, size);
+      --dx-calc-content: calc-size(content, size);
+    }
+  }
+}

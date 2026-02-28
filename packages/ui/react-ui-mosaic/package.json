@@ -19,6 +19,12 @@
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
+    "./playwright": {
+      "source": "./src/playwright/index.ts",
+      "types": "./dist/types/src/playwright/index.d.ts",
+      "browser": "./dist/lib/browser/playwright/index.mjs",
+      "node": "./dist/lib/node-esm/playwright/index.mjs"
+    },
     "./testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
@@ -28,7 +34,14 @@
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
-    "*": {}
+    "*": {
+      "playwright": [
+        "dist/types/src/playwright/index.d.ts"
+      ],
+      "testing": [
+        "dist/types/src/testing/index.d.ts"
+      ]
+    }
   },
   "files": [
     "dist",

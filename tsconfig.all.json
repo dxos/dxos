@@ -409,9 +409,6 @@
       "path": "packages/plugins/plugin-theme/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-theme-editor/tsconfig.json"
-    },
-    {
       "path": "packages/plugins/plugin-thread/tsconfig.json"
     },
     {
@@ -487,9 +484,6 @@
       "path": "packages/ui/lit-grid/tsconfig.json"
     },
     {
-      "path": "packages/ui/lit-theme-editor/tsconfig.json"
-    },
-    {
       "path": "packages/ui/lit-ui/tsconfig.json"
     },
     {
@@ -548,9 +542,6 @@
     },
     {
       "path": "packages/ui/react-ui-grid/tsconfig.json"
-    },
-    {
-      "path": "packages/ui/react-ui-kanban/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-list/tsconfig.json"

@@ -37,7 +37,7 @@ const queryableRegistry = new WeakDictionary<string, Database.Queryable>();
 // Key separator that won't appear in identifiers (DXN strings use colons).
 const KEY_SEPARATOR = '~';
 
-// Atom.family keyed by "identifier\0serializedAST".
+// Atom.family keyed by "identifier~serializedAST".
 const queryFamily = Atom.family((key: string) => {
   // Parse key outside Atom.make - runs once per key.
   const separatorIndex = key.indexOf(KEY_SEPARATOR);

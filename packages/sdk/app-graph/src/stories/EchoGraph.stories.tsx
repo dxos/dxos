@@ -17,9 +17,9 @@ import { type Client, useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Icon, IconButton, Input, Select } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
-import { Path, Tree } from '@dxos/react-ui-list';
+import { Path, Tree, type TreeModel } from '@dxos/react-ui-list';
 import { getSize, mx } from '@dxos/ui-theme';
-import { byPosition, isNonNullable, safeParseInt } from '@dxos/util';
+import { safeParseInt } from '@dxos/util';
 
 import * as CreateAtom from '../atoms';
 import * as Graph from '../graph';
@@ -217,13 +217,13 @@ const Controls = ({ children }: PropsWithChildren) => {
             <Input.TextInput
               autoComplete='off'
               size={5}
-              classNames='is-[100px] text-right pie-[22px]'
+              classNames='w-[100px] text-right pe-[22px]'
               placeholder='Interval'
               value={actionInterval}
               onChange={({ target: { value } }) => setActionInterval(value)}
             />
           </Input.Root>
-          <Icon icon='ph--timer--regular' classNames={mx('absolute inline-end-1 block-start-1 mt-[6px]', getSize(3))} />
+          <Icon icon='ph--timer--regular' classNames={mx('absolute right-1 top-1 mt-[6px]', getSize(3))} />
         </div>
         <IconButton icon='ph--plus--regular' label='Add' onClick={() => action && runAction(client, action)} />
         <Select.Root value={action?.toString()} onValueChange={(action) => setAction(action as unknown as Action)}>
@@ -255,6 +255,7 @@ const meta = {
     withTheme(),
     withClientProvider({
       createIdentity: true,
+      types: [TestSchema.Expando],
       onCreateIdentity: async ({ client }) => {
         await client.spaces.create();
         await client.spaces.create();
@@ -291,60 +292,97 @@ export const TreeView: Story = {
     const stateRef = useRef(new Map<string, Atom.Writable<{ open: boolean; current: boolean }>>());
 
     const getOrCreateState = useMemo(
-      () => (path: string) => {
-        let atom = stateRef.current.get(path);
+      () => (pathKey: string) => {
+        let atom = stateRef.current.get(pathKey);
         if (!atom) {
           atom = Atom.make({ open: true, current: false }).pipe(Atom.keepAlive);
-          stateRef.current.set(path, atom);
+          stateRef.current.set(pathKey, atom);
         }
         return atom;
       },
       [],
     );
 
-    const useItems = useCallback(
-      (node?: Node.Node, options?: { disposition?: string; sort?: boolean }) => {
-        const connections = useAtomValue(graph.connections(node?.id ?? Node.RootId));
-        return options?.sort ? connections.toSorted((a, b) => byPosition(a.properties, b.properties)) : connections;
-      },
+    const childIdsFamily = useMemo(
+      () =>
+        Atom.family((id: string) =>
+          Atom.make((get) => {
+            const connections = get(graph.connections(id));
+            return connections.map((connection) => connection.id);
+          }),
+        ),
       [graph],
     );
 
-    const getProps = useCallback(
-      (node: Node.Node, path: string[]) => {
-        const children = Graph.getConnections(graph, node.id, 'outbound')
-          .map((n) => {
-            // Break cycles.
-            const nextPath = [...path, node.id];
-            return nextPath.includes(n.id) ? undefined : (n as Node.Node);
-          })
-          .filter(isNonNullable) as Node.Node[];
-        const parentOf =
-          children.length > 0 ? children.map(({ id }) => id) : node.properties.role === 'branch' ? [] : undefined;
-        return {
-          id: node.id,
-          label: node.id,
-          icon: node.type === 'dxos.org/type/Space' ? 'ph--planet--regular' : 'ph--placeholder--regular',
-          parentOf,
-        };
-      },
+    const itemFamily = useMemo(
+      () =>
+        Atom.family((id: string) =>
+          Atom.make((get) => {
+            const node = get(graph.node(id));
+            return Option.isSome(node) ? node.value : undefined;
+          }),
+        ),
       [graph],
     );
 
-    // Hook that subscribes to item state via Atom.
-    const useItemState = (_path: string[]) => {
-      const path = useMemo(() => Path.create(..._path), [_path.join('~')]);
-      const atom = getOrCreateState(path);
-      return useAtomValue(atom);
-    };
+    const itemPropsFamily = useMemo(
+      () =>
+        Atom.family((pathKey: string) => {
+          const path = pathKey.split('~');
+          const id = path[path.length - 1];
+          return Atom.make((get) => {
+            const nodeOpt = get(graph.node(id));
+            const node = Option.isSome(nodeOpt) ? nodeOpt.value : undefined;
+            if (!node) {
+              return { id, label: id };
+            }
+            const connections = get(graph.connections(node.id, 'outbound'));
+            const safeChildren = connections.filter((n) => !path.includes(n.id));
+            const parentOf =
+              safeChildren.length > 0
+                ? safeChildren.map(({ id }) => id)
+                : node.properties.role === 'branch'
+                  ? []
+                  : undefined;
+            return {
+              id: node.id,
+              label: node.id,
+              icon: node.type === 'dxos.org/type/Space' ? 'ph--planet--regular' : 'ph--placeholder--regular',
+              parentOf,
+            };
+          });
+        }),
+      [graph],
+    );
 
-    const useIsOpen = (_path: string[]) => {
-      return useItemState(_path).open;
-    };
+    const itemOpenFamily = useMemo(
+      () =>
+        Atom.family((pathKey: string) => {
+          const stateAtom = getOrCreateState(pathKey);
+          return Atom.make((get) => get(stateAtom).open);
+        }),
+      [getOrCreateState],
+    );
 
-    const useIsCurrent = (_path: string[]) => {
-      return useItemState(_path).current;
-    };
+    const itemCurrentFamily = useMemo(
+      () =>
+        Atom.family((pathKey: string) => {
+          const stateAtom = getOrCreateState(pathKey);
+          return Atom.make((get) => get(stateAtom).current);
+        }),
+      [getOrCreateState],
+    );
+
+    const model: TreeModel<Node.Node> = useMemo(
+      () => ({
+        childIds: (parentId?: string) => childIdsFamily(parentId ?? Node.RootId),
+        item: (id: string) => itemFamily(id),
+        itemProps: (path: string[]) => itemPropsFamily(path.join('~')),
+        itemOpen: (path: string[]) => itemOpenFamily(Path.create(...path)),
+        itemCurrent: (path: string[]) => itemCurrentFamily(Path.create(...path)),
+      }),
+      [childIdsFamily, itemFamily, itemPropsFamily, itemOpenFamily, itemCurrentFamily],
+    );
 
     const onOpenChange = useCallback(
       ({ path: _path, open }: { path: string[]; open: boolean }) => {
@@ -373,15 +411,7 @@ export const TreeView: Story = {
     return (
       <>
         <Controls />
-        <Tree
-          id={Node.RootId}
-          useItems={useItems}
-          getProps={getProps}
-          useIsOpen={useIsOpen}
-          useIsCurrent={useIsCurrent}
-          onOpenChange={onOpenChange}
-          onSelect={onSelect}
-        />
+        <Tree model={model} id={Node.RootId} onOpenChange={onOpenChange} onSelect={onSelect} />
       </>
     );
   },

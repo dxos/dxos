@@ -9,8 +9,7 @@ import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import { AiSession, GenericToolkit, ToolExecutionServices } from '@dxos/assistant';
-import { Filter, Obj, Ref, Type } from '@dxos/echo';
-import { Database } from '@dxos/echo';
+import { Database, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { FunctionInvocationServiceLayerTest } from '@dxos/functions-runtime/testing';
 import { type DXN } from '@dxos/keys';
@@ -18,8 +17,8 @@ import { log } from '@dxos/log';
 import { type Actor, LegacyOrganization, Message, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
+import { ResearchGraph } from '../../blueprints';
 import { makeGraphWriterHandler, makeGraphWriterToolkit } from '../../crud';
-import { contextQueueLayerFromResearchGraph } from '../research';
 
 export default defineFunction({
   key: 'dxos.org/functions/entity-extraction',
@@ -57,7 +56,7 @@ export default defineFunction({
           onAppend: (dxns) => created.push(...dxns),
         });
         const toolkit = yield* GraphWriterToolkit.pipe(
-          Effect.provide(GraphWriterHandler.pipe(Layer.provide(contextQueueLayerFromResearchGraph))),
+          Effect.provide(GraphWriterHandler.pipe(Layer.provide(ResearchGraph.contextQueueLayer))),
         );
 
         yield* new AiSession().run({

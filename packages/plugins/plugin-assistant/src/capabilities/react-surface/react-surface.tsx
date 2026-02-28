@@ -8,7 +8,7 @@ import React from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useSettingsState } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { Chat, Initiative } from '@dxos/assistant-toolkit';
+import { Chat, Project } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { getSpace } from '@dxos/client/echo';
 import { Sequence } from '@dxos/conductor';
@@ -22,10 +22,11 @@ import {
   ChatCompanion,
   ChatContainer,
   ChatDialog,
-  InitiativeContainer,
+  ProjectArticle,
+  ProjectSettings,
   PromptArticle,
   TriggerStatus,
-} from '../../components';
+} from '../../containers';
 import { ASSISTANT_DIALOG, meta } from '../../meta';
 import { type Assistant } from '../../types';
 
@@ -50,11 +51,16 @@ export default Capability.makeModule(() =>
         component: ({ data, role, ref }) => <ChatContainer role={role} subject={data.subject} ref={ref} />,
       }),
       Surface.create({
-        id: `${meta.id}/initiative`,
+        id: `${meta.id}/project`,
         role: 'article',
-        filter: (data): data is { subject: Initiative.Initiative } =>
-          Obj.instanceOf(Initiative.Initiative, data.subject),
-        component: ({ data, role }) => <InitiativeContainer role={role} initiative={data.subject} />,
+        filter: (data): data is { subject: Project.Project } => Obj.instanceOf(Project.Project, data.subject),
+        component: ({ data, role }) => <ProjectArticle role={role} subject={data.subject} />,
+      }),
+      Surface.create({
+        id: `${meta.id}/project/companion/settings`,
+        role: 'object-settings',
+        filter: (data): data is { subject: Project.Project } => Obj.instanceOf(Project.Project, data.subject),
+        component: ({ data }) => <ProjectSettings subject={data.subject} />,
       }),
       // TODO(wittjosiah): This is flashing when chat changes.
       Surface.create({

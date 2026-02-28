@@ -63,7 +63,7 @@ const ViewportRoot = ({
       setActiveView={setActiveView}
       scope={__viewportScope}
     >
-      <div role='region' aria-live='polite' {...props} className={mx('is-full overflow-hidden', classNames)}>
+      <div role='region' aria-live='polite' {...props} className={mx('w-full overflow-hidden', classNames)}>
         {children}
       </div>
     </ViewportProvider>
@@ -96,7 +96,7 @@ const ViewportView = forwardRef<HTMLDivElement, ViewportScopedProps<ViewportView
     const ref = useForwardedRef(forwardedRef);
     const { findFirstFocusable } = useFocusFinders();
     useEffect(() => {
-      if (!focusManaged && isActive && document.body.hasAttribute('data-is-keyboard') && ref.current) {
+      if (!focusManaged && isActive && document.body.hasAttribute('data-w-keyboard') && ref.current) {
         findFirstFocusable(ref.current)?.focus();
       }
     }, [focusManaged, ref.current, isActive]);
@@ -105,7 +105,7 @@ const ViewportView = forwardRef<HTMLDivElement, ViewportScopedProps<ViewportView
       <section
         {...props}
         {...(!isActive && { 'aria-hidden': true })}
-        className={mx('min-is-0 flex-1 flex flex-col', isActive ? 'order-2' : 'order-4 invisible', classNames)}
+        className={mx('min-w-0 flex-1 flex flex-col', isActive ? 'order-2' : 'order-4 invisible', classNames)}
         ref={ref}
       >
         {children}
@@ -116,6 +116,12 @@ const ViewportView = forwardRef<HTMLDivElement, ViewportScopedProps<ViewportView
 
 ViewportView.displayName = VIEW_NAME;
 
-export const Viewport = { Root: ViewportRoot, Views: ViewportViews, View: ViewportView };
+export const Viewport = {
+  Root: ViewportRoot,
+  Views: ViewportViews,
+  View: ViewportView,
+};
+
 export { useViewportContext, createViewportScope };
+
 export type { ViewportRootProps, ViewportViewsProps, ViewportViewProps, ViewportScopedProps };

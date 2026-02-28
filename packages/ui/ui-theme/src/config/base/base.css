@@ -1,0 +1,40 @@
+/**
+ * Base utilities.
+ */
+
+@layer dx-base {
+  :root {
+    color-scheme: light;
+    touch-action: pan-x pan-y;
+    font-synthesis: none;
+    font-variation-settings: 'wght' 400,
+    'slnt' 0;
+    scroll-padding-block-start: var(--spacing-14);
+    scroll-padding-block-end: var(--spacing-2);
+    @apply font-body;
+  }
+
+  .dark {
+    color-scheme: dark;
+  }
+
+  button {
+    @apply cursor-pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+@layer dx-tokens {
+  :root {
+    --dx-tag-padding-block: var(--spacing-tag-padding-block);
+  }
+
+  html, html.dark, html .dark,
+  .sb-show-main {
+    background-color: var(--color-base-surface);
+    color: var(--color-base-text);
+    --surface-bg: var(--color-base-surface);
+    --surface-text: var(--color-base-text);
+    --description-text: var(--color-description);
+  }
+}

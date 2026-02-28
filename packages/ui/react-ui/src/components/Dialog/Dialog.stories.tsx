@@ -56,16 +56,22 @@ const meta = {
   component: Dialog as any,
   render: DefaultStory,
   decorators: [withTheme()],
-  parameters: {
-    chromatic: {
-      disableSnapshot: false,
-    },
-  },
+  parameters: {},
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
+  args: {
+    title: 'Dialog title',
+    description: faker.lorem.paragraph(2),
+    openTrigger: 'Open',
+    closeTrigger: 'Close',
+    blockAlign: 'start',
+  },
+};
 
 export const Small: Story = {
   args: {
@@ -97,5 +103,16 @@ export const Large: Story = {
     closeTrigger: 'Close',
     blockAlign: 'center',
     size: 'lg',
+  },
+};
+
+export const ExtraLarge: Story = {
+  args: {
+    title: 'Dialog title',
+    description: faker.lorem.paragraph(2),
+    openTrigger: 'Open Dialog',
+    closeTrigger: 'Close',
+    blockAlign: 'center',
+    size: 'xl',
   },
 };

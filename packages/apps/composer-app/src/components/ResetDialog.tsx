@@ -72,10 +72,10 @@ export const ResetDialog = ({
     void navigator.clipboard.writeText(JSON.stringify(error));
   }, [error]);
 
-  const handleReset = async () => {
+  const handleReset = useCallback(async () => {
     localStorage.clear();
     window.location.href = window.location.origin;
-  };
+  }, []);
 
   const handleSaveFeedback = useCallback(
     async (values: UserFeedback) => {
@@ -109,13 +109,12 @@ export const ResetDialog = ({
         : { defaultOpen, open, onOpenChange })}
     >
       <AlertDialog.Overlay>
-        {/* TODO(burdon): Replace max-is-[40rem] with standard size. */}
-        <AlertDialog.Content classNames='md:max-is-[40rem]' data-testid='resetDialog'>
+        <AlertDialog.Content size='md' data-testid='resetDialog'>
           <AlertDialog.Title>{t(error ? error.title : 'reset dialog label')}</AlertDialog.Title>
           <AlertDialog.Description>{t(error ? error.message : 'reset dialog message')}</AlertDialog.Description>
           {error && (
             <>
-              <div role='none' className='mbs-4'>
+              <div role='none' className='mt-4'>
                 <IconButton
                   icon={showStack ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
                   variant='ghost'
@@ -129,7 +128,7 @@ export const ResetDialog = ({
                 <Message.Root
                   key={error.message}
                   valence='error'
-                  classNames='mlb-4 overflow-auto max-bs-72 relative'
+                  classNames='my-4 overflow-auto max-h-72 relative'
                   data-testid='resetDialog.stackTrace'
                 >
                   <pre className='text-xs whitespace-pre-line'>{error.stack}</pre>
@@ -144,7 +143,7 @@ export const ResetDialog = ({
               )}
             </>
           )}
-          <div role='none' className='flex gap-2 mbs-4'>
+          <div role='none' className='flex gap-2 mt-4'>
             {!isDev ? (
               <DropdownMenu.Root>
                 <DropdownMenu.Trigger asChild>

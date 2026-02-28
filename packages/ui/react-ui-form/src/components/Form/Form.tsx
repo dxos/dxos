@@ -4,12 +4,19 @@
 
 import { createContext } from '@radix-ui/react-context';
 import * as Schema from 'effect/Schema';
-import type * as SchemaAST from 'effect/SchemaAST';
+import * as SchemaAST from 'effect/SchemaAST';
 import React, { type PropsWithChildren, useEffect, useMemo, useRef } from 'react';
 
 import { type AnyProperties } from '@dxos/echo/internal';
 import { createJsonPath, getValue as getValue$ } from '@dxos/effect';
-import { IconButton, type IconButtonProps, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import {
+  IconButton,
+  type IconButtonProps,
+  ScrollArea,
+  type ScrollAreaRootProps,
+  type ThemedClassName,
+  useTranslation,
+} from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import {
@@ -20,7 +27,6 @@ import {
   useKeyHandler,
 } from '../../hooks';
 import { translationKey } from '../../translations';
-import { setValueEchoAware } from '../../util';
 
 import { FormFieldLabel, type FormFieldLabelProps, type FormFieldStateProps } from './FormFieldComponent';
 import {
@@ -30,10 +36,10 @@ import {
 
 // New features/polish
 // [x] Unify readonly/inline modes
+// [ ] auto save doesn't work for combobox + select due to only firing on blur (workaround is to use onValuesChanged)
 // [ ] Don't call save/autoSave if value hasn't changed
 // [ ] Fix onCancel (restore values)
 // [ ] Fix useSchema Type.Obj.Any cast
-// [ ] Remove @dxos/echo-db deps
 // [ ] TableCellEditor (handleEnter/ModalController).
 // [ ] Use FormFieldWrapper uniformly
 // [ ] Inline tables for object arrays
@@ -42,7 +48,6 @@ import {
 // [x] Refs
 //   [x] Single-select (fix popover)
 //   [x] Multi-select (array)
-// [ ] auto save doesn't work for combobox + select due to only firing on blur (workaround is to use onValuesChanged)
 
 // TODO(burdon): Move to @dxos/schema (re-export here).
 export type ExcludeId<S extends Schema.Schema.AnyNoContext> = Omit<Schema.Schema.Type<S>, 'id'>;
@@ -70,7 +75,7 @@ type FormContextValue<T extends AnyProperties = any> = {
    * Testing.
    */
   testId?: string;
-} & Pick<NaturalFormFieldSetProps<T>, 'readonly' | 'layout' | 'fieldMap' | 'fieldProvider'>;
+} & Pick<NaturalFormFieldSetProps<T>, 'readonly' | 'layout' | 'fieldMap' | 'fieldProvider' | 'projection'>;
 
 const [FormContextProvider, useFormContext] = createContext<FormContextValue>('Form');
 
@@ -84,19 +89,25 @@ const useFormValues: {
     path: (string | number)[] | undefined,
     defaultValue: () => T,
   ): T | undefined;
-} = (componentName: string, path: (string | number)[] = [], defaultValue?: () => any) => {
-  const jsonPath = createJsonPath(path);
+} = (componentName: string, path?: (string | number)[], defaultValue?: () => any) => {
+  const stablePath = useMemo(() => path ?? [], [path ? path.join('.') : undefined]);
+  const jsonPath = createJsonPath(stablePath);
   const {
-    form: { values },
+    form: { values, onValueChange },
   } = useFormContext(componentName);
 
   const value = getValue$(values, jsonPath);
 
+  // Apply default value once when the field has no value. lastAppliedPathRef prevents
+  // re-applying on every render (e.g. when defaultValue() returns null) and ensures
+  // we apply per path when the hook is used for different fields.
+  const lastAppliedPathRef = useRef<string | null>(null);
   useEffect(() => {
-    if (!value && defaultValue) {
-      setValueEchoAware(values, jsonPath, defaultValue());
+    if (value == null && defaultValue && lastAppliedPathRef.current !== jsonPath) {
+      lastAppliedPathRef.current = jsonPath;
+      onValueChange(stablePath, SchemaAST.stringKeyword, defaultValue());
     }
-  }, [value, defaultValue]);
+  }, [value, defaultValue, onValueChange, stablePath, jsonPath]);
 
   return value;
 };
@@ -166,12 +177,25 @@ FormRoot.displayName = 'Form.Root';
 
 const FORM_VIEWPORT_NAME = 'Form.Viewport';
 
-type FormViewportProps = PropsWithChildren<{}>;
+type FormViewportProps = PropsWithChildren<ScrollAreaRootProps>;
 
-// TODO(burdon): Ref and props (allow asChild).
-const FormViewport = ({ children }: FormViewportProps) => {
+const FormViewport = ({
+  children,
+  classNames,
+  margin = true,
+  padding = true,
+  thin = true,
+  ...props
+}: FormViewportProps) => {
   return (
-    <ScrollArea.Root orientation='vertical'>
+    <ScrollArea.Root
+      orientation='vertical'
+      classNames={['py-form-padding', classNames]}
+      margin={margin}
+      padding={padding}
+      thin={thin}
+      {...props}
+    >
       <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
     </ScrollArea.Root>
   );
@@ -187,19 +211,13 @@ const FORM_CONTENT_NAME = 'Form.Content';
 
 type FormContentProps = ThemedClassName<PropsWithChildren<{}>>;
 
-// TOOD(burdon): Figure out nesting (indent and testId).
 const FormContent = ({ classNames, children }: FormContentProps) => {
   const { form, testId } = useFormContext(FORM_CONTENT_NAME);
   const ref = useRef<HTMLDivElement>(null);
   useKeyHandler(ref.current, form);
 
   return (
-    <div
-      ref={ref}
-      role='form'
-      className={mx('flex flex-col is-full pli-cardSpacingInline density-fine', classNames)}
-      data-testid={testId}
-    >
+    <div ref={ref} role='form' className={mx('w-full flex flex-col gap-form-padding', classNames)} data-testid={testId}>
       {children}
     </div>
   );
@@ -247,7 +265,7 @@ const FormActions = ({ classNames }: FormActionsProps) => {
   //   Deprecate FormSubmit ans use FormActions without Cancel button if no callback is supplied.
 
   return (
-    <div role='none' className={mx('grid grid-flow-col auto-cols-fr gap-2 pbs-cardSpacingBlock', classNames)}>
+    <div role='none' className={mx('grid grid-flow-col gap-2 auto-cols-fr py-form-padding', classNames)}>
       {onCancel && (
         <IconButton
           icon='ph--x--regular'
@@ -296,9 +314,9 @@ const FormSubmit = ({ classNames, label, icon, disabled }: FormSubmitProps) => {
   }
 
   return (
-    <div role='none' className={mx('flex is-full pbs-cardSpacingBlock', classNames)}>
+    <div role='none' className={mx('flex w-full pt-formSpacing', classNames)}>
       <IconButton
-        classNames='is-full'
+        classNames='w-full'
         type='submit'
         variant='primary'
         disabled={disabled ?? !canSave}
@@ -323,9 +341,9 @@ export const Form = {
   Viewport: FormViewport,
   Content: FormContent,
   FieldSet: FormFieldSet,
+  Label: FormFieldLabel,
   Actions: FormActions,
   Submit: FormSubmit,
-  Label: FormFieldLabel,
 };
 
 export { useFormContext, useFormValues, useFormFieldState };
@@ -335,7 +353,7 @@ export type {
   FormViewportProps,
   FormContentProps,
   FormFieldSetProps,
+  FormFieldLabelProps as LabelProps,
   FormActionsProps,
   FormSubmitProps,
-  FormFieldLabelProps as LabelProps,
 };

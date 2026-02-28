@@ -16,17 +16,17 @@ export const Banner = ({ variant, classNames }: ThemedClassName<{ variant?: 'top
   return (
     <header
       className={mx(
-        'flex items-stretch relative plb-1 pis-1 pie-2',
+        'flex items-stretch relative py-1 ps-1 pe-2',
         variant === 'topbar' &&
-          'fixed inset-inline-0 block-start-[env(safe-area-inset-top)] bs-[--rail-size] border-be border-separator',
+          'fixed inset-x-0 top-[env(safe-area-inset-top)] h-(--rail-size) border-b border-separator',
         classNames,
       )}
     >
       {variant === 'sidebar' ? <CloseSidebarButton /> : <ToggleSidebarButton />}
-      <span className='self-center grow mis-1'>{t('current app name', { ns: osTranslations })}</span>
+      <span className='self-center grow ms-1'>{t('current app name', { ns: osTranslations })}</span>
       {variant === 'topbar' && (
         <div role='none' className='absolute inset-0 pointer-events-none'>
-          <div role='none' className='grid bs-full pointer-fine:p-1 max-is-md mli-auto pointer-events-auto'>
+          <div role='none' className='grid h-full pointer-fine:p-1 max-w-md mx-auto pointer-events-auto'>
             <Surface.Surface role='search-input' limit={1} />
           </div>
         </div>

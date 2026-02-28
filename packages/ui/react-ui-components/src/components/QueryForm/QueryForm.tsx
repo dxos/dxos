@@ -23,7 +23,7 @@ export type QueryFormProps = ThemedClassName<{
 }>;
 
 // TODO(wittjosiah): Support more complex queries and traversals.
-export const QueryForm = ({ classNames, types, tags, initialQuery, onChange }: QueryFormProps) => {
+export const QueryForm = ({ classNames, initialQuery, types, tags, onChange }: QueryFormProps) => {
   const { t } = useTranslation(translationKey);
 
   const initialType = initialQuery ? Option.getOrUndefined(extractTypename(initialQuery)) : undefined;

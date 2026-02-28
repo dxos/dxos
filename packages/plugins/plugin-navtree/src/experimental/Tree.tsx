@@ -19,7 +19,7 @@ export const IconButton = ({
 } & Pick<HTMLAttributes<HTMLDivElement>, 'onClick'>) => {
   // TODO(burdon): Density aware.
   return (
-    <div className={mx('flex is-6 bs-6 items-center justify-center select-none', classNames)} onClick={onClick}>
+    <div className={mx('flex w-6 h-6 items-center justify-center select-none', classNames)} onClick={onClick}>
       <Icon icon={iconName} classNames='cursor-pointer' size={size} />
     </div>
   );
@@ -193,9 +193,9 @@ export const TreeNodeRow = (props: TreeNodeProps & { className?: string }) => {
     <Grid
       style={{ paddingLeft: `${(depth - 1) * 24}px` }}
       className={mx(
-        'group is-full items-center cursor-pointer bg-hoverSurface',
+        'group w-full items-center cursor-pointer bg-hover-surface',
         // TODO(burdon): Use data-active.
-        selected?.[id] && 'bg-activeSurface',
+        selected?.[id] && 'bg-active-surface',
         className,
       )}
       onClick={() => selected && onChangeSelected?.(id, !selected[id])}

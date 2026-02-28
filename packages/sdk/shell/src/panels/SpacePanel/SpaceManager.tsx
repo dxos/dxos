@@ -9,7 +9,7 @@ import { useConfig } from '@dxos/react-client';
 import { useSpaceInvitations } from '@dxos/react-client/echo';
 import { type CancellableInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { ScrollArea, useTranslation } from '@dxos/react-ui';
-import { descriptionText, mx } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import {
   type ActionMenuItem,
@@ -96,7 +96,7 @@ export const SpaceManager = (props: SpaceManagerProps) => {
   return <SpaceManagerImpl {...props} invitations={invitations} inviteActions={inviteActions} />;
 };
 
-const headingFragment = 'pis-3 pie-1 plb-1 mbe-1 font-medium';
+const headingFragment = 'ps-3 pe-1 py-1 mb-1 font-medium';
 
 export const SpaceManagerImpl = (props: SpaceManagerImplProps) => {
   const {
@@ -136,11 +136,11 @@ export const SpaceManagerImpl = (props: SpaceManagerImplProps) => {
 
   return (
     <>
-      <ScrollArea.Root thin orientation='vertical' classNames='grow shrink basis-28 -mli-2'>
+      <ScrollArea.Root thin orientation='vertical' classNames='grow shrink basis-28 -mx-2'>
         <ScrollArea.Viewport>
           {!!visibleInvitations?.length && (
             <>
-              <h3 className={mx(headingFragment, descriptionText)}>{t('invitation list heading')}</h3>
+              <h3 className={mx(headingFragment, 'text-description')}>{t('invitation list heading')}</h3>
               <InvitationListComponent
                 className='mb-2'
                 send={send}
@@ -148,7 +148,7 @@ export const SpaceManagerImpl = (props: SpaceManagerImplProps) => {
                 onClickRemove={(invitation) => invitation.cancel()}
                 createInvitationUrl={createInvitationUrl}
               />
-              <h3 className={mx(headingFragment, descriptionText, 'mbs-2')}>{t('space member list heading')}</h3>
+              <h3 className={mx(headingFragment, 'text-description', 'mt-2')}>{t('space member list heading')}</h3>
             </>
           )}
           <SpaceMemberListComponent spaceKey={space.key} includeSelf />

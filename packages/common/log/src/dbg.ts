@@ -3,7 +3,6 @@
 //
 
 import { type CallMetadata } from './meta';
-
 /**
  * Debug-log value to console.
  * Log's the expression being evaluated.

@@ -7,6 +7,7 @@ import React, { useState } from 'react';
 
 import { Filter, Query } from '@dxos/echo';
 import { Tag, Type } from '@dxos/echo';
+import { ObjectId } from '@dxos/keys';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -26,9 +27,9 @@ const types = [
 ];
 
 const tags = Tag.createTagList({
-  ['tag_1' as const]: Tag.make({ label: 'Important' }),
-  ['tag_2' as const]: Tag.make({ label: 'Investor' }),
-  ['tag_3' as const]: Tag.make({ label: 'New' }),
+  [ObjectId.random().toString()]: Tag.make({ label: 'Important' }),
+  [ObjectId.random().toString()]: Tag.make({ label: 'Investor' }),
+  [ObjectId.random().toString()]: Tag.make({ label: 'New' }),
 });
 
 const meta = {
@@ -39,7 +40,7 @@ const meta = {
 
     return (
       <div>
-        <Toolbar.Root classNames='border-be border-subduedSeparator'>
+        <Toolbar.Root classNames='border-b border-subdued-separator'>
           <QueryForm {...args} onChange={setQuery} />
         </Toolbar.Root>
 

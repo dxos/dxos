@@ -14,7 +14,7 @@ type Config = {
 };
 
 const Container = ({ children, elevation, surface }: PropsWithChildren<{ elevation: Elevation; surface?: string }>) => (
-  <div className={mx('rounded-md border border-separator', surface, surfaceShadow({ elevation }))}>{children}</div>
+  <div className={mx('p-4 rounded-sm', surface, surfaceShadow({ elevation }))}>{children}</div>
 );
 
 const Panel = ({
@@ -22,30 +22,27 @@ const Panel = ({
   elevations,
   densities,
   className,
-}: { Story: ComponentType } & Config & { className?: string }) => (
-  <div className={mx('flex flex-col bs-full p-4 gap-4', className)}>
-    {elevations?.map(({ elevation, surface }) =>
-      densities?.map((density) => (
-        <Container key={`${elevation}--${density}`} surface={surface} elevation={elevation}>
-          <Story />
-        </Container>
-      )),
-    )}
-  </div>
-);
+}: { Story: ComponentType } & Config & { className?: string }) => {
+  return (
+    <div className={mx('flex flex-col h-full p-8 gap-8', className)}>
+      {elevations?.map(({ elevation, surface }) =>
+        densities?.map((density) => (
+          <Container key={`${elevation}--${density}`} surface={surface} elevation={elevation}>
+            <Story />
+          </Container>
+        )),
+      )}
+    </div>
+  );
+};
 
 export const withLayoutVariants = ({
   elevations = [
-    { elevation: 'base', surface: 'bg-baseSurface' },
-    { elevation: 'positioned', surface: 'bg-cardSurface' },
-    { elevation: 'dialog', surface: 'bg-modalSurface' },
+    { elevation: 'dialog', surface: 'bg-modal-surface' },
+    { elevation: 'positioned', surface: 'bg-card-surface' },
+    { elevation: 'base', surface: 'bg-base-surface' },
   ],
   densities = ['coarse'],
 }: Config = {}): Decorator => {
-  return (Story) => (
-    <div className='fixed inset-0 grid grid-cols-2 overflow-y-auto'>
-      <Panel Story={Story} className='light' elevations={elevations} densities={densities} />
-      <Panel Story={Story} className='dark' elevations={elevations} densities={densities} />
-    </div>
-  );
+  return (Story) => <Panel Story={Story} elevations={elevations} densities={densities} />;
 };

@@ -48,7 +48,7 @@ const DefaultStory = (_args: StoryMainArgs) => {
           <NavigationSidebarToggle close />
         </Toolbar.Root>
       </Main.NavigationSidebar>
-      <Main.Content classNames='is-full'>
+      <Main.Content classNames='w-full'>
         <Toolbar.Root>
           <NavigationSidebarToggle />
           <div className='flex items-center grow justify-center'>Main</div>
@@ -73,9 +73,6 @@ const meta = {
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
-    chromatic: {
-      disableSnapshot: false,
-    },
   },
 } satisfies Meta<typeof DefaultStory>;
 

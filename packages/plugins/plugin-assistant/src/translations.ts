@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Chat, Initiative } from '@dxos/assistant-toolkit';
+import { Chat, Project } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
@@ -53,15 +53,15 @@ export const translations = [
         'delete object label': 'Delete AI Chat',
         'object deleted label': 'AI Chat deleted',
       },
-      [Initiative.Initiative.typename]: {
-        'typename label': 'Initiative',
-        'typename label_zero': 'Initiatives',
-        'typename label_one': 'Initiative',
-        'typename label_other': 'Initiatives',
-        'object name placeholder': 'New initiative',
-        'rename object label': 'Rename initiative',
-        'delete object label': 'Delete initiative',
-        'object deleted label': 'Initiative deleted',
+      [Project.Project.typename]: {
+        'typename label': 'Project',
+        'typename label_zero': 'Projects',
+        'typename label_one': 'Project',
+        'typename label_other': 'Projects',
+        'object name placeholder': 'New project',
+        'rename object label': 'Rename project',
+        'delete object label': 'Delete project',
+        'object deleted label': 'Project deleted',
       },
       // TODO(burdon): Reconcile with react-ui-chat.
       [meta.id]: {
@@ -106,7 +106,7 @@ export const translations = [
         'chat update name label': 'Update AI Chat name',
 
         'toolkit label': 'Toolkit',
-        'summary label': 'Summary',
+        'stats label': 'Stats',
 
         'search placeholder': 'Search...',
         'prompt placeholder': 'Enter question or command...',

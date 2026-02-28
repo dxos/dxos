@@ -13,7 +13,7 @@ import { DropdownMenu, type MenuItem, MenuProvider } from '@dxos/react-ui-menu';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
 
-import { useIsAlternateTree, useLoadDescendents } from '../../hooks';
+import { useActions, useFilteredItems, useIsAlternateTree, useLoadDescendents } from '../../hooks';
 import { meta } from '../../meta';
 import { NAV_TREE_ITEM } from '../NavTree';
 import { useNavTreeContext } from '../NavTreeContext';
@@ -32,30 +32,16 @@ export type L1PanelProps = {
  */
 export const L1Panel = ({ open, path, item, currentItemId, onBack }: L1PanelProps) => {
   const { t } = useTranslation(meta.id);
-  const navTreeContext = useNavTreeContext();
   const title = toLocalizedString(item.properties.label, t);
-
-  // TODO(wittjosiah): Support multiple alternate trees.
-  const { useItems } = navTreeContext;
-  const alternateTree = useItems(item, { disposition: 'alternate-tree' })[0];
-  const alternatePath = useMemo(() => [...path, item.id], [item.id, path]);
-  const isAlternate = useIsAlternateTree(alternatePath, item);
-  const useAlternateItems = useCallback(
-    (node?: Node.Node, { disposition }: { disposition?: string } = {}) => {
-      // TODO(wittjosiah): Sorting is expensive, limit to necessary items for now.
-      return useItems(node, { disposition, sort: node?.id === alternateTree.id });
-    },
-    [alternateTree, useItems],
-  );
 
   return (
     <Tabs.Tabpanel
       key={item.id}
       value={item.id}
       classNames={[
-        'absolute inset-block-0 inline-end-0',
-        'is-[calc(100%-var(--l0-size))] lg:is-[--l1-size] grid-cols-1 grid-rows-[var(--rail-size)_1fr]',
-        'pbs-[env(safe-area-inset-top)]',
+        'absolute inset-y-0 end-0',
+        'w-[calc(100%-var(--l0-size))] lg:w-(--l1-size) grid-cols-1 grid-rows-[var(--rail-size)_1fr]',
+        'py-[env(safe-area-inset-top)]',
         item.id === currentItemId && 'grid',
       ]}
       tabIndex={-1}
@@ -63,38 +49,65 @@ export const L1Panel = ({ open, path, item, currentItemId, onBack }: L1PanelProp
       {...(!open && { inert: true })}
     >
       {item.id === currentItemId && (
-        <DensityProvider density='fine'>
-          <L1PanelHeader path={path} item={item} currentItemId={currentItemId} onBack={onBack} />
-          <ScrollArea.Root thin orientation='vertical'>
-            <ScrollArea.Viewport>
-              {isAlternate ? (
-                <Tree
-                  {...navTreeContext}
-                  id={alternateTree.id}
-                  root={alternateTree}
-                  path={alternatePath}
-                  levelOffset={5}
-                  gridTemplateColumns='[tree-row-start] 1fr min-content min-content min-content [tree-row-end]'
-                  renderColumns={NavTreeItemColumns}
-                  useItems={useAlternateItems}
-                />
-              ) : (
-                <Tree
-                  {...navTreeContext}
-                  id={item.id}
-                  root={item}
-                  path={path}
-                  levelOffset={5}
-                  gridTemplateColumns='[tree-row-start] 1fr min-content min-content min-content [tree-row-end]'
-                  renderColumns={NavTreeItemColumns}
-                  draggable
-                />
-              )}
-            </ScrollArea.Viewport>
-          </ScrollArea.Root>
-        </DensityProvider>
+        <L1PanelContent open={open} path={path} item={item} currentItemId={currentItemId} onBack={onBack} />
       )}
     </Tabs.Tabpanel>
+  );
+};
+
+/**
+ * Active panel content — only mounted for the current tab to avoid effect cascades.
+ */
+const L1PanelContent = ({ path, item, currentItemId, onBack }: L1PanelProps) => {
+  const navTreeContext = useNavTreeContext();
+
+  // TODO(wittjosiah): Support multiple alternate trees.
+  const alternateTree = useFilteredItems(item, { disposition: 'alternate-tree' })[0];
+  const alternatePath = useMemo(() => [...path, item.id], [item.id, path]);
+  const isAlternate = useIsAlternateTree(alternatePath, item);
+
+  return (
+    <DensityProvider density='fine'>
+      <L1PanelHeader path={path} item={item} currentItemId={currentItemId} onBack={onBack} />
+      <ScrollArea.Root thin orientation='vertical'>
+        <ScrollArea.Viewport>
+          {isAlternate ? (
+            <Tree
+              model={navTreeContext.model}
+              id={alternateTree.id}
+              rootId={alternateTree.id}
+              path={alternatePath}
+              levelOffset={5}
+              gridTemplateColumns='[tree-row-start] 1fr min-content min-content min-content [tree-row-end]'
+              renderColumns={NavTreeItemColumns}
+              blockInstruction={navTreeContext.blockInstruction}
+              canDrop={navTreeContext.canDrop}
+              canSelect={navTreeContext.canSelect}
+              onOpenChange={navTreeContext.onOpenChange}
+              onSelect={navTreeContext.onSelect}
+              onItemHover={navTreeContext.onItemHover}
+            />
+          ) : (
+            <Tree
+              model={navTreeContext.model}
+              id={item.id}
+              rootId={item.id}
+              path={path}
+              levelOffset={5}
+              gridTemplateColumns='[tree-row-start] 1fr min-content min-content min-content [tree-row-end]'
+              draggable
+              renderColumns={NavTreeItemColumns}
+              blockInstruction={navTreeContext.blockInstruction}
+              canDrop={navTreeContext.canDrop}
+              canSelect={navTreeContext.canSelect}
+              onOpenChange={navTreeContext.onOpenChange}
+              onSelect={navTreeContext.onSelect}
+              onItemHover={navTreeContext.onItemHover}
+            />
+          )}
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
+    </DensityProvider>
   );
 };
 
@@ -105,14 +118,29 @@ const L1PanelHeader = ({ item, path, onBack }: L1PanelProps) => {
   const { t } = useTranslation(meta.id);
   const { renderItemEnd: ItemEnd } = useNavTreeContext();
   const title = toLocalizedString(item.properties.label, t);
+  const backCapableWorkspace = item.id.startsWith('!');
 
   const { primaryAction, groupedActions, menuActions, onAction } = useL1MenuActions({ item, path });
   useLoadDescendents(item);
 
   return (
-    <div className='flex is-full items-center border-be border-subduedSeparator app-drag density-coarse'>
-      <div className='is-6' />
-      <h2 className='flex-1 truncate min-is-0'>{title}</h2>
+    <div className='flex w-full items-center border-b border-subdued-separator app-drag density-coarse pe-1'>
+      {backCapableWorkspace ? (
+        <IconButton
+          size={5}
+          density='coarse'
+          classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
+          variant='ghost'
+          icon='ph--caret-left--regular'
+          iconOnly
+          label={t('button back')}
+          data-testid='treeView.primaryTreeButton'
+          onClick={() => onBack?.()}
+        />
+      ) : (
+        <div className='w-6' />
+      )}
+      <h2 className='flex-1 truncate min-w-0'>{title}</h2>
       {/* TODO(wittjosiah): Reconcile with NavTreeItemColumns. */}
       <div role='none' className='contents app-no-drag'>
         {primaryAction?.properties?.disposition === 'list-item-primary' && !primaryAction?.properties?.disabled && (
@@ -131,7 +159,7 @@ const L1PanelHeader = ({ item, path, onBack }: L1PanelProps) => {
           <IconButton
             size={5}
             density='coarse'
-            classNames={['shrink-0 pli-2 pointer-fine:pli-1', hoverableControlItem, hoverableOpenControlItem]}
+            classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
             variant='ghost'
             icon={menuActions[0].properties?.icon ?? 'ph--placeholder--regular'}
             iconOnly
@@ -147,7 +175,7 @@ const L1PanelHeader = ({ item, path, onBack }: L1PanelProps) => {
                 <IconButton
                   size={5}
                   density='coarse'
-                  classNames={['shrink-0 pli-2 pointer-fine:pli-1', hoverableControlItem, hoverableOpenControlItem]}
+                  classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
                   variant='ghost'
                   icon='ph--dots-three-vertical--regular'
                   iconOnly
@@ -169,11 +197,11 @@ const L1PanelHeader = ({ item, path, onBack }: L1PanelProps) => {
  */
 const useL1MenuActions = ({ item, path }: Pick<L1PanelProps, 'item' | 'path'>) => {
   const { t } = useTranslation(meta.id);
-  const { setAlternateTree, useActions, ...navTreeContext } = useNavTreeContext();
+  const { setAlternateTree } = useNavTreeContext();
   const runAction = useActionRunner();
 
   // TODO(wittjosiah): Support multiple alternate trees.
-  const alternateTree = navTreeContext.useItems(item, { disposition: 'alternate-tree' })[0];
+  const alternateTree = useFilteredItems(item, { disposition: 'alternate-tree' })[0];
   const alternatePath = useMemo(() => [...path, item.id], [item.id, path]);
   const isAlternate = useIsAlternateTree(alternatePath, item);
 

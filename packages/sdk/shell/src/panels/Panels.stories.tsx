@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type FC } from 'react';
 
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../translations';
 
@@ -55,12 +55,9 @@ Default.parameters = { layout: 'fullscreen' };
 const meta = {
   title: 'sdk/shell/All',
   component: StoryRow,
-  decorators: [withTheme()],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     translations,
-    chromatic: {
-      disableSnapshot: false,
-    },
   },
 } satisfies Meta<typeof StoryRow>;
 

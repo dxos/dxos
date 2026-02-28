@@ -7,12 +7,13 @@ import type * as Schema from 'effect/Schema';
 import React, { forwardRef, useMemo, useRef, useState } from 'react';
 
 import { Obj, Query, Type } from '@dxos/echo';
-import { getQueryTarget, resolveSchemaWithRegistry } from '@dxos/plugin-space';
-import { Filter, getSpace, isSpace, useObject, useQuery } from '@dxos/react-client/echo';
-import { ScrollArea, useAsyncEffect, useTranslation } from '@dxos/react-ui';
-import { Card, Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
+import { resolveSchemaWithRegistry } from '@dxos/plugin-space';
+import { Filter, getSpace, useObject } from '@dxos/react-client/echo';
+import { useAsyncEffect, useTranslation } from '@dxos/react-ui';
+import { Board, Card, Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { ProjectionModel, createEchoChangeCallback } from '@dxos/schema';
 import { type Pipeline } from '@dxos/types';
+import { mx } from '@dxos/ui-theme';
 
 import { meta } from '../meta';
 
@@ -24,15 +25,12 @@ import { type ItemProps, usePipeline } from './PipelineComponent';
 
 const PIPELINE_COLUMN_NAME = 'PipelineColumn';
 
-export type PipelineColumnProps = {
-  column: Pipeline.Column;
-};
+export type PipelineColumnProps = Pick<MosaicTileProps<Pipeline.Column>, 'classNames' | 'location' | 'data' | 'debug'>;
 
-// TODO(thure): Duplicates a lot of the same boilerplate as Kanban columns; is there an opportunity to DRY these out?
-// TODO(wittjosiah): Support column DnD reordering.
 // TODO(wittjosiah): Support item DnD reordering (ordering needs to be stored on the view presentation collection).
-export const PipelineColumn = ({ column }: PipelineColumnProps) => {
+export const PipelineColumn = ({ data: column, location, classNames, debug }: PipelineColumnProps) => {
   const { t } = useTranslation(meta.id);
+  const dragHandleRef = useRef<HTMLButtonElement>(null);
   // Subscribe to the view target for reactivity.
   const [viewSnapshot] = useObject(column.view);
   const view = column.view.target;
@@ -50,7 +48,7 @@ export const PipelineColumn = ({ column }: PipelineColumnProps) => {
   }, [JSON.stringify(viewSnapshot?.query.ast)]);
 
   useAsyncEffect(async () => {
-    if (!query || !space) {
+    if (!query || !space?.db) {
       return;
     }
 
@@ -58,12 +56,6 @@ export const PipelineColumn = ({ column }: PipelineColumnProps) => {
     setSchema(() => schema);
   }, [space, query]);
 
-  const queryTarget = getQueryTarget(query.ast, space);
-  const items = useQuery(queryTarget, query);
-  const sortedItems = useMemo(() => {
-    // TODO(burdon): Hack to reverse queue.
-    return isSpace(queryTarget) ? items : [...items.reverse()];
-  }, [queryTarget, items]);
   const projectionModel = useMemo(() => {
     if (!schema || !view) {
       return undefined;
@@ -86,22 +78,22 @@ export const PipelineColumn = ({ column }: PipelineColumnProps) => {
   }
 
   return (
-    <Focus.Group asChild>
-      <div className='grid bs-full card-default-width overflow-hidden grid-rows-[min-content_1fr] density-fine border border-separator rounded-md bg-deckSurface'>
-        <Card.Toolbar>
-          <Card.DragHandle />
-          <Card.Title>{column.name ?? t('untitled view title')}</Card.Title>
-          <Card.Menu />
-        </Card.Toolbar>
-        <Mosaic.Container asChild orientation='vertical' withFocus>
-          <ScrollArea.Root orientation='vertical'>
-            <ScrollArea.Viewport classNames='p-2'>
-              <Mosaic.Stack orientation='vertical' items={sortedItems} getId={(item) => item.id} Tile={Tile} />
-            </ScrollArea.Viewport>
-          </ScrollArea.Root>
-        </Mosaic.Container>
+    <Board.Column.Root
+      data={column}
+      location={location}
+      classNames={classNames}
+      debug={debug}
+      dragHandleRef={dragHandleRef}
+    >
+      <div
+        role='none'
+        data-testid='board-column'
+        className={mx('group/column grid h-full overflow-hidden grid-rows-[var(--rail-action)_1fr]', classNames)}
+      >
+        <Board.Column.Header label={column.name ?? t('untitled view title')} dragHandleRef={dragHandleRef} />
+        <Board.Column.Body data={column} Tile={Tile} />
       </div>
-    </Focus.Group>
+    </Board.Column.Root>
   );
 };
 

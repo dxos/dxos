@@ -25,7 +25,7 @@ export default {
 const Column = () => (
   <div>
     {Array.from({ length: 50 }).map((_, index) => (
-      <div key={index} className='text-sm'>
+      <div key={index} className='px-1 text-sm cursor-pointer hover:bg-hover-surface'>
         Item {index + 1}
       </div>
     ))}
@@ -33,11 +33,11 @@ const Column = () => (
 );
 
 const Row = () => (
-  <div className='flex gap-2 is-max'>
+  <div className='flex gap-2 w-max'>
     {Array.from({ length: 50 }).map((_, index) => (
       <div
         key={index}
-        className='shrink-0 bs-20 is-20 border border-separator rounded-md flex items-center justify-center text-sm'
+        className='shrink-0 h-20 w-20 cursor-pointer border border-separator rounded-md flex items-center justify-center text-sm hover:bg-hover-surface'
       >
         {index + 1}
       </div>
@@ -47,8 +47,8 @@ const Row = () => (
 
 export const Vertical = {
   render: () => (
-    <div className='bs-72 is-48 p-2 border border-separator rounded-md'>
-      <ScrollArea.Root orientation='vertical'>
+    <div className='h-72 w-48 p-2 border border-separator rounded-md'>
+      <ScrollArea.Root orientation='vertical' padding>
         <ScrollArea.Viewport>
           <Column />
         </ScrollArea.Viewport>
@@ -59,8 +59,8 @@ export const Vertical = {
 
 export const VerticalThin = {
   render: () => (
-    <div className='bs-72 is-48 p-2 border border-separator rounded-md'>
-      <ScrollArea.Root orientation='vertical' thin>
+    <div className='h-72 w-48 p-2 border border-separator rounded-md'>
+      <ScrollArea.Root orientation='vertical' padding thin>
         <ScrollArea.Viewport>
           <Column />
         </ScrollArea.Viewport>
@@ -71,8 +71,8 @@ export const VerticalThin = {
 
 export const Horizontal = {
   render: () => (
-    <div className='is-96 p-2 border border-separator rounded-md'>
-      <ScrollArea.Root orientation='horizontal'>
+    <div className='w-96 p-2 border border-separator rounded-md'>
+      <ScrollArea.Root orientation='horizontal' padding>
         <ScrollArea.Viewport>
           <Row />
         </ScrollArea.Viewport>
@@ -83,8 +83,8 @@ export const Horizontal = {
 
 export const HorizontalThin = {
   render: () => (
-    <div className='is-96 p-2 border border-separator rounded-md'>
-      <ScrollArea.Root orientation='horizontal' thin>
+    <div className='w-96 p-2 border border-separator rounded-md'>
+      <ScrollArea.Root orientation='horizontal' padding thin>
         <ScrollArea.Viewport>
           <Row />
         </ScrollArea.Viewport>
@@ -95,8 +95,8 @@ export const HorizontalThin = {
 
 export const Both = {
   render: () => (
-    <div className='bs-72 is-96 p-2 border border-separator rounded-md'>
-      <ScrollArea.Root thin orientation='all'>
+    <div className='h-96 w-96 p-2 border border-separator rounded-md'>
+      <ScrollArea.Root orientation='all' padding>
         <ScrollArea.Viewport>
           <div className='flex flex-col gap-2'>
             {Array.from({ length: 50 }).map((_, rowIndex) => (
@@ -104,7 +104,7 @@ export const Both = {
                 {Array.from({ length: 50 }).map((_, colIndex) => (
                   <div
                     key={colIndex}
-                    className='shrink-0 bs-20 is-20 flex items-center justify-center text-sm border border-separator font-mono'
+                    className='shrink-0 h-20 w-20 flex items-center justify-center text-sm border border-separator font-mono'
                   >
                     [{colIndex}:{rowIndex}]
                   </div>
@@ -136,19 +136,19 @@ export const NestedScrollAreas = {
           {columns.map((column) => (
             <section
               key={column.id}
-              className='shrink-0 bs-full is-[16rem] grid grid-rows-[min-content_1fr_min-content] border border-separator'
+              className='shrink-0 h-full w-[16rem] grid grid-rows-[min-content_1fr_min-content] border border-separator'
             >
-              <header className='flex shrink-0 p-2 border-be border-separator'>Column {column.id}</header>
+              <header className='flex shrink-0 p-2 border-b border-separator'>Column {column.id}</header>
               <ScrollArea.Root thin orientation='vertical'>
-                <ScrollArea.Viewport classNames='plb-2 pli-2 gap-2'>
+                <ScrollArea.Viewport classNames='py-2 px-2 gap-2'>
                   {Array.from({ length: column.count }, (_, i) => (
-                    <div key={i} role='listitem' className={`shrink-0 p-2 text-sm border border-separator rounded-sm`}>
+                    <div key={i} role='listitem' className={`shrink-0 p-2 text-sm border border-separator rounded-xs`}>
                       Item {i + 1}
                     </div>
                   ))}
                 </ScrollArea.Viewport>
               </ScrollArea.Root>
-              <footer className={`p-2 text-subdued border-bs border-separator`}>{column.count}</footer>
+              <footer className={`p-2 text-subdued border-t border-separator`}>{column.count}</footer>
             </section>
           ))}
         </ScrollArea.Viewport>
@@ -159,15 +159,15 @@ export const NestedScrollAreas = {
 
 export const NativeScroll = {
   render: () => (
-    <div className='group bs-48 is-48 border border-separator'>
+    <div className='group h-48 w-48 border border-separator'>
       <div
         className={mx(
-          'group bs-full is-full overflow-y-scroll',
-          '[&::-webkit-scrollbar]:is-3',
+          'group h-full w-full overflow-y-scroll',
+          '[&::-webkit-scrollbar]:w-3',
           '[&::-webkit-scrollbar-thumb]:rounded-none',
           '[&::-webkit-scrollbar-track]:bg-scrollbarTrack',
-          '[&::-webkit-scrollbar-thumb]:bg-scrollbarThumbSubdued',
-          'group-hover:[&::-webkit-scrollbar-thumb]:bg-scrollbarThumb',
+          '[&::-webkit-scrollbar-thumb]:bg-scrollbar-thumbSubdued',
+          'group-hover:[&::-webkit-scrollbar-thumb]:bg-scrollbar-thumb',
         )}
       >
         <Column />

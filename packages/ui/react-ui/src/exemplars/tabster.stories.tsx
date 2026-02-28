@@ -21,14 +21,14 @@ import { mx } from '@dxos/ui-theme';
 // TODO(burdon): Prevent tab out of app.
 
 const border =
-  'rounded-sm outline-none border border-subduedSeparator focus:border-primary-500 focus-within:border-rose-500';
+  'rounded-xs outline-hidden border border-subdued-separator focus:border-primary-500 focus-within:border-rose-500';
 
 const Board = forwardRef<HTMLDivElement, { columns: string[][] }>(({ columns }, ref) => {
   const arrowNavigationAttrs = useArrowNavigationGroup({ axis: 'horizontal', memorizeCurrent: true, tabbable: true });
 
   return (
-    <div ref={ref} tabIndex={0} {...arrowNavigationAttrs} className='flex bs-full is-full overflow-hidden'>
-      <div className={mx('flex bs-full overflow-x-auto p-4 gap-4')}>
+    <div ref={ref} tabIndex={0} {...arrowNavigationAttrs} className='flex h-full w-full overflow-hidden'>
+      <div className={mx('flex h-full overflow-x-auto p-4 gap-4')}>
         {columns.map((column) => (
           <Column key={column[0]} items={column} />
         ))}
@@ -43,7 +43,7 @@ const Column = forwardRef<HTMLDivElement, { items: string[] }>(({ items }, ref) 
   const tabsterAttrs = useMergedTabsterAttributes_unstable(focusableGroupAttrs, arrowNavigationAttrs);
 
   return (
-    <ScrollArea.Root tabIndex={0} orientation='vertical' classNames={mx('shrink-0 bs-full is-[25rem]', border)}>
+    <ScrollArea.Root tabIndex={0} orientation='vertical' classNames={mx('w-[25rem]', border)}>
       <ScrollArea.Viewport {...tabsterAttrs} classNames='p-4 gap-4' ref={ref}>
         {items.map((item) => (
           <Item key={item} value={item} />
@@ -61,7 +61,7 @@ const Item = forwardRef<HTMLDivElement, { value: string }>(({ value }, ref) => {
       ref={ref}
       tabIndex={0}
       {...focusableGroupAttrs}
-      className={mx('flex shrink-0 is-full gap-4 p-4 items-center', border)}
+      className={mx('flex shrink-0 w-full gap-4 p-4 items-center', border)}
     >
       <Input.Root>
         <Input.Checkbox />

@@ -281,7 +281,7 @@ export class AiContextBinder extends Resource {
     const refArray = [...refs];
 
     // Load all refs that need loading.
-    await Promise.all(refArray.map((ref) => ref.load()));
+    await Promise.all(refArray.map((ref) => ref.tryLoad()));
 
     return refArray
       .map((ref) => {

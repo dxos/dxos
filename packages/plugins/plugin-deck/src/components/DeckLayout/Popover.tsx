@@ -101,7 +101,7 @@ export const PopoverContent = () => {
           {/* TODO(burdon): Set/disable column context. */}
           {state.popoverKind === 'base' && <Surface.Surface role='popover' data={state.popoverContent} limit={1} />}
           {state.popoverKind === 'card' && (
-            <Card.Root border={false} classNames='popover-card-max-width'>
+            <Card.Root border={false} classNames='popover-card'>
               <Card.Toolbar>
                 {/* TODO(wittjosiah): Cleaner way to handle no drag handle in toolbar? */}
                 {state.popoverContentRef ? (

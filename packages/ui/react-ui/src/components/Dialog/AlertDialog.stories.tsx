@@ -7,7 +7,6 @@ import React from 'react';
 
 import { withTheme } from '../../testing';
 import { Button } from '../Button';
-import { Toolbar } from '../Toolbar';
 
 import { AlertDialog } from './AlertDialog';
 
@@ -30,16 +29,16 @@ const DefaultStory = ({ title, description, body, openTrigger, cancelTrigger, ac
         <AlertDialog.Content>
           <AlertDialog.Title>{title}</AlertDialog.Title>
           <AlertDialog.Description>{description}</AlertDialog.Description>
-          <p className='mbs-2 mbe-8'>{body}</p>
-          <Toolbar.Root>
+          <p className='mt-2 mb-8'>{body}</p>
+          <AlertDialog.ActionBar>
             <div className='grow' />
             <AlertDialog.Cancel asChild>
-              <Toolbar.Button>{cancelTrigger}</Toolbar.Button>
+              <Button>{cancelTrigger}</Button>
             </AlertDialog.Cancel>
             <AlertDialog.Action asChild>
-              <Toolbar.Button variant='primary'>{actionTrigger}</Toolbar.Button>
+              <Button variant='primary'>{actionTrigger}</Button>
             </AlertDialog.Action>
-          </Toolbar.Root>
+          </AlertDialog.ActionBar>
         </AlertDialog.Content>
       </AlertDialog.Overlay>
     </AlertDialog.Root>

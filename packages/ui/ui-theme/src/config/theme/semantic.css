@@ -1,0 +1,109 @@
+/**
+ * Tokens
+ */
+
+@theme {
+  /* Surfaces */
+
+  --color-base-surface: light-dark(var(--color-neutral-50), var(--color-neutral-950));
+  --color-base-text: light-dark(var(--color-neutral-950), var(--color-neutral-50));
+
+  --color-inverse-surface: light-dark(var(--color-neutral-800), var(--color-neutral-200));
+  --color-inverse-text: light-dark(var(--color-neutral-50), var(--color-neutral-950));
+
+  --color-deck-surface: light-dark(var(--color-neutral-50), var(--color-neutral-950));
+  --color-scrim-surface: light-dark(
+    oklch(from var(--color-neutral-50) l c h / 0.5), 
+    oklch(from var(--color-neutral-950) l c h / 0.25)
+  );
+  --color-group-surface: light-dark(var(--color-neutral-50), var(--color-neutral-950));
+  --color-toolbar-surface: light-dark(var(--color-neutral-75), var(--color-neutral-925));
+
+  --color-modal-surface: light-dark(var(--color-neutral-100), var(--color-neutral-900));
+  --color-card-surface: light-dark(var(--color-neutral-100), var(--color-neutral-900));
+  --color-sidebar-surface: light-dark(var(--color-neutral-100), var(--color-neutral-900));
+  --color-header-surface: light-dark(var(--color-neutral-100), var(--color-neutral-900));
+
+  --color-input-surface: light-dark(var(--color-neutral-100), var(--color-neutral-900));
+  --color-text-input-surface: light-dark(var(--color-neutral-50), var(--color-neutral-900));
+
+  --color-active-surface: light-dark(var(--color-neutral-200), var(--color-neutral-800));
+  --color-active-surface-text: light-dark(var(--color-neutral-950), var(--color-neutral-50));
+  /** TODO(burdon): Merge overlay/surface? */
+  --color-hover-overlay: light-dark(var(--color-neutral-250), var(--color-neutral-750));
+  --color-hover-surface: light-dark(var(--color-neutral-250), var(--color-neutral-750));
+  --color-hover-surface-text: light-dark(var(--color-neutral-950), var(--color-neutral-50));
+
+  /* Map attention to focus-surface logic so that elements acting as active attention zones highlight correctly on focus. */
+  --color-attention: var(--color-focus-surface);
+  --color-focus-surface: light-dark(var(--color-neutral-50), var(--color-neutral-950));
+  --color-neutral-focus-indicator: light-dark(var(--color-neutral-400), var(--color-neutral-600));
+
+  /* Accent */
+
+  --color-accent-surface: light-dark(var(--color-blue-600), var(--color-blue-600));
+  --color-accent-surface-hover: light-dark(var(--color-blue-800), var(--color-blue-800));
+  --color-accent-surface-text: var(--color-blue-100);
+  --color-accent-text: light-dark(var(--color-blue-600), var(--color-blue-600));
+  --color-accent-text-hover: light-dark(var(--color-blue-500), var(--color-blue-500));
+  --color-accent-focus-indicator: light-dark(var(--color-blue-600), var(--color-blue-600));
+
+  --color-un-accent: var(--color-neutral-400);
+  --color-un-accent-hover: var(--color-neutral-500);
+
+  /* Separator */
+
+  --color-separator: light-dark(var(--color-neutral-200), var(--color-neutral-800));
+  --color-primary-separator: light-dark(var(--color-neutral-200), var(--color-neutral-800));
+  --color-subdued-separator: light-dark(var(--color-neutral-100), var(--color-neutral-900));
+
+  /* Scrollbar */
+
+  --color-scrollbar-track: light-dark(var(--color-neutral-50), var(--color-neutral-950));
+  --color-scrollbar-thumb: light-dark(var(--color-neutral-200), var(--color-neutral-700));
+  --color-scrollbar-thumb-active: light-dark(var(--color-neutral-200), var(--color-neutral-600));
+  --color-scrollbar-thumb-hover: light-dark(var(--color-neutral-200), var(--color-neutral-600));
+
+  /* Sheet */
+
+  --color-axis-selected-surface: light-dark(var(--color-neutral-100), var(--color-neutral-900));
+  --color-axis-selected-text: light-dark(var(--color-neutral-100), var(--color-neutral-900));
+  --color-axis-surface: light-dark(var(--color-neutral-50), var(--color-neutral-800));
+  --color-axis-text: light-dark(var(--color-neutral-800), var(--color-neutral-200));
+
+  /* Grid */
+
+  --color-grid-surface: light-dark(var(--color-neutral-50), var(--color-neutral-950));
+  --color-grid-selection-overlay: var(--color-blue-500);
+  --color-grid-highlight: oklch(from var(--color-emerald-500) l c h / 0.5);
+  --color-grid-commented: light-dark(var(--color-green-400), var(--color-green-600));
+  --color-grid-commented-active: light-dark(oklch(from var(--color-green-400) l c h / 0.5), oklch(from var(--color-green-600) l c h / 0.5));
+  --color-grid-hover-overlay: oklch(from var(--color-neutral-500) l c h / 0.1);
+  --color-grid-focus-indicator: light-dark(var(--color-green-200), var(--color-green-600));
+  --color-grid-line: light-dark(var(--color-neutral-200), var(--color-neutral-800));
+
+  /* Text */
+
+  --color-placeholder: light-dark(var(--color-neutral-400), var(--color-neutral-600));
+  --color-description: light-dark(var(--color-neutral-600), var(--color-neutral-400));
+  --color-subdued: light-dark(var(--color-neutral-800), var(--color-neutral-200));
+}
+
+/* TODO(burdon): Resolve. */
+/* 
+@layer dx-tokens {
+  .sidebar-surface, .dark .sidebar-surface, .bg-group-surface, .dark .bg-group-surface, .bg-sidebar-surface, .dark .bg-sidebar-surface, .bg-header-surface, .dark .bg-header-surface, .bg-toolbar-surface, .dark .bg-toolbar-surface, .bg-card-surface, .dark .bg-card-surface {
+    --color-text-input-surface: light-dark(var(--color-neutral-50), var(--color-neutral-800));
+    --color-input-surface: light-dark(var(--color-neutral-100), var(--color-neutral-800));
+    --color-hover-surface: light-dark(var(--color-neutral-100), var(--color-neutral-700));
+    --color-separator: light-dark(var(--color-neutral-200), var(--color-neutral-700));
+  }
+
+  .modal-surface, .dark .modal-surface, .bg-modal-surface, .dark .bg-modal-surface, .bg-current-related, .dark .bg-current-related {
+    --color-text-input-surface: light-dark(var(--color-neutral-50), var(--color-neutral-800));
+    --color-input-surface: light-dark(var(--color-neutral-100), var(--color-neutral-800));
+    --color-hover-surface: light-dark(var(--color-neutral-100), var(--color-neutral-700));
+    --color-separator: light-dark(var(--color-neutral-200), var(--color-neutral-700));
+  }
+}
+*/

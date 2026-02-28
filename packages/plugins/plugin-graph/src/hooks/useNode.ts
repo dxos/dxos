@@ -27,3 +27,8 @@ export const useConnections = (graph: Graph.ReadableGraph, id?: string, relation
 export const useActions = (graph: Graph.ReadableGraph, id?: string): Node.Node[] => {
   return useAtomValue(graph.actions(id ?? ''));
 };
+
+/** Subscribe to just the edge topology (inbound/outbound IDs) of a node without subscribing to node content. */
+export const useEdges = (graph: Graph.ReadableGraph, id?: string): Graph.Edges => {
+  return useAtomValue(graph.edges(id ?? ''));
+};

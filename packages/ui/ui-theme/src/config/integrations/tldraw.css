@@ -1,0 +1,12 @@
+/**
+ * Tldraw
+ */
+
+.tl-background {
+  --color-background: var(--color-base-surface);
+}
+.tl-container.tl-theme__light, .tl-container.tl-theme__dark {
+  --color-selected: var(--color-accent-surface);
+  --color-panel: var(--color-modal-surface);
+  --color-panel-contrast: var(--color-separator);
+}

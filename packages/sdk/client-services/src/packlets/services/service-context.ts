@@ -22,7 +22,7 @@ import { type RuntimeProvider } from '@dxos/effect';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { Keyring } from '@dxos/keyring';
-import { PublicKey } from '@dxos/keys';
+import { PublicKey, type SpaceId } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
 import { type SignalManager } from '@dxos/messaging';
@@ -67,7 +67,6 @@ export type ServiceContextRuntimeProps = Pick<
     invitationConnectionDefaultProps?: InvitationConnectionProps;
     disableP2pReplication?: boolean;
     enableVectorIndexing?: boolean;
-    enableLocalQueues?: boolean;
   };
 /**
  * Shared backend for all client services.
@@ -170,7 +169,14 @@ export class ServiceContext extends Resource {
       peerIdProvider: () => this.identityManager.identity?.deviceKey?.toHex(),
       getSpaceKeyByRootDocumentId: (documentId) => this.spaceManager.findSpaceByRootDocumentId(documentId)?.key,
       runtime: this._runtime,
-      localQueues: this._runtimeProps?.enableLocalQueues,
+      syncQueue: async (request) => {
+        return this._feedSyncer?.syncBlocking({
+          spaceId: request.spaceId as SpaceId,
+          subspaceTag: request.subspaceTag,
+          shouldPush: request.shouldPush,
+          shouldPull: request.shouldPull,
+        });
+      },
     });
 
     this.invitations = new InvitationsHandler(
@@ -213,7 +219,7 @@ export class ServiceContext extends Resource {
         edgeClient: this._edgeConnection,
         peerId: this.identityManager.identity?.deviceKey?.toHex() ?? '',
         getSpaceIds: () => this.echoHost!.spaceIds,
-        syncNamespace: FeedProtocol.WellKnownNamespaces.data,
+        syncNamespaces: [FeedProtocol.WellKnownNamespaces.data, FeedProtocol.WellKnownNamespaces.trace],
       });
     }
   }

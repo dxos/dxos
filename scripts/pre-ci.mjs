@@ -191,7 +191,7 @@ async function main() {
         ...process.env,
         CI: 1,
       },
-    })`moon exec --on-failure continue --quiet :test -- --no-file-parallelism "--project=!storybook*"`;
+    })`moon exec --on-failure continue --quiet :test :test-browser -- --no-file-parallelism`;
     console.log(chalk.green('Build and tests completed successfully.'));
   } catch (error) {
     console.error(chalk.red('Build or tests failed:'), error.message);

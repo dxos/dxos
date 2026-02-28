@@ -87,7 +87,7 @@ const main = async () => {
                 <Input.Root>
                   <Input.Switch
                     data-testid='airplane-mode'
-                    classNames='me-2'
+                    classNames='mr-2'
                     onCheckedChange={(e) => {
                       setOffline(!offline);
                       return handleToggleNetwork(e);
@@ -102,7 +102,7 @@ const main = async () => {
                 <Input.Root>
                   <Input.Switch
                     data-testid='batching'
-                    classNames='me-2'
+                    classNames='mr-2'
                     onCheckedChange={(e) => {
                       setBatching(!batching);
                       return handleToggleBatching(e);
@@ -131,7 +131,7 @@ const main = async () => {
 const fallback = () => {
   root.render(
     <ThemeProvider tx={defaultTx}>
-      <div className='flex bs-[100dvh] justify-center items-center'>
+      <div className='flex h-[100dvh] justify-center items-center'>
         <Status indeterminate aria-label='Initializing' />
       </div>
     </ThemeProvider>,

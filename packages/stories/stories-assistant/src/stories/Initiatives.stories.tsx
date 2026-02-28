@@ -17,7 +17,7 @@ import { Assistant } from '@dxos/plugin-assistant/types';
 import { MarkdownPlugin } from '@dxos/plugin-markdown';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
 import { render } from '@dxos/storybook-utils';
 import { isNonNullable } from '@dxos/util';
@@ -25,12 +25,12 @@ import { isNonNullable } from '@dxos/util';
 import { ChatModule, type ComponentProps } from '../components';
 import { config, getDecorators } from '../testing';
 
-const panelClassNames = 'bg-baseSurface rounded-sm border border-separator overflow-hidden';
+const panelClassNames = 'bg-base-surface rounded-xs border border-separator overflow-hidden';
 
 type StoryProps = {
   modules: FC<ComponentProps>[][];
-  showContext?: boolean;
   blueprints?: string[];
+  showContext?: boolean;
 };
 
 const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => {
@@ -50,7 +50,7 @@ const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => 
     }
 
     // Add blueprints to context.
-    const blueprintRegistry = new Blueprint.Registry(blueprintsDefinitions);
+    const blueprintRegistry = new Blueprint.Registry(blueprintsDefinitions.map((blueprint) => blueprint.make()));
     const blueprintObjects = blueprints
       .map((key) => {
         const blueprint = blueprintRegistry.getByKey(key);
@@ -82,14 +82,14 @@ const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => 
       size='split'
       rail={false}
       itemsCount={modules.length + (showContext ? 1 : 0)}
-      classNames='absolute inset-0 gap-[--stack-gap]'
+      classNames='absolute inset-0 gap-(--stack-gap)'
     >
       {modules.map((Components, i) => {
         return (
           <StackItem.Root key={i} item={{ id: `${i}` }}>
             <Stack
               orientation='vertical'
-              classNames='gap-[--stack-gap]'
+              classNames='gap-(--stack-gap)'
               size={i > 0 ? 'contain' : 'split'}
               itemsCount={Components.length}
               rail={false}
@@ -113,7 +113,7 @@ const StackContainer = ({ objects }: { objects: Obj.Any[] }) => {
   return (
     <Stack
       orientation='vertical'
-      classNames='gap-[--stack-gap]'
+      classNames='gap-(--stack-gap)'
       size='contain'
       rail={false}
       itemsCount={objects.length}
@@ -128,9 +128,9 @@ const StackContainer = ({ objects }: { objects: Obj.Any[] }) => {
 };
 
 const storybook: Meta<typeof DefaultStory> = {
-  title: 'stories/stories-assistant/Initiatives',
+  title: 'stories/stories-assistant/Projects',
   render: render(DefaultStory),
-  decorators: [withTheme()],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
     translations,

@@ -7,4 +7,3 @@ export * from './Card';
 export * from './Focus';
 export * from './Image';
 export * from './Mosaic';
-export * from './Stack';

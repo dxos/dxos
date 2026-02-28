@@ -27,7 +27,7 @@ export default Capability.makeModule(
     const themeAtom = Atom.make<{ themeMode: ThemeMode }>({ themeMode: 'dark' }).pipe(Atom.keepAlive);
 
     const setTheme = ({ matches: prefersDark }: { matches?: boolean }) => {
-      document.documentElement.classList[prefersDark ? 'add' : 'remove']('dark');
+      document.body.classList[prefersDark ? 'add' : 'remove']('dark');
       registry.set(themeAtom, { themeMode: prefersDark ? 'dark' : 'light' });
     };
 
@@ -50,7 +50,7 @@ export default Capability.makeModule(
           return (
             <ThemeProvider {...{ tx: propsTx, themeMode, resourceExtensions: resources, ...rest }}>
               <Toast.Provider>
-                <Tooltip.Provider delayDuration={2_000} skipDelayDuration={100} disableHoverableContent>
+                <Tooltip.Provider delayDuration={1_000} skipDelayDuration={100} disableHoverableContent>
                   {children}
                 </Tooltip.Provider>
                 <Toast.Viewport />

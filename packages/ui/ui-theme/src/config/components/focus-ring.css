@@ -1,0 +1,228 @@
+/**
+ * Focus ring
+ */
+
+@layer dx-components {
+  .dx-focus-ring,
+  .dx-focus-ring-inset {
+    &:not([disabled]),
+    &[disabled='false'] {
+      &:focus {
+        @apply outline-hidden;
+      }
+
+      &:focus-visible {
+        @apply ring-focus-line ring-offset-focus-offset z-[1] ring-[var(--color-neutral-focus-indicator)];
+
+        &[data-variant='primary'] {
+          @apply ring-[var(--color-accent-focus-indicator)];
+        }
+
+        &:hover {
+          @apply outline-hidden;
+
+          .dark & {
+            @apply outline-hidden;
+          }
+        }
+      }
+    }
+  }
+
+  .dx-focus-ring-always,
+  .dx-focus-ring-inset-always {
+    &:not([disabled]),
+    &[disabled='false'] {
+      &:focus {
+        @apply outline-hidden;
+      }
+
+      &:focus {
+        @apply ring-focus-line ring-offset-focus-offset z-[1] ring-[var(--color-neutral-focus-indicator)];
+
+        &[data-variant='primary'] {
+          @apply ring-[var(--color-accent-focus-indicator)];
+        }
+
+        &:hover {
+          @apply outline-hidden;
+
+          .dark & {
+            @apply outline-hidden;
+          }
+        }
+      }
+    }
+  }
+
+  .dx-focus-ring-group,
+  .dx-focus-ring-group-x,
+  .dx-focus-ring-group-y,
+  .dx-focus-ring-group-always,
+  .dx-focus-ring-group-x-always,
+  .dx-focus-ring-group-y-always {
+    &:not([disabled]),
+    &[disabled='false'] {
+      &:focus {
+        @apply outline-hidden;
+      }
+    }
+  }
+
+  .dx-focus-ring-group:focus-visible .dx-focus-ring-group-indicator,
+  .dx-focus-ring-group-x:focus-visible .dx-focus-ring-group-x-indicator,
+  .dx-focus-ring-group-y:focus-visible .dx-focus-ring-group-y-indicator {
+    @apply ring-focus-line ring-offset-focus-offset ring-[var(--color-neutral-focus-indicator)];
+
+    &[data-variant='primary'] {
+      @apply ring-[var(--color-accent-focus-indicator)];
+    }
+
+    &:hover {
+      @apply outline-hidden;
+
+      .dark & {
+        @apply outline-hidden;
+      }
+    }
+  }
+
+  .dx-focus-ring-group-always:focus .dx-focus-ring-group-indicator,
+  .dx-focus-ring-group-x-always:focus .dx-focus-ring-group-x-indicator,
+  .dx-focus-ring-group-y-always:focus .dx-focus-ring-group-y-indicator {
+    @apply ring-focus-line ring-offset-focus-offset ring-[var(--color-neutral-focus-indicator)];
+
+    &[data-variant='primary'] {
+      @apply ring-[var(--color-accent-focus-indicator)];
+    }
+
+    &:hover {
+      @apply outline-hidden;
+
+      .dark & {
+        @apply outline-hidden;
+      }
+    }
+  }
+
+  .dx-focus-ring-inset {
+    &:not([disabled]),
+    &[disabled='false'] {
+      &:focus-visible {
+        @apply ring-inset;
+      }
+    }
+  }
+
+  .dx-focus-ring-inset-always {
+    &:not([disabled]),
+    &[disabled='false'] {
+      &:focus {
+        @apply ring-inset;
+      }
+    }
+  }
+
+  .dx-focus-ring-inset-over-all,
+  .dx-focus-ring-main[data-handles-focus='true'] {
+    &:not([disabled]),
+    &[disabled='false'] {
+      &::after {
+        content: '';
+        @apply z-20 pointer-events-none;
+      }
+
+      &:focus {
+        @apply outline-hidden;
+      }
+
+      &:focus-visible {
+        &::after {
+          @apply ring-focus-line ring-offset-focus-offset ring-inset z-[1] ring-[var(--color-neutral-focus-indicator)];
+        }
+
+        &[data-variant='primary']::after {
+          @apply ring-[var(--color-accent-focus-indicator)];
+        }
+
+        &:hover {
+          @apply outline-hidden;
+
+          .dark & {
+            @apply outline-hidden;
+          }
+        }
+      }
+    }
+  }
+
+  .dx-focus-ring-inset-over-all-always,
+  .dx-focus-ring-main-always[data-handles-focus='true'] {
+    &:not([disabled]),
+    &[disabled='false'] {
+      &::after {
+        content: '';
+        @apply z-20 pointer-events-none;
+      }
+
+      &:focus {
+        @apply outline-hidden;
+      }
+
+      &:focus {
+        &::after {
+          @apply ring-focus-line ring-offset-focus-offset ring-inset z-[1] ring-[var(--color-neutral-focus-indicator)];
+        }
+
+        &[data-variant='primary']::after {
+          @apply ring-[var(--color-accent-focus-indicator)];
+        }
+
+        &:hover {
+          @apply outline-hidden;
+
+          .dark & {
+            @apply outline-hidden;
+          }
+        }
+      }
+    }
+  }
+
+  .dx-focus-ring-inset-over-all, .dx-focus-ring-inset-over-all-always {
+    &:not([disabled]),
+    &[disabled='false'] {
+      &::after {
+        @apply inset-0 absolute;
+      }
+    }
+  }
+
+  .dx-focus-ring-main[data-handles-focus='true'] {
+    &:not([disabled]),
+    &[disabled='false'] {
+      &::after {
+        position: fixed;
+        inset: 0;
+      }
+
+      @media screen(lg) {
+        &[data-sidebar-left-state='expanded']::after {
+          inset-inline-start: var(--nav-sidebar-size);
+        }
+
+        &[data-sidebar-left-state='collapsed']::after {
+          inset-inline-start: var(--l0-size);
+        }
+
+        &[data-sidebar-right-state='expanded']::after {
+          inset-inline-end: var(--complementary-sidebar-size);
+        }
+
+        &[data-sidebar-right-state='collapsed']::after {
+          inset-inline-end: var(--r0-size);
+        }
+      }
+    }
+  }
+}

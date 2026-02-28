@@ -43,6 +43,7 @@
     "@dxos/async": "workspace:*",
     "@dxos/devtools": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/echo-atom": "workspace:*",
     "@dxos/echo-query": "workspace:*",
     "@dxos/functions": "workspace:*",
     "@dxos/log": "workspace:*",
@@ -68,6 +69,7 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@dxos/echo-db": "workspace:*",
     "@dxos/plugin-attention": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-preview": "workspace:*",

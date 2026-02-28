@@ -60,8 +60,10 @@ const DefaultStory = ({ columns: columnsProp = 1, debug = false }: StoryProps) =
     );
 
     const model: BoardModel<TestColumn, TestItem> = {
-      isColumn: (obj: Obj.Unknown): obj is TestColumn => Obj.instanceOf(TestColumn, obj),
-      isItem: (obj: Obj.Unknown): obj is TestItem => Obj.instanceOf(TestItem, obj),
+      getColumnId: (data: TestColumn) => data.id,
+      getItemId: (data: TestItem) => data.id,
+      isColumn: (obj: unknown): obj is TestColumn => Obj.isObject(obj) && Obj.instanceOf(TestColumn, obj),
+      isItem: (obj: unknown): obj is TestItem => Obj.isObject(obj) && Obj.instanceOf(TestItem, obj),
       columns: columnsAtom,
       items: (column) => itemsAtomFamily(column),
       getColumns: () => registry.get(columnsAtom),
@@ -73,11 +75,13 @@ const DefaultStory = ({ columns: columnsProp = 1, debug = false }: StoryProps) =
   return (
     <Mosaic.Root asChild debug={debug}>
       <div className={mx('grid overflow-hidden', debug && 'grid-cols-[1fr_20rem] gap-2')}>
-        <Board.Root id='board' model={model} debug={debug} />
+        <Board.Root model={model}>
+          <Board.Content id='board' debug={debug} />
+        </Board.Root>
 
         {debug && (
           <Focus.Group classNames='flex flex-col gap-2 overflow-hidden'>
-            <Toolbar.Root classNames='border-be border-separator'>
+            <Toolbar.Root classNames='border-b border-separator'>
               <IconButton
                 icon='ph--arrows-clockwise--regular'
                 iconOnly

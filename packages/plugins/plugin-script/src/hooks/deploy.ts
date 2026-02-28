@@ -11,7 +11,7 @@ import { type Client, useClient } from '@dxos/react-client';
 import { type Space, getSpace, useQuery } from '@dxos/react-client/echo';
 import { type TFunction } from '@dxos/react-ui';
 import { createMenuAction } from '@dxos/react-ui-menu';
-import { errorMessageColors } from '@dxos/ui-theme';
+import { messageValence } from '@dxos/ui-theme';
 
 import { meta } from '../meta';
 import { deployScript, getFunctionUrl, isScriptDeployed } from '../util';
@@ -45,7 +45,7 @@ export const createDeploy = ({ state, script, space, fn, client, existingFunctio
     label: value.error ?? ['no error label', { ns: meta.id }],
     icon: 'ph--warning-circle--regular',
     hidden: !value.error,
-    classNames: value.error && errorMessageColors,
+    classNames: value.error && messageValence('error'),
   });
 
   const deployAction = createMenuAction<DeployActionProperties>(

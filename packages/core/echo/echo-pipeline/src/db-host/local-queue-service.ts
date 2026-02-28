@@ -6,8 +6,8 @@ import type * as SqlClient from '@effect/sql/SqlClient';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 
-import { ATTR_META, type ObjectJSON } from '@dxos/echo/internal';
-import type { ForeignKey } from '@dxos/echo-protocol';
+import { type ObjectJSON } from '@dxos/echo/internal';
+import { EchoFeedCodec } from '@dxos/echo-protocol';
 import { RuntimeProvider } from '@dxos/effect';
 import { type FeedStore } from '@dxos/feed';
 import { assertArgument, invariant } from '@dxos/invariant';
@@ -19,6 +19,7 @@ import {
   type QueryQueueRequest,
   type QueueQueryResult,
   type QueueService,
+  type SyncQueueRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
 import type { SqlTransaction } from '@dxos/sql-sqlite';
 
@@ -28,13 +29,16 @@ import type { SqlTransaction } from '@dxos/sql-sqlite';
 export class LocalQueueServiceImpl implements QueueService {
   #runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>;
   #feedStore: FeedStore;
+  #syncQueue?: (request: SyncQueueRequest) => Promise<void>;
 
   constructor(
     runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>,
     feedStore: FeedStore,
+    syncQueue?: (request: SyncQueueRequest) => Promise<void>,
   ) {
     this.#runtime = runtime;
     this.#feedStore = feedStore;
+    this.#syncQueue = syncQueue;
   }
 
   queryQueue(request: QueryQueueRequest): Promise<QueueQueryResult> {
@@ -53,13 +57,9 @@ export class LocalQueueServiceImpl implements QueueService {
           limit: query.limit,
         });
 
-        const objects = result.blocks.map((block: FeedProtocol.Block) => {
-          const data = JSON.parse(new TextDecoder().decode(block.data));
-          if (block.position !== null) {
-            setQueuePosition(data, block.position);
-          }
-          return data;
-        });
+        const objects = result.blocks.map(
+          (block: FeedProtocol.Block) => EchoFeedCodec.decode(block.data, block.position ?? undefined) as ObjectJSON,
+        );
 
         const lastBlock = result.blocks[result.blocks.length - 1];
         const nextCursor = lastBlock && lastBlock.position != null ? String(lastBlock.position) : null;
@@ -85,21 +85,12 @@ export class LocalQueueServiceImpl implements QueueService {
     );
     return RuntimeProvider.runPromise(this.#runtime)(
       Effect.gen(this, function* () {
-        const messages = objects!.map((obj) => {
-          const data = structuredClone(obj);
-          if (data[ATTR_META]?.keys?.find((key: ForeignKey) => key.source === FeedProtocol.KEY_QUEUE_POSITION)) {
-            data[ATTR_META].keys = data[ATTR_META].keys.filter(
-              (key: ForeignKey) => key.source !== FeedProtocol.KEY_QUEUE_POSITION,
-            );
-          }
-
-          return {
-            spaceId: spaceId,
-            feedId: queueId!,
-            feedNamespace,
-            data: new TextEncoder().encode(JSON.stringify(obj)),
-          };
-        });
+        const messages = objects!.map((obj) => ({
+          spaceId: spaceId,
+          feedId: queueId!,
+          feedNamespace,
+          data: EchoFeedCodec.encode(obj as ObjectJSON),
+        }));
 
         yield* this.#feedStore.appendLocal(messages);
       }),
@@ -120,28 +111,15 @@ export class LocalQueueServiceImpl implements QueueService {
           spaceId: spaceId,
           feedId: queueId!,
           feedNamespace,
-          data: new TextEncoder().encode(JSON.stringify({ id, '@deleted': true })),
+          data: EchoFeedCodec.encode({ id, '@deleted': true }),
         }));
 
         yield* this.#feedStore.appendLocal(messages);
       }),
     );
   }
-}
 
-// TODO(dmaretskyi): Duplicated code.
-const setQueuePosition = (obj: ObjectJSON, position: number) => {
-  obj[ATTR_META] ??= { keys: [] };
-  obj[ATTR_META].keys ??= [];
-  for (let i = 0; i < obj[ATTR_META].keys.length; i++) {
-    const key = obj[ATTR_META].keys[i];
-    if (key.source === FeedProtocol.KEY_QUEUE_POSITION) {
-      obj[ATTR_META].keys.splice(i, 1);
-      i--;
-    }
+  async syncQueue(request: SyncQueueRequest): Promise<void> {
+    await this.#syncQueue?.(request);
   }
-  obj[ATTR_META].keys.push({
-    source: FeedProtocol.KEY_QUEUE_POSITION,
-    id: position.toString(),
-  });
-};
+}

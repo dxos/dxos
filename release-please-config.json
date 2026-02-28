@@ -705,11 +705,6 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/plugin-theme-editor/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/plugins/plugin-thread/package.json",
           "jsonpath": "$.version"
         },
@@ -835,11 +830,6 @@
         },
         {
           "type": "json",
-          "path": "packages/ui/lit-theme-editor/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/ui/lit-ui/package.json",
           "jsonpath": "$.version"
         },
@@ -936,11 +926,6 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-grid/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/ui/react-ui-kanban/package.json",
           "jsonpath": "$.version"
         },
         {

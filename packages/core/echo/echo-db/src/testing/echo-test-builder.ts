@@ -9,7 +9,7 @@ import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
-import isEqual from 'lodash.isequal';
+import isEqual from 'fast-deep-equal';
 
 import { waitForCondition } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
@@ -139,7 +139,6 @@ export class EchoTestPeer extends Resource {
     this._echoHost = new EchoHost({
       kv: this._kv,
       runtime: this._managedRuntime.runtimeEffect,
-      localQueues: true,
       assignQueuePositions: this._assignQueuePositions,
     });
     this._clients.clear();

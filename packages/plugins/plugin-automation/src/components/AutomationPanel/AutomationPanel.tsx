@@ -15,7 +15,7 @@ import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { useTypeOptions } from '@dxos/plugin-space';
 import { type Client, useClient } from '@dxos/react-client';
 import { type Space, useObject, useQuery } from '@dxos/react-client/echo';
-import { Clipboard, IconButton, Input, Separator, useTranslation } from '@dxos/react-ui';
+import { Clipboard, IconButton, type IconButtonProps, Input, Separator, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';
 import { Pipeline } from '@dxos/types';
@@ -25,7 +25,7 @@ import { isNonNullable } from '@dxos/util';
 import { meta } from '../../meta';
 import { TriggerEditor, type TriggerEditorProps } from '../TriggerEditor';
 
-const grid = 'grid grid-cols-[40px_1fr_32px_32px] min-bs-[2.5rem]';
+const grid = 'grid grid-cols-[40px_1fr_32px_32px] min-h-[2.5rem]';
 
 export type AutomationPanelProps = {
   space: Space;
@@ -105,7 +105,7 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
 
   if (trigger) {
     return (
-      <Settings.Item title={t('trigger editor title')}>
+      <Settings.Item title={t('trigger editor title')} description={t('trigger editor description')}>
         <TriggerEditor
           db={space.db}
           trigger={trigger}
@@ -128,7 +128,7 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
           getId={(field) => field.id}
         >
           {({ items: filteredTriggers }) => (
-            <div role='list' className='flex flex-col is-full'>
+            <div role='list' className='flex flex-col w-full'>
               {filteredTriggers?.map((trigger) => (
                 <TriggerListItem
                   key={trigger.id}
@@ -145,7 +145,7 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
         </List.Root>
       )}
 
-      {filteredTriggers.length > 0 && <Separator classNames='mlb-4' />}
+      {filteredTriggers.length > 0 && <Separator classNames='my-4' />}
       <IconButton icon='ph--plus--regular' label={t('new trigger label')} onClick={handleAdd} />
     </Settings.Container>
   );
@@ -195,18 +195,38 @@ const TriggerListItem = ({
     onForceRun?.(trigger);
   }, [onForceRun, trigger]);
 
+  const actionProps = useMemo<IconButtonProps | undefined>(() => {
+    if (trigger.spec?.kind === 'timer' && onForceRun) {
+      return {
+        disabled: !enabled || trigger.spec?.kind !== 'timer',
+        icon: 'ph--play--regular',
+        label: 'Force run',
+        onClick: handleForceRun,
+      };
+    }
+
+    if (trigger.spec?.kind === 'queue' && onResetCursor) {
+      return {
+        disabled: !cursor,
+        icon: 'ph--arrow-clockwise--regular',
+        label: 'Reset cursor',
+        onClick: handleResetCursor,
+      };
+    }
+  }, [enabled, trigger.spec?.kind, handleForceRun]);
+
   return (
     <List.Item<Obj.Snapshot<Trigger.Trigger>>
       key={trigger.id}
       item={snapshot}
-      classNames={mx(grid, ghostHover, 'items-center', 'pli-2')}
+      classNames={mx(grid, ghostHover, 'items-center', 'px-2')}
     >
       <Input.Root>
         <Input.Switch checked={enabled} onCheckedChange={onEnabledChange} />
       </Input.Root>
 
       <div className={'flex'}>
-        <List.ItemTitle classNames='pli-1 cursor-pointer is-0 shrink truncate' onClick={handleSelect}>
+        <List.ItemTitle classNames='px-1 cursor-pointer w-0 shrink truncate' onClick={handleSelect}>
           {getFunctionName(functions, trigger) ?? '∅'}
           {cursor && <div className='text-xs text-description truncate ml-4'>Position: {cursor}</div>}
         </List.ItemTitle>
@@ -216,24 +236,7 @@ const TriggerListItem = ({
         )}
       </div>
 
-      {trigger.spec?.kind === 'timer' && onForceRun && (
-        <List.ItemButton
-          autoHide={false}
-          disabled={!enabled || trigger.spec?.kind !== 'timer'}
-          icon='ph--play--regular'
-          label='Force run'
-          onClick={handleForceRun}
-        />
-      )}
-      {trigger.spec?.kind === 'queue' && onResetCursor && (
-        <List.ItemButton
-          autoHide={false}
-          disabled={!cursor}
-          icon='ph--arrow-clockwise--regular'
-          label='Reset cursor'
-          onClick={handleResetCursor}
-        />
-      )}
+      {actionProps ? <List.ItemButton {...actionProps} autoHide={false} /> : <div />}
 
       {onDelete && <List.ItemDeleteButton onClick={handleDelete} />}
     </List.Item>

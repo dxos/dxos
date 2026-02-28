@@ -19,6 +19,7 @@ type MainProps = ThemedClassName<
   }>
 >;
 
+// TODO(burdon): Rename and move into Container.
 const Main = forwardRef<HTMLDivElement, MainProps>(
   ({ classNames, children, role, toolbar, statusbar }, forwardedRef) => {
     const style = useMemo(
@@ -36,10 +37,10 @@ const Main = forwardRef<HTMLDivElement, MainProps>(
         role={role ?? 'none'}
         style={style}
         className={mx(
-          'bs-full is-full grid grid-cols-[100%] overflow-hidden',
+          'h-full w-full grid grid-cols-[100%] overflow-hidden',
           toolbar && [
-            '[.dx-main-mobile-layout_&>.dx-toolbar]:pli-3 [&>.dx-toolbar]:relative',
-            '[&>.dx-toolbar]:border-be [&>.dx-toolbar]:border-subduedSeparator',
+            '[.dx-main-mobile-layout_&>.dx-toolbar]:px-3 [&>.dx-toolbar]:relative',
+            '[&>.dx-toolbar]:border-b [&>.dx-toolbar]:border-subdued-separator',
           ],
           classNames,
         )}

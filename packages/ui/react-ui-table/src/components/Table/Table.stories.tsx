@@ -13,7 +13,7 @@ import { faker } from '@dxos/random';
 import { PublicKey } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { ScrollArea } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { ViewEditor, translations as formTranslations } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { View, getSchemaFromPropertyDefinitions, getTypenameFromQuery } from '@dxos/schema';
@@ -119,8 +119,8 @@ const DefaultStory = () => {
 
   return (
     <div className='grow grid grid-cols-[1fr_350px]'>
-      <div className='grid grid-rows-[min-content_1fr] min-bs-0 overflow-hidden'>
-        <TableToolbar classNames='border-be border-subduedSeparator' onAdd={handleInsertRow} onSave={handleSaveView} />
+      <div className='grid grid-rows-[min-content_1fr] min-h-0 overflow-hidden'>
+        <TableToolbar classNames='border-b border-subdued-separator' onAdd={handleInsertRow} onSave={handleSaveView} />
         <TableComponent.Root>
           <TableComponent.Main
             ref={tableRef}
@@ -132,7 +132,7 @@ const DefaultStory = () => {
           />
         </TableComponent.Root>
       </div>
-      <ScrollArea.Root orientation='vertical' classNames='bs-full border-l border-separator'>
+      <ScrollArea.Root orientation='vertical' classNames='border-l border-separator'>
         <ScrollArea.Viewport>
           <StoryViewEditor view={table.view.target} schema={schema} db={db} handleDeleteColumn={handleDeleteColumn} />
           <SyntaxHighlighter language='json' className='text-xs'>
@@ -157,6 +157,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withTheme(),
+    withLayout({ layout: 'fullscreen' }),
     withRegistry,
     withClientProvider({
       types: [View.View, Table.Table],

@@ -3,6 +3,7 @@ language: typescript
 tags:
   - ts-build
   - ts-test
+  - ts-test-storybook
   - pack
   - storybook
 tasks:
@@ -14,8 +15,6 @@ tasks:
   compile-node:
     command: pnpm exec dx-compile
     args:
-      - '--entryPoint=src/config/tailwind.ts'
-      - '--entryPoint=src/plugins/esbuild-plugin.ts'
       - '--entryPoint=src/plugins/plugin.ts'
       - '--entryPoint=src/theme.css'
       - '--outputPath=dist/plugin'
@@ -32,6 +31,6 @@ tasks:
   test:
     deps:
       - compile-node
-    inputs:
-      - .storybook/*
-      - /tools/storybook-react/.storybook/main.ts
+  test-storybook:
+    deps:
+      - compile-node

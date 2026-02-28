@@ -7,7 +7,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { useWebComponentContext } from '@dxos/web-context-react';
 
 import { ActivationEvents, Capabilities } from '../../common';
@@ -104,7 +104,7 @@ const CounterComponent = () => {
           <CountStatus />
         </div>
 
-        <div className='mt-8 pt-4 border-bs border-neutral-200 dark:border-neutral-700 text-center'>
+        <div className='mt-8 pt-4 border-t border-neutral-200 dark:border-neutral-700 text-center'>
           <p className='text-sm text-neutral-500 dark:text-neutral-400'>
             This component accesses the <code>PluginManager</code> via <code>useWebComponentContext</code>.
           </p>
@@ -172,7 +172,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'sdk/app-framework/PluginManagerContext',
   render: DefaultStory,
-  decorators: [withTheme()],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
   },

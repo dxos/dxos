@@ -7,7 +7,6 @@ import * as Result from '@effect-atom/atom/Result';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
-import isEqual from 'lodash.isequal';
 
 import { Obj, Ref } from '@dxos/echo';
 import { assertArgument } from '@dxos/invariant';
@@ -27,7 +26,7 @@ const objectFamily = Atom.family(<T extends Obj.Unknown>(obj: T): Atom.Atom<Obj.
     get.addFinalizer(() => unsubscribe());
 
     return Obj.getSnapshot(obj);
-  });
+  }).pipe(Atom.keepAlive);
 });
 
 /**
@@ -52,7 +51,7 @@ const refFamily = Atom.family(<T extends Obj.Unknown>(ref: Ref.Ref<T>): Atom.Ato
     });
 
     return loadRefTarget(ref, get, setupTargetSubscription);
-  });
+  }).pipe(Atom.keepAlive);
 });
 
 /**
@@ -84,7 +83,7 @@ const propertyFamily = Atom.family(<T extends Obj.Unknown>(obj: T) =>
 
       const unsubscribe = Obj.subscribe(obj, () => {
         const newValue = obj[key];
-        if (!isEqual(previousSnapshot, newValue)) {
+        if (previousSnapshot !== newValue) {
           previousSnapshot = snapshotForComparison(newValue);
           // Return a snapshot copy so React sees a new reference.
           get.setSelf(snapshotForComparison(newValue));
@@ -95,7 +94,7 @@ const propertyFamily = Atom.family(<T extends Obj.Unknown>(obj: T) =>
 
       // Return a snapshot copy so React sees a new reference.
       return snapshotForComparison(obj[key]);
-    });
+    }).pipe(Atom.keepAlive);
   }),
 );
 
@@ -176,7 +175,7 @@ const objectWithReactiveFamily = Atom.family(<T extends Obj.Unknown>(obj: T): At
     get.addFinalizer(() => unsubscribe());
 
     return obj;
-  });
+  }).pipe(Atom.keepAlive);
 });
 
 /**

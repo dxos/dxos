@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { Chat, Initiative, ResearchGraph } from '@dxos/assistant-toolkit';
+import { Chat, Plan, Project, ProjectBlueprint, ResearchGraph } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
 import { Obj, Type } from '@dxos/echo';
@@ -45,7 +45,10 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
         metadata: {
           icon: 'ph--atom--regular',
           iconHue: 'sky',
-          createObject: ((props) => Effect.sync(() => Chat.make(props))) satisfies CreateObject,
+          createObject: ((props, { db }) =>
+            Operation.invoke(AssistantOperation.CreateChat, { db, name: props?.name }).pipe(
+              Effect.map(({ object }) => object),
+            )) satisfies CreateObject,
         },
       },
       {
@@ -75,17 +78,17 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
         },
       },
       {
-        id: Type.getTypename(Initiative.Initiative),
+        id: Type.getTypename(Project.Project),
         metadata: {
           icon: 'ph--circuitry--regular',
           iconHue: 'sky',
           createObject: ((_, { db }) =>
-            Initiative.makeInitialized(
+            Project.makeInitialized(
               {
-                name: 'New Initiative',
+                name: 'New Project',
                 spec: 'Not specified yet',
               },
-              Initiative.makeBlueprint(),
+              ProjectBlueprint.make(),
             ).pipe(withComputeRuntime(db.spaceId))) satisfies CreateObject,
           addToCollectionOnCreate: true,
         },
@@ -100,9 +103,9 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
       Blueprint.Blueprint,
       HasSubject.HasSubject,
       Prompt.Prompt,
-      ResearchGraph,
-      Initiative.Initiative,
-      Initiative.Plan,
+      ResearchGraph.ResearchGraph,
+      Project.Project,
+      Plan.Plan,
       Sequence,
     ],
   }),
