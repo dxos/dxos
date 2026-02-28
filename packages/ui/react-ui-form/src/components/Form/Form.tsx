@@ -9,7 +9,14 @@ import React, { type PropsWithChildren, useEffect, useMemo, useRef } from 'react
 
 import { type AnyProperties } from '@dxos/echo/internal';
 import { createJsonPath, getValue as getValue$ } from '@dxos/effect';
-import { IconButton, type IconButtonProps, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import {
+  IconButton,
+  type IconButtonProps,
+  ScrollArea,
+  type ScrollAreaRootProps,
+  type ThemedClassName,
+  useTranslation,
+} from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import {
@@ -170,12 +177,25 @@ FormRoot.displayName = 'Form.Root';
 
 const FORM_VIEWPORT_NAME = 'Form.Viewport';
 
-type FormViewportProps = PropsWithChildren<{}>;
+type FormViewportProps = PropsWithChildren<ScrollAreaRootProps>;
 
-// TODO(burdon): Ref and props (allow asChild).
-const FormViewport = ({ children }: FormViewportProps) => {
+const FormViewport = ({
+  children,
+  classNames,
+  margin = true,
+  padding = true,
+  thin = true,
+  ...props
+}: FormViewportProps) => {
   return (
-    <ScrollArea.Root orientation='vertical'>
+    <ScrollArea.Root
+      orientation='vertical'
+      classNames={['py-form-padding', classNames]}
+      margin={margin}
+      padding={padding}
+      thin={thin}
+      {...props}
+    >
       <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
     </ScrollArea.Root>
   );
@@ -191,19 +211,13 @@ const FORM_CONTENT_NAME = 'Form.Content';
 
 type FormContentProps = ThemedClassName<PropsWithChildren<{}>>;
 
-// TOOD(burdon): Figure out nesting (indent and testId).
 const FormContent = ({ classNames, children }: FormContentProps) => {
   const { form, testId } = useFormContext(FORM_CONTENT_NAME);
   const ref = useRef<HTMLDivElement>(null);
   useKeyHandler(ref.current, form);
 
   return (
-    <div
-      ref={ref}
-      role='form'
-      className={mx('w-full flex flex-col gap-card-padding px-card-padding', classNames)}
-      data-testid={testId}
-    >
+    <div ref={ref} role='form' className={mx('w-full flex flex-col gap-form-padding', classNames)} data-testid={testId}>
       {children}
     </div>
   );
@@ -251,7 +265,7 @@ const FormActions = ({ classNames }: FormActionsProps) => {
   //   Deprecate FormSubmit ans use FormActions without Cancel button if no callback is supplied.
 
   return (
-    <div role='none' className={mx('grid grid-flow-col gap-2 auto-cols-fr py-card-padding', classNames)}>
+    <div role='none' className={mx('grid grid-flow-col gap-2 auto-cols-fr py-form-padding', classNames)}>
       {onCancel && (
         <IconButton
           icon='ph--x--regular'

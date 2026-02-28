@@ -128,9 +128,7 @@ const meta = {
 
   decorators: [
     withTheme(),
-    withLayout({
-      layout: 'fullscreen',
-    }),
+    withLayout({ layout: 'fullscreen' }),
     withClientProvider({
       createIdentity: true,
       createSpace: true,

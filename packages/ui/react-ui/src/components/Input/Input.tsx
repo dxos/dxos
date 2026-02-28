@@ -97,9 +97,7 @@ const DescriptionAndValidation = forwardRef<HTMLParagraphElement, DescriptionAnd
   },
 );
 
-type PinInputProps = InputSharedProps &
-  Omit<PinInputPrimitiveProps, 'className' | 'segmentClassName'> &
-  ThemedClassName<{}>;
+type PinInputProps = ThemedClassName<InputSharedProps & Omit<PinInputPrimitiveProps, 'className' | 'segmentClassName'>>;
 
 const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
   ({ density: propsDensity, elevation: propsElevation, classNames, ...props }, forwardedRef) => {

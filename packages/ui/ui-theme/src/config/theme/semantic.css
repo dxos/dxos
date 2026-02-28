@@ -41,12 +41,12 @@
 
   /* Accent */
 
-  --color-accent-surface: light-dark(var(--color-blue-400), var(--color-blue-600));
-  --color-accent-surface-hover: light-dark(var(--color-blue-200), var(--color-blue-800));
+  --color-accent-surface: light-dark(var(--color-blue-600), var(--color-blue-600));
+  --color-accent-surface-hover: light-dark(var(--color-blue-800), var(--color-blue-800));
   --color-accent-surface-text: var(--color-blue-100);
   --color-accent-text: light-dark(var(--color-blue-600), var(--color-blue-600));
   --color-accent-text-hover: light-dark(var(--color-blue-500), var(--color-blue-500));
-  --color-accent-focus-indicator: light-dark(var(--color-blue-300), var(--color-blue-600));
+  --color-accent-focus-indicator: light-dark(var(--color-blue-600), var(--color-blue-600));
 
   --color-un-accent: var(--color-neutral-400);
   --color-un-accent-hover: var(--color-neutral-500);
@@ -84,25 +84,26 @@
 
   /* Text */
 
-  --color-placeholder: light-dark(var(--color-neutral-600), var(--color-neutral-400));
+  --color-placeholder: light-dark(var(--color-neutral-400), var(--color-neutral-600));
   --color-description: light-dark(var(--color-neutral-600), var(--color-neutral-400));
   --color-subdued: light-dark(var(--color-neutral-800), var(--color-neutral-200));
 }
 
+/* TODO(burdon): Resolve. */
+/* 
 @layer dx-tokens {
-  /* TODO(burdon): Are these used? See surfaces.css */
-  /* .sidebar-surface, .dark .sidebar-surface, .bg-group-surface, .dark .bg-group-surface, .bg-sidebar-surface, .dark .bg-sidebar-surface, .bg-header-surface, .dark .bg-header-surface, .bg-toolbar-surface, .dark .bg-toolbar-surface, .bg-card-surface, .dark .bg-card-surface {
+  .sidebar-surface, .dark .sidebar-surface, .bg-group-surface, .dark .bg-group-surface, .bg-sidebar-surface, .dark .bg-sidebar-surface, .bg-header-surface, .dark .bg-header-surface, .bg-toolbar-surface, .dark .bg-toolbar-surface, .bg-card-surface, .dark .bg-card-surface {
     --color-text-input-surface: light-dark(var(--color-neutral-50), var(--color-neutral-800));
     --color-input-surface: light-dark(var(--color-neutral-100), var(--color-neutral-800));
     --color-hover-surface: light-dark(var(--color-neutral-100), var(--color-neutral-700));
     --color-separator: light-dark(var(--color-neutral-200), var(--color-neutral-700));
-  } */
+  }
 
-  /* TODO(burdon): Are these used? See surfaces.css */
-  /* .modal-surface, .dark .modal-surface, .bg-modal-surface, .dark .bg-modal-surface, .bg-current-related, .dark .bg-current-related {
+  .modal-surface, .dark .modal-surface, .bg-modal-surface, .dark .bg-modal-surface, .bg-current-related, .dark .bg-current-related {
     --color-text-input-surface: light-dark(var(--color-neutral-50), var(--color-neutral-800));
     --color-input-surface: light-dark(var(--color-neutral-100), var(--color-neutral-800));
     --color-hover-surface: light-dark(var(--color-neutral-100), var(--color-neutral-700));
     --color-separator: light-dark(var(--color-neutral-200), var(--color-neutral-700));
-  } */
+  }
 }
+*/

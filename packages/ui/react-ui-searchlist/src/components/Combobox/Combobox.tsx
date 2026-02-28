@@ -16,7 +16,7 @@ import {
   type PopoverVirtualTriggerProps,
 } from '@dxos/react-ui';
 import { useId } from '@dxos/react-ui';
-import { mx, staticPlaceholderText } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import {
   SearchList,
@@ -203,9 +203,7 @@ const ComboboxTrigger = forwardRef<HTMLButtonElement, ComboboxTriggerProps>(
         >
           {children ?? (
             <>
-              <span
-                className={mx('font-normal text-start flex-1 min-w-0 truncate me-2', !value && staticPlaceholderText)}
-              >
+              <span className={mx('font-normal text-start flex-1 min-w-0 truncate me-2', !value && 'text-subdued')}>
                 {value || placeholder}
               </span>
               <Icon icon='ph--caret-down--bold' size={3} />
@@ -237,7 +235,7 @@ const ComboboxInput = forwardRef<HTMLInputElement, ComboboxInputProps>(({ classN
   return (
     <SearchList.Input
       {...props}
-      classNames={['m-card-chrome mb-0 w-[calc(100%-2*var(--spacing-card-chrome))]', classNames]}
+      classNames={['m-form-chrome mb-0 w-[calc(100%-2*var(--spacing-form-chrome))]', classNames]}
       ref={forwardedRef}
     />
   );
@@ -250,7 +248,7 @@ const ComboboxInput = forwardRef<HTMLInputElement, ComboboxInputProps>(({ classN
 type ComboboxListProps = SearchListViewportProps;
 
 const ComboboxList = forwardRef<HTMLDivElement, ComboboxListProps>(({ classNames, ...props }, forwardedRef) => {
-  return <SearchList.Viewport {...props} classNames={['py-card-chrome', classNames]} ref={forwardedRef} />;
+  return <SearchList.Viewport {...props} classNames={['py-form-chrome', classNames]} ref={forwardedRef} />;
 });
 
 //
@@ -279,7 +277,7 @@ const ComboboxItem = forwardRef<HTMLDivElement, ComboboxItemProps>(
       <SearchList.Item
         {...props}
         value={value}
-        classNames={['mx-card-chrome px-card-chrome', classNames]}
+        classNames={['mx-form-chrome px-form-chrome', classNames]}
         onSelect={handleSelect}
         ref={forwardedRef}
       />

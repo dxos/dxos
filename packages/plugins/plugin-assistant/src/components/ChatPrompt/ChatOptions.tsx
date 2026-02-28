@@ -73,7 +73,7 @@ export const ChatOptions = ({ db, context, blueprintRegistry, presets, preset, o
                     'max-h-(--radix-popover-content-available-height) grid grid-rows-[1fr_min-content]',
                     '[&_[cmdk-root]]:contents [&_[role="tabpanel"]]:grid [&_[role="tabpanel"]]:grid-rows-[1fr_min-content]',
                     '[&_[role="listbox"]]:min-h-0 [&_[role="listbox"]]:overflow-y-auto',
-                    '[&_[role="tabpanel"]]:min-h-0 [&_[role="tabpanel"]]:px-card-chrome [&_[role="tabpanel"][data-state="active"]]:order-first [&_[role="tabpanel"][data-state="inactive"]]:hidden',
+                    '[&_[role="tabpanel"]]:min-h-0 [&_[role="tabpanel"]]:px-form-chrome [&_[role="tabpanel"][data-state="active"]]:order-first [&_[role="tabpanel"][data-state="inactive"]]:hidden',
                   )}
                 >
                   <Tabs.Tabpanel value='blueprints' tabIndex={-1} classNames='dx-focus-ring-inset'>
@@ -82,7 +82,7 @@ export const ChatOptions = ({ db, context, blueprintRegistry, presets, preset, o
                   <Tabs.Tabpanel value='model' tabIndex={-1} classNames='dx-focus-ring-inset px-0!'>
                     <ModelsPanel presets={presets} preset={preset} onPresetChange={onPresetChange} />
                   </Tabs.Tabpanel>
-                  <Tabs.Tablist classNames='sm:overflow-x-hidden justify-center p-card-chrome border-y border-subdued-separator order-last'>
+                  <Tabs.Tablist classNames='sm:overflow-x-hidden justify-center p-form-chrome border-y border-subdued-separator order-last'>
                     <Tabs.IconTab
                       value='blueprints'
                       icon='ph--blueprint--regular'
@@ -119,7 +119,7 @@ const BlueprintsPanel = ({
 
   return (
     <SearchList.Root onSearch={handleSearch}>
-      <SearchList.Content classNames='py-card-chrome'>
+      <SearchList.Content classNames='py-form-chrome'>
         <SearchList.Viewport>
           {results.map((blueprint) => {
             const isActive = activeBlueprints.has(blueprint.key);
@@ -136,7 +136,7 @@ const BlueprintsPanel = ({
           })}
         </SearchList.Viewport>
       </SearchList.Content>
-      <SearchList.Input placeholder={t('search placeholder')} classNames='mb-card-chrome' autoFocus />
+      <SearchList.Input placeholder={t('search placeholder')} classNames='mb-form-chrome' autoFocus />
     </SearchList.Root>
   );
 };
@@ -198,7 +198,7 @@ const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'context'>)
 
   return (
     <SearchList.Root onSearch={handleSearch}>
-      <SearchList.Content classNames='p-card-chrome [&:has([cmdk-list-sizer]:empty)]:py-0'>
+      <SearchList.Content classNames='p-form-chrome [&:has([cmdk-list-sizer]:empty)]:py-0'>
         <SearchList.Viewport>
           {results.length ? (
             results.map((object) => {
@@ -220,7 +220,7 @@ const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'context'>)
         </SearchList.Viewport>
       </SearchList.Content>
 
-      <div role='none' className='grid grid-cols-[min-content_1fr] gap-2 px-card-chrome mb-card-chrome'>
+      <div role='none' className='grid grid-cols-[min-content_1fr] gap-2 px-form-chrome mb-form-chrome'>
         <Select.Root value={typename === ANY ? undefined : typename} onValueChange={setTypename}>
           <Select.TriggerButton density='fine' placeholder={t('type filter placeholder')} />
           <Select.Portal>
