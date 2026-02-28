@@ -14,11 +14,12 @@ import {
   type RecoverIdentityRequest as EdgeRecoverIdentityRequest,
   type RecoverIdentityResponseBody,
 } from '@dxos/protocols';
+import { fromBinary } from '@dxos/protocols/buf';
 import {
   type CreateRecoveryCredentialRequest,
   type RecoverIdentityRequest_ExternalSignature,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { schema } from '@dxos/protocols/proto';
+import { CredentialSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Timeframe } from '@dxos/timeframe';
 
 import { type Identity } from './identity';
@@ -128,7 +129,7 @@ export class EdgeIdentityRecoveryManager {
     const response = await this._edgeClient.recoverIdentity(request);
 
     await this._acceptRecoveredIdentity({
-      authorizedDeviceCredential: decodeCredential(response.deviceAuthCredential) as any,
+      authorizedDeviceCredential: decodeCredential(response.deviceAuthCredential),
       haloGenesisFeedKey: PublicKey.fromHex(response.genesisFeedKey),
       haloSpaceKey: PublicKey.fromHex(response.haloSpaceKey),
       identityKey: PublicKey.fromHex(response.identityKey),
@@ -155,7 +156,7 @@ export class EdgeIdentityRecoveryManager {
     const response = await this._edgeClient.recoverIdentity(request);
 
     await this._acceptRecoveredIdentity({
-      authorizedDeviceCredential: decodeCredential(response.deviceAuthCredential) as any,
+      authorizedDeviceCredential: decodeCredential(response.deviceAuthCredential),
       haloGenesisFeedKey: PublicKey.fromHex(response.genesisFeedKey),
       haloSpaceKey: PublicKey.fromHex(response.haloSpaceKey),
       identityKey: PublicKey.fromHex(response.identityKey),
@@ -195,7 +196,7 @@ export class EdgeIdentityRecoveryManager {
     log.info('recovering identity', response);
 
     await this._acceptRecoveredIdentity({
-      authorizedDeviceCredential: decodeCredential(response.deviceAuthCredential) as any,
+      authorizedDeviceCredential: decodeCredential(response.deviceAuthCredential),
       haloGenesisFeedKey: PublicKey.fromHex(response.genesisFeedKey),
       haloSpaceKey: PublicKey.fromHex(response.haloSpaceKey),
       identityKey: PublicKey.fromHex(response.identityKey),
@@ -208,6 +209,5 @@ export class EdgeIdentityRecoveryManager {
 
 const decodeCredential = (credentialBase64: string) => {
   const credentialBytes = Buffer.from(credentialBase64, 'base64');
-  const codec = schema.getCodecForType('dxos.halo.credentials.Credential');
-  return codec.decode(credentialBytes);
+  return fromBinary(CredentialSchema, credentialBytes);
 };

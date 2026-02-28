@@ -8,10 +8,13 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { TimeoutError as ProtocolTimeoutError, trace } from '@dxos/protocols';
-import { type bufWkt, create, protoAnyToBufAny } from '@dxos/protocols/buf';
+import { type bufWkt, create, encodePublicKey, fromBinary, toBinary, toPublicKey } from '@dxos/protocols/buf';
 import { MessageSchema } from '@dxos/protocols/buf/dxos/edge/signal_pb';
-import { schema } from '@dxos/protocols/proto';
-import { type ReliablePayload } from '@dxos/protocols/buf/dxos/mesh/messaging_pb';
+import {
+  type ReliablePayload,
+  ReliablePayloadSchema,
+  AcknowledgementSchema,
+} from '@dxos/protocols/buf/dxos/mesh/messaging_pb';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { MessengerMonitor } from './messenger-monitor';
@@ -25,9 +28,6 @@ export interface MessengerOptions {
   signalManager: SignalManager;
   retryDelay?: number;
 }
-
-const ReliablePayload = schema.getCodecForType('dxos.mesh.messaging.ReliablePayload');
-const Acknowledgement = schema.getCodecForType('dxos.mesh.messaging.Acknowledgement');
 
 const RECEIVED_MESSAGES_GC_INTERVAL = 120_000;
 
@@ -221,7 +221,10 @@ export class Messenger {
         recipient,
         payload: {
           typeUrl: 'dxos.mesh.messaging.ReliablePayload',
-          value: ReliablePayload.encode(reliablePayload as any, { preserveAny: true }),
+          value: toBinary(ReliablePayloadSchema, create(ReliablePayloadSchema, {
+            messageId: encodePublicKey(reliablePayload.messageId as any),
+            payload: reliablePayload.payload,
+          } as any)),
         },
       }),
     );
@@ -242,8 +245,11 @@ export class Messenger {
 
   private async _handleReliablePayload({ author, recipient, payload }: Message): Promise<void> {
     invariant(payload?.typeUrl === 'dxos.mesh.messaging.ReliablePayload');
-    // Proto codec returns proto-shaped objects; cast at boundary.
-    const reliablePayload: ReliablePayload = ReliablePayload.decode(payload.value, { preserveAny: true }) as any;
+    const decoded = fromBinary(ReliablePayloadSchema, payload.value);
+    const reliablePayload: ReliablePayload = {
+      ...decoded,
+      messageId: decoded.messageId ? toPublicKey(decoded.messageId) : undefined,
+    } as any;
 
     log('handling message', { messageId: reliablePayload.messageId });
 
@@ -268,14 +274,15 @@ export class Messenger {
       create(MessageSchema, {
         author,
         recipient,
-        payload: protoAnyToBufAny(reliablePayload.payload) as bufWkt.Any,
+        payload: reliablePayload.payload as bufWkt.Any,
       }),
     );
   }
 
   private async _handleAcknowledgement({ payload }: { payload: bufWkt.Any }): Promise<void> {
     invariant(payload.typeUrl === 'dxos.mesh.messaging.Acknowledgement');
-    this._onAckCallbacks.get(Acknowledgement.decode(payload.value).messageId)?.();
+    const ack = fromBinary(AcknowledgementSchema, payload.value);
+    this._onAckCallbacks.get(toPublicKey(ack.messageId!))?.();
   }
 
   private async _sendAcknowledgement({
@@ -295,7 +302,7 @@ export class Messenger {
         recipient: author,
         payload: {
           typeUrl: 'dxos.mesh.messaging.Acknowledgement',
-          value: Acknowledgement.encode({ messageId }),
+          value: toBinary(AcknowledgementSchema, create(AcknowledgementSchema, { messageId: encodePublicKey(messageId) })),
         },
       }),
     );

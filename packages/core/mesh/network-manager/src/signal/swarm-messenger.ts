@@ -8,10 +8,9 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Message, type PeerInfo } from '@dxos/messaging';
 import { TimeoutError } from '@dxos/protocols';
-import { bufWkt, create } from '@dxos/protocols/buf';
+import { bufWkt, create, fromBinary, toBinary } from '@dxos/protocols/buf';
 import { MessageSchema } from '@dxos/protocols/buf/dxos/edge/signal_pb';
-import { type Answer, type SwarmMessage } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
-import { schema } from '@dxos/protocols/proto';
+import { type Answer, SwarmMessageSchema } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 import { ComplexMap, type MakeOptional } from '@dxos/util';
 
 import { type OfferMessage, type SignalMessage, type SignalMessenger } from './signal-messenger';
@@ -27,7 +26,66 @@ export type SwarmMessengerOptions = {
   topic: PublicKey;
 };
 
-const SwarmMessage = schema.getCodecForType('dxos.mesh.swarm.SwarmMessage');
+/** Strip buf $typeName from an object to get a plain init value for create(). */
+const stripBufMeta = (obj: any): any => {
+  if (!obj || typeof obj !== 'object') {
+    return obj;
+  }
+  const { $typeName, ...rest } = obj;
+  return rest;
+};
+
+/** Encode a proto-shaped SwarmMessage (with @dxos/keys PublicKey and direct oneof data fields) to bytes. */
+const encodeSwarmMessage = (msg: any): Uint8Array => {
+  const encKey = (key: any) => (key ? { data: key instanceof PublicKey ? key.asUint8Array() : key.data } : undefined);
+  let data: any;
+  if (msg.data) {
+    for (const field of ['offer', 'answer', 'signal', 'signalBatch'] as const) {
+      if (msg.data[field] != null) {
+        let value = stripBufMeta(msg.data[field]);
+        if (field === 'answer' && value.offerMessageId) {
+          value = { ...value, offerMessageId: encKey(value.offerMessageId) };
+        }
+        data = { payload: { case: field, value } };
+        break;
+      }
+    }
+  }
+
+  return toBinary(SwarmMessageSchema, create(SwarmMessageSchema, {
+    topic: encKey(msg.topic),
+    sessionId: encKey(msg.sessionId),
+    messageId: encKey(msg.messageId),
+    data,
+  } as any));
+};
+
+/** Decode bytes to a proto-shaped SwarmMessage (with @dxos/keys PublicKey and direct oneof data fields). */
+const decodeSwarmMessage = (bytes: Uint8Array): any => {
+  const decoded = fromBinary(SwarmMessageSchema, bytes);
+  const decKey = (key: any) => (key ? PublicKey.from(key.data) : undefined);
+
+  let data: any;
+  if (decoded.data) {
+    const payload = decoded.data.payload;
+    if (payload.case) {
+      let value: any = payload.value;
+      if (payload.case === 'answer' && value.offerMessageId) {
+        value = { ...value, offerMessageId: decKey(value.offerMessageId) };
+      }
+      data = { [payload.case]: value };
+    } else {
+      data = {};
+    }
+  }
+
+  return {
+    topic: decKey(decoded.topic),
+    sessionId: decKey(decoded.sessionId),
+    messageId: decKey(decoded.messageId),
+    data,
+  };
+};
 
 /**
  * Adds offer/answer and signal interfaces.
@@ -62,8 +120,7 @@ export class SwarmMessenger implements SignalMessenger {
       // Ignore not swarm messages.
       return;
     }
-    // Proto codec returns proto-shaped objects (direct oneof fields); access via `as any` at boundary.
-    const message: any = SwarmMessage.decode(payload.value);
+    const message: any = decodeSwarmMessage(payload.value);
 
     if (!this._topic.equals(message.topic)) {
       return;
@@ -129,7 +186,7 @@ export class SwarmMessenger implements SignalMessenger {
         recipient,
         payload: create(bufWkt.AnySchema, {
           typeUrl: 'dxos.mesh.swarm.SwarmMessage',
-          value: SwarmMessage.encode(networkMessage),
+          value: encodeSwarmMessage(networkMessage),
         }),
       }),
     );

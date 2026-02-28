@@ -7,11 +7,11 @@ import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { create, timestampFromDate } from '@dxos/protocols/buf';
+import { create, fromBinary, timestampFromDate } from '@dxos/protocols/buf';
 import { type SwarmResponse } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { type QueryRequest, SwarmEventSchema } from '@dxos/protocols/buf/dxos/edge/signal_pb';
 import { PublicKeySchema } from '@dxos/protocols/buf/dxos/keys_pb';
-import { schema } from '@dxos/protocols/proto';
+import { ReliablePayloadSchema } from '@dxos/protocols/buf/dxos/mesh/messaging_pb';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { type Message, type PeerInfo, PeerInfoHash, type SignalStatus, type SwarmEvent } from '../signal-methods';
@@ -231,10 +231,10 @@ const dec = (payload?: { typeUrl?: string; value?: Uint8Array }) => {
     return {};
   }
 
-  const relPayload = schema.getCodecForType('dxos.mesh.messaging.ReliablePayload').decode(payload.value!);
+  const relPayload = fromBinary(ReliablePayloadSchema, payload.value!);
 
-  if (typeof relPayload?.payload?.data === 'object') {
-    return { payload: Object.keys(relPayload?.payload?.data)[0], sessionId: relPayload?.payload?.sessionId };
+  if (relPayload?.payload?.typeUrl) {
+    return { payload: relPayload.payload.typeUrl };
   }
 
   return {};

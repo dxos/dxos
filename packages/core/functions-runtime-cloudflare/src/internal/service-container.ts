@@ -4,10 +4,7 @@
 
 import { type AnyEntity } from '@dxos/echo/internal';
 import { type DXN, type SpaceId } from '@dxos/keys';
-import { type EdgeFunctionEnv, type FeedProtocol } from '@dxos/protocols';
-import { bufToProto } from '@dxos/protocols/buf';
-import { type QueryService as QueryServiceProto } from '@dxos/protocols/proto/dxos/echo/query';
-import type { DataService as DataServiceProto } from '@dxos/protocols/proto/dxos/echo/service';
+import { type Echo, type EdgeFunctionEnv, type FeedProtocol } from '@dxos/protocols';
 
 import { DataServiceImpl } from './data-service-impl';
 import { QueryServiceImpl } from './query-service-impl';
@@ -37,9 +34,9 @@ export class ServiceContainer {
   }
 
   async createServices(): Promise<{
-    dataService: DataServiceProto;
-    queryService: QueryServiceProto;
-    queueService: FeedProtocol.QueueService;
+    dataService: Echo.DataService;
+    queryService: Echo.QueryService;
+    queueService: Echo.QueueService;
     functionsAiService: EdgeFunctionEnv.FunctionsAiService;
   }> {
     const dataService = new DataServiceImpl(this._executionContext, this._dataService);
@@ -49,7 +46,7 @@ export class ServiceContainer {
     return {
       dataService,
       queryService,
-      queueService: bufToProto<FeedProtocol.QueueService>(queueService),
+      queueService,
       functionsAiService: this._functionsService,
     };
   }

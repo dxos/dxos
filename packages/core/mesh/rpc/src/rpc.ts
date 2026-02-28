@@ -3,13 +3,13 @@
 //
 
 import { Trigger, asyncTimeout, synchronized } from '@dxos/async';
-import { type Any, type ProtoCodec, type RequestOptions, Stream } from '@dxos/codec-protobuf';
+import { type Any, type RequestOptions, Stream } from '@dxos/codec-protobuf';
 import { StackTrace } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { RpcClosedError, RpcNotOpenError, encodeError } from '@dxos/protocols';
-import { type Request, type Response, type RpcMessage } from '@dxos/protocols/buf/dxos/rpc_pb';
-import { schema } from '@dxos/protocols/proto';
+import { create, fromBinary, toBinary } from '@dxos/protocols/buf';
+import { type Request, type Response, type RpcMessage, RpcMessageSchema } from '@dxos/protocols/buf/dxos/rpc_pb';
 import { exponentialBackoffInterval } from '@dxos/util';
 
 import { decodeRpcError } from './errors';
@@ -19,67 +19,65 @@ const BYE_SEND_TIMEOUT = 2_000;
 
 const DEBUG_CALLS = true;
 
-/**
- * Convert proto-shaped RpcMessage (direct oneof fields) to buf-shaped (discriminated union on `content`).
- * Proto codec returns `{ request?, response?, open?, openAck?, streamClose?, bye? }`.
- * Buf expects `{ content: { case: 'request', value } | ... }`.
- */
-const protoRpcMessageToBuf = (raw: any): RpcMessage => {
-  let content: RpcMessage['content'];
-  if (raw.request) {
-    content = { case: 'request', value: { ...raw.request, payload: raw.request.payload } };
-  } else if (raw.response) {
-    content = { case: 'response', value: protoResponseToBuf(raw.response) };
-  } else if (raw.open !== undefined && raw.open !== null) {
-    content = { case: 'open', value: raw.open };
-  } else if (raw.openAck !== undefined && raw.openAck !== null) {
-    content = { case: 'openAck', value: raw.openAck };
-  } else if (raw.streamClose) {
-    content = { case: 'streamClose', value: raw.streamClose };
-  } else if (raw.bye) {
-    content = { case: 'bye', value: raw.bye };
-  } else {
-    content = { case: undefined, value: undefined };
+/** Normalize Any payload field names from proto-style (type_url) to buf-style (typeUrl) before encoding. */
+const normalizeAnyForBuf = (any: any): any => {
+  if (!any) {
+    return any;
   }
-  return { content } as any;
+  let value = any.value;
+  // Copy Buffer to clean Uint8Array to avoid ArrayBuffer pool sharing issues with toBinary.
+  if (value instanceof Uint8Array && value.buffer.byteLength !== value.byteLength) {
+    value = new Uint8Array(value);
+  }
+  return { typeUrl: any.typeUrl ?? any.type_url ?? '', value };
 };
 
-const protoResponseToBuf = (raw: any): Response => {
-  let content: Response['content'];
-  if (raw.payload) {
-    content = { case: 'payload', value: raw.payload };
-  } else if (raw.error) {
-    content = { case: 'error', value: raw.error };
-  } else if (raw.close) {
-    content = { case: 'close', value: raw.close };
-  } else if (raw.streamReady) {
-    content = { case: 'streamReady', value: raw.streamReady };
-  } else {
-    content = { case: undefined, value: undefined };
+const normalizeRpcMessage = (msg: any): any => {
+  if (msg?.content?.case === 'request' && msg.content.value?.payload) {
+    return {
+      content: {
+        ...msg.content,
+        value: { ...msg.content.value, payload: normalizeAnyForBuf(msg.content.value.payload) },
+      },
+    };
   }
-  return { id: raw.id, content } as any;
+  if (msg?.content?.case === 'response') {
+    const resp = msg.content.value;
+    if (resp?.content?.case === 'payload') {
+      return {
+        content: {
+          case: 'response',
+          value: { ...resp, content: { case: 'payload', value: normalizeAnyForBuf(resp.content.value) } },
+        },
+      };
+    }
+  }
+  return msg;
 };
 
-/**
- * Convert buf-shaped RpcMessage to proto-shaped for the proto codec.
- */
-const bufRpcMessageToProto = (msg: any): any => {
-  const c = msg.content;
-  if (!c || c.case === undefined) {
-    return {};
+/** Convert buf-decoded Any to proto-compatible format for backward compatibility. */
+const convertAnyToProto = (msg: RpcMessage): void => {
+  const convert = (parent: any, key: string) => {
+    const any = parent[key];
+    if (!any) {
+      return;
+    }
+    const typeUrl = any.typeUrl ?? '';
+    const value =
+      typeof Buffer !== 'undefined' && any.value instanceof Uint8Array && !(any.value instanceof Buffer)
+        ? Buffer.from(any.value)
+        : any.value;
+    parent[key] = {
+      '@type': 'google.protobuf.Any',
+      type_url: typeUrl,
+      value,
+    };
+  };
+  if (msg.content.case === 'request' && msg.content.value.payload) {
+    convert(msg.content.value, 'payload');
+  } else if (msg.content.case === 'response' && msg.content.value.content.case === 'payload') {
+    convert(msg.content.value.content, 'value');
   }
-  if (c.case === 'response') {
-    return { response: bufResponseToProto(c.value) };
-  }
-  return { [c.case]: c.value };
-};
-
-const bufResponseToProto = (resp: any): any => {
-  const c = resp.content;
-  if (!c || c.case === undefined) {
-    return { id: resp.id };
-  }
-  return { id: resp.id, [c.case]: c.value };
 };
 
 type MaybePromise<T> = Promise<T> | T;
@@ -130,10 +128,6 @@ class PendingRpcRequest {
     public readonly stream: boolean,
   ) {}
 }
-
-// NOTE: Lazy so that code that doesn't use indexing doesn't need to load the codec (breaks in workerd).
-let RpcMessageCodec!: ProtoCodec<any>;
-const getRpcMessageCodec = () => (RpcMessageCodec ??= schema.getCodecForType('dxos.rpc.RpcMessage'));
 
 enum RpcState {
   INITIAL = 'INITIAL',
@@ -322,9 +316,8 @@ export class RpcPeer {
    * Handle incoming message. Should be called as the result of other peer's `send` callback.
    */
   private async _receive(msg: Uint8Array): Promise<void> {
-    // Proto codec returns proto-shaped oneof (direct fields); convert to buf discriminated union.
-    const raw: any = getRpcMessageCodec().decode(msg, { preserveAny: true });
-    const decoded = protoRpcMessageToBuf(raw);
+    const decoded = fromBinary(RpcMessageSchema, msg);
+    convertAnyToProto(decoded);
     DEBUG_CALLS && log('received message', { type: decoded.content.case });
 
     switch (decoded.content.case) {
@@ -558,10 +551,8 @@ export class RpcPeer {
   }
 
   private async _sendMessage(message: any, timeout?: number): Promise<void> {
-    // Convert buf-shaped oneof to proto-shaped for the proto codec.
-    const protoMsg = bufRpcMessageToProto(message);
     DEBUG_CALLS && log('sending message', { type: message.content?.case });
-    await this._params.port.send(getRpcMessageCodec().encode(protoMsg, { preserveAny: true }), timeout);
+    await this._params.port.send(toBinary(RpcMessageSchema, create(RpcMessageSchema, normalizeRpcMessage(message))), timeout);
   }
 
   private async _callHandler(req: Request): Promise<Response> {

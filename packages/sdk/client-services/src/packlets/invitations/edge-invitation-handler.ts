@@ -21,13 +21,14 @@ import {
   Invitation_State,
   Invitation_Type,
 } from '@dxos/protocols/buf/dxos/client/invitation_pb';
-import { type DeviceProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type DeviceProfileDocument, CredentialSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import {
   type AdmissionRequest,
   type AdmissionResponse,
+  AdmissionResponseSchema,
   type SpaceAdmissionRequest,
 } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
-import { schema } from '@dxos/protocols/proto';
+import { create, fromBinary } from '@dxos/protocols/buf';
 
 import { type InvitationProtocol } from './invitation-protocol';
 import { type FlowLockHolder, type GuardedInvitationState } from './invitation-state';
@@ -152,15 +153,13 @@ export class EdgeInvitationHandler implements FlowLockHolder {
 
   private async _mapToAdmissionResponse(edgeResponse: JoinSpaceResponseBody): Promise<AdmissionResponse> {
     const credentialBytes = Buffer.from(edgeResponse.spaceMemberCredential, 'base64');
-    const codec = schema.getCodecForType('dxos.halo.credentials.Credential');
-    return {
+    const credential = fromBinary(CredentialSchema, credentialBytes);
+    return create(AdmissionResponseSchema, {
       kind: {
         case: 'space',
-        value: {
-          credential: codec.decode(credentialBytes),
-        },
+        value: { credential },
       },
-    } as any;
+    });
   }
 
   private async _joinSpaceByInvitation(

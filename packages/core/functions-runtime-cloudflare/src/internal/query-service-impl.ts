@@ -8,21 +8,23 @@ import { Stream } from '@dxos/codec-protobuf/stream';
 import { QueryAST } from '@dxos/echo-protocol';
 import { NotImplementedError, RuntimeServiceError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
-import { SpaceId } from '@dxos/keys';
+import { PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type EdgeFunctionEnv } from '@dxos/protocols';
+import { type Echo, type EdgeFunctionEnv } from '@dxos/protocols';
+import { type Empty, EMPTY, create, encodePublicKey } from '@dxos/protocols/buf';
+import { type IndexConfig } from '@dxos/protocols/buf/dxos/echo/indexing_pb';
 import {
   type QueryRequest,
   type QueryResponse,
-  type QueryResult as QueryResultProto,
-  type QueryService as QueryServiceProto,
-} from '@dxos/protocols/proto/dxos/echo/query';
+  QueryResponseSchema,
+  type QueryResult,
+  QueryResultSchema,
+} from '@dxos/protocols/buf/dxos/echo/query_pb';
 
 import { queryToDataServiceRequest } from './adapter';
 import { copyUint8Array } from './utils';
 
-export class QueryServiceImpl implements QueryServiceProto {
+export class QueryServiceImpl implements Echo.QueryService {
   private _queryCount = 0;
 
   constructor(
@@ -47,21 +49,19 @@ export class QueryServiceImpl implements QueryServiceProto {
             queryToDataServiceRequest(query),
           );
           log.info('query response', { spaceId, filter: request.filter, resultCount: queryResponse.results.length });
-          return {
+          return create(QueryResponseSchema, {
             results: queryResponse.results.map(
-              (object): QueryResultProto => ({
-                id: object.objectId,
-                spaceId,
-                spaceKey: PublicKey.ZERO,
-                documentId: object.document.documentId,
-                // Rank 1 for predicate matches where ranking is not determined.
-                rank: 1,
-                // Copy returned object to avoid hanging RPC stub.
-                // See https://developers.cloudflare.com/workers/runtime-apis/rpc/lifecycle/
-                documentAutomerge: copyUint8Array(object.document.data),
-              }),
+              (object): QueryResult =>
+                create(QueryResultSchema, {
+                  id: object.objectId,
+                  spaceId,
+                  spaceKey: encodePublicKey(PublicKey.ZERO),
+                  documentId: object.document.documentId,
+                  rank: 1,
+                  documentAutomerge: copyUint8Array(object.document.data),
+                }),
             ),
-          } satisfies QueryResponse;
+          });
         } catch (error) {
           log.error('query failed', { err: error });
           throw new RuntimeServiceError({
@@ -74,13 +74,13 @@ export class QueryServiceImpl implements QueryServiceProto {
     );
   }
 
-  async reindex() {
+  async reindex(): Promise<Empty> {
     throw new NotImplementedError({
       message: 'Reindex is not implemented.',
     });
   }
 
-  async setConfig() {
+  async setConfig(_request: IndexConfig): Promise<Empty> {
     throw new NotImplementedError({
       message: 'SetConfig is not implemented.',
     });

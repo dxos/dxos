@@ -8,10 +8,9 @@ import { type CredentialSigner, verifyCredential } from '@dxos/credentials';
 import { type AuthProvider, type AuthVerifier } from '@dxos/echo-pipeline';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { schema } from '@dxos/protocols/proto';
+import { toBinary, fromBinary, toPublicKey } from '@dxos/protocols/buf';
+import { CredentialSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type ComplexSet } from '@dxos/util';
-
-const Credential = schema.getCodecForType('dxos.halo.credentials.Credential');
 
 export const createAuthProvider =
   (signer: CredentialSigner): AuthProvider =>
@@ -24,7 +23,7 @@ export const createAuthProvider =
       nonce,
     });
 
-    return Credential.encode(credential as never);
+    return toBinary(CredentialSchema, credential);
   };
 
 export type TrustedKeySetAuthVerifierProps = {
@@ -52,22 +51,23 @@ export class TrustedKeySetAuthVerifier {
 
   get verifier(): AuthVerifier {
     return async (nonce, auth) => {
-      const credential = Credential.decode(auth);
+      const credential = fromBinary(CredentialSchema, auth);
       log('authenticating...', { credential });
 
-      const result = await verifyCredential(credential as never);
+      const result = await verifyCredential(credential);
       if (result.kind === 'fail') {
         log('Invalid credential', { result });
         return false;
       }
 
-      if (!credential.proof!.nonce || !Buffer.from(nonce).equals(credential.proof!.nonce)) {
+      if (!credential.proof?.nonce || !Buffer.from(nonce).equals(credential.proof.nonce)) {
         log('Invalid nonce', { nonce, credential });
         return false;
       }
 
-      if (this._isTrustedKey(credential.issuer)) {
-        log('key is trusted -- auth success', { key: credential.issuer });
+      const issuerKey = toPublicKey(credential.issuer!);
+      if (this._isTrustedKey(issuerKey)) {
+        log('key is trusted -- auth success', { key: issuerKey });
         return true;
       }
 
@@ -77,12 +77,12 @@ export class TrustedKeySetAuthVerifier {
       });
 
       const clear = this._params.update.on(this._ctx, () => {
-        if (this._isTrustedKey(credential.issuer)) {
-          log('auth success', { key: credential.issuer });
+        if (this._isTrustedKey(issuerKey)) {
+          log('auth success', { key: issuerKey });
           trigger.wake(true);
         } else {
           log('key is not currently in trusted set, waiting...', {
-            key: credential.issuer,
+            key: issuerKey,
             trusted: [...this._params.trustedKeysProvider()],
           });
         }

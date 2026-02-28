@@ -12,11 +12,10 @@ import { PublicKey } from '@dxos/keys';
 import { type SpaceId } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
 import { EdgeCallFailedError, type Rpc } from '@dxos/protocols';
-import { bufToProto, EMPTY, protoToBuf } from '@dxos/protocols/buf';
+import { EMPTY, toBinary, fromBinary } from '@dxos/protocols/buf';
 import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
-import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type Credential, CredentialSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { NotarizationService, type NotarizeRequest } from '@dxos/protocols/buf/dxos/mesh/teleport/notarization_pb';
-import { schema } from '@dxos/protocols/proto';
 import { type ExtensionContext, BufRpcExtension } from '@dxos/teleport';
 import { ComplexMap, ComplexSet, entry } from '@dxos/util';
 
@@ -31,8 +30,6 @@ const DEFAULT_ACTIVE_EDGE_POLLING_INTERVAL = 3_000;
 const MAX_EDGE_RETRIES = 2;
 
 const WRITER_NOT_SET_ERROR_CODE = 'WRITER_NOT_SET';
-
-const credentialCodec = schema.getCodecForType('dxos.halo.credentials.Credential');
 
 export type NotarizationPluginProps = {
   spaceId: SpaceId;
@@ -245,8 +242,7 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
     timeouts: NotarizationTimeouts & { jitter?: number },
   ): void {
     const encodedCredentials = credentials.map((credential) => {
-      // Proto codec boundary: buf Credential cast to proto for protobuf.js codec.encode.
-      const binary = credentialCodec.encode(bufToProto(credential));
+      const binary = toBinary(CredentialSchema, credential);
       return Buffer.from(binary).toString('base64');
     });
     scheduleTask(ctx, async () => {
@@ -323,8 +319,7 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
 
         const decodedCredentials = credentials.map((credential) => {
           const binary = Buffer.from(credential, 'base64');
-          // Proto codec boundary: protobuf.js codec.decode returns proto type, cast to buf.
-          return protoToBuf<Credential>(credentialCodec.decode(binary));
+          return fromBinary(CredentialSchema, binary);
         });
 
         await this._notarizeCredentials(writer, decodedCredentials);

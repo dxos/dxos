@@ -10,7 +10,6 @@ import { randomBytes } from '@dxos/crypto';
 import { Keyring } from '@dxos/keyring';
 import { buf, create } from '@dxos/protocols/buf';
 import { ChainSchema, PresentationSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { schema } from '@dxos/protocols/proto';
 
 import { createCredential } from '../credentials';
 
@@ -55,14 +54,12 @@ describe('json encoding', () => {
       nonce: randomBytes(32),
     });
 
-    console.log('original (codec-protobuf object):', inspect(presentation, false, null, true));
+    console.log('original (buf object):', inspect(presentation, false, null, true));
 
-    // TODO(dmaretskyi): This test exercises codec interop between buf and protobuf.js; types differ at boundary.
-    const json = schema.getCodecForType('dxos.halo.credentials.Presentation').encodeToJson(presentation as never);
-    console.log('json (pb.js):', inspect(json, false, null, true));
+    const json = buf.toJson(PresentationSchema, presentation);
+    console.log('json (buf):', inspect(json, false, null, true));
 
-    // TODO(dmaretskyi): Fails because protobuf.js encodes timestamp as object.
     const obj = buf.fromJson(PresentationSchema, json);
-    console.log('object (buf):', inspect(obj, false, null, true));
+    console.log('object (buf round-trip):', inspect(obj, false, null, true));
   });
 });

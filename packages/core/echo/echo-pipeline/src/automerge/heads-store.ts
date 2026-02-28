@@ -6,21 +6,16 @@ import type { Heads } from '@automerge/automerge';
 import type { DocumentId } from '@automerge/automerge-repo';
 import { type MixedEncoding } from 'level-transcoder';
 
-import type { ProtoCodec } from '@dxos/codec-protobuf';
 import type { BatchLevel, SublevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
-import { schema } from '@dxos/protocols/proto';
-import type { Heads as HeadsProto } from '@dxos/protocols/buf/dxos/echo/query_pb';
-
-// NOTE: Lazy so that code that doesn't use indexing doesn't need to load the codec (breaks in workerd).
-let headsCodec: ProtoCodec<any>;
-const getHeadsCodec = () => (headsCodec ??= schema.getCodecForType('dxos.echo.query.Heads'));
+import { create, toBinary, fromBinary } from '@dxos/protocols/buf';
+import { HeadsSchema } from '@dxos/protocols/buf/dxos/echo/query_pb';
 
 const headsEncoding: MixedEncoding<Heads, Uint8Array, Heads> = {
-  encode: (value: Heads): Uint8Array => getHeadsCodec().encode({ hashes: value }),
+  encode: (value: Heads): Uint8Array => toBinary(HeadsSchema, create(HeadsSchema, { hashes: value })),
   decode: (encodedValue: Uint8Array): Heads => {
     try {
-      return getHeadsCodec().decode(encodedValue).hashes!;
+      return fromBinary(HeadsSchema, encodedValue).hashes;
     } catch {
       // Legacy encoding migration path.
       log.warn('Detected legacy encoding of heads in storage.');

@@ -8,14 +8,12 @@ import isMatch from 'lodash.ismatch';
 import { InvalidConfigError } from '@dxos/protocols';
 import { create } from '@dxos/protocols/buf';
 import { type Config as ConfigProto, ConfigSchema } from '@dxos/protocols/buf/dxos/config_pb';
-import { schema } from '@dxos/protocols/proto';
 import { trace } from '@dxos/tracing';
 import { getDeep, setDeep } from '@dxos/util';
 
 import { type ConfigKey, type DeepIndex, type ParseKey } from './types';
 
 type MappingSpec = Record<string, { path: string; type?: string }>;
-const configRootType = schema.getCodecForType('dxos.config.Config');
 
 /**
  * Maps the given objects onto a flattened set of (key x values).
@@ -104,11 +102,6 @@ export const validateConfig = (config: ConfigProto): ConfigProto => {
 
   if (config?.version !== 1) {
     throw new InvalidConfigError({ message: `Invalid config version: ${config.version}` });
-  }
-
-  const error = configRootType.protoType.verify(config);
-  if (error) {
-    throw new InvalidConfigError({ message: String(error) });
   }
 
   return config;

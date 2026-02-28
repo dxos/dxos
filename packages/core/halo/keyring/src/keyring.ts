@@ -3,17 +3,14 @@
 //
 
 import { Event, synchronized } from '@dxos/async';
-import { type ProtoCodec } from '@dxos/codec-protobuf';
 import { type Signer, subtleCrypto } from '@dxos/crypto';
 import { todo } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { schema } from '@dxos/protocols/proto';
-import { type KeyRecord } from '@dxos/protocols/proto/dxos/halo/keyring';
+import { create, toBinary, fromBinary } from '@dxos/protocols/buf';
+import { type KeyRecord, KeyRecordSchema } from '@dxos/protocols/buf/dxos/halo/keyring_pb';
 import { type Directory, StorageType, createStorage } from '@dxos/random-access-storage';
 import { ComplexMap, arrayToBuffer } from '@dxos/util';
-
-const KeyRecord: ProtoCodec<KeyRecord> = schema.getCodecForType('dxos.halo.keyring.KeyRecord');
 
 /**
  * Manages keys.
@@ -72,7 +69,7 @@ export class Keyring implements Signer {
       const recordBytes = await file.read(0, size);
       await file.close();
 
-      const record = KeyRecord.decode(recordBytes);
+      const record = fromBinary(KeyRecordSchema, recordBytes);
       const publicKey = PublicKey.from(record.publicKey);
       invariant(key.equals(publicKey), 'Corrupted keyring: Key mismatch');
       invariant(record.privateKey, 'Corrupted keyring: Missing private key');
@@ -110,13 +107,13 @@ export class Keyring implements Signer {
     const publicKey = await keyPairToPublicKey(keyPair);
     this._keyCache.set(publicKey, keyPair);
 
-    const record: KeyRecord = {
+    const record = create(KeyRecordSchema, {
       publicKey: publicKey.asUint8Array(),
       privateKey: new Uint8Array(await subtleCrypto.exportKey('pkcs8', keyPair.privateKey)),
-    };
+    });
 
     const file = this._storage.getOrCreateFile(publicKey.toHex());
-    await file.write(0, arrayToBuffer(KeyRecord.encode(record)));
+    await file.write(0, arrayToBuffer(toBinary(KeyRecordSchema, record)));
     await file.close();
     await file.flush?.();
     this.keysUpdate.emit();
@@ -132,7 +129,7 @@ export class Keyring implements Signer {
     for (const path of await this._storage.list()) {
       const fileName = path.split('/').pop(); // get last portion of the path
       invariant(fileName, 'Invalid file name');
-      keys.push({ publicKey: PublicKey.fromHex(fileName).asUint8Array() });
+      keys.push(create(KeyRecordSchema, { publicKey: PublicKey.fromHex(fileName).asUint8Array() }));
     }
     return keys;
   }

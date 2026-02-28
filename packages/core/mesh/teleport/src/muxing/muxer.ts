@@ -11,34 +11,12 @@ import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
 import { TimeoutError } from '@dxos/protocols';
+import { create, fromBinary, toBinary } from '@dxos/protocols/buf';
 import { type ConnectionInfo_StreamStats } from '@dxos/protocols/buf/dxos/devtools/swarm_pb';
-import { type Command } from '@dxos/protocols/buf/dxos/mesh/muxer_pb';
-import { schema } from '@dxos/protocols/proto';
+import { type Command, CommandSchema } from '@dxos/protocols/buf/dxos/mesh/muxer_pb';
 
 import { Balancer } from './balancer';
 import { type RpcPort } from './rpc-port';
-
-const Command = schema.getCodecForType('dxos.mesh.muxer.Command');
-
-/** Convert proto-shaped Command (direct oneof fields) to buf-shaped (discriminated union on `payload`). */
-const protoCommandToBuf = (raw: any): import('@dxos/protocols/buf/dxos/mesh/muxer_pb').Command => {
-  const fields = ['openChannel', 'data', 'destroy', 'close'] as const;
-  for (const field of fields) {
-    if (raw[field] !== undefined && raw[field] !== null) {
-      return { payload: { case: field, value: raw[field] } } as any;
-    }
-  }
-  return { payload: { case: undefined, value: undefined } } as any;
-};
-
-/** Convert buf-shaped Command to proto-shaped for the proto codec. */
-const bufCommandToProto = (msg: any): any => {
-  const payloadCase = msg.payload?.case;
-  if (!payloadCase) {
-    return {};
-  }
-  return { [payloadCase]: msg.payload.value };
-};
 
 const DEFAULT_SEND_COMMAND_TIMEOUT = 60_000;
 const DESTROY_COMMAND_SEND_TIMEOUT = 5_000;
@@ -145,7 +123,7 @@ export class Muxer {
   constructor() {
     // Add a channel for control messages.
     this._balancer.incomingData.on(async (msg) => {
-      await this._handleCommand(protoCommandToBuf(Command.decode(msg)));
+      await this._handleCommand(fromBinary(CommandSchema, msg));
     });
   }
 
@@ -404,10 +382,8 @@ export class Muxer {
       return;
     }
     try {
-      // Convert buf-shaped oneof to proto-shaped for the proto codec.
-      const protoCmd = bufCommandToProto(cmd);
       const trigger = new Trigger<void>();
-      this._balancer.pushData(Command.encode(protoCmd), trigger, channelId);
+      this._balancer.pushData(toBinary(CommandSchema, create(CommandSchema, cmd)), trigger, channelId);
       await trigger.wait({ timeout });
     } catch (err: any) {
       await this.destroy(err);

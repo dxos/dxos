@@ -11,14 +11,25 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { DataCorruptionError, STORAGE_VERSION } from '@dxos/protocols';
-import { schema } from '@dxos/protocols/proto';
+import {
+  create,
+  encodePublicKey,
+  fromBinary,
+  timeframeToBuf,
+  timestampDate,
+  timestampFromDate,
+  toBinary,
+  toPublicKey,
+} from '@dxos/protocols/buf';
 import { type Invitation, Invitation_Type, SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import {
   type ControlPipelineSnapshot,
   type EchoMetadata,
+  EchoMetadataSchema,
   type EdgeReplicationSetting,
   type IdentityRecord,
   type LargeSpaceMetadata,
+  LargeSpaceMetadataSchema,
   type SpaceCache,
   type SpaceMetadata,
 } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
@@ -33,17 +44,25 @@ export interface AddSpaceOptions {
   genesisFeed: PublicKey;
 }
 
-const emptyEchoMetadata = (): EchoMetadata => ({
-  version: STORAGE_VERSION,
-  spaces: [],
-  created: new Date() as any,
-  updated: new Date() as any,
-}) as any;
+const emptyEchoMetadata = (): EchoMetadata =>
+  create(EchoMetadataSchema, {
+    version: STORAGE_VERSION,
+    spaces: [],
+    created: timestampFromDate(new Date()),
+    updated: timestampFromDate(new Date()),
+  });
 
-const emptyLargeSpaceMetadata = (): LargeSpaceMetadata => ({}) as any;
+const emptyLargeSpaceMetadata = (): LargeSpaceMetadata => create(LargeSpaceMetadataSchema, {});
 
-const EchoMetadata = schema.getCodecForType('dxos.echo.metadata.EchoMetadata');
-const LargeSpaceMetadata = schema.getCodecForType('dxos.echo.metadata.LargeSpaceMetadata');
+const echoMetadataCodec: Codec<EchoMetadata> = {
+  encode: (msg: EchoMetadata) => toBinary(EchoMetadataSchema, msg),
+  decode: (bytes: Uint8Array) => fromBinary(EchoMetadataSchema, bytes),
+};
+
+const largeSpaceMetadataCodec: Codec<LargeSpaceMetadata> = {
+  encode: (msg: LargeSpaceMetadata) => toBinary(LargeSpaceMetadataSchema, msg),
+  decode: (bytes: Uint8Array) => fromBinary(LargeSpaceMetadataSchema, bytes),
+};
 
 export class MetadataStore {
   private _metadata: EchoMetadata = emptyEchoMetadata();
@@ -148,9 +167,9 @@ export class MetadataStore {
     }
 
     try {
-      const metadata = await this._readFile(this._metadataFile, EchoMetadata);
+      const metadata = await this._readFile(this._metadataFile, echoMetadataCodec);
       if (metadata) {
-        this._metadata = metadata as any;
+        this._metadata = metadata;
       }
 
       // post-processing
@@ -163,9 +182,9 @@ export class MetadataStore {
     }
 
     await forEachAsync(
-      [this._metadata.identity?.haloSpace?.key, ...(this._metadata.spaces?.map((space) => space.key) ?? [])].filter(
-        isNonNullable,
-      ) as any as PublicKey[],
+      [this._metadata.identity?.haloSpace?.key, ...(this._metadata.spaces?.map((space) => space.key) ?? [])]
+        .filter(isNonNullable)
+        .map(toPublicKey),
       async (key) => {
         try {
           await this._loadSpaceLargeMetadata(key);
@@ -194,22 +213,22 @@ export class MetadataStore {
     const data: EchoMetadata = {
       ...this._metadata,
       version: STORAGE_VERSION,
-      created: this._metadata.created ?? new Date() as any,
-      updated: new Date() as any,
-    } as any;
+      created: this._metadata.created ?? timestampFromDate(new Date()),
+      updated: timestampFromDate(new Date()),
+    };
     this.update.emit(data);
 
     const file = this._directory.getOrCreateFile('EchoMetadata');
 
-    await this._writeFile(file, EchoMetadata, data as any);
+    await this._writeFile(file, echoMetadataCodec, data);
   }
 
   private async _loadSpaceLargeMetadata(key: PublicKey): Promise<void> {
     const file = this._directory.getOrCreateFile(`space_${key.toHex()}_large`);
     try {
-      const metadata = await this._readFile(file, LargeSpaceMetadata);
+      const metadata = await this._readFile(file, largeSpaceMetadataCodec);
       if (metadata) {
-        this._spaceLargeMetadata.set(key, metadata as any);
+        this._spaceLargeMetadata.set(key, metadata);
       }
     } catch (err: any) {
       log.error('failed to load space large metadata', { err });
@@ -220,7 +239,7 @@ export class MetadataStore {
   private async _saveSpaceLargeMetadata(key: PublicKey): Promise<void> {
     const data = this._getLargeSpaceMetadata(key);
     const file = this._directory.getOrCreateFile(`space_${key.toHex()}_large`);
-    await this._writeFile(file, LargeSpaceMetadata, data as any);
+    await this._writeFile(file, largeSpaceMetadataCodec, data);
   }
 
   async flush(): Promise<void> {
@@ -228,23 +247,21 @@ export class MetadataStore {
   }
 
   _getSpace(spaceKey: PublicKey): SpaceMetadata {
-    if (this._metadata.identity?.haloSpace?.key && PublicKey.from(this._metadata.identity.haloSpace.key as any).equals(spaceKey)) {
-      // Check if the space is the identity space.
+    if (this._metadata.identity?.haloSpace?.key && toPublicKey(this._metadata.identity.haloSpace.key).equals(spaceKey)) {
       return this._metadata.identity.haloSpace;
     }
 
-    const space = this.spaces.find((space) => space.key && PublicKey.from(space.key as any).equals(spaceKey));
+    const space = this.spaces.find((space) => space.key && toPublicKey(space.key).equals(spaceKey));
     invariant(space, 'Space not found');
     return space!;
   }
 
   hasSpace(spaceKey: PublicKey): boolean {
-    if (this._metadata.identity?.haloSpace?.key && PublicKey.from(this._metadata.identity.haloSpace.key as any).equals(spaceKey)) {
-      // Check if the space is the identity space.
+    if (this._metadata.identity?.haloSpace?.key && toPublicKey(this._metadata.identity.haloSpace.key).equals(spaceKey)) {
       return true;
     }
 
-    return !!this.spaces.find((space) => space.key && PublicKey.from(space.key as any).equals(spaceKey));
+    return !!this.spaces.find((space) => space.key && toPublicKey(space.key).equals(spaceKey));
   }
 
   private _getLargeSpaceMetadata(key: PublicKey): LargeSpaceMetadata {
@@ -301,7 +318,7 @@ export class MetadataStore {
 
   async addSpace(record: SpaceMetadata): Promise<void> {
     invariant(
-      !(this._metadata.spaces ?? []).find((space) => space.key && PublicKey.from(space.key as any).equals(record.key as any)),
+      !(this._metadata.spaces ?? []).find((space) => space.key && record.key && toPublicKey(space.key).equals(toPublicKey(record.key))),
       'Cannot overwrite existing space in metadata',
     );
 
@@ -311,12 +328,12 @@ export class MetadataStore {
   }
 
   async setSpaceDataLatestTimeframe(spaceKey: PublicKey, timeframe: Timeframe): Promise<void> {
-    this._getSpace(spaceKey).dataTimeframe = timeframe as any;
+    this._getSpace(spaceKey).dataTimeframe = timeframeToBuf(timeframe);
     await this._save();
   }
 
   async setSpaceControlLatestTimeframe(spaceKey: PublicKey, timeframe: Timeframe): Promise<void> {
-    this._getSpace(spaceKey).controlTimeframe = timeframe as any;
+    this._getSpace(spaceKey).controlTimeframe = timeframeToBuf(timeframe);
     await this._save();
     await this.flush();
   }
@@ -328,8 +345,8 @@ export class MetadataStore {
 
   async setWritableFeedKeys(spaceKey: PublicKey, controlFeedKey: PublicKey, dataFeedKey: PublicKey): Promise<void> {
     const space = this._getSpace(spaceKey);
-    space.controlFeedKey = controlFeedKey as any;
-    space.dataFeedKey = dataFeedKey as any;
+    space.controlFeedKey = encodePublicKey(controlFeedKey);
+    space.dataFeedKey = encodePublicKey(dataFeedKey);
     await this._save();
     await this.flush();
   }
@@ -368,7 +385,7 @@ export const hasInvitationExpired = (invitation: Invitation): boolean => {
     invitation.created &&
       invitation.lifetime &&
       invitation.lifetime !== 0 &&
-      (invitation.created as any).getTime() + invitation.lifetime * 1000 < Date.now(),
+      timestampDate(invitation.created).getTime() + invitation.lifetime * 1000 < Date.now(),
   );
 };
 
