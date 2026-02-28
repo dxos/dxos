@@ -650,6 +650,7 @@ catalog:
   xstate: ^4.37.0
   yaml: ^2.7.0
   yargs: ~16.2.0
+  youtube-transcript: ^1.2.1
   zen-observable: ^0.10.0
   zen-push: ^0.3.1
   zone.js: ^0.15.0

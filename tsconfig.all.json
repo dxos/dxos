@@ -424,6 +424,9 @@
       "path": "packages/plugins/plugin-wnfs/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-youtube/tsconfig.json"
+    },
+    {
       "path": "packages/sdk/app-framework/tsconfig.json"
     },
     {

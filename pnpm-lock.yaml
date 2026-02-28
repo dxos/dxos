@@ -1854,6 +1854,9 @@ catalogs:
     yargs:
       specifier: ~16.2.0
       version: 16.2.0
+    youtube-transcript:
+      specifier: ^1.2.1
+      version: 1.2.1
     zen-observable:
       specifier: ^0.10.0
       version: 0.10.0
@@ -13243,6 +13246,151 @@ importers:
       vite:
         specifier: '>=7.1.11'
         version: 7.3.1(@types/node@22.10.2)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+
+  packages/plugins/plugin-youtube:
+    dependencies:
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../common/async
+      '@dxos/blueprints':
+        specifier: workspace:*
+        version: link:../../core/blueprints
+      '@dxos/client':
+        specifier: workspace:*
+        version: link:../../sdk/client
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../../common/debug
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
+      '@dxos/echo-atom':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-atom
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-db
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../common/errors
+      '@dxos/functions':
+        specifier: workspace:*
+        version: link:../../core/functions
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/operation
+      '@dxos/plugin-attention':
+        specifier: workspace:*
+        version: link:../plugin-attention
+      '@dxos/plugin-automation':
+        specifier: workspace:*
+        version: link:../plugin-automation
+      '@dxos/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
+      '@dxos/plugin-deck':
+        specifier: workspace:*
+        version: link:../plugin-deck
+      '@dxos/plugin-graph':
+        specifier: workspace:*
+        version: link:../plugin-graph
+      '@dxos/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../sdk/react-client
+      '@dxos/react-ui-attention':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-attention
+      '@dxos/react-ui-mosaic':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-mosaic
+      '@dxos/react-ui-stack':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-stack
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../sdk/schema
+      '@dxos/types':
+        specifier: workspace:*
+        version: link:../../sdk/types
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      '@effect-atom/atom-react':
+        specifier: 'catalog:'
+        version: 0.5.0(@effect/experimental@0.58.0(@effect/platform@0.94.4(effect@3.19.16))(effect@3.19.16)(ioredis@5.3.2))(@effect/platform@0.94.4(effect@3.19.16))(@effect/rpc@0.73.0(@effect/platform@0.94.4(effect@3.19.16))(effect@3.19.16))(effect@3.19.16)(react@19.2.3)(scheduler@0.27.0)
+      '@effect/platform':
+        specifier: 'catalog:'
+        version: 0.94.4(effect@3.19.16)
+      '@radix-ui/react-context':
+        specifier: 'catalog:'
+        version: 1.1.1(@types/react@19.2.7)(react@19.2.3)
+      effect:
+        specifier: 3.19.16
+        version: 3.19.16
+      youtube-transcript:
+        specifier: 'catalog:'
+        version: 1.2.1
+    devDependencies:
+      '@dxos/config':
+        specifier: workspace:*
+        version: link:../../sdk/config
+      '@dxos/plugin-testing':
+        specifier: workspace:*
+        version: link:../plugin-testing
+      '@dxos/plugin-theme':
+        specifier: workspace:*
+        version: link:../plugin-theme
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../core/protocols
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../common/storybook-utils
+      '@dxos/ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/ui-theme
+      '@types/react':
+        specifier: ~19.2.7
+        version: 19.2.7
+      '@types/react-dom':
+        specifier: ~19.2.3
+        version: 19.2.3(@types/react@19.2.7)
+      react:
+        specifier: ~19.2.3
+        version: 19.2.3
+      react-dom:
+        specifier: ~19.2.3
+        version: 19.2.3(react@19.2.3)
+      vite:
+        specifier: 'catalog:'
+        version: 7.1.9(@types/node@22.10.2)(jiti@2.6.1)(terser@5.19.2)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/sdk/app-framework:
     dependencies:
@@ -36866,6 +37014,10 @@ packages:
   youch@4.1.0-beta.10:
     resolution: {integrity: sha512-rLfVLB4FgQneDr0dv1oddCVZmKjcJ6yX6mS4pU82Mq/Dt9a3cLZQ62pDBL4AUO+uVrCvtWz3ZFUL2HFAFJ/BXQ==}
 
+  youtube-transcript@1.2.1:
+    resolution: {integrity: sha512-TvEGkBaajKw+B6y91ziLuBLsa5cawgowou+Bk0ciGpjELDfAzSzTGXaZmeSSkUeknCPpEr/WGApOHDwV7V+Y9Q==}
+    engines: {node: '>=18.0.0'}
+
   zen-observable@0.10.0:
     resolution: {integrity: sha512-iI3lT0iojZhKwT5DaFy2Ce42n3yFcLdFyOh01G7H0flMY60P8MJuVFEoJoNwXlmAyQ45GrjL6AcZmmlv8A5rbw==}
 
@@ -59319,6 +59471,8 @@ snapshots:
       '@speed-highlight/core': 1.2.7
       cookie: 1.0.2
       youch-core: 0.3.3
+
+  youtube-transcript@1.2.1: {}
 
   zen-observable@0.10.0: {}
 
