@@ -11,14 +11,13 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type SpaceId } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
-import { EdgeCallFailedError } from '@dxos/protocols';
-import { bufToProto, protoToBuf } from '@dxos/protocols/buf';
+import { EdgeCallFailedError, type Rpc } from '@dxos/protocols';
+import { bufToProto, EMPTY, protoToBuf } from '@dxos/protocols/buf';
 import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
 import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { type NotarizeRequest } from '@dxos/protocols/buf/dxos/mesh/teleport/notarization_pb';
+import { NotarizationService, type NotarizeRequest } from '@dxos/protocols/buf/dxos/mesh/teleport/notarization_pb';
 import { schema } from '@dxos/protocols/proto';
-import { type NotarizationService } from '@dxos/protocols/proto/dxos/mesh/teleport/notarization';
-import { type ExtensionContext, RpcExtension } from '@dxos/teleport';
+import { type ExtensionContext, BufRpcExtension } from '@dxos/teleport';
 import { ComplexMap, ComplexSet, entry } from '@dxos/util';
 
 const DEFAULT_RETRY_TIMEOUT = 1_000;
@@ -220,10 +219,9 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
         peersTried.add(peer);
         log('try notarizing', { peer: peer.localPeerId, credentialId: credentials.map((credential) => credential.id) });
         await peer.rpc.NotarizationService.notarize({
-          // Proto RPC boundary: buf Credentials cast to proto for protobuf.js codec.
-          credentials: bufToProto(credentials.filter(
+          credentials: credentials.filter(
             (credential) => !this._processedCredentials.has(fromBufPublicKey(credential.id)!),
-          )),
+          ),
         });
         log('success');
 
@@ -416,23 +414,26 @@ export type NotarizationTeleportExtensionProps = {
   onNotarize: (request: NotarizeRequest) => Promise<void>;
 };
 
-export class NotarizationTeleportExtension extends RpcExtension<Services, Services> {
+type NotarizationServices = { NotarizationService: typeof NotarizationService };
+
+export class NotarizationTeleportExtension extends BufRpcExtension<NotarizationServices, NotarizationServices> {
   constructor(private readonly _params: NotarizationTeleportExtensionProps) {
     super({
       requested: {
-        NotarizationService: schema.getService('dxos.mesh.teleport.notarization.NotarizationService'),
+        NotarizationService,
       },
       exposed: {
-        NotarizationService: schema.getService('dxos.mesh.teleport.notarization.NotarizationService'),
+        NotarizationService,
       },
     });
   }
 
-  protected async getHandlers(): Promise<Services> {
+  protected async getHandlers(): Promise<Rpc.BufServiceHandlers<NotarizationServices>> {
     return {
       NotarizationService: {
         notarize: async (request) => {
-          await this._params.onNotarize(protoToBuf<NotarizeRequest>(request));
+          await this._params.onNotarize(request);
+          return EMPTY;
         },
       },
     };
@@ -452,8 +453,4 @@ export class NotarizationTeleportExtension extends RpcExtension<Services, Servic
 type NotarizationTimeouts = {
   retryTimeout: number;
   successDelay: number;
-};
-
-type Services = {
-  NotarizationService: NotarizationService;
 };

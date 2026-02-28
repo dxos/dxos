@@ -7,9 +7,14 @@ import { Context } from '@dxos/context';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError } from '@dxos/protocols';
-import { schema } from '@dxos/protocols/proto';
-import { type ControlService } from '@dxos/protocols/proto/dxos/mesh/teleport/control';
-import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
+import { EMPTY, create, timestampDate, timestampFromDate } from '@dxos/protocols/buf';
+import {
+  ControlHeartbeatRequestSchema,
+  ControlHeartbeatResponseSchema,
+  ControlService,
+  RegisterExtensionRequestSchema,
+} from '@dxos/protocols/buf/dxos/mesh/teleport/control_pb';
+import { type BufProtoRpcPeer, createBufProtoRpcPeer } from '@dxos/rpc';
 import { Callback } from '@dxos/util';
 
 import { type ExtensionContext, type TeleportExtension } from './teleport';
@@ -18,7 +23,7 @@ const HEARTBEAT_RTT_WARN_THRESH = 10_000;
 const DEBUG_PRINT_HEARTBEAT = false; // very noisy
 
 type ControlRpcBundle = {
-  Control: ControlService;
+  Control: typeof ControlService;
 };
 
 type ControlExtensionOpts = {
@@ -37,7 +42,7 @@ export class ControlExtension implements TeleportExtension {
   public readonly onExtensionRegistered = new Callback<(extensionName: string) => void>();
 
   private _extensionContext!: ExtensionContext;
-  private _rpc!: ProtoRpcPeer<{ Control: ControlService }>;
+  private _rpc!: BufProtoRpcPeer<{ Control: typeof ControlService }>;
 
   constructor(
     private readonly opts: ControlExtensionOpts,
@@ -46,23 +51,24 @@ export class ControlExtension implements TeleportExtension {
   ) {}
 
   async registerExtension(name: string): Promise<void> {
-    await this._rpc.rpc.Control.registerExtension({ name });
+    await this._rpc.rpc.Control.registerExtension(create(RegisterExtensionRequestSchema, { name }));
   }
 
   async onOpen(extensionContext: ExtensionContext): Promise<void> {
     this._extensionContext = extensionContext;
 
-    this._rpc = createProtoRpcPeer<ControlRpcBundle, ControlRpcBundle>({
+    this._rpc = createBufProtoRpcPeer<ControlRpcBundle, ControlRpcBundle>({
       requested: {
-        Control: schema.getService('dxos.mesh.teleport.control.ControlService'),
+        Control: ControlService,
       },
       exposed: {
-        Control: schema.getService('dxos.mesh.teleport.control.ControlService'),
+        Control: ControlService,
       },
       handlers: {
         Control: {
           registerExtension: async (request) => {
             this.onExtensionRegistered.call(request.name);
+            return EMPTY;
           },
           heartbeat: async (request) => {
             if (DEBUG_PRINT_HEARTBEAT) {
@@ -72,9 +78,9 @@ export class ControlExtension implements TeleportExtension {
                 remotePeerId: this.remotePeerId.truncate(),
               });
             }
-            return {
+            return create(ControlHeartbeatResponseSchema, {
               requestTimestamp: request.requestTimestamp,
-            };
+            });
           },
         },
       },
@@ -92,27 +98,30 @@ export class ControlExtension implements TeleportExtension {
         const reqTS = new Date();
         try {
           const resp = await asyncTimeout(
-            this._rpc.rpc.Control.heartbeat({ requestTimestamp: reqTS }),
+            this._rpc.rpc.Control.heartbeat(
+              create(ControlHeartbeatRequestSchema, { requestTimestamp: timestampFromDate(reqTS) }),
+            ),
             this.opts.heartbeatTimeout,
           );
           const now = Date.now();
           // TODO(nf): properly instrument
-          if (resp.requestTimestamp instanceof Date) {
+          if (resp.requestTimestamp) {
+            const requestTime = timestampDate(resp.requestTimestamp).getTime();
             if (
-              now - resp.requestTimestamp.getTime() >
+              now - requestTime >
               (HEARTBEAT_RTT_WARN_THRESH < this.opts.heartbeatTimeout
                 ? HEARTBEAT_RTT_WARN_THRESH
                 : this.opts.heartbeatTimeout / 2)
             ) {
               log.warn(`heartbeat RTT for Teleport > ${HEARTBEAT_RTT_WARN_THRESH / 1000}s`, {
-                rtt: now - resp.requestTimestamp.getTime(),
+                rtt: now - requestTime,
                 localPeerId: this.localPeerId.truncate(),
                 remotePeerId: this.remotePeerId.truncate(),
               });
             } else {
               if (DEBUG_PRINT_HEARTBEAT) {
                 log('heartbeat RTT', {
-                  rtt: now - resp.requestTimestamp.getTime(),
+                  rtt: now - requestTime,
                   localPeerId: this.localPeerId.truncate(),
                   remotePeerId: this.remotePeerId.truncate(),
                 });

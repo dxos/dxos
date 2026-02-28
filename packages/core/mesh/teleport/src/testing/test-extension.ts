@@ -5,9 +5,9 @@
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { schema } from '@dxos/protocols/proto';
-import { type TestService } from '@dxos/protocols/proto/example/testing/rpc';
-import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
+import { EMPTY, create } from '@dxos/protocols/buf';
+import { TestRpcRequestSchema, TestRpcResponseSchema, TestService } from '@dxos/protocols/buf/example/testing/rpc_pb';
+import { type BufProtoRpcPeer, createBufProtoRpcPeer } from '@dxos/rpc';
 
 import { type ExtensionContext, type TeleportExtension } from '../teleport';
 
@@ -22,7 +22,7 @@ export class TestExtension implements TeleportExtension {
   public readonly closed = new Trigger();
   public readonly aborted = new Trigger();
   public extensionContext: ExtensionContext | undefined;
-  private _rpc!: ProtoRpcPeer<{ TestService: TestService }>;
+  private _rpc!: BufProtoRpcPeer<{ TestService: typeof TestService }>;
 
   constructor(public readonly callbacks: TestExtensionCallbacks = {}) {}
 
@@ -33,25 +33,25 @@ export class TestExtension implements TeleportExtension {
   async onOpen(context: ExtensionContext): Promise<void> {
     log('onOpen', { localPeerId: context.localPeerId, remotePeerId: context.remotePeerId });
     this.extensionContext = context;
-    this._rpc = createProtoRpcPeer<{ TestService: TestService }, { TestService: TestService }>({
+    this._rpc = createBufProtoRpcPeer<{ TestService: typeof TestService }, { TestService: typeof TestService }>({
       port: await context.createPort('rpc', {
         contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"',
       }),
       requested: {
-        TestService: schema.getService('example.testing.rpc.TestService'),
+        TestService,
       },
       exposed: {
-        TestService: schema.getService('example.testing.rpc.TestService'),
+        TestService,
       },
       handlers: {
         TestService: {
-          voidCall: async (request) => {
-            // Ok.
+          voidCall: async () => {
+            return EMPTY;
           },
           testCall: async (request) => {
-            return {
+            return create(TestRpcResponseSchema, {
               data: request.data,
-            };
+            });
           },
         },
       },
@@ -80,7 +80,10 @@ export class TestExtension implements TeleportExtension {
 
   async test(message = 'test'): Promise<void> {
     await this.open.wait({ timeout: 2000 });
-    const res = await asyncTimeout(this._rpc.rpc.TestService.testCall({ data: message }), 1500);
+    const res = await asyncTimeout(
+      this._rpc.rpc.TestService.testCall(create(TestRpcRequestSchema, { data: message })),
+      1500,
+    );
     invariant(res.data === message);
   }
 

@@ -9,10 +9,9 @@ import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { RpcClosedError } from '@dxos/protocols';
-import { type BlobChunk, type WantList } from '@dxos/protocols/buf/dxos/mesh/teleport/blobsync_pb';
-import { schema } from '@dxos/protocols/proto';
-import { type BlobSyncService } from '@dxos/protocols/proto/dxos/mesh/teleport/blobsync';
-import { type ExtensionContext, RpcExtension } from '@dxos/teleport';
+import { create, EMPTY } from '@dxos/protocols/buf';
+import { type BlobChunk, BlobChunkSchema, type WantList, WantListSchema, BlobSyncService } from '@dxos/protocols/buf/dxos/mesh/teleport/blobsync_pb';
+import { type ExtensionContext, BufRpcExtension } from '@dxos/teleport';
 import { BitField } from '@dxos/util';
 
 import { type BlobStore } from './blob-store';
@@ -32,11 +31,11 @@ const MAX_CONCURRENT_UPLOADS = 20;
 /**
  * Manages replication between a set of feeds for a single teleport session.
  */
-export class BlobSyncExtension extends RpcExtension<ServiceBundle, ServiceBundle> {
+export class BlobSyncExtension extends BufRpcExtension<ServiceBundle, ServiceBundle> {
   private readonly _ctx = new Context({ onError: (err) => log.catch(err) });
 
   private _lastWantListUpdate = 0;
-  private _localWantList: WantList = { blobs: [] } as any;
+  private _localWantList: WantList = create(WantListSchema, { blobs: [] });
 
   private readonly _updateWantList = new DeferredTask(this._ctx, async () => {
     // Throttle want list updates.
@@ -86,22 +85,19 @@ export class BlobSyncExtension extends RpcExtension<ServiceBundle, ServiceBundle
   /**
    * Set of id's remote peer wants.
    */
-  public remoteWantList: WantList = { blobs: [] } as any;
+  public remoteWantList: WantList = create(WantListSchema, { blobs: [] });
 
   constructor(
     private readonly _params: BlobSyncExtensionProps, // to not conflict with the base class
   ) {
     super({
       exposed: {
-        BlobSyncService: schema.getService('dxos.mesh.teleport.blobsync.BlobSyncService'),
+        BlobSyncService,
       },
       requested: {
-        BlobSyncService: schema.getService('dxos.mesh.teleport.blobsync.BlobSyncService'),
+        BlobSyncService,
       },
       timeout: 20_000,
-      encodingOptions: {
-        preserveAny: true,
-      },
     });
   }
 
@@ -125,18 +121,19 @@ export class BlobSyncExtension extends RpcExtension<ServiceBundle, ServiceBundle
     await super.onAbort(err);
   }
 
-  protected async getHandlers(): Promise<ServiceBundle> {
+  protected async getHandlers() {
     return {
       BlobSyncService: {
-        // Proto RPC passes proto-typed objects; cast at boundary.
-        want: async (wantList: any) => {
+        want: async (wantList: WantList) => {
           log('remote want', { remoteWantList: wantList });
           this.remoteWantList = wantList;
           this.reconcileUploads();
+          return EMPTY;
         },
-        push: async (data: any) => {
+        push: async (data: BlobChunk) => {
           log('received', { data });
           await this._params.onPush(data);
+          return EMPTY;
         },
       },
     };
@@ -205,13 +202,15 @@ export class BlobSyncExtension extends RpcExtension<ServiceBundle, ServiceBundle
           offset: idx * meta.chunkSize,
           length: Math.min(meta.chunkSize, meta.length - idx * meta.chunkSize),
         });
-        chunks.push({
-          id: header.id,
-          totalLength: meta.length,
-          chunkSize: meta.chunkSize,
-          chunkOffset: idx * meta.chunkSize,
-          payload: chunkData,
-        } as any);
+        chunks.push(
+          create(BlobChunkSchema, {
+            id: header.id,
+            totalLength: meta.length,
+            chunkSize: meta.chunkSize,
+            chunkOffset: idx * meta.chunkSize,
+            payload: chunkData,
+          }),
+        );
 
         if (chunks.length >= amount) {
           return chunks;
@@ -224,5 +223,5 @@ export class BlobSyncExtension extends RpcExtension<ServiceBundle, ServiceBundle
 }
 
 type ServiceBundle = {
-  BlobSyncService: BlobSyncService;
+  BlobSyncService: typeof BlobSyncService;
 };

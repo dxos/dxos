@@ -6,11 +6,15 @@ import { type Mutex, type MutexGuard, Trigger } from '@dxos/async';
 import { Context, cancelWithContext } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { InvalidInvitationExtensionRoleError } from '@dxos/protocols';
+import { InvalidInvitationExtensionRoleError, type Rpc } from '@dxos/protocols';
+import { EMPTY } from '@dxos/protocols/buf';
 import { type Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
-import { schema } from '@dxos/protocols/proto';
-import { type InvitationHostService, InvitationOptions } from '@dxos/protocols/proto/dxos/halo/invitations';
-import { type ExtensionContext, RpcExtension } from '@dxos/teleport';
+import {
+  InvitationHostService,
+  type InvitationOptions,
+  InvitationOptions_Role,
+} from '@dxos/protocols/buf/dxos/halo/invitations_pb';
+import { type ExtensionContext, BufRpcExtension } from '@dxos/teleport';
 
 import { type FlowLockHolder } from './invitation-state';
 import { tryAcquireBeforeContextDisposed } from './utils';
@@ -28,11 +32,10 @@ type InvitationGuestExtensionCallbacks = {
 /**
  * Guest's side for a connection to a concrete peer in p2p network during invitation.
  */
+type InvitationServices = { InvitationHostService: typeof InvitationHostService };
+
 export class InvitationGuestExtension
-  extends RpcExtension<
-    { InvitationHostService: InvitationHostService },
-    { InvitationHostService: InvitationHostService }
-  >
+  extends BufRpcExtension<InvitationServices, InvitationServices>
   implements FlowLockHolder
 {
   private _ctx = new Context();
@@ -49,10 +52,10 @@ export class InvitationGuestExtension
   ) {
     super({
       requested: {
-        InvitationHostService: schema.getService('dxos.halo.invitations.InvitationHostService'),
+        InvitationHostService,
       },
       exposed: {
-        InvitationHostService: schema.getService('dxos.halo.invitations.InvitationHostService'),
+        InvitationHostService,
       },
     });
   }
@@ -61,13 +64,14 @@ export class InvitationGuestExtension
     return this._invitationFlowLock != null;
   }
 
-  protected override async getHandlers(): Promise<{ InvitationHostService: InvitationHostService }> {
+  protected override async getHandlers(): Promise<Rpc.BufServiceHandlers<InvitationServices>> {
     return {
       InvitationHostService: {
         options: async (options) => {
           invariant(!this._remoteOptions, 'Remote options already set.');
           this._remoteOptions = options;
           this._remoteOptionsTrigger.wake();
+          return EMPTY;
         },
         introduce: () => {
           throw new Error('Method not allowed.');
@@ -91,15 +95,15 @@ export class InvitationGuestExtension
       log.verbose('guest lock acquired');
       await cancelWithContext(
         this._ctx,
-        this.rpc.InvitationHostService.options({ role: InvitationOptions.Role.GUEST }),
+        this.rpc.InvitationHostService.options({ role: InvitationOptions_Role.GUEST }),
       );
       log.verbose('options sent');
       await cancelWithContext(this._ctx, this._remoteOptionsTrigger.wait({ timeout: OPTIONS_TIMEOUT }));
       log.verbose('options received');
-      if (this._remoteOptions?.role !== InvitationOptions.Role.HOST) {
+      if (this._remoteOptions?.role !== InvitationOptions_Role.HOST) {
         throw new InvalidInvitationExtensionRoleError({
           context: {
-            expected: InvitationOptions.Role.HOST,
+            expected: InvitationOptions_Role.HOST,
             remoteOptions: this._remoteOptions,
             remotePeerId: context.remotePeerId,
           },

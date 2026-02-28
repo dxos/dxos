@@ -7,10 +7,9 @@ import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError } from '@dxos/protocols';
-import { type PeerInfo, type SyncMessage } from '@dxos/protocols/buf/dxos/mesh/teleport/automerge_pb';
-import { schema } from '@dxos/protocols/proto';
-import { type AutomergeReplicatorService } from '@dxos/protocols/proto/dxos/mesh/teleport/automerge';
-import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
+import { EMPTY } from '@dxos/protocols/buf';
+import { type PeerInfo, type SyncMessage, AutomergeReplicatorService } from '@dxos/protocols/buf/dxos/mesh/teleport/automerge_pb';
+import { type BufProtoRpcPeer, createBufProtoRpcPeer } from '@dxos/rpc';
 import { type ExtensionContext, type TeleportExtension } from '@dxos/teleport';
 
 export type AutomergeReplicatorProps = {
@@ -59,7 +58,7 @@ export type AutomergeReplicatorFactory = (
  */
 export class AutomergeReplicator implements TeleportExtension {
   private readonly _opened = new Trigger();
-  private _rpc?: ProtoRpcPeer<ServiceBundle>;
+  private _rpc?: BufProtoRpcPeer<ServiceBundle>;
 
   private _destroyed: boolean = false;
   private _extensionContext?: ExtensionContext;
@@ -72,23 +71,24 @@ export class AutomergeReplicator implements TeleportExtension {
   async onOpen(context: ExtensionContext): Promise<void> {
     log('onOpen', { localPeerId: context.localPeerId, remotePeerId: context.remotePeerId });
     this._extensionContext = context;
-    this._rpc = createProtoRpcPeer<ServiceBundle, ServiceBundle>({
+    this._rpc = createBufProtoRpcPeer<ServiceBundle, ServiceBundle>({
       timeout: RPC_TIMEOUT,
       requested: {
-        AutomergeReplicatorService: schema.getService('dxos.mesh.teleport.automerge.AutomergeReplicatorService'),
+        AutomergeReplicatorService,
       },
       exposed: {
-        AutomergeReplicatorService: schema.getService('dxos.mesh.teleport.automerge.AutomergeReplicatorService'),
+        AutomergeReplicatorService,
       },
       handlers: {
         AutomergeReplicatorService: {
-          // Proto RPC passes proto-typed objects; cast at boundary.
-          startReplication: async (info: any): Promise<void> => {
+          startReplication: async (info) => {
             log('startReplication', { localPeerId: context.localPeerId, remotePeerId: context.remotePeerId, info });
             await this._callbacks.onStartReplication?.(info, context.remotePeerId);
+            return EMPTY;
           },
-          sendSyncMessage: async (message: any): Promise<void> => {
+          sendSyncMessage: async (message) => {
             await this._callbacks.onSyncMessage?.(message);
+            return EMPTY;
           },
         },
       },
@@ -155,5 +155,5 @@ export class AutomergeReplicator implements TeleportExtension {
 }
 
 type ServiceBundle = {
-  AutomergeReplicatorService: AutomergeReplicatorService;
+  AutomergeReplicatorService: typeof AutomergeReplicatorService;
 };

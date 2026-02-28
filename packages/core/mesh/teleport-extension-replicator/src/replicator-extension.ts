@@ -14,16 +14,25 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
 import { RpcClosedError, TimeoutError } from '@dxos/protocols';
-import { type FeedInfo } from '@dxos/protocols/buf/dxos/mesh/teleport/replicator_pb';
-import { schema } from '@dxos/protocols/proto';
-import { type ReplicatorService } from '@dxos/protocols/proto/dxos/mesh/teleport/replicator';
-import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
+import { EMPTY, create, encodePublicKey, toPublicKey } from '@dxos/protocols/buf';
+import {
+  type FeedInfo,
+  FeedInfoSchema,
+  ReplicatorService,
+  StartReplicationResponseSchema,
+} from '@dxos/protocols/buf/dxos/mesh/teleport/replicator_pb';
+import {
+  type BufProtoRpcPeer,
+  createBufProtoRpcPeer,
+} from '@dxos/rpc';
 import { type ExtensionContext, type TeleportExtension } from '@dxos/teleport';
 import { ComplexMap } from '@dxos/util';
 
 export type ReplicationOptions = {
   upload: boolean;
 };
+
+type ServiceBundle = { ReplicatorService: typeof ReplicatorService };
 
 /**
  * Manages replication between a set of feeds for a single teleport session.
@@ -38,7 +47,7 @@ export class ReplicatorExtension implements TeleportExtension {
   private readonly _feeds = new ComplexMap<PublicKey, FeedWrapper<any>>(PublicKey.hash);
   private readonly _streams = new ComplexMap<PublicKey, ActiveStream>(PublicKey.hash);
 
-  private _rpc?: ProtoRpcPeer<ServiceBundle>;
+  private _rpc?: BufProtoRpcPeer<ServiceBundle>;
   private _extensionContext?: ExtensionContext;
 
   private _options: ReplicationOptions = {
@@ -50,7 +59,7 @@ export class ReplicatorExtension implements TeleportExtension {
       if (this._extensionContext!.initiator === false) {
         await this._rpc!.rpc.ReplicatorService.updateFeeds({
           feeds: Array.from(this._feeds.values()).map((feed) => ({
-            feedKey: feed.key,
+            feedKey: encodePublicKey(feed.key),
             download: true,
             upload: this._options.upload,
           })),
@@ -60,7 +69,7 @@ export class ReplicatorExtension implements TeleportExtension {
       }
     } catch (err) {
       if (err instanceof RpcClosedError) {
-        return; // Some RPC requests might be pending while closing.
+        return;
       }
       throw err;
     }
@@ -97,35 +106,30 @@ export class ReplicatorExtension implements TeleportExtension {
     this._extensionContext = context;
     log('open');
 
-    this._rpc = createProtoRpcPeer<ServiceBundle, ServiceBundle>({
-      requested: {
-        ReplicatorService: schema.getService('dxos.mesh.teleport.replicator.ReplicatorService'),
-      },
-      exposed: {
-        ReplicatorService: schema.getService('dxos.mesh.teleport.replicator.ReplicatorService'),
-      },
+    this._rpc = createBufProtoRpcPeer<ServiceBundle, ServiceBundle>({
+      requested: { ReplicatorService },
+      exposed: { ReplicatorService },
       handlers: {
         ReplicatorService: {
           updateFeeds: async ({ feeds }) => {
             log('received feed info', { feeds });
             invariant(this._extensionContext!.initiator === true, 'Invalid call');
             this._updateTask.schedule();
+            return EMPTY;
           },
-          // Proto RPC passes proto-typed objects; cast at boundary.
-          startReplication: async ({ info }: any) => {
+          startReplication: async ({ info }) => {
             log('starting replication...', { info });
             invariant(this._extensionContext!.initiator === false, 'Invalid call');
 
-            const streamTag = await this._acceptReplication(info);
-            return {
-              streamTag,
-            };
+            const streamTag = await this._acceptReplication(info!);
+            return create(StartReplicationResponseSchema, { streamTag });
           },
-          stopReplication: async ({ info }: any) => {
+          stopReplication: async ({ info }) => {
             log('stopping replication...', { info });
             invariant(this._extensionContext!.initiator === false, 'Invalid call');
 
-            await this._stopReplication(info.feedKey);
+            await this._stopReplication(toPublicKey(info!.feedKey!));
+            return EMPTY;
           },
         },
       },
@@ -177,12 +181,13 @@ export class ReplicatorExtension implements TeleportExtension {
         return;
       }
       if (!this._streams.has(feedKey)) {
-        // Proto codec handles @dxos/keys PublicKey at runtime; cast at boundary.
-        await this._initiateReplication({
-          feedKey,
-          download: true,
-          upload: this._options.upload,
-        } as any);
+        await this._initiateReplication(
+          create(FeedInfoSchema, {
+            feedKey: encodePublicKey(feedKey),
+            download: true,
+            upload: this._options.upload,
+          }),
+        );
       }
     }
   }
@@ -193,9 +198,9 @@ export class ReplicatorExtension implements TeleportExtension {
   private async _initiateReplication(feedInfo: FeedInfo): Promise<void> {
     log('initiating replication', { feedInfo });
     invariant(this._extensionContext!.initiator === true, 'Invalid call');
-    // Proto codec handles @dxos/keys PublicKey at runtime; cast at boundary.
-    invariant(!this._streams.has((feedInfo as any).feedKey), `Replication already in progress for feed: ${(feedInfo as any).feedKey}`);
-    const { streamTag } = await this._rpc!.rpc.ReplicatorService.startReplication({ info: feedInfo as any });
+    const feedKey = toPublicKey(feedInfo.feedKey!);
+    invariant(!this._streams.has(feedKey), `Replication already in progress for feed: ${feedKey}`);
+    const { streamTag } = await this._rpc!.rpc.ReplicatorService.startReplication({ info: feedInfo });
     if (!streamTag) {
       return;
     }
@@ -210,24 +215,22 @@ export class ReplicatorExtension implements TeleportExtension {
   @synchronized
   private async _acceptReplication(feedInfo: FeedInfo): Promise<string | undefined> {
     invariant(this._extensionContext!.initiator === false, 'Invalid call');
-    // Proto codec handles @dxos/keys PublicKey at runtime; cast at boundary.
-    const fk: any = feedInfo.feedKey;
-    if (!this._feeds.has(fk) || this._streams.has(fk)) {
+    const feedKey = toPublicKey(feedInfo.feedKey!);
+    if (!this._feeds.has(feedKey) || this._streams.has(feedKey)) {
       return undefined;
     }
 
-    const tag = `feed-${fk.toHex()}-${PublicKey.random().toHex().slice(0, 8)}`;
+    const tag = `feed-${feedKey.toHex()}-${PublicKey.random().toHex().slice(0, 8)}`;
     await this._replicateFeed(feedInfo, tag);
     return tag;
   }
 
   private async _replicateFeed(info: FeedInfo, streamTag: string): Promise<void> {
     log('replicate', { info, streamTag });
-    // Proto codec handles @dxos/keys PublicKey at runtime; cast at boundary.
-    const infoFeedKey: any = info.feedKey;
-    invariant(!this._streams.has(infoFeedKey), `Replication already in progress for feed: ${infoFeedKey}`);
+    const feedKey = toPublicKey(info.feedKey!);
+    invariant(!this._streams.has(feedKey), `Replication already in progress for feed: ${feedKey}`);
 
-    const feed = this._feeds.get(infoFeedKey) ?? failUndefined();
+    const feed = this._feeds.get(feedKey) ?? failUndefined();
     const networkStream = await this._extensionContext!.createStream(streamTag, {
       contentType: 'application/x-hypercore',
     });
@@ -243,22 +246,6 @@ export class ReplicatorExtension implements TeleportExtension {
       maxRequests: 1024,
     });
 
-    // Left for testing.
-    // const debug = true;
-    // if (debug) {
-    //   feed.on('sync', () => {
-    //     log.info('sync', { key: feed.key, length: feed.length });
-    //   });
-    //   feed.on('download', (index: number, data: any) => {
-    //     log.info('download', {
-    //       key: feed.key,
-    //       index,
-    //       length: feed.length,
-    //       data: data.length,
-    //     });
-    //   });
-    // }
-
     replicationStream.on('error', (err) => {
       if (err instanceof TimeoutError) {
         log.info('replication stream timeout', { err, info });
@@ -273,16 +260,15 @@ export class ReplicatorExtension implements TeleportExtension {
         return;
       }
 
-      // TODO(nf): WARN on first error? log full info on some subsequent errors?
       if (replicationStreamErrors === 0) {
         log.info('replication stream error', { err, info });
       } else {
-        log.info('replication stream error', { err, feedKey: infoFeedKey, count: replicationStreamErrors });
+        log.info('replication stream error', { err, feedKey, count: replicationStreamErrors });
       }
       replicationStreamErrors++;
     });
 
-    this._streams.set(infoFeedKey, {
+    this._streams.set(feedKey, {
       streamTag,
       networkStream,
       replicationStream,
@@ -302,10 +288,6 @@ export class ReplicatorExtension implements TeleportExtension {
     this._streams.delete(feedKey);
   }
 }
-
-type ServiceBundle = {
-  ReplicatorService: ReplicatorService;
-};
 
 type ActiveStream = {
   streamTag: string;

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type DescMessage, type MessageShape } from '@bufbuild/protobuf';
+import { type DescMessage, type MessageInitShape, type MessageShape } from '@bufbuild/protobuf';
 import { type GenService, type GenServiceMethods } from '@bufbuild/protobuf/codegenv2';
 
 import type { Stream } from '@dxos/codec-protobuf/stream';
@@ -43,7 +43,22 @@ type MethodInputType<M> = M extends { input: infer I extends DescMessage } ? Mes
 type MethodOutputType<M> = M extends { output: infer O extends DescMessage } ? MessageShape<O> : never;
 
 /**
+ * Get the output init shape from a method definition.
+ * Accepts partial objects without `$typeName` — mirrors what `create(Schema, init)` accepts.
+ * Used for handler outputs where the runtime normalizes via `create()`.
+ */
+type MethodOutputInitType<M> = M extends { output: infer O extends DescMessage } ? MessageInitShape<O> : never;
+
+/**
+ * Get the input init shape from a method definition.
+ * Accepts partial objects without `$typeName` — mirrors what `create(Schema, init)` accepts.
+ * Used for client inputs where the runtime normalizes via `create()`.
+ */
+type MethodInputInitType<M> = M extends { input: infer I extends DescMessage } ? MessageInitShape<I> : never;
+
+/**
  * Get the client method signature for a unary RPC method.
+ * Accepts init shapes for requests since the runtime normalizes via `create()`.
  */
 type UnaryClientMethod<I, O> = (request: I, options?: BufRequestOptions) => Promise<O>;
 
@@ -55,20 +70,21 @@ type StreamingClientMethod<I, O> = (request: I, options?: BufRequestOptions) => 
 /**
  * Get the handler signature for a unary RPC method.
  */
-type UnaryHandler<I, O> = (request: I, options?: BufRequestOptions) => Promise<O>;
+type UnaryHandler<I, OInit> = (request: I, options?: BufRequestOptions) => Promise<OInit>;
 
 /**
  * Get the handler signature for a server streaming RPC method.
  */
-type StreamingHandler<I, O> = (request: I, options?: BufRequestOptions) => Stream<O>;
+type StreamingHandler<I, OInit> = (request: I, options?: BufRequestOptions) => Stream<OInit>;
 
 /**
  * Maps a method definition to its client signature.
+ * Client inputs accept `MessageInitShape` (plain objects without `$typeName`).
  */
 type ClientMethodSignature<M> = M extends { methodKind: 'unary' }
-  ? UnaryClientMethod<MethodInputType<M>, MethodOutputType<M>>
+  ? UnaryClientMethod<MethodInputInitType<M>, MethodOutputType<M>>
   : M extends { methodKind: 'server_streaming' }
-    ? StreamingClientMethod<MethodInputType<M>, MethodOutputType<M>>
+    ? StreamingClientMethod<MethodInputInitType<M>, MethodOutputType<M>>
     : never;
 
 /**

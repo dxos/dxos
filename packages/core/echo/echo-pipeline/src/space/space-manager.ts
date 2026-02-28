@@ -12,7 +12,8 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type SwarmNetworkManager } from '@dxos/network-manager';
 import { trace } from '@dxos/protocols';
-import { toPublicKey } from '@dxos/protocols/buf';
+import { create, encodePublicKey, toPublicKey } from '@dxos/protocols/buf';
+import { GetAdmissionCredentialRequestSchema } from '@dxos/protocols/buf/dxos/mesh/teleport/admission-discovery_pb';
 import type { FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { type SpaceMetadata } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import type { Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
@@ -150,7 +151,7 @@ export class SpaceManager {
         session.addExtension(
           'dxos.mesh.teleport.admission-discovery',
           new CredentialRetrieverExtension(
-            { spaceKey: params.spaceKey, memberKey: params.identityKey },
+            create(GetAdmissionCredentialRequestSchema, { spaceKey: encodePublicKey(params.spaceKey), memberKey: encodePublicKey(params.identityKey) }),
             onCredentialResolved,
           ),
         );

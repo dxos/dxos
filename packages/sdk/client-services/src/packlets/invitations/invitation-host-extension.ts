@@ -8,8 +8,8 @@ import { randomBytes, verify } from '@dxos/crypto';
 import { InvariantViolation, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { InvalidInvitationExtensionRoleError, trace } from '@dxos/protocols';
-import { toPublicKey } from '@dxos/protocols/buf';
+import { InvalidInvitationExtensionRoleError, type Rpc, trace } from '@dxos/protocols';
+import { create, EMPTY, toPublicKey } from '@dxos/protocols/buf';
 import {
   type Invitation,
   Invitation_AuthMethod,
@@ -20,11 +20,14 @@ import {
   type AdmissionRequest,
   type AdmissionResponse,
   AuthenticationResponse_Status,
+  AuthenticationResponseSchema,
+  InvitationHostService,
+  type InvitationOptions,
+  InvitationOptions_Role,
+  IntroductionResponseSchema,
   type IntroductionResponse,
 } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
-import { schema } from '@dxos/protocols/proto';
-import { type InvitationHostService, InvitationOptions } from '@dxos/protocols/proto/dxos/halo/invitations';
-import { type ExtensionContext, RpcExtension } from '@dxos/teleport';
+import { type ExtensionContext, BufRpcExtension } from '@dxos/teleport';
 
 import type { FlowLockHolder } from './invitation-state';
 import { stateToString, tryAcquireBeforeContextDisposed } from './utils';
@@ -49,11 +52,10 @@ type InvitationHostExtensionCallbacks = {
 /**
  * Host's side for a connection to a concrete peer in p2p network during invitation.
  */
+type InvitationServices = { InvitationHostService: typeof InvitationHostService };
+
 export class InvitationHostExtension
-  extends RpcExtension<
-    { InvitationHostService: InvitationHostService },
-    { InvitationHostService: InvitationHostService }
-  >
+  extends BufRpcExtension<InvitationServices, InvitationServices>
   implements FlowLockHolder
 {
   /**
@@ -90,10 +92,10 @@ export class InvitationHostExtension
   ) {
     super({
       requested: {
-        InvitationHostService: schema.getService('dxos.halo.invitations.InvitationHostService'),
+        InvitationHostService,
       },
       exposed: {
-        InvitationHostService: schema.getService('dxos.halo.invitations.InvitationHostService'),
+        InvitationHostService,
       },
     });
   }
@@ -102,18 +104,17 @@ export class InvitationHostExtension
     return this._invitationFlowLock != null;
   }
 
-  protected override async getHandlers(): Promise<{ InvitationHostService: InvitationHostService }> {
+  protected override async getHandlers(): Promise<Rpc.BufServiceHandlers<InvitationServices>> {
     return {
-      // TODO(dmaretskyi): For now this is just forwarding the data to callbacks since we don't have session-specific logic.
-      // Perhaps in the future we will have more complex logic here.
       InvitationHostService: {
         options: async (options) => {
           invariant(!this._remoteOptions, 'Remote options already set.');
           this._remoteOptions = options;
           this._remoteOptionsTrigger.wake();
+          return EMPTY;
         },
 
-        introduce: (async (request: any) => {
+        introduce: async (request) => {
           const { profile, invitationId } = request;
           const traceId = PublicKey.random().toHex();
           log.trace('dxos.sdk.invitation-handler.host.introduce', trace.begin({ id: traceId }));
@@ -124,26 +125,26 @@ export class InvitationHostExtension
             log.warn('incorrect invitationId', { expected: invitation.invitationId, actual: invitationId });
             this._callbacks.onError(new Error('Incorrect invitationId.'));
             scheduleTask(this._ctx, () => this.close());
-            // TODO(dmaretskyi): Better error handling.
-            return {
+            return create(IntroductionResponseSchema, {
               authMethod: Invitation_AuthMethod.NONE,
-            } as unknown as IntroductionResponse;
+            });
           }
 
           log.verbose('guest introduced themselves', { guestProfile: profile });
-          this.guestProfile = profile as any;
+          this.guestProfile = profile;
           this._callbacks.onStateUpdate(Invitation_State.READY_FOR_AUTHENTICATION);
           this._challenge =
             invitation.authMethod === Invitation_AuthMethod.KNOWN_PUBLIC_KEY ? randomBytes(32) : undefined;
 
           log.trace('dxos.sdk.invitation-handler.host.introduce', trace.end({ id: traceId }));
-          return {
+          return create(IntroductionResponseSchema, {
             authMethod: invitation.authMethod,
             challenge: this._challenge,
-          } as unknown as IntroductionResponse;
-        }) as any,
+          });
+        },
 
-        authenticate: (async ({ authCode: code, signedChallenge }: any) => {
+        authenticate: async (request) => {
+          const { authCode: code, signedChallenge } = request;
           const traceId = PublicKey.random().toHex();
           log.trace('dxos.sdk.invitation-handler.host.authenticate', trace.begin({ id: traceId }));
 
@@ -157,7 +158,7 @@ export class InvitationHostExtension
           switch (invitation.authMethod) {
             case Invitation_AuthMethod.NONE: {
               log('authentication not required');
-              return { status: AuthenticationResponse_Status.OK };
+              return create(AuthenticationResponseSchema, { status: AuthenticationResponse_Status.OK });
             }
 
             case Invitation_AuthMethod.SHARED_SECRET: {
@@ -206,20 +207,19 @@ export class InvitationHostExtension
           if (![AuthenticationResponse_Status.OK, AuthenticationResponse_Status.INVALID_OTP].includes(status)) {
             this._callbacks.onError(new Error(`Authentication failed, with status=${status}`));
             scheduleTask(this._ctx, () => this.close());
-            return { status };
+            return create(AuthenticationResponseSchema, { status });
           }
 
           log.trace('dxos.sdk.invitation-handler.host.authenticate', trace.end({ id: traceId, data: { status } }));
-          return { status };
-        }) as any,
+          return create(AuthenticationResponseSchema, { status });
+        },
 
-        admit: (async (request: any) => {
+        admit: async (request) => {
           const traceId = PublicKey.random().toHex();
           log.trace('dxos.sdk.invitation-handler.host.admit', trace.begin({ id: traceId }));
           const invitation = this._requireActiveInvitation();
 
           try {
-            // Check authenticated.
             if (isAuthenticationRequired(invitation)) {
               this._assertInvitationState(Invitation_State.AUTHENTICATING);
               if (!this.authenticationPassed) {
@@ -227,7 +227,7 @@ export class InvitationHostExtension
               }
             }
 
-            const response = await this._callbacks.admit(request as any);
+            const response = await this._callbacks.admit(request);
 
             log.trace('dxos.sdk.invitation-handler.host.admit', trace.end({ id: traceId }));
             return response;
@@ -235,7 +235,7 @@ export class InvitationHostExtension
             this._callbacks.onError(err);
             throw err;
           }
-        }) as any,
+        },
       },
     };
   }
@@ -248,14 +248,14 @@ export class InvitationHostExtension
       this._invitationFlowLock = await tryAcquireBeforeContextDisposed(this._ctx, this._invitationFlowMutex);
       log.verbose('host lock acquired');
       this._callbacks.onStateUpdate(Invitation_State.CONNECTING);
-      await this.rpc.InvitationHostService.options({ role: InvitationOptions.Role.HOST });
+      await this.rpc.InvitationHostService.options({ role: InvitationOptions_Role.HOST });
       log.verbose('options sent');
       await cancelWithContext(this._ctx, this._remoteOptionsTrigger.wait({ timeout: OPTIONS_TIMEOUT }));
       log.verbose('options received');
-      if (this._remoteOptions?.role !== InvitationOptions.Role.GUEST) {
+      if (this._remoteOptions?.role !== InvitationOptions_Role.GUEST) {
         throw new InvalidInvitationExtensionRoleError({
           context: {
-            expected: InvitationOptions.Role.GUEST,
+            expected: InvitationOptions_Role.GUEST,
             remoteOptions: this._remoteOptions,
             remotePeerId: context.remotePeerId,
           },

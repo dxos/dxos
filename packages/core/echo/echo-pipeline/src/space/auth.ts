@@ -7,9 +7,10 @@ import { Context } from '@dxos/context';
 import { randomBytes } from '@dxos/crypto';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { schema } from '@dxos/protocols/proto';
-import { type AuthService } from '@dxos/protocols/proto/dxos/mesh/teleport/auth';
-import { type ExtensionContext, RpcExtension } from '@dxos/teleport';
+import { type Rpc } from '@dxos/protocols';
+import { create } from '@dxos/protocols/buf';
+import { AuthService, AuthenticateResponseSchema } from '@dxos/protocols/buf/dxos/mesh/teleport/auth_pb';
+import { BufRpcExtension, type ExtensionContext } from '@dxos/teleport';
 
 export type AuthProvider = (nonce: Uint8Array) => Promise<Uint8Array | undefined>;
 
@@ -22,7 +23,9 @@ export type AuthExtensionProps = {
   onAuthFailure: () => void;
 };
 
-export class AuthExtension extends RpcExtension<Services, Services> {
+type Services = { AuthService: typeof AuthService };
+
+export class AuthExtension extends BufRpcExtension<Services, Services> {
   private readonly _ctx = new Context({
     onError: (err) => {
       log.catch(err);
@@ -31,17 +34,13 @@ export class AuthExtension extends RpcExtension<Services, Services> {
 
   constructor(private readonly _authProps: AuthExtensionProps) {
     super({
-      requested: {
-        AuthService: schema.getService('dxos.mesh.teleport.auth.AuthService'),
-      },
-      exposed: {
-        AuthService: schema.getService('dxos.mesh.teleport.auth.AuthService'),
-      },
-      timeout: 60 * 1000, // Long timeout because auth can wait for sync in certain cases.
+      requested: { AuthService },
+      exposed: { AuthService },
+      timeout: 60 * 1000,
     });
   }
 
-  protected async getHandlers(): Promise<Services> {
+  protected async getHandlers(): Promise<Rpc.BufServiceHandlers<Services>> {
     return {
       AuthService: {
         authenticate: async ({ challenge }) => {
@@ -50,7 +49,7 @@ export class AuthExtension extends RpcExtension<Services, Services> {
             if (!credential) {
               throw new Error('auth rejected');
             }
-            return { credential };
+            return create(AuthenticateResponseSchema, { credential });
           } catch (err) {
             log.error('failed to generate auth credentials', err);
             throw new Error('auth rejected');
@@ -88,5 +87,3 @@ export class AuthExtension extends RpcExtension<Services, Services> {
     await super.onAbort();
   }
 }
-
-type Services = { AuthService: AuthService };

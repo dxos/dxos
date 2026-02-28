@@ -5,10 +5,9 @@
 import { Trigger } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { type GossipMessage } from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
-import { schema } from '@dxos/protocols/proto';
-import { type GossipService } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
-import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
+import { EMPTY } from '@dxos/protocols/buf';
+import { type GossipMessage, GossipService } from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
+import { type BufProtoRpcPeer, createBufProtoRpcPeer } from '@dxos/rpc';
 import { type ExtensionContext, type TeleportExtension } from '@dxos/teleport';
 
 export type GossipCallbacks = {
@@ -30,25 +29,26 @@ export class GossipExtension implements TeleportExtension {
   private readonly _opened = new Trigger();
   private _closed = false;
 
-  private _rpc?: ProtoRpcPeer<ServiceBundle>;
+  private _rpc?: BufProtoRpcPeer<ServiceBundle>;
 
   constructor(private readonly _callbacks: GossipCallbacks = {}) {}
 
   async onOpen(context: ExtensionContext): Promise<void> {
     log('onOpen', { localPeerId: context.localPeerId, remotePeerId: context.remotePeerId });
 
-    this._rpc = createProtoRpcPeer<ServiceBundle, ServiceBundle>({
+    this._rpc = createBufProtoRpcPeer<ServiceBundle, ServiceBundle>({
       requested: {
-        GossipService: schema.getService('dxos.mesh.teleport.gossip.GossipService'),
+        GossipService,
       },
       exposed: {
-        GossipService: schema.getService('dxos.mesh.teleport.gossip.GossipService'),
+        GossipService,
       },
       handlers: {
         GossipService: {
-          announce: async (message: any) => {
+          announce: async (message) => {
             log('received announce', { localPeerId: context.localPeerId, remotePeerId: context.remotePeerId, message });
             await this._callbacks.onAnnounce?.(message);
+            return EMPTY;
           },
         },
       },
@@ -85,10 +85,10 @@ export class GossipExtension implements TeleportExtension {
     }
     await this._opened.wait();
     invariant(this._rpc, 'RPC not initialized');
-    await this._rpc.rpc.GossipService.announce(message as any);
+    await this._rpc.rpc.GossipService.announce(message);
   }
 }
 
 type ServiceBundle = {
-  GossipService: GossipService;
+  GossipService: typeof GossipService;
 };
