@@ -82,9 +82,6 @@
 
   /** TODO(burdon): Add either spacing- or dx- prefix */
   :root {
-    /** TODO(burdon): Remove? */
-    --sticky-top: 0;
-
     --line-height: 32px;
 
     --rail-content: 3rem;

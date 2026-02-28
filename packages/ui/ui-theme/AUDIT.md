@@ -73,13 +73,13 @@ None
 - `app-no-drag`
 - `card-max-width`
 - `card-min-width`
+- `card-popover`
 - `card-square`
 - `contain-layout`
 - `container-max-width`
 - `density-coarse`
 - `overflow-anchor`
 - `overflow-anchored`
-- `card-popover`
 - `size-container`
 - `sticky-bottom-from-statusbar-bottom`
 - `sticky-top-from-topbar-bottom`
