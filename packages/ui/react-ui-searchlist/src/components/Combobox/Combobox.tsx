@@ -237,7 +237,7 @@ const ComboboxInput = forwardRef<HTMLInputElement, ComboboxInputProps>(({ classN
   return (
     <SearchList.Input
       {...props}
-      classNames={['m-card-chrome mb-0 w-[calc(100%-2*var(--spacing-card-chrome))]', classNames]}
+      classNames={['m-form-chrome mb-0 w-[calc(100%-2*var(--spacing-form-chrome))]', classNames]}
       ref={forwardedRef}
     />
   );
@@ -250,7 +250,7 @@ const ComboboxInput = forwardRef<HTMLInputElement, ComboboxInputProps>(({ classN
 type ComboboxListProps = SearchListViewportProps;
 
 const ComboboxList = forwardRef<HTMLDivElement, ComboboxListProps>(({ classNames, ...props }, forwardedRef) => {
-  return <SearchList.Viewport {...props} classNames={['py-card-chrome', classNames]} ref={forwardedRef} />;
+  return <SearchList.Viewport {...props} classNames={['py-form-chrome', classNames]} ref={forwardedRef} />;
 });
 
 //
@@ -279,7 +279,7 @@ const ComboboxItem = forwardRef<HTMLDivElement, ComboboxItemProps>(
       <SearchList.Item
         {...props}
         value={value}
-        classNames={['mx-card-chrome px-card-chrome', classNames]}
+        classNames={['mx-form-chrome px-form-chrome', classNames]}
         onSelect={handleSelect}
         ref={forwardedRef}
       />

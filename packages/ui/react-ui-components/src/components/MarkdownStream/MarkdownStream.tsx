@@ -96,7 +96,7 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
             slots: {
               scroll: {
                 // NOTE: Child widgets must have `max-w-[100cqi]`.
-                className: 'size-container p-card-padding',
+                className: 'size-container p-form-padding',
               },
             },
           }),

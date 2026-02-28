@@ -349,7 +349,7 @@ const SearchListInput = forwardRef<HTMLInputElement, SearchListInputProps>(
     );
 
     return (
-      <div className='p-card-chrome'>
+      <div className='p-form-chrome'>
         <input
           {...props}
           {...(props.autoFocus && !hasIosKeyboard && { autoFocus: true })}
