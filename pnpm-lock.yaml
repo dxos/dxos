@@ -1503,9 +1503,6 @@ catalogs:
     randombytes:
       specifier: ^2.1.0
       version: 2.1.0
-    rci:
-      specifier: ^0.1.0
-      version: 0.1.0
     re-resizable:
       specifier: ^6.9.17
       version: 6.9.17
@@ -15043,9 +15040,6 @@ importers:
       '@radix-ui/react-use-controllable-state':
         specifier: 'catalog:'
         version: 1.1.0(@types/react@19.2.7)(react@19.2.3)
-      rci:
-        specifier: 'catalog:'
-        version: 0.1.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
     devDependencies:
       '@types/react':
         specifier: ~19.2.7
@@ -33612,12 +33606,6 @@ packages:
     resolution: {integrity: sha512-y3bGgqKj3QBdxLbLkomlohkvsA8gdAiUQlSBJnBhfn+BPxg4bc62d8TcBW15wavDfgexCgccckhcZvywyQYPOw==}
     hasBin: true
 
-  rci@0.1.0:
-    resolution: {integrity: sha512-o/elFrXXRLdYDAq/qQUFE175TqzJ5nU3MYwIwa6WOZfljNJ4akQSy1n7zA79swB696MNIFDWJs+Do0q2FBTy+Q==}
-    peerDependencies:
-      react: ~19.2.3
-      react-dom: ~19.2.3
-
   re-resizable@6.9.17:
     resolution: {integrity: sha512-OBqd1BwVXpEJJn/yYROG+CbeqIDBWIp6wathlpB0kzZWWZIY1gPTsgK2yJEui5hOvkCdC2mcexF2V3DZVfLq2g==}
     peerDependencies:
@@ -36072,12 +36060,6 @@ packages:
     peerDependenciesMeta:
       '@types/react':
         optional: true
-
-  use-code-input@0.0.2:
-    resolution: {integrity: sha512-lDIUiRca0K8sF+c/KZ9cz5g6oPqlFiTmaDgwGzg0wlNSnFAvROtweKy0XpihEWJwo2tjETtgAxIh82RVGaBFHQ==}
-    peerDependencies:
-      react: ~19.2.3
-      react-dom: ~19.2.3
 
   use-deep-compare-effect@1.8.1:
     resolution: {integrity: sha512-kbeNVZ9Zkc0RFGpfMN3MNfaKNvcLNyxOAAd9O4CBZ+kCBXXscn9s/4I+8ytUER4RDpEYs5+O6Rs4PqiZ+rHr5Q==}
@@ -55290,12 +55272,6 @@ snapshots:
       minimist: 1.2.8
       strip-json-comments: 2.0.1
 
-  rci@0.1.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
-    dependencies:
-      react: 19.2.3
-      react-dom: 19.2.3(react@19.2.3)
-      use-code-input: 0.0.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-
   re-resizable@6.9.17(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
     dependencies:
       react: 19.2.3
@@ -58330,11 +58306,6 @@ snapshots:
       tslib: 2.8.1
     optionalDependencies:
       '@types/react': 19.2.7
-
-  use-code-input@0.0.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
-    dependencies:
-      react: 19.2.3
-      react-dom: 19.2.3(react@19.2.3)
 
   use-deep-compare-effect@1.8.1(react@19.2.3):
     dependencies:

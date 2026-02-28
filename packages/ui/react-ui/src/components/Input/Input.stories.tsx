@@ -69,7 +69,7 @@ const InputWrapper = ({
 
 const DefaultStory = (props: BaseProps) => {
   return (
-    <div className='space-b-4'>
+    <div className='flex flex-col gap-4'>
       <div className={mx('bg-base-surface p-4 rounded-md border border-separator')}>
         <InputWrapper {...props} />
       </div>
@@ -209,6 +209,8 @@ export const PinInput: Story = {
     length: 6,
     description: 'Type in secret you received',
     placeholder: '••••••',
+    pattern: '\\d*',
+    density: 'coarse',
   },
 };
 

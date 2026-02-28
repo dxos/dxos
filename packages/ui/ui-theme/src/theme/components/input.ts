@@ -148,7 +148,25 @@ const inputSwitchThumb: ComponentFunction<InputStyleProps> = ({ size = 5 }, ...e
   );
 
 const inputWithSegmentsInput: ComponentFunction<InputStyleProps> = (props, ...etc) =>
-  mx('font-mono selection:bg-transparent mx-auto', props.disabled && 'cursor-not-allowed', ...etc);
+  mx(
+    'font-mono selection:bg-transparent mx-auto',
+    props.density === 'fine' ? 'text-base pointer-fine:text-sm' : 'text-lg',
+    props.disabled && 'cursor-not-allowed',
+    ...etc,
+  );
+
+const inputSegment: ComponentFunction<InputStyleProps> = (props, ...etc) =>
+  mx(
+    'flex items-center justify-center font-mono',
+    props.density === 'fine' ? 'size-10 pointer-fine:size-8 rounded-xs' : 'size-12 rounded-xs',
+    'text-[color:var(--surface-text)]',
+    'transition-colors border border-separator bg-text-input-surface',
+    'data-[focused]:bg-attention data-[focused]:border-neutral-focus-indicator',
+    'data-[focused]:ring-2 data-[focused]:ring-offset-0 data-[focused]:ring-neutral-focus-indicator',
+    inputValence(props.validationValence),
+    props.disabled && staticDisabled,
+    ...etc,
+  );
 
 const inputLabel: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
   mx('block', inputTextLabel, props.srOnly && 'sr-only', ...etc);
@@ -166,6 +184,7 @@ export const inputTheme = {
   input: inputInput,
   textArea: inputTextArea,
   inputWithSegments: inputWithSegmentsInput,
+  segment: inputSegment,
   checkbox: inputCheckbox,
   checkboxIndicator: inputCheckboxIndicator,
   label: inputLabel,

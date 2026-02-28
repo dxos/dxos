@@ -116,6 +116,12 @@ const ViewportView = forwardRef<HTMLDivElement, ViewportScopedProps<ViewportView
 
 ViewportView.displayName = VIEW_NAME;
 
-export const Viewport = { Root: ViewportRoot, Views: ViewportViews, View: ViewportView };
+export const Viewport = {
+  Root: ViewportRoot,
+  Views: ViewportViews,
+  View: ViewportView,
+};
+
 export { useViewportContext, createViewportScope };
+
 export type { ViewportRootProps, ViewportViewsProps, ViewportViewProps, ViewportScopedProps };
