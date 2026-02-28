@@ -10,7 +10,7 @@ import { mx } from '@dxos/ui-theme';
 
 export type ContainerProps = ThemedClassName<PropsWithChildren>;
 
-export type ContainerType = 'fullscreen' | 'column';
+export type ContainerType = 'default' | 'centered' | 'fullscreen' | 'column';
 
 export type WithLayoutProps =
   | FC<ContainerProps>
@@ -36,7 +36,7 @@ export const withLayout =
         </Container>
       );
     } else {
-      const { layout = 'fullscreen', classNames, scroll } = props;
+      const { layout = 'default', classNames, scroll } = props;
       const Container = layouts[layout] ?? layouts.fullscreen;
       return (
         <Container classNames={mx(classNames, scroll ? 'overflow-y-auto' : 'overflow-hidden')}>
@@ -47,13 +47,25 @@ export const withLayout =
   };
 
 const layouts: Record<ContainerType, FC<ContainerProps>> = {
-  fullscreen: ({ children, classNames }: ContainerProps) => (
+  default: ({ classNames, children }: ContainerProps) => (
+    <div role='none' className={mx('p-4', classNames)}>
+      {children}
+    </div>
+  ),
+
+  centered: ({ classNames, children }: ContainerProps) => (
+    <div role='none' className={mx('fixed inset-0 flex grid place-items-center', classNames)}>
+      {children}
+    </div>
+  ),
+
+  fullscreen: ({ classNames, children }: ContainerProps) => (
     <div role='none' className={mx('fixed inset-0 flex overflow-hidden bg-deck-surface', classNames)}>
       {children}
     </div>
   ),
 
-  column: ({ children, classNames }: ContainerProps) => (
+  column: ({ classNames, children }: ContainerProps) => (
     <div role='none' className='fixed inset-0 flex justify-center overflow-hidden bg-deck-surface'>
       <div role='none' className={mx('flex flex-col w-[40rem] bg-base-surface', classNames)}>
         {children}

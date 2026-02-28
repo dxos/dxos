@@ -3,6 +3,4 @@
 //
 
 export const descriptionTextPrimary = 'text-sm font-normal text-base-surface-text';
-export const descriptionMessage = ['text-description', 'border border-dashed border-separator rounded-sm p-4'];
-
-export const chromeText = 'text-sm font-normal';
+export const descriptionMessage = 'text-description border border-dashed border-separator rounded-sm p-4';
