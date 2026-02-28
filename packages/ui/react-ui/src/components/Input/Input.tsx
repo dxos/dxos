@@ -4,7 +4,7 @@
 
 import { Root as CheckboxPrimitive, type CheckboxProps as CheckboxPrimitiveProps } from '@radix-ui/react-checkbox';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { type ComponentPropsWithRef, type ForwardRefExoticComponent, forwardRef, useCallback } from 'react';
+import React, { type ComponentPropsWithRef, type ForwardRefExoticComponent, forwardRef } from 'react';
 
 import {
   DescriptionAndValidation as DescriptionAndValidationPrimitive,
@@ -28,7 +28,7 @@ import {
   useInputContext,
 } from '@dxos/react-input';
 import { mx } from '@dxos/ui-theme';
-import { type ClassNameValue, type Density, type Elevation, type Size } from '@dxos/ui-types';
+import { type Density, type Elevation, type Size } from '@dxos/ui-types';
 
 import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
@@ -98,51 +98,24 @@ const DescriptionAndValidation = forwardRef<HTMLParagraphElement, DescriptionAnd
 );
 
 type PinInputProps = InputSharedProps &
-  Omit<PinInputPrimitiveProps, 'segmentClassName' | 'inputClassName'> & {
-    segmentClassName?: ClassNameValue;
-    inputClassName?: ClassNameValue;
-  };
+  Omit<PinInputPrimitiveProps, 'className' | 'segmentClassName'> &
+  ThemedClassName<{}>;
 
 const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
-  (
-    {
-      density: propsDensity,
-      elevation: propsElevation,
-      segmentClassName: propsSegmentClassName,
-      inputClassName,
-      ...props
-    },
-    forwardedRef,
-  ) => {
+  ({ density: propsDensity, elevation: propsElevation, classNames, ...props }, forwardedRef) => {
     const { hasIosKeyboard } = useThemeContext();
     const { tx } = useThemeContext();
     const density = useDensityContext(propsDensity);
     const elevation = useElevationContext(propsElevation);
-    const segmentClassName = useCallback(
-      ({ focused, validationValence }: Parameters<Exclude<PinInputPrimitiveProps['segmentClassName'], undefined>>[0]) =>
-        tx(
-          'input.input',
-          {
-            variant: 'static',
-            focused,
-            disabled: props.disabled,
-            density,
-            elevation,
-            validationValence,
-          },
-          propsSegmentClassName,
-        ) || '',
-      [tx, props.disabled, elevation, propsElevation, density],
-    );
 
     return (
       <PinInputPrimitive
         {...{
           ...props,
-          segmentClassName,
           ...(props.autoFocus && !hasIosKeyboard && { autoFocus: true }),
         }}
-        inputClassName={tx('input.inputWithSegments', { disabled: props.disabled }, inputClassName) || ''}
+        className={tx('input.inputWithSegments', { disabled: props.disabled }, classNames) || ''}
+        segmentClassName={tx('input.segment', { disabled: props.disabled, density, elevation }) || ''}
         ref={forwardedRef}
       />
     );
