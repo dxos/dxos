@@ -15,10 +15,12 @@
     &[aria-checked='true'] {
       @apply text-accent-text bg-attention;
     }
+
     /* Disabled styles */
     &[disabled]:not([disabled='false']) {
       @apply opacity-40 cursor-not-allowed shadow-none;
     }
+
     /* Variants consistent between enabled & disabled */
     &[data-variant='ghost'] {
       @apply bg-transparent;
@@ -39,6 +41,7 @@
         @apply bg-hover-surface;
       }
     }
+
     /* Enabled styles */
     &:not([disabled]),
     &[disabled='false'] {
@@ -46,6 +49,7 @@
       &:hover {
         @apply bg-hover-surface;
       }
+
       /* Variants */
       &[data-variant='primary'] {
         @apply text-accent-surface-text bg-accent-surface;

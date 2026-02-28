@@ -62,7 +62,7 @@ const TableRoot = ({ children, role = 'article' }: TableRootProps) => {
       className={mx(
         'relative border-separator! [&_.dx-grid]:max-w-(--dx-grid-content-w-size) [&_.dx-grid]:max-h-(--dx-grid-content-h-size)',
         // TODO(burdon): Move role-dependent logic to plugin.
-        role === 'section' && 'attention-surface',
+        role === 'section' && 'dx-attention-surface',
         role === 'card--content' && 'popover-card-height',
         ['section'].includes(role) && 'overflow-hidden',
         ['article', 'slide'].includes(role) && 'flex flex-col [&_.dx-grid]:grow [&_.dx-grid]:h-0',
@@ -424,7 +424,7 @@ const TableMainInner = <T extends Type.Entity.Any = Type.Entity.Any>(
   }, [dxGrid, model, presentation]);
 
   if (!model || !modals) {
-    return <span role='none' className='attention-surface' />;
+    return <span role='none' className='dx-attention-surface' />;
   }
 
   return (

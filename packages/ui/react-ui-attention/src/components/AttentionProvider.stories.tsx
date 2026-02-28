@@ -16,7 +16,7 @@ const Attendable = ({ id }: { id: string }) => {
 
   return (
     <div {...attentionAttrs}>
-      <textarea className='attention-surface resize-none' placeholder={id} />
+      <textarea className='dx-attention-surface resize-none' placeholder={id} />
     </div>
   );
 };

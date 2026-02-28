@@ -26,8 +26,8 @@ No `--dx-{hue}-xxx` references found in source files. Complete.
 
 ### Task 3 — camelCase to kebab-case
 - `annotations.ts`: `--dx-errorText` → `--color-error-text`
-- `semantic.css`: Added `--color-active-text` and `--color-hover-text` definitions.
-- `theme.ts`: `--dx-activeSurfaceText` → `--color-active-text`, `--dx-hoverSurfaceText` → `--color-hover-text`
+- `semantic.css`: Added `--color-active-text` and `--color-hover-surface-text` definitions.
+- `theme.ts`: `--dx-activeSurfaceText` → `--color-active-text`, `--dx-hoverSurfaceText` → `--color-hover-surface-text`
 - `base.css`: Restored `--dx-tag-padding-block` as bridge pointing to `var(--spacing-tag-padding-block)`.
 - `CellValidationMessage.tsx`, `CellEditor.tsx`: `--dx-gridCellWidth` → `--dx-grid-cell-width`
 - `dx-grid-axis-resize-handle.pcss`: `--dx-accentSurface` → `--color-accent-surface`, `--dx-hoverSurface` → `--color-hover-surface`

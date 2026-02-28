@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Avatar, Button, Icon, IconButton, Link, Tooltip, Trans, useTranslation } from '@dxos/react-ui';
-import { getSize, mx, valenceColorText } from '@dxos/ui-theme';
+import { getSize, mx, textValence } from '@dxos/ui-theme';
 
 import { translationKey } from '../translations';
 
@@ -23,7 +23,7 @@ export const AgentConfig = ({
     <div role='none' className='p-1'>
       <h2 className={mx('text-description', 'text-center mt-2')}>{t('agent heading')}</h2>
       {validationMessage && (
-        <p role='alert' className={mx(valenceColorText('error'), 'my-2')}>
+        <p role='alert' className={mx(textValence('error'), 'my-2')}>
           {validationMessage}
         </p>
       )}

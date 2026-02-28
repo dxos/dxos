@@ -29,7 +29,7 @@ export const messageIcon: ComponentFunction<MessageStyleProps> = (_, etc) => {
 };
 
 export const messageContent: ComponentFunction<MessageStyleProps> = (_, etc) => {
-  return mx('col-span-2 grid grid-cols-subgrid col-start-2 first:font-medium', etc);
+  return mx('col-span-2 grid grid-cols-subgrid first:font-medium', etc);
 };
 
 export const messageTheme: Theme<MessageStyleProps> = {

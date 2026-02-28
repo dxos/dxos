@@ -2,28 +2,40 @@
  * Surfaces
  */
 
-/* TODO(burdon): Prefix component classes with dx- */
-
 @layer dx-components {
-  /* If an element should apply attention-related color tokens, it should use this class. */
-  .attention-surface {
-    --surface-separator: transparent;
-    background-color: var(--color-base-surface);
-    border-color: var(--color-separator);
-  }
-
-  .base-surface {
+  .dx-base-surface {
+    color: var(--color-base-surface-text);
     background-color: var(--color-base-surface);
     --surface-bg: var(--color-base-surface);
   }
 
-  .sidebar-surface {
+  .dx-sidebar-surface {
+    color: var(--color-sidebar-surface-text);
     background-color: var(--color-sidebar-surface);
     --surface-bg: var(--color-sidebar-surface);
   }
 
-  .modal-surface {
+  .dx-modal-surface {
+    color: var(--color-modal-surface-text);
     background-color: var(--color-modal-surface);
     --surface-bg: var(--color-modal-surface);
+    @apply backdrop-blur-md;
+  }
+
+  .dx-attention-surface {
+    color: var(--color-attention-surface-text);
+    background-color: var(--color-attention-surface);
+    --surface-bg: var(--color-attention-surface);
+    border-color: var(--color-separator);
+    --surface-separator: transparent;
   }
 }
+
+/* TODO(burdon): Resolve. */
+/* @layer dx-tokens {
+  .dx-sidebar-surface, .dx-modal-surface {
+    --color-hover-surface: light-dark(var(--color-neutral-300), var(--color-neutral-700));
+    --color-input-surface: light-dark(var(--color-neutral-200), var(--color-neutral-800));
+    --color-separator: light-dark(var(--color-neutral-300), var(--color-neutral-700));
+  }
+} */
