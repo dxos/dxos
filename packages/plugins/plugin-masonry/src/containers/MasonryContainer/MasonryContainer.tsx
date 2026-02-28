@@ -7,6 +7,7 @@ import React, { useEffect, useState } from 'react';
 
 import { Surface, useCapabilities } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
+import { useObjectMenuItems, useObjectNavigate } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, type Ref, Type } from '@dxos/echo';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { useObject, useQuery } from '@dxos/react-client/echo';
@@ -66,12 +67,15 @@ export const MasonryContainer = ({
 };
 
 const Item = ({ data }: { data: any }) => {
+  const objectMenuItems = useObjectMenuItems(data);
+  const handleNavigate = useObjectNavigate(data);
+
   return (
     <Card.Root>
       <Card.Toolbar>
         <span />
-        <Card.Title>{Obj.getLabel(data)}</Card.Title>
-        <Card.Menu />
+        <Card.Title onClick={handleNavigate}>{Obj.getLabel(data)}</Card.Title>
+        <Card.Menu items={objectMenuItems} />
       </Card.Toolbar>
       <Surface.Surface role='card--content' limit={1} data={{ subject: data }} />
     </Card.Root>

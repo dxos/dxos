@@ -5,6 +5,7 @@
 import React, { useRef, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
+import { createMenuAction } from '@dxos/react-ui-menu';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 
 import { Card, Mosaic, type MosaicStackTileComponent } from '../components';
@@ -19,10 +20,10 @@ export const DefaultStackTile: MosaicStackTileComponent<Obj.Any> = (props) => {
         <Card.Title>{Obj.getLabel(props.data) ?? props.data.id}</Card.Title>
         <Card.Menu
           items={[
-            {
+            createMenuAction('toggle-details', () => setOpen((open) => !open), {
               label: open ? 'Hide details' : 'Show details',
-              onClick: () => setOpen((open) => !open),
-            },
+              icon: 'ph--placeholder--regular',
+            }),
           ]}
         />
       </Card.Toolbar>

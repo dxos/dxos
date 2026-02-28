@@ -3,15 +3,20 @@
 //
 
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
-import React, { type ReactElement, type Ref as ReactRef, forwardRef, useRef } from 'react';
+import React, { type ReactElement, type Ref as ReactRef, forwardRef, useMemo, useRef } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Tag } from '@dxos/react-ui';
+import { Tag, useTranslation } from '@dxos/react-ui';
+import { createMenuAction } from '@dxos/react-ui-menu';
 import { getHashStyles } from '@dxos/ui-theme';
 
+import { translationKey } from '../../translations';
 import { Card } from '../Card';
 import { Focus } from '../Focus';
 import { Mosaic, type MosaicTileProps } from '../Mosaic';
+
+import { useBoard } from './Board';
+import { useBoardColumn } from './Column';
 
 //
 // Item
@@ -26,9 +31,26 @@ type BoardItemProps<TItem extends Obj.Unknown = any> = Pick<
 
 const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
   ({ classNames, data, location, debug }, forwardedRef) => {
+    const { t } = useTranslation(translationKey);
     const rootRef = useRef<HTMLDivElement>(null);
     const composedRef = useComposedRefs<HTMLDivElement>(rootRef, forwardedRef);
     const dragHandleRef = useRef<HTMLButtonElement>(null);
+
+    const { model } = useBoard(BOARD_ITEM_NAME);
+    const column = useBoardColumn();
+    const items = useMemo(
+      () =>
+        column != null && model.onItemDelete
+          ? [
+              createMenuAction('delete-item', () => model.onItemDelete?.(column, data), {
+                label: t('delete menu label'),
+                icon: 'ph--trash--regular',
+              }),
+            ]
+          : [],
+      [column, data, model.onItemDelete, t],
+    );
+
     if (!data) {
       return null;
     }
@@ -55,7 +77,7 @@ const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
             <Card.Toolbar>
               <Card.DragHandle ref={dragHandleRef} />
               <Card.Title>{label}</Card.Title>
-              <Card.Menu context={data} />
+              <Card.Menu items={items} />
             </Card.Toolbar>
             {/* TODO(burdon): Replace with surface. */}
             <Card.Row icon='ph--note--regular' classNames='text-description'>

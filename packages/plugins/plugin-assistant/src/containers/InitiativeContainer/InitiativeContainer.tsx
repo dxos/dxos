@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 import React, { forwardRef, useMemo, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { type SurfaceComponentProps, useObjectMenuItems, useObjectNavigate } from '@dxos/app-toolkit/ui';
 import { type Project } from '@dxos/assistant-toolkit';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';
@@ -76,14 +76,17 @@ export const ProjectArticle = ({ subject: project }: ProjectArticleProps) => {
 
 const StackTile = forwardRef<HTMLDivElement, MosaicTileProps<Obj.Unknown>>(
   ({ data, location, debug }, forwardedRef) => {
+    const objectMenuItems = useObjectMenuItems(data);
+    const handleNavigate = useObjectNavigate(data);
+
     return (
       <Mosaic.Tile asChild id={data.id} data={data} location={location} debug={debug}>
         <Focus.Group asChild>
           <Card.Root ref={forwardedRef} data-testid='board-item'>
             <Card.Toolbar>
               <Card.IconBlock></Card.IconBlock>
-              <Card.Title>{Obj.getLabel(data)}</Card.Title>
-              <Card.Menu />
+              <Card.Title onClick={handleNavigate}>{Obj.getLabel(data)}</Card.Title>
+              <Card.Menu items={objectMenuItems} />
             </Card.Toolbar>
             <Card.Content>
               <Surface.Surface role='card--content' limit={1} data={{ subject: data }} />
