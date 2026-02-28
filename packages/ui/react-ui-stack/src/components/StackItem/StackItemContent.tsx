@@ -24,9 +24,9 @@ export const StackItemContent = forwardRef<HTMLDivElement, StackItemContentProps
     const style = useMemo(
       () => ({
         gridTemplateRows: [
-          toolbar && role === 'section' ? 'calc(var(--toolbar-size) - 1px)' : 'var(--toolbar-size)',
+          toolbar && role === 'section' ? 'calc(var(--dx-toolbar-size) - 1px)' : 'var(--dx-toolbar-size)',
           '1fr',
-          statusbar && 'var(--statusbar-size)',
+          statusbar && 'var(--dx-statusbar-size)',
         ]
           .filter(Boolean)
           .join(' '),

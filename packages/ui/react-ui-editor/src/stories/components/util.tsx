@@ -220,7 +220,7 @@ export const renderLinkButton: RenderCallback<{ url: string }> = (el, { url }) =
   el.appendChild(
     Domino.of('a')
       .attributes({ href: url, target: '_blank', rel: 'noreferrer', 'aria-label': 'Open link' })
-      .classNames(hover, 'inline-block ms-1 align-[-0.125em]')
+      .classNames(hover, 'inline-block ms-1 align-[-0.125em]') // Center icon.
       .children(Domino.svg('ph--arrow-square-out--regular')).root,
   );
 };

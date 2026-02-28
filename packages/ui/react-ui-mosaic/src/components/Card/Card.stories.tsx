@@ -128,16 +128,16 @@ export const Description: Story = {
 export const Mock = () => (
   <div className='grid grid-cols-[2rem_1fr_2rem] w-full card-min-width card-max-width border border-separator rounded-xs'>
     <div className='grid grid-cols-subgrid col-span-full'>
-      <div role='none' className='grid h-[var(--rail-item)] w-[var(--rail-item)] place-items-center'>
+      <div role='none' className='grid h-[var(--dx-rail-item)] w-[var(--dx-rail-item)] place-items-center'>
         <Icon icon='ph--dots-six-vertical--regular' />
       </div>
       <div className='p-1 truncate text-description items-center'>This line is very very long and it should wrap.</div>
-      <div role='none' className='grid h-[var(--rail-item)] w-[var(--rail-item)] place-items-center'>
+      <div role='none' className='grid h-[var(--dx-rail-item)] w-[var(--dx-rail-item)] place-items-center'>
         <Icon icon='ph--x--regular' />
       </div>
     </div>
     <div className='grid grid-cols-subgrid col-span-3'>
-      <div role='none' className='grid h-[var(--rail-item)] w-[var(--rail-item)] place-items-center'>
+      <div role='none' className='grid h-[var(--dx-rail-item)] w-[var(--dx-rail-item)] place-items-center'>
         <Icon icon='ph--dots-six-vertical--regular' />
       </div>
       <div className='p-1 text-description items-center col-span-2'>

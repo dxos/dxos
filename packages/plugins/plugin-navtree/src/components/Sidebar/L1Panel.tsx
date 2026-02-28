@@ -40,7 +40,7 @@ export const L1Panel = ({ open, path, item, currentItemId, onBack }: L1PanelProp
       value={item.id}
       classNames={[
         'absolute inset-y-0 end-0',
-        'w-[calc(100%-var(--l0-size))] lg:w-(--l1-size) grid-cols-1 grid-rows-[var(--rail-size)_1fr]',
+        'w-[calc(100%-var(--dx-l0-size))] lg:w-(--dx-l1-size) grid-cols-1 grid-rows-[var(--dx-rail-size)_1fr]',
         'py-[env(safe-area-inset-top)]',
         item.id === currentItemId && 'grid',
       ]}

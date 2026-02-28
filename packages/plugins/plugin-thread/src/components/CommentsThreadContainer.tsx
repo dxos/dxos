@@ -106,7 +106,7 @@ export const CommentsThreadContainer = ({
       <div
         role='none'
         className={mx(
-          'col-span-2 grid grid-cols-[var(--rail-size)_1fr_min-content]',
+          'col-span-2 grid grid-cols-[var(--dx-rail-size)_1fr_min-content]',
           hoverableControls,
           hoverableFocusedWithinControls,
         )}

@@ -17,6 +17,11 @@ Update this document with the results of the following tasks:
 
 - [ ] Add -dx prefix to :root spacing.css styles.
 
+## Phase 3
+
+- [ ] Density audit.
+- [ ] Semantic color audit.
+
 ## Results
 
 ### Invalid classes

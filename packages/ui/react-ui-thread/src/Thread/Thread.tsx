@@ -11,7 +11,7 @@ import { translationKey } from '../translations';
 import type { ThreadEntity } from '../types';
 
 // TODO(burdon): Avoid exporting fragments.
-export const threadLayout = 'w-full place-self-start grid grid-cols-[var(--rail-size)_1fr]';
+export const threadLayout = 'w-full place-self-start grid grid-cols-[var(--dx-rail-size)_1fr]';
 
 //
 // Root

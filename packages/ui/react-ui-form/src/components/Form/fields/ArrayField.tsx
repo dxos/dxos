@@ -93,7 +93,7 @@ export const ArrayField = ({
               {!readonly && layout !== 'static' && (
                 <div role='none' className='flex flex-col h-full justify-end'>
                   {/* NOTE: Aligns with center of last field if multi-field object. */}
-                  <div role='none' className='flex items-center h-[var(--line-height)]'>
+                  <div role='none' className='flex items-center h-[2rem]'>
                     <IconButton
                       icon='ph--x--regular'
                       iconOnly
