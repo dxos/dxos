@@ -1,7 +1,31 @@
 # Buf Migration — Status, Plan & Principles
 
 > Branch: `cursor/DX-745-buf-rpc-client-1bd0`
-> Last updated: 2026-02-28 (Phase 11 — comprehensive proto-to-buf migration: COMPLETE)
+> Last updated: 2026-02-28 (Phase 12 — final cleanup: IN PROGRESS)
+
+---
+
+## PR Acceptance Criteria
+
+All of these must be true before the PR is merged:
+
+- [ ] **Fully migrated to buf**: Zero `@dxos/protocols/proto` imports, zero `protoToBuf`/`bufToProto` usages, protobuf.js (`@dxos/codec-protobuf`) removed as a runtime dependency
+- [ ] **Build passing**: `moon run :build` succeeds with no errors
+- [ ] **Tests passing**: All test suites pass (pre-existing environment-specific failures excepted)
+- [ ] **No degraded functionality**: No modules commented out, no tests removed, no features disabled
+- [ ] **CI passing**: GitHub Actions CI green
+- [ ] **Composer starts up**: Vite dev server starts and Composer app renders in browser
+
+### Current Progress Against Criteria
+
+| Criterion | Status | Detail |
+|---|---|---|
+| Fully migrated to buf | **Partial** | 0 proto imports, but 56 `protoToBuf`/`bufToProto` usages in 21 files remain; ~70 `as never`, ~25 `as unknown` boundary casts remain |
+| Build passing | **Yes** | `moon run :build` passes |
+| Tests passing | **Partial** | Most suites pass; 6 pre-existing client test failures (not buf-related) |
+| No degraded functionality | **Yes** | No modules commented out or tests removed |
+| CI passing | **Not verified** | Needs CI run |
+| Composer starts up | **Yes** | Vite dev server starts and app renders |
 
 ---
 
@@ -645,6 +669,59 @@ All remaining `@dxos/protocols/proto` imports across the repository have been re
 - Zero new casts introduced
 
 **Proto import count:** 0 (in application code). Only `protobuf-compiler/test/` (12) and `codec-protobuf/src/substitutions/any.ts` (2) retain proto usage for testing the protobuf.js infrastructure itself.
+
+---
+
+### Phase 12: Final Cleanup — Eliminate All Boundary Casts & Helpers (IN PROGRESS)
+
+**Goal**: Meet all PR acceptance criteria. Remove every `protoToBuf`/`bufToProto` call, eliminate remaining boundary casts, ensure build+tests+CI pass with no degraded functionality.
+
+#### 12A — Eliminate `protoToBuf`/`bufToProto` (56 usages in 21 files)
+
+Each call site needs the surrounding code converted so the types align naturally without casting.
+
+**Files by category:**
+
+| Category | Files | Usages | Approach |
+|---|---|---|---|
+| Pipeline internals | `control-pipeline.ts`, `echo-host.ts`, `pipeline-stress.test.ts` | 5 | Convert proto-decoded values to buf at read boundary |
+| Mesh/network | `swarm.ts`, `rtc-transport-service.ts`, `connection-log.ts` | 4 | Align signal/message types to buf |
+| Echo services | `queue-service.ts` | 2 | Align QueueService types |
+| Functions | `protocol.ts`, `queue-service-impl.ts` | 4 | Align DataService/QueryService types |
+| Tracing | `trace-sender.ts` | 4 | Convert Resource/Span to buf types |
+| Devtools | `TracingPanel.tsx`, `network.ts`, `spaces.ts`, `feeds.ts`, `metadata.ts` | 9 | Convert devtools response types |
+| Client-services | `diagnostics.ts`, `contacts-service.ts`, `data-space-manager.ts`, `identity-manager.test.ts`, `space-invitation-protocol.ts` | 8 | Convert credential/invitation types |
+
+- [ ] 12A.1: Pipeline internals (5 usages)
+- [ ] 12A.2: Mesh/network (4 usages)
+- [ ] 12A.3: Echo services (2 usages)
+- [ ] 12A.4: Functions (4 usages)
+- [ ] 12A.5: Tracing (4 usages)
+- [ ] 12A.6: Devtools (9 usages)
+- [ ] 12A.7: Client-services (8 usages)
+- [ ] 12A.8: Remove `protoToBuf`/`bufToProto` definitions from `@dxos/protocols/buf`
+
+#### 12B — Eliminate remaining `as never` boundary casts (~70)
+
+- [ ] 12B.1: Test assertions & fixtures (~30)
+- [ ] 12B.2: Invitation protocol (~15)
+- [ ] 12B.3: Agent hosting (~6)
+- [ ] 12B.4: Diagnostics & service wiring (~8)
+- [ ] 12B.5: Other scattered (~11)
+
+#### 12C — Eliminate remaining `as unknown` casts (~25)
+
+- [ ] 12C.1: SpaceProxy/space-list internals (4)
+- [ ] 12C.2: Client service wiring (3)
+- [ ] 12C.3: Other boundary points (~18)
+
+#### 12D — Final verification
+
+- [ ] 12D.1: `moon run :build` passes
+- [ ] 12D.2: All test suites pass
+- [ ] 12D.3: `pnpm -w pre-ci` passes
+- [ ] 12D.4: Composer dev server starts and renders
+- [ ] 12D.5: CI green
 
 ---
 
