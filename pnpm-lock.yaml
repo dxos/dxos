@@ -9135,6 +9135,9 @@ importers:
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
+      '@dxos/react-ui-menu':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-menu
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../ui/react-ui-mosaic
@@ -13468,9 +13471,18 @@ importers:
       '@dxos/operation':
         specifier: workspace:*
         version: link:../../core/operation
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
+      '@dxos/react-ui-menu':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-menu
       '@dxos/types':
         specifier: workspace:*
         version: link:../types
+      '@dxos/ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/ui-theme
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -13481,18 +13493,12 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../ui/react-ui
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../../ui/react-ui-syntax-highlighter
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
-      '@dxos/ui-theme':
-        specifier: workspace:*
-        version: link:../../ui/ui-theme
       '@effect-atom/atom-react':
         specifier: 'catalog:'
         version: 0.5.0(@effect/experimental@0.58.0(@effect/platform@0.94.4(effect@3.19.16))(effect@3.19.16)(ioredis@5.3.2))(@effect/platform@0.94.4(effect@3.19.16))(@effect/rpc@0.73.0(@effect/platform@0.94.4(effect@3.19.16))(effect@3.19.16))(effect@3.19.16)(react@19.2.3)(scheduler@0.27.0)
@@ -17262,6 +17268,9 @@ importers:
       '@dxos/react-ui-dnd':
         specifier: workspace:*
         version: link:../react-ui-dnd
+      '@dxos/react-ui-menu':
+        specifier: workspace:*
+        version: link:../react-ui-menu
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../react-ui-syntax-highlighter

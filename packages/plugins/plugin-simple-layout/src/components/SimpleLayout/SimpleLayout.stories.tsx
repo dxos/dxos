@@ -10,6 +10,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { ClientOperation, ClientPlugin } from '@dxos/plugin-client';
 import { SearchPlugin } from '@dxos/plugin-search';
+import { SpacePlugin } from '@dxos/plugin-space';
 import { SpaceOperation } from '@dxos/plugin-space/types';
 import { corePlugins } from '@dxos/plugin-testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';

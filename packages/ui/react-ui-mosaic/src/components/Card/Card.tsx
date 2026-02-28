@@ -7,15 +7,12 @@ import React, {
   type ComponentPropsWithoutRef,
   type HTMLAttributes,
   type PropsWithChildren,
-  createContext,
   forwardRef,
-  useContext,
 } from 'react';
 
 import {
   Button,
   type Density,
-  DropdownMenu,
   Icon,
   type IconProps,
   type ThemedClassName,
@@ -23,6 +20,7 @@ import {
   type ToolbarRootProps,
   useTranslation,
 } from '@dxos/react-ui';
+import { DropdownMenu as MenuDropdownMenu, type MenuItem, MenuProvider, useMenuItems } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
@@ -34,17 +32,6 @@ type CardSharedProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
   asChild?: boolean;
   className?: string;
 };
-
-//
-// Context
-//
-
-type CardContextValue = {
-  menuItems?: CardMenuItem<any>[];
-};
-
-/** @deprecated Create context for menus. */
-const CardContext = createContext<CardContextValue>({});
 
 //
 // Root
@@ -71,7 +58,7 @@ const CardRoot = forwardRef<HTMLDivElement, CardRootProps>(
         className={mx(styles.root, border && styles.border, fullWidth && 'max-w-none!', className, classNames)}
         ref={forwardedRef}
       >
-        {children}
+        <MenuProvider>{children}</MenuProvider>
       </Root>
     );
   },
@@ -159,46 +146,26 @@ const CardClose = forwardRef<HTMLButtonElement, CardCloseProps>(({ onClick }, fo
 // Menu
 //
 
-type CardMenuItem<T extends any | void = void> = {
-  label: string;
-  onClick: (context: T) => void;
+type CardMenuProps = {
+  items?: MenuItem[];
 };
 
-type CardMenuProps<T extends any | void = void> = {
-  context?: T;
-  items?: CardMenuItem<T>[];
-};
-
-const CardMenu = <T extends any | void = void>({ context, items }: CardMenuProps<T>) => {
+const CardMenu = ({ items }: CardMenuProps) => {
   const { t } = useTranslation(translationKey);
-  const { menuItems } = useContext(CardContext) ?? {};
-  const combinedItems = [...(items ?? []), ...((menuItems as CardMenuItem<T>[]) ?? [])];
+  const baseItems = items ?? [];
+  const mergedItems = useMenuItems(undefined, baseItems.length > 0 ? baseItems : undefined);
 
   return (
-    <DropdownMenu.Root>
-      <DropdownMenu.Trigger disabled={!combinedItems.length} asChild>
+    <MenuDropdownMenu.Root items={baseItems.length > 0 ? baseItems : undefined}>
+      <MenuDropdownMenu.Trigger disabled={!(mergedItems?.length ?? 0)} asChild>
         <Card.ToolbarIconButton
           iconOnly
           variant='ghost'
           icon='ph--dots-three-vertical--regular'
           label={t('action menu label')}
         />
-      </DropdownMenu.Trigger>
-      {(combinedItems?.length ?? 0) > 0 && (
-        <DropdownMenu.Portal>
-          <DropdownMenu.Content>
-            <DropdownMenu.Viewport>
-              {combinedItems?.map(({ label, onClick: onSelect }, i) => (
-                <DropdownMenu.Item key={i} onSelect={() => onSelect(context as T)}>
-                  {label}
-                </DropdownMenu.Item>
-              ))}
-            </DropdownMenu.Viewport>
-            <DropdownMenu.Arrow />
-          </DropdownMenu.Content>
-        </DropdownMenu.Portal>
-      )}
-    </DropdownMenu.Root>
+      </MenuDropdownMenu.Trigger>
+    </MenuDropdownMenu.Root>
   );
 };
 
@@ -206,14 +173,23 @@ const CardMenu = <T extends any | void = void>({ context, items }: CardMenuProps
 // Title
 //
 
-type CardTitleProps = CardSharedProps;
+type CardTitleProps = CardSharedProps & {
+  /** When set, the title is clickable (e.g. to navigate to the object). */
+  onClick?: () => void;
+};
 
 const CardTitle = forwardRef<HTMLDivElement, CardTitleProps>(
-  ({ children, classNames, className, asChild, role = 'heading', ...props }, forwardedRef) => {
+  ({ children, classNames, className, asChild, role = 'heading', onClick, ...props }, forwardedRef) => {
     const Root = asChild ? Slot : 'div';
 
     return (
-      <Root {...props} role={role} className={mx('grow truncate', classNames, className)} ref={forwardedRef}>
+      <Root
+        {...props}
+        role={role}
+        className={mx('grow truncate', onClick != null && 'cursor-pointer hover:underline', classNames, className)}
+        onClick={onClick}
+        ref={forwardedRef}
+      >
         {children}
       </Root>
     );
@@ -431,7 +407,6 @@ const CardIcon = ({ toolbar, ...props }: IconProps & { toolbar?: boolean }) => {
 //
 
 export const Card = {
-  Context: CardContext,
   Root: CardRoot,
 
   // Toolbar
@@ -455,4 +430,4 @@ export const Card = {
   Link: CardLink,
 };
 
-export type { CardContextValue, CardRootProps, CardToolbarProps, CardMenuProps };
+export type { CardRootProps, CardToolbarProps, CardMenuProps };

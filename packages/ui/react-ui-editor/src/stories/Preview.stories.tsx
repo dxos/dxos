@@ -12,6 +12,7 @@ import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 import { Popover } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { createMenuAction } from '@dxos/react-ui-menu';
 import { Card } from '@dxos/react-ui-mosaic';
 import {
   type PreviewBlock,
@@ -22,7 +23,7 @@ import {
   preview,
 } from '@dxos/ui-editor';
 import { hoverableControls } from '@dxos/ui-theme';
-import { isTruthy, trim } from '@dxos/util';
+import { trim } from '@dxos/util';
 
 import { type EditorController, EditorPreviewProvider, useEditorPreview } from '../components';
 
@@ -152,19 +153,19 @@ const PreviewBlockComponent = ({ link, el, view }: { link: PreviewLinkRef; el: H
           <Card.Title>{link.label}</Card.Title>
           <Card.Menu
             items={[
-              {
-                id: 'delete',
+              createMenuAction('delete', handleDelete, {
                 label: link.suggest ? 'Discard' : 'Delete',
                 icon: 'ph--x--regular',
-                onClick: handleDelete,
-              },
-              target && {
-                id: 'apply',
-                label: 'Apply',
-                icon: 'ph--check--regular',
-                onClick: handleInsert,
-              },
-            ].filter(isTruthy)}
+              }),
+              ...(target
+                ? [
+                    createMenuAction('apply', handleInsert, {
+                      label: 'Apply',
+                      icon: 'ph--check--regular',
+                    }),
+                  ]
+                : []),
+            ]}
           />
         </Card.Toolbar>
       )}

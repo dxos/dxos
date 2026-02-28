@@ -22,13 +22,13 @@ const MENU_NAME = 'Menu';
 
 const [createMenuContext, createMenuScope] = createContextScope(MENU_NAME, []);
 
-const [MenuContextProvider, useMenu] = createMenuContext<MenuContextValue>(MENU_NAME);
-
 export const menuContextDefaults: MenuContextValue = {
   iconSize: 5,
   useGroupItems: () => null,
   onAction: undefined,
 };
+
+const [MenuContextProvider, useMenu] = createMenuContext<MenuContextValue>(MENU_NAME, menuContextDefaults);
 
 const useMenuScope = createMenuScope();
 

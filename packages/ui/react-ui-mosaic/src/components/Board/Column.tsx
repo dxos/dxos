@@ -3,6 +3,7 @@
 //
 
 import { useAtomValue } from '@effect-atom/atom-react';
+import { createContext } from '@radix-ui/react-context';
 import React, {
   type PropsWithChildren,
   type ReactElement,
@@ -17,17 +18,38 @@ import React, {
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
 import { IconButton, ScrollArea, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
+import { createMenuAction } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/ui-theme';
-import { isNonNullable } from '@dxos/util';
 
 import { useContainerDebug, useEventHandlerAdapter } from '../../hooks';
 import { translationKey } from '../../translations';
-import { Card, type CardMenuProps } from '../Card';
+import { Card } from '../Card';
 import { Focus } from '../Focus';
 import { Mosaic, type MosaicContainerProps, type MosaicStackProps, type MosaicTileProps } from '../Mosaic';
 
 import { useBoard } from './Board';
 import { BoardItem } from './Item';
+
+//
+// Column context
+//
+
+const BOARD_COLUMN_CONTEXT_NAME = 'Board.Column';
+
+export type BoardColumnContextValue<TColumn = unknown> = {
+  column: TColumn;
+};
+
+const [BoardColumnProvider, useBoardColumnContext] = createContext<BoardColumnContextValue | null>(
+  BOARD_COLUMN_CONTEXT_NAME,
+  null,
+);
+
+/** Returns the current column when rendered inside a board column (e.g. in column header or item tile). */
+export const useBoardColumn = <TColumn = unknown,>(): TColumn | undefined => {
+  const value = useBoardColumnContext(BOARD_COLUMN_CONTEXT_NAME);
+  return value?.column as TColumn | undefined;
+};
 
 //
 // Column
@@ -44,6 +66,7 @@ type BoardColumnRootInnerProps<TColumn = any> = BoardColumnProps<TColumn> & {
 const BoardColumnRootInner = forwardRef<HTMLDivElement, PropsWithChildren<BoardColumnRootInnerProps>>(
   ({ classNames, children, location, data, debug, dragHandleRef }, forwardedRef) => {
     const { model } = useBoard(BOARD_COLUMN_NAME);
+
     return (
       <Mosaic.Tile
         asChild
@@ -61,7 +84,7 @@ const BoardColumnRootInner = forwardRef<HTMLDivElement, PropsWithChildren<BoardC
           )}
           ref={forwardedRef}
         >
-          {children}
+          <BoardColumnProvider column={data}>{children}</BoardColumnProvider>
         </Focus.Group>
       </Mosaic.Tile>
     );
@@ -114,6 +137,22 @@ type BoardColumnHeaderProps = ThemedClassName<{ label: string; dragHandleRef: Re
 
 const BoardColumnHeader = forwardRef<HTMLDivElement, BoardColumnHeaderProps>(
   ({ classNames, label, dragHandleRef }, forwardedRef) => {
+    const { t } = useTranslation(translationKey);
+    const { model } = useBoard(BOARD_COLUMN_HEADER_NAME);
+    const column = useBoardColumn();
+    const columnMenuItems = useMemo(
+      () =>
+        column != null && model.onColumnDelete
+          ? [
+              createMenuAction('delete-column', () => model.onColumnDelete?.(column), {
+                label: t('delete menu label'),
+                icon: 'ph--trash--regular',
+              }),
+            ]
+          : [],
+      [column, model.onColumnDelete, t],
+    );
+
     return (
       <Card.Toolbar
         classNames={mx('border-b border-separator', classNames)}
@@ -122,7 +161,7 @@ const BoardColumnHeader = forwardRef<HTMLDivElement, BoardColumnHeaderProps>(
       >
         <Card.DragHandle ref={dragHandleRef} />
         <Card.Title>{label}</Card.Title>
-        <Card.Menu items={[]} />
+        <Card.Menu items={columnMenuItems} />
       </Card.Toolbar>
     );
   },
@@ -143,42 +182,25 @@ type BoardColumnBodyProps = Pick<BoardColumnProps, 'data'> & {
 };
 
 const BoardColumnBody = ({ data, eventHandler, Tile = BoardItem, debug }: BoardColumnBodyProps) => {
-  const { t } = useTranslation(translationKey);
   const [viewport, setViewport] = useState<HTMLElement | null>(null);
   const { model } = useBoard(BOARD_COLUMN_BODY_NAME);
   const items = useAtomValue(model.items(data));
 
-  // Context menu for items.
-  const menuItems = useMemo<NonNullable<CardMenuProps<Obj.Unknown>['items']>>(
-    () =>
-      [
-        model.onItemDelete && {
-          label: t('delete menu label'),
-          onClick: (obj: Obj.Unknown) => {
-            model.onItemDelete?.(data, obj);
-          },
-        },
-      ].filter(isNonNullable),
-    [model.onItemDelete, data, t],
-  );
-
   return (
-    <Card.Context value={{ menuItems }}>
-      <Mosaic.Container
-        asChild
-        withFocus
-        orientation='vertical'
-        autoScroll={viewport}
-        eventHandler={eventHandler}
-        debug={debug}
-      >
-        <ScrollArea.Root orientation='vertical' thin margin padding>
-          <ScrollArea.Viewport classNames='snap-y md:snap-none' ref={setViewport}>
-            <Mosaic.Stack items={items} getId={model.getItemId} Tile={Tile} />
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
-      </Mosaic.Container>
-    </Card.Context>
+    <Mosaic.Container
+      asChild
+      withFocus
+      orientation='vertical'
+      autoScroll={viewport}
+      eventHandler={eventHandler}
+      debug={debug}
+    >
+      <ScrollArea.Root orientation='vertical' thin margin padding>
+        <ScrollArea.Viewport classNames='snap-y md:snap-none' ref={setViewport}>
+          <Mosaic.Stack items={items} getId={model.getItemId} Tile={Tile} />
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
+    </Mosaic.Container>
   );
 };
 

@@ -5,6 +5,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
+import { useObjectMenuItems, useObjectNavigate } from '@dxos/app-toolkit/ui';
 import { Entity, Query } from '@dxos/echo';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
@@ -73,12 +74,15 @@ export const SearchMain = ({ space }: { space?: Space }) => {
 
 const SearchResultTile: MosaicStackTileComponent<SearchResult> = (props) => {
   const data = props.data;
+  const objectMenuItems = useObjectMenuItems(data.object!);
+  const handleNavigate = useObjectNavigate(data.object ?? undefined);
+
   return (
     <Card.Root key={data.id}>
       <Card.Toolbar>
         <Card.DragHandle />
-        <Card.Title>{data.label ?? (data.object && Entity.getLabel(data.object))}</Card.Title>
-        <Card.Menu />
+        <Card.Title onClick={handleNavigate}>{data.label ?? (data.object && Entity.getLabel(data.object))}</Card.Title>
+        <Card.Menu items={objectMenuItems} />
       </Card.Toolbar>
       <Surface.Surface role='card--content' data={{ subject: data.object }} limit={1} />
     </Card.Root>

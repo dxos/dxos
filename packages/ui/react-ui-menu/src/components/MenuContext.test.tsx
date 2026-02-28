@@ -432,5 +432,45 @@ describe('MenuContext', () => {
       expect(result.current).toHaveLength(1);
       expect(result.current?.[0].id).toBe('props-item');
     });
+
+    test('object-actions contribution pattern (navigate item) appears in useMenuItems', ({ expect }) => {
+      const navigateItem = createMenuAction('navigate', () => {}, {
+        label: 'Open',
+        icon: 'ph--arrow-square-out--regular',
+      });
+
+      const ObjectActionsContributor = () => {
+        useMenuContribution({
+          id: 'object-actions',
+          mode: 'additive',
+          priority: 50,
+          items: [navigateItem],
+        });
+        return null;
+      };
+
+      const ConsumerComponent = () => {
+        const items = useMenuItems();
+        return (
+          <div data-testid='menu-items'>
+            {items?.map((item) => (
+              <div key={item.id} data-testid={`item-${item.id}`}>
+                {(item.properties as { label?: string })?.label}
+              </div>
+            ))}
+          </div>
+        );
+      };
+
+      render(
+        <TestWrapper>
+          <ObjectActionsContributor />
+          <ConsumerComponent />
+        </TestWrapper>,
+      );
+
+      expect(screen.getByTestId('item-navigate')).toBeTruthy();
+      expect(screen.getByText('Open')).toBeTruthy();
+    });
   });
 });

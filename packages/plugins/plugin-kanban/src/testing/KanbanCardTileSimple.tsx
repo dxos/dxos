@@ -6,6 +6,7 @@ import React, { forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { useTranslation } from '@dxos/react-ui';
+import { createMenuAction } from '@dxos/react-ui-menu';
 import { Card, Focus, Mosaic, useBoard } from '@dxos/react-ui-mosaic';
 
 import { type KanbanCardProps, useKanbanBoard } from '../components';
@@ -26,13 +27,13 @@ export const KanbanCardTileSimple = forwardRef<HTMLDivElement, KanbanCardProps>(
       () =>
         onCardRemove
           ? [
-              {
+              createMenuAction('remove', () => onCardRemove(data), {
                 label: t('remove card label'),
-                onClick: (card: Obj.Unknown) => onCardRemove(card),
-              },
+                icon: 'ph--trash--regular',
+              }),
             ]
           : [],
-      [onCardRemove, t],
+      [onCardRemove, data, t],
     );
 
     return (
@@ -49,7 +50,7 @@ export const KanbanCardTileSimple = forwardRef<HTMLDivElement, KanbanCardProps>(
             <Card.Toolbar>
               <Card.DragHandle ref={dragHandleRef} />
               <Card.Title>{Obj.getLabel(data)}</Card.Title>
-              {menuItems.length > 0 && <Card.Menu context={data} items={menuItems} />}
+              <Card.Menu items={menuItems} />
             </Card.Toolbar>
             <Card.Content>
               <div className='p-2 text-sm text-fg'>{Obj.getLabel(data)}</div>

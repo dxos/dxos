@@ -8,7 +8,7 @@ import { Capabilities } from '@dxos/app-framework';
 import { useCapability } from '@dxos/app-framework/ui';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Surface } from '@dxos/app-framework/ui';
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { type SurfaceComponentProps, useObjectMenuContributions } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { ATTENDABLE_PATH_SEPARATOR, DeckOperation } from '@dxos/plugin-deck/types';
 import { Layout } from '@dxos/react-ui';
@@ -46,6 +46,8 @@ export const PipelineContainer = ({ role, subject: pipeline }: PipelineContainer
 };
 
 const PipelineItem = ({ item, projectionModel }: ItemProps) => {
+  useObjectMenuContributions(item);
+
   return (
     <Surface.Surface
       role='card--content'

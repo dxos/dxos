@@ -29,7 +29,7 @@ import {
   useMosaic,
 } from '../Mosaic';
 
-import { BoardColumn, type BoardColumnProps, DefaultBoardColumn } from './Column';
+import { BoardColumn, type BoardColumnProps, DefaultBoardColumn, useBoardColumn } from './Column';
 import { BoardItem, type BoardItemProps } from './Item';
 
 //
@@ -186,5 +186,5 @@ export const Board = {
   Debug: BoardDebug,
 };
 
-export { useBoard };
+export { useBoard, useBoardColumn };
 export type { BoardRootProps, BoardContentProps, BoardColumnProps, BoardItemProps };
