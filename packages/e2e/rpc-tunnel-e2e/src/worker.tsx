@@ -6,9 +6,9 @@ import React, { StrictMode, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { JSONTree } from 'react-json-tree';
 
-import { schema } from '@dxos/protocols/proto';
+import { TestStreamService } from '@dxos/protocols/buf/example/testing/rpc_pb';
 import { useAsyncEffect } from '@dxos/react-hooks';
-import { createProtoRpcPeer } from '@dxos/rpc';
+import { createBufProtoRpcPeer } from '@dxos/rpc';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
 
 import { Channels } from './channels';
@@ -23,12 +23,10 @@ const App = ({ port }: { port: MessagePort }) => {
 
   useAsyncEffect(async () => {
     const rpcPort = await createWorkerPort({ port, channel: Channels.ONE });
-    const client = createProtoRpcPeer({
+    const client = createBufProtoRpcPeer({
       requested: {
-        TestStreamService: schema.getService('example.testing.rpc.TestStreamService'),
+        TestStreamService,
       },
-      exposed: {},
-      handlers: {},
       port: rpcPort,
     });
     await client.open();

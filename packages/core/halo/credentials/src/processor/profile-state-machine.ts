@@ -26,7 +26,7 @@ export class ProfileStateMachine implements CredentialProcessor {
 
   async processCredential(credential: Credential): Promise<void> {
     const assertion = getCredentialAssertion(credential);
-    switch (assertion['@type']) {
+    switch (assertion.$typeName) {
       case 'dxos.halo.credentials.IdentityProfile': {
         const issuer = fromBufPublicKey(credential.issuer);
         const subjectId = fromBufPublicKey(credential.subject?.id);
@@ -35,8 +35,7 @@ export class ProfileStateMachine implements CredentialProcessor {
           return;
         }
 
-        // TODO(dmaretskyi): Extra validation for the credential?
-        this.profile = assertion.profile as any as ProfileDocument;
+        this.profile = assertion.profile;
         log('updated profile', {
           identityKey: this._params.identityKey,
           profile: this.profile,

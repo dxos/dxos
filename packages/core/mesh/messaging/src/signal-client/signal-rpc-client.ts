@@ -5,24 +5,23 @@
 import WebSocket from 'isomorphic-ws';
 
 import { TimeoutError, Trigger, scheduleTaskInterval } from '@dxos/async';
-import { type Any, type Stream } from '@dxos/codec-protobuf';
+import { type Any } from '@dxos/codec-protobuf';
+import { type Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
-import { type Message as SignalMessage } from '@dxos/protocols/buf/dxos/mesh/signal_pb';
-import { schema } from '@dxos/protocols/proto';
-import { type Signal } from '@dxos/protocols/proto/dxos/mesh/signal';
-import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
+import { type Message as SignalMessage, Signal } from '@dxos/protocols/buf/dxos/mesh/signal_pb';
+import { type BufProtoRpcPeer, createBufProtoRpcPeer } from '@dxos/rpc';
 
 import { SignalRpcClientMonitor } from './signal-rpc-client-monitor';
 
 const SIGNAL_KEEPALIVE_INTERVAL = 10000;
 
-interface Services {
-  Signal: Signal;
-}
+type Services = {
+  Signal: typeof Signal;
+};
 
 export type SignalCallbacks = {
   onConnected?: () => void;
@@ -49,7 +48,7 @@ export type SignalRPCClientProps = {
  */
 export class SignalRPCClient {
   private readonly _socket: WebSocket;
-  private readonly _rpc: ProtoRpcPeer<Services>;
+  private readonly _rpc: BufProtoRpcPeer<Services>;
   private readonly _connectTrigger = new Trigger();
 
   private _keepaliveCtx?: Context;
@@ -69,15 +68,14 @@ export class SignalRPCClient {
     this._callbacks = callbacks;
     this._socket = new WebSocket(this._url);
 
-    this._rpc = createProtoRpcPeer({
+    this._rpc = createBufProtoRpcPeer({
       requested: {
-        Signal: schema.getService('dxos.mesh.signal.Signal'),
+        Signal,
       },
       noHandshake: true,
       port: {
         send: (msg) => {
           if (this._closed) {
-            // Do not send messages after close.
             return;
           }
           try {
@@ -95,9 +93,6 @@ export class SignalRPCClient {
             }
           };
         },
-      },
-      encodingOptions: {
-        preserveAny: true,
       },
     });
 
@@ -196,8 +191,7 @@ export class SignalRPCClient {
       peer: peerId.asUint8Array(),
     });
     await messageStream.waitUntilReady();
-    // Proto RPC returns proto-typed stream; cast at boundary.
-    return messageStream as any;
+    return messageStream;
   }
 
   async sendMessage({
@@ -215,7 +209,7 @@ export class SignalRPCClient {
     await this._rpc.rpc.Signal.sendMessage({
       author: author.asUint8Array(),
       recipient: recipient.asUint8Array(),
-      payload,
+      payload: payload ? { typeUrl: payload.type_url ?? '', value: payload.value ?? new Uint8Array() } : undefined,
       metadata: this._callbacks?.getMetadata?.(),
     });
   }

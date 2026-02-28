@@ -8,7 +8,6 @@ import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { type Device } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { type DevicesService } from '@dxos/protocols/proto/dxos/client/services';
 
 import { type ServiceContext } from '../services';
 import { createServiceContext } from '../testing';
@@ -17,12 +16,12 @@ import { DevicesServiceImpl } from './devices-service';
 
 describe('DevicesService', () => {
   let serviceContext: ServiceContext;
-  let devicesService: DevicesService;
+  let devicesService: DevicesServiceImpl;
 
   beforeEach(async () => {
     serviceContext = await createServiceContext();
     await serviceContext.open(new Context());
-    devicesService = new DevicesServiceImpl(serviceContext.identityManager) as never;
+    devicesService = new DevicesServiceImpl(serviceContext.identityManager);
   });
 
   afterEach(async () => {

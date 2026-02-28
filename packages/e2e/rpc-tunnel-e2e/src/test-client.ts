@@ -5,7 +5,7 @@
 import { Event } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { log } from '@dxos/log';
-import { type TestStreamService } from '@dxos/protocols/proto/example/testing/rpc';
+import { type TestRpcResponse } from '@dxos/protocols/buf/example/testing/rpc_pb';
 
 const STORAGE_KEY = 'testclient';
 
@@ -45,9 +45,9 @@ export class TestClient {
   }
 
   get handlers() {
-    const TestStreamService: TestStreamService = {
-      testCall: (req) =>
-        new Stream(({ next, close }) => {
+    const TestStreamService = {
+      testCall: (req: { data: string }) =>
+        new Stream<TestRpcResponse>(({ next, close }) => {
           if (req.data !== 'requestData') {
             log.info('Invalid request, closing...');
             close();

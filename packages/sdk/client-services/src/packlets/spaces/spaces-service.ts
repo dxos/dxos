@@ -338,17 +338,18 @@ export class SpacesServiceImpl implements Client.SpacesService {
   private async _joinByAdmission({ credential }: ContactAdmission): Promise<JoinSpaceResponse> {
     invariant(credential, 'Credential is required');
     const assertion = getCredentialAssertion(credential);
-    invariant(assertion['@type'] === 'dxos.halo.credentials.SpaceMember', 'Invalid credential');
+    invariant(assertion.$typeName === 'dxos.halo.credentials.SpaceMember', 'Invalid credential');
     const myIdentity = this._identityManager.identity;
     const subjectId = credential.subject?.id ? toPublicKey(credential.subject.id!) : undefined;
     invariant(myIdentity && subjectId?.equals(myIdentity.identityKey));
 
     const dataSpaceManager = await this._getDataSpaceManager();
-    let dataSpace = dataSpaceManager.spaces.get(assertion.spaceKey);
+    const assertionSpaceKey = assertion.spaceKey ? toPublicKey(assertion.spaceKey) : undefined;
+    let dataSpace = assertionSpaceKey ? dataSpaceManager.spaces.get(assertionSpaceKey) : undefined;
     if (!dataSpace) {
       dataSpace = await dataSpaceManager.acceptSpace({
-        spaceKey: assertion.spaceKey,
-        genesisFeedKey: assertion.genesisFeedKey,
+        spaceKey: assertionSpaceKey!,
+        genesisFeedKey: assertion.genesisFeedKey ? toPublicKey(assertion.genesisFeedKey) : undefined!,
       });
       await myIdentity.controlPipeline.writer.write({ credential: { credential } });
     }

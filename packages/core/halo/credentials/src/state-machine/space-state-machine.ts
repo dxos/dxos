@@ -6,11 +6,12 @@ import { runInContextAsync, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { toPublicKey } from '@dxos/protocols/buf';
 import { type Credential, SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type DelegateSpaceInvitation } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
-import { type TypedMessage } from '@dxos/protocols/proto';
 import { type AsyncCallback, Callback, ComplexMap, ComplexSet } from '@dxos/util';
 
+import { type CredentialAssertion } from '../credentials/assertion-registry';
 import { fromBufPublicKey, getCredentialAssertion, verifyCredential } from '../credentials';
 import { type CredentialProcessor } from '../processor/credential-processor';
 
@@ -30,7 +31,7 @@ export interface SpaceState {
   addCredentialProcessor(processor: CredentialProcessor): Promise<void>;
   removeCredentialProcessor(processor: CredentialProcessor): Promise<void>;
 
-  getCredentialsOfType(type: TypedMessage['@type']): Credential[];
+  getCredentialsOfType(typeName: CredentialAssertion['$typeName']): Credential[];
 
   getMemberRole(memberKey: PublicKey): SpaceMember_Role;
   hasMembershipManagementPermission(memberKey: PublicKey): boolean;
@@ -139,8 +140,8 @@ export class SpaceStateMachine implements SpaceState {
     await consumer?.close();
   }
 
-  getCredentialsOfType(type: TypedMessage['@type']): Credential[] {
-    return this.credentials.filter((credential) => getCredentialAssertion(credential)['@type'] === type);
+  getCredentialsOfType(typeName: CredentialAssertion['$typeName']): Credential[] {
+    return this.credentials.filter((credential) => getCredentialAssertion(credential).$typeName === typeName);
   }
 
   /**
@@ -169,7 +170,7 @@ export class SpaceStateMachine implements SpaceState {
     const subjectId = fromBufPublicKey(credential.subject!.id!)!;
 
     const assertion = getCredentialAssertion(credential);
-    switch (assertion['@type']) {
+    switch (assertion.$typeName) {
       case 'dxos.halo.credentials.SpaceGenesis': {
         if (this._genesisCredential) {
           log.warn('Space already has a genesis credential.');
@@ -188,7 +189,8 @@ export class SpaceStateMachine implements SpaceState {
       }
 
       case 'dxos.halo.credentials.SpaceMember': {
-        if (!assertion.spaceKey.equals(this._spaceKey)) {
+        const spaceKey = assertion.spaceKey ? toPublicKey(assertion.spaceKey) : undefined;
+        if (!spaceKey?.equals(this._spaceKey)) {
           break; // Ignore credentials for other spaces.
         }
 

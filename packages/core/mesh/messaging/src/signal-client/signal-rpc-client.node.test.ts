@@ -7,8 +7,9 @@ import { afterAll, beforeAll, describe, expect, onTestFinished, test } from 'vit
 import { type Any } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { schema } from '@dxos/protocols/proto';
+import { create, toBinary } from '@dxos/protocols/buf';
 import { type Message as SignalMessage, type SwarmEvent } from '@dxos/protocols/buf/dxos/mesh/signal_pb';
+import { TestPayloadSchema } from '@dxos/protocols/buf/example/testing/data_pb';
 import { type SignalServerRunner, runTestSignalServer } from '@dxos/signal';
 
 import { SignalRPCClient } from './signal-rpc-client';
@@ -41,7 +42,7 @@ describe('SignalRPCClient', () => {
     const stream1 = await client1.receiveMessages(peerId1);
     const payload: Any = {
       type_url: 'example.testing.data.TestPayload',
-      value: schema.getCodecForType('example.testing.data.TestPayload').encode({ data: 'Some payload' }),
+      value: toBinary(TestPayloadSchema, create(TestPayloadSchema, { data: 'Some payload' })),
     };
 
     const received: Promise<SignalMessage> = new Promise((resolve) => {

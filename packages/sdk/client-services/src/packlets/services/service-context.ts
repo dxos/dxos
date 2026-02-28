@@ -387,18 +387,18 @@ export class ServiceContext extends Resource {
     this._deviceSpaceSync = {
       processCredential: async (credential) => {
         const assertion = getCredentialAssertion(credential);
-        if (assertion['@type'] !== 'dxos.halo.credentials.SpaceMember') {
+        if (assertion.$typeName !== 'dxos.halo.credentials.SpaceMember') {
           return;
         }
-        if (assertion.spaceKey.equals(identity.space.key)) {
-          // ignore halo space
+        const spaceKey = assertion.spaceKey ? toPublicKey(assertion.spaceKey) : undefined;
+        if (spaceKey?.equals(identity.space.key)) {
           return;
         }
         if (!this.dataSpaceManager) {
           log('dataSpaceManager not initialized yet, ignoring space admission', { details: assertion });
           return;
         }
-        if (this.dataSpaceManager.spaces.has(assertion.spaceKey)) {
+        if (spaceKey && this.dataSpaceManager.spaces.has(spaceKey)) {
           log('space already exists, ignoring space admission', { details: assertion });
           return;
         }
@@ -406,8 +406,8 @@ export class ServiceContext extends Resource {
         try {
           log('accepting space recorded in halo', { details: assertion });
           await this.dataSpaceManager.acceptSpace({
-            spaceKey: assertion.spaceKey,
-            genesisFeedKey: assertion.genesisFeedKey,
+            spaceKey: spaceKey!,
+            genesisFeedKey: assertion.genesisFeedKey ? toPublicKey(assertion.genesisFeedKey) : undefined!,
           });
         } catch (err) {
           log.catch(err);

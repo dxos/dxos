@@ -5,14 +5,13 @@
 import { describe, expect, test } from 'vitest';
 
 import { Trigger, sleep } from '@dxos/async';
-import { type Any, Stream, type TaggedType } from '@dxos/codec-protobuf';
+import { type Any, Stream } from '@dxos/codec-protobuf';
 import { log } from '@dxos/log';
-import { type TYPES } from '@dxos/protocols/proto';
 
 import { RpcPeer } from './rpc';
 import { createLinkedPorts, encodeMessage } from './testing';
 
-const createPayload = (value = ''): TaggedType<TYPES, 'google.protobuf.Any'> => ({
+const createPayload = (value = ''): Any & { '@type': string } => ({
   '@type': 'google.protobuf.Any',
   type_url: 'dxos.test',
   value: encodeMessage(value),

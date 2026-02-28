@@ -6,7 +6,7 @@ import { Trigger } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { create } from '@dxos/protocols/buf';
+import { create, toPublicKey } from '@dxos/protocols/buf';
 import {
   type Chain,
   ChainSchema,
@@ -58,15 +58,14 @@ export class DeviceStateMachine implements CredentialProcessor {
     const assertion = getCredentialAssertion(credential);
     const subjectId = fromBufPublicKey(credential.subject!.id!)!;
 
-    switch (assertion['@type']) {
+    switch (assertion.$typeName) {
       case 'dxos.halo.credentials.AuthorizedDevice': {
-        // We don't need to validate that the device is already added since the credentials are considered idempotent.
-        // In the future, when we will have device-specific attributes, we should join them from all concurrent credentials.
-        this.authorizedDeviceKeys.set(assertion.deviceKey, this.authorizedDeviceKeys.get(assertion.deviceKey) ?? ({} as any as DeviceProfileDocument));
+        const deviceKey = assertion.deviceKey ? toPublicKey(assertion.deviceKey) : subjectId;
+        this.authorizedDeviceKeys.set(deviceKey, this.authorizedDeviceKeys.get(deviceKey) ?? ({} as DeviceProfileDocument));
 
         log('added device', {
           localDeviceKey: this._params.deviceKey,
-          deviceKey: assertion.deviceKey,
+          deviceKey,
           size: this.authorizedDeviceKeys.size,
         });
         this._params.onUpdate?.();
@@ -83,7 +82,7 @@ export class DeviceStateMachine implements CredentialProcessor {
           });
         }
 
-        this.authorizedDeviceKeys.set(subjectId, assertion.profile as any as DeviceProfileDocument);
+        this.authorizedDeviceKeys.set(subjectId, assertion.profile ?? ({} as DeviceProfileDocument));
         this._params.onUpdate?.();
         break;
       }

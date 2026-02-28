@@ -8,7 +8,6 @@ import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { type Identity } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { type IdentityService } from '@dxos/protocols/proto/dxos/client/services';
 
 import { type ServiceContext } from '../services';
 import { createServiceContext } from '../testing';
@@ -17,12 +16,12 @@ import { IdentityServiceImpl } from './identity-service';
 
 describe('IdentityService', () => {
   let serviceContext: ServiceContext;
-  let identityService: IdentityService;
+  let identityService: IdentityServiceImpl;
 
   beforeEach(async () => {
     serviceContext = await createServiceContext();
     await serviceContext.open(new Context());
-    identityService = createIdentityService(serviceContext) as never;
+    identityService = createIdentityService(serviceContext);
   });
 
   afterEach(async () => {

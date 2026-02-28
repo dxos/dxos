@@ -3,6 +3,7 @@
 //
 
 import { PublicKey } from '@dxos/keys';
+import { toPublicKey, timestampMs } from '@dxos/protocols/buf';
 import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type DelegateSpaceInvitation } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 import { type AsyncCallback, Callback, ComplexMap, ComplexSet } from '@dxos/util';
@@ -36,44 +37,53 @@ export class InvitationStateMachine {
       return;
     }
     const assertion = getCredentialAssertion(credential);
-    switch (assertion['@type']) {
+    switch (assertion.$typeName) {
       case 'dxos.halo.invitations.CancelDelegatedInvitation': {
-        this._cancelledInvitationCredentialIds.add(assertion.credentialId);
-        const existingInvitation = this._invitations.get(assertion.credentialId);
-        if (existingInvitation != null) {
-          this._invitations.delete(assertion.credentialId);
-          await this.onDelegatedInvitationRemoved.callIfSet({
-            credentialId: assertion.credentialId,
-            invitation: existingInvitation,
-          });
+        const cancelCredId = assertion.credentialId ? toPublicKey(assertion.credentialId) : undefined;
+        if (cancelCredId) {
+          this._cancelledInvitationCredentialIds.add(cancelCredId);
+          const existingInvitation = this._invitations.get(cancelCredId);
+          if (existingInvitation != null) {
+            this._invitations.delete(cancelCredId);
+            await this.onDelegatedInvitationRemoved.callIfSet({
+              credentialId: cancelCredId,
+              invitation: existingInvitation,
+            });
+          }
         }
         break;
       }
       case 'dxos.halo.invitations.DelegateSpaceInvitation': {
         if (credentialId) {
-          const isExpired = assertion.expiresOn && assertion.expiresOn.getTime() < Date.now();
+          // expiresOn is Date from proto codec or buf Timestamp — handle both.
+          const expiresOnMs = assertion.expiresOn
+            ? assertion.expiresOn instanceof Date
+              ? assertion.expiresOn.getTime()
+              : Number(timestampMs(assertion.expiresOn))
+            : undefined;
+          const isExpired = expiresOnMs != null && expiresOnMs < Date.now();
           const wasUsed = this._redeemedInvitationCredentialIds.has(credentialId) && !assertion.multiUse;
           const wasCancelled = this._cancelledInvitationCredentialIds.has(credentialId);
           if (isExpired || wasCancelled || wasUsed) {
             return;
           }
-          const invitation = { ...assertion } as any as DelegateSpaceInvitation;
-          this._invitations.set(credentialId, invitation);
+          this._invitations.set(credentialId, assertion);
           await this.onDelegatedInvitation.callIfSet({
             credentialId,
-            invitation,
+            invitation: assertion,
           });
         }
         break;
       }
       case 'dxos.halo.credentials.SpaceMember': {
-        if (assertion.invitationCredentialId != null) {
-          this._redeemedInvitationCredentialIds.add(assertion.invitationCredentialId);
-          const existingInvitation = this._invitations.get(assertion.invitationCredentialId);
+        const invCredId = assertion.invitationCredentialId ? toPublicKey(assertion.invitationCredentialId) : undefined;
+        if (invCredId != null) {
+          this._redeemedInvitationCredentialIds.add(invCredId);
+          const existingInvitation = this._invitations.get(invCredId);
           if (existingInvitation != null && !existingInvitation.multiUse) {
-            this._invitations.delete(assertion.invitationCredentialId);
+            this._invitations.delete(invCredId);
             await this.onDelegatedInvitationRemoved.callIfSet({
-              credentialId: assertion.invitationCredentialId,
+              credentialId: invCredId,
               invitation: existingInvitation,
             });
           }

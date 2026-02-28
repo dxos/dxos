@@ -178,10 +178,10 @@ export class SpaceManager {
     return [...this._spaces.values()].find((space) => {
       return space.spaceState.credentials.some((credential) => {
         const assertion = getCredentialAssertion(credential);
-        if (assertion['@type'] !== 'dxos.halo.credentials.Epoch') {
+        if (assertion.$typeName !== 'dxos.halo.credentials.Epoch') {
           return false;
         }
-        if (!assertion?.automergeRoot) {
+        if (!assertion.automergeRoot) {
           return false;
         }
         return parseAutomergeUrl(assertion.automergeRoot as AutomergeUrl).documentId === documentId;

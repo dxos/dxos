@@ -8,7 +8,6 @@ import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { type Space } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { type SpacesService } from '@dxos/protocols/proto/dxos/client/services';
 
 import { type ServiceContext } from '../services';
 import { createServiceContext } from '../testing';
@@ -17,7 +16,7 @@ import { SpacesServiceImpl } from './spaces-service';
 
 describe('SpacesService', () => {
   let serviceContext: ServiceContext;
-  let spacesService: SpacesService;
+  let spacesService: SpacesServiceImpl;
 
   beforeEach(async () => {
     serviceContext = await createServiceContext();
@@ -25,7 +24,7 @@ describe('SpacesService', () => {
     spacesService = new SpacesServiceImpl(serviceContext.identityManager, serviceContext.spaceManager, async () => {
       await serviceContext.initialized.wait();
       return serviceContext.dataSpaceManager!;
-    }) as never;
+    });
   });
 
   afterEach(async () => {

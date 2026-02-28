@@ -5,6 +5,7 @@
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { toPublicKey } from '@dxos/protocols/buf';
 import {
   type Credential,
   type ProfileDocument,
@@ -71,26 +72,26 @@ export class MemberStateMachine implements CredentialGraphStateHandler<SpaceMemb
     const subjectId = fromBufPublicKey(credential.subject!.id!)!;
     const issuer = fromBufPublicKey(credential.issuer!)!;
 
-    switch (assertion['@type']) {
+    switch (assertion.$typeName) {
       case 'dxos.halo.credentials.SpaceMember': {
-        invariant(assertion.spaceKey.equals(this._spaceKey));
+        invariant(assertion.spaceKey && toPublicKey(assertion.spaceKey).equals(this._spaceKey));
         if (this._ownerKey == null && issuer.equals(this._spaceKey)) {
           this._ownerKey = subjectId;
         }
         if (assertion.profile != null) {
-          this._memberProfiles.set(subjectId, assertion.profile as any as ProfileDocument);
+          this._memberProfiles.set(subjectId, assertion.profile);
         }
-        await this._hashgraph.addVertex(credential, assertion as any as SpaceMember);
+        await this._hashgraph.addVertex(credential, assertion);
         break;
       }
       case 'dxos.halo.credentials.MemberProfile': {
         const member = this._hashgraph.getSubjectState(subjectId);
         if (member) {
-          member.profile = assertion.profile as any as ProfileDocument;
+          member.profile = assertion.profile;
         } else {
           log.warn('Member not found', { id: subjectId });
         }
-        this._memberProfiles.set(subjectId, assertion.profile as any as ProfileDocument);
+        this._memberProfiles.set(subjectId, assertion.profile);
         break;
       }
       default:

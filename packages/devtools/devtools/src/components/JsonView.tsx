@@ -5,7 +5,6 @@
 import React, { type FC } from 'react';
 
 import { PublicKey } from '@dxos/keys';
-import { schema } from '@dxos/protocols/proto';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { arrayToBuffer } from '@dxos/util';
 
@@ -46,13 +45,10 @@ const replacer =
       }
 
       if (value?.['@type'] === 'google.protobuf.Any') {
-        try {
-          const codec = schema.getCodecForType(value.type_url);
-          return {
-            '@type': value.type_url,
-            ...codec.decode(value.value),
-          };
-        } catch {}
+        return {
+          '@type': value.type_url,
+          value: value.value instanceof Uint8Array ? arrayToBuffer(value.value).toString('hex') : value.value,
+        };
       }
     }
 

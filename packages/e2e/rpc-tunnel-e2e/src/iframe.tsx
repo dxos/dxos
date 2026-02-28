@@ -6,9 +6,9 @@ import React, { StrictMode, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { JSONTree } from 'react-json-tree';
 
-import { schema } from '@dxos/protocols/proto';
+import { TestStreamService } from '@dxos/protocols/buf/example/testing/rpc_pb';
 import { useAsyncEffect } from '@dxos/react-hooks';
-import { createProtoRpcPeer } from '@dxos/rpc';
+import { createBufProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 
 import { Channels } from './channels';
@@ -26,12 +26,12 @@ const App = () => {
     if (IN_IFRAME) {
       const port = createIFramePort({ channel: Channels.ONE });
       const client = new TestClient();
-      const server = createProtoRpcPeer({
+      const server = createBufProtoRpcPeer({
         requested: {
-          TestStreamService: schema.getService('example.testing.rpc.TestStreamService'),
+          TestStreamService,
         },
         exposed: {
-          TestStreamService: schema.getService('example.testing.rpc.TestStreamService'),
+          TestStreamService,
         },
         handlers: client.handlers,
         port,
@@ -45,12 +45,10 @@ const App = () => {
         origin: 'http://127.0.0.1:5173',
         channel: Channels.ONE,
       });
-      const client = createProtoRpcPeer({
+      const client = createBufProtoRpcPeer({
         requested: {
-          TestStreamService: schema.getService('example.testing.rpc.TestStreamService'),
+          TestStreamService,
         },
-        exposed: {},
-        handlers: {},
         port,
       });
       await client.open();
