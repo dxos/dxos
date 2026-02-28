@@ -60,11 +60,7 @@ const InputWrapper = ({
       {kind === 'switch' && <Input.Switch {...props} />}
 
       <Input.DescriptionAndValidation srOnly={descriptionVisuallyHidden}>
-        {validationMessage && (
-          <>
-            <Input.Validation>{validationMessage}</Input.Validation>{' '}
-          </>
-        )}
+        {validationMessage && <Input.Validation>{validationMessage}</Input.Validation>}
         <Input.Description>{description}</Input.Description>
       </Input.DescriptionAndValidation>
     </Input.Root>
@@ -73,14 +69,14 @@ const InputWrapper = ({
 
 const DefaultStory = (props: BaseProps) => {
   return (
-    <div className='space-b-4'>
-      <div className={mx('bg-base-surface', 'p-4 rounded-md')}>
+    <div className='flex flex-col gap-4'>
+      <div className={mx('p-4 rounded-md bg-base-surface')}>
         <InputWrapper {...props} />
       </div>
-      <div className={mx('bg-card-surface', 'p-4 rounded-md', surfaceShadow({ elevation: 'positioned' }))}>
+      <div className={mx('p-4 rounded-md bg-toolbar-surface', surfaceShadow({ elevation: 'positioned' }))}>
         <InputWrapper {...props} />
       </div>
-      <div className={mx('bg-modal-surface', 'p-4 rounded-md', surfaceShadow({ elevation: 'dialog' }))}>
+      <div className={mx('p-4 rounded-md bg-modal-surface', surfaceShadow({ elevation: 'dialog' }))}>
         <InputWrapper {...props} />
       </div>
     </div>
@@ -208,6 +204,8 @@ export const PinInput: Story = {
     length: 6,
     description: 'Type in secret you received',
     placeholder: '••••••',
+    pattern: '\\d*',
+    density: 'coarse',
   },
 };
 
