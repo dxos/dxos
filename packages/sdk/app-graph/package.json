@@ -28,6 +28,9 @@
     "dist",
     "src"
   ],
+  "scripts": {
+    "correlate-flush-trace": "tsx scripts/correlate-flush-trace.ts"
+  },
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/debug": "workspace:*",
@@ -54,6 +57,7 @@
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
+    "tsx": "catalog:",
     "vite": "catalog:"
   },
   "peerDependencies": {

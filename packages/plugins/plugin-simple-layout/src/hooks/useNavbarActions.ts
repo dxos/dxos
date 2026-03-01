@@ -67,9 +67,9 @@ export const useNavbarActions = (): NavbarActions => {
         nodes.push(mainMenuGroup);
         edges.push({ source: 'root', target: mainMenuGroup.id });
 
-        // Get menu actions from root connections.
-        const rootConnections = get(graph.connections(Node.RootId));
-        const menuActions = rootConnections.filter((node) => node.properties.disposition === 'menu');
+        // Get menu actions from root actions (on 'actions' edge relation).
+        const rootActions = get(graph.actions(Node.RootId));
+        const menuActions = rootActions.filter((node) => node.properties.disposition === 'menu');
 
         // Add menu actions as children of the dropdown group.
         menuActions.forEach((menuAction) => {

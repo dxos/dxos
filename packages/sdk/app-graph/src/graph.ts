@@ -15,8 +15,26 @@ import { log } from '@dxos/log';
 import { type MakeOptional, isNonNullable } from '@dxos/util';
 
 import * as Node from './node';
+import { type MutationStepRecord, PERF_MEASUREMENT_ENABLED, getMutationStepCollector } from './perf-measurement-schema';
 
 const graphSymbol = Symbol('graph');
+
+function recordMutationStep(record: MutationStepRecord): void {
+  if (PERF_MEASUREMENT_ENABLED) {
+    const collector = getMutationStepCollector();
+    collector?.push(record);
+  }
+}
+
+/** Shallow equality for node data: handles primitives and one-level-deep objects. */
+const dataEqual = (a: unknown, b: unknown): boolean => {
+  if (a === b) return true;
+  if (a == null || b == null || typeof a !== 'object' || typeof b !== 'object') return false;
+  const keysA = Object.keys(a as Record<string, unknown>);
+  const keysB = Object.keys(b as Record<string, unknown>);
+  if (keysA.length !== keysB.length) return false;
+  return keysA.every((key) => (a as Record<string, unknown>)[key] === (b as Record<string, unknown>)[key]);
+};
 
 // TODO(wittjosiah): Reconcile all separators across the codebase.
 const EXPAND_KEY_SEPARATOR = '\0';
@@ -68,8 +86,8 @@ export type GraphProps = {
   onRemoveNode?: (id: string) => void;
 };
 
-export type Edge = { source: string; target: string };
-export type Edges = { inbound: string[]; outbound: string[] };
+export type Edge = { source: string; target: string; relation?: string };
+export type Edges = Record<string, string[]>;
 
 /**
  * Identifier denoting a Graph.
@@ -150,9 +168,9 @@ class GraphImpl implements WritableGraph {
   readonly _onRemoveNode?: GraphProps['onRemoveNode'];
 
   readonly _registry: Registry.Registry;
-  readonly _expanded = Record.empty<string, boolean>();
+  readonly _expanded: { [key: string]: boolean } = {};
   readonly _pendingExpands = new Set<string>();
-  readonly _initialized = Record.empty<string, boolean>();
+  readonly _initialized: { [key: string]: boolean } = {};
   readonly _initialEdges = Record.empty<string, Edges>();
   readonly _initialNodes = Record.fromEntries([
     [
@@ -181,7 +199,7 @@ class GraphImpl implements WritableGraph {
   });
 
   readonly _edges = Atom.family<string, Atom.Writable<Edges>>((id) => {
-    const initial = Record.get(this._initialEdges, id).pipe(Option.getOrElse(() => ({ inbound: [], outbound: [] })));
+    const initial = Record.get(this._initialEdges, id).pipe(Option.getOrElse(() => ({}) as Edges));
     return Atom.make<Edges>(initial).pipe(Atom.keepAlive, Atom.withLabel(`graph:edges:${id}`));
   });
 
@@ -191,7 +209,7 @@ class GraphImpl implements WritableGraph {
     return Atom.make((get) => {
       const [id, relation] = key.split('$');
       const edges = get(this._edges(id));
-      return edges[relation as Node.Relation]
+      return (edges[relation] ?? [])
         .map((id) => get(this._node(id)))
         .filter(Option.isSome)
         .map((o) => o.value);
@@ -200,9 +218,7 @@ class GraphImpl implements WritableGraph {
 
   readonly _actions = Atom.family<string, Atom.Atom<(Node.Action | Node.ActionGroup)[]>>((id) => {
     return Atom.make((get) => {
-      return get(this._connections(`${id}$outbound`)).filter(
-        (node) => node.type === Node.ActionType || node.type === Node.ActionGroupType,
-      );
+      return get(this._connections(`${id}$actions`)) as (Node.Action | Node.ActionGroup)[];
     }).pipe(Atom.withLabel(`graph:actions:${id}`));
   });
 
@@ -661,11 +677,11 @@ export function waitForPath(
  */
 const initializeImpl = async <T extends ExpandableGraph | WritableGraph>(graph: T, id: string): Promise<T> => {
   const internal = getInternal(graph);
-  const initialized = Record.get(internal._initialized, id).pipe(Option.getOrElse(() => false));
+  const initialized = internal._initialized[id] ?? false;
   log('initialize', { id, initialized });
   if (!initialized) {
+    internal._initialized[id] = true;
     await internal._onInitialize?.(id);
-    Record.set(internal._initialized, id, true);
   }
   return graph;
 };
@@ -711,11 +727,11 @@ const expandImpl = <T extends ExpandableGraph | WritableGraph>(
     return graph;
   }
 
-  const expanded = Record.get(internal._expanded, key).pipe(Option.getOrElse(() => false));
+  const expanded = internal._expanded[key] ?? false;
   log('expand', { key, expanded });
   if (!expanded) {
+    internal._expanded[key] = true;
     internal._onExpand?.(id, relation);
-    Record.set(internal._expanded, key, true);
   }
   return graph;
 };
@@ -758,12 +774,13 @@ const sortEdgesImpl = <T extends ExpandableGraph | WritableGraph>(
   relation: Node.Relation,
   order: string[],
 ): T => {
+  const t0 = PERF_MEASUREMENT_ENABLED ? performance.now() : 0;
   const internal = getInternal(graph);
   const edgesAtom = internal._edges(id);
   const edges = internal._registry.get(edgesAtom);
-  const current = edges[relation];
-  const unsorted = current.filter((id) => !order.includes(id)) ?? [];
-  const sorted = order.filter((id) => current.includes(id)) ?? [];
+  const current = edges[relation] ?? [];
+  const unsorted = current.filter((id) => !order.includes(id));
+  const sorted = order.filter((id) => current.includes(id));
   const newOrder = [...sorted, ...unsorted];
   if (newOrder.length === current.length && newOrder.every((id, i) => id === current[i])) {
     return graph;
@@ -772,6 +789,9 @@ const sortEdgesImpl = <T extends ExpandableGraph | WritableGraph>(
     ...edges,
     [relation]: newOrder,
   });
+  if (PERF_MEASUREMENT_ENABLED) {
+    recordMutationStep({ step: 'sortEdges', count: order.length, durationMs: performance.now() - t0 });
+  }
   return graph;
 };
 
@@ -814,9 +834,13 @@ export function sortEdges<T extends ExpandableGraph | WritableGraph>(
  * Implementation helper for addNodes.
  */
 const addNodesImpl = <T extends WritableGraph>(graph: T, nodes: Node.NodeArg<any, Record<string, any>>[]): T => {
+  const t0 = PERF_MEASUREMENT_ENABLED ? performance.now() : 0;
   Atom.batch(() => {
     nodes.map((node) => addNodeImpl(graph, node));
   });
+  if (PERF_MEASUREMENT_ENABLED) {
+    recordMutationStep({ step: 'addNodes', count: nodes.length, durationMs: performance.now() - t0 });
+  }
   return graph;
 };
 
@@ -844,6 +868,7 @@ export function addNodes<T extends WritableGraph>(
  * Implementation helper for addNode.
  */
 const addNodeImpl = <T extends WritableGraph>(graph: T, nodeArg: Node.NodeArg<any, Record<string, any>>): T => {
+  const t0 = PERF_MEASUREMENT_ENABLED ? performance.now() : 0;
   const internal = getInternal(graph);
   // Extract known NodeArg fields, preserve any extra fields (like _actionContext) in rest.
   const {
@@ -862,7 +887,7 @@ const addNodeImpl = <T extends WritableGraph>(graph: T, nodeArg: Node.NodeArg<an
   Option.match(existingNode, {
     onSome: (existing) => {
       const typeChanged = existing.type !== type;
-      const dataChanged = existing.data !== data;
+      const dataChanged = !dataEqual(existing.data, data);
       const propertiesChanged = Object.keys(properties).some((key) => existing.properties[key] !== properties[key]);
       log('existing node', {
         id,
@@ -895,8 +920,8 @@ const addNodeImpl = <T extends WritableGraph>(graph: T, nodeArg: Node.NodeArg<an
       for (const pendingKey of toApply) {
         internal._pendingExpands.delete(pendingKey);
         const relation = pendingKey.slice(prefix.length) as Node.Relation;
+        internal._expanded[pendingKey] = true;
         internal._onExpand?.(id, relation);
-        Record.set(internal._expanded, pendingKey, true);
       }
     },
   });
@@ -909,6 +934,9 @@ const addNodeImpl = <T extends WritableGraph>(graph: T, nodeArg: Node.NodeArg<an
 
   if (edges) {
     todo();
+  }
+  if (PERF_MEASUREMENT_ENABLED) {
+    recordMutationStep({ step: 'addNode', count: 1, durationMs: performance.now() - t0 });
   }
   return graph;
 };
@@ -937,9 +965,13 @@ export function addNode<T extends WritableGraph>(
  * Implementation helper for removeNodes.
  */
 const removeNodesImpl = <T extends WritableGraph>(graph: T, ids: string[], edges = false): T => {
+  const t0 = PERF_MEASUREMENT_ENABLED ? performance.now() : 0;
   Atom.batch(() => {
     ids.map((id) => removeNodeImpl(graph, id, edges));
   });
+  if (PERF_MEASUREMENT_ENABLED) {
+    recordMutationStep({ step: 'removeNodes', count: ids.length, durationMs: performance.now() - t0 });
+  }
   return graph;
 };
 
@@ -971,6 +1003,7 @@ export function removeNodes<T extends WritableGraph>(
  * Implementation helper for removeNode.
  */
 const removeNodeImpl = <T extends WritableGraph>(graph: T, id: string, edges = false): T => {
+  const t0 = PERF_MEASUREMENT_ENABLED ? performance.now() : 0;
   const internal = getInternal(graph);
   const nodeAtom = internal._node(id);
   // TODO(wittjosiah): Is there a way to mark these atom values for garbage collection?
@@ -979,15 +1012,20 @@ const removeNodeImpl = <T extends WritableGraph>(graph: T, id: string, edges = f
   // TODO(wittjosiah): Reset expanded and initialized flags?
 
   if (edges) {
-    const { inbound, outbound } = internal._registry.get(internal._edges(id));
-    const edgesToRemove = [
-      ...inbound.map((source) => ({ source, target: id })),
-      ...outbound.map((target) => ({ source: id, target })),
-    ];
+    const nodeEdges = internal._registry.get(internal._edges(id));
+    const edgesToRemove: Edge[] = [];
+    for (const [relation, ids] of Object.entries(nodeEdges)) {
+      for (const targetId of ids) {
+        edgesToRemove.push({ source: id, target: targetId, relation });
+      }
+    }
     removeEdgesImpl(graph, edgesToRemove);
   }
 
   internal._onRemoveNode?.(id);
+  if (PERF_MEASUREMENT_ENABLED) {
+    recordMutationStep({ step: 'removeNode', count: 1, durationMs: performance.now() - t0 });
+  }
   return graph;
 };
 
@@ -1019,9 +1057,13 @@ export function removeNode<T extends WritableGraph>(
  * Implementation helper for addEdges.
  */
 const addEdgesImpl = <T extends WritableGraph>(graph: T, edges: Edge[]): T => {
+  const t0 = PERF_MEASUREMENT_ENABLED ? performance.now() : 0;
   Atom.batch(() => {
     edges.map((edge) => addEdgeImpl(graph, edge));
   });
+  if (PERF_MEASUREMENT_ENABLED) {
+    recordMutationStep({ step: 'addEdges', count: edges.length, durationMs: performance.now() - t0 });
+  }
   return graph;
 };
 
@@ -1048,32 +1090,32 @@ export function addEdges<T extends WritableGraph>(
 /**
  * Implementation helper for addEdge.
  */
+const inverseRelation = (relation: string): string => (relation === 'inbound' ? 'outbound' : 'inbound');
+
 const addEdgeImpl = <T extends WritableGraph>(graph: T, edgeArg: Edge): T => {
+  const t0 = PERF_MEASUREMENT_ENABLED ? performance.now() : 0;
+  const relation = edgeArg.relation ?? 'outbound';
+  const inverse = inverseRelation(relation);
   const internal = getInternal(graph);
+
   const sourceAtom = internal._edges(edgeArg.source);
   const source = internal._registry.get(sourceAtom);
-  if (!source.outbound.includes(edgeArg.target)) {
-    log('add outbound edge', {
-      source: edgeArg.source,
-      target: edgeArg.target,
-    });
-    internal._registry.set(sourceAtom, {
-      inbound: source.inbound,
-      outbound: [...source.outbound, edgeArg.target],
-    });
+  const sourceList = source[relation] ?? [];
+  if (!sourceList.includes(edgeArg.target)) {
+    log('add edge', { source: edgeArg.source, target: edgeArg.target, relation });
+    internal._registry.set(sourceAtom, { ...source, [relation]: [...sourceList, edgeArg.target] });
   }
 
   const targetAtom = internal._edges(edgeArg.target);
   const target = internal._registry.get(targetAtom);
-  if (!target.inbound.includes(edgeArg.source)) {
-    log('add inbound edge', {
-      source: edgeArg.source,
-      target: edgeArg.target,
-    });
-    internal._registry.set(targetAtom, {
-      inbound: [...target.inbound, edgeArg.source],
-      outbound: target.outbound,
-    });
+  const targetList = target[inverse] ?? [];
+  if (!targetList.includes(edgeArg.source)) {
+    log('add inverse edge', { source: edgeArg.source, target: edgeArg.target, relation: inverse });
+    internal._registry.set(targetAtom, { ...target, [inverse]: [...targetList, edgeArg.source] });
+  }
+
+  if (PERF_MEASUREMENT_ENABLED) {
+    recordMutationStep({ step: 'addEdge', count: 1, durationMs: performance.now() - t0 });
   }
   return graph;
 };
@@ -1102,9 +1144,13 @@ export function addEdge<T extends WritableGraph>(
  * Implementation helper for removeEdges.
  */
 const removeEdgesImpl = <T extends WritableGraph>(graph: T, edges: Edge[], removeOrphans = false): T => {
+  const t0 = PERF_MEASUREMENT_ENABLED ? performance.now() : 0;
   Atom.batch(() => {
     edges.map((edge) => removeEdgeImpl(graph, edge, removeOrphans));
   });
+  if (PERF_MEASUREMENT_ENABLED) {
+    recordMutationStep({ step: 'removeEdges', count: edges.length, durationMs: performance.now() - t0 });
+  }
   return graph;
 };
 
@@ -1136,34 +1182,46 @@ export function removeEdges<T extends WritableGraph>(
  * Implementation helper for removeEdge.
  */
 const removeEdgeImpl = <T extends WritableGraph>(graph: T, edgeArg: Edge, removeOrphans = false): T => {
+  const t0 = PERF_MEASUREMENT_ENABLED ? performance.now() : 0;
+  const relation = edgeArg.relation ?? 'outbound';
+  const inverse = inverseRelation(relation);
   const internal = getInternal(graph);
+
   const sourceAtom = internal._edges(edgeArg.source);
   const source = internal._registry.get(sourceAtom);
-  if (source.outbound.includes(edgeArg.target)) {
-    internal._registry.set(sourceAtom, {
-      inbound: source.inbound,
-      outbound: source.outbound.filter((id) => id !== edgeArg.target),
-    });
+  const sourceList = source[relation] ?? [];
+  if (sourceList.includes(edgeArg.target)) {
+    internal._registry.set(sourceAtom, { ...source, [relation]: sourceList.filter((id) => id !== edgeArg.target) });
   }
 
   const targetAtom = internal._edges(edgeArg.target);
   const target = internal._registry.get(targetAtom);
-  if (target.inbound.includes(edgeArg.source)) {
-    internal._registry.set(targetAtom, {
-      inbound: target.inbound.filter((id) => id !== edgeArg.source),
-      outbound: target.outbound,
-    });
+  const targetList = target[inverse] ?? [];
+  if (targetList.includes(edgeArg.source)) {
+    internal._registry.set(targetAtom, { ...target, [inverse]: targetList.filter((id) => id !== edgeArg.source) });
   }
 
+  let orphanPruneCount = 0;
   if (removeOrphans) {
-    const source = internal._registry.get(sourceAtom);
-    const target = internal._registry.get(targetAtom);
-    if (source.outbound.length === 0 && source.inbound.length === 0 && edgeArg.source !== Node.RootId) {
+    const sourceAfter = internal._registry.get(sourceAtom);
+    const targetAfter = internal._registry.get(targetAtom);
+    const isEmpty = (edges: Edges) => Object.values(edges).every((ids) => ids.length === 0);
+    if (isEmpty(sourceAfter) && edgeArg.source !== Node.RootId) {
       removeNodesImpl(graph, [edgeArg.source]);
+      orphanPruneCount++;
     }
-    if (target.outbound.length === 0 && target.inbound.length === 0 && edgeArg.target !== Node.RootId) {
+    if (isEmpty(targetAfter) && edgeArg.target !== Node.RootId) {
       removeNodesImpl(graph, [edgeArg.target]);
+      orphanPruneCount++;
     }
+  }
+  if (PERF_MEASUREMENT_ENABLED) {
+    recordMutationStep({
+      step: 'removeEdge',
+      count: 1,
+      durationMs: performance.now() - t0,
+      orphanPruneCount: orphanPruneCount > 0 ? orphanPruneCount : undefined,
+    });
   }
   return graph;
 };

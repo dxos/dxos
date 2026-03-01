@@ -5,9 +5,12 @@
 import React, { forwardRef, useMemo } from 'react';
 
 import { type Node } from '@dxos/app-graph';
+import { useAppGraph } from '@dxos/app-toolkit/ui';
+import { useActions as useGraphActions, useConnections } from '@dxos/plugin-graph';
 import { Tabs } from '@dxos/react-ui-tabs';
+import { byPosition } from '@dxos/util';
 
-import { useFilteredItems, useLoadDescendents } from '../../hooks';
+import { useLoadDescendents } from '../../hooks';
 import { useNavTreeContext } from '../NavTreeContext';
 import { L0Menu, L1Tabs, type L1TabsProps } from '../Sidebar';
 
@@ -18,11 +21,42 @@ export type NavTreeProps = { id: string; root?: Node.Node; tab: string } & Pick<
 // TODO(wittjosiah): Refactor to Radix-style.
 export const NavTree = forwardRef<HTMLDivElement, NavTreeProps>(({ id, root, tab, ...props }, forwardedRef) => {
   const { onBack } = useNavTreeContext();
-  const topLevelActions = useFilteredItems(root, { disposition: 'menu', sort: true });
-  const topLevelWorkspaces = useFilteredItems(root, { disposition: 'workspace' });
-  const l0Items = topLevelWorkspaces;
-  const pinnedItems = useFilteredItems(root, { disposition: 'pin-end', sort: true });
-  const userAccountItem = useFilteredItems(root, { disposition: 'user-account' })[0];
+  const { graph } = useAppGraph();
+  const rootId = root?.id ?? Node.RootId;
+  const rootOutboundItems = useConnections(graph, rootId);
+  const rootActions = useGraphActions(graph, rootId);
+  const { topLevelActions, l0Items, pinnedItems, userAccountItem } = useMemo(() => {
+    const topLevelWorkspaces: Node.Node[] = [];
+    const outboundPinnedItems: Node.Node[] = [];
+    let userAccountItem: Node.Node | undefined;
+    for (const node of rootOutboundItems) {
+      switch (node.properties.disposition) {
+        case 'workspace':
+          topLevelWorkspaces.push(node);
+          break;
+        case 'pin-end':
+          outboundPinnedItems.push(node);
+          break;
+        case 'user-account':
+          userAccountItem ??= node;
+          break;
+      }
+    }
+
+    const topLevelActions = rootActions
+      .filter((action) => action.properties.disposition === 'menu')
+      .toSorted((a, b) => byPosition(a.properties, b.properties));
+    const pinnedItems = [...outboundPinnedItems, ...rootActions.filter((action) => action.properties.disposition === 'pin-end')].toSorted(
+      (a, b) => byPosition(a.properties, b.properties),
+    );
+
+    return {
+      topLevelActions,
+      l0Items: topLevelWorkspaces,
+      pinnedItems,
+      userAccountItem,
+    };
+  }, [rootActions, rootOutboundItems]);
   const topLevelItems = useMemo(
     () => [
       // prettier-ignore

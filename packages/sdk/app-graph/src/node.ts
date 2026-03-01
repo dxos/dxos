@@ -69,7 +69,7 @@ export type NodeFilter<TData = any, TProperties extends Record<string, any> = Re
   connectedNode: Node,
 ) => node is Node<TData, TProperties>;
 
-export type Relation = 'outbound' | 'inbound';
+export type Relation = string;
 
 export const isGraphNode = (data: unknown): data is Node =>
   data && typeof data === 'object' && 'id' in data && 'properties' in data && data.properties

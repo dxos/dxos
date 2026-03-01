@@ -132,7 +132,7 @@ describe('Graph', () => {
     const graph = Graph.make({ registry });
     Graph.addEdge(graph, { source: exampleId(1), target: exampleId(2) });
     const edges = registry.get(graph.edges(exampleId(1)));
-    expect(edges.inbound).toEqual([]);
+    expect(edges.inbound ?? []).toEqual([]);
     expect(edges.outbound).toEqual([exampleId(2)]);
   });
 
@@ -142,7 +142,7 @@ describe('Graph', () => {
     Graph.addEdge(graph, { source: exampleId(1), target: exampleId(2) });
     Graph.addEdge(graph, { source: exampleId(1), target: exampleId(2) });
     const edges = registry.get(graph.edges(exampleId(1)));
-    expect(edges.inbound).toEqual([]);
+    expect(edges.inbound ?? []).toEqual([]);
     expect(edges.outbound).toEqual([exampleId(2)]);
   });
 
@@ -172,14 +172,14 @@ describe('Graph', () => {
     {
       Graph.addEdge(graph, { source: exampleId(1), target: exampleId(2) });
       const edges = registry.get(graph.edges(exampleId(1)));
-      expect(edges.inbound).toEqual([]);
+      expect(edges.inbound ?? []).toEqual([]);
       expect(edges.outbound).toEqual([exampleId(2)]);
     }
 
     {
       Graph.removeEdge(graph, { source: exampleId(1), target: exampleId(2) });
       const edges = registry.get(graph.edges(exampleId(1)));
-      expect(edges.inbound).toEqual([]);
+      expect(edges.inbound ?? []).toEqual([]);
       expect(edges.outbound).toEqual([]);
     }
   });
@@ -193,8 +193,30 @@ describe('Graph', () => {
     const result = graph.pipe(Graph.removeEdge({ source: exampleId(1), target: exampleId(2) }));
     expect(result).toEqual(graph);
     const edges = registry.get(graph.edges(exampleId(1)));
-    expect(edges.inbound).toEqual([]);
+    expect(edges.inbound ?? []).toEqual([]);
     expect(edges.outbound).toEqual([]);
+  });
+
+  test('add edge with custom relation', () => {
+    const registry = Registry.make();
+    const graph = Graph.make({ registry });
+    Graph.addEdge(graph, { source: exampleId(1), target: exampleId(2), relation: 'actions' });
+    const sourceEdges = registry.get(graph.edges(exampleId(1)));
+    expect(sourceEdges.actions).toEqual([exampleId(2)]);
+    expect(sourceEdges.outbound ?? []).toEqual([]);
+    const targetEdges = registry.get(graph.edges(exampleId(2)));
+    expect(targetEdges.inbound).toEqual([exampleId(1)]);
+  });
+
+  test('remove edge with custom relation', () => {
+    const registry = Registry.make();
+    const graph = Graph.make({ registry });
+    Graph.addEdge(graph, { source: exampleId(1), target: exampleId(2), relation: 'actions' });
+    Graph.removeEdge(graph, { source: exampleId(1), target: exampleId(2), relation: 'actions' });
+    const sourceEdges = registry.get(graph.edges(exampleId(1)));
+    expect(sourceEdges.actions).toEqual([]);
+    const targetEdges = registry.get(graph.edges(exampleId(2)));
+    expect(targetEdges.inbound).toEqual([]);
   });
 
   test('get connections', () => {

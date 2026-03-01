@@ -18,6 +18,99 @@ import * as Node from './node';
  */
 export type NodeMatcher<TData = Node.Node> = (node: Node.Node) => Option.Option<TData>;
 
+export type NodeMatcherPrefilter = Readonly<{
+  /** Restrict matcher application to specific source node ids. */
+  sourceIds?: readonly string[];
+  /** Restrict matcher application to specific source node types. */
+  nodeTypes?: readonly string[];
+}>;
+
+const matcherPrefilterSymbol = Symbol.for('@dxos/app-graph/node-matcher-prefilter');
+
+type AnnotatedNodeMatcher<TData = Node.Node> = NodeMatcher<TData> & {
+  [matcherPrefilterSymbol]?: NodeMatcherPrefilter;
+};
+
+const annotateMatcher = <TData>(
+  matcher: NodeMatcher<TData>,
+  prefilter?: NodeMatcherPrefilter,
+): NodeMatcher<TData> => {
+  if (prefilter == null) {
+    return matcher;
+  }
+  (matcher as AnnotatedNodeMatcher<TData>)[matcherPrefilterSymbol] = prefilter;
+  return matcher;
+};
+
+const intersectValues = (left?: readonly string[], right?: readonly string[]): string[] | undefined => {
+  if (left == null && right == null) {
+    return undefined;
+  }
+  if (left == null) {
+    return [...right!];
+  }
+  if (right == null) {
+    return [...left];
+  }
+  return left.filter((value) => right.includes(value));
+};
+
+const unionValues = (left?: readonly string[], right?: readonly string[]): string[] | undefined => {
+  if (left == null && right == null) {
+    return undefined;
+  }
+  return [...new Set([...(left ?? []), ...(right ?? [])])];
+};
+
+const mergeAndPrefilters = (prefilters: (NodeMatcherPrefilter | undefined)[]): NodeMatcherPrefilter | undefined => {
+  let hasAny = false;
+  let sourceIds: string[] | undefined;
+  let nodeTypes: string[] | undefined;
+  for (const prefilter of prefilters) {
+    if (prefilter == null) {
+      continue;
+    }
+    hasAny = true;
+    sourceIds = intersectValues(sourceIds, prefilter.sourceIds);
+    nodeTypes = intersectValues(nodeTypes, prefilter.nodeTypes);
+  }
+  if (!hasAny) {
+    return undefined;
+  }
+
+  const merged: NodeMatcherPrefilter = {
+    ...(sourceIds != null ? { sourceIds } : {}),
+    ...(nodeTypes != null ? { nodeTypes } : {}),
+  };
+  return merged;
+};
+
+const mergeOrPrefilters = (prefilters: (NodeMatcherPrefilter | undefined)[]): NodeMatcherPrefilter | undefined => {
+  // OR-composition is only safe to prefilter when all branches provide constraints.
+  if (prefilters.some((prefilter) => prefilter == null)) {
+    return undefined;
+  }
+
+  let sourceIds: string[] | undefined;
+  let nodeTypes: string[] | undefined;
+  for (const prefilter of prefilters as NodeMatcherPrefilter[]) {
+    sourceIds = unionValues(sourceIds, prefilter.sourceIds);
+    nodeTypes = unionValues(nodeTypes, prefilter.nodeTypes);
+  }
+
+  const merged: NodeMatcherPrefilter = {
+    ...(sourceIds != null ? { sourceIds } : {}),
+    ...(nodeTypes != null ? { nodeTypes } : {}),
+  };
+  return merged;
+};
+
+/**
+ * Returns optional matcher metadata used by graph-builder to conservatively skip clearly inapplicable connectors.
+ */
+export const getPrefilter = (matcher: (node: Node.Node) => Option.Option<unknown>): NodeMatcherPrefilter | undefined =>
+  (matcher as AnnotatedNodeMatcher<unknown>)[matcherPrefilterSymbol];
+
 //
 // Basic Node Matchers
 //
@@ -36,8 +129,10 @@ export type NodeMatcher<TData = Node.Node> = (node: Node.Node) => Option.Option<
  * });
  * ```
  */
-export const whenRoot = (node: Node.Node): Option.Option<Node.Node> =>
-  node.id === Node.RootId ? Option.some(node) : Option.none();
+export const whenRoot = annotateMatcher(
+  (node: Node.Node): Option.Option<Node.Node> => (node.id === Node.RootId ? Option.some(node) : Option.none()),
+  { sourceIds: [Node.RootId] },
+);
 
 /**
  * Matches a node by its exact ID.
@@ -56,8 +151,10 @@ export const whenRoot = (node: Node.Node): Option.Option<Node.Node> =>
  */
 export const whenId =
   (id: string) =>
-  (node: Node.Node): Option.Option<Node.Node> =>
-    node.id === id ? Option.some(node) : Option.none();
+    annotateMatcher(
+      (node: Node.Node): Option.Option<Node.Node> => (node.id === id ? Option.some(node) : Option.none()),
+      { sourceIds: [id] },
+    );
 
 /**
  * Matches a node by its type string (the `node.type` property).
@@ -76,8 +173,10 @@ export const whenId =
  */
 export const whenNodeType =
   (type: string) =>
-  (node: Node.Node): Option.Option<Node.Node> =>
-    node.type === type ? Option.some(node) : Option.none();
+    annotateMatcher(
+      (node: Node.Node): Option.Option<Node.Node> => (node.type === type ? Option.some(node) : Option.none()),
+      { nodeTypes: [type] },
+    );
 
 //
 // ECHO Data Matchers
@@ -160,15 +259,18 @@ export const whenEchoObject = (node: Node.Node): Option.Option<Obj.Unknown> =>
  * ```
  */
 export const whenAll =
-  (...matchers: NodeMatcher[]): NodeMatcher =>
-  (node: Node.Node): Option.Option<Node.Node> => {
-    for (const matcher of matchers) {
-      const result = matcher(node);
-      if (Option.isNone(result)) {
-        return Option.none();
+  (...matchers: NodeMatcher[]): NodeMatcher => {
+    const matcher: NodeMatcher = (node: Node.Node): Option.Option<Node.Node> => {
+      for (const candidate of matchers) {
+        const result = candidate(node);
+        if (Option.isNone(result)) {
+          return Option.none();
+        }
       }
-    }
-    return Option.some(node);
+      return Option.some(node);
+    };
+
+    return annotateMatcher(matcher, mergeAndPrefilters(matchers.map(getPrefilter)));
   };
 
 /**
@@ -188,15 +290,18 @@ export const whenAll =
  * ```
  */
 export const whenAny =
-  (...matchers: NodeMatcher[]): NodeMatcher =>
-  (node: Node.Node): Option.Option<Node.Node> => {
-    for (const matcher of matchers) {
-      const result = matcher(node);
-      if (Option.isSome(result)) {
-        return Option.some(node);
+  (...matchers: NodeMatcher[]): NodeMatcher => {
+    const matcher: NodeMatcher = (node: Node.Node): Option.Option<Node.Node> => {
+      for (const candidate of matchers) {
+        const result = candidate(node);
+        if (Option.isSome(result)) {
+          return Option.some(node);
+        }
       }
-    }
-    return Option.none();
+      return Option.none();
+    };
+
+    return annotateMatcher(matcher, mergeOrPrefilters(matchers.map(getPrefilter)));
   };
 
 /**

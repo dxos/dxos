@@ -11,3 +11,23 @@ export * as NodeMatcher from './node-matcher';
 
 // TODO(wittjosiah): Direct re-export needed for portable type references.
 export type { BuilderExtensions } from './graph-builder';
+
+export {
+  clearFlushLog,
+  type ConnectorKeyRecord,
+  exportFlushLogJsonl,
+  type ExtensionRecord,
+  type FlushId,
+  type FlushMeasurementEmitter,
+  type FlushMeasurementPayload,
+  type FlushRecord,
+  getFlushLog,
+  getFlushMeasurementEmitter,
+  getMutationStepCollector,
+  type LongTaskWave,
+  type MutationStepRecord,
+  nextFlushId,
+  PERF_MEASUREMENT_ENABLED,
+  setFlushMeasurementEmitter,
+  setMutationStepCollector,
+} from './perf-measurement-schema';
