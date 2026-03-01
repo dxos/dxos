@@ -18,9 +18,9 @@ const containerMain: ComponentFunction<{ toolbar?: boolean }> = ({ toolbar }, ..
     ...etc,
   );
 
-const containerColumn: ComponentFunction<void> = (_, ...etc) => mx('w-full grid', ...etc);
+const containerColumn: ComponentFunction<Record<string, any>> = (_, ...etc) => mx('dx-column w-full grid', ...etc);
 
-const containerSegment: ComponentFunction<void> = (_, ...etc) =>
+const containerSegment: ComponentFunction<Record<string, any>> = (_, ...etc) =>
   mx('col-span-full grid grid-cols-subgrid col-start-2', ...etc);
 
 export const containerTheme = {

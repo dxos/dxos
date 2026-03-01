@@ -10,6 +10,20 @@ import { withLayout, withTheme } from '../../testing';
 
 import { Container } from './Container';
 
+const List = () => {
+  return (
+    <ScrollArea.Root margin>
+      <ScrollArea.Viewport>
+        {Array.from({ length: 100 }).map((_, i) => (
+          <div key={i} role='listitem' className='p-1 bg-green-500/50 text-black'>
+            Item {i}
+          </div>
+        ))}
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
+  );
+};
+
 const MainStory = () => {
   return (
     <Container.Main toolbar statusbar>
@@ -21,15 +35,7 @@ const MainStory = () => {
         <Toolbar.IconButton icon='ph--dots-three-vertical--regular' iconOnly label='Menu' />
       </Toolbar.Root>
 
-      <ScrollArea.Root thin orientation='vertical'>
-        <ScrollArea.Viewport classNames='px-2 py-1 gap-1'>
-          {Array.from({ length: 100 }).map((_, index) => (
-            <div key={index} role='listitem' className='px-2 py-1 border border-separator'>
-              {index}
-            </div>
-          ))}
-        </ScrollArea.Viewport>
-      </ScrollArea.Root>
+      <List />
 
       <Toolbar.Root classNames='justify-between'>
         <Toolbar.IconButton variant='ghost' icon='ph--house--regular' iconOnly label='Add' size={4} />
@@ -50,15 +56,7 @@ const ColumnStory = () => {
         <div className='p-1 bg-blue-500 text-black'>Section</div>
       </Container.Segment>
 
-      <ScrollArea.Root className='col-span-full' margin>
-        <ScrollArea.Viewport>
-          {Array.from({ length: 100 }).map((_, i) => (
-            <div key={i} className='p-1 bg-green-500/50 text-black'>
-              Item {i}
-            </div>
-          ))}
-        </ScrollArea.Viewport>
-      </ScrollArea.Root>
+      <List />
 
       <Container.Segment>
         <div className='p-1 bg-orange-500 text-black'>Footer</div>

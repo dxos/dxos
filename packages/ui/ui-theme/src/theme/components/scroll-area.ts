@@ -29,7 +29,11 @@ export const scrollAreaRoot: ComponentFunction<ScrollAreaStyleProps> = ({ orient
     orientation === 'horizontal' && 'group/scroll-h w-full min-w-0 h-full',
     orientation === 'all' && 'group/scroll-all h-full min-h-0 w-full min-w-0',
 
-    // NOTE: Uses --gutter CSS variable if defined.
+    // Apply col-span-full only when inside a Container.Column grid (detected via dx-column marker).
+    '[.dx-column_&]:col-span-full',
+
+    // NOTE: Uses --gutter CSS variable
+    // If contained within Container.Column grid, the gutter is set by that component.
     margin && [
       orientation === 'vertical' &&
         (thin
