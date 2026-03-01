@@ -33,7 +33,7 @@ export const Workspace = ({ id }: WorkspaceProps) => {
   useLoadDescendents(id);
 
   // Get direct children of the workspace node.
-  const children = useConnections(graph, id, 'outbound');
+  const children = useConnections(graph, id, 'child');
 
   const { results, handleSearch } = useSearchListResults({
     items: children,

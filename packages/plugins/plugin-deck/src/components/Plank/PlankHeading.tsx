@@ -71,7 +71,7 @@ export const PlankHeading = memo(
       const frame = requestAnimationFrame(() => {
         // Load actions for the node.
         if (node) {
-          void Graph.expand(graph, node.id);
+          void Graph.expand(graph, node.id, 'child');
         }
       });
 

@@ -41,7 +41,7 @@ class MenuBuilderImpl implements MenuBuilder {
 
   action<P extends {} = {}>(id: string, props: P & MenuActionProperties, invoke: () => void): this {
     this._data.nodes.push(createMenuAction(id, invoke, props));
-    this._data.edges.push({ source: this._rootId, target: id });
+    this._data.edges.push({ source: this._rootId, target: id, relation: 'child' });
     return this;
   }
 
@@ -51,7 +51,7 @@ class MenuBuilderImpl implements MenuBuilder {
     cb: (builder: ActionGroupBuilder) => void,
   ): this {
     this._data.nodes.push(createMenuItemGroup(id, props));
-    this._data.edges.push({ source: this._rootId, target: id });
+    this._data.edges.push({ source: this._rootId, target: id, relation: 'child' });
     cb(new MenuBuilderImpl(this._data, id));
     return this;
   }

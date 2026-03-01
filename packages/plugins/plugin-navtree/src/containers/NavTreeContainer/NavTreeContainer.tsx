@@ -31,9 +31,7 @@ const NavTreeItemEnd = ({ node, open }: { node: Node.Node; open: boolean }) => {
 };
 
 const getItems = (graph: Graph.ReadableGraph, node?: Node.Node, disposition?: string) => {
-  return Graph.getConnections(graph, node?.id ?? Node.RootId, 'outbound').filter((node) =>
-    filterItems(node, disposition),
-  );
+  return Graph.getConnections(graph, node?.id ?? Node.RootId, 'child').filter((node) => filterItems(node, disposition));
 };
 
 export type NavTreeContainerProps = {
@@ -57,7 +55,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
       ({ item: { id }, path, open }: { item: Node.Node; path: string[]; open: boolean }) => {
         // TODO(thure): This might become a localstorage leak; openItemIds that no longer exist should be removed from this map.
         setItem(path, 'open', open);
-        Graph.expand(graph, id, 'outbound');
+        Graph.expand(graph, id, 'child');
       },
       [graph, setItem],
     );
@@ -110,7 +108,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
         }
 
         if (Node.isAction(node)) {
-          const [parent] = Graph.getConnections(graph, node.id, 'inbound');
+          const [parent] = Graph.getConnections(graph, node.id, Node.childRelation('inbound'));
           if (parent) {
             void runAction(node, { parent, caller: NAV_TREE_ITEM });
           }
@@ -208,10 +206,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
       [setItem],
     );
 
-    const onItemHover = useCallback(
-      ({ item }: { item: Node.Node }) => Graph.expand(graph, item.id, 'outbound'),
-      [graph],
-    );
+    const onItemHover = useCallback(({ item }: { item: Node.Node }) => Graph.expand(graph, item.id, 'child'), [graph]);
 
     const navTreeContextValue = useMemo(
       () => ({

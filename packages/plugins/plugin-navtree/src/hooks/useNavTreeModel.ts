@@ -32,14 +32,10 @@ const createItemPropsFamily = (graph: ReturnType<typeof useAppGraph>['graph']) =
       if (!node) {
         return { id, label: id };
       }
-      const outboundIds = get(graph.edges(node.id)).outbound ?? [];
-      const safeChildren = outboundIds.filter((childId) => !path.includes(childId));
-      const visibleChildren = safeChildren.filter((childId) => {
-        const childNode = Option.getOrElse(get(graph.node(childId)), () => undefined);
-        return childNode != null && isVisibleChild(childNode);
-      });
+      const safeChildren = get(graph.connections(node.id, 'child')).filter((child) => !path.includes(child.id));
+      const visibleChildren = safeChildren.filter(isVisibleChild);
       const parentOf =
-        visibleChildren.length > 0 ? visibleChildren : node.properties.role === 'branch' ? [] : undefined;
+        visibleChildren.length > 0 ? visibleChildren.map((child) => child.id) : node.properties.role === 'branch' ? [] : undefined;
       return {
         id: node.id,
         parentOf,
@@ -56,7 +52,9 @@ const createItemPropsFamily = (graph: ReturnType<typeof useAppGraph>['graph']) =
 
 /** Create an atom family for outbound child IDs keyed by parent ID (pre-sorted by position on write). */
 const createChildIdsFamily = (graph: ReturnType<typeof useAppGraph>['graph']) =>
-  Atom.family((id: string) => Atom.make((get) => get(graph.edges(id)).outbound ?? []).pipe(Atom.keepAlive));
+  Atom.family((id: string) =>
+    Atom.make((get) => get(graph.connections(id, 'child')).map((child) => child.id)).pipe(Atom.keepAlive),
+  );
 
 /** Create an atom family for item resolution keyed by ID. */
 const createItemFamily = (graph: ReturnType<typeof useAppGraph>['graph']) =>

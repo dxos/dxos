@@ -354,7 +354,7 @@ const useMailboxActions = ({
             // Add gap after filter action.
             ...gap.edges,
             // Add compose email after gap.
-            { source: 'root', target: 'composeEmail' },
+            { source: 'root', target: 'composeEmail', relation: 'child' },
           ],
         };
       }),

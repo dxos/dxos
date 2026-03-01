@@ -65,7 +65,7 @@ export const useNavbarActions = (): NavbarActions => {
           testId: 'simpleLayoutPlugin.addSpace',
         });
         nodes.push(mainMenuGroup);
-        edges.push({ source: 'root', target: mainMenuGroup.id });
+        edges.push({ source: 'root', target: mainMenuGroup.id, relation: 'child' });
 
         // Get menu actions from root actions (on 'actions' edge relation).
         const rootActions = get(graph.actions(Node.RootId));
@@ -74,7 +74,7 @@ export const useNavbarActions = (): NavbarActions => {
         // Add menu actions as children of the dropdown group.
         menuActions.forEach((menuAction) => {
           nodes.push(menuAction as ActionGraphProps['nodes'][number]);
-          edges.push({ source: MAIN_MENU_GROUP_ID, target: menuAction.id });
+          edges.push({ source: MAIN_MENU_GROUP_ID, target: menuAction.id, relation: 'child' });
         });
 
         return { nodes, edges };

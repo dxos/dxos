@@ -13,9 +13,9 @@ export const getParent = (
   path: string[],
 ): NavTreeItemGraphNode | undefined => {
   const parentId = path[path.length - 2];
-  return Graph.getConnections(graph, node.id, 'inbound').find((n: Node.Node) => n.id === parentId) as
-    | NavTreeItemGraphNode
-    | undefined;
+  return Graph.getConnections(graph, node.id, Node.childRelation('inbound')).find(
+    (n: Node.Node) => n.id === parentId,
+  ) as NavTreeItemGraphNode | undefined;
 };
 
 export const getPersistenceParent = (
@@ -80,7 +80,7 @@ export const getChildren = (
   node: NavTreeItemGraphNode,
   path: readonly string[] = [],
 ): NavTreeItemGraphNode[] => {
-  return Graph.getConnections(graph, node.id, 'outbound')
+  return Graph.getConnections(graph, node.id, 'child')
     .map((n: Node.Node) => {
       // Break cycles.
       const nextPath = [...path, node.id];

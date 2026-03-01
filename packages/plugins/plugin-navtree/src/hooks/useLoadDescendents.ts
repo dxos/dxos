@@ -18,9 +18,9 @@ export const useLoadDescendents = (root?: Node.Node) => {
     if (!root) {
       return;
     }
-    Graph.expand(graph, root.id, 'outbound');
-    Graph.getConnections(graph, root.id, 'outbound').forEach((child) => {
-      Graph.expand(graph, child.id, 'outbound');
+    Graph.expand(graph, root.id, 'child');
+    Graph.getConnections(graph, root.id, 'child').forEach((child) => {
+      Graph.expand(graph, child.id, 'child');
     });
   }, [graph, root]);
 };

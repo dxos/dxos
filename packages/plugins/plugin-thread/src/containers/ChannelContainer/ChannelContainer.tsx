@@ -177,7 +177,7 @@ const useChannelToolbarActions = (onJoinCall?: () => void) => {
               type: 'video-call',
             }),
           ],
-          edges: [{ source: 'root', target: 'video-call' }],
+          edges: [{ source: 'root', target: 'video-call', relation: 'child' }],
         };
       }),
     [],

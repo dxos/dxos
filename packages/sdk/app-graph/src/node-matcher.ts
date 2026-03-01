@@ -31,10 +31,7 @@ type AnnotatedNodeMatcher<TData = Node.Node> = NodeMatcher<TData> & {
   [matcherPrefilterSymbol]?: NodeMatcherPrefilter;
 };
 
-const annotateMatcher = <TData>(
-  matcher: NodeMatcher<TData>,
-  prefilter?: NodeMatcherPrefilter,
-): NodeMatcher<TData> => {
+const annotateMatcher = <TData>(matcher: NodeMatcher<TData>, prefilter?: NodeMatcherPrefilter): NodeMatcher<TData> => {
   if (prefilter == null) {
     return matcher;
   }
@@ -149,12 +146,10 @@ export const whenRoot = annotateMatcher(
  * });
  * ```
  */
-export const whenId =
-  (id: string) =>
-    annotateMatcher(
-      (node: Node.Node): Option.Option<Node.Node> => (node.id === id ? Option.some(node) : Option.none()),
-      { sourceIds: [id] },
-    );
+export const whenId = (id: string) =>
+  annotateMatcher((node: Node.Node): Option.Option<Node.Node> => (node.id === id ? Option.some(node) : Option.none()), {
+    sourceIds: [id],
+  });
 
 /**
  * Matches a node by its type string (the `node.type` property).
@@ -171,12 +166,11 @@ export const whenId =
  * });
  * ```
  */
-export const whenNodeType =
-  (type: string) =>
-    annotateMatcher(
-      (node: Node.Node): Option.Option<Node.Node> => (node.type === type ? Option.some(node) : Option.none()),
-      { nodeTypes: [type] },
-    );
+export const whenNodeType = (type: string) =>
+  annotateMatcher(
+    (node: Node.Node): Option.Option<Node.Node> => (node.type === type ? Option.some(node) : Option.none()),
+    { nodeTypes: [type] },
+  );
 
 //
 // ECHO Data Matchers
@@ -258,20 +252,19 @@ export const whenEchoObject = (node: Node.Node): Option.Option<Obj.Unknown> =>
  * );
  * ```
  */
-export const whenAll =
-  (...matchers: NodeMatcher[]): NodeMatcher => {
-    const matcher: NodeMatcher = (node: Node.Node): Option.Option<Node.Node> => {
-      for (const candidate of matchers) {
-        const result = candidate(node);
-        if (Option.isNone(result)) {
-          return Option.none();
-        }
+export const whenAll = (...matchers: NodeMatcher[]): NodeMatcher => {
+  const matcher: NodeMatcher = (node: Node.Node): Option.Option<Node.Node> => {
+    for (const candidate of matchers) {
+      const result = candidate(node);
+      if (Option.isNone(result)) {
+        return Option.none();
       }
-      return Option.some(node);
-    };
-
-    return annotateMatcher(matcher, mergeAndPrefilters(matchers.map(getPrefilter)));
+    }
+    return Option.some(node);
   };
+
+  return annotateMatcher(matcher, mergeAndPrefilters(matchers.map(getPrefilter)));
+};
 
 /**
  * Composes multiple matchers with OR logic - at least one matcher must match.
@@ -289,20 +282,19 @@ export const whenAll =
  * );
  * ```
  */
-export const whenAny =
-  (...matchers: NodeMatcher[]): NodeMatcher => {
-    const matcher: NodeMatcher = (node: Node.Node): Option.Option<Node.Node> => {
-      for (const candidate of matchers) {
-        const result = candidate(node);
-        if (Option.isSome(result)) {
-          return Option.some(node);
-        }
+export const whenAny = (...matchers: NodeMatcher[]): NodeMatcher => {
+  const matcher: NodeMatcher = (node: Node.Node): Option.Option<Node.Node> => {
+    for (const candidate of matchers) {
+      const result = candidate(node);
+      if (Option.isSome(result)) {
+        return Option.some(node);
       }
-      return Option.none();
-    };
-
-    return annotateMatcher(matcher, mergeOrPrefilters(matchers.map(getPrefilter)));
+    }
+    return Option.none();
   };
+
+  return annotateMatcher(matcher, mergeOrPrefilters(matchers.map(getPrefilter)));
+};
 
 /**
  * Matches a node whose data is an instance of the given ECHO schema type.

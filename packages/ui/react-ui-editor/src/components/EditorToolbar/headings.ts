@@ -61,8 +61,8 @@ export const createHeadings = (state: EditorToolbarState, getView: () => EditorV
   return {
     nodes: [headingGroupAction as Node.NodeArg<any>, ...headingActions],
     edges: [
-      { source: 'root', target: 'heading' },
-      ...headingActions.map(({ id }) => ({ source: headingGroupAction.id, target: id })),
+      { source: 'root', target: 'heading', relation: 'child' },
+      ...headingActions.map(({ id }) => ({ source: headingGroupAction.id, target: id, relation: 'child' })),
     ],
   };
 };

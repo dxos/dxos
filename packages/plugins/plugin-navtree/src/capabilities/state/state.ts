@@ -120,10 +120,10 @@ export default Capability.makeModule(
         if (!nodeId) {
           continue;
         }
-        Graph.expand(graph, nodeId, 'outbound');
-        const children = Graph.getConnections(graph, nodeId, 'outbound');
+        Graph.expand(graph, nodeId, 'child');
+        const children = Graph.getConnections(graph, nodeId, 'child');
         for (const child of children) {
-          Graph.expand(graph, child.id, 'outbound');
+          Graph.expand(graph, child.id, 'child');
         }
       }
     }).pipe(Effect.forkDaemon);

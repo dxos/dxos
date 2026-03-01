@@ -44,7 +44,7 @@ export const createCompanionActions = (
   const activeId = state.active ?? state.workspace;
 
   // Get companions from graph connections for activeId.
-  const activeConnections = activeId ? get(graph.connections(activeId)) : [];
+  const activeConnections = activeId ? get(graph.connections(activeId, 'child')) : [];
   const companions = activeConnections
     .filter((node: Node.Node) => node.type === PLANK_COMPANION_TYPE)
     .toSorted((a: Node.Node, b: Node.Node) => byPosition(a.properties, b.properties));
@@ -78,7 +78,7 @@ export const createCompanionActions = (
         ),
     };
     nodes.push(companionAction);
-    edges.push({ source: 'root', target: companionAction.id });
+    edges.push({ source: 'root', target: companionAction.id, relation: 'child' });
   });
 
   return { nodes, edges };

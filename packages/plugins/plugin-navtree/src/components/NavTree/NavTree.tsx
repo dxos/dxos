@@ -4,9 +4,8 @@
 
 import React, { forwardRef, useMemo } from 'react';
 
-import { type Node } from '@dxos/app-graph';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
-import { useActions as useGraphActions, useConnections } from '@dxos/plugin-graph';
+import { Node, useConnections, useActions as useGraphActions } from '@dxos/plugin-graph';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { byPosition } from '@dxos/util';
 
@@ -23,7 +22,7 @@ export const NavTree = forwardRef<HTMLDivElement, NavTreeProps>(({ id, root, tab
   const { onBack } = useNavTreeContext();
   const { graph } = useAppGraph();
   const rootId = root?.id ?? Node.RootId;
-  const rootOutboundItems = useConnections(graph, rootId);
+  const rootOutboundItems = useConnections(graph, rootId, 'child');
   const rootActions = useGraphActions(graph, rootId);
   const { topLevelActions, l0Items, pinnedItems, userAccountItem } = useMemo(() => {
     const topLevelWorkspaces: Node.Node[] = [];
@@ -46,9 +45,10 @@ export const NavTree = forwardRef<HTMLDivElement, NavTreeProps>(({ id, root, tab
     const topLevelActions = rootActions
       .filter((action) => action.properties.disposition === 'menu')
       .toSorted((a, b) => byPosition(a.properties, b.properties));
-    const pinnedItems = [...outboundPinnedItems, ...rootActions.filter((action) => action.properties.disposition === 'pin-end')].toSorted(
-      (a, b) => byPosition(a.properties, b.properties),
-    );
+    const pinnedItems = [
+      ...outboundPinnedItems,
+      ...rootActions.filter((action) => action.properties.disposition === 'pin-end'),
+    ].toSorted((a, b) => byPosition(a.properties, b.properties));
 
     return {
       topLevelActions,

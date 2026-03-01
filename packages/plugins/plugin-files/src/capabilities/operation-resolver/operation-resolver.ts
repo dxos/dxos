@@ -165,6 +165,7 @@ export default Capability.makeModule(
 
           yield* Effect.promise(async () =>
             explore({
+              relation: 'child',
               visitor: async (node, path) => {
                 if (Node.isActionLike(node)) {
                   return false;

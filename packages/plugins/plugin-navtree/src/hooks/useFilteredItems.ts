@@ -27,7 +27,7 @@ export const filterItems = (node: Node.Node, disposition?: string) => {
  */
 export const useFilteredItems = (node?: Node.Node, options?: { disposition?: string; sort?: boolean }) => {
   const { graph } = useAppGraph();
-  const connections = useConnections(graph, node?.id ?? Node.RootId);
+  const connections = useConnections(graph, node?.id ?? Node.RootId, 'child');
   return useMemo(() => {
     const filtered = connections.filter((n) => filterItems(n, options?.disposition));
     return options?.sort ? filtered.toSorted((a, b) => byPosition(a.properties, b.properties)) : filtered;

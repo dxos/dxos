@@ -108,6 +108,32 @@ const matchesConnectorPrefilter = (prefilter: ConnectorPrefilter | undefined, no
   return true;
 };
 
+const CONNECTOR_KEY_SEPARATOR = '\u0001';
+
+const normalizeRelation = (relation?: Node.RelationInput): Node.Relation =>
+  relation == null ? Node.childRelation() : typeof relation === 'string' ? Node.relation(relation) : relation;
+
+const relationEquals = (left: Node.RelationInput, right: Node.RelationInput): boolean => {
+  const normalizedLeft = normalizeRelation(left);
+  const normalizedRight = normalizeRelation(right);
+  return normalizedLeft.kind === normalizedRight.kind && normalizedLeft.direction === normalizedRight.direction;
+};
+
+const relationLabel = (relation: Node.RelationInput): string => {
+  const normalized = normalizeRelation(relation);
+  return `${normalized.kind}:${normalized.direction}`;
+};
+
+const connectorKey = (id: string, relation: Node.RelationInput): string =>
+  `${id}${CONNECTOR_KEY_SEPARATOR}${JSON.stringify(normalizeRelation(relation))}`;
+
+const relationFromConnectorKey = (key: string): { id: string; relation: Node.Relation } => {
+  const separatorIndex = key.indexOf(CONNECTOR_KEY_SEPARATOR);
+  const id = key.slice(0, separatorIndex);
+  const relation = JSON.parse(key.slice(separatorIndex + 1)) as Node.Relation;
+  return { id, relation };
+};
+
 //
 // Extension Types
 //
@@ -141,7 +167,7 @@ export type ActionGroupsExtension = (
 export type BuilderExtension = Readonly<{
   id: string;
   position: Position;
-  relation?: Node.Relation; // Only for connector.
+  relation?: Node.RelationInput; // Only for connector.
   prefilter?: ConnectorPrefilter; // Only for connector.
   resolver?: ResolverExtension;
   connector?: (node: Atom.Atom<Option.Option<Node.Node>>) => Atom.Atom<Node.NodeArg<any>[]>;
@@ -157,7 +183,7 @@ export type GraphBuilderTraverseOptions = {
   visitor: (node: Node.Node, path: string[]) => MaybePromise<boolean | void>;
   registry?: Registry.Registry;
   source?: string;
-  relation?: Node.Relation;
+  relation: Node.RelationInput;
 };
 
 /**
@@ -253,7 +279,7 @@ class GraphBuilderImpl implements GraphBuilder {
     byExtension?: Record<string, Node.NodeArg<any>[]>,
     prefilterStats?: ConnectorPrefilterStats,
   ): void {
-    const [id, relation] = key.split('+') as [string, Node.Relation];
+    const { id, relation } = relationFromConnectorKey(key);
     const ids = nodes.map((node) => node.id);
     const removed = previous.filter((pid) => !ids.includes(pid));
     this._connectorPrevious.set(key, ids);
@@ -264,7 +290,7 @@ class GraphBuilderImpl implements GraphBuilder {
         ? {
             key,
             sourceId: id,
-            relation,
+            relation: relationLabel(relation),
             nodesIn: nodes.length,
             removedEdgeCount: removed.length,
             addedEdgeCount: nodes.length,
@@ -329,7 +355,7 @@ class GraphBuilderImpl implements GraphBuilder {
           extensionId,
           pluginId,
           sourceId: id,
-          relation,
+          relation: relationLabel(relation),
           nodeCount: extNodes.length,
           nodeIdsSample: extNodes.slice(0, 5).map((n) => n.id),
           durationMs: nodes.length > 0 ? (totalKeyMs * extNodes.length) / nodes.length : 0,
@@ -436,7 +462,7 @@ class GraphBuilderImpl implements GraphBuilder {
 
   private readonly _connectors = Atom.family<string, Atom.Atom<Node.NodeArg<any>[]>>((key) => {
     return Atom.make((get) => {
-      const [id, relation] = key.split('+');
+      const { id, relation } = relationFromConnectorKey(key);
       const node = this._graph.node(id);
 
       const sourceNode = Option.getOrElse(get(node), () => undefined);
@@ -459,7 +485,7 @@ class GraphBuilderImpl implements GraphBuilder {
         Array.sortBy(byPosition),
         Array.filter(
           (ext): ext is BuilderExtension & { connector: NonNullable<BuilderExtension['connector']> } =>
-            (ext.relation ?? 'outbound') === relation && ext.connector != null,
+            relationEquals(ext.relation ?? 'child', relation) && ext.connector != null,
         ),
       );
 
@@ -495,13 +521,13 @@ class GraphBuilderImpl implements GraphBuilder {
     this._expandRelation(id, relation);
 
     // TODO(perf): Make this declarative — extensions should declare which relations they co-expand.
-    if (relation === 'outbound') {
+    if (relation.kind === 'child' && relation.direction === 'outbound') {
       Graph.expand(this._graph, id, 'actions');
     }
   }
 
-  private _expandRelation(id: string, relation: Node.Relation): void {
-    const key = `${id}+${relation}`;
+  private _expandRelation(id: string, relation: Node.RelationInput): void {
+    const key = connectorKey(id, relation);
     const connectors = this._connectors(key);
 
     const cancel = this._registry.subscribe(
@@ -535,7 +561,7 @@ class GraphBuilderImpl implements GraphBuilder {
       { immediate: true },
     );
 
-    this._subscriptions.set(`${id}\0expand\0${relation}`, cancel);
+    this._subscriptions.set(`${id}\0expand\0${key}`, cancel);
   }
 
   // TODO(wittjosiah): If the same node is added by a connector, the resolver should probably cancel itself?
@@ -665,7 +691,7 @@ const exploreImpl = async (
   path: string[] = [],
 ): Promise<void> => {
   const internal = builder as GraphBuilderImpl;
-  const { registry = Registry.make(), source = Node.RootId, relation = 'outbound', visitor } = options;
+  const { registry = Registry.make(), source = Node.RootId, relation, visitor } = options;
   // Break cycles.
   if (path.includes(source)) {
     return;
@@ -682,7 +708,7 @@ const exploreImpl = async (
   const nodes = Object.values(internal._registry.get(internal._extensions))
     .filter(
       (extension) =>
-        relation === (extension.relation ?? 'outbound') && matchesConnectorPrefilter(extension.prefilter, node),
+        relationEquals(extension.relation ?? 'child', relation) && matchesConnectorPrefilter(extension.prefilter, node),
     )
     .map((extension) => extension.connector)
     .filter(isNonNullable)
@@ -776,7 +802,7 @@ export const flush = (builder: GraphBuilder): Promise<void> => {
  */
 export type CreateExtensionRawOptions = {
   id: string;
-  relation?: Node.Relation;
+  relation?: Node.RelationInput;
   position?: Position;
   prefilter?: ConnectorPrefilter;
   resolver?: ResolverExtension;
@@ -792,13 +818,14 @@ export const createExtensionRaw = (extension: CreateExtensionRawOptions): Builde
   const {
     id,
     position = 'static',
-    relation = 'outbound',
+    relation = 'child',
     prefilter,
     resolver: _resolver,
     connector: _connector,
     actions: _actions,
     actionGroups: _actionGroups,
   } = extension;
+  const normalizedRelation = normalizeRelation(relation);
   const getId = (key: string) => `${id}/${key}`;
 
   const resolver =
@@ -828,7 +855,7 @@ export const createExtensionRaw = (extension: CreateExtensionRawOptions): Builde
       ? ({
           id: getId('connector'),
           position,
-          relation,
+          relation: normalizedRelation,
           prefilter,
           connector: Atom.family((node) =>
             Atom.make((get) => {
@@ -846,7 +873,7 @@ export const createExtensionRaw = (extension: CreateExtensionRawOptions): Builde
       ? ({
           id: getId('actionGroups'),
           position,
-          relation: 'actions',
+          relation: Node.actionsRelation(),
           prefilter,
           connector: Atom.family((node) =>
             Atom.make((get) => {
@@ -868,7 +895,7 @@ export const createExtensionRaw = (extension: CreateExtensionRawOptions): Builde
       ? ({
           id: getId('actions'),
           position,
-          relation: 'actions',
+          relation: Node.actionsRelation(),
           prefilter,
           connector: Atom.family((node) =>
             Atom.make((get) => {
@@ -900,7 +927,7 @@ export type CreateExtensionOptions<TMatched = Node.Node, R = never> = {
   ) => Effect.Effect<Omit<Node.NodeArg<Node.ActionData<any>, any>, 'type'>[], Error, R>;
   connector?: (matched: TMatched, get: Atom.Context) => Effect.Effect<Node.NodeArg<any, any>[], Error, R>;
   resolver?: (id: string, get: Atom.Context) => Effect.Effect<Node.NodeArg<any, any> | null, Error, R>;
-  relation?: Node.Relation;
+  relation?: Node.RelationInput;
   position?: Position;
 };
 
@@ -1032,7 +1059,7 @@ export type CreateTypeExtensionOptions<T extends Type.Entity.Any = Type.Entity.A
     object: Entity.Entity<Schema.Schema.Type<T>>,
     get: Atom.Context,
   ) => Effect.Effect<Node.NodeArg<any>[], Error, R>;
-  relation?: Node.Relation;
+  relation?: Node.RelationInput;
   position?: Position;
 };
 

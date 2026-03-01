@@ -20,7 +20,11 @@ export const useNode = <T = any>(graph: Graph.ReadableGraph, id?: string): Node.
   return Option.getOrElse(useAtomValue(graph.node(id ?? '')), () => undefined);
 };
 
-export const useConnections = (graph: Graph.ReadableGraph, id?: string, relation?: Node.Relation): Node.Node[] => {
+export const useConnections = (
+  graph: Graph.ReadableGraph,
+  id: string | undefined,
+  relation: Node.RelationInput,
+): Node.Node[] => {
   return useAtomValue(graph.connections(id ?? '', relation));
 };
 
