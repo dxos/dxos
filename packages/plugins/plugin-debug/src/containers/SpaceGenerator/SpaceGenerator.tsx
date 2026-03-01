@@ -12,7 +12,7 @@ import { Sheet } from '@dxos/plugin-sheet/types';
 import { Diagram } from '@dxos/plugin-sketch/types';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
-import { IconButton, Input, Layout, ScrollArea, Toolbar, useAsyncEffect } from '@dxos/react-ui';
+import { IconButton, Input, Container, ScrollArea, Toolbar, useAsyncEffect } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { Organization, Person, Task } from '@dxos/types';
 import { jsonKeyReplacer, sortKeys } from '@dxos/util';
@@ -97,7 +97,7 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
   );
 
   return (
-    <Layout.Main toolbar>
+    <Container.Main toolbar>
       <Toolbar.Root>
         <IconButton icon='ph--arrow-clockwise--regular' iconOnly label='Refresh' onClick={updateInfo} />
         <Toolbar.Separator variant='gap' />
@@ -125,6 +125,6 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
           </SyntaxHighlighter>
         </ScrollArea.Viewport>
       </ScrollArea.Root>
-    </Layout.Main>
+    </Container.Main>
   );
 };

@@ -11,7 +11,7 @@ import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { AtomQuery } from '@dxos/echo-atom';
 import { useObject, useSchema } from '@dxos/react-client/echo';
-import { Layout } from '@dxos/react-ui';
+import { Container } from '@dxos/react-ui';
 import { getTypenameFromQuery } from '@dxos/schema';
 
 import { KanbanBoard } from '../../components';
@@ -69,7 +69,7 @@ export const KanbanContainer = ({ role, subject: object }: KanbanContainerProps)
   }
 
   return (
-    <Layout.Main role={role}>
+    <Container.Main role={role}>
       <KanbanBoard.Root
         kanban={object}
         projection={projection}
@@ -80,6 +80,6 @@ export const KanbanContainer = ({ role, subject: object }: KanbanContainerProps)
       >
         <KanbanBoard.Content />
       </KanbanBoard.Root>
-    </Layout.Main>
+    </Container.Main>
   );
 };

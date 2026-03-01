@@ -6,7 +6,7 @@ import { type Meta } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
 import { faker } from '@dxos/random';
-import { Icon, IconButton, Layout, ScrollArea } from '@dxos/react-ui';
+import { Icon, IconButton, Container, ScrollArea } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
@@ -145,7 +145,7 @@ const Sidebar = ({ mutate }: { mutate?: boolean }) => {
   };
 
   return (
-    <Layout.Main>
+    <Container.Main>
       <ScrollArea.Root orientation='vertical' thin>
         <ScrollArea.Viewport>
           <Tree
@@ -176,7 +176,7 @@ const Sidebar = ({ mutate }: { mutate?: boolean }) => {
         </span>
         <Icon icon='ph--list--regular' />
       </div>
-    </Layout.Main>
+    </Container.Main>
   );
 };
 

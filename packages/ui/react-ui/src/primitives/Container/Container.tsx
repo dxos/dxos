@@ -4,25 +4,63 @@
 
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import React, { type CSSProperties, type PropsWithChildren, forwardRef } from 'react';
+import React, { type CSSProperties, type PropsWithChildren, forwardRef, useMemo } from 'react';
 
-import { type SlottableProps } from '@dxos/ui-types';
+import { mx } from '@dxos/ui-theme';
+import { type SlottableProps, type ThemedClassName } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
 
-// TODO(burdon): Replace Form, Container, Card spacing.
-// TODO(burdon): Scrolling (reconcile with Mosaic Viewport).
+// TODO(burdon): Integrate with Form, Card, Dialog.
 // TODO(burdon): Reconcile AnchoredOverflow.
 
 //
-// Root
+// Main
 //
 
-type RootProps = PropsWithChildren;
+const CONTAINER_MAIN_NAME = 'Container.Main';
 
-const Root = ({ children }: RootProps) => {
-  return <div>{children}</div>;
-};
+type MainProps = ThemedClassName<
+  PropsWithChildren<{
+    role?: string;
+    toolbar?: boolean;
+    statusbar?: boolean;
+  }>
+>;
+
+// TODO(burdon): Custom sizes for toolbars.
+const Main = forwardRef<HTMLDivElement, MainProps>(
+  ({ classNames, children, role, toolbar, statusbar }, forwardedRef) => {
+    const style = useMemo(
+      () => ({
+        gridTemplateRows: [toolbar && 'var(--dx-toolbar-size)', '1fr', statusbar && 'var(--dx-statusbar-size)']
+          .filter(Boolean)
+          .join(' '),
+      }),
+      [toolbar, statusbar],
+    );
+
+    return (
+      <div
+        ref={forwardedRef}
+        role={role ?? 'none'}
+        style={style}
+        className={mx(
+          'h-full w-full grid grid-cols-[100%] overflow-hidden',
+          toolbar && [
+            '[.dx-main-mobile-layout_&>.dx-toolbar]:px-3 [&>.dx-toolbar]:relative',
+            '[&>.dx-toolbar]:border-b [&>.dx-toolbar]:border-subdued-separator',
+          ],
+          classNames,
+        )}
+      >
+        {children}
+      </div>
+    );
+  },
+);
+
+Main.displayName = CONTAINER_MAIN_NAME;
 
 //
 // Column
@@ -36,8 +74,8 @@ type ColumnProps = SlottableProps<HTMLDivElement> & { gutter?: string };
  * Creates a vertical channel with left/right gutter.
  * The `--gutter` CSS variable is used to set the gutter width by nested components, such as:
  * - ScrollArea
- * - Form
  * - Dialog
+ * - Form
  * - Card
  */
 const Column = forwardRef<HTMLDivElement, ColumnProps>(
@@ -92,13 +130,13 @@ Segment.displayName = CONTAINER_SEGMENT_NAME;
 //
 
 export const Container = {
-  Root,
+  Main,
   Column,
   Segment,
 };
 
 export type {
-  RootProps as ContainerRootProps,
+  MainProps as ContainerMainProps,
   ColumnProps as ContainerColumnProps,
   SegmentProps as ContainerSegmentProps,
 };

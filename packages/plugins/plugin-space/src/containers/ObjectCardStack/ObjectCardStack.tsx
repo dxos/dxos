@@ -7,7 +7,7 @@ import React, { forwardRef } from 'react';
 import { Obj } from '@dxos/echo';
 import { Filter, useQuery, useSchema } from '@dxos/react-client/echo';
 import { Message, Toolbar, useTranslation } from '@dxos/react-ui';
-import { Layout } from '@dxos/react-ui';
+import { Container } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
 import { Card } from '@dxos/react-ui-mosaic';
 import { CardStack, StackItem } from '@dxos/react-ui-stack';
@@ -37,7 +37,7 @@ export const ObjectCardStack = forwardRef<HTMLDivElement, ObjectCardStackProps>(
   }
 
   return (
-    <Layout.Main toolbar ref={forwardedRef}>
+    <Container.Main toolbar ref={forwardedRef}>
       <Toolbar.Root></Toolbar.Root>
       <CardStack.Root asChild>
         <CardStack.Content>
@@ -61,6 +61,6 @@ export const ObjectCardStack = forwardRef<HTMLDivElement, ObjectCardStackProps>(
           </CardStack.Stack>
         </CardStack.Content>
       </CardStack.Root>
-    </Layout.Main>
+    </Container.Main>
   );
 });

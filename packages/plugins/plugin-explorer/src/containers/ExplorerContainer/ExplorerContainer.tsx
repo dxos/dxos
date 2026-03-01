@@ -9,7 +9,7 @@ import { type Filter } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { useGlobalSearch } from '@dxos/plugin-search';
 import { getSpace, useObject } from '@dxos/react-client/echo';
-import { Layout, Toolbar } from '@dxos/react-ui';
+import { Container, Toolbar } from '@dxos/react-ui';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
 import { type View } from '@dxos/schema';
 
@@ -37,13 +37,13 @@ export const ExplorerContainer = ({ role, subject: view }: ExplorerContainerProp
   }
 
   return (
-    <Layout.Main role={role} toolbar={showToolbar}>
+    <Container.Main role={role} toolbar={showToolbar}>
       {showToolbar && (
         <Toolbar.Root>
           <QueryEditor db={space.db} onChange={handleChange} />
         </Toolbar.Root>
       )}
       <D3ForceGraph model={model} match={match} />
-    </Layout.Main>
+    </Container.Main>
   );
 };

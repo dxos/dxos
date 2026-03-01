@@ -12,7 +12,7 @@ import { type Project } from '@dxos/assistant-toolkit';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';
 import { useQuery } from '@dxos/react-client/echo';
-import { Layout, ScrollArea } from '@dxos/react-ui';
+import { Container, ScrollArea } from '@dxos/react-ui';
 import { Card, Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { isNonNullable } from '@dxos/util';
 
@@ -46,7 +46,7 @@ export const ProjectArticle = ({ subject: project }: ProjectArticleProps) => {
   const stackObjects = [...artifacts, ...inputQueueItems].filter(isNonNullable);
 
   return (
-    <Layout.Main classNames='overflow-y-auto'>
+    <Container.Main classNames='overflow-y-auto'>
       {stackObjects.length === 0 && (
         <div className='text-subdued'>
           Project has no objects associated with it.
@@ -70,7 +70,7 @@ export const ProjectArticle = ({ subject: project }: ProjectArticleProps) => {
           </Mosaic.Container>
         </Focus.Group>
       )}
-    </Layout.Main>
+    </Container.Main>
   );
 };
 

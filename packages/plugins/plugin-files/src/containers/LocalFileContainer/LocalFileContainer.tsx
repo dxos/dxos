@@ -8,7 +8,7 @@ import React, { type FC, useMemo } from 'react';
 import { Surface } from '@dxos/app-framework/ui';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Graph, Node, useActionRunner } from '@dxos/plugin-graph';
-import { Button, Layout, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Button, Container, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { descriptionMessage, mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
@@ -48,7 +48,7 @@ const PermissionsGate = ({ entity }: { entity: LocalEntity }) => {
     );
 
   return (
-    <Layout.Main>
+    <Container.Main>
       <div role='none' className='overflow-auto p-8 grid place-items-center'>
         <p role='alert' className={mx(descriptionMessage, 'break-words rounded-md p-8')}>
           {t('missing file permissions')}
@@ -59,6 +59,6 @@ const PermissionsGate = ({ entity }: { entity: LocalEntity }) => {
           )}
         </p>
       </div>
-    </Layout.Main>
+    </Container.Main>
   );
 };
