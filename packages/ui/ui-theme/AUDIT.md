@@ -12,12 +12,9 @@ Update this document with the results of the following tasks:
 - [x] Compile list of used and unused custom utility classes from our theme
 - [x] Compile list of used and unused component classes from our theme
 - [x] Compile list of unused fragment (exported consts and functions in `ui-theme/src/theme/fragments`)
+- [x] Add -dx prefix to :root spacing.css styles.
 
 ## Phase 2
-
-- [ ] Add -dx prefix to :root spacing.css styles.
-
-## Phase 3
 
 - [ ] Density audit.
 - [ ] Semantic color audit.
@@ -74,24 +71,24 @@ None
 
 #### Used (no dx- prefix)
 
-- `app-drag`
-- `app-no-drag`
-- `card-max-width`
-- `card-min-width`
-- `card-popover`
-- `card-square`
-- `contain-layout`
-- `container-max-width`
-- `density-coarse`
-- `overflow-anchor`
-- `overflow-anchored`
-- `size-container`
-- `sticky-bottom-from-statusbar-bottom`
-- `sticky-top-from-topbar-bottom`
+- `dx-app-drag`
+- `dx-app-no-drag`
+- `dx-card-max-width`
+- `dx-card-min-width`
+- `dx-card-popover`
+- `dx-card-square`
+- `dx-contain-layout`
+- `dx-container-max-width`
+- `dx-density-coarse`
+- `dx-overflow-anchor`
+- `dx-overflow-anchored`
+- `dx-size-container`
+- `dx-sticky-bottom-from-statusbar-bottom`
+- `dx-sticky-top-from-topbar-bottom`
 
 #### Unused
 
-- `card-default-width`
+- `dx-card-default-width`
 - `dx-base-surface`
 - `dx-focus-ring-always`
 - `dx-focus-ring-group-always`
