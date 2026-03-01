@@ -61,8 +61,8 @@
   /* Separator */
 
   --color-separator: light-dark(var(--color-neutral-200), var(--color-neutral-800));
-  --color-primary-separator: light-dark(var(--color-neutral-200), var(--color-neutral-800));
-  --color-subdued-separator: light-dark(var(--color-neutral-100), var(--color-neutral-900));
+  --color-primary-separator: light-dark(var(--color-neutral-400), var(--color-neutral-800));
+  --color-subdued-separator: light-dark(var(--color-neutral-300), var(--color-neutral-900));
 
   /* Scrollbar */
 
@@ -86,8 +86,8 @@
   --color-grid-comment-active: light-dark(oklch(from var(--color-green-400) l c h / 0.5), oklch(from var(--color-green-600) l c h / 0.5));
   --color-grid-hover-overlay: oklch(from var(--color-neutral-500) l c h / 0.1);
   --color-grid-selection-overlay: var(--color-blue-500);
-  --color-grid-focus-indicator: light-dark(var(--color-green-200), var(--color-green-600));
   --color-grid-line: light-dark(var(--color-neutral-200), var(--color-neutral-800));
+  --color-grid-focus-indicator: light-dark(var(--color-primary-600), var(--color-primary-600));
 
   /* Text */
 
