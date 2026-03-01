@@ -6,28 +6,12 @@ import { type ComponentFunction } from '@dxos/ui-types';
 
 import { mx } from '../../util';
 
-/**
- * Padding variants:
- * - sm: Default padding for inputs, forms, etc.
- * - md: Padding for cards.
- * - lg: Padding for dialogs.
- */
-export type ColumnPadding = 'sm' | 'md' | 'lg';
+const containerColumn: ComponentFunction<void> = (_, ...etc) => mx('w-full grid', ...etc);
 
-export type ColumnStyleProps = {
-  variant?: ColumnPadding;
-};
-
-// TODO(burdon): Remove these TW types and just define here.
-const padding: Record<ColumnPadding, string> = {
-  sm: 'px-2',
-  md: 'px-3',
-  lg: 'px-6',
-};
-
-const containerColumn: ComponentFunction<ColumnStyleProps> = ({ variant }, ...etc) =>
-  mx(variant && padding[variant], ...etc);
+const containerSegment: ComponentFunction<void> = (_, ...etc) =>
+  mx('col-span-full grid grid-cols-subgrid col-start-2', ...etc);
 
 export const containerTheme = {
   column: containerColumn,
+  segment: containerSegment,
 };

@@ -2,13 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import React, { type PropsWithChildren, type Ref, forwardRef } from 'react';
+import React, { type CSSProperties, type PropsWithChildren, type Ref, forwardRef } from 'react';
 
-import { type ColumnPadding } from '@dxos/ui-theme';
-import { type SlottableProps } from '@dxos/ui-types';
+import { type SlottableProps, type ThemedClassName } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
 
@@ -17,23 +15,13 @@ import { useThemeContext } from '../../hooks';
 // TODO(burdon): Reconcile AnchoredOverflow.
 
 //
-// Context
-//
-
-type ContainerContext = {
-  variant?: ColumnPadding;
-};
-
-const [ContainerProvider, useContext] = createContext<ContainerContext>('Container');
-
-//
 // Root
 //
 
-type RootProps = PropsWithChildren<Partial<ContainerContext>>;
+type RootProps = PropsWithChildren;
 
-const Root = ({ variant, children }: RootProps) => {
-  return <ContainerProvider {...{ variant }}>{children}</ContainerProvider>;
+const Root = ({ children }: RootProps) => {
+  return <div>{children}</div>;
 };
 
 //
@@ -42,25 +30,33 @@ const Root = ({ variant, children }: RootProps) => {
 
 const CONTAINER_COLUMN_NAME = 'Container.Column';
 
-type ColumnProps = SlottableProps<HTMLDivElement> & { variant?: ColumnPadding };
+type ColumnProps = SlottableProps<HTMLDivElement> & { gutter?: string };
 
-// TODO(burdon): Use CSS variables to set left/right margin/gutter/padding.
-//  - Used by Dialog, Card, Form, ScrollArea, etc.
-//  - Extract Column/Section (generalized structure used by Card, Dialog, etc.)
-//  - Implement using Grid (support icons in left/right margin, etc.)
-
+/**
+ * Creates a vertical channel with left/right gutter.
+ * The `--gutter` CSS variable is used to set the gutter width by nested components, such as:
+ * - ScrollArea
+ * - Form
+ * - Dialog
+ * - Card
+ */
 const Column = forwardRef(
   (
-    { classNames, className, asChild, role = 'none', children, variant, ...props }: ColumnProps,
+    { classNames, className, asChild, role = 'none', children, gutter = '1rem', ...props }: ColumnProps,
     ref: Ref<HTMLDivElement>,
   ) => {
     const { tx } = useThemeContext();
     const Root = asChild ? Slot : Primitive.div;
-    const context = useContext(CONTAINER_COLUMN_NAME);
     return (
       <Root
         {...props}
-        className={tx('container.column', { variant: variant ?? context.variant }, [className, classNames])}
+        style={
+          {
+            '--gutter': gutter,
+            gridTemplateColumns: [gutter, '1fr', gutter].join(' '),
+          } as CSSProperties
+        }
+        className={tx('container.column', { gutter }, [className, classNames])}
         role={role}
         ref={ref}
       >
@@ -73,12 +69,32 @@ const Column = forwardRef(
 Column.displayName = CONTAINER_COLUMN_NAME;
 
 //
+// Segment
+//
+
+type SegmentProps = ThemedClassName<PropsWithChildren>;
+
+const Segment = ({ classNames, children }: SegmentProps) => {
+  const { tx } = useThemeContext();
+  return (
+    <div role='none' className={tx('container.segment', {}, classNames)}>
+      {children}
+    </div>
+  );
+};
+
+//
 // Container
 //
 
 export const Container = {
   Root,
   Column,
+  Segment,
 };
 
-export type { RootProps as ContainerRootProps, ColumnProps as ContainerColumnProps };
+export type {
+  RootProps as ContainerRootProps,
+  ColumnProps as ContainerColumnProps,
+  SegmentProps as ContainerSegmentProps,
+};

@@ -29,10 +29,15 @@ export const scrollAreaRoot: ComponentFunction<ScrollAreaStyleProps> = ({ orient
     orientation === 'horizontal' && 'group/scroll-h w-full min-w-0 h-full',
     orientation === 'all' && 'group/scroll-all h-full min-h-0 w-full min-w-0',
 
+    // NOTE: Uses --gutter CSS variable if defined.
     margin && [
-      orientation === 'vertical' && (thin ? 'pl-[4px]' : 'pl-[8px]'),
-      orientation === 'horizontal' && (thin ? 'py-[4px]' : 'py-[8px]'),
-      orientation === 'all' && (thin ? 'pl-[4px] py-[8px]' : 'pl-[8px] py-[8px]'),
+      orientation === 'vertical' &&
+        (thin
+          ? 'pl-[var(--gutter,4px)] pr-[calc(var(--gutter,4px)-4px)]'
+          : 'pl-[var(--gutter,8px)] pr-[calc(var(--gutter,8px)-8px)]'),
+      orientation === 'horizontal' && (thin ? 'py-[var(--gutter,4px)]' : 'py-[var(--gutter,8px)]'),
+      orientation === 'all' &&
+        (thin ? 'pl-[var(--gutter,4px)] py-[var(--gutter,8px)]' : 'pl-[var(--gutter,8px)] py-[var(--gutter,8px)]'),
     ],
 
     ...etc,

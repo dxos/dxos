@@ -5,23 +5,37 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Input } from '../../components';
-import { withTheme } from '../../testing';
+import { ScrollArea } from '../../components';
+import { withLayout, withTheme } from '../../testing';
 
 import { Container, type ContainerRootProps } from './Container';
 
 const DefaultStory = (props: ContainerRootProps) => {
   return (
-    <div className='py-2 w-[20rem] border border-separator rounded-xs'>
-      <Container.Root {...props}>
-        <Container.Column>
-          <Input.Root>
-            <Input.Label>Label</Input.Label>
-            <Input.TextInput />
-          </Input.Root>
-        </Container.Column>
-      </Container.Root>
-    </div>
+    <Container.Column className='h-full overflow-hidden'>
+      <Container.Segment>
+        <h1 className='p-1 bg-yellow-500 text-black'>Channel</h1>
+      </Container.Segment>
+
+      <Container.Segment>
+        <div className='p-1 bg-blue-500 text-black'>Section 1</div>
+      </Container.Segment>
+
+      {/* TODO(burdon): Detect grid. */}
+      <ScrollArea.Root className='col-span-full' margin thin>
+        <ScrollArea.Viewport>
+          {Array.from({ length: 100 }).map((_, i) => (
+            <div key={i} className='p-1 bg-green-500/50 text-black'>
+              Section 2
+            </div>
+          ))}
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
+
+      <Container.Segment>
+        <div className='p-1 bg-orange-500 text-black'>Section 1</div>
+      </Container.Segment>
+    </Container.Column>
   );
 };
 
@@ -29,9 +43,9 @@ const meta: Meta<typeof Container.Root> = {
   title: 'ui/react-ui-core/primitives/Container',
   component: Container.Root,
   render: DefaultStory,
-  decorators: [withTheme()],
+  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'w-[25rem]' })],
   parameters: {
-    layout: 'centered',
+    layout: 'fullscreen',
   },
 };
 
@@ -39,29 +53,4 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// TODO(burdon): Requires container.
-export const Default = () => {
-  return (
-    <Container.Root>
-      <Container.Column>Column</Container.Column>
-    </Container.Root>
-  );
-};
-
-export const SM: Story = {
-  args: {
-    variant: 'sm',
-  },
-};
-
-export const MD: Story = {
-  args: {
-    variant: 'md',
-  },
-};
-
-export const LG: Story = {
-  args: {
-    variant: 'lg',
-  },
-};
+export const Default: Story = {};
