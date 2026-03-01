@@ -100,6 +100,39 @@ describe('Graph', () => {
     }
   });
 
+  test('remove node with edges=true removes default inbound counterparts', () => {
+    const registry = Registry.make();
+    const graph = Graph.make({ registry });
+    Graph.addNode(graph, { id: exampleId(1), type: EXAMPLE_TYPE });
+    Graph.addNode(graph, { id: exampleId(2), type: EXAMPLE_TYPE });
+    Graph.addEdge(graph, { source: exampleId(1), target: exampleId(2) });
+
+    Graph.removeNode(graph, exampleId(2), true);
+
+    const sourceEdges = registry.get(graph.edges(exampleId(1)));
+    expect(sourceEdges.outbound ?? []).toEqual([]);
+    expect(sourceEdges.inbound ?? []).toEqual([]);
+  });
+
+  test('remove node with edges=true removes typed inbound and outbound counterparts', () => {
+    const registry = Registry.make();
+    const graph = Graph.make({ registry });
+    Graph.addNode(graph, { id: exampleId(1), type: EXAMPLE_TYPE });
+    Graph.addNode(graph, { id: exampleId(2), type: EXAMPLE_TYPE });
+    Graph.addNode(graph, { id: exampleId(3), type: EXAMPLE_TYPE });
+    Graph.addEdge(graph, { source: exampleId(1), target: exampleId(2), relation: 'actions' });
+    Graph.addEdge(graph, { source: exampleId(2), target: exampleId(3), relation: 'actions' });
+
+    Graph.removeNode(graph, exampleId(2), true);
+
+    const sourceEdges = registry.get(graph.edges(exampleId(1)));
+    const targetEdges = registry.get(graph.edges(exampleId(3)));
+    expect(sourceEdges.actions ?? []).toEqual([]);
+    expect(sourceEdges['actions:inbound'] ?? []).toEqual([]);
+    expect(targetEdges.actions ?? []).toEqual([]);
+    expect(targetEdges['actions:inbound'] ?? []).toEqual([]);
+  });
+
   test('remove node curried', () => {
     const registry = Registry.make();
     const graph = Graph.make({ registry });
@@ -197,18 +230,23 @@ describe('Graph', () => {
     expect(edges.outbound).toEqual([]);
   });
 
-  test('add edge with custom relation', () => {
+  test('add edge with custom relation creates typed inbound inverse', () => {
     const registry = Registry.make();
     const graph = Graph.make({ registry });
+    Graph.addNode(graph, { id: exampleId(1), type: EXAMPLE_TYPE });
+    Graph.addNode(graph, { id: exampleId(2), type: EXAMPLE_TYPE });
     Graph.addEdge(graph, { source: exampleId(1), target: exampleId(2), relation: 'actions' });
     const sourceEdges = registry.get(graph.edges(exampleId(1)));
     expect(sourceEdges.actions).toEqual([exampleId(2)]);
     expect(sourceEdges.outbound ?? []).toEqual([]);
     const targetEdges = registry.get(graph.edges(exampleId(2)));
-    expect(targetEdges.inbound).toEqual([exampleId(1)]);
+    expect(targetEdges.inbound ?? []).toEqual([]);
+    expect(targetEdges['actions:inbound']).toEqual([exampleId(1)]);
+    const reverseConnections = registry.get(graph.connections(exampleId(2), 'actions:inbound'));
+    expect(reverseConnections.map(({ id }) => id)).toEqual([exampleId(1)]);
   });
 
-  test('remove edge with custom relation', () => {
+  test('remove edge with custom relation removes typed inbound inverse', () => {
     const registry = Registry.make();
     const graph = Graph.make({ registry });
     Graph.addEdge(graph, { source: exampleId(1), target: exampleId(2), relation: 'actions' });
@@ -216,7 +254,10 @@ describe('Graph', () => {
     const sourceEdges = registry.get(graph.edges(exampleId(1)));
     expect(sourceEdges.actions).toEqual([]);
     const targetEdges = registry.get(graph.edges(exampleId(2)));
-    expect(targetEdges.inbound).toEqual([]);
+    expect(targetEdges.inbound ?? []).toEqual([]);
+    expect(targetEdges.outbound ?? []).toEqual([]);
+    expect(targetEdges.actions ?? []).toEqual([]);
+    expect(targetEdges['actions:inbound'] ?? []).toEqual([]);
   });
 
   test('get connections', () => {
@@ -501,6 +542,23 @@ describe('Graph', () => {
         },
       });
       expect(nodes).to.deep.equal(['test2', 'test1', 'root']);
+    });
+
+    test('traversal can follow typed inbound edges', () => {
+      const graph = Graph.make();
+      Graph.addNode(graph, { id: 'host', type: 'test' });
+      Graph.addNode(graph, { id: 'action', type: 'test' });
+      Graph.addEdge(graph, { source: 'host', target: 'action', relation: 'actions' });
+
+      const nodes: string[] = [];
+      Graph.traverse(graph, {
+        source: 'action',
+        relation: 'actions:inbound',
+        visitor: (node) => {
+          nodes.push(node.id);
+        },
+      });
+      expect(nodes).to.deep.equal(['action', 'host']);
     });
 
     test('traversal can be terminated early', () => {

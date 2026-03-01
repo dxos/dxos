@@ -14,6 +14,17 @@ Graph-builder and graph mutation paths can be instrumented to quantify per-flush
 - **Local captures**: Store raw local captures under `perf-reports/captures/` (ignored from git).
 - **Validate overhead**: Run the same flow (e.g. create-space) with the flag off and on; compare trace duration and long-task counts to confirm instrumentation overhead is acceptable.
 
+## Relation naming
+
+Edges are stored as directional relation keys.
+
+- **Default relation**: `outbound` and `inbound` remain the default pair.
+- **Typed outbound**: A custom relation like `actions` is treated as outbound.
+- **Typed inbound**: The inverse of a typed relation uses the `:inbound` suffix (for example, `actions:inbound`).
+- **Traversal**: Reverse traversal for typed relations should use `graph.connections(id, '<relation>:inbound')`.
+- **Compatibility**: Existing code using `relation: 'actions'` remains valid and now records reverse links under `actions:inbound`.
+- **TODO**: Evaluate replacing string-pattern relation keys with a structured API (for example, `{ kind: 'actions', direction: 'inbound' }`) while preserving backwards compatibility for string callers.
+
 ## DXOS Resources
 
 - [Website](https://dxos.org)

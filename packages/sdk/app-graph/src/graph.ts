@@ -1014,9 +1014,15 @@ const removeNodeImpl = <T extends WritableGraph>(graph: T, id: string, edges = f
   if (edges) {
     const nodeEdges = internal._registry.get(internal._edges(id));
     const edgesToRemove: Edge[] = [];
-    for (const [relation, ids] of Object.entries(nodeEdges)) {
-      for (const targetId of ids) {
-        edgesToRemove.push({ source: id, target: targetId, relation });
+    for (const [relation, relatedIds] of Object.entries(nodeEdges)) {
+      const isInboundRelation = relation === 'inbound' || relation.endsWith(':inbound');
+      for (const relatedId of relatedIds) {
+        if (isInboundRelation) {
+          // Inbound edge lists store source node IDs; reconstruct the canonical outbound edge.
+          edgesToRemove.push({ source: relatedId, target: id, relation: inverseRelation(relation) });
+        } else {
+          edgesToRemove.push({ source: id, target: relatedId, relation });
+        }
       }
     }
     removeEdgesImpl(graph, edgesToRemove);
@@ -1087,11 +1093,30 @@ export function addEdges<T extends WritableGraph>(
   }
 }
 
+const TYPED_INBOUND_SUFFIX = ':inbound';
+
+const isTypedInboundRelation = (relation: string): boolean =>
+  relation.endsWith(TYPED_INBOUND_SUFFIX) && relation !== TYPED_INBOUND_SUFFIX;
+
+const toTypedOutboundRelation = (relation: string): string => relation.slice(0, -TYPED_INBOUND_SUFFIX.length);
+
+const toTypedInboundRelation = (relation: string): string => `${relation}${TYPED_INBOUND_SUFFIX}`;
+
+// TODO(burdon): Replace relation string conventions with a structured `{ kind, direction }` edge API.
+const inverseRelation = (relation: string): string => {
+  switch (relation) {
+    case 'inbound':
+      return 'outbound';
+    case 'outbound':
+      return 'inbound';
+    default:
+      return isTypedInboundRelation(relation) ? toTypedOutboundRelation(relation) : toTypedInboundRelation(relation);
+  }
+};
+
 /**
  * Implementation helper for addEdge.
  */
-const inverseRelation = (relation: string): string => (relation === 'inbound' ? 'outbound' : 'inbound');
-
 const addEdgeImpl = <T extends WritableGraph>(graph: T, edgeArg: Edge): T => {
   const t0 = PERF_MEASUREMENT_ENABLED ? performance.now() : 0;
   const relation = edgeArg.relation ?? 'outbound';
