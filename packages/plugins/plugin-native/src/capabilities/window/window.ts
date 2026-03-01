@@ -33,13 +33,13 @@ export default Capability.makeModule(
 /**
  * Interactive element selectors that should not trigger window dragging.
  */
-const INTERACTIVE_SELECTORS = '.app-no-drag, button, a, input, select, textarea, [role="button"], [role="menuitem"]';
+const INTERACTIVE_SELECTORS = '.dx-app-no-drag, button, a, input, select, textarea, [role="button"], [role="menuitem"]';
 
 /**
  * Sets up window drag regions.
  *
  * Tauri 2.0 does not support the `-webkit-app-region` CSS property with overlay titlebars.
- * This uses the Tauri window API to enable dragging on elements with the `app-drag` class.
+ * This uses the Tauri window API to enable dragging on elements with the `dx-app-drag` class.
  */
 const setupWindowDrag = (appWindow: ReturnType<typeof getCurrentWindow>): (() => void) => {
   const handleMouseDown = (event: MouseEvent) => {
@@ -48,8 +48,8 @@ const setupWindowDrag = (appWindow: ReturnType<typeof getCurrentWindow>): (() =>
       return;
     }
 
-    // Check if the click target or any ancestor has the app-drag class.
-    const dragElement = target.closest('.app-drag');
+    // Check if the click target or any ancestor has the dx-app-drag class.
+    const dragElement = target.closest('.dx-app-drag');
     if (!dragElement) {
       return;
     }

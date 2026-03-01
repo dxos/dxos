@@ -18,6 +18,7 @@
   --spacing-trim-lg: 1.5rem;
 
   --spacing-tag-padding-block: 0.125rem;
+  --spacing-text-content: calc(50rem - env(safe-area-inset-left) - env(safe-area-inset-right));
 
   /** Minimal trim to allow for ring/outline. */
   --spacing-form-chrome: var(--spacing-trim-xs);
@@ -34,7 +35,7 @@
   /**
    * Density: coarse
    */
-  .density-coarse {
+  .dx-density-coarse {
     --spacing-form-padding: var(--spacing-trim-md);
     --spacing-icon-button-padding: var(--spacing-trim-sm);
     --spacing-scroll-padding: 8px;
@@ -79,31 +80,24 @@
   }
 
   :root {
-    /** TODO(burdon): Remove? */
-    --sticky-top: 0;
-
-    /** TODO(burdon): Add dx- prefix */
-    --line-height: 32px;
-    --text-content: calc(50rem - env(safe-area-inset-left) - env(safe-area-inset-right));
-
-    --rail-content: 3rem;
-    --rail-size: calc(var(--rail-content) + 1px);
-    --rail-item: calc(var(--rail-content) - 1rem);
-    --rail-action: calc(var(--rail-content) - 0.5rem + 1px);
+    --dx-rail-content: 3rem;
+    --dx-rail-size: calc(var(--dx-rail-content) + 1px);
+    --dx-rail-item: calc(var(--dx-rail-content) - 1rem);
+    --dx-rail-action: calc(var(--dx-rail-content) - 0.5rem + 1px);
  
-    --topbar-size: var(--rail-size);
-    --toolbar-size: var(--rail-content);
-    --statusbar-size: var(--rail-content);
+    --dx-topbar-size: var(--dx-rail-size);
+    --dx-toolbar-size: var(--dx-rail-content);
+    --dx-statusbar-size: var(--dx-rail-content);
 
-    --nav-sidebar-size: 22.5rem;
-    --complementary-sidebar-size: 25rem;
-    --drawer-size: 50dvh;
+    --dx-nav-sidebar-size: 23rem;
+    --dx-complementary-sidebar-size: 25rem;
+    --dx-drawer-size: 50dvh;
 
-    --l0-size: 74px; /* MacOS windowing controls. */
-    --l0-avatar-size: 3rem;
-    --l1-size: calc(var(--nav-sidebar-size) - var(--l0-size));
-    --r0-size: var(--rail-size);
-    --r1-size: calc(var(--complementary-sidebar-size) - var(--r0-size));
+    --dx-l0-size: 74px; /* MacOS windowing controls. */
+    --dx-l0-avatar-size: 3rem;
+    --dx-l1-size: calc(var(--dx-nav-sidebar-size) - var(--dx-l0-size));
+    --dx-r0-size: var(--dx-rail-size);
+    --dx-r1-size: calc(var(--dx-complementary-sidebar-size) - var(--dx-r0-size));
   }
 
   :root {

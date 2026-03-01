@@ -5,7 +5,7 @@
 import { type ComponentFunction, type Elevation, type Theme } from '@dxos/ui-types';
 
 import { mx } from '../../util';
-import { blockSeparator, ghostHighlighted, separatorBorderColor, surfaceShadow, surfaceZIndex } from '../fragments';
+import { ghostHighlighted, surfaceShadow, surfaceZIndex } from '../fragments';
 
 export type SelectStyleProps = Partial<{
   elevation: Elevation;
@@ -13,7 +13,8 @@ export type SelectStyleProps = Partial<{
 
 export const selectContent: ComponentFunction<SelectStyleProps> = ({ elevation }, ...etc) => {
   return mx(
-    'dx-modal-surface min-w-(--radix-select-trigger-width) rounded-sm max-h-(--radix-select-content-available-height) border border-separator',
+    'dx-modal-surface rounded-sm border border-separator',
+    'min-w-(--radix-select-trigger-width) max-h-(--radix-select-content-available-height)',
     surfaceShadow({ elevation: 'positioned' }),
     surfaceZIndex({ elevation, level: 'menu' }),
     ...etc,
@@ -36,7 +37,7 @@ export const selectItemIndicator: ComponentFunction<SelectStyleProps> = (_props,
 export const selectArrow: ComponentFunction<SelectStyleProps> = (_props, ...etc) => mx('fill-separator', ...etc);
 
 export const selectSeparator: ComponentFunction<SelectStyleProps> = (_props, ...etc) =>
-  mx(blockSeparator, separatorBorderColor, ...etc);
+  mx('self-stretch border-b my-1 border-separator', ...etc);
 
 export const selectScrollButton: ComponentFunction<SelectStyleProps> = (_props, ...etc) =>
   mx('dx-modal-surface flex items-center justify-center cursor-default h-6 w-full', ...etc);

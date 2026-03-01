@@ -76,13 +76,13 @@ describe('tailwind classes', () => {
   });
 
   test('CSS variable shorthand uses parentheses in v4', ({ expect }) => {
-    expect(isValidClass('pl-(--nav-sidebar-size)')).toBe(true);
+    expect(isValidClass('pl-(--dx-nav-sidebar-size)')).toBe(true);
     expect(isValidClass('bg-(--surface-bg)')).toBe(true);
   });
 
   test('v3 bracket variable shorthand is deprecated but still resolves', ({ expect }) => {
     // Both syntaxes resolve in v4; parentheses are preferred.
-    expect(isValidClass('pl-[--nav-sidebar-size]')).toBe(true);
+    expect(isValidClass('pl-[--dx-nav-sidebar-size]')).toBe(true);
     expect(isValidClass('bg-[--surface-bg]')).toBe(true);
   });
 

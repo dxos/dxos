@@ -9,10 +9,10 @@ import { mx } from '../../util';
 export type AnchoredOverflowStyleProps = {};
 
 export const anchoredOverflowRoot: ComponentFunction<AnchoredOverflowStyleProps> = (_props, ...etc) =>
-  mx('overflow-anchored overflow-auto', ...etc);
+  mx('dx-overflow-anchored overflow-auto', ...etc);
 
 export const anchoredOverflowAnchor: ComponentFunction<AnchoredOverflowStyleProps> = (_props, ...etc) =>
-  mx('overflow-anchor w-px h-px', ...etc);
+  mx('dx-overflow-anchor w-px h-px', ...etc);
 
 export const anchoredOverflowTheme: Theme<AnchoredOverflowStyleProps> = {
   root: anchoredOverflowRoot,

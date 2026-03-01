@@ -56,7 +56,7 @@ export const TranscriptView = ({ classNames, transcript: object, model }: Transc
   return (
     <div
       ref={parentRef}
-      className={mx('flex grow overflow-hidden container-max-width', classNames)}
+      className={mx('flex grow overflow-hidden dx-container-max-width', classNames)}
       data-popover-collision-boundary={true /* TODO(thure): Make this a constant and document it. */}
     />
   );

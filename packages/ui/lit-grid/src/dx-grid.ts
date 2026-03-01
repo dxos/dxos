@@ -1476,7 +1476,7 @@ export class DxGrid extends LitElement {
           .split(' ')
           .filter((value) => value)
           .map(
-            (activeRef) => `[data-refs~="${activeRef}"] { background: var(--color-grid-commented-active) !important; }`,
+            (activeRef) => `[data-refs~="${activeRef}"] { background: var(--color-grid-comment-active) !important; }`,
           )
           .join('\n')}
       </style>

@@ -8,7 +8,7 @@ import React from 'react';
 import { hues } from '@dxos/ui-theme';
 import { type ChromaticPalette, type MessageValence } from '@dxos/ui-types';
 
-import { withTheme } from '../../testing';
+import { withLayout, withTheme } from '../../testing';
 
 import { Tag } from './Tag';
 
@@ -18,7 +18,7 @@ const meta = {
   title: 'ui/react-ui-core/components/Tag',
   component: Tag,
   render: () => (
-    <div role='grid' className='grid grid-cols-5 gap-2 max-w-screen-md'>
+    <div className='grid grid-cols-5 gap-2'>
       {palettes.map((palette) => (
         <Tag key={palette} palette={palette}>
           {palette}
@@ -26,8 +26,7 @@ const meta = {
       ))}
     </div>
   ),
-  decorators: [withTheme()],
-  parameters: {},
+  decorators: [withTheme(), withLayout({ layout: 'default' })],
 } satisfies Meta<typeof Tag>;
 
 export default meta;

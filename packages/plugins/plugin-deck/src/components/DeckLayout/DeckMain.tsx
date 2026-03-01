@@ -119,8 +119,8 @@ export const DeckMain = () => {
   const mainPosition = useMemo(
     () => [
       'grid !top-[env(safe-area-inset-top)]',
-      topbar && '!top-[calc(env(safe-area-inset-top)+var(--rail-size))]',
-      hoistStatusbar && 'lg:bottom-(--statusbar-size)',
+      topbar && '!top-[calc(env(safe-area-inset-top)+var(--dx-rail-size))]',
+      hoistStatusbar && 'lg:bottom-(--dx-statusbar-size)',
     ],
     [topbar, hoistStatusbar],
   );
@@ -184,15 +184,15 @@ export const DeckMain = () => {
               '--main-spacing': settings?.encapsulatedPlanks ? '0.75rem' : '0',
               '--dx-main-sidebar-width':
                 sidebarState === 'expanded'
-                  ? 'var(--nav-sidebar-size)'
+                  ? 'var(--dx-nav-sidebar-size)'
                   : sidebarState === 'collapsed'
-                    ? 'var(--l0-size)'
+                    ? 'var(--dx-l0-size)'
                     : '0',
               '--dx-main-complementary-width':
                 complementarySidebarState === 'expanded'
-                  ? 'var(--complementary-sidebar-size)'
+                  ? 'var(--dx-complementary-sidebar-size)'
                   : complementarySidebarState === 'collapsed'
-                    ? 'var(--rail-size)'
+                    ? 'var(--dx-rail-size)'
                     : '0',
               '--dx-main-content-first-width': `${plankSizing[active[0] ?? 'never'] ?? DEFAULT_HORIZONTAL_SIZE}rem`,
               '--dx-main-content-last-width': `${plankSizing[active[(active.length ?? 1) - 1] ?? 'never'] ?? DEFAULT_HORIZONTAL_SIZE}rem`,

@@ -49,7 +49,7 @@ export const CalendarArticle = ({ role, subject: feed }: SurfaceComponentProps<F
       <div role='none' className='grid @2xl:grid-cols-[min-content_1fr] overflow-hidden'>
         <div role='none' className='hidden @2xl:flex'>
           <NaturalCalendar.Root>
-            <NaturalCalendar.Viewport classNames='grid grid-rows-[var(--toolbar-size)_1fr]'>
+            <NaturalCalendar.Viewport classNames='grid grid-rows-[var(--dx-toolbar-size)_1fr]'>
               <NaturalCalendar.Toolbar classNames='h-full border-b border-subdued-separator' />
               <NaturalCalendar.Grid />
             </NaturalCalendar.Viewport>

@@ -63,7 +63,7 @@ const TableRoot = ({ children, role = 'article' }: TableRootProps) => {
         'relative border-separator! [&_.dx-grid]:max-w-(--dx-grid-content-w-size) [&_.dx-grid]:max-h-(--dx-grid-content-h-size)',
         // TODO(burdon): Move role-dependent logic to plugin.
         role === 'section' && 'dx-attention-surface',
-        role === 'card--content' && 'popover-card-height',
+        role === 'card--content' && 'dx-card-popover-height',
         ['section'].includes(role) && 'overflow-hidden',
         ['article', 'slide'].includes(role) && 'flex flex-col [&_.dx-grid]:grow [&_.dx-grid]:h-0',
       )}

@@ -17,7 +17,7 @@ export const TriggersSettings = ({ db }: { db: Database.Database }) => {
   const { t } = useTranslation(meta.id);
 
   return (
-    <div className='container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content]'>
+    <div className='dx-container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content]'>
       <Settings.ItemInput title={t('runtime label')} description={t('runtime description')}>
         <Input.Switch classNames='justify-self-end' checked={isRunning} onCheckedChange={isRunning ? stop : start} />
       </Settings.ItemInput>

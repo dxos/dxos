@@ -60,7 +60,7 @@ export const AgentConfig = ({
               <Tooltip.Trigger asChild content={t('destroy agent label')} side='bottom'>
                 <IconButton
                   variant='ghost'
-                  classNames='px-0 w-(--rail-action) h-(--rail-action)'
+                  classNames='px-0 w-(--dx-rail-action) h-(--dx-rail-action)'
                   data-testid='agent.destroy'
                   label={t('destroy agent label')}
                   icon='ph--power--regular'
