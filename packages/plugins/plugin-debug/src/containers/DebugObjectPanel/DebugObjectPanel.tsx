@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { type Obj } from '@dxos/echo';
-import { Clipboard, Input, Container, Toolbar } from '@dxos/react-ui';
+import { Clipboard, Container, Input, Toolbar } from '@dxos/react-ui';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 
 export type DebugObjectPanelProps = {

@@ -12,7 +12,7 @@ import { Sheet } from '@dxos/plugin-sheet/types';
 import { Diagram } from '@dxos/plugin-sketch/types';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
-import { IconButton, Input, Container, ScrollArea, Toolbar, useAsyncEffect } from '@dxos/react-ui';
+import { Container, IconButton, Input, ScrollArea, Toolbar, useAsyncEffect } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { Organization, Person, Task } from '@dxos/types';
 import { jsonKeyReplacer, sortKeys } from '@dxos/util';

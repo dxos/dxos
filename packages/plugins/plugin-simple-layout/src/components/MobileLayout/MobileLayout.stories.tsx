@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type PropsWithChildren, useEffect, useState } from 'react';
 
 import { addEventListener, combine } from '@dxos/async';
-import { Flex, Input, Container, Splitter, type SplitterMode, Toolbar } from '@dxos/react-ui';
+import { Container, Flex, Input, Splitter, type SplitterMode, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { MobileLayout, type MobileLayoutRootProps } from './MobileLayout';

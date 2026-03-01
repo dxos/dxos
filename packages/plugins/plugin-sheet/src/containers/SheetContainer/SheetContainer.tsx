@@ -8,7 +8,7 @@ import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { type ComputeGraphRegistry } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
-import { Flex, type FlexProps, Container } from '@dxos/react-ui';
+import { Container, Flex, type FlexProps } from '@dxos/react-ui';
 
 import { FunctionEditor, GridSheet, SheetProvider, SheetToolbar } from '../../components';
 import { ComputeGraphContextProvider, useComputeGraph } from '../../components/ComputeGraph';
