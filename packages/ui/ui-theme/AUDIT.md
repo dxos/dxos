@@ -70,7 +70,7 @@ None
 - `dx-main-sidebar`
 - `dx-modal-surface`
 - `dx-tag` (all variants)
-- `dx-text-hue`
+- `dx-text`
 
 #### Used (no dx- prefix)
 

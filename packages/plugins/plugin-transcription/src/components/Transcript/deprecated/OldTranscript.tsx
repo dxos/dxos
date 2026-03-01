@@ -204,7 +204,7 @@ export const Transcript: FC<TranscriptViewProps> = ({ classNames, blocks, attend
                 segmentIndex < 0
                   ? {
                       readonly: true,
-                      accessoryHtml: `<span data-hue="${blocks[blockIndex]!.authorHue}" class="dx-text-hue">${blocks[blockIndex]!.authorName}</span>`,
+                      accessoryHtml: `<span data-hue="${blocks[blockIndex]!.authorHue}" class="dx-text">${blocks[blockIndex]!.authorName}</span>`,
                       className: authorClasses,
                     }
                   : {

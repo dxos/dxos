@@ -4,30 +4,23 @@
 
 @layer dx-components {
   .dx-base-surface {
-    color: var(--color-base-surface-text);
-    background-color: var(--color-base-surface);
+    @apply bg-base-surface text-base-surface-text;
     --surface-bg: var(--color-base-surface);
   }
 
   .dx-sidebar-surface {
-    color: var(--color-sidebar-surface-text);
-    background-color: var(--color-sidebar-surface);
+    @apply bg-sidebar-surface text-base-surface-text;
     --surface-bg: var(--color-sidebar-surface);
   }
 
   .dx-modal-surface {
-    color: var(--color-modal-surface-text);
-    background-color: var(--color-modal-surface);
+    @apply bg-modal-surface text-base-surface-text backdrop-blur-md;
     --surface-bg: var(--color-modal-surface);
-    @apply backdrop-blur-md;
   }
 
   .dx-attention-surface {
-    color: var(--color-attention-surface-text);
-    background-color: var(--color-attention-surface);
+    @apply bg-attention-surface text-base-surface-text;
     --surface-bg: var(--color-attention-surface);
-    border-color: var(--color-separator);
-    --surface-separator: transparent;
   }
 }
 

@@ -46,10 +46,10 @@ const ColorSwatch = ({ hue }: { hue: string }) => {
       </div>
       <div
         style={{
-          color: `var(--color-${hue}-border)`,
+          color: `var(--color-${hue}-text)`,
           backgroundColor: `var(--color-${hue}-fill)`,
         }}
-        className='p-2 text-sm flex items-center'
+        className='px-1 text-sm flex items-center'
       >
         <svg className='h-6 w-6'>
           <use href='/icons.svg#ph--aperture--regular' />
@@ -190,7 +190,7 @@ export const Tags = {
                 </span>
               </div>
               <div>
-                <span className='dx-text-hue text-sm' data-hue={hue}>
+                <span className='dx-text text-sm' data-hue={hue}>
                   {hue}
                 </span>
               </div>
