@@ -15,7 +15,6 @@ import { ConnectionState, useNetworkStatus } from '@dxos/react-client/mesh';
 import { useClientStory, withMultiClientProvider } from '@dxos/react-client/testing';
 import { ButtonGroup, Clipboard, IconButton, List } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { activeSurface } from '@dxos/ui-theme';
 
 import { IdentityListItem, SpaceListItem } from '../components';
 import { IdentityPanel, JoinPanel, SpacePanel } from '../panels';
@@ -200,7 +199,7 @@ const Invitations = () => {
 
   return (
     <div className={'flex flex-col m-4 flex-1 min-w-0'} data-testid={`peer-${id}`}>
-      <div className={`${activeSurface} rounded-sm p-2 mb-2`}>
+      <div className='bg-base-surface rounded-sm p-2 mb-2'>
         <div data-testid='invitations.identity-header'>{controls}</div>
         {identity ? (
           <List>
@@ -211,7 +210,7 @@ const Invitations = () => {
         )}
       </div>
       {identity || panel ? (
-        <div className={`${activeSurface} rounded-sm p-2`}>
+        <div className='bg-base-surface rounded-sm p-2'>
           <Panel id={id} panel={panel} setPanel={setPanel} />
         </div>
       ) : null}

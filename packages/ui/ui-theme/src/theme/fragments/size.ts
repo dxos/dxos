@@ -6,7 +6,7 @@ import { type Size } from '@dxos/ui-types';
 
 import { mx } from '../../util';
 
-export const sizeWidthMap = new Map<Size, string>([
+const sizeWidthMap = new Map<Size, string>([
   [0, 'w-0'],
   ['px', 'w-px'], // 1px
   [0.5, 'w-0.5'],
@@ -44,7 +44,7 @@ export const sizeWidthMap = new Map<Size, string>([
   [96, 'w-96'],
 ]);
 
-export const sizeHeightMap = new Map<Size, string>([
+const sizeHeightMap = new Map<Size, string>([
   [0, 'h-0'],
   ['px', 'h-px'], // 1px
   [0.5, 'h-0.5'],

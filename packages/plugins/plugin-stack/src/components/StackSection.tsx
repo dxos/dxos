@@ -17,7 +17,7 @@ import { type StackSectionItem } from '../types';
 import { CaretDownUp } from './CaretDownUp';
 import { useStack } from './StackContext';
 
-const sectionActionDimensions = 'p-1 my-1 shrink-0 min-h-0 w-(--rail-action) h-min';
+const sectionActionDimensions = 'p-1 my-1 shrink-0 min-h-0 w-(--dx-rail-action) h-min';
 
 export type StackSectionProps = StackSectionItem;
 
@@ -36,7 +36,7 @@ export const StackSection = ({
   return (
     <CollapsiblePrimitive.Root asChild open={!view.collapsed} onOpenChange={(nextOpen) => onCollapse?.(id, !nextOpen)}>
       <StackItem.Root item={stackItem} role='section' {...attentionAttrs}>
-        <StackItem.Heading classNames='attention-surface'>
+        <StackItem.Heading classNames='dx-attention-surface'>
           <span className='sr-only'>{view.title}</span>
           <StackItem.HeadingStickyContent>
             <DropdownMenu.Root
@@ -110,7 +110,7 @@ export const StackSection = ({
           <Surface.Surface role='section' data={{ subject: object }} limit={1} placeholder={<></>} />
         </CollapsiblePrimitive.Content>
         {view.collapsed && (
-          <StackItem.Content classNames='attention-surface'>
+          <StackItem.Content classNames='dx-attention-surface'>
             <h2 className={mx('flex items-center p-4 font-medium', textBlockWidth)}>{view.title}</h2>
           </StackItem.Content>
         )}

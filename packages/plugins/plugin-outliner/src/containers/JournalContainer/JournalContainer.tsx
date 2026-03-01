@@ -45,7 +45,7 @@ export const JournalContainer = ({ role, subject: journal, showCalendar = true }
           </Calendar.Root>
         )}
 
-        <JournalComponent journal={journal} classNames='container-max-width' onSelect={handleSelect} />
+        <JournalComponent journal={journal} classNames='dx-container-max-width' onSelect={handleSelect} />
       </div>
     </Layout.Main>
   );

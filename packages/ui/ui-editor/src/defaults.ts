@@ -29,6 +29,6 @@ export const editorWithToolbarLayout =
 // NOTE: Padding is added to the editor to account for the focus ring (since otherwise the CM gutter will clip it)
 export const stackItemContentEditorClassNames = (role?: string) =>
   mx(
-    'p-0.5 dx-focus-ring-inset attention-surface data-[toolbar=disabled]:pt-2',
+    'p-0.5 dx-focus-ring-inset dx-attention-surface data-[toolbar=disabled]:pt-2',
     role === 'section' ? '[&_.cm-scroller]:overflow-hidden [&_.cm-scroller]:min-h-24' : 'min-h-0',
   );

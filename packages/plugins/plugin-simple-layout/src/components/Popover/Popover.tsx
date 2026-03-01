@@ -102,7 +102,7 @@ export const PopoverContent = () => {
         <Popover.Viewport>
           {state.popoverKind === 'base' && <Surface.Surface role='popover' data={state.popoverContent} limit={1} />}
           {state.popoverKind === 'card' && (
-            <Card.Root border={false} classNames='popover-card'>
+            <Card.Root border={false} classNames='dx-card-popover'>
               <Card.Toolbar>
                 {/* TODO(wittjosiah): Cleaner way to handle no drag handle in toolbar? */}
                 <span />

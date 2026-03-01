@@ -10,13 +10,13 @@
    * automatically by plugin-native (Tauri doesn't support -webkit-app-region).
    * The CSS properties below are for Electron/PWA compatibility.
    */
-  .app-drag {
+  .dx-app-drag {
     -webkit-user-select: none;
     -webkit-app-region: drag;
     --app-region: drag;
   }
 
-  .app-no-drag {
+  .dx-app-no-drag {
     -webkit-app-region: no-drag;
     --app-region: no-drag;
   }

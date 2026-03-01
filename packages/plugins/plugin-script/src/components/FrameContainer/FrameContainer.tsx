@@ -11,7 +11,7 @@ import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { createProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
-import { baseSurface, mx } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 export type FrameContainerProps = {
   containerUrl: string;
@@ -61,8 +61,7 @@ export const FrameContainer = ({ containerUrl, result, debug = true }: FrameCont
         <div className='relative'>
           <div
             className={mx(
-              baseSurface,
-              'flex absolute right-2 bottom-2 w-[30rem] h-[200px] ring rounded-sm',
+              'flex absolute right-2 bottom-2 w-[30rem] h-[200px] bg-base-surface ring rounded-sm',
               'z-20 overflow-x-hidden overflow-y-auto',
             )}
           >

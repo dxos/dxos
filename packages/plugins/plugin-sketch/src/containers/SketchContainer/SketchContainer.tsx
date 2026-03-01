@@ -44,7 +44,7 @@ export const SketchContainer = ({ role, subject: sketch, settings }: SketchConta
       <Sketch
         // Force instance per sketch object. Otherwise, sketch shares the same instance.
         key={id}
-        classNames='attention-surface'
+        classNames='dx-attention-surface'
         sketch={sketch}
         // TODO(wittjosiah): Ensure attention works as expected on the mobile app.
         hideUi={!hasAttention && !isTauri()}

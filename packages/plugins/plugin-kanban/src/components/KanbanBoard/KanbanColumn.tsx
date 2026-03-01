@@ -43,7 +43,7 @@ export const KanbanColumn = forwardRef<HTMLDivElement, KanbanColumnProps>(
         dragHandleRef={dragHandleRef}
         ref={forwardedRef}
       >
-        <Board.Column.Grid classNames='grid-rows-[var(--rail-action)_1fr_var(--rail-action)]'>
+        <Board.Column.Grid classNames='grid-rows-[var(--dx-rail-action)_1fr_var(--dx-rail-action)]'>
           {uncategorized ? (
             <div className='border-b border-separator p-2' data-testid='board-column-header'>
               <span className='font-medium'>{title}</span>

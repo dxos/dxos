@@ -159,7 +159,7 @@ export const ResizeHandle = ({
         data-side={side}
         className={mx(
           'grid place-items-center group-hover:opacity-0 group-focus-visible:opacity-0 group-active:opacity-0',
-          orientation === 'horizontal' ? 'h-(--rail-size) w-4' : 'w-(--rail-size) h-4',
+          orientation === 'horizontal' ? 'h-(--dx-rail-size) w-4' : 'w-(--dx-rail-size) h-4',
         )}
       >
         <DragHandleSignifier side={side} />

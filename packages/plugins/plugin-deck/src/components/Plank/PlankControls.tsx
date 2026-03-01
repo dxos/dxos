@@ -50,7 +50,7 @@ export const PlankCompanionControls = forwardRef<HTMLDivElement, PlankCompliment
       return invokePromise(DeckOperation.ChangeCompanion, { primary, companion: null });
     }, [invokePromise, primary]);
     return (
-      <div ref={forwardedRef} className='contents app-no-drag'>
+      <div ref={forwardedRef} className='contents dx-app-no-drag'>
         <PlankControl
           label={t('close companion label')}
           variant='ghost'
@@ -78,7 +78,7 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
     const layoutIsAnySolo = !!layoutMode?.startsWith('solo');
 
     return (
-      <ButtonGroup {...props} classNames={['app-no-drag opacity-100!', classNames]} ref={forwardedRef}>
+      <ButtonGroup {...props} classNames={['dx-app-no-drag opacity-100!', classNames]} ref={forwardedRef}>
         {capabilities.deck ? (
           <>
             {capabilities.solo && (

@@ -26,7 +26,7 @@ import {
   staticDisabled,
   staticFocusRing,
   subduedFocus,
-  valenceColorText,
+  textValence,
 } from '../fragments';
 
 export type InputStyleProps = Partial<{
@@ -48,9 +48,9 @@ export type InputMetaStyleProps = Partial<{
 export const inputTextLabel = 'py-1 text-sm text-description';
 
 const textInputSurfaceFocus =
-  'transition-colors bg-text-input-surface focus:bg-focus-surface border border-separator focus:border-separator';
+  'transition-colors bg-input-surface-text focus:bg-focus-surface border border-separator focus:border-separator';
 
-const textInputSurfaceHover = 'hover:bg-text-input-surface focus:hover:bg-focus-surface';
+const textInputSurfaceHover = 'hover:bg-input-surface-text focus:hover:bg-focus-surface';
 
 const booleanInputSurface =
   'shadow-inner transition-colors bg-un-accent aria-checked:bg-accent-surface aria-[checked=mixed]:bg-accent-surface';
@@ -81,7 +81,7 @@ const sharedSubduedInputStyles: ComponentFragment<InputStyleProps> = (props) => 
 ];
 
 const sharedDefaultInputStyles: ComponentFragment<InputStyleProps> = (props) => [
-  'py-0 w-full text-base-text rounded-xs text-[color:var(--surface-text)] placeholder-placeholder',
+  'py-0 w-full text-base-surface-text rounded-xs text-[color:var(--surface-text)] placeholder-placeholder',
   '[[data-drag-autoscroll="active"]_&]:pointer-events-none',
   textInputSurfaceFocus,
   props.density === 'fine' ? fineDimensions : coarseDimensions,
@@ -89,11 +89,11 @@ const sharedDefaultInputStyles: ComponentFragment<InputStyleProps> = (props) => 
 ];
 
 const sharedStaticInputStyles: ComponentFragment<InputStyleProps> = (props) => [
-  'py-0 w-full text-base-text rounded-xs text-[color:var(--surface-text)] placeholder-placeholder',
+  'py-0 w-full text-base-surface-text rounded-xs text-[color:var(--surface-text)] placeholder-placeholder',
   '[[data-drag-autoscroll="active"]_&]:pointer-events-none',
   textInputSurfaceFocus,
   textInputSurfaceHover,
-  props.focused && 'bg-attention',
+  props.focused && 'bg-attention-surface',
   inputValence(props.validationValence),
   props.disabled && staticDisabled,
   props.focused && staticFocusRing,
@@ -151,8 +151,8 @@ const inputSegment: ComponentFunction<InputStyleProps> = (props, ...etc) =>
     'flex items-center justify-center font-mono',
     props.density === 'fine' ? 'size-10 pointer-fine:size-8 rounded-xs' : 'size-12 rounded-xs',
     'text-[color:var(--surface-text)]',
-    'transition-colors border border-separator bg-text-input-surface',
-    'data-[focused]:bg-attention data-[focused]:border-neutral-focus-indicator',
+    'transition-colors border border-separator bg-input-surface-text',
+    'data-[focused]:bg-attention-surface data-[focused]:border-neutral-focus-indicator',
     'data-[focused]:ring-2 data-[focused]:ring-offset-0 data-[focused]:ring-neutral-focus-indicator',
     inputValence(props.validationValence),
     props.disabled && staticDisabled,
@@ -169,7 +169,7 @@ const inputDescriptionAndValidation: ComponentFunction<InputMetaStyleProps> = (p
   mx('leading-none my-1.5', props.srOnly && 'sr-only', ...etc);
 
 const inputValidation: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
-  mx(inputTextLabel, props.srOnly ? 'sr-only' : valenceColorText(props.validationValence), ...etc);
+  mx(inputTextLabel, props.srOnly ? 'sr-only' : textValence(props.validationValence), ...etc);
 
 export const inputTheme = {
   input: inputInput,

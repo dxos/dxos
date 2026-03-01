@@ -14,7 +14,7 @@ import { Container, Options } from './components';
 const Root = () => {
   return (
     <Container classNames='absolute inset-0 flex justify-center overflow-hidden bg-modal-surface'>
-      <div className='container-max-width bg-base-surface'>
+      <div className='dx-container-max-width bg-base-surface'>
         <Options />
       </div>
     </Container>
