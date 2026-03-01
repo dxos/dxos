@@ -143,7 +143,7 @@ export const BoardContainer = ({ role, subject: board }: BoardContainerProps) =>
             </Board.Viewport>
           </Board.Container>
         </Layout.Main>
-        <ObjectPicker.Content options={options} onSelect={handleSelect} classNames='card-popover-width' />
+        <ObjectPicker.Content options={options} onSelect={handleSelect} classNames='dx-card-popover-width' />
         <ObjectPicker.VirtualTrigger virtualRef={addTriggerRef} />
       </ObjectPicker.Root>
     </Board.Root>

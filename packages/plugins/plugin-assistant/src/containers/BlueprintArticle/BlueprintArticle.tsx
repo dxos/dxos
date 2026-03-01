@@ -20,7 +20,7 @@ export const BlueprintArticle = ({ role, subject }: BlueprintArticleProps) => {
   return (
     <Layout.Main role={role} toolbar>
       <Toolbar.Root disabled={!hasAttention} />
-      <TemplateEditor id={subject.id} template={subject.instructions} classNames='container-max-width' />
+      <TemplateEditor id={subject.id} template={subject.instructions} classNames='dx-container-max-width' />
     </Layout.Main>
   );
 };

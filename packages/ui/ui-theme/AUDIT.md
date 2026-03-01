@@ -99,7 +99,6 @@ None
 - `dx-focus-ring-main-always`
 - `dx-scrollbar-thin`
 - `dx-sidebar-surface`
-- `sticky-top-0`
 
 ### Unused Fragments
 

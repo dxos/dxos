@@ -92,7 +92,7 @@ const CardToolbar = forwardRef<HTMLDivElement, CardToolbarProps>(
       <Toolbar.Root
         {...props}
         classNames={[
-          'density-fine bg-transparent',
+          'dx-density-fine bg-transparent',
           density === 'fine' ? styles.grid_3 : styles.grid_3_coarse,
           classNames,
         ]}

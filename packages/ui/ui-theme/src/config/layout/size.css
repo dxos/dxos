@@ -7,11 +7,11 @@
    * Container query root.
    */
 
-  .size-container {
+  .dx-size-container {
     container-type: size;
   }
 
-  .container-max-width {
+  .dx-container-max-width {
     @apply w-full max-w-container-max-width mx-auto;
   }
 
@@ -19,26 +19,26 @@
    * Card
    */
 
-  .card-square {
+  .dx-card-square {
     inline-size: min(min(var(--radix-popper-available-width), var(--spacing-card-max-width)),
         min(var(--radix-popper-available-height), 100dvh));
     block-size: min(min(var(--radix-popper-available-width), var(--spacing-card-max-width)),
         min(var(--radix-popper-available-height), 100dvh));
   }
 
-  .card-default-width {
+  .dx-card-default-width {
     @apply w-card-default-width;
   }
 
-  .card-min-width {
+  .dx-card-min-width {
     @apply min-w-card-min-width;
   }
 
-  .card-max-width {
+  .dx-card-max-width {
     @apply w-full max-w-card-max-width;
   }
 
-  .card-popover {
+  .dx-card-popover {
     @apply inline-card-max-width bg-card-surface;
     max-width: min(var(--radix-popper-available-width), var(--spacing-card-max-width));
     max-height: min(var(--radix-popper-available-height), var(--spacing-card-max-height));

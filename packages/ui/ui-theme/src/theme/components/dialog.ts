@@ -27,7 +27,7 @@ export const dialogOverlay: ComponentFunction<DialogStyleProps> = (_props, ...et
 export const dialogContent: ComponentFunction<DialogStyleProps> = ({ inOverlayLayout, size = 'md' }, ...etc) => {
   return mx(
     '@container',
-    'dx-dialog__content dx-focus-ring dx-modal-surface density-coarse',
+    'dx-dialog__content dx-focus-ring dx-modal-surface dx-density-coarse',
     !inOverlayLayout && 'fixed z-50 top-[50%] left-[50%] -translate-x-[50%] -translate-y-[50%]',
     sizeMap[size],
     ...etc,
@@ -41,7 +41,7 @@ export const dialogBody: ComponentFunction<DialogStyleProps> = (_props, ...etc) 
   mx('dx-dialog__body flex flex-col gap-4 h-full overflow-hidden', ...etc);
 
 export const dialogActionBar: ComponentFunction<DialogStyleProps> = (_props, ...etc) =>
-  mx('dx-dialog__actionbar flex items-center gap-2 density-coarse', ...etc);
+  mx('dx-dialog__actionbar flex items-center gap-2 dx-density-coarse', ...etc);
 
 export const dialogTitle: ComponentFunction<DialogStyleProps> = ({ srOnly }, ...etc) =>
   mx('dx-dialog__title', srOnly && 'sr-only', ...etc);

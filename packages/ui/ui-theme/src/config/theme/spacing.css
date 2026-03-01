@@ -35,7 +35,7 @@
   /**
    * Density: coarse
    */
-  .density-coarse {
+  .dx-density-coarse {
     --spacing-form-padding: var(--spacing-trim-md);
     --spacing-icon-button-padding: var(--spacing-trim-sm);
     --spacing-scroll-padding: 8px;
@@ -89,7 +89,7 @@
     --dx-toolbar-size: var(--dx-rail-content);
     --dx-statusbar-size: var(--dx-rail-content);
 
-    --dx-nav-sidebar-size: 25rem;
+    --dx-nav-sidebar-size: 23rem;
     --dx-complementary-sidebar-size: 25rem;
     --dx-drawer-size: 50dvh;
 

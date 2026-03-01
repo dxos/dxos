@@ -47,7 +47,7 @@ export const ChatContainer = forwardRef<HTMLDivElement, ChatContainerProps>((pro
     <Layout.Main toolbar role={role} ref={forwardedRef}>
       <ChatComponent.Root db={space?.db} chat={chat} processor={processor} onEvent={onEvent}>
         <ChatComponent.Toolbar companionTo={companionTo} />
-        <ChatComponent.Viewport classNames='container-max-width'>
+        <ChatComponent.Viewport classNames='dx-container-max-width'>
           <ChatComponent.Thread />
           <div role='none' className='p-4'>
             <ChatComponent.Prompt

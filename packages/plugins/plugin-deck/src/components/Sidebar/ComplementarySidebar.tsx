@@ -103,7 +103,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
           className={mx(
             'absolute z-[1] inset-y-0 end-0 !w-(--dx-r0-size)',
             'py-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] border-s border-subdued-separator',
-            'grid grid-cols-1 grid-rows-[1fr_min-content] bg-toolbar-surface contain-layout app-drag',
+            'grid grid-cols-1 grid-rows-[1fr_min-content] bg-toolbar-surface dx-contain-layout dx-app-drag',
           )}
         >
           <Tabs.Tablist classNames='grid grid-cols-1 auto-rows-(--dx-rail-action) p-1 gap-1 overflow-y-auto!'>

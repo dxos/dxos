@@ -102,7 +102,7 @@ const l0Breakpoints: Record<string, string> = {
 };
 
 const l0ItemRoot =
-  'group/l0item flex w-full justify-center items-center relative data[type!="collection"]:cursor-pointer app-no-drag dx-focus-ring-group';
+  'group/l0item flex w-full justify-center items-center relative data[type!="collection"]:cursor-pointer dx-app-no-drag dx-focus-ring-group';
 
 const l0ItemContent = 'flex justify-center items-center dx-focus-ring-group-indicator transition-colors rounded-sm';
 
@@ -303,8 +303,8 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
     <Tabs.Tablist
       classNames={[
         'group/l0 absolute z-[1] inset-y-0 start-0 rounded-is',
-        'grid grid-cols-[var(--dx-l0-size)] grid-rows-[var(--dx-rail-size)_1fr_min-content_var(--dx-l0-size)] contain-layout',
-        '!w-(--dx-l0-size) bg-toolbar-surface border-e border-subdued-separator app-drag pb-[env(safe-area-inset-bottom)]',
+        'grid grid-cols-[var(--dx-l0-size)] grid-rows-[var(--dx-rail-size)_1fr_min-content_var(--dx-l0-size)] dx-contain-layout',
+        '!w-(--dx-l0-size) bg-toolbar-surface border-e border-subdued-separator dx-app-drag pb-[env(safe-area-inset-bottom)]',
       ]}
     >
       {/* TODO(wittjosiah): Use L0Item trigger. */}
@@ -367,7 +367,7 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
       </div>
 
       {userAccountItem && (
-        <div role='none' className='grid app-no-drag'>
+        <div role='none' className='grid dx-app-no-drag'>
           <L0ItemRoot key={userAccountItem.id} item={userAccountItem} parent={parent} path={path}>
             <UserAccountAvatar
               userId={userAccountItem.properties.userId}

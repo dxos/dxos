@@ -82,7 +82,7 @@ const DefaultStory = () => {
           </Button>
         </ObjectPicker.Trigger>
         <ObjectPicker.Content
-          classNames='card-popover-width'
+          classNames='dx-card-popover-width'
           options={options}
           createSchema={personSchema}
           createOptionLabel={['create new person label', { ns: osTranslations }]}

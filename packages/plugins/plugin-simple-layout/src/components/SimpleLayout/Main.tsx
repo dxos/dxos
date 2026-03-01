@@ -58,7 +58,9 @@ export const Main = () => {
       role='none'
       className={mx(
         'h-full grid overflow-hidden bg-toolbar-surface',
-        showNavBar ? 'grid-rows-[var(--dx-rail-action)_1fr_var(--dx-toolbar-size)]' : 'grid-rows-[var(--dx-rail-action)_1fr]',
+        showNavBar
+          ? 'grid-rows-[var(--dx-rail-action)_1fr_var(--dx-toolbar-size)]'
+          : 'grid-rows-[var(--dx-rail-action)_1fr]',
       )}
       {...attentionAttrs}
     >

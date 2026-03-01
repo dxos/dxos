@@ -44,7 +44,7 @@ export const PopoverCardContainer = ({
   return (
     <Popover.Root open>
       <Popover.Content onOpenAutoFocus={(event: Event) => event.preventDefault()}>
-        <Popover.Viewport classNames='card-popover'>{children}</Popover.Viewport>
+        <Popover.Viewport classNames='dx-card-popover'>{children}</Popover.Viewport>
         <Popover.Arrow />
       </Popover.Content>
       <Popover.Trigger asChild>

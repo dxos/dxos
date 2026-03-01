@@ -126,7 +126,7 @@ export const Description: Story = {
 };
 
 export const Mock = () => (
-  <div className='grid grid-cols-[2rem_1fr_2rem] w-full card-min-width card-max-width border border-separator rounded-xs'>
+  <div className='grid grid-cols-[2rem_1fr_2rem] w-full dx-card-min-width dx-card-max-width border border-separator rounded-xs'>
     <div className='grid grid-cols-subgrid col-span-full'>
       <div role='none' className='grid h-[var(--dx-rail-item)] w-[var(--dx-rail-item)] place-items-center'>
         <Icon icon='ph--dots-six-vertical--regular' />

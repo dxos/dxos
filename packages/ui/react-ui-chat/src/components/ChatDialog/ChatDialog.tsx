@@ -14,7 +14,9 @@ const preventDefault = (event: Event) => event.preventDefault();
 // TODO(burdon): Factor out.
 const Endcap = ({ children }: PropsWithChildren) => {
   return (
-    <div className='grid w-[var(--dx-rail-action)] h-[var(--dx-rail-action)] items-center justify-center'>{children}</div>
+    <div className='grid w-[var(--dx-rail-action)] h-[var(--dx-rail-action)] items-center justify-center'>
+      {children}
+    </div>
   );
 };
 
@@ -103,7 +105,9 @@ const ChatDialogHeader = ({ classNames, title }: ChatDialogHeaderProps) => {
   const { expanded, setExpanded } = useChatDialogContext(CHAT_DIALOG_HEADER_NAME);
 
   return (
-    <div className={mx('grid grid-cols-[var(--dx-rail-action)_1fr_min-content] items-center overflow-hidden', classNames)}>
+    <div
+      className={mx('grid grid-cols-[var(--dx-rail-action)_1fr_min-content] items-center overflow-hidden', classNames)}
+    >
       <Endcap>
         <Dialog.Close>
           <Icon icon='ph--x--regular' />

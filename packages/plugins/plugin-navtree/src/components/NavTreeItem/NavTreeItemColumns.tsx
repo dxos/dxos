@@ -59,7 +59,7 @@ export const NavTreeItemColumns = memo(({ path, item, open }: NavTreeItemColumns
   const ActionRoot = popoverAnchorId === `dxos.org/ui/${NAV_TREE_ITEM}/${item.id}` ? Popover.Anchor : Fragment;
 
   return (
-    <div role='none' className='contents app-no-drag'>
+    <div role='none' className='contents dx-app-no-drag'>
       {primaryAction?.properties?.disposition === 'list-item-primary' && !primaryAction?.properties?.disabled ? (
         <Treegrid.Cell classNames='contents'>
           <NavTreeItemAction

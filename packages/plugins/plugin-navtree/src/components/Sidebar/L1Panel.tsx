@@ -124,7 +124,7 @@ const L1PanelHeader = ({ item, path, onBack }: L1PanelProps) => {
   useLoadDescendents(item);
 
   return (
-    <div className='flex w-full items-center border-b border-subdued-separator app-drag density-coarse pe-1'>
+    <div className='flex w-full items-center border-b border-subdued-separator dx-app-drag dx-density-coarse pe-1'>
       {backCapableWorkspace ? (
         <IconButton
           size={5}
@@ -142,7 +142,7 @@ const L1PanelHeader = ({ item, path, onBack }: L1PanelProps) => {
       )}
       <h2 className='flex-1 truncate min-w-0'>{title}</h2>
       {/* TODO(wittjosiah): Reconcile with NavTreeItemColumns. */}
-      <div role='none' className='contents app-no-drag'>
+      <div role='none' className='contents dx-app-no-drag'>
         {primaryAction?.properties?.disposition === 'list-item-primary' && !primaryAction?.properties?.disabled && (
           <NavTreeItemAction
             testId={primaryAction.properties?.testId}

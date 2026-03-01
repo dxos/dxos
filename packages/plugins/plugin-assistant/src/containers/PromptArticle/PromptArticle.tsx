@@ -49,7 +49,7 @@ export const PromptArticle = ({ role, subject }: PromptArticleProps) => {
       <Toolbar.Root disabled={!hasAttention} onClick={handleRun}>
         <Toolbar.IconButton iconOnly icon='ph--play--regular' label={t('run prompt label')} onClick={handleRun} />
       </Toolbar.Root>
-      <TemplateEditor id={subject.id} template={subject.instructions} classNames='container-max-width' />
+      <TemplateEditor id={subject.id} template={subject.instructions} classNames='dx-container-max-width' />
     </Layout.Main>
   );
 };

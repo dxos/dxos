@@ -206,7 +206,7 @@ export const Animation = {
   render: () => {
     return (
       <div className='absolute inset-0 grid place-items-center'>
-        <div className='density-coarse border border-separator rounded-md'>
+        <div className='dx-density-coarse border border-separator rounded-md'>
           <div
             className={mx(
               'flex items-center font-mono text-2xl text-test-experimental',
