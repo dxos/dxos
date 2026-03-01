@@ -14,63 +14,63 @@
   "type": "module",
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs",
-      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts"
     },
     "./ActivationEvent": {
+      "source": "./src/core/activation-event.ts",
       "browser": "./dist/lib/browser/activation-event/index.mjs",
       "node": "./dist/lib/node-esm/activation-event/index.mjs",
-      "source": "./src/core/activation-event.ts",
       "types": "./dist/types/src/activation-event/index.d.ts"
     },
     "./ActivationEvents": {
+      "source": "./src/common/activation-events.ts",
       "browser": "./dist/lib/browser/common/activation-events.mjs",
       "node": "./dist/lib/node-esm/common/activation-events.mjs",
-      "source": "./src/common/activation-events.ts",
       "types": "./dist/types/src/common/activation-events.d.ts"
     },
     "./Capabilities": {
+      "source": "./src/common/capabilities.ts",
       "browser": "./dist/lib/browser/common/capabilities.mjs",
       "node": "./dist/lib/node-esm/common/capabilities.mjs",
-      "source": "./src/common/capabilities.ts",
       "types": "./dist/types/src/common/capabilities.d.ts"
     },
     "./Capability": {
+      "source": "./src/core/capability.ts",
       "browser": "./dist/lib/browser/capability/index.mjs",
       "node": "./dist/lib/node-esm/capability/index.mjs",
-      "source": "./src/core/capability.ts",
       "types": "./dist/types/src/capability/index.d.ts"
     },
     "./Plugin": {
+      "source": "./src/core/plugin.ts",
       "browser": "./dist/lib/browser/plugin/index.mjs",
       "node": "./dist/lib/node-esm/plugin/index.mjs",
-      "source": "./src/core/plugin.ts",
       "types": "./dist/types/src/plugin/index.d.ts"
     },
     "./PluginManager": {
+      "source": "./src/core/plugin-manager.ts",
       "browser": "./dist/lib/browser/plugin-manager/index.mjs",
       "node": "./dist/lib/node-esm/plugin-manager/index.mjs",
-      "source": "./src/core/plugin-manager.ts",
       "types": "./dist/types/src/plugin-manager/index.d.ts"
     },
     "./cli": {
+      "source": "./src/cli/index.ts",
       "browser": "./dist/lib/browser/cli/index.mjs",
       "node": "./dist/lib/node-esm/cli/index.mjs",
-      "source": "./src/cli/index.ts",
       "types": "./dist/types/src/cli/index.d.ts"
     },
     "./testing": {
+      "source": "./src/testing/index.ts",
       "browser": "./dist/lib/browser/testing/index.mjs",
       "node": "./dist/lib/node-esm/testing/index.mjs",
-      "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts"
     },
     "./ui": {
+      "source": "./src/ui/index.ts",
       "browser": "./dist/lib/browser/ui/index.mjs",
       "node": "./dist/lib/node-esm/ui/index.mjs",
-      "source": "./src/ui/index.ts",
       "types": "./dist/types/src/ui/index.d.ts"
     }
   },

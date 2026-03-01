@@ -33,10 +33,11 @@ export const ObservabilitySettings = ({ settings }: ObservabilitySettingsCompone
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
 
+  // TODO(burdon): dx-container-max-width
   return (
     <Settings.Root>
       <Settings.Section title={t('settings title', { ns: meta.id })}>
-        <Message.Root valence='info' classNames='dx-container-max-width mb-form-padding'>
+        <Message.Root valence='info' classNames=' mb-form-padding'>
           <Message.Content>{t('observability description')}</Message.Content>
         </Message.Root>
         <Settings.Group>
