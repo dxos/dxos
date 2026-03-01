@@ -8,7 +8,7 @@ import React, { Fragment } from 'react';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { Filter, useQuery, useSchema } from '@dxos/react-client/echo';
-import { Flex, type FlexProps, Layout, useControlledState } from '@dxos/react-ui';
+import { Container as DxContainer, Flex, type FlexProps, useControlledState } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
 import { type GeoMarker, type MapRootProps } from '@dxos/react-ui-geo';
 import { getTypenameFromQuery } from '@dxos/schema';
@@ -65,14 +65,14 @@ export const MapContainer = ({ role, subject: object, type: typeProp = 'map', ..
 
   return (
     <Root>
-      <Layout.Main>
+      <DxContainer.Main>
         {type === 'map' && (
           <MapControl markers={markers} selected={selected} onToggle={() => setType('globe')} {...props} />
         )}
         {type === 'globe' && (
           <GlobeControl markers={markers} selected={selected} onToggle={() => setType('map')} {...props} />
         )}
-      </Layout.Main>
+      </DxContainer.Main>
     </Root>
   );
 };

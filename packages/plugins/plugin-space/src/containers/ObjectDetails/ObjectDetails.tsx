@@ -8,7 +8,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { type Obj } from '@dxos/echo';
 import { Toolbar } from '@dxos/react-ui';
-import { Layout } from '@dxos/react-ui';
+import { Container } from '@dxos/react-ui';
 
 import { BaseObjectSettings } from '../../components/ObjectDetails/BaseObjectSettings';
 
@@ -19,7 +19,7 @@ export const ObjectDetails = forwardRef<HTMLDivElement, ObjectDetailsProps>(
     const data = useMemo(() => ({ subject: object }), [object]);
 
     return (
-      <Layout.Main toolbar role={role} ref={forwardedRef}>
+      <Container.Main toolbar role={role} ref={forwardedRef}>
         <Toolbar.Root />
         <BaseObjectSettings object={object}>
           <Surface.Surface role='base-object-settings' data={data} />
@@ -27,7 +27,7 @@ export const ObjectDetails = forwardRef<HTMLDivElement, ObjectDetailsProps>(
           {/* TODO(wittjosiah): Remove (or add as surface)? */}
           {/* <AdvancedObjectSettings object={object} /> */}
         </BaseObjectSettings>
-      </Layout.Main>
+      </Container.Main>
     );
   },
 );

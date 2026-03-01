@@ -12,7 +12,7 @@ import { InvocationTraceContainer } from '@dxos/devtools';
 import { Obj } from '@dxos/echo';
 import { Script } from '@dxos/functions';
 import { getSpace } from '@dxos/react-client/echo';
-import { Layout } from '@dxos/react-ui';
+import { Container } from '@dxos/react-ui';
 import { type AccessToken } from '@dxos/types';
 
 import { DEPLOYMENT_DIALOG } from '../../constants';
@@ -96,14 +96,14 @@ export default Capability.makeModule(() =>
           const space = getSpace(data.companionTo);
           const queueDxn = space?.properties.invocationTraceQueue?.dxn;
           return (
-            <Layout.Main role={role}>
+            <Container.Main role={role}>
               <InvocationTraceContainer
                 db={space?.db}
                 queueDxn={queueDxn}
                 target={data.companionTo}
                 detailAxis='block'
               />
-            </Layout.Main>
+            </Container.Main>
           );
         },
       }),

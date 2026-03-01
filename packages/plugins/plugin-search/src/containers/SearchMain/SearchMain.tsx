@@ -8,7 +8,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { Entity, Query } from '@dxos/echo';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
-import { Layout } from '@dxos/react-ui';
+import { Container } from '@dxos/react-ui';
 import { Card, Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { Text } from '@dxos/schema';
@@ -51,7 +51,7 @@ export const SearchMain = ({ space }: { space?: Space }) => {
   );
 
   return (
-    <Layout.Main toolbar>
+    <Container.Main toolbar>
       <SearchList.Root onSearch={handleSearch}>
         <Toolbar.Root>
           <SearchList.Input placeholder={t('search placeholder')} />
@@ -67,7 +67,7 @@ export const SearchMain = ({ space }: { space?: Space }) => {
           {allResults.length === 0 && <SearchList.Empty>{t('empty results message')}</SearchList.Empty>}
         </SearchList.Content>
       </SearchList.Root>
-    </Layout.Main>
+    </Container.Main>
   );
 };
 

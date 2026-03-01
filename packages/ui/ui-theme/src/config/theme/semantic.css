@@ -25,8 +25,8 @@
     oklch(from var(--color-neutral-50) l c h / 0.5), 
     oklch(from var(--color-neutral-950) l c h / 0.25)
   );
-  --color-group-surface: light-dark(var(--color-neutral-50), var(--color-neutral-950));
   --color-toolbar-surface: light-dark(var(--color-neutral-75), var(--color-neutral-925));
+  --color-group-surface: light-dark(var(--color-neutral-100), var(--color-neutral-900));
   --color-modal-surface: light-dark(var(--color-neutral-100), var(--color-neutral-900));
   --color-card-surface: light-dark(var(--color-neutral-100), var(--color-neutral-900));
   --color-sidebar-surface: light-dark(var(--color-neutral-100), var(--color-neutral-900));

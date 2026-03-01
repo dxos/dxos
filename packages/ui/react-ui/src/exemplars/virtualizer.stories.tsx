@@ -7,7 +7,7 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { faker } from '@dxos/random';
-import { Layout, ScrollArea, Toolbar } from '@dxos/react-ui';
+import { Container, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 faker.seed(999);
@@ -58,7 +58,7 @@ export const Default = {
     const virtualItems = virtualizer.getVirtualItems();
 
     return (
-      <Layout.Main toolbar>
+      <Container.Main toolbar>
         <ScrollToolbar items={items} index={index} setIndex={setIndex} />
         <ScrollArea.Root orientation='vertical' margin>
           <ScrollArea.Viewport classNames='p-2' ref={setViewport}>
@@ -93,7 +93,7 @@ export const Default = {
             </div>
           </ScrollArea.Viewport>
         </ScrollArea.Root>
-      </Layout.Main>
+      </Container.Main>
     );
   },
 };

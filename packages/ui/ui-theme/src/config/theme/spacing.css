@@ -52,6 +52,11 @@
     --dx-lacuna-3: 0.375rem;
     --dx-lacuna-4: 0.500rem;
     --dx-lacuna-6: 0.750rem;
+
+    --dx-gutter-xs: 0.125rem;
+    --dx-gutter-sm: 0.5rem;
+    --dx-gutter-md: 1rem;
+    --dx-gutter-lg: 2rem;
   }
 
   :root {

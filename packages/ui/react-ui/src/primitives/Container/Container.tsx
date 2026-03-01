@@ -2,39 +2,53 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import React, { type PropsWithChildren, type Ref, forwardRef } from 'react';
+import React, { type CSSProperties, type PropsWithChildren, forwardRef } from 'react';
 
-import { type ColumnPadding } from '@dxos/ui-theme';
-import { type SlottableProps } from '@dxos/ui-types';
+import { type SlottableProps, type ThemedClassName } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
 
-// TODO(burdon): Replace Form, Container, Card spacing.
-// TODO(burdon): Scrolling (reconcile with Mosaic Viewport).
+// TODO(burdon): Integrate with Form, Card, Dialog.
 // TODO(burdon): Reconcile AnchoredOverflow.
 
 //
-// Context
+// Main
 //
 
-type ContainerContext = {
-  variant?: ColumnPadding;
-};
+const CONTAINER_MAIN_NAME = 'Container.Main';
 
-const [ContainerProvider, useContext] = createContext<ContainerContext>('Container');
+type MainProps = ThemedClassName<
+  PropsWithChildren<{
+    role?: string;
+    toolbar?: boolean;
+    statusbar?: boolean;
+  }>
+>;
 
-//
-// Root
-//
+// TODO(burdon): Custom sizes for toolbars.
+const Main = forwardRef<HTMLDivElement, MainProps>(
+  ({ classNames, children, role, toolbar, statusbar }, forwardedRef) => {
+    const { tx } = useThemeContext();
+    return (
+      <div
+        ref={forwardedRef}
+        role={role ?? 'none'}
+        style={{
+          gridTemplateRows: [toolbar && 'var(--dx-toolbar-size)', '1fr', statusbar && 'var(--dx-statusbar-size)']
+            .filter(Boolean)
+            .join(' '),
+        }}
+        className={tx('container.main', { toolbar }, [classNames])}
+      >
+        {children}
+      </div>
+    );
+  },
+);
 
-type RootProps = PropsWithChildren<Partial<ContainerContext>>;
-
-const Root = ({ variant, children }: RootProps) => {
-  return <ContainerProvider {...{ variant }}>{children}</ContainerProvider>;
-};
+Main.displayName = CONTAINER_MAIN_NAME;
 
 //
 // Column
@@ -42,27 +56,41 @@ const Root = ({ variant, children }: RootProps) => {
 
 const CONTAINER_COLUMN_NAME = 'Container.Column';
 
-type ColumnProps = SlottableProps<HTMLDivElement> & { variant?: ColumnPadding };
+type GutterSize = 'sm' | 'md' | 'lg';
 
-// TODO(burdon): Use CSS variables to set left/right margin/gutter/padding.
-//  - Used by Dialog, Card, Form, ScrollArea, etc.
-//  - Extract Column/Section (generalized structure used by Card, Dialog, etc.)
-//  - Implement using Grid (support icons in left/right margin, etc.)
+const gutterSizes: Record<GutterSize, string> = {
+  sm: 'var(--dx-gutter-sm)',
+  md: 'var(--dx-gutter-md)',
+  lg: 'var(--dx-gutter-lg)',
+};
 
-const Column = forwardRef(
-  (
-    { classNames, className, asChild, role = 'none', children, variant, ...props }: ColumnProps,
-    ref: Ref<HTMLDivElement>,
-  ) => {
+type ColumnProps = SlottableProps<HTMLDivElement> & { gutter?: GutterSize };
+
+/**
+ * Creates a vertical channel with left/right gutter.
+ * The `--gutter` CSS variable is used to set the gutter width by nested components, such as:
+ * - ScrollArea
+ * - Dialog
+ * - Form
+ * - Card
+ */
+const Column = forwardRef<HTMLDivElement, ColumnProps>(
+  ({ classNames, className, asChild, role = 'none', children, gutter = 'md', ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const Root = asChild ? Slot : Primitive.div;
-    const context = useContext(CONTAINER_COLUMN_NAME);
+    const gutterSize = gutterSizes[gutter];
     return (
       <Root
         {...props}
-        className={tx('container.column', { variant: variant ?? context.variant }, [className, classNames])}
+        style={
+          {
+            '--gutter': gutterSize,
+            gridTemplateColumns: [gutterSize, '1fr', gutterSize].join(' '),
+          } as CSSProperties
+        }
+        className={tx('container.column', { gutter }, [className, classNames])}
         role={role}
-        ref={ref}
+        ref={forwardedRef}
       >
         {children}
       </Root>
@@ -73,12 +101,39 @@ const Column = forwardRef(
 Column.displayName = CONTAINER_COLUMN_NAME;
 
 //
+// Segment
+//
+
+const CONTAINER_SEGMENT_NAME = 'Container.Segment';
+
+type SegmentProps = SlottableProps<HTMLDivElement>;
+
+const Segment = forwardRef<HTMLDivElement, SegmentProps>(
+  ({ classNames, className, asChild, role = 'none', children, ...props }, forwardedRef) => {
+    const { tx } = useThemeContext();
+    const Root = asChild ? Slot : Primitive.div;
+    return (
+      <Root {...props} className={tx('container.segment', {}, [className, classNames])} role={role} ref={forwardedRef}>
+        {children}
+      </Root>
+    );
+  },
+);
+
+Segment.displayName = CONTAINER_SEGMENT_NAME;
+
+//
 // Container
 //
 
 export const Container = {
-  Root,
+  Main,
   Column,
+  Segment,
 };
 
-export type { RootProps as ContainerRootProps, ColumnProps as ContainerColumnProps };
+export type {
+  MainProps as ContainerMainProps,
+  ColumnProps as ContainerColumnProps,
+  SegmentProps as ContainerSegmentProps,
+};

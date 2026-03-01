@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { type Obj } from '@dxos/echo';
-import { Clipboard, Input, Layout, Toolbar } from '@dxos/react-ui';
+import { Clipboard, Container, Input, Toolbar } from '@dxos/react-ui';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 
 export type DebugObjectPanelProps = {
@@ -18,7 +18,7 @@ export const DebugObjectPanel = ({ object }: DebugObjectPanelProps) => {
 
   return (
     <Clipboard.Provider>
-      <Layout.Main toolbar>
+      <Container.Main toolbar>
         <Toolbar.Root>
           <Input.Root>
             <Input.TextInput disabled value={dxn} />
@@ -26,7 +26,7 @@ export const DebugObjectPanel = ({ object }: DebugObjectPanelProps) => {
           </Input.Root>
         </Toolbar.Root>
         <Json data={object} />
-      </Layout.Main>
+      </Container.Main>
     </Clipboard.Provider>
   );
 };

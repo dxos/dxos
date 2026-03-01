@@ -12,7 +12,7 @@ import { Filter, Obj, Query, Relation } from '@dxos/echo';
 import { Ref, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useTranslation } from '@dxos/react-ui';
-import { Layout } from '@dxos/react-ui';
+import { Container } from '@dxos/react-ui';
 import { useAttended } from '@dxos/react-ui-attention';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { AnchoredTo, Thread } from '@dxos/types';
@@ -166,7 +166,7 @@ export const ThreadCompanion = ({ subject }: { subject: any }) => {
   );
 
   return (
-    <Layout.Main toolbar>
+    <Container.Main toolbar>
       <Tabs.Root
         value={showResolvedThreads ? 'all' : 'unresolved'}
         orientation='horizontal'
@@ -189,6 +189,6 @@ export const ThreadCompanion = ({ subject }: { subject: any }) => {
           <Tabs.Tabpanel value='unresolved'>{!showResolvedThreads && comments}</Tabs.Tabpanel>
         </div>
       </Tabs.Root>
-    </Layout.Main>
+    </Container.Main>
   );
 };

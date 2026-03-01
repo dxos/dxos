@@ -8,7 +8,7 @@ import { useAtomCapability } from '@dxos/app-framework/ui';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { type Space, getSpace } from '@dxos/client/echo';
 import { type Obj } from '@dxos/echo';
-import { Layout } from '@dxos/react-ui';
+import { Container } from '@dxos/react-ui';
 
 import { Chat as ChatComponent, type ChatRootProps } from '../../components';
 import { useBlueprintRegistry, useChatProcessor, useChatServices, useOnline, usePresets } from '../../hooks';
@@ -44,7 +44,7 @@ export const ChatContainer = forwardRef<HTMLDivElement, ChatContainerProps>((pro
   }
 
   return (
-    <Layout.Main toolbar role={role} ref={forwardedRef}>
+    <Container.Main toolbar role={role} ref={forwardedRef}>
       <ChatComponent.Root db={space?.db} chat={chat} processor={processor} onEvent={onEvent}>
         <ChatComponent.Toolbar companionTo={companionTo} />
         <ChatComponent.Viewport classNames='dx-container-max-width'>
@@ -60,6 +60,6 @@ export const ChatContainer = forwardRef<HTMLDivElement, ChatContainerProps>((pro
           </div>
         </ChatComponent.Viewport>
       </ChatComponent.Root>
-    </Layout.Main>
+    </Container.Main>
   );
 });

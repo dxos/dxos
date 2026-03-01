@@ -14,7 +14,7 @@ import { getSpace } from '@dxos/client/echo';
 import { Sequence } from '@dxos/conductor';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Obj } from '@dxos/echo';
-import { Layout } from '@dxos/react-ui';
+import { Container } from '@dxos/react-ui';
 
 import {
   AssistantSettings,
@@ -83,9 +83,9 @@ export default Capability.makeModule(() =>
           // TODO(wittjosiah): Support invocation filtering for prompts.
           const target = Obj.instanceOf(Prompt.Prompt, data.companionTo) ? undefined : data.companionTo;
           return (
-            <Layout.Main role={role}>
+            <Container.Main role={role}>
               <InvocationTraceContainer db={space?.db} queueDxn={queueDxn} target={target} detailAxis='block' />
-            </Layout.Main>
+            </Container.Main>
           );
         },
       }),

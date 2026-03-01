@@ -7,7 +7,7 @@ import React from 'react';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useMembers, useQueue } from '@dxos/react-client/echo';
-import { Layout } from '@dxos/react-ui';
+import { Container } from '@dxos/react-ui';
 import { type Message, type Transcript } from '@dxos/types';
 
 import { TranscriptView } from '../../components/Transcript';
@@ -24,8 +24,8 @@ export const TranscriptionContainer = ({ role, subject: transcript }: Transcript
   const model = useQueueModelAdapter(renderByline(members), queue);
 
   return (
-    <Layout.Main role={role}>
+    <Container.Main role={role}>
       <TranscriptView attendableId={attendableId} model={model} transcript={transcript} />
-    </Layout.Main>
+    </Container.Main>
   );
 };

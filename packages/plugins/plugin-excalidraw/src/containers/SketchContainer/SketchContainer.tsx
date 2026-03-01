@@ -8,7 +8,7 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { type Diagram } from '@dxos/plugin-sketch/types';
-import { Flex, type FlexProps, Layout, useThemeContext } from '@dxos/react-ui';
+import { Container as DxContainer, Flex, type FlexProps, useThemeContext } from '@dxos/react-ui';
 
 import { useStoreAdapter } from '../../hooks';
 import { type SketchSettingsProps } from '../../types';
@@ -89,7 +89,7 @@ export const SketchContainer = ({ role, subject: sketch }: SketchContainerProps)
   };
 
   // NOTE: Min 500px height (for tools palette to be visible).
-  const Root = role === 'section' ? Container : Layout.Main;
+  const Root = role === 'section' ? Container : DxContainer.Main;
 
   // NOTE: Min 500px height (for tools palette to be visible).
   // TODO(burdon): Disable scrolling with mouse pad unless focused.

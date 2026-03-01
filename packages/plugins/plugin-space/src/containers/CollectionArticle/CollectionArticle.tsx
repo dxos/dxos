@@ -10,7 +10,7 @@ import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { useClient } from '@dxos/react-client';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
-import { Layout, ScrollArea, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Container, ScrollArea, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Card, Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-searchlist';
 import { Collection } from '@dxos/schema';
@@ -35,7 +35,7 @@ export const CollectionArticle = ({ subject }: SurfaceComponentProps<Collection.
   const { items, handleSearch } = useCollectionItems(subject, resolveMetadata);
 
   return (
-    <Layout.Main toolbar>
+    <Container.Main toolbar>
       <SearchList.Root onSearch={handleSearch}>
         <Toolbar.Root>
           <SearchList.Input placeholder={t('search placeholder')} />
@@ -50,7 +50,7 @@ export const CollectionArticle = ({ subject }: SurfaceComponentProps<Collection.
           </Mosaic.Container>
         </SearchList.Content>
       </SearchList.Root>
-    </Layout.Main>
+    </Container.Main>
   );
 };
 
