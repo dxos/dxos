@@ -4,9 +4,8 @@
 
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import React, { type CSSProperties, type PropsWithChildren, forwardRef, useMemo } from 'react';
+import React, { type CSSProperties, type PropsWithChildren, forwardRef } from 'react';
 
-import { mx } from '@dxos/ui-theme';
 import { type SlottableProps, type ThemedClassName } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
@@ -31,28 +30,17 @@ type MainProps = ThemedClassName<
 // TODO(burdon): Custom sizes for toolbars.
 const Main = forwardRef<HTMLDivElement, MainProps>(
   ({ classNames, children, role, toolbar, statusbar }, forwardedRef) => {
-    const style = useMemo(
-      () => ({
-        gridTemplateRows: [toolbar && 'var(--dx-toolbar-size)', '1fr', statusbar && 'var(--dx-statusbar-size)']
-          .filter(Boolean)
-          .join(' '),
-      }),
-      [toolbar, statusbar],
-    );
-
+    const { tx } = useThemeContext();
     return (
       <div
         ref={forwardedRef}
         role={role ?? 'none'}
-        style={style}
-        className={mx(
-          'h-full w-full grid grid-cols-[100%] overflow-hidden',
-          toolbar && [
-            '[.dx-main-mobile-layout_&>.dx-toolbar]:px-3 [&>.dx-toolbar]:relative',
-            '[&>.dx-toolbar]:border-b [&>.dx-toolbar]:border-subdued-separator',
-          ],
-          classNames,
-        )}
+        style={{
+          gridTemplateRows: [toolbar && 'var(--dx-toolbar-size)', '1fr', statusbar && 'var(--dx-statusbar-size)']
+            .filter(Boolean)
+            .join(' '),
+        }}
+        className={tx('container.main', { toolbar }, [classNames])}
       >
         {children}
       </div>
@@ -68,7 +56,15 @@ Main.displayName = CONTAINER_MAIN_NAME;
 
 const CONTAINER_COLUMN_NAME = 'Container.Column';
 
-type ColumnProps = SlottableProps<HTMLDivElement> & { gutter?: string };
+type GutterSize = 'sm' | 'md' | 'lg';
+
+const gutterSizes: Record<GutterSize, string> = {
+  sm: 'var(--dx-gutter-sm)',
+  md: 'var(--dx-gutter-md)',
+  lg: 'var(--dx-gutter-lg)',
+};
+
+type ColumnProps = SlottableProps<HTMLDivElement> & { gutter?: GutterSize };
 
 /**
  * Creates a vertical channel with left/right gutter.
@@ -79,16 +75,17 @@ type ColumnProps = SlottableProps<HTMLDivElement> & { gutter?: string };
  * - Card
  */
 const Column = forwardRef<HTMLDivElement, ColumnProps>(
-  ({ classNames, className, asChild, role = 'none', children, gutter = '1rem', ...props }, forwardedRef) => {
+  ({ classNames, className, asChild, role = 'none', children, gutter = 'md', ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const Root = asChild ? Slot : Primitive.div;
+    const gutterSize = gutterSizes[gutter];
     return (
       <Root
         {...props}
         style={
           {
-            '--gutter': gutter,
-            gridTemplateColumns: [gutter, '1fr', gutter].join(' '),
+            '--gutter': gutterSize,
+            gridTemplateColumns: [gutterSize, '1fr', gutterSize].join(' '),
           } as CSSProperties
         }
         className={tx('container.column', { gutter }, [className, classNames])}
