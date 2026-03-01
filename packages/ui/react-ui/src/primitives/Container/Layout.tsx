@@ -19,6 +19,7 @@ type MainProps = ThemedClassName<
   }>
 >;
 
+// TODO(burdon): Move into Container as Container.Main.
 const Main = forwardRef<HTMLDivElement, MainProps>(
   ({ classNames, children, role, toolbar, statusbar }, forwardedRef) => {
     const style = useMemo(

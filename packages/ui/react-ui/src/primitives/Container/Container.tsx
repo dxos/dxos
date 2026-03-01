@@ -4,9 +4,9 @@
 
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import React, { type CSSProperties, type PropsWithChildren, type Ref, forwardRef } from 'react';
+import React, { type CSSProperties, type PropsWithChildren, forwardRef } from 'react';
 
-import { type SlottableProps, type ThemedClassName } from '@dxos/ui-types';
+import { type SlottableProps } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
 
@@ -40,11 +40,8 @@ type ColumnProps = SlottableProps<HTMLDivElement> & { gutter?: string };
  * - Dialog
  * - Card
  */
-const Column = forwardRef(
-  (
-    { classNames, className, asChild, role = 'none', children, gutter = '1rem', ...props }: ColumnProps,
-    ref: Ref<HTMLDivElement>,
-  ) => {
+const Column = forwardRef<HTMLDivElement, ColumnProps>(
+  ({ classNames, className, asChild, role = 'none', children, gutter = '1rem', ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const Root = asChild ? Slot : Primitive.div;
     return (
@@ -58,7 +55,7 @@ const Column = forwardRef(
         }
         className={tx('container.column', { gutter }, [className, classNames])}
         role={role}
-        ref={ref}
+        ref={forwardedRef}
       >
         {children}
       </Root>
@@ -72,16 +69,23 @@ Column.displayName = CONTAINER_COLUMN_NAME;
 // Segment
 //
 
-type SegmentProps = ThemedClassName<PropsWithChildren>;
+const CONTAINER_SEGMENT_NAME = 'Container.Segment';
 
-const Segment = ({ classNames, children }: SegmentProps) => {
-  const { tx } = useThemeContext();
-  return (
-    <div role='none' className={tx('container.segment', {}, classNames)}>
-      {children}
-    </div>
-  );
-};
+type SegmentProps = SlottableProps<HTMLDivElement>;
+
+const Segment = forwardRef<HTMLDivElement, SegmentProps>(
+  ({ classNames, className, asChild, role = 'none', children, ...props }, forwardedRef) => {
+    const { tx } = useThemeContext();
+    const Root = asChild ? Slot : Primitive.div;
+    return (
+      <Root {...props} className={tx('container.segment', {}, [className, classNames])} role={role} ref={forwardedRef}>
+        {children}
+      </Root>
+    );
+  },
+);
+
+Segment.displayName = CONTAINER_SEGMENT_NAME;
 
 //
 // Container
