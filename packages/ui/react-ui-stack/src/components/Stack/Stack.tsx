@@ -34,14 +34,14 @@ export type Orientation = 'horizontal' | 'vertical';
  */
 export type Size = 'intrinsic' | 'contain' | 'split';
 
-export const railGridHorizontal = 'grid-rows-[[rail-start]_var(--rail-size)_[content-start]_1fr_[content-end]]';
-export const railGridVertical = 'grid-cols-[[rail-start]_var(--rail-size)_[content-start]_1fr_[content-end]]';
+export const railGridHorizontal = 'grid-rows-[[rail-start]_var(--dx-rail-size)_[content-start]_1fr_[content-end]]';
+export const railGridVertical = 'grid-cols-[[rail-start]_var(--dx-rail-size)_[content-start]_1fr_[content-end]]';
 
 // TODO(ZaymonFC): Magic 2px to stop overflow.
 export const railGridHorizontalContainFitContent =
-  'grid-rows-[[rail-start]_var(--rail-size)_[content-start]_fit-content(calc(100%-var(--rail-size)*2+2px))_[content-end]]';
+  'grid-rows-[[rail-start]_var(--dx-rail-size)_[content-start]_fit-content(calc(100%-var(--dx-rail-size)*2+2px))_[content-end]]';
 export const railGridVerticalContainFitContent =
-  'grid-cols-[[rail-start]_var(--rail-size)_[content-start]_fit-content(calc(100%-var(--rail-size)*2+2px))_[content-end]]';
+  'grid-cols-[[rail-start]_var(--dx-rail-size)_[content-start]_fit-content(calc(100%-var(--dx-rail-size)*2+2px))_[content-end]]';
 
 export const autoScrollRootAttributes = { 'data-drag-autoscroll': 'idle' };
 

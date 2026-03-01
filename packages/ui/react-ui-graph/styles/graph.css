@@ -123,7 +123,7 @@ svg {
             @apply stroke-1 stroke-neutral-500 fill-inverse-surface;
           }
           text {
-            @apply fill-inverse-text;
+            @apply fill-inverse-surface-text;
           }
         }
       }

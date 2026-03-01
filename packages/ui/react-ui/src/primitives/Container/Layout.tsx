@@ -24,7 +24,7 @@ const Main = forwardRef<HTMLDivElement, MainProps>(
   ({ classNames, children, role, toolbar, statusbar }, forwardedRef) => {
     const style = useMemo(
       () => ({
-        gridTemplateRows: [toolbar && 'var(--toolbar-size)', '1fr', statusbar && 'var(--statusbar-size)']
+        gridTemplateRows: [toolbar && 'var(--dx-toolbar-size)', '1fr', statusbar && 'var(--dx-statusbar-size)']
           .filter(Boolean)
           .join(' '),
       }),

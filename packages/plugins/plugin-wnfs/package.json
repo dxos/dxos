@@ -13,13 +13,13 @@
   "type": "module",
   "exports": {
     ".": {
-      "browser": "./dist/lib/browser/index.mjs",
       "source": "./src/index.ts",
+      "browser": "./dist/lib/browser/index.mjs",
       "types": "./dist/types/src/index.d.ts"
     },
     "./types": {
-      "browser": "./dist/lib/browser/types/index.mjs",
       "source": "./src/types/index.ts",
+      "browser": "./dist/lib/browser/types/index.mjs",
       "types": "./dist/types/src/types/index.d.ts"
     }
   },

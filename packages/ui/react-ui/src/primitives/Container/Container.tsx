@@ -44,6 +44,11 @@ const CONTAINER_COLUMN_NAME = 'Container.Column';
 
 type ColumnProps = SlottableProps<HTMLDivElement> & { variant?: ColumnPadding };
 
+// TODO(burdon): Use CSS variables to set left/right margin/gutter/padding.
+//  - Used by Dialog, Card, Form, ScrollArea, etc.
+//  - Extract Column/Section (generalized structure used by Card, Dialog, etc.)
+//  - Implement using Grid (support icons in left/right margin, etc.)
+
 const Column = forwardRef(
   (
     { classNames, className, asChild, role = 'none', children, variant, ...props }: ColumnProps,

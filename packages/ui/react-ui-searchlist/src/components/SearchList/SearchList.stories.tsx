@@ -339,7 +339,7 @@ const CustomInput = () => {
         className='bg-transparent outline-hidden grow'
       />
       {query && (
-        <button onClick={() => onQueryChange('')} className='text-description hover:text-base-text'>
+        <button onClick={() => onQueryChange('')} className='text-description hover:text-base-surface-text'>
           ✕
         </button>
       )}

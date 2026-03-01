@@ -8,7 +8,6 @@ import React, { Fragment, useCallback, useEffect } from 'react';
 import { type Template } from '@dxos/blueprints';
 import { type Obj } from '@dxos/echo';
 import { Input, Select, useTranslation } from '@dxos/react-ui';
-import { attentionSurface, groupBorder, mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../../meta';
@@ -61,7 +60,7 @@ export const TemplateForm = ({ id, template, commandEditable = true, onChange }:
   );
 
   return (
-    <div className={mx('flex flex-col w-full overflow-hidden gap-4', groupBorder)}>
+    <div className='flex flex-col w-full overflow-hidden gap-4'>
       {/* {commandEditable && (
         <div className='flex items-center pl-4'>
           <span className='text-neutral-500'>/</span>
@@ -80,7 +79,7 @@ export const TemplateForm = ({ id, template, commandEditable = true, onChange }:
         </div>
       )} */}
 
-      <TemplateEditor id={id} template={template} classNames={[attentionSurface, 'min-h-[120px]']} />
+      <TemplateEditor id={id} template={template} classNames='bg-base-surface min-h-[120px]' />
 
       {(template.inputs?.length ?? 0) > 0 && (
         <div className='grid grid-cols-[10rem_10rem_1fr] gap-1 items-center'>

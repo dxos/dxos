@@ -603,7 +603,22 @@ export class Toolbox {
         if (!existsSync(join(project.path, src))) {
           console.log(`Missing src file for ${project.name}: ${src}`);
         }
-        config.source = src;
+        // Ensure 'source' is first in the exports map so it takes precedence over 'browser'
+        // when oxc-resolver matches conditions in exports map order.
+        if (Object.keys(config)[0] !== 'source') {
+          const existing = { ...(config as any) };
+          for (const k of Object.keys(existing)) {
+            delete (config as any)[k];
+          }
+          (config as any).source = src;
+          for (const [k, v] of Object.entries(existing)) {
+            if (k !== 'source') {
+              (config as any)[k] = v;
+            }
+          }
+        } else {
+          config.source = src;
+        }
       }
 
       for (const [key, config] of Object.entries(packageJson.imports ?? {})) {
@@ -614,7 +629,21 @@ export class Toolbox {
         if (!existsSync(join(project.path, src))) {
           console.log(`Missing src file for ${project.name}: ${src}`);
         }
-        config.source = src;
+        // Ensure 'source' is first in the imports map.
+        if (Object.keys(config)[0] !== 'source') {
+          const existing = { ...(config as any) };
+          for (const k of Object.keys(existing)) {
+            delete (config as any)[k];
+          }
+          (config as any).source = src;
+          for (const [k, v] of Object.entries(existing)) {
+            if (k !== 'source') {
+              (config as any)[k] = v;
+            }
+          }
+        } else {
+          config.source = src;
+        }
       }
 
       // const projectJson = await loadJson<ProjectJson>(join(project.path, 'project.json'));

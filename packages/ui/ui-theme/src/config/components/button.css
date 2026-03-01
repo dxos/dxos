@@ -1,5 +1,5 @@
 /**
- * Button utilities.
+ * Button
  */
 
 /* TODO(thure): Focus is handled by .dx-focus-ring, but should ideally be applied as part of this component. */
@@ -13,12 +13,14 @@
     @apply font-medium shrink-0 inline-flex select-none items-center justify-center overflow-hidden transition-colors duration-100 ease-linear bg-input-surface min-h-[2.5rem] px-3;
     &[aria-pressed='true'],
     &[aria-checked='true'] {
-      @apply text-accent-text bg-attention;
+      @apply text-accent-text bg-attention-surface;
     }
+
     /* Disabled styles */
     &[disabled]:not([disabled='false']) {
       @apply opacity-40 cursor-not-allowed shadow-none;
     }
+
     /* Variants consistent between enabled & disabled */
     &[data-variant='ghost'] {
       @apply bg-transparent;
@@ -39,6 +41,7 @@
         @apply bg-hover-surface;
       }
     }
+
     /* Enabled styles */
     &:not([disabled]),
     &[disabled='false'] {
@@ -46,6 +49,7 @@
       &:hover {
         @apply bg-hover-surface;
       }
+
       /* Variants */
       &[data-variant='primary'] {
         @apply text-accent-surface-text bg-accent-surface;

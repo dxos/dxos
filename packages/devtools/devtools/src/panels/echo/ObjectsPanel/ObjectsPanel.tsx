@@ -193,7 +193,7 @@ export const ObjectsPanel = (props: { space?: Space }) => {
           />
           <div
             className={mx(
-              'h-(--statusbar-size)',
+              'h-(--dx-statusbar-size)',
               'flex shrink-0 justify-end items-center gap-2',
               'bg-base-surface text-description',
             )}

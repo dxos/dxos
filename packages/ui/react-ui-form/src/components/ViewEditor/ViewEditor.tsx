@@ -184,7 +184,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
       <div role='none' className={mx(classNames)}>
         {/* If readonly is set, then the callout is not needed. */}
         {schemaReadonly && !readonly && (
-          <Message.Root valence='info' classNames='my-formSpacing'>
+          <Message.Root valence='info' classNames='my-form-padding'>
             <Message.Title>{t('system schema description')}</Message.Title>
           </Message.Root>
         )}
@@ -376,7 +376,7 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
             })}
           </div>
           {!readonly && !expandedField && (
-            <div role='none' className='my-formSpacing'>
+            <div role='none' className='my-form-padding'>
               <IconButton
                 icon='ph--plus--regular'
                 label={t('add property button label')}
