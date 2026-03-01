@@ -6,7 +6,7 @@ import { type Meta } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
 import { faker } from '@dxos/random';
-import { Icon, IconButton, Container, ScrollArea } from '@dxos/react-ui';
+import { Container, Icon, IconButton, ScrollArea } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
