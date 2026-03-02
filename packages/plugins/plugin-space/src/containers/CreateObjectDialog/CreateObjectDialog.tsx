@@ -18,11 +18,7 @@ import { useSpaces } from '@dxos/react-client/echo';
 import { Dialog, useTranslation } from '@dxos/react-ui';
 import { type Collection } from '@dxos/schema';
 
-import {
-  CreateObjectPanel,
-  type CreateObjectPanelProps,
-  type Metadata,
-} from '../../components/CreateDialog/CreateObjectPanel';
+import { CreateObjectPanel, type CreateObjectPanelProps, type Metadata } from '../../components';
 import { meta } from '../../meta';
 import { SpaceOperation } from '../../types';
 
@@ -133,8 +129,8 @@ export const CreateObjectDialog = ({
           schemas={userSchemas}
           spaces={spaces}
           target={target}
-          views={views}
           typename={typename}
+          views={views}
           initialFormValues={initialFormValues}
           defaultSpaceId={client.spaces.default.id}
           resolve={resolve}

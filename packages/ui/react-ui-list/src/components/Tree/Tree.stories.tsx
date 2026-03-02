@@ -131,8 +131,8 @@ const DefaultStory = ({ draggable }: { draggable?: boolean }) => {
   );
 
   const handleOpenChange = useCallback(
-    ({ path: _path, open }: { path: string[]; open: boolean }) => {
-      const path = Path.create(..._path);
+    ({ path: pathProp, open }: { path: string[]; open: boolean }) => {
+      const path = Path.create(...pathProp);
       const atom = getOrCreateStateAtom(path);
       const prev = registry.get(atom);
       registry.set(atom, { ...prev, open });
@@ -141,8 +141,8 @@ const DefaultStory = ({ draggable }: { draggable?: boolean }) => {
   );
 
   const handleSelect = useCallback(
-    ({ path: _path, current }: { path: string[]; current: boolean }) => {
-      const path = Path.create(..._path);
+    ({ path: pathProp, current }: { path: string[]; current: boolean }) => {
+      const path = Path.create(...pathProp);
       const atom = getOrCreateStateAtom(path);
       const prev = registry.get(atom);
       registry.set(atom, { ...prev, current });

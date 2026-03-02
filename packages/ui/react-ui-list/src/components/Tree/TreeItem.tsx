@@ -79,10 +79,10 @@ export type TreeItemProps<T extends { id: string } = any> = {
 
 const RawTreeItem = <T extends { id: string } = any>({
   item,
-  path: _path,
+  path: pathProp,
   levelOffset = 2,
   last,
-  draggable: _draggable,
+  draggable: draggableProp,
   renderColumns: Columns,
   blockInstruction,
   canDrop,
@@ -105,7 +105,7 @@ const RawTreeItem = <T extends { id: string } = any>({
     itemOpen: itemOpenAtom,
     itemCurrent: itemCurrentAtom,
   } = useTree();
-  const path = useMemo(() => [..._path, item.id], [_path, item.id]);
+  const path = useMemo(() => [...pathProp, item.id], [pathProp, item.id]);
 
   const { id, parentOf, label, className, headingClassName, icon, iconHue, disabled, testId } = useAtomValue(
     itemPropsAtom(path),
@@ -128,7 +128,7 @@ const RawTreeItem = <T extends { id: string } = any>({
   }, []);
 
   useEffect(() => {
-    if (!_draggable) {
+    if (!draggableProp) {
       return;
     }
 
@@ -207,7 +207,7 @@ const RawTreeItem = <T extends { id: string } = any>({
         },
       }),
     );
-  }, [_draggable, item, id, mode, path, open, blockInstruction, canDrop]);
+  }, [draggableProp, item, id, mode, path, open, blockInstruction, canDrop]);
 
   // Cancel expand on unmount.
   useEffect(() => () => cancelExpand(), [cancelExpand]);
@@ -258,7 +258,7 @@ const RawTreeItem = <T extends { id: string } = any>({
   );
 
   const childProps = {
-    draggable: _draggable,
+    draggable: draggableProp,
     renderColumns: Columns,
     blockInstruction,
     canDrop,

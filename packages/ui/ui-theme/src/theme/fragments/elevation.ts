@@ -18,7 +18,7 @@ export const surfaceZIndex: ComponentFragment<{ level?: SurfaceLevel; elevation?
 }) => {
   switch (level) {
     case 'tooltip':
-      return elevation === 'dialog' ? ['z-[53]'] : elevation === 'toast' ? ['z-[43]'] : ['z-30'];
+      return elevation === 'dialog' ? ['z-[53]'] : elevation === 'toast' ? ['z-[43]'] : ['z-60'];
     case 'menu':
       return elevation === 'dialog' ? ['z-[52]'] : elevation === 'toast' ? ['z-[42]'] : ['z-20'];
     default:

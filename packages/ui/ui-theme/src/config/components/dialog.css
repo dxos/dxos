@@ -49,7 +49,7 @@
   }
 
   .dx-dialog__content {
-    @apply flex flex-col w-dvw max-w-full max-h-full p-4 overflow-hidden shadow-md;
+    @apply flex flex-col w-dvw max-w-full max-h-full overflow-hidden shadow-md;
 
     &[data-state='open'] {
       @apply animate-slide-up-and-fade;

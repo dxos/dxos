@@ -106,7 +106,7 @@ class GraphBuilderImpl implements GraphBuilder {
   // TODO(wittjosiah): Use Context.
   readonly _subscriptions = new Map<string, CleanupFn>();
   readonly _dirtyConnectors = new Map<string, { nodes: Node.NodeArg<any>[]; previous: string[] }>();
-  readonly _connectorPrevious = new Map<string, string[]>();
+  readonly connectorPropPrevious = new Map<string, string[]>();
   _flushScheduled = false;
   _flushPromise: Promise<void> = Promise.resolve();
   readonly _extensions = Atom.make(Record.empty<string, BuilderExtension>()).pipe(
@@ -149,7 +149,7 @@ class GraphBuilderImpl implements GraphBuilder {
     const [id, relation] = key.split('+') as [string, Node.Relation];
     const ids = nodes.map((node) => node.id);
     const removed = previous.filter((pid) => !ids.includes(pid));
-    this._connectorPrevious.set(key, ids);
+    this.connectorPropPrevious.set(key, ids);
 
     Graph.removeEdges(
       this._graph,
@@ -189,7 +189,7 @@ class GraphBuilderImpl implements GraphBuilder {
     }
   }
 
-  private readonly _resolvers = Atom.family<string, Atom.Atom<Option.Option<Node.NodeArg<any>>>>((id) => {
+  private readonly resolverProps = Atom.family<string, Atom.Atom<Option.Option<Node.NodeArg<any>>>>((id) => {
     return Atom.make((get) => {
       return Function.pipe(
         get(this._extensions),
@@ -204,7 +204,7 @@ class GraphBuilderImpl implements GraphBuilder {
     });
   });
 
-  private readonly _connectors = Atom.family<string, Atom.Atom<Node.NodeArg<any>[]>>((key) => {
+  private readonly connectorProps = Atom.family<string, Atom.Atom<Node.NodeArg<any>[]>>((key) => {
     return Atom.make((get) => {
       const [id, relation] = key.split('+');
       const node = this._graph.node(id);
@@ -214,7 +214,7 @@ class GraphBuilderImpl implements GraphBuilder {
         Record.values,
         // TODO(wittjosiah): Sort on write rather than read.
         Array.sortBy(byPosition),
-        Array.filter(({ relation: _relation = 'outbound' }) => _relation === relation),
+        Array.filter(({ relation: relationProp = 'outbound' }) => relationProp === relation),
         Array.map(({ connector }) => connector?.(node)),
         Array.filter(isNonNullable),
         Array.flatMap((result) => get(result)),
@@ -225,12 +225,12 @@ class GraphBuilderImpl implements GraphBuilder {
   private _onExpand(id: string, relation: Node.Relation): void {
     log('onExpand', { id, relation, registry: getDebugName(this._registry) });
     const key = `${id}+${relation}`;
-    const connectors = this._connectors(key);
+    const connectors = this.connectorProps(key);
 
     const cancel = this._registry.subscribe(
       connectors,
       (nodes) => {
-        const previous = this._connectorPrevious.get(key) ?? [];
+        const previous = this.connectorPropPrevious.get(key) ?? [];
         log('update', { id, relation, ids: nodes.map((n) => n.id) });
 
         // Store latest value; overwrites previous pending entry for the same key,
@@ -247,7 +247,7 @@ class GraphBuilderImpl implements GraphBuilder {
   // TODO(wittjosiah): If the same node is added by a connector, the resolver should probably cancel itself?
   private async _onInitialize(id: string) {
     log('onInitialize', { id });
-    const resolver = this._resolvers(id);
+    const resolver = this.resolverProps(id);
 
     const cancel = this._registry.subscribe(
       resolver,
@@ -490,32 +490,33 @@ export const createExtensionRaw = (extension: CreateExtensionRawOptions): Builde
     id,
     position = 'static',
     relation = 'outbound',
-    resolver: _resolver,
-    connector: _connector,
-    actions: _actions,
-    actionGroups: _actionGroups,
+    resolver: resolverProp,
+    connector: connectorProp,
+    actions: actionsProp,
+    actionGroups: actionGroupsProp,
   } = extension;
   const getId = (key: string) => `${id}/${key}`;
 
   const resolver =
-    _resolver && Atom.family((id: string) => _resolver(id).pipe(Atom.withLabel(`graph-builder:_resolver:${id}`)));
+    resolverProp &&
+    Atom.family((id: string) => resolverProp(id).pipe(Atom.withLabel(`graph-builder:resolverProp:${id}`)));
 
   const connector =
-    _connector &&
+    connectorProp &&
     Atom.family((node: Atom.Atom<Option.Option<Node.Node>>) =>
-      _connector(node).pipe(Atom.withLabel(`graph-builder:_connector:${id}`)),
+      connectorProp(node).pipe(Atom.withLabel(`graph-builder:connectorProp:${id}`)),
     );
 
   const actionGroups =
-    _actionGroups &&
+    actionGroupsProp &&
     Atom.family((node: Atom.Atom<Option.Option<Node.Node>>) =>
-      _actionGroups(node).pipe(Atom.withLabel(`graph-builder:_actionGroups:${id}`)),
+      actionGroupsProp(node).pipe(Atom.withLabel(`graph-builder:actionGroupsProp:${id}`)),
     );
 
   const actions =
-    _actions &&
+    actionsProp &&
     Atom.family((node: Atom.Atom<Option.Option<Node.Node>>) =>
-      _actions(node).pipe(Atom.withLabel(`graph-builder:_actions:${id}`)),
+      actionsProp(node).pipe(Atom.withLabel(`graph-builder:actionsProp:${id}`)),
     );
 
   return [

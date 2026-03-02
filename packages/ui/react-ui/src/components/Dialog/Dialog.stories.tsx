@@ -9,6 +9,7 @@ import { faker } from '@dxos/random';
 
 import { withTheme } from '../../testing';
 import { Button } from '../Button';
+import { Input } from '../Input';
 
 import { Dialog, type DialogContentProps } from './Dialog';
 
@@ -23,7 +24,7 @@ type StoryProps = Pick<DialogContentProps, 'size'> &
 
 const DefaultStory = ({ size, title, description, openTrigger, closeTrigger, blockAlign }: StoryProps) => {
   return (
-    <Dialog.Root defaultOpen>
+    <Dialog.Root defaultOpen modal>
       <Dialog.Trigger asChild>
         <Button>{openTrigger}</Button>
       </Dialog.Trigger>
@@ -39,6 +40,10 @@ const DefaultStory = ({ size, title, description, openTrigger, closeTrigger, blo
           </Dialog.Header>
           <Dialog.Body>
             <Dialog.Description>{description}</Dialog.Description>
+            <Input.Root>
+              <Input.Label>Value</Input.Label>
+              <Input.TextInput placeholder='Enter value' />
+            </Input.Root>
           </Dialog.Body>
           <Dialog.ActionBar>
             <Dialog.Close asChild>
@@ -66,7 +71,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     title: 'Dialog title',
-    description: faker.lorem.paragraph(2),
+    description: faker.lorem.paragraph(1),
     openTrigger: 'Open',
     closeTrigger: 'Close',
     blockAlign: 'start',
@@ -76,7 +81,7 @@ export const Default: Story = {
 export const Small: Story = {
   args: {
     title: 'Dialog title',
-    description: faker.lorem.paragraph(2),
+    description: faker.lorem.paragraph(1),
     openTrigger: 'Open',
     closeTrigger: 'Close',
     blockAlign: 'center',
@@ -87,7 +92,7 @@ export const Small: Story = {
 export const Medium: Story = {
   args: {
     title: 'Dialog title',
-    description: faker.lorem.paragraph(2),
+    description: faker.lorem.paragraph(1),
     openTrigger: 'Open',
     closeTrigger: 'Close',
     blockAlign: 'center',

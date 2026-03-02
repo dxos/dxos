@@ -114,7 +114,7 @@ const Segment = forwardRef<HTMLDivElement, SegmentProps>(
     const Root = asChild ? Slot : Primitive.div;
     return (
       <Root {...props} className={tx('container.segment', {}, [className, classNames])} role={role} ref={forwardedRef}>
-        {children}
+        <div className='contents'>{children}</div>
       </Root>
     );
   },

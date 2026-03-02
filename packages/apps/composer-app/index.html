@@ -25,7 +25,10 @@
 
     <link rel="manifest" href="/site.webmanifest" />
 
-    <!-- Add theme mode to html element (before code runs.) -->
+    <!-- 
+      Add theme mode to html element (before code runs.) 
+      NOTE: Theme switching may be overridden in Chrome via: chrome://settings/appearance and chrome://flags/#enable-force-dark
+      -->
     <script>
       const modeQuery = window.matchMedia('(prefers-color-scheme: dark)');
       function setTheme(dark) {

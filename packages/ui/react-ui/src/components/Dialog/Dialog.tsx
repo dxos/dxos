@@ -32,6 +32,7 @@ import { useTranslation } from 'react-i18next';
 import { type DialogSize, osTranslations } from '@dxos/ui-theme';
 
 import { useThemeContext } from '../../hooks';
+import { Container } from '../../primitives';
 import { type ThemedClassName } from '../../util';
 import { IconButton, type IconButtonProps } from '../Button';
 import { ElevationProvider } from '../ElevationProvider';
@@ -123,7 +124,7 @@ const DialogContent: ForwardRefExoticComponent<DialogContentProps> = forwardRef<
         className={tx('dialog.content', { inOverlayLayout: propsInOverlayLayout || inOverlayLayout, size }, classNames)}
         ref={forwardedRef}
       >
-        {children}
+        <Container.Column>{children}</Container.Column>
       </DialogContentPrimitive>
     );
   },
@@ -140,7 +141,11 @@ type DialogHeaderProps = ThemedClassName<PropsWithChildren> & { srOnly?: boolean
 const DialogHeader: ForwardRefExoticComponent<DialogTitleProps> = forwardRef<HTMLHeadingElement, DialogTitleProps>(
   ({ classNames, srOnly, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
-    return <div {...props} role='header' className={tx('dialog.header', { srOnly }, classNames)} ref={forwardedRef} />;
+    return (
+      <Container.Segment>
+        <div role='header' {...props} className={tx('dialog.header', { srOnly }, [classNames])} ref={forwardedRef} />
+      </Container.Segment>
+    );
   },
 );
 
@@ -154,14 +159,14 @@ const DialogBody: ForwardRefExoticComponent<DialogBodyProps> = forwardRef<HTMLDi
   ({ children, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
-      <div {...props} className={tx('dialog.body')} ref={forwardedRef}>
-        {children}
-      </div>
+      <Container.Segment>
+        <div role='none' {...props} className={tx('dialog.body')} ref={forwardedRef}>
+          {children}
+        </div>
+      </Container.Segment>
     );
   },
 );
-
-// TODO(burdon): Add ActionBar.
 
 //
 // Title
@@ -210,9 +215,11 @@ const DialogActionBar: ForwardRefExoticComponent<DialogActionBarProps> = forward
 >(({ children, classNames, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   return (
-    <div {...props} className={tx('dialog.actionbar', {}, classNames)} ref={forwardedRef}>
-      {children}
-    </div>
+    <Container.Segment>
+      <div {...props} className={tx('dialog.actionbar', {}, classNames)} ref={forwardedRef}>
+        {children}
+      </div>
+    </Container.Segment>
   );
 });
 
