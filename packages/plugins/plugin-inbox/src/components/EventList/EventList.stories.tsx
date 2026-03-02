@@ -19,7 +19,7 @@ const EventListStory = (props: Omit<EventListProps, 'events'>) => {
 };
 
 const meta: Meta<typeof EventListStory> = {
-  title: 'plugins/plugin-inbox/EventList',
+  title: 'plugins/plugin-inbox/components/EventList',
   component: EventListStory,
   parameters: {
     layout: 'fullscreen',

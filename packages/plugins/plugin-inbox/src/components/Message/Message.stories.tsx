@@ -34,7 +34,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-inbox/Message',
+  title: 'plugins/plugin-inbox/components/Message',
   component: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {
