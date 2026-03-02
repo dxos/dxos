@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useState } from 'react';
+import React, { type ComponentPropsWithoutRef, forwardRef, useState } from 'react';
 
 import { Container } from '../../primitives';
 import { withLayout, withTheme } from '../../testing';
@@ -12,42 +12,44 @@ import { Toolbar } from '../Toolbar';
 
 import { Splitter, type SplitterRootProps } from './Splitter';
 
-const Panel = ({ label }: { label: string }) => {
-  return (
-    <Container.Main toolbar>
-      <Toolbar.Root>{label}</Toolbar.Root>
-      <ScrollArea.Root orientation='vertical'>
-        <ScrollArea.Viewport>
-          {Array.from({ length: 100 }).map((_, i) => (
-            <div key={i} className='p-1'>
-              {label}-{i}
-            </div>
-          ))}
-        </ScrollArea.Viewport>
-      </ScrollArea.Root>
-    </Container.Main>
-  );
-};
+const Panel = forwardRef<HTMLDivElement, ComponentPropsWithoutRef<'div'> & { label: string }>(
+  ({ label, ...props }, ref) => (
+    <div ref={ref} {...props}>
+      <Container.Main toolbar>
+        <Toolbar.Root>{label}</Toolbar.Root>
+        <ScrollArea.Root orientation='vertical'>
+          <ScrollArea.Viewport>
+            {Array.from({ length: 100 }).map((_, i) => (
+              <div key={i} className='p-1'>
+                {label}-{i}
+              </div>
+            ))}
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </Container.Main>
+    </div>
+  ),
+);
 
 const DefaultStory = (props: SplitterRootProps) => {
   const [mode, setMode] = useState(props.mode ?? 'both');
 
   return (
-    <div className='grid grid-rows-[min-content_1fr] h-full overflow-hidden'>
+    <Container.Main toolbar>
       <Toolbar.Root>
         <Toolbar.Button onClick={() => setMode('upper')}>A</Toolbar.Button>
         <Toolbar.Button onClick={() => setMode('both')}>A + B</Toolbar.Button>
         <Toolbar.Button onClick={() => setMode('lower')}>B</Toolbar.Button>
       </Toolbar.Root>
-      <Splitter.Root mode={mode} ratio={props.ratio} classNames='divide-y divide-subdued-separator'>
-        <Splitter.Panel position='upper'>
+      <Splitter.Root mode={mode} ratio={props.ratio}>
+        <Splitter.Panel asChild position='upper'>
           <Panel label='A' />
         </Splitter.Panel>
-        <Splitter.Panel position='lower'>
+        <Splitter.Panel asChild position='lower'>
           <Panel label='B' />
         </Splitter.Panel>
       </Splitter.Root>
-    </div>
+    </Container.Main>
   );
 };
 

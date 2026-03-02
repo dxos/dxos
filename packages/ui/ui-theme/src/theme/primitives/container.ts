@@ -6,8 +6,6 @@ import { type ComponentFunction } from '@dxos/ui-types';
 
 import { mx } from '../../util';
 
-// TODO(burdon): Define types.
-
 const containerMain: ComponentFunction<{ toolbar?: boolean }> = ({ toolbar }, ...etc) =>
   mx(
     'h-full w-full grid grid-cols-[100%] overflow-hidden',

@@ -6,12 +6,9 @@ import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import React, { type CSSProperties, type PropsWithChildren, forwardRef } from 'react';
 
-import { type SlottableProps, type ThemedClassName } from '@dxos/ui-types';
+import { type SlottableClassName, type SlottableProps } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
-
-// TODO(burdon): Integrate with Form, Card, Dialog.
-// TODO(burdon): Reconcile AnchoredOverflow.
 
 //
 // Main
@@ -19,7 +16,7 @@ import { useThemeContext } from '../../hooks';
 
 const CONTAINER_MAIN_NAME = 'Container.Main';
 
-type MainProps = ThemedClassName<
+type MainProps = SlottableClassName<
   PropsWithChildren<{
     role?: string;
     toolbar?: boolean;
@@ -27,20 +24,18 @@ type MainProps = ThemedClassName<
   }>
 >;
 
-// TODO(burdon): Custom sizes for toolbars.
 const Main = forwardRef<HTMLDivElement, MainProps>(
-  ({ classNames, children, role, toolbar, statusbar }, forwardedRef) => {
+  ({ classNames, className, children, role, toolbar, statusbar, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
       <div
         ref={forwardedRef}
         role={role ?? 'none'}
+        {...props}
         style={{
-          gridTemplateRows: [toolbar && 'var(--dx-toolbar-size)', '1fr', statusbar && 'var(--dx-statusbar-size)']
-            .filter(Boolean)
-            .join(' '),
+          gridTemplateRows: [toolbar && 'min-content', '1fr', statusbar && 'min-content'].filter(Boolean).join(' '),
         }}
-        className={tx('container.main', { toolbar }, [classNames])}
+        className={tx('container.main', { toolbar }, [className, classNames])}
       >
         {children}
       </div>
@@ -68,12 +63,9 @@ type ColumnProps = SlottableProps<HTMLDivElement> & { gutter?: GutterSize };
 
 /**
  * Creates a vertical channel with left/right gutter.
- * The `--gutter` CSS variable is used to set the gutter width by nested components, such as:
- * - ScrollArea
- * - Dialog
- * - Form
- * - Card
+ * The `--gutter` CSS variable is used to set the gutter width by nested components, such as: Dialog, ScrollArea, Form.Viewport, etc.
  */
+// TODO(burdon): Make Column the base layout for Card.
 const Column = forwardRef<HTMLDivElement, ColumnProps>(
   ({ classNames, className, asChild, role = 'none', children, gutter = 'md', ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
