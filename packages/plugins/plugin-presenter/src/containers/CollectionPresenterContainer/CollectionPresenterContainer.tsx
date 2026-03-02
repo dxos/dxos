@@ -6,7 +6,7 @@ import React, { useContext, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { Layout } from '@dxos/react-ui';
+import { Container } from '@dxos/react-ui';
 import { type Collection } from '@dxos/schema';
 
 import { PageNumber, Pager, Layout as PresenterLayout } from '../../components/Presenter';
@@ -21,7 +21,7 @@ export const CollectionPresenterContainer = ({ role, subject: collection }: Coll
   const handleExit = useExitPresenter(collection);
 
   return (
-    <Layout.Main role={role} classNames='relative'>
+    <Container.Main role={role} classNames='relative'>
       <PresenterLayout
         bottomRight={<PageNumber index={slide} count={collection.objects.length} />}
         bottomLeft={
@@ -36,6 +36,6 @@ export const CollectionPresenterContainer = ({ role, subject: collection }: Coll
       >
         <Surface.Surface role='slide' data={{ subject: collection.objects[slide] }} />
       </PresenterLayout>
-    </Layout.Main>
+    </Container.Main>
   );
 };

@@ -60,14 +60,14 @@ const layouts: Record<ContainerType, FC<ContainerProps>> = {
   ),
 
   fullscreen: ({ classNames, children }: ContainerProps) => (
-    <div role='none' className={mx('fixed inset-0 flex overflow-hidden bg-deck-surface', classNames)}>
+    <div role='none' className={mx('fixed inset-0 flex overflow-hidden bg-base-surface', classNames)}>
       {children}
     </div>
   ),
 
   column: ({ classNames, children }: ContainerProps) => (
-    <div role='none' className='fixed inset-0 flex justify-center overflow-hidden bg-deck-surface'>
-      <div role='none' className={mx('flex flex-col w-[40rem] bg-base-surface', classNames)}>
+    <div role='none' className='fixed inset-0 flex justify-center overflow-hidden bg-base-surface'>
+      <div role='none' className={mx('flex flex-col w-[40rem] bg-group-surface', classNames)}>
         {children}
       </div>
     </div>

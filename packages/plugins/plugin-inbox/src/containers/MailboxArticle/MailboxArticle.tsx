@@ -16,7 +16,7 @@ import { AttentionOperation } from '@dxos/plugin-attention/types';
 import { ATTENDABLE_PATH_SEPARATOR, DeckOperation } from '@dxos/plugin-deck/types';
 import { Filter, useQuery } from '@dxos/react-client/echo';
 import { ElevationProvider, IconButton, useTranslation } from '@dxos/react-ui';
-import { Layout } from '@dxos/react-ui';
+import { Container } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
 import { QueryEditor } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
@@ -187,7 +187,7 @@ export const MailboxArticle = ({ subject: feed, filter: filterProp, attendableId
   }, [filterVisible, filterProp, parser]);
 
   return (
-    <Layout.Main toolbar>
+    <Container.Main toolbar>
       <ElevationProvider elevation='positioned'>
         <MenuProvider {...menuActions} attendableId={id}>
           <ToolbarMenu />
@@ -237,7 +237,7 @@ export const MailboxArticle = ({ subject: feed, filter: filterProp, attendableId
       ) : (
         <MailboxEmpty feed={feed} />
       )}
-    </Layout.Main>
+    </Container.Main>
   );
 };
 

@@ -10,7 +10,7 @@ import { Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { useQuery } from '@dxos/react-client/echo';
-import { Layout } from '@dxos/react-ui';
+import { Container } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { Board, type BoardController, type BoardRootProps, type Position } from '@dxos/react-ui-board';
 import { ObjectPicker, type ObjectPickerContentProps } from '@dxos/react-ui-form';
@@ -128,7 +128,7 @@ export const BoardContainer = ({ role, subject: board }: BoardContainerProps) =>
           setPickerState(nextOpen ? { position: DEFAULT_POSITION } : null);
         }}
       >
-        <Layout.Main role={role} toolbar>
+        <Container.Main role={role} toolbar>
           <Board.Toolbar disabled={!hasAttention} />
           <Board.Container>
             <Board.Viewport classNames='border-none'>
@@ -142,7 +142,7 @@ export const BoardContainer = ({ role, subject: board }: BoardContainerProps) =>
               </Board.Content>
             </Board.Viewport>
           </Board.Container>
-        </Layout.Main>
+        </Container.Main>
         <ObjectPicker.Content options={options} onSelect={handleSelect} classNames='dx-card-popover-width' />
         <ObjectPicker.VirtualTrigger virtualRef={addTriggerRef} />
       </ObjectPicker.Root>

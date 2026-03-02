@@ -1,0 +1,117 @@
+/**
+ * Panel — applies bg-{hue}-surface / text-{hue}-surface-text / border-{hue}-border tokens via data-hue attribute or BEM modifier.
+ * Example: <div className='dx-panel' data-hue='blue'>...</div>
+ * Example: <div className='dx-panel dx-panel--blue'>...</div>
+ */
+
+@layer dx-components {
+  .dx-panel[data-hue='neutral'],
+  .dx-panel--neutral {
+    @apply bg-neutral-surface text-neutral-surface-text border-neutral-border;
+  }
+
+  .dx-panel[data-hue='red'],
+  .dx-panel--red {
+    @apply bg-red-surface text-red-surface-text border-red-border;
+  }
+
+  .dx-panel[data-hue='orange'],
+  .dx-panel--orange {
+    @apply bg-orange-surface text-orange-surface-text border-orange-border;
+  }
+
+  .dx-panel[data-hue='amber'],
+  .dx-panel--amber {
+    @apply bg-amber-surface text-amber-surface-text border-amber-border;
+  }
+
+  .dx-panel[data-hue='yellow'],
+  .dx-panel--yellow {
+    @apply bg-yellow-surface text-yellow-surface-text border-yellow-border;
+  }
+
+  .dx-panel[data-hue='lime'],
+  .dx-panel--lime {
+    @apply bg-lime-surface text-lime-surface-text border-lime-border;
+  }
+
+  .dx-panel[data-hue='green'],
+  .dx-panel--green {
+    @apply bg-green-surface text-green-surface-text border-green-border;
+  }
+
+  .dx-panel[data-hue='emerald'],
+  .dx-panel--emerald {
+    @apply bg-emerald-surface text-emerald-surface-text border-emerald-border;
+  }
+
+  .dx-panel[data-hue='teal'],
+  .dx-panel--teal {
+    @apply bg-teal-surface text-teal-surface-text border-teal-border;
+  }
+
+  .dx-panel[data-hue='cyan'],
+  .dx-panel--cyan {
+    @apply bg-cyan-surface text-cyan-surface-text border-cyan-border;
+  }
+
+  .dx-panel[data-hue='sky'],
+  .dx-panel--sky {
+    @apply bg-sky-surface text-sky-surface-text border-sky-border;
+  }
+
+  .dx-panel[data-hue='blue'],
+  .dx-panel--blue {
+    @apply bg-blue-surface text-blue-surface-text border-blue-border;
+  }
+
+  .dx-panel[data-hue='indigo'],
+  .dx-panel--indigo {
+    @apply bg-indigo-surface text-indigo-surface-text border-indigo-border;
+  }
+
+  .dx-panel[data-hue='violet'],
+  .dx-panel--violet {
+    @apply bg-violet-surface text-violet-surface-text border-violet-border;
+  }
+
+  .dx-panel[data-hue='purple'],
+  .dx-panel--purple {
+    @apply bg-purple-surface text-purple-surface-text border-purple-border;
+  }
+
+  .dx-panel[data-hue='fuchsia'],
+  .dx-panel--fuchsia {
+    @apply bg-fuchsia-surface text-fuchsia-surface-text border-fuchsia-border;
+  }
+
+  .dx-panel[data-hue='pink'],
+  .dx-panel--pink {
+    @apply bg-pink-surface text-pink-surface-text border-pink-border;
+  }
+
+  .dx-panel[data-hue='rose'],
+  .dx-panel--rose {
+    @apply bg-rose-surface text-rose-surface-text border-rose-border;
+  }
+
+  .dx-panel[data-hue='info'],
+  .dx-panel--info {
+    @apply bg-info-surface text-info-surface-text border-info-border;
+  }
+
+  .dx-panel[data-hue='success'],
+  .dx-panel--success {
+    @apply bg-success-surface text-success-surface-text border-success-border;
+  }
+
+  .dx-panel[data-hue='warning'],
+  .dx-panel--warning {
+    @apply bg-warning-surface text-warning-surface-text border-warning-border;
+  }
+
+  .dx-panel[data-hue='error'],
+  .dx-panel--error {
+    @apply bg-error-surface text-error-surface-text border-error-border;
+  }
+}

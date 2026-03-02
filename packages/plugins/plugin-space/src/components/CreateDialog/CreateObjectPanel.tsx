@@ -47,7 +47,7 @@ export const CreateObjectPanel = ({
   typename,
   target,
   views,
-  initialFormValues: _initialFormValues,
+  initialFormValues: initialFormValuesProp,
   defaultSpaceId,
   resolve,
   onTargetChange,
@@ -55,7 +55,7 @@ export const CreateObjectPanel = ({
   onCreateObject,
 }: CreateObjectPanelProps) => {
   const { t } = useTranslation(meta.id);
-  const initialFormValues = useDefaultValue(_initialFormValues, () => ({}));
+  const initialFormValues = useDefaultValue(initialFormValuesProp, () => ({}));
   const metadata = typename && resolve?.(typename);
 
   // TODO(burdon): Message appears twice (v1 and v2).

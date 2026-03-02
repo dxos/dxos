@@ -8,7 +8,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { type Node, useConnections } from '@dxos/plugin-graph';
-import { Avatar, Icon, Layout, ScrollArea, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Avatar, Container, Icon, ScrollArea, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Card, Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchList, useSearchListItem, useSearchListResults } from '@dxos/react-ui-searchlist';
 import { mx } from '@dxos/ui-theme';
@@ -41,7 +41,7 @@ export const Workspace = ({ id }: WorkspaceProps) => {
   });
 
   return (
-    <Layout.Main toolbar>
+    <Container.Main toolbar>
       <SearchList.Root onSearch={handleSearch}>
         <Toolbar.Root>
           <SearchList.Input placeholder={t('search placeholder')} autoFocus />
@@ -56,7 +56,7 @@ export const Workspace = ({ id }: WorkspaceProps) => {
           </Mosaic.Container>
         </SearchList.Content>
       </SearchList.Root>
-    </Layout.Main>
+    </Container.Main>
   );
 };
 

@@ -6,7 +6,7 @@ import React, { useCallback, useRef } from 'react';
 
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { useMediaQuery } from '@dxos/react-ui';
-import { Layout } from '@dxos/react-ui';
+import { Container } from '@dxos/react-ui';
 import { Calendar, type CalendarController } from '@dxos/react-ui-calendar';
 import { mx } from '@dxos/ui-theme';
 
@@ -26,7 +26,7 @@ export const JournalContainer = ({ role, subject: journal, showCalendar = true }
   }, []);
 
   return (
-    <Layout.Main role={role}>
+    <Container.Main role={role}>
       <div
         className={mx(
           showCalendar
@@ -47,6 +47,6 @@ export const JournalContainer = ({ role, subject: journal, showCalendar = true }
 
         <JournalComponent journal={journal} classNames='dx-container-max-width' onSelect={handleSelect} />
       </div>
-    </Layout.Main>
+    </Container.Main>
   );
 };
