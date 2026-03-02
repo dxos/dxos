@@ -56,17 +56,6 @@ export const decodePublicKey = (publicKey: KeysPb.PublicKey | { data: Uint8Array
 export const toPublicKey = (key: KeysPb.PublicKey | PublicKey | { data: Uint8Array }): PublicKey =>
   key instanceof PublicKey ? key : decodePublicKey(key);
 
-//
-// Proto/buf boundary cast helpers.
-// These are safe at runtime because proto and buf share the same wire format (generated from the same .proto files).
-// They make the boundary casts self-documenting and auditable.
-//
-
-/** Cast buf type to proto equivalent at a codec/feed boundary. */
-export const bufToProto = <T>(value: unknown): T => value as T;
-
-/** Cast proto type to buf equivalent after codec/feed decoding. */
-export const protoToBuf = <T>(value: unknown): T => value as T;
 
 /** Proto Any uses snake_case `type_url`, buf Any uses camelCase `typeUrl`. */
 type ProtoAny = { type_url: string; value: Uint8Array };

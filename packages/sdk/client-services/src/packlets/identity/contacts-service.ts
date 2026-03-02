@@ -8,14 +8,13 @@ import { type MemberInfo } from '@dxos/credentials';
 import { type SpaceManager } from '@dxos/echo-pipeline';
 import { PublicKey } from '@dxos/keys';
 import { type Client } from '@dxos/protocols';
-import { create, protoToBuf } from '@dxos/protocols/buf';
+import { create } from '@dxos/protocols/buf';
 import {
   type Contact,
   type ContactBook,
   ContactBookSchema,
   ContactSchema,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { PublicKeySchema } from '@dxos/protocols/buf/dxos/keys_pb';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
@@ -44,7 +43,7 @@ export class ContactsServiceImpl implements Client.ContactsService {
         }
         const existing = acc.get(memberInfo.key);
         if (existing != null) {
-          existing.profile ??= protoToBuf<ProfileDocument>(memberInfo.profile);
+          existing.profile ??= memberInfo.profile;
           existing.commonSpaces?.push(create(PublicKeySchema, { data: spaceKey.asUint8Array() }));
         } else {
           acc.set(

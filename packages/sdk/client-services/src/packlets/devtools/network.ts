@@ -7,7 +7,7 @@ import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { type SignalManager } from '@dxos/messaging';
 import { type SwarmNetworkManager } from '@dxos/network-manager';
-import { create, protoToBuf, timestampFromDate } from '@dxos/protocols/buf';
+import { create, timestampFromDate } from '@dxos/protocols/buf';
 import {
   type GetNetworkPeersRequest,
   type GetNetworkPeersResponse,
@@ -22,14 +22,13 @@ import {
   SubscribeToSwarmInfoResponseSchema,
 } from '@dxos/protocols/buf/dxos/devtools/host_pb';
 import { PublicKeySchema } from '@dxos/protocols/buf/dxos/keys_pb';
-import { type SwarmEvent } from '@dxos/protocols/buf/dxos/mesh/signal_pb';
 
 export const subscribeToNetworkStatus = ({ signalManager }: { signalManager: SignalManager }) =>
   new Stream<SubscribeToSignalStatusResponse>(({ next, close }) => {
     const update = () => {
       try {
         const status = signalManager.getStatus?.();
-        next(create(SubscribeToSignalStatusResponseSchema, { servers: protoToBuf<SubscribeToSignalStatusResponse['servers']>(status) }));
+        next(create(SubscribeToSignalStatusResponseSchema, { servers: status as unknown as SubscribeToSignalStatusResponse['servers'] }));
       } catch (err: any) {
         close(err);
       }
@@ -58,24 +57,30 @@ export const subscribeToSignal = ({ signalManager }: { signalManager: SignalMana
       );
     });
     signalManager.swarmEvent.on(ctx, (swarmEvent) => {
-      const swarmEventData =
+      const swarmEventValue =
         swarmEvent.event.case === 'peerAvailable'
           ? {
-              peerAvailable: {
-                peer: PublicKey.from(swarmEvent.event.value.peer!.peerKey).asUint8Array(),
-                since: swarmEvent.event.value.since,
+              event: {
+                case: 'peerAvailable' as const,
+                value: {
+                  peer: PublicKey.from(swarmEvent.event.value.peer!.peerKey).asUint8Array(),
+                  since: swarmEvent.event.value.since,
+                },
               },
             }
           : {
-              peerLeft: {
-                peer: PublicKey.from(swarmEvent.event.value!.peer!.peerKey).asUint8Array(),
+              event: {
+                case: 'peerLeft' as const,
+                value: {
+                  peer: PublicKey.from(swarmEvent.event.value!.peer!.peerKey).asUint8Array(),
+                },
               },
             };
       next(
         create(SignalResponseSchema, {
           data: {
             case: 'swarmEvent',
-            value: protoToBuf<SwarmEvent>(swarmEventData),
+            value: swarmEventValue,
           },
           topic: swarmEvent.topic!.data,
           receivedAt: timestampFromDate(new Date()),

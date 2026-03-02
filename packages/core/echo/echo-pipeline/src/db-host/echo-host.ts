@@ -112,7 +112,7 @@ export class EchoHost extends Resource {
       runtime: this._runtime,
       getSpaceIds: () => this._spaceStateManager.spaceIds,
     });
-    this._queuesService = new LocalQueueServiceImpl(runtime, this._feedStore, syncQueue) as Echo.QueueService;
+    this._queuesService = new LocalQueueServiceImpl(runtime, this._feedStore, syncQueue) as unknown as Echo.QueueService;
 
     // SQLite-based index engine for all queries.
     this._indexEngine = new IndexEngine();

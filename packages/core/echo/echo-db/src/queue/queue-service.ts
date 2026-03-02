@@ -29,9 +29,9 @@ export class QueueServiceImpl implements Echo.QueueService {
     const result = await this._client.queryQueue(
       request.query.queuesNamespace,
       request.query.spaceId as SpaceId,
-      bufToProto(request.query),
+      request.query as any,
     );
-    return protoToBuf<QueueQueryResult>(result);
+    return result as QueueQueryResult;
   }
 
   async insertIntoQueue(request: InsertIntoQueueRequest): Promise<Empty> {

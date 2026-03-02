@@ -13,7 +13,7 @@ import { type Keyring } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AlreadyJoinedError, AuthorizationError, InvalidInvitationError, SpaceNotFoundError } from '@dxos/protocols';
-import { bufToProto, decodePublicKey, encodePublicKey, protoToBuf, toPublicKey } from '@dxos/protocols/buf';
+import { encodePublicKey, toPublicKey } from '@dxos/protocols/buf';
 import {
   type Invitation,
   Invitation_AuthMethod,
@@ -95,7 +95,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
       kind: {
         case: 'space',
         value: {
-          credential: bufToProto(spaceMemberCredential),
+          credential: spaceMemberCredential,
           controlTimeframe: space?.inner.controlPipeline.state.timeframe,
         },
       },
@@ -116,7 +116,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
       space.key,
       {
         invitationId: invitation.invitationId,
-        authMethod: bufToProto(invitation.authMethod),
+        authMethod: invitation.authMethod,
         swarmKey: toPublicKey(invitation.swarmKey!),
         role: (invitation.role ?? SpaceMember_Role.ADMIN) as never,
         expiresOn: computeExpirationTime(invitation),
@@ -204,7 +204,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
       dataTimeframe,
     });
 
-    await this._signingContext.recordCredential(protoToBuf<Credential>(credential));
+    await this._signingContext.recordCredential(credential);
 
     return { spaceKey: spaceKey ? encodePublicKey(spaceKey) : undefined! };
   }

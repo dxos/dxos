@@ -4,7 +4,7 @@
 
 import { RuntimeServiceError } from '@dxos/errors';
 import { type Echo, type EdgeFunctionEnv, type FeedProtocol } from '@dxos/protocols';
-import { bufToProto, EMPTY, type Empty } from '@dxos/protocols/buf';
+import { EMPTY, type Empty } from '@dxos/protocols/buf';
 import type {
   DeleteFromQueueRequest,
   InsertIntoQueueRequest,
@@ -20,7 +20,7 @@ export class QueueServiceImpl implements Echo.QueueService {
 
   async queryQueue(request: QueryQueueRequest): Promise<QueueQueryResult> {
     try {
-      using result = await this._queueService.queryQueue(this._ctx, bufToProto(request));
+      using result = await this._queueService.queryQueue(this._ctx, request as any);
       // Copy to avoid hanging RPC stub (Workers RPC lifecycle).
       return {
         objects: structuredClone(result.objects),

@@ -46,8 +46,8 @@ import { type Keyring } from '@dxos/keyring';
 import { ObjectId, PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AlreadyJoinedError, trace as Trace } from '@dxos/protocols';
-import { create, encodePublicKey, protoToBuf, toPublicKey } from '@dxos/protocols/buf';
-import { AdmissionKeypairSchema, type Invitation_AuthMethod, Invitation_Kind, Invitation_Type, SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { create, encodePublicKey, toPublicKey } from '@dxos/protocols/buf';
+import { AdmissionKeypairSchema, Invitation_Kind, Invitation_Type, SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
 import { type FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { EdgeReplicationSetting, type SpaceMetadata } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
@@ -483,7 +483,7 @@ export class DataSpaceManager extends Resource {
   }
 
   public async requestSpaceAdmissionCredential(spaceKey: PublicKey): Promise<Credential> {
-    return protoToBuf<Credential>(await this._spaceManager.requestSpaceAdmissionCredential({
+    return this._spaceManager.requestSpaceAdmissionCredential({
       spaceKey,
       identityKey: this._signingContext.identityKey,
       timeout: 15_000,
@@ -493,7 +493,7 @@ export class DataSpaceManager extends Resource {
         credentialProvider: createAuthProvider(this._signingContext.credentialSigner),
         credentialAuthenticator: async () => true,
       },
-    }));
+    });
   }
 
   async setSpaceEdgeReplicationSetting(spaceKey: PublicKey, setting: EdgeReplicationSetting): Promise<void> {
@@ -718,7 +718,7 @@ export class DataSpaceManager extends Resource {
         type: Invitation_Type.DELEGATED,
         kind: Invitation_Kind.SPACE,
         spaceKey: encodePublicKey(space.key),
-        authMethod: protoToBuf<Invitation_AuthMethod>(invitation.authMethod),
+        authMethod: invitation.authMethod,
         invitationId: invitation.invitationId,
         swarmKey: encodePublicKey(invitation.swarmKey as any),
         guestKeypair: invitation.guestKey ? create(AdmissionKeypairSchema, { publicKey: encodePublicKey(invitation.guestKey as any) }) : undefined,

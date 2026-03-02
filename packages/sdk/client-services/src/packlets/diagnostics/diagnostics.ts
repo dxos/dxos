@@ -10,7 +10,7 @@ import { createDidFromIdentityKey, credentialTypeFilter } from '@dxos/credential
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { STORAGE_VERSION } from '@dxos/protocols';
-import { protoToBuf, timestampMs, toPublicKey } from '@dxos/protocols/buf';
+import { timestampMs, toPublicKey } from '@dxos/protocols/buf';
 import {
   type Device as BufDevice,
   type Identity,
@@ -168,7 +168,7 @@ export const createDiagnostics = async (
         const status = await getFirstStreamValue(clientServices.NetworkService!.queryStatus(), {
           timeout: DEFAULT_TIMEOUT,
         }).catch(() => undefined);
-        diagnostics.networkStatus = protoToBuf<BufNetworkStatus>(status);
+        diagnostics.networkStatus = status as BufNetworkStatus;
 
         // Networking.
 
@@ -194,7 +194,7 @@ const getSpaceStats = async (space: DataSpace): Promise<SpaceStats> => {
         id: credential.id,
       })) as never,
 
-    members: protoToBuf<SpaceMember[]>(await Promise.all(
+    members: (await Promise.all(
       Array.from(space.inner.spaceState.members.values()).map(async (member) => ({
         role: member.role,
         identity: {
@@ -209,7 +209,7 @@ const getSpaceStats = async (space: DataSpace): Promise<SpaceStats> => {
             ? SpaceMember_PresenceState.ONLINE
             : SpaceMember_PresenceState.OFFLINE,
       })),
-    )),
+    )) as unknown as SpaceMember[],
 
     pipeline: {
       // TODO(burdon): Pick properties from credentials if needed.
