@@ -143,7 +143,7 @@ const DialogHeader: ForwardRefExoticComponent<DialogTitleProps> = forwardRef<HTM
     const { tx } = useThemeContext();
     return (
       <Container.Segment>
-        <div role='header' {...props} className={tx('dialog.header', { srOnly }, [classNames])} ref={forwardedRef} />
+        <div role='heading' {...props} className={tx('dialog.header', { srOnly }, [classNames])} ref={forwardedRef} />
       </Container.Segment>
     );
   },

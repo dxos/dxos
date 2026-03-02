@@ -8,6 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { useRegisterSW } from 'virtual:pwa-register/react';
 
 import { useApp } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
@@ -18,8 +19,6 @@ import { ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { defaultTx } from '@dxos/ui-theme';
 import { getHostPlatform, isMobile as isMobile$, isTauri as isTauri$ } from '@dxos/util';
-
-import { useRegisterSW } from 'virtual:pwa-register/react';
 
 import { Placeholder, ResetDialog } from './components';
 import { initializeObservability, setupConfig } from './config';
