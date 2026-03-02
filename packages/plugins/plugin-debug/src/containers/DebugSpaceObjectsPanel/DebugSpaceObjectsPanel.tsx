@@ -34,15 +34,17 @@ export const DebugSpaceObjectsPanel = () => {
 
   return (
     <Clipboard.Provider>
-      <Layout.Main toolbar classNames='grid grid-cols- grid-rows-[auto_1fr_1fr]'>
+      <Layout.Main toolbar>
         <Toolbar.Root>
           <Input.Root>
             <Input.TextInput disabled placeholder='Search...' />
           </Input.Root>
         </Toolbar.Root>
-        <div className='min-h-100'>{selectedObject && <Json data={selectedObject} />}</div>
-        <div className='border-t border-separator! min-h-100 overflow-auto'>
-          <ObjectsTree db={database} onSelect={(entity) => setSelectedId(entity.id)} />
+        <div className='h-full overflow-hidden grid grid-rows-[1fr_1fr] divide-y divide-separator'>
+          <div className='overflow-auto'>
+            <ObjectsTree db={database} onSelect={(entity) => setSelectedId(entity.id)} />
+          </div>
+          <div className='overflow-auto'>{selectedObject && <Json classNames='p-1' data={selectedObject} />}</div>
         </div>
       </Layout.Main>
     </Clipboard.Provider>
