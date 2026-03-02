@@ -20,7 +20,7 @@ const perfomInvitation = async (host: AppManager, guest: AppManager) => {
 
 const navigateToNewDocument = async (app: AppManager) => {
   // Check if Documents collection (nth=1) is collapsed by looking for "Click to open" in its text.
-  const documentsCollection = app.page.getByTestId('spacePlugin.object').nth(3);
+  const documentsCollection = app.getObject(3);
   const documentsText = await documentsCollection.textContent();
   const isCollapsed = documentsText?.includes('Click to open');
   if (isCollapsed) {

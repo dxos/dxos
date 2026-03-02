@@ -48,6 +48,7 @@ const L1Panel$ = ({ open, path, item, isCurrent, isVisited, onBack }: L1PanelPro
       ]}
       tabIndex={-1}
       aria-label={title}
+      {...(isCurrent && { 'data-testid': 'navtree.workspace.visible' })}
       {...(!open && { inert: true })}
     >
       {shouldRenderContent && <L1PanelContent open={open} path={path} item={item} onBack={onBack} />}
