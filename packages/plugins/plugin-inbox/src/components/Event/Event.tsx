@@ -88,7 +88,7 @@ type EventHeaderProps = {
   onContactCreate?: (actor: Actor.Actor) => void;
 };
 
-const EventHeader = ({ db, onContactCreate }: EventHeaderProps) => {
+const EventHeader = e ({ db, onContactCreate }: EventHeaderProps) => {
   const { t } = useTranslation(meta.id);
   const { event } = useEventContext(EVENT_HEADER_NAME);
 

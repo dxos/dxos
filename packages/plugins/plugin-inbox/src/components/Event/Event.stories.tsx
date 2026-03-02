@@ -30,7 +30,6 @@ const DefaultStory = () => {
 
 const meta = {
   title: 'plugins/plugin-inbox/components/Event',
-  component: Event.Root,
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {
