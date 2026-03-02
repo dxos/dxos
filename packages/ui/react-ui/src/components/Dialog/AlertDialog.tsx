@@ -153,6 +153,7 @@ const AlertDialogOverlay: ForwardRefExoticComponent<AlertDialogOverlayProps> = f
         'dialog.overlay',
         {},
         classNames,
+        // TODO(burdon): Move to dialog.ts.
         'data-[h-align=start]:justify-center',
         'data-[h-align=start]:items-start',
         'data-[h-align=center]:place-content-center',
@@ -216,6 +217,9 @@ AlertDialogActionBar.displayName = ALERT_DIALOG_ACTIONBAR_NAME;
 // AlertDialog
 //
 
+/**
+ * @deprecated Use Dialog instead
+ */
 export const AlertDialog = {
   Root: AlertDialogRoot,
   Trigger: AlertDialogTrigger,

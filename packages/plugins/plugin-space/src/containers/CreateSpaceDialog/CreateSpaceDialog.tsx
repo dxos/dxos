@@ -50,23 +50,21 @@ export const CreateSpaceDialog = () => {
           <Dialog.CloseIconButton ref={closeRef} />
         </Dialog.Close>
       </Dialog.Header>
-      <Dialog.Body>
-        <Form.Root
-          testId='create-space-form'
-          autoFocus
-          schema={SpaceForm}
-          values={initialValues}
-          fieldProvider={inputSurfaceLookup}
-          onSave={handleCreateSpace}
-        >
-          <Form.Viewport>
-            <Form.Content>
-              <Form.FieldSet />
-              <Form.Submit />
-            </Form.Content>
-          </Form.Viewport>
-        </Form.Root>
-      </Dialog.Body>
+      <Form.Root
+        testId='create-space-form'
+        autoFocus
+        schema={SpaceForm}
+        values={initialValues}
+        fieldProvider={inputSurfaceLookup}
+        onSave={handleCreateSpace}
+      >
+        <Form.Viewport>
+          <Form.Content>
+            <Form.FieldSet />
+            <Form.Submit />
+          </Form.Content>
+        </Form.Viewport>
+      </Form.Root>
     </Dialog.Content>
   );
 };

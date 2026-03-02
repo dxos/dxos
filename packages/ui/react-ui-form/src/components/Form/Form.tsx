@@ -190,7 +190,7 @@ const FormViewport = ({
   return (
     <ScrollArea.Root
       orientation='vertical'
-      classNames={['py-form-padding', classNames]}
+      classNames={classNames}
       margin={margin}
       padding={padding}
       thin={thin}
