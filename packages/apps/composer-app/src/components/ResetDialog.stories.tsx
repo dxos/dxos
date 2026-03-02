@@ -3,7 +3,6 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
 
 import { withTheme } from '@dxos/react-ui/testing';
 
@@ -28,13 +27,6 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     defaultOpen: true,
-  },
-};
-
-export const WithRefreshAvailable: Story = {
-  args: {
-    defaultOpen: true,
-    needRefresh: true,
     onRefresh: () => console.log('refresh'),
   },
 };
@@ -42,14 +34,8 @@ export const WithRefreshAvailable: Story = {
 export const WithError: Story = {
   args: {
     defaultOpen: true,
+    isDev: true,
     error: Object.assign(new Error('Failed to load storage'), { name: 'StorageError' }),
     onRefresh: () => console.log('refresh'),
-  },
-};
-
-export const DevMode: Story = {
-  args: {
-    defaultOpen: true,
-    isDev: true,
   },
 };

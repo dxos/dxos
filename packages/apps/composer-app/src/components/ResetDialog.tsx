@@ -147,7 +147,11 @@ export const ResetDialog = ({
           </AlertDialog.Body>
 
           <AlertDialog.ActionBar>
-            {!isDev ? (
+            <Button variant='primary' onClick={handleSafeMode}>
+              {t('safe mode label')}
+            </Button>
+
+            {isDev && (
               <DropdownMenu.Root>
                 <DropdownMenu.Trigger asChild>
                   <Button data-testid='resetDialog.reset' variant='destructive'>
@@ -165,10 +169,6 @@ export const ResetDialog = ({
                   </DropdownMenu.Content>
                 </DropdownMenu.Portal>
               </DropdownMenu.Root>
-            ) : (
-              <Button variant='primary' onClick={handleSafeMode}>
-                {t('safe mode label')}
-              </Button>
             )}
 
             <div role='none' className='flex-grow' />
