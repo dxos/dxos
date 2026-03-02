@@ -10,8 +10,9 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type FeedMessageBlock } from '@dxos/protocols';
+import { create, timeframeToBuf } from '@dxos/protocols/buf';
 import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import type { FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
+import { type FeedMessage, FeedMessageSchema } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { Timeframe } from '@dxos/timeframe';
 import { ComplexMap } from '@dxos/util';
 
@@ -285,10 +286,10 @@ export class Pipeline implements PipelineAccessor {
     invariant(feed.properties.writable, 'Feed must be writable.');
 
     this._writer = createMappedFeedWriter<ControlPipelinePayload, FeedMessage>(
-      (payload: ControlPipelinePayload) => ({
-        timeframe: this._timeframeClock.timeframe,
-        payload: payload,
-      }) as any,
+      (payload: ControlPipelinePayload) => create(FeedMessageSchema, {
+        timeframe: timeframeToBuf(this._timeframeClock.timeframe),
+        payload: payload as any,
+      }),
       feed.createFeedWriter(),
     );
   }

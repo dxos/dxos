@@ -55,12 +55,12 @@ const emptyEchoMetadata = (): EchoMetadata =>
 const emptyLargeSpaceMetadata = (): LargeSpaceMetadata => create(LargeSpaceMetadataSchema, {});
 
 const echoMetadataCodec: Codec<EchoMetadata> = {
-  encode: (msg: EchoMetadata) => toBinary(EchoMetadataSchema, msg),
+  encode: (msg: EchoMetadata) => toBinary(EchoMetadataSchema, create(EchoMetadataSchema, msg)),
   decode: (bytes: Uint8Array) => fromBinary(EchoMetadataSchema, bytes),
 };
 
 const largeSpaceMetadataCodec: Codec<LargeSpaceMetadata> = {
-  encode: (msg: LargeSpaceMetadata) => toBinary(LargeSpaceMetadataSchema, msg),
+  encode: (msg: LargeSpaceMetadata) => toBinary(LargeSpaceMetadataSchema, create(LargeSpaceMetadataSchema, msg)),
   decode: (bytes: Uint8Array) => fromBinary(LargeSpaceMetadataSchema, bytes),
 };
 

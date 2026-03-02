@@ -5,7 +5,8 @@
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Event, sleep } from '@dxos/async';
-import { type FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
+import { create, timeframeToBuf } from '@dxos/protocols/buf';
+import { type FeedMessage, FeedMessageSchema } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { Timeframe } from '@dxos/timeframe';
 import { range } from '@dxos/util';
 
@@ -13,10 +14,9 @@ import { TestFeedBuilder } from '../testing';
 
 import { Pipeline } from './pipeline';
 
-const TEST_MESSAGE: FeedMessage = {
-  timeframe: new Timeframe() as any,
-  payload: {} as any,
-} as any;
+const TEST_MESSAGE: FeedMessage = create(FeedMessageSchema, {
+  timeframe: timeframeToBuf(new Timeframe()),
+});
 
 describe('pipeline/Pipeline', () => {
   test('asynchronous reader & writer without ordering', async () => {

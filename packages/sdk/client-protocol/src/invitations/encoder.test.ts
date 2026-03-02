@@ -8,6 +8,7 @@ import { PublicKey, SpaceId } from '@dxos/keys';
 import { create, encodePublicKey, timestampFromDate } from '@dxos/protocols/buf';
 import {
   type Invitation,
+  AdmissionKeypairSchema,
   Invitation_AuthMethod,
   Invitation_Kind,
   InvitationSchema,
@@ -54,13 +55,14 @@ describe('Invitation utils', () => {
   });
 
   test('guestKeypair for known public key auth method is encoded', () => {
-    const invitation = {
+    const keypair = create(AdmissionKeypairSchema, {
+      publicKey: encodePublicKey(PublicKey.random()),
+      privateKey: PublicKey.random().asBuffer(),
+    });
+    const invitation = create(InvitationSchema, {
       ...baseInvitation,
-      guestKeypair: {
-        publicKey: encodePublicKey(PublicKey.random()),
-        privateKey: PublicKey.random().asBuffer(),
-      },
-    } as unknown as Invitation;
+      guestKeypair: keypair,
+    });
 
     const encoded = InvitationEncoder.encode(invitation);
     const decoded = InvitationEncoder.decode(encoded);

@@ -9,11 +9,11 @@ import { type Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import { MemoryTransportFactory, SwarmNetworkManager, createRtcTransportFactory } from '@dxos/network-manager';
-import { create } from '@dxos/protocols/buf';
+import { create, encodePublicKey } from '@dxos/protocols/buf';
 import { Runtime_Services_SignalSchema } from '@dxos/protocols/buf/dxos/config_pb';
 import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { type FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
-import { type SpaceMetadata } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
+import { type SpaceMetadata, SpaceMetadataSchema } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { AdmittedFeed_Designation } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type Storage, StorageType, createStorage } from '@dxos/random-access-storage';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
@@ -176,12 +176,12 @@ export class TestAgent {
       sparse: true,
     });
 
-    const metadata = {
-      key: spaceKey,
-      genesisFeedKey: genesisKey,
-      controlFeedKey: controlFeed.key,
-      dataFeedKey: dataFeed.key,
-    } as any as SpaceMetadata;
+    const metadata = create(SpaceMetadataSchema, {
+      key: encodePublicKey(spaceKey),
+      genesisFeedKey: encodePublicKey(genesisKey),
+      controlFeedKey: encodePublicKey(controlFeed.key),
+      dataFeedKey: encodePublicKey(dataFeed.key),
+    });
     if (saveMetadata) {
       await this.metadataStore.addSpace(metadata);
     }

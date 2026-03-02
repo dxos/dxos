@@ -4,14 +4,14 @@
 
 import { type Codec } from '@dxos/codec-protobuf';
 import { log } from '@dxos/log';
-import { fromBinary, toBinary } from '@dxos/protocols/buf';
+import { create, fromBinary, toBinary } from '@dxos/protocols/buf';
 import { type EchoMetadata, EchoMetadataSchema } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import type { Storage } from '@dxos/random-access-storage';
 
 import { MetadataStore } from '../metadata';
 
 const echoMetadataCodec: Codec<EchoMetadata> = {
-  encode: (msg: EchoMetadata) => toBinary(EchoMetadataSchema, msg),
+  encode: (msg: EchoMetadata) => toBinary(EchoMetadataSchema, create(EchoMetadataSchema, msg)),
   decode: (bytes: Uint8Array) => fromBinary(EchoMetadataSchema, bytes),
 };
 
