@@ -50,6 +50,7 @@ import {
   type QuerySpacesResponse,
   QuerySpacesResponseSchema,
   type Space,
+  type SpaceMember,
   SpaceMember_PresenceState,
   SpaceSchema,
   type SubscribeMessagesRequest,
@@ -400,7 +401,7 @@ export class SpacesServiceImpl implements Client.SpacesService {
             peerStates: peers as any,
           };
         }),
-      )) as never,
+      )) as unknown as SpaceMember[],
       creator: space.inner.spaceState.creator ? { data: space.inner.spaceState.creator.key.asUint8Array() } : undefined,
       cache: space.cache as SpaceCache,
       metrics: space.metrics,

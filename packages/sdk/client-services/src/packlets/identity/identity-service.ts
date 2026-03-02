@@ -100,7 +100,7 @@ export class IdentityServiceImpl extends Resource implements Halo.IdentityServic
   async updateProfile(profile: ProfileDocument): Promise<IdentityProto> {
     invariant(this._identityManager.identity, 'Identity not initialized.');
     await this._identityManager.updateProfile(profile);
-    await this._onProfileUpdate?.(this._identityManager.identity.profileDocument as never);
+    await this._onProfileUpdate?.(this._identityManager.identity.profileDocument);
     return this._getIdentity()!;
   }
 

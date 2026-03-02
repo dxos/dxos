@@ -126,7 +126,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
       // Notify all existing spaces that reconnection is starting.
       // They will ignore state updates until the backend reaches READY again.
       for (const space of this._spaces) {
-        (space as unknown as SpaceProxy)._notifyReconnecting();
+        (space as SpaceProxy)._notifyReconnecting();
       }
 
       await this._setupInvitationProxy();
@@ -177,7 +177,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     const spacesStream = this._serviceProvider.services.SpacesService.querySpaces(EMPTY, { timeout: RPC_TIMEOUT });
     spacesStream.subscribe((data: QuerySpacesResponse) => {
       let emitUpdate = false;
-      const newSpaces = this.get() as unknown as SpaceProxy[];
+      const newSpaces = this.get() as SpaceProxy[];
 
       for (const space of data.spaces ?? []) {
         if (this._ctx.disposed) {
@@ -286,7 +286,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   async _close(): Promise<void> {
     this._streamSubscriptions.clear();
     await this._ctx.dispose();
-    await Promise.all(this.get().map((space) => (space as unknown as SpaceProxy)._destroy()));
+    await Promise.all(this.get().map((space) => (space as SpaceProxy)._destroy()));
     this._spacesStream.next([]);
     await this._invitationProxy?.close();
     this._invitationProxy = undefined;
@@ -414,7 +414,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   private _findProxy(space: SerializedSpace): SpaceProxy {
     const spaceKeyDecoded = space.spaceKey ? toPublicKey(space.spaceKey) : undefined;
     return (
-      (this.get().find(({ key }) => spaceKeyDecoded && key.equals(spaceKeyDecoded)) as unknown as
+      (this.get().find(({ key }) => spaceKeyDecoded && key.equals(spaceKeyDecoded)) as
         | SpaceProxy
         | undefined) ?? failUndefined()
     );

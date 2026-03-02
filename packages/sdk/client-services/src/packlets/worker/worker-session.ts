@@ -111,7 +111,7 @@ export class WorkerSession {
       timeout: 1_000, // With low timeout heartbeat may fail if the tab's thread is saturated.
     });
 
-    this.bridgeService = this._iframeRpc.rpc.BridgeService as never;
+    this.bridgeService = this._iframeRpc.rpc.BridgeService as unknown as Mesh.BridgeService;
   }
 
   async open(): Promise<void> {

@@ -7,7 +7,7 @@ import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';
 import { AlreadyJoinedError } from '@dxos/protocols';
-import { encodePublicKey } from '@dxos/protocols/buf';
+import { encodePublicKey, toPublicKey } from '@dxos/protocols/buf';
 import { type Invitation, Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import type { DeviceProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import {
@@ -56,20 +56,20 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
     invariant(deviceRequest);
     const identity = this._getIdentity();
     const credential = await identity.admitDevice(deviceRequest);
-    invariant(getCredentialAssertion(credential as never)['@type'] === 'dxos.halo.credentials.AuthorizedDevice');
+    invariant(getCredentialAssertion(credential)['@type'] === 'dxos.halo.credentials.AuthorizedDevice');
 
     return {
       kind: {
         case: 'device',
         value: {
-          identityKey: identity.identityKey as any,
-          haloSpaceKey: identity.haloSpaceKey as any,
-          genesisFeedKey: identity.haloGenesisFeedKey as any,
-          controlTimeframe: identity.controlPipeline.state.timeframe as any,
+          identityKey: encodePublicKey(identity.identityKey),
+          haloSpaceKey: encodePublicKey(identity.haloSpaceKey),
+          genesisFeedKey: encodePublicKey(identity.haloGenesisFeedKey),
+          controlTimeframe: identity.controlPipeline.state.timeframe,
           credential,
         },
       },
-    } as any;
+    } as unknown as AdmissionResponse;
   }
 
   checkInvitation(invitation: Partial<Invitation>): AlreadyJoinedError | undefined {
@@ -84,7 +84,7 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
   }
 
   createIntroduction(): IntroductionRequest {
-    return {} as any;
+    return {} as IntroductionRequest;
   }
 
   async createAdmissionRequest(deviceProfile?: DeviceProfileDocument): Promise<AdmissionRequest> {
@@ -96,13 +96,13 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
       kind: {
         case: 'device',
         value: {
-          deviceKey: deviceKey as any,
-          controlFeedKey: controlFeedKey as any,
-          dataFeedKey: dataFeedKey as any,
+          deviceKey: encodePublicKey(deviceKey),
+          controlFeedKey: encodePublicKey(controlFeedKey),
+          dataFeedKey: encodePublicKey(dataFeedKey),
           profile: deviceProfile,
         },
       },
-    } as any;
+    } as AdmissionRequest;
   }
 
   async accept(response: AdmissionResponse, request: AdmissionRequest): Promise<Partial<Invitation>> {
@@ -124,7 +124,7 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
       controlFeedKey,
       dataFeedKey,
       controlTimeframe,
-      deviceProfile: profile as never,
+      deviceProfile: profile,
       authorizedDeviceCredential: deviceResponse.credential,
     });
 

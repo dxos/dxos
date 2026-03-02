@@ -104,7 +104,7 @@ export class InvitationsManager {
 
       const loadTasks = freshInvitations.map((persistentInvitation) => {
         invariant(!this._createInvitations.get(persistentInvitation.invitationId), 'invitation already exists');
-        return this.createInvitation({ ...persistentInvitation, persistent: false } as never);
+        return this.createInvitation({ ...persistentInvitation, persistent: false } as Invitation);
       });
       const cInvitations = await Promise.all(loadTasks);
 
@@ -134,7 +134,7 @@ export class InvitationsManager {
       handler,
       options,
       otpEnteredTrigger,
-      request.deviceProfile as never,
+      request.deviceProfile,
     );
     this._acceptInvitations.set(invitation.get().invitationId, invitation);
     this.invitationAccepted.emit(invitation.get());
@@ -319,7 +319,7 @@ export class InvitationsManager {
       const delegationCredentialId = await handler.delegate(invitation);
       changeStream.next({ ...invitation, delegationCredentialId: encodePublicKey(delegationCredentialId) });
     } else if (invitation.persistent) {
-      await this._metadataStore.addInvitation(invitation as never);
+      await this._metadataStore.addInvitation(invitation);
       this.saved.emit(invitation);
     }
   }

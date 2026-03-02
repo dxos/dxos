@@ -8,6 +8,7 @@ import { type Client, EdgeAgentStatus } from '@dxos/protocols';
 import { type Empty, EmptySchema, create } from '@dxos/protocols/buf';
 import {
   EdgeStatus_ConnectionState,
+  EdgeStatusSchema,
   type QueryAgentStatusResponse,
   QueryAgentStatusResponseSchema,
   QueryAgentStatusResponse_AgentStatus,
@@ -30,15 +31,9 @@ export class EdgeAgentServiceImpl implements Client.EdgeAgentService {
       const update = () => {
         next(
           create(QueryEdgeStatusResponseSchema, {
-            status: (this._edgeConnection?.status ?? {
+            status: this._edgeConnection?.status ?? create(EdgeStatusSchema, {
               state: EdgeStatus_ConnectionState.NOT_CONNECTED,
-              rtt: 0,
-              uptime: 0,
-              rateBytesUp: 0,
-              rateBytesDown: 0,
-              messagesSent: 0,
-              messagesReceived: 0,
-            }) as never,
+            }),
           }),
         );
       };

@@ -6,7 +6,7 @@ import { next as A } from '@automerge/automerge';
 import { cbor } from '@automerge/automerge-repo';
 import * as Schema from 'effect/Schema';
 
-import { type Halo, type Space } from '@dxos/client-protocol';
+import { type ClientServices, type Halo, type Space } from '@dxos/client-protocol';
 import { type ClientServicesHost, type DataSpace } from '@dxos/client-services';
 import { exposeModule, importModule } from '@dxos/debug';
 import { Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
@@ -117,7 +117,7 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
       log('Opening devtools client RPC server...');
       server = createBufProtoRpcPeer({
         exposed: client.services.descriptors,
-        handlers: client.services.services as never,
+        handlers: client.services.services as unknown as ClientServices,
         port,
       });
 

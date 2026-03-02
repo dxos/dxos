@@ -87,7 +87,9 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
       identityKey: spaceRequest.identityKey,
       role: invitation.role ?? SpaceMember_Role.ADMIN,
       profile: guestProfile,
-      delegationCredentialId: invitation.delegationCredentialId as never,
+      delegationCredentialId: invitation.delegationCredentialId
+        ? toPublicKey(invitation.delegationCredentialId)
+        : undefined,
     });
 
     const space = this._spaceManager.spaces.get(this._spaceKey);
@@ -99,7 +101,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
           controlTimeframe: space?.inner.controlPipeline.state.timeframe,
         },
       },
-    } as any;
+    } as AdmissionResponse;
   }
 
   async delegate(invitation: Invitation): Promise<PublicKey> {
@@ -117,20 +119,20 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
       {
         invitationId: invitation.invitationId,
         authMethod: invitation.authMethod,
-        swarmKey: toPublicKey(invitation.swarmKey!),
-        role: (invitation.role ?? SpaceMember_Role.ADMIN) as never,
+        swarmKey: invitation.swarmKey,
+        role: invitation.role ?? SpaceMember_Role.ADMIN,
         expiresOn: computeExpirationTime(invitation),
         multiUse: invitation.multiUse ?? false,
         guestKey:
           invitation.authMethod === Invitation_AuthMethod.KNOWN_PUBLIC_KEY
-            ? (invitation.guestKeypair!.publicKey as never)
+            ? invitation.guestKeypair!.publicKey
             : undefined,
       } as any,
     );
 
     invariant(credential.credential);
     await writeMessages(space.inner.controlPipeline.writer, [credential]);
-    return credential.credential.credential.id! as never;
+    return toPublicKey(credential.credential.credential.id!);
   }
 
   async cancelDelegation(invitation: Invitation): Promise<void> {
@@ -143,7 +145,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     const credential = await createCancelDelegatedSpaceInvitationCredential(
       this._signingContext.credentialSigner,
       space.key,
-      invitation.delegationCredentialId as never,
+      toPublicKey(invitation.delegationCredentialId!),
     );
 
     invariant(credential.credential);
@@ -162,7 +164,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
   createIntroduction(): IntroductionRequest {
     return {
       profile: this._signingContext.getProfile(),
-    } as any;
+    } as IntroductionRequest;
   }
 
   async createAdmissionRequest(): Promise<AdmissionRequest> {
@@ -174,20 +176,20 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
       kind: {
         case: 'space',
         value: {
-          identityKey: this._signingContext.identityKey as any,
-          deviceKey: this._signingContext.deviceKey as any,
-          controlFeedKey: controlFeedKey as any,
-          dataFeedKey: dataFeedKey as any,
+          identityKey: encodePublicKey(this._signingContext.identityKey),
+          deviceKey: encodePublicKey(this._signingContext.deviceKey),
+          controlFeedKey: encodePublicKey(controlFeedKey),
+          dataFeedKey: encodePublicKey(dataFeedKey),
         },
       },
-    } as any;
+    } as AdmissionRequest;
   }
 
   async accept(response: AdmissionResponse): Promise<Partial<Invitation>> {
     const spaceResponse = (response as any).space ?? (response.kind?.case === 'space' ? response.kind.value : undefined);
     invariant(spaceResponse);
     const { credential, controlTimeframe, dataTimeframe } = spaceResponse;
-    const assertion = getCredentialAssertion(credential as never);
+    const assertion = getCredentialAssertion(credential as unknown as Credential);
     invariant(assertion.$typeName === 'dxos.halo.credentials.SpaceMember', 'Invalid credential');
     invariant(credential.subject.id.equals(this._signingContext.identityKey));
 

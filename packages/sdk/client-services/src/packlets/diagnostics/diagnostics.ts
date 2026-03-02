@@ -116,7 +116,7 @@ export const createDiagnostics = async (
         version: STORAGE_VERSION,
       },
     },
-    trace: TRACE_PROCESSOR.getDiagnostics() as never,
+    trace: TRACE_PROCESSOR.getDiagnostics() as TraceDiagnostic,
   };
 
   await Promise.all([
@@ -126,7 +126,7 @@ export const createDiagnostics = async (
       invariant(clientServices.LoggingService, 'SystemService is not available.');
       diagnostics.metrics = (await getFirstStreamValue(clientServices.LoggingService.queryMetrics({}), {
         timeout: DEFAULT_TIMEOUT,
-      }).catch(() => undefined)) as never;
+      }).catch(() => undefined)) as Metrics | undefined;
     })(),
     (async () => {
       diagnostics.storage = await asyncTimeout(getStorageDiagnostics(), DEFAULT_TIMEOUT).catch(() => undefined);
@@ -191,8 +191,8 @@ const getSpaceStats = async (space: DataSpace): Promise<SpaceStats> => {
       .filter(credentialTypeFilter('dxos.halo.credentials.Epoch'))
       .map((credential) => ({
         ...(credential.subject.assertion as unknown as Record<string, unknown>),
-        id: credential.id,
-      })) as never,
+        id: credential.id ? toPublicKey(credential.id) : undefined,
+      })) as unknown as (Epoch & { id?: PublicKey })[],
 
     members: (await Promise.all(
       Array.from(space.inner.spaceState.members.values()).map(async (member) => ({

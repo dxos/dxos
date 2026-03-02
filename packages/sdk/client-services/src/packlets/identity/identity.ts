@@ -268,7 +268,7 @@ export class Identity {
       ].map((credential) => ({ credential: { credential } })),
     );
 
-    return deviceCredential as never;
+    return deviceCredential;
   }
 
   private _onFeedAdded = async (feed: FeedWrapper<any>) => {

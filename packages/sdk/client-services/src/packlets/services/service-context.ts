@@ -435,7 +435,7 @@ export class ServiceContext extends Resource {
           identity.identityKey,
           identity.deviceKey,
           // Avoid create(ChainSchema, { credential }) which deep-processes proto-decoded credentials.
-          (() => { const chain = create(ChainSchema, {}); chain.credential = params.deviceCredential as never; return chain; })(),
+          (() => { const chain = create(ChainSchema, {}); chain.credential = params.deviceCredential; return chain; })(),
           [], // TODO(dmaretskyi): Service access credentials.
         );
       } else {

@@ -19,7 +19,7 @@ import {
   type SystemStatus,
   type UpdateStatusRequest,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { type Config as ConfigProto, ConfigSchema } from '@dxos/protocols/buf/dxos/config_pb';
+import { type Config as ConfigProto, ConfigSchema, type Runtime } from '@dxos/protocols/buf/dxos/config_pb';
 import { type MaybePromise, jsonKeyReplacer } from '@dxos/util';
 
 import { type Diagnostics } from '../diagnostics';
@@ -64,7 +64,7 @@ export class SystemServiceImpl implements Client.SystemService {
     return create(ConfigSchema, {
       version: config?.values.version,
       package: config?.values.package,
-      runtime: config?.values.runtime as never,
+      runtime: config?.values.runtime as unknown as Runtime,
     });
   }
 
