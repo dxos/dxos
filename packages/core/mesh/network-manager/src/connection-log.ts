@@ -5,7 +5,7 @@
 import { Event } from '@dxos/async';
 import { raise } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
-import { create, protoToBuf, timestampFromDate, timestampMs } from '@dxos/protocols/buf';
+import { create, timestampFromDate, timestampMs } from '@dxos/protocols/buf';
 import { ConnectionInfoSchema, type SwarmInfo, SwarmInfoSchema } from '@dxos/protocols/buf/dxos/devtools/swarm_pb';
 import { PublicKeySchema } from '@dxos/protocols/buf/dxos/keys_pb';
 import { type MuxerStats } from '@dxos/teleport';
@@ -90,7 +90,7 @@ export class ConnectionLog {
       (connection.protocol as WireProtocol & { stats: Event<MuxerStats> })?.stats?.on((stats) => {
         connectionInfo.readBufferSize = stats.readBufferSize;
         connectionInfo.writeBufferSize = stats.writeBufferSize;
-        connectionInfo.streams = protoToBuf(stats.channels);
+        connectionInfo.streams = stats.channels;
         connectionInfo.lastUpdate = timestampFromDate(new Date());
         this.update.emit();
       });

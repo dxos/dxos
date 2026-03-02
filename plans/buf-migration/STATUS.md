@@ -15,6 +15,7 @@ All of these must be true before the PR is merged:
 - [ ] **No degraded functionality**: No modules commented out, no tests removed, no features disabled
 - [ ] **CI passing**: GitHub Actions CI green
 - [ ] **Composer starts up**: Vite dev server starts and Composer app renders in browser
+- [ ] **Up-to-date with main**: Branch is rebased/merged with latest `main`
 
 ### Current Progress Against Criteria
 
@@ -26,6 +27,7 @@ All of these must be true before the PR is merged:
 | No degraded functionality | **Yes** | No modules commented out or tests removed |
 | CI passing | **Not verified** | Needs CI run |
 | Composer starts up | **Yes** | Vite dev server starts and app renders |
+| Up-to-date with main | **Not verified** | Needs merge with latest main |
 
 ---
 

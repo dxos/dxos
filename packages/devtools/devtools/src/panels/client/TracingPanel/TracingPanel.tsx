@@ -7,9 +7,8 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { Format } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
-import { bufToProto } from '@dxos/protocols/buf';
 import { type LogEntry } from '@dxos/protocols/buf/dxos/client/logging_pb';
-import { type Resource, type Span, type StreamTraceEvent } from '@dxos/protocols/buf/dxos/tracing_pb';
+import { type Span, type StreamTraceEvent } from '@dxos/protocols/buf/dxos/tracing_pb';
 import { useClient } from '@dxos/react-client';
 import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
 
@@ -50,12 +49,12 @@ export const TracingPanel = () => {
             const existing = newResources.get(event.resource!.id);
             if (!existing) {
               newResources.set(event.resource!.id, {
-                resource: bufToProto<Resource>(event.resource!),
+                resource: event.resource!,
                 spans: [],
                 logs: [],
               });
             } else {
-              existing.resource = bufToProto<Resource>(event.resource!);
+              existing.resource = event.resource!;
             }
           }
 
@@ -78,7 +77,7 @@ export const TracingPanel = () => {
             if (!resource) {
               return prevState; // No changes
             }
-            resource.logs.push(bufToProto<LogEntry>(event.log!));
+            resource.logs.push(event.log!);
           }
 
           return {

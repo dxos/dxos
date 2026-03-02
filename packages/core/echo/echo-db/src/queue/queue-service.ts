@@ -7,7 +7,7 @@ import type { EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import type { ObjectId, SpaceId } from '@dxos/keys';
 import { type Echo, FeedProtocol } from '@dxos/protocols';
-import { type Empty, EmptySchema, EMPTY, type JsonObject, bufToProto, create, protoToBuf } from '@dxos/protocols/buf';
+import { type Empty, EmptySchema, EMPTY, type JsonObject, create } from '@dxos/protocols/buf';
 import {
   type DeleteFromQueueRequest,
   type InsertIntoQueueRequest,

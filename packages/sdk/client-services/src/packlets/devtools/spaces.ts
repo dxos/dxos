@@ -5,7 +5,7 @@
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { type Space } from '@dxos/echo-pipeline';
 import { PublicKey } from '@dxos/keys';
-import { create, protoToBuf } from '@dxos/protocols/buf';
+import { create } from '@dxos/protocols/buf';
 import {
   type SubscribeToSpacesRequest,
   type SubscribeToSpacesResponse,
@@ -39,7 +39,7 @@ export const subscribeToSpaces = (context: ServiceContext, request: SubscribeToS
             return create(SubscribeToSpacesResponse_SpaceInfoSchema, {
               key: create(PublicKeySchema, { data: space.key.asUint8Array() }),
               isOpen: space.isOpen,
-              timeframe: protoToBuf<SubscribeToSpacesResponse_SpaceInfo['timeframe']>(spaceMetadata?.dataTimeframe),
+              timeframe: spaceMetadata?.dataTimeframe,
               genesisFeed: create(PublicKeySchema, { data: space.genesisFeedKey.asUint8Array() }),
               controlFeed: space.controlFeedKey
                 ? create(PublicKeySchema, { data: space.controlFeedKey.asUint8Array() })

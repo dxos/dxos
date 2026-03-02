@@ -10,7 +10,7 @@ import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
 import { type ListeningHandle, type Messenger, type PeerInfo, PeerInfoHash, type SwarmEvent } from '@dxos/messaging';
 import { trace } from '@dxos/protocols';
-import { create, protoToBuf } from '@dxos/protocols/buf';
+import { create } from '@dxos/protocols/buf';
 import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { type Answer, AnswerSchema } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 import { ComplexMap, isNonNullable } from '@dxos/util';
@@ -141,7 +141,7 @@ export class Swarm {
           .receiveMessage({
             author: message.author!,
             recipient: message.recipient!,
-            payload: protoToBuf(message.payload),
+            payload: message.payload!,
           })
           // TODO(nf): discriminate between errors
           .catch((err) => log.info('Error while receiving message', { err }));

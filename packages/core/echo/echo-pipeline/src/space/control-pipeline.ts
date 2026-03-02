@@ -15,7 +15,6 @@ import { type FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type FeedMessageBlock } from '@dxos/protocols';
-import { bufToProto, protoToBuf } from '@dxos/protocols/buf';
 import { AdmittedFeed_Designation, type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import type { FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { type ControlPipelineSnapshot } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
@@ -142,7 +141,7 @@ export class ControlPipeline {
     await this._pipeline.setCursor(snapshot.timeframe as any);
 
     for (const message of snapshot.messages ?? []) {
-      const result = await this._spaceStateMachine.process(protoToBuf<Credential>(message.credential!), {
+      const result = await this._spaceStateMachine.process(message.credential! as Credential, {
         sourceFeed: message.feedKey as any,
         skipVerification: true,
       });
@@ -159,7 +158,7 @@ export class ControlPipeline {
       timeframe: this._pipeline.state.timeframe as any,
       messages: this._spaceStateMachine.credentialEntries.map((entry) => ({
         feedKey: entry.sourceFeed as any,
-        credential: bufToProto(entry.credential),
+        credential: entry.credential,
       })) as any,
     } as any;
     await this._pipeline.unpause();
@@ -189,7 +188,7 @@ export class ControlPipeline {
     log('processing', { key: msg.feedKey, seq: msg.seq });
     if (msg.data.payload?.credential) {
       const timer = tracer.mark('dxos.echo.pipeline.control');
-      const result = await this._spaceStateMachine.process(protoToBuf<Credential>(msg.data.payload.credential.credential!), {
+      const result = await this._spaceStateMachine.process(msg.data.payload.credential.credential! as Credential, {
         sourceFeed: PublicKey.from(msg.feedKey),
       });
 
