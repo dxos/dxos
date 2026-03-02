@@ -4,7 +4,7 @@
 
 @layer dx-components {
   .dx-dialog__overlay {
-    @apply z-50 fixed grid inset-x-0 top-0 h-dvh py-[env(safe-area-inset-top)] place-items-center;
+    @apply z-40 fixed grid inset-x-0 top-0 h-dvh py-[env(safe-area-inset-top)] place-items-center;
     @apply bg-scrim-surface backdrop-blur-xs;
 
     &[data-state='open'] {

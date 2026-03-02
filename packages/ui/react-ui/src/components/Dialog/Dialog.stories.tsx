@@ -61,7 +61,6 @@ const meta = {
   component: Dialog as any,
   render: DefaultStory,
   decorators: [withTheme()],
-  parameters: {},
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
