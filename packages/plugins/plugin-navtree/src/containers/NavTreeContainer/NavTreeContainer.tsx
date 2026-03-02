@@ -4,7 +4,7 @@
 
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { type Instruction, extractInstruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
-import React, { forwardRef, memo, useCallback, useEffect, useMemo } from 'react';
+import React, { forwardRef, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
@@ -48,8 +48,44 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
     const { getItem, setItem } = useNavTreeState();
     const layout = useLayout();
     const { navigationSidebarState } = useSidebars(meta.id);
+    const [activatedWorkspaceIds, setActivatedWorkspaceIds] = useState<ReadonlySet<string>>(() => new Set());
+    const activatedWorkspaceIdsRef = useRef<ReadonlySet<string>>(new Set());
+    const latestRef = useRef({
+      tab,
+      activeItems: layout.active,
+      navigationSidebarState,
+      isLg,
+    });
 
     const model = useNavTreeModel(Node.RootId);
+
+    useEffect(() => {
+      latestRef.current = {
+        tab,
+        activeItems: layout.active,
+        navigationSidebarState,
+        isLg,
+      };
+    }, [tab, layout.active, navigationSidebarState, isLg]);
+
+    const activateWorkspace = useCallback(
+      (workspaceId: string) => {
+        if (activatedWorkspaceIdsRef.current.has(workspaceId)) {
+          return;
+        }
+
+        const nextActivatedWorkspaceIds = new Set(activatedWorkspaceIdsRef.current);
+        nextActivatedWorkspaceIds.add(workspaceId);
+        Graph.expand(graph, workspaceId, 'child');
+        activatedWorkspaceIdsRef.current = nextActivatedWorkspaceIds;
+        setActivatedWorkspaceIds(nextActivatedWorkspaceIds);
+      },
+      [graph],
+    );
+
+    useEffect(() => {
+      activateWorkspace(tab);
+    }, [activateWorkspace, tab]);
 
     const handleOpenChange = useCallback(
       ({ item: { id }, path, open }: { item: Node.Node; path: string[]; open: boolean }) => {
@@ -62,11 +98,15 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
 
     const handleTabChange = useCallback(
       (node: NavTreeItemGraphNode) => {
+        activateWorkspace(node.id);
+
+        const { tab: activeTab, activeItems, navigationSidebarState: currentSidebarState, isLg: latestIsLg } =
+          latestRef.current;
         invokeSync(LayoutOperation.UpdateSidebar, {
           state:
-            node.id === tab
-              ? navigationSidebarState === 'expanded'
-                ? isLg
+            node.id === activeTab
+              ? currentSidebarState === 'expanded'
+                ? latestIsLg
                   ? 'collapsed'
                   : 'closed'
                 : 'expanded'
@@ -76,14 +116,14 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
         invokeSync(LayoutOperation.SwitchWorkspace, { subject: node.id });
 
         // Open the first item if the workspace is empty.
-        if (layout.active.length === 0) {
+        if (activeItems.length === 0) {
           const [item] = getItems(graph, node).filter((node) => !Node.isActionLike(node));
           if (item && item.data) {
             invokeSync(LayoutOperation.Open, { subject: [item.id] });
           }
         }
       },
-      [invokeSync, graph, tab, layout.active],
+      [activateWorkspace, invokeSync, graph],
     );
 
     const blockInstruction = useCallback(
@@ -240,7 +280,14 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
 
     return (
       <NavTreeContext.Provider value={navTreeContextValue}>
-        <NavTree id={Node.RootId} root={Graph.getRoot(graph)} tab={tab} open={layout.sidebarOpen} ref={forwardedRef} />
+        <NavTree
+          id={Node.RootId}
+          root={Graph.getRoot(graph)}
+          tab={tab}
+          visitedItemIds={activatedWorkspaceIds}
+          open={layout.sidebarOpen}
+          ref={forwardedRef}
+        />
       </NavTreeContext.Provider>
     );
   },

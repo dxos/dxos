@@ -3,7 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React, { useCallback, useMemo } from 'react';
+import React, { memo, useCallback, useMemo } from 'react';
 
 import { Node } from '@dxos/app-graph';
 import { useActionRunner } from '@dxos/plugin-graph';
@@ -23,16 +23,18 @@ export type L1PanelProps = {
   open?: boolean;
   path: string[];
   item: Node.Node;
-  currentItemId: string;
+  isCurrent: boolean;
+  isVisited: boolean;
   onBack?: () => void;
 };
 
 /**
  * Space or settings panel.
  */
-export const L1Panel = ({ open, path, item, currentItemId, onBack }: L1PanelProps) => {
+const L1Panel$ = ({ open, path, item, isCurrent, isVisited, onBack }: L1PanelProps) => {
   const { t } = useTranslation(meta.id);
   const title = toLocalizedString(item.properties.label, t);
+  const shouldRenderContent = isCurrent || isVisited;
 
   return (
     <Tabs.Tabpanel
@@ -42,23 +44,21 @@ export const L1Panel = ({ open, path, item, currentItemId, onBack }: L1PanelProp
         'absolute inset-y-0 end-0',
         'w-[calc(100%-var(--dx-l0-size))] lg:w-(--dx-l1-size) grid-cols-1 grid-rows-[var(--dx-rail-size)_1fr]',
         'py-[env(safe-area-inset-top)]',
-        item.id === currentItemId && 'grid',
+        isCurrent && 'grid',
       ]}
       tabIndex={-1}
       aria-label={title}
       {...(!open && { inert: true })}
     >
-      {item.id === currentItemId && (
-        <L1PanelContent open={open} path={path} item={item} currentItemId={currentItemId} onBack={onBack} />
-      )}
+      {shouldRenderContent && <L1PanelContent open={open} path={path} item={item} onBack={onBack} />}
     </Tabs.Tabpanel>
   );
 };
 
 /**
- * Active panel content — only mounted for the current tab to avoid effect cascades.
+ * Mounted panel content for active or previously-visited tabs.
  */
-const L1PanelContent = ({ path, item, currentItemId, onBack }: L1PanelProps) => {
+const L1PanelContent = ({ path, item, onBack }: Pick<L1PanelProps, 'open' | 'path' | 'item' | 'onBack'>) => {
   const navTreeContext = useNavTreeContext();
 
   // TODO(wittjosiah): Support multiple alternate trees.
@@ -68,7 +68,7 @@ const L1PanelContent = ({ path, item, currentItemId, onBack }: L1PanelProps) => 
 
   return (
     <DensityProvider density='fine'>
-      <L1PanelHeader path={path} item={item} currentItemId={currentItemId} onBack={onBack} />
+      <L1PanelHeader path={path} item={item} onBack={onBack} />
       <ScrollArea.Root thin orientation='vertical'>
         <ScrollArea.Viewport>
           {isAlternate ? (
@@ -114,7 +114,7 @@ const L1PanelContent = ({ path, item, currentItemId, onBack }: L1PanelProps) => 
 /**
  * Header row.
  */
-const L1PanelHeader = ({ item, path, onBack }: L1PanelProps) => {
+const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'item' | 'path' | 'onBack'>) => {
   const { t } = useTranslation(meta.id);
   const { renderItemEnd: ItemEnd } = useNavTreeContext();
   const title = toLocalizedString(item.properties.label, t);
@@ -256,3 +256,14 @@ const useL1MenuActions = ({ item, path }: Pick<L1PanelProps, 'item' | 'path'>) =
 
   return { primaryAction, groupedActions, menuActions, onAction };
 };
+
+export const L1Panel = memo(
+  L1Panel$,
+  (previous, next) =>
+    previous.item === next.item &&
+    previous.path === next.path &&
+    previous.open === next.open &&
+    previous.onBack === next.onBack &&
+    previous.isCurrent === next.isCurrent &&
+    previous.isVisited === next.isVisited,
+);

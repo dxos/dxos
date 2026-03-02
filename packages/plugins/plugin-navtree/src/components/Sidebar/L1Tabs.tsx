@@ -10,7 +10,9 @@ import { l0ItemType } from '../../util';
 
 import { L1Panel, type L1PanelProps } from './L1Panel';
 
-export type L1TabsProps = Pick<L1PanelProps, 'open' | 'currentItemId' | 'onBack'> & {
+export type L1TabsProps = Pick<L1PanelProps, 'open' | 'onBack'> & {
+  currentItemId: string;
+  visitedItemIds: ReadonlySet<string>;
   path: string[];
   topLevelItems: Node.Node[];
 };
@@ -18,13 +20,23 @@ export type L1TabsProps = Pick<L1PanelProps, 'open' | 'currentItemId' | 'onBack'
 /**
  * Each workspace is an L1 tab.
  */
-export const L1Tabs = ({ topLevelItems, onBack, ...props }: L1TabsProps) => {
+export const L1Tabs = ({ topLevelItems, currentItemId, visitedItemIds, onBack, open, path }: L1TabsProps) => {
   return (
     <>
       {topLevelItems.map((item) => {
         const type = l0ItemType(item);
         if (type === 'tab') {
-          return <L1Panel key={item.id} item={item} {...props} onBack={onBack} />;
+          return (
+            <L1Panel
+              key={item.id}
+              item={item}
+              path={path}
+              open={open}
+              onBack={onBack}
+              isCurrent={item.id === currentItemId}
+              isVisited={visitedItemIds.has(item.id)}
+            />
+          );
         }
         return null;
       })}
