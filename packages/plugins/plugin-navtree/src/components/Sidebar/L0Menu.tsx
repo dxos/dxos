@@ -109,35 +109,37 @@ const l0ItemRoot =
 const l0ItemContent = 'flex justify-center items-center dx-focus-ring-group-indicator transition-colors rounded-sm';
 
 const L0ItemRoot = memo(
-  forwardRef<HTMLElement, PropsWithChildren<L0ItemRootProps>>(({ item, parent, path, onMouseEnter, children }, forwardedRef) => {
-    const { model } = useNavTreeContext();
-    const itemPath = useMemo(() => [...path, item.id], [item.id, path]);
-    const { id, testId } = useAtomValue(model.itemProps(itemPath));
-    const type = l0ItemType(item);
+  forwardRef<HTMLElement, PropsWithChildren<L0ItemRootProps>>(
+    ({ item, parent, path, onMouseEnter, children }, forwardedRef) => {
+      const { model } = useNavTreeContext();
+      const itemPath = useMemo(() => [...path, item.id], [item.id, path]);
+      const { id, testId } = useAtomValue(model.itemProps(itemPath));
+      const type = l0ItemType(item);
 
-    const { t } = useTranslation(meta.id);
-    const localizedString = toLocalizedString(item.properties.label, t);
+      const { t } = useTranslation(meta.id);
+      const localizedString = toLocalizedString(item.properties.label, t);
 
-    const handleClick = useL0ItemClick({ item, parent, path: itemPath }, type);
-    const rootProps =
-      type === 'tab'
-        ? { value: item.id, tabIndex: 0, onClick: handleClick, 'data-testid': testId, 'data-object-id': id }
-        : { onClick: handleClick, 'data-testid': testId, 'data-object-id': id };
+      const handleClick = useL0ItemClick({ item, parent, path: itemPath }, type);
+      const rootProps =
+        type === 'tab'
+          ? { value: item.id, tabIndex: 0, onClick: handleClick, 'data-testid': testId, 'data-object-id': id }
+          : { onClick: handleClick, 'data-testid': testId, 'data-object-id': id };
 
-    return (
-      <Tooltip.Trigger asChild delayDuration={0} side='right' content={localizedString}>
-        <Tabs.TabPrimitive
-          {...(rootProps as any)}
-          data-type={type}
-          className={mx(l0ItemRoot, l0Breakpoints[item.properties.l0Breakpoint])}
-          ref={forwardedRef}
-          onMouseEnter={onMouseEnter}
-        >
-          {children}
-        </Tabs.TabPrimitive>
-      </Tooltip.Trigger>
-    );
-  }),
+      return (
+        <Tooltip.Trigger asChild delayDuration={0} side='right' content={localizedString}>
+          <Tabs.TabPrimitive
+            {...(rootProps as any)}
+            data-type={type}
+            className={mx(l0ItemRoot, l0Breakpoints[item.properties.l0Breakpoint])}
+            ref={forwardedRef}
+            onMouseEnter={onMouseEnter}
+          >
+            {children}
+          </Tabs.TabPrimitive>
+        </Tooltip.Trigger>
+      );
+    },
+  ),
 );
 
 export const L0ItemActiveTabIndicator = ({ classNames }: ThemedClassName<{}>) => (

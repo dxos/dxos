@@ -35,7 +35,11 @@ const createItemPropsFamily = (graph: ReturnType<typeof useAppGraph>['graph']) =
       const safeChildren = get(graph.connections(node.id, 'child')).filter((child) => !path.includes(child.id));
       const visibleChildren = safeChildren.filter(isVisibleChild);
       const parentOf =
-        visibleChildren.length > 0 ? visibleChildren.map((child) => child.id) : node.properties.role === 'branch' ? [] : undefined;
+        visibleChildren.length > 0
+          ? visibleChildren.map((child) => child.id)
+          : node.properties.role === 'branch'
+            ? []
+            : undefined;
       return {
         id: node.id,
         parentOf,
