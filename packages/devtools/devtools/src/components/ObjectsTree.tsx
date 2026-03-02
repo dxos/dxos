@@ -45,14 +45,22 @@ export const ObjectsTree = ({ db, root, onSelect }: ObjectsTreeProps) => {
         classNames='grid-cols-1 gap-0'
       >
         {rootNodes.map((node) => (
-          <ObjectsTreeRow key={node.id} node={node} level={1} />
+          <ObjectsTreeRow key={node.id} node={node} level={1} parent={null} />
         ))}
       </Treegrid.Root>
     </ObjectsTreeContext.Provider>
   );
 };
 
-const ObjectsTreeRow = ({ node, level }: { node: ObjectsTreeItem; level: number }) => {
+const ObjectsTreeRow = ({
+  node,
+  level,
+  parent,
+}: {
+  node: ObjectsTreeItem;
+  level: number;
+  parent: ObjectsTreeItem | null;
+}) => {
   const model = useContext(ObjectsTreeContext) ?? raise(new Error('ObjectsTreeContext not found'));
   const expanded = useAtomValue(model.expanded(node.id, level));
   const setExpanded = useAtomSet(model.expanded(node.id, level));
@@ -90,7 +98,10 @@ const ObjectsTreeRow = ({ node, level }: { node: ObjectsTreeItem; level: number 
           </Treegrid.Cell>
         </div>
       </Treegrid.Row>
-      {expanded && children.map((child, index) => <ObjectsTreeRow key={child.id} node={child} level={level + 1} />)}
+      {expanded &&
+        children
+          .filter((child) => child.id !== parent?.id)
+          .map((child, index) => <ObjectsTreeRow key={child.id} node={child} level={level + 1} parent={node} />)}
     </>
   );
 };
@@ -172,6 +183,8 @@ class ObjectsTreeModel {
             Query.select(Filter.id(anchor)).children(),
             Query.select(Filter.id(anchor)).sourceOf(),
             Query.select(Filter.id(anchor)).targetOf(),
+            Query.select(Filter.id(anchor)).source(),
+            Query.select(Filter.id(anchor)).target(),
           )
             .options({
               deleted: 'include',
