@@ -23,6 +23,7 @@ import {
   updateFieldsInSchema,
 } from './manipulation';
 import { PersistentSchema } from './persistent-schema';
+import { dbg } from '@dxos/log';
 
 /**
  * Base schema type.
@@ -400,7 +401,7 @@ export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implem
    */
   _rebuild(): void {
     if (this._isDirty || this._schema == null) {
-      this._schema = toEffectSchema(getSnapshot(this._persistentSchema.jsonSchema));
+      this._schema = toEffectSchema(getSnapshot(this._persistentSchema).jsonSchema);
       this._isDirty = false;
     }
   }

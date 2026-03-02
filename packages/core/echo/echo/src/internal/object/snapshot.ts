@@ -4,11 +4,12 @@
 
 import { deepMapValues } from '@dxos/util';
 
-import { ObjectDatabaseId } from '../entities/model';
+import { ObjectDatabaseId, SelfDXNId } from '../entities/model';
 import { RelationSourceDXNId, RelationSourceId, RelationTargetDXNId, RelationTargetId } from '../entities/relation';
 import { KindId, SnapshotKindId } from '../types/entity';
 import { MetaId } from '../types/meta';
 import { SchemaId, TypeId } from '../types/typename';
+import { assertArgument } from '@dxos/invariant';
 
 /**
  * Copy a Symbol-keyed property from source to target if it has a defined value.
@@ -45,6 +46,8 @@ const copySymbolProperty = (
  * The snapshot is branded with SnapshotKindId (not KindId).
  */
 export const getSnapshot = <T extends object>(obj: T): T => {
+  assertArgument(typeof obj === 'object' && obj !== null && KindId in obj, 'obj', 'must be an entity');
+
   const snapshot = deepMapValues(obj, (value, recurse) => {
     // Do not recurse on references (but do recurse on arrays).
     if (
@@ -66,28 +69,27 @@ export const getSnapshot = <T extends object>(obj: T): T => {
 
   // Preserve Symbol-keyed properties that are important for type introspection.
   // These are not copied by deepMapValues since Object.keys() doesn't include symbols.
-  if (obj != null && typeof obj === 'object') {
-    const source = obj as any;
+  const source = obj as any;
 
-    // Type introspection symbols.
-    copySymbolProperty(source, snapshot, TypeId);
-    copySymbolProperty(source, snapshot, SchemaId);
+  // Type introspection symbols.
+  copySymbolProperty(source, snapshot, TypeId);
+  copySymbolProperty(source, snapshot, SchemaId);
+  copySymbolProperty(source, snapshot, SelfDXNId);
 
-    // Database reference (required for Obj.getDatabase to work on snapshots).
-    copySymbolProperty(source, snapshot, ObjectDatabaseId);
+  // Database reference (required for Obj.getDatabase to work on snapshots).
+  copySymbolProperty(source, snapshot, ObjectDatabaseId);
 
-    // Metadata symbol. Copy arrays so the snapshot is not affected by mutations to the live meta's keys/tags.
-    copySymbolProperty(source, snapshot, MetaId, (meta: any) => ({
-      keys: [...(meta?.keys ?? [])],
-      tags: [...(meta?.tags ?? [])],
-    }));
+  // Metadata symbol. Copy arrays so the snapshot is not affected by mutations to the live meta's keys/tags.
+  copySymbolProperty(source, snapshot, MetaId, (meta: any) => ({
+    keys: [...(meta?.keys ?? [])],
+    tags: [...(meta?.tags ?? [])],
+  }));
 
-    // Relation endpoint symbols.
-    copySymbolProperty(source, snapshot, RelationSourceDXNId);
-    copySymbolProperty(source, snapshot, RelationTargetDXNId);
-    copySymbolProperty(source, snapshot, RelationSourceId);
-    copySymbolProperty(source, snapshot, RelationTargetId);
-  }
+  // Relation endpoint symbols.
+  copySymbolProperty(source, snapshot, RelationSourceDXNId);
+  copySymbolProperty(source, snapshot, RelationTargetDXNId);
+  copySymbolProperty(source, snapshot, RelationSourceId);
+  copySymbolProperty(source, snapshot, RelationTargetId);
 
   return Object.freeze(snapshot) as T;
 };

@@ -9,6 +9,7 @@ import { SnapshotKindId } from './internal';
 import * as Obj from './Obj';
 import * as Ref from './Ref';
 import { TestSchema } from './testing';
+import * as Relation from './Relation';
 
 describe('Obj', () => {
   describe('getSnapshot', () => {
@@ -19,6 +20,10 @@ describe('Obj', () => {
       // Snapshot has SnapshotKindId, not KindId.
       expect(snapshot[SnapshotKindId]).toBe(Entity.Kind.Object);
       expect((snapshot as any)[Entity.KindId]).toBeUndefined();
+      expect(Obj.isSnapshot(snapshot)).toBe(true);
+      expect(Relation.isSnapshot(snapshot)).toBe(false);
+      expect(Entity.isEntity(snapshot)).toBe(false);
+      expect(Entity.isSnapshot(snapshot)).toBe(true);
 
       // Snapshot has same id and properties.
       expect(snapshot.id).toBe(obj.id);
