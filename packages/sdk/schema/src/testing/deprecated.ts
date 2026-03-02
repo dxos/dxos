@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Format, Type } from '@dxos/echo';
+import { Annotation, Format, Type } from '@dxos/echo';
 import { FieldLookupAnnotationId, GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 
 import { IconAnnotation } from '../annotations';
@@ -46,7 +46,7 @@ export namespace TestSchema {
   }).pipe(
     Schema.annotations({ title: 'Organization' }),
     LabelAnnotation.set(['name']),
-    IconAnnotation.set('ph--building--regular'),
+    Annotation.IconAnnotation.set({ icon: 'ph--building--regular', hue: 'blue' }),
   );
 
   export const Organization = OrganizationSchema.pipe(
@@ -79,7 +79,7 @@ export namespace TestSchema {
   }).pipe(
     Schema.annotations({ title: 'Person' }),
     LabelAnnotation.set(['name']),
-    IconAnnotation.set('ph--user--regular'),
+    Annotation.IconAnnotation.set({ icon: 'ph--user--regular', hue: 'green' }),
   );
 
   export const Person = PersonSchema.pipe(
@@ -102,7 +102,7 @@ export namespace TestSchema {
   }).pipe(
     Schema.annotations({ title: 'Project' }),
     LabelAnnotation.set(['name']),
-    IconAnnotation.set('ph--kanban--regular'),
+    Annotation.IconAnnotation.set({ icon: 'ph--kanban--regular', hue: 'purple' }),
   );
 
   export const Project = ProjectSchema.pipe(

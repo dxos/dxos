@@ -1,6 +1,7 @@
 //
 // Copyright 2025 DXOS.org
 //
+import '@dxos-theme';
 
 import { type Decorator, type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
@@ -17,6 +18,7 @@ import { DevtoolsContextProvider } from '../../../hooks';
 
 import { ObjectsPanel } from './ObjectsPanel';
 import { ObjectsTree } from './ObjectsTree';
+import { dbg } from '@dxos/log';
 
 faker.seed(1);
 
@@ -88,6 +90,7 @@ const meta = {
             }),
           ),
         );
+        space.db.remove(projects[0]);
 
         const functions = Array.from({ length: 3 }, (_, index) =>
           space.db.add(
@@ -157,7 +160,7 @@ export const WithTree: Story = {
       return <div>No space</div>;
     }
     return (
-      <div>
+      <div className='text-base-text'>
         <ObjectsTree db={space.db} />
       </div>
     );

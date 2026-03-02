@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Filter, Query, type Database, Entity, Relation, Obj } from '@dxos/echo';
+import * as Option from 'effect/Option';
+import { Filter, Query, type Database, Entity, Relation, Obj, Annotation } from '@dxos/echo';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { Atom } from '@effect-atom/atom';
 import { useAtomValue, useAtomSet } from '@effect-atom/atom-react';
@@ -15,6 +16,7 @@ import { Array, Match, pipe } from 'effect';
 import React from 'react';
 import { paddingIndentation, TreeItemToggle } from '@dxos/react-ui-list';
 import { dbg } from '@dxos/log';
+import { getStyles } from '@dxos/ui-theme';
 
 export interface ObjectsTreeProps {
   db: Database.Database;
@@ -31,8 +33,6 @@ export const ObjectsTree = ({ db, root }: ObjectsTreeProps) => {
 
   const rootNodes = useAtomValue(model.rootNodes);
 
-  dbg(rootNodes);
-
   return (
     <ObjectsTreeContext.Provider value={model}>
       <Treegrid.Root
@@ -40,7 +40,7 @@ export const ObjectsTree = ({ db, root }: ObjectsTreeProps) => {
         classNames='grid-cols-1 gap-0'
       >
         {rootNodes.map((node) => (
-          <ObjectsTreeRow key={node.id} node={node} level={0} />
+          <ObjectsTreeRow key={node.id} node={node} level={1} />
         ))}
       </Treegrid.Root>
     </ObjectsTreeContext.Provider>
@@ -54,6 +54,8 @@ const ObjectsTreeRow = ({ node, level }: { node: ObjectsTreeItem; level: number 
   const children = useAtomValue(model.getChildren(node.id));
   const hasChildren = children.length > 0;
   const parentOf = hasChildren ? children.map((child) => child.id).join(Treegrid.PARENT_OF_SEPARATOR) : undefined;
+
+  const styles = node.iconHue ? getStyles(node.iconHue) : undefined;
 
   return (
     <>
@@ -71,7 +73,13 @@ const ObjectsTreeRow = ({ node, level }: { node: ObjectsTreeItem; level: number 
         >
           <Treegrid.Cell indent classNames='flex items-center gap-1 min-w-0'>
             <TreeItemToggle isBranch={hasChildren} open={expanded} onClick={() => setExpanded((prev) => !prev)} />
-            <Icon icon={node.icon} classNames='shrink-0 w-4 h-4 opacity-70' />
+            {node.type === 'outgoing-relation' && (
+              <Icon icon='ph--arrow-right--regular' classNames='shrink-0 w-4 h-4 opacity-70' />
+            )}
+            {node.type === 'incoming-relation' && (
+              <Icon icon='ph--arrow-left--regular' classNames='shrink-0 w-4 h-4 opacity-70' />
+            )}
+            <Icon icon={node.icon} classNames={['shrink-0 w-4 h-4', styles?.surfaceText]} />
             <span className={node.deleted ? 'line-through opacity-60' : 'truncate'}>{node.label}</span>
           </Treegrid.Cell>
         </div>
@@ -80,6 +88,7 @@ const ObjectsTreeRow = ({ node, level }: { node: ObjectsTreeItem; level: number 
     </>
   );
 };
+ObjectsTreeRow.displayName = 'ObjectsTreeRow';
 
 const ObjectsTreeContext = createContext<ObjectsTreeModel | null>(null);
 
@@ -89,7 +98,8 @@ export type ObjectsTreeItem = {
   deleted: boolean;
   label: string;
   icon: string;
-  iconHue: string;
+  iconHue?: string;
+  entity: Entity.Snapshot;
 };
 
 class ObjectsTreeModel {
@@ -137,7 +147,9 @@ class ObjectsTreeModel {
             Query.select(Filter.id(anchor)).children(),
             Query.select(Filter.id(anchor)).sourceOf(),
             Query.select(Filter.id(anchor)).targetOf(),
-          ),
+          ).options({
+            deleted: 'include',
+          }),
         ),
       );
 
@@ -150,7 +162,7 @@ class ObjectsTreeModel {
       );
     } else {
       const entities: Atom.Atom<Entity.Unknown[]> = AtomQuery.fromQuery(
-        this.#database.query(Query.select(Filter.everything())),
+        this.#database.query(Query.select(Filter.everything()).options({ deleted: 'include' })),
       );
 
       return Atom.make((get) =>
@@ -165,23 +177,31 @@ class ObjectsTreeModel {
   }
 
   #mapEntityToTreeItems(entity: Entity.Snapshot, anchor: string | null): ObjectsTreeItem {
-    dbg((entity as any)[Relation.Source]);
+    const { icon, hue } = Option.fromNullable(Obj.getSchema(entity)).pipe(
+      Option.flatMap(Annotation.IconAnnotation.get),
+      Option.getOrElse(() => ({
+        icon: Obj.isSnapshot(entity) ? DEFAULT_OBJECT_ICON : DEFAULT_RELATION_ICON,
+        hue: undefined,
+      })),
+    );
     return {
       id: entity.id,
-      type:
-        // TODO(dmaretskyi): ECHO APIs around snapshots are bad.
-        entity[Entity.SnapshotKindId] === 'object'
-          ? 'object'
-          : (entity as any)[Relation.Source].id === anchor
-            ? 'outgoing-relation'
-            : 'incoming-relation',
+      type: Relation.isSnapshot(entity)
+        ? Relation.getSource(entity).id === anchor
+          ? 'outgoing-relation'
+          : 'incoming-relation'
+        : 'object',
       deleted: Entity.isDeleted(entity),
       label:
         Entity.getLabel(entity) ??
         Entity.getTypename(entity) ??
         `${Obj.isObject(entity) ? 'Object' : 'Relation'}-${entity.id.slice(-4)}`,
-      icon: Obj.isObject(entity) ? 'ph--cube--regular' : 'ph--arrow-right--regular',
-      iconHue: 'blue',
+      icon,
+      iconHue: hue,
+      entity,
     };
   }
 }
+
+const DEFAULT_OBJECT_ICON = 'ph--cube--regular';
+const DEFAULT_RELATION_ICON = 'ph--link--regular';
