@@ -12,7 +12,7 @@ import { withLayout, withTheme } from '../../testing';
 import { Flex } from './Flex';
 
 const Cell = ({ label, hue }: { label: string; hue: ChromaticPalette }) => (
-  <div data-hue={hue} className='dx-panel p-2 text-sm font-mono border rounded-sm'>
+  <div data-hue={hue} className='flex w-full dx-panel p-2 text-sm font-mono border rounded-sm'>
     {label}
   </div>
 );
@@ -34,7 +34,7 @@ const ColumnStory = () => (
 );
 
 const GrowStory = () => (
-  <Flex column grow classNames='gap-2 p-2 h-full'>
+  <Flex column grow classNames='gap-2 p-2'>
     <Cell label='Header' hue='yellow' />
     <Flex grow>
       <Cell label='Content (grows)' hue='blue' />
@@ -45,7 +45,7 @@ const GrowStory = () => (
 
 const meta: Meta = {
   title: 'ui/react-ui-core/primitives/Flex',
-  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'h-[20rem] w-[20rem]' })],
+  decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: { layout: 'fullscreen' },
 };
 
