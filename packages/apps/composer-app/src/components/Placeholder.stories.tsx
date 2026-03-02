@@ -13,7 +13,7 @@ const meta = {
   title: 'apps/composer-app/Placeholder',
   component: Placeholder,
   render: () => {
-    const [stage, setStage] = useState(0);
+    const [stage, setStage] = useState(1);
     useEffect(() => {
       const interval = setInterval(() => {
         setStage((prev) => {

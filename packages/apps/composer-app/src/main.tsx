@@ -19,6 +19,8 @@ import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { defaultTx } from '@dxos/ui-theme';
 import { getHostPlatform, isMobile as isMobile$, isTauri as isTauri$ } from '@dxos/util';
 
+import { useRegisterSW } from 'virtual:pwa-register/react';
+
 import { Placeholder, ResetDialog } from './components';
 import { initializeObservability, setupConfig } from './config';
 import { PARAM_LOG_LEVEL, PARAM_SAFE_MODE, setSafeModeUrl } from './config';
@@ -167,13 +169,26 @@ const main = async () => {
   const defaults = getDefaults(conf);
   const setupEvents = [AppActivationEvents.SetupSettings];
 
-  const Fallback = ({ error }: { error: Error }) => (
-    <ThemeProvider tx={defaultTx} resourceExtensions={translations}>
-      <Tooltip.Provider>
-        <ResetDialog isDev={conf.isDev} error={error} observability={observability} />
-      </Tooltip.Provider>
-    </ThemeProvider>
-  );
+  const Fallback = ({ error }: { error: Error }) => {
+    const {
+      needRefresh: [needRefresh],
+      updateServiceWorker,
+    } = useRegisterSW();
+
+    return (
+      <ThemeProvider tx={defaultTx} resourceExtensions={translations}>
+        <Tooltip.Provider>
+          <ResetDialog
+            isDev={conf.isDev}
+            error={error}
+            needRefresh={needRefresh}
+            onRefresh={needRefresh ? () => void updateServiceWorker(true) : undefined}
+            observability={observability}
+          />
+        </Tooltip.Provider>
+      </ThemeProvider>
+    );
+  };
 
   const Main = () => {
     const App = useApp({

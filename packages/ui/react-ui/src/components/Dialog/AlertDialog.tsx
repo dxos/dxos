@@ -33,6 +33,7 @@ import React, {
 import { type DialogSize } from '@dxos/ui-theme';
 
 import { useThemeContext } from '../../hooks';
+import { Container } from '../../primitives';
 import { type ThemedClassName } from '../../util';
 import { ElevationProvider } from '../ElevationProvider';
 
@@ -124,6 +125,7 @@ type OverlayLayoutContextValue = { inOverlayLayout?: boolean };
 
 const ALERT_DIALOG_OVERLAY_NAME = 'AlertDialogOverlay';
 const ALERT_DIALOG_CONTENT_NAME = 'AlertDialogContent';
+const ALERT_DIALOG_BODY_NAME = 'AlertDialogBody';
 const ALERT_DIALOG_ACTIONBAR_NAME = 'AlertDialogActionBar';
 
 const [OverlayLayoutProvider, useOverlayLayoutContext] = createContext<OverlayLayoutContextValue>(
@@ -186,12 +188,34 @@ const AlertDialogContent: ForwardRefExoticComponent<AlertDialogContentProps> = f
       className={tx('dialog.content', { inOverlayLayout, size }, classNames)}
       ref={forwardedRef}
     >
-      {children}
+      <Container.Column>{children}</Container.Column>
     </AlertDialogContentPrimitive>
   );
 });
 
 AlertDialogContent.displayName = ALERT_DIALOG_CONTENT_NAME;
+
+//
+// Body
+//
+
+type AlertDialogBodyProps = PropsWithChildren;
+
+const AlertDialogBody: ForwardRefExoticComponent<AlertDialogBodyProps> = forwardRef<
+  HTMLDivElement,
+  AlertDialogBodyProps
+>(({ children, ...props }, forwardedRef) => {
+  const { tx } = useThemeContext();
+  return (
+    <Container.Segment>
+      <div role='none' {...props} className={tx('dialog.body')} ref={forwardedRef}>
+        {children}
+      </div>
+    </Container.Segment>
+  );
+});
+
+AlertDialogBody.displayName = ALERT_DIALOG_BODY_NAME;
 
 //
 // ActionBar
@@ -205,9 +229,11 @@ const AlertDialogActionBar: ForwardRefExoticComponent<AlertDialogActionBarProps>
 >(({ children, classNames, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   return (
-    <div {...props} className={tx('dialog.actionbar', {}, classNames)} ref={forwardedRef}>
-      {children}
-    </div>
+    <Container.Segment>
+      <div {...props} className={tx('dialog.actionbar', {}, classNames)} ref={forwardedRef}>
+        {children}
+      </div>
+    </Container.Segment>
   );
 });
 
@@ -217,15 +243,13 @@ AlertDialogActionBar.displayName = ALERT_DIALOG_ACTIONBAR_NAME;
 // AlertDialog
 //
 
-/**
- * @deprecated Use Dialog instead
- */
 export const AlertDialog = {
   Root: AlertDialogRoot,
   Trigger: AlertDialogTrigger,
   Portal: AlertDialogPortal,
   Overlay: AlertDialogOverlay,
   Content: AlertDialogContent,
+  Body: AlertDialogBody,
   Title: AlertDialogTitle,
   Description: AlertDialogDescription,
   ActionBar: AlertDialogActionBar,
@@ -239,6 +263,7 @@ export type {
   AlertDialogPortalProps,
   AlertDialogOverlayProps,
   AlertDialogContentProps,
+  AlertDialogBodyProps,
   AlertDialogTitleProps,
   AlertDialogDescriptionProps,
   AlertDialogActionBarProps,
