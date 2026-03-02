@@ -269,7 +269,6 @@ class ObjectsTreeModel {
     } else if (this.#root !== null) {
       return AtomObj.make(this.#root).pipe((_) => Atom.make((get) => [this.#mapEntityToTreeItems(get(_), null)]));
     } else {
-      console.log('get all');
       const entities: Atom.Atom<Entity.Unknown[]> = AtomQuery.fromQuery(
         this.#database.query(Query.select(Filter.everything()).options({ deleted: 'include' }).from(this.#database)),
       );
