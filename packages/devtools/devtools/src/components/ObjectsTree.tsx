@@ -11,17 +11,14 @@ import * as Option from 'effect/Option';
 import * as Order from 'effect/Order';
 import * as Schema from 'effect/Schema';
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
-
 import React from 'react';
-import { raise } from '@dxos/debug';
-import { Filter, Query, type Database, Entity, Relation, Obj, Annotation } from '@dxos/echo';
 
+import { raise } from '@dxos/debug';
+import { Annotation, type Database, Entity, Filter, Obj, Query, Relation } from '@dxos/echo';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 import { DropdownMenu, Icon, IconButton, Treegrid } from '@dxos/react-ui';
-
-
 import { TreeItemToggle, paddingIndentation } from '@dxos/react-ui-list';
 import { getStyles, hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
 
@@ -83,6 +80,7 @@ const ObjectsTreeRow = ({
   }, [node.entity]);
   const handlePrintToConsole = useCallback(async () => {
     const obj = await model.database.query(Query.select(Filter.id(node.id)).options({ deleted: 'include' })).first();
+    // eslint-disable-next-line no-console
     console.log(obj);
   }, [node.entity]);
   const handleDelete = useCallback(async () => {

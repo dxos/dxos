@@ -11,7 +11,7 @@ import { Filter, Query } from '@dxos/echo';
 import type { ObjectId } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { parseId, useQuery } from '@dxos/react-client/echo';
-import { Clipboard, Input, Toolbar, Container } from '@dxos/react-ui';
+import { Clipboard, Container, Input, Toolbar } from '@dxos/react-ui';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 
 export const DebugSpaceObjectsPanel = () => {

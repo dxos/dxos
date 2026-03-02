@@ -8,7 +8,7 @@ import { ObjectsTree } from '@dxos/devtools';
 import { Filter, Obj, Query } from '@dxos/echo';
 import type { ObjectId } from '@dxos/keys';
 import { useQuery } from '@dxos/react-client/echo';
-import { Clipboard, Container, Input, Toolbar } from '@dxos/react-ui';
+import { Clipboard, Container } from '@dxos/react-ui';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
