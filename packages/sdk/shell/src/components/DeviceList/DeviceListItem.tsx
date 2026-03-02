@@ -106,7 +106,7 @@ export const DeviceListItem = forwardRef<
                 </Button>
               </Tooltip.Trigger>
               <Tooltip.Portal>
-                <Tooltip.Content side='bottom' classNames='z-50'>
+                <Tooltip.Content side='bottom'>
                   {t('destroy agent label')}
                 </Tooltip.Content>
               </Tooltip.Portal>

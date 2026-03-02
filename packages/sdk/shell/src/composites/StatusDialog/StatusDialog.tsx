@@ -15,7 +15,9 @@ export const StatusDialog = () => {
       <AlertDialog.Portal>
         <AlertDialog.Overlay>
           <AlertDialog.Content aria-labelledby={titleId}>
-            <StatusPanel titleId={titleId} />
+            <AlertDialog.Body>
+              <StatusPanel titleId={titleId} />
+            </AlertDialog.Body>
           </AlertDialog.Content>
         </AlertDialog.Overlay>
       </AlertDialog.Portal>
