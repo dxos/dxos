@@ -673,7 +673,7 @@ describe('GraphBuilder', () => {
         if (PERF_MEASUREMENT_ENABLED) {
           const rootOutboundRecord = payloads
             .flatMap((payload) => payload.flush.connectorKeys)
-            .find((record) => record.key === `${Node.RootId}+outbound`);
+            .find((record) => record.sourceId === Node.RootId && record.relation === 'child:outbound');
           expect(rootOutboundRecord).to.not.be.undefined;
           expect(rootOutboundRecord!.extensionsCandidateCount).to.equal(2);
           expect(rootOutboundRecord!.extensionsScanned).to.equal(1);
