@@ -10,12 +10,12 @@ import type { ObjectId } from '@dxos/keys';
 import { useQuery } from '@dxos/react-client/echo';
 import { Clipboard, Container, Input, Toolbar } from '@dxos/react-ui';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
+import { mx } from '@dxos/ui-theme';
 
 export type DebugObjectPanelProps = {
   object: Obj.Unknown;
 };
 
-// TODO(burdon): Get schema and traverse references.
 export const DebugObjectPanel = ({ object }: DebugObjectPanelProps) => {
   const db = Obj.getDatabase(object);
   const dxn = Obj.getDXN(object)?.toString() ?? '';
@@ -28,16 +28,14 @@ export const DebugObjectPanel = ({ object }: DebugObjectPanelProps) => {
 
   return (
     <Clipboard.Provider>
-      <Container.Main toolbar classNames='grid grid-cols- grid-rows-[auto_1fr_1fr]'>
-        <Toolbar.Root>
-          <Input.Root>
-            <Input.TextInput disabled value={dxn} />
-            <Clipboard.IconButton value={dxn} size={5} />
-          </Input.Root>
-        </Toolbar.Root>
-        <Json data={selectedObject} />
-        <div className='border-t border-separator! min-h-100'>
-          {db && <ObjectsTree db={db} root={object} onSelect={(entity) => setSelectedId(entity.id)} />}
+      <Container.Main>
+        <div className={mx('grid h-full overflow-hidden divide-y divide-separator grid-rows-[1fr_1fr]')}>
+          {db && (
+            <div>
+              <ObjectsTree db={db} root={object} onSelect={(entity) => setSelectedId(entity.id)} />
+            </div>
+          )}
+          <Json data={selectedObject} />
         </div>
       </Container.Main>
     </Clipboard.Provider>
