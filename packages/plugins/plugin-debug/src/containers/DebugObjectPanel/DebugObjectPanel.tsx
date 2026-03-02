@@ -32,7 +32,7 @@ export const DebugObjectPanel = ({ object }: DebugObjectPanelProps) => {
         <Toolbar.Root>
           <Input.Root>
             <Input.TextInput disabled value={dxn} />
-            <Clipboard.IconButton value={dxn} />
+            <Clipboard.IconButton value={dxn} size={5} />
           </Input.Root>
         </Toolbar.Root>
         <Json data={selectedObject} />

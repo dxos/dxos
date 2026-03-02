@@ -11,7 +11,7 @@ import { Filter, Query } from '@dxos/echo';
 import type { ObjectId } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { parseId, useQuery } from '@dxos/react-client/echo';
-import { Clipboard, Input, Toolbar } from '@dxos/react-ui';
+import { Clipboard, Input, Toolbar, Container } from '@dxos/react-ui';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 
 export const DebugSpaceObjectsPanel = () => {
@@ -33,7 +33,7 @@ export const DebugSpaceObjectsPanel = () => {
 
   return (
     <Clipboard.Provider>
-      <div className='grid grid-cols- grid-rows-[auto_1fr_1fr]'>
+      <Container.Main toolbar classNames='grid grid-cols- grid-rows-[auto_1fr_1fr]'>
         <Toolbar.Root>
           <Input.Root>
             <Input.TextInput disabled placeholder='Search...' />
@@ -43,7 +43,7 @@ export const DebugSpaceObjectsPanel = () => {
         <div className='border-t border-separator! min-h-100 overflow-auto'>
           <ObjectsTree db={database} onSelect={(entity) => setSelectedId(entity.id)} />
         </div>
-      </div>
+      </Container.Main>
     </Clipboard.Provider>
   );
 };
