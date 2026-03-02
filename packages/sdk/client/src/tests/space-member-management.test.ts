@@ -15,6 +15,7 @@ import {
   ConnectionState,
   type SpaceMember,
   SpaceMember_PresenceState,
+  type UpdateMemberRoleRequest,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
@@ -121,7 +122,7 @@ const inviteMember = async (host: Space, guestOrMany: Client | Client[], role: S
   const guests = Array.isArray(guestOrMany) ? guestOrMany : [guestOrMany];
   for (const guest of guests) {
     const [{ invitation: hostInvitation }] = await Promise.all(
-      performInvitation({ host, guest: guest.spaces, options: { role: role as never } }),
+      performInvitation({ host, guest: guest.spaces, options: { role } }),
     );
     expect(hostInvitation?.state).to.eq(Invitation_State.SUCCESS);
     await waitHasRole(host, guest, role);
@@ -140,7 +141,7 @@ const updateRole = async (
   await echoSpace.updateMemberRole({
     memberKey: memberIdentityKey!,
     newRole,
-  } as never);
+  } as unknown as Omit<UpdateMemberRoleRequest, 'spaceKey'>);
   if (options?.waitUpdated?.length) {
     await waitHasRole(options.waitUpdated, target, newRole);
   }

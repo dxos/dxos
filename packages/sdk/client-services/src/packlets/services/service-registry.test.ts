@@ -68,7 +68,7 @@ describe('service registry', () => {
 
     const server = createBufProtoRpcPeer({
       exposed: serviceRegistry.descriptors,
-      handlers: serviceRegistry.services as never,
+      handlers: serviceRegistry.services as any,
       port: serverPort,
     });
 

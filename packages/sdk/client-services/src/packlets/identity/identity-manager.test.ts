@@ -12,6 +12,7 @@ import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging
 import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
 import { create } from '@dxos/protocols/buf';
 import { type FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
+import { type DeviceProfileDocument, type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { type Storage, StorageType, createStorage } from '@dxos/random-access-storage';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
@@ -101,7 +102,7 @@ describe('identity/identity-manager', () => {
 
     const identity = await identityManager.createIdentity();
     expect(identity.profileDocument?.displayName).to.be.undefined;
-    await identityManager.updateProfile({ displayName: 'Example' } as never);
+    await identityManager.updateProfile({ displayName: 'Example' } as unknown as ProfileDocument);
     expect(identity.profileDocument?.displayName).to.equal('Example');
   });
 
@@ -193,7 +194,7 @@ describe('identity/identity-manager', () => {
     expect(deviceProfile).to.exist;
 
     deviceProfile!.label = 'updated profile';
-    await peer.identityManager.updateDeviceProfile(deviceProfile! as never);
+    await peer.identityManager.updateDeviceProfile(deviceProfile!);
 
     expect(identity.authorizedDeviceKeys.get(identity.deviceKey)?.label).to.equal('updated profile');
   });

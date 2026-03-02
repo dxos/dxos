@@ -89,7 +89,7 @@ describe('ClientServicesHost', () => {
     const queriedCredential = new Trigger<Credential>();
     credentials.subscribe((credential: Credential) => {
       if (toPublicKey(credential.subject!.id!).equals(toPublicKey(testCredential.subject!.id!))) {
-        queriedCredential.wake(credential as never);
+        queriedCredential.wake(credential);
       }
     });
     onTestFinished(() => credentials.close());
@@ -156,7 +156,7 @@ describe('ClientServicesHost', () => {
 
       stream?.subscribe((identity: QueryIdentityResponse) => {
         if (identity.identity) {
-          trigger.wake(identity.identity as never);
+          trigger.wake(identity.identity!);
         }
       });
       await expect(asyncTimeout(trigger.wait(), 200)).rejects.toBeInstanceOf(Error);

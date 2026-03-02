@@ -14,7 +14,7 @@ import { assertArgument, failedInvariant } from '@dxos/invariant';
 import { type DXN, type ObjectId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Echo } from '@dxos/protocols';
-import { create } from '@dxos/protocols/buf';
+import { type JsonObject, create } from '@dxos/protocols/buf';
 import {
   DeleteFromQueueRequestSchema,
   InsertIntoQueueRequestSchema,
@@ -245,7 +245,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
             spaceId: this._spaceId,
             queueId: this._queueId,
             // ObjectJSON[] is structurally compatible with google.protobuf.Struct[] at runtime.
-            objects: json.slice(i, i + QUEUE_APPEND_BATCH_SIZE) as never,
+            objects: json.slice(i, i + QUEUE_APPEND_BATCH_SIZE) as unknown as JsonObject[],
           }),
         );
       }

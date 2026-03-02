@@ -60,7 +60,7 @@ export const queryAllCredentials = (client: Client) => {
     const credentials: Credential[] = [];
     stream?.subscribe(
       (credential: BufCredential) => {
-        credentials.push(credential as never);
+        credentials.push(credential);
       },
       (err: Error) => {
         if (err) {

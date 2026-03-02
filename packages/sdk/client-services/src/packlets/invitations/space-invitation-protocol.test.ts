@@ -4,7 +4,7 @@
 
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { type MulticastObservable, Trigger, chain } from '@dxos/async';
+import { Trigger, chain } from '@dxos/async';
 import { raise } from '@dxos/debug';
 import { AlreadyJoinedError } from '@dxos/protocols';
 import { encodePublicKey, toPublicKey } from '@dxos/protocols/buf';
@@ -169,8 +169,8 @@ describe('services/space-invitations-protocol', () => {
     await host.close();
 
     const guestTimeout = new Trigger();
-    const guestInvitation = await acceptInvitation(guest, invitation as never);
-    (guestInvitation as never as MulticastObservable<Invitation>).subscribe((invitation: Invitation) => {
+    const guestInvitation = await acceptInvitation(guest, invitation);
+    guestInvitation.subscribe((invitation: Invitation) => {
       if (invitation.state === Invitation_State.TIMEOUT) {
         guestTimeout.wake();
       }
@@ -194,7 +194,7 @@ describe('services/space-invitations-protocol', () => {
       hooks: {
         host: {
           onConnecting: (invitation) => {
-            hostConnected.wake(invitation.get() as never);
+            hostConnected.wake(invitation.get());
           },
           onConnected: (invitation) => {
             void invitation.cancel();
@@ -204,7 +204,7 @@ describe('services/space-invitations-protocol', () => {
         },
         guest: {
           onConnecting: (invitation) => {
-            guestConnected.wake(invitation.get() as never);
+            guestConnected.wake(invitation.get());
           },
         },
       },

@@ -21,6 +21,8 @@ import {
 import { type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { isNode } from '@dxos/util';
 
+import { type PerformInvitationProps } from '@dxos/client-services/testing';
+
 import { Client } from '../client';
 import { TestBuilder, TestSchema, performInvitation } from '../testing';
 
@@ -234,7 +236,7 @@ describe('Client', () => {
       },
       { fire: true },
     );
-    await Promise.all(performInvitation({ host: space1 as never, guest: client2.spaces as never }));
+    await Promise.all(performInvitation({ host: space1 as unknown as PerformInvitationProps['host'], guest: client2.spaces as unknown as PerformInvitationProps['guest'] }));
 
     // Create Thread on second client.
     const space2 = client2.spaces.get(spaceKey)!;

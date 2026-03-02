@@ -11,6 +11,7 @@ import {
   Invitation_Kind,
   Invitation_State,
 } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { type AcceptInvitationRequest } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type DeviceProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { ServiceContext } from '../services';
@@ -254,7 +255,7 @@ export const acceptInvitation = (
     return guest.invitationsManager.acceptInvitation({
       invitation,
       deviceProfile: guestDeviceProfile,
-    } as never);
+    } as unknown as AcceptInvitationRequest);
   }
 
   return guest.join(invitation, guestDeviceProfile);

@@ -55,7 +55,7 @@ describe('DataSpaceManager', () => {
       space1.key,
       space1.inner.genesisFeedKey,
     );
-    await writeMessages(space1.inner.controlPipeline.writer, admissionCredentials as never);
+    await writeMessages(space1.inner.controlPipeline.writer, admissionCredentials);
 
     // Accept must be called after admission so that the peer can authenticate for notarization.
     const space2 = await peer2.dataSpaceManager.acceptSpace({
@@ -123,7 +123,7 @@ describe('DataSpaceManager', () => {
       space1.key,
       space1.inner.genesisFeedKey,
     );
-    await writeMessages(space1.inner.controlPipeline.writer, admissionCreds as never);
+    await writeMessages(space1.inner.controlPipeline.writer, admissionCreds);
 
     // Accept must be called after admission so that the peer can authenticate for notarization.
     const space2 = await peer2.dataSpaceManager.acceptSpace({

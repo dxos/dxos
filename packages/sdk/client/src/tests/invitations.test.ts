@@ -5,7 +5,7 @@
 import { beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, chain, sleep, waitForCondition } from '@dxos/async';
-import { type Space } from '@dxos/client-protocol';
+import { type ClientServices, type Space } from '@dxos/client-protocol';
 import {
   type DataSpace,
   InvitationsManager,
@@ -13,6 +13,7 @@ import {
   type ServiceContext,
   createAdmissionKeypair,
 } from '@dxos/client-services';
+import { type AdmissionKeypair } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import {
   type PerformInvitationProps,
   type Result,
@@ -132,13 +133,13 @@ const testSuite = (getProps: () => PerformInvitationProps, getPeers: () => [Serv
     const params = getProps();
     const keypair1 = createAdmissionKeypair();
     const keypair2 = createAdmissionKeypair();
-    const invalidKeypair = { publicKey: keypair1.publicKey, privateKey: keypair2.privateKey };
+    const invalidKeypair = { publicKey: keypair1.publicKey, privateKey: keypair2.privateKey } as unknown as AdmissionKeypair;
     const [hostResult, guestResult] = await Promise.all(
       performInvitation({
         ...params,
         options: {
           ...params.options,
-          guestKeypair: invalidKeypair as never,
+          guestKeypair: invalidKeypair,
           authMethod: Invitation_AuthMethod.KNOWN_PUBLIC_KEY,
         },
       }),
@@ -369,7 +370,7 @@ describe('Invitations', () => {
         const { service, metadata } = createInvitationsApi(hostContext);
         hostMetadata = metadata;
         space = await hostContext.dataSpaceManager.createSpace();
-        host = new InvitationsProxy(service as never, undefined, () => ({
+        host = new InvitationsProxy(service as unknown as ClientServices['InvitationsService'], undefined, () => ({
           kind: Invitation_Kind.SPACE,
           spaceKey: encodePublicKey(space.key),
         }));
@@ -423,10 +424,10 @@ describe('Invitations', () => {
         const space = await hostContext?.dataSpaceManager.createSpace();
         onTestFinished(() => space.close());
 
-        const guest = new InvitationsProxy(guestService as never, undefined, () => ({ kind: Invitation_Kind.SPACE }));
+        const guest = new InvitationsProxy(guestService as unknown as ClientServices['InvitationsService'], undefined, () => ({ kind: Invitation_Kind.SPACE }));
         let persistentInvitationId: string;
         {
-          const tempHost = new InvitationsProxy(hostApi.service as never, undefined, () => ({
+          const tempHost = new InvitationsProxy(hostApi.service as unknown as ClientServices['InvitationsService'], undefined, () => ({
             kind: Invitation_Kind.SPACE,
             spaceKey: encodePublicKey(space.key),
           }));
@@ -454,7 +455,7 @@ describe('Invitations', () => {
           hostContext,
           hostApi.metadata,
         );
-        const host = new InvitationsProxy(newHostService as never, undefined, () => ({
+        const host = new InvitationsProxy(newHostService as unknown as ClientServices['InvitationsService'], undefined, () => ({
           kind: Invitation_Kind.SPACE,
           spaceKey: encodePublicKey(space.key),
         }));
@@ -518,7 +519,7 @@ describe('Invitations', () => {
         onTestFinished(() => space.close());
 
         {
-          const tempHost = new InvitationsProxy(hostApi.service as never, undefined, () => ({
+          const tempHost = new InvitationsProxy(hostApi.service as unknown as ClientServices['InvitationsService'], undefined, () => ({
             kind: Invitation_Kind.SPACE,
             spaceKey: encodePublicKey(space.key),
             persistent: false,
@@ -544,7 +545,7 @@ describe('Invitations', () => {
         await newHostManager.loadPersistentInvitations();
         expect(hostApi.metadata.getInvitations()).to.have.lengthOf(0);
 
-        const host = new InvitationsProxy(newHostService as never, undefined, () => ({
+        const host = new InvitationsProxy(newHostService as unknown as ClientServices['InvitationsService'], undefined, () => ({
           kind: Invitation_Kind.SPACE,
           spaceKey: encodePublicKey(space.key),
         }));
@@ -573,11 +574,11 @@ describe('Invitations', () => {
         const { service: guestService } = createInvitationsApi(guestContext);
 
         space = await hostContext.dataSpaceManager.createSpace();
-        host = new InvitationsProxy(hostService as never, undefined, () => ({
+        host = new InvitationsProxy(hostService as unknown as ClientServices['InvitationsService'], undefined, () => ({
           kind: Invitation_Kind.SPACE,
           spaceKey: encodePublicKey(space.key),
         }));
-        guest = new InvitationsProxy(guestService as never, undefined, () => ({ kind: Invitation_Kind.SPACE }));
+        guest = new InvitationsProxy(guestService as unknown as ClientServices['InvitationsService'], undefined, () => ({ kind: Invitation_Kind.SPACE }));
 
         onTestFinished(() => space.close());
       });
@@ -604,8 +605,8 @@ describe('Invitations', () => {
         const { service: hostService } = createInvitationsApi(hostContext);
         const { service: guestService } = createInvitationsApi(guestContext);
 
-        host = new InvitationsProxy(hostService as never, undefined, () => ({ kind: Invitation_Kind.DEVICE }));
-        guest = new InvitationsProxy(guestService as never, undefined, () => ({ kind: Invitation_Kind.DEVICE }));
+        host = new InvitationsProxy(hostService as unknown as ClientServices['InvitationsService'], undefined, () => ({ kind: Invitation_Kind.DEVICE }));
+        guest = new InvitationsProxy(guestService as unknown as ClientServices['InvitationsService'], undefined, () => ({ kind: Invitation_Kind.DEVICE }));
       });
 
       testSuite(
@@ -696,7 +697,7 @@ const createInvitationsApi = (
 ) => {
   const manager = new InvitationsManager(
     context.invitations,
-    (invitation) => context.getInvitationHandler(invitation as never),
+    (invitation) => context.getInvitationHandler(invitation),
     metadata,
   );
   const service = new InvitationsServiceImpl(manager);

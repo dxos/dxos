@@ -52,7 +52,7 @@ describe('Signal Integration Test', () => {
         await messageRouter.receiveMessage({
           author: message.author!,
           recipient: message.recipient!,
-          payload: message.payload as never,
+          payload: message.payload as { typeUrl: string; value: Uint8Array },
         }),
     });
 
