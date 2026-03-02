@@ -16,7 +16,7 @@ export const Text = Schema.Struct({
   }),
   Annotation.SystemTypeAnnotation.set(true),
   Annotation.IconAnnotation.set({
-    icon: 'ph--cube--regular',
+    icon: 'ph--text-t--regular',
     hue: 'green',
   }),
 );

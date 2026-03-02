@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { type Space } from '@dxos/client/echo';
-import { Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/internal';
 import { Queue } from '@dxos/echo-db';
 import { QueueAnnotation } from '@dxos/schema';
@@ -50,6 +50,10 @@ export const Mailbox = Schema.Struct({
     version: '0.1.0',
   }),
   QueueAnnotation.set(true),
+  Annotation.IconAnnotation.set({
+    icon: 'ph--tray--regular',
+    hue: 'red',
+  }),
 );
 
 export type Mailbox = Schema.Schema.Type<typeof Mailbox>;

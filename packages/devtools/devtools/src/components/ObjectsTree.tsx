@@ -18,6 +18,7 @@ import { paddingIndentation, TreeItemToggle } from '@dxos/react-ui-list';
 import { getStyles } from '@dxos/ui-theme';
 import * as Schema from 'effect/Schema';
 import { dbg } from '@dxos/log';
+import { Order } from 'effect';
 
 export interface ObjectsTreeProps {
   db: Database.Database;
@@ -36,7 +37,6 @@ export const ObjectsTree = ({ db, root, onSelect }: ObjectsTreeProps) => {
   }, [db, root]);
 
   const rootNodes = useAtomValue(model.rootNodes);
-  dbg(rootNodes);
 
   return (
     <ObjectsTreeContext.Provider value={model}>
@@ -185,6 +185,7 @@ class ObjectsTreeModel {
           get(entities),
           Array.map((entity) => AtomObj.make(entity).pipe(get)),
           Array.map((entity) => this.#mapEntityToTreeItems(entity, anchor)),
+          Array.sortBy(itemOrder),
         ),
       );
     } else if (this.#root !== null) {
@@ -198,10 +199,10 @@ class ObjectsTreeModel {
       return Atom.make((get) =>
         pipe(
           get(entities),
-          (_) => dbg(_),
           Array.filter(Obj.isObject),
           Array.map((entity) => AtomObj.make(entity).pipe(get)),
           Array.map((entity) => this.#mapEntityToTreeItems(entity, null)),
+          Array.sortBy(itemOrder),
         ),
       );
     }
@@ -236,3 +237,13 @@ class ObjectsTreeModel {
 
 const DEFAULT_OBJECT_ICON = 'ph--cube--regular';
 const DEFAULT_RELATION_ICON = 'ph--link--regular';
+
+const itemOrder: Order.Order<ObjectsTreeItem> = Order.mapInput(
+  Order.number,
+  Match.type<ObjectsTreeItem>().pipe(
+    Match.when({ type: 'object' }, () => 0),
+    Match.when({ type: 'outgoing-relation' }, () => 1),
+    Match.when({ type: 'incoming-relation' }, () => 2),
+    Match.exhaustive,
+  ),
+);

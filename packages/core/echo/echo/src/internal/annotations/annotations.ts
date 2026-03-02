@@ -485,3 +485,42 @@ export const makeUserAnnotation = <T>(props: MakeAnnoationsProps<T>): Annotation
       PropertyMeta(props.id, Schema.encodeSync(props.schema)(value)) as <S extends Schema.Schema.Any>(schema: S) => S,
   };
 };
+
+const IconAnnotationSchema = Schema.Struct({
+  /**
+   * Phosphor icon name (e.g., 'ph--user--regular', 'ph--cube--regular', 'ph--link--regular ', etc.)
+   */
+  icon: Schema.String.pipe(Schema.pattern(/^ph--[a-z-]+--[a-z]+$/)),
+
+  /**
+   * Color name.
+   *
+   * List of colors:
+   *  - 'red'
+   *  - 'orange'
+   *  - 'amber'
+   *  - 'yellow'
+   *  - 'lime'
+   *  - 'green'
+   *  - 'emerald'
+   *  - 'teal'
+   *  - 'cyan'
+   *  - 'violet'
+   *  - 'purple'
+   *  - 'fuchsia'
+   *  - 'pink'
+   *  - 'rose'
+   */
+
+  hue: Schema.optional(Schema.String),
+});
+
+export interface IconAnnotation extends Schema.Schema.Type<typeof IconAnnotationSchema> {}
+
+/**
+ * Icon to render in the UI.
+ */
+export const IconAnnotation = makeUserAnnotation<IconAnnotation>({
+  id: 'dxos.org/annotation/Icon',
+  schema: IconAnnotationSchema,
+});

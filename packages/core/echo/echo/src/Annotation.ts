@@ -15,6 +15,7 @@ export {
   getTypeAnnotation,
   setDescriptionWithSchema,
   setLabelWithSchema,
+  IconAnnotation,
 } from './internal/annotations';
 
 import * as Schema from 'effect/Schema';
@@ -43,42 +44,3 @@ interface MakeProps<T> {
  */
 export const make: <T>(props: MakeProps<T>) => internalAnnotations.AnnotationHelper<T> =
   internalAnnotations.makeUserAnnotation;
-
-const IconAnnotationSchema = Schema.Struct({
-  /**
-   * Phosphor icon name (e.g., 'ph--user--regular', 'ph--cube--regular', 'ph--link--regular ', etc.)
-   */
-  icon: Schema.String.pipe(Schema.pattern(/^ph--[a-z-]+--[a-z]+$/)),
-
-  /**
-   * Color name.
-   *
-   * List of colors:
-   *  - 'red'
-   *  - 'orange'
-   *  - 'amber'
-   *  - 'yellow'
-   *  - 'lime'
-   *  - 'green'
-   *  - 'emerald'
-   *  - 'teal'
-   *  - 'cyan'
-   *  - 'violet'
-   *  - 'purple'
-   *  - 'fuchsia'
-   *  - 'pink'
-   *  - 'rose'
-   */
-
-  hue: Schema.optional(Schema.String),
-});
-
-export interface IconAnnotation extends Schema.Schema.Type<typeof IconAnnotationSchema> {}
-
-/**
- * Icon to render in the UI.
- */
-export const IconAnnotation = make<IconAnnotation>({
-  id: 'dxos.org/annotation/Icon',
-  schema: IconAnnotationSchema,
-});

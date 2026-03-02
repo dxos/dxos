@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Type } from '@dxos/echo';
+import { Annotation, Obj, Type } from '@dxos/echo';
 import { GeneratorAnnotation, LabelAnnotation, SystemTypeAnnotation } from '@dxos/echo/internal';
 import { defineObjectMigration } from '@dxos/echo-db';
 import { type MakeOptional } from '@dxos/util';
@@ -44,6 +44,10 @@ export const Message = Schema.Struct({
     version: '0.2.0',
   }),
   LabelAnnotation.set(['properties.subject']),
+  Annotation.IconAnnotation.set({
+    icon: 'ph--envelope--regular',
+    hue: 'red',
+  }),
 );
 
 export interface Message extends Schema.Schema.Type<typeof Message> {}

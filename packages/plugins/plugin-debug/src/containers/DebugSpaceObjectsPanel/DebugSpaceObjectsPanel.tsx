@@ -20,12 +20,10 @@ export const DebugSpaceObjectsPanel = () => {
   const client = useCapability(ClientCapabilities.Client);
   const { spaceId } = parseId(layout.workspace);
   const space = spaceId ? client.spaces.get(spaceId) : undefined;
-  dbg(space);
   if (!space) {
     return null;
   }
   const database = space.db;
-  dbg(database);
 
   const [selectedId, setSelectedId] = useState<ObjectId | null>(null);
 
@@ -39,7 +37,7 @@ export const DebugSpaceObjectsPanel = () => {
       <Layout.Main toolbar classNames='grid grid-cols- grid-rows-[auto_1fr_1fr]'>
         <Toolbar.Root>
           <Input.Root>
-            <Input.TextInput placeholder='Search...' />
+            <Input.TextInput disabled placeholder='Search...' />
           </Input.Root>
         </Toolbar.Root>
         <div className='min-h-100'>{selectedObject && <Json data={selectedObject} />}</div>
