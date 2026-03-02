@@ -4,12 +4,11 @@
 
 import { type Event, Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { type CredentialSigner, verifyCredential } from '@dxos/credentials';
+import { type CredentialSigner, credentialToBinary, credentialFromBinary, verifyCredential } from '@dxos/credentials';
 import { type AuthProvider, type AuthVerifier } from '@dxos/echo-pipeline';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { toBinary, fromBinary, toPublicKey } from '@dxos/protocols/buf';
-import { CredentialSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { toPublicKey } from '@dxos/protocols/buf';
 import { type ComplexSet } from '@dxos/util';
 
 export const createAuthProvider =
@@ -23,7 +22,7 @@ export const createAuthProvider =
       nonce,
     });
 
-    return toBinary(CredentialSchema, credential);
+    return credentialToBinary(credential);
   };
 
 export type TrustedKeySetAuthVerifierProps = {
@@ -51,7 +50,7 @@ export class TrustedKeySetAuthVerifier {
 
   get verifier(): AuthVerifier {
     return async (nonce, auth) => {
-      const credential = fromBinary(CredentialSchema, auth);
+      const credential = credentialFromBinary(auth);
       log('authenticating...', { credential });
 
       const result = await verifyCredential(credential);

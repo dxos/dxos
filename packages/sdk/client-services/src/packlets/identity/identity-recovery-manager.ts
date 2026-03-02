@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { generateSeedPhrase, keyPairFromSeedPhrase } from '@dxos/credentials';
+import { credentialFromBinary, generateSeedPhrase, keyPairFromSeedPhrase } from '@dxos/credentials';
 import { sign } from '@dxos/crypto';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
@@ -14,12 +14,10 @@ import {
   type RecoverIdentityRequest as EdgeRecoverIdentityRequest,
   type RecoverIdentityResponseBody,
 } from '@dxos/protocols';
-import { fromBinary } from '@dxos/protocols/buf';
 import {
   type CreateRecoveryCredentialRequest,
   type RecoverIdentityRequest_ExternalSignature,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { CredentialSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Timeframe } from '@dxos/timeframe';
 
 import { type Identity } from './identity';
@@ -209,5 +207,5 @@ export class EdgeIdentityRecoveryManager {
 
 const decodeCredential = (credentialBase64: string) => {
   const credentialBytes = Buffer.from(credentialBase64, 'base64');
-  return fromBinary(CredentialSchema, credentialBytes);
+  return credentialFromBinary(credentialBytes);
 };

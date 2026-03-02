@@ -11,9 +11,8 @@ import * as Option from 'effect/Option';
 
 import { CommandConfig } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
+import { credentialFromBinary } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
-import { fromBinary } from '@dxos/protocols/buf';
-import { CredentialSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 export const handler = Effect.fn(function* ({ credential }: { credential: Option.Option<string> }) {
   const { json } = yield* CommandConfig;
@@ -43,7 +42,7 @@ export const handler = Effect.fn(function* ({ credential }: { credential: Option
     });
 
     const credentialObj = yield* Effect.try({
-      try: () => fromBinary(CredentialSchema, new Uint8Array(credentialBytes)),
+      try: () => credentialFromBinary(new Uint8Array(credentialBytes)),
       catch: (error) => new Error(`Failed to decode credential: ${error}`),
     });
 

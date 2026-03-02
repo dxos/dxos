@@ -46,15 +46,15 @@ export const getCredentialAssertion = (credential: Credential): NormalizedAssert
     }
   }
 
-  // Fallback: inline TypedMessage from protobuf.js codec.
+  // Fallback: inline TypedMessage — return a shallow copy to avoid mutating the
+  // credential's assertion in-place (which would add $typeName and break later
+  // serialization when this credential is part of a chain).
   const assertion = any as Record<string, unknown>;
-  if (!assertion.$typeName && assertion['@type']) {
-    assertion.$typeName = assertion['@type'];
+  const typeName = (assertion['@type'] ?? assertion.$typeName) as string | undefined;
+  if (!typeName) {
+    return assertion as NormalizedAssertion;
   }
-  if (!assertion['@type'] && assertion.$typeName) {
-    assertion['@type'] = assertion.$typeName;
-  }
-  return assertion as NormalizedAssertion;
+  return { ...assertion, '@type': typeName, $typeName: typeName } as NormalizedAssertion;
 };
 
 /**

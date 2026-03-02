@@ -4,7 +4,7 @@
 
 import { DeferredTask, Event, TimeoutError, Trigger, scheduleMicroTask, scheduleTask, sleep } from '@dxos/async';
 import { type Context, Resource, rejectOnDispose } from '@dxos/context';
-import { type CredentialProcessor, fromBufPublicKey, verifyCredential } from '@dxos/credentials';
+import { type CredentialProcessor, credentialToBinary, credentialFromBinary, fromBufPublicKey, verifyCredential } from '@dxos/credentials';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { type FeedWriter } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
@@ -12,9 +12,9 @@ import { PublicKey } from '@dxos/keys';
 import { type SpaceId } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
 import { EdgeCallFailedError, type Rpc } from '@dxos/protocols';
-import { EMPTY, toBinary, fromBinary } from '@dxos/protocols/buf';
+import { EMPTY } from '@dxos/protocols/buf';
 import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
-import { type Credential, CredentialSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { NotarizationService, type NotarizeRequest } from '@dxos/protocols/buf/dxos/mesh/teleport/notarization_pb';
 import { type ExtensionContext, BufRpcExtension } from '@dxos/teleport';
 import { ComplexMap, ComplexSet, entry } from '@dxos/util';
@@ -242,7 +242,7 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
     timeouts: NotarizationTimeouts & { jitter?: number },
   ): void {
     const encodedCredentials = credentials.map((credential) => {
-      const binary = toBinary(CredentialSchema, credential);
+      const binary = credentialToBinary(credential);
       return Buffer.from(binary).toString('base64');
     });
     scheduleTask(ctx, async () => {
@@ -319,7 +319,7 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
 
         const decodedCredentials = credentials.map((credential) => {
           const binary = Buffer.from(credential, 'base64');
-          return fromBinary(CredentialSchema, binary);
+          return credentialFromBinary(binary);
         });
 
         await this._notarizeCredentials(writer, decodedCredentials);

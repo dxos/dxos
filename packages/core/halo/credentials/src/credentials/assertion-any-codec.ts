@@ -4,6 +4,7 @@
 
 import { PublicKey } from '@dxos/keys';
 import { bufWkt, create, fromBinary, toBinary, type DescMessage } from '@dxos/protocols/buf';
+import { type Credential, CredentialSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { ASSERTION_REGISTRY, ASSERTION_SCHEMA_MAP } from './assertion-registry';
 
@@ -17,7 +18,7 @@ import { ASSERTION_REGISTRY, ASSERTION_SCHEMA_MAP } from './assertion-registry';
  * are not fields of google.protobuf.Any.
  */
 export const packTypedAssertionAsAny = (assertion: Record<string, unknown>): bufWkt.Any => {
-  const typeName = assertion['@type'] as string;
+  const typeName = (assertion['@type'] ?? assertion.$typeName) as string | undefined;
   if (!typeName) {
     return assertion as unknown as bufWkt.Any;
   }
@@ -48,7 +49,7 @@ export const packTypedAssertionAsAny = (assertion: Record<string, unknown>): buf
  * fields. A packed Any (typeUrl + binary value) would produce a different canonical string.
  */
 export const unpackAnyAsTypedMessage = (any: bufWkt.Any): Record<string, unknown> | null => {
-  if (!any.typeUrl || !any.value?.length) {
+  if (!any.typeUrl || !any.value) {
     return null;
   }
 
@@ -118,3 +119,69 @@ const isBufPublicKey = (value: unknown): boolean =>
   typeof value === 'object' &&
   (value as any).$typeName === 'dxos.keys.PublicKey' &&
   (value as any).data instanceof Uint8Array;
+
+/**
+ * Serialize a Credential to binary, packing the TypedMessage assertion into a
+ * proper buf Any first so that toBinary() can process it.
+ */
+export const credentialToBinary = (credential: Credential): Uint8Array => {
+  const packed = packCredentialAssertion(credential);
+  return toBinary(CredentialSchema, packed);
+};
+
+/**
+ * Deserialize a Credential from binary, unpacking the Any assertion back to
+ * TypedMessage format so that canonicalStringify-based signature verification works.
+ */
+export const credentialFromBinary = (bytes: Uint8Array): Credential => {
+  const credential = fromBinary(CredentialSchema, bytes);
+  unpackCredentialAssertionInPlace(credential);
+  return credential;
+};
+
+/** Pack a credential's TypedMessage assertion into buf Any for serialization. Also handles chain credentials recursively. */
+export const packCredentialAssertion = (credential: Credential): Credential => {
+  let result = credential;
+
+  const assertion = credential.subject?.assertion as Record<string, unknown> | undefined;
+  if (assertion && (assertion['@type'] || assertion.$typeName) && !('typeUrl' in assertion && 'value' in assertion)) {
+    result = {
+      ...result,
+      subject: {
+        ...result.subject!,
+        assertion: packTypedAssertionAsAny(assertion) as any,
+      },
+    } as Credential;
+  }
+
+  // Recursively pack chain credentials.
+  if (result.proof?.chain?.credential) {
+    const packedChain = packCredentialAssertion(result.proof.chain.credential);
+    if (packedChain !== result.proof.chain.credential) {
+      result = {
+        ...result,
+        proof: {
+          ...result.proof!,
+          chain: {
+            ...result.proof!.chain!,
+            credential: packedChain,
+          },
+        },
+      } as Credential;
+    }
+  }
+
+  return result;
+};
+
+/** Unpack a credential's buf Any assertion back to TypedMessage format in-place. */
+const unpackCredentialAssertionInPlace = (credential: Credential): void => {
+  const assertion = credential.subject?.assertion as bufWkt.Any | undefined;
+  if (!assertion?.typeUrl || !assertion?.value) {
+    return;
+  }
+  const typedMessage = unpackAnyAsTypedMessage(assertion);
+  if (typedMessage) {
+    credential.subject!.assertion = typedMessage as any;
+  }
+};

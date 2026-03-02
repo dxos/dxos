@@ -39,7 +39,7 @@ const packFeedMessageAssertions = (msg: FeedMessage): FeedMessage => {
 
   const { credential, path } = found;
   const assertion = credential.subject.assertion as Record<string, unknown>;
-  if (!assertion['@type'] || 'typeUrl' in assertion) {
+  if ((!assertion['@type'] && !assertion.$typeName) || 'typeUrl' in assertion) {
     return msg;
   }
 
@@ -96,7 +96,7 @@ const unpackCredentialAssertion = (msg: FeedMessage): void => {
     return;
   }
   const assertion = credential.subject.assertion as bufWkt.Any;
-  if (assertion.typeUrl && assertion.value?.length) {
+  if (assertion.typeUrl && assertion.value) {
     const typedMessage = unpackAnyAsTypedMessage(assertion);
     if (typedMessage) {
       credential.subject.assertion = typedMessage;
