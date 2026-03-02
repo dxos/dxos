@@ -20,6 +20,31 @@ import { ComplexMap } from '@dxos/util';
 import { createMappedFeedWriter } from '../common';
 
 import { createMessageSelector } from './message-selector';
+
+/**
+ * Recursively convert @dxos/keys.PublicKey instances to buf PublicKey init
+ * shapes ({ data: Uint8Array }) for serialization. Preserves $typeName and
+ * other metadata on existing buf messages.
+ */
+const convertPublicKeysForBuf = (obj: unknown): unknown => {
+  if (obj == null || typeof obj !== 'object') {
+    return obj;
+  }
+  if (PublicKey.isPublicKey(obj)) {
+    return { data: (obj as PublicKey).asUint8Array() };
+  }
+  if (obj instanceof Uint8Array || obj instanceof Date) {
+    return obj;
+  }
+  if (Array.isArray(obj)) {
+    return obj.map(convertPublicKeysForBuf);
+  }
+  const result: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(obj)) {
+    result[key] = convertPublicKeysForBuf(value);
+  }
+  return result;
+};
 import { TimeframeClock, mapFeedIndexesToTimeframe, startAfter } from './timeframe-clock';
 
 export type WaitUntilReachedTargetProps = {
@@ -288,10 +313,11 @@ export class Pipeline implements PipelineAccessor {
 
     this._writer = createMappedFeedWriter<ControlPipelinePayload, FeedMessage>(
       (payload: ControlPipelinePayload) => {
-        // Pack TypedMessage assertions (including chain) into proper buf Any before create().
+        // Pack TypedMessage assertions (including chain) and convert @dxos/keys.PublicKey
+        // instances to plain init shapes for buf's create().
         if (payload.credential?.credential) {
           const packed = packCredentialAssertion(payload.credential.credential as any);
-          payload = { credential: { credential: packed as any } };
+          payload = { credential: { credential: convertPublicKeysForBuf(packed) as any } };
         }
         return create(FeedMessageSchema, {
           timeframe: timeframeToBuf(this._timeframeClock.timeframe),

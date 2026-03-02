@@ -12,6 +12,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { DataCorruptionError, STORAGE_VERSION } from '@dxos/protocols';
 import {
+  bufToTimeframe,
   create,
   encodePublicKey,
   fromBinary,
@@ -83,32 +84,33 @@ const convertKeysForBufInit = (obj: unknown): unknown => {
 };
 
 /**
- * Recursively convert buf PublicKey messages ({ $typeName, data }) to @dxos/keys.PublicKey
- * so application code can use them directly.
+ * Recursively convert buf messages to application types:
+ * - buf PublicKey ({ $typeName: 'dxos.keys.PublicKey', data }) → @dxos/keys.PublicKey
+ * - buf TimeframeVector ({ $typeName: 'dxos.echo.timeframe.TimeframeVector', frames }) → Timeframe
  */
-const convertBufKeysToAppKeys = (obj: unknown): unknown => {
+const convertBufTypesToAppTypes = (obj: unknown): unknown => {
   if (obj == null || typeof obj !== 'object') {
     return obj;
   }
   if (obj instanceof Uint8Array || obj instanceof Date || PublicKey.isPublicKey(obj)) {
     return obj;
   }
-  if (
-    typeof (obj as any).$typeName === 'string' &&
-    (obj as any).$typeName === 'dxos.keys.PublicKey' &&
-    (obj as any).data instanceof Uint8Array
-  ) {
+  const typeName = (obj as any).$typeName;
+  if (typeName === 'dxos.keys.PublicKey' && (obj as any).data instanceof Uint8Array) {
     return PublicKey.from((obj as any).data);
   }
+  if (typeName === 'dxos.echo.timeframe.TimeframeVector') {
+    return bufToTimeframe(obj as any);
+  }
   if (Array.isArray(obj)) {
-    return obj.map(convertBufKeysToAppKeys);
+    return obj.map(convertBufTypesToAppTypes);
   }
   const result: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(obj)) {
     if (key.startsWith('$')) {
       continue;
     }
-    result[key] = convertBufKeysToAppKeys(value);
+    result[key] = convertBufTypesToAppTypes(value);
   }
   return result;
 };
@@ -116,13 +118,13 @@ const convertBufKeysToAppKeys = (obj: unknown): unknown => {
 const echoMetadataCodec: Codec<EchoMetadata> = {
   encode: (msg: EchoMetadata) =>
     toBinary(EchoMetadataSchema, create(EchoMetadataSchema, convertKeysForBufInit(msg) as EchoMetadata)),
-  decode: (bytes: Uint8Array) => convertBufKeysToAppKeys(fromBinary(EchoMetadataSchema, bytes)) as EchoMetadata,
+  decode: (bytes: Uint8Array) => convertBufTypesToAppTypes(fromBinary(EchoMetadataSchema, bytes)) as EchoMetadata,
 };
 
 const largeSpaceMetadataCodec: Codec<LargeSpaceMetadata> = {
   encode: (msg: LargeSpaceMetadata) =>
     toBinary(LargeSpaceMetadataSchema, create(LargeSpaceMetadataSchema, convertKeysForBufInit(msg) as LargeSpaceMetadata)),
-  decode: (bytes: Uint8Array) => convertBufKeysToAppKeys(fromBinary(LargeSpaceMetadataSchema, bytes)) as LargeSpaceMetadata,
+  decode: (bytes: Uint8Array) => convertBufTypesToAppTypes(fromBinary(LargeSpaceMetadataSchema, bytes)) as LargeSpaceMetadata,
 };
 
 export class MetadataStore {
