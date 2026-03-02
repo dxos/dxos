@@ -67,7 +67,7 @@ export const useNavbarActions = (): NavbarActions => {
         nodes.push(mainMenuGroup);
         edges.push({ source: 'root', target: mainMenuGroup.id, relation: 'child' });
 
-        // Get menu actions from root actions (on 'actions' edge relation).
+        // Get menu actions from root actions (on 'action' edge relation).
         const rootActions = get(graph.actions(Node.RootId));
         const menuActions = rootActions.filter((node) => node.properties.disposition === 'menu');
 

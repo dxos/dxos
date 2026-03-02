@@ -167,10 +167,6 @@ export default Capability.makeModule(
             explore({
               relation: 'child',
               visitor: async (node, path) => {
-                if (Node.isActionLike(node)) {
-                  return false;
-                }
-
                 const [serializer] = serializers
                   .flat()
                   .filter((serializer) => node.type === serializer.inputType)

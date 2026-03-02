@@ -28,8 +28,8 @@ Examples:
 
 - Child traversal: `graph.connections(id, 'child')`.
 - Child reverse traversal: `graph.connections(id, { kind: 'child', direction: 'inbound' })`.
-- Actions traversal: `graph.connections(id, 'actions')`.
-- Actions reverse traversal: `graph.connections(id, { kind: 'actions', direction: 'inbound' })`.
+- Action traversal: `graph.connections(id, 'action')`.
+- Action reverse traversal: `graph.connections(id, { kind: 'action', direction: 'inbound' })`.
 
 ## DXOS Resources
 

@@ -248,7 +248,7 @@ class GraphImpl implements WritableGraph {
 
   readonly _actions = Atom.family<string, Atom.Atom<(Node.Action | Node.ActionGroup)[]>>((id) => {
     return Atom.make((get) => {
-      return get(this._connections(connectionKey(id, Node.actionsRelation()))) as (Node.Action | Node.ActionGroup)[];
+      return get(this._connections(connectionKey(id, Node.actionRelation()))) as (Node.Action | Node.ActionGroup)[];
     }).pipe(Atom.withLabel(`graph:actions:${id}`));
   });
 

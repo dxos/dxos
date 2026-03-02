@@ -4,7 +4,7 @@
 
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { type Instruction, extractInstruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
-import React, { forwardRef, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { forwardRef, memo, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
@@ -47,17 +47,14 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
     const { graph } = useAppGraph();
     const { getItem, setItem } = useNavTreeState();
     const layout = useLayout();
+    const model = useNavTreeModel(Node.RootId);
     const { navigationSidebarState } = useSidebars(meta.id);
-    const [activatedWorkspaceIds, setActivatedWorkspaceIds] = useState<ReadonlySet<string>>(() => new Set());
-    const activatedWorkspaceIdsRef = useRef<ReadonlySet<string>>(new Set());
     const latestRef = useRef({
       tab,
       activeItems: layout.active,
       navigationSidebarState,
       isLg,
     });
-
-    const model = useNavTreeModel(Node.RootId);
 
     useEffect(() => {
       latestRef.current = {
@@ -67,25 +64,6 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
         isLg,
       };
     }, [tab, layout.active, navigationSidebarState, isLg]);
-
-    const activateWorkspace = useCallback(
-      (workspaceId: string) => {
-        if (activatedWorkspaceIdsRef.current.has(workspaceId)) {
-          return;
-        }
-
-        const nextActivatedWorkspaceIds = new Set(activatedWorkspaceIdsRef.current);
-        nextActivatedWorkspaceIds.add(workspaceId);
-        Graph.expand(graph, workspaceId, 'child');
-        activatedWorkspaceIdsRef.current = nextActivatedWorkspaceIds;
-        setActivatedWorkspaceIds(nextActivatedWorkspaceIds);
-      },
-      [graph],
-    );
-
-    useEffect(() => {
-      activateWorkspace(tab);
-    }, [activateWorkspace, tab]);
 
     const handleOpenChange = useCallback(
       ({ item: { id }, path, open }: { item: Node.Node; path: string[]; open: boolean }) => {
@@ -98,10 +76,14 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
 
     const handleTabChange = useCallback(
       (node: NavTreeItemGraphNode) => {
-        activateWorkspace(node.id);
+        Graph.expand(graph, node.id, 'child');
 
-        const { tab: activeTab, activeItems, navigationSidebarState: currentSidebarState, isLg: latestIsLg } =
-          latestRef.current;
+        const {
+          tab: activeTab,
+          activeItems,
+          navigationSidebarState: currentSidebarState,
+          isLg: latestIsLg,
+        } = latestRef.current;
         invokeSync(LayoutOperation.UpdateSidebar, {
           state:
             node.id === activeTab
@@ -123,7 +105,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
           }
         }
       },
-      [activateWorkspace, invokeSync, graph],
+      [invokeSync, graph],
     );
 
     const blockInstruction = useCallback(
@@ -280,14 +262,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
 
     return (
       <NavTreeContext.Provider value={navTreeContextValue}>
-        <NavTree
-          id={Node.RootId}
-          root={Graph.getRoot(graph)}
-          tab={tab}
-          visitedItemIds={activatedWorkspaceIds}
-          open={layout.sidebarOpen}
-          ref={forwardedRef}
-        />
+        <NavTree id={Node.RootId} root={Graph.getRoot(graph)} tab={tab} open={layout.sidebarOpen} ref={forwardedRef} />
       </NavTreeContext.Provider>
     );
   },

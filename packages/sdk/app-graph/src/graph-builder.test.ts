@@ -710,8 +710,8 @@ describe('GraphBuilder', () => {
         await GraphBuilder.flush(builder);
 
         const edges = registry.get(graph.edges('parent'));
-        expect(edges[Graph.relationKey('actions')] ?? []).to.have.length(1);
-        expect(edges[Graph.relationKey('actions')] ?? []).to.include('test-action');
+        expect(edges[Graph.relationKey('action')] ?? []).to.have.length(1);
+        expect(edges[Graph.relationKey('action')] ?? []).to.include('test-action');
         expect(edges[Graph.relationKey('child')] ?? []).to.have.length(0);
         const actions = registry.get(graph.actions('parent'));
         expect(actions).has.length(1);
@@ -742,7 +742,7 @@ describe('GraphBuilder', () => {
 
         const edges = registry.get(graph.edges('parent'));
         expect(edges[Graph.relationKey('child')] ?? []).to.include('child');
-        expect(edges[Graph.relationKey('actions')] ?? []).to.include('act1');
+        expect(edges[Graph.relationKey('action')] ?? []).to.include('act1');
         const actions = registry.get(graph.actions('parent'));
         expect(actions).has.length(1);
         expect(actions[0].id).to.equal('act1');
@@ -776,7 +776,7 @@ describe('GraphBuilder', () => {
         await GraphBuilder.flush(builder);
 
         const edges = registry.get(graph.edges('parent'));
-        expect(edges[Graph.relationKey('actions')] ?? []).to.include('late-act');
+        expect(edges[Graph.relationKey('action')] ?? []).to.include('late-act');
         const actions = registry.get(graph.actions('parent'));
         expect(actions).has.length(1);
         expect(actions[0].id).to.equal('late-act');

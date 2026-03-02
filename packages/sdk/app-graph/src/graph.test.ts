@@ -15,8 +15,8 @@ const EXAMPLE_ID = exampleId(1);
 const EXAMPLE_TYPE = 'dxos.org/type/example';
 const CHILD_RELATION_KEY = Graph.relationKey('child');
 const CHILD_INBOUND_RELATION_KEY = Graph.relationKey(Node.childRelation('inbound'));
-const ACTIONS_RELATION_KEY = Graph.relationKey('actions');
-const ACTIONS_INBOUND_RELATION_KEY = Graph.relationKey(Node.actionsRelation('inbound'));
+const ACTIONS_RELATION_KEY = Graph.relationKey('action');
+const ACTIONS_INBOUND_RELATION_KEY = Graph.relationKey(Node.actionRelation('inbound'));
 
 describe('Graph', () => {
   test('getGraph', () => {
@@ -124,8 +124,8 @@ describe('Graph', () => {
     Graph.addNode(graph, { id: exampleId(1), type: EXAMPLE_TYPE });
     Graph.addNode(graph, { id: exampleId(2), type: EXAMPLE_TYPE });
     Graph.addNode(graph, { id: exampleId(3), type: EXAMPLE_TYPE });
-    Graph.addEdge(graph, { source: exampleId(1), target: exampleId(2), relation: 'actions' });
-    Graph.addEdge(graph, { source: exampleId(2), target: exampleId(3), relation: 'actions' });
+    Graph.addEdge(graph, { source: exampleId(1), target: exampleId(2), relation: 'action' });
+    Graph.addEdge(graph, { source: exampleId(2), target: exampleId(3), relation: 'action' });
 
     Graph.removeNode(graph, exampleId(2), true);
 
@@ -239,22 +239,22 @@ describe('Graph', () => {
     const graph = Graph.make({ registry });
     Graph.addNode(graph, { id: exampleId(1), type: EXAMPLE_TYPE });
     Graph.addNode(graph, { id: exampleId(2), type: EXAMPLE_TYPE });
-    Graph.addEdge(graph, { source: exampleId(1), target: exampleId(2), relation: 'actions' });
+    Graph.addEdge(graph, { source: exampleId(1), target: exampleId(2), relation: 'action' });
     const sourceEdges = registry.get(graph.edges(exampleId(1)));
     expect(sourceEdges[ACTIONS_RELATION_KEY]).toEqual([exampleId(2)]);
     expect(sourceEdges[CHILD_RELATION_KEY] ?? []).toEqual([]);
     const targetEdges = registry.get(graph.edges(exampleId(2)));
     expect(targetEdges[CHILD_INBOUND_RELATION_KEY] ?? []).toEqual([]);
     expect(targetEdges[ACTIONS_INBOUND_RELATION_KEY]).toEqual([exampleId(1)]);
-    const reverseConnections = registry.get(graph.connections(exampleId(2), Node.actionsRelation('inbound')));
+    const reverseConnections = registry.get(graph.connections(exampleId(2), Node.actionRelation('inbound')));
     expect(reverseConnections.map(({ id }) => id)).toEqual([exampleId(1)]);
   });
 
   test('remove edge with custom relation removes typed inbound inverse', () => {
     const registry = Registry.make();
     const graph = Graph.make({ registry });
-    Graph.addEdge(graph, { source: exampleId(1), target: exampleId(2), relation: 'actions' });
-    Graph.removeEdge(graph, { source: exampleId(1), target: exampleId(2), relation: 'actions' });
+    Graph.addEdge(graph, { source: exampleId(1), target: exampleId(2), relation: 'action' });
+    Graph.removeEdge(graph, { source: exampleId(1), target: exampleId(2), relation: 'action' });
     const sourceEdges = registry.get(graph.edges(exampleId(1)));
     expect(sourceEdges[ACTIONS_RELATION_KEY]).toEqual([]);
     const targetEdges = registry.get(graph.edges(exampleId(2)));
@@ -555,12 +555,12 @@ describe('Graph', () => {
       const graph = Graph.make();
       Graph.addNode(graph, { id: 'host', type: 'test' });
       Graph.addNode(graph, { id: 'action', type: 'test' });
-      Graph.addEdge(graph, { source: 'host', target: 'action', relation: 'actions' });
+      Graph.addEdge(graph, { source: 'host', target: 'action', relation: 'action' });
 
       const nodes: string[] = [];
       Graph.traverse(graph, {
         source: 'action',
-        relation: Node.actionsRelation('inbound'),
+        relation: Node.actionRelation('inbound'),
         visitor: (node) => {
           nodes.push(node.id);
         },

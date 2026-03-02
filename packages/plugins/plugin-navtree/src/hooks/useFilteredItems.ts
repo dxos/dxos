@@ -2,11 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useMemo } from 'react';
-
-import { useAppGraph } from '@dxos/app-toolkit/ui';
-import { Node, useConnections } from '@dxos/plugin-graph';
-import { byPosition } from '@dxos/util';
+import { Node } from '@dxos/app-graph';
 
 /**
  * Determines whether a node should be visible based on its disposition.
@@ -20,16 +16,4 @@ export const filterItems = (node: Node.Node, disposition?: string) => {
   } else {
     return node.properties.disposition === disposition;
   }
-};
-
-/**
- * Returns the outbound connections of a node, filtered by disposition and optionally sorted by position.
- */
-export const useFilteredItems = (node?: Node.Node, options?: { disposition?: string; sort?: boolean }) => {
-  const { graph } = useAppGraph();
-  const connections = useConnections(graph, node?.id ?? Node.RootId, 'child');
-  return useMemo(() => {
-    const filtered = connections.filter((n) => filterItems(n, options?.disposition));
-    return options?.sort ? filtered.toSorted((a, b) => byPosition(a.properties, b.properties)) : filtered;
-  }, [connections, options?.disposition, options?.sort]);
 };

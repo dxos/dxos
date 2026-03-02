@@ -171,22 +171,20 @@ export class AppManager {
     await this.page.getByTestId('spacePlugin.joinSpace').click();
   }
 
-  async waitForSpaceReady(timeout = 30_000): Promise<void> {
-    await Promise.all([
-      this.page.waitForSelector('[data-testid="create-space-form"]', { state: 'detached', timeout: timeout / 2 }),
-      this.page.waitForFunction(
-        () => {
-          const workspaceId = window.location.pathname.split('/').filter(Boolean)[0];
-          if (!workspaceId) {
-            return false;
-          }
+  async waitForSpaceReady(timeout = 10_000): Promise<void> {
+    await this.page.waitForSelector('[data-testid="create-space-form"]', { state: 'detached', timeout });
+    await this.page.waitForFunction(
+      () => {
+        const workspaceId = window.location.pathname.split('/').filter(Boolean)[0];
+        if (!workspaceId) {
+          return false;
+        }
 
-          const selectedSpace = document.querySelector('[data-testid="spacePlugin.space"][aria-selected="true"]');
-          return selectedSpace?.getAttribute('data-object-id') === workspaceId;
-        },
-        { timeout: timeout / 2 },
-      ),
-    ]);
+        const selectedSpace = document.querySelector('[data-testid="spacePlugin.space"][aria-selected="true"]');
+        return selectedSpace?.getAttribute('data-object-id') === workspaceId;
+      },
+      { timeout: timeout / 2 },
+    );
   }
 
   getSpacePresenceMembers(): Locator {

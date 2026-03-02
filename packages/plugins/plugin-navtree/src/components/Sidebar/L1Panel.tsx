@@ -3,17 +3,19 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 import React, { memo, useCallback, useMemo } from 'react';
 
 import { Node } from '@dxos/app-graph';
-import { useActionRunner } from '@dxos/plugin-graph';
+import { useAppGraph } from '@dxos/app-toolkit/ui';
+import { Graph, useActionRunner, useConnections, useEdges } from '@dxos/plugin-graph';
 import { DensityProvider, IconButton, ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Tree } from '@dxos/react-ui-list';
 import { DropdownMenu, type MenuItem, MenuProvider } from '@dxos/react-ui-menu';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
 
-import { useActions, useFilteredItems, useIsAlternateTree, useLoadDescendents } from '../../hooks';
+import { useActions, useIsAlternateTree, useLoadDescendents } from '../../hooks';
 import { meta } from '../../meta';
 import { NAV_TREE_ITEM } from '../NavTree';
 import { useNavTreeContext } from '../NavTreeContext';
@@ -24,17 +26,17 @@ export type L1PanelProps = {
   path: string[];
   item: Node.Node;
   isCurrent: boolean;
-  isVisited: boolean;
   onBack?: () => void;
 };
 
 /**
  * Space or settings panel.
  */
-const L1Panel$ = ({ open, path, item, isCurrent, isVisited, onBack }: L1PanelProps) => {
+const L1Panel$ = ({ open, path, item, isCurrent, onBack }: L1PanelProps) => {
   const { t } = useTranslation(meta.id);
   const title = toLocalizedString(item.properties.label, t);
-  const shouldRenderContent = isCurrent || isVisited;
+  const isActivated = useIsActivatedWorkspace(item);
+  const shouldRenderContent = isCurrent || isActivated;
 
   return (
     <Tabs.Tabpanel
@@ -56,14 +58,30 @@ const L1Panel$ = ({ open, path, item, isCurrent, isVisited, onBack }: L1PanelPro
   );
 };
 
+/** Determines whether a workspace tab has been populated with real child content (i.e. expanded at least once). */
+const useIsActivatedWorkspace = (item: Node.Node): boolean => {
+  const { graph } = useAppGraph();
+  const edges = useEdges(graph, item.id);
+
+  return useMemo(() => {
+    const childIds = edges[Graph.relationKey('child')] ?? [];
+    return childIds.some((childId) => {
+      const child = Graph.getNode(graph, childId);
+      if (Option.isNone(child)) {
+        return false;
+      }
+      return child.value.properties.disposition === undefined;
+    });
+  }, [edges, graph]);
+};
+
 /**
  * Mounted panel content for active or previously-visited tabs.
  */
 const L1PanelContent = ({ path, item, onBack }: Pick<L1PanelProps, 'open' | 'path' | 'item' | 'onBack'>) => {
   const navTreeContext = useNavTreeContext();
 
-  // TODO(wittjosiah): Support multiple alternate trees.
-  const alternateTree = useFilteredItems(item, { disposition: 'alternate-tree' })[0];
+  const alternateTree = useAlternateTreeItem(item);
   const alternatePath = useMemo(() => [...path, item.id], [item.id, path]);
   const isAlternate = useIsAlternateTree(alternatePath, item);
 
@@ -72,7 +90,7 @@ const L1PanelContent = ({ path, item, onBack }: Pick<L1PanelProps, 'open' | 'pat
       <L1PanelHeader path={path} item={item} onBack={onBack} />
       <ScrollArea.Root thin orientation='vertical'>
         <ScrollArea.Viewport>
-          {isAlternate ? (
+          {isAlternate && alternateTree ? (
             <Tree
               model={navTreeContext.model}
               id={alternateTree.id}
@@ -201,8 +219,7 @@ const useL1MenuActions = ({ item, path }: Pick<L1PanelProps, 'item' | 'path'>) =
   const { setAlternateTree } = useNavTreeContext();
   const runAction = useActionRunner();
 
-  // TODO(wittjosiah): Support multiple alternate trees.
-  const alternateTree = useFilteredItems(item, { disposition: 'alternate-tree' })[0];
+  const alternateTree = useAlternateTreeItem(item);
   const alternatePath = useMemo(() => [...path, item.id], [item.id, path]);
   const isAlternate = useIsAlternateTree(alternatePath, item);
 
@@ -258,13 +275,11 @@ const useL1MenuActions = ({ item, path }: Pick<L1PanelProps, 'item' | 'path'>) =
   return { primaryAction, groupedActions, menuActions, onAction };
 };
 
-export const L1Panel = memo(
-  L1Panel$,
-  (previous, next) =>
-    previous.item === next.item &&
-    previous.path === next.path &&
-    previous.open === next.open &&
-    previous.onBack === next.onBack &&
-    previous.isCurrent === next.isCurrent &&
-    previous.isVisited === next.isVisited,
-);
+/** Finds the first child with disposition 'alternate-tree' using graph connections directly. */
+const useAlternateTreeItem = (item: Node.Node): Node.Node | undefined => {
+  const { graph } = useAppGraph();
+  const connections = useConnections(graph, item.id, 'child');
+  return connections.find((node) => node.properties.disposition === 'alternate-tree');
+};
+
+export const L1Panel = memo(L1Panel$);

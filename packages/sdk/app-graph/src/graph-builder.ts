@@ -522,7 +522,7 @@ class GraphBuilderImpl implements GraphBuilder {
 
     // TODO(perf): Make this declarative — extensions should declare which relations they co-expand.
     if (relation.kind === 'child' && relation.direction === 'outbound') {
-      Graph.expand(this._graph, id, 'actions');
+      Graph.expand(this._graph, id, 'action');
     }
   }
 
@@ -873,7 +873,7 @@ export const createExtensionRaw = (extension: CreateExtensionRawOptions): Builde
       ? ({
           id: getId('actionGroups'),
           position,
-          relation: Node.actionsRelation(),
+          relation: Node.actionRelation(),
           prefilter,
           connector: Atom.family((node) =>
             Atom.make((get) => {
@@ -895,7 +895,7 @@ export const createExtensionRaw = (extension: CreateExtensionRawOptions): Builde
       ? ({
           id: getId('actions'),
           position,
-          relation: Node.actionsRelation(),
+          relation: Node.actionRelation(),
           prefilter,
           connector: Atom.family((node) =>
             Atom.make((get) => {

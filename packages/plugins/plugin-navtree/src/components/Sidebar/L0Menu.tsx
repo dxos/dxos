@@ -62,6 +62,7 @@ type L0ItemRootProps = {
   item: Node.Node;
   parent?: Node.Node;
   path: string[];
+  onMouseEnter?: () => void;
 };
 
 type L0ItemProps = L0ItemRootProps & {
@@ -70,6 +71,7 @@ type L0ItemProps = L0ItemRootProps & {
   path: string[];
   pinned?: boolean;
   onRearrange?: StackItemRearrangeHandler<L0ItemData>;
+  onItemHover?: (params: { item: Node.Node }) => void;
 };
 
 const useL0ItemClick = ({ item, parent, path }: L0ItemProps, type: string) => {
@@ -107,7 +109,7 @@ const l0ItemRoot =
 const l0ItemContent = 'flex justify-center items-center dx-focus-ring-group-indicator transition-colors rounded-sm';
 
 const L0ItemRoot = memo(
-  forwardRef<HTMLElement, PropsWithChildren<L0ItemRootProps>>(({ item, parent, path, children }, forwardedRef) => {
+  forwardRef<HTMLElement, PropsWithChildren<L0ItemRootProps>>(({ item, parent, path, onMouseEnter, children }, forwardedRef) => {
     const { model } = useNavTreeContext();
     const itemPath = useMemo(() => [...path, item.id], [item.id, path]);
     const { id, testId } = useAtomValue(model.itemProps(itemPath));
@@ -129,6 +131,7 @@ const L0ItemRoot = memo(
           data-type={type}
           className={mx(l0ItemRoot, l0Breakpoints[item.properties.l0Breakpoint])}
           ref={forwardedRef}
+          onMouseEnter={onMouseEnter}
         >
           {children}
         </Tabs.TabPrimitive>
@@ -148,7 +151,7 @@ export const L0ItemActiveTabIndicator = ({ classNames }: ThemedClassName<{}>) =>
 );
 
 // TODO(burdon): Factor out pinned (non-draggable) items.
-const L0Item = memo(({ item, parent, path, pinned, onRearrange }: L0ItemProps) => {
+const L0Item = memo(({ item, parent, path, pinned, onRearrange, onItemHover }: L0ItemProps) => {
   const { t } = useTranslation(meta.id);
   const itemElement = useRef<HTMLElement | null>(null);
   const [closestEdge, setEdge] = useState<Edge | null>(null);
@@ -211,8 +214,10 @@ const L0Item = memo(({ item, parent, path, pinned, onRearrange }: L0ItemProps) =
     );
   }, [item, onRearrange]);
 
+  const handleMouseEnter = useCallback(() => onItemHover?.({ item }), [item, onItemHover]);
+
   return (
-    <L0ItemRoot ref={itemElement} item={item} parent={parent} path={path}>
+    <L0ItemRoot ref={itemElement} item={item} parent={parent} path={path} onMouseEnter={handleMouseEnter}>
       <div
         role='none'
         data-frame={true}
@@ -264,9 +269,18 @@ export type L0MenuProps = {
   userAccountItem?: Node.Node;
   parent?: Node.Node;
   path: string[];
+  onItemHover?: (params: { item: Node.Node }) => void;
 };
 
-export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountItem, parent, path }: L0MenuProps) => {
+export const L0Menu = ({
+  menuActions,
+  topLevelItems,
+  pinnedItems,
+  userAccountItem,
+  parent,
+  path,
+  onItemHover,
+}: L0MenuProps) => {
   const { t } = useTranslation(meta.id);
   const runAction = useActionRunner();
   const handleAction = useCallback(
@@ -352,6 +366,7 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
                 item={item}
                 parent={parent}
                 path={path}
+                onItemHover={onItemHover}
                 {...(hasRearrangeableItems && { onRearrange: handleRearrange })}
               />
             ))}

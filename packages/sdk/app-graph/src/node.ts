@@ -81,7 +81,7 @@ export type RelationInput = Relation | string;
 export const relation = (kind: string, direction: RelationDirection = 'outbound'): Relation => ({ kind, direction });
 // TODO(wittjosiah): Consider moving these helpers out of the core API.
 export const childRelation = (direction: RelationDirection = 'outbound'): Relation => relation('child', direction);
-export const actionsRelation = (direction: RelationDirection = 'outbound'): Relation => relation('actions', direction);
+export const actionRelation = (direction: RelationDirection = 'outbound'): Relation => relation('action', direction);
 
 export const isGraphNode = (data: unknown): data is Node =>
   data && typeof data === 'object' && 'id' in data && 'properties' in data && data.properties
