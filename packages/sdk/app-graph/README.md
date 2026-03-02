@@ -1,19 +1,5 @@
 # @dxos/app-graph
 
-## Performance measurement
-
-Graph-builder and graph mutation paths can be instrumented to quantify per-flush node/edge churn and correlate with DevTools long-task waves.
-
-- **Default**: Instrumentation is **off** in all environments.
-- **Enable**: Set `globalThis.__DXOS_APP_GRAPH_PERF__ = true` or `DXOS_APP_GRAPH_PERF=1`.
-- **Capture**: Set an emitter via `setFlushMeasurementEmitter((payload) => { ... })` to log or write flush records (e.g. one JSON line per flush to a file).
-- **Correlate**: Run the analysis script with a Chrome trace and optional flush-records JSONL:
-  `pnpm run correlate-flush-trace -- --trace <trace.json> [--flush-records <flush.jsonl>]`
-- **Tooling**: Correlation tooling is kept in `scripts/correlate-flush-trace.ts`.
-- **Reports**: Investigation writeups are kept in `perf-reports/`.
-- **Local captures**: Store raw local captures under `perf-reports/captures/` (ignored from git).
-- **Validate overhead**: Run the same flow (e.g. create-space) with the flag off and on; compare trace duration and long-task counts to confirm instrumentation overhead is acceptable.
-
 ## Relation API
 
 Graph relation APIs use a structured relation object:

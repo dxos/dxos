@@ -15,16 +15,8 @@ import { log } from '@dxos/log';
 import { type MakeOptional, isNonNullable } from '@dxos/util';
 
 import * as Node from './node';
-import { type MutationStepRecord, PERF_MEASUREMENT_ENABLED, getMutationStepCollector } from './perf-measurement-schema';
 
 const graphSymbol = Symbol('graph');
-
-function recordMutationStep(record: MutationStepRecord): void {
-  if (PERF_MEASUREMENT_ENABLED) {
-    const collector = getMutationStepCollector();
-    collector?.push(record);
-  }
-}
 
 /** Shallow equality for node data: handles primitives and one-level-deep objects. */
 const dataEqual = (a: unknown, b: unknown): boolean => {
@@ -808,7 +800,6 @@ const sortEdgesImpl = <T extends ExpandableGraph | WritableGraph>(
   relation: Node.RelationInput,
   order: string[],
 ): T => {
-  const t0 = PERF_MEASUREMENT_ENABLED ? performance.now() : 0;
   const internal = getInternal(graph);
   const edgesAtom = internal._edges(id);
   const edges = internal._registry.get(edgesAtom);
@@ -824,9 +815,6 @@ const sortEdgesImpl = <T extends ExpandableGraph | WritableGraph>(
     ...edges,
     [relationId]: newOrder,
   });
-  if (PERF_MEASUREMENT_ENABLED) {
-    recordMutationStep({ step: 'sortEdges', count: order.length, durationMs: performance.now() - t0 });
-  }
   return graph;
 };
 
@@ -869,13 +857,9 @@ export function sortEdges<T extends ExpandableGraph | WritableGraph>(
  * Implementation helper for addNodes.
  */
 const addNodesImpl = <T extends WritableGraph>(graph: T, nodes: Node.NodeArg<any, Record<string, any>>[]): T => {
-  const t0 = PERF_MEASUREMENT_ENABLED ? performance.now() : 0;
   Atom.batch(() => {
     nodes.map((node) => addNodeImpl(graph, node));
   });
-  if (PERF_MEASUREMENT_ENABLED) {
-    recordMutationStep({ step: 'addNodes', count: nodes.length, durationMs: performance.now() - t0 });
-  }
   return graph;
 };
 
@@ -903,7 +887,6 @@ export function addNodes<T extends WritableGraph>(
  * Implementation helper for addNode.
  */
 const addNodeImpl = <T extends WritableGraph>(graph: T, nodeArg: Node.NodeArg<any, Record<string, any>>): T => {
-  const t0 = PERF_MEASUREMENT_ENABLED ? performance.now() : 0;
   const internal = getInternal(graph);
   // Extract known NodeArg fields, preserve any extra fields (like _actionContext) in rest.
   const {
@@ -970,9 +953,6 @@ const addNodeImpl = <T extends WritableGraph>(graph: T, nodeArg: Node.NodeArg<an
   if (edges) {
     todo();
   }
-  if (PERF_MEASUREMENT_ENABLED) {
-    recordMutationStep({ step: 'addNode', count: 1, durationMs: performance.now() - t0 });
-  }
   return graph;
 };
 
@@ -1000,13 +980,9 @@ export function addNode<T extends WritableGraph>(
  * Implementation helper for removeNodes.
  */
 const removeNodesImpl = <T extends WritableGraph>(graph: T, ids: string[], edges = false): T => {
-  const t0 = PERF_MEASUREMENT_ENABLED ? performance.now() : 0;
   Atom.batch(() => {
     ids.map((id) => removeNodeImpl(graph, id, edges));
   });
-  if (PERF_MEASUREMENT_ENABLED) {
-    recordMutationStep({ step: 'removeNodes', count: ids.length, durationMs: performance.now() - t0 });
-  }
   return graph;
 };
 
@@ -1038,7 +1014,6 @@ export function removeNodes<T extends WritableGraph>(
  * Implementation helper for removeNode.
  */
 const removeNodeImpl = <T extends WritableGraph>(graph: T, id: string, edges = false): T => {
-  const t0 = PERF_MEASUREMENT_ENABLED ? performance.now() : 0;
   const internal = getInternal(graph);
   const nodeAtom = internal._node(id);
   // TODO(wittjosiah): Is there a way to mark these atom values for garbage collection?
@@ -1065,9 +1040,6 @@ const removeNodeImpl = <T extends WritableGraph>(graph: T, id: string, edges = f
   }
 
   internal._onRemoveNode?.(id);
-  if (PERF_MEASUREMENT_ENABLED) {
-    recordMutationStep({ step: 'removeNode', count: 1, durationMs: performance.now() - t0 });
-  }
   return graph;
 };
 
@@ -1099,13 +1071,9 @@ export function removeNode<T extends WritableGraph>(
  * Implementation helper for addEdges.
  */
 const addEdgesImpl = <T extends WritableGraph>(graph: T, edges: Edge[]): T => {
-  const t0 = PERF_MEASUREMENT_ENABLED ? performance.now() : 0;
   Atom.batch(() => {
     edges.map((edge) => addEdgeImpl(graph, edge));
   });
-  if (PERF_MEASUREMENT_ENABLED) {
-    recordMutationStep({ step: 'addEdges', count: edges.length, durationMs: performance.now() - t0 });
-  }
   return graph;
 };
 
@@ -1133,7 +1101,6 @@ export function addEdges<T extends WritableGraph>(
  * Implementation helper for addEdge.
  */
 const addEdgeImpl = <T extends WritableGraph>(graph: T, edgeArg: Edge): T => {
-  const t0 = PERF_MEASUREMENT_ENABLED ? performance.now() : 0;
   const relation = normalizeRelation(edgeArg.relation);
   const relationId = relationKey(relation);
   const inverse = inverseRelation(relation);
@@ -1156,9 +1123,6 @@ const addEdgeImpl = <T extends WritableGraph>(graph: T, edgeArg: Edge): T => {
     internal._registry.set(targetAtom, { ...target, [inverseId]: [...targetList, edgeArg.source] });
   }
 
-  if (PERF_MEASUREMENT_ENABLED) {
-    recordMutationStep({ step: 'addEdge', count: 1, durationMs: performance.now() - t0 });
-  }
   return graph;
 };
 
@@ -1186,13 +1150,9 @@ export function addEdge<T extends WritableGraph>(
  * Implementation helper for removeEdges.
  */
 const removeEdgesImpl = <T extends WritableGraph>(graph: T, edges: Edge[], removeOrphans = false): T => {
-  const t0 = PERF_MEASUREMENT_ENABLED ? performance.now() : 0;
   Atom.batch(() => {
     edges.map((edge) => removeEdgeImpl(graph, edge, removeOrphans));
   });
-  if (PERF_MEASUREMENT_ENABLED) {
-    recordMutationStep({ step: 'removeEdges', count: edges.length, durationMs: performance.now() - t0 });
-  }
   return graph;
 };
 
@@ -1224,7 +1184,6 @@ export function removeEdges<T extends WritableGraph>(
  * Implementation helper for removeEdge.
  */
 const removeEdgeImpl = <T extends WritableGraph>(graph: T, edgeArg: Edge, removeOrphans = false): T => {
-  const t0 = PERF_MEASUREMENT_ENABLED ? performance.now() : 0;
   const relation = normalizeRelation(edgeArg.relation);
   const relationId = relationKey(relation);
   const inverse = inverseRelation(relation);
@@ -1245,27 +1204,16 @@ const removeEdgeImpl = <T extends WritableGraph>(graph: T, edgeArg: Edge, remove
     internal._registry.set(targetAtom, { ...target, [inverseId]: targetList.filter((id) => id !== edgeArg.source) });
   }
 
-  let orphanPruneCount = 0;
   if (removeOrphans) {
     const sourceAfter = internal._registry.get(sourceAtom);
     const targetAfter = internal._registry.get(targetAtom);
     const isEmpty = (edges: Edges) => Object.values(edges).every((ids) => ids.length === 0);
     if (isEmpty(sourceAfter) && edgeArg.source !== Node.RootId) {
       removeNodesImpl(graph, [edgeArg.source]);
-      orphanPruneCount++;
     }
     if (isEmpty(targetAfter) && edgeArg.target !== Node.RootId) {
       removeNodesImpl(graph, [edgeArg.target]);
-      orphanPruneCount++;
     }
-  }
-  if (PERF_MEASUREMENT_ENABLED) {
-    recordMutationStep({
-      step: 'removeEdge',
-      count: 1,
-      durationMs: performance.now() - t0,
-      orphanPruneCount: orphanPruneCount > 0 ? orphanPruneCount : undefined,
-    });
   }
   return graph;
 };

@@ -13,11 +13,11 @@ import { Path, type TreeModel } from '@dxos/react-ui-list';
 import { mx } from '@dxos/ui-theme';
 
 import { type NavTreeItemGraphNode } from '../types';
+import { filterItems } from '../util';
 
-import { filterItems } from './useFilteredItems';
 import { useNavTreeState } from './useNavTreeState';
 
-// TODO(perf): Move companion/hidden nodes to their own edge categories so this filter is unnecessary.
+// TODO(wittjosiah): Move companion/hidden nodes to their own edge categories so this filter is unnecessary.
 const isVisibleChild = (node: Node.Node): boolean =>
   node.type !== PLANK_COMPANION_TYPE && node.properties.disposition !== 'hidden';
 

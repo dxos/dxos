@@ -21,15 +21,6 @@ import { type MaybePromise, type Position, byPosition, getDebugName, isNonNullab
 import * as Graph from './graph';
 import * as Node from './node';
 import * as NodeMatcher from './node-matcher';
-import {
-  type ConnectorKeyRecord,
-  type ExtensionRecord,
-  type MutationStepRecord,
-  PERF_MEASUREMENT_ENABLED,
-  getFlushMeasurementEmitter,
-  nextFlushId,
-  setMutationStepCollector,
-} from './perf-measurement-schema';
 
 /** Shallow-compare two values: same reference, or same own-keys with === values. */
 const shallowEqual = (a: unknown, b: unknown): boolean => {
@@ -58,13 +49,6 @@ export type ConnectorPrefilter = Readonly<{
   /** Restrict connector execution to specific source node types. */
   nodeTypes?: readonly string[];
 }>;
-
-type ConnectorPrefilterStats = {
-  extensionsCandidateCount: number;
-  extensionsScanned: number;
-  extensionsContributing: number;
-  extensionsSkippedByPrefilter: number;
-};
 
 const intersectValues = (left?: readonly string[], right?: readonly string[]): string[] | undefined => {
   if (left == null && right == null) {
@@ -117,11 +101,6 @@ const relationEquals = (left: Node.RelationInput, right: Node.RelationInput): bo
   const normalizedLeft = normalizeRelation(left);
   const normalizedRight = normalizeRelation(right);
   return normalizedLeft.kind === normalizedRight.kind && normalizedLeft.direction === normalizedRight.direction;
-};
-
-const relationLabel = (relation: Node.RelationInput): string => {
-  const normalized = normalizeRelation(relation);
-  return `${normalized.kind}:${normalized.direction}`;
 };
 
 const connectorKey = (id: string, relation: Node.RelationInput): string =>
@@ -223,14 +202,8 @@ class GraphBuilderImpl implements GraphBuilder {
     {
       nodes: Node.NodeArg<any>[];
       previous: string[];
-      byExtension?: Record<string, Node.NodeArg<any>[]>;
-      prefilterStats?: ConnectorPrefilterStats;
     }
   >();
-  /** Ephemeral per-extension connector output per key (only when PERF_MEASUREMENT_ENABLED). */
-  readonly _connectorKeyToByExtension = new Map<string, Record<string, Node.NodeArg<any>[]>>();
-  /** Ephemeral connector scan stats per key (only when PERF_MEASUREMENT_ENABLED). */
-  readonly _connectorKeyToStats = new Map<string, ConnectorPrefilterStats>();
   readonly _connectorPrevious = new Map<string, string[]>();
   readonly _connectorPreviousArgs = new Map<string, Node.NodeArg<any>[]>();
   _flushScheduled = false;
@@ -275,9 +248,6 @@ class GraphBuilderImpl implements GraphBuilder {
     key: string,
     nodes: Node.NodeArg<any>[],
     previous: string[],
-    collector?: ConnectorKeyRecord[],
-    byExtension?: Record<string, Node.NodeArg<any>[]>,
-    prefilterStats?: ConnectorPrefilterStats,
   ): void {
     const { id, relation } = relationFromConnectorKey(key);
     const ids = nodes.map((node) => node.id);
@@ -285,52 +255,16 @@ class GraphBuilderImpl implements GraphBuilder {
     this._connectorPrevious.set(key, ids);
     this._connectorPreviousArgs.set(key, nodes);
 
-    const keyRecord: ConnectorKeyRecord | undefined =
-      PERF_MEASUREMENT_ENABLED && collector
-        ? {
-            key,
-            sourceId: id,
-            relation: relationLabel(relation),
-            nodesIn: nodes.length,
-            removedEdgeCount: removed.length,
-            addedEdgeCount: nodes.length,
-            sortEdgeCount: ids.length > 0 ? ids.length : 0,
-            extensionsCandidateCount: prefilterStats?.extensionsCandidateCount ?? 0,
-            extensionsScanned: prefilterStats?.extensionsScanned ?? 0,
-            extensionsContributing: prefilterStats?.extensionsContributing ?? 0,
-            extensionsSkippedByPrefilter: prefilterStats?.extensionsSkippedByPrefilter ?? 0,
-            stepMs: { removeEdges: 0, addNodes: 0, addEdges: 0, sortEdges: 0 },
-            extensions: [],
-          }
-        : undefined;
-
-    let t0: number;
-    if (keyRecord) t0 = performance.now();
     Graph.removeEdges(
       this._graph,
       removed.map((target) => ({ source: id, target, relation })),
       true,
     );
-    if (keyRecord) {
-      keyRecord.stepMs.removeEdges = performance.now() - t0!;
-    }
-
-    if (keyRecord) t0 = performance.now();
     Graph.addNodes(this._graph, nodes);
-    if (keyRecord) {
-      keyRecord.stepMs.addNodes = performance.now() - t0!;
-    }
-
-    if (keyRecord) t0 = performance.now();
     Graph.addEdges(
       this._graph,
       nodes.map((node) => ({ source: id, target: node.id, relation })),
     );
-    if (keyRecord) {
-      keyRecord.stepMs.addEdges = performance.now() - t0!;
-    }
-
-    if (keyRecord) t0 = performance.now();
     if (ids.length > 0) {
       const sortedIds = [...nodes]
         .sort((a, b) =>
@@ -338,33 +272,6 @@ class GraphBuilderImpl implements GraphBuilder {
         )
         .map((n) => n.id);
       Graph.sortEdges(this._graph, id, relation, sortedIds);
-    }
-    if (keyRecord) {
-      keyRecord.stepMs.sortEdges = performance.now() - t0!;
-    }
-
-    if (keyRecord && byExtension) {
-      const totalKeyMs =
-        keyRecord.stepMs.removeEdges +
-        keyRecord.stepMs.addNodes +
-        keyRecord.stepMs.addEdges +
-        keyRecord.stepMs.sortEdges;
-      for (const [extensionId, extNodes] of Object.entries(byExtension)) {
-        const pluginId = extensionId.split('/').slice(0, 3).join('/') || extensionId;
-        const extRecord: ExtensionRecord = {
-          extensionId,
-          pluginId,
-          sourceId: id,
-          relation: relationLabel(relation),
-          nodeCount: extNodes.length,
-          nodeIdsSample: extNodes.slice(0, 5).map((n) => n.id),
-          durationMs: nodes.length > 0 ? (totalKeyMs * extNodes.length) / nodes.length : 0,
-        };
-        keyRecord.extensions.push(extRecord);
-      }
-      if (collector) collector.push(keyRecord);
-    } else if (keyRecord && collector) {
-      collector.push(keyRecord);
     }
   }
 
@@ -374,70 +281,15 @@ class GraphBuilderImpl implements GraphBuilder {
       this._flushPromise = scheduleTask(
         () => {
           this._flushScheduled = false;
-          let iterations = 0;
           while (this._dirtyConnectors.size > 0) {
-            iterations++;
             const entries = [...this._dirtyConnectors.entries()];
             this._dirtyConnectors.clear();
 
-            const flushId = PERF_MEASUREMENT_ENABLED ? nextFlushId() : 0;
-            const startTs = PERF_MEASUREMENT_ENABLED ? performance.now() : 0;
-            if (PERF_MEASUREMENT_ENABLED && typeof performance.mark === 'function') {
-              performance.mark(`graph-flush.start.${flushId}`);
-            }
-
-            const connectorKeys: ConnectorKeyRecord[] = [];
-            const mutationSteps: MutationStepRecord[] = [];
-            if (PERF_MEASUREMENT_ENABLED) {
-              setMutationStepCollector(mutationSteps);
-            }
-
             Atom.batch(() => {
-              for (const [key, { nodes, previous, byExtension, prefilterStats }] of entries) {
-                this._applyConnectorUpdate(
-                  key,
-                  nodes,
-                  previous,
-                  PERF_MEASUREMENT_ENABLED ? connectorKeys : undefined,
-                  byExtension,
-                  prefilterStats,
-                );
+              for (const [key, { nodes, previous }] of entries) {
+                this._applyConnectorUpdate(key, nodes, previous);
               }
             });
-
-            if (PERF_MEASUREMENT_ENABLED) {
-              setMutationStepCollector(null);
-              const endTs = performance.now();
-              if (typeof performance.mark === 'function') {
-                performance.mark(`graph-flush.end.${flushId}`);
-              }
-              if (typeof performance.measure === 'function') {
-                performance.measure(
-                  `graph-flush.${flushId}`,
-                  `graph-flush.start.${flushId}`,
-                  `graph-flush.end.${flushId}`,
-                );
-              }
-              const timeOriginMs =
-                typeof performance !== 'undefined' &&
-                typeof (performance as Performance & { timeOrigin?: number }).timeOrigin === 'number'
-                  ? (performance as Performance & { timeOrigin: number }).timeOrigin
-                  : undefined;
-              const payload = {
-                flush: {
-                  flushId,
-                  startTs,
-                  endTs,
-                  durationMs: endTs - startTs,
-                  dirtyConnectorCount: entries.length,
-                  iterations,
-                  connectorKeys,
-                  timeOriginMs,
-                },
-                mutationSteps: mutationSteps!,
-              };
-              getFlushMeasurementEmitter()?.(payload);
-            }
           }
         },
         { strategy: 'smooth' },
@@ -467,49 +319,25 @@ class GraphBuilderImpl implements GraphBuilder {
 
       const sourceNode = Option.getOrElse(get(node), () => undefined);
       if (!sourceNode) {
-        if (PERF_MEASUREMENT_ENABLED) {
-          this._connectorKeyToByExtension.set(key, {});
-          this._connectorKeyToStats.set(key, {
-            extensionsCandidateCount: 0,
-            extensionsScanned: 0,
-            extensionsContributing: 0,
-            extensionsSkippedByPrefilter: 0,
-          });
-        }
         return [];
       }
 
-      const candidateExtensions = Function.pipe(
+      const extensions = Function.pipe(
         get(this._extensions),
         Record.values,
         Array.sortBy(byPosition),
         Array.filter(
           (ext): ext is BuilderExtension & { connector: NonNullable<BuilderExtension['connector']> } =>
-            relationEquals(ext.relation ?? 'child', relation) && ext.connector != null,
+            relationEquals(ext.relation ?? 'child', relation) &&
+            ext.connector != null &&
+            matchesConnectorPrefilter(ext.prefilter, sourceNode),
         ),
       );
 
-      const extensions = candidateExtensions.filter((ext) => matchesConnectorPrefilter(ext.prefilter, sourceNode));
-      const byExtension: Record<string, Node.NodeArg<any>[]> = {};
       const nodes: Node.NodeArg<any>[] = [];
-      let extensionsContributing = 0;
       for (const ext of extensions) {
         const result = get(ext.connector(node));
-        if (result.length > 0) {
-          extensionsContributing++;
-        }
-        byExtension[ext.id] = result;
         nodes.push(...result);
-      }
-
-      if (PERF_MEASUREMENT_ENABLED) {
-        this._connectorKeyToByExtension.set(key, byExtension);
-        this._connectorKeyToStats.set(key, {
-          extensionsCandidateCount: candidateExtensions.length,
-          extensionsScanned: extensions.length,
-          extensionsContributing,
-          extensionsSkippedByPrefilter: candidateExtensions.length - extensions.length,
-        });
       }
 
       return nodes;
@@ -520,7 +348,7 @@ class GraphBuilderImpl implements GraphBuilder {
     log('onExpand', { id, relation, registry: getDebugName(this._registry) });
     this._expandRelation(id, relation);
 
-    // TODO(perf): Make this declarative — extensions should declare which relations they co-expand.
+    // TODO(wittjosiah): Make this declarative — extensions should declare which relations they co-expand.
     if (relation.kind === 'child' && relation.direction === 'outbound') {
       Graph.expand(this._graph, id, 'action');
     }
@@ -544,18 +372,7 @@ class GraphBuilderImpl implements GraphBuilder {
         }
 
         log('update', { id, relation, ids });
-
-        const entry: {
-          nodes: Node.NodeArg<any>[];
-          previous: string[];
-          byExtension?: Record<string, Node.NodeArg<any>[]>;
-          prefilterStats?: ConnectorPrefilterStats;
-        } = { nodes, previous };
-        if (PERF_MEASUREMENT_ENABLED) {
-          entry.byExtension = this._connectorKeyToByExtension.get(key);
-          entry.prefilterStats = this._connectorKeyToStats.get(key);
-        }
-        this._dirtyConnectors.set(key, entry);
+        this._dirtyConnectors.set(key, { nodes, previous });
         this._scheduleDirtyFlush();
       },
       { immediate: true },

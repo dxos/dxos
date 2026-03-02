@@ -17,12 +17,6 @@ import * as Graph from './graph';
 import * as GraphBuilder from './graph-builder';
 import * as Node from './node';
 import * as NodeMatcher from './node-matcher';
-import {
-  type FlushMeasurementPayload,
-  PERF_MEASUREMENT_ENABLED,
-  getFlushMeasurementEmitter,
-  setFlushMeasurementEmitter,
-} from './perf-measurement-schema';
 
 const exampleId = (id: number) => `dx:test:${id}`;
 const EXAMPLE_ID = exampleId(1);
@@ -627,13 +621,6 @@ describe('GraphBuilder', () => {
         const builder = GraphBuilder.make({ registry });
         const graph = builder.graph;
 
-        const payloads: FlushMeasurementPayload[] = [];
-        if (PERF_MEASUREMENT_ENABLED) {
-          const previousEmitter = getFlushMeasurementEmitter();
-          setFlushMeasurementEmitter((payload) => payloads.push(payload));
-          onTestFinished(() => setFlushMeasurementEmitter(previousEmitter));
-        }
-
         let rootCalls = 0;
         let typeCalls = 0;
         const rootExtensions = Effect.runSync(
@@ -669,17 +656,6 @@ describe('GraphBuilder', () => {
         expect(registry.get(graph.connections(Node.RootId, 'child')).map((node) => node.id)).to.not.include(
           'type-child',
         );
-
-        if (PERF_MEASUREMENT_ENABLED) {
-          const rootOutboundRecord = payloads
-            .flatMap((payload) => payload.flush.connectorKeys)
-            .find((record) => record.sourceId === Node.RootId && record.relation === 'child:outbound');
-          expect(rootOutboundRecord).to.not.be.undefined;
-          expect(rootOutboundRecord!.extensionsCandidateCount).to.equal(2);
-          expect(rootOutboundRecord!.extensionsScanned).to.equal(1);
-          expect(rootOutboundRecord!.extensionsContributing).to.equal(1);
-          expect(rootOutboundRecord!.extensionsSkippedByPrefilter).to.equal(1);
-        }
       });
 
       test('works with Effect actions', async () => {

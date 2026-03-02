@@ -16,10 +16,10 @@ import { arrayMove } from '@dxos/util';
 
 import { NAV_TREE_ITEM, NavTree } from '../../components/NavTree';
 import { NavTreeContext } from '../../components/NavTreeContext';
-import { filterItems, useNavTreeModel, useNavTreeState } from '../../hooks';
+import { useNavTreeModel, useNavTreeState } from '../../hooks';
 import { meta } from '../../meta';
 import { type NavTreeItemGraphNode } from '../../types';
-import { getParent, resolveMigrationOperation } from '../../util';
+import { filterItems, getParent, resolveMigrationOperation } from '../../util';
 
 // TODO(thure): Is NavTree truly authoritative in this regard?
 export const NODE_TYPE = 'dxos/app-graph/node';
