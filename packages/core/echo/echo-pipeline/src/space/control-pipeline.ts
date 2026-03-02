@@ -188,9 +188,10 @@ export class ControlPipeline {
     log('processing', { key: msg.feedKey, seq: msg.seq });
     if (msg.data.payload?.credential) {
       const timer = tracer.mark('dxos.echo.pipeline.control');
-      const result = await this._spaceStateMachine.process(msg.data.payload.credential.credential! as unknown as Credential, {
-        sourceFeed: PublicKey.from(msg.feedKey),
-      });
+      const result = await this._spaceStateMachine.process(
+        msg.data.payload.credential.credential! as unknown as Credential,
+        { sourceFeed: PublicKey.from(msg.feedKey) },
+      );
 
       timer.end();
       if (!result) {

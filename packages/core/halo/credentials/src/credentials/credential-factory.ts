@@ -85,7 +85,11 @@ export const createCredential = async ({
       nonce,
     }),
   });
-  // Phase 10: replace with anyPack() when protobuf.js codec is removed.
+  // Assertion is set after create() because buf's create() recursively initializes nested message
+  // fields — it would convert the TypedMessage assertion into an empty google.protobuf.Any.
+  // The TypedMessage format is preserved here for signing compatibility (canonicalStringify
+  // hashes the inline assertion fields). Packing into proper Any happens at the codec layer
+  // (before toBinary) via packTypedAssertionAsAny.
   credential.subject!.assertion = assertion as unknown as bufWkt.Any;
 
   // Set proof after creating signature.

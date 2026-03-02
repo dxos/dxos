@@ -57,7 +57,7 @@ describe('Invitation utils', () => {
   test('guestKeypair for known public key auth method is encoded', () => {
     const keypair = create(AdmissionKeypairSchema, {
       publicKey: encodePublicKey(PublicKey.random()),
-      privateKey: PublicKey.random().asBuffer(),
+      privateKey: { data: PublicKey.random().asUint8Array() },
     });
     const invitation = create(InvitationSchema, {
       ...baseInvitation,

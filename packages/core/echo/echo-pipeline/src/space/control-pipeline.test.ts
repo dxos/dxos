@@ -9,7 +9,7 @@ import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { create, encodePublicKey } from '@dxos/protocols/buf';
+import { create, encodePublicKey, timeframeToBuf } from '@dxos/protocols/buf';
 import type { FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { SpaceMetadataSchema } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { AdmittedFeed_Designation } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
@@ -140,27 +140,26 @@ describe('space/control-pipeline', () => {
     // TODO(dmaretskyi): Move to other test (data feed cannot admit feeds).
     const dataFeed2 = await createFeed();
     {
-      await dataFeed1.append({
-        payload: {
-          '@type': 'dxos.echo.feed.FeedMessage',
-          timeframe: controlPipeline.pipeline.state.timeframe,
-          credential: {
-            credential: await createCredential({
-              signer: keyring,
-              issuer: identityKey,
-              subject: dataFeed2.key,
-              assertion: {
-                '@type': 'dxos.halo.credentials.AdmittedFeed',
-                spaceKey,
-                identityKey,
-                deviceKey,
-                designation: AdmittedFeed_Designation.DATA,
-              },
-            }),
-          },
+      const dataCredential = await createCredential({
+        signer: keyring,
+        issuer: identityKey,
+        subject: dataFeed2.key,
+        assertion: {
+          '@type': 'dxos.halo.credentials.AdmittedFeed',
+          spaceKey,
+          identityKey,
+          deviceKey,
+          designation: AdmittedFeed_Designation.DATA,
         },
-        timeframe: new Timeframe(),
       });
+      // Construct FeedMessage as a raw object (not via create()) so the codec's
+      // packFeedMessageAssertions can find and pack the TypedMessage assertion.
+      await dataFeed1.append({
+        timeframe: timeframeToBuf(controlPipeline.pipeline.state.timeframe),
+        credential: {
+          credential: dataCredential,
+        },
+      } as any as FeedMessage);
 
       await controlPipeline.pipeline.state.waitUntilTimeframe(controlPipeline.pipeline.state.endTimeframe);
       expect(admittedFeeds).toEqual([genesisFeed.key, controlFeed2.key, dataFeed1.key]);

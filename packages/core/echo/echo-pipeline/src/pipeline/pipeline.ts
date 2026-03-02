@@ -7,6 +7,7 @@ import { Context, rejectOnDispose } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
 import { FeedSetIterator, type FeedWrapper, type FeedWriter } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
+import { packTypedAssertionAsAny } from '@dxos/credentials';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type FeedMessageBlock } from '@dxos/protocols';
@@ -286,10 +287,32 @@ export class Pipeline implements PipelineAccessor {
     invariant(feed.properties.writable, 'Feed must be writable.');
 
     this._writer = createMappedFeedWriter<ControlPipelinePayload, FeedMessage>(
-      (payload: ControlPipelinePayload) => create(FeedMessageSchema, {
-        timeframe: timeframeToBuf(this._timeframeClock.timeframe),
-        payload: payload as any,
-      }),
+      (payload: ControlPipelinePayload) => {
+        // Pack TypedMessage assertion into proper buf Any before create() which would strip it.
+        const credential = payload.credential?.credential;
+        if (credential?.subject?.assertion) {
+          const assertion = credential.subject.assertion as Record<string, unknown>;
+          if (assertion['@type'] && !('typeUrl' in assertion)) {
+            payload = {
+              credential: {
+                credential: {
+                  ...credential,
+                  subject: {
+                    ...credential.subject,
+                    assertion: packTypedAssertionAsAny(assertion) as any,
+                  },
+                },
+              },
+            };
+          }
+        }
+        return create(FeedMessageSchema, {
+          timeframe: timeframeToBuf(this._timeframeClock.timeframe),
+          payload: {
+            payload: { case: 'credential', value: payload.credential },
+          },
+        } as any);
+      },
       feed.createFeedWriter(),
     );
   }
