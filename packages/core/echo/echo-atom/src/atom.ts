@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
-import { Obj, Ref, type Entity, Relation } from '@dxos/echo';
+import { type Entity, Obj, Ref, Relation } from '@dxos/echo';
 import { assertArgument } from '@dxos/invariant';
 
 import { loadRefTarget } from './ref-utils';

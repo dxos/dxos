@@ -2,23 +2,28 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Option from 'effect/Option';
-import { Filter, Query, type Database, Entity, Relation, Obj, Annotation } from '@dxos/echo';
-import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { Atom } from '@effect-atom/atom';
-import { useAtomValue, useAtomSet } from '@effect-atom/atom-react';
-import { raise } from '@dxos/debug';
-import { ObjectId } from '@dxos/keys';
-import { invariant } from '@dxos/invariant';
-import { AtomObj, AtomQuery } from '@dxos/echo-atom';
-import { Button, DropdownMenu, Icon, IconButton, Treegrid, TreeItem } from '@dxos/react-ui';
-import { Array, Match, pipe } from 'effect';
-import React from 'react';
-import { paddingIndentation, TreeItemToggle } from '@dxos/react-ui-list';
-import { getStyles, hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
+import { useAtomSet, useAtomValue } from '@effect-atom/atom-react';
+import * as Array from 'effect/Array';
+import { pipe } from 'effect/Function';
+import * as Match from 'effect/Match';
+import * as Option from 'effect/Option';
+import * as Order from 'effect/Order';
 import * as Schema from 'effect/Schema';
-import { dbg } from '@dxos/log';
-import { Order } from 'effect';
+import { createContext, useCallback, useContext, useEffect, useState } from 'react';
+
+import React from 'react';
+import { raise } from '@dxos/debug';
+import { Filter, Query, type Database, Entity, Relation, Obj, Annotation } from '@dxos/echo';
+
+import { AtomObj, AtomQuery } from '@dxos/echo-atom';
+import { invariant } from '@dxos/invariant';
+import { ObjectId } from '@dxos/keys';
+import { DropdownMenu, Icon, IconButton, Treegrid } from '@dxos/react-ui';
+
+
+import { TreeItemToggle, paddingIndentation } from '@dxos/react-ui-list';
+import { getStyles, hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
 
 export interface ObjectsTreeProps {
   db: Database.Database;

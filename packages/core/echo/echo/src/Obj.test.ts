@@ -8,8 +8,8 @@ import * as Entity from './Entity';
 import { SnapshotKindId } from './internal';
 import * as Obj from './Obj';
 import * as Ref from './Ref';
-import { TestSchema } from './testing';
 import * as Relation from './Relation';
+import { TestSchema } from './testing';
 
 describe('Obj', () => {
   describe('getSnapshot', () => {

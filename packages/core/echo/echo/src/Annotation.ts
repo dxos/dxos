@@ -18,7 +18,7 @@ export {
   IconAnnotation,
 } from './internal/annotations';
 
-import * as Schema from 'effect/Schema';
+import type * as Schema from 'effect/Schema';
 
 import * as internalAnnotations from './internal/annotations';
 

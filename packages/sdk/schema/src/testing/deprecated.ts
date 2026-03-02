@@ -7,8 +7,6 @@ import * as Schema from 'effect/Schema';
 import { Annotation, Format, Type } from '@dxos/echo';
 import { FieldLookupAnnotationId, GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 
-import { IconAnnotation } from '../annotations';
-
 /**
  * @deprecated Use (@dxos/echo/testing)
  */

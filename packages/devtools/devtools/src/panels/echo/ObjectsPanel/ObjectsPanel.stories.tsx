@@ -7,19 +7,18 @@ import { type Decorator, type Meta, type StoryObj } from '@storybook/react-vite'
 import * as Schema from 'effect/Schema';
 import React, { useState } from 'react';
 
-import { Obj, Relation, Type, type Entity } from '@dxos/echo';
+import { type Entity, Obj, Relation, Type } from '@dxos/echo';
 import { Function, Trigger } from '@dxos/functions';
 import { faker } from '@dxos/random';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { TestSchema } from '@dxos/schema/testing';
 
+import { ObjectViewer } from '../../../components/ObjectViewer';
 import { DevtoolsContextProvider } from '../../../hooks';
 
 import { ObjectsPanel } from './ObjectsPanel';
 import { ObjectsTree } from './ObjectsTree';
-import { dbg } from '@dxos/log';
-import { ObjectViewer } from '../../../components/ObjectViewer';
 
 faker.seed(1);
 

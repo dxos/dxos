@@ -37,7 +37,7 @@ import {
   WorkflowPanel,
 } from '@dxos/devtools';
 import { Obj } from '@dxos/echo';
-import { dbg, log } from '@dxos/log';
+import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { type Graph } from '@dxos/plugin-graph';
 import { ScriptOperation } from '@dxos/plugin-script/types';

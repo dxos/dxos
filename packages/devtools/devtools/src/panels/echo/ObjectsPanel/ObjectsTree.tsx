@@ -2,20 +2,21 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Option from 'effect/Option';
-import { Filter, Query, type Database, Entity, Relation, Obj, Annotation } from '@dxos/echo';
-import { createContext, useContext, useEffect, useState } from 'react';
 import { Atom } from '@effect-atom/atom';
-import { useAtomValue, useAtomSet } from '@effect-atom/atom-react';
-import { raise } from '@dxos/debug';
-import { ObjectId } from '@dxos/keys';
-import { invariant } from '@dxos/invariant';
-import { AtomObj, AtomQuery } from '@dxos/echo-atom';
-import { Icon, Treegrid, TreeItem } from '@dxos/react-ui';
-import { Array, Match, pipe } from 'effect';
+import { useAtomSet, useAtomValue } from '@effect-atom/atom-react';
+import * as Array from 'effect/Array';
+import { pipe } from 'effect/Function';
+import * as Option from 'effect/Option';
+import { createContext, useContext, useEffect, useState } from 'react';
 import React from 'react';
-import { paddingIndentation, TreeItemToggle } from '@dxos/react-ui-list';
-import { dbg } from '@dxos/log';
+
+import { raise } from '@dxos/debug';
+import { Annotation, type Database, Entity, Filter, Obj, Query, Relation } from '@dxos/echo';
+import { AtomObj, AtomQuery } from '@dxos/echo-atom';
+import { invariant } from '@dxos/invariant';
+import { ObjectId } from '@dxos/keys';
+import { Icon, Treegrid } from '@dxos/react-ui';
+import { TreeItemToggle, paddingIndentation } from '@dxos/react-ui-list';
 import { getStyles } from '@dxos/ui-theme';
 
 export interface ObjectsTreeProps {

@@ -23,7 +23,6 @@ import {
   updateFieldsInSchema,
 } from './manipulation';
 import { PersistentSchema } from './persistent-schema';
-import { dbg } from '@dxos/log';
 
 /**
  * Base schema type.

@@ -4,16 +4,15 @@
 
 import React, { useState } from 'react';
 
-import { Database, Filter, Obj, Query } from '@dxos/echo';
-import { Clipboard, Input, Layout, Toolbar } from '@dxos/react-ui';
-import { Json } from '@dxos/react-ui-syntax-highlighter';
-import { parseId, useQuery } from '@dxos/react-client/echo';
-import { ObjectsTree } from '@dxos/devtools';
-import { dbg } from '@dxos/log';
-import type { ObjectId } from '@dxos/keys';
-import { useLayout } from '@dxos/app-toolkit/ui';
 import { useCapability } from '@dxos/app-framework/ui';
+import { useLayout } from '@dxos/app-toolkit/ui';
+import { ObjectsTree } from '@dxos/devtools';
+import { Filter, Query } from '@dxos/echo';
+import type { ObjectId } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
+import { parseId, useQuery } from '@dxos/react-client/echo';
+import { Clipboard, Input, Toolbar } from '@dxos/react-ui';
+import { Json } from '@dxos/react-ui-syntax-highlighter';
 
 export const DebugSpaceObjectsPanel = () => {
   const layout = useLayout();
@@ -34,7 +33,7 @@ export const DebugSpaceObjectsPanel = () => {
 
   return (
     <Clipboard.Provider>
-      <Layout.Main toolbar classNames='grid grid-cols- grid-rows-[auto_1fr_1fr]'>
+      <div className='grid grid-cols- grid-rows-[auto_1fr_1fr]'>
         <Toolbar.Root>
           <Input.Root>
             <Input.TextInput disabled placeholder='Search...' />
@@ -44,7 +43,7 @@ export const DebugSpaceObjectsPanel = () => {
         <div className='border-t border-separator! min-h-100 overflow-auto'>
           <ObjectsTree db={database} onSelect={(entity) => setSelectedId(entity.id)} />
         </div>
-      </Layout.Main>
+      </div>
     </Clipboard.Provider>
   );
 };

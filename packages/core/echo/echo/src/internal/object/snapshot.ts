@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { assertArgument } from '@dxos/invariant';
 import { deepMapValues } from '@dxos/util';
 
 import { ObjectDatabaseId, ObjectDeletedId, SelfDXNId } from '../entities/model';
@@ -9,7 +10,6 @@ import { RelationSourceDXNId, RelationSourceId, RelationTargetDXNId, RelationTar
 import { KindId, SnapshotKindId } from '../types/entity';
 import { MetaId } from '../types/meta';
 import { SchemaId, TypeId } from '../types/typename';
-import { assertArgument } from '@dxos/invariant';
 
 /**
  * Copy a Symbol-keyed property from source to target if it has a defined value.
