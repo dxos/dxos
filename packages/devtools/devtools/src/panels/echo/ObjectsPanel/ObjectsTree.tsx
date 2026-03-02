@@ -21,13 +21,16 @@ import { getStyles } from '@dxos/ui-theme';
 export interface ObjectsTreeProps {
   db: Database.Database;
   root?: Entity.Unknown;
+  onSelect?: (entity: Entity.Snapshot) => void;
 }
 
-export const ObjectsTree = ({ db, root }: ObjectsTreeProps) => {
-  const [model, setModel] = useState(() => new ObjectsTreeModel(db, root ?? null));
+export const ObjectsTree = ({ db, root, onSelect }: ObjectsTreeProps) => {
+  const [model, setModel] = useState(() => new ObjectsTreeModel(db, root ?? null, onSelect ?? (() => {})));
   useEffect(() => {
     setModel((prev) =>
-      prev.database === db && prev.root === (root ?? null) ? prev : new ObjectsTreeModel(db, root ?? null),
+      prev.database === db && prev.root === (root ?? null)
+        ? prev
+        : new ObjectsTreeModel(db, root ?? null, onSelect ?? (() => {})),
     );
   }, [db, root]);
 
@@ -64,7 +67,8 @@ const ObjectsTreeRow = ({ node, level }: { node: ObjectsTreeItem; level: number 
         open={expanded}
         onOpenChange={setExpanded}
         {...(parentOf && { parentOf })}
-        classNames='grid grid-cols-subgrid col-[tree-row]'
+        classNames='grid grid-cols-subgrid col-[tree-row] cursor-pointer'
+        onClick={() => model.onSelect(node.entity)}
       >
         <div
           role='none'
@@ -103,14 +107,16 @@ export type ObjectsTreeItem = {
 };
 
 class ObjectsTreeModel {
+  #onSelect: (entity: Entity.Snapshot) => void;
   #database: Database.Database;
   #root: Entity.Unknown | null;
   #atoms = Atom.family((anchor: string | null) => this.#makeNodeAtom(anchor));
   #expandedState = Atom.family((id: string) => Atom.make(false));
 
-  constructor(database: Database.Database, root: Entity.Unknown | null) {
+  constructor(database: Database.Database, root: Entity.Unknown | null, onSelect: (entity: Entity.Snapshot) => void) {
     this.#database = database;
     this.#root = root;
+    this.#onSelect = onSelect;
   }
 
   get database(): Database.Database {
@@ -123,6 +129,10 @@ class ObjectsTreeModel {
 
   get rootNodes(): Atom.Atom<ObjectsTreeItem[]> {
     return this.#atoms(null);
+  }
+
+  onSelect(entity: Entity.Snapshot): void {
+    this.#onSelect(entity);
   }
 
   getChildren(id: string): Atom.Atom<ObjectsTreeItem[]> {

@@ -5,9 +5,9 @@ import '@dxos-theme';
 
 import { type Decorator, type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
-import React from 'react';
+import React, { useState } from 'react';
 
-import { Obj, Relation, Type } from '@dxos/echo';
+import { Obj, Relation, Type, type Entity } from '@dxos/echo';
 import { Function, Trigger } from '@dxos/functions';
 import { faker } from '@dxos/random';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
@@ -19,6 +19,7 @@ import { DevtoolsContextProvider } from '../../../hooks';
 import { ObjectsPanel } from './ObjectsPanel';
 import { ObjectsTree } from './ObjectsTree';
 import { dbg } from '@dxos/log';
+import { ObjectViewer } from '../../../components/ObjectViewer';
 
 faker.seed(1);
 
@@ -162,6 +163,24 @@ export const WithTree: Story = {
     return (
       <div className='text-base-text'>
         <ObjectsTree db={space.db} />
+      </div>
+    );
+  },
+};
+
+export const WithDetails: Story = {
+  render: () => {
+    const { space } = useClientStory();
+    if (!space) {
+      return <div>No space</div>;
+    }
+    const [selectedObject, setSelectedObject] = useState<Entity.Snapshot | null>(null);
+    return (
+      <div className='flex grid grid-rows_[1fr_1fr]'>
+        <ObjectsTree db={space.db} onSelect={setSelectedObject} />
+        <div className='border-separator! border-s border-t'>
+          {selectedObject && <ObjectViewer object={selectedObject} id={selectedObject.id} />}
+        </div>
       </div>
     );
   },
