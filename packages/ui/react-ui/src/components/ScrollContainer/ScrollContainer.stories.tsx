@@ -7,7 +7,7 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { faker } from '@dxos/random';
 
-import { Layout } from '../../primitives';
+import { Container } from '../../primitives';
 import { withLayout, withTheme } from '../../testing';
 import { Button } from '../Button';
 import { Toolbar } from '../Toolbar';
@@ -36,7 +36,7 @@ const DefaultStory = ({ initialLines = 0, running: runningProp, ...props }: Stor
   }, [running]);
 
   return (
-    <Layout.Main toolbar>
+    <Container.Main toolbar>
       <Toolbar.Root>
         <Button onClick={() => setRunning((running) => !running)}>{running ? 'Stop' : 'Start'}</Button>
         <Button onClick={() => scroller.current?.scrollToBottom()}>Scroll to bottom</Button>
@@ -53,7 +53,7 @@ const DefaultStory = ({ initialLines = 0, running: runningProp, ...props }: Stor
         </ScrollContainer.Viewport>
         <ScrollContainer.ScrollDownButton />
       </ScrollContainer.Root>
-    </Layout.Main>
+    </Container.Main>
   );
 };
 

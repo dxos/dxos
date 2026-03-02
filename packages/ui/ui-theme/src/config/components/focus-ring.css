@@ -208,19 +208,19 @@
 
       @media screen(lg) {
         &[data-sidebar-left-state='expanded']::after {
-          inset-inline-start: var(--nav-sidebar-size);
+          inset-inline-start: var(--dx-nav-sidebar-size);
         }
 
         &[data-sidebar-left-state='collapsed']::after {
-          inset-inline-start: var(--l0-size);
+          inset-inline-start: var(--dx-l0-size);
         }
 
         &[data-sidebar-right-state='expanded']::after {
-          inset-inline-end: var(--complementary-sidebar-size);
+          inset-inline-end: var(--dx-complementary-sidebar-size);
         }
 
         &[data-sidebar-right-state='collapsed']::after {
-          inset-inline-end: var(--r0-size);
+          inset-inline-end: var(--dx-r0-size);
         }
       }
     }

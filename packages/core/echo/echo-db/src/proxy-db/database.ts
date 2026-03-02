@@ -230,14 +230,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   private _query(query: Query.Any | Filter.Any, options?: Database.QueryOptions & QueryAST.QueryOptions) {
     query = Filter.is(query) ? Query.select(query) : query;
 
-    let hasSpaceIds = false;
-    QueryAST.visit(query.ast, (node) => {
-      if (node.type === 'options' && node.options.spaceIds !== undefined) {
-        hasSpaceIds = true;
-      }
-    });
-
-    if (hasSpaceIds) {
+    if (isQueryQualified(query.ast)) {
       return this._coreDatabase.graph.query(query, options);
     }
 
@@ -391,4 +384,14 @@ const createSchemaNotRegisteredError = (schema?: any) => {
   }
 
   return new Error(message);
+};
+
+const isQueryQualified = (query: QueryAST.Query): boolean => {
+  let isQualified = false;
+  QueryAST.visit(query, (node) => {
+    if (node.type === 'options' && (node.options.spaceIds !== undefined || node.options.queues !== undefined)) {
+      isQualified = true;
+    }
+  });
+  return isQualified;
 };

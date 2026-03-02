@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
-import { Database } from '@dxos/echo';
+import { Database, Feed } from '@dxos/echo';
 import { CredentialsService, FunctionInvocationService, type InvocationServices, QueueService } from '@dxos/functions';
 import { type FunctionDefinition } from '@dxos/functions';
 
@@ -79,7 +79,7 @@ export const FunctionInvocationServiceLayerTest = ({
 } = {}): Layer.Layer<
   FunctionInvocationService,
   never,
-  AiService.AiService | CredentialsService | Database.Service | QueueService
+  AiService.AiService | CredentialsService | Database.Service | QueueService | Feed.Service
 > =>
   FunctionInvocationServiceLayerWithLocalLoopbackExecutor.pipe(
     Layer.provide(FunctionImplementationResolver.layerTest({ functions })),
@@ -102,4 +102,5 @@ export const FunctionInvocationServiceLayerTestMocked = ({
     Layer.provide(CredentialsService.configuredLayer([])),
     Layer.provide(Database.notAvailable),
     Layer.provide(QueueService.notAvailable),
+    Layer.provide(Feed.notAvailable),
   );

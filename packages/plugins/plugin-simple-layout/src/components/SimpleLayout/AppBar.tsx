@@ -62,7 +62,11 @@ export const AppBar = ({
   return (
     <Toolbar.Root
       role='banner'
-      classNames={mx('grid grid-cols-[var(--rail-size)_1fr_var(--rail-size)] items-center', 'density-fine', classNames)}
+      classNames={mx(
+        'grid grid-cols-[var(--dx-rail-size)_1fr_var(--dx-rail-size)] items-center',
+        'dx-density-fine',
+        classNames,
+      )}
     >
       {keyboardOpen ? (
         <IconButton variant='ghost' icon='ph--x--regular' iconOnly label={t('done label')} />

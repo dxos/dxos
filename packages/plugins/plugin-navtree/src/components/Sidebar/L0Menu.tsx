@@ -11,10 +11,12 @@ import {
   attachClosestEdge,
   extractClosestEdge,
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
+import { useAtomValue } from '@effect-atom/atom-react';
 import React, {
   type MouseEvent,
   type PropsWithChildren,
   forwardRef,
+  memo,
   useCallback,
   useLayoutEffect,
   useMemo,
@@ -71,7 +73,7 @@ type L0ItemProps = L0ItemRootProps & {
 };
 
 const useL0ItemClick = ({ item, parent, path }: L0ItemProps, type: string) => {
-  const { tab, onSelect, onTabChange } = useNavTreeContext();
+  const { onSelect, onTabChange } = useNavTreeContext();
   const { getItem } = useNavTreeState();
   const [isLg] = useMediaQuery('lg');
   const runAction = useActionRunner();
@@ -91,7 +93,7 @@ const useL0ItemClick = ({ item, parent, path }: L0ItemProps, type: string) => {
           return onSelect?.({ item, path, current: !getItem(path).current, option: event.altKey });
       }
     },
-    [item, parent, type, tab, getItem, onSelect, onTabChange, isLg, runAction],
+    [item, parent, type, getItem, onSelect, onTabChange, isLg, runAction],
   );
 };
 
@@ -100,16 +102,16 @@ const l0Breakpoints: Record<string, string> = {
 };
 
 const l0ItemRoot =
-  'group/l0item flex w-full justify-center items-center relative data[type!="collection"]:cursor-pointer app-no-drag dx-focus-ring-group';
+  'group/l0item flex w-full justify-center items-center relative data[type!="collection"]:cursor-pointer dx-app-no-drag dx-focus-ring-group';
 
 const l0ItemContent = 'flex justify-center items-center dx-focus-ring-group-indicator transition-colors rounded-sm';
 
-const L0ItemRoot = forwardRef<HTMLElement, PropsWithChildren<L0ItemRootProps>>(
-  ({ item, parent, path, children }, forwardedRef) => {
-    const { getProps } = useNavTreeContext();
-    const { id, testId } = getProps?.(item, path) ?? {};
-    const type = l0ItemType(item);
+const L0ItemRoot = memo(
+  forwardRef<HTMLElement, PropsWithChildren<L0ItemRootProps>>(({ item, parent, path, children }, forwardedRef) => {
+    const { model } = useNavTreeContext();
     const itemPath = useMemo(() => [...path, item.id], [item.id, path]);
+    const { id, testId } = useAtomValue(model.itemProps(itemPath));
+    const type = l0ItemType(item);
 
     const { t } = useTranslation(meta.id);
     const localizedString = toLocalizedString(item.properties.label, t);
@@ -132,7 +134,7 @@ const L0ItemRoot = forwardRef<HTMLElement, PropsWithChildren<L0ItemRootProps>>(
         </Tabs.TabPrimitive>
       </Tooltip.Trigger>
     );
-  },
+  }),
 );
 
 export const L0ItemActiveTabIndicator = ({ classNames }: ThemedClassName<{}>) => (
@@ -146,7 +148,7 @@ export const L0ItemActiveTabIndicator = ({ classNames }: ThemedClassName<{}>) =>
 );
 
 // TODO(burdon): Factor out pinned (non-draggable) items.
-const L0Item = ({ item, parent, path, pinned, onRearrange }: L0ItemProps) => {
+const L0Item = memo(({ item, parent, path, pinned, onRearrange }: L0ItemProps) => {
   const { t } = useTranslation(meta.id);
   const itemElement = useRef<HTMLElement | null>(null);
   const [closestEdge, setEdge] = useState<Edge | null>(null);
@@ -219,7 +221,7 @@ const L0Item = ({ item, parent, path, pinned, onRearrange }: L0ItemProps) => {
           l0ItemContent,
           pinned
             ? 'p-2 group-hover/l0item:bg-active-surface'
-            : 'w-(--l0-avatar-size) h-(--l0-avatar-size) bg-active-surface',
+            : 'w-(--dx-l0-avatar-size) h-(--dx-l0-avatar-size) bg-active-surface',
         )}
       >
         <ItemAvatar item={item} />
@@ -231,7 +233,7 @@ const L0Item = ({ item, parent, path, pinned, onRearrange }: L0ItemProps) => {
       {closestEdge && <ListItem.DropIndicator edge={closestEdge} />}
     </L0ItemRoot>
   );
-};
+});
 
 const ItemAvatar = ({ item }: Pick<L0ItemProps, 'item'>) => {
   const { t } = useTranslation(meta.id);
@@ -301,8 +303,8 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
     <Tabs.Tablist
       classNames={[
         'group/l0 absolute z-[1] inset-y-0 start-0 rounded-is',
-        'grid grid-cols-[var(--l0-size)] grid-rows-[var(--rail-size)_1fr_min-content_var(--l0-size)] contain-layout',
-        '!w-(--l0-size) bg-toolbar-surface border-e border-subdued-separator app-drag pb-[env(safe-area-inset-bottom)]',
+        'grid grid-cols-[var(--dx-l0-size)] grid-rows-[var(--dx-rail-size)_1fr_min-content_var(--dx-l0-size)] dx-contain-layout',
+        '!w-(--dx-l0-size) bg-toolbar-surface border-e border-subdued-separator dx-app-drag pb-[env(safe-area-inset-bottom)]',
       ]}
     >
       {/* TODO(wittjosiah): Use L0Item trigger. */}
@@ -322,7 +324,7 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
                   role='none'
                   className={mx(
                     l0ItemContent,
-                    'h-(--rail-action) w-(--rail-action) group-hover/l0item:bg-hover-surface',
+                    'h-(--dx-rail-action) w-(--dx-rail-action) group-hover/l0item:bg-hover-surface',
                   )}
                 >
                   <Icon icon='ph--list--regular' size={5} />
@@ -358,14 +360,14 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
       </ScrollArea.Root>
 
       {/* Actions. */}
-      <div role='none' className='grid grid-cols-1 auto-rows-(--rail-action) pt-2'>
+      <div role='none' className='grid grid-cols-1 auto-rows-(--dx-rail-action) pt-2'>
         {pinnedItems.map((item) => (
           <L0Item key={item.id} item={item} parent={parent} path={path} pinned />
         ))}
       </div>
 
       {userAccountItem && (
-        <div role='none' className='grid app-no-drag'>
+        <div role='none' className='grid dx-app-no-drag'>
           <L0ItemRoot key={userAccountItem.id} item={userAccountItem} parent={parent} path={path}>
             <UserAccountAvatar
               userId={userAccountItem.properties.userId}

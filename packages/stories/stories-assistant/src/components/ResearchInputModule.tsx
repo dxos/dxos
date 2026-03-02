@@ -37,7 +37,7 @@ const DebugCard = ({ object }: DebugCardProps) => {
       <div className='flex items-center justify-between mb-2'>
         <h3 className='font-medium text-lg'>{Entity.getLabel(object)}</h3>
         <p className='flex gap-2 items-center'>
-          <span className='text-sm font-mono dx-text-hue' data-hue={getHashHue(object.id)}>
+          <span className='text-sm font-mono dx-text' data-hue={getHashHue(object.id)}>
             {object.id.slice(-6)}
           </span>
           <span className='text-sm text-description bg-neutral-800 px-2 py-1 rounded-sm'>
@@ -46,7 +46,7 @@ const DebugCard = ({ object }: DebugCardProps) => {
         </p>
       </div>
       <details className='group'>
-        <summary className='cursor-pointer text-sm text-primary hover:text-primaryHover'>View JSON</summary>
+        <summary className='cursor-pointer text-sm text-accent-text hover:text-accent-text-hover'>View JSON</summary>
         <pre className='mt-2 text-xs p-3 rounded-sm overflow-x-auto'>{JSON.stringify(object, null, 2)}</pre>
       </details>
     </div>

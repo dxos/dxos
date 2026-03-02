@@ -59,7 +59,7 @@ test.describe('Collaboration tests', () => {
   test("guest joins host's space", async () => {
     // Host creates a space and adds a markdown object
     await host.createSpace();
-    await host.createObject({ type: 'Document', nth: 0 });
+    await host.createObject({ type: 'Document' });
 
     {
       // Focus new editor before space invitation.
@@ -93,7 +93,7 @@ test.describe('Collaboration tests', () => {
 
   test("host and guest can see each others' cursors when same document is in focus", async () => {
     await host.createSpace();
-    await host.createObject({ type: 'Document', nth: 0 });
+    await host.createObject({ type: 'Document' });
 
     // Focus on host's textbox and wait for it to be ready
     const hostPlank = host.deck.plank();
@@ -137,7 +137,7 @@ test.describe('Collaboration tests', () => {
 
   test("host and guest can see each others' changes in same document", async () => {
     await host.createSpace();
-    await host.createObject({ type: 'Document', nth: 0 });
+    await host.createObject({ type: 'Document' });
 
     // Focus on host's textbox and wait for it to be ready
     const hostPlank = host.deck.plank();
@@ -208,7 +208,7 @@ test.describe('Collaboration tests', () => {
     test.setTimeout(90_000);
 
     await host.createSpace();
-    await host.createObject({ type: 'Document', nth: 0 });
+    await host.createObject({ type: 'Document' });
 
     // Focus on host's textbox and wait for it to be ready
     const hostPlank = host.deck.plank();

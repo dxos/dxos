@@ -35,7 +35,7 @@
    * Hue
    */
 
-  --color-neutral-fill: var(--color-neutral-500);
+  --color-neutral-fill: light-dark(var(--color-neutral-300), var(--color-neutral-700));
   --color-neutral-surface: light-dark(var(--color-neutral-200), var(--color-neutral-800));
   --color-neutral-surface-text: light-dark(var(--color-neutral-800), var(--color-neutral-200));
   --color-neutral-text: light-dark(var(--color-neutral-600), var(--color-neutral-400));

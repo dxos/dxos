@@ -162,7 +162,7 @@ export const ContentError = ({ error }: { error?: Error }) => {
   const { t } = useTranslation(meta.id);
   const errorString = error?.toString() ?? '';
   return (
-    <div role='none' className='overflow-auto p-8 attention-surface grid place-items-center'>
+    <div role='none' className='overflow-auto p-8 dx-attention-surface grid place-items-center'>
       <p
         role='alert'
         className={mx(descriptionMessage, 'break-words rounded-md p-8', errorString.length < 256 && 'text-lg')}

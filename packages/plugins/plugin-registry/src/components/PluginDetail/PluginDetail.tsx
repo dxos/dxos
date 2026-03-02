@@ -34,7 +34,7 @@ export const PluginDetail = ({ plugin, enabled, onEnabledChange }: PluginDetailP
   return (
     <ScrollArea.Root orientation='vertical'>
       <ScrollArea.Viewport>
-        <div role='none' className='grid grid-cols-[min-content_1fr] gap-4 container-max-width p-4'>
+        <div role='none' className='grid grid-cols-[min-content_1fr] gap-4 dx-container-max-width p-4'>
           <div role='none'>
             <Icon classNames={mx('p-1 rounded-md', styles.fill, styles.surfaceText)} icon={icon} size={14} />
           </div>

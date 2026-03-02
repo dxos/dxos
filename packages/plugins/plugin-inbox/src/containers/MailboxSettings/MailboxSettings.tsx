@@ -7,7 +7,8 @@ import React, { useCallback, useMemo } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { Obj, Ref } from '@dxos/echo';
+import { type Feed, Obj, Ref } from '@dxos/echo';
+import { Feed as FeedModule } from '@dxos/echo';
 import { Trigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { AutomationOperation } from '@dxos/plugin-automation/types';
@@ -16,19 +17,21 @@ import { Filter, useQuery } from '@dxos/react-client/echo';
 import { Button, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '../../meta';
-import { type Mailbox } from '../../types';
 
-export const MailboxSettings = ({ subject }: SurfaceComponentProps<Mailbox.Mailbox>) => {
+export const MailboxSettings = ({ subject }: SurfaceComponentProps<Feed.Feed>) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const db = useMemo(() => Obj.getDatabase(subject), [subject]);
   const triggers = useQuery(db, Filter.type(Trigger.Trigger));
 
+  // Get the feed's queue DXN from meta keys.
+  const queueDxn = useMemo(() => FeedModule.getQueueDxn(subject), [subject]);
+
   const handleConfigureSync = useCallback(() => {
     invariant(db);
 
     const syncTrigger = triggers.find(
-      (trigger) => trigger.spec?.kind === 'timer' && trigger.input?.mailboxId === subject.id,
+      (trigger) => trigger.spec?.kind === 'timer' && trigger.input?.feedId === subject.id,
     );
     if (syncTrigger) {
       void invokePromise(LayoutOperation.Open, {
@@ -40,7 +43,7 @@ export const MailboxSettings = ({ subject }: SurfaceComponentProps<Mailbox.Mailb
         db,
         template: { type: 'timer', cron: '*/5 * * * *' },
         scriptName: 'Gmail',
-        input: { mailbox: Ref.make(subject) },
+        input: { feed: Ref.make(subject) },
       });
     }
   }, [invokePromise, db, subject.id, triggers, subject]);
@@ -49,8 +52,8 @@ export const MailboxSettings = ({ subject }: SurfaceComponentProps<Mailbox.Mailb
     invariant(db);
 
     const subscriptionTrigger = triggers.find((trigger) => {
-      if (trigger.spec?.kind === 'queue') {
-        if (trigger.spec.queue === subject.queue.dxn.toString()) {
+      if (trigger.spec?.kind === 'queue' && queueDxn) {
+        if (trigger.spec.queue === queueDxn.toString()) {
           return true;
         }
       }
@@ -61,13 +64,13 @@ export const MailboxSettings = ({ subject }: SurfaceComponentProps<Mailbox.Mailb
         subject: [`automation-settings${ATTENDABLE_PATH_SEPARATOR}${db.spaceId}`],
         workspace: db.spaceId,
       });
-    } else {
+    } else if (queueDxn) {
       void invokePromise(AutomationOperation.CreateTriggerFromTemplate, {
         db,
-        template: { type: 'queue', queueDXN: subject.queue.dxn },
+        template: { type: 'queue', queueDXN: queueDxn },
       });
     }
-  }, [invokePromise, db, subject.queue.dxn, triggers]);
+  }, [invokePromise, db, queueDxn, triggers]);
 
   // TODO(wittjosiah): More than one trigger may be desired, particularly for subscription.
   //   Distinguish between configuring existing triggers and adding new ones.

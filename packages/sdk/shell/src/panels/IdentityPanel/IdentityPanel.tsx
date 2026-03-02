@@ -120,16 +120,16 @@ const IdentityHeading = ({
         </Input.Root>
 
         <Toolbar.Root classNames='justify-center pt-3'>
-          <EmojiPickerToolbarButton emoji={emoji} onChangeEmoji={setEmoji} classNames='h-(--rail-action)' />
+          <EmojiPickerToolbarButton emoji={emoji} onChangeEmoji={setEmoji} classNames='h-(--dx-rail-action)' />
           <HuePicker
             value={hue}
             onChange={setHue}
             onReset={() => setHue(undefined)}
-            classNames='h-(--rail-action)'
+            classNames='h-(--dx-rail-action)'
             rootVariant='toolbar-button'
           />
           <Clipboard.IconButton
-            classNames='h-(--rail-action)'
+            classNames='h-(--dx-rail-action)'
             data-testid='update-profile-form-copy-key'
             label={t('copy self did label')}
             value={identity.did}
@@ -140,7 +140,7 @@ const IdentityHeading = ({
               label={t('manage credentials label')}
               iconOnly
               tooltipSide='bottom'
-              classNames='h-(--rail-action)'
+              classNames='h-(--dx-rail-action)'
               onClick={onManageCredentials}
             />
           )}
@@ -149,7 +149,7 @@ const IdentityHeading = ({
             label={t(isConnected ? 'disconnect label' : 'connect label')}
             iconOnly
             tooltipSide='bottom'
-            classNames={['h-(--rail-action)', !isConnected && 'text-error-text']}
+            classNames={['h-(--dx-rail-action)', !isConnected && 'text-error-text']}
             onClick={() => onChangeConnectionState?.(isConnected ? ConnectionState.OFFLINE : ConnectionState.ONLINE)}
           />
         </Toolbar.Root>

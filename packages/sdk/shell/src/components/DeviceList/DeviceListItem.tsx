@@ -97,7 +97,7 @@ export const DeviceListItem = forwardRef<
               <Tooltip.Trigger asChild>
                 <Button
                   variant='ghost'
-                  classNames='px-0 w-(--rail-action) h-(--rail-action)'
+                  classNames='px-0 w-(--dx-rail-action) h-(--dx-rail-action)'
                   data-testid='agent.destroy'
                   onClick={onAgentDestroy}
                 >
@@ -117,7 +117,7 @@ export const DeviceListItem = forwardRef<
               <DropdownMenu.Trigger asChild>
                 <Button
                   variant='ghost'
-                  classNames='px-0 w-(--rail-action) h-(--rail-action)'
+                  classNames='px-0 w-(--dx-rail-action) h-(--dx-rail-action)'
                   data-testid={`device-list-item${isCurrent ? '-current' : ''}.options`}
                 >
                   <span className='sr-only'>{t('more options label')}</span>

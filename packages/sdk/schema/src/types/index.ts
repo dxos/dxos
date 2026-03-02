@@ -12,12 +12,13 @@ import * as View from './View';
 export { Collection, Expando, Text, View };
 
 export const DataTypes: Type.Entity.Any[] = [
-  Expando.Expando,
+  Type.Feed,
   Type.PersistentType,
 
   // System
   Collection.Collection,
   Collection.Managed,
+  Expando.Expando,
   Text.Text,
   View.View,
 ];

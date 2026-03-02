@@ -24,14 +24,12 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}/navigation`,
         role: 'navigation',
-        filter: (data): data is { popoverAnchorId?: string; topbar: boolean; current: string } =>
-          typeof data.current === 'string',
+        filter: (data): data is { popoverAnchorId?: string; current: string } => typeof data.current === 'string',
         component: ({ data, ref }) => {
           return (
             <NavTreeContainer
               tab={data.current}
               popoverAnchorId={data.popoverAnchorId as string | undefined}
-              topbar={data.topbar as boolean}
               ref={ref}
             />
           );

@@ -102,7 +102,7 @@ const CardStackStack = forwardRef<
 // Item
 //
 
-const cardStackItem = 'contain-layout px-2 py-1 first-of-type:pt-0 last-of-type:pb-0';
+const cardStackItem = 'dx-contain-layout px-2 py-1 first-of-type:pt-0 last-of-type:pb-0';
 
 const CardStackItem = forwardRef<HTMLDivElement, SharedCardStackProps>(
   ({ children, classNames, asChild, role = 'none', ...props }, forwardedRef) => {

@@ -56,7 +56,7 @@ export const ConfirmReset = ({ active, mode, onCancel, onConfirm }: ConfirmReset
           <Message.Title>{t('sign out chooser title')}</Message.Title>
           <Message.Content>{t('sign out chooser message')}</Message.Content>
         </Message.Root>
-        <div className='p-card-chrome'>
+        <div className='p-form-chrome'>
           <Input
             {...{ validationMessage }}
             label={

@@ -17,7 +17,7 @@ export const PlankContentError = ({ error }: { error?: Error }) => {
   const { t } = useTranslation(meta.id);
   const errorString = error?.toString() ?? '';
   return (
-    <div role='none' className='overflow-y-auto p-8 attention-surface grid place-items-center'>
+    <div role='none' className='overflow-y-auto p-8 dx-attention-surface grid place-items-center'>
       <p role='alert' className={mx(descriptionMessage, 'break-all rounded-md p-4')}>
         {error ? errorString : t('error fallback message')}
       </p>

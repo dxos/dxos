@@ -263,7 +263,7 @@ const DefaultStory = ({
           <Card.Root>
             <SyntaxHighlighter
               language='json'
-              classNames='text-xs my-card-padding px-card-padding bg-transparent'
+              classNames='text-xs my-form-padding px-form-padding bg-transparent'
               code={JSON.stringify(popover, null, 2)}
             />
           </Card.Root>

@@ -169,7 +169,7 @@ export const RefField = (props: RefFieldProps) => {
             </ObjectPicker.Trigger>
             <ObjectPicker.Portal>
               <ObjectPicker.Content
-                classNames='popover-card-width'
+                classNames='dx-card-popover-width'
                 options={options}
                 selectedIds={selectedIds}
                 createSchema={createSchema && omitId(createSchema)}

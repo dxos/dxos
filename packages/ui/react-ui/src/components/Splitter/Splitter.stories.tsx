@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { Layout } from '../../primitives';
+import { Container } from '../../primitives';
 import { withLayout, withTheme } from '../../testing';
 import { ScrollArea } from '../ScrollArea';
 import { Toolbar } from '../Toolbar';
@@ -14,7 +14,7 @@ import { Splitter, type SplitterRootProps } from './Splitter';
 
 const Panel = ({ label }: { label: string }) => {
   return (
-    <Layout.Main toolbar>
+    <Container.Main toolbar>
       <Toolbar.Root>{label}</Toolbar.Root>
       <ScrollArea.Root orientation='vertical'>
         <ScrollArea.Viewport>
@@ -25,7 +25,7 @@ const Panel = ({ label }: { label: string }) => {
           ))}
         </ScrollArea.Viewport>
       </ScrollArea.Root>
-    </Layout.Main>
+    </Container.Main>
   );
 };
 

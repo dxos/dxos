@@ -30,13 +30,12 @@
 @import './config/components/button.css';
 @import './config/components/checkbox.css';
 @import './config/components/dialog.css';
-@import './config/components/drag-preview.css';
 @import './config/components/focus-ring.css';
-@import './config/components/hues.css';
 @import './config/components/link.css';
 @import './config/components/scrollbar.css';
 @import './config/components/surface.css';
 @import './config/components/tag.css';
+@import './config/components/text.css';
 
 /* @layer dx-components (layout) */
 @import './config/layout/main.css';

@@ -195,9 +195,14 @@ export class AppManager {
     return this.page.getByTestId('spacePlugin.object').nth(nth).getByRole('button').first().click({ delay });
   }
 
-  async createObject({ type, name, nth = 0 }: { type: string; name?: string; nth?: number }): Promise<void> {
-    const object = this.page.getByTestId('spacePlugin.createObject');
-    await object.nth(nth).click();
+  async createObject({ type, name, nth }: { type: string; name?: string; nth?: number }): Promise<void> {
+    if (nth !== undefined) {
+      const object = this.page.getByTestId('spacePlugin.object').nth(nth);
+      await object.hover();
+      await object.getByTestId('spacePlugin.createObject').click();
+    } else {
+      await this.page.getByTestId('spacePlugin.createObject').first().click();
+    }
 
     await this.page.getByRole('listbox').getByText(type).first().click();
 
@@ -217,6 +222,7 @@ export class AppManager {
   }
 
   async renameObject(newName: string, nth = 0): Promise<void> {
+    await this.page.getByTestId('spacePlugin.object').nth(nth).hover();
     await this.page
       .getByTestId('spacePlugin.object')
       .nth(nth)
