@@ -4,18 +4,18 @@
 
 import * as Option from 'effect/Option';
 import { Filter, Query, type Database, Entity, Relation, Obj, Annotation } from '@dxos/echo';
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { Atom } from '@effect-atom/atom';
 import { useAtomValue, useAtomSet } from '@effect-atom/atom-react';
 import { raise } from '@dxos/debug';
 import { ObjectId } from '@dxos/keys';
 import { invariant } from '@dxos/invariant';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
-import { Icon, Treegrid, TreeItem } from '@dxos/react-ui';
+import { Button, DropdownMenu, Icon, IconButton, Treegrid, TreeItem } from '@dxos/react-ui';
 import { Array, Match, pipe } from 'effect';
 import React from 'react';
 import { paddingIndentation, TreeItemToggle } from '@dxos/react-ui-list';
-import { getStyles } from '@dxos/ui-theme';
+import { getStyles, hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
 import * as Schema from 'effect/Schema';
 import { dbg } from '@dxos/log';
 import { Order } from 'effect';
@@ -70,6 +70,27 @@ const ObjectsTreeRow = ({
 
   const styles = node.iconHue ? getStyles(node.iconHue) : undefined;
 
+  const handleCopyDXN = useCallback(() => {
+    void navigator.clipboard.writeText(Entity.getDXN(node.entity)?.toString() ?? '');
+  }, [node.entity]);
+  const handleCopyJSON = useCallback(() => {
+    void navigator.clipboard.writeText(JSON.stringify(node.entity, null, 2));
+  }, [node.entity]);
+  const handlePrintToConsole = useCallback(async () => {
+    const obj = await model.database.query(Query.select(Filter.id(node.id)).options({ deleted: 'include' })).first();
+    console.log(obj);
+  }, [node.entity]);
+  const handleDelete = useCallback(async () => {
+    const obj = await model.database.query(Query.select(Filter.id(node.id)).options({ deleted: 'include' })).first();
+    model.database.remove(obj);
+    await model.database.flush({ indexes: true });
+  }, [node.entity, model.database]);
+  const handleRestore = useCallback(async () => {
+    const obj = await model.database.query(Query.select(Filter.id(node.id)).options({ deleted: 'include' })).first();
+    model.database.add(obj);
+    await model.database.flush({ indexes: true });
+  }, [node.entity, model.database]);
+
   return (
     <>
       <Treegrid.Row
@@ -95,6 +116,50 @@ const ObjectsTreeRow = ({
             )}
             <Icon icon={node.icon} classNames={['shrink-0 w-4 h-4', styles?.surfaceText]} />
             <span className={node.deleted ? 'line-through opacity-60' : 'truncate'}>{node.label}</span>
+          </Treegrid.Cell>
+          <Treegrid.Cell classNames='contents'>
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger asChild>
+                <IconButton
+                  size={5}
+                  density='coarse'
+                  classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
+                  variant='ghost'
+                  icon='ph--dots-three-vertical--regular'
+                  iconOnly
+                  label='Actions'
+                  data-testid='objects-tree.row.actions'
+                />
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Content>
+                {!node.deleted && (
+                  <DropdownMenu.Item onClick={handleDelete}>
+                    <Icon icon='ph--trash--regular' />
+                    Delete
+                  </DropdownMenu.Item>
+                )}
+                {node.deleted && (
+                  <DropdownMenu.Item onClick={handleRestore}>
+                    <Icon icon='ph--arrow-counter-clockwise--regular' />
+                    Restore
+                  </DropdownMenu.Item>
+                )}
+
+                <DropdownMenu.Separator />
+                <DropdownMenu.Item onClick={handleCopyDXN}>
+                  <Icon icon='ph--copy--regular' />
+                  Copy DXN
+                </DropdownMenu.Item>
+                <DropdownMenu.Item onClick={handleCopyJSON}>
+                  <Icon icon='ph--brackets-curly--regular' />
+                  Copy JSON
+                </DropdownMenu.Item>
+                <DropdownMenu.Item onClick={handlePrintToConsole}>
+                  <Icon icon='ph--terminal-window--regular' />
+                  Print to console
+                </DropdownMenu.Item>
+              </DropdownMenu.Content>
+            </DropdownMenu.Root>
           </Treegrid.Cell>
         </div>
       </Treegrid.Row>
