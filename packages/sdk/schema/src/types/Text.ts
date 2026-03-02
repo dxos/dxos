@@ -15,6 +15,10 @@ export const Text = Schema.Struct({
     version: '0.1.0',
   }),
   Annotation.SystemTypeAnnotation.set(true),
+  Annotation.IconAnnotation.set({
+    icon: 'ph--cube--regular',
+    hue: 'green',
+  }),
 );
 
 export interface Text extends Schema.Schema.Type<typeof Text> {}
