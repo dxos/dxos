@@ -22,8 +22,10 @@ export const DebugObjectPanel = ({ object }: DebugObjectPanelProps) => {
   const dxn = Obj.getDXN(object)?.toString() ?? '';
 
   const [selectedId, setSelectedId] = useState<ObjectId | null>(null);
-
-  const [selectedObject] = useQuery(db, Query.select(Filter.id(selectedId ?? object.id)));
+  const [selectedObject] = useQuery(
+    db,
+    Query.select(Filter.id(selectedId ?? object.id)).options({ deleted: 'include' }),
+  );
 
   return (
     <Clipboard.Provider>

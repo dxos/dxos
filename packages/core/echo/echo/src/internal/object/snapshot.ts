@@ -4,7 +4,7 @@
 
 import { deepMapValues } from '@dxos/util';
 
-import { ObjectDatabaseId, SelfDXNId } from '../entities/model';
+import { ObjectDatabaseId, ObjectDeletedId, SelfDXNId } from '../entities/model';
 import { RelationSourceDXNId, RelationSourceId, RelationTargetDXNId, RelationTargetId } from '../entities/relation';
 import { KindId, SnapshotKindId } from '../types/entity';
 import { MetaId } from '../types/meta';
@@ -78,6 +78,7 @@ export const getSnapshot = <T extends object>(obj: T): T => {
 
   // Database reference (required for Obj.getDatabase to work on snapshots).
   copySymbolProperty(source, snapshot, ObjectDatabaseId);
+  copySymbolProperty(source, snapshot, ObjectDeletedId);
 
   // Metadata symbol. Copy arrays so the snapshot is not affected by mutations to the live meta's keys/tags.
   copySymbolProperty(source, snapshot, MetaId, (meta: any) => ({
