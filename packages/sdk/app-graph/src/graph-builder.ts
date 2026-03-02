@@ -244,11 +244,7 @@ class GraphBuilderImpl implements GraphBuilder {
   }
 
   /** Apply a set of node changes for a single connector key. */
-  private _applyConnectorUpdate(
-    key: string,
-    nodes: Node.NodeArg<any>[],
-    previous: string[],
-  ): void {
+  private _applyConnectorUpdate(key: string, nodes: Node.NodeArg<any>[], previous: string[]): void {
     const { id, relation } = relationFromConnectorKey(key);
     const ids = nodes.map((node) => node.id);
     const removed = previous.filter((pid) => !ids.includes(pid));
