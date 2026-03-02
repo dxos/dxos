@@ -8,7 +8,8 @@ import React from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 
-import { SHORTCUTS_DIALOG, ShortcutsDialogContent, ShortcutsHints, ShortcutsList } from '../../components';
+import { SHORTCUTS_DIALOG } from '../../constants';
+import { ShortcutsDialogContent, ShortcutsHints, ShortcutsList } from '../../containers';
 import { meta } from '../../meta';
 
 export default Capability.makeModule(() =>

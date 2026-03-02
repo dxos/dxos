@@ -9,7 +9,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useSettingsState } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
 
-import { Banner, DeckSettings } from '../../components';
+import { Banner, DeckSettings } from '../../containers';
 import { meta } from '../../meta';
 import { type DeckSettingsProps } from '../../types';
 

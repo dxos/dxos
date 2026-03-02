@@ -15,7 +15,7 @@ import { type FormFieldComponentProps, SelectField, useFormValues } from '@dxos/
 import { type LatLngLiteral } from '@dxos/react-ui-geo';
 import { type Collection } from '@dxos/schema';
 
-import { MapContainer, MapViewEditor } from '../../components';
+import { MapContainer, MapViewEditor } from '../../containers';
 import { meta } from '../../meta';
 import { LocationAnnotationId, Map, MapCapabilities } from '../../types';
 

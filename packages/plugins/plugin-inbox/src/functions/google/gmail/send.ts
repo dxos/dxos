@@ -23,8 +23,8 @@ export default defineFunction({
     userId: Schema.String.pipe(Schema.optional),
     // TODO(dmaretskyi): This should be a ref s we can send a message from database.
     message: Message.Message,
-    mailbox: Type.Ref(Mailbox.Mailbox).pipe(
-      Schema.annotations({ description: 'Optional mailbox to send from. Uses mailbox credentials if provided.' }),
+    feed: Type.Ref(Type.Feed).pipe(
+      Schema.annotations({ description: 'Optional mailbox feed to send from. Uses feed credentials if provided.' }),
       Schema.optional,
     ),
   }),
@@ -32,10 +32,10 @@ export default defineFunction({
     id: Schema.String,
     threadId: Schema.String,
   }),
-  types: [Message.Message, Mailbox.Mailbox],
-  handler: ({ data: { userId = 'me', message, mailbox: mailboxRef } }) =>
+  types: [Message.Message, Type.Feed, Mailbox.Config],
+  handler: ({ data: { userId = 'me', message, feed: feedRef } }) =>
     Effect.gen(function* () {
-      log('sending email', { userId, mailbox: mailboxRef?.dxn.toString() });
+      log('sending email', { userId, feed: feedRef?.dxn.toString() });
 
       // Extract details from the message object.
       // TODO(burdon): Refine Message schema to have explicit To/Subject fields or use properties.
@@ -80,7 +80,7 @@ export default defineFunction({
       };
     }).pipe(
       Effect.provide(FetchHttpClient.layer),
-      // Use mailbox credentials if provided, otherwise fall back to database credentials.
-      Effect.provide(mailboxRef ? GoogleCredentials.fromMailboxRef(mailboxRef) : GoogleCredentials.default),
+      // Use feed config credentials if provided, otherwise fall back to database credentials.
+      Effect.provide(feedRef ? GoogleCredentials.fromMailbox(feedRef) : GoogleCredentials.default),
     ),
 });

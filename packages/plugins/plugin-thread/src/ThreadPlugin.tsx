@@ -56,13 +56,6 @@ export const ThreadPlugin = Plugin.define(meta).pipe(
         },
       },
       {
-        id: Message.Message.typename,
-        metadata: {
-          // TODO(wittjosiah): Move out of metadata.
-          loadReferences: () => [], // loadObjectReferences(message, (message) => [...message.parts, message.context]),
-        },
-      },
-      {
         id: THREAD_ITEM,
         metadata: {
           parse: (item: Thread.Thread, type: string) => {

@@ -4,9 +4,9 @@
 
 import React, { type ChangeEventHandler, type ReactNode } from 'react';
 
-import { type TextInputProps, Input as UiInput } from '@dxos/react-ui';
+import { Input as NaturalInput, type TextInputProps } from '@dxos/react-ui';
 
-export type LargeInputProps = TextInputProps & {
+export type InputProps = TextInputProps & {
   validationMessage?: string;
   label?: ReactNode;
   disabled?: boolean;
@@ -14,14 +14,14 @@ export type LargeInputProps = TextInputProps & {
   onChange?: ChangeEventHandler<HTMLInputElement>;
 };
 
-export const Input = ({ validationMessage, label, ...props }: LargeInputProps) => {
+export const Input = ({ validationMessage, label, ...props }: InputProps) => {
   return (
-    <UiInput.Root>
-      <UiInput.Label>{label}</UiInput.Label>
-      <UiInput.TextInput {...props} classNames='py-3 mt-2 text-center' />
-      <UiInput.DescriptionAndValidation>
-        {validationMessage && <UiInput.Validation>{validationMessage}</UiInput.Validation>}
-      </UiInput.DescriptionAndValidation>
-    </UiInput.Root>
+    <NaturalInput.Root>
+      <NaturalInput.Label>{label}</NaturalInput.Label>
+      <NaturalInput.TextInput {...props} classNames='py-2 mt-2 text-center' />
+      <NaturalInput.DescriptionAndValidation>
+        {validationMessage && <NaturalInput.Validation>{validationMessage}</NaturalInput.Validation>}
+      </NaturalInput.DescriptionAndValidation>
+    </NaturalInput.Root>
   );
 };

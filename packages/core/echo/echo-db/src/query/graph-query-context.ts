@@ -195,7 +195,7 @@ export class SpaceQuerySource implements QuerySource {
         });
 
         const trivial = isSimpleSelectionQuery(this._query!);
-        if (!trivial) {
+        if (!trivial || trivial.hasQueues) {
           return false;
         }
 
@@ -221,7 +221,7 @@ export class SpaceQuerySource implements QuerySource {
     }
 
     const simple = isSimpleSelectionQuery(query);
-    if (!simple) {
+    if (!simple || simple.hasQueues) {
       return [];
     }
 
@@ -255,7 +255,7 @@ export class SpaceQuerySource implements QuerySource {
     }
 
     const trivial = isSimpleSelectionQuery(this._query);
-    if (!trivial) {
+    if (!trivial || trivial.hasQueues) {
       return [];
     }
 

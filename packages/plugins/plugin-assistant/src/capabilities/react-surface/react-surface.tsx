@@ -8,13 +8,13 @@ import React from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useSettingsState } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { Chat, Initiative } from '@dxos/assistant-toolkit';
+import { Chat, Project } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { getSpace } from '@dxos/client/echo';
 import { Sequence } from '@dxos/conductor';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Obj } from '@dxos/echo';
-import { Layout } from '@dxos/react-ui';
+import { Container } from '@dxos/react-ui';
 
 import {
   AssistantSettings,
@@ -22,11 +22,11 @@ import {
   ChatCompanion,
   ChatContainer,
   ChatDialog,
-  InitiativeContainer,
-  InitiativeSettings,
+  ProjectArticle,
+  ProjectSettings,
   PromptArticle,
   TriggerStatus,
-} from '../../components';
+} from '../../containers';
 import { ASSISTANT_DIALOG, meta } from '../../meta';
 import { type Assistant } from '../../types';
 
@@ -51,18 +51,16 @@ export default Capability.makeModule(() =>
         component: ({ data, role, ref }) => <ChatContainer role={role} subject={data.subject} ref={ref} />,
       }),
       Surface.create({
-        id: `${meta.id}/initiative`,
+        id: `${meta.id}/project`,
         role: 'article',
-        filter: (data): data is { subject: Initiative.Initiative } =>
-          Obj.instanceOf(Initiative.Initiative, data.subject),
-        component: ({ data, role }) => <InitiativeContainer role={role} subject={data.subject} />,
+        filter: (data): data is { subject: Project.Project } => Obj.instanceOf(Project.Project, data.subject),
+        component: ({ data, role }) => <ProjectArticle role={role} subject={data.subject} />,
       }),
       Surface.create({
-        id: `${meta.id}/initiative/companion/settings`,
+        id: `${meta.id}/project/companion/settings`,
         role: 'object-settings',
-        filter: (data): data is { subject: Initiative.Initiative } =>
-          Obj.instanceOf(Initiative.Initiative, data.subject),
-        component: ({ data }) => <InitiativeSettings subject={data.subject} />,
+        filter: (data): data is { subject: Project.Project } => Obj.instanceOf(Project.Project, data.subject),
+        component: ({ data }) => <ProjectSettings subject={data.subject} />,
       }),
       // TODO(wittjosiah): This is flashing when chat changes.
       Surface.create({
@@ -85,9 +83,9 @@ export default Capability.makeModule(() =>
           // TODO(wittjosiah): Support invocation filtering for prompts.
           const target = Obj.instanceOf(Prompt.Prompt, data.companionTo) ? undefined : data.companionTo;
           return (
-            <Layout.Main role={role}>
+            <Container.Main role={role}>
               <InvocationTraceContainer db={space?.db} queueDxn={queueDxn} target={target} detailAxis='block' />
-            </Layout.Main>
+            </Container.Main>
           );
         },
       }),

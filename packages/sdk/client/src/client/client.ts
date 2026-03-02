@@ -48,6 +48,7 @@ import { createIFramePort } from '@dxos/rpc-tunnel';
 import { trace } from '@dxos/tracing';
 import { type JsonKeyOptions, type MaybePromise } from '@dxos/util';
 
+import { type ClientEdgeAPI, createClientEdgeAPI } from '../edge';
 import { type MeshProxy } from '../mesh/mesh-proxy';
 import type { IFrameManager, Shell, ShellManager } from '../services';
 import { DXOS_VERSION } from '../version';
@@ -125,7 +126,8 @@ export class Client {
   private _iframeManager?: IFrameManager;
   private _shellManager?: ShellManager;
   private _shellClientProxy?: BufProtoRpcPeer<typeof clientServiceBundle>;
-  private _edgeClient?: EdgeHttpClient = undefined;
+  private _edgeHttpClient?: EdgeHttpClient = undefined;
+  private _edgeApi?: ClientEdgeAPI = undefined;
 
   constructor(options: ClientOptions = {}) {
     if (
@@ -236,9 +238,9 @@ export class Client {
    * EDGE client.
    * This API is experimental and subject to change.
    */
-  get edge(): EdgeHttpClient {
-    invariant(this._edgeClient, 'Client not initialized.');
-    return this._edgeClient;
+  get edge(): ClientEdgeAPI {
+    invariant(this._edgeApi, 'Client not initialized or Edge not available.');
+    return this._edgeApi;
   }
 
   /**
@@ -425,6 +427,13 @@ export class Client {
     });
     await this._services.open();
 
+    const edgeUrl = this._config!.get('runtime.services.edge.url');
+    if (edgeUrl) {
+      const { EdgeHttpClient } = await import('@dxos/edge-client');
+      this._edgeHttpClient = new EdgeHttpClient(edgeUrl);
+      this._edgeApi = createClientEdgeAPI({ client: this, edgeClient: this._edgeHttpClient });
+    }
+
     this._echoClient.connectToService({
       dataService: (this._services.services.DataService ??
         raise(new Error('DataService not available'))) as unknown as EchoProtocol.DataService,
@@ -535,7 +544,8 @@ export class Client {
     await this._runtime?.close();
     await this._echoClient.close(this._ctx);
     await this._services?.close();
-    this._edgeClient = undefined;
+    this._edgeHttpClient = undefined;
+    this._edgeApi = undefined;
     log('closed');
   }
 

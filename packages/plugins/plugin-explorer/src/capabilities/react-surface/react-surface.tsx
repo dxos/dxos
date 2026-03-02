@@ -10,7 +10,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { Obj } from '@dxos/echo';
 import { type View } from '@dxos/schema';
 
-import { ExplorerContainer } from '../../components';
+import { ExplorerContainer } from '../../containers';
 import { meta } from '../../meta';
 import { Graph } from '../../types';
 

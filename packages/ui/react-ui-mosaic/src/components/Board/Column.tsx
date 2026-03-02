@@ -255,8 +255,8 @@ const DefaultBoardColumn = forwardRef<HTMLDivElement, DefaultBoardColumnProps>(
         <BoardColumnGrid
           classNames={mx(
             debug
-              ? 'grid-rows-[var(--rail-action)_1fr_20rem]'
-              : 'grid-rows-[var(--rail-action)_1fr_var(--rail-action)]',
+              ? 'grid-rows-[var(--dx-rail-action)_1fr_20rem]'
+              : 'grid-rows-[var(--dx-rail-action)_1fr_var(--dx-rail-action)]',
             classNames,
           )}
         >

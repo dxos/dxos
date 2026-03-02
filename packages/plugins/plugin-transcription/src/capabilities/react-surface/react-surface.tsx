@@ -10,7 +10,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { Obj } from '@dxos/echo';
 import { Transcript } from '@dxos/types';
 
-import { TranscriptionContainer } from '../../components';
+import { TranscriptionContainer } from '../../containers';
 import { meta } from '../../meta';
 
 export default Capability.makeModule(() =>

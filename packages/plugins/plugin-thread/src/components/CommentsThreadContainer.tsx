@@ -106,7 +106,7 @@ export const CommentsThreadContainer = ({
       <div
         role='none'
         className={mx(
-          'col-span-2 grid grid-cols-[var(--rail-size)_1fr_min-content]',
+          'col-span-2 grid grid-cols-[var(--dx-rail-size)_1fr_min-content]',
           hoverableControls,
           hoverableFocusedWithinControls,
         )}
@@ -166,7 +166,7 @@ export const CommentsThreadContainer = ({
 
       <ThreadComponent.Status activity={activity}>{t('activity message')}</ThreadComponent.Status>
 
-      {/* NOTE(thure): This can’t also be the `overflow-anchor` because `ScrollArea` injects an interceding node that contains this necessary ref’d element. */}
+      {/* NOTE(thure): This can’t also be the `dx-overflow-anchor` because `ScrollArea` injects an interceding node that contains this necessary ref’d element. */}
       <div role='none' className='h-px -mt-px' ref={threadScrollRef} />
     </ThreadComponent.Root>
   );

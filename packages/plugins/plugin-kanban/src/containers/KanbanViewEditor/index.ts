@@ -2,4 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './KanbanViewEditor';
+import { KanbanViewEditor } from './KanbanViewEditor';
+
+export default KanbanViewEditor;

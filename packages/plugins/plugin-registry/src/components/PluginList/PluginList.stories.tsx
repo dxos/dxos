@@ -1,0 +1,84 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React, { useState } from 'react';
+
+import { type Plugin, Plugin as PluginNS } from '@dxos/app-framework';
+import { faker } from '@dxos/random';
+import { ScrollArea } from '@dxos/react-ui';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { getHashHue } from '@dxos/ui-theme';
+
+import { translations } from '../../translations';
+import { RegistryTagType } from '../../types';
+
+import { PluginList } from './PluginList';
+
+faker.seed(1);
+
+const icons = [
+  'ph--bug--regular',
+  'ph--compass--regular',
+  'ph--kanban--regular',
+  'ph--table--regular',
+  'ph--gear--regular',
+  'ph--github-logo--regular',
+];
+
+const DefaultStory = () => {
+  const [plugins] = useState<Plugin.Plugin[]>(
+    faker.helpers.multiple(
+      () =>
+        PluginNS.define({
+          id: `dxos.org/plugin/plugin-${faker.string.uuid()}`,
+          name: `${faker.commerce.productName()}`,
+          description: faker.lorem.sentences(Math.ceil(Math.random() * 3)),
+          tags: faker.helpers.uniqueArray(RegistryTagType.literals as any, Math.floor(Math.random() * 3)),
+          icon: faker.helpers.arrayElement(icons),
+          iconHue: getHashHue(faker.string.uuid()),
+          homePage: faker.datatype.boolean({ probability: 0.5 }) ? faker.internet.url() : undefined,
+          source: faker.internet.url(),
+        }).pipe(PluginNS.make)(),
+      { count: 32 },
+    ),
+  );
+  const [enabled, setEnabled] = useState<string[]>([]);
+
+  const handleChange = (id: string, enabled: boolean) => {
+    setEnabled((plugins) => (enabled ? [...plugins, id] : plugins.filter((plugin) => plugin === id)));
+  };
+
+  return (
+    <ScrollArea.Root orientation='vertical'>
+      <ScrollArea.Viewport>
+        <PluginList plugins={plugins} enabled={enabled} onChange={handleChange} hasSettings={() => true} />
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
+  );
+};
+
+const meta = {
+  title: 'plugins/plugin-registry/PluginList',
+  component: PluginList,
+  render: DefaultStory,
+  parameters: {
+    translations,
+  },
+} satisfies Meta<typeof PluginList>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
+  decorators: [withTheme(), withLayout({ layout: 'column' })],
+};
+
+export const FullScreen: Story = {
+  decorators: [withTheme(), withLayout({ scroll: true })],
+  parameters: {
+    layout: 'fullscreen',
+  },
+};

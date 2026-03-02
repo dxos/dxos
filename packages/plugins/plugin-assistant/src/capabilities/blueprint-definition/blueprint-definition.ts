@@ -11,10 +11,10 @@ import {
   AgentFunctions,
   DiscordBlueprint,
   EntityExtractionFunctions,
-  InitiativeBlueprint,
-  InitiativeFunctions,
   LinearBlueprint,
   PlanningBlueprint,
+  ProjectBlueprint,
+  ProjectFunctions,
   ResearchBlueprint,
   WebSearchBlueprint,
 } from '@dxos/assistant-toolkit';
@@ -28,15 +28,15 @@ const blueprintDefinition = Capability.makeModule(() =>
     Capability.contributes(AppCapabilities.BlueprintDefinition, WebSearchBlueprint),
     Capability.contributes(AppCapabilities.BlueprintDefinition, DiscordBlueprint),
     Capability.contributes(AppCapabilities.BlueprintDefinition, LinearBlueprint),
-    Capability.contributes(AppCapabilities.BlueprintDefinition, InitiativeBlueprint),
+    Capability.contributes(AppCapabilities.BlueprintDefinition, ProjectBlueprint),
     Capability.contributes(AppCapabilities.BlueprintDefinition, PlanningBlueprint),
 
     Capability.contributes(AppCapabilities.Functions, Record.values(AgentFunctions)),
     Capability.contributes(AppCapabilities.Functions, Record.values(EntityExtractionFunctions)),
     Capability.contributes(AppCapabilities.Functions, [
-      InitiativeFunctions.Agent,
-      InitiativeFunctions.GetContext,
-      InitiativeFunctions.Qualifier,
+      ProjectFunctions.Agent,
+      ProjectFunctions.GetContext,
+      ProjectFunctions.Qualifier,
     ]),
   ]),
 );

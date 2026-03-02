@@ -11,7 +11,7 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
 import { Channel } from '@dxos/plugin-thread/types';
 
-import { MeetingContainer, MeetingSettings, MeetingsList } from '../../components';
+import { MeetingContainer, MeetingSettings, MeetingsList } from '../../containers';
 import { meta } from '../../meta';
 import { Meeting } from '../../types';
 

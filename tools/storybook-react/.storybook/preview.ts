@@ -8,6 +8,7 @@ import { withThemeByClassName } from '@storybook/addon-themes';
 import { type Preview } from '@storybook/react';
 
 import { docsTheme } from './theme';
+import './cubes.css';
 
 /**
  * Configure Storybook rendering.
@@ -36,8 +37,7 @@ export const preview: Preview = {
       argTypesRegex: '^on.*',
     },
     backgrounds: {
-      backgrounds: { default: 'dark' },
-      options: {},
+      disable: true,
     },
     controls: {
       matchers: {

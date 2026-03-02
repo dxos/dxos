@@ -5,7 +5,7 @@
 // System collections created by default:
 // - Records smart collection
 // - Channels smart collection
-// - Meetings smart collection (no object form)
+// - Meetings smart collection
 // - Assistant smart collection
 // - Blueprint smart collection
 // - Prompt smart collection
@@ -19,4 +19,3 @@
 // - Mailbox smart collection
 // - Calendar smart collection
 export const INITIAL_OBJECT_COUNT = 15;
-export const INITIAL_CREATE_ACTION_COUNT = 14;

@@ -37,11 +37,17 @@ const testRegistry: XmlWidgetRegistry = {
   },
 };
 
-type StoryProps = MarkdownStreamProps & { streamOptions?: TextStreamOptions };
+type StoryProps = MarkdownStreamProps & { initialContent?: string; streamOptions?: TextStreamOptions };
 
-const DefaultStory = ({ content = '', streamOptions = defaultStreamOptions, ...props }: StoryProps) => {
+const DefaultStory = ({ initialContent, content, streamOptions = defaultStreamOptions, ...props }: StoryProps) => {
   const [controller, setController] = useState<MarkdownStreamController | null>(null);
   const [streaming, setStreaming] = useState(false);
+
+  useEffect(() => {
+    if (initialContent) {
+      void controller?.append(initialContent);
+    }
+  }, [controller, initialContent]);
 
   useEffect(() => {
     if (!controller || !streaming) {
@@ -73,9 +79,7 @@ const DefaultStory = ({ content = '', streamOptions = defaultStreamOptions, ...p
 
   const handleAppend = useCallback(() => {
     void controller?.append(
-      ['', faker.lorem.paragraph(), `<suggestion>${faker.lorem.word()}</suggestion>`, faker.lorem.paragraph(), ''].join(
-        '\n\n',
-      ),
+      ['', faker.lorem.paragraph(), `<suggestion>${faker.lorem.word()}</suggestion>`, faker.lorem.paragraph()].join(),
     );
   }, [controller]);
 
@@ -116,6 +120,16 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
+    content: TEXT,
+    registry: testRegistry,
+    fadeIn: true,
+    cursor: false,
+  },
+};
+
+export const WithInitialContent: Story = {
+  args: {
+    initialContent: TEXT,
     content: TEXT,
     registry: testRegistry,
     fadeIn: true,

@@ -216,7 +216,15 @@ type StepExecutionResult = {
   trace: ExecutionTrace;
 };
 
-const TRACE_QUERY_EXECUTION = false;
+declare global {
+  interface ImportMeta {
+    env: {
+      DX_TRACE_QUERY_EXECUTION: string;
+    };
+  }
+}
+
+const TRACE_QUERY_EXECUTION = !!import.meta.env.DX_TRACE_QUERY_EXECUTION;
 
 const MAX_DEPTH_FOR_DELETION_TRACING = 10;
 
@@ -397,7 +405,8 @@ export class QueryExecutor extends Resource {
     switch (step.selector._tag) {
       case 'WildcardSelector': {
         const beginIndexQuery = performance.now();
-        const metas = await this._queryAllFromSqlIndex(step.spaces);
+        const queueIds = extractQueueIds(step.queues);
+        const metas = await this._queryAllFromSqlIndex(step.spaces, step.allQueuesFromSpaces, queueIds);
         trace.indexHits = metas.length;
         trace.indexQueryTime += performance.now() - beginIndexQuery;
 
@@ -418,10 +427,18 @@ export class QueryExecutor extends Resource {
 
       case 'IdSelector': {
         const beginLoad = performance.now();
+
         const items = await Promise.all(
-          step.selector.objectIds.map((id) =>
-            this._loadFromDXN(DXN.fromLocalObjectId(id), { sourceSpaceId: step.spaces[0] }),
-          ),
+          step.selector.objectIds.map((id) => {
+            if (step.queues.length > 0) {
+              const { spaceId } = DXN.parse(step.queues[0]).asQueueDXN()!;
+              return this._loadFromDXN(DXN.parse(step.queues[0]).extend([id]), { sourceSpaceId: spaceId });
+            } else if (step.spaces.length > 0) {
+              return this._loadFromDXN(DXN.fromLocalObjectId(id), { sourceSpaceId: step.spaces[0] });
+            } else {
+              return null; // Unknown scope.
+            }
+          }),
         );
         trace.documentLoadTime += performance.now() - beginLoad;
 
@@ -432,7 +449,14 @@ export class QueryExecutor extends Resource {
 
       case 'TypeSelector': {
         const beginIndexQuery = performance.now();
-        const metas = await this._queryTypesFromSqlIndex(step.spaces, step.selector.typename, step.selector.inverted);
+        const queueIds = extractQueueIds(step.queues);
+        const metas = await this._queryTypesFromSqlIndex(
+          step.spaces,
+          step.selector.typename,
+          step.selector.inverted,
+          step.allQueuesFromSpaces,
+          queueIds,
+        );
         trace.indexHits = metas.length;
         trace.indexQueryTime += performance.now() - beginIndexQuery;
 
@@ -463,11 +487,7 @@ export class QueryExecutor extends Resource {
         // Full-text search using SQLite FTS5.
         const beginIndexQuery = performance.now();
         invariant(step.spaces.length <= 1, 'Multiple spaces are not supported for full-text search');
-        // Extract queue IDs from DXN strings.
-        const queueIds =
-          step.queues.length > 0
-            ? (step.queues.map((dxnStr) => DXN.parse(dxnStr).asQueueDXN()?.queueId).filter(Boolean) as ObjectId[])
-            : null;
+        const queueIds = extractQueueIds(step.queues);
         const textResults = await this._runInRuntime(
           this._indexEngine.queryText({
             query: step.selector.text,
@@ -537,7 +557,20 @@ export class QueryExecutor extends Resource {
         trace.documentsLoaded += items.length;
         trace.documentLoadTime += performance.now() - documentLoadStart;
 
-        workingSet.push(...items.filter((item) => step.spaces.includes(item.spaceId)));
+        workingSet.push(
+          ...items.filter((item) => {
+            if (step.spaces.includes(item.spaceId)) {
+              return true;
+            }
+            if (item.queueId) {
+              return step.queues.some((dxn) => {
+                const { queueId, spaceId } = DXN.parse(dxn).asQueueDXN()!;
+                return queueId === item.queueId && spaceId === item.spaceId;
+              });
+            }
+            return false;
+          }),
+        );
         trace.objectCount = workingSet.length;
         break;
       }
@@ -985,16 +1018,24 @@ export class QueryExecutor extends Resource {
     return await unwrapExit(await effect.pipe(Runtime.runPromiseExit(runtime)));
   }
 
-  private async _queryAllFromSqlIndex(spaceIds: readonly SpaceId[]): Promise<readonly ObjectMeta[]> {
-    return await this._runInRuntime(this._indexEngine.queryAll({ spaceIds }));
+  private async _queryAllFromSqlIndex(
+    spaceIds: readonly SpaceId[],
+    includeAllQueues: boolean,
+    queueIds: readonly ObjectId[] | null,
+  ): Promise<readonly ObjectMeta[]> {
+    return await this._runInRuntime(this._indexEngine.queryAll({ spaceIds, includeAllQueues, queueIds }));
   }
 
   private async _queryTypesFromSqlIndex(
     spaceIds: readonly SpaceId[],
     typeDxns: readonly string[],
     inverted: boolean,
+    includeAllQueues: boolean,
+    queueIds: readonly ObjectId[] | null,
   ): Promise<readonly ObjectMeta[]> {
-    return await this._runInRuntime(this._indexEngine.queryTypes({ spaceIds, typeDxns, inverted }));
+    return await this._runInRuntime(
+      this._indexEngine.queryTypes({ spaceIds, typeDxns, inverted, includeAllQueues, queueIds }),
+    );
   }
 
   private async _queryIncomingReferencesFromSqlIndex(
@@ -1169,67 +1210,98 @@ export class QueryExecutor extends Resource {
   }
 
   private async _loadFromDXN(dxn: DXN, { sourceSpaceId }: { sourceSpaceId: SpaceId }): Promise<QueryItem | null> {
-    const echoDxn = dxn.asEchoDXN();
-    if (!echoDxn) {
-      log.warn('unable to resolve DXN', { dxn });
-      return null;
-    }
+    switch (dxn.kind) {
+      case DXN.kind.ECHO: {
+        const echoDxn = dxn.asEchoDXN();
+        if (!echoDxn) {
+          log.warn('unable to resolve DXN', { dxn });
+          return null;
+        }
 
-    const spaceId = echoDxn.spaceId ?? sourceSpaceId;
+        const spaceId = echoDxn.spaceId ?? sourceSpaceId;
 
-    const spaceRoot = this._spaceStateManager.getRootBySpaceId(spaceId);
-    if (!spaceRoot) {
-      log.warn('no space state found for', { spaceId });
-      return null;
-    }
-    const dbDirectory = spaceRoot.doc();
-    if (!dbDirectory) {
-      log.warn('no space state found for', { spaceId });
-      return null;
-    }
+        const spaceRoot = this._spaceStateManager.getRootBySpaceId(spaceId);
+        if (!spaceRoot) {
+          log.warn('no space state found for', { spaceId });
+          return null;
+        }
+        const dbDirectory = spaceRoot.doc();
+        if (!dbDirectory) {
+          log.warn('no space state found for', { spaceId });
+          return null;
+        }
 
-    const inlineObject = DatabaseDirectory.getInlineObject(dbDirectory, echoDxn.echoId);
-    if (inlineObject) {
-      return {
-        objectId: echoDxn.echoId,
-        documentId: spaceRoot.documentId,
-        spaceId,
-        queueId: null,
-        queueNamespace: null,
-        data: null,
-        doc: inlineObject,
-        rank: 1,
-      };
-    }
+        const inlineObject = DatabaseDirectory.getInlineObject(dbDirectory, echoDxn.echoId);
+        if (inlineObject) {
+          return {
+            objectId: echoDxn.echoId,
+            documentId: spaceRoot.documentId,
+            spaceId,
+            queueId: null,
+            queueNamespace: null,
+            data: null,
+            doc: inlineObject,
+            rank: 1,
+          };
+        }
 
-    const link = DatabaseDirectory.getLink(dbDirectory, echoDxn.echoId);
-    if (!link) {
-      return null;
-    }
+        const link = DatabaseDirectory.getLink(dbDirectory, echoDxn.echoId);
+        if (!link) {
+          return null;
+        }
 
-    const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(Context.default(), link as AutomergeUrl, {
-      fetchFromNetwork: true,
-    });
-    const doc = handle.doc();
-    if (!doc) {
-      return null;
-    }
+        const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(Context.default(), link as AutomergeUrl, {
+          fetchFromNetwork: true,
+        });
+        const doc = handle.doc();
+        if (!doc) {
+          return null;
+        }
 
-    const object = DatabaseDirectory.getInlineObject(doc, echoDxn.echoId);
-    if (!object) {
-      return null;
-    }
+        const object = DatabaseDirectory.getInlineObject(doc, echoDxn.echoId);
+        if (!object) {
+          return null;
+        }
 
-    return {
-      objectId: echoDxn.echoId,
-      documentId: handle.documentId,
-      spaceId,
-      queueId: null,
-      queueNamespace: null,
-      data: null,
-      doc: object,
-      rank: 1,
-    };
+        return {
+          objectId: echoDxn.echoId,
+          documentId: handle.documentId,
+          spaceId,
+          queueId: null,
+          queueNamespace: null,
+          data: null,
+          doc: object,
+          rank: 1,
+        };
+        break;
+      }
+      case DXN.kind.QUEUE: {
+        const queueDxn = dxn.asQueueDXN();
+        if (!queueDxn || !queueDxn.objectId) {
+          log.warn('unable to resolve queue DXN', { dxn });
+          return null;
+        }
+
+        const { spaceId, queueId, objectId } = queueDxn;
+        const meta = await this._runInRuntime(
+          this._indexEngine.lookupByObjectId({
+            objectId,
+            spaceId,
+            queueId,
+          }),
+        );
+        if (!meta) {
+          return null;
+        }
+
+        const snapshotMap = await this._loadQueueSnapshotMap([meta]);
+        return this._loadFromQueue(meta, snapshotMap);
+      }
+      default: {
+        log.warn('unable to resolve DXN', { dxn });
+        return null;
+      }
+    }
   }
 
   private async _getTransitiveDeletionState(item: QueryItem, remainingDepth: number): Promise<boolean> {
@@ -1373,4 +1445,11 @@ const prettyQuery = (query: QueryAST.Query): string => {
     case 'limit':
       return `${prettyQuery(query.query)}.limit(${query.limit})`;
   }
+};
+
+const extractQueueIds = (queues: readonly DXN.String[]): ObjectId[] | null => {
+  if (queues.length === 0) {
+    return null;
+  }
+  return queues.map((dxnStr) => DXN.parse(dxnStr).asQueueDXN()?.queueId).filter(Boolean) as ObjectId[];
 };

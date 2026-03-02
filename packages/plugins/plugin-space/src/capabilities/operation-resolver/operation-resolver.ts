@@ -21,7 +21,6 @@ import { iconValues } from '@dxos/react-ui-pickers/icons';
 import { Collection, ProjectionModel, createEchoChangeCallback, getTypenameFromQuery } from '@dxos/schema';
 import { hues } from '@dxos/ui-theme';
 
-import { type JoinDialogProps } from '../../components';
 import {
   CREATE_OBJECT_DIALOG,
   CREATE_SPACE_DIALOG,
@@ -29,6 +28,7 @@ import {
   OBJECT_RENAME_POPOVER,
   SPACE_RENAME_POPOVER,
 } from '../../constants';
+import { type JoinDialogProps } from '../../containers/JoinDialog/JoinDialog';
 import { meta } from '../../meta';
 import { SpaceEvents } from '../../types';
 import { SpaceCapabilities, SpaceOperation } from '../../types';
@@ -306,6 +306,7 @@ export default Capability.makeModule(
               properties: {
                 spaceId: db.spaceId,
                 objectId: object.id,
+                typename: Obj.getTypename(object),
               },
             });
 

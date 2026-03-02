@@ -114,7 +114,7 @@ class CursorWidget extends WidgetType {
  */
 const fadeIn = (options: { removalDelay?: number } = {}): Extension => {
   const FADE_IN_DURATION = 1_000; // ms.
-  const DEFAULT_REMOVAL_DELAY = 5_000; // ms.
+  const DEFAULT_REMOVAL_DELAY = 3_000; // ms.
   const removalDelay = options.removalDelay ?? DEFAULT_REMOVAL_DELAY;
 
   // Effect to remove a specific decoration by range.

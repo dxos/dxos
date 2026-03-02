@@ -21,7 +21,7 @@ import { log } from '@dxos/log';
 
 import { type Range } from '../../types';
 import { decorationSetToArray } from '../../util';
-import { scrollToLineEffect } from '../smooth-scroll';
+import { scrollerLineEffect } from '../scroller';
 
 import { nodeToJson } from './xml-util';
 
@@ -268,7 +268,7 @@ const createNavigationEffectPlugin = (
           const line = view.state.doc.lineAt(widget?.from ?? 0);
           view.dispatch({
             selection: { anchor: line.from, head: line.from },
-            effects: scrollToLineEffect.of({ line: line.number, options: { offset: -16 } }),
+            effects: scrollerLineEffect.of({ line: line.number - 1, offset: -16 }),
           });
 
           continue;
@@ -294,13 +294,13 @@ const createNavigationEffectPlugin = (
             const line = view.state.doc.lineAt(widget?.from);
             view.dispatch({
               selection: { anchor: line.to, head: line.to },
-              effects: scrollToLineEffect.of({ line: line.number, options: { offset: -16 } }),
+              effects: scrollerLineEffect.of({ line: line.number - 1, offset: -16 }),
             });
           } else {
             const line = view.state.doc.lineAt(view.state.doc.length);
             view.dispatch({
               selection: { anchor: line.to, head: line.to },
-              effects: scrollToLineEffect.of({ line: line.number, options: { position: 'end' } }),
+              effects: scrollerLineEffect.of({ line: line.number - 1, position: 'end' }),
             });
           }
 

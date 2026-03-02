@@ -9,7 +9,7 @@ import * as Scope from 'effect/Scope';
 
 import { AiService } from '@dxos/ai';
 import { raise } from '@dxos/debug';
-import { Database } from '@dxos/echo';
+import { Database, Feed } from '@dxos/echo';
 import {
   ComputeEventLogger,
   CredentialsService,
@@ -364,6 +364,7 @@ export class GraphExecutor {
         Layer.succeed(CredentialsService, yield* CredentialsService),
         Layer.succeed(Database.Service, yield* Database.Service),
         Layer.succeed(QueueService, yield* QueueService),
+        Layer.succeed(Feed.Service, yield* Feed.Service),
         Layer.succeed(FunctionInvocationService, yield* FunctionInvocationService),
         Layer.succeed(TracingService, yield* TracingService),
       );

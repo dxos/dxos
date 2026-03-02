@@ -4,43 +4,30 @@
 
 import { type MessageValence } from '@dxos/ui-types';
 
-export const successText = 'text-xs font-medium text-success';
-export const infoText = 'text-xs font-medium text-info';
-export const warningText = 'text-xs font-medium text-warning';
-export const errorText = 'text-xs font-medium text-error';
-
-export const valenceColorText = (valence?: MessageValence) => {
+export const textValence = (valence?: MessageValence) => {
   switch (valence) {
     case 'success':
-      return successText;
+      return 'font-medium text-success-text';
     case 'info':
-      return infoText;
+      return 'font-medium text-info-text';
     case 'warning':
-      return warningText;
+      return 'font-medium text-warning-text';
     case 'error':
-      return errorText;
-    default:
-      return undefined;
+      return 'font-medium text-error-text';
   }
 };
-
-export const neutralMessageColors = 'border border-dashed border-separator text-subdued';
-export const successMessageColors = 'text-success-surface-text bg-success-surface';
-export const infoMessageColors = 'text-info-surface-text bg-info-surface';
-export const warningMessageColors = 'text-warning-surface-text bg-warning-surface';
-export const errorMessageColors = 'text-error-surface-text bg-error-surface';
 
 export const messageValence = (valence?: MessageValence) => {
   switch (valence) {
     case 'success':
-      return successMessageColors;
+      return 'font-medium text-success-text border-success-text bg-success-surface';
     case 'info':
-      return infoMessageColors;
+      return 'font-medium text-info-text border-info-text bg-info-surface';
     case 'warning':
-      return warningMessageColors;
+      return 'font-medium text-warning-text border-warning-text bg-warning-surface';
     case 'error':
-      return errorMessageColors;
+      return 'font-medium text-error-text border-error-text bg-error-surface';
     default:
-      return neutralMessageColors;
+      return 'font-medium text-neutral-text border-neutral-text bg-neutral-surface';
   }
 };

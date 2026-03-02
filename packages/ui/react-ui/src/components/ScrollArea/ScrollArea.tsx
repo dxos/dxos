@@ -51,7 +51,7 @@ const ScrollAreaRoot = forwardRef<HTMLDivElement, ScrollAreaRootProps>(
       children,
       orientation = 'vertical',
       autoHide = true,
-      margin = true, // TODO(burdon): Is this the right default?
+      margin = false,
       padding = false,
       thin = false,
       snap = false,

@@ -41,6 +41,7 @@ const DefaultStory = () => {
   const handleAdd = useCallback(() => {
     const id = `test-${faker.number.int({ min: 0, max: 1_000 })}`;
     const styles = getHashStyles(id);
+
     manager.capabilities.contribute({
       module: 'test',
       interface: Capabilities.ReactSurface,

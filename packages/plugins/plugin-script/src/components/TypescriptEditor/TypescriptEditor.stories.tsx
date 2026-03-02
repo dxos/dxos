@@ -8,7 +8,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { createDocAccessor } from '@dxos/echo-db';
 import { createObject } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
-import { Layout } from '@dxos/react-ui';
+import { Container } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { createDataExtensions } from '@dxos/ui-editor';
@@ -66,7 +66,7 @@ const DefaultStory = (props: TypescriptEditorProps) => {
   }, [object]);
 
   return (
-    <Layout.Main toolbar>
+    <Container.Main toolbar>
       {/* <ScriptToolbar script={script} state={{}} /> */}
       <Toolbar.Root>
         <Toolbar.Button onClick={handleRun}>Run</Toolbar.Button>
@@ -75,7 +75,7 @@ const DefaultStory = (props: TypescriptEditorProps) => {
         <TypescriptEditor {...props} initialValue={object.content} extensions={extensions} />
         <Json data={result} classNames='shrink-0 p-2 border-y border-subdued-separator' />
       </div>
-    </Layout.Main>
+    </Container.Main>
   );
 };
 

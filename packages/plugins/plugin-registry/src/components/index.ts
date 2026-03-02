@@ -4,4 +4,3 @@
 
 export * from './PluginDetail';
 export * from './PluginList';
-export * from './RegistryContainer';

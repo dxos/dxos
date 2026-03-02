@@ -128,7 +128,7 @@ const StackContainer = ({ objects }: { objects: Obj.Any[] }) => {
 };
 
 const storybook: Meta<typeof DefaultStory> = {
-  title: 'stories/stories-assistant/Initiatives',
+  title: 'stories/stories-assistant/Projects',
   render: render(DefaultStory),
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {

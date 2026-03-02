@@ -109,7 +109,7 @@ const Content = ({ classNames, children, role }: ContentProps) => {
     <Gameboard.Content
       classNames={mx(
         classNames,
-        role === 'card--content' ? 'size-container card-square' : 'flex flex-col justify-center',
+        role === 'card--content' ? 'dx-size-container dx-card-square' : 'flex flex-col justify-center',
       )}
     >
       {children}

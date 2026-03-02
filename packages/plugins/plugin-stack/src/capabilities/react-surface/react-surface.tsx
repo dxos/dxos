@@ -10,7 +10,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { Obj } from '@dxos/echo';
 import { Collection } from '@dxos/schema';
 
-import { StackContainer } from '../../components';
+import { StackContainer } from '../../containers';
 import { meta } from '../../meta';
 
 export default Capability.makeModule(() =>

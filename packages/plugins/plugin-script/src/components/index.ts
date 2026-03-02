@@ -2,14 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { lazy } from 'react';
-
+export * from './FrameContainer';
 export * from './NotebookStack';
-export * from './Settings';
+export * from './QueryEditor';
+export * from './ScriptToolbar';
 export * from './TestPanel';
-
-export { DEPLOYMENT_DIALOG } from './DeploymentDialog';
-
-export const ScriptContainer = lazy(() => import('./ScriptContainer'));
-export const DeploymentDialog = lazy(() => import('./DeploymentDialog'));
-export const NotebookContainer = lazy(() => import('./NotebookContainer'));
+export * from './TypescriptEditor';

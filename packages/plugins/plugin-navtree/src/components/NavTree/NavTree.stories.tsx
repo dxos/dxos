@@ -21,10 +21,10 @@ import { useAttention, useAttentionAttributes } from '@dxos/react-ui-attention';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/ui-theme';
 
+import { NavTreeContainer } from '../../containers';
 import { NavTreePlugin } from '../../NavTreePlugin';
 import { storybookGraphBuilders } from '../../testing';
 import { translations } from '../../translations';
-import { NavTreeContainer } from '../NavTreeContainer';
 
 faker.seed(1234);
 
@@ -47,7 +47,7 @@ const StoryPlankHeading = ({ attendableId }: { attendableId: string }) => {
         label='Test'
         iconOnly
         variant={hasAttention ? 'primary' : 'ghost'}
-        classNames='w-(--rail-action) h-(--rail-action)'
+        classNames='w-(--dx-rail-action) h-(--dx-rail-action)'
       />
       <StackItem.ResizeHandle />
     </div>
@@ -161,7 +161,7 @@ export default meta;
 type Story = StoryObj<typeof NavTreeContainer>;
 
 export const Default: Story = {
-  play: async ({ canvasElement }) => {
+  play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
     const canvas = within(canvasElement);
 
     // Find the element with treegrid role and click on its parent

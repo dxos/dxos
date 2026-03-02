@@ -4,13 +4,11 @@
 
 import React from 'react';
 
-import { descriptionText } from '@dxos/ui-theme';
-
 import { ShortcutsList } from './ShortcutsList';
 
 export const ShortcutsSection = () => {
   return (
-    <section className={descriptionText}>
+    <section className='text-description'>
       <ShortcutsList />
     </section>
   );

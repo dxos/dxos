@@ -6,28 +6,25 @@ import { type ComponentFunction } from '@dxos/ui-types';
 
 import { mx } from '../../util';
 
-/**
- * Padding variants:
- * - sm: Default padding for inputs, forms, etc.
- * - md: Padding for cards.
- * - lg: Padding for dialogs.
- */
-export type ColumnPadding = 'sm' | 'md' | 'lg';
+// TODO(burdon): Define types.
 
-export type ColumnStyleProps = {
-  variant?: ColumnPadding;
-};
+const containerMain: ComponentFunction<{ toolbar?: boolean }> = ({ toolbar }, ...etc) =>
+  mx(
+    'h-full w-full grid grid-cols-[100%] overflow-hidden',
+    toolbar && [
+      '[.dx-main-mobile-layout_&>.dx-toolbar]:px-3 [&>.dx-toolbar]:relative',
+      '[&>.dx-toolbar]:border-b [&>.dx-toolbar]:border-subdued-separator',
+    ],
+    ...etc,
+  );
 
-// TODO(burdon): Remove these TW types and just define here.
-const padding: Record<ColumnPadding, string> = {
-  sm: 'px-2',
-  md: 'px-3',
-  lg: 'px-6',
-};
+const containerColumn: ComponentFunction<Record<string, any>> = (_, ...etc) => mx('dx-column w-full grid', ...etc);
 
-const containerColumn: ComponentFunction<ColumnStyleProps> = ({ variant }, ...etc) =>
-  mx(variant && padding[variant], ...etc);
+const containerSegment: ComponentFunction<Record<string, any>> = (_, ...etc) =>
+  mx('col-span-full grid grid-cols-subgrid col-start-2', ...etc);
 
 export const containerTheme = {
+  main: containerMain,
   column: containerColumn,
+  segment: containerSegment,
 };

@@ -21,6 +21,13 @@ import { Collection, type View, ViewAnnotation } from '@dxos/schema';
 import { type JoinPanelProps } from '@dxos/shell/react';
 
 import {
+  CREATE_OBJECT_DIALOG,
+  CREATE_SPACE_DIALOG,
+  JOIN_DIALOG,
+  OBJECT_RENAME_POPOVER,
+  SPACE_RENAME_POPOVER,
+} from '../../constants';
+import {
   CollectionArticle,
   CollectionSection,
   CreateObjectDialog,
@@ -42,14 +49,7 @@ import {
   SpaceSettingsContainer,
   SyncStatus,
   ViewEditor,
-} from '../../components';
-import {
-  CREATE_OBJECT_DIALOG,
-  CREATE_SPACE_DIALOG,
-  JOIN_DIALOG,
-  OBJECT_RENAME_POPOVER,
-  SPACE_RENAME_POPOVER,
-} from '../../constants';
+} from '../../containers';
 import { useTypeOptions } from '../../hooks';
 import { meta } from '../../meta';
 import {
