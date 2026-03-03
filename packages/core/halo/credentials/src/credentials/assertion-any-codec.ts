@@ -3,7 +3,8 @@
 //
 
 import { PublicKey } from '@dxos/keys';
-import { type DescMessage, bufToTimeframe, bufWkt, create, fromBinary, timestampFromDate, toBinary } from '@dxos/protocols/buf';
+import { log } from '@dxos/log';
+import { type DescMessage, bufToTimeframe, bufWkt, create, fromBinary, timestampFromDate, timestampDate, toBinary } from '@dxos/protocols/buf';
 import { type Credential, CredentialSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Timeframe } from '@dxos/timeframe';
 
@@ -30,6 +31,7 @@ export const packTypedAssertionAsAny = (assertion: Record<string, unknown>): buf
 
   const schema = ASSERTION_SCHEMA_MAP.get(typeName) as DescMessage | undefined;
   if (!schema) {
+    log.warn('packTypedAssertionAsAny: unregistered assertion type, data will be lost', { typeName });
     return {
       typeUrl: `type.googleapis.com/${typeName}`,
       value: new Uint8Array(),
@@ -135,6 +137,9 @@ const convertBufFieldValue = (value: unknown): unknown => {
   if (isBufTimeframeVector(value)) {
     return bufToTimeframe(value as any);
   }
+  if (isBufTimestamp(value)) {
+    return timestampDate(value as bufWkt.Timestamp);
+  }
   if (Array.isArray(value)) {
     return value.map(convertBufFieldValue);
   }
@@ -151,6 +156,13 @@ const isBufPublicKey = (value: unknown): boolean =>
 /** Check if a value is a buf TimeframeVector message. */
 const isBufTimeframeVector = (value: unknown): boolean =>
   value != null && typeof value === 'object' && (value as any).$typeName === 'dxos.echo.timeframe.TimeframeVector';
+
+/** Check if a value is a buf Timestamp message. */
+const isBufTimestamp = (value: unknown): boolean =>
+  value != null &&
+  typeof value === 'object' &&
+  (value as any).$typeName === 'google.protobuf.Timestamp' &&
+  typeof (value as any).seconds === 'bigint';
 
 /**
  * Recursively convert a credential to a plain init object suitable for create().

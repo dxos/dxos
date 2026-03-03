@@ -33,8 +33,9 @@ export const getCredentialProofPayload = (credential: Credential): Uint8Array =>
   // Credentials arriving via RPC have packed Any assertions (typeUrl + binary value).
   // Signatures are always computed over the TypedMessage format, so unpack if needed.
   const assertion = copy.subject?.assertion;
-  if (assertion?.typeUrl && assertion?.value instanceof Uint8Array && assertion.value.length > 0) {
-    const unpacked = unpackAnyAsTypedMessage(assertion);
+  const assertionTypeUrl = assertion?.typeUrl ?? assertion?.type_url;
+  if (assertionTypeUrl && assertion?.value instanceof Uint8Array && assertion.value.length > 0) {
+    const unpacked = unpackAnyAsTypedMessage({ ...assertion, typeUrl: assertionTypeUrl });
     if (unpacked) {
       copy.subject = { ...copy.subject, assertion: unpacked };
     }

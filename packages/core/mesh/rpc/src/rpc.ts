@@ -7,7 +7,7 @@ import { StackTrace } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type Rpc, RpcClosedError, RpcNotOpenError, encodeError } from '@dxos/protocols';
-import { create, fromBinary, toBinary } from '@dxos/protocols/buf';
+import { type MessageInitShape, create, fromBinary, toBinary } from '@dxos/protocols/buf';
 import { type Request, type Response, type RpcMessage, RpcMessageSchema } from '@dxos/protocols/buf/dxos/rpc_pb';
 import { Stream } from '@dxos/stream';
 import { exponentialBackoffInterval } from '@dxos/util';
@@ -330,7 +330,7 @@ export class RpcPeer {
               case: 'response',
               value: { id: req.id, content: { case: 'error', value: encodeError(new RpcClosedError()) } },
             },
-          } as any);
+          });
           return;
         }
 
@@ -342,7 +342,7 @@ export class RpcPeer {
               responseCase: response.content.case,
             });
 
-            void this._sendMessage({ content: { case: 'response', value: response } } as any).catch((err) => {
+            void this._sendMessage({ content: { case: 'response', value: response } }).catch((err) => {
               log.warn('failed during close', err);
             });
           });
@@ -354,7 +354,7 @@ export class RpcPeer {
               method: req.method,
               responseCase: response.content.case,
             });
-          await this._sendMessage({ content: { case: 'response', value: response } } as any);
+          await this._sendMessage({ content: { case: 'response', value: response } });
         }
         break;
       }
@@ -388,7 +388,7 @@ export class RpcPeer {
         if (this._params.noHandshake) {
           return;
         }
-        await this._sendMessage({ content: { case: 'openAck', value: true } } as any);
+        await this._sendMessage({ content: { case: 'openAck', value: true } });
         break;
       }
 
@@ -427,7 +427,7 @@ export class RpcPeer {
         if (this._state !== RpcState.CLOSING && this._state !== RpcState.CLOSED) {
           log('replying to bye');
           this._state = RpcState.CLOSING;
-          await this._sendMessage({ content: { case: 'bye', value: {} } } as any);
+          await this._sendMessage({ content: { case: 'bye', value: {} } });
 
           this._abortRequests();
           this._disposeAndClose();
@@ -550,8 +550,11 @@ export class RpcPeer {
     });
   }
 
-  private async _sendMessage(message: any, timeout?: number): Promise<void> {
-    DEBUG_CALLS && log('sending message', { type: message.content?.case });
+  private async _sendMessage(
+    message: MessageInitShape<typeof RpcMessageSchema>,
+    timeout?: number,
+  ): Promise<void> {
+    DEBUG_CALLS && log('sending message', { type: (message as any).content?.case });
     await this._params.port.send(
       toBinary(RpcMessageSchema, create(RpcMessageSchema, normalizeRpcMessage(message))),
       timeout,
