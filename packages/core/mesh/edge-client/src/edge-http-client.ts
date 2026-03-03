@@ -372,6 +372,7 @@ export class EdgeHttpClient {
   /**
    * Execute a QueryAST query against a space.
    */
+  // TODO(dmaretskyi): Use buf toJson() encoding for the request body instead of plain JSON.stringify.
   public async execQuery(
     spaceId: SpaceId,
     body: QueryRequestProto,
