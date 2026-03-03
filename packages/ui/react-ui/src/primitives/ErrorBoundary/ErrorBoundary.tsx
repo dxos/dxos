@@ -24,6 +24,21 @@ export type ErrorBoundaryProps = {
 };
 
 /**
+ * Record error for storybook smoke test detection.
+ * Persists even if the component re-renders away.
+ */
+const recordErrorForSmokeTests = (error: unknown) => {
+  if (typeof window !== 'undefined') {
+    const win = window as any;
+    if (!win.__ERROR_BOUNDARY_ERRORS__) {
+      win.__ERROR_BOUNDARY_ERRORS__ = [];
+    }
+    const message = error instanceof Error ? error.message : String(error);
+    win.__ERROR_BOUNDARY_ERRORS__.push(message);
+  }
+};
+
+/**
  * Standard error boundary component.
  * https://reactjs.org/docs/error-boundaries.html
  * https://github.com/bvaughn/react-error-boundary
@@ -40,6 +55,7 @@ export const ErrorBoundary = ({
   const [error, setError] = useState<Error>();
   useEffect(() => {
     return addEventListener(window, 'unhandledrejection', (event: PromiseRejectionEvent) => {
+      recordErrorForSmokeTests(event.reason);
       setError(event.reason);
     });
   }, []);
@@ -58,10 +74,15 @@ export const ErrorBoundary = ({
     return <Fallback {...props} />;
   }
 
+  const handleError = (error: Error, info: { componentStack?: string | null }) => {
+    recordErrorForSmokeTests(error);
+    onError?.(error, info);
+  };
+
   const fallbackProps = fallbackRender ? { fallbackRender } : { FallbackComponent: FallbackComponent ?? ErrorFallback };
 
   return (
-    <NaturalErrorBoundary {...fallbackProps} onError={onError} onReset={onReset} resetKeys={resetKeys}>
+    <NaturalErrorBoundary {...fallbackProps} onError={handleError} onReset={onReset} resetKeys={resetKeys}>
       {children}
     </NaturalErrorBoundary>
   );
@@ -80,19 +101,9 @@ export const ErrorFallback = ({ error }: FallbackProps) => {
           stack: undefined,
         };
 
-  // Record error for smoke test detection (persists even if component re-renders away).
-  if (typeof window !== 'undefined') {
-    const win = window as any;
-    if (!win.__ERROR_BOUNDARY_ERRORS__) {
-      win.__ERROR_BOUNDARY_ERRORS__ = [];
-    }
-    win.__ERROR_BOUNDARY_ERRORS__.push(message);
-  }
-
   return (
     <div
       role='alert'
-      // NOTE: Storybook smoke tests use this to detect errors.
       data-testid='error-boundary-fallback'
       className='flex flex-col p-4 gap-4 overflow-auto'
     >
