@@ -186,10 +186,10 @@ export class ControlPipeline {
   @trace.span()
   private async _processMessage(ctx: Context, msg: FeedMessageBlock): Promise<void> {
     log('processing', { key: msg.feedKey, seq: msg.seq });
-    if (msg.data.payload?.credential) {
+    if (msg.data.payload?.payload.case === 'credential') {
       const timer = tracer.mark('dxos.echo.pipeline.control');
       const result = await this._spaceStateMachine.process(
-        msg.data.payload.credential.credential! as unknown as Credential,
+        msg.data.payload.payload.value.credential! as unknown as Credential,
         { sourceFeed: PublicKey.from(msg.feedKey) },
       );
 
