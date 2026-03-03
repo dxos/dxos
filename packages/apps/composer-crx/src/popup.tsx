@@ -12,7 +12,9 @@ import browser from 'webextension-polyfill';
 import { log } from '@dxos/log';
 import { mx } from '@dxos/ui-theme';
 
-import { Chat, type ChatProps, Container, ErrorBoundary, Thumbnail } from './components';
+import { ErrorBoundary } from '@dxos/react-ui';
+
+import { Chat, type ChatProps, Container, Thumbnail } from './components';
 import { THUMBNAIL_PROP, getConfig } from './config';
 
 // NOTE: Keep in sync with popup.html initial layout.

@@ -165,6 +165,7 @@ export const ContentError = ({ error }: { error?: Error }) => {
     <div role='none' className='overflow-auto p-8 dx-attention-surface grid place-items-center'>
       <p
         role='alert'
+        data-testid='error-boundary-fallback'
         className={mx(descriptionMessage, 'break-words rounded-md p-8', errorString.length < 256 && 'text-lg')}
       >
         {error ? errorString : t('error fallback message')}

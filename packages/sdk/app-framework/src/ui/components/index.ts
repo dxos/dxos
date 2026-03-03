@@ -4,5 +4,4 @@
 
 export * from './App';
 export * from './DefaultFallback';
-export * from './ErrorBoundary';
 export * from './PluginManagerProvider';

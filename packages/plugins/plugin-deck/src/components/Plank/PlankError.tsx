@@ -17,7 +17,11 @@ export const PlankContentError = ({ error }: { error?: Error }) => {
   const { t } = useTranslation(meta.id);
   const errorString = error?.toString() ?? '';
   return (
-    <div role='none' className='overflow-y-auto p-8 dx-attention-surface grid place-items-center'>
+    <div
+      role='none'
+      data-testid='plank-content-error'
+      className='overflow-y-auto p-8 dx-attention-surface grid place-items-center'
+    >
       <p role='alert' className={mx(descriptionMessage, 'break-all rounded-md p-4')}>
         {error ? errorString : t('error fallback message')}
       </p>
@@ -38,8 +42,9 @@ export const PlankError = ({
 }) => {
   const [timedOut, setTimedOut] = useState(false);
   useEffect(() => {
-    setTimeout(() => setTimedOut(true), 5e3);
+    setTimeout(() => setTimedOut(true), 5_000);
   }, []);
+
   return (
     <>
       <PlankHeading id={id} part={part} node={node} pending={!timedOut} />

@@ -6,10 +6,9 @@ import React, { Suspense } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 
 import { DeviceKind, useDevices, useIdentity } from '@dxos/react-client/halo';
-import { Icon, ScrollArea } from '@dxos/react-ui';
+import { ErrorBoundary, Icon, ScrollArea } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { ErrorBoundary } from '../components';
 import { useSections } from '../hooks';
 
 export const RootContainer = () => {

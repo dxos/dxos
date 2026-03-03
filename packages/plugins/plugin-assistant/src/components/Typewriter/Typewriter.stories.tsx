@@ -11,14 +11,16 @@ import React, { useEffect, useState } from 'react';
 
 import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { Typewriter } from './Typewriter';
 
 const meta: Meta<typeof Typewriter> = {
   title: 'plugins/plugin-assistant/components/Typewriter',
   component: Typewriter,
+  decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {
-    layout: 'centered',
+    layout: 'fullscreen',
   },
 };
 
@@ -49,7 +51,7 @@ The quick brown fox jumps over teh lazy dog. i think this is cool.
 
 export const Default: Story = {
   render: () => {
-    const [rtEffect, setRtEffect] = useState<Runtime.Runtime<LanguageModel.LanguageModel>>();
+    const [runtime, setRuntime] = useState<Runtime.Runtime<LanguageModel.LanguageModel>>();
     useEffect(() => {
       let disposed = false;
       const rt = ManagedRuntime.make(
@@ -59,10 +61,14 @@ export const Default: Story = {
         ),
       );
       queueMicrotask(async () => {
-        if (disposed) return;
-        const x = await rt.runtime();
-        if (disposed) return;
-        setRtEffect(x);
+        if (disposed) {
+          return;
+        }
+        const runtime = await rt.runtime();
+        if (disposed) {
+          return;
+        }
+        setRuntime(runtime);
       });
       return () => {
         disposed = true;
@@ -70,14 +76,10 @@ export const Default: Story = {
       };
     }, []);
 
-    if (!rtEffect) {
+    if (!runtime) {
       return <div>...Loading</div>;
     }
 
-    return (
-      <div className='w-[800px] p-4'>
-        <Typewriter initialContent={sampleText} runtime={rtEffect} />
-      </div>
-    );
+    return <Typewriter initialContent={sampleText} runtime={runtime} />;
   },
 };

@@ -86,6 +86,7 @@
     "date-fns": "catalog:",
     "i18next": "catalog:",
     "keyborg": "catalog:",
+    "react-error-boundary": "catalog:",
     "react-i18next": "catalog:",
     "react-remove-scroll": "catalog:"
   },

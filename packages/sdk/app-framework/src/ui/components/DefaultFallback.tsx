@@ -4,10 +4,12 @@
 
 import React from 'react';
 
+import type { FallbackProps } from '@dxos/react-ui';
+
 /**
  * NOTE: Default fallback should not use tailwind or theme.
  */
-export const DefaultFallback = ({ error }: { error: Error }) => {
+export const DefaultFallback = ({ error }: FallbackProps) => {
   // Record error for smoke test detection (persists even if component re-renders away).
   if (typeof window !== 'undefined') {
     ((window as any).__ERROR_BOUNDARY_ERRORS__ ??= []).push(error.message);

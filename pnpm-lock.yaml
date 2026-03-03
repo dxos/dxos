@@ -14157,9 +14157,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      react-error-boundary:
-        specifier: 'catalog:'
-        version: 4.0.13(react@19.2.3)
     devDependencies:
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
@@ -15234,6 +15231,9 @@ importers:
       keyborg:
         specifier: 'catalog:'
         version: 2.6.0
+      react-error-boundary:
+        specifier: 'catalog:'
+        version: 4.0.13(react@19.2.3)
       react-i18next:
         specifier: 'catalog:'
         version: 11.18.6(i18next@21.10.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)

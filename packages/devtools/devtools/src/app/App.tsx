@@ -5,10 +5,8 @@
 import React, { useEffect, useState } from 'react';
 
 import { ClientProvider, type ClientProviderProps } from '@dxos/react-client';
-import { type ThemeMode, ThemeProvider } from '@dxos/react-ui';
+import { ErrorBoundary, type ThemeMode, ThemeProvider } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/ui-theme';
-
-import { ErrorBoundary } from '../components';
 
 import { Devtools } from './Devtools';
 

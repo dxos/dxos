@@ -16,13 +16,12 @@ import React, {
 
 import { log } from '@dxos/log';
 import { useDefaultValue } from '@dxos/react-hooks';
-import { ScrollArea } from '@dxos/react-ui';
+import { ErrorBoundary, ScrollArea } from '@dxos/react-ui';
 import { byPosition } from '@dxos/util';
 
 import { Capabilities } from '../../../common';
 import { type CapabilityManager } from '../../../core';
 import { useCapabilities } from '../../hooks';
-import { ErrorBoundary } from '../ErrorBoundary';
 
 import { SurfaceContext } from './context';
 import { SurfaceInfo } from './SurfaceInfo';
@@ -113,7 +112,7 @@ const SurfaceContextProvider = memo(
       // Handle Web Component surfaces
       if (definition.kind === 'web-component') {
         return (
-          <ErrorBoundary data={data} fallback={fallback}>
+          <ErrorBoundary resetKeys={[data]} fallbackRender={({ error }) => fallback({ data, error })}>
             <SurfaceContext.Provider value={contextValue}>
               <WebComponentWrapper
                 id={id}
@@ -136,7 +135,7 @@ const SurfaceContextProvider = memo(
       const debug = DEBUG || '__DX_DEBUG__' in window;
       if (debug) {
         return (
-          <ErrorBoundary data={data} fallback={fallback}>
+          <ErrorBoundary resetKeys={[data]} fallbackRender={({ error }) => fallback({ data, error })}>
             <div role='none' className='contents' data-id={id} data-role={role}>
               <SurfaceContext.Provider value={contextValue}>
                 <SurfaceInfo ref={forwardedRef}>
@@ -149,7 +148,7 @@ const SurfaceContextProvider = memo(
       }
 
       return (
-        <ErrorBoundary data={data} fallback={fallback}>
+        <ErrorBoundary resetKeys={[data]} fallbackRender={({ error }) => fallback({ data, error })}>
           <div role='none' className='contents' data-id={id} data-role={role}>
             <SurfaceContext.Provider value={contextValue}>
               <Component id={id} role={role} data={data} limit={limit} {...rest} ref={forwardedRef} />

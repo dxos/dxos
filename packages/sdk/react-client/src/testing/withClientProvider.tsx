@@ -3,14 +3,14 @@
 //
 
 import { type Decorator, type StoryContext } from '@storybook/react';
-import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { type FallbackProps, ErrorBoundary as NaturalErrorBoundary } from 'react-error-boundary';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Trigger } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { type Space, type SpaceId } from '@dxos/client/echo';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
 import { log } from '@dxos/log';
+import { ErrorBoundary } from '@dxos/react-ui';
 import { type MaybePromise } from '@dxos/util';
 
 import { ClientProvider, type ClientProviderProps } from '../client';
@@ -187,35 +187,4 @@ export const withMultiClientProvider = ({
       </div>
     );
   };
-};
-
-const ErrorBoundary = ({ children }: PropsWithChildren) => {
-  const [error, setError] = useState<Error>();
-  useEffect(() => {
-    const handleError = (event: PromiseRejectionEvent) => {
-      setError(event.reason);
-    };
-
-    window.addEventListener('unhandledrejection', handleError);
-    return () => window.removeEventListener('unhandledrejection', handleError);
-  }, []);
-
-  if (error) {
-    return <ErrorFallback error={error} resetErrorBoundary={() => setError(undefined)} />;
-  }
-
-  return <NaturalErrorBoundary FallbackComponent={ErrorFallback}>{children}</NaturalErrorBoundary>;
-};
-
-const ErrorFallback = ({ error }: FallbackProps) => {
-  const { name, message, stack } =
-    error instanceof Error ? error : { name: 'Error', message: String(error), stack: undefined };
-
-  return (
-    <div role='alert' className='flex flex-col p-4 gap-4 overflow-auto'>
-      <h1 className='text-xl text-red-500'>{name}</h1>
-      <div className='text-lg'>{message}</div>
-      {stack && <pre className='whitespace-pre-wrap text-sm text-subdued'>{stack}</pre>}
-    </div>
-  );
 };

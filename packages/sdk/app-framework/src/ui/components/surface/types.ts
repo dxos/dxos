@@ -2,11 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { PropsWithChildren, ReactNode, RefCallback } from 'react';
+import type { FC, PropsWithChildren, ReactNode, RefCallback } from 'react';
 
 import type { MakeOptional, Position } from '@dxos/util';
-
-import type { ErrorBoundary } from '../index';
 
 /**
  * Props that are passed to the Surface component.
@@ -16,7 +14,7 @@ export type Props<T extends Record<string, any> = Record<string, unknown>> = {
    * If specified, the Surface will be wrapped in an error boundary.
    * The fallback component will be rendered if an error occurs.
    */
-  fallback?: ErrorBoundary['props']['fallback'];
+  fallback?: FC<{ data?: any; error: Error }>;
 
   /**
    * If specified, the Surface will be wrapped in a suspense boundary.

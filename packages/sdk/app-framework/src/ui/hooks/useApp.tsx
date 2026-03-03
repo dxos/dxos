@@ -13,15 +13,13 @@ import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { useAsyncEffect, useDefaultValue } from '@dxos/react-hooks';
+import { ErrorBoundary, type FallbackProps } from '@dxos/react-ui';
 import { ContextProtocolProvider } from '@dxos/web-context-react';
 
 import { ActivationEvents, Capabilities } from '../../common';
 import { PluginManagerContext } from '../../context';
 import { type ActivationEvent, type Plugin, PluginManager } from '../../core';
-import { App } from '../components/App';
-import { DefaultFallback } from '../components/DefaultFallback';
-import { ErrorBoundary } from '../components/ErrorBoundary';
-import { PluginManagerProvider } from '../components/PluginManagerProvider';
+import { App, DefaultFallback, PluginManagerProvider } from '../components';
 
 const ENABLED_KEY = 'dxos.org/app-framework/enabled';
 
@@ -37,7 +35,7 @@ export type UseAppOptions = {
    */
   setupEvents?: ActivationEvent.ActivationEvent[];
   placeholder?: FC<{ stage: number }>;
-  fallback?: ErrorBoundary['props']['fallback'];
+  fallback?: FC<FallbackProps>;
   cacheEnabled?: boolean;
   safeMode?: boolean;
   debounce?: number;
@@ -195,7 +193,7 @@ export const useApp = ({
 
   return useCallback(
     () => (
-      <ErrorBoundary fallback={fallback}>
+      <ErrorBoundary FallbackComponent={fallback}>
         <PluginManagerProvider value={manager}>
           <ContextProtocolProvider value={manager} context={PluginManagerContext}>
             <RegistryContext.Provider value={manager.registry}>
