@@ -8,13 +8,11 @@ import { useMemo } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Annotation, Obj } from '@dxos/echo';
 import { useTranslation } from '@dxos/react-ui';
-import { type MenuItem, createMenuAction, useMenuContribution } from '@dxos/react-ui-menu';
+import { type MenuItem, createMenuAction } from '@dxos/react-ui-menu';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { LayoutOperation } from '../../operations';
 
-const OBJECT_ACTIONS_CONTRIBUTION_ID = 'object-actions';
-const NAVIGATE_PRIORITY = 50;
 const OPEN_ICON = 'ph--arrow-square-out--regular';
 
 /** True when subject is an Echo object and its schema does not have the system annotation. */
@@ -49,8 +47,7 @@ export const useObjectNavigate = (subject: unknown): (() => void) | undefined =>
 /**
  * Returns object-scoped menu items (e.g. Open/Navigate) for the given subject.
  * Only includes items when subject is an Echo object and its schema does not have the system annotation.
- * Call from a component that is rendered inside Card.Root (e.g. inside Card.Content) so that
- * useMenuContribution in the same tree registers with the card's MenuProvider.
+ * Use with useMenuContributions(CONTRIBUTOR_NAME)?.addContribution from a component inside Card.Root to register with the card menu.
  */
 export const useObjectMenuItems = (subject: unknown): MenuItem[] => {
   const { invokePromise } = useOperationInvoker();
@@ -77,20 +74,10 @@ export const useObjectMenuItems = (subject: unknown): MenuItem[] => {
   }, [subject, invokePromise, t]);
 };
 
-/**
- * Contributes object-scoped menu items to the nearest Card menu (e.g. Open/Navigate).
- * Must be called from a component rendered inside Card.Root (e.g. inside Card.Content) so the
- * contribution registers with that card's MenuProvider. For card layouts where the surface-providing
- * component is outside Card.Root (e.g. KanbanCard), use a small wrapper inside Card.Content that
- * calls this hook and renders the surface.
- */
-export const useObjectMenuContributions = (subject: unknown): void => {
-  const items = useObjectMenuItems(subject);
+/** Contribution id for object-actions (Open/Navigate). Use with useMenuContributions(CONTRIBUTOR_NAME)?.addContribution. */
+export const OBJECT_ACTIONS_CONTRIBUTION_ID = 'object-actions';
 
-  useMenuContribution({
-    id: OBJECT_ACTIONS_CONTRIBUTION_ID,
-    mode: 'additive',
-    priority: NAVIGATE_PRIORITY,
-    items,
-  });
-};
+/**
+ * Priority for object-actions contribution.
+ */
+export const OBJECT_ACTIONS_CONTRIBUTION_PRIORITY = 50;

@@ -74,8 +74,9 @@ export const SearchMain = ({ space }: { space?: Space }) => {
 
 const SearchResultTile: MosaicStackTileComponent<SearchResult> = (props) => {
   const data = props.data;
-  const objectMenuItems = useObjectMenuItems(data.object!);
-  const handleNavigate = useObjectNavigate(data.object ?? undefined);
+  const object = data.object!;
+  const objectMenuItems = useObjectMenuItems(object);
+  const handleNavigate = useObjectNavigate(object);
 
   return (
     <Card.Root key={data.id}>

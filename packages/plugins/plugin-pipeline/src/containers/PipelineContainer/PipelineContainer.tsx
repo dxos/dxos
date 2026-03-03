@@ -2,20 +2,28 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
 
 import { Capabilities } from '@dxos/app-framework';
 import { useCapability } from '@dxos/app-framework/ui';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Surface } from '@dxos/app-framework/ui';
-import { type SurfaceComponentProps, useObjectMenuContributions } from '@dxos/app-toolkit/ui';
+import {
+  OBJECT_ACTIONS_CONTRIBUTION_ID,
+  OBJECT_ACTIONS_CONTRIBUTION_PRIORITY,
+  type SurfaceComponentProps,
+  useObjectMenuItems,
+} from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { ATTENDABLE_PATH_SEPARATOR, DeckOperation } from '@dxos/plugin-deck/types';
 import { Layout } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
+import { useMenuContributions } from '@dxos/react-ui-menu';
 import { type Pipeline as PipelineType } from '@dxos/types';
 
 import { type ItemProps, PipelineComponent, usePipelineBoardModel } from '../../components';
+
+const PIPELINE_ITEM = 'PipelineItem';
 
 export type PipelineContainerProps = SurfaceComponentProps<PipelineType.Pipeline>;
 
@@ -46,7 +54,19 @@ export const PipelineContainer = ({ role, subject: pipeline }: PipelineContainer
 };
 
 const PipelineItem = ({ item, projectionModel }: ItemProps) => {
-  useObjectMenuContributions(item);
+  const menu = useMenuContributions(PIPELINE_ITEM);
+  const items = useObjectMenuItems(item);
+
+  useEffect(() => {
+    menu.addContribution({
+      id: OBJECT_ACTIONS_CONTRIBUTION_ID,
+      mode: 'additive',
+      priority: OBJECT_ACTIONS_CONTRIBUTION_PRIORITY,
+      items,
+    });
+
+    return () => menu.removeContribution(OBJECT_ACTIONS_CONTRIBUTION_ID);
+  }, [menu, items]);
 
   return (
     <Surface.Surface

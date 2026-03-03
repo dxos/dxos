@@ -2,21 +2,23 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Atom, RegistryContext } from '@effect-atom/atom-react';
+import { Atom } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useContext, useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { faker } from '@dxos/random';
 import { Button, IconButton } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 
-import { MenuProvider, DropdownMenu as NaturalDropdownMenu, ToolbarMenu, useMenuContribution } from '../components';
+import { MenuProvider, DropdownMenu as NaturalDropdownMenu, ToolbarMenu, useMenuContributions } from '../components';
 import { type ActionGraphProps, useMenuActions } from '../hooks';
 import { createActions, createNestedActions, createNestedActionsResolver, useMutateActions } from '../testing';
 import { translations } from '../translations';
 import { type MenuItem } from '../types';
 import { createMenuAction } from '../util';
+
+const STORY_CONTRIBUTOR = 'StoryContributor';
 
 faker.seed(1234);
 
@@ -90,6 +92,7 @@ export const UseMenuActionsToolbar: Story = {
  * Component that contributes static menu items.
  */
 const StaticContributor = () => {
+  const menu = useMenuContributions(STORY_CONTRIBUTOR);
   const items: MenuItem[] = useMemo(
     () => [
       createMenuAction('contributed-1', () => alert('Contributed action 1'), {
@@ -104,11 +107,10 @@ const StaticContributor = () => {
     [],
   );
 
-  useMenuContribution({
-    id: 'static-contributor',
-    mode: 'additive',
-    items,
-  });
+  useEffect(() => {
+    menu?.addContribution({ id: 'static-contributor', mode: 'additive', items });
+    return () => menu?.removeContribution('static-contributor');
+  }, [menu, items]);
 
   return null;
 };
@@ -138,15 +140,20 @@ export const StaticContribution: Story = {
 };
 
 /**
- * Component that contributes reactive menu items via an atom.
+ * Component that contributes reactive menu items (caller passes current items).
  */
-const ReactiveContributor = ({ itemsAtom }: { itemsAtom: Atom.Atom<MenuItem[]> }) => {
-  useMenuContribution({
-    id: 'reactive-contributor',
-    mode: 'additive',
-    items: itemsAtom,
-    priority: 50, // Higher priority (lower number) = appears first in contributions.
-  });
+const ReactiveContributor = ({ items }: { items: MenuItem[] }) => {
+  const menu = useMenuContributions(STORY_CONTRIBUTOR);
+
+  useEffect(() => {
+    menu.addContribution({
+      id: 'reactive-contributor',
+      mode: 'additive',
+      priority: 50,
+      items,
+    });
+    return () => menu.removeContribution('reactive-contributor');
+  }, [menu, items]);
 
   return null;
 };
@@ -161,35 +168,23 @@ export const ReactiveContribution: Story = {
       }).pipe(Atom.keepAlive);
     }, []);
 
-    const contributedItemsAtom = useMemo(
-      () =>
-        Atom.make<MenuItem[]>([
-          createMenuAction('reactive-1', () => alert('Reactive action'), {
-            label: 'Reactive Action',
-            icon: 'ph--lightning--regular',
-          }),
-        ]).pipe(Atom.keepAlive),
-      [],
-    );
-
-    const registry = useContext(RegistryContext);
     const [count, setCount] = useState(1);
-
-    useEffect(() => {
-      registry.set(contributedItemsAtom, [
+    const reactiveItems: MenuItem[] = useMemo(
+      () => [
         createMenuAction('reactive-1', () => alert(`Reactive action (count: ${count})`), {
           label: `Reactive Action (${count})`,
           icon: 'ph--lightning--regular',
         }),
-      ]);
-    }, [count, contributedItemsAtom, registry]);
+      ],
+      [count],
+    );
 
     const menu = useMenuActions(baseActionsAtom);
 
     return (
       <div className='flex flex-col gap-4'>
         <MenuProvider {...menu}>
-          <ReactiveContributor itemsAtom={contributedItemsAtom} />
+          <ReactiveContributor items={reactiveItems} />
           <NaturalDropdownMenu.Root>
             <NaturalDropdownMenu.Trigger asChild>
               <IconButton icon='ph--list-checks--regular' label='Options' />
@@ -206,6 +201,7 @@ export const ReactiveContribution: Story = {
  * Component that replaces all menu items.
  */
 const ReplacementContributor = () => {
+  const menu = useMenuContributions(STORY_CONTRIBUTOR);
   const items: MenuItem[] = useMemo(
     () => [
       createMenuAction('replacement-1', () => alert('Replacement only'), {
@@ -216,11 +212,10 @@ const ReplacementContributor = () => {
     [],
   );
 
-  useMenuContribution({
-    id: 'replacement-contributor',
-    mode: 'replacement',
-    items,
-  });
+  useEffect(() => {
+    menu.addContribution({ id: 'replacement-contributor', mode: 'replacement', items });
+    return () => menu.removeContribution('replacement-contributor');
+  }, [menu, items]);
 
   return null;
 };
@@ -253,6 +248,7 @@ export const ReplacementMode: Story = {
  * Demo of multiple contributors with different priorities.
  */
 const LowPriorityContributor = () => {
+  const menu = useMenuContributions(STORY_CONTRIBUTOR);
   const items: MenuItem[] = useMemo(
     () => [
       createMenuAction('low-priority', () => alert('Low priority'), {
@@ -263,17 +259,21 @@ const LowPriorityContributor = () => {
     [],
   );
 
-  useMenuContribution({
-    id: 'low-priority-contributor',
-    mode: 'additive',
-    items,
-    priority: 150,
-  });
+  useEffect(() => {
+    menu?.addContribution({
+      id: 'low-priority-contributor',
+      mode: 'additive',
+      items,
+      priority: 150,
+    });
+    return () => menu?.removeContribution('low-priority-contributor');
+  }, [menu, items]);
 
   return null;
 };
 
 const HighPriorityContributor = () => {
+  const menu = useMenuContributions(STORY_CONTRIBUTOR);
   const items: MenuItem[] = useMemo(
     () => [
       createMenuAction('high-priority', () => alert('High priority'), {
@@ -284,12 +284,15 @@ const HighPriorityContributor = () => {
     [],
   );
 
-  useMenuContribution({
-    id: 'high-priority-contributor',
-    mode: 'additive',
-    items,
-    priority: 50,
-  });
+  useEffect(() => {
+    menu?.addContribution({
+      id: 'high-priority-contributor',
+      mode: 'additive',
+      items,
+      priority: 50,
+    });
+    return () => menu?.removeContribution('high-priority-contributor');
+  }, [menu, items]);
 
   return null;
 };

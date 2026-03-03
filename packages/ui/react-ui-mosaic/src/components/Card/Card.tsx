@@ -147,11 +147,10 @@ type CardMenuProps = {
 
 const CardMenu = ({ items }: CardMenuProps) => {
   const { t } = useTranslation(translationKey);
-  const baseItems = items ?? [];
-  const mergedItems = useMenuItems(undefined, baseItems.length > 0 ? baseItems : undefined);
+  const mergedItems = useMenuItems(undefined, items);
 
   return (
-    <MenuDropdownMenu.Root items={baseItems.length > 0 ? baseItems : undefined}>
+    <MenuDropdownMenu.Root items={mergedItems}>
       <MenuDropdownMenu.Trigger disabled={!(mergedItems?.length ?? 0)} asChild>
         <Card.ToolbarIconButton
           iconOnly

@@ -2,37 +2,28 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, Registry, RegistryContext } from '@effect-atom/atom-react';
 import { cleanup, render, renderHook, screen } from '@testing-library/react';
-import React, { type PropsWithChildren, useMemo } from 'react';
+import React, { type PropsWithChildren, useEffect } from 'react';
 import { afterEach, describe, test } from 'vitest';
 
 import { type MenuItem } from '../types';
 import { createMenuAction } from '../util';
 
-import { MenuProvider, useMenuContribution, useMenuItems } from './MenuContext';
+import { MenuProvider, useMenuContributions, useMenuItems } from './MenuContext';
+
+const TEST_CONTRIBUTOR = 'TestContributor';
 
 const createTestAction = (id: string, label: string): MenuItem =>
   createMenuAction(id, () => {}, { label, icon: 'ph--star--regular' });
 
 const TestWrapper = ({ children }: PropsWithChildren) => {
-  const registry = useMemo(() => Registry.make(), []);
-  return (
-    <RegistryContext.Provider value={registry}>
-      <MenuProvider>{children}</MenuProvider>
-    </RegistryContext.Provider>
-  );
+  return <MenuProvider>{children}</MenuProvider>;
 };
 
 const createTestWrapperWithBaseItems = (baseItems: MenuItem[]) => {
   return ({ children }: PropsWithChildren) => {
-    const registry = useMemo(() => Registry.make(), []);
     const useGroupItems = () => baseItems;
-    return (
-      <RegistryContext.Provider value={registry}>
-        <MenuProvider useGroupItems={useGroupItems}>{children}</MenuProvider>
-      </RegistryContext.Provider>
-    );
+    return <MenuProvider useGroupItems={useGroupItems}>{children}</MenuProvider>;
   };
 };
 
@@ -41,16 +32,16 @@ describe('MenuContext', () => {
     cleanup();
   });
 
-  describe('useMenuContribution', () => {
+  describe('imperative contribution API', () => {
     test('contributes static items to menu', ({ expect }) => {
       const contributedItems = [createTestAction('test-1', 'Test Action 1')];
 
       const ContributorComponent = () => {
-        useMenuContribution({
-          id: 'test-contributor',
-          mode: 'additive',
-          items: contributedItems,
-        });
+        const menu = useMenuContributions(TEST_CONTRIBUTOR);
+        useEffect(() => {
+          menu.addContribution({ id: 'test-contributor', mode: 'additive', items: contributedItems });
+          return () => menu.removeContribution('test-contributor');
+        }, [menu, contributedItems]);
         return null;
       };
 
@@ -78,16 +69,13 @@ describe('MenuContext', () => {
       expect(screen.getByText('Test Action 1')).toBeTruthy();
     });
 
-    test('contributes reactive items via atom', async ({ expect }) => {
-      const registry = Registry.make();
-      const itemsAtom = Atom.make<MenuItem[]>([createTestAction('reactive-1', 'Reactive 1')]).pipe(Atom.keepAlive);
-
-      const ContributorComponent = () => {
-        useMenuContribution({
-          id: 'reactive-contributor',
-          mode: 'additive',
-          items: itemsAtom,
-        });
+    test('contributes items that update when deps change', ({ expect }) => {
+      const ContributorComponent = ({ items }: { items: MenuItem[] }) => {
+        const menu = useMenuContributions(TEST_CONTRIBUTOR);
+        useEffect(() => {
+          menu.addContribution({ id: 'reactive-contributor', mode: 'additive', items });
+          return () => menu.removeContribution('reactive-contributor');
+        }, [menu, items]);
         return null;
       };
 
@@ -104,20 +92,14 @@ describe('MenuContext', () => {
         );
       };
 
-      const Wrapper = ({ children }: PropsWithChildren) => (
-        <RegistryContext.Provider value={registry}>
-          <MenuProvider>{children}</MenuProvider>
-        </RegistryContext.Provider>
-      );
-
+      const items = [createTestAction('reactive-1', 'Reactive 1')];
       render(
-        <Wrapper>
-          <ContributorComponent />
+        <TestWrapper>
+          <ContributorComponent items={items} />
           <ConsumerComponent />
-        </Wrapper>,
+        </TestWrapper>,
       );
 
-      // Verify the atom-based contribution is rendered.
       expect(screen.getByTestId('item-reactive-1')).toBeTruthy();
       expect(screen.getByText('Reactive 1')).toBeTruthy();
     });
@@ -127,11 +109,11 @@ describe('MenuContext', () => {
       const contributedItems = [createTestAction('contrib-1', 'Contributed Action')];
 
       const ContributorComponent = () => {
-        useMenuContribution({
-          id: 'test-contributor',
-          mode: 'additive',
-          items: contributedItems,
-        });
+        const menu = useMenuContributions(TEST_CONTRIBUTOR);
+        useEffect(() => {
+          menu.addContribution({ id: 'test-contributor', mode: 'additive', items: contributedItems });
+          return () => menu.removeContribution('test-contributor');
+        }, [menu, contributedItems]);
         return null;
       };
 
@@ -157,7 +139,6 @@ describe('MenuContext', () => {
         </WrapperWithBase>,
       );
 
-      // Base items should come first, then contributions.
       const menuItems = screen.getByTestId('menu-items');
       expect(menuItems.children.length).toBe(2);
       expect(screen.getByTestId('item-base-1')).toBeTruthy();
@@ -165,23 +146,23 @@ describe('MenuContext', () => {
     });
 
     test('orders contributions by priority', ({ expect }) => {
+      const lowItems = [createTestAction('low', 'Low Priority')];
+      const highItems = [createTestAction('high', 'High Priority')];
       const LowPriorityContributor = () => {
-        useMenuContribution({
-          id: 'low-priority',
-          mode: 'additive',
-          items: [createTestAction('low', 'Low Priority')],
-          priority: 200,
-        });
+        const menu = useMenuContributions(TEST_CONTRIBUTOR);
+        useEffect(() => {
+          menu.addContribution({ id: 'low-priority', mode: 'additive', items: lowItems, priority: 200 });
+          return () => menu.removeContribution('low-priority');
+        }, [menu, lowItems]);
         return null;
       };
 
       const HighPriorityContributor = () => {
-        useMenuContribution({
-          id: 'high-priority',
-          mode: 'additive',
-          items: [createTestAction('high', 'High Priority')],
-          priority: 50,
-        });
+        const menu = useMenuContributions(TEST_CONTRIBUTOR);
+        useEffect(() => {
+          menu.addContribution({ id: 'high-priority', mode: 'additive', items: highItems, priority: 50 });
+          return () => menu.removeContribution('high-priority');
+        }, [menu, highItems]);
         return null;
       };
 
@@ -200,14 +181,12 @@ describe('MenuContext', () => {
 
       render(
         <TestWrapper>
-          {/* Order in JSX doesn't matter - priority determines order. */}
           <LowPriorityContributor />
           <HighPriorityContributor />
           <ConsumerComponent />
         </TestWrapper>,
       );
 
-      // High priority (lower number) should come first.
       const firstItem = screen.getByTestId('item-0');
       const secondItem = screen.getByTestId('item-1');
 
@@ -220,11 +199,11 @@ describe('MenuContext', () => {
       const replacementItems = [createTestAction('replacement-1', 'Replacement Action')];
 
       const ReplacementContributor = () => {
-        useMenuContribution({
-          id: 'replacement-contributor',
-          mode: 'replacement',
-          items: replacementItems,
-        });
+        const menu = useMenuContributions(TEST_CONTRIBUTOR);
+        useEffect(() => {
+          menu.addContribution({ id: 'replacement-contributor', mode: 'replacement', items: replacementItems });
+          return () => menu.removeContribution('replacement-contributor');
+        }, [menu, replacementItems]);
         return null;
       };
 
@@ -250,20 +229,19 @@ describe('MenuContext', () => {
         </WrapperWithBase>,
       );
 
-      // Should only have replacement item, not base item.
       expect(screen.queryByTestId('item-base-1')).toBeNull();
       expect(screen.getByTestId('item-replacement-1')).toBeTruthy();
     });
 
-    test('unregisters contribution on unmount', ({ expect }) => {
+    test('removeContribution on unmount clears contribution', ({ expect }) => {
       const contributedItems = [createTestAction('unmount-test', 'Will Be Removed')];
 
       const ContributorComponent = () => {
-        useMenuContribution({
-          id: 'unmount-contributor',
-          mode: 'additive',
-          items: contributedItems,
-        });
+        const menu = useMenuContributions(TEST_CONTRIBUTOR);
+        useEffect(() => {
+          menu.addContribution({ id: 'unmount-contributor', mode: 'additive', items: contributedItems });
+          return () => menu.removeContribution('unmount-contributor');
+        }, [menu, contributedItems]);
         return null;
       };
 
@@ -280,50 +258,42 @@ describe('MenuContext', () => {
         );
       };
 
-      const registry = Registry.make();
-      const Wrapper = ({ children }: PropsWithChildren) => (
-        <RegistryContext.Provider value={registry}>
-          <MenuProvider>{children}</MenuProvider>
-        </RegistryContext.Provider>
-      );
-
       const { rerender } = render(
-        <Wrapper>
+        <TestWrapper>
           <ContributorComponent />
           <ConsumerComponent />
-        </Wrapper>,
+        </TestWrapper>,
       );
 
       expect(screen.getByTestId('item-unmount-test')).toBeTruthy();
 
-      // Unmount the contributor.
       rerender(
-        <Wrapper>
+        <TestWrapper>
           <ConsumerComponent />
-        </Wrapper>,
+        </TestWrapper>,
       );
 
       expect(screen.queryByTestId('item-unmount-test')).toBeNull();
     });
 
     test('deterministic ordering with same priority uses id', ({ expect }) => {
+      const itemsA = [createTestAction('item-a', 'Item A')];
+      const itemsB = [createTestAction('item-b', 'Item B')];
       const ContributorA = () => {
-        useMenuContribution({
-          id: 'contributor-a',
-          mode: 'additive',
-          items: [createTestAction('item-a', 'Item A')],
-          priority: 100,
-        });
+        const menu = useMenuContributions(TEST_CONTRIBUTOR);
+        useEffect(() => {
+          menu.addContribution({ id: 'contributor-a', mode: 'additive', items: itemsA, priority: 100 });
+          return () => menu.removeContribution('contributor-a');
+        }, [menu, itemsA]);
         return null;
       };
 
       const ContributorB = () => {
-        useMenuContribution({
-          id: 'contributor-b',
-          mode: 'additive',
-          items: [createTestAction('item-b', 'Item B')],
-          priority: 100,
-        });
+        const menu = useMenuContributions(TEST_CONTRIBUTOR);
+        useEffect(() => {
+          menu.addContribution({ id: 'contributor-b', mode: 'additive', items: itemsB, priority: 100 });
+          return () => menu.removeContribution('contributor-b');
+        }, [menu, itemsB]);
         return null;
       };
 
@@ -342,14 +312,12 @@ describe('MenuContext', () => {
 
       render(
         <TestWrapper>
-          {/* Render B before A in JSX. */}
           <ContributorB />
           <ContributorA />
           <ConsumerComponent />
         </TestWrapper>,
       );
 
-      // With same priority, should be sorted alphabetically by id.
       const firstItem = screen.getByTestId('item-0');
       const secondItem = screen.getByTestId('item-1');
 
@@ -362,25 +330,28 @@ describe('MenuContext', () => {
       const groupFilteredItems = [createTestAction('group-item', 'Group Only Item')];
 
       const GlobalContributor = () => {
-        useMenuContribution({
-          id: 'global-contributor',
-          mode: 'additive',
-          items: globalContributedItems,
-        });
+        const menu = useMenuContributions(TEST_CONTRIBUTOR);
+        useEffect(() => {
+          menu.addContribution({ id: 'global-contributor', mode: 'additive', items: globalContributedItems });
+          return () => menu.removeContribution('global-contributor');
+        }, [menu, globalContributedItems]);
         return null;
       };
 
       const FilteredContributor = () => {
-        useMenuContribution({
-          id: 'filtered-contributor',
-          mode: 'additive',
-          items: groupFilteredItems,
-          groupFilter: (group) => group?.id === 'special-group',
-        });
+        const menu = useMenuContributions(TEST_CONTRIBUTOR);
+        useEffect(() => {
+          menu.addContribution({
+            id: 'filtered-contributor',
+            mode: 'additive',
+            items: groupFilteredItems,
+            groupFilter: (group) => group?.id === 'special-group',
+          });
+          return () => menu.removeContribution('filtered-contributor');
+        }, [menu, groupFilteredItems]);
         return null;
       };
 
-      // Consumer for root group (no group specified).
       const RootConsumer = () => {
         const items = useMenuItems();
         return (
@@ -402,7 +373,6 @@ describe('MenuContext', () => {
         </TestWrapper>,
       );
 
-      // Root should only have global item, not the group-filtered item.
       expect(screen.getByTestId('root-global-item')).toBeTruthy();
       expect(screen.queryByTestId('root-group-item')).toBeNull();
     });
@@ -438,14 +408,14 @@ describe('MenuContext', () => {
         label: 'Open',
         icon: 'ph--arrow-square-out--regular',
       });
+      const items = [navigateItem];
 
       const ObjectActionsContributor = () => {
-        useMenuContribution({
-          id: 'object-actions',
-          mode: 'additive',
-          priority: 50,
-          items: [navigateItem],
-        });
+        const menu = useMenuContributions(TEST_CONTRIBUTOR);
+        useEffect(() => {
+          menu.addContribution({ id: 'object-actions', mode: 'additive', priority: 50, items });
+          return () => menu.removeContribution('object-actions');
+        }, [menu, items]);
         return null;
       };
 
