@@ -48,7 +48,7 @@ const createBufClient = <S extends GenService<GenServiceMethods>>(
           rpcMethodName,
           {
             value: encoded,
-            type_url: input.typeName,
+            typeUrl: input.typeName,
           },
           options,
         );
@@ -63,7 +63,7 @@ const createBufClient = <S extends GenService<GenServiceMethods>>(
           rpcMethodName,
           {
             value: encoded,
-            type_url: input.typeName,
+            typeUrl: input.typeName,
           },
           options,
         );
@@ -111,7 +111,7 @@ export class BufServiceHandler<S extends GenService<GenServiceMethods>> implemen
 
     return {
       value: responseEncoded,
-      type_url: output.typeName,
+      typeUrl: output.typeName,
     };
   }
 
@@ -140,7 +140,7 @@ export class BufServiceHandler<S extends GenService<GenServiceMethods>> implemen
       const normalizedData = create(output, data as Record<string, unknown>);
       return {
         value: toBinary(output, normalizedData),
-        type_url: output.typeName,
+        typeUrl: output.typeName,
       };
     });
   }

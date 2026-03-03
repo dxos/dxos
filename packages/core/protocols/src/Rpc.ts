@@ -11,7 +11,7 @@ import { type Stream } from '@dxos/stream';
  * Represents a protobuf Any type used for RPC encoding.
  */
 export interface BufAny {
-  type_url: string;
+  typeUrl: string;
   value: Uint8Array;
 }
 

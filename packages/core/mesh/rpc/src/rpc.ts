@@ -8,7 +8,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type Rpc, RpcClosedError, RpcNotOpenError, encodeError } from '@dxos/protocols';
 import { type MessageInitShape, create, fromBinary, toBinary } from '@dxos/protocols/buf';
-import { type Request, type Response, type RpcMessage, RpcMessageSchema } from '@dxos/protocols/buf/dxos/rpc_pb';
+import { type Request, type Response, RpcMessageSchema } from '@dxos/protocols/buf/dxos/rpc_pb';
 import { Stream } from '@dxos/stream';
 import { exponentialBackoffInterval } from '@dxos/util';
 
@@ -18,67 +18,6 @@ const DEFAULT_TIMEOUT = 3_000;
 const BYE_SEND_TIMEOUT = 2_000;
 
 const DEBUG_CALLS = true;
-
-/** Normalize Any payload field names from proto-style (type_url) to buf-style (typeUrl) before encoding. */
-const normalizeAnyForBuf = (any: any): any => {
-  if (!any) {
-    return any;
-  }
-  let value = any.value;
-  // Copy Buffer to clean Uint8Array to avoid ArrayBuffer pool sharing issues with toBinary.
-  if (value instanceof Uint8Array && value.buffer.byteLength !== value.byteLength) {
-    value = new Uint8Array(value);
-  }
-  return { typeUrl: any.typeUrl ?? any.type_url ?? '', value };
-};
-
-const normalizeRpcMessage = (msg: any): any => {
-  if (msg?.content?.case === 'request' && msg.content.value?.payload) {
-    return {
-      content: {
-        ...msg.content,
-        value: { ...msg.content.value, payload: normalizeAnyForBuf(msg.content.value.payload) },
-      },
-    };
-  }
-  if (msg?.content?.case === 'response') {
-    const resp = msg.content.value;
-    if (resp?.content?.case === 'payload') {
-      return {
-        content: {
-          case: 'response',
-          value: { ...resp, content: { case: 'payload', value: normalizeAnyForBuf(resp.content.value) } },
-        },
-      };
-    }
-  }
-  return msg;
-};
-
-/** Convert buf-decoded Any to proto-compatible format for backward compatibility. */
-const convertAnyToProto = (msg: RpcMessage): void => {
-  const convert = (parent: any, key: string) => {
-    const any = parent[key];
-    if (!any) {
-      return;
-    }
-    const typeUrl = any.typeUrl ?? '';
-    const value =
-      typeof Buffer !== 'undefined' && any.value instanceof Uint8Array && !(any.value instanceof Buffer)
-        ? Buffer.from(any.value)
-        : any.value;
-    parent[key] = {
-      '@type': 'google.protobuf.Any',
-      type_url: typeUrl,
-      value,
-    };
-  };
-  if (msg.content.case === 'request' && msg.content.value.payload) {
-    convert(msg.content.value, 'payload');
-  } else if (msg.content.case === 'response' && msg.content.value.content.case === 'payload') {
-    convert(msg.content.value.content, 'value');
-  }
-};
 
 type MaybePromise<T> = Promise<T> | T;
 
@@ -317,7 +256,6 @@ export class RpcPeer {
    */
   private async _receive(msg: Uint8Array): Promise<void> {
     const decoded = fromBinary(RpcMessageSchema, msg);
-    convertAnyToProto(decoded);
     DEBUG_CALLS && log('received message', { type: decoded.content.case });
 
     switch (decoded.content.case) {
@@ -556,7 +494,7 @@ export class RpcPeer {
   ): Promise<void> {
     DEBUG_CALLS && log('sending message', { type: (message as any).content?.case });
     await this._params.port.send(
-      toBinary(RpcMessageSchema, create(RpcMessageSchema, normalizeRpcMessage(message))),
+      toBinary(RpcMessageSchema, create(RpcMessageSchema, message)),
       timeout,
     );
   }

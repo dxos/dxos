@@ -2,8 +2,6 @@
 // Copyright 2021 DXOS.org
 //
 
-import { isNode } from '@dxos/util';
-
 import { type RpcPort } from './rpc';
 
 export type CreateLinkedPortsOptions = {
@@ -42,4 +40,4 @@ export const createLinkedPorts = ({ delay }: CreateLinkedPortsOptions = {}): [Rp
   return [port1, port2];
 };
 
-export const encodeMessage = (msg: string): Uint8Array => (isNode() ? Buffer.from(msg) : new TextEncoder().encode(msg));
+export const encodeMessage = (msg: string): Uint8Array => new TextEncoder().encode(msg);

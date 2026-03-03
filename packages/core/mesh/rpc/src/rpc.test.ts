@@ -12,9 +12,8 @@ import { Stream } from '@dxos/stream';
 import { RpcPeer } from './rpc';
 import { createLinkedPorts, encodeMessage } from './testing';
 
-const createPayload = (value = ''): Rpc.BufAny & { '@type': string } => ({
-  '@type': 'google.protobuf.Any',
-  type_url: 'dxos.test',
+const createPayload = (value = ''): Rpc.BufAny => ({
+  typeUrl: 'dxos.test',
   value: encodeMessage(value),
 });
 
@@ -195,7 +194,7 @@ describe('RpcPeer', () => {
       await Promise.all([alice.open(), bob.open()]);
 
       const response = await bob.call('method', createPayload('request'));
-      expect(response).toEqual(createPayload('response'));
+      expect(response).toEqual(expect.objectContaining(createPayload('response')));
 
       await Promise.all([alice.close(), bob.close()]);
     });
@@ -231,8 +230,8 @@ describe('RpcPeer', () => {
       const parallel2 = bob.call('method', createPayload('p2'));
       const error = bob.call('method', createPayload('error'));
 
-      await expect(await parallel1).toEqual(createPayload('p1'));
-      await expect(await parallel2).toEqual(createPayload('p2'));
+      await expect(await parallel1).toEqual(expect.objectContaining(createPayload('p1')));
+      await expect(await parallel2).toEqual(expect.objectContaining(createPayload('p2')));
       await expect(error).rejects.toBeInstanceOf(Error);
     });
 
@@ -377,8 +376,8 @@ describe('RpcPeer', () => {
 
       expect(await Stream.consume(stream)).toEqual([
         { ready: true },
-        { data: createPayload('res1') },
-        { data: createPayload('res2') },
+        { data: expect.objectContaining(createPayload('res1')) },
+        { data: expect.objectContaining(createPayload('res2')) },
         { closed: true },
       ]);
     });
@@ -539,7 +538,7 @@ describe('RpcPeer', () => {
       await bob.open();
 
       const response = await bob.call('method', createPayload('request'));
-      expect(response).toEqual(createPayload('response'));
+      expect(response).toEqual(expect.objectContaining(createPayload('response')));
 
       await Promise.all([alice.close(), bob.close()]);
     });
