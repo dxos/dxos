@@ -81,10 +81,10 @@ Examples:
 ## Submitting PRs
 
 - Use `gh` CLI to create and manage PRs
-- After you have completed your work, run `pnpm -w pre-ci` to run a series of code-quality checks.
 - At the end you can monitor the CI status with `pnpm -w gh-action --verify --watch`
 - When the user asks you to submit a PR, make sure that:
-  - `pnpm -w pre-ci` passes
+  - `moon run :lint -- --fix` succeeds
+  - `moon run :test` succeeds
   - `pnpm -w gh-action --verify --watch` shows green CI
   - The PR description is up-to-date and has a description of the changes and reasoning behind them.
   - Reference linear issues if available in PR description as "closes DX-123" or "part of DX-123"

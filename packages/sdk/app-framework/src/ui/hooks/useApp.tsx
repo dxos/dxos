@@ -34,12 +34,12 @@ export type UseAppOptions = {
    * These are fired alongside SetupReactSurface before the Startup event.
    */
   setupEvents?: ActivationEvent.ActivationEvent[];
-  placeholder?: FC<{ stage: number }>;
-  fallback?: FC<FallbackProps>;
   cacheEnabled?: boolean;
   safeMode?: boolean;
   debounce?: number;
   timeout?: number;
+  fallback?: FC<FallbackProps>;
+  placeholder?: FC<{ stage: number }>;
 };
 
 /**
@@ -62,10 +62,10 @@ export type UseAppOptions = {
  * @param params.plugins All plugins available to the application.
  * @param params.core Core plugins which will always be enabled.
  * @param params.defaults Default plugins are enabled by default but can be disabled by the user.
- * @param params.placeholder Placeholder component to render during startup.
- * @param params.fallback Fallback component to render if an error occurs during startup.
  * @param params.cacheEnabled Whether to cache enabled plugins in localStorage.
  * @param params.safeMode Whether to enable safe mode, which disables optional plugins.
+ * @param params.fallback Fallback component to render if an error occurs during startup.
+ * @param params.placeholder Placeholder component to render during startup.
  */
 export const useApp = ({
   pluginManager,
