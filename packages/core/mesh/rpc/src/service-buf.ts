@@ -200,7 +200,7 @@ export interface BufProtoRpcPeerOptions<
 /**
  * Parse a fully qualified method name into service and method name.
  */
-const parseMethodName = (method: string): [serviceName: string, methodName: string] => {
+export const parseMethodName = (method: string): [serviceName: string, methodName: string] => {
   const separator = method.lastIndexOf('.');
   const serviceName = method.slice(0, separator);
   const methodName = method.slice(separator + 1);

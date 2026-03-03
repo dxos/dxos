@@ -8,7 +8,6 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
-import { bufAnyToProtoAny } from '@dxos/protocols/buf';
 import { type SwarmResponse } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { type JoinRequest, type LeaveRequest, type QueryRequest } from '@dxos/protocols/buf/dxos/edge/signal_pb';
 import { SignalState } from '@dxos/protocols/buf/dxos/mesh/signal_pb';
@@ -200,7 +199,7 @@ export class SignalClient extends Resource implements SignalClientMethods {
       await this._client!.sendMessage({
         author: PublicKey.from(msg.author.peerKey),
         recipient: PublicKey.from(msg.recipient.peerKey),
-        payload: bufAnyToProtoAny(msg.payload)!,
+        payload: msg.payload!,
       });
     });
   }

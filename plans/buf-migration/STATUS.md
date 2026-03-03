@@ -1,7 +1,7 @@
 # Buf Migration — Status, Plan & Principles
 
 > Branch: `cursor/DX-745-buf-rpc-client-1bd0`
-> Last updated: 2026-03-03 (Phase 12 — protobuf.js build removed from @dxos/protocols; @dxos/codec-protobuf still needed by 14 packages)
+> Last updated: 2026-03-03 (Phase 13 — @dxos/codec-protobuf and @dxos/protobuf-compiler deleted; old RPC service layer and RpcExtension removed)
 
 ---
 
@@ -12,7 +12,7 @@ Readiness is measured against the `main` branch baseline:
 
 All of these must be true before the PR is merged:
 
-- [x] **Fully migrated to buf**: Zero `@dxos/protocols/proto` imports, zero `protoToBuf`/`bufToProto` usages. `@dxos/codec-protobuf` still exists but removed from `@dxos/protocols` deps. Protobuf.js build removed from `@dxos/protocols`.
+- [x] **Fully migrated to buf**: Zero `@dxos/protocols/proto` imports, zero `protoToBuf`/`bufToProto` usages. `@dxos/codec-protobuf` and `@dxos/protobuf-compiler` deleted. Old RPC service layer (`service.ts`) and `RpcExtension` removed. Protobuf.js build removed from `@dxos/protocols`.
 - [x] **Build passing**: `moon run :build` succeeds with no new errors vs main.
 - [ ] **Tests passing**: All test suites pass with no new failures vs main.
 - [x] **No degraded functionality**: No modules commented out, 1 test file removed (`codec.test.ts` — tested protobuf.js codec only, not buf).
@@ -24,7 +24,7 @@ All of these must be true before the PR is merged:
 
 | Criterion | Status | Detail |
 |---|---|---|
-| Fully migrated to buf | **Mostly** | 0 proto imports, 0 `protoToBuf`/`bufToProto` usages, helpers deleted. `@dxos/codec-protobuf` removed from `@dxos/protocols` deps but still used by 14 other packages for `Codec`, `Any`, `RequestOptions`, substitutions, and RPC service types. `Stream` extracted to `@dxos/stream`. Protobuf.js build removed from `@dxos/protocols` (no more `prebuild` task, no `proto/*` exports). |
+| Fully migrated to buf | **Yes** | 0 proto imports, 0 `protoToBuf`/`bufToProto` usages, helpers deleted. `@dxos/codec-protobuf` and `@dxos/protobuf-compiler` packages deleted. Old RPC `service.ts` and `RpcExtension` removed. `Stream` extracted to `@dxos/stream`. Protobuf.js build removed from `@dxos/protocols`. |
 | Build passing | **Yes** | `moon run :build` passes fully (0 errors). |
 | Tests passing | **Partial** | Most suites pass; pre-existing client test failures (not buf-related). |
 | No degraded functionality | **Yes** | 1 test removed (`protocols/codec.test.ts` — tested protobuf.js codec only). No modules commented out. |

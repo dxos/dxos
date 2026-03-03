@@ -3,11 +3,10 @@
 //
 
 import { Trigger, asyncTimeout, synchronized } from '@dxos/async';
-import { type Any, type RequestOptions } from '@dxos/codec-protobuf';
 import { StackTrace } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { RpcClosedError, RpcNotOpenError, encodeError } from '@dxos/protocols';
+import { type Rpc, RpcClosedError, RpcNotOpenError, encodeError } from '@dxos/protocols';
 import { create, fromBinary, toBinary } from '@dxos/protocols/buf';
 import { type Request, type Response, type RpcMessage, RpcMessageSchema } from '@dxos/protocols/buf/dxos/rpc_pb';
 import { Stream } from '@dxos/stream';
@@ -91,8 +90,8 @@ export interface RpcPeerOptions {
    */
   timeout?: number;
 
-  callHandler: (method: string, request: Any, options?: RequestOptions) => MaybePromise<Any>;
-  streamHandler?: (method: string, request: Any, options?: RequestOptions) => Stream<Any>;
+  callHandler: (method: string, request: Rpc.BufAny, options?: Rpc.BufRequestOptions) => MaybePromise<Rpc.BufAny>;
+  streamHandler?: (method: string, request: Rpc.BufAny, options?: Rpc.BufRequestOptions) => Stream<Rpc.BufAny>;
 
   /**
    * Do not require or send handshake messages.
@@ -102,7 +101,7 @@ export interface RpcPeerOptions {
   /**
    * What options get passed to the `callHandler` and `streamHandler`.
    */
-  handlerRpcOptions?: RequestOptions;
+  handlerRpcOptions?: Rpc.BufRequestOptions;
 }
 
 /**
@@ -447,7 +446,7 @@ export class RpcPeer {
    * Make RPC call. Will trigger a handler on the other side.
    * Peer should be open before making this call.
    */
-  async call(method: string, request: Any, options?: RequestOptions): Promise<Any> {
+  async call(method: string, request: Rpc.BufAny, options?: Rpc.BufRequestOptions): Promise<Rpc.BufAny> {
     DEBUG_CALLS && log('calling...', { method });
     throwIfNotOpen(this._state);
 
@@ -497,7 +496,7 @@ export class RpcPeer {
    * Will trigger a handler on the other side.
    * Peer should be open before making this call.
    */
-  callStream(method: string, request: Any, options?: RequestOptions): Stream<Any> {
+  callStream(method: string, request: Rpc.BufAny, options?: Rpc.BufRequestOptions): Stream<Rpc.BufAny> {
     throwIfNotOpen(this._state);
     const id = this._nextId++;
 
