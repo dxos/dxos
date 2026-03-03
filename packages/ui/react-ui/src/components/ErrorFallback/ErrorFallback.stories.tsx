@@ -7,7 +7,7 @@ import React from 'react';
 
 import { withLayout, withTheme } from '../../testing';
 
-import { ErrorFallback } from './ErrorBoundary';
+import { ErrorFallback } from './ErrorFallback';
 
 const BasicStory = () => {
   return (
@@ -20,11 +20,11 @@ const StringErrorStory = () => {
 };
 
 const meta: Meta = {
-  title: 'ui/react-ui-core/primitives/ErrorBoundary',
+  title: 'ui/react-ui-core/components/ErrorFallback',
   component: ErrorFallback,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {
-    layout: 'centered',
+    layout: 'fullscreen',
   },
 };
 

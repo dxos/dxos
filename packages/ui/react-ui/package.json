@@ -45,6 +45,7 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/lit-ui": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/react-error-boundary": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
     "@dxos/react-input": "workspace:*",
     "@dxos/react-list": "workspace:*",

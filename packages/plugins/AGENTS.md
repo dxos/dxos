@@ -27,7 +27,7 @@ NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
 - Use barrel imports (from components/index) and avoid default exports in `src/components/`.
 - Containers in `src/containers/` use default exports specifically for React.lazy (each subdirectory's `index.ts` bridges named→default; the top-level `containers/index.ts` uses `lazy(() => import('./X'))`). This is the only exception to the no-default-exports rule.
 
-## Tasks
+## General Tasks
 
 - Move components that are directly referenced `src/capabilities/react-surface` to `src/containers`.
 - Audit components that currently use `@dxos/app-framework` hooks and consider if they can be simply split into primitive components and surface components.
@@ -40,6 +40,16 @@ NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
 - At the end of each plugin update the observations section with any generalizable insights or patterns.
 - At the end of each plugin note the date and time you spent on it, then commit and push the current branch.
 - At the end of all tasks run the plugin smoke tests and update the Status section below.
+
+## Specific Tasks
+
+Follow these specific steps for the following tasks:
+
+### Refactor container
+
+1. Factor out `@dxos/app-framework` hooks from containers into primitive components.
+2. Create storybooks for the new primitive components; don't create for container unless instructed.
+3. Ensure that containers/components are grouped into subdirectories.
 
 ## Plugin Status
 

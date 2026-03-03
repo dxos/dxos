@@ -20,8 +20,8 @@ import { DropdownMenu, IconButton, useTranslation } from '@dxos/react-ui';
 import { AccessToken } from '@dxos/types';
 import { isTauri } from '@dxos/util';
 
-import { OAUTH_PRESETS, type OAuthPreset } from '../defs';
-import { meta } from '../meta';
+import { OAUTH_PRESETS, type OAuthPreset } from '../../defs';
+import { meta } from '../../meta';
 import {
   createTauriOAuthInitiator,
   createTauriServerProvider,
@@ -29,7 +29,7 @@ import {
   openTauriBrowser,
   performMobileOAuthFlow,
   performOAuthFlow,
-} from '../oauth';
+} from '../../oauth';
 
 /** Response from Google OAuth2 userinfo endpoint. */
 const GoogleUserInfo = Schema.Struct({

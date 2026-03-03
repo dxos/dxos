@@ -12,9 +12,9 @@ import { type ColorStyles, getHashStyles, mx } from '@dxos/ui-theme';
 
 import { Capabilities } from '../../../common';
 import { withPluginManager } from '../../../testing';
-import { usePluginManager } from '../PluginManagerProvider';
+import { usePluginManager } from '../PluginManager';
 
-import { Surface, useSurfaces } from './SurfaceComponent';
+import { SurfaceComponent, useSurfaces } from './SurfaceComponent';
 import { create } from './types';
 
 type TestComponentProps = {
@@ -112,7 +112,7 @@ const DefaultStory = () => {
         <Toolbar.Button onClick={handleError}>Error</Toolbar.Button>
       </Toolbar.Root>
       <div className='grid grid-cols-2 h-full gap-4 overflow-hidden'>
-        <Surface role='item' data={selected ? { id: selected } : undefined} limit={1} ref={ref} />
+        <SurfaceComponent role='item' data={selected ? { id: selected } : undefined} limit={1} ref={ref} />
         <div className='overflow-y-auto h-full'>
           <List>
             {surfaces.map((surface) => (

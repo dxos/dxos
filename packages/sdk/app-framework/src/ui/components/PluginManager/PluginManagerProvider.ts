@@ -6,7 +6,7 @@ import { createContext, useContext } from 'react';
 
 import { raise } from '@dxos/debug';
 
-import { type PluginManager } from '../../core';
+import { type PluginManager } from '../../../core';
 
 const PluginManagerContext = createContext<PluginManager.PluginManager | undefined>(undefined);
 

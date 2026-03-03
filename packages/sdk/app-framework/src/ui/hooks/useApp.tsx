@@ -12,14 +12,14 @@ import React, { type FC, useCallback, useEffect, useMemo, useRef, useState } fro
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { ErrorBoundary, ErrorFallback, type FallbackProps } from '@dxos/react-error-boundary';
 import { useAsyncEffect, useDefaultValue } from '@dxos/react-hooks';
-import { ErrorBoundary, type FallbackProps } from '@dxos/react-ui';
 import { ContextProtocolProvider } from '@dxos/web-context-react';
 
 import { ActivationEvents, Capabilities } from '../../common';
 import { PluginManagerContext } from '../../context';
 import { type ActivationEvent, type Plugin, PluginManager } from '../../core';
-import { App, DefaultFallback, PluginManagerProvider } from '../components';
+import { App, PluginManagerProvider } from '../components';
 
 const ENABLED_KEY = 'dxos.org/app-framework/enabled';
 
@@ -75,7 +75,7 @@ export const useApp = ({
   defaults: defaultsProp,
   setupEvents: setupEventsProp,
   placeholder,
-  fallback = DefaultFallback,
+  fallback = ErrorFallback,
   cacheEnabled = false,
   safeMode = false,
   debounce = 0,

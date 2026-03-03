@@ -15,7 +15,7 @@ const List = () => {
     <ScrollArea.Root margin>
       <ScrollArea.Viewport>
         {Array.from({ length: 100 }).map((_, i) => (
-          <div key={i} role='listitem' className='p-1 bg-green-500/50 text-black'>
+          <div key={i} role='listitem' className='p-1'>
             Item {i}
           </div>
         ))}
@@ -47,9 +47,9 @@ const MainStory = () => {
 
 const ColumnStory = () => {
   return (
-    <Container.Column className='h-full overflow-hidden' gutter='sm'>
+    <Container.Column className='h-full overflow-hidden' gutter='md'>
       <Container.Segment>
-        <h1 className='p-1 bg-yellow-500 text-black'>Header</h1>
+        <h1 className='p-1 bg-red-500 text-black'>Header</h1>
       </Container.Segment>
 
       <Container.Segment>
@@ -59,7 +59,7 @@ const ColumnStory = () => {
       <List />
 
       <Container.Segment>
-        <div className='p-1 bg-orange-500 text-black'>Footer</div>
+        <div className='p-1 bg-green-500 text-black'>Footer</div>
       </Container.Segment>
     </Container.Column>
   );

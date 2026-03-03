@@ -7,8 +7,6 @@ import React, { useCallback } from 'react';
 import { type Space } from '@dxos/react-client/echo';
 import { Select } from '@dxos/react-ui';
 
-// TODO(wittjosiah): Factor out? Consider reconciling with similar component in devtools.
-
 export type SpaceSelectorProps = {
   spaces: Space[];
   value?: Space;
@@ -17,6 +15,8 @@ export type SpaceSelectorProps = {
   onChange?: (space: Space) => void;
 };
 
+// TODO(burdon): Unused?
+// TODO(wittjosiah): Factor out? Consider reconciling with similar component in devtools.
 export const SpaceSelector = ({ placeholder, spaces, value, getLabel, onChange }: SpaceSelectorProps) => {
   const handleValueChange = useCallback(
     (id: string) => {

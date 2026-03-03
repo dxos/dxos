@@ -3,5 +3,5 @@
 //
 
 export * from './App';
-export * from './DefaultFallback';
-export * from './PluginManagerProvider';
+export * from './PluginManager';
+export * from './Surface';

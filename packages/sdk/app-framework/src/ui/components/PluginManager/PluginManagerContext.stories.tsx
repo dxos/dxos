@@ -10,10 +10,10 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { useWebComponentContext } from '@dxos/web-context-react';
 
-import { ActivationEvents, Capabilities } from '../../common';
-import { PluginManagerContext } from '../../context';
-import { Capability, Plugin } from '../../core';
-import { useApp } from '../hooks';
+import { ActivationEvents, Capabilities } from '../../../common';
+import { PluginManagerContext } from '../../../context';
+import { Capability, Plugin } from '../../../core';
+import { useApp } from '../../hooks';
 
 // Define the Counter capability
 const Counter = Capability.make<{ count: number; increment: () => void }>('example/counter');

@@ -15,8 +15,8 @@ import React, {
 } from 'react';
 
 import { log } from '@dxos/log';
+import { ErrorBoundary } from '@dxos/react-error-boundary';
 import { useDefaultValue } from '@dxos/react-hooks';
-import { ErrorBoundary, ScrollArea } from '@dxos/react-ui';
 import { byPosition } from '@dxos/util';
 
 import { Capabilities } from '../../../common';
@@ -165,8 +165,8 @@ SurfaceContextProvider.displayName = 'SurfaceContextProvider';
 /**
  * A surface is a named region of the screen that can be populated by plugins.
  */
-// TODO(burdon): Remove ref since relying on this would be error prone.
-export const Surface: NamedExoticComponent<Props & RefAttributes<HTMLElement>> = memo(
+// TODO(burdon): Remove `ref` since relying on this would be error prone.
+export const SurfaceComponent: NamedExoticComponent<Props & RefAttributes<HTMLElement>> = memo(
   forwardRef(({ id: _id, role, data: dataProp, limit, placeholder = DEFAULT_PLACEHOLDER, ...rest }, forwardedRef) => {
     const data = useDefaultValue(dataProp, () => ({}));
 
@@ -204,7 +204,7 @@ export const Surface: NamedExoticComponent<Props & RefAttributes<HTMLElement>> =
   }),
 );
 
-Surface.displayName = 'Surface';
+SurfaceComponent.displayName = 'Surface';
 
 const findCandidates = (surfaces: Definition[], { role, data }: Pick<Props, 'role' | 'data'>) => {
   return Object.values(surfaces)
@@ -216,27 +216,16 @@ const findCandidates = (surfaces: Definition[], { role, data }: Pick<Props, 'rol
 };
 
 // TODO(burdon): Make user facing, with telemetry.
-// TODO(burdon): Change based on dev/prod mode; infer subject type, id.
-const DefaultFallback = ({ data, error, dev }: { data: any; error: Error; dev?: boolean }) => {
-  if (dev) {
-    return (
-      <ScrollArea.Root orientation='vertical'>
-        <ScrollArea.Viewport classNames='p-4 gap-4'>
-          <h1 className='flex gap-2 text-sm mt-2'>{error.message}</h1>
-          <pre className='overflow-auto text-xs text-description'>{JSON.stringify(data, null, 2)}</pre>
-        </ScrollArea.Viewport>
-      </ScrollArea.Root>
-    );
-  }
-
+const DefaultFallback = ({ data, error }: Props) => {
+  // TODO(burdon): Deduce dev/prod from environment; infer subject type, id.
   return (
-    <ScrollArea.Root orientation='vertical'>
-      <ScrollArea.Viewport classNames='p-4 gap-4 border border-rose-fill'>
-        <h1 className='flex gap-2 text-sm mt-2 text-error-text'>{error.message}</h1>
-        <pre className='overflow-x-auto text-xs text-description'>{error.stack}</pre>
-        <pre className='overflow-x-auto text-xs text-description'>{JSON.stringify(data, null, 2)}</pre>
-      </ScrollArea.Viewport>
-    </ScrollArea.Root>
+    <div role='alert' data-testid='error-boundary-fallback'>
+      <h1 className='flex gap-2 text-sm mt-2 text-error-text'>{error.message}</h1>
+      <h2 className='text-xs mt-2'>Stack</h2>
+      <pre className='overflow-x-auto text-xs text-description'>{error.stack}</pre>
+      <h2 className='text-xs mt-2'>Data</h2>
+      <pre className='overflow-x-auto text-xs text-description'>{JSON.stringify(data, null, 2)}</pre>
+    </div>
   );
 };
 

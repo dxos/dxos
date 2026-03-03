@@ -4,9 +4,9 @@
 
 import React, { type PropsWithChildren } from 'react';
 
-import { Capabilities } from '../../common';
-import { topologicalSort } from '../../helpers';
-import { LoadingState, type UseAppOptions, useCapabilities, useLoading } from '../hooks';
+import { Capabilities } from '../../../common';
+import { topologicalSort } from '../../../helpers';
+import { LoadingState, type UseAppOptions, useCapabilities, useLoading } from '../../hooks';
 
 export type AppProps = Pick<UseAppOptions, 'placeholder' | 'debounce'> & {
   ready: boolean;
