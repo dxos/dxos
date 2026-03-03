@@ -28,6 +28,8 @@ export {
   type JsonValue,
   type Message,
   type MessageShape,
+  fromJson,
+  toJson,
 } from '@bufbuild/protobuf';
 export {
   anyPack,

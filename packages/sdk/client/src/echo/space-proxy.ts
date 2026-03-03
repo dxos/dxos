@@ -44,7 +44,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { EdgeService, decodeError } from '@dxos/protocols';
-import { encodePublicKey, toPublicKey } from '@dxos/protocols/buf';
+import { anyPack, bufWkt, encodePublicKey, fromJson, toPublicKey } from '@dxos/protocols/buf';
 import { create } from '@dxos/protocols/buf';
 import { type Invitation, Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
@@ -499,10 +499,7 @@ export class SpaceProxy implements Space, CustomInspectable {
       {
         spaceKey: encodePublicKey(this.key),
         channel,
-        message: {
-          ...message,
-          '@type': message['@type'] || 'google.protobuf.Struct',
-        },
+        message: anyPack(bufWkt.StructSchema, fromJson(bufWkt.StructSchema, message)),
       },
       { timeout: RPC_TIMEOUT },
     );

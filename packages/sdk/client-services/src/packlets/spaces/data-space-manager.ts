@@ -682,9 +682,12 @@ export class DataSpaceManager extends Resource {
   }
 
   private _handleNewPeerConnected(space: Space, peerState: PeerState): void {
-    const role = space.spaceState.getMemberRole(peerState.identityKey as any);
+    if (!peerState.identityKey) {
+      return;
+    }
+    const role = space.spaceState.getMemberRole(toPublicKey(peerState.identityKey));
     if (role === SpaceMember_Role.REMOVED) {
-      const session = peerState.peerId && space.protocol.sessions.get(peerState.peerId as any);
+      const session = peerState.peerId && space.protocol.sessions.get(toPublicKey(peerState.peerId));
       if (session != null) {
         log('closing a session with a removed peer', { peerId: peerState.peerId });
         void session.close().catch(log.error);

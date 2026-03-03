@@ -15,7 +15,7 @@ import { getObjectCore } from '@dxos/echo-db';
 import { EncodedReference } from '@dxos/echo-protocol';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { toPublicKey } from '@dxos/protocols/buf';
+import { anyUnpack, bufWkt, toJson, toPublicKey } from '@dxos/protocols/buf';
 import { type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { range } from '@dxos/util';
 
@@ -140,7 +140,9 @@ describe('Spaces', () => {
     {
       space2.listen('hello', (message) => {
         expect(message.channelId).to.include('hello');
-        expect(message.payload).to.deep.contain({ data: 'Hello, world!' });
+        const struct = anyUnpack(message.payload!, bufWkt.StructSchema);
+        const payload = toJson(bufWkt.StructSchema, struct!);
+        expect(payload).to.deep.contain({ data: 'Hello, world!' });
         hello.wake();
       });
       await space1.postMessage('hello', { data: 'Hello, world!' });
@@ -150,7 +152,9 @@ describe('Spaces', () => {
     {
       space2.listen('goodbye', (message) => {
         expect(message.channelId).to.include('goodbye');
-        expect(message.payload).to.deep.contain({ data: 'Goodbye' });
+        const struct = anyUnpack(message.payload!, bufWkt.StructSchema);
+        const payload = toJson(bufWkt.StructSchema, struct!);
+        expect(payload).to.deep.contain({ data: 'Goodbye' });
         goodbye.wake();
       });
       await space1.postMessage('goodbye', { data: 'Goodbye' });

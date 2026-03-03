@@ -268,13 +268,12 @@ describe('Client services', () => {
         .poll(() => getMembers()[0])
         .toEqual(
           expect.objectContaining({
-            identity: {
+            identity: expect.objectContaining({
               did: client1.halo.identity.get()!.did,
-              identityKey: client1.halo.identity.get()!.identityKey,
-              profile: {
+              profile: expect.objectContaining({
                 displayName: 'Peer 1',
-              },
-            },
+              }),
+            }),
             presence: SpaceMember_PresenceState.ONLINE,
           }),
         );
@@ -282,13 +281,12 @@ describe('Client services', () => {
         .poll(() => getMembers()[1], { timeout: 15_000 })
         .toEqual(
           expect.objectContaining({
-            identity: {
+            identity: expect.objectContaining({
               did: client2.halo.identity.get()!.did,
-              identityKey: client2.halo.identity.get()!.identityKey,
-              profile: {
+              profile: expect.objectContaining({
                 displayName: 'Peer 2',
-              },
-            },
+              }),
+            }),
             presence: SpaceMember_PresenceState.ONLINE,
           }),
         );

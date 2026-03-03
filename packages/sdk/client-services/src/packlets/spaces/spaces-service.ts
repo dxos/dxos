@@ -11,6 +11,7 @@ import {
   createAdmissionCredentials,
   createDidFromIdentityKey,
   getCredentialAssertion,
+  normalizeCredentialForBuf,
 } from '@dxos/credentials';
 import { raise } from '@dxos/debug';
 import { type SpaceManager } from '@dxos/echo-pipeline';
@@ -234,7 +235,8 @@ export class SpacesServiceImpl implements Client.SpacesService {
 
       const processor: CredentialProcessor = {
         processCredential: async (credential) => {
-          next(credential);
+          // Normalize PublicKey fields from @dxos/keys.PublicKey instances back to buf format for RPC serialization.
+          next(normalizeCredentialForBuf(credential));
         },
       };
       ctx.onDispose(() => space.spaceState.removeCredentialProcessor(processor));
@@ -359,14 +361,19 @@ export class SpacesServiceImpl implements Client.SpacesService {
   }
 
   private async _serializeSpace(space: DataSpace): Promise<Space> {
+    // Normalize the credential for buf serialization: the codec converts buf PublicKey
+    // fields to @dxos/keys.PublicKey instances for application code, but toBinary() needs
+    // proper buf messages with $typeName metadata.
+    const lastEpoch = space.automergeSpaceState.lastEpoch;
+    const normalizedEpoch = lastEpoch ? normalizeCredentialForBuf(lastEpoch) : undefined;
     return create(SpaceSchema, {
       id: space.id,
       spaceKey: { data: space.key.asUint8Array() },
       state: space.state,
       error: space.error ? encodeError(space.error) : undefined,
       pipeline: {
-        currentEpoch: space.automergeSpaceState.lastEpoch,
-        appliedEpoch: space.automergeSpaceState.lastEpoch,
+        currentEpoch: normalizedEpoch,
+        appliedEpoch: normalizedEpoch,
 
         controlFeeds: space.inner.controlPipeline.state.feeds.map((feed) => ({ data: feed.key.asUint8Array() })),
         currentControlTimeframe: timeframeToBuf(space.inner.controlPipeline.state.timeframe),
