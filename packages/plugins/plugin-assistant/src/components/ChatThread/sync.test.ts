@@ -1,3 +1,5 @@
+// @vitest-environment jsdom
+
 //
 // Copyright 2025 DXOS.org
 //
