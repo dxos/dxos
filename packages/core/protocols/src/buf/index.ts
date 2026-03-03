@@ -30,6 +30,8 @@ export {
   type MessageShape,
 } from '@bufbuild/protobuf';
 export {
+  anyPack,
+  anyUnpack,
   type Empty,
   EmptySchema,
   timestampDate,

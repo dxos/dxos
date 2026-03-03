@@ -7,27 +7,30 @@
 
 ## PR Acceptance Criteria
 
+Readiness is measured against the `main` branch baseline:
+- **Main branch baseline**: `:build` passes fully, `:test` passes fully, Composer starts up.
+
 All of these must be true before the PR is merged:
 
 - [x] **Fully migrated to buf**: Zero `@dxos/protocols/proto` imports, zero `protoToBuf`/`bufToProto` usages. `@dxos/codec-protobuf` still exists but removed from `@dxos/protocols` deps. Protobuf.js build removed from `@dxos/protocols`.
-- [x] **Build passing**: `moon run :build` succeeds (only pre-existing `cli:compile` error for `credentialFromBinary`)
-- [ ] **Tests passing**: All test suites pass (pre-existing environment-specific failures excepted)
-- [x] **No degraded functionality**: No modules commented out, 1 test file removed (`codec.test.ts` — tested protobuf.js codec only, not buf)
-- [ ] **CI passing**: GitHub Actions CI green
-- [ ] **Composer starts up**: Vite dev server starts and Composer app renders in browser
-- [ ] **Up-to-date with main**: Branch is rebased/merged with latest `main`
+- [x] **Build passing**: `moon run :build` succeeds with no new errors vs main.
+- [ ] **Tests passing**: All test suites pass with no new failures vs main.
+- [x] **No degraded functionality**: No modules commented out, 1 test file removed (`codec.test.ts` — tested protobuf.js codec only, not buf).
+- [ ] **CI passing**: GitHub Actions CI green.
+- [ ] **Composer starts up**: Vite dev server starts and Composer app renders in browser (same as main).
+- [ ] **Up-to-date with main**: Branch is rebased/merged with latest `main`.
 
 ### Current Progress Against Criteria
 
 | Criterion | Status | Detail |
 |---|---|---|
 | Fully migrated to buf | **Mostly** | 0 proto imports, 0 `protoToBuf`/`bufToProto` usages, helpers deleted. `@dxos/codec-protobuf` removed from `@dxos/protocols` deps but still used by 14 other packages for `Codec`, `Any`, `RequestOptions`, substitutions, and RPC service types. `Stream` extracted to `@dxos/stream`. Protobuf.js build removed from `@dxos/protocols` (no more `prebuild` task, no `proto/*` exports). |
-| Build passing | **Yes** | `moon run :build` passes. Only pre-existing `cli:compile` error (`credentialFromBinary` — not buf-related). |
-| Tests passing | **Partial** | Most suites pass; pre-existing client test failures (not buf-related) |
+| Build passing | **Yes** | `moon run :build` passes fully (0 errors). |
+| Tests passing | **Partial** | Most suites pass; pre-existing client test failures (not buf-related). |
 | No degraded functionality | **Yes** | 1 test removed (`protocols/codec.test.ts` — tested protobuf.js codec only). No modules commented out. |
-| CI passing | **Not verified** | Needs CI run |
-| Composer starts up | **Not verified** | Needs re-check |
-| Up-to-date with main | **Needs update** | Needs merge with latest `origin/main` |
+| CI passing | **Not verified** | Needs CI run. |
+| Composer starts up | **Not verified** | Needs re-check. |
+| Up-to-date with main | **Needs update** | Needs merge with latest `origin/main`. |
 
 ---
 

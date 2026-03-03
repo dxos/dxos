@@ -7,7 +7,8 @@ import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError, TimeoutError } from '@dxos/protocols';
-import { type GossipMessage } from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
+import { create, encodePublicKey, timestampFromDate, toPublicKey } from '@dxos/protocols/buf';
+import { type GossipMessage, GossipMessageSchema } from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { GossipExtension } from './gossip-extension';
@@ -75,11 +76,11 @@ export class Gossip {
   createExtension({ remotePeerId }: { remotePeerId: PublicKey }): GossipExtension {
     const extension = new GossipExtension({
       onAnnounce: async (message) => {
-        // Proto codec returns @dxos/keys PublicKey at runtime; cast at boundary.
-        if (this._receivedMessages.has(message.messageId as any)) {
+        const msgId = message.messageId ? toPublicKey(message.messageId) : PublicKey.random();
+        if (this._receivedMessages.has(msgId)) {
           return;
         }
-        this._receivedMessages.add(message.messageId as any);
+        this._receivedMessages.add(msgId);
         this._callListeners(message);
         if (this._ctx.disposeCallbacksLength > MAX_CTX_TASKS) {
           log(`skipping propagating gossip message due to exessive tasks (${MAX_CTX_TASKS})`);
@@ -103,14 +104,13 @@ export class Gossip {
 
   postMessage(channel: string, payload: any): void {
     for (const extension of this._connections.values()) {
-      // Proto codec handles @dxos/keys PublicKey and Date at runtime; cast at boundary.
-      this._sendAnnounceWithTimeoutTracking(extension, {
-        peerId: this._params.localPeerId,
-        messageId: PublicKey.random(),
+      this._sendAnnounceWithTimeoutTracking(extension, create(GossipMessageSchema, {
+        peerId: encodePublicKey(this._params.localPeerId),
+        messageId: encodePublicKey(PublicKey.random()),
         channelId: channel,
-        timestamp: new Date(),
+        timestamp: timestampFromDate(new Date()),
         payload,
-      } as any).catch(async (err) => {
+      })).catch(async (err) => {
         if (err instanceof RpcClosedError) {
           log('sendAnnounce failed because of RpcClosedError', { err });
         } else if (
@@ -148,9 +148,10 @@ export class Gossip {
   }
 
   private _propagateAnnounce(message: GossipMessage): Promise<void[]> {
+    const messagePeerId = message.peerId ? toPublicKey(message.peerId) : undefined;
     return Promise.all(
       [...this._connections.entries()].map(async ([remotePeerId, extension]) => {
-        if (this._params.localPeerId.equals(message.peerId as any) || remotePeerId.equals(message.peerId as any)) {
+        if (messagePeerId && (this._params.localPeerId.equals(messagePeerId) || remotePeerId.equals(messagePeerId))) {
           return;
         }
         return this._sendAnnounceWithTimeoutTracking(extension, message).catch((err) => log(err));

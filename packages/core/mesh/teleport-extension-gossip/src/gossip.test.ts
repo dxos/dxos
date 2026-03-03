@@ -5,6 +5,7 @@
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { latch } from '@dxos/async';
+import { anyPack, create, EmptySchema, toPublicKey } from '@dxos/protocols/buf';
 import { TestBuilder } from '@dxos/teleport/testing';
 
 import { TestAgent } from './testing';
@@ -19,13 +20,12 @@ describe('Gossip', () => {
 
     const [messageReceived, inc] = latch({ count: 1 });
     agent2.gossip.listen('test_channel', (message) => {
-      // Proto codec returns @dxos/keys PublicKey at runtime; cast at boundary.
-      expect((message.peerId as any).equals(agent1.peerId)).to.be.true;
+      expect(toPublicKey(message.peerId!).equals(agent1.peerId)).to.be.true;
       expect(message.channelId).to.equal('test_channel');
       inc();
     });
 
-    await agent1.gossip.postMessage('test_channel', { '@type': 'google.protobuf.Any' });
+    await agent1.gossip.postMessage('test_channel', anyPack(EmptySchema, create(EmptySchema)));
     await messageReceived();
   });
 
@@ -43,12 +43,12 @@ describe('Gossip', () => {
 
     const [messageReceived, inc] = latch({ count: 1 });
     agent3.gossip.listen('test_channel', (message) => {
-      expect((message.peerId as any).equals(agent1.peerId)).to.be.true;
+      expect(toPublicKey(message.peerId!).equals(agent1.peerId)).to.be.true;
       expect(message.channelId).to.equal('test_channel');
       inc();
     });
 
-    await agent1.gossip.postMessage('test_channel', { '@type': 'google.protobuf.Any' });
+    await agent1.gossip.postMessage('test_channel', anyPack(EmptySchema, create(EmptySchema)));
     await messageReceived();
   });
 
@@ -66,19 +66,19 @@ describe('Gossip', () => {
 
     const [messageReceived, inc] = latch({ count: 2 });
     agent3.gossip.listen('first', (message) => {
-      expect((message.peerId as any).equals(agent1.peerId)).to.be.true;
+      expect(toPublicKey(message.peerId!).equals(agent1.peerId)).to.be.true;
       expect(message.channelId).to.equal('first');
       inc();
     });
 
     agent3.gossip.listen('second', (message) => {
-      expect((message.peerId as any).equals(agent1.peerId)).to.be.true;
+      expect(toPublicKey(message.peerId!).equals(agent1.peerId)).to.be.true;
       expect(message.channelId).to.equal('second');
       inc();
     });
 
-    await agent1.gossip.postMessage('first', { '@type': 'google.protobuf.Any' });
-    await agent1.gossip.postMessage('second', { '@type': 'google.protobuf.Any' });
+    await agent1.gossip.postMessage('first', anyPack(EmptySchema, create(EmptySchema)));
+    await agent1.gossip.postMessage('second', anyPack(EmptySchema, create(EmptySchema)));
     await messageReceived();
   });
 });

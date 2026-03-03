@@ -70,7 +70,8 @@ describe('Muxer', () => {
 
       setTimeout(async () => {
         await client.open();
-        expect(await client.rpc.TestService.testCall({ data: 'test' })).to.deep.eq({ data: 'test' });
+        const result = await client.rpc.TestService.testCall({ data: 'test' });
+        expect(result.data).to.eq('test');
         inc();
       });
     }
@@ -102,7 +103,7 @@ describe('Muxer', () => {
 
         setTimeout(async () => {
           await client.open();
-          expect(await client.rpc.TestService.testCall({ data: 'test' })).to.deep.eq({ data: 'test-rpc1' });
+          expect((await client.rpc.TestService.testCall({ data: 'test' })).data).to.eq('test-rpc1');
           inc();
         });
       }
@@ -116,7 +117,7 @@ describe('Muxer', () => {
 
         setTimeout(async () => {
           await client.open();
-          expect(await client.rpc.TestService.testCall({ data: 'test' })).to.deep.eq({ data: 'test-rpc2' });
+          expect((await client.rpc.TestService.testCall({ data: 'test' })).data).to.eq('test-rpc2');
           inc();
         });
       }
