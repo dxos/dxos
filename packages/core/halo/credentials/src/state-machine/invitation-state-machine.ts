@@ -55,7 +55,6 @@ export class InvitationStateMachine {
       }
       case 'dxos.halo.invitations.DelegateSpaceInvitation': {
         if (credentialId) {
-          // expiresOn is Date from proto codec or buf Timestamp — handle both.
           const expiresOnMs = assertion.expiresOn
             ? assertion.expiresOn instanceof Date
               ? assertion.expiresOn.getTime()
@@ -64,6 +63,9 @@ export class InvitationStateMachine {
           const isExpired = expiresOnMs != null && expiresOnMs < Date.now();
           const wasUsed = this._redeemedInvitationCredentialIds.has(credentialId) && !assertion.multiUse;
           const wasCancelled = this._cancelledInvitationCredentialIds.has(credentialId);
+          // #region agent log
+          fetch('http://127.0.0.1:7411/ingest/79f9f923-e0a2-4fd2-9621-d137664856ff',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'7188f5'},body:JSON.stringify({sessionId:'7188f5',location:'invitation-state-machine.ts:process:DelegateSpaceInvitation',message:'processing DelegateSpaceInvitation',data:{credentialId:credentialId?.toHex(),invitationId:assertion.invitationId,isExpired,wasUsed,wasCancelled,hasCallbackSet:!!this.onDelegatedInvitation},timestamp:Date.now(),hypothesisId:'H-delegate-flow'})}).catch(()=>{});
+          // #endregion
           if (isExpired || wasCancelled || wasUsed) {
             return;
           }

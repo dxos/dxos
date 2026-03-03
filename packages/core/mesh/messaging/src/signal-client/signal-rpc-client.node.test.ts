@@ -4,7 +4,7 @@
 
 import { afterAll, beforeAll, describe, expect, onTestFinished, test } from 'vitest';
 
-import { type Any } from '@dxos/codec-protobuf';
+import { type Any, anyPack, AnySchema } from '@dxos/protocols/buf';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { create, toBinary } from '@dxos/protocols/buf';
@@ -40,11 +40,7 @@ describe('SignalRPCClient', () => {
     const peerId2 = PublicKey.random();
 
     const stream1 = await client1.receiveMessages(peerId1);
-    const payload: Any = {
-      type_url: 'example.testing.data.TestPayload',
-      value: toBinary(TestPayloadSchema, create(TestPayloadSchema, { data: 'Some payload' })),
-    };
-
+    const payload: Any = anyPack(TestPayloadSchema, create(TestPayloadSchema, { data: 'Some payload' }));
     const received: Promise<SignalMessage> = new Promise((resolve) => {
       stream1.subscribe(
         (message) => {
@@ -67,7 +63,7 @@ describe('SignalRPCClient', () => {
 
     const msg = await received;
     expect(PublicKey.from(msg.author)).toEqual(peerId2);
-    expect(msg.payload?.typeUrl).toEqual('example.testing.data.TestPayload');
+    expect(msg.payload?.typeUrl).toEqual('type.googleapis.com/example.testing.data.TestPayload');
     expect(new Uint8Array(msg.payload!.value)).toEqual(new Uint8Array(payload.value));
     void stream1.close();
   });

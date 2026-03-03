@@ -39,6 +39,8 @@ export {
   timestampDate,
   timestampFromDate,
   timestampMs,
+  type Any,
+  AnySchema,
   type Timestamp,
 } from '@bufbuild/protobuf/wkt';
 export { type GenService, type GenServiceMethods } from '@bufbuild/protobuf/codegenv2';

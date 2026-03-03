@@ -19,7 +19,6 @@ import { type Message, type PeerInfo } from '../signal-methods';
 import { SignalClient } from './signal-client';
 
 const PAYLOAD = create(bufWkt.AnySchema, {
-  typeUrl: 'google.protobuf.Any',
   value: Buffer.from('1'),
 });
 

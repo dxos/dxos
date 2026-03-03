@@ -5,7 +5,7 @@
 import WebSocket from 'isomorphic-ws';
 
 import { TimeoutError, Trigger, scheduleTaskInterval } from '@dxos/async';
-import { type Any } from '@dxos/codec-protobuf';
+import { type Any } from '@dxos/protocols/buf';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -209,7 +209,7 @@ export class SignalRPCClient {
     await this._rpc.rpc.Signal.sendMessage({
       author: author.asUint8Array(),
       recipient: recipient.asUint8Array(),
-      payload: payload ? { typeUrl: payload.type_url ?? '', value: payload.value ?? new Uint8Array() } : undefined,
+      payload: payload ? { typeUrl: payload.typeUrl ?? '', value: payload.value ?? new Uint8Array() } : undefined,
       metadata: this._callbacks?.getMetadata?.(),
     });
   }
