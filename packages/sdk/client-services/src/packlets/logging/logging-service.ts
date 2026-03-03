@@ -174,7 +174,7 @@ const matchFilter = (
  */
 const shouldLog = (entry: NaturalLogEntry, request: QueryLogsRequest): boolean => {
   const options = request.options ?? QueryLogsRequest_MatchingOptions.INCLUSIVE;
-  if (request.filters === undefined) {
+  if (!request.filters?.length) {
     return options === QueryLogsRequest_MatchingOptions.INCLUSIVE;
   } else {
     return request.filters.some((filter) => matchFilter(filter, entry.level, entry.meta?.F ?? '', options));
