@@ -46,18 +46,22 @@ export const TriggerEditor = ({ db, types, tags, readonlySpec, trigger, ...formP
   const handleValuesChanged = useCallback(
     (newValues: Partial<TriggerFormSchema>) => {
       Obj.change(trigger, (t) => {
-        const { id: _, ...values } = newValues as any;
-        Object.assign(t, values);
+        Object.assign(t, newValues);
       });
     },
     [trigger],
   );
 
+  const defaultValues = useMemo(() => {
+    const { id: _, ...values } = trigger;
+    return values;
+  }, [trigger]);
+
   return (
     <Form.Root<TriggerFormSchema>
       {...formProps}
       schema={omitId(Trigger.Trigger)}
-      defaultValues={trigger}
+      defaultValues={defaultValues}
       db={db}
       fieldMap={fieldMap}
       onValuesChanged={handleValuesChanged}
