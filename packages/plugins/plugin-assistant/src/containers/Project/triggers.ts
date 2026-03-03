@@ -65,8 +65,10 @@ export const syncTriggers = async (project: Project.Project) => {
 
     db.add(
       Trigger.make({
+        [Obj.Parent]: project,
         [Obj.Meta]: {
           keys: [
+            // TODO(dmaretskyi): Query by parent instead of manually adding keys.
             { source: PROJECT_TRIGGER_EXTENSION_KEY, id: project.id },
             { source: PROJECT_TRIGGER_TARGET_EXTENSION_KEY, id: subscription.dxn.toString() },
           ],
@@ -99,6 +101,7 @@ export const syncTriggers = async (project: Project.Project) => {
     if (!qualifierTrigger && project.queue) {
       db.add(
         Trigger.make({
+          [Obj.Parent]: project,
           [Obj.Meta]: {
             keys: [
               { source: PROJECT_TRIGGER_EXTENSION_KEY, id: project.id },

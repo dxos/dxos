@@ -18,7 +18,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-sheet/Toolbar',
+  title: 'plugins/plugin-sheet/components/Toolbar',
   component: SheetToolbar as any,
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],

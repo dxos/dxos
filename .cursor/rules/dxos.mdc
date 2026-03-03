@@ -33,6 +33,6 @@ Monorepo tools:
 
 Testing:
 - Place test files near the module they test with "module_name.test.ts" format.
-- Use vitest with `describe` and `test` apis (don't use `it`).
+- Use vitest with `describe` and `test` apis (don't use `it`). `it.effect` is an exception to this rule.
 - Don't write tests at top-level, instead make sure they are wrapped in a `describe` block.
 - Prefer importing `expect` from test context: `test('foo', ({ expect }) => ...)`

@@ -404,10 +404,30 @@ export default Capability.makeModule(
             {
               id: [node.id, 'devtools'].join(ATTENDABLE_PATH_SEPARATOR),
               type: DECK_COMPANION_TYPE,
-              data: null,
+              data: 'devtools' as const,
               properties: {
                 label: ['devtools overview label', { ns: meta.id }],
                 icon: 'ph--equalizer--regular',
+                disposition: 'hidden',
+                position: 'fallback',
+              },
+            },
+          ]),
+      }),
+
+      // Object explorer.
+      GraphBuilder.createExtension({
+        id: `${meta.id}/space-objects`,
+        match: NodeMatcher.whenRoot,
+        connector: (node) =>
+          Effect.succeed([
+            {
+              id: [node.id, 'space-objects'].join(ATTENDABLE_PATH_SEPARATOR),
+              type: DECK_COMPANION_TYPE,
+              data: 'space-objects' as const,
+              properties: {
+                label: ['space objects label', { ns: meta.id }],
+                icon: 'ph--cube--regular',
                 disposition: 'hidden',
                 position: 'fallback',
               },

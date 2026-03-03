@@ -44,7 +44,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-explorer/Tree',
+  title: 'plugins/plugin-explorer/components/Tree',
   component: Tree as any,
   render: DefaultStory,
   decorators: [withRegistry, withTheme(), withLayout()],

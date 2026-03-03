@@ -7,7 +7,7 @@ import { inspect } from 'node:util';
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Obj, Query, Ref, Relation, Type } from '@dxos/echo';
+import { Entity, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import {
   ATTR_RELATION_SOURCE,
   ATTR_RELATION_TARGET,
@@ -185,6 +185,25 @@ describe('Reactive Object with ECHO database', () => {
     await builder.close();
   });
 
+  test('Obj.isObject', async () => {
+    const { db } = await builder.createDatabase({ types: [TestSchema.Example] });
+    const obj = db.add(Obj.make(TestSchema.Example, { string: 'foo' }));
+    expect(Obj.isObject(obj)).to.be.true;
+  });
+
+  test('snapshots', async () => {
+    const { db } = await builder.createDatabase({ types: [TestSchema.Example] });
+    const obj = db.add(Obj.make(TestSchema.Example, { string: 'foo' }));
+    const snapshot = Obj.getSnapshot(obj);
+    expect(Obj.isObject(snapshot)).to.be.false;
+    expect(Entity.isEntity(snapshot)).to.be.false;
+    expect(Obj.isSnapshot(snapshot)).to.be.true;
+    expect(Entity.isSnapshot(snapshot)).to.be.true;
+    expect(Relation.isSnapshot(snapshot)).to.be.false;
+    expect(Obj.getSchema(snapshot)).to.eq(TestSchema.Example);
+    expect(Obj.getDXN(snapshot).toString()).to.eq(Obj.getDXN(obj).toString());
+  });
+
   test('throws if schema was not annotated as echo object', async () => {
     const NonEchoSchema = Schema.Struct({ field: Schema.String });
     const { graph } = await builder.createDatabase();
@@ -199,8 +218,7 @@ describe('Reactive Object with ECHO database', () => {
   });
 
   test('existing proxy objects can be added to the database', async () => {
-    const { db, graph } = await builder.createDatabase();
-    await graph.schemaRegistry.register([TestSchema.Example]);
+    const { db } = await builder.createDatabase({ types: [TestSchema.Example] });
 
     const obj = Obj.make(TestSchema.Example, { string: 'foo' });
     const returnObj = db.add(obj);

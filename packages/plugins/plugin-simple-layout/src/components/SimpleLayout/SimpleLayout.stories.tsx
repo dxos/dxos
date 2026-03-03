@@ -80,7 +80,7 @@ const createPluginManager = ({ isPopover }: { isPopover: boolean }) => {
 };
 
 const meta = {
-  title: 'plugins/plugin-simple-layout/SimpleLayout',
+  title: 'plugins/plugin-simple-layout/components/SimpleLayout',
   component: SimpleLayout,
   parameters: {
     layout: 'fullscreen',

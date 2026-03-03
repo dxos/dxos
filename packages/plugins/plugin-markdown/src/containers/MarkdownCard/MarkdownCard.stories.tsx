@@ -5,11 +5,14 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import { OperationPlugin } from '@dxos/app-framework';
+import { OperationPlugin, RuntimePlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { Obj } from '@dxos/echo';
+import { ClientPlugin } from '@dxos/plugin-client';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { faker } from '@dxos/random';
 import { withTheme } from '@dxos/react-ui/testing';
+import { Card } from '@dxos/react-ui-mosaic';
 import { CardContainer } from '@dxos/react-ui-mosaic/testing';
 
 import { translations } from '../../translations';
@@ -18,30 +21,37 @@ import { MarkdownCard, type MarkdownCardProps } from './MarkdownCard';
 
 faker.seed(1234);
 
-// TODO(wittjosiah): ECHO objects don't work when passed via Storybook args.
 const MarkdownCardStory = ({ ...args }: Omit<MarkdownCardProps, 'subject'>) => {
   const subject = useMemo(
     () =>
       Markdown.make({
         name: faker.lorem.words(3),
-        content: faker.lorem.paragraphs(3),
+        content: faker.lorem.paragraphs(5),
       }),
     [],
   );
+
   return (
     <CardContainer icon='ph--text-aa--regular'>
-      <MarkdownCard subject={subject} {...args} />
+      <Card.Root border={false}>
+        <Card.Toolbar>
+          <Card.DragHandle />
+          <Card.Title>{Obj.getLabel(subject)}</Card.Title>
+          <Card.Menu />
+        </Card.Toolbar>
+        <MarkdownCard subject={subject} {...args} />
+      </Card.Root>
     </CardContainer>
   );
 };
 
 const meta: Meta<typeof MarkdownCardStory> = {
-  title: 'plugins/plugin-markdown/Card',
+  title: 'plugins/plugin-markdown/containers/MarkdownCard',
   component: MarkdownCardStory,
   decorators: [
     withTheme(),
     withPluginManager({
-      plugins: [OperationPlugin()],
+      plugins: [OperationPlugin(), RuntimePlugin(), ClientPlugin({})],
     }),
   ],
   parameters: {

@@ -111,6 +111,8 @@ export const autoScroll = (_: AutoScrollToProps = {}) => {
  *     the element's clientWidth (the content area, excluding the scrollbar).
  * Returns a cleanup function that removes the listeners.
  */
+// TODO(burdon): Still jumps when widgets are rendered.
+// - Track position of specific element/line in document and scroll relative to that.
 function createUserScrollDetector(element: HTMLElement, onUserScroll: () => void): () => void {
   return combine(
     addEventListener(element, 'wheel', () => onUserScroll(), { passive: true }),

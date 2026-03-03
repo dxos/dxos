@@ -4,6 +4,8 @@
 
 import { type ClassNameValue } from '@dxos/react-ui';
 
+// TODO(burdon): Use theme styles/tokens.
+
 export const styles = {
   root: 'group/card relative min-h-(--dx-rail-item) w-full dx-card-min-width overflow-hidden',
   border:

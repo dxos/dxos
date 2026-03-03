@@ -31,7 +31,7 @@ const DefaultStory = ({ roomId }: ChannelContainerProps) => {
 };
 
 const meta = {
-  title: 'plugins/plugin-thread/ChannelContainer',
+  title: 'plugins/plugin-thread/containers/ChannelContainer',
   component: ChannelContainer,
   render: render(DefaultStory),
   decorators: [

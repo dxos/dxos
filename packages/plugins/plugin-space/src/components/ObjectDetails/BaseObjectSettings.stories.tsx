@@ -34,7 +34,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-space/BaseObjectSettings',
+  title: 'plugins/plugin-space/components/BaseObjectSettings',
   component: BaseObjectSettings as any,
   render: render(DefaultStory),
   decorators: [

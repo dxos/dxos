@@ -69,7 +69,7 @@ const DefaultStory = () => {
 //
 
 const meta = {
-  title: 'plugins/plugin-board/BoardContainer',
+  title: 'plugins/plugin-board/containers/BoardContainer',
   render: DefaultStory,
   decorators: [
     withTheme(),

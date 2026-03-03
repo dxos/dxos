@@ -84,7 +84,7 @@ const DefaultStory = () => {
 export const Default: Story = {};
 
 const meta = {
-  title: 'plugins/plugin-sheet/functions',
+  title: 'plugins/plugin-sheet/components/functions',
   render: DefaultStory,
   decorators: [
     withTheme(),

@@ -50,6 +50,7 @@ import {
   DebugGraph,
   DebugObjectPanel,
   DebugSettings,
+  DebugSpaceObjectsPanel,
   DebugStatus,
   DevtoolsOverviewContainer,
   SpaceGenerator,
@@ -167,14 +168,21 @@ export default Capability.makeModule(
       Surface.create({
         id: `${meta.id}/devtools-overview`,
         role: 'deck-companion--devtools',
+        filter: (data): data is { subject: 'devtools' } => data.subject === 'devtools',
         component: () => <DevtoolsOverviewContainer />,
       }),
+      Surface.create({
+        id: `${meta.id}/space-objects`,
+        role: 'deck-companion--space-objects',
+        filter: (data): data is { subject: 'space-objects' } => data.subject === 'space-objects',
+        component: () => <DebugSpaceObjectsPanel />,
+      }),
+
       Surface.create({
         id: `${meta.id}/status`,
         role: 'status',
         component: () => <DebugStatus />,
       }),
-
       //
       // Devtools
       //

@@ -6,8 +6,6 @@ import { type ComponentFunction } from '@dxos/ui-types';
 
 import { mx } from '../../util';
 
-// TODO(burdon): Define types.
-
 const containerMain: ComponentFunction<{ toolbar?: boolean }> = ({ toolbar }, ...etc) =>
   mx(
     'h-full w-full grid grid-cols-[100%] overflow-hidden',
@@ -21,7 +19,7 @@ const containerMain: ComponentFunction<{ toolbar?: boolean }> = ({ toolbar }, ..
 const containerColumn: ComponentFunction<Record<string, any>> = (_, ...etc) => mx('dx-column w-full grid', ...etc);
 
 const containerSegment: ComponentFunction<Record<string, any>> = (_, ...etc) =>
-  mx('col-span-full grid grid-cols-subgrid col-start-2', ...etc);
+  mx('col-start-2 overflow-hidden', ...etc);
 
 export const containerTheme = {
   main: containerMain,

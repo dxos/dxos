@@ -415,21 +415,21 @@ class QueryClass implements Query$.Any {
     });
   }
 
-  sourceOf(relation: Schema.Schema.All | string, predicates?: Filter$.Props<unknown> | undefined): Query$.Any {
+  sourceOf(relation?: Schema.Schema.All | string, predicates?: Filter$.Props<unknown> | undefined): Query$.Any {
     return new QueryClass({
       type: 'relation',
       anchor: this.ast,
       direction: 'outgoing',
-      filter: FilterClass.type(relation, predicates).ast,
+      filter: relation !== undefined ? FilterClass.type(relation, predicates).ast : undefined,
     });
   }
 
-  targetOf(relation: Schema.Schema.All | string, predicates?: Filter$.Props<unknown> | undefined): Query$.Any {
+  targetOf(relation?: Schema.Schema.All | string, predicates?: Filter$.Props<unknown> | undefined): Query$.Any {
     return new QueryClass({
       type: 'relation',
       anchor: this.ast,
       direction: 'incoming',
-      filter: FilterClass.type(relation, predicates).ast,
+      filter: relation !== undefined ? FilterClass.type(relation, predicates).ast : undefined,
     });
   }
 

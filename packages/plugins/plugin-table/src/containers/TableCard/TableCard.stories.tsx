@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { OperationPlugin } from '@dxos/app-framework';
+import { OperationPlugin, RuntimePlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
@@ -38,7 +38,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-table/Card',
+  title: 'plugins/plugin-table/containers/Card',
   render: DefaultStory,
   decorators: [
     withTheme(), // TODO(burdon): Should not require space.
@@ -89,7 +89,7 @@ const meta = {
       },
     }),
     withPluginManager({
-      plugins: [OperationPlugin()],
+      plugins: [OperationPlugin(), RuntimePlugin()],
     }),
   ],
   parameters: {

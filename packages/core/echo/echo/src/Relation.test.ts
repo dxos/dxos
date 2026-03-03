@@ -25,6 +25,12 @@ describe('Relation', () => {
       expect(snapshot[SnapshotKindId]).toBe(Entity.Kind.Relation);
       expect((snapshot as any)[Entity.KindId]).toBeUndefined();
 
+      expect(Relation.isSnapshot(snapshot)).toBe(true);
+      expect(Obj.isSnapshot(snapshot)).toBe(false);
+
+      expect(Relation.getSource(snapshot)).toEqual(obj1);
+      expect(Relation.getTarget(snapshot)).toEqual(obj2);
+
       // Snapshot has same id.
       expect(snapshot.id).toBe(rel.id);
     });

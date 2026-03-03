@@ -1,0 +1,29 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "composer-app",
+      "runtimeExecutable": "moon",
+      "runtimeArgs": ["run", "composer-app:serve"],
+      "port": 5173
+    },
+    {
+      "name": "testbench-app",
+      "runtimeExecutable": "moon",
+      "runtimeArgs": ["run", "testbench-app:serve"],
+      "port": 5173
+    },
+    {
+      "name": "tasks-app",
+      "runtimeExecutable": "moon",
+      "runtimeArgs": ["run", "tasks:serve"],
+      "port": 5173
+    },
+    {
+      "name": "storybook-react",
+      "runtimeExecutable": "moon",
+      "runtimeArgs": ["run", "storybook-react:serve"],
+      "port": 9009
+    }
+  ]
+}

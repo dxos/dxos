@@ -21,32 +21,34 @@ export const RecoveryCodeDialog = ({ code }: RecoveryCodeDialogProps) => {
 
   return (
     <AlertDialog.Content size='md' classNames='min-h-[15rem]'>
-      <AlertDialog.Title>{t('recovery code dialog title')}</AlertDialog.Title>
-      <p className='py-4'>{t('recovery code dialog description')}</p>
-      <Clipboard.Provider>
-        <Code code={code} />
-      </Clipboard.Provider>
-      <div className='flex flex-col py-4 gap-2'>
-        <p>{t('recovery code dialog warning 1')}</p>
-        <p>{t('recovery code dialog warning 2')}</p>
-      </div>
-      <div className='flex items-center gap-2 pb-4'>
-        <Input.Root>
-          <Input.Checkbox
-            data-testid='recoveryCode.confirm'
-            checked={confirmation}
-            onCheckedChange={handleConfirmation}
-          />
-          <Input.Label>{t('recovery code confirmation label')}</Input.Label>
-        </Input.Root>
-      </div>
-      <div className='flex justify-end'>
+      <AlertDialog.Body>
+        <AlertDialog.Title>{t('recovery code dialog title')}</AlertDialog.Title>
+        <p className='py-4'>{t('recovery code dialog description')}</p>
+        <Clipboard.Provider>
+          <Code code={code} />
+        </Clipboard.Provider>
+        <div className='flex flex-col py-4 gap-2'>
+          <p>{t('recovery code dialog warning 1')}</p>
+          <p>{t('recovery code dialog warning 2')}</p>
+        </div>
+        <div className='flex items-center gap-2 pb-4'>
+          <Input.Root>
+            <Input.Checkbox
+              data-testid='recoveryCode.confirm'
+              checked={confirmation}
+              onCheckedChange={handleConfirmation}
+            />
+            <Input.Label>{t('recovery code confirmation label')}</Input.Label>
+          </Input.Root>
+        </div>
+      </AlertDialog.Body>
+      <AlertDialog.ActionBar>
         <AlertDialog.Action asChild>
           <Button data-testid='recoveryCode.continue' variant='primary' disabled={!confirmation}>
             {t('continue label')}
           </Button>
         </AlertDialog.Action>
-      </div>
+      </AlertDialog.ActionBar>
     </AlertDialog.Content>
   );
 };

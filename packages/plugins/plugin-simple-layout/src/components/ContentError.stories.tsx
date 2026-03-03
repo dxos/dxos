@@ -11,7 +11,7 @@ import { translations } from '../translations';
 import { ContentError } from './ContentError';
 
 const meta = {
-  title: 'plugins/plugin-simple-layout/ContentError',
+  title: 'plugins/plugin-simple-layout/components/ContentError',
   component: ContentError,
   decorators: [withTheme()],
   parameters: {

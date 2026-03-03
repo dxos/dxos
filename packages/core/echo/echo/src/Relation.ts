@@ -178,6 +178,13 @@ export const isRelation = (value: unknown): value is Unknown => {
   return kind === EntityKind.Relation;
 };
 
+export const isSnapshot = (value: unknown): value is Snapshot => {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+  return (value as any)[SnapshotKindId] === EntityKind.Relation;
+};
+
 /**
  * @returns Relation source DXN.
  * Accepts both reactive relations and snapshots.
