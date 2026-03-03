@@ -32,6 +32,13 @@ import { type Stream } from '@dxos/stream';
 
 import { RPC_TIMEOUT } from '../common';
 
+/** Checks if a value is a buf-encoded PublicKey message (has $typeName and data). */
+const isBufPublicKey = (value: unknown): value is { data: Uint8Array } =>
+  value != null &&
+  typeof value === 'object' &&
+  'data' in value &&
+  (value as Record<string, unknown>).data instanceof Uint8Array;
+
 /**
  * Create an observable from an RPC stream.
  */
@@ -251,6 +258,8 @@ export class InvitationsProxy implements Invitations {
       const invitationValue = (invitation as Record<string, unknown>)[key];
       if (invitationValue instanceof PublicKey && value instanceof PublicKey) {
         return acc && invitationValue.equals(value);
+      } else if (isBufPublicKey(invitationValue) && isBufPublicKey(value)) {
+        return acc && PublicKey.equals(new PublicKey(invitationValue.data), new PublicKey(value.data));
       } else {
         return acc && invitationValue === value;
       }

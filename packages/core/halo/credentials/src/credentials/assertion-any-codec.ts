@@ -3,7 +3,7 @@
 //
 
 import { PublicKey } from '@dxos/keys';
-import { type DescMessage, bufToTimeframe, bufWkt, create, fromBinary, toBinary } from '@dxos/protocols/buf';
+import { type DescMessage, bufToTimeframe, bufWkt, create, fromBinary, timestampFromDate, toBinary } from '@dxos/protocols/buf';
 import { type Credential, CredentialSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Timeframe } from '@dxos/timeframe';
 
@@ -87,6 +87,9 @@ const convertAssertionFieldsForBuf = (obj: Record<string, unknown>): Record<stri
 const convertAppFieldToBuf = (value: unknown): unknown => {
   if (value == null || typeof value !== 'object') {
     return value;
+  }
+  if (value instanceof Date) {
+    return timestampFromDate(value);
   }
   if (PublicKey.isPublicKey(value)) {
     return { data: (value as PublicKey).asUint8Array() };

@@ -40,7 +40,8 @@ export const getCredentialProofPayload = (credential: Credential): Uint8Array =>
     }
   }
 
-  return Buffer.from(canonicalStringify(copy));
+  const canonical = canonicalStringify(copy);
+  return Buffer.from(canonical);
 };
 
 /**

@@ -161,9 +161,6 @@ export class SpaceStateMachine implements SpaceState {
     if (!skipVerification) {
       const result = await verifyCredential(credential);
       if (result.kind !== 'pass') {
-        // #region agent log
-        fetch('http://127.0.0.1:7411/ingest/79f9f923-e0a2-4fd2-9621-d137664856ff',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'7188f5'},body:JSON.stringify({sessionId:'7188f5',location:'space-state-machine.ts:process:verifyFailed',message:'credential verification failed',data:{errors:result.errors,credId:credentialId?.toHex()},timestamp:Date.now(),hypothesisId:'H-verify'})}).catch(()=>{});
-        // #endregion
         log.warn(`Invalid credential: ${result.errors.join(', ')}`);
         return false;
       }
@@ -173,8 +170,6 @@ export class SpaceStateMachine implements SpaceState {
     const subjectId = fromBufPublicKey(credential.subject!.id!)!;
 
     const assertion = getCredentialAssertion(credential);
-    // #region agent log
-    fetch('http://127.0.0.1:7411/ingest/79f9f923-e0a2-4fd2-9621-d137664856ff',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'7188f5'},body:JSON.stringify({sessionId:'7188f5',location:'space-state-machine.ts:process:assertion',message:'processing credential',data:{typeName:assertion?.$typeName,atType:(assertion as any)?.['@type'],credId:credentialId?.toHex(),issuer:issuer?.toHex()?.slice(0,16)},timestamp:Date.now(),hypothesisId:'H-assertion-type'})}).catch(()=>{});
     switch (assertion.$typeName) {
       case 'dxos.halo.credentials.SpaceGenesis': {
         if (this._genesisCredential) {
@@ -235,9 +230,6 @@ export class SpaceStateMachine implements SpaceState {
       }
       case 'dxos.halo.invitations.CancelDelegatedInvitation':
       case 'dxos.halo.invitations.DelegateSpaceInvitation': {
-        // #region agent log
-        fetch('http://127.0.0.1:7411/ingest/79f9f923-e0a2-4fd2-9621-d137664856ff',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'7188f5'},body:JSON.stringify({sessionId:'7188f5',location:'space-state-machine.ts:process:delegation',message:'delegation credential received',data:{typeName:assertion.$typeName,issuer:issuer?.toHex(),canInvite:this._canInviteNewMembers(issuer)},timestamp:Date.now(),hypothesisId:'H-delegate-flow'})}).catch(()=>{});
-        // #endregion
         if (!this._canInviteNewMembers(issuer)) {
           log.warn(`Invalid invitation, space member is not authorized to invite new members: ${issuer}`);
           return false;

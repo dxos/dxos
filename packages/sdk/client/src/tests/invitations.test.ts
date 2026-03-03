@@ -454,12 +454,13 @@ describe('Invitations', () => {
           const persistentInvitation = tempHost.share({ authMethod: Invitation_AuthMethod.NONE });
           persistentInvitationId = persistentInvitation.get().invitationId;
           await savedTrigger.wait();
+          const swarmKey = toPublicKey(persistentInvitation.get().swarmKey!);
           await waitForCondition({
             condition: () =>
-              hostContext.networkManager.topics.includes(toPublicKey(persistentInvitation.get().swarmKey!)),
+              hostContext.networkManager.topics.some((topic) => topic.equals(swarmKey)),
           });
           // TODO(nf): expose this in API as suspendInvitation()/SuspendableInvitation?
-          await hostContext.networkManager.leaveSwarm(toPublicKey(persistentInvitation.get().swarmKey!));
+          await hostContext.networkManager.leaveSwarm(swarmKey);
         }
 
         const { service: newHostService, manager: newHostManager } = createInvitationsApi(
