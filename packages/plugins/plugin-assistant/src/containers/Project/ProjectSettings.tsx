@@ -89,9 +89,9 @@ export const ProjectSettings = ({ subject: project }: SurfaceComponentProps<Proj
       <ButtonGroup classNames='h-10'>
         <Button onClick={handleResetHistory}>Reset Chat History</Button>
       </ButtonGroup>
-      {subscribableObjects.length > 0 && (
-        <div>
-          <p>Subscriptions</p>
+      <div>
+        <h2 className='text-lg font-bold'>Subscriptions</h2>
+        {subscribableObjects.length > 0 && (
           <div>
             {subscribableObjects.map((object) => (
               <Input.Root key={object.id}>
@@ -113,8 +113,11 @@ export const ProjectSettings = ({ subject: project }: SurfaceComponentProps<Proj
               </Input.Root>
             ))}
           </div>
-        </div>
-      )}
+        )}
+        {subscribableObjects.length === 0 && (
+          <div className='text-sm text-description'>Space has no feeds to subscribe to.</div>
+        )}
+      </div>
     </div>
   );
 };
