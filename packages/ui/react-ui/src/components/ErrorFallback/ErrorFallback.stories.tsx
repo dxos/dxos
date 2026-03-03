@@ -7,11 +7,17 @@ import React from 'react';
 
 import { withLayout, withTheme } from '../../testing';
 
-import { ErrorFallback } from './ErrorFallback';
+import { ErrorBoundary, ErrorFallback } from './ErrorFallback';
+
+const ErrorGenerator = () => {
+  throw new Error('This is a test error message');
+};
 
 const BasicStory = () => {
   return (
-    <ErrorFallback error={new Error('This is a test error message')} resetErrorBoundary={() => console.log('reset')} />
+    <ErrorBoundary fallbackRender={ErrorFallback}>
+      <ErrorGenerator />
+    </ErrorBoundary>
   );
 };
 

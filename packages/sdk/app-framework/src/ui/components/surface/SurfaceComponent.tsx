@@ -221,13 +221,13 @@ const ErrorFallback = ({ data, error }: Props) => {
 
   return (
     <div role='alert' data-testid='error-boundary-fallback'>
-      <h1 className='flex gap-2 text-sm mt-2 text-error-text'>{message}</h1>
-      <h2 className='text-xs mt-2'>Data</h2>
-      <pre className='overflow-x-auto text-xs text-description'>{safeStringify(data, undefined, 2)}</pre>
+      <h1 className='flex gap-2 text-sm mt-2 text-info-text'>{message}</h1>
+      <h2 className='text-xs mt-2 uppercase'>Data</h2>
+      <pre className='overflow-x-auto text-xs text-subdued'>{safeStringify(data, undefined, 2)}</pre>
       {import.meta.env.DEV && stack && (
         <>
-          <h2 className='text-xs mt-2'>Stack</h2>
-          <pre className='overflow-x-auto text-xs text-description'>{stack}</pre>
+          <h2 className='text-xs mt-2 uppercase'>Stack</h2>
+          <pre className='overflow-x-auto text-xs text-subdued'>{stack}</pre>
         </>
       )}
     </div>

@@ -92,6 +92,6 @@
   /* Text */
 
   --color-placeholder: light-dark(var(--color-neutral-400), var(--color-neutral-600));
+  --color-subdued: light-dark(var(--color-neutral-500), var(--color-neutral-500));
   --color-description: light-dark(var(--color-neutral-600), var(--color-neutral-400));
-  --color-subdued: light-dark(var(--color-neutral-800), var(--color-neutral-200));
 }

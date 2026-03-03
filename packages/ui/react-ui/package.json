@@ -85,6 +85,7 @@
     "@radix-ui/react-visually-hidden": "catalog:",
     "aria-hidden": "catalog:",
     "date-fns": "catalog:",
+    "error-stack-parser": "catalog:",
     "i18next": "catalog:",
     "keyborg": "catalog:",
     "react-error-boundary": "catalog:",
