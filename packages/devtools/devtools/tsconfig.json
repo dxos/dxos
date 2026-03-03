@@ -79,6 +79,9 @@
       "path": "../../core/functions-runtime"
     },
     {
+      "path": "../../core/halo/credentials"
+    },
+    {
       "path": "../../core/mesh/edge-client"
     },
     {
