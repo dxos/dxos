@@ -19,9 +19,6 @@ const meta: Meta<typeof Typewriter> = {
   title: 'plugins/plugin-assistant/components/Typewriter',
   component: Typewriter,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
-  parameters: {
-    layout: 'fullscreen',
-  },
 };
 
 export default meta;

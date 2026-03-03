@@ -42,7 +42,8 @@ export const PlankError = ({
 }) => {
   const [timedOut, setTimedOut] = useState(false);
   useEffect(() => {
-    setTimeout(() => setTimedOut(true), 5_000);
+    const timer = setTimeout(() => setTimedOut(true), 5_000);
+    return () => clearTimeout(timer);
   }, []);
 
   return (
