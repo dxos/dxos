@@ -23,7 +23,11 @@ import {
   Invitation_Type,
 } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type DeviceProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { AuthenticationResponse_Status, type IntroductionResponse, InvitationOptions_Role } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
+import {
+  AuthenticationResponse_Status,
+  type IntroductionResponse,
+  InvitationOptions_Role,
+} from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 import { PrivateKeySchema, PublicKeySchema } from '@dxos/protocols/buf/dxos/keys_pb';
 import { type ExtensionContext, type TeleportExtension, type TeleportProps } from '@dxos/teleport';
 import { trace as _trace } from '@dxos/tracing';
@@ -117,7 +121,14 @@ export class InvitationsHandler {
               invitationId: invitation.invitationId,
               ...protocol.toJSON(),
             });
-            const deviceKey = (admissionRequest as any).device?.deviceKey ?? (admissionRequest as any).space?.deviceKey ?? (admissionRequest.kind?.case === 'device' ? admissionRequest.kind.value?.deviceKey : admissionRequest.kind?.case === 'space' ? admissionRequest.kind.value?.deviceKey : undefined);
+            const deviceKey =
+              (admissionRequest as any).device?.deviceKey ??
+              (admissionRequest as any).space?.deviceKey ??
+              (admissionRequest.kind?.case === 'device'
+                ? admissionRequest.kind.value?.deviceKey
+                : admissionRequest.kind?.case === 'space'
+                  ? admissionRequest.kind.value?.deviceKey
+                  : undefined);
             invariant(deviceKey);
             const admissionResponse = await protocol.admit(invitation, admissionRequest, extension.guestProfile);
 

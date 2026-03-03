@@ -58,18 +58,18 @@ import {
   Space_PipelineStateSchema,
   type UpdateMemberRoleRequest,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { QueryOptions_DataLocation } from '@dxos/protocols/buf/dxos/echo/filter_pb';
 import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { type SpaceSyncState_PeerState } from '@dxos/protocols/buf/dxos/echo/service_pb';
 import { type SpaceSnapshot } from '@dxos/protocols/buf/dxos/echo/snapshot_pb';
 import { type Credential, type Epoch, SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type GossipMessage } from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
-import { QueryOptions_DataLocation } from '@dxos/protocols/buf/dxos/echo/filter_pb';
+import { Stream } from '@dxos/stream';
 import { Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
 
 import { RPC_TIMEOUT } from '../common';
 import { InvitationsProxy } from '../invitations';
-import { Stream } from '@dxos/stream';
 
 const EPOCH_CREATION_TIMEOUT = 60_000;
 

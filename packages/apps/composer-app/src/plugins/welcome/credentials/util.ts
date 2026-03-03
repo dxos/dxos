@@ -3,9 +3,9 @@
 //
 
 import { type PublicKey } from '@dxos/client';
-import { decodePublicKey } from '@dxos/protocols/buf';
 import { type Credential, type Identity, type Presentation } from '@dxos/client/halo';
 import { getCredentialAssertion } from '@dxos/credentials';
+import { decodePublicKey } from '@dxos/protocols/buf';
 
 import { codec } from './codec';
 

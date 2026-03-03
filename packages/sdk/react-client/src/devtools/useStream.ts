@@ -3,8 +3,9 @@
 //
 
 import { type DependencyList, useEffect, useState } from 'react';
+
 import { log } from '@dxos/log';
-import { Stream } from '@dxos/stream';
+import { type Stream } from '@dxos/stream';
 
 /**
  * Subscribe to service API streams.

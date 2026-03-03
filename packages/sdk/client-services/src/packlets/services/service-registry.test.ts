@@ -6,18 +6,14 @@ import { describe, expect, test } from 'vitest';
 
 import { Event } from '@dxos/async';
 import { Config } from '@dxos/config';
-import { create } from '@dxos/protocols/buf';
-import {
-  ConfigSchema,
-  RuntimeSchema,
-  Runtime_ClientSchema,
-} from '@dxos/protocols/buf/dxos/config_pb';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { type Client } from '@dxos/protocols';
+import { create } from '@dxos/protocols/buf';
 import { EMPTY } from '@dxos/protocols/buf';
 import * as ClientServicesPb from '@dxos/protocols/buf/dxos/client/services_pb';
 import { SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { ConfigSchema, RuntimeSchema, Runtime_ClientSchema } from '@dxos/protocols/buf/dxos/config_pb';
 import { createBufProtoRpcPeer, createBufServiceBundle, createLinkedPorts } from '@dxos/rpc';
 
 import { SystemServiceImpl } from '../system';

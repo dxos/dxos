@@ -8,12 +8,12 @@ import { Trigger, asyncTimeout } from '@dxos/async';
 import { performInvitation } from '@dxos/client-services/testing';
 import { invariant } from '@dxos/invariant';
 import { create } from '@dxos/protocols/buf';
+import { DeviceKind } from '@dxos/protocols/buf/dxos/client/services_pb';
 import {
   type DeviceProfileDocument,
   DeviceProfileDocumentSchema,
   type ProfileDocument,
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { DeviceKind } from '@dxos/protocols/buf/dxos/client/services_pb';
 
 import { Client } from '../client';
 import { TestBuilder } from '../testing';

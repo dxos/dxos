@@ -8,9 +8,9 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RateLimitExceededError, TimeoutError, trace } from '@dxos/protocols';
+import { type Runtime_Services_Signal } from '@dxos/protocols/buf/dxos/config_pb';
 import { type SwarmResponse } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { type JoinRequest, type LeaveRequest, type QueryRequest } from '@dxos/protocols/buf/dxos/edge/signal_pb';
-import { type Runtime_Services_Signal } from '@dxos/protocols/buf/dxos/config_pb';
 import { BitField, safeAwaitAll } from '@dxos/util';
 
 import { SignalClient } from '../signal-client';

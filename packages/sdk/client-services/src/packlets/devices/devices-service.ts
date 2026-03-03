@@ -18,9 +18,9 @@ import {
 } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type DeviceProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { PublicKeySchema } from '@dxos/protocols/buf/dxos/keys_pb';
+import { Stream } from '@dxos/stream';
 
 import { type IdentityManager } from '../identity';
-import { Stream } from '@dxos/stream';
 
 export class DevicesServiceImpl implements Halo.DevicesService {
   constructor(

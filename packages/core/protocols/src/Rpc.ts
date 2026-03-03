@@ -4,7 +4,8 @@
 
 import { type DescMessage, type MessageInitShape, type MessageShape } from '@bufbuild/protobuf';
 import { type GenService, type GenServiceMethods } from '@bufbuild/protobuf/codegenv2';
-import { Stream } from '@dxos/stream';
+
+import { type Stream } from '@dxos/stream';
 
 /**
  * Represents a protobuf Any type used for RPC encoding.

@@ -4,7 +4,14 @@
 
 import { DeferredTask, Event, TimeoutError, Trigger, scheduleMicroTask, scheduleTask, sleep } from '@dxos/async';
 import { type Context, Resource, rejectOnDispose } from '@dxos/context';
-import { type CredentialProcessor, credentialToBinary, credentialFromBinary, fromBufPublicKey, normalizeCredentialForBuf, verifyCredential } from '@dxos/credentials';
+import {
+  type CredentialProcessor,
+  credentialFromBinary,
+  credentialToBinary,
+  fromBufPublicKey,
+  normalizeCredentialForBuf,
+  verifyCredential,
+} from '@dxos/credentials';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { type FeedWriter } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
@@ -16,7 +23,7 @@ import { EMPTY } from '@dxos/protocols/buf';
 import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
 import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { NotarizationService, type NotarizeRequest } from '@dxos/protocols/buf/dxos/mesh/teleport/notarization_pb';
-import { type ExtensionContext, BufRpcExtension } from '@dxos/teleport';
+import { BufRpcExtension, type ExtensionContext } from '@dxos/teleport';
 import { ComplexMap, ComplexSet, entry } from '@dxos/util';
 
 const DEFAULT_RETRY_TIMEOUT = 1_000;

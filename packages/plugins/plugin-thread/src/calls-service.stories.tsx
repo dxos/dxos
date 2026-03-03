@@ -9,7 +9,6 @@ import { scheduleTask, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Config, useConfig } from '@dxos/react-client';
 import { create } from '@dxos/protocols/buf';
 import {
   ConfigSchema,
@@ -17,6 +16,7 @@ import {
   Runtime_ServicesSchema,
   Runtime_Services_IceProviderSchema,
 } from '@dxos/protocols/buf/dxos/config_pb';
+import { Config, useConfig } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Button } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';

@@ -15,7 +15,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
 import { create } from '@dxos/protocols/buf';
-import { type Device, Device_PresenceState, DeviceKind } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type Device, DeviceKind, Device_PresenceState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
 import { type FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { type IdentityRecord, type SpaceMetadata } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
@@ -158,12 +158,19 @@ export class IdentityManager {
     await identity.open(new Context());
 
     {
-      const generator = new CredentialGenerator(this._keyring, identityRecord.identityKey as any, identityRecord.deviceKey as any);
+      const generator = new CredentialGenerator(
+        this._keyring,
+        identityRecord.identityKey as any,
+        identityRecord.deviceKey as any,
+      );
       invariant(identityRecord.haloSpace!.genesisFeedKey, 'Genesis feed key is required.');
       invariant(identityRecord.haloSpace!.dataFeedKey, 'Data feed key is required.');
       const credentials = [
         // Space genesis.
-        ...(await generator.createSpaceGenesis(identityRecord.haloSpace!.key as any, identityRecord.haloSpace!.genesisFeedKey as any)),
+        ...(await generator.createSpaceGenesis(
+          identityRecord.haloSpace!.key as any,
+          identityRecord.haloSpace!.genesisFeedKey as any,
+        )),
 
         // Feed admission.
         await generator.createFeedAdmission(
@@ -370,7 +377,9 @@ export class IdentityManager {
       swarmIdentity: {
         identityKey: identityRecord.identityKey as any,
         peerKey: identityRecord.deviceKey as any,
-        credentialProvider: createAuthProvider(createCredentialSignerWithKey(this._keyring, identityRecord.deviceKey as any)),
+        credentialProvider: createAuthProvider(
+          createCredentialSignerWithKey(this._keyring, identityRecord.deviceKey as any),
+        ),
         credentialAuthenticator: deferFunction(() => identity.authVerifier.verifier),
       },
       gossip,

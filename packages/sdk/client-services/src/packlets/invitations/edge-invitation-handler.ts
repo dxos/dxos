@@ -16,6 +16,7 @@ import {
   type JoinSpaceRequest,
   type JoinSpaceResponseBody,
 } from '@dxos/protocols';
+import { create } from '@dxos/protocols/buf';
 import {
   Invitation_AuthMethod,
   Invitation_Kind,
@@ -29,7 +30,6 @@ import {
   AdmissionResponseSchema,
   type SpaceAdmissionRequest,
 } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
-import { create } from '@dxos/protocols/buf';
 
 import { type InvitationProtocol } from './invitation-protocol';
 import { type FlowLockHolder, type GuardedInvitationState } from './invitation-state';
@@ -97,7 +97,9 @@ export class EdgeInvitationHandler implements FlowLockHolder {
     const tryHandleInvitation = async () => {
       requestCount++;
       const admissionRequest = await protocol.createAdmissionRequest(deviceProfile);
-      const spaceRequest = (admissionRequest as any).space ?? (admissionRequest.kind?.case === 'space' ? admissionRequest.kind.value : undefined);
+      const spaceRequest =
+        (admissionRequest as any).space ??
+        (admissionRequest.kind?.case === 'space' ? admissionRequest.kind.value : undefined);
       if (spaceRequest) {
         try {
           await this._handleSpaceInvitationFlow(ctx, guardedState, spaceRequest, spaceId);
@@ -135,14 +137,18 @@ export class EdgeInvitationHandler implements FlowLockHolder {
       guardedState.set(this, Invitation_State.CONNECTING);
 
       const identityKey = admissionRequest.identityKey;
-      const identityKeyHex = identityKey && ('toHex' in identityKey ? (identityKey as any).toHex() : PublicKey.from((identityKey as any).data).toHex());
+      const identityKeyHex =
+        identityKey &&
+        ('toHex' in identityKey ? (identityKey as any).toHex() : PublicKey.from((identityKey as any).data).toHex());
       const response = await this._joinSpaceByInvitation(guardedState, spaceId, {
         identityKey: identityKeyHex!,
         invitationId: guardedState.current.invitationId,
       });
 
       const admissionResponse = await this._mapToAdmissionResponse(response);
-      await this._callbacks.onInvitationSuccess(admissionResponse, { kind: { case: 'space', value: admissionRequest } } as any);
+      await this._callbacks.onInvitationSuccess(admissionResponse, {
+        kind: { case: 'space', value: admissionRequest },
+      } as any);
     } catch (error) {
       guardedState.set(this, Invitation_State.ERROR);
       throw error;

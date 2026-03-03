@@ -7,8 +7,8 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/operation';
-import { toPublicKey } from '@dxos/protocols/buf';
 import { CreateAtom, GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
+import { toPublicKey } from '@dxos/protocols/buf';
 import { ConnectionState } from '@dxos/react-client/mesh';
 
 import { meta } from '../../meta';

@@ -32,7 +32,7 @@ export const parseOptions = Effect.fn(function* (options: {
   });
 
   const ownerPublicKey = Option.match(space, {
-    onNone: () => identity.identityKey ? decodePublicKey(identity.identityKey).toHex() : '',
+    onNone: () => (identity.identityKey ? decodePublicKey(identity.identityKey).toHex() : ''),
     onSome: (space) => space.key.toString(),
   });
 

@@ -4,22 +4,23 @@
 
 import { Event, Trigger, sleepWithContext, synchronized } from '@dxos/async';
 import { Context, rejectOnDispose } from '@dxos/context';
+import { packCredentialAssertion } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import { FeedSetIterator, type FeedWrapper, type FeedWriter } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
-import { packCredentialAssertion } from '@dxos/credentials';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type FeedMessageBlock } from '@dxos/protocols';
 import { create, timeframeToBuf } from '@dxos/protocols/buf';
-import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type FeedMessage, FeedMessageSchema } from '@dxos/protocols/buf/dxos/echo/feed_pb';
+import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Timeframe } from '@dxos/timeframe';
 import { ComplexMap } from '@dxos/util';
 
 import { createMappedFeedWriter } from '../common';
 
 import { createMessageSelector } from './message-selector';
+import { TimeframeClock, mapFeedIndexesToTimeframe, startAfter } from './timeframe-clock';
 
 /**
  * Recursively convert @dxos/keys.PublicKey instances to buf PublicKey init
@@ -45,7 +46,6 @@ const convertPublicKeysForBuf = (obj: unknown): unknown => {
   }
   return result;
 };
-import { TimeframeClock, mapFeedIndexesToTimeframe, startAfter } from './timeframe-clock';
 
 export type WaitUntilReachedTargetProps = {
   /**
@@ -311,23 +311,20 @@ export class Pipeline implements PipelineAccessor {
     invariant(!this._writer, 'Writer already set.');
     invariant(feed.properties.writable, 'Feed must be writable.');
 
-    this._writer = createMappedFeedWriter<ControlPipelinePayload, FeedMessage>(
-      (payload: ControlPipelinePayload) => {
-        // Pack TypedMessage assertions (including chain) and convert @dxos/keys.PublicKey
-        // instances to plain init shapes for buf's create().
-        if (payload.credential?.credential) {
-          const packed = packCredentialAssertion(payload.credential.credential as any);
-          payload = { credential: { credential: convertPublicKeysForBuf(packed) as any } };
-        }
-        return create(FeedMessageSchema, {
-          timeframe: timeframeToBuf(this._timeframeClock.timeframe),
-          payload: {
-            payload: { case: 'credential', value: payload.credential },
-          },
-        } as any);
-      },
-      feed.createFeedWriter(),
-    );
+    this._writer = createMappedFeedWriter<ControlPipelinePayload, FeedMessage>((payload: ControlPipelinePayload) => {
+      // Pack TypedMessage assertions (including chain) and convert @dxos/keys.PublicKey
+      // instances to plain init shapes for buf's create().
+      if (payload.credential?.credential) {
+        const packed = packCredentialAssertion(payload.credential.credential as any);
+        payload = { credential: { credential: convertPublicKeysForBuf(packed) as any } };
+      }
+      return create(FeedMessageSchema, {
+        timeframe: timeframeToBuf(this._timeframeClock.timeframe),
+        payload: {
+          payload: { case: 'credential', value: payload.credential },
+        },
+      } as any);
+    }, feed.createFeedWriter());
   }
 
   @synchronized

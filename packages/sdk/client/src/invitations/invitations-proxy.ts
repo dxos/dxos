@@ -28,9 +28,9 @@ import {
   QueryInvitationsResponse_Type,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type DeviceProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type Stream } from '@dxos/stream';
 
 import { RPC_TIMEOUT } from '../common';
-import { Stream } from '@dxos/stream';
 
 /**
  * Create an observable from an RPC stream.

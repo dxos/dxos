@@ -30,12 +30,12 @@ import {
   type UpdateSubscriptionRequest,
   type WaitUntilHeadsReplicatedRequest,
 } from '@dxos/protocols/buf/dxos/echo/service_pb';
+import { Stream } from '@dxos/stream';
 
 import { type AutomergeHost, deriveCollectionIdFromSpaceId } from '../automerge';
 
 import { DocumentsSynchronizer } from './documents-synchronizer';
 import { type SpaceStateManager } from './space-state-manager';
-import { Stream } from '@dxos/stream';
 
 export type DataServiceProps = {
   automergeHost: AutomergeHost;

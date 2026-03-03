@@ -135,7 +135,9 @@ export class CallSwarmSynchronizer extends Resource {
    */
   _setIdentity(identity: Identity): void {
     this._identityKey = identity.identityKey ? decodePublicKey(identity.identityKey).toHex() : undefined;
-    this._displayName = identity.profile?.displayName ?? generateName(identity.identityKey ? decodePublicKey(identity.identityKey).toHex() : '');
+    this._displayName =
+      identity.profile?.displayName ??
+      generateName(identity.identityKey ? decodePublicKey(identity.identityKey).toHex() : '');
   }
 
   /**

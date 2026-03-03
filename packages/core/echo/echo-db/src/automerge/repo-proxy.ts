@@ -13,10 +13,10 @@ import { log } from '@dxos/log';
 import { type Echo, RpcClosedError } from '@dxos/protocols';
 import { type JsonObject, create } from '@dxos/protocols/buf';
 import * as EchoServicePb from '@dxos/protocols/buf/dxos/echo/service_pb';
+import { type Stream } from '@dxos/stream';
 import { trace } from '@dxos/tracing';
 
 import { DocHandleProxy } from './doc-handle-proxy';
-import { Stream } from '@dxos/stream';
 
 const MAX_UPDATE_FREQ = 10; // [updates/sec]
 const RPC_TIMEOUT = 30_000;

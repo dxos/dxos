@@ -28,6 +28,7 @@ import { log } from '@dxos/log';
 import { type Echo, RpcClosedError } from '@dxos/protocols';
 import { EMPTY, create } from '@dxos/protocols/buf';
 import * as EchoServicePb from '@dxos/protocols/buf/dxos/echo/service_pb';
+import { Stream } from '@dxos/stream';
 import { trace } from '@dxos/tracing';
 import { chunkArray, deepMapValues, defaultMap } from '@dxos/util';
 
@@ -42,7 +43,6 @@ import {
 } from './automerge-doc-loader';
 import { ObjectCore } from './object-core';
 import { getInlineAndLinkChanges } from './util';
-import { Stream } from '@dxos/stream';
 
 export type InitRootProxyFn = (core: ObjectCore) => void;
 

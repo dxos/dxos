@@ -5,17 +5,17 @@ import { type EdgeConnection } from '@dxos/edge-client';
 import { type Client, EdgeAgentStatus } from '@dxos/protocols';
 import { type Empty, EmptySchema, create } from '@dxos/protocols/buf';
 import {
-  EdgeStatus_ConnectionState,
   EdgeStatusSchema,
+  EdgeStatus_ConnectionState,
   type QueryAgentStatusResponse,
   QueryAgentStatusResponseSchema,
   QueryAgentStatusResponse_AgentStatus,
   type QueryEdgeStatusResponse,
   QueryEdgeStatusResponseSchema,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { Stream } from '@dxos/stream';
 
 import { type EdgeAgentManager } from './edge-agent-manager';
-import { Stream } from '@dxos/stream';
 
 // TODO(wittjosiah): This service is not currently exposed on the client api, it must be called directly.
 export class EdgeAgentServiceImpl implements Client.EdgeAgentService {
@@ -30,9 +30,11 @@ export class EdgeAgentServiceImpl implements Client.EdgeAgentService {
       const update = () => {
         next(
           create(QueryEdgeStatusResponseSchema, {
-            status: this._edgeConnection?.status ?? create(EdgeStatusSchema, {
-              state: EdgeStatus_ConnectionState.NOT_CONNECTED,
-            }),
+            status:
+              this._edgeConnection?.status ??
+              create(EdgeStatusSchema, {
+                state: EdgeStatus_ConnectionState.NOT_CONNECTED,
+              }),
           }),
         );
       };

@@ -7,18 +7,18 @@ import { type LogEntry } from '@dxos/protocols/buf/dxos/client/logging_pb';
 import {
   type StreamTraceEvent,
   StreamTraceEventSchema,
-  StreamTraceEvent_LogAddedSchema,
   type StreamTraceEvent_LogAdded,
-  StreamTraceEvent_ResourceAddedSchema,
+  StreamTraceEvent_LogAddedSchema,
   type StreamTraceEvent_ResourceAdded,
-  StreamTraceEvent_ResourceRemovedSchema,
+  StreamTraceEvent_ResourceAddedSchema,
   type StreamTraceEvent_ResourceRemoved,
-  StreamTraceEvent_SpanAddedSchema,
+  StreamTraceEvent_ResourceRemovedSchema,
   type StreamTraceEvent_SpanAdded,
+  StreamTraceEvent_SpanAddedSchema,
 } from '@dxos/protocols/buf/dxos/tracing_pb';
+import { Stream } from '@dxos/stream';
 
 import { type TraceProcessor, type TraceSubscription } from './trace-processor';
-import { Stream } from '@dxos/stream';
 
 export class TraceSender implements Client.TracingService {
   constructor(private _traceProcessor: TraceProcessor) {}

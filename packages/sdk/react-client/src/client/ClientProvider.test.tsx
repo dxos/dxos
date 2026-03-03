@@ -8,6 +8,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { waitForCondition } from '@dxos/async';
 import { Client, Config, SystemStatus, fromHost } from '@dxos/client';
+import { log } from '@dxos/log';
 import { create } from '@dxos/protocols/buf';
 import {
   ConfigSchema,
@@ -15,7 +16,6 @@ import {
   Runtime_ClientSchema,
   Runtime_Client_StorageSchema,
 } from '@dxos/protocols/buf/dxos/config_pb';
-import { log } from '@dxos/log';
 import { type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { useIdentity } from '../halo';

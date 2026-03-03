@@ -145,7 +145,10 @@ const DisplayNameMissing = () => {
   const client = useClient();
   const [displayName, setDisplayName] = useState('');
   const handleChange = useCallback((event: ChangeEvent<HTMLInputElement>) => setDisplayName(event.target.value), []);
-  const handleSave = useCallback(() => client.halo.updateProfile(create(ProfileDocumentSchema, { displayName })), [client, displayName]);
+  const handleSave = useCallback(
+    () => client.halo.updateProfile(create(ProfileDocumentSchema, { displayName })),
+    [client, displayName],
+  );
 
   return (
     <Settings.Group classNames='p-4 place-content-center'>

@@ -7,7 +7,7 @@ import { bufWkt, toPublicKey } from '@dxos/protocols/buf';
 import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type PublicKey as BufPublicKey } from '@dxos/protocols/buf/dxos/keys_pb';
 
-import { type CredentialAssertion, ASSERTION_REGISTRY } from './assertion-registry';
+import { ASSERTION_REGISTRY, type CredentialAssertion } from './assertion-registry';
 
 /** Helper to convert buf PublicKey message (or @dxos/keys PublicKey) to @dxos/keys PublicKey. */
 export const fromBufPublicKey = (key?: BufPublicKey | PublicKey): PublicKey | undefined =>

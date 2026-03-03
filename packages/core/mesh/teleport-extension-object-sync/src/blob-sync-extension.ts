@@ -9,9 +9,15 @@ import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { RpcClosedError } from '@dxos/protocols';
-import { create, EMPTY } from '@dxos/protocols/buf';
-import { type BlobChunk, BlobChunkSchema, type WantList, WantListSchema, BlobSyncService } from '@dxos/protocols/buf/dxos/mesh/teleport/blobsync_pb';
-import { type ExtensionContext, BufRpcExtension } from '@dxos/teleport';
+import { EMPTY, create } from '@dxos/protocols/buf';
+import {
+  type BlobChunk,
+  BlobChunkSchema,
+  BlobSyncService,
+  type WantList,
+  WantListSchema,
+} from '@dxos/protocols/buf/dxos/mesh/teleport/blobsync_pb';
+import { BufRpcExtension, type ExtensionContext } from '@dxos/teleport';
 import { BitField } from '@dxos/util';
 
 import { type BlobStore } from './blob-store';

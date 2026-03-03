@@ -12,7 +12,12 @@ import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type Timestamp } from '@dxos/protocols/buf';
-import { ConnectionState, type NetworkStatus, type NetworkStatus_Signal, Platform_PLATFORM_TYPE } from '@dxos/protocols/buf/dxos/client/services_pb';
+import {
+  ConnectionState,
+  type NetworkStatus,
+  type NetworkStatus_Signal,
+  Platform_PLATFORM_TYPE,
+} from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type TimeframeVector } from '@dxos/protocols/buf/dxos/echo/timeframe_pb';
 
 import { type DataProvider } from '../observability';
@@ -240,9 +245,7 @@ const mapSpaces = (spaces: Space[], options: MapSpacesOptions = { verbose: false
 
     const pipeline = space.internal.data.pipeline;
     const assertion = pipeline?.currentEpoch?.subject?.assertion as any;
-    const startDataMutations = assertion?.timeframe
-      ? timeframeVectorTotalMessages(assertion.timeframe)
-      : 0;
+    const startDataMutations = assertion?.timeframe ? timeframeVectorTotalMessages(assertion.timeframe) : 0;
     const epoch = assertion?.number;
     const currentDataMutations = timeframeVectorTotalMessages(pipeline?.currentDataTimeframe);
     const totalDataMutations = timeframeVectorTotalMessages(pipeline?.targetDataTimeframe);

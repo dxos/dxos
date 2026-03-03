@@ -8,17 +8,17 @@ import { Event, Trigger } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { create } from '@dxos/protocols/buf';
 import {
+  QueryStatusRequestSchema,
+  type QueryStatusResponse,
+  SystemStatus,
+  UpdateStatusRequestSchema,
+} from '@dxos/protocols/buf/dxos/client/services_pb';
+import {
   ConfigSchema,
   RuntimeSchema,
   Runtime_ClientSchema,
   Runtime_Client_LogSchema,
 } from '@dxos/protocols/buf/dxos/config_pb';
-import {
-  type QueryStatusResponse,
-  QueryStatusRequestSchema,
-  SystemStatus,
-  UpdateStatusRequestSchema,
-} from '@dxos/protocols/buf/dxos/client/services_pb';
 
 import { SystemServiceImpl } from './system-service';
 

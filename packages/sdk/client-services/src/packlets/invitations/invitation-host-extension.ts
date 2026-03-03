@@ -9,7 +9,7 @@ import { InvariantViolation, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { InvalidInvitationExtensionRoleError, type Rpc, trace } from '@dxos/protocols';
-import { create, EMPTY, toPublicKey } from '@dxos/protocols/buf';
+import { EMPTY, create, toPublicKey } from '@dxos/protocols/buf';
 import {
   type Invitation,
   Invitation_AuthMethod,
@@ -19,15 +19,14 @@ import { type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_
 import {
   type AdmissionRequest,
   type AdmissionResponse,
-  AuthenticationResponse_Status,
   AuthenticationResponseSchema,
+  AuthenticationResponse_Status,
+  IntroductionResponseSchema,
   InvitationHostService,
   type InvitationOptions,
   InvitationOptions_Role,
-  IntroductionResponseSchema,
-  type IntroductionResponse,
 } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
-import { type ExtensionContext, BufRpcExtension } from '@dxos/teleport';
+import { BufRpcExtension, type ExtensionContext } from '@dxos/teleport';
 
 import type { FlowLockHolder } from './invitation-state';
 import { stateToString, tryAcquireBeforeContextDisposed } from './utils';
@@ -181,14 +180,11 @@ export class InvitationHostExtension
               }
               invariant(invitation.guestKeypair.publicKey);
               const pubKey = invitation.guestKeypair.publicKey;
-              const pubKeyBytes = pubKey instanceof Uint8Array ? pubKey : (pubKey as any).data ?? toPublicKey(pubKey).asUint8Array();
+              const pubKeyBytes =
+                pubKey instanceof Uint8Array ? pubKey : ((pubKey as any).data ?? toPublicKey(pubKey).asUint8Array());
               const isSignatureValid =
                 this._challenge &&
-                verify(
-                  this._challenge,
-                  Buffer.from(signedChallenge ?? []),
-                  Buffer.from(pubKeyBytes),
-                );
+                verify(this._challenge, Buffer.from(signedChallenge ?? []), Buffer.from(pubKeyBytes));
               if (isSignatureValid) {
                 this.authenticationPassed = true;
               } else {

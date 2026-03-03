@@ -3,7 +3,7 @@
 //
 
 import { type Echo } from '@dxos/protocols';
-import { EMPTY, type Empty } from '@dxos/protocols/buf';
+import { type Empty } from '@dxos/protocols/buf';
 import type {
   DeleteFromQueueRequest,
   InsertIntoQueueRequest,

@@ -11,9 +11,9 @@ import { Context, LifecycleState, Resource, cancelWithContext } from '@dxos/cont
 import {
   type CredentialSigner,
   type DelegateInvitationCredential,
-  fromBufPublicKey,
   type MemberInfo,
   createAdmissionCredentials,
+  fromBufPublicKey,
   getCredentialAssertion,
 } from '@dxos/credentials';
 import { Type } from '@dxos/echo';
@@ -47,7 +47,12 @@ import { ObjectId, PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AlreadyJoinedError, trace as Trace } from '@dxos/protocols';
 import { create, encodePublicKey, toPublicKey } from '@dxos/protocols/buf';
-import { AdmissionKeypairSchema, Invitation_Kind, Invitation_Type, SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import {
+  AdmissionKeypairSchema,
+  Invitation_Kind,
+  Invitation_Type,
+  SpaceState,
+} from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
 import { type FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { EdgeReplicationSetting, type SpaceMetadata } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
@@ -65,7 +70,6 @@ import { type InvitationsManager } from '../invitations';
 
 import { DataSpace } from './data-space';
 import { spaceGenesis } from './genesis';
-
 
 const PRESENCE_ANNOUNCE_INTERVAL = 10_000;
 const PRESENCE_OFFLINE_TIMEOUT = 20_000;
@@ -724,8 +728,13 @@ export class DataSpaceManager extends Resource {
         authMethod: invitation.authMethod,
         invitationId: invitation.invitationId,
         swarmKey: encodePublicKey(invitation.swarmKey as any),
-        guestKeypair: invitation.guestKey ? create(AdmissionKeypairSchema, { publicKey: encodePublicKey(invitation.guestKey as any) }) : undefined,
-        lifetime: invitation.expiresOn ? ((invitation.expiresOn as any).getTime?.() ?? new Date(invitation.expiresOn as any).getTime()) - Date.now() / 1000 : undefined,
+        guestKeypair: invitation.guestKey
+          ? create(AdmissionKeypairSchema, { publicKey: encodePublicKey(invitation.guestKey as any) })
+          : undefined,
+        lifetime: invitation.expiresOn
+          ? ((invitation.expiresOn as any).getTime?.() ?? new Date(invitation.expiresOn as any).getTime()) -
+            Date.now() / 1000
+          : undefined,
         multiUse: invitation.multiUse,
         delegationCredentialId: encodePublicKey(credentialId as any),
         persistent: false,

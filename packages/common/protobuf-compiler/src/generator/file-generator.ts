@@ -7,7 +7,7 @@ import { dirname, join } from 'path';
 import type pb from 'protobufjs';
 import * as ts from 'typescript';
 
-import { CODEC_MODULE, STREAM_MODULE, ModuleSpecifier } from '../module-specifier';
+import { CODEC_MODULE, ModuleSpecifier, STREAM_MODULE } from '../module-specifier';
 import { getSafeNamespaceIdentifier, parseFullyQualifiedName } from '../namespaces';
 import { type SubstitutionsMap } from '../parser';
 
@@ -121,9 +121,7 @@ const createRuntimeImports = () => [
     f.createImportClause(
       true,
       undefined,
-      f.createNamedImports([
-        f.createImportSpecifier(false, undefined, f.createIdentifier('RequestOptions')),
-      ]),
+      f.createNamedImports([f.createImportSpecifier(false, undefined, f.createIdentifier('RequestOptions'))]),
     ),
     f.createStringLiteral(CODEC_MODULE.importSpecifier('')),
   ),
@@ -132,9 +130,7 @@ const createRuntimeImports = () => [
     f.createImportClause(
       true,
       undefined,
-      f.createNamedImports([
-        f.createImportSpecifier(false, undefined, f.createIdentifier('Stream')),
-      ]),
+      f.createNamedImports([f.createImportSpecifier(false, undefined, f.createIdentifier('Stream'))]),
     ),
     f.createStringLiteral(STREAM_MODULE.importSpecifier('')),
   ),

@@ -8,20 +8,20 @@ import { afterEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout, latch } from '@dxos/async';
 import { Config } from '@dxos/config';
+import { Context } from '@dxos/context';
+import { verifyPresentation } from '@dxos/credentials';
+import { type PublicKey } from '@dxos/keys';
+import { MemorySignalManagerContext } from '@dxos/messaging';
 import { create } from '@dxos/protocols/buf';
+import { toPublicKey } from '@dxos/protocols/buf';
+import { type Identity } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type QueryIdentityResponse } from '@dxos/protocols/buf/dxos/client/services_pb';
 import {
   ConfigSchema,
   RuntimeSchema,
   Runtime_ClientSchema,
   Runtime_Client_StorageSchema,
 } from '@dxos/protocols/buf/dxos/config_pb';
-import { Context } from '@dxos/context';
-import { verifyPresentation } from '@dxos/credentials';
-import { type PublicKey } from '@dxos/keys';
-import { MemorySignalManagerContext } from '@dxos/messaging';
-import { toPublicKey } from '@dxos/protocols/buf';
-import { type Identity } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { type QueryIdentityResponse } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { isNode } from '@dxos/util';
 

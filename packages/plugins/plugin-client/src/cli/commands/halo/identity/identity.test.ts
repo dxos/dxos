@@ -28,7 +28,9 @@ describe('halo identity', () => {
   it('should print identity if initialized', () =>
     Effect.gen(function* () {
       const client = yield* ClientService;
-      yield* Effect.tryPromise(() => client.halo.createIdentity(create(ProfileDocumentSchema, { displayName: 'Test' })));
+      yield* Effect.tryPromise(() =>
+        client.halo.createIdentity(create(ProfileDocumentSchema, { displayName: 'Test' })),
+      );
       yield* handler();
       const logger = yield* TestConsole.TestConsole;
       const logs = logger.logs;

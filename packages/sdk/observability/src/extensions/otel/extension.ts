@@ -67,7 +67,9 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
     _headers ??
     Match.value(isNode()).pipe(
       Match.when(true, () => Option.fromNullable(process.env.DX_OTEL_HEADERS ?? buildSecrets.OTEL_HEADERS)),
-      Match.when(false, () => Option.fromNullable(config.values.runtime?.app?.env?.DX_OTEL_HEADERS as string | undefined)),
+      Match.when(false, () =>
+        Option.fromNullable(config.values.runtime?.app?.env?.DX_OTEL_HEADERS as string | undefined),
+      ),
       Match.exhaustive,
       Option.map((raw) => parseHeaders(raw as string)),
       Option.getOrElse(() => undefined),

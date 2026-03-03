@@ -6,9 +6,9 @@ import { type Codec } from '@dxos/codec-protobuf';
 import { credentialToBinary, packTypedAssertionAsAny, unpackAnyAsTypedMessage } from '@dxos/credentials';
 import { createCodecEncoding } from '@dxos/hypercore';
 import { PublicKey } from '@dxos/keys';
-import { type bufWkt, bufToTimeframe, create, toBinary, fromBinary, timeframeToBuf } from '@dxos/protocols/buf';
-import { type Credential, CredentialSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { bufToTimeframe, type bufWkt, create, fromBinary, timeframeToBuf, toBinary } from '@dxos/protocols/buf';
 import { type FeedMessage, FeedMessageSchema } from '@dxos/protocols/buf/dxos/echo/feed_pb';
+import { CredentialSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Timeframe } from '@dxos/timeframe';
 
 /**
@@ -16,7 +16,9 @@ import { Timeframe } from '@dxos/timeframe';
  * - Buf oneof format: msg.payload.payload.case === 'credential'
  * - Flat init format: msg.payload.credential.credential (before create() processes it)
  */
-const findCredentialInFeedMessage = (msg: any): { credential: any; path: 'oneof' | 'flat-payload' | 'flat-root' } | null => {
+const findCredentialInFeedMessage = (
+  msg: any,
+): { credential: any; path: 'oneof' | 'flat-payload' | 'flat-root' } | null => {
   if (msg.payload?.payload?.case === 'credential') {
     return { credential: msg.payload.payload.value?.credential, path: 'oneof' };
   }
@@ -130,8 +132,8 @@ const convertCredentialPublicKeys = (msg: FeedMessage): void => {
     credential.proof.signer = PublicKey.from(credential.proof.signer.data);
   }
   if (credential.parentCredentialIds) {
-    credential.parentCredentialIds = credential.parentCredentialIds.map(
-      (pk: any) => pk?.data instanceof Uint8Array ? PublicKey.from(pk.data) : pk,
+    credential.parentCredentialIds = credential.parentCredentialIds.map((pk: any) =>
+      pk?.data instanceof Uint8Array ? PublicKey.from(pk.data) : pk,
     );
   }
   // Recurse into chain.
@@ -160,8 +162,7 @@ const convertCredentialPublicKeysForBuf = (msg: FeedMessage): void => {
     return;
   }
   const cred = found.credential;
-  const convertPk = (pk: unknown) =>
-    PublicKey.isPublicKey(pk) ? { data: (pk as PublicKey).asUint8Array() } : pk;
+  const convertPk = (pk: unknown) => (PublicKey.isPublicKey(pk) ? { data: (pk as PublicKey).asUint8Array() } : pk);
 
   if (PublicKey.isPublicKey(cred.issuer)) {
     cred.issuer = convertPk(cred.issuer);

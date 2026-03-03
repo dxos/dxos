@@ -28,7 +28,7 @@ import { log } from '@dxos/log';
 import { CancelledError, SystemError } from '@dxos/protocols';
 import { timestampFromDate, toPublicKey } from '@dxos/protocols/buf';
 import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
-import { type CreateEpochRequest, type CreateEpochRequest_Migration, type Space_Metrics } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type CreateEpochRequest_Migration, type Space_Metrics } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
 import { type FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { type SpaceCache } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
@@ -547,9 +547,7 @@ export class DataSpace {
 
     const lastEpoch = this._automergeSpaceState.lastEpoch as any;
     const epoch = {
-      previousId: lastEpoch?.id
-        ? toPublicKey(lastEpoch.id)
-        : undefined,
+      previousId: lastEpoch?.id ? toPublicKey(lastEpoch.id) : undefined,
       number: (lastEpoch?.subject.assertion.number ?? -1) + 1,
       timeframe: lastEpoch?.subject.assertion.timeframe ?? new Timeframe(),
       automergeRoot: newRoot ?? this._automergeSpaceState.rootUrl,

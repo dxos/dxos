@@ -44,6 +44,7 @@ import {
 } from '@dxos/protocols/buf/dxos/config_pb';
 import { type BufProtoRpcPeer, createBufProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
+import { type Stream } from '@dxos/stream';
 import { trace } from '@dxos/tracing';
 import { type JsonKeyOptions, type MaybePromise } from '@dxos/util';
 
@@ -53,7 +54,6 @@ import type { IFrameManager, Shell, ShellManager } from '../services';
 import { DXOS_VERSION } from '../version';
 
 import { ClientRuntime } from './client-runtime';
-import { Stream } from '@dxos/stream';
 
 /**
  * This options object configures the DXOS Client.

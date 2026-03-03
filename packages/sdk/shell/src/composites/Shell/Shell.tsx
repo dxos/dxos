@@ -167,9 +167,7 @@ export const Shell = ({ runtime }: { runtime: ShellRuntime }) => {
           onDone={async (result) => {
             blurActiveElement();
             const target = result?.target ?? undefined;
-            const spaceKeyBuf = result?.spaceKey
-              ? encodePublicKey(result.spaceKey as KeysPublicKey)
-              : undefined;
+            const spaceKeyBuf = result?.spaceKey ? encodePublicKey(result.spaceKey as KeysPublicKey) : undefined;
             await runtime.setAppContext(
               create(AppContextRequestSchema, { display: ShellDisplay.NONE, spaceKey: spaceKeyBuf, target }),
             );

@@ -285,17 +285,18 @@ export class QueryExecutor extends Resource {
 
   getResults(): QueryResult[] {
     return this._lastResultSet.map(
-      (item) => ({
-        id: item.objectId,
-        documentId: item.documentId ?? undefined,
-        queueId: item.queueId ?? undefined,
-        queueNamespace: item.queueNamespace ?? undefined,
-        spaceId: item.spaceId,
+      (item) =>
+        ({
+          id: item.objectId,
+          documentId: item.documentId ?? undefined,
+          queueId: item.queueId ?? undefined,
+          queueNamespace: item.queueNamespace ?? undefined,
+          spaceId: item.spaceId,
 
-        rank: item.rank,
+          rank: item.rank,
 
-        documentJson: item.doc ? JSON.stringify(item.doc) : item.data ? JSON.stringify(item.data) : undefined,
-      }) as any as QueryResult,
+          documentJson: item.doc ? JSON.stringify(item.doc) : item.data ? JSON.stringify(item.data) : undefined,
+        }) as any as QueryResult,
     );
   }
 

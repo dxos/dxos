@@ -11,7 +11,6 @@ import { toPublicKey } from '@dxos/protocols/buf';
 import { type Contact } from '@dxos/protocols/buf/dxos/client/services_pb';
 import {
   type SubscribeToFeedBlocksResponse_Block,
-  type SubscribeToFeedsResponse,
   type SubscribeToFeedsResponse_FeedOwner,
 } from '@dxos/protocols/buf/dxos/devtools/host_pb';
 import { type Client, useClient } from '@dxos/react-client';

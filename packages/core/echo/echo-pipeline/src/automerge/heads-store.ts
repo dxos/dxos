@@ -8,7 +8,7 @@ import { type MixedEncoding } from 'level-transcoder';
 
 import type { BatchLevel, SublevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
-import { create, toBinary, fromBinary } from '@dxos/protocols/buf';
+import { create, fromBinary, toBinary } from '@dxos/protocols/buf';
 import { HeadsSchema } from '@dxos/protocols/buf/dxos/echo/query_pb';
 
 const headsEncoding: MixedEncoding<Heads, Uint8Array, Heads> = {

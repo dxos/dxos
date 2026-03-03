@@ -12,8 +12,8 @@ import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging
 import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
 import { create } from '@dxos/protocols/buf';
 import { type FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
-import { type DeviceProfileDocument, type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import { type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type Storage, StorageType, createStorage } from '@dxos/random-access-storage';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
 
@@ -53,7 +53,12 @@ describe('identity/identity-manager', () => {
       blobStore,
       metadataStore,
     });
-    const identityManager = new IdentityManager({ metadataStore, keyring, feedStore: feedStore as any, spaceManager } as any);
+    const identityManager = new IdentityManager({
+      metadataStore,
+      keyring,
+      feedStore: feedStore as any,
+      spaceManager,
+    } as any);
 
     return {
       networkManager,
@@ -111,10 +116,12 @@ describe('identity/identity-manager', () => {
 
     const peer1 = await setupPeer({ signalContext });
     const identity1 = await peer1.identityManager.createIdentity();
-    peer1.networkManager.setPeerInfo(create(PeerSchema, {
-      peerKey: identity1.deviceKey.toHex(),
-      identityKey: identity1.identityKey.toHex(),
-    }));
+    peer1.networkManager.setPeerInfo(
+      create(PeerSchema, {
+        peerKey: identity1.deviceKey.toHex(),
+        identityKey: identity1.identityKey.toHex(),
+      }),
+    );
     await identity1.joinNetwork();
 
     const peer2 = await setupPeer({ signalContext });
@@ -147,10 +154,12 @@ describe('identity/identity-manager', () => {
       dataFeedKey,
       authorizedDeviceCredential: credential,
     });
-    peer2.networkManager.setPeerInfo(create(PeerSchema, {
-      peerKey: identity2.deviceKey.toHex(),
-      identityKey: identity2.identityKey.toHex(),
-    }));
+    peer2.networkManager.setPeerInfo(
+      create(PeerSchema, {
+        peerKey: identity2.deviceKey.toHex(),
+        identityKey: identity2.identityKey.toHex(),
+      }),
+    );
     await identity2.joinNetwork();
 
     // Identity2 is not yet ready at this point. Peer1 needs to admit peer2 device key and feed keys.

@@ -181,9 +181,11 @@ export default Capability.makeModule(
           invariant(credential, 'Credential not available');
           const recoveryKey = PublicKey.from(
             new Uint8Array(
-              ((credential as PublicKeyCredential).response as AuthenticatorAttestationResponse as unknown as {
-                getPublicKey(): ArrayBuffer;
-              }).getPublicKey(),
+              (
+                (credential as PublicKeyCredential).response as AuthenticatorAttestationResponse as unknown as {
+                  getPublicKey(): ArrayBuffer;
+                }
+              ).getPublicKey(),
             ),
           );
           const algorithm =

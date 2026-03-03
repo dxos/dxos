@@ -9,6 +9,7 @@ import type { PublicKey } from '@dxos/keys';
 import { type CallMetadata, type LogFilter, log, parseFilter } from '@dxos/log';
 import { type LogEntry, type LogEntry_Meta, LogLevel } from '@dxos/protocols/buf/dxos/client/logging_pb';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
+import { type Stream } from '@dxos/stream';
 import { trace } from '@dxos/tracing';
 
 import { RPC_TIMEOUT } from '../common';
@@ -16,7 +17,6 @@ import { STORAGE_LOCK_KEY } from '../lock-key';
 
 import { ClientServicesProxy } from './service-proxy';
 import { SharedWorkerConnection } from './shared-worker-connection';
-import { Stream } from '@dxos/stream';
 
 /**
  * Creates services provider connected via worker.

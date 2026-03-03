@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { create, type JsonObject } from '@dxos/protocols/buf';
+import { type JsonObject, create } from '@dxos/protocols/buf';
 import { type Metric, MetricSchema } from '@dxos/protocols/buf/dxos/tracing_pb';
 
 import { BaseCounter } from './base';

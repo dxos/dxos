@@ -30,7 +30,7 @@ import { type SwarmNetworkManager } from '@dxos/network-manager';
 import { FeedProtocol, InvalidStorageVersionError, STORAGE_VERSION, trace } from '@dxos/protocols';
 import { create, toPublicKey } from '@dxos/protocols/buf';
 import { type Invitation, Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
-import { type Runtime_Client_EdgeFeatures, type Runtime_Client_Storage } from '@dxos/protocols/buf/dxos/config_pb';
+import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
 import { type FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { ChainSchema, type Credential, type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
@@ -435,7 +435,11 @@ export class ServiceContext extends Resource {
           identity.identityKey,
           identity.deviceKey,
           // Avoid create(ChainSchema, { credential }) which deep-processes proto-decoded credentials.
-          (() => { const chain = create(ChainSchema, {}); chain.credential = params.deviceCredential; return chain; })(),
+          (() => {
+            const chain = create(ChainSchema, {});
+            chain.credential = params.deviceCredential;
+            return chain;
+          })(),
           [], // TODO(dmaretskyi): Service access credentials.
         );
       } else {

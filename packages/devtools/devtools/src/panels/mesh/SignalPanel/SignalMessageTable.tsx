@@ -24,8 +24,7 @@ const getSwarmEvent = (response: SignalResponse) =>
 const getSignalMessage = (response: SignalResponse) =>
   response.data?.case === 'message' ? response.data.value : undefined;
 
-const getReceivedAtMs = (response: SignalResponse) =>
-  response.receivedAt ? timestampMs(response.receivedAt) : 0;
+const getReceivedAtMs = (response: SignalResponse) => (response.receivedAt ? timestampMs(response.receivedAt) : 0);
 
 export type View<T> = {
   id: string;

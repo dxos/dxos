@@ -44,7 +44,9 @@ describe('AutomergeReplicator', () => {
       const [peer1] = await setupConnectedPeers();
       const replicator = registerReplicator(peer1);
       await replicator.extension.onClose();
-      await expect(replicator.extension.sendSyncMessage({ payload: new Uint8Array([]) } as any)).rejects.toBeInstanceOf(Error);
+      await expect(replicator.extension.sendSyncMessage({ payload: new Uint8Array([]) } as any)).rejects.toBeInstanceOf(
+        Error,
+      );
     });
 
     test('waits for replication to get started', async () => {
@@ -75,9 +77,9 @@ describe('AutomergeReplicator', () => {
           onConnectionClosed.wake(err);
         },
       });
-      await expect(replicator2.extension.sendSyncMessage({ payload: new Uint8Array([42]) } as any)).rejects.toBeInstanceOf(
-        Error,
-      );
+      await expect(
+        replicator2.extension.sendSyncMessage({ payload: new Uint8Array([42]) } as any),
+      ).rejects.toBeInstanceOf(Error);
       const sendError = await onConnectionClosed.wait();
       expect(sendError).not.to.be.undefined;
     });

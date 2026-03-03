@@ -30,8 +30,14 @@ const printCredential = (credential: Credential) => {
   const type = credential.subject ? getCredentialAssertion(credential)['@type'] : '<unknown>';
   return FormBuilder.make({ title: type }).pipe(
     FormBuilder.option('id', Option.fromNullable(credential.id ? toPublicKey(credential.id).truncate() : undefined)),
-    FormBuilder.option('issuer', Option.fromNullable(credential.issuer ? toPublicKey(credential.issuer).truncate() : undefined)),
-    FormBuilder.option('subject', Option.fromNullable(credential.subject?.id ? toPublicKey(credential.subject.id).truncate() : undefined)),
+    FormBuilder.option(
+      'issuer',
+      Option.fromNullable(credential.issuer ? toPublicKey(credential.issuer).truncate() : undefined),
+    ),
+    FormBuilder.option(
+      'subject',
+      Option.fromNullable(credential.subject?.id ? toPublicKey(credential.subject.id).truncate() : undefined),
+    ),
     FormBuilder.build,
   );
 };

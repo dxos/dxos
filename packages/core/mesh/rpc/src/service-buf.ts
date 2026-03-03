@@ -13,10 +13,10 @@ import {
   fromBinary,
   toBinary,
 } from '@dxos/protocols/buf';
+import { Stream } from '@dxos/stream';
 import { getAsyncProviderValue } from '@dxos/util';
 
 import { RpcPeer, type RpcPeerOptions } from './rpc';
-import { Stream } from '@dxos/stream';
 
 /**
  * Service backend interface for making RPC calls.

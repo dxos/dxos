@@ -61,7 +61,10 @@ export class DeviceStateMachine implements CredentialProcessor {
     switch (assertion.$typeName) {
       case 'dxos.halo.credentials.AuthorizedDevice': {
         const deviceKey = assertion.deviceKey ? toPublicKey(assertion.deviceKey) : subjectId;
-        this.authorizedDeviceKeys.set(deviceKey, this.authorizedDeviceKeys.get(deviceKey) ?? ({} as DeviceProfileDocument));
+        this.authorizedDeviceKeys.set(
+          deviceKey,
+          this.authorizedDeviceKeys.get(deviceKey) ?? ({} as DeviceProfileDocument),
+        );
 
         log('added device', {
           localDeviceKey: this._params.deviceKey,

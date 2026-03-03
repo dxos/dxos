@@ -5,7 +5,11 @@
 import { MulticastObservable, type Observable, type Subscriber } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { type MessageInitShape, timestampDate } from '@dxos/protocols/buf';
-import { type Invitation, type InvitationSchema, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import {
+  type Invitation,
+  type InvitationSchema,
+  Invitation_State,
+} from '@dxos/protocols/buf/dxos/client/invitation_pb';
 
 export type InvitationInit = MessageInitShape<typeof InvitationSchema>;
 

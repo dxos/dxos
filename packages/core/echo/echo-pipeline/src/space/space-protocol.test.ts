@@ -45,14 +45,26 @@ describe('space/space-protocol', () => {
     onTestFinished(() => protocol2.stop());
 
     await expect
-      .poll(() => presence1.getPeersOnline().some(({ identityKey }) => identityKey && toPublicKey(identityKey).equals(peer2.identityKey)), {
-        timeout: 1_000,
-      })
+      .poll(
+        () =>
+          presence1
+            .getPeersOnline()
+            .some(({ identityKey }) => identityKey && toPublicKey(identityKey).equals(peer2.identityKey)),
+        {
+          timeout: 1_000,
+        },
+      )
       .toBeTruthy();
     await expect
-      .poll(() => presence2.getPeersOnline().some(({ identityKey }) => identityKey && toPublicKey(identityKey).equals(peer1.identityKey)), {
-        timeout: 1_000,
-      })
+      .poll(
+        () =>
+          presence2
+            .getPeersOnline()
+            .some(({ identityKey }) => identityKey && toPublicKey(identityKey).equals(peer1.identityKey)),
+        {
+          timeout: 1_000,
+        },
+      )
       .toBeTruthy();
   });
 

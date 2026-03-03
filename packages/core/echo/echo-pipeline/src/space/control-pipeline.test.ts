@@ -14,7 +14,6 @@ import type { FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { SpaceMetadataSchema } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { AdmittedFeed_Designation } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
-import { Timeframe } from '@dxos/timeframe';
 
 import { valueEncoding } from '../common';
 import { MetadataStore } from '../metadata';
@@ -46,7 +45,13 @@ describe('space/control-pipeline', () => {
     // TODO(dmaretskyi): Separate test for cold start after genesis.
     const genesisFeed = await createFeed();
     const metadata = new MetadataStore(createStorage({ type: StorageType.RAM }).createDirectory());
-    await metadata.addSpace(create(SpaceMetadataSchema, { key: encodePublicKey(spaceKey), genesisFeedKey: encodePublicKey(genesisFeed.key), controlFeedKey: encodePublicKey(genesisFeed.key) }));
+    await metadata.addSpace(
+      create(SpaceMetadataSchema, {
+        key: encodePublicKey(spaceKey),
+        genesisFeedKey: encodePublicKey(genesisFeed.key),
+        controlFeedKey: encodePublicKey(genesisFeed.key),
+      }),
+    );
     const controlPipeline = new ControlPipeline({
       spaceKey,
       genesisFeed,
@@ -92,7 +97,7 @@ describe('space/control-pipeline', () => {
       await controlPipeline.pipeline.writer!.write({
         credential: {
           // buf Credential cast to proto Credential for feed encoding.
-          credential: (await createCredential({
+          credential: await createCredential({
             signer: keyring,
             issuer: identityKey,
             subject: controlFeed2.key,
@@ -103,7 +108,7 @@ describe('space/control-pipeline', () => {
               deviceKey,
               designation: AdmittedFeed_Designation.CONTROL,
             },
-          })),
+          }),
         },
       });
 
@@ -117,7 +122,7 @@ describe('space/control-pipeline', () => {
       await controlPipeline.pipeline.writer!.write({
         credential: {
           // buf Credential cast to proto Credential for feed encoding.
-          credential: (await createCredential({
+          credential: await createCredential({
             signer: keyring,
             issuer: identityKey,
             subject: dataFeed1.key,
@@ -128,7 +133,7 @@ describe('space/control-pipeline', () => {
               deviceKey,
               designation: AdmittedFeed_Designation.DATA,
             },
-          })),
+          }),
         },
       });
 

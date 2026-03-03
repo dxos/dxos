@@ -104,13 +104,16 @@ export class Gossip {
 
   postMessage(channel: string, payload: any): void {
     for (const extension of this._connections.values()) {
-      this._sendAnnounceWithTimeoutTracking(extension, create(GossipMessageSchema, {
-        peerId: encodePublicKey(this._params.localPeerId),
-        messageId: encodePublicKey(PublicKey.random()),
-        channelId: channel,
-        timestamp: timestampFromDate(new Date()),
-        payload,
-      })).catch(async (err) => {
+      this._sendAnnounceWithTimeoutTracking(
+        extension,
+        create(GossipMessageSchema, {
+          peerId: encodePublicKey(this._params.localPeerId),
+          messageId: encodePublicKey(PublicKey.random()),
+          channelId: channel,
+          timestamp: timestampFromDate(new Date()),
+          payload,
+        }),
+      ).catch(async (err) => {
         if (err instanceof RpcClosedError) {
           log('sendAnnounce failed because of RpcClosedError', { err });
         } else if (

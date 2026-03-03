@@ -277,15 +277,10 @@ export class ClientServicesHost {
     const iceProviders = this._config?.get('runtime.services.iceProviders' as any) as
       | Runtime_Services_IceProvider[]
       | undefined;
-    const signaling = this._config?.get('runtime.services.signaling' as any) as
-      | Runtime_Services_Signal[]
-      | undefined;
+    const signaling = this._config?.get('runtime.services.signaling' as any) as Runtime_Services_Signal[] | undefined;
     const {
       connectionLog = true,
-      transportFactory = createRtcTransportFactory(
-        { iceServers },
-        iceProviders && createIceProvider(iceProviders),
-      ),
+      transportFactory = createRtcTransportFactory({ iceServers }, iceProviders && createIceProvider(iceProviders)),
       signalManager = this._edgeConnection && this._config?.get('runtime.client.edgeFeatures' as any)?.signaling
         ? new EdgeSignalManager({ edgeConnection: this._edgeConnection })
         : new WebsocketSignalManager(signaling ?? []),

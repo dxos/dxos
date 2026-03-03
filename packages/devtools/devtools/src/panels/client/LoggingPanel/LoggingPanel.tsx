@@ -7,7 +7,13 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Format } from '@dxos/echo/internal';
 import { levels, parseFilter } from '@dxos/log';
 import { create, timestampFromDate } from '@dxos/protocols/buf';
-import { type LogEntry, LogEntrySchema, LogLevel, type QueryLogsRequest, QueryLogsRequestSchema } from '@dxos/protocols/buf/dxos/client/logging_pb';
+import {
+  type LogEntry,
+  LogEntrySchema,
+  LogLevel,
+  type QueryLogsRequest,
+  QueryLogsRequestSchema,
+} from '@dxos/protocols/buf/dxos/client/logging_pb';
 import { useClient } from '@dxos/react-client';
 import { useStream } from '@dxos/react-client/devtools';
 import { Toolbar, useFileDownload } from '@dxos/react-ui';
@@ -17,7 +23,11 @@ import { MasterDetailTable, PanelContainer, Searchbar, Select } from '../../../c
 
 const MAX_LOGS = 2_000;
 
-const defaultEntry: LogEntry = create(LogEntrySchema, { level: LogLevel.DEBUG, message: '', timestamp: timestampFromDate(new Date(0)) });
+const defaultEntry: LogEntry = create(LogEntrySchema, {
+  level: LogLevel.DEBUG,
+  message: '',
+  timestamp: timestampFromDate(new Date(0)),
+});
 
 const shortFile = (file?: string) => file?.split('/').slice(-1).join('/');
 

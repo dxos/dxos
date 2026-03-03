@@ -5,7 +5,7 @@
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { latch } from '@dxos/async';
-import { anyPack, create, EmptySchema, toPublicKey } from '@dxos/protocols/buf';
+import { EmptySchema, anyPack, create, toPublicKey } from '@dxos/protocols/buf';
 import { TestBuilder } from '@dxos/teleport/testing';
 
 import { TestAgent } from './testing';

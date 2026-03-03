@@ -25,7 +25,9 @@ describe('halo keys', () => {
       expect(parsed).toHaveProperty('identityKey');
       expect(parsed).toHaveProperty('deviceKey');
       expect(parsed.identityKey).toBe(
-        client.halo.identity.get()?.identityKey ? toPublicKey(client.halo.identity.get()!.identityKey!).toHex() : undefined,
+        client.halo.identity.get()?.identityKey
+          ? toPublicKey(client.halo.identity.get()!.identityKey!).toHex()
+          : undefined,
       );
       expect(parsed.deviceKey).toBe(
         client.halo.device?.deviceKey ? toPublicKey(client.halo.device.deviceKey).toHex() : undefined,

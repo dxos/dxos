@@ -27,7 +27,6 @@ const bufPublicKeysEqual = (a?: BufPublicKey, b?: BufPublicKey): boolean => {
 };
 
 export const verifyCredential = async (credential: Credential): Promise<VerificationResult> => {
-
   if (!bufPublicKeysEqual(credential.issuer, credential.proof?.signer)) {
     if (!credential.proof?.chain) {
       return {

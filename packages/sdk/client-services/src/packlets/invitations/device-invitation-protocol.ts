@@ -106,7 +106,8 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
   }
 
   async accept(response: AdmissionResponse, request: AdmissionRequest): Promise<Partial<Invitation>> {
-    const deviceResponse = (response as any).device ?? (response.kind?.case === 'device' ? response.kind.value : undefined);
+    const deviceResponse =
+      (response as any).device ?? (response.kind?.case === 'device' ? response.kind.value : undefined);
     invariant(deviceResponse);
 
     const deviceRequest = (request as any).device ?? (request.kind?.case === 'device' ? request.kind.value : undefined);

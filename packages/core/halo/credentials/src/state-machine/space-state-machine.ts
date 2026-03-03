@@ -11,8 +11,8 @@ import { type Credential, SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo
 import { type DelegateSpaceInvitation } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 import { type AsyncCallback, Callback, ComplexMap, ComplexSet } from '@dxos/util';
 
-import { type CredentialAssertion } from '../credentials/assertion-registry';
 import { fromBufPublicKey, getCredentialAssertion, verifyCredential } from '../credentials';
+import { type CredentialAssertion } from '../credentials/assertion-registry';
 import { type CredentialProcessor } from '../processor/credential-processor';
 
 import { type FeedInfo, FeedStateMachine } from './feed-state-machine';

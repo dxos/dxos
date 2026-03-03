@@ -41,9 +41,7 @@ const POLLING_INTERVAL = 1_000;
 export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Queue<T> {
   private readonly _ctx = new Context();
 
-  public readonly updated = new Event()
-
-;
+  public readonly updated = new Event();
 
   private readonly _refreshTask = new DeferredTask(this._ctx, async () => {
     const thisRefreshId = ++this._refreshId;
@@ -108,53 +106,31 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
         this.updated.emit();
       }
     }
-  })
+  });
 
-;
+  private readonly _subspaceTag: string;
 
-  private readonly _subspaceTag: string
+  private readonly _spaceId: SpaceId;
 
-;
-
-  private readonly _spaceId: SpaceId
-
-;
-
-  private readonly _queueId: string
-
-;
+  private readonly _queueId: string;
 
   /**
    * Number of active polling handlers.
    */
 
-  private _pollingHandlers: number = 0
+  private _pollingHandlers: number = 0;
 
-;
+  private _objectCache = new Map<ObjectId, T>();
 
-  private _objectCache = new Map<ObjectId, T>()
+  private _objects: T[] = [];
 
-;
+  private _isLoading = true;
 
-  private _objects: T[] = []
+  private _error: Error | null = null;
 
-;
+  private _refreshId = 0;
 
-  private _isLoading = true
-
-;
-
-  private _error: Error | null = null
-
-;
-
-  private _refreshId = 0
-
-;
-
-  private _querying = false
-
-;
+  private _querying = false;
 
   constructor(
     private readonly _service: Echo.QueueService,
@@ -282,9 +258,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
 
   // Odd way to define method's types from a typedef.
 
-  declare query: Database.QueryFn
-
-;
+  declare query: Database.QueryFn;
 
   static {
     this.prototype.query = this.prototype._query;
@@ -307,8 +281,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
   async queryObjects(): Promise<T[]> {
     const objects = await this.fetchObjectsJSON();
     const decodedObjects = await Promise.all(
-      objects
-        .map(async (obj) => {
+      objects.map(async (obj) => {
         const decoded = await Obj.fromJSON(obj, {
           refResolver: this._refResolver,
           dxn: this._dxn.extend([(obj as { id?: string }).id ?? '']),
@@ -383,35 +356,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
     await this._refreshTask.runBlocking();
   }
 
-  private _pollingInterval: NodeJS.Timeout | null = null
-
-;
-
-;
-
-;
-
-;
-
-;
-
-;
-
-;
-
-;
-
-;
-
-;
-
-;
-
-;
-
-;
-
-;
+  private _pollingInterval: NodeJS.Timeout | null = null;
 
   // TODO(burdon): Rename to objects.
 
@@ -428,8 +373,6 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
    */
 
   // Odd way to define method's types from a typedef.
-
-;
 
   async sync({
     shouldPush = true,
@@ -455,8 +398,6 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
    */
 
   // TODO(dmaretskyi): Split optimistic into separate state so it doesn't get overridden.
-
-;
 
   beginPolling(): () => void {
     if (this._pollingHandlers++ === 0) {

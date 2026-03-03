@@ -14,8 +14,12 @@ import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
 import { toPublicKey } from '@dxos/protocols/buf';
 import { Invitation_AuthMethod, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import {
+  DeviceKind,
+  Device_PresenceState,
+  SpaceMember_PresenceState,
+} from '@dxos/protocols/buf/dxos/client/services_pb';
 import type { ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { Device_PresenceState, DeviceKind, SpaceMember_PresenceState } from '@dxos/protocols/buf/dxos/client/services_pb';
 
 import { Client } from '../client';
 import { TestBuilder, syncItemsAutomerge } from '../testing';

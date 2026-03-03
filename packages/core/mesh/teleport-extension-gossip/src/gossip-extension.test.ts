@@ -36,27 +36,37 @@ describe('GossipExtension', () => {
     });
     connection2.teleport.addExtension('dxos.mesh.teleport.gossip', extension2);
 
-    await extension1.sendAnnounce(create(GossipMessageSchema, {
-      peerId: encodePublicKey(peer1.peerId),
-      channelId: 'dxos.mesh.teleport.gossip',
-      timestamp: timestampFromDate(new Date()),
-      messageId: encodePublicKey(PublicKey.random()),
-      payload: anyPack(PeerStateSchema, create(PeerStateSchema, {
-        connections: [encodePublicKey(peer2.peerId)],
-        identityKey: encodePublicKey(PublicKey.random()),
-      })),
-    }));
+    await extension1.sendAnnounce(
+      create(GossipMessageSchema, {
+        peerId: encodePublicKey(peer1.peerId),
+        channelId: 'dxos.mesh.teleport.gossip',
+        timestamp: timestampFromDate(new Date()),
+        messageId: encodePublicKey(PublicKey.random()),
+        payload: anyPack(
+          PeerStateSchema,
+          create(PeerStateSchema, {
+            connections: [encodePublicKey(peer2.peerId)],
+            identityKey: encodePublicKey(PublicKey.random()),
+          }),
+        ),
+      }),
+    );
 
-    await extension2.sendAnnounce(create(GossipMessageSchema, {
-      peerId: encodePublicKey(peer2.peerId),
-      channelId: 'dxos.mesh.teleport.gossip',
-      timestamp: timestampFromDate(new Date()),
-      messageId: encodePublicKey(PublicKey.random()),
-      payload: anyPack(PeerStateSchema, create(PeerStateSchema, {
-        connections: [encodePublicKey(peer1.peerId)],
-        identityKey: encodePublicKey(PublicKey.random()),
-      })),
-    }));
+    await extension2.sendAnnounce(
+      create(GossipMessageSchema, {
+        peerId: encodePublicKey(peer2.peerId),
+        channelId: 'dxos.mesh.teleport.gossip',
+        timestamp: timestampFromDate(new Date()),
+        messageId: encodePublicKey(PublicKey.random()),
+        payload: anyPack(
+          PeerStateSchema,
+          create(PeerStateSchema, {
+            connections: [encodePublicKey(peer1.peerId)],
+            identityKey: encodePublicKey(PublicKey.random()),
+          }),
+        ),
+      }),
+    );
 
     expect(toPublicKey((await trigger1.wait({ timeout: 50 })).peerId!).toHex()).toEqual(peer2.peerId.toHex());
     expect(toPublicKey((await trigger2.wait({ timeout: 50 })).peerId!).toHex()).toEqual(peer1.peerId.toHex());

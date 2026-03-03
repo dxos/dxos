@@ -41,14 +41,12 @@ const setupPeersInSpace = async (options: PeersInSpaceProps = {}) => {
   const space = await clients[0].spaces.create({ name: faker.commerce.productName() });
   await onCreateSpace?.({ space });
   await Promise.all(
-    clients
-      .slice(1)
-      .map((client) =>
-        performInvitation({
-          host: space as unknown as Parameters<typeof performInvitation>[0]['host'],
-          guest: client.spaces as unknown as Parameters<typeof performInvitation>[0]['guest'],
-        }),
-      ),
+    clients.slice(1).map((client) =>
+      performInvitation({
+        host: space as unknown as Parameters<typeof performInvitation>[0]['host'],
+        guest: client.spaces as unknown as Parameters<typeof performInvitation>[0]['guest'],
+      }),
+    ),
   );
   return { spaceId: space.id, clients };
 };

@@ -141,7 +141,8 @@ describe('EchoNetworkAdapter', () => {
     data: payload,
   });
 
-  const encodeSyncPayload = (payload: Uint8Array): SyncMessage => ({
-    payload: cbor.encode(payload),
-  }) as any;
+  const encodeSyncPayload = (payload: Uint8Array): SyncMessage =>
+    ({
+      payload: cbor.encode(payload),
+    }) as any;
 });

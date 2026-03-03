@@ -46,6 +46,7 @@ import {
   type SubscribeToSwarmInfoResponse,
 } from '@dxos/protocols/buf/dxos/devtools/host_pb';
 import { type BlobMeta, BlobMetaSchema, BlobMeta_State } from '@dxos/protocols/buf/dxos/echo/blob_pb';
+import { Stream } from '@dxos/stream';
 
 import { type ServiceContext } from '../services';
 
@@ -54,7 +55,6 @@ import { subscribeToKeyringKeys } from './keys';
 import { subscribeToMetadata } from './metadata';
 import { subscribeToNetworkStatus, subscribeToSignal, subscribeToSwarmInfo } from './network';
 import { subscribeToSpaces } from './spaces';
-import { Stream } from '@dxos/stream';
 
 export class DevtoolsHostEvents {
   readonly ready = new AsyncEvent();
@@ -106,8 +106,12 @@ export class DevtoolsServiceImpl implements Client.DevtoolsHost {
         length: blob.length,
         chunkSize: blob.chunkSize,
         bitfield: blob.bitfield,
-        created: blob.created ? timestampFromDate(blob.created instanceof Date ? blob.created : new Date(blob.created)) : undefined,
-        updated: blob.updated ? timestampFromDate(blob.updated instanceof Date ? blob.updated : new Date(blob.updated)) : undefined,
+        created: blob.created
+          ? timestampFromDate(blob.created instanceof Date ? blob.created : new Date(blob.created))
+          : undefined,
+        updated: blob.updated
+          ? timestampFromDate(blob.updated instanceof Date ? blob.updated : new Date(blob.updated))
+          : undefined,
       }),
     );
     return create(GetBlobsResponseSchema, { blobs });

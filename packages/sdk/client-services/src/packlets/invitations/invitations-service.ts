@@ -13,10 +13,10 @@ import {
   QueryInvitationsResponse_Action,
   QueryInvitationsResponse_Type,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { Stream } from '@dxos/stream';
 import { trace } from '@dxos/tracing';
 
 import { type InvitationsManager } from './invitations-manager';
-import { Stream } from '@dxos/stream';
 
 /**
  * Adapts invitation service observable to client/service stream.

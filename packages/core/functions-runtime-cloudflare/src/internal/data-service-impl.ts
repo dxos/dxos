@@ -7,7 +7,7 @@ import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Echo, type EdgeFunctionEnv } from '@dxos/protocols';
-import { type Empty, EMPTY, create } from '@dxos/protocols/buf';
+import { EMPTY, type Empty, create } from '@dxos/protocols/buf';
 import {
   type BatchedDocumentUpdates,
   BatchedDocumentUpdatesSchema,
@@ -25,9 +25,9 @@ import {
   type UpdateSubscriptionRequest,
   type WaitUntilHeadsReplicatedRequest,
 } from '@dxos/protocols/buf/dxos/echo/service_pb';
+import { Stream } from '@dxos/stream';
 
 import { copyUint8Array } from './utils';
-import { Stream } from '@dxos/stream';
 
 export class DataServiceImpl implements Echo.DataService {
   private dataSubscriptions = new Map<string, { spaceId: SpaceId; next: (msg: BatchedDocumentUpdates) => void }>();

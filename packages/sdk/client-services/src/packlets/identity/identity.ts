@@ -20,7 +20,6 @@ import { invariant } from '@dxos/invariant';
 import { type IdentityDid, PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
-import { type FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import {
   AdmittedFeed_Designation,
   type Chain,

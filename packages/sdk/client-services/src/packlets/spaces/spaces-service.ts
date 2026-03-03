@@ -61,6 +61,7 @@ import {
 import { type EdgeReplicationSetting, type SpaceCache } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type GossipMessage } from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
+import { Stream } from '@dxos/stream';
 import { trace } from '@dxos/tracing';
 import { type Provider } from '@dxos/util';
 
@@ -69,7 +70,6 @@ import { SpaceArchiveWriter, extractSpaceArchive } from '../space-export';
 
 import { type DataSpace } from './data-space';
 import { type DataSpaceManager } from './data-space-manager';
-import { Stream } from '@dxos/stream';
 
 export class SpacesServiceImpl implements Client.SpacesService {
   constructor(
@@ -390,7 +390,9 @@ export class SpacesServiceImpl implements Client.SpacesService {
       },
       members: (await Promise.all(
         Array.from(space.inner.spaceState.members.values()).map(async (member) => {
-          const peers = space.presence.getPeersOnline().filter(({ identityKey }) => identityKey && toPublicKey(identityKey).equals(member.key));
+          const peers = space.presence
+            .getPeersOnline()
+            .filter(({ identityKey }) => identityKey && toPublicKey(identityKey).equals(member.key));
           const isMe = this._identityManager.identity?.identityKey.equals(member.key);
 
           if (isMe) {

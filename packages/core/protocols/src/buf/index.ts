@@ -8,8 +8,8 @@ import { EmptySchema } from '@bufbuild/protobuf/wkt';
 import { PublicKey } from '@dxos/keys';
 import { Timeframe } from '@dxos/timeframe';
 
-import * as KeysPb from './proto/gen/dxos/keys_pb.ts';
 import { type TimeframeVector, TimeframeVectorSchema } from './proto/gen/dxos/echo/timeframe_pb.ts';
+import * as KeysPb from './proto/gen/dxos/keys_pb.ts';
 
 export * as buf from '@bufbuild/protobuf';
 export * as bufWkt from '@bufbuild/protobuf/wkt';
@@ -43,7 +43,6 @@ export {
 } from '@bufbuild/protobuf/wkt';
 export { type GenService, type GenServiceMethods } from '@bufbuild/protobuf/codegenv2';
 
-
 export const EMPTY = create(EmptySchema);
 
 export const encodePublicKey = (publicKey: PublicKey): KeysPb.PublicKey => {
@@ -59,7 +58,6 @@ export const decodePublicKey = (publicKey: KeysPb.PublicKey | { data: Uint8Array
 /** Converts buf PublicKey or @dxos/keys PublicKey to @dxos/keys PublicKey. Use when key type may be either. */
 export const toPublicKey = (key: KeysPb.PublicKey | PublicKey | { data: Uint8Array }): PublicKey =>
   key instanceof PublicKey ? key : decodePublicKey(key);
-
 
 /** Proto Any uses snake_case `type_url`, buf Any uses camelCase `typeUrl`. */
 type ProtoAny = { type_url: string; value: Uint8Array };

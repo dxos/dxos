@@ -11,7 +11,7 @@ import { TimeoutError } from '@dxos/protocols';
 import { bufWkt, create, fromBinary, toBinary } from '@dxos/protocols/buf';
 import { MessageSchema } from '@dxos/protocols/buf/dxos/edge/signal_pb';
 import { type Answer, SwarmMessageSchema } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
-import { ComplexMap, type MakeOptional } from '@dxos/util';
+import { ComplexMap } from '@dxos/util';
 
 import { type OfferMessage, type SignalMessage, type SignalMessenger } from './signal-messenger';
 
@@ -52,12 +52,15 @@ const encodeSwarmMessage = (msg: any): Uint8Array => {
     }
   }
 
-  return toBinary(SwarmMessageSchema, create(SwarmMessageSchema, {
-    topic: encKey(msg.topic),
-    sessionId: encKey(msg.sessionId),
-    messageId: encKey(msg.messageId),
-    data,
-  } as any));
+  return toBinary(
+    SwarmMessageSchema,
+    create(SwarmMessageSchema, {
+      topic: encKey(msg.topic),
+      sessionId: encKey(msg.sessionId),
+      messageId: encKey(msg.messageId),
+      data,
+    } as any),
+  );
 };
 
 /** Decode bytes to a proto-shaped SwarmMessage (with @dxos/keys PublicKey and direct oneof data fields). */

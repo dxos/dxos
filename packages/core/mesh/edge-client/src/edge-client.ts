@@ -12,9 +12,13 @@ import {
 } from '@dxos/async';
 import { type Lifecycle, Resource } from '@dxos/context';
 import { log, logInfo } from '@dxos/log';
-import { type Message } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
-import { type EdgeStatus, EdgeStatus_ConnectionState, EdgeStatusSchema } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { create } from '@dxos/protocols/buf';
+import {
+  type EdgeStatus,
+  EdgeStatusSchema,
+  EdgeStatus_ConnectionState,
+} from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type Message } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 
 import { protocol } from './defs';
 import { type EdgeIdentity, handleAuthChallenge } from './edge-identity';

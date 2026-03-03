@@ -176,12 +176,13 @@ export const StoragePanel = () => {
   const items = useMemo(
     () =>
       getInfoTree(
-        storageInfo ?? create(StorageInfoSchema, {
-          type: '',
-          originUsage: 0,
-          storageUsage: 0,
-          usageQuota: 0,
-        }),
+        storageInfo ??
+          create(StorageInfoSchema, {
+            type: '',
+            originUsage: 0,
+            storageUsage: 0,
+            usageQuota: 0,
+          }),
         feeds as any,
         snapshotInfo?.snapshots ?? [],
         blobsInfo?.blobs ?? [],

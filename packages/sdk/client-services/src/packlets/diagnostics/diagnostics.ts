@@ -4,17 +4,17 @@
 
 import { asyncTimeout } from '@dxos/async';
 import { type ClientServices } from '@dxos/client-protocol';
-import { getFirstStreamValue } from '@dxos/stream';
 import { type Config, type ConfigProto } from '@dxos/config';
 import { createDidFromIdentityKey, credentialTypeFilter } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
+import { type PublicKey } from '@dxos/keys';
 import { STORAGE_VERSION } from '@dxos/protocols';
 import { timestampMs, toPublicKey } from '@dxos/protocols/buf';
+import { type LogEntry, type Metrics } from '@dxos/protocols/buf/dxos/client/logging_pb';
 import {
   type Device as BufDevice,
-  type Identity,
   type NetworkStatus as BufNetworkStatus,
+  type Identity,
   type Platform,
   type QueryDevicesResponse,
   type SpaceMember,
@@ -26,13 +26,10 @@ import {
   type SubscribeToFeedsResponse_Feed,
 } from '@dxos/protocols/buf/dxos/devtools/host_pb';
 import { type SwarmInfo } from '@dxos/protocols/buf/dxos/devtools/swarm_pb';
-import {
-  type LogEntry,
-  type Metrics,
-} from '@dxos/protocols/buf/dxos/client/logging_pb';
 import { type Credential, type Epoch } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type Resource, type Span } from '@dxos/protocols/buf/dxos/tracing_pb';
-import { Timeframe } from '@dxos/timeframe';
+import { getFirstStreamValue } from '@dxos/stream';
+import { type Timeframe } from '@dxos/timeframe';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { DXOS_VERSION } from '../../version';
@@ -205,7 +202,9 @@ const getSpaceStats = async (space: DataSpace): Promise<SpaceStats> => {
           },
         },
         presence:
-          space.presence.getPeersOnline().filter(({ identityKey }) => identityKey && toPublicKey(identityKey).equals(member.key)).length > 0
+          space.presence
+            .getPeersOnline()
+            .filter(({ identityKey }) => identityKey && toPublicKey(identityKey).equals(member.key)).length > 0
             ? SpaceMember_PresenceState.ONLINE
             : SpaceMember_PresenceState.OFFLINE,
       })),

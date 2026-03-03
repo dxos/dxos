@@ -3,13 +3,9 @@
 //
 
 import { invariant } from '@dxos/invariant';
-import { type GenService, type GenServiceMethods } from '@dxos/protocols/buf';
 import { type Rpc } from '@dxos/protocols';
-import {
-  type BufProtoRpcPeer,
-  type BufProtoRpcPeerOptions,
-  createBufProtoRpcPeer,
-} from '@dxos/rpc';
+import { type GenService, type GenServiceMethods } from '@dxos/protocols/buf';
+import { type BufProtoRpcPeer, type BufProtoRpcPeerOptions, createBufProtoRpcPeer } from '@dxos/rpc';
 
 import { type ExtensionContext, type TeleportExtension } from './teleport';
 
@@ -26,9 +22,7 @@ export abstract class BufRpcExtension<
   private _rpc?: BufProtoRpcPeer<Client>;
   private _isClosed = false;
 
-  constructor(
-    private readonly _rpcProps: Omit<BufProtoRpcPeerOptions<Client, Server>, 'port' | 'handlers'>,
-  ) {}
+  constructor(private readonly _rpcProps: Omit<BufProtoRpcPeerOptions<Client, Server>, 'port' | 'handlers'>) {}
 
   get initiator() {
     return this._extensionContext?.initiator;

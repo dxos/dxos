@@ -8,12 +8,10 @@ import { type MessageInitShape } from '@dxos/protocols/buf';
 import { type Invitation } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type Contact, type Device, type Identity } from '@dxos/protocols/buf/dxos/client/services_pb';
 import {
-  ProfileDocumentSchema,
   type Credential,
-  type DeviceProfileDocument,
   type DeviceProfileDocumentSchema,
   type Presentation,
-  type ProfileDocument,
+  type ProfileDocumentSchema,
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { type AuthenticatingInvitation, type CancellableInvitation, type InvitationInit } from './invitations';

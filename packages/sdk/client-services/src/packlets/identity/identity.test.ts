@@ -198,7 +198,9 @@ describe('identity/identity', () => {
       id: await createIdFromSpaceKey(spaceKey),
       spaceKey,
       protocol,
-      genesisFeed: args?.genesisFeedKey ? await feedStore.openFeed(args.genesisFeedKey) as any : controlFeed as any,
+      genesisFeed: args?.genesisFeedKey
+        ? ((await feedStore.openFeed(args.genesisFeedKey)) as any)
+        : (controlFeed as any),
       feedProvider: (feedKey) => feedStore.openFeed(feedKey) as any,
       memberKey: identityKey,
       metadataStore,
@@ -215,7 +217,7 @@ describe('identity/identity', () => {
       identityKey,
       deviceKey,
       space,
-      edgeFeatures: args?.edgeConnection ? { feedReplicator: true } as any : undefined,
+      edgeFeatures: args?.edgeConnection ? ({ feedReplicator: true } as any) : undefined,
       edgeConnection: args?.edgeConnection,
     });
 

@@ -9,7 +9,7 @@ import { checkType, raise } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Message, WebsocketSignalManager } from '@dxos/messaging';
-import { type Runtime_Services, type Runtime_Services_Signal } from '@dxos/protocols/buf/dxos/config_pb';
+import { type Runtime_Services_Signal } from '@dxos/protocols/buf/dxos/config_pb';
 import { type SignalServerRunner } from '@dxos/signal';
 import { ComplexMap } from '@dxos/util';
 

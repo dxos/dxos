@@ -11,10 +11,10 @@ import {
   WebsocketSignalManager,
 } from '@dxos/messaging';
 import { create } from '@dxos/protocols/buf';
-import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
-import * as MeshBridgePb from '@dxos/protocols/buf/dxos/mesh/bridge_pb';
 import { ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type Runtime_Services_Signal, Runtime_Services_SignalSchema } from '@dxos/protocols/buf/dxos/config_pb';
+import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import * as MeshBridgePb from '@dxos/protocols/buf/dxos/mesh/bridge_pb';
 import { type BufProtoRpcPeer, createBufProtoRpcPeer, createBufServiceBundle, createLinkedPorts } from '@dxos/rpc';
 import { ComplexMap } from '@dxos/util';
 

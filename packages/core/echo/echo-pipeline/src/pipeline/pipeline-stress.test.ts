@@ -18,7 +18,7 @@ import { range } from '@dxos/util';
 
 import { TestFeedBuilder } from '../testing';
 
-import { Pipeline, type ControlPipelinePayload } from './pipeline';
+import { type ControlPipelinePayload, Pipeline } from './pipeline';
 
 const NUM_AGENTS = 2;
 const NUM_MESSAGES = 10;

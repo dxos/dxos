@@ -5,8 +5,8 @@
 import * as Match from 'effect/Match';
 
 import { generateName } from '@dxos/display-name';
-import { decodePublicKey } from '@dxos/protocols/buf';
 import { type Selection } from '@dxos/plugin-attention';
+import { decodePublicKey } from '@dxos/protocols/buf';
 import { type PublicKey } from '@dxos/react-client';
 import { type Identity } from '@dxos/react-client/halo';
 import { type MessageMetadata } from '@dxos/react-ui-thread';

@@ -7,8 +7,8 @@ import { type Context } from '@dxos/context';
 import { LogLevel, type LogProcessor, getContextFromEntry, log } from '@dxos/log';
 import { type JsonObject, create, timestampFromDate } from '@dxos/protocols/buf';
 import { type LogEntry, LogEntrySchema, LogEntry_MetaSchema } from '@dxos/protocols/buf/dxos/client/logging_pb';
-import { type Error as SerializedError, ErrorSchema } from '@dxos/protocols/buf/dxos/error_pb';
-import { type Metric, type Resource, type Span, ResourceSchema, SpanSchema } from '@dxos/protocols/buf/dxos/tracing_pb';
+import { ErrorSchema, type Error as SerializedError } from '@dxos/protocols/buf/dxos/error_pb';
+import { type Metric, type Resource, ResourceSchema, type Span, SpanSchema } from '@dxos/protocols/buf/dxos/tracing_pb';
 import { getPrototypeSpecificInstanceId } from '@dxos/util';
 
 import type { AddLinkOptions, TimeAware } from './api';

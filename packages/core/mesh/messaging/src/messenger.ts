@@ -11,9 +11,9 @@ import { TimeoutError as ProtocolTimeoutError, trace } from '@dxos/protocols';
 import { type bufWkt, create, encodePublicKey, fromBinary, toBinary, toPublicKey } from '@dxos/protocols/buf';
 import { MessageSchema } from '@dxos/protocols/buf/dxos/edge/signal_pb';
 import {
+  AcknowledgementSchema,
   type ReliablePayload,
   ReliablePayloadSchema,
-  AcknowledgementSchema,
 } from '@dxos/protocols/buf/dxos/mesh/messaging_pb';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
@@ -221,10 +221,13 @@ export class Messenger {
         recipient,
         payload: {
           typeUrl: 'dxos.mesh.messaging.ReliablePayload',
-          value: toBinary(ReliablePayloadSchema, create(ReliablePayloadSchema, {
-            messageId: encodePublicKey(reliablePayload.messageId as any),
-            payload: reliablePayload.payload,
-          } as any)),
+          value: toBinary(
+            ReliablePayloadSchema,
+            create(ReliablePayloadSchema, {
+              messageId: encodePublicKey(reliablePayload.messageId as any),
+              payload: reliablePayload.payload,
+            } as any),
+          ),
         },
       }),
     );
@@ -302,7 +305,10 @@ export class Messenger {
         recipient: author,
         payload: {
           typeUrl: 'dxos.mesh.messaging.Acknowledgement',
-          value: toBinary(AcknowledgementSchema, create(AcknowledgementSchema, { messageId: encodePublicKey(messageId) })),
+          value: toBinary(
+            AcknowledgementSchema,
+            create(AcknowledgementSchema, { messageId: encodePublicKey(messageId) }),
+          ),
         },
       }),
     );

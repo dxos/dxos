@@ -21,13 +21,13 @@ import {
   QueryResponseSchema,
   QueryResultSchema,
 } from '@dxos/protocols/buf/dxos/echo/query_pb';
+import { Stream } from '@dxos/stream';
 import { trace } from '@dxos/tracing';
 
 import { type AutomergeHost } from '../automerge';
 import { QueryExecutor } from '../query';
 
 import type { SpaceStateManager } from './space-state-manager';
-import { Stream } from '@dxos/stream';
 
 export type QueryServiceProps = {
   indexEngine: IndexEngine;

@@ -6,7 +6,6 @@ import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'v
 
 import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { PublicKey } from '@dxos/keys';
 import { type Space } from '@dxos/protocols/buf/dxos/client/services_pb';
 
 import { type ServiceContext } from '../services';
@@ -94,8 +93,9 @@ describe('SpacesService', () => {
       expect(spaces?.length).to.equal(1);
       const toBytes = (sk: { data?: Uint8Array; asUint8Array?: () => Uint8Array }) =>
         sk?.data ?? sk?.asUint8Array?.() ?? new Uint8Array(0);
-      expect(Buffer.from(toBytes(spaces?.[0]?.spaceKey!)).equals(Buffer.from(toBytes(space.spaceKey!))))
-        .to.be.true;
+      const spaceKey = spaces?.[0]?.spaceKey;
+      expect(spaceKey).to.exist;
+      expect(Buffer.from(toBytes(spaceKey!)).equals(Buffer.from(toBytes(space.spaceKey!)))).to.be.true;
     });
 
     test.skip('updates when space is updated', async () => {});

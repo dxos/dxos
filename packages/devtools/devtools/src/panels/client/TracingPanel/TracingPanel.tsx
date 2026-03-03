@@ -7,7 +7,6 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { Format } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
-import { type LogEntry } from '@dxos/protocols/buf/dxos/client/logging_pb';
 import { type Span, type StreamTraceEvent } from '@dxos/protocols/buf/dxos/tracing_pb';
 import { useClient } from '@dxos/react-client';
 import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';

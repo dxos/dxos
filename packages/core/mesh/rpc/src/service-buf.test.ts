@@ -16,10 +16,10 @@ import {
   TestService,
   TestStreamService,
 } from '@dxos/protocols/buf/example/testing/rpc_pb';
+import { Stream } from '@dxos/stream';
 
 import { type BufProtoRpcPeer, createBufProtoRpcPeer, createBufServiceBundle } from './service-buf';
 import { createLinkedPorts } from './testing';
-import { Stream } from '@dxos/stream';
 
 describe('Buf protobuf service', () => {
   test('works with buf protobuf service', async () => {

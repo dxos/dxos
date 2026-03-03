@@ -6,7 +6,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type Rpc } from '@dxos/protocols';
 import { EMPTY, decodePublicKey } from '@dxos/protocols/buf';
-import { DeviceKind, DevicesService, IdentityService } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { DeviceKind, type DevicesService, type IdentityService } from '@dxos/protocols/buf/dxos/client/services_pb';
 
 export const setIdentityTags = ({
   identityService,

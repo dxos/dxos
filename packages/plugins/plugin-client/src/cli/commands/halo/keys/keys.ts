@@ -33,8 +33,14 @@ export const handler = Effect.fn(function* () {
     );
   } else {
     const builder = FormBuilder.make({ title: 'HALO Keys' }).pipe(
-      FormBuilder.option('identityKey', Option.fromNullable(identity?.identityKey ? toPublicKey(identity.identityKey).truncate() : undefined)),
-      FormBuilder.option('deviceKey', Option.fromNullable(device?.deviceKey ? toPublicKey(device.deviceKey).truncate() : undefined)),
+      FormBuilder.option(
+        'identityKey',
+        Option.fromNullable(identity?.identityKey ? toPublicKey(identity.identityKey).truncate() : undefined),
+      ),
+      FormBuilder.option(
+        'deviceKey',
+        Option.fromNullable(device?.deviceKey ? toPublicKey(device.deviceKey).truncate() : undefined),
+      ),
     );
     yield* Console.log(print(FormBuilder.build(builder)));
   }

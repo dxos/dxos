@@ -4,7 +4,7 @@
 
 import { type Event, Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { type CredentialSigner, credentialToBinary, credentialFromBinary, verifyCredential } from '@dxos/credentials';
+import { type CredentialSigner, credentialFromBinary, credentialToBinary, verifyCredential } from '@dxos/credentials';
 import { type AuthProvider, type AuthVerifier } from '@dxos/echo-pipeline';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';

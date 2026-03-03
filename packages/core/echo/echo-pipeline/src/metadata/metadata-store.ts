@@ -130,8 +130,12 @@ const echoMetadataCodec: Codec<EchoMetadata> = {
 
 const largeSpaceMetadataCodec: Codec<LargeSpaceMetadata> = {
   encode: (msg: LargeSpaceMetadata) =>
-    toBinary(LargeSpaceMetadataSchema, create(LargeSpaceMetadataSchema, convertKeysForBufInit(msg) as LargeSpaceMetadata)),
-  decode: (bytes: Uint8Array) => convertBufTypesToAppTypes(fromBinary(LargeSpaceMetadataSchema, bytes)) as LargeSpaceMetadata,
+    toBinary(
+      LargeSpaceMetadataSchema,
+      create(LargeSpaceMetadataSchema, convertKeysForBufInit(msg) as LargeSpaceMetadata),
+    ),
+  decode: (bytes: Uint8Array) =>
+    convertBufTypesToAppTypes(fromBinary(LargeSpaceMetadataSchema, bytes)) as LargeSpaceMetadata,
 };
 
 export class MetadataStore {
@@ -317,7 +321,10 @@ export class MetadataStore {
   }
 
   _getSpace(spaceKey: PublicKey): SpaceMetadata {
-    if (this._metadata.identity?.haloSpace?.key && toPublicKey(this._metadata.identity.haloSpace.key).equals(spaceKey)) {
+    if (
+      this._metadata.identity?.haloSpace?.key &&
+      toPublicKey(this._metadata.identity.haloSpace.key).equals(spaceKey)
+    ) {
       return this._metadata.identity.haloSpace;
     }
 
@@ -327,7 +334,10 @@ export class MetadataStore {
   }
 
   hasSpace(spaceKey: PublicKey): boolean {
-    if (this._metadata.identity?.haloSpace?.key && toPublicKey(this._metadata.identity.haloSpace.key).equals(spaceKey)) {
+    if (
+      this._metadata.identity?.haloSpace?.key &&
+      toPublicKey(this._metadata.identity.haloSpace.key).equals(spaceKey)
+    ) {
       return true;
     }
 
@@ -388,7 +398,9 @@ export class MetadataStore {
 
   async addSpace(record: SpaceMetadata): Promise<void> {
     invariant(
-      !(this._metadata.spaces ?? []).find((space) => space.key && record.key && toPublicKey(space.key).equals(toPublicKey(record.key))),
+      !(this._metadata.spaces ?? []).find(
+        (space) => space.key && record.key && toPublicKey(space.key).equals(toPublicKey(record.key)),
+      ),
       'Cannot overwrite existing space in metadata',
     );
 

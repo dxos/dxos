@@ -106,12 +106,8 @@ const main = async () => {
         return platform === 'android' || platform === 'ios';
       }),
     ),
-    Match.when(
-      false,
-      () =>
-        Effect.sync(
-          () => isTrue(config.values.runtime?.app?.env?.DX_MOBILE as string | undefined) || isMobile$(),
-        ),
+    Match.when(false, () =>
+      Effect.sync(() => isTrue(config.values.runtime?.app?.env?.DX_MOBILE as string | undefined) || isMobile$()),
     ),
     Match.exhaustive,
     runAndForwardErrors,

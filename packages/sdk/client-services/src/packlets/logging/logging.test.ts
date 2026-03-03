@@ -37,9 +37,11 @@ describe('LoggingService', () => {
 
   test('queryLogs filters logs', async () => {
     const trigger = new Trigger<LogEntry>();
-    loggingService.queryLogs(create(QueryLogsRequestSchema, { filters: [{ level: LogLevel.ERROR }] })).subscribe((entry) => {
-      trigger.wake(entry);
-    });
+    loggingService
+      .queryLogs(create(QueryLogsRequestSchema, { filters: [{ level: LogLevel.ERROR }] }))
+      .subscribe((entry) => {
+        trigger.wake(entry);
+      });
     log('debugging something');
     const message = 'This is a failure';
     log.error(message);

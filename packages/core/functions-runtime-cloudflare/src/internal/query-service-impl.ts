@@ -3,13 +3,14 @@
 //
 
 import * as Schema from 'effect/Schema';
+
 import { QueryAST } from '@dxos/echo-protocol';
 import { NotImplementedError, RuntimeServiceError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Echo, type EdgeFunctionEnv } from '@dxos/protocols';
-import { type Empty, EMPTY, create, encodePublicKey } from '@dxos/protocols/buf';
+import { type Empty, create, encodePublicKey } from '@dxos/protocols/buf';
 import { type IndexConfig } from '@dxos/protocols/buf/dxos/echo/indexing_pb';
 import {
   type QueryRequest,
@@ -18,10 +19,10 @@ import {
   type QueryResult,
   QueryResultSchema,
 } from '@dxos/protocols/buf/dxos/echo/query_pb';
+import { Stream } from '@dxos/stream';
 
 import { queryToDataServiceRequest } from './adapter';
 import { copyUint8Array } from './utils';
-import { Stream } from '@dxos/stream';
 
 export class QueryServiceImpl implements Echo.QueryService {
   private _queryCount = 0;

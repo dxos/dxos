@@ -21,10 +21,7 @@ import {
   ReplicatorService,
   StartReplicationResponseSchema,
 } from '@dxos/protocols/buf/dxos/mesh/teleport/replicator_pb';
-import {
-  type BufProtoRpcPeer,
-  createBufProtoRpcPeer,
-} from '@dxos/rpc';
+import { type BufProtoRpcPeer, createBufProtoRpcPeer } from '@dxos/rpc';
 import { type ExtensionContext, type TeleportExtension } from '@dxos/teleport';
 import { ComplexMap } from '@dxos/util';
 

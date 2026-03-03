@@ -7,7 +7,7 @@ import { Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { anyPack, anyUnpack, create, encodePublicKey, timestampDate, timestampFromDate, toPublicKey } from '@dxos/protocols/buf';
+import { anyPack, anyUnpack, create, encodePublicKey, timestampDate, toPublicKey } from '@dxos/protocols/buf';
 import { type PublicKey as BufPublicKey } from '@dxos/protocols/buf/dxos/keys_pb';
 import { type PeerState, PeerStateSchema } from '@dxos/protocols/buf/dxos/mesh/presence_pb';
 import { type GossipMessage } from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';

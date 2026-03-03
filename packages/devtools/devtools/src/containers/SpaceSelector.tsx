@@ -32,8 +32,8 @@ export const SpaceSelector = () => {
           ...state,
           space: spaceKey ? spaces.find((space) => space.key.equals(spaceKey)) : undefined,
           spaceInfo: spaceKey
-            ? spacesInfo.find((spaceInfo) =>
-                spaceInfo.key && decodePublicKey(spaceInfo.key).equals(toPublicKey(spaceKey)),
+            ? spacesInfo.find(
+                (spaceInfo) => spaceInfo.key && decodePublicKey(spaceInfo.key).equals(toPublicKey(spaceKey)),
               )
             : undefined,
           haloSpaceKey: undefined,

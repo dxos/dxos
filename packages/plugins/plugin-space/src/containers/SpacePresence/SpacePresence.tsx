@@ -10,6 +10,7 @@ import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { generateName } from '@dxos/display-name';
 import { type Key, Obj } from '@dxos/echo';
 import { PublicKey } from '@dxos/keys';
+import { decodePublicKey } from '@dxos/protocols/buf';
 import { type SpaceMember, useMembers, useSpace } from '@dxos/react-client/echo';
 import { type Identity, useIdentity } from '@dxos/react-client/halo';
 import {
@@ -26,7 +27,6 @@ import {
   useTranslation,
 } from '@dxos/react-ui';
 import { AttentionGlyph, type AttentionGlyphProps, useAttended, useAttention } from '@dxos/react-ui-attention';
-import { decodePublicKey } from '@dxos/protocols/buf';
 import { ComplexMap, keyToFallback } from '@dxos/util';
 
 import { usePath } from '../../hooks';
@@ -42,7 +42,8 @@ const noViewers = new ComplexMap<PublicKey, ObjectViewerProps>(PublicKey.hash);
 
 // TODO(wittjosiah): Factor out?
 const getName = (identity: Identity) =>
-  identity.profile?.displayName ?? generateName(identity.identityKey ? decodePublicKey(identity.identityKey).toHex() : '');
+  identity.profile?.displayName ??
+  generateName(identity.identityKey ? decodePublicKey(identity.identityKey).toHex() : '');
 
 export type SpacePresenceProps = {
   object: Obj.Unknown;
@@ -67,7 +68,11 @@ export const SpacePresence = ({ object, spaceId }: SpacePresenceProps) => {
   const memberOnline = useCallback((member: SpaceMember) => member.presence === 1, []);
   const memberIsNotSelf = useCallback(
     (member: SpaceMember) =>
-      !(identity?.identityKey && member.identity?.identityKey && decodePublicKey(identity.identityKey).equals(decodePublicKey(member.identity.identityKey))),
+      !(
+        identity?.identityKey &&
+        member.identity?.identityKey &&
+        decodePublicKey(identity.identityKey).equals(decodePublicKey(member.identity.identityKey))
+      ),
     [identity?.identityKey],
   );
 
@@ -81,8 +86,9 @@ export const SpacePresence = ({ object, spaceId }: SpacePresenceProps) => {
 
   const membersForObject = spaceMembers
     .filter((member) => memberOnline(member) && memberIsNotSelf(member))
-    .filter((member) =>
-      member.identity?.identityKey && currentObjectViewers.has(decodePublicKey(member.identity.identityKey)),
+    .filter(
+      (member) =>
+        member.identity?.identityKey && currentObjectViewers.has(decodePublicKey(member.identity.identityKey)),
     )
     .map((member) => {
       const objectView = member.identity?.identityKey
@@ -199,7 +205,9 @@ type PresenceAvatarProps = Pick<AvatarContentProps, 'size'> & {
 const PresenceAvatar = forwardRef<DxAvatar, PresenceAvatarProps>(
   ({ identity, showName, match, index, onClick, size }, forwardedRef) => {
     const status = match ? 'current' : 'active';
-    const fallbackValue = keyToFallback(identity.identityKey ? decodePublicKey(identity.identityKey) : PublicKey.random());
+    const fallbackValue = keyToFallback(
+      identity.identityKey ? decodePublicKey(identity.identityKey) : PublicKey.random(),
+    );
     return (
       <Avatar.Root>
         <Avatar.Content

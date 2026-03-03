@@ -6,9 +6,9 @@ import { Atom, type Registry } from '@effect-atom/atom-react';
 
 import { Event, synchronized } from '@dxos/async';
 import { type Client } from '@dxos/client';
-import { type Client as ClientNamespace } from '@dxos/protocols';
 import { Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
+import { type Client as ClientNamespace } from '@dxos/protocols';
 import { type Tracks } from '@dxos/protocols/buf/dxos/edge/calls_pb';
 import { isNonNullable } from '@dxos/util';
 
@@ -179,7 +179,9 @@ export class CallManager extends Resource {
     this._client.config.getOrThrow('runtime.services.edge.url');
     const networkService = this._client.services.services.NetworkService;
     invariant(networkService, 'network service not found');
-    this._swarmSynchronizer = new CallSwarmSynchronizer({ networkService: networkService as unknown as ClientNamespace.NetworkService });
+    this._swarmSynchronizer = new CallSwarmSynchronizer({
+      networkService: networkService as unknown as ClientNamespace.NetworkService,
+    });
     this._mediaManager = new MediaManager();
   }
 

@@ -13,11 +13,11 @@ import { type Echo, RpcClosedError } from '@dxos/protocols';
 import { create } from '@dxos/protocols/buf';
 import * as QueryPb from '@dxos/protocols/buf/dxos/echo/query_pb';
 import { QueryReactivity } from '@dxos/protocols/buf/dxos/echo/query_pb';
+import { type Stream } from '@dxos/stream';
 import { isNonNullable } from '@dxos/util';
 
 import { OBJECT_DIAGNOSTICS, type QuerySourceProvider } from '../hypergraph';
 import { type QuerySource, getTargetSpacesForQuery } from '../query';
-import { Stream } from '@dxos/stream';
 
 export type LoadObjectProps = {
   spaceId: SpaceId;

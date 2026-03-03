@@ -8,7 +8,7 @@ import { synchronized } from '@dxos/async';
 import { subtleCrypto } from '@dxos/crypto';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { create, toBinary, fromBinary, timestampFromDate } from '@dxos/protocols/buf';
+import { create, fromBinary, timestampFromDate, toBinary } from '@dxos/protocols/buf';
 import { type BlobMeta, BlobMetaSchema, BlobMeta_State } from '@dxos/protocols/buf/dxos/echo/blob_pb';
 import { type BlobChunk } from '@dxos/protocols/buf/dxos/mesh/teleport/blobsync_pb';
 import { type Directory } from '@dxos/random-access-storage';

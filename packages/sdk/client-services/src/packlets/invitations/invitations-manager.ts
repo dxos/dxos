@@ -128,14 +128,7 @@ export class InvitationsManager {
 
     const handler = this._getHandler(options);
     const { ctx, invitation, stream, otpEnteredTrigger } = this._createObservableAcceptingInvitation(handler, options);
-    this._invitationsHandler.acceptInvitation(
-      ctx,
-      stream,
-      handler,
-      options,
-      otpEnteredTrigger,
-      request.deviceProfile,
-    );
+    this._invitationsHandler.acceptInvitation(ctx, stream, handler, options, otpEnteredTrigger, request.deviceProfile);
     this._acceptInvitations.set(invitation.get().invitationId, invitation);
     this.invitationAccepted.emit(invitation.get());
 

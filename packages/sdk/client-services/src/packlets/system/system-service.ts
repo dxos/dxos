@@ -19,11 +19,11 @@ import {
   type UpdateStatusRequest,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type Config as ConfigProto, ConfigSchema, type Runtime } from '@dxos/protocols/buf/dxos/config_pb';
+import { Stream } from '@dxos/stream';
 import { type MaybePromise, jsonKeyReplacer } from '@dxos/util';
 
 import { type Diagnostics } from '../diagnostics';
 import { getPlatform } from '../services/platform';
-import { Stream } from '@dxos/stream';
 
 export type SystemServiceOptions = {
   config?: () => MaybePromise<Config | undefined>;

@@ -3,6 +3,7 @@
 //
 
 import { Duplex } from 'node:stream';
+
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -21,13 +22,13 @@ import {
   type StatsRequest,
   type StatsResponse,
 } from '@dxos/protocols/buf/dxos/mesh/bridge_pb';
+import { Stream } from '@dxos/stream';
 import { ComplexMap } from '@dxos/util';
 
 import { type IceProvider } from '../../signal';
 import { type Transport, type TransportFactory } from '../transport';
 
 import { createRtcTransportFactory } from './rtc-transport-factory';
-import { Stream } from '@dxos/stream';
 
 const fromBufKey = (key: BufPublicKey): PublicKey => PublicKey.from(key.data);
 

@@ -3,7 +3,7 @@
 //
 
 import { PublicKey } from '@dxos/keys';
-import { bufToTimeframe, bufWkt, create, fromBinary, toBinary, type DescMessage } from '@dxos/protocols/buf';
+import { type DescMessage, bufToTimeframe, bufWkt, create, fromBinary, toBinary } from '@dxos/protocols/buf';
 import { type Credential, CredentialSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Timeframe } from '@dxos/timeframe';
 
@@ -147,9 +147,7 @@ const isBufPublicKey = (value: unknown): boolean =>
 
 /** Check if a value is a buf TimeframeVector message. */
 const isBufTimeframeVector = (value: unknown): boolean =>
-  value != null &&
-  typeof value === 'object' &&
-  (value as any).$typeName === 'dxos.echo.timeframe.TimeframeVector';
+  value != null && typeof value === 'object' && (value as any).$typeName === 'dxos.echo.timeframe.TimeframeVector';
 
 /**
  * Recursively convert a credential to a plain init object suitable for create().

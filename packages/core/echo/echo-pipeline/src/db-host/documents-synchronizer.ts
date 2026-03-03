@@ -105,7 +105,9 @@ export class DocumentsSynchronizer extends Resource {
       await this._writeMutation(documentId as DocumentId, mutation);
     }
     // TODO(mykola): This should not be required.
-    await this._params.automergeHost.flush({ documentIds: updates.map(({ documentId }) => documentId as DocumentId) } as any);
+    await this._params.automergeHost.flush({
+      documentIds: updates.map(({ documentId }) => documentId as DocumentId),
+    } as any);
   }
 
   private _startSync(doc: DocHandle<DatabaseDirectory>) {

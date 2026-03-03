@@ -6,9 +6,9 @@ import * as Schema from 'effect/Schema';
 import React, { type ChangeEvent, useCallback, useMemo, useState } from 'react';
 
 import { debounce } from '@dxos/async';
+import { toPublicKey } from '@dxos/protocols/buf';
 import { useClient } from '@dxos/react-client';
 import { type Identity, useIdentity } from '@dxos/react-client/halo';
-import { toPublicKey } from '@dxos/protocols/buf';
 import { ButtonGroup, Clipboard, Input, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap, type FormUpdateMeta, Settings } from '@dxos/react-ui-form';
 import { EmojiPickerBlock, HuePicker } from '@dxos/react-ui-pickers';

@@ -8,11 +8,11 @@ import { SubscriptionList, type Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { getCredentialAssertion } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
-import { timestampMs } from '@dxos/protocols/buf';
 import { log } from '@dxos/log';
 import { Account, ClientOperation } from '@dxos/plugin-client/types';
 import { HelpOperation } from '@dxos/plugin-help/types';
 import { SpaceOperation } from '@dxos/plugin-space/types';
+import { timestampMs } from '@dxos/protocols/buf';
 import { type Client } from '@dxos/react-client';
 import { type Credential, DeviceType, type Identity } from '@dxos/react-client/halo';
 import { osTranslations } from '@dxos/ui-theme';
@@ -68,9 +68,8 @@ export class OnboardingManager {
     this._client = client;
     this._hubUrl = hubUrl;
     this._skipAuth =
-      ['main', 'labs'].includes(
-        (client.config.values.runtime?.app?.env?.DX_ENVIRONMENT as string | undefined) ?? '',
-      ) || !this._hubUrl;
+      ['main', 'labs'].includes((client.config.values.runtime?.app?.env?.DX_ENVIRONMENT as string | undefined) ?? '') ||
+      !this._hubUrl;
     this._token = token;
     this._tokenType = tokenType;
     this._recoverIdentity = recoverIdentity || false;
@@ -180,7 +179,10 @@ export class OnboardingManager {
 
   private _setCredential(credentials: Credential[]): void {
     const credential = credentials
-      .toSorted((a, b) => (b.issuanceDate ? timestampMs(b.issuanceDate) : 0) - (a.issuanceDate ? timestampMs(a.issuanceDate) : 0))
+      .toSorted(
+        (a, b) =>
+          (b.issuanceDate ? timestampMs(b.issuanceDate) : 0) - (a.issuanceDate ? timestampMs(a.issuanceDate) : 0),
+      )
       .find(matchServiceCredential(['composer:beta']));
     if (credential) {
       this._credential = credential;
@@ -198,7 +200,9 @@ export class OnboardingManager {
       const { capabilities } = await getProfile({ hubUrl: this._hubUrl, presentation });
       const newCapabilities = capabilities.filter(
         (capability) =>
-          !(getCredentialAssertion(this._credential!) as { capabilities?: string[] }).capabilities?.includes(capability),
+          !(getCredentialAssertion(this._credential!) as { capabilities?: string[] }).capabilities?.includes(
+            capability,
+          ),
       );
       if (newCapabilities.length > 0) {
         log('upgrading beta credential', { newCapabilities });

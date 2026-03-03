@@ -8,7 +8,11 @@ import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError } from '@dxos/protocols';
 import { EMPTY } from '@dxos/protocols/buf';
-import { type PeerInfo, type SyncMessage, AutomergeReplicatorService } from '@dxos/protocols/buf/dxos/mesh/teleport/automerge_pb';
+import {
+  AutomergeReplicatorService,
+  type PeerInfo,
+  type SyncMessage,
+} from '@dxos/protocols/buf/dxos/mesh/teleport/automerge_pb';
 import { type BufProtoRpcPeer, createBufProtoRpcPeer } from '@dxos/rpc';
 import { type ExtensionContext, type TeleportExtension } from '@dxos/teleport';
 

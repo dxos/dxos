@@ -6,6 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback } from 'react';
 
 import { Config, PublicKey } from '@dxos/client';
+import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { create } from '@dxos/protocols/buf';
 import {
   ConfigSchema,
@@ -16,8 +18,6 @@ import {
   Runtime_Services_EdgeSchema,
   Runtime_Services_IceProviderSchema,
 } from '@dxos/protocols/buf/dxos/config_pb';
-import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
 import { Button } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';

@@ -553,7 +553,10 @@ export class RpcPeer {
 
   private async _sendMessage(message: any, timeout?: number): Promise<void> {
     DEBUG_CALLS && log('sending message', { type: message.content?.case });
-    await this._params.port.send(toBinary(RpcMessageSchema, create(RpcMessageSchema, normalizeRpcMessage(message))), timeout);
+    await this._params.port.send(
+      toBinary(RpcMessageSchema, create(RpcMessageSchema, normalizeRpcMessage(message))),
+      timeout,
+    );
   }
 
   private async _callHandler(req: Request): Promise<Response> {

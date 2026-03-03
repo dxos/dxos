@@ -7,7 +7,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { debounce } from '@dxos/async';
 import { generateName } from '@dxos/display-name';
 import { log } from '@dxos/log';
-import { create, type JsonObject } from '@dxos/protocols/buf';
+import { type JsonObject, create } from '@dxos/protocols/buf';
 import { decodePublicKey } from '@dxos/protocols/buf';
 import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { useClient } from '@dxos/react-client';

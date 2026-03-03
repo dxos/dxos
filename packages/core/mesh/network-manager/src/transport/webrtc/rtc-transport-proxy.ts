@@ -27,10 +27,10 @@ import {
   StatsRequestSchema,
 } from '@dxos/protocols/buf/dxos/mesh/bridge_pb';
 import { type Signal } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
+import { type Stream } from '@dxos/stream';
 import { arrayToBuffer } from '@dxos/util';
 
 import { type Transport, type TransportFactory, type TransportOptions, type TransportStats } from '../transport';
-import { Stream } from '@dxos/stream';
 
 const RPC_TIMEOUT = 10_000;
 const CLOSE_RPC_TIMEOUT = 3000;

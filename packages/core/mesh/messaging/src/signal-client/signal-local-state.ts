@@ -13,12 +13,12 @@ import {
   type Message as SignalMessage,
   type SwarmEvent as SwarmEventProto,
 } from '@dxos/protocols/buf/dxos/mesh/signal_pb';
+import { type Stream } from '@dxos/stream';
 import { ComplexMap, ComplexSet, safeAwaitAll } from '@dxos/util';
 
 import type { Message, SwarmEvent } from '../signal-methods';
 
 import { type SignalRPCClient } from './signal-rpc-client';
-import { Stream } from '@dxos/stream';
 
 export class SignalLocalState {
   /**

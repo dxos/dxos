@@ -4,7 +4,7 @@
 
 import base from 'base-x';
 
-import { create, toBinary, fromBinary } from '@dxos/protocols/buf';
+import { create, fromBinary, toBinary } from '@dxos/protocols/buf';
 import { type Invitation, InvitationSchema, Invitation_Type } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 
 const base62 = base('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ');

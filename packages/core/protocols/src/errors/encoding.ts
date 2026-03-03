@@ -4,7 +4,7 @@
 
 import { create } from '@bufbuild/protobuf';
 
-import { type Error as SerializedErrorProto, ErrorSchema } from '../buf/proto/gen/dxos/error_pb.ts';
+import { ErrorSchema, type Error as SerializedErrorProto } from '../buf/proto/gen/dxos/error_pb.ts';
 
 import { reconstructError } from './helpers.ts';
 

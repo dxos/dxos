@@ -6,7 +6,6 @@ import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'v
 
 import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { PublicKey } from '@dxos/keys';
 import { create } from '@dxos/protocols/buf';
 import { CreateIdentityRequestSchema, type Identity } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
@@ -50,7 +49,9 @@ describe('IdentityService', () => {
 
     test('fails to create identity if one already exists', async () => {
       await identityService.createIdentity(create(CreateIdentityRequestSchema));
-      await expect(identityService.createIdentity(create(CreateIdentityRequestSchema))).rejects.toThrowError('Identity already exists');
+      await expect(identityService.createIdentity(create(CreateIdentityRequestSchema))).rejects.toThrowError(
+        'Identity already exists',
+      );
     });
   });
 
@@ -61,7 +62,9 @@ describe('IdentityService', () => {
       const identity = await identityService.createIdentity(create(CreateIdentityRequestSchema));
       expect(identity.profile?.displayName).to.be.undefined;
 
-      const updatedIdentity = await identityService.updateProfile(create(ProfileDocumentSchema, { displayName: 'Example' }));
+      const updatedIdentity = await identityService.updateProfile(
+        create(ProfileDocumentSchema, { displayName: 'Example' }),
+      );
       expect(updatedIdentity.profile?.displayName).to.equal('Example');
     });
   });

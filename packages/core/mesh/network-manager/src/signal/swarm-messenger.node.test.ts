@@ -5,6 +5,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { type Awaited } from '@dxos/async';
+import { failedInvariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { Messenger, WebsocketSignalManager } from '@dxos/messaging';
 import { create } from '@dxos/protocols/buf';
@@ -17,7 +18,6 @@ import { runTestSignalServer } from '@dxos/signal';
 
 import { type OfferMessage, type SignalMessage } from './signal-messenger';
 import { SwarmMessenger } from './swarm-messenger';
-import { failedInvariant } from '@dxos/invariant';
 
 const toBufKey = (key: PublicKey) => create(PublicKeySchema, { data: key.asUint8Array() });
 const joinReq = (topic: PublicKey, peer: ReturnType<typeof create<typeof PeerSchema>>) =>

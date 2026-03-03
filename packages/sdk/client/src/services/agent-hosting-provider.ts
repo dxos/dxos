@@ -66,9 +66,7 @@ export class AgentManagerClient implements AgentHostingProviderClient {
   private readonly _config: AgentHostingProvider;
   private readonly DXRPC_PATH = 'dxrpc';
   private readonly _wsDxrpcUrl: string;
-  private _rpc:
-    | WebsocketRpcClient<{ AgentManager: typeof AgentManager }, {}>
-    | undefined;
+  private _rpc: WebsocketRpcClient<{ AgentManager: typeof AgentManager }, {}> | undefined;
   private _rpcState: 'connected' | 'disconnected' = 'disconnected';
   private _authToken: string | null = null;
 

@@ -6,7 +6,7 @@ import { Mutex, Trigger, synchronized } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log, logInfo } from '@dxos/log';
 import { ConnectivityError } from '@dxos/protocols';
-import { create, type JsonObject } from '@dxos/protocols/buf';
+import { type JsonObject, create } from '@dxos/protocols/buf';
 import { type Signal, SignalSchema } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 import { trace } from '@dxos/tracing';
 
@@ -403,18 +403,20 @@ export class RtcPeerConnection {
 
   private async _sendIceCandidate(candidate: RTCIceCandidate): Promise<void> {
     try {
-      await this._options.sendSignal(create(SignalSchema, {
-        payload: {
-          data: {
-            type: 'candidate',
-            candidate: {
-              candidate: candidate.candidate,
-              sdpMLineIndex: candidate.sdpMLineIndex ?? '0',
-              sdpMid: candidate.sdpMid ?? '0',
+      await this._options.sendSignal(
+        create(SignalSchema, {
+          payload: {
+            data: {
+              type: 'candidate',
+              candidate: {
+                candidate: candidate.candidate,
+                sdpMLineIndex: candidate.sdpMLineIndex ?? '0',
+                sdpMid: candidate.sdpMid ?? '0',
+              },
             },
           },
-        },
-      }));
+        }),
+      );
     } catch (err) {
       log.warn('signaling error', { err });
     }

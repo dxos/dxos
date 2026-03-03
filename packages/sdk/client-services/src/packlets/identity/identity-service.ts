@@ -27,6 +27,7 @@ import {
 } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type Credential, type Presentation, type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { PublicKeySchema } from '@dxos/protocols/buf/dxos/keys_pb';
+import { Stream } from '@dxos/stream';
 import { safeAwaitAll } from '@dxos/util';
 
 import { type DataSpaceManager } from '../spaces';
@@ -34,7 +35,6 @@ import { type DataSpaceManager } from '../spaces';
 import { type Identity } from './identity';
 import { type CreateIdentityOptions, type IdentityManager } from './identity-manager';
 import { type EdgeIdentityRecoveryManager } from './identity-recovery-manager';
-import { Stream } from '@dxos/stream';
 
 const DEFAULT_SPACE_SEARCH_TIMEOUT = 10_000;
 

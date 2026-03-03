@@ -3,7 +3,6 @@
 //
 
 import { type DescMessage, buf } from '@dxos/protocols/buf';
-
 import {
   type AdmittedFeed,
   AdmittedFeedSchema,

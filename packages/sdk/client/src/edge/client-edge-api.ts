@@ -92,10 +92,13 @@ export class RemoteEdgeQueryContext<T extends Entity.Unknown = Entity.Unknown> i
 
     log('executing edge query', { spaceId: this._params.spaceId, query });
 
-    const response = await this._params.edgeClient.execQuery(this._params.spaceId, create(QueryRequestSchema, {
-      query: JSON.stringify(query),
-      reactivity: QueryReactivity.ONE_SHOT,
-    }));
+    const response = await this._params.edgeClient.execQuery(
+      this._params.spaceId,
+      create(QueryRequestSchema, {
+        query: JSON.stringify(query),
+        reactivity: QueryReactivity.ONE_SHOT,
+      }),
+    );
 
     const results: QueryResult.EntityEntry<T>[] = [];
 

@@ -5,8 +5,8 @@
 import { Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
-import { type Identity } from '@dxos/react-client/halo';
 import { getSpace } from '@dxos/react-client/echo';
+import { type Identity } from '@dxos/react-client/halo';
 import { Message, Transcript } from '@dxos/types';
 
 import { BlueprintDefinition, OperationResolver, ReactSurface, Transcriber } from './capabilities';
@@ -25,7 +25,9 @@ export const TranscriptionPlugin = Plugin.define(meta).pipe(
         // TODO(wittjosiah): Factor out. Artifact? Separate capability?
         getTextContent: async (transcript: Transcript.Transcript) => {
           const space = getSpace(transcript);
-          const members = (space?.members.get().map((member) => member.identity) ?? []).filter((identity): identity is Identity => identity != null);
+          const members = (space?.members.get().map((member) => member.identity) ?? []).filter(
+            (identity): identity is Identity => identity != null,
+          );
           const queue = space?.queues.get<Message.Message>(transcript.queue.dxn);
           await queue?.refresh();
           const content = queue?.objects

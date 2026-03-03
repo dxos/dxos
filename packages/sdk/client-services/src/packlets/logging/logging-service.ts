@@ -26,8 +26,8 @@ import {
   type QueryMetricsResponse,
   QueryMetricsResponseSchema,
 } from '@dxos/protocols/buf/dxos/client/logging_pb';
-import { getDebugName, jsonify, numericalValues, tracer } from '@dxos/util';
 import { Stream } from '@dxos/stream';
+import { getDebugName, jsonify, numericalValues, tracer } from '@dxos/util';
 
 /**
  * Logging service used to spy on logs of the host.

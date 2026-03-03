@@ -179,7 +179,12 @@ export class Muxer {
     // NOTE: Make sure channel.push is set before sending the command.
     try {
       await this._sendCommand(
-        { payload: { case: 'openChannel', value: { id: channel.id, tag: channel.tag, contentType: channel.contentType } } },
+        {
+          payload: {
+            case: 'openChannel',
+            value: { id: channel.id, tag: channel.tag, contentType: channel.contentType },
+          },
+        },
         SYSTEM_CHANNEL_ID,
       );
     } catch (err: any) {
@@ -233,7 +238,12 @@ export class Muxer {
     // NOTE: Make sure channel.push is set before sending the command.
     try {
       await this._sendCommand(
-        { payload: { case: 'openChannel', value: { id: channel.id, tag: channel.tag, contentType: channel.contentType } } },
+        {
+          payload: {
+            case: 'openChannel',
+            value: { id: channel.id, tag: channel.tag, contentType: channel.contentType },
+          },
+        },
         SYSTEM_CHANNEL_ID,
       );
     } catch (err: any) {
@@ -291,12 +301,11 @@ export class Muxer {
     } else {
       // as a courtesy to the peer, send destroy command but ignore errors sending
 
-      await this._sendCommand(
-        { payload: { case: 'close', value: { error: err?.message } } },
-        SYSTEM_CHANNEL_ID,
-      ).catch(async (err: any) => {
-        log('error sending courtesy close command', { err });
-      });
+      await this._sendCommand({ payload: { case: 'close', value: { error: err?.message } } }, SYSTEM_CHANNEL_ID).catch(
+        async (err: any) => {
+          log('error sending courtesy close command', { err });
+        },
+      );
     }
 
     this._dispose(err).catch((err) => {

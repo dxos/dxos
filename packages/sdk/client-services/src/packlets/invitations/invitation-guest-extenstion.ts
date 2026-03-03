@@ -14,7 +14,7 @@ import {
   type InvitationOptions,
   InvitationOptions_Role,
 } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
-import { type ExtensionContext, BufRpcExtension } from '@dxos/teleport';
+import { BufRpcExtension, type ExtensionContext } from '@dxos/teleport';
 
 import { type FlowLockHolder } from './invitation-state';
 import { tryAcquireBeforeContextDisposed } from './utils';

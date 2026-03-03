@@ -414,9 +414,8 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   private _findProxy(space: SerializedSpace): SpaceProxy {
     const spaceKeyDecoded = space.spaceKey ? toPublicKey(space.spaceKey) : undefined;
     return (
-      (this.get().find(({ key }) => spaceKeyDecoded && key.equals(spaceKeyDecoded)) as
-        | SpaceProxy
-        | undefined) ?? failUndefined()
+      (this.get().find(({ key }) => spaceKeyDecoded && key.equals(spaceKeyDecoded)) as SpaceProxy | undefined) ??
+      failUndefined()
     );
   }
 }

@@ -6,14 +6,14 @@ import WebSocket from 'isomorphic-ws';
 
 import { TimeoutError, Trigger, scheduleTaskInterval } from '@dxos/async';
 import { type Any } from '@dxos/codec-protobuf';
-import { type Stream } from '@dxos/stream';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
-import { type Message as SignalMessage, Signal } from '@dxos/protocols/buf/dxos/mesh/signal_pb';
+import { Signal, type Message as SignalMessage } from '@dxos/protocols/buf/dxos/mesh/signal_pb';
 import { type BufProtoRpcPeer, createBufProtoRpcPeer } from '@dxos/rpc';
+import { type Stream } from '@dxos/stream';
 
 import { SignalRpcClientMonitor } from './signal-rpc-client-monitor';
 

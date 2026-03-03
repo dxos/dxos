@@ -187,7 +187,8 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
   }
 
   async accept(response: AdmissionResponse): Promise<Partial<Invitation>> {
-    const spaceResponse = (response as any).space ?? (response.kind?.case === 'space' ? response.kind.value : undefined);
+    const spaceResponse =
+      (response as any).space ?? (response.kind?.case === 'space' ? response.kind.value : undefined);
     invariant(spaceResponse);
     const { credential } = spaceResponse;
     const assertion = getCredentialAssertion(credential as unknown as Credential);
@@ -203,9 +204,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     const controlTimeframe = spaceResponse.controlTimeframe
       ? bufToTimeframe(spaceResponse.controlTimeframe)
       : undefined;
-    const dataTimeframe = spaceResponse.dataTimeframe
-      ? bufToTimeframe(spaceResponse.dataTimeframe)
-      : undefined;
+    const dataTimeframe = spaceResponse.dataTimeframe ? bufToTimeframe(spaceResponse.dataTimeframe) : undefined;
 
     await this._spaceManager.acceptSpace({
       spaceKey: spaceKey!,

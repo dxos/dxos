@@ -7,11 +7,10 @@ import { describe, expect, test } from 'vitest';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { create, encodePublicKey, timestampFromDate } from '@dxos/protocols/buf';
 import {
-  type Invitation,
   AdmissionKeypairSchema,
+  InvitationSchema,
   Invitation_AuthMethod,
   Invitation_Kind,
-  InvitationSchema,
   Invitation_State,
   Invitation_Type,
 } from '@dxos/protocols/buf/dxos/client/invitation_pb';

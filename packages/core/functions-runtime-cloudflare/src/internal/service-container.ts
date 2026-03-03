@@ -8,9 +8,9 @@ import { type Echo, type EdgeFunctionEnv, type FeedProtocol } from '@dxos/protoc
 import { create } from '@dxos/protocols/buf';
 import {
   InsertIntoQueueRequestSchema,
+  QueryQueueRequestSchema,
   QueueQueryResultSchema,
   QueueQuerySchema,
-  QueryQueueRequestSchema,
 } from '@dxos/protocols/buf/dxos/client/queue_pb';
 
 import { DataServiceImpl } from './data-service-impl';

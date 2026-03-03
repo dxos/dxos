@@ -29,11 +29,11 @@ import {
   type Presentation,
   type ProfileDocument,
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type Stream } from '@dxos/stream';
 import { trace } from '@dxos/tracing';
 
 import { RPC_TIMEOUT } from '../common';
 import { InvitationsProxy } from '../invitations';
-import { Stream } from '@dxos/stream';
 
 @trace.resource()
 export class HaloProxy implements Halo {

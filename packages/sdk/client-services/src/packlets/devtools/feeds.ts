@@ -19,8 +19,8 @@ import {
 } from '@dxos/protocols/buf/dxos/devtools/host_pb';
 import { type FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { PublicKeySchema } from '@dxos/protocols/buf/dxos/keys_pb';
-import { ComplexMap } from '@dxos/util';
 import { Stream } from '@dxos/stream';
+import { ComplexMap } from '@dxos/util';
 
 type FeedOwner = {
   identity?: PublicKey;

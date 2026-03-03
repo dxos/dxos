@@ -13,7 +13,6 @@ import { DEFAULT_WORKER_BROADCAST_CHANNEL } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
-import type { Runtime_Services_Signal } from '@dxos/protocols/buf/dxos/config_pb';
 import { log } from '@dxos/log';
 import {
   MemorySignalManager,
@@ -22,6 +21,7 @@ import {
   setIdentityTags,
 } from '@dxos/messaging';
 import { RtcTransportProxyFactory } from '@dxos/network-manager';
+import type { Runtime_Services_Signal } from '@dxos/protocols/buf/dxos/config_pb';
 import { type RpcPort } from '@dxos/rpc';
 import * as OpfsWorker from '@dxos/sql-sqlite/OpfsWorker';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
@@ -145,9 +145,7 @@ export class WorkerRuntime {
 
       await this._acquireLock();
       this._config = await this._configProvider();
-      const signals = this._config.get('runtime.services.signaling' as any) as
-        | Runtime_Services_Signal[]
-        | undefined;
+      const signals = this._config.get('runtime.services.signaling' as any) as Runtime_Services_Signal[] | undefined;
       this._clientServices.initialize({
         config: this._config,
         signalManager: this._config.get('runtime.client.edgeFeatures' as any)?.signaling

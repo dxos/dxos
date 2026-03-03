@@ -4,7 +4,6 @@
 
 import type * as SqlClient from '@effect/sql/SqlClient';
 import * as Effect from 'effect/Effect';
-import * as Function from 'effect/Function';
 
 import { type ObjectJSON } from '@dxos/echo/internal';
 import { EchoFeedCodec } from '@dxos/echo-protocol';
@@ -13,7 +12,6 @@ import { type FeedStore } from '@dxos/feed';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
-import type { Echo } from '@dxos/protocols';
 import {
   type DeleteFromQueueRequest,
   type InsertIntoQueueRequest,

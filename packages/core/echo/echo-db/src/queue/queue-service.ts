@@ -7,14 +7,14 @@ import type { EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import type { ObjectId, SpaceId } from '@dxos/keys';
 import { type Echo, FeedProtocol } from '@dxos/protocols';
-import { type Empty, EmptySchema, EMPTY, type JsonObject, create } from '@dxos/protocols/buf';
+import { EMPTY, type Empty, EmptySchema, type JsonObject, create } from '@dxos/protocols/buf';
 import {
   type DeleteFromQueueRequest,
   type InsertIntoQueueRequest,
   type QueryQueueRequest,
   type QueueQueryResult,
   QueueQueryResultSchema,
-  SyncQueueRequest,
+  type SyncQueueRequest,
 } from '@dxos/protocols/buf/dxos/client/queue_pb';
 import { ComplexMap } from '@dxos/util';
 

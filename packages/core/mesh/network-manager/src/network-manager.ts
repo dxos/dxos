@@ -9,9 +9,9 @@ import { log } from '@dxos/log';
 import { Messenger, type PeerInfo, type SignalManager } from '@dxos/messaging';
 import { trace } from '@dxos/protocols';
 import { create } from '@dxos/protocols/buf';
+import { ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { JoinRequestSchema, LeaveRequestSchema } from '@dxos/protocols/buf/dxos/edge/signal_pb';
 import { PublicKeySchema } from '@dxos/protocols/buf/dxos/keys_pb';
-import { ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { ComplexMap } from '@dxos/util';
 
 import { ConnectionLog } from './connection-log';

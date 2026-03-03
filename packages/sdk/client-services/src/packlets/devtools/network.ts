@@ -27,7 +27,11 @@ export const subscribeToNetworkStatus = ({ signalManager }: { signalManager: Sig
     const update = () => {
       try {
         const status = signalManager.getStatus?.();
-        next(create(SubscribeToSignalStatusResponseSchema, { servers: status as unknown as SubscribeToSignalStatusResponse['servers'] }));
+        next(
+          create(SubscribeToSignalStatusResponseSchema, {
+            servers: status as unknown as SubscribeToSignalStatusResponse['servers'],
+          }),
+        );
       } catch (err: any) {
         close(err);
       }

@@ -32,7 +32,9 @@ export const createThreadPlugins = async (): Promise<Array<Plugin.Plugin>> => [
   ClientPlugin({
     onClientInitialized: ({ client }) =>
       Effect.gen(function* () {
-        yield* Effect.promise(() => client.halo.createIdentity(create(ProfileDocumentSchema, { displayName: 'Test User' })));
+        yield* Effect.promise(() =>
+          client.halo.createIdentity(create(ProfileDocumentSchema, { displayName: 'Test User' })),
+        );
       }),
     onSpacesReady: ({ client }) =>
       Effect.gen(function* () {
