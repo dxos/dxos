@@ -61,7 +61,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-thread/Comments',
+  title: 'plugins/plugin-thread/components/Comments',
   render: render(DefaultStory),
   decorators: [
     withTheme(),

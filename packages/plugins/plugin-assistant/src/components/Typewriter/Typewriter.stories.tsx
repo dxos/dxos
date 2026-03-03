@@ -15,7 +15,7 @@ import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { Typewriter } from './Typewriter';
 
 const meta: Meta<typeof Typewriter> = {
-  title: 'plugins/plugin-assistant/Typewriter',
+  title: 'plugins/plugin-assistant/components/Typewriter',
   component: Typewriter,
   parameters: {
     layout: 'centered',

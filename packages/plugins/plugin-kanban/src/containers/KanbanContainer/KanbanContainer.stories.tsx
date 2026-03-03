@@ -138,7 +138,7 @@ const DefaultComponent = () => {
 //
 
 const meta = {
-  title: 'plugins/plugin-kanban/Kanban',
+  title: 'plugins/plugin-kanban/containers/Kanban',
   component: DefaultComponent,
   render: () => <DefaultComponent />,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],

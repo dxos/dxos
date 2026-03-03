@@ -3,16 +3,17 @@
 //
 
 import { createContextScope } from '@radix-ui/react-context';
-import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
+import { Primitive } from '@radix-ui/react-primitive';
+import { Slot } from '@radix-ui/react-slot';
+import React, { forwardRef } from 'react';
 
-import { mx } from '@dxos/ui-theme';
+import { type SlottableProps } from '@dxos/ui-types';
 
-import { type ThemedClassName } from '../../util';
+import { useThemeContext } from '../../hooks';
 
 type ScopedProps<P> = P & { __scopeSplitter?: any };
 
-// TODO(burdon): Generalize styles.
-// TODO(burdon): Enalbe resize.
+// TODO(burdon): Enable resize.
 // TODO(burdon): Generalize horizontal/vertical and change to start/end.
 type Mode = 'upper' | 'lower' | 'both';
 
@@ -34,23 +35,35 @@ const [SplitterProvider, useSplitterContext] = createSplitterContext<SplitterCon
 
 const ROOT_NAME = 'Splitter.Root';
 
-type RootProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & Partial<SplitterContextValue>;
+type RootProps = SlottableProps<HTMLDivElement> & Partial<SplitterContextValue>;
 
 const Root = forwardRef<HTMLDivElement, ScopedProps<RootProps>>(
   (
-    { __scopeSplitter, classNames, mode = 'upper', ratio = 0.5, transition = 250, children, ...rootProps },
+    {
+      __scopeSplitter,
+      classNames,
+      className,
+      asChild,
+      mode = 'upper',
+      ratio = 0.5,
+      transition = 250,
+      children,
+      ...rootProps
+    },
     forwardedRef,
   ) => {
+    const { tx } = useThemeContext();
+    const Root = asChild ? Slot : Primitive.div;
     return (
       <SplitterProvider scope={__scopeSplitter} mode={mode} ratio={ratio} transition={transition}>
-        <div
+        <Root
           role='none'
           {...rootProps}
           ref={forwardedRef}
-          className={mx('relative h-full overflow-hidden', classNames)}
+          className={tx('splitter.root', {}, [className, classNames])}
         >
           {children}
-        </div>
+        </Root>
       </SplitterProvider>
     );
   },
@@ -64,14 +77,15 @@ Root.displayName = ROOT_NAME;
 
 const PANEL_NAME = 'Splitter.Panel';
 
-interface PanelProps extends ThemedClassName<ComponentPropsWithoutRef<'div'>> {
+type PanelProps = SlottableProps<HTMLDivElement> & {
   position: 'upper' | 'lower';
-}
+};
 
 const Panel = forwardRef<HTMLDivElement, ScopedProps<PanelProps>>(
-  ({ __scopeSplitter, classNames, children, position, style, ...panelProps }, forwardedRef) => {
-    const context = useSplitterContext(PANEL_NAME, __scopeSplitter);
-    const { mode, ratio, transition } = context;
+  ({ __scopeSplitter, classNames, className, asChild, children, position, style, ...panelProps }, forwardedRef) => {
+    const { mode, ratio, transition } = useSplitterContext(PANEL_NAME, __scopeSplitter);
+    const { tx } = useThemeContext();
+    const Root = asChild ? Slot : Primitive.div;
 
     // Calculate position and height based on mode and ratio.
     const isUpper = position === 'upper';
@@ -90,10 +104,11 @@ const Panel = forwardRef<HTMLDivElement, ScopedProps<PanelProps>>(
           : `${(1 - ratio) * 100}%`;
 
     return (
-      <div
+      <Root
+        role='none'
         {...panelProps}
         ref={forwardedRef}
-        className={mx('absolute inset-x-0 flex flex-col overflow-hidden', classNames)}
+        className={tx('splitter.panel', {}, [className, classNames])}
         style={{
           top,
           height,
@@ -102,7 +117,7 @@ const Panel = forwardRef<HTMLDivElement, ScopedProps<PanelProps>>(
         }}
       >
         {children}
-      </div>
+      </Root>
     );
   },
 );

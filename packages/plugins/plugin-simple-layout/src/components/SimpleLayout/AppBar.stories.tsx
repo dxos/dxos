@@ -53,7 +53,7 @@ const DefaultStory = ({ actions: actionsProp, ...props }: StoryProps) => {
 };
 
 const meta = {
-  title: 'plugins/plugin-simple-layout/AppBar',
+  title: 'plugins/plugin-simple-layout/components/AppBar',
   render: DefaultStory,
   decorators: [
     withTheme(),

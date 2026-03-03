@@ -206,13 +206,13 @@ const useL1MenuActions = ({ item, path }: Pick<L1PanelProps, 'item' | 'path'>) =
   const isAlternate = useIsAlternateTree(alternatePath, item);
 
   // Graph actions.
-  const { actions: _actions, groupedActions } = useActions(item);
-  const [primaryAction, ...secondaryActions] = _actions.toSorted((a, _b) =>
+  const { actions: actionsProp, groupedActions } = useActions(item);
+  const [primaryAction, ...secondaryActions] = actionsProp.toSorted((a, _b) =>
     a.properties?.disposition === 'list-item-primary' ? -1 : 1,
   );
 
   const graphMenuActions = (
-    primaryAction?.properties?.disposition === 'list-item-primary' ? secondaryActions : _actions
+    primaryAction?.properties?.disposition === 'list-item-primary' ? secondaryActions : actionsProp
   )
     .flatMap((action) => (Node.isAction(action) ? [action] : []))
     .filter((a) => ['list-item', 'list-item-primary'].includes(a.properties?.disposition));

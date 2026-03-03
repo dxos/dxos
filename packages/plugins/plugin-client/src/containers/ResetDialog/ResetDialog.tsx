@@ -42,12 +42,12 @@ export const ResetDialog = ({ mode, onReset, capabilityManager }: ResetDialogPro
   // TODO(wittjosiah): Add the sr-only translations.
   // TODO(wittjosiah): Add missing descriptions to other dialogs.
   return (
-    <>
-      <Dialog.Content>
+    <Dialog.Content>
+      <Dialog.Body>
         <Dialog.Title classNames='sr-only'>{t('reset dialog title')}</Dialog.Title>
         <Dialog.Description classNames='sr-only'>{t('reset dialog description')}</Dialog.Description>
-        <ConfirmReset active mode={mode} onConfirm={handleReset} onCancel={handleCancel} />
-      </Dialog.Content>
-    </>
+      </Dialog.Body>
+      <ConfirmReset active mode={mode} onConfirm={handleReset} onCancel={handleCancel} />
+    </Dialog.Content>
   );
 };

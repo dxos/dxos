@@ -23,7 +23,7 @@ const viewers = (n: number, currentlyAttended = true): Member[] =>
   }));
 
 const meta = {
-  title: 'plugins/plugin-space/SpacePresence',
+  title: 'plugins/plugin-space/containers/SpacePresence',
   decorators: [withTheme()],
   parameters: {
     translations,

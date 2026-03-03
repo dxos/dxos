@@ -48,7 +48,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-pipeline/PipelineContainer',
+  title: 'plugins/plugin-pipeline/containers/PipelineContainer',
   render: DefaultStory,
   decorators: [
     withTheme(),

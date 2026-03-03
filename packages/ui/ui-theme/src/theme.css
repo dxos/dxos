@@ -31,6 +31,7 @@
 @import './config/components/checkbox.css';
 @import './config/components/dialog.css';
 @import './config/components/focus-ring.css';
+@import './config/components/panel.css';
 @import './config/components/link.css';
 @import './config/components/scrollbar.css';
 @import './config/components/surface.css';
@@ -57,7 +58,9 @@
  */
 @source inline("bg-{neutral,red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose}-{50,100,200,300,400,500,600,700,800,900,950}");
 @source inline("bg-{neutral,red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose}-{fill,surface,surface-text,text,border}");
+@source inline("border-{neutral,red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose}-border");
 @source inline("bg-{info,success,warning,error}-{fill,surface,surface-text,text,border}");
+@source inline("border-{info,success,warning,error}-border");
 
 /**
  * Plugins must come after all imports.
