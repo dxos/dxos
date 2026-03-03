@@ -5,6 +5,8 @@
 import React, { type ComponentType, type ReactNode, useEffect, useState } from 'react';
 import { type FallbackProps, ErrorBoundary as NaturalErrorBoundary } from 'react-error-boundary';
 
+import { addEventListener } from '@dxos/async';
+
 export type { FallbackProps };
 
 export type ErrorBoundaryProps = {
@@ -26,6 +28,7 @@ export type ErrorBoundaryProps = {
  * https://reactjs.org/docs/error-boundaries.html
  * https://github.com/bvaughn/react-error-boundary
  */
+// TODO(burdon): Integrate with telemetry?
 export const ErrorBoundary = ({
   children,
   FallbackComponent,
@@ -36,20 +39,15 @@ export const ErrorBoundary = ({
 }: ErrorBoundaryProps) => {
   const [error, setError] = useState<Error>();
   useEffect(() => {
-    const handleError = (event: PromiseRejectionEvent) => {
+    return addEventListener(window, 'unhandledrejection', (event: PromiseRejectionEvent) => {
       setError(event.reason);
-    };
-
-    window.addEventListener('unhandledrejection', handleError);
-    return () => window.removeEventListener('unhandledrejection', handleError);
+    });
   }, []);
 
   if (error) {
     return <ErrorFallback error={error} resetErrorBoundary={() => setError(undefined)} />;
   }
 
-  // react-error-boundary uses a discriminated union for fallback props;
-  // only one of FallbackComponent or fallbackRender can be passed.
   const fallbackProps = fallbackRender ? { fallbackRender } : { FallbackComponent: FallbackComponent ?? ErrorFallback };
 
   return (
@@ -67,12 +65,23 @@ export const ErrorFallback = ({ error }: FallbackProps) => {
     error instanceof Error
       ? error
       : {
+          name: undefined,
           message: String(error),
           stack: undefined,
         };
 
+  // Record error for smoke test detection (persists even if component re-renders away).
+  if (typeof window !== 'undefined') {
+    ((window as any).__ERROR_BOUNDARY_ERRORS__ ??= []).push(message);
+  }
+
   return (
-    <div role='alert' data-testid='error-boundary-fallback' className='flex flex-col p-4 gap-4 overflow-auto'>
+    <div
+      role='alert'
+      // NOTE: Storybook smoke tests use this to detect errors.
+      data-testid='error-boundary-fallback'
+      className='flex flex-col p-4 gap-4 overflow-auto'
+    >
       <h1 className='text-lg text-error-text'>Fatal Error</h1>
       {name && <p>{name}</p>}
       <p>{message}</p>

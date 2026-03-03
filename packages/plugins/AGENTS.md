@@ -43,51 +43,67 @@ NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
 
 ## Plugin Status
 
-| Plugin | Stories | Smoke Test |
-|---|---|---|
-| plugin-assistant      |  9 | pass |
-| plugin-attention      |  — | — |
-| plugin-automation     |  3 | pass |
-| plugin-board          |  1 | pass |
-| plugin-chess          |  4 | pass |
-| plugin-client         |  7 | pass |
-| plugin-conductor      |  0 | pass |
-| plugin-debug          |  0 | pass |
-| plugin-deck           |  2 | pass |
-| plugin-excalidraw     |  1 | pass |
-| plugin-explorer       |  8 | pass |
-| plugin-files          |  — | — |
-| plugin-graph          |  — | — |
-| plugin-help           |  1 | pass |
-| plugin-inbox          |  9 | pass |
-| plugin-kanban         |  3 | pass |
-| plugin-map            |  — | — |
-| plugin-markdown       |  3 | pass |
-| plugin-masonry        |  1 | pass |
-| plugin-meeting        |  1 | pass |
-| plugin-mermaid        |  2 | pass |
-| plugin-native         |  — | — |
-| plugin-navtree        |  5 | pass |
-| plugin-observability  |  1 | pass |
-| plugin-outliner       |  4 | pass |
-| plugin-pipeline       |  3 | pass |
-| plugin-presenter      |  8 | pass |
-| plugin-preview        |  5 | pass |
-| plugin-registry       |  3 | pass |
-| plugin-script         |  6 | pass |
-| plugin-search         |  0 | pass |
-| plugin-settings       |  — | — |
-| plugin-sheet          |  9 | pass |
-| plugin-sketch         |  1 | pass |
-| plugin-space          |  6 | pass |
-| plugin-stack          |  — | — |
-| plugin-status-bar     |  2 | pass |
-| plugin-table          |  1 | pass |
-| plugin-thread         | 15 | pass |
-| plugin-token-manager  |  1 | pass |
-| plugin-transcription  |  7 | pass |
-| plugin-transformer    |  1 | pass |
-| plugin-wnfs           |  1 | pass |
+Run storybook smoke tests: `moon run <plugin>:test-storybook`
+
+NOTE: Tests using `withClientProvider` complete before async client initialization finishes,
+so errors in components that depend on Edge, capabilities, or other runtime services are
+NOT detected by the current smoke test infrastructure. Stories that need to test fully-rendered
+components should add a `play` function that waits for the component to mount. See "Smoke Test Issues" below.
+
+| Plugin | Stories | Smoke Test | Notes |
+|---|---|---|---|
+| plugin-assistant      |  9 | pass | |
+| plugin-attention      |  — | — | No stories (behavioral plugin) |
+| plugin-automation     |  3 | warn | AutomationPanel: `Edge is not configured` at runtime (not caught by test; see issues) |
+| plugin-board          |  1 | pass | |
+| plugin-chess          |  4 | pass | |
+| plugin-client         |  7 | pass | |
+| plugin-conductor      |  0 | — | No storybook stories |
+| plugin-debug          |  0 | — | No storybook stories |
+| plugin-deck           |  2 | pass | |
+| plugin-excalidraw     |  1 | pass | |
+| plugin-explorer       |  8 | pass | |
+| plugin-files          |  — | — | No stories |
+| plugin-graph          |  — | — | No stories (utility plugin) |
+| plugin-help           |  1 | warn | Intermittent `Missing ThemeContext` error in DialogOverlay |
+| plugin-inbox          |  9 | pass | |
+| plugin-kanban         |  3 | warn | Console: `Error in connector` |
+| plugin-map            |  — | — | No stories |
+| plugin-markdown       |  3 | pass | |
+| plugin-masonry        |  1 | pass | |
+| plugin-meeting        |  1 | pass | |
+| plugin-mermaid        |  2 | pass | |
+| plugin-native         |  — | — | No stories (native plugin) |
+| plugin-navtree        |  5 | pass | |
+| plugin-observability  |  1 | pass | |
+| plugin-outliner       |  4 | pass | |
+| plugin-pipeline       |  3 | pass | |
+| plugin-presenter      |  8 | pass | |
+| plugin-preview        |  5 | warn | Console: `invariant violation: No capability found for atom-registry` (4x) |
+| plugin-registry       |  3 | pass | |
+| plugin-script         |  6 | pass | |
+| plugin-search         |  0 | — | All tests skipped |
+| plugin-settings       |  — | — | No stories (routing plugin) |
+| plugin-sheet          |  9 | pass | |
+| plugin-simple-layout  | 15 | pass | ContentError demo stories intentionally render errors |
+| plugin-sketch         |  1 | pass | |
+| plugin-space          |  6 | pass | |
+| plugin-stack          |  — | — | No stories |
+| plugin-status-bar     |  2 | pass | |
+| plugin-table          |  1 | pass | |
+| plugin-thread         | 15 | warn | Console: `Schema not registered`, `NotSupportedError` |
+| plugin-token-manager  |  1 | pass | |
+| plugin-transcription  |  7 | pass | |
+| plugin-transformer    |  1 | pass | Console: `No GPU adapter found` (expected in headless) |
+| plugin-wnfs           |  1 | pass | |
+
+### Smoke Test Issues
+
+1. **Async initialization gap**: Stories using `withClientProvider` (creates mock client + identity + space) complete before the inner component renders. The test framework renders the initial loading state and declares success (~100ms). Errors that occur after async initialization (e.g., `Edge is not configured` in AutomationPanel) are never exercised. **Fix**: stories that test components needing a fully initialized client should add a `play` function that waits for the component to appear (e.g., `await canvas.findByText('...')`).
+
+2. **ErrorBoundary detection**: The `ErrorFallback` in `react-ui/ErrorBoundary.tsx` now records to `__ERROR_BOUNDARY_ERRORS__` for smoke test detection. Previously, only the `DefaultFallback` in `app-framework` did this, so errors caught by the `ErrorBoundary` component (used by `withClientProvider`) were silently swallowed.
+
+3. **Console errors vs test failures**: Several plugins log errors to console but the tests pass because the errors are caught by try/catch (not ErrorBoundary) or occur in non-rendering code paths. These are listed as "warn" in the table.
 
 ## Observations
 
