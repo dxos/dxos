@@ -3,7 +3,6 @@
 //
 
 import { Event } from '@dxos/async';
-import { type Stream } from '@dxos/codec-protobuf/stream';
 import { Context } from '@dxos/context';
 import { type Hypergraph, Obj, type QueryResult } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
@@ -18,6 +17,7 @@ import { isNonNullable } from '@dxos/util';
 
 import { OBJECT_DIAGNOSTICS, type QuerySourceProvider } from '../hypergraph';
 import { type QuerySource, getTargetSpacesForQuery } from '../query';
+import { Stream } from '@dxos/stream';
 
 export type LoadObjectProps = {
   spaceId: SpaceId;

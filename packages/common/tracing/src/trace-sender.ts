@@ -1,8 +1,6 @@
 //
 // Copyright 2023 DXOS.org
 //
-
-import { Stream } from '@dxos/codec-protobuf/stream';
 import { type Client } from '@dxos/protocols';
 import { create } from '@dxos/protocols/buf';
 import { type LogEntry } from '@dxos/protocols/buf/dxos/client/logging_pb';
@@ -20,6 +18,7 @@ import {
 } from '@dxos/protocols/buf/dxos/tracing_pb';
 
 import { type TraceProcessor, type TraceSubscription } from './trace-processor';
+import { Stream } from '@dxos/stream';
 
 export class TraceSender implements Client.TracingService {
   constructor(private _traceProcessor: TraceProcessor) {}

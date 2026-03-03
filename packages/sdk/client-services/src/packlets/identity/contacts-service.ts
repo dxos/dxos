@@ -3,7 +3,6 @@
 //
 
 import { SubscriptionList, UpdateScheduler, scheduleTask } from '@dxos/async';
-import { Stream } from '@dxos/codec-protobuf/stream';
 import { type MemberInfo } from '@dxos/credentials';
 import { type SpaceManager } from '@dxos/echo-pipeline';
 import { PublicKey } from '@dxos/keys';
@@ -21,6 +20,7 @@ import { ComplexMap, ComplexSet } from '@dxos/util';
 import { type DataSpaceManager } from '../spaces';
 
 import { type IdentityManager } from './identity-manager';
+import { Stream } from '@dxos/stream';
 
 export class ContactsServiceImpl implements Client.ContactsService {
   constructor(

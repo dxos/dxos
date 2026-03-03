@@ -10,7 +10,7 @@ import { getAsyncProviderValue } from '@dxos/util';
 import { type Any, type EncodingOptions } from './common';
 import { type RequestOptions } from './request-options';
 import type { Schema } from './schema';
-import { Stream } from './stream';
+import { Stream } from '@dxos/stream';
 
 /**
  * Service endpoint.

@@ -5,7 +5,6 @@
 import type { AutomergeUrl } from '@automerge/automerge-repo';
 
 import { SubscriptionList, UpdateScheduler, scheduleTask } from '@dxos/async';
-import { Stream } from '@dxos/codec-protobuf/stream';
 import {
   type CredentialProcessor,
   type TypedAssertion,
@@ -69,6 +68,7 @@ import { SpaceArchiveWriter, extractSpaceArchive } from '../space-export';
 
 import { type DataSpace } from './data-space';
 import { type DataSpaceManager } from './data-space-manager';
+import { Stream } from '@dxos/stream';
 
 export class SpacesServiceImpl implements Client.SpacesService {
   constructor(

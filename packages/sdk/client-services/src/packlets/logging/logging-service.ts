@@ -3,7 +3,6 @@
 //
 
 import { Event } from '@dxos/async';
-import { Stream } from '@dxos/codec-protobuf/stream';
 import { PublicKey } from '@dxos/keys';
 import {
   type LogLevel,
@@ -28,6 +27,7 @@ import {
   QueryMetricsResponseSchema,
 } from '@dxos/protocols/buf/dxos/client/logging_pb';
 import { getDebugName, jsonify, numericalValues, tracer } from '@dxos/util';
+import { Stream } from '@dxos/stream';
 
 /**
  * Logging service used to spy on logs of the host.

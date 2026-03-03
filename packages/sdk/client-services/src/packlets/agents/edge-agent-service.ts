@@ -1,8 +1,6 @@
 //
 // Copyright 2024 DXOS.org
 //
-
-import { Stream } from '@dxos/codec-protobuf/stream';
 import { type EdgeConnection } from '@dxos/edge-client';
 import { type Client, EdgeAgentStatus } from '@dxos/protocols';
 import { type Empty, EmptySchema, create } from '@dxos/protocols/buf';
@@ -17,6 +15,7 @@ import {
 } from '@dxos/protocols/buf/dxos/client/services_pb';
 
 import { type EdgeAgentManager } from './edge-agent-manager';
+import { Stream } from '@dxos/stream';
 
 // TODO(wittjosiah): This service is not currently exposed on the client api, it must be called directly.
 export class EdgeAgentServiceImpl implements Client.EdgeAgentService {

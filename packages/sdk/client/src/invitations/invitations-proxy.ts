@@ -10,7 +10,6 @@ import {
   InvitationEncoder,
   type Invitations,
 } from '@dxos/client-protocol';
-import { type Stream } from '@dxos/codec-protobuf/stream';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -31,6 +30,7 @@ import {
 import { type DeviceProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { RPC_TIMEOUT } from '../common';
+import { Stream } from '@dxos/stream';
 
 /**
  * Create an observable from an RPC stream.

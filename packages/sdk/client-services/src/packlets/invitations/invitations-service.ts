@@ -1,8 +1,6 @@
 //
 // Copyright 2022 DXOS.org
 //
-
-import { Stream } from '@dxos/codec-protobuf/stream';
 import { type Halo } from '@dxos/protocols';
 import { type Empty, EmptySchema, create } from '@dxos/protocols/buf';
 import { type Invitation } from '@dxos/protocols/buf/dxos/client/invitation_pb';
@@ -18,6 +16,7 @@ import {
 import { trace } from '@dxos/tracing';
 
 import { type InvitationsManager } from './invitations-manager';
+import { Stream } from '@dxos/stream';
 
 /**
  * Adapts invitation service observable to client/service stream.

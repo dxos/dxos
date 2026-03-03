@@ -109,6 +109,9 @@
       "path": "packages/common/storybook-utils/tsconfig.json"
     },
     {
+      "path": "packages/common/stream/tsconfig.json"
+    },
+    {
       "path": "packages/common/test-utils/tsconfig.json"
     },
     {

@@ -5,8 +5,9 @@
 import { describe, expect, test } from 'vitest';
 
 import { Trigger, sleep } from '@dxos/async';
-import { type Any, Stream } from '@dxos/codec-protobuf';
+import { type Any } from '@dxos/codec-protobuf';
 import { log } from '@dxos/log';
+import { Stream } from '@dxos/stream';
 
 import { RpcPeer } from './rpc';
 import { createLinkedPorts, encodeMessage } from './testing';

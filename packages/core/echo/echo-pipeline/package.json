@@ -73,6 +73,7 @@
     "@dxos/random-access-storage": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/sql-sqlite": "workspace:*",
+    "@dxos/stream": "workspace:*",
     "@dxos/teleport": "workspace:*",
     "@dxos/teleport-extension-automerge-replicator": "workspace:*",
     "@dxos/teleport-extension-gossip": "workspace:*",

@@ -1,8 +1,6 @@
 //
 // Copyright 2023 DXOS.org
 //
-
-import { Stream } from '@dxos/codec-protobuf/stream';
 import { create } from '@dxos/protocols/buf';
 import {
   type SubscribeToMetadataResponse,
@@ -10,6 +8,7 @@ import {
 } from '@dxos/protocols/buf/dxos/devtools/host_pb';
 
 import { type ServiceContext } from '../services';
+import { Stream } from '@dxos/stream';
 
 export const subscribeToMetadata = ({ context }: { context: ServiceContext }) =>
   new Stream<SubscribeToMetadataResponse>(({ next, ctx }) => {

@@ -27,6 +27,9 @@
       "path": "../../common/protobuf-compiler"
     },
     {
+      "path": "../../common/stream"
+    },
+    {
       "path": "../../common/timeframe"
     },
     {

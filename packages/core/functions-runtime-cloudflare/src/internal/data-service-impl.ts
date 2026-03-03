@@ -1,8 +1,6 @@
 //
 // Copyright 2024 DXOS.org
 //
-
-import { Stream } from '@dxos/codec-protobuf/stream';
 import { raise } from '@dxos/debug';
 import { NotImplementedError, RuntimeServiceError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
@@ -29,6 +27,7 @@ import {
 } from '@dxos/protocols/buf/dxos/echo/service_pb';
 
 import { copyUint8Array } from './utils';
+import { Stream } from '@dxos/stream';
 
 export class DataServiceImpl implements Echo.DataService {
   private dataSubscriptions = new Map<string, { spaceId: SpaceId; next: (msg: BatchedDocumentUpdates) => void }>();

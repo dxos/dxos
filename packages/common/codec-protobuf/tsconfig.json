@@ -11,19 +11,16 @@
   ],
   "references": [
     {
-      "path": "../async"
-    },
-    {
       "path": "../context"
     },
     {
       "path": "../invariant"
     },
     {
-      "path": "../log"
+      "path": "../node-std"
     },
     {
-      "path": "../node-std"
+      "path": "../stream"
     },
     {
       "path": "../util"

@@ -39,6 +39,7 @@
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",
+    "@dxos/stream": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
   },

@@ -23,6 +23,9 @@
     },
     {
       "path": "../node-std"
+    },
+    {
+      "path": "../stream"
     }
   ]
 }

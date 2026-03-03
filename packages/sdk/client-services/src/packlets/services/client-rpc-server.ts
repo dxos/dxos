@@ -3,7 +3,7 @@
 //
 
 import { type ClientServices } from '@dxos/client-protocol';
-import { Stream } from '@dxos/codec-protobuf';
+import { Stream } from '@dxos/stream';
 import { raise } from '@dxos/debug';
 import { type Rpc } from '@dxos/protocols';
 import { type DescService, type GenService, type GenServiceMethods } from '@dxos/protocols/buf';

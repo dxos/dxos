@@ -1,8 +1,6 @@
 //
 // Copyright 2020 DXOS.org
 //
-
-import { Stream } from '@dxos/codec-protobuf/stream';
 import { type Space } from '@dxos/echo-pipeline';
 import { PublicKey } from '@dxos/keys';
 import { create } from '@dxos/protocols/buf';
@@ -17,6 +15,7 @@ import { type SpaceMetadata } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { PublicKeySchema } from '@dxos/protocols/buf/dxos/keys_pb';
 
 import { type ServiceContext } from '../services';
+import { Stream } from '@dxos/stream';
 
 export const subscribeToSpaces = (context: ServiceContext, request: SubscribeToSpacesRequest) => {
   const spaceKeys = request.spaceKeys?.map((k) => PublicKey.from(k.data));

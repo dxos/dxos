@@ -1,8 +1,6 @@
 //
 // Copyright 2021 DXOS.org
 //
-
-import { Stream } from '@dxos/codec-protobuf/stream';
 import { invariant } from '@dxos/invariant';
 import { type Rpc } from '@dxos/protocols';
 import {
@@ -18,6 +16,7 @@ import {
 import { getAsyncProviderValue } from '@dxos/util';
 
 import { RpcPeer, type RpcPeerOptions } from './rpc';
+import { Stream } from '@dxos/stream';
 
 /**
  * Service backend interface for making RPC calls.

@@ -6,7 +6,6 @@ import type * as SqlClient from '@effect/sql/SqlClient';
 import * as Schema from 'effect/Schema';
 
 import { DeferredTask, scheduleMicroTask, synchronized } from '@dxos/async';
-import { Stream } from '@dxos/codec-protobuf/stream';
 import { type Context, Resource } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { QueryAST } from '@dxos/echo-protocol';
@@ -28,6 +27,7 @@ import { type AutomergeHost } from '../automerge';
 import { QueryExecutor } from '../query';
 
 import type { SpaceStateManager } from './space-state-manager';
+import { Stream } from '@dxos/stream';
 
 export type QueryServiceProps = {
   indexEngine: IndexEngine;

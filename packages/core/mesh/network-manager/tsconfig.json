@@ -32,6 +32,9 @@
       "path": "../../../common/node-std"
     },
     {
+      "path": "../../../common/stream"
+    },
+    {
       "path": "../../../common/tracing"
     },
     {

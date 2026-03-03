@@ -7,8 +7,8 @@ import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_p
 import type { SpaceId } from '@dxos/keys';
 import { EdgeService } from '@dxos/protocols';
 import { sleep } from '@dxos/async';
-import { Stream } from '@dxos/codec-protobuf/stream';
 import { log } from '@dxos/log';
+import { Stream } from '@dxos/stream';
 
 // DX_TEST_TAGS=sync-e2e pnpm vitest run sync.test.ts
 describe.runIf(process.env.DX_TEST_TAGS?.includes('sync-e2e'))('sync', { timeout: 120_000, retry: 0 }, async () => {

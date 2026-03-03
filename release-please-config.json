@@ -200,6 +200,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/stream/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/test-utils/package.json",
           "jsonpath": "$.version"
         },

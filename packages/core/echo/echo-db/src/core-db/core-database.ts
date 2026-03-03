@@ -16,7 +16,6 @@ import {
   runInContextAsync,
   synchronized,
 } from '@dxos/async';
-import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context, ContextDisposedError } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { type Database, Ref } from '@dxos/echo';
@@ -43,6 +42,7 @@ import {
 } from './automerge-doc-loader';
 import { ObjectCore } from './object-core';
 import { getInlineAndLinkChanges } from './util';
+import { Stream } from '@dxos/stream';
 
 export type InitRootProxyFn = (core: ObjectCore) => void;
 

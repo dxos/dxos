@@ -3,7 +3,6 @@
 //
 
 import { Trigger, sleep } from '@dxos/async';
-import { Stream } from '@dxos/codec-protobuf/stream';
 import { Resource } from '@dxos/context';
 import { createCredential, signPresentation } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
@@ -35,6 +34,7 @@ import { type DataSpaceManager } from '../spaces';
 import { type Identity } from './identity';
 import { type CreateIdentityOptions, type IdentityManager } from './identity-manager';
 import { type EdgeIdentityRecoveryManager } from './identity-recovery-manager';
+import { Stream } from '@dxos/stream';
 
 const DEFAULT_SPACE_SEARCH_TIMEOUT = 10_000;
 

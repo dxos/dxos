@@ -5,7 +5,6 @@
 import { beforeEach, describe, expect, test } from 'vitest';
 
 import { latch, sleep } from '@dxos/async';
-import { Stream } from '@dxos/codec-protobuf/stream';
 import { EmptySchema, create } from '@dxos/protocols/buf';
 import {
   MessageWithAnySchema,
@@ -22,6 +21,7 @@ import {
 
 import { type BufProtoRpcPeer, createBufProtoRpcPeer, createBufServiceBundle } from './service-buf';
 import { createLinkedPorts, encodeMessage } from './testing';
+import { Stream } from '@dxos/stream';
 
 // TODO(dmaretskyi): Rename alice and bob to peer1 and peer2.
 

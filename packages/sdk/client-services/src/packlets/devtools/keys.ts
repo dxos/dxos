@@ -3,7 +3,6 @@
 //
 
 import { scheduleTask } from '@dxos/async';
-import { Stream } from '@dxos/codec-protobuf/stream';
 import { type Keyring } from '@dxos/keyring';
 import { create } from '@dxos/protocols/buf';
 import {
@@ -11,6 +10,7 @@ import {
   SubscribeToKeyringKeysResponseSchema,
 } from '@dxos/protocols/buf/dxos/devtools/host_pb';
 import { KeyRecordSchema } from '@dxos/protocols/buf/dxos/halo/keyring_pb';
+import { Stream } from '@dxos/stream';
 
 export const subscribeToKeyringKeys = ({ keyring }: { keyring: Keyring }) =>
   new Stream<SubscribeToKeyringKeysResponse>(({ next, ctx }) => {

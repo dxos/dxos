@@ -53,6 +53,7 @@ export class ModuleSpecifier {
 }
 
 export const CODEC_MODULE = new ModuleSpecifier('@dxos/codec-protobuf', import.meta.dirname);
+export const STREAM_MODULE = new ModuleSpecifier('@dxos/stream', import.meta.dirname);
 
 const normalizeRelativePath = (path: string) => {
   if (!path.startsWith('.')) {

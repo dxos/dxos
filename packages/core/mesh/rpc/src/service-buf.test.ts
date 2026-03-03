@@ -5,7 +5,6 @@
 import { describe, expect, test } from 'vitest';
 
 import { latch, sleep } from '@dxos/async';
-import { Stream } from '@dxos/codec-protobuf/stream';
 import { EmptySchema, create } from '@dxos/protocols/buf';
 import {
   PingReponseSchema,
@@ -20,6 +19,7 @@ import {
 
 import { type BufProtoRpcPeer, createBufProtoRpcPeer, createBufServiceBundle } from './service-buf';
 import { createLinkedPorts } from './testing';
+import { Stream } from '@dxos/stream';
 
 describe('Buf protobuf service', () => {
   test('works with buf protobuf service', async () => {

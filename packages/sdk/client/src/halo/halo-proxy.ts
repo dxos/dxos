@@ -6,7 +6,6 @@ import { inspect } from 'node:util';
 
 import { Event, MulticastObservable, SubscriptionList, Trigger, asyncTimeout } from '@dxos/async';
 import { AUTH_TIMEOUT, type ClientServicesProvider, type Halo } from '@dxos/client-protocol';
-import type { Stream } from '@dxos/codec-protobuf/stream';
 import { getCredentialAssertion } from '@dxos/credentials';
 import { inspectObject } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
@@ -34,6 +33,7 @@ import { trace } from '@dxos/tracing';
 
 import { RPC_TIMEOUT } from '../common';
 import { InvitationsProxy } from '../invitations';
+import { Stream } from '@dxos/stream';
 
 @trace.resource()
 export class HaloProxy implements Halo {

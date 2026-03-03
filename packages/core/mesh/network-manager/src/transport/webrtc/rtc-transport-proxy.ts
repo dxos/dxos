@@ -5,7 +5,6 @@
 import { Writable } from 'node:stream';
 
 import { Event, scheduleTask } from '@dxos/async';
-import { type Stream } from '@dxos/codec-protobuf/stream';
 import { Resource } from '@dxos/context';
 import { ErrorStream } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
@@ -31,6 +30,7 @@ import { type Signal } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 import { arrayToBuffer } from '@dxos/util';
 
 import { type Transport, type TransportFactory, type TransportOptions, type TransportStats } from '../transport';
+import { Stream } from '@dxos/stream';
 
 const RPC_TIMEOUT = 10_000;
 const CLOSE_RPC_TIMEOUT = 3000;

@@ -7,7 +7,7 @@ import { dirname, join } from 'path';
 import type pb from 'protobufjs';
 import * as ts from 'typescript';
 
-import { CODEC_MODULE, ModuleSpecifier } from '../module-specifier';
+import { CODEC_MODULE, STREAM_MODULE, ModuleSpecifier } from '../module-specifier';
 import { getSafeNamespaceIdentifier, parseFullyQualifiedName } from '../namespaces';
 import { type SubstitutionsMap } from '../parser';
 
@@ -52,7 +52,7 @@ export const createNamespaceSourceFile = (
 
   return ts.factory.createSourceFile(
     [
-      createRuntimeImports(),
+      ...createRuntimeImports(),
       ...(substitutionsImport ? [substitutionsImport] : []),
       ...otherNamespaceImports,
       ...declarations,
@@ -115,7 +115,18 @@ export const getFileNameForNamespace = (namespace: string) => {
   return `${name.join('/')}.ts`;
 };
 
-const createRuntimeImports = () =>
+const createRuntimeImports = () => [
+  f.createImportDeclaration(
+    [],
+    f.createImportClause(
+      true,
+      undefined,
+      f.createNamedImports([
+        f.createImportSpecifier(false, undefined, f.createIdentifier('RequestOptions')),
+      ]),
+    ),
+    f.createStringLiteral(CODEC_MODULE.importSpecifier('')),
+  ),
   f.createImportDeclaration(
     [],
     f.createImportClause(
@@ -123,8 +134,8 @@ const createRuntimeImports = () =>
       undefined,
       f.createNamedImports([
         f.createImportSpecifier(false, undefined, f.createIdentifier('Stream')),
-        f.createImportSpecifier(false, undefined, f.createIdentifier('RequestOptions')),
       ]),
     ),
-    f.createStringLiteral(CODEC_MODULE.importSpecifier('')),
-  );
+    f.createStringLiteral(STREAM_MODULE.importSpecifier('')),
+  ),
+];

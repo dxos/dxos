@@ -5,7 +5,6 @@
 import { type DocumentId } from '@automerge/automerge-repo';
 
 import { UpdateScheduler } from '@dxos/async';
-import { Stream } from '@dxos/codec-protobuf/stream';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -36,6 +35,7 @@ import { type AutomergeHost, deriveCollectionIdFromSpaceId } from '../automerge'
 
 import { DocumentsSynchronizer } from './documents-synchronizer';
 import { type SpaceStateManager } from './space-state-manager';
+import { Stream } from '@dxos/stream';
 
 export type DataServiceProps = {
   automergeHost: AutomergeHost;

@@ -3,7 +3,6 @@
 //
 
 import { SubscriptionList } from '@dxos/async';
-import { Stream } from '@dxos/codec-protobuf/stream';
 import { type SpaceManager } from '@dxos/echo-pipeline';
 import { FeedIterator, type FeedStore, type FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
@@ -21,6 +20,7 @@ import {
 import { type FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { PublicKeySchema } from '@dxos/protocols/buf/dxos/keys_pb';
 import { ComplexMap } from '@dxos/util';
+import { Stream } from '@dxos/stream';
 
 type FeedOwner = {
   identity?: PublicKey;

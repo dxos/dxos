@@ -1,8 +1,6 @@
 //
 // Copyright 2022 DXOS.org
 //
-
-import { Stream } from '@dxos/codec-protobuf/stream';
 import { type EdgeConnection } from '@dxos/edge-client';
 import { PublicKey } from '@dxos/keys';
 import { type SignalManager } from '@dxos/messaging';
@@ -22,6 +20,7 @@ import {
   type Message,
   type QueryRequest,
 } from '@dxos/protocols/buf/dxos/edge/signal_pb';
+import { Stream } from '@dxos/stream';
 
 export class NetworkServiceImpl implements Client.NetworkService {
   constructor(

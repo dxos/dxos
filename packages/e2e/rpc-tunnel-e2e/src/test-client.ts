@@ -3,10 +3,10 @@
 //
 
 import { Event } from '@dxos/async';
-import { Stream } from '@dxos/codec-protobuf/stream';
 import { log } from '@dxos/log';
 import { create } from '@dxos/protocols/buf';
 import { type TestRpcResponse, TestRpcResponseSchema } from '@dxos/protocols/buf/example/testing/rpc_pb';
+import { Stream } from '@dxos/stream';
 
 const STORAGE_KEY = 'testclient';
 

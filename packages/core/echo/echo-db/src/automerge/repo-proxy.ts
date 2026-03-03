@@ -6,7 +6,6 @@ import { next as A } from '@automerge/automerge';
 import { type AnyDocumentId, type DocumentId, interpretAsDocumentId } from '@automerge/automerge-repo';
 
 import { Event, UpdateScheduler } from '@dxos/async';
-import { type Stream } from '@dxos/codec-protobuf/stream';
 import { LifecycleState, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
@@ -17,6 +16,7 @@ import * as EchoServicePb from '@dxos/protocols/buf/dxos/echo/service_pb';
 import { trace } from '@dxos/tracing';
 
 import { DocHandleProxy } from './doc-handle-proxy';
+import { Stream } from '@dxos/stream';
 
 const MAX_UPDATE_FREQ = 10; // [updates/sec]
 const RPC_TIMEOUT = 30_000;

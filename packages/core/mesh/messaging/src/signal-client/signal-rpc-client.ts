@@ -6,7 +6,7 @@ import WebSocket from 'isomorphic-ws';
 
 import { TimeoutError, Trigger, scheduleTaskInterval } from '@dxos/async';
 import { type Any } from '@dxos/codec-protobuf';
-import { type Stream } from '@dxos/codec-protobuf';
+import { type Stream } from '@dxos/stream';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';

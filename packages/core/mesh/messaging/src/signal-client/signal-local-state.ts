@@ -3,7 +3,6 @@
 //
 
 import { Event, asyncTimeout } from '@dxos/async';
-import type { Stream } from '@dxos/codec-protobuf/stream';
 import { type Context, cancelWithContext } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -19,6 +18,7 @@ import { ComplexMap, ComplexSet, safeAwaitAll } from '@dxos/util';
 import type { Message, SwarmEvent } from '../signal-methods';
 
 import { type SignalRPCClient } from './signal-rpc-client';
+import { Stream } from '@dxos/stream';
 
 export class SignalLocalState {
   /**

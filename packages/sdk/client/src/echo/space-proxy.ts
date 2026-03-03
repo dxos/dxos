@@ -21,7 +21,6 @@ import {
   type SpaceInternal,
   SpaceProperties,
 } from '@dxos/client-protocol';
-import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context, cancelWithContext } from '@dxos/context';
 import { type SpecificCredential, checkCredentialType } from '@dxos/credentials';
 import {
@@ -70,6 +69,7 @@ import { trace } from '@dxos/tracing';
 
 import { RPC_TIMEOUT } from '../common';
 import { InvitationsProxy } from '../invitations';
+import { Stream } from '@dxos/stream';
 
 const EPOCH_CREATION_TIMEOUT = 60_000;
 

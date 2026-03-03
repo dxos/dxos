@@ -3,8 +3,6 @@
 //
 
 import * as Schema from 'effect/Schema';
-
-import { Stream } from '@dxos/codec-protobuf/stream';
 import { QueryAST } from '@dxos/echo-protocol';
 import { NotImplementedError, RuntimeServiceError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
@@ -23,6 +21,7 @@ import {
 
 import { queryToDataServiceRequest } from './adapter';
 import { copyUint8Array } from './utils';
+import { Stream } from '@dxos/stream';
 
 export class QueryServiceImpl implements Echo.QueryService {
   private _queryCount = 0;

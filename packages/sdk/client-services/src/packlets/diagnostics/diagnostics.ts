@@ -4,7 +4,7 @@
 
 import { asyncTimeout } from '@dxos/async';
 import { type ClientServices } from '@dxos/client-protocol';
-import { getFirstStreamValue } from '@dxos/codec-protobuf';
+import { getFirstStreamValue } from '@dxos/stream';
 import { type Config, type ConfigProto } from '@dxos/config';
 import { createDidFromIdentityKey, credentialTypeFilter } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';

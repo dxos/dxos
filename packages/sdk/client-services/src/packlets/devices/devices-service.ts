@@ -3,7 +3,6 @@
 //
 
 import { SubscriptionList } from '@dxos/async';
-import { Stream } from '@dxos/codec-protobuf/stream';
 import { type EdgeConnection } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { type Halo } from '@dxos/protocols';
@@ -21,6 +20,7 @@ import { type DeviceProfileDocument } from '@dxos/protocols/buf/dxos/halo/creden
 import { PublicKeySchema } from '@dxos/protocols/buf/dxos/keys_pb';
 
 import { type IdentityManager } from '../identity';
+import { Stream } from '@dxos/stream';
 
 export class DevicesServiceImpl implements Halo.DevicesService {
   constructor(

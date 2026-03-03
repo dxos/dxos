@@ -24,6 +24,7 @@
     "@dxos/react-hooks": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/rpc-tunnel": "workspace:*",
+    "@dxos/stream": "workspace:*",
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-json-tree": "catalog:"

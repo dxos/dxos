@@ -1,8 +1,6 @@
 //
 // Copyright 2020 DXOS.org
 //
-
-import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { type SignalManager } from '@dxos/messaging';
@@ -22,6 +20,7 @@ import {
   SubscribeToSwarmInfoResponseSchema,
 } from '@dxos/protocols/buf/dxos/devtools/host_pb';
 import { PublicKeySchema } from '@dxos/protocols/buf/dxos/keys_pb';
+import { Stream } from '@dxos/stream';
 
 export const subscribeToNetworkStatus = ({ signalManager }: { signalManager: SignalManager }) =>
   new Stream<SubscribeToSignalStatusResponse>(({ next, close }) => {

@@ -3,13 +3,14 @@
 //
 
 import { Trigger, asyncTimeout, synchronized } from '@dxos/async';
-import { type Any, type RequestOptions, Stream } from '@dxos/codec-protobuf';
+import { type Any, type RequestOptions } from '@dxos/codec-protobuf';
 import { StackTrace } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { RpcClosedError, RpcNotOpenError, encodeError } from '@dxos/protocols';
 import { create, fromBinary, toBinary } from '@dxos/protocols/buf';
 import { type Request, type Response, type RpcMessage, RpcMessageSchema } from '@dxos/protocols/buf/dxos/rpc_pb';
+import { Stream } from '@dxos/stream';
 import { exponentialBackoffInterval } from '@dxos/util';
 
 import { decodeRpcError } from './errors';

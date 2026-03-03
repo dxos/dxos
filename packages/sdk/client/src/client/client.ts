@@ -15,7 +15,6 @@ import {
   SpaceProperties,
   clientServiceBundle,
 } from '@dxos/client-protocol';
-import { type Stream } from '@dxos/codec-protobuf/stream';
 import { Config, SaveConfig } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
@@ -54,6 +53,7 @@ import type { IFrameManager, Shell, ShellManager } from '../services';
 import { DXOS_VERSION } from '../version';
 
 import { ClientRuntime } from './client-runtime';
+import { Stream } from '@dxos/stream';
 
 /**
  * This options object configures the DXOS Client.

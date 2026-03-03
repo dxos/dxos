@@ -49,6 +49,9 @@
       "path": "../../../common/sql-sqlite"
     },
     {
+      "path": "../../../common/stream"
+    },
+    {
       "path": "../../../common/test-utils"
     },
     {

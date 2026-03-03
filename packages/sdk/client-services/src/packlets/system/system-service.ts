@@ -3,7 +3,6 @@
 //
 
 import { type Event } from '@dxos/async';
-import { Stream } from '@dxos/codec-protobuf/stream';
 import { type Config } from '@dxos/config';
 import { type Client } from '@dxos/protocols';
 import { type Empty, EmptySchema, create, timestampFromDate } from '@dxos/protocols/buf';
@@ -24,6 +23,7 @@ import { type MaybePromise, jsonKeyReplacer } from '@dxos/util';
 
 import { type Diagnostics } from '../diagnostics';
 import { getPlatform } from '../services/platform';
+import { Stream } from '@dxos/stream';
 
 export type SystemServiceOptions = {
   config?: () => MaybePromise<Config | undefined>;

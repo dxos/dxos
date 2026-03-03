@@ -3202,21 +3202,18 @@ importers:
 
   packages/common/codec-protobuf:
     dependencies:
-      '@dxos/async':
-        specifier: workspace:*
-        version: link:../async
       '@dxos/context':
         specifier: workspace:*
         version: link:../context
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../invariant
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../log
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../node-std
+      '@dxos/stream':
+        specifier: workspace:*
+        version: link:../stream
       '@dxos/util':
         specifier: workspace:*
         version: link:../util
@@ -3713,6 +3710,9 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../node-std
+      '@dxos/stream':
+        specifier: workspace:*
+        version: link:../stream
       argparse:
         specifier: 'catalog:'
         version: 2.0.1
@@ -3935,6 +3935,24 @@ importers:
         specifier: ~19.2.3
         version: 19.2.3(react@19.2.3)
 
+  packages/common/stream:
+    dependencies:
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../async
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../context
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../invariant
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../log
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../util
+
   packages/common/test-utils:
     dependencies:
       '@dxos/async':
@@ -3991,6 +4009,9 @@ importers:
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols
+      '@dxos/stream':
+        specifier: workspace:*
+        version: link:../stream
       '@dxos/util':
         specifier: workspace:*
         version: link:../util
@@ -4675,6 +4696,9 @@ importers:
       '@dxos/sql-sqlite':
         specifier: workspace:*
         version: link:../../../common/sql-sqlite
+      '@dxos/stream':
+        specifier: workspace:*
+        version: link:../../../common/stream
       '@dxos/teleport':
         specifier: workspace:*
         version: link:../../mesh/teleport
@@ -4833,6 +4857,9 @@ importers:
       '@dxos/sql-sqlite':
         specifier: workspace:*
         version: link:../../../common/sql-sqlite
+      '@dxos/stream':
+        specifier: workspace:*
+        version: link:../../../common/stream
       '@dxos/teleport':
         specifier: workspace:*
         version: link:../../mesh/teleport
@@ -5334,6 +5361,9 @@ importers:
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../protocols
+      '@dxos/stream':
+        specifier: workspace:*
+        version: link:../../common/stream
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -5443,9 +5473,6 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
-      '@dxos/codec-protobuf':
-        specifier: workspace:*
-        version: link:../../../common/codec-protobuf
       '@dxos/crypto':
         specifier: workspace:*
         version: link:../../../common/crypto
@@ -5558,6 +5585,9 @@ importers:
       '@dxos/rpc':
         specifier: workspace:*
         version: link:../rpc
+      '@dxos/stream':
+        specifier: workspace:*
+        version: link:../../../common/stream
       '@dxos/tracing':
         specifier: workspace:*
         version: link:../../../common/tracing
@@ -5616,6 +5646,9 @@ importers:
       '@dxos/rpc':
         specifier: workspace:*
         version: link:../rpc
+      '@dxos/stream':
+        specifier: workspace:*
+        version: link:../../../common/stream
       '@dxos/teleport':
         specifier: workspace:*
         version: link:../teleport
@@ -5665,6 +5698,9 @@ importers:
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../protocols
+      '@dxos/stream':
+        specifier: workspace:*
+        version: link:../../../common/stream
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
@@ -5988,6 +6024,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/stream':
+        specifier: workspace:*
+        version: link:../../common/stream
       '@dxos/timeframe':
         specifier: workspace:*
         version: link:../../common/timeframe
@@ -6318,9 +6357,6 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
-      '@dxos/codec-protobuf':
-        specifier: workspace:*
-        version: link:../../common/codec-protobuf
       '@dxos/conductor':
         specifier: workspace:*
         version: link:../../core/conductor
@@ -6940,6 +6976,9 @@ importers:
       '@dxos/rpc-tunnel':
         specifier: workspace:*
         version: link:../../core/mesh/rpc-tunnel
+      '@dxos/stream':
+        specifier: workspace:*
+        version: link:../../common/stream
       react:
         specifier: ~19.2.3
         version: 19.2.3
@@ -12503,9 +12542,6 @@ importers:
       '@dxos/blueprints':
         specifier: workspace:*
         version: link:../../core/blueprints
-      '@dxos/codec-protobuf':
-        specifier: workspace:*
-        version: link:../../common/codec-protobuf
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
@@ -12865,9 +12901,6 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
-      '@dxos/codec-protobuf':
-        specifier: workspace:*
-        version: link:../../common/codec-protobuf
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
@@ -13616,6 +13649,9 @@ importers:
       '@dxos/sql-sqlite':
         specifier: workspace:*
         version: link:../../common/sql-sqlite
+      '@dxos/stream':
+        specifier: workspace:*
+        version: link:../../common/stream
       '@dxos/timeframe':
         specifier: workspace:*
         version: link:../../common/timeframe
@@ -13806,6 +13842,9 @@ importers:
       '@dxos/sql-sqlite':
         specifier: workspace:*
         version: link:../../common/sql-sqlite
+      '@dxos/stream':
+        specifier: workspace:*
+        version: link:../../common/stream
       '@dxos/teleport':
         specifier: workspace:*
         version: link:../../core/mesh/teleport
@@ -14175,6 +14214,9 @@ importers:
       '@dxos/react-hooks':
         specifier: workspace:*
         version: link:../../ui/react-primitives/react-hooks
+      '@dxos/stream':
+        specifier: workspace:*
+        version: link:../../common/stream
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util

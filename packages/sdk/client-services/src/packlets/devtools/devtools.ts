@@ -3,7 +3,6 @@
 //
 
 import { Event as AsyncEvent } from '@dxos/async';
-import { Stream } from '@dxos/codec-protobuf/stream';
 import { type Config } from '@dxos/config';
 import { type Client } from '@dxos/protocols';
 import { create, timestampFromDate } from '@dxos/protocols/buf';
@@ -55,6 +54,7 @@ import { subscribeToKeyringKeys } from './keys';
 import { subscribeToMetadata } from './metadata';
 import { subscribeToNetworkStatus, subscribeToSignal, subscribeToSwarmInfo } from './network';
 import { subscribeToSpaces } from './spaces';
+import { Stream } from '@dxos/stream';
 
 export class DevtoolsHostEvents {
   readonly ready = new AsyncEvent();

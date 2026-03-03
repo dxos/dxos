@@ -1,7 +1,7 @@
 {
-  "name": "@dxos/rpc",
+  "name": "@dxos/stream",
   "version": "0.8.3",
-  "description": "A lightweight, transport-agnostic RPC implementation",
+  "description": "Typed data stream.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": {
@@ -29,13 +29,9 @@
   ],
   "dependencies": {
     "@dxos/async": "workspace:*",
-    "@dxos/codec-protobuf": "workspace:*",
-    "@dxos/debug": "workspace:*",
+    "@dxos/context": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/node-std": "workspace:*",
-    "@dxos/protocols": "workspace:*",
-    "@dxos/stream": "workspace:*",
     "@dxos/util": "workspace:*"
   },
   "publishConfig": {

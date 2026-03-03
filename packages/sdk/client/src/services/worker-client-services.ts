@@ -4,7 +4,6 @@
 
 import { Event, Trigger, synchronized } from '@dxos/async';
 import { type ClientServices, type ClientServicesProvider, clientServiceBundle } from '@dxos/client-protocol';
-import type { Stream } from '@dxos/codec-protobuf/stream';
 import { Config } from '@dxos/config';
 import type { PublicKey } from '@dxos/keys';
 import { type CallMetadata, type LogFilter, log, parseFilter } from '@dxos/log';
@@ -17,6 +16,7 @@ import { STORAGE_LOCK_KEY } from '../lock-key';
 
 import { ClientServicesProxy } from './service-proxy';
 import { SharedWorkerConnection } from './shared-worker-connection';
+import { Stream } from '@dxos/stream';
 
 /**
  * Creates services provider connected via worker.

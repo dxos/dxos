@@ -69,6 +69,7 @@
     "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/stream": "workspace:*",
     "@dxos/timeframe": "workspace:*",
     "@dxos/util": "workspace:*"
   },
