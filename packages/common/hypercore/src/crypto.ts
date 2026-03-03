@@ -4,7 +4,7 @@
 
 import { callbackify } from 'node:util';
 
-import { type Codec, type EncodingOptions } from '@dxos/protocols';
+import { type Codec } from '@dxos/protocols';
 import { type Signer, verifySignature } from '@dxos/crypto';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
@@ -14,9 +14,9 @@ import { type AbstractValueEncoding, type Crypto } from '@dxos/vendor-hypercore/
 /**
  * Create encoding (e.g., from protobuf codec).
  */
-export const createCodecEncoding = <T>(codec: Codec<T>, opts?: EncodingOptions): AbstractValueEncoding<T> => ({
-  encode: (obj: T) => arrayToBuffer(codec.encode(obj, opts)),
-  decode: (buffer: Buffer) => codec.decode(buffer, opts),
+export const createCodecEncoding = <T>(codec: Codec<T>): AbstractValueEncoding<T> => ({
+  encode: (obj: T) => arrayToBuffer(codec.encode(obj)),
+  decode: (buffer: Buffer) => codec.decode(buffer),
 });
 
 /**

@@ -36,7 +36,7 @@ import { RPC_TIMEOUT } from '../common';
 const isBufPublicKey = (value: unknown): value is { data: Uint8Array } =>
   value != null &&
   typeof value === 'object' &&
-  'data' in value &&
+  (value as Record<string, unknown>).$typeName === 'dxos.keys.PublicKey' &&
   (value as Record<string, unknown>).data instanceof Uint8Array;
 
 /**
