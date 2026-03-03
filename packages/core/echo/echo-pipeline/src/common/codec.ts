@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type Codec } from '@dxos/codec-protobuf';
+import { type Codec } from '@dxos/protocols';
 import { credentialToBinary, packTypedAssertionAsAny, unpackAnyAsTypedMessage } from '@dxos/credentials';
 import { createCodecEncoding } from '@dxos/hypercore';
 import { PublicKey } from '@dxos/keys';

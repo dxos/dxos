@@ -40,3 +40,21 @@ export interface IEchoStream {
 }
 
 export type ObjectId = string;
+
+/**
+ * Options for encoding/decoding.
+ */
+export interface EncodingOptions {
+  /**
+   * If enabled, google.protobuf.Any will not be recursively decoded.
+   */
+  preserveAny?: boolean;
+}
+
+/**
+ * Generic encoder/decoder interface.
+ */
+export interface Codec<T> {
+  encode(obj: T, opts?: EncodingOptions): Uint8Array;
+  decode(buffer: Uint8Array, opts?: EncodingOptions): T;
+}

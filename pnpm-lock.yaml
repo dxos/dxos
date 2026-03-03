@@ -3379,9 +3379,6 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../async
-      '@dxos/codec-protobuf':
-        specifier: workspace:*
-        version: link:../codec-protobuf
       '@dxos/context':
         specifier: workspace:*
         version: link:../context
@@ -3409,6 +3406,9 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../node-std
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../core/protocols
       '@dxos/random-access-storage':
         specifier: workspace:*
         version: link:../random-access-storage
@@ -3475,9 +3475,6 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../async
-      '@dxos/codec-protobuf':
-        specifier: workspace:*
-        version: link:../codec-protobuf
       '@dxos/crypto':
         specifier: workspace:*
         version: link:../crypto
@@ -3493,6 +3490,9 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../node-std
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../core/protocols
       '@dxos/random-access-storage':
         specifier: workspace:*
         version: link:../random-access-storage
@@ -3988,9 +3988,6 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../async
-      '@dxos/codec-protobuf':
-        specifier: workspace:*
-        version: link:../codec-protobuf
       '@dxos/context':
         specifier: workspace:*
         version: link:../context
@@ -4642,9 +4639,6 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
-      '@dxos/codec-protobuf':
-        specifier: workspace:*
-        version: link:../../../common/codec-protobuf
       '@dxos/context':
         specifier: workspace:*
         version: link:../../../common/context
@@ -4776,9 +4770,6 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
-      '@dxos/codec-protobuf':
-        specifier: workspace:*
-        version: link:../../../common/codec-protobuf
       '@dxos/context':
         specifier: workspace:*
         version: link:../../../common/context
@@ -5325,9 +5316,6 @@ importers:
 
   packages/core/functions-runtime-cloudflare:
     dependencies:
-      '@dxos/codec-protobuf':
-        specifier: workspace:*
-        version: link:../../common/codec-protobuf
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
@@ -5613,9 +5601,6 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
-      '@dxos/codec-protobuf':
-        specifier: workspace:*
-        version: link:../../../common/codec-protobuf
       '@dxos/context':
         specifier: workspace:*
         version: link:../../../common/context
@@ -5827,9 +5812,6 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
-      '@dxos/codec-protobuf':
-        specifier: workspace:*
-        version: link:../../../common/codec-protobuf
       '@dxos/context':
         specifier: workspace:*
         version: link:../../../common/context
@@ -6964,9 +6946,6 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
-      '@dxos/codec-protobuf':
-        specifier: workspace:*
-        version: link:../../common/codec-protobuf
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -13583,9 +13562,6 @@ importers:
       '@dxos/client-services':
         specifier: workspace:*
         version: link:../client-services
-      '@dxos/codec-protobuf':
-        specifier: workspace:*
-        version: link:../../common/codec-protobuf
       '@dxos/config':
         specifier: workspace:*
         version: link:../config
@@ -13767,9 +13743,6 @@ importers:
       '@dxos/client-protocol':
         specifier: workspace:*
         version: link:../client-protocol
-      '@dxos/codec-protobuf':
-        specifier: workspace:*
-        version: link:../../common/codec-protobuf
       '@dxos/config':
         specifier: workspace:*
         version: link:../config
@@ -14187,9 +14160,6 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../client
-      '@dxos/codec-protobuf':
-        specifier: workspace:*
-        version: link:../../common/codec-protobuf
       '@dxos/config':
         specifier: workspace:*
         version: link:../config

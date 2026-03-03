@@ -4,7 +4,7 @@
 
 import { callbackify } from 'node:util';
 
-import { type Codec, type EncodingOptions } from '@dxos/codec-protobuf';
+import { type Codec, type EncodingOptions } from '@dxos/protocols';
 import { type Signer, verifySignature } from '@dxos/crypto';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';

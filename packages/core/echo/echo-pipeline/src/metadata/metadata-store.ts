@@ -5,7 +5,7 @@
 import CRC32 from 'crc-32';
 
 import { Event, scheduleTaskInterval, synchronized } from '@dxos/async';
-import { type Codec } from '@dxos/codec-protobuf';
+import { type Codec } from '@dxos/protocols';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
