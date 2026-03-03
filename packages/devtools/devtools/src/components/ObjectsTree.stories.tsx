@@ -49,7 +49,7 @@ const ObjectsPanelStory = () => {
 const roles = ['Engineer', 'Designer', 'Manager', 'Director', 'Analyst'];
 
 const meta = {
-  title: 'devtools/devtools/ObjectsPanel',
+  title: 'devtools/devtools/ObjectsTree',
   render: ObjectsPanelStory,
   decorators: [
     withTheme(),
