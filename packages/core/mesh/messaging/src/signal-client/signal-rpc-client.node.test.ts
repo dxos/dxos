@@ -8,7 +8,7 @@ import { type Any } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { create, toBinary } from '@dxos/protocols/buf';
-import { type Message as SignalMessage, type SwarmEvent } from '@dxos/protocols/buf/dxos/mesh/signal_pb';
+import { type Message as SignalMessage } from '@dxos/protocols/buf/dxos/mesh/signal_pb';
 import { TestPayloadSchema } from '@dxos/protocols/buf/example/testing/data_pb';
 import { type SignalServerRunner, runTestSignalServer } from '@dxos/signal';
 
@@ -65,8 +65,10 @@ describe('SignalRPCClient', () => {
       payload,
     });
 
-    expect((await received).author).toEqual(peerId2.asBuffer());
-    expect((await received).payload).toEqual(expect.objectContaining(payload));
+    const msg = await received;
+    expect(PublicKey.from(msg.author)).toEqual(peerId2);
+    expect(msg.payload?.typeUrl).toEqual('example.testing.data.TestPayload');
+    expect(new Uint8Array(msg.payload!.value)).toEqual(new Uint8Array(payload.value));
     void stream1.close();
   });
 
@@ -82,8 +84,7 @@ describe('SignalRPCClient', () => {
     const promise = new Promise<any>((resolve) => {
       stream1.subscribe(
         (event: any) => {
-          // Proto codec returns proto-shaped oneof (direct fields); access via `as any` at boundary.
-          if (event.peerAvailable && peerId2.equals(event.peerAvailable.peer!)) {
+          if (event.event?.case === 'peerAvailable' && peerId2.equals(event.event.value.peer)) {
             resolve(event);
           }
         },
@@ -97,7 +98,9 @@ describe('SignalRPCClient', () => {
     });
     const stream2 = await client2.join({ topic, peerId: peerId2 });
 
-    expect((await promise).peerAvailable?.peer).toEqual(peerId2.asBuffer());
+    const result = await promise;
+    expect(result.event.case).toEqual('peerAvailable');
+    expect(PublicKey.from(result.event.value.peer)).toEqual(peerId2);
     void stream1.close();
     void stream2.close();
   });
