@@ -10,7 +10,8 @@ import { type EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { QueryReactivity } from '@dxos/protocols/proto/dxos/echo/query';
+import { create } from '@dxos/protocols/buf';
+import { QueryReactivity, QueryRequestSchema } from '@dxos/protocols/buf/dxos/echo/query_pb';
 
 import { type Client } from '../client';
 
@@ -91,10 +92,10 @@ export class RemoteEdgeQueryContext<T extends Entity.Unknown = Entity.Unknown> i
 
     log('executing edge query', { spaceId: this._params.spaceId, query });
 
-    const response = await this._params.edgeClient.execQuery(this._params.spaceId, {
+    const response = await this._params.edgeClient.execQuery(this._params.spaceId, create(QueryRequestSchema, {
       query: JSON.stringify(query),
       reactivity: QueryReactivity.ONE_SHOT,
-    });
+    }));
 
     const results: QueryResult.EntityEntry<T>[] = [];
 

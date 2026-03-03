@@ -43,7 +43,7 @@ import {
 import {
   type QueryRequest as QueryRequestProto,
   type QueryResponse as QueryResponseProto,
-} from '@dxos/protocols/proto/dxos/echo/query';
+} from '@dxos/protocols/buf/dxos/echo/query_pb';
 import { createUrl } from '@dxos/util';
 
 import { type EdgeIdentity, handleAuthChallenge } from './edge-identity';
