@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 import { useCapability } from '@dxos/app-framework/ui';
 import { useLayout } from '@dxos/app-toolkit/ui';
 import { ObjectsTree } from '@dxos/devtools';
-import { Filter, Query, type Database } from '@dxos/echo';
+import { type Database, Filter, Query } from '@dxos/echo';
 import type { ObjectId } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { parseId, useQuery } from '@dxos/react-client/echo';
