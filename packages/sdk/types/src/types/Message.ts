@@ -5,8 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, Obj, Type } from '@dxos/echo';
-import { GeneratorAnnotation, LabelAnnotation, SystemTypeAnnotation } from '@dxos/echo/internal';
-import { defineObjectMigration } from '@dxos/echo-db';
+import { GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { type MakeOptional } from '@dxos/util';
 
 import * as Actor from './Actor';
@@ -67,57 +66,3 @@ export const make = ({
     properties,
   });
 };
-
-/** @deprecated */
-export enum MessageV1State {
-  NONE = 0,
-  ARCHIVED = 1,
-  DELETED = 2,
-  SPAM = 3,
-}
-
-/** @deprecated */
-export const MessageV1 = Schema.Struct({
-  timestamp: Schema.String,
-  state: Schema.optional(Schema.Enums(MessageV1State)),
-  sender: Actor.Actor,
-  text: Schema.String,
-  parts: Schema.optional(Schema.Array(Type.Ref(Type.Obj))),
-  properties: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
-  context: Schema.optional(Type.Ref(Type.Obj)),
-}).pipe(
-  Type.object({
-    typename: 'dxos.org/type/Message',
-    version: '0.1.0',
-  }),
-  SystemTypeAnnotation.set(true),
-);
-
-/** @deprecated */
-export const MessageV1ToV2 = defineObjectMigration({
-  from: MessageV1,
-  to: Message,
-  transform: async (from) => {
-    return {
-      id: from.id,
-      created: from.timestamp,
-      sender: from.sender,
-      blocks: [
-        {
-          _tag: 'text' as const,
-          text: from.text,
-        },
-        ...(from.parts ?? []).map((part) => ({
-          _tag: 'reference' as const,
-          reference: part,
-        })),
-      ],
-      properties: {
-        ...from.properties,
-        state: from.state,
-        context: from.context,
-      },
-    };
-  },
-  onMigration: async () => {},
-});

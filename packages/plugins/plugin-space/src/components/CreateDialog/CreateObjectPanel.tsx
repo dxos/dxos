@@ -58,7 +58,6 @@ export const CreateObjectPanel = ({
   const initialFormValues = useDefaultValue(initialFormValuesProp, () => ({}));
   const metadata = typename && resolve?.(typename);
 
-  // TODO(burdon): Message appears twice (v1 and v2).
   const options: TypeAnnotation[] = schemas
     .filter((schema) => {
       if (views == null) {
