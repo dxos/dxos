@@ -206,7 +206,7 @@
         inset: 0;
       }
 
-      @media screen(lg) {
+      @media (width >= theme(--breakpoint-lg)) {
         &[data-sidebar-left-state='expanded']::after {
           inset-inline-start: var(--dx-nav-sidebar-size);
         }
