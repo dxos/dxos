@@ -98,11 +98,9 @@ export const CreateObjectDialog = ({
           });
           const shouldNavigate = _shouldNavigate ?? (() => true);
           if (shouldNavigate(object)) {
-            yield* Effect.promise(() =>
-              operationInvoker.invokePromise(LayoutOperation.Open, {
-                subject: [Obj.getDXN(object).toString()],
-              }),
-            );
+            yield* operationInvoker.invoke(LayoutOperation.Open, {
+              subject: [Obj.getDXN(object).toString()],
+            });
           }
 
           onCreateObject?.(object);

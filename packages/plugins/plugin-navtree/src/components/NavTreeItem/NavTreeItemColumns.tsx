@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { Fragment, memo } from 'react';
+import React, { Fragment, memo, useMemo } from 'react';
 
 import { Node } from '@dxos/app-graph';
 import { Popover, Treegrid, toLocalizedString, useTranslation } from '@dxos/react-ui';
 
-import { useLoadDescendents } from '../../hooks';
+import { useActions } from '../../hooks';
 import { meta } from '../../meta';
 import { NAV_TREE_ITEM } from '../NavTree';
 import { useNavTreeContext } from '../NavTreeContext';
@@ -17,20 +17,44 @@ import { NavTreeItemAction } from './NavTreeItemAction';
 
 export const NavTreeItemColumns = memo(({ path, item, open }: NavTreeItemColumnsProps) => {
   const { t } = useTranslation(meta.id);
-  const { useActions, renderItemEnd: ItemEnd, popoverAnchorId } = useNavTreeContext();
+  const { renderItemEnd: ItemEnd, popoverAnchorId } = useNavTreeContext();
 
   const level = path.length - 2;
   const { actions: _actions, groupedActions } = useActions(item);
-  const [primaryAction, ...secondaryActions] = _actions.toSorted((a, _b) =>
-    a.properties?.disposition === 'list-item-primary' ? -1 : 1,
+  const sortedActions = useMemo(
+    () =>
+      _actions.toSorted((actionA, actionB) => {
+        const primaryA = actionA.properties?.disposition === 'list-item-primary';
+        const primaryB = actionB.properties?.disposition === 'list-item-primary';
+        if (primaryA && !primaryB) {
+          return -1;
+        }
+        if (primaryB && !primaryA) {
+          return 1;
+        }
+        return 0;
+      }),
+    [_actions],
+  );
+  const [primaryAction, ...secondaryActions] = sortedActions;
+
+  const actions = useMemo(
+    () =>
+      (primaryAction?.properties?.disposition === 'list-item-primary' ? secondaryActions : sortedActions)
+        .flatMap((action) => (Node.isAction(action) ? [action] : []))
+        .filter((a) => ['list-item', 'list-item-primary'].includes(a.properties?.disposition)),
+    [sortedActions, primaryAction],
   );
 
-  const actions = (primaryAction?.properties?.disposition === 'list-item-primary' ? secondaryActions : _actions)
-    .flatMap((action) => (Node.isAction(action) ? [action] : []))
-    .filter((a) => ['list-item', 'list-item-primary'].includes(a.properties?.disposition));
-
-  useLoadDescendents(item);
-  useLoadDescendents(primaryAction && !Node.isAction(primaryAction) ? (primaryAction as Node.Node) : undefined);
+  const primaryMenuActions = useMemo(
+    () =>
+      primaryAction
+        ? Node.isAction(primaryAction)
+          ? [primaryAction]
+          : groupedActions[primaryAction?.id ?? '']
+        : undefined,
+    [primaryAction, groupedActions],
+  );
 
   const ActionRoot = popoverAnchorId === `dxos.org/ui/${NAV_TREE_ITEM}/${item.id}` ? Popover.Anchor : Fragment;
 
@@ -44,7 +68,7 @@ export const NavTreeItemColumns = memo(({ path, item, open }: NavTreeItemColumns
             icon={primaryAction.properties?.icon ?? 'ph--placeholder--regular'}
             parent={item}
             monolithic={Node.isAction(primaryAction)}
-            menuActions={Node.isAction(primaryAction) ? [primaryAction] : groupedActions[primaryAction?.id ?? '']}
+            menuActions={primaryMenuActions}
             menuType={primaryAction.properties?.menuType}
             caller={NAV_TREE_ITEM}
           />

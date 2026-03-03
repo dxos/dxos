@@ -12,7 +12,7 @@ import { AttentionPlugin } from '@dxos/plugin-attention';
 import { AutomationPlugin } from '@dxos/plugin-automation';
 import { BoardPlugin } from '@dxos/plugin-board';
 import { ChessPlugin } from '@dxos/plugin-chess';
-import { ClientPlugin, type ClientPluginOptions } from '@dxos/plugin-client';
+import { ClientPlugin } from '@dxos/plugin-client';
 import { ConductorPlugin } from '@dxos/plugin-conductor';
 import { DebugPlugin } from '@dxos/plugin-debug';
 import { DeckPlugin } from '@dxos/plugin-deck';
@@ -159,7 +159,17 @@ export const getPlugins = ({
       config,
       services,
       shareableLinkOrigin: origin,
-      onReset: createResetHandler(origin),
+      onReset: ({ target }) =>
+        Effect.sync(() => {
+          localStorage.clear();
+          if (target === 'deviceInvitation') {
+            window.location.assign(new URL('/?deviceInvitationCode=', window.location.origin));
+          } else if (target === 'recoverIdentity') {
+            window.location.assign(new URL('/?recoverIdentity=true', window.location.origin));
+          } else {
+            window.location.pathname = '/';
+          }
+        }),
     }),
     ConductorPlugin(),
     DebugPlugin(),
@@ -217,17 +227,3 @@ export const getPlugins = ({
     .filter(isTruthy)
     .flat();
 };
-
-const createResetHandler =
-  (origin: string): ClientPluginOptions['onReset'] =>
-  ({ target }) =>
-    Effect.sync(() => {
-      localStorage.clear();
-      if (target === 'deviceInvitation') {
-        window.location.assign(new URL('/?deviceInvitationCode=', origin));
-      } else if (target === 'recoverIdentity') {
-        window.location.assign(new URL('/?recoverIdentity=true', origin));
-      } else {
-        window.location.pathname = '/';
-      }
-    });

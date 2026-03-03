@@ -22,14 +22,14 @@ export const valenceColorText = (valence?: MessageValence) => {
 export const messageValence = (valence?: MessageValence) => {
   switch (valence) {
     case 'success':
-      return 'text-xs font-medium border border-dashed text-success-text border-success-text bg-success-surface';
+      return 'text-xs font-medium text-success-text border-success-text bg-success-surface';
     case 'info':
-      return 'text-xs font-medium border border-dashed text-info-text border-info-text bg-info-surface';
+      return 'text-xs font-medium text-info-text border-info-text bg-info-surface';
     case 'warning':
-      return 'text-xs font-medium border border-dashed text-warning-text border-warning-text bg-warning-surface';
+      return 'text-xs font-medium text-warning-text border-warning-text bg-warning-surface';
     case 'error':
-      return 'text-xs font-medium border border-dashed text-error-text border-error-text bg-error-surface';
+      return 'text-xs font-medium text-error-text border-error-text bg-error-surface';
     default:
-      return 'text-xs font-medium border border-dashed text-neutral-text border-neutral-text bg-neutral-surface';
+      return 'text-xs font-medium text-neutral-text border-neutral-text bg-neutral-surface';
   }
 };

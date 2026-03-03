@@ -18,6 +18,8 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: LayoutOperation.Expose,
         handler: Effect.fnUntraced(function* ({ subject }) {
+          // TODO(wittjosiah): There's a lot of scenarios where this will fail.
+          //   Probably needs to be aware of the composer ontology to more reliably ensure objects are accessible.
           const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
           const { getItem, setItem } = yield* Capability.get(NavTreeCapabilities.State);
           yield* Effect.tryPromise(() => Graph.waitForPath(graph, { target: subject }, { timeout: 1_000 })).pipe(

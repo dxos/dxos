@@ -306,6 +306,7 @@ export default Capability.makeModule(
               properties: {
                 spaceId: db.spaceId,
                 objectId: object.id,
+                typename: Obj.getTypename(object),
               },
             });
 

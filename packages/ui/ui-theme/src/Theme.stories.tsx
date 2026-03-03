@@ -97,7 +97,7 @@ const meta = {
 
 export default meta;
 
-export const Roles = {
+export const Styles = {
   render: () => {
     return (
       <div className='p-4'>
@@ -210,7 +210,7 @@ export const Animation = {
           <div
             className={mx(
               'flex items-center font-mono text-2xl text-test-experimental',
-              'p-card-padding w-card-min-width grid grid-cols-[min-content_1fr_min-content]',
+              'p-form-padding w-card-min-width grid grid-cols-[min-content_1fr_min-content]',
             )}
           >
             <span className='animate-blink text-error-text'>*</span>

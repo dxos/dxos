@@ -11,6 +11,7 @@ import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
 import { type ComputeGraphModel, type ComputeNode, type GraphDiagnostic } from '@dxos/conductor';
+import { Feed } from '@dxos/echo';
 import { CredentialsService, TracingService } from '@dxos/functions';
 import { FunctionInvocationServiceLayerTest } from '@dxos/functions-runtime';
 import { TestDatabaseLayer } from '@dxos/functions-runtime/testing';
@@ -222,6 +223,7 @@ const ServiceLayer = Layer.empty.pipe(
       TestDatabaseLayer(),
       CredentialsService.configuredLayer([]),
       TracingService.layerNoop,
+      Feed.notAvailable,
     ),
   ),
   Layer.orDie,

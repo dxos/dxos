@@ -71,10 +71,10 @@ const ChatDialogRoot = ({
       <Dialog.Root modal={false} open={open} onOpenChange={setOpen}>
         <div role='none' className='dx-dialog__overlay bg-transparent pointer-events-none' data-h-align='end'>
           <Dialog.Content
+            size='md'
             inOverlayLayout
             classNames={[
-              'grid grid-rows-[var(--rail-action)_1fr_min-content] p-0 overflow-hidden',
-              'box-content md:w-[35rem] md:max-w-none pointer-events-auto',
+              'grid grid-rows-[var(--rail-action)_1fr_min-content] p-0 overflow-hidden box-content pointer-events-auto',
             ]}
             onEscapeKeyDown={onEscape}
             onInteractOutside={preventDefault}

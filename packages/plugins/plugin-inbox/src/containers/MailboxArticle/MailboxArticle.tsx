@@ -9,8 +9,9 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { useLayout } from '@dxos/app-toolkit/ui';
-import { type Database, Obj, Relation, Tag } from '@dxos/echo';
+import { type Database, type Feed, Obj, Query, Relation, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
+import { DXN } from '@dxos/keys';
 import { AttentionOperation } from '@dxos/plugin-attention/types';
 import { ATTENDABLE_PATH_SEPARATOR, DeckOperation } from '@dxos/plugin-deck/types';
 import { Filter, useQuery } from '@dxos/react-client/echo';
@@ -26,21 +27,21 @@ import { HasSubject, Message } from '@dxos/types';
 import { type MailboxActionHandler, Mailbox as MailboxComponent, MailboxEmpty } from '../../components';
 import { POPOVER_SAVE_FILTER } from '../../constants';
 import { meta } from '../../meta';
-import { InboxOperation, type Mailbox } from '../../types';
+import { InboxOperation, Mailbox } from '../../types';
 import { sortByCreated } from '../../util';
 
 export type MailboxArticleProps = SurfaceComponentProps<
-  Mailbox.Mailbox,
+  Feed.Feed,
   {
     filter?: string;
     attendableId?: string;
   }
 >;
 
-export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendableId }: MailboxArticleProps) => {
+export const MailboxArticle = ({ subject: feed, filter: filterProp, attendableId }: MailboxArticleProps) => {
   const { t } = useTranslation(meta.id);
-  const id = attendableId ?? Obj.getDXN(mailbox).toString();
-  const db = Obj.getDatabase(mailbox);
+  const id = attendableId ?? Obj.getDXN(feed).toString();
+  const db = Obj.getDatabase(feed);
   const { invokePromise } = useOperationInvoker();
   const layout = useLayout();
   const currentMessageId = useSelected(id, 'single');
@@ -57,14 +58,20 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
     filterVisible: filterVisible.atom,
   });
 
+  // Get the feed's database and config.
+  const configs = useQuery(db, Filter.type(Mailbox.Config));
+  // TODO(wittjosiah): Not possible to filter by references yet.
+  const config = useMemo(
+    () => configs.find((config) => DXN.equals(config.feed.dxn, Obj.getDXN(feed))),
+    [configs, feed],
+  );
+
   // Filter and messages.
   const [filter, setFilter] = useState<Filter.Any>();
   const [filterText, setFilterText] = useState<string>(filterProp ?? '');
-  // TODO(burdon): Query not supported on queues.
-  //  Query.select(filter ?? Filter.everything()).orderBy(Order.property('createdAt', 'desc')),
   const messages: Message.Message[] = useQuery(
-    mailbox.queue.target,
-    filter ?? Filter.type(Message.Message),
+    db,
+    Query.select(filter ?? Filter.type(Message.Message)).from(feed),
   ) as Message.Message[];
   const sortedMessages = useMemo(
     () => [...messages].sort(sortByCreated('created', sortDescending.value)),
@@ -82,28 +89,28 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   const parser = useMemo(() => new QueryBuilder(tagMap), [tagMap]);
   useEffect(() => setFilter(parser.build(filterText).filter), [filterText, parser]);
 
-  // Build message-to-tags map from HasSubject relations incrementally
-  const messageTagsMap = useMessageTagsMap(mailbox.queue.target);
+  // Build message-to-tags map from HasSubject relations incrementally.
+  const messageTagsMap = useMessageTagsMap(db, feed);
 
-  // Merge tags into mailbox labels
+  // Merge tags into config labels.
   const mergedLabels = useMemo(() => {
-    const labels = { ...(mailbox.labels ?? {}) };
-    // Add all tags to the labels object (tag.id -> tag.label)
+    const labels = { ...(config?.labels ?? {}) };
+    // Add all tags to the labels object (tag.id -> tag.label).
     for (const [_messageId, messageTags] of Object.entries(messageTagsMap)) {
       for (const tag of messageTags) {
         labels[tag.id] = tag.label;
       }
     }
     return labels;
-  }, [mailbox.labels, messageTagsMap]);
+  }, [config?.labels, messageTagsMap]);
 
-  // Update message properties to include tag IDs in labels array
+  // Update message properties to include tag IDs in labels array.
   const messagesWithTags = useMemo(() => {
     return sortedMessages.map((message) => {
       const messageTags = messageTagsMap[message.id] ?? [];
       const tagIds = [...new Set(messageTags.map((tag) => tag.id))]; // Deduplicate tag IDs
       const existingLabels = Array.isArray(message.properties?.labels) ? message.properties.labels : [];
-      // Deduplicate existing labels and filter out tag IDs that are already present
+      // Deduplicate existing labels and filter out tag IDs that are already present.
       const uniqueExistingLabels = [...new Set(existingLabels)];
       const newTagIds = tagIds.filter((tagId) => !uniqueExistingLabels.includes(tagId));
       const finalLabels = [...uniqueExistingLabels, ...newTagIds];
@@ -164,13 +171,13 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
             state: true,
             variant: 'virtual',
             anchor: filterSaveButtonRef.current,
-            props: { mailbox, filter: action.filter },
+            props: { feed, config, filter: action.filter },
           });
           break;
         }
       }
     },
-    [id, layout.mode, mailbox, sortedMessages, invokePromise],
+    [id, layout.mode, feed, config, sortedMessages, invokePromise],
   );
 
   const handleCancel = useCallback(() => {
@@ -228,7 +235,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
           onAction={handleAction}
         />
       ) : (
-        <MailboxEmpty mailbox={mailbox} />
+        <MailboxEmpty feed={feed} />
       )}
     </Layout.Main>
   );
@@ -237,8 +244,8 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
 /**
  * Hook that builds an object mapping message IDs to tags from HasSubject relations.
  */
-const useMessageTagsMap = (queue: Database.Queryable | undefined): Record<string, Tag.Tag[]> => {
-  const hasSubjectRelations = useQuery(queue, Filter.type(HasSubject.HasSubject));
+const useMessageTagsMap = (db: Database.Database | undefined, feed: Feed.Feed): Record<string, Tag.Tag[]> => {
+  const hasSubjectRelations = useQuery(db, Query.select(Filter.type(HasSubject.HasSubject)).from(feed));
   const [messageTagsMap, setMessageTagsMap] = useState<Record<string, Tag.Tag[]>>({});
 
   useEffect(() => {
@@ -251,7 +258,7 @@ const useMessageTagsMap = (queue: Database.Queryable | undefined): Record<string
           continue;
         }
 
-        // Try to get message ID from target DXN (queue DXN with objectId)
+        // Try to get message ID from target DXN (queue DXN with objectId).
         const targetDXN = Relation.getTargetDXN(relation);
         const queueDXNInfo = targetDXN.asQueueDXN();
         let messageId: string | undefined;
@@ -259,14 +266,14 @@ const useMessageTagsMap = (queue: Database.Queryable | undefined): Record<string
         if (queueDXNInfo?.objectId) {
           messageId = queueDXNInfo.objectId;
         } else {
-          // Fallback: try to resolve target object
+          // Fallback: try to resolve target object.
           try {
             const target = Relation.getTarget(relation);
             if (Obj.instanceOf(Message.Message, target)) {
               messageId = target.id;
             }
           } catch {
-            // Target not resolved, skip this relation
+            // Target not resolved, skip this relation.
           }
         }
 
@@ -274,13 +281,13 @@ const useMessageTagsMap = (queue: Database.Queryable | undefined): Record<string
           if (!map[messageId]) {
             map[messageId] = [];
           }
-          // Prevent duplicates
+          // Prevent duplicates.
           if (!map[messageId].some((tag) => tag.id === source.id)) {
             map[messageId].push(source);
           }
         }
       } catch {
-        // Skip relations with unresolved source or target
+        // Skip relations with unresolved source or target.
       }
     }
 

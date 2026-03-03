@@ -40,7 +40,7 @@ const Views = ({ __viewportScope }: ViewportScopedProps<{}>) => {
   );
 };
 
-const StorybookViewport = (props: StorybookViewportProps) => {
+const StorybookViewport = (_: StorybookViewportProps) => {
   return (
     <AlertDialog.Root defaultOpen>
       <AlertDialog.Overlay>

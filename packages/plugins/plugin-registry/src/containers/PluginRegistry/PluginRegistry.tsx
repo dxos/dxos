@@ -18,12 +18,12 @@ import { PluginList } from '../../components';
 const sortByPluginMeta = ({ meta: { name: a = '' } }: Plugin.Plugin, { meta: { name: b = '' } }: Plugin.Plugin) =>
   a.localeCompare(b);
 
-export type RegistryContainerProps = {
+export type PluginRegistryProps = {
   id: string;
   plugins: Plugin.Plugin[];
 };
 
-export const RegistryContainer = ({ id, plugins: pluginsProp }: RegistryContainerProps) => {
+export const PluginRegistry = ({ id, plugins: pluginsProp }: PluginRegistryProps) => {
   const manager = usePluginManager();
   const { invoke, invokePromise } = useOperationInvoker();
   const plugins = useMemo(() => pluginsProp.sort(sortByPluginMeta), [pluginsProp]);

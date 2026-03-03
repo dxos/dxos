@@ -14,6 +14,10 @@
     @apply font-body;
   }
 
+  .dark {
+    color-scheme: dark;
+  }
+
   button {
     @apply cursor-pointer;
     -webkit-tap-highlight-color: transparent;
@@ -25,11 +29,8 @@
     --dx-tag-padding-block: var(--spacing-tag-padding-block);
   }
 
-  .dark {
-    color-scheme: dark;
-  }
-
-  html, html.dark, html .dark {
+  html, html.dark, html .dark,
+  .sb-show-main {
     background-color: var(--color-base-surface);
     color: var(--color-base-text);
     --surface-bg: var(--color-base-surface);

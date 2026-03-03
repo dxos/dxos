@@ -19,12 +19,15 @@
 
   --spacing-tag-padding-block: 0.125rem;
 
+  /** Minimal trim to allow for ring/outline. */
+  --spacing-form-chrome: var(--spacing-trim-xs);
+
   /**
    * Density: fine
    */
+  --spacing-form-padding: var(--spacing-trim-sm);
   --spacing-icon-button-padding: var(--spacing-trim-xs);
-  --spacing-card-padding: var(--spacing-trim-sm);
-  --spacing-card-chrome: var(--spacing-trim-xs);
+  --spacing-scroll-padding: 4px;
 }
 
 @layer dx-tokens {
@@ -32,8 +35,9 @@
    * Density: coarse
    */
   .density-coarse {
+    --spacing-form-padding: var(--spacing-trim-md);
     --spacing-icon-button-padding: var(--spacing-trim-sm);
-    --spacing-card-padding: var(--spacing-trim-md);
+    --spacing-scroll-padding: 8px;
   }
 }
 

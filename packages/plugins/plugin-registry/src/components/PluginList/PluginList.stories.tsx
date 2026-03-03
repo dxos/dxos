@@ -11,8 +11,8 @@ import { ScrollArea } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { getHashHue } from '@dxos/ui-theme';
 
-import { translations } from '../translations';
-import { RegistryTagType } from '../types';
+import { translations } from '../../translations';
+import { RegistryTagType } from '../../types';
 
 import { PluginList } from './PluginList';
 

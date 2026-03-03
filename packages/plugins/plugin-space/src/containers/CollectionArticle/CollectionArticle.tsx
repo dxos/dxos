@@ -7,7 +7,7 @@ import React, { useCallback, useMemo } from 'react';
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { Filter, Obj } from '@dxos/echo';
+import { Filter, Obj, Type } from '@dxos/echo';
 import { useClient } from '@dxos/react-client';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
 import { Layout, ScrollArea, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
@@ -79,7 +79,13 @@ const ObjectTile: MosaicStackTileComponent<ObjectItem> = (props) => {
   return (
     <Card.Root fullWidth>
       <Card.Toolbar>
-        <Card.ToolbarIconButton variant='ghost' label={label} icon={item.icon} iconOnly iconClassNames={styles?.icon} />
+        <Card.ToolbarIconButton
+          variant='ghost'
+          label={label}
+          icon={item.icon}
+          iconOnly
+          iconClassNames={styles?.surfaceText}
+        />
         <Card.Title onClick={handleClick}>{label}</Card.Title>
         <Card.Menu />
       </Card.Toolbar>
@@ -103,13 +109,24 @@ const useRegularCollectionItems = (collection: Collection.Collection): Obj.Unkno
 const useManagedCollectionItems = (collection: Collection.Managed): Obj.Unknown[] => {
   const client = useClient();
   const space = getSpace(collection);
+  const [typename, feedKind] = collection.key.split('~');
 
   const schema = useMemo(
-    () => client.graph.schemaRegistry.query({ typename: collection.key, location: ['runtime'] }).runSync()[0],
-    [client, collection],
+    () => client.graph.schemaRegistry.query({ typename, location: ['runtime'] }).runSync()[0],
+    [client, typename],
   );
 
-  return useQuery(space?.db, schema ? Filter.type(schema) : Filter.nothing());
+  const filter = useMemo(
+    () =>
+      typename === Type.Feed.typename
+        ? Filter.type(Type.Feed, { kind: feedKind })
+        : schema
+          ? Filter.type(schema)
+          : Filter.nothing(),
+    [typename, schema, feedKind],
+  );
+
+  return useQuery(space?.db, filter);
 };
 
 type MetadataResolver = (typename: string) => { icon?: string; iconHue?: string };

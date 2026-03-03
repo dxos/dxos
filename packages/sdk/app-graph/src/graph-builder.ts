@@ -11,11 +11,12 @@ import * as Option from 'effect/Option';
 import * as Pipeable from 'effect/Pipeable';
 import * as Record from 'effect/Record';
 import type * as Schema from 'effect/Schema';
+import { scheduleTask, yieldOrContinue } from 'main-thread-scheduling';
 
 import { type CleanupFn, type Trigger } from '@dxos/async';
 import { type Entity, type Type } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { type MaybePromise, type Position, byPosition, getDebugName, isNode, isNonNullable } from '@dxos/util';
+import { type MaybePromise, type Position, byPosition, getDebugName, isNonNullable } from '@dxos/util';
 
 import * as Graph from './graph';
 import * as Node from './node';
@@ -104,6 +105,10 @@ class GraphBuilderImpl implements GraphBuilder {
 
   // TODO(wittjosiah): Use Context.
   readonly _subscriptions = new Map<string, CleanupFn>();
+  readonly _dirtyConnectors = new Map<string, { nodes: Node.NodeArg<any>[]; previous: string[] }>();
+  readonly _connectorPrevious = new Map<string, string[]>();
+  _flushScheduled = false;
+  _flushPromise: Promise<void> = Promise.resolve();
   readonly _extensions = Atom.make(Record.empty<string, BuilderExtension>()).pipe(
     Atom.keepAlive,
     Atom.withLabel('graph-builder:extensions'),
@@ -137,6 +142,51 @@ class GraphBuilderImpl implements GraphBuilder {
 
   get extensions() {
     return this._extensions;
+  }
+
+  /** Apply a set of node changes for a single connector key. */
+  private _applyConnectorUpdate(key: string, nodes: Node.NodeArg<any>[], previous: string[]): void {
+    const [id, relation] = key.split('+') as [string, Node.Relation];
+    const ids = nodes.map((node) => node.id);
+    const removed = previous.filter((pid) => !ids.includes(pid));
+    this._connectorPrevious.set(key, ids);
+
+    Graph.removeEdges(
+      this._graph,
+      removed.map((target) => ({ source: id, target })),
+      true,
+    );
+    Graph.addNodes(this._graph, nodes);
+    Graph.addEdges(
+      this._graph,
+      nodes.map((node) =>
+        relation === 'outbound' ? { source: id, target: node.id } : { source: node.id, target: id },
+      ),
+    );
+    if (ids.length > 0) {
+      Graph.sortEdges(this._graph, id, relation, ids);
+    }
+  }
+
+  private _scheduleDirtyFlush(): void {
+    if (!this._flushScheduled) {
+      this._flushScheduled = true;
+      this._flushPromise = scheduleTask(
+        () => {
+          this._flushScheduled = false;
+          while (this._dirtyConnectors.size > 0) {
+            const entries = [...this._dirtyConnectors.entries()];
+            this._dirtyConnectors.clear();
+            Atom.batch(() => {
+              for (const [key, { nodes, previous }] of entries) {
+                this._applyConnectorUpdate(key, nodes, previous);
+              }
+            });
+          }
+        },
+        { strategy: 'smooth' },
+      );
+    }
   }
 
   private readonly _resolvers = Atom.family<string, Atom.Atom<Option.Option<Node.NodeArg<any>>>>((id) => {
@@ -174,47 +224,19 @@ class GraphBuilderImpl implements GraphBuilder {
 
   private _onExpand(id: string, relation: Node.Relation): void {
     log('onExpand', { id, relation, registry: getDebugName(this._registry) });
-    const connectors = this._connectors(`${id}+${relation}`);
+    const key = `${id}+${relation}`;
+    const connectors = this._connectors(key);
 
-    let previous: string[] = [];
     const cancel = this._registry.subscribe(
       connectors,
       (nodes) => {
-        const ids = nodes.map((n) => n.id);
-        const removed = previous.filter((id) => !ids.includes(id));
-        previous = ids;
+        const previous = this._connectorPrevious.get(key) ?? [];
+        log('update', { id, relation, ids: nodes.map((n) => n.id) });
 
-        log('update', { id, relation, ids, removed });
-        const update = () => {
-          Atom.batch(() => {
-            Graph.removeEdges(
-              this._graph,
-              removed.map((target) => ({ source: id, target })),
-              true,
-            );
-            Graph.addNodes(this._graph, nodes);
-            Graph.addEdges(
-              this._graph,
-              nodes.map((node) =>
-                relation === 'outbound' ? { source: id, target: node.id } : { source: node.id, target: id },
-              ),
-            );
-            Graph.sortEdges(
-              this._graph,
-              id,
-              relation,
-              nodes.map(({ id }) => id),
-            );
-          });
-        };
-
-        // TODO(wittjosiah): Remove `requestAnimationFrame` once we have a better solution.
-        //  This is a workaround to avoid a race condition where the graph is updated during React render.
-        if (typeof requestAnimationFrame === 'function') {
-          requestAnimationFrame(update);
-        } else {
-          update();
-        }
+        // Store latest value; overwrites previous pending entry for the same key,
+        // so only the final state is processed in the next scheduled flush.
+        this._dirtyConnectors.set(key, { nodes, previous });
+        this._scheduleDirtyFlush();
       },
       { immediate: true },
     );
@@ -350,12 +372,7 @@ const exploreImpl = async (
     return;
   }
 
-  // TODO(wittjosiah): This is a workaround for esm not working in the test runner.
-  //   Switching to vitest is blocked by having node esm versions of echo-schema & echo-signals.
-  if (!isNode()) {
-    const { yieldOrContinue } = await import('main-thread-scheduling');
-    await yieldOrContinue('idle');
-  }
+  await yieldOrContinue('idle');
 
   const node = registry.get(internal._graph.nodeOrThrow(source));
   const shouldContinue = await visitor(node, [...path, node.id]);
@@ -432,6 +449,13 @@ export function destroy(builder?: GraphBuilder): void | ((builder: GraphBuilder)
     return destroyImpl(builder);
   }
 }
+
+/**
+ * Wait for all pending connector updates to be flushed.
+ */
+export const flush = (builder: GraphBuilder): Promise<void> => {
+  return (builder as GraphBuilderImpl)._flushPromise;
+};
 
 //
 // Extension Creation

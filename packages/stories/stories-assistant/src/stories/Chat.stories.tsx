@@ -22,7 +22,7 @@ import {
   WebSearchBlueprint,
 } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt, Template } from '@dxos/blueprints';
-import { Filter, Obj, Query, Ref, Tag, Type } from '@dxos/echo';
+import { Feed, Filter, Obj, Query, Ref, Tag, Type } from '@dxos/echo';
 import { ExampleFunctions, Script, Trigger, serializeFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -383,16 +383,22 @@ export const WithMail: Story = {
   decorators: getDecorators({
     plugins: [InboxPlugin(), MarkdownPlugin(), ThreadPlugin()],
     config: config.remote,
-    types: [Mailbox.Mailbox],
+    types: [Type.Feed],
     onInit: async ({ space }) => {
-      const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox', space }));
-      const queue = space.queues.get<Message.Message>(mailbox.queue.dxn);
+      const feed = space.db.add(Mailbox.make({ name: 'Mailbox' }));
+      const queue = space.queues.create<Message.Message>();
+      Obj.change(feed, (mutable) => {
+        Obj.getMeta(mutable).keys.push({ source: Feed.DXN_KEY, id: queue.dxn.toString() });
+      });
       const messages = createTestMailbox();
       await queue.append(messages);
     },
     onChatCreated: async ({ space, binder }) => {
-      const objects = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
-      await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
+      const feeds = await space.db.query(Filter.type(Type.Feed)).run();
+      const mailbox = feeds.find((feed) => feed.kind === Mailbox.kind);
+      if (mailbox) {
+        await binder.bind({ objects: [Ref.make(mailbox)] });
+      }
     },
   }),
   args: {
@@ -407,13 +413,16 @@ export const WithGmail: Story = {
   decorators: getDecorators({
     plugins: [InboxPlugin(), TokenManagerPlugin()],
     config: config.persistent,
-    types: [Mailbox.Mailbox],
+    types: [Type.Feed],
     onInit: async ({ space }) => {
-      space.db.add(Mailbox.make({ name: 'Mailbox', space }));
+      space.db.add(Mailbox.make({ name: 'Mailbox' }));
     },
     onChatCreated: async ({ space, binder }) => {
-      const objects = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
-      await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
+      const feeds = await space.db.query(Filter.type(Type.Feed)).run();
+      const mailbox = feeds.find((feed) => feed.kind === Mailbox.kind);
+      if (mailbox) {
+        await binder.bind({ objects: [Ref.make(mailbox)] });
+      }
     },
   }),
   args: {
@@ -428,13 +437,16 @@ export const WithCalendar: Story = {
   decorators: getDecorators({
     plugins: [InboxPlugin(), TokenManagerPlugin()],
     config: config.remote,
-    types: [Calendar.Calendar, Event.Event],
+    types: [Type.Feed, Event.Event],
     onInit: async ({ space }) => {
-      space.db.add(Calendar.make({ name: 'Calendar', space }));
+      space.db.add(Calendar.make({ name: 'Calendar' }));
     },
     onChatCreated: async ({ space, binder }) => {
-      const objects = await space.db.query(Filter.type(Calendar.Calendar)).run();
-      await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
+      const feeds = await space.db.query(Filter.type(Type.Feed)).run();
+      const calendar = feeds.find((feed) => feed.kind === Calendar.kind);
+      if (calendar) {
+        await binder.bind({ objects: [Ref.make(calendar)] });
+      }
     },
   }),
   args: {
@@ -773,7 +785,7 @@ export const WithProject: Story = {
       Person.Person,
       Pipeline.Pipeline,
       View.View,
-      Mailbox.Mailbox,
+      Type.Feed,
     ],
     onInit: async ({ space }) => {
       await addTestData(space);
@@ -788,8 +800,11 @@ export const WithProject: Story = {
         });
       });
 
-      const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox', space }));
-      const queue = space.queues.get<Message.Message>(mailbox.queue.dxn);
+      const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox' }));
+      const queue = space.queues.create<Message.Message>();
+      Obj.change(mailbox, (mutable) => {
+        Obj.getMeta(mutable).keys.push({ source: Feed.DXN_KEY, id: queue.dxn.toString() });
+      });
       const messages = createTestMailbox(people);
       await queue.append(messages);
 
@@ -876,11 +891,7 @@ export const WithProject: Story = {
       space.db.add(researchTrigger);
 
       const mailboxView = View.make({
-        query: Query.select(Filter.type(Message.Message))
-          .select(Filter.tag(tagDxn))
-          .options({
-            queues: [mailbox.queue.dxn.toString()],
-          }),
+        query: Query.select(Filter.type(Message.Message)).select(Filter.tag(tagDxn)).from(mailbox),
         jsonSchema: Type.toJsonSchema(Message.Message),
       });
       const contactsView = View.make({

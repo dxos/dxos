@@ -19,12 +19,11 @@ import {
   makeGraphWriterHandler,
   makeGraphWriterToolkit,
 } from '@dxos/assistant-toolkit';
-import { Database, Obj, Type } from '@dxos/echo';
-import { QueueService, TracingService, defineFunction } from '@dxos/functions';
+import { Database, Feed, Filter, Obj, Type } from '@dxos/echo';
+import { TracingService, defineFunction } from '@dxos/functions';
 import { Message, Organization, Person, Pipeline } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { Mailbox } from '../types';
 import { renderMarkdown } from '../util';
 
 /**
@@ -35,8 +34,8 @@ export default defineFunction({
   name: 'Summarize',
   description: 'Summarize a mailbox.',
   inputSchema: Schema.Struct({
-    mailbox: Type.Ref(Mailbox.Mailbox).annotations({
-      description: 'The ID of the mailbox object.',
+    feed: Type.Ref(Type.Feed).annotations({
+      description: 'The ID of the mailbox feed.',
     }),
     skip: Schema.Number.pipe(
       Schema.annotations({
@@ -56,13 +55,13 @@ export default defineFunction({
       description: 'The summary of the mailbox.',
     }),
   }),
+  services: [Database.Service, Feed.Service],
   handler: Effect.fnUntraced(
-    function* ({ data: { mailbox, skip = 0, limit = 20 } }) {
-      const mailboxObj = yield* Database.load(mailbox);
-      const queue = yield* QueueService.getQueue(mailboxObj.queue.dxn);
-      yield* Effect.promise(() => queue?.queryObjects());
+    function* ({ data: { feed: feedRef, skip = 0, limit = 20 } }) {
+      const feed = yield* Database.load(feedRef);
+      const objects = yield* Feed.runQuery(feed, Filter.type(Message.Message));
       const messages = Function.pipe(
-        queue?.objects ?? [],
+        objects,
         Array.reverse,
         Array.drop(skip),
         Array.take(limit),

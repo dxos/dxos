@@ -6,24 +6,34 @@ import React, { useCallback, useRef, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { Obj } from '@dxos/echo';
+import { type Feed, Obj } from '@dxos/echo';
 import { Button, Input, Popover, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '../../meta';
 import { type Mailbox } from '../../types';
 
-export const SaveFilterPopover = ({ mailbox, filter }: { mailbox: Mailbox.Mailbox; filter: string }) => {
+export const SaveFilterPopover = ({
+  feed,
+  config,
+  filter,
+}: {
+  feed: Feed.Feed;
+  config?: Mailbox.Config;
+  filter: string;
+}) => {
   const { t } = useTranslation(meta.id);
   const doneButton = useRef<HTMLButtonElement>(null);
   const [name, setName] = useState('');
   const { invokePromise } = useOperationInvoker();
 
   const handleDone = useCallback(() => {
-    Obj.change(mailbox, (m) => {
-      (m.filters ??= []).push({ name, filter });
-    });
+    if (config) {
+      Obj.change(config, (c: any) => {
+        (c.filters ??= []).push({ name, filter });
+      });
+    }
     void invokePromise(LayoutOperation.UpdatePopover, { state: false, anchorId: '' });
-  }, [mailbox, name, invokePromise]);
+  }, [config, name, filter, invokePromise]);
 
   // TODO(thure): Why does the input value need to be uncontrolled to work?
   return (
@@ -42,7 +52,7 @@ export const SaveFilterPopover = ({ mailbox, filter }: { mailbox: Mailbox.Mailbo
         </Input.Root>
       </div>
       <Popover.Close asChild>
-        <Button ref={doneButton} classNames='self-stretch' disabled={!name} onClick={handleDone}>
+        <Button ref={doneButton} classNames='self-stretch' disabled={!name || !config} onClick={handleDone}>
           {t('save filter button')}
         </Button>
       </Popover.Close>

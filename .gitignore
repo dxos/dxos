@@ -1,4 +1,5 @@
 .worktrees/
+.claude/worktrees/
 
 # Logs
 logs/

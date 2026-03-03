@@ -14,6 +14,7 @@ export type ScrollAreaStyleProps = {
   /** Add default padding. */
   padding?: boolean;
   /** Use thin scrollbars. */
+  /** TODO(burdon): Density fine/course. */
   thin?: boolean;
   /** Enable snap scrolling. */
   snap?: boolean;
