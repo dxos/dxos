@@ -102,11 +102,7 @@ export const ErrorFallback = ({ error }: FallbackProps) => {
         };
 
   return (
-    <div
-      role='alert'
-      data-testid='error-boundary-fallback'
-      className='flex flex-col p-4 gap-4 overflow-auto'
-    >
+    <div role='alert' data-testid='error-boundary-fallback' className='flex flex-col p-4 gap-4 overflow-auto'>
       <h1 className='text-lg text-error-text'>Fatal Error</h1>
       {name && <p>{name}</p>}
       <p>{message}</p>
