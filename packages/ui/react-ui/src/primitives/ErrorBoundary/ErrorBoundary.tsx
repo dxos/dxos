@@ -44,8 +44,18 @@ export const ErrorBoundary = ({
     });
   }, []);
 
-  if (error) {
-    return <ErrorFallback error={error} resetErrorBoundary={() => setError(undefined)} />;
+  if (error !== undefined) {
+    const props: FallbackProps = {
+      error,
+      resetErrorBoundary: () => setError(undefined),
+    };
+
+    if (fallbackRender) {
+      return <>{fallbackRender(props)}</>;
+    }
+
+    const Fallback = FallbackComponent ?? ErrorFallback;
+    return <Fallback {...props} />;
   }
 
   const fallbackProps = fallbackRender ? { fallbackRender } : { FallbackComponent: FallbackComponent ?? ErrorFallback };
@@ -72,7 +82,11 @@ export const ErrorFallback = ({ error }: FallbackProps) => {
 
   // Record error for smoke test detection (persists even if component re-renders away).
   if (typeof window !== 'undefined') {
-    ((window as any).__ERROR_BOUNDARY_ERRORS__ ??= []).push(message);
+    const win = window as any;
+    if (!win.__ERROR_BOUNDARY_ERRORS__) {
+      win.__ERROR_BOUNDARY_ERRORS__ = [];
+    }
+    win.__ERROR_BOUNDARY_ERRORS__.push(message);
   }
 
   return (

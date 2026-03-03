@@ -61,14 +61,18 @@ export const Default: Story = {
         ),
       );
       queueMicrotask(async () => {
-        if (disposed) {
-          return;
+        try {
+          if (disposed) {
+            return;
+          }
+          const runtime = await rt.runtime();
+          if (disposed) {
+            return;
+          }
+          setRuntime(runtime);
+        } catch (error) {
+          console.error('Failed to initialize runtime:', error);
         }
-        const runtime = await rt.runtime();
-        if (disposed) {
-          return;
-        }
-        setRuntime(runtime);
       });
       return () => {
         disposed = true;
