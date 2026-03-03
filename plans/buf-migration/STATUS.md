@@ -968,11 +968,11 @@ The following feedback was given during PR review and has been tracked for resol
 |---|---|---|---|
 | ~~**P0**~~ | ~~Guard `type_url` in `getCredentialProofPayload` unpack check~~ | ~~Signature verification could silently fail~~ | **Done** — `signing.ts` now checks both `typeUrl` and `type_url`. |
 | ~~**P0**~~ | ~~Add warning log in `packTypedAssertionAsAny` for unregistered types~~ | ~~Silent data loss~~ | **Done** — `log.warn()` added in `assertion-any-codec.ts`. |
-| ~~**P1**~~ | ~~Remove `normalizeAnyForBuf`/`convertAnyToProto` shims (standardize on `typeUrl`)~~ | ~~-2 object spreads per RPC message~~ | **Done** — Shims deleted, `Rpc.BufAny.type_url` → `typeUrl`, all call sites updated. |
+| ~~**P1**~~ | ~~Remove `normalizeAnyForBuf`/`convertAnyToProto` shims (standardize on `typeUrl`)~~ | ~~-2 object spreads per RPC message~~ | **Done** — Shims deleted, `Rpc.Any.typeUrl` standardized, all call sites updated. |
 | ~~**P1**~~ | ~~Restore typed `_sendMessage(message: RpcMessage)` signature~~ | ~~Type safety regression~~ | **Done** — Changed to `MessageInitShape<typeof RpcMessageSchema>`, removed 4 `as any` casts at call sites. |
 | ~~**P1**~~ | ~~Add Timestamp handling to `convertBufFieldValue`~~ | ~~Assertion unpack correctness~~ | **Done** — `isBufTimestamp` check + `timestampDate()` conversion added. |
-| **P2** | Rename all `Buf`-prefixed types/files (mechanical) | Code clarity | Pending |
-| **P2** | Eliminate credential serialization deep copies | Performance | Pending |
-| **P2** | Fix `isBufPublicKey` to check `$typeName` | False positive prevention | Pending |
-| **P3** | Consolidate `service-buf.test.ts` with `rpc.test.ts` | Test hygiene | Pending |
-| **P3** | Remove `preserveAny` option from proto codec | Dead code | Pending |
+| ~~**P2**~~ | ~~Rename all `Buf`-prefixed types/files (mechanical)~~ | ~~Code clarity~~ | **Done** — 51 files, all `Buf` prefixes removed. Files renamed: `service-buf.ts`→`service.ts`, `buf-rpc-extension.ts`→`rpc-extension.ts`. |
+| **P2** | Eliminate credential serialization deep copies | Performance | Deferred — requires all credential producers to output buf-native messages first. |
+| ~~**P2**~~ | ~~Fix `isBufPublicKey` to check `$typeName`~~ | ~~False positive prevention~~ | **Done** — Now checks `$typeName === 'dxos.keys.PublicKey'`. |
+| ~~**P3**~~ | ~~Consolidate `service-buf.test.ts` with `rpc.test.ts`~~ | ~~Test hygiene~~ | **Not needed** — Tests cover different layers (service layer vs low-level RpcPeer). Renamed to `service.test.ts`. |
+| ~~**P3**~~ | ~~Remove `preserveAny` option from proto codec~~ | ~~Dead code~~ | **Done** — `EncodingOptions` interface removed, `Codec<T>` simplified. |
