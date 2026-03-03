@@ -17,7 +17,6 @@ import {
   typeToFormat,
 } from '@dxos/echo/internal';
 import { createSchemaReference, getSchemaReference } from '@dxos/echo/internal';
-import { getSnapshot } from '@dxos/echo/internal';
 import { AtomObj } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -485,7 +484,7 @@ export class ProjectionModel {
     const current = this.getFieldProjection(fieldId);
     invariant(current, `Field projection not found for fieldId: ${fieldId}`);
 
-    const snapshot = getSnapshot(current);
+    const snapshot = JSON.parse(JSON.stringify(current)) as FieldProjection;
 
     // Calculate field index before deleting (Obj.change returns void, so we can't get return values from the callback).
     const fieldIndex = this._view.projection.fields.findIndex((field) => field.id === fieldId);
