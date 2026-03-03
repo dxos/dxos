@@ -43,10 +43,12 @@ export const ErrorBoundary = ({
     return combine(
       addEventListener(window, 'unhandledrejection', (event: PromiseRejectionEvent) => {
         recordErrorForSmokeTests(event.reason);
+        onError?.(event.reason, { componentStack: null });
         setError(event.reason);
       }),
       addEventListener(window, 'error', (event: ErrorEvent) => {
         recordErrorForSmokeTests(event.error);
+        onError?.(event.error, { componentStack: null });
         setError(event.error);
       }),
     );
@@ -55,7 +57,10 @@ export const ErrorBoundary = ({
   if (error !== undefined) {
     const props: FallbackProps = {
       error,
-      resetErrorBoundary: () => setError(undefined),
+      resetErrorBoundary: () => {
+        setError(undefined);
+        onReset?.();
+      },
     };
 
     if (fallbackRender) {
