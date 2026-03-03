@@ -36,9 +36,12 @@ message Heads {
 message QueryResult {
   string id = 1;
   string spaceId = 4;
-  string documentId = 5;
+  optional string documentId = 5;
+  optional string queueId = 6;
+  optional string queueNamespace = 7;
   float rank = 3;
 
+  /// In the ECHO Json object format.
   optional string document_json = 10;
   optional bytes document_automerge = 11;
   

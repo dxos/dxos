@@ -4,8 +4,8 @@
 
 import { createContext, useContext } from 'react';
 
-import { type StackItemRearrangeHandler, type StackItemSize } from './defs';
 import { type Orientation, type Size } from './Stack';
+import { type StackItemRearrangeHandler, type StackItemSize } from './types';
 
 export type StackContextValue = {
   orientation: Orientation;
@@ -33,7 +33,7 @@ export type ItemDragState =
       item: any;
     }
   | {
-      type: 'is-dragging';
+      type: 'w-dragging';
       item: any;
     };
 

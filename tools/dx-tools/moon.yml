@@ -1,4 +1,4 @@
-type: tool
+layer: tool
 language: typescript
 workspace:
   inheritedTasks:

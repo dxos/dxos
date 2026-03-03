@@ -8,6 +8,7 @@ import { sleep } from '@dxos/async';
 import { WorkerRuntime } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { createLinkedPorts } from '@dxos/rpc';
+import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
 import { type MaybePromise, type Provider } from '@dxos/util';
 
 import { Client } from '../client';
@@ -25,6 +26,8 @@ const setup = (configProvider: Provider<MaybePromise<Config>>) => {
     onStop: async () => {
       // No-op.
     },
+    // Use in-memory SQLite for testing instead of OPFS which only works in browsers.
+    sqliteLayer: sqliteLayerMemory,
   });
 
   const systemPorts = createLinkedPorts();

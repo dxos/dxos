@@ -15,7 +15,7 @@ import {
   type IntroductionRequest,
 } from '@dxos/protocols/proto/dxos/halo/invitations';
 
-import { type Identity, type JoinIdentityParams } from '../identity';
+import { type Identity, type JoinIdentityProps } from '../identity';
 
 import { type InvitationProtocol } from './invitation-protocol';
 
@@ -23,7 +23,7 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
   constructor(
     private readonly _keyring: Keyring,
     private readonly _getIdentity: () => Identity,
-    private readonly _acceptIdentity: (identity: JoinIdentityParams) => Promise<Identity>,
+    private readonly _acceptIdentity: (identity: JoinIdentityProps) => Promise<Identity>,
   ) {}
 
   toJSON(): object {

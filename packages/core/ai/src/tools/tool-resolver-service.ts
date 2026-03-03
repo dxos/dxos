@@ -16,6 +16,10 @@ import { AiToolNotFoundError } from '../errors';
 
 import { type ToolId } from './tool';
 
+/**
+ * Resolves tool definitions.
+ * Also is able to resolve tools backed by functions.
+ */
 export class ToolResolverService extends Context.Tag('@dxos/ai/ToolResolverService')<
   ToolResolverService,
   {
@@ -44,6 +48,7 @@ export class ToolResolverService extends Context.Tag('@dxos/ai/ToolResolverServi
           Effect.either,
         ),
       ).pipe(Effect.map(Array.filterMap(Either.getRight)));
+
       return Toolkit.make(...tools);
     });
 }

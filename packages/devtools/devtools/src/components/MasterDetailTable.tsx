@@ -5,7 +5,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 import { type MaybePromise } from '@dxos/util';
 
 import { JsonView } from './JsonView';
@@ -81,9 +81,9 @@ export const MasterDetailTable = ({
   );
 
   return (
-    <div className={mx('bs-full divide-y divide-separator', gridLayout)}>
+    <div className={mx('h-full divide-y divide-separator', gridLayout)}>
       <DynamicTable properties={properties} rows={data} features={features} onRowClick={handleRowClicked} />
-      <div className={mx('overflow-auto text-sm', detailsPosition === 'right' && 'border-separator border-is')}>
+      <div className={mx('overflow-auto text-sm', detailsPosition === 'right' && 'border-separator border-s')}>
         {selected ? (
           isLoading ? (
             <p className={mx('font-mono text-xs p-1')}>Loading details...</p>

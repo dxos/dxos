@@ -12,8 +12,21 @@ import { type Orientation, type StackItemData, type StackItemRearrangeHandler } 
 
 const noop = () => {};
 
+export type UseStackDropForElementsProps = {
+  id?: string;
+  element: HTMLDivElement | null;
+  scrollElement?: HTMLDivElement | null;
+  orientation: Orientation;
+  selfDroppable: boolean;
+  onRearrange?: StackItemRearrangeHandler;
+};
+
+export type UseStackDropForElements = {
+  dropping: boolean;
+};
+
 /**
- * Hook to handle drag and drop functionality for Stack components.
+ * Hook to handle drag-and-drop functionality for Stack components.
  */
 export const useStackDropForElements = ({
   id,
@@ -22,14 +35,7 @@ export const useStackDropForElements = ({
   orientation,
   selfDroppable,
   onRearrange,
-}: {
-  id?: string;
-  element: HTMLDivElement | null;
-  scrollElement?: HTMLDivElement | null;
-  orientation: Orientation;
-  selfDroppable: boolean;
-  onRearrange?: StackItemRearrangeHandler;
-}) => {
+}: UseStackDropForElementsProps): UseStackDropForElements => {
   const [dropping, setDropping] = useState(false);
 
   useLayoutEffect(() => {
@@ -39,6 +45,7 @@ export const useStackDropForElements = ({
 
     const acceptSourceType = orientation === 'horizontal' ? 'column' : 'card';
 
+    // TODO(burdon): Use monitor?
     return combine(
       selfDroppable
         ? dropTargetForElements({
@@ -78,7 +85,7 @@ export const useStackDropForElements = ({
           })
         : noop,
     );
-  }, [element, scrollElement, selfDroppable, orientation, id, onRearrange]);
+  }, [id, element, scrollElement, selfDroppable, orientation, onRearrange]);
 
   return { dropping };
 };

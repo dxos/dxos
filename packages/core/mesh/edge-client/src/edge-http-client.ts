@@ -25,6 +25,7 @@ import {
   type ExecuteWorkflowResponseBody,
   type ExportBundleRequest,
   type ExportBundleResponse,
+  type FeedProtocol,
   type GetAgentStatusResponseBody,
   type GetNotarizationResponseBody,
   type ImportBundleRequest,
@@ -34,13 +35,15 @@ import {
   type JoinSpaceResponseBody,
   type ObjectId,
   type PostNotarizationRequestBody,
-  type QueryResult,
-  type QueueQuery,
   type RecoverIdentityRequest,
   type RecoverIdentityResponseBody,
   type UploadFunctionRequest,
   type UploadFunctionResponseBody,
 } from '@dxos/protocols';
+import {
+  type QueryRequest as QueryRequestProto,
+  type QueryResponse as QueryResponseProto,
+} from '@dxos/protocols/proto/dxos/echo/query';
 import { createUrl } from '@dxos/util';
 
 import { type EdgeIdentity, handleAuthChallenge } from './edge-identity';
@@ -88,6 +91,10 @@ type EdgeHttpRequestArgs = {
 export type EdgeHttpGetArgs = Pick<EdgeHttpRequestArgs, 'context' | 'retry' | 'auth'>;
 export type EdgeHttpPostArgs = Pick<EdgeHttpRequestArgs, 'context' | 'retry' | 'body' | 'auth'>;
 
+export type GetCronTriggersResponse = {
+  cronIds: string[];
+};
+
 export class EdgeHttpClient {
   private readonly _baseUrl: string;
 
@@ -119,7 +126,7 @@ export class EdgeHttpClient {
   //
 
   public async getStatus(args?: EdgeHttpGetArgs): Promise<EdgeStatus> {
-    return this._call(new URL('/status', this.baseUrl), { ...args, method: 'GET' });
+    return this._call(new URL('/status', this.baseUrl), { ...args, method: 'GET', auth: true });
   }
 
   //
@@ -205,10 +212,11 @@ export class EdgeHttpClient {
   public async queryQueue(
     subspaceTag: string,
     spaceId: SpaceId,
-    query: QueueQuery,
+    query: FeedProtocol.QueueQuery,
     args?: EdgeHttpGetArgs,
-  ): Promise<QueryResult> {
-    const { queueId } = query;
+  ): Promise<FeedProtocol.QueryResult> {
+    const queueId = query.queueIds?.[0];
+    invariant(queueId, 'queueId required');
     return this._call(
       createUrl(new URL(`/spaces/${subspaceTag}/${spaceId}/queue/${queueId}/query`, this.baseUrl), {
         after: query.after,
@@ -345,14 +353,31 @@ export class EdgeHttpClient {
   // Triggers
   //
 
-  public async getCronTriggers(spaceId: SpaceId) {
-    return this._call(new URL(`/test/functions/${spaceId}/triggers/crons`, this.baseUrl), { method: 'GET' });
+  public async getCronTriggers(spaceId: SpaceId): Promise<GetCronTriggersResponse> {
+    return this._call<GetCronTriggersResponse>(new URL(`/test/functions/${spaceId}/triggers/crons`, this.baseUrl), {
+      method: 'GET',
+    });
   }
 
   public async forceRunCronTrigger(spaceId: SpaceId, triggerId: ObjectId) {
     return this._call(new URL(`/test/functions/${spaceId}/triggers/crons/${triggerId}/run`, this.baseUrl), {
       method: 'POST',
     });
+  }
+
+  //
+  // Query
+  //
+
+  /**
+   * Execute a QueryAST query against a space.
+   */
+  public async execQuery(
+    spaceId: SpaceId,
+    body: QueryRequestProto,
+    args?: EdgeHttpGetArgs,
+  ): Promise<QueryResponseProto> {
+    return this._call(new URL(`/spaces/${spaceId}/exec-query`, this.baseUrl), { ...args, body, method: 'POST' });
   }
 
   //

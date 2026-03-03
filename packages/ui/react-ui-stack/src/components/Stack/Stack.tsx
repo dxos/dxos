@@ -17,11 +17,11 @@ import React, {
 } from 'react';
 
 import { ListItem, type ThemedClassName, useId } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { useStackDropForElements } from '../../hooks';
-import { type StackContextValue } from '../defs';
 import { StackContext } from '../StackContext';
+import { type StackContextValue } from '../types';
 
 export type Orientation = 'horizontal' | 'vertical';
 
@@ -34,14 +34,14 @@ export type Orientation = 'horizontal' | 'vertical';
  */
 export type Size = 'intrinsic' | 'contain' | 'split';
 
-export const railGridHorizontal = 'grid-rows-[[rail-start]_var(--rail-size)_[content-start]_1fr_[content-end]]';
-export const railGridVertical = 'grid-cols-[[rail-start]_var(--rail-size)_[content-start]_1fr_[content-end]]';
+export const railGridHorizontal = 'grid-rows-[[rail-start]_var(--dx-rail-size)_[content-start]_1fr_[content-end]]';
+export const railGridVertical = 'grid-cols-[[rail-start]_var(--dx-rail-size)_[content-start]_1fr_[content-end]]';
 
 // TODO(ZaymonFC): Magic 2px to stop overflow.
 export const railGridHorizontalContainFitContent =
-  'grid-rows-[[rail-start]_var(--rail-size)_[content-start]_fit-content(calc(100%-var(--rail-size)*2+2px))_[content-end]]';
+  'grid-rows-[[rail-start]_var(--dx-rail-size)_[content-start]_fit-content(calc(100%-var(--dx-rail-size)*2+2px))_[content-end]]';
 export const railGridVerticalContainFitContent =
-  'grid-cols-[[rail-start]_var(--rail-size)_[content-start]_fit-content(calc(100%-var(--rail-size)*2+2px))_[content-end]]';
+  'grid-cols-[[rail-start]_var(--dx-rail-size)_[content-start]_fit-content(calc(100%-var(--dx-rail-size)*2+2px))_[content-end]]';
 
 export const autoScrollRootAttributes = { 'data-drag-autoscroll': 'idle' };
 
@@ -195,6 +195,7 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
                 scrollIntoViewAndFocus(adjacentItem, closestStackOrientation);
               }
             }
+
             if (perpendicularDelta !== 0) {
               if (ancestorStack && ancestorOrientation !== closestStackOrientation) {
                 const siblingStacks = Array.from(
@@ -292,7 +293,7 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
 
     const gridClasses = useMemo(() => {
       if (!rail) {
-        return orientation === 'horizontal' ? 'grid-rows-1 pli-[--stack-gap]' : 'grid-cols-1 plb-[--stack-gap]';
+        return orientation === 'horizontal' ? 'grid-rows-1 px-(--stack-gap)' : 'grid-cols-1 py-(--stack-gap)';
       }
 
       if (orientation === 'horizontal') {
@@ -323,12 +324,12 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
         <div
           {...props}
           className={mx(
-            'grid relative [--stack-gap:var(--dx-trimXs)]',
+            'grid relative [--stack-gap:var(--spacing-trim-xs)]',
             gridClasses,
             size === 'contain' &&
               (orientation === 'horizontal'
-                ? 'overflow-x-auto overscroll-x-contain min-bs-0 max-bs-full bs-full'
-                : 'overflow-y-auto min-is-0 max-is-full is-full'),
+                ? 'overflow-x-auto overscroll-x-contain min-h-0 max-h-full h-full'
+                : 'overflow-y-auto min-w-0 max-w-full w-full'),
             classNames,
           )}
           onKeyDown={handleKeyDown}

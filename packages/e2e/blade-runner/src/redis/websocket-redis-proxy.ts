@@ -14,7 +14,7 @@ import { log } from '@dxos/log';
 
 import { DEFAULT_REDIS_TCP_CONNECTION, DEFAULT_WEBSOCKET } from './defaults';
 
-export type WebSocketRedisProxyParams = {
+export type WebSocketRedisProxyProps = {
   /**
    * ioredis uses `family = 4` by default.
    */
@@ -31,7 +31,7 @@ export class WebSocketRedisProxy {
    */
   private readonly _wsServer: Server;
 
-  constructor(private readonly _params?: WebSocketRedisProxyParams) {
+  constructor(private readonly _params?: WebSocketRedisProxyProps) {
     this._wsServer = createServer(this._params?.websocketServer ?? DEFAULT_WEBSOCKET);
     this._wsServer.on('stream', (ws) => {
       log('New WebSocket connection');

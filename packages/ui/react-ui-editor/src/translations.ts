@@ -4,7 +4,7 @@
 
 import { type Resource } from '@dxos/react-ui';
 
-export const translationKey = 'react-ui-editor';
+export const translationKey = '@dxos/react-ui-editor';
 
 export const translations = [
   {
@@ -29,11 +29,11 @@ export const translations = [
         'heading level label_zero': 'Paragraph',
         'heading level label_one': 'Heading level {{count}}',
         'heading level label_other': 'Heading level {{count}}',
-        'view mode label': 'Editor view',
-        'preview mode label': 'Live preview',
-        'readonly mode label': 'Read only',
         'search label': 'Search',
-        'source mode label': 'Source',
+        'view mode label': 'Editor view',
+        'preview mode label': 'Markdown',
+        'readonly mode label': 'Read only',
+        'source mode label': 'Plain text',
       },
     },
   },

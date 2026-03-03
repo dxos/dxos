@@ -11,21 +11,19 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
-import { AiSession, ArtifactId, GenerationObserver } from '@dxos/assistant';
+import { AiSession, GenerationObserver } from '@dxos/assistant';
 import {
   LocalSearchHandler,
   LocalSearchToolkit,
-  contextQueueLayerFromResearchGraph,
+  ResearchGraph,
   makeGraphWriterHandler,
   makeGraphWriterToolkit,
 } from '@dxos/assistant-toolkit';
-import { Obj } from '@dxos/echo';
-import { Database } from '@dxos/echo';
-import { QueueService, TracingService, defineFunction } from '@dxos/functions';
-import { Message, Organization, Person, Project } from '@dxos/types';
+import { Database, Feed, Filter, Obj, Type } from '@dxos/echo';
+import { TracingService, defineFunction } from '@dxos/functions';
+import { Message, Organization, Person, Pipeline } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { Mailbox } from '../types';
 import { renderMarkdown } from '../util';
 
 /**
@@ -36,8 +34,8 @@ export default defineFunction({
   name: 'Summarize',
   description: 'Summarize a mailbox.',
   inputSchema: Schema.Struct({
-    id: ArtifactId.annotations({
-      description: 'The ID of the mailbox object.',
+    feed: Type.Ref(Type.Feed).annotations({
+      description: 'The ID of the mailbox feed.',
     }),
     skip: Schema.Number.pipe(
       Schema.annotations({
@@ -57,13 +55,13 @@ export default defineFunction({
       description: 'The summary of the mailbox.',
     }),
   }),
+  services: [Database.Service, Feed.Service],
   handler: Effect.fnUntraced(
-    function* ({ data: { id, skip = 0, limit = 20 } }) {
-      const mailbox = yield* Database.Service.resolve(ArtifactId.toDXN(id), Mailbox.Mailbox);
-      const queue = yield* QueueService.getQueue(mailbox.queue.dxn);
-      yield* Effect.promise(() => queue?.queryObjects());
+    function* ({ data: { feed: feedRef, skip = 0, limit = 20 } }) {
+      const feed = yield* Database.load(feedRef);
+      const objects = yield* Feed.runQuery(feed, Filter.type(Message.Message));
       const messages = Function.pipe(
-        queue?.objects ?? [],
+        objects,
         Array.reverse,
         Array.drop(skip),
         Array.take(limit),
@@ -74,7 +72,7 @@ export default defineFunction({
 
       const GraphWriterToolkit = makeGraphWriterToolkit({
         // TODO(wittjosiah): Anthropic does not support GeoPoint schema currently, causing legacy schemas to be needed.
-        schema: [Person.LegacyPerson, Project.Project, Organization.LegacyOrganization],
+        schema: [Person.LegacyPerson, Pipeline.Pipeline, Organization.LegacyOrganization],
       });
       const GraphWriterHandler = makeGraphWriterHandler(GraphWriterToolkit);
 
@@ -84,7 +82,7 @@ export default defineFunction({
             //
             GraphWriterHandler,
             LocalSearchHandler,
-          ).pipe(Layer.provide(contextQueueLayerFromResearchGraph)),
+          ).pipe(Layer.provide(ResearchGraph.contextQueueLayer)),
         ),
       );
 

@@ -10,7 +10,7 @@ import { Type } from '@dxos/echo';
 export const Text = Schema.Struct({
   content: Schema.String,
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Text',
     version: '0.1.0',
   }),

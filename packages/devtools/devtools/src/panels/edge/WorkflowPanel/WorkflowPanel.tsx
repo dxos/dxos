@@ -12,7 +12,7 @@ import { DXN } from '@dxos/keys';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { ControlledSelector, MasterDetailTable, PanelContainer } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
@@ -25,7 +25,7 @@ export const WorkflowPanel = (props: { space?: Space }) => {
   const space = props.space ?? state.space;
   const [displayMode, setDisplayMode] = useState(DisplayMode.COMPILED);
   const [executionMode, setExecutionMode] = useState(WorkflowDebugPanelMode.LOCAL);
-  const graphs = useQuery(space, Filter.type(ComputeGraph));
+  const graphs = useQuery(space?.db, Filter.type(ComputeGraph));
   const [selectedId, setSelectedId] = useState<string>();
   const selected = useMemo(() => graphs.find((graph) => graph.id === selectedId), [graphs, selectedId]);
 
@@ -85,7 +85,7 @@ export const WorkflowPanel = (props: { space?: Space }) => {
         </Toolbar.Root>
       }
     >
-      <div className={'bs-full grid grid-rows-[4fr_3fr]'}>
+      <div className={'h-full grid grid-rows-[4fr_3fr]'}>
         <MasterDetailTable
           properties={properties}
           data={tableData}
@@ -93,7 +93,7 @@ export const WorkflowPanel = (props: { space?: Space }) => {
           onSelectionChanged={setSelectedId}
         />
 
-        <div className={mx('bs-full')}>
+        <div className={mx('h-full')}>
           {selected && <WorkflowDebugPanel loader={loader} graph={selected} mode={executionMode} />}
         </div>
       </div>

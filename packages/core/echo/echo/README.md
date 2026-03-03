@@ -35,11 +35,10 @@ import { Type, Obj, Relation, Ref, Query, Filter } from '@dxos/echo';
 | Get typename (of schema)      | `Type.getTypename(schema)` | `Type.getTypename(schema)` |                |
 | Get type metadata (of schema) | `Type.getMeta(schema)`     | `Type.getMeta(schema)`     |                |
 | Is mutable schema             | `Type.isMutable(schema)`   | `Type.isMutable(schema)`   |                |
-| Expando                       | `Type.Expando`             |
 
 |
 | **DATA API** |
-| Any instance type | `Obj.Any` | `Relation.Any` | `Ref.Any` |
+| Unknown instance type | `Obj.Unknown` | `Relation.Unknown` | `Ref.Unknown` |
 | Create object | `Obj.make(Schema, { ... })` | `Relation.make(Schema, { ... })` | `Ref.make(obj)` |
 | Check kind | `Obj.isObject(obj)` | `Relation.isRelation(obj)` | `Ref.isRef(ref)` |
 | Get relation source | | `Relation.getSource(relation)` | |

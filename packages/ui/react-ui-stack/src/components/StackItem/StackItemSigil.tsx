@@ -4,11 +4,11 @@
 
 import React, { Fragment, type PropsWithChildren, forwardRef, useState } from 'react';
 
-import { type ActionLike } from '@dxos/app-graph';
+import { type Node } from '@dxos/app-graph';
 import { keySymbols } from '@dxos/keyboard';
 import { Button, type ButtonProps, DropdownMenu, Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { type AttendableId, type Related, useAttention } from '@dxos/react-ui-attention';
-import { descriptionText, mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 import { getHostPlatform } from '@dxos/util';
 
 import { translationKey } from '../../translations';
@@ -23,7 +23,7 @@ export type KeyBinding = {
   unknown?: string;
 };
 
-export type StackItemSigilAction = Pick<ActionLike, 'id' | 'properties' | 'data'>;
+export type StackItemSigilAction = Pick<Node.ActionLike, 'id' | 'properties' | 'data'>;
 
 export type StackItemSigilButtonProps = Omit<ButtonProps, 'variant'> &
   AttendableId &
@@ -40,7 +40,10 @@ export const StackItemSigilButton = forwardRef<HTMLButtonElement, StackItemSigil
       <Button
         {...props}
         variant={variant}
-        classNames={['shrink-0 pli-0 min-bs-0 is-[--rail-action] bs-[--rail-action] relative app-no-drag', classNames]}
+        classNames={[
+          'shrink-0 px-0 min-h-0 w-(--dx-rail-action) h-(--dx-rail-action) relative dx-app-no-drag',
+          classNames,
+        ]}
         ref={forwardedRef}
       >
         {isMenu && <MenuSignifierHorizontal />}
@@ -133,7 +136,7 @@ export const StackItemSigil = forwardRef<HTMLButtonElement, StackItemSigilProps>
                             </DropdownMenu.ItemIndicator>
                           )}
                           {shortcut && (
-                            <span className={mx('shrink-0', descriptionText)}>{keySymbols(shortcut).join('')}</span>
+                            <span className={mx('shrink-0', 'text-description')}>{keySymbols(shortcut).join('')}</span>
                           )}
                         </Root>
                       );

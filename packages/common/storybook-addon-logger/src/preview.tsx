@@ -18,7 +18,8 @@ const preview: Preview = {
       // Prevent re-rendering of the story.
       const MemoizedStory = memo(Story);
       useEffect(() => {
-        log.config({ filter: logLevel });
+        const level = Number(logLevel);
+        log.config({ filter: level });
       }, [logLevel]);
 
       return <MemoizedStory />;
@@ -39,11 +40,26 @@ const preview: Preview = {
         icon: 'eye',
         dynamicTitle: true,
         items: [
-          { value: LogLevel.TRACE, title: 'TRACE' },
-          { value: LogLevel.DEBUG, title: 'DEBUG' },
-          { value: LogLevel.INFO, title: 'INFO' },
-          { value: LogLevel.WARN, title: 'WARN' },
-          { value: LogLevel.ERROR, title: 'ERROR' },
+          {
+            value: String(LogLevel.TRACE),
+            title: 'TRACE',
+          },
+          {
+            value: String(LogLevel.DEBUG),
+            title: 'DEBUG',
+          },
+          {
+            value: String(LogLevel.INFO),
+            title: 'INFO',
+          },
+          {
+            value: String(LogLevel.WARN),
+            title: 'WARN',
+          },
+          {
+            value: String(LogLevel.ERROR),
+            title: 'ERROR',
+          },
         ],
       },
     },

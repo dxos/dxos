@@ -5,4 +5,5 @@
 export * as Map from './Map';
 export * as MapAction from './MapAction';
 
+export * from './capabilities';
 export * from './types';

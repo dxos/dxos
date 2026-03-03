@@ -4,22 +4,22 @@
 
 import { type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 
-import { type NodeArg } from '@dxos/app-graph';
+import { type Node } from '@dxos/app-graph';
 import { log } from '@dxos/log';
 import { type TreeData } from '@dxos/react-ui-list';
 
-const removeItem = (tree: NodeArg<any>, source: TreeData) => {
+const removeItem = (tree: Node.NodeArg<any>, source: TreeData) => {
   const parent = getNode(tree, source.path.slice(1, -1));
-  const index = parent.nodes!.findIndex(({ id }) => id === source.id);
+  const index = parent.nodes!.findIndex((node: Node.NodeArg<any>) => node.id === source.id);
   const item = parent.nodes![index];
   parent.nodes!.splice(index, 1);
   return item;
 };
 
-const getNode = (tree: NodeArg<any>, path: string[]) => {
+const getNode = (tree: Node.NodeArg<any>, path: string[]) => {
   let node = tree;
   for (const part of path) {
-    node = node.nodes!.find(({ id }) => id === part)!;
+    node = node.nodes!.find((n: Node.NodeArg<any>) => n.id === part)!;
   }
   return node;
 };
@@ -31,7 +31,7 @@ export const updateState = ({
   source,
   target,
 }: {
-  state: NodeArg<any>;
+  state: Node.NodeArg<any>;
   instruction: Instruction;
   source: TreeData;
   target: TreeData;

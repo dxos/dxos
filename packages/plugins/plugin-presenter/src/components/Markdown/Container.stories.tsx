@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { createSlide } from '../../testing';
 
@@ -21,9 +21,9 @@ const DefaultStory = ({ content = '' }: SlideProps) => {
 };
 
 const meta = {
-  title: 'plugins/plugin-presenter/Container',
+  title: 'plugins/plugin-presenter/components/Container',
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
   },

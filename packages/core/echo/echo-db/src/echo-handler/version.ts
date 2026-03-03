@@ -4,8 +4,6 @@
 
 import { next as A } from '@automerge/automerge';
 
-import type { Live } from '@dxos/live-object';
-
 import { createDocAccessor } from './doc-accessor';
 
 export type ObjectVersion = {
@@ -22,7 +20,7 @@ export const ObjectVersion = Object.freeze({
  * @returns The current version of the object in the database.
  * @throws If the object is not in the database.
  */
-export const getVersion = (obj: Live<any>): ObjectVersion => {
+export const getVersion = (obj: any): ObjectVersion => {
   const docAccessor = createDocAccessor(obj, []);
   const doc = docAccessor.handle.doc();
   if (!doc) {

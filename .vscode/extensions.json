@@ -1,10 +1,11 @@
 {
   "recommendations": [
+    "bradlc.vscode-tailwindcss",
+    "dbaeumer.vscode-eslint",
     "folke.vscode-monorepo-workspace",
     "hediet.vscode-drawio",
-    "dbaeumer.vscode-eslint",
-    "zxh404.vscode-proto3",
+    "yoavbls.pretty-ts-errors",
     "zjcompt.es6-string-javascript",
-    "yoavbls.pretty-ts-errors"
+    "zxh404.vscode-proto3"
   ]
 }

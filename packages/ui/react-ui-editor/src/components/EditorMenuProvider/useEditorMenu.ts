@@ -7,9 +7,8 @@ import { type EditorState } from '@codemirror/state';
 import { type RefObject, useCallback, useMemo, useRef, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
+import { modalStateEffect } from '@dxos/ui-editor';
 import { type MaybePromise } from '@dxos/util';
-
-import { modalStateEffect } from '../../extensions';
 
 import { type EditorMenuProviderProps } from './EditorMenuProvider';
 import { type EditorMenuGroup, type EditorMenuItem } from './menu';
@@ -74,7 +73,6 @@ export const useEditorMenu = ({
 
   const handleOpenChange = useCallback<NonNullable<UseEditorMenu['onOpenChange']>>(
     async ({ view, open }) => {
-      console.log(view, open);
       invariant(view);
       setOpen(open);
       if (!open) {

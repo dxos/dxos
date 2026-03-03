@@ -27,7 +27,7 @@ import { useResizeDetector } from 'react-resize-detector';
 import { type Topology } from 'topojson-specification';
 
 import { type ThemeMode, type ThemedClassName, useDynamicRef, useThemeContext } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import {
   GlobeContextProvider,
@@ -157,16 +157,16 @@ type GlobeCanvasProps = {
  */
 // TODO(burdon): Move controller to root.
 const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
-  ({ projection: projectionParam, topology, features, styles: stylesParam }, forwardRef) => {
+  ({ projection: projectionProp, topology, features, styles: stylesProp }, forwardRef) => {
     const { themeMode } = useThemeContext();
-    const styles = useMemo(() => stylesParam ?? defaultStyles[themeMode], [stylesParam, themeMode]);
+    const styles = useMemo(() => stylesProp ?? defaultStyles[themeMode], [stylesProp, themeMode]);
 
     // Canvas.
     const [canvas, setCanvas] = useState<HTMLCanvasElement>(null);
     const canvasRef = (canvas: HTMLCanvasElement) => setCanvas(canvas);
 
     // Projection.
-    const projection = useMemo(() => getProjection(projectionParam), [projectionParam]);
+    const projection = useMemo(() => getProjection(projectionProp), [projectionProp]);
 
     // Layers.
     // TODO(burdon): Generate on the fly based on what is visible.
@@ -200,9 +200,9 @@ const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
         translation,
         rotation,
         setCenter,
-        setZoom: (s) => {
-          if (typeof s === 'function') {
-            const is = interpolateNumber(zoomRef.current, s(zoomRef.current));
+        setZoom: (state) => {
+          if (typeof state === 'function') {
+            const is = interpolateNumber(zoomRef.current, state(zoomRef.current));
             // Stop easing if already zooming.
             transition()
               .ease(zooming.current ? easeLinear : easeSinOut)
@@ -212,7 +212,7 @@ const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
                 zooming.current = false;
               });
           } else {
-            setZoom(s);
+            setZoom(state);
           }
         },
         setTranslation,
@@ -259,7 +259,7 @@ const GlobeDebug = ({ position = 'topleft' }: { position?: ControlPosition }) =>
   return (
     <div
       className={mx(
-        'z-10 absolute is-96 p-2 overflow-hidden border border-green-700 rounded',
+        'z-10 absolute w-96 p-2 overflow-hidden border border-green-700 rounded-sm',
         controlPositions[position],
       )}
     >

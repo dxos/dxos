@@ -8,7 +8,8 @@ import React, { useEffect, useState } from 'react';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { type ClientRepeatedComponentProps, ClientRepeater } from '@dxos/react-client/testing';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withRegistry } from '@dxos/storybook-utils';
 
 import { Tree, type TreeComponentProps } from './Tree';
 import { Tree as TreeModel, TreeType } from './types';
@@ -43,10 +44,10 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-explorer/Tree',
+  title: 'plugins/plugin-explorer/components/Tree',
   component: Tree as any,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withRegistry, withTheme(), withLayout()],
   parameters: {
     layout: 'fullscreen',
   },

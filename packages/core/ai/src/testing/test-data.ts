@@ -2,14 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Obj, Ref } from '@dxos/echo';
-import { type EchoDatabase } from '@dxos/echo-db';
+import { type Database, Obj, Ref } from '@dxos/echo';
 
 import { Contact, Organization, Project, Task } from './test-schema';
 
 // TODO(burdon): Remove and use standard test data.
 
-export const seedTestData = (db: EchoDatabase) => {
+export const seedTestData = (db: Database.Database) => {
   const contactRich = db.add(
     Obj.make(Contact, {
       name: 'Rich',

@@ -8,14 +8,14 @@ import * as Schema from 'effect/Schema';
 import { SpaceProperties } from '@dxos/client-protocol/types';
 import { Obj, Query, Ref, Type } from '@dxos/echo';
 import { Database } from '@dxos/echo';
-import { type Expando, FormInputAnnotation, SystemTypeAnnotation } from '@dxos/echo/internal';
+import { FormInputAnnotation, SystemTypeAnnotation } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 
 export const Collection = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
-  objects: Schema.Array(Type.Ref(Obj.Any)).pipe(Schema.mutable, FormInputAnnotation.set(false)),
+  objects: Schema.Array(Type.Ref(Type.Obj)).pipe(FormInputAnnotation.set(false)),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Collection',
     version: '0.1.0',
   }),
@@ -23,7 +23,7 @@ export const Collection = Schema.Struct({
 
 export type Collection = Schema.Schema.Type<typeof Collection>;
 
-export const make = (props: Partial<Obj.MakeProps<typeof Collection>> = {}) =>
+export const make = (props: Partial<Obj.MakeProps<typeof Collection>> = {}): Collection =>
   Obj.make(Collection, { objects: [], ...props });
 
 /**
@@ -33,7 +33,7 @@ export const make = (props: Partial<Obj.MakeProps<typeof Collection>> = {}) =>
 export const Managed = Schema.Struct({
   key: Schema.String,
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/ManagedCollection',
     version: '0.1.0',
   }),
@@ -42,31 +42,39 @@ export const Managed = Schema.Struct({
 
 export type Managed = Schema.Schema.Type<typeof Managed>;
 
-export const makeManaged = (props: Obj.MakeProps<typeof Managed>) => Obj.make(Managed, props);
+export const makeManaged = (props: Obj.MakeProps<typeof Managed>): Managed => Obj.make(Managed, props);
 
-type AddParams = {
-  object: Obj.Any;
+type AddProps = {
+  object: Obj.Unknown;
   target?: Collection;
   hidden?: boolean;
 };
 
-export const add = Effect.fn(function* ({ object, target, hidden }: AddParams) {
+export const add = Effect.fn(function* ({ object, target, hidden }: AddProps) {
+  const objectRef = Ref.make(object);
   if (Obj.instanceOf(Collection, target)) {
-    target.objects.push(Ref.make(object));
+    Obj.change(target, (t) => {
+      t.objects.push(objectRef);
+    });
   } else if (hidden) {
-    yield* Database.Service.add(object);
+    yield* Database.add(object);
   } else {
-    const objects = yield* Database.Service.runQuery(Query.type(SpaceProperties));
+    const objects = yield* Database.runQuery(Query.type(SpaceProperties));
     invariant(objects.length === 1, 'Space properties not found');
-    const properties: Expando = objects[0];
+    const properties: Obj.Any = objects[0];
 
-    const collection = properties[Collection.typename]?.target;
-    if (Obj.instanceOf(Collection, collection)) {
-      collection.objects.push(Ref.make(object));
+    const collectionRef: Ref.Ref<Collection> | undefined = properties[Collection.typename];
+    if (collectionRef) {
+      const collection = yield* Effect.promise(() => collectionRef.load());
+      Obj.change(collection, (c) => {
+        c.objects.push(objectRef);
+      });
     } else {
-      // TODO(wittjosiah): Can't add non-echo objects by including in a collection because of types.
-      const collection = Obj.make(Collection, { objects: [Ref.make(object)] });
-      properties[Collection.typename] = Ref.make(collection);
+      const newCollection = Obj.make(Collection, { objects: [objectRef] });
+      const collectionRef = Ref.make(newCollection);
+      Obj.change(properties, (p) => {
+        p[Collection.typename] = collectionRef;
+      });
     }
   }
 });

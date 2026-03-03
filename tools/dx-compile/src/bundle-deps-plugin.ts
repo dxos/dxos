@@ -50,7 +50,7 @@ export const bundleDepsPlugin = (options: BundleDepsPluginOptions): Plugin => ({
         });
       }
 
-      // Ignore external imports.
+      // Keep subpath imports (#) as external - let the consuming code do the resolution.
       if (args.path.startsWith('#')) {
         return { external: true, path: args.path };
       }
@@ -69,6 +69,16 @@ export const bundleDepsPlugin = (options: BundleDepsPluginOptions): Plugin => ({
       if (args.path.startsWith('@')) {
         const split = args.path.split('/');
         moduleName = `${split[0]}/${split[1]}`;
+      }
+
+      // Check alias again for module aliases.
+      if (options.alias?.[moduleName]) {
+        return build.resolve(options.alias[moduleName] + args.path.slice(moduleName.length), {
+          importer: args.importer,
+          kind: args.kind,
+          namespace: args.namespace,
+          resolveDir: options.packageDir,
+        });
       }
 
       if (options.packages.includes(moduleName)) {

@@ -5,13 +5,13 @@
 import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
 import { Icon, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { hoverableControlItem, hoverableFocusedWithinControls, mx } from '@dxos/react-ui-theme';
+import { hoverableControlItem, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../translations';
 import type { ThreadEntity } from '../types';
 
-// TODO(burdon): Why is this exported?
-export const threadLayout = 'is-full place-self-start grid grid-cols-[var(--rail-size)_1fr]';
+// TODO(burdon): Avoid exporting fragments.
+export const threadLayout = 'w-full place-self-start grid grid-cols-[var(--dx-rail-size)_1fr]';
 
 //
 // Root
@@ -30,7 +30,7 @@ const ThreadRoot = forwardRef<HTMLDivElement, ThreadRootProps>(
         className={mx(
           threadLayout,
           hoverableFocusedWithinControls,
-          'bg-[var(--surface-bg)] current-related attention-surface [--controls-opacity:0]',
+          'bg-[var(--surface-bg)] current-related dx-attention-surface [--controls-opacity:0]',
           classNames,
         )}
         ref={forwardedRef}
@@ -59,10 +59,7 @@ const ThreadHeader = forwardRef<HTMLParagraphElement, ThreadHeaderProps>(
             role='heading'
             data-testid='thread.heading'
             {...props}
-            className={mx(
-              'mie-2 text-description font-medium truncate italic',
-              detached && 'line-through decoration-1',
-            )}
+            className={mx('me-2 text-description font-medium truncate italic', detached && 'line-through decoration-1')}
             ref={forwardedRef}
           >
             {children}
@@ -88,17 +85,17 @@ const ThreadStatus = forwardRef<HTMLDivElement, ThreadStatusProps>(
       <div
         {...props}
         className={mx(
-          'col-start-2 grid grid-cols-[min-content_1fr_max-content] pb-2 pie-2 text-xs text-description',
+          'col-start-2 grid grid-cols-[min-content_1fr_max-content] pb-2 pe-2 text-xs text-description',
           classNames,
         )}
         ref={forwardedRef}
       >
         <Icon
           icon='ph--spinner--bold'
-          classNames='is-6 bs-4 invisible data-[visible=show]:visible animate-spin-slow'
+          classNames='w-6 h-4 invisible data-[visible=show]:visible animate-spin-slow'
           data-visible={activity ? 'show' : 'hide'}
         />
-        <span className='truncate min-is-0' aria-live='polite'>
+        <span className='truncate min-w-0' aria-live='polite'>
           {activity ? children : null}
         </span>
         <span className={mx('text-end', hoverableControlItem)}>{t('enter to send message')}</span>
@@ -113,4 +110,4 @@ export const Thread = {
   Status: ThreadStatus,
 };
 
-export type { ThreadRootProps, ThreadHeaderProps as ThreadHeadingProps, ThreadStatusProps };
+export type { ThreadRootProps, ThreadHeaderProps, ThreadStatusProps };

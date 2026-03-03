@@ -7,9 +7,9 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { useTranslation } from '@dxos/react-ui';
 import { NumericTabs, TextCrawl, ToggleContainer, type ToggleContainerRootProps } from '@dxos/react-ui-components';
-import { type XmlWidgetProps } from '@dxos/react-ui-editor';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { type ContentBlock, type Message } from '@dxos/types';
+import { type XmlWidgetProps } from '@dxos/ui-editor';
 import { isNonNullable, safeParseJson } from '@dxos/util';
 
 import { meta } from '../../meta';
@@ -25,12 +25,12 @@ export type ToolBlockProps = XmlWidgetProps<{
 export const ToolBlock = ({ view, blocks = [] }: ToolBlockProps) => {
   const { t } = useTranslation(meta.id);
 
-  const items = useMemo<ToolContainerParams['items']>(() => {
+  const items = useMemo<ToolContainerProps['items']>(() => {
     let lastToolCall: { tool: Tool.Any | undefined; block: ContentBlock.ToolCall } | undefined;
     // TODO(burdon): Get from context?
     const tools: Tool.Any[] = []; //processor.conversation.toolkit?.tools ?? [];
     return blocks
-      .filter((block) => block._tag === 'toolCall' || block._tag === 'toolResult' || block._tag === 'summary')
+      .filter((block) => block._tag === 'toolCall' || block._tag === 'toolResult' || block._tag === 'stats')
       .map((block) => {
         switch (block._tag) {
           case 'toolCall': {
@@ -70,13 +70,13 @@ export const ToolBlock = ({ view, blocks = [] }: ToolBlockProps) => {
             };
           }
 
-          case 'summary': {
+          case 'stats': {
             if (!lastToolCall) {
               return null;
             }
 
             return {
-              title: t('summary label'),
+              title: t('stats label'),
               content: block,
             };
           }
@@ -101,11 +101,11 @@ export const ToolBlock = ({ view, blocks = [] }: ToolBlockProps) => {
 
 ToolBlock.displayName = 'ToolBlock';
 
-type ToolContainerParams = {
+type ToolContainerProps = {
   items: { title: string; content: any }[];
 } & Pick<ToggleContainerRootProps, 'onChangeOpen'>;
 
-export const ToolContainer = ({ items, onChangeOpen }: ToolContainerParams) => {
+export const ToolContainer = ({ items, onChangeOpen }: ToolContainerProps) => {
   const tabsRef = useRef<HTMLDivElement>(null);
   const [selected, setSelected] = useState(0);
   const [open, setOpen] = useState(false);
@@ -117,12 +117,12 @@ export const ToolContainer = ({ items, onChangeOpen }: ToolContainerParams) => {
     }
   }, [open, onChangeOpen]);
 
-  const handleSelect = (index: number) => {
+  const handleSelect = useCallback((index: number) => {
     setSelected(index);
-  };
+  }, []);
 
   return (
-    <ToggleContainer.Root classNames='mbs-2 is-full rounded-sm' open={open} onChangeOpen={setOpen}>
+    <ToggleContainer.Root classNames='mt-2 w-full rounded-xs' open={open} onChangeOpen={setOpen}>
       <ToggleContainer.Header classNames='text-sm text-placeholder'>
         <TextCrawl key='status-roll' lines={items.map((item) => item.title)} autoAdvance greedy />
       </ToggleContainer.Header>

@@ -24,7 +24,7 @@ export interface Fields {
   [data: string]: any;
 }
 
-export interface EventsCollectorParams {
+export interface EventsCollectorProps {
   fields?: Partial<Fields>;
 }
 

@@ -6,7 +6,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type SchedulerEnvImpl } from '../env';
-import { type Platform, type ReplicantsSummary, type TestParams, type TestPlan } from '../plan';
+import { type Platform, type ReplicantsSummary, type TestPlan, type TestProps } from '../plan';
 import { WsReplicant } from '../replicants/ws-replicant';
 
 export type EdgeWsTestSpec = {
@@ -30,7 +30,7 @@ export class EdgeWs implements TestPlan<EdgeWsTestSpec, EdgeWsResult> {
     };
   }
 
-  async run(env: SchedulerEnvImpl<EdgeWsTestSpec>, params: TestParams<EdgeWsTestSpec>): Promise<EdgeWsResult> {
+  async run(env: SchedulerEnvImpl<EdgeWsTestSpec>, params: TestProps<EdgeWsTestSpec>): Promise<EdgeWsResult> {
     const replicant = await env.spawn(WsReplicant, { platform: params.spec.platform });
     const topic = PublicKey.random().toHex();
     const result: EdgeWsResult = { testDuration: 0 };
@@ -59,5 +59,5 @@ export class EdgeWs implements TestPlan<EdgeWsTestSpec, EdgeWsResult> {
     return result;
   }
 
-  async analyze(params: TestParams<EdgeWsTestSpec>, summary: ReplicantsSummary, result: EdgeWsResult) {}
+  async analyze(params: TestProps<EdgeWsTestSpec>, summary: ReplicantsSummary, result: EdgeWsResult) {}
 }

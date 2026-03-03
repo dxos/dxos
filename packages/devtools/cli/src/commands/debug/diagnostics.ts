@@ -1,64 +1,25 @@
 //
-// Copyright 2022 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
-import { Flags } from '@oclif/core';
-import rev from 'git-rev-sync';
-import defaultsDeep from 'lodash.defaultsdeep';
+import * as Command from '@effect/cli/Command';
+import * as Options from '@effect/cli/Options';
+import * as Console from 'effect/Console';
+import * as Effect from 'effect/Effect';
 
-import { asyncTimeout } from '@dxos/async';
-import { type ConfigProto } from '@dxos/config';
+import { ClientService } from '@dxos/client';
 
-import { BaseCommand } from '../../base';
+export const handler = Effect.fn(function* (options: { humanize: boolean; truncate: boolean }) {
+  const client = yield* ClientService;
+  const data = yield* Effect.tryPromise(() => client.diagnostics(options));
+  yield* Console.log(JSON.stringify(data, null, 2));
+});
 
-export default class Diagnostics extends BaseCommand<typeof Diagnostics> {
-  static override enableJsonFlag = true;
-  static override description = 'Create diagnostics report.';
-  static override flags = {
-    ...BaseCommand.flags,
-    humanize: Flags.boolean({
-      description: 'Humanize keys.',
-    }),
-    truncate: Flags.boolean({
-      description: 'Truncate keys.',
-    }),
-  };
-
-  static override examples = [
-    {
-      description: 'Inspect diagnostics.',
-      command: "dx debug diagnostics --json --truncate | jq -r '.metrics'",
-    },
-    {
-      description: 'Upload diagnostics to GitHub.',
-      command: 'dx debug diagnostics --json --truncate | gh gist create --filename diagnostics.json',
-    },
-  ];
-
-  async run(): Promise<any> {
-    return await this.execWithClient(async ({ client }) => {
-      const data = await asyncTimeout(
-        client.diagnostics({ humanize: this.flags.humanize, truncate: this.flags.truncate }),
-        this.flags.timeout,
-      );
-
-      const config: ConfigProto = {
-        runtime: {
-          app: {
-            build: {
-              timestamp: rev.date().toISOString(),
-              commitHash: rev.long(),
-              branch: rev.branch(),
-            },
-          },
-        },
-      };
-
-      return defaultsDeep({}, data, {
-        diagnostics: {
-          config,
-        },
-      });
-    });
-  }
-}
+export const diagnostics = Command.make(
+  'diagnostics',
+  {
+    humanize: Options.boolean('humanize').pipe(Options.withDescription('Humanize keys.'), Options.withDefault(false)),
+    truncate: Options.boolean('truncate').pipe(Options.withDescription('Truncate keys.'), Options.withDefault(false)),
+  },
+  handler,
+).pipe(Command.withDescription('Create diagnostics report.'));

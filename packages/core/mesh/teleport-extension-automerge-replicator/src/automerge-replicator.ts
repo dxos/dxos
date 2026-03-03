@@ -16,7 +16,7 @@ import {
 import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 import { type ExtensionContext, type TeleportExtension } from '@dxos/teleport';
 
-export type AutomergeReplicatorParams = {
+export type AutomergeReplicatorProps = {
   /**
    * The peerId of local automerge repo.
    */
@@ -47,7 +47,7 @@ export type AutomergeReplicatorCallbacks = {
 
 const RPC_TIMEOUT = 10_000;
 
-const DEFAULT_RETRY_POLICY: NonNullable<AutomergeReplicatorParams['sendSyncRetryPolicy']> = {
+const DEFAULT_RETRY_POLICY: NonNullable<AutomergeReplicatorProps['sendSyncRetryPolicy']> = {
   retriesBeforeBackoff: 3,
   retryBackoff: 1_000,
   maxRetries: 10,
@@ -68,7 +68,7 @@ export class AutomergeReplicator implements TeleportExtension {
   private _extensionContext?: ExtensionContext;
 
   constructor(
-    private readonly _params: AutomergeReplicatorParams,
+    private readonly _params: AutomergeReplicatorProps,
     private readonly _callbacks: AutomergeReplicatorCallbacks = {},
   ) {}
 

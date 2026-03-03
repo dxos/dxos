@@ -6,7 +6,7 @@ import React, { useEffect, useState } from 'react';
 
 import { type ThemedClassName, Tooltip, useTimeout } from '@dxos/react-ui';
 import { Spinner, type SpinnerProps } from '@dxos/react-ui-sfx';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 const period = 3_000;
 

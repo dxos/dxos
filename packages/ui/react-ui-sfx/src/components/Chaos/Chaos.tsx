@@ -13,7 +13,7 @@ import * as THREE from 'three';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 import { type Specialize } from '@dxos/util';
 
 import { DofPointsMaterial, type ShaderOptions, SimulationMaterial } from '../../shaders';

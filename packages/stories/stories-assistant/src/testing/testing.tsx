@@ -5,46 +5,42 @@
 import * as Tool from '@effect/ai/Tool';
 import * as Toolkit from '@effect/ai/Toolkit';
 import * as Console from 'effect/Console';
+import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
 import {
+  ActivationEvent,
+  ActivationEvents,
   Capabilities,
-  Events,
-  IntentPlugin,
-  LayoutAction,
-  type Plugin,
-  type PluginContext,
-  SettingsPlugin,
-  allOf,
-  contributes,
-  createIntent,
-  createResolver,
-  defineModule,
-  definePlugin,
+  Capability,
+  type CapabilityManager,
+  Plugin,
+  PluginManager,
 } from '@dxos/app-framework';
-import { withPluginManager } from '@dxos/app-framework/testing';
+import { type WithPluginManagerOptions, withPluginManager } from '@dxos/app-framework/testing';
+import { useApp } from '@dxos/app-framework/ui';
+import { AppActivationEvents, AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { AiContextBinder, ArtifactId, GenericToolkit } from '@dxos/assistant';
-import { Agent, DesignBlueprint, Document, PlanningBlueprint, Research, Tasks } from '@dxos/assistant-toolkit';
+import { AgentFunctions, DesignBlueprint, MarkdownBlueprint, PlanningBlueprint } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
 import { Obj, Ref } from '@dxos/echo';
-import { Example, Function, Trigger } from '@dxos/functions';
+import { ExampleFunctions, Function, Trigger } from '@dxos/functions';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Assistant, AssistantAction, AssistantPlugin } from '@dxos/plugin-assistant';
-import { AttentionPlugin } from '@dxos/plugin-attention';
+import { OperationResolver } from '@dxos/operation';
+import { Assistant, AssistantOperation, AssistantPlugin } from '@dxos/plugin-assistant';
 import { AutomationPlugin } from '@dxos/plugin-automation';
 import { ClientCapabilities, ClientEvents, ClientPlugin } from '@dxos/plugin-client';
 import { type ClientPluginOptions } from '@dxos/plugin-client/types';
-import { DeckAction } from '@dxos/plugin-deck/types';
-import { GraphPlugin } from '@dxos/plugin-graph';
+import { DeckOperation } from '@dxos/plugin-deck/types';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { PreviewPlugin } from '@dxos/plugin-preview';
-import { SpacePlugin } from '@dxos/plugin-space';
-import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
-import { ThemePlugin } from '@dxos/plugin-theme';
+import { StorybookPlugin } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
 import { type Client, Config } from '@dxos/react-client';
-import { defaultTx } from '@dxos/react-ui-theme';
 import { AccessToken } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -88,91 +84,172 @@ const Toolkit$ = Toolkit.make(
 namespace TestingToolkit {
   export const Toolkit = Toolkit$;
 
-  export const createLayer = (_context: PluginContext) =>
+  export const createLayer = (_capabilities: CapabilityManager.CapabilityManager) =>
     Toolkit$.toLayer({
       'open-item': ({ id }) => Console.log('Called open-item', { id }),
     });
 }
 
+type LazyPluginsResult = {
+  plugins: Plugin.Plugin[];
+  types?: any[];
+};
+
 type DecoratorsProps = {
-  plugins?: Plugin[];
+  plugins?: Plugin.Plugin[];
+  lazyPlugins?: () => Promise<LazyPluginsResult>;
   accessTokens?: AccessToken.AccessToken[];
   onInit?: (props: { client: Client; space: Space }) => Promise<void>;
 } & (Omit<ClientPluginOptions, 'onClientInitialized' | 'onSpacesReady'> & Pick<StoryPluginOptions, 'onChatCreated'>);
 
 /**
- * Create storybook decorators.
+ * Builds the full plugin list for the plugin manager.
  */
-export const getDecorators = ({
+const buildPluginManagerOptions = ({
   types = [],
   plugins = [],
   accessTokens = [],
   onInit,
   onChatCreated,
   ...props
-}: DecoratorsProps) => [
-  withPluginManager({
-    plugins: [
-      // System plugins.
-      AttentionPlugin(),
-      AutomationPlugin(),
-      GraphPlugin(),
-      IntentPlugin(),
-      SettingsPlugin(),
-      SpacePlugin({}),
-      ClientPlugin({
-        types: [
-          Assistant.Chat,
-          Blueprint.Blueprint,
-          AccessToken.AccessToken,
-          Function.Function,
-          Markdown.Document,
-          Prompt.Prompt,
-          Trigger.Trigger,
-          ...types,
-        ],
-        onClientInitialized: async ({ client }) => {
+}: Omit<DecoratorsProps, 'lazyPlugins'>): WithPluginManagerOptions => ({
+  plugins: [
+    ...corePlugins(),
+    ClientPlugin({
+      types: [
+        Assistant.Chat,
+        Blueprint.Blueprint,
+        AccessToken.AccessToken,
+        Function.Function,
+        Markdown.Document,
+        Prompt.Prompt,
+        Trigger.Trigger,
+        ...types,
+      ],
+      onClientInitialized: ({ client }) =>
+        Effect.gen(function* () {
           log('onClientInitialized', { identity: client.halo.identity.get()?.did });
           // Abort if already initialized.
           if (client.halo.identity.get()) {
             return;
           }
 
-          await client.halo.createIdentity();
-          await client.spaces.waitUntilReady();
+          yield* Effect.promise(() => client.halo.createIdentity());
+          yield* Effect.promise(() => client.spaces.waitUntilReady());
 
           const space = client.spaces.default;
           // TODO(burdon): Should not require this.
           //  ERROR: invariant violation: Database was not initialized with root object.
           // TODO(burdon): onSpacesReady is never called.
-          await space.waitUntilReady();
+          yield* Effect.promise(() => space.waitUntilReady());
 
           // Add tokens.
           for (const accessToken of accessTokens) {
             space.db.add(Obj.clone(accessToken));
           }
 
-          await space.db.flush({ indexes: true });
-          await onInit?.({ client, space });
-          await space.db.flush({ indexes: true });
-        },
-        ...props,
-      }),
+          yield* Effect.promise(() => space.db.flush({ indexes: true }));
+          if (onInit) {
+            yield* Effect.promise(() => onInit({ client, space }));
+          }
+          yield* Effect.promise(() => space.db.flush({ indexes: true }));
+        }),
+      // Directly importing the "@dxos/client/opfs-worker" didn't work.
+      createOpfsWorker: () => new Worker(new URL('./opfs-worker', import.meta.url), { type: 'module' }),
+      ...props,
+    }),
 
-      // Cards
-      ThemePlugin({ tx: defaultTx }),
-      StorybookLayoutPlugin({}),
-      PreviewPlugin(),
+    // User plugins.
+    PreviewPlugin(),
+    AutomationPlugin(),
+    AssistantPlugin(),
 
-      // User plugins.
-      AssistantPlugin(),
-      StoryPlugin({ onChatCreated }),
+    // Test-specific.
+    StorybookPlugin({}),
+    StoryPlugin({ onChatCreated }),
+    ...plugins,
+  ],
+});
 
-      // Test-specific.
-      ...plugins,
-    ],
-  }),
-];
+/**
+ * Inner component that creates the plugin manager and renders the app.
+ * Separated to respect React hooks rules (hooks must be called unconditionally).
+ */
+const PluginManagerHost: React.FC<{
+  options: WithPluginManagerOptions;
+  children: React.ReactNode;
+  contextId: string;
+}> = ({ options, children, contextId }) => {
+  const manager = useMemo(() => {
+    const pluginManager = PluginManager.make({
+      pluginLoader: () => Effect.die(new Error('Not implemented')),
+      plugins: options.plugins ?? [],
+      core: (options.plugins ?? []).map(({ meta }) => meta.id),
+    });
+    return pluginManager;
+  }, [options]);
+
+  useEffect(() => {
+    const capability = Capability.contributes(Capabilities.ReactRoot, {
+      id: contextId,
+      root: () => <>{children}</>,
+    });
+
+    manager.capabilities.contribute({
+      ...capability,
+      module: 'dxos.org/app-framework/withPluginManager/lazy',
+    });
+
+    return () => {
+      manager.capabilities.remove(capability.interface, capability.implementation);
+    };
+  }, [manager, contextId, children]);
+
+  const App = useApp({ pluginManager: manager });
+  return <App />;
+};
+
+/**
+ * Create storybook decorators.
+ * Supports lazy plugin loading via the `lazyPlugins` option.
+ */
+export const getDecorators = ({ lazyPlugins, ...props }: DecoratorsProps) => {
+  if (lazyPlugins) {
+    return [
+      ((Story: React.FC, context: { id: string }) => {
+        const [lazyResult, setLazyResult] = useState<LazyPluginsResult | null>(null);
+
+        useEffect(() => {
+          void lazyPlugins().then(setLazyResult);
+        }, []);
+
+        const options = useMemo(
+          () =>
+            lazyResult
+              ? buildPluginManagerOptions({
+                  ...props,
+                  plugins: lazyResult.plugins,
+                  types: [...(props.types ?? []), ...(lazyResult.types ?? [])],
+                })
+              : null,
+          [lazyResult],
+        );
+
+        if (!options) {
+          return null;
+        }
+
+        return (
+          <PluginManagerHost options={options} contextId={context.id}>
+            <Story />
+          </PluginManagerHost>
+        );
+      }) as any,
+    ];
+  }
+
+  return [withPluginManager(buildPluginManagerOptions(props))];
+};
 
 /**
  * Creates access tokens from environment variables.
@@ -198,65 +275,73 @@ type StoryPluginOptions = {
   onChatCreated?: (props: { space: Space; chat: Assistant.Chat; binder: AiContextBinder }) => Promise<void>;
 };
 
-const StoryPlugin = definePlugin<StoryPluginOptions>(
-  {
-    id: 'example.com/plugin/testing',
-    name: 'Testing',
-  },
-  ({ onChatCreated }) => [
-    defineModule({
-      id: 'example.com/plugin/testing/module/testing',
-      activatesOn: Events.SetupArtifactDefinition,
-      activate: () => [
-        contributes(Capabilities.BlueprintDefinition, DesignBlueprint),
-        contributes(Capabilities.BlueprintDefinition, PlanningBlueprint),
-        contributes(Capabilities.Functions, [Agent.prompt]),
-        contributes(Capabilities.Functions, [Document.read, Document.update]),
-        contributes(Capabilities.Functions, [Tasks.read, Tasks.update]),
-        contributes(Capabilities.Functions, [Research.create, Research.research]),
-        contributes(Capabilities.Functions, [Example.reply]),
-      ],
-    }),
-    defineModule({
-      id: 'example.com/plugin/testing/module/toolkit',
-      activatesOn: Events.Startup,
-      activate: (context) => [
-        contributes(
-          Capabilities.Toolkit,
-          GenericToolkit.make(TestingToolkit.Toolkit, TestingToolkit.createLayer(context)),
+const StoryPlugin = Plugin.define<StoryPluginOptions>({
+  id: 'example.com/plugin/testing',
+  name: 'Testing',
+}).pipe(
+  Plugin.addModule({
+    id: 'example.com/plugin/testing/module/testing',
+    activatesOn: AppActivationEvents.SetupArtifactDefinition,
+    activate: () =>
+      Effect.succeed([
+        // TODO(burdon): Needs attention!!!
+        Capability.contributes(AppCapabilities.BlueprintDefinition, MarkdownBlueprint),
+        Capability.contributes(AppCapabilities.BlueprintDefinition, DesignBlueprint),
+        Capability.contributes(AppCapabilities.BlueprintDefinition, PlanningBlueprint),
+        Capability.contributes(AppCapabilities.Functions, MarkdownBlueprint.functions),
+        Capability.contributes(AppCapabilities.Functions, DesignBlueprint.functions),
+        Capability.contributes(AppCapabilities.Functions, PlanningBlueprint.functions),
+        Capability.contributes(AppCapabilities.Functions, Object.values(AgentFunctions)),
+        Capability.contributes(AppCapabilities.Functions, Object.values(ExampleFunctions)),
+      ]),
+  }),
+  Plugin.addModule({
+    id: 'example.com/plugin/testing/module/toolkit',
+    activatesOn: ActivationEvents.Startup,
+    activate: Effect.fnUntraced(function* () {
+      const capabilities = yield* Capability.Service;
+      return [
+        Capability.contributes(
+          AppCapabilities.Toolkit,
+          GenericToolkit.make(TestingToolkit.Toolkit, TestingToolkit.createLayer(capabilities)),
         ),
-      ],
+      ];
     }),
-    defineModule({
-      id: 'example.com/plugin/testing/module/setup',
-      activatesOn: allOf(Events.DispatcherReady, ClientEvents.SpacesReady),
-      activate: async (context) => {
-        const client = context.getCapability(ClientCapabilities.Client);
-        const space = client.spaces.default;
-        const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+  }),
+  Plugin.addModule({
+    id: 'example.com/plugin/testing/module/setup',
+    activatesOn: ActivationEvent.allOf(ActivationEvents.OperationInvokerReady, ClientEvents.SpacesReady),
+    activate: Effect.fnUntraced(function* () {
+      const { invoke } = yield* Capability.get(Capabilities.OperationInvoker);
+      const client = yield* Capability.get(ClientCapabilities.Client);
+      const space = client.spaces.default;
 
-        // Ensure workspace is set.
-        await dispatch(createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: space.id }));
+      // Ensure workspace is set.
+      yield* invoke(LayoutOperation.SwitchWorkspace, { subject: space.id });
 
-        // Create initial chat.
-        await dispatch(createIntent(AssistantAction.CreateChat, { space }));
-
-        return [];
-      },
+      // Create initial chat.
+      yield* invoke(AssistantOperation.CreateChat, { db: space.db });
     }),
-    defineModule({
-      id: 'example.com/plugin/testing/module/intent-resolver',
-      activatesOn: Events.SetupIntentResolver,
-      activate: () => [
-        contributes(Capabilities.IntentResolver, [
-          createResolver({
-            intent: DeckAction.ChangeCompanion,
-            resolve: () => ({}),
-          }),
-          createResolver({
-            intent: AssistantAction.CreateChat,
-            position: 'hoist',
-            resolve: async ({ space, name }) => {
+  }),
+  Plugin.addModule(({ onChatCreated }) => ({
+    id: 'example.com/plugin/testing/module/operation-resolver',
+    activatesOn: ActivationEvents.SetupOperationResolver,
+    activate: Effect.fnUntraced(function* () {
+      const client = yield* Capability.get(ClientCapabilities.Client);
+      return Capability.contributes(Capabilities.OperationResolver, [
+        OperationResolver.make({
+          operation: DeckOperation.ChangeCompanion,
+          handler: () => Effect.void,
+        }),
+        OperationResolver.make({
+          operation: AssistantOperation.CreateChat,
+          position: 'hoist',
+          handler: ({ db, name }) =>
+            Effect.gen(function* () {
+              const registry = yield* Capability.get(Capabilities.AtomRegistry);
+              const space = client.spaces.get(db.spaceId);
+              invariant(space, 'Space not found');
+
               const queue = space.queues.create();
               const traceQueue = space.queues.create();
               const chat = Obj.make(Assistant.Chat, {
@@ -264,23 +349,25 @@ const StoryPlugin = definePlugin<StoryPluginOptions>(
                 queue: Ref.fromDXN(queue.dxn),
                 traceQueue: Ref.fromDXN(traceQueue.dxn),
               });
-              const binder = new AiContextBinder(queue);
+              const binder = new AiContextBinder({ queue, registry });
 
               // Story-specific behaviour to allow chat creation to be extended.
               space.db.add(chat);
-              await space.db.flush({ indexes: true });
+              yield* Effect.tryPromise(() => space.db.flush({ indexes: true }));
 
-              await binder.open();
-              await onChatCreated?.({ space, chat, binder });
-              await binder.close();
+              if (onChatCreated) {
+                yield* Effect.tryPromise(() => binder.open());
+                yield* Effect.tryPromise(() => onChatCreated({ space, chat, binder }));
+                yield* Effect.tryPromise(() => binder.close());
+              }
 
               return {
-                data: { object: chat },
+                object: chat,
               };
-            },
-          }),
-        ]),
-      ],
+            }),
+        }),
+      ]);
     }),
-  ],
+  })),
+  Plugin.make,
 );

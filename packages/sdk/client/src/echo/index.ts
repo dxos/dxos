@@ -4,16 +4,8 @@
 
 export { SpaceId } from '@dxos/keys';
 export { isSpace, type Echo, type Space, SpaceSchema, SpaceProperties } from '@dxos/client-protocol';
-export {
-  compareForeignKeys,
-  createQueueDXN,
-  type ObjectMeta,
-  Ref,
-  RefArray,
-  type TypedObject,
-} from '@dxos/echo/internal';
+export { compareForeignKeys, createQueueDXN, type ObjectMeta, Ref, RefArray } from '@dxos/echo/internal';
 export { Entity, Relation, Type, Database } from '@dxos/echo';
-export { type Live, live, isLiveObject } from '@dxos/live-object';
 export {
   createObject,
   createSubscription,
@@ -47,8 +39,6 @@ export {
   FQ_ID_LENGTH,
   OBJECT_ID_LENGTH,
   SPACE_ID_LENGTH,
-  EchoObjectSchema,
-  ReactiveObjectSchema,
   type Progress,
   type PeerSyncState,
   type SpaceSyncStateMap,

@@ -10,9 +10,9 @@ import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
 import { Client } from '@dxos/client';
-import { live } from '@dxos/client/echo';
 import { Obj, Type } from '@dxos/echo';
-import { Ref, TypedObject } from '@dxos/echo/internal';
+import { Ref } from '@dxos/echo/internal';
+import { TestSchema } from '@dxos/echo/testing';
 import { log } from '@dxos/log';
 import { STORAGE_VERSION } from '@dxos/protocols';
 import { CreateEpochRequest } from '@dxos/protocols/proto/dxos/client/services';
@@ -83,22 +83,21 @@ const main = async () => {
     await space.waitUntilReady();
 
     space.db.add(
-      // TODO(dmaretskyi): Change to Obj.make.
-      live({
+      Obj.make(TestSchema.Expando, {
         value: 100,
         string: 'hello world!',
         array: ['one', 'two', 'three'],
-      }) as any,
+      }),
     );
     await space.db.flush();
 
     // Generate epoch.
-    const promise = space.db.coreDatabase.rootChanged.waitForCount(1);
+    const promise = space.internal.db.coreDatabase.rootChanged.waitForCount(1);
     await space.internal.createEpoch({ migration: CreateEpochRequest.Migration.PRUNE_AUTOMERGE_ROOT_HISTORY });
     await promise;
     await space.db.flush();
 
-    const expando = space.db.add(Obj.make(Type.Expando, { value: [1, 2, 3] }));
+    const expando = space.db.add(Obj.make(TestSchema.Expando, { value: [1, 2, 3] }));
     const todo = space.db.add(
       Obj.make(Todo, {
         name: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
@@ -116,7 +115,12 @@ const main = async () => {
     // Create dynamic schema.
 
     // TODO(burdon): Should just be example.org/type/Test
-    class TestType extends TypedObject({ typename: 'example.org/type/TestType', version: '0.1.0' })({}) {}
+    const TestType = Schema.Struct({}).pipe(
+      Type.object({
+        typename: 'example.org/type/TestType',
+        version: '0.1.0',
+      }),
+    );
     const [dynamicSchema] = await space.db.schemaRegistry.register([TestType]);
     await client.addTypes([TestType]);
     const object = space.db.add(Obj.make(dynamicSchema, {}));

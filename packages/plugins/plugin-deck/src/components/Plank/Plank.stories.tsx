@@ -5,20 +5,30 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
+import { Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AttentionPlugin } from '@dxos/plugin-attention';
-import { GraphPlugin } from '@dxos/plugin-graph';
-import { withTheme } from '@dxos/react-ui/testing';
+import { AppActivationEvents } from '@dxos/app-toolkit';
+import { corePlugins } from '@dxos/plugin-testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Stack } from '@dxos/react-ui-stack';
 
-import { DeckStateFactory } from '../../capabilities';
+import { DeckState } from '../../capabilities';
+import { meta as pluginMeta } from '../../meta';
 import { translations } from '../../translations';
 
 import { Plank } from './Plank';
 
+const TestPlugin = Plugin.define(pluginMeta).pipe(
+  Plugin.addModule({
+    id: Capability.getModuleTag(DeckState),
+    activatesOn: AppActivationEvents.AppGraphReady,
+    activate: () => DeckState(),
+  }),
+  Plugin.make,
+);
+
 const meta = {
-  title: 'plugins/plugin-deck/Plank',
+  title: 'plugins/plugin-deck/components/Plank',
   component: Plank,
   render: (args) => {
     return (
@@ -28,10 +38,10 @@ const meta = {
     );
   },
   decorators: [
-    withTheme,
+    withTheme(),
+    withLayout({ layout: 'fullscreen' }),
     withPluginManager({
-      plugins: [AttentionPlugin(), SettingsPlugin(), IntentPlugin(), GraphPlugin()],
-      capabilities: () => DeckStateFactory(),
+      plugins: [...corePlugins(), TestPlugin()],
     }),
   ],
   parameters: {

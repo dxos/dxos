@@ -95,6 +95,11 @@ function readPackage(packageJson, context) {
       break;
     }
 
+    case '@opentui/solid': {
+      packageJson.peerDependencies['solid-js'] = '^1.9.9';
+      break;
+    }
+
     case '@rollup/pluginutils': {
       packageJson.peerDependencies['rollup'] = '^2.0.0||^3.0.0';
       break;
@@ -104,6 +109,7 @@ function readPackage(packageJson, context) {
       packageJson.peerDependencies['vite'] = '^7.0.0';
       break;
     }
+
 
     // https://github.com/dxos/dxos/issues/3330
     case 'simple-hypercore-protocol': {

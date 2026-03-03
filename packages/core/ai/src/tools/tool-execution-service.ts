@@ -12,9 +12,8 @@ import * as Record from 'effect/Record';
 import { AiToolNotFoundError } from '../errors';
 
 /**
- *
+ * Provides handlers for tools.
  */
-// TODO(burdon): Comment.
 export class ToolExecutionService extends Context.Tag('@dxos/ai/ToolExecutionService')<
   ToolExecutionService,
   {

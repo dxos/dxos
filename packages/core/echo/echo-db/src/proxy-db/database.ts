@@ -7,11 +7,11 @@ import { inspect } from 'node:util';
 import { type CleanupFn, Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
-import { type Database, type Entity, Obj, type QueryAST, Ref } from '@dxos/echo';
+import { Database, type Entity, Obj, QueryAST, Ref } from '@dxos/echo';
 import { type AnyProperties, assertObjectModel, setRefResolver } from '@dxos/echo/internal';
+import { getProxyTarget, isProxy } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { DXN, type PublicKey, type SpaceId } from '@dxos/keys';
-import { getProxyTarget, isLiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { type DataService, type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
@@ -35,22 +35,25 @@ import { type ObjectMigration } from './object-migration';
 
 // TODO(burdon): Remove and progressively push methods to Database.Database.
 export interface EchoDatabase extends Database.Database {
+  /**
+   * Get notification about the data being saved to disk.
+   */
+  readonly saveStateChanged: ReadOnlyEvent<SaveStateChangedEvent>;
+
+  /** @deprecated */
+  readonly pendingBatch: ReadOnlyEvent<unknown>;
+
+  /** @deprecated */
+  readonly coreDatabase: CoreDatabase;
+
   /** @deprecated */
   get spaceKey(): PublicKey;
-  get spaceId(): SpaceId;
 
-  get graph(): HypergraphImpl;
+  // Overrides interface.
   get schemaRegistry(): DatabaseSchemaRegistry;
 
-  toJSON(): object;
-
-  /**
-   * @deprecated Use `ref` instead.
-   */
-  getObjectById<T extends Obj.Any = Obj.Obj<AnyProperties>>(
-    id: string,
-    opts?: Database.GetObjectByIdOptions,
-  ): T | undefined;
+  // Overrides interface.
+  get graph(): HypergraphImpl;
 
   /**
    * Run migrations.
@@ -68,37 +71,19 @@ export interface EchoDatabase extends Database.Database {
   subscribeToSyncState(ctx: Context, callback: (state: SpaceSyncState) => void): CleanupFn;
 
   /**
-   * Get notification about the data being saved to disk.
+   * Insert new objects.
+   * @deprecated Use `add` instead.
    */
-  readonly saveStateChanged: ReadOnlyEvent<SaveStateChangedEvent>;
-
-  /**
-   * @deprecated
-   */
-  readonly pendingBatch: ReadOnlyEvent<unknown>;
-
-  /**
-   * @deprecated
-   */
-  readonly coreDatabase: CoreDatabase;
+  insert(data: unknown): Promise<unknown>;
 
   /**
    * Update objects.
    * @deprecated Directly mutate the object.
    */
-  // TODO(burdon): Remove.
   update(filter: Filter.Any, operation: unknown): Promise<void>;
-
-  /**
-   * Insert new objects.
-   * @deprecated Use `add` instead.
-   */
-  // TODO(burdon): Remove.
-  // TODO(dmaretskyi): Support meta.
-  insert(data: unknown): Promise<unknown>;
 }
 
-export type EchoDatabaseParams = {
+export type EchoDatabaseProps = {
   graph: HypergraphImpl;
   dataService: DataService;
   queryService: QueryService;
@@ -121,6 +106,8 @@ export type EchoDatabaseParams = {
  * Implements EchoDatabase interface.
  */
 export class EchoDatabaseImpl extends Resource implements EchoDatabase {
+  readonly [Database.TypeId]: typeof Database.TypeId = Database.TypeId;
+
   /**
    * @internal
    */
@@ -128,17 +115,17 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
 
   private readonly _schemaRegistry: DatabaseSchemaRegistry;
 
-  private _rootUrl: string | undefined = undefined;
-
   /**
    * Mapping `object core` -> `root proxy` (User facing proxies).
    * @internal
    */
-  readonly _rootProxies = new Map<ObjectCore, Obj.Any>();
+  readonly _rootProxies = new Map<ObjectCore, Entity.Unknown>();
 
   readonly saveStateChanged: ReadOnlyEvent<SaveStateChangedEvent>;
 
-  constructor(params: EchoDatabaseParams) {
+  private _rootUrl: string | undefined = undefined;
+
+  constructor(params: EchoDatabaseProps) {
     super();
 
     this._coreDatabase = new CoreDatabase({
@@ -225,7 +212,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
       return undefined;
     }
 
-    return defaultMap(this._rootProxies, core, () => initEchoReactiveObjectRootProxy(core, this));
+    return defaultMap(this._rootProxies, core, () => initEchoReactiveObjectRootProxy(core, this)) as T;
   }
 
   makeRef<T extends AnyProperties = any>(dxn: DXN): Ref.Ref<T> {
@@ -242,6 +229,11 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
 
   private _query(query: Query.Any | Filter.Any, options?: Database.QueryOptions & QueryAST.QueryOptions) {
     query = Filter.is(query) ? Query.select(query) : query;
+
+    if (isQueryQualified(query.ast)) {
+      return this._coreDatabase.graph.query(query, options);
+    }
+
     return this._coreDatabase.graph.query(query, {
       ...options,
       spaceIds: [this.spaceId],
@@ -304,7 +296,9 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
 
   async runMigrations(migrations: ObjectMigration[]): Promise<void> {
     for (const migration of migrations) {
-      const objects = await this._coreDatabase.graph.query(Query.select(Filter.typeDXN(migration.fromType))).run();
+      const objects = await this._coreDatabase.graph
+        .query(Query.select(Filter.typeDXN(migration.fromType)).from(this))
+        .run();
       log.verbose('migrate', {
         from: migration.fromType,
         to: migration.toType,
@@ -338,16 +332,30 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   }
 
   /**
+   * Update service references after reconnection.
+   */
+  _updateServices({ dataService, queryService }: { dataService: DataService; queryService: QueryService }): void {
+    this._coreDatabase._updateServices({ dataService, queryService });
+  }
+
+  /**
+   * Handle reconnection to re-establish RPC streams.
+   */
+  async _onReconnect(): Promise<void> {
+    await this._coreDatabase._onReconnect();
+  }
+
+  /**
    * @internal
    */
-  async _loadObjectById(objectId: string, options: LoadObjectOptions = {}): Promise<Obj.Any | undefined> {
+  async _loadObjectById(objectId: string, options: LoadObjectOptions = {}): Promise<Entity.Unknown | undefined> {
     const core = await this._coreDatabase.loadObjectCoreById(objectId, options);
-    if (!core || core?.isDeleted()) {
+    if (!core || (core?.isDeleted() && !options.allowDeleted)) {
       return undefined;
     }
 
     const obj = defaultMap(this._rootProxies, core, () => initEchoReactiveObjectRootProxy(core, this));
-    invariant(isLiveObject(obj));
+    invariant(isProxy(obj));
     return obj;
   }
 
@@ -376,4 +384,14 @@ const createSchemaNotRegisteredError = (schema?: any) => {
   }
 
   return new Error(message);
+};
+
+const isQueryQualified = (query: QueryAST.Query): boolean => {
+  let isQualified = false;
+  QueryAST.visit(query, (node) => {
+    if (node.type === 'options' && (node.options.spaceIds !== undefined || node.options.queues !== undefined)) {
+      isQualified = true;
+    }
+  });
+  return isQualified;
 };

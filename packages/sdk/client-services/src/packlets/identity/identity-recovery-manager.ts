@@ -22,14 +22,14 @@ import {
 import { Timeframe } from '@dxos/timeframe';
 
 import { type Identity } from './identity';
-import { type JoinIdentityParams } from './identity-manager';
+import { type JoinIdentityProps } from './identity-manager';
 
 export class EdgeIdentityRecoveryManager {
   constructor(
     private readonly _keyring: Keyring,
     private readonly _edgeClient: EdgeHttpClient | undefined,
     private readonly _identityProvider: () => Identity | undefined,
-    private readonly _acceptRecoveredIdentity: (params: JoinIdentityParams) => Promise<Identity>,
+    private readonly _acceptRecoveredIdentity: (params: JoinIdentityProps) => Promise<Identity>,
   ) {}
 
   public async createRecoveryCredential({

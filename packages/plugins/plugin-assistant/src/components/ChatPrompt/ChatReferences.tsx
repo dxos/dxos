@@ -5,22 +5,21 @@
 import React from 'react';
 
 import { type AiContextBinder } from '@dxos/assistant';
-import { Obj } from '@dxos/echo';
-import { type Space } from '@dxos/react-client/echo';
+import { type Database, Obj } from '@dxos/echo';
 import { IconButton, type Label, type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { useContextObjects } from '../../hooks';
 import { meta } from '../../meta';
 
 export type ChatReferencesProps = ThemedClassName<{
   context: AiContextBinder;
-  space: Space;
+  db: Database.Database;
 }>;
 
-export const ChatReferences = ({ classNames, context, space }: ChatReferencesProps) => {
+export const ChatReferences = ({ classNames, context, db }: ChatReferencesProps) => {
   const { t } = useTranslation(meta.id);
-  const { objects, onUpdateObject } = useContextObjects({ space, context });
+  const { objects, onUpdateObject } = useContextObjects({ db, context });
 
   return (
     <ul className={mx('flex', classNames)}>
@@ -29,7 +28,7 @@ export const ChatReferences = ({ classNames, context, space }: ChatReferencesPro
         const typename = Obj.getTypename(obj);
         const label: Label = Obj.getLabel(obj) ?? (typename ? ['object name placeholder', { ns: typename }] : obj.id);
         return (
-          <li key={dxn.toString()} className='dx-tag plb-0 pis-2 flex items-center' data-hue='neutral'>
+          <li key={dxn.toString()} className='dx-tag py-0 ps-2 flex items-center' data-hue='neutral'>
             {toLocalizedString(label, t)}
             <IconButton
               icon='ph--x--bold'

@@ -12,14 +12,20 @@ import React, {
   useState,
 } from 'react';
 
-import { LayoutAction, createIntent } from '@dxos/app-framework';
-import { Surface, useCapability, useIntentDispatcher } from '@dxos/app-framework/react';
-import { IconButton, type Label, Main, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
+import { IconButton, type Label, Main, ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Tabs } from '@dxos/react-ui-tabs';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
-import { DeckCapabilities } from '../../capabilities';
-import { type DeckCompanion, getCompanionId, useBreakpoints, useDeckCompanions, useHoistStatusbar } from '../../hooks';
+import {
+  type DeckCompanion,
+  getCompanionId,
+  useBreakpoints,
+  useDeckCompanions,
+  useDeckState,
+  useHoistStatusbar,
+} from '../../hooks';
 import { meta } from '../../meta';
 import { getMode } from '../../types';
 import { layoutAppliesTopbar } from '../../util';
@@ -35,9 +41,9 @@ export type ComplementarySidebarProps = {
 
 export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => {
   const { t } = useTranslation(meta.id);
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
-  const layout = useCapability(DeckCapabilities.MutableDeckState);
-  const layoutMode = getMode(layout.deck);
+  const { invokeSync } = useOperationInvoker();
+  const { state, deck, updateState } = useDeckState();
+  const layoutMode = getMode(deck);
   const breakpoint = useBreakpoints();
   const topbar = layoutAppliesTopbar(breakpoint, layoutMode);
   const hoistStatusbar = useHoistStatusbar(breakpoint, layoutMode);
@@ -55,14 +61,17 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
     (event: MouseEvent) => {
       const nextValue = event.currentTarget.getAttribute('data-value') as string;
       if (nextValue === activeId) {
-        layout.complementarySidebarState = layout.complementarySidebarState === 'expanded' ? 'collapsed' : 'expanded';
+        updateState((state) => ({
+          ...state,
+          complementarySidebarState: state.complementarySidebarState === 'expanded' ? 'collapsed' : 'expanded',
+        }));
       } else {
         setInternalValue(nextValue);
-        layout.complementarySidebarState = 'expanded';
-        void dispatch(createIntent(LayoutAction.UpdateComplementary, { part: 'complementary', subject: nextValue }));
+        updateState((state) => ({ ...state, complementarySidebarState: 'expanded' }));
+        invokeSync(LayoutOperation.UpdateComplementary, { subject: nextValue });
       }
     },
-    [layout, activeId, dispatch],
+    [state.complementarySidebarState, activeId, invokeSync, updateState],
   );
 
   const data = useMemo(
@@ -76,30 +85,28 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
 
   useEffect(() => {
     if (!activeId) {
-      void dispatch(
-        createIntent(LayoutAction.UpdateComplementary, { part: 'complementary', options: { state: 'collapsed' } }),
-      );
+      invokeSync(LayoutOperation.UpdateComplementary, { state: 'collapsed' });
     }
-  }, [activeId, dispatch]);
+  }, [activeId, invokeSync]);
 
   return (
     <Main.ComplementarySidebar
       label={label}
       classNames={[
-        topbar && 'block-start-[calc(env(safe-area-inset-top)+var(--rail-size))]',
-        hoistStatusbar && 'block-end-[--statusbar-size]',
+        topbar && 'top-[calc(env(safe-area-inset-top)+var(--dx-rail-size))]',
+        hoistStatusbar && 'bottom-(--dx-statusbar-size)',
       ]}
     >
       <Tabs.Root orientation='vertical' verticalVariant='stateless' value={internalValue} classNames='contents'>
         <div
           role='none'
           className={mx(
-            'absolute z-[1] inset-block-0 inline-end-0 !is-[--r0-size]',
-            'pbs-[env(safe-area-inset-top)] pbe-[env(safe-area-inset-bottom)] border-is border-subduedSeparator',
-            'grid grid-cols-1 grid-rows-[1fr_min-content] bg-baseSurface contain-layout app-drag',
+            'absolute z-[1] inset-y-0 end-0 !w-(--dx-r0-size)',
+            'py-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] border-s border-subdued-separator',
+            'grid grid-cols-1 grid-rows-[1fr_min-content] bg-toolbar-surface dx-contain-layout dx-app-drag',
           )}
         >
-          <Tabs.Tablist classNames='grid grid-cols-1 auto-rows-[--rail-action] p-1 gap-1 !overflow-y-auto'>
+          <Tabs.Tablist classNames='grid grid-cols-1 auto-rows-(--dx-rail-action) p-1 gap-1 overflow-y-auto!'>
             {companions.map((companion) => (
               <Tabs.Tab key={getCompanionId(companion.id)} value={getCompanionId(companion.id)} asChild>
                 <IconButton
@@ -110,7 +117,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
                   data-value={getCompanionId(companion.id)}
                   variant={
                     activeId === getCompanionId(companion.id)
-                      ? layout.complementarySidebarState === 'expanded'
+                      ? state.complementarySidebarState === 'expanded'
                         ? 'primary'
                         : 'default'
                       : 'ghost'
@@ -121,11 +128,11 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
             ))}
           </Tabs.Tablist>
           {!hoistStatusbar && (
-            <div role='none' className='grid grid-cols-1 auto-rows-[--rail-item] p-1 overflow-y-auto'>
-              <Surface role='status-bar--r0-footer' limit={1} />
+            <div role='none' className='grid grid-cols-1 auto-rows-(--dx-rail-item) p-1 overflow-y-auto'>
+              <Surface.Surface role='status-bar--r0-footer' limit={1} />
             </div>
           )}
-          <div role='none' className='hidden lg:grid grid-cols-1 auto-rows-[--rail-action] p-1'>
+          <div role='none' className='hidden lg:grid grid-cols-1 auto-rows-(--dx-rail-action) p-1'>
             <ToggleComplementarySidebarButton />
           </div>
         </div>
@@ -136,10 +143,10 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
               value={getCompanionId(companion.id)}
               classNames={[
                 'absolute data-[state="inactive"]:-z-[1] overflow-hidden',
-                'inset-block-0 inline-start-0 is-[calc(100%-var(--r0-size))] lg:is-[--r1-size]',
-                'grid grid-cols-1 grid-rows-[var(--rail-size)_1fr_min-content] pbs-[env(safe-area-inset-top)]',
+                'inset-y-0 start-0 w-[calc(100%-var(--dx-r0-size))] lg:w-(--dx-r1-size)',
+                'grid grid-cols-1 grid-rows-[var(--dx-rail-size)_1fr_min-content] py-[env(safe-area-inset-top)]',
               ]}
-              {...(layout.complementarySidebarState !== 'expanded' && { inert: true })}
+              {...(state.complementarySidebarState !== 'expanded' && { inert: true })}
             >
               <ComplementarySidebarPanel
                 companion={companion}
@@ -171,26 +178,26 @@ const ComplementarySidebarPanel = ({ companion, activeId, data, hoistStatusbar }
     return null;
   }
 
-  const Wrapper = companion.properties.fixed ? Fragment : ScrollArea;
+  const Wrapper = companion.properties.fixed ? Fragment : ScrollAreaWrapper;
 
   return (
     <>
-      <div role='none' className='flex items-center p-1 gap-1 border-be border-subduedSeparator'>
+      <div role='none' className='flex items-center p-1 gap-1 border-b border-subdued-separator'>
         <IconButton
           label={toLocalizedString(companion.properties.label, t)}
           icon={companion.properties.icon}
           iconOnly
           tooltipSide='left'
           data-value={getCompanionId(companion.id)}
-          classNames='bs-10 is-10'
+          classNames='h-10 w-10'
           variant='default'
         />
-        <div role='none' className='pli-1'>
+        <div role='none' className='px-1'>
           {toLocalizedString(companion.properties.label, t)}
         </div>
       </div>
       <Wrapper>
-        <Surface
+        <Surface.Surface
           role={`deck-companion--${getCompanionId(companion.id)}`}
           data={data}
           fallback={PlankContentError}
@@ -200,15 +207,19 @@ const ComplementarySidebarPanel = ({ companion, activeId, data, hoistStatusbar }
       {!hoistStatusbar && (
         <div
           role='contentinfo'
-          className='flex flex-wrap justify-center items-center border-bs border-subduedSeparator pbs-1 pbe-[max(env(safe-area-inset-bottom),0.25rem)]'
+          className='flex flex-wrap justify-center items-center border-y border-subdued-separator pt-1 pb-[max(env(safe-area-inset-bottom),0.25rem)]'
         >
-          <Surface role='status-bar--r1-footer' limit={1} />
+          <Surface.Surface role='status-bar--r1-footer' limit={1} />
         </div>
       )}
     </>
   );
 };
 
-const ScrollArea = ({ children }: PropsWithChildren) => {
-  return <div className='flex flex-col grow overflow-x-hidden overflow-y-auto scrollbar-thin'>{children}</div>;
+const ScrollAreaWrapper = ({ children }: PropsWithChildren) => {
+  return (
+    <ScrollArea.Root thin orientation='vertical' classNames='grow'>
+      <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
+    </ScrollArea.Root>
+  );
 };

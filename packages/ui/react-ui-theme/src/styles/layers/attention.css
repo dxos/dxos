@@ -1,8 +1,0 @@
-@layer utilities {
-  /* If an element should apply attention-related color tokens, it should use this class. */
-  .attention-surface {
-    --surface-separator: transparent;
-    background-color: var(--dx-baseSurface);
-    border-color: var(--dx-separator);
-  }
-}

@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 
 import { EchoObjectSchema } from '../entities';
 
-import { LabelAnnotation, TypenameSchema, VersionSchema, getLabel } from './annotations';
+import { LabelAnnotation, TypenameSchema, VersionSchema, getLabelWithSchema } from './annotations';
 
 // TODO(dmaretskyi): Use one of the testing schemas.
 const TestObject = Schema.Struct({
@@ -51,7 +51,7 @@ describe('annotations', () => {
     });
   });
 
-  describe('getLabel', () => {
+  describe('getLabelWithSchema', () => {
     test('should return first available label value', ({ expect }) => {
       const obj: TestObject = {
         name: 'Primary Name',
@@ -59,7 +59,7 @@ describe('annotations', () => {
         other: 'Other',
       };
 
-      expect(getLabel(TestObject, obj)).toEqual('Primary Name');
+      expect(getLabelWithSchema(TestObject, obj)).toEqual('Primary Name');
     });
 
     test('should fallback to second path if first is undefined', ({ expect }) => {
@@ -69,7 +69,7 @@ describe('annotations', () => {
         other: 'Other',
       };
 
-      expect(getLabel(TestObject, obj)).toEqual('Fallback Name');
+      expect(getLabelWithSchema(TestObject, obj)).toEqual('Fallback Name');
     });
 
     test('should return undefined if no label paths resolve', ({ expect }) => {
@@ -79,7 +79,7 @@ describe('annotations', () => {
         other: 'Other',
       };
 
-      expect(getLabel(TestObject, obj)).toBeUndefined();
+      expect(getLabelWithSchema(TestObject, obj)).toBeUndefined();
     });
 
     test('should return label from echo object', ({ expect }) => {
@@ -90,7 +90,7 @@ describe('annotations', () => {
         other: 'Other',
       };
 
-      expect(getLabel(TestEchoSchema, obj)).toEqual('Primary Name');
+      expect(getLabelWithSchema(TestEchoSchema, obj)).toEqual('Primary Name');
     });
   });
 });

@@ -17,7 +17,7 @@ import {
 } from '@dxos/lit-ui';
 import { DxAvatar } from '@dxos/lit-ui/react';
 import { useId } from '@dxos/react-hooks';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { useIconHref, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
@@ -67,14 +67,7 @@ const AvatarLabel = forwardRef<HTMLSpanElement, AvatarLabelProps>(
     const Root = asChild ? Slot : Primitive.span;
     const { tx } = useThemeContext();
     const { labelId } = useAvatarContext('AvatarLabel');
-    return (
-      <Root
-        {...props}
-        id={labelId}
-        ref={forwardedRef}
-        className={tx('avatar.label', 'avatar__label', { srOnly }, classNames)}
-      />
-    );
+    return <Root {...props} id={labelId} ref={forwardedRef} className={tx('avatar.label', { srOnly }, classNames)} />;
   },
 );
 
@@ -93,7 +86,7 @@ const AvatarDescription = forwardRef<HTMLSpanElement, AvatarDescriptionProps>(
         {...props}
         id={descriptionId}
         ref={forwardedRef}
-        className={tx('avatar.description', 'avatar__description', { srOnly }, classNames)}
+        className={tx('avatar.description', { srOnly }, classNames)}
       />
     );
   },

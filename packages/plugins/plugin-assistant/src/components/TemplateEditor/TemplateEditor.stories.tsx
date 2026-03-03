@@ -57,7 +57,7 @@ const DefaultStory = ({ source }: TemplateEditorProps & { source: string }) => {
 
   return (
     <TemplateEditor
-      classNames='bg-baseSurface max-is-prose is-full'
+      classNames='bg-base-surface w-full max-w-prose-max-width'
       id={blueprint.id}
       template={blueprint.instructions}
     />
@@ -65,12 +65,12 @@ const DefaultStory = ({ source }: TemplateEditorProps & { source: string }) => {
 };
 
 const meta = {
-  title: 'plugins/plugin-assistant/TemplateEditor',
+  title: 'plugins/plugin-assistant/components/TemplateEditor',
   component: TemplateEditor as any,
   render: DefaultStory,
   decorators: [
-    withTheme,
-    withLayout({ container: 'column' }),
+    withTheme(),
+    withLayout({ layout: 'column' }),
     withClientProvider({
       types: [Blueprint.Blueprint],
       createIdentity: true,

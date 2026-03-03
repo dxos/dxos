@@ -5,7 +5,7 @@
 import { createKeyborg } from 'keyborg';
 import React, { type PropsWithChildren, createContext, useEffect, useMemo } from 'react';
 
-import { type Density, type Elevation, type ThemeFunction } from '@dxos/react-ui-types';
+import { type Density, type Elevation, type ThemeFunction, type ThemeMode } from '@dxos/ui-types';
 
 import { type SafeAreaPadding, useSafeArea } from '../../hooks';
 import { hasIosKeyboard } from '../../util';
@@ -14,14 +14,13 @@ import { ElevationProvider } from '../ElevationProvider';
 
 import { TranslationsProvider, type TranslationsProviderProps } from './TranslationsProvider';
 
-export type ThemeMode = 'dark' | 'light';
-
 export type ThemeContextValue = {
   tx: ThemeFunction<any>;
   themeMode: ThemeMode;
   hasIosKeyboard: boolean;
   safeAreaPadding?: SafeAreaPadding;
   noCache?: boolean;
+  platform?: 'mobile' | 'desktop';
 };
 
 /**
@@ -41,7 +40,7 @@ export const ThemeProvider = ({
   fallback = null,
   resourceExtensions,
   appNs,
-  tx = (_path, defaultClassName, _styleProps, ..._options) => defaultClassName,
+  tx = (_path, _styleProps, ..._options) => undefined,
   themeMode = 'dark',
   rootDensity = 'fine',
   ...rest
@@ -79,8 +78,8 @@ export const ThemeProvider = ({
 
 const handleInputModalityChange = (isUsingKeyboard: boolean) => {
   if (isUsingKeyboard) {
-    document.body.setAttribute('data-is-keyboard', 'true');
+    document.body.setAttribute('data-w-keyboard', 'true');
   } else {
-    document.body.removeAttribute('data-is-keyboard');
+    document.body.removeAttribute('data-w-keyboard');
   }
 };

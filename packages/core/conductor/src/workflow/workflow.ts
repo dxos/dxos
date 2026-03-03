@@ -11,9 +11,9 @@ import { type DXN } from '@dxos/keys';
 import { type GraphExecutor, compileOrThrow } from '../compiler';
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
 import {
-  type ComputeEffect,
   type ComputeGraphModel,
   type ComputeNode,
+  type ComputeResult,
   type Executable,
   NotExecuted,
   ValueBag,
@@ -32,7 +32,7 @@ export class Workflow {
     private readonly _resolvedNodeById: Map<string, Executable>,
   ) {}
 
-  run(input: ValueBag<any>): ComputeEffect<ValueBag<any>> {
+  run(input: ValueBag<any>): ComputeResult<ValueBag<any>> {
     const inputNodes = this._graph.nodes.filter((node) => node.type === NODE_INPUT);
     if (inputNodes.length !== 1) {
       throw new Error(`Ambiguous workflow(${this._dxn.toString()}) entrypoint, use runFrom(inputNodeId, args) method.`);
@@ -40,7 +40,7 @@ export class Workflow {
     return this.runFrom(inputNodes[0].id, input);
   }
 
-  runFrom(inputNodeId: string, input: ValueBag<any>): ComputeEffect<ValueBag<any>> {
+  runFrom(inputNodeId: string, input: ValueBag<any>): ComputeResult<ValueBag<any>> {
     const executor = this._executor.clone();
 
     let inputExists = false;
@@ -61,7 +61,7 @@ export class Workflow {
     const allAffectedNodes = executor.getAllDependantNodes(inputNodeId);
 
     return Effect.gen(this, function* () {
-      const tasks: ComputeEffect<ValueBag<any>>[] = allAffectedNodes.map((nodeId) => {
+      const tasks: ComputeResult<ValueBag<any>>[] = allAffectedNodes.map((nodeId) => {
         const executable = this._requireResolved(nodeId);
         const computingOutputs = executable.exec != null;
         const effect = computingOutputs ? executor.computeOutputs(nodeId) : executor.computeInputs(nodeId);

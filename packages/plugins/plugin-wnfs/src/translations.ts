@@ -12,6 +12,9 @@ export const translations = [
     'en-US': {
       [WnfsFile.File.typename]: {
         'typename label': 'File',
+        'typename label_zero': 'Files',
+        'typename label_one': 'File',
+        'typename label_other': 'Files',
         'object name placeholder': 'New file',
         'rename object label': 'Rename file',
         'delete object label': 'Delete file',

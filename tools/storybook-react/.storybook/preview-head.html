@@ -1,0 +1,28 @@
+<script>
+  window.global = window;
+</script>
+<style>
+  /* NOTE: Must be in sync with theme.css */
+  @layer properties, theme, dx-tokens, user-tokens, base, tw-base, dx-base, components, tw-components, dx-components, utilities;
+</style>
+<style>
+  /**
+   * Minimizes white flash when story reloads.
+   * NOTE: This doesn't override the white flash on hard reload.
+   * https://github.com/storybookjs/storybook/discussions/32392
+   *
+   * NOTE: color-scheme is handled by the theme CSS layers (dx-base).
+   * Setting it here unlayered would override layer-based dark mode toggling
+   * since unlayered CSS always beats layered CSS in the cascade.
+   */
+  @media (prefers-color-scheme: dark) {
+    html,
+    body,
+    .sb-preparing-story,
+    .sb-preparing-docs,
+    .sb-previewBlock {
+      background: var(--color-base-surface) !important;
+      color: var(--color-base-surface-text) !important;
+    }
+  }
+</style>

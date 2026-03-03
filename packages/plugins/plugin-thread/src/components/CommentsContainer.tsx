@@ -5,7 +5,7 @@
 import React, { useEffect } from 'react';
 
 import { Obj, Relation } from '@dxos/echo';
-import { Callout, Icon, Trans, useTranslation } from '@dxos/react-ui';
+import { Icon, Message, Trans, useTranslation } from '@dxos/react-ui';
 import { type AnchoredTo, type Thread } from '@dxos/types';
 
 import { meta } from '../meta';
@@ -40,20 +40,20 @@ export const CommentsContainer = ({ anchors, currentId, showResolvedThreads, ...
 
   if (filteredAnchors.length === 0) {
     return (
-      <div role='none' className='plb-cardSpacingBlock pli-cardSpacingInline'>
-        <Callout.Root>
-          <Callout.Title>
+      <div role='none' className='p-form-padding'>
+        <Message.Root>
+          <Message.Title>
             <Trans
               {...{
                 t,
                 i18nKey: 'no comments message',
                 components: {
-                  commentIcon: <Icon icon='ph--chat-text--regular' size={4} classNames='inline-block' />,
+                  commentIcon: <Icon icon='ph--chat-text--regular' size={4} classNames='w-block' />,
                 },
               }}
             />
-          </Callout.Title>
-        </Callout.Root>
+          </Message.Title>
+        </Message.Root>
       </div>
     );
   }

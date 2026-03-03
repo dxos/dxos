@@ -13,7 +13,7 @@ import TopLevelAwaitPlugin from 'vite-plugin-top-level-await';
 import WasmPlugin from 'vite-plugin-wasm';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
-import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
+import { ThemePlugin } from '@dxos/ui-theme/plugin';
 
 import { createConfig as createTestConfig } from '../../../vitest.base.config';
 
@@ -60,25 +60,12 @@ export default defineConfig({
     },
     ConfigPlugin({
       root: dirname,
-      env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY', 'PACKAGE_VERSION'],
+      env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_POSTHOG_API_KEY', 'DX_POSTHOG_API_HOST', 'DX_POSTHOG_FEEDBACK_SURVEY_ID', 'PACKAGE_VERSION'],
     }),
-    ThemePlugin({
-      root: dirname,
-      content: [
-        path.resolve(dirname, './index.html'),
-        path.resolve(dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        path.resolve(dirname, '../plugins/*/src/**/*.{js,ts,jsx,tsx}'),
-      ],
-    }),
+    ThemePlugin({}),
     TopLevelAwaitPlugin(),
     WasmPlugin(),
-    react({
-      tsDecorators: true,
-      plugins: [
-        // https://github.com/XantreDev/preact-signals/tree/main/packages/react#how-parser-plugins-works
-        ['@preact-signals/safe-react/swc', { mode: 'all' }],
-      ],
-    }),
+    react({ tsDecorators: true }),
     VitePWA({
       // TODO(wittjosiah): Remove once this has been released.
       selfDestroying: true,

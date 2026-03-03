@@ -21,10 +21,12 @@ import { createPortal } from 'react-dom';
 
 import { addEventListener } from '@dxos/async';
 import { runAndForwardErrors } from '@dxos/effect';
+import { log } from '@dxos/log';
 import { type ThemedClassName, useDynamicRef, useStateWithRef } from '@dxos/react-ui';
 import { useThemeContext } from '@dxos/react-ui';
+import { useTextEditor } from '@dxos/react-ui-editor';
 import {
-  type AutoScrollOptions,
+  type AutoScrollToProps,
   type StreamerOptions,
   type XmlTagsOptions,
   type XmlWidgetState,
@@ -37,16 +39,16 @@ import {
   navigateNextEffect,
   navigatePreviousEffect,
   preview,
-  scrollToBottomEffect,
-  smoothScroll,
+  scrollToLine,
+  scroller,
+  scrollerLineEffect,
   streamer,
-  useTextEditor,
   xmlTagContextEffect,
   xmlTagResetEffect,
   xmlTagUpdateEffect,
   xmlTags,
-} from '@dxos/react-ui-editor';
-import { mx } from '@dxos/react-ui-theme';
+} from '@dxos/ui-editor';
+import { mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import { createStreamer } from './stream';
@@ -70,10 +72,12 @@ export type MarkdownStreamProps = ThemedClassName<
   {
     debug?: boolean;
     content?: string;
+    autoScroll?: boolean; // TODO(burdon): On/off.
     onEvent?: (event: MarkdownStreamEvent) => void;
-  } & (XmlTagsOptions & StreamerOptions & AutoScrollOptions)
+  } & (XmlTagsOptions & StreamerOptions & AutoScrollToProps)
 >;
 
+// TODO(burdon): Initial content isn't formatted.
 export const MarkdownStream = forwardRef<MarkdownStreamController | null, MarkdownStreamProps>(
   ({ classNames, debug, content, registry, fadeIn, cursor, onEvent }, forwardedRef) => {
     const { themeMode } = useThemeContext();
@@ -92,14 +96,14 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
             syntaxHighlighting: true,
             slots: {
               scroll: {
-                // NOTE: Child widgets must have `max-is-[100cqi]`.
-                className: 'size-container pli-cardSpacingInline',
+                // NOTE: Child widgets must have `max-w-[100cqi]`.
+                className: 'dx-size-container p-form-padding',
               },
             },
           }),
-          createBasicExtensions({ lineWrapping: true, readOnly: true, scrollPastEnd: true }),
+          createBasicExtensions({ lineWrapping: true, readOnly: true, scrollPastEnd: false }),
           extendedMarkdown({ registry }),
-          smoothScroll(),
+          scroller({ overScroll: 64 }),
           debug
             ? []
             : [
@@ -109,7 +113,7 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
                 preview(),
                 xmlTags({ registry, setWidgets, bookmarks: ['prompt'] }),
                 streamer({ cursor, fadeIn }),
-                autoScroll({ autoScroll: false }),
+                autoScroll(),
               ],
         ].filter(isNonNullable),
       };
@@ -151,13 +155,31 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
     // Expose controller as API.
     const viewRef = useDynamicRef(view);
     useImperativeHandle(forwardedRef, () => {
+      const reset = async (text: string) => {
+        if (!viewRef.current) {
+          return;
+        }
+
+        viewRef.current.dispatch({
+          effects: [xmlTagContextEffect.of(null), xmlTagResetEffect.of(null)],
+          changes: [{ from: 0, to: viewRef.current.state.doc.length, insert: text }],
+          selection: EditorSelection.cursor(text.length),
+        });
+
+        scrollToLine(viewRef.current, { line: -1, behavior: 'instant' });
+
+        // New queue.
+        const queue = Effect.runSync(Queue.unbounded<string>());
+        setQueue(queue);
+      };
+
       return {
         get view() {
           return viewRef.current;
         },
         scrollToBottom: (behavior?: ScrollBehavior) => {
           viewRef.current?.dispatch({
-            effects: scrollToBottomEffect.of(behavior),
+            effects: scrollerLineEffect.of({ line: -1, behavior }),
           });
         },
         navigatePrevious: () => {
@@ -177,19 +199,12 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
           });
         },
         // Reset document.
-        reset: async (text: string) => {
-          viewRef.current?.dispatch({
-            effects: [xmlTagContextEffect.of(null), xmlTagResetEffect.of(null)],
-            changes: [{ from: 0, to: viewRef.current?.state.doc.length ?? 0, insert: text }],
-          });
-
-          // New queue.
-          const queue = Effect.runSync(Queue.unbounded<string>());
-          setQueue(queue);
-        },
+        reset,
         // Append to queue (and stream).
         append: async (text: string) => {
-          if (text.length) {
+          if (viewRef.current?.state.doc.length === 0) {
+            await reset(text);
+          } else if (text.length) {
             await runAndForwardErrors(Queue.offer(queueRef.current, text));
           }
         },
@@ -229,7 +244,7 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
     return (
       <>
         {/* Markdown editor. */}
-        <div ref={parentRef} className={mx('bs-full is-full overflow-hidden', classNames)} />
+        <div ref={parentRef} className={mx('h-full w-full overflow-hidden', classNames)} />
 
         {/* React widgets are rendered in portals outside of the editor. */}
         <ErrorBoundary>
@@ -250,7 +265,7 @@ class ErrorBoundary extends Component<PropsWithChildren, { hasError: boolean }> 
   }
 
   override componentDidCatch(error: unknown, info: ErrorInfo) {
-    console.error('ErrorBoundary caught:', error, info);
+    log.catch(error, info);
   }
 
   override render() {

@@ -30,7 +30,7 @@ test.describe('Basic tests', () => {
   });
 
   test('create identity, space is created by default', async () => {
-    await expect(host.page.getByTestId('spacePlugin.spaces')).toBeVisible();
+    await expect(host.page.getByTestId('spacePlugin.space')).toHaveCount(1);
     const plank = host.deck.plank();
     await expect(Markdown.getMarkdownTextboxWithLocator(plank.locator).first()).toHaveText(/.+/);
   });
@@ -42,7 +42,9 @@ test.describe('Basic tests', () => {
 
   test('create document', async () => {
     await host.createSpace();
-    await host.createObject({ type: 'Document', nth: 0 });
+    // Expand the Documents collection.
+    await host.toggleCollectionCollapsed(3);
+    await host.createObject({ type: 'Document' });
 
     const plank = host.deck.plank();
     const textBox = Markdown.getMarkdownTextboxWithLocator(plank.locator);

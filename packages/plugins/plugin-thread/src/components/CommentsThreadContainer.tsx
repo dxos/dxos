@@ -4,12 +4,11 @@
 
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { Obj, Ref, Relation } from '@dxos/echo';
+import { Obj, Relation } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
 import { getSpace, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { IconButton, Tag, Tooltip, useThemeContext, useTranslation } from '@dxos/react-ui';
-import { createBasicExtensions, createThemeExtensions, listener } from '@dxos/react-ui-editor';
-import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/react-ui-theme';
 import {
   MessageTextbox,
   type MessageTextboxProps,
@@ -17,7 +16,8 @@ import {
   type ThreadRootProps,
 } from '@dxos/react-ui-thread';
 import { type AnchoredTo, type Thread } from '@dxos/types';
-import { isNonNullable } from '@dxos/util';
+import { createBasicExtensions, createThemeExtensions, listener } from '@dxos/ui-editor';
+import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
 
 import { useStatus } from '../hooks';
 import { meta } from '../meta';
@@ -50,9 +50,10 @@ export const CommentsThreadContainer = ({
   const { t } = useTranslation(meta.id);
   const identity = useIdentity()!;
   const space = getSpace(anchor);
-  const members = useMembers(space?.key);
+  const members = useMembers(space?.id);
   const detached = !anchor.anchor;
   const thread = Relation.getSource(anchor) as Thread.Thread;
+  const [messages] = useObject(thread, 'messages');
   const activity = useStatus(space, Obj.getDXN(thread).toString());
   const threadScrollRef = useRef<HTMLDivElement | null>(null);
 
@@ -97,7 +98,7 @@ export const CommentsThreadContainer = ({
   return (
     <ThreadComponent.Root
       id={Obj.getDXN(thread).toString()}
-      classNames='pbs-2 border-be border-subduedSeparator last:border-none'
+      classNames='pt-2 border-b border-subdued-separator last:border-none'
       current={current}
       onClickCapture={handleAttend}
       onFocusCapture={handleAttend}
@@ -105,7 +106,7 @@ export const CommentsThreadContainer = ({
       <div
         role='none'
         className={mx(
-          'col-span-2 grid grid-cols-[var(--rail-size)_1fr_min-content]',
+          'col-span-2 grid grid-cols-[var(--dx-rail-size)_1fr_min-content]',
           hoverableControls,
           hoverableFocusedWithinControls,
         )}
@@ -144,12 +145,11 @@ export const CommentsThreadContainer = ({
         </div>
       </div>
 
-      {/** TODO(dmaretskyi): How's `thread.messages` undefined? */}
-      {Ref.Array.targets(thread.messages?.filter(isNonNullable) ?? []).map((message) => (
+      {messages?.map((ref) => (
         <MessageContainer
-          key={message.id}
+          key={ref.dxn.toString()}
           editable
-          message={message}
+          message={ref}
           members={members}
           onDelete={handleMessageDelete}
           onAcceptProposal={handleAcceptProposal}
@@ -166,8 +166,8 @@ export const CommentsThreadContainer = ({
 
       <ThreadComponent.Status activity={activity}>{t('activity message')}</ThreadComponent.Status>
 
-      {/* NOTE(thure): This can’t also be the `overflow-anchor` because `ScrollArea` injects an interceding node that contains this necessary ref’d element. */}
-      <div role='none' className='bs-px -mbs-px' ref={threadScrollRef} />
+      {/* NOTE(thure): This can’t also be the `dx-overflow-anchor` because `ScrollArea` injects an interceding node that contains this necessary ref’d element. */}
+      <div role='none' className='h-px -mt-px' ref={threadScrollRef} />
     </ThreadComponent.Root>
   );
 };

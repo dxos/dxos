@@ -3,4 +3,6 @@
 //
 
 export * from './icon';
+export * from './queue';
 export * from './view';
+export * from './subscription-target';

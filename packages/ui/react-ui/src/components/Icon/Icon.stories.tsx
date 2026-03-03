@@ -6,7 +6,7 @@ import { IconBase, type IconProps, type IconWeight } from '@phosphor-icons/react
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type FC, type ReactElement, type SVGProps, forwardRef } from 'react';
 
-import { getSize, mx } from '@dxos/react-ui-theme';
+import { getSize, mx } from '@dxos/ui-theme';
 
 import { withTheme } from '../../testing';
 
@@ -60,9 +60,9 @@ const DefaultStory = ({ CustomIcon }: { CustomIcon: FC<IconProps> }) => {
 };
 
 const meta = {
-  title: 'ui/react-ui-core/Icon',
+  title: 'ui/react-ui-core/components/Icon',
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'centered',
   },

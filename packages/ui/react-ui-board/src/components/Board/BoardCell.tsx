@@ -8,8 +8,8 @@ import React, { type PropsWithChildren, useEffect, useRef, useState } from 'reac
 import { type Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { Card } from '@dxos/react-ui-stack';
-import { mx } from '@dxos/react-ui-theme';
+import { Card } from '@dxos/react-ui-mosaic';
+import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
 
@@ -19,6 +19,8 @@ import { type CellLayout, type Position } from './types';
 
 type DragState = 'idle' | 'dragging';
 
+const BOARD_CELL_NAME = 'Board.Cell';
+
 export type BoardCellProps<T extends Type.Obj.Any = any> = ThemedClassName<
   PropsWithChildren<{
     item: T;
@@ -27,9 +29,10 @@ export type BoardCellProps<T extends Type.Obj.Any = any> = ThemedClassName<
   }>
 >;
 
+// TODO(burdon): Reconcile with Mosaic.Tile.
 export const BoardCell = ({ classNames, children, item, layout, draggable: isDraggable }: BoardCellProps) => {
   const { t } = useTranslation(translationKey);
-  const { grid: board, zoom, onSelect, onDelete, onMove } = useBoardContext(BoardCell.displayName);
+  const { grid: board, zoom, onSelect, onDelete, onMove } = useBoardContext(BOARD_CELL_NAME);
 
   const rootRef = useRef<HTMLDivElement | null>(null);
   const dragHandleRef = useRef<HTMLButtonElement | null>(null);
@@ -60,9 +63,8 @@ export const BoardCell = ({ classNames, children, item, layout, draggable: isDra
   }, [isDraggable, zoom]);
 
   return (
-    <Card.StaticRoot
+    <Card.Root
       ref={rootRef}
-      // TODO(burdon): Common fragment for placeholder opacity?
       classNames={mx(
         'absolute p-0 grid grid-rows-[min-content_1fr]',
         dragState === 'dragging' && 'opacity-50',
@@ -72,7 +74,8 @@ export const BoardCell = ({ classNames, children, item, layout, draggable: isDra
       onClick={() => onSelect?.(item.id)}
     >
       <Card.Toolbar>
-        <Card.DragHandle toolbarItem ref={dragHandleRef} />
+        <Card.DragHandle ref={dragHandleRef} />
+        {/* TODO(burdon): Title. */}
         <Card.ToolbarSeparator variant='gap' />
         {dragState !== 'dragging' && (
           <Card.ToolbarIconButton
@@ -84,11 +87,11 @@ export const BoardCell = ({ classNames, children, item, layout, draggable: isDra
           />
         )}
       </Card.Toolbar>
-      <div role='none' {...{ inert: true }} className='pointer-events-none min-bs-0 min-is-0'>
+      <div role='none' {...{ inert: true }} className='pointer-events-none min-h-0 min-w-0'>
         {children}
       </div>
-    </Card.StaticRoot>
+    </Card.Root>
   );
 };
 
-BoardCell.displayName = 'Board.Cell';
+BoardCell.displayName = BOARD_CELL_NAME;

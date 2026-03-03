@@ -5,15 +5,14 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { Filter, Type } from '@dxos/echo';
+import { Filter } from '@dxos/echo';
 import { ClientProvider } from '@dxos/react-client';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
-import { useIdentity } from '@dxos/react-client/halo';
+import { useDatabase, useQuery } from '@dxos/react-client/echo';
+import { Expando } from '@dxos/schema';
 
 export const App = () => {
-  useIdentity();
-  const [space] = useSpaces();
-  const tasks = useQuery(space, Filter.type(Type.Expando, { type: 'task' }));
+  const db = useDatabase();
+  const tasks = useQuery(db, Filter.type(Expando.Expando, { type: 'task' }));
   return (
     <>
       {tasks.map((task) => (

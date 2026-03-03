@@ -2,17 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { effect } from '@preact/signals-core';
 import type * as Schema from 'effect/Schema';
 import type * as SchemaAST from 'effect/SchemaAST';
 
-import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { assertArgument } from '@dxos/invariant';
 import { deepMapValues } from '@dxos/util';
 
-import { EchoSchema, PersistentSchema, getSchemaTypename, makeObject, toJsonSchema } from '../internal';
-
-registerSignalsRuntime();
+import { EchoSchema, PersistentSchema, getSchemaTypename, makeObject, subscribe, toJsonSchema } from '../internal';
 
 /**
  * Create a reactive mutable schema that updates when the JSON schema is updated.
@@ -25,8 +21,7 @@ export const createEchoSchema = (schema: Schema.Schema.AnyNoContext, version = '
   const echoSchema = new EchoSchema(makeObject(PersistentSchema, { typename, version, jsonSchema }));
 
   // TODO(burdon): Unsubscribe is never called.
-  effect(() => {
-    const _ = echoSchema.jsonSchema;
+  subscribe(echoSchema.persistentSchema, () => {
     echoSchema._invalidate();
   });
 
@@ -60,17 +55,29 @@ export const prepareAstForCompare = (obj: SchemaAST.AST): any =>
     return recurse(value);
   });
 
-// TODO(burdon): Use @dxos/util.
-export const updateCounter = (touch: () => void) => {
-  let updateCount = -1;
-  const unsubscribe = effect(() => {
-    touch();
-    updateCount++;
-  });
+/**
+ * Creates an update counter that tracks changes to reactive objects.
+ * @param objects - Reactive objects to subscribe to.
+ * @returns An object with a count property and Symbol.dispose for cleanup.
+ */
+export const updateCounter = (...objects: object[]) => {
+  let updateCount = 0;
+
+  const unsubscribes = objects.map((obj) =>
+    subscribe(obj, () => {
+      updateCount++;
+    }),
+  );
+
+  const unsubscribeAll = () => {
+    for (const unsub of unsubscribes) {
+      unsub();
+    }
+  };
 
   return {
     // https://github.com/tc39/proposal-explicit-resource-management
-    [Symbol.dispose]: unsubscribe,
+    [Symbol.dispose]: unsubscribeAll,
     get count() {
       return updateCount;
     },

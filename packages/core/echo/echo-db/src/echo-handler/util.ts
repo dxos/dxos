@@ -3,17 +3,16 @@
 //
 
 import { Obj } from '@dxos/echo';
-import { type AnyProperties } from '@dxos/echo/internal';
-import { type ForeignKey, Reference } from '@dxos/echo-protocol';
-import { invariant } from '@dxos/invariant';
-import { type Live, getProxyTarget } from '@dxos/live-object';
+import { getProxyTarget } from '@dxos/echo/internal';
+import { type ForeignKey } from '@dxos/echo-protocol';
+import { DXN } from '@dxos/keys';
 
 import { type EchoDatabase } from '../proxy-db';
 
-import { type AnyLiveObject, isEchoObject } from './echo-handler';
+import { isEchoObject } from './echo-object-utils';
 import { type ProxyTarget, symbolInternals } from './echo-proxy-target';
 
-export const getDatabaseFromObject = (obj: Live<any>): EchoDatabase | undefined => {
+export const getDatabaseFromObject = (obj: any): EchoDatabase | undefined => {
   if (!isEchoObject(obj)) {
     return undefined;
   }
@@ -23,20 +22,16 @@ export const getDatabaseFromObject = (obj: Live<any>): EchoDatabase | undefined 
 };
 
 /**
- * @deprecated
+ * @deprecated Use `DXN.fromSpaceAndObjectId(spaceId, obj.id)` instead.
  */
-export const getReferenceWithSpaceKey = (obj: AnyLiveObject<any>): Reference | undefined => {
-  invariant(obj);
+export const getDXNWithSpaceKey = (obj: Obj.Any): DXN | undefined => {
   const db = getDatabaseFromObject(obj);
-  return db && Reference.fromObjectIdAndSpaceKey(obj.id, db.spaceKey);
+  return db && DXN.fromSpaceAndObjectId(db.spaceId, obj.id);
 };
 
 // TODO(burdon): Factor out.
 // TODO(burdon): Impl query by meta.
-export const findObjectWithForeignKey = <T extends AnyProperties>(
-  objects: AnyLiveObject<T>[],
-  foreignKey: ForeignKey,
-) => {
+export const findObjectWithForeignKey = <T extends Obj.Unknown>(objects: T[], foreignKey: ForeignKey) => {
   return objects.find((result) => {
     return Obj.getMeta(result).keys.find(({ source, id }) => source === foreignKey.source && id === foreignKey.id);
   });

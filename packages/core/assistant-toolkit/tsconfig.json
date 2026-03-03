@@ -39,10 +39,16 @@
       "path": "../../sdk/app-framework"
     },
     {
+      "path": "../../sdk/client-protocol"
+    },
+    {
       "path": "../../sdk/schema"
     },
     {
       "path": "../../sdk/types"
+    },
+    {
+      "path": "../../ui/react-ui-mosaic"
     },
     {
       "path": "../../ui/react-ui-syntax-highlighter"

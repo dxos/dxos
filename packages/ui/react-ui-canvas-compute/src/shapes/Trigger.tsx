@@ -7,6 +7,7 @@ import React, { useEffect } from 'react';
 
 import { VoidInput } from '@dxos/conductor';
 import { Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+import { type Mutable } from '@dxos/echo/internal';
 import { Trigger, TriggerEvent } from '@dxos/functions';
 import { DXN, SpaceId } from '@dxos/keys';
 import { useSpace } from '@dxos/react-client/echo';
@@ -23,7 +24,8 @@ export const TriggerShape = Schema.extend(
     functionTrigger: Schema.optional(Type.Ref(Trigger.Trigger)),
   }),
 );
-export type TriggerShape = Schema.Schema.Type<typeof TriggerShape>;
+
+export interface TriggerShape extends Schema.Schema.Type<typeof TriggerShape> {}
 
 export type CreateTriggerProps = CreateShapeProps<Omit<TriggerShape, 'functionTrigger'>> & {
   spaceId?: SpaceId;
@@ -51,7 +53,9 @@ export const TriggerComponent = ({ shape }: TriggerComponentProps) => {
 
   useEffect(() => {
     if (functionTrigger && !functionTrigger.spec) {
-      functionTrigger.spec = createTriggerSpec({ triggerKind: 'email', spaceId: space?.id });
+      Obj.change(functionTrigger, (t) => {
+        t.spec = createTriggerSpec({ triggerKind: 'email', spaceId: space?.id }) as Mutable<Trigger.Spec>;
+      });
     }
   }, [functionTrigger, functionTrigger?.spec]);
 
@@ -61,7 +65,9 @@ export const TriggerComponent = ({ shape }: TriggerComponentProps) => {
 
   const setKind = (kind: Trigger.Kind) => {
     if (functionTrigger?.spec?.kind !== kind) {
-      functionTrigger!.spec = createTriggerSpec({ triggerKind: kind, spaceId: space?.id });
+      Obj.change(functionTrigger!, (t) => {
+        t.spec = createTriggerSpec({ triggerKind: kind, spaceId: space?.id }) as Mutable<Trigger.Spec>;
+      });
     }
   };
 
@@ -85,7 +91,7 @@ export const TriggerComponent = ({ shape }: TriggerComponentProps) => {
 const TriggerKindSelect = ({ value, onValueChange }: Pick<SelectRootProps, 'value' | 'onValueChange'>) => {
   return (
     <Select.Root value={value} onValueChange={onValueChange}>
-      <Select.TriggerButton variant='ghost' classNames='is-full !pli-0' />
+      <Select.TriggerButton variant='ghost' classNames='w-full px-0!' />
       <Select.Portal>
         <Select.Content>
           <Select.ScrollUpButton />

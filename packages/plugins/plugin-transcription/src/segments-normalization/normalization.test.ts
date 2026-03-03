@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { effect } from '@preact/signals-core';
 import { describe, test } from 'vitest';
 
 import { scheduleTaskInterval } from '@dxos/async';
@@ -99,7 +98,7 @@ describe.skip('SentenceNormalization', () => {
     }
 
     log.info('sentences', {
-      originalMessages: JSON.stringify(messages, null, 2),
+      messages: JSON.stringify(messages, null, 2),
       sentences: JSON.stringify(sentences, null, 2),
     });
     throw new Error('test');
@@ -133,10 +132,6 @@ describe.skip('SentenceNormalization', () => {
 
     // Start normalizer.
     await normalizer.open();
-    effect(() => {
-      log.info('normalizer');
-      log.info(JSON.stringify(queue.objects, null, 2));
-    });
 
     await new Promise(() => {});
   });

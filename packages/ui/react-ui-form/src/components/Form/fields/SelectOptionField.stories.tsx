@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import React, { useState } from 'react';
 
 import { SelectOption } from '@dxos/echo/internal';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../../translations';
 import { TestLayout } from '../../testing';
@@ -50,7 +50,7 @@ const meta = {
   title: 'ui/react-ui-form/SelectOptionField',
   component: SelectOptionField as any,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
     translations,

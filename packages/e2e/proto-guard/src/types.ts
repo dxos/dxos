@@ -4,11 +4,15 @@
 
 import * as Schema from 'effect/Schema';
 
-import { TypedObject } from '@dxos/echo/internal';
+import { Type } from '@dxos/echo';
 
-export class Todo extends TypedObject({
-  typename: 'example.org/type/Todo',
-  version: '0.1.0',
-})({
+export const Todo = Schema.Struct({
   name: Schema.optional(Schema.String),
-}) {}
+}).pipe(
+  Type.object({
+    typename: 'example.org/type/Todo',
+    version: '0.1.0',
+  }),
+);
+
+export interface Todo extends Schema.Schema.Type<typeof Todo> {}

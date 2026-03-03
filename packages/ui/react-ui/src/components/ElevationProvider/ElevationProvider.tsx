@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren, createContext } from 'react';
 
-import { type Elevation } from '@dxos/react-ui-types';
+import { type Elevation } from '@dxos/ui-types';
 
 export interface ElevationContextValue {
   elevation?: Elevation;

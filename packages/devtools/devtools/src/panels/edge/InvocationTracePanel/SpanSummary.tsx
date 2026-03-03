@@ -7,7 +7,7 @@ import React, { type FC, useEffect, useMemo, useState } from 'react';
 
 import { type InvocationSpan } from '@dxos/functions-runtime';
 import { InvocationOutcome } from '@dxos/functions-runtime';
-import { type Space } from '@dxos/react-client/echo';
+import { type Database } from '@dxos/react-client/echo';
 import { type ChromaticPalette, IconButton, Tag } from '@dxos/react-ui';
 
 import { useFunctionNameResolver } from './hooks';
@@ -20,12 +20,12 @@ const InvocationColor: Record<InvocationOutcome, ChromaticPalette> = {
 };
 
 type SpanSummaryProps = {
-  space?: Space;
+  db?: Database.Database;
   span: InvocationSpan;
   onClose: () => void;
 };
 
-export const SpanSummary: FC<SpanSummaryProps> = ({ space, span, onClose }) => {
+export const SpanSummary: FC<SpanSummaryProps> = ({ db, span, onClose }) => {
   const [currentDuration, setCurrentDuration] = useState<number | undefined>(undefined);
 
   useEffect(() => {
@@ -45,7 +45,7 @@ export const SpanSummary: FC<SpanSummaryProps> = ({ space, span, onClose }) => {
   }, [span]);
 
   const targetDxn = useMemo(() => span.invocationTarget?.dxn, [span.invocationTarget]);
-  const resolver = useFunctionNameResolver({ space });
+  const resolver = useFunctionNameResolver({ db });
   const targetName = useMemo(() => resolver(targetDxn), [targetDxn, resolver]);
 
   const timestamp = useMemo(() => formatDate(span.timestamp, 'yyyy-MM-dd HH:mm:ss'), [span.timestamp]);
@@ -54,8 +54,8 @@ export const SpanSummary: FC<SpanSummaryProps> = ({ space, span, onClose }) => {
 
   return (
     <div className='p-2 overflow-auto' role='none'>
-      <div className='is-flex justify-between items-start' role='none'>
-        <div className='is-full flex flex-row justify-between' role='none'>
+      <div className='flex justify-between items-start' role='none'>
+        <div className='w-full flex flex-row justify-between' role='none'>
           <h3 className='text-lg font-medium mb-1'>{targetName}</h3>
           <IconButton icon='ph--x--regular' iconOnly label='Close panel' onClick={onClose} />
         </div>
@@ -73,7 +73,7 @@ export const SpanSummary: FC<SpanSummaryProps> = ({ space, span, onClose }) => {
       </div>
 
       {span.error && (
-        <div className='mlb-2 text-sm font-medium'>
+        <div className='my-2 text-sm font-medium'>
           {span.error.name}: {span.error.message}
         </div>
       )}
@@ -82,7 +82,7 @@ export const SpanSummary: FC<SpanSummaryProps> = ({ space, span, onClose }) => {
         <div className='mt-3'>
           <details className='text-sm'>
             <summary className='cursor-pointer font-medium'>Input Data</summary>
-            <pre className='mt-2 p-2 bg-neutral/5 rounded text-xs overflow-auto'>
+            <pre className='mt-2 p-2 bg-neutral/5 rounded-sm text-xs overflow-auto'>
               {JSON.stringify(span.input, null, 2)}
             </pre>
           </details>

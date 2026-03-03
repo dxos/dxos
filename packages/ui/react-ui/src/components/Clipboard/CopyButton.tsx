@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { mx } from '@dxos/react-ui-theme';
+import { mx, osTranslations } from '@dxos/ui-theme';
 
 import { Button, type ButtonProps, IconButton } from '../Button';
 import { Icon, type IconProps } from '../Icon';
@@ -18,10 +18,10 @@ export type CopyButtonProps = ButtonProps &
     value: string;
   };
 
-const inactiveLabelStyles = 'invisible bs-px -mbe-px overflow-hidden';
+const inactiveLabelStyles = 'invisible h-px -mb-px overflow-hidden';
 
 export const CopyButton = ({ classNames, value, size = 5, ...props }: CopyButtonProps) => {
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(osTranslations);
   const { textValue, setTextValue } = useClipboard();
   const isCopied = textValue === value;
   return (
@@ -32,11 +32,11 @@ export const CopyButton = ({ classNames, value, size = 5, ...props }: CopyButton
       data-testid='copy-invitation'
     >
       <div role='none' className={mx('flex gap-1 items-center', isCopied && inactiveLabelStyles)}>
-        <span className='pli-1'>{t('copy label')}</span>
+        <span className='px-1'>{t('copy label')}</span>
         <Icon icon='ph--copy--regular' size={size} />
       </div>
       <div role='none' className={mx('flex gap-1 items-center', !isCopied && inactiveLabelStyles)}>
-        <span className='pli-1'>{t('copy success label')}</span>
+        <span className='px-1'>{t('copy success label')}</span>
         <Icon icon='ph--check--regular' size={size} />
       </div>
     </Button>
@@ -55,7 +55,7 @@ export const CopyButtonIconOnly = ({
   variant,
   ...props
 }: TooltipScopedProps<CopyButtonIconOnlyProps>) => {
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(osTranslations);
   const { textValue, setTextValue } = useClipboard();
   const isCopied = textValue === value;
   const label = isCopied ? t('copy success label') : (props.label ?? t('copy label'));

@@ -1,4 +1,4 @@
-type: application
+layer: application
 language: typescript
 tags:
   - typecheck
@@ -10,7 +10,7 @@ tasks:
       mergeOutputs: replace
     outputs: []
   bundle:
-    command: astro build
+    command: pnpm exec astro build
     deps:
       - ^:build
       - build
@@ -22,14 +22,14 @@ tasks:
       - .astro
       - dist
   prebuild:
-    command: astro sync
+    command: pnpm exec astro sync
     inputs:
       - astro.config.ts
       - '@group(sources)'
     outputs:
       - .astro
   serve:
-    command: astro dev
+    command: pnpm exec astro dev
     deps:
       - ^:build
       - typedoc

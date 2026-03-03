@@ -5,9 +5,10 @@
 import React, { type ForwardedRef, cloneElement, forwardRef } from 'react';
 
 import { Button, Icon, useTranslation } from '@dxos/react-ui';
-import { descriptionText, mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { Heading } from '../../components';
+import { translationKey } from '../../translations';
 
 import { type JoinPanelMode } from './JoinPanelProps';
 
@@ -21,13 +22,13 @@ export interface JoinSpaceHeadingProps {
 // TODO(wittjosiah): Accesses the space properties directly which will trigger ECHO warnings without observer.
 export const JoinHeading = forwardRef(
   ({ mode, titleId, exitActionParent, onExit }: JoinSpaceHeadingProps, forwardedRef: ForwardedRef<HTMLDivElement>) => {
-    const { t } = useTranslation('os');
+    const { t } = useTranslation(translationKey);
 
     const exitButton = (
       <Button
         variant='ghost'
         {...(onExit && { onClick: onExit })}
-        classNames={mx(descriptionText, 'plb-0 pli-2 absolute block-start-0 inline-end-0 z-[1]')}
+        classNames={mx('text-description', 'py-0 px-2 absolute top-0 right-0 z-[1]')}
         data-testid='join-exit'
       >
         <Icon icon='ph--x--bold' size={4} />

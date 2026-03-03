@@ -1,14 +1,13 @@
-type: library
+layer: library
 language: typescript
 tags:
   - ts-build
   - pack
   - storybook
+  - ts-test-storybook
 tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
+      - '--entryPoint=src/cli/index.ts'
       - '--entryPoint=src/types/index.ts'
-      - '--platform=browser'
-      - '--platform=node'
-      - '--preactSignalTracking'

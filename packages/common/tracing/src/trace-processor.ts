@@ -25,13 +25,13 @@ export type Diagnostics = {
   logs: LogEntry[];
 };
 
-export type TraceResourceConstructorParams = {
+export type TraceResourceConstructorProps = {
   constructor: { new (...args: any[]): {} };
   instance: any;
   annotation?: symbol;
 };
 
-export type TraceSpanParams = {
+export type TraceSpanProps = {
   instance: any;
   // TODO(wittjosiah): Rename to `name`.
   methodName: string;
@@ -122,7 +122,7 @@ export class TraceProcessor {
    * @internal
    */
   // TODO(burdon): Comment.
-  createTraceResource(params: TraceResourceConstructorParams): void {
+  createTraceResource(params: TraceResourceConstructorProps): void {
     const id = this.resources.size;
 
     // Init metrics counters.
@@ -158,7 +158,7 @@ export class TraceProcessor {
     return new TraceSender(this);
   }
 
-  traceSpan(params: TraceSpanParams): TracingSpan {
+  traceSpan(params: TraceSpanProps): TracingSpan {
     const span = new TracingSpan(this, params);
     this._flushSpan(span);
     return span;
@@ -381,7 +381,7 @@ export class TracingSpan {
 
   constructor(
     private _traceProcessor: TraceProcessor,
-    params: TraceSpanParams,
+    params: TraceSpanProps,
   ) {
     this.id = TracingSpan.nextId++;
     this.methodName = params.methodName;

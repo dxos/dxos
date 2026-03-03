@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
-import { GeneratorAnnotation, SystemTypeAnnotation } from '@dxos/echo/internal';
+import { GeneratorAnnotation, LabelAnnotation, SystemTypeAnnotation } from '@dxos/echo/internal';
 import { defineObjectMigration } from '@dxos/echo-db';
 import { type MakeOptional } from '@dxos/util';
 
@@ -27,24 +27,23 @@ export const Message = Schema.Struct({
     Schema.annotations({ description: 'ISO date string when the message was sent.' }),
     GeneratorAnnotation.set('date.iso8601'),
   ),
-  sender: Schema.mutable(Actor.Actor).pipe(Schema.annotations({ description: 'Identity of the message sender.' })),
-  blocks: Schema.mutable(Schema.Array(ContentBlock.Any)).annotations({
+  sender: Actor.Actor.pipe(Schema.annotations({ description: 'Identity of the message sender.' })),
+  blocks: Schema.Array(ContentBlock.Any).annotations({
     description: 'Contents of the message.',
     default: [],
   }),
   // TODO(dmaretskyi): Add tool call ID here.
   properties: Schema.optional(
-    Schema.mutable(
-      Schema.Record({ key: Schema.String, value: Schema.Any }).annotations({
-        description: 'Custom properties for specific message types (e.g. attention context, email subject, etc.).',
-      }),
-    ),
+    Schema.Record({ key: Schema.String, value: Schema.Any }).annotations({
+      description: 'Custom properties for specific message types (e.g. attention context, email subject, etc.).',
+    }),
   ),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Message',
     version: '0.2.0',
   }),
+  LabelAnnotation.set(['properties.subject']),
 );
 
 export interface Message extends Schema.Schema.Type<typeof Message> {}
@@ -79,11 +78,11 @@ export const MessageV1 = Schema.Struct({
   state: Schema.optional(Schema.Enums(MessageV1State)),
   sender: Actor.Actor,
   text: Schema.String,
-  parts: Schema.optional(Schema.mutable(Schema.Array(Type.Ref(Obj.Any)))),
-  properties: Schema.optional(Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.Any }))),
-  context: Schema.optional(Type.Ref(Obj.Any)),
+  parts: Schema.optional(Schema.Array(Type.Ref(Type.Obj))),
+  properties: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
+  context: Schema.optional(Type.Ref(Type.Obj)),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Message',
     version: '0.1.0',
   }),

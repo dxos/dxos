@@ -2,17 +2,20 @@
 // Copyright 2025 DXOS.org
 //
 
+import type * as Toolkit from '@effect/ai/Toolkit';
+import type * as Context from 'effect/Context';
+import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
-import { Obj, type Ref, Type } from '@dxos/echo';
+import { ConsolePrinter } from '@dxos/ai';
+import { Obj, Ref, Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
-import { TracingService } from '@dxos/functions';
-import { Trigger } from '@dxos/functions';
-import { ObjectId } from '@dxos/keys';
+import { QueueService, TracingService, Trigger } from '@dxos/functions';
+import { DXN, ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { SerializedError } from '@dxos/protocols';
-import { FunctionRuntimeKind } from '@dxos/protocols';
+import { ErrorCodec, FunctionRuntimeKind, SerializedError } from '@dxos/protocols';
+import { Message } from '@dxos/types';
 
 export enum InvocationOutcome {
   SUCCESS = 'success',
@@ -35,6 +38,7 @@ export const TraceEventException = Schema.Struct({
   name: Schema.String,
   stack: Schema.optional(Schema.String),
 });
+
 export type TraceEventException = Schema.Schema.Type<typeof TraceEventException>;
 
 export const InvocationTraceStartEvent = Schema.Struct({
@@ -63,7 +67,7 @@ export const InvocationTraceStartEvent = Schema.Struct({
   /**
    * DXN of the invoked function/workflow.
    */
-  invocationTarget: Schema.optional(Type.Ref(Obj.Any)),
+  invocationTarget: Schema.optional(Type.Ref(Type.Obj)),
   /**
    * Present for automatic invocations.
    */
@@ -72,9 +76,14 @@ export const InvocationTraceStartEvent = Schema.Struct({
    * Runtime executing the function.
    */
   runtime: Schema.optional(FunctionRuntimeKind),
-}).pipe(Type.Obj({ typename: 'dxos.org/type/InvocationTraceStart', version: '0.1.0' }));
+}).pipe(
+  Type.object({
+    typename: 'dxos.org/type/InvocationTraceStart',
+    version: '0.1.0',
+  }),
+);
 
-export type InvocationTraceStartEvent = Schema.Schema.Type<typeof InvocationTraceStartEvent>;
+export interface InvocationTraceStartEvent extends Schema.Schema.Type<typeof InvocationTraceStartEvent> {}
 
 export const InvocationTraceEndEvent = Schema.Struct({
   /**
@@ -95,9 +104,14 @@ export const InvocationTraceEndEvent = Schema.Struct({
   outcome: Schema.Enums(InvocationOutcome),
 
   error: Schema.optional(SerializedError),
-}).pipe(Type.Obj({ typename: 'dxos.org/type/InvocationTraceEnd', version: '0.1.0' }));
+}).pipe(
+  Type.object({
+    typename: 'dxos.org/type/InvocationTraceEnd',
+    version: '0.1.0',
+  }),
+);
 
-export type InvocationTraceEndEvent = Schema.Schema.Type<typeof InvocationTraceEndEvent>;
+export interface InvocationTraceEndEvent extends Schema.Schema.Type<typeof InvocationTraceEndEvent> {}
 
 export type InvocationTraceEvent = InvocationTraceStartEvent | InvocationTraceEndEvent;
 
@@ -117,7 +131,7 @@ export const TraceEvent = Schema.Struct({
   ingestionTimestamp: Schema.Number,
   logs: Schema.Array(TraceEventLog),
   exceptions: Schema.Array(TraceEventException),
-}).pipe(Type.Obj({ typename: 'dxos.org/type/TraceEvent', version: '0.1.0' }));
+}).pipe(Type.object({ typename: 'dxos.org/type/TraceEvent', version: '0.1.0' }));
 
 export type TraceEvent = Schema.Schema.Type<typeof TraceEvent>;
 
@@ -132,7 +146,7 @@ export type InvocationSpan = {
   outcome: InvocationOutcome;
   input: object;
   invocationTraceQueue?: Ref.Ref<Queue>;
-  invocationTarget?: Ref.Ref<Obj.Any>;
+  invocationTarget?: Ref.Ref<Obj.Unknown>;
   trigger?: Ref.Ref<Trigger.Trigger>;
   error?: SerializedError;
   runtime?: FunctionRuntimeKind;
@@ -195,16 +209,19 @@ export const createInvocationSpans = (items?: InvocationTraceEvent[]): Invocatio
  */
 export namespace TracingServiceExt {
   /**
-   * Creates a TracingService layer that writes events to a specific queue.
+   * Creates a TracingService layer that writes events to a single specific queue.
+   * Assumes we are working with a single invocation.
    */
   export const layerQueue = (queue: Queue): Layer.Layer<TracingService> =>
     Layer.succeed(TracingService, {
       getTraceContext: () => ({}),
-      write: (event: Obj.Any) => {
+      write: (event: Obj.Unknown) => {
         void queue.append([event]).catch((error) => {
           log.warn('Failed to write trace event to queue', { error });
         });
       },
+      traceInvocationStart: () => Effect.die('TracingService.traceInvocationStart is not supported in this context.'),
+      traceInvocationEnd: () => Effect.die('TracingService.traceInvocationEnd is not supported in this context.'),
     });
 
   /**
@@ -213,14 +230,135 @@ export namespace TracingServiceExt {
   export const layerLogInfo = (): Layer.Layer<TracingService> =>
     Layer.succeed(TracingService, {
       getTraceContext: () => ({}),
-      write: (event: Obj.Any) => {
+      write: (event: Obj.Unknown, context: TracingService.TraceContext) => {
         log.info('trace event', { event });
       },
+      traceInvocationStart: ({ payload, target }) =>
+        Effect.sync(() => {
+          const invocationId = ObjectId.random();
+          log.info('trace invocation start', { invocationId, payload });
+          return { invocationId, invocationTraceQueue: undefined };
+        }),
+      traceInvocationEnd: ({ trace, exception }) =>
+        Effect.sync(() => {
+          log.info('trace invocation end', { trace, exception });
+        }),
     });
+
+  /**
+   * Creates a TracingService layer that maintains a global queue of invocation events with subqueues for each invocation.
+   */
+  export const layerInvocationsQueue = (opts: { invocationTraceQueue: Queue }) =>
+    Layer.effect(
+      TracingService,
+      Effect.gen(function* () {
+        const queueService = yield* QueueService;
+        return {
+          getTraceContext: () => ({}),
+          write: (event: Obj.Any, traceContext: TracingService.TraceContext) => {
+            const specificQueueDXN = traceContext.currentInvocation?.invocationTraceQueue;
+            const queue = specificQueueDXN
+              ? queueService.queues.get(DXN.parse(specificQueueDXN))
+              : opts.invocationTraceQueue;
+            void queue.append([event]).catch((error) => {
+              log.warn('Failed to write trace event to queue', { error });
+            });
+          },
+          traceInvocationStart: Effect.fn('traceInvocationStart')(
+            function* ({ payload, target }) {
+              const invocationId = ObjectId.random();
+              const invocationTraceQueue = yield* QueueService.createQueue({ subspaceTag: 'trace' });
+              const now = Date.now();
+              const traceEvent = Obj.make(InvocationTraceStartEvent, {
+                type: InvocationTraceEventType.START,
+                invocationId,
+                timestamp: now,
+                // TODO(dmaretskyi): Not json-stringifying this makes ECHO fail when one ECHO object becomes embedded in another ECHO object.
+                input: JSON.parse(JSON.stringify(payload.data ?? {})),
+                invocationTraceQueue: Ref.fromDXN(invocationTraceQueue.dxn),
+                invocationTarget: target ? Ref.fromDXN(target) : undefined,
+                trigger: payload.trigger ? Ref.fromDXN(DXN.fromLocalObjectId(payload.trigger.id)) : undefined,
+              });
+              yield* QueueService.append(opts.invocationTraceQueue, [traceEvent]);
+
+              return { invocationId, invocationTraceQueue: invocationTraceQueue.dxn.toString() };
+            },
+            Effect.provideService(QueueService, queueService),
+          ),
+          traceInvocationEnd: Effect.fn('traceInvocationEnd')(
+            function* ({ trace, exception }) {
+              const now = Date.now();
+              const traceEvent = Obj.make(InvocationTraceEndEvent, {
+                type: InvocationTraceEventType.END,
+                invocationId: trace.invocationId,
+                timestamp: now,
+                outcome: exception ? InvocationOutcome.FAILURE : InvocationOutcome.SUCCESS,
+                error: exception ? ErrorCodec.encode(exception) : undefined,
+              });
+              yield* QueueService.append(opts.invocationTraceQueue, [traceEvent]);
+            },
+            Effect.provideService(QueueService, queueService),
+          ),
+        };
+      }),
+    );
+
+  export const layerInvocationsQueueTest = Layer.unwrapEffect(
+    Effect.gen(function* () {
+      const queue = yield* QueueService.createQueue({ subspaceTag: 'trace' });
+      return layerInvocationsQueue({ invocationTraceQueue: queue });
+    }),
+  );
+
+  export const layerConsolePrettyPrint = (opts: PrettyConsoleTracerOptions = {}) =>
+    Layer.succeed(TracingService, new PrettyConsoleTracer(opts));
 }
 
-// Add layer helpers as static methods on TracingService for convenience
-Object.assign(TracingService, {
-  layerQueue: TracingServiceExt.layerQueue,
-  layerLogInfo: TracingServiceExt.layerLogInfo,
-});
+interface PrettyConsoleTracerOptions {
+  readonly toolkit?: Toolkit.Any;
+}
+
+class PrettyConsoleTracer implements Context.Tag.Service<TracingService> {
+  // TODO(dmaretskyi): Use options for toolkit-aware tracing.
+  #options: PrettyConsoleTracerOptions; // eslint-disable-line no-unused-private-class-members
+
+  constructor(options: PrettyConsoleTracerOptions = {}) {
+    this.#options = options;
+  }
+  getTraceContext(): TracingService.TraceContext {
+    return {};
+  }
+
+  write(event: Obj.Any, traceContext: TracingService.TraceContext): void {
+    if (Obj.instanceOf(Message.Message, event)) {
+      new ConsolePrinter({ tag: traceContext.currentInvocation?.invocationId }).printMessage(event as Message.Message);
+    } else {
+      // eslint-disable-next-line no-console
+      console.log('[EVENT]', JSON.stringify(traceContext), JSON.stringify(event, null, 2));
+    }
+  }
+
+  traceInvocationStart = Effect.fn('traceInvocationStart')(function* ({ payload, target }) {
+    const now = Date.now();
+    const invocationId = ObjectId.random();
+
+    const triggerType = payload.trigger ? payload.trigger.kind : undefined;
+
+    // eslint-disable-next-line no-console
+    console.log(
+      `⚡️ ${triggerType ? `Trigger: ${triggerType}` : ''} ${target ? Ref.fromDXN(target) : undefined}\n`,
+      JSON.stringify(payload.data, null, 2),
+    );
+    return { invocationId, invocationTraceQueue: undefined };
+  });
+
+  traceInvocationEnd = Effect.fn('traceInvocationEnd')(function* ({ trace, exception }) {
+    const outcome = exception ? InvocationOutcome.FAILURE : InvocationOutcome.SUCCESS;
+    // eslint-disable-next-line no-console
+    console.log(`${exception ? '❌' : '✅'} ${trace.invocationId} ${outcome}\n`);
+    if (exception) {
+      // eslint-disable-next-line no-console
+      console.error(exception);
+    }
+  });
+}

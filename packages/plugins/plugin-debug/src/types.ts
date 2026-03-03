@@ -2,10 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type Atom } from '@effect-atom/atom-react';
 import * as Schema from 'effect/Schema';
 import { type Context, createContext } from 'react';
 
+import { Capability } from '@dxos/app-framework';
 import type { TimerCallback, TimerOptions } from '@dxos/async';
+
+import { meta } from './meta';
 
 export type DebugContextType = {
   running: boolean;
@@ -26,6 +30,10 @@ export const DebugSettingsSchema = Schema.mutable(
 );
 
 export interface DebugSettingsProps extends Schema.Schema.Type<typeof DebugSettingsSchema> {}
+
+export namespace DebugCapabilities {
+  export const Settings = Capability.make<Atom.Writable<DebugSettingsProps>>(`${meta.id}/capability/settings`);
+}
 
 export namespace Devtools {
   // TODO(wittjosiah): Cannot use slashes in ids until we have a router which decouples ids from url paths.

@@ -4,7 +4,8 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { Obj, Ref, Type } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
+import { TestSchema } from '@dxos/echo/testing';
 import { PublicKey } from '@dxos/keys';
 import { openAndClose } from '@dxos/test-utils';
 
@@ -22,19 +23,21 @@ describe('HyperGraph', () => {
     const db2 = await peer.createDatabase(spaceKey2);
 
     const obj1 = db1.add(
-      Obj.make(Type.Expando, {
+      Obj.make(TestSchema.Expando, {
         type: 'task',
         title: 'A',
       }),
     );
     const obj2 = db2.add(
-      Obj.make(Type.Expando, {
+      Obj.make(TestSchema.Expando, {
         type: 'task',
         title: 'B',
       }),
     );
 
-    obj1.link = Ref.make(obj2);
+    Obj.change(obj1, (o) => {
+      o.link = Ref.make(obj2);
+    });
     expect(obj1.link.target?.title).to.eq('B');
 
     await Promise.all([db1.flush(), db2.flush()]);
@@ -56,18 +59,20 @@ describe('HyperGraph', () => {
     const db2 = await peer.createDatabase(spaceKey2);
 
     const obj1 = db1.add(
-      Obj.make(Type.Expando, {
+      Obj.make(TestSchema.Expando, {
         type: 'task',
         title: 'A',
       }),
     );
     const obj2 = db2.add(
-      Obj.make(Type.Expando, {
+      Obj.make(TestSchema.Expando, {
         type: 'task',
         title: 'B',
       }),
     );
-    obj1.link = Ref.make(obj2);
+    Obj.change(obj1, (o) => {
+      o.link = Ref.make(obj2);
+    });
     await Promise.all([db1.flush(), db2.flush()]);
     expect(obj1.link.target?.title).to.eq('B');
 

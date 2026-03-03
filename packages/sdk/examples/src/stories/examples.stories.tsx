@@ -13,7 +13,7 @@ import { NetworkToggle } from '../template/src/components';
 
 const meta = {
   title: 'sdk/examples/DXOS',
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof ClientRepeater>;
 
 export default meta;
@@ -62,7 +62,7 @@ export const TaskList: Story = {
 //       <div className='demo-buttons space-b-2'>
 //         <div className='flex'>
 //           <Input.Root>
-//             <Input.Switch classNames='me-2' onCheckedChange={handleToggleNetwork} />
+//             <Input.Switch classNames='mr-2' onCheckedChange={handleToggleNetwork} />
 //             <Input.Label>
 //               Disable{' '}
 //               <a
@@ -79,7 +79,7 @@ export const TaskList: Story = {
 //         </div>
 //         <div className='flex'>
 //           <Input.Root>
-//             <Input.Switch classNames='me-2' onCheckedChange={handleToggleBatching} />
+//             <Input.Switch classNames='mr-2' onCheckedChange={handleToggleBatching} />
 //             <Input.Label>Enable mutation batching</Input.Label>
 //           </Input.Root>
 //         </div>

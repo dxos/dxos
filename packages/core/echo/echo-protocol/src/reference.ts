@@ -177,6 +177,9 @@ export const EncodedReference = Object.freeze({
     return DXN.parse(EncodedReference.getReferenceString(value));
   },
   fromDXN: (dxn: DXN): EncodedReference => {
-    return encodeReference(Reference.fromDXN(dxn));
+    return { '/': dxn.toString() };
+  },
+  fromLegacyTypename: (typename: string): EncodedReference => {
+    return { '/': DXN.fromTypename(typename).toString() };
   },
 });

@@ -5,7 +5,7 @@
 import { asyncTimeout } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 
-import { type TraceDiagnostic, type TraceDiagnosticParams } from './api';
+import { type TraceDiagnostic, type TraceDiagnosticProps } from './api';
 import { createId } from './util';
 
 export const DIAGNOSTICS_TIMEOUT = 10_000;
@@ -58,7 +58,7 @@ export class DiagnosticsManager {
     this._instanceTag = tag;
   }
 
-  registerDiagnostic(params: TraceDiagnosticParams<any>): TraceDiagnostic {
+  registerDiagnostic(params: TraceDiagnosticProps<any>): TraceDiagnostic {
     const impl = new TraceDiagnosticImpl(params.id, params.fetch, params.name ?? params.id, () => {
       if (this.registry.get(params.id) === impl) {
         this.registry.delete(params.id);

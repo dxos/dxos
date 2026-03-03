@@ -2,93 +2,74 @@
 // Copyright 2025 DXOS.org
 //
 
-import {
-  Capabilities,
-  Events,
-  LayoutAction,
-  allOf,
-  contributes,
-  createIntent,
-  defineModule,
-  definePlugin,
-} from '@dxos/app-framework';
+import * as Effect from 'effect/Effect';
+
+import { ActivationEvent, ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import { AppActivationEvents, AppCapabilities, AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
+import { Graph } from '@dxos/plugin-graph';
 import { type TreeData } from '@dxos/react-ui-list';
 
-import { AppGraphBuilder, IntentResolver, Keyboard, ReactSurface, State } from './capabilities';
-import { NODE_TYPE } from './components';
-import { NavTreeEvents } from './events';
+import { AppGraphBuilder, Keyboard, OperationResolver, ReactSurface, State } from './capabilities';
+import { NODE_TYPE } from './containers';
 import { meta } from './meta';
 import { translations } from './translations';
+import { NavTreeEvents } from './types';
 
-export const NavTreePlugin = definePlugin(meta, () => [
-  defineModule({
-    id: `${meta.id}/module/state`,
-    activatesOn: Events.LayoutReady,
+export const NavTreePlugin = Plugin.define(meta).pipe(
+  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
+  AppPlugin.addMetadataModule({
+    metadata: {
+      id: NODE_TYPE,
+      metadata: {
+        parse: ({ item }: TreeData, type: string) => {
+          switch (type) {
+            case 'node':
+              return item;
+            case 'object':
+              return item.data;
+            case 'view-object':
+              return { id: `${item.id}-view`, object: item.data };
+          }
+        },
+      },
+    },
+  }),
+  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addModule({
+    id: 'state',
+    activatesOn: AppActivationEvents.LayoutReady,
     activatesAfter: [NavTreeEvents.StateReady],
     activate: State,
   }),
-  defineModule({
-    id: `${meta.id}/module/translations`,
-    activatesOn: Events.SetupTranslations,
-    activate: () => contributes(Capabilities.Translations, translations),
-  }),
-  defineModule({
-    id: `${meta.id}/module/metadata`,
-    activatesOn: Events.SetupMetadata,
-    activate: () =>
-      contributes(Capabilities.Metadata, {
-        id: NODE_TYPE,
-        metadata: {
-          parse: ({ item }: TreeData, type: string) => {
-            switch (type) {
-              case 'node':
-                return item;
-              case 'object':
-                return item.data;
-              case 'view-object':
-                return { id: `${item.id}-view`, object: item.data };
-            }
-          },
-        },
-      }),
-  }),
-  defineModule({
-    id: `${meta.id}/module/expose`,
-    activatesOn: allOf(Events.DispatcherReady, Events.AppGraphReady, Events.LayoutReady, NavTreeEvents.StateReady),
-    activate: async (context) => {
-      const layout = context.getCapability(Capabilities.Layout);
-      const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
-      const { graph } = context.getCapability(Capabilities.AppGraph);
-      if (dispatch && layout.active.length === 1) {
+  Plugin.addModule({
+    id: 'expose',
+    activatesOn: ActivationEvent.allOf(
+      ActivationEvents.OperationInvokerReady,
+      AppActivationEvents.AppGraphReady,
+      AppActivationEvents.LayoutReady,
+      NavTreeEvents.StateReady,
+    ),
+    activate: Effect.fnUntraced(function* () {
+      const layout = yield* Capabilities.getAtomValue(AppCapabilities.Layout);
+      const { invokePromise } = yield* Capability.get(Capabilities.OperationInvoker);
+      const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
+      if (invokePromise && layout.active.length === 1) {
         // TODO(wittjosiah): This should really be fired once the navtree renders for the first time.
         //   That is the point at which the graph is expanded and the path should be available.
-        void graph
-          .waitForPath({ target: layout.active[0] }, { timeout: 30_000 })
-          .then(() => dispatch(createIntent(LayoutAction.Expose, { part: 'navigation', subject: layout.active[0] })))
+        void Graph.waitForPath(graph, { target: layout.active[0] }, { timeout: 30_000 })
+          .then(() => invokePromise(LayoutOperation.Expose, { subject: layout.active[0] }))
           .catch(() => {});
       }
 
       return [];
-    },
+    }),
   }),
-  defineModule({
-    id: `${meta.id}/module/keyboard`,
-    activatesOn: Events.AppGraphReady,
+  Plugin.addModule({
+    id: 'keyboard',
+    activatesOn: ActivationEvent.allOf(AppActivationEvents.AppGraphReady, ActivationEvents.OperationInvokerReady),
     activate: Keyboard,
   }),
-  defineModule({
-    id: `${meta.id}/module/react-surface`,
-    activatesOn: Events.SetupReactSurface,
-    activate: ReactSurface,
-  }),
-  defineModule({
-    id: `${meta.id}/module/intent-resolver`,
-    activatesOn: Events.SetupIntentResolver,
-    activate: IntentResolver,
-  }),
-  defineModule({
-    id: `${meta.id}/module/app-graph-builder`,
-    activatesOn: Events.SetupAppGraph,
-    activate: AppGraphBuilder,
-  }),
-]);
+  Plugin.make,
+);

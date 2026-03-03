@@ -4,23 +4,22 @@
 
 import { type Extension } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
+import { type Atom } from '@effect-atom/atom-react';
 import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { Surface } from '@dxos/app-framework/react';
+import { Surface } from '@dxos/app-framework/ui';
 import { DXN } from '@dxos/keys';
-import { type Live } from '@dxos/live-object';
 import { useClient } from '@dxos/react-client';
 import {
   EditorMenuProvider,
   type EditorToolbarState,
-  type PreviewBlock,
-  type PreviewOptions,
   type UseEditorMenu,
   useEditorMenu,
   useEditorToolbar,
 } from '@dxos/react-ui-editor';
+import { type PreviewBlock, type PreviewOptions } from '@dxos/ui-editor';
 import { isNonNullable } from '@dxos/util';
 
 import {
@@ -49,10 +48,10 @@ type MarkdownEditorContextValue = {
   setEditorView: (view: EditorView) => void;
   extensions: Extension[];
   previewBlocks: PreviewBlock[];
-  toolbarState: Live<EditorToolbarState>;
+  toolbarState: Atom.Writable<EditorToolbarState>;
   popoverMenu: Omit<UseEditorMenu, 'extension'>;
 } & (Pick<ExtensionsOptions, 'viewMode'> &
-  Pick<NaturalMarkdownToolbarProps, 'editorView' | 'onFileUpload' | 'onViewModeChange'>);
+  Pick<NaturalMarkdownToolbarProps, 'editorView' | 'onAction' | 'onFileUpload' | 'onViewModeChange'>);
 
 const [MarkdownEditorContextProvider, useMarkdownEditorContext] =
   createContext<MarkdownEditorContextValue>('MarkdownEditor.Context');
@@ -65,7 +64,7 @@ type MarkdownEditorRootProps = PropsWithChildren<
   {
     object?: DocumentType;
     extensions?: Extension[];
-  } & Pick<MarkdownEditorContextValue, 'id' | 'onFileUpload' | 'onViewModeChange' | 'viewMode'> &
+  } & Pick<MarkdownEditorContextValue, 'id' | 'onAction' | 'onFileUpload' | 'onViewModeChange' | 'viewMode'> &
     Pick<UseEditorMenuOptionsProps, 'slashCommandGroups' | 'onLinkQuery'> &
     Pick<ExtensionsOptions, 'editorStateStore' | 'selectionManager' | 'settings'>
 >;
@@ -78,7 +77,7 @@ const MarkdownEditorRoot = ({
   selectionManager,
   settings,
   viewMode,
-  extensions: extensionsParam,
+  extensions: extensionsProp,
   slashCommandGroups,
   onLinkQuery,
   ...props
@@ -93,7 +92,7 @@ const MarkdownEditorRoot = ({
         setPreviewBlocks((prev) => [...prev, block]);
       },
       removeBlockContainer: ({ link }) => {
-        setPreviewBlocks((prev) => prev.filter(({ link: prevLink }) => prevLink.ref !== link.ref));
+        setPreviewBlocks((prev) => prev.filter(({ link: prevLink }) => prevLink.dxn !== link.dxn));
       },
     }),
     [],
@@ -122,8 +121,8 @@ const MarkdownEditorRoot = ({
   });
 
   const extensions = useMemo(
-    () => [coreExtensions, menuExtension, extensionsParam].filter(isNonNullable),
-    [coreExtensions, menuExtension, extensionsParam],
+    () => [coreExtensions, menuExtension, extensionsProp].filter(isNonNullable),
+    [coreExtensions, menuExtension, extensionsProp],
   );
 
   return (
@@ -149,6 +148,8 @@ MarkdownEditorRoot.displayName = 'MarkdownEditor.Root';
 // MarkdownEditor.Main
 //
 
+const MARKDOWN_EDITOR_CONTENT_NAME = 'MarkdownEditor.Content';
+
 type MarkdownEditorContentProps = Omit<NaturalMarkdownEditorContentProps, 'id' | 'extensions' | 'toolbarState'>;
 
 const MarkdownEditorContent = (props: MarkdownEditorContentProps) => {
@@ -160,7 +161,7 @@ const MarkdownEditorContent = (props: MarkdownEditorContentProps) => {
     toolbarState,
     extensions,
     popoverMenu: { groupsRef, ...menuProps },
-  } = useMarkdownEditorContext(MarkdownEditorContent.displayName);
+  } = useMarkdownEditorContext(MARKDOWN_EDITOR_CONTENT_NAME);
 
   return (
     <EditorMenuProvider view={editorView} groups={groupsRef.current} {...menuProps}>
@@ -176,52 +177,56 @@ const MarkdownEditorContent = (props: MarkdownEditorContentProps) => {
   );
 };
 
-MarkdownEditorContent.displayName = 'MarkdownEditor.Content';
+MarkdownEditorContent.displayName = MARKDOWN_EDITOR_CONTENT_NAME;
 
 //
 // MarkdownEditor.Toolbar
 //
 
+const MARKDOWN_EDITOR_TOOLBAR_NAME = 'MarkdownEditor.Toolbar';
+
 type MarkdownEditorToolbarProps = Omit<
   NaturalMarkdownToolbarProps,
-  'state' | 'editorView' | 'onFileUpload' | 'onViewModeChange'
+  'state' | 'editorView' | 'onAction' | 'onFileUpload' | 'onViewModeChange'
 >;
 
 const MarkdownEditorToolbar = (props: MarkdownEditorToolbarProps) => {
-  const { toolbarState, ...rootProps } = useMarkdownEditorContext(MarkdownEditorToolbar.displayName);
+  const { toolbarState, ...rootProps } = useMarkdownEditorContext(MARKDOWN_EDITOR_TOOLBAR_NAME);
 
   return <NaturalMarkdownToolbar {...props} {...rootProps} state={toolbarState} />;
 };
 
-MarkdownEditorToolbar.displayName = 'MarkdownEditor.Toolbar';
+MarkdownEditorToolbar.displayName = MARKDOWN_EDITOR_TOOLBAR_NAME;
 
 //
 // MarkdownEditor.Blocks (embedded objects)
 //
 
+const MARKDOWN_EDITOR_BLOCKS_NAME = 'MarkdownEditor.Blocks';
+
 type MarkdownEditorBlocksProps = {};
 
 const MarkdownEditorBlocks = (_props: MarkdownEditorBlocksProps) => {
-  const { previewBlocks } = useMarkdownEditorContext(MarkdownEditorBlocks.displayName);
+  const { previewBlocks } = useMarkdownEditorContext(MARKDOWN_EDITOR_BLOCKS_NAME);
 
   return (
     <>
       {previewBlocks.map(({ link, el }) => (
-        <PreviewBlock key={link.ref} link={link} el={el} />
+        <PreviewBlock key={link.dxn} link={link} el={el} />
       ))}
     </>
   );
 };
 
-MarkdownEditorBlocks.displayName = 'MarkdownEditor.Blocks';
+MarkdownEditorBlocks.displayName = MARKDOWN_EDITOR_BLOCKS_NAME;
 
 const PreviewBlock = ({ el, link }: PreviewBlock) => {
   const client = useClient();
-  const dxn = DXN.parse(link.ref);
+  const dxn = DXN.parse(link.dxn);
   const subject = client.graph.makeRef(dxn).target;
   const data = useMemo(() => ({ subject }), [subject]);
 
-  return createPortal(<Surface role='card--transclusion' data={data} limit={1} />, el);
+  return createPortal(<Surface.Surface role='card--content' data={data} limit={1} />, el);
 };
 
 //

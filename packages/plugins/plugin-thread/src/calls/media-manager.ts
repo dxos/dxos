@@ -51,7 +51,7 @@ const MAX_WEB_CAM_FRAMERATE = 24;
 const MAX_WEB_CAM_BITRATE = 120_0000;
 const RETRY_INTERVAL = 100;
 
-export type MediaManagerParams = {
+export type MediaManagerProps = {
   serviceConfig: CallsServiceConfig;
 };
 

@@ -6,7 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { withTheme } from '@dxos/react-ui/testing';
-import { Card, translations as stackTranslations } from '@dxos/react-ui-stack';
+import { Card } from '@dxos/react-ui-mosaic';
+import { translations as stackTranslations } from '@dxos/react-ui-stack';
 
 import { translations } from '../../translations';
 
@@ -29,7 +30,7 @@ const meta = {
   title: 'ui/react-ui-board/Cell',
   component: Board.Cell,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'centered',
     translations: [...translations, ...stackTranslations],

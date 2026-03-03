@@ -4,26 +4,25 @@
 
 import { WidgetType } from '@codemirror/view';
 
-import { Domino } from '@dxos/react-ui';
+import { Domino } from '@dxos/ui';
 
 export class ReferenceWidget extends WidgetType {
   constructor(
     private text: string,
-    private refid: string,
+    private dxn: string,
   ) {
     super();
   }
 
   override eq(other: this) {
-    return this.refid === other.refid;
+    return this.dxn === other.dxn;
   }
 
   override toDOM() {
-    return Domino.of('div')
-      .classNames('mbs-2 mbe-2')
-      .children(
-        Domino.of<any>('dx-anchor').classNames('dx-tag--anchor').attributes({ refid: this.refid }).text(this.text),
-      )
-      .build();
+    const anchor = Domino.of('dx-anchor' as any)
+      .classNames('dx-tag--anchor')
+      .attributes({ dxn: this.dxn })
+      .text(this.text);
+    return Domino.of('div').classNames('mt-2 mb-2').children(anchor).root;
   }
 }

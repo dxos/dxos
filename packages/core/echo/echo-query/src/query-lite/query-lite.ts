@@ -35,6 +35,11 @@ namespace Order1 {
       property,
       direction,
     });
+  export const rank = <T>(direction: QueryAST.OrderDirection = 'desc'): Order$.Order<T> =>
+    new OrderClass({
+      kind: 'rank',
+      direction,
+    });
 }
 
 const Order2: typeof Order$ = Order1;
@@ -395,14 +400,18 @@ class QueryClass implements Query$.Any {
     });
   }
 
-  referencedBy(target: Schema.Schema.All | string, key: string): Query$.Any {
-    assertArgument(typeof target === 'string', 'target');
-    assertArgument(!target.startsWith('dxn:'), 'target');
+  referencedBy(target?: Schema.Schema.All | string, key?: string): Query$.Any {
+    const typename =
+      target !== undefined
+        ? (assertArgument(typeof target === 'string', 'target'),
+          assertArgument(!target.startsWith('dxn:'), 'target'),
+          target)
+        : null;
     return new QueryClass({
       type: 'incoming-references',
       anchor: this.ast,
-      property: key,
-      typename: target,
+      property: key ?? null,
+      typename,
     });
   }
 
@@ -440,12 +449,50 @@ class QueryClass implements Query$.Any {
     });
   }
 
+  parent(): Query$.Any {
+    return new QueryClass({
+      type: 'hierarchy-traversal',
+      anchor: this.ast,
+      direction: 'to-parent',
+    });
+  }
+
+  children(): Query$.Any {
+    return new QueryClass({
+      type: 'hierarchy-traversal',
+      anchor: this.ast,
+      direction: 'to-children',
+    });
+  }
+
   orderBy(...order: Order$.Any[]): Query$.Any {
     return new QueryClass({
       type: 'order',
       query: this.ast,
       order: order.map((o) => o.ast),
     });
+  }
+
+  limit(limit: number): Query$.Any {
+    return new QueryClass({
+      type: 'limit',
+      query: this.ast,
+      limit,
+    });
+  }
+
+  from(arg: any, options?: { includeFeeds?: boolean }): Query$.Any {
+    if (arg === 'all-accessible-spaces') {
+      return new QueryClass({
+        type: 'options',
+        query: this.ast,
+        options: {
+          ...(options?.includeFeeds ? { allQueuesFromSpaces: true } : {}),
+        },
+      });
+    }
+
+    throw new TypeError('Database and Feed objects are not supported in query-lite sandbox');
   }
 
   options(options: QueryAST.QueryOptions): Query$.Any {

@@ -12,6 +12,9 @@
   ],
   "references": [
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -27,9 +30,6 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/echo/live-object"
-    },
-    {
       "path": "../../sdk/app-graph"
     },
     {
@@ -39,7 +39,10 @@
       "path": "../react-ui-attention"
     },
     {
-      "path": "../react-ui-theme"
+      "path": "../ui-theme"
+    },
+    {
+      "path": "../ui-types"
     }
   ]
 }

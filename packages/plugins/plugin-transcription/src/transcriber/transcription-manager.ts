@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { signal } from '@preact/signals-core';
+import { Atom, type Registry } from '@effect-atom/atom-react';
 
 import { synchronized } from '@dxos/async';
 import { Resource } from '@dxos/context';
@@ -34,6 +34,7 @@ export type TranscriptMessageEnricher = (message: Message.Message) => Promise<Me
 
 export type TranscriptionManagerOptions = {
   edgeClient: EdgeHttpClient;
+  registry: Registry.Registry;
 
   /**
    * Enrich the message before it is written to the transcription queue.
@@ -47,22 +48,27 @@ export type TranscriptionManagerOptions = {
 export class TranscriptionManager extends Resource {
   private readonly _edgeClient: EdgeHttpClient;
   private readonly _messageEnricher?: TranscriptMessageEnricher;
+  private readonly _registry: Registry.Registry;
   private _audioStreamTrack?: MediaStreamTrack = undefined;
   private _identityDid?: string = undefined;
   private _mediaRecorder?: MediaStreamRecorder = undefined;
   private _transcriber?: Transcriber = undefined;
   private _queue?: Queue<Message.Message> = undefined;
-  private _enabled = signal(false);
+  private _enabledAtom = Atom.make(false);
 
   constructor(options: TranscriptionManagerOptions) {
     super();
     this._edgeClient = options.edgeClient;
     this._messageEnricher = options.messageEnricher;
+    this._registry = options.registry;
   }
 
-  /** @reactive */
-  get enabled() {
-    return this._enabled.value;
+  get enabled(): Atom.Atom<boolean> {
+    return this._enabledAtom;
+  }
+
+  getEnabled(): boolean {
+    return this._registry.get(this._enabledAtom);
   }
 
   setQueue(queue: Queue<Message.Message>): this {
@@ -78,7 +84,7 @@ export class TranscriptionManager extends Resource {
   }
 
   setRecording(recording?: boolean): this {
-    if (!this.isOpen || !this._enabled.value) {
+    if (!this.isOpen || !this.getEnabled()) {
       return this;
     }
 
@@ -91,11 +97,11 @@ export class TranscriptionManager extends Resource {
   }
 
   async setEnabled(enabled: boolean): Promise<void> {
-    if (this._enabled.value === enabled) {
+    if (this.getEnabled() === enabled) {
       return;
     }
 
-    this._enabled.value = enabled ?? false;
+    this._registry.set(this._enabledAtom, enabled ?? false);
     if (enabled) {
       await this._maybeRestartTranscriber();
     } else {
@@ -122,7 +128,7 @@ export class TranscriptionManager extends Resource {
   }
 
   private async _maybeRestartTranscriber(): Promise<void> {
-    if (!this._audioStreamTrack || !this._enabled.value || !this.isOpen) {
+    if (!this._audioStreamTrack || !this.getEnabled() || !this.isOpen) {
       return;
     }
 

@@ -2,64 +2,55 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { type CreateObjectIntent } from '@dxos/plugin-space/types';
+import * as Effect from 'effect/Effect';
+
+import { Capability, Plugin } from '@dxos/app-framework';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { Operation } from '@dxos/operation';
+import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
+import { type CreateObject } from '@dxos/plugin-space/types';
 import { RefArray } from '@dxos/react-client/echo';
 
-import { AppGraphSerializer, IntentResolver, ReactSurface, SketchSettings } from './capabilities';
+import { AppGraphSerializer, OperationResolver, ReactSurface, SketchSettings } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { Diagram, SketchAction } from './types';
+import { Diagram, SketchOperation } from './types';
 import { serializer } from './util';
 
-export const SketchPlugin = definePlugin(meta, () => [
-  defineModule({
-    id: `${meta.id}/module/settings`,
-    activatesOn: Events.SetupSettings,
-    activate: SketchSettings,
+export const SketchPlugin = Plugin.define(meta).pipe(
+  AppPlugin.addMetadataModule({
+    metadata: {
+      id: Diagram.Diagram.typename,
+      metadata: {
+        icon: 'ph--compass-tool--regular',
+        iconHue: 'indigo',
+        // TODO(wittjosiah): Move out of metadata.
+        loadReferences: async (diagram: Diagram.Diagram) => await RefArray.loadAll([diagram.canvas]),
+        serializer,
+        comments: 'unanchored',
+        createObject: ((props) => Effect.sync(() => Diagram.make(props))) satisfies CreateObject,
+      },
+    },
   }),
-  defineModule({
-    id: `${meta.id}/module/translations`,
-    activatesOn: Events.SetupTranslations,
-    activate: () => contributes(Capabilities.Translations, translations),
-  }),
-  defineModule({
-    id: `${meta.id}/module/metadata`,
-    activatesOn: Events.SetupMetadata,
+  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addSchemaModule({ schema: [Diagram.Canvas, Diagram.Diagram] }),
+  AppPlugin.addSettingsModule({ activate: SketchSettings }),
+  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addModule({
+    id: 'on-space-created',
+    activatesOn: SpaceEvents.SpaceCreated,
     activate: () =>
-      contributes(Capabilities.Metadata, {
-        id: Diagram.Diagram.typename,
-        metadata: {
-          icon: 'ph--compass-tool--regular',
-          iconHue: 'indigo',
-          // TODO(wittjosiah): Move out of metadata.
-          loadReferences: async (diagram: Diagram.Diagram) => await RefArray.loadAll([diagram.canvas]),
-          serializer,
-          comments: 'unanchored',
-          createObjectIntent: (() => createIntent(SketchAction.Create)) satisfies CreateObjectIntent,
-          addToCollectionOnCreate: true,
-        },
-      }),
+      Effect.succeed(
+        Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) =>
+          Operation.invoke(SketchOperation.OnCreateSpace, params),
+        ),
+      ),
   }),
-  defineModule({
-    id: `${meta.id}/module/schema`,
-    activatesOn: ClientEvents.SetupSchema,
-    activate: () => contributes(ClientCapabilities.Schema, [Diagram.Canvas, Diagram.Diagram]),
-  }),
-  defineModule({
-    id: `${meta.id}/module/react-surface`,
-    activatesOn: Events.SetupReactSurface,
-    activate: ReactSurface,
-  }),
-  defineModule({
-    id: `${meta.id}/module/intent-resolver`,
-    activatesOn: Events.SetupIntentResolver,
-    activate: IntentResolver,
-  }),
-  defineModule({
-    id: `${meta.id}/module/app-graph-serializer`,
-    activatesOn: Events.AppGraphReady,
+  Plugin.addModule({
+    id: 'app-graph-serializer',
+    activatesOn: AppActivationEvents.AppGraphReady,
     activate: AppGraphSerializer,
   }),
-]);
+  Plugin.make,
+);

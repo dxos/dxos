@@ -14,7 +14,7 @@ import {
   createAdmissionKeypair,
 } from '@dxos/client-services';
 import {
-  type PerformInvitationParams,
+  type PerformInvitationProps,
   type Result,
   createIdentity,
   createPeers,
@@ -78,24 +78,24 @@ const successfulInvitation = async ({
   }
 };
 
-const testSuite = (getParams: () => PerformInvitationParams, getPeers: () => [ServiceContext, ServiceContext]) => {
+const testSuite = (getProps: () => PerformInvitationProps, getPeers: () => [ServiceContext, ServiceContext]) => {
   test('no auth', async () => {
     const [host, guest] = getPeers();
-    const [hostResult, guestResult] = await Promise.all(performInvitation(getParams()));
+    const [hostResult, guestResult] = await Promise.all(performInvitation(getProps()));
     await successfulInvitation({ host, guest, hostResult, guestResult });
   });
 
   test('already joined', async () => {
     const [host, guest] = getPeers();
-    const [hostResult, guestResult] = await Promise.all(performInvitation(getParams()));
+    const [hostResult, guestResult] = await Promise.all(performInvitation(getProps()));
     await successfulInvitation({ host, guest, hostResult, guestResult });
-    const [_, result] = performInvitation(getParams());
+    const [_, result] = performInvitation(getProps());
     expect((await result).error).to.be.instanceof(AlreadyJoinedError);
   });
 
   test('with shared secret', async () => {
     const [host, guest] = getPeers();
-    const params = getParams();
+    const params = getProps();
     const [hostResult, guestResult] = await Promise.all(
       performInvitation({
         ...params,
@@ -108,7 +108,7 @@ const testSuite = (getParams: () => PerformInvitationParams, getPeers: () => [Se
 
   test('with shared keypair', async () => {
     const [host, guest] = getPeers();
-    const params = getParams();
+    const params = getProps();
     const guestKeypair = createAdmissionKeypair();
     const [hostResult, guestResult] = await Promise.all(
       performInvitation({
@@ -121,7 +121,7 @@ const testSuite = (getParams: () => PerformInvitationParams, getPeers: () => [Se
   });
 
   test('invalid shared keypair', async () => {
-    const params = getParams();
+    const params = getProps();
     const keypair1 = createAdmissionKeypair();
     const keypair2 = createAdmissionKeypair();
     const invalidKeypair = { publicKey: keypair1.publicKey, privateKey: keypair2.privateKey };
@@ -140,7 +140,7 @@ const testSuite = (getParams: () => PerformInvitationParams, getPeers: () => [Se
   });
 
   test('incomplete shared keypair', async () => {
-    const params = getParams();
+    const params = getProps();
     const keypair = createAdmissionKeypair();
     delete keypair.privateKey;
     const [hostResult, guestResult] = performInvitation({
@@ -157,7 +157,7 @@ const testSuite = (getParams: () => PerformInvitationParams, getPeers: () => [Se
 
   test('with target', async () => {
     const [host, guest] = getPeers();
-    const params = getParams();
+    const params = getProps();
     const [hostResult, guestResult] = await Promise.all(
       performInvitation({
         ...params,
@@ -170,7 +170,7 @@ const testSuite = (getParams: () => PerformInvitationParams, getPeers: () => [Se
 
   test('invalid auth code', async () => {
     const [host, guest] = getPeers();
-    const params = getParams();
+    const params = getProps();
     let attempt = 1;
     const [hostResult, guestResult] = await Promise.all(
       performInvitation({
@@ -198,7 +198,7 @@ const testSuite = (getParams: () => PerformInvitationParams, getPeers: () => [Se
   });
 
   test('max auth code retries', async () => {
-    const params = getParams();
+    const params = getProps();
     let attempt = 0;
     const [hostResult, guestResult] = await Promise.all(
       performInvitation({
@@ -222,7 +222,7 @@ const testSuite = (getParams: () => PerformInvitationParams, getPeers: () => [Se
   });
 
   test('invitation timeout', async () => {
-    const params = getParams();
+    const params = getProps();
     const [hostResult, guestResult] = await Promise.all(
       performInvitation({
         ...params,
@@ -235,7 +235,7 @@ const testSuite = (getParams: () => PerformInvitationParams, getPeers: () => [Se
   });
 
   test('host cancels invitation', async () => {
-    const params = getParams();
+    const params = getProps();
     const [hostResult, guestResult] = await Promise.all(
       performInvitation({
         ...params,
@@ -256,7 +256,7 @@ const testSuite = (getParams: () => PerformInvitationParams, getPeers: () => [Se
   });
 
   test('guest cancels invitation', async () => {
-    const params = getParams();
+    const params = getProps();
     const [hostResult, guestResult] = await Promise.all(
       performInvitation({
         ...params,
@@ -278,7 +278,7 @@ const testSuite = (getParams: () => PerformInvitationParams, getPeers: () => [Se
 
   test('network error', async () => {
     const [, guest] = getPeers();
-    const params = getParams();
+    const params = getProps();
     const [hostResult, guestResult] = await Promise.all(
       performInvitation({
         ...params,

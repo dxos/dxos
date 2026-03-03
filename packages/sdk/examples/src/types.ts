@@ -10,7 +10,7 @@ export const TaskType = Schema.Struct({
   title: Schema.String,
   completed: Schema.Boolean,
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/example/Task',
     version: '0.1.0',
   }),

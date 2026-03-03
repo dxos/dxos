@@ -15,9 +15,9 @@ const meta = {
   title: 'apps/testbench-app/Main',
   component: Main,
   decorators: [
-    withTheme,
+    withTheme(),
     withLayout({
-      classNames: 'grid grid-rows-2 bs-full divide-y divide-separator grow overflow-hidden',
+      classNames: 'grid grid-rows-2 h-full divide-y divide-separator grow overflow-hidden',
     }),
     withMultiClientProvider({
       numClients: 2,

@@ -7,7 +7,7 @@ import React, { forwardRef, useMemo } from 'react';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { type SchemaProperty } from '@dxos/effect';
 import { type ThemedClassName } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 
 import { type FormHandlerProps } from '../../hooks';
@@ -32,18 +32,21 @@ export type FormFieldSetProps<T extends AnyProperties> = ThemedClassName<
       | 'projection'
       | 'fieldMap'
       | 'fieldProvider'
-      | 'createSchema'
       | 'createOptionLabel'
       | 'createOptionIcon'
       | 'createInitialValuePath'
+      | 'db'
+      | 'schemaHook'
+      | 'getOptions'
       | 'onCreate'
-      | 'onQueryRefOptions'
     >
 >;
 
+const FORM_FIELDSET_NAME = 'Form.FieldSet';
+
 export const FormFieldSet = forwardRef<HTMLDivElement, FormFieldSetProps<any>>(
   ({ classNames, label, schema, readonly, path, exclude, sort, projection, layout, ...props }, forwardRef) => {
-    const values = useFormValues(FormFieldSet.displayName!, path);
+    const values = useFormValues(FORM_FIELDSET_NAME, path);
 
     // TODO(burdon): Updates on every value change.
     //  Remove values dep if can remove from getSchemaProperties.
@@ -94,7 +97,7 @@ export const FormFieldSet = forwardRef<HTMLDivElement, FormFieldSetProps<any>>(
     return (
       <div
         role='form'
-        className={mx('is-full', layout === 'inline' && 'flex flex-col gap-2', classNames)}
+        className={mx('w-full', layout === 'inline' && 'flex flex-col gap-2', classNames)}
         ref={forwardRef}
       >
         {layout !== 'inline' && label && <FormFieldLabel label={label} asChild />}
@@ -121,4 +124,4 @@ export const FormFieldSet = forwardRef<HTMLDivElement, FormFieldSetProps<any>>(
   },
 );
 
-FormFieldSet.displayName = 'Form.Fields';
+FormFieldSet.displayName = FORM_FIELDSET_NAME;

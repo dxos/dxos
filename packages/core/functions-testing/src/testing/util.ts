@@ -14,7 +14,7 @@ import { InvocationTraceEndEvent, InvocationTraceStartEvent } from '@dxos/functi
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { bundleFunction } from '@dxos/functions-runtime/native';
 import type { BundleResult } from '@dxos/functions-runtime/native';
-import { type FunctionRuntimeKind } from '@dxos/protocols';
+import { ErrorCodec, type FunctionRuntimeKind } from '@dxos/protocols';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 
 export const writeBundle = (path: string, bundle: BundleResult) => {
@@ -95,7 +95,9 @@ export const observeInvocations = async (space: Space, maxCount: number | null) 
             count: count++,
             begin: invocation,
           });
-          console.log(`${count.toString().padStart(3, ' ')}: BEGIN ${JSON.stringify(invocation.input)}`);
+          console.log(
+            `${count.toString().padStart(3, ' ')}: BEGIN ${invocation.runtime ?? '(unknown runtime)'} ${JSON.stringify(invocation.input)}`,
+          );
         } else if (Obj.instanceOf(InvocationTraceEndEvent, invocation)) {
           const data = invocationData.get(invocation.invocationId);
           if (!data || !!data.end) {
@@ -107,8 +109,8 @@ export const observeInvocations = async (space: Space, maxCount: number | null) 
           console.log(
             `${data.count.toString().padStart(3, ' ')}: END outcome=${outcome} duration=${data.end.timestamp - data.begin.timestamp}`,
           );
-          if (outcome === 'failure') {
-            console.log(data.end.error?.stack);
+          if (outcome === 'failure' && data.end.error) {
+            console.error(ErrorCodec.decode(data.end.error));
           }
         }
       }

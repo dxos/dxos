@@ -16,15 +16,15 @@ import {
   type PopoverVirtualTriggerProps,
 } from '@dxos/react-ui';
 import { useId } from '@dxos/react-ui';
-import { mx, staticPlaceholderText } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import {
   SearchList,
-  type SearchListContentProps,
   type SearchListEmptyProps,
   type SearchListInputProps,
   type SearchListItemProps,
   type SearchListRootProps,
+  type SearchListViewportProps,
 } from '../SearchList';
 
 const COMBOBOX_NAME = 'Combobox';
@@ -101,7 +101,7 @@ const ComboboxRoot = ({
 // ContentProps
 //
 
-type ComboboxContentProps = SearchListRootProps & PopoverContentProps;
+type ComboboxContentProps = SearchListRootProps & PopoverContentProps & { label?: string };
 
 const ComboboxContent = forwardRef<HTMLDivElement, ComboboxContentProps>(
   (
@@ -125,7 +125,11 @@ const ComboboxContent = forwardRef<HTMLDivElement, ComboboxContentProps>(
       forceMount,
       children,
       classNames,
-      ...props
+      onSearch,
+      value,
+      defaultValue,
+      debounceMs,
+      label,
     },
     forwardedRef,
   ) => {
@@ -153,14 +157,14 @@ const ComboboxContent = forwardRef<HTMLDivElement, ComboboxContentProps>(
           forceMount,
         }}
         classNames={[
-          'is-[--radix-popover-trigger-width] max-bs-[--radix-popover-content-available-height] grid grid-rows-[min-content_1fr]',
+          'w-(--radix-popover-trigger-width) max-h-(--radix-popover-content-available-height) grid grid-rows-[min-content_1fr]',
           classNames,
         ]}
         id={modalId}
         ref={forwardedRef}
       >
-        <SearchList.Root {...props} classNames='contents density-fine' role='none'>
-          {children}
+        <SearchList.Root onSearch={onSearch} value={value} defaultValue={defaultValue} debounceMs={debounceMs}>
+          <SearchList.Content>{children}</SearchList.Content>
         </SearchList.Root>
       </Popover.Content>
     );
@@ -199,9 +203,7 @@ const ComboboxTrigger = forwardRef<HTMLButtonElement, ComboboxTriggerProps>(
         >
           {children ?? (
             <>
-              <span
-                className={mx('font-normal text-start flex-1 min-is-0 truncate mie-2', !value && staticPlaceholderText)}
-              >
+              <span className={mx('font-normal text-start flex-1 min-w-0 truncate me-2', !value && 'text-subdued')}>
                 {value || placeholder}
               </span>
               <Icon icon='ph--caret-down--bold' size={3} />
@@ -233,10 +235,7 @@ const ComboboxInput = forwardRef<HTMLInputElement, ComboboxInputProps>(({ classN
   return (
     <SearchList.Input
       {...props}
-      classNames={[
-        'mli-cardSpacingChrome mbs-cardSpacingChrome mbe-0 is-[calc(100%-2*var(--dx-cardSpacingChrome))]',
-        classNames,
-      ]}
+      classNames={['m-form-chrome mb-0 w-[calc(100%-2*var(--spacing-form-chrome))]', classNames]}
       ref={forwardedRef}
     />
   );
@@ -246,40 +245,39 @@ const ComboboxInput = forwardRef<HTMLInputElement, ComboboxInputProps>(({ classN
 // List
 //
 
-type ComboboxListProps = SearchListContentProps;
+type ComboboxListProps = SearchListViewportProps;
 
 const ComboboxList = forwardRef<HTMLDivElement, ComboboxListProps>(({ classNames, ...props }, forwardedRef) => {
-  return (
-    <SearchList.Content
-      {...props}
-      classNames={['min-bs-0 overflow-y-auto plb-cardSpacingChrome', classNames]}
-      ref={forwardedRef}
-    />
-  );
+  return <SearchList.Viewport {...props} classNames={['py-form-chrome', classNames]} ref={forwardedRef} />;
 });
 
 //
 // Item
 //
 
-type ComboboxItemProps = SearchListItemProps;
+type ComboboxItemProps = SearchListItemProps & {
+  /** Whether to close the popover when this item is selected. Defaults to true. */
+  closeOnSelect?: boolean;
+};
 
 const ComboboxItem = forwardRef<HTMLDivElement, ComboboxItemProps>(
-  ({ classNames, onSelect, ...props }, forwardedRef) => {
+  ({ classNames, onSelect, value, closeOnSelect = true, ...props }, forwardedRef) => {
     const { onValueChange, onOpenChange } = useComboboxContext(COMBOBOX_ITEM_NAME);
-    const handleSelect = useCallback<NonNullable<SearchListItemProps['onSelect']>>(
-      (nextValue) => {
-        onSelect?.(nextValue);
-        onValueChange?.(nextValue);
+    const handleSelect = useCallback<NonNullable<SearchListItemProps['onSelect']>>(() => {
+      onSelect?.();
+      if (value !== undefined) {
+        onValueChange?.(value);
+      }
+      if (closeOnSelect) {
         onOpenChange?.(false);
-      },
-      [onSelect, onValueChange, onOpenChange],
-    );
+      }
+    }, [onSelect, onValueChange, onOpenChange, value, closeOnSelect]);
 
     return (
       <SearchList.Item
         {...props}
-        classNames={['mli-cardSpacingChrome pli-cardSpacingChrome', classNames]}
+        value={value}
+        classNames={['mx-form-chrome px-form-chrome', classNames]}
         onSelect={handleSelect}
         ref={forwardedRef}
       />
@@ -310,8 +308,17 @@ const ComboboxEmpty = SearchList.Empty;
 // https://www.w3.org/WAI/ARIA/apg/patterns/combobox
 //
 
+//
+// Portal
+//
+
+type ComboboxPortalProps = React.ComponentPropsWithoutRef<typeof Popover.Portal>;
+
+const ComboboxPortal = Popover.Portal;
+
 export const Combobox = {
   Root: ComboboxRoot,
+  Portal: ComboboxPortal,
   Content: ComboboxContent,
   Trigger: ComboboxTrigger,
   VirtualTrigger: ComboboxVirtualTrigger,
@@ -324,6 +331,7 @@ export const Combobox = {
 
 export type {
   ComboboxRootProps,
+  ComboboxPortalProps,
   ComboboxContentProps,
   ComboboxTriggerProps,
   ComboboxVirtualTriggerProps,

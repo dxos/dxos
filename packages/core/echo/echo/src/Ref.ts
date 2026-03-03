@@ -11,21 +11,21 @@ import type * as JsonSchema from './JsonSchema';
 import type * as Obj from './Obj';
 
 export type Ref<T> = Ref$<T>;
-export type Any = Ref$<Obj.Any>;
+export type Unknown = Ref$<Obj.Unknown>;
 
 export const Array = RefArray;
 
 /**
  * Extract reference target.
  */
-export type Target<R extends Any> = R extends Ref$<infer T> ? T : never;
+export type Target<R extends Unknown> = R extends Ref$<infer T> ? T : never;
 
 /**
  * Reference resolver.
  */
 export type Resolver = RefResolver;
 
-export const isRef: (value: unknown) => value is Any = Ref$.isRef;
+export const isRef: (value: unknown) => value is Unknown = Ref$.isRef;
 
 export const make = Ref$.make;
 

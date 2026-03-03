@@ -78,18 +78,17 @@ export type FormFieldProps = {
    * Function to lookup custom renderers for specific properties.
    */
   fieldProvider?: FormFieldProvider;
-} & Pick<
-  RefFieldProps,
-  | 'autoFocus'
-  | 'readonly'
-  | 'layout'
-  | 'createSchema'
-  | 'createOptionLabel'
-  | 'createOptionIcon'
-  | 'createInitialValuePath'
-  | 'onCreate'
-  | 'onQueryRefOptions'
->;
+} & Pick<FormFieldComponentProps, 'autoFocus' | 'readonly' | 'layout'> &
+  Pick<
+    RefFieldProps,
+    | 'createOptionLabel'
+    | 'createOptionIcon'
+    | 'createInitialValuePath'
+    | 'db'
+    | 'schemaHook'
+    | 'getOptions'
+    | 'onCreate'
+  >;
 
 export const FormField = (props: FormFieldProps) => {
   const {
@@ -101,12 +100,15 @@ export const FormField = (props: FormFieldProps) => {
     fieldProvider,
     readonly,
     layout,
-    createSchema,
+
+    // RefFieldProps
     createOptionLabel,
     createOptionIcon,
     createInitialValuePath,
+    db,
+    schemaHook,
+    getOptions: getRefOptions,
     onCreate,
-    onQueryRefOptions,
   } = props;
   const { t } = useTranslation(translationKey);
   const title = getAnnotation<string>(SchemaAST.TitleAnnotationId)(type);
@@ -169,13 +171,21 @@ export const FormField = (props: FormFieldProps) => {
 
   const options = getOptions(type);
   if (options) {
+    // Resolve labels from projection metadata when available.
+    const fieldProjections = projection?.getFieldProjections();
+    const fieldProjection = fieldProjections?.find((fp) => fp.field.path === name);
+    const selectOptions = fieldProjection?.props.options;
+
     return (
       <SelectField
         {...fieldProps}
-        options={options.map((option) => ({
-          value: option,
-          label: option.toString(),
-        }))}
+        options={options.map((option) => {
+          const selectOption = selectOptions?.find((so) => so.id === globalThis.String(option));
+          return {
+            value: option,
+            label: selectOption?.title ?? option.toString(),
+          };
+        })}
       />
     );
   }
@@ -190,12 +200,13 @@ export const FormField = (props: FormFieldProps) => {
       <RefField
         {...fieldProps}
         {...refProps}
-        createSchema={createSchema}
         createOptionLabel={createOptionLabel}
         createOptionIcon={createOptionIcon}
         createInitialValuePath={createInitialValuePath}
+        db={db}
+        schemaHook={schemaHook}
+        getOptions={getRefOptions}
         onCreate={onCreate}
-        onQueryRefOptions={onQueryRefOptions}
       />
     );
   }
@@ -224,8 +235,11 @@ export const FormField = (props: FormFieldProps) => {
           fieldProvider={fieldProvider}
           createOptionLabel={createOptionLabel}
           createOptionIcon={createOptionIcon}
+          createInitialValuePath={createInitialValuePath}
+          db={db}
+          schemaHook={schemaHook}
+          getOptions={getRefOptions}
           onCreate={onCreate}
-          onQueryRefOptions={onQueryRefOptions}
         />
       );
     }

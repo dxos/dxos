@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Atom, RegistryContext, useAtomValue } from '@effect-atom/atom-react';
 import * as String from 'effect/String';
 import React, {
   type JSX,
@@ -11,6 +12,7 @@ import React, {
   type WheelEvent,
   forwardRef,
   useCallback,
+  useContext,
   useEffect,
   useImperativeHandle,
   useMemo,
@@ -18,8 +20,10 @@ import React, {
 } from 'react';
 
 import { type Type } from '@dxos/echo';
+import { log } from '@dxos/log';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
+  type DxGridAxisMeta,
   type DxGridElement,
   type DxGridPlane,
   type DxGridPlaneRange,
@@ -31,7 +35,7 @@ import {
   gridSeparatorInlineEnd,
 } from '@dxos/react-ui-grid';
 import { DxEditRequest } from '@dxos/react-ui-grid';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { type InsertRowResult, ModalController, type TableModel, type TablePresentation } from '../../model';
 import { tableButtons, tableControls } from '../../util';
@@ -43,6 +47,7 @@ import { RowActionsMenu } from './RowActionsMenu';
 
 const columnDefault = { grid: { minSize: 80, maxSize: 640 } };
 const rowDefault = { frozenRowsStart: { readonly: true, focusUnfurl: false } };
+const emptyColumnMeta = Atom.make<DxGridAxisMeta>({ grid: {} });
 
 //
 // Table.Root
@@ -55,12 +60,12 @@ const TableRoot = ({ children, role = 'article' }: TableRootProps) => {
     <div
       role='none'
       className={mx(
-        'relative !border-separator [&_.dx-grid]:max-is-[--dx-grid-content-inline-size] [&_.dx-grid]:max-bs-[--dx-grid-content-block-size]',
-        role === 'card--popover' && 'popover-card-height',
-        role === 'section' && 'attention-surface',
-        role === 'card--intrinsic' && '[&_.dx-grid]:bs-[--dx-grid-content-block-size]',
-        ['card--popover', 'section', 'card--extrinsic'].includes(role) && 'overflow-hidden',
-        ['article', 'slide'].includes(role) && 'flex flex-col [&_.dx-grid]:grow [&_.dx-grid]:bs-0',
+        'relative border-separator! [&_.dx-grid]:max-w-(--dx-grid-content-w-size) [&_.dx-grid]:max-h-(--dx-grid-content-h-size)',
+        // TODO(burdon): Move role-dependent logic to plugin.
+        role === 'section' && 'dx-attention-surface',
+        role === 'card--content' && 'dx-card-popover-height',
+        ['section'].includes(role) && 'overflow-hidden',
+        ['article', 'slide'].includes(role) && 'flex flex-col [&_.dx-grid]:grow [&_.dx-grid]:h-0',
       )}
     >
       {children}
@@ -88,13 +93,24 @@ export type TableMainProps<T extends Type.Entity.Any = Type.Entity.Any> = {
   testId?: string;
 };
 
+const emptyRowsAtom = Atom.make<unknown[]>([]);
+const emptyCellUpdateAtom = Atom.make<number>(0);
+
 const TableMainInner = <T extends Type.Entity.Any = Type.Entity.Any>(
   { schema, model, presentation, ignoreAttention, onCreate, onRowClick, testId }: TableMainProps<T>,
   forwardedRef: Ref<TableController>,
 ) => {
+  const registry = useContext(RegistryContext);
   const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
   const { hasAttention } = useAttention(model?.id ?? 'table');
-  const modals = useMemo(() => new ModalController(), []);
+  const modals = useMemo(() => new ModalController(registry), [registry]);
+  const columnMeta = useAtomValue(model?.columnMeta ?? emptyColumnMeta);
+  // Subscribe to rows atom to trigger re-render when rows change.
+  const rows = useAtomValue(model?.rows ?? emptyRowsAtom);
+  // Subscribe to cell update counter to trigger re-render when individual cells change.
+  const cellUpdateCounter = useAtomValue(model?.cellUpdate ?? emptyCellUpdateAtom);
+  // Derive column count from columnMeta (reactive) with fallback.
+  const columnCount = Object.keys(columnMeta.grid).length || model?.projection.getFields().length || 0;
 
   const draftRowCount = model?.getDraftRowCount() ?? 0;
 
@@ -117,15 +133,6 @@ const TableMainInner = <T extends Type.Entity.Any = Type.Entity.Any>(
     [presentation],
   );
 
-  // Set initial sort order.
-  // TODO(burdon): Save sort order to local storage.
-  useEffect(() => {
-    const fieldId = model?.projection?.fields?.[0]?.id;
-    if (fieldId) {
-      model.sorting.setSort(fieldId, 'asc');
-    }
-  }, [model]);
-
   useEffect(() => {
     if (!dxGrid || !presentation) {
       return;
@@ -133,6 +140,16 @@ const TableMainInner = <T extends Type.Entity.Any = Type.Entity.Any>(
 
     dxGrid.getCells = getCells;
   }, [dxGrid, presentation, getCells]);
+
+  // Trigger grid update when rows or cell values change.
+  useEffect(() => {
+    if (!dxGrid) {
+      return;
+    }
+
+    dxGrid.updateCells(true);
+    dxGrid.requestUpdate();
+  }, [dxGrid, rows, cellUpdateCounter]);
 
   const handleInsertRowResult = useCallback(
     (insertResult?: InsertRowResult) => {
@@ -220,7 +237,7 @@ const TableMainInner = <T extends Type.Entity.Any = Type.Entity.Any>(
             break;
           }
           case 'sort': {
-            model?.sorting?.toggleSort(data.fieldId);
+            model?.toggleSort(data.fieldId);
             break;
           }
           case 'saveDraftRow': {
@@ -246,7 +263,7 @@ const TableMainInner = <T extends Type.Entity.Any = Type.Entity.Any>(
         switch (data.type) {
           case 'checkbox': {
             if (data.header) {
-              model?.selection.setSelection(model.selection.allRowsSeleted.value ? 'none' : 'all');
+              model?.selection.setSelection(model.selection.allRowsSelected ? 'none' : 'all');
             } else {
               model?.selection.toggleSelectionForRowIndex(data.rowIndex);
             }
@@ -302,7 +319,7 @@ const TableMainInner = <T extends Type.Entity.Any = Type.Entity.Any>(
               void navigator.clipboard.writeText(textContent);
               event.preventDefault();
             } catch (error) {
-              console.warn('Failed to copy cell content:', error);
+              log.catch(error);
             }
             break;
           }
@@ -407,7 +424,7 @@ const TableMainInner = <T extends Type.Entity.Any = Type.Entity.Any>(
   }, [dxGrid, model, presentation]);
 
   if (!model || !modals) {
-    return <span role='none' className='attention-surface' />;
+    return <span role='none' className='dx-attention-surface' />;
   }
 
   return (
@@ -421,13 +438,13 @@ const TableMainInner = <T extends Type.Entity.Any = Type.Entity.Any>(
         onCreate={onCreate}
       />
       <Grid.Content
-        className={mx('[--dx-grid-base:var(--baseSurface)]', gridSeparatorInlineEnd, gridSeparatorBlockEnd)}
+        className={mx('[--dx-grid-base:var(--base-surface)]', gridSeparatorInlineEnd, gridSeparatorBlockEnd)}
         frozen={frozen}
-        columns={model.columnMeta.value}
+        columns={columnMeta}
         columnDefault={columnDefault}
         rowDefault={rowDefault}
-        limitRows={model.getRowCount() ?? 0}
-        limitColumns={model.projection.fields.length}
+        limitRows={rows.length}
+        limitColumns={columnCount}
         overscroll='trap'
         onAxisResize={handleAxisResize}
         onClick={handleGridClick}

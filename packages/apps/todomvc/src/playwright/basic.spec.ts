@@ -88,15 +88,15 @@ test.describe('Basic test', () => {
       expect(await guest.todoCount()).toEqual(1);
     });
 
-    // TODO(wittjosiah): Flaky.
-    test.skip('delete a task', async () => {
+    test('delete a task', async () => {
       await host.createTodo(Groceries.Eggnog);
 
       await expect(guest.todo(Groceries.Eggnog)).toBeVisible();
+      expect(await guest.todoCount()).toEqual(1);
 
       await host.deleteTodo(Groceries.Eggnog);
 
-      await expect(guest.hasText(Groceries.Eggnog)).not.toBeVisible();
+      await expect(guest.todo(Groceries.Eggnog)).toHaveCount(0);
     });
 
     test('filter active tasks', async () => {

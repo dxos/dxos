@@ -541,7 +541,7 @@ export const seedTestData = async (space: Space) => {
 
   const { organizations, contacts, transcriptMessages, emails } = createTestData();
 
-  const objects: Obj.Any[] = [
+  const objects: Obj.Unknown[] = [
     // ...Object.values(documents),
     ...Object.values(contacts),
     ...Object.values(organizations),

@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+/* eslint-disable no-console */
+
 import { LogLevel, type LogProcessor, log, shouldLog } from '@dxos/log';
 
 export const setupFunctionsLogger = () => {

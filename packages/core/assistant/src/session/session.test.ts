@@ -9,12 +9,12 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
-import { AiService, ToolExecutionService, ToolResolverService } from '@dxos/ai';
-import { AiServiceTestingPreset, MemoizedAiService } from '@dxos/ai/testing';
 import { Obj, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { TracingService } from '@dxos/functions';
-import { log } from '@dxos/log';
+import { dbg, log } from '@dxos/log';
+import { Message } from '@dxos/types';
+
+import { AssistantTestLayer } from '../testing';
 
 import { AiSession } from './session';
 
@@ -25,7 +25,7 @@ const CalendarEventSchema = Schema.Struct({
   endTime: Schema.String,
   description: Schema.String,
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'example.com/type/CalendarEvent',
     version: '0.1.0',
   }),
@@ -66,15 +66,11 @@ const toolkitLayer = TestToolkit.toLayer({
 });
 
 const TestLayer = Layer.mergeAll(
+  AssistantTestLayer({
+    types: [CalendarEventSchema],
+    tracing: 'pretty',
+  }),
   toolkitLayer,
-  AiService.model('@anthropic/claude-3-5-sonnet-20241022'),
-  TracingService.layerNoop,
-  ToolResolverService.layerEmpty,
-  ToolExecutionService.layerEmpty,
-).pipe(
-  //
-  Layer.provideMerge(MemoizedAiService.layerTest()),
-  Layer.provide(AiServiceTestingPreset('direct')),
 );
 
 describe('AiSession', () => {
@@ -82,7 +78,7 @@ describe('AiSession', () => {
     'no tools',
     Effect.fnUntraced(
       function* (_) {
-        const session = new AiSession({ operationModel: 'configured' });
+        const session = new AiSession();
         const response = yield* session.run({
           prompt: 'Hello world!',
           history: [],
@@ -98,7 +94,7 @@ describe('AiSession', () => {
     'calculator',
     Effect.fnUntraced(
       function* (_) {
-        const session = new AiSession({ operationModel: 'configured' });
+        const session = new AiSession();
         const toolkit = yield* TestToolkit;
         const response = yield* session.run({
           toolkit,
@@ -106,6 +102,52 @@ describe('AiSession', () => {
           history: [],
         });
         log.info('response', { response });
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'tool schema error',
+    Effect.fnUntraced(
+      function* (_) {
+        const session = new AiSession();
+        const toolkit = yield* TestToolkit;
+        const response = yield* session.run({
+          toolkit,
+          prompt:
+            'I am testing error handling in tool paramter parsing. I want you to call the calculator tool but omit the input parameter to intentionally differ from the tool schema.',
+          history: [],
+        });
+        log.info('response', { response });
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'summarization',
+    Effect.fnUntraced(
+      function* (_) {
+        const session = new AiSession({ summarizationThreshold: 0 }); // Force summarization.
+        const response = yield* session.run({
+          prompt: 'What did we talk about?',
+          history: [
+            Obj.make(Message.Message, {
+              created: '2024-01-01T10:00:00Z',
+              sender: { role: 'user' },
+              blocks: [{ _tag: 'text', text: 'How many apples are in the basket?' }],
+            }),
+            Obj.make(Message.Message, {
+              created: '2024-01-01T11:00:00Z',
+              sender: { role: 'assistant' },
+              blocks: [{ _tag: 'text', text: 'There are 10 apples in the basket.' }],
+            }),
+          ],
+        });
+        dbg(response);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

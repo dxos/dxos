@@ -3,69 +3,78 @@
 //
 
 import { bindAll } from 'bind-event-listener';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { type Rect, getRelativePoint } from '@dxos/react-ui-canvas';
 
 import { type Range, getBounds } from '../layout';
 
-export type SelectionEvent = { bounds?: Rect | null; shift?: boolean };
+export type SelectionEvent = {
+  bounds?: Rect | null;
+  subtract?: boolean;
+};
 
 /**
  * Event listener to track range bounds selection.
  */
-export const useSelectionEvents = (el: HTMLElement | null, cb?: (event: SelectionEvent) => void): Rect | null => {
-  const [range, setRange] = useState<Partial<Range>>();
+// TODO(burdon): Reconcile with useDrag.
+export const useSelectionEvents = (root: HTMLElement | null, cb?: (event: SelectionEvent) => void): Rect | null => {
+  const [bounds, setBounds] = useState<Rect | null>(null);
+
+  const shiftRef = useRef(false);
+  const rangeRef = useRef<Partial<Range> | null>(null);
+
   useEffect(() => {
-    if (!el) {
+    if (!root) {
       return;
     }
 
-    return bindAll(el, [
-      {
-        type: 'keydown',
-        listener: (ev) => {
-          if (ev.key === 'Escape') {
-            setRange(undefined);
-          }
-        },
-      },
+    return bindAll(root, [
       {
         type: 'pointerdown',
         listener: (ev) => {
-          if (ev.target !== el) {
+          if (ev.target !== root) {
             return;
           }
 
-          const p1 = getRelativePoint(el, ev);
-          setRange({ p1 });
+          shiftRef.current = ev.shiftKey;
+          rangeRef.current = { p1: getRelativePoint(root, ev) };
         },
       },
       {
         type: 'pointermove',
         listener: (ev) => {
-          if (!range) {
+          if (!rangeRef.current?.p1) {
             return;
           }
 
-          const p2 = getRelativePoint(el, ev);
-          setRange((range) => (range ? { ...range, p2 } : undefined));
+          rangeRef.current.p2 = getRelativePoint(root, ev);
+          if (shiftRef.current) {
+            setBounds(getBounds(rangeRef.current.p1, rangeRef.current.p2));
+          }
         },
       },
       {
         type: 'pointerup',
         listener: (ev) => {
-          if (range?.p1 && !range?.p2) {
-            cb?.({ bounds: null });
-          } else {
-            cb?.({ bounds: range?.p1 && range?.p2 ? getBounds(range.p1, range.p2) : undefined, shift: ev.shiftKey });
+          if (rangeRef.current?.p1) {
+            if (rangeRef.current?.p2) {
+              if (shiftRef.current) {
+                const bounds = getBounds(rangeRef.current.p1, rangeRef.current.p2);
+                cb?.({ bounds, subtract: ev.altKey });
+              }
+            } else {
+              cb?.({ bounds: null });
+            }
           }
 
-          setRange(undefined);
+          shiftRef.current = false;
+          rangeRef.current = null;
+          setBounds(null);
         },
       },
     ]);
-  }, [el, cb]);
+  }, [root, cb]);
 
-  return range?.p1 && range?.p2 ? getBounds(range.p1, range.p2) : null;
+  return bounds;
 };

@@ -2,9 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { lazy } from '@dxos/app-framework';
-
-export const AppGraphBuilder = lazy(() => import('./app-graph-builder'));
-export const ReactContext = lazy(() => import('./react-context'));
-export const ReactSurface = lazy(() => import('./react-surface'));
-export const DebugSettings = lazy(() => import('./settings'));
+export * from './app-graph-builder';
+export * from './react-context';
+export * from './react-surface';
+export * from './settings';

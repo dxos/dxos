@@ -2,20 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-import { untracked } from '@preact/signals-core';
 import React, { Fragment, type UIEvent, useCallback, useEffect, useMemo, useRef } from 'react';
 
-import { Capabilities, LayoutAction, createIntent } from '@dxos/app-framework';
-import { useCapability, useIntentDispatcher, usePluginManager } from '@dxos/app-framework/react';
+import { useAtomCapability, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
-import { Main, type MainProps, useMediaQuery, useOnTransition } from '@dxos/react-ui';
+import { Main, type MainContentProps, useMediaQuery, useOnTransition } from '@dxos/react-ui';
 import { DEFAULT_HORIZONTAL_SIZE, Stack, StackContext } from '@dxos/react-ui-stack';
-import { mainPaddingTransitions, mx } from '@dxos/react-ui-theme';
+import { mainPaddingTransitions, mx } from '@dxos/ui-theme';
 
-import { DeckCapabilities } from '../../capabilities';
-import { useBreakpoints, useHoistStatusbar } from '../../hooks';
-import { meta } from '../../meta';
-import { type DeckSettingsProps, getMode } from '../../types';
+import { useBreakpoints, useDeckState, useHoistStatusbar } from '../../hooks';
+import { DeckCapabilities, getMode } from '../../types';
 import { calculateOverscroll, layoutAppliesTopbar } from '../../util';
 import { fixedComplementarySidebarToggleStyles, fixedSidebarToggleStyles } from '../fragments';
 import { Plank } from '../Plank';
@@ -26,10 +23,10 @@ import { StatusBar } from './StatusBar';
 import { Topbar } from './Topbar';
 
 export const DeckMain = () => {
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
-  const settings = useCapability(Capabilities.SettingsStore).getStore<DeckSettingsProps>(meta.id)?.value;
-  const context = useCapability(DeckCapabilities.MutableDeckState);
-  const { sidebarState, complementarySidebarState, complementarySidebarPanel, deck } = context;
+  const { invokeSync } = useOperationInvoker();
+  const settings = useAtomCapability(DeckCapabilities.Settings);
+  const { state, deck, updateState } = useDeckState();
+  const { sidebarState, complementarySidebarState, complementarySidebarPanel } = state;
   const { active, activeCompanions, fullscreen, solo, plankSizing } = deck;
   const layoutMode = getMode(deck);
   const breakpoint = useBreakpoints();
@@ -43,10 +40,8 @@ export const DeckMain = () => {
   // Ensure the first plank is attended when the deck is first rendered.
   useEffect(() => {
     // NOTE: Not `useAttended` so that the layout component is not re-rendered when the attended list changes.
-    const attended = untracked(() => {
-      const attention = pluginManager.context.getCapability(AttentionCapabilities.Attention);
-      return attention.current;
-    });
+    const attention = pluginManager.capabilities.get(AttentionCapabilities.Attention);
+    const attended = attention.getCurrent();
     const firstId = solo ?? active[0];
     if (attended.length === 0 && firstId) {
       // TODO(wittjosiah): Focusing the type button is a workaround.
@@ -60,31 +55,26 @@ export const DeckMain = () => {
   const [isNotMobile] = useMediaQuery('md');
   const shouldRevert = useRef(false);
   useEffect(() => {
-    if (!isNotMobile && getMode(deck) === 'deck') {
+    if (!isNotMobile && layoutMode === 'deck') {
       // NOTE: Not `useAttended` so that the layout component is not re-rendered when the attended list changes.
-      const attended = untracked(() => {
-        const attention = pluginManager.context.getCapability(AttentionCapabilities.Attention);
-        return attention.current;
-      });
+      const attention = pluginManager.capabilities.get(AttentionCapabilities.Attention);
+      const attended = attention.getCurrent();
 
       shouldRevert.current = true;
-      void dispatch(
-        createIntent(LayoutAction.SetLayoutMode, { part: 'mode', subject: attended[0], options: { mode: 'solo' } }),
-      );
-    } else if (isNotMobile && getMode(deck) === 'solo' && shouldRevert.current) {
-      void dispatch(createIntent(LayoutAction.SetLayoutMode, { part: 'mode', options: { revert: true } }));
+      invokeSync(LayoutOperation.SetLayoutMode, { subject: attended[0], mode: 'solo' });
+    } else if (isNotMobile && layoutMode === 'solo' && shouldRevert.current) {
+      invokeSync(LayoutOperation.SetLayoutMode, { revert: true });
     }
-  }, [isNotMobile, deck, dispatch]);
+    // NOTE: Using `layoutMode` instead of `deck` to avoid infinite loops caused by object reference changes.
+  }, [isNotMobile, layoutMode, invokeSync]);
 
   // When deck is disabled in settings, set to solo mode if the current layout mode is deck.
-  // TODO(thure): Applying this as an effect should be avoided over emitting the intent only when the setting changes.
+  // TODO(thure): Applying this as an effect should be avoided over emitting the operation only when the setting changes.
   useEffect(() => {
     if (!settings?.enableDeck && layoutMode === 'deck') {
-      void dispatch(
-        createIntent(LayoutAction.SetLayoutMode, { part: 'mode', subject: active[0], options: { mode: 'solo' } }),
-      );
+      invokeSync(LayoutOperation.SetLayoutMode, { subject: active[0], mode: 'solo' });
     }
-  }, [settings?.enableDeck, dispatch, active, layoutMode]);
+  }, [settings?.enableDeck, invokeSync, active, layoutMode]);
 
   /**
    * Clear scroll restoration state if the window is resized.
@@ -128,9 +118,9 @@ export const DeckMain = () => {
 
   const mainPosition = useMemo(
     () => [
-      'grid !block-start-[env(safe-area-inset-top)]',
-      topbar && '!block-start-[calc(env(safe-area-inset-top)+var(--rail-size))]',
-      hoistStatusbar && 'lg:block-end-[--statusbar-size]',
+      'grid !top-[env(safe-area-inset-top)]',
+      topbar && '!top-[calc(env(safe-area-inset-top)+var(--dx-rail-size))]',
+      hoistStatusbar && 'lg:bottom-(--dx-statusbar-size)',
     ],
     [topbar, hoistStatusbar],
   );
@@ -146,12 +136,26 @@ export const DeckMain = () => {
     );
   }, [active, activeCompanions]);
 
+  const handleNavigationSidebarStateChange = useCallback(
+    (next: typeof sidebarState) => {
+      updateState((s) => ({ ...s, sidebarState: next }));
+    },
+    [updateState],
+  );
+
+  const handleComplementarySidebarStateChange = useCallback(
+    (next: typeof complementarySidebarState) => {
+      updateState((s) => ({ ...s, complementarySidebarState: next }));
+    },
+    [updateState],
+  );
+
   return (
     <Main.Root
-      navigationSidebarState={fullscreen ? 'closed' : context.sidebarState}
-      complementarySidebarState={fullscreen ? 'closed' : context.complementarySidebarState}
-      onNavigationSidebarStateChange={(next) => (context.sidebarState = next)}
-      onComplementarySidebarStateChange={(next) => (context.complementarySidebarState = next)}
+      navigationSidebarState={fullscreen ? 'closed' : sidebarState}
+      complementarySidebarState={fullscreen ? 'closed' : complementarySidebarState}
+      onNavigationSidebarStateChange={handleNavigationSidebarStateChange}
+      onComplementarySidebarStateChange={handleComplementarySidebarStateChange}
     >
       {/* Left sidebar. */}
       <Sidebar />
@@ -178,27 +182,27 @@ export const DeckMain = () => {
           style={
             {
               '--main-spacing': settings?.encapsulatedPlanks ? '0.75rem' : '0',
-              '--dx-main-sidebarWidth':
+              '--dx-main-sidebar-width':
                 sidebarState === 'expanded'
-                  ? 'var(--nav-sidebar-size)'
+                  ? 'var(--dx-nav-sidebar-size)'
                   : sidebarState === 'collapsed'
-                    ? 'var(--l0-size)'
+                    ? 'var(--dx-l0-size)'
                     : '0',
-              '--dx-main-complementaryWidth':
+              '--dx-main-complementary-width':
                 complementarySidebarState === 'expanded'
-                  ? 'var(--complementary-sidebar-size)'
+                  ? 'var(--dx-complementary-sidebar-size)'
                   : complementarySidebarState === 'collapsed'
-                    ? 'var(--rail-size)'
+                    ? 'var(--dx-rail-size)'
                     : '0',
-              '--dx-main-contentFirstWidth': `${plankSizing[active[0] ?? 'never'] ?? DEFAULT_HORIZONTAL_SIZE}rem`,
-              '--dx-main-contentLastWidth': `${plankSizing[active[(active.length ?? 1) - 1] ?? 'never'] ?? DEFAULT_HORIZONTAL_SIZE}rem`,
-            } as MainProps['style']
+              '--dx-main-content-first-width': `${plankSizing[active[0] ?? 'never'] ?? DEFAULT_HORIZONTAL_SIZE}rem`,
+              '--dx-main-content-last-width': `${plankSizing[active[(active.length ?? 1) - 1] ?? 'never'] ?? DEFAULT_HORIZONTAL_SIZE}rem`,
+            } as MainContentProps['style']
           }
         >
           {/* Deck mode. */}
           <div
             role='none'
-            className={!solo ? 'relative bg-deckSurface overflow-hidden' : 'sr-only'}
+            className={!solo ? 'relative bg-deck-surface overflow-hidden' : 'sr-only'}
             {...(solo && { inert: true })}
           >
             {!topbar && !fullscreen && <ToggleSidebarButton classNames={fixedSidebarToggleStyles} />}
@@ -211,7 +215,7 @@ export const DeckMain = () => {
               size='contain'
               itemsCount={itemsCount - 1}
               classNames={[
-                'absolute inset-block-[--main-spacing] -inset-inline-px bs-[calc(100%-2*var(--main-spacing))]',
+                'absolute inset-y-(--main-spacing) -inset-w-px h-[calc(100%-2*var(--main-spacing))]',
                 mainPaddingTransitions,
               ]}
               style={padding}
@@ -233,10 +237,11 @@ export const DeckMain = () => {
               ))}
             </Stack>
           </div>
+
           {/* Solo mode. */}
           <div
             role='none'
-            className={solo ? 'relative overflow-hidden bg-deckSurface' : 'sr-only'}
+            className={solo ? 'relative overflow-hidden bg-deck-surface' : 'sr-only'}
             {...(!solo && { inert: true })}
           >
             {!topbar && !fullscreen && <ToggleSidebarButton classNames={fixedSidebarToggleStyles} />}
@@ -275,7 +280,7 @@ const PlankSeparator = ({ order, encapsulate }: { order: number; encapsulate?: b
   order > 0 ? (
     <span
       role='separator'
-      className={mx('row-span-2 bg-deckSurface', encapsulate ? 'is-0' : 'is-4')}
+      className={mx('row-span-2 bg-deck-surface', encapsulate ? 'w-0' : 'w-4')}
       style={{ gridColumn: order }}
     />
   ) : null;

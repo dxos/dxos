@@ -39,7 +39,7 @@ const initialLabels = {
     '0,0': { value: '', resizeHandle: 'col' },
   },
   frozenColsStart: [...Array(64)].reduce((acc, _, i) => {
-    acc[`0,${i}`] = { value: rowToA1Notation(i), className: 'text-end pie-1', resizeHandle: 'row' };
+    acc[`0,${i}`] = { value: rowToA1Notation(i), className: 'text-end pe-1', resizeHandle: 'row' };
     return acc;
   }, {}),
   frozenRowsStart: [...Array(12)].reduce((acc, _, i) => {

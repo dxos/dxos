@@ -4,6 +4,7 @@
 
 import { type Resource } from '@dxos/react-ui';
 import { translations as componentsTranslations } from '@dxos/react-ui-components';
+import { Message } from '@dxos/types';
 
 import { meta } from './meta';
 import { Calendar, Mailbox } from './types';
@@ -11,7 +12,7 @@ import { Calendar, Mailbox } from './types';
 export const translations = [
   {
     'en-US': {
-      [Mailbox.Mailbox.typename]: {
+      [Mailbox.kind]: {
         'typename label': 'Mailbox',
         'typename label_zero': 'Mailboxes',
         'typename label_one': 'Mailbox',
@@ -21,7 +22,17 @@ export const translations = [
         'delete object label': 'Delete mailbox',
         'object deleted label': 'Mailbox deleted',
       },
-      [Calendar.Calendar.typename]: {
+      [Message.Message.typename]: {
+        'typename label': 'Message',
+        'typename label_zero': 'Messages',
+        'typename label_one': 'Message',
+        'typename label_other': 'Messages',
+        'object name placeholder': 'New message',
+        'rename object label': 'Rename message',
+        'delete object label': 'Delete message',
+        'object deleted label': 'Message deleted',
+      },
+      [Calendar.kind]: {
         'typename label': 'Calendar',
         'typename label_zero': 'Calendars',
         'typename label_one': 'Calendar',
@@ -58,6 +69,9 @@ export const translations = [
         'event toolbar create note menu': 'Create note',
 
         'message toolbar label': 'Message toolbar',
+        'message toolbar reply': 'Reply',
+        'message toolbar reply all': 'Reply All',
+        'message toolbar forward': 'Forward',
         'message toolbar show enriched message': 'Show enriched message',
         'message toolbar show plain message': 'Show plain message',
         'message toolbar enriched message not available': 'Enriched message not available',
@@ -80,6 +94,23 @@ export const translations = [
         'recent events title': 'Recent events',
         'upcoming events title': 'Upcoming events',
         'related messages title': 'Recent messages',
+
+        'compose email label': 'Compose email',
+        'compose email dialog title': 'Compose Email',
+        'compose email dialog title reply': 'Reply',
+        'compose email dialog title forward': 'Forward Email',
+        'close label': 'Close',
+        'send email button label': 'Send',
+        'send email error title': 'Failed to send email',
+        'send email error no runtime': 'Email service not available',
+        'send email error unknown': 'An unknown error occurred',
+
+        'send as email label': 'Send as email',
+
+        'draft subject label': 'Subject',
+        'draft subject placeholder': 'Message subject',
+        'draft body label': 'Body',
+        'draft body placeholder': 'Write your message...',
       },
     },
   },

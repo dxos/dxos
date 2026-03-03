@@ -11,7 +11,7 @@ import { type MaybePromise } from '@dxos/util';
 
 import { type ServiceRegistry } from './service-registry';
 
-export type ClientRpcServerParams = {
+export type ClientRpcServerProps = {
   serviceRegistry: ServiceRegistry<ClientServices>;
   handleCall?: (
     method: string,
@@ -30,8 +30,8 @@ export class ClientRpcServer {
   private readonly _serviceRegistry: ServiceRegistry<ClientServices>;
   private readonly _rpcPeer: RpcPeer;
   private readonly _handlerCache = new Map<string, ServiceHandler<any>>();
-  private readonly _handleCall: ClientRpcServerParams['handleCall'];
-  private readonly _handleStream: ClientRpcServerParams['handleStream'];
+  private readonly _handleCall: ClientRpcServerProps['handleCall'];
+  private readonly _handleStream: ClientRpcServerProps['handleStream'];
 
   @trace.metricsCounter()
   private readonly _callMetrics = new MapCounter();
@@ -41,7 +41,7 @@ export class ClientRpcServer {
     return Object.keys(this._serviceRegistry.services);
   }
 
-  constructor(params: ClientRpcServerParams) {
+  constructor(params: ClientRpcServerProps) {
     const { serviceRegistry, handleCall, handleStream, ...rpcOptions } = params;
     this._handleCall = handleCall;
     this._handleStream = handleStream;

@@ -33,16 +33,16 @@
       "path": "../../core/echo/echo-db"
     },
     {
-      "path": "../../core/echo/live-object"
-    },
-    {
       "path": "../react-ui"
     },
     {
       "path": "../react-ui-editor"
     },
     {
-      "path": "../react-ui-theme"
+      "path": "../ui-editor"
+    },
+    {
+      "path": "../ui-theme"
     }
   ]
 }

@@ -2,15 +2,40 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Atom } from '@effect-atom/atom-react';
 import { useMemo } from 'react';
 
-import { live } from '@dxos/live-object';
+import { Capabilities } from '@dxos/app-framework';
+import { useCapability } from '@dxos/app-framework/ui';
 
 import { type DeployState } from './deploy';
 
 export type ScriptToolbarState = Partial<DeployState>;
 
-// TODO(burdon): Replace with context provider?
-export const useToolbarState = (initialState: ScriptToolbarState = {}) => {
-  return useMemo(() => live<ScriptToolbarState>(initialState), []);
+export type ScriptToolbarStateStore = {
+  atom: Atom.Writable<ScriptToolbarState>;
+  get value(): ScriptToolbarState;
+  update: (updater: (current: ScriptToolbarState) => ScriptToolbarState) => void;
+  set: <K extends keyof ScriptToolbarState>(key: K, value: ScriptToolbarState[K]) => void;
+};
+
+export const useToolbarState = (initialState: ScriptToolbarState = {}): ScriptToolbarStateStore => {
+  const registry = useCapability(Capabilities.AtomRegistry);
+  const atom = useMemo(() => Atom.make<ScriptToolbarState>(initialState), []);
+
+  return useMemo(
+    () => ({
+      atom,
+      get value() {
+        return registry.get(atom);
+      },
+      update: (updater: (current: ScriptToolbarState) => ScriptToolbarState) => {
+        registry.set(atom, updater(registry.get(atom)));
+      },
+      set: <K extends keyof ScriptToolbarState>(key: K, v: ScriptToolbarState[K]) => {
+        registry.set(atom, { ...registry.get(atom), [key]: v });
+      },
+    }),
+    [atom, registry],
+  );
 };

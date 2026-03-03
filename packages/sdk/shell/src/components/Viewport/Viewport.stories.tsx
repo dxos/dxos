@@ -40,7 +40,7 @@ const Views = ({ __viewportScope }: ViewportScopedProps<{}>) => {
   );
 };
 
-const StorybookViewport = (props: StorybookViewportProps) => {
+const StorybookViewport = (_: StorybookViewportProps) => {
   return (
     <AlertDialog.Root defaultOpen>
       <AlertDialog.Overlay>
@@ -57,7 +57,7 @@ const StorybookViewport = (props: StorybookViewportProps) => {
 const meta = {
   title: 'sdk/shell/StorybookViewport',
   component: StorybookViewport,
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof StorybookViewport>;
 
 export default meta;

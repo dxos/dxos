@@ -11,6 +11,7 @@ import {
   isFormula,
 } from '@dxos/compute';
 import { randomBytes } from '@dxos/crypto';
+import { type Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
 import { type Sheet } from '../types';
@@ -55,7 +56,7 @@ export const insertIndices = (indices: string[], i: number, n: number, max: numb
 };
 
 export const initialize = (
-  sheet: Sheet.Sheet,
+  sheet: Obj.Mutable<Sheet.Sheet>,
   { rows = DEFAULT_ROWS, columns = DEFAULT_COLS }: Partial<Sheet.SheetSize> = {},
 ) => {
   if (!sheet.rows.length) {

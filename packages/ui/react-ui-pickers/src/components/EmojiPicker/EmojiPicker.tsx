@@ -20,6 +20,7 @@ import {
   useThemeContext,
   useTranslation,
 } from '@dxos/react-ui';
+import { osTranslations } from '@dxos/ui-theme';
 
 import './emoji.css';
 
@@ -42,7 +43,7 @@ export const EmojiPickerToolbarButton = ({
   defaultEmoji,
   onChangeEmoji,
 }: Omit<EmojiPickerProps, 'onClickClear'>) => {
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(osTranslations);
   const { themeMode } = useThemeContext();
 
   const [_emojiValue, setEmojiValue] = useControllableState<string>({
@@ -112,7 +113,7 @@ export const EmojiPickerBlock = ({
   triggerVariant = 'ghost',
   classNames,
 }: EmojiPickerProps) => {
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(osTranslations);
   const [isMd] = useMediaQuery('md');
 
   const [emojiValue, setEmojiValue] = useControllableState<string>({
@@ -127,7 +128,7 @@ export const EmojiPickerBlock = ({
     <ButtonGroup classNames={classNames}>
       <Popover.Root open={emojiPickerOpen} onOpenChange={setEmojiPickerOpen}>
         <Popover.Trigger asChild>
-          <Button variant={triggerVariant} classNames='grow gap-2 text-2xl plb-1' disabled={disabled}>
+          <Button variant={triggerVariant} classNames='grow gap-2 text-2xl py-1' disabled={disabled}>
             <span className='sr-only'>{t('select emoji label')}</span>
             <span>{emojiValue}</span>
             <Icon icon='ph--caret-down--bold' size={3} />

@@ -4,10 +4,10 @@
 
 import { type EditorView } from '@codemirror/view';
 
-import { type NodeArg } from '@dxos/app-graph';
+import { type Node } from '@dxos/app-graph';
 import { type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
+import { setHeading } from '@dxos/ui-editor';
 
-import { setHeading } from '../../extensions';
 import { translationKey } from '../../translations';
 
 import { createEditorAction, createEditorActionGroup } from './actions';
@@ -59,7 +59,7 @@ export const createHeadings = (state: EditorToolbarState, getView: () => EditorV
   const headingGroupAction = createHeadingGroupAction(headingValue);
   const headingActions = createHeadingActions(headingValue, getView);
   return {
-    nodes: [headingGroupAction as NodeArg<any>, ...headingActions],
+    nodes: [headingGroupAction as Node.NodeArg<any>, ...headingActions],
     edges: [
       { source: 'root', target: 'heading' },
       ...headingActions.map(({ id }) => ({ source: headingGroupAction.id, target: id })),

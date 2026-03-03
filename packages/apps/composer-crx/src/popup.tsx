@@ -10,13 +10,13 @@ import { sendMessage } from 'webext-bridge/popup';
 import browser from 'webextension-polyfill';
 
 import { log } from '@dxos/log';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { Chat, type ChatProps, Container, ErrorBoundary, Thumbnail } from './components';
 import { THUMBNAIL_PROP, getConfig } from './config';
 
 // NOTE: Keep in sync with popup.html initial layout.
-const rootClasses = 'flex flex-col is-[500px] opacity-0 [animation:popup-fade-in_0.5s_ease-out_forwards]';
+const rootClasses = 'flex flex-col w-[500px] opacity-0 [animation:popup-fade-in_0.5s_ease-out_forwards]';
 
 /**
  * Root component.

@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 
 import { createObject } from '@dxos/echo-db';
 import { Button, Toolbar } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { migrateCanvas } from '../../migrations';
 import { data } from '../../testing';
@@ -55,10 +55,10 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-sketch/Sketch',
+  title: 'plugins/plugin-sketch/components/Sketch',
   component: Sketch as any,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
   },

@@ -2,27 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
-import { useEffect } from 'react';
+import { Atom, RegistryContext } from '@effect-atom/atom-react';
+import { useContext, useEffect } from 'react';
 
-import {
-  ACTION_GROUP_TYPE,
-  ACTION_TYPE,
-  type Action,
-  Graph,
-  type NodeArg,
-  ROOT_ID,
-  actionGroupSymbol,
-} from '@dxos/app-graph';
-import { live } from '@dxos/live-object';
+import { Graph, Node } from '@dxos/app-graph';
 import { faker } from '@dxos/random';
-import { type DeepWriteable } from '@dxos/util';
 
 import { type ActionGraphProps } from '../hooks/useMenuActions';
-import { type MenuAction, type MenuItem, type MenuItemGroup } from '../types';
+import { type MenuItem, type MenuItemGroup } from '../types';
 
-export type CreateActionsParams = Partial<{
-  type?: typeof ACTION_TYPE | typeof ACTION_GROUP_TYPE;
+export type CreateActionsProps = Partial<{
+  type?: typeof Node.ActionType | typeof Node.ActionGroupType;
   callback: () => void;
   count: number;
 }>;
@@ -46,29 +36,27 @@ const icons = {
   ],
 };
 
-export const createActions = (params?: CreateActionsParams) => {
-  // eslint-disable-next-line no-console
-  const { callback = () => console.log('invoke'), count = 12, type = ACTION_TYPE } = params ?? {};
+export const createActions = (params?: CreateActionsProps) => {
+  const { callback = () => console.log('invoke'), count = 12, type = Node.ActionType } = params ?? {};
   return faker.helpers.multiple(
-    () =>
-      live({
-        id: faker.string.uuid(),
-        type,
-        data: type === ACTION_GROUP_TYPE ? actionGroupSymbol : callback,
-        properties: {
-          label: faker.lorem.words(2),
-          icon: faker.helpers.arrayElement(icons[faker.helpers.arrayElement(Object.keys(icons)) as keyof typeof icons]),
-          disabled: faker.helpers.arrayElement([true, false]),
-          ...(type === ACTION_GROUP_TYPE && { variant: 'dropdownMenu' }),
-        },
-      }),
+    () => ({
+      id: faker.string.uuid(),
+      type,
+      data: type === Node.ActionGroupType ? Node.actionGroupSymbol : callback,
+      properties: {
+        label: faker.lorem.words(2),
+        icon: faker.helpers.arrayElement(icons[faker.helpers.arrayElement(Object.keys(icons)) as keyof typeof icons]),
+        disabled: faker.helpers.arrayElement([true, false]),
+        ...(type === Node.ActionGroupType && { variant: 'dropdownMenu' }),
+      },
+    }),
     { count },
   );
 };
 
-export const createNestedActions = Atom.make(() => {
+const buildNestedActions = (): ActionGraphProps => {
   const result: ActionGraphProps = { edges: [], nodes: [] };
-  const actionGroups = createActions({ type: ACTION_GROUP_TYPE });
+  const actionGroups = createActions({ type: Node.ActionGroupType });
   actionGroups.forEach((group) => {
     const actions = createActions();
     result.nodes.push(group, ...actions);
@@ -78,39 +66,56 @@ export const createNestedActions = Atom.make(() => {
     );
   });
   return result;
-});
+};
 
-export const createNestedActionsResolver = (groupParams?: CreateActionsParams, params?: CreateActionsParams) => {
-  const graph = new Graph();
-  const actionGroups = createActions({ type: ACTION_GROUP_TYPE, ...groupParams });
+export const createNestedActions = Atom.make(buildNestedActions()).pipe(Atom.keepAlive);
+
+export const createNestedActionsResolver = (groupParams?: CreateActionsProps, params?: CreateActionsProps) => {
+  const graph = Graph.make();
+  const actionGroups = createActions({ type: Node.ActionGroupType, ...groupParams });
   actionGroups.forEach((group) => {
     const actions = createActions(params);
-    graph.addNodes([group as NodeArg<any>, ...(actions as NodeArg<any>[])]);
-    graph.addEdges([
-      { source: 'root', target: group.id },
-      ...actions.map((action) => ({ source: group.id, target: action.id })),
-    ]);
-    void graph.expand(group.id);
+    graph.pipe(
+      Graph.addNodes([group as Node.NodeArg<any>, ...(actions as Node.NodeArg<any>[])]),
+      Graph.addEdges([
+        { source: 'root', target: group.id },
+        ...actions.map((action) => ({ source: group.id, target: action.id })),
+      ]),
+      Graph.expand(group.id),
+    );
   });
   const resolveGroupItems = (groupNode?: MenuItemGroup) =>
-    (graph.getActions(groupNode?.id ?? ROOT_ID) || null) as MenuItem[] | null;
+    (Graph.getActions(graph, groupNode?.id ?? Node.RootId) || null) as MenuItem[] | null;
   return { resolveGroupItems };
 };
 
-export const mutateActionsOnInterval = (actions: Action[]) => {
-  let cursor = 0;
-  return setInterval(() => {
-    const action = actions[cursor] as DeepWriteable<Action>;
-    action.properties.icon = faker.helpers.arrayElement(
-      action.properties.icon.endsWith('regular') ? icons.fill : icons.regular,
-    );
-    action.properties.disabled = !action.properties.disabled;
-    cursor = (cursor + actions.length + 1) % actions.length;
-  }, 1_000);
-};
+/**
+ * Hook to mutate actions in an atom on an interval for testing reactivity.
+ */
+export const useMutateActions = (actionsAtom: Atom.Writable<ActionGraphProps>) => {
+  const registry = useContext(RegistryContext);
 
-export const useMutateActions = (actions: MenuAction[]) =>
   useEffect(() => {
-    const interval = mutateActionsOnInterval(actions);
+    let cursor = 0;
+    const interval = setInterval(() => {
+      const current = registry.get(actionsAtom);
+      const nodes = current.nodes.map((node, index) => {
+        if (index !== cursor) {
+          return node;
+        }
+        return {
+          ...node,
+          properties: {
+            ...node.properties,
+            icon: faker.helpers.arrayElement(node.properties?.icon?.endsWith('regular') ? icons.fill : icons.regular),
+            disabled: !node.properties?.disabled,
+          },
+        };
+      });
+      registry.set(actionsAtom, { ...current, nodes });
+      cursor = (cursor + 1) % current.nodes.length;
+    }, 1_000);
+
     return () => clearInterval(interval);
-  }, []);
+  }, [actionsAtom, registry]);
+};

@@ -12,10 +12,10 @@ import { StackItem, type StackItemRootProps } from './StackItem';
 
 const DefaultStory = (props: StackItemRootProps) => {
   return (
-    <StackItem.Root role='section' {...props} classNames='is-[20rem] border border-separator'>
-      <StackItem.Heading>
+    <StackItem.Root role='section' {...props} classNames='w-[20rem] border border-separator'>
+      <StackItem.Heading classNames='w-full border-b border-separator'>
         <span className='sr-only'>Title</span>
-        <div role='none' className='sticky -block-start-px bg-[--sticky-bg] p-1 is-full'>
+        <div role='none' className='sticky -top-px bg-(--sticky-bg) p-1 w-full'>
           <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
               <StackItem.SigilButton>
@@ -25,7 +25,9 @@ const DefaultStory = (props: StackItemRootProps) => {
           </DropdownMenu.Root>
         </div>
       </StackItem.Heading>
-      <StackItem.Content>Content</StackItem.Content>
+      <StackItem.Content>
+        <div className='p-4 text-center'>Content</div>
+      </StackItem.Content>
     </StackItem.Root>
   );
 };
@@ -34,7 +36,7 @@ const meta = {
   title: 'ui/react-ui-stack/StackItem',
   component: StackItem.Root as any,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'centered',
   },

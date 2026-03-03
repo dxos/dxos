@@ -8,7 +8,7 @@ import * as Layer from 'effect/Layer';
 import { describe } from 'vitest';
 
 import { TestAiService } from '@dxos/ai/testing';
-import { Obj, Ref } from '@dxos/echo';
+import { Feed, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { ComputeEventLogger, CredentialsService, TracingService } from '@dxos/functions';
 import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
@@ -20,16 +20,16 @@ import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
 import {
   AnyInput,
   AnyOutput,
-  type ComputeEffect,
   ComputeGraph,
   ComputeGraphModel,
   type ComputeNode,
+  type ComputeResult,
   type Executable,
   ValueBag,
   synchronizedComputeFunction,
 } from '../types';
 
-import { WorkflowLoader, type WorkflowLoaderParams } from './loader';
+import { WorkflowLoader, type WorkflowLoaderProps } from './loader';
 
 const TestLayer = Layer.mergeAll(ComputeEventLogger.layerFromTracing).pipe(
   Layer.provideMerge(FunctionInvocationServiceLayerTest()),
@@ -38,6 +38,7 @@ const TestLayer = Layer.mergeAll(ComputeEventLogger.layerFromTracing).pipe(
       TestAiService(),
       TestDatabaseLayer(),
       CredentialsService.configuredLayer([]),
+      Feed.notAvailable,
       TracingService.layerNoop,
     ),
   ),
@@ -168,7 +169,7 @@ describe('workflow', () => {
     );
   });
 
-  const executeEffect = (effect: ComputeEffect<any>) => {
+  const executeEffect = (effect: ComputeResult<any>) => {
     return effect.pipe(
       Effect.withSpan('runTestWorkflow'),
       Effect.flatMap(ValueBag.unwrap),
@@ -237,7 +238,7 @@ describe('workflow', () => {
     }
   };
 
-  const createResolver = (...params: TestWorkflowGraph[]): WorkflowLoaderParams => {
+  const createResolver = (...params: TestWorkflowGraph[]): WorkflowLoaderProps => {
     return {
       nodeResolver: async (node: ComputeNode) => {
         const transform = params.flatMap((v) => v.compute).find((v) => v[0].toString() === node.type)?.[1];

@@ -13,11 +13,13 @@ import { Table } from 'console-table-printer';
 import deepEqual from 'deep-equal';
 import globrex from 'globrex';
 import defaultsDeep from 'lodash.defaultsdeep';
-import pick from 'lodash.pick';
 import sortPackageJson from 'sort-package-json';
 
 import { loadJson, saveJson, sortJson } from './util';
 import { type PackageJson, type Project, ProjectGraph } from './util/project-graph';
+
+const pick = <T extends object>(obj: T, keys: (keyof T)[]): Partial<T> =>
+  keys.reduce((result, key) => (key in obj ? { ...result, [key]: obj[key] } : result), {} as Partial<T>);
 
 const raise = (err: Error) => {
   throw err;
@@ -209,7 +211,7 @@ export class Toolbox {
             // TODO(wittjosiah): Move extra files to toolbox config.
             'packages/sdk/client/src/version.ts',
             'packages/sdk/client-services/src/version.ts',
-            'packages/devtools/cli-next/src/version.ts',
+            'packages/devtools/cli/src/version.ts',
             {
               type: 'json',
               path: 'packages/apps/composer-app/src-tauri/tauri.conf.json',
@@ -308,14 +310,15 @@ export class Toolbox {
     for (const project of this.graph.projects) {
       const packagePath = join(project.path, 'package.json');
       const packageJson = await loadJson<PackageJson>(packagePath);
+      const commonKeys = pick(this.rootPackage, (this.config.package?.commonKeys as (keyof PackageJson)[]) ?? []);
+      const merged = defaultsDeep(packageJson, commonKeys);
 
-      // if (project.path.includes('dxos/packages')) {
-      //   packageJson.type = 'module';
-      // }
+      // Enforce repository field format for npm provenance.
+      if (this.rootPackage.repository) {
+        merged.repository = this.rootPackage.repository;
+      }
 
-      const commonKeys = pick(this.rootPackage, this.config.package?.commonKeys ?? []);
-      // TODO(burdon): Investigate util: https://github.com/JamieMason/syncpack
-      const updated = sortPackageJson(defaultsDeep(packageJson, commonKeys));
+      const updated = sortPackageJson(merged);
       await saveJson(packagePath, updated, this.options.verbose);
     }
   }
@@ -334,6 +337,7 @@ export class Toolbox {
       const projectPath = join(project.path, 'package.json');
       const projectPackage = await loadJson<PackageJson>(projectPath);
       const tsConfigPath = join(project.path, 'tsconfig.json');
+
       if (fs.existsSync(tsConfigPath)) {
         const tsConfigJson = await loadJson<TsConfigJson>(tsConfigPath);
 
@@ -344,7 +348,7 @@ export class Toolbox {
             ...Object.entries(dependencies),
             ...Object.entries(devDependencies),
             ...Object.entries(peerDependencies),
-          ].filter(([_, value]) => value === 'workspace:*'),
+          ].filter(([_, value]) => value === 'workspace:*' || value === 'workspace:'),
         );
 
         const deps = Array.from(depsMap.entries());
@@ -352,7 +356,7 @@ export class Toolbox {
           tsConfigJson.references = [];
         } else {
           tsConfigJson.references = deps.map(([dependencyName]) => {
-            const dependency = this._getProjectByPackageName(dependencyName)!;
+            const dependency = this._getProjectByPackageName(dependencyName);
             const path = relative(project.path, dependency.path);
             return { path };
           });
@@ -599,7 +603,22 @@ export class Toolbox {
         if (!existsSync(join(project.path, src))) {
           console.log(`Missing src file for ${project.name}: ${src}`);
         }
-        config.source = src;
+        // Ensure 'source' is first in the exports map so it takes precedence over 'browser'
+        // when oxc-resolver matches conditions in exports map order.
+        if (Object.keys(config)[0] !== 'source') {
+          const existing = { ...(config as any) };
+          for (const k of Object.keys(existing)) {
+            delete (config as any)[k];
+          }
+          (config as any).source = src;
+          for (const [k, v] of Object.entries(existing)) {
+            if (k !== 'source') {
+              (config as any)[k] = v;
+            }
+          }
+        } else {
+          config.source = src;
+        }
       }
 
       for (const [key, config] of Object.entries(packageJson.imports ?? {})) {
@@ -610,7 +629,21 @@ export class Toolbox {
         if (!existsSync(join(project.path, src))) {
           console.log(`Missing src file for ${project.name}: ${src}`);
         }
-        config.source = src;
+        // Ensure 'source' is first in the imports map.
+        if (Object.keys(config)[0] !== 'source') {
+          const existing = { ...(config as any) };
+          for (const k of Object.keys(existing)) {
+            delete (config as any)[k];
+          }
+          (config as any).source = src;
+          for (const [k, v] of Object.entries(existing)) {
+            if (k !== 'source') {
+              (config as any)[k] = v;
+            }
+          }
+        } else {
+          config.source = src;
+        }
       }
 
       // const projectJson = await loadJson<ProjectJson>(join(project.path, 'project.json'));

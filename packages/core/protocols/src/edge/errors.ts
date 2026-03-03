@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type EdgeErrorData, type EdgeFailure, EdgeHttpErrorCodec, ErrorCodec } from './edge.js';
+import { type EdgeErrorData, type EdgeFailure, EdgeHttpErrorCodec, ErrorCodec } from './edge.ts';
 
 // TODO(burdon): Reconcile with @dxos/errors.
 /**

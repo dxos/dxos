@@ -15,6 +15,8 @@ import { DeckManager } from './plugins';
 // TODO(wittjosiah): Normalize data-testids between snake and camel case.
 // TODO(wittjosiah): Consider structuring tests in such that they could be run with different sets of plugins enabled.
 
+// TODO(wittjosiah): Beware that sometimes the playwright chromium seems to appear as Windows.
+//   At least via `navigator.userAgent.platform`.
 const isMac = os.platform() === 'darwin';
 const modifier = isMac ? 'Meta' : 'Control';
 export const INITIAL_URL = 'http://localhost:4173';
@@ -85,9 +87,7 @@ export class AppManager {
   }
 
   async openUserAccount(): Promise<void> {
-    const platform = os.platform();
-    const shortcut = platform === 'darwin' ? 'Meta+Shift+.' : platform === 'win32' ? 'Alt+Shift+.' : 'Alt+Shift+>';
-    await this.page.keyboard.press(shortcut);
+    await this.page.getByTestId('clientPlugin.account').click();
   }
 
   async openUserDevices(): Promise<void> {
@@ -119,8 +119,9 @@ export class AppManager {
   }
 
   async shareSpace(): Promise<void> {
-    const shortcut = isMac ? 'Meta+.' : 'Alt+.';
-    await this.page.keyboard.press(shortcut);
+    await this.page.getByTestId('navtree.spaceSettings').click();
+    await this.page.getByTestId('spacePlugin.members').getByTestId('treeItem.heading').click();
+    await this.page.getByTestId('navtree.backToSpace').click();
   }
 
   async createSpaceInvitation(): Promise<string> {
@@ -168,7 +169,7 @@ export class AppManager {
 
   async waitForSpaceReady(timeout = 30_000): Promise<void> {
     await Promise.all([
-      this.page.getByTestId('treeView.alternateTreeButton').waitFor({ timeout }),
+      // this.page.getByTestId('treeView.alternateTreeButton').waitFor({ timeout }),
       this.page.waitForSelector('[data-testid="create-space-form"]', { state: 'detached', timeout }),
     ]);
   }
@@ -194,9 +195,14 @@ export class AppManager {
     return this.page.getByTestId('spacePlugin.object').nth(nth).getByRole('button').first().click({ delay });
   }
 
-  async createObject({ type, name, nth = 0 }: { type: string; name?: string; nth?: number }): Promise<void> {
-    const object = this.page.getByTestId('spacePlugin.createObject');
-    await object.nth(nth).click();
+  async createObject({ type, name, nth }: { type: string; name?: string; nth?: number }): Promise<void> {
+    if (nth !== undefined) {
+      const object = this.page.getByTestId('spacePlugin.object').nth(nth);
+      await object.hover();
+      await object.getByTestId('spacePlugin.createObject').click();
+    } else {
+      await this.page.getByTestId('spacePlugin.createObject').first().click();
+    }
 
     await this.page.getByRole('listbox').getByText(type).first().click();
 
@@ -216,10 +222,11 @@ export class AppManager {
   }
 
   async renameObject(newName: string, nth = 0): Promise<void> {
+    await this.page.getByTestId('spacePlugin.object').nth(nth).hover();
     await this.page
       .getByTestId('spacePlugin.object')
       .nth(nth)
-      .getByTestId('navtree.treeItem.actionsLevel2')
+      .getByTestId('navtree.treeItem.actionsLevel1')
       .first()
       .click();
     // TODO(thure): For some reason, actions move around when simulating the mouse in Firefox.
@@ -235,7 +242,7 @@ export class AppManager {
     await this.page
       .getByTestId('spacePlugin.object')
       .nth(nth)
-      .getByTestId('navtree.treeItem.actionsLevel2')
+      .getByTestId('navtree.treeItem.actionsLevel1')
       .first()
       .click();
     // TODO(thure): For some reason, actions move around when simulating the mouse in Firefox.

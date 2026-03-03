@@ -9,9 +9,9 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { UserAccountAvatar } from './UserAccountAvatar';
 
 const meta = {
-  title: 'plugins/plugin-navtree/UserAccountAvatar',
+  title: 'plugins/plugin-navtree/components/UserAccountAvatar',
 
-  decorators: [withTheme],
+  decorators: [withTheme()],
   component: UserAccountAvatar,
 } satisfies Meta<typeof UserAccountAvatar>;
 

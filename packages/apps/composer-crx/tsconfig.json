@@ -64,7 +64,7 @@
       "path": "../../ui/brand"
     },
     {
-      "path": "../../ui/primitives/react-hooks"
+      "path": "../../ui/react-primitives/react-hooks"
     },
     {
       "path": "../../ui/react-ui"
@@ -73,7 +73,7 @@
       "path": "../../ui/react-ui-markdown"
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/ui-theme"
     }
   ]
 }

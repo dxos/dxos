@@ -42,7 +42,7 @@
       "path": "../../core/protocols"
     },
     {
-      "path": "../../ui/primitives/react-hooks"
+      "path": "../../ui/react-primitives/react-hooks"
     }
   ]
 }

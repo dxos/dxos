@@ -39,6 +39,7 @@ message AppContextRequest {
   /// The key of the joined space.
   optional dxos.keys.PublicKey space_key = 2;
 
+  // TODO(wittjosiah): Make the generated type be `SpaceId`.
   /// The id of the joined space.
   optional string space_id = 5;
 

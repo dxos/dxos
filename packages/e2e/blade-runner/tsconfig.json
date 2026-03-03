@@ -71,9 +71,6 @@
       "path": "../../core/echo/echo-pipeline"
     },
     {
-      "path": "../../core/echo/live-object"
-    },
-    {
       "path": "../../core/functions"
     },
     {

@@ -3,24 +3,32 @@
 //
 
 import type { AutomergeUrl } from '@automerge/automerge-repo';
-import type * as Schema from 'effect/Schema';
-import isEqual from 'lodash.isequal';
+import * as Reactivity from '@effect/experimental/Reactivity';
+import * as SqlClient from '@effect/sql/SqlClient';
+import * as EffectContext from 'effect/Context';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as ManagedRuntime from 'effect/ManagedRuntime';
+import isEqual from 'fast-deep-equal';
 
 import { waitForCondition } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
-import { EchoHost, type EchoHostIndexingConfig } from '@dxos/echo-pipeline';
+import { type Obj, type Type } from '@dxos/echo';
+import { TestSchema } from '@dxos/echo/testing';
+import { EchoHost } from '@dxos/echo-pipeline';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { createTestLevel } from '@dxos/kv-store/testing';
+import { layerMemory } from '@dxos/sql-sqlite/platform';
+import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
+import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { range } from '@dxos/util';
 
 import { EchoClient } from '../client';
-import { type AnyLiveObject } from '../echo-handler';
 import { type EchoDatabase } from '../proxy-db';
 import { Filter, Query } from '../query';
-import { MockQueueService } from '../queue';
 
 type OpenDatabaseOptions = {
   client?: EchoClient;
@@ -29,8 +37,9 @@ type OpenDatabaseOptions = {
 };
 
 type PeerOptions = {
-  indexing?: Partial<EchoHostIndexingConfig>;
-  types?: Schema.Schema.AnyNoContext[];
+  types?: Type.Entity.Any[];
+  assignQueuePositions?: boolean;
+
   kv?: LevelDB;
 };
 
@@ -72,26 +81,67 @@ export class EchoTestBuilder extends Resource {
 
 export class EchoTestPeer extends Resource {
   private readonly _kv: LevelDB;
-  private readonly _indexing: Partial<EchoHostIndexingConfig>;
-  private readonly _types: Schema.Schema.AnyNoContext[];
+  private readonly _types: Type.Entity.Any[];
+  private readonly _assignQueuePositions?: boolean;
   private readonly _clients = new Set<EchoClient>();
-  private _queuesService = new MockQueueService();
   private _echoHost!: EchoHost;
   private _echoClient!: EchoClient;
   private _lastDatabaseSpaceKey?: PublicKey = undefined;
   private _lastDatabaseRootUrl?: string = undefined;
 
-  constructor({ kv = createTestLevel(), indexing = {}, types }: PeerOptions) {
+  private _persistentRuntime?: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient | SqlExport.SqlExport, never>;
+  private _managedRuntime!: ManagedRuntime.ManagedRuntime<
+    SqlClient.SqlClient | SqlExport.SqlExport | SqlTransaction.SqlTransaction,
+    never
+  >;
+  private _isReloading = false;
+
+  constructor({ kv = createTestLevel(), types, assignQueuePositions }: PeerOptions) {
     super();
     this._kv = kv;
-    this._indexing = indexing;
-    this._types = types ?? [];
-    this._initEcho();
+    // Include Expando as default type for tests that use Obj.make(TestSchema.Expando, ...).
+    this._types = [TestSchema.Expando, ...(types ?? [])];
+    this._assignQueuePositions = assignQueuePositions;
+  }
+
+  private _createManagedRuntime(): ManagedRuntime.ManagedRuntime<
+    SqlClient.SqlClient | SqlExport.SqlExport | SqlTransaction.SqlTransaction,
+    never
+  > {
+    if (this._persistentRuntime == null) {
+      this._persistentRuntime = ManagedRuntime.make(layerMemory.pipe(Layer.orDie));
+    }
+
+    // Keep the same SQLite-backed services across peer reloads by reading them from the
+    // persistent runtime context, then provide those services into a new runtime that
+    // recreates only the transaction layer.
+    const persistedSqlLayer = Layer.unwrapEffect(
+      this._persistentRuntime.runtimeEffect.pipe(
+        Effect.map((runtime) =>
+          Layer.merge(
+            Layer.succeed(SqlClient.SqlClient, EffectContext.get(runtime.context, SqlClient.SqlClient)),
+            Layer.succeed(SqlExport.SqlExport, EffectContext.get(runtime.context, SqlExport.SqlExport)),
+          ),
+        ),
+      ),
+    );
+
+    return ManagedRuntime.make(
+      SqlTransaction.layer
+        .pipe(Layer.provideMerge(persistedSqlLayer), Layer.provideMerge(Reactivity.layer))
+        .pipe(Layer.orDie),
+    );
   }
 
   private _initEcho(): void {
-    this._echoHost = new EchoHost({ kv: this._kv, indexing: this._indexing });
-    this._clients.delete(this._echoClient);
+    this._managedRuntime = this._createManagedRuntime();
+
+    this._echoHost = new EchoHost({
+      kv: this._kv,
+      runtime: this._managedRuntime.runtimeEffect,
+      assignQueuePositions: this._assignQueuePositions,
+    });
+    this._clients.clear();
     this._echoClient = new EchoClient();
     this._clients.add(this._echoClient);
     void this._echoClient.graph.schemaRegistry.register(this._types);
@@ -107,11 +157,11 @@ export class EchoTestPeer extends Resource {
 
   protected override async _open(ctx: Context): Promise<void> {
     await this._kv.open();
-
+    this._initEcho();
     this._echoClient.connectToService({
       dataService: this._echoHost.dataService,
       queryService: this._echoHost.queryService,
-      queueService: this._queuesService,
+      queueService: this._echoHost.queuesService,
     });
     await this._echoHost.open(ctx);
     await this._echoClient.open(ctx);
@@ -123,17 +173,25 @@ export class EchoTestPeer extends Resource {
       client.disconnectFromService();
     }
     await this._echoHost.close(ctx);
-
     await this._kv.close();
+    await this._managedRuntime.dispose();
+    if (!this._isReloading && this._persistentRuntime != null) {
+      await this._persistentRuntime.dispose();
+      this._persistentRuntime = undefined;
+    }
   }
 
   /**
    * Simulates a reload of the process by re-creation ECHO.
    */
   async reload(): Promise<void> {
-    await this.close();
-    this._initEcho();
-    await this.open();
+    this._isReloading = true;
+    try {
+      await this.close();
+      await this.open();
+    } finally {
+      this._isReloading = false;
+    }
   }
 
   async createClient(): Promise<EchoClient> {
@@ -151,9 +209,10 @@ export class EchoTestPeer extends Resource {
   async createDatabase(
     spaceKey: PublicKey = PublicKey.random(),
     { client = this.client, reactiveSchemaQuery, preloadSchemaOnOpen }: OpenDatabaseOptions = {},
+    // TODO(burdon): Return Promise<EchoDatabase>
   ) {
-    const root = await this.host.createSpaceRoot(spaceKey);
     // NOTE: Client closes the database when it is closed.
+    const root = await this.host.createSpaceRoot(spaceKey);
     const spaceId = await createIdFromSpaceKey(spaceKey);
     const db = client.constructDatabase({ spaceId, spaceKey, reactiveSchemaQuery, preloadSchemaOnOpen });
     await db.setSpaceRoot(root.url);
@@ -168,6 +227,7 @@ export class EchoTestPeer extends Resource {
     spaceKey: PublicKey,
     rootUrl: string,
     { client = this.client, reactiveSchemaQuery, preloadSchemaOnOpen }: OpenDatabaseOptions = {},
+    // TODO(burdon): Return Promise<EchoDatabase>
   ) {
     // NOTE: Client closes the database when it is closed.
     const spaceId = await createIdFromSpaceKey(spaceKey);
@@ -185,6 +245,16 @@ export class EchoTestPeer extends Resource {
       preloadSchemaOnOpen,
     });
   }
+
+  async exportSqliteDatabase(): Promise<Uint8Array> {
+    invariant(this._managedRuntime);
+    return await this._managedRuntime.runPromise(
+      Effect.gen(function* () {
+        const sql = yield* SqlExport.SqlExport;
+        return yield* sql.export;
+      }),
+    );
+  }
 }
 
 export const createDataAssertion = ({
@@ -192,7 +262,7 @@ export const createDataAssertion = ({
   onlyObject = true,
   numObjects = 1,
 }: { referenceEquality?: boolean; onlyObject?: boolean; numObjects?: number } = {}) => {
-  let seedObjects: AnyLiveObject<any>[];
+  let seedObjects: Obj.Any[];
   const findSeedObject = async (db: EchoDatabase) => {
     const objects = await db.query(Query.select(Filter.everything())).run();
     const received = seedObjects.map((seedObject) => objects.find((object) => object.id === seedObject.id));

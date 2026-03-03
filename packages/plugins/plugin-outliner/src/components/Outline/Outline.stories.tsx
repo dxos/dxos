@@ -7,27 +7,34 @@ import React, { useMemo } from 'react';
 
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
-import { render } from '@dxos/storybook-utils';
 
 import { translations } from '../../translations';
 import { Outline } from '../../types';
 
 import { Outline as OutlineComponent } from './Outline';
 
-const meta = {
-  title: 'plugins/plugin-outliner/Outline',
-  component: OutlineComponent,
-  render: render(({ text: textParam }) => {
-    const space = useSpace();
-    const text = useMemo(() => space?.db.add(textParam), [space, textParam]);
-    if (text) {
-      return <OutlineComponent id={text.id} text={text} />;
+const OutlineStory = () => {
+  const space = useSpace();
+  const text = useMemo(() => {
+    if (space) {
+      return space.db.add(Text.make('- [x] Initial content'));
     }
-  }),
+    return undefined;
+  }, [space]);
+  if (text) {
+    return <OutlineComponent id={text.id} text={text} />;
+  }
+  return null;
+};
+
+const meta = {
+  title: 'plugins/plugin-outliner/components/Outline',
+  component: OutlineStory,
   decorators: [
-    withTheme,
+    withTheme(),
+    withLayout({ layout: 'fullscreen' }),
     // TODO(burdon): Can we create a storybook for the Outliner without the database?
     withClientProvider({
       createIdentity: true,
@@ -39,15 +46,10 @@ const meta = {
     layout: 'fullscreen',
     translations,
   },
-} satisfies Meta<typeof OutlineComponent>;
+} satisfies Meta<typeof OutlineStory>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
-  args: {
-    id: 'outline',
-    text: Text.make('- [x] Initial content'),
-  },
-};
+export const Default: Story = {};

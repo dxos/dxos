@@ -10,10 +10,11 @@ import { expect, fn, userEvent, within } from 'storybook/test';
 import { Obj } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { Filter, useQuery } from '@dxos/react-client/echo';
-import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
+import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { Button } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { Person } from '@dxos/types';
+import { osTranslations } from '@dxos/ui-theme';
 
 import { translations } from '../../translations';
 
@@ -34,7 +35,7 @@ const mockHandleSelect = fn();
 const mockHandleCreate = fn();
 
 const DefaultStory = () => {
-  const { space } = useClientProvider();
+  const { space } = useClientStory();
   const [isOpen, setIsOpen] = useState(false);
 
   // Create sample Person objects
@@ -48,7 +49,7 @@ const DefaultStory = () => {
   }, [space]);
 
   // Get all objects in the space (similar to BoardContainer)
-  const allObjects = useQuery(space, Filter.everything());
+  const allObjects = useQuery(space?.db, Filter.everything());
 
   // Map objects to options format expected by ObjectPicker
   const options = useMemo(
@@ -73,18 +74,18 @@ const DefaultStory = () => {
   );
 
   return (
-    <div role='none' className='flex is-96'>
+    <div role='none' className='flex w-96'>
       <ObjectPicker.Root open={isOpen} onOpenChange={setIsOpen}>
         <ObjectPicker.Trigger asChild>
-          <Button variant='primary' data-testid='trigger' classNames='is-full'>
+          <Button variant='primary' data-testid='trigger' classNames='w-full'>
             Select Person
           </Button>
         </ObjectPicker.Trigger>
         <ObjectPicker.Content
-          classNames='popover-card-width'
+          classNames='dx-card-popover-width'
           options={options}
           createSchema={personSchema}
-          createOptionLabel={['create new person label', { ns: 'os' }]}
+          createOptionLabel={['create new person label', { ns: osTranslations }]}
           createOptionIcon='ph--user-plus--regular'
           createInitialValuePath='fullName'
           onCreate={handleCreateCallback}
@@ -99,7 +100,7 @@ const meta = {
   title: 'ui/react-ui-form/ObjectPicker',
   render: DefaultStory,
   decorators: [
-    withTheme,
+    withTheme(),
     withClientProvider({
       types: [Person.Person],
       createIdentity: true,
@@ -200,8 +201,10 @@ export const WithTest: Story = {
     await userEvent.click(saveButton);
 
     // Check that clicking the save button calls onCreate with expected values.
-    await expect(mockHandleCreate).toHaveBeenCalledWith({
-      fullName: unrelatedTerm,
-    });
+    await expect(mockHandleCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        fullName: unrelatedTerm,
+      }),
+    );
   },
 };

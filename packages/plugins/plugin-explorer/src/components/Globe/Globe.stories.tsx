@@ -10,7 +10,7 @@ import { useResizeDetector } from 'react-resize-detector';
 import { feature } from 'topojson-client';
 
 import { ClientRepeater } from '@dxos/react-client/testing';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import CitiesData from '../../../data/cities.js';
 import CountriesData from '../../../data/countries-110m.js';
@@ -80,8 +80,8 @@ const ExtendedStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-explorer/Globe',
-  decorators: [withTheme],
+  title: 'plugins/plugin-explorer/components/Globe',
+  decorators: [withTheme(), withLayout()],
   parameters: {
     layout: 'fullscreen',
   },

@@ -73,8 +73,8 @@ const TextInputComponent = ({ shape, title, ...props }: TextInputComponentProps)
 
       node.value = value;
       node.function = Ref.make(fn);
-      node.inputSchema = getSnapshot(fn.inputSchema);
-      node.outputSchema = getSnapshot(fn.outputSchema);
+      node.inputSchema = fn.inputSchema ? getSnapshot(fn.inputSchema) : undefined;
+      node.outputSchema = fn.outputSchema ? getSnapshot(fn.outputSchema) : undefined;
     },
     [client, node],
   );

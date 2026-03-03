@@ -9,7 +9,7 @@ import { Client, Config } from '@dxos/client';
 import { DeviceType, type Identity } from '@dxos/client/halo';
 import { type ConfigProto } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { TypedObject } from '@dxos/echo/internal';
+import { Type } from '@dxos/echo';
 import { getInvocationUrl } from '@dxos/functions-runtime';
 import { bundleFunction } from '@dxos/functions-runtime/bundler';
 import { uploadWorkerFunction } from '@dxos/functions-runtime/edge';
@@ -23,9 +23,16 @@ import { trace } from '@dxos/tracing';
 
 import { type ReplicantEnv, ReplicantRegistry } from '../env';
 
-export class Text extends TypedObject({ typename: 'dxos.org/blade-runner/Text', version: '0.1.0' })({
+export const Text = Schema.Struct({
   content: Schema.String,
-}) {}
+}).pipe(
+  Type.object({
+    typename: 'dxos.org/blade-runner/Text',
+    version: '0.1.0',
+  }),
+);
+
+export interface Text extends Schema.Schema.Type<typeof Text> {}
 
 @trace.resource()
 export class EdgeReplicant {
@@ -175,7 +182,7 @@ export class EdgeReplicant {
 
     const replicationIsDone = new Trigger();
     let lastDifferentDocuments: number = Infinity;
-    const unsub = space.db.coreDatabase.subscribeToSyncState(Context.default(), (state) => {
+    const unsub = space.internal.db.coreDatabase.subscribeToSyncState(Context.default(), (state) => {
       if (
         state.peers?.length === 1 &&
         state.peers[0].differentDocuments === 0 &&

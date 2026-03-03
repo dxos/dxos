@@ -8,9 +8,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 
-import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
-
-import { createConfig as createTestConfig } from '../../../vitest.base.config';
+import { ThemePlugin } from '@dxos/ui-theme/plugin';
 
 const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
 
@@ -47,16 +45,8 @@ export default defineConfig({
     },
   },
   plugins: [
-    ThemePlugin({
-      root: dirname,
-      content: [
-        path.resolve(dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        path.resolve(dirname, './node_modules/@dxos/react-ui/dist/**/*.mjs'),
-        path.resolve(dirname, './node_modules/@dxos/react-ui-theme/dist/**/*.mjs'),
-      ],
-    }),
-    // https://github.com/preactjs/signals/issues/269
-    ReactPlugin({ jsxRuntime: 'classic' }),
+    ThemePlugin({}),
+    ReactPlugin(),
     // https://www.bundle-buddy.com/rollup
     {
       name: 'bundle-buddy',
@@ -79,5 +69,4 @@ export default defineConfig({
       },
     },
   ],
-  ...createTestConfig({ dirname, node: true, storybook: true }),
 });

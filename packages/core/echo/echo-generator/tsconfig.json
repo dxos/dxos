@@ -32,9 +32,6 @@
     },
     {
       "path": "../echo-db"
-    },
-    {
-      "path": "../live-object"
     }
   ]
 }

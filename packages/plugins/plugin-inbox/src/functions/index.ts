@@ -2,8 +2,17 @@
 // Copyright 2024 DXOS.org
 //
 
-export { default as open } from './open';
-export { default as summarize } from './summarize';
+import Classify from './classify';
+import Create from './create';
+import Open from './open';
+import Summarize from './summarize';
 
-export * as calendar from './google/calendar';
-export * as gmail from './google/gmail';
+export { CalendarFunctions } from './google/calendar';
+export { GmailFunctions } from './google/gmail';
+
+export const InboxFunctions = {
+  Classify,
+  Create,
+  Open,
+  Summarize,
+};

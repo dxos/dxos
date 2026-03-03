@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Trigger, latch } from '@dxos/async';
-import { TypedObject } from '@dxos/echo/internal';
+import { Type } from '@dxos/echo';
 import {
   EdgeClient,
   SwarmRequestSchema,
@@ -21,9 +21,16 @@ import { trace } from '@dxos/tracing';
 
 import { type ReplicantEnv, ReplicantRegistry } from '../env';
 
-export class Text extends TypedObject({ typename: 'dxos.org/blade-runner/Text', version: '0.1.0' })({
+export const Text = Schema.Struct({
   content: Schema.String,
-}) {}
+}).pipe(
+  Type.object({
+    typename: 'dxos.org/blade-runner/Text',
+    version: '0.1.0',
+  }),
+);
+
+export interface Text extends Schema.Schema.Type<typeof Text> {}
 
 @trace.resource()
 export class WsReplicant {

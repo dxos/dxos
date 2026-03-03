@@ -26,7 +26,7 @@ type Task = Schema.Schema.Type<typeof Task>;
 const Contact = Schema.Struct({
   name: Schema.String,
   email: Schema.optional(Schema.String),
-  tasks: Schema.mutable(Schema.Array(Ref(Task))),
+  tasks: Schema.Array(Ref(Task)),
 }).pipe(
   EchoObjectSchema({
     typename: 'example.com/type/Person',

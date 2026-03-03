@@ -6,7 +6,7 @@ import type * as Context from 'effect/Context';
 
 import type { Space } from '@dxos/client/echo';
 import { Database } from '@dxos/echo';
-import { type EchoDatabase, type QueueFactory } from '@dxos/echo-db';
+import { type QueueFactory } from '@dxos/echo-db';
 import {
   type ComputeEventLogger,
   ConfiguredCredentialsService,
@@ -52,7 +52,7 @@ export type TestServiceOptions = {
   /**
    * Database configuration.
    */
-  db?: EchoDatabase;
+  db?: Database.Database;
 
   /**
    * Gets database and queue services from the space.
@@ -95,7 +95,7 @@ export const createTestServices = ({
   return new ServiceContainer().setServices({
     // ai: createAiService(ai),
     credentials: createCredentialsService(credentials),
-    database: space || db ? Database.Service.make(space?.db || db!) : undefined,
+    database: space || db ? Database.makeService(space?.db || db!) : undefined,
     eventLogger: (logging?.logger ?? logging?.enabled) ? consoleLogger : noopLogger,
     queues: space || queues ? QueueService.make(space?.queues || queues!, undefined) : undefined,
     tracing: tracing?.service,

@@ -6,10 +6,10 @@ import React, { type ChangeEvent, useState } from 'react';
 
 import { Invitation } from '@dxos/react-client/invitations';
 import { Input, useTranslation } from '@dxos/react-ui';
-import { descriptionText } from '@dxos/react-ui-theme';
 import { hexToEmoji } from '@dxos/util';
 
 import { Action, Actions, Emoji, Label, StepHeading } from '../../../components';
+import { translationKey } from '../../../translations';
 import { type JoinStepProps } from '../JoinPanelProps';
 
 const pinLength = 6;
@@ -35,7 +35,7 @@ export const InvitationAuthenticator = ({
   onInvitationCancel,
 }: InvitationAuthenticatorProps) => {
   const disabled = !active || pending;
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(translationKey);
   const invitationType = Kind.toLowerCase() as 'space' | 'halo';
   const [authCode, setAuthCode] = useState('');
 
@@ -54,25 +54,28 @@ export const InvitationAuthenticator = ({
             validationValence: 'error',
           })}
         >
-          <Input.Label asChild>
-            {authMethod === Invitation.AuthMethod.SHARED_SECRET ? (
+          {authMethod === Invitation.AuthMethod.SHARED_SECRET ? (
+            <Input.Label asChild>
               <StepHeading>{t('auth code input label')}</StepHeading>
-            ) : (
-              <>
-                <StepHeading className={descriptionText}>{t('authenticating label')}</StepHeading>
-                <div role='none' className='grow' />
-              </>
-            )}
-          </Input.Label>
+            </Input.Label>
+          ) : (
+            <>
+              <Input.Label>
+                <StepHeading className='text-description'>{t('authenticating label')}</StepHeading>
+              </Input.Label>
+              <div role='none' className='grow' />
+            </>
+          )}
           {authMethod === Invitation.AuthMethod.SHARED_SECRET && (
             <Input.PinInput
               {...{
                 disabled,
+                density: 'coarse',
                 length: pinLength,
-                onChange,
                 inputMode: 'numeric',
                 autoComplete: 'off',
                 pattern: '\\d*',
+                onChange,
                 'data-autofocus': `connecting${Kind}Invitation inputting${Kind}VerificationCode authenticationFailing${Kind}VerificationCode authenticating${Kind}VerificationCode`,
                 'data-prevent-ios-autofocus': true,
                 'data-testid': `${invitationType}-auth-code-input`,

@@ -20,14 +20,7 @@ const BreadcrumbRoot = forwardRef<HTMLDivElement, BreadcrumbRootProps>(
   ({ asChild, classNames, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const Root = asChild ? Slot : Primitive.div;
-    return (
-      <Root
-        role='navigation'
-        {...props}
-        className={tx('breadcrumb.root', 'breadcrumb', {}, classNames)}
-        ref={forwardedRef}
-      />
-    );
+    return <Root role='navigation' {...props} className={tx('breadcrumb.root', {}, classNames)} ref={forwardedRef} />;
   },
 );
 
@@ -37,14 +30,7 @@ const BreadcrumbList = forwardRef<HTMLOListElement, BreadcrumbListProps>(
   ({ asChild, classNames, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const Root = asChild ? Slot : Primitive.ol;
-    return (
-      <Root
-        role='list'
-        {...props}
-        className={tx('breadcrumb.list', 'breadcrumb__list', {}, classNames)}
-        ref={forwardedRef}
-      />
-    );
+    return <Root role='list' {...props} className={tx('breadcrumb.list', {}, classNames)} ref={forwardedRef} />;
   },
 );
 
@@ -54,14 +40,7 @@ const BreadcrumbListItem = forwardRef<HTMLLIElement, BreadcrumbListItemProps>(
   ({ asChild, classNames, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const Root = asChild ? Slot : Primitive.li;
-    return (
-      <Root
-        role='listitem'
-        {...props}
-        className={tx('breadcrumb.listItem', 'breadcrumb__list__item', {}, classNames)}
-        ref={forwardedRef}
-      />
-    );
+    return <Root role='listitem' {...props} className={tx('breadcrumb.listItem', {}, classNames)} ref={forwardedRef} />;
   },
 );
 
@@ -79,12 +58,7 @@ const BreadcrumbCurrent = forwardRef<HTMLHeadingElement, BreadcrumbCurrentProps>
     const { tx } = useThemeContext();
     const Root = asChild ? Slot : 'h1';
     return (
-      <Root
-        {...props}
-        aria-current='page'
-        className={tx('breadcrumb.current', 'breadcrumb__item__heading--current', {}, classNames)}
-        ref={forwardedRef}
-      />
+      <Root {...props} aria-current='page' className={tx('breadcrumb.current', {}, classNames)} ref={forwardedRef} />
     );
   },
 );
@@ -98,7 +72,7 @@ const BreadcrumbSeparator = ({ children, classNames, ...props }: BreadcrumbSepar
       role='separator'
       aria-hidden='true'
       {...props}
-      className={tx('breadcrumb.separator', 'breadcrumb__separator', {}, classNames)}
+      className={tx('breadcrumb.separator', {}, classNames)}
     >
       {children ?? <Icon icon='ph--dot--bold' />}
     </Primitive.span>

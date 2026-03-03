@@ -3,9 +3,10 @@
 //
 
 import { type Meta } from '@storybook/react-vite';
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 
 import { Blueprint, Template } from '@dxos/blueprints';
+import { Obj } from '@dxos/echo';
 import { useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -13,15 +14,15 @@ import { trim } from '@dxos/util';
 
 import { translations } from '../../translations';
 
-import { TemplateForm } from './TemplateForm';
+import { type TemplateChangeCallback, TemplateForm } from './TemplateForm';
 
 const TEMPLATE = trim`
   You are a machine that is an expert chess player.
   The move history of the current game is: {{history}}
   If asked to suggest a move explain why it is a good move.
-  
+
   ---
- 
+
   {{input}},
 `;
 
@@ -38,20 +39,27 @@ const DefaultStory = () => {
     );
   });
 
+  const handleChange: TemplateChangeCallback = useCallback(
+    (mutate) => {
+      Obj.change(blueprint, (b) => mutate(b.instructions));
+    },
+    [blueprint],
+  );
+
   return (
-    <div role='none' className='flex is-[40rem] border border-separator overflow-hidden'>
-      <TemplateForm id={blueprint.id} template={blueprint.instructions} />
+    <div role='none' className='flex w-[40rem] border border-separator overflow-hidden'>
+      <TemplateForm id={blueprint.id} template={blueprint.instructions} onChange={handleChange} />
     </div>
   );
 };
 
 const meta = {
-  title: 'plugins/plugin-assistant/TemplateForm',
+  title: 'plugins/plugin-assistant/components/TemplateForm',
   component: TemplateForm,
   render: DefaultStory,
   decorators: [
-    withTheme,
-    withLayout({ container: 'column' }),
+    withTheme(),
+    withLayout({ layout: 'column' }),
     withClientProvider({
       types: [Blueprint.Blueprint],
       createIdentity: true,

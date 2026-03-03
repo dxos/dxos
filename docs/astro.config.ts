@@ -8,7 +8,8 @@ import starlightLinksValidator from 'starlight-links-validator';
 
 const DX_ENVIRONMENT = process.env.DX_ENVIRONMENT;
 const DX_RELEASE = process.env.DX_RELEASE;
-const TELEMETRY_API_KEY = process.env.DX_TELEMETRY_API_KEY;
+const DX_POSTHOG_API_KEY = process.env.DX_POSTHOG_API_KEY;
+const DX_POSTHOG_API_HOST = process.env.DX_POSTHOG_API_HOST;
 
 // https://astro.build/config
 export default defineConfig({
@@ -80,13 +81,19 @@ export default defineConfig({
         },
       ],
       plugins: [starlightLinksValidator({ exclude: ['/typedoc/**'] })],
-      head: [
-        {
-          tag: 'script',
-          attrs: { type: 'text/javascript' },
-          content: `!function(){var i="analytics",analytics=window[i]=window[i]||[];if(!analytics.initialize)if(analytics.invoked)window.console&&console.error&&console.error("Segment snippet included twice.");else{analytics.invoked=!0;analytics.methods=["trackSubmit","trackClick","trackLink","trackForm","pageview","identify","reset","group","track","ready","alias","debug","page","screen","once","off","on","addSourceMiddleware","addIntegrationMiddleware","setAnonymousId","addDestinationMiddleware","register"];analytics.factory=function(e){return function(){if(window[i].initialized)return window[i][e].apply(window[i],arguments);var n=Array.prototype.slice.call(arguments);if(["track","screen","alias","group","page","identify"].indexOf(e)>-1){var c=document.querySelector("link[rel='canonical']");n.push({__t:"bpc",c:c&&c.getAttribute("href")||void 0,p:location.pathname,u:location.href,s:location.search,t:document.title,r:document.referrer})}n.unshift(e);analytics.push(n);return analytics}};for(var n=0;n<analytics.methods.length;n++){var key=analytics.methods[n];analytics[key]=analytics.factory(key)}analytics.load=function(key,n){var t=document.createElement("script");t.type="text/javascript";t.async=!0;t.setAttribute("data-global-segment-analytics-key",i);t.src="https://cdn.segment.com/analytics.js/v1/" + key + "/analytics.min.js";var r=document.getElementsByTagName("script")[0];r.parentNode.insertBefore(t,r);analytics._loadOptions=n};analytics._writeKey="${TELEMETRY_API_KEY}";;analytics.SNIPPET_VERSION="5.2.1";analytics.load("${TELEMETRY_API_KEY}");analytics.page({ properties: { environment: "${DX_ENVIRONMENT}", release: "${DX_RELEASE}" } });}}();`,
-        },
-      ],
+      // PostHog snippet: https://posthog.com/docs/getting-started/install
+      head:
+        DX_POSTHOG_API_KEY && DX_POSTHOG_API_HOST
+          ? [
+              {
+                tag: 'script',
+                attrs: { type: 'text/javascript' },
+                content: `!function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="init capture register register_once register_for_session unregister unregister_for_session getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey getNextSurveyStep identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty createPersonProfile opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing debug".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+posthog.init('${DX_POSTHOG_API_KEY}',{api_host:'${DX_POSTHOG_API_HOST}',person_profiles:'identified_only'});
+posthog.register({environment:'${DX_ENVIRONMENT ?? ""}',release:'${DX_RELEASE ?? ""}'});`,
+              },
+            ]
+          : [],
     }),
   ],
 });

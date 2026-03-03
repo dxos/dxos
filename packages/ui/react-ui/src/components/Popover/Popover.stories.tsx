@@ -20,7 +20,7 @@ const DefaultStory = ({ openTrigger, children }: PropsWithChildren<{ openTrigger
       <Popover.Trigger asChild>{openTrigger}</Popover.Trigger>
       <Popover.Content>
         <Popover.Viewport>
-          <p className='pli-2 plb-1 min-is-[18rem] max-is-[38rem]'>{children}</p>
+          <p className='px-2 py-1 min-w-[18rem] max-w-[38rem]'>{children}</p>
         </Popover.Viewport>
         <Popover.Arrow />
       </Popover.Content>
@@ -29,10 +29,10 @@ const DefaultStory = ({ openTrigger, children }: PropsWithChildren<{ openTrigger
 };
 
 const meta = {
-  title: 'ui/react-ui-core/Popover',
+  title: 'ui/react-ui-core/components/Popover',
   component: Popover.Root,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
@@ -59,7 +59,7 @@ export const VirtualTrigger = {
           <Popover.VirtualTrigger virtualRef={buttonRef} />
           <Popover.Content>
             <Popover.Viewport>
-              <p className='pli-2 plb-1 min-is-[18rem] max-is-[38rem]'>{faker.lorem.paragraphs(3)}</p>
+              <p className='px-2 py-1 min-w-[18rem] max-w-[38rem]'>{faker.lorem.paragraphs(3)}</p>
             </Popover.Viewport>
             <Popover.Arrow />
           </Popover.Content>

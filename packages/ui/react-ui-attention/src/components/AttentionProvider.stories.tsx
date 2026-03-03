@@ -16,7 +16,7 @@ const Attendable = ({ id }: { id: string }) => {
 
   return (
     <div {...attentionAttrs}>
-      <textarea className='attention-surface resize-none' placeholder={id} />
+      <textarea className='dx-attention-surface resize-none' placeholder={id} />
     </div>
   );
 };
@@ -35,7 +35,7 @@ const Story = () => {
 const meta = {
   title: 'ui/react-ui-attention/AttentionProvider',
   render: Story,
-  decorators: [withTheme, withAttention],
+  decorators: [withTheme(), withAttention()],
 } satisfies Meta;
 
 export default meta;

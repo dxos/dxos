@@ -3,7 +3,7 @@
 //
 
 import { readFile, readdir, rm, writeFile } from 'node:fs/promises';
-import { basename, dirname } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 
 import type * as Swc from '@swc/core';
 import * as Array from 'effect/Array';
@@ -36,8 +36,8 @@ export interface EsbuildExecutorOptions {
   moduleFormat: Format[];
   sourcemap: boolean;
   watch: boolean;
-  preactSignalTracking: boolean;
   verbose: boolean;
+  mainFields: string[];
 }
 
 export default async (options: EsbuildExecutorOptions): Promise<{ success: boolean }> => {
@@ -57,6 +57,17 @@ export default async (options: EsbuildExecutorOptions): Promise<{ success: boole
   }
   const packageJson = JSON.parse(await readFile(packagePath, 'utf-8'));
 
+  let tsConfig: any;
+  try {
+    const tsConfigPath = join(dirname(packagePath), 'tsconfig.json');
+    const content = await readFile(tsConfigPath, 'utf-8');
+    const json = content.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '$1');
+    tsConfig = JSON.parse(json);
+  } catch (err) {
+    tsConfig = { compilerOptions: {} };
+  }
+  const { jsx, jsxImportSource, jsxFactory, jsxFragmentFactory } = tsConfig.compilerOptions || {};
+
   const swcTransformPlugin = new SwcTransformPlugin({
     isVerbose: options.verbose,
     getTranspilerOptions: ({ filePath }) => ({
@@ -67,6 +78,15 @@ export default async (options: EsbuildExecutorOptions): Promise<{ success: boole
         parser: {
           syntax: 'typescript',
           decorators: true,
+          tsx: true,
+        },
+        transform: {
+          react: {
+            runtime: jsxImportSource ? 'automatic' : 'classic',
+            importSource: jsxImportSource,
+            pragma: jsxFactory,
+            pragmaFrag: jsxFragmentFactory,
+          },
         },
         experimental: {
           plugins: [
@@ -83,6 +103,14 @@ export default async (options: EsbuildExecutorOptions): Promise<{ success: boole
                       include_args: false,
                       include_call_site: true,
                       include_scope: true,
+                    },
+                    {
+                      name: 'dbg',
+                      package: '@dxos/log',
+                      param_index: 1,
+                      include_args: true,
+                      include_call_site: false,
+                      include_scope: false,
                     },
                     {
                       name: 'invariant',
@@ -103,11 +131,6 @@ export default async (options: EsbuildExecutorOptions): Promise<{ success: boole
                   ],
                 },
               ];
-
-              if (options.preactSignalTracking) {
-                // https://github.com/XantreDev/preact-signals/tree/main/packages/react#how-parser-plugins-works
-                yield ['@preact-signals/safe-react/swc', { mode: 'all' }];
-              }
             })(),
           ],
         },
@@ -126,7 +149,11 @@ export default async (options: EsbuildExecutorOptions): Promise<{ success: boole
             ? [{ platform: 'node', format: 'cjs', slug: 'node-cjs', replaceRequire: false }]
             : []),
         ]
-      : [{ platform: 'browser', format: 'esm', slug: 'browser', replaceRequire: true }];
+      : platform === 'browser'
+        ? [{ platform: 'browser', format: 'esm', slug: 'browser', replaceRequire: true }]
+        : platform === 'neutral'
+          ? [{ platform: 'neutral', format: 'esm', slug: 'neutral', replaceRequire: true }]
+          : [];
   });
 
   const errors = await Promise.all(
@@ -143,6 +170,10 @@ export default async (options: EsbuildExecutorOptions): Promise<{ success: boole
         write: true,
         splitting: true,
         sourcemap: options.sourcemap,
+        jsx: jsx === 'preserve' ? 'preserve' : jsxImportSource ? 'automatic' : undefined,
+        jsxImportSource,
+        jsxFactory,
+        jsxFragment: jsxFragmentFactory,
         metafile: options.metafile,
         bundle: options.bundle,
         // watch: options.watch,
@@ -158,6 +189,7 @@ export default async (options: EsbuildExecutorOptions): Promise<{ success: boole
         banner: {
           js: format === 'esm' && platform === 'node' ? CREATE_REQUIRE_BANNER : '',
         },
+        mainFields: options.mainFields,
         define:
           format === 'cjs'
             ? {

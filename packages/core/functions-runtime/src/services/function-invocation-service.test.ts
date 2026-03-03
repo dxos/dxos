@@ -19,7 +19,6 @@ const TestLayer = Layer.mergeAll(AiService.model('@anthropic/claude-opus-4-0')).
   Layer.provideMerge(
     Layer.mergeAll(
       TestDatabaseLayer({
-        indexing: { vector: true },
         types: [],
       }),
       FunctionInvocationServiceLayer,
@@ -48,7 +47,6 @@ describe('FunctionInvocationService', () => {
       });
 
       const layer = TestLayer.pipe(Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: [add] })));
-
       const result = yield* Effect.gen(function* () {
         return yield* FunctionInvocationService.invokeFunction(add, { a: 2, b: 3 });
       }).pipe(Effect.provide(layer));
@@ -63,7 +61,7 @@ describe('FunctionInvocationService', () => {
       // This function is not deployed, so mock layer will be used.
       const echo = defineFunction({
         key: 'example.org/function/echo',
-        name: 'function-that-is-deployed',
+        name: 'function-that-w-deployed',
         inputSchema: Schema.Unknown,
         outputSchema: Schema.Unknown,
         handler: () => {},

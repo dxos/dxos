@@ -27,7 +27,7 @@ export default defineFunction({
     const res = yield* HttpClientRequest.get(`https://free.ratesdb.com/v1/rates?from=${from}&to=${to}`).pipe(
       HttpClient.execute,
       Effect.flatMap((res: any) => res.json),
-      Effect.timeout('1 second'),
+      Effect.timeout('5 seconds'),
       Effect.retry(Schedule.exponential(1_000).pipe(Schedule.compose(Schedule.recurs(3)))),
       Effect.scoped,
     );

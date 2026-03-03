@@ -4,7 +4,7 @@
 $schema: https://moonrepo.dev/schemas/tasks.json
 tasks:
   compile:
-    command: dx-compile
+    command: pnpm exec dx-compile
     args:
       - --outputPath=dist/lib
     deps:
@@ -16,3 +16,6 @@ tasks:
       - dist/lib/
     options:
       timeout: 10
+
+inheritedBy:
+  tags: vendor

@@ -17,7 +17,7 @@ import * as Stream from 'effect/Stream';
 import { TestHelpers } from '@dxos/effect/testing';
 
 import * as AiService from '../../AiService';
-import { AiServiceTestingPreset } from '../layer';
+import { AiServiceTestingPreset } from '../test-layers';
 import { TestingToolkit, testingLayer } from '../toolkit';
 
 import * as MemoizedAiService from './MemoizedAiService';

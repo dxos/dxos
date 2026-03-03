@@ -7,14 +7,14 @@ import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import type { AutomergeProtocolMessage } from '@dxos/protocols';
-import { AutomergeReplicator, type AutomergeReplicatorFactory } from '@dxos/teleport-extension-automerge-replicator';
+import * as TeleportAutomergeReplicator from '@dxos/teleport-extension-automerge-replicator';
 
 import type {
-  EchoReplicator,
-  EchoReplicatorContext,
-  ReplicatorConnection,
-  ShouldAdvertiseParams,
-  ShouldSyncCollectionParams,
+  AutomergeReplicator,
+  AutomergeReplicatorConnection,
+  AutomergeReplicatorContext,
+  ShouldAdvertiseProps,
+  ShouldSyncCollectionProps,
 } from '../automerge';
 
 export type TestReplicatorNetworkOptions = {
@@ -115,19 +115,19 @@ export class TestReplicationNetwork extends Resource {
   }
 }
 
-type TestReplicatorParams = {
+type TestReplicatorProps = {
   onConnect: () => Promise<void>;
   onDisconnect: () => Promise<void>;
 };
 
-export class TestReplicator implements EchoReplicator {
-  constructor(private readonly _params: TestReplicatorParams) {}
+export class TestReplicator implements AutomergeReplicator {
+  constructor(private readonly _params: TestReplicatorProps) {}
 
   public connected = false;
-  public context: EchoReplicatorContext | undefined = undefined;
+  public context: AutomergeReplicatorContext | undefined = undefined;
   public connections = new Set<TestReplicatorConnection>();
 
-  async connect(context: EchoReplicatorContext): Promise<void> {
+  async connect(context: AutomergeReplicatorContext): Promise<void> {
     log('connect', { peerId: context.peerId });
     this.context = context;
     this.connected = true;
@@ -153,7 +153,7 @@ export class TestReplicator implements EchoReplicator {
   }
 }
 
-export class TestReplicatorConnection implements ReplicatorConnection {
+export class TestReplicatorConnection implements AutomergeReplicatorConnection {
   public otherSide: TestReplicatorConnection | undefined = undefined;
   public owningReplicator: TestReplicator | undefined = undefined;
 
@@ -167,17 +167,17 @@ export class TestReplicatorConnection implements ReplicatorConnection {
     return false;
   }
 
-  async shouldAdvertise(_params: ShouldAdvertiseParams): Promise<boolean> {
+  async shouldAdvertise(_params: ShouldAdvertiseProps): Promise<boolean> {
     return true;
   }
 
-  shouldSyncCollection(_params: ShouldSyncCollectionParams): boolean {
+  shouldSyncCollection(_params: ShouldSyncCollectionProps): boolean {
     return true;
   }
 }
 
-export const testAutomergeReplicatorFactory: AutomergeReplicatorFactory = (params) => {
-  return new AutomergeReplicator(
+export const testAutomergeReplicatorFactory: TeleportAutomergeReplicator.AutomergeReplicatorFactory = (params) => {
+  return new TeleportAutomergeReplicator.AutomergeReplicator(
     {
       ...params[0],
       sendSyncRetryPolicy: {
@@ -190,7 +190,7 @@ export const testAutomergeReplicatorFactory: AutomergeReplicatorFactory = (param
   );
 };
 
-export const brokenAutomergeReplicatorFactory: AutomergeReplicatorFactory = (params) => {
+export const brokenAutomergeReplicatorFactory: TeleportAutomergeReplicator.AutomergeReplicatorFactory = (params) => {
   params[1]!.onSyncMessage = () => {
     throw new Error();
   };

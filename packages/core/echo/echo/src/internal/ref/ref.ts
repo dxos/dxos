@@ -3,19 +3,25 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Equal from 'effect/Equal';
+import * as Hash from 'effect/Hash';
 import * as Option from 'effect/Option';
 import * as ParseResult from 'effect/ParseResult';
+import * as Pipeable from 'effect/Pipeable';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
+import type * as Types from 'effect/Types';
 
-import { type EncodedReference, Reference } from '@dxos/echo-protocol';
-import { compositeRuntime } from '@dxos/echo-signals/runtime';
+import { Event } from '@dxos/async';
+import { type CustomInspectFunction, inspectCustom } from '@dxos/debug';
+import { EncodedReference } from '@dxos/echo-protocol';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
 
+import * as Database from '../../Database';
 import { ReferenceAnnotationId, getSchemaDXN, getTypeAnnotation, getTypeIdentifierAnnotation } from '../annotations';
 import { type JsonSchemaType } from '../json-schema';
-import type { AnyProperties, WithId } from '../types';
+import type { AnyEntity, AnyProperties } from '../types';
 
 /**
  * The `$id` and `$ref` fields for an ECHO reference schema.
@@ -29,7 +35,7 @@ export const getSchemaReference = (property: JsonSchemaType): { typename: string
   }
 };
 
-export const createSchemaReference = (typename: string): JsonSchemaType => {
+export const createSchemaReference = (typename: string): Types.DeepMutable<JsonSchemaType> => {
   return {
     $id: JSON_SCHEMA_ECHO_REF_ID,
     reference: {
@@ -70,7 +76,7 @@ export const RefTypeId: unique symbol = Symbol('@dxos/echo/internal/Ref');
 /**
  * Reference Schema.
  */
-export interface RefSchema<T extends WithId> extends Schema.SchemaClass<Ref<T>, EncodedReference> {}
+export interface RefSchema<T extends AnyEntity> extends Schema.SchemaClass<Ref<T>, EncodedReference> {}
 
 /**
  * Type of the `Ref` function and extra methods attached to it.
@@ -101,8 +107,8 @@ export interface RefFn {
   /**
    * Constructs a reference that points to the given object.
    */
-  // TODO(burdon): Narrow to Obj.Any?
-  make: <T extends WithId>(object: T) => Ref<T>;
+  // TODO(burdon): Narrow to Obj.Unknown?
+  make: <T extends AnyEntity>(object: T) => Ref<T>;
 
   /**
    * Constructs a reference that points to the object specified by the provided DXN.
@@ -115,36 +121,33 @@ export interface RefFn {
  */
 export const Ref: RefFn = <S extends Schema.Schema.Any>(schema: S): RefSchema<Schema.Schema.Type<S>> => {
   assertArgument(Schema.isSchema(schema), 'schema', 'Must call with an instance of effect-schema');
-
   const annotation = getTypeAnnotation(schema);
   if (annotation == null) {
     throw new Error('Reference target must be an ECHO schema.');
   }
 
-  return createEchoReferenceSchema(
-    getTypeIdentifierAnnotation(schema),
-    annotation.typename,
-    annotation.version,
-    getSchemaExpectedName(schema.ast),
-  );
+  return createEchoReferenceSchema(getTypeIdentifierAnnotation(schema), annotation.typename, annotation.version);
 };
 
 /**
  * Represents materialized reference to a target.
  * This is the data type for the fields marked as ref.
  */
-export interface Ref<T> {
+export interface Ref<T> extends Pipeable.Pipeable {
   /**
    * Target object DXN.
    */
   get dxn(): DXN;
 
   /**
+   * Returns true if the reference has a target available (inlined or resolver set).
+   */
+  get isAvailable(): boolean;
+
+  /**
    * @returns The reference target.
    * May return `undefined` if the object is not loaded in the working set.
    * Accessing this property, even if it returns `undefined` will trigger the object to be loaded to the working set.
-   *
-   * @reactive Supports signal subscriptions.
    */
   get target(): T | undefined;
 
@@ -158,6 +161,7 @@ export interface Ref<T> {
   /**
    * @returns Promise that will resolves with the target object or undefined if the object is not loaded locally.
    */
+
   tryLoad(): Promise<T | undefined>;
 
   /**
@@ -219,7 +223,7 @@ Ref.make = <T extends AnyProperties>(obj: T): Ref<T> => {
   // TODO(dmaretskyi): Extract to `getObjectDXN` function.
   const id = obj.id;
   invariant(ObjectId.isValid(id), 'Invalid object ID');
-  const dxn = Reference.localObjectReference(id).toDXN();
+  const dxn = DXN.fromLocalObjectId(id);
   return new RefImpl(dxn, obj);
 };
 
@@ -244,7 +248,6 @@ export const createEchoReferenceSchema = (
   echoId: string | undefined,
   typename: string | undefined,
   version: string | undefined,
-  schemaName?: string, // TODO(burdon): Not used.
 ): Schema.SchemaClass<Ref<any>, EncodedReference> => {
   if (!echoId && !typename) {
     throw new TypeError('Either echoId or typename must be provided.');
@@ -263,25 +266,39 @@ export const createEchoReferenceSchema = (
     [],
     {
       encode: () => {
-        return (value) => {
-          return Effect.succeed({
-            '/': (value as Ref<any>).dxn.toString(),
+        return (value) =>
+          Effect.gen(function* () {
+            if (Ref.isRef(value)) {
+              return EncodedReference.fromDXN((value as Ref<any>).dxn);
+            } else if (EncodedReference.isEncodedReference(value)) {
+              return value;
+            }
+            throw new Error('Invalid reference');
           });
-        };
       },
       decode: () => {
-        return (value) => {
-          // TODO(dmaretskyi): This branch seems to be taken by Schema.is
-          if (Ref.isRef(value)) {
-            return Effect.succeed(value);
-          }
+        return (value) =>
+          Effect.gen(function* () {
+            const dbService = yield* Effect.serviceOption(Database.Service);
 
-          if (typeof value !== 'object' || value == null || typeof (value as any)['/'] !== 'string') {
-            return Effect.fail(new ParseResult.Unexpected(value, 'reference'));
-          }
+            // TODO(dmaretskyi): This branch seems to be taken by Schema.is
+            if (Ref.isRef(value)) {
+              if (Option.isSome(dbService)) {
+                return dbService.value.db.makeRef(value.dxn);
+              } else {
+                return value;
+              }
+            }
 
-          return Effect.succeed(Ref.fromDXN(DXN.parse((value as any)['/'])));
-        };
+            if (!EncodedReference.isEncodedReference(value)) {
+              return yield* Effect.fail(new ParseResult.Unexpected(value, 'reference'));
+            }
+            if (Option.isSome(dbService)) {
+              return dbService.value.db.makeRef(EncodedReference.toDXN(value));
+            } else {
+              return Ref.fromDXN(EncodedReference.toDXN(value));
+            }
+          });
       },
     },
     {
@@ -331,7 +348,7 @@ export interface RefResolver {
 export class RefImpl<T> implements Ref<T> {
   #dxn: DXN;
   #resolver?: RefResolver = undefined;
-  #signal = compositeRuntime.createSignal();
+  #resolved = new Event<void>();
 
   /**
    * Target is set when the reference is created from a specific object.
@@ -343,7 +360,7 @@ export class RefImpl<T> implements Ref<T> {
    * Callback to issue a reactive notification when object is resolved.
    */
   #resolverCallback = () => {
-    this.#signal.notifyWrite();
+    this.#resolved.emit();
   };
 
   constructor(dxn: DXN, target?: T) {
@@ -361,8 +378,14 @@ export class RefImpl<T> implements Ref<T> {
   /**
    * @inheritdoc
    */
+  get isAvailable(): boolean {
+    return this.#target !== undefined || this.#resolver !== undefined;
+  }
+
+  /**
+   * @inheritdoc
+   */
   get target(): T | undefined {
-    this.#signal.notifyRead();
     if (this.#target) {
       return this.#target;
     }
@@ -390,6 +413,9 @@ export class RefImpl<T> implements Ref<T> {
    * @inheritdoc
    */
   async tryLoad(): Promise<T | undefined> {
+    if (this.#target) {
+      return this.#target;
+    }
     invariant(this.#resolver, 'Resolver is not set');
     return (await this.#resolver.resolve(this.#dxn)) as T | undefined;
   }
@@ -430,7 +456,26 @@ export class RefImpl<T> implements Ref<T> {
     return `Ref(${this.#dxn.toString()})`;
   }
 
+  [inspectCustom]: CustomInspectFunction = (depth, options, inspect) => {
+    return this.toString();
+  };
+
   [RefTypeId] = refVariance;
+
+  /**
+   * Effect Hash trait. Required for MutableHashMap-based caches (e.g., Atom.family)
+   * to deduplicate Ref instances that point to the same object.
+   * ECHO proxies return new RefImpl instances on every property access,
+   * so without this, each access would create a separate cache entry.
+   */
+  [Hash.symbol](): number {
+    return Hash.hash(this.#dxn.toString());
+  }
+
+  /** Effect Equal trait. See {@link Hash.symbol} for rationale. */
+  [Equal.symbol](that: Equal.Equal): boolean {
+    return that instanceof RefImpl && this.#dxn.toString() === that.dxn.toString();
+  }
 
   /**
    * Internal method to set the resolver.
@@ -442,13 +487,15 @@ export class RefImpl<T> implements Ref<T> {
   }
 
   /**
-   * Internal method to get the saved target.
-   * Not the same as `target` which is resolved from the resolver.
-   *
    * @internal
    */
   _getSavedTarget(): T | undefined {
     return this.#target;
+  }
+
+  pipe() {
+    // eslint-disable-next-line prefer-rest-params
+    return Pipeable.pipeArguments(this, arguments);
   }
 }
 

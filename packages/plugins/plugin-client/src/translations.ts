@@ -3,14 +3,15 @@
 //
 
 import { type Resource } from '@dxos/react-ui';
+import { translations as shellTranslations } from '@dxos/shell/react';
 
 import { meta } from './meta';
 
-export const translations = [
+const pluginTranslations = [
   {
     'en-US': {
       [meta.id]: {
-        'account label': 'User Account',
+        'account label': 'User profile',
         'profile label': 'Profile',
         'profile description': 'You can adjust how your user settings here.',
         'devices label': 'Devices',
@@ -35,7 +36,7 @@ export const translations = [
         'display name description': 'Your name as it appears in the app.',
         'display name input placeholder': 'Enter a name',
         'icon label': 'Avatar',
-        'icon description': 'The emoji used to represent you in the app.',
+        'icon description': 'The emoji used to represent the user.',
         'hue label': 'Color',
         'hue description':
           'The color used to represent you in the app, including as your avatar’s background, your cursor as it appears to others, and the messages you send in group threads.',
@@ -68,3 +69,5 @@ export const translations = [
     },
   },
 ] as const satisfies Resource[];
+
+export const translations: Resource[] = [...pluginTranslations, ...shellTranslations];

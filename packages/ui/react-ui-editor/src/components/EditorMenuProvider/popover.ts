@@ -13,10 +13,8 @@ import {
   keymap,
 } from '@codemirror/view';
 
+import { type PlaceholderOptions, type Range, modalStateField, placeholder } from '@dxos/ui-editor';
 import { isNonNullable, isTruthy } from '@dxos/util';
-
-import { type PlaceholderOptions, modalStateField, placeholder } from '../../extensions';
-import { type Range } from '../../types';
 
 const DELIMITERS = [' ', ':'];
 

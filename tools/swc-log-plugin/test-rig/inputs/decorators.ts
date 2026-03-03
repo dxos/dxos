@@ -3,10 +3,12 @@
 //
 
 // @ts-nocheck
+
 import { type Schema } from 'effect';
 
 import { raise } from '@dxos/debug';
-import { type EchoDatabase, Filter, type AnyLiveObject } from '@dxos/echo-db';
+import { type Obj } from '@dxos/echo';
+import { type EchoDatabase, Filter } from '@dxos/echo-db';
 import { getSchema, getSchemaTypename, StoredSchema, toJsonSchema } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
 
@@ -76,7 +78,7 @@ export class EchoDataSource implements DataSource {
     ].filter((schema) => getSchemaTypename(schema) !== StoredSchema.typename);
   }
 
-  private _objectToNode(object: AnyLiveObject<any>): Node {
+  private _objectToNode(object: Obj.Any): Node {
     const { id, ...properties } = object;
     return {
       id,
@@ -86,7 +88,7 @@ export class EchoDataSource implements DataSource {
     };
   }
 
-  private async _projectRefRelationship(object: AnyLiveObject<any>, prop: string): Promise<Relationship[]> {
+  private async _projectRefRelationship(object: Obj.Any, prop: string): Promise<Relationship[]> {
     if (!object[prop]) {
       return [];
     }

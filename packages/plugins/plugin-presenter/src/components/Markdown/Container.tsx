@@ -6,7 +6,7 @@ import React, { type PropsWithChildren, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { type ThemedClassName } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 export type ContainerProps = ThemedClassName<PropsWithChildren<{}>>;
 
@@ -35,8 +35,8 @@ export const Container = ({ children, classNames }: ContainerProps) => {
   // TODO(burdon): Reconcile highlight colors with markdown editor.
   // https://www.npmjs.com/package/react-markdown
   return (
-    <div ref={containerRef} className={mx('flex grow relative overflow-hidden bg-attention', classNames)}>
-      <div className={mx('flex is-full bs-full overflow-hidden absolute')} style={props}>
+    <div ref={containerRef} className={mx('flex grow relative overflow-hidden bg-attention-surface', classNames)}>
+      <div className={mx('flex w-full h-full overflow-hidden absolute')} style={props}>
         {width && height && children}
       </div>
     </div>

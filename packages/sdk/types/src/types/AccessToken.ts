@@ -5,8 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
-import { Format } from '@dxos/echo/internal';
-import { SystemTypeAnnotation } from '@dxos/echo/internal';
+import { Format, LabelAnnotation, SystemTypeAnnotation } from '@dxos/echo/internal';
 
 export const AccessToken = Schema.Struct({
   note: Schema.optional(
@@ -25,13 +24,14 @@ export const AccessToken = Schema.Struct({
     description: 'The token provided by the service.',
   }),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/AccessToken',
     version: '0.1.0',
   }),
   Schema.annotations({
     description: 'A credential or token for accessing a service.',
   }),
+  LabelAnnotation.set(['note']),
   SystemTypeAnnotation.set(true),
 );
 

@@ -12,6 +12,7 @@ import { EmojiPickerBlock, HuePicker } from '@dxos/react-ui-pickers';
 import { hexToEmoji, hexToHue } from '@dxos/util';
 
 import { Action, Actions, Input, StepHeading } from '../../../components';
+import { translationKey } from '../../../translations';
 import { type IdentityEvent } from '../identityMachine';
 import { type IdentityPanelStepProps } from '../IdentityPanelProps';
 
@@ -27,7 +28,7 @@ export type ProfileFormImplProps = ProfileFormProps & {
 
 export const ProfileForm = (props: ProfileFormProps) => {
   const { onUpdateProfile } = props;
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(translationKey);
   const [validationMessage, setValidationMessage] = useState('');
   const handleUpdateProfile = async (profile: NonNullable<Identity['profile']>) => {
     await onUpdateProfile?.(profile).catch((error) => {
@@ -48,7 +49,7 @@ const ProfileFormImpl = (props: ProfileFormImplProps) => {
   const { active, identity, send, onUpdateProfile, validationMessage } = props;
   const profile = identity?.profile;
   const disabled = !active;
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(translationKey);
   const [displayName, setDisplayName] = useState(profile?.displayName ?? '');
   const [hue, setHue] = useState<string>(getHueValue(identity));
   const [emoji, setEmoji] = useState<string>(getEmojiValue(identity));
@@ -67,7 +68,7 @@ const ProfileFormImpl = (props: ProfileFormImplProps) => {
           value={displayName}
           onChange={({ target: { value } }) => setDisplayName(value)}
         />
-        <StepHeading className='mbe-2'>{t('emoji and color label')}</StepHeading>
+        <StepHeading className='mb-2'>{t('emoji and color label')}</StepHeading>
         <div role='none' className='grid grid-cols-[1fr_min-content] gap-y-2'>
           <EmojiPickerBlock
             emoji={emoji}

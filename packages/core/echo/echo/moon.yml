@@ -1,4 +1,4 @@
-type: library
+layer: library
 language: typescript
 tags:
   - ts-build
@@ -15,6 +15,7 @@ tasks:
       - '--entryPoint=src/Annotation.ts'
       - '--entryPoint=src/Database.ts'
       - '--entryPoint=src/Err.ts'
+      - '--entryPoint=src/Feed.ts'
       - '--entryPoint=src/Filter.ts'
       - '--entryPoint=src/Format.ts'
       - '--entryPoint=src/Relation.ts'
@@ -27,6 +28,4 @@ tasks:
       - '--entryPoint=src/Order.ts'
       - '--entryPoint=src/Key.ts'
       - '--entryPoint=src/Type.ts'
-      - '--platform=browser'
-      - '--platform=node'
-      - '--injectGlobals'
+      - '--platform=neutral'

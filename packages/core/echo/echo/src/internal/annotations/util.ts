@@ -12,11 +12,24 @@ import { DXN } from '@dxos/keys';
 import { EntityKind } from '../types';
 
 export interface AnnotationHelper<T> {
+  /**
+   * Get the annotation value from the schema.
+   */
   get: (schema: Schema.Schema.Any) => Option.Option<T>;
+  /**
+   * Get the annotation value from the AST.
+   */
   getFromAst: (ast: SchemaAST.AST) => Option.Option<T>;
+  /**
+   * Set the annotation value on the schema.
+   */
   set: (value: T) => <S extends Schema.Schema.Any>(schema: S) => S;
 }
 
+/**
+ * Note: only for system annotations.
+ */
+// TODO(dmaretskyi): Rename to createSystemAnnotationHelper.
 export const createAnnotationHelper = <T>(id: symbol): AnnotationHelper<T> => {
   return {
     get: (schema) => SchemaAST.getAnnotation(schema.ast, id),

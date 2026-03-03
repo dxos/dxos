@@ -7,7 +7,7 @@ projects:
   - tools/*/moon.yml
   - vendor/*/moon.yml
 
-unstable_remote:
+remote:
   host: 'grpcs://cache.depot.dev'
   auth:
     token: 'DEPOT_TOKEN'
@@ -15,5 +15,5 @@ unstable_remote:
       'X-Depot-Org': 't8fblrl00n'
 
 vcs:
-  manager: git
+  client: git
   defaultBranch: main

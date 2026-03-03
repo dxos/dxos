@@ -8,7 +8,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { Filter, Obj, Query, type QueryAST, type Tag } from '@dxos/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { useTranslation } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
 
@@ -23,7 +23,7 @@ export type QueryFormProps = ThemedClassName<{
 }>;
 
 // TODO(wittjosiah): Support more complex queries and traversals.
-export const QueryForm = ({ classNames, types, tags, initialQuery, onChange }: QueryFormProps) => {
+export const QueryForm = ({ classNames, initialQuery, types, tags, onChange }: QueryFormProps) => {
   const { t } = useTranslation(translationKey);
 
   const initialType = initialQuery ? Option.getOrUndefined(extractTypename(initialQuery)) : undefined;

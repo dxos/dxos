@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
 import { VideoObject as VideoObjectComponent } from '../Media';
@@ -13,9 +13,9 @@ import { VideoObject as VideoObjectComponent } from '../Media';
 import { ResponsiveContainer } from './ResponsiveContainer';
 
 const meta = {
-  title: 'plugins/plugin-thread/ResponsiveContainer',
+  title: 'plugins/plugin-thread/components/ResponsiveContainer',
   component: ResponsiveContainer,
-  decorators: [withTheme],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
     translations,

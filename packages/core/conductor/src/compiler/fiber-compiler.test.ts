@@ -10,7 +10,7 @@ import * as Schema from 'effect/Schema';
 import { describe } from 'vitest';
 
 import { TestAiService } from '@dxos/ai/testing';
-import { Ref } from '@dxos/echo';
+import { Feed, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { logCustomEvent } from '@dxos/functions';
 import { CredentialsService, TracingService } from '@dxos/functions';
@@ -29,8 +29,6 @@ import {
   synchronizedComputeFunction,
 } from '../types';
 
-const ENABLE_LOGGING = false;
-
 const TestLayer = Layer.empty.pipe(
   Layer.provideMerge(FunctionInvocationServiceLayerTest()),
   Layer.provideMerge(
@@ -38,6 +36,7 @@ const TestLayer = Layer.empty.pipe(
       TestAiService(),
       TestDatabaseLayer(),
       CredentialsService.configuredLayer([]),
+      Feed.notAvailable,
       TracingService.layerNoop,
     ),
   ),
@@ -49,7 +48,7 @@ describe('Graph as a fiber runtime', () => {
     Effect.fnUntraced(
       function* ({ expect }) {
         const runtime = new TestRuntime()
-          // Break line formatting.
+          // prettier-ignore
           .registerNode('dxn:test:sum', sum)
           .registerGraph('dxn:test:g1', g1());
 

@@ -7,7 +7,7 @@ import React, { type PropsWithChildren, forwardRef, useEffect, useImperativeHand
 import { useResizeDetector } from 'react-resize-detector';
 
 import { type ThemedClassName } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { SVGContext, type SVGContextOptions, SVGContextProvider } from '../../hooks';
 

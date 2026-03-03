@@ -24,14 +24,16 @@ export const JoinDialog = (joinPanelProps: JoinDialogProps) => {
       <AlertDialog.Portal>
         <AlertDialog.Overlay classNames='backdrop-blur' {...(height && { style: { blockSize: `${height}px` } })}>
           <AlertDialog.Content aria-labelledby={titleId}>
-            <JoinPanel
-              {...{
-                ...joinPanelProps,
-                titleId,
-                exitActionParent: <AlertDialog.Cancel asChild />,
-                doneActionParent: <AlertDialog.Action asChild />,
-              }}
-            />
+            <AlertDialog.Body>
+              <JoinPanel
+                {...{
+                  ...joinPanelProps,
+                  titleId,
+                  exitActionParent: <AlertDialog.Cancel asChild />,
+                  doneActionParent: <AlertDialog.Action asChild />,
+                }}
+              />
+            </AlertDialog.Body>
           </AlertDialog.Content>
         </AlertDialog.Overlay>
       </AlertDialog.Portal>

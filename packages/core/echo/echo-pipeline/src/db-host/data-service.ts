@@ -12,6 +12,8 @@ import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
   type BatchedDocumentUpdates,
+  type CreateDocumentRequest,
+  type CreateDocumentResponse,
   type DataService,
   type FlushRequest,
   type GetDocumentHeadsRequest,
@@ -30,7 +32,7 @@ import { type AutomergeHost, deriveCollectionIdFromSpaceId } from '../automerge'
 import { DocumentsSynchronizer } from './documents-synchronizer';
 import { type SpaceStateManager } from './space-state-manager';
 
-export type DataServiceParams = {
+export type DataServiceProps = {
   automergeHost: AutomergeHost;
   spaceStateManager: SpaceStateManager;
   updateIndexes: () => Promise<void>;
@@ -51,7 +53,7 @@ export class DataServiceImpl implements DataService {
   private readonly _spaceStateManager: SpaceStateManager;
   private readonly _updateIndexes: () => Promise<void>;
 
-  constructor(params: DataServiceParams) {
+  constructor(params: DataServiceProps) {
     this._automergeHost = params.automergeHost;
     this._spaceStateManager = params.spaceStateManager;
     this._updateIndexes = params.updateIndexes;
@@ -60,7 +62,7 @@ export class DataServiceImpl implements DataService {
   subscribe(request: SubscribeRequest): Stream<BatchedDocumentUpdates> {
     return new Stream<BatchedDocumentUpdates>(({ next, ready }) => {
       const synchronizer = new DocumentsSynchronizer({
-        repo: this._automergeHost.repo,
+        automergeHost: this._automergeHost,
         sendUpdates: (updates) => next(updates),
       });
       synchronizer
@@ -84,6 +86,11 @@ export class DataServiceImpl implements DataService {
     if (request.removeIds?.length) {
       await synchronizer.removeDocuments(request.removeIds as DocumentId[]);
     }
+  }
+
+  async createDocument(request: CreateDocumentRequest): Promise<CreateDocumentResponse> {
+    const handle = await this._automergeHost.createDoc(request.initialValue);
+    return { documentId: handle.documentId };
   }
 
   async update(request: UpdateRequest): Promise<void> {

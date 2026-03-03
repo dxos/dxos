@@ -162,6 +162,7 @@ export class Peer {
         return { accept: true };
       }
     }
+
     return { accept: false };
   }
 

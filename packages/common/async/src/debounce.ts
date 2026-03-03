@@ -12,7 +12,7 @@ type Callback = (...args: any[]) => void;
  * @param delay Time to wait before invoking the callback.
  * @returns A new function that schedules the callback once and ignores subsequent calls until executed.
  */
-export const delay = <CB extends Callback>(cb: CB, delay = 100): CB => {
+export const delay = <F extends Callback>(cb: F, delay = 100): F => {
   let pending = false;
   return ((...args: any[]) => {
     if (pending) {
@@ -27,32 +27,37 @@ export const delay = <CB extends Callback>(cb: CB, delay = 100): CB => {
         pending = false;
       }
     }, delay);
-  }) as CB;
+  }) as F;
 };
 
 /**
- * Debounce callback.
+ * Debounce callback: delays execution until calls stop.
+ * Each new call resets the timer, so the callback fires only after the delay elapses with no further calls (trailing-edge).
+ * Use when you want to react to the end of a burst of events (e.g. user stops typing).
  *
  * @param cb Callback to invoke.
- * @param delay Time window to wait before allowing calls.
- * @returns A new function that wraps the callback and ensures that the callback is only invoked after the time window has passed and no new calls have been made.
+ * @param delay Idle time (ms) to wait after the last call before invoking.
+ * @returns Wrapped function that postpones invocation until activity ceases.
  */
-export const debounce = <CB extends Callback>(cb: CB, delay = 100): CB => {
+export const debounce = <F extends Callback>(cb: F, delay = 100): F => {
   let t: ReturnType<typeof setTimeout>;
   return ((...args: any[]) => {
     clearTimeout(t);
     t = setTimeout(() => cb(...args), delay);
-  }) as CB;
+  }) as F;
 };
 
 /**
- * Throttle callback.
+ * Throttle callback: limits execution to at most once per interval.
+ * The callback fires immediately on the first call;
+ * subsequent calls within the same interval are dropped (leading-edge).
+ * Use when you need regular updates at a bounded rate (e.g. scroll or resize handlers).
  *
  * @param cb Callback to invoke.
- * @param delay Time window to allow calls in.
- * @returns A new function that wraps the callback and prevents multiple invocations within the time window.
+ * @param delay Minimum interval (ms) between successive invocations.
+ * @returns Wrapped function that rate-limits invocations.
  */
-export const throttle = <CB extends Callback>(cb: CB, delay = 100): CB => {
+export const throttle = <F extends Callback>(cb: F, delay = 100): F => {
   let lastCall = 0;
   return ((...args: any[]) => {
     const now = Date.now();
@@ -60,7 +65,7 @@ export const throttle = <CB extends Callback>(cb: CB, delay = 100): CB => {
       cb(...args);
       lastCall = now;
     }
-  }) as CB;
+  }) as F;
 };
 
 /**
@@ -72,7 +77,7 @@ export const throttle = <CB extends Callback>(cb: CB, delay = 100): CB => {
  * @param delay Time window for both throttle and debounce.
  * @returns A new function that combines throttle and debounce behavior.
  */
-export const debounceAndThrottle = <CB extends Callback>(cb: CB, delay = 100): CB => {
+export const debounceAndThrottle = <F extends Callback>(cb: F, delay = 100): F => {
   let timeout: ReturnType<typeof setTimeout>;
   let lastCall = 0;
 
@@ -94,5 +99,5 @@ export const debounceAndThrottle = <CB extends Callback>(cb: CB, delay = 100): C
         lastCall = Date.now();
       }, delay - delta);
     }
-  }) as CB;
+  }) as F;
 };

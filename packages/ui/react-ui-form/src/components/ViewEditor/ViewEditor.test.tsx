@@ -89,13 +89,9 @@ describe('ViewEditor', () => {
     await Default.run();
     await waitForViewEditor();
 
-    // Click the add property button.
+    // Click the add property button. The new field is auto-expanded by handleAdd.
     const addButton = screen.getByText('Add property');
     fireEvent.click(addButton);
-
-    // Open the last field.
-    const buttons = screen.getAllByTestId('field.toggle');
-    fireEvent.click(buttons.at(-1)!);
 
     // Fill out the property field.
     const fieldInput = screen.getByPlaceholderText('Property name');

@@ -12,8 +12,9 @@ import type { BrowserContext, BrowserType } from 'playwright';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { CONSOLE_PROCESSOR, LogLevel, type LogProcessor, createFileProcessor, log } from '@dxos/log';
+import { trim } from '@dxos/util';
 
-import { type GlobalOptions, type Platform, type ReplicantParams, type ReplicantRuntimeParams } from './spec';
+import { type GlobalOptions, type Platform, type ReplicantProps, type ReplicantRuntimeProps } from './spec';
 
 const DEBUG_PORT_START = 9229;
 
@@ -24,25 +25,25 @@ export type ProcessHandle = {
   kill: (signal?: NodeJS.Signals | number) => void;
 };
 
-export type RunParams = {
-  replicantParams: ReplicantParams;
+export type RunProps = {
+  replicantProps: ReplicantProps;
   options: GlobalOptions;
 };
 
-export const runNode = (params: RunParams): ProcessHandle => {
+export const runNode = (params: RunProps): ProcessHandle => {
   const execArgv = [...process.execArgv];
 
   if (params.options.profile) {
     execArgv.push(
       '--cpu-prof',
       '--cpu-prof-dir',
-      params.replicantParams.outDir,
+      params.replicantProps.outDir,
       '--cpu-prof-name',
-      `replicant-${params.replicantParams.replicantId}.cpuprofile`,
+      `replicant-${params.replicantProps.replicantId}.cpuprofile`,
     );
   }
   if (params.options.debug) {
-    execArgv.push('--inspect=:' + (DEBUG_PORT_START + params.replicantParams.replicantId));
+    execArgv.push('--inspect=:' + (DEBUG_PORT_START + params.replicantProps.replicantId));
   }
 
   // Node CLI expects options before the script path.
@@ -68,13 +69,13 @@ export const runNode = (params: RunParams): ProcessHandle => {
   };
 };
 
-export const runBrowser = async ({ replicantParams, options }: RunParams): Promise<ProcessHandle> => {
+export const runBrowser = async ({ replicantProps, options }: RunProps): Promise<ProcessHandle> => {
   const ctx = new Context();
 
   const start = Date.now();
-  invariant(replicantParams.runtime.platform);
+  invariant(replicantProps.runtime.platform);
 
-  const { page, context } = await getNewBrowserContext(replicantParams.runtime, {
+  const { page, context } = await getNewBrowserContext(replicantProps.runtime, {
     headless: options.headless ?? true,
   });
   ctx.onDispose(async () => {
@@ -95,7 +96,7 @@ export const runBrowser = async ({ replicantParams, options }: RunParams): Promi
   });
 
   const fileProcessor = createFileProcessor({
-    pathOrFd: replicantParams.logFile,
+    pathOrFd: replicantProps.logFile,
     levels: [LogLevel.ERROR, LogLevel.WARN, LogLevel.VERBOSE, LogLevel.INFO, LogLevel.TRACE],
   });
 
@@ -118,28 +119,28 @@ export const runBrowser = async ({ replicantParams, options }: RunParams): Promi
   const server = await servePage({
     '/index.html': {
       contentType: 'text/html',
-      data: `
+      data: trim`
         <!DOCTYPE html>
-  <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Browser-Mocha</title>
-  </head>
-  <body>
-    <h1>TESTING TESTING.</h1>
-    <script>
-      window.DX_RUN_PARAMS = ${JSON.stringify(JSON.stringify({ replicantParams, options }))}
-    </script>
-    <script type="module" src="index.js"></script>
-  </body>
-  </html>
-  `,
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <meta http-equiv="X-UA-Compatible" content="IE=edge">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Browser-Mocha</title>
+        </head>
+        <body>
+          <h1>TESTING TESTING.</h1>
+          <script>
+            window.DX_RUN_PARAMS = ${JSON.stringify(JSON.stringify({ replicantProps, options }))}
+          </script>
+          <script type="module" src="index.js"></script>
+        </body>
+        </html>
+      `,
     },
     '/index.js': {
       contentType: 'text/javascript',
-      data: await readFile(join(replicantParams.planRunDir, 'artifacts', 'browser.js'), 'utf8'),
+      data: await readFile(join(replicantProps.planRunDir, 'artifacts', 'browser.js'), 'utf8'),
     },
   });
 
@@ -151,7 +152,7 @@ export const runBrowser = async ({ replicantParams, options }: RunParams): Promi
   await page.goto(`http://localhost:${port}`, { timeout: 0 });
 
   log.info('browser started and page loaded', {
-    replicantId: replicantParams.replicantId,
+    replicantId: replicantProps.replicantId,
     time: Date.now() - start,
   });
 
@@ -174,7 +175,7 @@ const getBrowser = async (browserType: Platform): Promise<BrowserType> => {
   }
 };
 
-const getNewBrowserContext = async ({ platform, userDataDir }: ReplicantRuntimeParams, options: BrowserOptions) => {
+const getNewBrowserContext = async ({ platform, userDataDir }: ReplicantRuntimeProps, options: BrowserOptions) => {
   invariant(platform, 'Invalid runtime');
 
   const browserRunner = await getBrowser(platform);

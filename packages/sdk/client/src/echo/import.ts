@@ -3,22 +3,26 @@
 //
 
 import { SpaceProperties } from '@dxos/client-protocol';
-import { Type } from '@dxos/echo';
-import { type EchoDatabase, Filter, type SerializedSpace, Serializer, decodeReferenceJSON } from '@dxos/echo-db';
+import { Obj, Type } from '@dxos/echo';
+import { Filter, type SerializedSpace, Serializer, decodeDXNFromJSON } from '@dxos/echo-db';
+import { type EchoDatabase } from '@dxos/echo-db';
 
-export const importSpace = async (database: EchoDatabase, data: SerializedSpace) => {
-  const [properties] = await database.query(Filter.type(SpaceProperties)).run();
+export const importSpace = async (db: EchoDatabase, data: SerializedSpace) => {
+  const [properties] = await db.query(Filter.type(SpaceProperties)).run();
 
-  await new Serializer().import(database, data, {
+  await new Serializer().import(db, data, {
     onObject: async (object) => {
       const { '@type': typeEncoded, ...data } = object;
-      const type = decodeReferenceJSON(typeEncoded);
+      const typeDXN = decodeDXNFromJSON(typeEncoded);
+      const typename = typeDXN?.asTypeDXN()?.type;
       // Handle Space Properties.
-      if (properties && type?.objectId === Type.getTypename(SpaceProperties)) {
-        Object.entries(data).forEach(([name, value]) => {
-          if (!name.startsWith('@')) {
-            properties[name] = value;
-          }
+      if (properties && typename === Type.getTypename(SpaceProperties)) {
+        Obj.change(properties, (props: any) => {
+          Object.entries(data).forEach(([name, value]) => {
+            if (!name.startsWith('@')) {
+              props[name] = value;
+            }
+          });
         });
         return false;
       }

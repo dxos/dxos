@@ -4,6 +4,10 @@
   "description": "ECHO queries.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "info@dxos.org",
   "sideEffects": false,
@@ -15,8 +19,7 @@
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
+      "default": "./dist/lib/neutral/index.mjs"
     },
     "./api.d.ts": "./dist/query-lite/index.d.ts"
   },
@@ -38,16 +41,16 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
     "@dxos/vendor-quickjs": "workspace:*",
-    "@lezer/common": "^1.2.2",
-    "@lezer/lezer": "^1.1.2",
-    "@lezer/lr": "^1.4.2"
+    "@lezer/common": "catalog:",
+    "@lezer/lezer": "catalog:",
+    "@lezer/lr": "catalog:"
   },
   "devDependencies": {
     "@dxos/echo-generator": "workspace:*",
     "@dxos/random": "workspace:*",
-    "@lezer/generator": "^1.7.1",
-    "tsdown": "^0.16.6",
-    "typescript": "^5.9.3"
+    "@lezer/generator": "catalog:",
+    "tsdown": "catalog:",
+    "typescript": "catalog:"
   },
   "publishConfig": {
     "access": "public"

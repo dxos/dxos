@@ -21,6 +21,8 @@ import jsonStableStringify from 'json-stable-stringify';
 
 import { deepMapValues } from '@dxos/util';
 
+import { withoutToolCallParising } from '../../util';
+
 // Can be performance-intensive
 const DISABLE_CLOSEST_MATCH_SEARCH = false;
 
@@ -46,14 +48,14 @@ export const layer = (
     }),
   );
 
-export interface MakeModelOptions {
+type MakeProps = {
   upstreamModel: LanguageModel.Service;
   modelName: string;
   storePath: string;
   allowGeneration: boolean;
-}
+};
 
-export const make = (options: MakeModelOptions): Effect.Effect<LanguageModel.Service> => {
+export const make = (options: MakeProps): Effect.Effect<LanguageModel.Service> => {
   const store = new MemoizedStore(options.storePath);
 
   return LanguageModel.make({
@@ -122,6 +124,7 @@ export const make = (options: MakeModelOptions): Effect.Effect<LanguageModel.Ser
                 disableToolCallResolution: true,
               })
               .pipe(
+                withoutToolCallParising,
                 Stream.mapEffect((part) =>
                   Schema.encode(PartCodec)(part).pipe(
                     Effect.catchTag('ParseError', (error) =>
@@ -139,7 +142,7 @@ export const make = (options: MakeModelOptions): Effect.Effect<LanguageModel.Ser
                     return chunk;
                   }),
                 ),
-                Stream.onEnd(
+                Stream.onDone(() =>
                   Effect.gen(function* () {
                     const conversation: MemoziedConversation = {
                       parameters: getMemoizedConversationParameters(options.modelName, true, params),
@@ -297,7 +300,7 @@ const MemoziedConversation = Schema.Struct({
   // This is supposed to be Response.AllParts for arbitrary tools.
   // Tool call schema is generated based on the available tools so we can't use a static schema.
   response: Schema.Array(Schema.Unknown),
-});
+}).annotations({ identifier: 'MemoziedConversation' });
 type MemoziedConversation = Schema.Schema.Type<typeof MemoziedConversation>;
 
 const ConversationStore = Schema.Struct({
@@ -358,12 +361,18 @@ const throwErrorWithClosestMatch = (store: MemoizedStore, conversation: Memozied
           'saved',
           'new',
         );
-        return yield* Effect.dieMessage(
-          `No memoized conversation found for the given prompt. Closest match:\n${patch}\n\nRe-run with ALLOW_LLM_GENERATION=1 to generate a new memoized conversation.`,
-        );
+        return yield* Effect.dieMessage(error(patch));
       }
     }
-    return yield* Effect.dieMessage(
-      'No memoized conversation found for the given prompt.\n\nRe-run with ALLOW_LLM_GENERATION=1 to generate a new memoized conversation.',
-    );
+
+    return yield* Effect.dieMessage(error());
   });
+
+const error = (patch?: string) =>
+  [
+    'No memoized conversation found for the given prompt.',
+    'Re-run test with ALLOW_LLM_GENERATION=1 to generate a new memoized conversation.',
+    patch && `Closest match: ${patch}`,
+  ]
+    .filter(Boolean)
+    .join('\n');

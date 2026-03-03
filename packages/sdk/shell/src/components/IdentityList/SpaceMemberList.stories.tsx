@@ -14,7 +14,7 @@ import { SpaceMemberListImpl } from './SpaceMemberList';
 const meta = {
   title: 'sdk/shell/SpaceMemberList',
   component: SpaceMemberListImpl,
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof SpaceMemberListImpl>;
 
 export default meta;

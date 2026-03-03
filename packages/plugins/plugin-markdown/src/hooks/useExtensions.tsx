@@ -3,19 +3,20 @@
 //
 
 import { type ViewUpdate } from '@codemirror/view';
-import React, { type AnchorHTMLAttributes, type ReactNode, useMemo } from 'react';
-import { createRoot } from 'react-dom/client';
+import { useMemo } from 'react';
 
-import { LayoutAction, type PromiseIntentDispatcher, createIntent } from '@dxos/app-framework';
-import { useIntentDispatcher } from '@dxos/app-framework/react';
+import { type Capabilities } from '@dxos/app-framework';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { debounceAndThrottle } from '@dxos/async';
 import { Obj } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
-import { getSpace } from '@dxos/react-client/echo';
+import { getSpace, useObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Icon, ThemeProvider } from '@dxos/react-ui';
 import { type SelectionManager } from '@dxos/react-ui-attention';
+import { Text } from '@dxos/schema';
+import { Domino } from '@dxos/ui';
 import {
   Cursor,
   type EditorStateStore,
@@ -36,10 +37,8 @@ import {
   replacer,
   selectionState,
   typewriter,
-} from '@dxos/react-ui-editor';
-import { defaultTx } from '@dxos/react-ui-theme';
-import { Text } from '@dxos/schema';
-import { isTruthy } from '@dxos/util';
+} from '@dxos/ui-editor';
+import { isTruthy, safeUrl } from '@dxos/util';
 
 import { Markdown } from '../types';
 import { setFallbackName } from '../util';
@@ -49,7 +48,7 @@ export type DocumentType = Markdown.Document | Text.Text | { id: string; text: s
 export type ExtensionsOptions = {
   id: string;
   object?: DocumentType;
-  dispatch?: PromiseIntentDispatcher;
+  invokePromise?: Capabilities.OperationInvoker['invokePromise'];
   settings?: Markdown.Settings;
   selectionManager?: SelectionManager;
   viewMode?: EditorViewMode;
@@ -67,16 +66,16 @@ export const useExtensions = ({
   editorStateStore,
   previewOptions,
 }: ExtensionsOptions): Extension[] => {
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
   const identity = useIdentity();
   const space = getSpace(object);
 
-  let target: Obj.Any | undefined;
-  if (Obj.instanceOf(Markdown.Document, object)) {
-    target = (object as Markdown.Document).content.target;
-  } else if (Obj.instanceOf(Text.Text, object)) {
-    target = object;
-  }
+  // Get the content reference from Document objects.
+  const contentRef = Obj.instanceOf(Markdown.Document, object) ? (object as Markdown.Document).content : undefined;
+  // Use useObject to trigger re-render when the reference loads (returns snapshot for reactivity).
+  useObject(contentRef);
+  // Get the actual live object target via .target (needed for createDocAccessor).
+  const target = contentRef?.target ?? (Obj.instanceOf(Text.Text, object) ? object : undefined);
 
   // TODO(wittjosiah): Autocomplete is not working and this query is causing performance issues.
   // TODO(burdon): Unsubscribe.
@@ -92,13 +91,13 @@ export const useExtensions = ({
         selectionManager,
         viewMode,
         previewOptions,
-        dispatch,
+        invokePromise,
       }),
     [
       id,
       object,
       viewMode,
-      dispatch,
+      invokePromise,
       previewOptions,
       settings,
       settings?.debug,
@@ -144,7 +143,7 @@ export const useExtensions = ({
 const createBaseExtensions = ({
   id,
   object,
-  dispatch,
+  invokePromise,
   settings,
   selectionManager,
   viewMode,
@@ -166,22 +165,13 @@ const createBaseExtensions = ({
         decorateMarkdown({
           selectionChangeDelay: 100,
           numberedHeadings: settings?.numberedHeadings ? { from: 2 } : undefined,
-          // TODO(wittjosiah): For internal links, consider ignoring the link text and rendering the label of the object being linked to.
-          // TODO(burdon): Create dx-tag.
-          renderLinkButton:
-            dispatch && (object || id)
-              ? createLinkRenderer((id: string) => {
-                  void dispatch(
-                    createIntent(LayoutAction.Open, {
-                      part: 'main',
-                      subject: [id],
-                      options: {
-                        pivotId: object && Obj.isObject(object) ? Obj.getDXN(object).toString() : id,
-                      },
-                    }),
-                  );
-                })
-              : undefined,
+          // TODO(wittjosiah): For internal links render the label of the object.
+          renderLinkButton: createRenderLink((targetId: string) => {
+            void invokePromise?.(LayoutOperation.Open, {
+              subject: [targetId],
+              pivotId: object && Obj.isObject(object) ? Obj.getDXN(object).toString() : id,
+            });
+          }),
         }),
         linkTooltip(renderLinkTooltip),
         preview(previewOptions),
@@ -220,60 +210,34 @@ const selectionChange = (selectionManager: SelectionManager) => {
   );
 };
 
-// TODO(burdon): Factor out styles.
-const style = {
-  hover: 'rounded-sm text-primary-500 hover:text-primary-600 dark:text-primary-500 hover:dark:text-primary-400',
-  icon: 'inline-block leading-none mis-1 cursor-pointer',
-};
-
-const createLinkRenderer =
+const createRenderLink =
   (onSelectObject: (id: string) => void): RenderCallback<{ url: string }> =>
   (el, { url }) => {
     // TODO(burdon): Formalize/document internal link format.
-    const isInternal =
-      url.startsWith('/') ||
-      // TODO(wittjosiah): This should probably be parsed out on paste?
-      url.startsWith(window.location.origin);
+    const isInternal = url.startsWith('/') || url.startsWith(window.location.origin);
+    const anchor = Domino.of('a')
+      .classNames('dx-link dx-icon-inline ms-1')
+      .children(Domino.svg(isInternal ? 'ph--arrow-square-down--regular' : 'ph--arrow-square-out--regular'));
 
-    const options: AnchorHTMLAttributes<any> = isInternal
-      ? {
-          onClick: () => {
-            const qualifiedId = url.split('/').at(-1);
-            invariant(qualifiedId, 'Invalid link format.');
-            onSelectObject(qualifiedId);
-          },
-        }
-      : {
-          href: url,
-          rel: 'noreferrer',
-          target: '_blank',
-        };
+    if (isInternal) {
+      anchor.on('click', () => {
+        const qualifiedId = url.split('/').at(-1);
+        invariant(qualifiedId, 'Invalid link format.');
+        onSelectObject(qualifiedId);
+      });
+    } else {
+      anchor.attributes({ href: url, rel: 'noreferrer', target: '_blank' });
+    }
 
-    renderRoot(
-      el,
-      <a {...options} className={style.hover}>
-        <Icon
-          icon={isInternal ? 'ph--arrow-square-down--bold' : 'ph--arrow-square-out--bold'}
-          size={4}
-          classNames={style.icon}
-        />
-      </a>,
-    );
+    el.appendChild(anchor.root);
   };
 
 const renderLinkTooltip: RenderCallback<{ url: string }> = (el, { url }) => {
-  const web = new URL(url);
-  renderRoot(
-    el,
-    <a href={url} rel='noreferrer' target='_blank' className={style.hover}>
-      {web.origin}
-      <Icon icon='ph--arrow-square-out--bold' size={4} classNames={style.icon} />
-    </a>,
+  el.appendChild(
+    Domino.of('a')
+      .attributes({ href: url, target: '_blank', rel: 'noreferrer' })
+      .classNames('dx-link flex items-center gap-2')
+      .text(safeUrl(url)?.origin ?? url)
+      .children(Domino.svg('ph--arrow-square-out--regular')).root,
   );
-};
-
-// TODO(burdon): REMOVE.
-const renderRoot = <T extends Element>(root: T, node: ReactNode): T => {
-  createRoot(root).render(<ThemeProvider tx={defaultTx}>{node}</ThemeProvider>);
-  return root;
 };

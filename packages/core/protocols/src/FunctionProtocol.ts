@@ -6,7 +6,8 @@ import { type SpaceId } from '@dxos/keys';
 import type * as QueryProto from '@dxos/protocols/proto/dxos/echo/query';
 import type * as DataProto from '@dxos/protocols/proto/dxos/echo/service';
 
-import { type QueueService } from './queue';
+import { type EdgeFunctionEnv } from './edge';
+import type * as FeedProtocol from './FeedProtocol';
 
 //
 // Function protocol definition
@@ -16,8 +17,6 @@ import { type QueueService } from './queue';
 // - Cannot use effect.
 // - Protobuf service definitions are allowed (Q: What about PublicKey, Timeframe, etc.).
 // - Breaking changes in this interface should be carefully considered.
-
-// TODO(dmaretskyi): Consider moving this to protocols.
 
 /**
  * Function implementation.
@@ -76,10 +75,13 @@ export interface Context {
      * Queue service.
      * Available if the function is invoked in context of a space.
      */
-    queueService?: QueueService;
+    queueService?: FeedProtocol.QueueService;
 
-    // TODO(dmaretskyi): Add aiService.
-    // TODO(dmaretskyi): Add functionsService.
+    /**
+     * Functions service.
+     * Available if the function is invoked in context of a space.
+     */
+    functionsAiService?: EdgeFunctionEnv.FunctionsAiService;
   };
 
   /**

@@ -6,24 +6,25 @@ import { Atom, type Registry, RegistryContext, useAtomValue } from '@effect-atom
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
-import type * as Schema from 'effect/Schema';
-import React, { type PropsWithChildren, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, { type PropsWithChildren, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Filter, type Live, Query, type Space, SpaceState, isSpace, live } from '@dxos/client/echo';
-import { Obj, type QueryResult, Type } from '@dxos/echo';
+import { Filter, type Space, SpaceState, isSpace } from '@dxos/client/echo';
+import { Obj, Query } from '@dxos/echo';
+import { TestSchema } from '@dxos/echo/testing';
+import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { faker } from '@dxos/random';
 import { type Client, useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Icon, IconButton, Input, Select } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
-import { Path, Tree } from '@dxos/react-ui-list';
-import { getSize, mx } from '@dxos/react-ui-theme';
-import { byPosition, isNonNullable, safeParseInt } from '@dxos/util';
+import { Path, Tree, type TreeModel } from '@dxos/react-ui-list';
+import { getSize, mx } from '@dxos/ui-theme';
+import { safeParseInt } from '@dxos/util';
 
-import { type ExpandableGraph, ROOT_ID } from '../graph';
-import { GraphBuilder, atomFromObservable, atomFromSignal, createExtension } from '../graph-builder';
-import { type Node } from '../node';
-import { atomFromQuery } from '../testing';
+import * as CreateAtom from '../atoms';
+import * as Graph from '../graph';
+import * as GraphBuilder from '../graph-builder';
+import * as Node from '../node';
 
 import { JsonTree } from './Tree';
 
@@ -47,47 +48,44 @@ const actionWeights = {
   [Action.RENAME_OBJECT]: 4,
 };
 
-const createGraph = (client: Client, registry: Registry.Registry): ExpandableGraph => {
-  const spaceBuilderExtension = createExtension({
+const createGraph = (client: Client, registry: Registry.Registry): Graph.ExpandableGraph => {
+  const spaceBuilderExtension = GraphBuilder.createExtensionRaw({
     id: 'space',
     connector: (node) =>
       Atom.make((get) =>
         Function.pipe(
           get(node),
-          Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
+          Option.flatMap((node) => (node.id === Node.RootId ? Option.some(node) : Option.none())),
           Option.map(() => {
-            const spaces = get(atomFromObservable(client.spaces)) ?? [];
+            const spaces = get(CreateAtom.fromObservable(client.spaces)) ?? [];
             return spaces
-              .filter((space) => get(atomFromObservable(space.state)) === SpaceState.SPACE_READY)
-              .map((space) => ({
-                id: space.id,
-                type: 'dxos.org/type/Space',
-                properties: {
-                  label: get(atomFromSignal(() => space.properties.name)),
-                },
-                data: space,
-              }));
+              .filter((space: any) => get(CreateAtom.fromObservable(space.state)) === SpaceState.SPACE_READY)
+              .map((space) => {
+                const propertiesSnapshot = get(AtomObj.make(space.properties));
+                return {
+                  id: space.id,
+                  type: 'dxos.org/type/Space',
+                  properties: {
+                    label: propertiesSnapshot.name,
+                  },
+                  data: space,
+                };
+              });
           }),
           Option.getOrElse(() => []),
         ),
       ),
   });
 
-  const objectBuilderExtension = createExtension({
+  const objectBuilderExtension = GraphBuilder.createExtensionRaw({
     id: 'object',
     connector: (node) => {
-      // TODO(wittjosiah): Find a simpler way to define this type.
-      let result: QueryResult.QueryResult<Schema.Schema.Type<typeof Type.Expando>> | undefined;
       return Atom.make((get) =>
         Function.pipe(
           get(node),
           Option.flatMap((node) => (isSpace(node.data) ? Option.some(node.data) : Option.none())),
           Option.map((space) => {
-            if (!result) {
-              result = space.db.query(Query.type(Type.Expando, { type: 'test' }));
-            }
-
-            const objects = get(atomFromQuery(result));
+            const objects = get(AtomQuery.make(space.db, Query.type(TestSchema.Expando, { type: 'test' })));
             return objects.map((object) => ({
               id: object.id,
               type: 'dxos.org/type/test',
@@ -101,13 +99,14 @@ const createGraph = (client: Client, registry: Registry.Registry): ExpandableGra
     },
   });
 
-  const graph = new GraphBuilder({ registry })
-    .addExtension(spaceBuilderExtension)
-    .addExtension(objectBuilderExtension).graph;
+  const builder = GraphBuilder.make({ registry });
+  GraphBuilder.addExtension(builder, spaceBuilderExtension);
+  GraphBuilder.addExtension(builder, objectBuilderExtension);
+  const graph = builder.graph;
   graph.onNodeChanged.on(({ id }) => {
-    graph.expand(id);
+    Graph.expand(graph, id);
   });
-  graph.expand(ROOT_ID);
+  Graph.expand(graph, Node.RootId);
   (window as any).graph = graph;
   return graph;
 };
@@ -128,7 +127,7 @@ const getRandomSpace = (client: Client): Space | undefined => {
 const getSpaceWithObjects = async (client: Client): Promise<Space | undefined> => {
   const readySpaces = client.spaces.get().filter((space) => space.state.get() === SpaceState.SPACE_READY);
   const spaceQueries = await Promise.all(
-    readySpaces.map((space) => space.db.query(Filter.type(Type.Expando, { type: 'test' })).run()),
+    readySpaces.map((space) => space.db.query(Filter.type(TestSchema.Expando, { type: 'test' })).run()),
   );
   const spaces = readySpaces.filter((space, index) => spaceQueries[index].length > 0);
   return spaces[Math.floor(Math.random() * spaces.length)];
@@ -147,14 +146,16 @@ const runAction = async (client: Client, action: Action) => {
     case Action.RENAME_SPACE: {
       const space = getRandomSpace(client);
       if (space) {
-        space.properties.name = faker.commerce.productName();
+        Obj.change(space.properties, (p) => {
+          p.name = faker.commerce.productName();
+        });
       }
       break;
     }
 
     case Action.ADD_OBJECT:
       getRandomSpace(client)?.db.add(
-        Obj.make(Type.Expando, {
+        Obj.make(TestSchema.Expando, {
           type: 'test',
           name: faker.commerce.productName(),
         }),
@@ -164,7 +165,7 @@ const runAction = async (client: Client, action: Action) => {
     case Action.REMOVE_OBJECT: {
       const space = await getSpaceWithObjects(client);
       if (space) {
-        const objects = await space.db.query(Filter.type(Type.Expando, { type: 'test' })).run();
+        const objects = await space.db.query(Filter.type(TestSchema.Expando, { type: 'test' })).run();
         space.db.remove(objects[Math.floor(Math.random() * objects.length)]);
       }
       break;
@@ -173,8 +174,11 @@ const runAction = async (client: Client, action: Action) => {
     case Action.RENAME_OBJECT: {
       const space = await getSpaceWithObjects(client);
       if (space) {
-        const objects = await space.db.query(Filter.type(Type.Expando, { type: 'test' })).run();
-        objects[Math.floor(Math.random() * objects.length)].name = faker.commerce.productName();
+        const objects = await space.db.query(Filter.type(TestSchema.Expando, { type: 'test' })).run();
+        const object = objects[Math.floor(Math.random() * objects.length)];
+        Obj.change(object, (o) => {
+          o.name = faker.commerce.productName();
+        });
       }
       break;
     }
@@ -213,13 +217,13 @@ const Controls = ({ children }: PropsWithChildren) => {
             <Input.TextInput
               autoComplete='off'
               size={5}
-              classNames='is-[100px] text-right pie-[22px]'
+              classNames='w-[100px] text-right pe-[22px]'
               placeholder='Interval'
               value={actionInterval}
               onChange={({ target: { value } }) => setActionInterval(value)}
             />
           </Input.Root>
-          <Icon icon='ph--timer--regular' classNames={mx('absolute inline-end-1 block-start-1 mt-[6px]', getSize(3))} />
+          <Icon icon='ph--timer--regular' classNames={mx('absolute right-1 top-1 mt-[6px]', getSize(3))} />
         </div>
         <IconButton icon='ph--plus--regular' label='Add' onClick={() => action && runAction(client, action)} />
         <Select.Root value={action?.toString()} onValueChange={(action) => setAction(action as unknown as Action)}>
@@ -248,9 +252,10 @@ const Controls = ({ children }: PropsWithChildren) => {
 const meta = {
   title: 'sdk/app-graph/EchoGraph',
   decorators: [
-    withTheme,
+    withTheme(),
     withClientProvider({
       createIdentity: true,
+      types: [TestSchema.Expando],
       onCreateIdentity: async ({ client }) => {
         await client.spaces.create();
         await client.spaces.create();
@@ -284,94 +289,129 @@ export const TreeView: Story = {
     const client = useClient();
     const registry = useContext(RegistryContext);
     const graph = useMemo(() => createGraph(client, registry), [client, registry]);
-    const state = useMemo(() => new Map<string, Live<{ open: boolean; current: boolean }>>(), []);
+    const stateRef = useRef(new Map<string, Atom.Writable<{ open: boolean; current: boolean }>>());
 
-    const useItems = useCallback(
-      (node?: Node, options?: { disposition?: string; sort?: boolean }) => {
-        const connections = useAtomValue(graph.connections(node?.id ?? ROOT_ID));
-        return options?.sort ? connections.toSorted((a, b) => byPosition(a.properties, b.properties)) : connections;
+    const getOrCreateState = useMemo(
+      () => (pathKey: string) => {
+        let atom = stateRef.current.get(pathKey);
+        if (!atom) {
+          atom = Atom.make({ open: true, current: false }).pipe(Atom.keepAlive);
+          stateRef.current.set(pathKey, atom);
+        }
+        return atom;
       },
+      [],
+    );
+
+    const childIdsFamily = useMemo(
+      () =>
+        Atom.family((id: string) =>
+          Atom.make((get) => {
+            const connections = get(graph.connections(id));
+            return connections.map((connection) => connection.id);
+          }),
+        ),
       [graph],
     );
 
-    const getProps = useCallback(
-      (node: Node, path: string[]) => {
-        const children = graph
-          .getConnections(node.id, 'outbound')
-          .map((n) => {
-            // Break cycles.
-            const nextPath = [...path, node.id];
-            return nextPath.includes(n.id) ? undefined : (n as Node);
-          })
-          .filter(isNonNullable) as Node[];
-        const parentOf =
-          children.length > 0 ? children.map(({ id }) => id) : node.properties.role === 'branch' ? [] : undefined;
-        return {
-          id: node.id,
-          label: node.id,
-          icon: node.type === 'dxos.org/type/Space' ? 'ph--planet--regular' : 'ph--placeholder--regular',
-          parentOf,
-        };
-      },
+    const itemFamily = useMemo(
+      () =>
+        Atom.family((id: string) =>
+          Atom.make((get) => {
+            const node = get(graph.node(id));
+            return Option.isSome(node) ? node.value : undefined;
+          }),
+        ),
       [graph],
     );
 
-    const isOpen = useCallback(
-      (_path: string[]) => {
-        const path = Path.create(..._path);
-        const object = state.get(path) ?? live({ open: true, current: false });
-        if (!state.has(path)) {
-          state.set(path, object);
-        }
-
-        return object.open;
-      },
-      [state],
+    const itemPropsFamily = useMemo(
+      () =>
+        Atom.family((pathKey: string) => {
+          const path = pathKey.split('~');
+          const id = path[path.length - 1];
+          return Atom.make((get) => {
+            const nodeOpt = get(graph.node(id));
+            const node = Option.isSome(nodeOpt) ? nodeOpt.value : undefined;
+            if (!node) {
+              return { id, label: id };
+            }
+            const connections = get(graph.connections(node.id, 'outbound'));
+            const safeChildren = connections.filter((n) => !path.includes(n.id));
+            const parentOf =
+              safeChildren.length > 0
+                ? safeChildren.map(({ id }) => id)
+                : node.properties.role === 'branch'
+                  ? []
+                  : undefined;
+            return {
+              id: node.id,
+              label: node.id,
+              icon: node.type === 'dxos.org/type/Space' ? 'ph--planet--regular' : 'ph--placeholder--regular',
+              parentOf,
+            };
+          });
+        }),
+      [graph],
     );
 
-    const isCurrent = useCallback(
-      (_path: string[]) => {
-        const path = Path.create(..._path);
-        const object = state.get(path) ?? live({ open: false, current: false });
-        if (!state.has(path)) {
-          state.set(path, object);
-        }
+    const itemOpenFamily = useMemo(
+      () =>
+        Atom.family((pathKey: string) => {
+          const stateAtom = getOrCreateState(pathKey);
+          return Atom.make((get) => get(stateAtom).open);
+        }),
+      [getOrCreateState],
+    );
 
-        return object.current;
-      },
-      [state],
+    const itemCurrentFamily = useMemo(
+      () =>
+        Atom.family((pathKey: string) => {
+          const stateAtom = getOrCreateState(pathKey);
+          return Atom.make((get) => get(stateAtom).current);
+        }),
+      [getOrCreateState],
+    );
+
+    const model: TreeModel<Node.Node> = useMemo(
+      () => ({
+        childIds: (parentId?: string) => childIdsFamily(parentId ?? Node.RootId),
+        item: (id: string) => itemFamily(id),
+        itemProps: (path: string[]) => itemPropsFamily(path.join('~')),
+        itemOpen: (path: string[]) => itemOpenFamily(Path.create(...path)),
+        itemCurrent: (path: string[]) => itemCurrentFamily(Path.create(...path)),
+      }),
+      [childIdsFamily, itemFamily, itemPropsFamily, itemOpenFamily, itemCurrentFamily],
     );
 
     const onOpenChange = useCallback(
       ({ path: _path, open }: { path: string[]; open: boolean }) => {
         const path = Path.create(..._path);
-        const object = state.get(path);
-        object!.open = open;
+        const atom = stateRef.current.get(path);
+        if (atom) {
+          const prev = registry.get(atom);
+          registry.set(atom, { ...prev, open });
+        }
       },
-      [state],
+      [registry],
     );
 
     const onSelect = useCallback(
       ({ path: _path, current }: { path: string[]; current: boolean }) => {
         const path = Path.create(..._path);
-        const object = state.get(path);
-        object!.current = current;
+        const atom = stateRef.current.get(path);
+        if (atom) {
+          const prev = registry.get(atom);
+          registry.set(atom, { ...prev, current });
+        }
       },
-      [state],
+      [registry],
     );
 
     return (
       <>
         <Controls />
-        <Tree
-          id={ROOT_ID}
-          useItems={useItems}
-          getProps={getProps}
-          isOpen={isOpen}
-          isCurrent={isCurrent}
-          onOpenChange={onOpenChange}
-          onSelect={onSelect}
-        />
+        <Tree model={model} id={Node.RootId} onOpenChange={onOpenChange} onSelect={onSelect} />
       </>
     );
   },

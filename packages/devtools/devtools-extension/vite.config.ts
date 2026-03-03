@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-// import { sentryVitePlugin } from '@sentry/vite-plugin';
 import ReactPlugin from '@vitejs/plugin-react';
 import { join, resolve } from 'node:path';
 import { defineConfig } from 'vite';
@@ -12,7 +11,7 @@ import SourceMapsPlugin from 'rollup-plugin-sourcemaps';
 import WasmPlugin from 'vite-plugin-wasm';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
-import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
+import { ThemePlugin } from '@dxos/ui-theme/plugin';
 
 import packageJson from './package.json';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
@@ -42,15 +41,11 @@ export default defineConfig({
   plugins: [
     SourceMapsPlugin(),
     ConfigPlugin({ root: __dirname }),
-    ThemePlugin({
-      root: __dirname,
-      content: [resolve(__dirname, './*.html'), resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}')],
-    }),
+    ThemePlugin({}),
 
     WasmPlugin(),
 
-    // https://github.com/preactjs/signals/issues/269
-    ReactPlugin({ jsxRuntime: 'classic' }),
+    ReactPlugin(),
 
     ChromeExtensionPlugin({
       manifest: {
@@ -90,20 +85,6 @@ export default defineConfig({
         ],
       },
     }),
-
-    // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite
-    // https://www.npmjs.com/package/@sentry/vite-plugin
-    // TODO(wittjosiah): Seems to have some conflict with the chrome extension plugin.
-    //   If only one is included it builds but fails with both.
-    // sentryVitePlugin({
-    //   org: 'dxos',
-    //   project: 'devtools-extension',
-    //   sourcemaps: {
-    //     assets: './packages/devtools/devtools-extension/out/devtools-extension/**'
-    //   },
-    //   authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN,
-    //   disable: process.env.DX_ENVIRONMENT !== 'production'
-    // })
 
     // Add "style-src 'unsafe-inline' https://fonts.googleapis.com; style-src-elem 'unsafe-inline' https://fonts.googleapis.com" in content_security_policy in manifest.json when uncommenting this.
     /**

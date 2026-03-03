@@ -4,6 +4,10 @@
   "description": "Functions tests",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "info@dxos.org",
   "sideEffects": true,
@@ -43,9 +47,8 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",
-    "@effect/platform": "0.92.1"
+    "@effect/platform": "catalog:"
   },
-  "devDependencies": {},
   "publishConfig": {
     "access": "public"
   },

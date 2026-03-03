@@ -6,7 +6,7 @@ import React, { type ForwardedRef, forwardRef } from 'react';
 
 import type { Space } from '@dxos/react-client/echo';
 import { Avatar, useId } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 import { humanize, keyToEmoji } from '@dxos/util';
 
 export const SpaceListItem = forwardRef(
@@ -17,7 +17,7 @@ export const SpaceListItem = forwardRef(
 
     return (
       <li
-        className={mx('flex gap-2 items-center mbe-2', onClick && 'cursor-pointer')}
+        className={mx('flex gap-2 items-center mb-2', onClick && 'cursor-pointer')}
         onClick={() => onClick?.()}
         ref={ref}
         data-testid='space-list-item'

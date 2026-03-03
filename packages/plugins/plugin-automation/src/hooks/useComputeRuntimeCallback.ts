@@ -7,25 +7,24 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import { type DependencyList, useCallback } from 'react';
 
-import { useCapability } from '@dxos/app-framework/react';
-import { type FunctionDefinition, FunctionInvocationService } from '@dxos/functions';
-import { InvocationTracer, TracingServiceExt } from '@dxos/functions-runtime';
+import { useCapability } from '@dxos/app-framework/ui';
+import { type Key } from '@dxos/echo';
+import { type FunctionDefinition, FunctionInvocationService, TracingService } from '@dxos/functions';
 import { log } from '@dxos/log';
-import type { Space } from '@dxos/react-client/echo';
 
-import { AutomationCapabilities } from '../capabilities';
+import { AutomationCapabilities } from '../types';
 
 /**
  * Create an effectful function that has access to compute services
  */
 // TODO(burdon): Factor out (figure out cross-plugin capabilities dependencies).
 export const useComputeRuntimeCallback = <T>(
-  space: Space | undefined,
+  id: Key.SpaceId | undefined,
   fn: () => Effect.Effect<T, any, AutomationCapabilities.ComputeServices>,
   deps?: DependencyList,
 ): (() => Promise<T>) => {
   const computeRuntime = useCapability(AutomationCapabilities.ComputeRuntime);
-  const runtime = space !== undefined ? computeRuntime.getRuntime(space.id) : undefined;
+  const runtime = id !== undefined ? computeRuntime.getRuntime(id) : undefined;
 
   return useCallback(() => {
     if (!runtime) {
@@ -39,7 +38,7 @@ export const useComputeRuntimeCallback = <T>(
 // TODO(wittjosiah): Function invoking should automatically be traced (DX-647).
 export const invokeFunctionWithTracing = <I, O>(functionDef: FunctionDefinition<I, O>, inputData: I) =>
   Effect.gen(function* () {
-    const tracer = yield* InvocationTracer;
+    const tracer = yield* TracingService;
     const trace = yield* tracer.traceInvocationStart({
       target: undefined,
       payload: {
@@ -49,7 +48,7 @@ export const invokeFunctionWithTracing = <I, O>(functionDef: FunctionDefinition<
 
     // Invoke the function.
     const result = yield* FunctionInvocationService.invokeFunction(functionDef, inputData).pipe(
-      Effect.provide(TracingServiceExt.layerQueue(trace.invocationTraceQueue)),
+      Effect.provide(trace.invocationTraceQueue ? TracingService.layerInvocation(trace) : TracingService.layerNoop),
       Effect.exit,
     );
 

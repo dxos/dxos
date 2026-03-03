@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Input } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 import { safeParseFloat } from '@dxos/util';
 
 import { type FormFieldComponentProps, FormFieldLabel } from '../FormFieldComponent';

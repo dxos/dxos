@@ -15,8 +15,8 @@ import {
   SVG,
   type SVGContext,
 } from '@dxos/react-ui-graph';
-import { getHashStyles } from '@dxos/react-ui-theme';
 import { type SpaceGraphEdge, type SpaceGraphModel, type SpaceGraphNode } from '@dxos/schema';
+import { getHashStyles } from '@dxos/ui-theme';
 
 import '@dxos/react-ui-graph/styles/graph.css';
 
@@ -52,7 +52,7 @@ export const D3ForceGraph = ({ classNames, model, selection: _selection, grid, .
 
   const graph = useRef<GraphController>(null);
   const selection = useMemo(() => _selection ?? new SelectionModel(), [_selection]);
-  useEffect(() => graph.current?.repaint(), [selection.selected.value]);
+  useEffect(() => selection.subscribe(() => graph.current?.repaint()), [selection]);
 
   const handleSelect = useCallback<NonNullable<GraphProps['onSelect']>>(
     (node) => {

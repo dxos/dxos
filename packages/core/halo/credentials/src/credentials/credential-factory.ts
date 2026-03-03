@@ -11,14 +11,14 @@ import { type Chain, type Credential } from '@dxos/protocols/proto/dxos/halo/cre
 import { getCredentialProofPayload } from './signing';
 import { SIGNATURE_TYPE_ED25519, verifyChain } from './verifier';
 
-export type CreateCredentialSignerParams = {
+export type CreateCredentialSignerProps = {
   subject: PublicKey;
   assertion: TypedMessage;
   nonce?: Uint8Array;
   parentCredentialIds?: PublicKey[];
 };
 
-export type CreateCredentialParams = {
+export type CreateCredentialProps = {
   signer: Signer;
   issuer: PublicKey;
   signingKey?: PublicKey;
@@ -44,7 +44,7 @@ export const createCredential = async ({
   chain,
   nonce,
   parentCredentialIds,
-}: CreateCredentialParams): Promise<Credential> => {
+}: CreateCredentialProps): Promise<Credential> => {
   invariant(assertion['@type'], 'Invalid assertion.');
   invariant(!!signingKey === !!chain, 'Chain must be provided if and only if the signing key differs from the issuer.');
   if (chain) {
@@ -93,7 +93,7 @@ export const createCredentialMessage = (credential: Credential) => {
 // TODO(burdon): Vs. Signer.
 export interface CredentialSigner {
   getIssuer(): PublicKey;
-  createCredential: (params: CreateCredentialSignerParams) => Promise<Credential>;
+  createCredential: (params: CreateCredentialSignerProps) => Promise<Credential>;
 }
 
 /**

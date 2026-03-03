@@ -18,7 +18,7 @@ import RevealHighlight from 'reveal.js/plugin/highlight/highlight';
 import RevealMarkdown from 'reveal.js/plugin/markdown/plugin.js';
 
 import { type ThemedClassName, useAsyncEffect } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 const styles = `
 <style type="text/css">
@@ -91,6 +91,9 @@ export const RevealPlayer = ({ classNames, content, slide, fullscreen = true, on
       slideNumber: false,
       embedded: true,
 
+      // Disable autoplay to prevent errors in headless environments (e.g., CI).
+      autoPlayMedia: false,
+
       // TODO(burdon): Speaker view requires server to serve popout window.
       // https://revealjs.com/speaker-view
       showNotes: false,
@@ -146,12 +149,12 @@ export const RevealPlayer = ({ classNames, content, slide, fullscreen = true, on
   return (
     <div
       className={mx(
-        'grid place-items-center is-full bs-full overflow-hidden bg-black',
+        'grid place-items-center w-full h-full overflow-hidden bg-black',
         fullscreen && 'absolute inset-0',
         classNames,
       )}
     >
-      <div className='relative aspect-video is-full bs-full bs-auto max-bs-full overflow-hidden'>
+      <div className='relative aspect-video w-full h-full h-auto max-h-full overflow-hidden'>
         <div ref={deckDivRef} className='absolute inset-0 reveal'>
           {/* NOTE: Must be in head. */}
           <style>
@@ -163,7 +166,7 @@ export const RevealPlayer = ({ classNames, content, slide, fullscreen = true, on
             />
           </style>
           <div className='slides'>
-            <div className='!text-center' />
+            <div className='text-center!' />
             <section {...{ 'data-markdown': [] }}>
               <textarea {...{ 'data-template': true }} defaultValue={[styles, content].join('\n')}></textarea>
             </section>

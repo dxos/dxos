@@ -2,36 +2,34 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useCallback } from 'react';
+import { useAtomValue } from '@effect-atom/atom-react';
+import { useCallback, useMemo } from 'react';
 
-import { LayoutAction, createIntent } from '@dxos/app-framework';
-import { useCapability, useIntentDispatcher } from '@dxos/app-framework/react';
+import { useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
-import { type Live } from '@dxos/live-object';
 import { DeckCapabilities } from '@dxos/plugin-deck';
-import { DeckAction } from '@dxos/plugin-deck/types';
-import { getSpace } from '@dxos/react-client/echo';
+import { DeckOperation } from '@dxos/plugin-deck/types';
 
-export const useExitPresenter = (object: Live<any>) => {
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
-  const layout = useCapability(DeckCapabilities.MutableDeckState);
+export const useExitPresenter = (object: any) => {
+  const { invokePromise } = useOperationInvoker();
+  const stateAtom = useCapability(DeckCapabilities.State);
+  const state = useAtomValue(stateAtom);
+
+  // Compute deck from decks[activeDeck] since the getter doesn't survive spread operations.
+  const deck = useMemo(() => state.decks[state.activeDeck], [state.decks, state.activeDeck]);
 
   return useCallback(() => {
     const objectId = Obj.getDXN(object).toString();
-    if (layout.deck.fullscreen) {
-      void dispatch(
-        createIntent(DeckAction.Adjust, {
-          type: 'solo--fullscreen',
-          id: objectId,
-        }),
-      );
+    if (deck?.fullscreen) {
+      void invokePromise(DeckOperation.Adjust, {
+        type: 'solo--fullscreen',
+        id: objectId,
+      });
     }
-    return dispatch(
-      createIntent(LayoutAction.Open, {
-        part: 'main',
-        subject: [objectId],
-        options: { workspace: getSpace(document)?.id },
-      }),
-    );
-  }, [dispatch, object]);
+    return invokePromise(LayoutOperation.Open, {
+      subject: [objectId],
+      workspace: Obj.getDatabase(object)?.spaceId,
+    });
+  }, [invokePromise, object, deck]);
 };

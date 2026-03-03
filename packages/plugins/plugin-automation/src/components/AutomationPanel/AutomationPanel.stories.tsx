@@ -20,18 +20,18 @@ const DefaultStory = () => {
   const space = spaces[1];
 
   return (
-    <div className='is-96'>
+    <div className='w-96'>
       <AutomationPanel space={space} />
     </div>
   );
 };
 
 const meta = {
-  title: 'plugins/plugin-automation/AutomationPanel',
+  title: 'plugins/plugin-automation/components/AutomationPanel',
   component: AutomationPanel as any,
   render: DefaultStory,
   decorators: [
-    withTheme,
+    withTheme(),
     withClientProvider({
       createIdentity: true,
       createSpace: true,

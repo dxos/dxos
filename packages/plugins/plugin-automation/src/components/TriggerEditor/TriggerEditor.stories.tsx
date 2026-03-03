@@ -10,11 +10,11 @@ import { Function, Trigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
-import { TestSchema, useClientProvider, withClientProvider } from '@dxos/react-client/testing';
+import { TestSchema, useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as formTranslations } from '@dxos/react-ui-form';
-import { Employer, Organization, Person, Project } from '@dxos/types';
+import { Employer, Organization, Person, Pipeline } from '@dxos/types';
 
 import { functions } from '../../testing';
 import { translations } from '../../translations';
@@ -25,14 +25,14 @@ const types = [
   // TODO(burdon): Get label from annotation.
   { value: Organization.Organization.typename, label: 'Organization' },
   { value: Person.Person.typename, label: 'Person' },
-  { value: Type.getTypename(Project.Project), label: 'Project' },
+  { value: Type.getTypename(Pipeline.Pipeline), label: 'Project' },
   { value: Employer.Employer.typename, label: 'Employer' },
 ];
 
 const DefaultStory = (props: Partial<TriggerEditorProps>) => {
-  const { space } = useClientProvider();
+  const { space } = useClientStory();
   const [trigger, setTrigger] = useState<Trigger.Trigger>();
-  const tags = useQuery(space, Filter.type(Tag.Tag));
+  const tags = useQuery(space?.db, Filter.type(Tag.Tag));
 
   useAsyncEffect(async () => {
     if (!space) {
@@ -61,7 +61,7 @@ const DefaultStory = (props: Partial<TriggerEditorProps>) => {
 
   return (
     <TriggerEditor
-      space={space}
+      db={space.db}
       trigger={trigger}
       types={types}
       tags={tags}
@@ -72,12 +72,12 @@ const DefaultStory = (props: Partial<TriggerEditorProps>) => {
 };
 
 const meta = {
-  title: 'plugins/plugin-automation/TriggerEditor',
+  title: 'plugins/plugin-automation/components/TriggerEditor',
   component: TriggerEditor as any,
   render: DefaultStory,
   decorators: [
-    withTheme,
-    withLayout({ container: 'column' }),
+    withTheme(),
+    withLayout({ layout: 'column' }),
     withClientProvider({
       createIdentity: true,
       createSpace: true,

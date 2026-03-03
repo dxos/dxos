@@ -2,18 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import type * as Schema from 'effect/Schema';
-
-import { type EchoSchema } from '@dxos/echo/internal';
-import { type AnyLiveObject } from '@dxos/echo-db';
-import { type Live } from '@dxos/live-object';
+import { type Obj, type Type } from '@dxos/echo';
 
 // TODO(burdon): Use echo-schema types.
 export type TestObject = { id: string } & Record<string, any>;
 
-export type TestSchemaMap<T extends string = string> = Record<T, EchoSchema | Schema.Schema.AnyNoContext>;
+export type TestSchemaMap<T extends string = string> = Record<T, Type.Obj.Any>;
 
-export type TestObjectProvider<T extends string = string> = (type: T) => Promise<Live<any>[]>;
+export type TestObjectProvider<T extends string = string> = (type: T) => Promise<any[]>;
 
 export type TestGeneratorMap<T extends string = string> = Record<
   T,
@@ -22,10 +18,10 @@ export type TestGeneratorMap<T extends string = string> = Record<
 
 export type TestMutationsMap<T extends string = string> = Record<T, TestObjectMutators>;
 
-export type MutationsProviderParams = {
+export type MutationsProviderProps = {
   count: number;
   mutationSize: number;
   maxContentLength: number;
 };
 
-export type TestObjectMutators = (object: AnyLiveObject<any>, params: MutationsProviderParams) => Promise<void>;
+export type TestObjectMutators = (object: Obj.Any, params: MutationsProviderProps) => Promise<void>;

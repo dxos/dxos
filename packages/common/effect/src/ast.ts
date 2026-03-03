@@ -27,9 +27,11 @@ const reduceRefinements = (
   refinements: SchemaAST.Refinement['filter'][] = [],
 ): { type: SchemaAST.AST; refinements: SchemaAST.Refinement['filter'][] } => {
   if (SchemaAST.isRefinement(type)) {
-    const annotations = type.annotations;
     const filter = type.filter;
-    const nextType = { ...type.from, annotations: { ...type.annotations, ...annotations } } as SchemaAST.AST;
+    const nextType = {
+      ...type.from,
+      annotations: { ...type.from.annotations, ...type.annotations },
+    } as SchemaAST.AST;
     return reduceRefinements(nextType, [...refinements, filter]);
   }
 
@@ -42,7 +44,7 @@ const reduceRefinements = (
  * Unwraps refinements and optional unions.
  */
 export const getBaseType = (
-  prop: SchemaAST.PropertySignature,
+  prop: SchemaAST.PropertySignature | SchemaProperty,
 ): { type: SchemaAST.AST; refinements: SchemaAST.Refinement['filter'][] } => {
   const encoded = SchemaAST.encodedBoundAST(prop.type);
   // Extract property ast from optional union.
@@ -51,6 +53,7 @@ export const getBaseType = (
 };
 
 export type SchemaProperty = Pick<SchemaAST.PropertySignature, 'name' | 'type' | 'isOptional' | 'isReadonly'> & {
+  /** Can be used to validate the property to the spec of the initial AST. */
   refinements: SchemaAST.Refinement['filter'][];
 };
 

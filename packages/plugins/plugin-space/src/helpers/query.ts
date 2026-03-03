@@ -10,7 +10,7 @@ import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { DXN, Filter, Query, type QueryAST } from '@dxos/echo';
+import { DXN, Filter, Key, Query, type QueryAST, type SchemaRegistry } from '@dxos/echo';
 import {
   ReferenceAnnotationId,
   type ReferenceAnnotationValue,
@@ -35,14 +35,14 @@ export const evalQuery = (queryString: string): Query.Any => {
   }
 };
 
-export const resolveSchemaWithClientAndSpace = (space: Space, query: QueryAST.Query) => {
+export const resolveSchemaWithRegistry = (registry: SchemaRegistry.SchemaRegistry, query: QueryAST.Query) => {
   const resolve = Effect.fn(function* (dxn: string) {
     const typename = DXN.parse(dxn).asTypeDXN()?.type;
     if (!typename) {
       return Option.none();
     }
 
-    const query = space.db.schemaRegistry.query({ typename, location: ['database', 'runtime'] });
+    const query = registry.query({ typename, location: ['database', 'runtime'] });
     const schemas = yield* Effect.promise(() => query.run());
     return Array.head(schemas);
   });
@@ -141,13 +141,23 @@ const typenameFromFilter = (filter: QueryAST.Filter): Option.Option<string> =>
 export const getQueryTarget = (query: QueryAST.Query, space?: Space) => {
   return Match.value(query).pipe(
     Match.when({ type: 'options' }, ({ options }) => {
-      return Option.fromNullable(options.queues).pipe(
+      const result = Option.fromNullable(options.queues).pipe(
         Option.flatMap((queues) => Array.head(queues)),
         Option.flatMap((queueDxn) => Option.fromNullable(DXN.tryParse(queueDxn))),
-        Option.flatMap((queueDxn) => Option.fromNullable(space?.queues.get(queueDxn))),
-        Option.getOrElse(() => space),
+        Option.flatMap((parsed) => {
+          const q = parsed.asQueueDXN();
+          if (!q || !Key.ObjectId.isValid(q.queueId)) return Option.none();
+          return Option.fromNullable(space?.queues.get(parsed));
+        }),
       );
+      // Skip query when a requested queue is not found (structurally invalid DXN or valid DXN
+      // referencing a queue not present in space.queues, e.g. not yet synced) to avoid 400 errors.
+      // TODO(wittjosiah): Can we handle this upstream?
+      if (options.queues?.length && Option.isNone(result)) {
+        return undefined;
+      }
+      return Option.getOrElse(result, () => space?.db);
     }),
-    Match.orElse(() => space),
+    Match.orElse(() => space?.db),
   );
 };

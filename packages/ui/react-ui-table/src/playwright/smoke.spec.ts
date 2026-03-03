@@ -71,6 +71,7 @@ test.describe('Table', () => {
     const table = new TableManager(page);
 
     await table.grid.ready();
+    await expect(page.getByRole('gridcell', { name: 'Sapiente.' })).toHaveCount(1);
     await table.deleteRow(0);
     await expect(page.getByRole('gridcell', { name: 'Sapiente.' })).toHaveCount(0);
     await page.close();
@@ -88,7 +89,7 @@ test.describe('Table', () => {
     // Delete action affects all selected rows.
     await table.deleteRow(0);
 
-    await expect(page.getByRole('gridcell', { name: 'Sapiente.' })).toHaveCount(0);
+    await expect(page.getByRole('gridcell', { name: 'Aut.' })).toHaveCount(0);
     await expect(page.getByRole('gridcell', { name: 'Beatae.' })).toHaveCount(0);
     await expect(table.grid.cellsWithinPlane('grid')).toHaveCount(0);
     await page.close();
@@ -120,8 +121,22 @@ test.describe('Table', () => {
     await page.close();
   });
 
-  // Rest of add column test remains the same as it's a more complex flow.
-  test('add column', async ({ browser, browserName }) => {
+  test('add column without changing format', async ({ browser, browserName }) => {
+    test.skip(browserName === 'webkit');
+    test.skip(browserName === 'firefox');
+    const { page } = await setupPage(browser, { url: storyUrl });
+    const table = new TableManager(page);
+
+    await table.grid.ready();
+    const newColumnLabel = 'DEFAULT FORMAT COL';
+
+    await table.addColumn({ label: newColumnLabel });
+
+    await expect(page.getByRole('gridcell', { name: newColumnLabel })).toBeVisible();
+    await page.close();
+  });
+
+  test('add column with format', async ({ browser, browserName }) => {
     test.skip(browserName === 'webkit');
     test.skip(browserName === 'firefox');
     const { page } = await setupPage(browser, { url: storyUrl });
@@ -153,9 +168,38 @@ test.describe('Table', () => {
     // Assert the first two switch checkboxes are checked.
     await expect(page.getByTestId('table-switch').first()).toBeChecked();
     await expect(page.getByTestId('table-switch').nth(1)).toBeChecked();
-    await expect(table.grid.cell(0, 0, 'grid')).toHaveText('Sapiente.');
+    await expect(table.grid.cell(0, 0, 'grid')).toHaveText('Aut.');
     await expect(table.grid.cell(0, 1, 'grid')).toHaveText('Beatae.');
 
+    await page.close();
+  });
+
+  test('add row and edit cell', async ({ browser, browserName }) => {
+    test.skip(browserName === 'webkit');
+    test.skip(browserName === 'firefox');
+    const { page } = await setupPage(browser, { url: storyUrl });
+    const table = new TableManager(page);
+
+    await table.grid.ready();
+
+    // Click the CTA row at the bottom to add a new row.
+    await table.grid.cell(0, 0, 'frozenRowsEnd').click();
+
+    // All schema fields are optional so the row is added directly to the grid (not as a draft).
+    const newCell = table.grid.cell(0, 10, 'grid');
+    await newCell.waitFor({ state: 'visible' });
+
+    // Focus should already be on the new row; engage edit mode.
+    await page.keyboard.press('Enter');
+    await page.getByTestId('grid.cell-editor').waitFor({ state: 'visible' });
+
+    // Type text and confirm.
+    const cellContent = 'New row content';
+    await page.keyboard.type(cellContent);
+    await page.keyboard.press('Enter');
+
+    // Assert the cell content is saved.
+    await expect(newCell).toHaveText(cellContent);
     await page.close();
   });
 

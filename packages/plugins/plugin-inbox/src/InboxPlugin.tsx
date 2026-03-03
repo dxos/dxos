@@ -2,95 +2,90 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { type CreateObjectIntent } from '@dxos/plugin-space/types';
+import * as Effect from 'effect/Effect';
+
+import { ActivationEvent, Capability, Plugin } from '@dxos/app-framework';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { Operation } from '@dxos/operation';
+import { AttentionEvents } from '@dxos/plugin-attention';
+import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
+import { type CreateObject } from '@dxos/plugin-space/types';
 import { Event, Message } from '@dxos/types';
 
-import {
-  AppGraphBuilder,
-  BlueprintDefinition,
-  CALENDAR_BLUEPRINT_KEY,
-  INBOX_BLUEPRINT_KEY,
-  IntentResolver,
-  ReactSurface,
-} from './capabilities';
+import { CalendarBlueprint, InboxBlueprint } from './blueprints';
+import { AppGraphBuilder, BlueprintDefinition, OperationResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { Calendar, InboxAction, Mailbox } from './types';
+import { Calendar, InboxOperation, Mailbox } from './types';
+import { CreateCalendarSchema } from './types/Calendar';
+import { CreateMailboxSchema } from './types/Mailbox';
 
-export const InboxPlugin = definePlugin(meta, () => [
-  defineModule({
-    id: `${meta.id}/module/translations`,
-    activatesOn: Events.SetupTranslations,
-    activate: () => contributes(Capabilities.Translations, translations),
+export const InboxPlugin = Plugin.define(meta).pipe(
+  AppPlugin.addAppGraphModule({
+    activatesOn: ActivationEvent.allOf(AppActivationEvents.SetupAppGraph, AttentionEvents.AttentionReady),
+    activate: AppGraphBuilder,
   }),
-  defineModule({
-    id: `${meta.id}/module/metadata`,
-    activatesOn: Events.SetupMetadata,
-    activate: () => [
-      contributes(Capabilities.Metadata, {
-        id: Mailbox.Mailbox.typename,
+  AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+  AppPlugin.addMetadataModule({
+    metadata: [
+      {
+        id: Mailbox.kind,
         metadata: {
           icon: 'ph--tray--regular',
           iconHue: 'rose',
-          blueprints: [INBOX_BLUEPRINT_KEY],
-          createObjectIntent: ((_, options) =>
-            createIntent(InboxAction.CreateMailbox, { space: options.space })) satisfies CreateObjectIntent,
-          addToCollectionOnCreate: true,
+          blueprints: [InboxBlueprint.key],
+          inputSchema: CreateMailboxSchema,
+          createObject: ((props) =>
+            Effect.gen(function* () {
+              return Mailbox.make(props);
+            })) satisfies CreateObject,
         },
-      }),
-      contributes(Capabilities.Metadata, {
+      },
+      {
         id: Message.Message.typename,
         metadata: {
           icon: 'ph--note--regular',
           iconHue: 'rose',
+          createObject: (() => Effect.succeed(Message.make({ sender: 'user' }))) satisfies CreateObject,
         },
-      }),
-      contributes(Capabilities.Metadata, {
-        id: Calendar.Calendar.typename,
+      },
+      {
+        id: Calendar.kind,
         metadata: {
           icon: 'ph--calendar--regular',
           iconHue: 'rose',
-          blueprints: [CALENDAR_BLUEPRINT_KEY],
-          createObjectIntent: ((_, options) =>
-            createIntent(InboxAction.CreateCalendar, { space: options.space })) satisfies CreateObjectIntent,
-          addToCollectionOnCreate: true,
+          blueprints: [CalendarBlueprint.key],
+          inputSchema: CreateCalendarSchema,
+          createObject: ((props) =>
+            Effect.gen(function* () {
+              return Calendar.make(props);
+            })) satisfies CreateObject,
         },
-      }),
-      contributes(Capabilities.Metadata, {
+      },
+      {
         id: Event.Event.typename,
         metadata: {
           icon: 'ph--calendar-dot--regular',
           iconHue: 'rose',
         },
-      }),
+      },
     ],
   }),
-  defineModule({
-    id: `${meta.id}/module/schema`,
-    activatesOn: ClientEvents.SetupSchema,
+  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addSchemaModule({
+    schema: [Event.Event, Mailbox.Config, Calendar.Config, Message.Message],
+  }),
+  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addModule({
+    id: 'on-space-created',
+    activatesOn: SpaceEvents.SpaceCreated,
     activate: () =>
-      contributes(ClientCapabilities.Schema, [Calendar.Calendar, Event.Event, Mailbox.Mailbox, Message.Message]),
+      Effect.succeed(
+        Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) =>
+          Operation.invoke(InboxOperation.OnCreateSpace, params),
+        ),
+      ),
   }),
-  defineModule({
-    id: `${meta.id}/module/app-graph-builder`,
-    activatesOn: Events.SetupAppGraph,
-    activate: AppGraphBuilder,
-  }),
-  defineModule({
-    id: `${meta.id}/module/react-surface`,
-    activatesOn: Events.SetupReactSurface,
-    activate: ReactSurface,
-  }),
-  defineModule({
-    id: `${meta.id}/module/intent-resolver`,
-    activatesOn: Events.SetupIntentResolver,
-    activate: IntentResolver,
-  }),
-  defineModule({
-    id: `${meta.id}/module/blueprint`,
-    activatesOn: Events.SetupArtifactDefinition,
-    activate: BlueprintDefinition,
-  }),
-]);
+  Plugin.make,
+);

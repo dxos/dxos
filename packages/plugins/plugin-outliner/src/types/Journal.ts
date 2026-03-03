@@ -16,7 +16,7 @@ export const JournalEntry = Schema.Struct({
   date: Schema.String,
   content: Type.Ref(Text.Text),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/JournalEntry',
     version: '0.2.0',
   }),
@@ -29,9 +29,9 @@ export const Journal = Schema.Struct({
   id: Schema.String,
   name: Schema.optional(Schema.String),
   // TODO(burdon): Convert map of references indexed by sortable ISO date.
-  entries: Schema.mutable(Schema.Record({ key: Schema.String, value: Type.Ref(JournalEntry) })),
+  entries: Schema.Record({ key: Schema.String, value: Type.Ref(JournalEntry) }),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Journal',
     version: '0.3.0',
   }),

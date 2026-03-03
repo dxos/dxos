@@ -6,8 +6,8 @@ import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import { useMemo } from 'react';
 
-import { createIntent } from '@dxos/app-framework';
-import { useIntentDispatcher } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { Chat } from '@dxos/assistant-toolkit';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -16,22 +16,22 @@ import { MenuBuilder, useMenuActions } from '@dxos/react-ui-menu';
 
 import { useChatContext } from '../components';
 import { meta } from '../meta';
-import { Assistant, AssistantAction } from '../types';
+import { AssistantOperation } from '../types';
 
 export type ChatToolbarActionsProps = {
-  chat?: Assistant.Chat;
-  companionTo?: Obj.Any;
+  chat?: Chat.Chat;
+  companionTo?: Obj.Unknown;
 };
 
 export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsProps) => {
-  const { dispatch } = useIntentDispatcher();
-  const { space } = useChatContext('useChatToolbarActions');
+  const { invoke } = useOperationInvoker();
+  const { db } = useChatContext('useChatToolbarActions');
   const query = companionTo
-    ? Query.select(Filter.id(companionTo.id)).targetOf(Assistant.CompanionTo).source()
+    ? Query.select(Filter.id(companionTo.id)).targetOf(Chat.CompanionTo).source()
     : Query.select(Filter.nothing());
 
   // TODO(wittjosiah): Query in react vs query in atom?
-  const chats = useQuery(space, query);
+  const chats = useQuery(db, query);
 
   // Create stable reference for dependency array to avoid circular reference issues.
   return useMenuActions(
@@ -47,14 +47,15 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
               label: ['new thread button', { ns: meta.id }],
               icon: 'ph--plus--regular',
               type: 'new',
+              disabled: !companionTo,
             },
-            () =>
-              dispatch(
-                createIntent(AssistantAction.SetCurrentChat, {
-                  companionTo,
-                  chat: undefined,
-                }),
-              ).pipe(runAndForwardErrors),
+            () => {
+              invariant(companionTo);
+              return invoke(AssistantOperation.SetCurrentChat, {
+                companionTo,
+                chat: undefined,
+              }).pipe(runAndForwardErrors);
+            },
           )
           .action(
             'rename',
@@ -67,7 +68,7 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
             () =>
               Effect.gen(function* () {
                 invariant(chat);
-                yield* dispatch(createIntent(AssistantAction.UpdateChatName, { chat }));
+                yield* invoke(AssistantOperation.UpdateChatName, { chat });
               }).pipe(runAndForwardErrors),
           )
           .action(
@@ -98,17 +99,15 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
                   builder.action(
                     chat.id,
                     {
-                      label: Obj.getLabel(chat) ?? ['object name placeholder', { ns: Assistant.Chat.typename }],
+                      label: Obj.getLabel(chat) ?? ['object name placeholder', { ns: Chat.Chat.typename }],
                     },
                     () =>
                       Effect.gen(function* () {
                         invariant(companionTo);
-                        yield* dispatch(
-                          createIntent(AssistantAction.SetCurrentChat, {
-                            companionTo,
-                            chat,
-                          }),
-                        );
+                        yield* invoke(AssistantOperation.SetCurrentChat, {
+                          companionTo,
+                          chat,
+                        });
                       }).pipe(runAndForwardErrors),
                   );
                 });
@@ -118,6 +117,6 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
 
         return builder.build();
       });
-    }, [chats.length, space?.id, companionTo?.id, chat?.id, dispatch]),
+    }, [chats.length, db?.spaceId, companionTo?.id, chat?.id, invoke]),
   );
 };

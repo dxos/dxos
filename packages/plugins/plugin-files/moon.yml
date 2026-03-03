@@ -1,4 +1,4 @@
-type: library
+layer: library
 language: typescript
 tags:
   - ts-build
@@ -7,5 +7,3 @@ tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
-      - '--platform=browser'
-      - '--preactSignalTracking'

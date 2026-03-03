@@ -63,7 +63,7 @@ export type TranscribeConfig = {
   prefixBufferChunksAmount: number;
 };
 
-export type TranscriberParams = {
+export type TranscriberProps = {
   config: TranscribeConfig;
   recorder: AudioRecorder;
   /**
@@ -86,12 +86,12 @@ export class Transcriber extends Resource {
 
   private readonly _config: TranscribeConfig;
   private readonly _recorder: AudioRecorder;
-  private readonly _onSegments: TranscriberParams['onSegments'];
+  private readonly _onSegments: TranscriberProps['onSegments'];
 
   private _recording = false;
   private _transcribeTask?: DeferredTask = undefined;
 
-  constructor({ config, recorder, onSegments }: TranscriberParams) {
+  constructor({ config, recorder, onSegments }: TranscriberProps) {
     super();
     this._config = config;
     this._recorder = recorder;

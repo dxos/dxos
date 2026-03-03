@@ -69,7 +69,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'common/keyboard/Keyboard',
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
 } satisfies Meta<typeof Input>;
 
 export default meta;

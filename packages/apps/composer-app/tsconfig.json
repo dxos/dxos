@@ -41,6 +41,9 @@
       "path": "../../common/debug"
     },
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -68,13 +71,10 @@
       "path": "../../core/echo/echo-db"
     },
     {
-      "path": "../../core/echo/echo-signals"
-    },
-    {
-      "path": "../../core/echo/live-object"
-    },
-    {
       "path": "../../core/mesh/rpc-tunnel"
+    },
+    {
+      "path": "../../core/operation"
     },
     {
       "path": "../../core/protocols"
@@ -134,6 +134,9 @@
       "path": "../../plugins/plugin-map"
     },
     {
+      "path": "../../plugins/plugin-map-solid"
+    },
+    {
       "path": "../../plugins/plugin-markdown"
     },
     {
@@ -158,13 +161,13 @@
       "path": "../../plugins/plugin-outliner"
     },
     {
+      "path": "../../plugins/plugin-pipeline"
+    },
+    {
       "path": "../../plugins/plugin-presenter"
     },
     {
       "path": "../../plugins/plugin-preview"
-    },
-    {
-      "path": "../../plugins/plugin-project"
     },
     {
       "path": "../../plugins/plugin-pwa"
@@ -179,7 +182,13 @@
       "path": "../../plugins/plugin-search"
     },
     {
+      "path": "../../plugins/plugin-settings"
+    },
+    {
       "path": "../../plugins/plugin-sheet"
+    },
+    {
+      "path": "../../plugins/plugin-simple-layout"
     },
     {
       "path": "../../plugins/plugin-sketch"
@@ -203,9 +212,6 @@
       "path": "../../plugins/plugin-theme"
     },
     {
-      "path": "../../plugins/plugin-theme-editor"
-    },
-    {
       "path": "../../plugins/plugin-thread"
     },
     {
@@ -222,6 +228,9 @@
     },
     {
       "path": "../../sdk/app-graph"
+    },
+    {
+      "path": "../../sdk/app-toolkit"
     },
     {
       "path": "../../sdk/client"
@@ -263,16 +272,13 @@
       "path": "../../ui/react-ui-editor"
     },
     {
-      "path": "../../ui/react-ui-kanban"
-    },
-    {
       "path": "../../ui/react-ui-stack"
     },
     {
       "path": "../../ui/react-ui-table"
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/ui-theme"
     }
   ]
 }

@@ -4,6 +4,10 @@
   "description": "Simulate functions running in Cloudflare runtime",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "info@dxos.org",
   "sideEffects": true,
@@ -35,7 +39,7 @@
   "dependencies": {
     "@dxos/context": "workspace:*",
     "@dxos/protocols": "workspace:*",
-    "miniflare": "^4.20251128.0"
+    "miniflare": "catalog:"
   },
   "publishConfig": {
     "access": "public"

@@ -8,34 +8,34 @@ import { isNode } from '@dxos/util';
 import { ReplicantEnvImpl, ReplicantRegistry } from '../env';
 import { DEFAULT_REDIS_OPTIONS } from '../redis';
 
-import { type RunParams } from './run-process';
-import { type ReplicantParams } from './spec';
+import { type RunProps } from './run-process';
+import { type ReplicantProps } from './spec';
 
 /**
  * Entry point for process running in agent mode.
  */
-export const runReplicant = async ({ replicantParams }: RunParams) => {
+export const runReplicant = async ({ replicantProps }: RunProps) => {
   try {
-    initLogProcessor(replicantParams);
-    log.info('running replicant', { params: replicantParams });
+    initLogProcessor(replicantProps);
+    log.info('running replicant', { params: replicantProps });
 
     process.on('SIGINT', () => finish('SIGINT'));
     process.on('SIGTERM', () => finish('SIGTERM'));
 
-    const env: ReplicantEnvImpl = new ReplicantEnvImpl(replicantParams, DEFAULT_REDIS_OPTIONS);
-    const replicant = new (ReplicantRegistry.instance.get(replicantParams.replicantClass))(env);
+    const env: ReplicantEnvImpl = new ReplicantEnvImpl(replicantProps, DEFAULT_REDIS_OPTIONS);
+    const replicant = new (ReplicantRegistry.instance.get(replicantProps.replicantClass))(env);
 
     env.setReplicant(replicant);
     await env.open();
     process.once('beforeExit', () => env.close());
     // Ensure graceful termination so Node writes CPU profile when enabled.
   } catch (err) {
-    log.catch(err, { params: replicantParams });
+    log.catch(err, { params: replicantProps });
     finish(1);
   }
 };
 
-const initLogProcessor = (params: ReplicantParams) => {
+const initLogProcessor = (params: ReplicantProps) => {
   if (isNode()) {
     log.addProcessor(
       createFileProcessor({

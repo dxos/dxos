@@ -4,6 +4,7 @@
 
 export * from './Main';
 export * from './Root';
-export * from './Todos';
+export * from './TodoContainer';
 export * from './TodoFooter';
 export * from './TodoItem';
+export * from './Todos';

@@ -2,12 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useCapabilities, usePluginManager } from '@dxos/app-framework/react';
+import { useCapabilities, usePluginManager } from '@dxos/app-framework/ui';
+import { runAndForwardErrors } from '@dxos/effect';
 import { useAsyncEffect } from '@dxos/react-ui';
 
-import { ScriptCapabilities } from '../capabilities';
 import type { Compiler } from '../compiler';
-import { ScriptEvents } from '../events';
+import { ScriptEvents } from '../types';
+import { ScriptCapabilities } from '../types';
 
 /**
  * Asynchronously sets up the compiler and returns it.
@@ -16,7 +17,7 @@ import { ScriptEvents } from '../events';
 export const useCompiler = (): Compiler | undefined => {
   const manager = usePluginManager();
   useAsyncEffect(async () => {
-    await manager.activate(ScriptEvents.SetupCompiler);
+    await manager.activate(ScriptEvents.SetupCompiler).pipe(runAndForwardErrors);
   }, [manager]);
   const [compiler] = useCapabilities(ScriptCapabilities.Compiler);
   return compiler;

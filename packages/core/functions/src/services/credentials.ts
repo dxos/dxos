@@ -82,7 +82,7 @@ export class CredentialsService extends Context.Tag('@dxos/functions/Credentials
       }),
     );
 
-  static layerFromDatabase = () =>
+  static layerFromDatabase = ({ caching = false }: { caching?: boolean } = {}) =>
     Layer.effect(
       CredentialsService,
       Effect.gen(function* () {
@@ -91,7 +91,7 @@ export class CredentialsService extends Context.Tag('@dxos/functions/Credentials
 
         const queryCredentials = async (query: CredentialQuery): Promise<ServiceCredential[]> => {
           const cacheKey = JSON.stringify(query);
-          if (cache.has(cacheKey)) {
+          if (caching && cache.has(cacheKey)) {
             return cache.get(cacheKey)!;
           }
 
@@ -103,7 +103,10 @@ export class CredentialsService extends Context.Tag('@dxos/functions/Credentials
               apiKey: accessToken.token,
             }));
 
-          cache.set(cacheKey, credentials);
+          if (caching) {
+            cache.set(cacheKey, credentials);
+          }
+
           return credentials;
         };
 
@@ -147,13 +150,10 @@ export class ConfiguredCredentialsService implements Context.Tag.Service<Credent
 }
 
 /**
- * Maps the request to include the API key from the credential.
+ * Maps the request to include the given token in the Authorization header.
  */
-export const withAuthorization = (query: CredentialQuery, kind?: 'Bearer' | 'Basic') =>
-  HttpClient.mapRequestEffect(
-    Effect.fnUntraced(function* (request) {
-      const key = yield* CredentialsService.getApiKey(query).pipe(Effect.map(Redacted.value));
-      const authorization = kind ? `${kind} ${key}` : key;
-      return HttpClientRequest.setHeader(request, 'Authorization', authorization);
-    }),
-  );
+export const withAuthorization = (token: string, kind?: 'Bearer' | 'Basic') =>
+  HttpClient.mapRequest((request) => {
+    const authorization = kind ? `${kind} ${token}` : token;
+    return HttpClientRequest.setHeader(request, 'Authorization', authorization);
+  });

@@ -4,14 +4,14 @@
 
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { type EchoDatabase, Query } from '@dxos/echo-db';
+import { type Database, Query } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { type TypeSpec, type ValueGenerator, createGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { stripUndefined } from '@dxos/util';
 
-import { Message, Organization, Person, Project } from '../types';
+import { Message, Organization, Person, Pipeline } from '../types';
 
 faker.seed(1);
 
@@ -20,7 +20,7 @@ const generator: ValueGenerator = {
   ...faker,
 } as any as ValueGenerator;
 
-const queryObjects = async (db: EchoDatabase, specs: TypeSpec[]) => {
+const queryObjects = async (db: Database.Database, specs: TypeSpec[]) => {
   for (const { type, count } of specs) {
     const objects = await db.query(Query.type(type)).run();
     expect(objects).to.have.length(count);
@@ -58,7 +58,7 @@ describe('Generator', () => {
     }
 
     {
-      const objectGenerator = createGenerator(generator, Project.Project, {
+      const objectGenerator = createGenerator(generator, Pipeline.Pipeline, {
         force: true,
       });
       const object = objectGenerator.createObject();
@@ -71,12 +71,12 @@ describe('Generator', () => {
     const createObjects = createObjectFactory(db, generator);
 
     // Register static schema.
-    await db.graph.schemaRegistry.register([Organization.Organization, Project.Project, Person.Person]);
+    await db.graph.schemaRegistry.register([Organization.Organization, Pipeline.Pipeline, Person.Person]);
 
     const spec: TypeSpec[] = [
       { type: Organization.Organization, count: 5 },
       { type: Person.Person, count: 10 },
-      { type: Project.Project, count: 5 },
+      { type: Pipeline.Pipeline, count: 5 },
     ];
 
     await createObjects(spec);
@@ -90,7 +90,7 @@ describe('Generator', () => {
     // Register mutable schema.
     const [organization] = await db.schemaRegistry.register([Organization.Organization]);
     const [person] = await db.schemaRegistry.register([Person.Person]);
-    const [project] = await db.schemaRegistry.register([Project.Project]);
+    const [project] = await db.schemaRegistry.register([Pipeline.Pipeline]);
 
     const spec: TypeSpec[] = [
       { type: organization, count: 5 },

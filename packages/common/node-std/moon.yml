@@ -1,4 +1,4 @@
-type: library
+layer: library
 language: typescript
 tags:
   - ts-build
@@ -19,10 +19,10 @@ tasks:
       - '--entryPoint=src/globals.js'
       - '--entryPoint=src/inject-globals.js'
       - '--entryPoint=src/path.js'
+      - '--entryPoint=src/process.js'
       - '--entryPoint=src/stream.js'
       - '--entryPoint=src/util.js'
       - '--platform=browser'
-      - '--platform=node'
       - '--bundlePackage=assert'
       - '--bundlePackage=available-typed-arrays'
       - '--bundlePackage=base64-js'

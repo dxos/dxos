@@ -9,9 +9,9 @@ import { type BundleResult } from '@dxos/functions-runtime/bundler';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
-import { baseSurface, mx } from '@dxos/react-ui-theme';
 import { createProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
+import { mx } from '@dxos/ui-theme';
 
 export type FrameContainerProps = {
   containerUrl: string;
@@ -61,8 +61,7 @@ export const FrameContainer = ({ containerUrl, result, debug = true }: FrameCont
         <div className='relative'>
           <div
             className={mx(
-              baseSurface,
-              'flex absolute right-2 bottom-2 is-[30rem] bs-[200px] ring rounded',
+              'flex absolute right-2 bottom-2 w-[30rem] h-[200px] bg-base-surface ring rounded-sm',
               'z-20 overflow-x-hidden overflow-y-auto',
             )}
           >

@@ -7,7 +7,7 @@ dx-grid-axis-resize-handle {
   background: transparent;
   z-index: 2;
   &:hover {
-    background: var(--dx-grid-resizeHandleHover, var(--dx-hoverSurface));
+    background: var(--color-hover-surface);
   }
   &[data-dx-grid-axis='col'] {
     inset-block: 0;
@@ -25,6 +25,6 @@ dx-grid-axis-resize-handle {
     outline: none;
   }
   &:focus-visible {
-    background: var(--dx-grid-resizeHandleFocus, var(--dx-accentSurface));
+    background: var(--color-accent-surface);
   }
 }

@@ -2,7 +2,6 @@
 // Copyright 2021 DXOS.org
 //
 
-import { boolean } from 'boolean';
 import defaultsDeep from 'lodash.defaultsdeep';
 import isMatch from 'lodash.ismatch';
 
@@ -19,7 +18,6 @@ const configRootType = schema.getCodecForType('dxos.config.Config');
 
 /**
  * Maps the given objects onto a flattened set of (key x values).
- *
  * Expects parsed yaml content of the form:
  *
  * ```
@@ -36,12 +34,11 @@ export const mapFromKeyValues = (spec: MappingSpec, values: Record<string, any>)
 
   for (const [key, { path, type }] of Object.entries(spec)) {
     let value = values[key];
-
     if (value !== undefined) {
       if (type) {
         switch (type) {
           case 'boolean': {
-            value = boolean(value);
+            value = String(value).toLowerCase() === 'true' || value === '1';
             break;
           }
 

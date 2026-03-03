@@ -27,7 +27,7 @@ export type Session = {
 
 export type CallsServiceConfig = {
   apiBase: string;
-  apiExtraParams?: string;
+  apiExtraProps?: string;
   iceServers?: RTCIceServer[];
 };
 

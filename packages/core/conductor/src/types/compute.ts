@@ -10,7 +10,7 @@ import { type ComputeEventLogger } from '@dxos/functions';
 import { type FunctionServices } from '@dxos/functions';
 import { mapValues } from '@dxos/util';
 
-import { type ComputeNode, type ComputeNodeMeta } from './compute-graph';
+import { type ComputeNode, type ComputeNodeMeta } from './graph';
 
 //
 // Errors
@@ -45,6 +45,7 @@ export type ValueEffect<T> = Effect.Effect<T, ConductorError, never>;
  *
  * The whole bag itself can be a not-executed marker in case the entire node did not execute.
  */
+// TODO(burdon): Rename.
 export type ValueBag<T extends ValueRecord = ValueRecord> = {
   _tag: 'ValueBag';
   values: {
@@ -96,66 +97,67 @@ export const ValueBag = Object.freeze({
 // Functions
 //
 
-/**
- * Node function.
- * Note that not-executed markers must be in the output bag.
- */
-export type ComputeFunction<I extends ValueRecord, O extends ValueRecord> = (
-  input: ValueBag<I>,
-  node?: ComputeNode, // TODO(burdon): Undefined?
-) => ComputeEffect<ValueBag<O>>;
-
 export type ComputeRequirements = FunctionServices | ComputeEventLogger | Scope.Scope;
 
 /**
  * For results of compute functions.
  */
-export type ComputeEffect<T> = Effect.Effect<T, ConductorError, ComputeRequirements>;
+export type ComputeResult<T> = Effect.Effect<T, ConductorError, ComputeRequirements>;
 
 /**
- * Lifts a compute function that takes all inputs together and returns all outputs together.
+ * Node function.
+ * Note that not-executed markers must be in the output bag.
+ */
+export type ComputeFunction<Input extends ValueRecord, Output extends ValueRecord> = (
+  input: ValueBag<Input>,
+  node?: ComputeNode, // TODO(burdon): Undefined?
+) => ComputeResult<ValueBag<Output>>;
+
+/**
  * @internal
  */
-// TODO(dmaretskyi): output schema needs to be passed in in-case the node does not execute to know the output property names to propagate not-executed marker further.
-export const synchronizedComputeFunction =
-  <I extends ValueRecord, O extends ValueRecord>(
-    fn: (input: I, node?: ComputeNode) => ComputeEffect<O>,
-  ): ComputeFunction<I, O> =>
-  (inputBag, node) =>
-    Effect.gen(function* () {
-      const input = yield* ValueBag.unwrap(inputBag);
-      const output = yield* fn(input, node);
-      return ValueBag.make<O>(output);
-    });
+// TODO(burdon): Reconcile with @effect/ai/Tool and handler.
+export type NodeDef<Input extends Schema.Schema.AnyNoContext, Ouput extends Schema.Schema.AnyNoContext> = {
+  input: Input;
+  output: Ouput;
+  exec?: ComputeFunction<Schema.Schema.Type<Input>, Schema.Schema.Type<Ouput>>;
+};
 
 /**
  * Executable node.
  */
+// TODO(burdon): Handler.
 export type Executable<
-  SI extends Schema.Schema.AnyNoContext = Schema.Schema.AnyNoContext,
-  SO extends Schema.Schema.AnyNoContext = Schema.Schema.AnyNoContext,
+  Input extends Schema.Schema.AnyNoContext = Schema.Schema.AnyNoContext,
+  Output extends Schema.Schema.AnyNoContext = Schema.Schema.AnyNoContext,
 > = {
   meta: ComputeNodeMeta;
 
   /** Undefined for meta nodes like input/output. */
-  exec?: ComputeFunction<Schema.Schema.Type<SI>, Schema.Schema.Type<SO>>;
-};
-
-/**
- * @internal
- */
-export type NodeDef<SI extends Schema.Schema.AnyNoContext, SO extends Schema.Schema.AnyNoContext> = {
-  input: SI;
-  output: SO;
-  exec?: ComputeFunction<Schema.Schema.Type<SI>, Schema.Schema.Type<SO>>;
+  exec?: ComputeFunction<Schema.Schema.Type<Input>, Schema.Schema.Type<Output>>;
 };
 
 /**
  * Type-safe constructor for function definition.
- * @internal
  */
-export const defineComputeNode = <SI extends Schema.Schema.AnyNoContext, SO extends Schema.Schema.AnyNoContext>({
+// TODO(burdon): make
+export const defineComputeNode = <Input extends Schema.Schema.AnyNoContext, Output extends Schema.Schema.AnyNoContext>({
   input,
   output,
   exec,
-}: NodeDef<SI, SO>): Executable<SI, SO> => ({ meta: { input, output }, exec });
+}: NodeDef<Input, Output>): Executable<Input, Output> => ({ meta: { input, output }, exec });
+
+/**
+ * Lifts a compute function that takes all inputs together and returns all outputs together.
+ */
+// TODO(dmaretskyi): Output schema needs to be passed in in-case the node does not execute in order to know the output property names to propagate not-executed marker further.
+export const synchronizedComputeFunction =
+  <Input extends ValueRecord, Ouput extends ValueRecord>(
+    fn: (input: Input, node?: ComputeNode) => ComputeResult<Ouput>,
+  ): ComputeFunction<Input, Ouput> =>
+  (inputBag, node) =>
+    Effect.gen(function* () {
+      const input = yield* ValueBag.unwrap(inputBag);
+      const output = yield* fn(input, node);
+      return ValueBag.make<Ouput>(output);
+    });

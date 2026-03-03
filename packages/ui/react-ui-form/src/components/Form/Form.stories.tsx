@@ -6,13 +6,13 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useState } from 'react';
 
-import { Annotation, Filter, Format, Obj, Tag, Type } from '@dxos/echo';
+import { Annotation, Format, Obj, Tag, Type } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Tooltip } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
 import { TestLayout } from '../testing';
@@ -22,7 +22,7 @@ import { type ExcludeId, Form, type FormRootProps, omitId } from './Form';
 const Organization = Schema.Struct({
   name: Schema.String.pipe(Schema.minLength(1)).annotations({ title: 'Full name' }),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'example.com/type/Organization', // TODO(burdon): Change all types to /schema
     version: '0.1.0',
   }),
@@ -64,7 +64,7 @@ const Person = Schema.Struct({
     }),
   ),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Person', // TODO(burdon): Change all types to /schema
     version: '0.1.0',
   }),
@@ -80,10 +80,10 @@ type StoryProps<T extends AnyProperties> = {
 const DefaultStory = <T extends AnyProperties = AnyProperties>({
   debug,
   schema,
-  values: valuesParam,
+  values: valuesProp,
   ...props
 }: StoryProps<T>) => {
-  const [values, setValues] = useState<Partial<T>>(valuesParam ?? {});
+  const [values, setValues] = useState<Partial<T>>(valuesProp ?? {});
   const client = useClient();
   const space = client.spaces.default;
 
@@ -94,16 +94,8 @@ const DefaultStory = <T extends AnyProperties = AnyProperties>({
 
   const handleCancel = useCallback<NonNullable<FormRootProps<T>['onCancel']>>(() => {
     log.info('cancel');
-    setValues(valuesParam ?? {});
+    setValues(valuesProp ?? {});
   }, []);
-
-  const handleQueryRefOptions = useCallback<NonNullable<FormRootProps<T>['onQueryRefOptions']>>(
-    async ({ typename }) => {
-      const objects = await space.db.query(Filter.typename(typename)).run();
-      return objects.map((result: any) => ({ dxn: Obj.getDXN(result), label: Obj.getLabel(result) }));
-    },
-    [space],
-  );
 
   return (
     <Tooltip.Provider>
@@ -112,9 +104,9 @@ const DefaultStory = <T extends AnyProperties = AnyProperties>({
           debug={debug}
           schema={schema}
           values={values}
+          db={space.db}
           onSave={handleSave}
           onCancel={handleCancel}
-          onQueryRefOptions={handleQueryRefOptions}
           {...props}
         >
           <Form.Viewport>
@@ -135,7 +127,8 @@ const meta = {
   render: DefaultStory,
 
   decorators: [
-    withTheme,
+    withTheme(),
+    withLayout({ layout: 'fullscreen' }),
     withClientProvider({
       createIdentity: true,
       createSpace: true,

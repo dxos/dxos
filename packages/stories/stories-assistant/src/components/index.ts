@@ -20,3 +20,4 @@ export * from './ScriptModule';
 export * from './TasksModule';
 export * from './TokenManagerModule';
 export * from './TriggersModule';
+export * from './InboxModule';

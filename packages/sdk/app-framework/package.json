@@ -4,38 +4,105 @@
   "description": "A framework for building applications from composible plugins.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
   "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "exports": {
     ".": {
       "source": "./src/index.ts",
-      "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
+      "node": "./dist/lib/node-esm/index.mjs",
+      "types": "./dist/types/src/index.d.ts"
     },
-    "./react": {
-      "source": "./src/react/index.ts",
-      "types": "./dist/types/src/react/index.d.ts",
-      "browser": "./dist/lib/browser/react/index.mjs",
-      "node": "./dist/lib/node-esm/react/index.mjs"
+    "./ActivationEvent": {
+      "source": "./src/core/activation-event.ts",
+      "browser": "./dist/lib/browser/activation-event/index.mjs",
+      "node": "./dist/lib/node-esm/activation-event/index.mjs",
+      "types": "./dist/types/src/activation-event/index.d.ts"
+    },
+    "./ActivationEvents": {
+      "source": "./src/common/activation-events.ts",
+      "browser": "./dist/lib/browser/common/activation-events.mjs",
+      "node": "./dist/lib/node-esm/common/activation-events.mjs",
+      "types": "./dist/types/src/common/activation-events.d.ts"
+    },
+    "./Capabilities": {
+      "source": "./src/common/capabilities.ts",
+      "browser": "./dist/lib/browser/common/capabilities.mjs",
+      "node": "./dist/lib/node-esm/common/capabilities.mjs",
+      "types": "./dist/types/src/common/capabilities.d.ts"
+    },
+    "./Capability": {
+      "source": "./src/core/capability.ts",
+      "browser": "./dist/lib/browser/capability/index.mjs",
+      "node": "./dist/lib/node-esm/capability/index.mjs",
+      "types": "./dist/types/src/capability/index.d.ts"
+    },
+    "./Plugin": {
+      "source": "./src/core/plugin.ts",
+      "browser": "./dist/lib/browser/plugin/index.mjs",
+      "node": "./dist/lib/node-esm/plugin/index.mjs",
+      "types": "./dist/types/src/plugin/index.d.ts"
+    },
+    "./PluginManager": {
+      "source": "./src/core/plugin-manager.ts",
+      "browser": "./dist/lib/browser/plugin-manager/index.mjs",
+      "node": "./dist/lib/node-esm/plugin-manager/index.mjs",
+      "types": "./dist/types/src/plugin-manager/index.d.ts"
+    },
+    "./cli": {
+      "source": "./src/cli/index.ts",
+      "browser": "./dist/lib/browser/cli/index.mjs",
+      "node": "./dist/lib/node-esm/cli/index.mjs",
+      "types": "./dist/types/src/cli/index.d.ts"
     },
     "./testing": {
       "source": "./src/testing/index.ts",
-      "types": "./dist/types/src/testing/index.d.ts",
       "browser": "./dist/lib/browser/testing/index.mjs",
-      "node": "./dist/lib/node-esm/testing/index.mjs"
+      "node": "./dist/lib/node-esm/testing/index.mjs",
+      "types": "./dist/types/src/testing/index.d.ts"
+    },
+    "./ui": {
+      "source": "./src/ui/index.ts",
+      "browser": "./dist/lib/browser/ui/index.mjs",
+      "node": "./dist/lib/node-esm/ui/index.mjs",
+      "types": "./dist/types/src/ui/index.d.ts"
     }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
-      "react": [
-        "dist/types/src/react/index.d.ts"
+      "ActivationEvent": [
+        "dist/types/src/activation-event/index.d.ts"
+      ],
+      "ActivationEvents": [
+        "dist/types/src/common/activation-events.d.ts"
+      ],
+      "Capabilities": [
+        "dist/types/src/common/capabilities.d.ts"
+      ],
+      "Capability": [
+        "dist/types/src/capability/index.d.ts"
+      ],
+      "Plugin": [
+        "dist/types/src/plugin/index.d.ts"
+      ],
+      "PluginManager": [
+        "dist/types/src/plugin-manager/index.d.ts"
+      ],
+      "cli": [
+        "dist/types/src/cli/index.d.ts"
       ],
       "testing": [
         "dist/types/src/testing/index.d.ts"
+      ],
+      "ui": [
+        "dist/types/src/ui/index.d.ts"
       ]
     }
   },
@@ -43,51 +110,41 @@
     "typedoc": "typedoc --out typedoc"
   },
   "dependencies": {
-    "@dxos/ai": "workspace:*",
-    "@dxos/app-graph": "workspace:*",
-    "@dxos/assistant": "workspace:*",
     "@dxos/async": "workspace:*",
-    "@dxos/blueprints": "workspace:*",
-    "@dxos/client-protocol": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/effect": "workspace:*",
-    "@dxos/functions": "workspace:*",
     "@dxos/invariant": "workspace:*",
-    "@dxos/keys": "workspace:*",
-    "@dxos/live-object": "workspace:*",
-    "@dxos/local-storage": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/operation": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
-    "@dxos/schema": "workspace:*",
-    "@dxos/types": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/ai": "0.29.1",
-    "@effect/experimental": "0.56.0",
-    "@preact-signals/safe-react": "^0.9.0",
-    "@preact/signals-core": "^1.12.1"
+    "@dxos/web-context": "workspace:*",
+    "@dxos/web-context-react": "workspace:*",
+    "@effect/cli": "catalog:"
   },
   "devDependencies": {
-    "@dxos/echo-signals": "workspace:*",
+    "@dxos/echo-db": "workspace:*",
     "@dxos/random": "workspace:*",
-    "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-syntax-highlighter": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@effect-atom/atom-react": "^0.3.4",
-    "@effect/platform": "0.92.1",
-    "@types/react": "~19.2.2",
-    "effect": "3.18.3",
-    "react": "~19.2.0",
-    "react-dom": "~19.2.0",
-    "typedoc": "0.28.1"
+    "@dxos/test-utils": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
+    "@effect-atom/atom-react": "catalog:",
+    "@effect/platform": "catalog:",
+    "@effect/vitest": "catalog:",
+    "@types/react": "catalog:",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "typedoc": "catalog:"
   },
   "peerDependencies": {
-    "@effect-atom/atom-react": "^0.3.4",
-    "@effect/platform": "^0.80.12",
-    "effect": "^3.13.3",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "@effect-atom/atom-react": "catalog:",
+    "@effect/platform": "catalog:",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "publishConfig": {
     "access": "public"

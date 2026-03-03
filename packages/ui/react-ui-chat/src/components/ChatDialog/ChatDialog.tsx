@@ -7,14 +7,16 @@ import React, { type Dispatch, type PropsWithChildren, type SetStateAction, useE
 
 import { Dialog, Icon, IconButton, type ThemedClassName, useControlledState } from '@dxos/react-ui';
 import { ResizeHandle, type Size, resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 const preventDefault = (event: Event) => event.preventDefault();
 
 // TODO(burdon): Factor out.
 const Endcap = ({ children }: PropsWithChildren) => {
   return (
-    <div className='grid is-[var(--rail-action)] bs-[var(--rail-action)] items-center justify-center'>{children}</div>
+    <div className='grid w-[var(--dx-rail-action)] h-[var(--dx-rail-action)] items-center justify-center'>
+      {children}
+    </div>
   );
 };
 
@@ -47,15 +49,15 @@ type ChatDialogRootProps = PropsWithChildren<{
 
 const ChatDialogRoot = ({
   children,
-  open: openParam = false,
-  expanded: expandedParam = false,
+  open: openProp = false,
+  expanded: expandedProp = false,
   onOpenChange,
   onExpandedChange,
   onEscape,
 }: ChatDialogRootProps) => {
   const [size, setSize] = useState<Size>('min-content');
-  const [open, setOpen] = useControlledState<boolean>(openParam, onOpenChange);
-  const [expanded, setExpanded] = useControlledState<boolean>(expandedParam, onExpandedChange);
+  const [open, setOpen] = useControlledState<boolean>(openProp, onOpenChange);
+  const [expanded, setExpanded] = useControlledState<boolean>(expandedProp, onExpandedChange);
 
   // NOTE: We set the min size to 5rem (80px), and the header and prompt bar to 40px (i.e., the rail-size) each.
   // The dialog has no vertical padding and has box-content so that when closed it collapses to the size of the header and prompt bar.
@@ -69,12 +71,12 @@ const ChatDialogRoot = ({
       setSize={setSize}
     >
       <Dialog.Root modal={false} open={open} onOpenChange={setOpen}>
-        <div role='none' className='dx-dialog__overlay bg-transparent pointer-events-none' data-block-align='end'>
+        <div role='none' className='dx-dialog__overlay bg-transparent pointer-events-none' data-h-align='end'>
           <Dialog.Content
+            size='md'
             inOverlayLayout
             classNames={[
-              'grid grid-rows-[var(--rail-action)_1fr_min-content] p-0 overflow-hidden',
-              'box-content md:is-[35rem] md:max-is-none pointer-events-auto',
+              'grid grid-rows-[var(--dx-rail-action)_1fr_min-content] p-0 overflow-hidden box-content pointer-events-auto',
             ]}
             onEscapeKeyDown={onEscape}
             onInteractOutside={preventDefault}
@@ -93,22 +95,26 @@ ChatDialogRoot.displayName = 'ChatDialog.Root';
 // Header
 //
 
+const CHAT_DIALOG_HEADER_NAME = 'ChatDialog.Header';
+
 type ChatDialogHeaderProps = ThemedClassName<{
   title?: string;
 }>;
 
 const ChatDialogHeader = ({ classNames, title }: ChatDialogHeaderProps) => {
-  const { expanded, setExpanded } = useChatDialogContext(ChatDialogHeader.displayName);
+  const { expanded, setExpanded } = useChatDialogContext(CHAT_DIALOG_HEADER_NAME);
 
   return (
-    <div className={mx('grid grid-cols-[var(--rail-action)_1fr_min-content] items-center overflow-hidden', classNames)}>
+    <div
+      className={mx('grid grid-cols-[var(--dx-rail-action)_1fr_min-content] items-center overflow-hidden', classNames)}
+    >
       <Endcap>
         <Dialog.Close>
           <Icon icon='ph--x--regular' />
         </Dialog.Close>
       </Endcap>
       <Dialog.Title
-        classNames='flex is-full justify-center text-sm text-subdued select-none cursor-pointer'
+        classNames='flex w-full justify-center text-sm text-subdued select-none cursor-pointer'
         onClick={() => setExpanded((expanded) => !expanded)}
       >
         {title}
@@ -118,7 +124,7 @@ const ChatDialogHeader = ({ classNames, title }: ChatDialogHeaderProps) => {
           variant='ghost'
           icon='ph--caret-up--regular'
           iconOnly
-          classNames={mx('!p-1 [&>svg]:transition [&>svg]:duration-200', expanded && '[&>svg]:rotate-180')}
+          classNames={mx('p-1! [&>svg]:transition [&>svg]:duration-200', expanded && '[&>svg]:rotate-180')}
           label={expanded ? 'Close' : 'Open'}
           onClick={() => setExpanded((expanded) => !expanded)}
         />
@@ -127,16 +133,18 @@ const ChatDialogHeader = ({ classNames, title }: ChatDialogHeaderProps) => {
   );
 };
 
-ChatDialogHeader.displayName = 'ChatDialog.Header';
+ChatDialogHeader.displayName = CHAT_DIALOG_HEADER_NAME;
 
 //
 // Content
 //
 
+const CHAT_DIALOG_CONTENT_NAME = 'ChatDialog.Content';
+
 type ChatDialogContentProps = ThemedClassName<PropsWithChildren>;
 
 const ChatDialogContent = ({ children, classNames }: ChatDialogContentProps) => {
-  const { expanded, size, setSize } = useChatDialogContext(ChatDialogContent.displayName);
+  const { expanded, size, setSize } = useChatDialogContext(CHAT_DIALOG_CONTENT_NAME);
   useEffect(() => {
     setSize(expanded ? 'min-content' : 0);
   }, [expanded]);
@@ -144,8 +152,8 @@ const ChatDialogContent = ({ children, classNames }: ChatDialogContentProps) => 
   return (
     <div
       className={mx(
-        'flex flex-col overflow-y-auto border-t border-be border-subduedSeparator',
-        'transition-[block-size] ease-in-out duration-0 [&:not([data-dx-resizing="true"])]:duration-200',
+        'border-t border-b border-subdued-separator',
+        'transition ease-in-out duration-0 [&:not([data-dx-resizing="true"])]:duration-200',
         classNames,
       )}
       style={{
@@ -167,11 +175,13 @@ const ChatDialogContent = ({ children, classNames }: ChatDialogContentProps) => 
   );
 };
 
-ChatDialogContent.displayName = 'ChatDialog.Content';
+ChatDialogContent.displayName = CHAT_DIALOG_CONTENT_NAME;
 
 //
 // Footer
 //
+
+const CHAT_DIALOG_FOOTER_NAME = 'ChatDialog.Footer';
 
 type ChatDialogFooterProps = ThemedClassName<PropsWithChildren>;
 
@@ -179,7 +189,7 @@ const ChatDialogFooter = ({ children, classNames }: ChatDialogFooterProps) => {
   return <div className={mx(classNames)}>{children}</div>;
 };
 
-ChatDialogFooter.displayName = 'ChatDialog.Footer';
+ChatDialogFooter.displayName = CHAT_DIALOG_FOOTER_NAME;
 
 //
 // ChatDialog

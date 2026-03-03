@@ -6,7 +6,7 @@
 import React, { useEffect, useReducer, useRef } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 export type FPSProps = ThemedClassName<{
   width?: number;
@@ -73,12 +73,12 @@ export const FPS = ({ classNames, width = 60, height = 30, bar = 'bg-cyan-500' }
       style={{ width: width + 6 }}
       className={mx(
         'relative flex flex-col p-0.5',
-        'bg-baseSurface text-xs text-subdued font-thin pointer-events-none border border-separator',
+        'bg-base-surface text-xs text-subdued font-thin pointer-events-none border border-separator',
         classNames,
       )}
     >
       <div>{fps[len - 1]} FPS</div>
-      <div className='is-full relative' style={{ height }}>
+      <div className='w-full relative' style={{ height }}>
         {fps.map((frame, i) => (
           <div
             key={`fps-${i}`}

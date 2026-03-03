@@ -7,9 +7,7 @@ import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { useThemeContext } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
-import { trim } from '@dxos/util';
-
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import {
   type XmlWidgetRegistry,
   type XmlWidgetState,
@@ -18,7 +16,9 @@ import {
   decorateMarkdown,
   extendedMarkdown,
   xmlTags,
-} from '../extensions';
+} from '@dxos/ui-editor';
+import { safeParseInt, trim } from '@dxos/util';
+
 import { useTextEditor } from '../hooks';
 
 const registry = {
@@ -27,16 +27,23 @@ const registry = {
    */
   ['test' as const]: {
     block: true,
-    Component: () => {
-      const [count, setCount] = useState(0);
+    Component: ({ start = '0' }) => {
+      const [count, setCount] = useState<number>(safeParseInt(start, 0));
       useEffect(() => {
         const interval = setInterval(() => {
-          setCount((prev) => prev + 1);
-        }, 1_000);
+          setCount((prev) => {
+            if (prev >= 200) {
+              clearInterval(interval);
+              return prev;
+            }
+
+            return prev + 1;
+          });
+        }, 100);
         return () => clearInterval(interval);
       }, []);
 
-      return <div className='p-2 border border-separator rounded'>Test {count}</div>;
+      return <div className='p-2 border border-separator rounded-sm'>Test {count}</div>;
     },
   },
 } satisfies XmlWidgetRegistry;
@@ -57,8 +64,8 @@ const DefaultStory = ({ text }: { text?: string }) => {
 
   return (
     <>
-      <div ref={parentRef} className='is-full p-4' />
-      {widgets.map(({ Component, root, id, ...props }) => (
+      <div ref={parentRef} className='w-full p-4' />
+      {widgets.map(({ id, root, Component, props }) => (
         <div key={id}>{createPortal(<Component {...props} />, root)}</div>
       ))}
     </>
@@ -70,15 +77,17 @@ const text = trim`
 
   React widget below.
 
-  <test id="123" />
+  <test id="t-1" />
+
+  <test id="t-2" start="100" />
 
   React widget above.
 `;
 
 const meta = {
-  title: 'ui/react-ui-editor/XmlTags',
+  title: 'ui/react-ui-editor/Tags',
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
   },

@@ -7,18 +7,18 @@ import { addDays, format, subDays } from 'date-fns';
 import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
+import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Predicate from 'effect/Predicate';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
-import { ArtifactId } from '@dxos/assistant';
-import { DXN, Filter, Obj, Query } from '@dxos/echo';
+import { Feed, Filter, Obj, Type } from '@dxos/echo';
 import { Database } from '@dxos/echo';
-import type { Queue } from '@dxos/echo-db';
-import { QueueService, defineFunction } from '@dxos/functions';
+import { defineFunction } from '@dxos/functions';
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type Message, Person } from '@dxos/types';
+import { Message } from '@dxos/types';
 
 // NOTE: While the integration is in test mode, only the emails listed in the following dashboard are supported:
 //   https://console.cloud.google.com/auth/audience?authuser=1&project=composer-app-454920
@@ -26,6 +26,8 @@ import { type Message, Person } from '@dxos/types';
 // TODO(burdon): Importing from types/index.ts pulls in @dxos/client dependencies due to SpaceSchema.
 import * as Mailbox from '../../../types/Mailbox';
 import { GoogleMail } from '../../apis';
+import * as InboxResolver from '../../inbox-resolver';
+import { GoogleCredentials } from '../../services/google-credentials';
 
 import { mapMessage } from './mapper';
 
@@ -41,19 +43,26 @@ type DateRangeConfig = {
 };
 
 const STREAMING_CONFIG = {
-  dateChunkDays: 7, // Days per date chunk.
-  messageFetchConcurrency: 5, // Parallel message fetches.
-  bufferSize: 10, // In-flight message buffer.
-  queueBatchSize: 10, // Messages per queue append.
-  maxResults: 500, // Gmail API page size.
+  /** Days per date chunk. */
+  dateChunkDays: 7,
+  /** Parallel message fetches. */
+  messageFetchConcurrency: 5,
+  /** In-flight message buffer. */
+  bufferSize: 10,
+  /** Messages per queue append. */
+  queueBatchSize: 10,
+  /** Gmail API page size. */
+  maxResults: 500,
+  /** Restricted mode max messages. */
+  restrictedMax: 20,
 } as const;
 
 export default defineFunction({
   key: 'dxos.org/function/inbox/google-mail-sync',
   name: 'Sync Gmail',
-  description: 'Sync emails from Gmail to the mailbox.',
+  description: 'Sync emails from Gmail to the mailbox feed.',
   inputSchema: Schema.Struct({
-    mailboxId: ArtifactId,
+    feed: Type.Ref(Type.Feed).annotations({ description: 'Reference to the mailbox feed to sync emails to.' }),
     userId: Schema.String.pipe(Schema.optional),
     label: Schema.String.pipe(
       Schema.annotations({
@@ -67,32 +76,50 @@ export default defineFunction({
       }),
       Schema.optional,
     ),
+    restrictedMode: Schema.Boolean.pipe(
+      Schema.annotations({
+        description: 'Use restricted mode to limit to single date range and max 20 messages. Reduces subrequests.',
+      }),
+      Schema.optional,
+    ),
   }),
   outputSchema: Schema.Struct({
     newMessages: Schema.Number,
   }),
-  types: [Mailbox.Mailbox],
-  services: [Database.Service, QueueService],
+  // TODO(wittjosiah): Include Type.Feed by default?
+  types: [Type.Feed, Mailbox.Config],
+  services: [Database.Service, Feed.Service],
   handler: ({
     // TODO(wittjosiah): Schema-based defaults are not yet supported.
-    data: { mailboxId, userId = 'me', label = 'inbox', after = format(subDays(new Date(), 30), 'yyyy-MM-dd') },
+    data: {
+      feed: feedRef,
+      userId = 'me',
+      label = 'inbox',
+      after = format(subDays(new Date(), 30), 'yyyy-MM-dd'),
+      restrictedMode = false,
+    },
   }) =>
     Effect.gen(function* () {
-      log('syncing gmail', { mailboxId, userId, after });
-      const mailbox = yield* Database.Service.resolve(DXN.parse(mailboxId), Mailbox.Mailbox);
+      log('syncing gmail', { feed: feedRef.dxn.toString(), userId, after, restrictedMode });
+      const feed = yield* Database.load(feedRef);
 
-      const labelCount = yield* syncLabels(mailbox, userId).pipe(
-        Effect.catchAll((error) => {
-          log.catch(error);
-          return Effect.succeed(0);
-        }),
-      );
-      log('synced labels', { count: labelCount });
+      // Find the mailbox config linked to this feed.
+      const configs = yield* Database.runQuery(Filter.type(Mailbox.Config));
+      const config = configs.find((config) => DXN.equals(config.feed.dxn, Obj.getDXN(feed)));
 
-      const queue = yield* QueueService.getQueue<Message.Message>(mailbox.queue.dxn);
+      // Get labels.
+      if (config) {
+        const labelCount = yield* syncLabels(config, userId).pipe(
+          Effect.catchAll((error) => {
+            log.catch(error);
+            return Effect.succeed(0);
+          }),
+        );
+        log('synced labels', { count: labelCount });
+      }
 
-      // Get last message to resume from.
-      const objects = yield* Effect.tryPromise(() => queue.query(Query.select(Filter.everything())).run());
+      // Query existing messages from feed.
+      const objects = yield* Feed.runQuery(feed, Filter.type(Message.Message));
       const lastMessage = objects.at(-1);
 
       // Build deduplication set from recent messages to prevent duplicates across sync runs.
@@ -105,22 +132,28 @@ export default defineFunction({
       );
 
       const startDate = lastMessage ? new Date(lastMessage.created) : new Date(after);
-
       log('starting sync', {
         startDate: format(startDate, 'yyyy-MM-dd'),
         lastMessageId: lastMessage?.id,
         existingGmailIds: existingGmailIds.size,
       });
 
-      // Stream messages oldest-first into queue.
-      const newMessagesCount = yield* streamGmailMessagesToQueue(startDate, queue, userId, label, existingGmailIds);
-
+      // Stream messages oldest-first into feed.
+      const newMessagesCount = yield* streamGmailMessagesToFeed(
+        startDate,
+        feed,
+        userId,
+        label,
+        existingGmailIds,
+        restrictedMode,
+      );
       log('sync complete', { newMessages: newMessagesCount });
-
       return {
         newMessages: newMessagesCount,
       };
-    }).pipe(Effect.provide(FetchHttpClient.layer)),
+    }).pipe(
+      Effect.provide(Layer.mergeAll(FetchHttpClient.layer, InboxResolver.Live, GoogleCredentials.fromMailbox(feedRef))),
+    ),
 });
 
 //
@@ -128,12 +161,14 @@ export default defineFunction({
 //
 
 /**
- * Sync labels.
+ * Sync labels to the mailbox config.
  */
-const syncLabels = Effect.fn(function* (mailbox: Mailbox.Mailbox, userId: string) {
+const syncLabels = Effect.fn(function* (config: Mailbox.Config, userId: string) {
   const { labels } = yield* GoogleMail.listLabels(userId);
-  labels.forEach((label) => {
-    (mailbox.labels ??= {})[label.id] = label.name;
+  Obj.change(config, (config) => {
+    labels.forEach((label) => {
+      (config.labels ??= {})[label.id] = label.name;
+    });
   });
   return labels.length;
 });
@@ -181,7 +216,6 @@ const fetchMessagesForDateRange = (userId: string, label: string, dateChunk: Dat
 
       // Build query for date range.
       const query = `in:anywhere label:${label} after:${format(dateChunk.start, 'yyyy/MM/dd')} before:${format(dateChunk.end, 'yyyy/MM/dd')}`;
-
       log('fetching message IDs', {
         query,
         pageToken: Option.getOrUndefined(state.pageToken),
@@ -194,9 +228,13 @@ const fetchMessagesForDateRange = (userId: string, label: string, dateChunk: Dat
         Option.getOrUndefined(state.pageToken),
       );
 
+      log('fetched message IDs', {
+        count: messages?.length ?? 0,
+        done: !nextPageToken,
+      });
+
       // Messages come newest-first from Gmail, reverse to get oldest-first.
       const messageIds = (messages ?? []).map((m) => m.id).reverse();
-
       const nextState = {
         pageToken: Option.fromNullable(nextPageToken),
         done: !nextPageToken,
@@ -208,23 +246,24 @@ const fetchMessagesForDateRange = (userId: string, label: string, dateChunk: Dat
 };
 
 /**
- * Streams Gmail messages from oldest to newest into a DXOS queue.
+ * Streams Gmail messages from oldest to newest into a DXOS feed.
+ * In restricted mode, limits to a single date chunk and max N messages to reduce subrequests.
  */
-const streamGmailMessagesToQueue = Effect.fn(function* (
+const streamGmailMessagesToFeed = Effect.fn(function* (
   startDate: Date,
-  queue: Queue<Message.Message>,
+  feed: Feed.Feed,
   userId: string,
   label: string,
   existingGmailIds: Set<string>,
+  restricted: boolean,
 ) {
   const config: DateRangeConfig = {
     startDate,
-    // Add 1 day to endDate to ensure messages from today are included.
-    endDate: addDays(new Date(), 1),
+    // NOTE: Restricted mode can get stuck if there are no messages in the date range.
+    // In restricted mode, limit to single range.
+    endDate: restricted ? addDays(startDate, STREAMING_CONFIG.dateChunkDays + 1) : addDays(new Date(), 1),
     chunkDays: STREAMING_CONFIG.dateChunkDays,
   };
-
-  const contacts = yield* Database.Service.runQuery(Query.select(Filter.type(Person.Person)));
 
   const count = yield* Function.pipe(
     generateDateRanges(config),
@@ -238,6 +277,8 @@ const streamGmailMessagesToQueue = Effect.fn(function* (
       }
       return !isDuplicate;
     }),
+    // In restricted mode, limit to N oldest messages.
+    restricted ? Stream.take(STREAMING_CONFIG.restrictedMax) : Function.identity,
     // Parallel message fetching with bounded buffer.
     Stream.flatMap(
       (messageId) =>
@@ -251,18 +292,18 @@ const streamGmailMessagesToQueue = Effect.fn(function* (
       },
     ),
     // Convert to Message.Message objects.
-    Stream.mapEffect((gmailMessage) => mapMessage(gmailMessage, contacts)),
+    Stream.mapEffect((message) => mapMessage(message)),
     Stream.filter(Predicate.isNotNullable),
     // Batch messages for queue append.
     Stream.grouped(STREAMING_CONFIG.queueBatchSize),
-    // Append batches to DXOS queue.
+    // Append batches to DXOS feed.
     Stream.mapEffect((batch) =>
       Effect.gen(function* () {
         const messages = Chunk.toArray(batch);
-        log('appending batch to queue', {
+        log('appending batch to feed', {
           count: messages.length,
         });
-        yield* Effect.tryPromise(() => queue.append(messages));
+        yield* Feed.append(feed, messages);
         return messages.length;
       }),
     ),

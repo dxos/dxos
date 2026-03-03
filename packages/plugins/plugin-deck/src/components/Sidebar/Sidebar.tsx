@@ -4,11 +4,10 @@
 
 import React, { useMemo } from 'react';
 
-import { Surface, useCapability } from '@dxos/app-framework/react';
+import { Surface } from '@dxos/app-framework/ui';
 import { type Label, Main } from '@dxos/react-ui';
 
-import { DeckCapabilities } from '../../capabilities';
-import { useBreakpoints, useHoistStatusbar } from '../../hooks';
+import { useBreakpoints, useDeckState, useHoistStatusbar } from '../../hooks';
 import { meta } from '../../meta';
 import { getMode } from '../../types';
 import { layoutAppliesTopbar } from '../../util';
@@ -16,7 +15,8 @@ import { layoutAppliesTopbar } from '../../util';
 const label = ['sidebar title', { ns: meta.id }] satisfies Label;
 
 export const Sidebar = () => {
-  const { popoverAnchorId, activeDeck: current, deck } = useCapability(DeckCapabilities.DeckState);
+  const { state, deck } = useDeckState();
+  const { popoverAnchorId, activeDeck: current } = state;
   const breakpoint = useBreakpoints();
   const layoutMode = getMode(deck);
   const topbar = layoutAppliesTopbar(breakpoint, layoutMode);
@@ -32,11 +32,11 @@ export const Sidebar = () => {
       label={label}
       classNames={[
         'grid',
-        topbar && 'block-start-[calc(env(safe-area-inset-top)+var(--rail-size))]',
-        hoistStatusbar && 'block-end-[--statusbar-size]',
+        topbar && 'top-[calc(env(safe-area-inset-top)+var(--dx-rail-size))]',
+        hoistStatusbar && 'bottom-(--dx-statusbar-size)',
       ]}
     >
-      <Surface role='navigation' data={navigationData} limit={1} />
+      <Surface.Surface role='navigation' data={navigationData} limit={1} />
     </Main.NavigationSidebar>
   );
 };

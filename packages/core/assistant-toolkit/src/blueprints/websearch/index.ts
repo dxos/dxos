@@ -2,7 +2,5 @@
 // Copyright 2025 DXOS.org
 //
 
-import blueprint from './websearch-blueprint';
-
-export { WebSearchToolkit } from './websearch-toolkit';
-export default blueprint;
+export { default as WebSearchBlueprint } from './blueprint';
+export { WebSearchToolkit } from './toolkit';

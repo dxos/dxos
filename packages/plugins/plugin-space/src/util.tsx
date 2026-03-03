@@ -3,203 +3,203 @@
 //
 
 import { type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
-import { Atom } from '@effect-atom/atom-react';
-import * as Function from 'effect/Function';
-import type * as Schema from 'effect/Schema';
+import * as Effect from 'effect/Effect';
+import * as Match from 'effect/Match';
+import * as Option from 'effect/Option';
 
-import { LayoutAction, type PromiseIntentDispatcher, chain, createIntent } from '@dxos/app-framework';
-import { type Entity, Filter, Obj, Query, type QueryResult, Ref, Type } from '@dxos/echo';
-import { EXPANDO_TYPENAME } from '@dxos/echo/internal';
+import { type CapabilityManager } from '@dxos/app-framework';
+import { LayoutOperation } from '@dxos/app-toolkit';
+import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
+import { type Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Migrations } from '@dxos/migrations';
-import {
-  ACTION_GROUP_TYPE,
-  ACTION_TYPE,
-  type ActionData,
-  type InvokeParams,
-  type Node,
-  type NodeArg,
-  type ReadableGraph,
-  isGraphNode,
-} from '@dxos/plugin-graph';
-import { type Space, SpaceState, getSpace, isSpace } from '@dxos/react-client/echo';
-import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
+import { Operation } from '@dxos/operation';
+import { Graph, Node } from '@dxos/plugin-graph';
+import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention/types';
 import { type TreeData } from '@dxos/react-ui-list';
-import { Collection } from '@dxos/schema';
+import { Collection, Expando } from '@dxos/schema';
+import { type Label } from '@dxos/ui-types';
 import { createFilename } from '@dxos/util';
 
 import { meta } from './meta';
-import { SPACE_TYPE, SpaceAction } from './types';
+import { SPACE_TYPE, SpaceOperation } from './types';
+
+//
+// Constants
+//
+
+const CACHEABLE_PROPS: string[] = ['label', 'icon', 'role'];
+const ACCEPT_ECHO_CLASS: Set<string> = new Set(['echo']);
+
+/** Shared translation namespace descriptor. */
+const META_NS: { ns: string } = { ns: meta.id };
+
+/** Static label tuples (translation key + namespace). */
+const PERSONAL_SPACE_LABEL: Label = ['personal space label', META_NS];
+const UNNAMED_SPACE_LABEL: Label = ['unnamed space label', META_NS];
+const SETTINGS_PANEL_LABEL: Label = ['settings panel label', META_NS];
+const SPACE_SETTINGS_PROPERTIES_LABEL: Label = ['space settings properties label', META_NS];
+const MEMBERS_PANEL_LABEL: Label = ['members panel label', META_NS];
+const SPACE_SETTINGS_SCHEMA_LABEL: Label = ['space settings schema label', META_NS];
+const MIGRATE_SPACE_LABEL: Label = ['migrate space label', META_NS];
+const CREATE_OBJECT_IN_SPACE_LABEL: Label = ['create object in space label', META_NS];
+const RENAME_SPACE_LABEL: Label = ['rename space label', META_NS];
+const ADD_VIEW_TO_SCHEMA_LABEL: Label = ['add view to schema label', META_NS];
+const SNAPSHOT_BY_SCHEMA_LABEL: Label = ['snapshot by schema label', META_NS];
+const CREATE_OBJECT_IN_COLLECTION_LABEL: Label = ['create object in collection label', META_NS];
+const CREATE_OBJECT_IN_SYSTEM_COLLECTION_LABEL: Label = ['create object in system collection label', META_NS];
+const COPY_LINK_LABEL: Label = ['copy link label', META_NS];
+const EXPOSE_OBJECT_LABEL: Label = ['expose object label', META_NS];
+
+/** Stable callback constants (no closed-over state). */
+const CAN_DROP_FALSE = () => false;
+const CAN_DROP_SPACE = (source: TreeData) => Obj.isObject(source.item.data) || isSpace(source.item.data);
+const CAN_DROP_OBJECT = (source: TreeData) => Node.isGraphNode(source.item) && Obj.isObject(source.item.data);
 
 export const SPACES = `${meta.id}-spaces`;
 export const COMPOSER_SPACE_LOCK = `${meta.id}/lock`;
 // TODO(wittjosiah): Remove.
 export const SHARED = 'shared-spaces';
 
+const SCHEMA_GRAPH_NODE_PARTIALS = {
+  role: 'branch',
+  canDrop: CAN_DROP_FALSE,
+} as const;
+
+const getSchemaGraphNodePartials = () => SCHEMA_GRAPH_NODE_PARTIALS;
+
+//
+// Caching Infrastructure
+//
+
+/** Creates a string-keyed memoized factory. Returns the same instance for the same key. */
+// TODO(wittjosiah): Factor out as app-graph utility.
+function createFactory<T>(create: (key: string) => T): (key: string) => T;
+function createFactory<TArgs extends any[], T>(
+  create: (...args: TArgs) => T,
+  keyFn: (...args: TArgs) => string,
+): (...args: TArgs) => T;
+function createFactory<TArgs extends any[], T>(
+  create: (...args: TArgs) => T,
+  keyFn?: (...args: TArgs) => string,
+): (...args: TArgs) => T {
+  const cache = new Map<string, T>();
+  return (...args: TArgs) => {
+    const key = keyFn ? keyFn(...args) : (args[0] as string);
+    if (cache.has(key)) {
+      return cache.get(key)!;
+    }
+    const value = create(...args);
+    cache.set(key, value);
+    return value;
+  };
+}
+
+/** Stable Set instances keyed by spaceId. */
+const getAcceptPersistenceKey = createFactory((spaceId: string) => new Set([spaceId]));
+
+/** Caches for closures that capture ECHO objects, keyed by DXN/ID string. */
+const rearrangeCache = new Map<string, (nextOrder: unknown[]) => void>();
+const blockInstructionCache = new Map<string, (source: TreeData, instruction: Instruction) => boolean>();
+const spaceRearrangeCache = new Map<string, (nextOrder: Space[]) => void>();
+const collectionPartialsCache = new Map<string, ReturnType<typeof buildCollectionPartials>>();
+const systemCollectionPartialsCache = new Map<
+  string,
+  {
+    label: Label;
+    icon?: string;
+    iconHue?: string;
+    acceptPersistenceClass: Set<string>;
+    acceptPersistenceKey: Set<string>;
+    role: string;
+  }
+>();
+const spaceActionsCache = new Map<
+  string,
+  {
+    state: SpaceState;
+    hasPendingMigration: boolean;
+    migrating: boolean;
+    actions: Node.NodeArg<Node.ActionData<Operation.Service>>[];
+  }
+>();
+
+/** Dynamic label tuples keyed by composite key string. */
+const getDynamicLabel = createFactory(
+  (key: string, ns: string, extra?: Record<string, any>): Label => [key, { ns, ...extra }],
+  (key: string, ns: string, extra?: Record<string, any>) => `${key}\0${ns}${extra ? `\0${JSON.stringify(extra)}` : ''}`,
+);
+
+//
+// Node Constructors
+//
+
 /**
- * Convert a query result to an Atom value of the objects.
+ * Builds an app-graph node for a space (workspace), including settings children and optional rearrange handler.
+ *
+ * @param space - Space to wrap as a graph node.
+ * @param navigable - Whether the space node is navigable; affects disabled state.
+ * @param personal - Passed to display name resolution (e.g. "Personal space" fallback).
+ * @param namesCache - Optional cache of space id to display name.
+ * @param resolve - Metadata resolver for typename.
+ * @param graph - Optional expandable graph for sorting edges on rearrange.
+ * @param spacesOrder - Optional ECHO object holding workspace order; used with graph for persist on rearrange.
+ * @returns A graph node for the space.
  */
-export const atomFromQuery = <T extends Entity.Unknown>(query: QueryResult.QueryResult<T>): Atom.Atom<T[]> => {
-  return Atom.make((get) => {
-    const unsubscribe = query.subscribe((result) => {
-      get.setSelf(result.results);
-    });
-
-    get.addFinalizer(() => unsubscribe());
-    return query.results;
-  });
-};
-
-// TODO(wittjosiah): Factor out? Expose via capability?
-export const getSpaceDisplayName = (
-  space: Space,
-  { personal, namesCache = {} }: { personal?: boolean; namesCache?: Record<string, string> } = {},
-): string | [string, { ns: string }] => {
-  return space.state.get() === SpaceState.SPACE_READY && (space.properties.name?.length ?? 0) > 0
-    ? space.properties.name!
-    : namesCache[space.id]
-      ? namesCache[space.id]
-      : personal
-        ? ['personal space label', { ns: meta.id }]
-        : ['unnamed space label', { ns: meta.id }];
-};
-
-const getCollectionGraphNodePartials = ({
-  collection,
-  space,
-  resolve,
-}: {
-  collection: Collection.Collection;
-  space: Space;
-  resolve: (typename: string) => Record<string, any>;
-}) => {
-  return {
-    acceptPersistenceClass: new Set(['echo']),
-    acceptPersistenceKey: new Set([space.id]),
-    role: 'branch',
-    onRearrangeChildren: (nextOrder: unknown[]) => {
-      // Change on disk.
-      collection.objects = nextOrder.filter(Obj.isObject).map(Ref.make);
-    },
-    onTransferStart: (child: Node<Obj.Any>, index?: number) => {
-      // TODO(wittjosiah): Support transfer between spaces.
-      // const childSpace = getSpace(child.data);
-      // if (space && childSpace && !childSpace.key.equals(space.key)) {
-      //   // Create clone of child and add to destination space.
-      //   const newObject = clone(child.data, {
-      //     // TODO(wittjosiah): This needs to be generalized and not hardcoded here.
-      //     additional: [
-      //       child.data.content,
-      //       ...(child.data.objects ?? []),
-      //       ...(child.data.objects ?? []).map((object: TypedObject) => object.content),
-      //     ],
-      //   });
-      //   space.db.add(newObject);
-      //   collection.objects.push(newObject);
-      // } else {
-
-      // Add child to destination collection.
-      // TODO(dmaretskyi): Compare by id.
-      if (!collection.objects.find((object) => object.target === child.data)) {
-        if (typeof index !== 'undefined') {
-          collection.objects.splice(index, 0, Ref.make(child.data));
-        } else {
-          collection.objects.push(Ref.make(child.data));
-        }
-      }
-
-      // }
-    },
-    onTransferEnd: (child: Node<Obj.Any>, destination: Node) => {
-      // Remove child from origin collection.
-      const index = collection.objects.findIndex((object) => object.target === child.data);
-      if (index > -1) {
-        collection.objects.splice(index, 1);
-      }
-
-      // TODO(wittjosiah): Support transfer between spaces.
-      // const childSpace = getSpace(child.data);
-      // const destinationSpace =
-      //   destination.data instanceof SpaceProxy ? destination.data : getSpace(destination.data);
-      // if (destinationSpace && childSpace && !childSpace.key.equals(destinationSpace.key)) {
-      //   // Mark child as deleted in origin space.
-      //   childSpace.db.remove(child.data);
-      // }
-    },
-    onCopy: async (child: Node<Obj.Any>, index?: number) => {
-      // Create clone of child and add to destination space.
-      const newObject = await cloneObject(child.data, resolve, space);
-      space.db.add(newObject);
-      if (typeof index !== 'undefined') {
-        collection.objects.splice(index, 0, Ref.make(newObject));
-      } else {
-        collection.objects.push(Ref.make(newObject));
-      }
-    },
-  };
-};
-
-const getSystemCollectionNodePartials = ({
-  collection,
-  space,
-  resolve,
-}: {
-  collection: Collection.Managed;
-  space: Space;
-  resolve: (typename: string) => Record<string, any>;
-}) => {
-  const metadata = resolve(collection.key);
-  return {
-    label: ['typename label', { ns: collection.key, count: 2 }],
-    icon: metadata.icon,
-    iconHue: metadata.iconHue,
-    acceptPersistenceClass: new Set(['echo']),
-    acceptPersistenceKey: new Set([space.id]),
-    role: 'branch',
-  };
-};
-
-const getSchemaGraphNodePartials = () => {
-  return {
-    role: 'branch',
-    canDrop: () => false,
-  };
-};
-
-const checkPendingMigration = (space: Space) => {
-  return (
-    space.state.get() === SpaceState.SPACE_REQUIRES_MIGRATION ||
-    (space.state.get() === SpaceState.SPACE_READY &&
-      !!Migrations.versionProperty &&
-      space.properties[Migrations.versionProperty] !== Migrations.targetVersion)
-  );
-};
-
 export const constructSpaceNode = ({
   space,
   navigable = false,
   personal,
   namesCache,
   resolve,
+  graph,
+  spacesOrder,
 }: {
   space: Space;
   navigable?: boolean;
   personal?: boolean;
   namesCache?: Record<string, string>;
   resolve: (typename: string) => Record<string, any>;
+  /** Graph for sorting edges on rearrange. */
+  graph?: Graph.ExpandableGraph;
+  // TODO(wittjosiah): Should be Type.Expando but it doesn't work with the AtomQuery result type.
+  /** Spaces order object for persisting workspace order. */
+  spacesOrder?: Obj.Any;
 }) => {
   const hasPendingMigration = checkPendingMigration(space);
   const collection =
     space.state.get() === SpaceState.SPACE_READY && space.properties[Collection.Collection.typename]?.target;
   const partials =
     space.state.get() === SpaceState.SPACE_READY && Obj.instanceOf(Collection.Collection, collection)
-      ? getCollectionGraphNodePartials({ collection, space, resolve })
+      ? getCollectionGraphNodePartials({ collection, db: space.db, resolve })
       : {};
+
+  let onRearrange: ((nextOrder: Space[]) => void) | undefined;
+  if (graph && spacesOrder) {
+    onRearrange = spaceRearrangeCache.get(space.id);
+    if (!onRearrange) {
+      onRearrange = (nextOrder: Space[]) => {
+        // NOTE: This is needed to ensure order is updated by next animation frame.
+        Graph.sortEdges(
+          graph,
+          Node.RootId,
+          'outbound',
+          nextOrder.map(({ id }) => id),
+        );
+
+        // Persist order to database.
+        Obj.change(spacesOrder, (mutableOrder: any) => {
+          mutableOrder.order = nextOrder.map(({ id }) => id);
+        });
+      };
+      spaceRearrangeCache.set(space.id, onRearrange);
+    }
+  }
 
   return {
     id: space.id,
     type: SPACE_TYPE,
-    cacheable: ['label', 'icon', 'role'],
+    cacheable: CACHEABLE_PROPS,
     data: space,
     properties: {
       ...partials,
@@ -212,11 +212,11 @@ export const constructSpaceNode = ({
           : undefined,
       iconHue: space.state.get() === SpaceState.SPACE_READY && space.properties.iconHue,
       disabled: !navigable || space.state.get() !== SpaceState.SPACE_READY || hasPendingMigration,
+      disposition: 'workspace',
       testId: 'spacePlugin.space',
-      canDrop: (source: TreeData) => {
-        // TODO(wittjosiah): Find a way to only allow space as source for rearranging.
-        return Obj.isObject(source.item.data) || isSpace(source.item.data);
-      },
+      onRearrange,
+      // TODO(wittjosiah): Find a way to only allow space as source for rearranging.
+      canDrop: CAN_DROP_SPACE,
     },
     nodes: [
       {
@@ -224,7 +224,7 @@ export const constructSpaceNode = ({
         type: `${meta.id}/settings`,
         data: null,
         properties: {
-          label: ['settings panel label', { ns: meta.id }],
+          label: SETTINGS_PANEL_LABEL,
           icon: 'ph--faders--regular',
           disposition: 'alternate-tree',
         },
@@ -234,9 +234,10 @@ export const constructSpaceNode = ({
             type: `${meta.id}/properties`,
             data: `${meta.id}/properties`,
             properties: {
-              label: ['space settings properties label', { ns: meta.id }],
+              label: SPACE_SETTINGS_PROPERTIES_LABEL,
               icon: 'ph--sliders--regular',
               position: 'hoist',
+              testId: 'spacePlugin.general',
             },
           },
           {
@@ -244,9 +245,10 @@ export const constructSpaceNode = ({
             type: `${meta.id}/members`,
             data: `${meta.id}/members`,
             properties: {
-              label: ['members panel label', { ns: meta.id }],
+              label: MEMBERS_PANEL_LABEL,
               icon: 'ph--users--regular',
               position: 'hoist',
+              testId: 'spacePlugin.members',
             },
           },
           {
@@ -254,8 +256,9 @@ export const constructSpaceNode = ({
             type: `${meta.id}/schema`,
             data: `${meta.id}/schema`,
             properties: {
-              label: ['space settings schema label', { ns: meta.id }],
+              label: SPACE_SETTINGS_SCHEMA_LABEL,
               icon: 'ph--shapes--regular',
+              testId: 'spacePlugin.schema',
             },
           },
         ],
@@ -264,34 +267,192 @@ export const constructSpaceNode = ({
   };
 };
 
-export const constructSpaceActions = ({
-  space,
-  dispatch,
-  personal,
-  migrating,
+/**
+ * Builds an app-graph node for an ECHO object (collection, managed feed, schema, or generic object).
+ *
+ * @param db - Database for the object's space.
+ * @param object - ECHO object to wrap.
+ * @param disposition - Optional UI disposition.
+ * @param droppable - Whether the node accepts drops.
+ * @param navigable - Whether the node is navigable.
+ * @param managedCollectionChild - Whether the object is a managed collection child (affects blockInstruction).
+ * @param resolve - Metadata resolver for typename.
+ * @param parentCollection - Parent collection for rearranging objects.
+ * @returns A graph node or null if the object has no typename.
+ */
+export const createObjectNode = ({
+  db,
+  object,
+  disposition,
+  droppable = true,
+  navigable = false,
+  managedCollectionChild = false,
+  resolve,
+  parentCollection,
 }: {
-  space: Space;
-  dispatch: PromiseIntentDispatcher;
-  personal?: boolean;
-  migrating?: boolean;
+  db: Database.Database;
+  object: Obj.Unknown;
+  disposition?: string;
+  droppable?: boolean;
+  navigable?: boolean;
+  managedCollectionChild?: boolean;
+  resolve: (typename: string) => Record<string, any>;
+  /** Parent collection for rearranging objects. */
+  parentCollection?: Collection.Collection;
 }) => {
+  const type = Obj.getTypename(object);
+  if (!type) {
+    return null;
+  }
+
+  // For feeds, use the kind property for metadata lookup instead of the generic Feed typename.
+  const metadataKey = Obj.instanceOf(Type.Feed, object) ? (object.kind ?? type) : type;
+  const metadata = resolve(metadataKey);
+  const partials = Obj.instanceOf(Collection.Collection, object)
+    ? getCollectionGraphNodePartials({ collection: object, db, resolve })
+    : Obj.instanceOf(Collection.Managed, object)
+      ? getSystemCollectionNodePartials({ collection: object, db, resolve })
+      : Obj.instanceOf(Type.PersistentType, object)
+        ? getSchemaGraphNodePartials()
+        : metadata.graphProps;
+
+  // TODO(wittjosiah): Obj.getLabel isn't triggering reactivity in some cases.
+  //   e.g., create new collection with no name and rename it.
+  const label =
+    (object as any).name ||
+    Obj.getLabel(object) ||
+    // TODO(wittjosiah): Remove metadata labels.
+    metadata.label?.(object) ||
+    getDynamicLabel('object name placeholder', metadataKey, { default: 'New item' });
+
+  const selectable =
+    (!Obj.instanceOf(Type.PersistentType, object) &&
+      !Obj.instanceOf(Collection.Managed, object) &&
+      !Obj.instanceOf(Collection.Collection, object)) ||
+    (navigable && Obj.instanceOf(Collection.Collection, object));
+
+  let onRearrange: ((nextOrder: unknown[]) => void) | undefined;
+  if (parentCollection) {
+    const collectionId = Obj.getDXN(parentCollection).toString();
+    onRearrange = rearrangeCache.get(collectionId);
+    if (!onRearrange) {
+      onRearrange = (nextOrder: unknown[]) => {
+        Obj.change(parentCollection, (c) => {
+          c.objects = nextOrder.filter(Obj.isObject).map(Ref.make);
+        });
+      };
+      rearrangeCache.set(collectionId, onRearrange);
+    }
+  }
+
+  const objectId = Obj.getDXN(object).toString();
+  const blockInstructionKey = `${objectId}:${managedCollectionChild}`;
+  let blockInstruction = blockInstructionCache.get(blockInstructionKey);
+  if (!blockInstruction) {
+    blockInstruction = (source: TreeData, instruction: Instruction) => {
+      if (source.item.properties.managedCollectionChild) {
+        return true;
+      }
+      if (Obj.instanceOf(Collection.Managed, object)) {
+        return !instruction.type.startsWith('reorder');
+      }
+      return managedCollectionChild;
+    };
+    blockInstructionCache.set(blockInstructionKey, blockInstruction);
+  }
+
+  const canDrop = droppable ? CAN_DROP_OBJECT : CAN_DROP_FALSE;
+
+  return {
+    id: Obj.getDXN(object).toString(),
+    type,
+    cacheable: CACHEABLE_PROPS,
+    data: object,
+    properties: {
+      label,
+      icon: metadata.icon ?? 'ph--placeholder--regular',
+      iconHue: metadata.iconHue,
+      disposition,
+      testId: 'spacePlugin.object',
+      persistenceClass: 'echo',
+      persistenceKey: db.spaceId,
+      selectable,
+      managedCollectionChild,
+      onRearrange,
+      blockInstruction,
+      canDrop,
+      ...partials,
+    },
+  };
+};
+
+/**
+ * Builds a static schema node for the app graph.
+ *
+ * @param schema - ECHO schema entity.
+ * @param space - Space that owns the schema.
+ * @returns A graph node for the schema.
+ */
+export const createStaticSchemaNode = ({ schema, space }: { schema: Type.Entity.Any; space: Space }): Node.Node => {
+  return {
+    id: `${space.id}/${Type.getTypename(schema)}`,
+    type: `${meta.id}/static-schema`,
+    data: schema,
+    properties: {
+      label: getDynamicLabel('typename label', Type.getTypename(schema), {
+        count: 2,
+        default: Type.getTypename(schema),
+      }),
+      icon: 'ph--database--regular',
+      iconHue: 'green',
+      role: 'branch',
+      selectable: false,
+      canDrop: CAN_DROP_FALSE,
+      space,
+    },
+  };
+};
+
+//
+// Action Constructors
+//
+
+/**
+ * Builds the action list for a space node (migrate, create object, rename).
+ * Results are cached by space id and state flags.
+ *
+ * @param space - Space to build actions for.
+ * @param migrating - When true, treats the space as currently migrating (disables migrate action).
+ * @returns Array of graph action descriptors for the space.
+ */
+export const constructSpaceActions = ({ space, migrating }: { space: Space; migrating?: boolean }) => {
   const state = space.state.get();
   const hasPendingMigration = checkPendingMigration(space);
+  const isMigrating = migrating || Migrations.running(space);
+
+  const cached = spaceActionsCache.get(space.id);
+  if (
+    cached &&
+    cached.state === state &&
+    cached.hasPendingMigration === hasPendingMigration &&
+    cached.migrating === isMigrating
+  ) {
+    return cached.actions;
+  }
+
   const getId = (id: string) => `${id}/${space.id}`;
-  const actions: NodeArg<ActionData>[] = [];
+  const actions: Node.NodeArg<Node.ActionData<Operation.Service>>[] = [];
 
   if (hasPendingMigration) {
     actions.push({
-      id: getId(SpaceAction.Migrate._tag),
-      type: ACTION_GROUP_TYPE,
-      data: async () => {
-        await dispatch(createIntent(SpaceAction.Migrate, { space }));
-      },
+      id: getId(SpaceOperation.Migrate.meta.key),
+      type: Node.ActionGroupType,
+      data: () => Operation.invoke(SpaceOperation.Migrate, { space }),
       properties: {
-        label: ['migrate space label', { ns: meta.id }],
+        label: MIGRATE_SPACE_LABEL,
         icon: 'ph--database--regular',
         disposition: 'list-item-primary',
-        disabled: migrating || Migrations.running(space),
+        disabled: isMigrating,
       },
     });
   }
@@ -299,26 +460,22 @@ export const constructSpaceActions = ({
   if (state === SpaceState.SPACE_READY && !hasPendingMigration) {
     actions.push(
       {
-        id: getId(SpaceAction.OpenCreateObject._tag),
-        type: ACTION_TYPE,
-        data: async () => {
-          await dispatch(createIntent(SpaceAction.OpenCreateObject, { target: space }));
-        },
+        id: getId(SpaceOperation.OpenCreateObject.meta.key),
+        type: Node.ActionType,
+        data: () => Operation.invoke(SpaceOperation.OpenCreateObject, { target: space.db }),
         properties: {
-          label: ['create object in space label', { ns: meta.id }],
+          label: CREATE_OBJECT_IN_SPACE_LABEL,
           icon: 'ph--plus--regular',
-          disposition: 'item',
+          disposition: 'list-item-primary',
           testId: 'spacePlugin.createObject',
         },
       },
       {
-        id: getId(SpaceAction.Rename._tag),
-        type: ACTION_TYPE,
-        data: async (params?: InvokeParams) => {
-          await dispatch(createIntent(SpaceAction.Rename, { space, caller: params?.caller }));
-        },
+        id: getId(SpaceOperation.Rename.meta.key),
+        type: Node.ActionType,
+        data: (params?: Node.InvokeProps) => Operation.invoke(SpaceOperation.Rename, { space, caller: params?.caller }),
         properties: {
-          label: ['rename space label', { ns: meta.id }],
+          label: RENAME_SPACE_LABEL,
           icon: 'ph--pencil-simple-line--regular',
           keyBinding: {
             macos: 'shift+F6',
@@ -329,73 +486,52 @@ export const constructSpaceActions = ({
     );
   }
 
+  spaceActionsCache.set(space.id, { state, hasPendingMigration, migrating: isMigrating, actions });
   return actions;
 };
 
-export const createStaticSchemaNode = ({
-  schema,
-  space,
-}: {
-  schema: Schema.Schema.AnyNoContext;
-  space: Space;
-}): Node => {
-  return {
-    id: `${space.id}/${Type.getTypename(schema)}`,
-    type: `${meta.id}/static-schema`,
-    data: schema,
-    properties: {
-      label: ['typename label', { ns: Type.getTypename(schema), count: 2, default: Type.getTypename(schema) }],
-      icon: 'ph--database--regular',
-      iconHue: 'green',
-      role: 'branch',
-      selectable: false,
-      canDrop: () => false,
-      space,
-    },
-  };
-};
-
+/**
+ * Builds the action list for a static schema node (add view, rename, delete, snapshot).
+ *
+ * @param schema - ECHO schema entity (e.g. static record type).
+ * @param space - Space that owns the schema.
+ * @param deletable - Whether the delete/snapshot actions are enabled.
+ * @returns Array of graph action descriptors for the schema.
+ */
 export const createStaticSchemaActions = ({
   schema,
   space,
-  dispatch,
   deletable,
 }: {
   schema: Type.Obj.Any;
   space: Space;
-  dispatch: PromiseIntentDispatcher;
   deletable: boolean;
 }) => {
   const getId = (id: string) => `${space.id}/${Type.getTypename(schema)}/${id}`;
 
-  const actions: NodeArg<ActionData>[] = [
+  const actions: Node.NodeArg<Node.ActionData<Operation.Service>>[] = [
     {
-      id: getId(SpaceAction.AddObject._tag),
-      type: ACTION_TYPE,
-      data: async () => {
-        await dispatch(
-          createIntent(SpaceAction.OpenCreateObject, {
-            target: space,
-            views: true,
-            initialFormValues: { typename: Type.getTypename(schema) },
-          }),
-        );
-      },
+      id: getId(SpaceOperation.AddObject.meta.key),
+      type: Node.ActionType,
+      data: () =>
+        Operation.invoke(SpaceOperation.OpenCreateObject, {
+          target: space.db,
+          views: true,
+          initialFormValues: { typename: Type.getTypename(schema) },
+        }),
       properties: {
-        label: ['add view to schema label', { ns: meta.id }],
+        label: ADD_VIEW_TO_SCHEMA_LABEL,
         icon: 'ph--plus--regular',
         disposition: 'list-item-primary',
         testId: 'spacePlugin.addViewToSchema',
       },
     },
     {
-      id: getId(SpaceAction.RenameObject._tag),
-      type: ACTION_TYPE,
-      data: async (params?: InvokeParams) => {
-        throw new Error('Not implemented');
-      },
+      id: getId(SpaceOperation.RenameObject.meta.key),
+      type: Node.ActionType,
+      data: () => Effect.fail(new Error('Not implemented')),
       properties: {
-        label: ['rename object label', { ns: Type.getTypename(Type.PersistentType) }],
+        label: getDynamicLabel('rename object label', Type.getTypename(Type.PersistentType)),
         icon: 'ph--pencil-simple-line--regular',
         disabled: true,
         disposition: 'list-item',
@@ -403,18 +539,21 @@ export const createStaticSchemaActions = ({
       },
     },
     {
-      id: getId(SpaceAction.RemoveObjects._tag),
-      type: ACTION_TYPE,
-      data: async () => {
-        const index = space.properties.staticRecords.findIndex(
-          (typename: string) => typename === Type.getTypename(schema),
-        );
-        if (index > -1) {
-          space.properties.staticRecords.splice(index, 1);
-        }
-      },
+      id: getId(SpaceOperation.RemoveObjects.meta.key),
+      type: Node.ActionType,
+      data: () =>
+        Effect.sync(() => {
+          const index = space.properties.staticRecords.findIndex(
+            (typename: string) => typename === Type.getTypename(schema),
+          );
+          if (index > -1) {
+            Obj.change(space.properties, (p) => {
+              p.staticRecords.splice(index, 1);
+            });
+          }
+        }),
       properties: {
-        label: ['delete object label', { ns: Type.getTypename(Type.PersistentType) }],
+        label: getDynamicLabel('delete object label', Type.getTypename(Type.PersistentType)),
         icon: 'ph--trash--regular',
         disposition: 'list-item',
         disabled: !deletable,
@@ -422,24 +561,21 @@ export const createStaticSchemaActions = ({
       },
     },
     {
-      id: getId(SpaceAction.Snapshot._tag),
-      type: ACTION_TYPE,
-      data: async () => {
-        const result = await dispatch(
-          createIntent(SpaceAction.Snapshot, {
-            space,
-            query: Query.select(Filter.type(schema)).ast,
-          }),
-        );
-        if (result.data?.snapshot) {
-          await downloadBlob(
-            result.data.snapshot,
-            createFilename({ parts: [space.id, Type.getTypename(schema)], ext: 'json' }),
+      id: getId(SpaceOperation.Snapshot.meta.key),
+      type: Node.ActionType,
+      data: Effect.fnUntraced(function* () {
+        const result = yield* Operation.invoke(SpaceOperation.Snapshot, {
+          db: space.db,
+          query: Query.select(Filter.type(schema)).ast,
+        });
+        if (result.snapshot) {
+          yield* Effect.tryPromise(() =>
+            downloadBlob(result.snapshot, createFilename({ parts: [space.id, Type.getTypename(schema)], ext: 'json' })),
           );
         }
-      },
+      }),
       properties: {
-        label: ['snapshot by schema label', { ns: meta.id }],
+        label: SNAPSHOT_BY_SCHEMA_LABEL,
         icon: 'ph--camera--regular',
         disposition: 'list-item',
       },
@@ -449,124 +585,67 @@ export const createStaticSchemaActions = ({
   return actions;
 };
 
-export const createObjectNode = ({
-  space,
-  object,
-  disposition,
-  droppable = true,
-  navigable = false,
-  managedCollectionChild = false,
-  resolve,
-}: {
-  space: Space;
-  object: Obj.Any;
-  disposition?: string;
-  droppable?: boolean;
-  navigable?: boolean;
-  managedCollectionChild?: boolean;
-  resolve: (typename: string) => Record<string, any>;
-}) => {
-  const type = Obj.getTypename(object);
-  if (!type) {
-    return null;
-  }
-
-  const metadata = resolve(type);
-  const partials = Obj.instanceOf(Collection.Collection, object)
-    ? getCollectionGraphNodePartials({ collection: object, space, resolve })
-    : Obj.instanceOf(Collection.Managed, object)
-      ? getSystemCollectionNodePartials({ collection: object, space, resolve })
-      : Obj.instanceOf(Type.PersistentType, object)
-        ? getSchemaGraphNodePartials()
-        : metadata.graphProps;
-
-  // TODO(wittjosiah): Obj.getLabel isn't triggering reactivity in some cases.
-  //   e.g., create new collection with no name and rename it.
-  const label = (object as any).name ||
-    Obj.getLabel(object) ||
-    // TODO(wittjosiah): Remove metadata labels.
-    metadata.label?.(object) || ['object name placeholder', { ns: type, default: 'New item' }];
-
-  const selectable =
-    (!Obj.instanceOf(Type.PersistentType, object) &&
-      !Obj.instanceOf(Collection.Managed, object) &&
-      !Obj.instanceOf(Collection.Collection, object)) ||
-    (navigable && Obj.instanceOf(Collection.Collection, object));
-
-  return {
-    id: Obj.getDXN(object).toString(),
-    type,
-    cacheable: ['label', 'icon', 'role'],
-    data: object,
-    properties: {
-      label,
-      icon: metadata.icon ?? 'ph--placeholder--regular',
-      iconHue: metadata.iconHue,
-      disposition,
-      testId: 'spacePlugin.object',
-      persistenceClass: 'echo',
-      persistenceKey: space?.id,
-      selectable,
-      managedCollectionChild,
-      blockInstruction: (source: TreeData, instruction: Instruction) => {
-        if (source.item.properties.managedCollectionChild) {
-          // TODO(wittjosiah): Support reordering system collections.
-          // return !(managedCollectionChild && source.item.type === type && instruction.type.startsWith('reorder'));
-          return true;
-        }
-
-        if (Obj.instanceOf(Collection.Managed, object)) {
-          return !instruction.type.startsWith('reorder');
-        }
-
-        return managedCollectionChild;
-      },
-      canDrop: (source: TreeData) => {
-        return droppable && isGraphNode(source.item) && Obj.isObject(source.item.data);
-      },
-      ...partials,
-    },
-  };
-};
-
+/**
+ * Builds the action list for an ECHO object node (create, rename, delete, copy link, etc.).
+ *
+ * @param object - ECHO object to build actions for.
+ * @param graph - Readable app graph (used for action wiring).
+ * @param resolve - Metadata resolver for typename.
+ * @param capabilities - Capability manager for feature checks.
+ * @param shareableLinkOrigin - Origin URL for shareable links.
+ * @param deletable - Whether delete action is included. Defaults to true.
+ * @param navigable - Whether the object is navigable (affects available actions). Defaults to false.
+ * @returns Array of graph action descriptors for the object.
+ */
 export const constructObjectActions = ({
   object,
   graph,
-  dispatch,
   resolve,
+  capabilities,
   deletable = true,
   navigable = false,
+  shareableLinkOrigin,
 }: {
-  object: Obj.Any;
-  graph: ReadableGraph;
-  dispatch: PromiseIntentDispatcher;
+  object: Obj.Unknown;
+  graph: Graph.ReadableGraph;
   resolve: (typename: string) => Record<string, any>;
+  capabilities: CapabilityManager.CapabilityManager;
+  shareableLinkOrigin: string;
   deletable?: boolean;
   navigable?: boolean;
 }) => {
-  const space = getSpace(object);
-  invariant(space, 'Space not found');
+  const db = Obj.getDatabase(object);
+  invariant(db, 'Database not found');
   const typename = Obj.getTypename(object);
   invariant(typename, 'Object has no typename');
 
   const getId = (id: string) => `${id}/${Obj.getDXN(object).toString()}`;
 
-  const managedCollection = Obj.instanceOf(Collection.Managed, object) ? object : undefined;
-  const metadata = managedCollection ? resolve(managedCollection.key) : {};
-  const createObjectIntent = metadata.createObjectIntent;
+  const metadataKey = Match.value(object).pipe(
+    Match.when(Obj.instanceOf(Type.Feed), (feed: Type.Feed) => feed.kind ?? Obj.getTypename(feed)!),
+    Match.when(Obj.instanceOf(Collection.Managed), (managed) => {
+      const [, feedKind] = managed.key.split('~') ?? [];
+      return feedKind ?? managed.key;
+    }),
+    Match.orElse((obj) => Obj.getTypename(obj)!),
+  );
+  const managedCollection = Option.some(object).pipe(
+    Option.filter(Obj.instanceOf(Collection.Managed)),
+    Option.getOrUndefined,
+  );
+  const metadata = metadataKey ? resolve(metadataKey) : {};
+  const createObject = metadata.createObject;
   const inputSchema = metadata.inputSchema;
 
-  const actions: NodeArg<ActionData>[] = [
+  const actions: Node.NodeArg<Node.ActionData<Operation.Service>>[] = [
     ...(Obj.instanceOf(Collection.Collection, object)
       ? [
           {
-            id: getId(SpaceAction.OpenCreateObject._tag),
-            type: ACTION_TYPE,
-            data: async () => {
-              await dispatch(createIntent(SpaceAction.OpenCreateObject, { target: object }));
-            },
+            id: getId(SpaceOperation.OpenCreateObject.meta.key),
+            type: Node.ActionType,
+            data: () => Operation.invoke(SpaceOperation.OpenCreateObject, { target: object }),
             properties: {
-              label: ['create object in collection label', { ns: meta.id }],
+              label: CREATE_OBJECT_IN_COLLECTION_LABEL,
               icon: 'ph--plus--regular',
               disposition: 'list-item-primary',
               testId: 'spacePlugin.createObject',
@@ -577,74 +656,72 @@ export const constructObjectActions = ({
     ...(Obj.instanceOf(Type.PersistentType, object)
       ? [
           {
-            id: getId(SpaceAction.AddObject._tag),
-            type: ACTION_TYPE,
-            data: async () => {
-              await dispatch(
-                createIntent(SpaceAction.OpenCreateObject, {
-                  target: space,
-                  views: true,
-                  initialFormValues: { typename: object.typename },
-                }),
-              );
-            },
+            id: getId(SpaceOperation.AddObject.meta.key),
+            type: Node.ActionType,
+            data: () =>
+              Operation.invoke(SpaceOperation.OpenCreateObject, {
+                target: db,
+                views: true,
+                initialFormValues: { typename: object.typename },
+              }),
             properties: {
-              label: ['add view to schema label', { ns: meta.id }],
+              label: ADD_VIEW_TO_SCHEMA_LABEL,
               icon: 'ph--plus--regular',
               disposition: 'list-item-primary',
               testId: 'spacePlugin.addViewToSchema',
             },
           },
           {
-            id: getId(SpaceAction.Snapshot._tag),
-            type: ACTION_TYPE,
-            data: async () => {
-              const result = await dispatch(
-                createIntent(SpaceAction.Snapshot, {
-                  space,
-                  query: Query.select(Filter.type(Type.toEffectSchema(object.jsonSchema))).ast,
-                }),
-              );
-              if (result.data?.snapshot) {
-                await downloadBlob(
-                  result.data.snapshot,
-                  createFilename({ parts: [space.id, object.typename], ext: 'json' }),
+            id: getId(SpaceOperation.Snapshot.meta.key),
+            type: Node.ActionType,
+            data: Effect.fnUntraced(function* () {
+              const result = yield* Operation.invoke(SpaceOperation.Snapshot, {
+                db,
+                query: Query.select(Filter.type(Type.toEffectSchema(object.jsonSchema))).ast,
+              });
+              if (result.snapshot) {
+                yield* Effect.promise(() =>
+                  downloadBlob(result.snapshot, createFilename({ parts: [db.spaceId, object.typename], ext: 'json' })),
                 );
               }
-            },
+            }),
             properties: {
-              label: ['snapshot by schema label', { ns: meta.id }],
+              label: SNAPSHOT_BY_SCHEMA_LABEL,
               icon: 'ph--camera--regular',
               disposition: 'list-item',
             },
           },
         ]
       : []),
-    ...(createObjectIntent
+    ...(createObject && managedCollection
       ? [
           {
-            id: getId(SpaceAction.OpenCreateObject._tag),
-            type: ACTION_TYPE,
-            data: async () => {
+            id: getId(SpaceOperation.OpenCreateObject.meta.key),
+            type: Node.ActionType,
+            data: Effect.fnUntraced(function* () {
               if (inputSchema) {
-                await dispatch(
-                  createIntent(SpaceAction.OpenCreateObject, {
-                    target: space,
-                    typename: managedCollection ? managedCollection.key : undefined,
-                  }),
-                );
+                yield* Operation.invoke(SpaceOperation.OpenCreateObject, {
+                  target: db,
+                  typename: managedCollection ? metadataKey : undefined,
+                });
               } else {
-                await dispatch(
-                  Function.pipe(
-                    createObjectIntent({}, { space }),
-                    chain(SpaceAction.AddObject, { target: space, hidden: true }),
-                    chain(LayoutAction.Open, { part: 'main' }),
-                  ),
-                );
+                const createdObject = yield* createObject({}, { db, capabilities }) as Effect.Effect<
+                  Obj.Unknown,
+                  Error,
+                  never
+                >;
+                const addResult = yield* Operation.invoke(SpaceOperation.AddObject, {
+                  target: db,
+                  hidden: true,
+                  object: createdObject,
+                });
+                if (addResult.id) {
+                  yield* Operation.invoke(LayoutOperation.Open, { subject: [addResult.id] });
+                }
               }
-            },
+            }),
             properties: {
-              label: ['create object in system collection label', { ns: meta.id }],
+              label: CREATE_OBJECT_IN_SYSTEM_COLLECTION_LABEL,
               icon: 'ph--plus--regular',
               disposition: 'list-item-primary',
               testId: 'spacePlugin.createObject',
@@ -656,13 +733,12 @@ export const constructObjectActions = ({
       ? []
       : [
           {
-            id: getId(SpaceAction.RenameObject._tag),
-            type: ACTION_TYPE,
-            data: async (params?: InvokeParams) => {
-              await dispatch(createIntent(SpaceAction.RenameObject, { object, caller: params?.caller }));
-            },
+            id: getId(SpaceOperation.RenameObject.meta.key),
+            type: Node.ActionType,
+            data: (params?: Node.InvokeProps) =>
+              Operation.invoke(SpaceOperation.RenameObject, { object, caller: params?.caller }),
             properties: {
-              label: ['rename object label', { ns: typename }],
+              label: getDynamicLabel('rename object label', metadataKey),
               icon: 'ph--pencil-simple-line--regular',
               disposition: 'list-item',
               // TODO(wittjosiah): Not working.
@@ -673,16 +749,17 @@ export const constructObjectActions = ({
             },
           },
           {
-            id: getId(SpaceAction.RemoveObjects._tag),
-            type: ACTION_TYPE,
-            data: async () => {
-              const collection = graph
-                .getConnections(Obj.getDXN(object).toString(), 'inbound')
-                .find(({ data }) => Obj.instanceOf(Collection.Collection, data))?.data;
-              await dispatch(createIntent(SpaceAction.RemoveObjects, { objects: [object], target: collection }));
-            },
+            id: getId(SpaceOperation.RemoveObjects.meta.key),
+            type: Node.ActionType,
+            data: Effect.fnUntraced(function* () {
+              const collection = Graph.getConnections(graph, Obj.getDXN(object).toString(), 'inbound').find(
+                (node: Node.Node): node is Node.Node<Collection.Collection> =>
+                  Obj.instanceOf(Collection.Collection, node.data),
+              )?.data;
+              yield* Operation.invoke(SpaceOperation.RemoveObjects, { objects: [object], target: collection });
+            }),
             properties: {
-              label: ['delete object label', { ns: typename }],
+              label: getDynamicLabel('delete object label', metadataKey),
               icon: 'ph--trash--regular',
               disposition: 'list-item',
               disabled: !deletable,
@@ -699,13 +776,14 @@ export const constructObjectActions = ({
       ? [
           {
             id: getId('copy-link'),
-            type: ACTION_TYPE,
-            data: async () => {
-              const url = `${window.location.origin}/${space.id}/${Obj.getDXN(object).toString()}`;
-              await navigator.clipboard.writeText(url);
-            },
+            type: Node.ActionType,
+            data: () =>
+              Effect.promise(async () => {
+                const url = `${shareableLinkOrigin}/${db.spaceId}/${Obj.getDXN(object).toString()}`;
+                await navigator.clipboard.writeText(url);
+              }),
             properties: {
-              label: ['copy link label', { ns: meta.id }],
+              label: COPY_LINK_LABEL,
               icon: 'ph--link--regular',
               disposition: 'list-item',
               testId: 'spacePlugin.copyLink',
@@ -715,15 +793,11 @@ export const constructObjectActions = ({
       : []),
     // TODO(wittjosiah): Factor out and apply to all nodes.
     {
-      id: getId(LayoutAction.Expose._tag),
-      type: ACTION_TYPE,
-      data: async () => {
-        await dispatch(
-          createIntent(LayoutAction.Expose, { part: 'navigation', subject: Obj.getDXN(object).toString() }),
-        );
-      },
+      id: getId(LayoutOperation.Expose.meta.key),
+      type: Node.ActionType,
+      data: () => Operation.invoke(LayoutOperation.Expose, { subject: Obj.getDXN(object).toString() }),
       properties: {
-        label: ['expose object label', { ns: meta.id }],
+        label: EXPOSE_OBJECT_LABEL,
         icon: 'ph--eye--regular',
         disposition: 'heading-list-item',
         testId: 'spacePlugin.exposeObject',
@@ -732,6 +806,41 @@ export const constructObjectActions = ({
   ];
 
   return actions;
+};
+
+//
+// Helpers
+//
+
+const checkPendingMigration = (space: Space) => {
+  return (
+    space.state.get() === SpaceState.SPACE_REQUIRES_MIGRATION ||
+    (space.state.get() === SpaceState.SPACE_READY &&
+      !!Migrations.versionProperty &&
+      space.properties[Migrations.versionProperty] !== Migrations.targetVersion)
+  );
+};
+
+/**
+ * Returns the display label for a space (name, namesCache entry, or fallback).
+ *
+ * @param space - Space to label.
+ * @param options.personal - If true, use personal-space fallback when unnamed.
+ * @param options.namesCache - Optional cache of space id to display name.
+ * @returns Label tuple (translation key or string, and namespace).
+ */
+// TODO(wittjosiah): Factor out? Exposer via capability?
+export const getSpaceDisplayName = (
+  space: Space,
+  { personal, namesCache = {} }: { personal?: boolean; namesCache?: Record<string, string> } = {},
+): Label => {
+  return space.state.get() === SpaceState.SPACE_READY && (space.properties.name?.length ?? 0) > 0
+    ? space.properties.name!
+    : namesCache[space.id]
+      ? namesCache[space.id]
+      : personal
+        ? PERSONAL_SPACE_LABEL
+        : UNNAMED_SPACE_LABEL;
 };
 
 // TODO(wittjosiah): Factor out.
@@ -748,13 +857,103 @@ const downloadBlob = async (blob: Blob, filename: string) => {
   URL.revokeObjectURL(url);
 };
 
+const buildCollectionPartials = (
+  collection: Collection.Collection,
+  db: Database.Database,
+  resolve: (typename: string) => Record<string, any>,
+) => ({
+  acceptPersistenceClass: ACCEPT_ECHO_CLASS,
+  acceptPersistenceKey: getAcceptPersistenceKey(db.spaceId),
+  role: 'branch' as const,
+  onTransferStart: (child: Node.Node<Obj.Unknown>, index?: number) => {
+    Obj.change(collection, (c) => {
+      if (!c.objects.find((object) => object.target === child.data)) {
+        if (typeof index !== 'undefined') {
+          c.objects.splice(index, 0, Ref.make(child.data));
+        } else {
+          c.objects.push(Ref.make(child.data));
+        }
+      }
+    });
+  },
+  onTransferEnd: (child: Node.Node<Obj.Unknown>, _destination: Node.Node) => {
+    Obj.change(collection, (c) => {
+      const index = c.objects.findIndex((object) => object.target === child.data);
+      if (index > -1) {
+        c.objects.splice(index, 1);
+      }
+    });
+  },
+  onCopy: async (child: Node.Node<Obj.Unknown>, index?: number) => {
+    const newObject = await cloneObject(child.data, resolve, db);
+    db.add(newObject);
+    Obj.change(collection, (c) => {
+      if (typeof index !== 'undefined') {
+        c.objects.splice(index, 0, Ref.make(newObject));
+      } else {
+        c.objects.push(Ref.make(newObject));
+      }
+    });
+  },
+});
+
+const getCollectionGraphNodePartials = ({
+  collection,
+  db,
+  resolve,
+}: {
+  collection: Collection.Collection;
+  db: Database.Database;
+  resolve: (typename: string) => Record<string, any>;
+}) => {
+  const id = Obj.getDXN(collection).toString();
+  let cached = collectionPartialsCache.get(id);
+  if (!cached) {
+    cached = buildCollectionPartials(collection, db, resolve);
+    collectionPartialsCache.set(id, cached);
+  }
+  return cached;
+};
+
+const getSystemCollectionNodePartials = ({
+  collection,
+  db,
+  resolve,
+}: {
+  collection: Collection.Managed;
+  db: Database.Database;
+  resolve: (typename: string) => Record<string, any>;
+}) => {
+  const cacheKey = `${db.spaceId}:${collection.key}`;
+  let cached = systemCollectionPartialsCache.get(cacheKey);
+  if (!cached) {
+    const [, feedKind] = collection.key.split('~');
+    const metadataKey = feedKind ?? collection.key;
+    const metadata = resolve(metadataKey);
+    cached = {
+      label: getDynamicLabel('typename label', metadataKey, { count: 2 }),
+      icon: metadata.icon,
+      iconHue: metadata.iconHue,
+      acceptPersistenceClass: ACCEPT_ECHO_CLASS,
+      acceptPersistenceKey: getAcceptPersistenceKey(db.spaceId),
+      role: 'branch',
+    };
+    systemCollectionPartialsCache.set(cacheKey, cached);
+  }
+  return cached;
+};
+
+//
+// Deprecated
+//
+
 /**
  * @deprecated This is a temporary solution.
  */
 export const getNestedObjects = async (
-  object: Obj.Any,
+  object: Obj.Unknown,
   resolve: (typename: string) => Record<string, any>,
-): Promise<Obj.Any[]> => {
+): Promise<Obj.Unknown[]> => {
   const type = Obj.getTypename(object);
   if (!type) {
     return [];
@@ -766,7 +965,7 @@ export const getNestedObjects = async (
     return [];
   }
 
-  const objects: Obj.Any[] = await loadReferences(object);
+  const objects: Obj.Unknown[] = await loadReferences(object);
   const nested = await Promise.all(objects.map((object) => getNestedObjects(object, resolve)));
   return [...objects, ...nested.flat()];
 };
@@ -776,15 +975,15 @@ export const getNestedObjects = async (
  */
 // TODO(burdon): Remove.
 export const cloneObject = async (
-  object: Obj.Any,
+  object: Obj.Unknown,
   resolve: (typename: string) => Record<string, any>,
-  newSpace: Space,
-): Promise<Obj.Any> => {
+  newDb: Database.Database,
+): Promise<Obj.Unknown> => {
   const schema = Obj.getSchema(object);
-  const typename = schema ? (Type.getTypename(schema) ?? EXPANDO_TYPENAME) : EXPANDO_TYPENAME;
+  const typename = schema ? (Type.getTypename(schema) ?? Expando.Expando.typename) : Expando.Expando.typename;
   const metadata = resolve(typename);
   const serializer = metadata.serializer;
   invariant(serializer, `No serializer for type: ${typename}`);
   const content = await serializer.serialize({ object });
-  return serializer.deserialize({ content, space: newSpace, newId: true });
+  return serializer.deserialize({ content, db: newDb, newId: true });
 };

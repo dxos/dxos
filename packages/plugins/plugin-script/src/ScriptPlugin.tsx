@@ -2,95 +2,72 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
+import * as Effect from 'effect/Effect';
+
+import { Plugin } from '@dxos/app-framework';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Ref } from '@dxos/echo';
 import { Script } from '@dxos/functions';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { type CreateObjectIntent } from '@dxos/plugin-space/types';
+import { Operation } from '@dxos/operation';
+import { type CreateObject } from '@dxos/plugin-space/types';
 
 import {
   AppGraphBuilder,
   BlueprintDefinition,
   Compiler,
-  IntentResolver,
+  OperationResolver,
   ReactSurface,
   ScriptSettings,
 } from './capabilities';
-import { ScriptEvents } from './events';
 import { meta } from './meta';
 import { translations } from './translations';
-import { Notebook, ScriptAction } from './types';
+import { ScriptEvents } from './types';
+import { Notebook, ScriptOperation } from './types';
 
-export const ScriptPlugin = definePlugin(meta, () => [
-  defineModule({
-    id: `${meta.id}/module/settings`,
-    activatesOn: Events.SetupSettings,
-    activate: ScriptSettings,
-  }),
-  defineModule({
-    id: `${meta.id}/module/compiler`,
-    activatesOn: ScriptEvents.SetupCompiler,
-    activate: Compiler,
-  }),
-  defineModule({
-    id: `${meta.id}/module/translations`,
-    activatesOn: Events.SetupTranslations,
-    activate: () => contributes(Capabilities.Translations, translations),
-  }),
-  defineModule({
-    id: `${meta.id}/module/metadata`,
-    activatesOn: Events.SetupMetadata,
-    activate: () => [
-      contributes(Capabilities.Metadata, {
+export const ScriptPlugin = Plugin.define(meta).pipe(
+  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
+  AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+  AppPlugin.addMetadataModule({
+    metadata: [
+      {
         id: Script.Script.typename,
         metadata: {
           icon: 'ph--code--regular',
           iconHue: 'sky',
           // TODO(wittjosiah): Move out of metadata.
           loadReferences: async (script: Script.Script) => await Ref.Array.loadAll([script.source]),
-          inputSchema: ScriptAction.ScriptProps,
-          createObjectIntent: ((props, options) =>
-            createIntent(ScriptAction.CreateScript, { ...props, space: options.space })) satisfies CreateObjectIntent,
+          inputSchema: ScriptOperation.ScriptProps,
+          createObject: ((props) =>
+            Effect.gen(function* () {
+              const { object } = yield* Operation.invoke(ScriptOperation.CreateScript, props);
+              return object;
+            })) satisfies CreateObject,
           addToCollectionOnCreate: true,
         },
-      }),
-      contributes(Capabilities.Metadata, {
+      },
+      {
         id: Notebook.Notebook.typename,
         metadata: {
           icon: 'ph--notebook--regular',
           iconHue: 'sky',
-          inputSchema: ScriptAction.NotebookProps,
-          createObjectIntent: ((props, options) =>
-            createIntent(ScriptAction.CreateNotebook, { ...props, space: options.space })) satisfies CreateObjectIntent,
+          inputSchema: ScriptOperation.NotebookProps,
+          createObject: ((props) => Effect.sync(() => Notebook.make(props))) satisfies CreateObject,
           addToCollectionOnCreate: true,
         },
-      }),
+      },
     ],
   }),
-  defineModule({
-    id: `${meta.id}/module/app-graph-builder`,
-    activatesOn: Events.SetupAppGraph,
-    activate: AppGraphBuilder,
+  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addSchemaModule({ schema: [Script.Script] }),
+  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addModule({
+    activatesOn: AppActivationEvents.SetupSettings,
+    activate: ScriptSettings,
   }),
-  defineModule({
-    id: `${meta.id}/module/schema`,
-    activatesOn: ClientEvents.SetupSchema,
-    activate: () => contributes(ClientCapabilities.Schema, [Script.Script]),
+  Plugin.addModule({
+    activatesOn: ScriptEvents.SetupCompiler,
+    activate: Compiler,
   }),
-
-  defineModule({
-    id: `${meta.id}/module/react-surface`,
-    activatesOn: Events.SetupReactSurface,
-    activate: ReactSurface,
-  }),
-  defineModule({
-    id: `${meta.id}/module/intent-resolver`,
-    activatesOn: Events.SetupIntentResolver,
-    activate: IntentResolver,
-  }),
-  defineModule({
-    id: `${meta.id}/module/blueprint`,
-    activatesOn: Events.SetupArtifactDefinition,
-    activate: BlueprintDefinition,
-  }),
-]);
+  Plugin.make,
+);

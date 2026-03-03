@@ -16,6 +16,7 @@ test.describe('plugin-sheet', () => {
   test.beforeEach(async ({ browser }) => {
     const setup = await setupPage(browser, {
       url: storybookUrl('plugins-plugin-sheet-sheetcontainer--spec', 9005),
+      viewportSize: { width: 1280, height: 720 },
     });
     page = setup.page;
     sheet = new SheetManager(page);

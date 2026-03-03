@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-// TODO(thure): I was unable to bring this in from `react-ui-types` because toolbox.ts would not acknowledge
+// TODO(thure): I was unable to bring this in from `ui-types` because toolbox.ts would not acknowledge
 //  `"@dxos/lit-ui": [ "packages/ui/lit-ui/src/index.ts" ]` in tsconfig.paths.json. How is this meant to work? How is it
 //  okay with `react-hooks`?
 export type Size =

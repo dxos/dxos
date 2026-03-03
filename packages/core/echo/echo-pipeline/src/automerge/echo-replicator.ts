@@ -9,11 +9,11 @@ import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { type AutomergeProtocolMessage } from '@dxos/protocols';
 
 // TODO(burdon): Rename AutomergeReplicator?
-export interface EchoReplicator {
+export interface AutomergeReplicator {
   /**
    * Called on when replicator is added to EchoHost.
    */
-  connect(context: EchoReplicatorContext): Promise<void>;
+  connect(context: AutomergeReplicatorContext): Promise<void>;
 
   /**
    * Called on when replicator is removed from EchoHost.
@@ -21,7 +21,7 @@ export interface EchoReplicator {
   disconnect(): Promise<void>;
 }
 
-export interface EchoReplicatorContext {
+export interface AutomergeReplicatorContext {
   /**
    * Our own peer id.
    */
@@ -32,14 +32,18 @@ export interface EchoReplicatorContext {
    */
   getContainingSpaceForDocument(documentId: string): Promise<PublicKey | null>;
   getContainingSpaceIdForDocument(documentId: string): Promise<SpaceId | null>;
-  isDocumentInRemoteCollection(params: RemoteDocumentExistenceCheckParams): Promise<boolean>;
 
-  onConnectionOpen(connection: ReplicatorConnection): void;
-  onConnectionClosed(connection: ReplicatorConnection): void;
-  onConnectionAuthScopeChanged(connection: ReplicatorConnection): void;
+  /**
+   * Returns false if collection sync hasn't happened yet.
+   */
+  isDocumentInRemoteCollection(params: RemoteDocumentExistenceCheckProps): Promise<boolean>;
+
+  onConnectionOpen(connection: AutomergeReplicatorConnection): void;
+  onConnectionClosed(connection: AutomergeReplicatorConnection): void;
+  onConnectionAuthScopeChanged(connection: AutomergeReplicatorConnection): void;
 }
 
-export interface ReplicatorConnection {
+export interface AutomergeReplicatorConnection {
   /**
    * Remote peer id.
    */
@@ -59,15 +63,15 @@ export interface ReplicatorConnection {
    * @returns true if the document should be advertised to this peer.
    * The remote peer can still request the document by its id bypassing this check.
    */
-  shouldAdvertise(params: ShouldAdvertiseParams): Promise<boolean>;
+  shouldAdvertise(params: ShouldAdvertiseProps): Promise<boolean>;
 
   /**
    * @returns true if the collection should be synced to this peer.
    */
-  shouldSyncCollection(params: ShouldSyncCollectionParams): boolean;
+  shouldSyncCollection(params: ShouldSyncCollectionProps): boolean;
 
   /**
-   * Batch syncing considered enabled if ReplicatorConnection implements `pushBatch` and `pullBatch` methods.
+   * Batch syncing considered enabled if AutomergeReplicatorConnection implements `pushBatch` and `pullBatch` methods.
    * @returns true if the batch syncing is enabled.
    */
   get bundleSyncEnabled(): boolean;
@@ -84,15 +88,15 @@ export interface ReplicatorConnection {
   pullBundle?(docHeads: Record<DocumentId, Heads>): Promise<Record<DocumentId, Uint8Array>>;
 }
 
-export type ShouldAdvertiseParams = {
+export type ShouldAdvertiseProps = {
   documentId: string;
 };
 
-export type ShouldSyncCollectionParams = {
+export type ShouldSyncCollectionProps = {
   collectionId: string;
 };
 
-export type RemoteDocumentExistenceCheckParams = {
+export type RemoteDocumentExistenceCheckProps = {
   peerId: string;
   documentId: string;
 };

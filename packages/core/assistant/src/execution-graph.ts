@@ -412,7 +412,7 @@ const createBlockCommit = (
         message: block.error ? 'Tool error: ' + block.error : 'Tool call succeeded',
       } satisfies Commit;
 
-    case 'summary':
+    case 'stats':
       return {
         id: getGenericBlockId(message.id, idx),
         branch,
@@ -420,7 +420,7 @@ const createBlockCommit = (
         timestamp,
         icon: IconType.ROCKET,
         level: LogLevel.INFO,
-        message: ContentBlock.createSummaryMessage(block),
+        message: ContentBlock.createStatsMessage(block),
       } satisfies Commit;
 
     case 'status':
@@ -496,7 +496,7 @@ const getParentId = (message: Message.Message) => {
   }
 };
 
-const stringifyRef = (ref: Ref.Any) => {
+const stringifyRef = (ref: Ref.Unknown) => {
   if (ref.target) {
     return stringifyObject(ref.target);
   }
@@ -504,6 +504,6 @@ const stringifyRef = (ref: Ref.Any) => {
   return ref.dxn.asEchoDXN()?.echoId ?? ref.dxn.asQueueDXN()?.objectId ?? '';
 };
 
-const stringifyObject = (obj: Obj.Any) => {
+const stringifyObject = (obj: Obj.Unknown) => {
   return Obj.getLabel(obj) ?? Obj.getTypename(obj) ?? obj.id;
 };

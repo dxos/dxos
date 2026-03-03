@@ -6,13 +6,13 @@ import { type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-
 import * as Schema from 'effect/Schema';
 
 import { Obj } from '@dxos/echo';
-import { type HasId } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 
 import { type TreeData } from './TreeItem';
 
-export type TestItem = HasId & {
+export type TestItem = {
+  id: string;
   name: string;
   icon?: string;
   items: TestItem[];

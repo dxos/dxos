@@ -4,7 +4,7 @@
 
 import { type Resource } from '@dxos/react-ui';
 
-export const translationKey = 'composer';
+export const translationKey = '@dxos/composer';
 
 export const translations = [
   {

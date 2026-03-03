@@ -2,7 +2,6 @@
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {},
   "include": [
-    "../assistant-testing/src/functions/testing",
     "bin",
     "src",
     "src/**/*.json"
@@ -61,9 +60,6 @@
     },
     {
       "path": "../echo/echo-protocol"
-    },
-    {
-      "path": "../echo/live-object"
     },
     {
       "path": "../functions"

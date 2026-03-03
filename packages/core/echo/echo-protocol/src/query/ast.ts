@@ -212,7 +212,11 @@ export const QueryReferenceTraversalClause: Schema.Schema<QueryReferenceTraversa
 const QueryIncomingReferencesClause_ = Schema.Struct({
   type: Schema.Literal('incoming-references'),
   anchor: Schema.suspend(() => Query),
-  property: Schema.String,
+  /**
+   * Property path where the reference is located.
+   * If null, matches references from any property.
+   */
+  property: Schema.NullOr(Schema.String),
   typename: TypenameSpecifier,
 });
 
@@ -251,6 +255,23 @@ export interface QueryRelationTraversalClause extends Schema.Schema.Type<typeof 
 export const QueryRelationTraversalClause: Schema.Schema<QueryRelationTraversalClause> = QueryRelationTraversalClause_;
 
 /**
+ * Traverse parent-child hierarchy.
+ */
+const QueryHierarchyTraversalClause_ = Schema.Struct({
+  type: Schema.Literal('hierarchy-traversal'),
+  anchor: Schema.suspend(() => Query),
+  /**
+   * to-parent: traverse from child to parent.
+   * to-children: traverse from parent to children.
+   */
+  direction: Schema.Literal('to-parent', 'to-children'),
+});
+
+export interface QueryHierarchyTraversalClause extends Schema.Schema.Type<typeof QueryHierarchyTraversalClause_> {}
+export const QueryHierarchyTraversalClause: Schema.Schema<QueryHierarchyTraversalClause> =
+  QueryHierarchyTraversalClause_;
+
+/**
  * Union of multiple queries.
  */
 const QueryUnionClause_ = Schema.Struct({
@@ -286,6 +307,12 @@ const Order_ = Schema.Union(
     property: Schema.String,
     direction: OrderDirection,
   }),
+  Schema.Struct({
+    // Order by relevance rank (for FTS/vector search results).
+    // Default direction is 'desc' (higher rank = better match first).
+    kind: Schema.Literal('rank'),
+    direction: OrderDirection,
+  }),
 );
 
 export type Order = Schema.Schema.Type<typeof Order_>;
@@ -316,6 +343,18 @@ const QueryOptionsClause_ = Schema.Struct({
 export interface QueryOptionsClause extends Schema.Schema.Type<typeof QueryOptionsClause_> {}
 export const QueryOptionsClause: Schema.Schema<QueryOptionsClause> = QueryOptionsClause_;
 
+/**
+ * Limit the number of results.
+ */
+const QueryLimitClause_ = Schema.Struct({
+  type: Schema.Literal('limit'),
+  query: Schema.suspend(() => Query),
+  limit: Schema.Number,
+});
+
+export interface QueryLimitClause extends Schema.Schema.Type<typeof QueryLimitClause_> {}
+export const QueryLimitClause: Schema.Schema<QueryLimitClause> = QueryLimitClause_;
+
 const Query_ = Schema.Union(
   QuerySelectClause,
   QueryFilterClause,
@@ -323,10 +362,12 @@ const Query_ = Schema.Union(
   QueryIncomingReferencesClause,
   QueryRelationClause,
   QueryRelationTraversalClause,
+  QueryHierarchyTraversalClause,
   QueryUnionClause,
   QuerySetDifferenceClause,
   QueryOrderClause,
   QueryOptionsClause,
+  QueryLimitClause,
 ).annotations({ identifier: 'dxos.org/schema/Query' });
 
 export type Query = Schema.Schema.Type<typeof Query_>;
@@ -339,6 +380,11 @@ export const QueryOptions = Schema.Struct({
    * NOTE: Spaces and queues are unioned together if both are specified.
    */
   spaceIds: Schema.optional(Schema.Array(Schema.String)),
+
+  /**
+   * If true, the nested select statements will select from all queues in the spaces specified by `spaceIds`.
+   */
+  allQueuesFromSpaces: Schema.optional(Schema.Boolean),
 
   /**
    * The nested select statemets will select from the given queues.
@@ -365,12 +411,14 @@ export const visit = (query: Query, visitor: (node: Query) => void) => {
     Match.when({ type: 'relation' }, ({ anchor }) => visit(anchor, visitor)),
     Match.when({ type: 'options' }, ({ query }) => visit(query, visitor)),
     Match.when({ type: 'relation-traversal' }, ({ anchor }) => visit(anchor, visitor)),
+    Match.when({ type: 'hierarchy-traversal' }, ({ anchor }) => visit(anchor, visitor)),
     Match.when({ type: 'union' }, ({ queries }) => queries.forEach((q) => visit(q, visitor))),
     Match.when({ type: 'set-difference' }, ({ source, exclude }) => {
       visit(source, visitor);
       visit(exclude, visitor);
     }),
     Match.when({ type: 'order' }, ({ query }) => visit(query, visitor)),
+    Match.when({ type: 'limit' }, ({ query }) => visit(query, visitor)),
     Match.when({ type: 'select' }, () => {}),
     Match.exhaustive,
   );
@@ -385,11 +433,13 @@ export const fold = <T>(query: Query, reducer: (node: Query) => T): T[] => {
     Match.when({ type: 'relation' }, ({ anchor }) => fold(anchor, reducer)),
     Match.when({ type: 'options' }, ({ query }) => fold(query, reducer)),
     Match.when({ type: 'relation-traversal' }, ({ anchor }) => fold(anchor, reducer)),
+    Match.when({ type: 'hierarchy-traversal' }, ({ anchor }) => fold(anchor, reducer)),
     Match.when({ type: 'union' }, ({ queries }) => queries.flatMap((q) => fold(q, reducer))),
     Match.when({ type: 'set-difference' }, ({ source, exclude }) =>
       fold(source, reducer).concat(fold(exclude, reducer)),
     ),
     Match.when({ type: 'order' }, ({ query }) => fold(query, reducer)),
+    Match.when({ type: 'limit' }, ({ query }) => fold(query, reducer)),
     Match.when({ type: 'select' }, () => []),
     Match.exhaustive,
   );

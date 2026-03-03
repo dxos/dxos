@@ -50,7 +50,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
     });
 
     // Invoke deployed function via EDGE directly.
-    const edgeClient = client.edge;
+    const edgeClient = client.edge.http;
     invariant(edgeClient, 'edgeClient is required');
     edgeClient.setIdentity(createEdgeIdentity(client));
 

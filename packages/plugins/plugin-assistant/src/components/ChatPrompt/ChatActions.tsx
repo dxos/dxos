@@ -5,7 +5,7 @@
 import React, { type PropsWithChildren } from 'react';
 
 import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 import { type ChatEvent } from '../Chat';
@@ -23,7 +23,7 @@ export const ChatActions = ({ classNames, children, microphone, recording, proce
   const { t } = useTranslation(meta.id);
 
   return (
-    <div className={mx('flex items-center mie-1', classNames)}>
+    <div className={mx('flex items-center me-1', classNames)}>
       {children}
 
       <IconButton
@@ -50,6 +50,14 @@ export const ChatActions = ({ classNames, children, microphone, recording, proce
           onTouchEnd={() => onEvent?.({ type: 'record-stop' })}
         />
       )}
+
+      <IconButton
+        variant='ghost'
+        icon='ph--wrench--regular'
+        iconOnly
+        label={t('debug button')}
+        onClick={() => onEvent?.({ type: 'toggle-debug' })}
+      />
     </div>
   );
 };

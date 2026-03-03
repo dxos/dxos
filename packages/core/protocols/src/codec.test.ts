@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { schema } from './proto/index.js';
+import { schema } from './proto/index.ts';
 
 describe('Codec', () => {
   test('encodes and decodes messages', async () => {

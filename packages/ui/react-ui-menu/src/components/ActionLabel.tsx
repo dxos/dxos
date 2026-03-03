@@ -4,16 +4,16 @@
 
 import React from 'react';
 
-import { type ActionGroup, type Action as GraphAction } from '@dxos/app-graph';
+import { type Node } from '@dxos/app-graph';
 import { keySymbols } from '@dxos/keyboard';
 import { type TFunction, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { descriptionText, mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
+import { type MenuActionProperties } from '@dxos/ui-types';
 
 import { translationKey } from '../translations';
-import { type MenuActionProperties } from '../types';
 import { getShortcut } from '../util';
 
-type Action = GraphAction<MenuActionProperties> | ActionGroup<Omit<MenuActionProperties, 'variant'>>;
+type Action = Node.Action<MenuActionProperties> | Node.ActionGroup<Omit<MenuActionProperties, 'variant'>>;
 
 export const ActionLabel = ({ action }: { action: Action }) => {
   const { t } = useTranslation(translationKey);
@@ -21,7 +21,7 @@ export const ActionLabel = ({ action }: { action: Action }) => {
   return (
     <>
       <span className='grow truncate'>{toLocalizedString(action.properties!.label, t)}</span>
-      {shortcut && <span className={mx('shrink-0', descriptionText)}>{keySymbols(shortcut).join('')}</span>}
+      {shortcut && <span className={mx('shrink-0', 'text-description')}>{keySymbols(shortcut).join('')}</span>}
     </>
   );
 };

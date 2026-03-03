@@ -2,8 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-export { ScriptCapabilities } from './capabilities';
+export { ScriptCapabilities, ScriptEvents } from './types';
 export * from './components';
+export * from './containers';
 export * from './meta';
 export * from './util';
 

@@ -3,9 +3,10 @@
 //
 
 import { asyncTimeout } from '@dxos/async';
+import { type Obj } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 
-import { type AnyLiveObject, getObjectCore } from '../echo-handler';
+import { getObjectCore } from '../echo-handler';
 
 /**
  * @param obj
@@ -27,7 +28,7 @@ export const loadObject = <T extends AnyProperties>(obj: T): T => {
  */
 // TODO(burdon): Rename/review SDK.
 export const loadObjectReferences = async <
-  T extends AnyLiveObject<any>,
+  T extends Obj.Unknown,
   RefType,
   DerefType = RefType extends Array<infer U> ? Array<NonNullable<U>> : NonNullable<RefType>,
 >(

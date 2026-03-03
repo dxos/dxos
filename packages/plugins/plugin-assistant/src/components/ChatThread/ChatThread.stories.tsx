@@ -18,7 +18,7 @@ import { Popover } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { MarkdownStream } from '@dxos/react-ui-components';
 import { EditorPreviewProvider, useEditorPreview } from '@dxos/react-ui-editor';
-import { Card } from '@dxos/react-ui-stack';
+import { Card } from '@dxos/react-ui-mosaic';
 import { render } from '@dxos/storybook-utils';
 import { type Message, Organization, Person } from '@dxos/types';
 
@@ -56,7 +56,7 @@ const DefaultStory = ({ generator = [], delay = 0, wait, ...props }: StoryProps)
           }
         }
         setDone(true);
-      }).pipe(Effect.provide(Layer.mergeAll(Database.Service.layer(space.db), ContextQueueService.layer(queue)))),
+      }).pipe(Effect.provide(Layer.mergeAll(Database.layer(space.db), ContextQueueService.layer(queue)))),
     );
 
     return () => {
@@ -69,7 +69,7 @@ const DefaultStory = ({ generator = [], delay = 0, wait, ...props }: StoryProps)
   }
 
   return (
-    <EditorPreviewProvider onLookup={async ({ label, ref }) => ({ label, text: ref })}>
+    <EditorPreviewProvider onLookup={async ({ dxn, label }) => ({ label, text: dxn })}>
       <ChatThread {...props} messages={queue?.objects} />
       <PreviewCard />
     </EditorPreviewProvider>
@@ -83,10 +83,10 @@ const PreviewCard = () => {
     <Popover.Portal>
       <Popover.Content onOpenAutoFocus={(event) => event.preventDefault()}>
         <Popover.Viewport>
-          <Card.SurfaceRoot role='card--popover'>
+          <Card.Root>
             <Card.Heading>{target?.label}</Card.Heading>
             {target && <Card.Text classNames='truncate line-clamp-3'>{target.text}</Card.Text>}
-          </Card.SurfaceRoot>
+          </Card.Root>
         </Popover.Viewport>
         <Popover.Arrow />
       </Popover.Content>
@@ -95,12 +95,12 @@ const PreviewCard = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-assistant/ChatThread',
+  title: 'plugins/plugin-assistant/components/ChatThread',
   component: ChatThread,
   render: render(DefaultStory),
   decorators: [
-    withTheme,
-    withLayout({ container: 'column' }),
+    withTheme(),
+    withLayout({ layout: 'column' }),
     withClientProvider({
       createIdentity: true,
       createSpace: true,
@@ -135,7 +135,7 @@ export const Delayed: Story = {
 
 export const Raw: Story = {
   render: () => (
-    <div className='contents' style={{ '--user-fill': 'var(--dx-amberFill)' } as CSSProperties}>
+    <div className='contents' style={{ '--user-fill': 'var(--color-amber-fill)' } as CSSProperties}>
       <MarkdownStream content={TEXT} />
     </div>
   ),
@@ -143,7 +143,7 @@ export const Raw: Story = {
 
 export const Static: Story = {
   render: () => (
-    <div className='contents' style={{ '--user-fill': 'var(--dx-amberFill)' } as CSSProperties}>
+    <div className='contents' style={{ '--user-fill': 'var(--color-amber-fill)' } as CSSProperties}>
       <MarkdownStream content={TEXT} registry={componentRegistry} />
     </div>
   ),

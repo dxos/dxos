@@ -1,6 +1,11 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
+    "lib": [
+      "DOM",
+      "ESNext",
+      "WebWorker"
+    ],
     "types": [
       "@dxos/typings",
       "node"
@@ -24,6 +29,9 @@
     },
     {
       "path": "../../common/debug"
+    },
+    {
+      "path": "../../common/effect"
     },
     {
       "path": "../../common/feed-store"
@@ -50,6 +58,9 @@
       "path": "../../common/random-access-storage"
     },
     {
+      "path": "../../common/sql-sqlite"
+    },
+    {
       "path": "../../common/test-utils"
     },
     {
@@ -74,7 +85,7 @@
       "path": "../../core/echo/echo-protocol"
     },
     {
-      "path": "../../core/echo/indexing"
+      "path": "../../core/echo/feed"
     },
     {
       "path": "../../core/halo/credentials"

@@ -7,12 +7,10 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 
-import { ArtifactId, computeDiffsWithCursors } from '@dxos/assistant';
-import { Obj, Ref, Relation } from '@dxos/echo';
-import { Database } from '@dxos/echo';
+import { computeDiffsWithCursors } from '@dxos/assistant';
+import { Database, Obj, Ref, Relation, Type } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
 import { defineFunction } from '@dxos/functions';
-import { DXN } from '@dxos/keys';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 
@@ -21,14 +19,16 @@ export default defineFunction({
   name: 'Create Proposals',
   description: 'Proposes a set of changes to a document.',
   inputSchema: Schema.Struct({
-    id: ArtifactId,
+    doc: Type.Ref(Markdown.Document).annotations({
+      description: 'The ID of the document.',
+    }),
     diffs: Schema.Array(Schema.String).annotations({
       description: 'The diffs to propose for the document.',
     }),
   }),
   outputSchema: Schema.Void,
-  handler: Effect.fn(function* ({ data: { id, diffs: _diffs } }) {
-    const object = yield* Database.Service.resolve(DXN.parse(id), Markdown.Document);
+  handler: Effect.fn(function* ({ data: { doc, diffs: _diffs } }) {
+    const object = yield* Database.load(doc);
     const content = yield* Effect.promise(() => object.content.load());
     const accessor = createDocAccessor(content, ['content']);
 
@@ -47,8 +47,8 @@ export default defineFunction({
             [Relation.Target]: object,
             anchor: cursor,
           });
-          yield* Database.Service.add(thread);
-          yield* Database.Service.add(relation);
+          yield* Database.add(thread);
+          yield* Database.add(relation);
         }),
       ),
       Effect.allWith({ concurrency: 'unbounded' }),

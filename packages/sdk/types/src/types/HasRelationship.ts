@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Type } from '@dxos/echo';
+import { Obj, Relation, Type } from '@dxos/echo';
 
 import { Person } from './Person';
 
@@ -16,7 +16,7 @@ export const HasRelationship = Schema.Struct({
   }),
 })
   .pipe(
-    Type.Relation({
+    Type.relation({
       typename: 'dxos.org/relation/HasRelationship',
       version: '0.1.0',
       source: Person,
@@ -29,4 +29,4 @@ export const HasRelationship = Schema.Struct({
 
 export interface HasRelationship extends Schema.Schema.Type<typeof HasRelationship> {}
 
-export const make = (props: Obj.MakeProps<typeof HasRelationship>) => Obj.make(HasRelationship, props);
+export const make = (props: Relation.MakeProps<typeof HasRelationship>) => Relation.make(HasRelationship, props);

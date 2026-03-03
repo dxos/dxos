@@ -2,42 +2,33 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Atom, type Registry } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import * as Schema from 'effect/Schema';
+import * as Effect from 'effect/Effect';
 import React, { type KeyboardEvent, useCallback, useRef } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
-import {
-  Capabilities,
-  IntentPlugin,
-  LayoutAction,
-  SettingsPlugin,
-  contributes,
-  createResolver,
-  defineCapability,
-} from '@dxos/app-framework';
-import { useCapability } from '@dxos/app-framework/react';
+import { Capabilities, Capability } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { live } from '@dxos/live-object';
-import { AttentionPlugin } from '@dxos/plugin-attention';
-import { GraphPlugin } from '@dxos/plugin-graph';
-import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
-import { ThemePlugin } from '@dxos/plugin-theme';
+import { useAtomCapability } from '@dxos/app-framework/ui';
+import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
+import { OperationResolver } from '@dxos/operation';
+import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { IconButton, Input, Main, Toolbar } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { useAttention, useAttentionAttributes } from '@dxos/react-ui-attention';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
-import { defaultTx, mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
+import { NavTreeContainer } from '../../containers';
 import { NavTreePlugin } from '../../NavTreePlugin';
 import { storybookGraphBuilders } from '../../testing';
 import { translations } from '../../translations';
-import { NavTreeContainer } from '../NavTreeContainer';
 
 faker.seed(1234);
 
-const StoryState = defineCapability<{ tab: string }>('story-state');
+const StoryState = Capability.make<Atom.Atom<{ tab: string }>>('story-state');
 
 // TODO(burdon): Fix outline (e.g., button in sidebar nav is clipped when focused).
 // TODO(burdon): Consider similar containment of: Table, Sheet, Kanban Column, Form, etc.
@@ -56,7 +47,7 @@ const StoryPlankHeading = ({ attendableId }: { attendableId: string }) => {
         label='Test'
         iconOnly
         variant={hasAttention ? 'primary' : 'ghost'}
-        classNames='is-[--rail-action] bs-[--rail-action]'
+        classNames='w-(--dx-rail-action) h-(--dx-rail-action)'
       />
       <StackItem.ResizeHandle />
     </div>
@@ -79,22 +70,22 @@ const StoryPlank = ({ attendableId }: { attendableId: string }) => {
     <StackItem.Root
       item={{ id: attendableId }}
       {...attentionAttrs}
-      classNames='bg-baseSurface border-ie border-separator'
+      classNames='bg-base-surface border-e border-separator'
       size={30}
       onKeyDown={handleKeyDown}
       ref={rootElement}
     >
       <StoryPlankHeading attendableId={attendableId} />
       <StackItem.Content toolbar>
-        <Toolbar.Root classNames='border-be border-subduedSeparator'>
+        <Toolbar.Root classNames='border-b border-subdued-separator'>
           <Toolbar.Button>Test</Toolbar.Button>
         </Toolbar.Root>
 
-        <div className={mx(container, 'm-2 bg-activeSurface')}>
+        <div className={mx(container, 'm-2 bg-active-surface')}>
           <Input.Root>
             <Input.Label>Level 1 (group)</Input.Label>
           </Input.Root>
-          <div className={mx(container, 'bg-baseSurface')}>
+          <div className={mx(container, 'bg-base-surface')}>
             <Input.Root>
               <Input.Label>Level 2 (base)</Input.Label>
               <Input.TextArea placeholder='Enter text' />
@@ -107,10 +98,10 @@ const StoryPlank = ({ attendableId }: { attendableId: string }) => {
 };
 
 const DefaultStory = () => {
-  const state = useCapability(StoryState);
+  const state = useAtomCapability(StoryState);
 
   return (
-    <Main.Root complementarySidebarState='closed'>
+    <Main.Root navigationSidebarState='expanded'>
       <Main.NavigationSidebar label='Navigation' classNames='grid'>
         <NavTreeContainer tab={state.tab} />
       </Main.NavigationSidebar>
@@ -125,36 +116,38 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-navtree/NavTree',
+  title: 'plugins/plugin-navtree/components/NavTree',
   component: NavTreeContainer,
   render: DefaultStory,
   decorators: [
-    withTheme,
+    withTheme(),
+    withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [
-        ThemePlugin({ tx: defaultTx }),
-        GraphPlugin(),
-        IntentPlugin(),
-        SettingsPlugin(),
-        AttentionPlugin(),
+        ...corePlugins(),
+        StorybookPlugin({
+          initialState: { sidebarState: 'expanded' },
+        }),
+
         NavTreePlugin(),
-        StorybookLayoutPlugin({ initialState: { sidebarState: 'expanded' } }),
       ],
-      capabilities: (context) => [
-        contributes(StoryState, live({ tab: 'space-0' })),
-        contributes(Capabilities.AppGraphBuilder, storybookGraphBuilders(context)),
-        contributes(Capabilities.IntentResolver, [
-          createResolver({
-            intent: LayoutAction.UpdateLayout,
-            filter: (data): data is Schema.Schema.Type<typeof LayoutAction.SwitchWorkspace.fields.input> =>
-              Schema.is(LayoutAction.SwitchWorkspace.fields.input)(data),
-            resolve: ({ subject }) => {
-              const state = context.getCapability(StoryState);
-              state.tab = subject;
-            },
-          }),
-        ]),
-      ],
+      capabilities: () => {
+        const storyStateAtom = Atom.make({ tab: 'space-0' }).pipe(Atom.keepAlive);
+        return [
+          Capability.contributes(StoryState, storyStateAtom),
+          Capability.contributes(AppCapabilities.AppGraphBuilder, storybookGraphBuilders()),
+          Capability.contributes(Capabilities.OperationResolver, [
+            OperationResolver.make({
+              operation: LayoutOperation.SwitchWorkspace,
+              handler: ({ subject }) =>
+                Effect.gen(function* () {
+                  const registry: Registry.Registry = yield* Capability.get(Capabilities.AtomRegistry);
+                  registry.set(storyStateAtom, { tab: subject });
+                }),
+            }),
+          ]),
+        ];
+      },
     }),
   ],
   parameters: {
@@ -168,7 +161,7 @@ export default meta;
 type Story = StoryObj<typeof NavTreeContainer>;
 
 export const Default: Story = {
-  play: async ({ canvasElement }) => {
+  play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
     const canvas = within(canvasElement);
 
     // Find the element with treegrid role and click on its parent

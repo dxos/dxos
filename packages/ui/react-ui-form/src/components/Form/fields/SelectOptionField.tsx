@@ -9,7 +9,7 @@ import { PublicKey } from '@dxos/keys';
 import { type ChromaticPalette, IconButton, Input, Tag, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 import { HuePicker } from '@dxos/react-ui-pickers';
-import { hues, subtleHover } from '@dxos/react-ui-theme';
+import { hues, osTranslations, subtleHover } from '@dxos/ui-theme';
 
 import { translationKey } from '../../../translations';
 import { type FormFieldComponentProps, FormFieldLabel } from '../FormFieldComponent';
@@ -128,13 +128,13 @@ export const SelectOptionField = ({
             readonly={!!readonly}
           >
             {({ items }) => (
-              <div role='list' className='is-full overflow-auto'>
+              <div role='list' className='w-full overflow-auto'>
                 {items?.map((item) => (
                   <div key={item.id}>
                     <List.Item
                       role='button'
                       item={item}
-                      classNames={[subtleHover, 'flex flex-col cursor-pointer rounded-sm']}
+                      classNames={[subtleHover, 'flex flex-col cursor-pointer rounded-xs']}
                       aria-expanded={selected === item.id}
                     >
                       <div className='flex items-center'>
@@ -146,13 +146,13 @@ export const SelectOptionField = ({
                         <IconButton
                           iconOnly
                           variant='ghost'
-                          label={t(selected === item.id ? 'collapse label' : 'expand label', { ns: 'os' })}
+                          label={t(selected === item.id ? 'collapse label' : 'expand label', { ns: osTranslations })}
                           icon={selected === item.id ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
                           onClick={() => handleClick(item.id)}
                         />
                       </div>
                       {selected === item.id && (
-                        <div className='pli-cardSpacingInline plb-cardSpacingBlock flex flex-col gap-1 density-fine'>
+                        <div className='flex flex-col p-form-padding gap-1 dx-density-fine'>
                           {/* 16px to match drag handle width. */}
                           <Input.Label classNames='text-xs'>{t('select option label')}</Input.Label>
                           <div className='grid grid-cols-[1fr_min-content_min-content] gap-1'>
@@ -185,7 +185,7 @@ export const SelectOptionField = ({
                   label={t('select option add')}
                   onClick={handleAdd}
                   disabled={!!readonly}
-                  classNames='is-full'
+                  classNames='w-full'
                 />
               </div>
             )}

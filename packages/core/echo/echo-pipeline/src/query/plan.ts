@@ -3,7 +3,7 @@
 //
 
 import type { QueryAST } from '@dxos/echo-protocol';
-import type { EscapedPropPath } from '@dxos/indexing';
+import type { EscapedPropPath } from '@dxos/index-core';
 import type { DXN, ObjectId, SpaceId } from '@dxos/keys';
 
 export namespace QueryPlan {
@@ -33,7 +33,8 @@ export namespace QueryPlan {
     | TraverseStep
     | UnionStep
     | SetDifferenceStep
-    | OrderStep;
+    | OrderStep
+    | LimitStep;
 
   /**
    * Clear the current working set.
@@ -44,13 +45,36 @@ export namespace QueryPlan {
 
   /**
    * Select objects based on id, typename, or other predicates.
-   * Specifies the spaces to select from.
+   * Specifies the spaces and/or queues to select from.
+   * The results from spaces and queues are unioned together.
    */
   export type SelectStep = {
     _tag: 'SelectStep';
 
+    // TODO(dmaretskyi): Extract the object container spec into a separate type in ECHO-protocol that we can share with the indexer.
+
+    /**
+     * Select from specific spaces.
+     */
     spaces: readonly SpaceId[];
+
+    /**
+     * If true, select from all queues in the spaces specified by `spaces`.
+     */
+    allQueuesFromSpaces: boolean;
+
+    /**
+     * Select from specific queues.
+     */
+    queues: readonly DXN.String[];
+
     selector: Selector;
+
+    /**
+     * Optional limit on the number of results to select.
+     * When set, the index scan can be optimized to stop early.
+     */
+    limit?: number;
   };
 
   /**
@@ -91,6 +115,11 @@ export namespace QueryPlan {
 
     text: string;
     searchKind: TextSearchKind;
+
+    /**
+     * Optionally select only objects of the given typenames.
+     */
+    typename: DXN.String[] | null;
   };
 
   /**
@@ -141,7 +170,7 @@ export namespace QueryPlan {
   /**
    * Describes a traversal of the object graph.
    */
-  export type Traversal = ReferenceTraversal | RelationTraversal;
+  export type Traversal = ReferenceTraversal | RelationTraversal | HierarchyTraversal;
 
   /**
    * Traverse a reference connection.
@@ -151,8 +180,9 @@ export namespace QueryPlan {
 
     /**
      * Property path where the reference is located.
+     * If null, matches references from any property (only valid for incoming direction).
      */
-    property: EscapedPropPath;
+    property: EscapedPropPath | null;
 
     /**
      * outgoing: the reference points from the anchor object to the target.
@@ -172,6 +202,19 @@ export namespace QueryPlan {
      * There are for variants since each relation has two connectors (source & target) and there are two directions to traverse each.
      */
     direction: 'source-to-relation' | 'relation-to-source' | 'target-to-relation' | 'relation-to-target';
+  };
+
+  /**
+   * Traverse parent-child hierarchy.
+   */
+  export type HierarchyTraversal = {
+    _tag: 'HierarchyTraversal';
+
+    /**
+     * to-parent: traverse from child to parent.
+     * to-children: traverse from parent to children.
+     */
+    direction: 'to-parent' | 'to-children';
   };
 
   /**
@@ -203,5 +246,21 @@ export namespace QueryPlan {
 
     // Defaults to natural order if empty.
     order: readonly QueryAST.Order[];
+
+    /**
+     * Optional limit on the number of results to return after ordering.
+     * When set, the sorting can be optimized to only track the top N elements.
+     */
+    // TODO(dmaretskyi): Remove. This doesn't belong here.
+    limit?: number;
+  };
+
+  /**
+   * Limit the number of results.
+   */
+  export type LimitStep = {
+    _tag: 'LimitStep';
+
+    limit: number;
   };
 }

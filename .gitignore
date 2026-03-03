@@ -1,4 +1,8 @@
+.worktrees/
+.claude/worktrees/
+
 # Logs
+logs/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -172,9 +176,13 @@ typedoc
 # aider assistant temp files
 .aider*
 
+# playwright MCP temp files
+.playwright-mcp/
+
 vite.config.*.timestamp*
 vitest.config.*.timestamp*
 
 # moon
 .moon/cache
 .moon/docker
+node_modules

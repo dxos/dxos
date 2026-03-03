@@ -2,15 +2,20 @@
 // Copyright 2025 DXOS.org
 //
 
+import type * as Tool from '@effect/ai/Tool';
 import type * as Toolkit from '@effect/ai/Toolkit';
-import * as Array from 'effect/Array';
+import type { Registry } from '@effect-atom/atom-react';
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
+import * as Layer from 'effect/Layer';
 
+import { type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
 import { Resource } from '@dxos/context';
 import { Obj } from '@dxos/echo';
-import { Database } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
+import { acquireReleaseResource } from '@dxos/effect';
+import { QueueService } from '@dxos/functions';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
@@ -24,11 +29,23 @@ import {
 
 import { AiContextBinder, AiContextService, type ContextBinding } from './context';
 
-export interface AiConversationRunParams {
+export interface AiConversationRunProps {
   prompt: string;
   system?: string;
   observer?: GenerationObserver;
 }
+
+export type AiConversationOptions = {
+  queue: Queue<Message.Message | ContextBinding>;
+  toolkit?: Toolkit.Any;
+  registry?: Registry.Registry;
+};
+
+// TODO(dmaretskyi): Take from model characteristics. opus has 200k max tokens.
+/**
+ * Summarization threshold in tokens.
+ */
+const SUMMARY_THRESHOLD = 80_000;
 
 /**
  * Durable conversation state (initiated by users and agents) backed by a Queue.
@@ -36,37 +53,30 @@ export interface AiConversationRunParams {
  */
 export class AiConversation extends Resource {
   /**
-   * Message and binding queue.
+   * Blueprints and objects bound to the conversation.
    */
+  private readonly _binder: AiContextBinder;
   private readonly _queue: Queue<Message.Message | ContextBinding>;
+  private readonly _toolkit?: Toolkit.Any;
 
-  /**
-   * Blueprints bound to the conversation.
-   */
-  private readonly _context: AiContextBinder;
-
-  /**
-   * Toolkit from the current session request.
-   */
-  private _toolkit: Toolkit.WithHandler<any> | undefined;
-
-  public constructor(queue: Queue<Message.Message | ContextBinding>) {
+  public constructor(options: AiConversationOptions) {
     super();
-    this._queue = queue;
-    this._context = new AiContextBinder(this._queue);
+    this._queue = options.queue;
+    this._toolkit = options.toolkit;
+    invariant(this._queue);
+    this._binder = new AiContextBinder({ queue: this._queue, registry: options.registry });
   }
 
   protected override async _open(): Promise<void> {
-    // TODO(wittjosiah): Pass in parent context?
-    await this._context.open();
+    await this._binder.open(this._ctx);
   }
 
-  protected override async _close(): Promise<void> {
-    await this._context.close();
+  public get queue() {
+    return this._queue;
   }
 
   public get context() {
-    return this._context;
+    return this._binder;
   }
 
   public get toolkit() {
@@ -74,55 +84,135 @@ export class AiConversation extends Resource {
   }
 
   public async getHistory(): Promise<Message.Message[]> {
-    const queueItems = await this._queue.queryObjects();
+    const queueItems = await this._queue.queryObjects(); // TODO(burdon): Update.
     return queueItems.filter(Obj.instanceOf(Message.Message));
+  }
+
+  getTools(): Effect.Effect<Record<string, Tool.Any>, never, ToolExecutionService | ToolResolverService> {
+    return Effect.gen(this, function* () {
+      const blueprints = this.context.getBlueprints();
+      const tookit = yield* createToolkit({ toolkit: this._toolkit, blueprints });
+      return tookit.tools;
+    }).pipe(Effect.orDie);
   }
 
   /**
    * Creates a new cancelable request effect.
    */
-  createRequest(
-    params: AiConversationRunParams,
+  public createRequest(
+    params: AiConversationRunProps,
   ): Effect.Effect<Message.Message[], AiSessionRunError, AiSessionRunRequirements> {
     return Effect.gen(this, function* () {
-      const session = new AiSession();
       const history = yield* Effect.promise(() => this.getHistory());
 
-      // Get context objects.
-      const context = yield* Effect.promise(() => this.context.query());
-      const blueprints = yield* Effect.forEach(context.blueprints.values(), Database.Service.loadOption).pipe(
-        Effect.map(Array.filter(Option.isSome)),
-        Effect.map(Array.map((option) => option.value)),
-      );
-      const objects = yield* Effect.forEach(context.objects.values(), Database.Service.loadOption).pipe(
-        Effect.map(Array.filter(Option.isSome)),
-        Effect.map(Array.map((option) => option.value)),
-      );
-
       // Create toolkit.
-      const toolkit = yield* createToolkit({ blueprints });
-      this._toolkit = toolkit;
+      const blueprints = this.context.getBlueprints();
+      const toolkit = yield* createToolkit({
+        toolkit: this._toolkit,
+        blueprints,
+      });
 
-      const start = Date.now();
+      // Context objects.
+      const objects = this.context.getObjects();
+
       log('run', {
         history: history.length,
         blueprints: blueprints.length,
+        tools: Object.keys(toolkit.tools).length,
         objects: objects.length,
-        tools: this._toolkit?.tools.length ?? 0,
       });
 
       // Process request.
-      const messages = yield* session.run({ history, blueprints, objects, toolkit, ...params }).pipe(
-        Effect.provideService(AiContextService, {
-          binder: this.context,
-        }),
-      );
+      const session = new AiSession({
+        summarizationThreshold: SUMMARY_THRESHOLD,
+      });
+      const messages = yield* session
+        .run({
+          history,
+          blueprints,
+          toolkit,
+          objects,
+          ...params,
+          onOutput: (message) => Effect.promise(() => this._queue.append([message])),
+        })
+        .pipe(
+          Effect.provide(
+            Layer.mergeAll(
+              Layer.succeed(AiContextService, {
+                binder: this.context,
+              }),
+              Layer.succeed(AiConversationService, this),
+            ),
+          ),
+        );
 
-      log('result', { messages: messages.length, duration: Date.now() - start });
+      log('result', {
+        messages: messages.length,
+        duration: session.duration,
+        toolCalls: session.toolCalls,
+      });
 
-      // Append to queue.
-      yield* Effect.promise(() => this._queue.append(messages));
       return messages;
-    }).pipe(Effect.withSpan('AiConversation.request'));
+    });
   }
 }
+
+/**
+ * Gives access to the ai conversation.
+ */
+export class AiConversationService extends Context.Tag('@dxos/assistant/AiConversationService')<
+  AiConversationService,
+  AiConversation
+>() {
+  /**
+   * Create a new conversation layer from options.
+   */
+  static layer = (options: AiConversationOptions): Layer.Layer<AiConversationService | AiContextService> =>
+    aiContextFromConversation.pipe(
+      Layer.provideMerge(
+        Layer.scoped(
+          AiConversationService,
+          Effect.gen(function* () {
+            const conversation = yield* acquireReleaseResource(() => new AiConversation(options));
+            return conversation;
+          }),
+        ),
+      ),
+    );
+
+  /**
+   * Create a new conversation with a new queue.
+   */
+  static layerNewQueue = (
+    options?: Omit<AiConversationOptions, 'queue'>,
+  ): Layer.Layer<AiConversationService | AiContextService, never, QueueService> =>
+    Layer.unwrapScoped(
+      Effect.gen(function* () {
+        return AiConversationService.layer({
+          ...options,
+          queue: yield* QueueService.createQueue<Message.Message | ContextBinding>(),
+        });
+      }),
+    );
+
+  /**
+   * Run a prompt in the current conversation.
+   */
+  static run = (
+    params: AiConversationRunProps,
+  ): Effect.Effect<Message.Message[], AiSessionRunError, AiSessionRunRequirements | AiConversationService> =>
+    Effect.gen(function* () {
+      const conversation = yield* AiConversationService;
+      return yield* conversation.createRequest(params);
+    });
+}
+
+const aiContextFromConversation = Layer.effect(
+  AiContextService,
+  Effect.gen(function* () {
+    const conversation = yield* AiConversationService;
+    return {
+      binder: conversation.context,
+    };
+  }),
+);

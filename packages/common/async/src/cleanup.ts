@@ -12,7 +12,10 @@ export type CleanupFn = () => void;
  */
 export const combine = (...cleanupFns: (CleanupFn | CleanupFn[])[]): CleanupFn => {
   return () => {
-    cleanupFns.flat().forEach((cleanupFn) => cleanupFn());
+    cleanupFns
+      .flat()
+      .filter(Boolean)
+      .forEach((cleanupFn) => cleanupFn());
   };
 };
 
@@ -37,6 +40,7 @@ type EventMap<T> = T extends Window
 /**
  * Add the event listener and return a cleanup function.
  * Can be used in effect hooks in conjunction with `combine`.
+ * @deprecated use bind-event-listener
  */
 export const addEventListener = <T extends EventTarget, K extends keyof EventMap<T>>(
   target: T,
@@ -51,8 +55,8 @@ export const addEventListener = <T extends EventTarget, K extends keyof EventMap
 export class SubscriptionList {
   private readonly _cleanups: CleanupFn[] = [];
 
-  add(cb: CleanupFn): this {
-    this._cleanups.push(cb);
+  add(...cb: CleanupFn[]): this {
+    this._cleanups.push(...cb);
     return this;
   }
 

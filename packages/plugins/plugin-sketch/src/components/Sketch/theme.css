@@ -4,7 +4,7 @@
 
     .tlui-toolbar__tools, .tlui-menu, .tlui-style-panel__wrapper {
       box-shadow: none;
-      border: 1px solid var(--dx-separator);
+      border: 1px solid var(--color-separator);
     }
   }
 
@@ -13,7 +13,7 @@
 
     .tlui-toolbar__tools, .tlui-menu, .tlui-style-panel__wrapper {
       box-shadow: none;
-      border: 1px solid var(--dx-separator);
+      border: 1px solid var(--color-separator);
     }
   }
 }

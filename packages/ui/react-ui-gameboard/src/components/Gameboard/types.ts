@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type ReadonlySignal } from '@preact/signals-core';
+import { type Atom } from '@effect-atom/atom-react';
 
 // TODO(burdon): Don't make this assumption.
 export type Player = 'black' | 'white';
@@ -54,8 +54,7 @@ export const isEqualLocation = (l1: Location, l2: Location): boolean => l1[0] ==
 export interface GameboardModel<T extends PieceType = PieceType> {
   readonly: boolean;
   turn: Player;
-  /** @reactive */
-  pieces: ReadonlySignal<PieceMap<T>>;
+  pieces: Atom.Atom<PieceMap<T>>;
   isValidMove: (move: Move) => boolean;
   canPromote?: (move: Move) => boolean;
 }

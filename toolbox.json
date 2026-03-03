@@ -4,7 +4,7 @@
     "fixedKeys": ["$schema", "name", "tags", "sourceRoot", "projectType", "targets"]
   },
   "package": {
-    "commonKeys": ["license", "author", "homepage", "bugs"],
+    "commonKeys": ["license", "author", "homepage", "bugs", "repository"],
     "withCustomExports": [
       "@dxos/async",
       "@dxos/codec-protobuf",

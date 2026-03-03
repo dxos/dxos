@@ -6,7 +6,7 @@ import React from 'react';
 
 import { useClient } from '@dxos/react-client';
 import { type PeerSyncState, type Space, type SpaceId, SpaceState, useSpace } from '@dxos/react-client/echo';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 // TODO(wittjosiah): Factor out (copied from plugin-space).
 export const getSpaceDisplayName = (space: Space, { personal }: { personal?: boolean } = {}): string => {
@@ -69,8 +69,8 @@ export const SpaceRow = ({
         void navigator.clipboard.writeText(spaceId);
       }}
     >
-      <span className='is-1/2 truncate'>{spaceName}</span>
-      <span className={mx('pli-1 plb-0.5 rounded text-xs shrink-0')}>
+      <span className='w-1/2 truncate'>{spaceName}</span>
+      <span className={mx('px-1 py-0.5 rounded-sm text-xs shrink-0')}>
         {isSynced ? `✅ total: ${totalDocumentCount}` : `↕ syncing: ${unsyncedDocumentCount}`}
       </span>
     </div>

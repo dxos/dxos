@@ -46,6 +46,9 @@
       "path": "../../../common/random"
     },
     {
+      "path": "../../../common/sql-sqlite"
+    },
+    {
       "path": "../../../common/test-utils"
     },
     {
@@ -73,13 +76,7 @@
       "path": "../echo-protocol"
     },
     {
-      "path": "../echo-signals"
-    },
-    {
-      "path": "../indexing"
-    },
-    {
-      "path": "../live-object"
+      "path": "../feed"
     }
   ]
 }

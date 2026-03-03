@@ -13,7 +13,7 @@ import { sleep } from './timeout';
 const INIT_RESTART_DELAY = 100;
 const DEFAULT_MAX_RESTART_DELAY = 5000;
 
-export type PersistentLifecycleParams<T> = {
+export type PersistentLifecycleProps<T> = {
   /**
    * Create connection.
    * If promise resolves successfully, connection is considered established.
@@ -51,7 +51,7 @@ export class PersistentLifecycle<T> extends Resource {
   private _restartTask?: DeferredTask = undefined;
   private _restartAfter = 0;
 
-  constructor({ start, stop, onRestart, maxRestartDelay = DEFAULT_MAX_RESTART_DELAY }: PersistentLifecycleParams<T>) {
+  constructor({ start, stop, onRestart, maxRestartDelay = DEFAULT_MAX_RESTART_DELAY }: PersistentLifecycleProps<T>) {
     super();
     this._start = start;
     this._stop = stop;

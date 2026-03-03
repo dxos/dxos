@@ -87,7 +87,7 @@ export type GraphDiagnostic = {
   property?: string;
 };
 
-export type CreateTopologyParams = {
+export type CreateTopologyProps = {
   graph: ComputeGraphModel;
   computeMetaResolver: (node: ComputeNode) => Promise<ComputeNodeMeta>;
 };
@@ -100,7 +100,7 @@ export type CreateTopologyParams = {
  * @param params.computeMetaResolver - Function that resolves compute metadata for a given node
  * @returns A topology containing nodes with their inputs/outputs and any diagnostics
  */
-export const createTopology = async ({ graph, computeMetaResolver }: CreateTopologyParams): Promise<Topology> => {
+export const createTopology = async ({ graph, computeMetaResolver }: CreateTopologyProps): Promise<Topology> => {
   const topology: Omit<Topology, 'inputSchema' | 'outputSchema'> = {
     nodes: [],
     diagnostics: [],

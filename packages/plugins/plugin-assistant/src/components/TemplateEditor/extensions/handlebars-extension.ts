@@ -19,8 +19,7 @@ import {
   keymap,
 } from '@codemirror/view';
 
-import { Domino } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { Domino, mx } from '@dxos/ui';
 
 export type HandlebarsOptions = {};
 
@@ -65,7 +64,7 @@ const regex = {
   url: /[\w.-]+\.[\w.-]+\/[\w/]+/g,
 };
 
-const tagPadding = 'mli-0.5 pli-1 rounded-sm';
+const tagPadding = 'mx-0.5 px-1 rounded-xs';
 
 /**
  * ViewPlugin that decorates Handlebars syntax.
@@ -87,7 +86,11 @@ const handlebarsHighlightPlugin = ViewPlugin.fromClass(
     // NOTE: Decorations may clash with other extensions (e.g., markdown).
     buildDecorations(view: EditorView) {
       const selection = view.state.selection.main;
-      const decorations: Array<{ from: number; to: number; decoration: Decoration }> = [];
+      const decorations: Array<{
+        from: number;
+        to: number;
+        decoration: Decoration;
+      }> = [];
 
       for (const { from, to } of view.visibleRanges) {
         const text = view.state.doc.sliceString(from, to);
@@ -121,7 +124,9 @@ const handlebarsHighlightPlugin = ViewPlugin.fromClass(
             decorations.push({
               from: start,
               to: end,
-              decoration: Decoration.mark({ class: mx('dx-tag--blue', tagPadding) }),
+              decoration: Decoration.mark({
+                class: mx('dx-tag--blue', tagPadding),
+              }),
             });
           }
         }
@@ -153,14 +158,14 @@ const handlebarsHighlightPlugin = ViewPlugin.fromClass(
               decorations.push({
                 from: idx,
                 to: end,
-                decoration: Decoration.mark({ class: 'text-greenText' }),
+                decoration: Decoration.mark({ class: 'text-green-text' }),
               });
               end = idx;
             }
             decorations.push({
               from: start,
               to: end,
-              decoration: Decoration.mark({ class: 'text-blueText' }),
+              decoration: Decoration.mark({ class: 'text-blue-text' }),
             });
           }
         }
@@ -174,7 +179,7 @@ const handlebarsHighlightPlugin = ViewPlugin.fromClass(
             decorations.push({
               from: start,
               to: end,
-              decoration: Decoration.mark({ class: 'text-greenText' }),
+              decoration: Decoration.mark({ class: 'text-green-text' }),
             });
           }
         }
@@ -222,7 +227,7 @@ class DXNWidget extends WidgetType {
         return part;
       })
       .join(':');
-    return Domino.of('span').classNames(['font-mono dx-tag--blue', tagPadding]).text(text).build();
+    return Domino.of('span').classNames(mx('font-mono dx-tag--blue', tagPadding)).text(text).root;
   }
 }
 

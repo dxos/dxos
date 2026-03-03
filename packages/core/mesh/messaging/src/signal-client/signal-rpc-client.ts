@@ -36,7 +36,7 @@ export type SignalCallbacks = {
   getMetadata?: () => any;
 };
 
-export type SignalRPCClientParams = {
+export type SignalRPCClientProps = {
   url: string;
   callbacks?: SignalCallbacks;
 };
@@ -61,7 +61,7 @@ export class SignalRPCClient {
 
   private readonly _monitor = new SignalRpcClientMonitor();
 
-  constructor({ url, callbacks = {} }: SignalRPCClientParams) {
+  constructor({ url, callbacks = {} }: SignalRPCClientProps) {
     const traceId = PublicKey.random().toHex();
     log.trace('dxos.mesh.signal-rpc-client.constructor', trace.begin({ id: traceId }));
     this._url = url;

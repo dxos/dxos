@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { signal } from '@preact/signals-core';
+import { Atom, type Registry } from '@effect-atom/atom-react';
 import * as Predicate from 'effect/Predicate';
 
 import { Obj } from '@dxos/echo';
@@ -15,8 +15,8 @@ import {
   type DxGridPlaneRange,
   toPlaneCellIndex,
 } from '@dxos/react-ui-grid';
-import { mx } from '@dxos/react-ui-theme';
 import { type FieldType, VIEW_FIELD_LIMIT } from '@dxos/schema';
+import { mx } from '@dxos/ui-theme';
 
 import { tableButtons, tableControls } from '../util';
 
@@ -29,15 +29,20 @@ import { type TableModel, type TableRow } from './table-model';
  * different grid planes.
  */
 export class TablePresentation<T extends TableRow = TableRow> {
+  private readonly _registry: Registry.Registry;
+  private readonly _visibleRange: Atom.Writable<DxGridPlaneRange>;
   private fieldProjectionCache = new Map<string, ReturnType<typeof this.model.projection.getFieldProjection>>();
 
   constructor(
+    registry: Registry.Registry,
     private readonly model: TableModel<T>,
-    private readonly _visibleRange = signal<DxGridPlaneRange>({
+  ) {
+    this._registry = registry;
+    this._visibleRange = Atom.make<DxGridPlaneRange>({
       start: { row: 0, col: 0 },
       end: { row: 0, col: 0 },
-    }),
-  ) {}
+    });
+  }
 
   public getCells(range: DxGridPlaneRange, plane: DxGridPlane): DxGridPlaneCells {
     // Clear cache at the start of each render pass
@@ -47,7 +52,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
 
     switch (plane) {
       case 'grid':
-        this._visibleRange.value = range;
+        this._registry.set(this._visibleRange, range);
         cells = this.getMainGridCells(range);
         break;
       case 'frozenRowsStart':
@@ -205,7 +210,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
       const targetObj = getValue(obj, field.path)?.target;
       if (targetObj) {
         const dxn = Obj.getDXN(targetObj)?.toString();
-        cell.accessoryHtml = `<div role="none" class="absolute inline-end-0 inset-block-0 p-[--dx-grid-cell-content-padding-block]"><dx-anchor refId=${dxn} class="dx-button is-6 aspect-square min-bs-0" data-dx-grid-action="accessory"><dx-icon icon="ph--link-simple--regular"/></dx-anchor></div>`;
+        cell.accessoryHtml = `<div role="none" class="absolute end-0 inset-y-0 p-(--dx-grid-cell-content-padding-block)"><dx-anchor dxn=${dxn} class="dx-button w-6 aspect-square min-h-0" data-dx-grid-action="accessory"><dx-icon icon="ph--link-simple--regular"/></dx-anchor></div>`;
       }
     }
 
@@ -260,7 +265,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
 
   private getMainGridCells(range: DxGridPlaneRange): DxGridPlaneCells {
     const cells: DxGridPlaneCells = {};
-    const fields = this.model.projection?.fields ?? [];
+    const fields = this.model.projection?.getFields() ?? [];
 
     for (let row = range.start.row; row <= range.end.row && row < this.model.getRowCount(); row++) {
       for (let col = range.start.col; col <= range.end.col && col < fields.length; col++) {
@@ -269,7 +274,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
           continue;
         }
 
-        this.createDataCell(cells, this.model.rows.value[row], field, col, row);
+        this.createDataCell(cells, this.model.getRows()[row], field, col, row);
       }
     }
 
@@ -278,8 +283,8 @@ export class TablePresentation<T extends TableRow = TableRow> {
 
   private getDraftRowCells(range: DxGridPlaneRange): DxGridPlaneCells {
     const cells: DxGridPlaneCells = {};
-    const fields = this.model.projection?.fields ?? [];
-    const draftRows = this.model.draftRows.value;
+    const fields = this.model.projection?.getFields() ?? [];
+    const draftRows = this.model.getDraftRows();
 
     // Return cells of the CTA row if no draft row is active
     if (draftRows.length === 0) {
@@ -319,22 +324,22 @@ export class TablePresentation<T extends TableRow = TableRow> {
 
   private getHeaderCells(range: DxGridPlaneRange): DxGridPlaneCells {
     const cells: DxGridPlaneCells = {};
-    const fields = this.model.projection?.fields ?? [];
+    const fields = this.model.projection?.getFields() ?? [];
+    const currentSort = this.model.getSorting();
     for (let col = range.start.col; col <= range.end.col && col < fields.length; col++) {
       const { field, props } = this.model.projection.getFieldProjection(fields[col].id);
-      const sorting = this.model.sorting?.sorting;
-      const direction = sorting?.fieldId === field.id ? sorting.direction : undefined;
+      const direction = currentSort?.fieldId === field.id ? currentSort.direction : undefined;
 
       cells[toPlaneCellIndex({ col, row: 0 })] = {
         // TODO(burdon): Use same logic as form for fallback title.
         value: '',
         resizeHandle: 'col',
         accessoryHtml: `
-          <span class="grow min-is-0 truncate">${props.title ?? field.path}</span>
+          <span class="grow min-w-0 truncate">${props.title ?? field.path}</span>
           ${direction !== undefined ? tableButtons.sort.render({ fieldId: field.id, direction }) : ''}
           ${tableButtons.columnSettings.render({ fieldId: field.id })}
         `,
-        className: '!bg-toolbarSurface !text-description [&>div]:flex [&>div]:items-stretch',
+        className: '!bg-toolbar-surface text-description! [&>div]:flex [&>div]:items-stretch',
       };
     }
 
@@ -377,7 +382,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
     if (!this.model.features.selection.enabled || this.model.selection.selectionMode === 'single') {
       return {
         [toPlaneCellIndex({ col: 0, row: 0 })]: {
-          className: '!bg-toolbarSurface',
+          className: '!bg-toolbar-surface',
           readonly: true,
           value: '',
         },
@@ -389,9 +394,9 @@ export class TablePresentation<T extends TableRow = TableRow> {
         accessoryHtml: tableControls.checkbox.render({
           rowIndex: 0,
           header: true,
-          checked: this.model.selection.allRowsSeleted.value,
+          checked: this.model.selection.allRowsSelected,
         }),
-        className: '!bg-toolbarSurface',
+        className: '!bg-toolbar-surface',
         readonly: true,
         value: '',
       },
@@ -403,10 +408,10 @@ export class TablePresentation<T extends TableRow = TableRow> {
       [toPlaneCellIndex({ col: 0, row: 0 })]: {
         accessoryHtml: this.model.features.schemaEditable
           ? tableButtons.addColumn.render({
-              disabled: (this.model.projection?.fields?.length ?? 0) >= VIEW_FIELD_LIMIT,
+              disabled: (this.model.projection?.getFields()?.length ?? 0) >= VIEW_FIELD_LIMIT,
             })
           : undefined,
-        className: '!bg-toolbarSurface',
+        className: '!bg-toolbar-surface',
         readonly: true,
         value: '',
       },
@@ -415,7 +420,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
 
   private getDraftActionCells(range: DxGridPlaneRange): DxGridPlaneCells {
     const cells: DxGridPlaneCells = {};
-    const draftRows = this.model.draftRows.value;
+    const draftRows = this.model.getDraftRows();
 
     // Return cells of the CTA row if no draft row is active
     if (draftRows.length === 0) {
@@ -442,7 +447,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
 
   private getDraftIconCells(range: DxGridPlaneRange): DxGridPlaneCells {
     const cells: DxGridPlaneCells = {};
-    const draftRows = this.model.draftRows.value;
+    const draftRows = this.model.getDraftRows();
 
     for (let row = range.start.row; row <= range.end.row; row++) {
       cells[toPlaneCellIndex({ col: 0, row })] = {
@@ -460,7 +465,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
 export const cellClassesForRowSelection = (selected: boolean, selectionMode: SelectionMode) => {
   if (!selected) {
     if (selectionMode === 'single') {
-      return ['!cursor-pointer'];
+      return ['cursor-pointer!'];
     } else {
       return undefined;
     }
@@ -468,8 +473,8 @@ export const cellClassesForRowSelection = (selected: boolean, selectionMode: Sel
 
   switch (selectionMode) {
     case 'single':
-      return ['!bg-currentRelated dx-grid__cell--no-focus-unfurl hover:bg-hoverSurface !cursor-pointer'];
+      return ['dx-grid__cell--no-focus-unfurl !bg-current-surface hover:bg-hover-surface cursor-pointer!'];
     case 'multiple':
-      return ['!bg-gridCellSelected'];
+      return ['!bg-grid-cell-selected'];
   }
 };

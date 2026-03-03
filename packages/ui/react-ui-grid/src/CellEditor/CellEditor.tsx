@@ -8,15 +8,14 @@ import { EditorView, keymap } from '@codemirror/view';
 import React, { type KeyboardEvent } from 'react';
 
 import { useThemeContext } from '@dxos/react-ui';
+import { type UseTextEditorProps, useTextEditor } from '@dxos/react-ui-editor';
 import {
   type ThemeExtensionsOptions,
-  type UseTextEditorProps,
   createBasicExtensions,
   createThemeExtensions,
   filterChars,
-  useTextEditor,
-} from '@dxos/react-ui-editor';
-import { mx } from '@dxos/react-ui-theme';
+} from '@dxos/ui-editor';
+import { mx } from '@dxos/ui-theme';
 
 import { type GridEditBox } from '../Grid';
 
@@ -123,7 +122,7 @@ export type CellEditorProps = {
 } & Pick<UseTextEditorProps, 'autoFocus'> &
   Pick<ThemeExtensionsOptions, 'slots'>;
 
-export const CellEditor = ({ value, extensions, box, gridId, onBlur, autoFocus, slots }: CellEditorProps) => {
+export const CellEditor = ({ value, extensions, box, gridId, autoFocus, slots, onBlur }: CellEditorProps) => {
   const { themeMode } = useThemeContext();
   const { parentRef } = useTextEditor(() => {
     return {
@@ -145,18 +144,18 @@ export const CellEditor = ({ value, extensions, box, gridId, onBlur, autoFocus, 
           slots: {
             editor: {
               className: mx(
-                '!min-is-full !is-min !max-is-[--dx-grid-cell-editor-max-inline-size] !min-bs-full !max-bs-[--dx-grid-cell-editor-max-block-size]',
+                'min-w-full! w-min! !max-w-(--dx-grid-cell-editor-max-w-size) min-h-full! !max-h-(--dx-grid-cell-editor-max-h-size)',
                 slots?.editor?.className,
               ),
             },
             scroll: {
               className: mx(
-                '!overflow-x-hidden !plb-[max(0,calc(var(--dx-grid-cell-editor-padding-block)-1px))] !pie-0 !pis-[--dx-grid-cell-editor-padding-inline]',
+                'overflow-x-hidden! !py-[max(0,calc(var(--dx-grid-cell-editor-padding-block)-1px))] pe-0! !pl-(--dx-grid-cell-editor-padding-inline)',
                 slots?.scroll?.className,
               ),
             },
             content: {
-              className: mx('!break-normal', slots?.content?.className),
+              className: mx('break-normal!', slots?.content?.className),
             },
           },
         }),
@@ -174,7 +173,7 @@ export const CellEditor = ({ value, extensions, box, gridId, onBlur, autoFocus, 
         insetBlockStart: box?.insetBlockStart ?? '0px',
         minInlineSize: box?.inlineSize ?? '180px',
         minBlockSize: box?.blockSize ?? '30px',
-        ...{ '--dx-gridCellWidth': `${box?.inlineSize ?? 200}px` },
+        ...{ '--dx-grid-cell-width': `${box?.inlineSize ?? 200}px` },
       }}
       {...(gridId && { 'data-grid': gridId })}
     />

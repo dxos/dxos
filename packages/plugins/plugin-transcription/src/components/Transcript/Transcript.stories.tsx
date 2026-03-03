@@ -3,24 +3,22 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
+import type * as Types from 'effect/Types';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 
-import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Key } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
-import { SpacePlugin } from '@dxos/plugin-space';
-import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
-import { ThemePlugin } from '@dxos/plugin-theme';
+import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { useMembers, useSpace } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { defaultTx } from '@dxos/react-ui-theme';
 import { TestSchema } from '@dxos/schema/testing';
-import { type Message, Organization, Person } from '@dxos/types';
+import { type ContentBlock, type Message, Organization, Person } from '@dxos/types';
 
 import { useQueueModelAdapter } from '../../hooks';
 import { SerializationModel } from '../../model';
@@ -31,8 +29,9 @@ import {
   useTestTranscriptionQueueWithEntityExtraction,
 } from '../../testing';
 import { translations } from '../../translations';
+import { renderByline } from '../../util';
 
-import { TranscriptView, type TranscriptViewProps, renderByline } from './Transcript';
+import { TranscriptView, type TranscriptViewProps } from './Transcript';
 
 faker.seed(1);
 
@@ -45,10 +44,10 @@ const TranscriptContainer: FC<
     onRunningChange: (running: boolean) => void;
     onReset?: () => void;
   }
-> = ({ space, model, running, onRunningChange, onReset }) => {
+> = ({ model, running, onRunningChange, onReset }) => {
   return (
     <div className='grid grid-rows-[1fr_40px] grow divide-y divide-separator'>
-      <TranscriptView space={space} model={model} />
+      <TranscriptView model={model} />
       <div className='grid grid-cols-[1fr_16rem] overflow-hidden'>
         <div className='flex items-center'>
           <SyntaxHighlighter language='json' className='text-sm'>
@@ -81,7 +80,8 @@ const BasicStory = ({ messages: initialMessages = [], ...props }: StoryProps) =>
     [initialMessages, reset],
   );
   const [running, setRunning] = useState(true);
-  const [currentMessage, setCurrentMessage] = useState<Message.Message | null>(null);
+  // Use mutable type for local message building (not ECHO-managed).
+  const [currentMessage, setCurrentMessage] = useState<Types.Mutable<Message.Message> | null>(null);
   useEffect(() => {
     if (!running) {
       return;
@@ -102,7 +102,7 @@ const BasicStory = ({ messages: initialMessages = [], ...props }: StoryProps) =>
         return;
       }
 
-      currentMessage.blocks.push(builder.createBlock());
+      (currentMessage.blocks as ContentBlock.Any[]).push(builder.createBlock());
       model.updateChunk(currentMessage);
     }, 3_000);
 
@@ -137,19 +137,12 @@ const QueueStory = ({
 }: StoryProps & { queueId: Key.ObjectId; onReset: () => void }) => {
   const [running, setRunning] = useState(true);
   const space = useSpace();
-  const members = useMembers(space?.key).map((member) => member.identity);
+  const members = useMembers(space?.id).map((member) => member.identity);
   const queue = useTestTranscriptionQueue(space, queueId, running, 2_000);
   const model = useQueueModelAdapter(renderByline(members), queue, initialMessages);
 
   return (
-    <TranscriptContainer
-      space={space}
-      model={model}
-      running={running}
-      onRunningChange={setRunning}
-      onReset={onReset}
-      {...props}
-    />
+    <TranscriptContainer model={model} running={running} onRunningChange={setRunning} onReset={onReset} {...props} />
   );
 };
 
@@ -161,7 +154,7 @@ const EntityExtractionQueueStory = () => {
   const queue = useTestTranscriptionQueueWithEntityExtraction(space, undefined, running, 2_000);
   const model = useQueueModelAdapter(renderByline(members), queue, []);
 
-  return <TranscriptContainer space={space} model={model} running={running} onRunningChange={setRunning} />;
+  return <TranscriptContainer model={model} running={running} onRunningChange={setRunning} />;
 };
 
 /**
@@ -178,25 +171,23 @@ const QueueStoryWrapper = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-transcription/Transcript',
+  title: 'plugins/plugin-transcription/components/Transcript',
   decorators: [
-    withTheme,
+    withTheme(),
+    withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [
+        ...corePlugins(),
+        StorybookPlugin({}),
         ClientPlugin({
           types: [TestItem, TestSchema.DocumentType, Person.Person, Organization.Organization],
-          onClientInitialized: async ({ client }) => {
-            await client.halo.createIdentity();
-          },
+          onClientInitialized: ({ client }) =>
+            Effect.gen(function* () {
+              yield* Effect.promise(() => client.halo.createIdentity());
+            }),
         }),
-        SpacePlugin({}),
-        IntentPlugin(),
-        SettingsPlugin(),
 
-        // UI
         PreviewPlugin(),
-        ThemePlugin({ tx: defaultTx }),
-        StorybookLayoutPlugin({}),
       ],
     }),
   ],
@@ -208,12 +199,22 @@ const meta = {
 
 export default meta;
 
-export const Default: StoryObj<typeof BasicStory> = {
-  render: BasicStory,
+const DefaultStory = (props: StoryProps) => {
+  const [messages, setMessages] = useState<Message.Message[]>([]);
+  useEffect(() => {
+    void Promise.all(Array.from({ length: 10 }, () => MessageBuilder.singleton.createMessage())).then(setMessages);
+  }, []);
+  if (messages.length === 0) {
+    return <div>Loading messages...</div>;
+  }
+  return <BasicStory {...props} messages={messages} />;
+};
+
+export const Default: StoryObj<typeof DefaultStory> = {
+  render: DefaultStory,
   args: {
     ignoreAttention: true,
     attendableId: 'story',
-    messages: await Promise.all(Array.from({ length: 10 }, () => MessageBuilder.singleton.createMessage())),
   },
 };
 

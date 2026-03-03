@@ -19,14 +19,14 @@ export type ConnectionHandler<C, S> = {
   onClose?: (rpc: ProtoRpcPeer<C>) => Promise<void>;
 } & Pick<ProtoRpcPeerOptions<C, S>, 'requested' | 'exposed' | 'handlers'>;
 
-export type WebsocketRpcServerParams<C, S> = {
+export type WebsocketRpcServerProps<C, S> = {
   onConnection: (info: ConnectionInfo) => Promise<ConnectionHandler<C, S>>;
 } & WebSocket.ServerOptions;
 
 export class WebsocketRpcServer<C, S> {
   private _server?: WebSocket.Server;
 
-  constructor(private readonly _params: WebsocketRpcServerParams<C, S>) {}
+  constructor(private readonly _params: WebsocketRpcServerProps<C, S>) {}
   handleUpgrade(request: IncomingMessage, socket: Socket, head: Buffer): void {
     this._server?.handleUpgrade(request, socket, head, (ws: WebSocket) => {
       this._server?.emit('connection', ws, request);

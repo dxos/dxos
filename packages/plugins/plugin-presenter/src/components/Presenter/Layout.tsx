@@ -5,7 +5,7 @@
 import React, { type PropsWithChildren, type ReactNode } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 export type LayoutProps = ThemedClassName<
   PropsWithChildren<{
@@ -19,7 +19,7 @@ export type LayoutProps = ThemedClassName<
 
 export const Layout = ({ children, classNames, topLeft, topRight, bottomLeft, bottomRight }: LayoutProps) => {
   return (
-    <div className={mx('flex grow relative overflow-hidden bg-attention', classNames)}>
+    <div className={mx('flex grow relative overflow-hidden bg-attention-surface', classNames)}>
       <div className={mx('flex flex-col grow overflow-hidden')}>{children}</div>
 
       <div className='z-[200]'>

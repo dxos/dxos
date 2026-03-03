@@ -15,9 +15,9 @@ import { type BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { type ProtoRpcPeer, type RpcPort, createProtoRpcPeer } from '@dxos/rpc';
 import { Callback, type MaybePromise } from '@dxos/util';
 
-import { ClientRpcServer, type ClientRpcServerParams, type ClientServicesHost } from '../services';
+import { ClientRpcServer, type ClientRpcServerProps, type ClientServicesHost } from '../services';
 
-export type WorkerSessionParams = {
+export type WorkerSessionProps = {
   serviceHost: ClientServicesHost;
   systemPort: RpcPort;
   appPort: RpcPort;
@@ -50,11 +50,11 @@ export class WorkerSession {
 
   public bridgeService?: BridgeService;
 
-  constructor({ serviceHost, systemPort, appPort, shellPort, readySignal }: WorkerSessionParams) {
+  constructor({ serviceHost, systemPort, appPort, shellPort, readySignal }: WorkerSessionProps) {
     invariant(serviceHost);
     this._serviceHost = serviceHost;
 
-    const middleware: Pick<ClientRpcServerParams, 'handleCall' | 'handleStream'> = {
+    const middleware: Pick<ClientRpcServerProps, 'handleCall' | 'handleStream'> = {
       handleCall: async (method, params, handler) => {
         const error = await readySignal.wait({ timeout: PROXY_CONNECTION_TIMEOUT });
         if (error) {
@@ -119,7 +119,7 @@ export class WorkerSession {
   }
 
   async open(): Promise<void> {
-    log.info('opening...');
+    log('opening...');
     await Promise.all([this._clientRpc.open(), this._iframeRpc.open(), this._maybeOpenShell()]);
 
     // Wait until the worker's RPC service has started.
@@ -130,11 +130,11 @@ export class WorkerSession {
       void this._afterLockReleases(this.lockKey, () => this.close());
     }
 
-    log.info('opened');
+    log('opened');
   }
 
   async close(): Promise<void> {
-    log.info('closing...');
+    log.debug('closing...');
     try {
       await this.onClose.callIfSet();
     } catch (err: any) {
@@ -142,7 +142,7 @@ export class WorkerSession {
     }
 
     await Promise.all([this._clientRpc.close(), this._iframeRpc.close()]);
-    log.info('closed');
+    log.debug('closed');
   }
 
   private async _maybeOpenShell(): Promise<void> {

@@ -4,17 +4,11 @@
 
 import './main.css';
 
-import { withProfiler } from '@sentry/react';
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 
-import { initializeAppObservability } from '@dxos/observability';
-import { Config, Defaults } from '@dxos/react-client';
-
 import { Root, Todos } from './components';
-
-void initializeAppObservability({ namespace: 'todomvc', config: new Config(Defaults()) });
 
 const router = createBrowserRouter([
   {
@@ -22,13 +16,13 @@ const router = createBrowserRouter([
     element: <Root />,
     children: [
       { path: '/', element: <Todos /> },
-      { path: ':spaceId', element: <Todos /> },
-      { path: ':spaceId/:state', element: <Todos /> },
+      { path: ':spaceProp', element: <Todos /> },
+      { path: ':spaceProp/:state', element: <Todos /> },
     ],
   },
 ]);
 
-const App = withProfiler(() => <RouterProvider router={router} />);
+const App = () => <RouterProvider router={router} />;
 
 const root = createRoot(document.getElementById('root')!);
 root.render(

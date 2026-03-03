@@ -5,7 +5,7 @@
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 import { Collection } from '@dxos/schema';
-import { Event, Message, Organization, Person, Project, Task } from '@dxos/types';
+import { Event, Message, Organization, Person, Pipeline, Task } from '@dxos/types';
 
 import { meta } from './meta';
 
@@ -61,7 +61,7 @@ export const translations = [
         'typename label_other': 'People',
         'object name placeholder': 'New person',
       },
-      [Project.Project.typename]: {
+      [Pipeline.Pipeline.typename]: {
         'typename label': 'Project',
         'typename label_zero': 'Projects',
         'typename label_one': 'Project',
@@ -238,6 +238,8 @@ export const translations = [
         'sync latency label': 'Latency',
         'sync upload label': 'Upload',
         'sync download label': 'Download',
+
+        'search placeholder': 'Search…',
       },
     },
   },

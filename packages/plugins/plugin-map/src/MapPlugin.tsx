@@ -2,68 +2,56 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
-import { Type } from '@dxos/echo';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { type CreateObjectIntent } from '@dxos/plugin-space/types';
+import * as Effect from 'effect/Effect';
 
-import { AppGraphBuilder, BlueprintDefinition, IntentResolver, MapState, ReactSurface } from './capabilities';
+import { Plugin } from '@dxos/app-framework';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { Type } from '@dxos/echo';
+import { type CreateObject } from '@dxos/plugin-space/types';
+import { View } from '@dxos/schema';
+
+import { AppGraphBuilder, BlueprintDefinition, MapState, OperationResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 import { Map, MapAction } from './types';
 
-export const MapPlugin = definePlugin(meta, () => [
-  defineModule({
-    id: `${meta.id}/module/state`,
+export const MapPlugin = Plugin.define(meta).pipe(
+  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
+  AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+  AppPlugin.addMetadataModule({
+    metadata: {
+      id: Type.getTypename(Map.Map),
+      metadata: {
+        icon: 'ph--compass--regular',
+        iconHue: 'green',
+        inputSchema: MapAction.CreateMap,
+        createObject: ((props, { db }) =>
+          Effect.promise(async () => {
+            const view = props.typename
+              ? (
+                  await View.makeFromDatabase({
+                    db,
+                    typename: props.typename,
+                    pivotFieldName: props.locationFieldName,
+                  })
+                ).view
+              : undefined;
+            return Map.make({ name: props.name, view });
+          })) satisfies CreateObject,
+      },
+    },
+  }),
+  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addSchemaModule({ schema: [Map.Map] }),
+  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addModule({
+    id: 'state',
     // TODO(wittjosiah): Does not integrate with settings store.
     //   Should this be a different event?
     //   Should settings store be renamed to be more generic?
-    activatesOn: Events.SetupSettings,
+    activatesOn: AppActivationEvents.SetupSettings,
     activate: MapState,
   }),
-  defineModule({
-    id: `${meta.id}/module/translations`,
-    activatesOn: Events.SetupTranslations,
-    activate: () => contributes(Capabilities.Translations, translations),
-  }),
-  defineModule({
-    id: `${meta.id}/module/metadata`,
-    activatesOn: Events.SetupMetadata,
-    activate: () =>
-      contributes(Capabilities.Metadata, {
-        id: Type.getTypename(Map.Map),
-        metadata: {
-          icon: 'ph--compass--regular',
-          iconHue: 'green',
-          inputSchema: MapAction.CreateMap,
-          createIntent: ((props, options) =>
-            createIntent(MapAction.Create, { ...props, space: options.space })) satisfies CreateObjectIntent,
-        },
-      }),
-  }),
-  defineModule({
-    id: `${meta.id}/module/schema`,
-    activatesOn: ClientEvents.SetupSchema,
-    activate: () => contributes(ClientCapabilities.Schema, [Map.Map]),
-  }),
-  defineModule({
-    id: `${meta.id}/module/react-surface`,
-    activatesOn: Events.SetupReactSurface,
-    activate: ReactSurface,
-  }),
-  defineModule({
-    id: `${meta.id}/module/intent-resolver`,
-    activatesOn: Events.SetupIntentResolver,
-    activate: IntentResolver,
-  }),
-  defineModule({
-    id: `${meta.id}/module/app-graph-builder`,
-    activatesOn: Events.SetupAppGraph,
-    activate: AppGraphBuilder,
-  }),
-  defineModule({
-    id: `${meta.id}/module/blueprint`,
-    activatesOn: Events.SetupArtifactDefinition,
-    activate: BlueprintDefinition,
-  }),
-]);
+  Plugin.make,
+);

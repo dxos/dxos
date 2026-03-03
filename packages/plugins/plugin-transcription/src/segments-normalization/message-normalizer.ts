@@ -6,8 +6,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { effect } from '@preact/signals-core';
-
 import { DeferredTask, asyncTimeout } from '@dxos/async';
 import { LifecycleState, Resource } from '@dxos/context';
 import { type Queue } from '@dxos/echo-db';
@@ -21,7 +19,7 @@ import { getActorId } from './utils';
 const PROCESSING_TIMEOUT = 20_000; // ms
 const MAX_RANGE_ID_COUNT = 10;
 
-export type SegmentsNormalizerParams = {
+export type SegmentsNormalizerProps = {
   functionExecutor: FunctionExecutor;
   queue: Queue<Message.Message>;
   startingCursor: QueueCursor;
@@ -42,7 +40,7 @@ export class MessageNormalizer extends Resource {
   private _normalizationTask?: DeferredTask;
   private _lastProcessedMessageIds?: string[];
 
-  constructor({ functionExecutor, queue, startingCursor }: SegmentsNormalizerParams) {
+  constructor({ functionExecutor, queue, startingCursor }: SegmentsNormalizerProps) {
     super();
     this._functionExecutor = functionExecutor;
     this._queue = queue;
@@ -51,7 +49,8 @@ export class MessageNormalizer extends Resource {
 
   protected override async _open(): Promise<void> {
     this._normalizationTask = new DeferredTask(this._ctx, () => this._processMessages());
-    const unsubscribe = effect(() => {
+
+    const updateMessages = () => {
       if (this._lifecycleState !== LifecycleState.OPEN) {
         return;
       }
@@ -62,8 +61,14 @@ export class MessageNormalizer extends Resource {
       });
 
       this._normalizationTask!.schedule();
-    });
-    this._ctx.onDispose(() => unsubscribe());
+    };
+
+    // Initial update.
+    updateMessages();
+
+    // Subscribe to queue changes.
+    const unsubscribe = this._queue.subscribe(updateMessages);
+    this._ctx.onDispose(unsubscribe);
   }
 
   // Need to unpack strings from blocks from messages run them through the function and then pack them back into blocks into messages.

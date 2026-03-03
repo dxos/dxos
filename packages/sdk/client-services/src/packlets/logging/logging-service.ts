@@ -26,6 +26,10 @@ import { getDebugName, jsonify, numericalValues, tracer } from '@dxos/util';
 
 /**
  * Logging service used to spy on logs of the host.
+ *
+ * @deprecated This was created so that logs from the shared worker (WorkerClientServices) could be
+ * seen in the main window console without opening the shared worker DevTools. Shared worker client
+ * services is deprecated; dedicated worker logs already show in the main window console.
  */
 export class LoggingServiceImpl implements LoggingService {
   private readonly _logs = new Event<NaturalLogEntry>();

@@ -12,20 +12,20 @@ import { log } from '@dxos/log';
 import type { AutomergeProtocolMessage } from '@dxos/protocols';
 import { AutomergeReplicator, type AutomergeReplicatorFactory } from '@dxos/teleport-extension-automerge-replicator';
 
-import type { ReplicatorConnection, ShouldAdvertiseParams, ShouldSyncCollectionParams } from './echo-replicator';
+import type { AutomergeReplicatorConnection, ShouldAdvertiseProps, ShouldSyncCollectionProps } from './echo-replicator';
 
 const DEFAULT_FACTORY: AutomergeReplicatorFactory = (params) => new AutomergeReplicator(...params);
 
-export type MeshReplicatorConnectionParams = {
+export type MeshReplicatorConnectionProps = {
   ownPeerId: string;
   onRemoteConnected: () => void;
   onRemoteDisconnected: () => void;
-  shouldAdvertise: (params: ShouldAdvertiseParams) => Promise<boolean>;
-  shouldSyncCollection: (params: ShouldSyncCollectionParams) => boolean;
+  shouldAdvertise: (params: ShouldAdvertiseProps) => Promise<boolean>;
+  shouldSyncCollection: (params: ShouldSyncCollectionProps) => boolean;
   replicatorFactory?: AutomergeReplicatorFactory;
 };
 
-export class MeshReplicatorConnection extends Resource implements ReplicatorConnection {
+export class MeshReplicatorConnection extends Resource implements AutomergeReplicatorConnection {
   public readable: ReadableStream<AutomergeProtocolMessage>;
   public writable: WritableStream<AutomergeProtocolMessage>;
   public remoteDeviceKey: PublicKey | null = null;
@@ -35,7 +35,7 @@ export class MeshReplicatorConnection extends Resource implements ReplicatorConn
   private _remotePeerId: string | null = null;
   private _isEnabled = false;
 
-  constructor(private readonly _params: MeshReplicatorConnectionParams) {
+  constructor(private readonly _params: MeshReplicatorConnectionProps) {
     super();
 
     let readableStreamController!: ReadableStreamDefaultController<AutomergeProtocolMessage>;
@@ -115,11 +115,11 @@ export class MeshReplicatorConnection extends Resource implements ReplicatorConn
     return false;
   }
 
-  async shouldAdvertise(params: ShouldAdvertiseParams): Promise<boolean> {
+  async shouldAdvertise(params: ShouldAdvertiseProps): Promise<boolean> {
     return this._params.shouldAdvertise(params);
   }
 
-  shouldSyncCollection(params: ShouldSyncCollectionParams): boolean {
+  shouldSyncCollection(params: ShouldSyncCollectionProps): boolean {
     return this._params.shouldSyncCollection(params);
   }
 

@@ -2,15 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, LayoutAction, type PluginContext, createIntent } from '@dxos/app-framework';
+import { Capabilities, type CapabilityManager } from '@dxos/app-framework';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { sleep } from '@dxos/async';
 import { type Step } from '@dxos/plugin-help';
 
-const ensureSidebar: Step['before'] = async (context: PluginContext) => {
-  const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
-  await dispatch(
-    createIntent(LayoutAction.UpdateSidebar, { part: 'sidebar', subject: 'sidebar', options: { state: 'expanded' } }),
-  );
+const ensureSidebar: Step['before'] = async (capabilities: CapabilityManager.CapabilityManager) => {
+  const { invokePromise } = capabilities.get(Capabilities.OperationInvoker);
+  await invokePromise(LayoutOperation.UpdateSidebar, { state: 'expanded' });
   return await sleep(200);
 };
 
@@ -19,7 +18,7 @@ const base: Partial<Step> = {
   disableOverlay: true,
   styles: {
     options: {
-      arrowColor: 'var(--dx-accentSurface)',
+      arrowColor: 'var(--color-accent-surface)',
     },
   },
   offset: 0,

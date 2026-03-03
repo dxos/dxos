@@ -47,6 +47,9 @@
       "path": "../echo/echo-db"
     },
     {
+      "path": "../operation"
+    },
+    {
       "path": "../protocols"
     }
   ]

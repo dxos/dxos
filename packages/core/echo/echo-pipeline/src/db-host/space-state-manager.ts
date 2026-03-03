@@ -3,7 +3,7 @@
 //
 
 import { type DocHandle, type DocumentId, interpretAsDocumentId } from '@automerge/automerge-repo';
-import isEqual from 'lodash.isequal';
+import isEqual from 'fast-deep-equal';
 
 import { Event, UpdateScheduler } from '@dxos/async';
 import { Context, LifecycleState, Resource } from '@dxos/context';
@@ -30,6 +30,10 @@ export class SpaceStateManager extends Resource {
 
   get roots(): ReadonlyMap<DocumentId, DatabaseRoot> {
     return this._roots;
+  }
+
+  get spaceIds(): SpaceId[] {
+    return Array.from(this._rootBySpace.keys());
   }
 
   getRootByDocumentId(documentId: DocumentId): DatabaseRoot | undefined {

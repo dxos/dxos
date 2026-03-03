@@ -12,7 +12,7 @@ type ProcessEmailResult = {
   summary: string;
 };
 
-type ProcessEmailParams = {
+type ProcessEmailProps = {
   email: Message.Message;
   context: {
     labels: TestSchema.Label[];
@@ -21,7 +21,7 @@ type ProcessEmailParams = {
   };
 };
 
-export const processEmail = async ({ email, context }: ProcessEmailParams): Promise<ProcessEmailResult> => {
+export const processEmail = async ({ email, context }: ProcessEmailProps): Promise<ProcessEmailResult> => {
   const system = trim`
     You are a helpful assistant that processes emails.
     You are given a set of labels and you need to choose one, multiple, or none to apply to the email.

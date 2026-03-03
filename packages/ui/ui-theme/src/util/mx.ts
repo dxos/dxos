@@ -1,0 +1,49 @@
+//
+// Copyright 2022 DXOS.org
+//
+
+import { extendTailwindMerge, validators } from 'tailwind-merge';
+
+type AdditionalClassGroups = 'density' | 'dx-focus-ring';
+
+export const mx = extendTailwindMerge<AdditionalClassGroups>({
+  extend: {
+    classGroups: {
+      ['font-family' as const]: ['font-body', 'font-mono'],
+      ['font-weight' as const]: [
+        // App weights
+        'font-thin',
+        'font-extralight',
+        'font-light',
+        'font-normal',
+        'font-medium',
+        'font-semibold',
+        'font-bold',
+        'font-extrabold',
+        'font-black',
+
+        // Arbitrary numbers
+        validators.isArbitraryNumber,
+      ],
+
+      ['density' as const]: ['dx-density-fine', 'dx-density-coarse'],
+
+      ['dx-focus-ring' as const]: [
+        'dx-focus-ring',
+        'dx-focus-ring-inset',
+        'dx-focus-ring-always',
+        'dx-focus-ring-inset-always',
+        'dx-focus-ring-group',
+        'dx-focus-ring-group-x',
+        'dx-focus-ring-group-y',
+        'dx-focus-ring-group-always',
+        'dx-focus-ring-group-x-always',
+        'dx-focus-ring-group-y-always',
+        'dx-focus-ring-inset-over-all',
+        'dx-focus-ring-inset-over-all-always',
+        'dx-focus-ring-main',
+        'dx-focus-ring-main-always',
+      ],
+    },
+  },
+});

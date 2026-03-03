@@ -11,10 +11,12 @@ import {
   attachClosestEdge,
   extractClosestEdge,
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
+import { useAtomValue } from '@effect-atom/atom-react';
 import React, {
   type MouseEvent,
   type PropsWithChildren,
   forwardRef,
+  memo,
   useCallback,
   useLayoutEffect,
   useMemo,
@@ -23,8 +25,8 @@ import React, {
 } from 'react';
 
 import { type Node } from '@dxos/app-graph';
-import { invariant } from '@dxos/invariant';
 import { DxAvatar } from '@dxos/lit-ui/react';
+import { useActionRunner } from '@dxos/plugin-graph';
 import {
   Icon,
   ListItem,
@@ -38,10 +40,10 @@ import {
 import { DropdownMenu, type MenuItem, MenuProvider } from '@dxos/react-ui-menu';
 import type { StackItemRearrangeHandler } from '@dxos/react-ui-stack';
 import { Tabs } from '@dxos/react-ui-tabs';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';
 
-import { useLoadDescendents } from '../../hooks';
+import { useNavTreeState } from '../../hooks';
 import { meta } from '../../meta';
 import { l0ItemType } from '../../util';
 import { useNavTreeContext } from '../NavTreeContext';
@@ -57,43 +59,41 @@ type L0ItemData = {
 };
 
 type L0ItemRootProps = {
-  item: Node<any>;
-  parent?: Node<any>;
+  item: Node.Node;
+  parent?: Node.Node;
   path: string[];
 };
 
 type L0ItemProps = L0ItemRootProps & {
-  item: Node<any>;
-  parent?: Node<any>;
+  item: Node.Node;
+  parent?: Node.Node;
   path: string[];
   pinned?: boolean;
   onRearrange?: StackItemRearrangeHandler<L0ItemData>;
 };
 
 const useL0ItemClick = ({ item, parent, path }: L0ItemProps, type: string) => {
-  const { tab, isCurrent, onSelect, onTabChange } = useNavTreeContext();
+  const { onSelect, onTabChange } = useNavTreeContext();
+  const { getItem } = useNavTreeState();
   const [isLg] = useMediaQuery('lg');
+  const runAction = useActionRunner();
 
   return useCallback(
     (event: MouseEvent) => {
       switch (type) {
         case 'action': {
-          const {
-            data: invoke,
-            properties: { caller },
-          } = item;
-
-          return invoke?.(caller ? { node: parent, caller } : { node: parent });
+          const { properties: { caller } = {} } = item;
+          return void runAction(item as Node.Action, caller ? { parent, caller } : { parent });
         }
 
         case 'tab':
           return onTabChange?.(item);
 
         case 'link':
-          return onSelect?.({ item, path, current: !isCurrent(path, item), option: event.altKey });
+          return onSelect?.({ item, path, current: !getItem(path).current, option: event.altKey });
       }
     },
-    [item, parent, type, tab, isCurrent, onSelect, onTabChange, isLg],
+    [item, parent, type, getItem, onSelect, onTabChange, isLg, runAction],
   );
 };
 
@@ -102,16 +102,16 @@ const l0Breakpoints: Record<string, string> = {
 };
 
 const l0ItemRoot =
-  'group/l0item flex is-full justify-center items-center relative data[type!="collection"]:cursor-pointer app-no-drag dx-focus-ring-group';
+  'group/l0item flex w-full justify-center items-center relative data[type!="collection"]:cursor-pointer dx-app-no-drag dx-focus-ring-group';
 
 const l0ItemContent = 'flex justify-center items-center dx-focus-ring-group-indicator transition-colors rounded-sm';
 
-const L0ItemRoot = forwardRef<HTMLElement, PropsWithChildren<L0ItemRootProps>>(
-  ({ item, parent, path, children }, forwardedRef) => {
-    const { getProps } = useNavTreeContext();
-    const { id, testId } = getProps?.(item, path) ?? {};
-    const type = l0ItemType(item);
+const L0ItemRoot = memo(
+  forwardRef<HTMLElement, PropsWithChildren<L0ItemRootProps>>(({ item, parent, path, children }, forwardedRef) => {
+    const { model } = useNavTreeContext();
     const itemPath = useMemo(() => [...path, item.id], [item.id, path]);
+    const { id, testId } = useAtomValue(model.itemProps(itemPath));
+    const type = l0ItemType(item);
 
     const { t } = useTranslation(meta.id);
     const localizedString = toLocalizedString(item.properties.label, t);
@@ -120,9 +120,7 @@ const L0ItemRoot = forwardRef<HTMLElement, PropsWithChildren<L0ItemRootProps>>(
     const rootProps =
       type === 'tab'
         ? { value: item.id, tabIndex: 0, onClick: handleClick, 'data-testid': testId, 'data-object-id': id }
-        : type !== 'collection'
-          ? { onClick: handleClick, 'data-testid': testId, 'data-object-id': id }
-          : { onClick: handleClick, role: 'button' };
+        : { onClick: handleClick, 'data-testid': testId, 'data-object-id': id };
 
     return (
       <Tooltip.Trigger asChild delayDuration={0} side='right' content={localizedString}>
@@ -136,21 +134,21 @@ const L0ItemRoot = forwardRef<HTMLElement, PropsWithChildren<L0ItemRootProps>>(
         </Tabs.TabPrimitive>
       </Tooltip.Trigger>
     );
-  },
+  }),
 );
 
 export const L0ItemActiveTabIndicator = ({ classNames }: ThemedClassName<{}>) => (
   <div
     role='none'
     className={mx(
-      'hidden group-aria-selected/l0item:block absolute inline-start-0 inset-block-2 is-1 bg-accentSurface rounded-ie',
+      'hidden group-aria-selected/l0item:block absolute start-0 inset-y-2 w-1 bg-accent-surface rounded-ie',
       classNames,
     )}
   />
 );
 
 // TODO(burdon): Factor out pinned (non-draggable) items.
-const L0Item = ({ item, parent, path, pinned, onRearrange }: L0ItemProps) => {
+const L0Item = memo(({ item, parent, path, pinned, onRearrange }: L0ItemProps) => {
   const { t } = useTranslation(meta.id);
   const itemElement = useRef<HTMLElement | null>(null);
   const [closestEdge, setEdge] = useState<Edge | null>(null);
@@ -218,12 +216,12 @@ const L0Item = ({ item, parent, path, pinned, onRearrange }: L0ItemProps) => {
       <div
         role='none'
         data-frame={true}
-        {...(hue && { style: { background: `var(--dx-${hue}Surface)` } })}
+        {...(hue && { style: { background: `var(--color-${hue}-surface)` } })}
         className={mx(
           l0ItemContent,
           pinned
-            ? 'p-2 group-hover/l0item:bg-activeSurface'
-            : 'is-[--l0-avatar-size] bs-[--l0-avatar-size] bg-activeSurface',
+            ? 'p-2 group-hover/l0item:bg-active-surface'
+            : 'w-(--dx-l0-avatar-size) h-(--dx-l0-avatar-size) bg-active-surface',
         )}
       >
         <ItemAvatar item={item} />
@@ -235,14 +233,14 @@ const L0Item = ({ item, parent, path, pinned, onRearrange }: L0ItemProps) => {
       {closestEdge && <ListItem.DropIndicator edge={closestEdge} />}
     </L0ItemRoot>
   );
-};
+});
 
 const ItemAvatar = ({ item }: Pick<L0ItemProps, 'item'>) => {
   const { t } = useTranslation(meta.id);
   const type = l0ItemType(item);
   if (item.properties.icon) {
     const hue = item.properties.hue ?? null;
-    const hueFgStyle = hue && { style: { color: `var(--dx-${hue}SurfaceText)` } };
+    const hueFgStyle = hue && { style: { color: `var(--color-${hue}-surface-text)` } };
     return <Icon icon={item.properties.icon} size={6} {...hueFgStyle} />;
   }
 
@@ -256,91 +254,77 @@ const ItemAvatar = ({ item }: Pick<L0ItemProps, 'item'>) => {
 };
 
 //
-// L0Collection
-//
-
-const L0Collection = ({ item, path }: L0ItemProps) => {
-  const navTreeContext = useNavTreeContext();
-  useLoadDescendents(item);
-  const collectionItems = navTreeContext.useItems(item);
-  const groupPath = useMemo(() => [...path, item.id], [item.id, path]);
-  const { id, testId } = navTreeContext.getProps?.(item, path) ?? {};
-
-  const handleRearrange = useCallback<StackItemRearrangeHandler<L0ItemData>>(
-    (source, target, closestEdge) => {
-      invariant(item.properties.onRearrangeChildren);
-      const sourceIndex = collectionItems.findIndex((i) => i.id === source.id);
-      const targetIndex = collectionItems.findIndex((i) => i.id === target.id);
-      const insertIndex =
-        source.id === target.id
-          ? sourceIndex
-          : targetIndex +
-            (sourceIndex < targetIndex ? (closestEdge === 'top' ? -1 : 0) : closestEdge === 'bottom' ? 1 : 0);
-      const nextOrder = arrayMove([...collectionItems], sourceIndex, insertIndex);
-      return item.properties.onRearrangeChildren(nextOrder);
-    },
-    [collectionItems, item.properties.onRearrangeChildren],
-  );
-
-  return (
-    <div
-      role='group'
-      className='contents group/l0c'
-      aria-labelledby={`${item.id}__label`}
-      data-object-id={id}
-      data-testid={testId}
-    >
-      {collectionItems.map((collectionItem) => (
-        <L0Item
-          key={collectionItem.id}
-          item={collectionItem}
-          parent={item}
-          path={groupPath}
-          {...(item.properties.onRearrangeChildren && { onRearrange: handleRearrange })}
-        />
-      ))}
-    </div>
-  );
-};
-
-//
 // L0Menu
 //
 
 export type L0MenuProps = {
   menuActions: MenuItem[];
-  topLevelItems: Node<any>[];
-  pinnedItems: Node<any>[];
-  userAccountItem?: Node<any>;
-  parent?: Node<any>;
+  topLevelItems: Node.Node[];
+  pinnedItems: Node.Node[];
+  userAccountItem?: Node.Node;
+  parent?: Node.Node;
   path: string[];
 };
 
 export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountItem, parent, path }: L0MenuProps) => {
   const { t } = useTranslation(meta.id);
+  const runAction = useActionRunner();
+  const handleAction = useCallback(
+    (action: Node.Action, params: Node.InvokeProps) => {
+      void runAction(action, params);
+    },
+    [runAction],
+  );
+
+  const handleRearrange = useCallback<StackItemRearrangeHandler<L0ItemData>>(
+    (source, target, closestEdge) => {
+      const sourceItem = topLevelItems.find((i) => i.id === source.id);
+      if (!sourceItem?.properties.onRearrange) {
+        return;
+      }
+
+      const sourceIndex = topLevelItems.findIndex((i) => i.id === source.id);
+      const targetIndex = topLevelItems.findIndex((i) => i.id === target.id);
+      const insertIndex =
+        source.id === target.id
+          ? sourceIndex
+          : targetIndex +
+            (sourceIndex < targetIndex ? (closestEdge === 'top' ? -1 : 0) : closestEdge === 'bottom' ? 1 : 0);
+      const nextOrder = arrayMove([...topLevelItems], sourceIndex, insertIndex);
+      return sourceItem.properties.onRearrange(nextOrder.map((item) => item.data));
+    },
+    [topLevelItems],
+  );
+
+  // Check if any items have onRearrange to enable drag-and-drop.
+  const hasRearrangeableItems = topLevelItems.some((item) => item.properties.onRearrange);
 
   return (
     <Tabs.Tablist
       classNames={[
-        'group/l0 absolute z-[1] inset-block-0 inline-start-0 rounded-is',
-        'grid grid-cols-[var(--l0-size)] grid-rows-[var(--rail-size)_1fr_min-content_var(--l0-size)] contain-layout',
-        '!is-[--l0-size] bg-baseSurface border-ie border-subduedSeparator app-drag pbe-[env(safe-area-inset-bottom)]',
+        'group/l0 absolute z-[1] inset-y-0 start-0 rounded-is',
+        'grid grid-cols-[var(--dx-l0-size)] grid-rows-[var(--dx-rail-size)_1fr_min-content_var(--dx-l0-size)] dx-contain-layout',
+        '!w-(--dx-l0-size) bg-toolbar-surface border-e border-subdued-separator dx-app-drag pb-[env(safe-area-inset-bottom)]',
       ]}
     >
       {/* TODO(wittjosiah): Use L0Item trigger. */}
-      <MenuProvider>
+      <MenuProvider onAction={handleAction}>
         <DropdownMenu.Root group={parent} items={menuActions}>
           <Tooltip.Trigger content={t('app menu label')} side='right' asChild>
             <Tabs.TabPrimitive value='options' asChild role='button'>
               <DropdownMenu.Trigger
                 data-testid='spacePlugin.addSpace'
-                className={mx(l0ItemRoot, 'grid place-items-center dx-focus-ring-group')}
+                className={mx(
+                  l0ItemRoot,
+                  'grid place-items-center dx-focus-ring-group',
+                  '[body[data-platform="macos"]_&]:mt-[30px]',
+                )}
               >
                 <div
                   role='none'
                   className={mx(
                     l0ItemContent,
-                    'is-[--rail-action] bs-[--rail-action] group-hover/l0item:bg-hoverSurface',
+                    'h-(--dx-rail-action) w-(--dx-rail-action) group-hover/l0item:bg-hover-surface',
                   )}
                 >
                   <Icon icon='ph--list--regular' size={5} />
@@ -352,41 +336,38 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
       </MenuProvider>
 
       {/* Space list. */}
-      <ScrollArea.Root>
+      <ScrollArea.Root thin orientation='vertical'>
         <ScrollArea.Viewport>
           <div
             role='none'
             className={mx([
-              'flex flex-col gap-1 pbs-1',
-              '[body[data-platform="darwin"]_&]:pbs-[calc(30px+0.25rem)]',
-              '[body[data-platform="ios"]_&]:pbs-[max(env(safe-area-inset-top),0.25rem)]',
+              'flex flex-col gap-1 pt-1',
+              '[body[data-platform="macos"]_&]:py-[30px]',
+              '[body[data-platform="ios"]_&]:py-[max(env(safe-area-inset-top),0.25rem)]',
             ])}
           >
-            {topLevelItems.map((item) => {
-              if (l0ItemType(item) === 'collection') {
-                return <L0Collection key={item.id} item={item} parent={parent} path={path} />;
-              } else {
-                return <L0Item key={item.id} item={item} parent={parent} path={path} />;
-              }
-            })}
+            {topLevelItems.map((item) => (
+              <L0Item
+                key={item.id}
+                item={item}
+                parent={parent}
+                path={path}
+                {...(hasRearrangeableItems && { onRearrange: handleRearrange })}
+              />
+            ))}
           </div>
-          <ScrollArea.Scrollbar orientation='vertical'>
-            <ScrollArea.Thumb />
-          </ScrollArea.Scrollbar>
         </ScrollArea.Viewport>
       </ScrollArea.Root>
 
       {/* Actions. */}
-      <div role='none' className='grid grid-cols-1 auto-rows-[--rail-action] pbs-2'>
-        {pinnedItems
-          .filter((item) => l0ItemType(item) !== 'collection')
-          .map((item) => (
-            <L0Item key={item.id} item={item} parent={parent} path={path} pinned />
-          ))}
+      <div role='none' className='grid grid-cols-1 auto-rows-(--dx-rail-action) pt-2'>
+        {pinnedItems.map((item) => (
+          <L0Item key={item.id} item={item} parent={parent} path={path} pinned />
+        ))}
       </div>
 
       {userAccountItem && (
-        <div role='none' className='grid app-no-drag'>
+        <div role='none' className='grid dx-app-no-drag'>
           <L0ItemRoot key={userAccountItem.id} item={userAccountItem} parent={parent} path={path}>
             <UserAccountAvatar
               userId={userAccountItem.properties.userId}
@@ -398,14 +379,6 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
           </L0ItemRoot>
         </div>
       )}
-      <div
-        role='none'
-        className='hidden [body[data-platform="darwin"]_&]:block absolute block-start-0 is-[calc(var(--l0-size)-1px)] bs-[calc(40px+0.25rem)]'
-        style={{
-          background:
-            'linear-gradient(to bottom, var(--dx-sidebarSurface) 0%, var(--dx-sidebarSurface) 70%, transparent 100%)',
-        }}
-      />
     </Tabs.Tablist>
   );
 };

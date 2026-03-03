@@ -11,14 +11,14 @@ import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useThemeContext } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
+import { useTextEditor } from '@dxos/react-ui-editor';
 import {
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
   processEditorPayload,
-  useTextEditor,
-} from '@dxos/react-ui-editor';
+} from '@dxos/ui-editor';
 
 import { create as createBlockstore } from '../blockstore';
 import { upload } from '../helpers';
@@ -86,7 +86,7 @@ const DefaultStory = () => {
       <div className='mb-2'>
         <input type='file' accept='image/*' onChange={onFileChange} />
       </div>
-      <div className='is-[50rem]' ref={parentRef} {...focusAttributes} />
+      <div className='w-[50rem]' ref={parentRef} {...focusAttributes} />
     </>
   );
 };
@@ -94,7 +94,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'plugins/plugin-wnfs/image',
   render: DefaultStory,
-  decorators: [withTheme, withClientProvider({ createIdentity: true, createSpace: true })],
+  decorators: [withTheme(), withClientProvider({ createIdentity: true, createSpace: true })],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

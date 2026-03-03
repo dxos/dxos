@@ -1,0 +1,32 @@
+{
+  "extends": "../../../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": [
+      "node"
+    ]
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/*.ts"
+  ],
+  "references": [
+    {
+      "path": "../../../common/invariant"
+    },
+    {
+      "path": "../../../common/random"
+    },
+    {
+      "path": "../../../common/test-utils"
+    },
+    {
+      "path": "../../../common/util"
+    },
+    {
+      "path": "../echo"
+    },
+    {
+      "path": "../echo-db"
+    }
+  ]
+}

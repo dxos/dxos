@@ -3,5 +3,3 @@
 //
 
 export * from './FeedbackForm';
-export * from './HelpContainer';
-export * from './ObservabilitySettings';

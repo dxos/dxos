@@ -2,22 +2,23 @@
 // Copyright 2025 DXOS.org
 //
 
+import { RegistryContext } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import type * as Schema from 'effect/Schema';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { Obj, Type } from '@dxos/echo';
+import { invariant } from '@dxos/invariant';
 import { type DxGrid } from '@dxos/lit-grid';
 import '@dxos/lit-ui/dx-tag-picker.pcss';
 import { faker } from '@dxos/random';
-import { useClient } from '@dxos/react-client';
-import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
+import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as formTranslations } from '@dxos/react-ui-form';
 import { View } from '@dxos/schema';
 import { type ValueGenerator, createAsyncGenerator } from '@dxos/schema/testing';
+import { withRegistry } from '@dxos/storybook-utils';
 import { Organization, Person } from '@dxos/types';
 
 import { useProjectionModel, useTableModel } from '../../hooks';
@@ -35,7 +36,8 @@ const generator: ValueGenerator = faker as any;
 // TODO(burdon): Reconcile schemas types and utils (see API PR).
 // TODO(burdon): Base type for T (with id); see ECHO API PR?
 const useTestModel = <S extends Type.Obj.Any>(schema: S, count: number) => {
-  const { space } = useClientProvider();
+  const registry = useContext(RegistryContext);
+  const { space } = useClientStory();
   const [object, setObject] = useState<Table.Table>();
 
   const features = useMemo<TableFeatures>(
@@ -48,14 +50,14 @@ const useTestModel = <S extends Type.Obj.Any>(schema: S, count: number) => {
       return;
     }
 
-    const { view, jsonSchema } = await View.makeFromSpace({ space, typename: Type.getTypename(schema) });
+    const { view, jsonSchema } = await View.makeFromDatabase({ db: space.db, typename: Type.getTypename(schema) });
     const object = Table.make({ view, jsonSchema });
     setObject(object);
     space.db.add(object);
   }, [space, schema]);
 
-  const projection = useProjectionModel(schema, object);
-  const model = useTableModel<TableRow>({ object, projection, features });
+  const projection = useProjectionModel(schema, object, registry);
+  const model = useTableModel<TableRow>({ object, projection, db: space?.db, features });
 
   useEffect(() => {
     if (!model || !space) {
@@ -73,27 +75,28 @@ const useTestModel = <S extends Type.Obj.Any>(schema: S, count: number) => {
       return;
     }
 
-    return new TablePresentation(model);
-  }, [model]);
+    return new TablePresentation(registry, model);
+  }, [registry, model]);
 
   return { model, presentation };
 };
 
 const DefaultStory = () => {
-  const client = useClient();
   const { model: orgModel, presentation: orgPresentation } = useTestModel(Organization.Organization, 50);
   const { model: contactModel, presentation: contactPresentation } = useTestModel(Person.Person, 50);
-  const { space } = useClientProvider();
+  const { space } = useClientStory();
 
   const handleCreate = useCallback(
-    (schema: Schema.Schema.AnyNoContext, values: any) => {
-      return client.spaces.default.db.add(Obj.make(schema, values));
+    (schema: Type.Entity.Any, values: any) => {
+      invariant(Type.isObjectSchema(schema));
+      invariant(space);
+      return space.db.add(Obj.make(schema, values));
     },
     [space],
   );
 
   return (
-    <div className='is-full bs-full grid grid-cols-2 divide-x divide-separator'>
+    <div className='w-full h-full grid grid-cols-2 divide-x divide-separator'>
       <TableComponent.Root>
         <TableComponent.Main
           model={orgModel}
@@ -122,8 +125,9 @@ const meta = {
   title: 'ui/react-ui-table/Relations',
   render: DefaultStory,
   decorators: [
-    withTheme,
-    // TODO(thure): Shouldn’t `layout: 'fullscreen'` below make this unnecessary?
+    withTheme(),
+    withRegistry,
+    // TODO(thure): Shouldn't `layout: 'fullscreen'` below make this unnecessary?
     withLayout({ classNames: 'fixed inset-0' }),
     withClientProvider({
       types: [View.View, Organization.Organization, Person.Person, Table.Table],
@@ -191,8 +195,9 @@ export const Default: Story = {
     const saveButton = await body.findByTestId('save-button');
     await userEvent.click(saveButton);
 
-    // Verify the relation was set (cell should now contain the org name)
-    await expect(targetCell).toHaveTextContent(orgName.substring(0, 4));
+    // Verify the relation was set (cell should now contain the org name).
+    const updatedCell = within(secondGrid).getByTestId('grid.4.0');
+    await expect(updatedCell).toHaveTextContent(orgName.substring(0, 4));
 
     // Test object creation (new relations) - equivalent to "new relations work as expected" test
     // Find a different cell to test object creation (second row, relations column)
@@ -215,9 +220,9 @@ export const Default: Story = {
     const newOrgName = 'Salieri LLC';
     await userEvent.type(newSearchField, newOrgName);
 
-    // Look for an option to select (should be the create new option)
-    const newOption = await body.findAllByRole('option');
-    await expect(newOption[0]).toBeVisible();
+    // Wait for the create option to appear (debounce is 200ms, allow time for render)
+    const createOption = await body.findByRole('option', undefined, { timeout: 500 });
+    await expect(createOption).toBeVisible();
 
     // Press Enter to select/create
     await userEvent.keyboard('{Enter}');
@@ -227,7 +232,8 @@ export const Default: Story = {
     const saveObjectButton = await within(createReferencedObjectForm).findByTestId('save-button');
     await userEvent.click(saveObjectButton);
 
-    // Verify the new object was created and relation was set
-    await expect(newTargetCell).toHaveTextContent(newOrgName);
+    // Verify the new object was created and relation was set.
+    const updatedNewCell = within(secondGrid).getByTestId('grid.4.1');
+    await expect(updatedNewCell).toHaveTextContent(newOrgName);
   },
 } as any;

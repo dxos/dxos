@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useRef, useState } from 'react';
 
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { type ProjectionState } from '../../hooks';
 
@@ -16,7 +16,7 @@ const DefaultStory = (props: GridProps) => {
   const [{ scale, offset }] = useState<ProjectionState>({ scale: 1, offset: { x: 0, y: 0 } });
 
   return (
-    <div ref={ref} className='grow'>
+    <div role='none' ref={ref} className='grow'>
       <GridComponent scale={scale} offset={offset} {...props} />
     </div>
   );
@@ -26,7 +26,7 @@ const meta = {
   title: 'ui/react-ui-canvas/Grid',
   component: GridComponent,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
   },

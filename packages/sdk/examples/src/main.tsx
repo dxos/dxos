@@ -7,16 +7,16 @@ import '@dxos-theme';
 import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { registerSignalsRuntime } from '@dxos/echo-signals';
+import { type Type } from '@dxos/echo';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { faker } from '@dxos/random';
 import { Client, ClientProvider } from '@dxos/react-client';
-import { type Space, type TypedObject } from '@dxos/react-client/echo';
+import { type Space } from '@dxos/react-client/echo';
 import { ConnectionState } from '@dxos/react-client/mesh';
 import { TestBuilder, performInvitation } from '@dxos/react-client/testing';
 import { Icon, Input, Status, ThemeProvider, Tooltip } from '@dxos/react-ui';
-import { defaultTx, mx } from '@dxos/react-ui-theme';
 import { Text } from '@dxos/schema';
+import { defaultTx, mx } from '@dxos/ui-theme';
 import { type MaybePromise } from '@dxos/util';
 
 import TaskList from './examples/TaskList';
@@ -27,13 +27,12 @@ const testBuilder = new TestBuilder();
 
 type PeersInSpaceProps = {
   count?: number;
-  types?: TypedObject<any>[];
+  types?: Type.Obj.Any[];
   onCreateSpace?: (props: { space: Space }) => MaybePromise<void>;
 };
 
 const setupPeersInSpace = async (options: PeersInSpaceProps = {}) => {
   const { count = 1, types, onCreateSpace } = options;
-  registerSignalsRuntime();
   const clients = [...Array(count)].map(
     (_) => new Client({ services: testBuilder.createLocalClientServices(), types }),
   );
@@ -42,12 +41,12 @@ const setupPeersInSpace = async (options: PeersInSpaceProps = {}) => {
   const space = await clients[0].spaces.create({ name: faker.commerce.productName() });
   await onCreateSpace?.({ space });
   await Promise.all(clients.slice(1).map((client) => performInvitation({ host: space, guest: client.spaces })));
-  return { spaceKey: space.key, clients };
+  return { spaceId: space.id, clients };
 };
 
 // TODO(wittjosiah): Migrate to story once chromatic publish is fixed.
 const main = async () => {
-  const { clients, spaceKey } = await setupPeersInSpace({
+  const { clients, spaceId } = await setupPeersInSpace({
     count: 2,
     types: [Markdown.Document, Text.Text],
     onCreateSpace: ({ space }) => {
@@ -67,7 +66,7 @@ const main = async () => {
   const handleToggleBatching = async (checked: boolean) => {
     const _batchSize = checked ? 64 : 0;
     clients.forEach((client) => {
-      const space = client.spaces.get(spaceKey);
+      const space = client.spaces.get(spaceId);
       if (space) {
         // TODO(dmaretskyi): Is this code still relevant?
         // space.db._backend.maxBatchSize = batchSize;
@@ -88,7 +87,7 @@ const main = async () => {
                 <Input.Root>
                   <Input.Switch
                     data-testid='airplane-mode'
-                    classNames='me-2'
+                    classNames='mr-2'
                     onCheckedChange={(e) => {
                       setOffline(!offline);
                       return handleToggleNetwork(e);
@@ -103,7 +102,7 @@ const main = async () => {
                 <Input.Root>
                   <Input.Switch
                     data-testid='batching'
-                    classNames='me-2'
+                    classNames='mr-2'
                     onCheckedChange={(e) => {
                       setBatching(!batching);
                       return handleToggleBatching(e);
@@ -118,7 +117,7 @@ const main = async () => {
           </Tooltip.Provider>
           {clients.map((client, index) => (
             <ClientProvider key={index} client={client}>
-              <TaskList id={index} spaceKey={spaceKey} />
+              <TaskList id={index} spaceId={spaceId} />
             </ClientProvider>
           ))}
         </div>
@@ -132,7 +131,7 @@ const main = async () => {
 const fallback = () => {
   root.render(
     <ThemeProvider tx={defaultTx}>
-      <div className='flex bs-[100dvh] justify-center items-center'>
+      <div className='flex h-[100dvh] justify-center items-center'>
         <Status indeterminate aria-label='Initializing' />
       </div>
     </ThemeProvider>,

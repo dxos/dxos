@@ -1,0 +1,28 @@
+/**
+ * Color theme tokens.
+ * https://tailwindcss.com/docs/colors
+ * 
+ * NOTE: The following are equivalent:
+ *   text-red-500
+ *   text-(--color-red-500)
+ *   text-[var(--color-red-500)]
+ */
+
+@theme {
+  --color-neutral-75:  color-mix(in oklch, var(--color-neutral-50)  50%, var(--color-neutral-100) 50%);
+  --color-neutral-250: color-mix(in oklch, var(--color-neutral-200) 50%, var(--color-neutral-300) 50%);
+  --color-neutral-750: color-mix(in oklch, var(--color-neutral-700) 50%, var(--color-neutral-800) 50%);
+  --color-neutral-925: color-mix(in oklch, var(--color-neutral-900) 50%, var(--color-neutral-950) 50%);
+
+  --color-primary-50:  var(--color-blue-50);
+  --color-primary-100: var(--color-blue-100);
+  --color-primary-200: var(--color-blue-200);
+  --color-primary-300: var(--color-blue-300);
+  --color-primary-400: var(--color-blue-400);
+  --color-primary-500: var(--color-blue-500);
+  --color-primary-600: var(--color-blue-600);
+  --color-primary-700: var(--color-blue-700);
+  --color-primary-800: var(--color-blue-800);
+  --color-primary-900: var(--color-blue-900);
+  --color-primary-950: var(--color-blue-950);
+}

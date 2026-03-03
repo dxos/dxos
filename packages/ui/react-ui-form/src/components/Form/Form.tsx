@@ -4,13 +4,20 @@
 
 import { createContext } from '@radix-ui/react-context';
 import * as Schema from 'effect/Schema';
-import type * as SchemaAST from 'effect/SchemaAST';
-import React, { type PropsWithChildren, useMemo, useRef } from 'react';
+import * as SchemaAST from 'effect/SchemaAST';
+import React, { type PropsWithChildren, useEffect, useMemo, useRef } from 'react';
 
 import { type AnyProperties } from '@dxos/echo/internal';
 import { createJsonPath, getValue as getValue$ } from '@dxos/effect';
-import { IconButton, type IconButtonProps, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import {
+  IconButton,
+  type IconButtonProps,
+  ScrollArea,
+  type ScrollAreaRootProps,
+  type ThemedClassName,
+  useTranslation,
+} from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
 
 import {
   type FormHandler,
@@ -29,10 +36,10 @@ import {
 
 // New features/polish
 // [x] Unify readonly/inline modes
+// [ ] auto save doesn't work for combobox + select due to only firing on blur (workaround is to use onValuesChanged)
 // [ ] Don't call save/autoSave if value hasn't changed
 // [ ] Fix onCancel (restore values)
 // [ ] Fix useSchema Type.Obj.Any cast
-// [ ] Remove @dxos/echo-db deps
 // [ ] TableCellEditor (handleEnter/ModalController).
 // [ ] Use FormFieldWrapper uniformly
 // [ ] Inline tables for object arrays
@@ -41,7 +48,6 @@ import {
 // [x] Refs
 //   [x] Single-select (fix popover)
 //   [x] Multi-select (array)
-// [ ] auto save doesn't work for combobox + select due to only firing on blur (workaround is to use onValuesChanged)
 
 // TODO(burdon): Move to @dxos/schema (re-export here).
 export type ExcludeId<S extends Schema.Schema.AnyNoContext> = Omit<Schema.Schema.Type<S>, 'id'>;
@@ -69,20 +75,41 @@ type FormContextValue<T extends AnyProperties = any> = {
    * Testing.
    */
   testId?: string;
-} & Pick<NaturalFormFieldSetProps<T>, 'readonly' | 'layout' | 'fieldMap' | 'fieldProvider'>;
+} & Pick<NaturalFormFieldSetProps<T>, 'readonly' | 'layout' | 'fieldMap' | 'fieldProvider' | 'projection'>;
 
 const [FormContextProvider, useFormContext] = createContext<FormContextValue>('Form');
 
 /**
  * Get the current form values.
  */
-const useFormValues = <T extends AnyProperties>(componentName: string, path: (string | number)[] = []): T => {
-  const jsonPath = createJsonPath(path);
+const useFormValues: {
+  <T extends AnyProperties>(componentName: string, path?: (string | number)[]): T;
+  <T extends AnyProperties>(
+    componentName: string,
+    path: (string | number)[] | undefined,
+    defaultValue: () => T,
+  ): T | undefined;
+} = (componentName: string, path?: (string | number)[], defaultValue?: () => any) => {
+  const stablePath = useMemo(() => path ?? [], [path ? path.join('.') : undefined]);
+  const jsonPath = createJsonPath(stablePath);
   const {
-    form: { values },
+    form: { values, onValueChange },
   } = useFormContext(componentName);
 
-  return getValue$(values, jsonPath) as T;
+  const value = getValue$(values, jsonPath);
+
+  // Apply default value once when the field has no value. lastAppliedPathRef prevents
+  // re-applying on every render (e.g. when defaultValue() returns null) and ensures
+  // we apply per path when the hook is used for different fields.
+  const lastAppliedPathRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (value == null && defaultValue && lastAppliedPathRef.current !== jsonPath) {
+      lastAppliedPathRef.current = jsonPath;
+      onValueChange(stablePath, SchemaAST.stringKeyword, defaultValue());
+    }
+  }, [value, defaultValue, onValueChange, stablePath, jsonPath]);
+
+  return value;
 };
 
 /**
@@ -148,74 +175,87 @@ FormRoot.displayName = 'Form.Root';
 // Viewport
 //
 
-type FormViewportProps = ThemedClassName<PropsWithChildren<{}>>;
+const FORM_VIEWPORT_NAME = 'Form.Viewport';
 
-const FormViewport = ({ classNames, children }: FormViewportProps) => {
+type FormViewportProps = PropsWithChildren<ScrollAreaRootProps>;
+
+const FormViewport = ({
+  children,
+  classNames,
+  margin = true,
+  padding = true,
+  thin = true,
+  ...props
+}: FormViewportProps) => {
   return (
-    <ScrollArea.Root>
-      <ScrollArea.Viewport classNames={['plb-cardSpacingBlock', classNames]}>{children}</ScrollArea.Viewport>
-      <ScrollArea.Scrollbar orientation='vertical'>
-        <ScrollArea.Thumb />
-      </ScrollArea.Scrollbar>
+    <ScrollArea.Root
+      orientation='vertical'
+      classNames={classNames}
+      margin={margin}
+      padding={padding}
+      thin={thin}
+      {...props}
+    >
+      <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
     </ScrollArea.Root>
   );
 };
 
-FormViewport.displayName = 'Form.Viewport';
+FormViewport.displayName = FORM_VIEWPORT_NAME;
 
 //
 // Content
 //
 
+const FORM_CONTENT_NAME = 'Form.Content';
+
 type FormContentProps = ThemedClassName<PropsWithChildren<{}>>;
 
-// TOOD(burdon): Figure out nesting (indent and testId).
 const FormContent = ({ classNames, children }: FormContentProps) => {
-  const { form, testId } = useFormContext(FormContent.displayName);
+  const { form, testId } = useFormContext(FORM_CONTENT_NAME);
   const ref = useRef<HTMLDivElement>(null);
   useKeyHandler(ref.current, form);
 
   return (
-    <div
-      ref={ref}
-      role='form'
-      className={mx('flex flex-col is-full pli-cardSpacingInline', classNames)}
-      data-testid={testId}
-    >
+    <div ref={ref} role='form' className={mx('w-full flex flex-col gap-form-padding', classNames)} data-testid={testId}>
       {children}
     </div>
   );
 };
 
-FormContent.displayName = 'Form.Content';
+FormContent.displayName = FORM_CONTENT_NAME;
 
 //
 // FieldSet
 //
 
+const FORM_FIELDSET_NAME = 'Form.FieldSet';
+
 type FormFieldSetProps = ThemedClassName<{}>;
 
 const FormFieldSet = ({ classNames }: FormFieldSetProps) => {
-  const { form, ...props } = useFormContext(FormFieldSet.displayName);
+  const { form, ...props } = useFormContext(FORM_FIELDSET_NAME);
 
   return <NaturalFormFieldSet classNames={classNames} schema={form.schema} {...props} />;
 };
 
-FormFieldSet.displayName = 'Form.FieldSet';
+FormFieldSet.displayName = FORM_FIELDSET_NAME;
 
 //
 // Actions
 //
+
+const FORM_ACTIONS_NAME = 'Form.Actions';
 
 type FormActionsProps = ThemedClassName<{}>;
 
 const FormActions = ({ classNames }: FormActionsProps) => {
   const { t } = useTranslation(translationKey);
   const {
-    form: { isValid, onSave, onCancel },
+    form: { canSave, onSave, onCancel },
     readonly,
     layout,
-  } = useFormContext(FormActions.displayName);
+  } = useFormContext(FORM_ACTIONS_NAME);
 
   if (readonly || layout === 'static') {
     return null;
@@ -225,7 +265,7 @@ const FormActions = ({ classNames }: FormActionsProps) => {
   //   Deprecate FormSubmit ans use FormActions without Cancel button if no callback is supplied.
 
   return (
-    <div role='none' className={mx('grid grid-flow-col auto-cols-fr gap-2 pbs-cardSpacingBlock', classNames)}>
+    <div role='none' className={mx('grid grid-flow-col gap-2 auto-cols-fr py-form-padding', classNames)}>
       {onCancel && (
         <IconButton
           icon='ph--x--regular'
@@ -239,7 +279,7 @@ const FormActions = ({ classNames }: FormActionsProps) => {
         <IconButton
           type='submit'
           variant='primary'
-          disabled={!isValid}
+          disabled={!canSave}
           icon='ph--check--regular'
           iconEnd
           label={t('save button label')}
@@ -251,33 +291,35 @@ const FormActions = ({ classNames }: FormActionsProps) => {
   );
 };
 
-FormActions.displayName = 'Form.Actions';
+FormActions.displayName = FORM_ACTIONS_NAME;
 
 //
 // Submit
 //
 
-type FormSubmitProps = ThemedClassName<Partial<Pick<IconButtonProps, 'icon' | 'label'>>>;
+const FORM_SUBMIT_NAME = 'Form.Submit';
 
-const FormSubmit = ({ classNames, label, icon }: FormSubmitProps) => {
+type FormSubmitProps = ThemedClassName<Partial<Pick<IconButtonProps, 'icon' | 'label' | 'disabled'>>>;
+
+const FormSubmit = ({ classNames, label, icon, disabled }: FormSubmitProps) => {
   const { t } = useTranslation(translationKey);
   const {
-    form: { isValid, onSave },
+    form: { canSave, onSave },
     readonly,
     layout,
-  } = useFormContext(FormSubmit.displayName);
+  } = useFormContext(FORM_SUBMIT_NAME);
 
   if (readonly || layout === 'static') {
     return null;
   }
 
   return (
-    <div role='none' className={mx('flex is-full pbs-cardSpacingBlock', classNames)}>
+    <div role='none' className={mx('flex w-full pt-form-padding', classNames)}>
       <IconButton
-        classNames='is-full'
+        classNames='w-full'
         type='submit'
         variant='primary'
-        disabled={!isValid}
+        disabled={disabled ?? !canSave}
         icon={icon ?? 'ph--check--regular'}
         label={label ?? t('save button label')}
         onClick={onSave}
@@ -287,7 +329,7 @@ const FormSubmit = ({ classNames, label, icon }: FormSubmitProps) => {
   );
 };
 
-FormSubmit.displayName = 'Form.Submit';
+FormSubmit.displayName = FORM_SUBMIT_NAME;
 
 //
 // Form
@@ -299,9 +341,9 @@ export const Form = {
   Viewport: FormViewport,
   Content: FormContent,
   FieldSet: FormFieldSet,
+  Label: FormFieldLabel,
   Actions: FormActions,
   Submit: FormSubmit,
-  Label: FormFieldLabel,
 };
 
 export { useFormContext, useFormValues, useFormFieldState };
@@ -311,6 +353,7 @@ export type {
   FormViewportProps,
   FormContentProps,
   FormFieldSetProps,
-  FormActionsProps,
   FormFieldLabelProps as LabelProps,
+  FormActionsProps,
+  FormSubmitProps,
 };

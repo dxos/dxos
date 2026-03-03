@@ -4,7 +4,8 @@
 
 import { type SpaceId } from '@dxos/keys';
 
-import { type QueryResult, type QueueQuery } from '../queue';
+import type * as FeedProtocol from '../FeedProtocol';
+import { type CreateDocumentRequest, type CreateDocumentResponse } from '../proto/gen/dxos/echo/service';
 
 /*
 
@@ -59,6 +60,7 @@ On Error returns `EdgeEnvelope` with error:
 export interface Env {
   QUEUE_SERVICE: QueueService;
   DATA_SERVICE: DataService;
+  FUNCTIONS_AI_SERVICE: FunctionsAiService;
 }
 
 /**
@@ -72,20 +74,42 @@ export interface ExecutionContext {}
  * Database API for other CF services like functions.
  */
 export interface DataService {
-  getSpaceMeta(ctx: ExecutionContext, spaceId: SpaceId): Promise<SpaceMeta | undefined>;
-  getDocument(ctx: ExecutionContext, spaceId: SpaceId, documentId: string): Promise<RawDocument | undefined>;
+  getSpaceMeta(ctx: ExecutionContext, spaceId: SpaceId): Promise<RpcResult<SpaceMeta | undefined>>;
+  getDocument(ctx: ExecutionContext, spaceId: SpaceId, documentId: string): Promise<RpcResult<RawDocument | undefined>>;
 
-  query(ctx: ExecutionContext, request: QueryRequest): Promise<QueryResponse>;
-  queryDocuments(ctx: ExecutionContext, request: QueryRequest): Promise<QueryDocumentsResponse>;
-  queryReferences(ctx: ExecutionContext, request: QueryReferencesRequest): Promise<QueryReferencesResponse>;
+  query(ctx: ExecutionContext, request: QueryRequest): Promise<RpcResult<QueryResponse>>;
+  queryDocuments(ctx: ExecutionContext, request: QueryRequest): Promise<RpcResult<QueryDocumentsResponse>>;
+  queryReferences(ctx: ExecutionContext, request: QueryReferencesRequest): Promise<RpcResult<QueryReferencesResponse>>;
+
+  createDocument(ctx: ExecutionContext, request: CreateDocumentRequest): Promise<RpcResult<CreateDocumentResponse>>;
 
   // TODO(burdon): Update? Return DocumentEntry?
   changeDocument(ctx: ExecutionContext, spaceId: SpaceId, documentId: string, changes: Uint8Array): Promise<void>;
 }
 
 export interface QueueService {
-  query(ctx: ExecutionContext, queueDXN: string, query: Omit<QueueQuery, 'queueId'>): Promise<QueryResult>;
-  append(ctx: ExecutionContext, queueDXN: string, objects: unknown[]): Promise<void>;
+  queryQueue: (
+    ctx: ExecutionContext,
+    request: FeedProtocol.QueryQueueRequest,
+  ) => Promise<RpcResult<FeedProtocol.QueryResult>>;
+  insertIntoQueue: (
+    ctx: ExecutionContext,
+    request: FeedProtocol.InsertIntoQueueRequest,
+  ) => Promise<RpcResult<RpcDisposable>>;
+  deleteFromQueue: (
+    ctx: ExecutionContext,
+    request: FeedProtocol.DeleteFromQueueRequest,
+  ) => Promise<RpcResult<RpcDisposable>>;
+}
+
+/**
+ * FunctionsAiService API for other CF services like functions.
+ */
+export interface FunctionsAiService {
+  /**
+   * Enables proxying HTTP requests to the AI service from other workers.
+   */
+  fetch(request: Request): Promise<RpcResult<Response>>;
 }
 
 export type ObjectDocumentJson = {
@@ -159,7 +183,21 @@ export type QueryReferencesResponse = {
   references: ObjectReference[];
 };
 
-export type CreateDocumentResponse = {
-  /** Automerge document ID. */
-  documentId: string;
-};
+/**
+ * Cloudflare Workers RPC returns objects/arrays/stubs that may need to be explicitly disposed.
+ *
+ * See: https://developers.cloudflare.com/workers/runtime-apis/rpc/lifecycle/
+ */
+export interface RpcDisposable {
+  /**
+   * Disposes the RPC stub / returned value and releases any server-side resources it references.
+   */
+  [Symbol.dispose](): void;
+}
+
+/**
+ * Wraps a return type so that any non-primitive value is marked as disposable.
+ *
+ * This models Workers RPC behavior where any returned object (including arrays) gets a disposer added.
+ */
+export type RpcResult<T> = T extends object ? T & RpcDisposable : T;

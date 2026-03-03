@@ -5,4 +5,3 @@
 export * from './field';
 export * from './format';
 export * from './projection';
-export * from './sort';

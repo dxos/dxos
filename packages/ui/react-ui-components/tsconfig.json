@@ -73,13 +73,16 @@
       "path": "../react-ui-markdown"
     },
     {
-      "path": "../react-ui-stack"
-    },
-    {
       "path": "../react-ui-syntax-highlighter"
     },
     {
-      "path": "../react-ui-theme"
+      "path": "../ui"
+    },
+    {
+      "path": "../ui-editor"
+    },
+    {
+      "path": "../ui-theme"
     }
   ]
 }

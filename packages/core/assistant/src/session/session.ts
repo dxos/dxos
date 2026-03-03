@@ -8,25 +8,24 @@ import type * as Tool from '@effect/ai/Tool';
 import type * as Toolkit from '@effect/ai/Toolkit';
 import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
-import type * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
 import {
   AiParser,
   AiPreprocessor,
+  AiSummarizer,
   type AiToolNotFoundError,
   type PromptPreprocessingError,
   type ToolExecutionService,
   type ToolResolverService,
   callTool,
-  getToolCalls,
+  withoutToolCallParising,
 } from '@dxos/ai';
 import { type Blueprint } from '@dxos/blueprints';
-import { todo } from '@dxos/debug';
 import { Obj } from '@dxos/echo';
-import { TracingService } from '@dxos/functions';
+import { type FunctionInvocationService, TracingService } from '@dxos/functions';
 import { log } from '@dxos/log';
-import { Message } from '@dxos/types';
+import { type ContentBlock, Message } from '@dxos/types';
 
 import { type AiAssistantError } from '../errors';
 
@@ -39,20 +38,32 @@ export type AiSessionRunRequirements =
   | LanguageModel.LanguageModel
   | ToolExecutionService
   | ToolResolverService
-  | TracingService;
+  | TracingService
+  | FunctionInvocationService;
 
-export type AiSessionRunParams<Tools extends Record<string, Tool.Any>> = {
+export type AiSessionOptions = {
+  /**
+   * Summarize before executing the prompt if the existing history exceeds this threshold.
+   */
+  summarizationThreshold?: number;
+};
+
+export type AiSessionRunProps<Tools extends Record<string, Tool.Any>> = {
   prompt: string;
   // TODO(wittjosiah): Rename to systemPrompt.
   system?: string;
   history?: Message.Message[];
-  objects?: Obj.Any[];
-  blueprints?: Blueprint.Blueprint[];
+  objects?: Obj.Unknown[];
+  blueprints?: readonly Blueprint.Blueprint[];
   toolkit?: Toolkit.WithHandler<Tools>;
-  observer?: GenerationObserver;
+  observer?: GenerationObserver<Tools>;
+  /**
+   * Callback for when a message is received from the user, model, or tool.
+   * This is useful for streaming the output to a queue.
+   */
+  // TODO(dmaretskyi): This is duplicated by generation observer. Better solution would be to convert the return type from effect to stream.
+  onOutput?: (message: Message.Message) => Effect.Effect<void, never, never>;
 };
-
-export type AiSessionOptions = {};
 
 /**
  * Contains message history, tools, current context.
@@ -75,7 +86,19 @@ export class AiSession {
   /** Pending messages for this session (incl. the current prompt). */
   private _pending: Message.Message[] = [];
 
+  private _started = 0;
+  private _ended = 0;
+  private _toolCalls = 0;
+
   constructor(private readonly _options: AiSessionOptions = {}) {}
+
+  get duration(): number {
+    return this._ended - this._started;
+  }
+
+  get toolCalls(): number {
+    return this._toolCalls;
+  }
 
   run = <Tools extends Record<string, Tool.Any>>({
     prompt,
@@ -85,25 +108,41 @@ export class AiSession {
     blueprints = [],
     toolkit,
     observer = GenerationObserver.noop(),
-  }: AiSessionRunParams<Tools>): Effect.Effect<Message.Message[], AiSessionRunError, AiSessionRunRequirements> =>
+    onOutput = () => Effect.void,
+  }: AiSessionRunProps<Tools>): Effect.Effect<Message.Message[], AiSessionRunError, AiSessionRunRequirements> =>
     Effect.gen(this, function* () {
+      this._started = Date.now();
       this._history = [...history];
       this._pending = [];
-      const pending = this._pending;
 
-      const submitMessage = Effect.fnUntraced(function* (message: Message.Message) {
-        pending.push(message);
-        yield* observer.onMessage(message);
-        yield* TracingService.emitConverationMessage(message);
-        return message;
-      });
+      const submitMessage = (message: Message.Message) =>
+        Effect.gen(this, function* () {
+          this._pending.push(message);
+          yield* observer.onMessage(message);
+          yield* TracingService.emitConverationMessage(message);
+          yield* onOutput(message);
+          return message;
+        });
+
+      const system = yield* formatSystemPrompt({ system: systemTemplate, blueprints, objects }).pipe(Effect.orDie);
+
+      if (this._options.summarizationThreshold !== undefined) {
+        const tokenCount = yield* AiPreprocessor.estimateTokens(
+          yield* AiPreprocessor.preprocessPrompt([...this._history], {
+            system,
+          }),
+        );
+        if (tokenCount > this._options.summarizationThreshold) {
+          const summary = yield* AiSummarizer.summarize([...this._history]);
+          yield* submitMessage(summary);
+        }
+      }
 
       // Submit the prompt.
       // TODO(burdon): Remove if cancelled?
       const promptMessage = yield* submitMessage(yield* formatUserPrompt({ prompt, history }));
 
       // Generate system and prompt messages.
-      const system = yield* formatSystemPrompt({ system: systemTemplate, blueprints, objects });
 
       // Tool call loop.
       do {
@@ -115,15 +154,19 @@ export class AiSession {
           objects: objects?.length ?? 0,
         });
 
-        const prompt = yield* AiPreprocessor.preprocessPrompt([...this._history, ...this._pending], { system });
+        const prompt = yield* AiPreprocessor.preprocessPrompt([...this._history, ...this._pending], {
+          system,
+          cacheControl: 'ephemeral',
+        });
 
         // Execute the stream request.
-        // logDump('prompt', Prompt.Prompt.pipe(Schema.encodeSync)(prompt));
-        const blocks = yield* LanguageModel.streamText({
+        const messages = yield* LanguageModel.streamText({
           prompt,
           toolkit,
           disableToolCallResolution: true,
         }).pipe(
+          // Disable tool call parsing so that we can handle parameter schema errors on a per-tool call basis.
+          withoutToolCallParising,
           // TOOD(dmaretskyi): Error mapping.
           AiParser.parseResponse({
             onBegin: () => observer.onBegin(),
@@ -131,21 +174,29 @@ export class AiSession {
             onPart: (part) => observer.onPart(part),
             onEnd: (summary) => observer.onEnd(summary),
           }),
+          Stream.mapEffect((block) =>
+            Effect.gen(function* () {
+              return yield* submitMessage(
+                Obj.make(Message.Message, {
+                  created: new Date().toISOString(),
+                  sender: { role: 'assistant' },
+                  blocks: [block],
+                }),
+              );
+            }),
+          ),
           Stream.runCollect,
           Effect.map(Chunk.toArray),
         );
 
-        // Create the response message.
-        const response = yield* submitMessage(
-          Obj.make(Message.Message, {
-            created: new Date().toISOString(),
-            sender: { role: 'assistant' },
-            blocks,
-          }),
-        );
-
         // Parse the response for tool calls.
-        const toolCalls = getToolCalls(response);
+        const toolCalls = messages.flatMap((message) =>
+          message.blocks
+            .filter(
+              (block): block is ContentBlock.ToolCall => block._tag === 'toolCall' && block.providerExecuted === false,
+            )
+            .map((block) => ({ block, message })),
+        );
         if (toolCalls.length === 0) {
           break;
         } else if (!toolkit) {
@@ -154,13 +205,13 @@ export class AiSession {
 
         // Execute the tool calls.
         // TODO(burdon): Retry errors? Write result when each completes individually?
-        const toolResults = yield* Effect.forEach(toolCalls, (toolCall) => {
-          return callTool(toolkit, toolCall).pipe(
+        const toolResults = yield* Effect.forEach(toolCalls, ({ block, message }) => {
+          return callTool(toolkit, block).pipe(
             Effect.provide(
               TracingService.layerSubframe((context) => ({
                 ...context,
-                parentMessage: response.id,
-                toolCallId: toolCall.toolCallId,
+                parentMessage: message.id,
+                toolCallId: block.toolCallId,
               })),
             ),
           );
@@ -169,6 +220,7 @@ export class AiSession {
         // Add to queue and continue loop.
         // TODO(wittjosiah): Sometimes tool error results are added to the queue before the tool agent statuses.
         //   This results in a broken execution graph.
+        // TODO(dmaretskyi): Stream tool results one by one.
         yield* submitMessage(
           Obj.make(Message.Message, {
             created: new Date().toISOString(),
@@ -176,28 +228,14 @@ export class AiSession {
             blocks: toolResults,
           }),
         );
+
+        this._toolCalls++;
       } while (true);
 
-      log('done', { pending: this._pending.length });
+      this._ended = Date.now();
+      log('done', { pending: this._pending.length, duration: this.duration, tools: this._toolCalls });
       return this._pending;
     }).pipe(this._semaphore.withPermits(1), Effect.withSpan('AiSession.run'));
-
-  /**
-   * @deprecated
-   */
-  // TODO(burdon): Implement or remove.
-  async runStructured<S extends Schema.Schema.AnyNoContext>(
-    _schema: S,
-    _options: AiSessionRunParams<any>,
-  ): Promise<Schema.Schema.Type<S>> {
-    return todo();
-    // const parser = structuredOutputParser(schema);
-    // const result = await this.run({
-    //   ...options,
-    //   executableTools: [...(options.executableTools ?? []), parser.tool],
-    // });
-    // return parser.getResult(result);
-  }
 }
 
 const createSnippet = (text: string, len = 32) =>

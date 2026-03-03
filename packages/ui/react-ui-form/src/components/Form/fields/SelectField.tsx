@@ -43,7 +43,7 @@ export const SelectField = ({
       ) : (
         <Select.Root value={value} onValueChange={handleValueChange}>
           {/* TODO(burdon): Placeholder not working? */}
-          <Select.TriggerButton classNames='is-full' disabled={!!readonly} placeholder={placeholder} />
+          <Select.TriggerButton classNames='w-full' disabled={!!readonly} placeholder={placeholder} />
           <Select.Portal>
             <Select.Content>
               <Select.Viewport>

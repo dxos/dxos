@@ -2,27 +2,31 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type Atom } from '@effect-atom/atom-react';
 import * as Schema from 'effect/Schema';
 import { type Context, createContext } from 'react';
 
+import { Capability } from '@dxos/app-framework';
+import { Operation } from '@dxos/operation';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { Collection } from '@dxos/schema';
 
 import { meta } from './meta';
 
-export namespace PresenterAction {
-  const PRESENTER_ACTION = `${meta.id}/action`;
+const PRESENTER_OPERATION = `${meta.id}/operation`;
 
-  export class TogglePresentation extends Schema.TaggedClass<TogglePresentation>()(
-    `${PRESENTER_ACTION}/toggle-presentation`,
-    {
+// TODO(wittjosiah): This appears to be unused.
+export namespace PresenterOperation {
+  export const TogglePresentation = Operation.make({
+    meta: { key: `${PRESENTER_OPERATION}/toggle-presentation`, name: 'Toggle Presentation' },
+    schema: {
       input: Schema.Struct({
         object: Schema.Union(Markdown.Document, Collection.Collection),
         state: Schema.optional(Schema.Boolean),
       }),
       output: Schema.Void,
     },
-  ) {}
+  });
 }
 
 export type PresenterContextType = {
@@ -44,3 +48,7 @@ export const PresenterSettingsSchema = Schema.mutable(
 );
 
 export type PresenterSettingsProps = Schema.Schema.Type<typeof PresenterSettingsSchema>;
+
+export namespace PresenterCapabilities {
+  export const Settings = Capability.make<Atom.Writable<PresenterSettingsProps>>(`${meta.id}/capability/settings`);
+}

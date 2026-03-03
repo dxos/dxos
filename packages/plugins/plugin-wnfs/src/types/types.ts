@@ -4,21 +4,18 @@
 
 import * as Schema from 'effect/Schema';
 
-import { FileInfoSchema } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
+import { FileInfoSchema } from '@dxos/app-toolkit';
+import { Database } from '@dxos/echo';
+import { Operation } from '@dxos/operation';
 import { SpaceSchema } from '@dxos/react-client/echo';
+import { Collection } from '@dxos/schema';
 
 import { meta } from '../meta';
 
 import * as File from './File';
 
 export namespace WnfsAction {
-  export class Create extends Schema.TaggedClass<Create>()(`${meta.id}/action/create`, {
-    input: FileInfoSchema.pick('name', 'type', 'cid').pipe(Schema.required),
-    output: Schema.Struct({
-      object: File.File,
-    }),
-  }) {}
-
   export const UploadAnnotationId = Symbol.for(`${meta.id}/annotation/upload`);
 
   export const UploadFileSchema = Schema.Struct({
@@ -33,9 +30,52 @@ export namespace WnfsAction {
   });
 
   export type UploadFileForm = Schema.Schema.Type<typeof UploadFileSchema>;
+}
 
-  export class Upload extends Schema.TaggedClass<Upload>()(`${meta.id}/action/upload`, {
-    input: Schema.extend(UploadFileSchema, Schema.Struct({ space: SpaceSchema })),
-    output: Schema.required(FileInfoSchema),
-  }) {}
+const WNFS_OPERATION = `${meta.id}/operation`;
+
+export namespace WnfsOperation {
+  export const OnCreateSpace = Operation.make({
+    meta: { key: `${WNFS_OPERATION}/on-create-space`, name: 'On Create Space' },
+    services: [Capability.Service],
+    schema: {
+      input: Schema.Struct({
+        space: SpaceSchema,
+        rootCollection: Collection.Collection,
+        isDefault: Schema.optional(Schema.Boolean),
+      }),
+      output: Schema.Void,
+    },
+  });
+
+  export const Create = Operation.make({
+    meta: { key: `${WNFS_OPERATION}/create`, name: 'Create WNFS File' },
+    services: [Capability.Service],
+    schema: {
+      input: FileInfoSchema.pick('name', 'type', 'cid').pipe(Schema.required),
+      output: Schema.Struct({
+        object: File.File,
+      }),
+    },
+  });
+
+  export const Upload = Operation.make({
+    meta: { key: `${WNFS_OPERATION}/upload`, name: 'Upload File' },
+    services: [Capability.Service],
+    schema: {
+      input: Schema.extend(WnfsAction.UploadFileSchema, Schema.Struct({ db: Database.Database })),
+      output: Schema.required(FileInfoSchema),
+    },
+  });
+
+  export const CreateFile = Operation.make({
+    meta: { key: `${WNFS_OPERATION}/create-file`, name: 'Create File' },
+    services: [Capability.Service],
+    schema: {
+      input: Schema.extend(WnfsAction.UploadFileSchema, Schema.Struct({ db: Database.Database })),
+      output: Schema.Struct({
+        object: File.File,
+      }),
+    },
+  });
 }

@@ -5,7 +5,7 @@
 import { type Primitive } from '@radix-ui/react-primitive';
 import React, { type ComponentPropsWithRef, forwardRef, memo } from 'react';
 
-import { type Size } from '@dxos/react-ui-types';
+import { type Size } from '@dxos/ui-types';
 
 import { useIconHref, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
@@ -20,7 +20,7 @@ export const Icon = memo(
     const { tx } = useThemeContext();
     const href = useIconHref(icon);
     return (
-      <svg {...props} className={tx('icon.root', 'icon', { size }, classNames)} ref={forwardedRef}>
+      <svg {...props} className={tx('icon.root', { size }, classNames)} ref={forwardedRef}>
         <use href={href} />
       </svg>
     );

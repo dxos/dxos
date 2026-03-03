@@ -4,7 +4,7 @@
 
 import { beforeAll, describe, test } from 'vitest';
 
-import { type EchoDatabase } from '@dxos/echo-db';
+import { type Database } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { FunctionExecutor, ServiceContainer } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
@@ -19,7 +19,7 @@ import { extractionNerFunction } from './extraction-ner-function';
 
 describe.skip('NER EntityExtraction', () => {
   let builder: EchoTestBuilder;
-  let db: EchoDatabase;
+  let db: Database.Database;
   let executor: FunctionExecutor;
   let testData: {
     transcriptJosiah: Message.Message[];
@@ -35,7 +35,7 @@ describe.skip('NER EntityExtraction', () => {
   beforeAll(async () => {
     // TODO(dmaretskyi): Helper to scaffold this from a config.
     builder = await new EchoTestBuilder().open();
-    const { db: db1 } = await builder.createDatabase({ indexing: { vector: true } });
+    const { db: db1 } = await builder.createDatabase();
     db = db1;
     await db.graph.schemaRegistry.register(TYPES);
     const data = createTestData();

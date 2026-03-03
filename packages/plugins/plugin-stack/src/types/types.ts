@@ -39,7 +39,7 @@ export type StackSectionMetadata = {
 
 export type StackSectionItem = {
   id: string;
-  object: Obj.Any;
+  object: Obj.Unknown;
   view: StackSectionView;
   metadata: StackSectionMetadata;
 };

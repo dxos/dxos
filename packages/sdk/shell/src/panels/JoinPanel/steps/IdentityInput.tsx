@@ -10,6 +10,7 @@ import { useTranslation } from '@dxos/react-ui';
 import { type MaybePromise } from '@dxos/util';
 
 import { Action, Actions, Input, StepHeading } from '../../../components';
+import { translationKey } from '../../../translations';
 import { type JoinStepProps } from '../JoinPanelProps';
 
 export interface IdentityCreatorProps extends JoinStepProps {
@@ -27,7 +28,7 @@ export const IdentityInput = (props: IdentityInputProps) => {
   const { send, method } = props;
   const isRecover = method === 'recover identity';
   const client = useClient();
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(translationKey);
   const [validationMessage, setValidationMessage] = useState('');
   const handleConfirm = async (value: string) => {
     if (isRecover) {
@@ -58,7 +59,7 @@ export const IdentityInput = (props: IdentityInputProps) => {
 // TODO(zhenyasav): impl shouldn't need send()
 export const IdentityInputImpl = (props: IdentityInputImplProps) => {
   const { method, active, onConfirm, validationMessage } = props;
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(translationKey);
   const [inputValue, setInputValue] = useState('');
   const [pending, setPending] = useState(false);
   const disabled = !active || pending;

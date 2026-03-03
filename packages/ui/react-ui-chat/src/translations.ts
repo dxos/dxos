@@ -4,7 +4,7 @@
 
 import { type Resource } from '@dxos/react-ui';
 
-export const translationKey = 'react-ui-chat';
+export const translationKey = '@dxos/react-ui-chat';
 
 export const translations = [
   {

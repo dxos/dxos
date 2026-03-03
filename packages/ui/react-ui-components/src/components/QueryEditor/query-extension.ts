@@ -11,9 +11,9 @@ import JSON5 from 'json5';
 
 import { Tag } from '@dxos/echo';
 import { QueryDSL } from '@dxos/echo-query';
-import { Domino } from '@dxos/react-ui';
-import { type CompoetionContext, focus, focusField, staticCompletion, typeahead } from '@dxos/react-ui-editor';
-import { getHashHue, getStyles } from '@dxos/react-ui-theme';
+import { Domino } from '@dxos/ui';
+import { type CompoetionContext, focus, focusField, staticCompletion, typeahead } from '@dxos/ui-editor';
+import { getHashHue, getStyles, mx } from '@dxos/ui-theme';
 
 export type QueryOptions = {
   tags?: Tag.Map;
@@ -62,7 +62,7 @@ const decorations = ({ tags }: QueryOptions): Extension => {
               node.from,
               node.to,
               Decoration.mark({
-                class: 'pli-1',
+                class: 'px-1',
               }),
             );
             break;
@@ -146,7 +146,7 @@ const decorations = ({ tags }: QueryOptions): Extension => {
               node.from,
               node.to,
               Decoration.mark({
-                class: 'pie-1 uppercase',
+                class: 'pe-1 uppercase',
                 atomic: true,
               }),
             );
@@ -211,14 +211,10 @@ const lineHeight = '30px';
  * NOTE: The outer container vertically aligns the inner text with content in the outer div.
  */
 const container = (classNames: string, ...children: Domino<HTMLElement>[]) => {
-  return Domino.of('span')
-    .classNames('inline-flex bs-[28px] align-middle')
-    .children(
-      Domino.of('span')
-        .classNames(['inline-flex bs-[26px] border rounded-sm', classNames])
-        .children(...children),
-    )
-    .build();
+  const inner = Domino.of('span')
+    .classNames(mx('inline-flex h-[26px] border rounded-xs', classNames))
+    .children(...children);
+  return Domino.of('span').classNames('inline-flex h-[28px] align-middle').children(inner).root;
 };
 
 /**
@@ -241,8 +237,8 @@ class TypeWidget extends WidgetType {
     const label: string = this._identifier.split(/\W/).at(-1)!;
     return container(
       'border-sky-500',
-      Domino.of('span').classNames(['flex items-center pli-1 text-black text-xs bg-sky-500']).text('type'),
-      Domino.of('span').classNames(['flex items-center pli-1 text-subdued']).text(label),
+      Domino.of('span').classNames(mx('flex items-center px-1 text-black text-xs bg-sky-500')).text('type'),
+      Domino.of('span').classNames(mx('flex items-center px-1 text-subdued')).text(label),
     );
   }
 }
@@ -263,12 +259,12 @@ class TagWidget extends WidgetType {
   }
 
   override toDOM() {
-    const { bg, border, surface } = getStyles(this._hue);
+    const { fill, border, surface } = getStyles(this._hue);
     return container(
       border,
-      Domino.of('span').classNames(['flex items-center pli-1 text-black text-xs', bg]).text('#'),
+      Domino.of('span').classNames(mx('flex items-center px-1 text-black text-xs', fill)).text('#'),
       Domino.of('span')
-        .classNames(['flex items-center pli-1 text-subdued text-sm rounded-r-[3px]', surface])
+        .classNames(mx('flex items-center px-1 text-subdued text-sm rounded-r-[3px]', surface))
         .text(this._str),
     );
   }
@@ -298,16 +294,13 @@ class ObjectWidget extends WidgetType {
   override toDOM() {
     return container(
       'border-separator divide-x divide-separator',
-      ...this._entries.map(([key, value]) =>
-        Domino.of('span')
-          .classNames('inline-flex items-stretch')
-          .children(
-            Domino.of('span')
-              .classNames('flex items-center pli-1 text-subdued text-xs bg-modalSurface first:rounded-l-[3px]')
-              .text(key),
-            Domino.of('span').classNames('flex items-center pli-1 text-subdued').text(value),
-          ),
-      ),
+      ...this._entries.map(([key, value]) => {
+        const keyEl = Domino.of('span')
+          .classNames('flex items-center px-1 text-subdued text-xs bg-modal-surface first:rounded-l-[3px]')
+          .text(key);
+        const valueEl = Domino.of('span').classNames('flex items-center px-1 text-subdued').text(value);
+        return Domino.of('span').classNames('inline-flex items-stretch').children(keyEl, valueEl);
+      }),
     );
   }
 }
@@ -325,7 +318,7 @@ class SymbolWidget extends WidgetType {
   }
 
   override toDOM() {
-    return Domino.of('span').text(this._str).build();
+    return Domino.of('span').text(this._str).root;
   }
 }
 
@@ -380,21 +373,21 @@ const queryLanguage = LRLanguage.define({
  * Define a custom highlight style for the query language.
  */
 const queryHighlightStyle = HighlightStyle.define([
-  { tag: t.keyword, class: 'text-blueText' },
-  { tag: t.string, class: 'text-orangeText' },
-  { tag: t.number, class: 'text-greenText' },
-  { tag: t.bool, class: 'text-greenText' },
-  { tag: t.null, class: 'text-neutralText' },
-  { tag: t.attributeName, class: 'text-blueText' },
-  { tag: t.variableName, class: 'text-tealText' },
-  { tag: t.propertyName, class: 'text-tealText' },
+  { tag: t.keyword, class: 'text-blue-text' },
+  { tag: t.string, class: 'text-orange-text' },
+  { tag: t.number, class: 'text-green-text' },
+  { tag: t.bool, class: 'text-green-text' },
+  { tag: t.null, class: 'text-neutral-text' },
+  { tag: t.attributeName, class: 'text-blue-text' },
+  { tag: t.variableName, class: 'text-teal-text' },
+  { tag: t.propertyName, class: 'text-teal-text' },
   { tag: t.definitionOperator, class: 'text-subdued' },
   { tag: t.separator, class: 'text-subdued' },
   { tag: t.derefOperator, class: 'text-subdued' },
   { tag: t.brace, class: 'text-subdued' },
   { tag: t.squareBracket, class: 'text-subdued' },
   { tag: t.operator, class: 'text-subdued' },
-  { tag: t.paren, class: 'text-amberText' },
+  { tag: t.paren, class: 'text-amber-text' },
 ]);
 
 type Range = { from: number; to: number };

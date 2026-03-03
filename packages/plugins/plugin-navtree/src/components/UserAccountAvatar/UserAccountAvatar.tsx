@@ -22,7 +22,7 @@ export const UserAccountAvatar = ({ size, userId, hue, emoji, status }: UserAcco
 
   return (
     <>
-      <L0ItemActiveTabIndicator classNames='inset-block-6' />
+      <L0ItemActiveTabIndicator classNames='inset-y-6' />
       <div
         className='grid place-items-center dx-focus-ring-group-indicator rounded-full'
         data-joyride='welcome/account'

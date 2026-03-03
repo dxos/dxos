@@ -2,11 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Toolbox } from './toolbox';
+
 /**
  * Hook runs on `pnpm i` (see root `package.json` script `postinstall`).
+ *
+ * Run the following to see the entire trace to debug errors:
+ * pnpm i --reporter=append-only
  */
-
-import { Toolbox } from './toolbox';
 
 // TODO(burdon): Parse options using yargs.
 const argModuleStats = process.argv.includes('--module-stats');

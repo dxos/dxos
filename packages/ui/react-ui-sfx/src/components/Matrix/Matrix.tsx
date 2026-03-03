@@ -6,7 +6,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import React, { useMemo } from 'react';
 
 import { type Size, type ThemedClassName } from '@dxos/react-ui';
-import { getSize, mx } from '@dxos/react-ui-theme';
+import { getSize, mx } from '@dxos/ui-theme';
 
 export type MatrixProps = ThemedClassName<{
   dim?: number;
@@ -38,7 +38,7 @@ export const Matrix = ({ classNames, dim = 5, count = 20, size = 5, dotSize = 4 
 
   return (
     <div className={mx('flex shrink-0 items-center', getSize(size), classNames)}>
-      <div className='relative flex is-full bs-full'>
+      <div className='relative flex w-full h-full'>
         <AnimatePresence>
           {Array.from({ length: count }).map((_, i) => (
             <Dot key={i} variants={variants} variant={randomVariant()} size={dotSize} classNames='bg-primary-500' />

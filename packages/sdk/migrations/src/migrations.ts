@@ -2,7 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Space, SpaceState, live } from '@dxos/client/echo';
+import { Atom } from '@effect-atom/atom';
+import * as Registry from '@effect-atom/atom/Registry';
+
+import { type Space, SpaceState } from '@dxos/client/echo';
 import { invariant } from '@dxos/invariant';
 import { type MaybePromise } from '@dxos/util';
 
@@ -21,7 +24,8 @@ export type Migration = {
 export class Migrations {
   static namespace?: string;
   static migrations: Migration[] = [];
-  private static _state = live<{ running: string[] }>({ running: [] });
+  private static _registry = Registry.make();
+  private static _stateAtom = Atom.make<{ running: string[] }>({ running: [] }).pipe(Atom.keepAlive);
 
   static get versionProperty() {
     return this.namespace && `${this.namespace}.version`;
@@ -32,7 +36,8 @@ export class Migrations {
   }
 
   static running(space: Space): boolean {
-    return this._state.running.includes(space.key.toHex());
+    const state = this._registry.get(this._stateAtom);
+    return state.running.includes(space.key.toHex());
   }
 
   static define(namespace: string, migrations: Migration[]): void {
@@ -52,20 +57,23 @@ export class Migrations {
       return false;
     }
 
-    this._state.running.push(space.key.toHex());
+    const spaceKey = space.key.toHex();
+    const currentState = this._registry.get(this._stateAtom);
+    this._registry.set(this._stateAtom, { running: [...currentState.running, spaceKey] });
     if (targetIndex > currentIndex) {
       const migrations = this.migrations.slice(currentIndex, targetIndex);
       for (const migration of migrations) {
         const builder = new MigrationBuilder(space);
         await migration.next({ space, builder });
-        builder.changeProperties((propertiesStructure) => {
+        await builder.changeProperties((propertiesStructure) => {
           invariant(this.versionProperty, 'Migrations namespace not set');
           propertiesStructure.data[this.versionProperty] = migration.version;
         });
         await builder._commit();
       }
     }
-    this._state.running.splice(this._state.running.indexOf(space.key.toHex()), 1);
+    const finalState = this._registry.get(this._stateAtom);
+    this._registry.set(this._stateAtom, { running: finalState.running.filter((key) => key !== spaceKey) });
 
     return true;
   }

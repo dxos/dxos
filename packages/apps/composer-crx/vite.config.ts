@@ -13,7 +13,7 @@ import topLevelAwait from 'vite-plugin-top-level-await';
 import wasm from 'vite-plugin-wasm';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
-import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
+import { ThemePlugin } from '@dxos/ui-theme/plugin';
 import { IconsPlugin } from '@dxos/vite-plugin-icons';
 
 // import { createConfig as createTestConfig } from '../../../vitest.base.config';
@@ -62,14 +62,7 @@ export default defineConfig({
     ConfigPlugin({
       root: dirname,
     }),
-    ThemePlugin({
-      root: dirname,
-      content: [
-        path.resolve(dirname, './index.html'),
-        path.resolve(dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        path.join(rootDir, '/packages/ui/*/src/**/*.{js,ts,jsx,tsx}'),
-      ],
-    }),
+    ThemePlugin({}),
     IconsPlugin({
       symbolPattern: 'ph--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
       assetPath: (name, variant) =>

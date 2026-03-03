@@ -12,6 +12,7 @@ import { ScopedShellManager } from './scoped-shell-manager';
 
 const CONFIRM_INPUT = 'RESET';
 
+/** @deprecated */
 export class ShellManager extends ScopedShellManager {
   private _invitationCode = new Trigger<string>();
   private _authCode = new Trigger<string>();

@@ -9,9 +9,9 @@ export const translations = [
     'en-US': {
       composer: {
         'show stack label': 'View stack trace',
-        'fatal error title': 'The app encountered an error',
+        'fatal error title': 'System Error',
         'fatal error message':
-          'Please refresh the page to continue. If you keep seeing this error, please create a GitHub issue or ask for help on Discord.',
+          'Refresh the page to continue. If you keep seeing this error, please create a GitHub issue or ask for help on Discord.',
         'reset dialog label': 'Reload or reset',
         'reset dialog message':
           'If you are encountering issues, reloading may fix the issue. If reloading doesn’t help, consider resetting the app.',

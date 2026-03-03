@@ -9,9 +9,9 @@ import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { type ComponentPropsWithRef, forwardRef, useCallback, useEffect, useRef } from 'react';
 
 import { Icon, type IconProps, type ThemedClassName } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
-import { commandItem, searchListItem } from '../SearchList';
+const commandItem = 'flex items-center overflow-hidden';
 
 const LISTBOX_NAME = 'Listbox';
 const LISTBOX_OPTION_NAME = 'ListboxOption';
@@ -100,7 +100,7 @@ const ListboxRoot = forwardRef<HTMLUListElement, ListboxRootProps>(
         <ul
           role='listbox'
           {...rootProps}
-          className={mx('is-full p-cardSpacingChrome', classNames)}
+          className={mx('w-full p-form-chrome', classNames)}
           ref={rootRef}
           {...arrowGroup}
         >
@@ -135,7 +135,12 @@ const ListboxOption = forwardRef<HTMLLIElement, ListboxOptionProps>(
           {...rootProps}
           aria-selected={isSelected}
           tabIndex={0}
-          className={mx('dx-focus-ring', commandItem, searchListItem, classNames)}
+          className={mx(
+            'dx-focus-ring',
+            'py-1 px-2 rounded-xs select-none cursor-pointer data-[selected=true]:bg-hover-overlay hover:bg-hover-overlay',
+            commandItem,
+            classNames,
+          )}
           onClick={handleSelect}
           onKeyDown={({ key }) => {
             if (['Enter', ' '].includes(key)) {

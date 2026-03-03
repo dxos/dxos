@@ -441,12 +441,12 @@ type JoinSend = InterpreterFrom<JoinMachine>['send'] | JoinSendVoid;
 
 export const defaultCodeFromUrl = (invitationType: 'halo' | 'space', text: string) => {
   try {
-    const searchParams = new URLSearchParams(text.substring(text.lastIndexOf('?')));
+    const searchProps = new URLSearchParams(text.substring(text.lastIndexOf('?')));
     return (
-      searchParams.get(`${invitationType}InvitationCode`) ??
-      searchParams.get(`${invitationType}Invitation`) ??
-      searchParams.get('invitationCode') ??
-      searchParams.get('invitation') ??
+      searchProps.get(`${invitationType}InvitationCode`) ??
+      searchProps.get(`${invitationType}Invitation`) ??
+      searchProps.get('invitationCode') ??
+      searchProps.get('invitation') ??
       text
     );
   } catch (err) {

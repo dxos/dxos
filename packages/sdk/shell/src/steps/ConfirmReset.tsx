@@ -2,12 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 
 import { log } from '@dxos/log';
-import { Message, useTranslation } from '@dxos/react-ui';
+import { Dialog, Message, useTranslation } from '@dxos/react-ui';
 
-import { Action, Actions, Input, StepHeading } from '../components';
+import { Action, Input, StepHeading } from '../components';
+import { translationKey } from '../translations';
 
 import { type StepProps } from './StepProps';
 
@@ -25,49 +26,33 @@ export type ConfirmResetImplProps = ConfirmResetOptions & {
   validationMessage?: string;
 };
 
-export const ConfirmReset = ({ active, onCancel, onConfirm, mode }: ConfirmResetProps) => {
-  const { t } = useTranslation('os');
+export const ConfirmReset = ({ active, mode, onCancel, onConfirm }: ConfirmResetProps) => {
+  const { t } = useTranslation(translationKey);
   const [validationMessage, setValidationMessage] = useState('');
   const [pending, setPending] = useState(false);
-  const processReset = async () => {
-    setPending(true);
-    return onConfirm?.().then(
-      () => setPending(false),
-      (error) => {
-        log.catch(error);
-        setValidationMessage(t('failed to reset identity message'));
-        setPending(false);
-      },
-    );
-  };
-  return (
-    <ConfirmResetImpl
-      disabled={!active}
-      pending={pending}
-      validationMessage={validationMessage}
-      onConfirm={processReset}
-      onCancel={onCancel}
-      mode={mode}
-    />
-  );
-};
-
-export const ConfirmResetImpl = ({
-  disabled,
-  pending,
-  validationMessage,
-  onConfirm,
-  onCancel,
-  mode,
-}: ConfirmResetImplProps) => {
-  const { t } = useTranslation('os');
-  const confirmationValue = t('confirmation value');
   const [inputValue, setInputValue] = useState('');
+  const disabled = !active;
   const testIdAffix =
     mode === 'join new identity' ? 'join-new-identity' : mode === 'recover' ? 'recover' : 'reset-storage';
+
+  const confirmationValue = t('confirmation value');
+
+  const handleConfirm = useCallback(async () => {
+    setPending(true);
+    try {
+      await onConfirm?.();
+      setPending(false);
+    } catch (err) {
+      log.catch(err);
+      setValidationMessage(t('failed to reset identity message'));
+      setPending(false);
+    }
+  }, [onConfirm, t]);
+
   return (
     <>
-      <div role='none' className='grow flex flex-col gap-2 justify-center'>
+      <Dialog.Body>
+        xxxxxxx
         <Message.Root valence='error'>
           <Message.Title>{t('sign out chooser title')}</Message.Title>
           <Message.Content>{t('sign out chooser message')}</Message.Content>
@@ -75,7 +60,7 @@ export const ConfirmResetImpl = ({
         <Input
           {...{ validationMessage }}
           label={
-            <StepHeading className='text-start mlb-2'>
+            <StepHeading className='text-start my-2'>
               {t(
                 mode === 'join new identity'
                   ? 'join new identity input label'
@@ -93,8 +78,8 @@ export const ConfirmResetImpl = ({
           placeholder={t('confirmation placeholder', { confirmationValue })}
           onChange={({ target: { value } }) => setInputValue(value)}
         />
-      </div>
-      <Actions>
+      </Dialog.Body>
+      <Dialog.ActionBar classNames='grid grid-cols-2 gap-2'>
         {onCancel && (
           <Action disabled={disabled} onClick={onCancel} data-testid={`${testIdAffix}.reset-identity-cancel`}>
             {t('cancel label')}
@@ -104,13 +89,13 @@ export const ConfirmResetImpl = ({
           <Action
             variant='destructive'
             disabled={disabled || pending || inputValue !== confirmationValue}
-            onClick={onConfirm}
+            onClick={handleConfirm}
             data-testid={`${testIdAffix}.reset-identity-confirm`}
           >
             {pending ? t('reset in progress label') : t('reset device label')}
           </Action>
         )}
-      </Actions>
+      </Dialog.ActionBar>
     </>
   );
 };

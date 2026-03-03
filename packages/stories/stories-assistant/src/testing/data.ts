@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Live, type Space } from '@dxos/client/echo';
+import { type Space } from '@dxos/client/echo';
 import { Obj, Ref, Relation, type Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Employer, HasConnection, Message, Organization, Person } from '@dxos/types';
@@ -101,19 +101,19 @@ const testRelationships: Record<
 };
 
 export const addTestData = async (space: Space): Promise<void> => {
-  const objectMap = new Map<string, Live<any>>();
+  const objectMap = new Map<string, any>();
 
   for (const [typename, objects] of Object.entries(testObjects)) {
-    const schema = space.db.graph.schemaRegistry.getSchema(typename);
+    const schema = space.internal.db.graph.schemaRegistry.getSchema(typename);
     invariant(schema, `Schema not found: ${typename}`);
     for (const { id, ...data } of objects) {
-      const object = space.db.add(Obj.make(schema, data));
+      const object = space.internal.db.add(Obj.make(schema, data));
       objectMap.set(id, object);
     }
   }
 
   for (const [typename, relationships] of Object.entries(testRelationships)) {
-    const schema = space.db.graph.schemaRegistry.getSchema(typename);
+    const schema = space.internal.db.graph.schemaRegistry.getSchema(typename);
     invariant(schema, `Schema not found: ${typename}`);
 
     for (const { source, target, ...data } of relationships) {

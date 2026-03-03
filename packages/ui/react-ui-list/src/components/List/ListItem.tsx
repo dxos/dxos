@@ -31,7 +31,7 @@ import {
   type ThemedClassName,
   useTranslation,
 } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx, osTranslations } from '@dxos/ui-theme';
 
 import { useListContext } from './ListRoot';
 
@@ -46,17 +46,17 @@ export type ItemDragState =
       container: HTMLElement;
     }
   | {
-      type: 'is-dragging';
+      type: 'w-dragging';
     }
   | {
-      type: 'is-dragging-over';
+      type: 'w-dragging-over';
       closestEdge: Edge | null;
     };
 
 export const idle: ItemDragState = { type: 'idle' };
 
 const stateStyles: { [Key in ItemDragState['type']]?: HTMLAttributes<HTMLDivElement>['className'] } = {
-  'is-dragging': 'opacity-50',
+  'w-dragging': 'opacity-50',
 };
 
 type ListItemContext<T extends ListItemRecord> = {
@@ -124,8 +124,8 @@ export const ListItem = <T extends ListItemRecord>({ children, classNames, item,
             }
           : undefined,
         onDragStart: () => {
-          setState({ type: 'is-dragging' });
-          setRootState({ type: 'is-dragging', item });
+          setState({ type: 'w-dragging' });
+          setRootState({ type: 'w-dragging', item });
         },
         onDrop: () => {
           setState(idle);
@@ -147,7 +147,7 @@ export const ListItem = <T extends ListItemRecord>({ children, classNames, item,
         getIsSticky: () => true,
         onDragEnter: ({ self }) => {
           const closestEdge = extractClosestEdge(self.data);
-          setState({ type: 'is-dragging-over', closestEdge });
+          setState({ type: 'w-dragging-over', closestEdge });
         },
         onDragLeave: () => {
           setState(idle);
@@ -155,10 +155,10 @@ export const ListItem = <T extends ListItemRecord>({ children, classNames, item,
         onDrag: ({ self }) => {
           const closestEdge = extractClosestEdge(self.data);
           setState((current) => {
-            if (current.type === 'is-dragging-over' && current.closestEdge === closestEdge) {
+            if (current.type === 'w-dragging-over' && current.closestEdge === closestEdge) {
               return current;
             }
-            return { type: 'is-dragging-over', closestEdge };
+            return { type: 'w-dragging-over', closestEdge };
           });
         },
         onDrop: () => {
@@ -172,7 +172,7 @@ export const ListItem = <T extends ListItemRecord>({ children, classNames, item,
     <ListItemProvider item={item} dragHandleRef={dragHandleRef}>
       <div ref={ref} role='listitem' className={mx('flex relative', classNames, stateStyles[state.type])} {...props}>
         {children}
-        {state.type === 'is-dragging-over' && state.closestEdge && (
+        {state.type === 'w-dragging-over' && state.closestEdge && (
           <NaturalListItem.DropIndicator edge={state.closestEdge} />
         )}
       </div>
@@ -195,7 +195,7 @@ export const ListItemDeleteButton = ({
   Omit<IconButtonProps, 'icon' | 'label'> & { autoHide?: boolean; label?: string }) => {
   const { state } = useListContext('DELETE_BUTTON');
   const isDisabled = state.type !== 'idle' || disabled;
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(osTranslations);
   return (
     <IconButton
       iconOnly
@@ -232,7 +232,7 @@ export const ListItemButton = ({
 
 export const ListItemDragHandle = ({ disabled }: Pick<IconButtonProps, 'disabled'>) => {
   const { dragHandleRef } = useListItemContext('DRAG_HANDLE');
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(osTranslations);
   return (
     <IconButton
       iconOnly
@@ -255,7 +255,7 @@ export const ListItemDragPreview = <T extends ListItemRecord>({
 };
 
 export const ListItemWrapper = ({ classNames, children }: ThemedClassName<PropsWithChildren>) => (
-  <div className={mx('flex is-full gap-2', classNames)}>{children}</div>
+  <div className={mx('flex w-full gap-2', classNames)}>{children}</div>
 );
 
 export const ListItemTitle = ({

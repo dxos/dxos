@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { useAtomValue } from '@effect-atom/atom-react';
 import React from 'react';
 
 import { DropdownMenu, toLocalizedString, useTranslation } from '@dxos/react-ui';
@@ -13,8 +14,8 @@ type RowActionsMenuProps = { model: TableModel; modals: ModalController };
 
 export const RowActionsMenu = ({ model, modals }: RowActionsMenuProps) => {
   const { t } = useTranslation(translationKey);
-  const hasSelection = model.selection.hasSelection.value;
-  const state = modals.state.value;
+  const hasSelection = model.selection.hasSelection;
+  const state = useAtomValue(modals.state);
   if (state?.type !== 'row') {
     return null;
   }

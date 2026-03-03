@@ -4,7 +4,7 @@
 
 import { type Resource } from '@dxos/react-ui';
 
-export const translationKey = 'os';
+export const translationKey = 'dxos.org/i18n/shell';
 
 export const translations = [
   {
@@ -116,11 +116,12 @@ export const translations = [
           'WARNING: To join an existing device all data on this device will be deleted. Type {{confirmationValue}} to continue.',
         'failed to reset identity message': 'Failed to reset identity.',
         'confirmation value': 'RESET',
-        'confirmation placeholder': 'Enter {{confirmationValue}} to continue.',
+        'confirmation placeholder': 'Type {{confirmationValue}} to continue.',
         'sign out chooser title': 'Danger zone',
         'sign out chooser message': 'Proceeding with the action below will erase all data on this device.',
         'join new identity label': 'Join an existing identity',
         'reset device label': 'Reset storage',
+        'recover reset input label': '', // TODO(burdon): ???
         'reset device confirm message': 'Are you sure you want to reset your device? All data will be lost.',
         'emoji and color label': 'Emoji and color',
         'clear label': 'Use default',

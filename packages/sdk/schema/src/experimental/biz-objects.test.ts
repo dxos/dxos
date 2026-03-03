@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { Obj, Type } from '@dxos/echo';
+import { Obj, Ref, Type } from '@dxos/echo';
 
 // TODO(burdon): Goal > Action > Result.
 
@@ -50,7 +50,7 @@ namespace Proposition {
   export interface Fields extends Schema.Schema.Type<typeof Fields> {}
 
   export const Object = Fields.pipe(
-    Type.Obj({
+    Type.object({
       typename: 'dxos.org/type/Proposition',
       version: '0.1.0',
     }),
@@ -86,7 +86,7 @@ export namespace OKR {
   });
 
   const Object = Properties.pipe(
-    Type.Obj({
+    Type.object({
       typename: 'dxos.org/type/OKR',
       version: '0.1.0',
     }),
@@ -105,16 +105,16 @@ export namespace SWOT {
     subject: Schema.optional(Type.Ref(Proposition.Object)).annotations({
       description: 'Subject of the analysis, which could be a document or a structured object.',
     }),
-    strengths: Schema.mutable(Schema.Array(Proposition.Object)).annotations({
+    strengths: Schema.Array(Type.Ref(Proposition.Object)).annotations({
       description: 'An attribute of the organization that is helpful in achieving its objectives.',
     }),
-    weaknesses: Schema.mutable(Schema.Array(Proposition.Object)).annotations({
+    weaknesses: Schema.Array(Type.Ref(Proposition.Object)).annotations({
       description: 'A limitation or deficiency within the organization that could hinder its progress.',
     }),
-    opportunities: Schema.mutable(Schema.Array(Proposition.Object)).annotations({
+    opportunities: Schema.Array(Type.Ref(Proposition.Object)).annotations({
       description: 'An external factor that the organization could exploit to its advantage.',
     }),
-    threats: Schema.mutable(Schema.Array(Proposition.Object)).annotations({
+    threats: Schema.Array(Type.Ref(Proposition.Object)).annotations({
       description: 'An external factor that could potentially harm the organization.',
     }),
   }).annotations({
@@ -123,7 +123,7 @@ export namespace SWOT {
   });
 
   const Object = Properties.pipe(
-    Type.Obj({
+    Type.object({
       typename: 'dxos.org/type/SWOT',
       version: '0.1.0',
     }),
@@ -140,7 +140,7 @@ export namespace Plan {
   });
 
   const Object = Properties.pipe(
-    Type.Obj({
+    Type.object({
       typename: 'dxos.org/type/Plan',
       version: '0.1.0',
     }),
@@ -169,7 +169,14 @@ export namespace HealthPlan {}
 describe('analysis', () => {
   test('SWOT', ({ expect }) => {
     const analysis = SWOT.make();
-    analysis.strengths.push(Proposition.make({ text: 'Unique decentralized object graph.' }));
+    expect(analysis.strengths).toHaveLength(0);
+
+    // Add a proposition using Ref.make (required for ECHO object references).
+    const proposition = Proposition.make({ text: 'Unique decentralized object graph.' });
+    Obj.change(analysis, (a) => {
+      a.strengths.push(Ref.make(proposition));
+    });
+
     expect(analysis.strengths).toHaveLength(1);
   });
 });

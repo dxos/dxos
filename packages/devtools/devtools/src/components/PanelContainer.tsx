@@ -5,7 +5,7 @@
 import React, { type JSX, type PropsWithChildren } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 type PanelContainerProps = ThemedClassName<
   PropsWithChildren<{
@@ -16,9 +16,9 @@ type PanelContainerProps = ThemedClassName<
 
 export const PanelContainer = ({ classNames, children, toolbar, footer }: PanelContainerProps) => {
   return (
-    <div className='flex flex-col bs-full overflow-hidden divide-y divide-separator'>
+    <div className='flex flex-col h-full overflow-hidden divide-y divide-separator'>
       {toolbar}
-      <div className={mx('flex flex-col bs-full overflow-auto', classNames)}>{children}</div>
+      <div className={mx('flex flex-col h-full overflow-auto', classNames)}>{children}</div>
       {footer}
     </div>
   );

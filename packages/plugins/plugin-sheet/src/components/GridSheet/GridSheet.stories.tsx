@@ -5,12 +5,12 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { testFunctionPlugins } from '@dxos/compute/testing';
+import { OperationPlugin, RuntimePlugin } from '@dxos/plugin-testing';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { createTestCells, useTestSheet, withComputeGraphDecorator } from '../../testing';
 import { translations } from '../../translations';
@@ -30,7 +30,7 @@ export const Basic = () => {
 
   return (
     <SheetProvider graph={graph} sheet={sheet} ignoreAttention>
-      <div role='none' className='grid bs-full is-full'>
+      <div role='none' className='grid h-full w-full'>
         <GridSheet />
       </div>
     </SheetProvider>
@@ -38,14 +38,15 @@ export const Basic = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-sheet/GridSheet',
+  title: 'plugins/plugin-sheet/components/GridSheet',
   component: GridSheet,
   decorators: [
-    withTheme,
+    withTheme(),
+    withLayout({ layout: 'fullscreen' }),
     withClientProvider({ types: [Sheet.Sheet], createSpace: true }),
     withComputeGraphDecorator({ plugins: testFunctionPlugins }),
     withPluginManager({
-      plugins: [IntentPlugin()],
+      plugins: [OperationPlugin(), RuntimePlugin()],
     }),
   ],
   parameters: {

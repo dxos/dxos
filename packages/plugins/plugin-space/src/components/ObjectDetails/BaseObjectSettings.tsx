@@ -2,18 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import { batch } from '@preact/signals-core';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import React, { type PropsWithChildren, useCallback, useMemo } from 'react';
 
 import { DXN, Obj, type Ref, Tag, Type } from '@dxos/echo';
-import { type JsonPath, setValue } from '@dxos/echo/internal';
+import { type JsonPath, splitJsonPath } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { getSpace } from '@dxos/react-client/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
-import { Form, omitId, useRefQueryOptions } from '@dxos/react-ui-form';
+import { Form, omitId } from '@dxos/react-ui-form';
 import { isNonNullable } from '@dxos/util';
 
 import { meta as pluginMeta } from '../../meta';
@@ -23,19 +21,15 @@ const BaseSchema = Schema.Struct({
   tags: Schema.Array(Type.Ref(Tag.Tag)).pipe(Schema.optional),
 });
 
-// TODO(wittjosiah): Better way to support validation of object schemas?
-const TagSchema = Tag.Tag.pipe(Schema.omit('id'));
-
 export type BaseObjectSettingsProps = ThemedClassName<
   PropsWithChildren<{
-    object: Obj.Any;
+    object: Obj.Unknown;
   }>
 >;
 
 // TODO(wittjosiah): Reconcile w/ ObjectDetailsPanel.
 export const BaseObjectSettings = ({ classNames, children, object }: BaseObjectSettingsProps) => {
-  const space = getSpace(object);
-  const handleRefQueryLookup = useRefQueryOptions({ space });
+  const db = Obj.getDatabase(object);
 
   const formSchema = useMemo(() => {
     return Function.pipe(
@@ -47,7 +41,7 @@ export const BaseObjectSettings = ({ classNames, children, object }: BaseObjectS
   }, [object]);
 
   const meta = Obj.getMeta(object);
-  const tags = (meta.tags ?? []).map((tag) => space?.db.makeRef(DXN.parse(tag))).filter(isNonNullable);
+  const tags = (meta.tags ?? []).map((tag) => db?.makeRef(DXN.parse(tag))).filter(isNonNullable);
   const values = useMemo(
     () => ({
       tags,
@@ -56,11 +50,15 @@ export const BaseObjectSettings = ({ classNames, children, object }: BaseObjectS
     [object, tags],
   );
 
-  const handleCreateTag = useCallback((values: Schema.Schema.Type<typeof TagSchema>) => {
-    invariant(space);
-    const tag = space.db.add(Tag.make(values));
-    const meta = Obj.getMeta(object);
-    meta.tags = [...(meta.tags ?? []), Obj.getDXN(tag).toString()];
+  const handleCreate = useCallback((schema: Type.Entity.Any, values: any) => {
+    invariant(db);
+    invariant(Type.isObjectSchema(schema));
+    const newObject = db.add(Obj.make(schema, values));
+    if (Obj.instanceOf(Tag.Tag, newObject)) {
+      Obj.change(object, (obj) => {
+        Obj.getMeta(obj).tags = [...(Obj.getMeta(obj).tags ?? []), Obj.getDXN(newObject).toString()];
+      });
+    }
   }, []);
 
   // TODO(wittjosiah): Use FormRootProps type.
@@ -74,19 +72,26 @@ export const BaseObjectSettings = ({ classNames, children, object }: BaseObjectS
       }
 
       const changedPaths = Object.keys(changed).filter((path) => changed[path as JsonPath]) as JsonPath[];
-      batch(() => {
-        for (const path of changedPaths) {
-          // TODO(wittjosiah): This doesn't handle array paths well.
-          if (path.startsWith('tags')) {
-            const meta = Obj.getMeta(object);
-            meta.tags = tags?.map((tag: Ref.Ref<Tag.Tag>) => tag.dxn.toString()) ?? [];
-            continue;
-          }
 
-          const value = values[path];
-          setValue(object, path, value);
-        }
-      });
+      // Handle tags separately using Obj.change.
+      const hasTagsChange = changedPaths.some((path) => splitJsonPath(path)[0] === 'tags');
+      if (hasTagsChange) {
+        Obj.change(object, (obj) => {
+          Obj.getMeta(obj).tags = tags?.map((tag: Ref.Ref<Tag.Tag>) => tag.dxn.toString()) ?? [];
+        });
+      }
+
+      // Handle other property changes.
+      const nonTagPaths = changedPaths.filter((path) => splitJsonPath(path)[0] !== 'tags');
+      if (nonTagPaths.length > 0) {
+        Obj.change(object, () => {
+          for (const path of nonTagPaths) {
+            const parts = splitJsonPath(path);
+            const value = Obj.getValue(values, parts);
+            Obj.setValue(object, parts, value);
+          }
+        });
+      }
     },
     [object],
   );
@@ -99,13 +104,12 @@ export const BaseObjectSettings = ({ classNames, children, object }: BaseObjectS
     <Form.Root
       schema={omitId(formSchema)}
       values={values}
-      createSchema={TagSchema}
       createOptionIcon='ph--plus--regular'
       createOptionLabel={['add tag label', { ns: pluginMeta.id }]}
       createInitialValuePath='label'
+      db={db}
       onValuesChanged={handleChange}
-      onCreate={handleCreateTag}
-      onQueryRefOptions={handleRefQueryLookup}
+      onCreate={handleCreate}
     >
       <Form.Viewport>
         <Form.Content classNames={classNames}>

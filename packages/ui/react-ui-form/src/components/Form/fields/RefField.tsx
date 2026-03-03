@@ -4,38 +4,53 @@
 
 import '@dxos/lit-ui/dx-tag-picker.pcss';
 
-import type * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
-import { Ref } from '@dxos/echo';
+import { type Database, Entity, Filter, Ref, Type } from '@dxos/echo';
 import { ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/internal';
+import { useQuery, useSchema as useSchema$ } from '@dxos/echo-react';
 import { findAnnotation } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { DxAnchor } from '@dxos/lit-ui/react';
 import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
-import { descriptionText, mx } from '@dxos/react-ui-theme';
-import { isNonNullable } from '@dxos/util';
+import { mx } from '@dxos/ui-theme';
 
-import { type QueryRefOptions, useQueryRefOptions } from '../../../hooks';
 import { translationKey } from '../../../translations';
-import { ObjectPicker } from '../../ObjectPicker';
+import { ObjectPicker, type ObjectPickerContentProps, type RefOption } from '../../ObjectPicker';
+import { omitId } from '../Form';
 import { type FormFieldComponentProps, FormFieldLabel } from '../FormFieldComponent';
 
 // TODO(burdon): Factor out.
-const isRefSnapShot = (val: any): val is { '/': string } => {
+const isRefSnapshot = (val: any): val is { '/': string } => {
   return typeof val === 'object' && typeof (val as any)?.['/'] === 'string';
 };
 
-export type RefFieldProps = FormFieldComponentProps & {
-  // TODO(wittjosiah): Remove this. Array is handled upstream.
-  array?: boolean;
-  createOptionLabel?: [string, { ns: string }];
-  createOptionIcon?: string;
-  createSchema?: Schema.Schema.AnyNoContext;
-  createInitialValuePath?: string;
-  onCreate?: (values: any) => void;
-  onQueryRefOptions?: QueryRefOptions;
-};
+const defaultGetOptions: NonNullable<RefFieldProps['getOptions']> = (results) =>
+  results.map((result) => {
+    const id = Entity.getDXN(result).toString();
+    const label = Entity.getLabel(result);
+    return { id, label: label ?? id };
+  });
+
+const defaultResultsHook: NonNullable<RefFieldProps['resultsHook']> = (db, typename) =>
+  useQuery(
+    db,
+    typename
+      ? // For Type.Ref(Type.Obj) we want to show all objects.
+        typename === Type.getTypename(Type.Obj)
+        ? Filter.everything()
+        : Filter.typename(typename)
+      : Filter.nothing(),
+  );
+
+export type RefFieldProps = FormFieldComponentProps &
+  Pick<ObjectPickerContentProps, 'createOptionLabel' | 'createOptionIcon' | 'createInitialValuePath'> & {
+    db?: Database.Database;
+    resultsHook?: (db?: Database.Database, typename?: string) => Entity.Any[];
+    schemaHook?: (db?: Database.Database, typename?: string) => Type.Entity.Any;
+    getOptions?: (objects: Entity.Any[]) => RefOption[];
+    onCreate?: (schema: Type.Entity.Any, values: any) => void;
+  };
 
 export const RefField = (props: RefFieldProps) => {
   const {
@@ -46,13 +61,14 @@ export const RefField = (props: RefFieldProps) => {
     layout,
     getStatus,
     getValue,
-    array,
     createOptionLabel,
     createOptionIcon,
-    createSchema,
     createInitialValuePath,
+    db,
+    resultsHook: useResults = defaultResultsHook,
+    schemaHook: useSchema = useSchema$,
+    getOptions = defaultGetOptions,
     onCreate,
-    onQueryRefOptions,
     onValueChange,
   } = props;
   const { t } = useTranslation(translationKey);
@@ -63,15 +79,15 @@ export const RefField = (props: RefFieldProps) => {
     [type],
   );
 
-  // TODO(burdon): Query items on demand.
-  const { options, update: updateOptions } = useQueryRefOptions({ typename, onQueryRefOptions });
+  const results = useResults(db, typename);
+  const options = useMemo(() => getOptions(results), [results, getOptions]);
 
   const handleGetValue = useCallback(() => {
     const formValue = getValue();
 
     const unknownToRefOption = (value: unknown) => {
       const isRef = Ref.isRef(value);
-      if (isRef || isRefSnapShot(value)) {
+      if (isRef || isRefSnapshot(value)) {
         const dxnString = isRef ? value.dxn.toString() : value['/'];
         const matchingOption = options.find((option) => option.id === dxnString);
         if (matchingOption) {
@@ -81,72 +97,43 @@ export const RefField = (props: RefFieldProps) => {
       return undefined;
     };
 
-    if (array && Array.isArray(formValue)) {
-      return formValue.map(unknownToRefOption).filter(isNonNullable) ?? [];
-    }
-
-    const option = unknownToRefOption(formValue);
-    if (option) {
-      return [option];
-    }
-
-    return [];
-  }, [options, array, getValue]);
+    return unknownToRefOption(formValue);
+  }, [options, getValue]);
 
   const handleUpdate = useCallback(
-    (ids: string[]) => {
-      if (ids.length === 0) {
-        onValueChange(type, undefined);
-        return;
-      }
-
-      const refs = ids
-        .map((id) => {
-          const item = options.find((option) => option.id === id);
-          if (item) {
-            const dxn = DXN.parse(item.id);
-            return Ref.fromDXN(dxn);
-          }
-          return null;
-        })
-        .filter(isNonNullable);
-
-      if (array) {
-        onValueChange(type, refs);
-      } else {
-        onValueChange(type, refs[0]);
-      }
+    (id: string | undefined) => {
+      const item = options.find((option) => option.id === id);
+      const ref = item ? Ref.fromDXN(DXN.parse(item.id)) : undefined;
+      onValueChange(type, ref);
     },
-    [options, type, array, onValueChange],
+    [options, type, onValueChange],
   );
+
+  const item = handleGetValue();
+  const selectedIds = useMemo(() => (item ? [item.id] : []), [item]);
+  const createSchema = useSchema(db, typename);
 
   const handleCreate = useCallback(
     (values: any) => {
-      onCreate?.(values);
-      updateOptions();
-    },
-    [onCreate, updateOptions],
-  );
-
-  const items = handleGetValue();
-  const selectedIds = useMemo(() => items.map((i: any) => i.id), [items]);
-  const toggleSelect = useCallback(
-    (id: string) => {
-      if (array) {
-        const nextIds = selectedIds.includes(id) ? selectedIds.filter((x) => x !== id) : [...selectedIds, id];
-        handleUpdate(nextIds);
-      } else {
-        if (selectedIds[0] === id) {
-          handleUpdate([]);
-        } else {
-          handleUpdate([id]);
-        }
+      if (createSchema && onCreate) {
+        onCreate(createSchema, values);
       }
     },
-    [array, selectedIds, handleUpdate],
+    [createSchema, onCreate],
   );
 
-  if (!typename || ((readonly || layout === 'static') && items.length < 1)) {
+  const handleSelect = useCallback(
+    (id: string) => {
+      if (item?.id === id) {
+        handleUpdate(undefined);
+      } else {
+        handleUpdate(id);
+      }
+    },
+    [item, handleUpdate],
+  );
+
+  if (!typename || ((readonly || layout === 'static') && !item)) {
     return null;
   }
 
@@ -155,48 +142,44 @@ export const RefField = (props: RefFieldProps) => {
       {layout !== 'inline' && <FormFieldLabel error={error} readonly={readonly} label={label} />}
       <div>
         {readonly ? (
-          items.length < 1 ? (
-            <p className={mx(descriptionText, 'mbe-2')}>{t('empty readonly ref field label')}</p>
+          !item ? (
+            <p className={mx('text-description', 'mb-2')}>{t('empty readonly ref field label')}</p>
           ) : (
-            items.map((item) => (
-              <DxAnchor key={item.id} refid={item.id} rootclassname='mie-1'>
-                {item.label}
-              </DxAnchor>
-            ))
+            <DxAnchor key={item.id} dxn={item.id} rootclassname='me-1'>
+              {item.label}
+            </DxAnchor>
           )
         ) : (
           <ObjectPicker.Root>
             <ObjectPicker.Trigger asChild classNames='p-0'>
-              {items?.length === 1 ? (
-                <div className='flex gap-2 is-full'>
-                  {items?.map((item) => (
-                    <Input.Root key={item.id}>
-                      <Input.TextInput value={item.label} readOnly classNames='is-full' />
-                    </Input.Root>
-                  ))}
+              {item ? (
+                <div className='flex gap-2 w-full'>
+                  <Input.Root key={item.id}>
+                    <Input.TextInput value={item.label} readOnly classNames='w-full' />
+                  </Input.Root>
                 </div>
               ) : (
-                <Button classNames='is-full text-start gap-2'>
+                <Button classNames='w-full text-start gap-2'>
                   <div role='none' className='grow overflow-hidden'>
-                    <span className='flex truncate text-description'>
-                      {placeholder ?? t('ref field placeholder', { count: array ? 99 : 1 })}
-                    </span>
+                    <span className='flex truncate text-description'>{placeholder ?? t('ref field placeholder')}</span>
                   </div>
                   <Icon size={3} icon='ph--caret-down--bold' />
                 </Button>
               )}
             </ObjectPicker.Trigger>
-            <ObjectPicker.Content
-              classNames='popover-card-width'
-              options={options}
-              selectedIds={selectedIds}
-              createSchema={createSchema}
-              createOptionLabel={createOptionLabel}
-              createOptionIcon={createOptionIcon}
-              createInitialValuePath={createInitialValuePath}
-              onCreate={handleCreate}
-              onSelect={toggleSelect}
-            />
+            <ObjectPicker.Portal>
+              <ObjectPicker.Content
+                classNames='dx-card-popover-width'
+                options={options}
+                selectedIds={selectedIds}
+                createSchema={createSchema && omitId(createSchema)}
+                createOptionLabel={createOptionLabel}
+                createOptionIcon={createOptionIcon}
+                createInitialValuePath={createInitialValuePath}
+                onCreate={handleCreate}
+                onSelect={handleSelect}
+              />
+            </ObjectPicker.Portal>
           </ObjectPicker.Root>
         )}
       </div>

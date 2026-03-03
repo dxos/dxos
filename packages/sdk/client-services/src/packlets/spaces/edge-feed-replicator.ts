@@ -22,7 +22,7 @@ import type { FeedBlock, ProtocolMessage } from '@dxos/protocols/feed-replicatio
 import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { ComplexMap, arrayToBuffer, bufferToArray, defaultMap, rangeFromTo } from '@dxos/util';
 
-export type EdgeFeedReplicatorParams = {
+export type EdgeFeedReplicatorProps = {
   messenger: EdgeConnection;
   spaceId: SpaceId;
 };
@@ -47,7 +47,7 @@ export class EdgeFeedReplicator extends Resource {
    */
   private _pushMutex = new ComplexMap<PublicKey, Mutex>(PublicKey.hash);
 
-  constructor({ messenger, spaceId }: EdgeFeedReplicatorParams) {
+  constructor({ messenger, spaceId }: EdgeFeedReplicatorProps) {
     super();
     this._messenger = messenger;
     this._spaceId = spaceId;

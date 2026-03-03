@@ -2,213 +2,177 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Registry } from '@effect-atom/atom-react';
-import type * as Layer from 'effect/Layer';
-import type * as Schema from 'effect/Schema';
-import { type FC, type PropsWithChildren } from 'react';
+import type * as Command$ from '@effect/cli/Command';
+import { type Atom, type Registry } from '@effect-atom/atom-react';
+import * as Effect from 'effect/Effect';
+import type * as Layer$ from 'effect/Layer';
+import type * as ManagedRuntime$ from 'effect/ManagedRuntime';
+import type { FC, PropsWithChildren } from 'react';
 
-import { type AiService } from '@dxos/ai';
-import type * as AiServiceRouter from '@dxos/ai/AiServiceRouter';
-import { type BuilderExtensions, type GraphBuilder } from '@dxos/app-graph';
-import { type GenericToolkit } from '@dxos/assistant';
-import { type Blueprint } from '@dxos/blueprints';
-import { type Space } from '@dxos/client-protocol';
-import { type FunctionDefinition } from '@dxos/functions';
-import { type RootSettingsStore } from '@dxos/local-storage';
-import { type AnchoredTo } from '@dxos/types';
+import type { OperationInvoker as OperationInvoker$, OperationResolver as OperationResolver$ } from '@dxos/operation';
 
-import { type PluginManager, defineCapability } from '../core';
-import { type AnyIntentResolver, type IntentContext } from '../plugin-intent';
+import { Capability as Capability$, type PluginManager as PluginManager$ } from '../core';
+import type {
+  HistoryTracker as HistoryTracker$,
+  UndoMapping as UndoMapping$,
+  UndoRegistry as UndoRegistry$,
+} from '../plugin-operation';
+import type { Surface } from '../ui';
 
-import { type FileInfo } from './file';
-import { type NodeSerializer } from './graph';
-import { type SurfaceDefinition } from './surface';
-import { type Resource } from './translations';
+/**
+ * Null capability.
+ * @category Capability
+ */
+export const Null = Capability$.make<null>('dxos.org/app-framework/capability/null');
 
-// TODO(burdon): Sort.
-export namespace Capabilities {
-  /**
-   * @category Capability
-   */
-  export const Null = defineCapability<null>('dxos.org/app-framework/capability/null');
+/**
+ * @category Capability
+ */
+export const PluginManager = Capability$.make<PluginManager$.PluginManager>(
+  'dxos.org/app-framework/capability/plugin-manager',
+);
 
-  /**
-   * @category Capability
-   */
-  export const PluginManager = defineCapability<PluginManager>('dxos.org/app-framework/capability/plugin-manager');
+/**
+ * @category Capability
+ */
+export const AtomRegistry = Capability$.make<Registry.Registry>('dxos.org/app-framework/capability/atom-registry');
 
-  /**
-   * @category Capability
-   */
-  export const AtomRegistry = defineCapability<Registry.Registry>('dxos.org/app-framework/capability/atom-registry');
+export type ReactContext = Readonly<{
+  id: string;
+  dependsOn?: string[];
+  context: FC<PropsWithChildren>;
+}>;
 
-  export type ReactContext = Readonly<{
-    id: string;
-    dependsOn?: string[];
-    context: FC<PropsWithChildren>;
-  }>;
+/**
+ * @category Capability
+ */
+export const ReactContext = Capability$.make<ReactContext>('dxos.org/app-framework/capability/react-context');
 
-  /**
-   * @category Capability
-   */
-  export const ReactContext = defineCapability<ReactContext>('dxos.org/app-framework/capability/react-context');
+export type ReactRoot = Readonly<{ id: string; root: FC<PropsWithChildren> }>;
 
-  export type ReactRoot = Readonly<{ id: string; root: FC<PropsWithChildren> }>;
+/**
+ * @category Capability
+ */
+export const ReactRoot = Capability$.make<ReactRoot>('dxos.org/app-framework/capability/react-root');
 
-  /**
-   * @category Capability
-   */
-  export const ReactRoot = defineCapability<ReactRoot>('dxos.org/app-framework/capability/react-root');
+/**
+ * Surface definitions that can be either React components or Web Components.
+ */
+export type ReactSurface = Surface.Definition | readonly Surface.Definition[];
 
-  export type ReactSurface = SurfaceDefinition | readonly SurfaceDefinition[];
+/**
+ * @category Capability
+ */
+export const ReactSurface = Capability$.make<ReactSurface>('dxos.org/app-framework/common/react-surface');
 
-  /**
-   * @category Capability
-   */
-  export const ReactSurface = defineCapability<ReactSurface>('dxos.org/app-framework/common/react-surface');
+export type AnyCommand = Command$.Command<any, any, any, any>;
 
-  export type IntentResolver = AnyIntentResolver | readonly AnyIntentResolver[];
+/**
+ * @category Capability
+ */
+export const Command = Capability$.make<AnyCommand>('dxos.org/app-framework/capability/command');
 
-  /**
-   * @category Capability
-   */
-  export const IntentResolver = defineCapability<IntentResolver>('dxos.org/app-framework/capability/intent-resolver');
+/**
+ * @category Capability
+ */
+export const Layer = Capability$.make<Layer$.Layer<any, any, any>>('dxos.org/app-framework/capability/layer');
 
-  /**
-   * @category Capability
-   */
-  export const IntentDispatcher = defineCapability<IntentContext>(
-    'dxos.org/app-framework/capability/intent-dispatcher',
-  );
+export type ManagedRuntime = ManagedRuntime$.ManagedRuntime<any, any>;
 
-  export type Layout = Readonly<{
-    mode: string;
-    dialogOpen: boolean;
-    sidebarOpen: boolean;
-    complementarySidebarOpen: boolean;
-    /**
-     * The id of the active workspace, where a workspace is a set of active items.
-     */
-    workspace: string;
-    /**
-     * Identifiers of items which are currently active in the application.
-     */
-    active: string[];
-    /**
-     * Identifiers of items which were previously active in the application.
-     */
-    inactive: string[];
-    /**
-     * Identifier of the item which should be scrolled into view.
-     */
-    scrollIntoView: string | undefined;
-  }>;
+/**
+ * @category Capability
+ */
+export const ManagedRuntime = Capability$.make<ManagedRuntime>('dxos.org/app-framework/capability/managed-runtime');
 
-  /**
-   * @category Capability
-   */
-  export const Layout = defineCapability<Layout>('dxos.org/app-framework/capability/layout');
+//
+// Operation System Capabilities
+//
 
-  /**
-   * @category Capability
-   */
-  export const Translations = defineCapability<Readonly<Resource[]>>('dxos.org/app-framework/capability/translations');
+export type OperationResolver = OperationResolver$.OperationResolver<any, any, any, any>;
 
-  /**
-   * @category Capability
-   */
-  export const AppGraph = defineCapability<Readonly<Pick<GraphBuilder, 'graph' | 'explore'>>>(
-    'dxos.org/app-framework/capability/app-graph',
-  );
+/**
+ * Handler registration for operations - contributed by plugins.
+ * @category Capability
+ */
+export const OperationResolver = Capability$.make<OperationResolver[]>(
+  'dxos.org/app-framework/capability/operation-resolver',
+);
 
-  /**
-   * @category Capability
-   */
-  export const AppGraphBuilder = defineCapability<BuilderExtensions>(
-    'dxos.org/app-framework/capability/app-graph-builder',
-  );
+export type UndoMapping = UndoMapping$.UndoMapping;
 
-  /**
-   * @category Capability
-   */
-  export const AppGraphSerializer = defineCapability<NodeSerializer[]>(
-    'dxos.org/app-framework/capability/app-graph-serializer',
-  );
+/**
+ * Undo mapping registration - contributed by plugins.
+ * @category Capability
+ */
+export const UndoMapping = Capability$.make<UndoMapping[]>('dxos.org/app-framework/capability/undo-mapping');
 
-  /**
-   * @category Capability
-   */
-  export const SettingsStore = defineCapability<RootSettingsStore>('dxos.org/app-framework/capability/settings-store');
+export type OperationInvoker = OperationInvoker$.OperationInvoker;
 
-  // TODO(wittjosiah): The generics caused type inference issues for schemas when contributing settings.
-  // export type Settings = Parameters<RootSettingsStore['createStore']>[0];
-  // export type Settings<T extends SettingsValue = SettingsValue> = SettingsProps<T>;
-  export type Settings = {
-    prefix: string;
-    schema: Schema.Schema.All;
-    value?: Record<string, any>;
-  };
+/**
+ * Operation invoker - provided by OperationPlugin.
+ * @category Capability
+ */
+export const OperationInvoker = Capability$.make<OperationInvoker>(
+  'dxos.org/app-framework/capability/operation-invoker',
+);
 
-  /**
-   * @category Capability
-   */
-  export const Settings = defineCapability<Settings>('dxos.org/app-framework/capability/settings');
+export type UndoRegistry = UndoRegistry$.UndoRegistry;
 
-  export type Metadata = Readonly<{
-    id: string;
-    metadata: Record<string, any>;
-  }>;
+/**
+ * Undo registry - provided by OperationPlugin.
+ * @category Capability
+ */
+export const UndoRegistry = Capability$.make<UndoRegistry>('dxos.org/app-framework/capability/undo-registry');
 
-  /**
-   * @category Capability
-   */
-  export const Metadata = defineCapability<Metadata>('dxos.org/app-framework/capability/metadata');
+export type HistoryTracker = HistoryTracker$.HistoryTracker;
 
-  /**
-   * @category Capability
-   */
-  export const Toolkit = defineCapability<GenericToolkit.GenericToolkit>(
-    'dxos.org/app-framework/capability/ai-toolkit',
-  );
+/**
+ * History tracker - provided by OperationPlugin.
+ * @category Capability
+ */
+export const HistoryTracker = Capability$.make<HistoryTracker>('dxos.org/app-framework/capability/history-tracker');
 
-  /**
-   * @category Capability
-   */
-  export const BlueprintDefinition = defineCapability<Blueprint.Blueprint>(
-    'dxos.org/app-framework/capability/blueprint-definition',
-  );
+//
+// Atom Capability Helpers
+//
 
-  export type AiServiceLayer = Layer.Layer<AiService.AiService>;
-  export const AiServiceLayer = defineCapability<AiServiceLayer>(
-    'dxos.org/app-framework/capability/ai-service-factory',
-  );
+/**
+ * Get the current value of an atom capability.
+ * @example const settings = yield* Capabilities.getAtomValue(ThreadCapabilities.Settings);
+ */
+export const getAtomValue = <T>(
+  atomCapability: Capability$.InterfaceDef<Atom.Atom<T>>,
+): Effect.Effect<T, Error, Capability$.Service> =>
+  Effect.gen(function* () {
+    const registry = yield* Capability$.get(AtomRegistry);
+    const atom = yield* Capability$.get(atomCapability);
+    return registry.get(atom);
+  });
 
-  /**
-   * Plugins can contribute them to provide model resolvers.
-   */
-  export const AiModelResolver = defineCapability<Layer.Layer<AiServiceRouter.AiModelResolver>>(
-    'dxos.org/app-framework/capability/ai-model-resolver',
-  );
+/**
+ * Update an atom capability value (requires writable atom).
+ * @example yield* Capabilities.updateAtomValue(ThreadCapabilities.Settings, (s) => ({ ...s, foo: true }));
+ */
+export const updateAtomValue = <T>(
+  atomCapability: Capability$.InterfaceDef<Atom.Writable<T>>,
+  fn: (current: T) => T,
+): Effect.Effect<void, Error, Capability$.Service> =>
+  Effect.gen(function* () {
+    const registry = yield* Capability$.get(AtomRegistry);
+    const atom = yield* Capability$.get(atomCapability);
+    registry.set(atom, fn(registry.get(atom)));
+  });
 
-  /**
-   * @category Capability
-   */
-  export const Functions = defineCapability<FunctionDefinition.Any[]>('dxos.org/app-framework/capability/functions');
-
-  export type FileUploader = (space: Space, file: File) => Promise<FileInfo | undefined>;
-
-  /**
-   * @category Capability
-   */
-  export const FileUploader = defineCapability<FileUploader>('dxos.org/app-framework/capability/file-uploader');
-
-  export type AnchorSort = {
-    key: string;
-    sort: (anchorA: AnchoredTo.AnchoredTo, anchorB: AnchoredTo.AnchoredTo) => number;
-  };
-
-  /**
-   * @category Capability
-   */
-  export const AnchorSort = defineCapability<AnchorSort>('dxos.org/app-framework/capability/anchor-sort');
-}
+/**
+ * Subscribe to an atom capability.
+ * @example const unsubscribe = yield* Capabilities.subscribeAtom(ThreadCapabilities.Settings, (value) => ...);
+ */
+export const subscribeAtom = <T>(
+  atomCapability: Capability$.InterfaceDef<Atom.Atom<T>>,
+  callback: (value: T) => void,
+): Effect.Effect<() => void, Error, Capability$.Service> =>
+  Effect.gen(function* () {
+    const registry = yield* Capability$.get(AtomRegistry);
+    const atom = yield* Capability$.get(atomCapability);
+    return registry.subscribe(atom, () => callback(registry.get(atom)));
+  });

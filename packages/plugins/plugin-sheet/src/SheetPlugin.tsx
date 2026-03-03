@@ -2,78 +2,63 @@
 // Copyright 2023 DXOS.org
 //
 
-import {
-  Capabilities,
-  Events,
-  allOf,
-  contributes,
-  createIntent,
-  defineModule,
-  definePlugin,
-} from '@dxos/app-framework';
-import { AutomationEvents } from '@dxos/plugin-automation';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { MarkdownEvents } from '@dxos/plugin-markdown';
-import { type CreateObjectIntent } from '@dxos/plugin-space/types';
+import * as Effect from 'effect/Effect';
 
-import { AnchorSort, ComputeGraphRegistry, IntentResolver, Markdown, ReactSurface } from './capabilities';
+import { ActivationEvent, Capability, Plugin } from '@dxos/app-framework';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { Operation } from '@dxos/operation';
+import { AutomationEvents } from '@dxos/plugin-automation';
+import { ClientEvents } from '@dxos/plugin-client';
+import { MarkdownEvents } from '@dxos/plugin-markdown';
+import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
+import { type CreateObject } from '@dxos/plugin-space/types';
+
+import { AnchorSort, ComputeGraphRegistry, Markdown, OperationResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { serializer } from './serializer';
 import { translations } from './translations';
-import { Sheet, SheetAction } from './types';
+import { Sheet, SheetOperation } from './types';
 
-export const SheetPlugin = definePlugin(meta, () => [
-  defineModule({
-    id: `${meta.id}/module/compute-graph-registry`,
-    activatesOn: allOf(ClientEvents.ClientReady, AutomationEvents.ComputeRuntimeReady),
+export const SheetPlugin = Plugin.define(meta).pipe(
+  AppPlugin.addMetadataModule({
+    metadata: {
+      id: Sheet.Sheet.typename,
+      metadata: {
+        label: (object: Sheet.Sheet) => object.name,
+        icon: 'ph--grid-nine--regular',
+        iconHue: 'indigo',
+        serializer,
+        comments: 'anchored',
+        createObject: ((props) => Effect.sync(() => Sheet.make(props))) satisfies CreateObject,
+      },
+    },
+  }),
+  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addSchemaModule({ schema: [Sheet.Sheet] }),
+  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addModule({
+    activatesOn: ActivationEvent.allOf(ClientEvents.ClientReady, AutomationEvents.ComputeRuntimeReady),
     activate: ComputeGraphRegistry,
   }),
-  defineModule({
-    id: `${meta.id}/module/translations`,
-    activatesOn: Events.SetupTranslations,
-    activate: () => contributes(Capabilities.Translations, translations),
-  }),
-  defineModule({
-    id: `${meta.id}/module/metadata`,
-    activatesOn: Events.SetupMetadata,
+  Plugin.addModule({
+    id: 'on-space-created',
+    activatesOn: SpaceEvents.SpaceCreated,
     activate: () =>
-      contributes(Capabilities.Metadata, {
-        id: Sheet.Sheet.typename,
-        metadata: {
-          label: (object: Sheet.Sheet) => object.name,
-          icon: 'ph--grid-nine--regular',
-          iconHue: 'indigo',
-          serializer,
-          comments: 'anchored',
-          createObjectIntent: ((props) => createIntent(SheetAction.Create, { ...props })) satisfies CreateObjectIntent,
-          addToCollectionOnCreate: true,
-        },
-      }),
+      Effect.succeed(
+        Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) =>
+          Operation.invoke(SheetOperation.OnCreateSpace, params),
+        ),
+      ),
   }),
-  defineModule({
-    id: `${meta.id}/module/schema`,
-    activatesOn: ClientEvents.SetupSchema,
-    activate: () => contributes(ClientCapabilities.Schema, [Sheet.Sheet]),
-  }),
-  defineModule({
-    id: `${meta.id}/module/markdown`,
+  Plugin.addModule({
     activatesOn: MarkdownEvents.SetupExtensions,
     activate: Markdown,
   }),
-  defineModule({
-    id: `${meta.id}/module/anchor-sort`,
+  Plugin.addModule({
     // TODO(wittjosiah): More relevant event?
-    activatesOn: Events.AppGraphReady,
+    activatesOn: AppActivationEvents.AppGraphReady,
     activate: AnchorSort,
   }),
-  defineModule({
-    id: `${meta.id}/module/react-surface`,
-    activatesOn: Events.SetupReactSurface,
-    activate: ReactSurface,
-  }),
-  defineModule({
-    id: `${meta.id}/module/intent-resolver`,
-    activatesOn: Events.SetupIntentResolver,
-    activate: IntentResolver,
-  }),
-]);
+  Plugin.make,
+);

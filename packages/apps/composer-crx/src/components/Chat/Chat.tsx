@@ -9,9 +9,10 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 import browser from 'webextension-polyfill';
 
 import { SpaceId } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { IconButton, Input, ScrollContainer, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { MarkdownViewer } from '@dxos/react-ui-markdown';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { SPACE_ID_PROP, SPACE_MODE_PROP } from '../../config';
 import { translationKey } from '../../translations';
@@ -89,7 +90,7 @@ export const Chat = ({ classNames, host, url }: ChatProps) => {
 
       // Send system message.
       if (context.length > 0) {
-        console.log('system:', JSON.stringify(context, null, 2));
+        log.info('system', { context });
         await sendMessage(
           {
             role: 'assistant',
@@ -123,7 +124,7 @@ export const Chat = ({ classNames, host, url }: ChatProps) => {
   }, [clearError, clearHistory, stop]);
 
   return (
-    <div className={mx('flex flex-col gap-2 overflow-hidden bg-baseSurface', classNames)}>
+    <div className={mx('flex flex-col gap-2 overflow-hidden bg-base-surface', classNames)}>
       {/* TODO(burdon): Replace with chat from plugin-assistant. */}
       <div className='flex relative'>
         <Input.Root>
@@ -134,7 +135,7 @@ export const Chat = ({ classNames, host, url }: ChatProps) => {
             value={text}
             onChange={(ev) => setText(ev.target.value)}
             onKeyDown={(ev) => ev.key === 'Enter' && handleSubmit()}
-            classNames='pli-2 pbs-[4px] pbe-[4px] is-full rounded-none text-lg !ring-none !ring-sky-500'
+            classNames='px-2 pt-[4px] pb-[4px] w-full rounded-none text-lg ring-none! ring-sky-500!'
           />
         </Input.Root>
         {filteredMessages.length > 0 && (
@@ -152,11 +153,11 @@ export const Chat = ({ classNames, host, url }: ChatProps) => {
 
       {/* TODO(burdon): Replace with ChatThread. */}
       {filteredMessages.length > 0 && (
-        <ScrollContainer.Root pin classNames='max-bs-[480px] p-3'>
+        <ScrollContainer.Root pin classNames='max-h-[480px] p-3'>
           <ScrollContainer.Viewport classNames='scrollbar-none'>
             {filteredMessages.map((message, i) => (
-              <div key={i} className={mx('flex', 'text-base', message.role === 'user' && 'justify-end mlb-3')}>
-                <p className={mx(message.role === 'user' ? 'bg-sky-500 pli-2 plb-1 rounded' : 'text-description')}>
+              <div key={i} className={mx('flex', 'text-base', message.role === 'user' && 'justify-end my-3')}>
+                <p className={mx(message.role === 'user' ? 'bg-sky-500 px-2 py-1 rounded-sm' : 'text-description')}>
                   <MarkdownViewer
                     content={message.parts
                       .map((part) => (part.type === 'text' ? part.text : null))
@@ -172,7 +173,7 @@ export const Chat = ({ classNames, host, url }: ChatProps) => {
 
       {error && (
         <div className='flex overflow-hidden items-center opacity-50'>
-          <div className='pli-2 text-subdued text-xs whitespace-nowrap truncate'>
+          <div className='px-2 text-subdued text-xs whitespace-nowrap truncate'>
             {error.message || 'An error occurred'}
           </div>
           <div className='flex shrink-0'>

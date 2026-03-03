@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-export type * from './defs';
+export type * from './types';
 
-export * from './Image';
+export * from './CardStack';
 export * from './Stack';
 export * from './StackItem';

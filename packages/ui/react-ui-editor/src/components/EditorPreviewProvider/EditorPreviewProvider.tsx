@@ -7,8 +7,7 @@ import React, { type PropsWithChildren, type RefObject, useCallback, useEffect, 
 
 import { addEventListener } from '@dxos/async';
 import { DX_ANCHOR_ACTIVATE, type DxAnchorActivate, Popover } from '@dxos/react-ui';
-
-import { type PreviewLinkRef, type PreviewLinkTarget } from '../../extensions';
+import { type PreviewLinkRef, type PreviewLinkTarget } from '@dxos/ui-editor';
 
 type EditorPreviewPopoverValue = Partial<{
   link: PreviewLinkRef;
@@ -33,16 +32,16 @@ export const EditorPreviewProvider = ({ children, onLookup }: EditorPreviewProvi
 
   const handleActivate = useCallback(
     (event: DxAnchorActivate) => {
-      const { refId, label, trigger: dxTrigger } = event;
+      const { dxn, label, trigger } = event;
       setValue((value) => ({
         ...value,
-        link: { label, ref: refId },
+        link: { label, dxn },
         pending: true,
       }));
 
-      triggerRef.current = dxTrigger;
+      triggerRef.current = trigger;
       queueMicrotask(() => setOpen(true));
-      void onLookup?.({ label, ref: refId }).then((target) =>
+      void onLookup?.({ label, dxn }).then((target) =>
         setValue((value) => ({
           ...value,
           target: target ?? undefined,
@@ -69,9 +68,7 @@ export const EditorPreviewProvider = ({ children, onLookup }: EditorPreviewProvi
     <EditorPreviewContextProvider pending={value.pending} link={value.link} target={value.target}>
       <Popover.Root open={open} onOpenChange={setOpen}>
         <Popover.VirtualTrigger virtualRef={triggerRef as unknown as RefObject<HTMLButtonElement>} />
-
-        {/* Content */}
-        <div ref={setRoot} role='none' className='contents'>
+        <div role='none' className='contents' ref={setRoot}>
           {children}
         </div>
       </Popover.Root>

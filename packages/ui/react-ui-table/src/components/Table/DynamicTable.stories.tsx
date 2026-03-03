@@ -3,16 +3,18 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import type * as Types from 'effect/Types';
 import React, { useMemo, useState } from 'react';
 
-import { Obj } from '@dxos/echo';
-import { Format, type JsonSchemaType } from '@dxos/echo/internal';
+import { type JsonSchema, Obj } from '@dxos/echo';
+import { Format } from '@dxos/echo/internal';
 import { faker } from '@dxos/random';
 import { Filter, useQuery, useSchema } from '@dxos/react-client/echo';
-import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
-import { withTheme } from '@dxos/react-ui/testing';
+import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type SchemaPropertyDefinition } from '@dxos/schema';
 import { TestSchema } from '@dxos/schema/testing';
+import { withRegistry } from '@dxos/storybook-utils';
 
 import { type TableFeatures } from '../../model';
 import { translations } from '../../translations';
@@ -57,7 +59,7 @@ const DynamicTableStory = () => {
 const meta = {
   title: 'ui/react-ui-table/DynamicTable',
   component: DynamicTable,
-  decorators: [withTheme],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withRegistry],
   parameters: {
     layout: 'fullscreen',
     translations,
@@ -100,7 +102,7 @@ export const WithClickToSelect: StoryObj = {
 
 export const WithJsonSchema: StoryObj = {
   render: () => {
-    const schema = useMemo<JsonSchemaType>(
+    const schema = useMemo<Types.DeepMutable<JsonSchema.JsonSchema>>(
       () => ({
         type: 'object',
         properties: {
@@ -129,9 +131,9 @@ export const WithJsonSchema: StoryObj = {
 
 export const WithEchoSchema: StoryObj = {
   render: () => {
-    const { space } = useClientProvider();
-    const schema = useSchema(space, TestSchema.Person.typename);
-    const objects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
+    const { space } = useClientStory();
+    const schema = useSchema(space?.db, TestSchema.Person.typename);
+    const objects = useQuery(space?.db, schema ? Filter.type(schema) : Filter.nothing());
     if (!schema) {
       return <div>Loading schema...</div>;
     }

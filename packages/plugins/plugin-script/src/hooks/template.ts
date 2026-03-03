@@ -15,15 +15,21 @@ const createTemplateSelectActions = (script: Script.Script) => {
     return createMenuAction<TemplateActionProperties>(
       `template--${template.id}`,
       () => {
-        script.name = template.name;
-        script.source!.target!.content = template.source;
-        const metaKeys = Obj.getMeta(script).keys;
-        const oldPresetIndex = metaKeys.findIndex((key) => key.source === FUNCTIONS_PRESET_META_KEY);
-        if (oldPresetIndex >= 0) {
-          metaKeys.splice(oldPresetIndex, 1);
-        }
-        if ('presetId' in template) {
-          metaKeys.push({ source: FUNCTIONS_PRESET_META_KEY, id: template.presetId });
+        Obj.change(script, (s) => {
+          s.name = template.name;
+          const meta = Obj.getMeta(s);
+          const oldPresetIndex = meta.keys.findIndex((key) => key.source === FUNCTIONS_PRESET_META_KEY);
+          if (oldPresetIndex >= 0) {
+            meta.keys.splice(oldPresetIndex, 1);
+          }
+          if ('presetId' in template) {
+            meta.keys.push({ source: FUNCTIONS_PRESET_META_KEY, id: template.presetId });
+          }
+        });
+        if (script.source?.target) {
+          Obj.change(script.source.target, (s) => {
+            s.content = template.source;
+          });
         }
       },
       {

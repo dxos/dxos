@@ -1,0 +1,25 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {},
+  "exclude": [
+    "dist",
+    "node_modules",
+    "out"
+  ],
+  "include": [
+    ".storybook/*.ts",
+    ".storybook/*.tsx",
+    "config/**/*.mts"
+  ],
+  "references": [
+    {
+      "path": "../../packages/common/log"
+    },
+    {
+      "path": "../../packages/ui/ui-theme"
+    },
+    {
+      "path": "../vite-plugin-icons"
+    }
+  ]
+}

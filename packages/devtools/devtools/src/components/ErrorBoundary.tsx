@@ -6,7 +6,7 @@ import React, { Component, type PropsWithChildren, type ReactNode } from 'react'
 // import { useNavigate } from 'react-router-dom';
 
 // import { Button, Message } from '@dxos/react-ui';
-import { captureException } from '@dxos/observability/sentry';
+import { log } from '@dxos/log';
 
 const ErrorPopup = ({ error, onReset }: { error: Error; onReset?: () => void }) => {
   return <div>{error.message}</div>;
@@ -21,9 +21,9 @@ const ErrorPopup = ({ error, onReset }: { error: Error; onReset?: () => void }) 
 
   // return (
   //   <div className='m-4'>
-  //     <Message.Root valence='error' className='mlb-4'>
+  //     <Message.Root valence='error' className='my-4'>
   //       <Message.Title>{message}</Message.Title>
-  //       <pre className='text-xs overflow-auto max-is-72 max-bs-72'>{stack}</pre>
+  //       <pre className='text-xs overflow-auto max-w-72 max-h-72'>{stack}</pre>
   //     </Message.Root>
   //     <div role='none' className='flex gap-2'>
   //       <div className='grow' />
@@ -59,7 +59,7 @@ export class ErrorBoundary extends Component<
   }
 
   static getDerivedStateFromError(error: Error): { hasError: boolean; error: Error } {
-    captureException(error);
+    log.catch(error);
     return { hasError: true, error };
   }
 

@@ -47,16 +47,19 @@ const PersonSchema = Schema.Struct({
   emails: Schema.Array(
     Schema.Struct({
       label: Schema.optional(Schema.String),
-      value: Format.Email.pipe(GeneratorAnnotation.set('internet.email')),
+      value: Format.Email.pipe(
+        Schema.annotations({ default: 'hello@email.com' }),
+        GeneratorAnnotation.set('internet.email'),
+      ),
     }),
-  ).pipe(Schema.mutable, Schema.optional),
+  ).pipe(Schema.optional),
   identities: Schema.Array(
     Schema.Struct({
       label: Schema.optional(Schema.String),
       // TODO(burdon): Identity types? (socials, DIDs, etc.)
       value: Schema.String,
     }),
-  ).pipe(Schema.mutable, Schema.optional),
+  ).pipe(Schema.optional),
   phoneNumbers: Schema.Array(
     Schema.Struct({
       label: Schema.optional(Schema.String),
@@ -64,20 +67,23 @@ const PersonSchema = Schema.Struct({
       value: Schema.String,
     }),
   )
-    .pipe(Schema.mutable, Schema.optional)
+    .pipe(Schema.optional)
     .annotations({ title: 'Phone Numbers' }),
   addresses: Schema.Array(
     Schema.Struct({
       label: Schema.optional(Schema.String),
       value: Geo.PostalAddress,
     }),
-  ).pipe(Schema.mutable, Schema.optional),
+  ).pipe(Schema.optional),
   urls: Schema.Array(
     Schema.Struct({
       label: Schema.optional(Schema.String),
-      value: Format.URL.pipe(GeneratorAnnotation.set('internet.url')),
+      value: Format.URL.pipe(
+        Schema.annotations({ default: 'https://example.com' }),
+        GeneratorAnnotation.set('internet.url'),
+      ),
     }),
-  ).pipe(Schema.mutable, Schema.optional),
+  ).pipe(Schema.optional),
   // TODO(burdon): Support date or create String type for ISO Date.
   birthday: Schema.String.pipe(
     Schema.annotations({ title: 'Birthday' }),
@@ -91,7 +97,7 @@ const PersonSchema = Schema.Struct({
       label: Schema.String,
       value: Schema.String,
     }),
-  ).pipe(Schema.mutable, Schema.optional),
+  ).pipe(Schema.optional),
 });
 
 export const Person = PersonSchema.pipe(
@@ -101,7 +107,7 @@ export const Person = PersonSchema.pipe(
       location: Format.GeoPoint.pipe(Schema.annotations({ title: 'Location' }), Schema.optional),
     }),
   ),
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Person',
     version: '0.1.0',
   }),
@@ -117,7 +123,7 @@ export const make = (props: Partial<Obj.MakeProps<typeof Person>> = {}) => Obj.m
  * @deprecated
  */
 export const LegacyPerson = PersonSchema.pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Person',
     version: '0.1.0',
   }),

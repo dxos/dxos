@@ -2,7 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import React from 'react';
+import * as Registry from '@effect-atom/atom/Registry';
+import { RegistryContext } from '@effect-atom/atom-react';
+import React, { useMemo } from 'react';
 import { generatePath, useNavigate } from 'react-router-dom';
 
 import { ClientProvider } from '@dxos/react-client';
@@ -20,6 +22,8 @@ const createWorker = () =>
 
 export const Root = () => {
   const navigate = useNavigate();
+  const registry = useMemo(() => Registry.make(), []);
+
   return (
     <ClientProvider
       config={getConfig}
@@ -27,8 +31,8 @@ export const Root = () => {
       shell='./shell.html'
       types={[TodoList, Todo]}
       onInitialized={async (client) => {
-        const searchParams = new URLSearchParams(location.search);
-        const deviceInvitationCode = searchParams.get('deviceInvitationCode');
+        const searchProps = new URLSearchParams(location.search);
+        const deviceInvitationCode = searchProps.get('deviceInvitationCode');
         if (!client.halo.identity.get() && !deviceInvitationCode) {
           await client.halo.createIdentity();
           await client.spaces.waitUntilReady();
@@ -36,7 +40,7 @@ export const Root = () => {
           createTodoList(client.spaces.default);
         }
 
-        const spaceInvitationCode = searchParams.get('spaceInvitationCode');
+        const spaceInvitationCode = searchProps.get('spaceInvitationCode');
         if (spaceInvitationCode) {
           void client.shell.joinSpace({ invitationCode: spaceInvitationCode }).then(({ space }) => {
             space && navigate(generatePath('/:spaceKey', { spaceKey: space.key.toHex() }));
@@ -46,7 +50,9 @@ export const Root = () => {
         }
       }}
     >
-      <Main />
+      <RegistryContext.Provider value={registry}>
+        <Main />
+      </RegistryContext.Provider>
     </ClientProvider>
   );
 };

@@ -54,7 +54,7 @@ export const Blueprint = Schema.Struct({
     description: 'Array of tools that the AI assistant can use when this blueprint is active',
   }),
 }).pipe(
-  Type.Obj({
+  Type.object({
     // TODO(burdon): Is this a DXN? Need to create a Format type for these IDs.
     typename: 'dxos.org/type/Blueprint',
     version: '0.1.0',
@@ -67,14 +67,17 @@ export const Blueprint = Schema.Struct({
  */
 export interface Blueprint extends Schema.Schema.Type<typeof Blueprint> {}
 
+type MakeProps = Pick<Blueprint, 'key' | 'name'> & Partial<Blueprint>;
+
 /**
  * Create a new Blueprint.
  */
-export const make = ({
-  tools = [],
-  instructions = Template.make(),
-  ...props
-}: Pick<Blueprint, 'key' | 'name'> & Partial<Blueprint>) => Obj.make(Blueprint, { tools, instructions, ...props });
+export const make = ({ tools = [], instructions = Template.make(), ...props }: MakeProps) =>
+  Obj.make(Blueprint, {
+    tools,
+    instructions,
+    ...props,
+  });
 
 /**
  * Util to create tool definitions for a blueprint.

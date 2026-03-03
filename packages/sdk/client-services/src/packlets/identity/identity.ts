@@ -38,7 +38,7 @@ import { EdgeFeedReplicator } from '../spaces';
 import { TrustedKeySetAuthVerifier } from './authenticator';
 import { DefaultSpaceStateMachine } from './default-space-state-machine';
 
-export type IdentityParams = {
+export type IdentityProps = {
   did: IdentityDid;
   identityKey: PublicKey;
   deviceKey: PublicKey;
@@ -71,7 +71,7 @@ export class Identity {
 
   public readonly stateUpdate = new Event();
 
-  constructor(params: IdentityParams) {
+  constructor(params: IdentityProps) {
     this.space = params.space;
     this._signer = params.signer;
     this._presence = params.presence;

@@ -13,9 +13,9 @@ export const Canvas = Schema.Struct({
   /** Fully qualified external schema reference. */
   // TODO(wittjosiah): Remove once the schema is fully internalized.
   schema: Schema.String.pipe(Schema.optional),
-  content: Schema.Record({ key: Schema.String, value: Schema.Any }).pipe(Schema.mutable),
+  content: Schema.Record({ key: Schema.String, value: Schema.Any }),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Canvas',
     version: '0.1.0',
   }),
@@ -27,7 +27,7 @@ export const Diagram = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
   canvas: Type.Ref(Canvas).pipe(FormInputAnnotation.set(false)),
 }).pipe(
-  Type.Obj({
+  Type.object({
     typename: 'dxos.org/type/Diagram',
     version: '0.1.0',
   }),
@@ -44,5 +44,11 @@ export const make = ({ canvas: canvasProps, ...props }: DiagramProps = {}) => {
   return Obj.make(Diagram, { ...props, canvas: Ref.make(canvas) });
 };
 
-export const isDiagram = (object: any, schema: string): object is Diagram =>
-  Schema.is(Diagram)(object) && object.canvas.target?.schema === schema;
+/**
+ * Type guard for {@link Diagram} objects. Delegates to `Schema.is(Diagram)(object)`.
+ * The `_schema` parameter is intentionally ignored pending reconciliation with the Excalidraw plugin.
+ */
+// TODO(wittjosiah): Reconcile canvas schema check with Excalidraw plugin.
+// export const isDiagram = (object: any, schema: string): object is Diagram =>
+//   Schema.is(Diagram)(object) && object.canvas.target?.schema === schema;
+export const isDiagram = (object: any, _schema: string): object is Diagram => Schema.is(Diagram)(object);

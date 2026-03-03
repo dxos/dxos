@@ -15,7 +15,7 @@ export const WithProperties = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.
   Effect.zipRight(
     Effect.gen(function* () {
       // TODO(wittjosiah): Remove cast.
-      yield* Database.Service.add(
+      yield* Database.add(
         Obj.make(SpaceProperties, {
           [Collection.Collection.typename]: Ref.make(Collection.make()),
         }) as any,

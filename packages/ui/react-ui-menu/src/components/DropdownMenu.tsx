@@ -8,6 +8,7 @@ import React, { type MouseEvent, useCallback } from 'react';
 import { type DropdownMenuRootProps, Icon, DropdownMenu as NaturalDropdownMenu } from '@dxos/react-ui';
 
 import { type MenuAction, type MenuItem, type MenuItemGroup } from '../types';
+import { executeMenuAction } from '../util';
 
 import { ActionLabel } from './ActionLabel';
 import { type MenuScopedProps, useMenu, useMenuItems } from './MenuContext';
@@ -60,17 +61,23 @@ const DropdownMenuRoot = ({
     onChange: onOpenChange,
   });
 
+  const { onAction } = useMenu('DropdownMenuRoot', __menuScope);
+
   const handleActionClick = useCallback(
     (action: MenuAction, event: MouseEvent) => {
       if (action.properties?.disabled) {
         return;
       }
       event.stopPropagation();
-      // TODO(thure): Why does Dialog’s modal-ness cause issues if we don’t explicitly close the menu here?
+      // TODO(thure): Why does Dialog's modal-ness cause issues if we don't explicitly close the menu here?
       setOptionsMenuOpen(false);
-      void action.data?.({ parent: group, caller });
+      if (onAction) {
+        onAction(action, { parent: group, caller });
+      } else {
+        void executeMenuAction(action, { parent: group, caller });
+      }
     },
-    [group, caller],
+    [group, caller, onAction],
   );
 
   const items = useMenuItems(group, propsItems);

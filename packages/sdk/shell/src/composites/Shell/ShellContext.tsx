@@ -16,7 +16,7 @@ import React, {
 import { type LayoutRequest, type PublicKey, ShellDisplay, ShellLayout, useClient } from '@dxos/react-client';
 import type { Space } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { MemoryShellRuntime } from './memory-shell-runtime';
 import { Shell } from './Shell';

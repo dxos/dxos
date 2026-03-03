@@ -6,7 +6,7 @@ import { Context } from '@dxos/context';
 import { type MaybePromise } from '@dxos/util';
 
 import { getTracingContext } from './symbols';
-import { TRACE_PROCESSOR, type TraceSpanParams, type TracingSpan } from './trace-processor';
+import { TRACE_PROCESSOR, type TraceSpanProps, type TracingSpan } from './trace-processor';
 
 /**
  * Annotates a class as a tracked resource.
@@ -108,7 +108,7 @@ const spans = new Map<string, TracingSpan>();
 /**
  * Creates a span that must be ended manually.
  */
-const spanStart = (params: TraceSpanParams & { id: string }) => {
+const spanStart = (params: TraceSpanProps & { id: string }) => {
   if (spans.has(params.id)) {
     return;
   }
@@ -141,7 +141,7 @@ const addLink = (parent: any, child: any, opts: AddLinkOptions = {}) => {
   TRACE_PROCESSOR.addLink(parent, child, opts);
 };
 
-export type TraceDiagnosticParams<T> = {
+export type TraceDiagnosticProps<T> = {
   /**
    * Unique ID.
    */
@@ -167,7 +167,7 @@ export interface TraceDiagnostic {
 /**
  * Register a diagnostic that could be queried.
  */
-const diagnostic = <T>(params: TraceDiagnosticParams<T>): TraceDiagnostic => {
+const diagnostic = <T>(params: TraceDiagnosticProps<T>): TraceDiagnostic => {
   return TRACE_PROCESSOR.diagnostics.registerDiagnostic(params);
 };
 

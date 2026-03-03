@@ -6,7 +6,7 @@ import React from 'react';
 
 import { ClientRepeater } from '@dxos/react-client/testing';
 import { ThemeProvider } from '@dxos/react-ui';
-import { defaultTx } from '@dxos/react-ui-theme';
+import { defaultTx } from '@dxos/ui-theme';
 
 import { Demo, NetworkToggle } from './components';
 

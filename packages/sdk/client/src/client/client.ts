@@ -4,8 +4,6 @@
 
 import { inspect } from 'node:util';
 
-import type * as Schema from 'effect/Schema';
-
 import { Event, MulticastObservable, Trigger, synchronized } from '@dxos/async';
 import {
   type ClientServices,
@@ -22,13 +20,11 @@ import { Config, SaveConfig } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { type Hypergraph, Type } from '@dxos/echo';
-import { EchoClient, QueueServiceImpl } from '@dxos/echo-db';
-import { MockQueueService } from '@dxos/echo-db';
-import { EdgeHttpClient } from '@dxos/edge-client';
+import { EchoClient } from '@dxos/echo-db';
+import { type EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type QueueService } from '@dxos/protocols';
 import {
   ApiError,
   AuthorizationError,
@@ -43,6 +39,7 @@ import { createIFramePort } from '@dxos/rpc-tunnel';
 import { trace } from '@dxos/tracing';
 import { type JsonKeyOptions, type MaybePromise } from '@dxos/util';
 
+import { type ClientEdgeAPI, createClientEdgeAPI } from '../edge';
 import { type MeshProxy } from '../mesh/mesh-proxy';
 import type { IFrameManager, Shell, ShellManager } from '../services';
 import { DXOS_VERSION } from '../version';
@@ -59,11 +56,17 @@ export type ClientOptions = {
   /** Custom services provider. */
   services?: MaybePromise<ClientServicesProvider>;
   /** ECHO schema. */
-  types?: Schema.Schema.AnyNoContext[];
+  types?: Type.Entity.Any[];
   /** Shell path. */
   shell?: string;
   /** Create client worker. */
   createWorker?: () => SharedWorker;
+
+  /** When running in the host mode, a factory to create the worker for OPFS sqlite database. */
+  createOpfsWorker?: () => Worker;
+
+  /** Path to SQLite database file for persistent indexing in Node/Bun. */
+  sqlitePath?: string;
 };
 
 /**
@@ -114,8 +117,8 @@ export class Client {
   private _iframeManager?: IFrameManager;
   private _shellManager?: ShellManager;
   private _shellClientProxy?: ProtoRpcPeer<ClientServices>;
-  private _edgeClient?: EdgeHttpClient = undefined;
-  private _queuesService?: QueueService = undefined;
+  private _edgeHttpClient?: EdgeHttpClient = undefined;
+  private _edgeApi?: ClientEdgeAPI = undefined;
 
   constructor(options: ClientOptions = {}) {
     if (
@@ -226,9 +229,9 @@ export class Client {
    * EDGE client.
    * This API is experimental and subject to change.
    */
-  get edge(): EdgeHttpClient {
-    invariant(this._edgeClient, 'Client not initialized.');
-    return this._edgeClient;
+  get edge(): ClientEdgeAPI {
+    invariant(this._edgeApi, 'Client not initialized or Edge not available.');
+    return this._edgeApi;
   }
 
   /**
@@ -251,7 +254,7 @@ export class Client {
    * Add schema types to the client.
    */
   // TODO(burdon): Check if already registered (and remove downstream checks).
-  async addTypes(types: Schema.Schema.AnyNoContext[]) {
+  async addTypes(types: Type.Entity.Any[]) {
     log('addTypes', { schema: types.map((type) => Type.getTypename(type)) });
 
     // TODO(dmaretskyi): Uncomment after release.
@@ -361,7 +364,12 @@ export class Client {
     this._ctx = new Context();
     this._config = this._options.config ?? new Config();
     // NOTE: Must currently match the host.
-    this._services = await (this._options.services ?? createClientServices(this._config, this._options.createWorker));
+    this._services = await (this._options.services ??
+      createClientServices(this._config, {
+        createWorker: this._options.createWorker,
+        createOpfsWorker: this._options.createOpfsWorker,
+        sqlitePath: this._options.sqlitePath,
+      }));
     this._iframeManager = this._options.shell
       ? new IFrameManager({ source: new URL(this._options.shell, window.location.origin) })
       : undefined;
@@ -411,16 +419,15 @@ export class Client {
 
     const edgeUrl = this._config!.get('runtime.services.edge.url');
     if (edgeUrl) {
-      this._edgeClient = new EdgeHttpClient(edgeUrl);
-      this._queuesService = new QueueServiceImpl(this._edgeClient);
-    } else {
-      this._queuesService = new MockQueueService();
+      const { EdgeHttpClient } = await import('@dxos/edge-client');
+      this._edgeHttpClient = new EdgeHttpClient(edgeUrl);
+      this._edgeApi = createClientEdgeAPI({ client: this, edgeClient: this._edgeHttpClient });
     }
 
     this._echoClient.connectToService({
       dataService: this._services.services.DataService ?? raise(new Error('DataService not available')),
       queryService: this._services.services.QueryService ?? raise(new Error('QueryService not available')),
-      queueService: this._queuesService,
+      queueService: this._services.services.QueueService ?? raise(new Error('QueueService not available')),
     });
     await this._echoClient.open(this._ctx);
 
@@ -524,7 +531,8 @@ export class Client {
     await this._runtime?.close();
     await this._echoClient.close(this._ctx);
     await this._services?.close();
-    this._edgeClient = undefined;
+    this._edgeHttpClient = undefined;
+    this._edgeApi = undefined;
     log('closed');
   }
 
