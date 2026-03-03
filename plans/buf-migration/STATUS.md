@@ -827,12 +827,10 @@ Each unary RPC round-trip performs:
 | `create()` (deep copy) | 4 | O(message size) each — allocates new objects recursively |
 | `toBinary()` | 4 | Serialization |
 | `fromBinary()` | 4 | Deserialization |
-| `normalizeAnyForBuf()` | 2 | Object spread + field rename on every message |
-| `convertAnyToProto()` | 2 | Object spread + Buffer.from() on every received message |
+| ~~`normalizeAnyForBuf()`~~ | ~~2~~ | ~~Object spread + field rename on every message~~ — **ELIMINATED** |
+| ~~`convertAnyToProto()`~~ | ~~2~~ | ~~Object spread + Buffer.from() on every received message~~ — **ELIMINATED** |
 
-The `normalizeAnyForBuf` and `convertAnyToProto` shims run on **every single RPC message** — both request and response sides. This is the cost of the `typeUrl` vs `type_url` field name mismatch.
-
-**Hot path**: `_sendMessage` calls `create(RpcMessageSchema, normalizeRpcMessage(msg))` then `toBinary()`. The `normalizeRpcMessage` spreads the entire message tree for the sole purpose of renaming `type_url` → `typeUrl` on one nested Any field. This double allocation (normalize + create) could be eliminated by standardizing on `typeUrl` throughout.
+~~The `normalizeAnyForBuf` and `convertAnyToProto` shims ran on every single RPC message.~~ These have been eliminated by standardizing on `typeUrl` throughout.
 
 #### 2.2 Credential Serialization
 
@@ -854,11 +852,9 @@ This is **4 deep copies per credential**. The `normalizeCredentialForBuf()` help
 
 Now that `@dxos/codec-protobuf` and `@dxos/protobuf-compiler` are deleted, several areas can be simplified:
 
-#### 3.1 Remove `normalizeAnyForBuf` / `convertAnyToProto` Shims
+#### 3.1 ~~Remove `normalizeAnyForBuf` / `convertAnyToProto` Shims~~ — DONE
 
-These exist solely because callers use `type_url` (proto convention) while buf expects `typeUrl`. If all callers are updated to use `typeUrl` natively, both shims can be deleted, removing 2 object spreads per RPC message.
-
-**Files**: `rpc.ts:23–81`
+~~These exist solely because callers use `type_url` (proto convention) while buf expects `typeUrl`.~~ Both shims deleted. `Rpc.BufAny` standardized on `typeUrl`. All call sites updated.
 
 #### 3.2 Remove `preserveAny` Option from Proto Codec
 
@@ -968,15 +964,15 @@ The following feedback was given during PR review and has been tracked for resol
 
 #### Priority Items for Follow-up
 
-| Priority | Item | Impact |
-|---|---|---|
-| **P0** | Guard `type_url` in `getCredentialProofPayload` unpack check | Signature verification could silently fail |
-| **P0** | Add warning log in `packTypedAssertionAsAny` for unregistered types | Silent data loss |
-| **P1** | Remove `normalizeAnyForBuf`/`convertAnyToProto` shims (standardize on `typeUrl`) | -2 object spreads per RPC message |
-| **P1** | Restore typed `_sendMessage(message: RpcMessage)` signature | Type safety regression |
-| **P1** | Add Timestamp handling to `convertBufFieldValue` | Assertion unpack correctness |
-| **P2** | Rename all `Buf`-prefixed types/files (mechanical) | Code clarity |
-| **P2** | Eliminate credential serialization deep copies | Performance |
-| **P2** | Fix `isBufPublicKey` to check `$typeName` | False positive prevention |
-| **P3** | Consolidate `service-buf.test.ts` with `rpc.test.ts` | Test hygiene |
-| **P3** | Remove `preserveAny` option from proto codec | Dead code |
+| Priority | Item | Impact | Status |
+|---|---|---|---|
+| ~~**P0**~~ | ~~Guard `type_url` in `getCredentialProofPayload` unpack check~~ | ~~Signature verification could silently fail~~ | **Done** — `signing.ts` now checks both `typeUrl` and `type_url`. |
+| ~~**P0**~~ | ~~Add warning log in `packTypedAssertionAsAny` for unregistered types~~ | ~~Silent data loss~~ | **Done** — `log.warn()` added in `assertion-any-codec.ts`. |
+| ~~**P1**~~ | ~~Remove `normalizeAnyForBuf`/`convertAnyToProto` shims (standardize on `typeUrl`)~~ | ~~-2 object spreads per RPC message~~ | **Done** — Shims deleted, `Rpc.BufAny.type_url` → `typeUrl`, all call sites updated. |
+| ~~**P1**~~ | ~~Restore typed `_sendMessage(message: RpcMessage)` signature~~ | ~~Type safety regression~~ | **Done** — Changed to `MessageInitShape<typeof RpcMessageSchema>`, removed 4 `as any` casts at call sites. |
+| ~~**P1**~~ | ~~Add Timestamp handling to `convertBufFieldValue`~~ | ~~Assertion unpack correctness~~ | **Done** — `isBufTimestamp` check + `timestampDate()` conversion added. |
+| **P2** | Rename all `Buf`-prefixed types/files (mechanical) | Code clarity | Pending |
+| **P2** | Eliminate credential serialization deep copies | Performance | Pending |
+| **P2** | Fix `isBufPublicKey` to check `$typeName` | False positive prevention | Pending |
+| **P3** | Consolidate `service-buf.test.ts` with `rpc.test.ts` | Test hygiene | Pending |
+| **P3** | Remove `preserveAny` option from proto codec | Dead code | Pending |
