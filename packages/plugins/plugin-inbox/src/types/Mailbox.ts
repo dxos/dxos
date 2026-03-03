@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Feed, Obj, Type } from '@dxos/echo';
+import { Annotation, Feed, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/internal';
 import { AccessToken } from '@dxos/types';
 
@@ -56,6 +56,10 @@ export const Config = Schema.Struct({
   Type.object({
     typename: 'dxos.org/type/MailboxConfig',
     version: '0.1.0',
+  }),
+  Annotation.IconAnnotation.set({
+    icon: 'ph--tray--regular',
+    hue: 'red',
   }),
 );
 

@@ -5,13 +5,12 @@
 import { Atom } from '@effect-atom/atom';
 import { useAtomValue } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
-import React, { useCallback, useEffect, useMemo, useSyncExternalStore } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Project } from '@dxos/assistant-toolkit';
-import { type Database, Obj, Query, Ref, Type } from '@dxos/echo';
+import { Obj, Query, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/echo';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';
 import { QueueService } from '@dxos/functions';
@@ -21,9 +20,8 @@ import { Filter, useQuery } from '@dxos/react-client/echo';
 import { useObject } from '@dxos/react-client/echo';
 import { Button } from '@dxos/react-ui';
 import { ButtonGroup, Input } from '@dxos/react-ui';
-import { QueueAnnotation } from '@dxos/schema';
 
-import { syncTriggers } from '../../components/Project/triggers';
+import { syncTriggers } from './triggers';
 
 export const ProjectSettings = ({ subject: project }: SurfaceComponentProps<Project.Project>) => {
   const computeRuntime = useCapability(AutomationCapabilities.ComputeRuntime);
@@ -54,15 +52,13 @@ export const ProjectSettings = ({ subject: project }: SurfaceComponentProps<Proj
     });
   }, [project]);
 
-  const subscribableSchemaList = useSchemaList(Obj.getDatabase(project)).filter(
-    (schema) =>
-      QueueAnnotation.get(schema).pipe(Option.isSome) && Type.getTypename(schema) !== Project.Project.typename,
-  );
-  const subscribableObjects = useQuery(
-    Obj.getDatabase(project),
-    subscribableSchemaList.length === 0
-      ? Query.select(Filter.nothing())
-      : Query.all(...subscribableSchemaList.map((schema) => Query.select(Filter.type(schema)))),
+  const feedObjects = useQuery(Obj.getDatabase(project), Query.select(Filter.type(Type.Feed)));
+  const subscribableObjects = useMemo(
+    () =>
+      feedObjects.filter(
+        (feed) => !project.subscriptions.some((subscription) => DXN.equals(subscription.dxn, Obj.getDXN(feed))),
+      ),
+    [feedObjects, project.subscriptions],
   );
 
   const existingSubscripts = useAtomValue(
@@ -93,9 +89,9 @@ export const ProjectSettings = ({ subject: project }: SurfaceComponentProps<Proj
       <ButtonGroup classNames='h-10'>
         <Button onClick={handleResetHistory}>Reset Chat History</Button>
       </ButtonGroup>
-      {subscribableObjects.length > 0 && (
-        <div>
-          <p>Subscriptions</p>
+      <div>
+        <h2 className='text-lg font-bold'>Subscriptions</h2>
+        {subscribableObjects.length > 0 && (
           <div>
             {subscribableObjects.map((object) => (
               <Input.Root key={object.id}>
@@ -117,46 +113,13 @@ export const ProjectSettings = ({ subject: project }: SurfaceComponentProps<Proj
               </Input.Root>
             ))}
           </div>
-        </div>
-      )}
+        )}
+        {subscribableObjects.length === 0 && (
+          <div className='text-sm text-description'>Space has no feeds to subscribe to.</div>
+        )}
+      </div>
     </div>
   );
 };
 
 export default ProjectSettings;
-const EMPTY_ARRAY: never[] = [];
-
-/**
- * Subscribe to and retrieve schema changes from a space's schema registry.
- */
-export const useSchemaList = <T extends Type.Entity.Any = Type.Entity.Any>(
-  db?: Database.Database,
-  typename?: string,
-): T[] => {
-  const { subscribe, getSchema } = useMemo(() => {
-    if (!db) {
-      return {
-        subscribe: () => () => {},
-        getSchema: () => EMPTY_ARRAY,
-      };
-    }
-
-    const query = db.schemaRegistry.query({ typename, location: ['database', 'runtime'] });
-    const initialResult = query.runSync();
-    let currentSchema = initialResult;
-
-    return {
-      subscribe: (onStoreChange: () => void) => {
-        const unsubscribe = query.subscribe(() => {
-          currentSchema = query.results;
-          onStoreChange();
-        });
-
-        return unsubscribe;
-      },
-      getSchema: () => currentSchema,
-    };
-  }, [typename, db]);
-
-  return useSyncExternalStore(subscribe, getSchema) as T[];
-};

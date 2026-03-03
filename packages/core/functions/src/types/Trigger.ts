@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { Obj, QueryAST, Type } from '@dxos/echo';
+import { Annotation, Obj, QueryAST, Type } from '@dxos/echo';
 import { OptionsAnnotationId, SystemTypeAnnotation } from '@dxos/echo/internal';
 import { DXN } from '@dxos/keys';
 import { Expando } from '@dxos/schema';
@@ -143,6 +143,7 @@ const TriggerSchema = Schema.Struct({
     typename: 'dxos.org/type/Trigger',
     version: '0.1.0',
   }),
+  Annotation.IconAnnotation.set({ icon: 'ph--lightning--regular', hue: 'yellow' }),
   SystemTypeAnnotation.set(true),
 );
 

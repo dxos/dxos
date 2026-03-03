@@ -17,3 +17,4 @@ export * from './Searchbar';
 export * from './Select';
 export * from './Tree';
 export * from './ObjectViewer';
+export * from './ObjectsTree';

@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Type } from '@dxos/echo';
+import { Annotation, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { Queue } from '@dxos/echo-db';
 
@@ -22,6 +22,10 @@ export const Chat = Schema.Struct({
     version: '0.2.0',
   }),
   LabelAnnotation.set(['name']),
+  Annotation.IconAnnotation.set({
+    icon: 'ph--atom--regular',
+    hue: 'blue',
+  }),
 );
 
 export interface Chat extends Schema.Schema.Type<typeof Chat> {}
