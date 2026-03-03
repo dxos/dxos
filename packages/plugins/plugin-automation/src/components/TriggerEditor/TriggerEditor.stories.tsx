@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
+import { expect, userEvent, within } from 'storybook/test';
 
 import { Filter, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { Function, Trigger } from '@dxos/functions';
@@ -120,5 +121,46 @@ export const Default: Story = {};
 export const ReadonlySpec: Story = {
   args: {
     readonlySpec: true,
+  },
+};
+
+export const Spec: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const webhookText = await canvas.findByText('Webhook', {}, { timeout: 10_000 });
+    const combobox = webhookText.closest('[role="combobox"]') as HTMLElement;
+    await expect(combobox).not.toBeDisabled();
+
+    // Helper to switch to a kind via keyboard.
+    // TODO(wittjosiah): Radix Select in popper mode doesn't close on click.
+    //   Use keyboard navigation: open, type first letter to jump, Enter to select.
+    const selectKind = async (combobox: HTMLElement, firstLetter: string) => {
+      combobox.focus();
+      await userEvent.keyboard('{Enter}');
+      await userEvent.keyboard(firstLetter);
+      await userEvent.keyboard('{Enter}');
+    };
+
+    // Timer — should show "Cron" field.
+    await selectKind(combobox, 't');
+    await expect(canvas.findByLabelText('Cron')).resolves.toBeInTheDocument();
+
+    // Email — no extra fields; Cron should be gone.
+    await selectKind(combobox, 'e');
+    await expect(combobox).not.toBeDisabled();
+    await expect(canvas.queryByLabelText('Cron')).not.toBeInTheDocument();
+
+    // Webhook — should show "Method" field.
+    await selectKind(combobox, 'w');
+    await expect(canvas.findByLabelText('Method')).resolves.toBeInTheDocument();
+
+    // Subscription — should show query editor.
+    await selectKind(combobox, 's');
+    await expect(combobox).not.toBeDisabled();
+    await expect(canvas.queryByLabelText('Method')).not.toBeInTheDocument();
+
+    // Queue — should show DXN field (the queue address).
+    await selectKind(combobox, 'q');
+    await expect(canvas.findByLabelText('DXN')).resolves.toBeInTheDocument();
   },
 };

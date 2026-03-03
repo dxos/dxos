@@ -77,7 +77,7 @@ export const ComposeEmailPanel = ({ draft, onSend }: ComposeEmailPanelProps) => 
       testId='compose-email-form'
       autoFocus
       schema={ComposeEmailForm}
-      values={initialValues}
+      defaultValues={initialValues}
       onValuesChanged={handleValuesChanged}
       onSave={handleSendEmail}
     >
