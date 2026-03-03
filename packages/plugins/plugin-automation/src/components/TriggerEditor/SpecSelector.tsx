@@ -31,7 +31,7 @@ export const SpecSelector = (props: SpecSelectorProps) => {
               },
             };
           case 'queue':
-            return { kind: 'queue', queue: 'dxn:' };
+            return { kind: 'queue', queue: 'dxn:queue:default' };
           case 'email':
             return { kind: 'email' };
           case 'webhook':
