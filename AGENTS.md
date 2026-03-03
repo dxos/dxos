@@ -83,6 +83,7 @@ Examples:
 - Use `gh` CLI to create and manage PRs
 - At the end you can monitor the CI status with `pnpm -w gh-action --verify --watch`
 - When the user asks you to submit a PR, make sure that:
+  - you address and comment on major review comments
   - `moon run :lint -- --fix` succeeds
   - `moon run :test` succeeds
   - `pnpm -w gh-action --verify --watch` shows green CI
