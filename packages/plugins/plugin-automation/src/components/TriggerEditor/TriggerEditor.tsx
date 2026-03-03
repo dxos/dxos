@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { ComputeGraph } from '@dxos/conductor';
-import { DXN, type Database, type Query } from '@dxos/echo';
+import { DXN, type Database, Obj, type Query } from '@dxos/echo';
 import { Function, Script, Trigger } from '@dxos/functions';
 import { Filter, Ref, useQuery } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
@@ -43,13 +43,23 @@ export const TriggerEditor = ({ db, types, tags, readonlySpec, trigger, ...formP
     readonlySpec,
   });
 
+  const handleValuesChanged = useCallback(
+    (newValues: Partial<TriggerFormSchema>) => {
+      Obj.change(trigger, (t) => {
+        Object.assign(t, newValues);
+      });
+    },
+    [trigger],
+  );
+
   return (
     <Form.Root<TriggerFormSchema>
       {...formProps}
       schema={omitId(Trigger.Trigger)}
-      values={trigger}
+      defaultValues={trigger}
       db={db}
       fieldMap={fieldMap}
+      onValuesChanged={handleValuesChanged}
     >
       <Form.Viewport>
         <Form.Content>
