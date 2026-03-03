@@ -9,7 +9,7 @@ import { setupPage, storybookUrl } from '@dxos/test-utils/playwright';
 import { BoardManager } from './board-manager';
 
 const PORT = 9011;
-const STORY_URL = storybookUrl('plugins-plugin-kanban-kanban--mutable-schema', PORT);
+const STORY_URL = storybookUrl('plugins-plugin-kanban-containers-kanban--mutable-schema', PORT);
 
 test.describe('Kanban MutableSchema', () => {
   let page: Page;
