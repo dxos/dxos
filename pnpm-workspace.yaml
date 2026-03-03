@@ -279,7 +279,7 @@ catalog:
   '@types/wtfnode': ^0.10.0
   '@types/yargs': ~16.0.1
   '@types/zen-observable': ^0.8.3
-  '@typescript/native-preview': 7.0.0-dev.20250808.1
+  '@typescript/native-preview': 7.0.0-dev.20260303.1
   '@typescript/vfs': ^1.6.0
   '@uiw/codemirror-theme-vscode': ^4.25.2
   '@valtown/codemirror-continue': ^2.3.1
