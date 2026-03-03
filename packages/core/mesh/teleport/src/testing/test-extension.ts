@@ -7,7 +7,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { EMPTY, create } from '@dxos/protocols/buf';
 import { TestRpcRequestSchema, TestRpcResponseSchema, TestService } from '@dxos/protocols/buf/example/testing/rpc_pb';
-import { type BufProtoRpcPeer, createBufProtoRpcPeer } from '@dxos/rpc';
+import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 
 import { type ExtensionContext, type TeleportExtension } from '../teleport';
 
@@ -22,7 +22,7 @@ export class TestExtension implements TeleportExtension {
   public readonly closed = new Trigger();
   public readonly aborted = new Trigger();
   public extensionContext: ExtensionContext | undefined;
-  private _rpc!: BufProtoRpcPeer<{ TestService: typeof TestService }>;
+  private _rpc!: ProtoRpcPeer<{ TestService: typeof TestService }>;
 
   constructor(public readonly callbacks: TestExtensionCallbacks = {}) {}
 
@@ -33,7 +33,7 @@ export class TestExtension implements TeleportExtension {
   async onOpen(context: ExtensionContext): Promise<void> {
     log('onOpen', { localPeerId: context.localPeerId, remotePeerId: context.remotePeerId });
     this.extensionContext = context;
-    this._rpc = createBufProtoRpcPeer<{ TestService: typeof TestService }, { TestService: typeof TestService }>({
+    this._rpc = createProtoRpcPeer<{ TestService: typeof TestService }, { TestService: typeof TestService }>({
       port: await context.createPort('rpc', {
         contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"',
       }),

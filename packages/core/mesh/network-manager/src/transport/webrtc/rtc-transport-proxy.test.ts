@@ -13,7 +13,7 @@ import { type Mesh } from '@dxos/protocols';
 import { create } from '@dxos/protocols/buf';
 import * as MeshBridgePb from '@dxos/protocols/buf/dxos/mesh/bridge_pb';
 import { SignalSchema } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
-import { type RpcPort, createBufProtoRpcPeer, createBufServiceBundle, createLinkedPorts } from '@dxos/rpc';
+import { type RpcPort, createProtoRpcPeer, createServiceBundle, createLinkedPorts } from '@dxos/rpc';
 
 import { type Transport, type TransportFactory, type TransportOptions, type TransportStats } from '../transport';
 
@@ -288,13 +288,13 @@ describe.skip('RtcPeerTransportProxy', () => {
     return { proxy, options, stream };
   };
 
-  const bridgeBundle = createBufServiceBundle({
+  const bridgeBundle = createServiceBundle({
     BridgeService: MeshBridgePb.BridgeService,
   });
 
   const createService = async (port: RpcPort, transportFactory?: TransportFactory) => {
     const rtcTransportService = new RtcTransportService(undefined, undefined, transportFactory);
-    const service = createBufProtoRpcPeer({
+    const service = createProtoRpcPeer({
       exposed: bridgeBundle,
       handlers: { BridgeService: rtcTransportService },
       port,
@@ -309,7 +309,7 @@ describe.skip('RtcPeerTransportProxy', () => {
   };
 
   const createClient = async (port: RpcPort) => {
-    const rpcClient = createBufProtoRpcPeer({
+    const rpcClient = createProtoRpcPeer({
       requested: bridgeBundle,
       port,
       noHandshake: true,

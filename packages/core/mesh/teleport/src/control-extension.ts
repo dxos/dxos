@@ -14,7 +14,7 @@ import {
   ControlService,
   RegisterExtensionRequestSchema,
 } from '@dxos/protocols/buf/dxos/mesh/teleport/control_pb';
-import { type BufProtoRpcPeer, createBufProtoRpcPeer } from '@dxos/rpc';
+import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 import { Callback } from '@dxos/util';
 
 import { type ExtensionContext, type TeleportExtension } from './teleport';
@@ -42,7 +42,7 @@ export class ControlExtension implements TeleportExtension {
   public readonly onExtensionRegistered = new Callback<(extensionName: string) => void>();
 
   private _extensionContext!: ExtensionContext;
-  private _rpc!: BufProtoRpcPeer<{ Control: typeof ControlService }>;
+  private _rpc!: ProtoRpcPeer<{ Control: typeof ControlService }>;
 
   constructor(
     private readonly opts: ControlExtensionOpts,
@@ -57,7 +57,7 @@ export class ControlExtension implements TeleportExtension {
   async onOpen(extensionContext: ExtensionContext): Promise<void> {
     this._extensionContext = extensionContext;
 
-    this._rpc = createBufProtoRpcPeer<ControlRpcBundle, ControlRpcBundle>({
+    this._rpc = createProtoRpcPeer<ControlRpcBundle, ControlRpcBundle>({
       requested: {
         Control: ControlService,
       },

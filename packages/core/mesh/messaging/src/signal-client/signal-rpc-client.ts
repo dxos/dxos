@@ -12,7 +12,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
 import { Signal, type Message as SignalMessage } from '@dxos/protocols/buf/dxos/mesh/signal_pb';
-import { type BufProtoRpcPeer, createBufProtoRpcPeer } from '@dxos/rpc';
+import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 import { type Stream } from '@dxos/stream';
 
 import { SignalRpcClientMonitor } from './signal-rpc-client-monitor';
@@ -48,7 +48,7 @@ export type SignalRPCClientProps = {
  */
 export class SignalRPCClient {
   private readonly _socket: WebSocket;
-  private readonly _rpc: BufProtoRpcPeer<Services>;
+  private readonly _rpc: ProtoRpcPeer<Services>;
   private readonly _connectTrigger = new Trigger();
 
   private _keepaliveCtx?: Context;
@@ -68,7 +68,7 @@ export class SignalRPCClient {
     this._callbacks = callbacks;
     this._socket = new WebSocket(this._url);
 
-    this._rpc = createBufProtoRpcPeer({
+    this._rpc = createProtoRpcPeer({
       requested: {
         Signal,
       },

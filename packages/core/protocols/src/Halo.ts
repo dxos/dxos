@@ -6,8 +6,8 @@ import type * as IdentityPb from '@dxos/protocols/buf/dxos/client/services_pb';
 
 import type * as Rpc from './Rpc.ts';
 
-export interface IdentityService extends Rpc.BufRpcHandlers<typeof IdentityPb.IdentityService> {}
+export interface IdentityService extends Rpc.RpcHandlers<typeof IdentityPb.IdentityService> {}
 
-export interface InvitationsService extends Rpc.BufRpcHandlers<typeof IdentityPb.InvitationsService> {}
+export interface InvitationsService extends Rpc.RpcHandlers<typeof IdentityPb.InvitationsService> {}
 
-export interface DevicesService extends Rpc.BufRpcHandlers<typeof IdentityPb.DevicesService> {}
+export interface DevicesService extends Rpc.RpcHandlers<typeof IdentityPb.DevicesService> {}

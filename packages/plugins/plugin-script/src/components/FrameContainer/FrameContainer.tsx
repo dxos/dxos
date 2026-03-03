@@ -9,7 +9,7 @@ import { type BundleResult } from '@dxos/functions-runtime/bundler';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
-import { createBufProtoRpcPeer } from '@dxos/rpc';
+import { createProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 import { mx } from '@dxos/ui-theme';
 
@@ -28,7 +28,7 @@ export const FrameContainer = ({ containerUrl, result, debug = true }: FrameCont
   useEffect(() => {
     if (iframeRef.current) {
       // Connect iframe to client.
-      const rpc = createBufProtoRpcPeer({
+      const rpc = createProtoRpcPeer({
         exposed: clientServiceBundle,
         handlers: (client as any)._services.services, // TODO(burdon): Remove cast?
         port: createIFramePort({

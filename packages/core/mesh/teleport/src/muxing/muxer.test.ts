@@ -9,7 +9,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { asyncTimeout, latch } from '@dxos/async';
 import { EmptySchema, create } from '@dxos/protocols/buf';
 import { TestRpcResponseSchema, TestService } from '@dxos/protocols/buf/example/testing/rpc_pb';
-import { createBufProtoRpcPeer } from '@dxos/rpc';
+import { createProtoRpcPeer } from '@dxos/rpc';
 
 import { Muxer } from './muxer';
 import { type RpcPort } from './rpc-port';
@@ -38,7 +38,7 @@ const setupPeers = () => {
 };
 
 const createRpc = (port: RpcPort, handler: (req: { data: string }) => Promise<{ data: string }>) =>
-  createBufProtoRpcPeer({
+  createProtoRpcPeer({
     requested: {
       TestService,
     },

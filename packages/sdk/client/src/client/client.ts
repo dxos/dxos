@@ -42,7 +42,7 @@ import {
   Runtime_ClientSchema,
   Runtime_Client_StorageSchema,
 } from '@dxos/protocols/buf/dxos/config_pb';
-import { type BufProtoRpcPeer, createBufProtoRpcPeer } from '@dxos/rpc';
+import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 import { type Stream } from '@dxos/stream';
 import { trace } from '@dxos/tracing';
@@ -125,7 +125,7 @@ export class Client {
   private _statusTimeout?: NodeJS.Timeout;
   private _iframeManager?: IFrameManager;
   private _shellManager?: ShellManager;
-  private _shellClientProxy?: BufProtoRpcPeer<typeof clientServiceBundle>;
+  private _shellClientProxy?: ProtoRpcPeer<typeof clientServiceBundle>;
   private _edgeHttpClient?: EdgeHttpClient = undefined;
   private _edgeApi?: ClientEdgeAPI = undefined;
 
@@ -496,7 +496,7 @@ export class Client {
           ? this._iframeManager.source.toString().split('/').slice(0, 3).join('/')
           : this._iframeManager.source.origin;
 
-      this._shellClientProxy = createBufProtoRpcPeer({
+      this._shellClientProxy = createProtoRpcPeer({
         exposed: clientServiceBundle,
         handlers: this._services.services as ClientServices,
         port: createIFramePort({

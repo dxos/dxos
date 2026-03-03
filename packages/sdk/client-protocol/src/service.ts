@@ -13,7 +13,7 @@ import * as EchoServicePb from '@dxos/protocols/buf/dxos/echo/service_pb';
 import * as IframePb from '@dxos/protocols/buf/dxos/iframe_pb';
 import * as MeshBridgePb from '@dxos/protocols/buf/dxos/mesh/bridge_pb';
 import * as TracingPb from '@dxos/protocols/buf/dxos/tracing_pb';
-import { createBufServiceBundle } from '@dxos/rpc';
+import { createServiceBundle } from '@dxos/rpc';
 
 // Transitive type imports required for declaration emit (TS2742).
 import type {} from '@dxos/protocols/buf/dxos/client/invitation_pb';
@@ -32,7 +32,7 @@ export type { QueueService } from '@dxos/protocols/buf/dxos/client/queue_pb';
 /**
  * Services supported by host.
  */
-export const clientServiceBundle = createBufServiceBundle({
+export const clientServiceBundle = createServiceBundle({
   SystemService: ClientServicesPb.SystemService,
   NetworkService: ClientServicesPb.NetworkService,
   LoggingService: ClientLoggingPb.LoggingService,
@@ -56,7 +56,7 @@ export const clientServiceBundle = createBufServiceBundle({
  * Client services type derived from the service bundle.
  * This represents the client-side RPC interface for all services.
  */
-export type ClientServices = Rpc.BufRpcClientServices<typeof clientServiceBundle>;
+export type ClientServices = Rpc.RpcClientServices<typeof clientServiceBundle>;
 
 /**
  * Provide access to client services definitions and service handler.
@@ -93,7 +93,7 @@ export type IframeServiceBundle = {
   BridgeService: Mesh.BridgeService;
 };
 
-export const iframeServiceBundle = createBufServiceBundle({
+export const iframeServiceBundle = createServiceBundle({
   BridgeService: MeshBridgePb.BridgeService,
 });
 
@@ -101,7 +101,7 @@ export type WorkerServiceBundle = {
   WorkerService: Client.WorkerService;
 };
 
-export const workerServiceBundle = createBufServiceBundle({
+export const workerServiceBundle = createServiceBundle({
   WorkerService: IframePb.WorkerService,
 });
 
@@ -109,7 +109,7 @@ export type AppServiceBundle = {
   AppService: Client.AppService;
 };
 
-export const appServiceBundle = createBufServiceBundle({
+export const appServiceBundle = createServiceBundle({
   AppService: IframePb.AppService,
 });
 
@@ -117,6 +117,6 @@ export type ShellServiceBundle = {
   ShellService: Client.ShellService;
 };
 
-export const shellServiceBundle = createBufServiceBundle({
+export const shellServiceBundle = createServiceBundle({
   ShellService: IframePb.ShellService,
 });

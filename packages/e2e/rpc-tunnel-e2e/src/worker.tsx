@@ -8,7 +8,7 @@ import { JSONTree } from 'react-json-tree';
 
 import { TestStreamService } from '@dxos/protocols/buf/example/testing/rpc_pb';
 import { useAsyncEffect } from '@dxos/react-hooks';
-import { createBufProtoRpcPeer } from '@dxos/rpc';
+import { createProtoRpcPeer } from '@dxos/rpc';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
 
 import { Channels } from './channels';
@@ -23,7 +23,7 @@ const App = ({ port }: { port: MessagePort }) => {
 
   useAsyncEffect(async () => {
     const rpcPort = await createWorkerPort({ port, channel: Channels.ONE });
-    const client = createBufProtoRpcPeer({
+    const client = createProtoRpcPeer({
       requested: {
         TestStreamService,
       },

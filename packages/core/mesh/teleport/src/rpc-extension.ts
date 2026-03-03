@@ -5,24 +5,23 @@
 import { invariant } from '@dxos/invariant';
 import { type Rpc } from '@dxos/protocols';
 import { type GenService, type GenServiceMethods } from '@dxos/protocols/buf';
-import { type BufProtoRpcPeer, type BufProtoRpcPeerOptions, createBufProtoRpcPeer } from '@dxos/rpc';
+import { type ProtoRpcPeer, type ProtoRpcPeerOptions, createProtoRpcPeer } from '@dxos/rpc';
 
 import { type ExtensionContext, type TeleportExtension } from './teleport';
 
 /**
- * Base class for teleport extensions using buf-generated service definitions.
- * Replaces `RpcExtension` which uses protobuf.js-based `createProtoRpcPeer`.
+ * Base class for teleport extensions using service definitions.
  */
-export abstract class BufRpcExtension<
+export abstract class RpcExtension<
   Client extends Record<string, GenService<GenServiceMethods>>,
   Server extends Record<string, GenService<GenServiceMethods>>,
 > implements TeleportExtension
 {
   private _extensionContext!: ExtensionContext;
-  private _rpc?: BufProtoRpcPeer<Client>;
+  private _rpc?: ProtoRpcPeer<Client>;
   private _isClosed = false;
 
-  constructor(private readonly _rpcProps: Omit<BufProtoRpcPeerOptions<Client, Server>, 'port' | 'handlers'>) {}
+  constructor(private readonly _rpcProps: Omit<ProtoRpcPeerOptions<Client, Server>, 'port' | 'handlers'>) {}
 
   get initiator() {
     return this._extensionContext?.initiator;
@@ -36,12 +35,12 @@ export abstract class BufRpcExtension<
     return this._extensionContext?.remotePeerId;
   }
 
-  get rpc(): { [K in keyof Client]: Rpc.BufRpcClient<Client[K]> } {
+  get rpc(): { [K in keyof Client]: Rpc.RpcClient<Client[K]> } {
     invariant(this._rpc);
     return this._rpc.rpc;
   }
 
-  protected abstract getHandlers(): Promise<Rpc.BufServiceHandlers<Server>>;
+  protected abstract getHandlers(): Promise<Rpc.ServiceHandlers<Server>>;
 
   async onOpen(context: ExtensionContext): Promise<void> {
     this._extensionContext = context;
@@ -55,7 +54,7 @@ export abstract class BufRpcExtension<
     const port = await context.createPort('rpc', {
       contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"',
     });
-    this._rpc = createBufProtoRpcPeer({
+    this._rpc = createProtoRpcPeer({
       ...this._rpcProps,
       handlers,
       port,

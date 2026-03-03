@@ -29,8 +29,8 @@ export interface RpcPeerOptions {
    */
   timeout?: number;
 
-  callHandler: (method: string, request: Rpc.BufAny, options?: Rpc.BufRequestOptions) => MaybePromise<Rpc.BufAny>;
-  streamHandler?: (method: string, request: Rpc.BufAny, options?: Rpc.BufRequestOptions) => Stream<Rpc.BufAny>;
+  callHandler: (method: string, request: Rpc.Any, options?: Rpc.RequestOptions) => MaybePromise<Rpc.Any>;
+  streamHandler?: (method: string, request: Rpc.Any, options?: Rpc.RequestOptions) => Stream<Rpc.Any>;
 
   /**
    * Do not require or send handshake messages.
@@ -40,7 +40,7 @@ export interface RpcPeerOptions {
   /**
    * What options get passed to the `callHandler` and `streamHandler`.
    */
-  handlerRpcOptions?: Rpc.BufRequestOptions;
+  handlerRpcOptions?: Rpc.RequestOptions;
 }
 
 /**
@@ -384,7 +384,7 @@ export class RpcPeer {
    * Make RPC call. Will trigger a handler on the other side.
    * Peer should be open before making this call.
    */
-  async call(method: string, request: Rpc.BufAny, options?: Rpc.BufRequestOptions): Promise<Rpc.BufAny> {
+  async call(method: string, request: Rpc.Any, options?: Rpc.RequestOptions): Promise<Rpc.Any> {
     DEBUG_CALLS && log('calling...', { method });
     throwIfNotOpen(this._state);
 
@@ -434,7 +434,7 @@ export class RpcPeer {
    * Will trigger a handler on the other side.
    * Peer should be open before making this call.
    */
-  callStream(method: string, request: Rpc.BufAny, options?: Rpc.BufRequestOptions): Stream<Rpc.BufAny> {
+  callStream(method: string, request: Rpc.Any, options?: Rpc.RequestOptions): Stream<Rpc.Any> {
     throwIfNotOpen(this._state);
     const id = this._nextId++;
 

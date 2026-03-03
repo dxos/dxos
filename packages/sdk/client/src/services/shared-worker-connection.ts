@@ -10,7 +10,7 @@ import { createIceProvider } from '@dxos/network-manager';
 import { RemoteServiceConnectionError } from '@dxos/protocols';
 import { type Mesh } from '@dxos/protocols';
 import { EMPTY } from '@dxos/protocols/buf';
-import { type BufProtoRpcPeer, type RpcPort, createBufProtoRpcPeer } from '@dxos/rpc';
+import { type ProtoRpcPeer, type RpcPort, createProtoRpcPeer } from '@dxos/rpc';
 import { type MaybePromise, type Provider, getAsyncProviderValue } from '@dxos/util';
 
 // NOTE: Keep as RpcPorts to avoid dependency on @dxos/rpc-tunnel so we don't depend on browser-specific apis.
@@ -34,7 +34,7 @@ export class SharedWorkerConnection {
   private _release = new Trigger();
   private _config!: Config;
   private _transportService!: Mesh.BridgeService;
-  private _systemRpc!: BufProtoRpcPeer<typeof workerServiceBundle>;
+  private _systemRpc!: ProtoRpcPeer<typeof workerServiceBundle>;
 
   constructor({ config, systemPort }: SharedWorkerConnectionOptions) {
     this._configProvider = config;
@@ -53,7 +53,7 @@ export class SharedWorkerConnection {
       iceProviders && createIceProvider(iceProviders),
     );
 
-    this._systemRpc = createBufProtoRpcPeer({
+    this._systemRpc = createProtoRpcPeer({
       requested: workerServiceBundle,
       exposed: iframeServiceBundle,
       handlers: {

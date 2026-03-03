@@ -15,7 +15,7 @@ import { ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type Runtime_Services_Signal, Runtime_Services_SignalSchema } from '@dxos/protocols/buf/dxos/config_pb';
 import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import * as MeshBridgePb from '@dxos/protocols/buf/dxos/mesh/bridge_pb';
-import { type BufProtoRpcPeer, createBufProtoRpcPeer, createBufServiceBundle, createLinkedPorts } from '@dxos/rpc';
+import { type ProtoRpcPeer, createProtoRpcPeer, createServiceBundle, createLinkedPorts } from '@dxos/rpc';
 import { ComplexMap } from '@dxos/util';
 
 import { TcpTransportFactory } from '#tcp-transport';
@@ -82,8 +82,8 @@ export class TestPeer {
    */
   readonly _networkManager: SwarmNetworkManager;
 
-  private _proxy?: BufProtoRpcPeer<{ BridgeService: typeof MeshBridgePb.BridgeService }>;
-  private _service?: BufProtoRpcPeer<any>;
+  private _proxy?: ProtoRpcPeer<{ BridgeService: typeof MeshBridgePb.BridgeService }>;
+  private _service?: ProtoRpcPeer<any>;
 
   constructor(
     private readonly testBuilder: TestBuilder,
@@ -115,17 +115,17 @@ export class TestPeer {
           {
             // Simulates bridge to shared worker.
             const [proxyPort, servicePort] = createLinkedPorts();
-            const bridgeBundle = createBufServiceBundle({
+            const bridgeBundle = createServiceBundle({
               BridgeService: MeshBridgePb.BridgeService,
             });
 
-            this._proxy = createBufProtoRpcPeer({
+            this._proxy = createProtoRpcPeer({
               port: proxyPort,
               requested: bridgeBundle,
               noHandshake: true,
             });
 
-            this._service = createBufProtoRpcPeer({
+            this._service = createProtoRpcPeer({
               port: servicePort,
               exposed: bridgeBundle,
               handlers: { BridgeService: new RtcTransportService() },

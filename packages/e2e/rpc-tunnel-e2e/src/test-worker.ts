@@ -4,7 +4,7 @@
 
 import { log } from '@dxos/log';
 import { TestStreamService } from '@dxos/protocols/buf/example/testing/rpc_pb';
-import { createBufProtoRpcPeer } from '@dxos/rpc';
+import { createProtoRpcPeer } from '@dxos/rpc';
 import { PortMuxer } from '@dxos/rpc-tunnel';
 
 import { Channels } from './channels';
@@ -23,7 +23,7 @@ onconnect = async (event) => {
 const setup = async (muxer: PortMuxer, channel: string, client: TestClient) => {
   const port = muxer.createWorkerPort({ channel });
 
-  const server = createBufProtoRpcPeer({
+  const server = createProtoRpcPeer({
     exposed: {
       TestStreamService,
     },

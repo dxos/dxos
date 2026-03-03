@@ -10,7 +10,7 @@ import { type Stream } from '@dxos/stream';
 /**
  * Represents a protobuf Any type used for RPC encoding.
  */
-export interface BufAny {
+export interface Any {
   typeUrl: string;
   value: Uint8Array;
 }
@@ -18,14 +18,14 @@ export interface BufAny {
 /**
  * Request options for RPC calls.
  */
-export interface BufRequestOptions {
+export interface RequestOptions {
   timeout?: number;
 }
 
 /**
  * Service provider can be a service instance, a sync factory, or an async factory.
  */
-export type BufServiceProvider<Service> = Service | (() => Service) | (() => Promise<Service>);
+export type ServiceProvider<Service> = Service | (() => Service) | (() => Promise<Service>);
 
 /**
  * Extract method definitions from a GenService type.
@@ -60,22 +60,22 @@ type MethodInputInitType<M> = M extends { input: infer I extends DescMessage } ?
  * Get the client method signature for a unary RPC method.
  * Accepts init shapes for requests since the runtime normalizes via `create()`.
  */
-type UnaryClientMethod<I, O> = (request: I, options?: BufRequestOptions) => Promise<O>;
+type UnaryClientMethod<I, O> = (request: I, options?: RequestOptions) => Promise<O>;
 
 /**
  * Get the client method signature for a server streaming RPC method.
  */
-type StreamingClientMethod<I, O> = (request: I, options?: BufRequestOptions) => Stream<O>;
+type StreamingClientMethod<I, O> = (request: I, options?: RequestOptions) => Stream<O>;
 
 /**
  * Get the handler signature for a unary RPC method.
  */
-type UnaryHandler<I, OInit> = (request: I, options?: BufRequestOptions) => Promise<OInit>;
+type UnaryHandler<I, OInit> = (request: I, options?: RequestOptions) => Promise<OInit>;
 
 /**
  * Get the handler signature for a server streaming RPC method.
  */
-type StreamingHandler<I, OInit> = (request: I, options?: BufRequestOptions) => Stream<OInit>;
+type StreamingHandler<I, OInit> = (request: I, options?: RequestOptions) => Stream<OInit>;
 
 /**
  * Maps a method definition to its client signature.
@@ -99,33 +99,33 @@ type HandlerMethodSignature<M> = M extends { methodKind: 'unary' }
 /**
  * Type for an RPC service client built from a GenService definition.
  */
-export type BufRpcClient<S extends GenService<GenServiceMethods>> = {
+export type RpcClient<S extends GenService<GenServiceMethods>> = {
   [K in keyof ServiceMethods<S>]: ClientMethodSignature<ServiceMethods<S>[K]>;
 };
 
 /**
  * Type for RPC service handlers built from a GenService definition.
  */
-export type BufRpcHandlers<S extends GenService<GenServiceMethods>> = {
+export type RpcHandlers<S extends GenService<GenServiceMethods>> = {
   [K in keyof ServiceMethods<S>]: HandlerMethodSignature<ServiceMethods<S>[K]>;
 };
 
 /**
  * Map of service definitions.
  */
-export type BufServiceBundle<Services extends Record<string, GenService<GenServiceMethods>>> = Services;
+export type ServiceBundle<Services extends Record<string, GenService<GenServiceMethods>>> = Services;
 
 /**
  * Map of service handlers.
  */
-export type BufServiceHandlers<Services extends Record<string, GenService<GenServiceMethods>>> = {
-  [K in keyof Services]: BufServiceProvider<BufRpcHandlers<Services[K]>>;
+export type ServiceHandlers<Services extends Record<string, GenService<GenServiceMethods>>> = {
+  [K in keyof Services]: ServiceProvider<RpcHandlers<Services[K]>>;
 };
 
 /**
- * Extracts the client interface type from a buf service bundle.
+ * Extracts the client interface type from a service bundle.
  * Used to derive strongly-typed client services from a bundle definition.
  */
-export type BufRpcClientServices<Bundle extends Record<string, GenService<GenServiceMethods>>> = {
-  [K in keyof Bundle]: BufRpcClient<Bundle[K]>;
+export type RpcClientServices<Bundle extends Record<string, GenService<GenServiceMethods>>> = {
+  [K in keyof Bundle]: RpcClient<Bundle[K]>;
 };

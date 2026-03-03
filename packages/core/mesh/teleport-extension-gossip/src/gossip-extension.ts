@@ -7,7 +7,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { EMPTY } from '@dxos/protocols/buf';
 import { type GossipMessage, GossipService } from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
-import { type BufProtoRpcPeer, createBufProtoRpcPeer } from '@dxos/rpc';
+import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 import { type ExtensionContext, type TeleportExtension } from '@dxos/teleport';
 
 export type GossipCallbacks = {
@@ -29,14 +29,14 @@ export class GossipExtension implements TeleportExtension {
   private readonly _opened = new Trigger();
   private _closed = false;
 
-  private _rpc?: BufProtoRpcPeer<ServiceBundle>;
+  private _rpc?: ProtoRpcPeer<ServiceBundle>;
 
   constructor(private readonly _callbacks: GossipCallbacks = {}) {}
 
   async onOpen(context: ExtensionContext): Promise<void> {
     log('onOpen', { localPeerId: context.localPeerId, remotePeerId: context.remotePeerId });
 
-    this._rpc = createBufProtoRpcPeer<ServiceBundle, ServiceBundle>({
+    this._rpc = createProtoRpcPeer<ServiceBundle, ServiceBundle>({
       requested: {
         GossipService,
       },

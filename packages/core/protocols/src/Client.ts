@@ -10,24 +10,24 @@ import type * as TracingPb from '@dxos/protocols/buf/dxos/tracing_pb';
 
 import type * as Rpc from './Rpc.ts';
 
-export interface SpacesService extends Rpc.BufRpcHandlers<typeof ClientServicesPb.SpacesService> {}
+export interface SpacesService extends Rpc.RpcHandlers<typeof ClientServicesPb.SpacesService> {}
 
-export interface SystemService extends Rpc.BufRpcHandlers<typeof ClientServicesPb.SystemService> {}
+export interface SystemService extends Rpc.RpcHandlers<typeof ClientServicesPb.SystemService> {}
 
-export interface NetworkService extends Rpc.BufRpcHandlers<typeof ClientServicesPb.NetworkService> {}
+export interface NetworkService extends Rpc.RpcHandlers<typeof ClientServicesPb.NetworkService> {}
 
-export interface EdgeAgentService extends Rpc.BufRpcHandlers<typeof ClientServicesPb.EdgeAgentService> {}
+export interface EdgeAgentService extends Rpc.RpcHandlers<typeof ClientServicesPb.EdgeAgentService> {}
 
-export interface TracingService extends Rpc.BufRpcHandlers<typeof TracingPb.TracingService> {}
+export interface TracingService extends Rpc.RpcHandlers<typeof TracingPb.TracingService> {}
 
-export interface DevtoolsHost extends Rpc.BufRpcHandlers<typeof DevtoolsHostPb.DevtoolsHost> {}
+export interface DevtoolsHost extends Rpc.RpcHandlers<typeof DevtoolsHostPb.DevtoolsHost> {}
 
-export interface ContactsService extends Rpc.BufRpcHandlers<typeof ClientServicesPb.ContactsService> {}
+export interface ContactsService extends Rpc.RpcHandlers<typeof ClientServicesPb.ContactsService> {}
 
-export interface LoggingService extends Rpc.BufRpcHandlers<typeof ClientLoggingPb.LoggingService> {}
+export interface LoggingService extends Rpc.RpcHandlers<typeof ClientLoggingPb.LoggingService> {}
 
-export interface WorkerService extends Rpc.BufRpcHandlers<typeof IframePb.WorkerService> {}
+export interface WorkerService extends Rpc.RpcHandlers<typeof IframePb.WorkerService> {}
 
-export interface AppService extends Rpc.BufRpcHandlers<typeof IframePb.AppService> {}
+export interface AppService extends Rpc.RpcHandlers<typeof IframePb.AppService> {}
 
-export interface ShellService extends Rpc.BufRpcHandlers<typeof IframePb.ShellService> {}
+export interface ShellService extends Rpc.RpcHandlers<typeof IframePb.ShellService> {}

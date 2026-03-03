@@ -13,7 +13,7 @@ import {
   type PeerInfo,
   type SyncMessage,
 } from '@dxos/protocols/buf/dxos/mesh/teleport/automerge_pb';
-import { type BufProtoRpcPeer, createBufProtoRpcPeer } from '@dxos/rpc';
+import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 import { type ExtensionContext, type TeleportExtension } from '@dxos/teleport';
 
 export type AutomergeReplicatorProps = {
@@ -62,7 +62,7 @@ export type AutomergeReplicatorFactory = (
  */
 export class AutomergeReplicator implements TeleportExtension {
   private readonly _opened = new Trigger();
-  private _rpc?: BufProtoRpcPeer<ServiceBundle>;
+  private _rpc?: ProtoRpcPeer<ServiceBundle>;
 
   private _destroyed: boolean = false;
   private _extensionContext?: ExtensionContext;
@@ -75,7 +75,7 @@ export class AutomergeReplicator implements TeleportExtension {
   async onOpen(context: ExtensionContext): Promise<void> {
     log('onOpen', { localPeerId: context.localPeerId, remotePeerId: context.remotePeerId });
     this._extensionContext = context;
-    this._rpc = createBufProtoRpcPeer<ServiceBundle, ServiceBundle>({
+    this._rpc = createProtoRpcPeer<ServiceBundle, ServiceBundle>({
       timeout: RPC_TIMEOUT,
       requested: {
         AutomergeReplicatorService,

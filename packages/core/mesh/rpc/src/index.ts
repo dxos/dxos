@@ -4,6 +4,6 @@
 
 export * from './errors';
 export * from './rpc';
-export * from './service-buf';
+export * from './service';
 export * from './testing';
 export * from './trace';

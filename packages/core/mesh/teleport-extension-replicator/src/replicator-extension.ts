@@ -21,7 +21,7 @@ import {
   ReplicatorService,
   StartReplicationResponseSchema,
 } from '@dxos/protocols/buf/dxos/mesh/teleport/replicator_pb';
-import { type BufProtoRpcPeer, createBufProtoRpcPeer } from '@dxos/rpc';
+import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 import { type ExtensionContext, type TeleportExtension } from '@dxos/teleport';
 import { ComplexMap } from '@dxos/util';
 
@@ -44,7 +44,7 @@ export class ReplicatorExtension implements TeleportExtension {
   private readonly _feeds = new ComplexMap<PublicKey, FeedWrapper<any>>(PublicKey.hash);
   private readonly _streams = new ComplexMap<PublicKey, ActiveStream>(PublicKey.hash);
 
-  private _rpc?: BufProtoRpcPeer<ServiceBundle>;
+  private _rpc?: ProtoRpcPeer<ServiceBundle>;
   private _extensionContext?: ExtensionContext;
 
   private _options: ReplicationOptions = {
@@ -103,7 +103,7 @@ export class ReplicatorExtension implements TeleportExtension {
     this._extensionContext = context;
     log('open');
 
-    this._rpc = createBufProtoRpcPeer<ServiceBundle, ServiceBundle>({
+    this._rpc = createProtoRpcPeer<ServiceBundle, ServiceBundle>({
       requested: { ReplicatorService },
       exposed: { ReplicatorService },
       handlers: {

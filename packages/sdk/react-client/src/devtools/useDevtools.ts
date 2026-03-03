@@ -11,9 +11,9 @@ import { useClient } from '../client';
 /**
  * Returns the DevtoolsHost service from the client.
  */
-export const useDevtools = (): Rpc.BufRpcClient<typeof DevtoolsHost> => {
+export const useDevtools = (): Rpc.RpcClient<typeof DevtoolsHost> => {
   const client = useClient();
-  return (client.services.services.DevtoolsHost ?? raise(new Error('DevtoolsHost not available.'))) as Rpc.BufRpcClient<
+  return (client.services.services.DevtoolsHost ?? raise(new Error('DevtoolsHost not available.'))) as Rpc.RpcClient<
     typeof DevtoolsHost
   >;
 };

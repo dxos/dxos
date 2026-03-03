@@ -15,7 +15,7 @@ import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { create } from '@dxos/protocols/buf';
 import { Runtime_Client_StorageSchema } from '@dxos/protocols/buf/dxos/config_pb';
-import { type BufProtoRpcPeer, type RpcPort, createBufProtoRpcPeer } from '@dxos/rpc';
+import { type ProtoRpcPeer, type RpcPort, createProtoRpcPeer } from '@dxos/rpc';
 import { type DiagnosticMetadata, TRACE_PROCESSOR, type TraceProcessor } from '@dxos/tracing';
 import { joinTables } from '@dxos/util';
 
@@ -94,7 +94,7 @@ export type MountOptions = {
 };
 
 export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
-  let server: BufProtoRpcPeer<{}>;
+  let server: ProtoRpcPeer<{}>;
   let diagnostics: DiagnosticMetadata[] = [];
 
   const hook: DevtoolsHook = {
@@ -115,7 +115,7 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
       }
 
       log('Opening devtools client RPC server...');
-      server = createBufProtoRpcPeer({
+      server = createProtoRpcPeer({
         exposed: client.services.descriptors,
         handlers: client.services.services as unknown as ClientServices,
         port,

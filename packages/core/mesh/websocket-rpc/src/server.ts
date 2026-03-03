@@ -9,7 +9,7 @@ import WebSocket from 'isomorphic-ws';
 
 import { log } from '@dxos/log';
 import { type GenService, type GenServiceMethods } from '@dxos/protocols/buf';
-import { type BufProtoRpcPeer, type BufProtoRpcPeerOptions, createBufProtoRpcPeer } from '@dxos/rpc';
+import { type ProtoRpcPeer, type ProtoRpcPeerOptions, createProtoRpcPeer } from '@dxos/rpc';
 
 export type ConnectionInfo = {
   request: IncomingMessage;
@@ -19,9 +19,9 @@ export type ConnectionHandler<
   C extends Record<string, GenService<GenServiceMethods>>,
   S extends Record<string, GenService<GenServiceMethods>>,
 > = {
-  onOpen?: (rpc: BufProtoRpcPeer<C>) => Promise<void>;
-  onClose?: (rpc: BufProtoRpcPeer<C>) => Promise<void>;
-} & Pick<BufProtoRpcPeerOptions<C, S>, 'requested' | 'exposed' | 'handlers'>;
+  onOpen?: (rpc: ProtoRpcPeer<C>) => Promise<void>;
+  onClose?: (rpc: ProtoRpcPeer<C>) => Promise<void>;
+} & Pick<ProtoRpcPeerOptions<C, S>, 'requested' | 'exposed' | 'handlers'>;
 
 export type WebsocketRpcServerProps<
   C extends Record<string, GenService<GenServiceMethods>>,
@@ -53,7 +53,7 @@ export class WebsocketRpcServer<
         request,
       };
       const { onOpen, onClose, ...options } = await this._params.onConnection(info);
-      const rpc = createBufProtoRpcPeer<C, S>({
+      const rpc = createProtoRpcPeer<C, S>({
         ...options,
         port: {
           send: (msg) => {

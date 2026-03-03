@@ -6,7 +6,7 @@ import { type ClientServices } from '@dxos/client-protocol';
 import { raise } from '@dxos/debug';
 import { type Rpc } from '@dxos/protocols';
 import { type DescService, type GenService, type GenServiceMethods } from '@dxos/protocols/buf';
-import { BufServiceHandler, RpcPeer, type RpcPeerOptions, parseMethodName } from '@dxos/rpc';
+import { ServiceHandler, RpcPeer, type RpcPeerOptions, parseMethodName } from '@dxos/rpc';
 import { Stream } from '@dxos/stream';
 import { MapCounter, trace } from '@dxos/tracing';
 import { type MaybePromise } from '@dxos/util';
@@ -17,21 +17,21 @@ export type ClientRpcServerProps = {
   serviceRegistry: ServiceRegistry<ClientServices>;
   handleCall?: (
     method: string,
-    params: Rpc.BufAny,
-    handler: (method: string, params: Rpc.BufAny) => MaybePromise<Rpc.BufAny>,
-  ) => Promise<Rpc.BufAny>;
+    params: Rpc.Any,
+    handler: (method: string, params: Rpc.Any) => MaybePromise<Rpc.Any>,
+  ) => Promise<Rpc.Any>;
   handleStream?: (
     method: string,
-    params: Rpc.BufAny,
-    handler: (method: string, params: Rpc.BufAny) => Stream<Rpc.BufAny>,
-  ) => MaybePromise<Stream<Rpc.BufAny>>;
+    params: Rpc.Any,
+    handler: (method: string, params: Rpc.Any) => Stream<Rpc.Any>,
+  ) => MaybePromise<Stream<Rpc.Any>>;
 } & Omit<RpcPeerOptions, 'callHandler' | 'streamHandler'>;
 
 @trace.resource()
 export class ClientRpcServer {
   private readonly _serviceRegistry: ServiceRegistry<ClientServices>;
   private readonly _rpcPeer: RpcPeer;
-  private readonly _handlerCache = new Map<string, BufServiceHandler<GenService<GenServiceMethods>>>();
+  private readonly _handlerCache = new Map<string, ServiceHandler<GenService<GenServiceMethods>>>();
   private readonly _handleCall: ClientRpcServerProps['handleCall'];
   private readonly _handleStream: ClientRpcServerProps['handleStream'];
 
@@ -53,34 +53,34 @@ export class ClientRpcServer {
       ...rpcOptions,
       callHandler: (method, params) => {
         const [serviceName, methodName] = parseMethodName(method);
-        const handler = (method: string, params: Rpc.BufAny) =>
+        const handler = (method: string, params: Rpc.Any) =>
           this._getServiceHandler(serviceName).call(method, params);
 
         this._callMetrics.inc(`${serviceName}.${methodName} request`);
 
         if (this._handleCall) {
-          return this._handleCall(methodName, params as Rpc.BufAny, handler);
+          return this._handleCall(methodName, params as Rpc.Any, handler);
         } else {
-          return handler(methodName, params as Rpc.BufAny);
+          return handler(methodName, params as Rpc.Any);
         }
       },
       streamHandler: (method, params) => {
         const [serviceName, methodName] = parseMethodName(method);
-        const handler = (method: string, params: Rpc.BufAny) =>
+        const handler = (method: string, params: Rpc.Any) =>
           this._getServiceHandler(serviceName).callStream(method, params);
 
         this._callMetrics.inc(`${serviceName}.${methodName} request stream`);
 
         if (this._handleStream) {
           return Stream.map(
-            Stream.unwrapPromise(this._handleStream(methodName, params as Rpc.BufAny, handler)),
+            Stream.unwrapPromise(this._handleStream(methodName, params as Rpc.Any, handler)),
             (data) => {
               this._callMetrics.inc(`${serviceName}.${methodName} response stream`);
               return data;
             },
           );
         } else {
-          return handler(methodName, params as Rpc.BufAny);
+          return handler(methodName, params as Rpc.Any);
         }
       },
     });
@@ -94,7 +94,7 @@ export class ClientRpcServer {
     await this._rpcPeer.close();
   }
 
-  private _getServiceHandler(serviceName: string): BufServiceHandler<GenService<GenServiceMethods>> {
+  private _getServiceHandler(serviceName: string): ServiceHandler<GenService<GenServiceMethods>> {
     if (!this._handlerCache.has(serviceName)) {
       const [key, descriptor] =
         Object.entries(this._serviceRegistry.descriptors).find(
@@ -108,7 +108,7 @@ export class ClientRpcServer {
 
       this._handlerCache.set(
         serviceName,
-        new BufServiceHandler(descriptor as GenService<GenServiceMethods> & DescService, service),
+        new ServiceHandler(descriptor as GenService<GenServiceMethods> & DescService, service),
       );
     }
 

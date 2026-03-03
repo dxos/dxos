@@ -23,7 +23,7 @@ import { EMPTY } from '@dxos/protocols/buf';
 import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
 import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { NotarizationService, type NotarizeRequest } from '@dxos/protocols/buf/dxos/mesh/teleport/notarization_pb';
-import { BufRpcExtension, type ExtensionContext } from '@dxos/teleport';
+import { RpcExtension, type ExtensionContext } from '@dxos/teleport';
 import { ComplexMap, ComplexSet, entry } from '@dxos/util';
 
 const DEFAULT_RETRY_TIMEOUT = 1_000;
@@ -418,7 +418,7 @@ export type NotarizationTeleportExtensionProps = {
 
 type NotarizationServices = { NotarizationService: typeof NotarizationService };
 
-export class NotarizationTeleportExtension extends BufRpcExtension<NotarizationServices, NotarizationServices> {
+export class NotarizationTeleportExtension extends RpcExtension<NotarizationServices, NotarizationServices> {
   constructor(private readonly _params: NotarizationTeleportExtensionProps) {
     super({
       requested: {
@@ -430,7 +430,7 @@ export class NotarizationTeleportExtension extends BufRpcExtension<NotarizationS
     });
   }
 
-  protected async getHandlers(): Promise<Rpc.BufServiceHandlers<NotarizationServices>> {
+  protected async getHandlers(): Promise<Rpc.ServiceHandlers<NotarizationServices>> {
     return {
       NotarizationService: {
         notarize: async (request) => {

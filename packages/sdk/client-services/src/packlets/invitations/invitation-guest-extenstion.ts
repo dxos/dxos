@@ -14,7 +14,7 @@ import {
   type InvitationOptions,
   InvitationOptions_Role,
 } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
-import { BufRpcExtension, type ExtensionContext } from '@dxos/teleport';
+import { RpcExtension, type ExtensionContext } from '@dxos/teleport';
 
 import { type FlowLockHolder } from './invitation-state';
 import { tryAcquireBeforeContextDisposed } from './utils';
@@ -35,7 +35,7 @@ type InvitationGuestExtensionCallbacks = {
 type InvitationServices = { InvitationHostService: typeof InvitationHostService };
 
 export class InvitationGuestExtension
-  extends BufRpcExtension<InvitationServices, InvitationServices>
+  extends RpcExtension<InvitationServices, InvitationServices>
   implements FlowLockHolder
 {
   private _ctx = new Context();
@@ -64,7 +64,7 @@ export class InvitationGuestExtension
     return this._invitationFlowLock != null;
   }
 
-  protected override async getHandlers(): Promise<Rpc.BufServiceHandlers<InvitationServices>> {
+  protected override async getHandlers(): Promise<Rpc.ServiceHandlers<InvitationServices>> {
     return {
       InvitationHostService: {
         options: async (options) => {

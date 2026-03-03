@@ -16,7 +16,7 @@ import {
   TestStreamRpcRequestSchema,
   TestStreamRpcResponseSchema,
 } from '@dxos/protocols/buf/example/testing/rpc_pb';
-import { type BufProtoRpcPeer, createBufProtoRpcPeer } from '@dxos/rpc';
+import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 
 import { type ExtensionContext, type TeleportExtension } from '../teleport';
 
@@ -33,7 +33,7 @@ export class TestExtensionWithStreams implements TeleportExtension {
   private readonly _streams = new Map<string, TestStream>();
 
   public extensionContext: ExtensionContext | undefined;
-  private _rpc!: BufProtoRpcPeer<{ TestServiceWithStreams: typeof TestServiceWithStreams }>;
+  private _rpc!: ProtoRpcPeer<{ TestServiceWithStreams: typeof TestServiceWithStreams }>;
 
   constructor(public readonly callbacks: TestExtensionWithStreamsCallbacks = {}) {}
 
@@ -133,7 +133,7 @@ export class TestExtensionWithStreams implements TeleportExtension {
   async onOpen(context: ExtensionContext): Promise<void> {
     log('onOpen', { localPeerId: context.localPeerId, remotePeerId: context.remotePeerId });
     this.extensionContext = context;
-    this._rpc = createBufProtoRpcPeer<
+    this._rpc = createProtoRpcPeer<
       { TestServiceWithStreams: typeof TestServiceWithStreams },
       { TestServiceWithStreams: typeof TestServiceWithStreams }
     >({

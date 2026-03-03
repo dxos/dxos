@@ -12,7 +12,7 @@ import {
   type LayoutRequest,
   ShellDisplay,
 } from '@dxos/protocols/buf/dxos/iframe_pb';
-import { type BufProtoRpcPeer, createBufProtoRpcPeer } from '@dxos/rpc';
+import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 
 import { RPC_TIMEOUT } from '../common';
@@ -36,7 +36,7 @@ const shellStyles = Object.entries({
 export class ShellManager {
   readonly contextUpdate = new Event<AppContextRequest>();
 
-  private _shellRpc?: BufProtoRpcPeer<typeof shellServiceBundle>;
+  private _shellRpc?: ProtoRpcPeer<typeof shellServiceBundle>;
   private _display = ShellDisplay.NONE;
 
   // prettier-ignore
@@ -99,7 +99,7 @@ export class ShellManager {
       iframe: this._iframeManager.iframe,
     });
 
-    this._shellRpc = createBufProtoRpcPeer({
+    this._shellRpc = createProtoRpcPeer({
       requested: shellServiceBundle,
       exposed: appServiceBundle,
       handlers: {

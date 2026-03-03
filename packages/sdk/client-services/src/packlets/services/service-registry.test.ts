@@ -14,7 +14,7 @@ import { EMPTY } from '@dxos/protocols/buf';
 import * as ClientServicesPb from '@dxos/protocols/buf/dxos/client/services_pb';
 import { SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { ConfigSchema, RuntimeSchema, Runtime_ClientSchema } from '@dxos/protocols/buf/dxos/config_pb';
-import { createBufProtoRpcPeer, createBufServiceBundle, createLinkedPorts } from '@dxos/rpc';
+import { createProtoRpcPeer, createServiceBundle, createLinkedPorts } from '@dxos/rpc';
 
 import { SystemServiceImpl } from '../system';
 import { createServiceContext } from '../testing';
@@ -27,7 +27,7 @@ type TestServices = {
   SystemService: Client.SystemService;
 };
 
-const serviceBundle = createBufServiceBundle({
+const serviceBundle = createServiceBundle({
   SystemService: ClientServicesPb.SystemService,
 });
 
@@ -57,12 +57,12 @@ describe('service registry', () => {
 
     const [proxyPort, serverPort] = createLinkedPorts();
 
-    const proxy = createBufProtoRpcPeer({
+    const proxy = createProtoRpcPeer({
       requested: serviceRegistry.descriptors,
       port: proxyPort,
     });
 
-    const server = createBufProtoRpcPeer({
+    const server = createProtoRpcPeer({
       exposed: serviceRegistry.descriptors,
       handlers: serviceRegistry.services as any,
       port: serverPort,

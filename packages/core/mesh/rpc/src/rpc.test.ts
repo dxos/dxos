@@ -12,7 +12,7 @@ import { Stream } from '@dxos/stream';
 import { RpcPeer } from './rpc';
 import { createLinkedPorts, encodeMessage } from './testing';
 
-const createPayload = (value = ''): Rpc.BufAny => ({
+const createPayload = (value = ''): Rpc.Any => ({
   typeUrl: 'dxos.test',
   value: encodeMessage(value),
 });
@@ -355,7 +355,7 @@ describe('RpcPeer', () => {
         streamHandler: (method, msg) => {
           expect(method).toEqual('method');
           expect(msg.value!).toEqual(encodeMessage('request'));
-          return new Stream<Rpc.BufAny>(({ next, close }) => {
+          return new Stream<Rpc.Any>(({ next, close }) => {
             next(createPayload('res1'));
             next(createPayload('res2'));
             close();
@@ -390,7 +390,7 @@ describe('RpcPeer', () => {
         streamHandler: (method, msg) => {
           expect(method).toEqual('method');
           expect(msg.value).toEqual(encodeMessage('request'));
-          return new Stream<Rpc.BufAny>(({ next, close }) => {
+          return new Stream<Rpc.Any>(({ next, close }) => {
             close(new Error('Test error'));
           });
         },
@@ -421,7 +421,7 @@ describe('RpcPeer', () => {
       const alice = new RpcPeer({
         callHandler: async (msg) => createPayload(),
         streamHandler: (method, msg) =>
-          new Stream<Rpc.BufAny>(({ next, close }) => () => {
+          new Stream<Rpc.Any>(({ next, close }) => () => {
             closeCalled = true;
           }),
         port: alicePort,
@@ -450,7 +450,7 @@ describe('RpcPeer', () => {
         streamHandler: (method, msg) => {
           expect(method).toEqual('method');
           expect(msg.value!).toEqual(encodeMessage('request'));
-          return new Stream<Rpc.BufAny>(({ ready, close }) => {
+          return new Stream<Rpc.Any>(({ ready, close }) => {
             ready();
             close();
           });
@@ -478,7 +478,7 @@ describe('RpcPeer', () => {
 
       const alice = new RpcPeer({
         callHandler: async (msg) => createPayload(),
-        streamHandler: (method, msg): Stream<Rpc.BufAny> => {
+        streamHandler: (method, msg): Stream<Rpc.Any> => {
           throw new Error('Test error');
         },
         port: alicePort,

@@ -10,7 +10,7 @@ import { log } from '@dxos/log';
 import { type Rpc } from '@dxos/protocols';
 import { create } from '@dxos/protocols/buf';
 import { AuthService, AuthenticateResponseSchema } from '@dxos/protocols/buf/dxos/mesh/teleport/auth_pb';
-import { BufRpcExtension, type ExtensionContext } from '@dxos/teleport';
+import { RpcExtension, type ExtensionContext } from '@dxos/teleport';
 
 export type AuthProvider = (nonce: Uint8Array) => Promise<Uint8Array | undefined>;
 
@@ -25,7 +25,7 @@ export type AuthExtensionProps = {
 
 type Services = { AuthService: typeof AuthService };
 
-export class AuthExtension extends BufRpcExtension<Services, Services> {
+export class AuthExtension extends RpcExtension<Services, Services> {
   private readonly _ctx = new Context({
     onError: (err) => {
       log.catch(err);
@@ -40,7 +40,7 @@ export class AuthExtension extends BufRpcExtension<Services, Services> {
     });
   }
 
-  protected async getHandlers(): Promise<Rpc.BufServiceHandlers<Services>> {
+  protected async getHandlers(): Promise<Rpc.ServiceHandlers<Services>> {
     return {
       AuthService: {
         authenticate: async ({ challenge }) => {

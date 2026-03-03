@@ -8,7 +8,7 @@ import { invariant } from '@dxos/invariant';
 import { log, logInfo } from '@dxos/log';
 import { type Mesh } from '@dxos/protocols';
 import { type StartRequest } from '@dxos/protocols/buf/dxos/iframe_pb';
-import { type BufProtoRpcPeer, type RpcPort, createBufProtoRpcPeer } from '@dxos/rpc';
+import { type ProtoRpcPeer, type RpcPort, createProtoRpcPeer } from '@dxos/rpc';
 import { Callback, type MaybePromise } from '@dxos/util';
 
 import { ClientRpcServer, type ClientRpcServerProps, type ClientServicesHost } from '../services';
@@ -28,7 +28,7 @@ export type WorkerSessionProps = {
 export class WorkerSession {
   private readonly _clientRpc: ClientRpcServer;
   private readonly _shellClientRpc?: ClientRpcServer;
-  private readonly _iframeRpc: BufProtoRpcPeer<typeof iframeServiceBundle>;
+  private readonly _iframeRpc: ProtoRpcPeer<typeof iframeServiceBundle>;
   private readonly _startTrigger = new Trigger();
   private readonly _serviceHost: ClientServicesHost;
 
@@ -83,7 +83,7 @@ export class WorkerSession {
         })
       : undefined;
 
-    this._iframeRpc = createBufProtoRpcPeer({
+    this._iframeRpc = createProtoRpcPeer({
       requested: iframeServiceBundle,
       exposed: workerServiceBundle,
       handlers: {

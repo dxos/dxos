@@ -8,7 +8,7 @@ import { JSONTree } from 'react-json-tree';
 
 import { TestStreamService } from '@dxos/protocols/buf/example/testing/rpc_pb';
 import { useAsyncEffect } from '@dxos/react-hooks';
-import { createBufProtoRpcPeer } from '@dxos/rpc';
+import { createProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 
 import { Channels } from './channels';
@@ -26,7 +26,7 @@ const App = () => {
     if (IN_IFRAME) {
       const port = createIFramePort({ channel: Channels.ONE });
       const client = new TestClient();
-      const server = createBufProtoRpcPeer({
+      const server = createProtoRpcPeer({
         requested: {
           TestStreamService,
         },
@@ -45,7 +45,7 @@ const App = () => {
         origin: 'http://127.0.0.1:5173',
         channel: Channels.ONE,
       });
-      const client = createBufProtoRpcPeer({
+      const client = createProtoRpcPeer({
         requested: {
           TestStreamService,
         },

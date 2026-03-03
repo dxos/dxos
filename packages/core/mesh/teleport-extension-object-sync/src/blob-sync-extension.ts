@@ -17,7 +17,7 @@ import {
   type WantList,
   WantListSchema,
 } from '@dxos/protocols/buf/dxos/mesh/teleport/blobsync_pb';
-import { BufRpcExtension, type ExtensionContext } from '@dxos/teleport';
+import { RpcExtension, type ExtensionContext } from '@dxos/teleport';
 import { BitField } from '@dxos/util';
 
 import { type BlobStore } from './blob-store';
@@ -37,7 +37,7 @@ const MAX_CONCURRENT_UPLOADS = 20;
 /**
  * Manages replication between a set of feeds for a single teleport session.
  */
-export class BlobSyncExtension extends BufRpcExtension<ServiceBundle, ServiceBundle> {
+export class BlobSyncExtension extends RpcExtension<ServiceBundle, ServiceBundle> {
   private readonly _ctx = new Context({ onError: (err) => log.catch(err) });
 
   private _lastWantListUpdate = 0;

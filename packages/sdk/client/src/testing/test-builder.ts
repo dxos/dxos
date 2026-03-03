@@ -43,7 +43,7 @@ import {
   Runtime_Services_SignalSchema,
 } from '@dxos/protocols/buf/dxos/config_pb';
 import { type Storage } from '@dxos/random-access-storage';
-import { type BufProtoRpcPeer, createBufProtoRpcPeer, createLinkedPorts } from '@dxos/rpc';
+import { type ProtoRpcPeer, createProtoRpcPeer, createLinkedPorts } from '@dxos/rpc';
 import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
@@ -157,10 +157,10 @@ export class TestBuilder {
   /**
    * Create client/server.
    */
-  createClientServer(host: ClientServicesHost = this.createClientServicesHost()): [Client, BufProtoRpcPeer<{}>] {
+  createClientServer(host: ClientServicesHost = this.createClientServicesHost()): [Client, ProtoRpcPeer<{}>] {
     const [proxyPort, hostPort] = createLinkedPorts();
     const client = new Client({ config: this.config, services: new ClientServicesProxy(proxyPort) });
-    const server = createBufProtoRpcPeer({
+    const server = createProtoRpcPeer({
       exposed: host.descriptors,
       handlers: host.services as ClientServices,
       port: hostPort,

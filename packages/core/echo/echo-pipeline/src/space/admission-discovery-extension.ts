@@ -12,7 +12,7 @@ import {
   type GetAdmissionCredentialRequest,
   GetAdmissionCredentialResponseSchema,
 } from '@dxos/protocols/buf/dxos/mesh/teleport/admission-discovery_pb';
-import { BufRpcExtension, type ExtensionContext } from '@dxos/teleport';
+import { RpcExtension, type ExtensionContext } from '@dxos/teleport';
 
 import { type Space } from './space';
 
@@ -22,7 +22,7 @@ type ExposedServices = { AdmissionDiscoveryService: typeof AdmissionDiscoverySer
 /**
  * Guest's side for a connection to a concrete peer in p2p network during invitation.
  */
-export class CredentialRetrieverExtension extends BufRpcExtension<RequestedServices, Record<string, never>> {
+export class CredentialRetrieverExtension extends RpcExtension<RequestedServices, Record<string, never>> {
   private _ctx = new Context();
 
   constructor(
@@ -34,7 +34,7 @@ export class CredentialRetrieverExtension extends BufRpcExtension<RequestedServi
     });
   }
 
-  protected override async getHandlers(): Promise<Rpc.BufServiceHandlers<Record<string, never>>> {
+  protected override async getHandlers(): Promise<Rpc.ServiceHandlers<Record<string, never>>> {
     return {};
   }
 
@@ -59,14 +59,14 @@ export class CredentialRetrieverExtension extends BufRpcExtension<RequestedServi
   }
 }
 
-export class CredentialServerExtension extends BufRpcExtension<Record<string, never>, ExposedServices> {
+export class CredentialServerExtension extends RpcExtension<Record<string, never>, ExposedServices> {
   constructor(private readonly _space: Space) {
     super({
       exposed: { AdmissionDiscoveryService },
     });
   }
 
-  protected override async getHandlers(): Promise<Rpc.BufServiceHandlers<ExposedServices>> {
+  protected override async getHandlers(): Promise<Rpc.ServiceHandlers<ExposedServices>> {
     return {
       AdmissionDiscoveryService: {
         getAdmissionCredential: async (request) => {

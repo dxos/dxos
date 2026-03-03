@@ -6,12 +6,12 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { EMPTY, create } from '@dxos/protocols/buf';
 import { TestRpcRequestSchema, TestRpcResponseSchema, TestService } from '@dxos/protocols/buf/example/testing/rpc_pb';
-import { createBufServiceBundle } from '@dxos/rpc';
+import { createServiceBundle } from '@dxos/rpc';
 
 import { WebsocketRpcClient } from './client';
 import { WebsocketRpcServer } from './server';
 
-const services = createBufServiceBundle({
+const services = createServiceBundle({
   TestService,
 });
 

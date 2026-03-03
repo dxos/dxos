@@ -14,11 +14,11 @@ export class ServiceRegistry<
 > {
   // prettier-ignore
   constructor (
-    private readonly _serviceBundle: Rpc.BufServiceBundle<Descriptors>,
+    private readonly _serviceBundle: Rpc.ServiceBundle<Descriptors>,
     private _handlers: Partial<Services> = {}
   ) {}
 
-  get descriptors(): Rpc.BufServiceBundle<Descriptors> {
+  get descriptors(): Rpc.ServiceBundle<Descriptors> {
     return this._serviceBundle;
   }
 

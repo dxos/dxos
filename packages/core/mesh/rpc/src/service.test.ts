@@ -20,7 +20,7 @@ import {
 } from '@dxos/protocols/buf/example/testing/rpc_pb';
 import { Stream } from '@dxos/stream';
 
-import { type BufProtoRpcPeer, createBufProtoRpcPeer, createBufServiceBundle } from './service-buf';
+import { type ProtoRpcPeer, createProtoRpcPeer, createServiceBundle } from './service';
 import { createLinkedPorts, encodeMessage } from './testing';
 
 // TODO(dmaretskyi): Rename alice and bob to peer1 and peer2.
@@ -29,7 +29,7 @@ describe('Protobuf service', () => {
   test('Works with protobuf service', async () => {
     const [alicePort, bobPort] = createLinkedPorts();
 
-    const server = createBufProtoRpcPeer({
+    const server = createProtoRpcPeer({
       exposed: {
         TestService,
       },
@@ -47,7 +47,7 @@ describe('Protobuf service', () => {
       port: alicePort,
     });
 
-    const client = createBufProtoRpcPeer({
+    const client = createProtoRpcPeer({
       requested: {
         TestService,
       },
@@ -64,7 +64,7 @@ describe('Protobuf service', () => {
   test('Errors are serialized', async () => {
     const [alicePort, bobPort] = createLinkedPorts();
 
-    const server = createBufProtoRpcPeer({
+    const server = createProtoRpcPeer({
       exposed: {
         TestService,
       },
@@ -86,7 +86,7 @@ describe('Protobuf service', () => {
       port: alicePort,
     });
 
-    const client = createBufProtoRpcPeer({
+    const client = createProtoRpcPeer({
       requested: {
         TestService,
       },
@@ -111,7 +111,7 @@ describe('Protobuf service', () => {
   test('calls methods with google.protobuf.Empty parameters and return values', async () => {
     const [alicePort, bobPort] = createLinkedPorts();
 
-    const server = createBufProtoRpcPeer({
+    const server = createProtoRpcPeer({
       exposed: {
         TestService,
       },
@@ -129,7 +129,7 @@ describe('Protobuf service', () => {
       port: alicePort,
     });
 
-    const client = createBufProtoRpcPeer({
+    const client = createProtoRpcPeer({
       requested: {
         TestService,
       },
@@ -142,13 +142,13 @@ describe('Protobuf service', () => {
   });
 
   describe('streams', () => {
-    let server: BufProtoRpcPeer<{}>;
-    let client: BufProtoRpcPeer<{ TestStreamService: typeof TestStreamService }>;
+    let server: ProtoRpcPeer<{}>;
+    let client: ProtoRpcPeer<{ TestStreamService: typeof TestStreamService }>;
 
     beforeEach(async () => {
       const [alicePort, bobPort] = createLinkedPorts();
 
-      server = createBufProtoRpcPeer({
+      server = createProtoRpcPeer({
         exposed: {
           TestStreamService,
         },
@@ -172,7 +172,7 @@ describe('Protobuf service', () => {
         port: alicePort,
       });
 
-      client = createBufProtoRpcPeer({
+      client = createProtoRpcPeer({
         requested: {
           TestStreamService,
         },
@@ -213,12 +213,12 @@ describe('Protobuf service', () => {
     test('call different services', async () => {
       const [alicePort, bobPort] = createLinkedPorts();
 
-      const services = createBufServiceBundle({
+      const services = createServiceBundle({
         TestService,
         PingService,
       });
 
-      const server = createBufProtoRpcPeer({
+      const server = createProtoRpcPeer({
         exposed: services,
         handlers: {
           TestService: {
@@ -237,7 +237,7 @@ describe('Protobuf service', () => {
         port: alicePort,
       });
 
-      const client = createBufProtoRpcPeer({
+      const client = createProtoRpcPeer({
         requested: services,
         port: bobPort,
       });
@@ -254,7 +254,7 @@ describe('Protobuf service', () => {
     test('services exposed by both peers', async () => {
       const [alicePort, bobPort] = createLinkedPorts();
 
-      const alice = createBufProtoRpcPeer({
+      const alice = createProtoRpcPeer({
         requested: {
           TestService,
         },
@@ -269,7 +269,7 @@ describe('Protobuf service', () => {
         port: alicePort,
       });
 
-      const bob = createBufProtoRpcPeer({
+      const bob = createProtoRpcPeer({
         requested: {
           PingService,
         },
@@ -304,11 +304,11 @@ describe('Protobuf service', () => {
     test('sync function', async () => {
       const [alicePort, bobPort] = createLinkedPorts();
 
-      const services = createBufServiceBundle({
+      const services = createServiceBundle({
         TestService,
       });
 
-      const server = createBufProtoRpcPeer({
+      const server = createProtoRpcPeer({
         exposed: services,
         handlers: {
           TestService: () => ({
@@ -324,7 +324,7 @@ describe('Protobuf service', () => {
         port: alicePort,
       });
 
-      const client = createBufProtoRpcPeer({
+      const client = createProtoRpcPeer({
         requested: services,
         port: bobPort,
       });
@@ -338,11 +338,11 @@ describe('Protobuf service', () => {
     test('async function', async () => {
       const [alicePort, bobPort] = createLinkedPorts();
 
-      const services = createBufServiceBundle({
+      const services = createServiceBundle({
         TestService,
       });
 
-      const server = createBufProtoRpcPeer({
+      const server = createProtoRpcPeer({
         exposed: services,
         handlers: {
           TestService: async () => {
@@ -361,7 +361,7 @@ describe('Protobuf service', () => {
         port: alicePort,
       });
 
-      const client = createBufProtoRpcPeer({
+      const client = createProtoRpcPeer({
         requested: services,
         port: bobPort,
       });
@@ -375,11 +375,11 @@ describe('Protobuf service', () => {
     test('stream', async () => {
       const [alicePort, bobPort] = createLinkedPorts();
 
-      const services = createBufServiceBundle({
+      const services = createServiceBundle({
         TestStreamService,
       });
 
-      const server = createBufProtoRpcPeer({
+      const server = createProtoRpcPeer({
         exposed: services,
         handlers: {
           TestStreamService: async () => {
@@ -400,7 +400,7 @@ describe('Protobuf service', () => {
         port: alicePort,
       });
 
-      const client = createBufProtoRpcPeer({
+      const client = createProtoRpcPeer({
         requested: services,
         port: bobPort,
       });
@@ -420,11 +420,11 @@ describe('Protobuf service', () => {
     test('stream that throws', async () => {
       const [alicePort, bobPort] = createLinkedPorts();
 
-      const services = createBufServiceBundle({
+      const services = createServiceBundle({
         TestStreamService,
       });
 
-      const server = createBufProtoRpcPeer({
+      const server = createProtoRpcPeer({
         exposed: services,
         handlers: {
           TestStreamService: async () => {
@@ -434,7 +434,7 @@ describe('Protobuf service', () => {
         port: alicePort,
       });
 
-      const client = createBufProtoRpcPeer({
+      const client = createProtoRpcPeer({
         requested: services,
         port: bobPort,
       });
@@ -450,7 +450,7 @@ describe('Protobuf service', () => {
     test('recursively encodes google.protobuf.Any by default', async () => {
       const [alicePort, bobPort] = createLinkedPorts();
 
-      const server = createBufProtoRpcPeer({
+      const server = createProtoRpcPeer({
         exposed: {
           TestAnyService,
         },
@@ -464,7 +464,7 @@ describe('Protobuf service', () => {
         port: alicePort,
       });
 
-      const client = createBufProtoRpcPeer({
+      const client = createProtoRpcPeer({
         requested: {
           TestAnyService,
         },
@@ -488,7 +488,7 @@ describe('Protobuf service', () => {
   test('timeouts on methods', async () => {
     const [alicePort, bobPort] = createLinkedPorts();
 
-    const server = createBufProtoRpcPeer({
+    const server = createProtoRpcPeer({
       exposed: {
         TestService,
       },
@@ -506,7 +506,7 @@ describe('Protobuf service', () => {
       port: alicePort,
     });
 
-    const client = createBufProtoRpcPeer({
+    const client = createProtoRpcPeer({
       requested: {
         TestService,
       },

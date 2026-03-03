@@ -13,8 +13,8 @@ export const setIdentityTags = ({
   devicesService,
   setTag,
 }: {
-  identityService: Rpc.BufRpcClient<typeof IdentityService>;
-  devicesService: Rpc.BufRpcClient<typeof DevicesService>;
+  identityService: Rpc.RpcClient<typeof IdentityService>;
+  devicesService: Rpc.RpcClient<typeof DevicesService>;
   setTag: (k: string, v: string) => void;
 }) => {
   identityService.queryIdentity(EMPTY).subscribe((idqr) => {
