@@ -9,12 +9,12 @@ import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Timeframe } from '@dxos/timeframe';
 import { arrayToBuffer } from '@dxos/util';
 
+import { unpackAnyAsTypedMessage } from './assertion-any-codec';
+
 /**
  * @returns The input message to be signed for a given credential.
  */
 // TODO(nf): rename, this returns not the proof itself, but the payload for verifying against the proof.
-// TODO(dmaretskyi): Add storage-compatibility tests verifying that credentials signed with the old
-// protobuf.js codec can be verified after migrating to buf-native anyPack/anyUnpack.
 export const getCredentialProofPayload = (credential: Credential): Uint8Array => {
   const copy: any = {
     ...credential,
@@ -28,6 +28,17 @@ export const getCredentialProofPayload = (credential: Credential): Uint8Array =>
     delete copy.parentCredentialIds;
   }
   delete copy.id; // ID is not part of the signature payload.
+
+  // Ensure assertion is in TypedMessage format for canonical string generation.
+  // Credentials arriving via RPC have packed Any assertions (typeUrl + binary value).
+  // Signatures are always computed over the TypedMessage format, so unpack if needed.
+  const assertion = copy.subject?.assertion;
+  if (assertion?.typeUrl && assertion?.value instanceof Uint8Array && assertion.value.length > 0) {
+    const unpacked = unpackAnyAsTypedMessage(assertion);
+    if (unpacked) {
+      copy.subject = { ...copy.subject, assertion: unpacked };
+    }
+  }
 
   return Buffer.from(canonicalStringify(copy));
 };

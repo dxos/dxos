@@ -2,12 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { getCredentialAssertion } from '@dxos/credentials';
+import { getCredentialAssertion, normalizeCredentialForBuf } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';
 import { AlreadyJoinedError } from '@dxos/protocols';
-import { encodePublicKey, toPublicKey } from '@dxos/protocols/buf';
+import { bufToTimeframe, encodePublicKey, timeframeToBuf, toPublicKey } from '@dxos/protocols/buf';
 import { type Invitation, Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import type { DeviceProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import {
@@ -65,8 +65,8 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
           identityKey: encodePublicKey(identity.identityKey),
           haloSpaceKey: encodePublicKey(identity.haloSpaceKey),
           genesisFeedKey: encodePublicKey(identity.haloGenesisFeedKey),
-          controlTimeframe: identity.controlPipeline.state.timeframe,
-          credential,
+          controlTimeframe: timeframeToBuf(identity.controlPipeline.state.timeframe),
+          credential: normalizeCredentialForBuf(credential),
         },
       },
     } as unknown as AdmissionResponse;
@@ -108,13 +108,20 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
   async accept(response: AdmissionResponse, request: AdmissionRequest): Promise<Partial<Invitation>> {
     const deviceResponse = (response as any).device ?? (response.kind?.case === 'device' ? response.kind.value : undefined);
     invariant(deviceResponse);
-    const { identityKey, haloSpaceKey, genesisFeedKey, controlTimeframe } = deviceResponse;
 
     const deviceRequest = (request as any).device ?? (request.kind?.case === 'device' ? request.kind.value : undefined);
     invariant(deviceRequest);
-    const { deviceKey, controlFeedKey, dataFeedKey, profile } = deviceRequest;
 
-    // TODO(wittjosiah): When multiple identities are supported, verify identity doesn't already exist before accepting.
+    // Convert buf PublicKey messages and TimeframeVector to application types.
+    const identityKey = toPublicKey(deviceResponse.identityKey);
+    const haloSpaceKey = toPublicKey(deviceResponse.haloSpaceKey);
+    const genesisFeedKey = toPublicKey(deviceResponse.genesisFeedKey);
+    const deviceKey = toPublicKey(deviceRequest.deviceKey);
+    const controlFeedKey = toPublicKey(deviceRequest.controlFeedKey);
+    const dataFeedKey = toPublicKey(deviceRequest.dataFeedKey);
+    const controlTimeframe = deviceResponse.controlTimeframe
+      ? bufToTimeframe(deviceResponse.controlTimeframe)
+      : undefined;
 
     await this._acceptIdentity({
       identityKey,
@@ -124,7 +131,7 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
       controlFeedKey,
       dataFeedKey,
       controlTimeframe,
-      deviceProfile: profile,
+      deviceProfile: deviceRequest.profile,
       authorizedDeviceCredential: deviceResponse.credential,
     });
 

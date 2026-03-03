@@ -4,7 +4,7 @@
 
 import { DeferredTask, Event, TimeoutError, Trigger, scheduleMicroTask, scheduleTask, sleep } from '@dxos/async';
 import { type Context, Resource, rejectOnDispose } from '@dxos/context';
-import { type CredentialProcessor, credentialToBinary, credentialFromBinary, fromBufPublicKey, verifyCredential } from '@dxos/credentials';
+import { type CredentialProcessor, credentialToBinary, credentialFromBinary, fromBufPublicKey, normalizeCredentialForBuf, verifyCredential } from '@dxos/credentials';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { type FeedWriter } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
@@ -216,9 +216,9 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
         peersTried.add(peer);
         log('try notarizing', { peer: peer.localPeerId, credentialId: credentials.map((credential) => credential.id) });
         await peer.rpc.NotarizationService.notarize({
-          credentials: credentials.filter(
-            (credential) => !this._processedCredentials.has(fromBufPublicKey(credential.id)!),
-          ),
+          credentials: credentials
+            .filter((credential) => !this._processedCredentials.has(fromBufPublicKey(credential.id)!))
+            .map(normalizeCredentialForBuf),
         });
         log('success');
 

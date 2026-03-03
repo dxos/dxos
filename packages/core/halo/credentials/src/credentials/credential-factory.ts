@@ -16,8 +16,16 @@ import { PublicKeySchema } from '@dxos/protocols/buf/dxos/keys_pb';
 import { getCredentialProofPayload } from './signing';
 import { SIGNATURE_TYPE_ED25519, verifyChain } from './verifier';
 
-/** Helper to convert @dxos/keys PublicKey to buf PublicKey message. */
-const toBufPublicKey = (key: PublicKey) => create(PublicKeySchema, { data: key.asUint8Array() });
+/** Helper to convert @dxos/keys PublicKey (or buf PublicKey) to buf PublicKey message. */
+const toBufPublicKey = (key: PublicKey | { data: Uint8Array }) => {
+  if (key instanceof PublicKey) {
+    return create(PublicKeySchema, { data: key.asUint8Array() });
+  }
+  if (key && typeof key === 'object' && 'data' in key && key.data instanceof Uint8Array) {
+    return create(PublicKeySchema, { data: key.data });
+  }
+  return create(PublicKeySchema, { data: (key as any).asUint8Array() });
+};
 
 /**
  * Structural type for credential assertions.

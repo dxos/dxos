@@ -19,10 +19,8 @@ export const createMockCredential = async ({
     issuer,
     subject: new PublicKey(Buffer.from('test')),
     assertion: {
-      '@type': 'example.testing.rpc.MessageWithAny',
-      payload: {
-        '@type': 'google.protobuf.Any',
-        value: Buffer.from('test'),
-      },
+      '@type': 'dxos.halo.credentials.AuthorizedDevice',
+      identityKey: issuer,
+      deviceKey: PublicKey.random(),
     },
   });

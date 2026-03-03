@@ -16,7 +16,6 @@ import {
   create,
   encodePublicKey,
   fromBinary,
-  timeframeToBuf,
   timestampDate,
   timestampFromDate,
   toBinary,
@@ -35,7 +34,7 @@ import {
   type SpaceMetadata,
 } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { type Directory, type File } from '@dxos/random-access-storage';
-import { type Timeframe } from '@dxos/timeframe';
+import { Timeframe } from '@dxos/timeframe';
 import { ComplexMap, arrayToBuffer, forEachAsync, isNonNullable } from '@dxos/util';
 
 const EXPIRED_INVITATION_CLEANUP_INTERVAL = 60 * 60 * 1000; // 1 hour
@@ -66,6 +65,14 @@ const convertKeysForBufInit = (obj: unknown): unknown => {
   }
   if (PublicKey.isPublicKey(obj)) {
     return { data: (obj as PublicKey).asUint8Array() };
+  }
+  if (obj instanceof Timeframe) {
+    return {
+      frames: obj.frames().map(([feedKey, seq]) => ({
+        feedKey: feedKey.asUint8Array(),
+        seq,
+      })),
+    };
   }
   if (obj instanceof Uint8Array || obj instanceof Date) {
     return obj;
@@ -391,12 +398,14 @@ export class MetadataStore {
   }
 
   async setSpaceDataLatestTimeframe(spaceKey: PublicKey, timeframe: Timeframe): Promise<void> {
-    this._getSpace(spaceKey).dataTimeframe = timeframeToBuf(timeframe);
+    (this._getSpace(spaceKey) as any).dataTimeframe = timeframe;
     await this._save();
   }
 
   async setSpaceControlLatestTimeframe(spaceKey: PublicKey, timeframe: Timeframe): Promise<void> {
-    this._getSpace(spaceKey).controlTimeframe = timeframeToBuf(timeframe);
+    // Store Timeframe directly; the codec encode path (convertKeysForBufInit) handles
+    // conversion to TimeframeVector for serialization. In-memory metadata uses application types.
+    (this._getSpace(spaceKey) as any).controlTimeframe = timeframe;
     await this._save();
     await this.flush();
   }

@@ -6,6 +6,7 @@ import {
   createCancelDelegatedSpaceInvitationCredential,
   createDelegatedSpaceInvitationCredential,
   getCredentialAssertion,
+  normalizeCredentialForBuf,
 } from '@dxos/credentials';
 import { writeMessages } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
@@ -13,7 +14,7 @@ import { type Keyring } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AlreadyJoinedError, AuthorizationError, InvalidInvitationError, SpaceNotFoundError } from '@dxos/protocols';
-import { encodePublicKey, toPublicKey } from '@dxos/protocols/buf';
+import { bufToTimeframe, encodePublicKey, timeframeToBuf, toPublicKey } from '@dxos/protocols/buf';
 import {
   type Invitation,
   Invitation_AuthMethod,
@@ -84,7 +85,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
 
     const spaceMemberCredential = await this._spaceManager.admitMember({
       spaceKey: this._spaceKey,
-      identityKey: spaceRequest.identityKey,
+      identityKey: toPublicKey(spaceRequest.identityKey),
       role: invitation.role ?? SpaceMember_Role.ADMIN,
       profile: guestProfile,
       delegationCredentialId: invitation.delegationCredentialId
@@ -97,8 +98,8 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
       kind: {
         case: 'space',
         value: {
-          credential: spaceMemberCredential,
-          controlTimeframe: space?.inner.controlPipeline.state.timeframe,
+          credential: normalizeCredentialForBuf(spaceMemberCredential),
+          controlTimeframe: space ? timeframeToBuf(space.inner.controlPipeline.state.timeframe) : undefined,
         },
       },
     } as AdmissionResponse;
@@ -188,17 +189,24 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
   async accept(response: AdmissionResponse): Promise<Partial<Invitation>> {
     const spaceResponse = (response as any).space ?? (response.kind?.case === 'space' ? response.kind.value : undefined);
     invariant(spaceResponse);
-    const { credential, controlTimeframe, dataTimeframe } = spaceResponse;
+    const { credential } = spaceResponse;
     const assertion = getCredentialAssertion(credential as unknown as Credential);
     invariant(assertion.$typeName === 'dxos.halo.credentials.SpaceMember', 'Invalid credential');
-    invariant(credential.subject.id.equals(this._signingContext.identityKey));
+    invariant(toPublicKey(credential.subject.id).equals(this._signingContext.identityKey));
 
     const spaceKey = assertion.spaceKey ? toPublicKey(assertion.spaceKey) : undefined;
     if (spaceKey && this._spaceManager.spaces.has(spaceKey)) {
       throw new AlreadyJoinedError({ message: 'Already joined space.' });
     }
 
-    // Create local space.
+    // Convert buf TimeframeVector to Timeframe.
+    const controlTimeframe = spaceResponse.controlTimeframe
+      ? bufToTimeframe(spaceResponse.controlTimeframe)
+      : undefined;
+    const dataTimeframe = spaceResponse.dataTimeframe
+      ? bufToTimeframe(spaceResponse.dataTimeframe)
+      : undefined;
+
     await this._spaceManager.acceptSpace({
       spaceKey: spaceKey!,
       genesisFeedKey: assertion.genesisFeedKey ? toPublicKey(assertion.genesisFeedKey) : undefined!,

@@ -3,8 +3,9 @@
 //
 
 import { PublicKey } from '@dxos/keys';
-import { bufWkt, create, fromBinary, toBinary, type DescMessage } from '@dxos/protocols/buf';
+import { bufToTimeframe, bufWkt, create, fromBinary, toBinary, type DescMessage } from '@dxos/protocols/buf';
 import { type Credential, CredentialSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { Timeframe } from '@dxos/timeframe';
 
 import { ASSERTION_REGISTRY, ASSERTION_SCHEMA_MAP } from './assertion-registry';
 
@@ -77,22 +78,37 @@ const convertAssertionFieldsForBuf = (obj: Record<string, unknown>): Record<stri
     if (key === '@type' || key.startsWith('$')) {
       continue;
     }
-    if (PublicKey.isPublicKey(value)) {
-      result[key] = { data: (value as PublicKey).asUint8Array() };
-    } else if (Array.isArray(value)) {
-      result[key] = value.map((item: unknown) =>
-        PublicKey.isPublicKey(item) ? { data: (item as PublicKey).asUint8Array() } : item,
-      );
-    } else {
-      result[key] = value;
-    }
+    result[key] = convertAppFieldToBuf(value);
   }
   return result;
+};
+
+/** Convert a single application-level field value to buf init format. */
+const convertAppFieldToBuf = (value: unknown): unknown => {
+  if (value == null || typeof value !== 'object') {
+    return value;
+  }
+  if (PublicKey.isPublicKey(value)) {
+    return { data: (value as PublicKey).asUint8Array() };
+  }
+  if (value instanceof Timeframe) {
+    return {
+      frames: value.frames().map(([feedKey, seq]) => ({
+        feedKey: feedKey.asUint8Array(),
+        seq,
+      })),
+    };
+  }
+  if (Array.isArray(value)) {
+    return value.map(convertAppFieldToBuf);
+  }
+  return value;
 };
 
 /**
  * Convert buf assertion message fields back to TypedMessage format.
  * Buf PublicKey messages ({ $typeName, data }) are converted to @dxos/keys.PublicKey.
+ * Buf TimeframeVector messages ({ $typeName, frames }) are converted to Timeframe.
  */
 const convertBufFieldsToTypedMessage = (obj: Record<string, unknown>, typeName: string): Record<string, unknown> => {
   const result: Record<string, unknown> = { '@type': typeName };
@@ -100,17 +116,26 @@ const convertBufFieldsToTypedMessage = (obj: Record<string, unknown>, typeName: 
     if (key.startsWith('$')) {
       continue;
     }
-    if (isBufPublicKey(value)) {
-      result[key] = PublicKey.from((value as any).data);
-    } else if (Array.isArray(value)) {
-      result[key] = value.map((item: unknown) =>
-        isBufPublicKey(item) ? PublicKey.from((item as any).data) : item,
-      );
-    } else {
-      result[key] = value;
-    }
+    result[key] = convertBufFieldValue(value);
   }
   return result;
+};
+
+/** Recursively convert a single buf field value to its application-level type. */
+const convertBufFieldValue = (value: unknown): unknown => {
+  if (value == null || typeof value !== 'object') {
+    return value;
+  }
+  if (isBufPublicKey(value)) {
+    return PublicKey.from((value as any).data);
+  }
+  if (isBufTimeframeVector(value)) {
+    return bufToTimeframe(value as any);
+  }
+  if (Array.isArray(value)) {
+    return value.map(convertBufFieldValue);
+  }
+  return value;
 };
 
 /** Check if a value is a buf PublicKey message (has $typeName and data: Uint8Array). */
@@ -120,13 +145,61 @@ const isBufPublicKey = (value: unknown): boolean =>
   (value as any).$typeName === 'dxos.keys.PublicKey' &&
   (value as any).data instanceof Uint8Array;
 
+/** Check if a value is a buf TimeframeVector message. */
+const isBufTimeframeVector = (value: unknown): boolean =>
+  value != null &&
+  typeof value === 'object' &&
+  (value as any).$typeName === 'dxos.echo.timeframe.TimeframeVector';
+
+/**
+ * Recursively convert a credential to a plain init object suitable for create().
+ * - Converts @dxos/keys.PublicKey instances to { data: Uint8Array }.
+ * - Strips $typeName/$unknown so create() builds fresh buf messages from the schema.
+ * - Preserves Uint8Array, Date, and primitive values.
+ */
+const toCredentialInit = (obj: unknown): unknown => {
+  if (obj == null || typeof obj !== 'object') {
+    return obj;
+  }
+  if (PublicKey.isPublicKey(obj)) {
+    return { data: (obj as PublicKey).asUint8Array() };
+  }
+  if (obj instanceof Uint8Array || obj instanceof Date) {
+    return obj;
+  }
+  if (Array.isArray(obj)) {
+    return obj.map(toCredentialInit);
+  }
+  const result: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
+    if (key === '$typeName' || key === '$unknown') {
+      continue;
+    }
+    result[key] = toCredentialInit(value);
+  }
+  return result;
+};
+
 /**
  * Serialize a Credential to binary, packing the TypedMessage assertion into a
  * proper buf Any first so that toBinary() can process it.
  */
 export const credentialToBinary = (credential: Credential): Uint8Array => {
   const packed = packCredentialAssertion(credential);
-  return toBinary(CredentialSchema, packed);
+  const init = toCredentialInit(packed) as Credential;
+  return toBinary(CredentialSchema, create(CredentialSchema, init));
+};
+
+/**
+ * Normalize a credential for buf serialization by round-tripping through binary.
+ * This ensures all nested messages have correct $typeName and type structure,
+ * making the credential safe to embed in RPC request/response messages.
+ * The assertion remains packed as buf Any (not TypedMessage).
+ */
+export const normalizeCredentialForBuf = (credential: Credential): Credential => {
+  const packed = packCredentialAssertion(credential);
+  const init = toCredentialInit(packed);
+  return fromBinary(CredentialSchema, toBinary(CredentialSchema, create(CredentialSchema, init as Credential)));
 };
 
 /**
