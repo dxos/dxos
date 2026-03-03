@@ -17,7 +17,7 @@ import React, {
 import { log } from '@dxos/log';
 import { ErrorBoundary } from '@dxos/react-error-boundary';
 import { useDefaultValue } from '@dxos/react-hooks';
-import { byPosition } from '@dxos/util';
+import { byPosition, safeStringify } from '@dxos/util';
 
 import { Capabilities } from '../../../common';
 import { type CapabilityManager } from '../../../core';
@@ -106,7 +106,7 @@ WebComponentWrapper.displayName = 'WebComponentWrapper';
  */
 const SurfaceContextProvider = memo(
   forwardRef<HTMLElement, Props & { definition: Definition }>(
-    ({ id, role, data, limit, fallback = DefaultFallback, definition, ...rest }, forwardedRef) => {
+    ({ id, role, data, limit, fallback = ErrorFallback, definition, ...rest }, forwardedRef) => {
       const contextValue = useMemo(() => ({ id, role, data }), [id, role, data]);
 
       // Handle Web Component surfaces
@@ -216,15 +216,19 @@ const findCandidates = (surfaces: Definition[], { role, data }: Pick<Props, 'rol
 };
 
 // TODO(burdon): Make user facing, with telemetry.
-const DefaultFallback = ({ data, error }: Props) => {
-  // TODO(burdon): Deduce dev/prod from environment; infer subject type, id.
+const ErrorFallback = ({ data, error }: Props) => {
+  const { message, stack } = error as Error;
   return (
     <div role='alert' data-testid='error-boundary-fallback'>
-      <h1 className='flex gap-2 text-sm mt-2 text-error-text'>{error.message}</h1>
-      <h2 className='text-xs mt-2'>Stack</h2>
-      <pre className='overflow-x-auto text-xs text-description'>{error.stack}</pre>
+      <h1 className='flex gap-2 text-sm mt-2 text-error-text'>{message}</h1>
       <h2 className='text-xs mt-2'>Data</h2>
-      <pre className='overflow-x-auto text-xs text-description'>{JSON.stringify(data, null, 2)}</pre>
+      <pre className='overflow-x-auto text-xs text-description'>{safeStringify(data, undefined, 2)}</pre>
+      {import.meta.env.DEV && stack && (
+        <>
+          <h2 className='text-xs mt-2'>Stack</h2>
+          <pre className='overflow-x-auto text-xs text-description'>{stack}</pre>
+        </>
+      )}
     </div>
   );
 };

@@ -10,6 +10,7 @@ import type { FallbackProps } from 'react-error-boundary';
  * Uses inline styles (no tailwind or theme dependencies).
  */
 export const ErrorFallback = ({ error }: FallbackProps) => {
+  const isDev = process.env.NODE_ENV === 'development';
   const { message, stack } =
     error instanceof Error
       ? error
@@ -30,10 +31,9 @@ export const ErrorFallback = ({ error }: FallbackProps) => {
         borderRadius: '1rem',
       }}
     >
-      {/* TODO(wittjosiah): Link to docs for replacing default. */}
       <h1 style={{ margin: '0.5rem 0', fontSize: '1.2rem' }}>Fatal Error</h1>
       <p>{message}</p>
-      {stack && (
+      {isDev && stack && (
         <pre style={{ overflow: 'auto', fontSize: '1rem', whiteSpace: 'pre-wrap', color: '#888888' }}>{stack}</pre>
       )}
     </div>
