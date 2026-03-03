@@ -11,7 +11,7 @@ import { Filter, Query } from '@dxos/echo';
 import type { ObjectId } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { parseId, useQuery } from '@dxos/react-client/echo';
-import { Clipboard, Container, Input, Toolbar } from '@dxos/react-ui';
+import { Clipboard, Container, Grid, Input, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 
 export const DebugSpaceObjectsPanel = () => {
@@ -39,12 +39,14 @@ export const DebugSpaceObjectsPanel = () => {
             <Input.TextInput disabled placeholder='Search...' />
           </Input.Root>
         </Toolbar.Root>
-        <div className='h-full overflow-hidden grid grid-rows-[1fr_1fr] divide-y divide-separator'>
-          <div className='overflow-auto'>
-            <ObjectsTree db={database} onSelect={(entity) => setSelectedId(entity.id)} />
-          </div>
-          <div className='overflow-auto'>{selectedObject && <Json classNames='p-1' data={selectedObject} />}</div>
-        </div>
+        <Grid rows={2} classNames='divide-y divide-separator'>
+          <ScrollArea.Root>
+            <ScrollArea.Viewport>
+              <ObjectsTree db={database} onSelect={(entity) => setSelectedId(entity.id)} />
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
+          {selectedObject && <Json classNames='p-1' data={selectedObject} />}
+        </Grid>
       </Container.Main>
     </Clipboard.Provider>
   );

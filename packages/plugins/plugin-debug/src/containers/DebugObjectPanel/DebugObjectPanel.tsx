@@ -8,9 +8,8 @@ import { ObjectsTree } from '@dxos/devtools';
 import { Filter, Obj, Query } from '@dxos/echo';
 import type { ObjectId } from '@dxos/keys';
 import { useQuery } from '@dxos/react-client/echo';
-import { Clipboard, Container } from '@dxos/react-ui';
+import { Clipboard, Container, Grid, ScrollArea } from '@dxos/react-ui';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
-import { mx } from '@dxos/ui-theme';
 
 export type DebugObjectPanelProps = {
   object: Obj.Unknown;
@@ -18,7 +17,6 @@ export type DebugObjectPanelProps = {
 
 export const DebugObjectPanel = ({ object }: DebugObjectPanelProps) => {
   const db = Obj.getDatabase(object);
-  const dxn = Obj.getDXN(object)?.toString() ?? '';
 
   const [selectedId, setSelectedId] = useState<ObjectId | null>(null);
   const [selectedObject] = useQuery(
@@ -29,14 +27,16 @@ export const DebugObjectPanel = ({ object }: DebugObjectPanelProps) => {
   return (
     <Clipboard.Provider>
       <Container.Main>
-        <div className={mx('grid h-full overflow-hidden divide-y divide-separator grid-rows-[1fr_1fr]')}>
+        <Grid rows={db ? 2 : 1} classNames='divide-y divide-separator'>
           {db && (
-            <div>
-              <ObjectsTree db={db} root={object} onSelect={(entity) => setSelectedId(entity.id)} />
-            </div>
+            <ScrollArea.Root>
+              <ScrollArea.Viewport>
+                <ObjectsTree db={db} root={object} onSelect={(entity) => setSelectedId(entity.id)} />
+              </ScrollArea.Viewport>
+            </ScrollArea.Root>
           )}
           <Json data={selectedObject} />
-        </div>
+        </Grid>
       </Container.Main>
     </Clipboard.Provider>
   );
