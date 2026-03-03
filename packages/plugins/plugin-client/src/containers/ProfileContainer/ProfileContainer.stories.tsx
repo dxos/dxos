@@ -12,7 +12,7 @@ import { translations } from '../../translations';
 import { ProfileContainer } from './ProfileContainer';
 
 const meta = {
-  title: 'plugins/plugin-client/ProfileContainer',
+  title: 'plugins/plugin-client/containers/ProfileContainer',
   component: ProfileContainer,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withClientProvider({ createIdentity: true })],
   parameters: {

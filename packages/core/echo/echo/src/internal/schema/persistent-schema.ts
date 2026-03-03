@@ -4,6 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import { IconAnnotation } from '../annotations';
 import { LabelAnnotation, TypenameSchema, VersionSchema } from '../annotations';
 import { EchoObjectSchema } from '../entities';
 import { JsonSchemaType } from '../json-schema';
@@ -23,6 +24,10 @@ export const PersistentSchema = Schema.Struct({
     version: '0.1.0',
   }),
   LabelAnnotation.set(['name']),
+  IconAnnotation.set({
+    icon: 'ph--brackets-curly--regular',
+    hue: 'blue',
+  }),
 );
 
 export interface PersistentSchema extends Schema.Schema.Type<typeof PersistentSchema> {}

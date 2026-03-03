@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { AiContextBinder, AiContextService, type ContextBinding } from '@dxos/assistant';
 import { type Blueprint } from '@dxos/blueprints';
-import { Type } from '@dxos/echo';
+import { Annotation, Type } from '@dxos/echo';
 import { Database, Obj, Ref, Relation } from '@dxos/echo';
 import { type ObjectNotFoundError } from '@dxos/echo/Err';
 import { FormInputAnnotation } from '@dxos/echo/internal';
@@ -65,6 +65,10 @@ export const Project = Schema.Struct({
     typename: 'dxos.org/type/Project',
     version: '0.1.0',
   }),
+  Annotation.IconAnnotation.set({
+    icon: 'ph--circuitry--regular',
+    hue: 'green',
+  }),
   QueueAnnotation.set(true),
 );
 
@@ -109,6 +113,7 @@ export const makeInitialized = (
     );
     const chat = yield* Database.add(
       Chat.make({
+        [Obj.Parent]: project,
         queue: Ref.fromDXN(queue.dxn),
       }),
     );

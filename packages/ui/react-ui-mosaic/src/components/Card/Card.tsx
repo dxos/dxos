@@ -435,6 +435,7 @@ export const Card = {
   Root: CardRoot,
 
   // Toolbar
+  // TODO(burdon): Rename Header.
   Toolbar: CardToolbar,
   ToolbarIconButton: CardToolbarIconButton,
   ToolbarSeparator: CardToolbarSeparator,

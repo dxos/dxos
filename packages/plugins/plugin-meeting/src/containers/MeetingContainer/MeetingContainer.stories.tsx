@@ -34,7 +34,7 @@ const Render = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-meeting/MeetingContainer',
+  title: 'plugins/plugin-meeting/containers/MeetingContainer',
   component: MeetingContainer,
   render: () => <Render />,
   decorators: [

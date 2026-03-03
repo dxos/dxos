@@ -8,8 +8,15 @@ import React from 'react';
  * NOTE: Default fallback should not use tailwind or theme.
  */
 export const DefaultFallback = ({ error }: { error: Error }) => {
+  // Record error for smoke test detection (persists even if component re-renders away).
+  if (typeof window !== 'undefined') {
+    ((window as any).__ERROR_BOUNDARY_ERRORS__ ??= []).push(error.message);
+  }
+
   return (
     <div
+      role='alert'
+      data-testid='error-boundary-fallback'
       style={{
         margin: '1rem',
         padding: '1rem',

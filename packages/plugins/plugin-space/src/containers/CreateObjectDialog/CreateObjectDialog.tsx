@@ -3,31 +3,34 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Capability } from '@dxos/app-framework';
 import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { Database, Obj, Type } from '@dxos/echo';
-import { EntityKind, getTypeAnnotation } from '@dxos/echo/internal';
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { Operation } from '@dxos/operation';
 import { useClient } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Dialog, useTranslation } from '@dxos/react-ui';
-import { type Collection } from '@dxos/schema';
+import { type Collection, ViewAnnotation } from '@dxos/schema';
 
-import { CreateObjectPanel, type CreateObjectPanelProps, type Metadata } from '../../components';
+import {
+  type CreateObjectOption,
+  CreateObjectPanel,
+  type CreateObjectPanelProps,
+  type Metadata,
+} from '../../components';
 import { meta } from '../../meta';
 import { SpaceOperation } from '../../types';
 
 export const CREATE_OBJECT_DIALOG = `${meta.id}/CreateObjectDialog`;
 
-export type CreateObjectDialogProps = Pick<
-  CreateObjectPanelProps,
-  'target' | 'views' | 'typename' | 'initialFormValues'
-> & {
+export type CreateObjectDialogProps = Pick<CreateObjectPanelProps, 'target' | 'typename' | 'initialFormValues'> & {
+  views?: boolean;
   onCreateObject?: (object: Obj.Unknown) => void;
   shouldNavigate?: (object: Obj.Unknown) => boolean;
 };
@@ -50,10 +53,10 @@ export const CreateObjectDialog = ({
   const closeRef = useRef<HTMLButtonElement | null>(null);
 
   const resolve = useCallback<NonNullable<CreateObjectPanelProps['resolve']>>(
-    (typename) => {
+    (id) => {
       const metadata = manager.capabilities
         .getAll(AppCapabilities.Metadata)
-        .find(({ id }) => id === typename)?.metadata;
+        .find(({ id: entryId }) => entryId === id)?.metadata;
       return metadata?.createObject ? (metadata as Metadata) : undefined;
     },
     [manager],
@@ -62,12 +65,29 @@ export const CreateObjectDialog = ({
   const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
   // TODO(wittjosiah): Support database schemas.
   const schemas = db?.schemaRegistry.query({ location: ['runtime'], includeSystem: false }).runSync();
-  const userSchemas = useMemo(
+
+  const viewTypenames = useMemo(() => {
+    const set = new Set<string>();
+    for (const schema of schemas ?? []) {
+      if (ViewAnnotation.get(schema).pipe(Option.getOrElse(() => false))) {
+        set.add(Type.getTypename(schema));
+      }
+    }
+    return set;
+  }, [schemas]);
+
+  const options = useMemo<CreateObjectOption[]>(
     () =>
-      schemas
-        ?.filter((schema) => getTypeAnnotation(schema)?.kind !== EntityKind.Relation)
-        .filter((schema) => !!resolve(Type.getTypename(schema))) ?? [],
-    [schemas],
+      manager.capabilities
+        .getAll(AppCapabilities.Metadata)
+        .filter((entry) => entry.metadata?.createObject)
+        .filter((entry) => (views === true ? viewTypenames.has(entry.id) : !viewTypenames.has(entry.id)))
+        .map((entry) => ({
+          id: entry.id,
+          label: t('typename label', { ns: entry.id, defaultValue: entry.id }),
+          icon: entry.metadata?.icon,
+        })),
+    [manager, views, viewTypenames, t],
   );
 
   const handleCreateObject = useCallback<NonNullable<CreateObjectPanelProps['onCreateObject']>>(
@@ -126,11 +146,10 @@ export const CreateObjectDialog = ({
       </Dialog.Header>
       <Dialog.Body>
         <CreateObjectPanel
-          schemas={userSchemas}
+          options={options}
           spaces={spaces}
           target={target}
           typename={typename}
-          views={views}
           initialFormValues={initialFormValues}
           defaultSpaceId={client.spaces.default.id}
           resolve={resolve}

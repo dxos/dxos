@@ -77,7 +77,7 @@ const DefaultStory = (props: QueryEditorProps) => {
 };
 
 const meta = {
-  title: 'plugins/plugin-script/QueryEditor',
+  title: 'plugins/plugin-script/components/QueryEditor',
   component: QueryEditor,
   render: DefaultStory,
   decorators: [

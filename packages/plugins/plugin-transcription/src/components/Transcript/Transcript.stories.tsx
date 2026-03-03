@@ -171,7 +171,7 @@ const QueueStoryWrapper = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-transcription/Transcript',
+  title: 'plugins/plugin-transcription/components/Transcript',
   decorators: [
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
@@ -199,7 +199,6 @@ const meta = {
 
 export default meta;
 
-// TODO(wittjosiah): ECHO objects don't work when passed via Storybook args.
 const DefaultStory = (props: StoryProps) => {
   const [messages, setMessages] = useState<Message.Message[]>([]);
   useEffect(() => {

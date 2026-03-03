@@ -61,7 +61,7 @@ const AutomergeStory = ({ value, ...props }: CellEditorProps) => {
 };
 
 const meta = {
-  title: 'plugins/plugin-sheet/CellEditor',
+  title: 'plugins/plugin-sheet/components/CellEditor',
 
   decorators: [withTheme()],
   component: CellEditor,

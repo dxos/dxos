@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { SpaceProperties } from '@dxos/client-protocol/types';
-import { Obj, Query, Ref, Type } from '@dxos/echo';
+import { Annotation, Obj, Query, Ref, Type } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { FormInputAnnotation, SystemTypeAnnotation } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
@@ -38,6 +38,10 @@ export const Managed = Schema.Struct({
     version: '0.1.0',
   }),
   SystemTypeAnnotation.set(true),
+  Annotation.IconAnnotation.set({
+    icon: 'ph--rows--regular',
+    hue: 'blue',
+  }),
 );
 
 export type Managed = Schema.Schema.Type<typeof Managed>;

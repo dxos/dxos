@@ -95,7 +95,7 @@ const PreviewCard = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-assistant/ChatThread',
+  title: 'plugins/plugin-assistant/components/ChatThread',
   component: ChatThread,
   render: render(DefaultStory),
   decorators: [

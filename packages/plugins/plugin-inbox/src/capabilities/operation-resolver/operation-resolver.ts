@@ -30,8 +30,9 @@ export default Capability.makeModule(
           const calendarCollection = Collection.makeManaged({
             key: `${Type.getTypename(Type.Feed)}~${Calendar.kind}`,
           });
+          const messageCollection = Collection.makeManaged({ key: Message.Message.typename });
           Obj.change(rootCollection, (c) => {
-            c.objects.push(Ref.make(mailboxCollection), Ref.make(calendarCollection));
+            c.objects.push(Ref.make(mailboxCollection), Ref.make(calendarCollection), Ref.make(messageCollection));
           });
         }),
       }),

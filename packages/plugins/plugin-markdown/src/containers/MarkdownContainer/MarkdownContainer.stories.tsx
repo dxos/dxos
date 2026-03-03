@@ -6,9 +6,10 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { useMemo } from 'react';
 
+import { Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import { AppActivationEvents, LayoutOperation } from '@dxos/app-toolkit';
 import { Obj, Query } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
@@ -24,11 +25,21 @@ import { Organization, Person } from '@dxos/types';
 
 import { MarkdownPlugin } from '../../MarkdownPlugin';
 import { translations } from '../../translations';
-import { Markdown } from '../../types';
+import { Markdown, MarkdownCapabilities, MarkdownEvents } from '../../types';
 
 faker.seed(1);
 
 const generator: ValueGenerator = faker as any;
+
+/** Minimal plugin that contributes an empty Extensions capability for stories. */
+const MarkdownExtensionsPlugin = Plugin.define({ id: 'story-markdown-extensions', name: 'Story Extensions' }).pipe(
+  Plugin.addModule({
+    id: 'extensions',
+    activatesOn: MarkdownEvents.SetupExtensions,
+    activate: () => Effect.succeed(Capability.contributes(MarkdownCapabilities.Extensions, [])),
+  }),
+  Plugin.make,
+);
 
 const DefaultStory = () => {
   const { invokePromise } = useOperationInvoker();
@@ -52,15 +63,17 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-markdown/MarkdownContainer',
+  title: 'plugins/plugin-markdown/containers/MarkdownContainer',
   render: DefaultStory,
   decorators: [
     withTheme(),
     withLayout({ layout: 'column' }),
     withPluginManager<{ title?: string; content?: string }>((context) => ({
+      setupEvents: [AppActivationEvents.SetupSettings, MarkdownEvents.SetupExtensions],
       plugins: [
         ...corePlugins(),
         StorybookPlugin({}),
+        MarkdownExtensionsPlugin(),
         ClientPlugin({
           types: [Markdown.Document, Text.Text, Person.Person, Organization.Organization],
           onClientInitialized: ({ client }) =>

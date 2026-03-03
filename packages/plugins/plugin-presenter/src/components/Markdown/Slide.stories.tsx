@@ -11,7 +11,7 @@ import { createSlide } from '../../testing';
 import { Slide } from './Slide';
 
 const meta = {
-  title: 'plugins/plugin-presenter/Slide',
+  title: 'plugins/plugin-presenter/components/Slide',
   component: Slide,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {

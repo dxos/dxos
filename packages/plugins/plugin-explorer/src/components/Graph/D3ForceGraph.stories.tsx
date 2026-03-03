@@ -52,7 +52,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-explorer/D3ForceGraph',
+  title: 'plugins/plugin-explorer/components/D3ForceGraph',
   component: D3ForceGraph,
   render: render(DefaultStory),
   decorators: [

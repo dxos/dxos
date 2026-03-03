@@ -20,7 +20,7 @@ import { RevealPlayer } from './RevealPlayer';
 // https://fonts.google.com
 
 const meta = {
-  title: 'plugins/plugin-presenter/RevealPlayer',
+  title: 'plugins/plugin-presenter/components/RevealPlayer',
   component: RevealPlayer,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
