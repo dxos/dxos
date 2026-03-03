@@ -25,7 +25,6 @@ const generator = new TestObjectGenerator(
   },
 );
 
-// TODO(wittjosiah): ECHO objects don't work when passed via Storybook args.
 const TokenManagerStory = (props: Omit<TokenManagerProps, 'tokens'>) => {
   const [tokens, setTokens] = useState<AccessToken.AccessToken[]>([]);
   useEffect(() => {
@@ -40,7 +39,7 @@ const TokenManagerStory = (props: Omit<TokenManagerProps, 'tokens'>) => {
 };
 
 const meta = {
-  title: 'plugins/plugin-token-manager/TokenManager',
+  title: 'plugins/plugin-token-manager/components/TokenManager',
   decorators: [withTheme()],
   component: TokenManagerStory,
   args: {

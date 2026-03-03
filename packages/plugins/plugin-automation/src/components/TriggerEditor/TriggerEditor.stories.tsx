@@ -72,7 +72,7 @@ const DefaultStory = (props: Partial<TriggerEditorProps>) => {
 };
 
 const meta = {
-  title: 'plugins/plugin-automation/TriggerEditor',
+  title: 'plugins/plugin-automation/components/TriggerEditor',
   component: TriggerEditor as any,
   render: DefaultStory,
   decorators: [

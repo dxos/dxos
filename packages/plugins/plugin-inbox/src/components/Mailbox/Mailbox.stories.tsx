@@ -62,7 +62,7 @@ const CompanionStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-inbox/Mailbox',
+  title: 'plugins/plugin-inbox/components/Mailbox',
   component: MailboxComponent as any,
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column' }), withAttention(), withMosaic()],

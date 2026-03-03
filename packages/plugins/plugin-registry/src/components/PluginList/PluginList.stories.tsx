@@ -60,7 +60,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-registry/PluginList',
+  title: 'plugins/plugin-registry/components/PluginList',
   component: PluginList,
   render: DefaultStory,
   parameters: {

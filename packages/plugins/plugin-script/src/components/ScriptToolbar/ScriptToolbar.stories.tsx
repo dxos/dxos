@@ -6,7 +6,7 @@ import { Atom, Registry } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import { OperationPlugin } from '@dxos/app-framework';
+import { OperationPlugin, RuntimePlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Script } from '@dxos/functions';
 import { ClientPlugin } from '@dxos/plugin-client';
@@ -31,7 +31,6 @@ const createMockStore = (initialState: ScriptToolbarState = {}): ScriptToolbarSt
   };
 };
 
-// TODO(wittjosiah): ECHO objects don't work when passed via Storybook args.
 const ScriptToolbarStory = () => {
   const state = useMemo(() => createMockStore(), []);
   const script = useMemo(
@@ -47,14 +46,14 @@ const ScriptToolbarStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-script/Toolbar',
+  title: 'plugins/plugin-script/components/Toolbar',
   component: ScriptToolbarStory,
   // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
   decorators: [
     withTheme(),
     withLayout({ classNames: 'w-prose-max-width' }),
     withPluginManager({
-      plugins: [OperationPlugin(), ClientPlugin({})],
+      plugins: [OperationPlugin(), RuntimePlugin(), ClientPlugin({})],
     }),
   ],
   parameters: {

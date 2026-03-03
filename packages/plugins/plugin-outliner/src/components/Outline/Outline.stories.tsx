@@ -15,7 +15,6 @@ import { Outline } from '../../types';
 
 import { Outline as OutlineComponent } from './Outline';
 
-// TODO(wittjosiah): ECHO objects don't work when passed via Storybook args.
 const OutlineStory = () => {
   const space = useSpace();
   const text = useMemo(() => {
@@ -31,7 +30,7 @@ const OutlineStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-outliner/Outline',
+  title: 'plugins/plugin-outliner/components/Outline',
   component: OutlineStory,
   decorators: [
     withTheme(),

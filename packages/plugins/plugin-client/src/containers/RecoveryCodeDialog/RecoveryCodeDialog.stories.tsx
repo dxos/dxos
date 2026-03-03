@@ -32,7 +32,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-client/RecoveryCodeDialog',
+  title: 'plugins/plugin-client/containers/RecoveryCodeDialog',
   component: RecoveryCodeDialog as any,
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withClientProvider({ createIdentity: true })],

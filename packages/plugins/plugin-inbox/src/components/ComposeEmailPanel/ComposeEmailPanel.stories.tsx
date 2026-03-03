@@ -6,7 +6,7 @@ import { type Meta } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message } from '@dxos/types';
 
 import { translations } from '../../translations';
@@ -30,12 +30,12 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-inbox/ComposeEmailPanel',
+  title: 'plugins/plugin-inbox/components/ComposeEmailPanel',
   component: ComposeEmailPanel,
   render: DefaultStory,
-  decorators: [withTheme()],
+  decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {
-    layout: 'centered',
+    layout: 'fullscreen',
     translations,
   },
 } satisfies Meta<typeof ComposeEmailPanel>;

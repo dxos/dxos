@@ -5,6 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
+import { faker } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message as MessageType } from '@dxos/types';
 
@@ -12,16 +13,19 @@ import { translations } from '../../translations';
 
 import { Message } from './Message';
 
-// TODO(wittjosiah): ECHO objects don't work when passed via Storybook args.
 const DefaultStory = () => {
   const message = useMemo(
     () =>
       MessageType.make({
-        sender: { name: 'John Doe', email: 'john@doe.com' },
-        blocks: [{ _tag: 'text', text: 'Hello world!' }],
+        sender: {
+          name: faker.person.fullName(),
+          email: faker.internet.email(),
+        },
+        blocks: [{ _tag: 'text', text: faker.lorem.paragraph(2) }],
       }),
     [],
   );
+
   return (
     <Message.Root message={message} sender={undefined}>
       <Message.Toolbar />
@@ -34,7 +38,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-inbox/Message',
+  title: 'plugins/plugin-inbox/components/Message',
   component: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {

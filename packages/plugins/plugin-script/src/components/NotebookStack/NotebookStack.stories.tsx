@@ -17,14 +17,13 @@ import { translations } from '../../translations';
 
 import { NotebookStack } from './NotebookStack';
 
-// TODO(wittjosiah): ECHO objects don't work when passed via Storybook args.
 const NotebookStackStory = () => {
   const notebook = useMemo(() => createNotebook(), []);
   return <NotebookStack notebook={notebook} />;
 };
 
 const meta = {
-  title: 'plugins/plugin-script/NotebookStack',
+  title: 'plugins/plugin-script/components/NotebookStack',
   component: NotebookStackStory,
   decorators: [
     withTheme(),
