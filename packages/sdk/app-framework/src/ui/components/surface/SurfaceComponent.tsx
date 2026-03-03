@@ -217,7 +217,8 @@ const findCandidates = (surfaces: Definition[], { role, data }: Pick<Props, 'rol
 
 // TODO(burdon): Make user facing, with telemetry.
 const ErrorFallback = ({ data, error }: Props) => {
-  const { message, stack } = error as Error;
+  const { message, stack } = error instanceof Error ? error : { message: String(error) };
+
   return (
     <div role='alert' data-testid='error-boundary-fallback'>
       <h1 className='flex gap-2 text-sm mt-2 text-error-text'>{message}</h1>

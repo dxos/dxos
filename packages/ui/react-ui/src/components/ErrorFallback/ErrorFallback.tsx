@@ -12,13 +12,7 @@ export { ErrorBoundary, type ErrorBoundaryProps, type FallbackProps } from '@dxo
  */
 export const ErrorFallback = ({ error }: FallbackProps) => {
   const isDev = process.env.NODE_ENV === 'development';
-  const { message, stack } =
-    error instanceof Error
-      ? error
-      : {
-          message: String(error),
-          stack: undefined,
-        };
+  const { message, stack } = error instanceof Error ? error : { message: String(error) };
 
   return (
     <div role='alert' data-testid='error-boundary-fallback' className='flex flex-col p-4 gap-4 overflow-auto'>

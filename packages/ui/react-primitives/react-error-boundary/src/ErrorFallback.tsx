@@ -11,13 +11,7 @@ import type { FallbackProps } from 'react-error-boundary';
  */
 export const ErrorFallback = ({ error }: FallbackProps) => {
   const isDev = process.env.NODE_ENV === 'development';
-  const { message, stack } =
-    error instanceof Error
-      ? error
-      : {
-          message: String(error),
-          stack: undefined,
-        };
+  const { message, stack } = error instanceof Error ? error : { message: String(error) };
 
   return (
     <div
