@@ -190,7 +190,7 @@ const DefaultStory = ({
 };
 
 const meta = {
-  title: 'plugins/plugin-transcription/MicrophoneTranscription',
+  title: 'plugins/plugin-transcription/components/MicrophoneTranscription',
   render: DefaultStory,
   decorators: [
     withTheme(),

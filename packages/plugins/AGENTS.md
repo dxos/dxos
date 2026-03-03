@@ -39,52 +39,55 @@ NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
 - Update this document with recommendations based on best practices; these might include future refactoring.
 - At the end of each plugin update the observations section with any generalizable insights or patterns.
 - At the end of each plugin note the date and time you spent on it, then commit and push the current branch.
+- At the end of all tasks run the plugin smoke tests and update the Status section below.
 
-## Plugins
+## Plugin Status
 
-- [x] plugin-assistant
-- [x] plugin-attention
-- [x] plugin-automation
-- [x] plugin-board
-- [x] plugin-chess
-- [x] plugin-client
-- [x] plugin-conductor
-- [x] plugin-debug
-- [x] plugin-deck
-- [x] plugin-excalidraw
-- [x] plugin-explorer
-- [x] plugin-files
-- [x] plugin-graph
-- [x] plugin-help
-- [x] plugin-inbox
-- [x] plugin-kanban
-- [x] plugin-map
-- [x] plugin-markdown
-- [x] plugin-masonry
-- [x] plugin-meeting
-- [x] plugin-mermaid
-- [x] plugin-native
-- [x] plugin-navtree
-- [x] plugin-observability
-- [x] plugin-outliner
-- [x] plugin-pipeline
-- [x] plugin-presenter
-- [x] plugin-preview
-- [x] plugin-registry
-- [x] plugin-script
-- [x] plugin-search
-- [x] plugin-settings
-- [x] plugin-sheet
-- [x] plugin-sketch
-- [x] plugin-space
-- [x] plugin-stack
-- [x] plugin-status-bar
-- [x] plugin-table
-- [x] plugin-thread
-- [x] plugin-token-manager
-- [x] plugin-transcription
-- [x] plugin-transformer
-- [x] plugin-wnfs
+| Plugin | Stories | Smoke Test |
+|---|---|---|
+| plugin-assistant      |  9 | pass |
+| plugin-attention      |  — | — |
+| plugin-automation     |  3 | pass |
+| plugin-board          |  1 | pass |
+| plugin-chess          |  4 | pass |
+| plugin-client         |  7 | pass |
+| plugin-conductor      |  0 | pass |
+| plugin-debug          |  0 | pass |
+| plugin-deck           |  2 | pass |
+| plugin-excalidraw     |  1 | pass |
+| plugin-explorer       |  8 | pass |
+| plugin-files          |  — | — |
+| plugin-graph          |  — | — |
+| plugin-help           |  1 | pass |
+| plugin-inbox          |  9 | pass |
+| plugin-kanban         |  3 | pass |
+| plugin-map            |  — | — |
+| plugin-markdown       |  3 | pass |
+| plugin-masonry        |  1 | pass |
+| plugin-meeting        |  1 | pass |
+| plugin-mermaid        |  2 | pass |
+| plugin-native         |  — | — |
+| plugin-navtree        |  5 | pass |
+| plugin-observability  |  1 | pass |
+| plugin-outliner       |  4 | pass |
+| plugin-pipeline       |  3 | pass |
+| plugin-presenter      |  8 | pass |
+| plugin-preview        |  5 | pass |
+| plugin-registry       |  3 | pass |
+| plugin-script         |  6 | pass |
+| plugin-search         |  0 | pass |
+| plugin-settings       |  — | — |
+| plugin-sheet          |  9 | pass |
+| plugin-sketch         |  1 | pass |
+| plugin-space          |  6 | pass |
+| plugin-stack          |  — | — |
+| plugin-status-bar     |  2 | pass |
+| plugin-table          |  1 | pass |
+| plugin-thread         | 15 | pass |
+| plugin-token-manager  |  1 | pass |
+| plugin-transcription  |  7 | pass |
+| plugin-transformer    |  1 | pass |
+| plugin-wnfs           |  1 | pass |
 
 ## Observations
 

@@ -55,7 +55,7 @@ export const PopoverCardContainer = ({
 };
 
 //
-// Intrinsic card container (size constrained by card).
+// Intrinsic card container (size constrained by card itself).
 //
 
 export type IntrinsicCardContainerProps = PropsWithChildren<{
@@ -78,11 +78,12 @@ export const IntrinsicCardContainer = ({
 
   return (
     <div
-      className='relative border border-dashed border-subdued-separator rounded-lg overflow-x-auto'
+      role='none'
+      className='relative grid overflow-hidden border-2 border-dashed border-green-500 rounded-lg'
       style={sizeStyle(size, 'horizontal')}
       {...resizeAttributes}
     >
-      <div className='p-4'>{children}</div>
+      {children}
       <ResizeHandle
         side='inline-end'
         fallbackSize={DEFAULT_BLOCK_SIZE}

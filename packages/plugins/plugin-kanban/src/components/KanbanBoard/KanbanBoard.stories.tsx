@@ -122,7 +122,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-kanban/KanbanBoard',
+  title: 'plugins/plugin-kanban/components/KanbanBoard',
   component: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withMosaic(), withRegistry],
   parameters: {

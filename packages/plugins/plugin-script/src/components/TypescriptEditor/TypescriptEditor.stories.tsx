@@ -80,7 +80,7 @@ const DefaultStory = (props: TypescriptEditorProps) => {
 };
 
 const meta = {
-  title: 'plugins/plugin-script/TypescriptEditor',
+  title: 'plugins/plugin-script/components/TypescriptEditor',
   component: TypescriptEditor,
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'w-prose-max-width' })],

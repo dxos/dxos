@@ -116,7 +116,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-navtree/NavTree',
+  title: 'plugins/plugin-navtree/components/NavTree',
   component: NavTreeContainer,
   render: DefaultStory,
   decorators: [

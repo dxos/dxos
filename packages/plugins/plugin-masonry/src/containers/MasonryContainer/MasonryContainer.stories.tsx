@@ -33,7 +33,7 @@ const StorybookMasonry = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-masonry/Masonry',
+  title: 'plugins/plugin-masonry/containers/Masonry',
   component: StorybookMasonry,
   render: () => <StorybookMasonry />,
   decorators: [

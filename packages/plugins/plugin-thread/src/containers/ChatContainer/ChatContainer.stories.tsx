@@ -49,7 +49,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-thread/ChatContainer',
+  title: 'plugins/plugin-thread/containers/ChatContainer',
   component: ThreadComponent.Root as any,
   render: render(DefaultStory),
   decorators: [

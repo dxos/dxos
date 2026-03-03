@@ -11,7 +11,7 @@ import { translations } from '../translations';
 import { FeedbackForm } from './FeedbackForm';
 
 const meta = {
-  title: 'plugins/plugin-observability/FeedbackForm',
+  title: 'plugins/plugin-observability/components/FeedbackForm',
   component: FeedbackForm,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {

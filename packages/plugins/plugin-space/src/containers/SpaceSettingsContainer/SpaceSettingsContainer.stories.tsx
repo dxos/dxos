@@ -24,7 +24,7 @@ const Story = (props: Partial<SpaceSettingsContainerProps>) => {
 };
 
 const meta = {
-  title: 'plugins/plugin-space/SpaceSettingsContainer',
+  title: 'plugins/plugin-space/containers/SpaceSettingsContainer',
   component: SpaceSettingsContainer,
   render: Story,
   decorators: [

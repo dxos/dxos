@@ -105,7 +105,7 @@ export const Default: StoryObj<typeof WelcomeTour> = {
  * IMPORTANT: Run in separate tab.
  */
 const meta = {
-  title: 'plugins/plugin-help/WelcomeTour',
+  title: 'plugins/plugin-help/components/WelcomeTour',
   component: WelcomeTour,
   render: DefaultStory,
   decorators: [

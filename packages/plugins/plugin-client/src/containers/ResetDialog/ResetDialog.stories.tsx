@@ -34,7 +34,7 @@ const DefaultStory = (props: Omit<ResetDialogProps, 'capabilityManager'>) => {
 };
 
 const meta = {
-  title: 'plugins/plugin-client/ResetDialog',
+  title: 'plugins/plugin-client/containers/ResetDialog',
   component: ResetDialog,
   render: DefaultStory,
   decorators: [

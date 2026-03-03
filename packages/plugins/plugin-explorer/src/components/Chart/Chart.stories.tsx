@@ -32,7 +32,7 @@ const Story = () => {
 export const Default = () => <ClientRepeater component={Story} />;
 
 const meta = {
-  title: 'plugins/plugin-explorer/Chart',
+  title: 'plugins/plugin-explorer/components/Chart',
   component: Chart,
   decorators: [withTheme(), withLayout()],
   parameters: {
