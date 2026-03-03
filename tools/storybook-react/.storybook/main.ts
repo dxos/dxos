@@ -13,7 +13,6 @@ import wasm from 'vite-plugin-wasm';
 
 import { ThemePlugin } from '@dxos/ui-theme/plugin';
 import { IconsPlugin } from '@dxos/vite-plugin-icons';
-import importSource from '@dxos/vite-plugin-import-source';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -110,12 +109,18 @@ export const createConfig = ({
       {
         publicDir: staticDir,
         resolve: {
+          conditions: ['source', 'module', 'browser', 'development', 'production'],
           alias: {
             'node-fetch': 'isomorphic-fetch',
             'tiktoken/lite': resolve(__dirname, './stub.mjs'),
             'node:util': '@dxos/node-std/util',
             // Storybook builds from source; ensure worker entrypoints resolve without `dist/` artifacts.
             '@dxos/client/opfs-worker': resolve(rootDir, 'packages/sdk/client/src/worker/opfs-worker.ts'),
+          },
+        },
+        ssr: {
+          resolve: {
+            conditions: ['source', 'module', 'node', 'development', 'production'],
           },
         },
         build: {
@@ -146,24 +151,6 @@ export const createConfig = ({
           plugins: () => [wasm()],
         },
         plugins: [
-          //
-          // NOTE: Order matters.
-          //
-
-          importSource({
-            exclude: [
-              '@dxos/random-access-storage',
-              '@dxos/lock-file',
-              '@dxos/network-manager',
-              '@dxos/teleport',
-              '@dxos/config',
-              '@dxos/client-services',
-              '@dxos/observability',
-              // TODO(dmaretskyi): Decorators break in lit.
-              '@dxos/lit-*',
-            ],
-          }),
-
           // https://www.npmjs.com/package/vite-plugin-wasm
           wasm(),
 
