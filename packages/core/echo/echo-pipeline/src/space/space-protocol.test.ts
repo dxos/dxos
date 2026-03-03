@@ -7,7 +7,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
-import { create } from '@dxos/protocols/buf';
+import { create, toPublicKey } from '@dxos/protocols/buf';
 import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
@@ -45,12 +45,12 @@ describe('space/space-protocol', () => {
     onTestFinished(() => protocol2.stop());
 
     await expect
-      .poll(() => presence1.getPeersOnline().some(({ identityKey }) => identityKey && PublicKey.from(identityKey as any).equals(peer2.identityKey)), {
+      .poll(() => presence1.getPeersOnline().some(({ identityKey }) => identityKey && toPublicKey(identityKey).equals(peer2.identityKey)), {
         timeout: 1_000,
       })
       .toBeTruthy();
     await expect
-      .poll(() => presence2.getPeersOnline().some(({ identityKey }) => identityKey && PublicKey.from(identityKey as any).equals(peer1.identityKey)), {
+      .poll(() => presence2.getPeersOnline().some(({ identityKey }) => identityKey && toPublicKey(identityKey).equals(peer1.identityKey)), {
         timeout: 1_000,
       })
       .toBeTruthy();
