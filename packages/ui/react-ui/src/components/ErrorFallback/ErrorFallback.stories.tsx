@@ -40,6 +40,10 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   render: BasicStory,
+  play: async () => {
+    // This story intentionally renders an ErrorBoundary fallback; clear the smoke-test error flag.
+    (window as any).__ERROR_BOUNDARY_ERRORS__ = [];
+  },
 };
 
 export const StringError: Story = {

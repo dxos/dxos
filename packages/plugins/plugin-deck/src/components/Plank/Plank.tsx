@@ -26,7 +26,7 @@ import { useCompanions, useDeckState, useMainSize } from '../../hooks';
 import { parseEntryId } from '../../layout';
 import { DeckOperation, type DeckSettingsProps, type LayoutMode, type ResolvedPart } from '../../types';
 
-import { PlankErrorFallback, PlankError } from './PlankError';
+import { PlankError, PlankErrorFallback } from './PlankError';
 import { PlankHeading } from './PlankHeading';
 import { PlankLoading } from './PlankLoading';
 
