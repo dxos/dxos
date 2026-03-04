@@ -18,4 +18,5 @@
 // - Project smart collection
 // - Mailbox smart collection
 // - Calendar smart collection
-export const INITIAL_OBJECT_COUNT = 15;
+// - Messages smart collection
+export const INITIAL_OBJECT_COUNT = 16;
