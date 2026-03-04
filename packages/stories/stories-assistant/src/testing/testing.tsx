@@ -117,9 +117,9 @@ const buildPluginManagerOptions = ({
     ...corePlugins(),
     ClientPlugin({
       types: [
+        AccessToken.AccessToken,
         Assistant.Chat,
         Blueprint.Blueprint,
-        AccessToken.AccessToken,
         Function.Function,
         Markdown.Document,
         Prompt.Prompt,
