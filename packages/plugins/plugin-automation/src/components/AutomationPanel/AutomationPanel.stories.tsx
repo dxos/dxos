@@ -27,7 +27,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-automation/AutomationPanel',
+  title: 'plugins/plugin-automation/components/AutomationPanel',
   component: AutomationPanel as any,
   render: DefaultStory,
   decorators: [

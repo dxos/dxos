@@ -93,7 +93,7 @@ const BlueprintEditor = ({ object }: ScriptObjectSettingsProps) => {
   }, [db, existingBlueprint, fn, blueprintKey, object.name, instructions]);
 
   return (
-    <div className='flex flex-col gap-4 my-card-padding'>
+    <div className='flex flex-col gap-4 my-form-padding'>
       <div>
         <h2>{t('blueprint editor label', { default: 'Blueprint' })}</h2>
         <p className='text-description text-sm'>
@@ -160,7 +160,7 @@ const Binding = ({ object }: ScriptObjectSettingsProps) => {
 
   // TODO(burdon): Use form.
   return (
-    <div role='form' className='flex flex-col gap-2 my-card-padding'>
+    <div role='form' className='flex flex-col gap-2 my-form-padding'>
       <h2>{t('remote function settings heading')}</h2>
       <Input.Root>
         <div role='none' className='flex flex-col gap-1'>
@@ -267,7 +267,7 @@ const Publishing = ({ object }: ScriptObjectSettingsProps) => {
   }, [object, githubToken]);
 
   return (
-    <div className='flex flex-col gap-4 my-card-padding'>
+    <div className='flex flex-col gap-4 my-form-padding'>
       <div>
         <h2>{t('script publish settings label')}</h2>
         <p className='text-description text-sm'>{t('script publish settings description')}</p>

@@ -54,7 +54,7 @@ const EventCardStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-inbox/EventCard',
+  title: 'plugins/plugin-inbox/containers/EventCard',
   component: EventCardStory,
   decorators: [withTheme()],
   parameters: {

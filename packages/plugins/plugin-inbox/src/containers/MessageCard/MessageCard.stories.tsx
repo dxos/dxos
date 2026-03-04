@@ -50,7 +50,7 @@ const MessageCardStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-inbox/MessageCard',
+  title: 'plugins/plugin-inbox/containers/MessageCard',
   component: MessageCardStory,
   decorators: [withTheme()],
   parameters: {

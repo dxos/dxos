@@ -38,7 +38,7 @@ export const Basic = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-sheet/GridSheet',
+  title: 'plugins/plugin-sheet/components/GridSheet',
   component: GridSheet,
   decorators: [
     withTheme(),

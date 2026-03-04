@@ -15,7 +15,7 @@ import { meta } from '../../meta';
 type SchemaPanelProps = { space: Space };
 
 const itemClasses = mx([
-  'container-max-width grid md:col-span-2 grid-cols-subgrid gap-trim-sm items-center',
+  'dx-container-max-width grid md:col-span-2 grid-cols-subgrid gap-trim-sm items-center',
   '*:first:!mt-0 *:last:!mb-0 px-trim-md py-trim-md',
   'border border-separator rounded-md',
 ]);

@@ -162,7 +162,7 @@ export const PipelineObjectSettings = ({ classNames, pipeline }: PipelineObjectS
   }, [space, updateColumns]);
 
   return (
-    <div role='none' className={mx('py-card-padding overflow-y-auto', classNames)}>
+    <div role='none' className={mx('py-form-padding overflow-y-auto', classNames)}>
       <h2 className='text-sm text-description py-1'>{t('views label')}</h2>
 
       <List.Root<Pipeline.Column>
@@ -234,7 +234,7 @@ export const PipelineObjectSettings = ({ classNames, pipeline }: PipelineObjectS
         )}
       </List.Root>
 
-      <div role='none' className='my-card-padding'>
+      <div role='none' className='my-form-padding'>
         <IconButton icon='ph--plus--regular' label={t('add view label')} onClick={handleAdd} classNames='w-full' />
       </div>
     </div>

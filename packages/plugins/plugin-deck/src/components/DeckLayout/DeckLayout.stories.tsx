@@ -30,7 +30,7 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
 );
 
 const meta = {
-  title: 'plugins/plugin-deck/DeckLayout',
+  title: 'plugins/plugin-deck/components/DeckLayout',
   component: DeckLayout,
   render: (args) => <DeckLayout {...args} />,
   decorators: [

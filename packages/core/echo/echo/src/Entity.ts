@@ -89,6 +89,29 @@ export interface Any extends OfKind<Kind> {
   [key: string]: unknown;
 }
 
+/**
+ * Check if a value is an ECHO entity (object or relation).
+ * Returns `false` for snapshots.
+ */
+export const isEntity = (value: unknown): value is Unknown => {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+  return (value as any)[KindId] !== undefined;
+};
+
+/**
+ * Check if a value is an ECHO entity snapshot.
+ * Returns `false` for entities.
+ */
+export const isSnapshot = (value: unknown): value is Snapshot => {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+  return (value as any)[SnapshotKindId] !== undefined;
+};
+
+// TODO(dmaretskyi): Type introspection -- move to kind.
 export const getKind = getEntityKind;
 
 //

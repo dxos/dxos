@@ -55,6 +55,7 @@ export const Function = Schema.Struct({
     version: '0.1.0',
   }),
   Annotation.LabelAnnotation.set(['name']),
+  Annotation.IconAnnotation.set({ icon: 'ph--function--regular', hue: 'blue' }),
   SystemTypeAnnotation.set(true),
 );
 

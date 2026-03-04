@@ -18,6 +18,7 @@ export * from './message';
 export * from './popover';
 export * from './scroll-area';
 export * from './select';
+export * from './splitter';
 export * from './separator';
 export * from './skeleton';
 export * from './status';

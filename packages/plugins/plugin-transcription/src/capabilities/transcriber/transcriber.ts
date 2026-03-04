@@ -64,7 +64,7 @@ export default Capability.makeModule(
     const getTranscriptionManager: TranscriptionCapabilities.GetTranscriptionManager = ({ messageEnricher }) => {
       const client = capabilities.get(ClientCapabilities.Client);
       const transcriptionManager = new TranscriptionManager({
-        edgeClient: client.edge,
+        edgeClient: client.edge.http,
         messageEnricher,
         registry,
       });

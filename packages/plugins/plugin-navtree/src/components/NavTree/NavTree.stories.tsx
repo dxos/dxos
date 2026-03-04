@@ -47,7 +47,7 @@ const StoryPlankHeading = ({ attendableId }: { attendableId: string }) => {
         label='Test'
         iconOnly
         variant={hasAttention ? 'primary' : 'ghost'}
-        classNames='w-(--rail-action) h-(--rail-action)'
+        classNames='w-(--dx-rail-action) h-(--dx-rail-action)'
       />
       <StackItem.ResizeHandle />
     </div>
@@ -116,7 +116,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-navtree/NavTree',
+  title: 'plugins/plugin-navtree/components/NavTree',
   component: NavTreeContainer,
   render: DefaultStory,
   decorators: [

@@ -20,10 +20,10 @@ export const NavTreeItemColumns = memo(({ path, item, open }: NavTreeItemColumns
   const { renderItemEnd: ItemEnd, popoverAnchorId } = useNavTreeContext();
 
   const level = path.length - 2;
-  const { actions: _actions, groupedActions } = useActions(item);
+  const { actions: actionsProp, groupedActions } = useActions(item);
   const sortedActions = useMemo(
     () =>
-      _actions.toSorted((actionA, actionB) => {
+      actionsProp.toSorted((actionA, actionB) => {
         const primaryA = actionA.properties?.disposition === 'list-item-primary';
         const primaryB = actionB.properties?.disposition === 'list-item-primary';
         if (primaryA && !primaryB) {
@@ -34,7 +34,7 @@ export const NavTreeItemColumns = memo(({ path, item, open }: NavTreeItemColumns
         }
         return 0;
       }),
-    [_actions],
+    [actionsProp],
   );
   const [primaryAction, ...secondaryActions] = sortedActions;
 
@@ -59,7 +59,7 @@ export const NavTreeItemColumns = memo(({ path, item, open }: NavTreeItemColumns
   const ActionRoot = popoverAnchorId === `dxos.org/ui/${NAV_TREE_ITEM}/${item.id}` ? Popover.Anchor : Fragment;
 
   return (
-    <div role='none' className='contents app-no-drag'>
+    <div role='none' className='contents dx-app-no-drag'>
       {primaryAction?.properties?.disposition === 'list-item-primary' && !primaryAction?.properties?.disabled ? (
         <Treegrid.Cell classNames='contents'>
           <NavTreeItemAction

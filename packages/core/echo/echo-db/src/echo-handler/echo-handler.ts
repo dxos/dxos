@@ -155,6 +155,26 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return this._arrayHas(target, p);
     }
 
+    if (isRootDataObject(target)) {
+      switch (p) {
+        case 'id':
+        case SelfDXNId:
+        case Entity.KindId:
+        case ParentId:
+        case ChangeId:
+        case RelationSourceDXNId:
+        case RelationTargetDXNId:
+        case RelationSourceId:
+        case RelationTargetId:
+        case TypeId:
+        case MetaId:
+        case ObjectDeletedId:
+        case ObjectVersionId:
+        case ObjectDatabaseId:
+          return true;
+      }
+    }
+
     const { value } = this._getDecodedValueAtPath(target);
     return typeof value === 'object' ? Reflect.has(value, p) : false;
   }
@@ -162,6 +182,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   get(target: ProxyTarget, prop: string | symbol, receiver: any): any {
     invariant(Array.isArray(target[symbolPath]));
 
+    // TODO(dmaretskyi): Move those as property descriptors on target.
     // Non reactive properties on root and nested records.
     switch (prop) {
       case symbolInternals:

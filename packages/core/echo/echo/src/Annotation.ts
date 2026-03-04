@@ -15,6 +15,7 @@ export {
   getTypeAnnotation,
   setDescriptionWithSchema,
   setLabelWithSchema,
+  IconAnnotation,
 } from './internal/annotations';
 
 import type * as Schema from 'effect/Schema';

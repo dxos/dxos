@@ -55,6 +55,10 @@ export const Prompt = Schema.Struct({
     typename: 'dxos.org/type/Prompt',
     version: '0.1.0',
   }),
+  Annotation.IconAnnotation.set({
+    icon: 'ph--scroll--regular',
+    hue: 'blue',
+  }),
 );
 
 export interface Prompt extends Schema.Schema.Type<typeof Prompt> {}

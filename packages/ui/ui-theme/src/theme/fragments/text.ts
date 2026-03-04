@@ -2,10 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-export const placeholderText = 'placeholder-neutral-300 dark:placeholder-neutral-500';
-export const staticPlaceholderText = 'text-neutral-300 dark:text-neutral-500';
+/**
+ * Content areas that contain the text editor.
+ */
+export const textBlockWidth = 'w-full max-w-text-content mx-auto';
 
-export const descriptionTextPrimary = 'text-sm font-normal text-base-text';
-export const descriptionMessage = ['text-description', 'border border-dashed border-separator rounded-sm p-4'];
-
-export const chromeText = 'text-sm font-normal';
+export const descriptionTextPrimary = 'text-sm font-normal text-base-surface-text';
+export const descriptionMessage = 'text-description border border-dashed border-separator rounded-sm p-4';

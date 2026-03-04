@@ -11,7 +11,7 @@ import { Filter, Obj, Query } from '@dxos/echo';
 import { Graph, Node, useActionRunner, useConnections } from '@dxos/plugin-graph';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { ScrollArea, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Layout } from '@dxos/react-ui';
+import { Container } from '@dxos/react-ui';
 import { Card, Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { Text } from '@dxos/schema';
@@ -27,7 +27,7 @@ export const SpaceMain = ({ space }: { space: Space }) => {
   const { items, handleSearch } = useSpaceItems(space);
 
   return (
-    <Layout.Main toolbar>
+    <Container.Main toolbar>
       <SearchList.Root onSearch={handleSearch}>
         <Toolbar.Root>
           <SearchList.Input placeholder={t('search placeholder')} />
@@ -42,7 +42,7 @@ export const SpaceMain = ({ space }: { space: Space }) => {
           </Mosaic.Container>
         </SearchList.Content>
       </SearchList.Root>
-    </Layout.Main>
+    </Container.Main>
   );
 };
 
@@ -61,7 +61,7 @@ const NodeTile: MosaicStackTileComponent<Node.Node> = (props) => {
   const handleClick = () => {
     if (Node.isAction(node)) {
       // Run action if this is an action node.
-      const [parent] = Graph.getConnections(graph, node.id, 'inbound');
+      const [parent] = Graph.getConnections(graph, node.id, Node.childRelation('inbound'));
       if (parent) {
         void runAction(node, { parent });
       }
@@ -109,13 +109,13 @@ const useSpaceItems = (space: Space) => {
   // Expand the space node to load its children (needed when navigating directly to a space URL).
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
-      Graph.expand(graph, space.id, 'outbound');
+      Graph.expand(graph, space.id, 'child');
     });
     return () => cancelAnimationFrame(frame);
   }, [graph, space.id]);
 
   // Get direct children of the space node for the default view.
-  const children = useConnections(graph, space.id, 'outbound');
+  const children = useConnections(graph, space.id, 'child');
 
   const handleSearch = useCallback((text: string) => {
     setQuery(text);

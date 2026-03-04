@@ -4,7 +4,7 @@
 
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { type Instruction, extractInstruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
-import React, { forwardRef, memo, useCallback, useEffect, useMemo } from 'react';
+import React, { forwardRef, memo, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
@@ -16,10 +16,10 @@ import { arrayMove } from '@dxos/util';
 
 import { NAV_TREE_ITEM, NavTree } from '../../components/NavTree';
 import { NavTreeContext } from '../../components/NavTreeContext';
-import { filterItems, useNavTreeModel, useNavTreeState } from '../../hooks';
+import { useNavTreeModel, useNavTreeState } from '../../hooks';
 import { meta } from '../../meta';
 import { type NavTreeItemGraphNode } from '../../types';
-import { getParent, resolveMigrationOperation } from '../../util';
+import { filterItems, getParent, resolveMigrationOperation } from '../../util';
 
 // TODO(thure): Is NavTree truly authoritative in this regard?
 export const NODE_TYPE = 'dxos/app-graph/node';
@@ -31,9 +31,7 @@ const NavTreeItemEnd = ({ node, open }: { node: Node.Node; open: boolean }) => {
 };
 
 const getItems = (graph: Graph.ReadableGraph, node?: Node.Node, disposition?: string) => {
-  return Graph.getConnections(graph, node?.id ?? Node.RootId, 'outbound').filter((node) =>
-    filterItems(node, disposition),
-  );
+  return Graph.getConnections(graph, node?.id ?? Node.RootId, 'child').filter((node) => filterItems(node, disposition));
 };
 
 export type NavTreeContainerProps = {
@@ -49,26 +47,48 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
     const { graph } = useAppGraph();
     const { getItem, setItem } = useNavTreeState();
     const layout = useLayout();
-    const { navigationSidebarState } = useSidebars(meta.id);
-
     const model = useNavTreeModel(Node.RootId);
+    const { navigationSidebarState } = useSidebars(meta.id);
+    const latestRef = useRef({
+      tab,
+      activeItems: layout.active,
+      navigationSidebarState,
+      isLg,
+    });
+
+    useEffect(() => {
+      latestRef.current = {
+        tab,
+        activeItems: layout.active,
+        navigationSidebarState,
+        isLg,
+      };
+    }, [tab, layout.active, navigationSidebarState, isLg]);
 
     const handleOpenChange = useCallback(
       ({ item: { id }, path, open }: { item: Node.Node; path: string[]; open: boolean }) => {
         // TODO(thure): This might become a localstorage leak; openItemIds that no longer exist should be removed from this map.
         setItem(path, 'open', open);
-        Graph.expand(graph, id, 'outbound');
+        Graph.expand(graph, id, 'child');
       },
       [graph, setItem],
     );
 
     const handleTabChange = useCallback(
       (node: NavTreeItemGraphNode) => {
+        Graph.expand(graph, node.id, 'child');
+
+        const {
+          tab: activeTab,
+          activeItems,
+          navigationSidebarState: currentSidebarState,
+          isLg: latestIsLg,
+        } = latestRef.current;
         invokeSync(LayoutOperation.UpdateSidebar, {
           state:
-            node.id === tab
-              ? navigationSidebarState === 'expanded'
-                ? isLg
+            node.id === activeTab
+              ? currentSidebarState === 'expanded'
+                ? latestIsLg
                   ? 'collapsed'
                   : 'closed'
                 : 'expanded'
@@ -78,14 +98,14 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
         invokeSync(LayoutOperation.SwitchWorkspace, { subject: node.id });
 
         // Open the first item if the workspace is empty.
-        if (layout.active.length === 0) {
+        if (activeItems.length === 0) {
           const [item] = getItems(graph, node).filter((node) => !Node.isActionLike(node));
           if (item && item.data) {
             invokeSync(LayoutOperation.Open, { subject: [item.id] });
           }
         }
       },
-      [invokeSync, graph, tab, layout.active],
+      [invokeSync, graph],
     );
 
     const blockInstruction = useCallback(
@@ -110,7 +130,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
         }
 
         if (Node.isAction(node)) {
-          const [parent] = Graph.getConnections(graph, node.id, 'inbound');
+          const [parent] = Graph.getConnections(graph, node.id, Node.childRelation('inbound'));
           if (parent) {
             void runAction(node, { parent, caller: NAV_TREE_ITEM });
           }
@@ -208,10 +228,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
       [setItem],
     );
 
-    const onItemHover = useCallback(
-      ({ item }: { item: Node.Node }) => Graph.expand(graph, item.id, 'outbound'),
-      [graph],
-    );
+    const onItemHover = useCallback(({ item }: { item: Node.Node }) => Graph.expand(graph, item.id, 'child'), [graph]);
 
     const navTreeContextValue = useMemo(
       () => ({

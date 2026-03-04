@@ -24,7 +24,7 @@ const DefaultStory = (props: ToolboxProps) => {
 };
 
 const meta = {
-  title: 'plugins/plugin-assistant/Toolbox',
+  title: 'plugins/plugin-assistant/components/Toolbox',
   component: Toolbox as any,
   render: DefaultStory,
   decorators: [

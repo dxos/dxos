@@ -2,31 +2,42 @@
 // Copyright 2024 DXOS.org
 //
 
-import React from 'react';
+import React, { useState } from 'react';
 
-import { type Obj } from '@dxos/echo';
-import { Clipboard, Input, Layout, Toolbar } from '@dxos/react-ui';
+import { ObjectsTree } from '@dxos/devtools';
+import { Filter, Obj, Query } from '@dxos/echo';
+import type { ObjectId } from '@dxos/keys';
+import { useQuery } from '@dxos/react-client/echo';
+import { Clipboard, Container, Grid, ScrollArea } from '@dxos/react-ui';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 
 export type DebugObjectPanelProps = {
   object: Obj.Unknown;
 };
 
-// TODO(burdon): Get schema and traverse references.
 export const DebugObjectPanel = ({ object }: DebugObjectPanelProps) => {
-  const dxn = `dxn:echo:@:${object.id}`;
+  const db = Obj.getDatabase(object);
+
+  const [selectedId, setSelectedId] = useState<ObjectId | null>(null);
+  const [selectedObject] = useQuery(
+    db,
+    Query.select(Filter.id(selectedId ?? object.id)).options({ deleted: 'include' }),
+  );
 
   return (
     <Clipboard.Provider>
-      <Layout.Main toolbar>
-        <Toolbar.Root>
-          <Input.Root>
-            <Input.TextInput disabled value={dxn} />
-            <Clipboard.IconButton value={dxn} />
-          </Input.Root>
-        </Toolbar.Root>
-        <Json data={object} />
-      </Layout.Main>
+      <Container.Main>
+        <Grid rows={db ? 2 : 1} classNames='divide-y divide-separator'>
+          {db && (
+            <ScrollArea.Root>
+              <ScrollArea.Viewport>
+                <ObjectsTree db={db} root={object} onSelect={(entity) => setSelectedId(entity.id)} />
+              </ScrollArea.Viewport>
+            </ScrollArea.Root>
+          )}
+          <Json data={selectedObject} />
+        </Grid>
+      </Container.Main>
     </Clipboard.Provider>
   );
 };

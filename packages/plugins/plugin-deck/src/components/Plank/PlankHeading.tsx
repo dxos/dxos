@@ -71,7 +71,7 @@ export const PlankHeading = memo(
       const frame = requestAnimationFrame(() => {
         // Load actions for the node.
         if (node) {
-          void Graph.expand(graph, node.id);
+          void Graph.expand(graph, node.id, 'child');
         }
       });
 
@@ -139,20 +139,17 @@ export const PlankHeading = memo(
       (event: MouseEvent) => {
         const target = (event.target as HTMLElement).closest('[data-id]') as HTMLElement | null;
         const tabId = target?.dataset?.id;
-        if (primaryId && tabId) {
-          void invokePromise(DeckOperation.ChangeCompanion, {
-            primary: primaryId,
-            companion: tabId,
-          });
+        if (tabId) {
+          void invokePromise(DeckOperation.ChangeCompanion, { companion: tabId });
         }
       },
-      [primaryId, invokePromise],
+      [invokePromise],
     );
 
     return (
       <StackItem.Heading
         classNames={[
-          'py-1 items-stretch gap-1 sticky left-12 app-drag min-w-0 contain-layout density-coarse',
+          'py-1 items-stretch gap-1 sticky left-12 dx-app-drag min-w-0 dx-contain-layout dx-density-coarse',
           part === 'solo' ? soloInlinePadding : 'px-1',
           ...(layoutMode === 'solo--fullscreen'
             ? [

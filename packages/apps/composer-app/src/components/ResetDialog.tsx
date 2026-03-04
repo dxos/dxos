@@ -3,7 +3,6 @@
 //
 
 import React, { useCallback, useState } from 'react';
-import { useRegisterSW } from 'virtual:pwa-register/react';
 
 import { type Observability } from '@dxos/observability';
 import { FeedbackForm } from '@dxos/plugin-observability';
@@ -44,27 +43,27 @@ const parseError = (t: (name: string, context?: object) => string, error: Error)
   return { title, message, stack, context };
 };
 
-export type FatalErrorProps = Pick<AlertDialogRootProps, 'defaultOpen' | 'open' | 'onOpenChange'> & {
-  error?: Error;
+export type ResetDialogProps = Pick<AlertDialogRootProps, 'defaultOpen' | 'open' | 'onOpenChange'> & {
   isDev?: boolean;
+  error?: Error;
+  needRefresh?: boolean;
+  onRefresh?: () => void;
   observability?: Promise<Observability.Observability>;
 };
 
 export const ResetDialog = ({
-  error: propsError,
   isDev,
-  observability: observabilityPromise,
+  error: propsError,
+  needRefresh,
+  onRefresh,
+  observability: observabilityProp,
   defaultOpen,
   open,
   onOpenChange,
-}: FatalErrorProps) => {
+}: ResetDialogProps) => {
   const { t } = useTranslation('composer'); // TODO(burdon): Const.
   const [isNotMobile] = useMediaQuery('md');
   const error = propsError && parseError(t, propsError);
-  const {
-    needRefresh: [needRefresh, _setNeedRefresh],
-    updateServiceWorker,
-  } = useRegisterSW();
   const [showStack, setShowStack] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
 
@@ -79,24 +78,24 @@ export const ResetDialog = ({
 
   const handleSaveFeedback = useCallback(
     async (values: UserFeedback) => {
-      if (!observabilityPromise) {
+      if (!observabilityProp) {
         return;
       }
 
-      const observability = await observabilityPromise;
+      const observability = await observabilityProp;
       observability.feedback.captureUserFeedback(values);
       setFeedbackOpen(false);
     },
-    [observabilityPromise],
+    [observabilityProp],
   );
 
-  const handleReload = useCallback(() => {
-    if (needRefresh) {
-      void updateServiceWorker(true);
+  const handleRefresh = useCallback(() => {
+    if (onRefresh) {
+      onRefresh();
     } else {
       location.reload();
     }
-  }, [needRefresh, updateServiceWorker]);
+  }, [onRefresh]);
 
   const handleSafeMode = useCallback(() => {
     window.location.href = setSafeModeUrl(true);
@@ -110,41 +109,44 @@ export const ResetDialog = ({
     >
       <AlertDialog.Overlay>
         <AlertDialog.Content size='md' data-testid='resetDialog'>
-          <AlertDialog.Title>{t(error ? error.title : 'reset dialog label')}</AlertDialog.Title>
-          <AlertDialog.Description>{t(error ? error.message : 'reset dialog message')}</AlertDialog.Description>
-          {error && (
-            <>
-              <div role='none' className='mt-4'>
-                <IconButton
-                  icon={showStack ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
-                  variant='ghost'
-                  classNames='flex items-center'
-                  label={t('show stack label')}
-                  onClick={() => setShowStack((showStack) => !showStack)}
-                  data-testid='resetDialog.showStackTrace'
-                />
-              </div>
-              {showStack && (
-                <Message.Root
-                  key={error.message}
-                  valence='error'
-                  classNames='my-4 overflow-auto max-h-72 relative'
-                  data-testid='resetDialog.stackTrace'
-                >
-                  <pre className='text-xs whitespace-pre-line'>{error.stack}</pre>
-                  <IconButton
-                    classNames='absolute top-2 right-2'
-                    icon='ph--clipboard--duotone'
-                    iconOnly
-                    label={t('copy error label')}
-                    onClick={handleCopyError}
-                  />
-                </Message.Root>
-              )}
-            </>
-          )}
-          <div role='none' className='flex gap-2 mt-4'>
-            {!isDev ? (
+          <AlertDialog.Body>
+            <AlertDialog.Title>{t(error ? error.title : 'reset dialog label')}</AlertDialog.Title>
+            <AlertDialog.Description>{t(error ? error.message : 'reset dialog message')}</AlertDialog.Description>
+            {error && (
+              <>
+                <div role='none'>
+                  <div className='flex items-center justify-between'>
+                    <IconButton
+                      icon={showStack ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
+                      variant='ghost'
+                      classNames='flex items-center'
+                      label={t('show stack label')}
+                      onClick={() => setShowStack((showStack) => !showStack)}
+                      data-testid='resetDialog.showStackTrace'
+                    />
+                    <IconButton
+                      icon='ph--clipboard--duotone'
+                      iconOnly
+                      label={t('copy error label')}
+                      onClick={handleCopyError}
+                    />
+                  </div>
+                </div>
+                {showStack && (
+                  <Message.Root key={error.message} classNames='overflow-auto' data-testid='resetDialog.stackTrace'>
+                    <pre className='text-xs max-h-16'>{error.stack}</pre>
+                  </Message.Root>
+                )}
+              </>
+            )}
+          </AlertDialog.Body>
+
+          <AlertDialog.ActionBar>
+            <Button variant='primary' onClick={handleSafeMode}>
+              {t('safe mode label')}
+            </Button>
+
+            {isDev && (
               <DropdownMenu.Root>
                 <DropdownMenu.Trigger asChild>
                   <Button data-testid='resetDialog.reset' variant='destructive'>
@@ -162,14 +164,10 @@ export const ResetDialog = ({
                   </DropdownMenu.Content>
                 </DropdownMenu.Portal>
               </DropdownMenu.Root>
-            ) : (
-              <Button variant='primary' onClick={handleSafeMode}>
-                {t('safe mode label')}
-              </Button>
             )}
 
             <div role='none' className='flex-grow' />
-            {observabilityPromise && isNotMobile && (
+            {observabilityProp && isNotMobile && (
               <Popover.Root open={feedbackOpen} onOpenChange={setFeedbackOpen}>
                 <Popover.Trigger asChild>
                   <IconButton icon='ph--paper-plane-tilt--regular' label={t('feedback label')} />
@@ -187,9 +185,9 @@ export const ResetDialog = ({
             <IconButton
               icon='ph--arrow-clockwise--regular'
               label={t(needRefresh ? 'update and reload page label' : 'reload page label')}
-              onClick={handleReload}
+              onClick={handleRefresh}
             />
-          </div>
+          </AlertDialog.ActionBar>
         </AlertDialog.Content>
       </AlertDialog.Overlay>
     </AlertDialog.Root>

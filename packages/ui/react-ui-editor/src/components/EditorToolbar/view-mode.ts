@@ -48,8 +48,8 @@ export const createViewMode = (state: EditorToolbarState, onViewModeChange: (mod
   return {
     nodes: [viewModeGroupAction as Node.NodeArg<any>, ...viewModeActions],
     edges: [
-      { source: 'root', target: 'viewMode' },
-      ...viewModeActions.map(({ id }) => ({ source: viewModeGroupAction.id, target: id })),
+      { source: 'root', target: 'viewMode', relation: 'child' },
+      ...viewModeActions.map(({ id }) => ({ source: viewModeGroupAction.id, target: id, relation: 'child' })),
     ],
   };
 };

@@ -50,6 +50,7 @@ export const createFormat = (script: Script.Script) => {
       {
         source: 'root',
         target: 'format',
+        relation: 'child',
       },
     ],
   };

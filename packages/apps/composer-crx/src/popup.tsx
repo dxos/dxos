@@ -10,9 +10,10 @@ import { sendMessage } from 'webext-bridge/popup';
 import browser from 'webextension-polyfill';
 
 import { log } from '@dxos/log';
+import { ErrorBoundary } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { Chat, type ChatProps, Container, ErrorBoundary, Thumbnail } from './components';
+import { Chat, type ChatProps, Container, Thumbnail } from './components';
 import { THUMBNAIL_PROP, getConfig } from './config';
 
 // NOTE: Keep in sync with popup.html initial layout.
@@ -88,7 +89,7 @@ const Root = () => {
   };
 
   return (
-    <ErrorBoundary>
+    <ErrorBoundary name='popup'>
       <Container classNames={mx(rootClasses)}>
         {thumbnailUrl && <Thumbnail url={thumbnailUrl} />}
         {!thumbnailUrl && host && <Chat host={host} url={tabUrl ?? undefined} onPing={handlePing} />}

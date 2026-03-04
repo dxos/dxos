@@ -176,7 +176,7 @@ export default Capability.makeModule(
                 } else {
                   const primary = Obj.getDXN(channel).toString();
                   const companion = `${primary}${ATTENDABLE_PATH_SEPARATOR}transcript`;
-                  yield* Operation.invoke(DeckOperation.ChangeCompanion, { primary, companion });
+                  yield* Operation.invoke(DeckOperation.ChangeCompanion, { companion });
                 }
               }),
               properties: {
@@ -185,7 +185,6 @@ export default Capability.makeModule(
                   : ['start transcription label', { ns: meta.id }],
                 icon: 'ph--subtitles--regular',
                 disposition: 'toolbar',
-                classNames: enabled ? 'bg-callAlert' : '',
               },
             },
           ];

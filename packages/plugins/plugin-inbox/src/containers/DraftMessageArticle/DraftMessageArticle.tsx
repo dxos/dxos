@@ -9,7 +9,7 @@ import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { AutomationCapabilities, invokeFunctionWithTracing } from '@dxos/plugin-automation';
-import { Layout } from '@dxos/react-ui';
+import { Container } from '@dxos/react-ui';
 import { type Message } from '@dxos/types';
 
 import { ComposeEmailPanel } from '../../components';
@@ -31,8 +31,8 @@ export const DraftMessageArticle = ({ role, subject }: DraftMessageArticleProps)
   );
 
   return (
-    <Layout.Main role={role}>
+    <Container.Main role={role}>
       <ComposeEmailPanel draft={subject} onSend={handleSend} />
-    </Layout.Main>
+    </Container.Main>
   );
 };

@@ -473,7 +473,7 @@ export const cellClassesForRowSelection = (selected: boolean, selectionMode: Sel
 
   switch (selectionMode) {
     case 'single':
-      return ['!bg-currentRelated dx-grid__cell--no-focus-unfurl hover:bg-hover-surface cursor-pointer!'];
+      return ['dx-grid__cell--no-focus-unfurl !bg-current-surface hover:bg-hover-surface cursor-pointer!'];
     case 'multiple':
       return ['!bg-grid-cell-selected'];
   }

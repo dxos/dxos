@@ -25,7 +25,6 @@ import { type EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type FeedProtocol } from '@dxos/protocols';
 import {
   ApiError,
   AuthorizationError,
@@ -40,6 +39,7 @@ import { createIFramePort } from '@dxos/rpc-tunnel';
 import { trace } from '@dxos/tracing';
 import { type JsonKeyOptions, type MaybePromise } from '@dxos/util';
 
+import { type ClientEdgeAPI, createClientEdgeAPI } from '../edge';
 import { type MeshProxy } from '../mesh/mesh-proxy';
 import type { IFrameManager, Shell, ShellManager } from '../services';
 import { DXOS_VERSION } from '../version';
@@ -65,7 +65,7 @@ export type ClientOptions = {
   /** When running in the host mode, a factory to create the worker for OPFS sqlite database. */
   createOpfsWorker?: () => Worker;
 
-  /** Path to SQLite database file for persistent indexing in Node/Bun. */
+  /** Path to SQLite database file for persistent indexing in Node/Bun. Dervied from config's dataRoot. */
   sqlitePath?: string;
 };
 
@@ -117,8 +117,8 @@ export class Client {
   private _iframeManager?: IFrameManager;
   private _shellManager?: ShellManager;
   private _shellClientProxy?: ProtoRpcPeer<ClientServices>;
-  private _edgeClient?: EdgeHttpClient = undefined;
-  private _queuesService?: FeedProtocol.QueueService = undefined;
+  private _edgeHttpClient?: EdgeHttpClient = undefined;
+  private _edgeApi?: ClientEdgeAPI = undefined;
 
   constructor(options: ClientOptions = {}) {
     if (
@@ -229,9 +229,9 @@ export class Client {
    * EDGE client.
    * This API is experimental and subject to change.
    */
-  get edge(): EdgeHttpClient {
-    invariant(this._edgeClient, 'Client not initialized.');
-    return this._edgeClient;
+  get edge(): ClientEdgeAPI {
+    invariant(this._edgeApi, 'Client not initialized or Edge not available.');
+    return this._edgeApi;
   }
 
   /**
@@ -363,12 +363,13 @@ export class Client {
 
     this._ctx = new Context();
     this._config = this._options.config ?? new Config();
+
     // NOTE: Must currently match the host.
     this._services = await (this._options.services ??
       createClientServices(this._config, {
         createWorker: this._options.createWorker,
         createOpfsWorker: this._options.createOpfsWorker,
-        sqlitePath: this._options.sqlitePath,
+        sqlitePath: this._options.sqlitePath, // TODO(dmaretskyi): Remove and derive from dataRoot in config.
       }));
     this._iframeManager = this._options.shell
       ? new IFrameManager({ source: new URL(this._options.shell, window.location.origin) })
@@ -416,6 +417,13 @@ export class Client {
       }
     });
     await this._services.open();
+
+    const edgeUrl = this._config!.get('runtime.services.edge.url');
+    if (edgeUrl) {
+      const { EdgeHttpClient } = await import('@dxos/edge-client');
+      this._edgeHttpClient = new EdgeHttpClient(edgeUrl);
+      this._edgeApi = createClientEdgeAPI({ client: this, edgeClient: this._edgeHttpClient });
+    }
 
     this._echoClient.connectToService({
       dataService: this._services.services.DataService ?? raise(new Error('DataService not available')),
@@ -524,7 +532,8 @@ export class Client {
     await this._runtime?.close();
     await this._echoClient.close(this._ctx);
     await this._services?.close();
-    this._edgeClient = undefined;
+    this._edgeHttpClient = undefined;
+    this._edgeApi = undefined;
     log('closed');
   }
 

@@ -8,22 +8,12 @@ import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Queue from 'effect/Queue';
 import * as Stream from 'effect/Stream';
-import React, {
-  Component,
-  type ErrorInfo,
-  type PropsWithChildren,
-  forwardRef,
-  useEffect,
-  useImperativeHandle,
-  useState,
-} from 'react';
+import React, { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { addEventListener } from '@dxos/async';
 import { runAndForwardErrors } from '@dxos/effect';
-import { log } from '@dxos/log';
-import { type ThemedClassName, useDynamicRef, useStateWithRef } from '@dxos/react-ui';
-import { useThemeContext } from '@dxos/react-ui';
+import { ErrorBoundary, type ThemedClassName, useDynamicRef, useStateWithRef, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import {
   type AutoScrollToProps,
@@ -77,6 +67,7 @@ export type MarkdownStreamProps = ThemedClassName<
   } & (XmlTagsOptions & StreamerOptions & AutoScrollToProps)
 >;
 
+// TODO(burdon): Initial content isn't formatted.
 export const MarkdownStream = forwardRef<MarkdownStreamController | null, MarkdownStreamProps>(
   ({ classNames, debug, content, registry, fadeIn, cursor, onEvent }, forwardedRef) => {
     const { themeMode } = useThemeContext();
@@ -96,7 +87,7 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
             slots: {
               scroll: {
                 // NOTE: Child widgets must have `max-w-[100cqi]`.
-                className: 'size-container p-card-padding',
+                className: 'dx-size-container p-form-padding',
               },
             },
           }),
@@ -246,7 +237,7 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
         <div ref={parentRef} className={mx('h-full w-full overflow-hidden', classNames)} />
 
         {/* React widgets are rendered in portals outside of the editor. */}
-        <ErrorBoundary>
+        <ErrorBoundary name='markdown-stream'>
           {widgets.map(({ Component, root, id, props }) => (
             <div key={id}>{createPortal(<Component view={view} {...props} />, root)}</div>
           ))}
@@ -255,22 +246,3 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
     );
   },
 );
-
-class ErrorBoundary extends Component<PropsWithChildren, { hasError: boolean }> {
-  override state = { hasError: false };
-
-  static getDerivedStateFromError() {
-    return { hasError: true };
-  }
-
-  override componentDidCatch(error: unknown, info: ErrorInfo) {
-    log.catch(error, info);
-  }
-
-  override render() {
-    if (this.state.hasError) {
-      return <div>Something went wrong.</div>;
-    }
-    return this.props.children;
-  }
-}

@@ -12,7 +12,7 @@ export const StatusBar = ({ showHints }: { showHints?: boolean }) => {
   return (
     <div
       role='contentinfo'
-      className='fixed bottom-0 inset-x-0 h-(--statusbar-size) border-y border-separator z-[2] flex text-description'
+      className='fixed bottom-0 inset-x-0 h-(--dx-statusbar-size) border-y border-separator z-[2] flex text-description'
       {...mover}
     >
       {showHints && <Surface.Surface role='hints' limit={1} />}

@@ -61,9 +61,18 @@ export const translations = [
         'show contact label': 'Show contact',
         'create contact label': 'Create contact',
 
+        'mailbox account label': 'Account',
+        'mailbox account placeholder': 'Select account...',
         'mailbox sync label': 'Mailbox Sync',
-        'mailbox object settings configure sync button label': 'Configure sync',
-        'mailbox object settings configure subscription button label': 'Configure subscription',
+
+        'calendar account label': 'Account',
+        'calendar account placeholder': 'Select account...',
+        'calendar sync label': 'Calendar Sync',
+
+        'enable background sync label': 'Enable background sync',
+        'enabling background sync label': 'Enabling...',
+        'disable background sync label': 'Disable background sync',
+        'view trigger label': 'View trigger',
 
         'event untitled label': 'Untitled',
         'event toolbar create note menu': 'Create note',

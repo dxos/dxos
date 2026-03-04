@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
+import { Ref } from '@dxos/echo';
 import { type CreateObject } from '@dxos/plugin-space/types';
 import { Event, Message } from '@dxos/types';
 
@@ -20,14 +21,26 @@ export const InboxPlugin = Plugin.define(meta).pipe(
       {
         id: Mailbox.kind,
         metadata: {
-          createObject: ((props) => Effect.succeed(Mailbox.make(props))) satisfies CreateObject,
+          createObject: ((props, { db }) =>
+            Effect.sync(() => {
+              const feed = Mailbox.make(props);
+              const config = Mailbox.makeConfig({ feed: Ref.make(feed), accessToken: props.accessToken });
+              db.add(config);
+              return feed;
+            })) satisfies CreateObject,
           addToCollectionOnCreate: true,
         },
       },
       {
         id: Calendar.kind,
         metadata: {
-          createObject: ((props) => Effect.succeed(Calendar.make(props))) satisfies CreateObject,
+          createObject: ((props, { db }) =>
+            Effect.sync(() => {
+              const feed = Calendar.make(props);
+              const config = Calendar.makeConfig({ feed: Ref.make(feed), accessToken: props.accessToken });
+              db.add(config);
+              return feed;
+            })) satisfies CreateObject,
           addToCollectionOnCreate: true,
         },
       },

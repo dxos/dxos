@@ -5,7 +5,7 @@
 import { type ComponentFunction, type Elevation, type Theme } from '@dxos/ui-types';
 
 import { mx } from '../../util';
-import { dataDisabled, modalSurface, subduedFocus, surfaceShadow, surfaceZIndex } from '../fragments';
+import { dataDisabled, subduedFocus, surfaceShadow, surfaceZIndex } from '../fragments';
 
 export type MenuStyleProps = Partial<{
   constrainBlockSize: boolean;
@@ -17,11 +17,9 @@ export const menuViewport: ComponentFunction<MenuStyleProps> = (_props, ...etc) 
 
 export const menuContent: ComponentFunction<MenuStyleProps> = ({ elevation }, ...etc) =>
   mx(
-    'w-48 rounded-sm md:w-56 border border-separator',
+    'dx-modal-surface w-48 rounded-sm md:w-56 border border-separator',
     surfaceZIndex({ elevation, level: 'menu' }),
     surfaceShadow({ elevation: 'positioned' }),
-    modalSurface,
-    // popperMotion,
     ...etc,
   );
 

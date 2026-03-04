@@ -5,25 +5,13 @@
 import React, { useEffect, useState } from 'react';
 
 import { type Node } from '@dxos/plugin-graph';
-import { useTranslation } from '@dxos/react-ui';
+import { ErrorFallback, type ErrorFallbackProps, useTranslation } from '@dxos/react-ui';
 import { descriptionMessage, mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 
 import { PlankHeading, type PlankHeadingProps } from './PlankHeading';
 import { PlankLoading } from './PlankLoading';
-
-export const PlankContentError = ({ error }: { error?: Error }) => {
-  const { t } = useTranslation(meta.id);
-  const errorString = error?.toString() ?? '';
-  return (
-    <div role='none' className='overflow-y-auto p-8 attention-surface grid place-items-center'>
-      <p role='alert' className={mx(descriptionMessage, 'break-all rounded-md p-4')}>
-        {error ? errorString : t('error fallback message')}
-      </p>
-    </div>
-  );
-};
 
 export const PlankError = ({
   id,
@@ -38,12 +26,38 @@ export const PlankError = ({
 }) => {
   const [timedOut, setTimedOut] = useState(false);
   useEffect(() => {
-    setTimeout(() => setTimedOut(true), 5e3);
+    const timer = setTimeout(() => setTimedOut(true), 5_000);
+    return () => clearTimeout(timer);
   }, []);
+
   return (
     <>
       <PlankHeading id={id} part={part} node={node} pending={!timedOut} />
-      {timedOut ? <PlankContentError error={error} /> : <PlankLoading />}
+      {timedOut ? <PlankErrorFallback error={error} /> : <PlankLoading />}
     </>
   );
+};
+
+/**
+ * User facing error fallback.
+ */
+export const PlankErrorFallback = ({ error }: ErrorFallbackProps) => {
+  const { t } = useTranslation(meta.id);
+
+  if (process.env.NODE_ENV === 'development') {
+    return <ErrorFallback title='Plank Error' error={error} />;
+  } else {
+    const errorString = error?.toString() ?? '';
+    return (
+      <div
+        role='alert'
+        data-testid='plank-content-error'
+        className='dx-attention-surface overflow-y-auto p-8 grid place-items-center'
+      >
+        <p className={mx(descriptionMessage, 'break-all rounded-md p-4')}>
+          {error ? errorString : t('error fallback message')}
+        </p>
+      </div>
+    );
+  }
 };

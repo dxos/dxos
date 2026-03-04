@@ -27,7 +27,7 @@ NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
 - Use barrel imports (from components/index) and avoid default exports in `src/components/`.
 - Containers in `src/containers/` use default exports specifically for React.lazy (each subdirectory's `index.ts` bridges named→default; the top-level `containers/index.ts` uses `lazy(() => import('./X'))`). This is the only exception to the no-default-exports rule.
 
-## Tasks
+## General Tasks
 
 - Move components that are directly referenced `src/capabilities/react-surface` to `src/containers`.
 - Audit components that currently use `@dxos/app-framework` hooks and consider if they can be simply split into primitive components and surface components.
@@ -39,52 +39,81 @@ NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
 - Update this document with recommendations based on best practices; these might include future refactoring.
 - At the end of each plugin update the observations section with any generalizable insights or patterns.
 - At the end of each plugin note the date and time you spent on it, then commit and push the current branch.
+- At the end of all tasks run the plugin smoke tests and update the Status section below.
 
-## Plugins
+## Specific Tasks
 
-- [x] plugin-assistant
-- [x] plugin-attention
-- [x] plugin-automation
-- [x] plugin-board
-- [x] plugin-chess
-- [x] plugin-client
-- [x] plugin-conductor
-- [x] plugin-debug
-- [x] plugin-deck
-- [x] plugin-excalidraw
-- [x] plugin-explorer
-- [x] plugin-files
-- [x] plugin-graph
-- [x] plugin-help
-- [x] plugin-inbox
-- [x] plugin-kanban
-- [x] plugin-map
-- [x] plugin-markdown
-- [x] plugin-masonry
-- [x] plugin-meeting
-- [x] plugin-mermaid
-- [x] plugin-native
-- [x] plugin-navtree
-- [x] plugin-observability
-- [x] plugin-outliner
-- [x] plugin-pipeline
-- [x] plugin-presenter
-- [x] plugin-preview
-- [x] plugin-registry
-- [x] plugin-script
-- [x] plugin-search
-- [x] plugin-settings
-- [x] plugin-sheet
-- [x] plugin-sketch
-- [x] plugin-space
-- [x] plugin-stack
-- [x] plugin-status-bar
-- [x] plugin-table
-- [x] plugin-thread
-- [x] plugin-token-manager
-- [x] plugin-transcription
-- [x] plugin-transformer
-- [x] plugin-wnfs
+Follow these specific steps for the following tasks:
+
+### Refactor container
+
+1. Factor out `@dxos/app-framework` hooks from containers into primitive components.
+2. Create storybooks for the new primitive components; don't create for container unless instructed.
+3. Ensure that containers/components are grouped into subdirectories.
+
+## Plugin Status
+
+Run storybook smoke tests: `moon run <plugin>:test-storybook`
+
+NOTE: Tests using `withClientProvider` complete before async client initialization finishes,
+so errors in components that depend on Edge, capabilities, or other runtime services are
+NOT detected by the current smoke test infrastructure. Stories that need to test fully-rendered
+components should add a `play` function that waits for the component to mount. See "Smoke Test Issues" below.
+
+| Plugin | Stories | Smoke Test | Notes |
+|---|---|---|---|
+| plugin-assistant      |  9 | pass | |
+| plugin-attention      |  — | — | No stories (behavioral plugin) |
+| plugin-automation     |  3 | warn | AutomationPanel: `Edge is not configured` at runtime (not caught by test; see issues) |
+| plugin-board          |  1 | pass | |
+| plugin-chess          |  4 | pass | |
+| plugin-client         |  7 | pass | |
+| plugin-conductor      |  0 | — | No storybook stories |
+| plugin-debug          |  0 | — | No storybook stories |
+| plugin-deck           |  2 | pass | |
+| plugin-excalidraw     |  1 | pass | |
+| plugin-explorer       |  8 | pass | |
+| plugin-files          |  — | — | No stories |
+| plugin-graph          |  — | — | No stories (utility plugin) |
+| plugin-help           |  1 | warn | Intermittent `Missing ThemeContext` error in DialogOverlay |
+| plugin-inbox          |  9 | pass | |
+| plugin-kanban         |  3 | warn | Console: `Error in connector` |
+| plugin-map            |  — | — | No stories |
+| plugin-markdown       |  3 | pass | |
+| plugin-masonry        |  1 | pass | |
+| plugin-meeting        |  1 | pass | |
+| plugin-mermaid        |  2 | pass | |
+| plugin-native         |  — | — | No stories (native plugin) |
+| plugin-navtree        |  5 | pass | |
+| plugin-observability  |  1 | pass | |
+| plugin-outliner       |  4 | pass | |
+| plugin-pipeline       |  3 | pass | |
+| plugin-presenter      |  8 | pass | |
+| plugin-preview        |  5 | warn | Console: `invariant violation: No capability found for atom-registry` (4x) |
+| plugin-registry       |  3 | pass | |
+| plugin-script         |  6 | pass | |
+| plugin-search         |  0 | — | All tests skipped |
+| plugin-settings       |  — | — | No stories (routing plugin) |
+| plugin-sheet          |  9 | pass | |
+| plugin-simple-layout  | 15 | pass | ContentError demo stories intentionally render errors |
+| plugin-sketch         |  1 | pass | |
+| plugin-space          |  6 | pass | |
+| plugin-stack          |  — | — | No stories |
+| plugin-status-bar     |  2 | pass | |
+| plugin-table          |  1 | pass | |
+| plugin-thread         | 15 | warn | Console: `Schema not registered`, `NotSupportedError` |
+| plugin-token-manager  |  1 | pass | |
+| plugin-transcription  |  7 | pass | |
+| plugin-transformer    |  1 | pass | Console: `No GPU adapter found` (expected in headless) |
+| plugin-wnfs           |  1 | pass | |
+
+### Smoke Test Issues
+
+1. **Async initialization gap**: Stories using `withClientProvider` (creates mock client + identity + space) complete before the inner component renders. The test framework renders the initial loading state and declares success (~100ms). Errors that occur after async initialization (e.g., `Edge is not configured` in AutomationPanel) are never exercised. **Fix**: stories that test components needing a fully initialized client should add a `play` function that waits for the component to appear (e.g., `await canvas.findByText('...')`).
+
+2. **ErrorBoundary detection**: The `ErrorFallback` in `react-ui/ErrorBoundary.tsx` now records to `__ERROR_BOUNDARY_ERRORS__` for smoke test detection. Previously, only the `DefaultFallback` in `app-framework` did this, so errors caught by the `ErrorBoundary` component (used by `withClientProvider`) were silently swallowed.
+
+3. **Console errors vs test failures**: Several plugins log errors to console but the tests pass because the errors are caught by try/catch (not ErrorBoundary) or occur in non-rendering code paths. These are listed as "warn" in the table.
 
 ## Observations
 

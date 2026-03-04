@@ -89,7 +89,7 @@ const DefaultStory = (props: StoryProps) => {
 };
 
 const meta = {
-  title: 'plugins/plugin-thread/ResponsiveGrid',
+  title: 'plugins/plugin-thread/components/ResponsiveGrid',
   component: ResponsiveGrid as any,
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],

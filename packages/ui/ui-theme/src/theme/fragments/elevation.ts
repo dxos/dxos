@@ -4,12 +4,6 @@
 
 import { type ComponentFragment, type Elevation, type SurfaceLevel } from '@dxos/ui-types';
 
-/**
- * @deprecated
- */
-export const contentShadow: ComponentFragment<{ elevation?: Elevation }> = (_) => ['shadow-none'];
-
-// TODO(thure): These should become tokens.
 export const surfaceShadow: ComponentFragment<{ elevation?: Elevation }> = ({ elevation }) => [
   elevation === 'positioned'
     ? 'shadow-sm'
@@ -24,7 +18,7 @@ export const surfaceZIndex: ComponentFragment<{ level?: SurfaceLevel; elevation?
 }) => {
   switch (level) {
     case 'tooltip':
-      return elevation === 'dialog' ? ['z-[53]'] : elevation === 'toast' ? ['z-[43]'] : ['z-30'];
+      return elevation === 'dialog' ? ['z-[53]'] : elevation === 'toast' ? ['z-[43]'] : ['z-50'];
     case 'menu':
       return elevation === 'dialog' ? ['z-[52]'] : elevation === 'toast' ? ['z-[42]'] : ['z-20'];
     default:

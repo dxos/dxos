@@ -16,7 +16,7 @@ import {
 } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { ATTENDABLE_PATH_SEPARATOR, DeckOperation } from '@dxos/plugin-deck/types';
-import { Layout } from '@dxos/react-ui';
+import { Container } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { useMenuContributions } from '@dxos/react-ui-menu';
 import { type Pipeline as PipelineType } from '@dxos/types';
@@ -37,19 +37,18 @@ export const PipelineContainer = ({ role, subject: pipeline }: PipelineContainer
   const handleColumnAdd = useCallback(
     () =>
       invokePromise(DeckOperation.ChangeCompanion, {
-        primary: attendableId,
         companion: `${attendableId}${ATTENDABLE_PATH_SEPARATOR}settings`,
       }),
     [invokePromise, attendableId],
   );
 
   return (
-    <Layout.Main role={role} toolbar>
+    <Container.Main role={role} toolbar>
       <PipelineComponent.Root Item={PipelineItem} model={model} onAddColumn={handleColumnAdd}>
         <PipelineComponent.Toolbar disabled={!hasAttention} />
         <PipelineComponent.Content pipeline={pipeline} />
       </PipelineComponent.Root>
-    </Layout.Main>
+    </Container.Main>
   );
 };
 

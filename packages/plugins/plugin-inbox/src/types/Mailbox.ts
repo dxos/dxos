@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Feed, Obj, Type } from '@dxos/echo';
+import { Annotation, Feed, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/internal';
 import { AccessToken } from '@dxos/types';
 
@@ -37,7 +37,7 @@ export const make = (props?: Omit<Obj.MakeProps<typeof Type.Feed>, 'kind'>): Fee
 
 /** Configuration schema for a mailbox feed. */
 export const Config = Schema.Struct({
-  feed: Type.Ref(Type.Feed),
+  feed: Type.Ref(Type.Feed).pipe(FormInputAnnotation.set(false)),
   labels: Labels.pipe(FormInputAnnotation.set(false), Schema.optional),
   // TODO(wittjosiah): Factor out to relation?
   filters: Schema.Array(
@@ -56,6 +56,10 @@ export const Config = Schema.Struct({
   Type.object({
     typename: 'dxos.org/type/MailboxConfig',
     version: '0.1.0',
+  }),
+  Annotation.IconAnnotation.set({
+    icon: 'ph--tray--regular',
+    hue: 'red',
   }),
 );
 

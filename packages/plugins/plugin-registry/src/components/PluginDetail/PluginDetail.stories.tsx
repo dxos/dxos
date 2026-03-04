@@ -13,7 +13,7 @@ import { translations } from '../../translations';
 import { PluginDetail } from './PluginDetail';
 
 const meta = {
-  title: 'plugins/plugin-registry/PluginDetail',
+  title: 'plugins/plugin-registry/components/PluginDetail',
   component: PluginDetail,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {

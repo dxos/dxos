@@ -41,7 +41,7 @@ export const DropdownMenu: Story = {
       const actions = createActions();
       return Atom.make<ActionGraphProps>({
         nodes: actions,
-        edges: actions.map((action) => ({ source: 'root', target: action.id })),
+        edges: actions.map((action) => ({ source: 'root', target: action.id, relation: 'child' })),
       }).pipe(Atom.keepAlive);
     }, []);
     useMutateActions(actionsAtom);

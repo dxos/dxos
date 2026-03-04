@@ -9,7 +9,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Obj } from '@dxos/echo';
-import { Layout } from '@dxos/react-ui';
+import { Container } from '@dxos/react-ui';
 import { Pipeline } from '@dxos/types';
 
 import { PipelineContainer, PipelineObjectSettings } from '../../containers';
@@ -33,9 +33,9 @@ export default Capability.makeModule(() =>
           const db = Obj.getDatabase(data.companionTo);
           // TODO(wittjosiah): Filter the invocations to those relevant to the project.
           return (
-            <Layout.Main role={role}>
+            <Container.Main role={role}>
               <InvocationTraceContainer db={db} detailAxis='block' />
-            </Layout.Main>
+            </Container.Main>
           );
         },
       }),

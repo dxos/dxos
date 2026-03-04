@@ -41,10 +41,18 @@ export const ComposeEmailPanel = ({ draft, onSend }: ComposeEmailPanelProps) => 
     (newValues: Partial<ComposeEmailForm>) => {
       Obj.change(draft, (msg) => {
         const properties = (msg.properties ??= {});
-        if (newValues.to !== undefined) properties.to = newValues.to;
-        if (newValues.cc !== undefined) properties.cc = newValues.cc;
-        if (newValues.bcc !== undefined) properties.bcc = newValues.bcc;
-        if (newValues.subject !== undefined) properties.subject = newValues.subject;
+        if (newValues.to !== undefined) {
+          properties.to = newValues.to;
+        }
+        if (newValues.cc !== undefined) {
+          properties.cc = newValues.cc;
+        }
+        if (newValues.bcc !== undefined) {
+          properties.bcc = newValues.bcc;
+        }
+        if (newValues.subject !== undefined) {
+          properties.subject = newValues.subject;
+        }
         if (newValues.body !== undefined) {
           const textBlock = msg.blocks.find((b) => b._tag === 'text');
           if (textBlock && 'text' in textBlock) {
@@ -77,7 +85,7 @@ export const ComposeEmailPanel = ({ draft, onSend }: ComposeEmailPanelProps) => 
       testId='compose-email-form'
       autoFocus
       schema={ComposeEmailForm}
-      values={initialValues}
+      defaultValues={initialValues}
       onValuesChanged={handleValuesChanged}
       onSave={handleSendEmail}
     >

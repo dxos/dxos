@@ -8,7 +8,7 @@ import { Invitation } from '@dxos/react-client/invitations';
 import { Input, useTranslation } from '@dxos/react-ui';
 import { hexToEmoji } from '@dxos/util';
 
-import { Action, Actions, Emoji, Label, StepHeading } from '../../../components';
+import { Action, ActionBar, Emoji, InputLabel, Label } from '../../../components';
 import { translationKey } from '../../../translations';
 import { type JoinStepProps } from '../JoinPanelProps';
 
@@ -54,25 +54,28 @@ export const InvitationAuthenticator = ({
             validationValence: 'error',
           })}
         >
-          <Input.Label asChild>
-            {authMethod === Invitation.AuthMethod.SHARED_SECRET ? (
-              <StepHeading>{t('auth code input label')}</StepHeading>
-            ) : (
-              <>
-                <StepHeading className='text-description'>{t('authenticating label')}</StepHeading>
-                <div role='none' className='grow' />
-              </>
-            )}
-          </Input.Label>
+          {authMethod === Invitation.AuthMethod.SHARED_SECRET ? (
+            <Input.Label asChild>
+              <InputLabel>{t('auth code input label')}</InputLabel>
+            </Input.Label>
+          ) : (
+            <>
+              <Input.Label>
+                <InputLabel classNames='text-description'>{t('authenticating label')}</InputLabel>
+              </Input.Label>
+              <div role='none' className='grow' />
+            </>
+          )}
           {authMethod === Invitation.AuthMethod.SHARED_SECRET && (
             <Input.PinInput
               {...{
                 disabled,
+                density: 'coarse',
                 length: pinLength,
-                onChange,
                 inputMode: 'numeric',
                 autoComplete: 'off',
                 pattern: '\\d*',
+                onChange,
                 'data-autofocus': `connecting${Kind}Invitation inputting${Kind}VerificationCode authenticationFailing${Kind}VerificationCode authenticating${Kind}VerificationCode`,
                 'data-prevent-ios-autofocus': true,
                 'data-testid': `${invitationType}-auth-code-input`,
@@ -96,7 +99,7 @@ export const InvitationAuthenticator = ({
           </>
         )}
       </div>
-      <Actions>
+      <ActionBar>
         <Action
           variant='ghost'
           disabled={disabled}
@@ -114,7 +117,7 @@ export const InvitationAuthenticator = ({
         >
           {t('next label')}
         </Action>
-      </Actions>
+      </ActionBar>
     </>
   );
 };

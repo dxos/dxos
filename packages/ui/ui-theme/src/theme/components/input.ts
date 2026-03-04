@@ -22,12 +22,11 @@ import {
   getSize,
   getSizeHeight,
   getSizeWidth,
-  placeholderText,
   sizeValue,
   staticDisabled,
   staticFocusRing,
   subduedFocus,
-  valenceColorText,
+  textValence,
 } from '../fragments';
 
 export type InputStyleProps = Partial<{
@@ -46,19 +45,12 @@ export type InputMetaStyleProps = Partial<{
   validationValence: MessageValence;
 }>;
 
-// TODO(burdon): Use semantic tokens.
-export const neutralInputValence = '';
-export const successInputValence = 'shadow-emerald-500/50 dark:shadow-emerald-600/50';
-export const infoInputValence = 'shadow-cyan-500/50 dark:shadow-cyan-600/50';
-export const warningInputValence = 'shadow-amber-500/50 dark:shadow-amber-600/50';
-export const errorInputValence = 'shadow-rose-500/50 dark:shadow-rose-600/50';
-
-export const inputTextLabel = 'text-sm text-description py-1';
+export const inputTextLabel = 'py-1 text-sm text-description';
 
 const textInputSurfaceFocus =
-  'transition-colors bg-text-input-surface focus:bg-focus-surface border border-separator focus:border-separator';
+  'transition-colors bg-input-surface focus:bg-focus-surface border border-separator focus:border-separator';
 
-const textInputSurfaceHover = 'hover:bg-text-input-surface focus:hover:bg-focus-surface';
+const textInputSurfaceHover = 'hover:bg-focus-surface';
 
 const booleanInputSurface =
   'shadow-inner transition-colors bg-un-accent aria-checked:bg-accent-surface aria-[checked=mixed]:bg-accent-surface';
@@ -66,45 +58,42 @@ const booleanInputSurface =
 const booleanInputSurfaceHover =
   'hover:bg-un-accent-hover hover:aria-checked:bg-accent-surface-hover hover:aria-[checked=mixed]:bg-accent-surface-hover';
 
-export const inputValence = (valence?: MessageValence) => {
+// TODO(burdon): Replace with semantic tokens.
+const inputValence = (valence?: MessageValence) => {
   switch (valence) {
     case 'success':
-      return successInputValence;
+      return 'shadow-emerald-500/50 dark:shadow-emerald-600/50';
     case 'info':
-      return infoInputValence;
+      return 'shadow-cyan-500/50 dark:shadow-cyan-600/50';
     case 'warning':
-      return warningInputValence;
+      return 'shadow-amber-500/50 dark:shadow-amber-600/50';
     case 'error':
-      return errorInputValence;
-    default:
-      return null;
+      return 'shadow-rose-500/50 dark:shadow-rose-600/50';
   }
 };
 
-// TODO(burdon): Factor out color defs?
-
 const sharedSubduedInputStyles: ComponentFragment<InputStyleProps> = (props) => [
-  'py-0 w-full bg-transparent text-current [[data-drag-autoscroll="active"]_&]:pointer-events-none',
+  'py-0 w-full bg-transparent text-current placeholder-placeholder',
+  '[[data-drag-autoscroll="active"]_&]:pointer-events-none',
   props.density === 'fine' ? fineBlockSize : coarseBlockSize,
-  placeholderText,
   subduedFocus,
   props.disabled && staticDisabled,
 ];
 
 const sharedDefaultInputStyles: ComponentFragment<InputStyleProps> = (props) => [
-  'py-0 w-full text-base-text rounded-xs text-[color:var(--surface-text)] [[data-drag-autoscroll="active"]_&]:pointer-events-none',
+  'py-0 w-full text-base-surface-text rounded-xs placeholder-placeholder',
+  '[[data-drag-autoscroll="active"]_&]:pointer-events-none',
   textInputSurfaceFocus,
-  placeholderText,
   props.density === 'fine' ? fineDimensions : coarseDimensions,
   props.disabled ? staticDisabled : textInputSurfaceHover,
 ];
 
 const sharedStaticInputStyles: ComponentFragment<InputStyleProps> = (props) => [
-  'py-0 w-full text-base-text rounded-xs text-[color:var(--surface-text)] [[data-drag-autoscroll="active"]_&]:pointer-events-none',
+  'py-0 w-full text-base-surface-text rounded-xs placeholder-placeholder',
+  '[[data-drag-autoscroll="active"]_&]:pointer-events-none',
   textInputSurfaceFocus,
   textInputSurfaceHover,
-  props.focused && 'bg-attention',
-  placeholderText,
+  props.focused && 'bg-attention-surface',
   inputValence(props.validationValence),
   props.disabled && staticDisabled,
   props.focused && staticFocusRing,
@@ -118,7 +107,7 @@ const inputInput: ComponentFunction<InputStyleProps> = (props, ...etc) =>
       : mx(
           ...sharedDefaultInputStyles(props),
           !props.disabled && focusRing,
-          inputValence(props.validationValence) || neutralInputValence,
+          inputValence(props.validationValence),
           ...etc,
         );
 
@@ -150,7 +139,24 @@ const inputSwitchThumb: ComponentFunction<InputStyleProps> = ({ size = 5 }, ...e
   );
 
 const inputWithSegmentsInput: ComponentFunction<InputStyleProps> = (props, ...etc) =>
-  mx('font-mono selection:bg-transparent mx-auto', props.disabled && 'cursor-not-allowed', ...etc);
+  mx(
+    'font-mono selection:bg-transparent mx-auto',
+    props.density === 'fine' ? 'text-base pointer-fine:text-sm' : 'text-lg',
+    props.disabled && 'cursor-not-allowed',
+    ...etc,
+  );
+
+const inputSegment: ComponentFunction<InputStyleProps> = (props, ...etc) =>
+  mx(
+    'flex items-center justify-center font-mono',
+    props.density === 'fine' ? 'size-10 pointer-fine:size-8 rounded-xs' : 'size-12 rounded-xs',
+    'bg-input-surface text-base-surface-text transition-colors border border-separator',
+    'data-[focused]:bg-attention-surface data-[focused]:border-neutral-focus-indicator',
+    'data-[focused]:ring-2 data-[focused]:ring-offset-0 data-[focused]:ring-neutral-focus-indicator',
+    inputValence(props.validationValence),
+    props.disabled && staticDisabled,
+    ...etc,
+  );
 
 const inputLabel: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
   mx('block', inputTextLabel, props.srOnly && 'sr-only', ...etc);
@@ -162,12 +168,13 @@ const inputDescriptionAndValidation: ComponentFunction<InputMetaStyleProps> = (p
   mx('leading-none my-1.5', props.srOnly && 'sr-only', ...etc);
 
 const inputValidation: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
-  mx('text-description', props.srOnly ? 'sr-only' : valenceColorText(props.validationValence), ...etc);
+  mx(inputTextLabel, props.srOnly ? 'sr-only' : textValence(props.validationValence), ...etc);
 
 export const inputTheme = {
   input: inputInput,
   textArea: inputTextArea,
   inputWithSegments: inputWithSegmentsInput,
+  segment: inputSegment,
   checkbox: inputCheckbox,
   checkboxIndicator: inputCheckboxIndicator,
   label: inputLabel,

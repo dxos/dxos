@@ -36,8 +36,8 @@ const Fallback = ({ _tag, ...props }: XmlWidgetProps<MessageThreadContext>) => {
 const Summary = ({ text }: { text: string }) => {
   return (
     <ToggleContainer.Root classNames='rounded-sm'>
-      <ToggleContainer.Header classNames='bg-groupSurface'>Conversation summarized</ToggleContainer.Header>
-      <ToggleContainer.Content classNames='bg-modalSurface'>{text}</ToggleContainer.Content>
+      <ToggleContainer.Header classNames='bg-group-surface'>Conversation summarized</ToggleContainer.Header>
+      <ToggleContainer.Content classNames='bg-modal-surface'>{text}</ToggleContainer.Content>
     </ToggleContainer.Root>
   );
 };

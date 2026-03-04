@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import { OperationPlugin } from '@dxos/app-framework';
+import { OperationPlugin, RuntimePlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
@@ -17,7 +17,6 @@ import { translations } from '../../translations';
 
 import { DeploymentDialog } from './DeploymentDialog';
 
-// TODO(wittjosiah): ECHO objects don't work when passed via Storybook args.
 const DeploymentDialogStory = () => {
   const accessToken = useMemo(
     () =>
@@ -43,14 +42,14 @@ const DeploymentDialogStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-script/DeploymentDialog',
+  title: 'plugins/plugin-script/containers/DeploymentDialog',
   component: DeploymentDialogStory,
   parameters: { translations },
   // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
   decorators: [
     withTheme(),
     withPluginManager({
-      plugins: [OperationPlugin(), ClientPlugin({})],
+      plugins: [OperationPlugin(), RuntimePlugin(), ClientPlugin({})],
     }),
   ],
 } satisfies Meta<typeof DeploymentDialogStory>;

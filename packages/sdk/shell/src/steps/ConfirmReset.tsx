@@ -5,9 +5,9 @@
 import React, { useCallback, useState } from 'react';
 
 import { log } from '@dxos/log';
-import { Dialog, Message, useTranslation } from '@dxos/react-ui';
+import { Dialog, Message, Trans, useTranslation } from '@dxos/react-ui';
 
-import { Action, Input, StepHeading } from '../components';
+import { Action, InputLabel, TextInput } from '../components';
 import { translationKey } from '../translations';
 
 import { type StepProps } from './StepProps';
@@ -19,12 +19,6 @@ type ConfirmResetOptions = Partial<{
 }>;
 
 export type ConfirmResetProps = StepProps & ConfirmResetOptions;
-
-export type ConfirmResetImplProps = ConfirmResetOptions & {
-  disabled?: boolean;
-  pending?: boolean;
-  validationMessage?: string;
-};
 
 export const ConfirmReset = ({ active, mode, onCancel, onConfirm }: ConfirmResetProps) => {
   const { t } = useTranslation(translationKey);
@@ -56,29 +50,29 @@ export const ConfirmReset = ({ active, mode, onCancel, onConfirm }: ConfirmReset
           <Message.Title>{t('sign out chooser title')}</Message.Title>
           <Message.Content>{t('sign out chooser message')}</Message.Content>
         </Message.Root>
-        <div className='p-card-chrome'>
-          <Input
-            {...{ validationMessage }}
-            label={
-              <StepHeading className='text-start my-2'>
-                {t(
+        <TextInput
+          {...{ validationMessage }}
+          label={
+            <InputLabel classNames='text-start my-2'>
+              <Trans
+                i18nKey={`${translationKey}:${
                   mode === 'join new identity'
                     ? 'join new identity input label'
                     : mode === 'recover'
                       ? 'recover reset input label'
-                      : 'reset storage input label',
-                  {
-                    confirmationValue,
-                  },
-                )}
-              </StepHeading>
-            }
-            disabled={disabled}
-            data-testid={`${testIdAffix}.reset-identity-input`}
-            placeholder={t('confirmation placeholder', { confirmationValue })}
-            onChange={({ target: { value } }) => setInputValue(value)}
-          />
-        </div>
+                      : 'reset storage input label'
+                }`}
+                values={{
+                  confirmationValue,
+                }}
+              />
+            </InputLabel>
+          }
+          disabled={disabled}
+          data-testid={`${testIdAffix}.reset-identity-input`}
+          placeholder={t('confirmation placeholder', { confirmationValue })}
+          onChange={({ target: { value } }) => setInputValue(value)}
+        />
       </Dialog.Body>
       <Dialog.ActionBar classNames='grid grid-cols-2 gap-2'>
         {onCancel && (

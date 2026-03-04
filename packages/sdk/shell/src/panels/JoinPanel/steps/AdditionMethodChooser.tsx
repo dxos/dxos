@@ -6,7 +6,7 @@ import React from 'react';
 
 import { Icon, useTranslation } from '@dxos/react-ui';
 
-import { CompoundButton, StepHeading } from '../../../components';
+import { CompoundButton, InputLabel } from '../../../components';
 import { translationKey } from '../../../translations';
 import { type JoinStepProps } from '../JoinPanelProps';
 
@@ -26,7 +26,7 @@ export const AdditionMethodChooser = (viewStateProps: AdditionMethodChooserProps
 
   return (
     <>
-      <StepHeading>{t('addition method chooser title')}</StepHeading>
+      <InputLabel>{t('addition method chooser title')}</InputLabel>
       <div role='none' className='flex flex-col gap-1 grow'>
         <CompoundButton
           {...sharedButtonProps}

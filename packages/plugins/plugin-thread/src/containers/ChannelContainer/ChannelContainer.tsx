@@ -131,7 +131,7 @@ export const ChannelContainer = ({ role, subject: channel, roomId: roomIdProp, f
       {!isJoined && channel && channel.defaultThread.target && space && (
         <>
           <ChannelToolbar attendableId={attendableId} role={role} onJoinCall={handleJoin} />
-          <ChatContainer space={space} thread={channel.defaultThread.target} classNames='container-max-width' />
+          <ChatContainer space={space} thread={channel.defaultThread.target} classNames='dx-container-max-width' />
         </>
       )}
     </StackItem.Content>
@@ -177,7 +177,7 @@ const useChannelToolbarActions = (onJoinCall?: () => void) => {
               type: 'video-call',
             }),
           ],
-          edges: [{ source: 'root', target: 'video-call' }],
+          edges: [{ source: 'root', target: 'video-call', relation: 'child' }],
         };
       }),
     [],

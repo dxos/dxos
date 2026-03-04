@@ -277,8 +277,8 @@ catalogs:
       specifier: ^1.0.8
       version: 1.0.8
     '@moonrepo/cli':
-      specifier: 2.0.0-rc.2
-      version: 2.0.0-rc.2
+      specifier: 2.0.3
+      version: 2.0.3
     '@ngneat/falso':
       specifier: ^7.1.1
       version: 7.1.1
@@ -1050,6 +1050,9 @@ catalogs:
     enquirer:
       specifier: ^2.3.6
       version: 2.3.6
+    error-stack-parser:
+      specifier: ^2.1.4
+      version: 2.1.4
     esbuild-plugin-glsl:
       specifier: ^1.4.0
       version: 1.4.0
@@ -1503,9 +1506,6 @@ catalogs:
     randombytes:
       specifier: ^2.1.0
       version: 2.1.0
-    rci:
-      specifier: ^0.1.0
-      version: 0.1.0
     re-resizable:
       specifier: ^6.9.17
       version: 6.9.17
@@ -2006,7 +2006,7 @@ importers:
         version: 9.37.0
       '@moonrepo/cli':
         specifier: 'catalog:'
-        version: 2.0.0-rc.2
+        version: 2.0.3
       '@octokit/rest':
         specifier: 'catalog:'
         version: 22.0.1
@@ -6321,12 +6321,18 @@ importers:
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../../common/debug
       '@dxos/display-name':
         specifier: workspace:*
         version: link:../../common/display-name
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/echo-atom':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-atom
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -6387,6 +6393,9 @@ importers:
       '@dxos/react-ui-graph':
         specifier: workspace:*
         version: link:../../ui/react-ui-graph
+      '@dxos/react-ui-list':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-list
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../../ui/react-ui-syntax-highlighter
@@ -6411,6 +6420,12 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect-atom/atom':
+        specifier: 'catalog:'
+        version: 0.5.3(@effect/experimental@0.58.0(@effect/platform@0.94.4(effect@3.19.16))(effect@3.19.16)(ioredis@5.3.2))(@effect/platform@0.94.4(effect@3.19.16))(@effect/rpc@0.73.0(@effect/platform@0.94.4(effect@3.19.16))(effect@3.19.16))(effect@3.19.16)
+      '@effect-atom/atom-react':
+        specifier: 'catalog:'
+        version: 0.5.0(@effect/experimental@0.58.0(@effect/platform@0.94.4(effect@3.19.16))(effect@3.19.16)(ioredis@5.3.2))(@effect/platform@0.94.4(effect@3.19.16))(@effect/rpc@0.73.0(@effect/platform@0.94.4(effect@3.19.16))(effect@3.19.16))(effect@3.19.16)(react@19.2.3)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 'catalog:'
         version: 0.94.4(effect@3.19.16)
@@ -6864,6 +6879,9 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
+      '@dxos/config':
+        specifier: workspace:*
+        version: link:../../sdk/config
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
@@ -8249,6 +8267,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
+      '@dxos/react-error-boundary':
+        specifier: workspace:*
+        version: link:../../ui/react-primitives/react-error-boundary
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
@@ -13276,12 +13297,12 @@ importers:
       '@dxos/operation':
         specifier: workspace:*
         version: link:../../core/operation
+      '@dxos/react-error-boundary':
+        specifier: workspace:*
+        version: link:../../ui/react-primitives/react-error-boundary
       '@dxos/react-hooks':
         specifier: workspace:*
         version: link:../../ui/react-primitives/react-hooks
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../ui/react-ui
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -13301,6 +13322,9 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
@@ -14169,9 +14193,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      react-error-boundary:
-        specifier: 'catalog:'
-        version: 4.0.13(react@19.2.3)
     devDependencies:
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
@@ -14995,6 +15016,28 @@ importers:
         specifier: workspace:*
         version: link:../../common/test-utils
 
+  packages/ui/react-primitives/react-error-boundary:
+    dependencies:
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
+      react-error-boundary:
+        specifier: 'catalog:'
+        version: 4.0.13(react@19.2.3)
+    devDependencies:
+      '@types/react':
+        specifier: ~19.2.7
+        version: 19.2.7
+      '@types/react-dom':
+        specifier: ~19.2.3
+        version: 19.2.3(@types/react@19.2.7)
+      react:
+        specifier: ~19.2.3
+        version: 19.2.3
+      react-dom:
+        specifier: ~19.2.3
+        version: 19.2.3(react@19.2.3)
+
   packages/ui/react-primitives/react-hooks:
     dependencies:
       '@dxos/async':
@@ -15052,9 +15095,6 @@ importers:
       '@radix-ui/react-use-controllable-state':
         specifier: 'catalog:'
         version: 1.1.0(@types/react@19.2.7)(react@19.2.3)
-      rci:
-        specifier: 'catalog:'
-        version: 0.1.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
     devDependencies:
       '@types/react':
         specifier: ~19.2.7
@@ -15126,6 +15166,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/react-error-boundary':
+        specifier: workspace:*
+        version: link:../react-primitives/react-error-boundary
       '@dxos/react-hooks':
         specifier: workspace:*
         version: link:../react-primitives/react-hooks
@@ -15243,12 +15286,18 @@ importers:
       date-fns:
         specifier: 'catalog:'
         version: 3.6.0
+      error-stack-parser:
+        specifier: 'catalog:'
+        version: 2.1.4
       i18next:
         specifier: 'catalog:'
         version: 21.10.0
       keyborg:
         specifier: 'catalog:'
         version: 2.6.0
+      react-error-boundary:
+        specifier: 'catalog:'
+        version: 4.0.13(react@19.2.3)
       react-i18next:
         specifier: 'catalog:'
         version: 11.18.6(i18next@21.10.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -21713,37 +21762,37 @@ packages:
     peerDependencies:
       three: '>= 0.159.0'
 
-  '@moonrepo/cli@2.0.0-rc.2':
-    resolution: {integrity: sha512-Iaar67Jyu5JNBUmVH1r8WrkQkb7HTWwcQvduAx1+aI+3YD8vFSF4UqoVh8oZhWkggsNeonjDH0ayBi9QfvA4zQ==}
+  '@moonrepo/cli@2.0.3':
+    resolution: {integrity: sha512-Q9lZUy+hORaJjM7gEW2SZVGe62qdGsYR2To7gx1zMOJdR9/H/TCPBVJDmZK6vjYikdrdQkSLo1ypX5Z8TBmRFQ==}
     hasBin: true
 
-  '@moonrepo/core-linux-arm64-gnu@2.0.0-rc.2':
-    resolution: {integrity: sha512-4/N/hD75K6uDSp0hemfsJbWnaOaqe3Rs47QAFbG8xjRXPY6I3BcTTI7DcuQ5UCx0CXe4C8sSta0fCKPL4R5zCQ==}
+  '@moonrepo/core-linux-arm64-gnu@2.0.3':
+    resolution: {integrity: sha512-4QvLPfOUEkrtdoPc2IAgi8W6ZdaYDBPYFO/YSavhMTiVMM0LnYoDeoao5UGGlV0P6tk1gZJzv2AVz6TC6flXxA==}
     cpu: [arm64]
     os: [linux]
 
-  '@moonrepo/core-linux-arm64-musl@2.0.0-rc.2':
-    resolution: {integrity: sha512-t2spMFBJwvYvFYB9/gPRkZ7HvLDWUyjMmXLPtPbV4KWt+ACKF43x5cOy3XsyeWCCSmqBls4Uc6gH/RVfoJnvqg==}
+  '@moonrepo/core-linux-arm64-musl@2.0.3':
+    resolution: {integrity: sha512-sFL8zHKfpV6wjNslMINUJzqA+9hvXAREdLZkqpIdcKreAcOCgbHxL4QKkFZ0LaLeHWxij8d+gp3U6o4Uc3pM0w==}
     cpu: [arm64]
     os: [linux]
 
-  '@moonrepo/core-linux-x64-gnu@2.0.0-rc.2':
-    resolution: {integrity: sha512-LJk0l/ThN0uQU9/I7tFvM+OPTy6gObHo1eQVBuQ1r8cvBg1CLz8GMG2zT5xFM7NQTsyzcUzGKyREDcrAQWskAQ==}
+  '@moonrepo/core-linux-x64-gnu@2.0.3':
+    resolution: {integrity: sha512-XSRDk+yLLQB8BMueseBcMt3ayzZF6HQR2Cv/dZQD/m8F1bGQw3E3XnH7C6m1kY0o5ou8A37ujrMyb0GgG09nLg==}
     cpu: [x64]
     os: [linux]
 
-  '@moonrepo/core-linux-x64-musl@2.0.0-rc.2':
-    resolution: {integrity: sha512-R9bENS682hu/PeAwGR9LcSSjMUe4WXBCVzyGE8s+XuB+JsJjoDZnVJRDsSCnVN1rd8zpUMCH2/uc5xb0K7EipA==}
+  '@moonrepo/core-linux-x64-musl@2.0.3':
+    resolution: {integrity: sha512-ShIjhOUhfYy3k5sjHBfjLmzq6n1+vIHSAfUWcGVzbMdlnGp5g4UxXGOHZxOopPtcaXJbGNv9IxR10HiTJtErcQ==}
     cpu: [x64]
     os: [linux]
 
-  '@moonrepo/core-macos-arm64@2.0.0-rc.2':
-    resolution: {integrity: sha512-Q09iNAmevr5TR49EWv+tcEmhYGJvBWDGA/BfWMfVVcKDI0oGXLBPCtVRckgU8zbUrlMevEd85TC6kdX9/f6IdA==}
+  '@moonrepo/core-macos-arm64@2.0.3':
+    resolution: {integrity: sha512-MgdCNoUVYYeohUaIsSWWK63hIOie9/bjTeVLDhFvoooNNJrL6i5uBXij9XTtir3iSy9CCXO9COwnvkCuopcNEA==}
     cpu: [arm64]
     os: [darwin]
 
-  '@moonrepo/core-windows-x64-msvc@2.0.0-rc.2':
-    resolution: {integrity: sha512-9pHnZKvVyS3kEw+7IzeP69GjxkyB1HBxZri7fjm65WPky7vTa3fxqE2hJmiEgKjCiEpubD9ZhYlLmIsjuQ3Ing==}
+  '@moonrepo/core-windows-x64-msvc@2.0.3':
+    resolution: {integrity: sha512-zetuREncxv0X7WzL3tr5QGEdNz9/KtT5arbHqtCwrxJ3g1uEjay4bhsllzpph6X9gn5godhT26XZOmnYTZi5CA==}
     cpu: [x64]
     os: [win32]
 
@@ -33658,12 +33707,6 @@ packages:
     resolution: {integrity: sha512-y3bGgqKj3QBdxLbLkomlohkvsA8gdAiUQlSBJnBhfn+BPxg4bc62d8TcBW15wavDfgexCgccckhcZvywyQYPOw==}
     hasBin: true
 
-  rci@0.1.0:
-    resolution: {integrity: sha512-o/elFrXXRLdYDAq/qQUFE175TqzJ5nU3MYwIwa6WOZfljNJ4akQSy1n7zA79swB696MNIFDWJs+Do0q2FBTy+Q==}
-    peerDependencies:
-      react: ~19.2.3
-      react-dom: ~19.2.3
-
   re-resizable@6.9.17:
     resolution: {integrity: sha512-OBqd1BwVXpEJJn/yYROG+CbeqIDBWIp6wathlpB0kzZWWZIY1gPTsgK2yJEui5hOvkCdC2mcexF2V3DZVfLq2g==}
     peerDependencies:
@@ -36122,12 +36165,6 @@ packages:
     peerDependenciesMeta:
       '@types/react':
         optional: true
-
-  use-code-input@0.0.2:
-    resolution: {integrity: sha512-lDIUiRca0K8sF+c/KZ9cz5g6oPqlFiTmaDgwGzg0wlNSnFAvROtweKy0XpihEWJwo2tjETtgAxIh82RVGaBFHQ==}
-    peerDependencies:
-      react: ~19.2.3
-      react-dom: ~19.2.3
 
   use-deep-compare-effect@1.8.1:
     resolution: {integrity: sha512-kbeNVZ9Zkc0RFGpfMN3MNfaKNvcLNyxOAAd9O4CBZ+kCBXXscn9s/4I+8ytUER4RDpEYs5+O6Rs4PqiZ+rHr5Q==}
@@ -40841,33 +40878,33 @@ snapshots:
       promise-worker-transferable: 1.0.4
       three: 0.178.0
 
-  '@moonrepo/cli@2.0.0-rc.2':
+  '@moonrepo/cli@2.0.3':
     dependencies:
       detect-libc: 2.1.2
     optionalDependencies:
-      '@moonrepo/core-linux-arm64-gnu': 2.0.0-rc.2
-      '@moonrepo/core-linux-arm64-musl': 2.0.0-rc.2
-      '@moonrepo/core-linux-x64-gnu': 2.0.0-rc.2
-      '@moonrepo/core-linux-x64-musl': 2.0.0-rc.2
-      '@moonrepo/core-macos-arm64': 2.0.0-rc.2
-      '@moonrepo/core-windows-x64-msvc': 2.0.0-rc.2
+      '@moonrepo/core-linux-arm64-gnu': 2.0.3
+      '@moonrepo/core-linux-arm64-musl': 2.0.3
+      '@moonrepo/core-linux-x64-gnu': 2.0.3
+      '@moonrepo/core-linux-x64-musl': 2.0.3
+      '@moonrepo/core-macos-arm64': 2.0.3
+      '@moonrepo/core-windows-x64-msvc': 2.0.3
 
-  '@moonrepo/core-linux-arm64-gnu@2.0.0-rc.2':
+  '@moonrepo/core-linux-arm64-gnu@2.0.3':
     optional: true
 
-  '@moonrepo/core-linux-arm64-musl@2.0.0-rc.2':
+  '@moonrepo/core-linux-arm64-musl@2.0.3':
     optional: true
 
-  '@moonrepo/core-linux-x64-gnu@2.0.0-rc.2':
+  '@moonrepo/core-linux-x64-gnu@2.0.3':
     optional: true
 
-  '@moonrepo/core-linux-x64-musl@2.0.0-rc.2':
+  '@moonrepo/core-linux-x64-musl@2.0.3':
     optional: true
 
-  '@moonrepo/core-macos-arm64@2.0.0-rc.2':
+  '@moonrepo/core-macos-arm64@2.0.3':
     optional: true
 
-  '@moonrepo/core-windows-x64-msvc@2.0.0-rc.2':
+  '@moonrepo/core-windows-x64-msvc@2.0.3':
     optional: true
 
   '@msgpackr-extract/msgpackr-extract-darwin-arm64@3.0.3':
@@ -55373,12 +55410,6 @@ snapshots:
       minimist: 1.2.8
       strip-json-comments: 2.0.1
 
-  rci@0.1.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
-    dependencies:
-      react: 19.2.3
-      react-dom: 19.2.3(react@19.2.3)
-      use-code-input: 0.0.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-
   re-resizable@6.9.17(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
     dependencies:
       react: 19.2.3
@@ -58415,11 +58446,6 @@ snapshots:
       tslib: 2.8.1
     optionalDependencies:
       '@types/react': 19.2.7
-
-  use-code-input@0.0.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
-    dependencies:
-      react: 19.2.3
-      react-dom: 19.2.3(react@19.2.3)
 
   use-deep-compare-effect@1.8.1(react@19.2.3):
     dependencies:

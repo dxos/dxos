@@ -4,7 +4,7 @@
 
 @layer dx-components {
   .dx-tag {
-    @apply inline-block text-xs font-semibold m-0.5 px-1 rounded-xs cursor-default truncate;
+    @apply inline-block text-xs font-semibold m-0.5 px-1 rounded-sm cursor-default truncate;
     padding-block: var(--spacing-tag-padding-block);
     user-select: none;
   }
@@ -20,7 +20,7 @@
 
   .dx-tag[data-hue='neutral'],
   .dx-tag--neutral {
-    @apply bg-separator text-neutral-700 dark:text-neutral-200;
+    @apply bg-neutral-surface text-neutral-surface-text;
   }
 
   .dx-tag[data-hue='red'],

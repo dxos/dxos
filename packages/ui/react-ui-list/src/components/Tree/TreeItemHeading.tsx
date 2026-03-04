@@ -70,7 +70,7 @@ export const TreeItemHeading = memo(
             {icon && (
               <Icon icon={icon ?? 'ph--placeholder--regular'} size={5} classNames={['my-1', styles?.surfaceText]} />
             )}
-            <span className='flex-1 w-0 truncate text-start text-sm font-normal' data-tooltip>
+            <span className='flex-1 w-0 truncate text-start font-normal' data-tooltip>
               {toLocalizedString(label, t)}
             </span>
           </Button>

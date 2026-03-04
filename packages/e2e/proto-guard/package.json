@@ -27,11 +27,12 @@
     "src"
   ],
   "scripts": {
-    "snapshot": "moon run proto-guard:build && vite-node ./src/generate-snapshot.ts"
+    "snapshot": "moon run proto-guard:build && vite-node ./src/bin/snapshot.ts"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
+    "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/credentials": "workspace:*",
     "@dxos/debug": "workspace:*",

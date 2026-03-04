@@ -12,14 +12,13 @@ import { createEvents } from '../../testing';
 
 import { EventList, type EventListProps } from './EventList';
 
-// TODO(wittjosiah): ECHO objects don't work when passed via Storybook args.
 const EventListStory = (props: Omit<EventListProps, 'events'>) => {
   const events = useMemo(() => createEvents(100), []);
   return <EventList events={events} {...props} />;
 };
 
 const meta: Meta<typeof EventListStory> = {
-  title: 'plugins/plugin-inbox/EventList',
+  title: 'plugins/plugin-inbox/components/EventList',
   component: EventListStory,
   parameters: {
     layout: 'fullscreen',

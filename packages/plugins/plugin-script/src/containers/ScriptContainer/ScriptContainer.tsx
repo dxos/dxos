@@ -10,7 +10,7 @@ import { createDocAccessor } from '@dxos/echo-db';
 import { type Script } from '@dxos/functions';
 import { getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Layout } from '@dxos/react-ui';
+import { Container } from '@dxos/react-ui';
 import { createDataExtensions, listener, stackItemContentEditorClassNames } from '@dxos/ui-editor';
 
 import { ScriptToolbar } from '../../components/ScriptToolbar';
@@ -65,7 +65,7 @@ export const ScriptContainer = ({
   }
 
   return (
-    <Layout.Main role={role} toolbar>
+    <Container.Main role={role} toolbar>
       <ScriptToolbar state={state} role={role} script={script} />
       <TypescriptEditor
         id={script.id}
@@ -76,6 +76,6 @@ export const ScriptContainer = ({
         inputMode={settings.editorInputMode}
         toolbar
       />
-    </Layout.Main>
+    </Container.Main>
   );
 };
