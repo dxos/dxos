@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { ActivationEvent, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { Ref } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
@@ -35,9 +36,13 @@ export const InboxPlugin = Plugin.define(meta).pipe(
           iconHue: 'rose',
           blueprints: [InboxBlueprint.key],
           inputSchema: CreateMailboxSchema,
-          createObject: ((props) =>
+          createObject: ((props, { db }) =>
+            // TODO(wittjosiah): Should this allow multiple objects to be returned?
             Effect.gen(function* () {
-              return Mailbox.make(props);
+              const feed = Mailbox.make(props);
+              const config = Mailbox.makeConfig({ feed: Ref.make(feed), accessToken: props.accessToken });
+              db.add(config);
+              return feed;
             })) satisfies CreateObject,
         },
       },
@@ -56,9 +61,12 @@ export const InboxPlugin = Plugin.define(meta).pipe(
           iconHue: 'rose',
           blueprints: [CalendarBlueprint.key],
           inputSchema: CreateCalendarSchema,
-          createObject: ((props) =>
+          createObject: ((props, { db }) =>
             Effect.gen(function* () {
-              return Calendar.make(props);
+              const feed = Calendar.make(props);
+              const config = Calendar.makeConfig({ feed: Ref.make(feed), accessToken: props.accessToken });
+              db.add(config);
+              return feed;
             })) satisfies CreateObject,
         },
       },
