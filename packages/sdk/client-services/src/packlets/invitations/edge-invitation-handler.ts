@@ -4,7 +4,7 @@
 
 import { type MutexGuard, scheduleMicroTask, scheduleTask } from '@dxos/async';
 import { type Context } from '@dxos/context';
-import { credentialFromBinary } from '@dxos/credentials';
+import { packCredential, credentialFromBinary } from '@dxos/credentials';
 import { sign } from '@dxos/crypto';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
@@ -160,7 +160,7 @@ export class EdgeInvitationHandler implements FlowLockHolder {
 
   private async _mapToAdmissionResponse(edgeResponse: JoinSpaceResponseBody): Promise<AdmissionResponse> {
     const credentialBytes = Buffer.from(edgeResponse.spaceMemberCredential, 'base64');
-    const credential = credentialFromBinary(credentialBytes);
+    const credential = packCredential(credentialFromBinary(credentialBytes));
     return create(AdmissionResponseSchema, {
       kind: {
         case: 'space',

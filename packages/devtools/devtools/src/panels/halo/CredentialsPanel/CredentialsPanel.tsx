@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { getCredentialAssertion } from '@dxos/credentials';
+import { getAssertionFromCredential } from '@dxos/credentials';
 import { Format } from '@dxos/echo/internal';
 import { type Space } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
@@ -34,7 +34,7 @@ export const CredentialsPanel = (props: { space?: Space }) => {
       credentials.map((credential: any) => ({
         id: credential.id?.toString() ?? '',
         issuer: credential.issuer?.toString() ?? '',
-        type: credential.subject ? getCredentialAssertion(credential)['@type'] : undefined,
+        type: credential.subject ? getAssertionFromCredential(credential).$typeName : undefined,
         issuanceDate: credential.issuanceDate,
         _original: credential,
       })),

@@ -12,7 +12,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { DataCorruptionError, STORAGE_VERSION } from '@dxos/protocols';
 import {
-  TimeframeVectorProto.decode,
+  TimeframeVectorProto,
   create,
   encodePublicKey,
   fromBinary,

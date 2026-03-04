@@ -5,7 +5,7 @@
 import { asyncTimeout } from '@dxos/async';
 import { type ClientServices } from '@dxos/client-protocol';
 import { type Config, type ConfigProto } from '@dxos/config';
-import { createDidFromIdentityKey, credentialTypePredicate } from '@dxos/credentials';
+import { createDidFromIdentityKey, credentialTypePredicate, getAssertionFromCredential } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { STORAGE_VERSION } from '@dxos/protocols';
@@ -187,7 +187,7 @@ const getSpaceStats = async (space: DataSpace): Promise<SpaceStats> => {
     epochs: space.inner.spaceState.credentials
       .filter(credentialTypePredicate('dxos.halo.credentials.Epoch'))
       .map((credential) => ({
-        ...(credential.subject.assertion as unknown as Record<string, unknown>),
+        ...(getAssertionFromCredential(credential) as unknown as Record<string, unknown>),
         id: credential.id ? toPublicKey(credential.id) : undefined,
       })) as unknown as (Epoch & { id?: PublicKey })[],
 

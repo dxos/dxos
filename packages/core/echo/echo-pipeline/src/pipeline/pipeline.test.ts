@@ -5,7 +5,7 @@
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Event, sleep } from '@dxos/async';
-import { create, TimeframeVectorProto.encode } from '@dxos/protocols/buf';
+import { create, TimeframeVectorProto } from '@dxos/protocols/buf';
 import { type FeedMessage, FeedMessageSchema } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { Timeframe } from '@dxos/timeframe';
 import { range } from '@dxos/util';

@@ -8,7 +8,7 @@ import { type AutomergeUrl, type DocHandle } from '@automerge/automerge-repo';
 import { Event, Mutex, scheduleTask, sleep, synchronized, trackLeaks } from '@dxos/async';
 import { AUTH_TIMEOUT } from '@dxos/client-protocol';
 import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
-import type { SpecificCredential } from '@dxos/credentials';
+import { type SpecificCredential, toBufPublicKey } from '@dxos/credentials';
 import { timed, warnAfterTimeout } from '@dxos/debug';
 import {
   type ControlPipelinePayload,
@@ -26,7 +26,7 @@ import { type Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { CancelledError, SystemError } from '@dxos/protocols';
-import { timestampFromDate, toPublicKey } from '@dxos/protocols/buf';
+import { create, timestampFromDate, TimeframeVectorProto, toPublicKey } from '@dxos/protocols/buf';
 import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type CreateEpochRequest_Migration, type Space_Metrics } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
@@ -34,8 +34,11 @@ import { type FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { type SpaceCache } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import {
   AdmittedFeed_Designation,
+  AdmittedFeedSchema,
   type Credential,
   type Epoch,
+  EpochSchema,
+  MemberProfileSchema,
   type ProfileDocument,
   SpaceMember_Role,
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
@@ -410,13 +413,12 @@ export class DataSpace {
       credentials.push(
         await this._signingContext.credentialSigner.createCredential({
           subject: controlFeed.key,
-          assertion: {
-            '@type': 'dxos.halo.credentials.AdmittedFeed',
-            spaceKey: this.key,
-            deviceKey: this._signingContext.deviceKey,
-            identityKey: this._signingContext.identityKey,
+          assertion: create(AdmittedFeedSchema, {
+            spaceKey: toBufPublicKey(this.key),
+            deviceKey: toBufPublicKey(this._signingContext.deviceKey),
+            identityKey: toBufPublicKey(this._signingContext.identityKey),
             designation: AdmittedFeed_Designation.CONTROL,
-          },
+          }),
         }),
       );
     }
@@ -430,13 +432,12 @@ export class DataSpace {
       credentials.push(
         await this._signingContext.credentialSigner.createCredential({
           subject: dataFeed.key,
-          assertion: {
-            '@type': 'dxos.halo.credentials.AdmittedFeed',
-            spaceKey: this.key,
-            deviceKey: this._signingContext.deviceKey,
-            identityKey: this._signingContext.identityKey,
+          assertion: create(AdmittedFeedSchema, {
+            spaceKey: toBufPublicKey(this.key),
+            deviceKey: toBufPublicKey(this._signingContext.deviceKey),
+            identityKey: toBufPublicKey(this._signingContext.identityKey),
             designation: AdmittedFeed_Designation.DATA,
-          },
+          }),
         }),
       );
     }
@@ -520,10 +521,9 @@ export class DataSpace {
   async updateOwnProfile(profile: ProfileDocument): Promise<void> {
     const credential = await this._signingContext.credentialSigner.createCredential({
       subject: this._signingContext.identityKey,
-      assertion: {
-        '@type': 'dxos.halo.credentials.MemberProfile',
+      assertion: create(MemberProfileSchema, {
         profile,
-      },
+      }),
     });
     await this.inner.controlPipeline.writer.write({ credential: { credential } });
   }
@@ -546,20 +546,22 @@ export class DataSpace {
     });
 
     const lastEpoch = this._automergeSpaceState.lastEpoch as any;
-    const epoch = {
-      previousId: lastEpoch?.id ? toPublicKey(lastEpoch.id) : undefined,
-      number: (lastEpoch?.subject.assertion.number ?? -1) + 1,
-      timeframe: lastEpoch?.subject.assertion.timeframe ?? new Timeframe(),
-      automergeRoot: newRoot ?? this._automergeSpaceState.rootUrl,
-    } as any as Epoch;
+    const lastTimeframe = lastEpoch?.subject.assertion.timeframe;
+    const timeframeVector = lastTimeframe
+      ? lastTimeframe instanceof Timeframe
+        ? TimeframeVectorProto.encode(lastTimeframe)
+        : lastTimeframe
+      : TimeframeVectorProto.encode(new Timeframe());
 
-    const credential = (await this._signingContext.credentialSigner.createCredential({
+    const credential = await this._signingContext.credentialSigner.createCredential({
       subject: this.key,
-      assertion: {
-        '@type': 'dxos.halo.credentials.Epoch',
-        ...epoch,
-      },
-    })) as SpecificCredential<Epoch>;
+      assertion: create(EpochSchema, {
+        previousId: lastEpoch?.id ? toBufPublicKey(toPublicKey(lastEpoch.id)) : undefined,
+        number: (lastEpoch?.subject.assertion.number ?? -1) + 1,
+        timeframe: timeframeVector,
+        automergeRoot: newRoot ?? this._automergeSpaceState.rootUrl,
+      }),
+    });
 
     const receipt = await this.inner.controlPipeline.writer.write({
       credential: { credential },
@@ -608,6 +610,6 @@ export class DataSpace {
 }
 
 type CreateEpochResult = {
-  credential: SpecificCredential<Epoch>;
+  credential: Credential;
   timeframe: Timeframe;
 };

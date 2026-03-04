@@ -15,7 +15,7 @@ import {
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { ComplexMap } from '@dxos/util';
 
-import { fromBufPublicKey, getCredentialAssertion, isValidAuthorizedDeviceCredential } from '../credentials';
+import { fromBufPublicKey, getAssertionFromCredential } from '../credentials';
 
 import { type CredentialProcessor } from './credential-processor';
 
@@ -23,6 +23,16 @@ export type DeviceStateMachineProps = {
   identityKey: PublicKey;
   deviceKey: PublicKey;
   onUpdate?: () => void;
+};
+
+/** Check if a credential is an AuthorizedDevice for the given identity and device. */
+const isAuthorizedDeviceFor = (credential: Credential, identityKey: PublicKey, deviceKey: PublicKey): boolean => {
+  const assertion = getAssertionFromCredential(credential);
+  return (
+    assertion.$typeName === 'dxos.halo.credentials.AuthorizedDevice' &&
+    !!fromBufPublicKey(credential.issuer)?.equals(identityKey) &&
+    !!fromBufPublicKey(credential.subject?.id)?.equals(deviceKey)
+  );
 };
 
 /**
@@ -46,7 +56,7 @@ export class DeviceStateMachine implements CredentialProcessor {
     });
 
     // Save device keychain credential when processed by the space state machine.
-    if (isValidAuthorizedDeviceCredential(credential, this._params.identityKey, this._params.deviceKey)) {
+    if (isAuthorizedDeviceFor(credential, this._params.identityKey, this._params.deviceKey)) {
       // Avoid create(ChainSchema, { credential }) which deep-processes the credential
       // and strips @dxos/keys.PublicKey instances from proto-decoded credentials.
       const chain = create(ChainSchema, {});
@@ -55,7 +65,7 @@ export class DeviceStateMachine implements CredentialProcessor {
       this.deviceChainReady.wake();
     }
 
-    const assertion = getCredentialAssertion(credential);
+    const assertion = getAssertionFromCredential(credential);
     const subjectId = fromBufPublicKey(credential.subject!.id!)!;
 
     switch (assertion.$typeName) {

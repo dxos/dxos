@@ -6,7 +6,7 @@ import React, { type FC, useMemo } from 'react';
 
 import { MulticastObservable } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
-import { getCredentialAssertion } from '@dxos/credentials';
+import { getAssertionFromCredential } from '@dxos/credentials';
 import { TimeframeVectorProto.newMessages, TimeframeVectorProto.totalMessages, timestampMs } from '@dxos/protocols/buf';
 import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type SubscribeToSpacesResponse_SpaceInfo } from '@dxos/protocols/buf/dxos/devtools/host_pb';
@@ -28,10 +28,10 @@ export const SpaceProperties: FC<{ space: Space; metadata: SubscribeToSpacesResp
     const pipeline = space?.internal.data?.pipeline;
 
     const currentEpochAssertion = pipeline?.currentEpoch?.subject
-      ? getCredentialAssertion(pipeline.currentEpoch)
+      ? getAssertionFromCredential(pipeline.currentEpoch)
       : undefined;
     const appliedEpochAssertion = pipeline?.appliedEpoch?.subject
-      ? getCredentialAssertion(pipeline.appliedEpoch)
+      ? getAssertionFromCredential(pipeline.appliedEpoch)
       : undefined;
     const currentEpochNumber = (currentEpochAssertion as any)?.number;
     const appliedEpochNumber = (appliedEpochAssertion as any)?.number;

@@ -6,7 +6,7 @@ import { inspect } from 'node:util';
 
 import { Event, MulticastObservable, SubscriptionList, Trigger, asyncTimeout } from '@dxos/async';
 import { AUTH_TIMEOUT, type ClientServicesProvider, type Halo } from '@dxos/client-protocol';
-import { getCredentialAssertion } from '@dxos/credentials';
+import { getAssertionFromCredential } from '@dxos/credentials';
 import { inspectObject } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -312,7 +312,7 @@ export class HaloProxy implements Halo {
       if (ids && !ids.some((id) => id.equals(toPublicKey(credential.id!)))) {
         return false;
       }
-      if (type && getCredentialAssertion(credential)['@type'] !== type) {
+      if (type && getAssertionFromCredential(credential).$typeName !== type) {
         return false;
       }
       return true;

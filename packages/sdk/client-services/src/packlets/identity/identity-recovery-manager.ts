@@ -2,13 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-import { credentialFromBinary, generateSeedPhrase, keyPairFromSeedPhrase } from '@dxos/credentials';
+import { generateSeedPhrase, keyPairFromSeedPhrase, toBufPublicKey } from '@dxos/credentials';
 import { sign } from '@dxos/crypto';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { create, fromBinary } from '@dxos/protocols/buf';
+import { CredentialSchema, IdentityRecoverySchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import {
   EdgeAuthChallengeError,
   type RecoverIdentityRequest as EdgeRecoverIdentityRequest,
@@ -58,13 +60,12 @@ export class EdgeIdentityRecoveryManager {
     const identityKey = identity.identityKey;
     const credential = await identity.getIdentityCredentialSigner().createCredential({
       subject: identityKey,
-      assertion: {
-        '@type': 'dxos.halo.credentials.IdentityRecovery',
-        recoveryKey,
-        identityKey,
+      assertion: create(IdentityRecoverySchema, {
+        recoveryKey: toBufPublicKey(recoveryKey),
+        identityKey: toBufPublicKey(identityKey),
         algorithm,
-        lookupKey,
-      },
+        lookupKey: toBufPublicKey(lookupKey),
+      }),
     });
 
     const receipt = await identity.controlPipeline.writer.write({ credential: { credential } });
@@ -207,5 +208,5 @@ export class EdgeIdentityRecoveryManager {
 
 const decodeCredential = (credentialBase64: string) => {
   const credentialBytes = Buffer.from(credentialBase64, 'base64');
-  return credentialFromBinary(credentialBytes);
+  return fromBinary(CredentialSchema, credentialBytes);
 };

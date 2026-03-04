@@ -9,9 +9,9 @@ import { describe, test } from 'vitest';
 import { randomBytes } from '@dxos/crypto';
 import { Keyring } from '@dxos/keyring';
 import { buf, create } from '@dxos/protocols/buf';
-import { ChainSchema, PresentationSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { AuthorizedDeviceSchema, ChainSchema, PresentationSchema, ServiceAccessSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { createCredential } from '../credentials';
+import { createCredential, toBufPublicKey } from '../credentials';
 
 import { signPresentation } from './presentation';
 
@@ -23,24 +23,22 @@ describe('json encoding', () => {
     const device = await keyring.createKey();
 
     const serviceAccessCredential = await createCredential({
-      assertion: {
-        '@type': 'dxos.halo.credentials.ServiceAccess',
+      assertion: create(ServiceAccessSchema, {
         serverName: 'hub.dxos.network',
-        serverKey: serviceProvider,
-        identityKey: identity,
+        serverKey: toBufPublicKey(serviceProvider),
+        identityKey: toBufPublicKey(identity),
         capabilities: ['beta'],
-      },
+      }),
       subject: identity,
       issuer: serviceProvider,
       signer: keyring,
     });
 
     const deviceAuthorization = await createCredential({
-      assertion: {
-        '@type': 'dxos.halo.credentials.AuthorizedDevice',
-        deviceKey: device,
-        identityKey: identity,
-      },
+      assertion: create(AuthorizedDeviceSchema, {
+        deviceKey: toBufPublicKey(device),
+        identityKey: toBufPublicKey(identity),
+      }),
       subject: device,
       issuer: identity,
       signer: keyring,

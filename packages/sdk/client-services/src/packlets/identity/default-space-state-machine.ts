@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type CredentialProcessor, fromBufPublicKey, getCredentialAssertion } from '@dxos/credentials';
+import { type CredentialProcessor, fromBufPublicKey, getAssertionFromCredential } from '@dxos/credentials';
 import { type PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
@@ -25,7 +25,7 @@ export class DefaultSpaceStateMachine implements CredentialProcessor {
   }
 
   async processCredential(credential: Credential): Promise<void> {
-    const assertion = getCredentialAssertion(credential);
+    const assertion = getAssertionFromCredential(credential);
     switch (assertion.$typeName) {
       case 'dxos.halo.credentials.DefaultSpace': {
         if (!fromBufPublicKey(credential.subject!.id!)!.equals(this._params.identityKey)) {

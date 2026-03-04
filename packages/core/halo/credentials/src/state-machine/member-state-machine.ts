@@ -14,7 +14,7 @@ import {
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { ComplexMap } from '@dxos/util';
 
-import { fromBufPublicKey, getCredentialAssertion } from '../credentials';
+import { fromBufPublicKey, getAssertionFromCredential } from '../credentials';
 import {
   type ChainVertex,
   CredentialGraph,
@@ -68,7 +68,7 @@ export class MemberStateMachine implements CredentialGraphStateHandler<SpaceMemb
    * Assumes the credential is already pre-verified and the issuer has been authorized to issue credentials of this type.
    */
   async process(credential: Credential): Promise<void> {
-    const assertion = getCredentialAssertion(credential);
+    const assertion = getAssertionFromCredential(credential);
     const subjectId = fromBufPublicKey(credential.subject!.id!)!;
     const issuer = fromBufPublicKey(credential.issuer!)!;
 

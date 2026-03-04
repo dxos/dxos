@@ -6,7 +6,7 @@ import React, { type FC, useCallback, useMemo } from 'react';
 
 import { Format } from '@dxos/echo/internal';
 import { PublicKey } from '@dxos/keys';
-import { TimeframeVectorProto.decode, toPublicKey } from '@dxos/protocols/buf';
+import { TimeframeVectorProto, toPublicKey } from '@dxos/protocols/buf';
 import { type Space_PipelineState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type SubscribeToSpacesResponse_SpaceInfo } from '@dxos/protocols/buf/dxos/devtools/host_pb';
 import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';

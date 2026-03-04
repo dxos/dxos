@@ -3,10 +3,10 @@
 //
 
 import { type Codec } from '@dxos/protocols';
-import { credentialToBinary, packTypedAssertionAsAny, unpackAnyAsTypedMessage } from '@dxos/credentials';
+import { credentialToBinary, unpackAssertion } from '@dxos/credentials';
 import { createCodecEncoding } from '@dxos/hypercore';
 import { PublicKey } from '@dxos/keys';
-import { TimeframeVectorProto.decode, type bufWkt, create, fromBinary, TimeframeVectorProto.encode, toBinary } from '@dxos/protocols/buf';
+import { TimeframeVectorProto, type bufWkt, create, fromBinary, toBinary } from '@dxos/protocols/buf';
 import { type FeedMessage, FeedMessageSchema } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { CredentialSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Timeframe } from '@dxos/timeframe';
@@ -32,68 +32,9 @@ const findCredentialInFeedMessage = (
 };
 
 /**
- * Pack TypedMessage assertions into proper buf Any before create() + toBinary().
- * Returns a shallow copy with the assertion replaced; does not mutate the original.
- * Handles both oneof and flat init formats.
- */
-const packFeedMessageAssertions = (msg: FeedMessage): FeedMessage => {
-  const found = findCredentialInFeedMessage(msg);
-  if (!found?.credential?.subject?.assertion) {
-    return msg;
-  }
-
-  const { credential, path } = found;
-  const assertion = credential.subject.assertion as Record<string, unknown>;
-  if ((!assertion['@type'] && !assertion.$typeName) || 'typeUrl' in assertion) {
-    return msg;
-  }
-
-  const packedAssertion = packTypedAssertionAsAny(assertion);
-  const packedCredential = {
-    ...credential,
-    subject: {
-      ...credential.subject,
-      assertion: packedAssertion,
-    },
-  };
-
-  if (path === 'oneof') {
-    return {
-      ...msg,
-      payload: {
-        ...msg.payload!,
-        payload: {
-          case: 'credential' as const,
-          value: {
-            ...(msg.payload!.payload as { case: 'credential'; value: any }).value,
-            credential: packedCredential,
-          },
-        },
-      },
-    } as FeedMessage;
-  } else if (path === 'flat-payload') {
-    return {
-      ...msg,
-      payload: {
-        ...(msg as any).payload,
-        credential: {
-          credential: packedCredential,
-        },
-      },
-    } as FeedMessage;
-  } else {
-    return {
-      ...msg,
-      credential: {
-        credential: packedCredential,
-      },
-    } as FeedMessage;
-  }
-};
-
-/**
- * Unpack a packed Any assertion within a credential back to TypedMessage format.
- * This preserves the in-memory format used for credential signing so signature verification succeeds.
+ * Unpack a packed Any assertion within a credential to a typed buf message.
+ * After deserialization, assertions are proper Any (typeUrl + value).
+ * Unpacking restores the CredentialAssertion for direct field access.
  */
 const unpackCredentialAssertion = (msg: FeedMessage): void => {
   const credential = (msg.payload as any)?.credential?.credential;
@@ -102,9 +43,9 @@ const unpackCredentialAssertion = (msg: FeedMessage): void => {
   }
   const assertion = credential.subject.assertion as bufWkt.Any;
   if (assertion.typeUrl && assertion.value) {
-    const typedMessage = unpackAnyAsTypedMessage(assertion);
-    if (typedMessage) {
-      credential.subject.assertion = typedMessage;
+    const unpacked = unpackAssertion(assertion);
+    if (unpacked) {
+      credential.subject.assertion = unpacked;
     }
   }
 };

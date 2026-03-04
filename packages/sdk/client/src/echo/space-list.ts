@@ -23,7 +23,7 @@ import {
 } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { getCredentialAssertion } from '@dxos/credentials';
+import { getAssertionFromCredential } from '@dxos/credentials';
 import { failUndefined, inspectObject } from '@dxos/debug';
 import { Obj } from '@dxos/echo';
 import { type Database } from '@dxos/echo';
@@ -234,7 +234,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     const defaultSpaceCredential: Credential | undefined = this._halo.queryCredentials({
       type: 'dxos.halo.credentials.DefaultSpace',
     })[0];
-    const defaultSpaceAssertion = defaultSpaceCredential && getCredentialAssertion(defaultSpaceCredential);
+    const defaultSpaceAssertion = defaultSpaceCredential && getAssertionFromCredential(defaultSpaceCredential);
     if (defaultSpaceAssertion?.$typeName !== 'dxos.halo.credentials.DefaultSpace') {
       return false;
     }

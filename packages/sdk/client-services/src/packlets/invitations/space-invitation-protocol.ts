@@ -5,8 +5,7 @@
 import {
   createCancelDelegatedSpaceInvitationCredential,
   createDelegatedSpaceInvitationCredential,
-  getCredentialAssertion,
-  normalizeCredentialForBuf,
+  getAssertionFromCredential,
 } from '@dxos/credentials';
 import { writeMessages } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
@@ -14,7 +13,7 @@ import { type Keyring } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AlreadyJoinedError, AuthorizationError, InvalidInvitationError, SpaceNotFoundError } from '@dxos/protocols';
-import { TimeframeVectorProto.decode, encodePublicKey, TimeframeVectorProto.encode, toPublicKey } from '@dxos/protocols/buf';
+import { TimeframeVectorProto, encodePublicKey, toPublicKey } from '@dxos/protocols/buf';
 import {
   type Invitation,
   Invitation_AuthMethod,
@@ -98,7 +97,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
       kind: {
         case: 'space',
         value: {
-          credential: normalizeCredentialForBuf(spaceMemberCredential),
+          credential: spaceMemberCredential,
           controlTimeframe: space ? TimeframeVectorProto.encode(space.inner.controlPipeline.state.timeframe) : undefined,
         },
       },
@@ -191,7 +190,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
       (response as any).space ?? (response.kind?.case === 'space' ? response.kind.value : undefined);
     invariant(spaceResponse);
     const { credential } = spaceResponse;
-    const assertion = getCredentialAssertion(credential as unknown as Credential);
+    const assertion = getAssertionFromCredential(credential as unknown as Credential);
     invariant(assertion.$typeName === 'dxos.halo.credentials.SpaceMember', 'Invalid credential');
     invariant(toPublicKey(credential.subject.id).equals(this._signingContext.identityKey));
 

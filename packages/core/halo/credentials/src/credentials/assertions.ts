@@ -30,11 +30,25 @@ export type AssertionByTypeName<T extends CredentialAssertion['$typeName']> = Ex
 export type SpecificCredential<T extends CredentialAssertion> = UnpackedCredential<T>;
 
 export const isCredentialType = <T extends CredentialAssertion['$typeName']>(
-  credential: UnpackedCredential,
+  credential: Credential | UnpackedCredential,
   typeName: T,
-): credential is UnpackedCredential<AssertionByTypeName<T>> => credential.subject.assertion.$typeName === typeName;
+): credential is UnpackedCredential<AssertionByTypeName<T>> => {
+  const assertion = (credential.subject as any)?.assertion;
+  if (!assertion) {
+    return false;
+  }
+  // Unpacked assertion (has $typeName).
+  if (assertion.$typeName) {
+    return assertion.$typeName === typeName;
+  }
+  // Packed Any (has typeUrl).
+  if (assertion.typeUrl) {
+    return assertion.typeUrl === `type.googleapis.com/${typeName}`;
+  }
+  return false;
+};
 
 export const credentialTypePredicate =
   <T extends CredentialAssertion['$typeName']>(typeName: T) =>
-  (credential: UnpackedCredential): credential is UnpackedCredential<AssertionByTypeName<T>> =>
+  (credential: Credential | UnpackedCredential): credential is UnpackedCredential<AssertionByTypeName<T>> =>
     isCredentialType(credential, typeName);

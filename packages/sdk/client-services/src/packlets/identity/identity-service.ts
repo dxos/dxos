@@ -25,7 +25,7 @@ import {
   RequestRecoveryChallengeResponseSchema,
   type SignPresentationRequest,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { type Credential, type Presentation, type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { AuthSchema, type Credential, type Presentation, type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { PublicKeySchema } from '@dxos/protocols/buf/dxos/keys_pb';
 import { Stream } from '@dxos/stream';
 import { safeAwaitAll } from '@dxos/util';
@@ -155,7 +155,7 @@ export class IdentityServiceImpl extends Resource implements Halo.IdentityServic
     invariant(identity, 'Identity not initialized.');
 
     return createCredential({
-      assertion: { '@type': 'dxos.halo.credentials.Auth' },
+      assertion: create(AuthSchema, {}),
       issuer: identity.identityKey,
       subject: identity.identityKey,
       chain: identity.deviceCredentialChain,

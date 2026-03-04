@@ -7,11 +7,9 @@ import type { AutomergeUrl } from '@automerge/automerge-repo';
 import { SubscriptionList, UpdateScheduler, scheduleTask } from '@dxos/async';
 import {
   type CredentialProcessor,
-  type TypedAssertion,
   createAdmissionCredentials,
   createDidFromIdentityKey,
-  getCredentialAssertion,
-  normalizeCredentialForBuf,
+  getAssertionFromCredential,
 } from '@dxos/credentials';
 import { raise } from '@dxos/debug';
 import { type SpaceManager } from '@dxos/echo-pipeline';
@@ -27,7 +25,7 @@ import {
   SpaceNotFoundError,
   encodeError,
 } from '@dxos/protocols';
-import { type Empty, EmptySchema, create, TimeframeVectorProto.encode, toPublicKey } from '@dxos/protocols/buf';
+import { type Empty, EmptySchema, create, TimeframeVectorProto, toPublicKey } from '@dxos/protocols/buf';
 import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import {
   type AdmitContactRequest,
@@ -138,7 +136,7 @@ export class SpacesServiceImpl implements Client.SpacesService {
     );
     invariant(credentials[0].credential);
     const spaceMemberCredential = credentials[0].credential.credential;
-    invariant(getCredentialAssertion(spaceMemberCredential)['@type'] === 'dxos.halo.credentials.SpaceMember');
+    invariant(getAssertionFromCredential(spaceMemberCredential).$typeName === 'dxos.halo.credentials.SpaceMember');
     await writeMessages(space.controlPipeline.writer, credentials);
     return create(EmptySchema);
   }
@@ -235,8 +233,7 @@ export class SpacesServiceImpl implements Client.SpacesService {
 
       const processor: CredentialProcessor = {
         processCredential: async (credential) => {
-          // Normalize PublicKey fields from @dxos/keys.PublicKey instances back to buf format for RPC serialization.
-          next(normalizeCredentialForBuf(credential));
+          next(credential);
         },
       };
       ctx.onDispose(() => space.spaceState.removeCredentialProcessor(processor));
@@ -265,7 +262,7 @@ export class SpacesServiceImpl implements Client.SpacesService {
         invariant(subjectId, 'Subject ID is required');
         const signedCredential = await signer.createCredential({
           subject: subjectId,
-          assertion: credential.subject?.assertion as unknown as TypedAssertion,
+          assertion: getAssertionFromCredential(credential),
         });
         await space.controlPipeline.writer.write({ credential: { credential: signedCredential } });
       }
@@ -340,7 +337,7 @@ export class SpacesServiceImpl implements Client.SpacesService {
 
   private async _joinByAdmission({ credential }: ContactAdmission): Promise<JoinSpaceResponse> {
     invariant(credential, 'Credential is required');
-    const assertion = getCredentialAssertion(credential);
+    const assertion = getAssertionFromCredential(credential);
     invariant(assertion.$typeName === 'dxos.halo.credentials.SpaceMember', 'Invalid credential');
     const myIdentity = this._identityManager.identity;
     const subjectId = credential.subject?.id ? toPublicKey(credential.subject.id!) : undefined;
@@ -361,11 +358,8 @@ export class SpacesServiceImpl implements Client.SpacesService {
   }
 
   private async _serializeSpace(space: DataSpace): Promise<Space> {
-    // Normalize the credential for buf serialization: the codec converts buf PublicKey
-    // fields to @dxos/keys.PublicKey instances for application code, but toBinary() needs
-    // proper buf messages with $typeName metadata.
     const lastEpoch = space.automergeSpaceState.lastEpoch;
-    const normalizedEpoch = lastEpoch ? normalizeCredentialForBuf(lastEpoch) : undefined;
+    const normalizedEpoch = lastEpoch ?? undefined;
     return create(SpaceSchema, {
       id: space.id,
       spaceKey: { data: space.key.asUint8Array() },

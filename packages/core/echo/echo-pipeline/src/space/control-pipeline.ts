@@ -240,7 +240,7 @@ const getSnapshotLoggerContext = (snapshot: ControlPipelineSnapshot) => {
   return snapshot.messages?.map((msg) => {
     const issuer = msg.credential?.issuer;
     const subject = msg.credential?.subject?.id;
-    const type = (msg.credential?.subject?.assertion as any)?.['@type'];
+    const type = (msg.credential?.subject?.assertion as any)?.$typeName ?? (msg.credential?.subject?.assertion as any)?.typeUrl;
     return { issuer, subject, type };
   });
 };

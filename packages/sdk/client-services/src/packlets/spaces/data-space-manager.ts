@@ -14,7 +14,7 @@ import {
   type MemberInfo,
   createAdmissionCredentials,
   fromBufPublicKey,
-  getCredentialAssertion,
+  getAssertionFromCredential,
 } from '@dxos/credentials';
 import { Type } from '@dxos/echo';
 import { getSchemaDXN } from '@dxos/echo/internal';
@@ -346,7 +346,7 @@ export class DataSpaceManager extends Resource {
     await this._metadataStore.addSpace(metadata as any);
 
     const memberCredential = credentials[1];
-    invariant(getCredentialAssertion(memberCredential)['@type'] === 'dxos.halo.credentials.SpaceMember');
+    invariant(getAssertionFromCredential(memberCredential).$typeName === 'dxos.halo.credentials.SpaceMember');
     await this._signingContext.recordCredential(memberCredential);
 
     await space.initializeDataPipeline();
@@ -465,7 +465,7 @@ export class DataSpaceManager extends Resource {
     // TODO(dmaretskyi): Refactor.
     invariant(credentials[0].credential);
     const spaceMemberCredential = credentials[0].credential.credential;
-    invariant(getCredentialAssertion(spaceMemberCredential)['@type'] === 'dxos.halo.credentials.SpaceMember');
+    invariant(getAssertionFromCredential(spaceMemberCredential).$typeName === 'dxos.halo.credentials.SpaceMember');
     await writeMessages(space.controlPipeline.writer, credentials);
 
     return spaceMemberCredential;

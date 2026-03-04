@@ -8,7 +8,7 @@ import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type DelegateSpaceInvitation } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 import { type AsyncCallback, Callback, ComplexMap, ComplexSet } from '@dxos/util';
 
-import { fromBufPublicKey, getCredentialAssertion } from '../credentials';
+import { fromBufPublicKey, getAssertionFromCredential } from '../credentials';
 
 export interface DelegateInvitationCredential {
   credentialId: PublicKey;
@@ -36,7 +36,7 @@ export class InvitationStateMachine {
     if (credentialId == null) {
       return;
     }
-    const assertion = getCredentialAssertion(credential);
+    const assertion = getAssertionFromCredential(credential);
     switch (assertion.$typeName) {
       case 'dxos.halo.invitations.CancelDelegatedInvitation': {
         const cancelCredId = assertion.credentialId ? toPublicKey(assertion.credentialId) : undefined;

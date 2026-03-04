@@ -9,7 +9,7 @@ import {
   credentialFromBinary,
   credentialToBinary,
   fromBufPublicKey,
-  normalizeCredentialForBuf,
+  packCredential,
   verifyCredential,
 } from '@dxos/credentials';
 import { type EdgeHttpClient } from '@dxos/edge-client';
@@ -224,8 +224,7 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
         log('try notarizing', { peer: peer.localPeerId, credentialId: credentials.map((credential) => credential.id) });
         await peer.rpc.NotarizationService.notarize({
           credentials: credentials
-            .filter((credential) => !this._processedCredentials.has(fromBufPublicKey(credential.id)!))
-            .map(normalizeCredentialForBuf),
+            .filter((credential) => !this._processedCredentials.has(fromBufPublicKey(credential.id)!)),
         });
         log('success');
 
@@ -326,7 +325,7 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
 
         const decodedCredentials = credentials.map((credential) => {
           const binary = Buffer.from(credential, 'base64');
-          return credentialFromBinary(binary);
+          return packCredential(credentialFromBinary(binary));
         });
 
         await this._notarizeCredentials(writer, decodedCredentials);

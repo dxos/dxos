@@ -11,7 +11,7 @@ import { type Credential, SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo
 import { type DelegateSpaceInvitation } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 import { type AsyncCallback, Callback, ComplexMap, ComplexSet } from '@dxos/util';
 
-import { fromBufPublicKey, getCredentialAssertion, verifyCredential } from '../credentials';
+import { fromBufPublicKey, getAssertionFromCredential, verifyCredential } from '../credentials';
 import { type CredentialAssertion } from '../credentials/assertion-registry';
 import { type CredentialProcessor } from '../processor/credential-processor';
 
@@ -141,7 +141,7 @@ export class SpaceStateMachine implements SpaceState {
   }
 
   getCredentialsOfType(typeName: CredentialAssertion['$typeName']): Credential[] {
-    return this.credentials.filter((credential) => getCredentialAssertion(credential).$typeName === typeName);
+    return this.credentials.filter((credential) => getAssertionFromCredential(credential).$typeName === typeName);
   }
 
   /**
@@ -169,7 +169,7 @@ export class SpaceStateMachine implements SpaceState {
     const issuer = fromBufPublicKey(credential.issuer!)!;
     const subjectId = fromBufPublicKey(credential.subject!.id!)!;
 
-    const assertion = getCredentialAssertion(credential);
+    const assertion = getAssertionFromCredential(credential);
     switch (assertion.$typeName) {
       case 'dxos.halo.credentials.SpaceGenesis': {
         if (this._genesisCredential) {

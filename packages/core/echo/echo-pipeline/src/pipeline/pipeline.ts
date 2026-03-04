@@ -4,14 +4,14 @@
 
 import { Event, Trigger, sleepWithContext, synchronized } from '@dxos/async';
 import { Context, rejectOnDispose } from '@dxos/context';
-import { packCredentialAssertion } from '@dxos/credentials';
+import { packAssertion, type CredentialAssertion } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import { FeedSetIterator, type FeedWrapper, type FeedWriter } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type FeedMessageBlock } from '@dxos/protocols';
-import { create, TimeframeVectorProto.encode } from '@dxos/protocols/buf';
+import { create, TimeframeVectorProto } from '@dxos/protocols/buf';
 import { type FeedMessage, FeedMessageSchema } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Timeframe } from '@dxos/timeframe';
@@ -312,11 +312,15 @@ export class Pipeline implements PipelineAccessor {
     invariant(feed.properties.writable, 'Feed must be writable.');
 
     this._writer = createMappedFeedWriter<ControlPipelinePayload, FeedMessage>((payload: ControlPipelinePayload) => {
-      // Pack TypedMessage assertions (including chain) and convert @dxos/keys.PublicKey
-      // instances to plain init shapes for buf's create().
+      // Ensure assertion is packed and PublicKeys are buf-compatible.
       if (payload.credential?.credential) {
-        const packed = packCredentialAssertion(payload.credential.credential as any);
-        payload = { credential: { credential: convertPublicKeysForBuf(packed) as any } };
+        const cred = payload.credential.credential as any;
+        const assertion = cred.subject?.assertion;
+        // Pack buf assertion ($typeName) into Any if not already packed.
+        if (assertion && !assertion.typeUrl && assertion.$typeName) {
+          cred.subject.assertion = packAssertion(assertion as CredentialAssertion);
+        }
+        payload = { credential: { credential: convertPublicKeysForBuf(cred) as any } };
       }
       return create(FeedMessageSchema, {
         timeframe: TimeframeVectorProto.encode(this._timeframeClock.timeframe),

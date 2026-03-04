@@ -24,7 +24,9 @@ import {
   type Credential,
   type DeviceProfileDocument,
   DeviceProfileDocumentSchema,
+  DeviceProfileSchema,
   DeviceType,
+  IdentityProfileSchema,
   type ProfileDocument,
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
@@ -305,10 +307,9 @@ export class IdentityManager {
     // TODO(wittjosiah): Use CredentialGenerator.
     const credential = await this._identity.getIdentityCredentialSigner().createCredential({
       subject: this._identity.identityKey,
-      assertion: {
-        '@type': 'dxos.halo.credentials.IdentityProfile',
+      assertion: create(IdentityProfileSchema, {
         profile,
-      },
+      }),
     });
 
     const receipt = await this._identity.controlPipeline.writer.write({
@@ -328,10 +329,9 @@ export class IdentityManager {
 
     const credential = await this._identity.getDeviceCredentialSigner().createCredential({
       subject: this._identity.deviceKey,
-      assertion: {
-        '@type': 'dxos.halo.credentials.DeviceProfile',
+      assertion: create(DeviceProfileSchema, {
         profile,
-      },
+      }),
     });
 
     const receipt = await this._identity.controlPipeline.writer.write({

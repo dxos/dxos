@@ -6,7 +6,7 @@ import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Credential, type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { fromBufPublicKey, getCredentialAssertion } from '../credentials';
+import { fromBufPublicKey, getAssertionFromCredential } from '../credentials';
 
 import { type CredentialProcessor } from './credential-processor';
 
@@ -25,7 +25,7 @@ export class ProfileStateMachine implements CredentialProcessor {
   constructor(private readonly _params: ProfileStateMachineProps) {}
 
   async processCredential(credential: Credential): Promise<void> {
-    const assertion = getCredentialAssertion(credential);
+    const assertion = getAssertionFromCredential(credential);
     switch (assertion.$typeName) {
       case 'dxos.halo.credentials.IdentityProfile': {
         const issuer = fromBufPublicKey(credential.issuer);

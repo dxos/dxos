@@ -6,7 +6,7 @@ import type * as SqlClient from '@effect/sql/SqlClient';
 
 import { Mutex, Trigger } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
-import { type CredentialProcessor, getCredentialAssertion } from '@dxos/credentials';
+import { type CredentialProcessor, getAssertionFromCredential } from '@dxos/credentials';
 import { failUndefined, warnAfterTimeout } from '@dxos/debug';
 import {
   EchoEdgeReplicator,
@@ -386,7 +386,7 @@ export class ServiceContext extends Resource {
 
     this._deviceSpaceSync = {
       processCredential: async (credential) => {
-        const assertion = getCredentialAssertion(credential);
+        const assertion = getAssertionFromCredential(credential);
         if (assertion.$typeName !== 'dxos.halo.credentials.SpaceMember') {
           return;
         }

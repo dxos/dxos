@@ -2,12 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { getCredentialAssertion, normalizeCredentialForBuf } from '@dxos/credentials';
+import { getAssertionFromCredential } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';
 import { AlreadyJoinedError } from '@dxos/protocols';
-import { TimeframeVectorProto.decode, encodePublicKey, TimeframeVectorProto.encode, toPublicKey } from '@dxos/protocols/buf';
+import { TimeframeVectorProto, encodePublicKey, toPublicKey } from '@dxos/protocols/buf';
 import { type Invitation, Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import type { DeviceProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import {
@@ -56,7 +56,7 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
     invariant(deviceRequest);
     const identity = this._getIdentity();
     const credential = await identity.admitDevice(deviceRequest);
-    invariant(getCredentialAssertion(credential)['@type'] === 'dxos.halo.credentials.AuthorizedDevice');
+    invariant(getAssertionFromCredential(credential).$typeName === 'dxos.halo.credentials.AuthorizedDevice');
 
     return {
       kind: {
@@ -66,7 +66,7 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
           haloSpaceKey: encodePublicKey(identity.haloSpaceKey),
           genesisFeedKey: encodePublicKey(identity.haloGenesisFeedKey),
           controlTimeframe: TimeframeVectorProto.encode(identity.controlPipeline.state.timeframe),
-          credential: normalizeCredentialForBuf(credential),
+          credential,
         },
       },
     } as unknown as AdmissionResponse;

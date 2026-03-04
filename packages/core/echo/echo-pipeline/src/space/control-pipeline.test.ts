@@ -4,15 +4,15 @@
 
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { CredentialGenerator, createCredential } from '@dxos/credentials';
+import { CredentialGenerator, createCredential, toBufPublicKey } from '@dxos/credentials';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { create, encodePublicKey, TimeframeVectorProto.encode } from '@dxos/protocols/buf';
+import { create, encodePublicKey, TimeframeVectorProto } from '@dxos/protocols/buf';
 import type { FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { SpaceMetadataSchema } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
-import { AdmittedFeed_Designation } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { AdmittedFeed_Designation, AdmittedFeedSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 
 import { valueEncoding } from '../common';
@@ -101,13 +101,12 @@ describe('space/control-pipeline', () => {
             signer: keyring,
             issuer: identityKey,
             subject: controlFeed2.key,
-            assertion: {
-              '@type': 'dxos.halo.credentials.AdmittedFeed',
-              spaceKey,
-              identityKey,
-              deviceKey,
+            assertion: create(AdmittedFeedSchema, {
+              spaceKey: toBufPublicKey(spaceKey),
+              identityKey: toBufPublicKey(identityKey),
+              deviceKey: toBufPublicKey(deviceKey),
               designation: AdmittedFeed_Designation.CONTROL,
-            },
+            }),
           }),
         },
       });
@@ -126,13 +125,12 @@ describe('space/control-pipeline', () => {
             signer: keyring,
             issuer: identityKey,
             subject: dataFeed1.key,
-            assertion: {
-              '@type': 'dxos.halo.credentials.AdmittedFeed',
-              spaceKey,
-              identityKey,
-              deviceKey,
+            assertion: create(AdmittedFeedSchema, {
+              spaceKey: toBufPublicKey(spaceKey),
+              identityKey: toBufPublicKey(identityKey),
+              deviceKey: toBufPublicKey(deviceKey),
               designation: AdmittedFeed_Designation.DATA,
-            },
+            }),
           }),
         },
       });
@@ -149,13 +147,12 @@ describe('space/control-pipeline', () => {
         signer: keyring,
         issuer: identityKey,
         subject: dataFeed2.key,
-        assertion: {
-          '@type': 'dxos.halo.credentials.AdmittedFeed',
-          spaceKey,
-          identityKey,
-          deviceKey,
+        assertion: create(AdmittedFeedSchema, {
+          spaceKey: toBufPublicKey(spaceKey),
+          identityKey: toBufPublicKey(identityKey),
+          deviceKey: toBufPublicKey(deviceKey),
           designation: AdmittedFeed_Designation.DATA,
-        },
+        }),
       });
       // Construct FeedMessage as a raw object (not via create()) so the codec's
       // packFeedMessageAssertions can find and pack the TypedMessage assertion.

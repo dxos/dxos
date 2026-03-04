@@ -5,7 +5,7 @@
 import { type AutomergeUrl, parseAutomergeUrl } from '@automerge/automerge-repo';
 
 import { Trigger, synchronized, trackLeaks } from '@dxos/async';
-import { type DelegateInvitationCredential, type MemberInfo, getCredentialAssertion } from '@dxos/credentials';
+import { type DelegateInvitationCredential, type MemberInfo, getAssertionFromCredential } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import { type FeedStore } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
@@ -180,7 +180,7 @@ export class SpaceManager {
   public findSpaceByRootDocumentId(documentId: string): Space | undefined {
     return [...this._spaces.values()].find((space) => {
       return space.spaceState.credentials.some((credential) => {
-        const assertion = getCredentialAssertion(credential);
+        const assertion = getAssertionFromCredential(credential);
         if (assertion.$typeName !== 'dxos.halo.credentials.Epoch') {
           return false;
         }

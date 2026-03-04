@@ -6,7 +6,7 @@ import React, { useCallback, useRef, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { getCredentialAssertion } from '@dxos/credentials';
+import { getAssertionFromCredential } from '@dxos/credentials';
 import { log } from '@dxos/log';
 import { ClientOperation } from '@dxos/plugin-client/types';
 import { SpaceOperation } from '@dxos/plugin-space/types';
@@ -117,11 +117,11 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
         const spaceCredential = credentials.find((credential) => {
           if (
             !credential.subject ||
-            getCredentialAssertion(credential)['@type'] !== 'dxos.halo.credentials.SpaceMember'
+            getAssertionFromCredential(credential).$typeName !== 'dxos.halo.credentials.SpaceMember'
           ) {
             return false;
           }
-          const { spaceKey } = getCredentialAssertion(credential) as { spaceKey?: PublicKey };
+          const { spaceKey } = getAssertionFromCredential(credential) as any as { spaceKey?: PublicKey };
           return spaceKey instanceof PublicKey && spaceKey.equals(space.key);
         });
 

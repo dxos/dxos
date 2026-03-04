@@ -7,7 +7,7 @@ import { jwtDecode } from 'jwt-decode';
 import { synchronized } from '@dxos/async';
 import { type Halo } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
-import { getCredentialAssertion } from '@dxos/credentials';
+import { getAssertionFromCredential } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -312,7 +312,7 @@ export class AgentManagerClient implements AgentHostingProviderClient {
     const haloCredentials = this._halo.credentials.get();
 
     return haloCredentials.filter((cred) => {
-      if (type && getCredentialAssertion(cred)['@type'] !== type) {
+      if (type && getAssertionFromCredential(cred).$typeName !== type) {
         return false;
       }
       if (predicate && !predicate(cred)) {
@@ -426,8 +426,8 @@ export class AgentManagerClient implements AgentHostingProviderClient {
 export const matchServiceCredential =
   (capabilities: string[] = []) =>
   (credential: Credential) => {
-    const assertion = getCredentialAssertion(credential);
-    if (assertion['@type'] !== 'dxos.halo.credentials.ServiceAccess') {
+    const assertion = getAssertionFromCredential(credential);
+    if (assertion.$typeName !== 'dxos.halo.credentials.ServiceAccess') {
       return false;
     }
 

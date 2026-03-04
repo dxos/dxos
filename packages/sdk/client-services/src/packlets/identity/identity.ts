@@ -11,6 +11,7 @@ import {
   ProfileStateMachine,
   createCredentialSignerWithChain,
   createCredentialSignerWithKey,
+  toBufPublicKey,
 } from '@dxos/credentials';
 import { type Signer } from '@dxos/crypto';
 import { type Space } from '@dxos/echo-pipeline';
@@ -19,11 +20,15 @@ import { type FeedWrapper, writeMessages } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type IdentityDid, PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { create } from '@dxos/protocols/buf';
 import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
 import {
   AdmittedFeed_Designation,
+  AdmittedFeedSchema,
+  AuthorizedDeviceSchema,
   type Chain,
   type Credential,
+  DefaultSpaceSchema,
   type DeviceProfileDocument,
   type ProfileDocument,
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
@@ -214,7 +219,7 @@ export class Identity {
   async updateDefaultSpace(spaceId: SpaceId): Promise<void> {
     const credential = await this.getDeviceCredentialSigner().createCredential({
       subject: this.identityKey,
-      assertion: { '@type': 'dxos.halo.credentials.DefaultSpace', spaceId },
+      assertion: create(DefaultSpaceSchema, { spaceId }),
     });
     const receipt = await this.controlPipeline.writer.write({ credential: { credential } });
     await this.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
@@ -234,11 +239,10 @@ export class Identity {
     const dfk = dataFeedKey! as any;
     const deviceCredential = await signer.createCredential({
       subject: dk,
-      assertion: {
-        '@type': 'dxos.halo.credentials.AuthorizedDevice',
-        identityKey: this.identityKey,
-        deviceKey: dk,
-      },
+      assertion: create(AuthorizedDeviceSchema, {
+        identityKey: toBufPublicKey(this.identityKey),
+        deviceKey: toBufPublicKey(dk),
+      }),
     });
     await writeMessages(
       this.controlPipeline.writer,
@@ -246,23 +250,21 @@ export class Identity {
         deviceCredential,
         await signer.createCredential({
           subject: cfk,
-          assertion: {
-            '@type': 'dxos.halo.credentials.AdmittedFeed',
-            spaceKey: this.haloSpaceKey,
-            deviceKey: dk,
-            identityKey: this.identityKey,
+          assertion: create(AdmittedFeedSchema, {
+            spaceKey: toBufPublicKey(this.haloSpaceKey),
+            deviceKey: toBufPublicKey(dk),
+            identityKey: toBufPublicKey(this.identityKey),
             designation: AdmittedFeed_Designation.CONTROL,
-          },
+          }),
         }),
         await signer.createCredential({
           subject: dfk,
-          assertion: {
-            '@type': 'dxos.halo.credentials.AdmittedFeed',
-            spaceKey: this.haloSpaceKey,
-            deviceKey: dk,
-            identityKey: this.identityKey,
+          assertion: create(AdmittedFeedSchema, {
+            spaceKey: toBufPublicKey(this.haloSpaceKey),
+            deviceKey: toBufPublicKey(dk),
+            identityKey: toBufPublicKey(this.identityKey),
             designation: AdmittedFeed_Designation.DATA,
-          },
+          }),
         }),
       ].map((credential) => ({ credential: { credential } })),
     );

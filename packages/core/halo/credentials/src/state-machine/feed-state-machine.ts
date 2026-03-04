@@ -8,7 +8,7 @@ import { toPublicKey } from '@dxos/protocols/buf';
 import { type AdmittedFeed, type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type AsyncCallback, Callback, ComplexMap } from '@dxos/util';
 
-import { fromBufPublicKey, getCredentialAssertion } from '../credentials';
+import { fromBufPublicKey, getAssertionFromCredential } from '../credentials';
 
 export interface FeedInfo {
   key: PublicKey;
@@ -44,7 +44,7 @@ export class FeedStateMachine {
    * @param fromFeed Key of the feed where this credential is recorded.
    */
   async process(credential: Credential, fromFeed: PublicKey): Promise<void> {
-    const assertion = getCredentialAssertion(credential);
+    const assertion = getAssertionFromCredential(credential);
     invariant(assertion.$typeName === 'dxos.halo.credentials.AdmittedFeed');
     invariant(assertion.spaceKey && toPublicKey(assertion.spaceKey).equals(this._spaceKey));
 
