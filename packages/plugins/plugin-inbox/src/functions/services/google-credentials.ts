@@ -53,7 +53,10 @@ const loadTokenFromConfig = <T extends Mailbox.Config | Calendar.Config>(
     const feed = yield* Database.load(feedRef);
     const configs = yield* Database.runQuery(configFilter);
     // TODO(wittjosiah): Not possible to filter by references yet.
-    const config = configs.find((config: T) => DXN.equals(config.feed.dxn, Obj.getDXN(feed)));
+    const config = configs.find((config: T) => DXN.equalsEchoId(config.feed.dxn, Obj.getDXN(feed)));
+    if (!config) {
+      log.warn(`${label} config not found for feed`, { feed: feedRef.dxn.toString() });
+    }
     return yield* loadAccessToken(config?.accessToken, label);
   });
 
