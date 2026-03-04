@@ -14,7 +14,7 @@ export type Props<T extends Record<string, any> = Record<string, unknown>> = {
    * If specified, the Surface will be wrapped in an error boundary.
    * The fallback component will be rendered if an error occurs.
    */
-  fallback?: FC<{ data?: any; error: Error }>;
+  fallback?: FC<{ error: Error; data?: any }>;
 
   /**
    * If specified, the Surface will be wrapped in a suspense boundary.

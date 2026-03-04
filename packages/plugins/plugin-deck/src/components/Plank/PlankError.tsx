@@ -5,8 +5,7 @@
 import React, { useEffect, useState } from 'react';
 
 import { type Node } from '@dxos/plugin-graph';
-import { type FallbackProps } from '@dxos/react-error-boundary';
-import { ErrorFallback, useTranslation } from '@dxos/react-ui';
+import { ErrorFallback, type ErrorFallbackProps, useTranslation } from '@dxos/react-ui';
 import { descriptionMessage, mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
@@ -42,7 +41,7 @@ export const PlankError = ({
 /**
  * User facing error fallback.
  */
-export const PlankErrorFallback = ({ error }: FallbackProps) => {
+export const PlankErrorFallback = ({ error }: ErrorFallbackProps) => {
   const { t } = useTranslation(meta.id);
 
   if (process.env.NODE_ENV === 'development') {
@@ -51,11 +50,11 @@ export const PlankErrorFallback = ({ error }: FallbackProps) => {
     const errorString = error?.toString() ?? '';
     return (
       <div
-        role='none'
+        role='alert'
         data-testid='plank-content-error'
         className='dx-attention-surface overflow-y-auto p-8 grid place-items-center'
       >
-        <p role='alert' className={mx(descriptionMessage, 'break-all rounded-md p-4')}>
+        <p className={mx(descriptionMessage, 'break-all rounded-md p-4')}>
           {error ? errorString : t('error fallback message')}
         </p>
       </div>

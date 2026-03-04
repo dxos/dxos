@@ -4,27 +4,33 @@
 
 import ErrorStackParser from 'error-stack-parser';
 import React, { type PropsWithChildren } from 'react';
-import type { FallbackProps } from 'react-error-boundary';
+import { type FallbackProps } from 'react-error-boundary';
 
 import { mx } from '@dxos/ui-theme';
+import { safeStringify } from '@dxos/util';
 
 export { ErrorBoundary, type ErrorBoundaryProps, type FallbackProps } from '@dxos/react-error-boundary';
 
-export type ErrorFallbackProps = PropsWithChildren<Pick<FallbackProps, 'error'> & { title?: string }>;
+export type ErrorFallbackProps = PropsWithChildren<Pick<FallbackProps, 'error'> & { title?: string; data?: any }>;
 
 /**
  * Themed fallback component for `ErrorBoundary`.
  */
-export const ErrorFallback = ({ children, error, title }: ErrorFallbackProps) => {
+export const ErrorFallback = ({ children, error, title, data }: ErrorFallbackProps) => {
   const isDev = process.env.NODE_ENV === 'development';
 
   const message = error instanceof Error ? error.message : String(error);
   const frames = isDev && error instanceof Error ? ErrorStackParser.parse(error) : [];
 
-  // TODO(burdon): osTranslations.
   return (
     <div role='alert' data-testid='error-boundary-fallback' className='flex flex-col p-4 gap-4 overflow-auto'>
-      <h1 className='text-lg text-info-text'>{title ?? 'Fatal Error'}</h1>
+      <h1 className='text-lg text-info-text'>{title ?? 'Runtime Error'}</h1>
+      {data && (
+        <>
+          <h2 className='text-xs mt-2 uppercase'>Data</h2>
+          <pre className='overflow-x-auto text-xs text-subdued'>{safeStringify(data, undefined, 2)}</pre>
+        </>
+      )}
       <p>{message}</p>
       {frames.length > 0 && (
         <div className='flex flex-col gap-1'>

@@ -2,7 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type ComponentType, type PropsWithChildren, type ReactNode, useEffect, useState } from 'react';
+import React, {
+  type ComponentType,
+  type PropsWithChildren,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useState,
+} from 'react';
 import { type FallbackProps, ErrorBoundary as NaturalErrorBoundary } from 'react-error-boundary';
 
 import { addEventListener, combine } from '@dxos/async';
@@ -44,6 +51,8 @@ export const ErrorBoundary = ({
   onError,
   onReset,
 }: ErrorBoundaryProps) => {
+  const fallbackProps = fallbackRender ? { fallbackRender } : { FallbackComponent: FallbackComponent ?? ErrorFallback };
+
   const [error, setError] = useState<Error>();
   useEffect(() => {
     return combine(
@@ -62,22 +71,21 @@ export const ErrorBoundary = ({
     );
   }, [name, events]);
 
-  const handleError = (error: Error, info: { componentStack?: string | null }) => {
-    recordErrorForSmokeTests(error);
-    onError?.(error, { boundary: name, ...info });
-  };
+  const handleError = useCallback(
+    (error: Error, info: { componentStack?: string | null }) => {
+      recordErrorForSmokeTests(error);
+      onError?.(error, { boundary: name, ...info });
+    },
+    [name, onError],
+  );
 
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     setError(undefined);
     onReset?.();
-  };
+  }, [onReset]);
 
-  const fallbackProps = fallbackRender ? { fallbackRender } : { FallbackComponent: FallbackComponent ?? ErrorFallback };
-
-  // Throw re-throws the global event error inside NaturalErrorBoundary so the boundary
-  // handles it uniformly — avoids unmounting the entire children subtree (including ThemeProvider).
   return (
-    <NaturalErrorBoundary {...fallbackProps} onError={handleError} onReset={handleReset} resetKeys={resetKeys}>
+    <NaturalErrorBoundary {...fallbackProps} resetKeys={resetKeys} onError={handleError} onReset={handleReset}>
       {error !== undefined ? <Throw error={error} /> : children}
     </NaturalErrorBoundary>
   );

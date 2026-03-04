@@ -17,8 +17,7 @@ import React, {
 import { log } from '@dxos/log';
 import { ErrorBoundary } from '@dxos/react-error-boundary';
 import { useDefaultValue } from '@dxos/react-hooks';
-import { ErrorFallback } from '@dxos/react-ui';
-import { byPosition, safeStringify } from '@dxos/util';
+import { byPosition } from '@dxos/util';
 
 import { Capabilities } from '../../../common';
 import { type CapabilityManager } from '../../../core';
@@ -105,6 +104,7 @@ WebComponentWrapper.displayName = 'WebComponentWrapper';
 /**
  * Wrapper component that provides context for a surface.
  */
+// TODO(burdon): Allow DebugPlugin to provide different fallback using react-ui ErrorFallback.
 const SurfaceContextProvider = memo(
   forwardRef<HTMLElement, Props & { definition: Definition }>(
     ({ id, role, data, limit, fallback = SurfaceErrorFallback, definition, ...rest }, forwardedRef) => {
@@ -207,30 +207,14 @@ export const SurfaceComponent: NamedExoticComponent<Props & RefAttributes<HTMLEl
 
 SurfaceComponent.displayName = 'Surface';
 
-const SurfaceErrorFallback = ({ data, error }: Props) => {
+// TODO(burdon): Make user facing, with telemetry.
+const SurfaceErrorFallback = ({ error }: Props) => {
   const { message } = error instanceof Error ? error : { message: String(error) };
-
-  if (import.meta.env.DEV) {
-    return <div>{message}</div>;
-
-    return (
-      <ErrorFallback title='Surface Error' error={error}>
-        {data && (
-          <>
-            <h2 className='text-xs mt-2 uppercase'>Data</h2>
-            <pre className='overflow-x-auto text-xs text-subdued'>{safeStringify(data, undefined, 2)}</pre>
-          </>
-        )}
-      </ErrorFallback>
-    );
-  } else {
-    // TODO(burdon): Make user facing, with telemetry.
-    return (
-      <div role='alert' data-testid='error-boundary-fallback'>
-        <h1 className='flex gap-2 text-sm mt-2 text-info-text'>{message}</h1>
-      </div>
-    );
-  }
+  return (
+    <div role='alert' data-testid='error-boundary-fallback'>
+      <h1 className='flex gap-2 text-sm mt-2 text-info-text'>{message}</h1>
+    </div>
+  );
 };
 
 const findCandidates = (surfaces: Definition[], { role, data }: Pick<Props, 'role' | 'data'>) => {
