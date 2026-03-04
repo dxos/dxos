@@ -22,13 +22,13 @@ export const DefaultStory = <T extends Obj.Any>({ Component, createObject, image
   const roles: CardContainerProps['role'][] = ['intrinsic', 'popover'];
 
   return (
-    <div className='w-full h-full grid grid-cols-2 p-16 gap-16'>
+    <div className='w-full h-full grid grid-cols-2 py-16 gap-8'>
       {roles.map((role, i) => (
         <div key={i} className='flex h-full justify-center overflow-hidden'>
           <div className='flex flex-col gap-4 w-full items-center'>
             <label className='text-sm text-description'>{role}</label>
             <CardContainer role={role}>
-              <Card.Root>
+              <Card.Root border={false}>
                 <Card.Toolbar>
                   <Card.DragHandle />
                   <Card.Title>{Obj.getLabel(object)}</Card.Title>

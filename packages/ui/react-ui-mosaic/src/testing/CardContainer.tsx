@@ -43,13 +43,15 @@ export const PopoverCardContainer = ({
 }: PopoverCardContainerProps) => {
   return (
     <Popover.Root open>
-      <Popover.Content onOpenAutoFocus={(event: Event) => event.preventDefault()}>
-        <Popover.Viewport classNames='dx-card-popover'>{children}</Popover.Viewport>
-        <Popover.Arrow />
-      </Popover.Content>
       <Popover.Trigger asChild>
         <Icon icon={icon} size={5} />
       </Popover.Trigger>
+      <Popover.Portal>
+        <Popover.Content onOpenAutoFocus={(event: Event) => event.preventDefault()}>
+          <Popover.Viewport classNames='dx-card-popover'>{children}</Popover.Viewport>
+          <Popover.Arrow />
+        </Popover.Content>
+      </Popover.Portal>
     </Popover.Root>
   );
 };
