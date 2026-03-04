@@ -88,12 +88,7 @@ export const MailboxSettings = ({ subject }: SurfaceComponentProps<Feed.Feed>) =
                 : t('enable background sync label')}
           </Button>
           {syncTrigger && (
-            <IconButton
-              iconOnly
-              icon='ph--gear--regular'
-              label={t('view trigger label')}
-              onClick={handleViewTrigger}
-            />
+            <IconButton iconOnly icon='ph--gear--regular' label={t('view trigger label')} onClick={handleViewTrigger} />
           )}
         </ButtonGroup>
       </div>
