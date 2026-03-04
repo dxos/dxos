@@ -7,7 +7,7 @@ import React, { useCallback, useState } from 'react';
 import { log } from '@dxos/log';
 import { Dialog, Message, Trans, useTranslation } from '@dxos/react-ui';
 
-import { Action, Input, StepHeading } from '../components';
+import { Action, InputLabel, TextInput } from '../components';
 import { translationKey } from '../translations';
 
 import { type StepProps } from './StepProps';
@@ -19,12 +19,6 @@ type ConfirmResetOptions = Partial<{
 }>;
 
 export type ConfirmResetProps = StepProps & ConfirmResetOptions;
-
-export type ConfirmResetImplProps = ConfirmResetOptions & {
-  disabled?: boolean;
-  pending?: boolean;
-  validationMessage?: string;
-};
 
 export const ConfirmReset = ({ active, mode, onCancel, onConfirm }: ConfirmResetProps) => {
   const { t } = useTranslation(translationKey);
@@ -56,10 +50,10 @@ export const ConfirmReset = ({ active, mode, onCancel, onConfirm }: ConfirmReset
           <Message.Title>{t('sign out chooser title')}</Message.Title>
           <Message.Content>{t('sign out chooser message')}</Message.Content>
         </Message.Root>
-        <Input
+        <TextInput
           {...{ validationMessage }}
           label={
-            <StepHeading className='text-start my-2'>
+            <InputLabel classNames='text-start my-2'>
               <Trans
                 i18nKey={`${translationKey}:${
                   mode === 'join new identity'
@@ -72,7 +66,7 @@ export const ConfirmReset = ({ active, mode, onCancel, onConfirm }: ConfirmReset
                   confirmationValue,
                 }}
               />
-            </StepHeading>
+            </InputLabel>
           }
           disabled={disabled}
           data-testid={`${testIdAffix}.reset-identity-input`}

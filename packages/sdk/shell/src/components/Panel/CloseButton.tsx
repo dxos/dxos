@@ -8,6 +8,9 @@ import { type ButtonProps, IconButton, useTranslation } from '@dxos/react-ui';
 
 import { translationKey } from '../../translations';
 
+/**
+ * @deprecated use IconButton directly
+ */
 export const CloseButton = ({ onDone, ...props }: Omit<ButtonProps, 'onClick'> & { onDone?: () => void }) => {
   const { t } = useTranslation(translationKey);
   return (

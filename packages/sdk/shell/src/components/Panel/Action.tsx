@@ -3,9 +3,23 @@
 //
 
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { type Dispatch, type SetStateAction, forwardRef } from 'react';
+import React, {
+  type ComponentPropsWithoutRef,
+  type Dispatch,
+  type ReactNode,
+  type SetStateAction,
+  forwardRef,
+} from 'react';
 
-import { Button, type ButtonProps, DropdownMenu, Icon, IconButton, useTranslation } from '@dxos/react-ui';
+import {
+  Button,
+  type ButtonProps,
+  DropdownMenu,
+  Icon,
+  IconButton,
+  type ThemedClassName,
+  useTranslation,
+} from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
@@ -31,6 +45,10 @@ const defaultActions = {
     onClick: () => {},
   },
 } as Record<string, ActionMenuItem>;
+
+//
+// BifurcatedAction
+//
 
 export type BifurcatedActionProps = {
   actions: Record<string, ActionMenuItem>;
@@ -128,6 +146,10 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
   );
 });
 
+//
+// Action
+//
+
 /**
  * @deprecated Use Button directly.
  */
@@ -139,3 +161,34 @@ export const Action = forwardRef<HTMLButtonElement, LargeButtonProps>((props, fo
     </Button>
   );
 });
+
+//
+// Actions
+//
+
+type ActionBarProps = Omit<ThemedClassName<ComponentPropsWithoutRef<'div'>>, 'children'> & {
+  children: ReactNode | ReactNode[];
+};
+
+/**
+ * @deprecated Use Dialog.ActionBar
+ */
+const ActionBar = forwardRef<HTMLDivElement, ActionBarProps>(({ classNames, children, ...props }, forwardedRef) => {
+  return (
+    <div
+      {...props}
+      className={mx(
+        'flex flex-col gap-2 mt-2',
+        Array.isArray(children) && children.length > 1 ? 'justify-between' : 'justify-center',
+        classNames,
+      )}
+      ref={forwardedRef}
+    >
+      {children}
+    </div>
+  );
+});
+
+export { ActionBar };
+
+export type { ActionBarProps };
