@@ -58,8 +58,8 @@ export const createFormatting = (state: EditorToolbarState, getView: () => Edito
   return {
     nodes: [formattingGroupAction as Node.NodeArg<any>, ...formattingActions],
     edges: [
-      { source: 'root', target: 'formatting' },
-      ...formattingActions.map(({ id }) => ({ source: formattingGroupAction.id, target: id })),
+      { source: 'root', target: 'formatting', relation: 'child' },
+      ...formattingActions.map(({ id }) => ({ source: formattingGroupAction.id, target: id, relation: 'child' })),
     ],
   };
 };

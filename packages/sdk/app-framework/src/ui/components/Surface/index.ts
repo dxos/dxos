@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+// TODO(wittjosiah): Cleanup to avoid re-naming.
 import { SurfaceContext } from './context';
 import { SurfaceComponent, isSurfaceAvailable } from './SurfaceComponent';
 import { type Definition as SurfaceDefinition, create as createSurface, createWeb as createWebSurface } from './types';

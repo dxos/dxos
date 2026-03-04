@@ -72,7 +72,7 @@ export const MarkdownContainer = forwardRef<HTMLDivElement, MarkdownContainerPro
       return Atom.make((get) => {
         const actions = get(graph.actions(id));
         const nodes = actions.filter((action) => action.properties.disposition === 'toolbar');
-        const edges = nodes.map((node) => ({ source: 'root', target: node.id }));
+        const edges = nodes.map((node) => ({ source: 'root', target: node.id, relation: 'child' }));
         return { nodes, edges };
       });
     }, [graph]);

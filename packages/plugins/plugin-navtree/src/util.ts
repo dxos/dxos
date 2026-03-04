@@ -13,9 +13,9 @@ export const getParent = (
   path: string[],
 ): NavTreeItemGraphNode | undefined => {
   const parentId = path[path.length - 2];
-  return Graph.getConnections(graph, node.id, 'inbound').find((n: Node.Node) => n.id === parentId) as
-    | NavTreeItemGraphNode
-    | undefined;
+  return Graph.getConnections(graph, node.id, Node.childRelation('inbound')).find(
+    (n: Node.Node) => n.id === parentId,
+  ) as NavTreeItemGraphNode | undefined;
 };
 
 export const getPersistenceParent = (
@@ -80,13 +80,27 @@ export const getChildren = (
   node: NavTreeItemGraphNode,
   path: readonly string[] = [],
 ): NavTreeItemGraphNode[] => {
-  return Graph.getConnections(graph, node.id, 'outbound')
+  return Graph.getConnections(graph, node.id, 'child')
     .map((n: Node.Node) => {
       // Break cycles.
       const nextPath = [...path, node.id];
       return nextPath.includes(n.id) ? undefined : (n as NavTreeItemGraphNode);
     })
     .filter(isNonNullable) as NavTreeItemGraphNode[];
+};
+
+/**
+ * Determines whether a node should be visible based on its disposition.
+ */
+export const filterItems = (node: Node.Node, disposition?: string) => {
+  if (!disposition && (node.properties.disposition === 'hidden' || node.properties.disposition === 'alternate-tree')) {
+    return false;
+  } else if (!disposition) {
+    const action = Node.isAction(node);
+    return !action || node.properties.disposition === 'item';
+  } else {
+    return node.properties.disposition === disposition;
+  }
 };
 
 export const l0ItemType = (item: Node.Node) => {

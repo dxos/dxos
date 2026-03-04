@@ -296,7 +296,7 @@ export default Capability.makeModule(
             if (first) {
               yield* Operation.schedule(LayoutOperation.ScrollIntoView, { subject: first });
             } else {
-              const [item] = Graph.getConnections(graph, input.subject).filter(
+              const [item] = Graph.getConnections(graph, input.subject, 'child').filter(
                 (node) => !Node.isActionLike(node) && !node.properties.disposition,
               );
               if (item) {
@@ -464,7 +464,7 @@ export default Capability.makeModule(
             const companion = Function.pipe(
               Graph.getNode(graph, input.id),
               Option.map((node) =>
-                Graph.getConnections(graph, node.id)
+                Graph.getConnections(graph, node.id, 'child')
                   .filter((n) => n.type === PLANK_COMPANION_TYPE)
                   .toSorted((a, b) => byPosition(a.properties, b.properties)),
               ),

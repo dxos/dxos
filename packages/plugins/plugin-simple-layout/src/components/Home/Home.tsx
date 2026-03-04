@@ -127,7 +127,7 @@ const filterItems = (node: Node.Node, disposition: string) => {
 /** Returns root-level items filtered by disposition. */
 const useItemsByDisposition = (disposition: string, sort = false) => {
   const { graph } = useAppGraph();
-  const connections = useConnections(graph, Node.RootId);
+  const connections = useConnections(graph, Node.RootId, 'child');
   const filtered = connections.filter((node) => filterItems(node, disposition));
   return sort ? filtered.toSorted((a, b) => byPosition(a.properties, b.properties)) : filtered;
 };

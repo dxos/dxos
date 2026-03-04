@@ -16,10 +16,10 @@ export const useLoadDescendents = (nodeId?: string) => {
   useEffect(() => {
     if (nodeId) {
       // First level: expand the node itself.
-      Graph.expand(graph, nodeId, 'outbound');
+      Graph.expand(graph, nodeId, 'child');
       // Second level: expand each child.
-      Graph.getConnections(graph, nodeId, 'outbound').forEach((child) => {
-        Graph.expand(graph, child.id, 'outbound');
+      Graph.getConnections(graph, nodeId, 'child').forEach((child) => {
+        Graph.expand(graph, child.id, 'child');
       });
     }
   }, [nodeId, graph]);

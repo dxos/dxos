@@ -58,7 +58,7 @@ export default Capability.makeModule(
 
     // Ensure the default content is in the graph and connected.
     // This will allow the expose action to work before the navtree renders for the first time.
-    graph.pipe(Graph.expand(Node.RootId), Graph.expand(space.id));
+    graph.pipe(Graph.expand(Node.RootId, 'child'), Graph.expand(space.id, 'child'));
 
     yield* invoke(LayoutOperation.SwitchWorkspace, { subject: space.id });
     yield* invoke(LayoutOperation.SetLayoutMode, {

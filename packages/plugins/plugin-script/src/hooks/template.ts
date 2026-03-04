@@ -46,8 +46,8 @@ export const createTemplateSelect = (script: Script.Script) => {
   return {
     nodes: [...templateSelectActions],
     edges: [
-      { source: 'root', target: 'template-select' },
-      ...templateSelectActions.map((action) => ({ source: 'template-select', target: action.id })),
+      { source: 'root', target: 'template-select', relation: 'child' },
+      ...templateSelectActions.map((action) => ({ source: 'template-select', target: action.id, relation: 'child' })),
     ],
   };
 };

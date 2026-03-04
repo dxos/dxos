@@ -41,12 +41,12 @@ export const useEventToolbarActions = ({ onNoteCreate }: UseEventToolbarActionsP
             },
           );
           nodes.push(action);
-          edges.push({ source: 'root', target: action.id });
+          edges.push({ source: 'root', target: action.id, relation: 'child' });
         }
 
         const gap = createGapSeparator();
         nodes.push(gap.nodes[0]);
-        edges.push({ source: 'root', target: gap.nodes[0].id });
+        edges.push({ source: 'root', target: gap.nodes[0].id, relation: 'child' });
 
         return { nodes, edges };
       }),

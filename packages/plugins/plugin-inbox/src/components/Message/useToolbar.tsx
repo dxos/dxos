@@ -43,7 +43,7 @@ export const useMessageToolbarActions = ({
 
         const gap = createGapSeparator();
         nodes.push(gap.nodes[0]);
-        edges.push({ source: 'root', target: gap.nodes[0].id });
+        edges.push({ source: 'root', target: gap.nodes[0].id, relation: 'child' });
 
         // Reply actions.
         if (onReply) {
@@ -52,7 +52,7 @@ export const useMessageToolbarActions = ({
             icon: 'ph--arrow-bend-up-left--regular',
           });
           nodes.push(action);
-          edges.push({ source: 'root', target: action.id });
+          edges.push({ source: 'root', target: action.id, relation: 'child' });
         }
 
         if (onReplyAll) {
@@ -61,7 +61,7 @@ export const useMessageToolbarActions = ({
             icon: 'ph--arrow-bend-double-up-left--regular',
           });
           nodes.push(action);
-          edges.push({ source: 'root', target: action.id });
+          edges.push({ source: 'root', target: action.id, relation: 'child' });
         }
 
         if (onForward) {
@@ -70,7 +70,7 @@ export const useMessageToolbarActions = ({
             icon: 'ph--arrow-bend-up-right--regular',
           });
           nodes.push(action);
-          edges.push({ source: 'root', target: action.id });
+          edges.push({ source: 'root', target: action.id, relation: 'child' });
         }
 
         {
@@ -92,7 +92,7 @@ export const useMessageToolbarActions = ({
             },
           );
           nodes.push(action);
-          edges.push({ source: 'root', target: action.id });
+          edges.push({ source: 'root', target: action.id, relation: 'child' });
         }
 
         return { nodes, edges };

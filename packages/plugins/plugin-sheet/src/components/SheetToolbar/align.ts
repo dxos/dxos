@@ -117,8 +117,8 @@ export const createAlign = (context: AlignActionsContext): ActionGraphProps => {
   return {
     nodes: [alignGroup, ...alignActions],
     edges: [
-      { source: 'root', target: 'align' },
-      ...alignActions.map(({ id }) => ({ source: alignGroup.id, target: id })),
+      { source: 'root', target: 'align', relation: 'child' },
+      ...alignActions.map(({ id }) => ({ source: alignGroup.id, target: id, relation: 'child' })),
     ],
   };
 };
