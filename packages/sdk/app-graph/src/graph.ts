@@ -190,9 +190,9 @@ class GraphImpl implements WritableGraph {
   readonly _onRemoveNode?: GraphProps['onRemoveNode'];
 
   readonly _registry: Registry.Registry;
-  readonly _expanded: { [key: string]: boolean } = {};
+  readonly _expanded = Record.empty<string, boolean>();
   readonly _pendingExpands = new Set<string>();
-  readonly _initialized: { [key: string]: boolean } = {};
+  readonly _initialized = Record.empty<string, boolean>();
   readonly _initialEdges = Record.empty<string, Edges>();
   readonly _initialNodes = Record.fromEntries([
     [
@@ -697,10 +697,10 @@ export function waitForPath(
  */
 const initializeImpl = async <T extends ExpandableGraph | WritableGraph>(graph: T, id: string): Promise<T> => {
   const internal = getInternal(graph);
-  const initialized = internal._initialized[id] ?? false;
+  const initialized = Record.get(internal._initialized, id).pipe(Option.getOrElse(() => false));
   log('initialize', { id, initialized });
   if (!initialized) {
-    internal._initialized[id] = true;
+    Record.set(internal._initialized, id, true);
     await internal._onInitialize?.(id);
   }
   return graph;
@@ -748,10 +748,10 @@ const expandImpl = <T extends ExpandableGraph | WritableGraph>(
     return graph;
   }
 
-  const expanded = internal._expanded[key] ?? false;
+  const expanded = Record.get(internal._expanded, key).pipe(Option.getOrElse(() => false));
   log('expand', { key, expanded });
   if (!expanded) {
-    internal._expanded[key] = true;
+    Record.set(internal._expanded, key, true);
     internal._onExpand?.(id, normalizedRelation);
   }
   return graph;
@@ -938,7 +938,7 @@ const addNodeImpl = <T extends WritableGraph>(graph: T, nodeArg: Node.NodeArg<an
       for (const pendingKey of toApply) {
         internal._pendingExpands.delete(pendingKey);
         const relation = relationFromKey(pendingKey.slice(prefix.length));
-        internal._expanded[pendingKey] = true;
+        Record.set(internal._expanded, pendingKey, true);
         internal._onExpand?.(id, relation);
       }
     },

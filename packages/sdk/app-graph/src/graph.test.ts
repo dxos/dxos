@@ -114,8 +114,8 @@ describe('Graph', () => {
     Graph.removeNode(graph, exampleId(2), true);
 
     const sourceEdges = registry.get(graph.edges(exampleId(1)));
-    expect(sourceEdges[CHILD_RELATION_KEY] ?? []).toEqual([]);
-    expect(sourceEdges[CHILD_INBOUND_RELATION_KEY] ?? []).toEqual([]);
+    expect(sourceEdges[CHILD_RELATION_KEY]).toEqual([]);
+    expect(sourceEdges[CHILD_INBOUND_RELATION_KEY]).toBeUndefined();
   });
 
   test('remove node with edges=true removes typed inbound and outbound counterparts', () => {
@@ -131,10 +131,10 @@ describe('Graph', () => {
 
     const sourceEdges = registry.get(graph.edges(exampleId(1)));
     const targetEdges = registry.get(graph.edges(exampleId(3)));
-    expect(sourceEdges[ACTIONS_RELATION_KEY] ?? []).toEqual([]);
-    expect(sourceEdges[ACTIONS_INBOUND_RELATION_KEY] ?? []).toEqual([]);
-    expect(targetEdges[ACTIONS_RELATION_KEY] ?? []).toEqual([]);
-    expect(targetEdges[ACTIONS_INBOUND_RELATION_KEY] ?? []).toEqual([]);
+    expect(sourceEdges[ACTIONS_RELATION_KEY]).toEqual([]);
+    expect(sourceEdges[ACTIONS_INBOUND_RELATION_KEY]).toBeUndefined();
+    expect(targetEdges[ACTIONS_RELATION_KEY]).toBeUndefined();
+    expect(targetEdges[ACTIONS_INBOUND_RELATION_KEY]).toEqual([]);
   });
 
   test('remove node curried', () => {
@@ -168,9 +168,18 @@ describe('Graph', () => {
     const registry = Registry.make();
     const graph = Graph.make({ registry });
     Graph.addEdge(graph, { source: exampleId(1), target: exampleId(2), relation: 'child' });
-    const edges = registry.get(graph.edges(exampleId(1)));
-    expect(edges[CHILD_INBOUND_RELATION_KEY] ?? []).toEqual([]);
-    expect(edges[CHILD_RELATION_KEY]).toEqual([exampleId(2)]);
+
+    {
+      const edges = registry.get(graph.edges(exampleId(1)));
+      expect(edges[CHILD_INBOUND_RELATION_KEY]).toBeUndefined();
+      expect(edges[CHILD_RELATION_KEY]).toEqual([exampleId(2)]);
+    }
+
+    {
+      const edges = registry.get(graph.edges(exampleId(2)));
+      expect(edges[CHILD_INBOUND_RELATION_KEY]).toEqual([exampleId(1)]);
+      expect(edges[CHILD_RELATION_KEY]).toBeUndefined();
+    }
   });
 
   test('add edges is idempotent', () => {
@@ -179,7 +188,7 @@ describe('Graph', () => {
     Graph.addEdge(graph, { source: exampleId(1), target: exampleId(2), relation: 'child' });
     Graph.addEdge(graph, { source: exampleId(1), target: exampleId(2), relation: 'child' });
     const edges = registry.get(graph.edges(exampleId(1)));
-    expect(edges[CHILD_INBOUND_RELATION_KEY] ?? []).toEqual([]);
+    expect(edges[CHILD_INBOUND_RELATION_KEY]).toBeUndefined();
     expect(edges[CHILD_RELATION_KEY]).toEqual([exampleId(2)]);
   });
 
@@ -209,14 +218,14 @@ describe('Graph', () => {
     {
       Graph.addEdge(graph, { source: exampleId(1), target: exampleId(2), relation: 'child' });
       const edges = registry.get(graph.edges(exampleId(1)));
-      expect(edges[CHILD_INBOUND_RELATION_KEY] ?? []).toEqual([]);
+      expect(edges[CHILD_INBOUND_RELATION_KEY]).toBeUndefined();
       expect(edges[CHILD_RELATION_KEY]).toEqual([exampleId(2)]);
     }
 
     {
       Graph.removeEdge(graph, { source: exampleId(1), target: exampleId(2), relation: 'child' });
       const edges = registry.get(graph.edges(exampleId(1)));
-      expect(edges[CHILD_INBOUND_RELATION_KEY] ?? []).toEqual([]);
+      expect(edges[CHILD_INBOUND_RELATION_KEY]).toBeUndefined();
       expect(edges[CHILD_RELATION_KEY]).toEqual([]);
     }
   });
@@ -230,7 +239,7 @@ describe('Graph', () => {
     const result = graph.pipe(Graph.removeEdge({ source: exampleId(1), target: exampleId(2), relation: 'child' }));
     expect(result).toEqual(graph);
     const edges = registry.get(graph.edges(exampleId(1)));
-    expect(edges[CHILD_INBOUND_RELATION_KEY] ?? []).toEqual([]);
+    expect(edges[CHILD_INBOUND_RELATION_KEY]).toBeUndefined();
     expect(edges[CHILD_RELATION_KEY]).toEqual([]);
   });
 
@@ -242,9 +251,9 @@ describe('Graph', () => {
     Graph.addEdge(graph, { source: exampleId(1), target: exampleId(2), relation: 'action' });
     const sourceEdges = registry.get(graph.edges(exampleId(1)));
     expect(sourceEdges[ACTIONS_RELATION_KEY]).toEqual([exampleId(2)]);
-    expect(sourceEdges[CHILD_RELATION_KEY] ?? []).toEqual([]);
+    expect(sourceEdges[CHILD_RELATION_KEY]).toBeUndefined();
     const targetEdges = registry.get(graph.edges(exampleId(2)));
-    expect(targetEdges[CHILD_INBOUND_RELATION_KEY] ?? []).toEqual([]);
+    expect(targetEdges[CHILD_INBOUND_RELATION_KEY]).toBeUndefined();
     expect(targetEdges[ACTIONS_INBOUND_RELATION_KEY]).toEqual([exampleId(1)]);
     const reverseConnections = registry.get(graph.connections(exampleId(2), Node.actionRelation('inbound')));
     expect(reverseConnections.map(({ id }) => id)).toEqual([exampleId(1)]);
@@ -258,10 +267,10 @@ describe('Graph', () => {
     const sourceEdges = registry.get(graph.edges(exampleId(1)));
     expect(sourceEdges[ACTIONS_RELATION_KEY]).toEqual([]);
     const targetEdges = registry.get(graph.edges(exampleId(2)));
-    expect(targetEdges[CHILD_INBOUND_RELATION_KEY] ?? []).toEqual([]);
-    expect(targetEdges[CHILD_RELATION_KEY] ?? []).toEqual([]);
-    expect(targetEdges[ACTIONS_RELATION_KEY] ?? []).toEqual([]);
-    expect(targetEdges[ACTIONS_INBOUND_RELATION_KEY] ?? []).toEqual([]);
+    expect(targetEdges[CHILD_INBOUND_RELATION_KEY]).toBeUndefined();
+    expect(targetEdges[CHILD_RELATION_KEY]).toBeUndefined();
+    expect(targetEdges[ACTIONS_RELATION_KEY]).toBeUndefined();
+    expect(targetEdges[ACTIONS_INBOUND_RELATION_KEY]).toEqual([]);
   });
 
   test('get connections', () => {

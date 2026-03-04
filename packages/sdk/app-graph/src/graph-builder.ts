@@ -43,55 +43,6 @@ const nodeArgsUnchanged = (prev: Node.NodeArg<any>[], next: Node.NodeArg<any>[])
   });
 };
 
-export type ConnectorPrefilter = Readonly<{
-  /** Restrict connector execution to specific source ids. */
-  sourceIds?: readonly string[];
-  /** Restrict connector execution to specific source node types. */
-  nodeTypes?: readonly string[];
-}>;
-
-const intersectValues = (left?: readonly string[], right?: readonly string[]): string[] | undefined => {
-  if (left == null && right == null) {
-    return undefined;
-  }
-  if (left == null) {
-    return [...right!];
-  }
-  if (right == null) {
-    return [...left];
-  }
-  return left.filter((value) => right.includes(value));
-};
-
-const mergeConnectorPrefilters = (
-  left?: ConnectorPrefilter,
-  right?: ConnectorPrefilter,
-): ConnectorPrefilter | undefined => {
-  if (left == null && right == null) {
-    return undefined;
-  }
-
-  const sourceIds = intersectValues(left?.sourceIds, right?.sourceIds);
-  const nodeTypes = intersectValues(left?.nodeTypes, right?.nodeTypes);
-  return {
-    ...(sourceIds != null ? { sourceIds } : {}),
-    ...(nodeTypes != null ? { nodeTypes } : {}),
-  };
-};
-
-const matchesConnectorPrefilter = (prefilter: ConnectorPrefilter | undefined, node: Node.Node): boolean => {
-  if (prefilter == null) {
-    return true;
-  }
-  if (prefilter.sourceIds != null && prefilter.sourceIds.length > 0 && !prefilter.sourceIds.includes(node.id)) {
-    return false;
-  }
-  if (prefilter.nodeTypes != null && prefilter.nodeTypes.length > 0 && !prefilter.nodeTypes.includes(node.type)) {
-    return false;
-  }
-  return true;
-};
-
 const CONNECTOR_KEY_SEPARATOR = '\u0001';
 
 const normalizeRelation = (relation?: Node.RelationInput): Node.Relation =>
@@ -146,8 +97,7 @@ export type ActionGroupsExtension = (
 export type BuilderExtension = Readonly<{
   id: string;
   position: Position;
-  relation?: Node.RelationInput; // Only for connector.
-  prefilter?: ConnectorPrefilter; // Only for connector.
+  relation?: Node.RelationInput;
   resolver?: ResolverExtension;
   connector?: (node: Atom.Atom<Option.Option<Node.Node>>) => Atom.Atom<Node.NodeArg<any>[]>;
 }>;
@@ -324,9 +274,7 @@ class GraphBuilderImpl implements GraphBuilder {
         Array.sortBy(byPosition),
         Array.filter(
           (ext): ext is BuilderExtension & { connector: NonNullable<BuilderExtension['connector']> } =>
-            relationEquals(ext.relation ?? 'child', relation) &&
-            ext.connector != null &&
-            matchesConnectorPrefilter(ext.prefilter, sourceNode),
+            relationEquals(ext.relation ?? 'child', relation) && ext.connector != null,
         ),
       );
 
@@ -344,7 +292,7 @@ class GraphBuilderImpl implements GraphBuilder {
     log('onExpand', { id, relation, registry: getDebugName(this._registry) });
     this._expandRelation(id, relation);
 
-    // TODO(wittjosiah): Make this declarative — extensions should declare which relations they co-expand.
+    // TODO(wittjosiah): Remove. This is for backwards compatibility.
     if (relation.kind === 'child' && relation.direction === 'outbound') {
       Graph.expand(this._graph, id, 'action');
     }
@@ -519,10 +467,7 @@ const exploreImpl = async (
   }
 
   const nodes = Object.values(internal._registry.get(internal._extensions))
-    .filter(
-      (extension) =>
-        relationEquals(extension.relation ?? 'child', relation) && matchesConnectorPrefilter(extension.prefilter, node),
-    )
+    .filter((extension) => relationEquals(extension.relation ?? 'child', relation))
     .map((extension) => extension.connector)
     .filter(isNonNullable)
     .flatMap((connector) => registry.get(connector(internal._graph.node(source))));
@@ -617,7 +562,6 @@ export type CreateExtensionRawOptions = {
   id: string;
   relation?: Node.RelationInput;
   position?: Position;
-  prefilter?: ConnectorPrefilter;
   resolver?: ResolverExtension;
   connector?: ConnectorExtension;
   actions?: ActionsExtension;
@@ -632,7 +576,6 @@ export const createExtensionRaw = (extension: CreateExtensionRawOptions): Builde
     id,
     position = 'static',
     relation = 'child',
-    prefilter,
     resolver: _resolver,
     connector: _connector,
     actions: _actions,
@@ -669,7 +612,6 @@ export const createExtensionRaw = (extension: CreateExtensionRawOptions): Builde
           id: getId('connector'),
           position,
           relation: normalizedRelation,
-          prefilter,
           connector: Atom.family((node) =>
             Atom.make((get) => {
               try {
@@ -687,7 +629,6 @@ export const createExtensionRaw = (extension: CreateExtensionRawOptions): Builde
           id: getId('actionGroups'),
           position,
           relation: Node.actionRelation(),
-          prefilter,
           connector: Atom.family((node) =>
             Atom.make((get) => {
               try {
@@ -709,7 +650,6 @@ export const createExtensionRaw = (extension: CreateExtensionRawOptions): Builde
           id: getId('actions'),
           position,
           relation: Node.actionRelation(),
-          prefilter,
           connector: Atom.family((node) =>
             Atom.make((get) => {
               try {
@@ -733,7 +673,6 @@ export const createExtensionRaw = (extension: CreateExtensionRawOptions): Builde
 export type CreateExtensionOptions<TMatched = Node.Node, R = never> = {
   id: string;
   match: (node: Node.Node) => Option.Option<TMatched>;
-  prefilter?: ConnectorPrefilter;
   actions?: (
     matched: TMatched,
     get: Atom.Context,
@@ -774,9 +713,7 @@ export const createExtension = <TMatched = Node.Node, R = never>(
   options: CreateExtensionOptions<TMatched, R>,
 ): Effect.Effect<BuilderExtension[], never, R> =>
   Effect.map(Effect.context<R>(), (context) => {
-    const { id, match, prefilter, actions, connector, resolver, relation, position } = options;
-    const matcherPrefilter = NodeMatcher.getPrefilter(match);
-    const mergedPrefilter = mergeConnectorPrefilters(matcherPrefilter, prefilter);
+    const { id, match, actions, connector, resolver, relation, position } = options;
 
     const connectorExtension = connector ? createConnectorWithRuntime(id, match, connector, context) : undefined;
 
@@ -807,7 +744,6 @@ export const createExtension = <TMatched = Node.Node, R = never>(
       id,
       relation,
       position,
-      prefilter: mergedPrefilter,
       connector: connectorExtension,
       actions: actionsExtension,
       resolver: resolverExtension,
@@ -863,7 +799,6 @@ const createConnectorWithRuntime = <TData, R>(
 export type CreateTypeExtensionOptions<T extends Type.Entity.Any = Type.Entity.Any, R = never> = {
   id: string;
   type: T;
-  prefilter?: ConnectorPrefilter;
   actions?: (
     object: Entity.Entity<Schema.Schema.Type<T>>,
     get: Atom.Context,
@@ -884,11 +819,10 @@ export type CreateTypeExtensionOptions<T extends Type.Entity.Any = Type.Entity.A
 export const createTypeExtension = <T extends Type.Entity.Any, R = never>(
   options: CreateTypeExtensionOptions<T, R>,
 ): Effect.Effect<BuilderExtension[], never, R> => {
-  const { id, type, prefilter, actions, connector, relation, position } = options;
+  const { id, type, actions, connector, relation, position } = options;
   return createExtension<Entity.Entity<Schema.Schema.Type<T>>, R>({
     id,
     match: NodeMatcher.whenEchoType(type),
-    prefilter,
     actions,
     connector,
     relation,

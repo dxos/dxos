@@ -116,32 +116,6 @@ describe('GraphBuilder', () => {
       expect(inbound[0].data).to.equal(0);
     });
 
-    test('skips raw connectors when prefilter excludes source', async () => {
-      const registry = Registry.make();
-      const builder = GraphBuilder.make({ registry });
-      const graph = builder.graph;
-      let calls = 0;
-
-      GraphBuilder.addExtension(
-        builder,
-        GraphBuilder.createExtensionRaw({
-          id: 'prefiltered-connector',
-          prefilter: { sourceIds: ['never-match'] },
-          connector: () =>
-            Atom.make(() => {
-              calls++;
-              return [{ id: 'should-not-appear', type: EXAMPLE_TYPE, data: 'x' }];
-            }),
-        }),
-      );
-
-      Graph.expand(graph, Node.RootId, 'child');
-      await GraphBuilder.flush(builder);
-
-      expect(calls).to.equal(0);
-      expect(registry.get(graph.connections(Node.RootId, 'child'))).to.have.length(0);
-    });
-
     test('updates', async () => {
       const registry = Registry.make();
       const builder = GraphBuilder.make({ registry });
@@ -614,48 +588,6 @@ describe('GraphBuilder', () => {
         expect(connections).has.length(1);
         expect(connections[0].id).to.equal('child');
         expect(connections[0].data).to.equal('test');
-      });
-
-      test('uses matcher metadata prefilters to reduce scanned extensions', async ({ expect }) => {
-        const registry = Registry.make();
-        const builder = GraphBuilder.make({ registry });
-        const graph = builder.graph;
-
-        let rootCalls = 0;
-        let typeCalls = 0;
-        const rootExtensions = Effect.runSync(
-          GraphBuilder.createExtension({
-            id: 'root-only-extension',
-            match: NodeMatcher.whenRoot,
-            connector: () =>
-              Effect.sync(() => {
-                rootCalls++;
-                return [{ id: 'root-child', type: EXAMPLE_TYPE, properties: {}, data: 'root' }];
-              }),
-          }),
-        );
-        const typeExtensions = Effect.runSync(
-          GraphBuilder.createExtension({
-            id: 'type-only-extension',
-            match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
-            connector: () =>
-              Effect.sync(() => {
-                typeCalls++;
-                return [{ id: 'type-child', type: EXAMPLE_TYPE, properties: {}, data: 'type' }];
-              }),
-          }),
-        );
-
-        GraphBuilder.addExtension(builder, [...rootExtensions, ...typeExtensions]);
-        Graph.expand(graph, Node.RootId, 'child');
-        await GraphBuilder.flush(builder);
-
-        expect(rootCalls).to.equal(1);
-        expect(typeCalls).to.equal(0);
-        expect(registry.get(graph.connections(Node.RootId, 'child')).map((node) => node.id)).to.include('root-child');
-        expect(registry.get(graph.connections(Node.RootId, 'child')).map((node) => node.id)).to.not.include(
-          'type-child',
-        );
       });
 
       test('works with Effect actions', async () => {
