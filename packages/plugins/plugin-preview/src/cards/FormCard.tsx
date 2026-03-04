@@ -46,15 +46,8 @@ export const FormCard = ({ subject, projection }: SurfaceComponentProps & { proj
 
   return (
     <Card.Content>
-      <Form.Root
-        schema={omitId(schema)}
-        projection={projection}
-        values={subject}
-        autoSave
-        onSave={handleSave}
-        classNames='flex-1 min-h-0'
-      >
-        <Form.Viewport classNames='flex-1 min-h-0'>
+      <Form.Root schema={omitId(schema)} projection={projection} values={subject} autoSave onSave={handleSave}>
+        <Form.Viewport>
           <Form.Content>
             <Form.FieldSet />
           </Form.Content>
