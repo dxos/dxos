@@ -11,19 +11,15 @@ import { useClipboard, useTranslation } from '@dxos/react-ui';
 import { EmojiPickerBlock, HuePicker } from '@dxos/react-ui-pickers';
 import { hexToEmoji, hexToHue } from '@dxos/util';
 
-import { Action, Actions, Input, StepHeading } from '../../../components';
+import { Action, ActionBar, InputLabel, TextInput } from '../../../components';
 import { translationKey } from '../../../translations';
 import { type IdentityEvent } from '../identityMachine';
 import { type IdentityPanelStepProps } from '../IdentityPanelProps';
 
-export interface ProfileFormProps extends Omit<IdentityPanelStepProps, 'send' | 'devices'> {
+export type ProfileFormProps = Omit<IdentityPanelStepProps, 'send' | 'devices'> & {
   send?: (event: SingleOrArray<Event<IdentityEvent>>) => void;
   onUpdateProfile?: (profile: NonNullable<Identity['profile']>) => Promise<void>;
   identity?: Identity;
-}
-
-export type ProfileFormImplProps = ProfileFormProps & {
-  validationMessage?: string;
 };
 
 export const ProfileForm = (props: ProfileFormProps) => {
@@ -36,17 +32,15 @@ export const ProfileForm = (props: ProfileFormProps) => {
       setValidationMessage(t('failed to update profile message'));
     });
   };
+
   return <ProfileFormImpl {...props} onUpdateProfile={handleUpdateProfile} validationMessage={validationMessage} />;
 };
 
-const getHueValue = (identity?: Identity) =>
-  identity?.profile?.data?.hue || hexToHue(identity?.identityKey.toHex() ?? '0');
-const getEmojiValue = (identity?: Identity) =>
-  identity?.profile?.data?.emoji || hexToEmoji(identity?.identityKey.toHex() ?? '0');
+export type ProfileFormImplProps = ProfileFormProps & {
+  validationMessage?: string;
+};
 
-// TODO(zhenyasav): impl shouldn't need send()
-const ProfileFormImpl = (props: ProfileFormImplProps) => {
-  const { active, identity, send, onUpdateProfile, validationMessage } = props;
+const ProfileFormImpl = ({ active, identity, send, onUpdateProfile, validationMessage }: ProfileFormImplProps) => {
   const profile = identity?.profile;
   const disabled = !active;
   const { t } = useTranslation(translationKey);
@@ -59,16 +53,17 @@ const ProfileFormImpl = (props: ProfileFormImplProps) => {
   return (
     <>
       <div role='none' className='grow flex flex-col justify-center'>
-        <Input
+        <TextInput
           {...{ validationMessage }}
-          label={<StepHeading className='m-0'>{t('display name input label')}</StepHeading>}
+          label={<InputLabel classNames='m-0'>{t('display name input label')}</InputLabel>}
           disabled={disabled}
           data-testid='display-name-input'
           placeholder={t('display name input placeholder')}
           value={displayName}
           onChange={({ target: { value } }) => setDisplayName(value)}
         />
-        <StepHeading className='mb-2'>{t('emoji and color label')}</StepHeading>
+
+        <InputLabel classNames='mb-2'>{t('emoji and color label')}</InputLabel>
         <div role='none' className='grid grid-cols-[1fr_min-content] gap-y-2'>
           <EmojiPickerBlock
             emoji={emoji}
@@ -79,7 +74,7 @@ const ProfileFormImpl = (props: ProfileFormImplProps) => {
           <HuePicker disabled={disabled} value={hue} onChange={setHue} onReset={() => setHue(getHueValue(identity))} />
         </div>
       </div>
-      <Actions>
+      <ActionBar>
         <Action
           variant='ghost'
           disabled={disabled}
@@ -113,7 +108,12 @@ const ProfileFormImpl = (props: ProfileFormImplProps) => {
         >
           {t('done label')}
         </Action>
-      </Actions>
+      </ActionBar>
     </>
   );
 };
+
+const getHueValue = (identity?: Identity) =>
+  identity?.profile?.data?.hue || hexToHue(identity?.identityKey.toHex() ?? '0');
+const getEmojiValue = (identity?: Identity) =>
+  identity?.profile?.data?.emoji || hexToEmoji(identity?.identityKey.toHex() ?? '0');

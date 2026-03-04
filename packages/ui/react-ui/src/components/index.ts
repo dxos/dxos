@@ -8,6 +8,7 @@ export * from './Breadcrumb';
 export * from './Button';
 export * from './Clipboard';
 export * from './Dialog';
+export * from './ErrorFallback';
 export * from './Icon';
 export * from './Input';
 export * from './Link';

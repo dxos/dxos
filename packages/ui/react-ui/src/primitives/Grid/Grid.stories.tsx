@@ -26,7 +26,7 @@ const ColsStory = () => (
 );
 
 const RowsStory = () => (
-  <Grid rows={3} classNames='gap-2 p-2 h-[16rem]'>
+  <Grid rows={3} classNames='gap-2 p-2'>
     <Cell label='Row 1' hue='red' />
     <Cell label='Row 2' hue='green' />
     <Cell label='Row 3' hue='blue' />
@@ -34,7 +34,7 @@ const RowsStory = () => (
 );
 
 const MixedStory = () => (
-  <Grid cols={2} rows={2} classNames='gap-2 p-2 h-[16rem]'>
+  <Grid cols={2} rows={2} classNames='gap-2 p-2'>
     <Cell label='A' hue='red' />
     <Cell label='B' hue='green' />
     <Cell label='C' hue='blue' />

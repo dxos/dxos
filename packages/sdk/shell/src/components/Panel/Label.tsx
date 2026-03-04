@@ -6,8 +6,11 @@ import React, { type PropsWithChildren } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 
-export type LabelProps = PropsWithChildren<{}>;
+export type LabelProps = PropsWithChildren;
 
+/**
+ * @deprecated create tailwind theme: dx-label
+ */
 export const Label = (props: LabelProps) => {
   const { children } = props;
   return <span className={mx('text-description', 'text-center mx-6 whitespace-normal')}>{children}</span>;

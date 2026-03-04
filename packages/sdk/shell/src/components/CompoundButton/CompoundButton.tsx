@@ -7,6 +7,8 @@ import React, { type ComponentPropsWithoutRef, type ReactNode } from 'react';
 import { type ButtonProps, useElevationContext, useId, useThemeContext } from '@dxos/react-ui';
 import { descriptionTextPrimary, mx } from '@dxos/ui-theme';
 
+// TODO(burdon): Convert to radix primitive and move to react-ui.
+
 export interface CompoundButtonSlots {
   root: ComponentPropsWithoutRef<'button'>;
   middle: ComponentPropsWithoutRef<'div'>;

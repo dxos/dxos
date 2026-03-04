@@ -8,7 +8,7 @@ import { Invitation } from '@dxos/react-client/invitations';
 import { Input, useTranslation } from '@dxos/react-ui';
 import { hexToEmoji } from '@dxos/util';
 
-import { Action, Actions, Emoji, Label, StepHeading } from '../../../components';
+import { Action, ActionBar, Emoji, InputLabel, Label } from '../../../components';
 import { translationKey } from '../../../translations';
 import { type JoinStepProps } from '../JoinPanelProps';
 
@@ -56,12 +56,12 @@ export const InvitationAuthenticator = ({
         >
           {authMethod === Invitation.AuthMethod.SHARED_SECRET ? (
             <Input.Label asChild>
-              <StepHeading>{t('auth code input label')}</StepHeading>
+              <InputLabel>{t('auth code input label')}</InputLabel>
             </Input.Label>
           ) : (
             <>
               <Input.Label>
-                <StepHeading className='text-description'>{t('authenticating label')}</StepHeading>
+                <InputLabel classNames='text-description'>{t('authenticating label')}</InputLabel>
               </Input.Label>
               <div role='none' className='grow' />
             </>
@@ -99,7 +99,7 @@ export const InvitationAuthenticator = ({
           </>
         )}
       </div>
-      <Actions>
+      <ActionBar>
         <Action
           variant='ghost'
           disabled={disabled}
@@ -117,7 +117,7 @@ export const InvitationAuthenticator = ({
         >
           {t('next label')}
         </Action>
-      </Actions>
+      </ActionBar>
     </>
   );
 };

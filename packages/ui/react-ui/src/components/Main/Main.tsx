@@ -25,7 +25,7 @@ import React, {
 import { addEventListener } from '@dxos/async';
 import { log } from '@dxos/log';
 import { useForwardedRef, useMediaQuery } from '@dxos/react-hooks';
-import { type MainStyleProps } from '@dxos/ui-theme';
+import { type MainStyleProps, osTranslations } from '@dxos/ui-theme';
 
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
@@ -281,7 +281,7 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
   ) => {
     const [isLg] = useMediaQuery('lg');
     const { tx } = useThemeContext();
-    const { t } = useTranslation();
+    const { t } = useTranslation(osTranslations);
     const ref = useForwardedRef(forwardedRef);
     const noopRef = useRef(null);
 

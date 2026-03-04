@@ -120,6 +120,9 @@ export default defineConfig((env) => ({
       // TODO(wittjosiah): Remove this once we have a better solution.
       // NOTE: This is a workaround to fix "dual package hazard" where dist output and local sources
       //   might resolve differently, resulting in two distinct module instances.
+      // NOTE: react-ui must be aliased because vite-plugin-import-source only intercepts imports from
+      //   source files — imports embedded inside compiled dist/ files bypass it entirely.
+      '@dxos/react-ui': path.resolve(rootDir, 'packages/ui/react-ui/src'),
       '@dxos/solid-ui-geo': path.resolve(rootDir, 'packages/ui/solid-ui-geo/src'),
       '@dxos/plugin-map-solid': path.resolve(rootDir, 'packages/plugins/plugin-map-solid/src'),
       '@dxos/web-context-solid': path.resolve(rootDir, 'packages/common/web-context-solid/src'),

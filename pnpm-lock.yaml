@@ -1050,6 +1050,9 @@ catalogs:
     enquirer:
       specifier: ^2.3.6
       version: 2.3.6
+    error-stack-parser:
+      specifier: ^2.1.4
+      version: 2.1.4
     esbuild-plugin-glsl:
       specifier: ^1.4.0
       version: 1.4.0
@@ -8261,6 +8264,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
+      '@dxos/react-error-boundary':
+        specifier: workspace:*
+        version: link:../../ui/react-primitives/react-error-boundary
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
@@ -13282,12 +13288,12 @@ importers:
       '@dxos/operation':
         specifier: workspace:*
         version: link:../../core/operation
+      '@dxos/react-error-boundary':
+        specifier: workspace:*
+        version: link:../../ui/react-primitives/react-error-boundary
       '@dxos/react-hooks':
         specifier: workspace:*
         version: link:../../ui/react-primitives/react-hooks
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../ui/react-ui
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -13307,6 +13313,9 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
@@ -14172,9 +14181,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      react-error-boundary:
-        specifier: 'catalog:'
-        version: 4.0.13(react@19.2.3)
     devDependencies:
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
@@ -14998,6 +15004,28 @@ importers:
         specifier: workspace:*
         version: link:../../common/test-utils
 
+  packages/ui/react-primitives/react-error-boundary:
+    dependencies:
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
+      react-error-boundary:
+        specifier: 'catalog:'
+        version: 4.0.13(react@19.2.3)
+    devDependencies:
+      '@types/react':
+        specifier: ~19.2.7
+        version: 19.2.7
+      '@types/react-dom':
+        specifier: ~19.2.3
+        version: 19.2.3(@types/react@19.2.7)
+      react:
+        specifier: ~19.2.3
+        version: 19.2.3
+      react-dom:
+        specifier: ~19.2.3
+        version: 19.2.3(react@19.2.3)
+
   packages/ui/react-primitives/react-hooks:
     dependencies:
       '@dxos/async':
@@ -15126,6 +15154,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/react-error-boundary':
+        specifier: workspace:*
+        version: link:../react-primitives/react-error-boundary
       '@dxos/react-hooks':
         specifier: workspace:*
         version: link:../react-primitives/react-hooks
@@ -15243,12 +15274,18 @@ importers:
       date-fns:
         specifier: 'catalog:'
         version: 3.6.0
+      error-stack-parser:
+        specifier: 'catalog:'
+        version: 2.1.4
       i18next:
         specifier: 'catalog:'
         version: 21.10.0
       keyborg:
         specifier: 'catalog:'
         version: 2.6.0
+      react-error-boundary:
+        specifier: 'catalog:'
+        version: 4.0.13(react@19.2.3)
       react-i18next:
         specifier: 'catalog:'
         version: 11.18.6(i18next@21.10.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -30355,8 +30392,8 @@ packages:
     resolution: {integrity: sha512-eSmmWE5bZTK2Nou4g0AI3zZ9rswp7GRKoKXS1BLUkvPviOqs4YTN1djQIqrXy9k5gEtdLPy86JjRwsNM9tnDcA==}
     engines: {node: '>=0.10.0'}
 
-  hono@4.12.3:
-    resolution: {integrity: sha512-SFsVSjp8sj5UumXOOFlkZOG6XS9SJDKw0TbwFeV+AJ8xlST8kxK5Z/5EYa111UY8732lK2S/xB653ceuaoGwpg==}
+  hono@4.12.4:
+    resolution: {integrity: sha512-ooiZW1Xy8rQ4oELQ++otI2T9DsKpV0M6c6cO6JGx4RTfav9poFFLlet9UMXHZnoM1yG0HWGlQLswBGX3RZmHtg==}
     engines: {node: '>=16.9.0'}
 
   hookable@5.5.3:
@@ -35735,9 +35772,6 @@ packages:
   uc.micro@2.1.0:
     resolution: {integrity: sha512-ARDJmphmdvUk6Glw7y9DQ2bFkKBHwQHLi2lsaH6PPmz/Ka9sFOBsBluozhDltWmnv9u/cF6Rt87znRTPV+yp/A==}
 
-  ufo@1.6.1:
-    resolution: {integrity: sha512-9a4/uxlTWJ4+a5i0ooc1rU7C7YOw3wT+UGqdeNNHWnOF9qcMBgLRS+4IYUqbczewFx4mLEig6gawh7X6mFlEkA==}
-
   ufo@1.6.3:
     resolution: {integrity: sha512-yDJTmhydvl5lJzBmy/hyOAA0d+aqCBuwl818haVdYCRrWV84o7YyeVm4QlVHStqNrrJSTb6jKuFAVqAFsr+K3Q==}
 
@@ -39995,9 +40029,9 @@ snapshots:
 
   '@hazae41/symbol-dispose-polyfill@1.1.2': {}
 
-  '@hono/node-server@1.19.9(hono@4.12.3)':
+  '@hono/node-server@1.19.9(hono@4.12.4)':
     dependencies:
-      hono: 4.12.3
+      hono: 4.12.4
 
   '@huggingface/jinja@0.2.2': {}
 
@@ -40753,7 +40787,7 @@ snapshots:
 
   '@modelcontextprotocol/sdk@1.27.1(@cfworker/json-schema@4.1.1)':
     dependencies:
-      '@hono/node-server': 1.19.9(hono@4.12.3)
+      '@hono/node-server': 1.19.9(hono@4.12.4)
       ajv: 8.18.0
       ajv-formats: 3.0.1
       content-type: 1.0.5
@@ -40763,7 +40797,7 @@ snapshots:
       eventsource-parser: 3.0.6
       express: 5.2.1
       express-rate-limit: 8.2.1(express@5.2.1)
-      hono: 4.12.3
+      hono: 4.12.4
       jose: 6.1.3
       json-schema-typed: 8.0.2
       pkce-challenge: 5.0.0
@@ -51280,7 +51314,7 @@ snapshots:
     dependencies:
       parse-passwd: 1.0.0
 
-  hono@4.12.3: {}
+  hono@4.12.4: {}
 
   hookable@5.5.3: {}
 
@@ -54225,7 +54259,7 @@ snapshots:
     dependencies:
       destr: 2.0.5
       node-fetch-native: 1.6.7
-      ufo: 1.6.1
+      ufo: 1.6.3
 
   ogl@1.0.11: {}
 
@@ -58003,8 +58037,6 @@ snapshots:
   ua-parser-js@1.0.39: {}
 
   uc.micro@2.1.0: {}
-
-  ufo@1.6.1: {}
 
   ufo@1.6.3: {}
 

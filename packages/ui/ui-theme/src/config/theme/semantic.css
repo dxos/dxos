@@ -17,8 +17,8 @@
   --color-inverse-surface: light-dark(var(--color-neutral-800), var(--color-neutral-200));
   --color-inverse-surface-text: light-dark(var(--color-neutral-50), var(--color-neutral-950));
 
-  --color-input-surface: light-dark(var(--color-neutral-100), var(--color-neutral-900));
-  --color-input-surface-text: light-dark(var(--color-neutral-50), var(--color-neutral-900));
+  --color-input-surface: light-dark(var(--color-neutral-200), var(--color-neutral-800));
+  --color-input-surface-text: light-dark(var(--color-neutral-950), var(--color-neutral-50));
 
   --color-deck-surface: light-dark(var(--color-neutral-50), var(--color-neutral-950));
   --color-scrim-surface: light-dark(
@@ -92,6 +92,6 @@
   /* Text */
 
   --color-placeholder: light-dark(var(--color-neutral-400), var(--color-neutral-600));
+  --color-subdued: light-dark(var(--color-neutral-500), var(--color-neutral-500));
   --color-description: light-dark(var(--color-neutral-600), var(--color-neutral-400));
-  --color-subdued: light-dark(var(--color-neutral-800), var(--color-neutral-200));
 }

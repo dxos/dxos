@@ -133,13 +133,8 @@ export const ResetDialog = ({
                   </div>
                 </div>
                 {showStack && (
-                  <Message.Root
-                    key={error.message}
-                    valence='error'
-                    classNames='overflow-auto'
-                    data-testid='resetDialog.stackTrace'
-                  >
-                    <pre className='text-xs max-h-16 whitespace-pre-line'>{error.stack}</pre>
+                  <Message.Root key={error.message} classNames='overflow-auto' data-testid='resetDialog.stackTrace'>
+                    <pre className='text-xs max-h-16'>{error.stack}</pre>
                   </Message.Root>
                 )}
               </>
