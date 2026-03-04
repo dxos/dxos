@@ -23,6 +23,7 @@ export const generateSnapshot = async (snapshotDir: string, dumpPath: string) =>
   await space.waitUntilReady();
   await seedData(client);
   await SpacesDumper.dumpSpaces(client, dumpPath);
+  await client.destroy();
 };
 
 const seedData = async (client: Client) => {
@@ -56,7 +57,7 @@ const seedData = async (client: Client) => {
     Obj.change(expando, (e) => {
       e.value.push(Ref.make(todo));
     });
-    await space.db.flush();
+    await space.db.flush({ indexes: true });
   }
 
   {
@@ -81,9 +82,7 @@ const seedData = async (client: Client) => {
       object.name = 'Test';
       object.todo = Ref.make(Obj.make(Todo, { name: 'Test todo' }));
     });
-    await space.db.flush();
+    await space.db.flush({ indexes: true });
   }
   log.info('created spaces');
-
-  await client.destroy();
 };

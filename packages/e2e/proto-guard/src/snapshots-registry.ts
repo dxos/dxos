@@ -54,12 +54,9 @@ export class SnapshotsRegistry {
     SnapshotsRegistry._save();
   }
 
-  static getSnapshot(name: string): SnapshotDescription {
-    return SnapshotsRegistry.snapshots.find((snapshot) => snapshot.name === name) ?? raise(
-      new Error(`Snapshot not found: ${name}`)
-    );
+  static getSnapshot(name: string): SnapshotDescription | undefined {
+    return SnapshotsRegistry.snapshots.find((snapshot) => snapshot.name === name);
   }
-
 
   private static _save(): void {
     writeFileSync(REGISTRY_FILE, JSON.stringify(SnapshotsRegistry.snapshots, null, 2));

@@ -7,8 +7,12 @@ import path from 'node:path';
 
 import pkgUp from 'pkg-up';
 
-import { Config } from '@dxos/client';
+import { asyncTimeout } from '@dxos/async';
+import { Client, Config, PublicKey } from '@dxos/client';
 import { raise } from '@dxos/debug';
+import { log } from '@dxos/log';
+import { type SnapshotDescription } from './snapshots-registry';
+import { SpacesDumper, type SpacesDump } from './space-json-dump';
 
 export const SNAPSHOTS_DIR = 'snapshots';
 export const SNAPSHOT_DIR = 'snapshot';
@@ -46,5 +50,32 @@ export const copyDirSync = (src: string, dest: string) => {
     } else if (stat.isDirectory()) {
       copyDirSync(fromPath, toPath);
     }
+  }
+};
+
+export const copySnapshotToTmp = (snapshot: SnapshotDescription) => {
+  const testStoragePath = path.join('/', 'tmp', `proto-guard-${PublicKey.random().toHex()}`);
+
+  const storagePath = path.join(getBaseDataDir(), snapshot.dataRoot);
+  log.info('Copy storage', { src: storagePath, dest: testStoragePath });
+  copyDirSync(storagePath, testStoragePath);
+
+  return testStoragePath;
+};
+
+export const withSnapshot = async (
+  snapshot: SnapshotDescription,
+  callback: (client: Client, expectedData: SpacesDump) => Promise<void>,
+): Promise<void> => {
+  const expectedData = await SpacesDumper.load(path.join(getBaseDataDir(), snapshot.jsonDataPath));
+  const tmp = copySnapshotToTmp(snapshot);
+  const client = new Client({ config: createConfig({ dataRoot: tmp }) });
+  await asyncTimeout(client.initialize(), 2_000);
+  await client.spaces.waitUntilReady();
+
+  try {
+    await callback(client, expectedData);
+  } finally {
+    await client.destroy();
   }
 };
