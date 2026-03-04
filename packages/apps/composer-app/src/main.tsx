@@ -8,6 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { useRegisterSW } from 'virtual:pwa-register/react';
 
 import { useApp } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
@@ -167,13 +168,26 @@ const main = async () => {
   const defaults = getDefaults(conf);
   const setupEvents = [AppActivationEvents.SetupSettings];
 
-  const Fallback = ({ error }: { error: Error }) => (
-    <ThemeProvider tx={defaultTx} resourceExtensions={translations}>
-      <Tooltip.Provider>
-        <ResetDialog isDev={conf.isDev} error={error} observability={observability} />
-      </Tooltip.Provider>
-    </ThemeProvider>
-  );
+  const Fallback = ({ error }: { error: Error }) => {
+    const {
+      needRefresh: [needRefresh],
+      updateServiceWorker,
+    } = useRegisterSW();
+
+    return (
+      <ThemeProvider tx={defaultTx} resourceExtensions={translations}>
+        <Tooltip.Provider>
+          <ResetDialog
+            isDev={conf.isDev}
+            error={error}
+            needRefresh={needRefresh}
+            onRefresh={needRefresh ? () => void updateServiceWorker(true) : undefined}
+            observability={observability}
+          />
+        </Tooltip.Provider>
+      </ThemeProvider>
+    );
+  };
 
   const Main = () => {
     const App = useApp({

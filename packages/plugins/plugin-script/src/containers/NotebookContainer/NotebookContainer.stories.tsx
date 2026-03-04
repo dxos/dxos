@@ -29,7 +29,7 @@ import { Notebook } from '../../types';
 import { NotebookContainer } from './NotebookContainer';
 
 const meta: Meta<typeof NotebookContainer> = {
-  title: 'plugins/plugin-script/NotebookContainer',
+  title: 'plugins/plugin-script/containers/NotebookContainer',
   component: NotebookContainer,
   render: (args) => {
     const client = useClient();

@@ -16,7 +16,6 @@ import { Journal, Outline, getDateString } from '../../types';
 
 import { Journal as JournalComponent } from './Journal';
 
-// TODO(wittjosiah): ECHO objects don't work when passed via Storybook args.
 const DefaultJournalStory = () => {
   const space = useSpace();
   const journal = useMemo(() => {
@@ -56,7 +55,7 @@ const JournalsStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-outliner/Journal',
+  title: 'plugins/plugin-outliner/components/Journal',
   decorators: [
     withTheme(),
     withLayout({ layout: 'fullscreen' }),

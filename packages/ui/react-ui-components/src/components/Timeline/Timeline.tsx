@@ -245,7 +245,7 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
                       )}
                     </div>
                   )}
-                  <div className='text-sm truncate cursor-pointer text-subdued group-hover:text-base-text'>
+                  <div className='text-sm truncate cursor-pointer text-subdued group-hover:text-base-surface-text'>
                     {debug ? JSON.stringify({ id: commit.id, parents: commit.parents }) : commit.message}
                   </div>
                 </div>

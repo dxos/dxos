@@ -116,7 +116,7 @@ const DefaultStory = ({ keywords }: StoryProps) => {
 };
 
 const meta = {
-  title: 'plugins/plugin-transcription/KeyWordDetection',
+  title: 'plugins/plugin-transcription/components/KeyWordDetection',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
 } satisfies Meta<typeof DefaultStory>;

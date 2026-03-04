@@ -42,9 +42,9 @@ export const JoinHeading = forwardRef(
         titleId={titleId}
         title={t(mode === 'halo-only' ? 'selecting identity heading' : 'joining space heading')}
         {...(mode === 'halo-only'
-          ? { titleSrOnly: true }
+          ? { ssrOnly: true }
           : { corner: exitActionParent ? cloneElement(exitActionParent, {}, exitButton) : exitButton })}
-        titleSrOnly={mode === 'halo-only'}
+        ssrOnly={mode === 'halo-only'}
       />
     );
   },

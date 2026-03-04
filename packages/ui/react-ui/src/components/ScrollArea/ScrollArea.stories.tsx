@@ -165,7 +165,7 @@ export const NativeScroll = {
           'group h-full w-full overflow-y-scroll',
           '[&::-webkit-scrollbar]:w-3',
           '[&::-webkit-scrollbar-thumb]:rounded-none',
-          '[&::-webkit-scrollbar-track]:bg-scrollbarTrack',
+          '[&::-webkit-scrollbar-track]:bg-scrollbar-track',
           '[&::-webkit-scrollbar-thumb]:bg-scrollbar-thumbSubdued',
           'group-hover:[&::-webkit-scrollbar-thumb]:bg-scrollbar-thumb',
         )}

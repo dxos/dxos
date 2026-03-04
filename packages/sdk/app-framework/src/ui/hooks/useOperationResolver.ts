@@ -5,7 +5,7 @@
 import { useEffect, useMemo } from 'react';
 
 import { Capabilities } from '../../common';
-import { usePluginManager } from '../components/PluginManagerProvider';
+import { usePluginManager } from '../components';
 
 /**
  * Hook to dynamically register an operation resolver (handler) within a React component.

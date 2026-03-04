@@ -7,7 +7,7 @@ import React, { cloneElement, useEffect, useState } from 'react';
 import { log } from '@dxos/log';
 import { useTranslation } from '@dxos/react-ui';
 
-import { Action, Actions, Input, StepHeading } from '../../../components';
+import { Action, ActionBar, InputLabel, TextInput } from '../../../components';
 import { translationKey } from '../../../translations';
 import { type JoinPanelProps, type JoinStepProps } from '../JoinPanelProps';
 
@@ -66,8 +66,8 @@ export const InvitationInput = (props: InvitationInputProps) => {
   return (
     <>
       <div role='none' className='grow flex flex-col justify-center'>
-        <Input
-          label={<StepHeading>{t('invitation input label')}</StepHeading>}
+        <TextInput
+          label={<InputLabel>{t('invitation input label')}</InputLabel>}
           placeholder={t('invitation input placeholder')}
           disabled={disabled}
           value={inputValue}
@@ -77,7 +77,7 @@ export const InvitationInput = (props: InvitationInputProps) => {
           onKeyUp={({ key }) => key === 'Enter' && handleNext()}
         />
       </div>
-      <Actions>
+      <ActionBar>
         {/* TODO(wittjosiah): This disables returning to deprecated identity creation flow. */}
         {Kind === 'Halo'
           ? null
@@ -94,7 +94,7 @@ export const InvitationInput = (props: InvitationInputProps) => {
         >
           {t('continue label')}
         </Action>
-      </Actions>
+      </ActionBar>
     </>
   );
 };

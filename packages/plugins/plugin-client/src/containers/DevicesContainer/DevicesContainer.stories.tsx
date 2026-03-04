@@ -16,7 +16,7 @@ import { translations } from '../../translations';
 import { DevicesContainer } from './DevicesContainer';
 
 const meta = {
-  title: 'plugins/plugin-client/DevicesContainer',
+  title: 'plugins/plugin-client/containers/DevicesContainer',
   component: DevicesContainer,
   decorators: [
     withTheme(),

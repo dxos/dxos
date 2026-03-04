@@ -51,7 +51,7 @@ const NotebookSection = ({
 
   return (
     <StackItem.Root role='section' item={cell} draggable classNames={resizable && minSectionHeight}>
-      <StackItem.Heading classNames='h-full p-1 justify-between attention-surface'>
+      <StackItem.Heading classNames='h-full p-1 justify-between dx-attention-surface'>
         <StackItem.DragHandle asChild>
           <IconButton variant='ghost' icon='ph--dots-six-vertical--regular' iconOnly label='Drag handle' />
         </StackItem.DragHandle>

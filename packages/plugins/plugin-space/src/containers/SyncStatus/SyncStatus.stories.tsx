@@ -12,7 +12,7 @@ import { translations } from '../../translations';
 import { SyncStatusIndicator } from './SyncStatus';
 
 const meta = {
-  title: 'plugins/plugin-space/SyncStatusIndicator',
+  title: 'plugins/plugin-space/containers/SyncStatusIndicator',
   component: SyncStatusIndicator,
   decorators: [withTheme(), withClientProvider({ createIdentity: true })],
   parameters: {

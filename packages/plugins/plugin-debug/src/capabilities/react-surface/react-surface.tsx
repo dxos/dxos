@@ -43,13 +43,14 @@ import { type Graph } from '@dxos/plugin-graph';
 import { ScriptOperation } from '@dxos/plugin-script/types';
 import { SpaceOperation } from '@dxos/plugin-space/types';
 import { type Space, SpaceState, isSpace, parseId } from '@dxos/react-client/echo';
-import { Layout } from '@dxos/react-ui';
+import { Container } from '@dxos/react-ui';
 import { Collection } from '@dxos/schema';
 
 import {
   DebugGraph,
   DebugObjectPanel,
   DebugSettings,
+  DebugSpaceObjectsPanel,
   DebugStatus,
   DevtoolsOverviewContainer,
   SpaceGenerator,
@@ -133,9 +134,9 @@ export default Capability.makeModule(
           );
 
           return (
-            <Layout.Main role={role}>
+            <Container.Main role={role}>
               <SpaceGenerator space={data.subject.space} onCreateObjects={handleCreateObject} />
-            </Layout.Main>
+            </Container.Main>
           );
         },
       }),
@@ -167,14 +168,21 @@ export default Capability.makeModule(
       Surface.create({
         id: `${meta.id}/devtools-overview`,
         role: 'deck-companion--devtools',
+        filter: (data): data is { subject: 'devtools' } => data.subject === 'devtools',
         component: () => <DevtoolsOverviewContainer />,
       }),
+      Surface.create({
+        id: `${meta.id}/space-objects`,
+        role: 'deck-companion--space-objects',
+        filter: (data): data is { subject: 'space-objects' } => data.subject === 'space-objects',
+        component: () => <DebugSpaceObjectsPanel />,
+      }),
+
       Surface.create({
         id: `${meta.id}/status`,
         role: 'status',
         component: () => <DebugStatus />,
       }),
-
       //
       // Devtools
       //

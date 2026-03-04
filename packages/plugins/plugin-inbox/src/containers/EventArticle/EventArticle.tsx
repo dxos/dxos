@@ -8,7 +8,7 @@ import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { type Feed, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { Layout } from '@dxos/react-ui';
+import { Container } from '@dxos/react-ui';
 import { Text } from '@dxos/schema';
 import { Event as EventType } from '@dxos/types';
 
@@ -51,7 +51,7 @@ export const EventArticle = ({ role, subject, feed }: EventArticleProps) => {
   );
 
   return (
-    <Layout.Main role={role} toolbar>
+    <Container.Main role={role} toolbar>
       <Event.Root event={subject}>
         <Event.Toolbar onNoteCreate={handleNoteCreate} />
         <Event.Viewport>
@@ -61,6 +61,6 @@ export const EventArticle = ({ role, subject, feed }: EventArticleProps) => {
           {notes && <Surface.Surface role='section' data={{ id, subject: notes }} limit={1} />}
         </Event.Viewport>
       </Event.Root>
-    </Layout.Main>
+    </Container.Main>
   );
 };

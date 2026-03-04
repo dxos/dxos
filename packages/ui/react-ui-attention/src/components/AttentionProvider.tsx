@@ -184,7 +184,7 @@ const AttendableContainer = forwardRef<HTMLDivElement, AttendableContainerProps>
         role='none'
         {...attentionAttrs}
         {...props}
-        className={mx('attention-surface', props.tabIndex === 0 && 'dx-focus-ring-inset-over-all', classNames)}
+        className={mx('dx-attention-surface', props.tabIndex === 0 && 'dx-focus-ring-inset-over-all', classNames)}
         ref={forwardedRef}
       >
         {children}

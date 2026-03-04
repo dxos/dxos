@@ -9,7 +9,7 @@ import { invariant } from '@dxos/invariant';
 
 import { Capabilities } from '../../common';
 import { type Capability } from '../../core';
-import { usePluginManager } from '../components/PluginManagerProvider';
+import { usePluginManager } from '../components';
 
 /**
  * Hook to request capabilities from the plugin context.

@@ -24,7 +24,7 @@ export const FilesSettings = ({ settings, state, onSettingsChange }: FilesSettin
   return (
     <Settings.Root>
       <Settings.Section title={t('settings title', { ns: meta.id })}>
-        <Message.Root valence='warning' classNames='container-max-width'>
+        <Message.Root valence='warning' classNames='dx-container-max-width'>
           <Message.Content>{t('save files to directory description')}</Message.Content>
         </Message.Root>
         <Settings.Group>

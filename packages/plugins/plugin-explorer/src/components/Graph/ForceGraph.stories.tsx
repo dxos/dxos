@@ -52,7 +52,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-explorer/ForceGraph',
+  title: 'plugins/plugin-explorer/components/ForceGraph',
   component: ForceGraph,
   render: render(DefaultStory),
   decorators: [

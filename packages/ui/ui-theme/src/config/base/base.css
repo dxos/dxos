@@ -32,9 +32,9 @@
   html, html.dark, html .dark,
   .sb-show-main {
     background-color: var(--color-base-surface);
-    color: var(--color-base-text);
+    color: var(--color-base-surface-text);
     --surface-bg: var(--color-base-surface);
-    --surface-text: var(--color-base-text);
+    --surface-text: var(--color-base-surface-text);
     --description-text: var(--color-description);
   }
 }

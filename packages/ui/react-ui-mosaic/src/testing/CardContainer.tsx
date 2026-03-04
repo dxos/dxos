@@ -44,7 +44,7 @@ export const PopoverCardContainer = ({
   return (
     <Popover.Root open>
       <Popover.Content onOpenAutoFocus={(event: Event) => event.preventDefault()}>
-        <Popover.Viewport classNames='popover-card'>{children}</Popover.Viewport>
+        <Popover.Viewport classNames='dx-card-popover'>{children}</Popover.Viewport>
         <Popover.Arrow />
       </Popover.Content>
       <Popover.Trigger asChild>
@@ -55,7 +55,7 @@ export const PopoverCardContainer = ({
 };
 
 //
-// Intrinsic card container (size constrained by card).
+// Intrinsic card container (size constrained by card itself).
 //
 
 export type IntrinsicCardContainerProps = PropsWithChildren<{
@@ -78,7 +78,8 @@ export const IntrinsicCardContainer = ({
 
   return (
     <div
-      className='relative p-4 border border-dashed border-subdued-separator rounded-lg overflow-x-auto'
+      role='none'
+      className='relative grid overflow-hidden border-2 border-dashed border-green-500 rounded-lg'
       style={sizeStyle(size, 'horizontal')}
       {...resizeAttributes}
     >

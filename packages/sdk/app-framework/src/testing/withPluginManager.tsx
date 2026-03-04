@@ -61,7 +61,10 @@ export type WithPluginManagerInitializer<Args = void> =
 export const withPluginManager = <Args,>(init: WithPluginManagerInitializer<Args> = {}): Decorator => {
   return (Story, context) => {
     const options = typeof init === 'function' ? init(context as any) : init;
-    const pluginManager = useMemo(() => setupPluginManager(options), [init]);
+    const { pluginManager, setupEvents } = useMemo(
+      () => ({ pluginManager: setupPluginManager(options), setupEvents: options.setupEvents }),
+      [init],
+    );
 
     // Set-up root capability.
     useEffect(() => {
@@ -86,7 +89,7 @@ export const withPluginManager = <Args,>(init: WithPluginManagerInitializer<Args
     }, [pluginManager]);
 
     // Create app.
-    const App = useApp({ pluginManager });
+    const App = useApp({ pluginManager, setupEvents });
 
     return <App />;
   };

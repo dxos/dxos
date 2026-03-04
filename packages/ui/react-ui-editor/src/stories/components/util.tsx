@@ -204,7 +204,7 @@ export const links: Completion[] = [
 export const names = ['adam', 'alice', 'alison', 'bob', 'carol', 'charlie', 'sayuri', 'shoko'];
 
 const hover =
-  'rounded-xs text-base-text text-primary-600 hover:text-primary-500 dark:text-primary-300 hover:dark:text-primary-200';
+  'rounded-xs text-base-surface-text text-primary-600 hover:text-primary-500 dark:text-primary-300 hover:dark:text-primary-200';
 
 export const renderLinkTooltip: RenderCallback<{ url: string }> = (el, { url }) => {
   el.appendChild(
@@ -220,7 +220,7 @@ export const renderLinkButton: RenderCallback<{ url: string }> = (el, { url }) =
   el.appendChild(
     Domino.of('a')
       .attributes({ href: url, target: '_blank', rel: 'noreferrer', 'aria-label': 'Open link' })
-      .classNames(hover, 'inline-block ms-1 align-[-0.125em]')
+      .classNames(hover, 'inline-block ms-1 align-[-0.125em]') // Center icon.
       .children(Domino.svg('ph--arrow-square-out--regular')).root,
   );
 };

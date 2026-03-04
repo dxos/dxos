@@ -23,7 +23,7 @@ const DefaultStory = ({ pgn }: StoryProps) => {
 };
 
 const meta = {
-  title: 'plugins/plugin-chess/ChessArticle',
+  title: 'plugins/plugin-chess/containers/ChessArticle',
   component: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withClientProvider({ createIdentity: true })],
   parameters: {

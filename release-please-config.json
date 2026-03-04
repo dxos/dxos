@@ -835,6 +835,11 @@
         },
         {
           "type": "json",
+          "path": "packages/ui/react-primitives/react-error-boundary/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/ui/react-primitives/react-hooks/package.json",
           "jsonpath": "$.version"
         },

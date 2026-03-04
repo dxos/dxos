@@ -5,7 +5,7 @@
 import React, { useCallback, useRef, useState } from 'react';
 
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { Layout, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Container, Toolbar, useTranslation } from '@dxos/react-ui';
 import { type Player } from '@dxos/react-ui-gameboard';
 import { mx } from '@dxos/ui-theme';
 
@@ -27,7 +27,7 @@ export const ChessArticle = ({ role, subject: game }: ChessArticleProps) => {
   }, []);
 
   return (
-    <Layout.Main toolbar classNames='@container'>
+    <Container.Main toolbar classNames='@container'>
       <Chessboard.Root game={game} ref={controller}>
         <Toolbar.Root>
           <Toolbar.IconButton
@@ -64,6 +64,6 @@ export const ChessArticle = ({ role, subject: game }: ChessArticleProps) => {
           )}
         </div>
       </Chessboard.Root>
-    </Layout.Main>
+    </Container.Main>
   );
 };

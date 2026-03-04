@@ -9,7 +9,7 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { Voice } from './Voice';
 
 const meta = {
-  title: 'plugins/plugin-transformer/Voice',
+  title: 'plugins/plugin-transformer/components/Voice',
   component: Voice,
   decorators: [withTheme()],
   parameters: {

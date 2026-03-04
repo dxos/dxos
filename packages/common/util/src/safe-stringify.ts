@@ -12,7 +12,7 @@ export type StringifyReplacer = (key: string, value: any) => typeof SKIP | any;
 /**
  * Safely stringifies an object.
  */
-export function safeStringify(obj: any, filter: StringifyReplacer = defaultFilter, indent = 2) {
+export function safeStringify(obj: any, filter: StringifyReplacer | undefined = defaultFilter, indent = 2) {
   const seen = new WeakMap<object, string>();
 
   // NOTE: Called for the root object with undefined key.
@@ -68,7 +68,11 @@ export function safeStringify(obj: any, filter: StringifyReplacer = defaultFilte
     }
   }
 
-  return JSON.stringify(obj, replacer, indent);
+  try {
+    return JSON.stringify(obj, replacer, indent);
+  } catch (error: any) {
+    return `ERROR: ${error.message}`;
+  }
 }
 
 export type CreateReplacerProps = {

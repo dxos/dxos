@@ -8,7 +8,7 @@ import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { IconButton, useTranslation } from '@dxos/react-ui';
-import { Layout } from '@dxos/react-ui';
+import { Container } from '@dxos/react-ui';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
 
 import { meta } from '../../meta';
@@ -41,7 +41,7 @@ export const MeetingContainer = ({ role, subject: meeting }: MeetingContainerPro
   }
 
   return (
-    <Layout.Main role={role}>
+    <Container.Main role={role}>
       <Stack orientation='vertical' size='contain' rail>
         <StackItem.Root item={notes} role='section'>
           <StackItem.Heading>
@@ -85,6 +85,6 @@ export const MeetingContainer = ({ role, subject: meeting }: MeetingContainerPro
           </StackItem.Content>
         </StackItem.Root>
       </Stack>
-    </Layout.Main>
+    </Container.Main>
   );
 };

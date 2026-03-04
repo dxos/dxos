@@ -6,7 +6,7 @@ import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, type JsonPath, type JsonSchemaType, LabelAnnotation } from '@dxos/echo/internal';
 import { View, ViewAnnotation } from '@dxos/schema';
 
@@ -27,6 +27,10 @@ export const Table = Schema.Struct({
   }),
   LabelAnnotation.set(['name']),
   ViewAnnotation.set(true),
+  Annotation.IconAnnotation.set({
+    icon: 'ph--table--regular',
+    hue: 'green',
+  }),
 );
 
 export interface Table extends Schema.Schema.Type<typeof Table> {}

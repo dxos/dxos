@@ -190,7 +190,7 @@ const FormViewport = ({
   return (
     <ScrollArea.Root
       orientation='vertical'
-      classNames={['py-form-padding', classNames]}
+      classNames={classNames}
       margin={margin}
       padding={padding}
       thin={thin}
@@ -314,7 +314,7 @@ const FormSubmit = ({ classNames, label, icon, disabled }: FormSubmitProps) => {
   }
 
   return (
-    <div role='none' className={mx('flex w-full pt-formSpacing', classNames)}>
+    <div role='none' className={mx('flex w-full pt-form-padding', classNames)}>
       <IconButton
         classNames='w-full'
         type='submit'

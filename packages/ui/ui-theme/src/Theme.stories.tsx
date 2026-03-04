@@ -46,10 +46,10 @@ const ColorSwatch = ({ hue }: { hue: string }) => {
       </div>
       <div
         style={{
-          color: `var(--color-${hue}-border)`,
+          color: `var(--color-${hue}-text)`,
           backgroundColor: `var(--color-${hue}-fill)`,
         }}
-        className='p-2 text-sm flex items-center'
+        className='px-1 text-sm flex items-center'
       >
         <svg className='h-6 w-6'>
           <use href='/icons.svg#ph--aperture--regular' />
@@ -165,7 +165,7 @@ export const Surfaces = {
             { className: 'bg-input-surface', label: 'input' },
             { className: 'bg-active-surface', label: 'active' },
             { className: 'bg-hover-surface', label: 'hover' },
-            { className: 'bg-inverse-surface text-inverse-text', label: 'inverse' },
+            { className: 'bg-inverse-surface text-inverse-surface-text', label: 'inverse' },
           ].map(({ className, label }) => (
             <div key={className} className={mx('shrink-0 p-2 aspect-square w-48 rounded-md', className)}>
               {label}
@@ -190,7 +190,7 @@ export const Tags = {
                 </span>
               </div>
               <div>
-                <span className='dx-text-hue text-sm' data-hue={hue}>
+                <span className='dx-text text-sm' data-hue={hue}>
                   {hue}
                 </span>
               </div>
@@ -206,7 +206,7 @@ export const Animation = {
   render: () => {
     return (
       <div className='absolute inset-0 grid place-items-center'>
-        <div className='density-coarse border border-separator rounded-md'>
+        <div className='dx-density-coarse border border-separator rounded-md'>
           <div
             className={mx(
               'flex items-center font-mono text-2xl text-test-experimental',

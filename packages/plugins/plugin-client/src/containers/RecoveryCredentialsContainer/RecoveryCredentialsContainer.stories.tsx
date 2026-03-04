@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 
-import { OperationPlugin } from '@dxos/app-framework';
+import { OperationPlugin, RuntimePlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -15,7 +15,7 @@ import { translations } from '../../translations';
 import { RecoveryCredentialsContainer } from './RecoveryCredentialsContainer';
 
 const meta = {
-  title: 'plugins/plugin-client/RecoveryCredentialsContainer',
+  title: 'plugins/plugin-client/containers/RecoveryCredentialsContainer',
   component: RecoveryCredentialsContainer,
   decorators: [
     withTheme(),
@@ -29,6 +29,7 @@ const meta = {
             }),
         }),
         OperationPlugin(),
+        RuntimePlugin(),
       ],
     }),
   ],

@@ -8,7 +8,7 @@ import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useActions } from '@dxos/plugin-graph';
-import { Flex, type FlexProps, Layout } from '@dxos/react-ui';
+import { Container as DxContainer, Flex, type FlexProps } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { isTauri } from '@dxos/util';
 
@@ -37,14 +37,14 @@ export const SketchContainer = ({ role, subject: sketch, settings }: SketchConta
   const actions = useActions(graph, id);
   const handleThreadCreate = actions.find((action) => action.id === `${id}/comment`)?.data;
 
-  const Root = role === 'section' ? Container : Layout.Main;
+  const Root = role === 'section' ? Container : DxContainer.Main;
 
   return (
     <Root>
       <Sketch
         // Force instance per sketch object. Otherwise, sketch shares the same instance.
         key={id}
-        classNames='attention-surface'
+        classNames='dx-attention-surface'
         sketch={sketch}
         // TODO(wittjosiah): Ensure attention works as expected on the mobile app.
         hideUi={!hasAttention && !isTauri()}

@@ -24,7 +24,7 @@ const DefaultStory = ({
   );
 
   return (
-    <div className='p-formSpacing'>
+    <div className='p-form-padding'>
       <FormFieldWrapper<string> {...props}>
         {({ value = '' }) => (
           <Input.TextInput

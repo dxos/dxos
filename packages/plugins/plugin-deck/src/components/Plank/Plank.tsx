@@ -26,7 +26,7 @@ import { useCompanions, useDeckState, useMainSize } from '../../hooks';
 import { parseEntryId } from '../../layout';
 import { DeckOperation, type DeckSettingsProps, type LayoutMode, type ResolvedPart } from '../../types';
 
-import { PlankContentError, PlankError } from './PlankError';
+import { PlankError, PlankErrorFallback } from './PlankError';
 import { PlankHeading } from './PlankHeading';
 import { PlankLoading } from './PlankLoading';
 
@@ -231,7 +231,7 @@ const PlankComponent = memo(
     const Root = part.startsWith('solo') ? 'article' : StackItem.Root;
     const fullscreen = layoutMode === 'solo--fullscreen';
     const className = mx(
-      'attention-surface relative dx-focus-ring-inset-over-all density-coarse',
+      'dx-attention-surface relative dx-focus-ring-inset-over-all dx-density-coarse',
       isSolo && 'absolute inset-0',
       isSolo && mainIntrinsicSize,
       railGridHorizontal,
@@ -286,7 +286,7 @@ const PlankComponent = memo(
               role='article'
               data={data}
               limit={1}
-              fallback={PlankContentError}
+              fallback={PlankErrorFallback}
               placeholder={placeholder}
             />
           </>

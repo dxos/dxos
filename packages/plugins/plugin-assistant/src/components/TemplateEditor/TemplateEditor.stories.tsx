@@ -65,7 +65,7 @@ const DefaultStory = ({ source }: TemplateEditorProps & { source: string }) => {
 };
 
 const meta = {
-  title: 'plugins/plugin-assistant/TemplateEditor',
+  title: 'plugins/plugin-assistant/components/TemplateEditor',
   component: TemplateEditor as any,
   render: DefaultStory,
   decorators: [
