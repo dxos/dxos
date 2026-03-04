@@ -8,7 +8,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AlertDialog, Dialog as NaturalDialog } from '@dxos/react-ui';
 
 import { useDeckState } from '../../hooks';
-import { PlankContentError } from '../Plank';
+import { PlankErrorFallback } from '../Plank';
 
 export const Dialog = () => {
   const { state, updateEphemeral } = useDeckState();
@@ -32,12 +32,12 @@ export const Dialog = () => {
           role='dialog'
           data={dialogContent}
           limit={1}
-          fallback={PlankContentError}
+          fallback={PlankErrorFallback}
           placeholder={<div />}
         />
       ) : (
         <Overlay blockAlign={dialogBlockAlign} classNames={dialogOverlayClasses} style={dialogOverlayStyle}>
-          <Surface.Surface role='dialog' data={dialogContent} limit={1} fallback={PlankContentError} />
+          <Surface.Surface role='dialog' data={dialogContent} limit={1} fallback={PlankErrorFallback} />
         </Overlay>
       )}
     </Root>

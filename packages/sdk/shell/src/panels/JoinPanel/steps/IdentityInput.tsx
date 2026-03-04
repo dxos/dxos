@@ -11,7 +11,7 @@ import { useClient } from '@dxos/react-client';
 import { useTranslation } from '@dxos/react-ui';
 import { type MaybePromise } from '@dxos/util';
 
-import { Action, Actions, Input, StepHeading } from '../../../components';
+import { Action, ActionBar, InputLabel, TextInput } from '../../../components';
 import { translationKey } from '../../../translations';
 import { type JoinStepProps } from '../JoinPanelProps';
 
@@ -21,46 +21,49 @@ export interface IdentityCreatorProps extends JoinStepProps {
 
 export type IdentityInputProps = IdentityCreatorProps;
 
-export type IdentityInputImplProps = IdentityCreatorProps & {
-  onConfirm?: (value: string) => MaybePromise<void>;
-  validationMessage?: string;
-};
-
 export const IdentityInput = (props: IdentityInputProps) => {
   const { send, method } = props;
   const isRecover = method === 'recover identity';
   const client = useClient();
   const { t } = useTranslation(translationKey);
   const [validationMessage, setValidationMessage] = useState('');
-  const handleConfirm = async (value: string) => {
-    if (isRecover) {
-      await client.halo.recoverIdentity({ recoveryCode: value }).then(
-        (identity) => {
-          send?.({ type: 'selectIdentity' as const, identity });
-        },
-        (error) => {
-          log.catch(error);
-          setValidationMessage(t('failed to recover identity message'));
-        },
-      );
-    } else {
-      await client.halo.createIdentity(create(ProfileDocumentSchema, { displayName: value })).then(
-        (identity) => {
-          send?.({ type: 'selectIdentity' as const, identity });
-        },
-        (error) => {
-          log.catch(error);
-          setValidationMessage(t('failed to create identity message'));
-        },
-      );
-    }
-  };
+
+  const handleConfirm = useCallback(
+    async (value: string) => {
+      if (isRecover) {
+        await client.halo.recoverIdentity({ recoveryCode: value }).then(
+          (identity) => {
+            send?.({ type: 'selectIdentity' as const, identity });
+          },
+          (error) => {
+            log.catch(error);
+            setValidationMessage(t('failed to recover identity message'));
+          },
+        );
+      } else {
+        await client.halo.createIdentity(create(ProfileDocumentSchema, { displayName: value })).then(
+          (identity) => {
+            send?.({ type: 'selectIdentity' as const, identity });
+          },
+          (error) => {
+            log.catch(error);
+            setValidationMessage(t('failed to create identity message'));
+          },
+        );
+      }
+    },
+    [client, isRecover, send, t],
+  );
+
   return <IdentityInputImpl {...props} onConfirm={handleConfirm} validationMessage={validationMessage} />;
 };
 
-// TODO(zhenyasav): impl shouldn't need send()
-export const IdentityInputImpl = (props: IdentityInputImplProps) => {
-  const { method, active, onConfirm, validationMessage } = props;
+export type IdentityInputImplProps = IdentityCreatorProps & {
+  onConfirm?: (value: string) => MaybePromise<void>;
+  validationMessage?: string;
+};
+
+export const IdentityInputImpl = ({ method, active, validationMessage, onConfirm }: IdentityInputImplProps) => {
   const { t } = useTranslation(translationKey);
   const [inputValue, setInputValue] = useState('');
   const [pending, setPending] = useState(false);
@@ -76,18 +79,16 @@ export const IdentityInputImpl = (props: IdentityInputImplProps) => {
   return (
     <>
       <div role='none' className='grow flex flex-col justify-center'>
-        <Input
+        <TextInput
           {...{ validationMessage }}
-          label={
-            <StepHeading>{t(isRecover ? 'recover identity input label' : 'new identity input label')}</StepHeading>
-          }
+          label={<InputLabel>{t(isRecover ? 'recover identity input label' : 'new identity input label')}</InputLabel>}
           disabled={disabled}
           data-testid='identity-input'
           placeholder={isRecover ? t('recovery code placeholder') : t('display name placeholder')}
           onChange={({ target: { value } }) => setInputValue(value)}
         />
       </div>
-      <Actions>
+      <ActionBar>
         {/* TODO(wittjosiah): This disables returning to deprecated identity creation flow.
         <Action
           variant='ghost'
@@ -105,7 +106,7 @@ export const IdentityInputImpl = (props: IdentityInputImplProps) => {
         >
           {pending ? t('pending label') : t('continue label')}
         </Action>
-      </Actions>
+      </ActionBar>
     </>
   );
 };

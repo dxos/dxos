@@ -117,8 +117,8 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/operation": "workspace:*",
+    "@dxos/react-error-boundary": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
-    "@dxos/react-ui": "workspace:*",
     "@dxos/util": "workspace:*",
     "@dxos/web-context": "workspace:*",
     "@dxos/web-context-react": "workspace:*",
@@ -127,6 +127,7 @@
   "devDependencies": {
     "@dxos/echo-db": "workspace:*",
     "@dxos/random": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/test-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",

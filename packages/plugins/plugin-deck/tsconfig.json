@@ -67,6 +67,9 @@
       "path": "../../sdk/react-client"
     },
     {
+      "path": "../../ui/react-primitives/react-error-boundary"
+    },
+    {
       "path": "../../ui/react-ui"
     },
     {

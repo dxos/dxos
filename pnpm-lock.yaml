@@ -138,6 +138,9 @@ catalogs:
     '@dnd-kit/utilities':
       specifier: ^3.2.0
       version: 3.2.0
+    '@dxos/credentials':
+      specifier: ^0.8.3
+      version: 0.8.3
     '@dxos/protocols':
       specifier: ^0.8.3
       version: 0.8.3
@@ -1041,6 +1044,9 @@ catalogs:
     enquirer:
       specifier: ^2.3.6
       version: 2.3.6
+    error-stack-parser:
+      specifier: ^2.1.4
+      version: 2.1.4
     esbuild-plugin-glsl:
       specifier: ^1.4.0
       version: 1.4.0
@@ -8166,6 +8172,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
+      '@dxos/react-error-boundary':
+        specifier: workspace:*
+        version: link:../../ui/react-primitives/react-error-boundary
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
@@ -10805,6 +10814,9 @@ importers:
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
+      '@dxos/credentials':
+        specifier: 'catalog:'
+        version: 0.8.3(effect@3.19.16)
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
@@ -13181,12 +13193,12 @@ importers:
       '@dxos/operation':
         specifier: workspace:*
         version: link:../../core/operation
+      '@dxos/react-error-boundary':
+        specifier: workspace:*
+        version: link:../../ui/react-primitives/react-error-boundary
       '@dxos/react-hooks':
         specifier: workspace:*
         version: link:../../ui/react-primitives/react-hooks
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../ui/react-ui
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -13206,6 +13218,9 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
@@ -14071,9 +14086,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      react-error-boundary:
-        specifier: 'catalog:'
-        version: 4.0.13(react@19.2.3)
     devDependencies:
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
@@ -14900,6 +14912,28 @@ importers:
         specifier: workspace:*
         version: link:../../common/test-utils
 
+  packages/ui/react-primitives/react-error-boundary:
+    dependencies:
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
+      react-error-boundary:
+        specifier: 'catalog:'
+        version: 4.0.13(react@19.2.3)
+    devDependencies:
+      '@types/react':
+        specifier: ~19.2.7
+        version: 19.2.7
+      '@types/react-dom':
+        specifier: ~19.2.3
+        version: 19.2.3(@types/react@19.2.7)
+      react:
+        specifier: ~19.2.3
+        version: 19.2.3
+      react-dom:
+        specifier: ~19.2.3
+        version: 19.2.3(react@19.2.3)
+
   packages/ui/react-primitives/react-hooks:
     dependencies:
       '@dxos/async':
@@ -15028,6 +15062,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/react-error-boundary':
+        specifier: workspace:*
+        version: link:../react-primitives/react-error-boundary
       '@dxos/react-hooks':
         specifier: workspace:*
         version: link:../react-primitives/react-hooks
@@ -15145,12 +15182,18 @@ importers:
       date-fns:
         specifier: 'catalog:'
         version: 3.6.0
+      error-stack-parser:
+        specifier: 'catalog:'
+        version: 2.1.4
       i18next:
         specifier: 'catalog:'
         version: 21.10.0
       keyborg:
         specifier: 'catalog:'
         version: 2.6.0
+      react-error-boundary:
+        specifier: 'catalog:'
+        version: 4.0.13(react@19.2.3)
       react-i18next:
         specifier: 'catalog:'
         version: 11.18.6(i18next@21.10.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -20304,6 +20347,12 @@ packages:
   '@dxos/context@0.8.3':
     resolution: {integrity: sha512-PKpfYpUQNCNtK6oKo1Je0qOI1eBiXcdljEu68GW80427U2Oin/hry/EtsrMq3iXLUgpqjRr9hvKU/d/fXsWNDw==}
 
+  '@dxos/credentials@0.8.3':
+    resolution: {integrity: sha512-CgbuzXSAdRdopouDktoGl24p2nAuDo9zv0gmWXYJ3uz1YCbXfg8QqNhAujxx15tEEC6UFH5H/c+diIm1nzSgTg==}
+
+  '@dxos/crypto@0.8.3':
+    resolution: {integrity: sha512-wIflHRdxNsf5XFbCBV/wnNFD1U6k5rA2xIxupxbISfpIAh6eBLJMed/Loquv2nvGcLYLO9ooKSn1/j/s2LI0Qw==}
+
   '@dxos/debug@0.8.3':
     resolution: {integrity: sha512-sDsOvwejoVKdLPpBK3yd4RAX8/sZf3C4ZtmmSJm9rmb8kv6NcyJgiPYZZFOJIArEL6Xm4Z9aHfDhOjrK8p4YtQ==}
 
@@ -20314,6 +20363,9 @@ packages:
 
   '@dxos/invariant@0.8.3':
     resolution: {integrity: sha512-PWu7u8LxPwGwOedstv4SfB6q4ZtZpclercV5xERai3HNAf+cl1ExA1KOLjgeKQVZsI7Ip3K5dM4mymhA98+KQg==}
+
+  '@dxos/keyring@0.8.3':
+    resolution: {integrity: sha512-pPeq12VSx8AFqLsz3qI0qrL45BiB0/H8AB6oPHCDeYcXhjTW0BJ0+bwkwhRN8jKNlKrIxE2AJOr6GKLycGqG9g==}
 
   '@dxos/keys@0.8.3':
     resolution: {integrity: sha512-+ht+usY5oFawxnZaojtACBRQMj8lLzmh+P0QrJ6MAw8UpCqD+NkTC3IdWnHncUJZyAd597k21Kr1NCn8ukFsAg==}
@@ -20329,8 +20381,14 @@ packages:
     peerDependencies:
       effect: 3.19.16
 
+  '@dxos/random-access-storage@0.8.3':
+    resolution: {integrity: sha512-04+fItZ3Bwe/7FR5n7Oh3GFiaSshOyzCI3qOklrQCdz7dQAFQiRS3HYM9yzsJmfWSftaixlSkusTdvd9CCo3fQ==}
+
   '@dxos/timeframe@0.8.3':
     resolution: {integrity: sha512-6W+KbidO0NnGUyTT11PDSkbpGe9DgHHGKpS+W4XNaobtllBOyAd4LXHLNKdDdekjqFg1reXP0fS7PPvg8ASxlg==}
+
+  '@dxos/tracing@0.8.3':
+    resolution: {integrity: sha512-iB7glBZzHAPpV41DHgFxuXrN6uXU9Ep64r9+a6bbZS1aNsVMBo+25HiXVjFY7DbhByhJN/W1y8gh4BO6Xex24Q==}
 
   '@dxos/util@0.8.3':
     resolution: {integrity: sha512-g59XyzcFcNx31+Hw/lyWeJaHpWN9qbERlnAeFrcX1Ck0rYKacyiBWLKM7Z7ghXH0xr8eNUCHeGqk7GS+zAuH+g==}
@@ -39339,6 +39397,31 @@ snapshots:
       '@dxos/node-std': 0.8.3
       '@dxos/util': 0.8.3
 
+  '@dxos/credentials@0.8.3(effect@3.19.16)':
+    dependencies:
+      '@dxos/async': 0.8.3
+      '@dxos/context': 0.8.3
+      '@dxos/crypto': 0.8.3
+      '@dxos/invariant': 0.8.3
+      '@dxos/keyring': 0.8.3(effect@3.19.16)
+      '@dxos/keys': 0.8.3
+      '@dxos/log': 0.8.3
+      '@dxos/node-std': 0.8.3
+      '@dxos/protocols': 0.8.3(effect@3.19.16)
+      '@dxos/timeframe': 0.8.3
+      '@dxos/util': 0.8.3
+      bip39: 3.1.0
+      json-stable-stringify: 1.3.0
+    transitivePeerDependencies:
+      - effect
+
+  '@dxos/crypto@0.8.3':
+    dependencies:
+      '@dxos/invariant': 0.8.3
+      '@dxos/keys': 0.8.3
+      '@dxos/node-std': 0.8.3
+      hypercore-crypto: 2.3.2
+
   '@dxos/debug@0.8.3':
     dependencies:
       '@dxos/node-std': 0.8.3
@@ -39352,6 +39435,21 @@ snapshots:
       jsonpath-plus: 10.2.0
 
   '@dxos/invariant@0.8.3': {}
+
+  '@dxos/keyring@0.8.3(effect@3.19.16)':
+    dependencies:
+      '@dxos/async': 0.8.3
+      '@dxos/codec-protobuf': 0.8.3
+      '@dxos/crypto': 0.8.3
+      '@dxos/debug': 0.8.3
+      '@dxos/invariant': 0.8.3
+      '@dxos/keys': 0.8.3
+      '@dxos/node-std': 0.8.3
+      '@dxos/protocols': 0.8.3(effect@3.19.16)
+      '@dxos/random-access-storage': 0.8.3(effect@3.19.16)
+      '@dxos/util': 0.8.3
+    transitivePeerDependencies:
+      - effect
 
   '@dxos/keys@0.8.3':
     dependencies:
@@ -39389,6 +39487,28 @@ snapshots:
       '@dxos/util': 0.8.3
       effect: 3.19.16
 
+  '@dxos/random-access-storage@0.8.3(effect@3.19.16)':
+    dependencies:
+      '@dxos/async': 0.8.3
+      '@dxos/debug': 0.8.3
+      '@dxos/invariant': 0.8.3
+      '@dxos/log': 0.8.3
+      '@dxos/node-std': 0.8.3
+      '@dxos/tracing': 0.8.3(effect@3.19.16)
+      '@dxos/util': 0.8.3
+      buffer-alloc: 1.2.0
+      buffer-from: 0.1.2
+      del: 5.1.0
+      inherits: 2.0.4
+      next-tick: 1.1.0
+      once: 1.4.0
+      pify: 5.0.0
+      random-access-file: 2.2.1
+      random-access-memory: 4.1.0
+      random-access-storage: 1.4.3
+    transitivePeerDependencies:
+      - effect
+
   '@dxos/timeframe@0.8.3':
     dependencies:
       '@dxos/debug': 0.8.3
@@ -39396,6 +39516,19 @@ snapshots:
       '@dxos/log': 0.8.3
       '@dxos/node-std': 0.8.3
       '@dxos/util': 0.8.3
+
+  '@dxos/tracing@0.8.3(effect@3.19.16)':
+    dependencies:
+      '@dxos/async': 0.8.3
+      '@dxos/codec-protobuf': 0.8.3
+      '@dxos/context': 0.8.3
+      '@dxos/invariant': 0.8.3
+      '@dxos/log': 0.8.3
+      '@dxos/node-std': 0.8.3
+      '@dxos/protocols': 0.8.3(effect@3.19.16)
+      '@dxos/util': 0.8.3
+    transitivePeerDependencies:
+      - effect
 
   '@dxos/util@0.8.3':
     dependencies:

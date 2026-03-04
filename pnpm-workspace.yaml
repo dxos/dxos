@@ -379,6 +379,7 @@ catalog:
   esbuild-plugin-yaml: ^0.0.1
   esbuild-style-plugin: ^1.6.1
   esbuild-wasm: ^0.16.14
+  error-stack-parser: ^2.1.4
   eslint: ^9.37.0
   eslint-config-prettier: ^10.1.8
   eslint-formatter-unix: ^8.40.0

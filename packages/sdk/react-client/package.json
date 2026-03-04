@@ -105,8 +105,7 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
     "@dxos/stream": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "react-error-boundary": "catalog:"
+    "@dxos/util": "workspace:*"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",

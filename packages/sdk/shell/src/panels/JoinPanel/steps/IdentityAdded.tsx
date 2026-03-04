@@ -11,7 +11,7 @@ import { Avatar, useId, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 import { hexToFallback } from '@dxos/util';
 
-import { Action, Actions, StepHeading } from '../../../components';
+import { Action, ActionBar, InputLabel } from '../../../components';
 import { translationKey } from '../../../translations';
 import { type JoinPanelMode, type JoinStepProps } from '../JoinPanelProps';
 
@@ -43,7 +43,7 @@ export const IdentityAdded = (props: IdentityAddedProps) => {
 
   return (
     <>
-      <StepHeading>{t('identity added label')}</StepHeading>
+      <InputLabel>{t('identity added label')}</InputLabel>
       <div role='none' className='grow flex flex-col items-center justify-center text-center gap-2'>
         <Avatar.Root labelId={labelId}>
           <Avatar.Content
@@ -63,7 +63,7 @@ export const IdentityAdded = (props: IdentityAddedProps) => {
           </Avatar.Label>
         </Avatar.Root>
       </div>
-      <Actions>
+      <ActionBar>
         {mode === 'halo-only' ? (
           doneActionParent ? (
             cloneElement(doneActionParent, {}, doneAction)
@@ -80,7 +80,7 @@ export const IdentityAdded = (props: IdentityAddedProps) => {
             {t('continue label')}
           </Action>
         )}
-      </Actions>
+      </ActionBar>
     </>
   );
 };

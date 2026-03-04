@@ -26,7 +26,7 @@ import { focusRing, getSize, mx } from '@dxos/ui-theme';
 import { hexToEmoji } from '@dxos/util';
 
 import { translationKey } from '../../translations';
-import { AuthCode } from '../AuthCode';
+import { AuthCode } from '../AuthCode/AuthCode';
 
 import { type SharedInvitationListProps } from './InvitationListProps';
 

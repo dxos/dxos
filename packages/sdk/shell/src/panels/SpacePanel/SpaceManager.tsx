@@ -19,8 +19,8 @@ import { ScrollArea, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import {
+  ActionBar,
   type ActionMenuItem,
-  Actions,
   BifurcatedAction,
   InvitationList,
   type InvitationListProps,
@@ -161,7 +161,7 @@ export const SpaceManagerImpl = (props: SpaceManagerImplProps) => {
           <SpaceMemberListComponent spaceKey={space.key} includeSelf />
         </ScrollArea.Viewport>
       </ScrollArea.Root>
-      <Actions>
+      <ActionBar>
         <BifurcatedAction
           disabled={!active}
           actions={inviteActions}
@@ -169,7 +169,7 @@ export const SpaceManagerImpl = (props: SpaceManagerImplProps) => {
           onChangeActiveAction={setActiveAction as Dispatch<SetStateAction<string>>}
           data-testid='spaces-panel.create-invitation'
         />
-      </Actions>
+      </ActionBar>
     </>
   );
 };
