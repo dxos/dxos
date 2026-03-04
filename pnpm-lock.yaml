@@ -21745,6 +21745,36 @@ packages:
     resolution: {integrity: sha512-Q9lZUy+hORaJjM7gEW2SZVGe62qdGsYR2To7gx1zMOJdR9/H/TCPBVJDmZK6vjYikdrdQkSLo1ypX5Z8TBmRFQ==}
     hasBin: true
 
+  '@moonrepo/core-linux-arm64-gnu@2.0.3':
+    resolution: {integrity: sha512-4QvLPfOUEkrtdoPc2IAgi8W6ZdaYDBPYFO/YSavhMTiVMM0LnYoDeoao5UGGlV0P6tk1gZJzv2AVz6TC6flXxA==}
+    cpu: [arm64]
+    os: [linux]
+
+  '@moonrepo/core-linux-arm64-musl@2.0.3':
+    resolution: {integrity: sha512-sFL8zHKfpV6wjNslMINUJzqA+9hvXAREdLZkqpIdcKreAcOCgbHxL4QKkFZ0LaLeHWxij8d+gp3U6o4Uc3pM0w==}
+    cpu: [arm64]
+    os: [linux]
+
+  '@moonrepo/core-linux-x64-gnu@2.0.3':
+    resolution: {integrity: sha512-XSRDk+yLLQB8BMueseBcMt3ayzZF6HQR2Cv/dZQD/m8F1bGQw3E3XnH7C6m1kY0o5ou8A37ujrMyb0GgG09nLg==}
+    cpu: [x64]
+    os: [linux]
+
+  '@moonrepo/core-linux-x64-musl@2.0.3':
+    resolution: {integrity: sha512-ShIjhOUhfYy3k5sjHBfjLmzq6n1+vIHSAfUWcGVzbMdlnGp5g4UxXGOHZxOopPtcaXJbGNv9IxR10HiTJtErcQ==}
+    cpu: [x64]
+    os: [linux]
+
+  '@moonrepo/core-macos-arm64@2.0.3':
+    resolution: {integrity: sha512-MgdCNoUVYYeohUaIsSWWK63hIOie9/bjTeVLDhFvoooNNJrL6i5uBXij9XTtir3iSy9CCXO9COwnvkCuopcNEA==}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@moonrepo/core-windows-x64-msvc@2.0.3':
+    resolution: {integrity: sha512-zetuREncxv0X7WzL3tr5QGEdNz9/KtT5arbHqtCwrxJ3g1uEjay4bhsllzpph6X9gn5godhT26XZOmnYTZi5CA==}
+    cpu: [x64]
+    os: [win32]
+
   '@msgpackr-extract/msgpackr-extract-darwin-arm64@3.0.3':
     resolution: {integrity: sha512-QZHtlVgbAdy2zAqNA9Gu1UpIuI8Xvsd1v8ic6B2pZmeFnFcMWiPLfWXh7TVw4eGEZ/C9TH281KwhVoeQUKbyjw==}
     cpu: [arm64]
@@ -40794,6 +40824,31 @@ snapshots:
   '@moonrepo/cli@2.0.3':
     dependencies:
       detect-libc: 2.1.2
+    optionalDependencies:
+      '@moonrepo/core-linux-arm64-gnu': 2.0.3
+      '@moonrepo/core-linux-arm64-musl': 2.0.3
+      '@moonrepo/core-linux-x64-gnu': 2.0.3
+      '@moonrepo/core-linux-x64-musl': 2.0.3
+      '@moonrepo/core-macos-arm64': 2.0.3
+      '@moonrepo/core-windows-x64-msvc': 2.0.3
+
+  '@moonrepo/core-linux-arm64-gnu@2.0.3':
+    optional: true
+
+  '@moonrepo/core-linux-arm64-musl@2.0.3':
+    optional: true
+
+  '@moonrepo/core-linux-x64-gnu@2.0.3':
+    optional: true
+
+  '@moonrepo/core-linux-x64-musl@2.0.3':
+    optional: true
+
+  '@moonrepo/core-macos-arm64@2.0.3':
+    optional: true
+
+  '@moonrepo/core-windows-x64-msvc@2.0.3':
+    optional: true
 
   '@msgpackr-extract/msgpackr-extract-darwin-arm64@3.0.3':
     optional: true
@@ -59383,3 +59438,5 @@ snapshots:
   zwitch@2.0.4: {}
 
   zx@8.8.5: {}
+
+# First generated on 2026-03-04T20:01:59.153Z by jdw
