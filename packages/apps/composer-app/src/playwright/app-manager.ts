@@ -183,8 +183,10 @@ export class AppManager {
         const selectedSpace = document.querySelector('[data-testid="spacePlugin.space"][aria-selected="true"]');
         return selectedSpace?.getAttribute('data-object-id') === workspaceId;
       },
-      { timeout: timeout / 2 },
+      { timeout },
     );
+    // TODO(wittjosiah): This improves reliability significantly. Find a better thing to wait for.
+    await this.page.waitForTimeout(200);
   }
 
   getSpacePresenceMembers(): Locator {
