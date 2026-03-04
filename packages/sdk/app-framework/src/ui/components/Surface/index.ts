@@ -4,12 +4,12 @@
 
 import { SurfaceContext } from './context';
 import { SurfaceComponent, isSurfaceAvailable } from './SurfaceComponent';
-import { type Definition as SurfaceDefinition, create as createReact, createWeb as createWebComponent } from './types';
+import { type Definition as SurfaceDefinition, create as createSurface, createWeb as createWebSurface } from './types';
 
 export namespace Surface {
   export type Definition = SurfaceDefinition;
-  export const create = createReact;
-  export const createWeb = createWebComponent;
+  export const create = createSurface;
+  export const createWeb = createWebSurface;
 
   export type Context = SurfaceContext;
   export const Context = SurfaceContext;
