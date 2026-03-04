@@ -212,25 +212,33 @@ describe('schema registry', () => {
 
   test('can make an object with a dynamic schema', async () => {
     const { db } = await setupTest();
-    const [schema] = await db.schemaRegistry.register([Contact]);
-    const object = Obj.make(schema, { name: 'Test' });
+    const TestSchema = makeTestSchema();
+    const [schema] = await db.schemaRegistry.register([TestSchema]);
+    const object = db.add(Obj.make(schema, { name: 'Test' }));
     expect(object.name).toEqual('Test');
   });
 
   test('can change an object with a dynamic schema', async () => {
     const { db } = await setupTest();
-    const [schema] = await db.schemaRegistry.register([Contact]);
-    const object = Obj.make(schema, { name: 'Test' });
-    Obj.change(object, (o) => {
-      o.name = 'Test2';
+    const TestSchema = makeTestSchema();
+    const [schema] = await db.schemaRegistry.register([TestSchema]);
+    const object = db.add(Obj.make(schema, { name: 'Test' }));
+    Obj.change(object, (object) => {
+      object.name = 'Test2';
     });
     expect(object.name).toEqual('Test2');
   });
 
   test('can add new fields and change them', async () => {
     const { db } = await setupTest();
-    const [schema] = await db.schemaRegistry.register([Contact]);
-    const object = Obj.make(schema, { name: 'Test' });
+    const TestSchema = makeTestSchema();
+    const [schema] = await db.schemaRegistry.register([TestSchema]);
+    const object = db.add(
+      Obj.make(schema, {
+        name: 'Test',
+      }),
+    );
+
     schema.addFields({ newField: Schema.String });
     Obj.change(object, (object) => {
       object.newField = 'Test3';
@@ -238,3 +246,14 @@ describe('schema registry', () => {
     expect(object.newField).toEqual('Test3');
   });
 });
+
+// Separate test schema instance to avoid cross-test pollution.
+const makeTestSchema = () =>
+  Schema.Struct({
+    name: Schema.String,
+  }).pipe(
+    Type.object({
+      typename: 'example.com/type/Test',
+      version: '0.1.0',
+    }),
+  );
