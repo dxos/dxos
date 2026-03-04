@@ -4,4 +4,4 @@
 
 export * from './App';
 export * from './PluginManager';
-export * from './Surface';
+export * from './surface';
