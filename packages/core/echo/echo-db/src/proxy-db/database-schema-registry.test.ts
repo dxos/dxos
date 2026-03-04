@@ -209,4 +209,32 @@ describe('schema registry', () => {
       expect(Type.getTypename(schema)).toEqual(Type.getTypename(Contact));
     }
   });
+
+  test('can make an object with a dynamic schema', async () => {
+    const { db } = await setupTest();
+    const [schema] = await db.schemaRegistry.register([Contact]);
+    const object = Obj.make(schema, { name: 'Test' });
+    expect(object.name).toEqual('Test');
+  });
+
+  test('can change an object with a dynamic schema', async () => {
+    const { db } = await setupTest();
+    const [schema] = await db.schemaRegistry.register([Contact]);
+    const object = Obj.make(schema, { name: 'Test' });
+    Obj.change(object, (o) => {
+      o.name = 'Test2';
+    });
+    expect(object.name).toEqual('Test2');
+  });
+
+  test('can add new fields and change them', async () => {
+    const { db } = await setupTest();
+    const [schema] = await db.schemaRegistry.register([Contact]);
+    const object = Obj.make(schema, { name: 'Test' });
+    schema.addFields({ newField: Schema.String });
+    Obj.change(object, (object) => {
+      object.newField = 'Test3';
+    });
+    expect(object.newField).toEqual('Test3');
+  });
 });
