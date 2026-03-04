@@ -38,7 +38,7 @@ export const InboxPlugin = Plugin.define(meta).pipe(
           inputSchema: CreateMailboxSchema,
           createObject: ((props, { db }) =>
             // TODO(wittjosiah): Should this allow multiple objects to be returned?
-            Effect.gen(function* () {
+            Effect.sync(() => {
               const feed = Mailbox.make(props);
               const config = Mailbox.makeConfig({ feed: Ref.make(feed), accessToken: props.accessToken });
               db.add(config);
@@ -62,7 +62,7 @@ export const InboxPlugin = Plugin.define(meta).pipe(
           blueprints: [CalendarBlueprint.key],
           inputSchema: CreateCalendarSchema,
           createObject: ((props, { db }) =>
-            Effect.gen(function* () {
+            Effect.sync(() => {
               const feed = Calendar.make(props);
               const config = Calendar.makeConfig({ feed: Ref.make(feed), accessToken: props.accessToken });
               db.add(config);
