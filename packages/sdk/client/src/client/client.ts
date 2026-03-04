@@ -65,7 +65,7 @@ export type ClientOptions = {
   /** When running in the host mode, a factory to create the worker for OPFS sqlite database. */
   createOpfsWorker?: () => Worker;
 
-  /** Path to SQLite database file for persistent indexing in Node/Bun. */
+  /** Path to SQLite database file for persistent indexing in Node/Bun. Dervied from config's dataRoot. */
   sqlitePath?: string;
 };
 
@@ -363,12 +363,13 @@ export class Client {
 
     this._ctx = new Context();
     this._config = this._options.config ?? new Config();
+
     // NOTE: Must currently match the host.
     this._services = await (this._options.services ??
       createClientServices(this._config, {
         createWorker: this._options.createWorker,
         createOpfsWorker: this._options.createOpfsWorker,
-        sqlitePath: this._options.sqlitePath,
+        sqlitePath: this._options.sqlitePath, // TODO(dmaretskyi): Remove and derive from dataRoot in config.
       }));
     this._iframeManager = this._options.shell
       ? new IFrameManager({ source: new URL(this._options.shell, window.location.origin) })

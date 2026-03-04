@@ -2,79 +2,31 @@
 // Copyright 2023 DXOS.org
 //
 
-import { rmSync } from 'node:fs';
-import path, { join } from 'node:path';
-
 import * as Schema from 'effect/Schema';
-import yargs from 'yargs';
-import { hideBin } from 'yargs/helpers';
 
-import { Client } from '@dxos/client';
-import { Obj, Type } from '@dxos/echo';
-import { Ref } from '@dxos/echo/internal';
+import { Obj, Ref, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
-import { log } from '@dxos/log';
-import { STORAGE_VERSION } from '@dxos/protocols';
+import { dbg, log } from '@dxos/log';
 import { CreateEpochRequest } from '@dxos/protocols/proto/dxos/client/services';
 
-import { type SnapshotDescription, SnapshotsRegistry } from './snapshots-registry';
+import { Client } from '@dxos/client';
 import { SpacesDumper } from './space-json-dump';
 import { Todo } from './types';
-import { EXPECTED_JSON_DATA, SNAPSHOTS_DIR, SNAPSHOT_DIR, createConfig, getBaseDataDir } from './util';
+import { createConfig } from './util';
+import { expect } from 'vitest';
 
-/**
- * Generates a snapshot of encoded protocol buffers to check for backwards compatibility.
- */
-// TODO(burdon): Create space with different object model types.
-const main = async () => {
-  const baseDir = getBaseDataDir();
+export const generateSnapshot = async (snapshotDir: string, dumpPath: string) => {
+  const config = createConfig({ dataRoot: snapshotDir });
+  const client = new Client({ config, types: [Todo, TestSchema.Expando] });
+  await client.initialize();
+  await client.halo.createIdentity({ displayName: 'My Identity' });
+  const space = await client.spaces.create({ name: 'My Space' });
+  await space.waitUntilReady();
+  await seedData(client);
+  await SpacesDumper.dumpSpaces(client, dumpPath);
+};
 
-  let snapshot: SnapshotDescription;
-  let argv: yargs.Arguments<{ force: boolean }>;
-  {
-    argv = yargs(hideBin(process.argv))
-      .option({
-        force: {
-          type: 'boolean',
-          alias: 'f',
-          describe: 'if `true` overrides existing snapshot with same name',
-          default: false,
-        },
-      })
-      .demandCommand(1, 'need the name for snapshot')
-      .help().argv;
-    const name = argv._[0] as string;
-    snapshot = {
-      name,
-      version: STORAGE_VERSION,
-      dataRoot: join('.', SNAPSHOTS_DIR, name, SNAPSHOT_DIR),
-      jsonDataPath: path.join('.', SNAPSHOTS_DIR, name, EXPECTED_JSON_DATA),
-      timestamp: new Date().toISOString(),
-    };
-    log.info('creating snapshot', { snapshot });
-  }
-
-  {
-    // Check if snapshot already exists.
-    const existingSnapshot = SnapshotsRegistry.getSnapshot(snapshot.name);
-    if (existingSnapshot && !argv.force) {
-      log.warn('snapshot already exists', { existingSnapshot, newSnapshot: snapshot });
-      return;
-    }
-    rmSync(join(baseDir, snapshot.dataRoot), { recursive: true, force: true });
-    SnapshotsRegistry.removeSnapshot({ name: snapshot.name });
-  }
-
-  let client: Client;
-  {
-    // Init client.
-    client = new Client({ config: createConfig({ dataRoot: path.join(baseDir, snapshot.dataRoot) }) });
-    await client.initialize();
-    await client.addTypes([Todo]);
-    await client.halo.createIdentity();
-    await client.spaces.waitUntilReady();
-  }
-
+const seedData = async (client: Client) => {
   log.break();
 
   {
@@ -91,7 +43,6 @@ const main = async () => {
     );
     await space.db.flush();
 
-    // Generate epoch.
     const promise = space.internal.db.coreDatabase.rootChanged.waitForCount(1);
     await space.internal.createEpoch({ migration: CreateEpochRequest.Migration.PRUNE_AUTOMERGE_ROOT_HISTORY });
     await promise;
@@ -103,49 +54,40 @@ const main = async () => {
         name: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
       }),
     );
-    expando.value.push(todo);
+    Obj.change(expando, (e) => {
+      e.value.push(Ref.make(todo));
+    });
     await space.db.flush();
   }
 
   {
     // Create second space and data.
     const space = await client.spaces.create({ name: 'second-space' });
-    await space.waitUntilReady();
 
     // Create dynamic schema.
-
-    // TODO(burdon): Should just be example.org/type/Test
-    const TestType = Schema.Struct({}).pipe(
+    const TestType = Schema.Struct({
+      testField: Schema.String,
+    }).pipe(
       Type.object({
-        typename: 'example.org/type/TestType',
+        typename: 'example.org/type/Test',
         version: '0.1.0',
       }),
     );
     const [dynamicSchema] = await space.db.schemaRegistry.register([TestType]);
-    await client.addTypes([TestType]);
-    const object = space.db.add(Obj.make(dynamicSchema, {}));
-    dynamicSchema.addFields({ name: Schema.String, todo: Ref(Todo) });
-    object.name = 'Test';
-    object.todo = Obj.make(Todo, { name: 'Test todo' });
-    await space.db.flush();
+    dbg(dynamicSchema.id);
 
-    // space.db.add(live(Expando, { crossSpaceReference: obj, explanation: 'this tests cross-space references' }));
+    const object2 = space.db.add(Obj.make(dynamicSchema, { testField: 'Test' }));
+    expect(Obj.getSchema(object2)).toEqual(dynamicSchema);
+
+    dynamicSchema.addFields({ name: Schema.String, todo: Type.Ref(Todo) });
+    dbg(object2);
+    Obj.change(object2, (object) => {
+      object.name = 'Test';
+      object.todo = Ref.make(Obj.make(Todo, { name: 'Test todo' }));
+    });
+    await space.db.flush();
   }
   log.info('created spaces');
 
-  {
-    // Register snapshot.
-    SnapshotsRegistry.registerSnapshot(snapshot);
-    // Dump data.
-    await SpacesDumper.dumpSpaces(client, path.join(baseDir, snapshot.jsonDataPath));
-  }
-
-  {
-    // Clean up.
-    await client.destroy();
-  }
-
-  log.info('done');
+  await client.destroy();
 };
-
-main().catch((err) => log.catch(err));
