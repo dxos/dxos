@@ -15,55 +15,9 @@ import { log } from '@dxos/log';
 import { type MakeOptional, isNonNullable } from '@dxos/util';
 
 import * as Node from './node';
+import { Separators, normalizeRelation, shallowEqual } from './util';
 
 const graphSymbol = Symbol('graph');
-
-/** Shallow equality for node data: handles primitives and one-level-deep objects. */
-const dataEqual = (a: unknown, b: unknown): boolean => {
-  if (a === b) return true;
-  if (a == null || b == null || typeof a !== 'object' || typeof b !== 'object') return false;
-  const keysA = Object.keys(a as Record<string, unknown>);
-  const keysB = Object.keys(b as Record<string, unknown>);
-  if (keysA.length !== keysB.length) return false;
-  return keysA.every((key) => (a as Record<string, unknown>)[key] === (b as Record<string, unknown>)[key]);
-};
-
-const CONNECTION_KEY_SEPARATOR = '\u0001';
-const RELATION_KEY_SEPARATOR = '\u0002';
-const EXPAND_KEY_SEPARATOR = '\u0003';
-
-const normalizeRelation = (relation: Node.RelationInput): Node.Relation =>
-  typeof relation === 'string' ? Node.relation(relation) : relation;
-
-export const relationKey = (relation: Node.RelationInput): string => {
-  const normalized = normalizeRelation(relation);
-  return `${normalized.kind}${RELATION_KEY_SEPARATOR}${normalized.direction}`;
-};
-
-const relationFromKey = (encoded: string): Node.Relation => {
-  const separatorIndex = encoded.lastIndexOf(RELATION_KEY_SEPARATOR);
-  invariant(separatorIndex > 0 && separatorIndex < encoded.length - 1, `Invalid relation key: ${encoded}`);
-  const kind = encoded.slice(0, separatorIndex);
-  const directionRaw = encoded.slice(separatorIndex + 1);
-  invariant(directionRaw === 'outbound' || directionRaw === 'inbound', `Invalid relation direction: ${directionRaw}`);
-  return Node.relation(kind, directionRaw);
-};
-
-const connectionKey = (id: string, relation: Node.RelationInput): string =>
-  `${id}${CONNECTION_KEY_SEPARATOR}${relationKey(relation)}`;
-
-const relationFromConnectionKey = (key: string): { id: string; relation: Node.Relation } => {
-  const separatorIndex = key.indexOf(CONNECTION_KEY_SEPARATOR);
-  invariant(separatorIndex > 0 && separatorIndex < key.length - 1, `Invalid connection key: ${key}`);
-  const id = key.slice(0, separatorIndex);
-  const encodedRelation = key.slice(separatorIndex + 1);
-  return { id, relation: relationFromKey(encodedRelation) };
-};
-
-const inverseRelation = (relation: Node.RelationInput): Node.Relation => {
-  const normalized = normalizeRelation(relation);
-  return Node.relation(normalized.kind, normalized.direction === 'outbound' ? 'inbound' : 'outbound');
-};
 
 type DeepWriteable<T> = {
   -readonly [K in keyof T]: T[K] extends object ? DeepWriteable<T[K]> : T[K];
@@ -739,7 +693,7 @@ const expandImpl = <T extends ExpandableGraph | WritableGraph>(
 ): T => {
   const internal = getInternal(graph);
   const normalizedRelation = normalizeRelation(relation);
-  const key = `${id}${EXPAND_KEY_SEPARATOR}${relationKey(normalizedRelation)}`;
+  const key = `${id}${Separators.primary}${relationKey(normalizedRelation)}`;
   const nodeOpt = internal._registry.get(internal._node(id));
   if (Option.isNone(nodeOpt)) {
     // Node not yet in graph: record expand to run when the node is added.
@@ -905,7 +859,7 @@ const addNodeImpl = <T extends WritableGraph>(graph: T, nodeArg: Node.NodeArg<an
   Option.match(existingNode, {
     onSome: (existing) => {
       const typeChanged = existing.type !== type;
-      const dataChanged = !dataEqual(existing.data, data);
+      const dataChanged = !shallowEqual(existing.data, data);
       const propertiesChanged = Object.keys(properties).some((key) => existing.properties[key] !== properties[key]);
       log('existing node', {
         id,
@@ -933,7 +887,7 @@ const addNodeImpl = <T extends WritableGraph>(graph: T, nodeArg: Node.NodeArg<an
       graph.onNodeChanged.emit({ id, node: newNode });
 
       // Apply any expands that were deferred because this node did not exist yet.
-      const prefix = `${id}${EXPAND_KEY_SEPARATOR}`;
+      const prefix = `${id}${Separators.primary}`;
       const toApply = [...internal._pendingExpands].filter((k) => k.startsWith(prefix));
       for (const pendingKey of toApply) {
         internal._pendingExpands.delete(pendingKey);
@@ -1251,4 +1205,38 @@ export function removeEdge<T extends WritableGraph>(
  */
 export const make = (params?: GraphProps): Graph => {
   return new GraphImpl(params);
+};
+
+//
+// Utilities
+//
+
+export const relationKey = (relation: Node.RelationInput): string => {
+  const normalized = normalizeRelation(relation);
+  return `${normalized.kind}${Separators.secondary}${normalized.direction}`;
+};
+
+export const relationFromKey = (encoded: string): Node.Relation => {
+  const separatorIndex = encoded.lastIndexOf(Separators.secondary);
+  invariant(separatorIndex > 0 && separatorIndex < encoded.length - 1, `Invalid relation key: ${encoded}`);
+  const kind = encoded.slice(0, separatorIndex);
+  const directionRaw = encoded.slice(separatorIndex + 1);
+  invariant(directionRaw === 'outbound' || directionRaw === 'inbound', `Invalid relation direction: ${directionRaw}`);
+  return Node.relation(kind, directionRaw);
+};
+
+const connectionKey = (id: string, relation: Node.RelationInput): string =>
+  `${id}${Separators.primary}${relationKey(relation)}`;
+
+const relationFromConnectionKey = (key: string): { id: string; relation: Node.Relation } => {
+  const separatorIndex = key.indexOf(Separators.primary);
+  invariant(separatorIndex > 0 && separatorIndex < key.length - 1, `Invalid connection key: ${key}`);
+  const id = key.slice(0, separatorIndex);
+  const encodedRelation = key.slice(separatorIndex + 1);
+  return { id, relation: relationFromKey(encodedRelation) };
+};
+
+const inverseRelation = (relation: Node.RelationInput): Node.Relation => {
+  const normalized = normalizeRelation(relation);
+  return Node.relation(normalized.kind, normalized.direction === 'outbound' ? 'inbound' : 'outbound');
 };

@@ -21,48 +21,7 @@ import { type MaybePromise, type Position, byPosition, getDebugName, isNonNullab
 import * as Graph from './graph';
 import * as Node from './node';
 import * as NodeMatcher from './node-matcher';
-
-/** Shallow-compare two values: same reference, or same own-keys with === values. */
-const shallowEqual = (a: unknown, b: unknown): boolean => {
-  if (a === b) return true;
-  if (a == null || b == null || typeof a !== 'object' || typeof b !== 'object') return false;
-  const keysA = Object.keys(a as Record<string, unknown>);
-  const keysB = Object.keys(b as Record<string, unknown>);
-  if (keysA.length !== keysB.length) return false;
-  return keysA.every((k) => (a as Record<string, unknown>)[k] === (b as Record<string, unknown>)[k]);
-};
-
-/** Returns true if two NodeArg arrays are semantically identical (same id, type, data, properties per index). */
-const nodeArgsUnchanged = (prev: Node.NodeArg<any>[], next: Node.NodeArg<any>[]): boolean => {
-  if (prev.length !== next.length) return false;
-  return prev.every((p, idx) => {
-    const n = next[idx];
-    return (
-      p.id === n.id && p.type === n.type && shallowEqual(p.data, n.data) && shallowEqual(p.properties, n.properties)
-    );
-  });
-};
-
-const CONNECTOR_KEY_SEPARATOR = '\u0001';
-
-const normalizeRelation = (relation?: Node.RelationInput): Node.Relation =>
-  relation == null ? Node.childRelation() : typeof relation === 'string' ? Node.relation(relation) : relation;
-
-const relationEquals = (left: Node.RelationInput, right: Node.RelationInput): boolean => {
-  const normalizedLeft = normalizeRelation(left);
-  const normalizedRight = normalizeRelation(right);
-  return normalizedLeft.kind === normalizedRight.kind && normalizedLeft.direction === normalizedRight.direction;
-};
-
-const connectorKey = (id: string, relation: Node.RelationInput): string =>
-  `${id}${CONNECTOR_KEY_SEPARATOR}${JSON.stringify(normalizeRelation(relation))}`;
-
-const relationFromConnectorKey = (key: string): { id: string; relation: Node.Relation } => {
-  const separatorIndex = key.indexOf(CONNECTOR_KEY_SEPARATOR);
-  const id = key.slice(0, separatorIndex);
-  const relation = JSON.parse(key.slice(separatorIndex + 1)) as Node.Relation;
-  return { id, relation };
-};
+import { Separators, nodeArgsUnchanged, normalizeRelation } from './util';
 
 //
 // Extension Types
@@ -274,7 +233,7 @@ class GraphBuilderImpl implements GraphBuilder {
         Array.sortBy(byPosition),
         Array.filter(
           (ext): ext is BuilderExtension & { connector: NonNullable<BuilderExtension['connector']> } =>
-            relationEquals(ext.relation ?? 'child', relation) && ext.connector != null,
+            Graph.relationKey(ext.relation ?? 'child') === Graph.relationKey(relation) && ext.connector != null,
         ),
       );
 
@@ -322,7 +281,7 @@ class GraphBuilderImpl implements GraphBuilder {
       { immediate: true },
     );
 
-    this._subscriptions.set(`${id}\0expand\0${key}`, cancel);
+    this._subscriptions.set(subscriptionKey(id, 'expand', key), cancel);
   }
 
   // TODO(wittjosiah): If the same node is added by a connector, the resolver should probably cancel itself?
@@ -348,11 +307,11 @@ class GraphBuilderImpl implements GraphBuilder {
       { immediate: true },
     );
 
-    this._subscriptions.set(`${id}\0init`, cancel);
+    this._subscriptions.set(subscriptionKey(id, 'init'), cancel);
   }
 
   private _onRemoveNode(id: string): void {
-    const prefix = `${id}\0`;
+    const prefix = `${id}${Separators.primary}`;
     for (const [key, cleanup] of this._subscriptions) {
       if (key.startsWith(prefix)) {
         cleanup();
@@ -467,7 +426,7 @@ const exploreImpl = async (
   }
 
   const nodes = Object.values(internal._registry.get(internal._extensions))
-    .filter((extension) => relationEquals(extension.relation ?? 'child', relation))
+    .filter((extension) => Graph.relationKey(extension.relation ?? 'child') === Graph.relationKey(relation))
     .map((extension) => extension.connector)
     .filter(isNonNullable)
     .flatMap((connector) => registry.get(connector(internal._graph.node(source))));
@@ -833,6 +792,20 @@ export const createTypeExtension = <T extends Type.Entity.Any, R = never>(
 //
 // Extension Utilities
 //
+
+const connectorKey = (id: string, relation: Node.RelationInput): string =>
+  `${id}${Separators.primary}${Graph.relationKey(relation)}`;
+
+const relationFromConnectorKey = (key: string): { id: string; relation: Node.Relation } => {
+  const separatorIndex = key.indexOf(Separators.primary);
+  const id = key.slice(0, separatorIndex);
+  return { id, relation: Graph.relationFromKey(key.slice(separatorIndex + 1)) };
+};
+
+const subscriptionKey = (id: string, kind: string, detail?: string): string =>
+  detail != null
+    ? `${id}${Separators.primary}${kind}${Separators.primary}${detail}`
+    : `${id}${Separators.primary}${kind}`;
 
 export const flattenExtensions = (extension: BuilderExtensions, acc: BuilderExtension[] = []): BuilderExtension[] => {
   if (Array.isArray(extension)) {
