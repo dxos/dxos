@@ -4,4 +4,4 @@
 
 export * from './DropdownMenu';
 export * from './ToolbarMenu';
-export * from './MenuContext';
+export { menuContextDefaults, useMenu, useMenuItems, MenuProvider, type MenuProviderProps } from './MenuContext';

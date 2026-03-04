@@ -47,7 +47,7 @@ export const useObjectNavigate = (subject: unknown): (() => void) | undefined =>
 /**
  * Returns object-scoped menu items (e.g. Open/Navigate) for the given subject.
  * Only includes items when subject is an Echo object and its schema does not have the system annotation.
- * Use with useMenuContributions(CONTRIBUTOR_NAME)?.addContribution from a component inside Card.Root to register with the card menu.
+ * Use with useMenu(CONTRIBUTOR_NAME).addMenuItems from a component inside Card.Root to register with the card menu.
  */
 export const useObjectMenuItems = (subject: unknown): MenuItem[] => {
   const { invokePromise } = useOperationInvoker();
@@ -74,7 +74,7 @@ export const useObjectMenuItems = (subject: unknown): MenuItem[] => {
   }, [subject, invokePromise, t]);
 };
 
-/** Contribution id for object-actions (Open/Navigate). Use with useMenuContributions(CONTRIBUTOR_NAME)?.addContribution. */
+/** ID for object-actions (Open/Navigate). Use with useMenu(CONTRIBUTOR_NAME).addMenuItems. */
 export const OBJECT_ACTIONS_CONTRIBUTION_ID = 'object-actions';
 
 /**

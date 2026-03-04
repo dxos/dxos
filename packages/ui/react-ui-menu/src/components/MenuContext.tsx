@@ -2,15 +2,22 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, Registry, RegistryContext, useAtomValue } from '@effect-atom/atom-react';
-import { type Scope, createContext, createContextScope } from '@radix-ui/react-context';
-import React, { type PropsWithChildren, useCallback, useMemo } from 'react';
+import { Atom, RegistryContext, useAtomValue } from '@effect-atom/atom-react';
+import { type Scope, createContextScope } from '@radix-ui/react-context';
+import React, { type PropsWithChildren, useCallback, useContext, useMemo } from 'react';
 
 import { log } from '@dxos/log';
 
-import { type MenuContextValue, type MenuItem, type MenuItemGroup } from '../types';
+import {
+  type AddMenuItemsProps,
+  type MenuContextValue,
+  type MenuItem,
+  type MenuItemGroup,
+  type MenuItems,
+  type MenuItemsMap,
+} from '../types';
 
-export type MenuScopedProps<P> = P & { __menuScope?: Scope };
+type MenuScopedProps<P> = P & { __menuScope?: Scope };
 
 const MENU_NAME = 'Menu';
 
@@ -20,55 +27,25 @@ export const menuContextDefaults: MenuContextValue = {
   iconSize: 5,
   useGroupItems: () => null,
   onAction: undefined,
+  menuItemsAtom: Atom.make<MenuItemsMap>(new Map()),
+  addMenuItems: () => {},
+  removeMenuItems: () => {},
 };
 
-const [MenuContextProvider, useMenu] = createMenuContext<MenuContextValue>(MENU_NAME, menuContextDefaults);
+const [MenuContextProvider, useMenuScoped] = createMenuContext<MenuContextValue>(MENU_NAME, menuContextDefaults);
 
 const useMenuScope = createMenuScope();
 
-//
-// Menu contribution API (imperative). Plain context like mosaic – one provider per MenuProvider, no scope.
-//
-
-export type MenuContributionMode = 'additive' | 'replacement';
-
-export type MenuContribution = {
-  id: string;
-  mode: MenuContributionMode;
-  priority?: number;
-  items: MenuItem[];
-  groupFilter?: (group?: MenuItemGroup) => boolean;
-};
-
 const DEFAULT_PRIORITY = 100;
 
-type ContributionMap = Map<string, MenuContribution & { priority: number }>;
-
-const MENU_CONTRIBUTION_DEFAULT: MenuContributionContextValue = {
-  contributionsAtom: Atom.make<ContributionMap>(new Map()),
-  addContribution: () => {},
-  removeContribution: () => {},
-};
-
-function sortContributions(contributions: (MenuContribution & { priority: number })[]) {
-  return [...contributions].sort((a, b) => {
+function sortMenuItems(items: MenuItems[]) {
+  return [...items].sort((a, b) => {
     if (a.priority !== b.priority) {
       return a.priority - b.priority;
     }
     return a.id.localeCompare(b.id);
   });
 }
-
-export type MenuContributionContextValue = {
-  contributionsAtom: Atom.Atom<ContributionMap>;
-  addContribution: (record: MenuContribution) => void;
-  removeContribution: (id: string) => void;
-};
-
-const [MenuContributionProvider, useMenuContributions] = createContext<MenuContributionContextValue>(
-  'MenuContribution',
-  MENU_CONTRIBUTION_DEFAULT,
-);
 
 type MenuProviderProps = PropsWithChildren<Partial<MenuContextValue>>;
 
@@ -81,69 +58,63 @@ const MenuProvider = ({
   onAction,
 }: MenuProviderProps) => {
   const { scope } = useMenuScope(undefined);
-  const registry = useMemo(() => Registry.make(), []);
-  const contributionsAtom = useMemo(() => Atom.make<ContributionMap>(new Map()).pipe(Atom.keepAlive), []);
+  const registry = useContext(RegistryContext);
+  const menuItemsAtom = useMemo(() => Atom.make<MenuItemsMap>(new Map()).pipe(Atom.keepAlive), []);
 
-  const addContribution = useCallback(
-    (contribution: MenuContribution) => {
-      const priority = contribution.priority ?? DEFAULT_PRIORITY;
-      const prev = registry.get(contributionsAtom);
+  const addMenuItems = useCallback(
+    (props: AddMenuItemsProps) => {
+      const priority = props.priority ?? DEFAULT_PRIORITY;
+      const prev = registry.get(menuItemsAtom);
       const next = new Map(prev);
-      next.set(contribution.id, { ...contribution, priority });
-      registry.set(contributionsAtom, next);
+      next.set(props.id, { ...props, priority });
+      registry.set(menuItemsAtom, next);
     },
-    [registry, contributionsAtom],
+    [registry, menuItemsAtom],
   );
 
-  const removeContribution = useCallback(
+  const removeMenuItems = useCallback(
     (id: string) => {
-      const prev = registry.get(contributionsAtom);
+      const prev = registry.get(menuItemsAtom);
       const next = new Map(prev);
       next.delete(id);
-      registry.set(contributionsAtom, next);
+      registry.set(menuItemsAtom, next);
     },
-    [registry, contributionsAtom],
-  );
-
-  const contributionContextValue = useMemo<MenuContributionContextValue>(
-    () => ({ contributionsAtom, addContribution, removeContribution }),
-    [contributionsAtom, addContribution, removeContribution],
+    [registry, menuItemsAtom],
   );
 
   return (
-    <RegistryContext.Provider value={registry}>
-      <MenuContributionProvider {...contributionContextValue}>
-        <MenuContextProvider
-          useGroupItems={useGroupItems}
-          iconSize={iconSize}
-          attendableId={attendableId}
-          alwaysActive={alwaysActive}
-          onAction={onAction}
-          scope={scope}
-        >
-          {children}
-        </MenuContextProvider>
-      </MenuContributionProvider>
-    </RegistryContext.Provider>
+    <MenuContextProvider
+      useGroupItems={useGroupItems}
+      iconSize={iconSize}
+      attendableId={attendableId}
+      alwaysActive={alwaysActive}
+      menuItemsAtom={menuItemsAtom}
+      addMenuItems={addMenuItems}
+      removeMenuItems={removeMenuItems}
+      onAction={onAction}
+      scope={scope}
+    >
+      {children}
+    </MenuContextProvider>
   );
 };
 
 function resolveItems(
   baseItems: MenuItem[] | null,
   group: MenuItemGroup | undefined,
-  contributions: ReadonlyMap<string, MenuContribution & { priority: number }>,
+  entries: ReadonlyMap<string, MenuItems>,
 ): MenuItem[] | null {
-  const applicable = [...contributions.values()].filter((c) => !c.groupFilter || c.groupFilter(group));
+  const applicable = [...entries.values()].filter((entry) => !entry.groupFilter || entry.groupFilter(group));
   if (applicable.length === 0) {
     return baseItems;
   }
 
-  const sorted = sortContributions(applicable);
+  const sorted = sortMenuItems(applicable);
 
-  const replacements = sorted.filter((c) => c.mode === 'replacement');
+  const replacements = sorted.filter((entry) => entry.mode === 'replacement');
   if (replacements.length > 0) {
     if (replacements.length > 1) {
-      log.warn('multiple replacement contributions found', {
+      log.warn('multiple replacement entries found', {
         ids: replacements.map((r) => r.id).join(', '),
         using: replacements[0].id,
       });
@@ -151,14 +122,14 @@ function resolveItems(
     return replacements[0].items;
   }
 
-  const additive = sorted.filter((c) => c.mode === 'additive');
-  const contributedItems = additive.flatMap((c) => c.items);
+  const additive = sorted.filter((entry) => entry.mode === 'additive');
+  const additiveItems = additive.flatMap((entry) => entry.items);
 
   if (!baseItems || baseItems.length === 0) {
-    return contributedItems.length > 0 ? contributedItems : null;
+    return additiveItems.length > 0 ? additiveItems : null;
   }
 
-  return [...baseItems, ...contributedItems];
+  return [...baseItems, ...additiveItems];
 }
 
 export const useMenuItems = (
@@ -167,21 +138,25 @@ export const useMenuItems = (
   consumerName: string = 'useMenuItemConsumer',
   __menuScope?: Scope,
 ) => {
-  const { useGroupItems } = useMenu(consumerName, __menuScope);
+  const { useGroupItems, menuItemsAtom } = useMenuScoped(consumerName, __menuScope);
   const groupItems = useGroupItems(group);
-  const { contributionsAtom } = useMenuContributions(consumerName);
-  const contributions = useAtomValue(contributionsAtom) ?? new Map();
+  const entries = useAtomValue(menuItemsAtom) ?? new Map();
 
   const baseItems = useMemo(() => propsItems ?? groupItems ?? null, [propsItems, groupItems]);
 
   const resolved = useMemo(
-    () => resolveItems(baseItems, group, contributions as ReadonlyMap<string, MenuContribution & { priority: number }>),
-    [baseItems, group, contributions],
+    () => resolveItems(baseItems, group, entries as ReadonlyMap<string, MenuItems>),
+    [baseItems, group, entries],
   );
 
   return resolved ?? undefined;
 };
 
-export { useMenu, useMenuContributions, createMenuScope, MenuProvider };
+/** Public hook -- returns the menu context without Radix scope. */
+export const useMenu = (consumerName: string): MenuContextValue => {
+  return useMenuScoped(consumerName, undefined);
+};
 
-export type { MenuProviderProps };
+export { useMenuScoped, createMenuScope, MenuProvider };
+
+export type { MenuScopedProps, MenuProviderProps };

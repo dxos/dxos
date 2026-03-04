@@ -9,7 +9,7 @@ import { afterEach, describe, test } from 'vitest';
 import { type MenuItem } from '../types';
 import { createMenuAction } from '../util';
 
-import { MenuProvider, useMenuContributions, useMenuItems } from './MenuContext';
+import { MenuProvider, useMenu, useMenuItems } from './MenuContext';
 
 const TEST_CONTRIBUTOR = 'TestContributor';
 
@@ -37,10 +37,10 @@ describe('MenuContext', () => {
       const contributedItems = [createTestAction('test-1', 'Test Action 1')];
 
       const ContributorComponent = () => {
-        const menu = useMenuContributions(TEST_CONTRIBUTOR);
+        const menu = useMenu(TEST_CONTRIBUTOR);
         useEffect(() => {
-          menu.addContribution({ id: 'test-contributor', mode: 'additive', items: contributedItems });
-          return () => menu.removeContribution('test-contributor');
+          menu.addMenuItems({ id: 'test-contributor', mode: 'additive', items: contributedItems });
+          return () => menu.removeMenuItems('test-contributor');
         }, [menu, contributedItems]);
         return null;
       };
@@ -71,10 +71,10 @@ describe('MenuContext', () => {
 
     test('contributes items that update when deps change', ({ expect }) => {
       const ContributorComponent = ({ items }: { items: MenuItem[] }) => {
-        const menu = useMenuContributions(TEST_CONTRIBUTOR);
+        const menu = useMenu(TEST_CONTRIBUTOR);
         useEffect(() => {
-          menu.addContribution({ id: 'reactive-contributor', mode: 'additive', items });
-          return () => menu.removeContribution('reactive-contributor');
+          menu.addMenuItems({ id: 'reactive-contributor', mode: 'additive', items });
+          return () => menu.removeMenuItems('reactive-contributor');
         }, [menu, items]);
         return null;
       };
@@ -109,10 +109,10 @@ describe('MenuContext', () => {
       const contributedItems = [createTestAction('contrib-1', 'Contributed Action')];
 
       const ContributorComponent = () => {
-        const menu = useMenuContributions(TEST_CONTRIBUTOR);
+        const menu = useMenu(TEST_CONTRIBUTOR);
         useEffect(() => {
-          menu.addContribution({ id: 'test-contributor', mode: 'additive', items: contributedItems });
-          return () => menu.removeContribution('test-contributor');
+          menu.addMenuItems({ id: 'test-contributor', mode: 'additive', items: contributedItems });
+          return () => menu.removeMenuItems('test-contributor');
         }, [menu, contributedItems]);
         return null;
       };
@@ -149,19 +149,19 @@ describe('MenuContext', () => {
       const lowItems = [createTestAction('low', 'Low Priority')];
       const highItems = [createTestAction('high', 'High Priority')];
       const LowPriorityContributor = () => {
-        const menu = useMenuContributions(TEST_CONTRIBUTOR);
+        const menu = useMenu(TEST_CONTRIBUTOR);
         useEffect(() => {
-          menu.addContribution({ id: 'low-priority', mode: 'additive', items: lowItems, priority: 200 });
-          return () => menu.removeContribution('low-priority');
+          menu.addMenuItems({ id: 'low-priority', mode: 'additive', items: lowItems, priority: 200 });
+          return () => menu.removeMenuItems('low-priority');
         }, [menu, lowItems]);
         return null;
       };
 
       const HighPriorityContributor = () => {
-        const menu = useMenuContributions(TEST_CONTRIBUTOR);
+        const menu = useMenu(TEST_CONTRIBUTOR);
         useEffect(() => {
-          menu.addContribution({ id: 'high-priority', mode: 'additive', items: highItems, priority: 50 });
-          return () => menu.removeContribution('high-priority');
+          menu.addMenuItems({ id: 'high-priority', mode: 'additive', items: highItems, priority: 50 });
+          return () => menu.removeMenuItems('high-priority');
         }, [menu, highItems]);
         return null;
       };
@@ -199,10 +199,10 @@ describe('MenuContext', () => {
       const replacementItems = [createTestAction('replacement-1', 'Replacement Action')];
 
       const ReplacementContributor = () => {
-        const menu = useMenuContributions(TEST_CONTRIBUTOR);
+        const menu = useMenu(TEST_CONTRIBUTOR);
         useEffect(() => {
-          menu.addContribution({ id: 'replacement-contributor', mode: 'replacement', items: replacementItems });
-          return () => menu.removeContribution('replacement-contributor');
+          menu.addMenuItems({ id: 'replacement-contributor', mode: 'replacement', items: replacementItems });
+          return () => menu.removeMenuItems('replacement-contributor');
         }, [menu, replacementItems]);
         return null;
       };
@@ -233,14 +233,14 @@ describe('MenuContext', () => {
       expect(screen.getByTestId('item-replacement-1')).toBeTruthy();
     });
 
-    test('removeContribution on unmount clears contribution', ({ expect }) => {
+    test('removeMenuItems on unmount clears contribution', ({ expect }) => {
       const contributedItems = [createTestAction('unmount-test', 'Will Be Removed')];
 
       const ContributorComponent = () => {
-        const menu = useMenuContributions(TEST_CONTRIBUTOR);
+        const menu = useMenu(TEST_CONTRIBUTOR);
         useEffect(() => {
-          menu.addContribution({ id: 'unmount-contributor', mode: 'additive', items: contributedItems });
-          return () => menu.removeContribution('unmount-contributor');
+          menu.addMenuItems({ id: 'unmount-contributor', mode: 'additive', items: contributedItems });
+          return () => menu.removeMenuItems('unmount-contributor');
         }, [menu, contributedItems]);
         return null;
       };
@@ -280,19 +280,19 @@ describe('MenuContext', () => {
       const itemsA = [createTestAction('item-a', 'Item A')];
       const itemsB = [createTestAction('item-b', 'Item B')];
       const ContributorA = () => {
-        const menu = useMenuContributions(TEST_CONTRIBUTOR);
+        const menu = useMenu(TEST_CONTRIBUTOR);
         useEffect(() => {
-          menu.addContribution({ id: 'contributor-a', mode: 'additive', items: itemsA, priority: 100 });
-          return () => menu.removeContribution('contributor-a');
+          menu.addMenuItems({ id: 'contributor-a', mode: 'additive', items: itemsA, priority: 100 });
+          return () => menu.removeMenuItems('contributor-a');
         }, [menu, itemsA]);
         return null;
       };
 
       const ContributorB = () => {
-        const menu = useMenuContributions(TEST_CONTRIBUTOR);
+        const menu = useMenu(TEST_CONTRIBUTOR);
         useEffect(() => {
-          menu.addContribution({ id: 'contributor-b', mode: 'additive', items: itemsB, priority: 100 });
-          return () => menu.removeContribution('contributor-b');
+          menu.addMenuItems({ id: 'contributor-b', mode: 'additive', items: itemsB, priority: 100 });
+          return () => menu.removeMenuItems('contributor-b');
         }, [menu, itemsB]);
         return null;
       };
@@ -330,24 +330,24 @@ describe('MenuContext', () => {
       const groupFilteredItems = [createTestAction('group-item', 'Group Only Item')];
 
       const GlobalContributor = () => {
-        const menu = useMenuContributions(TEST_CONTRIBUTOR);
+        const menu = useMenu(TEST_CONTRIBUTOR);
         useEffect(() => {
-          menu.addContribution({ id: 'global-contributor', mode: 'additive', items: globalContributedItems });
-          return () => menu.removeContribution('global-contributor');
+          menu.addMenuItems({ id: 'global-contributor', mode: 'additive', items: globalContributedItems });
+          return () => menu.removeMenuItems('global-contributor');
         }, [menu, globalContributedItems]);
         return null;
       };
 
       const FilteredContributor = () => {
-        const menu = useMenuContributions(TEST_CONTRIBUTOR);
+        const menu = useMenu(TEST_CONTRIBUTOR);
         useEffect(() => {
-          menu.addContribution({
+          menu.addMenuItems({
             id: 'filtered-contributor',
             mode: 'additive',
             items: groupFilteredItems,
             groupFilter: (group) => group?.id === 'special-group',
           });
-          return () => menu.removeContribution('filtered-contributor');
+          return () => menu.removeMenuItems('filtered-contributor');
         }, [menu, groupFilteredItems]);
         return null;
       };
@@ -411,10 +411,10 @@ describe('MenuContext', () => {
       const items = [navigateItem];
 
       const ObjectActionsContributor = () => {
-        const menu = useMenuContributions(TEST_CONTRIBUTOR);
+        const menu = useMenu(TEST_CONTRIBUTOR);
         useEffect(() => {
-          menu.addContribution({ id: 'object-actions', mode: 'additive', priority: 50, items });
-          return () => menu.removeContribution('object-actions');
+          menu.addMenuItems({ id: 'object-actions', mode: 'additive', priority: 50, items });
+          return () => menu.removeMenuItems('object-actions');
         }, [menu, items]);
         return null;
       };

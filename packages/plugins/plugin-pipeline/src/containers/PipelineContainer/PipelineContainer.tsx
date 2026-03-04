@@ -18,7 +18,7 @@ import { Obj } from '@dxos/echo';
 import { ATTENDABLE_PATH_SEPARATOR, DeckOperation } from '@dxos/plugin-deck/types';
 import { Container } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { useMenuContributions } from '@dxos/react-ui-menu';
+import { useMenu } from '@dxos/react-ui-menu';
 import { type Pipeline as PipelineType } from '@dxos/types';
 
 import { type ItemProps, PipelineComponent, usePipelineBoardModel } from '../../components';
@@ -53,18 +53,18 @@ export const PipelineContainer = ({ role, subject: pipeline }: PipelineContainer
 };
 
 const PipelineItem = ({ item, projectionModel }: ItemProps) => {
-  const menu = useMenuContributions(PIPELINE_ITEM);
+  const menu = useMenu(PIPELINE_ITEM);
   const items = useObjectMenuItems(item);
 
   useEffect(() => {
-    menu.addContribution({
+    menu.addMenuItems({
       id: OBJECT_ACTIONS_CONTRIBUTION_ID,
       mode: 'additive',
       priority: OBJECT_ACTIONS_CONTRIBUTION_PRIORITY,
       items,
     });
 
-    return () => menu.removeContribution(OBJECT_ACTIONS_CONTRIBUTION_ID);
+    return () => menu.removeMenuItems(OBJECT_ACTIONS_CONTRIBUTION_ID);
   }, [menu, items]);
 
   return (
