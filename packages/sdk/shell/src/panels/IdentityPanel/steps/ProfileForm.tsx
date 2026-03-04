@@ -16,14 +16,10 @@ import { translationKey } from '../../../translations';
 import { type IdentityEvent } from '../identityMachine';
 import { type IdentityPanelStepProps } from '../IdentityPanelProps';
 
-export interface ProfileFormProps extends Omit<IdentityPanelStepProps, 'send' | 'devices'> {
+export type ProfileFormProps = Omit<IdentityPanelStepProps, 'send' | 'devices'> & {
   send?: (event: SingleOrArray<Event<IdentityEvent>>) => void;
   onUpdateProfile?: (profile: NonNullable<Identity['profile']>) => Promise<void>;
   identity?: Identity;
-}
-
-export type ProfileFormImplProps = ProfileFormProps & {
-  validationMessage?: string;
 };
 
 export const ProfileForm = (props: ProfileFormProps) => {
@@ -36,17 +32,15 @@ export const ProfileForm = (props: ProfileFormProps) => {
       setValidationMessage(t('failed to update profile message'));
     });
   };
+
   return <ProfileFormImpl {...props} onUpdateProfile={handleUpdateProfile} validationMessage={validationMessage} />;
 };
 
-const getHueValue = (identity?: Identity) =>
-  identity?.profile?.data?.hue || hexToHue(identity?.identityKey.toHex() ?? '0');
-const getEmojiValue = (identity?: Identity) =>
-  identity?.profile?.data?.emoji || hexToEmoji(identity?.identityKey.toHex() ?? '0');
+export type ProfileFormImplProps = ProfileFormProps & {
+  validationMessage?: string;
+};
 
-// TODO(zhenyasav): impl shouldn't need send()
-const ProfileFormImpl = (props: ProfileFormImplProps) => {
-  const { active, identity, send, onUpdateProfile, validationMessage } = props;
+const ProfileFormImpl = ({ active, identity, send, onUpdateProfile, validationMessage }: ProfileFormImplProps) => {
   const profile = identity?.profile;
   const disabled = !active;
   const { t } = useTranslation(translationKey);
@@ -117,3 +111,8 @@ const ProfileFormImpl = (props: ProfileFormImplProps) => {
     </>
   );
 };
+
+const getHueValue = (identity?: Identity) =>
+  identity?.profile?.data?.hue || hexToHue(identity?.identityKey.toHex() ?? '0');
+const getEmojiValue = (identity?: Identity) =>
+  identity?.profile?.data?.emoji || hexToEmoji(identity?.identityKey.toHex() ?? '0');

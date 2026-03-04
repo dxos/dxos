@@ -10,6 +10,8 @@ import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
 
+// TODO(burdon): Move to react-ui.
+
 export type LargeButtonProps = ButtonProps & {
   isFull?: boolean;
 };
@@ -21,14 +23,6 @@ export type ActionMenuItem = {
   testId?: string;
 } & Pick<ButtonProps, 'onClick'>;
 
-export type BifurcatedActionProps = {
-  actions: Record<string, ActionMenuItem>;
-  activeAction?: string;
-  onChangeActiveAction?: Dispatch<SetStateAction<string>>;
-  defaultActiveAction?: string;
-  'data-testid'?: string;
-} & Omit<LargeButtonProps, 'children' | 'onClick'>;
-
 const defaultActions = {
   noopAction: {
     label: 'No-op',
@@ -37,6 +31,14 @@ const defaultActions = {
     onClick: () => {},
   },
 } as Record<string, ActionMenuItem>;
+
+export type BifurcatedActionProps = {
+  actions: Record<string, ActionMenuItem>;
+  activeAction?: string;
+  onChangeActiveAction?: Dispatch<SetStateAction<string>>;
+  defaultActiveAction?: string;
+  'data-testid'?: string;
+} & Omit<LargeButtonProps, 'children' | 'onClick'>;
 
 export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionProps>((props, forwardedRef) => {
   const {
@@ -132,7 +134,7 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
 export const Action = forwardRef<HTMLButtonElement, LargeButtonProps>((props, forwardedRef) => {
   const { children, classNames, variant, isFull = true, ...rest } = props;
   return (
-    <Button {...rest} classNames={[isFull && 'w-full', classNames]} ref={forwardedRef} variant={variant}>
+    <Button {...rest} classNames={[isFull && 'w-full', classNames]} variant={variant} ref={forwardedRef}>
       {children}
     </Button>
   );

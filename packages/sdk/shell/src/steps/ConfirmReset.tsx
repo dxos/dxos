@@ -5,7 +5,7 @@
 import React, { useCallback, useState } from 'react';
 
 import { log } from '@dxos/log';
-import { Dialog, Message, useTranslation } from '@dxos/react-ui';
+import { Dialog, Message, Trans, useTranslation } from '@dxos/react-ui';
 
 import { Action, Input, StepHeading } from '../components';
 import { translationKey } from '../translations';
@@ -60,16 +60,18 @@ export const ConfirmReset = ({ active, mode, onCancel, onConfirm }: ConfirmReset
           {...{ validationMessage }}
           label={
             <StepHeading className='text-start my-2'>
-              {t(
-                mode === 'join new identity'
-                  ? 'join new identity input label'
-                  : mode === 'recover'
-                    ? 'recover reset input label'
-                    : 'reset storage input label',
-                {
+              <Trans
+                i18nKey={`${translationKey}:${
+                  mode === 'join new identity'
+                    ? 'join new identity input label'
+                    : mode === 'recover'
+                      ? 'recover reset input label'
+                      : 'reset storage input label'
+                }`}
+                values={{
                   confirmationValue,
-                },
-              )}
+                }}
+              />
             </StepHeading>
           }
           disabled={disabled}
