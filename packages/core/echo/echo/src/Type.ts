@@ -509,6 +509,16 @@ export const Feed = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
   /** Identifier for the feed's kind (e.g., plugin id). */
   kind: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
+
+  /**
+   * Feed namespace.
+   * Controls how feed data is stored and replicated.
+   * - `data`: Data feed (default).
+   * - `trace`: Trace feed.
+   *
+   * @default 'data'
+   */
+  namespace: Schema.optional(Schema.Literal('data', 'trace')),
 }).pipe(
   object({
     typename: 'dxos.org/type/Feed',

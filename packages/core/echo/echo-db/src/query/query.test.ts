@@ -22,6 +22,9 @@ import { type EchoDatabase } from '../proxy-db';
 import { EchoTestBuilder, type EchoTestPeer, createTmpPath } from '../testing';
 
 import { Filter, Query } from './api';
+import { createFeedServiceLayer } from '../queue';
+import { Effect } from 'effect';
+import { runAndForwardErrors } from '@dxos/effect';
 
 faker.seed(1);
 
@@ -561,20 +564,17 @@ describe('Query', () => {
       const peer = await builder.createPeer({ types: [Type.Feed, TestSchema.Task] });
       const db = await peer.createDatabase();
       const queues = peer.client.constructQueueFactory(db.spaceId);
-      const queue = queues.create();
+      const service = createFeedServiceLayer(queues);
 
       // Create a feed object and bind it to the queue.
       const feed = db.add(Feed.make({ name: 'test-feed' }));
-      Obj.change(feed, (mutable) => {
-        Obj.getMeta(mutable).keys.push({ source: Feed.DXN_KEY, id: queue.dxn.toString() });
-      });
 
       // Add items to the queue and a separate item to the space.
       db.add(Obj.make(TestSchema.Task, { title: 'Space Task' }));
-      await queue.append([
+      await Feed.append(feed, [
         Obj.make(TestSchema.Task, { title: 'Feed Task 1' }),
         Obj.make(TestSchema.Task, { title: 'Feed Task 2' }),
-      ]);
+      ]).pipe(Effect.provide(service), runAndForwardErrors);
       await db.flush({ indexes: true });
 
       // Query from feed should only return feed items.
@@ -587,16 +587,13 @@ describe('Query', () => {
       const peer = await builder.createPeer({ types: [Type.Feed, TestSchema.Task] });
       const db = await peer.createDatabase();
       const queues = peer.client.constructQueueFactory(db.spaceId);
-      const queue = queues.create();
+      const service = createFeedServiceLayer(queues);
 
       const feed = db.add(Feed.make({ name: 'test-feed' }));
-      Obj.change(feed, (mutable) => {
-        Obj.getMeta(mutable).keys.push({ source: Feed.DXN_KEY, id: queue.dxn.toString() });
-      });
 
       const feedItem = Obj.make(TestSchema.Task, { title: 'Feed Task' });
       const spaceItem = db.add(Obj.make(TestSchema.Task, { title: 'Space Task' }));
-      await queue.append([feedItem]);
+      await Feed.append(feed, [feedItem]).pipe(Effect.provide(service), runAndForwardErrors);
       await db.flush({ indexes: true });
 
       // Filter.id for a feed item should find it when scoped to feed.

@@ -43,32 +43,6 @@ describe('Feed', () => {
     }).pipe(Effect.provide(testLayer), runAndForwardErrors);
   });
 
-  test('DXN is stored as meta key on feed object', async ({ expect }) => {
-    await using peer = await builder.createPeer({ types: [Type.Feed, TestSchema.Person] });
-    const db = await peer.createDatabase();
-    const queues = peer.client.constructQueueFactory(db.spaceId);
-    const testLayer = Layer.merge(Database.layer(db), createFeedServiceLayer(queues));
-
-    await Effect.gen(function* () {
-      const feed = yield* Database.add(Feed.make({ name: 'meta-test' }));
-
-      // Before any operation, no key.
-      const keysBefore = Entity.getKeys(feed, Feed.DXN_KEY);
-      expect(keysBefore).toHaveLength(0);
-
-      yield* Feed.append(feed, [Obj.make(TestSchema.Person, { name: 'alice' })]);
-
-      // After append, key is set.
-      const keysAfter = Entity.getKeys(feed, Feed.DXN_KEY);
-      expect(keysAfter).toHaveLength(1);
-      expect(keysAfter[0].id).toBeDefined();
-
-      // Verify it's a valid DXN.
-      const dxn = DXN.parse(keysAfter[0].id);
-      expect(dxn).toBeInstanceOf(DXN);
-    }).pipe(Effect.provide(testLayer), runAndForwardErrors);
-  });
-
   test('query feeds by kind', async ({ expect }) => {
     await using peer = await builder.createPeer({ types: [Type.Feed] });
     const db = await peer.createDatabase();

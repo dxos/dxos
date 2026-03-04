@@ -21,11 +21,6 @@ import * as Type from './Type';
 //
 
 /**
- * Meta key source for storing the backing DXN bound to a feed object.
- */
-export const DXN_KEY = 'dxos.org/key/feed';
-
-/**
  * A Feed echo object instance.
  */
 export type Feed = Obj.Obj<Type.Feed>;
@@ -66,10 +61,12 @@ export const make = (props: Obj.MakeProps<typeof Type.Feed>): Feed => Obj.make(T
  *
  * @deprecated
  */
-// TODO(wittjosiah): Align backing feed dxn's with object DXN.
 export const getQueueDxn = (feed: Feed): DXN | undefined => {
-  const keys = Obj.getKeys(feed, DXN_KEY);
-  return keys.length === 0 ? undefined : DXN.parse(keys[0].id);
+  const self = Obj.getDXN(feed).asEchoDXN();
+  if (!self || !self.spaceId) {
+    return undefined;
+  }
+  return new DXN(DXN.kind.QUEUE, [feed.namespace ?? 'data', self.spaceId, self.echoId]);
 };
 
 //
