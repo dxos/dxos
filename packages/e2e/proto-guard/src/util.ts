@@ -11,8 +11,9 @@ import { asyncTimeout } from '@dxos/async';
 import { Client, Config, PublicKey } from '@dxos/client';
 import { raise } from '@dxos/debug';
 import { log } from '@dxos/log';
+
 import { type SnapshotDescription } from './snapshots-registry';
-import { SpacesDumper, type SpacesDump } from './space-json-dump';
+import { type SpacesDump, SpacesDumper } from './space-json-dump';
 
 export const SNAPSHOTS_DIR = 'snapshots';
 export const SNAPSHOT_DIR = 'snapshot';

@@ -5,14 +5,14 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+import * as Record from 'effect/Record';
 import isEqual from 'fast-deep-equal';
 
 import { type Client } from '@dxos/client';
+import { type Obj, Type } from '@dxos/echo';
 import { Filter, Serializer } from '@dxos/echo-db';
+import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Type, type Obj } from '@dxos/echo';
-import { SpaceId } from '@dxos/keys';
-import { Record } from 'effect';
 
 export type SpacesDump = {
   /**

@@ -1,9 +1,14 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { randomUUID } from 'node:crypto';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+
 import { expect, test } from 'vitest';
+
 import { generateSnapshot } from './generate-snapshot';
-import { dbg } from '@dxos/log';
-import { randomUUID } from 'node:crypto';
 import { SpacesDumper } from './space-json-dump';
 
 test('can generate snapshot', async () => {

@@ -2,9 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type EncodedReference } from '@dxos/echo-protocol';
-import { deepMapValuesAsync } from '@dxos/util';
-import { Obj } from '@dxos/echo';
+import { type Obj } from '@dxos/echo';
 
 /**
  * Archive of echo objects.

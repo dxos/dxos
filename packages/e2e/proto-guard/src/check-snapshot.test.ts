@@ -4,10 +4,11 @@
 
 import { describe, expect, test } from 'vitest';
 
+import { failUndefined } from '@dxos/debug';
+
+import { SnapshotsRegistry } from './snapshots-registry';
 import { SpacesDumper } from './space-json-dump';
 import { withSnapshot } from './util';
-import { SnapshotsRegistry } from './snapshots-registry';
-import { failUndefined } from '@dxos/debug';
 
 describe('Load client from storage snapshot', () => {
   test('2026-03-04', { timeout: 10_000 }, async () => {

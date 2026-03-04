@@ -6,10 +6,8 @@ import { Filter, Obj, type Query } from '@dxos/echo';
 import { EncodedReference as EncodedRef, type EncodedReference } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
-import { deepMapValues, isNonNullable, stripUndefined } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
 
-import { ObjectCore } from './core-db';
-import { getObjectCore } from './echo-handler';
 import { type EchoDatabase } from './proxy-db';
 import type { SerializedSpace } from './serialized-space';
 
@@ -64,7 +62,7 @@ export class Serializer {
       const shouldImport = opts?.onObject ? await opts.onObject(object) : true;
 
       if (shouldImport) {
-        this._importObject(database, object);
+        await this._importObject(database, object);
       }
     }
     await database.flush();

@@ -4,12 +4,12 @@
 
 import * as Schema from 'effect/Schema';
 
+import { Client } from '@dxos/client';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
-import { dbg, log } from '@dxos/log';
+import { log } from '@dxos/log';
 import { CreateEpochRequest } from '@dxos/protocols/proto/dxos/client/services';
 
-import { Client } from '@dxos/client';
 import { SpacesDumper } from './space-json-dump';
 import { Todo } from './types';
 import { createConfig } from './util';

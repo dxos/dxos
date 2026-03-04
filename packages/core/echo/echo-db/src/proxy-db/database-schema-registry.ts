@@ -20,8 +20,7 @@ import {
 } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { DXN, type ObjectId } from '@dxos/keys';
-import { dbg,
-log } from '@dxos/log';
+import { log } from '@dxos/log';
 import { coerceArray } from '@dxos/util';
 
 import { getObjectCore } from '../echo-handler';
