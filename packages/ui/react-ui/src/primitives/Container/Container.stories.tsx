@@ -15,7 +15,7 @@ const List = () => {
     <ScrollArea.Root margin>
       <ScrollArea.Viewport>
         {Array.from({ length: 100 }).map((_, i) => (
-          <div key={i} role='listitem' className='p-1 hover:bg-surface-hover'>
+          <div key={i} role='listitem' className='p-1 hover:bg-hover-surface'>
             Item {i}
           </div>
         ))}
@@ -53,7 +53,11 @@ const ColumnStory = () => {
       </Container.Segment>
 
       <Container.Segment>
-        <div className='p-1 bg-orange-500 text-black'>Section</div>
+        <div className='py-2'>
+          <Input.Root>
+            <Input.TextInput placeholder='Search' />
+          </Input.Root>
+        </div>
       </Container.Segment>
 
       <List />

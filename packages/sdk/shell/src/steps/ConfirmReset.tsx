@@ -52,7 +52,6 @@ export const ConfirmReset = ({ active, mode, onCancel, onConfirm }: ConfirmReset
   return (
     <>
       <Dialog.Body>
-        xxxxxxx
         <Message.Root valence='error'>
           <Message.Title>{t('sign out chooser title')}</Message.Title>
           <Message.Content>{t('sign out chooser message')}</Message.Content>

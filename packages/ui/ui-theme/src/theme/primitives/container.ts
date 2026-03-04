@@ -17,10 +17,12 @@ const containerMain: ComponentFunction<{ toolbar?: boolean }> = ({ toolbar }, ..
   );
 
 const containerColumn: ComponentFunction<Record<string, any>> = (_, ...etc) =>
-  mx('dx-column w-full min-w-0 grid', ...etc);
+  mx('dx-column w-full min-w-0 grid grid-cols-[minmax(0,1fr)]', ...etc);
 
-const containerSegment: ComponentFunction<Record<string, any>> = (_, ...etc) =>
-  mx('overflow-x-hidden col-start-2', ...etc);
+/**
+ * NOTE: Must not use overflow-hidden here since it will clip input focus rings.
+ */
+const containerSegment: ComponentFunction<Record<string, any>> = (_, ...etc) => mx('col-start-2 min-w-0', ...etc);
 
 export const containerTheme = {
   main: containerMain,
