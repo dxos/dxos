@@ -4,6 +4,7 @@
 
 import { type EncodedReference } from '@dxos/echo-protocol';
 import { deepMapValuesAsync } from '@dxos/util';
+import { Obj } from '@dxos/echo';
 
 /**
  * Archive of echo objects.
@@ -30,56 +31,5 @@ export type SerializedSpace = {
   /**
    * List of objects included in the archive.
    */
-  objects: SerializedObject[];
-};
-
-export type SerializedObject = {
-  /**
-   * Format version number.
-   *
-   * Current version: 1.
-   */
-  '@version': number;
-
-  /**
-   * Human-readable date of creation.
-   */
-  '@timestamp'?: string;
-
-  /**
-   * Unique object identifier.
-   */
-  '@id': string;
-
-  /**
-   * Reference to a type.
-   */
-  '@type'?: EncodedReference | string;
-
-  /**
-   * Flag to indicate soft-deleted objects.
-   */
-  '@deleted'?: boolean;
-
-  /**
-   * @deprecated
-   *
-   * Model name for the objects backed by a legacy ECHO model.
-   */
-  '@model'?: string;
-} & Record<string, any>;
-
-/**
- * Updates the serialized object data to the latest version.
- */
-export const normalizeSerializedObjectData = async (data: SerializedObject): Promise<SerializedObject> => {
-  data = await deepMapValuesAsync(data, async (value, recurse) => {
-    return recurse(value);
-  });
-
-  if (data['@timestamp']) {
-    data['@timestamp'] = new Date(data['@timestamp']).toISOString();
-  }
-
-  return data;
+  objects: Obj.JSON[];
 };

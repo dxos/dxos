@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Filter, type Obj, type Query } from '@dxos/echo';
+import { Filter, Obj, type Query } from '@dxos/echo';
 import { EncodedReference as EncodedRef, type EncodedReference } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -11,7 +11,7 @@ import { deepMapValues, isNonNullable, stripUndefined } from '@dxos/util';
 import { ObjectCore } from './core-db';
 import { getObjectCore } from './echo-handler';
 import { type EchoDatabase } from './proxy-db';
-import type { SerializedObject, SerializedSpace } from './serialized-space';
+import type { SerializedSpace } from './serialized-space';
 
 const MAX_LOAD_OBJECT_CHUNK_SIZE = 30;
 
@@ -22,7 +22,7 @@ export type ImportOptions = {
    * Called for each object before importing.
    * @returns true to import the object, false to skip.
    */
-  onObject?: (object: SerializedObject) => Promise<boolean>;
+  onObject?: (object: Obj.JSON) => Promise<boolean>;
 };
 
 // TODO(burdon): Schema not present when reloaded from persistent store.
@@ -70,52 +70,15 @@ export class Serializer {
     await database.flush();
   }
 
-  exportObject(object: Obj.Any): SerializedObject {
-    const core = getObjectCore(object);
-
-    // TODO(dmaretskyi): Unify JSONinfication with echo-handler.
-    const typeRef = core.getType();
-
-    // Note: EncodedReference values are already JSON-serializable ({ '/': string }).
-    const data = core.getDecoded(['data']);
-    const meta = core.getDecoded(['meta']);
-
-    return stripUndefined({
-      '@id': core.id,
-      '@type': typeRef,
-      ...(data as object),
-      '@version': Serializer.version,
-      '@meta': meta,
-      '@timestamp': new Date().toISOString(),
-    });
+  exportObject(object: Obj.Any): Obj.JSON {
+    return Obj.toJSON(object);
   }
 
-  private _importObject(database: EchoDatabase, object: SerializedObject): void {
-    const { '@id': id, '@type': type, '@deleted': deleted, '@meta': meta, ...data } = object;
-    const dataProperties = Object.fromEntries(Object.entries(data).filter(([key]) => !key.startsWith('@')));
-    const decodedData = deepMapValues(dataProperties, (value, recurse) => {
-      if (isEncodedReferenceJSON(value)) {
-        return decodeEncodedReferenceFromJSON(value);
-      } else {
-        return recurse(value);
-      }
+  private async _importObject(database: EchoDatabase, data: Obj.JSON): Promise<void> {
+    const obj = await Obj.fromJSON(data, {
+      refResolver: database.graph.createRefResolver({ context: { space: database.spaceId } }),
     });
-
-    const core = new ObjectCore();
-    core.id = id;
-    // TODO(dmaretskyi): Can't pass type in opts.
-    core.initNewObject(decodedData, {
-      meta,
-    });
-    const typeDXN = decodeDXNFromJSON(type);
-    if (typeDXN) {
-      core.setType(EncodedRef.fromDXN(typeDXN));
-    }
-    if (deleted) {
-      core.setDeleted(deleted);
-    }
-
-    database.coreDatabase.addCore(core);
+    database.add(obj);
   }
 }
 
