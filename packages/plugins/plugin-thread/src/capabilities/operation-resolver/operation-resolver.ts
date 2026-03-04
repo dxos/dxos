@@ -178,7 +178,6 @@ export default Capability.makeModule(
             // Follow-up operations.
             yield* Operation.invoke(ThreadOperation.Select, { current: Obj.getDXN(thread).toString() });
             yield* Operation.invoke(DeckOperation.ChangeCompanion, {
-              primary: subjectId,
               companion: `${subjectId}${ATTENDABLE_PATH_SEPARATOR}comments`,
             });
           }),

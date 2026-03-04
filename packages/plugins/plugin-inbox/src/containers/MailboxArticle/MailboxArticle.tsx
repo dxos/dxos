@@ -143,7 +143,6 @@ export const MailboxArticle = ({ subject: feed, filter: filterProp, attendableId
           } else {
             // Deck layout: open as companion panel.
             void invokePromise(DeckOperation.ChangeCompanion, {
-              primary: id,
               companion: companionId,
             });
           }

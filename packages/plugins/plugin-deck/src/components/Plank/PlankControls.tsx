@@ -5,7 +5,6 @@
 import React, { forwardRef, useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { invariant } from '@dxos/invariant';
 import { ButtonGroup, type ButtonGroupProps, type ButtonProps, IconButton, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '../../meta';
@@ -46,9 +45,8 @@ export const PlankCompanionControls = forwardRef<HTMLDivElement, PlankCompliment
     const { t } = useTranslation(meta.id);
     const { invokePromise } = useOperationInvoker();
     const handleCloseCompanion = useCallback(() => {
-      invariant(primary);
-      return invokePromise(DeckOperation.ChangeCompanion, { primary, companion: null });
-    }, [invokePromise, primary]);
+      return invokePromise(DeckOperation.ChangeCompanion, { companion: null });
+    }, [invokePromise]);
     return (
       <div ref={forwardedRef} className='contents dx-app-no-drag'>
         <PlankControl

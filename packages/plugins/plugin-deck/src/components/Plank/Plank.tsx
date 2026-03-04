@@ -22,7 +22,7 @@ import { ATTENDABLE_PATH_SEPARATOR, useAttentionAttributes } from '@dxos/react-u
 import { StackItem, railGridHorizontal } from '@dxos/react-ui-stack';
 import { mainIntrinsicSize, mx } from '@dxos/ui-theme';
 
-import { useCompanions, useDeckState, useMainSize } from '../../hooks';
+import { useCompanions, useDeckState, useMainSize, useSelectedCompanion } from '../../hooks';
 import { parseEntryId } from '../../layout';
 import { DeckOperation, type DeckSettingsProps, type LayoutMode, type ResolvedPart } from '../../types';
 
@@ -38,7 +38,7 @@ const UNKNOWN_ID = 'unknown_id';
 
 export type PlankProps = Pick<PlankComponentProps, 'layoutMode' | 'part' | 'path' | 'order' | 'active' | 'settings'> & {
   id?: string;
-  companionId?: string;
+  companionVariant?: string;
 };
 
 // TODO(burdon): Factor out conditional rendering.
@@ -59,12 +59,14 @@ export type PlankProps = Pick<PlankComponentProps, 'layoutMode' | 'part' | 'path
  * A Plank is the main container for surfaces within a Deck.
  * It may be paired with a companion plank that enables the user to select one of multiple companion surfaces.
  */
-export const Plank = memo(({ id = UNKNOWN_ID, companionId, ...props }: PlankProps) => {
+export const Plank = memo(({ id = UNKNOWN_ID, companionVariant, ...props }: PlankProps) => {
   const { graph } = useAppGraph();
   const node = useNode(graph, id);
   const companions = useCompanions(id);
-  const currentCompanion = companions.find(({ id }) => id === companionId);
-  const hasCompanion = !!(companionId && currentCompanion);
+  const { companionId } = useSelectedCompanion(companions, companionVariant);
+  const resolvedCompanionId = companionVariant ? companionId : undefined;
+  const currentCompanion = companions.find(({ id }) => id === resolvedCompanionId);
+  const hasCompanion = !!(resolvedCompanionId && currentCompanion);
 
   return (
     <PlankContainer
@@ -82,7 +84,7 @@ export const Plank = memo(({ id = UNKNOWN_ID, companionId, ...props }: PlankProp
       />
       {hasCompanion && (
         <PlankComponent
-          id={companionId}
+          id={resolvedCompanionId}
           node={currentCompanion}
           primary={node}
           companions={companions}

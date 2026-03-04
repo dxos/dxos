@@ -53,7 +53,6 @@ export default Capability.makeModule(
             transaction.effects.forEach(async (effect) => {
               if (effect.is(commentClickedEffect)) {
                 void invokePromise(DeckOperation.ChangeCompanion, {
-                  primary: id,
                   companion: `${id}${ATTENDABLE_PATH_SEPARATOR}comments`,
                 });
               }

@@ -176,7 +176,7 @@ export default Capability.makeModule(
                 } else {
                   const primary = Obj.getDXN(channel).toString();
                   const companion = `${primary}${ATTENDABLE_PATH_SEPARATOR}transcript`;
-                  yield* Operation.invoke(DeckOperation.ChangeCompanion, { primary, companion });
+                  yield* Operation.invoke(DeckOperation.ChangeCompanion, { companion });
                 }
               }),
               properties: {
