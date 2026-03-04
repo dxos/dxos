@@ -79,11 +79,13 @@ export const IntrinsicCardContainer = ({
   return (
     <div
       role='none'
-      className='relative grid overflow-hidden border-2 border-dashed border-green-500 rounded-lg'
+      className='relative p-2 grid overflow-hidden border-2 border-dashed border-green-500 rounded-lg'
       style={sizeStyle(size, 'horizontal')}
       {...resizeAttributes}
     >
-      {children}
+      <div role='none' className='flex flex-col w-full h-full overflow-hidden'>
+        {children}
+      </div>
       <ResizeHandle
         side='inline-end'
         fallbackSize={DEFAULT_BLOCK_SIZE}

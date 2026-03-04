@@ -25,7 +25,7 @@ import RangeList from '../RangeList';
 import { SheetContainer } from './SheetContainer';
 
 const meta = {
-  title: 'plugins/plugin-sheet/SheetContainer',
+  title: 'plugins/plugin-sheet/containers/SheetContainer',
   component: SheetContainer,
   decorators: [
     withTheme(),

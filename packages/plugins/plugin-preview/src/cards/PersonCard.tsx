@@ -13,8 +13,8 @@ export const PersonCard = ({ subject }: SurfaceComponentProps<Person.Person>) =>
   const { image, organization: { target: organization } = {}, emails = [] } = subject;
 
   return (
-    <Avatar.Root>
-      <Card.Content>
+    <Card.Content>
+      <Avatar.Root>
         {image && (
           <Card.Row className='py-1'>
             <Avatar.Content
@@ -41,7 +41,7 @@ export const PersonCard = ({ subject }: SurfaceComponentProps<Person.Person>) =>
             </Card.Text>
           </Card.Row>
         ))}
-      </Card.Content>
-    </Avatar.Root>
+      </Avatar.Root>
+    </Card.Content>
   );
 };

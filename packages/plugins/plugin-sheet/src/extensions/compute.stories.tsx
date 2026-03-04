@@ -105,7 +105,7 @@ const GraphStory = (props: EditorProps) => {
 };
 
 const meta = {
-  title: 'plugins/plugin-sheet/extensions',
+  title: 'plugins/plugin-sheet/extensions/compute',
   decorators: [
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
