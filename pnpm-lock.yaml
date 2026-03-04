@@ -9462,6 +9462,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
+      '@dxos/react-error-boundary':
+        specifier: workspace:*
+        version: link:../../ui/react-primitives/react-error-boundary
       '@dxos/react-hooks':
         specifier: workspace:*
         version: link:../../ui/react-primitives/react-hooks

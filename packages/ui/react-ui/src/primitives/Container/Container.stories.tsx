@@ -15,7 +15,7 @@ const List = () => {
     <ScrollArea.Root margin>
       <ScrollArea.Viewport>
         {Array.from({ length: 100 }).map((_, i) => (
-          <div key={i} role='listitem' className='p-1'>
+          <div key={i} role='listitem' className='p-1 hover:bg-surface-hover'>
             Item {i}
           </div>
         ))}
@@ -49,14 +49,19 @@ const ColumnStory = () => {
   return (
     <Container.Column className='h-full overflow-hidden' gutter='md'>
       <Container.Segment>
-        <h1 className='p-1 bg-red-500 text-black'>Header</h1>
+        <h1 className='p-1 bg-blue-500 text-black'>Header</h1>
       </Container.Segment>
 
       <Container.Segment>
-        <div className='p-1 bg-blue-500 text-black'>Section</div>
+        <div className='p-1 bg-orange-500 text-black'>Section</div>
       </Container.Segment>
 
       <List />
+
+      <Container.Segment>
+        <div className='p-1 bg-red-500 text-black'>Section with overflow</div>
+        <pre className='p-1 text-xs text-subdued overflow-auto'>{new Error().stack}</pre>
+      </Container.Segment>
 
       <Container.Segment>
         <div className='p-1 bg-green-500 text-black'>Footer</div>

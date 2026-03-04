@@ -21,7 +21,7 @@
 - Run all tests: `MOON_CONCURRENCY=4 moon run :test -- --no-file-parallelism`.
 - Lint & fix: `moon run :lint -- --fix`.
 - Check package tasks: see `moon.yml` in package directory.
-- When creating worktrees/branches, use a short (2-4 word) descriptive title (kebab-case) prefixed with the username (e.g. `username/add-auth-to-client`).
+- When creating worktrees/branches, use a short (2-4 word) descriptive title (kebab-case) prefixed with the agent name (e.g. `claude/add-auth-to-client`).
 - **Expected warning**: `Auth token DEPOT_TOKEN does not exist` is a normal warning about remote caching and should be ignored. Filter out warnings from your output.
 
 ## Important

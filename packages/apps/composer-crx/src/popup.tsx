@@ -89,7 +89,7 @@ const Root = () => {
   };
 
   return (
-    <ErrorBoundary>
+    <ErrorBoundary name='popup'>
       <Container classNames={mx(rootClasses)}>
         {thumbnailUrl && <Thumbnail url={thumbnailUrl} />}
         {!thumbnailUrl && host && <Chat host={host} url={tabUrl ?? undefined} onPing={handlePing} />}

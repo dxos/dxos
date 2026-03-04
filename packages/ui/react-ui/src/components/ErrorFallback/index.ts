@@ -3,3 +3,4 @@
 //
 
 export * from './ErrorFallback';
+export * from './ThrowError';

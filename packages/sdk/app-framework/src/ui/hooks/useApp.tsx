@@ -193,7 +193,7 @@ export const useApp = ({
 
   return useCallback(
     () => (
-      <ErrorBoundary FallbackComponent={fallback}>
+      <ErrorBoundary name='app' FallbackComponent={fallback}>
         <PluginManagerProvider value={manager}>
           <ContextProtocolProvider value={manager} context={PluginManagerContext}>
             <RegistryContext.Provider value={manager.registry}>

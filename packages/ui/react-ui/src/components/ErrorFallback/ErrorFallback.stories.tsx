@@ -15,14 +15,14 @@ const ErrorGenerator = () => {
 
 const BasicStory = () => {
   return (
-    <ErrorBoundary fallbackRender={ErrorFallback}>
+    <ErrorBoundary name='story' fallbackRender={ErrorFallback}>
       <ErrorGenerator />
     </ErrorBoundary>
   );
 };
 
 const StringErrorStory = () => {
-  return <ErrorFallback error='This is a string error message' resetErrorBoundary={() => console.log('reset')} />;
+  return <ErrorFallback error='This is a string error message' />;
 };
 
 const meta: Meta = {

@@ -237,7 +237,7 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
         <div ref={parentRef} className={mx('h-full w-full overflow-hidden', classNames)} />
 
         {/* React widgets are rendered in portals outside of the editor. */}
-        <ErrorBoundary>
+        <ErrorBoundary name='markdown-stream'>
           {widgets.map(({ Component, root, id, props }) => (
             <div key={id}>{createPortal(<Component view={view} {...props} />, root)}</div>
           ))}

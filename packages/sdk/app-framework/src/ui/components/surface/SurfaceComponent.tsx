@@ -17,6 +17,7 @@ import React, {
 import { log } from '@dxos/log';
 import { ErrorBoundary } from '@dxos/react-error-boundary';
 import { useDefaultValue } from '@dxos/react-hooks';
+import { ErrorFallback } from '@dxos/react-ui';
 import { byPosition, safeStringify } from '@dxos/util';
 
 import { Capabilities } from '../../../common';
@@ -106,13 +107,13 @@ WebComponentWrapper.displayName = 'WebComponentWrapper';
  */
 const SurfaceContextProvider = memo(
   forwardRef<HTMLElement, Props & { definition: Definition }>(
-    ({ id, role, data, limit, fallback = ErrorFallback, definition, ...rest }, forwardedRef) => {
+    ({ id, role, data, limit, fallback = SurfaceErrorFallback, definition, ...rest }, forwardedRef) => {
       const contextValue = useMemo(() => ({ id, role, data }), [id, role, data]);
 
       // Handle Web Component surfaces
       if (definition.kind === 'web-component') {
         return (
-          <ErrorBoundary resetKeys={[data]} fallbackRender={({ error }) => fallback({ data, error })}>
+          <ErrorBoundary name='surface' resetKeys={[data]} FallbackComponent={fallback}>
             <SurfaceContext.Provider value={contextValue}>
               <WebComponentWrapper
                 id={id}
@@ -135,7 +136,7 @@ const SurfaceContextProvider = memo(
       const debug = DEBUG || '__DX_DEBUG__' in window;
       if (debug) {
         return (
-          <ErrorBoundary resetKeys={[data]} fallbackRender={({ error }) => fallback({ data, error })}>
+          <ErrorBoundary name='surface' resetKeys={[data]} FallbackComponent={fallback}>
             <div role='none' className='contents' data-id={id} data-role={role}>
               <SurfaceContext.Provider value={contextValue}>
                 <SurfaceInfo ref={forwardedRef}>
@@ -148,7 +149,7 @@ const SurfaceContextProvider = memo(
       }
 
       return (
-        <ErrorBoundary resetKeys={[data]} fallbackRender={({ error }) => fallback({ data, error })}>
+        <ErrorBoundary name='surface' resetKeys={[data]} FallbackComponent={fallback}>
           <div role='none' className='contents' data-id={id} data-role={role}>
             <SurfaceContext.Provider value={contextValue}>
               <Component id={id} role={role} data={data} limit={limit} {...rest} ref={forwardedRef} />
@@ -206,6 +207,32 @@ export const SurfaceComponent: NamedExoticComponent<Props & RefAttributes<HTMLEl
 
 SurfaceComponent.displayName = 'Surface';
 
+const SurfaceErrorFallback = ({ data, error }: Props) => {
+  const { message } = error instanceof Error ? error : { message: String(error) };
+
+  if (import.meta.env.DEV) {
+    return <div>{message}</div>;
+
+    return (
+      <ErrorFallback title='Surface Error' error={error}>
+        {data && (
+          <>
+            <h2 className='text-xs mt-2 uppercase'>Data</h2>
+            <pre className='overflow-x-auto text-xs text-subdued'>{safeStringify(data, undefined, 2)}</pre>
+          </>
+        )}
+      </ErrorFallback>
+    );
+  } else {
+    // TODO(burdon): Make user facing, with telemetry.
+    return (
+      <div role='alert' data-testid='error-boundary-fallback'>
+        <h1 className='flex gap-2 text-sm mt-2 text-info-text'>{message}</h1>
+      </div>
+    );
+  }
+};
+
 const findCandidates = (surfaces: Definition[], { role, data }: Pick<Props, 'role' | 'data'>) => {
   return Object.values(surfaces)
     .filter((definition) =>
@@ -213,25 +240,6 @@ const findCandidates = (surfaces: Definition[], { role, data }: Pick<Props, 'rol
     )
     .filter(({ filter }) => (filter ? filter(data ?? {}) : true))
     .toSorted(byPosition);
-};
-
-// TODO(burdon): Make user facing, with telemetry.
-const ErrorFallback = ({ data, error }: Props) => {
-  const { message, stack } = error instanceof Error ? error : { message: String(error) };
-
-  return (
-    <div role='alert' data-testid='error-boundary-fallback'>
-      <h1 className='flex gap-2 text-sm mt-2 text-info-text'>{message}</h1>
-      <h2 className='text-xs mt-2 uppercase'>Data</h2>
-      <pre className='overflow-x-auto text-xs text-subdued'>{safeStringify(data, undefined, 2)}</pre>
-      {import.meta.env.DEV && stack && (
-        <>
-          <h2 className='text-xs mt-2 uppercase'>Stack</h2>
-          <pre className='overflow-x-auto text-xs text-subdued'>{stack}</pre>
-        </>
-      )}
-    </div>
-  );
 };
 
 /**

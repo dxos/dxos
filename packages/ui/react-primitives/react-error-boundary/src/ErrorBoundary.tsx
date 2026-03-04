@@ -12,14 +12,18 @@ import { ErrorFallback } from './ErrorFallback';
 export type { FallbackProps };
 
 export type ErrorBoundaryProps = PropsWithChildren<{
+  /** Boundary name. */
+  name?: string;
   /** Component to render when an error is caught. */
   FallbackComponent?: ComponentType<FallbackProps>;
   /** Render function to call when an error is caught. Takes precedence over FallbackComponent. */
   fallbackRender?: (props: FallbackProps) => ReactNode;
   /** Array of values that, when changed, reset the error boundary. */
   resetKeys?: any[];
+  /** Whether to handle errors globally. */
+  events?: { unhandledrejection?: boolean; error?: boolean };
   /** Callback fired when an error is caught. */
-  onError?: (error: Error, info: { componentStack?: string | null }) => void;
+  onError?: (error: Error, info: { boundary?: string; componentStack?: string | null }) => void;
   /** Callback fired when the error boundary resets. */
   onReset?: () => void;
 }>;
@@ -32,57 +36,56 @@ export type ErrorBoundaryProps = PropsWithChildren<{
  */
 export const ErrorBoundary = ({
   children,
+  name,
   FallbackComponent,
   fallbackRender,
   resetKeys,
+  events,
   onError,
   onReset,
 }: ErrorBoundaryProps) => {
   const [error, setError] = useState<Error>();
   useEffect(() => {
     return combine(
-      addEventListener(window, 'unhandledrejection', (event: PromiseRejectionEvent) => {
-        recordErrorForSmokeTests(event.reason);
-        onError?.(event.reason, { componentStack: null });
-        setError(event.reason);
-      }),
-      addEventListener(window, 'error', (event: ErrorEvent) => {
-        recordErrorForSmokeTests(event.error);
-        onError?.(event.error, { componentStack: null });
-        setError(event.error);
-      }),
+      events?.unhandledrejection &&
+        addEventListener(window, 'unhandledrejection', (event: PromiseRejectionEvent) => {
+          recordErrorForSmokeTests(event.reason);
+          onError?.(event.reason, { boundary: name, componentStack: null });
+          setError(event.reason);
+        }),
+      events?.error &&
+        addEventListener(window, 'error', (event: ErrorEvent) => {
+          recordErrorForSmokeTests(event.error);
+          onError?.(event.error, { boundary: name, componentStack: null });
+          setError(event.error);
+        }),
     );
-  }, []);
-
-  if (error !== undefined) {
-    const props: FallbackProps = {
-      error,
-      resetErrorBoundary: () => {
-        setError(undefined);
-        onReset?.();
-      },
-    };
-
-    if (fallbackRender) {
-      return <>{fallbackRender(props)}</>;
-    }
-
-    const Fallback = FallbackComponent ?? ErrorFallback;
-    return <Fallback {...props} />;
-  }
+  }, [name, events]);
 
   const handleError = (error: Error, info: { componentStack?: string | null }) => {
     recordErrorForSmokeTests(error);
-    onError?.(error, info);
+    onError?.(error, { boundary: name, ...info });
+  };
+
+  const handleReset = () => {
+    setError(undefined);
+    onReset?.();
   };
 
   const fallbackProps = fallbackRender ? { fallbackRender } : { FallbackComponent: FallbackComponent ?? ErrorFallback };
 
+  // Throw re-throws the global event error inside NaturalErrorBoundary so the boundary
+  // handles it uniformly — avoids unmounting the entire children subtree (including ThemeProvider).
   return (
-    <NaturalErrorBoundary {...fallbackProps} onError={handleError} onReset={onReset} resetKeys={resetKeys}>
-      {children}
+    <NaturalErrorBoundary {...fallbackProps} onError={handleError} onReset={handleReset} resetKeys={resetKeys}>
+      {error !== undefined ? <Throw error={error} /> : children}
     </NaturalErrorBoundary>
   );
+};
+
+/** Re-throws an error inside the React reconciler so an ancestor ErrorBoundary can catch it. */
+const Throw = ({ error }: { error: Error }) => {
+  throw error;
 };
 
 /**

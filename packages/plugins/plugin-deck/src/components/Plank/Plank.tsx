@@ -26,7 +26,7 @@ import { useCompanions, useDeckState, useMainSize } from '../../hooks';
 import { parseEntryId } from '../../layout';
 import { DeckOperation, type DeckSettingsProps, type LayoutMode, type ResolvedPart } from '../../types';
 
-import { PlankContentError, PlankError } from './PlankError';
+import { PlankErrorFallback, PlankError } from './PlankError';
 import { PlankHeading } from './PlankHeading';
 import { PlankLoading } from './PlankLoading';
 
@@ -286,7 +286,7 @@ const PlankComponent = memo(
               role='article'
               data={data}
               limit={1}
-              fallback={PlankContentError}
+              fallback={PlankErrorFallback}
               placeholder={placeholder}
             />
           </>

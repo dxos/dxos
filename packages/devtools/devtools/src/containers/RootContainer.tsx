@@ -18,7 +18,7 @@ export const RootContainer = () => {
     <div className='flex w-full h-full overflow-hidden'>
       <Sidebar />
       <div className='flex flex-col grow overflow-hidden'>
-        <ErrorBoundary key={pathname}>
+        <ErrorBoundary key={pathname} name='devtools.root'>
           <Suspense>
             <Outlet />
           </Suspense>

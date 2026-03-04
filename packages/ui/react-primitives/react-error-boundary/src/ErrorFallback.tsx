@@ -28,7 +28,17 @@ export const ErrorFallback = ({ error }: FallbackProps) => {
       <h1 style={{ margin: '0.5rem 0', fontSize: '1.2rem', color: 'teal' }}>Fatal Error</h1>
       <p>{message}</p>
       {isDev && stack && (
-        <pre style={{ overflow: 'auto', fontSize: '1rem', whiteSpace: 'pre-wrap', color: '#888888' }}>{stack}</pre>
+        <pre
+          style={{
+            wordBreak: 'break-all',
+            overflow: 'auto',
+            fontSize: '1rem',
+            whiteSpace: 'pre-wrap',
+            color: '#888888',
+          }}
+        >
+          {stack}
+        </pre>
       )}
     </div>
   );

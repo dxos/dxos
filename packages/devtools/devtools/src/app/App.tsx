@@ -33,7 +33,7 @@ export const App = (props: ClientProviderProps) => {
 
   return (
     <ThemeProvider {...{ tx: defaultTx, themeMode }} noCache>
-      <ErrorBoundary>
+      <ErrorBoundary name='devtools.app'>
         <ClientProvider {...props}>
           <Devtools />
         </ClientProvider>

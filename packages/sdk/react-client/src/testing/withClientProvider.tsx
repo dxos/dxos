@@ -87,7 +87,7 @@ export const withClientProvider = ({
     };
 
     return (
-      <ErrorBoundary>
+      <ErrorBoundary name='client-provider'>
         <ClientProvider onInitialized={handleInitialized} {...props}>
           <ClientStory.Provider value={data}>
             <Story />
@@ -178,7 +178,7 @@ export const withMultiClientProvider = ({
             {...props}
           >
             <ClientStory.Provider value={{ index, spaceId }}>
-              <ErrorBoundary>
+              <ErrorBoundary name='client-provider'>
                 <Story />
               </ErrorBoundary>
             </ClientStory.Provider>
