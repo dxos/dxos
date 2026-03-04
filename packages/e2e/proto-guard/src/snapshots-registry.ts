@@ -6,6 +6,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { getBaseDataDir } from './util';
+import { raise } from '@dxos/debug';
 
 const REGISTRY_FILE = join(getBaseDataDir(), 'registry.json');
 
@@ -53,9 +54,12 @@ export class SnapshotsRegistry {
     SnapshotsRegistry._save();
   }
 
-  static getSnapshot(name: string): SnapshotDescription | undefined {
-    return SnapshotsRegistry.snapshots.find((snapshot) => snapshot.name === name);
+  static getSnapshot(name: string): SnapshotDescription {
+    return SnapshotsRegistry.snapshots.find((snapshot) => snapshot.name === name) ?? raise(
+      new Error(`Snapshot not found: ${name}`)
+    );
   }
+
 
   private static _save(): void {
     writeFileSync(REGISTRY_FILE, JSON.stringify(SnapshotsRegistry.snapshots, null, 2));

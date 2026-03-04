@@ -13,7 +13,6 @@ import { Client } from '@dxos/client';
 import { SpacesDumper } from './space-json-dump';
 import { Todo } from './types';
 import { createConfig } from './util';
-import { expect } from 'vitest';
 
 export const generateSnapshot = async (snapshotDir: string, dumpPath: string) => {
   const config = createConfig({ dataRoot: snapshotDir });
@@ -74,13 +73,10 @@ const seedData = async (client: Client) => {
       }),
     );
     const [dynamicSchema] = await space.db.schemaRegistry.register([TestType]);
-    dbg(dynamicSchema.id);
 
     const object2 = space.db.add(Obj.make(dynamicSchema, { testField: 'Test' }));
-    expect(Obj.getSchema(object2)).toEqual(dynamicSchema);
 
     dynamicSchema.addFields({ name: Schema.String, todo: Type.Ref(Todo) });
-    dbg(object2);
     Obj.change(object2, (object) => {
       object.name = 'Test';
       object.todo = Ref.make(Obj.make(Todo, { name: 'Test todo' }));
