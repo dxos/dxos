@@ -12,7 +12,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { DataCorruptionError, STORAGE_VERSION } from '@dxos/protocols';
 import {
-  bufToTimeframe,
+  TimeframeVectorProto.decode,
   create,
   encodePublicKey,
   fromBinary,
@@ -107,7 +107,7 @@ const convertBufTypesToAppTypes = (obj: unknown): unknown => {
     return PublicKey.from((obj as any).data);
   }
   if (typeName === 'dxos.echo.timeframe.TimeframeVector') {
-    return bufToTimeframe(obj as any);
+    return TimeframeVectorProto.decode(obj as any);
   }
   if (Array.isArray(obj)) {
     return obj.map(convertBufTypesToAppTypes);

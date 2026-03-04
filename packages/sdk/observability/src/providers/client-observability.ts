@@ -33,7 +33,7 @@ const timestampToMs = (ts: Timestamp | undefined): number | undefined => {
   return Number(ts.seconds) * 1000 + Math.floor(ts.nanos / 1_000_000);
 };
 
-const timeframeVectorTotalMessages = (tf: TimeframeVector | undefined): number => {
+const TimeframeVectorProto.totalMessages = (tf: TimeframeVector | undefined): number => {
   if (!tf?.frames) {
     return 0;
   }
@@ -245,10 +245,10 @@ const mapSpaces = (spaces: Space[], options: MapSpacesOptions = { verbose: false
 
     const pipeline = space.internal.data.pipeline;
     const assertion = pipeline?.currentEpoch?.subject?.assertion as any;
-    const startDataMutations = assertion?.timeframe ? timeframeVectorTotalMessages(assertion.timeframe) : 0;
+    const startDataMutations = assertion?.timeframe ? TimeframeVectorProto.totalMessages(assertion.timeframe) : 0;
     const epoch = assertion?.number;
-    const currentDataMutations = timeframeVectorTotalMessages(pipeline?.currentDataTimeframe);
-    const totalDataMutations = timeframeVectorTotalMessages(pipeline?.targetDataTimeframe);
+    const currentDataMutations = TimeframeVectorProto.totalMessages(pipeline?.currentDataTimeframe);
+    const totalDataMutations = TimeframeVectorProto.totalMessages(pipeline?.targetDataTimeframe);
 
     return {
       key: space.key.truncate(),

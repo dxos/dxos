@@ -14,7 +14,7 @@ import { type Keyring } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AlreadyJoinedError, AuthorizationError, InvalidInvitationError, SpaceNotFoundError } from '@dxos/protocols';
-import { bufToTimeframe, encodePublicKey, timeframeToBuf, toPublicKey } from '@dxos/protocols/buf';
+import { TimeframeVectorProto.decode, encodePublicKey, TimeframeVectorProto.encode, toPublicKey } from '@dxos/protocols/buf';
 import {
   type Invitation,
   Invitation_AuthMethod,
@@ -99,7 +99,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
         case: 'space',
         value: {
           credential: normalizeCredentialForBuf(spaceMemberCredential),
-          controlTimeframe: space ? timeframeToBuf(space.inner.controlPipeline.state.timeframe) : undefined,
+          controlTimeframe: space ? TimeframeVectorProto.encode(space.inner.controlPipeline.state.timeframe) : undefined,
         },
       },
     } as AdmissionResponse;
@@ -202,9 +202,9 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
 
     // Convert buf TimeframeVector to Timeframe.
     const controlTimeframe = spaceResponse.controlTimeframe
-      ? bufToTimeframe(spaceResponse.controlTimeframe)
+      ? TimeframeVectorProto.decode(spaceResponse.controlTimeframe)
       : undefined;
-    const dataTimeframe = spaceResponse.dataTimeframe ? bufToTimeframe(spaceResponse.dataTimeframe) : undefined;
+    const dataTimeframe = spaceResponse.dataTimeframe ? TimeframeVectorProto.decode(spaceResponse.dataTimeframe) : undefined;
 
     await this._spaceManager.acceptSpace({
       spaceKey: spaceKey!,

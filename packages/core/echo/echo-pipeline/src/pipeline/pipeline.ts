@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type FeedMessageBlock } from '@dxos/protocols';
-import { create, timeframeToBuf } from '@dxos/protocols/buf';
+import { create, TimeframeVectorProto.encode } from '@dxos/protocols/buf';
 import { type FeedMessage, FeedMessageSchema } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Timeframe } from '@dxos/timeframe';
@@ -319,7 +319,7 @@ export class Pipeline implements PipelineAccessor {
         payload = { credential: { credential: convertPublicKeysForBuf(packed) as any } };
       }
       return create(FeedMessageSchema, {
-        timeframe: timeframeToBuf(this._timeframeClock.timeframe),
+        timeframe: TimeframeVectorProto.encode(this._timeframeClock.timeframe),
         payload: {
           payload: { case: 'credential', value: payload.credential },
         },

@@ -9,8 +9,6 @@ import { bufferToArray } from '@dxos/util';
 
 export type PeerData = buf.MessageInitShape<typeof PeerSchema>;
 
-export const getTypename = (typeName: string) => `type.googleapis.com/${typeName}`;
-
 /**
  * NOTE: The type registry should be extended with all message types.
  */

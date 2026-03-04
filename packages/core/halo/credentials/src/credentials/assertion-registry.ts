@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type DescMessage, buf } from '@dxos/protocols/buf';
+import { type DescMessage, type MessageShape, buf } from '@dxos/protocols/buf';
 import {
   type AdmittedFeed,
   AdmittedFeedSchema,
@@ -94,10 +94,3 @@ export const ASSERTION_SCHEMAS = [
  *   if (assertion && assertion.$typeName === 'dxos.halo.credentials.SpaceMember') { ... }
  */
 export const ASSERTION_REGISTRY: buf.Registry = buf.createRegistry(...ASSERTION_SCHEMAS);
-
-/**
- * Map from assertion $typeName to schema descriptor.
- */
-export const ASSERTION_SCHEMA_MAP: ReadonlyMap<string, DescMessage> = new Map(
-  ASSERTION_SCHEMAS.map((schema) => [schema.typeName, schema]),
-);

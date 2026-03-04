@@ -7,7 +7,7 @@ import { type Context, Resource } from '@dxos/context';
 import {
   type CredentialProcessor,
   type SpecificCredential,
-  checkCredentialType,
+  isCredentialType,
   getCredentialAssertion,
 } from '@dxos/credentials';
 import { type Credential, type Epoch } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
@@ -31,7 +31,7 @@ export class AutomergeSpaceState extends Resource implements CredentialProcessor
   }
 
   async processCredential(credential: Credential): Promise<void> {
-    if (!checkCredentialType(credential, 'dxos.halo.credentials.Epoch')) {
+    if (!isCredentialType(credential, 'dxos.halo.credentials.Epoch')) {
       return;
     }
 

@@ -5,7 +5,7 @@
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Event, sleep } from '@dxos/async';
-import { create, timeframeToBuf } from '@dxos/protocols/buf';
+import { create, TimeframeVectorProto.encode } from '@dxos/protocols/buf';
 import { type FeedMessage, FeedMessageSchema } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { Timeframe } from '@dxos/timeframe';
 import { range } from '@dxos/util';
@@ -15,7 +15,7 @@ import { TestFeedBuilder } from '../testing';
 import { Pipeline } from './pipeline';
 
 const TEST_MESSAGE: FeedMessage = create(FeedMessageSchema, {
-  timeframe: timeframeToBuf(new Timeframe()),
+  timeframe: TimeframeVectorProto.encode(new Timeframe()),
 });
 
 describe('pipeline/Pipeline', () => {

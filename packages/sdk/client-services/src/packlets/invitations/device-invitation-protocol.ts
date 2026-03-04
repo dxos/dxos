@@ -7,7 +7,7 @@ import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';
 import { AlreadyJoinedError } from '@dxos/protocols';
-import { bufToTimeframe, encodePublicKey, timeframeToBuf, toPublicKey } from '@dxos/protocols/buf';
+import { TimeframeVectorProto.decode, encodePublicKey, TimeframeVectorProto.encode, toPublicKey } from '@dxos/protocols/buf';
 import { type Invitation, Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import type { DeviceProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import {
@@ -65,7 +65,7 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
           identityKey: encodePublicKey(identity.identityKey),
           haloSpaceKey: encodePublicKey(identity.haloSpaceKey),
           genesisFeedKey: encodePublicKey(identity.haloGenesisFeedKey),
-          controlTimeframe: timeframeToBuf(identity.controlPipeline.state.timeframe),
+          controlTimeframe: TimeframeVectorProto.encode(identity.controlPipeline.state.timeframe),
           credential: normalizeCredentialForBuf(credential),
         },
       },
@@ -121,7 +121,7 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
     const controlFeedKey = toPublicKey(deviceRequest.controlFeedKey);
     const dataFeedKey = toPublicKey(deviceRequest.dataFeedKey);
     const controlTimeframe = deviceResponse.controlTimeframe
-      ? bufToTimeframe(deviceResponse.controlTimeframe)
+      ? TimeframeVectorProto.decode(deviceResponse.controlTimeframe)
       : undefined;
 
     await this._acceptIdentity({

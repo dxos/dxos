@@ -6,7 +6,7 @@ import { type Codec } from '@dxos/protocols';
 import { credentialToBinary, packTypedAssertionAsAny, unpackAnyAsTypedMessage } from '@dxos/credentials';
 import { createCodecEncoding } from '@dxos/hypercore';
 import { PublicKey } from '@dxos/keys';
-import { bufToTimeframe, type bufWkt, create, fromBinary, timeframeToBuf, toBinary } from '@dxos/protocols/buf';
+import { TimeframeVectorProto.decode, type bufWkt, create, fromBinary, TimeframeVectorProto.encode, toBinary } from '@dxos/protocols/buf';
 import { type FeedMessage, FeedMessageSchema } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { CredentialSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Timeframe } from '@dxos/timeframe';
@@ -221,7 +221,7 @@ export const codec: Codec<FeedMessage> = {
 
     // Convert Timeframe class instances to buf TimeframeVector.
     if (msg.timeframe && msg.timeframe instanceof Timeframe) {
-      (msg as any).timeframe = timeframeToBuf(msg.timeframe as any);
+      (msg as any).timeframe = TimeframeVectorProto.encode(msg.timeframe as any);
     }
 
     const created = create(FeedMessageSchema, msg);
@@ -230,7 +230,7 @@ export const codec: Codec<FeedMessage> = {
   decode: (bytes: Uint8Array) => {
     const msg = fromBinary(FeedMessageSchema, bytes);
     if (msg.timeframe) {
-      (msg as any).timeframe = bufToTimeframe(msg.timeframe);
+      (msg as any).timeframe = TimeframeVectorProto.decode(msg.timeframe);
     }
     // Flatten oneof for backward compatibility with proto-typed FeedMessageBlock consumers.
     if (msg.payload?.payload?.case === 'credential') {

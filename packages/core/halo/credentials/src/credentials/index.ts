@@ -2,7 +2,6 @@
 // Copyright 2019 DXOS.org
 //
 
-export * from './assertion-any-codec';
 export * from './assertion-registry';
 export * from './assertions';
 export * from './credential-factory';

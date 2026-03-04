@@ -2,8 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import { create } from '@bufbuild/protobuf';
-import { EmptySchema } from '@bufbuild/protobuf/wkt';
+import {
+  create,
+  type DescMessage,
+  fromBinary,
+  type Message,
+  type MessageShape,
+  type Registry,
+  toBinary,
+} from '@bufbuild/protobuf';
+import { EmptySchema, type Any, AnySchema, anyIs } from '@bufbuild/protobuf/wkt';
 
 import { PublicKey } from '@dxos/keys';
 import { Timeframe } from '@dxos/timeframe';
@@ -32,8 +40,6 @@ export {
   toJson,
 } from '@bufbuild/protobuf';
 export {
-  anyPack,
-  anyUnpack,
   type Empty,
   EmptySchema,
   timestampDate,
@@ -61,30 +67,54 @@ export const decodePublicKey = (publicKey: KeysPb.PublicKey | { data: Uint8Array
 export const toPublicKey = (key: KeysPb.PublicKey | PublicKey | { data: Uint8Array }): PublicKey =>
   key instanceof PublicKey ? key : decodePublicKey(key);
 
-/** Convert a Timeframe instance to buf TimeframeVector message. */
-export const timeframeToBuf = (timeframe: Timeframe): TimeframeVector =>
-  create(TimeframeVectorSchema, {
-    frames: timeframe.frames().map(([feedKey, seq]) => ({ feedKey: feedKey.asUint8Array(), seq })),
+export const TimeframeVectorProto = Object.freeze({
+  encode: (timeframe: Timeframe) =>
+    create(TimeframeVectorSchema, {
+      frames: timeframe.frames().map(([feedKey, seq]) => ({ feedKey: feedKey.asUint8Array(), seq })),
+    }),
+  decode: (vector: TimeframeVector) =>
+    new Timeframe(vector?.frames?.map((frame) => [PublicKey.from(frame.feedKey), frame.seq]) ?? []),
+  totalMessages: (vector: TimeframeVector) => vector.frames.reduce((total, frame) => total + frame.seq + 1, 0),
+  newMessages: (vector: TimeframeVector, base: TimeframeVector) => {
+    const baseMap = new Map<string, number>(
+      base?.frames?.map((frame) => [PublicKey.from(frame.feedKey).toHex(), frame.seq]) ?? [],
+    );
+    return vector.frames.reduce(
+      (total, frame) => total + Math.max(frame.seq - (baseMap.get(PublicKey.from(frame.feedKey).toHex()) ?? -1), 0),
+      0,
+    );
+  },
+});
+
+/**
+ * Packs the message into a buf Any.
+ */
+export function anyPack<Desc extends DescMessage>(schema: Desc, message: MessageShape<Desc>): Any {
+  // Does not add google prefix to typeUrl
+  return create(AnySchema, {
+    typeUrl: schema.typeName,
+    value: toBinary(schema, message),
   });
+}
 
-/** Convert a buf TimeframeVector message to Timeframe instance. */
-export const bufToTimeframe = (vector?: TimeframeVector): Timeframe =>
-  new Timeframe(vector?.frames?.map((frame) => [PublicKey.from(frame.feedKey), frame.seq]) ?? []);
-
-/** Compute total messages represented by a TimeframeVector (equivalent to Timeframe.totalMessages). */
-export const timeframeVectorTotalMessages = (vector?: TimeframeVector): number =>
-  vector?.frames?.reduce((total, frame) => total + frame.seq + 1, 0) ?? 0;
-
-/** Compute new messages in a TimeframeVector relative to a base (equivalent to Timeframe.newMessages). */
-export const timeframeVectorNewMessages = (vector?: TimeframeVector, base?: TimeframeVector): number => {
-  if (!vector?.frames) {
-    return 0;
+/**
+ * Unpacks the message the Any represents.
+ *
+ * Returns undefined if the Any is empty, or if it does not contain the type
+ * given by schema.
+ */
+export function anyUnpack(any: Any, registry: Registry): Message | undefined;
+export function anyUnpack<Desc extends DescMessage>(any: Any, schema: Desc): MessageShape<Desc> | undefined;
+export function anyUnpack<Desc extends DescMessage>(
+  any: Any,
+  schemaOrRegistry: Desc | Registry,
+): MessageShape<Desc> | undefined {
+  if (any.typeUrl === '') {
+    return undefined;
   }
-  const baseMap = new Map<string, number>(
-    base?.frames?.map((frame) => [PublicKey.from(frame.feedKey).toHex(), frame.seq]) ?? [],
-  );
-  return vector.frames.reduce(
-    (total, frame) => total + Math.max(frame.seq - (baseMap.get(PublicKey.from(frame.feedKey).toHex()) ?? -1), 0),
-    0,
-  );
-};
+  const desc = schemaOrRegistry.kind == 'message' ? schemaOrRegistry : schemaOrRegistry.getMessage(any.typeUrl);
+  if (!desc || !anyIs(any, desc)) {
+    return undefined;
+  }
+  return fromBinary(desc, any.value) as any;
+}

@@ -63,7 +63,7 @@ describe('SignalRPCClient', () => {
 
     const msg = await received;
     expect(PublicKey.from(msg.author)).toEqual(peerId2);
-    expect(msg.payload?.typeUrl).toEqual('type.googleapis.com/example.testing.data.TestPayload');
+    expect(msg.payload?.typeUrl).toEqual('example.testing.data.TestPayload');
     expect(new Uint8Array(msg.payload!.value)).toEqual(new Uint8Array(payload.value));
     void stream1.close();
   });

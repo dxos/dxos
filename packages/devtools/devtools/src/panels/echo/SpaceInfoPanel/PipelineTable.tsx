@@ -6,7 +6,7 @@ import React, { type FC, useCallback, useMemo } from 'react';
 
 import { Format } from '@dxos/echo/internal';
 import { PublicKey } from '@dxos/keys';
-import { bufToTimeframe, toPublicKey } from '@dxos/protocols/buf';
+import { TimeframeVectorProto.decode, toPublicKey } from '@dxos/protocols/buf';
 import { type Space_PipelineState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type SubscribeToSpacesResponse_SpaceInfo } from '@dxos/protocols/buf/dxos/devtools/host_pb';
 import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
@@ -79,15 +79,15 @@ export const PipelineTable: FC<PipelineTableProps> = ({ state, metadata, onSelec
   };
 
   const rows = useMemo(() => {
-    const currentControl = bufToTimeframe(state.currentControlTimeframe);
-    const targetControl = bufToTimeframe(state.targetControlTimeframe);
-    const totalControl = bufToTimeframe(state.totalControlTimeframe);
-    const knownControl = bufToTimeframe(state.knownControlTimeframe);
-    const startData = bufToTimeframe(state.startDataTimeframe);
-    const currentData = bufToTimeframe(state.currentDataTimeframe);
-    const targetData = bufToTimeframe(state.targetDataTimeframe);
-    const totalData = bufToTimeframe(state.totalDataTimeframe);
-    const knownData = bufToTimeframe(state.knownDataTimeframe);
+    const currentControl = TimeframeVectorProto.decode(state.currentControlTimeframe);
+    const targetControl = TimeframeVectorProto.decode(state.targetControlTimeframe);
+    const totalControl = TimeframeVectorProto.decode(state.totalControlTimeframe);
+    const knownControl = TimeframeVectorProto.decode(state.knownControlTimeframe);
+    const startData = TimeframeVectorProto.decode(state.startDataTimeframe);
+    const currentData = TimeframeVectorProto.decode(state.currentDataTimeframe);
+    const targetData = TimeframeVectorProto.decode(state.targetDataTimeframe);
+    const totalData = TimeframeVectorProto.decode(state.totalDataTimeframe);
+    const knownData = TimeframeVectorProto.decode(state.knownDataTimeframe);
 
     const controlKeys = Array.from(
       new ComplexSet(PublicKey.hash, [

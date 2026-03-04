@@ -9,7 +9,7 @@ import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { create, encodePublicKey, timeframeToBuf } from '@dxos/protocols/buf';
+import { create, encodePublicKey, TimeframeVectorProto.encode } from '@dxos/protocols/buf';
 import type { FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { SpaceMetadataSchema } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { AdmittedFeed_Designation } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
@@ -160,7 +160,7 @@ describe('space/control-pipeline', () => {
       // Construct FeedMessage as a raw object (not via create()) so the codec's
       // packFeedMessageAssertions can find and pack the TypedMessage assertion.
       await dataFeed1.append({
-        timeframe: timeframeToBuf(controlPipeline.pipeline.state.timeframe),
+        timeframe: TimeframeVectorProto.encode(controlPipeline.pipeline.state.timeframe),
         credential: {
           credential: dataCredential,
         },

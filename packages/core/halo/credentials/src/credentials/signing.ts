@@ -9,8 +9,6 @@ import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Timeframe } from '@dxos/timeframe';
 import { arrayToBuffer } from '@dxos/util';
 
-import { unpackAnyAsTypedMessage } from './assertion-any-codec';
-
 /**
  * @returns The input message to be signed for a given credential.
  */

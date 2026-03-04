@@ -27,7 +27,7 @@ import {
   SpaceNotFoundError,
   encodeError,
 } from '@dxos/protocols';
-import { type Empty, EmptySchema, create, timeframeToBuf, toPublicKey } from '@dxos/protocols/buf';
+import { type Empty, EmptySchema, create, TimeframeVectorProto.encode, toPublicKey } from '@dxos/protocols/buf';
 import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import {
   type AdmitContactRequest,
@@ -280,7 +280,7 @@ export class SpacesServiceImpl implements Client.SpacesService {
     const result = await space.createEpoch({ migration, newAutomergeRoot: automergeRootUrl });
     return create(CreateEpochResponseSchema, {
       epochCredential: result?.credential,
-      controlTimeframe: result?.timeframe ? timeframeToBuf(result.timeframe) : undefined,
+      controlTimeframe: result?.timeframe ? TimeframeVectorProto.encode(result.timeframe) : undefined,
     });
   }
 
@@ -376,9 +376,9 @@ export class SpacesServiceImpl implements Client.SpacesService {
         appliedEpoch: normalizedEpoch,
 
         controlFeeds: space.inner.controlPipeline.state.feeds.map((feed) => ({ data: feed.key.asUint8Array() })),
-        currentControlTimeframe: timeframeToBuf(space.inner.controlPipeline.state.timeframe),
-        targetControlTimeframe: timeframeToBuf(space.inner.controlPipeline.state.targetTimeframe),
-        totalControlTimeframe: timeframeToBuf(space.inner.controlPipeline.state.endTimeframe),
+        currentControlTimeframe: TimeframeVectorProto.encode(space.inner.controlPipeline.state.timeframe),
+        targetControlTimeframe: TimeframeVectorProto.encode(space.inner.controlPipeline.state.targetTimeframe),
+        totalControlTimeframe: TimeframeVectorProto.encode(space.inner.controlPipeline.state.endTimeframe),
 
         dataFeeds: undefined,
         startDataTimeframe: undefined,
