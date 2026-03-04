@@ -56,4 +56,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+// Show form view by default (list view requires client context for NewTokenSelector).
+export const Default: Story = {
+  args: { adding: true },
+};
