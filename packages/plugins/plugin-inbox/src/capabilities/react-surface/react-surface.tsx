@@ -13,6 +13,7 @@ import { Event, Message, Organization, Person } from '@dxos/types';
 import { POPOVER_SAVE_FILTER } from '../../constants';
 import {
   CalendarArticle,
+  CalendarSettings,
   DraftMessageArticle,
   EventArticle,
   EventCard,
@@ -111,6 +112,12 @@ export default Capability.makeModule(() =>
         role: 'object-settings',
         filter: (data): data is { subject: Feed.Feed } => Mailbox.instanceOf(data.subject),
         component: ({ data }) => <MailboxSettings subject={data.subject} />,
+      }),
+      Surface.create({
+        id: `${meta.id}/calendar/companion/settings`,
+        role: 'object-settings',
+        filter: (data): data is { subject: Feed.Feed } => Calendar.instanceOf(data.subject),
+        component: ({ data }) => <CalendarSettings subject={data.subject} />,
       }),
 
       // TODO(card-cleanup): Remove.

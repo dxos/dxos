@@ -16,14 +16,14 @@ import { Form, omitId } from '@dxos/react-ui-form';
 
 import { useSyncTrigger } from '../../hooks';
 import { meta } from '../../meta';
-import { Mailbox } from '../../types';
+import { Calendar } from '../../types';
 
-export const MailboxSettings = ({ subject }: SurfaceComponentProps<Feed.Feed>) => {
+export const CalendarSettings = ({ subject }: SurfaceComponentProps<Feed.Feed>) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const db = useMemo(() => Obj.getDatabase(subject), [subject]);
 
-  const configs = useQuery(db, Filter.type(Mailbox.Config));
+  const configs = useQuery(db, Filter.type(Calendar.Config));
   const config = useMemo(
     () => configs.find((config) => DXN.equalsEchoId(config.feed.dxn, Obj.getDXN(subject))),
     [configs, subject],
@@ -52,8 +52,7 @@ export const MailboxSettings = ({ subject }: SurfaceComponentProps<Feed.Feed>) =
   const { syncEnabled, syncTrigger, pending, handleToggleSync } = useSyncTrigger({
     db,
     subject,
-    functionKey: 'dxos.org/function/inbox/google-mail-sync',
-    input: { restrictedMode: true },
+    functionKey: 'dxos.org/function/inbox/google-calendar-sync',
   });
 
   const handleViewTrigger = useCallback(() => {
@@ -69,7 +68,7 @@ export const MailboxSettings = ({ subject }: SurfaceComponentProps<Feed.Feed>) =
   return (
     <div className='flex flex-col gap-4'>
       {config && (
-        <Form.Root schema={omitId(Mailbox.Config)} values={config} db={db} onValuesChanged={handleConfigChange}>
+        <Form.Root schema={omitId(Calendar.Config)} values={config} db={db} onValuesChanged={handleConfigChange}>
           <Form.Viewport>
             <Form.Content>
               <Form.FieldSet />
@@ -77,7 +76,7 @@ export const MailboxSettings = ({ subject }: SurfaceComponentProps<Feed.Feed>) =
           </Form.Viewport>
         </Form.Root>
       )}
-      <h2>{t('mailbox sync label')}</h2>
+      <h2>{t('calendar sync label')}</h2>
       <div className='p-1 flex flex-row gap-1'>
         <ButtonGroup>
           <Button onClick={handleToggleSync} disabled={pending}>
