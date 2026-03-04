@@ -75,7 +75,7 @@ const createTableToolbarActions = ({
     }
     const gap = createGapSeparator();
     nodes.push(...gap.nodes);
-    const edges: ActionGraphEdges = nodes.map(({ id: target }) => ({ source: 'root', target }));
+    const edges: ActionGraphEdges = nodes.map(({ id: target }) => ({ source: 'root', target, relation: 'child' }));
     if (customActions) {
       const custom = get(customActions);
       nodes.push(...custom.nodes);

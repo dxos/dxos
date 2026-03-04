@@ -72,7 +72,7 @@ export const useDrawerActions = (consumerName: string): DrawerActions => {
               Effect.sync(() => updateState((state) => ({ ...state, drawerState: isExpanded ? 'open' : 'expanded' }))),
           };
           nodes.push(toggleExpandAction);
-          edges.push({ source: 'root', target: toggleExpandAction.id });
+          edges.push({ source: 'root', target: toggleExpandAction.id, relation: 'child' });
         }
 
         // Add close button.
@@ -87,7 +87,7 @@ export const useDrawerActions = (consumerName: string): DrawerActions => {
           data: () => Effect.sync(() => updateState((state) => ({ ...state, drawerState: 'closed' }))),
         };
         nodes.push(closeAction);
-        edges.push({ source: 'root', target: closeAction.id });
+        edges.push({ source: 'root', target: closeAction.id, relation: 'child' });
 
         return { nodes, edges };
       }),

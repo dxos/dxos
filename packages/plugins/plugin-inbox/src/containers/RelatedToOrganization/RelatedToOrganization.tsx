@@ -50,7 +50,6 @@ export const RelatedToOrganization = ({ subject: organization }: SurfaceComponen
           yield* Effect.promise(() => invokePromise(LayoutOperation.Open, { subject: [id], workspace: db?.spaceId }));
           yield* Effect.promise(() =>
             invokePromise(DeckOperation.ChangeCompanion, {
-              primary: id,
               companion: [id, 'selected-objects'].join(ATTENDABLE_PATH_SEPARATOR),
             }),
           );

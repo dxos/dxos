@@ -61,7 +61,7 @@ export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(
         const nodes = actions.filter((action) => action.properties.disposition === 'toolbar');
         return {
           nodes,
-          edges: nodes.map((node) => ({ source: 'root', target: node.id })),
+          edges: nodes.map((node) => ({ source: 'root', target: node.id, relation: 'child' })),
         };
       });
     }, [graph]);

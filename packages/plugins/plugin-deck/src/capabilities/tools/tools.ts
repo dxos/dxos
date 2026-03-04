@@ -60,7 +60,6 @@ export default Capability.makeModule(() =>
 
           if (part === 'deck') {
             const { error } = await invokePromise(DeckOperation.ChangeCompanion, {
-              primary: pivotId,
               companion: id,
             });
             if (error) {

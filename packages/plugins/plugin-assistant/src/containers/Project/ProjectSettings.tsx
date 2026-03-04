@@ -52,21 +52,14 @@ export const ProjectSettings = ({ subject: project }: SurfaceComponentProps<Proj
     });
   }, [project]);
 
-  const feedObjects = useQuery(Obj.getDatabase(project), Query.select(Filter.type(Type.Feed)));
-  const subscribableObjects = useMemo(
-    () =>
-      feedObjects.filter(
-        (feed) => !project.subscriptions.some((subscription) => DXN.equals(subscription.dxn, Obj.getDXN(feed))),
-      ),
-    [feedObjects, project.subscriptions],
-  );
+  const subscribableObjects = useQuery(Obj.getDatabase(project), Query.select(Filter.type(Type.Feed)));
 
   const existingSubscripts = useAtomValue(
     useMemo(
       () =>
         AtomObj.make(project).pipe((_) =>
           Atom.make((get) => {
-            const initative = get(_);
+            const project = get(_);
             const selectedSubscriptions: Obj.Unknown[] = subscribableObjects.filter((object) =>
               project.subscriptions.some((subscription) => DXN.equals(subscription.dxn, Obj.getDXN(object))),
             );

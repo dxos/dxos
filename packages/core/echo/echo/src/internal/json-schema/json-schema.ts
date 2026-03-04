@@ -465,11 +465,13 @@ const jsonSchemaFieldsToAnnotations = (schema: JsonSchemaType): SchemaAST.Annota
     }
   }
 
-  annotations[TypeIdentifierAnnotationId] = decodeTypeIdentifierAnnotation(schema);
+  const typeIdentifier = decodeTypeIdentifierAnnotation(schema);
+  annotations[TypeIdentifierAnnotationId] = typeIdentifier;
   const typeAnnotation = decodeTypeAnnotation(schema);
   if (typeAnnotation) {
     annotations[TypeAnnotationId] = typeAnnotation;
     annotations[SchemaAST.JSONSchemaAnnotationId] = makeTypeJsonSchemaAnnotation({
+      identifier: typeIdentifier,
       kind: typeAnnotation.kind,
       typename: typeAnnotation.typename,
       version: typeAnnotation.version,

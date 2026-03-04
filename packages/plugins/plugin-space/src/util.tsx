@@ -752,9 +752,12 @@ export const constructObjectActions = ({
             id: getId(SpaceOperation.RemoveObjects.meta.key),
             type: Node.ActionType,
             data: Effect.fnUntraced(function* () {
-              const collection = Graph.getConnections(graph, Obj.getDXN(object).toString(), 'inbound').find(
-                (node: Node.Node): node is Node.Node<Collection.Collection> =>
-                  Obj.instanceOf(Collection.Collection, node.data),
+              const collection = Graph.getConnections(
+                graph,
+                Obj.getDXN(object).toString(),
+                Node.childRelation('inbound'),
+              ).find((node: Node.Node): node is Node.Node<Collection.Collection> =>
+                Obj.instanceOf(Collection.Collection, node.data),
               )?.data;
               yield* Operation.invoke(SpaceOperation.RemoveObjects, { objects: [object], target: collection });
             }),

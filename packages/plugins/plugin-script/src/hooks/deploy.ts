@@ -94,9 +94,9 @@ export const createDeploy = ({ state, script, space, fn, client, existingFunctio
   return {
     nodes: [errorItem, deployAction, copyAction],
     edges: [
-      { source: 'root', target: 'error' },
-      { source: 'root', target: 'deploy' },
-      { source: 'root', target: 'copy' },
+      { source: 'root', target: 'error', relation: 'child' },
+      { source: 'root', target: 'deploy', relation: 'child' },
+      { source: 'root', target: 'copy', relation: 'child' },
     ],
   };
 };

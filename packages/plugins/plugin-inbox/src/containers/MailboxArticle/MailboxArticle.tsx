@@ -143,7 +143,6 @@ export const MailboxArticle = ({ subject: feed, filter: filterProp, attendableId
           } else {
             // Deck layout: open as companion panel.
             void invokePromise(DeckOperation.ChangeCompanion, {
-              primary: id,
               companion: companionId,
             });
           }
@@ -354,7 +353,7 @@ const useMailboxActions = ({
             // Add gap after filter action.
             ...gap.edges,
             // Add compose email after gap.
-            { source: 'root', target: 'composeEmail' },
+            { source: 'root', target: 'composeEmail', relation: 'child' },
           ],
         };
       }),

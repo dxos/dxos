@@ -9,7 +9,7 @@ import { AppCapabilities, type SerializedNode, SettingsOperation } from '@dxos/a
 import { Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
 import { Operation, OperationResolver } from '@dxos/operation';
-import { Node } from '@dxos/plugin-graph';
+import { type Node } from '@dxos/plugin-graph';
 import { type MaybePromise, byPosition } from '@dxos/util';
 
 import { meta } from '../../meta';
@@ -165,11 +165,8 @@ export default Capability.makeModule(
 
           yield* Effect.promise(async () =>
             explore({
+              relation: 'child',
               visitor: async (node, path) => {
-                if (Node.isActionLike(node)) {
-                  return false;
-                }
-
                 const [serializer] = serializers
                   .flat()
                   .filter((serializer) => node.type === serializer.inputType)
