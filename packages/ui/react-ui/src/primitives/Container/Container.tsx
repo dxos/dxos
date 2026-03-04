@@ -77,7 +77,7 @@ const Column = forwardRef<HTMLDivElement, ColumnProps>(
         style={
           {
             '--gutter': gutterSize,
-            gridTemplateColumns: [gutterSize, '1fr', gutterSize].join(' '),
+            gridTemplateColumns: [gutterSize, 'minmax(0,1fr)', gutterSize].join(' '),
           } as CSSProperties
         }
         className={tx('container.column', { gutter }, [className, classNames])}

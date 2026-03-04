@@ -37,6 +37,9 @@
       "path": "../lit-ui"
     },
     {
+      "path": "../react-primitives/react-error-boundary"
+    },
+    {
       "path": "../react-primitives/react-hooks"
     },
     {

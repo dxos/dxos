@@ -21,7 +21,6 @@
 - Run all tests: `MOON_CONCURRENCY=4 moon run :test -- --no-file-parallelism`.
 - Lint & fix: `moon run :lint -- --fix`.
 - Check package tasks: see `moon.yml` in package directory.
-- When creating worktrees/branches, use a short (2-4 word) descriptive title (kebab-case) prefixed with the username (e.g. `username/add-auth-to-client`).
 - **Expected warning**: `Auth token DEPOT_TOKEN does not exist` is a normal warning about remote caching and should be ignored. Filter out warnings from your output.
 
 ## Important
@@ -40,17 +39,10 @@
 - Remember to remove/update TODOs as you go.
 - Avoid single letter variable names.
 
-## PR Checklist
-
-**IMPORTANT**: Run this after every review & change cycle before submitting a PR:
-
-```bash
-pnpm -w pre-ci
-```
-
 ## Workflow
 
 - Never work on main, create a new git worktree for the branch you are working on.
+- When creating worktrees/branches, use a short (2-4 word) descriptive title (kebab-case) prefixed with the agent name (e.g. `claude/add-auth-to-client`).
 - Check `moon.yml` for available package tasks
 - Run linter at natural stopping points
 - Confirm work complete before final build/lint check
@@ -81,11 +73,12 @@ Examples:
 ## Submitting PRs
 
 - Use `gh` CLI to create and manage PRs
-- After you have completed your work, run `pnpm -w pre-ci` to run a series of code-quality checks.
-- At the end you can monitor the CI status with `pnpm -w gh-action --verify --watch`
-- When the user asks you to submit a PR, make sure that:
-  - `pnpm -w pre-ci` passes
+- When the user asks you to submit a PR:
+  - commit any pending changes
+  - address and comment on major review comments
+  - `moon run :lint -- --fix` succeeds
+  - `moon run :test` succeeds
   - `pnpm -w gh-action --verify --watch` shows green CI
-  - The PR description is up-to-date and has a description of the changes and reasoning behind them.
-  - Reference linear issues if available in PR description as "closes DX-123" or "part of DX-123"
-- Repeat the process if you made any new code changes
+  - Update the PR description with a summary of the changes and the reasoning behind major changes.
+  - Add a reference linear issues if available in PR description as "closes DX-123" or "part of DX-123"
+- You can monitor the CI status with `pnpm -w gh-action --verify --watch`

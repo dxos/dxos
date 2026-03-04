@@ -487,6 +487,9 @@
       "path": "packages/ui/lit-ui/tsconfig.json"
     },
     {
+      "path": "packages/ui/react-primitives/react-error-boundary/tsconfig.json"
+    },
+    {
       "path": "packages/ui/react-primitives/react-hooks/tsconfig.json"
     },
     {

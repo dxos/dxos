@@ -29,7 +29,7 @@ import {
 import { meta } from '../../meta';
 import { getMode } from '../../types';
 import { layoutAppliesTopbar } from '../../util';
-import { PlankContentError, PlankLoading } from '../Plank';
+import { PlankErrorFallback, PlankLoading } from '../Plank';
 
 import { ToggleComplementarySidebarButton } from './SidebarButton';
 
@@ -200,7 +200,7 @@ const ComplementarySidebarPanel = ({ companion, activeId, data, hoistStatusbar }
         <Surface.Surface
           role={`deck-companion--${getCompanionId(companion.id)}`}
           data={data}
-          fallback={PlankContentError}
+          fallback={PlankErrorFallback}
           placeholder={<PlankLoading />}
         />
       </Wrapper>
