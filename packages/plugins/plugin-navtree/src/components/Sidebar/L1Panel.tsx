@@ -217,6 +217,7 @@ const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'item' | 'path
 const useL1MenuActions = ({ item, path }: Pick<L1PanelProps, 'item' | 'path'>) => {
   const { t } = useTranslation(meta.id);
   const { setAlternateTree } = useNavTreeContext();
+  const { graph } = useAppGraph();
   const runAction = useActionRunner();
 
   const alternateTree = useAlternateTreeItem(item);
@@ -264,12 +265,15 @@ const useL1MenuActions = ({ item, path }: Pick<L1PanelProps, 'item' | 'path'>) =
   const onAction = useCallback(
     (action: Node.Action, params?: Node.InvokeProps) => {
       if (action.id === settingsActionId) {
+        if (alternateTree && !isAlternate) {
+          Graph.expand(graph, alternateTree.id, 'child');
+        }
         setAlternateTree?.(alternatePath, !isAlternate);
       } else {
         void runAction(action, params);
       }
     },
-    [settingsActionId, setAlternateTree, alternatePath, isAlternate, runAction],
+    [settingsActionId, setAlternateTree, alternatePath, isAlternate, runAction, graph, alternateTree],
   );
 
   return { primaryAction, groupedActions, menuActions, onAction };

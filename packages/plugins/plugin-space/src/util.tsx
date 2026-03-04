@@ -38,9 +38,6 @@ const META_NS: { ns: string } = { ns: meta.id };
 const PERSONAL_SPACE_LABEL: Label = ['personal space label', META_NS];
 const UNNAMED_SPACE_LABEL: Label = ['unnamed space label', META_NS];
 const SETTINGS_PANEL_LABEL: Label = ['settings panel label', META_NS];
-const SPACE_SETTINGS_PROPERTIES_LABEL: Label = ['space settings properties label', META_NS];
-const MEMBERS_PANEL_LABEL: Label = ['members panel label', META_NS];
-const SPACE_SETTINGS_SCHEMA_LABEL: Label = ['space settings schema label', META_NS];
 const MIGRATE_SPACE_LABEL: Label = ['migrate space label', META_NS];
 const CREATE_OBJECT_IN_SPACE_LABEL: Label = ['create object in space label', META_NS];
 const RENAME_SPACE_LABEL: Label = ['rename space label', META_NS];
@@ -228,40 +225,6 @@ export const constructSpaceNode = ({
           icon: 'ph--faders--regular',
           disposition: 'alternate-tree',
         },
-        nodes: [
-          {
-            id: `properties-settings${ATTENDABLE_PATH_SEPARATOR}${space.id}`,
-            type: `${meta.id}/properties`,
-            data: `${meta.id}/properties`,
-            properties: {
-              label: SPACE_SETTINGS_PROPERTIES_LABEL,
-              icon: 'ph--sliders--regular',
-              position: 'hoist',
-              testId: 'spacePlugin.general',
-            },
-          },
-          {
-            id: `members-settings${ATTENDABLE_PATH_SEPARATOR}${space.id}`,
-            type: `${meta.id}/members`,
-            data: `${meta.id}/members`,
-            properties: {
-              label: MEMBERS_PANEL_LABEL,
-              icon: 'ph--users--regular',
-              position: 'hoist',
-              testId: 'spacePlugin.members',
-            },
-          },
-          {
-            id: `schema-settings${ATTENDABLE_PATH_SEPARATOR}${space.id}`,
-            type: `${meta.id}/schema`,
-            data: `${meta.id}/schema`,
-            properties: {
-              label: SPACE_SETTINGS_SCHEMA_LABEL,
-              icon: 'ph--shapes--regular',
-              testId: 'spacePlugin.schema',
-            },
-          },
-        ],
       },
     ],
   };
