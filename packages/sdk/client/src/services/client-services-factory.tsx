@@ -52,6 +52,12 @@ export const createClientServices = async (
     signalTelemetryEnabled,
     sqlitePath,
   } = options;
+
+  // Derive sqlitePath from dataRoot when not explicitly provided (matches CLI behavior).
+  const dataRoot = config.values.runtime?.client?.storage?.dataRoot;
+  const isPersistant = config.values.runtime?.client?.storage?.persistent;
+  const effectiveSqlitePath = sqlitePath ?? (isPersistant && dataRoot ? `${dataRoot}/sqlite.db` : undefined);
+
   const remote = config.values.runtime?.client?.remoteSource;
   if (remote) {
     const url = new URL(remote);
@@ -95,7 +101,7 @@ export const createClientServices = async (
           config,
           {
             createOpfsWorker,
-            sqlitePath,
+            sqlitePath: effectiveSqlitePath,
           },
           observabilityGroup,
           signalTelemetryEnabled,
