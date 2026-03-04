@@ -7,7 +7,9 @@ import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'v
 import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
-import { type Device, type DevicesService } from '@dxos/protocols/proto/dxos/client/services';
+import { create } from '@dxos/protocols/buf';
+import { type Device } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { DeviceProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { type ServiceContext } from '../services';
 import { createServiceContext } from '../testing';
@@ -16,7 +18,7 @@ import { DevicesServiceImpl } from './devices-service';
 
 describe('DevicesService', () => {
   let serviceContext: ServiceContext;
-  let devicesService: DevicesService;
+  let devicesService: DevicesServiceImpl;
 
   beforeEach(async () => {
     serviceContext = await createServiceContext();
@@ -31,9 +33,9 @@ describe('DevicesService', () => {
   describe('updateDevice', () => {
     test.skip('updates device profile', async () => {
       const query = devicesService.queryDevices();
-      const device = await devicesService.updateDevice({ label: 'test-device' });
+      const device = await devicesService.updateDevice(create(DeviceProfileDocumentSchema, { label: 'test-device' }));
       const result = new Trigger<Device[] | undefined>();
-      query.subscribe(({ devices }) => {
+      query.subscribe(({ devices }: any) => {
         result.wake(devices);
       });
       onTestFinished(() => query.close());
@@ -46,7 +48,7 @@ describe('DevicesService', () => {
       const query = devicesService.queryDevices();
       const result = new Trigger<Device[] | undefined>();
       query.subscribe(
-        ({ devices }) => {
+        ({ devices }: any) => {
           result.wake(devices);
         },
         (err) => log.catch(err),
@@ -58,7 +60,7 @@ describe('DevicesService', () => {
     test('updates when identity is created', async () => {
       const query = devicesService.queryDevices();
       let result = new Trigger<Device[] | undefined>();
-      query.subscribe(({ devices }) => {
+      query.subscribe(({ devices }: any) => {
         result.wake(devices);
       });
       onTestFinished(() => query.close());

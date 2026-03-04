@@ -9,6 +9,7 @@ import * as Effect from 'effect/Effect';
 import { CommandConfig } from '@dxos/cli-util';
 import { print } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
+import { toPublicKey } from '@dxos/protocols/buf';
 
 import { printIdentity } from '../util';
 
@@ -28,7 +29,7 @@ export const handler = Effect.fn(function* () {
       yield* Console.log(
         JSON.stringify(
           {
-            identityKey: identity.identityKey.toHex(),
+            identityKey: identity.identityKey ? toPublicKey(identity.identityKey).toHex() : undefined,
             displayName: identity.profile?.displayName,
           },
           null,

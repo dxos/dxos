@@ -21,7 +21,6 @@ import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { type SignalManager } from '@dxos/messaging';
 import { type SwarmNetworkManagerOptions, type TransportFactory, createIceProvider } from '@dxos/network-manager';
-import { type ServiceBundle } from '@dxos/rpc';
 import { layerFile, layerMemory, sqlExportLayer } from '@dxos/sql-sqlite/platform';
 import type * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
@@ -76,9 +75,11 @@ const setupNetworking = async (
   const { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } = await import('@dxos/messaging');
   const { createRtcTransportFactory, MemoryTransportFactory } = await import('@dxos/network-manager');
 
-  const signals = config.get('runtime.services.signaling');
-  const edgeFeatures = config.get('runtime.client.edgeFeatures');
+  const signals = config.get('runtime.services.signaling' as any);
+  const edgeFeatures = config.get('runtime.client.edgeFeatures' as any);
   if (signals || edgeFeatures?.signaling) {
+    const iceServers = config.get('runtime.services.ice' as any) as RTCIceServer[] | undefined;
+    const iceProviders = config.get('runtime.services.iceProviders' as any);
     const {
       signalManager = edgeFeatures?.signaling || !signals
         ? undefined // EdgeSignalManager needs EdgeConnection and will be created in service-host
@@ -86,11 +87,7 @@ const setupNetworking = async (
       // TODO(wittjosiah): P2P networking causes seg fault in bun currently.
       transportFactory = isBun()
         ? MemoryTransportFactory
-        : createRtcTransportFactory(
-            { iceServers: config.get('runtime.services.ice') },
-            config.get('runtime.services.iceProviders') &&
-              createIceProvider(config.get('runtime.services.iceProviders')!),
-          ),
+        : createRtcTransportFactory({ iceServers }, iceProviders && createIceProvider(iceProviders)),
     } = options;
 
     return {
@@ -126,7 +123,7 @@ export class LocalClientServices implements ClientServicesProvider {
     SqlTransaction.SqlTransaction | SqlClient.SqlClient | SqlExport.SqlExport,
     never
   >;
-  signalMetadataTags: any = {
+  signalMetadataTags: Record<string, string> = {
     runtime: 'local-client-services',
   };
 
@@ -143,7 +140,7 @@ export class LocalClientServices implements ClientServicesProvider {
       this.signalMetadataTags.origin = 'undefined';
     } else {
       // SocketSupply native app
-      if ((globalThis as any).__args) {
+      if ((globalThis as { __args?: unknown }).__args) {
         this.signalMetadataTags.runtime = 'native';
         this.signalMetadataTags.origin = window.location.origin;
         // TODO(nf): access socket app metadata?
@@ -153,7 +150,7 @@ export class LocalClientServices implements ClientServicesProvider {
     }
   }
 
-  get descriptors(): ServiceBundle<ClientServices> {
+  get descriptors() {
     return clientServiceBundle;
   }
 

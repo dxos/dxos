@@ -24,10 +24,10 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/codec-protobuf"
+      "path": "../../common/log"
     },
     {
-      "path": "../../common/log"
+      "path": "../../common/stream"
     },
     {
       "path": "../../common/test-utils"

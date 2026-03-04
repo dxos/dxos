@@ -12,9 +12,6 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/codec-protobuf"
-    },
-    {
       "path": "../../common/context"
     },
     {
@@ -34,6 +31,9 @@
     },
     {
       "path": "../../common/storybook-utils"
+    },
+    {
+      "path": "../../common/stream"
     },
     {
       "path": "../../common/test-utils"

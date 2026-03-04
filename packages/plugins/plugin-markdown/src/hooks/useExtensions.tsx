@@ -119,7 +119,7 @@ export const useExtensions = ({
             id,
             text: createDocAccessor(target, ['content']),
             messenger: space,
-            identity,
+            identity: identity as any,
           }),
 
         // TODO(burdon): Reconcile with effect in parent.

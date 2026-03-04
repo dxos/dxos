@@ -13,9 +13,6 @@
       "path": "../../../common/async"
     },
     {
-      "path": "../../../common/codec-protobuf"
-    },
-    {
       "path": "../../../common/context"
     },
     {
@@ -47,6 +44,9 @@
     },
     {
       "path": "../../../common/sql-sqlite"
+    },
+    {
+      "path": "../../../common/stream"
     },
     {
       "path": "../../../common/test-utils"

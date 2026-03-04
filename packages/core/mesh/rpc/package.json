@@ -29,12 +29,12 @@
   ],
   "dependencies": {
     "@dxos/async": "workspace:*",
-    "@dxos/codec-protobuf": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
+    "@dxos/stream": "workspace:*",
     "@dxos/util": "workspace:*"
   },
   "publishConfig": {

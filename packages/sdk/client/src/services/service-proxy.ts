@@ -21,7 +21,7 @@ import { trace } from '@dxos/tracing';
 @trace.resource({ annotation: ClientServicesProviderResource })
 export class ClientServicesProxy implements ClientServicesProvider {
   readonly closed = new Event<Error | undefined>();
-  private _proxy?: ProtoRpcPeer<ClientServices>;
+  private _proxy?: ProtoRpcPeer<typeof clientServiceBundle>;
 
   constructor(
     private readonly _port: RpcPort,
@@ -39,7 +39,7 @@ export class ClientServicesProxy implements ClientServicesProvider {
     return clientServiceBundle;
   }
 
-  get services() {
+  get services(): Partial<ClientServices> {
     invariant(this._proxy, 'Client services not open');
     return this._proxy.rpc;
   }
@@ -51,8 +51,6 @@ export class ClientServicesProxy implements ClientServicesProvider {
 
     this._proxy = createProtoRpcPeer({
       requested: clientServiceBundle,
-      exposed: {},
-      handlers: {},
       port: this._port,
       // TODO(wittjosiah): Specifying breaks the reset flows in Composer.
       // timeout: this._timeout,

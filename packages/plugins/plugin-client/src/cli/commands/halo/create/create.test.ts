@@ -13,6 +13,7 @@ import { TestConsole, TestLayer } from '@dxos/cli-util/testing';
 import { ClientService } from '@dxos/client';
 import { runAndForwardErrors } from '@dxos/effect';
 import { ObservabilityPlugin } from '@dxos/plugin-observability/cli';
+import { toPublicKey } from '@dxos/protocols/buf';
 
 import { ClientPlugin } from '../../../plugin';
 
@@ -31,7 +32,9 @@ describe.skip('halo create', () => {
       expect(logs).toHaveLength(1);
       const parsedIdentity = TestConsole.parseJson(logs[0]);
       expect(parsedIdentity).toEqual({
-        identityKey: client.halo.identity.get()?.identityKey.toHex(),
+        identityKey: client.halo.identity.get()?.identityKey
+          ? toPublicKey(client.halo.identity.get()!.identityKey!).toHex()
+          : undefined,
         displayName: client.halo.identity.get()?.profile?.displayName,
       });
     }).pipe(Effect.provide(layer), Effect.scoped, runAndForwardErrors));
@@ -45,7 +48,9 @@ describe.skip('halo create', () => {
       expect(logs).toHaveLength(1);
       const parsedIdentity = TestConsole.parseJson(logs[0]);
       expect(parsedIdentity).toEqual({
-        identityKey: client.halo.identity.get()?.identityKey.toHex(),
+        identityKey: client.halo.identity.get()?.identityKey
+          ? toPublicKey(client.halo.identity.get()!.identityKey!).toHex()
+          : undefined,
         displayName: client.halo.identity.get()?.profile?.displayName,
       });
     }).pipe(Effect.provide(layer), Effect.scoped, runAndForwardErrors));

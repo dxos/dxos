@@ -20,7 +20,7 @@ import { bundleFunction } from '@dxos/functions-runtime/native';
 import { failedInvariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ErrorCodec, FunctionRuntimeKind } from '@dxos/protocols';
-import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { AccessToken, Message } from '@dxos/types';
 
 import { Mailbox } from '../../../types';

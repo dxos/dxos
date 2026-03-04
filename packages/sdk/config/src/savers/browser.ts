@@ -7,7 +7,7 @@
 import localforage from 'localforage';
 
 import { log } from '@dxos/log';
-import { type Config as ConfigProto } from '@dxos/protocols/proto/dxos/config';
+import { type Config as ConfigProto } from '@dxos/protocols/buf/dxos/config_pb';
 
 let PERFORMING_CONFIG_SAVE = false;
 

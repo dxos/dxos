@@ -15,7 +15,7 @@ import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { bundleFunction } from '@dxos/functions-runtime/native';
 import type { BundleResult } from '@dxos/functions-runtime/native';
 import { ErrorCodec, type FunctionRuntimeKind } from '@dxos/protocols';
-import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 
 export const writeBundle = (path: string, bundle: BundleResult) => {
   fs.mkdirSync(path, { recursive: true });

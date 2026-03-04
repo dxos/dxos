@@ -5,6 +5,9 @@
 import fetchMock from 'fetch-mock';
 import { afterEach, describe, expect, test } from 'vitest';
 
+import { create } from '@dxos/protocols/buf';
+import { Runtime_Services_IceProviderSchema } from '@dxos/protocols/buf/dxos/config_pb';
+
 import { createIceProvider } from './ice';
 
 describe('Ice', () => {
@@ -26,7 +29,9 @@ describe('Ice', () => {
 
     fetchMock.getOnce(providerUrl, { iceServers: providedIceServers });
 
-    const iceServers = await createIceProvider([{ urls: providerUrl }]).getIceServers();
+    const iceServers = await createIceProvider([
+      create(Runtime_Services_IceProviderSchema, { urls: providerUrl }),
+    ]).getIceServers();
     expect(iceServers).to.deep.eq(providedIceServers);
   });
 
@@ -34,7 +39,9 @@ describe('Ice', () => {
     // mock error
     fetchMock.getOnce(providerUrl, 500);
 
-    const iceServers = await createIceProvider([{ urls: providerUrl }]).getIceServers();
+    const iceServers = await createIceProvider([
+      create(Runtime_Services_IceProviderSchema, { urls: providerUrl }),
+    ]).getIceServers();
     expect(iceServers).to.deep.eq([]);
   });
 });

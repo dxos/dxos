@@ -3,26 +3,24 @@
 //
 
 import { InvalidConfigError } from '@dxos/protocols';
-import { Runtime } from '@dxos/protocols/proto/dxos/config';
+import { type Runtime_Client_Storage, Runtime_Client_Storage_StorageDriver } from '@dxos/protocols/buf/dxos/config_pb';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 
 import { getRootPath } from './util';
 
-import StorageDriver = Runtime.Client.Storage.StorageDriver;
-
 // TODO(burdon): Factor out.
-export const createStorageObjects = (config: Runtime.Client.Storage) => {
+export const createStorageObjects = (config: Runtime_Client_Storage) => {
   const { persistent = false, keyStore, dataStore } = config ?? {};
-  if (persistent && dataStore === StorageDriver.RAM) {
+  if (persistent && dataStore === Runtime_Client_Storage_StorageDriver.RAM) {
     throw new InvalidConfigError({ message: 'RAM storage cannot be used in persistent mode.' });
   }
-  if (!persistent && dataStore !== undefined && dataStore !== StorageDriver.RAM) {
+  if (!persistent && dataStore !== undefined && dataStore !== Runtime_Client_Storage_StorageDriver.RAM) {
     throw new InvalidConfigError({ message: 'Cannot use a persistent storage in not persistent mode.' });
   }
-  if (persistent && keyStore === StorageDriver.RAM) {
+  if (persistent && keyStore === Runtime_Client_Storage_StorageDriver.RAM) {
     throw new InvalidConfigError({ message: 'RAM key storage cannot be used in persistent mode.' });
   }
-  if (!persistent && keyStore !== StorageDriver.RAM && keyStore !== undefined) {
+  if (!persistent && keyStore !== Runtime_Client_Storage_StorageDriver.RAM && keyStore !== undefined) {
     throw new InvalidConfigError({ message: 'Cannot use a persistent key storage in not persistent mode.' });
   }
 
@@ -34,23 +32,23 @@ export const createStorageObjects = (config: Runtime.Client.Storage) => {
   };
 };
 
-const toStorageType = (type: StorageDriver | undefined): StorageType | undefined => {
+const toStorageType = (type: Runtime_Client_Storage_StorageDriver | undefined): StorageType | undefined => {
   switch (type) {
     case undefined:
       return undefined;
-    case StorageDriver.RAM:
+    case Runtime_Client_Storage_StorageDriver.RAM:
       return StorageType.RAM;
-    case StorageDriver.CHROME:
+    case Runtime_Client_Storage_StorageDriver.CHROME:
       return StorageType.CHROME;
-    case StorageDriver.FIREFOX:
+    case Runtime_Client_Storage_StorageDriver.FIREFOX:
       return StorageType.FIREFOX;
-    case StorageDriver.IDB:
+    case Runtime_Client_Storage_StorageDriver.IDB:
       return StorageType.IDB;
-    case StorageDriver.NODE:
+    case Runtime_Client_Storage_StorageDriver.NODE:
       return StorageType.NODE;
-    case StorageDriver.WEBFS:
+    case Runtime_Client_Storage_StorageDriver.WEBFS:
       return StorageType.WEBFS;
     default:
-      throw new Error(`Invalid storage type: ${StorageDriver[type]}`);
+      throw new Error(`Invalid storage type: ${Runtime_Client_Storage_StorageDriver[type]}`);
   }
 };

@@ -8,8 +8,12 @@ import { SpaceState } from '@dxos/client/echo';
 import { type NetworkStatus } from '@dxos/client/mesh';
 import { type EchoDataStats, type EchoStatsDiagnostic } from '@dxos/echo-pipeline';
 import { log } from '@dxos/log';
-import { type QueryEdgeStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
-import { type Resource } from '@dxos/protocols/proto/dxos/tracing';
+import {
+  type NetworkStatus as BufNetworkStatus,
+  type QueryEdgeStatusResponse as BufQueryEdgeStatusResponse,
+} from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type QueryEdgeStatusResponse } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type Resource } from '@dxos/protocols/buf/dxos/tracing_pb';
 import { useClient } from '@dxos/react-client';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import { type Diagnostics, type DiagnosticsRequest, TRACE_PROCESSOR } from '@dxos/tracing';
@@ -171,7 +175,7 @@ export const useStats = (): [Stats, () => void] => {
 
   useEffect(() => {
     const stream = client.services.services.NetworkService!.queryStatus();
-    stream.subscribe((network) => {
+    stream.subscribe((network: BufNetworkStatus) => {
       setStats((stats) =>
         Object.assign({}, stats, {
           network,
@@ -186,7 +190,7 @@ export const useStats = (): [Stats, () => void] => {
 
   useEffect(() => {
     const stream = client.services.services.EdgeAgentService!.queryEdgeStatus();
-    stream.subscribe((edge) => {
+    stream.subscribe((edge: BufQueryEdgeStatusResponse) => {
       setStats((stats) =>
         Object.assign({}, stats, {
           edge,

@@ -7,6 +7,8 @@
 import { WorkerRuntime } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { log } from '@dxos/log';
+import { create } from '@dxos/protocols/buf';
+import { ConfigSchema } from '@dxos/protocols/buf/dxos/config_pb';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
 import { layerMemory } from '@dxos/sql-sqlite/platform';
 
@@ -39,7 +41,9 @@ export const runDedicatedWorker = (options: RunDedicatedWorkerOptions = {}): voi
       switch (message.type) {
         case 'init': {
           owningClientId = message.ownerClientId ?? message.clientId;
-          const config = new Config(message.config ?? {});
+          const config = new Config(
+            message.config ? create(ConfigSchema, message.config as any) : create(ConfigSchema, { version: 1 }),
+          );
           log('worker init with config', { keys: Object.keys(message.config ?? {}) });
           // TODO(wittjosiah): OPFS doesn't work in Playwright's WebKit (works in real Safari).
           //   https://github.com/microsoft/playwright/issues/18235

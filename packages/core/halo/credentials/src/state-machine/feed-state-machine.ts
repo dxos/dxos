@@ -4,10 +4,11 @@
 
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { type AdmittedFeed, type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { toPublicKey } from '@dxos/protocols/buf';
+import { type AdmittedFeed, type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type AsyncCallback, Callback, ComplexMap } from '@dxos/util';
 
-import { getCredentialAssertion } from '../credentials';
+import { fromBufPublicKey, getAssertionFromCredential } from '../credentials';
 
 export interface FeedInfo {
   key: PublicKey;
@@ -43,18 +44,19 @@ export class FeedStateMachine {
    * @param fromFeed Key of the feed where this credential is recorded.
    */
   async process(credential: Credential, fromFeed: PublicKey): Promise<void> {
-    const assertion = getCredentialAssertion(credential);
-    invariant(assertion['@type'] === 'dxos.halo.credentials.AdmittedFeed');
-    invariant(assertion.spaceKey.equals(this._spaceKey));
+    const assertion = getAssertionFromCredential(credential);
+    invariant(assertion.$typeName === 'dxos.halo.credentials.AdmittedFeed');
+    invariant(assertion.spaceKey && toPublicKey(assertion.spaceKey).equals(this._spaceKey));
 
+    const subjectId = fromBufPublicKey(credential.subject!.id!)!;
     const info: FeedInfo = {
-      key: credential.subject.id,
+      key: subjectId,
       credential,
       assertion,
       parent: fromFeed,
     };
 
-    this._feeds.set(credential.subject.id, info);
+    this._feeds.set(subjectId, info);
     await this.onFeedAdmitted.callIfSet(info);
   }
 }

@@ -5,16 +5,18 @@
 import stableStringify from 'json-stable-stringify';
 
 import { PublicKey } from '@dxos/keys';
-import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Timeframe } from '@dxos/timeframe';
 import { arrayToBuffer } from '@dxos/util';
+
+import { type UnpackedCredential, unpackAssertion } from './credential';
 
 /**
  * @returns The input message to be signed for a given credential.
  */
 // TODO(nf): rename, this returns not the proof itself, but the payload for verifying against the proof.
-export const getCredentialProofPayload = (credential: Credential): Uint8Array => {
-  const copy = {
+export const getCredentialProofPayload = (credential: Credential | UnpackedCredential): Uint8Array => {
+  const copy: any = {
     ...credential,
     proof: {
       ...credential.proof,
@@ -27,7 +29,20 @@ export const getCredentialProofPayload = (credential: Credential): Uint8Array =>
   }
   delete copy.id; // ID is not part of the signature payload.
 
-  return Buffer.from(canonicalStringify(copy));
+  // Ensure assertion is unpacked for canonical string generation.
+  // Credentials arriving via RPC have packed Any assertions (typeUrl + binary value).
+  // Signatures are computed over inline assertion fields, so unpack if needed.
+  const assertion = copy.subject?.assertion;
+  const assertionTypeUrl = assertion?.typeUrl ?? assertion?.type_url;
+  if (assertionTypeUrl && assertion?.value instanceof Uint8Array && assertion.value.length > 0) {
+    const unpacked = unpackAssertion({ ...assertion, typeUrl: assertionTypeUrl });
+    if (unpacked) {
+      copy.subject = { ...copy.subject, assertion: unpacked };
+    }
+  }
+
+  const canonical = canonicalStringify(copy);
+  return Buffer.from(canonical);
 };
 
 /**
@@ -43,7 +58,7 @@ export const canonicalStringify = (obj: any): string =>
      */
     // TODO(dmaretskyi): Should we actually skip the @type field?
     replacer: function (this: any, key: any, value: any) {
-      if (key.toString().startsWith('__') || key.toString() === '@type') {
+      if (key.toString().startsWith('__') || key.toString().startsWith('$') || key.toString() === '@type') {
         return undefined;
       }
 
@@ -51,12 +66,39 @@ export const canonicalStringify = (obj: any): string =>
         return undefined;
       }
 
+      if (typeof value === 'bigint') {
+        return Number(value);
+      }
+
       // Value before .toJSON() is called.
       const original = this[key];
+
+      // Normalize buf Timestamp objects to ISO date strings (matching proto Date serialization).
+      if (
+        typeof original === 'object' &&
+        original !== null &&
+        'seconds' in original &&
+        'nanos' in original &&
+        !(original instanceof Date)
+      ) {
+        return new Date(Number(original.seconds) * 1000 + (original.nanos ?? 0) / 1e6).toISOString();
+      }
 
       if (value) {
         if (PublicKey.isPublicKey(value)) {
           return value.toHex();
+        }
+        // Buf PublicKey messages are `{ data: Uint8Array }` — normalize to hex like @dxos/keys PublicKey.
+        if (
+          original &&
+          typeof original === 'object' &&
+          original.data instanceof Uint8Array &&
+          !Array.isArray(original)
+        ) {
+          const nonMetaKeys = Object.keys(original).filter((k: string) => !k.startsWith('$'));
+          if (nonMetaKeys.length === 1 && nonMetaKeys[0] === 'data') {
+            return PublicKey.from(original.data).toHex();
+          }
         }
         if (Buffer.isBuffer(value)) {
           return value.toString('hex');

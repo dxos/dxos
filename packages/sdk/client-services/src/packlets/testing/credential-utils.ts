@@ -2,10 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { createCredential } from '@dxos/credentials';
+import { createCredential, toBufPublicKey } from '@dxos/credentials';
 import { type Signer } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
-import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { create } from '@dxos/protocols/buf';
+import { AuthorizedDeviceSchema, type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 export const createMockCredential = async ({
   signer,
@@ -18,11 +19,8 @@ export const createMockCredential = async ({
     signer,
     issuer,
     subject: new PublicKey(Buffer.from('test')),
-    assertion: {
-      '@type': 'example.testing.rpc.MessageWithAny',
-      payload: {
-        '@type': 'google.protobuf.Any',
-        value: Buffer.from('test'),
-      },
-    },
+    assertion: create(AuthorizedDeviceSchema, {
+      identityKey: toBufPublicKey(issuer),
+      deviceKey: toBufPublicKey(PublicKey.random()),
+    }),
   });

@@ -6,6 +6,8 @@ import React, { useState } from 'react';
 import { type Event, type SingleOrArray } from 'xstate';
 
 import { log } from '@dxos/log';
+import { type JsonObject, create, decodePublicKey } from '@dxos/protocols/buf';
+import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type Identity } from '@dxos/react-client/halo';
 import { useClipboard, useTranslation } from '@dxos/react-ui';
 import { EmojiPickerBlock, HuePicker } from '@dxos/react-ui-pickers';
@@ -48,7 +50,7 @@ const ProfileFormImpl = ({ active, identity, send, onUpdateProfile, validationMe
   const [hue, setHue] = useState<string>(getHueValue(identity));
   const [emoji, setEmoji] = useState<string>(getEmojiValue(identity));
   const { textValue, setTextValue } = useClipboard();
-  const identityHex = identity?.identityKey.toHex();
+  const identityHex = identity?.identityKey ? decodePublicKey(identity.identityKey).toHex() : undefined;
   const copied = textValue === identityHex;
   return (
     <>
@@ -99,10 +101,14 @@ const ProfileFormImpl = ({ active, identity, send, onUpdateProfile, validationMe
           variant='primary'
           disabled={disabled}
           onClick={() =>
-            onUpdateProfile?.({
-              ...(displayName && { displayName }),
-              ...((emoji || hue) && { data: { ...(emoji && { emoji }), ...(hue && { hue }) } }),
-            })
+            onUpdateProfile?.(
+              create(ProfileDocumentSchema, {
+                ...(displayName && { displayName }),
+                ...((emoji || hue) && {
+                  data: { ...(emoji && { emoji }), ...(hue && { hue }) } as JsonObject,
+                }),
+              }),
+            )
           }
           data-testid='update-profile-form-continue'
         >

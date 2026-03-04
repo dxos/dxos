@@ -2,13 +2,18 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type Codec } from '@dxos/protocols';
 import { log } from '@dxos/log';
-import { schema } from '@dxos/protocols/proto';
+import { create, fromBinary, toBinary } from '@dxos/protocols/buf';
+import { type EchoMetadata, EchoMetadataSchema } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import type { Storage } from '@dxos/random-access-storage';
 
 import { MetadataStore } from '../metadata';
 
-const EchoMetadata = schema.getCodecForType('dxos.echo.metadata.EchoMetadata');
+const echoMetadataCodec: Codec<EchoMetadata> = {
+  encode: (msg: EchoMetadata) => toBinary(EchoMetadataSchema, create(EchoMetadataSchema, msg)),
+  decode: (bytes: Uint8Array) => fromBinary(EchoMetadataSchema, bytes),
+};
 
 /**
  * This function will change the storage version in the metadata.
@@ -22,6 +27,6 @@ export const changeStorageVersionInMetadata = async (storage: Storage, version: 
   const echoMetadata = metadata.metadata;
   echoMetadata.version = version;
   const file = metadata._directory.getOrCreateFile('EchoMetadata');
-  await metadata._writeFile(file, EchoMetadata, echoMetadata);
+  await metadata._writeFile(file, echoMetadataCodec, echoMetadata);
   await metadata._directory.flush();
 };

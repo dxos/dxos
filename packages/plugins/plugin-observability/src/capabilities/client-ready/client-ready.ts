@@ -26,7 +26,7 @@ export default Capability.makeModule(
     const client = yield* Capability.get(ClientCapability);
 
     const sendPrivacyNotice = async () => {
-      const environment = client?.config?.values.runtime?.app?.env?.DX_ENVIRONMENT;
+      const environment = client?.config?.values.runtime?.app?.env?.DX_ENVIRONMENT as string | undefined;
       const notify =
         environment && environment !== 'ci' && !environment.endsWith('.local') && !environment.endsWith('.lan');
       const state = registry.get(stateAtom);

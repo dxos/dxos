@@ -18,10 +18,10 @@
       "path": "../../core/halo/keyring"
     },
     {
-      "path": "../async"
+      "path": "../../core/protocols"
     },
     {
-      "path": "../codec-protobuf"
+      "path": "../async"
     },
     {
       "path": "../context"

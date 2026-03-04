@@ -5,7 +5,8 @@
 import React from 'react';
 
 import { type PublicKey } from '@dxos/keys';
-import { type SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
+import { toPublicKey } from '@dxos/protocols/buf';
+import { type SwarmInfo } from '@dxos/protocols/buf/dxos/devtools/swarm_pb';
 import { Button } from '@dxos/react-ui';
 import { humanize } from '@dxos/util';
 
@@ -27,16 +28,19 @@ export const SwarmTable = ({ swarms, onClick }: SwarmListProps) => (
     </div>
     <div>
       {swarms.map((swarm) => (
-        <div key={swarm.id.toHex()} className='inline-flex w-full border-b border-separator'>
+        <div
+          key={swarm.id ? toPublicKey(swarm.id).toHex() : ''}
+          className='inline-flex w-full border-b border-separator'
+        >
           <div className='flex w-[30rem] overflow-hidden'>{swarm.label && humanize(swarm.label)}</div>
-          <div className='flex w-[30rem] overflow-hidden'>{humanize(swarm.topic)}</div>
+          <div className='flex w-[30rem] overflow-hidden'>{swarm.topic ? humanize(toPublicKey(swarm.topic)) : ''}</div>
           <div className='flex w-[30rem] m-1'>
             <BooleanIcon value={swarm.isActive ? true : undefined} />
           </div>
           <div className='flex w-[30rem] overflow-hidden '>
             <Button
               onClick={() => {
-                onClick?.(swarm.id);
+                swarm.id && onClick?.(toPublicKey(swarm.id));
               }}
             >
               Info

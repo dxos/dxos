@@ -55,11 +55,6 @@
         },
         {
           "type": "json",
-          "path": "packages/common/codec-protobuf/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/common/context/package.json",
           "jsonpath": "$.version"
         },
@@ -170,11 +165,6 @@
         },
         {
           "type": "json",
-          "path": "packages/common/protobuf-compiler/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/common/random/package.json",
           "jsonpath": "$.version"
         },
@@ -196,6 +186,11 @@
         {
           "type": "json",
           "path": "packages/common/storybook-utils/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/common/stream/package.json",
           "jsonpath": "$.version"
         },
         {

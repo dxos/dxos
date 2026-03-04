@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type Span } from '@dxos/protocols/proto/dxos/tracing';
+import { type Span } from '@dxos/protocols/buf/dxos/tracing_pb';
 
 import { type CustomPanelProps, Panel } from '../Panel';
 import { Duration } from '../util';

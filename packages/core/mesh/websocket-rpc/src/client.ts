@@ -6,16 +6,24 @@ import WebSocket from 'isomorphic-ws';
 
 import { Event, Trigger } from '@dxos/async';
 import { log, logInfo } from '@dxos/log';
+import { type Rpc } from '@dxos/protocols';
+import { type GenService, type GenServiceMethods } from '@dxos/protocols/buf';
 import { type ProtoRpcPeer, type ProtoRpcPeerOptions, createProtoRpcPeer } from '@dxos/rpc';
 
 import { WebSocketWithTokenAuth } from './token-auth';
 
-export type WebsocketRpcClientProps<C, S> = {
+export type WebsocketRpcClientProps<
+  C extends Record<string, GenService<GenServiceMethods>>,
+  S extends Record<string, GenService<GenServiceMethods>>,
+> = {
   url: string;
   authenticationToken?: string;
 } & Pick<ProtoRpcPeerOptions<C, S>, 'requested' | 'exposed' | 'handlers' | 'noHandshake'>;
 
-export class WebsocketRpcClient<C, S> {
+export class WebsocketRpcClient<
+  C extends Record<string, GenService<GenServiceMethods>>,
+  S extends Record<string, GenService<GenServiceMethods>>,
+> {
   private _socket?: WebSocket;
   private _rpc?: ProtoRpcPeer<C>;
   private readonly _connectTrigger = new Trigger();
@@ -96,7 +104,7 @@ export class WebsocketRpcClient<C, S> {
     this._socket?.close();
   }
 
-  get rpc() {
+  get rpc(): { [K in keyof C]: Rpc.RpcClient<C[K]> } {
     return this._rpc!.rpc;
   }
 }

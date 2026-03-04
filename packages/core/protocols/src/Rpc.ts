@@ -1,0 +1,131 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { type DescMessage, type MessageInitShape, type MessageShape } from '@bufbuild/protobuf';
+import { type GenService, type GenServiceMethods } from '@bufbuild/protobuf/codegenv2';
+
+import { type Stream } from '@dxos/stream';
+
+/**
+ * Represents a protobuf Any type used for RPC encoding.
+ */
+export interface Any {
+  typeUrl: string;
+  value: Uint8Array;
+}
+
+/**
+ * Request options for RPC calls.
+ */
+export interface RequestOptions {
+  timeout?: number;
+}
+
+/**
+ * Service provider can be a service instance, a sync factory, or an async factory.
+ */
+export type ServiceProvider<Service> = Service | (() => Service) | (() => Promise<Service>);
+
+/**
+ * Extract method definitions from a GenService type.
+ */
+type ServiceMethods<S extends GenService<GenServiceMethods>> = S extends GenService<infer Methods> ? Methods : never;
+
+/**
+ * Get the input message type from a method definition.
+ */
+type MethodInputType<M> = M extends { input: infer I extends DescMessage } ? MessageShape<I> : never;
+
+/**
+ * Get the output message type from a method definition.
+ */
+type MethodOutputType<M> = M extends { output: infer O extends DescMessage } ? MessageShape<O> : never;
+
+/**
+ * Get the output init shape from a method definition.
+ * Accepts partial objects without `$typeName` — mirrors what `create(Schema, init)` accepts.
+ * Used for handler outputs where the runtime normalizes via `create()`.
+ */
+type MethodOutputInitType<M> = M extends { output: infer O extends DescMessage } ? MessageInitShape<O> : never;
+
+/**
+ * Get the input init shape from a method definition.
+ * Accepts partial objects without `$typeName` — mirrors what `create(Schema, init)` accepts.
+ * Used for client inputs where the runtime normalizes via `create()`.
+ */
+type MethodInputInitType<M> = M extends { input: infer I extends DescMessage } ? MessageInitShape<I> : never;
+
+/**
+ * Get the client method signature for a unary RPC method.
+ * Accepts init shapes for requests since the runtime normalizes via `create()`.
+ */
+type UnaryClientMethod<I, O> = (request: I, options?: RequestOptions) => Promise<O>;
+
+/**
+ * Get the client method signature for a server streaming RPC method.
+ */
+type StreamingClientMethod<I, O> = (request: I, options?: RequestOptions) => Stream<O>;
+
+/**
+ * Get the handler signature for a unary RPC method.
+ */
+type UnaryHandler<I, OInit> = (request: I, options?: RequestOptions) => Promise<OInit>;
+
+/**
+ * Get the handler signature for a server streaming RPC method.
+ */
+type StreamingHandler<I, OInit> = (request: I, options?: RequestOptions) => Stream<OInit>;
+
+/**
+ * Maps a method definition to its client signature.
+ * Client inputs accept `MessageInitShape` (plain objects without `$typeName`).
+ */
+type ClientMethodSignature<M> = M extends { methodKind: 'unary' }
+  ? UnaryClientMethod<MethodInputInitType<M>, MethodOutputType<M>>
+  : M extends { methodKind: 'server_streaming' }
+    ? StreamingClientMethod<MethodInputInitType<M>, MethodOutputType<M>>
+    : never;
+
+/**
+ * Maps a method definition to its handler signature.
+ */
+type HandlerMethodSignature<M> = M extends { methodKind: 'unary' }
+  ? UnaryHandler<MethodInputType<M>, MethodOutputType<M>>
+  : M extends { methodKind: 'server_streaming' }
+    ? StreamingHandler<MethodInputType<M>, MethodOutputType<M>>
+    : never;
+
+/**
+ * Type for an RPC service client built from a GenService definition.
+ */
+export type RpcClient<S extends GenService<GenServiceMethods>> = {
+  [K in keyof ServiceMethods<S>]: ClientMethodSignature<ServiceMethods<S>[K]>;
+};
+
+/**
+ * Type for RPC service handlers built from a GenService definition.
+ */
+export type RpcHandlers<S extends GenService<GenServiceMethods>> = {
+  [K in keyof ServiceMethods<S>]: HandlerMethodSignature<ServiceMethods<S>[K]>;
+};
+
+/**
+ * Map of service definitions.
+ */
+export type ServiceBundle<Services extends Record<string, GenService<GenServiceMethods>>> = Services;
+
+/**
+ * Map of service handlers.
+ */
+export type ServiceHandlers<Services extends Record<string, GenService<GenServiceMethods>>> = {
+  [K in keyof Services]: ServiceProvider<RpcHandlers<Services[K]>>;
+};
+
+/**
+ * Extracts the client interface type from a service bundle.
+ * Used to derive strongly-typed client services from a bundle definition.
+ */
+export type RpcClientServices<Bundle extends Record<string, GenService<GenServiceMethods>>> = {
+  [K in keyof Bundle]: RpcClient<Bundle[K]>;
+};

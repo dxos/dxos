@@ -6,10 +6,14 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { IdentityDid } from '@dxos/keys';
-import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
+import { create } from '@dxos/protocols/buf';
+import { encodePublicKey } from '@dxos/protocols/buf';
+import { IdentitySchema } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { faker } from '@dxos/random';
 import { PublicKey } from '@dxos/react-client';
-import { Invitation } from '@dxos/react-client/invitations';
+import { Invitation_State } from '@dxos/react-client/invitations';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { InvitationManager, type InvitationManagerProps } from '../../steps';
@@ -27,13 +31,11 @@ const noOpProps: IdentityPanelImplProps = {
   send: () => {},
   activeView: 'identity action chooser',
   createInvitationUrl: (code) => code,
-  identity: {
+  identity: create(IdentitySchema, {
     did: IdentityDid.random(),
-    identityKey: PublicKey.random(),
-    profile: {
-      displayName: faker.person.firstName(),
-    },
-  },
+    identityKey: encodePublicKey(PublicKey.random()),
+    profile: create(ProfileDocumentSchema, { displayName: faker.person.firstName() }),
+  }),
   devices: [],
   connectionState: ConnectionState.ONLINE,
   onManageCredentials: async () => console.log('manage credentials'),
@@ -75,42 +77,42 @@ const DeviceInvitationManagerWithState = (extraProps: InvitationManagerProps) =>
 );
 
 export const DeviceInvitationManager = () =>
-  DeviceInvitationManagerWithState({ status: Invitation.State.INIT, id: '0' });
+  DeviceInvitationManagerWithState({ status: Invitation_State.INIT, id: '0' });
 
 export const DeviceInvitationManagerConnecting = () =>
   DeviceInvitationManagerWithState({
-    status: Invitation.State.CONNECTING,
+    status: Invitation_State.CONNECTING,
     id: '1',
   });
 
 export const DeviceInvitationManagerConnected = () =>
   DeviceInvitationManagerWithState({
-    status: Invitation.State.CONNECTED,
+    status: Invitation_State.CONNECTED,
     id: '2',
   });
 
 export const DeviceInvitationManagerReady = () =>
   DeviceInvitationManagerWithState({
-    status: Invitation.State.READY_FOR_AUTHENTICATION,
+    status: Invitation_State.READY_FOR_AUTHENTICATION,
     authCode: '123123',
     id: '3',
   });
 
 export const DeviceInvitationManagerAuthenticating = () =>
   DeviceInvitationManagerWithState({
-    status: Invitation.State.AUTHENTICATING,
+    status: Invitation_State.AUTHENTICATING,
     id: '4',
   });
 
 export const DeviceInvitationManagerSuccess = () =>
-  DeviceInvitationManagerWithState({ status: Invitation.State.SUCCESS });
+  DeviceInvitationManagerWithState({ status: Invitation_State.SUCCESS });
 
-export const DeviceInvitationManagerError = () => DeviceInvitationManagerWithState({ status: Invitation.State.ERROR });
+export const DeviceInvitationManagerError = () => DeviceInvitationManagerWithState({ status: Invitation_State.ERROR });
 
 export const DeviceInvitationManagerTimeout = () =>
-  DeviceInvitationManagerWithState({ status: Invitation.State.TIMEOUT });
+  DeviceInvitationManagerWithState({ status: Invitation_State.TIMEOUT });
 
 export const DeviceInvitationManagerCancelled = () =>
   DeviceInvitationManagerWithState({
-    status: Invitation.State.CANCELLED,
+    status: Invitation_State.CANCELLED,
   });

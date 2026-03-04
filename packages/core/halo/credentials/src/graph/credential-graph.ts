@@ -5,8 +5,11 @@
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { timestampMs } from '@dxos/protocols/buf';
+import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type AsyncCallback, Callback, ComplexMap, ComplexSet } from '@dxos/util';
+
+import { fromBufPublicKey } from '../credentials';
 
 export class CredentialGraph<A, State> {
   /**
@@ -45,7 +48,7 @@ export class CredentialGraph<A, State> {
   }
 
   public getLeafIds(): PublicKey[] {
-    return this._sentinel.parents.map((v) => v.credential!.id!);
+    return this._sentinel.parents.map((v) => fromBufPublicKey(v.credential!.id!)!);
   }
 
   public getGlobalStateScope(): StateScope<A> {
@@ -53,6 +56,7 @@ export class CredentialGraph<A, State> {
   }
 
   public addVertex(credential: Credential, assertion: A): Promise<void> {
+    const credentialId = fromBufPublicKey(credential.id!)!;
     const newVertex: ChainVertex<A> = {
       id: this._vertexIdGenerator++,
       credential,
@@ -60,16 +64,17 @@ export class CredentialGraph<A, State> {
       parents: [],
       children: [],
     };
-    this._vertexByCredentialId.set(credential.id!, newVertex);
+    this._vertexByCredentialId.set(credentialId, newVertex);
     const parentIds = credential.parentCredentialIds ?? [];
     if (parentIds.length === 0) {
       this._root.children.push(newVertex);
       newVertex.parents.push(this._root);
     } else {
       for (const parentId of parentIds) {
-        const parentVertex = this._vertexByCredentialId.get(parentId);
+        const parentIdPk = fromBufPublicKey(parentId)!;
+        const parentVertex = this._vertexByCredentialId.get(parentIdPk);
         if (parentVertex == null) {
-          log.error('credential skipped because of the unknown parent', { credential, parentId });
+          log.error('credential skipped because of the unknown parent', { credential, parentId: parentIdPk });
           continue;
         }
         parentVertex.children.push(newVertex);
@@ -98,7 +103,7 @@ export class CredentialGraph<A, State> {
     let changedSubjects: State[] = [];
     const isUpdateAppliedOnTopOfThePreviousState = this._sentinel.parents.length === 1;
     if (isUpdateAppliedOnTopOfThePreviousState) {
-      const subjectId = credential.subject.id;
+      const subjectId = fromBufPublicKey(credential.subject!.id!)!;
       if (this._stateHandler.isUpdateAllowed(this.getGlobalStateScope(), credential, assertion)) {
         const newSubjectState = this._stateHandler.createState(credential, newVertex.assertion);
         const prevSubjectState = this._subjectToState.get(subjectId);
@@ -208,8 +213,9 @@ export class CredentialGraph<A, State> {
     if (headCredential == null) {
       return;
     }
-    const updatedSubject = headCredential.subject.id;
-    path.credentials.add(headCredential.id!);
+    const updatedSubject = fromBufPublicKey(headCredential.subject!.id!)!;
+    const headCredentialId = fromBufPublicKey(headCredential.id!)!;
+    path.credentials.add(headCredentialId);
     let isUpdateAllowed = this._stateHandler.isUpdateAllowed(path, headCredential, path.head.assertion);
     // Compatibility with old credentials where parent references were not specified.
     if (!isUpdateAllowed && path.head.parents[0]?.id === this._root.id) {
@@ -218,7 +224,8 @@ export class CredentialGraph<A, State> {
     }
     if (isUpdateAllowed) {
       path.forkChangedSubjects.add(updatedSubject);
-      path.forkIssuers.add(headCredential.issuer);
+      const issuer = fromBufPublicKey(headCredential.issuer!)!;
+      path.forkIssuers.add(issuer);
       path.state.set(updatedSubject, path.head);
       log('path state updated', () => ({
         subject: updatedSubject,
@@ -287,7 +294,8 @@ export class CredentialGraph<A, State> {
     for (const [id, state] of uniqueForkPoints.entries()) {
       const headCredential = state.head.credential;
       if (headCredential != null) {
-        const isPointInEveryPath = paths.every((p) => p.credentials.has(headCredential.id!));
+        const headCredentialId = fromBufPublicKey(headCredential.id!)!;
+        const isPointInEveryPath = paths.every((p) => p.credentials.has(headCredentialId));
         if (isPointInEveryPath && id > maxId) {
           maxId = id;
           maxState = state;
@@ -410,13 +418,15 @@ export class CredentialGraph<A, State> {
     }
     const candidateCredential = candidateVertex.credential!;
     const currentCredential = currentVertex.credential!;
+    const candidateCredentialId = fromBufPublicKey(candidateCredential.id!)!;
+    const currentCredentialId = fromBufPublicKey(currentCredential.id!)!;
     // A credential is contained in a branch where another credential for this subject was issued.
-    if (existing.credentials.has(candidateCredential.id!) !== candidate.credentials.has(currentCredential.id!)) {
+    if (existing.credentials.has(candidateCredentialId) !== candidate.credentials.has(currentCredentialId)) {
       log('one of the credentials was overridden in another branch', {
         current: currentVertex.id,
         candidate: candidateVertex.id,
       });
-      return candidate.credentials.has(currentCredential.id!);
+      return candidate.credentials.has(currentCredentialId);
     }
     // Give a chance to state-specific conflict resolution logic.
     const winningCredential = this._stateHandler.tryPickWinningUpdate(
@@ -435,7 +445,7 @@ export class CredentialGraph<A, State> {
       return candidate.forkIssuers.size > existing.forkIssuers.size;
     }
     log('issuance date used to break the tie');
-    return candidateCredential.issuanceDate.getTime() > currentCredential.issuanceDate.getTime();
+    return timestampMs(candidateCredential.issuanceDate!) > timestampMs(currentCredential.issuanceDate!);
   }
 
   private _createRootPath(): PathState<A> {

@@ -39,6 +39,9 @@
       "path": "../../core/echo/echo"
     },
     {
+      "path": "../../core/halo/credentials"
+    },
+    {
       "path": "../../core/operation"
     },
     {

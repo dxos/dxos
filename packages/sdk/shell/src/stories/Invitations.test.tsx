@@ -6,7 +6,7 @@ import { composeStories } from '@storybook/react';
 import { cleanup } from '@testing-library/react';
 import { afterEach, describe, expect, test } from 'vitest';
 
-import { Invitation } from '@dxos/react-client/invitations';
+import { Invitation_AuthMethod } from '@dxos/react-client/invitations';
 
 import { InvitationsTestManager } from '../testing';
 
@@ -55,7 +55,7 @@ describe('Invitations', () => {
       await manager.createIdentity(0);
       await manager.openPanel(0, 'devices');
       const invitation = await manager.createInvitation(0, 'device', {
-        authMethod: Invitation.AuthMethod.NONE,
+        authMethod: Invitation_AuthMethod.NONE,
       });
 
       await manager.openPanel(1, 'identity');
@@ -165,7 +165,7 @@ describe('Invitations', () => {
 
       // First invitation with no auth.
       const invitation1 = await manager.createInvitation(0, 'space', {
-        authMethod: Invitation.AuthMethod.NONE,
+        authMethod: Invitation_AuthMethod.NONE,
       });
       await manager.openPanel(1, 'join');
       await manager.acceptInvitation(1, 'space', invitation1);
@@ -196,7 +196,7 @@ describe('Invitations', () => {
       await manager.createSpace(0);
       await manager.openPanel(0, 1);
       const invitation = await manager.createInvitation(0, 'space', {
-        authMethod: Invitation.AuthMethod.NONE,
+        authMethod: Invitation_AuthMethod.NONE,
       });
 
       await manager.openPanel(1, 'join');

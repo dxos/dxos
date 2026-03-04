@@ -13,9 +13,6 @@
       "path": "../../../common/async"
     },
     {
-      "path": "../../../common/codec-protobuf"
-    },
-    {
       "path": "../../../common/debug"
     },
     {
@@ -26,6 +23,9 @@
     },
     {
       "path": "../../../common/node-std"
+    },
+    {
+      "path": "../../../common/stream"
     },
     {
       "path": "../../../common/util"

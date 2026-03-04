@@ -7,6 +7,13 @@ import { describe, expect, test } from 'vitest';
 
 import { waitForCondition } from '@dxos/async';
 import { Config, SystemStatus } from '@dxos/client';
+import { create } from '@dxos/protocols/buf';
+import {
+  ConfigSchema,
+  RuntimeSchema,
+  Runtime_ClientSchema,
+  Runtime_Client_StorageSchema,
+} from '@dxos/protocols/buf/dxos/config_pb';
 
 import { createClient, createClientContextProvider } from '../testing/util';
 
@@ -32,16 +39,16 @@ describe.runIf(!process.env.CI)('Config hook', () => {
   });
 
   test('should return custom client config', async () => {
-    const config = new Config({
-      version: 1,
-      runtime: {
-        client: {
-          storage: {
-            persistent: false,
-          },
-        },
-      },
-    });
+    const config = new Config(
+      create(ConfigSchema, {
+        version: 1,
+        runtime: create(RuntimeSchema, {
+          client: create(Runtime_ClientSchema, {
+            storage: create(Runtime_Client_StorageSchema, { persistent: false }),
+          }),
+        }),
+      }),
+    );
 
     const { client } = await createClient({ config });
     const wrapper = await createClientContextProvider(client);

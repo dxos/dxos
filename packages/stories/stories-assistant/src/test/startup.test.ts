@@ -13,12 +13,14 @@ import { SERVICES_CONFIG } from '@dxos/ai/testing';
 import { ActivationEvents, Capabilities, type Plugin } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { create } from '@dxos/protocols/buf';
+import { RuntimeSchema } from '@dxos/protocols/buf/dxos/config_pb';
 import { Config } from '@dxos/react-client';
 
 const localConfig = new Config({
-  runtime: {
+  runtime: create(RuntimeSchema, {
     services: SERVICES_CONFIG.LOCAL,
-  },
+  }),
 });
 
 /**

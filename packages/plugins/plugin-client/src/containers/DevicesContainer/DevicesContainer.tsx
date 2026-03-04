@@ -7,9 +7,15 @@ import { QR } from 'react-qr-rounded';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { log } from '@dxos/log';
+import { toPublicKey } from '@dxos/protocols/buf';
 import { useClient, useMulticastObservable } from '@dxos/react-client';
 import { type Device, useDevices } from '@dxos/react-client/halo';
-import { type CancellableInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
+import {
+  type CancellableInvitationObservable,
+  type Invitation,
+  InvitationEncoder,
+  Invitation_State,
+} from '@dxos/react-client/invitations';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
 import { Button, Clipboard, Icon, IconButton, List, useId, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
@@ -53,7 +59,11 @@ export const DevicesContainer = ({ createInvitationUrl }: DevicesContainerProps)
             <Settings.FrameItem title={t('devices label', { ns: meta.id })}>
               <List>
                 {devices.map((device: Device) => (
-                  <DeviceListItem key={device.deviceKey.toHex()} device={device} connectionState={connectionState} />
+                  <DeviceListItem
+                    key={device.deviceKey ? toPublicKey(device.deviceKey).toHex() : 'unknown'}
+                    device={device}
+                    connectionState={connectionState}
+                  />
                 ))}
               </List>
             </Settings.FrameItem>
@@ -113,7 +123,7 @@ const DeviceInvitation = (props: Pick<DeviceInvitationProps, 'createInvitationUr
     if (client.config.values.runtime?.app?.env?.DX_ENVIRONMENT !== 'production') {
       const subscription = invitation.subscribe((invitation: Invitation) => {
         const invitationCode = InvitationEncoder.encode(invitation);
-        if (invitation.state === Invitation.State.CONNECTING) {
+        if (invitation.state === Invitation_State.CONNECTING) {
           log.info(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
           subscription.unsubscribe();
         }
@@ -143,7 +153,7 @@ const DeviceInvitationImpl = ({
   const url = createInvitationUrl(InvitationEncoder.encode(invitation));
 
   useEffect(() => {
-    if (invitation.state >= Invitation.State.SUCCESS) {
+    if (invitation.state >= Invitation_State.SUCCESS) {
       onInvitationDone();
     }
   }, [invitation.state]);
@@ -171,9 +181,9 @@ const InvitationSection = ({
   const activeView =
     state < 0
       ? 'init'
-      : state >= Invitation.State.CANCELLED
+      : state >= Invitation_State.CANCELLED
         ? 'complete'
-        : state >= Invitation.State.READY_FOR_AUTHENTICATION && authCode
+        : state >= Invitation_State.READY_FOR_AUTHENTICATION && authCode
           ? 'auth-code'
           : 'qr-code';
   return activeView === 'init' ? (

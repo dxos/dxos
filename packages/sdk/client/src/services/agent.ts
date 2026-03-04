@@ -4,7 +4,6 @@
 
 import { Event } from '@dxos/async';
 import {
-  type ClientServices,
   type ClientServicesProvider,
   DEFAULT_PROFILE,
   DXEnv,
@@ -14,7 +13,6 @@ import {
 } from '@dxos/client-protocol';
 import { ClientServicesProviderResource } from '@dxos/client-protocol';
 import { log } from '@dxos/log';
-import { type ServiceBundle } from '@dxos/rpc';
 import { trace } from '@dxos/tracing';
 import type { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
@@ -38,15 +36,15 @@ export const fromAgent = ({
 export class AgentClientServiceProvider implements ClientServicesProvider {
   // TODO(wittjosiah): Fire an event if the socket disconnects.
   readonly closed = new Event<Error | undefined>();
-  private _client?: WebsocketRpcClient<ClientServices, {}>;
+  private _client?: WebsocketRpcClient<typeof clientServiceBundle, {}>;
 
   constructor(private readonly _profile: string) {}
 
-  get descriptors(): ServiceBundle<ClientServices> {
+  get descriptors() {
     return clientServiceBundle;
   }
 
-  get services(): Partial<ClientServices> {
+  get services() {
     return this._client!.rpc;
   }
 
@@ -55,8 +53,6 @@ export class AgentClientServiceProvider implements ClientServicesProvider {
     this._client = new WebsocketRpcClient({
       url: getUnixSocket(this._profile, 'ws+unix'),
       requested: clientServiceBundle,
-      exposed: {},
-      handlers: {},
     });
 
     this._client.error.on((error) => {

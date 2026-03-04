@@ -3,12 +3,7 @@
 //
 
 import { Event } from '@dxos/async';
-import {
-  DEFAULT_SHELL_CHANNEL,
-  type ShellServiceBundle,
-  appServiceBundle,
-  shellServiceBundle,
-} from '@dxos/client-protocol';
+import { DEFAULT_SHELL_CHANNEL, appServiceBundle, shellServiceBundle } from '@dxos/client-protocol';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import {
@@ -16,7 +11,7 @@ import {
   type InvitationUrlRequest,
   type LayoutRequest,
   ShellDisplay,
-} from '@dxos/protocols/proto/dxos/iframe';
+} from '@dxos/protocols/buf/dxos/iframe_pb';
 import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 
@@ -41,7 +36,7 @@ const shellStyles = Object.entries({
 export class ShellManager {
   readonly contextUpdate = new Event<AppContextRequest>();
 
-  private _shellRpc?: ProtoRpcPeer<ShellServiceBundle>;
+  private _shellRpc?: ProtoRpcPeer<typeof shellServiceBundle>;
   private _display = ShellDisplay.NONE;
 
   // prettier-ignore
@@ -58,7 +53,7 @@ export class ShellManager {
     invariant(this._shellRpc, 'ShellManager not open');
     log('set layout', request);
     this._display = ShellDisplay.FULLSCREEN;
-    this.contextUpdate.emit({ display: this._display });
+    this.contextUpdate.emit({ display: this._display } as AppContextRequest);
     await this._shellRpc.rpc.ShellService.setLayout(request, { timeout: RPC_TIMEOUT });
     // Focus the first focusable element when the iframe has something to display so that keybindings global to the iframe (e.g. Escape) work as expected.
     (
@@ -109,7 +104,7 @@ export class ShellManager {
       exposed: appServiceBundle,
       handlers: {
         AppService: {
-          setContext: async (request) => {
+          setContext: async (request: AppContextRequest) => {
             log('set context', request);
             if (request.display) {
               this._display = request.display;

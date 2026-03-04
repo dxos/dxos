@@ -4,13 +4,16 @@
 
 import { Event, Trigger, sleepWithContext, synchronized } from '@dxos/async';
 import { Context, rejectOnDispose } from '@dxos/context';
+import { packAssertion, type CredentialAssertion } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import { FeedSetIterator, type FeedWrapper, type FeedWriter } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type FeedMessageBlock } from '@dxos/protocols';
-import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { create, TimeframeVectorProto } from '@dxos/protocols/buf';
+import { type FeedMessage, FeedMessageSchema } from '@dxos/protocols/buf/dxos/echo/feed_pb';
+import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Timeframe } from '@dxos/timeframe';
 import { ComplexMap } from '@dxos/util';
 
@@ -18,6 +21,31 @@ import { createMappedFeedWriter } from '../common';
 
 import { createMessageSelector } from './message-selector';
 import { TimeframeClock, mapFeedIndexesToTimeframe, startAfter } from './timeframe-clock';
+
+/**
+ * Recursively convert @dxos/keys.PublicKey instances to buf PublicKey init
+ * shapes ({ data: Uint8Array }) for serialization. Preserves $typeName and
+ * other metadata on existing buf messages.
+ */
+const convertPublicKeysForBuf = (obj: unknown): unknown => {
+  if (obj == null || typeof obj !== 'object') {
+    return obj;
+  }
+  if (PublicKey.isPublicKey(obj)) {
+    return { data: (obj as PublicKey).asUint8Array() };
+  }
+  if (obj instanceof Uint8Array || obj instanceof Date) {
+    return obj;
+  }
+  if (Array.isArray(obj)) {
+    return obj.map(convertPublicKeysForBuf);
+  }
+  const result: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(obj)) {
+    result[key] = convertPublicKeysForBuf(value);
+  }
+  return result;
+};
 
 export type WaitUntilReachedTargetProps = {
   /**
@@ -175,10 +203,20 @@ export class PipelineState {
   }
 }
 
+/**
+ * Payload written to the control pipeline.
+ * Uses buf Credential type to avoid casts at call sites.
+ */
+export type ControlPipelinePayload = {
+  credential?: {
+    credential: Credential;
+  };
+};
+
 // TODO(mykola): Extract to `@dxos/echo-protocol`
 export interface PipelineAccessor {
   state: PipelineState;
-  writer: FeedWriter<FeedMessage.Payload>;
+  writer: FeedWriter<ControlPipelinePayload>;
 }
 
 /**
@@ -230,8 +268,8 @@ export class Pipeline implements PipelineAccessor {
   // Inbound feed stream.
   private _feedSetIterator?: FeedSetIterator<FeedMessage>;
 
-  // Outbound feed writer.
-  private _writer: FeedWriter<FeedMessage.Payload> | undefined;
+  // Outbound feed writer (accepts buf types, maps to protobuf.js for feed codec).
+  private _writer: FeedWriter<ControlPipelinePayload> | undefined;
 
   private _isStopping = false;
   private _isStarted = false;
@@ -242,7 +280,7 @@ export class Pipeline implements PipelineAccessor {
     return this._state;
   }
 
-  get writer(): FeedWriter<FeedMessage.Payload> {
+  get writer(): FeedWriter<ControlPipelinePayload> {
     invariant(this._writer, 'Writer not set.');
     return this._writer;
   }
@@ -273,13 +311,24 @@ export class Pipeline implements PipelineAccessor {
     invariant(!this._writer, 'Writer already set.');
     invariant(feed.properties.writable, 'Feed must be writable.');
 
-    this._writer = createMappedFeedWriter<FeedMessage.Payload, FeedMessage>(
-      (payload: FeedMessage.Payload) => ({
-        timeframe: this._timeframeClock.timeframe,
-        payload,
-      }),
-      feed.createFeedWriter(),
-    );
+    this._writer = createMappedFeedWriter<ControlPipelinePayload, FeedMessage>((payload: ControlPipelinePayload) => {
+      // Ensure assertion is packed and PublicKeys are buf-compatible.
+      if (payload.credential?.credential) {
+        const cred = payload.credential.credential as any;
+        const assertion = cred.subject?.assertion;
+        // Pack buf assertion ($typeName) into Any if not already packed.
+        if (assertion && !assertion.typeUrl && assertion.$typeName) {
+          cred.subject.assertion = packAssertion(assertion as CredentialAssertion);
+        }
+        payload = { credential: { credential: convertPublicKeysForBuf(cred) as any } };
+      }
+      return create(FeedMessageSchema, {
+        timeframe: TimeframeVectorProto.encode(this._timeframeClock.timeframe),
+        payload: {
+          payload: { case: 'credential', value: payload.credential },
+        },
+      } as any);
+    }, feed.createFeedWriter());
   }
 
   @synchronized
@@ -386,7 +435,7 @@ export class Pipeline implements PipelineAccessor {
       // Will be canceled when the iterator gets closed.
       const { done, value } = await iterable.next();
       if (!done) {
-        const block = value ?? failUndefined();
+        const block = (value ?? failUndefined()) as unknown as FeedMessageBlock;
         this._processingTrigger.reset();
         this._timeframeClock.updatePendingTimeframe(PublicKey.from(block.feedKey), block.seq);
         yield block;

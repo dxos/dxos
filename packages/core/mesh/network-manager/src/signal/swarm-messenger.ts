@@ -2,16 +2,16 @@
 // Copyright 2020 DXOS.org
 //
 
-import { type Any } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Message, type PeerInfo } from '@dxos/messaging';
 import { TimeoutError } from '@dxos/protocols';
-import { schema } from '@dxos/protocols/proto';
-import { type Answer, type SwarmMessage } from '@dxos/protocols/proto/dxos/mesh/swarm';
-import { ComplexMap, type MakeOptional } from '@dxos/util';
+import { bufWkt, create, fromBinary, toBinary } from '@dxos/protocols/buf';
+import { MessageSchema } from '@dxos/protocols/buf/dxos/edge/signal_pb';
+import { type Answer, SwarmMessageSchema } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
+import { ComplexMap } from '@dxos/util';
 
 import { type OfferMessage, type SignalMessage, type SignalMessenger } from './signal-messenger';
 
@@ -26,7 +26,69 @@ export type SwarmMessengerOptions = {
   topic: PublicKey;
 };
 
-const SwarmMessage = schema.getCodecForType('dxos.mesh.swarm.SwarmMessage');
+/** Strip buf $typeName from an object to get a plain init value for create(). */
+const stripBufMeta = (obj: any): any => {
+  if (!obj || typeof obj !== 'object') {
+    return obj;
+  }
+  const { $typeName, ...rest } = obj;
+  return rest;
+};
+
+/** Encode a proto-shaped SwarmMessage (with @dxos/keys PublicKey and direct oneof data fields) to bytes. */
+const encodeSwarmMessage = (msg: any): Uint8Array => {
+  const encKey = (key: any) => (key ? { data: key instanceof PublicKey ? key.asUint8Array() : key.data } : undefined);
+  let data: any;
+  if (msg.data) {
+    for (const field of ['offer', 'answer', 'signal', 'signalBatch'] as const) {
+      if (msg.data[field] != null) {
+        let value = stripBufMeta(msg.data[field]);
+        if (field === 'answer' && value.offerMessageId) {
+          value = { ...value, offerMessageId: encKey(value.offerMessageId) };
+        }
+        data = { payload: { case: field, value } };
+        break;
+      }
+    }
+  }
+
+  return toBinary(
+    SwarmMessageSchema,
+    create(SwarmMessageSchema, {
+      topic: encKey(msg.topic),
+      sessionId: encKey(msg.sessionId),
+      messageId: encKey(msg.messageId),
+      data,
+    } as any),
+  );
+};
+
+/** Decode bytes to a proto-shaped SwarmMessage (with @dxos/keys PublicKey and direct oneof data fields). */
+const decodeSwarmMessage = (bytes: Uint8Array): any => {
+  const decoded = fromBinary(SwarmMessageSchema, bytes);
+  const decKey = (key: any) => (key ? PublicKey.from(key.data) : undefined);
+
+  let data: any;
+  if (decoded.data) {
+    const payload = decoded.data.payload;
+    if (payload.case) {
+      let value: any = payload.value;
+      if (payload.case === 'answer' && value.offerMessageId) {
+        value = { ...value, offerMessageId: decKey(value.offerMessageId) };
+      }
+      data = { [payload.case]: value };
+    } else {
+      data = {};
+    }
+  }
+
+  return {
+    topic: decKey(decoded.topic),
+    sessionId: decKey(decoded.sessionId),
+    messageId: decKey(decoded.messageId),
+    data,
+  };
+};
 
 /**
  * Adds offer/answer and signal interfaces.
@@ -55,16 +117,15 @@ export class SwarmMessenger implements SignalMessenger {
   }: {
     author: PeerInfo;
     recipient: PeerInfo;
-    payload: Any;
+    payload: { typeUrl: string; value: Uint8Array };
   }): Promise<void> {
-    if (payload.type_url !== 'dxos.mesh.swarm.SwarmMessage') {
+    if (payload.typeUrl !== 'dxos.mesh.swarm.SwarmMessage') {
       // Ignore not swarm messages.
       return;
     }
-    const message: SwarmMessage = SwarmMessage.decode(payload.value);
+    const message: any = decodeSwarmMessage(payload.value);
 
     if (!this._topic.equals(message.topic)) {
-      // Ignore messages from wrong topics.
       return;
     }
 
@@ -84,16 +145,16 @@ export class SwarmMessenger implements SignalMessenger {
   }
 
   async signal(message: SignalMessage): Promise<void> {
-    invariant(message.data?.signal || message.data?.signalBatch, 'Invalid message');
+    invariant((message as any).data?.signal || (message as any).data?.signalBatch, 'Invalid message');
     await this._sendReliableMessage({
       author: message.author,
       recipient: message.recipient,
-      message,
+      message: message as any,
     });
   }
 
   async offer(message: OfferMessage): Promise<Answer> {
-    const networkMessage: SwarmMessage = {
+    const networkMessage: any = {
       ...message,
       messageId: PublicKey.random(),
     };
@@ -114,33 +175,34 @@ export class SwarmMessenger implements SignalMessenger {
   }: {
     author: PeerInfo;
     recipient: PeerInfo;
-    message: MakeOptional<SwarmMessage, 'messageId'>;
+    message: any;
   }): Promise<void> {
-    const networkMessage: SwarmMessage = {
+    const networkMessage: any = {
       ...message,
-      // Setting unique message_id if it not specified yet.
       messageId: message.messageId ?? PublicKey.random(),
     };
 
     log('sending', { from: author, to: recipient, msg: networkMessage });
-    await this._sendMessage({
-      author,
-      recipient,
-      payload: {
-        type_url: 'dxos.mesh.swarm.SwarmMessage',
-        value: SwarmMessage.encode(networkMessage),
-      },
-    });
+    await this._sendMessage(
+      create(MessageSchema, {
+        author,
+        recipient,
+        payload: create(bufWkt.AnySchema, {
+          typeUrl: 'dxos.mesh.swarm.SwarmMessage',
+          value: encodeSwarmMessage(networkMessage),
+        }),
+      }),
+    );
   }
 
-  private async _resolveAnswers(message: SwarmMessage): Promise<void> {
+  private async _resolveAnswers(message: any): Promise<void> {
     invariant(message.data?.answer?.offerMessageId, 'No offerMessageId');
     const offerRecord = this._offerRecords.get(message.data.answer.offerMessageId);
     if (offerRecord) {
       this._offerRecords.delete(message.data.answer.offerMessageId);
       invariant(message.data?.answer, 'No answer');
       log('resolving', { answer: message.data.answer });
-      offerRecord.resolve(message.data.answer);
+      offerRecord.resolve(message.data.answer as any);
     }
   }
 
@@ -151,17 +213,17 @@ export class SwarmMessenger implements SignalMessenger {
   }: {
     author: PeerInfo;
     recipient: PeerInfo;
-    message: SwarmMessage;
+    message: any;
   }): Promise<void> {
     invariant(message.data.offer, 'No offer');
     const offerMessage: OfferMessage = {
       author,
       recipient,
       ...message,
-      data: { offer: message.data.offer },
+      data: { offer: message.data.offer as any },
     };
     const answer = await this._onOffer(offerMessage);
-    answer.offerMessageId = message.messageId;
+    (answer as any).offerMessageId = message.messageId;
     try {
       await this._sendReliableMessage({
         author: recipient,
@@ -169,7 +231,7 @@ export class SwarmMessenger implements SignalMessenger {
         message: {
           topic: message.topic,
           sessionId: message.sessionId,
-          data: { answer },
+          data: { answer: answer as any },
         },
       });
     } catch (err) {
@@ -188,7 +250,7 @@ export class SwarmMessenger implements SignalMessenger {
   }: {
     author: PeerInfo;
     recipient: PeerInfo;
-    message: SwarmMessage;
+    message: any;
   }): Promise<void> {
     invariant(message.messageId);
     invariant(message.data.signal || message.data.signalBatch, 'Invalid message');
@@ -197,8 +259,8 @@ export class SwarmMessenger implements SignalMessenger {
       recipient,
       ...message,
       data: {
-        signal: message.data.signal,
-        signalBatch: message.data.signalBatch,
+        signal: message.data.signal as any,
+        signalBatch: message.data.signalBatch as any,
       },
     };
 

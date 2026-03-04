@@ -12,6 +12,7 @@ import { TestSchema } from '@dxos/echo/testing';
 import { DocAccessor, createDocAccessor } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { type Messenger } from '@dxos/protocols';
+import { decodePublicKey } from '@dxos/protocols/buf';
 import { Query, useQuery, useSpace } from '@dxos/react-client/echo';
 import { type Identity, useIdentity } from '@dxos/react-client/halo';
 import { useClientStory, withMultiClientProvider } from '@dxos/react-client/testing';
@@ -32,7 +33,7 @@ type TestObject = {
 type EditorProps = {
   source: DocAccessor;
   messenger?: Messenger;
-  identity?: Identity;
+  identity?: Identity | null;
   autoFocus?: boolean;
 };
 
@@ -45,7 +46,7 @@ const Editor = ({ source, messenger, identity, autoFocus }: EditorProps) => {
       extensions: [
         createBasicExtensions({ placeholder: 'Type here...', search: true }),
         createThemeExtensions({ themeMode, slots: { scroll: { className: 'p-2' } } }),
-        createDataExtensions({ id: 'test', text: source, messenger, identity }),
+        createDataExtensions({ id: 'test', text: source, messenger, identity: (identity ?? undefined) as any }),
       ],
     }),
     [source, themeMode],
@@ -119,7 +120,18 @@ const EchoStory = () => {
   return (
     <div className='h-full w-full flex flex-col overflow-hidden'>
       <pre className='p-2 text-xs text-subdued'>
-        {JSON.stringify({ index, identity: identity?.identityKey.truncate(), spaceId, objects }, null, 2)}
+        {JSON.stringify(
+          {
+            index,
+            identity: identity?.identityKey
+              ? decodePublicKey(identity.identityKey).truncate()
+              : String(identity?.identityKey),
+            spaceId,
+            objects,
+          },
+          null,
+          2,
+        )}
       </pre>
       {identity && source ? (
         <div className='p-2 flex grow overflow-hidden'>

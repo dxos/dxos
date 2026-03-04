@@ -5,16 +5,18 @@
 import { type AutomergeUrl, parseAutomergeUrl } from '@automerge/automerge-repo';
 
 import { Trigger, synchronized, trackLeaks } from '@dxos/async';
-import { type DelegateInvitationCredential, type MemberInfo, getCredentialAssertion } from '@dxos/credentials';
+import { type DelegateInvitationCredential, type MemberInfo, getAssertionFromCredential } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import { type FeedStore } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type SwarmNetworkManager } from '@dxos/network-manager';
 import { trace } from '@dxos/protocols';
-import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
-import type { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { create, encodePublicKey, toPublicKey } from '@dxos/protocols/buf';
+import type { FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
+import { type SpaceMetadata } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
+import type { Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { GetAdmissionCredentialRequestSchema } from '@dxos/protocols/buf/dxos/mesh/teleport/admission-discovery_pb';
 import { type Teleport } from '@dxos/teleport';
 import { type BlobStore } from '@dxos/teleport-extension-object-sync';
 import { ComplexMap } from '@dxos/util';
@@ -103,10 +105,10 @@ export class SpaceManager {
     log.trace('dxos.echo.space-manager.construct-space', trace.begin({ id: this._instanceId }));
     log('constructing space...', { spaceKey: metadata.genesisFeedKey });
 
-    // The genesis feed will be the same as the control feed if the space was created by the local agent.
-    const genesisFeed = await this._feedStore.openFeed(metadata.genesisFeedKey ?? failUndefined());
+    // Convert metadata keys from potential buf PublicKey objects to @dxos/keys.PublicKey instances.
+    const genesisFeed = await this._feedStore.openFeed(toPublicKey(metadata.genesisFeedKey ?? failUndefined()));
 
-    const spaceKey = metadata.key;
+    const spaceKey = toPublicKey(metadata.key ?? failUndefined());
     const spaceId = await createIdFromSpaceKey(spaceKey);
     const protocol = new SpaceProtocol({
       topic: spaceKey,
@@ -149,7 +151,10 @@ export class SpaceManager {
         session.addExtension(
           'dxos.mesh.teleport.admission-discovery',
           new CredentialRetrieverExtension(
-            { spaceKey: params.spaceKey, memberKey: params.identityKey },
+            create(GetAdmissionCredentialRequestSchema, {
+              spaceKey: encodePublicKey(params.spaceKey),
+              memberKey: encodePublicKey(params.identityKey),
+            }),
             onCredentialResolved,
           ),
         );
@@ -175,11 +180,11 @@ export class SpaceManager {
   public findSpaceByRootDocumentId(documentId: string): Space | undefined {
     return [...this._spaces.values()].find((space) => {
       return space.spaceState.credentials.some((credential) => {
-        const assertion = getCredentialAssertion(credential);
-        if (assertion['@type'] !== 'dxos.halo.credentials.Epoch') {
+        const assertion = getAssertionFromCredential(credential);
+        if (assertion.$typeName !== 'dxos.halo.credentials.Epoch') {
           return false;
         }
-        if (!assertion?.automergeRoot) {
+        if (!assertion.automergeRoot) {
           return false;
         }
         return parseAutomergeUrl(assertion.automergeRoot as AutomergeUrl).documentId === documentId;

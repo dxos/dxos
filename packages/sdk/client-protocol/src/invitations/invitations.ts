@@ -4,7 +4,14 @@
 
 import { MulticastObservable, type Observable, type Subscriber } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
-import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { type MessageInitShape, timestampDate } from '@dxos/protocols/buf';
+import {
+  type Invitation,
+  type InvitationSchema,
+  Invitation_State,
+} from '@dxos/protocols/buf/dxos/client/invitation_pb';
+
+export type InvitationInit = MessageInitShape<typeof InvitationSchema>;
 
 export const AUTHENTICATION_CODE_LENGTH = 6;
 
@@ -13,7 +20,7 @@ export const INVITATION_TIMEOUT = 3 * 60_000; // 3 mins.
 export interface Invitations {
   created: MulticastObservable<CancellableInvitation[]>;
   accepted: MulticastObservable<AuthenticatingInvitation[]>;
-  share(options?: Partial<Invitation>): CancellableInvitation;
+  share(options?: Partial<InvitationInit>): CancellableInvitation;
   join(invitation: Invitation): AuthenticatingInvitation;
 }
 
@@ -87,7 +94,7 @@ export const wrapObservable = async (observable: CancellableInvitation): Promise
     const subscription = observable.subscribe(
       (invitation: Invitation | undefined) => {
         // TODO(burdon): Throw error if auth requested.
-        invariant(invitation?.state === Invitation.State.SUCCESS);
+        invariant(invitation?.state === Invitation_State.SUCCESS);
         subscription.unsubscribe();
         resolve(invitation);
       },
@@ -103,5 +110,5 @@ export const getExpirationTime = (invitation: Partial<Invitation>): Date | undef
   if (!(invitation.created && invitation.lifetime)) {
     return;
   }
-  return new Date(invitation.created.getTime() + invitation.lifetime * 1000);
+  return new Date(timestampDate(invitation.created).getTime() + invitation.lifetime * 1000);
 };

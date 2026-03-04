@@ -2,12 +2,20 @@
 // Copyright 2024 DXOS.org
 //
 
-import { createCredential, signPresentation } from '@dxos/credentials';
+import { createCredential, signPresentation, toBufPublicKey } from '@dxos/credentials';
 import { type Signer } from '@dxos/crypto';
 import { invariant } from '@dxos/invariant';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
-import { type Chain, type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { create } from '@dxos/protocols/buf';
+import {
+  AuthSchema,
+  AuthorizedDeviceSchema,
+  type Chain,
+  ChainSchema,
+  type Credential,
+  PresentationSchema,
+} from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import type { EdgeIdentity } from './edge-identity';
 
@@ -20,19 +28,17 @@ export const createDeviceEdgeIdentity = async (signer: Signer, key: PublicKey): 
     peerKey: key.toHex(),
     presentCredentials: async ({ challenge }) => {
       return signPresentation({
-        presentation: {
+        presentation: create(PresentationSchema, {
           credentials: [
             // Verifier requires at least one credential in the presentation to establish the subject.
             await createCredential({
-              assertion: {
-                '@type': 'dxos.halo.credentials.Auth',
-              },
+              assertion: create(AuthSchema, {}),
               issuer: key,
               subject: key,
               signer,
             }),
           ],
-        },
+        }),
         signer,
         signerKey: key,
         nonce: challenge,
@@ -56,9 +62,7 @@ export const createChainEdgeIdentity = async (
       ? credentials
       : [
           await createCredential({
-            assertion: {
-              '@type': 'dxos.halo.credentials.Auth',
-            },
+            assertion: create(AuthSchema, {}),
             issuer: identityKey,
             subject: identityKey,
             signer,
@@ -74,9 +78,9 @@ export const createChainEdgeIdentity = async (
       // TODO: make chain required after device invitation flow update release
       invariant(chain);
       return signPresentation({
-        presentation: {
+        presentation: create(PresentationSchema, {
           credentials: credentialsToSign,
-        },
+        }),
         signer,
         nonce: challenge,
         signerKey: peerKey,
@@ -104,20 +108,17 @@ export const createTestHaloEdgeIdentity = async (
   deviceKey: PublicKey,
 ): Promise<EdgeIdentity> => {
   const deviceAdmission = await createCredential({
-    assertion: {
-      '@type': 'dxos.halo.credentials.AuthorizedDevice',
-      deviceKey,
-      identityKey,
-    },
+    assertion: create(AuthorizedDeviceSchema, {
+      deviceKey: toBufPublicKey(deviceKey),
+      identityKey: toBufPublicKey(identityKey),
+    }),
     issuer: identityKey,
     subject: deviceKey,
     signer,
   });
-  return createChainEdgeIdentity(signer, identityKey, deviceKey, { credential: deviceAdmission }, [
+  return createChainEdgeIdentity(signer, identityKey, deviceKey, create(ChainSchema, { credential: deviceAdmission }), [
     await createCredential({
-      assertion: {
-        '@type': 'dxos.halo.credentials.Auth',
-      },
+      assertion: create(AuthSchema, {}),
       issuer: identityKey,
       subject: identityKey,
       signer,

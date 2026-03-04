@@ -6,7 +6,7 @@ import React, { useMemo } from 'react';
 
 import { Format } from '@dxos/echo/internal';
 import { PublicKey } from '@dxos/keys';
-import { type KeyRecord } from '@dxos/protocols/proto/dxos/halo/keyring';
+import { type KeyRecord } from '@dxos/protocols/buf/dxos/halo/keyring_pb';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
 
@@ -14,7 +14,7 @@ import { MasterDetailTable } from '../../../components';
 
 export const KeyringPanel = () => {
   const devtoolsHost = useDevtools();
-  const { keys } = useStream(() => devtoolsHost.subscribeToKeyringKeys({}), {});
+  const { keys } = useStream(() => devtoolsHost.subscribeToKeyringKeys({} as any), {} as any);
 
   const properties: TablePropertyDefinition[] = useMemo(
     () => [{ name: 'publicKey', title: 'Public Key', format: Format.TypeFormat.DID }],

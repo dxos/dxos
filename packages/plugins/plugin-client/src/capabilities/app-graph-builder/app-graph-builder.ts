@@ -8,6 +8,7 @@ import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/operation';
 import { CreateAtom, GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
+import { toPublicKey } from '@dxos/protocols/buf';
 import { ConnectionState } from '@dxos/react-client/mesh';
 
 import { meta } from '../../meta';
@@ -51,7 +52,7 @@ export default Capability.makeModule(
               disposition: 'user-account',
               testId: 'clientPlugin.account',
               // NOTE: This currently needs to be the identity key because the fallback is generated from hex.
-              userId: identity?.identityKey.toHex(),
+              userId: identity?.identityKey ? toPublicKey(identity.identityKey).toHex() : undefined,
               hue: identity?.profile?.data?.hue,
               emoji: identity?.profile?.data?.emoji,
               status: status.swarm === ConnectionState.OFFLINE ? 'error' : 'active',

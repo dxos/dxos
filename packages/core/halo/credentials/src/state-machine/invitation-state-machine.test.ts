@@ -6,15 +6,20 @@ import { beforeEach, describe, expect, test } from 'vitest';
 
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
-import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import { type Credential, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { type DelegateSpaceInvitation } from '@dxos/protocols/proto/dxos/halo/invitations';
+import { create } from '@dxos/protocols/buf';
+import { Invitation_AuthMethod } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { type Credential, SpaceMember_Role, SpaceMemberSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import {
+  CancelDelegatedInvitationSchema,
+  type DelegateSpaceInvitation,
+} from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 import { range } from '@dxos/util';
 
 import {
   createCredential,
   createCredentialSignerWithKey,
   createDelegatedSpaceInvitationCredential,
+  toBufPublicKey,
 } from '../credentials';
 
 import { InvitationStateMachine } from './invitation-state-machine';
@@ -23,13 +28,13 @@ describe('InvitationStateMachine', () => {
   const keyring = new Keyring();
   let space: PublicKey;
   let identity: PublicKey;
-  const baseInvitation: DelegateSpaceInvitation = {
+  const baseInvitation = {
     invitationId: PublicKey.random().toHex(),
-    swarmKey: PublicKey.random(),
-    role: SpaceMember.Role.ADMIN,
-    authMethod: Invitation.AuthMethod.KNOWN_PUBLIC_KEY,
+    swarmKey: toBufPublicKey(PublicKey.random()),
+    role: SpaceMember_Role.ADMIN,
+    authMethod: Invitation_AuthMethod.KNOWN_PUBLIC_KEY,
     multiUse: false,
-  };
+  } as any as DelegateSpaceInvitation;
 
   beforeEach(async () => {
     space = await keyring.createKey();
@@ -58,7 +63,7 @@ describe('InvitationStateMachine', () => {
     await stateMachine.process(
       await delegateInvitation({
         ...baseInvitation,
-        expiresOn: new Date(Date.now() - 1),
+        expiresOn: new Date(Date.now() - 1) as any,
       }),
     );
     expectNoInvitation(stateMachine, baseInvitation);
@@ -137,28 +142,28 @@ describe('InvitationStateMachine', () => {
   };
 
   const cancelInvitation = async (invitation: Credential): Promise<Credential> => {
+    const credentialId = PublicKey.from(invitation.id!.data);
     return createCredential({
       issuer: space,
       subject: identity,
-      assertion: {
-        '@type': 'dxos.halo.invitations.CancelDelegatedInvitation',
-        credentialId: invitation.id!,
-      },
+      assertion: create(CancelDelegatedInvitationSchema, {
+        credentialId: toBufPublicKey(credentialId),
+      }),
       signer: keyring,
     });
   };
 
   const admitMember = (invitation: Credential) => {
+    const invitationCredentialId = invitation.id ? PublicKey.from(invitation.id.data) : undefined;
     return createCredential({
       issuer: space,
       subject: identity,
-      assertion: {
-        '@type': 'dxos.halo.credentials.SpaceMember',
-        spaceKey: space,
-        role: SpaceMember.Role.ADMIN,
-        genesisFeedKey: PublicKey.random(),
-        invitationCredentialId: invitation.id,
-      },
+      assertion: create(SpaceMemberSchema, {
+        spaceKey: toBufPublicKey(space),
+        role: SpaceMember_Role.ADMIN,
+        genesisFeedKey: toBufPublicKey(PublicKey.random()),
+        ...(invitationCredentialId ? { invitationCredentialId: toBufPublicKey(invitationCredentialId) } : {}),
+      }),
       signer: keyring,
     });
   };

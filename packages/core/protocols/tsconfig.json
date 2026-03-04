@@ -9,9 +9,6 @@
   ],
   "references": [
     {
-      "path": "../../common/codec-protobuf"
-    },
-    {
       "path": "../../common/effect"
     },
     {
@@ -24,7 +21,7 @@
       "path": "../../common/keys"
     },
     {
-      "path": "../../common/protobuf-compiler"
+      "path": "../../common/stream"
     },
     {
       "path": "../../common/timeframe"

@@ -7,6 +7,8 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { sleep } from '@dxos/async';
 import { WorkerRuntime } from '@dxos/client-services';
 import { Config } from '@dxos/config';
+import { create } from '@dxos/protocols/buf';
+import { ConfigSchema } from '@dxos/protocols/buf/dxos/config_pb';
 import { createLinkedPorts } from '@dxos/rpc';
 import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
 import { type MaybePromise, type Provider } from '@dxos/util';
@@ -57,7 +59,7 @@ const setup = (configProvider: Provider<MaybePromise<Config>>) => {
 
 describe('Shared worker', () => {
   test('client connects to the worker', async () => {
-    const { workerRuntime, clientProxy, client } = setup(() => new Config({}));
+    const { workerRuntime, clientProxy, client } = setup(() => new Config(create(ConfigSchema, { version: 1 })));
 
     await Promise.all([workerRuntime.start(), clientProxy.open({ origin: '*' }), client.initialize()]);
 
@@ -84,7 +86,7 @@ describe('Shared worker', () => {
   test('host can be initialized after client', async () => {
     const { workerRuntime, clientProxy, client } = setup(async () => {
       await sleep(5);
-      return new Config({});
+      return new Config(create(ConfigSchema, { version: 1 }));
     });
 
     await Promise.all([workerRuntime.start(), clientProxy.open({ origin: '*' }), client.initialize()]);

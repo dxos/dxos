@@ -5,25 +5,36 @@
 import CRC32 from 'crc-32';
 
 import { Event, scheduleTaskInterval, synchronized } from '@dxos/async';
-import { type Codec } from '@dxos/codec-protobuf';
+import { type Codec } from '@dxos/protocols';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { DataCorruptionError, STORAGE_VERSION } from '@dxos/protocols';
-import { schema } from '@dxos/protocols/proto';
-import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
+import {
+  TimeframeVectorProto,
+  create,
+  encodePublicKey,
+  fromBinary,
+  timestampDate,
+  timestampFromDate,
+  toBinary,
+  toPublicKey,
+} from '@dxos/protocols/buf';
+import { type Invitation, Invitation_Type, SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import {
   type ControlPipelineSnapshot,
   type EchoMetadata,
+  EchoMetadataSchema,
   type EdgeReplicationSetting,
   type IdentityRecord,
   type LargeSpaceMetadata,
+  LargeSpaceMetadataSchema,
   type SpaceCache,
   type SpaceMetadata,
-} from '@dxos/protocols/proto/dxos/echo/metadata';
+} from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { type Directory, type File } from '@dxos/random-access-storage';
-import { type Timeframe } from '@dxos/timeframe';
+import { Timeframe } from '@dxos/timeframe';
 import { ComplexMap, arrayToBuffer, forEachAsync, isNonNullable } from '@dxos/util';
 
 const EXPIRED_INVITATION_CLEANUP_INTERVAL = 60 * 60 * 1000; // 1 hour
@@ -33,17 +44,99 @@ export interface AddSpaceOptions {
   genesisFeed: PublicKey;
 }
 
-const emptyEchoMetadata = (): EchoMetadata => ({
-  version: STORAGE_VERSION,
-  spaces: [],
-  created: new Date(),
-  updated: new Date(),
-});
+const emptyEchoMetadata = (): EchoMetadata =>
+  create(EchoMetadataSchema, {
+    version: STORAGE_VERSION,
+    spaces: [],
+    created: timestampFromDate(new Date()),
+    updated: timestampFromDate(new Date()),
+  });
 
-const emptyLargeSpaceMetadata = (): LargeSpaceMetadata => ({});
+const emptyLargeSpaceMetadata = (): LargeSpaceMetadata => create(LargeSpaceMetadataSchema, {});
 
-const EchoMetadata = schema.getCodecForType('dxos.echo.metadata.EchoMetadata');
-const LargeSpaceMetadata = schema.getCodecForType('dxos.echo.metadata.LargeSpaceMetadata');
+/**
+ * Recursively convert @dxos/keys.PublicKey instances and buf PublicKey messages
+ * to plain init shapes ({ data: Uint8Array }) without $typeName, so that buf's
+ * create() can properly initialize them as nested messages.
+ */
+const convertKeysForBufInit = (obj: unknown): unknown => {
+  if (obj == null || typeof obj !== 'object') {
+    return obj;
+  }
+  if (PublicKey.isPublicKey(obj)) {
+    return { data: (obj as PublicKey).asUint8Array() };
+  }
+  if (obj instanceof Timeframe) {
+    return {
+      frames: obj.frames().map(([feedKey, seq]) => ({
+        feedKey: feedKey.asUint8Array(),
+        seq,
+      })),
+    };
+  }
+  if (obj instanceof Uint8Array || obj instanceof Date) {
+    return obj;
+  }
+  if (Array.isArray(obj)) {
+    return obj.map(convertKeysForBufInit);
+  }
+  const result: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (key.startsWith('$')) {
+      continue;
+    }
+    result[key] = convertKeysForBufInit(value);
+  }
+  return result;
+};
+
+/**
+ * Recursively convert buf messages to application types:
+ * - buf PublicKey ({ $typeName: 'dxos.keys.PublicKey', data }) → @dxos/keys.PublicKey
+ * - buf TimeframeVector ({ $typeName: 'dxos.echo.timeframe.TimeframeVector', frames }) → Timeframe
+ */
+const convertBufTypesToAppTypes = (obj: unknown): unknown => {
+  if (obj == null || typeof obj !== 'object') {
+    return obj;
+  }
+  if (obj instanceof Uint8Array || obj instanceof Date || PublicKey.isPublicKey(obj)) {
+    return obj;
+  }
+  const typeName = (obj as any).$typeName;
+  if (typeName === 'dxos.keys.PublicKey' && (obj as any).data instanceof Uint8Array) {
+    return PublicKey.from((obj as any).data);
+  }
+  if (typeName === 'dxos.echo.timeframe.TimeframeVector') {
+    return TimeframeVectorProto.decode(obj as any);
+  }
+  if (Array.isArray(obj)) {
+    return obj.map(convertBufTypesToAppTypes);
+  }
+  const result: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (key.startsWith('$')) {
+      continue;
+    }
+    result[key] = convertBufTypesToAppTypes(value);
+  }
+  return result;
+};
+
+const echoMetadataCodec: Codec<EchoMetadata> = {
+  encode: (msg: EchoMetadata) =>
+    toBinary(EchoMetadataSchema, create(EchoMetadataSchema, convertKeysForBufInit(msg) as EchoMetadata)),
+  decode: (bytes: Uint8Array) => convertBufTypesToAppTypes(fromBinary(EchoMetadataSchema, bytes)) as EchoMetadata,
+};
+
+const largeSpaceMetadataCodec: Codec<LargeSpaceMetadata> = {
+  encode: (msg: LargeSpaceMetadata) =>
+    toBinary(
+      LargeSpaceMetadataSchema,
+      create(LargeSpaceMetadataSchema, convertKeysForBufInit(msg) as LargeSpaceMetadata),
+    ),
+  decode: (bytes: Uint8Array) =>
+    convertBufTypesToAppTypes(fromBinary(LargeSpaceMetadataSchema, bytes)) as LargeSpaceMetadata,
+};
 
 export class MetadataStore {
   private _metadata: EchoMetadata = emptyEchoMetadata();
@@ -148,7 +241,7 @@ export class MetadataStore {
     }
 
     try {
-      const metadata = await this._readFile(this._metadataFile, EchoMetadata);
+      const metadata = await this._readFile(this._metadataFile, echoMetadataCodec);
       if (metadata) {
         this._metadata = metadata;
       }
@@ -163,9 +256,9 @@ export class MetadataStore {
     }
 
     await forEachAsync(
-      [this._metadata.identity?.haloSpace.key, ...(this._metadata.spaces?.map((space) => space.key) ?? [])].filter(
-        isNonNullable,
-      ),
+      [this._metadata.identity?.haloSpace?.key, ...(this._metadata.spaces?.map((space) => space.key) ?? [])]
+        .filter(isNonNullable)
+        .map(toPublicKey),
       async (key) => {
         try {
           await this._loadSpaceLargeMetadata(key);
@@ -194,20 +287,20 @@ export class MetadataStore {
     const data: EchoMetadata = {
       ...this._metadata,
       version: STORAGE_VERSION,
-      created: this._metadata.created ?? new Date(),
-      updated: new Date(),
+      created: this._metadata.created ?? timestampFromDate(new Date()),
+      updated: timestampFromDate(new Date()),
     };
     this.update.emit(data);
 
     const file = this._directory.getOrCreateFile('EchoMetadata');
 
-    await this._writeFile(file, EchoMetadata, data);
+    await this._writeFile(file, echoMetadataCodec, data);
   }
 
   private async _loadSpaceLargeMetadata(key: PublicKey): Promise<void> {
     const file = this._directory.getOrCreateFile(`space_${key.toHex()}_large`);
     try {
-      const metadata = await this._readFile(file, LargeSpaceMetadata);
+      const metadata = await this._readFile(file, largeSpaceMetadataCodec);
       if (metadata) {
         this._spaceLargeMetadata.set(key, metadata);
       }
@@ -220,7 +313,7 @@ export class MetadataStore {
   private async _saveSpaceLargeMetadata(key: PublicKey): Promise<void> {
     const data = this._getLargeSpaceMetadata(key);
     const file = this._directory.getOrCreateFile(`space_${key.toHex()}_large`);
-    await this._writeFile(file, LargeSpaceMetadata, data);
+    await this._writeFile(file, largeSpaceMetadataCodec, data);
   }
 
   async flush(): Promise<void> {
@@ -228,23 +321,27 @@ export class MetadataStore {
   }
 
   _getSpace(spaceKey: PublicKey): SpaceMetadata {
-    if (this._metadata.identity?.haloSpace.key.equals(spaceKey)) {
-      // Check if the space is the identity space.
+    if (
+      this._metadata.identity?.haloSpace?.key &&
+      toPublicKey(this._metadata.identity.haloSpace.key).equals(spaceKey)
+    ) {
       return this._metadata.identity.haloSpace;
     }
 
-    const space = this.spaces.find((space) => space.key.equals(spaceKey));
+    const space = this.spaces.find((space) => space.key && toPublicKey(space.key).equals(spaceKey));
     invariant(space, 'Space not found');
-    return space;
+    return space!;
   }
 
   hasSpace(spaceKey: PublicKey): boolean {
-    if (this._metadata.identity?.haloSpace.key.equals(spaceKey)) {
-      // Check if the space is the identity space.
+    if (
+      this._metadata.identity?.haloSpace?.key &&
+      toPublicKey(this._metadata.identity.haloSpace.key).equals(spaceKey)
+    ) {
       return true;
     }
 
-    return !!this.spaces.find((space) => space.key.equals(spaceKey));
+    return !!this.spaces.find((space) => space.key && toPublicKey(space.key).equals(spaceKey));
   }
 
   private _getLargeSpaceMetadata(key: PublicKey): LargeSpaceMetadata {
@@ -301,7 +398,9 @@ export class MetadataStore {
 
   async addSpace(record: SpaceMetadata): Promise<void> {
     invariant(
-      !(this._metadata.spaces ?? []).find((space) => space.key.equals(record.key)),
+      !(this._metadata.spaces ?? []).find(
+        (space) => space.key && record.key && toPublicKey(space.key).equals(toPublicKey(record.key)),
+      ),
       'Cannot overwrite existing space in metadata',
     );
 
@@ -311,12 +410,14 @@ export class MetadataStore {
   }
 
   async setSpaceDataLatestTimeframe(spaceKey: PublicKey, timeframe: Timeframe): Promise<void> {
-    this._getSpace(spaceKey).dataTimeframe = timeframe;
+    (this._getSpace(spaceKey) as any).dataTimeframe = timeframe;
     await this._save();
   }
 
   async setSpaceControlLatestTimeframe(spaceKey: PublicKey, timeframe: Timeframe): Promise<void> {
-    this._getSpace(spaceKey).controlTimeframe = timeframe;
+    // Store Timeframe directly; the codec encode path (convertKeysForBufInit) handles
+    // conversion to TimeframeVector for serialization. In-memory metadata uses application types.
+    (this._getSpace(spaceKey) as any).controlTimeframe = timeframe;
     await this._save();
     await this.flush();
   }
@@ -328,8 +429,8 @@ export class MetadataStore {
 
   async setWritableFeedKeys(spaceKey: PublicKey, controlFeedKey: PublicKey, dataFeedKey: PublicKey): Promise<void> {
     const space = this._getSpace(spaceKey);
-    space.controlFeedKey = controlFeedKey;
-    space.dataFeedKey = dataFeedKey;
+    space.controlFeedKey = encodePublicKey(controlFeedKey);
+    space.dataFeedKey = encodePublicKey(dataFeedKey);
     await this._save();
     await this.flush();
   }
@@ -368,11 +469,11 @@ export const hasInvitationExpired = (invitation: Invitation): boolean => {
     invitation.created &&
       invitation.lifetime &&
       invitation.lifetime !== 0 &&
-      invitation.created.getTime() + invitation.lifetime * 1000 < Date.now(),
+      timestampDate(invitation.created).getTime() + invitation.lifetime * 1000 < Date.now(),
   );
 };
 
 // TODO: remove once "multiuse" type invitations get removed from local metadata of existing profiles
 const isLegacyInvitationFormat = (invitation: Invitation): boolean => {
-  return invitation.type === Invitation.Type.MULTIUSE;
+  return invitation.type === Invitation_Type.MULTIUSE;
 };

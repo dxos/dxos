@@ -5,9 +5,10 @@
 import { unrefTimeout } from '@dxos/async';
 import { type Context } from '@dxos/context';
 import { LogLevel, type LogProcessor, getContextFromEntry, log } from '@dxos/log';
-import { type LogEntry } from '@dxos/protocols/proto/dxos/client/services';
-import { type Error as SerializedError } from '@dxos/protocols/proto/dxos/error';
-import { type Metric, type Resource, type Span } from '@dxos/protocols/proto/dxos/tracing';
+import { type JsonObject, create, timestampFromDate } from '@dxos/protocols/buf';
+import { type LogEntry, LogEntrySchema, LogEntry_MetaSchema } from '@dxos/protocols/buf/dxos/client/logging_pb';
+import { ErrorSchema, type Error as SerializedError } from '@dxos/protocols/buf/dxos/error_pb';
+import { type Metric, type Resource, ResourceSchema, type Span, SpanSchema } from '@dxos/protocols/buf/dxos/tracing_pb';
 import { getPrototypeSpecificInstanceId } from '@dxos/util';
 
 import type { AddLinkOptions, TimeAware } from './api';
@@ -132,14 +133,14 @@ export class TraceProcessor {
     }
 
     const entry = new ResourceEntry(
-      {
+      create(ResourceSchema, {
         id,
         className: params.constructor.name,
         instanceId: getPrototypeSpecificInstanceId(params.instance),
         info: this.getResourceInfo(params.instance),
         links: [],
         metrics: this.getResourceMetrics(params.instance),
-      },
+      }),
       new WeakRef(params.instance),
       params.annotation,
     );
@@ -343,17 +344,17 @@ export class TraceProcessor {
           context[key] = sanitizeValue(context[key], 0, this);
         }
 
-        const entryToPush: LogEntry = {
+        const entryToPush = create(LogEntrySchema, {
           level: entry.level,
           message: entry.message ?? (entry.error ? (entry.error.message ?? String(entry.error)) : ''),
-          context,
-          timestamp: new Date(),
-          meta: {
+          context: context as JsonObject,
+          timestamp: timestampFromDate(new Date()),
+          meta: create(LogEntry_MetaSchema, {
             file: entry.meta?.F ?? '',
             line: entry.meta?.L ?? 0,
             resourceId: resource.data.id,
-          },
-        };
+          }),
+        });
         this._pushLog(entryToPush);
         break;
       }
@@ -433,7 +434,7 @@ export class TracingSpan {
   }
 
   serialize(): Span {
-    return {
+    return create(SpanSchema, {
       id: this.id,
       resourceId: this.resourceId ?? undefined,
       methodName: this.methodName,
@@ -441,7 +442,7 @@ export class TracingSpan {
       startTs: this.startTs.toFixed(3),
       endTs: this.endTs?.toFixed(3) ?? undefined,
       error: this.error ?? undefined,
-    };
+    });
   }
 
   private _markInBrowserTimeline(): void {
@@ -454,15 +455,15 @@ export class TracingSpan {
 // TODO(burdon): Log cause.
 const serializeError = (err: unknown): SerializedError => {
   if (err instanceof Error) {
-    return {
+    return create(ErrorSchema, {
       name: err.name,
       message: err.message,
-    };
+    });
   }
 
-  return {
+  return create(ErrorSchema, {
     message: String(err),
-  };
+  });
 };
 
 // TODO(burdon): Rename singleton and move out of package.

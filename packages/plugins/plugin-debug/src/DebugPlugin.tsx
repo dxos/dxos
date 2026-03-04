@@ -37,7 +37,7 @@ const setupDevtools = () => {
     const client: Client = (window as any).dxos.client;
     const config = client.config;
     await client.destroy();
-    const { storage } = createStorageObjects(config.values?.runtime?.client?.storage ?? {});
+    const { storage } = createStorageObjects((config.values?.runtime?.client?.storage ?? {}) as any);
     await changeStorageVersionInMetadata(storage, version);
     location.pathname = '/';
   };

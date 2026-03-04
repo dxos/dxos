@@ -363,7 +363,8 @@ describe('Integration tests', () => {
       await expect
         .poll(async () => {
           const state = await db2.coreDatabase.getSyncState();
-          return state.peers![0].differentDocuments + state.peers![0].missingOnRemote + state.peers![0].missingOnLocal;
+          const peer = state.peers?.[0];
+          return (peer?.differentDocuments ?? 0) + (peer?.missingOnRemote ?? 0) + (peer?.missingOnLocal ?? 0);
         })
         .toEqual(0);
     }

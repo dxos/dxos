@@ -7,7 +7,11 @@ export {
   AuthenticatingInvitationObservable,
   CancellableInvitationObservable,
   InvitationEncoder,
-  Invitation,
+  type Invitation,
+  Invitation_AuthMethod,
+  Invitation_Kind,
+  Invitation_State,
+  Invitation_Type,
   type Invitations,
   InvitationsProxy,
 } from '@dxos/client/invitations';

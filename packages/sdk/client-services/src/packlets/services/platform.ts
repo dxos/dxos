@@ -2,41 +2,49 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Platform } from '@dxos/protocols/proto/dxos/client/services';
+import { create } from '@dxos/protocols/buf';
+import { type Platform, PlatformSchema, Platform_PLATFORM_TYPE } from '@dxos/protocols/buf/dxos/client/services_pb';
 
 export const getPlatform = (): Platform => {
   if ((process as any).browser) {
     if (typeof window !== 'undefined') {
       // Browser.
       const { userAgent } = window.navigator;
-      return {
-        type: Platform.PLATFORM_TYPE.BROWSER,
+      return create(PlatformSchema, {
+        type: Platform_PLATFORM_TYPE.BROWSER,
         userAgent,
         uptime: Math.floor((Date.now() - window.performance.timeOrigin) / 1_000),
-      };
+      });
     } else if (typeof SharedWorkerGlobalScope !== 'undefined') {
       // Shared worker.
-      return {
-        type: Platform.PLATFORM_TYPE.SHARED_WORKER,
+      return create(PlatformSchema, {
+        type: Platform_PLATFORM_TYPE.SHARED_WORKER,
         uptime: Math.floor((Date.now() - performance.timeOrigin) / 1_000),
-      };
+      });
     } else {
       // Dedicated worker.
-      return {
-        type: Platform.PLATFORM_TYPE.DEDICATED_WORKER,
+      return create(PlatformSchema, {
+        type: Platform_PLATFORM_TYPE.DEDICATED_WORKER,
         uptime: Math.floor((Date.now() - performance.timeOrigin) / 1_000),
-      };
+      });
     }
   } else {
     // Node.
     const { platform, version, arch } = process;
-    return {
-      type: Platform.PLATFORM_TYPE.NODE,
+    const memoryUsage = process.memoryUsage();
+    return create(PlatformSchema, {
+      type: Platform_PLATFORM_TYPE.NODE,
       platform,
       arch,
       runtime: version,
       uptime: Math.floor(process.uptime()),
-      memory: process.memoryUsage(),
-    };
+      memory: {
+        rss: memoryUsage.rss,
+        heapTotal: memoryUsage.heapTotal,
+        heapUsed: memoryUsage.heapUsed,
+        external: memoryUsage.external,
+        arrayBuffers: memoryUsage.arrayBuffers,
+      },
+    });
   }
 };

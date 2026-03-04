@@ -60,7 +60,7 @@ export const initializeObservability = async (config: Config, isTauri: boolean) 
         // TODO(wittjosiah): Make APP_KEY "composer"?
         serviceName: 'composer',
         serviceVersion: DXOS_VERSION,
-        environment: config.values.runtime?.app?.env?.DX_ENVIRONMENT ?? 'unknown',
+        environment: (config.values.runtime?.app?.env?.DX_ENVIRONMENT as string | undefined) ?? 'unknown',
         config,
         logs: true,
       }),
@@ -69,7 +69,7 @@ export const initializeObservability = async (config: Config, isTauri: boolean) 
       ObservabilityExtension.PostHog.extensions({
         config,
         release: DXOS_VERSION,
-        environment: config.values.runtime?.app?.env?.DX_ENVIRONMENT ?? 'unknown',
+        environment: (config.values.runtime?.app?.env?.DX_ENVIRONMENT as string | undefined) ?? 'unknown',
       }),
     ),
     Observability.addDataProvider(ObservabilityProvider.IPData.provider(config)),

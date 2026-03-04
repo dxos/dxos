@@ -4,7 +4,7 @@
 
 import React, { type ChangeEvent, useState } from 'react';
 
-import { Invitation } from '@dxos/react-client/invitations';
+import { Invitation_AuthMethod } from '@dxos/react-client/invitations';
 import { Input, useTranslation } from '@dxos/react-ui';
 import { hexToEmoji } from '@dxos/util';
 
@@ -16,7 +16,7 @@ const pinLength = 6;
 
 export interface InvitationAuthenticatorProps extends JoinStepProps {
   Kind: 'Space' | 'Halo';
-  authMethod?: Invitation.AuthMethod;
+  authMethod?: Invitation_AuthMethod;
   failed?: boolean;
   pending?: boolean;
   invitationId?: string;
@@ -54,7 +54,7 @@ export const InvitationAuthenticator = ({
             validationValence: 'error',
           })}
         >
-          {authMethod === Invitation.AuthMethod.SHARED_SECRET ? (
+          {authMethod === Invitation_AuthMethod.SHARED_SECRET ? (
             <Input.Label asChild>
               <InputLabel>{t('auth code input label')}</InputLabel>
             </Input.Label>
@@ -66,7 +66,7 @@ export const InvitationAuthenticator = ({
               <div role='none' className='grow' />
             </>
           )}
-          {authMethod === Invitation.AuthMethod.SHARED_SECRET && (
+          {authMethod === Invitation_AuthMethod.SHARED_SECRET && (
             <Input.PinInput
               {...{
                 disabled,
@@ -90,7 +90,7 @@ export const InvitationAuthenticator = ({
           )}
         </Input.Root>
 
-        {invitationId && authMethod === Invitation.AuthMethod.SHARED_SECRET && (
+        {invitationId && authMethod === Invitation_AuthMethod.SHARED_SECRET && (
           <>
             <Label>{t('auth other device emoji message')}</Label>
             <div className='flex justify-center'>

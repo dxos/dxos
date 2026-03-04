@@ -7,8 +7,8 @@ import { Transform, pipeline } from 'node:stream';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout, latch } from '@dxos/async';
-import { schema } from '@dxos/protocols/proto';
-import { type TestService } from '@dxos/protocols/proto/example/testing/rpc';
+import { EmptySchema, create } from '@dxos/protocols/buf';
+import { TestRpcResponseSchema, TestService } from '@dxos/protocols/buf/example/testing/rpc_pb';
 import { createProtoRpcPeer } from '@dxos/rpc';
 
 import { Muxer } from './muxer';
@@ -37,18 +37,18 @@ const setupPeers = () => {
   };
 };
 
-const createRpc = (port: RpcPort, handler: TestService['testCall']) =>
+const createRpc = (port: RpcPort, handler: (req: { data: string }) => Promise<{ data: string }>) =>
   createProtoRpcPeer({
     requested: {
-      TestService: schema.getService('example.testing.rpc.TestService'),
+      TestService,
     },
     exposed: {
-      TestService: schema.getService('example.testing.rpc.TestService'),
+      TestService,
     },
     handlers: {
       TestService: {
-        testCall: handler,
-        voidCall: async () => {},
+        testCall: async (req) => create(TestRpcResponseSchema, await handler(req)),
+        voidCall: async () => create(EmptySchema),
       },
     },
     port,
@@ -70,7 +70,8 @@ describe('Muxer', () => {
 
       setTimeout(async () => {
         await client.open();
-        expect(await client.rpc.TestService.testCall({ data: 'test' })).to.deep.eq({ data: 'test' });
+        const result = await client.rpc.TestService.testCall({ data: 'test' });
+        expect(result.data).to.eq('test');
         inc();
       });
     }
@@ -102,7 +103,7 @@ describe('Muxer', () => {
 
         setTimeout(async () => {
           await client.open();
-          expect(await client.rpc.TestService.testCall({ data: 'test' })).to.deep.eq({ data: 'test-rpc1' });
+          expect((await client.rpc.TestService.testCall({ data: 'test' })).data).to.eq('test-rpc1');
           inc();
         });
       }
@@ -116,7 +117,7 @@ describe('Muxer', () => {
 
         setTimeout(async () => {
           await client.open();
-          expect(await client.rpc.TestService.testCall({ data: 'test' })).to.deep.eq({ data: 'test-rpc2' });
+          expect((await client.rpc.TestService.testCall({ data: 'test' })).data).to.eq('test-rpc2');
           inc();
         });
       }

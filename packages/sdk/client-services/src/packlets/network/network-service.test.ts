@@ -6,7 +6,8 @@ import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'v
 
 import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { ConnectionState, type NetworkService } from '@dxos/protocols/proto/dxos/client/services';
+import { create } from '@dxos/protocols/buf';
+import { ConnectionState, UpdateConfigRequestSchema } from '@dxos/protocols/buf/dxos/client/services_pb';
 
 import { type ServiceContext } from '../services';
 import { createServiceContext } from '../testing';
@@ -15,7 +16,7 @@ import { NetworkServiceImpl } from './network-service';
 
 describe('NetworkService', () => {
   let serviceContext: ServiceContext;
-  let networkService: NetworkService;
+  let networkService: NetworkServiceImpl;
 
   beforeEach(async () => {
     serviceContext = await createServiceContext();
@@ -28,9 +29,7 @@ describe('NetworkService', () => {
   });
 
   test('setNetworkOptions changes network status', async () => {
-    await networkService.updateConfig({
-      swarm: ConnectionState.OFFLINE,
-    });
+    await networkService.updateConfig(create(UpdateConfigRequestSchema, { swarm: ConnectionState.OFFLINE }));
 
     expect(serviceContext.networkManager.connectionState).to.equal(ConnectionState.OFFLINE);
   });
@@ -45,9 +44,7 @@ describe('NetworkService', () => {
     expect(await result.wait()).to.equal(ConnectionState.ONLINE);
 
     result = new Trigger<ConnectionState | undefined>();
-    await networkService.updateConfig({
-      swarm: ConnectionState.OFFLINE,
-    });
+    await networkService.updateConfig(create(UpdateConfigRequestSchema, { swarm: ConnectionState.OFFLINE }));
     expect(await result.wait()).to.equal(ConnectionState.OFFLINE);
   });
 });

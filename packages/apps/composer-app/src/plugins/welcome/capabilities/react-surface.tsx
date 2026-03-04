@@ -22,7 +22,7 @@ export default Capability.makeModule(() =>
         filter: (data): data is any => data.component === WELCOME_SCREEN,
         component: () => {
           const client = useClient();
-          const hubUrl = client.config.values?.runtime?.app?.env?.DX_HUB_URL;
+          const hubUrl = client.config.values?.runtime?.app?.env?.DX_HUB_URL as string | undefined;
           invariant(hubUrl, 'Hub URL not found');
           return <WelcomeScreen hubUrl={hubUrl} />;
         },

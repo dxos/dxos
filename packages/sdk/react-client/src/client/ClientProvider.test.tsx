@@ -9,6 +9,14 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { waitForCondition } from '@dxos/async';
 import { Client, Config, SystemStatus, fromHost } from '@dxos/client';
 import { log } from '@dxos/log';
+import { create } from '@dxos/protocols/buf';
+import {
+  ConfigSchema,
+  RuntimeSchema,
+  Runtime_ClientSchema,
+  Runtime_Client_StorageSchema,
+} from '@dxos/protocols/buf/dxos/config_pb';
+import { type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { useIdentity } from '../halo';
 
@@ -65,16 +73,16 @@ describe('Client hook', function () {
   });
 
   test('should return client when used properly in a context', async () => {
-    const config = new Config({
-      version: 1,
-      runtime: {
-        client: {
-          storage: {
-            persistent: false,
-          },
-        },
-      },
-    });
+    const config = new Config(
+      create(ConfigSchema, {
+        version: 1,
+        runtime: create(RuntimeSchema, {
+          client: create(Runtime_ClientSchema, {
+            storage: create(Runtime_Client_StorageSchema, { persistent: false }),
+          }),
+        }),
+      }),
+    );
 
     const client = new Client({ config, services: fromHost(config) });
     await client.initialize();
@@ -94,7 +102,7 @@ describe('ClientProvider', () => {
     // TODO(wittjosiah): Use test builder to avoid warnings.
     client = new Client({ services: fromHost() });
     await client.initialize();
-    await client.halo.createIdentity({ displayName: 'test-user' });
+    await client.halo.createIdentity({ displayName: 'test-user' } as ProfileDocument);
   });
 
   afterEach(() => {

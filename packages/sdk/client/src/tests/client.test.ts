@@ -7,11 +7,19 @@ import { rmSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
+import { type PerformInvitationProps } from '@dxos/client-services/testing';
 import { Config } from '@dxos/config';
 import { Obj } from '@dxos/echo';
 import { Ref } from '@dxos/echo/internal';
 import { Filter } from '@dxos/echo-db';
-import { type Runtime } from '@dxos/protocols/proto/dxos/config';
+import { create } from '@dxos/protocols/buf';
+import {
+  ConfigSchema,
+  RuntimeSchema,
+  Runtime_ClientSchema,
+  Runtime_Client_StorageSchema,
+} from '@dxos/protocols/buf/dxos/config_pb';
+import { type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { isNode } from '@dxos/util';
 
 import { Client } from '../client';
@@ -95,14 +103,16 @@ describe('Client', () => {
   });
 
   test('creates identity then resets', async () => {
-    const config = new Config({
-      version: 1,
-      runtime: {
-        client: {
-          storage: { persistent: true, dataRoot },
-        },
-      },
-    });
+    const config = new Config(
+      create(ConfigSchema, {
+        version: 1,
+        runtime: create(RuntimeSchema, {
+          client: create(Runtime_ClientSchema, {
+            storage: create(Runtime_Client_StorageSchema, { persistent: true, dataRoot }),
+          }),
+        }),
+      }),
+    );
     const testBuilder = new TestBuilder(config);
     const client = new Client({
       services: testBuilder.createLocalClientServices(),
@@ -112,7 +122,7 @@ describe('Client', () => {
       // Create identity.
       await client.initialize();
       expect(client.halo.identity.get()).not.to.exist;
-      const identity = await client.halo.createIdentity({ displayName });
+      const identity = await client.halo.createIdentity({ displayName } as ProfileDocument);
       expect(client.halo.identity.get()).to.deep.eq(identity);
       await client.spaces.waitUntilReady();
       await client.destroy();
@@ -123,7 +133,7 @@ describe('Client', () => {
       await client.initialize();
       expect(client.halo.identity).to.exist;
       // TODO(burdon): Error type.
-      await expect(client.halo.createIdentity({ displayName })).rejects.toBeInstanceOf(Error);
+      await expect(client.halo.createIdentity({ displayName } as ProfileDocument)).rejects.toBeInstanceOf(Error);
       await client.spaces.waitUntilReady();
     }
     {
@@ -143,14 +153,15 @@ describe('Client', () => {
   });
 
   test('leveldb is cleared after client.reset', async () => {
-    const storageConfig = {
-      persistent: true,
-      dataRoot,
-    } satisfies Runtime.Client.Storage;
-    const config = new Config({
-      version: 1,
-      runtime: { client: { storage: storageConfig } },
-    });
+    const storageConfig = create(Runtime_Client_StorageSchema, { persistent: true, dataRoot });
+    const config = new Config(
+      create(ConfigSchema, {
+        version: 1,
+        runtime: create(RuntimeSchema, {
+          client: create(Runtime_ClientSchema, { storage: storageConfig }),
+        }),
+      }),
+    );
     const testBuilder = new TestBuilder(config);
 
     const services = testBuilder.createLocalClientServices();
@@ -158,7 +169,7 @@ describe('Client', () => {
 
     await client.initialize();
     onTestFinished(() => client.destroy());
-    await client.halo.createIdentity({ displayName: 'reset-check' });
+    await client.halo.createIdentity({ displayName: 'reset-check' } as ProfileDocument);
     await client.spaces.waitUntilReady();
 
     // Close client.
@@ -167,7 +178,7 @@ describe('Client', () => {
     const { createLevel } = await import('@dxos/client-services');
     // Level DB should have data in it after client is closed.
     {
-      const level = await createLevel(storageConfig);
+      const level = await createLevel(storageConfig as any);
       const keys = await level.keys().all();
       expect(keys.length).not.toEqual(0);
       await level.close();
@@ -179,7 +190,7 @@ describe('Client', () => {
 
     // Level DB should have no data in it after client is reset.
     {
-      const level = await createLevel(storageConfig);
+      const level = await createLevel(storageConfig as any);
       const keys = await level.keys().all();
       expect(keys.length).toEqual(0);
       await level.close();
@@ -224,7 +235,12 @@ describe('Client', () => {
       },
       { fire: true },
     );
-    await Promise.all(performInvitation({ host: space1, guest: client2.spaces }));
+    await Promise.all(
+      performInvitation({
+        host: space1 as unknown as PerformInvitationProps['host'],
+        guest: client2.spaces as unknown as PerformInvitationProps['guest'],
+      }),
+    );
 
     // Create Thread on second client.
     const space2 = client2.spaces.get(spaceKey)!;

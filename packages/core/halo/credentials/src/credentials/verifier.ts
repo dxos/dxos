@@ -3,30 +3,45 @@
 //
 
 import { verifySignature } from '@dxos/crypto';
-import { type PublicKey } from '@dxos/keys';
-import { type Chain, type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { PublicKey } from '@dxos/keys';
+import { type Chain, type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { isValidAuthorizedDeviceCredential } from './assertions';
+import { type UnpackedCredential } from './credential';
+import { type PublicKey as BufPublicKey } from '@dxos/protocols/buf/dxos/keys_pb';
+
+import { getAssertionFromCredential } from './credential';
 import { getCredentialProofPayload } from './signing';
 
 export const SIGNATURE_TYPE_ED25519 = 'ED25519Signature';
 
 export type VerificationResult = { kind: 'pass' } | { kind: 'fail'; errors: string[] };
 
-export const verifyCredential = async (credential: Credential): Promise<VerificationResult> => {
-  if (credential.parentCredentialIds?.length === 0) {
-    delete credential.parentCredentialIds;
-  }
+/** Helper to convert buf PublicKey message (or @dxos/keys PublicKey) to @dxos/keys PublicKey. */
+const fromBufPublicKey = (key: BufPublicKey | PublicKey): PublicKey =>
+  key instanceof PublicKey ? key : PublicKey.from(key.data);
 
-  if (!credential.issuer.equals(credential.proof!.signer)) {
-    if (!credential.proof!.chain) {
+/** Check if two buf PublicKey messages are equal. */
+const bufPublicKeysEqual = (a?: BufPublicKey, b?: BufPublicKey): boolean => {
+  if (!a || !b) {
+    return false;
+  }
+  return fromBufPublicKey(a).equals(fromBufPublicKey(b));
+};
+
+export const verifyCredential = async (credential: Credential | UnpackedCredential): Promise<VerificationResult> => {
+  if (!bufPublicKeysEqual(credential.issuer, credential.proof?.signer)) {
+    if (!credential.proof?.chain) {
       return {
         kind: 'fail',
         errors: ['Delegated credential is missing credential chain.'],
       };
     }
 
-    const result = await verifyChain(credential.proof!.chain, credential.issuer, credential.proof!.signer);
+    const result = await verifyChain(
+      credential.proof.chain,
+      fromBufPublicKey(credential.issuer!),
+      fromBufPublicKey(credential.proof.signer!),
+    );
     if (result.kind === 'fail') {
       return result;
     }
@@ -44,16 +59,17 @@ export const verifyCredential = async (credential: Credential): Promise<Verifica
  * Verifies that the signature is valid and was made by the signer.
  * Does not validate other semantics (e.g. chains).
  */
-export const verifyCredentialSignature = async (credential: Credential): Promise<VerificationResult> => {
-  if (credential.proof!.type !== SIGNATURE_TYPE_ED25519) {
+export const verifyCredentialSignature = async (credential: Credential | UnpackedCredential): Promise<VerificationResult> => {
+  if (credential.proof?.type !== SIGNATURE_TYPE_ED25519) {
     return {
       kind: 'fail',
-      errors: [`Invalid signature type: ${credential.proof!.type}`],
+      errors: [`Invalid signature type: ${credential.proof?.type}`],
     };
   }
 
   const signData = getCredentialProofPayload(credential);
-  if (!(await verifySignature(credential.proof!.signer, signData, credential.proof!.value))) {
+  const signerKey = fromBufPublicKey(credential.proof.signer!);
+  if (!(await verifySignature(signerKey, signData, credential.proof.value))) {
     return { kind: 'fail', errors: ['Invalid signature'] };
   }
 
@@ -68,12 +84,17 @@ export const verifyChain = async (
   authority: PublicKey,
   subject: PublicKey,
 ): Promise<VerificationResult> => {
-  const result = await verifyCredential(chain.credential);
+  const result = await verifyCredential(chain.credential!);
   if (result.kind === 'fail') {
     return result;
   }
 
-  if (!isValidAuthorizedDeviceCredential(chain.credential, authority, subject)) {
+  const assertion = getAssertionFromCredential(chain.credential!);
+  const isAuthorizedDevice =
+    assertion.$typeName === 'dxos.halo.credentials.AuthorizedDevice' &&
+    fromBufPublicKey(chain.credential!.issuer!)?.equals(authority) &&
+    fromBufPublicKey(chain.credential!.subject?.id!)?.equals(subject);
+  if (!isAuthorizedDevice) {
     return {
       kind: 'fail',
       errors: [`Invalid credential chain: invalid assertion for key: ${subject}`],

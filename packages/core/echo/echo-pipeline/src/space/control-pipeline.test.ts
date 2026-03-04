@@ -4,15 +4,16 @@
 
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { CredentialGenerator, createCredential } from '@dxos/credentials';
+import { CredentialGenerator, createCredential, toBufPublicKey } from '@dxos/credentials';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { create, encodePublicKey, TimeframeVectorProto } from '@dxos/protocols/buf';
+import type { FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
+import { SpaceMetadataSchema } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
+import { AdmittedFeed_Designation, AdmittedFeedSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
-import { Timeframe } from '@dxos/timeframe';
 
 import { valueEncoding } from '../common';
 import { MetadataStore } from '../metadata';
@@ -44,7 +45,13 @@ describe('space/control-pipeline', () => {
     // TODO(dmaretskyi): Separate test for cold start after genesis.
     const genesisFeed = await createFeed();
     const metadata = new MetadataStore(createStorage({ type: StorageType.RAM }).createDirectory());
-    await metadata.addSpace({ key: spaceKey, genesisFeedKey: genesisFeed.key, controlFeedKey: genesisFeed.key });
+    await metadata.addSpace(
+      create(SpaceMetadataSchema, {
+        key: encodePublicKey(spaceKey),
+        genesisFeedKey: encodePublicKey(genesisFeed.key),
+        controlFeedKey: encodePublicKey(genesisFeed.key),
+      }),
+    );
     const controlPipeline = new ControlPipeline({
       spaceKey,
       genesisFeed,
@@ -89,17 +96,17 @@ describe('space/control-pipeline', () => {
     {
       await controlPipeline.pipeline.writer!.write({
         credential: {
+          // buf Credential cast to proto Credential for feed encoding.
           credential: await createCredential({
             signer: keyring,
             issuer: identityKey,
             subject: controlFeed2.key,
-            assertion: {
-              '@type': 'dxos.halo.credentials.AdmittedFeed',
-              spaceKey,
-              identityKey,
-              deviceKey,
-              designation: AdmittedFeed.Designation.CONTROL,
-            },
+            assertion: create(AdmittedFeedSchema, {
+              spaceKey: toBufPublicKey(spaceKey),
+              identityKey: toBufPublicKey(identityKey),
+              deviceKey: toBufPublicKey(deviceKey),
+              designation: AdmittedFeed_Designation.CONTROL,
+            }),
           }),
         },
       });
@@ -113,17 +120,17 @@ describe('space/control-pipeline', () => {
     {
       await controlPipeline.pipeline.writer!.write({
         credential: {
+          // buf Credential cast to proto Credential for feed encoding.
           credential: await createCredential({
             signer: keyring,
             issuer: identityKey,
             subject: dataFeed1.key,
-            assertion: {
-              '@type': 'dxos.halo.credentials.AdmittedFeed',
-              spaceKey,
-              identityKey,
-              deviceKey,
-              designation: AdmittedFeed.Designation.DATA,
-            },
+            assertion: create(AdmittedFeedSchema, {
+              spaceKey: toBufPublicKey(spaceKey),
+              identityKey: toBufPublicKey(identityKey),
+              deviceKey: toBufPublicKey(deviceKey),
+              designation: AdmittedFeed_Designation.DATA,
+            }),
           }),
         },
       });
@@ -136,27 +143,25 @@ describe('space/control-pipeline', () => {
     // TODO(dmaretskyi): Move to other test (data feed cannot admit feeds).
     const dataFeed2 = await createFeed();
     {
-      await dataFeed1.append({
-        payload: {
-          '@type': 'dxos.echo.feed.FeedMessage',
-          timeframe: controlPipeline.pipeline.state.timeframe,
-          credential: {
-            credential: await createCredential({
-              signer: keyring,
-              issuer: identityKey,
-              subject: dataFeed2.key,
-              assertion: {
-                '@type': 'dxos.halo.credentials.AdmittedFeed',
-                spaceKey,
-                identityKey,
-                deviceKey,
-                designation: AdmittedFeed.Designation.DATA,
-              },
-            }),
-          },
-        },
-        timeframe: new Timeframe(),
+      const dataCredential = await createCredential({
+        signer: keyring,
+        issuer: identityKey,
+        subject: dataFeed2.key,
+        assertion: create(AdmittedFeedSchema, {
+          spaceKey: toBufPublicKey(spaceKey),
+          identityKey: toBufPublicKey(identityKey),
+          deviceKey: toBufPublicKey(deviceKey),
+          designation: AdmittedFeed_Designation.DATA,
+        }),
       });
+      // Construct FeedMessage as a raw object (not via create()) so the codec's
+      // packFeedMessageAssertions can find and pack the TypedMessage assertion.
+      await dataFeed1.append({
+        timeframe: TimeframeVectorProto.encode(controlPipeline.pipeline.state.timeframe),
+        credential: {
+          credential: dataCredential,
+        },
+      } as any as FeedMessage);
 
       await controlPipeline.pipeline.state.waitUntilTimeframe(controlPipeline.pipeline.state.endTimeframe);
       expect(admittedFeeds).toEqual([genesisFeed.key, controlFeed2.key, dataFeed1.key]);

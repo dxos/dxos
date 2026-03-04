@@ -2,7 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Metric } from '@dxos/protocols/proto/dxos/tracing';
+import { create } from '@dxos/protocols/buf';
+import { type Metric, MetricSchema } from '@dxos/protocols/buf/dxos/tracing_pb';
 
 import { BaseCounter } from './base';
 
@@ -33,20 +34,23 @@ export class TimeSeriesCounter extends BaseCounter {
   }
 
   override getData(): Metric {
-    return {
+    return create(MetricSchema, {
       name: this.name!,
-      timeSeries: {
-        tracks: [
-          {
-            name: this.name!,
-            units: this.units,
-            points: this._buckets.map((value, index) => ({
-              value,
-            })),
-            total: this._totalValue,
-          },
-        ],
+      Value: {
+        case: 'timeSeries',
+        value: {
+          tracks: [
+            {
+              name: this.name!,
+              units: this.units,
+              points: this._buckets.map((value) => ({
+                value,
+              })),
+              total: this._totalValue,
+            },
+          ],
+        },
       },
-    };
+    });
   }
 }

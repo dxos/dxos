@@ -26,6 +26,7 @@
 ## Important
 
 - Do NOT cast values to fix build issues; instead create a refactoring plan and get permission.
+- Run batch build, lint, tests jobs with `MOON_CONCURRENCY=4` to not overload the machine.
 
 ## Code Style
 
@@ -65,6 +66,7 @@
 Use scope when relevant: `feat(package-name): <description>`
 
 Examples:
+
 - `feat: add user authentication flow`
 - `fix(echo): resolve memory leak in subscription handler`
 - `refactor: simplify error handling in client SDK`

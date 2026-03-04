@@ -24,14 +24,14 @@ export {
   SystemError,
   UnknownModelError,
 } from '@dxos/protocols';
-export { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
+export { SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
 export {
   type AppContextRequest,
   type LayoutRequest,
   type InvitationUrlRequest,
   ShellDisplay,
   ShellLayout,
-} from '@dxos/protocols/proto/dxos/iframe';
+} from '@dxos/protocols/buf/dxos/iframe_pb';
 
 // TODO(burdon): Use "export *" and @internal to restrict exports.
 // TODO(wittjosiah): Should all api errors be exported here?

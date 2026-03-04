@@ -6,6 +6,12 @@ import { afterAll, beforeAll, describe, expect, onTestFinished, test } from 'vit
 
 import { PublicKey } from '@dxos/keys';
 import { Messenger, type PeerInfo, WebsocketSignalManager } from '@dxos/messaging';
+import { create } from '@dxos/protocols/buf';
+import { Runtime_Services_SignalSchema } from '@dxos/protocols/buf/dxos/config_pb';
+import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import { JoinRequestSchema } from '@dxos/protocols/buf/dxos/edge/signal_pb';
+import { PublicKeySchema } from '@dxos/protocols/buf/dxos/keys_pb';
+import { AnswerSchema, OfferSchema, SignalSchema } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 import { type SignalServerRunner, runTestSignalServer } from '@dxos/signal';
 
 import { type SignalMessage } from './signal-messenger';
@@ -23,13 +29,13 @@ describe('Signal Integration Test', () => {
   });
 
   const setupPeer = async ({
-    peer = { peerKey: PublicKey.random().toHex() },
+    peer = create(PeerSchema, { peerKey: PublicKey.random().toHex() }),
     topic = PublicKey.random(),
   }: {
     peer?: PeerInfo;
     topic?: PublicKey;
   }) => {
-    const signalManager = new WebsocketSignalManager([{ server: broker.url() }]);
+    const signalManager = new WebsocketSignalManager([create(Runtime_Services_SignalSchema, { server: broker.url() })]);
     await signalManager.open();
     onTestFinished(async () => {
       await signalManager.close();
@@ -42,7 +48,12 @@ describe('Signal Integration Test', () => {
     onTestFinished(() => messenger.close());
     await messenger.listen({
       peer,
-      onMessage: async (message) => await messageRouter.receiveMessage(message),
+      onMessage: async (message) =>
+        await messageRouter.receiveMessage({
+          author: message.author!,
+          recipient: message.recipient!,
+          payload: message.payload as { typeUrl: string; value: Uint8Array },
+        }),
     });
 
     const receivedSignals: SignalMessage[] = [];
@@ -52,7 +63,7 @@ describe('Signal Integration Test', () => {
     const messageRouter = new SwarmMessenger({
       sendMessage: messenger.sendMessage.bind(messenger),
       onSignal: signalMock,
-      onOffer: async () => ({ accept: true }),
+      onOffer: async () => create(AnswerSchema, { accept: true }),
       topic,
     });
 
@@ -71,15 +82,20 @@ describe('Signal Integration Test', () => {
 
     const peerNetworking1 = await setupPeer({ topic });
     const peerNetworking2 = await setupPeer({ topic });
+    const toBufKey = (key: PublicKey) => create(PublicKeySchema, { data: key.asUint8Array() });
     const promise1 = peerNetworking1.signalManager.swarmEvent.waitFor(
-      ({ peerAvailable }) => !!peerAvailable && peerNetworking2.peer.peerKey === peerAvailable.peer.peerKey,
+      (evt) => evt.event.case === 'peerAvailable' && peerNetworking2.peer.peerKey === evt.event.value.peer!.peerKey,
     );
     const promise2 = peerNetworking1.signalManager.swarmEvent.waitFor(
-      ({ peerAvailable }) => !!peerAvailable && peerNetworking1.peer.peerKey === peerAvailable.peer.peerKey,
+      (evt) => evt.event.case === 'peerAvailable' && peerNetworking1.peer.peerKey === evt.event.value.peer!.peerKey,
     );
 
-    await peerNetworking1.signalManager.join({ topic, peer: peerNetworking1.peer });
-    await peerNetworking2.signalManager.join({ topic, peer: peerNetworking2.peer });
+    await peerNetworking1.signalManager.join(
+      create(JoinRequestSchema, { topic: toBufKey(topic), peer: peerNetworking1.peer }),
+    );
+    await peerNetworking2.signalManager.join(
+      create(JoinRequestSchema, { topic: toBufKey(topic), peer: peerNetworking2.peer }),
+    );
 
     await promise1;
     await promise2;
@@ -91,7 +107,7 @@ describe('Signal Integration Test', () => {
         recipient: peerNetworking2.peer,
         sessionId: PublicKey.random(),
         data: {
-          offer: {},
+          offer: create(OfferSchema),
         },
       }),
     ).toEqual(expect.objectContaining({ accept: true }));
@@ -103,7 +119,7 @@ describe('Signal Integration Test', () => {
         recipient: peerNetworking1.peer,
         sessionId: PublicKey.random(),
         data: {
-          offer: {},
+          offer: create(OfferSchema),
         },
       }),
     ).toEqual(expect.objectContaining({ accept: true }));
@@ -115,7 +131,7 @@ describe('Signal Integration Test', () => {
         recipient: peerNetworking2.peer,
         sessionId: PublicKey.random(),
         data: {
-          signal: { payload: { message: 'Hello world!' } },
+          signal: create(SignalSchema, { payload: { message: 'Hello world!' } }),
           signalBatch: undefined,
         },
       };
@@ -131,7 +147,7 @@ describe('Signal Integration Test', () => {
         recipient: peerNetworking1.peer,
         sessionId: PublicKey.random(),
         data: {
-          signal: { payload: { foo: 'bar' } },
+          signal: create(SignalSchema, { payload: { foo: 'bar' } }),
           signalBatch: undefined,
         },
       };

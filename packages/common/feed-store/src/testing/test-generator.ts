@@ -3,7 +3,7 @@
 //
 
 import { sleep } from '@dxos/async';
-import { type Codec } from '@dxos/codec-protobuf';
+import { type Codec } from '@dxos/protocols';
 import { createCodecEncoding } from '@dxos/hypercore';
 import { faker } from '@dxos/random';
 import type { AbstractValueEncoding } from '@dxos/vendor-hypercore/hypercore';

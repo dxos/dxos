@@ -6,8 +6,16 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { IdentityDid, PublicKey } from '@dxos/keys';
-import { HaloSpaceMember, SpaceMember } from '@dxos/react-client/echo';
-import { Invitation } from '@dxos/react-client/invitations';
+import { create } from '@dxos/protocols/buf';
+import { decodePublicKey, encodePublicKey } from '@dxos/protocols/buf';
+import {
+  IdentitySchema,
+  SpaceMemberSchema,
+  SpaceMember_PresenceState,
+} from '@dxos/protocols/buf/dxos/client/services_pb';
+import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { SpaceMember_Role } from '@dxos/react-client/echo';
+import { Invitation_State } from '@dxos/react-client/invitations';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { InvitationList, InvitationListItemImpl, SpaceMemberListImpl } from '../../components';
@@ -67,7 +75,7 @@ export const SpaceManagerWithInvites = () => {
           return (
             <SpaceManagerImpl
               {...props}
-              invitations={[inviteWithState(Invitation.State.INIT)]}
+              invitations={[inviteWithState(Invitation_State.INIT)]}
               SpaceMemberList={(props) => <SpaceMemberListImpl {...props} members={[]} />}
             />
           );
@@ -88,9 +96,9 @@ export const SpaceManagerWithMoreInvites = () => {
             <SpaceManagerImpl
               {...props}
               invitations={[
-                inviteWithState(Invitation.State.INIT),
-                inviteWithState(Invitation.State.CONNECTING),
-                inviteWithState(Invitation.State.CONNECTED),
+                inviteWithState(Invitation_State.INIT),
+                inviteWithState(Invitation_State.CONNECTING),
+                inviteWithState(Invitation_State.CONNECTED),
               ]}
               SpaceMemberList={(props) => <SpaceMemberListImpl {...props} members={[]} />}
             />
@@ -112,13 +120,13 @@ export const SpaceManagerWithEvenMoreInvites = () => {
             <SpaceManagerImpl
               {...props}
               invitations={[
-                inviteWithState(Invitation.State.INIT),
-                inviteWithState(Invitation.State.READY_FOR_AUTHENTICATION),
-                inviteWithState(Invitation.State.AUTHENTICATING),
-                inviteWithState(Invitation.State.SUCCESS),
-                inviteWithState(Invitation.State.ERROR),
-                inviteWithState(Invitation.State.TIMEOUT),
-                inviteWithState(Invitation.State.CANCELLED),
+                inviteWithState(Invitation_State.INIT),
+                inviteWithState(Invitation_State.READY_FOR_AUTHENTICATION),
+                inviteWithState(Invitation_State.AUTHENTICATING),
+                inviteWithState(Invitation_State.SUCCESS),
+                inviteWithState(Invitation_State.ERROR),
+                inviteWithState(Invitation_State.TIMEOUT),
+                inviteWithState(Invitation_State.CANCELLED),
               ]}
               InvitationList={(props) => (
                 <InvitationList
@@ -129,9 +137,9 @@ export const SpaceManagerWithEvenMoreInvites = () => {
                       authMethod,
                       invitationId: id,
                       state,
-                      identityKey = PublicKey.random(),
+                      identityKey = encodePublicKey(PublicKey.random()),
                       swarmKey,
-                      spaceKey = PublicKey.random(),
+                      spaceKey = encodePublicKey(PublicKey.random()),
                       target = null,
                     } = invitation;
                     return (
@@ -142,9 +150,14 @@ export const SpaceManagerWithEvenMoreInvites = () => {
                           status: state,
                           authMethod,
                           invitationCode: id,
-                          authCode: state === Invitation.State.READY_FOR_AUTHENTICATION ? '123414' : undefined,
+                          authCode: state === Invitation_State.READY_FOR_AUTHENTICATION ? '123414' : undefined,
                           id,
-                          result: { identityKey, swarmKey, spaceKey, target },
+                          result: {
+                            identityKey: identityKey ? decodePublicKey(identityKey) : null,
+                            swarmKey: swarmKey ? decodePublicKey(swarmKey) : null,
+                            spaceKey: spaceKey ? decodePublicKey(spaceKey) : null,
+                            target,
+                          },
                           cancel: () => {},
                           authenticate: async (authCode: string) => {},
                           connect: () => {},
@@ -178,14 +191,14 @@ export const SpaceManagerWithMember = () => {
                 <SpaceMemberListImpl
                   {...props}
                   members={[
-                    {
-                      presence: SpaceMember.PresenceState.ONLINE,
-                      role: HaloSpaceMember.Role.ADMIN,
-                      identity: {
+                    create(SpaceMemberSchema, {
+                      presence: SpaceMember_PresenceState.ONLINE,
+                      role: SpaceMember_Role.ADMIN,
+                      identity: create(IdentitySchema, {
                         did: IdentityDid.random(),
-                        identityKey: PublicKey.random(),
-                      },
-                    },
+                        identityKey: encodePublicKey(PublicKey.random()),
+                      }),
+                    }),
                   ]}
                 />
               )}
@@ -212,17 +225,15 @@ export const SpaceManagerWithMembers = () => {
                 <SpaceMemberListImpl
                   {...props}
                   members={[
-                    {
-                      presence: SpaceMember.PresenceState.ONLINE,
-                      role: HaloSpaceMember.Role.ADMIN,
-                      identity: {
+                    create(SpaceMemberSchema, {
+                      presence: SpaceMember_PresenceState.ONLINE,
+                      role: SpaceMember_Role.ADMIN,
+                      identity: create(IdentitySchema, {
                         did: IdentityDid.random(),
-                        identityKey: PublicKey.random(),
-                        profile: {
-                          displayName: 'John Doe',
-                        },
-                      },
-                    },
+                        identityKey: encodePublicKey(PublicKey.random()),
+                        profile: create(ProfileDocumentSchema, { displayName: 'John Doe' }),
+                      }),
+                    }),
                   ]}
                 />
               )}
@@ -245,47 +256,41 @@ export const SpaceManagerWithMoreMembers = () => {
             <SpaceManagerImpl
               {...props}
               invitations={[
-                inviteWithState(Invitation.State.SUCCESS),
-                inviteWithState(Invitation.State.READY_FOR_AUTHENTICATION),
-                inviteWithState(Invitation.State.AUTHENTICATING),
+                inviteWithState(Invitation_State.SUCCESS),
+                inviteWithState(Invitation_State.READY_FOR_AUTHENTICATION),
+                inviteWithState(Invitation_State.AUTHENTICATING),
               ]}
               SpaceMemberList={(props) => (
                 <SpaceMemberListImpl
                   {...props}
                   members={[
-                    {
-                      presence: SpaceMember.PresenceState.ONLINE,
-                      role: HaloSpaceMember.Role.ADMIN,
-                      identity: {
+                    create(SpaceMemberSchema, {
+                      presence: SpaceMember_PresenceState.ONLINE,
+                      role: SpaceMember_Role.ADMIN,
+                      identity: create(IdentitySchema, {
                         did: IdentityDid.random(),
-                        identityKey: PublicKey.random(),
-                        profile: {
-                          displayName: 'John Doe',
-                        },
-                      },
-                    },
-                    {
-                      presence: SpaceMember.PresenceState.OFFLINE,
-                      role: HaloSpaceMember.Role.ADMIN,
-                      identity: {
+                        identityKey: encodePublicKey(PublicKey.random()),
+                        profile: create(ProfileDocumentSchema, { displayName: 'John Doe' }),
+                      }),
+                    }),
+                    create(SpaceMemberSchema, {
+                      presence: SpaceMember_PresenceState.OFFLINE,
+                      role: SpaceMember_Role.ADMIN,
+                      identity: create(IdentitySchema, {
                         did: IdentityDid.random(),
-                        identityKey: PublicKey.random(),
-                        profile: {
-                          displayName: 'Alice Wong',
-                        },
-                      },
-                    },
-                    {
-                      presence: SpaceMember.PresenceState.OFFLINE,
-                      role: HaloSpaceMember.Role.ADMIN,
-                      identity: {
+                        identityKey: encodePublicKey(PublicKey.random()),
+                        profile: create(ProfileDocumentSchema, { displayName: 'Alice Wong' }),
+                      }),
+                    }),
+                    create(SpaceMemberSchema, {
+                      presence: SpaceMember_PresenceState.OFFLINE,
+                      role: SpaceMember_Role.ADMIN,
+                      identity: create(IdentitySchema, {
                         did: IdentityDid.random(),
-                        identityKey: PublicKey.random(),
-                        profile: {
-                          displayName: 'Steel Nickels',
-                        },
-                      },
-                    },
+                        identityKey: encodePublicKey(PublicKey.random()),
+                        profile: create(ProfileDocumentSchema, { displayName: 'Steel Nickels' }),
+                      }),
+                    }),
                   ]}
                 />
               )}
@@ -318,25 +323,25 @@ const SpaceInvitationManagerState = (extraprops?: Partial<InvitationManagerProps
   );
 };
 
-export const SpaceInvitationManagerInit = () => SpaceInvitationManagerState({ status: Invitation.State.INIT, id: '0' });
+export const SpaceInvitationManagerInit = () => SpaceInvitationManagerState({ status: Invitation_State.INIT, id: '0' });
 
 export const SpaceInvitationManagerConnecting = () =>
-  SpaceInvitationManagerState({ status: Invitation.State.CONNECTING, id: '1' });
+  SpaceInvitationManagerState({ status: Invitation_State.CONNECTING, id: '1' });
 
 export const SpaceInvitationManagerConnected = () =>
-  SpaceInvitationManagerState({ status: Invitation.State.CONNECTED, id: '2' });
+  SpaceInvitationManagerState({ status: Invitation_State.CONNECTED, id: '2' });
 
 export const SpaceInvitationManagerReadyForAuthentication = () =>
-  SpaceInvitationManagerState({ status: Invitation.State.READY_FOR_AUTHENTICATION, authCode: '123451', id: '3' });
+  SpaceInvitationManagerState({ status: Invitation_State.READY_FOR_AUTHENTICATION, authCode: '123451', id: '3' });
 
 export const SpaceInvitationManagerAuthenticating = () =>
-  SpaceInvitationManagerState({ status: Invitation.State.AUTHENTICATING, id: '4' });
+  SpaceInvitationManagerState({ status: Invitation_State.AUTHENTICATING, id: '4' });
 
-export const SpaceInvitationManagerSuccess = () => SpaceInvitationManagerState({ status: Invitation.State.SUCCESS });
+export const SpaceInvitationManagerSuccess = () => SpaceInvitationManagerState({ status: Invitation_State.SUCCESS });
 
-export const SpaceInvitationManagerError = () => SpaceInvitationManagerState({ status: Invitation.State.ERROR });
+export const SpaceInvitationManagerError = () => SpaceInvitationManagerState({ status: Invitation_State.ERROR });
 
-export const SpaceInvitationManagerTimeout = () => SpaceInvitationManagerState({ status: Invitation.State.TIMEOUT });
+export const SpaceInvitationManagerTimeout = () => SpaceInvitationManagerState({ status: Invitation_State.TIMEOUT });
 
 export const SpaceInvitationManagerCancelled = () =>
-  SpaceInvitationManagerState({ status: Invitation.State.CANCELLED });
+  SpaceInvitationManagerState({ status: Invitation_State.CANCELLED });

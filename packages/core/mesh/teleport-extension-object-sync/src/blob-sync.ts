@@ -7,8 +7,8 @@ import { Context, cancelWithContext } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { BlobMeta } from '@dxos/protocols/proto/dxos/echo/blob';
-import { type WantList } from '@dxos/protocols/proto/dxos/mesh/teleport/blobsync';
+import { BlobMeta_State } from '@dxos/protocols/buf/dxos/echo/blob_pb';
+import { type WantList, type WantList_Entry } from '@dxos/protocols/buf/dxos/mesh/teleport/blobsync_pb';
 import { BitField, ComplexMap } from '@dxos/util';
 
 import { type BlobStore } from './blob-store';
@@ -21,7 +21,7 @@ export type BlobSyncProps = {
 type DownloadRequest = {
   trigger: Trigger<void>;
   counter: number;
-  want: WantList.Entry;
+  want: WantList_Entry;
 };
 
 // TODO(dmaretskyi): Rename to blob-sync.
@@ -67,11 +67,11 @@ export class BlobSync {
           id,
           chunkSize: meta?.chunkSize,
           bitfield: meta?.bitfield && Uint8Array.from(BitField.invert(meta.bitfield)),
-        },
+        } as any,
       };
 
       // Check if the object is already fully downloaded.
-      if (meta?.state === BlobMeta.State.FULLY_PRESENT) {
+      if (meta?.state === BlobMeta_State.FULLY_PRESENT) {
         request.trigger.wake();
       } else {
         this._downloadRequests.set(id, request);
@@ -120,7 +120,7 @@ export class BlobSync {
         }
         log('received', { blobChunk });
         const meta = await this._params.blobStore.setChunk(blobChunk);
-        if (meta.state === BlobMeta.State.FULLY_PRESENT) {
+        if (meta.state === BlobMeta_State.FULLY_PRESENT) {
           this._downloadRequests.get(blobChunk.id)?.trigger.wake();
           this._downloadRequests.delete(blobChunk.id);
         } else {
@@ -145,7 +145,7 @@ export class BlobSync {
   private _getWantList(): WantList {
     return {
       blobs: Array.from(this._downloadRequests.values()).map((request) => request.want),
-    };
+    } as any;
   }
 
   private _reconcileUploads(): void {

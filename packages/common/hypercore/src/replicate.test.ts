@@ -386,9 +386,11 @@ describe('Replication', () => {
     //   ...r.data.metrics!.map(m => [m.name, m.timeSeries!.tracks![0].total])
     // ])), false, null, true)
     const totalFlushes = sum(
-      TRACE_PROCESSOR.findResourcesByClassName('WebFile').map(
-        (resource) => resource.getMetric('_flushes')!.timeSeries!.tracks![0].total,
-      ),
+      TRACE_PROCESSOR.findResourcesByClassName('WebFile').map((resource) => {
+        const metric = resource.getMetric('_flushes')!;
+        const ts = metric.Value.case === 'timeSeries' ? metric.Value.value : undefined;
+        return ts!.tracks![0].total;
+      }),
     );
 
     log.info('time', {

@@ -6,10 +6,8 @@ import { type Message, type PeerId } from '@automerge/automerge-repo';
 import { Redis, type RedisOptions } from 'ioredis';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { type TaggedType } from '@dxos/codec-protobuf';
 import { EchoTestBuilder, TestReplicator, TestReplicatorConnection, createDataAssertion } from '@dxos/echo-db/testing';
 import { PublicKey } from '@dxos/keys';
-import { type TYPES } from '@dxos/protocols';
 import { RpcPeer } from '@dxos/rpc';
 import { openAndClose } from '@dxos/test-utils';
 
@@ -190,7 +188,7 @@ const setupRedisClient = async () => {
   return redis;
 };
 
-const createPayload = (value = ''): TaggedType<TYPES, 'google.protobuf.Any'> => ({
+const createPayload = (value = ''): { '@type': string; type_url: string; value: Buffer } => ({
   '@type': 'google.protobuf.Any',
   type_url: 'dxos.test',
   value: Buffer.from(value),

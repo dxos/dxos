@@ -22,9 +22,6 @@
       "path": "packages/common/async/tsconfig.json"
     },
     {
-      "path": "packages/common/codec-protobuf/tsconfig.json"
-    },
-    {
       "path": "packages/common/context/tsconfig.json"
     },
     {
@@ -91,9 +88,6 @@
       "path": "packages/common/process/tsconfig.json"
     },
     {
-      "path": "packages/common/protobuf-compiler/tsconfig.json"
-    },
-    {
       "path": "packages/common/random/tsconfig.json"
     },
     {
@@ -107,6 +101,9 @@
     },
     {
       "path": "packages/common/storybook-utils/tsconfig.json"
+    },
+    {
+      "path": "packages/common/stream/tsconfig.json"
     },
     {
       "path": "packages/common/test-utils/tsconfig.json"

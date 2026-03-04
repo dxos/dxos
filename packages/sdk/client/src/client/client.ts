@@ -15,7 +15,6 @@ import {
   SpaceProperties,
   clientServiceBundle,
 } from '@dxos/client-protocol';
-import { type Stream } from '@dxos/codec-protobuf/stream';
 import { Config, SaveConfig } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
@@ -25,6 +24,7 @@ import { type EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { type Echo as EchoProtocol } from '@dxos/protocols';
 import {
   ApiError,
   AuthorizationError,
@@ -33,9 +33,18 @@ import {
   RemoteServiceConnectionTimeout,
   trace as Trace,
 } from '@dxos/protocols';
-import { type QueryStatusResponse, SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
+import { create } from '@dxos/protocols/buf';
+import { EMPTY } from '@dxos/protocols/buf';
+import { type QueryStatusResponse, SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
+import {
+  ConfigSchema,
+  RuntimeSchema,
+  Runtime_ClientSchema,
+  Runtime_Client_StorageSchema,
+} from '@dxos/protocols/buf/dxos/config_pb';
 import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
+import { type Stream } from '@dxos/stream';
 import { trace } from '@dxos/tracing';
 import { type JsonKeyOptions, type MaybePromise } from '@dxos/util';
 
@@ -116,7 +125,7 @@ export class Client {
   private _statusTimeout?: NodeJS.Timeout;
   private _iframeManager?: IFrameManager;
   private _shellManager?: ShellManager;
-  private _shellClientProxy?: ProtoRpcPeer<ClientServices>;
+  private _shellClientProxy?: ProtoRpcPeer<typeof clientServiceBundle>;
   private _edgeHttpClient?: EdgeHttpClient = undefined;
   private _edgeApi?: ClientEdgeAPI = undefined;
 
@@ -310,15 +319,15 @@ export class Client {
 
     {
       // Fix storage config.
-      const config = {
-        runtime: {
-          client: {
-            storage: {
+      const config = create(ConfigSchema, {
+        runtime: create(RuntimeSchema, {
+          client: create(Runtime_ClientSchema, {
+            storage: create(Runtime_Client_StorageSchema, {
               dataStore: this.config.values.runtime?.client?.storage?.dataStore,
-            },
-          },
-        },
-      };
+            }),
+          }),
+        }),
+      });
       await SaveConfig(config);
 
       repairSummary.storageConfig = config;
@@ -327,7 +336,8 @@ export class Client {
     {
       repairSummary.levelDBRemovedEntries = 0;
       // Cleanup old index-data from level db.
-      const level = await createLevel(this._config?.values.runtime?.client?.storage ?? {});
+      const storageConfig = this._config?.values.runtime?.client?.storage ?? create(Runtime_Client_StorageSchema, {});
+      const level = await createLevel(storageConfig as any);
       const sublevelsToCleanup = [
         level.sublevel('index-store'),
         level.sublevel('index-metadata').sublevel('clean'),
@@ -341,7 +351,7 @@ export class Client {
     }
 
     {
-      await this._services?.services.QueryService?.reindex(undefined, { timeout: 30_000 });
+      await this._services?.services.QueryService?.reindex(EMPTY, { timeout: 30_000 });
     }
 
     log.info('Repair succeeded', { repairSummary });
@@ -425,9 +435,12 @@ export class Client {
     }
 
     this._echoClient.connectToService({
-      dataService: this._services.services.DataService ?? raise(new Error('DataService not available')),
-      queryService: this._services.services.QueryService ?? raise(new Error('QueryService not available')),
-      queueService: this._services.services.QueueService ?? raise(new Error('QueueService not available')),
+      dataService: (this._services.services.DataService ??
+        raise(new Error('DataService not available'))) as unknown as EchoProtocol.DataService,
+      queryService: (this._services.services.QueryService ??
+        raise(new Error('QueryService not available'))) as unknown as EchoProtocol.QueryService,
+      queueService: (this._services.services.QueueService ??
+        raise(new Error('QueueService not available'))) as unknown as EchoProtocol.QueueService,
     });
     await this._echoClient.open(this._ctx);
 
@@ -447,7 +460,7 @@ export class Client {
 
     invariant(this._services.services.SystemService, 'SystemService is not available.');
     this._statusStream = this._services.services.SystemService.queryStatus({ interval: 3_000 });
-    this._statusStream.subscribe(
+    this._statusStream!.subscribe(
       async ({ status }) => {
         this._statusTimeout && clearTimeout(this._statusTimeout);
         trigger.wake(undefined);
@@ -560,7 +573,7 @@ export class Client {
     log('resetting...');
     this._resetting = true;
     invariant(this._services?.services.SystemService, 'SystemService is not available.');
-    await this._services?.services.SystemService.reset();
+    await this._services?.services.SystemService.reset(EMPTY);
     await this._close();
 
     // TODO(wittjosiah): Re-open after reset.

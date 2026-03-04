@@ -4,7 +4,6 @@
 
 import type * as SqlClient from '@effect/sql/SqlClient';
 import * as Effect from 'effect/Effect';
-import * as Function from 'effect/Function';
 
 import { type ObjectJSON } from '@dxos/echo/internal';
 import { EchoFeedCodec } from '@dxos/echo-protocol';
@@ -18,15 +17,14 @@ import {
   type InsertIntoQueueRequest,
   type QueryQueueRequest,
   type QueueQueryResult,
-  type QueueService,
   type SyncQueueRequest,
-} from '@dxos/protocols/proto/dxos/client/services';
+} from '@dxos/protocols/buf/dxos/client/queue_pb';
 import type { SqlTransaction } from '@dxos/sql-sqlite';
 
 /**
  * Writes queue data to a local FeedStore.
  */
-export class LocalQueueServiceImpl implements QueueService {
+export class LocalQueueServiceImpl {
   #runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>;
   #feedStore: FeedStore;
   #syncQueue?: (request: SyncQueueRequest) => Promise<void>;
@@ -50,7 +48,7 @@ export class LocalQueueServiceImpl implements QueueService {
         const cursor = query.after ? parseInt(query.after) : -1;
         const result = yield* this.#feedStore.query({
           requestId: crypto.randomUUID(),
-          feedNamespace: request.query.queuesNamespace || FeedProtocol.WellKnownNamespaces.data,
+          feedNamespace: request.query!.queuesNamespace || FeedProtocol.WellKnownNamespaces.data,
           spaceId: spaceId! as SpaceId,
           query: { feedIds: queueIds ?? [] },
           position: cursor,
@@ -64,13 +62,13 @@ export class LocalQueueServiceImpl implements QueueService {
         const lastBlock = result.blocks[result.blocks.length - 1];
         const nextCursor = lastBlock && lastBlock.position != null ? String(lastBlock.position) : null;
 
-        return Function.identity<QueueQueryResult>({
-          objects,
+        return {
+          objects: objects as any,
 
           // TODO(dmaretskyi): This is wrong, fix later - cursors should come directly from the feed.
           nextCursor: nextCursor?.toString() ?? '',
           prevCursor: '',
-        });
+        } as any as QueueQueryResult;
       }),
     );
   }
@@ -85,7 +83,7 @@ export class LocalQueueServiceImpl implements QueueService {
     );
     return RuntimeProvider.runPromise(this.#runtime)(
       Effect.gen(this, function* () {
-        const messages = objects!.map((obj) => ({
+        const messages = objects!.map((obj: any) => ({
           spaceId: spaceId,
           feedId: queueId!,
           feedNamespace,
@@ -107,7 +105,7 @@ export class LocalQueueServiceImpl implements QueueService {
     );
     return RuntimeProvider.runPromise(this.#runtime)(
       Effect.gen(this, function* () {
-        const messages = objectIds!.map((id) => ({
+        const messages = objectIds!.map((id: any) => ({
           spaceId: spaceId,
           feedId: queueId!,
           feedNamespace,

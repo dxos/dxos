@@ -6,7 +6,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { CredentialGenerator, createDidFromIdentityKey, verifyCredential } from '@dxos/credentials';
+import { CredentialGenerator, createDidFromIdentityKey, toBufPublicKey, verifyCredential } from '@dxos/credentials';
 import {
   MOCK_AUTH_PROVIDER,
   MOCK_AUTH_VERIFIER,
@@ -23,9 +23,11 @@ import { Keyring } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
-import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
-import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { create, toPublicKey } from '@dxos/protocols/buf';
+import { EdgeStatus_ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
+import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import { AdmittedFeed_Designation, AuthorizedDeviceSchema, IdentityProfileSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
 
@@ -54,15 +56,14 @@ describe('identity/identity', () => {
     const identitySigner = setup.identity.getIdentityCredentialSigner();
     const credential = await identitySigner.createCredential({
       subject: setup.identityKey,
-      assertion: {
-        '@type': 'dxos.halo.credentials.IdentityProfile',
+      assertion: create(IdentityProfileSchema, {
         profile: {
           displayName: 'Alice',
         },
-      },
+      }),
     });
 
-    expect(credential.issuer).toEqual(setup.identityKey);
+    expect(toPublicKey(credential.issuer!).equals(setup.identityKey)).toBe(true);
     expect(await verifyCredential(credential)).toEqual({ kind: 'pass' });
   });
 
@@ -91,11 +92,10 @@ describe('identity/identity', () => {
         credential: {
           credential: await signer.createCredential({
             subject: secondDevice.deviceKey,
-            assertion: {
-              '@type': 'dxos.halo.credentials.AuthorizedDevice',
-              identityKey: owner.identityKey,
-              deviceKey: secondDevice.deviceKey,
-            },
+            assertion: create(AuthorizedDeviceSchema, {
+              identityKey: toBufPublicKey(owner.identityKey),
+              deviceKey: toBufPublicKey(secondDevice.deviceKey),
+            }),
           }),
         },
       });
@@ -103,13 +103,14 @@ describe('identity/identity', () => {
       await secondDevice.ready();
     }
 
-    expect(Array.from(owner.identity.authorizedDeviceKeys.keys())).toEqual([owner.deviceKey, secondDevice.deviceKey]);
-    expect(Array.from(secondDevice.authorizedDeviceKeys.keys())).toEqual([owner.deviceKey, secondDevice.deviceKey]);
+    const toHexKeys = (keys: Iterable<PublicKey>) => Array.from(keys).map((k) => k.toHex());
+    expect(toHexKeys(owner.identity.authorizedDeviceKeys.keys())).toEqual(toHexKeys([owner.deviceKey, secondDevice.deviceKey]));
+    expect(toHexKeys(secondDevice.authorizedDeviceKeys.keys())).toEqual(toHexKeys([owner.deviceKey, secondDevice.deviceKey]));
   });
 
   test('edge feed replicator', async () => {
     let replicationStarted = false;
-    let status = EdgeStatus.ConnectionState.NOT_CONNECTED;
+    let status = EdgeStatus_ConnectionState.NOT_CONNECTED;
     const listeners: Array<() => void> = [];
     const setup = await setupIdentity({
       edgeConnection: {
@@ -117,8 +118,8 @@ describe('identity/identity', () => {
         get status() {
           return { state: status };
         },
-        onReconnected: (listener) => {
-          if (status === EdgeStatus.ConnectionState.CONNECTED) {
+        onReconnected: (listener: () => void) => {
+          if (status === EdgeStatus_ConnectionState.CONNECTED) {
             listener();
           } else {
             listeners.push(listener);
@@ -130,15 +131,15 @@ describe('identity/identity', () => {
         onMessage: (_: MessageListener): (() => void) => {
           return () => {};
         },
-        send: async (_) => {
+        send: async (_: unknown) => {
           replicationStarted = true;
         },
-      } as EdgeConnection,
+      } as unknown as EdgeConnection,
     });
 
     await writeGenesisCredential(setup);
     listeners.forEach((callback) => callback());
-    status = EdgeStatus.ConnectionState.CONNECTED;
+    status = EdgeStatus_ConnectionState.CONNECTED;
 
     await expect.poll(() => replicationStarted).toBeTruthy();
   });
@@ -187,25 +188,27 @@ describe('identity/identity', () => {
       networkManager: new SwarmNetworkManager({
         signalManager: new MemorySignalManager(args?.signalContext ?? new MemorySignalManagerContext()),
         transportFactory: MemoryTransportFactory,
-        peerInfo: { identityKey: identityKey.toHex(), peerKey: deviceKey.toHex() },
+        peerInfo: create(PeerSchema, { identityKey: identityKey.toHex(), peerKey: deviceKey.toHex() }),
       }),
     });
 
-    await metadataStore.setIdentityRecord({ haloSpace: { key: spaceKey }, identityKey, deviceKey });
+    await metadataStore.setIdentityRecord({ haloSpace: { key: spaceKey }, identityKey, deviceKey } as any);
     const space: Space = new Space({
       id: await createIdFromSpaceKey(spaceKey),
       spaceKey,
       protocol,
-      genesisFeed: args?.genesisFeedKey ? await feedStore.openFeed(args.genesisFeedKey) : controlFeed,
-      feedProvider: (feedKey) => feedStore.openFeed(feedKey),
+      genesisFeed: args?.genesisFeedKey
+        ? ((await feedStore.openFeed(args.genesisFeedKey)) as any)
+        : (controlFeed as any),
+      feedProvider: (feedKey) => feedStore.openFeed(feedKey) as any,
       memberKey: identityKey,
       metadataStore,
       snapshotId: undefined,
       onDelegatedInvitationStatusChange: async () => {},
       onMemberRolesChanged: async () => {},
     });
-    await space.setControlFeed(controlFeed);
-    await space.setDataFeed(dataFeed);
+    await space.setControlFeed(controlFeed as any);
+    await space.setDataFeed(dataFeed as any);
 
     const identity = new Identity({
       signer: keyring,
@@ -213,7 +216,7 @@ describe('identity/identity', () => {
       identityKey,
       deviceKey,
       space,
-      edgeFeatures: args?.edgeConnection && { feedReplicator: true },
+      edgeFeatures: args?.edgeConnection ? ({ feedReplicator: true } as any) : undefined,
       edgeConnection: args?.edgeConnection,
     });
 
@@ -228,7 +231,7 @@ describe('identity/identity', () => {
     const credentials = [
       ...(await generator.createSpaceGenesis(setup.spaceKey, setup.controlFeed.key)),
       await generator.createDeviceAuthorization(setup.deviceKey),
-      await generator.createFeedAdmission(setup.spaceKey, setup.dataFeed.key, AdmittedFeed.Designation.DATA),
+      await generator.createFeedAdmission(setup.spaceKey, setup.dataFeed.key, AdmittedFeed_Designation.DATA),
     ];
 
     for (const credential of credentials) {

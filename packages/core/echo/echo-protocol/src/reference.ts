@@ -5,7 +5,8 @@
 import { assertArgument } from '@dxos/invariant';
 import { DXN, LOCAL_SPACE_TAG, type PublicKey } from '@dxos/keys';
 import { type ObjectId } from '@dxos/protocols';
-import { type Reference as ReferenceProto } from '@dxos/protocols/proto/dxos/echo/model/document';
+import { create } from '@dxos/protocols/buf';
+import { type Reference as ReferenceProto, ReferenceSchema } from '@dxos/protocols/buf/dxos/echo/model/document_pb';
 
 /**
  * Runtime representation of an reference in ECHO.
@@ -100,7 +101,7 @@ export class Reference {
   }
 
   encode(): ReferenceProto {
-    return { objectId: this.objectId, host: this.host, protocol: this.protocol };
+    return create(ReferenceSchema, { objectId: this.objectId, host: this.host, protocol: this.protocol });
   }
 
   // TODO(dmaretskyi): Remove in favor of `reference.dxn`.

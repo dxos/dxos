@@ -17,7 +17,7 @@ import { EchoClient, type EchoDatabaseImpl, type QueueFactory, createFeedService
 import { runAndForwardErrors } from '@dxos/effect';
 import { assertState, failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { type FunctionProtocol } from '@dxos/protocols';
+import { type Echo, type FunctionProtocol } from '@dxos/protocols';
 
 import { FunctionError } from '../errors';
 import { FunctionDefinition, type FunctionServices } from '../sdk';
@@ -118,9 +118,9 @@ class FunctionContext extends Resource {
     this.context = context;
     if (context.services.dataService && context.services.queryService) {
       this.client = new EchoClient().connectToService({
-        dataService: context.services.dataService,
-        queryService: context.services.queryService,
-        queueService: context.services.queueService,
+        dataService: context.services.dataService as Echo.DataService,
+        queryService: context.services.queryService as Echo.QueryService,
+        queueService: context.services.queueService as unknown as Echo.QueueService,
       });
     }
   }

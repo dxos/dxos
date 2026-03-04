@@ -5,8 +5,8 @@
 import { Trigger } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { schema } from '@dxos/protocols/proto';
-import { type GossipMessage, type GossipService } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
+import { EMPTY } from '@dxos/protocols/buf';
+import { type GossipMessage, GossipService } from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
 import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 import { type ExtensionContext, type TeleportExtension } from '@dxos/teleport';
 
@@ -38,16 +38,17 @@ export class GossipExtension implements TeleportExtension {
 
     this._rpc = createProtoRpcPeer<ServiceBundle, ServiceBundle>({
       requested: {
-        GossipService: schema.getService('dxos.mesh.teleport.gossip.GossipService'),
+        GossipService,
       },
       exposed: {
-        GossipService: schema.getService('dxos.mesh.teleport.gossip.GossipService'),
+        GossipService,
       },
       handlers: {
         GossipService: {
-          announce: async (message: GossipMessage) => {
+          announce: async (message) => {
             log('received announce', { localPeerId: context.localPeerId, remotePeerId: context.remotePeerId, message });
             await this._callbacks.onAnnounce?.(message);
+            return EMPTY;
           },
         },
       },
@@ -89,5 +90,5 @@ export class GossipExtension implements TeleportExtension {
 }
 
 type ServiceBundle = {
-  GossipService: GossipService;
+  GossipService: typeof GossipService;
 };

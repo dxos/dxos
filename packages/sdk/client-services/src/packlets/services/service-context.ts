@@ -6,7 +6,7 @@ import type * as SqlClient from '@effect/sql/SqlClient';
 
 import { Mutex, Trigger } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
-import { type CredentialProcessor, getCredentialAssertion } from '@dxos/credentials';
+import { type CredentialProcessor, getAssertionFromCredential } from '@dxos/credentials';
 import { failUndefined, warnAfterTimeout } from '@dxos/debug';
 import {
   EchoEdgeReplicator,
@@ -27,12 +27,13 @@ import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
 import { type SignalManager } from '@dxos/messaging';
 import { type SwarmNetworkManager } from '@dxos/network-manager';
-import { InvalidStorageVersionError, STORAGE_VERSION, trace } from '@dxos/protocols';
-import { FeedProtocol } from '@dxos/protocols';
-import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import { type Runtime } from '@dxos/protocols/proto/dxos/config';
-import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { type Credential, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { FeedProtocol, InvalidStorageVersionError, STORAGE_VERSION, trace } from '@dxos/protocols';
+import { create, toPublicKey } from '@dxos/protocols/buf';
+import { type Invitation, Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
+import { type FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
+import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import { ChainSchema, type Credential, type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type Storage } from '@dxos/random-access-storage';
 import type * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
@@ -98,7 +99,7 @@ export class ServiceContext extends Resource {
   public edgeAgentManager?: EdgeAgentManager;
 
   private readonly _handlerFactories = new Map<
-    Invitation.Kind,
+    Invitation_Kind,
     (invitation: Partial<Invitation>) => InvitationProtocol
   >();
 
@@ -115,7 +116,7 @@ export class ServiceContext extends Resource {
     private readonly _edgeHttpClient: EdgeHttpClient | undefined,
     private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>,
     public readonly _runtimeProps?: ServiceContextRuntimeProps,
-    private readonly _edgeFeatures?: Runtime.Client.EdgeFeatures,
+    private readonly _edgeFeatures?: Runtime_Client_EdgeFeatures,
   ) {
     super();
 
@@ -139,7 +140,7 @@ export class ServiceContext extends Resource {
     });
 
     this.spaceManager = new SpaceManager({
-      feedStore: this.feedStore,
+      feedStore: this.feedStore as any,
       networkManager: this.networkManager,
       blobStore: this.blobStore,
       metadataStore: this.metadataStore,
@@ -149,7 +150,7 @@ export class ServiceContext extends Resource {
     this.identityManager = new IdentityManager({
       metadataStore: this.metadataStore,
       keyring: this.keyring,
-      feedStore: this.feedStore,
+      feedStore: this.feedStore as any,
       spaceManager: this.spaceManager,
       devicePresenceOfflineTimeout: this._runtimeProps?.devicePresenceOfflineTimeout,
       devicePresenceAnnounceInterval: this._runtimeProps?.devicePresenceAnnounceInterval,
@@ -193,7 +194,7 @@ export class ServiceContext extends Resource {
     // TODO(burdon): _initialize called in multiple places.
     // TODO(burdon): Call _initialize on success.
     this._handlerFactories.set(
-      Invitation.Kind.DEVICE,
+      Invitation_Kind.DEVICE,
       () =>
         new DeviceInvitationProtocol(
           this.keyring,
@@ -297,7 +298,7 @@ export class ServiceContext extends Resource {
   }
 
   getInvitationHandler(invitation: Partial<Invitation> & Pick<Invitation, 'kind'>): InvitationProtocol {
-    if (this.identityManager.identity == null && invitation.kind === Invitation.Kind.SPACE) {
+    if (this.identityManager.identity == null && invitation.kind === Invitation_Kind.SPACE) {
       throw new Error('Identity must be created before joining a space.');
     }
     const factory = this._handlerFactories.get(invitation.kind);
@@ -372,27 +373,32 @@ export class ServiceContext extends Resource {
     );
     await this.edgeAgentManager.open();
 
-    this._handlerFactories.set(Invitation.Kind.SPACE, (invitation) => {
+    this._handlerFactories.set(Invitation_Kind.SPACE, (invitation) => {
       invariant(this.dataSpaceManager, 'dataSpaceManager not initialized yet');
-      return new SpaceInvitationProtocol(this.dataSpaceManager, signingContext, this.keyring, invitation.spaceKey);
+      return new SpaceInvitationProtocol(
+        this.dataSpaceManager,
+        signingContext,
+        this.keyring,
+        invitation.spaceKey ? toPublicKey(invitation.spaceKey) : undefined,
+      );
     });
     this.initialized.wake();
 
     this._deviceSpaceSync = {
-      processCredential: async (credential: Credential) => {
-        const assertion = getCredentialAssertion(credential);
-        if (assertion['@type'] !== 'dxos.halo.credentials.SpaceMember') {
+      processCredential: async (credential) => {
+        const assertion = getAssertionFromCredential(credential);
+        if (assertion.$typeName !== 'dxos.halo.credentials.SpaceMember') {
           return;
         }
-        if (assertion.spaceKey.equals(identity.space.key)) {
-          // ignore halo space
+        const spaceKey = assertion.spaceKey ? toPublicKey(assertion.spaceKey) : undefined;
+        if (spaceKey?.equals(identity.space.key)) {
           return;
         }
         if (!this.dataSpaceManager) {
           log('dataSpaceManager not initialized yet, ignoring space admission', { details: assertion });
           return;
         }
-        if (this.dataSpaceManager.spaces.has(assertion.spaceKey)) {
+        if (spaceKey && this.dataSpaceManager.spaces.has(spaceKey)) {
           log('space already exists, ignoring space admission', { details: assertion });
           return;
         }
@@ -400,8 +406,8 @@ export class ServiceContext extends Resource {
         try {
           log('accepting space recorded in halo', { details: assertion });
           await this.dataSpaceManager.acceptSpace({
-            spaceKey: assertion.spaceKey,
-            genesisFeedKey: assertion.genesisFeedKey,
+            spaceKey: spaceKey!,
+            genesisFeedKey: assertion.genesisFeedKey ? toPublicKey(assertion.genesisFeedKey) : undefined!,
           });
         } catch (err) {
           log.catch(err);
@@ -409,7 +415,7 @@ export class ServiceContext extends Resource {
       },
     };
 
-    await identity.space.spaceState.addCredentialProcessor(this._deviceSpaceSync);
+    await identity.space.spaceState.addCredentialProcessor(this._deviceSpaceSync!);
   }
 
   private async _setNetworkIdentity(params?: { deviceCredential: Credential }): Promise<void> {
@@ -428,7 +434,12 @@ export class ServiceContext extends Resource {
           identity.signer,
           identity.identityKey,
           identity.deviceKey,
-          params?.deviceCredential && { credential: params.deviceCredential },
+          // Avoid create(ChainSchema, { credential }) which deep-processes proto-decoded credentials.
+          (() => {
+            const chain = create(ChainSchema, {});
+            chain.credential = params.deviceCredential;
+            return chain;
+          })(),
           [], // TODO(dmaretskyi): Service access credentials.
         );
       } else {
@@ -453,9 +464,11 @@ export class ServiceContext extends Resource {
 
     this._edgeConnection?.setIdentity(edgeIdentity);
     this._edgeHttpClient?.setIdentity(edgeIdentity);
-    this.networkManager.setPeerInfo({
-      identityKey: edgeIdentity.identityKey,
-      peerKey: edgeIdentity.peerKey,
-    });
+    this.networkManager.setPeerInfo(
+      create(PeerSchema, {
+        identityKey: edgeIdentity.identityKey,
+        peerKey: edgeIdentity.peerKey,
+      }),
+    );
   }
 }

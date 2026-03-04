@@ -2,23 +2,24 @@
 // Copyright 2024 DXOS.org
 //
 
-import { generateSeedPhrase, keyPairFromSeedPhrase } from '@dxos/credentials';
+import { generateSeedPhrase, keyPairFromSeedPhrase, toBufPublicKey } from '@dxos/credentials';
 import { sign } from '@dxos/crypto';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { create, fromBinary } from '@dxos/protocols/buf';
+import { CredentialSchema, IdentityRecoverySchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import {
   EdgeAuthChallengeError,
   type RecoverIdentityRequest as EdgeRecoverIdentityRequest,
   type RecoverIdentityResponseBody,
 } from '@dxos/protocols';
-import { schema } from '@dxos/protocols/proto';
 import {
   type CreateRecoveryCredentialRequest,
-  type RecoverIdentityRequest,
-} from '@dxos/protocols/proto/dxos/client/services';
+  type RecoverIdentityRequest_ExternalSignature,
+} from '@dxos/protocols/buf/dxos/client/services_pb';
 import { Timeframe } from '@dxos/timeframe';
 
 import { type Identity } from './identity';
@@ -43,8 +44,10 @@ export class EdgeIdentityRecoveryManager {
     let algorithm: string;
     let recoveryCode: string | undefined;
     if (data) {
-      recoveryKey = data.recoveryKey;
-      lookupKey = data.lookupKey;
+      invariant(data.recoveryKey?.data, 'Recovery key data is required');
+      invariant(data.lookupKey?.data, 'Lookup key data is required');
+      recoveryKey = PublicKey.from(data.recoveryKey.data);
+      lookupKey = PublicKey.from(data.lookupKey.data);
       algorithm = data.algorithm;
     } else {
       recoveryCode = generateSeedPhrase();
@@ -57,13 +60,12 @@ export class EdgeIdentityRecoveryManager {
     const identityKey = identity.identityKey;
     const credential = await identity.getIdentityCredentialSigner().createCredential({
       subject: identityKey,
-      assertion: {
-        '@type': 'dxos.halo.credentials.IdentityRecovery',
-        recoveryKey,
-        identityKey,
+      assertion: create(IdentityRecoverySchema, {
+        recoveryKey: toBufPublicKey(recoveryKey),
+        identityKey: toBufPublicKey(identityKey),
         algorithm,
-        lookupKey,
-      },
+        lookupKey: toBufPublicKey(lookupKey),
+      }),
     });
 
     const receipt = await identity.controlPipeline.writer.write({ credential: { credential } });
@@ -97,28 +99,30 @@ export class EdgeIdentityRecoveryManager {
     }
   }
 
-  public async recoverIdentityWithExternalSignature({
-    lookupKey,
-    deviceKey,
-    controlFeedKey,
-    signature,
-    clientDataJson,
-    authenticatorData,
-  }: RecoverIdentityRequest.ExternalSignature): Promise<void> {
+  public async recoverIdentityWithExternalSignature(
+    externalSignature: RecoverIdentityRequest_ExternalSignature,
+  ): Promise<void> {
     invariant(this._edgeClient, 'Not connected to EDGE.');
+    invariant(externalSignature.lookupKey?.data, 'Lookup key data is required');
+    invariant(externalSignature.deviceKey?.data, 'Device key data is required');
+    invariant(externalSignature.controlFeedKey?.data, 'Control feed key data is required');
+
+    const lookupKey = PublicKey.from(externalSignature.lookupKey.data);
+    const deviceKey = PublicKey.from(externalSignature.deviceKey.data);
+    const controlFeedKey = PublicKey.from(externalSignature.controlFeedKey.data);
 
     const request: EdgeRecoverIdentityRequest = {
       lookupKey: lookupKey.toHex(),
       deviceKey: deviceKey.toHex(),
       controlFeedKey: controlFeedKey.toHex(),
       signature:
-        clientDataJson && authenticatorData
+        externalSignature.clientDataJson && externalSignature.authenticatorData
           ? {
-              signature: Buffer.from(signature).toString('base64'),
-              clientDataJson: Buffer.from(clientDataJson).toString('base64'),
-              authenticatorData: Buffer.from(authenticatorData).toString('base64'),
+              signature: Buffer.from(externalSignature.signature).toString('base64'),
+              clientDataJson: Buffer.from(externalSignature.clientDataJson).toString('base64'),
+              authenticatorData: Buffer.from(externalSignature.authenticatorData).toString('base64'),
             }
-          : Buffer.from(signature).toString('base64'),
+          : Buffer.from(externalSignature.signature).toString('base64'),
     };
 
     const response = await this._edgeClient.recoverIdentity(request);
@@ -204,6 +208,5 @@ export class EdgeIdentityRecoveryManager {
 
 const decodeCredential = (credentialBase64: string) => {
   const credentialBytes = Buffer.from(credentialBase64, 'base64');
-  const codec = schema.getCodecForType('dxos.halo.credentials.Credential');
-  return codec.decode(credentialBytes);
+  return fromBinary(CredentialSchema, credentialBytes);
 };

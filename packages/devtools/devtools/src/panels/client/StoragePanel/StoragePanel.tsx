@@ -6,14 +6,17 @@ import bytes from 'bytes';
 import React, { type FC, type ReactNode, useEffect, useMemo, useState } from 'react';
 
 import { log } from '@dxos/log';
+import { create, toPublicKey } from '@dxos/protocols/buf';
 import {
   type GetBlobsResponse,
   type GetSnapshotsResponse,
   type StorageInfo,
+  StorageInfoSchema,
   type StoredSnapshotInfo,
   type SubscribeToFeedsResponse,
-} from '@dxos/protocols/proto/dxos/devtools/host';
-import { BlobMeta } from '@dxos/protocols/proto/dxos/echo/blob';
+  type SubscribeToFeedsResponse_Feed,
+} from '@dxos/protocols/buf/dxos/devtools/host_pb';
+import { type BlobMeta, BlobMeta_State } from '@dxos/protocols/buf/dxos/echo/blob_pb';
 import { PublicKey, useClient } from '@dxos/react-client';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { useAsyncEffect } from '@dxos/react-hooks';
@@ -27,7 +30,7 @@ import { Bitbar, JsonView, PanelContainer } from '../../../components';
 type SelectionValue =
   | {
       kind: 'feed';
-      feed: SubscribeToFeedsResponse.Feed;
+      feed: SubscribeToFeedsResponse_Feed;
     }
   | {
       kind: 'blob';
@@ -73,9 +76,14 @@ const getInfoTree = (
             iconName: 'ph--queue--regular',
             Element: <TreeItemText primary='feeds' secondary={feedInfo.feeds?.length ?? 0} />,
             items: feedInfo.feeds?.map((feed) => ({
-              id: feed.feedKey.toHex(),
+              id: feed.feedKey ? toPublicKey(feed.feedKey).toHex() : '',
               iconName: 'ph--rows--regular',
-              Element: <TreeItemText primary={feed.feedKey.truncate()} secondary={bytes.format(feed.bytes)} />,
+              Element: (
+                <TreeItemText
+                  primary={feed.feedKey ? toPublicKey(feed.feedKey).truncate() : ''}
+                  secondary={bytes.format(feed.bytes)}
+                />
+              ),
               value: { kind: 'feed', feed },
             })),
           },
@@ -115,7 +123,7 @@ export const StoragePanel = () => {
   const [storageInfo, setStorageInfo] = useState<StorageInfo | undefined>();
   const [snapshotInfo, setSnapshotInfo] = useState<GetSnapshotsResponse | undefined>();
   const [blobsInfo, setBlobsInfo] = useState<GetBlobsResponse | undefined>();
-  const feeds = useStream(() => devtoolsHost.subscribeToFeeds({}), {}, []);
+  const feeds = useStream(() => devtoolsHost.subscribeToFeeds({} as any), {} as any, []);
   const client = useClient();
   const services = client.services.services;
   if (!services) {
@@ -133,21 +141,21 @@ export const StoragePanel = () => {
     let blobsInfo: GetBlobsResponse | undefined;
 
     try {
-      storageInfo = await devtoolsHost.getStorageInfo();
+      storageInfo = await devtoolsHost.getStorageInfo({} as any);
     } catch (err) {
       log.catch(err);
       retry = true;
     }
 
     try {
-      snapshotInfo = await devtoolsHost.getSnapshots();
+      snapshotInfo = await devtoolsHost.getSnapshots({} as any);
     } catch (err) {
       log.catch(err);
       retry = true;
     }
 
     try {
-      blobsInfo = await devtoolsHost.getBlobs();
+      blobsInfo = (await devtoolsHost.getBlobs({} as any)) as any;
     } catch (err) {
       log.catch(err);
       retry = true;
@@ -168,13 +176,14 @@ export const StoragePanel = () => {
   const items = useMemo(
     () =>
       getInfoTree(
-        storageInfo ?? {
-          type: '',
-          originUsage: 0,
-          storageUsage: 0,
-          usageQuota: 0,
-        },
-        feeds,
+        storageInfo ??
+          create(StorageInfoSchema, {
+            type: '',
+            originUsage: 0,
+            storageUsage: 0,
+            usageQuota: 0,
+          }),
+        feeds as any,
         snapshotInfo?.snapshots ?? [],
         blobsInfo?.blobs ?? [],
       ),
@@ -271,7 +280,7 @@ export const StoragePanel = () => {
 };
 
 const calculateBlobProgress = (blob: BlobMeta) => {
-  if (blob.state === BlobMeta.State.FULLY_PRESENT) {
+  if (blob.state === BlobMeta_State.FULLY_PRESENT) {
     return 1;
   }
 

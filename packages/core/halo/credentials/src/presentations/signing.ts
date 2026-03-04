@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Credential, type Proof } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Credential, type Proof } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { canonicalStringify } from '../credentials/signing';
 
@@ -26,13 +26,13 @@ const removeEmptyParentCredentialIds = (credential: Credential): Credential => {
       ? {
           ...credential.proof,
           chain: credential.proof.chain
-            ? { credential: removeEmptyParentCredentialIds(credential.proof.chain.credential) }
+            ? { credential: removeEmptyParentCredentialIds(credential.proof.chain.credential!) }
             : undefined,
         }
       : undefined,
   };
   if (copy.parentCredentialIds?.length === 0) {
-    delete copy.parentCredentialIds;
+    delete (copy as { parentCredentialIds?: unknown }).parentCredentialIds;
   }
-  return copy;
+  return copy as Credential;
 };

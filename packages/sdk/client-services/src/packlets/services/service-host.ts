@@ -23,7 +23,14 @@ import {
   createRtcTransportFactory,
 } from '@dxos/network-manager';
 import { trace } from '@dxos/protocols';
-import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
+import { create } from '@dxos/protocols/buf';
+import { SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
+import type {
+  Runtime_Client_Storage,
+  Runtime_Services_IceProvider,
+  Runtime_Services_Signal,
+} from '@dxos/protocols/buf/dxos/config_pb';
+import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { type Storage } from '@dxos/random-access-storage';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import type * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
@@ -97,7 +104,7 @@ export class ClientServicesHost {
   private _storage?: Storage;
   private _level?: LevelDB;
   private _callbacks?: ClientServicesHostCallbacks;
-  private _devtoolsProxy?: WebsocketRpcClient<{}, ClientServices>;
+  private _devtoolsProxy?: WebsocketRpcClient<any, any>;
   private _edgeConnection?: EdgeConnection = undefined;
   private _edgeHttpClient?: EdgeHttpClient = undefined;
 
@@ -192,7 +199,7 @@ export class ClientServicesHost {
     return this._serviceContext;
   }
 
-  get serviceRegistry() {
+  get serviceRegistry(): ServiceRegistry<ClientServices> {
     return this._serviceRegistry;
   }
 
@@ -200,7 +207,7 @@ export class ClientServicesHost {
     return this._serviceRegistry.descriptors;
   }
 
-  get services() {
+  get services(): Partial<ClientServices> {
     return this._serviceRegistry.services;
   }
 
@@ -248,7 +255,10 @@ export class ClientServicesHost {
       invariant(!this._config, 'config already set');
       this._config = config;
       if (!this._storage) {
-        this._storage = createStorageObjects(config.get('runtime.client.storage', {})!).storage;
+        const storageConfig = config.get('runtime.client.storage' as any, undefined) as
+          | Runtime_Client_Storage
+          | undefined;
+        this._storage = createStorageObjects(storageConfig ?? ({} as Runtime_Client_Storage)).storage;
       }
     }
 
@@ -263,16 +273,17 @@ export class ClientServicesHost {
       this._edgeHttpClient = new EdgeHttpClient(endpoint);
     }
 
+    const iceServers = this._config?.get('runtime.services.ice' as any) as RTCIceServer[] | undefined;
+    const iceProviders = this._config?.get('runtime.services.iceProviders' as any) as
+      | Runtime_Services_IceProvider[]
+      | undefined;
+    const signaling = this._config?.get('runtime.services.signaling' as any) as Runtime_Services_Signal[] | undefined;
     const {
       connectionLog = true,
-      transportFactory = createRtcTransportFactory(
-        { iceServers: this._config?.get('runtime.services.ice') },
-        this._config?.get('runtime.services.iceProviders') &&
-          createIceProvider(this._config!.get('runtime.services.iceProviders')!),
-      ),
-      signalManager = this._edgeConnection && this._config?.get('runtime.client.edgeFeatures')?.signaling
+      transportFactory = createRtcTransportFactory({ iceServers }, iceProviders && createIceProvider(iceProviders)),
+      signalManager = this._edgeConnection && this._config?.get('runtime.client.edgeFeatures' as any)?.signaling
         ? new EdgeSignalManager({ edgeConnection: this._edgeConnection })
-        : new WebsocketSignalManager(this._config?.get('runtime.services.signaling') ?? []),
+        : new WebsocketSignalManager(signaling ?? []),
     } = options;
     this._signalManager = signalManager;
 
@@ -282,10 +293,10 @@ export class ClientServicesHost {
       transportFactory,
       signalManager,
       peerInfo: this._edgeConnection
-        ? {
+        ? create(PeerSchema, {
             identityKey: this._edgeConnection.identityKey,
             peerKey: this._edgeConnection.peerKey,
-          }
+          })
         : undefined,
     });
 
@@ -313,7 +324,10 @@ export class ClientServicesHost {
     await this._resourceLock?.acquire();
 
     if (!this._level) {
-      this._level = await createLevel(this._config.get('runtime.client.storage', {})!);
+      const storageConfig = this._config.get('runtime.client.storage' as any, undefined) as
+        | Runtime_Client_Storage
+        | undefined;
+      this._level = await createLevel(storageConfig ?? ({} as Runtime_Client_Storage));
     }
     await this._level.open();
 

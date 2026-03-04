@@ -34,8 +34,8 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
-import { type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
-import { type DocHeadsList, type FlushRequest } from '@dxos/protocols/proto/dxos/echo/service';
+import { type SpaceSyncState } from '@dxos/protocols/buf/dxos/echo/service_pb';
+import { type DocHeadsList, type FlushRequest } from '@dxos/protocols/buf/dxos/echo/service_pb';
 import { trace } from '@dxos/tracing';
 import { ComplexSet, bufferToArray, defaultMap, isNonNullable, range } from '@dxos/util';
 
@@ -556,7 +556,7 @@ export class AutomergeHost extends Resource {
    * Flush documents to disk.
    */
   @trace.span({ showInBrowserTimeline: true })
-  async flush({ documentIds }: FlushRequest = {}): Promise<void> {
+  async flush({ documentIds }: FlushRequest = {} as any): Promise<void> {
     // Note: Sync protocol for client and services ensures that all handles should have all changes.
 
     const loadedDocuments = (documentIds ?? Object.keys(this._repo.handles)).filter(
@@ -621,7 +621,7 @@ export class AutomergeHost extends Resource {
   async getCollectionSyncState(collectionId: string): Promise<SpaceSyncState> {
     const result: SpaceSyncState = {
       peers: [],
-    };
+    } as any;
 
     const localState = this.getLocalCollectionState(collectionId);
     const remoteState = this.getRemoteCollectionStates(collectionId);
@@ -642,7 +642,7 @@ export class AutomergeHost extends Resource {
 
         totalDocumentCount: new Set([...Object.keys(localState.documents), ...Object.keys(state.documents)]).size,
         unsyncedDocumentCount: new Set([...diff.missingOnLocal, ...diff.missingOnRemote, ...diff.different]).size,
-      });
+      } as any);
     }
 
     return result;

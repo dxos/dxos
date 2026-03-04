@@ -3,8 +3,8 @@
 //
 
 import { invariant } from '@dxos/invariant';
-import { schema } from '@dxos/protocols/proto';
-import { type Presentation } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { toBinary } from '@dxos/protocols/buf';
+import { type Presentation, PresentationSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 export interface EdgeIdentity {
   peerKey: string;
@@ -27,5 +27,5 @@ export const handleAuthChallenge = async (failedResponse: Response, identity: Ed
   invariant(challenge);
 
   const presentation = await identity.presentCredentials({ challenge: Buffer.from(challenge, 'base64') });
-  return schema.getCodecForType('dxos.halo.credentials.Presentation').encode(presentation);
+  return toBinary(PresentationSchema, presentation);
 };

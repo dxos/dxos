@@ -70,6 +70,7 @@
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-gameboard": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",

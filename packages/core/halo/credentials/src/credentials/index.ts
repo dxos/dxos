@@ -2,7 +2,9 @@
 // Copyright 2019 DXOS.org
 //
 
+export * from './assertion-registry';
 export * from './assertions';
+export * from './credential';
 export * from './credential-factory';
 export * from './credential-generator';
 export * from './signing';

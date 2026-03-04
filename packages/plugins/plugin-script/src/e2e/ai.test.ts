@@ -12,7 +12,7 @@ import { Function } from '@dxos/functions';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { bundleFunction } from '@dxos/functions-runtime/native';
 import { FunctionRuntimeKind } from '@dxos/protocols';
-import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 
 // To heavy to run in CI.
 describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e')).skip('Function', () => {

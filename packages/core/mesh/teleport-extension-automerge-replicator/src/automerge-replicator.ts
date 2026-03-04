@@ -7,12 +7,12 @@ import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError } from '@dxos/protocols';
-import { schema } from '@dxos/protocols/proto';
+import { EMPTY } from '@dxos/protocols/buf';
 import {
-  type AutomergeReplicatorService,
+  AutomergeReplicatorService,
   type PeerInfo,
   type SyncMessage,
-} from '@dxos/protocols/proto/dxos/mesh/teleport/automerge';
+} from '@dxos/protocols/buf/dxos/mesh/teleport/automerge_pb';
 import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 import { type ExtensionContext, type TeleportExtension } from '@dxos/teleport';
 
@@ -78,19 +78,21 @@ export class AutomergeReplicator implements TeleportExtension {
     this._rpc = createProtoRpcPeer<ServiceBundle, ServiceBundle>({
       timeout: RPC_TIMEOUT,
       requested: {
-        AutomergeReplicatorService: schema.getService('dxos.mesh.teleport.automerge.AutomergeReplicatorService'),
+        AutomergeReplicatorService,
       },
       exposed: {
-        AutomergeReplicatorService: schema.getService('dxos.mesh.teleport.automerge.AutomergeReplicatorService'),
+        AutomergeReplicatorService,
       },
       handlers: {
         AutomergeReplicatorService: {
-          startReplication: async (info: PeerInfo): Promise<void> => {
+          startReplication: async (info) => {
             log('startReplication', { localPeerId: context.localPeerId, remotePeerId: context.remotePeerId, info });
             await this._callbacks.onStartReplication?.(info, context.remotePeerId);
+            return EMPTY;
           },
-          sendSyncMessage: async (message: SyncMessage): Promise<void> => {
+          sendSyncMessage: async (message) => {
             await this._callbacks.onSyncMessage?.(message);
+            return EMPTY;
           },
         },
       },
@@ -157,5 +159,5 @@ export class AutomergeReplicator implements TeleportExtension {
 }
 
 type ServiceBundle = {
-  AutomergeReplicatorService: AutomergeReplicatorService;
+  AutomergeReplicatorService: typeof AutomergeReplicatorService;
 };

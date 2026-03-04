@@ -12,9 +12,6 @@
   ],
   "references": [
     {
-      "path": "../../common/codec-protobuf"
-    },
-    {
       "path": "../../common/context"
     },
     {
@@ -31,6 +28,9 @@
     },
     {
       "path": "../../common/log"
+    },
+    {
+      "path": "../../common/stream"
     },
     {
       "path": "../../common/util"

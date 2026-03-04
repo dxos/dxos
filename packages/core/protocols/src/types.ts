@@ -5,10 +5,9 @@
 import { type PublicKey } from '@dxos/keys';
 import { type Timeframe } from '@dxos/timeframe';
 
-import { type CredentialsMessage, type FeedMessage } from './proto/gen/dxos/echo/feed.ts';
-import { type EchoObjectBatch } from './proto/gen/dxos/echo/object.ts';
+import { type CredentialsMessage, type FeedMessage } from './buf/proto/gen/dxos/echo/feed_pb.ts';
+import { type EchoObjectBatch } from './buf/proto/gen/dxos/echo/object_pb.ts';
 
-// TODO(burdon): Replace with proto definition.
 export type FeedMeta = {
   feedKey: PublicKey;
   seq: number;
@@ -30,17 +29,22 @@ export interface MutationMetaWithTimeframe extends MutationMeta {
   timeframe: Timeframe;
 }
 
-// TODO(burdon): Reconcile HaloMessage with CredentialsMessage.
 export interface IHaloStream {
   meta: FeedMeta;
   data: CredentialsMessage;
 }
 
-// TODO(burdon): EchoMessageWrapper.
 export interface IEchoStream {
   meta: MutationMetaWithTimeframe;
   batch: EchoObjectBatch;
 }
 
-// TODO(burdon): Change to Buffer (same as key)?
 export type ObjectId = string;
+
+/**
+ * Generic encoder/decoder interface.
+ */
+export interface Codec<T> {
+  encode(obj: T): Uint8Array;
+  decode(buffer: Uint8Array): T;
+}

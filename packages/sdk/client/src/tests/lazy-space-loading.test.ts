@@ -6,13 +6,17 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
+import { type PerformInvitationProps } from '@dxos/client-services/testing';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
+import { create } from '@dxos/protocols/buf';
+import { encodePublicKey, toPublicKey } from '@dxos/protocols/buf';
+import { SpaceMember_PresenceState, type UpdateMemberRoleRequest } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { ConfigSchema, RuntimeSchema, Runtime_ClientSchema } from '@dxos/protocols/buf/dxos/config_pb';
 
 import { type Client } from '../client';
 import { SpaceState } from '../echo';
@@ -47,7 +51,11 @@ describe('Lazy Space Loading', () => {
     const space = findClientSpace(client, createdSpace);
     const actions = [
       () => space.properties,
-      () => space.updateMemberRole({ memberKey: PublicKey.random(), newRole: 1 }),
+      () =>
+        space.updateMemberRole({
+          memberKey: encodePublicKey(PublicKey.random()),
+          newRole: 1,
+        } as unknown as Omit<UpdateMemberRoleRequest, 'spaceKey'>),
       () => space.share(),
     ];
     actions.forEach((action) => expect(action).to.throw);
@@ -61,7 +69,12 @@ describe('Lazy Space Loading', () => {
     await reload(client1);
     const space = findClientSpace(client1, createdSpace);
     await openAndWaitReady(space);
-    await Promise.all(performInvitation({ host: space, guest: client2.spaces }));
+    await Promise.all(
+      performInvitation({
+        host: space as unknown as PerformInvitationProps['host'],
+        guest: client2.spaces as unknown as PerformInvitationProps['guest'],
+      }),
+    );
     await waitForSpace(client2, space.key, { ready: true });
   });
 
@@ -81,9 +94,15 @@ describe('Lazy Space Loading', () => {
     });
 
     const connectionEstablished = new Trigger();
+    const client2IdentityKey = client2.halo.identity.get()?.identityKey;
     space.members.subscribe((members) => {
-      const client2State = members.find((m) => m.identity.identityKey.equals(client2.halo.identity.get()!.identityKey));
-      if (client2State?.presence === SpaceMember.PresenceState.ONLINE) {
+      const client2State = members.find(
+        (m) =>
+          m.identity?.identityKey &&
+          client2IdentityKey &&
+          toPublicKey(m.identity.identityKey).equals(toPublicKey(client2IdentityKey)),
+      );
+      if (client2State?.presence === SpaceMember_PresenceState.ONLINE) {
         connectionEstablished.wake();
       }
     });
@@ -128,7 +147,13 @@ describe('Lazy Space Loading', () => {
       await context.dispose();
     });
     return createInitializedClientsWithContext(context, count, {
-      config: new Config({ runtime: { client: { lazySpaceOpen: true } } }),
+      config: new Config(
+        create(ConfigSchema, {
+          runtime: create(RuntimeSchema, {
+            client: create(Runtime_ClientSchema, { lazySpaceOpen: true }),
+          }),
+        }),
+      ),
       serviceConfig: options?.fastPresence ? { fastPeerPresenceUpdate: true } : undefined,
       storage: true,
     });
@@ -145,7 +170,12 @@ describe('Lazy Space Loading', () => {
 });
 
 const inviteMember = async (space: Space, client: Client) => {
-  await Promise.all(performInvitation({ host: space, guest: client.spaces }));
+  await Promise.all(
+    performInvitation({
+      host: space as unknown as PerformInvitationProps['host'],
+      guest: client.spaces as unknown as PerformInvitationProps['guest'],
+    }),
+  );
   return waitForSpace(client, space.key, { ready: true });
 };
 

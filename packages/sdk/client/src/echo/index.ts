@@ -23,12 +23,20 @@ export {
 // TODO(dmaretskyi): Remove this export.
 export { decodeReference as internalDecodeReference } from '@dxos/echo-protocol';
 
-export { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
-export { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
-export { SpaceMember, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
-export { SpaceMember as HaloSpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
-export { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
-export { type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
+export { type IndexKind } from '@dxos/protocols/buf/dxos/echo/indexing_pb';
+export {
+  type QueryOptions,
+  QueryOptions_DataLocation,
+  QueryOptions_ShowDeletedOption,
+} from '@dxos/protocols/buf/dxos/echo/filter_pb';
+export { type SpaceMember } from '@dxos/protocols/buf/dxos/client/services_pb';
+export { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+export {
+  SpaceMember_Role as HaloSpaceMember_Role,
+  SpaceMember_Role,
+} from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+export { TextKind } from '@dxos/protocols/buf/dxos/echo/model/text_pb';
+export { type SpaceSyncState } from '@dxos/protocols/buf/dxos/echo/service_pb';
 
 export { importSpace } from './import';
 export {

@@ -14,7 +14,8 @@ import * as Option from 'effect/Option';
 import { CommandConfig } from '@dxos/cli-util';
 import { ConfigService } from '@dxos/config';
 import { log } from '@dxos/log';
-import type { Runtime } from '@dxos/protocols/proto/dxos/config';
+import { create } from '@dxos/protocols/buf';
+import { type Runtime_Client_Storage, Runtime_Client_StorageSchema } from '@dxos/protocols/buf/dxos/config_pb';
 
 export const handler = Effect.fn(function* ({
   file,
@@ -35,7 +36,7 @@ export const handler = Effect.fn(function* ({
     () => import('@dxos/client-services'),
   );
 
-  let storageConfig: Runtime.Client.Storage;
+  let storageConfig: Runtime_Client_Storage;
   if (!dataDirValue) {
     if (!force) {
       yield* Console.log(`Will overwrite profile: ${profile}`);
@@ -47,14 +48,14 @@ export const handler = Effect.fn(function* ({
         return;
       }
     }
-    storageConfig = config.values.runtime!.client!.storage!;
+    storageConfig = config.values.runtime!.client!.storage! as Runtime_Client_Storage;
   } else {
     const fullPath = path.resolve(dataDirValue);
     yield* Console.log(`Importing into: ${fullPath}`);
-    storageConfig = {
+    storageConfig = create(Runtime_Client_StorageSchema, {
       persistent: true,
       dataRoot: fullPath,
-    };
+    }) as Runtime_Client_Storage;
   }
 
   if (yield* fs.exists(storageConfig.dataRoot!)) {

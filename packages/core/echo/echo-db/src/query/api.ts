@@ -5,16 +5,17 @@
 import { type Database, Filter, Query, type QueryAST } from '@dxos/echo';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/echo/filter';
+import { create } from '@dxos/protocols/buf';
+import { type QueryOptions as QueryOptionsProto, QueryOptionsSchema } from '@dxos/protocols/buf/dxos/echo/filter_pb';
 
 export { Filter, Query };
 
 export const optionsToProto = (options: Database.QueryOptions): QueryOptionsProto => {
-  return {
-    spaces: options.spaces,
-    spaceIds: options.spaceIds,
+  return create(QueryOptionsSchema, {
+    spaces: (options.spaces ?? []) as any,
+    spaceIds: options.spaceIds ?? [],
     limit: options.limit,
-  };
+  });
 };
 
 type NormalizeQueryOptions = {

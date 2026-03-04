@@ -5,16 +5,15 @@
 import { describe, expect, test } from 'vitest';
 
 import { Trigger, sleep } from '@dxos/async';
-import { type Any, Stream, type TaggedType } from '@dxos/codec-protobuf';
 import { log } from '@dxos/log';
-import { type TYPES } from '@dxos/protocols/proto';
+import { type Rpc } from '@dxos/protocols';
+import { Stream } from '@dxos/stream';
 
 import { RpcPeer } from './rpc';
 import { createLinkedPorts, encodeMessage } from './testing';
 
-const createPayload = (value = ''): TaggedType<TYPES, 'google.protobuf.Any'> => ({
-  '@type': 'google.protobuf.Any',
-  type_url: 'dxos.test',
+const createPayload = (value = ''): Rpc.Any => ({
+  typeUrl: 'dxos.test',
   value: encodeMessage(value),
 });
 
@@ -195,7 +194,7 @@ describe('RpcPeer', () => {
       await Promise.all([alice.open(), bob.open()]);
 
       const response = await bob.call('method', createPayload('request'));
-      expect(response).toEqual(createPayload('response'));
+      expect(response).toEqual(expect.objectContaining(createPayload('response')));
 
       await Promise.all([alice.close(), bob.close()]);
     });
@@ -231,8 +230,8 @@ describe('RpcPeer', () => {
       const parallel2 = bob.call('method', createPayload('p2'));
       const error = bob.call('method', createPayload('error'));
 
-      await expect(await parallel1).toEqual(createPayload('p1'));
-      await expect(await parallel2).toEqual(createPayload('p2'));
+      await expect(await parallel1).toEqual(expect.objectContaining(createPayload('p1')));
+      await expect(await parallel2).toEqual(expect.objectContaining(createPayload('p2')));
       await expect(error).rejects.toBeInstanceOf(Error);
     });
 
@@ -356,7 +355,7 @@ describe('RpcPeer', () => {
         streamHandler: (method, msg) => {
           expect(method).toEqual('method');
           expect(msg.value!).toEqual(encodeMessage('request'));
-          return new Stream<Any>(({ next, close }) => {
+          return new Stream<Rpc.Any>(({ next, close }) => {
             next(createPayload('res1'));
             next(createPayload('res2'));
             close();
@@ -377,8 +376,8 @@ describe('RpcPeer', () => {
 
       expect(await Stream.consume(stream)).toEqual([
         { ready: true },
-        { data: createPayload('res1') },
-        { data: createPayload('res2') },
+        { data: expect.objectContaining(createPayload('res1')) },
+        { data: expect.objectContaining(createPayload('res2')) },
         { closed: true },
       ]);
     });
@@ -391,7 +390,7 @@ describe('RpcPeer', () => {
         streamHandler: (method, msg) => {
           expect(method).toEqual('method');
           expect(msg.value).toEqual(encodeMessage('request'));
-          return new Stream<Any>(({ next, close }) => {
+          return new Stream<Rpc.Any>(({ next, close }) => {
             close(new Error('Test error'));
           });
         },
@@ -422,7 +421,7 @@ describe('RpcPeer', () => {
       const alice = new RpcPeer({
         callHandler: async (msg) => createPayload(),
         streamHandler: (method, msg) =>
-          new Stream<Any>(({ next, close }) => () => {
+          new Stream<Rpc.Any>(({ next, close }) => () => {
             closeCalled = true;
           }),
         port: alicePort,
@@ -451,7 +450,7 @@ describe('RpcPeer', () => {
         streamHandler: (method, msg) => {
           expect(method).toEqual('method');
           expect(msg.value!).toEqual(encodeMessage('request'));
-          return new Stream<Any>(({ ready, close }) => {
+          return new Stream<Rpc.Any>(({ ready, close }) => {
             ready();
             close();
           });
@@ -479,7 +478,7 @@ describe('RpcPeer', () => {
 
       const alice = new RpcPeer({
         callHandler: async (msg) => createPayload(),
-        streamHandler: (method, msg): Stream<Any> => {
+        streamHandler: (method, msg): Stream<Rpc.Any> => {
           throw new Error('Test error');
         },
         port: alicePort,
@@ -539,7 +538,7 @@ describe('RpcPeer', () => {
       await bob.open();
 
       const response = await bob.call('method', createPayload('request'));
-      expect(response).toEqual(createPayload('response'));
+      expect(response).toEqual(expect.objectContaining(createPayload('response')));
 
       await Promise.all([alice.close(), bob.close()]);
     });

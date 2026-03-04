@@ -9,6 +9,13 @@ import pkgUp from 'pkg-up';
 
 import { Config } from '@dxos/client';
 import { raise } from '@dxos/debug';
+import { create } from '@dxos/protocols/buf';
+import {
+  ConfigSchema,
+  RuntimeSchema,
+  Runtime_ClientSchema,
+  Runtime_Client_StorageSchema,
+} from '@dxos/protocols/buf/dxos/config_pb';
 
 export const SNAPSHOTS_DIR = 'snapshots';
 export const SNAPSHOT_DIR = 'snapshot';
@@ -26,10 +33,16 @@ export const getBaseDataDir = () => {
 };
 
 export const createConfig = ({ dataRoot }: { dataRoot: string }) =>
-  new Config({
-    version: 1,
-    runtime: { client: { storage: { persistent: true, dataRoot } } },
-  });
+  new Config(
+    create(ConfigSchema, {
+      version: 1,
+      runtime: create(RuntimeSchema, {
+        client: create(Runtime_ClientSchema, {
+          storage: create(Runtime_Client_StorageSchema, { persistent: true, dataRoot }),
+        }),
+      }),
+    }),
+  );
 
 export const copyDirSync = (src: string, dest: string) => {
   const files = fs.readdirSync(src);

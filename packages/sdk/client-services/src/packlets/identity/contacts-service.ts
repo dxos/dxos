@@ -3,18 +3,26 @@
 //
 
 import { SubscriptionList, UpdateScheduler, scheduleTask } from '@dxos/async';
-import { Stream } from '@dxos/codec-protobuf/stream';
 import { type MemberInfo } from '@dxos/credentials';
 import { type SpaceManager } from '@dxos/echo-pipeline';
 import { PublicKey } from '@dxos/keys';
-import { type Contact, type ContactBook, type ContactsService } from '@dxos/protocols/proto/dxos/client/services';
+import { type Client } from '@dxos/protocols';
+import { create } from '@dxos/protocols/buf';
+import {
+  type Contact,
+  type ContactBook,
+  ContactBookSchema,
+  ContactSchema,
+} from '@dxos/protocols/buf/dxos/client/services_pb';
+import { PublicKeySchema } from '@dxos/protocols/buf/dxos/keys_pb';
+import { Stream } from '@dxos/stream';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { type DataSpaceManager } from '../spaces';
 
 import { type IdentityManager } from './identity-manager';
 
-export class ContactsServiceImpl implements ContactsService {
+export class ContactsServiceImpl implements Client.ContactsService {
   constructor(
     private readonly _identityManager: IdentityManager,
     private readonly _spaceManager: SpaceManager,
@@ -24,7 +32,7 @@ export class ContactsServiceImpl implements ContactsService {
   async getContacts(): Promise<ContactBook> {
     const identity = this._identityManager.identity;
     if (identity == null) {
-      return { contacts: [] };
+      return create(ContactBookSchema, { contacts: [] });
     }
     const contacts = [...this._spaceManager.spaces.values()]
       .flatMap((s) => [...s.spaceState.members.values()].map((m) => [s.key, m]))
@@ -36,19 +44,22 @@ export class ContactsServiceImpl implements ContactsService {
         const existing = acc.get(memberInfo.key);
         if (existing != null) {
           existing.profile ??= memberInfo.profile;
-          existing.commonSpaces?.push(spaceKey);
+          existing.commonSpaces?.push(create(PublicKeySchema, { data: spaceKey.asUint8Array() }));
         } else {
-          acc.set(memberInfo.key, {
-            identityKey: memberInfo.key,
-            profile: memberInfo.profile,
-            commonSpaces: [spaceKey],
-          });
+          acc.set(
+            memberInfo.key,
+            create(ContactSchema, {
+              identityKey: create(PublicKeySchema, { data: memberInfo.key.asUint8Array() }),
+              profile: memberInfo.profile,
+              commonSpaces: [create(PublicKeySchema, { data: spaceKey.asUint8Array() })],
+            }),
+          );
         }
         return acc;
       }, new ComplexMap<PublicKey, Contact>(PublicKey.hash));
-    return {
+    return create(ContactBookSchema, {
       contacts: [...contacts.values()],
-    };
+    });
   }
 
   queryContacts(): Stream<ContactBook> {

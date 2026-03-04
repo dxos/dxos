@@ -10,6 +10,7 @@ import * as Option from 'effect/Option';
 import { CommandConfig } from '@dxos/cli-util';
 import { FormBuilder, print } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
+import { toPublicKey } from '@dxos/protocols/buf';
 
 export const handler = Effect.fn(function* () {
   const { json } = yield* CommandConfig;
@@ -23,8 +24,8 @@ export const handler = Effect.fn(function* () {
     yield* Console.log(
       JSON.stringify(
         {
-          identityKey: identity?.identityKey.toHex(),
-          deviceKey: device?.deviceKey.toHex(),
+          identityKey: identity?.identityKey ? toPublicKey(identity.identityKey).toHex() : undefined,
+          deviceKey: device?.deviceKey ? toPublicKey(device.deviceKey).toHex() : undefined,
         },
         null,
         2,
@@ -32,8 +33,14 @@ export const handler = Effect.fn(function* () {
     );
   } else {
     const builder = FormBuilder.make({ title: 'HALO Keys' }).pipe(
-      FormBuilder.option('identityKey', Option.fromNullable(identity?.identityKey.truncate())),
-      FormBuilder.option('deviceKey', Option.fromNullable(device?.deviceKey.truncate())),
+      FormBuilder.option(
+        'identityKey',
+        Option.fromNullable(identity?.identityKey ? toPublicKey(identity.identityKey).truncate() : undefined),
+      ),
+      FormBuilder.option(
+        'deviceKey',
+        Option.fromNullable(device?.deviceKey ? toPublicKey(device.deviceKey).truncate() : undefined),
+      ),
     );
     yield* Console.log(print(FormBuilder.build(builder)));
   }

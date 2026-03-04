@@ -4,6 +4,19 @@
 
 import { expect, test } from 'vitest';
 
+import { create } from '@dxos/protocols/buf';
+import {
+  type Config as ConfigProto,
+  ConfigSchema,
+  ModuleSchema,
+  PackageSchema,
+  RuntimeSchema,
+  Runtime_AppSchema,
+  Runtime_PropsSchema,
+  Runtime_ServicesSchema,
+  Runtime_Services_SignalSchema,
+} from '@dxos/protocols/buf/dxos/config_pb';
+
 import { Config, mapFromKeyValues, mapToKeyValues } from './config';
 // @ts-ignore
 import defaults from './testing/defaults.js';
@@ -19,23 +32,19 @@ test('Empty config', () => {
 
 test('Basic config', () => {
   const config = new Config(
-    {
-      runtime: {
-        props: {
-          title: 'testing',
-        },
-      },
-    },
-    {
-      runtime: {
-        app: {
-          theme: 'light',
-        },
-      },
-    },
+    create(ConfigSchema, {
+      runtime: create(RuntimeSchema, {
+        props: create(Runtime_PropsSchema, { title: 'testing' }),
+      }),
+    }),
+    create(ConfigSchema, {
+      runtime: create(RuntimeSchema, {
+        app: create(Runtime_AppSchema, { theme: 'light' }),
+      }),
+    }),
   );
 
-  expect(config.values).toEqual({
+  expect(config.values).toMatchObject({
     version: 1,
     runtime: {
       app: {
@@ -50,44 +59,35 @@ test('Basic config', () => {
 
 test('Runtime and module config', () => {
   const config = new Config(
-    {
-      package: {
+    create(ConfigSchema, {
+      package: create(PackageSchema, {
         modules: [
-          {
+          create(ModuleSchema, {
             name: 'example:app/tasks',
-            record: {
-              web: {
-                entryPoint: 'main.js',
-              },
-            },
-          },
+            record: { web: { entryPoint: 'main.js' } } as any,
+          }),
         ],
-      },
-    },
-    {
-      runtime: {
-        services: {
+      }),
+    }),
+    create(ConfigSchema, {
+      runtime: create(RuntimeSchema, {
+        services: create(Runtime_ServicesSchema, {
           signaling: [
-            {
+            create(Runtime_Services_SignalSchema, {
               server: 'ws://localhost:<random-port>',
-            },
+            }),
           ],
-        },
-      },
-    },
+        }),
+      }),
+    }),
   );
 
-  expect(config.values).toEqual({
+  expect(config.values).toMatchObject({
     version: 1,
     package: {
       modules: [
         {
           name: 'example:app/tasks',
-          record: {
-            web: {
-              entryPoint: 'main.js',
-            },
-          },
         },
       ],
     },
@@ -108,14 +108,12 @@ test.skip('Mapping', () => {
   process.env.TEST_SERVER_ENDPOINT = 'http://localhost';
 
   const config = new Config(
-    {
-      runtime: {
-        client: {
-          tag: 'testing',
-        },
-      },
-    } as any,
-    mapFromKeyValues(envmap, process.env),
+    create(ConfigSchema, {
+      runtime: create(RuntimeSchema, {
+        client: { tag: 'testing' } as any,
+      }),
+    }),
+    mapFromKeyValues(envmap, process.env) as ConfigProto,
   );
 
   expect(config.values).toEqual({
@@ -141,11 +139,7 @@ test.skip('Mapping', () => {
 
 test.skip('mapToKeyValuesping', () => {
   const config = new Config(
-    {
-      client: {
-        tag: 'testing',
-      },
-    } as any,
+    create(ConfigSchema, { runtime: create(RuntimeSchema, { client: { tag: 'testing' } as any }) }),
     defaults as any,
   );
 

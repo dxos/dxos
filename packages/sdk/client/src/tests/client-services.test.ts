@@ -12,7 +12,14 @@ import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
-import { Device, DeviceKind, Invitation, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
+import { toPublicKey } from '@dxos/protocols/buf';
+import { Invitation_AuthMethod, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import {
+  DeviceKind,
+  Device_PresenceState,
+  SpaceMember_PresenceState,
+} from '@dxos/protocols/buf/dxos/client/services_pb';
+import type { ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { Client } from '../client';
 import { TestBuilder, syncItemsAutomerge } from '../testing';
@@ -142,16 +149,18 @@ describe('Client services', () => {
       performInvitation({
         host: client1.halo,
         guest: client2.halo,
-        options: { authMethod: Invitation.AuthMethod.SHARED_SECRET },
+        options: { authMethod: Invitation_AuthMethod.SHARED_SECRET },
       }),
     );
 
     // Check same identity.
     expect(hostInvitation!.identityKey).not.to.exist;
-    expect(guestInvitation?.identityKey).to.deep.eq(client1.halo.identity.get()!.identityKey);
-    expect(guestInvitation?.identityKey).to.deep.eq(client2.halo.identity.get()!.identityKey);
-    expect(hostInvitation?.state).to.eq(Invitation.State.SUCCESS);
-    expect(guestInvitation?.state).to.eq(Invitation.State.SUCCESS);
+    expect(toPublicKey(guestInvitation!.identityKey!).equals(toPublicKey(client1.halo.identity.get()!.identityKey!))).to
+      .be.true;
+    expect(toPublicKey(guestInvitation!.identityKey!).equals(toPublicKey(client2.halo.identity.get()!.identityKey!))).to
+      .be.true;
+    expect(hostInvitation?.state).to.eq(Invitation_State.SUCCESS);
+    expect(guestInvitation?.state).to.eq(Invitation_State.SUCCESS);
 
     // Check devices.
     // TODO(burdon): Incorrect number of devices.
@@ -162,12 +171,12 @@ describe('Client services', () => {
       .poll(() => client1.halo.devices.get().find((device) => device?.kind === DeviceKind.TRUSTED)?.presence, {
         timeout: 2000,
       })
-      .toEqual(Device.PresenceState.ONLINE);
+      .toEqual(Device_PresenceState.ONLINE);
     await expect
       .poll(() => client2.halo.devices.get().find((device) => device?.kind === DeviceKind.TRUSTED)?.presence, {
         timeout: 2000,
       })
-      .toEqual(Device.PresenceState.ONLINE);
+      .toEqual(Device_PresenceState.ONLINE);
 
     // Ensure peer2 shows up as offline to peer1.
     await client2.destroy();
@@ -178,7 +187,7 @@ describe('Client services', () => {
       .poll(() => client1.halo.devices.get().find((device) => device?.kind === DeviceKind.TRUSTED)?.presence, {
         timeout: 2000,
       })
-      .toEqual(Device.PresenceState.OFFLINE);
+      .toEqual(Device_PresenceState.OFFLINE);
   });
 
   test('synchronizes data between two spaces after completing invitation', { timeout: 20_000 }, async () => {
@@ -202,8 +211,8 @@ describe('Client services', () => {
       await client1.initialize();
       await client2.initialize();
       await Promise.all([client1, client2].map((c) => c.addTypes([TestSchema.Expando])));
-      await client1.halo.createIdentity({ displayName: 'Peer 1' });
-      await client2.halo.createIdentity({ displayName: 'Peer 2' });
+      await client1.halo.createIdentity({ displayName: 'Peer 1' } as ProfileDocument);
+      await client2.halo.createIdentity({ displayName: 'Peer 2' } as ProfileDocument);
     }
     log('initialized');
 
@@ -225,20 +234,20 @@ describe('Client services', () => {
       performInvitation({
         host: hostSpace,
         guest: client2.spaces,
-        options: { authMethod: Invitation.AuthMethod.SHARED_SECRET },
+        options: { authMethod: Invitation_AuthMethod.SHARED_SECRET },
       }),
     );
 
-    expect(guestInvitation?.spaceKey).to.deep.eq(hostSpace.key);
-    expect(hostInvitation?.spaceKey).to.deep.eq(guestInvitation?.spaceKey);
-    expect(hostInvitation?.state).to.eq(Invitation.State.SUCCESS);
+    expect(toPublicKey(guestInvitation!.spaceKey!).equals(hostSpace.key)).to.be.true;
+    expect(toPublicKey(hostInvitation!.spaceKey!).equals(toPublicKey(guestInvitation!.spaceKey!))).to.be.true;
+    expect(hostInvitation?.state).to.eq(Invitation_State.SUCCESS);
     log('invitation complete');
 
     // TODO(burdon): Space should now be available?
     const trigger = new Trigger<Space>();
     await expect
       .poll(() => {
-        const guestSpace = client2.spaces.get(guestInvitation!.spaceKey!);
+        const guestSpace = client2.spaces.get(toPublicKey(guestInvitation!.spaceKey!));
         invariant(guestSpace);
         trigger.wake(guestSpace);
         return guestSpace;
@@ -249,7 +258,12 @@ describe('Client services', () => {
     for (const space of [hostSpace, guestSpace]) {
       const getMembers = () => {
         const members = space.members.get();
-        members.sort((m1, m2) => (m1.identity.identityKey.equals(client1.halo.identity.get()!.identityKey) ? -1 : 1));
+        const client1IdentityKey = client1.halo.identity.get()?.identityKey;
+        members.sort((m1, m2) => {
+          const m1IdentityKey = m1.identity?.identityKey;
+          if (!client1IdentityKey || !m1IdentityKey) return 0;
+          return toPublicKey(client1IdentityKey).equals(toPublicKey(m1IdentityKey)) ? -1 : 1;
+        });
         return members;
       };
 
@@ -258,28 +272,26 @@ describe('Client services', () => {
         .poll(() => getMembers()[0])
         .toEqual(
           expect.objectContaining({
-            identity: {
+            identity: expect.objectContaining({
               did: client1.halo.identity.get()!.did,
-              identityKey: client1.halo.identity.get()!.identityKey,
-              profile: {
+              profile: expect.objectContaining({
                 displayName: 'Peer 1',
-              },
-            },
-            presence: SpaceMember.PresenceState.ONLINE,
+              }),
+            }),
+            presence: SpaceMember_PresenceState.ONLINE,
           }),
         );
       await expect
         .poll(() => getMembers()[1], { timeout: 15_000 })
         .toEqual(
           expect.objectContaining({
-            identity: {
+            identity: expect.objectContaining({
               did: client2.halo.identity.get()!.did,
-              identityKey: client2.halo.identity.get()!.identityKey,
-              profile: {
+              profile: expect.objectContaining({
                 displayName: 'Peer 2',
-              },
-            },
-            presence: SpaceMember.PresenceState.ONLINE,
+              }),
+            }),
+            presence: SpaceMember_PresenceState.ONLINE,
           }),
         );
     }

@@ -9,7 +9,7 @@ import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { useClient } from '@dxos/react-client';
 import { type Space, SpaceState } from '@dxos/react-client/echo';
 import { Button, Input, useFileDownload, useMulticastObservable, useTranslation } from '@dxos/react-ui';

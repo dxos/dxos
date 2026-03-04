@@ -9,9 +9,12 @@ import { type Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import { MemoryTransportFactory, SwarmNetworkManager, createRtcTransportFactory } from '@dxos/network-manager';
-import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { create, encodePublicKey } from '@dxos/protocols/buf';
+import { Runtime_Services_SignalSchema } from '@dxos/protocols/buf/dxos/config_pb';
+import { type FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
+import { SpaceMetadataSchema } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
+import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import { AdmittedFeed_Designation } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type Storage, StorageType, createStorage } from '@dxos/random-access-storage';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
@@ -36,7 +39,7 @@ export const WebsocketNetworkManagerProvider =
   (signalUrl: string): NetworkManagerProvider =>
   () =>
     new SwarmNetworkManager({
-      signalManager: new WebsocketSignalManager([{ server: signalUrl }]),
+      signalManager: new WebsocketSignalManager([create(Runtime_Services_SignalSchema, { server: signalUrl })]),
       transportFactory: createRtcTransportFactory(),
     });
 
@@ -135,7 +138,9 @@ export class TestAgent {
     }
 
     this._networkManager = this._networkManagerProvider();
-    this._networkManager.setPeerInfo({ peerKey: this.deviceKey.toHex(), identityKey: this.identityKey.toHex() });
+    this._networkManager.setPeerInfo(
+      create(PeerSchema, { peerKey: this.deviceKey.toHex(), identityKey: this.identityKey.toHex() }),
+    );
 
     return this._networkManager;
   }
@@ -171,12 +176,12 @@ export class TestAgent {
       sparse: true,
     });
 
-    const metadata: SpaceMetadata = {
-      key: spaceKey,
-      genesisFeedKey: genesisKey,
-      controlFeedKey: controlFeed.key,
-      dataFeedKey: dataFeed.key,
-    };
+    const metadata = create(SpaceMetadataSchema, {
+      key: encodePublicKey(spaceKey),
+      genesisFeedKey: encodePublicKey(genesisKey),
+      controlFeedKey: encodePublicKey(controlFeed.key),
+      dataFeedKey: encodePublicKey(dataFeed.key),
+    });
     if (saveMetadata) {
       await this.metadataStore.addSpace(metadata);
     }
@@ -248,7 +253,7 @@ export class TestAgent {
     const generator = new CredentialGenerator(this.keyring, this.identityKey, this.deviceKey);
     const credentials = [
       ...(await generator.createSpaceGenesis(space.key, space.controlFeedKey!)),
-      await generator.createFeedAdmission(space.key, space.dataFeedKey!, AdmittedFeed.Designation.DATA),
+      await generator.createFeedAdmission(space.key, space.dataFeedKey!, AdmittedFeed_Designation.DATA),
       await generator.createEpochCredential(space.key),
     ];
 

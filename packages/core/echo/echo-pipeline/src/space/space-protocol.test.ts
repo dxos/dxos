@@ -7,6 +7,8 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
+import { create, toPublicKey } from '@dxos/protocols/buf';
+import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
 import { Timeframe } from '@dxos/timeframe';
@@ -43,14 +45,26 @@ describe('space/space-protocol', () => {
     onTestFinished(() => protocol2.stop());
 
     await expect
-      .poll(() => presence1.getPeersOnline().some(({ identityKey }) => identityKey.equals(peer2.identityKey)), {
-        timeout: 1_000,
-      })
+      .poll(
+        () =>
+          presence1
+            .getPeersOnline()
+            .some(({ identityKey }) => identityKey && toPublicKey(identityKey).equals(peer2.identityKey)),
+        {
+          timeout: 1_000,
+        },
+      )
       .toBeTruthy();
     await expect
-      .poll(() => presence2.getPeersOnline().some(({ identityKey }) => identityKey.equals(peer1.identityKey)), {
-        timeout: 1_000,
-      })
+      .poll(
+        () =>
+          presence2
+            .getPeersOnline()
+            .some(({ identityKey }) => identityKey && toPublicKey(identityKey).equals(peer1.identityKey)),
+        {
+          timeout: 1_000,
+        },
+      )
       .toBeTruthy();
   });
 
@@ -70,10 +84,10 @@ describe('space/space-protocol', () => {
       networkManager: new SwarmNetworkManager({
         signalManager: new MemorySignalManager(signalContext),
         transportFactory: MemoryTransportFactory,
-        peerInfo: {
+        peerInfo: create(PeerSchema, {
           peerKey: peerId1.toHex(),
           identityKey: peerId1.toHex(),
-        },
+        }),
       }),
     });
 
@@ -89,10 +103,10 @@ describe('space/space-protocol', () => {
       networkManager: new SwarmNetworkManager({
         signalManager: new MemorySignalManager(signalContext),
         transportFactory: MemoryTransportFactory,
-        peerInfo: {
+        peerInfo: create(PeerSchema, {
           peerKey: peerId2.toHex(),
           identityKey: peerId2.toHex(),
-        },
+        }),
       }),
     });
 

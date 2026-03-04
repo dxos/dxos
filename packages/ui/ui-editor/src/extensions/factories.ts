@@ -26,7 +26,8 @@ import { generateName } from '@dxos/display-name';
 import { type DocAccessor } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { type Messenger } from '@dxos/protocols';
-import { type Identity } from '@dxos/protocols/proto/dxos/client/services';
+import { toPublicKey } from '@dxos/protocols/buf';
+import { type Identity } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type ChromaticPalette, type ThemeMode } from '@dxos/ui-types';
 import { hexToHue, isTruthy } from '@dxos/util';
 
@@ -261,18 +262,19 @@ export const createDataExtensions = <T>({ id, text, messenger, identity }: DataE
   }
 
   if (messenger && identity) {
-    const peerId = identity?.identityKey.toHex();
+    const identityKey = toPublicKey(identity.identityKey!);
+    const peerId = identityKey.toHex();
     const hue = (identity?.profile?.data?.hue as ChromaticPalette | undefined) ?? hexToHue(peerId ?? '0');
     extensions.push(
       awareness(
         new SpaceAwarenessProvider({
           messenger,
           channel: `awareness.${id}`,
-          peerId: identity.identityKey.toHex(),
+          peerId: identityKey.toHex(),
           info: {
             darkColor: `var(--color-${hue}-border)`,
             lightColor: `var(--color-${hue}-border)`,
-            displayName: identity.profile?.displayName ?? generateName(identity.identityKey.toHex()),
+            displayName: identity.profile?.displayName ?? generateName(identityKey.toHex()),
           },
         }),
       ),

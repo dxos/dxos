@@ -12,8 +12,17 @@ import { Context } from '@dxos/context';
 import { verifyPresentation } from '@dxos/credentials';
 import { type PublicKey } from '@dxos/keys';
 import { MemorySignalManagerContext } from '@dxos/messaging';
-import { type Identity } from '@dxos/protocols/proto/dxos/client/services';
-import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { create } from '@dxos/protocols/buf';
+import { toPublicKey } from '@dxos/protocols/buf';
+import { type Identity } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type QueryIdentityResponse } from '@dxos/protocols/buf/dxos/client/services_pb';
+import {
+  ConfigSchema,
+  RuntimeSchema,
+  Runtime_ClientSchema,
+  Runtime_Client_StorageSchema,
+} from '@dxos/protocols/buf/dxos/config_pb';
+import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { isNode } from '@dxos/util';
 
 import { createMockCredential, createServiceHost } from '../testing';
@@ -42,7 +51,7 @@ describe('ClientServicesHost', () => {
 
     const stream = host.services.SpacesService!.queryCredentials({ spaceKey });
     const [done, tick] = latch({ count: 3 });
-    stream.subscribe((credential) => {
+    stream.subscribe((credential: Credential) => {
       tick();
       // console.log(credential);
     });
@@ -65,9 +74,9 @@ describe('ClientServicesHost', () => {
 
     // Test if Identity exposes haloSpace key.
     const haloSpace = new Trigger<PublicKey>();
-    host.services.IdentityService!.queryIdentity()!.subscribe(({ identity }) => {
+    host.services.IdentityService!.queryIdentity()!.subscribe(({ identity }: QueryIdentityResponse) => {
       if (identity?.spaceKey) {
-        haloSpace.wake(identity.spaceKey);
+        haloSpace.wake(toPublicKey(identity.spaceKey));
       }
     });
 
@@ -78,8 +87,8 @@ describe('ClientServicesHost', () => {
 
     const credentials = host.services.SpacesService!.queryCredentials({ spaceKey: await haloSpace.wait() });
     const queriedCredential = new Trigger<Credential>();
-    credentials.subscribe((credential) => {
-      if (credential.subject.id.equals(testCredential.subject.id)) {
+    credentials.subscribe((credential: Credential) => {
+      if (toPublicKey(credential.subject!.id!).equals(toPublicKey(testCredential.subject!.id!))) {
         queriedCredential.wake(credential);
       }
     });
@@ -116,9 +125,15 @@ describe('ClientServicesHost', () => {
   });
 
   test('storage reset', async () => {
-    const config = new Config({
-      runtime: { client: { storage: { persistent: true, dataRoot } } },
-    });
+    const config = new Config(
+      create(ConfigSchema, {
+        runtime: create(RuntimeSchema, {
+          client: create(Runtime_ClientSchema, {
+            storage: create(Runtime_Client_StorageSchema, { persistent: true, dataRoot }),
+          }),
+        }),
+      }),
+    );
     {
       const host = createServiceHost(config, new MemorySignalManagerContext());
       await host.open(new Context());
@@ -139,9 +154,9 @@ describe('ClientServicesHost', () => {
       const stream = host.services.IdentityService?.queryIdentity();
       await stream?.waitUntilReady();
 
-      stream?.subscribe((identity) => {
+      stream?.subscribe((identity: QueryIdentityResponse) => {
         if (identity.identity) {
-          trigger.wake(identity.identity);
+          trigger.wake(identity.identity!);
         }
       });
       await expect(asyncTimeout(trigger.wait(), 200)).rejects.toBeInstanceOf(Error);

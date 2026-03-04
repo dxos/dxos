@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { Format } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
-import { type Span } from '@dxos/protocols/proto/dxos/tracing';
+import { type Span, type StreamTraceEvent } from '@dxos/protocols/buf/dxos/tracing_pb';
 import { useClient } from '@dxos/react-client';
 import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
 
@@ -35,7 +35,7 @@ export const TracingPanel = () => {
   useEffect(() => {
     const stream = client.services.services.TracingService!.streamTrace();
     stream.subscribe(
-      (data) => {
+      (data: StreamTraceEvent) => {
         if (!live) {
           return;
         }
@@ -45,11 +45,15 @@ export const TracingPanel = () => {
           const newSpans = new Map(prevState.spans);
 
           for (const event of data.resourceAdded ?? []) {
-            const existing = newResources.get(event.resource.id);
+            const existing = newResources.get(event.resource!.id);
             if (!existing) {
-              newResources.set(event.resource.id, { resource: event.resource, spans: [], logs: [] });
+              newResources.set(event.resource!.id, {
+                resource: event.resource!,
+                spans: [],
+                logs: [],
+              });
             } else {
-              existing.resource = event.resource;
+              existing.resource = event.resource!;
             }
           }
 
@@ -58,21 +62,21 @@ export const TracingPanel = () => {
           }
 
           for (const event of data.spanAdded ?? []) {
-            newSpans.set(event.span.id, event.span);
-            if (event.span.parentId === undefined) {
-              const resource = newResources.get(event.span.resourceId!);
+            newSpans.set(event.span!.id, event.span!);
+            if (event.span!.parentId === undefined) {
+              const resource = newResources.get(event.span!.resourceId!);
               if (resource) {
-                resource.spans.push(event.span);
+                resource.spans.push(event.span!);
               }
             }
           }
 
           for (const event of data.logAdded ?? []) {
-            const resource = newResources.get(event.log.meta!.resourceId!);
+            const resource = newResources.get(event.log!.meta!.resourceId!);
             if (!resource) {
               return prevState; // No changes
             }
-            resource.logs.push(event.log);
+            resource.logs.push(event.log!);
           }
 
           return {
@@ -81,7 +85,7 @@ export const TracingPanel = () => {
           };
         });
       },
-      (err) => {
+      (err: Error) => {
         log.catch(err);
       },
     );

@@ -21,6 +21,7 @@ import {
   setIdentityTags,
 } from '@dxos/messaging';
 import { RtcTransportProxyFactory } from '@dxos/network-manager';
+import type { Runtime_Services_Signal } from '@dxos/protocols/buf/dxos/config_pb';
 import { type RpcPort } from '@dxos/rpc';
 import * as OpfsWorker from '@dxos/sql-sqlite/OpfsWorker';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
@@ -144,10 +145,10 @@ export class WorkerRuntime {
 
       await this._acquireLock();
       this._config = await this._configProvider();
-      const signals = this._config.get('runtime.services.signaling');
+      const signals = this._config.get('runtime.services.signaling' as any) as Runtime_Services_Signal[] | undefined;
       this._clientServices.initialize({
         config: this._config,
-        signalManager: this._config.get('runtime.client.edgeFeatures')?.signaling
+        signalManager: this._config.get('runtime.client.edgeFeatures' as any)?.signaling
           ? undefined
           : signals
             ? new WebsocketSignalManager(signals, () => (this._signalTelemetryEnabled ? this._signalMetadataTags : {}))

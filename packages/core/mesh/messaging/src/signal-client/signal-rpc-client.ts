@@ -5,23 +5,23 @@
 import WebSocket from 'isomorphic-ws';
 
 import { TimeoutError, Trigger, scheduleTaskInterval } from '@dxos/async';
-import { type Any, type Stream } from '@dxos/codec-protobuf';
+import { type Any } from '@dxos/protocols/buf';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
-import { schema } from '@dxos/protocols/proto';
-import { type Signal, type Message as SignalMessage } from '@dxos/protocols/proto/dxos/mesh/signal';
+import { Signal, type Message as SignalMessage } from '@dxos/protocols/buf/dxos/mesh/signal_pb';
 import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
+import { type Stream } from '@dxos/stream';
 
 import { SignalRpcClientMonitor } from './signal-rpc-client-monitor';
 
 const SIGNAL_KEEPALIVE_INTERVAL = 10000;
 
-interface Services {
-  Signal: Signal;
-}
+type Services = {
+  Signal: typeof Signal;
+};
 
 export type SignalCallbacks = {
   onConnected?: () => void;
@@ -70,13 +70,12 @@ export class SignalRPCClient {
 
     this._rpc = createProtoRpcPeer({
       requested: {
-        Signal: schema.getService('dxos.mesh.signal.Signal'),
+        Signal,
       },
       noHandshake: true,
       port: {
         send: (msg) => {
           if (this._closed) {
-            // Do not send messages after close.
             return;
           }
           try {
@@ -94,9 +93,6 @@ export class SignalRPCClient {
             }
           };
         },
-      },
-      encodingOptions: {
-        preserveAny: true,
       },
     });
 
@@ -213,7 +209,7 @@ export class SignalRPCClient {
     await this._rpc.rpc.Signal.sendMessage({
       author: author.asUint8Array(),
       recipient: recipient.asUint8Array(),
-      payload,
+      payload: payload ? { typeUrl: payload.typeUrl ?? '', value: payload.value ?? new Uint8Array() } : undefined,
       metadata: this._callbacks?.getMetadata?.(),
     });
   }

@@ -6,7 +6,9 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
-import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
+import { anyPack, create, encodePublicKey, timestampFromDate, toPublicKey } from '@dxos/protocols/buf';
+import { PeerStateSchema } from '@dxos/protocols/buf/dxos/mesh/presence_pb';
+import { type GossipMessage, GossipMessageSchema } from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
 import { TestBuilder, TestPeer } from '@dxos/teleport/testing';
 
 import { GossipExtension } from './gossip-extension';
@@ -34,31 +36,39 @@ describe('GossipExtension', () => {
     });
     connection2.teleport.addExtension('dxos.mesh.teleport.gossip', extension2);
 
-    await extension1.sendAnnounce({
-      peerId: peer1.peerId,
-      channelId: 'dxos.mesh.teleport.gossip',
-      timestamp: new Date(),
-      messageId: PublicKey.random(),
-      payload: {
-        '@type': 'dxos.mesh.presence.PeerState',
-        connections: [peer2.peerId],
-        identityKey: PublicKey.random(),
-      },
-    });
+    await extension1.sendAnnounce(
+      create(GossipMessageSchema, {
+        peerId: encodePublicKey(peer1.peerId),
+        channelId: 'dxos.mesh.teleport.gossip',
+        timestamp: timestampFromDate(new Date()),
+        messageId: encodePublicKey(PublicKey.random()),
+        payload: anyPack(
+          PeerStateSchema,
+          create(PeerStateSchema, {
+            connections: [encodePublicKey(peer2.peerId)],
+            identityKey: encodePublicKey(PublicKey.random()),
+          }),
+        ),
+      }),
+    );
 
-    await extension2.sendAnnounce({
-      peerId: peer2.peerId,
-      channelId: 'dxos.mesh.teleport.gossip',
-      timestamp: new Date(),
-      messageId: PublicKey.random(),
-      payload: {
-        '@type': 'dxos.mesh.presence.PeerState',
-        connections: [peer1.peerId],
-        identityKey: PublicKey.random(),
-      },
-    });
+    await extension2.sendAnnounce(
+      create(GossipMessageSchema, {
+        peerId: encodePublicKey(peer2.peerId),
+        channelId: 'dxos.mesh.teleport.gossip',
+        timestamp: timestampFromDate(new Date()),
+        messageId: encodePublicKey(PublicKey.random()),
+        payload: anyPack(
+          PeerStateSchema,
+          create(PeerStateSchema, {
+            connections: [encodePublicKey(peer1.peerId)],
+            identityKey: encodePublicKey(PublicKey.random()),
+          }),
+        ),
+      }),
+    );
 
-    expect((await trigger1.wait({ timeout: 50 })).peerId.toHex()).toEqual(peer2.peerId.toHex());
-    expect((await trigger2.wait({ timeout: 50 })).peerId.toHex()).toEqual(peer1.peerId.toHex());
+    expect(toPublicKey((await trigger1.wait({ timeout: 50 })).peerId!).toHex()).toEqual(peer2.peerId.toHex());
+    expect(toPublicKey((await trigger2.wait({ timeout: 50 })).peerId!).toHex()).toEqual(peer1.peerId.toHex());
   });
 });

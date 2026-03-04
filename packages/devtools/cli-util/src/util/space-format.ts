@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { type Space, SpaceState, type SpaceSyncState } from '@dxos/client/echo';
+import { timestampMs } from '@dxos/protocols/buf';
 
 import * as FormBuilder from './form-builder';
 
@@ -15,12 +16,13 @@ export const formatSpace = Effect.fn(function* (space: Space, options = { verbos
   // TODO(burdon): Factor out.
   // TODO(burdon): Agent needs to restart before `ready` is available.
   const { open, ready } = space.internal.data.metrics ?? {};
-  const startup = open && ready && ready.getTime() - open.getTime();
+  const startup = open && ready ? timestampMs(ready) - timestampMs(open) : undefined;
 
   // TODO(burdon): Get feeds from client-services if verbose (factor out from devtools/diagnostics).
   // const host = client.services.services.DevtoolsHost!;
   const pipeline = space.internal.data.pipeline;
-  const epoch = pipeline?.currentEpoch?.subject.assertion.number;
+  const epochAssertion = pipeline?.currentEpoch?.subject?.assertion as unknown as { number?: number } | undefined;
+  const epoch = epochAssertion?.number;
 
   const syncState = aggregateSyncState(yield* Effect.tryPromise(() => space.internal.db.coreDatabase.getSyncState()));
 

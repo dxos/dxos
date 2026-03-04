@@ -46,7 +46,7 @@ export const ScriptContainer = ({
         id: script.id,
         text: createDocAccessor(script.source.target, ['content']),
         messenger: space,
-        identity,
+        identity: identity as any,
       }),
       listener({
         onChange: ({ text }) => {

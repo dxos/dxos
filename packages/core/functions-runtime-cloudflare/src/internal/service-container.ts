@@ -4,9 +4,14 @@
 
 import { type AnyEntity } from '@dxos/echo/internal';
 import { type DXN, type SpaceId } from '@dxos/keys';
-import { type EdgeFunctionEnv, type FeedProtocol } from '@dxos/protocols';
-import { type QueryService as QueryServiceProto } from '@dxos/protocols/proto/dxos/echo/query';
-import type { DataService as DataServiceProto } from '@dxos/protocols/proto/dxos/echo/service';
+import { type Echo, type EdgeFunctionEnv, type FeedProtocol } from '@dxos/protocols';
+import { create } from '@dxos/protocols/buf';
+import {
+  InsertIntoQueueRequestSchema,
+  QueryQueueRequestSchema,
+  QueueQueryResultSchema,
+  QueueQuerySchema,
+} from '@dxos/protocols/buf/dxos/client/queue_pb';
 
 import { DataServiceImpl } from './data-service-impl';
 import { QueryServiceImpl } from './query-service-impl';
@@ -25,8 +30,6 @@ export class ServiceContainer {
 
   async getSpaceMeta(spaceId: SpaceId): Promise<EdgeFunctionEnv.SpaceMeta | undefined> {
     using result = await this._dataService.getSpaceMeta(this._executionContext, spaceId);
-    // Copy returned object to avoid hanging RPC stub
-    // See https://developers.cloudflare.com/workers/runtime-apis/rpc/lifecycle/
     return result
       ? {
           spaceKey: result.spaceKey,
@@ -36,9 +39,9 @@ export class ServiceContainer {
   }
 
   async createServices(): Promise<{
-    dataService: DataServiceProto;
-    queryService: QueryServiceProto;
-    queueService: FeedProtocol.QueueService;
+    dataService: Echo.DataService;
+    queryService: Echo.QueryService;
+    queueService: Echo.QueueService;
     functionsAiService: EdgeFunctionEnv.FunctionsAiService;
   }> {
     const dataService = new DataServiceImpl(this._executionContext, this._dataService);
@@ -59,18 +62,21 @@ export class ServiceContainer {
       throw new Error('Invalid queue DXN');
     }
     const { subspaceTag, spaceId, queueId } = parts;
-    const result = await this._queueService.queryQueue(this._executionContext, {
-      query: {
-        spaceId,
-        queuesNamespace: subspaceTag,
-        queueIds: [queueId],
-      },
+    const result = await this._queueService.queryQueue(
+      this._executionContext,
+      create(QueryQueueRequestSchema, {
+        query: create(QueueQuerySchema, {
+          spaceId,
+          queuesNamespace: subspaceTag,
+          queueIds: [queueId],
+        }),
+      }),
+    );
+    return create(QueueQueryResultSchema, {
+      objects: structuredClone(result.objects) as FeedProtocol.QueryResult['objects'],
+      nextCursor: result.nextCursor ?? '',
+      prevCursor: result.prevCursor ?? '',
     });
-    return {
-      objects: structuredClone(result.objects),
-      nextCursor: result.nextCursor ?? null,
-      prevCursor: result.prevCursor ?? null,
-    };
   }
 
   async insertIntoQueue(queue: DXN, objects: AnyEntity[]): Promise<void> {
@@ -79,11 +85,14 @@ export class ServiceContainer {
       throw new Error('Invalid queue DXN');
     }
     const { subspaceTag, spaceId, queueId } = parts;
-    await this._queueService.insertIntoQueue(this._executionContext, {
-      subspaceTag,
-      spaceId,
-      queueId,
-      objects: objects as FeedProtocol.InsertIntoQueueRequest['objects'],
-    });
+    await this._queueService.insertIntoQueue(
+      this._executionContext,
+      create(InsertIntoQueueRequestSchema, {
+        subspaceTag,
+        spaceId,
+        queueId,
+        objects: objects as unknown as FeedProtocol.InsertIntoQueueRequest['objects'],
+      }),
+    );
   }
 }

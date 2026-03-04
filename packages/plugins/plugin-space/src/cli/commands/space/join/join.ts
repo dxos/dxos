@@ -15,6 +15,7 @@ import { CommandConfig } from '@dxos/cli-util';
 import { print, waitForSync } from '@dxos/cli-util';
 import { FormBuilder } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
+import { decodePublicKey } from '@dxos/protocols/buf';
 
 import { acceptInvitation } from './util';
 
@@ -54,7 +55,7 @@ export const handler = Effect.fn(function* ({
   });
 
   // Wait for space to be available with retry logic
-  const spaceKey = invitation.spaceKey;
+  const spaceKey = invitation.spaceKey ? decodePublicKey(invitation.spaceKey) : undefined;
   if (!spaceKey) {
     if (json) {
       yield* Console.log(JSON.stringify({ error: 'No space key in invitation' }, null, 2));

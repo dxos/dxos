@@ -43,7 +43,7 @@ import {
 import {
   type QueryRequest as QueryRequestProto,
   type QueryResponse as QueryResponseProto,
-} from '@dxos/protocols/proto/dxos/echo/query';
+} from '@dxos/protocols/buf/dxos/echo/query_pb';
 import { createUrl } from '@dxos/util';
 
 import { type EdgeIdentity, handleAuthChallenge } from './edge-identity';
@@ -372,6 +372,7 @@ export class EdgeHttpClient {
   /**
    * Execute a QueryAST query against a space.
    */
+  // TODO(dmaretskyi): Use buf toJson() encoding for the request body instead of plain JSON.stringify.
   public async execQuery(
     spaceId: SpaceId,
     body: QueryRequestProto,

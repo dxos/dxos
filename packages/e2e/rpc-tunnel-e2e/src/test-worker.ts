@@ -3,7 +3,7 @@
 //
 
 import { log } from '@dxos/log';
-import { schema } from '@dxos/protocols/proto';
+import { TestStreamService } from '@dxos/protocols/buf/example/testing/rpc_pb';
 import { createProtoRpcPeer } from '@dxos/rpc';
 import { PortMuxer } from '@dxos/rpc-tunnel';
 
@@ -25,7 +25,7 @@ const setup = async (muxer: PortMuxer, channel: string, client: TestClient) => {
 
   const server = createProtoRpcPeer({
     exposed: {
-      TestStreamService: schema.getService('example.testing.rpc.TestStreamService'),
+      TestStreamService,
     },
     handlers: client.handlers,
     port,

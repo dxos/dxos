@@ -10,7 +10,9 @@ import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
 import { type ListeningHandle, type Messenger, type PeerInfo, PeerInfoHash, type SwarmEvent } from '@dxos/messaging';
 import { trace } from '@dxos/protocols';
-import { type Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
+import { create } from '@dxos/protocols/buf';
+import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import { type Answer, AnswerSchema } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 import { ComplexMap, isNonNullable } from '@dxos/util';
 
 import { type OfferMessage, type SignalMessage, SwarmMessenger } from '../signal';
@@ -136,7 +138,11 @@ export class Swarm {
       payloadType: 'dxos.mesh.swarm.SwarmMessage',
       onMessage: async (message) => {
         await this._swarmMessenger
-          .receiveMessage(message)
+          .receiveMessage({
+            author: message.author!,
+            recipient: message.recipient!,
+            payload: message.payload!,
+          })
           // TODO(nf): discriminate between errors
           .catch((err) => log.info('Error while receiving message', { err }));
       },
@@ -179,25 +185,26 @@ export class Swarm {
       return;
     }
 
-    if (swarmEvent.peerAvailable) {
-      const peerId = swarmEvent.peerAvailable.peer.peerKey;
+    if (swarmEvent.event.case === 'peerAvailable') {
+      const peerId = swarmEvent.event.value.peer!.peerKey;
       if (peerId !== this._ownPeer.peerKey) {
         log('new peer', { peerId });
-        const peer = this._getOrCreatePeer(swarmEvent.peerAvailable.peer);
+        const peer = this._getOrCreatePeer(swarmEvent.event.value.peer!);
         peer.advertizing = true;
       }
-    } else if (swarmEvent.peerLeft) {
-      const peer = this._peers.get(swarmEvent.peerLeft.peer);
+    } else if (swarmEvent.event.case === 'peerLeft') {
+      const peerInfo = swarmEvent.event.value.peer!;
+      const peer = this._peers.get(peerInfo);
       if (peer) {
         peer.advertizing = false;
         // Destroy peer only if there is no p2p-connection established. Otherwise, let peers go through
         // the graceful shutdown protocol.
         if (this._isConnectionEstablishmentInProgress(peer)) {
           log(`destroying peer, state: ${peer.connection?.state}`);
-          void this._destroyPeer(swarmEvent.peerLeft.peer, 'peer left').catch((err) => log.catch(err));
+          void this._destroyPeer(peerInfo, 'peer left').catch((err) => log.catch(err));
         }
       } else {
-        log('received peerLeft but no peer found', { peer: swarmEvent.peerLeft.peer.peerKey });
+        log('received peerLeft but no peer found', { peer: peerInfo.peerKey });
       }
     }
 
@@ -209,18 +216,18 @@ export class Swarm {
     log('offer', { message });
     if (this._ctx.disposed) {
       log('ignored for disposed swarm');
-      return { accept: false };
+      return create(AnswerSchema, { accept: false });
     }
 
     // Id of the peer offering us the connection.
     invariant(message.author);
     if (message.recipient.peerKey !== this._ownPeer.peerKey) {
       log('rejecting offer with incorrect peerId', { message });
-      return { accept: false };
+      return create(AnswerSchema, { accept: false });
     }
     if (!message.topic?.equals(this._topic)) {
       log('rejecting offer with incorrect topic', { message });
-      return { accept: false };
+      return create(AnswerSchema, { accept: false });
     }
 
     const peer = this._getOfferSenderPeer(message.author);
@@ -357,7 +364,7 @@ export class Swarm {
         // Run in a separate non-blocking task.
         scheduleTask(this._ctx, async () => {
           try {
-            await this._initiateConnection({ peerKey: peer.toHex() });
+            await this._initiateConnection(create(PeerSchema, { peerKey: peer.toHex() }));
           } catch (err: any) {
             log('initiation error', err);
           }
@@ -370,7 +377,7 @@ export class Swarm {
 
         // Run in a separate non-blocking task.
         scheduleTask(this._ctx, async () => {
-          await this._closeConnection({ peerKey: peer.toHex() });
+          await this._closeConnection(create(PeerSchema, { peerKey: peer.toHex() }));
           this._topology.update();
         });
       },

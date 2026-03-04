@@ -6,9 +6,7 @@ import { type Context, ContextDisposedError, LifecycleState, Resource } from '@d
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type FeedProtocol } from '@dxos/protocols';
-import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
-import { type DataService } from '@dxos/protocols/proto/dxos/echo/service';
+import { type Echo } from '@dxos/protocols';
 
 import { HypergraphImpl } from '../hypergraph';
 import { EchoDatabaseImpl } from '../proxy-db';
@@ -19,9 +17,9 @@ import { IndexQuerySourceProvider, type LoadObjectProps } from './index-query-so
 export type EchoClientProps = {};
 
 export type ConnectToServiceProps = {
-  dataService: DataService;
-  queryService: QueryService;
-  queueService?: FeedProtocol.QueueService;
+  dataService: Echo.DataService;
+  queryService: Echo.QueryService;
+  queueService?: Echo.QueueService;
 };
 
 export type ConstructDatabaseProps = {
@@ -61,9 +59,9 @@ export class EchoClient extends Resource {
   private readonly _databases = new Map<SpaceId, EchoDatabaseImpl>();
   private readonly _queues = new Map<SpaceId, QueueFactory>();
 
-  private _dataService: DataService | undefined = undefined;
-  private _queryService: QueryService | undefined = undefined;
-  private _queuesService: FeedProtocol.QueueService | undefined = undefined;
+  private _dataService: Echo.DataService | undefined = undefined;
+  private _queryService: Echo.QueryService | undefined = undefined;
+  private _queuesService: Echo.QueueService | undefined = undefined;
 
   private _indexQuerySourceProvider: IndexQuerySourceProvider | undefined = undefined;
 
@@ -171,9 +169,9 @@ export class EchoClient extends Resource {
     queryService,
     queueService,
   }: {
-    dataService: DataService;
-    queryService: QueryService;
-    queueService?: FeedProtocol.QueueService;
+    dataService: Echo.DataService;
+    queryService: Echo.QueryService;
+    queueService?: Echo.QueueService;
   }): void {
     log('updating service references');
     this._dataService = dataService;

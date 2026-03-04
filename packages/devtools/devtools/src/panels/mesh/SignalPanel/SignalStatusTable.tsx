@@ -9,8 +9,9 @@ import { scheduleTaskInterval } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Format } from '@dxos/echo/internal';
 import { type SignalStatus } from '@dxos/messaging';
-import { type SubscribeToSignalStatusResponse } from '@dxos/protocols/proto/dxos/devtools/host';
-import { SignalState } from '@dxos/protocols/proto/dxos/mesh/signal';
+import { timestampDate } from '@dxos/protocols/buf';
+import { type SubscribeToSignalStatusResponse_SignalServer } from '@dxos/protocols/buf/dxos/devtools/host_pb';
+import { SignalState } from '@dxos/protocols/buf/dxos/mesh/signal_pb';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table';
 
@@ -18,13 +19,13 @@ export interface SignalStatusProps {
   status: SignalStatus[];
 }
 
-const getSignalStatus = (server: SubscribeToSignalStatusResponse.SignalServer): SignalStatus => {
+const getSignalStatus = (server: SubscribeToSignalStatusResponse_SignalServer): SignalStatus => {
   return {
-    connectionStarted: server.connectionStarted!,
-    lastStateChange: server.lastStateChange!,
-    reconnectIn: server.reconnectIn!,
-    host: server.host!,
-    state: server.state!,
+    connectionStarted: server.connectionStarted ? timestampDate(server.connectionStarted) : new Date(0),
+    lastStateChange: server.lastStateChange ? timestampDate(server.lastStateChange) : new Date(0),
+    reconnectIn: server.reconnectIn,
+    host: server.host,
+    state: server.state,
   };
 };
 
@@ -79,8 +80,8 @@ const tableProperties: TablePropertyDefinition[] = [
 
 export const SignalStatusTable = () => {
   const devtoolsHost = useDevtools();
-  const { servers } = useStream(() => devtoolsHost.subscribeToSignalStatus(), { servers: [] });
-  const status = servers!.map(getSignalStatus);
+  const { servers } = useStream(() => devtoolsHost.subscribeToSignalStatus({} as any), { servers: [] } as any);
+  const status = servers!.map((server: any) => getSignalStatus(server));
 
   const [time, setTime] = useState(new Date());
   useEffect(() => {
@@ -103,7 +104,7 @@ export const SignalStatusTable = () => {
 
   const properties = useMemo(() => tableProperties, []);
   const rows = useMemo(() => {
-    return status.map((status, index) => ({
+    return status.map((status: SignalStatus, index: number) => ({
       id: `${index}-${status.host}`,
       host: new URL(status.host).origin,
       status: getStateLabel(status.state),

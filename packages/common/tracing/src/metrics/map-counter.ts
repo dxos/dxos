@@ -2,7 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Metric } from '@dxos/protocols/proto/dxos/tracing';
+import { create } from '@dxos/protocols/buf';
+import { type Metric, MetricSchema } from '@dxos/protocols/buf/dxos/tracing_pb';
 
 import { BaseCounter } from './base';
 
@@ -21,15 +22,18 @@ export class MapCounter extends BaseCounter {
   }
 
   getData(): Metric {
-    return {
+    return create(MetricSchema, {
       name: this.name!,
-      multiCounter: {
-        records: Array.from(this.values.entries()).map(([key, value]) => ({
-          key,
-          value,
-        })),
-        units: this.units,
+      Value: {
+        case: 'multiCounter',
+        value: {
+          records: Array.from(this.values.entries()).map(([key, value]) => ({
+            key,
+            value,
+          })),
+          units: this.units,
+        },
       },
-    };
+    });
   }
 }

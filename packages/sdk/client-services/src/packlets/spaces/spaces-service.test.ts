@@ -6,8 +6,7 @@ import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'v
 
 import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { PublicKey } from '@dxos/keys';
-import { type Space, type SpacesService } from '@dxos/protocols/proto/dxos/client/services';
+import { type Space } from '@dxos/protocols/buf/dxos/client/services_pb';
 
 import { type ServiceContext } from '../services';
 import { createServiceContext } from '../testing';
@@ -16,7 +15,7 @@ import { SpacesServiceImpl } from './spaces-service';
 
 describe('SpacesService', () => {
   let serviceContext: ServiceContext;
-  let spacesService: SpacesService;
+  let spacesService: SpacesServiceImpl;
 
   beforeEach(async () => {
     serviceContext = await createServiceContext();
@@ -40,7 +39,7 @@ describe('SpacesService', () => {
       await serviceContext.createIdentity();
       const space = await spacesService.createSpace();
       expect(space).to.exist;
-      expect(space.spaceKey).to.be.instanceof(PublicKey);
+      expect(space.spaceKey).to.exist;
     });
   });
 
@@ -50,7 +49,7 @@ describe('SpacesService', () => {
     test('returns empty list if no identity is available', async () => {
       const query = spacesService.querySpaces();
       const result = new Trigger<Space[] | undefined>();
-      query.subscribe(({ spaces }) => {
+      query.subscribe(({ spaces }: any) => {
         result.wake(spaces);
       });
       onTestFinished(() => query.close());
@@ -67,7 +66,7 @@ describe('SpacesService', () => {
 
       const query = spacesService.querySpaces();
       const result = new Trigger<Space[] | undefined>();
-      query.subscribe(({ spaces }) => {
+      query.subscribe(({ spaces }: any) => {
         result.wake(spaces);
       });
       onTestFinished(() => query.close());
@@ -81,7 +80,7 @@ describe('SpacesService', () => {
       await serviceContext.createIdentity();
       const query = spacesService.querySpaces();
       const result = new Trigger<Space[] | undefined>();
-      query.subscribe(({ spaces }) => {
+      query.subscribe(({ spaces }: any) => {
         result.wake(spaces);
       });
       onTestFinished(() => query.close());
@@ -91,7 +90,12 @@ describe('SpacesService', () => {
       const space = await spacesService.createSpace();
       const spaces = await result.wait();
       expect(spaces).to.be.length(1);
-      expect(spaces?.[0].spaceKey.equals(space.spaceKey)).to.be.true;
+      expect(spaces?.length).to.equal(1);
+      const toBytes = (sk: { data?: Uint8Array; asUint8Array?: () => Uint8Array }) =>
+        sk?.data ?? sk?.asUint8Array?.() ?? new Uint8Array(0);
+      const spaceKey = spaces?.[0]?.spaceKey;
+      expect(spaceKey).to.exist;
+      expect(Buffer.from(toBytes(spaceKey!)).equals(Buffer.from(toBytes(space.spaceKey!)))).to.be.true;
     });
 
     test.skip('updates when space is updated', async () => {});

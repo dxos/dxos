@@ -1,17 +1,24 @@
 //
-// Copyright 2022 DXOS.org
+// Copyright 2024 DXOS.org
 //
 
 import { invariant } from '@dxos/invariant';
+import { type Rpc } from '@dxos/protocols';
+import { type GenService, type GenServiceMethods } from '@dxos/protocols/buf';
 import { type ProtoRpcPeer, type ProtoRpcPeerOptions, createProtoRpcPeer } from '@dxos/rpc';
 
 import { type ExtensionContext, type TeleportExtension } from './teleport';
 
-export abstract class RpcExtension<Client, Server> implements TeleportExtension {
-  // TODO(dmaretskyi): Type optionally.
+/**
+ * Base class for teleport extensions using service definitions.
+ */
+export abstract class RpcExtension<
+  Client extends Record<string, GenService<GenServiceMethods>>,
+  Server extends Record<string, GenService<GenServiceMethods>>,
+> implements TeleportExtension
+{
   private _extensionContext!: ExtensionContext;
   private _rpc?: ProtoRpcPeer<Client>;
-
   private _isClosed = false;
 
   constructor(private readonly _rpcProps: Omit<ProtoRpcPeerOptions<Client, Server>, 'port' | 'handlers'>) {}
@@ -28,12 +35,12 @@ export abstract class RpcExtension<Client, Server> implements TeleportExtension 
     return this._extensionContext?.remotePeerId;
   }
 
-  get rpc(): Client {
+  get rpc(): { [K in keyof Client]: Rpc.RpcClient<Client[K]> } {
     invariant(this._rpc);
     return this._rpc.rpc;
   }
 
-  protected abstract getHandlers(): Promise<Server>;
+  protected abstract getHandlers(): Promise<Rpc.ServiceHandlers<Server>>;
 
   async onOpen(context: ExtensionContext): Promise<void> {
     this._extensionContext = context;

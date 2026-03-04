@@ -5,6 +5,7 @@
 import { type defs } from '@dxos/config';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { type Credential as BufCredential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type Client } from '@dxos/react-client';
 import { type Credential } from '@dxos/react-client/halo';
 
@@ -12,10 +13,10 @@ export const isTrue = (str?: string | null, strict = true): boolean =>
   strict ? str === 'true' || str === '1' : str != null && !isFalse(str);
 export const isFalse = (str?: string | null): boolean => str === 'false' || str === '0';
 
-export const defaultStorageIsEmpty = async (config?: defs.Runtime.Client.Storage): Promise<boolean> => {
+export const defaultStorageIsEmpty = async (config?: defs.Runtime_Client_Storage): Promise<boolean> => {
   try {
     const { createStorageObjects } = await import('@dxos/client-services');
-    const storage = createStorageObjects(config ?? {}).storage;
+    const storage = createStorageObjects((config ?? {}) as any).storage;
     const metadataDir = storage.createDirectory('metadata');
     const echoMetadata = metadataDir.getOrCreateFile('EchoMetadata');
     const { size } = await echoMetadata.stat();
@@ -54,10 +55,10 @@ export const queryAllCredentials = (client: Client) => {
   return new Promise<Credential[]>((resolve, reject) => {
     const credentials: Credential[] = [];
     stream?.subscribe(
-      (credential) => {
+      (credential: BufCredential) => {
         credentials.push(credential);
       },
-      (err) => {
+      (err: Error) => {
         if (err) {
           reject(err);
         } else {

@@ -9,7 +9,7 @@ import {
   type InvitationUrlRequest,
   type LayoutRequest,
   type ShellLayout,
-} from '@dxos/protocols/proto/dxos/iframe';
+} from '@dxos/protocols/buf/dxos/iframe_pb';
 
 export interface ShellRuntime {
   layoutUpdate: Event<LayoutRequest>;

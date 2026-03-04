@@ -9,7 +9,7 @@ import { createAdmissionCredentials } from '@dxos/credentials';
 import { AuthStatus } from '@dxos/echo-pipeline';
 import { writeMessages } from '@dxos/feed-store';
 import { log } from '@dxos/log';
-import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
+import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { openAndClose } from '@dxos/test-utils';
 
 import { TestBuilder, type TestPeer } from '../testing';
@@ -49,15 +49,13 @@ describe('DataSpaceManager', () => {
     await space1.inner.controlPipeline.state.waitUntilTimeframe(space1.inner.controlPipeline.state.endTimeframe);
 
     // Admit peer2 to space1.
-    await writeMessages(
-      space1.inner.controlPipeline.writer,
-      await createAdmissionCredentials(
-        peer1.identity.credentialSigner,
-        peer2.identity.identityKey,
-        space1.key,
-        space1.inner.genesisFeedKey,
-      ),
+    const admissionCredentials = await createAdmissionCredentials(
+      peer1.identity.credentialSigner,
+      peer2.identity.identityKey,
+      space1.key,
+      space1.inner.genesisFeedKey,
     );
+    await writeMessages(space1.inner.controlPipeline.writer, admissionCredentials);
 
     // Accept must be called after admission so that the peer can authenticate for notarization.
     const space2 = await peer2.dataSpaceManager.acceptSpace({
@@ -119,15 +117,13 @@ describe('DataSpaceManager', () => {
     await space1.inner.controlPipeline.state.waitUntilTimeframe(space1.inner.controlPipeline.state.endTimeframe);
 
     // Admit peer2 to space1.
-    await writeMessages(
-      space1.inner.controlPipeline.writer,
-      await createAdmissionCredentials(
-        peer1.identity.credentialSigner,
-        peer2.identity.identityKey,
-        space1.key,
-        space1.inner.genesisFeedKey,
-      ),
+    const admissionCreds = await createAdmissionCredentials(
+      peer1.identity.credentialSigner,
+      peer2.identity.identityKey,
+      space1.key,
+      space1.inner.genesisFeedKey,
     );
+    await writeMessages(space1.inner.controlPipeline.writer, admissionCreds);
 
     // Accept must be called after admission so that the peer can authenticate for notarization.
     const space2 = await peer2.dataSpaceManager.acceptSpace({

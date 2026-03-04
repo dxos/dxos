@@ -2,18 +2,19 @@
 // Copyright 2023 DXOS.org
 //
 
-import { getCredentialAssertion } from '@dxos/credentials';
+import { getAssertionFromCredential } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';
 import { AlreadyJoinedError } from '@dxos/protocols';
-import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import type { DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { TimeframeVectorProto, encodePublicKey, toPublicKey } from '@dxos/protocols/buf';
+import { type Invitation, Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import type { DeviceProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import {
   type AdmissionRequest,
   type AdmissionResponse,
   type IntroductionRequest,
-} from '@dxos/protocols/proto/dxos/halo/invitations';
+} from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 
 import { type Identity, type JoinIdentityProps } from '../identity';
 
@@ -38,7 +39,7 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
 
   getInvitationContext(): Partial<Invitation> & Pick<Invitation, 'kind'> {
     return {
-      kind: Invitation.Kind.DEVICE,
+      kind: Invitation_Kind.DEVICE,
     };
   }
 
@@ -51,20 +52,24 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
   }
 
   async admit(_: Invitation, request: AdmissionRequest): Promise<AdmissionResponse> {
-    invariant(request.device);
+    const deviceRequest = (request as any).device ?? (request.kind?.case === 'device' ? request.kind.value : undefined);
+    invariant(deviceRequest);
     const identity = this._getIdentity();
-    const credential = await identity.admitDevice(request.device);
-    invariant(getCredentialAssertion(credential)['@type'] === 'dxos.halo.credentials.AuthorizedDevice');
+    const credential = await identity.admitDevice(deviceRequest);
+    invariant(getAssertionFromCredential(credential).$typeName === 'dxos.halo.credentials.AuthorizedDevice');
 
     return {
-      device: {
-        identityKey: identity.identityKey,
-        haloSpaceKey: identity.haloSpaceKey,
-        genesisFeedKey: identity.haloGenesisFeedKey,
-        controlTimeframe: identity.controlPipeline.state.timeframe,
-        credential,
+      kind: {
+        case: 'device',
+        value: {
+          identityKey: encodePublicKey(identity.identityKey),
+          haloSpaceKey: encodePublicKey(identity.haloSpaceKey),
+          genesisFeedKey: encodePublicKey(identity.haloGenesisFeedKey),
+          controlTimeframe: TimeframeVectorProto.encode(identity.controlPipeline.state.timeframe),
+          credential,
+        },
       },
-    };
+    } as unknown as AdmissionResponse;
   }
 
   checkInvitation(invitation: Partial<Invitation>): AlreadyJoinedError | undefined {
@@ -79,7 +84,7 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
   }
 
   createIntroduction(): IntroductionRequest {
-    return {};
+    return {} as IntroductionRequest;
   }
 
   async createAdmissionRequest(deviceProfile?: DeviceProfileDocument): Promise<AdmissionRequest> {
@@ -88,23 +93,36 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
     const dataFeedKey = await this._keyring.createKey();
 
     return {
-      device: {
-        deviceKey,
-        controlFeedKey,
-        dataFeedKey,
-        profile: deviceProfile,
+      kind: {
+        case: 'device',
+        value: {
+          deviceKey: encodePublicKey(deviceKey),
+          controlFeedKey: encodePublicKey(controlFeedKey),
+          dataFeedKey: encodePublicKey(dataFeedKey),
+          profile: deviceProfile,
+        },
       },
-    };
+    } as AdmissionRequest;
   }
 
   async accept(response: AdmissionResponse, request: AdmissionRequest): Promise<Partial<Invitation>> {
-    invariant(response.device);
-    const { identityKey, haloSpaceKey, genesisFeedKey, controlTimeframe } = response.device;
+    const deviceResponse =
+      (response as any).device ?? (response.kind?.case === 'device' ? response.kind.value : undefined);
+    invariant(deviceResponse);
 
-    invariant(request.device);
-    const { deviceKey, controlFeedKey, dataFeedKey, profile } = request.device;
+    const deviceRequest = (request as any).device ?? (request.kind?.case === 'device' ? request.kind.value : undefined);
+    invariant(deviceRequest);
 
-    // TODO(wittjosiah): When multiple identities are supported, verify identity doesn't already exist before accepting.
+    // Convert buf PublicKey messages and TimeframeVector to application types.
+    const identityKey = toPublicKey(deviceResponse.identityKey);
+    const haloSpaceKey = toPublicKey(deviceResponse.haloSpaceKey);
+    const genesisFeedKey = toPublicKey(deviceResponse.genesisFeedKey);
+    const deviceKey = toPublicKey(deviceRequest.deviceKey);
+    const controlFeedKey = toPublicKey(deviceRequest.controlFeedKey);
+    const dataFeedKey = toPublicKey(deviceRequest.dataFeedKey);
+    const controlTimeframe = deviceResponse.controlTimeframe
+      ? TimeframeVectorProto.decode(deviceResponse.controlTimeframe)
+      : undefined;
 
     await this._acceptIdentity({
       identityKey,
@@ -114,10 +132,10 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
       controlFeedKey,
       dataFeedKey,
       controlTimeframe,
-      deviceProfile: profile,
-      authorizedDeviceCredential: response.device.credential,
+      deviceProfile: deviceRequest.profile,
+      authorizedDeviceCredential: deviceResponse.credential,
     });
 
-    return { identityKey };
+    return { identityKey: encodePublicKey(identityKey) };
   }
 }

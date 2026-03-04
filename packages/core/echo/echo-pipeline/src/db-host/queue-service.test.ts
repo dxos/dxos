@@ -43,13 +43,13 @@ describe('LocalQueueServiceImpl', () => {
           spaceId,
           queueId,
           objects: [object1, object2],
-        }),
+        } as any),
       );
 
       const result = yield* Effect.promise(() =>
         service.queryQueue({
           query: { spaceId, queueIds: [queueId] },
-        }),
+        } as any),
       );
       expect(result.objects?.[0]).toMatchObject(object1);
       expect(result.objects?.[1]).toMatchObject(object2);
@@ -74,7 +74,7 @@ describe('LocalQueueServiceImpl', () => {
           spaceId,
           queueId,
           objects: [object1],
-        }),
+        } as any),
       );
       yield* Effect.promise(() =>
         service.deleteFromQueue({
@@ -82,13 +82,13 @@ describe('LocalQueueServiceImpl', () => {
           spaceId,
           queueId,
           objectIds: [object1Id],
-        }),
+        } as any),
       );
 
       const result = yield* Effect.promise(() =>
         service.queryQueue({
           query: { spaceId, queueIds: [queueId] },
-        }),
+        } as any),
       );
       expect(result.objects).toHaveLength(2);
       expect(result.objects?.[1]).toMatchObject({ id: object1Id, '@deleted': true });
@@ -112,14 +112,14 @@ describe('LocalQueueServiceImpl', () => {
           spaceId,
           queueId,
           objects: items,
-        }),
+        } as any),
       );
 
       // Query first 5
       const page1 = yield* Effect.promise(() =>
         service.queryQueue({
           query: { spaceId, queueIds: [queueId], limit: 5 },
-        }),
+        } as any),
       );
       expect(page1.objects).toHaveLength(5);
       expect(page1.objects?.[0]).toMatchObject(items[0]);
@@ -135,7 +135,7 @@ describe('LocalQueueServiceImpl', () => {
             limit: 5,
             after: page1.nextCursor!,
           },
-        }),
+        } as any),
       );
       expect(page2.objects).toHaveLength(5);
       expect(page2.objects?.[0]).toMatchObject(items[5]);

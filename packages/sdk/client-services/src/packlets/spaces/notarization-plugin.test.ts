@@ -10,7 +10,9 @@ import { MockFeedWriter } from '@dxos/feed-store/testing';
 import { Keyring } from '@dxos/keyring';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { AdmittedFeed, type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { toPublicKey } from '@dxos/protocols/buf';
+import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { AdmittedFeed_Designation } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { TestBuilder, type TestConnection, TestPeer } from '@dxos/teleport/testing';
 
 import { NotarizationPlugin, type NotarizationPluginProps } from './notarization-plugin';
@@ -70,7 +72,7 @@ describe('NotarizationPlugin', () => {
     const credential = await generator.createFeedAdmission(
       await keyring.createKey(),
       await keyring.createKey(),
-      AdmittedFeed.Designation.CONTROL,
+      AdmittedFeed_Designation.CONTROL,
     );
 
     const notarized = peer2.notarizationPlugin.notarize({
@@ -80,7 +82,8 @@ describe('NotarizationPlugin', () => {
     await testBuilder.connect(peer1, peer2);
     await notarized;
 
-    expect(peer1.feed.messages.map((c) => c.id)).to.deep.eq([credential.id]);
-    expect(peer2.feed.messages.map((c) => c.id)).to.deep.eq([credential.id]);
+    const expectedId = toPublicKey(credential.id!);
+    expect(peer1.feed.messages.map((c) => toPublicKey(c.id!))).to.deep.eq([expectedId]);
+    expect(peer2.feed.messages.map((c) => toPublicKey(c.id!))).to.deep.eq([expectedId]);
   });
 });

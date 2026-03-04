@@ -3,14 +3,14 @@
 //
 
 export {
-  type QueueService,
   type QueueQuery,
+  type QueueQueryResult,
   type QueueQueryResult as QueryResult,
   type QueryQueueRequest,
   type InsertIntoQueueRequest,
   type DeleteFromQueueRequest,
   type SyncQueueRequest,
-} from './proto/gen/dxos/client/services.js';
+} from './buf/proto/gen/dxos/client/queue_pb.ts';
 
 export const KEY_QUEUE_POSITION = 'dxos.org/key/queue-position';
 

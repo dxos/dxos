@@ -15,9 +15,9 @@ import { type FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type FeedMessageBlock } from '@dxos/protocols';
-import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { type ControlPipelineSnapshot } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { AdmittedFeed, type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import type { FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
+import { type ControlPipelineSnapshot } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
+import { AdmittedFeed_Designation, type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Timeframe } from '@dxos/timeframe';
 import { TimeSeriesCounter, TimeUsageCounter, trace } from '@dxos/tracing';
 import { type AsyncCallback, Callback, tracer } from '@dxos/util';
@@ -82,7 +82,10 @@ export class ControlPipeline {
       log('feed admitted', { key: info.key });
 
       // TODO(burdon): Check not stopping.
-      if (info.assertion.designation === AdmittedFeed.Designation.CONTROL && !info.key.equals(genesisFeed.key)) {
+      if (
+        (info.assertion.designation as number) === AdmittedFeed_Designation.CONTROL &&
+        !info.key.equals(genesisFeed.key)
+      ) {
         scheduleMicroTask(this._ctx, async () => {
           try {
             const feed = await feedProvider(info.key);
@@ -138,11 +141,11 @@ export class ControlPipeline {
   }
 
   private async _processSnapshot(snapshot: ControlPipelineSnapshot): Promise<void> {
-    await this._pipeline.setCursor(snapshot.timeframe);
+    await this._pipeline.setCursor(snapshot.timeframe as any);
 
     for (const message of snapshot.messages ?? []) {
-      const result = await this._spaceStateMachine.process(message.credential, {
-        sourceFeed: message.feedKey,
+      const result = await this._spaceStateMachine.process(message.credential! as Credential, {
+        sourceFeed: message.feedKey as any,
         skipVerification: true,
       });
 
@@ -155,12 +158,12 @@ export class ControlPipeline {
   private async _saveSnapshot(): Promise<void> {
     await this._pipeline.pause();
     const snapshot: ControlPipelineSnapshot = {
-      timeframe: this._pipeline.state.timeframe,
+      timeframe: this._pipeline.state.timeframe as any,
       messages: this._spaceStateMachine.credentialEntries.map((entry) => ({
-        feedKey: entry.sourceFeed,
+        feedKey: entry.sourceFeed as any,
         credential: entry.credential,
-      })),
-    };
+      })) as any,
+    } as any;
     await this._pipeline.unpause();
 
     log('save snapshot', { key: this._spaceKey, snapshot: getSnapshotLoggerContext(snapshot) });
@@ -186,11 +189,12 @@ export class ControlPipeline {
   @trace.span()
   private async _processMessage(ctx: Context, msg: FeedMessageBlock): Promise<void> {
     log('processing', { key: msg.feedKey, seq: msg.seq });
-    if (msg.data.payload.credential) {
+    if (msg.data.payload?.payload.case === 'credential') {
       const timer = tracer.mark('dxos.echo.pipeline.control');
-      const result = await this._spaceStateMachine.process(msg.data.payload.credential.credential, {
-        sourceFeed: PublicKey.from(msg.feedKey),
-      });
+      const result = await this._spaceStateMachine.process(
+        msg.data.payload.payload.value.credential! as unknown as Credential,
+        { sourceFeed: PublicKey.from(msg.feedKey) },
+      );
 
       timer.end();
       if (!result) {
@@ -234,9 +238,9 @@ export class ControlPipeline {
 
 const getSnapshotLoggerContext = (snapshot: ControlPipelineSnapshot) => {
   return snapshot.messages?.map((msg) => {
-    const issuer = msg.credential.issuer;
-    const subject = msg.credential.subject.id;
-    const type = msg.credential.subject.assertion['@type'];
+    const issuer = msg.credential?.issuer;
+    const subject = msg.credential?.subject?.id;
+    const type = (msg.credential?.subject?.assertion as any)?.$typeName ?? (msg.credential?.subject?.assertion as any)?.typeUrl;
     return { issuer, subject, type };
   });
 };

@@ -17,7 +17,8 @@ import {
   TimeoutError,
   trace,
 } from '@dxos/protocols';
-import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
+import { create } from '@dxos/protocols/buf';
+import { type Signal, SignalBatchSchema } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 
 import { type SignalMessage, type SignalMessenger } from '../signal';
 import { type Transport, type TransportFactory, type TransportStats } from '../transport';
@@ -385,7 +386,7 @@ export class Connection {
         recipient: this.remoteInfo,
         sessionId: this.sessionId,
         topic: this.topic,
-        data: { signalBatch: { signals } },
+        data: { signalBatch: create(SignalBatchSchema, { signals }) },
       });
     } catch (err) {
       // TODO(nf): determine why instanceof doesn't work here

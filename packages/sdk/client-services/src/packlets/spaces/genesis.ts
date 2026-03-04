@@ -2,11 +2,20 @@
 // Copyright 2022 DXOS.org
 //
 
-import { createCredential } from '@dxos/credentials';
+import { createCredential, toBufPublicKey } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import { type Space } from '@dxos/echo-pipeline';
 import { type Keyring } from '@dxos/keyring';
-import { AdmittedFeed, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { create, TimeframeVectorProto } from '@dxos/protocols/buf';
+import {
+  AdmittedFeed_Designation,
+  AdmittedFeedSchema,
+  type Credential,
+  EpochSchema,
+  SpaceGenesisSchema,
+  SpaceMember_Role,
+  SpaceMemberSchema,
+} from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Timeframe } from '@dxos/timeframe';
 
 import { type SigningContext } from './data-space-manager';
@@ -16,64 +25,57 @@ export const spaceGenesis = async (
   signingContext: SigningContext,
   space: Space,
   automergeRoot?: string,
-) => {
+): Promise<Credential[]> => {
   // TODO(dmaretskyi): Find a way to reconcile with credential generator.
   const credentials = [
     await createCredential({
       signer: keyring,
       issuer: space.key,
       subject: space.key,
-      assertion: {
-        '@type': 'dxos.halo.credentials.SpaceGenesis',
-        spaceKey: space.key,
-      },
+      assertion: create(SpaceGenesisSchema, {
+        spaceKey: toBufPublicKey(space.key),
+      }),
     }),
 
     await createCredential({
       signer: keyring,
       issuer: space.key,
       subject: signingContext.identityKey,
-      assertion: {
-        '@type': 'dxos.halo.credentials.SpaceMember',
-        spaceKey: space.key,
-        role: SpaceMember.Role.OWNER,
+      assertion: create(SpaceMemberSchema, {
+        spaceKey: toBufPublicKey(space.key),
+        role: SpaceMember_Role.OWNER,
         profile: signingContext.getProfile(),
-        genesisFeedKey: space.controlFeedKey ?? failUndefined(),
-      },
+        genesisFeedKey: toBufPublicKey(space.controlFeedKey ?? failUndefined()),
+      }),
     }),
 
     await signingContext.credentialSigner.createCredential({
       subject: space.controlFeedKey ?? failUndefined(),
-      assertion: {
-        '@type': 'dxos.halo.credentials.AdmittedFeed',
-        spaceKey: space.key,
-        identityKey: signingContext.identityKey,
-        deviceKey: signingContext.deviceKey,
-        designation: AdmittedFeed.Designation.CONTROL,
-      },
+      assertion: create(AdmittedFeedSchema, {
+        spaceKey: toBufPublicKey(space.key),
+        identityKey: toBufPublicKey(signingContext.identityKey),
+        deviceKey: toBufPublicKey(signingContext.deviceKey),
+        designation: AdmittedFeed_Designation.CONTROL,
+      }),
     }),
 
     await signingContext.credentialSigner.createCredential({
       subject: space.dataFeedKey ?? failUndefined(),
-      assertion: {
-        '@type': 'dxos.halo.credentials.AdmittedFeed',
-        spaceKey: space.key,
-        identityKey: signingContext.identityKey,
-        deviceKey: signingContext.deviceKey,
-        designation: AdmittedFeed.Designation.DATA,
-      },
+      assertion: create(AdmittedFeedSchema, {
+        spaceKey: toBufPublicKey(space.key),
+        identityKey: toBufPublicKey(signingContext.identityKey),
+        deviceKey: toBufPublicKey(signingContext.deviceKey),
+        designation: AdmittedFeed_Designation.DATA,
+      }),
     }),
 
     await signingContext.credentialSigner.createCredential({
       subject: space.key ?? failUndefined(),
-      assertion: {
-        '@type': 'dxos.halo.credentials.Epoch',
+      assertion: create(EpochSchema, {
         number: 0,
-        previousId: undefined,
-        timeframe: new Timeframe(),
-        snapshotCid: undefined,
+        timeframe: TimeframeVectorProto.encode(new Timeframe()),
         automergeRoot,
-      },
+      }),
     }),
   ];
 

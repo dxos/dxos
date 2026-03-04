@@ -25,7 +25,7 @@ export const ScriptPluginSettings = ({ settings, onSettingsChange }: ScriptPlugi
   // TODO(burdon): Check token.
   const handleAuthenticate = async () => {
     const { identityKey } = client.halo.identity.get()!;
-    await client.halo.writeCredentials([getAccessCredential(identityKey)]);
+    await client.halo.writeCredentials([getAccessCredential(identityKey as any)]);
   };
 
   return (

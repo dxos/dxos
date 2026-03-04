@@ -5,7 +5,8 @@
 import React, { useMemo } from 'react';
 
 import { Format } from '@dxos/echo/internal';
-import { SpaceMember, useMembers } from '@dxos/react-client/echo';
+import { SpaceMember_PresenceState } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { useMembers } from '@dxos/react-client/echo';
 import { type Space } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
@@ -42,18 +43,18 @@ export const MembersPanel = (props: { space?: Space }) => {
     return members.map((member) => {
       let status = 'unknown';
       switch (member.presence) {
-        case SpaceMember.PresenceState.ONLINE:
+        case SpaceMember_PresenceState.ONLINE:
           status = 'online';
           break;
-        case SpaceMember.PresenceState.OFFLINE:
+        case SpaceMember_PresenceState.OFFLINE:
           status = 'offline';
           break;
       }
 
       return {
-        id: member.identity.identityKey.toString(),
-        identityKey: member.identity.identityKey,
-        displayName: member.identity.profile?.displayName,
+        id: (member.identity as any)?.identityKey?.toString() ?? '',
+        identityKey: member.identity?.identityKey,
+        displayName: member.identity?.profile?.displayName,
         status,
         _original: member,
       };

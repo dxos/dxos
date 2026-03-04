@@ -7,7 +7,7 @@ import { createRoot } from 'react-dom/client';
 import { JSONTree } from 'react-json-tree';
 
 import { Trigger } from '@dxos/async';
-import { schema } from '@dxos/protocols/proto';
+import { TestStreamService } from '@dxos/protocols/buf/example/testing/rpc_pb';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import { type RpcPort, createProtoRpcPeer } from '@dxos/rpc';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
@@ -43,10 +43,8 @@ const App = ({ worker }: { worker?: SharedWorker }) => {
 
     const client = createProtoRpcPeer({
       requested: {
-        TestStreamService: schema.getService('example.testing.rpc.TestStreamService'),
+        TestStreamService,
       },
-      exposed: {},
-      handlers: {},
       port: await port.wait(),
     });
     await client.open();

@@ -3,9 +3,11 @@
 //
 
 import { type ClientServices } from '@dxos/client-protocol';
-import { type Any, type ServiceHandler, Stream } from '@dxos/codec-protobuf';
 import { raise } from '@dxos/debug';
-import { RpcPeer, type RpcPeerOptions, type ServiceBundle, parseMethodName } from '@dxos/rpc';
+import { type Rpc } from '@dxos/protocols';
+import { type DescService, type GenService, type GenServiceMethods } from '@dxos/protocols/buf';
+import { ServiceHandler, RpcPeer, type RpcPeerOptions, parseMethodName } from '@dxos/rpc';
+import { Stream } from '@dxos/stream';
 import { MapCounter, trace } from '@dxos/tracing';
 import { type MaybePromise } from '@dxos/util';
 
@@ -15,21 +17,21 @@ export type ClientRpcServerProps = {
   serviceRegistry: ServiceRegistry<ClientServices>;
   handleCall?: (
     method: string,
-    params: Any,
-    handler: (method: string, params: Any) => MaybePromise<Any>,
-  ) => Promise<Any>;
+    params: Rpc.Any,
+    handler: (method: string, params: Rpc.Any) => MaybePromise<Rpc.Any>,
+  ) => Promise<Rpc.Any>;
   handleStream?: (
     method: string,
-    params: Any,
-    handler: (method: string, params: Any) => Stream<Any>,
-  ) => MaybePromise<Stream<Any>>;
+    params: Rpc.Any,
+    handler: (method: string, params: Rpc.Any) => Stream<Rpc.Any>,
+  ) => MaybePromise<Stream<Rpc.Any>>;
 } & Omit<RpcPeerOptions, 'callHandler' | 'streamHandler'>;
 
 @trace.resource()
 export class ClientRpcServer {
   private readonly _serviceRegistry: ServiceRegistry<ClientServices>;
   private readonly _rpcPeer: RpcPeer;
-  private readonly _handlerCache = new Map<string, ServiceHandler<any>>();
+  private readonly _handlerCache = new Map<string, ServiceHandler<GenService<GenServiceMethods>>>();
   private readonly _handleCall: ClientRpcServerProps['handleCall'];
   private readonly _handleStream: ClientRpcServerProps['handleStream'];
 
@@ -51,30 +53,34 @@ export class ClientRpcServer {
       ...rpcOptions,
       callHandler: (method, params) => {
         const [serviceName, methodName] = parseMethodName(method);
-        const handler = (method: string, params: Any) => this._getServiceHandler(serviceName).call(method, params);
+        const handler = (method: string, params: Rpc.Any) =>
+          this._getServiceHandler(serviceName).call(method, params);
 
         this._callMetrics.inc(`${serviceName}.${methodName} request`);
 
         if (this._handleCall) {
-          return this._handleCall(methodName, params, handler);
+          return this._handleCall(methodName, params as Rpc.Any, handler);
         } else {
-          return handler(methodName, params);
+          return handler(methodName, params as Rpc.Any);
         }
       },
       streamHandler: (method, params) => {
         const [serviceName, methodName] = parseMethodName(method);
-        const handler = (method: string, params: Any) =>
+        const handler = (method: string, params: Rpc.Any) =>
           this._getServiceHandler(serviceName).callStream(method, params);
 
         this._callMetrics.inc(`${serviceName}.${methodName} request stream`);
 
         if (this._handleStream) {
-          return Stream.map(Stream.unwrapPromise(this._handleStream(methodName, params, handler)), (data) => {
-            this._callMetrics.inc(`${serviceName}.${methodName} response stream`);
-            return data;
-          });
+          return Stream.map(
+            Stream.unwrapPromise(this._handleStream(methodName, params as Rpc.Any, handler)),
+            (data) => {
+              this._callMetrics.inc(`${serviceName}.${methodName} response stream`);
+              return data;
+            },
+          );
         } else {
-          return handler(methodName, params);
+          return handler(methodName, params as Rpc.Any);
         }
       },
     });
@@ -88,11 +94,11 @@ export class ClientRpcServer {
     await this._rpcPeer.close();
   }
 
-  private _getServiceHandler(serviceName: string) {
+  private _getServiceHandler(serviceName: string): ServiceHandler<GenService<GenServiceMethods>> {
     if (!this._handlerCache.has(serviceName)) {
       const [key, descriptor] =
-        Object.entries(this._serviceRegistry.descriptors as ServiceBundle<Record<string, any>>).find(
-          ([key, descriptor]) => descriptor.name === serviceName,
+        Object.entries(this._serviceRegistry.descriptors).find(
+          ([_key, descriptor]) => (descriptor as DescService).typeName === serviceName,
         ) ?? raise(new Error(`Service not available: ${serviceName}`));
 
       const service = this._serviceRegistry.services[key as keyof ClientServices] as any;
@@ -100,7 +106,10 @@ export class ClientRpcServer {
         throw new Error(`Service not available: ${serviceName}`);
       }
 
-      this._handlerCache.set(serviceName, descriptor.createServer(service));
+      this._handlerCache.set(
+        serviceName,
+        new ServiceHandler(descriptor as GenService<GenServiceMethods> & DescService, service),
+      );
     }
 
     return this._handlerCache.get(serviceName)!;

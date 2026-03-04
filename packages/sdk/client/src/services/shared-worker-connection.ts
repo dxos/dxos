@@ -3,12 +3,13 @@
 //
 
 import { Trigger } from '@dxos/async';
-import { type WorkerServiceBundle, iframeServiceBundle, workerServiceBundle } from '@dxos/client-protocol';
+import { iframeServiceBundle, workerServiceBundle } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 import { log } from '@dxos/log';
 import { createIceProvider } from '@dxos/network-manager';
 import { RemoteServiceConnectionError } from '@dxos/protocols';
-import { type BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
+import { type Mesh } from '@dxos/protocols';
+import { EMPTY } from '@dxos/protocols/buf';
 import { type ProtoRpcPeer, type RpcPort, createProtoRpcPeer } from '@dxos/rpc';
 import { type MaybePromise, type Provider, getAsyncProviderValue } from '@dxos/util';
 
@@ -32,8 +33,8 @@ export class SharedWorkerConnection {
   private readonly _systemPort: RpcPort;
   private _release = new Trigger();
   private _config!: Config;
-  private _transportService!: BridgeService;
-  private _systemRpc!: ProtoRpcPeer<WorkerServiceBundle>;
+  private _transportService!: Mesh.BridgeService;
+  private _systemRpc!: ProtoRpcPeer<typeof workerServiceBundle>;
 
   constructor({ config, systemPort }: SharedWorkerConnectionOptions) {
     this._configProvider = config;
@@ -45,10 +46,11 @@ export class SharedWorkerConnection {
 
     this._config = await getAsyncProviderValue(this._configProvider);
 
+    const iceServers = this._config.get('runtime.services.ice' as any) ?? [];
+    const iceProviders = this._config.get('runtime.services.iceProviders' as any);
     this._transportService = new RtcTransportService(
-      { iceServers: [...(this._config.get('runtime.services.ice') ?? [])] },
-      this._config.get('runtime.services.iceProviders') &&
-        createIceProvider(this._config.get('runtime.services.iceProviders')!),
+      { iceServers: Array.isArray(iceServers) ? [...iceServers] : [] },
+      iceProviders && createIceProvider(iceProviders),
     );
 
     this._systemRpc = createProtoRpcPeer({
@@ -88,7 +90,7 @@ export class SharedWorkerConnection {
   async close(): Promise<void> {
     this._release.wake();
     try {
-      await this._systemRpc.rpc.WorkerService.stop();
+      await this._systemRpc.rpc.WorkerService.stop(EMPTY);
     } catch {
       // If this fails, the worker is probably already gone.
     }

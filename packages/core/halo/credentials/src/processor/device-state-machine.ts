@@ -6,10 +6,16 @@ import { Trigger } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type Chain, type Credential, type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { create, toPublicKey } from '@dxos/protocols/buf';
+import {
+  type Chain,
+  ChainSchema,
+  type Credential,
+  type DeviceProfileDocument,
+} from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { ComplexMap } from '@dxos/util';
 
-import { getCredentialAssertion, isValidAuthorizedDeviceCredential } from '../credentials';
+import { fromBufPublicKey, getAssertionFromCredential } from '../credentials';
 
 import { type CredentialProcessor } from './credential-processor';
 
@@ -17,6 +23,16 @@ export type DeviceStateMachineProps = {
   identityKey: PublicKey;
   deviceKey: PublicKey;
   onUpdate?: () => void;
+};
+
+/** Check if a credential is an AuthorizedDevice for the given identity and device. */
+const isAuthorizedDeviceFor = (credential: Credential, identityKey: PublicKey, deviceKey: PublicKey): boolean => {
+  const assertion = getAssertionFromCredential(credential);
+  return (
+    assertion.$typeName === 'dxos.halo.credentials.AuthorizedDevice' &&
+    !!fromBufPublicKey(credential.issuer)?.equals(identityKey) &&
+    !!fromBufPublicKey(credential.subject?.id)?.equals(deviceKey)
+  );
 };
 
 /**
@@ -40,22 +56,29 @@ export class DeviceStateMachine implements CredentialProcessor {
     });
 
     // Save device keychain credential when processed by the space state machine.
-    if (isValidAuthorizedDeviceCredential(credential, this._params.identityKey, this._params.deviceKey)) {
-      this.deviceCredentialChain = { credential };
+    if (isAuthorizedDeviceFor(credential, this._params.identityKey, this._params.deviceKey)) {
+      // Avoid create(ChainSchema, { credential }) which deep-processes the credential
+      // and strips @dxos/keys.PublicKey instances from proto-decoded credentials.
+      const chain = create(ChainSchema, {});
+      chain.credential = credential;
+      this.deviceCredentialChain = chain;
       this.deviceChainReady.wake();
     }
 
-    const assertion = getCredentialAssertion(credential);
+    const assertion = getAssertionFromCredential(credential);
+    const subjectId = fromBufPublicKey(credential.subject!.id!)!;
 
-    switch (assertion['@type']) {
+    switch (assertion.$typeName) {
       case 'dxos.halo.credentials.AuthorizedDevice': {
-        // We don't need to validate that the device is already added since the credentials are considered idempotent.
-        // In the future, when we will have device-specific attributes, we should join them from all concurrent credentials.
-        this.authorizedDeviceKeys.set(assertion.deviceKey, this.authorizedDeviceKeys.get(assertion.deviceKey) ?? {});
+        const deviceKey = assertion.deviceKey ? toPublicKey(assertion.deviceKey) : subjectId;
+        this.authorizedDeviceKeys.set(
+          deviceKey,
+          this.authorizedDeviceKeys.get(deviceKey) ?? ({} as DeviceProfileDocument),
+        );
 
         log('added device', {
           localDeviceKey: this._params.deviceKey,
-          deviceKey: assertion.deviceKey,
+          deviceKey,
           size: this.authorizedDeviceKeys.size,
         });
         this._params.onUpdate?.();
@@ -63,16 +86,16 @@ export class DeviceStateMachine implements CredentialProcessor {
       }
 
       case 'dxos.halo.credentials.DeviceProfile': {
-        invariant(this.authorizedDeviceKeys.has(credential.subject.id), 'Device not found.');
+        invariant(this.authorizedDeviceKeys.has(subjectId), 'Device not found.');
 
-        if (assertion && credential.subject.id.equals(this._params.deviceKey)) {
+        if (assertion && subjectId.equals(this._params.deviceKey)) {
           log.trace('dxos.halo.device', {
-            deviceKey: credential.subject.id,
+            deviceKey: subjectId,
             profile: assertion.profile,
           });
         }
 
-        this.authorizedDeviceKeys.set(credential.subject.id, assertion.profile);
+        this.authorizedDeviceKeys.set(subjectId, assertion.profile ?? ({} as DeviceProfileDocument));
         this._params.onUpdate?.();
         break;
       }

@@ -7,7 +7,7 @@ import path from 'node:path';
 import { sleep } from '@dxos/async';
 import { type ConfigProto } from '@dxos/config';
 import { log } from '@dxos/log';
-import { type IndexConfig, IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
+import { type IndexConfig, IndexKind_Kind } from '@dxos/protocols/buf/dxos/echo/indexing_pb';
 
 import { TraceReader } from '../analysys/traces';
 import { type SchedulerEnvImpl } from '../env';
@@ -61,7 +61,7 @@ export class EdgeSync implements TestPlan<EdgeTestSpec, EdgeSyncResult> {
       },
       maxDocumentsPerInvocation: 5_000,
       simultaneousInvocations: false,
-      indexing: { enabled: false, indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }] },
+      indexing: { enabled: false, indexes: [{ kind: IndexKind_Kind.SCHEMA_MATCH }] },
       config: {
         runtime: {
           client: {

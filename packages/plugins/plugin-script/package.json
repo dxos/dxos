@@ -75,6 +75,7 @@
     "@dxos/client-protocol": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/config": "workspace:*",
+    "@dxos/credentials": "catalog:",
     "@dxos/debug": "workspace:*",
     "@dxos/devtools": "workspace:*",
     "@dxos/echo": "workspace:*",

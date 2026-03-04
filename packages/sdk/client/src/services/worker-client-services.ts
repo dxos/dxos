@@ -4,13 +4,12 @@
 
 import { Event, Trigger, synchronized } from '@dxos/async';
 import { type ClientServices, type ClientServicesProvider, clientServiceBundle } from '@dxos/client-protocol';
-import type { Stream } from '@dxos/codec-protobuf/stream';
 import { Config } from '@dxos/config';
 import type { PublicKey } from '@dxos/keys';
 import { type CallMetadata, type LogFilter, log, parseFilter } from '@dxos/log';
-import { type LogEntry, LogLevel } from '@dxos/protocols/proto/dxos/client/services';
-import { type ServiceBundle } from '@dxos/rpc';
+import { type LogEntry, type LogEntry_Meta, LogLevel } from '@dxos/protocols/buf/dxos/client/logging_pb';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
+import { type Stream } from '@dxos/stream';
 import { trace } from '@dxos/tracing';
 
 import { RPC_TIMEOUT } from '../common';
@@ -68,7 +67,7 @@ export class WorkerClientServices implements ClientServicesProvider {
     this._signalTelemetryEnabled = signalTelemetryEnabled ?? false;
   }
 
-  get descriptors(): ServiceBundle<ClientServices> {
+  get descriptors() {
     return clientServiceBundle;
   }
 
@@ -117,13 +116,13 @@ export class WorkerClientServices implements ClientServicesProvider {
       }
     });
 
-    this._loggingStream = this._services.services.LoggingService.queryLogs(
+    this._loggingStream = this._services.services.LoggingService!.queryLogs(
       {
         filters: this._logFilter,
       },
       { timeout: RPC_TIMEOUT },
     );
-    this._loggingStream.subscribe((entry) => {
+    this._loggingStream!.subscribe((entry) => {
       switch (entry.level) {
         case LogLevel.DEBUG:
           log.debug(entry.message, entry.context, mapLogMeta(entry.meta));
@@ -163,7 +162,7 @@ export class WorkerClientServices implements ClientServicesProvider {
   }
 }
 
-const mapLogMeta = (meta: LogEntry.Meta | undefined): CallMetadata | undefined => {
+const mapLogMeta = (meta: LogEntry_Meta | undefined): CallMetadata | undefined => {
   return (
     meta && {
       F: meta.file,

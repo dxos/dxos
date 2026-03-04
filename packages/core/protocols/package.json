@@ -21,14 +21,6 @@
       "browser": "./dist/src/feed-replication.js",
       "import": "./dist/src/feed-replication.js"
     },
-    "./proto": {
-      "browser": "./dist/src/proto/index.js",
-      "import": "./dist/src/proto/index.js"
-    },
-    "./proto/*": {
-      "browser": "./dist/src/proto/gen/*.js",
-      "import": "./dist/src/proto/gen/*.js"
-    },
     "./buf": {
       "browser": "./dist/src/buf/index.js",
       "import": "./dist/src/buf/index.js"
@@ -41,9 +33,6 @@
   "types": "dist/src/index.d.ts",
   "typesVersions": {
     "*": {
-      "proto/*": [
-        "dist/src/proto/gen/*"
-      ],
       "buf/*": [
         "dist/src/buf/proto/gen/*"
       ],
@@ -52,9 +41,6 @@
       ],
       "buf": [
         "dist/src/buf/index.d.ts"
-      ],
-      "proto": [
-        "dist/src/proto/index.d.ts"
       ]
     }
   },
@@ -64,18 +50,17 @@
   ],
   "dependencies": {
     "@bufbuild/protobuf": "catalog:",
-    "@dxos/codec-protobuf": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/stream": "workspace:*",
     "@dxos/timeframe": "workspace:*",
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {
     "@bufbuild/buf": "catalog:",
     "@bufbuild/protoc-gen-es": "catalog:",
-    "@dxos/protobuf-compiler": "workspace:*",
     "effect": "catalog:"
   },
   "peerDependencies": {

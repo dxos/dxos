@@ -5,7 +5,8 @@
 import { describe, test } from 'vitest';
 
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
-import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { encodePublicKey } from '@dxos/protocols/buf';
+import { Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { openAndClose } from '@dxos/test-utils';
 
 import { createServiceContext, performInvitation } from '../testing';
@@ -17,7 +18,7 @@ describe('services/ServiceContext', () => {
     await device1.createIdentity();
 
     const device2 = await createOpenServiceContext(networkContext);
-    await Promise.all(performInvitation({ host: device1, guest: device2, options: { kind: Invitation.Kind.DEVICE } }));
+    await Promise.all(performInvitation({ host: device1, guest: device2, options: { kind: Invitation_Kind.DEVICE } }));
 
     const space1 = await device1.dataSpaceManager!.createSpace();
     await device2.dataSpaceManager!.waitUntilSpaceReady(space1!.key);
@@ -31,7 +32,7 @@ describe('services/ServiceContext', () => {
     await device1.createIdentity();
 
     const device2 = await createOpenServiceContext(networkContext);
-    await Promise.all(performInvitation({ host: device1, guest: device2, options: { kind: Invitation.Kind.DEVICE } }));
+    await Promise.all(performInvitation({ host: device1, guest: device2, options: { kind: Invitation_Kind.DEVICE } }));
 
     const identity2 = await createOpenServiceContext(networkContext);
     await identity2.createIdentity();
@@ -40,7 +41,7 @@ describe('services/ServiceContext', () => {
       performInvitation({
         host: identity2,
         guest: device1,
-        options: { kind: Invitation.Kind.SPACE, spaceKey: space1.key },
+        options: { kind: Invitation_Kind.SPACE, spaceKey: encodePublicKey(space1.key) },
       }),
     );
 

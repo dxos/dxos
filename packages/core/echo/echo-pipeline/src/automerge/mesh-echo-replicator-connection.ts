@@ -51,7 +51,7 @@ export class MeshReplicatorConnection extends Resource implements AutomergeRepli
         invariant(this._isEnabled, 'Writing to a disabled connection');
         try {
           logSendSync(message);
-          await this.replicatorExtension.sendSyncMessage({ payload: cbor.encode(message) });
+          await this.replicatorExtension.sendSyncMessage({ payload: cbor.encode(message) } as any);
         } catch (err) {
           controller.error(err);
           this._disconnectIfEnabled();

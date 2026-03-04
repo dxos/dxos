@@ -30,9 +30,20 @@ import {
   createRtcTransportFactory,
 } from '@dxos/network-manager';
 import { TcpTransportFactory } from '@dxos/network-manager/transport/tcp';
-import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { create } from '@dxos/protocols/buf';
+import {
+  type Invitation,
+  Invitation_AuthMethod,
+  Invitation_State,
+} from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import {
+  ConfigSchema,
+  RuntimeSchema,
+  Runtime_ServicesSchema,
+  Runtime_Services_SignalSchema,
+} from '@dxos/protocols/buf/dxos/config_pb';
 import { type Storage } from '@dxos/random-access-storage';
-import { type ProtoRpcPeer, createLinkedPorts, createProtoRpcPeer } from '@dxos/rpc';
+import { type ProtoRpcPeer, createProtoRpcPeer, createLinkedPorts } from '@dxos/rpc';
 import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
@@ -46,19 +57,20 @@ import {
 
 import { TestWorkerFactory } from './test-worker-factory';
 
-export const testConfigWithLocalSignal = new Config({
-  version: 1,
-  runtime: {
-    services: {
-      signaling: [
-        {
-          // TODO(burdon): Port numbers and global consts?
-          server: `ws://localhost:${process.env.SIGNAL_PORT ?? 4000}/.well-known/dx/signal`,
-        },
-      ],
-    },
-  },
-});
+export const testConfigWithLocalSignal = new Config(
+  create(ConfigSchema, {
+    version: 1,
+    runtime: create(RuntimeSchema, {
+      services: create(Runtime_ServicesSchema, {
+        signaling: [
+          create(Runtime_Services_SignalSchema, {
+            server: `ws://localhost:${process.env.SIGNAL_PORT ?? 4000}/.well-known/dx/signal`,
+          }),
+        ],
+      }),
+    }),
+  }),
+);
 
 /**
  * Client builder supports different configurations, incl. signaling, transports, storage.
@@ -189,17 +201,15 @@ export class TestBuilder {
    * Get network manager using local shared memory or remote signal manager.
    */
   private get networking() {
-    const signals = this.config.get('runtime.services.signaling');
+    const signals = this.config.get('runtime.services.signaling' as any);
     if (signals) {
       log.info(`using transport ${this._transport}`);
+      const iceServers = this.config.get('runtime.services.ice' as any) as RTCIceServer[] | undefined;
+      const iceProviders = this.config.get('runtime.services.iceProviders' as any);
       let transportFactory: TransportFactory;
       switch (this._transport) {
         case TransportKind.WEB_RTC:
-          transportFactory = createRtcTransportFactory(
-            { iceServers: this.config.get('runtime.services.ice') },
-            this.config.get('runtime.services.iceProviders') &&
-              createIceProvider(this.config.get('runtime.services.iceProviders')!),
-          );
+          transportFactory = createRtcTransportFactory({ iceServers }, iceProviders && createIceProvider(iceProviders));
           break;
 
         case TransportKind.TCP:
@@ -256,19 +266,19 @@ export const joinCommonSpace = async ([initialPeer, ...peers]: Client[], spaceKe
       const hostDone = new Trigger<Invitation>();
       const guestDone = new Trigger<Invitation>();
 
-      const hostObservable = rootSpace.share({ authMethod: Invitation.AuthMethod.NONE });
+      const hostObservable = rootSpace.share({ authMethod: Invitation_AuthMethod.NONE });
       log('invitation created');
       hostObservable.subscribe(
         (hostInvitation) => {
           switch (hostInvitation.state) {
-            case Invitation.State.CONNECTING: {
+            case Invitation_State.CONNECTING: {
               const guestObservable = peer.spaces.join(hostInvitation);
               log('invitation accepted');
 
               guestObservable.subscribe(
                 (guestInvitation) => {
                   switch (guestInvitation.state) {
-                    case Invitation.State.SUCCESS: {
+                    case Invitation_State.SUCCESS: {
                       guestDone.wake(guestInvitation);
                       log('invitation guestDone');
                       break;
@@ -280,7 +290,7 @@ export const joinCommonSpace = async ([initialPeer, ...peers]: Client[], spaceKe
               break;
             }
 
-            case Invitation.State.SUCCESS: {
+            case Invitation_State.SUCCESS: {
               hostDone.wake(hostInvitation);
               log('invitation hostDone');
             }

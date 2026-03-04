@@ -9,7 +9,8 @@ import { ErrorStream } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
-import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
+import { create } from '@dxos/protocols/buf';
+import { type Signal, SignalSchema } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 import { ComplexMap } from '@dxos/util';
 
 import { type Transport, type TransportFactory, type TransportOptions } from './transport';
@@ -77,7 +78,7 @@ export class MemoryTransport implements Transport {
     if (this._options.initiator) {
       log('sending signal');
       try {
-        await this._options.sendSignal({ payload: { transportId: this._instanceId.toHex() } });
+        await this._options.sendSignal(create(SignalSchema, { payload: { transportId: this._instanceId.toHex() } }));
       } catch (err) {
         if (!this._closed) {
           this.errors.raise(toError(err));

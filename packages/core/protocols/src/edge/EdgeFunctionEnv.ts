@@ -5,7 +5,16 @@
 import { type SpaceId } from '@dxos/keys';
 
 import type * as FeedProtocol from '../FeedProtocol';
-import { type CreateDocumentRequest, type CreateDocumentResponse } from '../proto/gen/dxos/echo/service';
+/** Cloudflare Workers RPC request to create a document. */
+export type CreateDocumentRequest = {
+  spaceId: string;
+  initialValue?: Record<string, unknown>;
+};
+
+/** Cloudflare Workers RPC response for document creation. */
+export type CreateDocumentResponse = {
+  documentId: string;
+};
 
 /*
 

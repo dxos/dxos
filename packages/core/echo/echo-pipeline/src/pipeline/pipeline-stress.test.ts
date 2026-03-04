@@ -12,13 +12,13 @@ import { type FeedStore, type FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type FeedMessageBlock } from '@dxos/protocols';
-import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { type FeedMessage, type FeedMessage_Payload } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { Timeframe } from '@dxos/timeframe';
 import { range } from '@dxos/util';
 
 import { TestFeedBuilder } from '../testing';
 
-import { Pipeline } from './pipeline';
+import { type ControlPipelinePayload, Pipeline } from './pipeline';
 
 const NUM_AGENTS = 2;
 const NUM_MESSAGES = 10;
@@ -112,9 +112,9 @@ class Agent {
     await this.feed.close();
   }
 
-  write(message: FeedMessage.Payload): void {
+  write(message: FeedMessage_Payload): void {
     const prev = this.writePromise;
-    const promise = this.pipeline.writer!.write(message);
+    const promise = this.pipeline.writer!.write(message as ControlPipelinePayload);
     this.writePromise = Promise.all([prev, promise]);
   }
 
@@ -147,7 +147,7 @@ class WriteCommand implements fc.AsyncCommand<Model, Real> {
     const toWrite = Math.min(this.count, NUM_MESSAGES - agent.feed.length);
     if (toWrite > 0) {
       for (const _ of range(toWrite)) {
-        agent.write({}); // Content is not important.
+        agent.write({} as any); // Content is not important.
       }
     }
   }

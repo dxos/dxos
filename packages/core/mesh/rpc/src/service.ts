@@ -1,39 +1,166 @@
 //
 // Copyright 2021 DXOS.org
 //
-
-import {
-  type EncodingOptions,
-  type ServiceDescriptor,
-  type ServiceHandler,
-  type ServiceProvider,
-} from '@dxos/codec-protobuf';
 import { invariant } from '@dxos/invariant';
+import { type Rpc } from '@dxos/protocols';
+import {
+  type DescMethod,
+  type DescService,
+  type GenService,
+  type GenServiceMethods,
+  type Message,
+  create,
+  fromBinary,
+  toBinary,
+} from '@dxos/protocols/buf';
+import { Stream } from '@dxos/stream';
+import { getAsyncProviderValue } from '@dxos/util';
 
 import { RpcPeer, type RpcPeerOptions } from './rpc';
 
 /**
- * Map of service definitions.
+ * Service backend interface for making RPC calls.
  */
-// TODO(burdon): Rename ServiceMap.
-export type ServiceBundle<Services> = { [Key in keyof Services]: ServiceDescriptor<Services[Key]> };
-
-export type ServiceHandlers<Services> = { [ServiceName in keyof Services]: ServiceProvider<Services[ServiceName]> };
-
-export type ServiceTypesOf<Bundle extends ServiceBundle<any>> =
-  Bundle extends ServiceBundle<infer Services> ? Services : never;
+export interface ServiceBackend {
+  call(method: string, request: Rpc.Any, requestOptions?: Rpc.RequestOptions): Promise<Rpc.Any>;
+  callStream(method: string, request: Rpc.Any, requestOptions?: Rpc.RequestOptions): Stream<Rpc.Any>;
+}
 
 /**
- * Groups multiple services together to be served by a single RPC peer.
+ * Creates a client for a service.
  */
-export const createServiceBundle = <Service>(services: ServiceBundle<Service>): ServiceBundle<Service> => services;
+const createClient = <S extends GenService<GenServiceMethods>>(
+  service: S & DescService,
+  backend: ServiceBackend,
+): Rpc.RpcClient<S> => {
+  const client: Record<string, unknown> = {};
+
+  for (const [methodName, methodDef] of Object.entries(service.method)) {
+    const descMethod = methodDef as DescMethod;
+    const { methodKind, input, output } = descMethod;
+    const rpcMethodName = descMethod.name;
+
+    if (methodKind === 'server_streaming') {
+      client[methodName] = (request: Message, options?: Rpc.RequestOptions): Stream<Message> => {
+        const normalizedRequest = create(input, request as Record<string, unknown>);
+        const encoded = toBinary(input, normalizedRequest);
+        const stream = backend.callStream(
+          rpcMethodName,
+          {
+            value: encoded,
+            typeUrl: input.typeName,
+          },
+          options,
+        );
+        return Stream.map(stream, (data) => fromBinary(output, data.value));
+      };
+    } else {
+      // unary
+      client[methodName] = async (request: Message, options?: Rpc.RequestOptions): Promise<Message> => {
+        const normalizedRequest = create(input, request as Record<string, unknown>);
+        const encoded = toBinary(input, normalizedRequest);
+        const response = await backend.call(
+          rpcMethodName,
+          {
+            value: encoded,
+            typeUrl: input.typeName,
+          },
+          options,
+        );
+        return fromBinary(output, response.value);
+      };
+    }
+
+    // Set function name for better stack traces.
+    Object.defineProperty(client[methodName], 'name', {
+      value: methodName,
+    });
+  }
+
+  return client as Rpc.RpcClient<S>;
+};
 
 /**
- * Type-safe RPC peer.
+ * Handler implementation for a service.
  */
-export class ProtoRpcPeer<Service> {
+export class ServiceHandler<S extends GenService<GenServiceMethods>> implements ServiceBackend {
   constructor(
-    public readonly rpc: Service,
+    private readonly _service: S & DescService,
+    private readonly _handlers: Rpc.ServiceProvider<Rpc.RpcHandlers<S>>,
+  ) {}
+
+  /**
+   * Handle a unary RPC call.
+   */
+  async call(methodName: string, request: Rpc.Any, options?: Rpc.RequestOptions): Promise<Rpc.Any> {
+    const mappedMethodName = methodName[0].toLowerCase() + methodName.slice(1);
+    const descMethod = this._service.method[mappedMethodName] as DescMethod | undefined;
+    invariant(descMethod, `Method not found: ${methodName}`);
+    invariant(
+      descMethod.methodKind !== 'server_streaming',
+      `Invalid RPC method call: ${methodName} is a streaming method.`,
+    );
+
+    const { input, output } = descMethod;
+    const requestDecoded = fromBinary(input, request.value);
+    const handler = await this._getHandler(mappedMethodName);
+    const response = await handler(requestDecoded, options);
+    // Normalize the response to a proper buf message before serialization.
+    const normalizedResponse = create(output, response as Record<string, unknown>);
+    const responseEncoded = toBinary(output, normalizedResponse);
+
+    return {
+      value: responseEncoded,
+      typeUrl: output.typeName,
+    };
+  }
+
+  /**
+   * Handle a streaming RPC call.
+   */
+  callStream(methodName: string, request: Rpc.Any, options?: Rpc.RequestOptions): Stream<Rpc.Any> {
+    const mappedMethodName = methodName[0].toLowerCase() + methodName.slice(1);
+    const descMethod = this._service.method[mappedMethodName] as DescMethod | undefined;
+    invariant(descMethod, `Method not found: ${methodName}`);
+    invariant(
+      descMethod.methodKind === 'server_streaming',
+      `Invalid RPC method call: ${methodName} is not a streaming method.`,
+    );
+
+    const { input, output } = descMethod;
+    const requestDecoded = fromBinary(input, request.value);
+    const handlerPromise = this._getHandler(mappedMethodName);
+
+    const responseStream = Stream.unwrapPromise(
+      handlerPromise.then((handler) => handler(requestDecoded, options) as Stream<Message>),
+    );
+
+    return Stream.map(responseStream, (data): Rpc.Any => {
+      // Normalize the response to a proper buf message before serialization.
+      const normalizedData = create(output, data as Record<string, unknown>);
+      return {
+        value: toBinary(output, normalizedData),
+        typeUrl: output.typeName,
+      };
+    });
+  }
+
+  private async _getHandler(
+    methodName: string,
+  ): Promise<(request: unknown, options?: Rpc.RequestOptions) => unknown> {
+    const handlers: Rpc.RpcHandlers<S> = await getAsyncProviderValue(this._handlers);
+    const handler = handlers[methodName as keyof typeof handlers];
+    invariant(handler, `Handler is missing: ${methodName}`);
+    return (handler as Function).bind(handlers);
+  }
+}
+
+/**
+ * Type-safe RPC peer for services.
+ */
+export class ProtoRpcPeer<Client extends Record<string, GenService<GenServiceMethods>>> {
+  constructor(
+    public readonly rpc: { [K in keyof Client]: Rpc.RpcClient<Client[K]> },
     private readonly _peer: RpcPeer,
   ) {}
 
@@ -50,52 +177,64 @@ export class ProtoRpcPeer<Service> {
   }
 }
 
-export interface ProtoRpcPeerOptions<Client, Server> extends Omit<RpcPeerOptions, 'callHandler' | 'streamHandler'> {
+export interface ProtoRpcPeerOptions<
+  Client extends Record<string, GenService<GenServiceMethods>>,
+  Server extends Record<string, GenService<GenServiceMethods>>,
+> extends Omit<RpcPeerOptions, 'callHandler' | 'streamHandler'> {
   /**
-   * Services that are expected to be implemented by the counter-space.
+   * Services that are expected to be implemented by the counter-party.
    */
-  // TODO(burdon): Rename proxy.
-  requested?: ServiceBundle<Client>;
+  requested?: Rpc.ServiceBundle<Client>;
 
   /**
-   * Services exposed to the counter-space.
+   * Services exposed to the counter-party.
    */
-  // TODO(burdon): Rename service.
-  exposed?: ServiceBundle<Server>;
+  exposed?: Rpc.ServiceBundle<Server>;
 
   /**
-   * Handlers for the exposed services
+   * Handlers for the exposed services.
    */
-  handlers?: ServiceHandlers<Server>;
-
-  /**
-   * Encoding options passed to the underlying proto codec.
-   */
-  encodingOptions?: EncodingOptions;
+  handlers?: Rpc.ServiceHandlers<Server>;
 }
 
 /**
- * Create type-safe RPC peer from a service bundle.
+ * Parse a fully qualified method name into service and method name.
+ */
+export const parseMethodName = (method: string): [serviceName: string, methodName: string] => {
+  const separator = method.lastIndexOf('.');
+  const serviceName = method.slice(0, separator);
+  const methodName = method.slice(separator + 1);
+  if (serviceName.length === 0 || methodName.length === 0) {
+    throw new Error(`Invalid method: ${method}`);
+  }
+  return [serviceName, methodName];
+};
+
+/**
+ * Create a type-safe RPC peer from a service bundle.
  * Can both handle and issue requests.
  */
-// TODO(burdon): Currently assumes that the proto service name is unique.
-//  Support multiple instances services definitions (e.g., halo/space invitations).
-export const createProtoRpcPeer = <Client = {}, Server = {}>({
+export const createProtoRpcPeer = <
+  Client extends Record<string, GenService<GenServiceMethods>> = {},
+  Server extends Record<string, GenService<GenServiceMethods>> = {},
+>({
   requested,
   exposed,
   handlers,
-  encodingOptions,
   ...rest
 }: ProtoRpcPeerOptions<Client, Server>): ProtoRpcPeer<Client> => {
-  // Create map of RPCs.
-  const exposedRpcs: Record<string, ServiceHandler<any>> = {};
+  // Create map of exposed service handlers.
+  const exposedHandlers: Record<string, ServiceHandler<GenService<GenServiceMethods>>> = {};
   if (exposed) {
-    invariant(handlers);
+    invariant(handlers, 'Handlers must be provided for exposed services.');
     for (const serviceName of Object.keys(exposed) as (keyof Server)[]) {
-      // Get full service name with the package name without '.' at the beginning.
-      const serviceFqn = exposed[serviceName].serviceProto.fullName.slice(1);
-      const serviceProvider = handlers[serviceName];
-      exposedRpcs[serviceFqn] = exposed[serviceName].createServer(serviceProvider, encodingOptions);
+      const service = exposed[serviceName] as GenService<GenServiceMethods> & DescService;
+      const serviceHandler = handlers[serviceName];
+      const serviceFqn = service.typeName;
+      exposedHandlers[serviceFqn] = new ServiceHandler(
+        service,
+        serviceHandler as Rpc.ServiceProvider<Rpc.RpcHandlers<GenService<GenServiceMethods>>>,
+      );
     }
   }
 
@@ -105,155 +244,44 @@ export const createProtoRpcPeer = <Client = {}, Server = {}>({
 
     callHandler: (method, request, options) => {
       const [serviceName, methodName] = parseMethodName(method);
-      if (!exposedRpcs[serviceName]) {
+      const handler = exposedHandlers[serviceName];
+      if (!handler) {
         throw new Error(`Service not supported: ${serviceName}`);
       }
-
-      return exposedRpcs[serviceName].call(methodName, request, options);
+      return handler.call(methodName, request as Rpc.Any, options);
     },
 
     streamHandler: (method, request, options) => {
       const [serviceName, methodName] = parseMethodName(method);
-      if (!exposedRpcs[serviceName]) {
+      const handler = exposedHandlers[serviceName];
+      if (!handler) {
         throw new Error(`Service not supported: ${serviceName}`);
       }
-
-      return exposedRpcs[serviceName].callStream(methodName, request, options);
+      return handler.callStream(methodName, request as Rpc.Any, options);
     },
   });
 
-  const requestedRpcs: Client = {} as Client;
+  // Create client proxies for requested services.
+  const requestedClients = {} as { [K in keyof Client]: Rpc.RpcClient<Client[K]> };
   if (requested) {
     for (const serviceName of Object.keys(requested) as (keyof Client)[]) {
-      // Get full service name with the package name without '.' at the beginning.
-      const serviceFqn = requested[serviceName].serviceProto.fullName.slice(1);
+      const service = requested[serviceName] as GenService<GenServiceMethods> & DescService;
+      const serviceFqn = service.typeName;
 
-      requestedRpcs[serviceName] = requested[serviceName].createClient(
-        {
-          call: (method, req, options) => peer.call(`${serviceFqn}.${method}`, req, options),
-          callStream: (method, req, options) => peer.callStream(`${serviceFqn}.${method}`, req, options),
-        },
-        encodingOptions,
-      );
+      requestedClients[serviceName] = createClient(service, {
+        call: (method, req, options) => peer.call(`${serviceFqn}.${method}`, req, options) as Promise<Rpc.Any>,
+        callStream: (method, req, options) =>
+          peer.callStream(`${serviceFqn}.${method}`, req, options) as Stream<Rpc.Any>,
+      }) as Rpc.RpcClient<Client[typeof serviceName]>;
     }
   }
 
-  return new ProtoRpcPeer(requestedRpcs, peer);
-};
-
-export const parseMethodName = (method: string): [serviceName: string, methodName: string] => {
-  const separator = method.lastIndexOf('.');
-  const serviceName = method.slice(0, separator);
-  const methodName = method.slice(separator + 1);
-  if (serviceName.length === 0 || methodName.length === 0) {
-    throw new Error(`Invalid method: ${method}`);
-  }
-
-  return [serviceName, methodName];
-};
-
-//
-// TODO(burdon): Remove deprecated (only bot factory).
-//
-
-/**
- * Create a type-safe RPC client.
- * @deprecated Use createProtoRpcPeer instead.
- */
-export const createRpcClient = <S>(
-  serviceDef: ServiceDescriptor<S>,
-  options: Omit<RpcPeerOptions, 'callHandler'>,
-): ProtoRpcPeer<S> => {
-  const peer = new RpcPeer({
-    ...options,
-    callHandler: () => {
-      throw new Error('Requests to client are not supported.');
-    },
-  });
-
-  const client = serviceDef.createClient({
-    call: peer.call.bind(peer),
-    callStream: peer.callStream.bind(peer),
-  });
-
-  return new ProtoRpcPeer(client, peer);
+  return new ProtoRpcPeer(requestedClients, peer);
 };
 
 /**
- * @deprecated
+ * Groups multiple services together to be served by a single RPC peer.
  */
-export interface RpcServerOptions<S> extends Omit<RpcPeerOptions, 'callHandler'> {
-  service: ServiceDescriptor<S>;
-  handlers: S;
-}
-
-/**
- * Create a type-safe RPC server.
- * @deprecated Use createProtoRpcPeer instead.
- */
-export const createRpcServer = <S>({ service, handlers, ...rest }: RpcServerOptions<S>): RpcPeer => {
-  const server = service.createServer(handlers);
-  return new RpcPeer({
-    ...rest,
-    callHandler: server.call.bind(server),
-    streamHandler: server.callStream.bind(server),
-  });
-};
-
-/**
- * Create type-safe RPC client from a service bundle.
- * @deprecated Use createProtoRpcPeer instead.
- */
-export const createBundledRpcClient = <S>(
-  descriptors: ServiceBundle<S>,
-  options: Omit<RpcPeerOptions, 'callHandler' | 'streamHandler'>,
-): ProtoRpcPeer<S> => {
-  return createProtoRpcPeer({
-    requested: descriptors,
-    ...options,
-  });
-};
-
-/**
- * @deprecated
- */
-export interface RpcBundledServerOptions<S> extends Omit<RpcPeerOptions, 'callHandler'> {
-  services: ServiceBundle<S>;
-  handlers: S;
-}
-
-/**
- * Create type-safe RPC server from a service bundle.
- * @deprecated Use createProtoRpcPeer instead.
- */
-// TODO(burdon): Support late-binding via providers.
-export const createBundledRpcServer = <S>({ services, handlers, ...rest }: RpcBundledServerOptions<S>): RpcPeer => {
-  const rpc: Record<string, ServiceHandler<any>> = {};
-  for (const serviceName of Object.keys(services) as (keyof S)[]) {
-    // Get full service name with the package name without '.' at the beginning.
-    const serviceFqn = services[serviceName].serviceProto.fullName.slice(1);
-    rpc[serviceFqn] = services[serviceName].createServer(handlers[serviceName] as any);
-  }
-
-  return new RpcPeer({
-    ...rest,
-
-    callHandler: (method, request) => {
-      const [serviceName, methodName] = parseMethodName(method);
-      if (!rpc[serviceName]) {
-        throw new Error(`Service not supported: ${serviceName}`);
-      }
-
-      return rpc[serviceName].call(methodName, request);
-    },
-
-    streamHandler: (method, request) => {
-      const [serviceName, methodName] = parseMethodName(method);
-      if (!rpc[serviceName]) {
-        throw new Error(`Service not supported: ${serviceName}`);
-      }
-
-      return rpc[serviceName].callStream(methodName, request);
-    },
-  });
-};
+export const createServiceBundle = <Services extends Record<string, GenService<GenServiceMethods>>>(
+  services: Rpc.ServiceBundle<Services>,
+): Rpc.ServiceBundle<Services> => services;

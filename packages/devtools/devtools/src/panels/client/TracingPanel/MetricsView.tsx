@@ -5,7 +5,7 @@
 import React, { type FC, useMemo } from 'react';
 import { type AxisOptions, Chart } from 'react-charts';
 
-import { type Metric, type Resource } from '@dxos/protocols/proto/dxos/tracing';
+import { type Metric, type Resource } from '@dxos/protocols/buf/dxos/tracing_pb';
 
 import { JsonView } from '../../../components';
 
@@ -34,16 +34,18 @@ export const MetricsView: FC<{ resource?: Resource }> = ({ resource }) => {
 };
 
 const MetricComponent: FC<{ metric: Metric }> = ({ metric }) => {
-  if (metric.counter) {
+  if (metric.Value.case === 'counter') {
+    const counter = metric.Value.value;
     return (
       <span>
-        {metric.name}: {metric.counter.value} {metric.counter.units ?? ''}
+        {metric.name}: {counter.value} {counter.units ?? ''}
       </span>
     );
   }
 
   // TODO(burdon): Consider using https://react-charts.tanstack.com/docs/api
-  if (metric.timeSeries) {
+  if (metric.Value.case === 'timeSeries') {
+    const timeSeries = metric.Value.value;
     const primaryAxis: AxisOptions<any> = useMemo(
       () => ({ scaleType: 'linear', getValue: (point: any) => point.idx as number }),
       [],
@@ -55,9 +57,9 @@ const MetricComponent: FC<{ metric: Metric }> = ({ metric }) => {
     );
 
     const data =
-      metric.timeSeries.tracks?.map(({ name, points }) => ({
+      timeSeries.tracks?.map(({ name, points }: { name: string; points: any[] }) => ({
         label: name,
-        data: points?.map((p, idx) => ({ idx: points.length - 1 - idx, value: p.value })) ?? [],
+        data: points?.map((p: any, idx: number) => ({ idx: points.length - 1 - idx, value: p.value })) ?? [],
       })) ?? [];
 
     return (
@@ -67,7 +69,10 @@ const MetricComponent: FC<{ metric: Metric }> = ({ metric }) => {
           <span>total</span>
           <span>
             {JSON.stringify(
-              metric.timeSeries.tracks?.reduce((acc, track) => ({ ...acc, [track.name]: track.total }), {}),
+              timeSeries.tracks?.reduce(
+                (acc: Record<string, number>, track: any) => ({ ...acc, [track.name]: track.total }),
+                {},
+              ),
               (key: string, value: any) => {
                 return typeof value === 'number' ? value.toFixed(2) : value;
               },
@@ -88,22 +93,23 @@ const MetricComponent: FC<{ metric: Metric }> = ({ metric }) => {
     );
   }
 
-  if (metric.multiCounter) {
-    const records = metric.multiCounter.records ?? [];
+  if (metric.Value.case === 'multiCounter') {
+    const multiCounter = metric.Value.value;
+    const records = [...(multiCounter.records ?? [])];
     records.sort((a, b) => a.key.localeCompare(b.key));
     return (
       <JsonView
         data={{
           [metric.name]: Object.fromEntries(
-            records.map(({ key, value }) => [key, `${value.toString()} ${metric.multiCounter?.units ?? ''}`]),
+            records.map(({ key, value }) => [key, `${value.toString()} ${multiCounter.units ?? ''}`]),
           ),
         }}
       />
     );
   }
 
-  if (metric.custom) {
-    return <JsonView data={{ [metric.name]: metric.custom.payload }} />;
+  if (metric.Value.case === 'custom') {
+    return <JsonView data={{ [metric.name]: metric.Value.value.payload }} />;
   }
 
   return <JsonView data={metric} />;

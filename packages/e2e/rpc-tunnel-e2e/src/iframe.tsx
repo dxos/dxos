@@ -6,7 +6,7 @@ import React, { StrictMode, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { JSONTree } from 'react-json-tree';
 
-import { schema } from '@dxos/protocols/proto';
+import { TestStreamService } from '@dxos/protocols/buf/example/testing/rpc_pb';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import { createProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
@@ -28,10 +28,10 @@ const App = () => {
       const client = new TestClient();
       const server = createProtoRpcPeer({
         requested: {
-          TestStreamService: schema.getService('example.testing.rpc.TestStreamService'),
+          TestStreamService,
         },
         exposed: {
-          TestStreamService: schema.getService('example.testing.rpc.TestStreamService'),
+          TestStreamService,
         },
         handlers: client.handlers,
         port,
@@ -47,10 +47,8 @@ const App = () => {
       });
       const client = createProtoRpcPeer({
         requested: {
-          TestStreamService: schema.getService('example.testing.rpc.TestStreamService'),
+          TestStreamService,
         },
-        exposed: {},
-        handlers: {},
         port,
       });
       await client.open();
