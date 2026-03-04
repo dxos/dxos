@@ -2,6 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
+// Suppress Lit dev mode warning (https://lit.dev/msg/dev-mode).
+(globalThis as any).litIssuedWarnings ??= new Set();
+(globalThis as any).litIssuedWarnings.add('dev-mode');
+
 import '@dxos-theme';
 
 import * as Effect from 'effect/Effect';

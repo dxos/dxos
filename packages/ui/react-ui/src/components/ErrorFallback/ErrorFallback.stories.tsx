@@ -5,24 +5,23 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
+import { ErrorBoundary } from '@dxos/react-error-boundary';
+
 import { withLayout, withTheme } from '../../testing';
 
-import { ErrorBoundary, ErrorFallback } from './ErrorFallback';
-
-const ErrorGenerator = () => {
-  throw new Error('This is a test error message');
-};
+import { ErrorFallback } from './ErrorFallback';
+import { ThrowError } from './ThrowError';
 
 const BasicStory = () => {
   return (
-    <ErrorBoundary name='story' fallbackRender={ErrorFallback}>
-      <ErrorGenerator />
+    <ErrorBoundary name='story' FallbackComponent={ErrorFallback}>
+      <ThrowError />
     </ErrorBoundary>
   );
 };
 
 const StringErrorStory = () => {
-  return <ErrorFallback error='This is a string error message' />;
+  return <ErrorFallback error='This is a string error message' data={{ context: 'story' }} />;
 };
 
 const meta: Meta = {

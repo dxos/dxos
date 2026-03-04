@@ -4,21 +4,20 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
+import { ErrorFallback } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../translations';
 
-import { ContentError } from './ContentError';
-
 const meta = {
-  title: 'plugins/plugin-simple-layout/components/ContentError',
-  component: ContentError,
+  title: 'plugins/plugin-simple-layout/components/ErrorFallback',
+  component: ErrorFallback,
   decorators: [withTheme()],
   parameters: {
     layout: 'centered',
     translations,
   },
-} satisfies Meta<typeof ContentError>;
+} satisfies Meta<typeof ErrorFallback>;
 
 export default meta;
 

@@ -18,9 +18,9 @@ import { QueryEditor, type QueryEditorProps } from './QueryEditor';
 
 // Create tags at render time to avoid Storybook serialization issues with ECHO objects.
 const createTags = (): Tag.Map => ({
-  ['tag_1' as const]: Tag.make({ label: 'Important' }),
-  ['tag_2' as const]: Tag.make({ label: 'Investor' }),
-  ['tag_3' as const]: Tag.make({ label: 'New' }),
+  'tag_1': Tag.make({ label: 'Important' }),
+  'tag_2': Tag.make({ label: 'Investor' }),
+  'tag_3': Tag.make({ label: 'New' }),
 });
 
 const meta = {

@@ -56,9 +56,9 @@ const DefaultStory = ({ value: valueProp }: QueryEditorProps) => {
 };
 
 const tags: Tag.Map = {
-  ['tag_1' as const]: Tag.make({ label: 'Red' }),
-  ['tag_2' as const]: Tag.make({ label: 'Green' }),
-  ['tag_3' as const]: Tag.make({ label: 'Blue' }),
+  'tag_1': Tag.make({ label: 'Red' }),
+  'tag_2': Tag.make({ label: 'Green' }),
+  'tag_3': Tag.make({ label: 'Blue' }),
 };
 
 const meta: Meta<typeof QueryEditor> = {

@@ -80,8 +80,8 @@ const DefaultStory = ({ id = 'test', init, sidebar, children, ...props }: Render
               values={selected}
               fieldMap={{
                 // TODO(burdon): Replace by type.
-                ['center' as const]: (props) => <TupleField {...props} binding={['x', 'y']} />,
-                ['size' as const]: (props) => <TupleField {...props} binding={['width', 'height']} />,
+                'center': (props) => <TupleField {...props} binding={['x', 'y']} />,
+                'size': (props) => <TupleField {...props} binding={['width', 'height']} />,
               }}
             >
               <Form.Viewport>
