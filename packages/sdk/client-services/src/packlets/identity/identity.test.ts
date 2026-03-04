@@ -6,7 +6,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { CredentialGenerator, createDidFromIdentityKey, verifyCredential } from '@dxos/credentials';
+import { CredentialGenerator, createDidFromIdentityKey, toBufPublicKey, verifyCredential } from '@dxos/credentials';
 import {
   MOCK_AUTH_PROVIDER,
   MOCK_AUTH_VERIFIER,
@@ -27,7 +27,7 @@ import { create, toPublicKey } from '@dxos/protocols/buf';
 import { EdgeStatus_ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
-import { AdmittedFeed_Designation } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { AdmittedFeed_Designation, AuthorizedDeviceSchema, IdentityProfileSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
 
@@ -56,12 +56,11 @@ describe('identity/identity', () => {
     const identitySigner = setup.identity.getIdentityCredentialSigner();
     const credential = await identitySigner.createCredential({
       subject: setup.identityKey,
-      assertion: {
-        '@type': 'dxos.halo.credentials.IdentityProfile',
+      assertion: create(IdentityProfileSchema, {
         profile: {
           displayName: 'Alice',
         },
-      },
+      }),
     });
 
     expect(toPublicKey(credential.issuer!).equals(setup.identityKey)).toBe(true);
@@ -93,11 +92,10 @@ describe('identity/identity', () => {
         credential: {
           credential: await signer.createCredential({
             subject: secondDevice.deviceKey,
-            assertion: {
-              '@type': 'dxos.halo.credentials.AuthorizedDevice',
-              identityKey: owner.identityKey,
-              deviceKey: secondDevice.deviceKey,
-            },
+            assertion: create(AuthorizedDeviceSchema, {
+              identityKey: toBufPublicKey(owner.identityKey),
+              deviceKey: toBufPublicKey(secondDevice.deviceKey),
+            }),
           }),
         },
       });
@@ -105,8 +103,9 @@ describe('identity/identity', () => {
       await secondDevice.ready();
     }
 
-    expect(Array.from(owner.identity.authorizedDeviceKeys.keys())).toEqual([owner.deviceKey, secondDevice.deviceKey]);
-    expect(Array.from(secondDevice.authorizedDeviceKeys.keys())).toEqual([owner.deviceKey, secondDevice.deviceKey]);
+    const toHexKeys = (keys: Iterable<PublicKey>) => Array.from(keys).map((k) => k.toHex());
+    expect(toHexKeys(owner.identity.authorizedDeviceKeys.keys())).toEqual(toHexKeys([owner.deviceKey, secondDevice.deviceKey]));
+    expect(toHexKeys(secondDevice.authorizedDeviceKeys.keys())).toEqual(toHexKeys([owner.deviceKey, secondDevice.deviceKey]));
   });
 
   test('edge feed replicator', async () => {

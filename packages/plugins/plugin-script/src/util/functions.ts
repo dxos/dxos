@@ -5,9 +5,11 @@
 import { Obj } from '@dxos/echo';
 import { type Function, type Script, getUserFunctionIdInMetadata } from '@dxos/functions';
 import { getInvocationUrl } from '@dxos/functions-runtime';
+import { packAssertion, toBufPublicKey } from '@dxos/credentials';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { create } from '@dxos/protocols/buf';
+import { type Credential, CredentialSchema, ClaimSchema, ServiceAccessSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { getSpace } from '@dxos/react-client/echo';
 /**
  * Get the function URL for a given script and client configuration
@@ -69,18 +71,20 @@ export const updateFunctionMetadata = (
 };
 
 export const getAccessCredential = (identityKey: PublicKey): Credential => {
-  return {
-    issuer: identityKey,
+  const bufKey = toBufPublicKey(identityKey);
+  return create(CredentialSchema, {
+    issuer: bufKey,
     issuanceDate: new Date(),
-    subject: {
-      id: identityKey,
-      assertion: {
-        '@type': 'dxos.halo.credentials.ServiceAccess',
-        serverName: 'hub.dxos.network',
-        serverKey: identityKey,
-        identityKey,
-        capabilities: ['composer:beta'],
-      },
-    },
-  } as any;
+    subject: create(ClaimSchema, {
+      id: bufKey,
+      assertion: packAssertion(
+        create(ServiceAccessSchema, {
+          serverName: 'hub.dxos.network',
+          serverKey: bufKey,
+          identityKey: bufKey,
+          capabilities: ['composer:beta'],
+        }),
+      ),
+    }),
+  });
 };

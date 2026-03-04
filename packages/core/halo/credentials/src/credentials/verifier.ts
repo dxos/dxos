@@ -5,9 +5,11 @@
 import { verifySignature } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
 import { type Chain, type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+
+import { type UnpackedCredential } from './credential';
 import { type PublicKey as BufPublicKey } from '@dxos/protocols/buf/dxos/keys_pb';
 
-import { isValidAuthorizedDeviceCredential } from './assertions';
+import { getAssertionFromCredential } from './credential';
 import { getCredentialProofPayload } from './signing';
 
 export const SIGNATURE_TYPE_ED25519 = 'ED25519Signature';
@@ -26,7 +28,7 @@ const bufPublicKeysEqual = (a?: BufPublicKey, b?: BufPublicKey): boolean => {
   return fromBufPublicKey(a).equals(fromBufPublicKey(b));
 };
 
-export const verifyCredential = async (credential: Credential): Promise<VerificationResult> => {
+export const verifyCredential = async (credential: Credential | UnpackedCredential): Promise<VerificationResult> => {
   if (!bufPublicKeysEqual(credential.issuer, credential.proof?.signer)) {
     if (!credential.proof?.chain) {
       return {
@@ -57,7 +59,7 @@ export const verifyCredential = async (credential: Credential): Promise<Verifica
  * Verifies that the signature is valid and was made by the signer.
  * Does not validate other semantics (e.g. chains).
  */
-export const verifyCredentialSignature = async (credential: Credential): Promise<VerificationResult> => {
+export const verifyCredentialSignature = async (credential: Credential | UnpackedCredential): Promise<VerificationResult> => {
   if (credential.proof?.type !== SIGNATURE_TYPE_ED25519) {
     return {
       kind: 'fail',
@@ -87,7 +89,12 @@ export const verifyChain = async (
     return result;
   }
 
-  if (!isValidAuthorizedDeviceCredential(chain.credential!, authority, subject)) {
+  const assertion = getAssertionFromCredential(chain.credential!);
+  const isAuthorizedDevice =
+    assertion.$typeName === 'dxos.halo.credentials.AuthorizedDevice' &&
+    fromBufPublicKey(chain.credential!.issuer!)?.equals(authority) &&
+    fromBufPublicKey(chain.credential!.subject?.id!)?.equals(subject);
+  if (!isAuthorizedDevice) {
     return {
       kind: 'fail',
       errors: [`Invalid credential chain: invalid assertion for key: ${subject}`],

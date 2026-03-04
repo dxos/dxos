@@ -8,16 +8,15 @@ import { type CredentialSigner, credentialFromBinary, credentialToBinary, verify
 import { type AuthProvider, type AuthVerifier } from '@dxos/echo-pipeline';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { toPublicKey } from '@dxos/protocols/buf';
+import { create, toPublicKey } from '@dxos/protocols/buf';
+import { AuthSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type ComplexSet } from '@dxos/util';
 
 export const createAuthProvider =
   (signer: CredentialSigner): AuthProvider =>
   async (nonce) => {
     const credential = await signer.createCredential({
-      assertion: {
-        '@type': 'dxos.halo.credentials.Auth',
-      },
+      assertion: create(AuthSchema, {}),
       subject: signer.getIssuer(),
       nonce,
     });

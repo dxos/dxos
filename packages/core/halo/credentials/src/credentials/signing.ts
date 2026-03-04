@@ -9,11 +9,13 @@ import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Timeframe } from '@dxos/timeframe';
 import { arrayToBuffer } from '@dxos/util';
 
+import { type UnpackedCredential, unpackAssertion } from './credential';
+
 /**
  * @returns The input message to be signed for a given credential.
  */
 // TODO(nf): rename, this returns not the proof itself, but the payload for verifying against the proof.
-export const getCredentialProofPayload = (credential: Credential): Uint8Array => {
+export const getCredentialProofPayload = (credential: Credential | UnpackedCredential): Uint8Array => {
   const copy: any = {
     ...credential,
     proof: {
@@ -27,13 +29,13 @@ export const getCredentialProofPayload = (credential: Credential): Uint8Array =>
   }
   delete copy.id; // ID is not part of the signature payload.
 
-  // Ensure assertion is in TypedMessage format for canonical string generation.
+  // Ensure assertion is unpacked for canonical string generation.
   // Credentials arriving via RPC have packed Any assertions (typeUrl + binary value).
-  // Signatures are always computed over the TypedMessage format, so unpack if needed.
+  // Signatures are computed over inline assertion fields, so unpack if needed.
   const assertion = copy.subject?.assertion;
   const assertionTypeUrl = assertion?.typeUrl ?? assertion?.type_url;
   if (assertionTypeUrl && assertion?.value instanceof Uint8Array && assertion.value.length > 0) {
-    const unpacked = unpackAnyAsTypedMessage({ ...assertion, typeUrl: assertionTypeUrl });
+    const unpacked = unpackAssertion({ ...assertion, typeUrl: assertionTypeUrl });
     if (unpacked) {
       copy.subject = { ...copy.subject, assertion: unpacked };
     }
