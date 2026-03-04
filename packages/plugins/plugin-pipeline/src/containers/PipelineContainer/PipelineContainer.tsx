@@ -29,7 +29,6 @@ export const PipelineContainer = ({ role, subject: pipeline }: PipelineContainer
   const handleColumnAdd = useCallback(
     () =>
       invokePromise(DeckOperation.ChangeCompanion, {
-        primary: attendableId,
         companion: `${attendableId}${ATTENDABLE_PATH_SEPARATOR}settings`,
       }),
     [invokePromise, attendableId],
