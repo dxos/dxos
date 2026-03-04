@@ -57,6 +57,7 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/platform": "catalog:",
+    "@opentelemetry/api": "catalog:",
     "isomorphic-ws": "catalog:",
     "ws": "catalog:"
   },

@@ -36,6 +36,8 @@ export const translations = [
         'settings storage adapter changed alert':
           'Warning: Swapping the storage adapter will make your data unavailable.',
         'settings space fragmentation': 'Enable AM space fragmentation',
+        'settings trace all': 'Force 100% trace sampling.',
+        'settings signoz traces': 'Open SigNoz traces for this user.',
         'open debug panel label': 'Show Debug',
         'client label': 'Client',
         'config label': 'Config',

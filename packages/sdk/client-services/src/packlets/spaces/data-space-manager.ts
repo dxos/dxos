@@ -138,6 +138,7 @@ export type CreateSpaceOptions = {
 };
 
 @trackLeaks('open', 'close')
+@trace.resource()
 export class DataSpaceManager extends Resource {
   public readonly updated = new Event();
 
@@ -262,6 +263,7 @@ export class DataSpaceManager extends Resource {
    * Creates a new space writing the genesis credentials to the control feed.
    */
   @synchronized
+  @trace.span({ showInBrowserTimeline: true })
   async createSpace(options: CreateSpaceOptions = {}): Promise<DataSpace> {
     assertArgument(
       !!options.rootUrl === !!options.documents,
@@ -414,6 +416,7 @@ export class DataSpaceManager extends Resource {
 
   // TODO(burdon): Rename join space.
   @synchronized
+  @trace.span({ showInBrowserTimeline: true })
   async acceptSpace(opts: AcceptSpaceOptions): Promise<DataSpace> {
     log('accept space', { opts });
     invariant(this._lifecycleState === LifecycleState.OPEN, 'Not open.');

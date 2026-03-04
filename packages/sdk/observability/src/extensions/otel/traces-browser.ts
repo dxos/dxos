@@ -2,11 +2,18 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Tracer, trace } from '@opentelemetry/api';
+import { type Tracer, propagation, trace } from '@opentelemetry/api';
 import { getWebAutoInstrumentations } from '@opentelemetry/auto-instrumentations-web';
+import { W3CTraceContextPropagator } from '@opentelemetry/core';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { registerInstrumentations } from '@opentelemetry/instrumentation';
-import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
+import {
+  AlwaysOnSampler,
+  BatchSpanProcessor,
+  ParentBasedSampler,
+  type ReadableSpan,
+  type SpanProcessor,
+} from '@opentelemetry/sdk-trace-base';
 import { WebTracerProvider } from '@opentelemetry/sdk-trace-web';
 import { ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
 
@@ -15,18 +22,44 @@ import { type StartSpanOptions, TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { type OtelOptions } from './otel';
 
+/**
+ * Injects dynamic tags (e.g. userId) as attributes on every span.
+ */
+class TagInjectorSpanProcessor implements SpanProcessor {
+  constructor(private readonly _getTags: () => Record<string, string>) {}
+
+  onStart(span: { setAttribute: (key: string, value: string) => void }): void {
+    const tags = this._getTags();
+    for (const [key, value] of Object.entries(tags)) {
+      span.setAttribute(key, value);
+    }
+  }
+
+  onEnd(_span: ReadableSpan): void {}
+
+  async shutdown(): Promise<void> {}
+
+  async forceFlush(): Promise<void> {}
+}
+
 export class OtelTraces {
   private _tracer: Tracer;
 
   constructor(private readonly options: OtelOptions) {
+    propagation.setGlobalPropagator(new W3CTraceContextPropagator());
+
+    const forceTraceAll = typeof localStorage !== 'undefined' && localStorage.getItem('dxos.debug.traceAll') === 'true';
+
     const tracerProvider = new WebTracerProvider({
       resource: this.options.resource,
+      ...(forceTraceAll ? { sampler: new ParentBasedSampler({ root: new AlwaysOnSampler() }) } : {}),
       spanProcessors: [
+        new TagInjectorSpanProcessor(this.options.getTags),
         new BatchSpanProcessor(
           new OTLPTraceExporter({
             url: this.options.endpoint + '/v1/traces',
             headers: this.options.headers,
-            concurrencyLimit: 10, // an optional limit on pending requests
+            concurrencyLimit: 10,
           }),
         ),
       ],

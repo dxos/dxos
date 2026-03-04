@@ -229,6 +229,7 @@ export class DataSpace {
   }
 
   @synchronized
+  @trace.span({ showInBrowserTimeline: true })
   async open(): Promise<void> {
     if (this._state === SpaceState.SPACE_CLOSED) {
       await this._open();
@@ -262,6 +263,7 @@ export class DataSpace {
   }
 
   @synchronized
+  @trace.span({ showInBrowserTimeline: true })
   async close(): Promise<void> {
     await this._close();
   }

@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { context as otelContext, propagation } from '@opentelemetry/api';
 import WebSocket from 'isomorphic-ws';
 
 import { scheduleTask, scheduleTaskInterval } from '@dxos/async';
@@ -116,8 +117,20 @@ export class EdgeWsConnection extends Resource {
 
   protected override async _open(): Promise<void> {
     const baseProtocols = [...Object.values(EdgeWebsocketProtocol)];
+
+    // Inject W3C trace context as query params since browser WebSocket API does not support custom headers.
+    const wsUrl = new URL(this._connectionInfo.url.toString());
+    const carrier: Record<string, string> = {};
+    propagation.inject(otelContext.active(), carrier);
+    if (carrier.traceparent) {
+      wsUrl.searchParams.set('traceparent', carrier.traceparent);
+    }
+    if (carrier.tracestate) {
+      wsUrl.searchParams.set('tracestate', carrier.tracestate);
+    }
+
     this._ws = new WebSocket(
-      this._connectionInfo.url.toString(),
+      wsUrl.toString(),
       this._connectionInfo.protocolHeader
         ? [...baseProtocols, this._connectionInfo.protocolHeader]
         : [...baseProtocols],

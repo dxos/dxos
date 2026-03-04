@@ -46,6 +46,7 @@
     "@opentelemetry/api": "catalog:",
     "@opentelemetry/api-logs": "catalog:",
     "@opentelemetry/auto-instrumentations-web": "catalog:",
+    "@opentelemetry/core": "catalog:",
     "@opentelemetry/exporter-logs-otlp-http": "catalog:",
     "@opentelemetry/exporter-metrics-otlp-http": "catalog:",
     "@opentelemetry/exporter-trace-otlp-http": "catalog:",

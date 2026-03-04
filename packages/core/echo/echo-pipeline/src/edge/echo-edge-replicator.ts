@@ -27,6 +27,7 @@ import {
   type Message as RouterMessage,
   MessageSchema as RouterMessageSchema,
 } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import { trace } from '@dxos/tracing';
 import { bufferToArray, setDeep } from '@dxos/util';
 
 import {
@@ -53,6 +54,7 @@ export type EchoEdgeReplicatorProps = {
   disableSharePolicy?: boolean;
 };
 
+@trace.resource()
 export class EchoEdgeReplicator implements AutomergeReplicator {
   private readonly _edgeConnection: EdgeConnection;
   private readonly _edgeHttpClient: EdgeHttpClient;
@@ -70,6 +72,7 @@ export class EchoEdgeReplicator implements AutomergeReplicator {
     this._sharePolicyEnabled = !disableSharePolicy;
   }
 
+  @trace.span({ showInBrowserTimeline: true })
   async connect(context: AutomergeReplicatorContext): Promise<void> {
     log('connecting...', { peerId: context.peerId, connectedSpaces: this._connectedSpaces.size });
     this._context = context;
@@ -97,6 +100,7 @@ export class EchoEdgeReplicator implements AutomergeReplicator {
     }
   }
 
+  @trace.span({ showInBrowserTimeline: true })
   async disconnect(): Promise<void> {
     using _guard = await this._mutex.acquire();
     await this._ctx?.dispose();
@@ -107,6 +111,7 @@ export class EchoEdgeReplicator implements AutomergeReplicator {
     this._connections.clear();
   }
 
+  @trace.span({ showInBrowserTimeline: true })
   async connectToSpace(spaceId: SpaceId): Promise<void> {
     log('connectToSpace', { spaceId });
     using _guard = await this._mutex.acquire();
