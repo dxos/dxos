@@ -37,7 +37,7 @@ export const make = (props?: Omit<Obj.MakeProps<typeof Type.Feed>, 'kind'>): Fee
 
 /** Configuration schema for a mailbox feed. */
 export const Config = Schema.Struct({
-  feed: Type.Ref(Type.Feed),
+  feed: Type.Ref(Type.Feed).pipe(FormInputAnnotation.set(false)),
   labels: Labels.pipe(FormInputAnnotation.set(false), Schema.optional),
   // TODO(wittjosiah): Factor out to relation?
   filters: Schema.Array(
