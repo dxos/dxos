@@ -28,13 +28,13 @@ const createHeadingGroupAction = (value: string) =>
 
 const createHeadingActions = (currentLevel: string, getView: () => EditorView) =>
   Object.entries({
-    '0': 'ph--paragraph--regular',
-    '1': 'ph--text-h-one--regular',
-    '2': 'ph--text-h-two--regular',
-    '3': 'ph--text-h-three--regular',
-    '4': 'ph--text-h-four--regular',
-    '5': 'ph--text-h-five--regular',
-    '6': 'ph--text-h-six--regular',
+    0: 'ph--paragraph--regular',
+    1: 'ph--text-h-one--regular',
+    2: 'ph--text-h-two--regular',
+    3: 'ph--text-h-three--regular',
+    4: 'ph--text-h-four--regular',
+    5: 'ph--text-h-five--regular',
+    6: 'ph--text-h-six--regular',
   }).map(([levelStr, icon]) => {
     const level = parseInt(levelStr);
     return createEditorAction(

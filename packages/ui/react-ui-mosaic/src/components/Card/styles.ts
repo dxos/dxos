@@ -5,9 +5,9 @@
 import { type ClassNameValue } from '@dxos/react-ui';
 
 // TODO(burdon): Use theme styles/tokens.
-
+// TODO(burdon): Use Container.Column grid.
 export const styles = {
-  root: 'group/card relative min-h-(--dx-rail-item) w-full dx-card-min-width overflow-hidden',
+  root: 'group/card relative flex flex-col w-full min-h-(--dx-rail-item) dx-card-min-width overflow-hidden',
   border:
     'bg-card-surface border border-separator dark:border-subdued-separator rounded-xs dx-focus-ring-group-y-indicator',
 

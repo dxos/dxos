@@ -166,7 +166,7 @@ export const ProfileContainer = () => {
         <Settings.Section title={t('profile label')} description={t('profile description')}>
           <Form.Root schema={UserProfile} values={values} fieldMap={fieldMap} onValuesChanged={handleChange}>
             <Form.Content>
-              <Form.FieldSet classNames='space-y-trim-md' />
+              <Form.FieldSet />
             </Form.Content>
           </Form.Root>
         </Settings.Section>
