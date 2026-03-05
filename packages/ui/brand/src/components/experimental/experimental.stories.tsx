@@ -5,6 +5,7 @@
 import '@fontsource/k2d/100-italic.css';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { arc } from 'd3';
 import React, { useRef, useState } from 'react';
 
 import { Button, Icon } from '@dxos/react-ui';
@@ -203,6 +204,48 @@ export const Linear: Story = {
               'linear-gradient(90deg, rgba(110, 159, 255, 0) 0%, #6E9FFF 80.75%, rgba(110, 159, 255, 0) 100%)',
           }}
         />
+      </div>
+    );
+  },
+};
+
+// Brand icon arc reproduced with D3 path generation (no DOM manipulation).
+// The Composer brand mark has 4 concentric C-arcs with the same opening
+// angle as ComposerSpinner, using exact brand fill colors.
+const brandColors = [
+  'rgb(5,40,61)', // outer — darkest navy
+  'rgb(10,75,105)', // dark teal
+  'rgb(1,122,183)', // medium blue
+  'rgb(6,197,253)', // inner — lightest cyan
+];
+
+export const BrandArc: Story = {
+  render: () => {
+    const size = 256;
+    const totalRadius = size / 2;
+    const n = brandColors.length;
+    const ringWidth = totalRadius / (n + 1);
+    const gap = 3;
+    // Same opening as ComposerSpinner — C opens at ~1:30 o'clock.
+    const startAngle = (1 / 4) * Math.PI;
+    const endAngle = -(5 / 4) * Math.PI;
+
+    return (
+      <div className='absolute inset-0 flex items-center justify-center'>
+        <svg width={size} height={size}>
+          <g transform={`translate(${totalRadius}, ${totalRadius})`}>
+            {brandColors.map((color, i) => {
+              const outerRadius = totalRadius - i * ringWidth;
+              const innerRadius = outerRadius - ringWidth + gap;
+              const d = arc<any, any>()
+                .innerRadius(innerRadius)
+                .outerRadius(outerRadius)
+                .startAngle(startAngle)
+                .endAngle(endAngle)() as string;
+              return <path key={i} d={d} fill={color} />;
+            })}
+          </g>
+        </svg>
       </div>
     );
   },
