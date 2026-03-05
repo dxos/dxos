@@ -1,4 +1,9 @@
-import { Effect, type Exit } from 'effect';
+//
+// Copyright 2026 DXOS.org
+//
+
+import * as Effect from 'effect/Effect';
+import type * as Exit from 'effect/Exit';
 
 export interface AddTrackEntryOptions {
   name: string;

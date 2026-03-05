@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Cause from 'effect/Cause';
 import type * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
@@ -10,6 +11,7 @@ import * as PubSub from 'effect/PubSub';
 
 import type { Key } from '@dxos/echo';
 import { DynamicRuntime, causeToError, runAndForwardErrors } from '@dxos/effect';
+import { Performance } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { byPosition } from '@dxos/util';
 
@@ -18,8 +20,6 @@ import * as Operation from './operation';
 import type * as OperationResolver from './resolver';
 import * as Scheduler from './scheduler';
 
-import { Performance } from '@dxos/effect';
-import { Cause } from 'effect';
 /**
  * Invocation event emitted after each operation.
  */

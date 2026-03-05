@@ -15,13 +15,13 @@ import * as PubSub from 'effect/PubSub';
 import * as Ref from 'effect/Ref';
 
 import { runAndForwardErrors } from '@dxos/effect';
+import { Performance } from '@dxos/effect';
 import { log } from '@dxos/log';
 
 import * as ActivationEvent from './activation-event';
 import * as Capability from './capability';
 import * as CapabilityManager from './capability-manager';
 import * as Plugin from './plugin';
-import { Performance } from '@dxos/effect';
 
 /**
  * Identifier denoting a Manager.
