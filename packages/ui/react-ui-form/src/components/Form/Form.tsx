@@ -231,12 +231,10 @@ FormContent.displayName = FORM_CONTENT_NAME;
 
 const FORM_FIELDSET_NAME = 'Form.FieldSet';
 
-type FormFieldSetProps = ThemedClassName<{}>;
-
-const FormFieldSet = ({ classNames }: FormFieldSetProps) => {
+const FormFieldSet = () => {
   const { form, ...props } = useFormContext(FORM_FIELDSET_NAME);
 
-  return <NaturalFormFieldSet classNames={classNames} schema={form.schema} {...props} />;
+  return <NaturalFormFieldSet schema={form.schema} {...props} />;
 };
 
 FormFieldSet.displayName = FORM_FIELDSET_NAME;
@@ -352,7 +350,6 @@ export type {
   FormRootProps,
   FormViewportProps,
   FormContentProps,
-  FormFieldSetProps,
   FormFieldLabelProps as LabelProps,
   FormActionsProps,
   FormSubmitProps,

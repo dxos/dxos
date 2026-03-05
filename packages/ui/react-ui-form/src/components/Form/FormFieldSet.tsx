@@ -41,6 +41,9 @@ export type FormFieldSetProps<T extends AnyProperties> = {
     | 'onCreate'
   >;
 
+/**
+ * Renders a set of form fields derived from a schema object.
+ */
 export const FormFieldSet = forwardRef<HTMLDivElement, FormFieldSetProps<any>>(
   ({ label, schema, readonly, path, exclude, sort, projection, layout, ...props }, forwardRef) => {
     const values = useFormValues(FORM_FIELDSET_NAME, path);
