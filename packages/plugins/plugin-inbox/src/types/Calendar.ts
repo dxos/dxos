@@ -22,7 +22,7 @@ export const make = (props?: Omit<Obj.MakeProps<typeof Type.Feed>, 'kind'>): Fee
 
 /** Configuration schema for a calendar feed. */
 export const Config = Schema.Struct({
-  feed: Type.Ref(Type.Feed),
+  feed: Type.Ref(Type.Feed).pipe(FormInputAnnotation.set(false)),
   // Track the last synced update timestamp to handle out-of-order event updates.
   lastSyncedUpdate: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
   accessToken: Schema.optional(

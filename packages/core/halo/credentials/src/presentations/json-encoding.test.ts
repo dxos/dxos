@@ -26,10 +26,10 @@ describe('json encoding', () => {
     const serviceAccessCredential = await createCredential({
       assertion: {
         '@type': 'dxos.halo.credentials.ServiceAccess',
-        serverName: 'hub.dxos.network',
-        serverKey: serviceProvider,
-        identityKey: identity,
-        capabilities: ['beta'],
+        'serverName': 'hub.dxos.network',
+        'serverKey': serviceProvider,
+        'identityKey': identity,
+        'capabilities': ['beta'],
       },
       subject: identity,
       issuer: serviceProvider,
@@ -39,8 +39,8 @@ describe('json encoding', () => {
     const deviceAuthorization = await createCredential({
       assertion: {
         '@type': 'dxos.halo.credentials.AuthorizedDevice',
-        deviceKey: device,
-        identityKey: identity,
+        'deviceKey': device,
+        'identityKey': identity,
       },
       subject: device,
       issuer: identity,

@@ -51,10 +51,10 @@ const defaultActions = {
 //
 
 export type BifurcatedActionProps = {
-  actions: Record<string, ActionMenuItem>;
-  activeAction?: string;
-  onChangeActiveAction?: Dispatch<SetStateAction<string>>;
-  defaultActiveAction?: string;
+  'actions': Record<string, ActionMenuItem>;
+  'activeAction'?: string;
+  'onChangeActiveAction'?: Dispatch<SetStateAction<string>>;
+  'defaultActiveAction'?: string;
   'data-testid'?: string;
 } & Omit<LargeButtonProps, 'children' | 'onClick'>;
 
@@ -64,7 +64,7 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
     variant,
     isFull = true,
     actions = defaultActions,
-    activeAction: propsActiveAction,
+    'activeAction': propsActiveAction,
     onChangeActiveAction,
     defaultActiveAction,
     'data-testid': testId,

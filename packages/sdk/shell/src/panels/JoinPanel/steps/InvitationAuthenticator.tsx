@@ -70,11 +70,11 @@ export const InvitationAuthenticator = ({
             <Input.PinInput
               {...{
                 disabled,
-                density: 'coarse',
-                length: pinLength,
-                inputMode: 'numeric',
-                autoComplete: 'off',
-                pattern: '\\d*',
+                'density': 'coarse',
+                'length': pinLength,
+                'inputMode': 'numeric',
+                'autoComplete': 'off',
+                'pattern': '\\d*',
                 onChange,
                 'data-autofocus': `connecting${Kind}Invitation inputting${Kind}VerificationCode authenticationFailing${Kind}VerificationCode authenticating${Kind}VerificationCode`,
                 'data-prevent-ios-autofocus': true,

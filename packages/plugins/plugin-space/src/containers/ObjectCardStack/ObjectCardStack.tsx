@@ -20,9 +20,16 @@ export type ObjectCardStackProps = {
   objectId: string;
 };
 
+<<<<<<< HEAD
 /**
  * @deprecated Use Mosaic Board components.
  */
+||||||| cd051a0bce
+=======
+/**
+ * @deprecated Use mosaic.
+ */
+>>>>>>> origin/main
 export const ObjectCardStack = forwardRef<HTMLDivElement, ObjectCardStackProps>(({ objectId, view }, forwardedRef) => {
   const { t } = useTranslation(meta.id);
   const db = Obj.getDatabase(view);

@@ -6,7 +6,6 @@ import React, { forwardRef, useMemo } from 'react';
 
 import { type AnyProperties } from '@dxos/echo/internal';
 import { type SchemaProperty } from '@dxos/effect';
-import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 
@@ -17,35 +16,36 @@ import { useFormValues } from './Form';
 import { FormField, type FormFieldProps } from './FormField';
 import { FormFieldErrorBoundary, FormFieldLabel } from './FormFieldComponent';
 
-export type FormFieldSetProps<T extends AnyProperties> = ThemedClassName<
-  {
-    label?: string;
-    exclude?: (props: SchemaProperty[]) => SchemaProperty[];
-    sort?: string[];
-  } & Pick<FormHandlerProps<T>, 'schema'> &
-    Pick<
-      FormFieldProps,
-      | 'path'
-      | 'autoFocus'
-      | 'readonly'
-      | 'layout'
-      | 'projection'
-      | 'fieldMap'
-      | 'fieldProvider'
-      | 'createOptionLabel'
-      | 'createOptionIcon'
-      | 'createInitialValuePath'
-      | 'db'
-      | 'schemaHook'
-      | 'getOptions'
-      | 'onCreate'
-    >
->;
-
 const FORM_FIELDSET_NAME = 'Form.FieldSet';
 
+export type FormFieldSetProps<T extends AnyProperties> = {
+  label?: string;
+  exclude?: (props: SchemaProperty[]) => SchemaProperty[];
+  sort?: string[];
+} & Pick<FormHandlerProps<T>, 'schema'> &
+  Pick<
+    FormFieldProps,
+    | 'path'
+    | 'autoFocus'
+    | 'readonly'
+    | 'layout'
+    | 'projection'
+    | 'fieldMap'
+    | 'fieldProvider'
+    | 'createOptionLabel'
+    | 'createOptionIcon'
+    | 'createInitialValuePath'
+    | 'db'
+    | 'schemaHook'
+    | 'getOptions'
+    | 'onCreate'
+  >;
+
+/**
+ * Renders a set of form fields derived from a schema object.
+ */
 export const FormFieldSet = forwardRef<HTMLDivElement, FormFieldSetProps<any>>(
-  ({ classNames, label, schema, readonly, path, exclude, sort, projection, layout, ...props }, forwardRef) => {
+  ({ label, schema, readonly, path, exclude, sort, projection, layout, ...props }, forwardRef) => {
     const values = useFormValues(FORM_FIELDSET_NAME, path);
 
     // TODO(burdon): Updates on every value change.
@@ -95,11 +95,7 @@ export const FormFieldSet = forwardRef<HTMLDivElement, FormFieldSetProps<any>>(
     }
 
     return (
-      <div
-        role='form'
-        className={mx('w-full', layout === 'inline' && 'flex flex-col gap-2', classNames)}
-        ref={forwardRef}
-      >
+      <div role='form' className={mx('w-full', layout === 'inline' && 'flex flex-col gap-2')} ref={forwardRef}>
         {layout !== 'inline' && label && <FormFieldLabel label={label} asChild />}
         {properties
           .map((property) => {

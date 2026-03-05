@@ -180,6 +180,7 @@ export default Capability.makeModule(
             Option.getOrElse(() => false),
           );
         },
+        // TODO(burdon): Replace with mosaic.
         component: ({ data, ref }) => (
           <ObjectCardStack
             key={Obj.getDXN(data.companionTo).toString()}

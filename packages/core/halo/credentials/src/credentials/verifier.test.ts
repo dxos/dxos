@@ -24,8 +24,8 @@ describe('verifier', () => {
         assertion: {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
-          role: SpaceMember.Role.ADMIN,
-          genesisFeedKey: PublicKey.random(),
+          'role': SpaceMember.Role.ADMIN,
+          'genesisFeedKey': PublicKey.random(),
         },
         issuer,
         signer: keyring,
@@ -45,8 +45,8 @@ describe('verifier', () => {
         assertion: {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
-          role: SpaceMember.Role.ADMIN,
-          genesisFeedKey: PublicKey.random(),
+          'role': SpaceMember.Role.ADMIN,
+          'genesisFeedKey': PublicKey.random(),
         },
         issuer,
         signer: keyring,
@@ -71,8 +71,8 @@ describe('verifier', () => {
         assertion: {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
-          role: SpaceMember.Role.ADMIN,
-          genesisFeedKey: PublicKey.random(),
+          'role': SpaceMember.Role.ADMIN,
+          'genesisFeedKey': PublicKey.random(),
         },
         issuer,
         signer: keyring,
@@ -97,8 +97,8 @@ describe('verifier', () => {
         assertion: {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
-          role: SpaceMember.Role.ADMIN,
-          genesisFeedKey: PublicKey.random(),
+          'role': SpaceMember.Role.ADMIN,
+          'genesisFeedKey': PublicKey.random(),
         },
         issuer,
         signer: keyring,
@@ -124,8 +124,8 @@ describe('verifier', () => {
         assertion: {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
-          role: SpaceMember.Role.ADMIN,
-          genesisFeedKey: PublicKey.random(),
+          'role': SpaceMember.Role.ADMIN,
+          'genesisFeedKey': PublicKey.random(),
         },
         issuer,
         signer: keyring,
@@ -148,9 +148,9 @@ describe('verifier', () => {
       parentCredentialIds: [PublicKey.random()],
       assertion: {
         '@type': 'dxos.halo.credentials.SpaceMember',
-        spaceKey: PublicKey.random(),
-        role: SpaceMember.Role.ADMIN,
-        genesisFeedKey: PublicKey.random(),
+        'spaceKey': PublicKey.random(),
+        'role': SpaceMember.Role.ADMIN,
+        'genesisFeedKey': PublicKey.random(),
       },
       issuer,
       signer: keyring,
@@ -178,8 +178,8 @@ describe('verifier', () => {
         credential: await createCredential({
           assertion: {
             '@type': 'dxos.halo.credentials.AuthorizedDevice',
-            deviceKey: device,
-            identityKey: identity,
+            'deviceKey': device,
+            'identityKey': identity,
           },
           subject: device,
           issuer: identity,
@@ -191,8 +191,8 @@ describe('verifier', () => {
         assertion: {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
-          role: SpaceMember.Role.ADMIN,
-          genesisFeedKey: PublicKey.random(),
+          'role': SpaceMember.Role.ADMIN,
+          'genesisFeedKey': PublicKey.random(),
         },
         issuer: identity,
         signer: keyring,
@@ -215,8 +215,8 @@ describe('verifier', () => {
         credential: await createCredential({
           assertion: {
             '@type': 'dxos.halo.credentials.AuthorizedDevice',
-            deviceKey: device,
-            identityKey: identity,
+            'deviceKey': device,
+            'identityKey': identity,
           },
           subject: device,
           issuer: identity,
@@ -228,8 +228,8 @@ describe('verifier', () => {
         assertion: {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
-          role: SpaceMember.Role.ADMIN,
-          genesisFeedKey: PublicKey.random(),
+          'role': SpaceMember.Role.ADMIN,
+          'genesisFeedKey': PublicKey.random(),
         },
         issuer: identity,
         signer: keyring,
@@ -257,8 +257,8 @@ describe('verifier', () => {
         credential: await createCredential({
           assertion: {
             '@type': 'dxos.halo.credentials.AuthorizedDevice',
-            deviceKey: device,
-            identityKey: identity,
+            'deviceKey': device,
+            'identityKey': identity,
           },
           subject: device,
           issuer: identity,
@@ -270,8 +270,8 @@ describe('verifier', () => {
         assertion: {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
-          role: SpaceMember.Role.ADMIN,
-          genesisFeedKey: PublicKey.random(),
+          'role': SpaceMember.Role.ADMIN,
+          'genesisFeedKey': PublicKey.random(),
         },
         issuer: identity,
         signer: keyring,
@@ -300,8 +300,8 @@ describe('verifier', () => {
         credential: await createCredential({
           assertion: {
             '@type': 'dxos.halo.credentials.AuthorizedDevice',
-            deviceKey: device,
-            identityKey: identity,
+            'deviceKey': device,
+            'identityKey': identity,
           },
           subject: device,
           issuer: identity,
@@ -312,8 +312,8 @@ describe('verifier', () => {
         assertion: {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
-          role: SpaceMember.Role.ADMIN,
-          genesisFeedKey: PublicKey.random(),
+          'role': SpaceMember.Role.ADMIN,
+          'genesisFeedKey': PublicKey.random(),
         },
         issuer: identity,
         signer: keyring,
@@ -326,8 +326,8 @@ describe('verifier', () => {
         assertion: {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
-          role: SpaceMember.Role.ADMIN,
-          genesisFeedKey: PublicKey.random(),
+          'role': SpaceMember.Role.ADMIN,
+          'genesisFeedKey': PublicKey.random(),
         },
         issuer: identity,
         signer: keyring,
@@ -350,8 +350,8 @@ describe('verifier', () => {
         credential: await createCredential({
           assertion: {
             '@type': 'dxos.halo.credentials.AuthorizedDevice',
-            deviceKey: device,
-            identityKey: identity,
+            'deviceKey': device,
+            'identityKey': identity,
           },
           subject: device,
           issuer: identity,
@@ -363,8 +363,8 @@ describe('verifier', () => {
         assertion: {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
-          role: SpaceMember.Role.ADMIN,
-          genesisFeedKey: PublicKey.random(),
+          'role': SpaceMember.Role.ADMIN,
+          'genesisFeedKey': PublicKey.random(),
         },
         issuer: identity,
         signer: keyring,
@@ -376,8 +376,8 @@ describe('verifier', () => {
       credential.proof!.chain!.credential = await createCredential({
         assertion: {
           '@type': 'dxos.halo.credentials.AuthorizedDevice',
-          deviceKey: device,
-          identityKey: identity2,
+          'deviceKey': device,
+          'identityKey': identity2,
         },
         subject: device,
         issuer: identity2,
@@ -401,8 +401,8 @@ describe('verifier', () => {
         credential: await createCredential({
           assertion: {
             '@type': 'dxos.halo.credentials.AuthorizedDevice',
-            deviceKey: device2,
-            identityKey: identity,
+            'deviceKey': device2,
+            'identityKey': identity,
           },
           subject: device2,
           issuer: identity,
@@ -412,8 +412,8 @@ describe('verifier', () => {
             credential: await createCredential({
               assertion: {
                 '@type': 'dxos.halo.credentials.AuthorizedDevice',
-                deviceKey: device1,
-                identityKey: identity,
+                'deviceKey': device1,
+                'identityKey': identity,
               },
               subject: device1,
               issuer: identity,
@@ -427,8 +427,8 @@ describe('verifier', () => {
         assertion: {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
-          role: SpaceMember.Role.ADMIN,
-          genesisFeedKey: PublicKey.random(),
+          'role': SpaceMember.Role.ADMIN,
+          'genesisFeedKey': PublicKey.random(),
         },
         issuer: identity,
         signer: keyring,
@@ -452,8 +452,8 @@ describe('verifier', () => {
         credential: await createCredential({
           assertion: {
             '@type': 'dxos.halo.credentials.AuthorizedDevice',
-            deviceKey: device2,
-            identityKey: identity,
+            'deviceKey': device2,
+            'identityKey': identity,
           },
           subject: device2,
           issuer: identity,
@@ -463,8 +463,8 @@ describe('verifier', () => {
             credential: await createCredential({
               assertion: {
                 '@type': 'dxos.halo.credentials.AuthorizedDevice',
-                deviceKey: device1,
-                identityKey: identity,
+                'deviceKey': device1,
+                'identityKey': identity,
               },
               subject: device1,
               issuer: identity,
@@ -478,8 +478,8 @@ describe('verifier', () => {
         assertion: {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
-          role: SpaceMember.Role.ADMIN,
-          genesisFeedKey: PublicKey.random(),
+          'role': SpaceMember.Role.ADMIN,
+          'genesisFeedKey': PublicKey.random(),
         },
         issuer: identity,
         signer: keyring,
@@ -491,8 +491,8 @@ describe('verifier', () => {
       credential.proof!.chain!.credential.proof!.chain!.credential = await createCredential({
         assertion: {
           '@type': 'dxos.halo.credentials.AuthorizedDevice',
-          deviceKey: device1,
-          identityKey: identity,
+          'deviceKey': device1,
+          'identityKey': identity,
         },
         subject: device1,
         issuer: device2,

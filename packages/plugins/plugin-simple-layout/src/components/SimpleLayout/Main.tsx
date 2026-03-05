@@ -7,11 +7,11 @@ import React, { useMemo } from 'react';
 import { Surface } from '@dxos/app-framework/ui';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { useNode } from '@dxos/plugin-graph';
+import { ErrorFallback } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/ui-theme';
 
 import { useAppBarProps, useNavbarActions, useSimpleLayoutState } from '../../hooks';
-import { ContentError } from '../ContentError';
 import { ContentLoading } from '../ContentLoading';
 import { useLoadDescendents } from '../hooks';
 import { useMobileLayout } from '../MobileLayout/MobileLayout';
@@ -71,7 +71,7 @@ export const Main = () => {
           role='article'
           data={data}
           limit={1}
-          fallback={ContentError}
+          fallback={ErrorFallback}
           placeholder={placeholder}
         />
       </article>

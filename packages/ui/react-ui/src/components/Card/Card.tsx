@@ -386,7 +386,7 @@ const CardIconBlock = ({
 const CardIcon = ({ toolbar, ...props }: IconProps & { toolbar?: boolean }) => {
   return (
     <CardIconBlock>
-      <Icon {...props} size={toolbar ? 5 : 4} />
+      <Icon {...props} size={toolbar ? 4 : 4} />
     </CardIconBlock>
   );
 };

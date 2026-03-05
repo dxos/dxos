@@ -43,7 +43,8 @@
 ## Workflow
 
 - Never work on main, create a new git worktree for the branch you are working on.
-- When creating worktrees/branches, use a short (2-4 word) descriptive title (kebab-case) prefixed with the agent name (e.g. `claude/add-auth-to-client`).
+- When creating worktrees/branches, use a short (2-4 word) descriptive title (kebab-case) prefixed with the agent name (e.g. `antigravity/add-auth-to-client`).
+- Worktrees must be created inside the main repo at `.claude/worktrees/<branch-short-name>` (e.g. `git worktree add .claude/worktrees/add-auth antigravity/add-auth`).
 - Check `moon.yml` for available package tasks
 - Run linter at natural stopping points
 - Confirm work complete before final build/lint check

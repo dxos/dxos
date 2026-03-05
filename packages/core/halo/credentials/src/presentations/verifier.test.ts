@@ -27,8 +27,8 @@ describe('presentation verifier', () => {
         credential: await createCredential({
           assertion: {
             '@type': 'dxos.halo.credentials.AuthorizedDevice',
-            deviceKey: device,
-            identityKey: identity,
+            'deviceKey': device,
+            'identityKey': identity,
           },
           subject: device,
           issuer: identity,
@@ -40,8 +40,8 @@ describe('presentation verifier', () => {
         assertion: {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
-          role: SpaceMember.Role.ADMIN,
-          genesisFeedKey: PublicKey.random(),
+          'role': SpaceMember.Role.ADMIN,
+          'genesisFeedKey': PublicKey.random(),
         },
         issuer,
         signer: keyring,
@@ -68,10 +68,10 @@ describe('presentation verifier', () => {
       const serviceAccessCredential = await createCredential({
         assertion: {
           '@type': 'dxos.halo.credentials.ServiceAccess',
-          serverName: 'hub.dxos.network',
-          serverKey: serviceProvider,
-          identityKey: identity,
-          capabilities: ['beta'],
+          'serverName': 'hub.dxos.network',
+          'serverKey': serviceProvider,
+          'identityKey': identity,
+          'capabilities': ['beta'],
         },
         subject: identity,
         issuer: serviceProvider,
@@ -81,8 +81,8 @@ describe('presentation verifier', () => {
       const deviceAuthorization = await createCredential({
         assertion: {
           '@type': 'dxos.halo.credentials.AuthorizedDevice',
-          deviceKey: device,
-          identityKey: identity,
+          'deviceKey': device,
+          'identityKey': identity,
         },
         subject: device,
         issuer: identity,
@@ -111,8 +111,8 @@ describe('presentation verifier', () => {
         credential: await createCredential({
           assertion: {
             '@type': 'dxos.halo.credentials.AuthorizedDevice',
-            deviceKey: device,
-            identityKey: identity,
+            'deviceKey': device,
+            'identityKey': identity,
           },
           subject: device,
           issuer: identity,
@@ -125,8 +125,8 @@ describe('presentation verifier', () => {
         assertion: {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
-          role: SpaceMember.Role.ADMIN,
-          genesisFeedKey: PublicKey.random(),
+          'role': SpaceMember.Role.ADMIN,
+          'genesisFeedKey': PublicKey.random(),
         },
         issuer,
         signer: keyring,
@@ -156,8 +156,8 @@ describe('presentation verifier', () => {
         credential: await createCredential({
           assertion: {
             '@type': 'dxos.halo.credentials.AuthorizedDevice',
-            deviceKey: device,
-            identityKey: identity,
+            'deviceKey': device,
+            'identityKey': identity,
           },
           subject: device,
           issuer: identity,
@@ -169,8 +169,8 @@ describe('presentation verifier', () => {
         assertion: {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
-          role: SpaceMember.Role.ADMIN,
-          genesisFeedKey: PublicKey.random(),
+          'role': SpaceMember.Role.ADMIN,
+          'genesisFeedKey': PublicKey.random(),
         },
         issuer: identity,
         signer: keyring,
@@ -206,8 +206,8 @@ describe('presentation verifier', () => {
         assertion: {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
-          role: SpaceMember.Role.ADMIN,
-          genesisFeedKey: PublicKey.random(),
+          'role': SpaceMember.Role.ADMIN,
+          'genesisFeedKey': PublicKey.random(),
         },
         issuer: signingKey,
         signer: keyring,
@@ -234,8 +234,8 @@ describe('presentation verifier', () => {
         assertion: {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
-          role: SpaceMember.Role.ADMIN,
-          genesisFeedKey: PublicKey.random(),
+          'role': SpaceMember.Role.ADMIN,
+          'genesisFeedKey': PublicKey.random(),
         },
         issuer: signingKey,
         signer: keyring,

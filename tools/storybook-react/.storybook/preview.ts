@@ -2,6 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
+// Suppress Lit dev mode warning (https://lit.dev/msg/dev-mode).
+// Pre-populating this set prevents Lit from issuing the warning on load.
+(globalThis as any).litIssuedWarnings ??= new Set();
+(globalThis as any).litIssuedWarnings.add('dev-mode');
+
 import '@dxos-theme';
 
 import { withThemeByClassName } from '@storybook/addon-themes';

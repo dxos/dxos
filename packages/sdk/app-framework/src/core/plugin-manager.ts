@@ -15,6 +15,7 @@ import * as PubSub from 'effect/PubSub';
 import * as Ref from 'effect/Ref';
 
 import { runAndForwardErrors } from '@dxos/effect';
+import { Performance } from '@dxos/effect';
 import { log } from '@dxos/log';
 
 import * as ActivationEvent from './activation-event';
@@ -438,6 +439,15 @@ class ManagerImpl implements PluginManager {
           Effect.andThen(Effect.sync(() => log.warn('event activation is taking a long time', { event: key }))),
         ),
       ),
+      Performance.addTrackEntry({
+        name: typeof event === 'string' ? event : ActivationEvent.eventKey(event),
+        devtools: {
+          dataType: 'track-entry',
+          track: 'Event Activation',
+          trackGroup: 'Composer',
+          color: 'primary',
+        },
+      }),
     );
   }
 
@@ -609,6 +619,15 @@ class ManagerImpl implements PluginManager {
               ),
             ),
           ),
+          Performance.addTrackEntry({
+            name: module.id,
+            devtools: {
+              dataType: 'track-entry',
+              track: 'Module Activation',
+              trackGroup: 'Composer',
+              color: 'primary',
+            },
+          }),
         );
 
         // Fork the load to run in background, completing the deferred when done.

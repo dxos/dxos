@@ -18,17 +18,17 @@ import { DefaultStory, createOrganization, createPerson, createProject, createTa
 faker.seed(999);
 
 const meta = {
-  title: 'plugins/plugin-preview/Card',
+  title: 'plugins/plugin-preview/cards/Card',
   render: DefaultStory,
   decorators: [
     withTheme(),
-    withLayout({ layout: 'column', scroll: true }),
+    withLayout({ layout: 'fullscreen' }),
     // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
     withPluginManager({ plugins: corePlugins() }),
   ],
   parameters: {
-    translations,
     layout: 'fullscreen',
+    translations,
   },
   tags: ['cards'],
 } satisfies Meta<typeof DefaultStory>;

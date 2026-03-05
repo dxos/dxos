@@ -76,10 +76,10 @@ export const getAccessCredential = (identityKey: PublicKey): Credential => {
       id: identityKey,
       assertion: {
         '@type': 'dxos.halo.credentials.ServiceAccess',
-        serverName: 'hub.dxos.network',
-        serverKey: identityKey,
+        'serverName': 'hub.dxos.network',
+        'serverKey': identityKey,
         identityKey,
-        capabilities: ['composer:beta'],
+        'capabilities': ['composer:beta'],
       },
     },
   };

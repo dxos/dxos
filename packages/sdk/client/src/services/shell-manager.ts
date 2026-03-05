@@ -25,13 +25,13 @@ import { RPC_TIMEOUT } from '../common';
 import { type IFrameManager } from './iframe-manager';
 
 const shellStyles = Object.entries({
-  display: 'none',
-  position: 'fixed',
-  top: 0,
-  left: 0,
-  width: '100vw',
-  height: '100vh',
-  border: 0,
+  'display': 'none',
+  'position': 'fixed',
+  'top': 0,
+  'left': 0,
+  'width': '100vw',
+  'height': '100vh',
+  'border': 0,
   'z-index': 60,
 }).reduce((acc, [key, value]) => `${acc}${key}: ${value};`, '');
 
