@@ -15,7 +15,7 @@ export type CardStyleProps = {
   truncate?: boolean;
 };
 
-export const cardRoot: ComponentFunction<CardStyleProps> = ({ border, fullWidth }, ...etc) =>
+const cardRoot: ComponentFunction<CardStyleProps> = ({ border, fullWidth }, ...etc) =>
   mx(
     'dx-card group/card relative flex flex-col w-full min-h-(--dx-rail-item) dx-card-min-width overflow-hidden',
     border &&
@@ -24,20 +24,19 @@ export const cardRoot: ComponentFunction<CardStyleProps> = ({ border, fullWidth 
     ...etc,
   );
 
-export const cardToolbar: ComponentFunction<CardStyleProps> = ({ coarse }, ...etc) =>
+const cardToolbar: ComponentFunction<CardStyleProps> = ({ coarse }, ...etc) =>
   mx(
     'dx-card__toolbar dx-density-fine bg-transparent',
     coarse && 'grid-cols-[var(--dx-l0-avatar-size)_minmax(0,1fr)_var(--dx-rail-item)]',
     ...etc,
   );
 
-export const cardTitle: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
-  mx('dx-card__title grow truncate', ...etc);
+const cardTitle: ComponentFunction<CardStyleProps> = (_props, ...etc) => mx('dx-card__title grow truncate', ...etc);
 
-export const cardContent: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
+const cardContent: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
   mx('dx-card__content contents [&>:last-child]:pb-1', ...etc);
 
-export const cardHeading: ComponentFunction<CardStyleProps> = ({ variant = 'default' }, ...etc) =>
+const cardHeading: ComponentFunction<CardStyleProps> = ({ variant = 'default' }, ...etc) =>
   mx(
     'dx-card__heading',
     variant === 'default' && 'py-1',
@@ -45,7 +44,7 @@ export const cardHeading: ComponentFunction<CardStyleProps> = ({ variant = 'defa
     ...etc,
   );
 
-export const cardText: ComponentFunction<CardStyleProps> = ({ variant = 'default', truncate: _truncate }, ...etc) =>
+const cardText: ComponentFunction<CardStyleProps> = ({ variant = 'default', truncate: _truncate }, ...etc) =>
   mx(
     'dx-card__text flex overflow-hidden',
     variant === 'default' && 'py-1',
@@ -53,28 +52,28 @@ export const cardText: ComponentFunction<CardStyleProps> = ({ variant = 'default
     ...etc,
   );
 
-export const cardTextSpan: ComponentFunction<CardStyleProps> = ({ variant = 'default', truncate }, ...etc) =>
+const cardTextSpan: ComponentFunction<CardStyleProps> = ({ variant = 'default', truncate }, ...etc) =>
   mx(variant === 'description' && 'text-sm text-description line-clamp-3', truncate && 'truncate', ...etc);
 
-export const cardPoster: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
+const cardPoster: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
   mx('dx-card__poster col-span-3 max-h-[200px]', ...etc);
 
-export const cardPosterIcon: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
+const cardPosterIcon: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
   mx('dx-card__poster-icon col-span-3 grid place-items-center bg-input-surface text-subdued max-h-[200px]', ...etc);
 
-export const cardAction: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
+const cardAction: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
   mx('dx-card__action p-0! w-full text-start overflow-hidden', ...etc);
 
-export const cardActionLabel: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
+const cardActionLabel: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
   mx('dx-card__action-label min-w-0 flex-1 truncate', ...etc);
 
-export const cardLink: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
+const cardLink: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
   mx('dx-card__link group p-0! dx-button dx-focus-ring min-h-1!', ...etc);
 
-export const cardLinkLabel: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
+const cardLinkLabel: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
   mx('dx-card__link-label min-w-0 flex-1 truncate', ...etc);
 
-export const cardIconBlock: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
+const cardIconBlock: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
   mx('dx-card__icon-block grid h-[var(--dx-rail-item)] w-[var(--dx-rail-item)] place-items-center', ...etc);
 
 export const cardTheme: Theme<CardStyleProps> = {

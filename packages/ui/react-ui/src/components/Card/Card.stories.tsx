@@ -22,6 +22,7 @@ type StoryProps = {
 
 const DefaultStory = ({ title, description, image, fullWidth }: StoryProps) => {
   const handleRef = useRef<HTMLButtonElement>(null);
+  console.log(title);
   return (
     <Card.Root fullWidth={fullWidth}>
       <Card.Toolbar>
@@ -55,7 +56,7 @@ const DefaultStory = ({ title, description, image, fullWidth }: StoryProps) => {
 };
 
 const meta = {
-  title: 'ui/react-ui/components/Card',
+  title: 'ui/react-ui-core/components/Card',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'grid w-[30rem] place-items-center' })],
 } satisfies Meta<typeof DefaultStory>;
