@@ -197,7 +197,12 @@ export const ComposerSpinner: FC<{
   }, [animate]);
 
   useEffect(() => {
-    const svg = select(ref.current)
+    const el = ref.current;
+    if (!el) {
+      return;
+    }
+
+    const svg = select(el)
       .attr('width', size)
       .attr('height', size)
       .append('g')
@@ -278,9 +283,9 @@ export const ComposerSpinner: FC<{
     }
 
     return () => {
-      select(ref.current).selectChildren().remove();
+      select(el).selectChildren().remove();
     };
-  }, []);
+  }, [size, gap, color]);
 
   return <svg ref={ref} onClick={onClick} />;
 };
