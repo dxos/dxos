@@ -4,9 +4,9 @@
 
 import * as Schema from 'effect/Schema';
 
+import { FormInputAnnotation } from '@dxos/echo/internal';
 import * as Obj from './Obj';
 import * as Type from './Type';
-import { FormInputAnnotation } from '@dxos/echo/internal';
 
 /**
  * A an ordered set of objects.
