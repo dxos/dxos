@@ -2,18 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Edge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { faker } from '@dxos/random';
-import { IconButton } from '@dxos/react-ui';
+import { Card, IconButton, ScrollArea } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { Card, CardDragPreview } from '@dxos/react-ui-mosaic';
-
-import { StackItem } from '../StackItem';
-
-import { CardStack } from './CardStack';
+import {
+  Mosaic,
+  type MosaicEventHandler,
+  type MosaicStackTileComponent,
+  type MosaicTileData,
+} from '@dxos/react-ui-mosaic';
 
 faker.seed(0);
 
@@ -24,136 +24,97 @@ type CardItem = {
   image: string;
 };
 
-type StackItemData = {
-  id: string;
-  type?: 'column' | 'card';
+//
+// Card tile using Mosaic.Tile with Card.DragHandle.
+//
+
+const CardTile: MosaicStackTileComponent<CardItem> = (props) => {
+  const dragHandleRef = useRef<HTMLButtonElement>(null);
+  return (
+    <Mosaic.Tile {...props} classNames='px-2 py-1' dragHandle={dragHandleRef.current}>
+      <Card.Root>
+        <Card.Toolbar>
+          <Card.DragHandle ref={dragHandleRef} />
+          <Card.Title>{props.data.title}</Card.Title>
+        </Card.Toolbar>
+        <Card.Poster alt={props.data.title} image={props.data.image} />
+        <Card.Text variant='description'>{props.data.description}</Card.Text>
+      </Card.Root>
+    </Mosaic.Tile>
+  );
 };
 
+CardTile.displayName = 'CardTile';
+
+//
+// Story
+//
+
 const CardStackStory = () => {
-  const [column, setColumn] = useState<CardItem[]>(
-    faker.helpers.multiple(
-      () => ({
-        id: faker.string.uuid(),
-        title: faker.commerce.productName(),
-        description: faker.lorem.paragraph(),
-        image: faker.image.url(),
-      }),
-      { count: 12 },
-    ),
+  const initialItems = useMemo(
+    () =>
+      faker.helpers.multiple(
+        (): CardItem => ({
+          id: faker.string.uuid(),
+          title: faker.commerce.productName(),
+          description: faker.lorem.paragraph(),
+          image: faker.image.url(),
+        }),
+        { count: 12 },
+      ),
+    [],
   );
 
-  const handleRearrange = useCallback((source: StackItemData, target: StackItemData, closestEdge: Edge | null) => {
-    setColumn((prevColumn) => {
-      const newColumns = [...prevColumn];
-      // Reordering cards within a column
-      const sourceCardIndex = prevColumn.findIndex((card) => card.id === source.id);
-      const targetCardIndex = prevColumn.findIndex((card) => card.id === target.id);
+  const [items, setItems] = useState<CardItem[]>(initialItems);
+  const [viewport, setViewport] = useState<HTMLElement | null>(null);
 
-      if (typeof sourceCardIndex === 'number' && typeof targetCardIndex === 'number') {
-        const [movedCard] = newColumns.splice(sourceCardIndex, 1);
-
-        let insertIndex;
-        if (sourceCardIndex < targetCardIndex) {
-          insertIndex = closestEdge === 'bottom' ? targetCardIndex : targetCardIndex - 1;
-        } else {
-          insertIndex = closestEdge === 'bottom' ? targetCardIndex + 1 : targetCardIndex;
-        }
-        newColumns.splice(insertIndex, 0, movedCard);
+  const handleDrop = useCallback<NonNullable<MosaicEventHandler<CardItem>['onDrop']>>(({ source, target }) => {
+    if (!target) {
+      return;
+    }
+    setItems((prev) => {
+      const next = [...prev];
+      const sourceIdx = next.findIndex((item) => item.id === source.id);
+      const targetData = target as MosaicTileData<CardItem>;
+      const targetIdx = targetData.id ? next.findIndex((item) => item.id === targetData.id) : -1;
+      if (sourceIdx !== -1 && targetIdx !== -1 && sourceIdx !== targetIdx) {
+        const [moved] = next.splice(sourceIdx, 1);
+        next.splice(targetIdx, 0, moved);
       }
-      return newColumns;
+      return next;
     });
   }, []);
 
-  const handleAddCard = useCallback(() => {
-    setColumn((prevColumn) => {
-      const newColumn = [...prevColumn];
-      const newCard = {
+  const handleAdd = useCallback(() => {
+    setItems((prev) => [
+      ...prev,
+      {
         id: faker.string.uuid(),
         title: faker.commerce.productName(),
         description: faker.lorem.paragraph(),
         image: faker.image.url(),
-      } satisfies CardItem;
-      newColumn.push(newCard);
-      console.log('[add card]', prevColumn.length, newColumn.length);
-      return newColumn;
-    });
-  }, []);
-
-  const handleRemoveCard = useCallback((cardId: string) => {
-    setColumn((prevColumn) => {
-      const newColumn = [...prevColumn];
-
-      const cardIndex = prevColumn.findIndex((card) => card.id === cardId);
-      if (cardIndex !== -1) {
-        newColumn.splice(cardIndex, 1);
-      }
-
-      return newColumn;
-    });
+      },
+    ]);
   }, []);
 
   return (
-    <CardStack.Root classNames='w-96'>
-      <CardStack.Content footer>
-        <CardStack.Stack id='story column' onRearrange={handleRearrange} itemsCount={column.length}>
-          {column.map((card, cardIndex, cardsArray) => {
-            const cardItem = { id: card.id, type: 'card' as const };
-            const prevCardId = cardIndex > 0 ? cardsArray[cardIndex - 1].id : undefined;
-            const nextCardId = cardIndex < cardsArray.length - 1 ? cardsArray[cardIndex + 1].id : undefined;
-
-            return (
-              <CardStack.Item asChild key={card.id}>
-                <StackItem.Root
-                  item={cardItem}
-                  focusIndicatorVariant='group'
-                  prevSiblingId={prevCardId}
-                  nextSiblingId={nextCardId}
-                >
-                  <Card.Root>
-                    <Card.Toolbar>
-                      <StackItem.DragHandle asChild>
-                        <Card.DragHandle />
-                      </StackItem.DragHandle>
-                      <Card.ToolbarSeparator variant='gap' />
-                      <Card.ToolbarIconButton
-                        iconOnly
-                        variant='ghost'
-                        icon='ph--x--regular'
-                        label='Remove card'
-                        onClick={() => handleRemoveCard(card.id)}
-                      />
-                    </Card.Toolbar>
-                    <Card.Poster alt={card.title} image={card.image} />
-                    <Card.Heading>{card.title}</Card.Heading>
-                    <Card.Text variant='description'>{card.description}</Card.Text>
-                  </Card.Root>
-                  <StackItem.DragPreview>
-                    {() => (
-                      <CardDragPreview.Root>
-                        <CardDragPreview.Content>
-                          <Card.Toolbar>
-                            <Card.DragHandle />
-                          </Card.Toolbar>
-                          <Card.Poster alt={card.title} image={card.image} />
-                          <Card.Heading>{card.title}</Card.Heading>
-                          <Card.Text variant='description'>{card.description}</Card.Text>
-                        </CardDragPreview.Content>
-                      </CardDragPreview.Root>
-                    )}
-                  </StackItem.DragPreview>
-                </StackItem.Root>
-              </CardStack.Item>
-            );
-          })}
-        </CardStack.Stack>
-
-        <CardStack.Footer>
-          <IconButton icon='ph--plus--regular' label='Add card' onClick={handleAddCard} classNames='w-full' />
-        </CardStack.Footer>
-
-        <CardStack.Heading>{faker.company.name()}</CardStack.Heading>
-      </CardStack.Content>
-    </CardStack.Root>
+    <Mosaic.Root classNames='h-full grid grid-rows-[1fr_min-content]'>
+      <Mosaic.Container
+        asChild
+        orientation='vertical'
+        autoScroll={viewport}
+        eventHandler={{ id: 'card-stack', canDrop: () => true, onDrop: handleDrop }}
+      >
+        <ScrollArea.Root orientation='vertical'>
+          <ScrollArea.Viewport classNames='py-2' ref={setViewport}>
+            <Mosaic.Stack items={items} getId={(item) => item.id} Tile={CardTile} />
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </Mosaic.Container>
+      <div className='p-2 border-t border-separator'>
+        <IconButton icon='ph--plus--regular' label='Add card' onClick={handleAdd} classNames='w-full' />
+      </div>
+    </Mosaic.Root>
   );
 };
 
