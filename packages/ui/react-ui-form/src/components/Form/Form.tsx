@@ -234,9 +234,9 @@ const FORM_FIELDSET_NAME = 'Form.FieldSet';
 type FormFieldSetProps = ThemedClassName<NaturalFormFieldSetProps<any>>;
 
 const FormFieldSet = (props: FormFieldSetProps) => {
-  const { form } = useFormContext(FORM_FIELDSET_NAME);
+  const { form, ...contextProps } = useFormContext(FORM_FIELDSET_NAME);
 
-  return <NaturalFormFieldSet schema={form.schema} {...props} />;
+  return <NaturalFormFieldSet schema={form.schema} {...contextProps} {...props} />;
 };
 
 FormFieldSet.displayName = FORM_FIELDSET_NAME;
