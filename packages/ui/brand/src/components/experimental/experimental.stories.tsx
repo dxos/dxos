@@ -5,22 +5,23 @@
 import '@fontsource/k2d/100-italic.css';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { arc } from 'd3';
 import React, { useRef, useState } from 'react';
 
 import { Button, Icon } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
-import { DXOS } from '../../icons';
+import { DXOS } from '../icons';
 
-import { type AnimationController, ComposerLogo, ComposerSpinner } from './ComposerLogo';
+import { type AnimationController, ComposerLogo, ComposerSpinner } from './experimental';
 
 // import ident from '../../../assets/sounds/ident-1.mp3';
 
 // https://pixabay.com/sound-effects/search/logo/?pagi=2
 
 const meta = {
-  title: 'ui/brand/Logo',
+  title: 'ui/brand/experimental/Logo',
   component: ComposerLogo,
   decorators: [withTheme()],
 } satisfies Meta<typeof ComposerLogo>;
@@ -78,7 +79,6 @@ export const Default: Story = {
   },
 };
 
-// TODO(burdon): Camo.
 export const Colors: Story = {
   render: () => {
     const colors = [
@@ -204,6 +204,106 @@ export const Linear: Story = {
               'linear-gradient(90deg, rgba(110, 159, 255, 0) 0%, #6E9FFF 80.75%, rgba(110, 159, 255, 0) 100%)',
           }}
         />
+      </div>
+    );
+  },
+};
+
+// Brand icon colors, outer → inner.
+const composerBrandColors = ['rgb(5,40,61)', 'rgb(10,75,105)', 'rgb(1,122,183)', 'rgb(6,197,253)'];
+
+export const BrandArcSimple: Story = {
+  render: () => {
+    const size = 256;
+    const totalRadius = size / 2;
+    const n = composerBrandColors.length;
+    const ringWidth = totalRadius / (n + 1);
+    const gap = 0;
+    const startAngle = (1 / 4) * Math.PI;
+    const endAngle = -(5 / 4) * Math.PI;
+
+    return (
+      <div className='absolute inset-0 flex items-center justify-center'>
+        <svg width={size} height={size}>
+          <g transform={`translate(${totalRadius}, ${totalRadius})`}>
+            {composerBrandColors.map((color, i) => {
+              const outerRadius = totalRadius - i * ringWidth;
+              const innerRadius = outerRadius - ringWidth + gap;
+              const d = arc<any, any>()
+                .innerRadius(innerRadius)
+                .outerRadius(outerRadius)
+                .startAngle(startAngle)
+                .endAngle(endAngle)({}) as string;
+              return <path key={i} d={d} fill={color} />;
+            })}
+          </g>
+        </svg>
+      </div>
+    );
+  },
+};
+
+/**
+ * Build a single brand-accurate C-arc layer.
+ *
+ * Shape: left semicircle ring (6 → 9 → 12 o'clock) with a
+ * horizontal-then-diagonal stepped edge at each open end, matching the
+ * Composer brand icon geometry. Two 90° arcs avoid the 180° SVG ambiguity.
+ */
+const makeBrandLayerPath = (cx: number, cy: number, R: number, r: number, botR: number, botR2: number): string => {
+  const frac = 0.29;
+  const topOuter = R * frac;
+  const topInner = r * frac;
+  const botOuter = botR2 * frac;
+  const botInner = botR * frac;
+  return [
+    // Start at outer top-right.
+    `M ${cx + topOuter} ${cy - R}`,
+    // Move left to 12-oclock.
+    `L ${cx} ${cy - R}`,
+    // Outer arc CW: 12 → 9 → 6 o'clock (through the west side).
+    `A ${R} ${R} 0 0 0 ${cx - R} ${cy}`,
+    `A ${R} ${R} 0 0 0 ${cx} ${cy + R}`,
+    // Bottom outer: extend right.
+    `L ${cx + botOuter} ${cy + R}`,
+    // Diagonal to inner bottom-right.
+    `L ${cx + botInner} ${cy + r}`,
+    // Move left to inner 6-oclock.
+    `L ${cx} ${cy + r}`,
+    // Inner arc CCW: 6 → 9 → 12 o'clock (back through the west side).
+    `A ${r} ${r} 0 0 1 ${cx - r} ${cy}`,
+    `A ${r} ${r} 0 0 1 ${cx} ${cy - r}`,
+    // Top inner: extend right.
+    `L ${cx + topInner} ${cy - r}`,
+    // Close: diagonal back to start.
+    'Z',
+  ].join(' ');
+};
+
+export const BrandArc: Story = {
+  render: () => {
+    const size = 256;
+    const cx = size / 2;
+    const cy = size / 2;
+    const n = composerBrandColors.length;
+    const ringWidth = size / 2 / (n + 1);
+    const gap = 0;
+
+    return (
+      <div className='absolute inset-0 flex items-center justify-center'>
+        <svg width={size} height={size}>
+          {composerBrandColors.map((color, i) => {
+            const outerR = size / 2 - i * ringWidth;
+            const innerR = outerR - ringWidth + gap;
+            // Bottom uses mirror ring's radii.
+            const mirror = n - 1 - i;
+            const mirrorOuterR = size / 2 - mirror * ringWidth;
+            const mirrorInnerR = mirrorOuterR - ringWidth + gap;
+            return (
+              <path key={i} d={makeBrandLayerPath(cx, cy, outerR, innerR, mirrorOuterR, mirrorInnerR)} fill={color} />
+            );
+          })}
+        </svg>
       </div>
     );
   },

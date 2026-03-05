@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { Card } from '@dxos/react-ui-mosaic';
+import { Card } from '@dxos/react-ui';
 import { type Event } from '@dxos/types';
 
 import { DateComponent } from '../../components';

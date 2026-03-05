@@ -1,10 +1,10 @@
 {
-  "singleQuote": true,
   "jsxSingleQuote": true,
-  "trailingComma": "all",
+  "plugins": ["prettier-plugin-packagejson"],
   "printWidth": 120,
   "quoteProps": "consistent",
-  "plugins": ["prettier-plugin-packagejson"],
+  "singleQuote": true,
+  "trailingComma": "all",
   "overrides": [
     {
       "files": "*.tpl",

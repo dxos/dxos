@@ -7,9 +7,9 @@ import React, { type ReactElement, type Ref as ReactRef, forwardRef, useRef } fr
 
 import { Obj } from '@dxos/echo';
 import { Tag } from '@dxos/react-ui';
+import { Card } from '@dxos/react-ui';
 import { getHashStyles } from '@dxos/ui-theme';
 
-import { Card } from '../Card';
 import { Focus } from '../Focus';
 import { Mosaic, type MosaicTileProps } from '../Mosaic';
 

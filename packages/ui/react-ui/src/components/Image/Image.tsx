@@ -94,7 +94,7 @@ export const Image = ({
         crossOrigin={crossOriginState}
         onError={handleImageError}
         onLoad={handleImageLoad}
-        className={mx('z-10 object-contain transition-opacity duration-500', classNames)}
+        className='z-10 object-contain transition-opacity duration-500'
         style={{
           opacity: imageLoaded ? 1 : 0,
         }}

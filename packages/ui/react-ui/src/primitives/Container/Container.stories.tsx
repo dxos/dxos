@@ -7,6 +7,7 @@ import React from 'react';
 
 import { Input, ScrollArea, Toolbar } from '../../components';
 import { withLayout, withTheme } from '../../testing';
+import { Flex } from '../Flex';
 
 import { Container } from './Container';
 
@@ -48,11 +49,11 @@ const MainStory = () => {
 const ColumnStory = () => {
   return (
     <Container.Column className='h-full overflow-hidden' gutter='md'>
-      <Container.Segment>
+      <Container.Segment asChild>
         <h1 className='p-1 bg-blue-500 text-black'>Header</h1>
       </Container.Segment>
 
-      <Container.Segment>
+      <Container.Segment asChild>
         <div className='py-2'>
           <Input.Root>
             <Input.TextInput placeholder='Search' />
@@ -62,12 +63,14 @@ const ColumnStory = () => {
 
       <List />
 
-      <Container.Segment>
-        <div className='p-1 bg-red-500 text-black'>Section with overflow</div>
-        <pre className='p-1 text-xs text-subdued overflow-auto'>{new Error().stack}</pre>
+      <Container.Segment asChild>
+        <Flex column>
+          <h1 className='p-1 bg-red-500 text-black'>Section with overflow</h1>
+          <pre className='p-1 text-xs text-subdued overflow-auto'>{new Error().stack}</pre>
+        </Flex>
       </Container.Segment>
 
-      <Container.Segment>
+      <Container.Segment asChild>
         <div className='p-1 bg-green-500 text-black'>Footer</div>
       </Container.Segment>
     </Container.Column>

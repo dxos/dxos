@@ -197,7 +197,12 @@ export const ComposerSpinner: FC<{
   }, [animate]);
 
   useEffect(() => {
-    const svg = select(ref.current)
+    const el = ref.current;
+    if (!el) {
+      return;
+    }
+
+    const svg = select(el)
       .attr('width', size)
       .attr('height', size)
       .append('g')
@@ -248,18 +253,11 @@ export const ComposerSpinner: FC<{
             .transition()
             .duration(duration)
             .attrTween('transform', (() => interpolateString('rotate(0)', 'rotate(360)')) as any)
-            .on('end', ((_: any, i: number, nodes: Node[]) => {
+            .on('end', (() => {
               if (animateRef.current) {
                 rotateArc();
               } else if (autoFade) {
                 fadeOut();
-                // d3.select(nodes[i])
-                //   .transition()
-                //   .duration(1000)
-                //   .attrTween('d', () => {
-                //     const interpolate = d3.interpolate(0, Math.PI);
-                //     return (t: number) => createArc(arc);
-                //   });
               }
             }) as any);
         };
@@ -278,9 +276,9 @@ export const ComposerSpinner: FC<{
     }
 
     return () => {
-      select(ref.current).selectChildren().remove();
+      select(el).selectChildren().remove();
     };
-  }, []);
+  }, [size, gap, color]);
 
   return <svg ref={ref} onClick={onClick} />;
 };

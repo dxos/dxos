@@ -207,7 +207,7 @@ const AlertDialogBody: ForwardRefExoticComponent<AlertDialogBodyProps> = forward
 >(({ children, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   return (
-    <Container.Segment>
+    <Container.Segment asChild>
       <div role='none' {...props} className={tx('dialog.body')} ref={forwardedRef}>
         {children}
       </div>
@@ -229,7 +229,7 @@ const AlertDialogActionBar: ForwardRefExoticComponent<AlertDialogActionBarProps>
 >(({ children, classNames, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   return (
-    <Container.Segment>
+    <Container.Segment asChild>
       <div {...props} className={tx('dialog.actionbar', {}, classNames)} ref={forwardedRef}>
         {children}
       </div>

@@ -19,6 +19,7 @@
 - Build package: `moon run package-name:build`.
 - Run single test file: `moon run package-name:test -- path/to/test.test.ts`.
 - Run all tests: `MOON_CONCURRENCY=4 moon run :test -- --no-file-parallelism`.
+- Storybook: `moon run storybook-react:serve` (defaults to port 9009).
 - Lint & fix: `moon run :lint -- --fix`.
 - Check package tasks: see `moon.yml` in package directory.
 - **Expected warning**: `Auth token DEPOT_TOKEN does not exist` is a normal warning about remote caching and should be ignored. Filter out warnings from your output.
@@ -47,6 +48,7 @@
 - Check `moon.yml` for available package tasks
 - Run linter at natural stopping points
 - Confirm work complete before final build/lint check
+- If updating `pnpm-workspace.yaml` make sure to preserve comments.
 
 ## PR Naming Convention
 
@@ -66,6 +68,7 @@
 Use scope when relevant: `feat(package-name): <description>`
 
 Examples:
+
 - `feat: add user authentication flow`
 - `fix(echo): resolve memory leak in subscription handler`
 - `refactor: simplify error handling in client SDK`
@@ -76,7 +79,7 @@ Examples:
 - Use `gh` CLI to create and manage PRs
 - When the user asks you to submit a PR:
   - commit any pending changes
-  - address and comment on major review comments
+  - address PR review comments as appropriate and reply to all comments
   - `moon run :lint -- --fix` succeeds
   - `moon run :test` succeeds
   - `pnpm -w gh-action --verify --watch` shows green CI
