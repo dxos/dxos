@@ -10,7 +10,6 @@ export default defineConfig({
   ...e2ePreset(import.meta.dirname),
   timeout: 30_000,
   webServer: {
-    // TODO(wittjosiah): Using vite directly to avoid moon re-building things.
     command: 'pnpm vite preview',
     port: 4173,
     reuseExistingServer: false,

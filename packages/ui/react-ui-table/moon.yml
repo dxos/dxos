@@ -15,4 +15,5 @@ tasks:
       - '--entryPoint=src/types/index.ts'
   e2e:
     inputs:
+      - .storybook/*
       - /tools/storybook-react/.storybook/main.ts
