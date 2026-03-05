@@ -2,7 +2,6 @@
   "recommendations": [
     "bradlc.vscode-tailwindcss",
     "dbaeumer.vscode-eslint",
-    "esbenp.prettier-vscode",
     "folke.vscode-monorepo-workspace",
     "hediet.vscode-drawio",
     "yoavbls.pretty-ts-errors",
