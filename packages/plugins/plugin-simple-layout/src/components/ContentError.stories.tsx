@@ -24,7 +24,9 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  args: {},
+  args: {
+    error: new Error('An unexpected error occurred'),
+  },
 };
 
 export const WithError: Story = {
