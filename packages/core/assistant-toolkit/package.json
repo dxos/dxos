@@ -61,11 +61,13 @@
     "exa-js": "catalog:"
   },
   "devDependencies": {
+    "@dxos/ui-theme": "workspace:*",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
   },
   "peerDependencies": {
+    "@dxos/ui-theme": "workspace:*",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"

@@ -20,16 +20,9 @@ export type ObjectCardStackProps = {
   objectId: string;
 };
 
-<<<<<<< HEAD
 /**
  * @deprecated Use Mosaic Board components.
  */
-||||||| cd051a0bce
-=======
-/**
- * @deprecated Use mosaic.
- */
->>>>>>> origin/main
 export const ObjectCardStack = forwardRef<HTMLDivElement, ObjectCardStackProps>(({ objectId, view }, forwardedRef) => {
   const { t } = useTranslation(meta.id);
   const db = Obj.getDatabase(view);
@@ -54,7 +47,7 @@ export const ObjectCardStack = forwardRef<HTMLDivElement, ObjectCardStackProps>(
           <Message.Title>{t('row details no selection label')}</Message.Title>
         </Message.Root>
       ) : (
-        <Mosaic.Root classNames='h-full'>
+        <Mosaic.Root>
           <Mosaic.Container
             asChild
             orientation='vertical'
@@ -62,13 +55,12 @@ export const ObjectCardStack = forwardRef<HTMLDivElement, ObjectCardStackProps>(
             eventHandler={{ id: objectId, canDrop: () => true }}
           >
             <ScrollArea.Root orientation='vertical'>
-              <ScrollArea.Viewport classNames='py-2' ref={setViewport}>
+              <ScrollArea.Viewport ref={setViewport}>
                 <Mosaic.Stack
                   items={selectedObjects}
                   getId={(obj) => obj.id}
                   Tile={({ ...props }) => (
-                    // TODO(burdon): Remove padding.
-                    <Mosaic.Tile {...props} classNames='px-2 py-1'>
+                    <Mosaic.Tile {...props}>
                       <Card.Root>
                         <ObjectForm object={props.data} schema={schema} />
                       </Card.Root>

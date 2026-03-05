@@ -3,17 +3,12 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 
 import { faker } from '@dxos/random';
 import { Card, IconButton, ScrollArea } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import {
-  Mosaic,
-  type MosaicEventHandler,
-  type MosaicStackTileComponent,
-  type MosaicTileData,
-} from '@dxos/react-ui-mosaic';
+import { Mosaic, type MosaicEventHandler, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 
 faker.seed(0);
 
@@ -51,21 +46,17 @@ CardTile.displayName = 'CardTile';
 //
 
 const CardStackStory = () => {
-  const initialItems = useMemo(
-    () =>
-      faker.helpers.multiple(
-        (): CardItem => ({
-          id: faker.string.uuid(),
-          title: faker.commerce.productName(),
-          description: faker.lorem.paragraph(),
-          image: faker.image.url(),
-        }),
-        { count: 12 },
-      ),
-    [],
+  const [items, setItems] = useState<CardItem[]>(() =>
+    faker.helpers.multiple(
+      (): CardItem => ({
+        id: faker.string.uuid(),
+        title: faker.commerce.productName(),
+        description: faker.lorem.paragraph(),
+        image: faker.image.url(),
+      }),
+      { count: 12 },
+    ),
   );
-
-  const [items, setItems] = useState<CardItem[]>(initialItems);
   const [viewport, setViewport] = useState<HTMLElement | null>(null);
 
   const handleDrop = useCallback<NonNullable<MosaicEventHandler<CardItem>['onDrop']>>(({ source, target }) => {
@@ -75,8 +66,7 @@ const CardStackStory = () => {
     setItems((prev) => {
       const next = [...prev];
       const sourceIdx = next.findIndex((item) => item.id === source.id);
-      const targetData = target as MosaicTileData<CardItem>;
-      const targetIdx = targetData.id ? next.findIndex((item) => item.id === targetData.id) : -1;
+      const targetIdx = target.id ? next.findIndex((item) => item.id === target.id) : next.length;
       if (sourceIdx !== -1 && targetIdx !== -1 && sourceIdx !== targetIdx) {
         const [moved] = next.splice(sourceIdx, 1);
         next.splice(targetIdx, 0, moved);
