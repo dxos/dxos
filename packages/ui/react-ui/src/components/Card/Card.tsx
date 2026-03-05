@@ -129,11 +129,10 @@ const CardDragHandle = forwardRef<HTMLButtonElement, CardDragHandleProps>((_, fo
 // Close
 //
 
-type CardCloseProps = { onClick?: () => void };
+type CardCloseIconButtonProps = { onClick?: () => void };
 
-const CardClose = forwardRef<HTMLButtonElement, CardCloseProps>(({ onClick }, forwardedRef) => {
+const CardCloseIconButton = forwardRef<HTMLButtonElement, CardCloseIconButtonProps>(({ onClick }, forwardedRef) => {
   const { t } = useTranslation(osTranslations);
-
   return (
     <Toolbar.IconButton
       iconOnly
@@ -362,6 +361,18 @@ const CardLink = ({ label, href }: CardLinkProps) => {
 };
 
 //
+// Icon
+//
+
+const CardIcon = ({ toolbar, ...props }: IconProps & { toolbar?: boolean }) => {
+  return (
+    <CardIconBlock>
+      <Icon {...props} size={toolbar ? 5 : 4} />
+    </CardIconBlock>
+  );
+};
+
+//
 // IconBlock
 //
 
@@ -380,18 +391,6 @@ const CardIconBlock = ({
 };
 
 //
-// Icon
-//
-
-const CardIcon = ({ toolbar, ...props }: IconProps & { toolbar?: boolean }) => {
-  return (
-    <CardIconBlock>
-      <Icon {...props} size={toolbar ? 4 : 4} />
-    </CardIconBlock>
-  );
-};
-
-//
 // Card
 //
 
@@ -405,7 +404,7 @@ export const Card = {
   ToolbarSeparator: CardToolbarSeparator,
   DragHandle: CardDragHandle,
   Title: CardTitle,
-  Close: CardClose,
+  CloseIconButton: CardCloseIconButton,
   Menu: CardMenu,
   Icon: CardIcon,
   IconBlock: CardIconBlock,
