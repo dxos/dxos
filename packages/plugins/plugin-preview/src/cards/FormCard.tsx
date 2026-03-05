@@ -4,14 +4,11 @@
 
 import React, { useCallback } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { type JsonPath, splitJsonPath } from '@dxos/effect';
-import { useTranslation } from '@dxos/react-ui';
+import { Card, useTranslation } from '@dxos/react-ui';
 import { Form, omitId } from '@dxos/react-ui-form';
-import { Card } from '@dxos/react-ui-mosaic';
 import { type ProjectionModel } from '@dxos/schema';
 import { descriptionMessage, mx } from '@dxos/ui-theme';
 
@@ -19,14 +16,7 @@ import { meta } from '../meta';
 
 export const FormCard = ({ subject, projection }: SurfaceComponentProps & { projection?: ProjectionModel }) => {
   const { t } = useTranslation(meta.id);
-  const { invokePromise } = useOperationInvoker();
   const schema = Obj.getSchema(subject);
-  const label = Obj.getLabel(subject) ?? Obj.getTypename(subject) ?? t('unable to create preview message');
-
-  const handleNavigate = useCallback(async () => {
-    await invokePromise(LayoutOperation.UpdatePopover, { state: false, anchorId: '' });
-    await invokePromise(LayoutOperation.Open, { subject: [Obj.getDXN(subject).toString()] });
-  }, [invokePromise, subject]);
 
   const handleSave = useCallback((values: any, { changed }: { changed: Record<string, boolean> }) => {
     const paths = Object.keys(changed).filter((path) => changed[path]);
@@ -40,7 +30,6 @@ export const FormCard = ({ subject, projection }: SurfaceComponentProps & { proj
   }, []);
 
   if (!schema) {
-    // TODO(burdon): Use Alert.
     return <p className={mx(descriptionMessage)}>{t('unable to create preview message')}</p>;
   }
 

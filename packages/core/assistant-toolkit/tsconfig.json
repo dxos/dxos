@@ -54,10 +54,10 @@
       "path": "../../ui/react-ui-mosaic"
     },
     {
-      "path": "../../ui/ui-theme"
+      "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
-      "path": "../../ui/react-ui-syntax-highlighter"
+      "path": "../../ui/ui-theme"
     },
     {
       "path": "../ai"
