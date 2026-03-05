@@ -4,6 +4,6 @@
 
 export type * from './types';
 
-export * from './CardStack';
 export * from './Stack';
+
 export * from './StackItem';

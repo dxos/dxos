@@ -12,7 +12,7 @@ import { Mosaic } from '@dxos/react-ui-mosaic';
 import { type View, getTypenameFromQuery } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
-import { ObjectForm } from '../../components/ObjectCardStack/ObjectForm';
+import { ObjectForm } from '../../components';
 import { meta } from '../../meta';
 
 export type ObjectCardStackProps = {
@@ -20,6 +20,9 @@ export type ObjectCardStackProps = {
   objectId: string;
 };
 
+/**
+ * @deprecated Use Mosaic Board components.
+ */
 export const ObjectCardStack = forwardRef<HTMLDivElement, ObjectCardStackProps>(({ objectId, view }, forwardedRef) => {
   const { t } = useTranslation(meta.id);
   const db = Obj.getDatabase(view);
@@ -57,6 +60,7 @@ export const ObjectCardStack = forwardRef<HTMLDivElement, ObjectCardStackProps>(
                   items={selectedObjects}
                   getId={(obj) => obj.id}
                   Tile={({ ...props }) => (
+                    // TODO(burdon): Remove padding.
                     <Mosaic.Tile {...props} classNames='px-2 py-1'>
                       <Card.Root>
                         <ObjectForm object={props.data} schema={schema} />
