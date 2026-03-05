@@ -85,15 +85,13 @@ const CardToolbar = forwardRef<HTMLDivElement, CardToolbarProps>(
   ({ children, classNames, density = 'fine', ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
-      <Container.Row asChild>
-        <Toolbar.Root
-          {...props}
-          classNames={[tx('card.toolbar', { coarse: density !== 'fine' }), classNames]}
-          ref={forwardedRef}
-        >
-          {children}
-        </Toolbar.Root>
-      </Container.Row>
+      <Toolbar.Root
+        {...props}
+        classNames={[tx('card.toolbar', { coarse: density !== 'fine' }), classNames]}
+        ref={forwardedRef}
+      >
+        {children}
+      </Toolbar.Root>
     );
   },
 );
@@ -334,13 +332,11 @@ type CardActionProps = { icon?: string; label: string; actionIcon?: string; onCl
 const CardAction = ({ icon, actionIcon = 'ph--arrow-right--regular', label, onClick }: CardActionProps) => {
   const { tx } = useThemeContext();
   return (
-    <Container.Row asChild>
-      <Button variant='ghost' classNames={tx('card.action', {})} onClick={onClick}>
-        {icon ? <CardIcon classNames='text-subdued' icon={icon} /> : <div />}
-        <span className={tx('card.action-label', {}, !actionIcon ? 'col-span-2' : undefined)}>{label}</span>
-        {actionIcon && <CardIcon icon={actionIcon} />}
-      </Button>
-    </Container.Row>
+    <Button variant='ghost' classNames={tx('card.action', {})} onClick={onClick}>
+      {icon ? <CardIcon classNames='text-subdued' icon={icon} /> : <div />}
+      <span className={tx('card.action-label', {}, !actionIcon ? 'col-span-2' : undefined)}>{label}</span>
+      {actionIcon && <CardIcon icon={actionIcon} />}
+    </Button>
   );
 };
 
@@ -353,13 +349,11 @@ type CardLinkProps = { label: string; href: string };
 const CardLink = ({ label, href }: CardLinkProps) => {
   const { tx } = useThemeContext();
   return (
-    <Container.Row asChild>
-      <a className={tx('card.link', {})} data-variant='ghost' href={href} target='_blank' rel='noreferrer'>
-        <CardIcon classNames='text-subdued' icon='ph--link--regular' />
-        <span className={tx('card.link-label', {})}>{label}</span>
-        <CardIcon classNames='invisible group-hover:visible' icon='ph--arrow-square-out--regular' />
-      </a>
-    </Container.Row>
+    <a className={tx('card.link', {})} data-variant='ghost' href={href} target='_blank' rel='noreferrer'>
+      <CardIcon classNames='text-subdued' icon='ph--link--regular' />
+      <span className={tx('card.link-label', {})}>{label}</span>
+      <CardIcon classNames='invisible group-hover:visible' icon='ph--arrow-square-out--regular' />
+    </a>
   );
 };
 

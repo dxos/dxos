@@ -58,7 +58,7 @@ const DefaultStory = ({ title, description, image, fullWidth }: StoryProps) => {
 const meta = {
   title: 'ui/react-ui-core/components/Card',
   render: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'grid w-[30rem] place-items-center' })],
+  decorators: [withTheme(), withLayout({ layout: 'centered', classNames: 'grid w-[30rem] place-items-center' })],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
