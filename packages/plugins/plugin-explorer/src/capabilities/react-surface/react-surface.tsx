@@ -8,7 +8,7 @@ import React from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { Obj } from '@dxos/echo';
-import { type View } from '@dxos/schema';
+import { type View } from '@dxos/echo';
 
 import { ExplorerContainer } from '../../containers';
 import { meta } from '../../meta';

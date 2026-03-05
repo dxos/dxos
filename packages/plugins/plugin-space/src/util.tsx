@@ -11,13 +11,14 @@ import { type CapabilityManager } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
 import { type Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+import { Collection } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Migrations } from '@dxos/migrations';
 import { Operation } from '@dxos/operation';
 import { Graph, Node } from '@dxos/plugin-graph';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention/types';
 import { type TreeData } from '@dxos/react-ui-list';
-import { Collection, Expando } from '@dxos/schema';
+import { Expando, ManagedCollection } from '@dxos/schema';
 import { type Label } from '@dxos/ui-types';
 import { createFilename } from '@dxos/util';
 
@@ -273,7 +274,7 @@ export const createObjectNode = ({
   const metadata = resolve(metadataKey);
   const partials = Obj.instanceOf(Collection.Collection, object)
     ? getCollectionGraphNodePartials({ collection: object, db, resolve })
-    : Obj.instanceOf(Collection.Managed, object)
+    : Obj.instanceOf(ManagedCollection.ManagedCollection, object)
       ? getSystemCollectionNodePartials({ collection: object, db, resolve })
       : Obj.instanceOf(Type.PersistentType, object)
         ? getSchemaGraphNodePartials()
@@ -290,7 +291,7 @@ export const createObjectNode = ({
 
   const selectable =
     (!Obj.instanceOf(Type.PersistentType, object) &&
-      !Obj.instanceOf(Collection.Managed, object) &&
+      !Obj.instanceOf(ManagedCollection.ManagedCollection, object) &&
       !Obj.instanceOf(Collection.Collection, object)) ||
     (navigable && Obj.instanceOf(Collection.Collection, object));
 
@@ -316,7 +317,7 @@ export const createObjectNode = ({
       if (source.item.properties.managedCollectionChild) {
         return true;
       }
-      if (Obj.instanceOf(Collection.Managed, object)) {
+      if (Obj.instanceOf(ManagedCollection.ManagedCollection, object)) {
         return !instruction.type.startsWith('reorder');
       }
       return managedCollectionChild;
@@ -586,14 +587,14 @@ export const constructObjectActions = ({
 
   const metadataKey = Match.value(object).pipe(
     Match.when(Obj.instanceOf(Type.Feed), (feed: Type.Feed) => feed.kind ?? Obj.getTypename(feed)!),
-    Match.when(Obj.instanceOf(Collection.Managed), (managed) => {
+    Match.when(Obj.instanceOf(ManagedCollection.ManagedCollection), (managed) => {
       const [, feedKind] = managed.key.split('~') ?? [];
       return feedKind ?? managed.key;
     }),
     Match.orElse((obj) => Obj.getTypename(obj)!),
   );
   const managedCollection = Option.some(object).pipe(
-    Option.filter(Obj.instanceOf(Collection.Managed)),
+    Option.filter(Obj.instanceOf(ManagedCollection.ManagedCollection)),
     Option.getOrUndefined,
   );
   const metadata = metadataKey ? resolve(metadataKey) : {};
@@ -737,7 +738,7 @@ export const constructObjectActions = ({
         ]),
     ...(navigable ||
     (!Obj.instanceOf(Collection.Collection, object) &&
-      !Obj.instanceOf(Collection.Managed, object) &&
+      !Obj.instanceOf(ManagedCollection.ManagedCollection, object) &&
       !Obj.instanceOf(Type.PersistentType, object))
       ? [
           {
@@ -886,7 +887,7 @@ const getSystemCollectionNodePartials = ({
   db,
   resolve,
 }: {
-  collection: Collection.Managed;
+  collection: ManagedCollection.ManagedCollection;
   db: Database.Database;
   resolve: (typename: string) => Record<string, any>;
 }) => {

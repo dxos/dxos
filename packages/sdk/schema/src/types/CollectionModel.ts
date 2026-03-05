@@ -1,6 +1,11 @@
+//
+// Copyright 2026 DXOS.org
+//
+
 import * as Effect from 'effect/Effect';
-import { Collection, Obj, Database, Query, Ref } from '@dxos/echo';
+
 import { SpaceProperties } from '@dxos/client-protocol/types';
+import { Collection, Database, Obj, Query, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
 type AddProps = {

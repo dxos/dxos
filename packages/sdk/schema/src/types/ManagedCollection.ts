@@ -2,15 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { SpaceProperties } from '@dxos/client-protocol/types';
-import { Annotation, Obj, Query, Ref, Type } from '@dxos/echo';
-import { Database } from '@dxos/echo';
+import { Annotation, Obj, Type } from '@dxos/echo';
 import { SystemTypeAnnotation } from '@dxos/echo/internal';
-import { invariant } from '@dxos/invariant';
-import { Collection } from '@dxos/echo';
 
 /**
  * System collections are used runtime collections of nodes in the app graph.

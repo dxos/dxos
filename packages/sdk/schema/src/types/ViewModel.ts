@@ -22,14 +22,14 @@ import {
   type SchemaRegistry,
   Type,
 } from '@dxos/echo';
+import { View } from '@dxos/echo';
 import {
   FormInputAnnotation,
-  JsonSchemaType,
+  type JsonSchemaType,
   LabelAnnotation,
   type Mutable,
   ReferenceAnnotationId,
   type ReferenceAnnotationValue,
-  SystemTypeAnnotation,
   TypeEnum,
   toEffectSchema,
 } from '@dxos/echo/internal';
@@ -48,7 +48,6 @@ import { DXN } from '@dxos/keys';
 
 import { type ProjectionChangeCallback, ProjectionModel } from '../projection';
 import { createDefaultSchema, getSchema } from '../util';
-import { View } from '@dxos/echo';
 
 type MakeProps = {
   name?: string;

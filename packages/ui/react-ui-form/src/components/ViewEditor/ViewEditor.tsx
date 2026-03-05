@@ -10,21 +10,14 @@ import * as Schema from 'effect/Schema';
 import React, { forwardRef, useCallback, useContext, useImperativeHandle, useMemo, useState } from 'react';
 
 import { Entity, Feed, Filter, Format, Obj, Query, QueryAST, Ref, type SchemaRegistry, Type } from '@dxos/echo';
+import { View } from '@dxos/echo';
 import { EchoSchema, type JsonProp, isMutable, toJsonSchema } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { IconButton, Input, Message, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { QueryForm, type QueryFormProps } from '@dxos/react-ui-components';
 import { List } from '@dxos/react-ui-list';
-import {
-  FieldSchema,
-  type FieldType,
-  ProjectionModel,
-  VIEW_FIELD_LIMIT,
-  type View,
-  createEchoChangeCallback,
-  getTypenameFromQuery,
-} from '@dxos/schema';
+import { ProjectionModel, VIEW_FIELD_LIMIT, createEchoChangeCallback, getTypenameFromQuery } from '@dxos/schema';
 import { mx, osTranslations, subtleHover } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
@@ -236,7 +229,7 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
     return model;
   }, [atomRegistry, schema, view]);
 
-  const [expandedField, setExpandedField] = useState<FieldType['id']>();
+  const [expandedField, setExpandedField] = useState<View.FieldType['id']>();
 
   const handleAdd = useCallback(() => {
     invariant(!readonly);
@@ -245,7 +238,7 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
   }, [projectionModel, readonly]);
 
   const handleToggleField = useCallback(
-    (field: FieldType) => {
+    (field: View.FieldType) => {
       setExpandedField((prevExpandedFieldId) => (prevExpandedFieldId === field.id ? undefined : field.id));
     },
     [readonly],
@@ -300,9 +293,9 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
   }
 
   return (
-    <List.Root<FieldType>
-      items={viewSnapshot.projection.fields as FieldType[]}
-      isItem={Schema.is(FieldSchema)}
+    <List.Root<View.FieldType>
+      items={viewSnapshot.projection.fields as View.FieldType[]}
+      isItem={Schema.is(View.FieldSchema)}
       getId={(field) => field.id}
       onMove={readonly ? undefined : handleMove}
       readonly={readonly}
@@ -314,7 +307,7 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
             {fields?.map((field) => {
               const hidden = field.visible === false;
               return (
-                <List.Item<FieldType>
+                <List.Item<View.FieldType>
                   key={field.id}
                   item={field}
                   classNames={'grid grid-cols-subgrid col-span-5'}

@@ -6,8 +6,8 @@ import React, { useContext, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { type Collection } from '@dxos/echo';
 import { Container } from '@dxos/react-ui';
-import { type Collection } from '@dxos/schema';
 
 import { PageNumber, Pager, Layout as PresenterLayout } from '../../components/Presenter';
 import { PresenterContext } from '../../types';

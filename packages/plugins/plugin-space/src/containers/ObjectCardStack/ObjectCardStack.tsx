@@ -5,13 +5,14 @@
 import React, { forwardRef } from 'react';
 
 import { Obj } from '@dxos/echo';
+import { type View } from '@dxos/echo';
 import { Filter, useQuery, useSchema } from '@dxos/react-client/echo';
 import { Message, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Container } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
 import { Card } from '@dxos/react-ui-mosaic';
 import { CardStack, StackItem } from '@dxos/react-ui-stack';
-import { type View, getTypenameFromQuery } from '@dxos/schema';
+import { getTypenameFromQuery } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { ObjectForm } from '../../components';

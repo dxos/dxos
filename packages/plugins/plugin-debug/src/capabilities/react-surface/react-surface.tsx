@@ -37,6 +37,7 @@ import {
   WorkflowPanel,
 } from '@dxos/devtools';
 import { Obj } from '@dxos/echo';
+import { Collection } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { type Graph } from '@dxos/plugin-graph';
@@ -44,7 +45,6 @@ import { ScriptOperation } from '@dxos/plugin-script/types';
 import { SpaceOperation } from '@dxos/plugin-space/types';
 import { type Space, SpaceState, isSpace, parseId } from '@dxos/react-client/echo';
 import { Container } from '@dxos/react-ui';
-import { Collection } from '@dxos/schema';
 
 import {
   DebugGraph,

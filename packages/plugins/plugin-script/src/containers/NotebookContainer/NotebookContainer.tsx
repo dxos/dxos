@@ -22,7 +22,7 @@ import { Graph } from '@dxos/plugin-explorer/types';
 import { DropdownMenu, IconButton, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Container } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { Text, View } from '@dxos/schema';
+import { Text, ViewModel } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { NotebookMenu, NotebookStack, type NotebookStackProps } from '../../components/NotebookStack';
@@ -62,7 +62,7 @@ export const NotebookContainer = ({ role, subject: notebook, env }: NotebookCont
             const ast = Query.select(filter).ast;
             const graph = cell.graph?.target;
             if (!graph) {
-              const { view } = await View.makeFromDatabase({ db });
+              const { view } = await ViewModel.makeFromDatabase({ db });
               const newGraph = Graph.make({ query: { ast }, view });
               Obj.change(notebook!, (n) => {
                 const c = n.cells.find((c) => c.id === cell.id);

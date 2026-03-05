@@ -13,7 +13,6 @@ import {
   PropertyMetaAnnotationId,
 } from '@dxos/echo/internal';
 // eslint-disable-next-line unused-imports/no-unused-imports
-import { View as _View } from '@dxos/schema';
 
 import * as Person from './Person';
 import * as Pipeline from './Pipeline';

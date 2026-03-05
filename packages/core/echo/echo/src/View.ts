@@ -5,11 +5,11 @@
 import * as Schema from 'effect/Schema';
 
 import { QueryAST } from '@dxos/echo-protocol';
-import * as Type from './Type';
-
 import { JsonPath } from '@dxos/effect';
 import { PublicKey } from '@dxos/keys';
+
 import { JsonSchemaType, SystemTypeAnnotation } from './internal';
+import * as Type from './Type';
 
 /**
  * Stored field metadata (e.g., for UX).

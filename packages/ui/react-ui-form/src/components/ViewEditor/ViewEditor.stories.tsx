@@ -7,12 +7,13 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { DXN, Filter, Obj, Query, type QueryAST, Tag, Type } from '@dxos/echo';
+import { type View } from '@dxos/echo';
 import { type EchoSchema, Format, type Mutable } from '@dxos/echo/internal';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { type ProjectionModel, View, getTypenameFromQuery } from '@dxos/schema';
+import { type ProjectionModel, ViewModel, getTypenameFromQuery } from '@dxos/schema';
 import { Employer, Organization, Person, Pipeline } from '@dxos/types';
 
 import { translations } from '../../translations';
@@ -70,7 +71,7 @@ const DefaultStory = (props: StoryProps) => {
       );
 
       const [testSchema] = await space.db.schemaRegistry.register([TestSchema, AlternateSchema]);
-      const view = View.make({
+      const view = ViewModel.make({
         name: 'Test',
         query: Query.select(Filter.type(TestSchema)),
         jsonSchema: Type.toJsonSchema(TestSchema),
@@ -100,7 +101,7 @@ const DefaultStory = (props: StoryProps) => {
           return;
         }
 
-        const newView = View.make({
+        const newView = ViewModel.make({
           query,
           jsonSchema: newSchema.jsonSchema,
         });

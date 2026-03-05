@@ -7,6 +7,7 @@ import * as Schema from 'effect/Schema';
 import type * as Types from 'effect/Types';
 
 import { Format, Obj } from '@dxos/echo';
+import { View } from '@dxos/echo';
 import {
   EchoSchema,
   type JsonProp,
@@ -22,7 +23,6 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { omit, pick } from '@dxos/util';
 
-import { View } from '@dxos/echo';
 import { makeMultiSelectAnnotations, makeSingleSelectAnnotations } from '../util';
 
 import { PropertySchema, type PropertyType } from './format';
