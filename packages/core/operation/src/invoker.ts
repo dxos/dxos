@@ -18,6 +18,8 @@ import * as Operation from './operation';
 import type * as OperationResolver from './resolver';
 import * as Scheduler from './scheduler';
 
+import { Performance } from '@dxos/effect';
+import { Cause } from 'effect';
 /**
  * Invocation event emitted after each operation.
  */
@@ -294,7 +296,18 @@ class OperationInvokerImpl implements OperationInvokerInternal {
 
       log('invocation completed', { key: op.meta.key, output });
       return output;
-    });
+    }).pipe(
+      Performance.addTrackEntry((exit) => ({
+        name: op.meta.key,
+        devtools: {
+          dataType: 'track-entry',
+          track: 'Operations',
+          trackGroup: 'Composer',
+          color: Exit.isSuccess(exit) ? 'tertiary-dark' : 'error-dark',
+          properties: Exit.isFailure(exit) ? [['error', Cause.pretty(exit.cause)]] : undefined,
+        },
+      })),
+    );
   };
 }
 

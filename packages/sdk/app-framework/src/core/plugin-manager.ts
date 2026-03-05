@@ -21,6 +21,7 @@ import * as ActivationEvent from './activation-event';
 import * as Capability from './capability';
 import * as CapabilityManager from './capability-manager';
 import * as Plugin from './plugin';
+import { Performance } from '@dxos/effect';
 
 /**
  * Identifier denoting a Manager.
@@ -438,7 +439,7 @@ class ManagerImpl implements PluginManager {
           Effect.andThen(Effect.sync(() => log.warn('event activation is taking a long time', { event: key }))),
         ),
       ),
-      withPerformaceTrack({
+      Performance.addTrackEntry({
         name: typeof event === 'string' ? event : ActivationEvent.eventKey(event),
         devtools: {
           dataType: 'track-entry',
@@ -618,7 +619,7 @@ class ManagerImpl implements PluginManager {
               ),
             ),
           ),
-          withPerformaceTrack({
+          Performance.addTrackEntry({
             name: module.id,
             devtools: {
               dataType: 'track-entry',
@@ -711,47 +712,4 @@ const together =
       const result = yield* effect;
       yield* Fiber.interrupt(togetherFiber);
       return result;
-    });
-
-interface WithPerformaceTrackOptions {
-  name: string;
-  devtools?: {
-    /**
-     * @example 'track-entry'
-     */
-    dataType: string;
-    track: string;
-    trackGroup: string;
-    /**
-     * @example 'tertiary-dark'
-     */
-    color: string;
-    properties?: [string, any][];
-    tooltipText?: string;
-  };
-}
-
-/**
- * Puts the effect span on the performance timeline in DevTools.
- */
-const withPerformaceTrack =
-  (options: WithPerformaceTrackOptions) =>
-  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>
-    Effect.gen(function* () {
-      const start = performance.now();
-      const handleEnd = () =>
-        Effect.sync(() => {
-          performance.measure(options.name, {
-            start: start,
-            detail: {
-              devtools: options.devtools,
-            },
-          });
-        });
-      return yield* effect.pipe(
-        Effect.tapBoth({
-          onSuccess: handleEnd,
-          onFailure: handleEnd,
-        }),
-      );
     });
