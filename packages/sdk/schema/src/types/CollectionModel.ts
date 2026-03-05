@@ -9,6 +9,7 @@ type AddProps = {
   hidden?: boolean;
 };
 
+// TODO(dmaretskyi): Move up to the composer level.
 export const add = Effect.fn(function* ({ object, target, hidden }: AddProps) {
   const objectRef = Ref.make(object);
   if (Collection.isCollection(target)) {
