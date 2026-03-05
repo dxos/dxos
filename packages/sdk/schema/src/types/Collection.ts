@@ -8,23 +8,9 @@ import * as Schema from 'effect/Schema';
 import { SpaceProperties } from '@dxos/client-protocol/types';
 import { Annotation, Obj, Query, Ref, Type } from '@dxos/echo';
 import { Database } from '@dxos/echo';
-import { FormInputAnnotation, SystemTypeAnnotation } from '@dxos/echo/internal';
+import { SystemTypeAnnotation } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-
-export const Collection = Schema.Struct({
-  name: Schema.String.pipe(Schema.optional),
-  objects: Schema.Array(Type.Ref(Type.Obj)).pipe(FormInputAnnotation.set(false)),
-}).pipe(
-  Type.object({
-    typename: 'dxos.org/type/Collection',
-    version: '0.1.0',
-  }),
-);
-
-export type Collection = Schema.Schema.Type<typeof Collection>;
-
-export const make = (props: Partial<Obj.MakeProps<typeof Collection>> = {}): Collection =>
-  Obj.make(Collection, { objects: [], ...props });
+import { Collection } from '@dxos/echo';
 
 /**
  * System collections are used runtime collections of nodes in the app graph.
@@ -50,13 +36,13 @@ export const makeManaged = (props: Obj.MakeProps<typeof Managed>): Managed => Ob
 
 type AddProps = {
   object: Obj.Unknown;
-  target?: Collection;
+  target?: Collection.Collection;
   hidden?: boolean;
 };
 
 export const add = Effect.fn(function* ({ object, target, hidden }: AddProps) {
   const objectRef = Ref.make(object);
-  if (Obj.instanceOf(Collection, target)) {
+  if (Collection.isCollection(target)) {
     Obj.change(target, (t) => {
       t.objects.push(objectRef);
     });
@@ -67,17 +53,17 @@ export const add = Effect.fn(function* ({ object, target, hidden }: AddProps) {
     invariant(objects.length === 1, 'Space properties not found');
     const properties: Obj.Any = objects[0];
 
-    const collectionRef: Ref.Ref<Collection> | undefined = properties[Collection.typename];
+    const collectionRef: Ref.Ref<Collection.Collection> | undefined = properties[Collection.Collection.typename];
     if (collectionRef) {
       const collection = yield* Effect.promise(() => collectionRef.load());
       Obj.change(collection, (c) => {
         c.objects.push(objectRef);
       });
     } else {
-      const newCollection = Obj.make(Collection, { objects: [objectRef] });
+      const newCollection = Collection.make({ objects: [objectRef] });
       const collectionRef = Ref.make(newCollection);
       Obj.change(properties, (p) => {
-        p[Collection.typename] = collectionRef;
+        p[Collection.Collection.typename] = collectionRef;
       });
     }
   }
