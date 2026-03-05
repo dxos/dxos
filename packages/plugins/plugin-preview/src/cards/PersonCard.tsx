@@ -6,7 +6,7 @@ import React from 'react';
 
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Avatar } from '@dxos/react-ui';
-import { Card } from '@dxos/react-ui-mosaic';
+import { Card } from '@dxos/react-ui';
 import { type Person } from '@dxos/types';
 
 export const PersonCard = ({ subject }: SurfaceComponentProps<Person.Person>) => {

@@ -8,7 +8,7 @@ import React, { type PropsWithChildren, useCallback, useEffect, useRef, useState
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { Popover, type PopoverContentInteractOutsideEvent, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Card } from '@dxos/react-ui-mosaic';
+import { Card } from '@dxos/react-ui';
 
 import { useDeckState } from '../../hooks';
 import { meta } from '../../meta';

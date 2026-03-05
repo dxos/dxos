@@ -13,7 +13,8 @@ import { Filter, Obj, Query } from '@dxos/echo';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';
 import { useQuery } from '@dxos/react-client/echo';
 import { Container, ScrollArea } from '@dxos/react-ui';
-import { Card, Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
+import { Card } from '@dxos/react-ui';
+import { Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { isNonNullable } from '@dxos/util';
 
 export type ProjectArticleProps = SurfaceComponentProps<Project.Project>;

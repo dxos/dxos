@@ -6,7 +6,7 @@ import { Slot } from '@radix-ui/react-slot';
 import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
 
 import type { ThemedClassName } from '@dxos/react-ui';
-import { Card } from '@dxos/react-ui-mosaic';
+import { Card } from '@dxos/react-ui';
 import { cardDefaultInlineSize, mx } from '@dxos/ui-theme';
 
 import { Stack, type StackProps, railGridHorizontalContainFitContent } from '../Stack';

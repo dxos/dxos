@@ -11,8 +11,8 @@ import { Obj } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { faker } from '@dxos/random';
+import { Card } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
-import { Card } from '@dxos/react-ui-mosaic';
 import { CardContainer } from '@dxos/react-ui-mosaic/testing';
 
 import { translations } from '../../translations';

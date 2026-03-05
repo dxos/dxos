@@ -7,9 +7,8 @@ import React, { useRef } from 'react';
 
 import { faker } from '@dxos/random';
 import { Icon } from '@dxos/react-ui';
+import { Card } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-
-import { Card } from './Card';
 
 faker.seed(0);
 

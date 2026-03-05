@@ -6,7 +6,8 @@ import React, { forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { useTranslation } from '@dxos/react-ui';
-import { Card, Focus, Mosaic, useBoard } from '@dxos/react-ui-mosaic';
+import { Card } from '@dxos/react-ui';
+import { Focus, Mosaic, useBoard } from '@dxos/react-ui-mosaic';
 
 import { type KanbanCardProps, useKanbanBoard } from '../components';
 import { meta } from '../meta';

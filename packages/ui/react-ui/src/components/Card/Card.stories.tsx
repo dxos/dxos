@@ -13,14 +13,14 @@ import { Card } from './Card';
 
 faker.seed(0);
 
-type CardStoryProps = {
+type StoryProps = {
   title: string;
   description?: string;
   image?: string;
   fullWidth?: boolean;
 };
 
-const DefaultStory = ({ title, description, image, fullWidth }: CardStoryProps) => {
+const DefaultStory = ({ title, description, image, fullWidth }: StoryProps) => {
   const handleRef = useRef<HTMLButtonElement>(null);
   return (
     <Card.Root fullWidth={fullWidth}>
@@ -55,7 +55,7 @@ const DefaultStory = ({ title, description, image, fullWidth }: CardStoryProps) 
 };
 
 const meta = {
-  title: 'ui/react-ui-mosaic/Card',
+  title: 'ui/react-ui/components/Card',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'grid w-[30rem] place-items-center' })],
 } satisfies Meta<typeof DefaultStory>;

@@ -15,7 +15,8 @@ import {
   toLocalizedString,
   useTranslation,
 } from '@dxos/react-ui';
-import { Card, Mosaic } from '@dxos/react-ui-mosaic';
+import { Card } from '@dxos/react-ui';
+import { Mosaic } from '@dxos/react-ui-mosaic';
 import { descriptionMessage, mx } from '@dxos/ui-theme';
 
 import { meta } from '../meta';

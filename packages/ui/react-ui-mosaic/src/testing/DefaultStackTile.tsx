@@ -5,9 +5,10 @@
 import React, { useRef, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
+import { Card } from '@dxos/react-ui';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 
-import { Card, Mosaic, type MosaicStackTileComponent } from '../components';
+import { Mosaic, type MosaicStackTileComponent } from '../components';
 
 export const DefaultStackTile: MosaicStackTileComponent<Obj.Any> = (props) => {
   const dragHandleRef = useRef<HTMLButtonElement>(null);
