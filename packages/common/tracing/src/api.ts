@@ -5,7 +5,7 @@
 import { Context } from '@dxos/context';
 import { type MaybePromise } from '@dxos/util';
 
-import { TRACE_SPAN_ATTRIBUTE, getTracingContext } from './symbols';
+import { getTracingContext } from './symbols';
 import { TRACE_PROCESSOR, type TraceSpanProps, type TracingSpan } from './trace-processor';
 
 /**
@@ -82,14 +82,9 @@ const span =
 
     descriptor.value = async function (this: any, ...args: any) {
       const explicitCtx = args[0] instanceof Context ? args[0] : null;
-      const instanceCtx = this[TRACE_SPAN_ATTRIBUTE] ?? null;
-      const parentCtx = explicitCtx ?? instanceCtx;
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/d745b3a2-60ce-460d-8f30-f162688e5153',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'api.ts:span-decorator',message:'span parent discovery',data:{method:propertyKey,hasExplicitCtx:!!explicitCtx,hasInstanceCtx:!!instanceCtx,hasParentCtx:!!parentCtx,parentSpanId:parentCtx?.getAttribute?.(TRACE_SPAN_ATTRIBUTE)},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
 
       const span = TRACE_PROCESSOR.traceSpan({
-        parentCtx,
+        parentCtx: explicitCtx,
         methodName: propertyKey,
         instance: this,
         showInBrowserTimeline,
@@ -99,9 +94,6 @@ const span =
 
       const callArgs = explicitCtx ? [span.ctx, ...args.slice(1)] : args;
 
-      const prevCtx = this[TRACE_SPAN_ATTRIBUTE];
-      this[TRACE_SPAN_ATTRIBUTE] = span.ctx;
-
       return TRACE_PROCESSOR.remoteTracing.wrapExecution(span, async () => {
         try {
           return await method.apply(this, callArgs);
@@ -110,7 +102,6 @@ const span =
           throw err;
         } finally {
           span.markSuccess();
-          this[TRACE_SPAN_ATTRIBUTE] = prevCtx;
         }
       });
     };

@@ -8,6 +8,7 @@
 // See: https://github.com/Menci/vite-plugin-wasm/issues/37
 
 onconnect = async (event) => {
+  await import('zone.js');
   const { Effect } = await import('effect');
   const { onconnect, getWorkerServiceHost } = await import('@dxos/client/worker');
   const { log } = await import('@dxos/log');

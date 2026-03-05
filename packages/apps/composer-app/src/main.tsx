@@ -2,6 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
+import 'zone.js';
 import '@dxos-theme';
 
 import * as Effect from 'effect/Effect';
@@ -16,7 +17,7 @@ import { runAndForwardErrors } from '@dxos/effect';
 import { LogLevel, log } from '@dxos/log';
 import { Observability } from '@dxos/observability';
 import { ThemeProvider, Tooltip } from '@dxos/react-ui';
-import { TRACE_SPAN_ATTRIBUTE, trace, TRACE_PROCESSOR } from '@dxos/tracing';
+import { TRACE_PROCESSOR, trace } from '@dxos/tracing';
 import { defaultTx } from '@dxos/ui-theme';
 import { getHostPlatform, isMobile as isMobile$, isTauri as isTauri$ } from '@dxos/util';
 
@@ -35,24 +36,24 @@ class ServiceA {
   async handleRequest() {
     await new Promise((resolve) => setTimeout(resolve, 20));
     const bridge = new Bridge();
-    await bridge.forward(this);
+    await bridge.forward();
   }
 }
 
 /** Uninstrumented intermediary — no decorators, just passes calls through. */
 class Bridge {
-  async forward(caller: any) {
+  async forward() {
     await new Promise((resolve) => setTimeout(resolve, 10));
     const downstream = new ServiceB();
-    await downstream.process((caller as any)[TRACE_SPAN_ATTRIBUTE]);
+    await downstream.process();
   }
 }
 
-/** Instrumented downstream — receives trace context explicitly. */
+/** Instrumented downstream — receives trace context via Zone.js OTEL propagation. */
 @trace.resource()
 class ServiceB {
   @trace.span({ op: 'test' })
-  async process(ctx?: any) {
+  async process() {
     await new Promise((resolve) => setTimeout(resolve, 15));
     await this.finalStep();
   }

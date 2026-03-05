@@ -106,7 +106,8 @@
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-joyride": "catalog:",
-    "solid-js": "catalog:"
+    "solid-js": "catalog:",
+    "zone.js": "catalog:"
   },
   "devDependencies": {
     "@babel/core": "catalog:",
