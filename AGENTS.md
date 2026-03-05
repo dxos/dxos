@@ -67,6 +67,7 @@
 Use scope when relevant: `feat(package-name): <description>`
 
 Examples:
+
 - `feat: add user authentication flow`
 - `fix(echo): resolve memory leak in subscription handler`
 - `refactor: simplify error handling in client SDK`
@@ -77,7 +78,7 @@ Examples:
 - Use `gh` CLI to create and manage PRs
 - When the user asks you to submit a PR:
   - commit any pending changes
-  - address major PR review comments and reply to all comments
+  - address PR review comments as appropriate and reply to all comments
   - `moon run :lint -- --fix` succeeds
   - `moon run :test` succeeds
   - `pnpm -w gh-action --verify --watch` shows green CI
