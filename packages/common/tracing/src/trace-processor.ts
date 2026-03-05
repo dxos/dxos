@@ -3,7 +3,7 @@
 //
 
 import { unrefTimeout } from '@dxos/async';
-import { type Context } from '@dxos/context';
+import { Context } from '@dxos/context';
 import { LogLevel, type LogProcessor, getContextFromEntry, log } from '@dxos/log';
 import { type LogEntry } from '@dxos/protocols/proto/dxos/client/services';
 import { type Error as SerializedError } from '@dxos/protocols/proto/dxos/error';
@@ -377,7 +377,7 @@ export class TracingSpan {
   error: SerializedError | null = null;
 
   private _showInBrowserTimeline: boolean;
-  private readonly _ctx: Context | null = null;
+  private readonly _ctx: Context;
 
   constructor(
     private _traceProcessor: TraceProcessor,
@@ -391,12 +391,13 @@ export class TracingSpan {
     this.op = params.op;
     this.attributes = params.attributes ?? {};
 
+    const baseCtx = params.parentCtx ?? new Context();
+    this._ctx = baseCtx.derive({
+      attributes: {
+        [TRACE_SPAN_ATTRIBUTE]: this.id,
+      },
+    });
     if (params.parentCtx) {
-      this._ctx = params.parentCtx.derive({
-        attributes: {
-          [TRACE_SPAN_ATTRIBUTE]: this.id,
-        },
-      });
       const parentId = params.parentCtx.getAttribute(TRACE_SPAN_ATTRIBUTE);
       if (typeof parentId === 'number') {
         this.parentId = parentId;
@@ -415,7 +416,7 @@ export class TracingSpan {
     return resource?.sanitizedClassName;
   }
 
-  get ctx(): Context | null {
+  get ctx(): Context {
     return this._ctx;
   }
 

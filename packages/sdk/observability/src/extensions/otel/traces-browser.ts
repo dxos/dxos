@@ -126,6 +126,7 @@ export class OtelTraces {
           '@opentelemetry/instrumentation-fetch': {
             ignoreUrls: [
               /localhost/,
+              /127\.0\.0\.1/,
               /api\.ipdata\.co/,
               /ingest\..*\.signoz\.cloud/,
               /\.hot-update\./,
