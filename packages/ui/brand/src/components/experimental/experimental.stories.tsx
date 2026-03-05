@@ -5,7 +5,6 @@
 import '@fontsource/k2d/100-italic.css';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { arc } from 'd3';
 import React, { useRef, useState } from 'react';
 
 import { Button, Icon } from '@dxos/react-ui';
@@ -209,42 +208,56 @@ export const Linear: Story = {
   },
 };
 
-// Brand icon arc reproduced with D3 path generation (no DOM manipulation).
-// The Composer brand mark has 4 concentric C-arcs with the same opening
-// angle as ComposerSpinner, using exact brand fill colors.
-const brandColors = [
-  'rgb(5,40,61)', // outer — darkest navy
-  'rgb(10,75,105)', // dark teal
-  'rgb(1,122,183)', // medium blue
-  'rgb(6,197,253)', // inner — lightest cyan
-];
+/**
+ * Build a single brand-accurate C-arc layer.
+ *
+ * Shape: left semicircle ring (6 → 9 → 12 o'clock) with a
+ * horizontal-then-diagonal stepped edge at each open end, matching the
+ * Composer brand icon geometry. Two 90° arcs avoid the 180° SVG ambiguity.
+ */
+const makeBrandLayerPath = (cx: number, cy: number, R: number, r: number): string => {
+  // Horizontal step at each open end (from brand icon: outerStep/R ≈ 0.29).
+  const outerStep = R * 0.29;
+  const innerStep = r * 0.29;
+  return [
+    `M ${cx} ${cy + R}`,
+    // Outer arc CCW: 6-oclock → 9-oclock → 12-oclock (two quarter arcs)
+    `A ${R} ${R} 0 0 0 ${cx - R} ${cy}`,
+    `A ${R} ${R} 0 0 0 ${cx} ${cy - R}`,
+    // Top open end: right → diagonal to inner top-right → left to inner top
+    `L ${cx + outerStep} ${cy - R}`,
+    `L ${cx + innerStep} ${cy - r}`,
+    `L ${cx} ${cy - r}`,
+    // Inner arc CCW: 12-oclock → 9-oclock → 6-oclock (two quarter arcs)
+    `A ${r} ${r} 0 0 0 ${cx - r} ${cy}`,
+    `A ${r} ${r} 0 0 0 ${cx} ${cy + r}`,
+    // Bottom open end: right → diagonal to outer bottom-right, Z closes left
+    `L ${cx + innerStep} ${cy + r}`,
+    `L ${cx + outerStep} ${cy + R}`,
+    'Z',
+  ].join(' ');
+};
+
+// Brand icon colors, outer → inner.
+const composerBrandColors = ['rgb(5,40,61)', 'rgb(10,75,105)', 'rgb(1,122,183)', 'rgb(6,197,253)'];
 
 export const BrandArc: Story = {
   render: () => {
     const size = 256;
-    const totalRadius = size / 2;
-    const n = brandColors.length;
-    const ringWidth = totalRadius / (n + 1);
-    const gap = 3;
-    // Same opening as ComposerSpinner — C opens at ~1:30 o'clock.
-    const startAngle = (1 / 4) * Math.PI;
-    const endAngle = -(5 / 4) * Math.PI;
+    const cx = size / 2;
+    const cy = size / 2;
+    const n = composerBrandColors.length;
+    const ringWidth = size / 2 / (n + 1);
+    const gap = 2;
 
     return (
       <div className='absolute inset-0 flex items-center justify-center'>
         <svg width={size} height={size}>
-          <g transform={`translate(${totalRadius}, ${totalRadius})`}>
-            {brandColors.map((color, i) => {
-              const outerRadius = totalRadius - i * ringWidth;
-              const innerRadius = outerRadius - ringWidth + gap;
-              const d = arc<any, any>()
-                .innerRadius(innerRadius)
-                .outerRadius(outerRadius)
-                .startAngle(startAngle)
-                .endAngle(endAngle)() as string;
-              return <path key={i} d={d} fill={color} />;
-            })}
-          </g>
+          {composerBrandColors.map((color, i) => {
+            const outerR = size / 2 - i * ringWidth;
+            const innerR = outerR - ringWidth + gap;
+            return <path key={i} d={makeBrandLayerPath(cx, cy, outerR, innerR)} fill={color} />;
+          })}
         </svg>
       </div>
     );
