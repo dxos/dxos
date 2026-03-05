@@ -3,7 +3,7 @@
   "jsxSingleQuote": true,
   "trailingComma": "all",
   "printWidth": 120,
-  "quoteProps": "consistent",
+  "quoteProps": "as-needed",
   "plugins": ["prettier-plugin-packagejson"],
   "overrides": [
     {

@@ -62,7 +62,7 @@ const cardPosterIcon: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
   mx('dx-card__poster-icon col-span-3 grid place-items-center bg-input-surface text-subdued max-h-[200px]', ...etc);
 
 const cardAction: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
-  mx('dx-card__action col-span-3 !grid grid-cols-subgrid p-0! w-full text-start overflow-hidden', ...etc);
+  mx('dx-card__acztion col-span-3 !grid grid-cols-subgrid p-0! w-full text-start overflow-hidden', ...etc);
 
 const cardActionLabel: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
   mx('dx-card__action-label min-w-0 flex-1 truncate', ...etc);
@@ -77,18 +77,18 @@ const cardIconBlock: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
   mx('dx-card__icon-block grid h-[var(--dx-rail-item)] w-[var(--dx-rail-item)] place-items-center', ...etc);
 
 export const cardTheme: Theme<CardStyleProps> = {
-  "root": cardRoot,
-  "toolbar": cardToolbar,
-  "title": cardTitle,
-  "content": cardContent,
-  "heading": cardHeading,
-  "text": cardText,
+  root: cardRoot,
+  toolbar: cardToolbar,
+  title: cardTitle,
+  content: cardContent,
+  heading: cardHeading,
+  text: cardText,
   'text-span': cardTextSpan,
-  "poster": cardPoster,
+  poster: cardPoster,
   'poster-icon': cardPosterIcon,
-  "action": cardAction,
+  action: cardAction,
   'action-label': cardActionLabel,
-  "link": cardLink,
+  link: cardLink,
   'link-label': cardLinkLabel,
   'icon-block': cardIconBlock,
 };
