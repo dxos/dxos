@@ -209,61 +209,8 @@ export const Linear: Story = {
   },
 };
 
-/**
- * Build a single brand-accurate C-arc layer.
- *
- * Shape: left semicircle ring (6 → 9 → 12 o'clock) with a
- * horizontal-then-diagonal stepped edge at each open end, matching the
- * Composer brand icon geometry. Two 90° arcs avoid the 180° SVG ambiguity.
- */
-const makeBrandLayerPath = (cx: number, cy: number, R: number, r: number): string => {
-  // Horizontal step at each open end (from brand icon: outerStep/R ≈ 0.29).
-  const outerStep = R * 0.29;
-  const innerStep = r * 0.29;
-  return [
-    `M ${cx} ${cy + R}`,
-    // Outer arc CCW: 6-oclock → 9-oclock → 12-oclock (two quarter arcs)
-    `A ${R} ${R} 0 0 0 ${cx - R} ${cy}`,
-    `A ${R} ${R} 0 0 0 ${cx} ${cy - R}`,
-    // Top open end: right → diagonal to inner top-right → left to inner top
-    `L ${cx + outerStep} ${cy - R}`,
-    `L ${cx + innerStep} ${cy - r}`,
-    `L ${cx} ${cy - r}`,
-    // Inner arc CCW: 12-oclock → 9-oclock → 6-oclock (two quarter arcs)
-    `A ${r} ${r} 0 0 0 ${cx - r} ${cy}`,
-    `A ${r} ${r} 0 0 0 ${cx} ${cy + r}`,
-    // Bottom open end: right → diagonal to outer bottom-right, Z closes left
-    `L ${cx + innerStep} ${cy + r}`,
-    `L ${cx + outerStep} ${cy + R}`,
-    'Z',
-  ].join(' ');
-};
-
 // Brand icon colors, outer → inner.
 const composerBrandColors = ['rgb(5,40,61)', 'rgb(10,75,105)', 'rgb(1,122,183)', 'rgb(6,197,253)'];
-
-export const BrandArc: Story = {
-  render: () => {
-    const size = 256;
-    const cx = size / 2;
-    const cy = size / 2;
-    const n = composerBrandColors.length;
-    const ringWidth = size / 2 / (n + 1);
-    const gap = 2;
-
-    return (
-      <div className='absolute inset-0 flex items-center justify-center'>
-        <svg width={size} height={size}>
-          {composerBrandColors.map((color, i) => {
-            const outerR = size / 2 - i * ringWidth;
-            const innerR = outerR - ringWidth + gap;
-            return <path key={i} d={makeBrandLayerPath(cx, cy, outerR, innerR)} fill={color} />;
-          })}
-        </svg>
-      </div>
-    );
-  },
-};
 
 export const BrandArcSimple: Story = {
   render: () => {
@@ -271,7 +218,7 @@ export const BrandArcSimple: Story = {
     const totalRadius = size / 2;
     const n = composerBrandColors.length;
     const ringWidth = totalRadius / (n + 1);
-    const gap = 2;
+    const gap = 0;
     const startAngle = (1 / 4) * Math.PI;
     const endAngle = -(5 / 4) * Math.PI;
 
@@ -290,6 +237,64 @@ export const BrandArcSimple: Story = {
               return <path key={i} d={d} fill={color} />;
             })}
           </g>
+        </svg>
+      </div>
+    );
+  },
+};
+
+/**
+ * Build a single brand-accurate C-arc layer.
+ *
+ * Shape: left semicircle ring (6 → 9 → 12 o'clock) with a
+ * horizontal-then-diagonal stepped edge at each open end, matching the
+ * Composer brand icon geometry. Two 90° arcs avoid the 180° SVG ambiguity.
+ */
+const makeBrandLayerPath = (cx: number, cy: number, r1: number, r2: number): string => {
+  // Horizontal step at each open end (from brand icon: outerStep/R ≈ 0.29).
+  const outerStep = r1 * 0.29;
+  const innerStep = r2 * 0.29;
+  return [
+    // Start at the outer bottom-right step edge (short at bottom).
+    `M ${cx + innerStep} ${cy + r1}`,
+    // Move left to 6-oclock.
+    `L ${cx} ${cy + r1}`,
+    // Outer arc CW: 6-oclock → 9-oclock → 12-oclock (through the left/west side).
+    `A ${r1} ${r1} 0 0 1 ${cx - r1} ${cy}`,
+    `A ${r1} ${r1} 0 0 1 ${cx} ${cy - r1}`,
+    // Move right along the top edge.
+    `L ${cx + outerStep} ${cy - r1}`,
+    // Diagonal down to inner top-right.
+    `L ${cx + innerStep} ${cy - r2}`,
+    // Move left to inner 12-oclock.
+    `L ${cx} ${cy - r2}`,
+    // Inner arc CCW: 12-oclock → 9-oclock → 6-oclock (back through the left/west side).
+    `A ${r2} ${r2} 0 0 0 ${cx - r2} ${cy}`,
+    `A ${r2} ${r2} 0 0 0 ${cx} ${cy + r2}`,
+    // Move right along the inner bottom edge (long at bottom).
+    `L ${cx + outerStep} ${cy + r2}`,
+    // Close: diagonal back up to start.
+    'Z',
+  ].join(' ');
+};
+
+export const BrandArc: Story = {
+  render: () => {
+    const size = 256;
+    const cx = size / 2;
+    const cy = size / 2;
+    const n = composerBrandColors.length;
+    const ringWidth = size / 2 / (n + 1);
+    const gap = 0;
+
+    return (
+      <div className='absolute inset-0 flex items-center justify-center'>
+        <svg width={size} height={size}>
+          {composerBrandColors.map((color, i) => {
+            const r1 = size / 2 - i * ringWidth;
+            const r2 = r1 - ringWidth + gap;
+            return <path key={i} d={makeBrandLayerPath(cx, cy, r1, r2)} fill={color} />;
+          })}
         </svg>
       </div>
     );

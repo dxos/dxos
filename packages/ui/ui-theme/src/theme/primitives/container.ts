@@ -19,7 +19,6 @@ const containerMain: ComponentFunction<{ toolbar?: boolean }> = ({ toolbar }, ..
 const containerColumn: ComponentFunction<Record<string, any>> = (_, ...etc) =>
   mx('dx-column w-full min-w-0 grid', ...etc);
 
-
 /**
  * Three-column icon-slot row: spans all 3 columns of the parent Container.Column grid.
  * Uses CSS subgrid to inherit column sizing from the parent Column.

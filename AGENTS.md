@@ -48,6 +48,7 @@
 - Check `moon.yml` for available package tasks
 - Run linter at natural stopping points
 - Confirm work complete before final build/lint check
+- If updating `pnpm-workspace.yaml` make sure to preserve comments.
 
 ## PR Naming Convention
 

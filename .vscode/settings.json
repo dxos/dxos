@@ -3,9 +3,7 @@
     "editor.defaultFormatter": "zxh404.vscode-proto3"
   },
   "css.lint.unknownAtRules": "ignore",
-  "css.customData": [
-    ".vscode/css-custom-data.json"
-  ],
+  "css.customData": [".vscode/css-custom-data.json"],
   "cSpell.words": [
     "Automerge",
     "bitfield",
@@ -31,20 +29,9 @@
     "wittjosiah"
   ],
   "debug.javascript.terminalOptions": {
-    "skipFiles": [
-      "**/**/tracing/src/api.ts"
-    ]
+    "skipFiles": ["**/**/tracing/src/api.ts"]
   },
   "editor.tabSize": 2,
-  "editor.formatOnSave": true,
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "[typescript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[typescriptreact]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-
   "eslint.rules.customizations": [
     {
       "rule": "prettier/*",
@@ -341,10 +328,7 @@
       }
     ]
   ],
-  "hediet.vscode-drawio.defaultFonts": [
-    "Montserrat",
-    "Space Grotesk"
-  ],
+  "hediet.vscode-drawio.defaultFonts": ["Montserrat", "Space Grotesk"],
   "hediet.vscode-drawio.presetColors": [
     // Netural
     "F7F7F7",
@@ -396,15 +380,11 @@
   "javascript.suggest.autoImports": true,
   "json.schemas": [
     {
-      "fileMatch": [
-        "packages/wallet/extension/public/manifest.json"
-      ],
+      "fileMatch": ["packages/wallet/extension/public/manifest.json"],
       "url": "https://raw.githubusercontent.com/PrsPrsBK/ffext-manifest-schema/master/ffext.json"
     }
   ],
-  "rust-analyzer.linkedProjects": [
-    "packages/apps/composer-app/src-tauri/Cargo.toml"
-  ],
+  "rust-analyzer.linkedProjects": ["packages/apps/composer-app/src-tauri/Cargo.toml"],
   "search.followSymlinks": false,
   "search.useGlobalIgnoreFiles": false,
   "search.useParentIgnoreFiles": true,
@@ -424,5 +404,5 @@
   "typescript.preferences.importModuleSpecifier": "non-relative",
   "typescript.tsdk": "node_modules/typescript/lib",
   "vitest.disableWorkspaceWarning": true,
-  "vitest.rootConfig": "vitest.all.config.ts",
+  "vitest.rootConfig": "vitest.all.config.ts"
 }
