@@ -92,14 +92,16 @@ const span =
       });
 
       const callArgs = span.ctx ? [span.ctx, ...args.slice(1)] : args;
-      try {
-        return await method.apply(this, callArgs);
-      } catch (err) {
-        span.markError(err);
-        throw err;
-      } finally {
-        span.markSuccess();
-      }
+      return TRACE_PROCESSOR.remoteTracing.wrapExecution(span, async () => {
+        try {
+          return await method.apply(this, callArgs);
+        } catch (err) {
+          span.markError(err);
+          throw err;
+        } finally {
+          span.markSuccess();
+        }
+      });
     };
   };
 

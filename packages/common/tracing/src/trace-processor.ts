@@ -409,6 +409,12 @@ export class TracingSpan {
     return resource ? `${resource.sanitizedClassName}#${resource.data.instanceId}.${this.methodName}` : this.methodName;
   }
 
+  /** Sanitized class name of the owning resource, if available. */
+  get sanitizedClassName(): string | undefined {
+    const resource = this.resourceId != null ? this._traceProcessor.resources.get(this.resourceId) : undefined;
+    return resource?.sanitizedClassName;
+  }
+
   get ctx(): Context | null {
     return this._ctx;
   }
@@ -537,13 +543,13 @@ const areEqualShallow = (a: any, b: any) => {
 };
 
 export const sanitizeClassName = (className: string) => {
+  let name = className.replace(/^_+/, '');
   const SANITIZE_REGEX = /[^_](\d+)$/;
-  const m = className.match(SANITIZE_REGEX);
-  if (!m) {
-    return className;
-  } else {
-    return className.slice(0, -m[1].length);
+  const m = name.match(SANITIZE_REGEX);
+  if (m) {
+    name = name.slice(0, -m[1].length);
   }
+  return name;
 };
 
 const isSetLike = (value: any): value is Set<any> =>

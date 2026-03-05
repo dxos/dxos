@@ -66,8 +66,7 @@
   "devDependencies": {
     "@effect/platform": "catalog:",
     "@types/debug": "catalog:",
-    "@types/js-yaml": "catalog:",
-    "zone.js": "catalog:"
+    "@types/js-yaml": "catalog:"
   },
   "peerDependencies": {
     "@effect/platform": "catalog:",
