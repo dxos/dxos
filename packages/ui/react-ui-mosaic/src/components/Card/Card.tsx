@@ -14,6 +14,7 @@ import React, {
 
 import {
   Button,
+  Container,
   type Density,
   DropdownMenu,
   Icon,
@@ -71,7 +72,7 @@ const CardRoot = forwardRef<HTMLDivElement, CardRootProps>(
         className={mx(styles.root, border && styles.border, fullWidth && 'max-w-none!', className, classNames)}
         ref={forwardedRef}
       >
-        {children}
+        <Container.Column>{children}</Container.Column>
       </Root>
     );
   },
@@ -91,11 +92,7 @@ const CardToolbar = forwardRef<HTMLDivElement, CardToolbarProps>(
     return (
       <Toolbar.Root
         {...props}
-        classNames={[
-          'dx-density-fine bg-transparent',
-          density === 'fine' ? styles.grid_3 : styles.grid_3_coarse,
-          classNames,
-        ]}
+        classNames={['dx-density-fine bg-transparent', density === 'fine' ? styles.row : styles.row_coarse, classNames]}
         ref={forwardedRef}
       >
         {children}
@@ -246,10 +243,11 @@ type CardRowProps = CardSharedProps & { icon?: string };
 const CardRow = forwardRef<HTMLDivElement, CardRowProps>(
   ({ children, classNames, className, role = 'none', icon, ...props }, forwardedRef) => {
     return (
-      <div {...props} role={role} className={mx(styles.grid_2, 'px-1', classNames, className)} ref={forwardedRef}>
+      <Container.Row {...props} role={role} classNames={[classNames, className]} ref={forwardedRef}>
         {(icon && <CardIcon classNames='text-subdued' icon={icon} />) || <div />}
         {children}
-      </div>
+        <div />
+      </Container.Row>
     );
   },
 );
@@ -355,17 +353,11 @@ type CardActionProps = { icon?: string; label: string; actionIcon?: string; onCl
 
 const CardAction = ({ icon, actionIcon = 'ph--arrow-right--regular', label, onClick }: CardActionProps) => {
   return (
-    <div role='none' className='w-full px-1'>
-      <Button
-        variant='ghost'
-        classNames={mx(styles.grid_3, 'p-0! w-full text-start overflow-hidden')}
-        onClick={onClick}
-      >
-        {icon ? <CardIcon classNames='text-subdued' icon={icon} /> : <div />}
-        <span className={mx('min-w-0 flex-1 truncate', !actionIcon && 'col-span-2')}>{label}</span>
-        {actionIcon && <CardIcon icon={actionIcon} />}
-      </Button>
-    </div>
+    <Button variant='ghost' classNames={mx(styles.row, 'p-0! w-full text-start overflow-hidden')} onClick={onClick}>
+      {icon ? <CardIcon classNames='text-subdued' icon={icon} /> : <div />}
+      <span className={mx('min-w-0 flex-1 truncate', !actionIcon && 'col-span-2')}>{label}</span>
+      {actionIcon && <CardIcon icon={actionIcon} />}
+    </Button>
   );
 };
 
@@ -377,19 +369,17 @@ type CardLinkProps = { label: string; href: string };
 
 const CardLink = ({ label, href }: CardLinkProps) => {
   return (
-    <div role='none' className='w-full px-1'>
-      <a
-        className={mx(styles.grid_3, 'group p-0! dx-button dx-focus-ring min-h-1!')}
-        data-variant='ghost'
-        href={href}
-        target='_blank'
-        rel='noreferrer'
-      >
-        <CardIcon classNames='text-subdued' icon='ph--link--regular' />
-        <span className={mx('min-w-0 flex-1 truncate')}>{label}</span>
-        <CardIcon classNames='invisible group-hover:visible' icon='ph--arrow-square-out--regular' />
-      </a>
-    </div>
+    <a
+      className={mx(styles.row, 'group p-0! dx-button dx-focus-ring min-h-1!')}
+      data-variant='ghost'
+      href={href}
+      target='_blank'
+      rel='noreferrer'
+    >
+      <CardIcon classNames='text-subdued' icon='ph--link--regular' />
+      <span className={mx('min-w-0 flex-1 truncate')}>{label}</span>
+      <CardIcon classNames='invisible group-hover:visible' icon='ph--arrow-square-out--regular' />
+    </a>
   );
 };
 

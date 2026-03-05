@@ -93,6 +93,33 @@ const Column = forwardRef<HTMLDivElement, ColumnProps>(
 Column.displayName = CONTAINER_COLUMN_NAME;
 
 //
+// Row
+//
+
+const CONTAINER_ROW_NAME = 'Container.Row';
+
+type RowProps = SlottableProps<HTMLDivElement>;
+
+/**
+ * Three-column icon-slot row grid: [rail-item | 1fr | rail-item].
+ * Use for rows that have an icon slot on the left and optionally an action slot on the right.
+ * Nested inside a `Container.Column` so the gutter is handled by the column, not the row.
+ */
+const Row = forwardRef<HTMLDivElement, RowProps>(
+  ({ classNames, className, asChild, role = 'none', children, ...props }, forwardedRef) => {
+    const { tx } = useThemeContext();
+    const Root = asChild ? Slot : Primitive.div;
+    return (
+      <Root {...props} className={tx('container.row', {}, [className, classNames])} role={role} ref={forwardedRef}>
+        {children}
+      </Root>
+    );
+  },
+);
+
+Row.displayName = CONTAINER_ROW_NAME;
+
+//
 // Segment
 //
 
@@ -121,11 +148,13 @@ Segment.displayName = CONTAINER_SEGMENT_NAME;
 export const Container = {
   Main,
   Column,
+  Row,
   Segment,
 };
 
 export type {
   MainProps as ContainerMainProps,
   ColumnProps as ContainerColumnProps,
+  RowProps as ContainerRowProps,
   SegmentProps as ContainerSegmentProps,
 };
