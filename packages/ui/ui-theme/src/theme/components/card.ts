@@ -77,18 +77,18 @@ const cardIconBlock: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
   mx('dx-card__icon-block grid h-[var(--dx-rail-item)] w-[var(--dx-rail-item)] place-items-center', ...etc);
 
 export const cardTheme: Theme<CardStyleProps> = {
-  "root": cardRoot,
-  "toolbar": cardToolbar,
-  "title": cardTitle,
-  "content": cardContent,
-  "heading": cardHeading,
-  "text": cardText,
+  'root': cardRoot,
+  'toolbar': cardToolbar,
+  'title': cardTitle,
+  'content': cardContent,
+  'heading': cardHeading,
+  'text': cardText,
   'text-span': cardTextSpan,
-  "poster": cardPoster,
+  'poster': cardPoster,
   'poster-icon': cardPosterIcon,
-  "action": cardAction,
+  'action': cardAction,
   'action-label': cardActionLabel,
-  "link": cardLink,
+  'link': cardLink,
   'link-label': cardLinkLabel,
   'icon-block': cardIconBlock,
 };
