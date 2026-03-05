@@ -47,6 +47,8 @@ const createStorybookProject = (dirname: string) =>
   defineProject({
     test: {
       name: 'storybook',
+      // Suppress flaky WebSocket birpc teardown errors from storybook test runner infrastructure.
+      dangerouslyIgnoreUnhandledErrors: true,
       browser: {
         enabled: true,
         headless: true,
