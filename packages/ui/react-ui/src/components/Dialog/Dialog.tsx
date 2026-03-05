@@ -142,7 +142,7 @@ const DialogHeader: ForwardRefExoticComponent<DialogTitleProps> = forwardRef<HTM
   ({ classNames, srOnly, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
-      <Container.Segment>
+      <Container.Segment asChild>
         <div role='heading' {...props} className={tx('dialog.header', { srOnly }, [classNames])} ref={forwardedRef} />
       </Container.Segment>
     );
@@ -159,7 +159,7 @@ const DialogBody: ForwardRefExoticComponent<DialogBodyProps> = forwardRef<HTMLDi
   ({ children, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
-      <Container.Segment>
+      <Container.Segment asChild>
         <div role='none' {...props} className={tx('dialog.body')} ref={forwardedRef}>
           {children}
         </div>
@@ -215,7 +215,7 @@ const DialogActionBar: ForwardRefExoticComponent<DialogActionBarProps> = forward
 >(({ children, classNames, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   return (
-    <Container.Segment>
+    <Container.Segment asChild>
       <div {...props} className={tx('dialog.actionbar', {}, classNames)} ref={forwardedRef}>
         {children}
       </div>

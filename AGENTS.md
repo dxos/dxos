@@ -19,6 +19,7 @@
 - Build package: `moon run package-name:build`.
 - Run single test file: `moon run package-name:test -- path/to/test.test.ts`.
 - Run all tests: `MOON_CONCURRENCY=4 moon run :test -- --no-file-parallelism`.
+- Storybook: `moon run storybook-react:serve` (defaults to port 9009).
 - Lint & fix: `moon run :lint -- --fix`.
 - Check package tasks: see `moon.yml` in package directory.
 - **Expected warning**: `Auth token DEPOT_TOKEN does not exist` is a normal warning about remote caching and should be ignored. Filter out warnings from your output.

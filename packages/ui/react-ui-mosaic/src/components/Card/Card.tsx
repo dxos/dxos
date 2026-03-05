@@ -72,7 +72,7 @@ const CardRoot = forwardRef<HTMLDivElement, CardRootProps>(
         className={mx(styles.root, border && styles.border, fullWidth && 'max-w-none!', className, classNames)}
         ref={forwardedRef}
       >
-        <Container.Column>{children}</Container.Column>
+        <Container.Column gutter='rail'>{children}</Container.Column>
       </Root>
     );
   },
@@ -90,13 +90,15 @@ type CardToolbarProps = ToolbarRootProps & {
 const CardToolbar = forwardRef<HTMLDivElement, CardToolbarProps>(
   ({ children, classNames, density = 'fine', ...props }, forwardedRef) => {
     return (
-      <Toolbar.Root
-        {...props}
-        classNames={['dx-density-fine bg-transparent', density === 'fine' ? styles.row : styles.row_coarse, classNames]}
-        ref={forwardedRef}
-      >
-        {children}
-      </Toolbar.Root>
+      <Container.Row asChild>
+        <Toolbar.Root
+          {...props}
+          classNames={['dx-density-fine bg-transparent', density === 'fine' ? '' : styles.coarse_icon, classNames]}
+          ref={forwardedRef}
+        >
+          {children}
+        </Toolbar.Root>
+      </Container.Row>
     );
   },
 );
@@ -135,6 +137,7 @@ const CardDragHandle = forwardRef<HTMLButtonElement, CardDragHandleProps>((_, fo
 
 type CardCloseProps = { onClick?: () => void };
 
+// TODO(burdon): Create primitive buttons (Drag handle, Close, etc. that can be shared across react-ui; e.g., Dialog, etc.)
 const CardClose = forwardRef<HTMLButtonElement, CardCloseProps>(({ onClick }, forwardedRef) => {
   const { t } = useTranslation(translationKey);
 
@@ -219,9 +222,6 @@ const CardTitle = forwardRef<HTMLDivElement, CardTitleProps>(
 
 //
 // Content
-// TODO(burdon): Root for card--content role (possibly multiple).
-//  - Able to add menu options/set title, etc. via context.
-// TODO(burdon): Consider collapsible sections (surfaces).
 //
 
 type CardContentProps = PropsWithChildren;
@@ -326,7 +326,7 @@ const CardPoster = (props: CardPosterProps) => {
   const aspect = props.aspect === 'auto' ? 'aspect-auto' : 'aspect-video';
   if (props.image) {
     return (
-      <div role='none' className='mb-1'>
+      <div role='none' className='col-span-3 mb-1'>
         <Image classNames={[styles.poster, aspect, props.classNames]} src={props.image} alt={props.alt} />
       </div>
     );
@@ -336,7 +336,12 @@ const CardPoster = (props: CardPosterProps) => {
     return (
       <div
         role='image'
-        className={mx('grid place-items-center bg-input-surface text-subdued', styles.poster, aspect, props.classNames)}
+        className={mx(
+          'col-span-3 grid place-items-center bg-input-surface text-subdued',
+          styles.poster,
+          aspect,
+          props.classNames,
+        )}
         aria-label={props.alt}
       >
         <Icon icon={props.icon} size={10} />
@@ -353,11 +358,13 @@ type CardActionProps = { icon?: string; label: string; actionIcon?: string; onCl
 
 const CardAction = ({ icon, actionIcon = 'ph--arrow-right--regular', label, onClick }: CardActionProps) => {
   return (
-    <Button variant='ghost' classNames={mx(styles.row, 'p-0! w-full text-start overflow-hidden')} onClick={onClick}>
-      {icon ? <CardIcon classNames='text-subdued' icon={icon} /> : <div />}
-      <span className={mx('min-w-0 flex-1 truncate', !actionIcon && 'col-span-2')}>{label}</span>
-      {actionIcon && <CardIcon icon={actionIcon} />}
-    </Button>
+    <Container.Row asChild>
+      <Button variant='ghost' classNames='p-0! w-full text-start overflow-hidden' onClick={onClick}>
+        {icon ? <CardIcon classNames='text-subdued' icon={icon} /> : <div />}
+        <span className={mx('min-w-0 flex-1 truncate', !actionIcon && 'col-span-2')}>{label}</span>
+        {actionIcon && <CardIcon icon={actionIcon} />}
+      </Button>
+    </Container.Row>
   );
 };
 
@@ -369,17 +376,19 @@ type CardLinkProps = { label: string; href: string };
 
 const CardLink = ({ label, href }: CardLinkProps) => {
   return (
-    <a
-      className={mx(styles.row, 'group p-0! dx-button dx-focus-ring min-h-1!')}
-      data-variant='ghost'
-      href={href}
-      target='_blank'
-      rel='noreferrer'
-    >
-      <CardIcon classNames='text-subdued' icon='ph--link--regular' />
-      <span className={mx('min-w-0 flex-1 truncate')}>{label}</span>
-      <CardIcon classNames='invisible group-hover:visible' icon='ph--arrow-square-out--regular' />
-    </a>
+    <Container.Row asChild>
+      <a
+        className='group p-0! dx-button dx-focus-ring min-h-1!'
+        data-variant='ghost'
+        href={href}
+        target='_blank'
+        rel='noreferrer'
+      >
+        <CardIcon classNames='text-subdued' icon='ph--link--regular' />
+        <span className={mx('min-w-0 flex-1 truncate')}>{label}</span>
+        <CardIcon classNames='invisible group-hover:visible' icon='ph--arrow-square-out--regular' />
+      </a>
+    </Container.Row>
   );
 };
 
