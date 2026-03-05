@@ -131,7 +131,9 @@ export const Mock = () => (
       <div role='none' className='grid h-[var(--dx-rail-item)] w-[var(--dx-rail-item)] place-items-center'>
         <Icon icon='ph--dots-six-vertical--regular' />
       </div>
-      <div className='p-1 truncate text-description items-center'>This line is very very long and it should wrap.</div>
+      <div className='p-1 whitespace-normal break-words text-description items-center'>
+        This line is very very long and it should wrap.
+      </div>
       <div role='none' className='grid h-[var(--dx-rail-item)] w-[var(--dx-rail-item)] place-items-center'>
         <Icon icon='ph--x--regular' />
       </div>
