@@ -5,6 +5,7 @@
 import '@fontsource/k2d/100-italic.css';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { arc } from 'd3';
 import React, { useRef, useState } from 'react';
 
 import { Button, Icon } from '@dxos/react-ui';
@@ -258,6 +259,37 @@ export const BrandArc: Story = {
             const innerR = outerR - ringWidth + gap;
             return <path key={i} d={makeBrandLayerPath(cx, cy, outerR, innerR)} fill={color} />;
           })}
+        </svg>
+      </div>
+    );
+  },
+};
+
+export const BrandArcSimple: Story = {
+  render: () => {
+    const size = 256;
+    const totalRadius = size / 2;
+    const n = composerBrandColors.length;
+    const ringWidth = totalRadius / (n + 1);
+    const gap = 2;
+    const startAngle = (1 / 4) * Math.PI;
+    const endAngle = -(5 / 4) * Math.PI;
+
+    return (
+      <div className='absolute inset-0 flex items-center justify-center'>
+        <svg width={size} height={size}>
+          <g transform={`translate(${totalRadius}, ${totalRadius})`}>
+            {composerBrandColors.map((color, i) => {
+              const outerRadius = totalRadius - i * ringWidth;
+              const innerRadius = outerRadius - ringWidth + gap;
+              const d = arc<any, any>()
+                .innerRadius(innerRadius)
+                .outerRadius(outerRadius)
+                .startAngle(startAngle)
+                .endAngle(endAngle)({}) as string;
+              return <path key={i} d={d} fill={color} />;
+            })}
+          </g>
         </svg>
       </div>
     );
