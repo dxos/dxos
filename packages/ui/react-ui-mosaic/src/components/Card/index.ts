@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-export { styles as cardStyles } from './styles';
-
-export * from './Card';
-export * from './CardDragPreview';
+// Card has moved to @dxos/react-ui. Re-exported here for backward compatibility.
+export { Card, CardDragPreview, cardStyles } from '@dxos/react-ui';
+export type { CardContextValue, CardRootProps, CardToolbarProps, CardMenuProps } from '@dxos/react-ui';
