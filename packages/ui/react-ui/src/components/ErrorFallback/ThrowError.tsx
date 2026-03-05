@@ -5,13 +5,14 @@
 import { useEffect, useState } from 'react';
 
 export type ThrowErrorProps = {
+  error?: () => Error;
   delay?: number;
 };
 
 /**
  * Use this to debug the error boundary.
  */
-export const ThrowError = ({ delay = 1_000 }: ThrowErrorProps) => {
+export const ThrowError = ({ delay = 1_000, ...props }: ThrowErrorProps) => {
   const [error, setError] = useState<Error>();
   useEffect(() => {
     if (delay < 0) {
@@ -19,14 +20,18 @@ export const ThrowError = ({ delay = 1_000 }: ThrowErrorProps) => {
     }
 
     const t = setTimeout(() => {
-      setError(new Error(`Error thrown by ThrowError after ${delay}ms`));
+      setError(generator({ delay, ...props }));
     }, delay);
     return () => clearTimeout(t);
-  }, [delay]);
+  }, [delay, generator]);
 
   if (error) {
     throw error;
   }
 
   return null;
+};
+
+const generator = ({ error, delay }: ThrowErrorProps) => {
+  return error?.() ?? new Error(`Error generated after ${delay}ms`);
 };

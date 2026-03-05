@@ -107,7 +107,7 @@ WebComponentWrapper.displayName = 'WebComponentWrapper';
 // TODO(burdon): Allow DebugPlugin to provide different fallback using react-ui ErrorFallback.
 const SurfaceContextProvider = memo(
   forwardRef<HTMLElement, Props & { definition: Definition }>(
-    ({ id, role, data, limit, fallback = SurfaceErrorFallback, definition, ...rest }, forwardedRef) => {
+    ({ id, role, data, limit, fallback = ErrorFallback, definition, ...rest }, forwardedRef) => {
       const contextValue = useMemo(() => ({ id, role, data }), [id, role, data]);
 
       // Handle Web Component surfaces
@@ -208,7 +208,7 @@ export const SurfaceComponent: NamedExoticComponent<Props & RefAttributes<HTMLEl
 SurfaceComponent.displayName = 'Surface';
 
 // TODO(burdon): Make user facing, with telemetry.
-const SurfaceErrorFallback = ({ error }: Props) => {
+const ErrorFallback = ({ error }: Props) => {
   const { message } = error instanceof Error ? error : { message: String(error) };
   return (
     <div role='alert' data-testid='error-boundary-fallback'>

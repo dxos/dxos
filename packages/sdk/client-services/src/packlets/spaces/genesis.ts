@@ -25,7 +25,7 @@ export const spaceGenesis = async (
       subject: space.key,
       assertion: {
         '@type': 'dxos.halo.credentials.SpaceGenesis',
-        spaceKey: space.key,
+        'spaceKey': space.key,
       },
     }),
 
@@ -35,10 +35,10 @@ export const spaceGenesis = async (
       subject: signingContext.identityKey,
       assertion: {
         '@type': 'dxos.halo.credentials.SpaceMember',
-        spaceKey: space.key,
-        role: SpaceMember.Role.OWNER,
-        profile: signingContext.getProfile(),
-        genesisFeedKey: space.controlFeedKey ?? failUndefined(),
+        'spaceKey': space.key,
+        'role': SpaceMember.Role.OWNER,
+        'profile': signingContext.getProfile(),
+        'genesisFeedKey': space.controlFeedKey ?? failUndefined(),
       },
     }),
 
@@ -46,10 +46,10 @@ export const spaceGenesis = async (
       subject: space.controlFeedKey ?? failUndefined(),
       assertion: {
         '@type': 'dxos.halo.credentials.AdmittedFeed',
-        spaceKey: space.key,
-        identityKey: signingContext.identityKey,
-        deviceKey: signingContext.deviceKey,
-        designation: AdmittedFeed.Designation.CONTROL,
+        'spaceKey': space.key,
+        'identityKey': signingContext.identityKey,
+        'deviceKey': signingContext.deviceKey,
+        'designation': AdmittedFeed.Designation.CONTROL,
       },
     }),
 
@@ -57,10 +57,10 @@ export const spaceGenesis = async (
       subject: space.dataFeedKey ?? failUndefined(),
       assertion: {
         '@type': 'dxos.halo.credentials.AdmittedFeed',
-        spaceKey: space.key,
-        identityKey: signingContext.identityKey,
-        deviceKey: signingContext.deviceKey,
-        designation: AdmittedFeed.Designation.DATA,
+        'spaceKey': space.key,
+        'identityKey': signingContext.identityKey,
+        'deviceKey': signingContext.deviceKey,
+        'designation': AdmittedFeed.Designation.DATA,
       },
     }),
 
@@ -68,10 +68,10 @@ export const spaceGenesis = async (
       subject: space.key ?? failUndefined(),
       assertion: {
         '@type': 'dxos.halo.credentials.Epoch',
-        number: 0,
-        previousId: undefined,
-        timeframe: new Timeframe(),
-        snapshotCid: undefined,
+        'number': 0,
+        'previousId': undefined,
+        'timeframe': new Timeframe(),
+        'snapshotCid': undefined,
         automergeRoot,
       },
     }),

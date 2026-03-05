@@ -50,28 +50,28 @@ export const componentRegistry: XmlWidgetRegistry = {
   // Widgets
   //
 
-  ['prompt' as const]: {
+  prompt: {
     block: true,
     factory: ({ children }) => {
       const text = getXmlTextChild(children);
       return text ? new PromptWidget(text) : null;
     },
   },
-  ['reasoning' as const]: {
+  reasoning: {
     block: true,
     factory: ({ children }) => {
       const text = getXmlTextChild(children);
       return text ? new ReasoningWidget(text) : null;
     },
   },
-  ['reference' as const]: {
+  reference: {
     block: false,
     factory: ({ children, ref }) => {
       const text = getXmlTextChild(children);
       return text && ref ? new ReferenceWidget(text, ref) : null;
     },
   },
-  ['select' as const]: {
+  select: {
     block: true,
     factory: ({ children }) => {
       const options = children
@@ -80,14 +80,14 @@ export const componentRegistry: XmlWidgetRegistry = {
       return options?.length ? new SelectWidget(options) : null;
     },
   },
-  ['suggestion' as const]: {
+  suggestion: {
     block: true,
     factory: ({ children }) => {
       const text = getXmlTextChild(children);
       return text ? new SuggestionWidget(text) : null;
     },
   },
-  ['stats' as const]: {
+  stats: {
     block: true,
     factory: ({ children }) => {
       const text = getXmlTextChild(children);
@@ -99,19 +99,19 @@ export const componentRegistry: XmlWidgetRegistry = {
   // React
   //
 
-  ['toolCall' as const]: {
+  toolCall: {
     block: true,
     Component: ToolBlock,
   },
-  ['toolResult' as const]: {
+  toolResult: {
     block: true,
     Component: Fallback,
   },
-  ['toolkit' as const]: {
+  toolkit: {
     block: true,
     Component: Fallback,
   },
-  ['summary' as const]: {
+  summary: {
     block: true,
     Component: Summary,
   },
@@ -120,7 +120,7 @@ export const componentRegistry: XmlWidgetRegistry = {
   // Fallback
   //
 
-  ['json' as const]: {
+  json: {
     block: true,
     Component: Fallback,
   },

@@ -9,6 +9,7 @@ import { Obj } from '@dxos/echo';
 import { type JsonPath, splitJsonPath } from '@dxos/effect';
 import { useTranslation } from '@dxos/react-ui';
 import { Form, omitId } from '@dxos/react-ui-form';
+import { Card } from '@dxos/react-ui-mosaic';
 import { type ProjectionModel } from '@dxos/schema';
 import { descriptionMessage, mx } from '@dxos/ui-theme';
 
@@ -35,13 +36,14 @@ export const FormCard = ({ subject, projection }: SurfaceComponentProps & { proj
   }
 
   return (
-    <Form.Root schema={omitId(schema)} projection={projection} values={subject} autoSave onSave={handleSave}>
-      {/* TODO(burdon): Scrolling issue. Need fixed height. */}
-      <Form.Viewport>
-        <Form.Content>
-          <Form.FieldSet />
-        </Form.Content>
-      </Form.Viewport>
-    </Form.Root>
+    <Card.Content>
+      <Form.Root schema={omitId(schema)} projection={projection} values={subject} autoSave onSave={handleSave}>
+        <Form.Viewport>
+          <Form.Content>
+            <Form.FieldSet />
+          </Form.Content>
+        </Form.Viewport>
+      </Form.Root>
+    </Card.Content>
   );
 };

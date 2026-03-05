@@ -8,7 +8,7 @@ import React from 'react';
 import { Icon } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { StatusBar } from './StatusBar';
+import { StatusBar } from './index';
 
 export const DefaultStory = () => (
   <div>
@@ -32,7 +32,7 @@ export const DefaultStory = () => (
 );
 
 const meta = {
-  title: 'plugins/plugin-status/StatusBar',
+  title: 'plugins/plugin-status-bar/components/StatusBar',
   component: StatusBar as any,
   render: DefaultStory,
   decorators: [withTheme()],

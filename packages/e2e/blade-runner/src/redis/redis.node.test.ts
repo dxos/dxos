@@ -192,6 +192,6 @@ const setupRedisClient = async () => {
 
 const createPayload = (value = ''): TaggedType<TYPES, 'google.protobuf.Any'> => ({
   '@type': 'google.protobuf.Any',
-  type_url: 'dxos.test',
-  value: Buffer.from(value),
+  'type_url': 'dxos.test',
+  'value': Buffer.from(value),
 });

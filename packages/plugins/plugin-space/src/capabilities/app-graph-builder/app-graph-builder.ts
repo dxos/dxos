@@ -606,6 +606,47 @@ export default Capability.makeModule(
           ]),
       }),
 
+      // Space settings panel children (General settings, Members, Types).
+      GraphBuilder.createExtension({
+        id: `${meta.id}/settings-sections`,
+        match: NodeMatcher.whenNodeType(`${meta.id}/settings`),
+        connector: (node) =>
+          Effect.succeed([
+            {
+              id: `properties-${node.id}`,
+              type: `${meta.id}/properties`,
+              data: `${meta.id}/properties`,
+              properties: {
+                label: ['space settings properties label', { ns: meta.id }],
+                icon: 'ph--sliders--regular',
+                position: 'hoist',
+                testId: 'spacePlugin.general',
+              },
+            },
+            {
+              id: `members-${node.id}`,
+              type: `${meta.id}/members`,
+              data: `${meta.id}/members`,
+              properties: {
+                label: ['members panel label', { ns: meta.id }],
+                icon: 'ph--users--regular',
+                position: 'hoist',
+                testId: 'spacePlugin.members',
+              },
+            },
+            {
+              id: `schema-${node.id}`,
+              type: `${meta.id}/schema`,
+              data: `${meta.id}/schema`,
+              properties: {
+                label: ['space settings schema label', { ns: meta.id }],
+                icon: 'ph--shapes--regular',
+                testId: 'spacePlugin.schema',
+              },
+            },
+          ]),
+      }),
+
       // Object settings plank companion.
       GraphBuilder.createExtension({
         id: `${meta.id}/settings`,

@@ -16,7 +16,8 @@ export type PopoverStyleProps = Partial<{
 export const popoverViewport: ComponentFunction<PopoverStyleProps> = ({ constrainBlock, constrainInline }, ...etc) =>
   mx(
     'flex flex-col rounded-md',
-    constrainBlock && 'max-h-(--radix-popover-content-available-height) overflow-hidden',
+    constrainBlock &&
+      'h-[min(var(--radix-popover-content-available-height),calc(100dvh_-_var(--spacing-screen-border)*2))] overflow-hidden',
     constrainInline && 'max-w-(--radix-popover-content-available-width) overflow-hidden',
     ...etc,
   );

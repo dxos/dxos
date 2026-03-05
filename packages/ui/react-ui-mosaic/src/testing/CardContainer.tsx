@@ -43,13 +43,15 @@ export const PopoverCardContainer = ({
 }: PopoverCardContainerProps) => {
   return (
     <Popover.Root open>
-      <Popover.Content onOpenAutoFocus={(event: Event) => event.preventDefault()}>
-        <Popover.Viewport classNames='dx-card-popover'>{children}</Popover.Viewport>
-        <Popover.Arrow />
-      </Popover.Content>
       <Popover.Trigger asChild>
         <Icon icon={icon} size={5} />
       </Popover.Trigger>
+      <Popover.Portal>
+        <Popover.Content onOpenAutoFocus={(event: Event) => event.preventDefault()}>
+          <Popover.Viewport classNames='dx-card-popover'>{children}</Popover.Viewport>
+          <Popover.Arrow />
+        </Popover.Content>
+      </Popover.Portal>
     </Popover.Root>
   );
 };
@@ -79,11 +81,13 @@ export const IntrinsicCardContainer = ({
   return (
     <div
       role='none'
-      className='relative grid overflow-hidden border-2 border-dashed border-green-500 rounded-lg'
+      className='relative p-2 grid overflow-hidden border-2 border-dashed border-green-500 rounded-lg'
       style={sizeStyle(size, 'horizontal')}
       {...resizeAttributes}
     >
-      {children}
+      <div role='none' className='flex flex-col w-full h-full overflow-hidden'>
+        {children}
+      </div>
       <ResizeHandle
         side='inline-end'
         fallbackSize={DEFAULT_BLOCK_SIZE}
