@@ -26,7 +26,7 @@ const cardRoot: ComponentFunction<CardStyleProps> = ({ border, fullWidth }, ...e
 
 const cardToolbar: ComponentFunction<CardStyleProps> = ({ coarse }, ...etc) =>
   mx(
-    'dx-card__toolbar dx-density-fine bg-transparent col-span-3',
+    'dx-card__toolbar dx-density-fine bg-transparent col-span-3 !grid grid-cols-subgrid [contain:none]',
     coarse && 'grid-cols-[var(--dx-l0-avatar-size)_minmax(0,1fr)_var(--dx-rail-item)]',
     ...etc,
   );
@@ -62,15 +62,13 @@ const cardPosterIcon: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
   mx('dx-card__poster-icon col-span-3 grid place-items-center bg-input-surface text-subdued max-h-[200px]', ...etc);
 
 const cardAction: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
-  mx('dx-card__action col-span-3 p-0! w-full text-start overflow-hidden', ...etc);
-
+  mx('dx-card__action col-span-3 !grid grid-cols-subgrid p-0! w-full text-start overflow-hidden', ...etc);
 
 const cardActionLabel: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
   mx('dx-card__action-label min-w-0 flex-1 truncate', ...etc);
 
 const cardLink: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
-  mx('dx-card__link col-span-3 group p-0! dx-button dx-focus-ring min-h-1!', ...etc);
-
+  mx('dx-card__link col-span-3 !grid grid-cols-subgrid group p-0! dx-button dx-focus-ring min-h-1!', ...etc);
 
 const cardLinkLabel: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
   mx('dx-card__link-label min-w-0 flex-1 truncate', ...etc);

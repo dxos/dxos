@@ -81,6 +81,7 @@ type CardToolbarProps = ToolbarRootProps & {
   density?: Density;
 };
 
+// TODO(burdon): Roncile name with DialogHeader.
 const CardToolbar = forwardRef<HTMLDivElement, CardToolbarProps>(
   ({ children, classNames, density = 'fine', ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
@@ -252,6 +253,9 @@ const CardRow = forwardRef<HTMLDivElement, CardRowProps>(
 
 type CardHeadingProps = CardSharedProps & { variant?: 'default' | 'subtitle' };
 
+/**
+ * @deprecated Use typography.
+ */
 const CardHeading = forwardRef<HTMLDivElement, CardHeadingProps>(
   ({ children, classNames, className, asChild, role = 'heading', variant = 'default', ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
