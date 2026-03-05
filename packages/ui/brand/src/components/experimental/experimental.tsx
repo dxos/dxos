@@ -253,18 +253,11 @@ export const ComposerSpinner: FC<{
             .transition()
             .duration(duration)
             .attrTween('transform', (() => interpolateString('rotate(0)', 'rotate(360)')) as any)
-            .on('end', ((_: any, i: number, nodes: Node[]) => {
+            .on('end', (() => {
               if (animateRef.current) {
                 rotateArc();
               } else if (autoFade) {
                 fadeOut();
-                // d3.select(nodes[i])
-                //   .transition()
-                //   .duration(1000)
-                //   .attrTween('d', () => {
-                //     const interpolate = d3.interpolate(0, Math.PI);
-                //     return (t: number) => createArc(arc);
-                //   });
               }
             }) as any);
         };

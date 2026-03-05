@@ -119,7 +119,7 @@ export const PopoverContent = () => {
                   <div />
                 )}
                 {state.popoverTitle ? <Card.Title>{toLocalizedString(state.popoverTitle, t)}</Card.Title> : <span />}
-                <Card.Close onClick={handleClose} />
+                <Card.CloseIconButton onClick={handleClose} />
               </Card.Toolbar>
               <Surface.Surface role='card--content' data={state.popoverContent} limit={1} />
             </Card.Root>
