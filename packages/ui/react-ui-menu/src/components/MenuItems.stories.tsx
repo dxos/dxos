@@ -11,7 +11,7 @@ import { Button, IconButton } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 
-import { DropdownMenu, MenuProvider, useMenu } from '../components';
+import { Menu, useMenu } from '../components';
 import { type ActionGraphProps, useMenuActions } from '../hooks';
 import { createActions } from '../testing';
 import { translations } from '../translations';
@@ -22,12 +22,12 @@ const STORY_NAME = 'StoryMenuItems';
 
 const meta = {
   title: 'ui/react-ui-menu/MenuItems',
-  component: MenuProvider,
+  component: Menu.Root,
   decorators: [withTheme(), withRegistry],
   parameters: {
     translations,
   },
-} satisfies Meta<typeof MenuProvider>;
+} satisfies Meta<typeof Menu.Root>;
 
 export default meta;
 
@@ -79,14 +79,13 @@ export const StaticItems: Story = {
     const menuActions = useMenuActions(actionsAtom);
 
     return (
-      <MenuProvider {...menuActions}>
+      <Menu.Root {...menuActions}>
         <StaticItemsProvider />
-        <DropdownMenu.Root>
-          <DropdownMenu.Trigger asChild>
-            <IconButton icon='ph--list-checks--regular' label='Options' />
-          </DropdownMenu.Trigger>
-        </DropdownMenu.Root>
-      </MenuProvider>
+        <Menu.Trigger asChild>
+          <IconButton icon='ph--list-checks--regular' label='Options' />
+        </Menu.Trigger>
+        <Menu.Content />
+      </Menu.Root>
     );
   },
   play: async ({ canvasElement }) => {
@@ -127,14 +126,13 @@ export const ReactiveItems: Story = {
 
     return (
       <div className='flex flex-col gap-4'>
-        <MenuProvider {...menuActions}>
+        <Menu.Root {...menuActions}>
           <ReactiveItemsProvider items={reactiveItems} />
-          <DropdownMenu.Root>
-            <DropdownMenu.Trigger asChild>
-              <IconButton icon='ph--list-checks--regular' label='Options' />
-            </DropdownMenu.Trigger>
-          </DropdownMenu.Root>
-        </MenuProvider>
+          <Menu.Trigger asChild>
+            <IconButton icon='ph--list-checks--regular' label='Options' />
+          </Menu.Trigger>
+          <Menu.Content />
+        </Menu.Root>
         <Button data-testid='update-button' onClick={() => setCount((prev) => prev + 1)}>
           Update Reactive Item ({count})
         </Button>
@@ -184,14 +182,13 @@ export const ReplacementMode: Story = {
     const menuActions = useMenuActions(actionsAtom);
 
     return (
-      <MenuProvider {...menuActions}>
+      <Menu.Root {...menuActions}>
         <ReplacementItemsProvider />
-        <DropdownMenu.Root>
-          <DropdownMenu.Trigger asChild>
-            <IconButton icon='ph--list-checks--regular' label='Options (replaced)' />
-          </DropdownMenu.Trigger>
-        </DropdownMenu.Root>
-      </MenuProvider>
+        <Menu.Trigger asChild>
+          <IconButton icon='ph--list-checks--regular' label='Options (replaced)' />
+        </Menu.Trigger>
+        <Menu.Content />
+      </Menu.Root>
     );
   },
   play: async ({ canvasElement }) => {
@@ -248,15 +245,14 @@ export const PriorityOrdering: Story = {
     const menuActions = useMenuActions(actionsAtom);
 
     return (
-      <MenuProvider {...menuActions}>
+      <Menu.Root {...menuActions}>
         <LowPriorityItemsProvider />
         <HighPriorityItemsProvider />
-        <DropdownMenu.Root>
-          <DropdownMenu.Trigger asChild>
-            <IconButton icon='ph--list-checks--regular' label='Options (priority ordered)' />
-          </DropdownMenu.Trigger>
-        </DropdownMenu.Root>
-      </MenuProvider>
+        <Menu.Trigger asChild>
+          <IconButton icon='ph--list-checks--regular' label='Options (priority ordered)' />
+        </Menu.Trigger>
+        <Menu.Content />
+      </Menu.Root>
     );
   },
   play: async ({ canvasElement }) => {

@@ -9,7 +9,7 @@ import { afterEach, describe, test } from 'vitest';
 import { type MenuItem } from '../types';
 import { createMenuAction } from '../util';
 
-import { MenuProvider, useMenu, useMenuItems } from './MenuContext';
+import { Menu, useMenu, useMenuItems } from './Menu';
 
 const TEST_CONTRIBUTOR = 'TestContributor';
 
@@ -17,17 +17,17 @@ const createTestAction = (id: string, label: string): MenuItem =>
   createMenuAction(id, () => {}, { label, icon: 'ph--star--regular' });
 
 const TestWrapper = ({ children }: PropsWithChildren) => {
-  return <MenuProvider>{children}</MenuProvider>;
+  return <Menu.Root>{children}</Menu.Root>;
 };
 
 const createTestWrapperWithBaseItems = (baseItems: MenuItem[]) => {
   return ({ children }: PropsWithChildren) => {
     const useGroupItems = () => baseItems;
-    return <MenuProvider useGroupItems={useGroupItems}>{children}</MenuProvider>;
+    return <Menu.Root useGroupItems={useGroupItems}>{children}</Menu.Root>;
   };
 };
 
-describe('MenuContext', () => {
+describe('Menu', () => {
   afterEach(() => {
     cleanup();
   });

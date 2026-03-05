@@ -8,7 +8,7 @@ import React, { type PropsWithChildren, useMemo, useState } from 'react';
 import { type DXN } from '@dxos/echo';
 import { Icon, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
-import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
+import { Menu } from '@dxos/react-ui-menu';
 import { type Actor, type Message as MessageType } from '@dxos/types';
 import {
   createBasicExtensions,
@@ -90,9 +90,9 @@ export const MessageToolbar = ({ classNames }: MessageToolbarProps) => {
   const actions = useMessageToolbarActions({ viewMode, setViewMode, onReply, onReplyAll, onForward });
 
   return (
-    <MenuProvider {...actions} attendableId={attendableId}>
-      <ToolbarMenu classNames={classNames} />
-    </MenuProvider>
+    <Menu.Root {...actions} attendableId={attendableId}>
+      <Menu.Toolbar classNames={classNames} />
+    </Menu.Root>
   );
 };
 

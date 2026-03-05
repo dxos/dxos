@@ -16,7 +16,7 @@ import { getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { ElevationProvider, Input, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
-import { MenuProvider, ToolbarMenu, createMenuAction, createMenuItemGroup, useMenuActions } from '@dxos/react-ui-menu';
+import { Menu, createMenuAction, createMenuItemGroup, useMenuActions } from '@dxos/react-ui-menu';
 import { useSoundEffect } from '@dxos/react-ui-sfx';
 import { StackItem } from '@dxos/react-ui-stack';
 
@@ -197,9 +197,9 @@ const ChannelToolbar = ({ attendableId, role, onJoinCall }: ChannelToolbarProps)
 
   return (
     <ElevationProvider elevation={role === 'section' ? 'positioned' : 'base'}>
-      <MenuProvider {...menuProps} attendableId={attendableId}>
-        <ToolbarMenu textBlockWidth />
-      </MenuProvider>
+      <Menu.Root {...menuProps} attendableId={attendableId}>
+        <Menu.Toolbar textBlockWidth />
+      </Menu.Root>
     </ElevationProvider>
   );
 };

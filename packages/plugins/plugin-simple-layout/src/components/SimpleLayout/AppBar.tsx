@@ -6,13 +6,7 @@ import { type Atom, useAtomValue } from '@effect-atom/atom-react';
 import React, { Fragment } from 'react';
 
 import { IconButton, Popover, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
-import {
-  type ActionExecutor,
-  type ActionGraphProps,
-  DropdownMenu,
-  MenuProvider,
-  useMenuActions,
-} from '@dxos/react-ui-menu';
+import { type ActionExecutor, type ActionGraphProps, Menu, useMenuActions } from '@dxos/react-ui-menu';
 import { mx, osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
@@ -78,18 +72,17 @@ export const AppBar = ({
       <h1 className='text-center truncate font-thin uppercase'>{displayTitle}</h1>
       {hasActions ? (
         <AnchorRoot>
-          <MenuProvider {...menu} onAction={onAction}>
-            <DropdownMenu.Root caller={meta.id}>
-              <DropdownMenu.Trigger asChild>
-                <IconButton
-                  variant='ghost'
-                  icon='ph--dots-three-vertical--regular'
-                  iconOnly
-                  label={t('actions menu label')}
-                />
-              </DropdownMenu.Trigger>
-            </DropdownMenu.Root>
-          </MenuProvider>
+          <Menu.Root {...menu} caller={meta.id} onAction={onAction}>
+            <Menu.Trigger asChild>
+              <IconButton
+                variant='ghost'
+                icon='ph--dots-three-vertical--regular'
+                iconOnly
+                label={t('actions menu label')}
+              />
+            </Menu.Trigger>
+            <Menu.Content />
+          </Menu.Root>
         </AnchorRoot>
       ) : (
         <span />

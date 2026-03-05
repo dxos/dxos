@@ -15,7 +15,7 @@ import {
   type ToolbarRootProps,
   useTranslation,
 } from '@dxos/react-ui';
-import { DropdownMenu as MenuDropdownMenu, type MenuItem, MenuProvider, useMenuItems } from '@dxos/react-ui-menu';
+import { Menu, type MenuItem, useMenuItems } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
@@ -53,7 +53,7 @@ const CardRoot = forwardRef<HTMLDivElement, CardRootProps>(
         className={mx(styles.root, border && styles.border, fullWidth && 'max-w-none!', className, classNames)}
         ref={forwardedRef}
       >
-        <MenuProvider>{children}</MenuProvider>
+        <Menu.Root>{children}</Menu.Root>
       </Root>
     );
   },
@@ -150,16 +150,17 @@ const CardMenu = ({ items }: CardMenuProps) => {
   const mergedItems = useMenuItems(undefined, items);
 
   return (
-    <MenuDropdownMenu.Root items={mergedItems}>
-      <MenuDropdownMenu.Trigger disabled={!(mergedItems?.length ?? 0)} asChild>
+    <Menu.Root>
+      <Menu.Trigger disabled={!(mergedItems?.length ?? 0)} asChild>
         <Card.ToolbarIconButton
           iconOnly
           variant='ghost'
           icon='ph--dots-three-vertical--regular'
           label={t('action menu label')}
         />
-      </MenuDropdownMenu.Trigger>
-    </MenuDropdownMenu.Root>
+      </Menu.Trigger>
+      <Menu.Content items={mergedItems} />
+    </Menu.Root>
   );
 };
 

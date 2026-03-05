@@ -84,9 +84,9 @@ export const createNestedActionsResolver = (groupParams?: CreateActionsProps, pa
       Graph.expand(group.id, 'child'),
     );
   });
-  const resolveGroupItems = (groupNode?: MenuItemGroup) =>
+  const useGroupItems = (groupNode?: MenuItemGroup) =>
     (Graph.getActions(graph, groupNode?.id ?? Node.RootId) || null) as MenuItem[] | null;
-  return { resolveGroupItems };
+  return { useGroupItems };
 };
 
 /**

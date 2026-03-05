@@ -23,7 +23,7 @@ import { executeMenuAction } from '../util';
 
 import { ActionLabel, actionLabel } from './ActionLabel';
 import { DropdownMenu } from './DropdownMenu';
-import { type MenuScopedProps, useMenuItems, useMenuScoped } from './MenuContext';
+import { type MenuScopedProps, useMenuItems, useMenuScoped } from './Menu';
 
 export type ToolbarMenuDropdownMenuActionGroup = Omit<MenuActionProperties, 'variant' | 'icon'> & {
   variant: 'dropdownMenu';
