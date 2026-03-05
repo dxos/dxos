@@ -992,7 +992,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
           const typeDXN = this.getTypeDXN(target);
 
           data = {
-            id: target[symbolInternals].core.id,
+            'id': target[symbolInternals].core.id,
             '@type': typeDXN?.asEchoDXN()?.echoId ?? typeDXN?.asTypeDXN()?.type,
             '@meta': metaReified,
             ...data,

@@ -46,7 +46,7 @@ export class TestWidget extends WidgetType {
 }
 
 const registry: XmlWidgetRegistry = {
-  'test': {
+  test: {
     block: true,
     factory: (props) => new TestWidget(props.children?.[0]),
   },

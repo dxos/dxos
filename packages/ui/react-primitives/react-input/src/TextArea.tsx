@@ -21,7 +21,7 @@ const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
             'aria-invalid': 'true' as const,
             'aria-errormessage': errorMessageId,
           }),
-          ref: forwardedRef,
+          'ref': forwardedRef,
         }}
       />
     );

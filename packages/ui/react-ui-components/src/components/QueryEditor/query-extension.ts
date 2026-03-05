@@ -334,18 +334,18 @@ const styles = EditorView.theme({
 const queryHighlighting = styleTags({
   // Keywords
   'Not And Or': t.keyword,
-  TypeKeyword: t.attributeName,
+  'TypeKeyword': t.attributeName,
 
   // Literals
-  String: t.string,
-  Number: t.number,
-  Boolean: t.bool,
-  Null: t.null,
+  'String': t.string,
+  'Number': t.number,
+  'Boolean': t.bool,
+  'Null': t.null,
 
   // Identifiers
-  Identifier: t.variableName,
-  PropertyPath: t.propertyName,
-  Tagname: t.variableName,
+  'Identifier': t.variableName,
+  'PropertyPath': t.propertyName,
+  'Tagname': t.variableName,
 
   // Punctuation
   '{ }': t.brace,

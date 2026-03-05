@@ -25,7 +25,7 @@ const registry = {
   /**
    * Custom tag: <test/>
    */
-  'test': {
+  test: {
     block: true,
     Component: ({ start = '0' }) => {
       const [count, setCount] = useState<number>(safeParseInt(start, 0));

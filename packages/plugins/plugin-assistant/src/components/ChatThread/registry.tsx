@@ -50,28 +50,28 @@ export const componentRegistry: XmlWidgetRegistry = {
   // Widgets
   //
 
-  'prompt': {
+  prompt: {
     block: true,
     factory: ({ children }) => {
       const text = getXmlTextChild(children);
       return text ? new PromptWidget(text) : null;
     },
   },
-  'reasoning': {
+  reasoning: {
     block: true,
     factory: ({ children }) => {
       const text = getXmlTextChild(children);
       return text ? new ReasoningWidget(text) : null;
     },
   },
-  'reference': {
+  reference: {
     block: false,
     factory: ({ children, ref }) => {
       const text = getXmlTextChild(children);
       return text && ref ? new ReferenceWidget(text, ref) : null;
     },
   },
-  'select': {
+  select: {
     block: true,
     factory: ({ children }) => {
       const options = children
@@ -80,14 +80,14 @@ export const componentRegistry: XmlWidgetRegistry = {
       return options?.length ? new SelectWidget(options) : null;
     },
   },
-  'suggestion': {
+  suggestion: {
     block: true,
     factory: ({ children }) => {
       const text = getXmlTextChild(children);
       return text ? new SuggestionWidget(text) : null;
     },
   },
-  'stats': {
+  stats: {
     block: true,
     factory: ({ children }) => {
       const text = getXmlTextChild(children);
@@ -99,19 +99,19 @@ export const componentRegistry: XmlWidgetRegistry = {
   // React
   //
 
-  'toolCall': {
+  toolCall: {
     block: true,
     Component: ToolBlock,
   },
-  'toolResult': {
+  toolResult: {
     block: true,
     Component: Fallback,
   },
-  'toolkit': {
+  toolkit: {
     block: true,
     Component: Fallback,
   },
-  'summary': {
+  summary: {
     block: true,
     Component: Summary,
   },
@@ -120,7 +120,7 @@ export const componentRegistry: XmlWidgetRegistry = {
   // Fallback
   //
 
-  'json': {
+  json: {
     block: true,
     Component: Fallback,
   },
