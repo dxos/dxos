@@ -250,30 +250,32 @@ export const BrandArcSimple: Story = {
  * horizontal-then-diagonal stepped edge at each open end, matching the
  * Composer brand icon geometry. Two 90° arcs avoid the 180° SVG ambiguity.
  */
-const makeBrandLayerPath = (cx: number, cy: number, r1: number, r2: number): string => {
-  // Horizontal step at each open end (from brand icon: outerStep/R ≈ 0.29).
-  const outerStep = r1 * 0.29;
-  const innerStep = r2 * 0.29;
+const makeBrandLayerPath = (cx: number, cy: number, R: number, r: number, botR: number, botR2: number): string => {
+  const frac = 0.29;
+  const topOuter = R * frac;
+  const topInner = r * frac;
+  const botOuter = botR2 * frac;
+  const botInner = botR * frac;
   return [
-    // Start at the outer bottom-right step edge (short at bottom).
-    `M ${cx + innerStep} ${cy + r1}`,
-    // Move left to 6-oclock.
-    `L ${cx} ${cy + r1}`,
-    // Outer arc CW: 6-oclock → 9-oclock → 12-oclock (through the left/west side).
-    `A ${r1} ${r1} 0 0 1 ${cx - r1} ${cy}`,
-    `A ${r1} ${r1} 0 0 1 ${cx} ${cy - r1}`,
-    // Move right along the top edge.
-    `L ${cx + outerStep} ${cy - r1}`,
-    // Diagonal down to inner top-right.
-    `L ${cx + innerStep} ${cy - r2}`,
-    // Move left to inner 12-oclock.
-    `L ${cx} ${cy - r2}`,
-    // Inner arc CCW: 12-oclock → 9-oclock → 6-oclock (back through the left/west side).
-    `A ${r2} ${r2} 0 0 0 ${cx - r2} ${cy}`,
-    `A ${r2} ${r2} 0 0 0 ${cx} ${cy + r2}`,
-    // Move right along the inner bottom edge (long at bottom).
-    `L ${cx + outerStep} ${cy + r2}`,
-    // Close: diagonal back up to start.
+    // Start at outer top-right.
+    `M ${cx + topOuter} ${cy - R}`,
+    // Move left to 12-oclock.
+    `L ${cx} ${cy - R}`,
+    // Outer arc CW: 12 → 9 → 6 o'clock (through the west side).
+    `A ${R} ${R} 0 0 0 ${cx - R} ${cy}`,
+    `A ${R} ${R} 0 0 0 ${cx} ${cy + R}`,
+    // Bottom outer: extend right.
+    `L ${cx + botOuter} ${cy + R}`,
+    // Diagonal to inner bottom-right.
+    `L ${cx + botInner} ${cy + r}`,
+    // Move left to inner 6-oclock.
+    `L ${cx} ${cy + r}`,
+    // Inner arc CCW: 6 → 9 → 12 o'clock (back through the west side).
+    `A ${r} ${r} 0 0 1 ${cx - r} ${cy}`,
+    `A ${r} ${r} 0 0 1 ${cx} ${cy - r}`,
+    // Top inner: extend right.
+    `L ${cx + topInner} ${cy - r}`,
+    // Close: diagonal back to start.
     'Z',
   ].join(' ');
 };
@@ -291,9 +293,15 @@ export const BrandArc: Story = {
       <div className='absolute inset-0 flex items-center justify-center'>
         <svg width={size} height={size}>
           {composerBrandColors.map((color, i) => {
-            const r1 = size / 2 - i * ringWidth;
-            const r2 = r1 - ringWidth + gap;
-            return <path key={i} d={makeBrandLayerPath(cx, cy, r1, r2)} fill={color} />;
+            const outerR = size / 2 - i * ringWidth;
+            const innerR = outerR - ringWidth + gap;
+            // Bottom uses mirror ring's radii.
+            const mirror = n - 1 - i;
+            const mirrorOuterR = size / 2 - mirror * ringWidth;
+            const mirrorInnerR = mirrorOuterR - ringWidth + gap;
+            return (
+              <path key={i} d={makeBrandLayerPath(cx, cy, outerR, innerR, mirrorOuterR, mirrorInnerR)} fill={color} />
+            );
           })}
         </svg>
       </div>
