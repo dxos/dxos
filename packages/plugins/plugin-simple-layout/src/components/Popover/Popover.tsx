@@ -54,6 +54,7 @@ export const PopoverRoot = ({ children }: PropsWithChildren) => {
   );
 };
 
+// Extracts the subject from popover content if it has one, otherwise returns the content as-is.
 const getPopoverSubject = (content: unknown): unknown =>
   content && typeof content === 'object' && 'subject' in content ? (content as { subject: unknown }).subject : content;
 
