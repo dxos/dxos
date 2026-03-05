@@ -35,19 +35,19 @@ import {
 } from './FormFieldSet';
 
 // New features/polish
-// [x] Unify readonly/inline modes
-// [ ] auto save doesn't work for combobox + select due to only firing on blur (workaround is to use onValuesChanged)
-// [ ] Don't call save/autoSave if value hasn't changed
-// [ ] Fix onCancel (restore values)
-// [ ] Fix useSchema Type.Obj.Any cast
-// [ ] TableCellEditor (handleEnter/ModalController).
-// [ ] Use FormFieldWrapper uniformly
-// [ ] Inline tables for object arrays
-// [ ] Defer query until popover
-// [ ] Omit id from sub properties.
+// [x] Unify readonly/inline modes.
 // [x] Refs
 //   [x] Single-select (fix popover)
 //   [x] Multi-select (array)
+// [ ] auto save doesn't work for combobox + select due to only firing on blur (workaround is to use onValuesChanged).
+// [ ] Don't call save/autoSave if value hasn't changed.
+// [ ] Fix onCancel (restore values).
+// [ ] Fix useSchema Type.Obj.Any cast.
+// [ ] TableCellEditor (handleEnter/ModalController).
+// [ ] Use FormFieldWrapper uniformly
+// [ ] Inline tables.
+// [ ] Defer query until popover.
+// [ ] Omit id from sub properties.
 
 // TODO(burdon): Move to @dxos/schema (re-export here).
 export type ExcludeId<S extends Schema.Schema.AnyNoContext> = Omit<Schema.Schema.Type<S>, 'id'>;
@@ -231,8 +231,10 @@ FormContent.displayName = FORM_CONTENT_NAME;
 
 const FORM_FIELDSET_NAME = 'Form.FieldSet';
 
-const FormFieldSet = () => {
-  const { form, ...props } = useFormContext(FORM_FIELDSET_NAME);
+type FormFieldSetProps = ThemedClassName<NaturalFormFieldSetProps<any>>;
+
+const FormFieldSet = (props: FormFieldSetProps) => {
+  const { form } = useFormContext(FORM_FIELDSET_NAME);
 
   return <NaturalFormFieldSet schema={form.schema} {...props} />;
 };
@@ -350,7 +352,8 @@ export type {
   FormRootProps,
   FormViewportProps,
   FormContentProps,
-  FormFieldLabelProps as LabelProps,
+  FormFieldSetProps,
+  FormFieldLabelProps,
   FormActionsProps,
   FormSubmitProps,
 };

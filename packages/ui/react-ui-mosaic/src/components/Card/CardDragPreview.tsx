@@ -8,15 +8,17 @@ import { mx } from '@dxos/ui-theme';
 
 import { styles } from './styles';
 
-// TODO(burdon): Why p-2?
 const CardDragPreviewRoot = ({ children }: PropsWithChildren<{}>) => {
-  return <div className='p-2'>{children}</div>;
+  return <div>{children}</div>;
 };
 
 const CardDragPreviewContent = ({ children }: PropsWithChildren<{}>) => {
   return <div className={mx(styles.root, 'ring-focus-line ring-neutral-focus-indicator')}>{children}</div>;
 };
 
+/**
+ * @deprecated Mosaic now supports drag and drop natively.
+ */
 export const CardDragPreview = {
   Root: CardDragPreviewRoot,
   Content: CardDragPreviewContent,

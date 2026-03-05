@@ -14,7 +14,7 @@ import { CardStack, StackItem } from '@dxos/react-ui-stack';
 import { type View, getTypenameFromQuery } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
-import { ObjectForm } from '../../components/ObjectCardStack/ObjectForm';
+import { ObjectForm } from '../../components';
 import { meta } from '../../meta';
 
 export type ObjectCardStackProps = {
@@ -22,6 +22,9 @@ export type ObjectCardStackProps = {
   objectId: string;
 };
 
+/**
+ * @deprecated Use mosaic.
+ */
 export const ObjectCardStack = forwardRef<HTMLDivElement, ObjectCardStackProps>(({ objectId, view }, forwardedRef) => {
   const { t } = useTranslation(meta.id);
   const db = Obj.getDatabase(view);
