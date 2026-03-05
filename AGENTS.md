@@ -76,7 +76,7 @@ Examples:
 - Use `gh` CLI to create and manage PRs
 - When the user asks you to submit a PR:
   - commit any pending changes
-  - address and comment on major review comments
+  - address major PR review comments and reply to all comments
   - `moon run :lint -- --fix` succeeds
   - `moon run :test` succeeds
   - `pnpm -w gh-action --verify --watch` shows green CI
