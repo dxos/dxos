@@ -2,11 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Atom } from '@effect-atom/atom-react';
 import { cleanup, render, renderHook, screen } from '@testing-library/react';
 import React, { type PropsWithChildren, useEffect } from 'react';
 import { afterEach, describe, test } from 'vitest';
 
-import { type MenuItem } from '../types';
+import { type MenuItem, type MenuItemsAccessor } from '../types';
 import { createMenuAction } from '../util';
 
 import { Menu, useMenu, useMenuItems } from './Menu';
@@ -21,9 +22,10 @@ const TestWrapper = ({ children }: PropsWithChildren) => {
 };
 
 const createTestWrapperWithBaseItems = (baseItems: MenuItem[]) => {
+  const baseItemsAtom = Atom.make<MenuItem[] | null>(baseItems);
+  const items: MenuItemsAccessor = () => baseItemsAtom;
   return ({ children }: PropsWithChildren) => {
-    const useGroupItems = () => baseItems;
-    return <Menu.Root useGroupItems={useGroupItems}>{children}</Menu.Root>;
+    return <Menu.Root items={items}>{children}</Menu.Root>;
   };
 };
 

@@ -27,7 +27,8 @@ export const isMenuGroup = (node: Node.Node): node is MenuItemGroup => node.type
 
 export type MenuItem = MenuSeparator | MenuAction | MenuItemGroup;
 
-export type MenuItemsResolver = (group?: MenuItemGroup) => MenuItem[] | null;
+/** Atom-family-style accessor: returns an atom of items for a given group (or root when undefined). */
+export type MenuItemsAccessor = (group?: MenuItemGroup) => Atom.Atom<MenuItem[] | null>;
 
 export type ActionExecutor = (action: MenuAction, params: Node.InvokeProps) => void;
 
@@ -45,8 +46,8 @@ export type MenuItems = Omit<AddMenuItemsProps, 'priority'> & { priority: number
 export type MenuItemsMap = Map<string, MenuItems>;
 
 export type MenuContextValue = {
-  // TODO(wittjosiah): Migrate this to be an atom. Similar to how Tree works.
-  useGroupItems: MenuItemsResolver;
+  /** Atom-family accessor for base menu items, keyed by group (similar to Tree model). */
+  items: MenuItemsAccessor;
   iconSize: IconButtonProps['size'];
   attendableId?: string;
   /** If true, the menu is always active regardless of attention state. */

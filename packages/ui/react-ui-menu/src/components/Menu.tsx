@@ -17,6 +17,7 @@ import {
   type MenuItem,
   type MenuItemGroup,
   type MenuItems,
+  type MenuItemsAccessor,
   type MenuItemsMap,
 } from '../types';
 import { executeMenuAction } from '../util';
@@ -34,9 +35,12 @@ const MENU_NAME = 'Menu';
 
 const [createMenuContext, createMenuScope] = createContextScope(MENU_NAME, []);
 
+const nullItemsAtom = Atom.make<MenuItem[] | null>(null);
+const defaultItemsAccessor: MenuItemsAccessor = () => nullItemsAtom;
+
 const menuContextDefaults: MenuContextValue = {
   iconSize: 5,
-  useGroupItems: () => null,
+  items: defaultItemsAccessor,
   onAction: undefined,
   menuItemsAtom: Atom.make<MenuItemsMap>(new Map()),
   addMenuItems: () => {},
@@ -78,7 +82,7 @@ type MenuProviderProps = PropsWithChildren<Partial<MenuContextValue>>;
 
 const MenuProvider = ({
   children,
-  useGroupItems = menuContextDefaults.useGroupItems,
+  items = menuContextDefaults.items,
   iconSize = menuContextDefaults.iconSize,
   attendableId,
   alwaysActive,
@@ -111,7 +115,7 @@ const MenuProvider = ({
 
   return (
     <MenuContextProvider
-      useGroupItems={useGroupItems}
+      items={items}
       iconSize={iconSize}
       attendableId={attendableId}
       alwaysActive={alwaysActive}
@@ -173,8 +177,8 @@ const useMenuItems = (
   consumerName: string = 'useMenuItemConsumer',
   __menuScope?: Scope,
 ) => {
-  const { useGroupItems, menuItemsAtom } = useMenuScoped(consumerName, __menuScope);
-  const groupItems = useGroupItems(group);
+  const { items, menuItemsAtom } = useMenuScoped(consumerName, __menuScope);
+  const groupItems = useAtomValue(items(group));
   const entries = useAtomValue(menuItemsAtom) ?? new Map();
 
   const baseItems = useMemo(() => propsItems ?? groupItems ?? null, [propsItems, groupItems]);
