@@ -19,7 +19,7 @@ export class AiModelResolver extends Context.Tag('@dxos/ai/AiModelResolver')<AiM
       const resolver = yield* AiModelResolver;
       return {
         metadata: resolver.metadata,
-        model: (name) => resolver.model(name),
+        model: (name, options) => resolver.model(name, options),
       } satisfies Context.Tag.Service<AiService>;
     }),
   );
@@ -42,11 +42,11 @@ export class AiModelResolver extends Context.Tag('@dxos/ai/AiModelResolver')<AiM
         const upstream = yield* Effect.serviceOption(AiModelResolver);
         return {
           metadata,
-          model: (modelName) =>
-            getModel(modelName).pipe(
+          model: (modelName, options) =>
+            getModel(modelName, options).pipe(
               Layer.catchAll(() => {
                 if (Option.isSome(upstream)) {
-                  return upstream.value.model(modelName);
+                  return upstream.value.model(modelName, options);
                 } else {
                   return Layer.fail(new AiModelNotAvailableError(modelName));
                 }
