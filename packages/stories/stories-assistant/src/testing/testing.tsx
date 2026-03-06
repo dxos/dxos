@@ -9,6 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import React, { useEffect, useMemo, useState } from 'react';
 
+import { GenericToolkit } from '@dxos/ai';
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
 import {
   ActivationEvent,
@@ -22,7 +23,7 @@ import {
 import { type WithPluginManagerOptions, withPluginManager } from '@dxos/app-framework/testing';
 import { useApp } from '@dxos/app-framework/ui';
 import { AppActivationEvents, AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
-import { AiContextBinder, ArtifactId, GenericToolkit } from '@dxos/assistant';
+import { AiContextBinder, ArtifactId } from '@dxos/assistant';
 import { AgentFunctions, DesignBlueprint, MarkdownBlueprint, PlanningBlueprint } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';

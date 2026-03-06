@@ -8,9 +8,10 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 
+import { GenericToolkit } from '@dxos/ai';
 import { Capabilities, Capability, type CapabilityManager } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { GenericToolkit, ToolExecutionServices } from '@dxos/assistant';
+import { ToolExecutionServices } from '@dxos/assistant';
 import { SpaceProperties } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
 import { Database, Feed, Obj, Query, Ref } from '@dxos/echo';

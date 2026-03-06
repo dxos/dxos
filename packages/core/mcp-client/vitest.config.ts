@@ -5,7 +5,7 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { createConfig } from '{{ workspace_root | path_join(part = 'vitest.base.config.ts') | path_relative(from = dest_dir) }}';
+import { createConfig } from '../../../vitest.base.config';
 
 export default createConfig({
   dirname: typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url)),
