@@ -22,7 +22,8 @@ import {
 import { type WithPluginManagerOptions, withPluginManager } from '@dxos/app-framework/testing';
 import { useApp } from '@dxos/app-framework/ui';
 import { AppActivationEvents, AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
-import { AiContextBinder, ArtifactId, GenericToolkit } from '@dxos/assistant';
+import { GenericToolkit } from '@dxos/ai';
+import { AiContextBinder, ArtifactId } from '@dxos/assistant';
 import { AgentFunctions, DesignBlueprint, MarkdownBlueprint, PlanningBlueprint } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';

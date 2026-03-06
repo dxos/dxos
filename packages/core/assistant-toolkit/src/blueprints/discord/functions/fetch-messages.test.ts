@@ -10,7 +10,8 @@ import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import { GenericToolkit, ToolExecutionServices } from '@dxos/assistant';
+import { GenericToolkit } from '@dxos/ai';
+import { ToolExecutionServices } from '@dxos/assistant';
 import { TestHelpers } from '@dxos/effect/testing';
 import { CredentialsService, FunctionInvocationService, TracingService } from '@dxos/functions';
 import { FunctionInvocationServiceLayerTestMocked, TestDatabaseLayer } from '@dxos/functions-runtime/testing';

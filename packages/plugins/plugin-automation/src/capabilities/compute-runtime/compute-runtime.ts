@@ -10,7 +10,8 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 
 import { Capabilities, Capability, type CapabilityManager } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { GenericToolkit, ToolExecutionServices } from '@dxos/assistant';
+import { GenericToolkit } from '@dxos/ai';
+import { ToolExecutionServices } from '@dxos/assistant';
 import { SpaceProperties } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
 import { Database, Feed, Obj, Query, Ref } from '@dxos/echo';

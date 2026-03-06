@@ -7,7 +7,7 @@ import * as Layer from 'effect/Layer';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { GenericToolkit } from '@dxos/assistant';
+import { GenericToolkit } from '@dxos/ai';
 import { WebSearchToolkit } from '@dxos/assistant-toolkit';
 
 export default Capability.makeModule(() =>

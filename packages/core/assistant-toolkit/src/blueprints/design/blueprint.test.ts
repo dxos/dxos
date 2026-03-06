@@ -8,11 +8,11 @@ import * as Layer from 'effect/Layer';
 
 import { AiService, ConsolePrinter } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
+import { GenericToolkit } from '@dxos/ai';
 import {
   AiConversation,
   type ContextBinding,
   GenerationObserver,
-  GenericToolkit,
   ToolExecutionServices,
 } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';

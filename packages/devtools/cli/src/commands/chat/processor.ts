@@ -15,9 +15,9 @@ import {
   AiConversation,
   type AiSessionRunError,
   type AiSessionRunRequirements,
-  GenericToolkit,
   ToolExecutionServices,
 } from '@dxos/assistant';
+import { GenericToolkit } from '@dxos/ai';
 import { Chat } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';

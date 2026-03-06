@@ -276,6 +276,9 @@ catalogs:
     '@lit/react':
       specifier: ^1.0.8
       version: 1.0.8
+    '@modelcontextprotocol/sdk':
+      specifier: ^1.27.1
+      version: 1.27.1
     '@moonrepo/cli':
       specifier: 2.0.3
       version: 2.0.3
@@ -5467,6 +5470,18 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+
+  packages/core/mcp-client:
+    dependencies:
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../ai
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
+      '@modelcontextprotocol/sdk':
+        specifier: 'catalog:'
+        version: 1.27.1(@cfworker/json-schema@4.1.1)
 
   packages/core/mesh/edge-client:
     dependencies:

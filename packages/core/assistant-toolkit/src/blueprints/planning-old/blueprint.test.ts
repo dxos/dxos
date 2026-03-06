@@ -8,7 +8,8 @@ import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import { AiConversation, type ContextBinding, GenericToolkit, ToolExecutionServices } from '@dxos/assistant';
+import { GenericToolkit } from '@dxos/ai';
+import { AiConversation, type ContextBinding, ToolExecutionServices } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { Obj, Ref } from '@dxos/echo';
 import { Database } from '@dxos/echo';
