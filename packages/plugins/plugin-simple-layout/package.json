@@ -29,6 +29,7 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/async": "workspace:*",
+    "@dxos/echo": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/operation": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
@@ -47,7 +48,6 @@
   },
   "devDependencies": {
     "@dxos/app-graph": "workspace:*",
-    "@dxos/echo": "catalog:",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-preview": "workspace:*",
     "@dxos/plugin-search": "workspace:*",
