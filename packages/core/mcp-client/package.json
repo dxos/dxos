@@ -1,7 +1,7 @@
 {
-  "name": "@dxos/{{ name | kebab_case }}",
+  "name": "@dxos/mcp-client",
   "version": "0.8.3",
-  "description": "{{ description }}",
+  "description": "MCP client.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
