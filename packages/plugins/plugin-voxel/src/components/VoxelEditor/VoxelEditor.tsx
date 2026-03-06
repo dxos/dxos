@@ -18,7 +18,7 @@ export type VoxelEditorProps = {
   gridSize?: number;
   /** Called when user clicks to add a voxel. */
   onAddVoxel?: (voxel: VoxelData) => void;
-  /** Called when user right-clicks to remove a voxel. */
+  /** Called when user shift+clicks to remove a voxel. */
   onRemoveVoxel?: (position: { x: number; y: number; z: number }) => void;
 };
 
@@ -86,13 +86,13 @@ const VoxelScene = ({ voxels, gridSize, selectedColor, onAddVoxel, onRemoveVoxel
   const handleVoxelClick = useCallback(
     (event: ThreeEvent<PointerEvent>) => {
       event.stopPropagation();
-      if (event.button === 2 && onRemoveVoxel) {
-        // Right-click: remove voxel.
+      if (event.button === 0 && event.shiftKey && onRemoveVoxel) {
+        // Shift+left-click: remove voxel.
         const pos = event.object.position;
         onRemoveVoxel({ x: pos.x, y: pos.y, z: pos.z });
         return;
       }
-      if (event.button === 0 && onAddVoxel && event.face) {
+      if (event.button === 0 && !event.shiftKey && onAddVoxel && event.face) {
         // Left-click: add voxel adjacent to clicked face.
         const normal = event.face.normal;
         const pos = event.object.position;
@@ -145,6 +145,7 @@ const VoxelScene = ({ voxels, gridSize, selectedColor, onAddVoxel, onRemoveVoxel
 
       <OrbitControls
         makeDefault
+        mouseButtons={{ LEFT: THREE.MOUSE.PAN, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.ROTATE }}
         target={[gridSize / 4, 0, gridSize / 4]}
         maxPolarAngle={Math.PI / 2}
         minDistance={2}
@@ -171,7 +172,7 @@ const ColorButton = ({
   return (
     <button
       type='button'
-      className='bs-6 is-6 rounded-sm border-2 cursor-pointer'
+      className='bs-10 is-10 rounded border-2 cursor-pointer'
       style={{
         backgroundColor: hexStr,
         borderColor: selected ? '#000' : 'transparent',
@@ -199,7 +200,7 @@ export const VoxelEditor = ({ voxels, gridSize = 16, onAddVoxel, onRemoveVoxel }
           />
         ))}
         <span className='mlb-auto text-xs text-neutral-500 pli-2'>
-          Left click: add | Right click: remove
+          Click: add | Shift+click: remove | Right drag: rotate
         </span>
       </div>
       <div className='grow'>
