@@ -17,6 +17,7 @@ import type * as Order from './Order';
 import type * as Ref from './Ref';
 import type * as Type$ from './Type';
 import type * as View from './View';
+import type * as Dataset from './Dataset';
 
 // TODO(dmaretskyi): Split up into interfaces for objects and relations so they can have separate verbs.
 // TODO(dmaretskyi): Undirected relation traversals.
@@ -182,7 +183,7 @@ export interface Query<T> {
    * Query.type(Person).from(feed);
    * ```
    */
-  from(dataset: Feed.Feed | Collection.Collection | View.View): Query<T>;
+  from(dataset: Dataset.Dataset): Query<T>;
 
   /**
    * Add options to a query.
