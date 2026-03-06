@@ -37,7 +37,6 @@ import { type ThemedClassName } from '../../util';
 import { IconButton } from '../Button';
 import { ElevationProvider } from '../ElevationProvider';
 
-
 //
 // Root
 //

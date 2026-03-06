@@ -8,7 +8,7 @@ import * as ToolbarPrimitive from '@radix-ui/react-toolbar';
 import React, { Fragment, forwardRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { type ToolbarStyleProps, osTranslations } from '@dxos/ui-theme';
+import { type ToolbarStyleProps } from '@dxos/ui-theme';
 import { type SlottableProps } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
@@ -219,7 +219,7 @@ type ToolbarDragHandleProps = { testId?: string; label?: string };
 
 const ToolbarDragHandle = forwardRef<HTMLButtonElement, ToolbarDragHandleProps>(
   ({ testId = 'drag-handle', label }, forwardedRef) => {
-    const { t } = useTranslation(osTranslations);
+    const { t } = useTranslation(translationKey);
     return (
       <ToolbarIconButton
         data-testid={testId}
@@ -227,7 +227,7 @@ const ToolbarDragHandle = forwardRef<HTMLButtonElement, ToolbarDragHandleProps>(
         iconOnly
         icon='ph--dots-six-vertical--regular'
         variant='ghost'
-        label={label ?? t('drag handle label')}
+        label={label ?? t('toolbar drag handle label')}
         classNames='cursor-pointer'
         size={5}
         disabled={!forwardedRef}
@@ -251,7 +251,7 @@ const ToolbarCloseIconButton = forwardRef<HTMLButtonElement, ToolbarCloseIconBut
         iconOnly
         icon='ph--x--regular'
         variant='ghost'
-        label={label ?? t('close label')}
+        label={label ?? t('toolbar close label')}
         classNames='cursor-pointer'
         size={5}
         onClick={onClick}

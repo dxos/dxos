@@ -320,7 +320,9 @@ export const Card = {
   Toolbar: CardToolbar,
   ToolbarIconButton: Toolbar.IconButton,
   ToolbarSeparator: Toolbar.Separator,
-  DragHandle: Toolbar.DragHandle,
+  DragHandle: forwardRef<HTMLButtonElement, Parameters<typeof Toolbar.DragHandle>[0]>((props, ref) => (
+    <Toolbar.DragHandle testId='card-drag-handle' {...props} ref={ref} />
+  )),
   CloseIconButton: Toolbar.CloseIconButton,
   Title: CardTitle,
   Menu: CardMenu,
