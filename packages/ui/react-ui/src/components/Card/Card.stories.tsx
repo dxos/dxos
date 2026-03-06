@@ -13,21 +13,22 @@ import { Card } from './Card';
 
 faker.seed(0);
 
-type CardStoryProps = {
+type StoryProps = {
   title: string;
   description?: string;
   image?: string;
   fullWidth?: boolean;
 };
 
-const DefaultStory = ({ title, description, image, fullWidth }: CardStoryProps) => {
+const DefaultStory = ({ title, description, image, fullWidth }: StoryProps) => {
   const handleRef = useRef<HTMLButtonElement>(null);
+  console.log(title);
   return (
     <Card.Root fullWidth={fullWidth}>
       <Card.Toolbar>
         <Card.DragHandle ref={handleRef} />
         <Card.Title>{title}</Card.Title>
-        <Card.Close onClick={() => console.log('close')} />
+        <Card.CloseIconButton onClick={() => console.log('close')} />
       </Card.Toolbar>
       <Card.Content>
         <Card.Poster alt='Card.Poster' image={image} />
@@ -55,9 +56,9 @@ const DefaultStory = ({ title, description, image, fullWidth }: CardStoryProps) 
 };
 
 const meta = {
-  title: 'ui/react-ui-mosaic/Card',
+  title: 'ui/react-ui-core/components/Card',
   render: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'grid w-[30rem] place-items-center' })],
+  decorators: [withTheme(), withLayout({ layout: 'centered', classNames: 'grid w-[30rem] place-items-center' })],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
@@ -94,7 +95,7 @@ export const Simple: Story = {
         <Card.Toolbar>
           <Card.DragHandle ref={handleRef} />
           <Card.Title>{title}</Card.Title>
-          <Card.Close onClick={() => console.log('close')} />
+          <Card.CloseIconButton onClick={() => console.log('close')} />
         </Card.Toolbar>
       </Card.Root>
     );
@@ -113,7 +114,7 @@ export const Description: Story = {
         <Card.Toolbar>
           <Card.DragHandle ref={handleRef} />
           <Card.Title>{title}</Card.Title>
-          <Card.Close onClick={() => console.log('close')} />
+          <Card.CloseIconButton onClick={() => console.log('close')} />
         </Card.Toolbar>
         <Card.Content>
           <Card.Row>
@@ -131,7 +132,9 @@ export const Mock = () => (
       <div role='none' className='grid h-[var(--dx-rail-item)] w-[var(--dx-rail-item)] place-items-center'>
         <Icon icon='ph--dots-six-vertical--regular' />
       </div>
-      <div className='p-1 truncate text-description items-center'>This line is very very long and it should wrap.</div>
+      <div className='p-1 whitespace-normal break-words text-description items-center'>
+        This line is very very long and it should wrap.
+      </div>
       <div role='none' className='grid h-[var(--dx-rail-item)] w-[var(--dx-rail-item)] place-items-center'>
         <Icon icon='ph--x--regular' />
       </div>

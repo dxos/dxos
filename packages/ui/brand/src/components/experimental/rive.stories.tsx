@@ -83,7 +83,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'ui/brand/Rive',
+  title: 'ui/brand/experimental/Rive',
   render: render(DefaultStory),
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {

@@ -12,7 +12,8 @@ import { Graph, Node, useActionRunner, useConnections } from '@dxos/plugin-graph
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { ScrollArea, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Container } from '@dxos/react-ui';
-import { Card, Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
+import { Card } from '@dxos/react-ui';
+import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { Text } from '@dxos/schema';
 import { getStyles } from '@dxos/ui-theme';

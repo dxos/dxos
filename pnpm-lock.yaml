@@ -4309,6 +4309,9 @@ importers:
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../../plugins/plugin-markdown
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../ui/react-ui-mosaic
@@ -4343,6 +4346,9 @@ importers:
         specifier: 'catalog:'
         version: 1.7.0
     devDependencies:
+      '@dxos/ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/ui-theme
       effect:
         specifier: 3.19.16
         version: 3.19.16
@@ -59438,5 +59444,3 @@ snapshots:
   zwitch@2.0.4: {}
 
   zx@8.8.5: {}
-
-# First generated on 2026-03-04T20:01:59.153Z by jdw

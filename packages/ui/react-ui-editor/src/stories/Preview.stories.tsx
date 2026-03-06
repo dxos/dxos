@@ -11,8 +11,8 @@ import { createPortal } from 'react-dom';
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 import { Popover } from '@dxos/react-ui';
+import { Card } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { Card } from '@dxos/react-ui-mosaic';
 import {
   type PreviewBlock,
   type PreviewLinkRef,
@@ -64,7 +64,7 @@ const PreviewCard = () => {
               <Card.Icon toolbar icon='ph--file-text--regular' />
               <Card.Title>{target.label}</Card.Title>
               <Popover.Close asChild>
-                <Card.Close />
+                <Card.CloseIconButton />
               </Popover.Close>
             </Card.Toolbar>
             <Card.Row>

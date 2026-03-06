@@ -177,7 +177,6 @@ const createSlices = ({
 /**
  * Spinning Composer "C" logo.
  */
-// TODO(burdon): Configure stripes.
 export const ComposerSpinner: FC<{
   animate?: boolean;
   size?: number;
@@ -197,13 +196,17 @@ export const ComposerSpinner: FC<{
   }, [animate]);
 
   useEffect(() => {
-    const svg = select(ref.current)
+    const el = ref.current;
+    if (!el) {
+      return;
+    }
+
+    const svg = select(el)
       .attr('width', size)
       .attr('height', size)
       .append('g')
       .attr('transform', `translate(${size / 2}, ${size / 2})`);
 
-    // TODO(burdon): Pass in.
     const arcs = createSlices({ radius: size / 2, gap, color });
 
     let count = 0;
@@ -217,14 +220,6 @@ export const ComposerSpinner: FC<{
           .attr('opacity', 0);
       }
     };
-
-    // const createArc = ({
-    //   innerRadius,
-    //   outerRadius,
-    //   startAngle = (1 / 4) * Math.PI,
-    //   endAngle = -(5 / 4) * Math.PI,
-    // }: Slice): ValueFn<SVGPathElement, DefaultArcObject, string | null> =>
-    //   arc().innerRadius(innerRadius).outerRadius(outerRadius).startAngle(startAngle).endAngle(endAngle);
 
     const trigger = arcs.map(
       ({
@@ -248,18 +243,11 @@ export const ComposerSpinner: FC<{
             .transition()
             .duration(duration)
             .attrTween('transform', (() => interpolateString('rotate(0)', 'rotate(360)')) as any)
-            .on('end', ((_: any, i: number, nodes: Node[]) => {
+            .on('end', (() => {
               if (animateRef.current) {
                 rotateArc();
               } else if (autoFade) {
                 fadeOut();
-                // d3.select(nodes[i])
-                //   .transition()
-                //   .duration(1000)
-                //   .attrTween('d', () => {
-                //     const interpolate = d3.interpolate(0, Math.PI);
-                //     return (t: number) => createArc(arc);
-                //   });
               }
             }) as any);
         };
@@ -278,9 +266,9 @@ export const ComposerSpinner: FC<{
     }
 
     return () => {
-      select(ref.current).selectChildren().remove();
+      select(el).selectChildren().remove();
     };
-  }, []);
+  }, [size, gap, color]);
 
   return <svg ref={ref} onClick={onClick} />;
 };

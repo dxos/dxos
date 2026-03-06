@@ -11,8 +11,8 @@ import { Filter, Obj, type Ref, Type } from '@dxos/echo';
 import { type View } from '@dxos/echo';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { useObject, useQuery } from '@dxos/react-client/echo';
+import { Card } from '@dxos/react-ui';
 import { Masonry as MasonryComponent } from '@dxos/react-ui-masonry';
-import { Card } from '@dxos/react-ui-mosaic';
 import { getTypenameFromQuery } from '@dxos/schema';
 
 export type MasonryContainerProps = {

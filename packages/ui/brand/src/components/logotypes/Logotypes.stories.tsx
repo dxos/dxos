@@ -3,17 +3,19 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { type FC, type ReactNode } from 'react';
+import React, { type PropsWithChildren } from 'react';
 
 import { withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
-import { DXOSHorizontalType, DXOSType, DXOSVerticalType } from './logotypes';
+import { DXOSHorizontalType } from './DXOSHorizontalType';
+import { DXOSType } from './DXOSType';
+import { DXOSVerticalType } from './DXOSVerticalType';
 
 const Icon = () => null;
 
 const meta = {
-  title: 'ui/brand/LogoTypes',
+  title: 'ui/brand/components/LogoTypes',
   component: Icon,
   decorators: [withTheme()],
 } satisfies Meta<typeof Icon>;
@@ -22,8 +24,8 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const Cell: FC<{ children: ReactNode; dark?: boolean }> = ({ children, dark }) => (
-  <div className={mx('flex p-4 justify-center rounded-md', dark ? 'bg-zinc-800 fill-zinc-50' : 'bg-white')}>
+const Cell = ({ children, dark }: PropsWithChildren<{ dark?: boolean }>) => (
+  <div className={mx('flex p-4 justify-center rounded-md', dark ? 'bg-zinc-800 fill-zinc-50' : 'bg-zinc-100')}>
     {children}
   </div>
 );
