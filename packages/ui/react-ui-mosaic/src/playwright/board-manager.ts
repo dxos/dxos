@@ -48,7 +48,7 @@ export class ColumnManager {
   }
 
   async dragTo(target: Locator, offset = { x: 0, y: 0 }): Promise<void> {
-    const handle = this.header().getByTestId('card-drag-handle');
+    const handle = this.header().getByTestId('toolbar-drag-handle');
     const handleBox = await handle.boundingBox();
     if (!handleBox) {
       return;
@@ -85,7 +85,7 @@ export class ItemManager {
   }
 
   async dragTo(target: Locator, offset = { x: 0, y: 0 }): Promise<void> {
-    const handle = this.locator.getByTestId('card-drag-handle');
+    const handle = this.locator.getByTestId('toolbar-drag-handle');
     const box = await target.boundingBox();
     if (box) {
       await handle.hover();
@@ -108,7 +108,7 @@ export class ItemManager {
    * @param dropOffset - Offset from the drop target center.
    */
   async dragToEndWithAutoScroll(holdTarget: Locator, dropTarget: Locator, dropOffset = { x: 0, y: 0 }): Promise<void> {
-    const handle = this.locator.getByTestId('card-drag-handle');
+    const handle = this.locator.getByTestId('toolbar-drag-handle');
     const holdBox = await holdTarget.boundingBox();
     if (!holdBox) {
       return;

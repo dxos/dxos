@@ -69,13 +69,14 @@ type ColumnProps = SlottableProps<HTMLDivElement> & { gutter?: GutterSize };
  * Direct children must use Container.Row (spans all 3 cols) or Container.Segment (center col only).
  */
 const Column = forwardRef<HTMLDivElement, ColumnProps>(
-  ({ classNames, className, asChild, role = 'none', children, gutter = 'md', ...props }, forwardedRef) => {
+  ({ classNames, className, asChild, role, children, gutter = 'md', ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const Root = asChild ? Slot : Primitive.div;
     const gutterSize = gutterSizes[gutter];
     return (
       <Root
         {...props}
+        role={role ?? 'none'}
         style={
           {
             '--gutter': gutterSize,
@@ -83,7 +84,6 @@ const Column = forwardRef<HTMLDivElement, ColumnProps>(
           } as CSSProperties
         }
         className={tx('container.column', { gutter }, [className, classNames])}
-        role={role}
         ref={forwardedRef}
       >
         {children}
@@ -108,11 +108,16 @@ type RowProps = SlottableProps<HTMLDivElement>;
  * Must be a direct child of Container.Column.
  */
 const Row = forwardRef<HTMLDivElement, RowProps>(
-  ({ classNames, className, asChild, role = 'none', children, ...props }, forwardedRef) => {
+  ({ classNames, className, asChild, role, children, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const Root = asChild ? Slot : Primitive.div;
     return (
-      <Root {...props} className={tx('container.row', {}, [className, classNames])} role={role} ref={forwardedRef}>
+      <Root
+        {...props}
+        className={tx('container.row', {}, [className, classNames])}
+        role={role ?? 'none'}
+        ref={forwardedRef}
+      >
         {children}
       </Root>
     );
@@ -135,7 +140,7 @@ type SegmentProps = SlottableProps<HTMLDivElement>;
  * NOTE: Must not use overflow-hidden here since it will clip input focus rings.
  */
 const Segment = forwardRef<HTMLDivElement, SegmentProps>(
-  ({ classNames, className, asChild, role = 'none', children, ...props }, forwardedRef) => {
+  ({ classNames, className, asChild, role, children, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const Root = asChild ? Slot : Primitive.div;
 
@@ -144,8 +149,8 @@ const Segment = forwardRef<HTMLDivElement, SegmentProps>(
       return (
         <Root
           {...props}
+          role={role ?? 'none'}
           className={tx('container.segment', {}, [className, classNames])}
-          role={role}
           ref={forwardedRef}
         >
           {children}

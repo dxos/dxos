@@ -288,10 +288,31 @@ export const BrandArc: Story = {
     const n = composerBrandColors.length;
     const ringWidth = size / 2 / (n + 1);
     const gap = 0;
+    const staggerMs = 200;
+
+    const [visible, setVisible] = useState(true);
+    const [cycle, setCycle] = useState(0);
+    const handleToggle = () => {
+      setVisible((prev) => !prev);
+      setCycle((prev) => prev + 1);
+    };
 
     return (
       <div className='absolute inset-0 flex items-center justify-center'>
-        <svg width={size} height={size}>
+        <div className='absolute left-4 top-4'>
+          <Button onClick={handleToggle}>{visible ? 'Fade Out' : 'Fade In'}</Button>
+        </div>
+        <style>{`
+          @keyframes brandArcFadeIn {
+            from { opacity: 0; }
+            to   { opacity: 1; }
+          }
+          @keyframes brandArcFadeOut {
+            from { opacity: 1; }
+            to   { opacity: 0; }
+          }
+        `}</style>
+        <svg key={cycle} width={size} height={size}>
           {composerBrandColors.map((color, i) => {
             const outerR = size / 2 - i * ringWidth;
             const innerR = outerR - ringWidth + gap;
@@ -299,8 +320,20 @@ export const BrandArc: Story = {
             const mirror = n - 1 - i;
             const mirrorOuterR = size / 2 - mirror * ringWidth;
             const mirrorInnerR = mirrorOuterR - ringWidth + gap;
+            // Reverse stagger on fade-out (inner rings disappear first).
+            const delay = visible ? i * staggerMs : (n - 1 - i) * staggerMs;
+            const animation = visible ? 'brandArcFadeIn' : 'brandArcFadeOut';
+            const isInitial = cycle === 0;
             return (
-              <path key={i} d={makeBrandLayerPath(cx, cy, outerR, innerR, mirrorOuterR, mirrorInnerR)} fill={color} />
+              <path
+                key={i}
+                d={makeBrandLayerPath(cx, cy, outerR, innerR, mirrorOuterR, mirrorInnerR)}
+                fill={color}
+                style={{
+                  opacity: isInitial ? 1 : visible ? 0 : 1,
+                  animation: isInitial ? 'none' : `${animation} 500ms ease-out ${delay}ms forwards`,
+                }}
+              />
             );
           })}
         </svg>

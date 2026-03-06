@@ -17,7 +17,6 @@ import React, {
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
 import {
-  Card,
   type CardMenuProps,
   IconButton,
   ScrollArea,
@@ -82,10 +81,18 @@ type BoardColumnRootProps<TColumn = any> = PropsWithChildren<BoardColumnProps<TC
 };
 
 const BoardColumnRootImpl = forwardRef<HTMLDivElement, BoardColumnRootProps>(
-  ({ dragHandleRef: dragHandleRefProp, ...props }, forwardedRef) => {
+  ({ classNames, dragHandleRef: dragHandleRefProp, ...props }, forwardedRef) => {
     const internalRef = useRef<HTMLButtonElement>(null);
     const dragHandleRef = dragHandleRefProp ?? internalRef;
-    return <BoardColumnRootInner {...props} dragHandleRef={dragHandleRef} ref={forwardedRef} />;
+    return (
+      <BoardColumnRootInner
+        {...props}
+        data-testid='board-column'
+        classNames={mx('group/column', classNames)}
+        dragHandleRef={dragHandleRef}
+        ref={forwardedRef}
+      />
+    );
   },
 );
 
@@ -94,22 +101,6 @@ BoardColumnRootImpl.displayName = 'Board.Column.Root';
 const BoardColumnRoot = BoardColumnRootImpl as <TColumn = any>(
   props: BoardColumnRootProps<TColumn> & { ref?: ReactRef<HTMLDivElement> },
 ) => ReactElement;
-
-//
-// Column Grid
-//
-
-const BOARD_COLUMN_GRID_NAME = 'Board.Column.Grid';
-
-type BoardColumnGridProps = ThemedClassName<PropsWithChildren>;
-
-const BoardColumnGrid = ({ classNames, children }: BoardColumnGridProps) => (
-  <div role='none' data-testid='board-column' className={mx('group/column grid h-full overflow-hidden', classNames)}>
-    {children}
-  </div>
-);
-
-BoardColumnGrid.displayName = BOARD_COLUMN_GRID_NAME;
 
 //
 // Column Header
@@ -122,15 +113,15 @@ type BoardColumnHeaderProps = ThemedClassName<{ label: string; dragHandleRef: Re
 const BoardColumnHeader = forwardRef<HTMLDivElement, BoardColumnHeaderProps>(
   ({ classNames, label, dragHandleRef }, forwardedRef) => {
     return (
-      <Card.Toolbar
+      <Toolbar.Root
         classNames={mx('border-b border-separator', classNames)}
         data-testid='board-column-header'
         ref={forwardedRef}
       >
-        <Card.DragHandle ref={dragHandleRef} />
-        <Card.Title>{label}</Card.Title>
-        <Card.Menu items={[]} />
-      </Card.Toolbar>
+        <Toolbar.DragHandle ref={dragHandleRef} />
+        <Toolbar.Text>{label}</Toolbar.Text>
+        <Toolbar.Menu items={[]} />
+      </Toolbar.Root>
     );
   },
 );
@@ -155,6 +146,7 @@ const BoardColumnBody = ({ data, eventHandler, Tile = BoardItem, debug }: BoardC
   const { model } = useBoard(BOARD_COLUMN_BODY_NAME);
   const items = useAtomValue(model.items(data));
 
+  // TODO(burdon): Add to menu context.
   // Context menu for items.
   const menuItems = useMemo<NonNullable<CardMenuProps<Obj.Unknown>['items']>>(
     () =>
@@ -170,22 +162,20 @@ const BoardColumnBody = ({ data, eventHandler, Tile = BoardItem, debug }: BoardC
   );
 
   return (
-    <Card.Context value={{ menuItems }}>
-      <Mosaic.Container
-        asChild
-        withFocus
-        orientation='vertical'
-        autoScroll={viewport}
-        eventHandler={eventHandler}
-        debug={debug}
-      >
-        <ScrollArea.Root orientation='vertical' thin margin padding>
-          <ScrollArea.Viewport classNames='snap-y md:snap-none' ref={setViewport}>
-            <Mosaic.Stack items={items} getId={model.getItemId} Tile={Tile} />
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
-      </Mosaic.Container>
-    </Card.Context>
+    <Mosaic.Container
+      asChild
+      withFocus
+      orientation='vertical'
+      autoScroll={viewport}
+      eventHandler={eventHandler}
+      debug={debug}
+    >
+      <ScrollArea.Root orientation='vertical' thin margin padding>
+        <ScrollArea.Viewport classNames='snap-y md:snap-none' ref={setViewport}>
+          <Mosaic.Stack items={items} getId={model.getItemId} Tile={Tile} />
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
+    </Mosaic.Container>
   );
 };
 
@@ -258,22 +248,24 @@ const DefaultBoardColumn = forwardRef<HTMLDivElement, DefaultBoardColumnProps>(
     });
 
     return (
-      <BoardColumnRootInner location={location} data={data} dragHandleRef={dragHandleRef} ref={forwardedRef}>
-        <BoardColumnGrid
-          classNames={mx(
-            debug
-              ? 'grid-rows-[var(--dx-rail-action)_1fr_20rem]'
-              : 'grid-rows-[var(--dx-rail-action)_1fr_var(--dx-rail-action)]',
-            classNames,
-          )}
-        >
-          <BoardColumnHeader label={Obj.getLabel(data) ?? data.id} dragHandleRef={dragHandleRef} />
-          <BoardColumnBody data={data} eventHandler={eventHandler} debug={debugHandler} Tile={Tile} />
-          <div role='none' className='flex flex-col'>
-            <BoardColumnFooter data={data} />
-            <DebugInfo />
-          </div>
-        </BoardColumnGrid>
+      <BoardColumnRootInner
+        classNames={mx(
+          debug
+            ? 'grid-rows-[var(--dx-rail-action)_1fr_20rem]'
+            : 'grid-rows-[var(--dx-rail-action)_1fr_var(--dx-rail-action)]',
+          classNames,
+        )}
+        location={location}
+        data={data}
+        dragHandleRef={dragHandleRef}
+        ref={forwardedRef}
+      >
+        <BoardColumnHeader label={Obj.getLabel(data) ?? data.id} dragHandleRef={dragHandleRef} />
+        <BoardColumnBody data={data} eventHandler={eventHandler} debug={debugHandler} Tile={Tile} />
+        <div role='none' className='flex flex-col col-span-full'>
+          <BoardColumnFooter data={data} />
+          <DebugInfo />
+        </div>
       </BoardColumnRootInner>
     );
   },
@@ -287,7 +279,6 @@ DefaultBoardColumn.displayName = BOARD_DEFAULT_COLUMN_NAME;
 
 const BoardColumn = {
   Root: BoardColumnRoot,
-  Grid: BoardColumnGrid,
   Header: BoardColumnHeader,
   Body: BoardColumnBody,
   Footer: BoardColumnFooter,

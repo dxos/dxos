@@ -11,9 +11,7 @@ import React, {
   forwardRef,
   useContext,
 } from 'react';
-import { useTranslation } from 'react-i18next';
 
-import { osTranslations } from '@dxos/ui-theme';
 import { type Density } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
@@ -22,8 +20,7 @@ import { type ThemedClassName } from '../../util';
 import { Button } from '../Button';
 import { Icon, type IconProps } from '../Icon';
 import { Image } from '../Image';
-import { DropdownMenu } from '../Menu';
-import { Toolbar, type ToolbarRootProps } from '../Toolbar';
+import { Toolbar, type ToolbarMenuItem, type ToolbarMenuProps, type ToolbarRootProps } from '../Toolbar';
 
 type CardSharedProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
   asChild?: boolean;
@@ -52,10 +49,7 @@ type CardRootProps = CardSharedProps & {
 };
 
 const CardRoot = forwardRef<HTMLDivElement, CardRootProps>(
-  (
-    { children, classNames, className, id, asChild, role = 'group', border = true, fullWidth, ...props },
-    forwardedRef,
-  ) => {
+  ({ children, classNames, className, id, asChild, role, border = true, fullWidth, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const Root = asChild ? Slot : 'div';
 
@@ -63,7 +57,7 @@ const CardRoot = forwardRef<HTMLDivElement, CardRootProps>(
       <Root
         {...(id && { 'data-object-id': id })}
         {...props}
-        role={role}
+        role={role ?? 'group'}
         className={tx('card.root', { border, fullWidth }, [className, classNames])}
         ref={forwardedRef}
       >
@@ -97,101 +91,18 @@ const CardToolbar = forwardRef<HTMLDivElement, CardToolbarProps>(
   },
 );
 
-const CardToolbarIconButton = Toolbar.IconButton;
-const CardToolbarSeparator = Toolbar.Separator;
-
 //
-// DragHandle
+// Menu (delegated to Toolbar.Menu)
 //
 
-type CardDragHandleProps = {};
+type CardMenuItem<T extends any | void = void> = ToolbarMenuItem<T>;
+type CardMenuProps<T extends any | void = void> = ToolbarMenuProps<T>;
 
-const CardDragHandle = forwardRef<HTMLButtonElement, CardDragHandleProps>((_, forwardedRef) => {
-  const { t } = useTranslation(osTranslations);
-
-  return (
-    <Toolbar.IconButton
-      data-testid='card-drag-handle'
-      noTooltip
-      iconOnly
-      icon='ph--dots-six-vertical--regular'
-      variant='ghost'
-      label={t('drag handle label')}
-      classNames='cursor-pointer'
-      size={5}
-      disabled={!forwardedRef}
-      ref={forwardedRef}
-    />
-  );
-});
-
-//
-// Close
-//
-
-type CardCloseIconButtonProps = { onClick?: () => void };
-
-const CardCloseIconButton = forwardRef<HTMLButtonElement, CardCloseIconButtonProps>(({ onClick }, forwardedRef) => {
-  const { t } = useTranslation(osTranslations);
-  return (
-    <Toolbar.IconButton
-      iconOnly
-      icon='ph--x--regular'
-      variant='ghost'
-      label={t('card close label')}
-      classNames='cursor-pointer'
-      size={5}
-      onClick={onClick}
-      ref={forwardedRef}
-    />
-  );
-});
-
-//
-// Menu
-//
-
-type CardMenuItem<T extends any | void = void> = {
-  label: string;
-  onClick: (context: T) => void;
-};
-
-type CardMenuProps<T extends any | void = void> = {
-  context?: T;
-  items?: CardMenuItem<T>[];
-};
-
+// TODO(burdon): Remove and Push up to Toolbar (incl. state).
 const CardMenu = <T extends any | void = void>({ context, items }: CardMenuProps<T>) => {
-  const { t } = useTranslation(osTranslations);
   const { menuItems } = useContext(CardContext) ?? {};
   const combinedItems = [...(items ?? []), ...((menuItems as CardMenuItem<T>[]) ?? [])];
-
-  return (
-    <DropdownMenu.Root>
-      <DropdownMenu.Trigger disabled={!combinedItems.length} asChild>
-        <Card.ToolbarIconButton
-          iconOnly
-          variant='ghost'
-          icon='ph--dots-three-vertical--regular'
-          label={t('action menu label')}
-        />
-      </DropdownMenu.Trigger>
-      {(combinedItems?.length ?? 0) > 0 && (
-        <DropdownMenu.Portal>
-          <DropdownMenu.Content>
-            <DropdownMenu.Viewport>
-              {combinedItems?.map(({ label, onClick: onSelect }, i) => (
-                <DropdownMenu.Item key={i} onSelect={() => onSelect(context as T)}>
-                  {label}
-                </DropdownMenu.Item>
-              ))}
-            </DropdownMenu.Viewport>
-            <DropdownMenu.Arrow />
-          </DropdownMenu.Content>
-        </DropdownMenu.Portal>
-      )}
-    </DropdownMenu.Root>
-  );
+  return <Toolbar.Menu context={context} items={combinedItems} />;
 };
 
 //
@@ -201,12 +112,17 @@ const CardMenu = <T extends any | void = void>({ context, items }: CardMenuProps
 type CardTitleProps = CardSharedProps;
 
 const CardTitle = forwardRef<HTMLDivElement, CardTitleProps>(
-  ({ children, classNames, className, asChild, role = 'heading', ...props }, forwardedRef) => {
+  ({ children, classNames, className, asChild, role, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const Root = asChild ? Slot : 'div';
 
     return (
-      <Root {...props} role={role} className={tx('card.title', {}, [classNames, className])} ref={forwardedRef}>
+      <Root
+        {...props}
+        role={role ?? 'heading'}
+        className={tx('card.title', {}, [className, classNames])}
+        ref={forwardedRef}
+      >
         {children}
       </Root>
     );
@@ -217,12 +133,12 @@ const CardTitle = forwardRef<HTMLDivElement, CardTitleProps>(
 // Content
 //
 
-type CardContentProps = PropsWithChildren;
+type CardContentProps = CardSharedProps;
 
-const CardContent = forwardRef<HTMLDivElement, CardContentProps>(({ children, ...props }, forwardedRef) => {
+const CardContent = forwardRef<HTMLDivElement, CardContentProps>(({ children, role, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   return (
-    <div role='none' className={tx('card.content', {})} {...props} ref={forwardedRef}>
+    <div role={role ?? 'none'} className={tx('card.content', {})} {...props} ref={forwardedRef}>
       {children}
     </div>
   );
@@ -235,9 +151,9 @@ const CardContent = forwardRef<HTMLDivElement, CardContentProps>(({ children, ..
 type CardRowProps = CardSharedProps & { icon?: string };
 
 const CardRow = forwardRef<HTMLDivElement, CardRowProps>(
-  ({ children, classNames, className, role = 'none', icon, ...props }, forwardedRef) => {
+  ({ children, classNames, className, role, icon, ...props }, forwardedRef) => {
     return (
-      <Container.Row {...props} role={role} classNames={[classNames, className]} ref={forwardedRef}>
+      <Container.Row {...props} role={role ?? 'none'} classNames={[classNames, className]} ref={forwardedRef}>
         {(icon && <CardIcon classNames='text-subdued' icon={icon} />) || <div />}
         {children}
         <div />
@@ -256,14 +172,14 @@ type CardHeadingProps = CardSharedProps & { variant?: 'default' | 'subtitle' };
  * @deprecated Use typography.
  */
 const CardHeading = forwardRef<HTMLDivElement, CardHeadingProps>(
-  ({ children, classNames, className, asChild, role = 'heading', variant = 'default', ...props }, forwardedRef) => {
+  ({ children, classNames, className, asChild, role, variant = 'default', ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const Root = asChild ? Slot : 'div';
 
     return (
       <Root
         {...props}
-        role={role}
+        role={role ?? 'heading'}
         className={tx('card.heading', { variant }, [classNames, className])}
         ref={forwardedRef}
       >
@@ -280,15 +196,17 @@ const CardHeading = forwardRef<HTMLDivElement, CardHeadingProps>(
 type CardTextProps = CardSharedProps & { truncate?: boolean; variant?: 'default' | 'description' };
 
 const CardText = forwardRef<HTMLDivElement, CardTextProps>(
-  (
-    { children, classNames, className, asChild, role = 'none', truncate, variant = 'default', ...props },
-    forwardedRef,
-  ) => {
+  ({ children, classNames, className, asChild, role, truncate, variant = 'default', ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const Root = asChild ? Slot : 'div';
 
     return (
-      <Root {...props} role={role} className={tx('card.text', { variant }, [classNames, className])} ref={forwardedRef}>
+      <Root
+        {...props}
+        role={role ?? 'none'}
+        className={tx('card.text', { variant }, [classNames, className])}
+        ref={forwardedRef}
+      >
         <span className={tx('card.text-span', { variant, truncate })}>{children}</span>
       </Root>
     );
@@ -379,12 +297,12 @@ const CardIcon = ({ toolbar, ...props }: IconProps & { toolbar?: boolean }) => {
 const CardIconBlock = ({
   classNames,
   children,
-  role = 'none',
+  role,
   ...props
 }: ThemedClassName<PropsWithChildren<HTMLAttributes<HTMLDivElement>>>) => {
   const { tx } = useThemeContext();
   return (
-    <div {...props} role={role} className={tx('card.icon-block', {}, classNames)}>
+    <div {...props} role={role ?? 'none'} className={tx('card.icon-block', {}, classNames)}>
       {children}
     </div>
   );
@@ -400,11 +318,11 @@ export const Card = {
 
   // Toolbar
   Toolbar: CardToolbar,
-  ToolbarIconButton: CardToolbarIconButton,
-  ToolbarSeparator: CardToolbarSeparator,
-  DragHandle: CardDragHandle,
+  ToolbarIconButton: Toolbar.IconButton,
+  ToolbarSeparator: Toolbar.Separator,
+  DragHandle: Toolbar.DragHandle,
+  CloseIconButton: Toolbar.CloseIconButton,
   Title: CardTitle,
-  CloseIconButton: CardCloseIconButton,
   Menu: CardMenu,
   Icon: CardIcon,
   IconBlock: CardIconBlock,
