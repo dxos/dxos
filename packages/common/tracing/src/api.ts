@@ -5,7 +5,7 @@
 import { Context } from '@dxos/context';
 import { type MaybePromise } from '@dxos/util';
 
-import { getTracingContext } from './symbols';
+import { TRACE_SPAN_ATTRIBUTE, getTracingContext } from './symbols';
 import { TRACE_PROCESSOR, type TraceSpanProps, type TracingSpan } from './trace-processor';
 
 /**
@@ -82,9 +82,11 @@ const span =
 
     descriptor.value = async function (this: any, ...args: any) {
       const explicitCtx = args[0] instanceof Context ? args[0] : null;
+      const instanceCtx: Context | undefined = this[TRACE_SPAN_ATTRIBUTE];
+      const parentCtx = explicitCtx ?? instanceCtx ?? null;
 
       const span = TRACE_PROCESSOR.traceSpan({
-        parentCtx: explicitCtx,
+        parentCtx,
         methodName: propertyKey,
         instance: this,
         showInBrowserTimeline,
@@ -94,6 +96,9 @@ const span =
 
       const callArgs = explicitCtx ? [span.ctx, ...args.slice(1)] : args;
 
+      const prevCtx = this[TRACE_SPAN_ATTRIBUTE];
+      this[TRACE_SPAN_ATTRIBUTE] = span.ctx;
+
       return TRACE_PROCESSOR.remoteTracing.wrapExecution(span, async () => {
         try {
           return await method.apply(this, callArgs);
@@ -101,6 +106,7 @@ const span =
           span.markError(err);
           throw err;
         } finally {
+          this[TRACE_SPAN_ATTRIBUTE] = prevCtx;
           span.markSuccess();
         }
       });

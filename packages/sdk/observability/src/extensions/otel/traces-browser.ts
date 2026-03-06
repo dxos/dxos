@@ -47,7 +47,7 @@ export class OtelTraces {
   private _tracer: Tracer;
 
   constructor(private readonly options: OtelOptions) {
-    otelContext.setGlobalContextManager(new ZoneContextManager());
+    otelContext.setGlobalContextManager(new ZoneContextManager().enable());
     propagation.setGlobalPropagator(new W3CTraceContextPropagator());
 
     const forceTraceAll = typeof localStorage !== 'undefined' && localStorage.getItem('dxos.debug.traceAll') === 'true';
