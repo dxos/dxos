@@ -74,4 +74,4 @@ Examples:
   - Address all PR review comments (fix or explain why not) and post a reply to all comments
   - Update the PR description with a summary of the changes and the reasoning behind major changes.
   - Add any reference linear issues if available in PR description as "closes DX-123" or "part of DX-123"
-  - After the CI succeesd, remove the local worktree and branch.
+  - After the CI succeeds, remove the local worktree and branch.

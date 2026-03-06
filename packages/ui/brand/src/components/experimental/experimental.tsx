@@ -177,7 +177,6 @@ const createSlices = ({
 /**
  * Spinning Composer "C" logo.
  */
-// TODO(burdon): Configure stripes.
 export const ComposerSpinner: FC<{
   animate?: boolean;
   size?: number;
@@ -208,7 +207,6 @@ export const ComposerSpinner: FC<{
       .append('g')
       .attr('transform', `translate(${size / 2}, ${size / 2})`);
 
-    // TODO(burdon): Pass in.
     const arcs = createSlices({ radius: size / 2, gap, color });
 
     let count = 0;
@@ -222,14 +220,6 @@ export const ComposerSpinner: FC<{
           .attr('opacity', 0);
       }
     };
-
-    // const createArc = ({
-    //   innerRadius,
-    //   outerRadius,
-    //   startAngle = (1 / 4) * Math.PI,
-    //   endAngle = -(5 / 4) * Math.PI,
-    // }: Slice): ValueFn<SVGPathElement, DefaultArcObject, string | null> =>
-    //   arc().innerRadius(innerRadius).outerRadius(outerRadius).startAngle(startAngle).endAngle(endAngle);
 
     const trigger = arcs.map(
       ({

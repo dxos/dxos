@@ -215,41 +215,43 @@ const ToolbarSeparator = forwardRef<HTMLDivElement, ToolbarSeparatorProps>(
 // DragHandle
 //
 
-type ToolbarDragHandleProps = {};
+type ToolbarDragHandleProps = { testId?: string; label?: string };
 
-const ToolbarDragHandle = forwardRef<HTMLButtonElement, ToolbarDragHandleProps>((_, forwardedRef) => {
-  const { t } = useTranslation(osTranslations);
-  return (
-    <ToolbarIconButton
-      data-testid='card-drag-handle'
-      noTooltip
-      iconOnly
-      icon='ph--dots-six-vertical--regular'
-      variant='ghost'
-      label={t('drag handle label')}
-      classNames='cursor-pointer'
-      size={5}
-      disabled={!forwardedRef}
-      ref={forwardedRef}
-    />
-  );
-});
+const ToolbarDragHandle = forwardRef<HTMLButtonElement, ToolbarDragHandleProps>(
+  ({ testId = 'drag-handle', label }, forwardedRef) => {
+    const { t } = useTranslation(osTranslations);
+    return (
+      <ToolbarIconButton
+        data-testid={testId}
+        noTooltip
+        iconOnly
+        icon='ph--dots-six-vertical--regular'
+        variant='ghost'
+        label={label ?? t('drag handle label')}
+        classNames='cursor-pointer'
+        size={5}
+        disabled={!forwardedRef}
+        ref={forwardedRef}
+      />
+    );
+  },
+);
 
 //
 // CloseIconButton
 //
 
-type ToolbarCloseIconButtonProps = { onClick?: () => void };
+type ToolbarCloseIconButtonProps = { onClick?: () => void; label?: string };
 
 const ToolbarCloseIconButton = forwardRef<HTMLButtonElement, ToolbarCloseIconButtonProps>(
-  ({ onClick }, forwardedRef) => {
-    const { t } = useTranslation(osTranslations);
+  ({ onClick, label }, forwardedRef) => {
+    const { t } = useTranslation(translationKey);
     return (
       <ToolbarIconButton
         iconOnly
         icon='ph--x--regular'
         variant='ghost'
-        label={t('card close label')}
+        label={label ?? t('close label')}
         classNames='cursor-pointer'
         size={5}
         onClick={onClick}

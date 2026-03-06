@@ -254,8 +254,8 @@ export const Debug: Story = {
 
 export const Spec: Story = {
   args: {
-    columns: 2,
-    items: (column) => (column === 0 ? 5 : 0),
+    columns: 3,
+    items: (column) => (column < 2 ? 5 : 0),
   },
   play: async () => {
     const body = within(document.body);
