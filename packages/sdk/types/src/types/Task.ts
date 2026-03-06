@@ -5,6 +5,8 @@
 import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
+// eslint-disable-next-line unused-imports/no-unused-imports
+import { View as _View } from '@dxos/echo';
 import {
   Format,
   FormatAnnotation,
@@ -12,7 +14,6 @@ import {
   LabelAnnotation,
   PropertyMetaAnnotationId,
 } from '@dxos/echo/internal';
-// eslint-disable-next-line unused-imports/no-unused-imports
 
 import * as Person from './Person';
 import * as Pipeline from './Pipeline';
