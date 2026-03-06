@@ -250,31 +250,31 @@ export const BrandArcSimple: Story = {
  * horizontal-then-diagonal stepped edge at each open end, matching the
  * Composer brand icon geometry. Two 90° arcs avoid the 180° SVG ambiguity.
  */
-const makeBrandLayerPath = (cx: number, cy: number, R: number, r: number, botR: number, botR2: number): string => {
-  const frac = 0.29;
-  const topOuter = R * frac;
-  const topInner = r * frac;
-  const botOuter = botR2 * frac;
-  const botInner = botR * frac;
+const makeBrandLayerPath = (cx: number, cy: number, r1: number, r2: number, r3: number, r4: number): string => {
+  const frac = 0.3;
+  const topOuter = r1 * frac;
+  const topInner = r2 * frac;
+  const botOuter = r4 * frac;
+  const botInner = r3 * frac;
   return [
     // Start at outer top-right.
-    `M ${cx + topOuter} ${cy - R}`,
+    `M ${cx + topOuter} ${cy - r1}`,
     // Move left to 12-oclock.
-    `L ${cx} ${cy - R}`,
+    `L ${cx} ${cy - r1}`,
     // Outer arc CW: 12 → 9 → 6 o'clock (through the west side).
-    `A ${R} ${R} 0 0 0 ${cx - R} ${cy}`,
-    `A ${R} ${R} 0 0 0 ${cx} ${cy + R}`,
+    `A ${r1} ${r1} 0 0 0 ${cx - r1} ${cy}`,
+    `A ${r1} ${r1} 0 0 0 ${cx} ${cy + r1}`,
     // Bottom outer: extend right.
-    `L ${cx + botOuter} ${cy + R}`,
+    `L ${cx + botOuter} ${cy + r1}`,
     // Diagonal to inner bottom-right.
-    `L ${cx + botInner} ${cy + r}`,
+    `L ${cx + botInner} ${cy + r2}`,
     // Move left to inner 6-oclock.
-    `L ${cx} ${cy + r}`,
+    `L ${cx} ${cy + r2}`,
     // Inner arc CCW: 6 → 9 → 12 o'clock (back through the west side).
-    `A ${r} ${r} 0 0 1 ${cx - r} ${cy}`,
-    `A ${r} ${r} 0 0 1 ${cx} ${cy - r}`,
+    `A ${r2} ${r2} 0 0 1 ${cx - r2} ${cy}`,
+    `A ${r2} ${r2} 0 0 1 ${cx} ${cy - r2}`,
     // Top inner: extend right.
-    `L ${cx + topInner} ${cy - r}`,
+    `L ${cx + topInner} ${cy - r2}`,
     // Close: diagonal back to start.
     'Z',
   ].join(' ');
@@ -290,12 +290,11 @@ export const BrandArc: Story = {
     const gap = 0;
 
     return (
-      <div className='absolute inset-0 flex items-center justify-center'>
-        <svg width={size} height={size}>
+      <div className='absolute inset-0 grid place-items-center'>
+        <svg width={size} height={size} aria-hidden='true'>
           {composerBrandColors.map((color, i) => {
             const outerR = size / 2 - i * ringWidth;
             const innerR = outerR - ringWidth + gap;
-            // Bottom uses mirror ring's radii.
             const mirror = n - 1 - i;
             const mirrorOuterR = size / 2 - mirror * ringWidth;
             const mirrorInnerR = mirrorOuterR - ringWidth + gap;

@@ -186,5 +186,6 @@ export const Board = {
   Debug: BoardDebug,
 };
 
-export { useBoard };
 export type { BoardRootProps, BoardContentProps, BoardColumnProps, BoardItemProps };
+
+export { useBoard };

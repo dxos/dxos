@@ -32,7 +32,6 @@ export const translations = [
         'remove card label': 'Remove card',
         'remove empty column label': 'Remove empty column',
         'column drag handle label': 'Drag to rearrange',
-        'action menu label': 'Action menu',
         'delete column label': 'Delete column',
         'card field deleted label': 'Card field deleted',
         'card deleted label': 'Card deleted',

@@ -34,7 +34,7 @@ import { type DialogSize, osTranslations } from '@dxos/ui-theme';
 import { useThemeContext } from '../../hooks';
 import { Container } from '../../primitives';
 import { type ThemedClassName } from '../../util';
-import { IconButton, type IconButtonProps } from '../Button';
+import { IconButton } from '../Button';
 import { ElevationProvider } from '../ElevationProvider';
 
 //
@@ -150,6 +150,30 @@ const DialogHeader: ForwardRefExoticComponent<DialogTitleProps> = forwardRef<HTM
 );
 
 //
+// CloseIconButton
+//
+
+type DialogCloseIconButtonProps = { label?: string };
+
+const DialogCloseIconButton = forwardRef<HTMLButtonElement, DialogCloseIconButtonProps>(
+  ({ label, ...props }, forwardedRef) => {
+    const { t } = useTranslation(osTranslations);
+    return (
+      <IconButton
+        {...props}
+        label={label ?? t('close dialog label')}
+        icon='ph--x--regular'
+        iconOnly
+        size={4}
+        density='fine'
+        variant='ghost'
+        ref={forwardedRef}
+      />
+    );
+  },
+);
+
+//
 // Body
 //
 
@@ -232,31 +256,6 @@ type DialogCloseProps = DialogClosePrimitiveProps;
 const DialogClose: FunctionComponent<DialogCloseProps> = DialogClosePrimitive;
 
 //
-// Close Button
-//
-
-type DialogCloseIconButtonProps = ThemedClassName<Partial<IconButtonProps>>;
-
-const DialogCloseIconButton: ForwardRefExoticComponent<DialogCloseIconButtonProps> = forwardRef<
-  HTMLButtonElement,
-  DialogCloseIconButtonProps
->((props, forwardedRef) => {
-  const { t } = useTranslation(osTranslations);
-  return (
-    <IconButton
-      {...props}
-      label={props.label ?? t('close dialog label')}
-      icon='ph--x--regular'
-      iconOnly
-      size={4}
-      density='fine'
-      variant='ghost'
-      ref={forwardedRef}
-    />
-  );
-});
-
-//
 // Dialog
 //
 
@@ -287,5 +286,4 @@ export type {
   DialogDescriptionProps,
   DialogActionBarProps,
   DialogCloseProps,
-  DialogCloseIconButtonProps,
 };
