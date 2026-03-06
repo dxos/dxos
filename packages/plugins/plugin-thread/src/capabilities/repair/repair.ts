@@ -6,10 +6,9 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { Obj, Ref, Type } from '@dxos/echo';
-import { Collection } from '@dxos/echo';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { type Space } from '@dxos/react-client/echo';
-import { ManagedCollection } from '@dxos/schema';
+import { Collection } from '@dxos/schema';
 
 import { Channel } from '../../types';
 
@@ -39,16 +38,13 @@ const ensureSystemCollection = async (space: Space) => {
 
   const objects = await Promise.all(rootCollection.objects.map((ref) => ref.load()));
   const channels = objects.find(
-    (object) =>
-      Obj.instanceOf(ManagedCollection.ManagedCollection, object) && object.key === Type.getTypename(Channel.Channel),
+    (object) => Obj.instanceOf(Collection.Managed, object) && object.key === Type.getTypename(Channel.Channel),
   );
   if (channels) {
     return;
   }
 
-  const channelCollectionRef = Ref.make(
-    ManagedCollection.makeManagedCollection({ key: Type.getTypename(Channel.Channel) }),
-  );
+  const channelCollectionRef = Ref.make(Collection.makeManaged({ key: Type.getTypename(Channel.Channel) }));
   Obj.change(rootCollection, (c) => {
     c.objects.push(channelCollectionRef);
   });
