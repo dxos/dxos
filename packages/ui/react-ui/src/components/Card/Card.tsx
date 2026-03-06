@@ -313,7 +313,6 @@ const CardIconBlock = ({
 //
 
 export const Card = {
-  Context: CardContext,
   Root: CardRoot,
 
   // Toolbar

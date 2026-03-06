@@ -7,13 +7,13 @@ import * as Option from 'effect/Option';
 import React, { forwardRef, useMemo, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { type SurfaceComponentProps, useObjectMenuItems, useObjectNavigate } from '@dxos/app-toolkit/ui';
 import { type Project } from '@dxos/assistant-toolkit';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';
 import { useQuery } from '@dxos/react-client/echo';
-import { Container, ScrollArea } from '@dxos/react-ui';
-import { Card } from '@dxos/react-ui';
+import { Card, Container, ScrollArea, Toolbar } from '@dxos/react-ui';
+import { Menu } from '@dxos/react-ui-menu';
 import { Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { isNonNullable } from '@dxos/util';
 
@@ -77,19 +77,33 @@ export const ProjectArticle = ({ subject: project }: ProjectArticleProps) => {
 
 const StackTile = forwardRef<HTMLDivElement, MosaicTileProps<Obj.Unknown>>(
   ({ data, location, debug }, forwardedRef) => {
+    const objectMenuItems = useObjectMenuItems(data);
+    const handleNavigate = useObjectNavigate(data);
+
     return (
       <Mosaic.Tile asChild id={data.id} data={data} location={location} debug={debug}>
         <Focus.Group asChild>
-          <Card.Root ref={forwardedRef} data-testid='board-item'>
-            <Card.Toolbar>
-              <Card.IconBlock></Card.IconBlock>
-              <Card.Title>{Obj.getLabel(data)}</Card.Title>
-              <Card.Menu />
-            </Card.Toolbar>
-            <Card.Content>
-              <Surface.Surface role='card--content' limit={1} data={{ subject: data }} />
-            </Card.Content>
-          </Card.Root>
+          <Menu.Root>
+            <Card.Root ref={forwardedRef} data-testid='board-item'>
+              <Card.Toolbar>
+                <Card.IconBlock></Card.IconBlock>
+                <Card.Title onClick={handleNavigate}>{Obj.getLabel(data)}</Card.Title>
+                {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
+                <Menu.Trigger asChild disabled={!objectMenuItems?.length}>
+                  <Toolbar.IconButton
+                    iconOnly
+                    variant='ghost'
+                    icon='ph--dots-three-vertical--regular'
+                    label='Actions'
+                  />
+                </Menu.Trigger>
+                <Menu.Content items={objectMenuItems} />
+              </Card.Toolbar>
+              <Card.Content>
+                <Surface.Surface role='card--content' limit={1} data={{ subject: data }} />
+              </Card.Content>
+            </Card.Root>
+          </Menu.Root>
         </Focus.Group>
       </Mosaic.Tile>
     );
