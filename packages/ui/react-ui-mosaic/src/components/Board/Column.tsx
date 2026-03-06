@@ -44,11 +44,11 @@ const [BoardColumnProvider, useBoardColumnContext] = createContext<BoardColumnCo
   null,
 );
 
-/** Returns the current column when rendered inside a board column (e.g. in column header or item tile). */
-export const useBoardColumn = <TColumn = unknown,>(): TColumn | undefined => {
+/** Returns the current column when rendered inside a board column (e.g., in column header or item tile). */
+export function useBoardColumn<TColumn = unknown>(): TColumn | undefined {
   const value = useBoardColumnContext(BOARD_COLUMN_CONTEXT_NAME);
   return value?.column as TColumn | undefined;
-};
+}
 
 type BoardColumnProps<TColumn = any> = Pick<MosaicTileProps<TColumn>, 'classNames' | 'location' | 'data' | 'debug'>;
 
@@ -60,14 +60,16 @@ const BOARD_COLUMN_ROOT_NAME = 'Board.Column.Root';
 
 type BoardColumnRootProps<TColumn = any> = PropsWithChildren<BoardColumnProps<TColumn>> & {
   dragHandleRef?: RefObject<HTMLButtonElement | null>;
-  [key: string]: any; // TODO(burdon): Why?
 };
 
 const BoardColumnRootInner = forwardRef<HTMLDivElement, BoardColumnRootProps>(
   ({ classNames, children, location, data, debug, dragHandleRef: dragHandleRefProp, ...rest }, forwardedRef) => {
     const { model } = useBoard(BOARD_COLUMN_ROOT_NAME);
+
+    // TODO(burdon): Use merge ref hook (see react-hooks).
     const internalRef = useRef<HTMLButtonElement>(null);
     const dragHandleRef = dragHandleRefProp ?? internalRef;
+
     return (
       <Mosaic.Tile
         asChild
@@ -96,7 +98,7 @@ const BoardColumnRootInner = forwardRef<HTMLDivElement, BoardColumnRootProps>(
 
 BoardColumnRootInner.displayName = BOARD_COLUMN_ROOT_NAME;
 
-const BoardColumnRoot = BoardColumnRootInner as <TColumn = any>(
+const BoardColumnRoot = BoardColumnRootInner as <TColumn = unknown>(
   props: BoardColumnRootProps<TColumn> & { ref?: ReactRef<HTMLDivElement> },
 ) => ReactElement;
 
@@ -159,7 +161,6 @@ BoardColumnHeader.displayName = BOARD_COLUMN_HEADER_NAME;
 
 const BOARD_COLUMN_BODY_NAME = 'Board.Column.Body';
 
-// TODO(burdon): Remove requirement for 'data' property and set this in the root component.
 type BoardColumnBodyProps = Pick<BoardColumnProps, 'data'> &
   Pick<MosaicContainerProps, 'eventHandler' | 'debug'> & {
     Tile?: MosaicStackProps<Obj.Unknown>['Tile'];
