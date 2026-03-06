@@ -256,7 +256,7 @@ describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
       await openAndClose(peer.echoHost, peer.dataSpaceManager);
       await peer.echoHost.addReplicator(peer.meshEchoReplicator);
       if (spaceKey == null) {
-        const space = await peer.dataSpaceManager.createSpace();
+        const space = await peer.dataSpaceManager.createSpace(new Context());
         spaceKey = space.key;
       }
       const invitationHandler = new InvitationsHandler(peer.networkManager, undefined, {
@@ -359,7 +359,7 @@ describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
     };
 
     const createInvitation = async (setup: PeerSetup, options?: Partial<Invitation>): Promise<Invitation> => {
-      const observable = await setup.peer.invitationsManager.createInvitation({
+      const observable = await setup.peer.invitationsManager.createInvitation(new Context(), {
         type: Invitation.Type.DELEGATED,
         kind: Invitation.Kind.SPACE,
         authMethod: Invitation.AuthMethod.SHARED_SECRET,

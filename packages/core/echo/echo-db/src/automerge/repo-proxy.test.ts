@@ -95,7 +95,7 @@ describe('RepoProxy', () => {
     const handle2 = repo2.find<{ text: string }>(handle1.url!);
     await handle2.whenReady();
     expect(handle2.doc()?.text).to.equal(text);
-    await peer1.host.flush();
+    await peer1.host.flush(new Context());
 
     {
       // Change from another peer.
@@ -131,7 +131,7 @@ describe('RepoProxy', () => {
       });
 
       await clientRepo.flush();
-      await host.flush();
+      await host.flush(new Context());
       await clientRepo.close();
       await host.close();
       await level.close();

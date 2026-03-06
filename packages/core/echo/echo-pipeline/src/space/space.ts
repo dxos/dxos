@@ -177,7 +177,7 @@ export class Space extends Resource {
     log('opening...');
 
     // Order is important.
-    await this._controlPipeline.start();
+    await this._controlPipeline.start(ctx);
 
     log('opened');
   }

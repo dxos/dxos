@@ -399,7 +399,7 @@ export class ServiceContext extends Resource {
 
         try {
           log('accepting space recorded in halo', { details: assertion });
-          await this.dataSpaceManager.acceptSpace({
+          await this.dataSpaceManager.acceptSpace(new Context(), {
             spaceKey: assertion.spaceKey,
             genesisFeedKey: assertion.genesisFeedKey,
           });

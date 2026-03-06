@@ -343,7 +343,7 @@ export class SpaceProxy implements Space, CustomInspectable {
     if (isFirstTimeInitializing) {
       await this._initialize();
     } else if (isReopening) {
-      await this._initializeDb();
+      await this._initializeDb(new Context());
     } else if (shouldReset) {
       await this._reset();
     }
@@ -382,7 +382,7 @@ export class SpaceProxy implements Space, CustomInspectable {
     log('initializing...', { space: this.key });
     this._initializing = true;
     await this._invitationsProxy.open();
-    await this._initializeDb();
+    await this._initializeDb(new Context());
 
     this._initialized = true;
     this._initializing = false;
@@ -393,7 +393,7 @@ export class SpaceProxy implements Space, CustomInspectable {
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  private async _initializeDb(): Promise<void> {
+  private async _initializeDb(ctx: Context): Promise<void> {
     this._databaseOpen = true;
 
     {

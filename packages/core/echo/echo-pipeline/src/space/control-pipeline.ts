@@ -121,7 +121,7 @@ export class ControlPipeline {
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  async start(): Promise<void> {
+  async start(ctx: Context): Promise<void> {
     const snapshot = this._metadata.getSpaceControlPipelineSnapshot(this._spaceKey);
     log('load snapshot', { key: this._spaceKey, present: !!snapshot, tf: snapshot?.timeframe });
     if (USE_SNAPSHOTS && snapshot) {

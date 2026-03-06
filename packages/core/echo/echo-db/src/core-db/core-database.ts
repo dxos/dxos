@@ -926,12 +926,16 @@ export class CoreDatabase {
    * This happens for objects which were loaded for the first time (_onObjectDocumentLoaded).
    */
   private _objectsForNextUpdate = new Set<string>();
-  private readonly _updateScheduler = new UpdateScheduler(this._ctx, async () => this._emitDbUpdateEvents(), {
-    maxFrequency: THROTTLED_UPDATE_FREQUENCY,
-  });
+  private readonly _updateScheduler = new UpdateScheduler(
+    this._ctx,
+    async () => this._emitDbUpdateEvents(new Context()),
+    {
+      maxFrequency: THROTTLED_UPDATE_FREQUENCY,
+    },
+  );
 
   @trace.span({ showInBrowserTimeline: true })
-  private _emitDbUpdateEvents(): void {
+  private _emitDbUpdateEvents(ctx: Context): void {
     const fullUpdateIds = [...this._objectsForNextUpdate];
     const allDbUpdates = new Set([...this._objectsForNextUpdate, ...this._objectsForNextDbUpdate]);
     this._objectsForNextUpdate.clear();

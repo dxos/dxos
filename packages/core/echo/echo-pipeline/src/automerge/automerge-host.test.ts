@@ -26,7 +26,7 @@ describe('AutomergeHost', () => {
     handle.change((doc: any) => {
       doc.text = 'Hello world';
     });
-    await host.flush();
+    await host.flush(new Context());
     expect(handle.doc()!.text).toEqual('Hello world');
   });
 
@@ -39,14 +39,14 @@ describe('AutomergeHost', () => {
     });
     const url = handle.url;
 
-    await host.flush();
+    await host.flush(new Context());
     await host.close();
 
     const host2 = await setupAutomergeHost({ level });
     const handle2 = await host2.loadDoc<any>(Context.default(), url);
     await handle2.whenReady();
     expect(handle2.doc()!.text).toEqual('Hello world');
-    await host2.flush();
+    await host2.flush(new Context());
   });
 
   test('load resolves when document is created from binary', async () => {
@@ -76,7 +76,7 @@ describe('AutomergeHost', () => {
     const host = await setupAutomergeHost({ level });
     const handle = await host.createDoc({ text: 'Hello world' });
     const expectedHeads = getHeads(handle.doc()!);
-    await host.flush();
+    await host.flush(new Context());
 
     expect(await host.getHeads([handle.documentId])).toEqual([expectedHeads]);
     await host.close();
@@ -96,7 +96,7 @@ describe('AutomergeHost', () => {
     const host = await setupAutomergeHost({ level });
     const handles = await Promise.all(range(2, () => host.createDoc({ text: 'Hello world' })));
     const expectedHeads: (Heads | undefined)[] = handles.map((handle) => getHeads(handle.doc()!));
-    await host.flush();
+    await host.flush(new Context());
 
     const ids = handles.map((handle) => handle.documentId);
     ids.splice(1, 0, 'non-existent-id' as DocumentId);
@@ -130,7 +130,7 @@ describe('AutomergeHost', () => {
         const handle = await host2.createDoc({ docIndex: i });
         documentIds.push(handle.documentId);
       }
-      await host2.flush();
+      await host2.flush(new Context());
       await host2.close();
     }
 

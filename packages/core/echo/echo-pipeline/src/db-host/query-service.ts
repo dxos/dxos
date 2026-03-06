@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 
 import { DeferredTask, scheduleMicroTask, synchronized } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf/stream';
-import { type Context, Resource } from '@dxos/context';
+import { Context, Resource } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { QueryAST } from '@dxos/echo-protocol';
 import { type RuntimeProvider } from '@dxos/effect';
@@ -80,7 +80,7 @@ export class QueryServiceImpl extends Resource implements QueryService {
   }
 
   override async _open(): Promise<void> {
-    this._updateQueries = new DeferredTask(this._ctx, this._executeQueries.bind(this));
+    this._updateQueries = new DeferredTask(this._ctx, () => this._executeQueries(new Context()));
   }
 
   @synchronized
@@ -165,7 +165,7 @@ export class QueryServiceImpl extends Resource implements QueryService {
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  private async _executeQueries() {
+  private async _executeQueries(ctx: Context) {
     // TODO(dmaretskyi): How do we integrate this tracing info into the tracing API.
     const begin = performance.now();
     let count = 0;

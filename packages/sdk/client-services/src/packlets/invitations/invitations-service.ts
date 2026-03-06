@@ -3,6 +3,7 @@
 //
 
 import { Stream } from '@dxos/codec-protobuf/stream';
+import { Context } from '@dxos/context';
 import {
   type AcceptInvitationRequest,
   type AuthenticationRequest,
@@ -30,7 +31,7 @@ export class InvitationsServiceImpl implements InvitationsService {
   createInvitation(options: Invitation): Stream<Invitation> {
     return new Stream<Invitation>(({ next, close }) => {
       void this._invitationsManager
-        .createInvitation(options)
+        .createInvitation(new Context(), options)
         .then((invitation) => {
           trace.metrics.increment('dxos.invitation.created');
           invitation.subscribe(next, close, close);
