@@ -9,6 +9,7 @@ import { type QueryAST } from '@dxos/echo-protocol';
 
 import type * as Collection from './Collection';
 import * as Database from './Database';
+import type * as Dataset from './Dataset';
 import * as Feed from './Feed';
 import * as Filter from './Filter';
 import { getTypeDXNFromSpecifier } from './internal';
@@ -17,7 +18,6 @@ import type * as Order from './Order';
 import type * as Ref from './Ref';
 import type * as Type$ from './Type';
 import type * as View from './View';
-import type * as Dataset from './Dataset';
 
 // TODO(dmaretskyi): Split up into interfaces for objects and relations so they can have separate verbs.
 // TODO(dmaretskyi): Undirected relation traversals.
