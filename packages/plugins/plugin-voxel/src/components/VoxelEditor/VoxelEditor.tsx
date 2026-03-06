@@ -42,14 +42,36 @@ export type VoxelEditorProps = {
   onRemoveVoxel?: (position: { x: number; y: number; z: number }) => void;
 };
 
+type GhostPosition = [number, number, number] | null;
+
+/** Semi-transparent ghost cursor showing where a voxel will be placed. */
+const GhostCursor = ({ position, color }: { position: GhostPosition; color: number }) => {
+  if (!position) {
+    return null;
+  }
+
+  return (
+    <mesh position={position} raycast={() => {}}>
+      <boxGeometry args={[1, 1, 1]} />
+      <meshStandardMaterial color={color} transparent opacity={0.4} depthWrite={false} />
+      <lineSegments>
+        <edgesGeometry args={[new THREE.BoxGeometry(1, 1, 1)]} />
+        <lineBasicMaterial color={color} transparent opacity={0.8} />
+      </lineSegments>
+    </mesh>
+  );
+};
+
 type VoxelBlockProps = {
   position: [number, number, number];
   color: number;
   onClick: (event: ThreeEvent<MouseEvent>) => void;
+  onPointerMove?: (event: ThreeEvent<PointerEvent>) => void;
+  onPointerOut?: () => void;
 };
 
 /** Voxel block mesh. */
-const VoxelBlock = ({ position, color, onClick }: VoxelBlockProps) => {
+const VoxelBlock = ({ position, color, onClick, onPointerMove, onPointerOut }: VoxelBlockProps) => {
   const [hovered, setHovered] = useState(false);
 
   return (
@@ -60,7 +82,14 @@ const VoxelBlock = ({ position, color, onClick }: VoxelBlockProps) => {
         event.stopPropagation();
         setHovered(true);
       }}
-      onPointerOut={() => setHovered(false)}
+      onPointerOut={() => {
+        setHovered(false);
+        onPointerOut?.();
+      }}
+      onPointerMove={(event) => {
+        event.stopPropagation();
+        onPointerMove?.(event);
+      }}
     >
       <boxGeometry args={[1, 1, 1]} />
       <meshStandardMaterial color={hovered ? 0xaaaaaa : color} transparent={hovered} opacity={hovered ? 0.8 : 1} />
@@ -71,15 +100,19 @@ const VoxelBlock = ({ position, color, onClick }: VoxelBlockProps) => {
 type GroundPlaneProps = {
   gridSize: number;
   onClick: (event: ThreeEvent<MouseEvent>) => void;
+  onPointerMove?: (event: ThreeEvent<PointerEvent>) => void;
+  onPointerOut?: () => void;
 };
 
 /** Ground plane that accepts clicks to place voxels. */
-const GroundPlane = ({ gridSize, onClick }: GroundPlaneProps) => {
+const GroundPlane = ({ gridSize, onClick, onPointerMove, onPointerOut }: GroundPlaneProps) => {
   return (
     <mesh
       rotation={[-Math.PI / 2, 0, 0]}
       position={[gridSize / 2 - 0.5, -0.5, gridSize / 2 - 0.5]}
       onClick={onClick}
+      onPointerMove={onPointerMove}
+      onPointerOut={onPointerOut}
       receiveShadow
     >
       <planeGeometry args={[gridSize, gridSize]} />
@@ -98,6 +131,8 @@ type VoxelSceneProps = {
 
 /** 3D scene containing the voxel world. */
 const VoxelScene = ({ voxels, gridSize, selectedColor, onAddVoxel, onRemoveVoxel }: VoxelSceneProps) => {
+  const [ghostPosition, setGhostPosition] = useState<GhostPosition>(null);
+
   const handleVoxelClick = useCallback(
     (event: ThreeEvent<MouseEvent>) => {
       event.stopPropagation();
@@ -122,6 +157,20 @@ const VoxelScene = ({ voxels, gridSize, selectedColor, onAddVoxel, onRemoveVoxel
     [onAddVoxel, onRemoveVoxel, selectedColor],
   );
 
+  const handleVoxelPointerMove = useCallback((event: ThreeEvent<PointerEvent>) => {
+    if (event.shiftKey || !event.face) {
+      setGhostPosition(null);
+      return;
+    }
+    const normal = event.face.normal;
+    const pos = event.object.position;
+    setGhostPosition([
+      Math.round(pos.x + normal.x),
+      Math.round(pos.y + normal.y),
+      Math.round(pos.z + normal.z),
+    ]);
+  }, []);
+
   const handleGroundClick = useCallback(
     (event: ThreeEvent<MouseEvent>) => {
       event.stopPropagation();
@@ -140,13 +189,28 @@ const VoxelScene = ({ voxels, gridSize, selectedColor, onAddVoxel, onRemoveVoxel
     [onAddVoxel, selectedColor],
   );
 
+  const handleGroundPointerMove = useCallback((event: ThreeEvent<PointerEvent>) => {
+    if (event.shiftKey || !event.point) {
+      setGhostPosition(null);
+      return;
+    }
+    setGhostPosition([Math.round(event.point.x), 0, Math.round(event.point.z)]);
+  }, []);
+
+  const clearGhost = useCallback(() => setGhostPosition(null), []);
+
   return (
     <>
       <ambientLight intensity={0.6} />
       <directionalLight position={[10, 20, 10]} intensity={0.8} castShadow />
       <pointLight position={[-10, 10, -10]} intensity={0.3} />
 
-      <GroundPlane gridSize={gridSize} onClick={handleGroundClick} />
+      <GroundPlane
+        gridSize={gridSize}
+        onClick={handleGroundClick}
+        onPointerMove={handleGroundPointerMove}
+        onPointerOut={clearGhost}
+      />
       <gridHelper args={[gridSize, gridSize]} position={[gridSize / 2 - 0.5, -0.5, gridSize / 2 - 0.5]} />
 
       {voxels.map((voxel, index) => (
@@ -155,8 +219,12 @@ const VoxelScene = ({ voxels, gridSize, selectedColor, onAddVoxel, onRemoveVoxel
           position={[voxel.x, voxel.y, voxel.z]}
           color={voxel.color}
           onClick={handleVoxelClick}
+          onPointerMove={handleVoxelPointerMove}
+          onPointerOut={clearGhost}
         />
       ))}
+
+      <GhostCursor position={ghostPosition} color={selectedColor} />
 
       <OrbitControls
         makeDefault
