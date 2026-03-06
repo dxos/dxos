@@ -45,14 +45,16 @@ const BOARD_COLUMN_ROOT_NAME = 'Board.Column.Root';
 
 type BoardColumnRootProps<TColumn = any> = PropsWithChildren<BoardColumnProps<TColumn>> & {
   dragHandleRef?: RefObject<HTMLButtonElement | null>;
-  [key: string]: any; // TODO(burdon): Why?
 };
 
 const BoardColumnRootInner = forwardRef<HTMLDivElement, BoardColumnRootProps>(
   ({ classNames, children, location, data, debug, dragHandleRef: dragHandleRefProp, ...rest }, forwardedRef) => {
     const { model } = useBoard(BOARD_COLUMN_ROOT_NAME);
+
+    // TODO(burdon): Use merge ref hook (see react-hooks).
     const internalRef = useRef<HTMLButtonElement>(null);
     const dragHandleRef = dragHandleRefProp ?? internalRef;
+
     return (
       <Mosaic.Tile
         asChild
@@ -91,10 +93,27 @@ const BoardColumnRoot = BoardColumnRootInner as <TColumn = any>(
 
 const BOARD_COLUMN_HEADER_NAME = 'Board.Column.Header';
 
-type BoardColumnHeaderProps = ThemedClassName<{ label: string; dragHandleRef: ReactRef<HTMLButtonElement> }>;
+type BoardColumnHeaderProps = Pick<BoardColumnProps, 'data'> &
+  ThemedClassName<{ label: string; dragHandleRef: ReactRef<HTMLButtonElement> }>;
 
 const BoardColumnHeader = forwardRef<HTMLDivElement, BoardColumnHeaderProps>(
-  ({ classNames, label, dragHandleRef }, forwardedRef) => {
+  ({ classNames, data, label, dragHandleRef }, forwardedRef) => {
+    const { t } = useTranslation(translationKey);
+    const { model } = useBoard(BOARD_COLUMN_BODY_NAME);
+
+    const menuItems = useMemo<NonNullable<CardMenuProps<Obj.Unknown>['items']>>(
+      () =>
+        [
+          model.onItemDelete && {
+            label: t('delete menu label'),
+            onClick: (obj: Obj.Unknown) => {
+              model.onItemDelete?.(data, obj);
+            },
+          },
+        ].filter(isNonNullable),
+      [model.onItemDelete, data, t],
+    );
+
     return (
       <Toolbar.Root
         classNames={mx('border-b border-separator', classNames)}
@@ -103,7 +122,7 @@ const BoardColumnHeader = forwardRef<HTMLDivElement, BoardColumnHeaderProps>(
       >
         <Toolbar.DragHandle ref={dragHandleRef} />
         <Toolbar.Text>{label}</Toolbar.Text>
-        <Toolbar.Menu items={[]} />
+        <Toolbar.Menu items={menuItems} />
       </Toolbar.Root>
     );
   },
@@ -117,32 +136,15 @@ BoardColumnHeader.displayName = BOARD_COLUMN_HEADER_NAME;
 
 const BOARD_COLUMN_BODY_NAME = 'Board.Column.Body';
 
-// TODO(burdon): Remove requirement for 'data' property and set this in the root component.
 type BoardColumnBodyProps = Pick<BoardColumnProps, 'data'> &
   Pick<MosaicContainerProps, 'eventHandler' | 'debug'> & {
     Tile?: MosaicStackProps<Obj.Unknown>['Tile'];
   };
 
 const BoardColumnBody = ({ data, eventHandler, Tile = BoardItem, debug }: BoardColumnBodyProps) => {
-  const { t } = useTranslation(translationKey);
   const { model } = useBoard(BOARD_COLUMN_BODY_NAME);
   const [viewport, setViewport] = useState<HTMLElement | null>(null);
   const items = useAtomValue(model.items(data));
-
-  // TODO(burdon): Add to menu context.
-  // Context menu for items.
-  const menuItems = useMemo<NonNullable<CardMenuProps<Obj.Unknown>['items']>>(
-    () =>
-      [
-        model.onItemDelete && {
-          label: t('delete menu label'),
-          onClick: (obj: Obj.Unknown) => {
-            model.onItemDelete?.(data, obj);
-          },
-        },
-      ].filter(isNonNullable),
-    [model.onItemDelete, data, t],
-  );
 
   return (
     <Mosaic.Container
