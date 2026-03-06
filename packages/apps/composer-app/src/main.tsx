@@ -20,7 +20,7 @@ import { runAndForwardErrors } from '@dxos/effect';
 import { LogLevel, log } from '@dxos/log';
 import { Observability } from '@dxos/observability';
 import { ThemeProvider, Tooltip } from '@dxos/react-ui';
-import { TRACE_PROCESSOR } from '@dxos/tracing';
+import { TRACE_SPAN_ATTRIBUTE, trace, TRACE_PROCESSOR } from '@dxos/tracing';
 import { defaultTx } from '@dxos/ui-theme';
 import { getHostPlatform, isMobile as isMobile$, isTauri as isTauri$ } from '@dxos/util';
 
@@ -31,6 +31,67 @@ import { APP_KEY } from './constants';
 import { type PluginConfig, getCore, getDefaults, getPlugins } from './plugin-defs';
 import { translations } from './translations';
 import { defaultStorageIsEmpty, isFalse, isTrue } from './util';
+
+/** Instrumented instance — has @trace.span() decorators. */
+@trace.resource()
+class ServiceA {
+  @trace.span({ op: 'test' })
+  async handleRequest() {
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    const bridge = new Bridge();
+    await bridge.forward(this);
+  }
+}
+
+/** Uninstrumented intermediary — no decorators, just passes calls through. */
+class Bridge {
+  async forward(caller: any) {
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    const downstream = new ServiceB();
+    await downstream.process((caller as any)[TRACE_SPAN_ATTRIBUTE]);
+  }
+}
+
+/** Instrumented downstream — receives trace context explicitly. */
+@trace.resource()
+class ServiceB {
+  @trace.span({ op: 'test' })
+  async process(ctx?: any) {
+    await new Promise((resolve) => setTimeout(resolve, 15));
+    await this.finalStep();
+  }
+
+  @trace.span({ op: 'test' })
+  async finalStep() {
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  }
+}
+
+/** Same-instance async chain test. */
+@trace.resource()
+class TracingTest {
+  @trace.span({ op: 'test' })
+  async rootOperation() {
+    await this.childA();
+    await this.childB();
+  }
+
+  @trace.span({ op: 'test' })
+  async childA() {
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    await this.grandchild();
+  }
+
+  @trace.span({ op: 'test' })
+  async childB() {
+    await new Promise((resolve) => setTimeout(resolve, 20));
+  }
+
+  @trace.span({ op: 'test' })
+  async grandchild() {
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  }
+}
 
 const main = async () => {
   const url = new URL(window.location.href);
@@ -82,6 +143,10 @@ const main = async () => {
 
   // Intentionally do not await; i.e., don't block app startup for telemetry.
   const observability = initializeObservability(config, isTauri);
+  void observability.then(async () => {
+    await new TracingTest().rootOperation();
+    await new ServiceA().handleRequest();
+  });
   const observabilityDisabled = await Observability.isObservabilityDisabled(APP_KEY);
   const observabilityGroup = await Observability.getObservabilityGroup(APP_KEY);
 

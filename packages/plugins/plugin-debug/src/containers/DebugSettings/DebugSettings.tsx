@@ -2,13 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { type ConfigProto, SaveConfig, Storage, defs } from '@dxos/config';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
+import { useIdentity } from '@dxos/react-client/halo';
 import { Icon, IconButton, Input, Select, Toast, useFileDownload, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
 import { setDeep } from '@dxos/util';
@@ -35,10 +36,19 @@ export const DebugSettings = ({ settings, onSettingsChange }: DebugSettingsCompo
   const { t } = useTranslation(meta.id);
   const [toast, setToast] = useState<Toast>();
   const client = useClient();
+  const identity = useIdentity();
   const download = useFileDownload();
   // TODO(mykola): Get updates from other places that change Config.
   const [storageConfig, setStorageConfig] = useState<ConfigProto>({});
   const [upload] = useCapabilities(AppCapabilities.FileUploader);
+
+  const signozUrl = useMemo(() => {
+    const baseUrl = client.config.values.runtime?.app?.env?.DX_SIGNOZ_URL;
+    if (!baseUrl || !identity?.did) {
+      return undefined;
+    }
+    return `${baseUrl}/traces-explorer?selectedTags=%5B%7B%22key%22%3A%7B%22key%22%3A%22did%22%7D%2C%22op%22%3A%22IN%22%2C%22value%22%3A%5B%22${identity.did}%22%5D%7D%5D`;
+  }, [client.config, identity?.did]);
 
   useEffect(() => {
     void Storage().then((config) => setStorageConfig(config));
@@ -122,6 +132,25 @@ export const DebugSettings = ({ settings, onSettingsChange }: DebugSettingsCompo
               onClick={handleRepair}
             />
           </Settings.ItemInput>
+          <Settings.ItemInput title={t('settings trace all')}>
+            <Input.Switch
+              checked={settings.traceAll}
+              onCheckedChange={(checked) => {
+                onSettingsChange((s) => ({ ...s, traceAll: !!checked }));
+                localStorage.setItem('dxos.debug.traceAll', checked ? 'true' : 'false');
+              }}
+            />
+          </Settings.ItemInput>
+          {signozUrl && (
+            <Settings.ItemInput title={t('settings signoz traces')}>
+              <IconButton
+                icon='ph--chart-line--regular'
+                iconOnly
+                label={t('settings signoz traces')}
+                onClick={() => window.open(signozUrl, '_blank')}
+              />
+            </Settings.ItemInput>
+          )}
 
           {/* TODO(burdon): Move to layout? */}
           {toast && (

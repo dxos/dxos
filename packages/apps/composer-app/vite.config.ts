@@ -9,7 +9,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sourcemaps from 'rollup-plugin-sourcemaps';
 import { visualizer } from 'rollup-plugin-visualizer';
-import { defineConfig, searchForWorkspaceRoot, type ConfigEnv, type Plugin, type PluginOption } from 'vite';
+import { defineConfig, loadEnv, searchForWorkspaceRoot, type ConfigEnv, type Plugin, type PluginOption } from 'vite';
 import devtoolsJson from 'vite-plugin-devtools-json';
 import inspect from 'vite-plugin-inspect';
 import { VitePWA } from 'vite-plugin-pwa';
@@ -59,7 +59,11 @@ const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
 /**
  * https://vitejs.dev/config
  */
-export default defineConfig((env) => ({
+export default defineConfig((env) => {
+  // Load DX_* env vars from .env before plugins (ConfigPlugin reads process.env in config hook).
+  Object.assign(process.env, loadEnv(env.mode, dirname, 'DX_'));
+
+  return {
   root: dirname,
   server: {
     host: true,
@@ -364,7 +368,8 @@ export default defineConfig((env) => ({
     .flat(), // Plugins
 
   ...createTestConfig({ dirname, node: true, storybook: true }),
-}));
+  };
+});
 
 /**
  * Generate nicer chunk names.

@@ -21,6 +21,7 @@ import {
   Invitation,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { trace } from '@dxos/tracing';
 
 import type { InvitationProtocol } from './invitation-protocol';
 import { type InvitationsHandler, createAdmissionKeypair } from './invitations-handler';
@@ -29,6 +30,7 @@ import { type InvitationsHandler, createAdmissionKeypair } from './invitations-h
  * Entry point for creating and accepting invitations, keeps track of existing invitation set and
  * emits events when the set changes.
  */
+@trace.resource()
 export class InvitationsManager {
   private readonly _createInvitations = new Map<string, CancellableInvitation>();
   private readonly _acceptInvitations = new Map<string, AuthenticatingInvitation>();
@@ -48,6 +50,7 @@ export class InvitationsManager {
     private readonly _metadataStore: MetadataStore,
   ) {}
 
+  @trace.span({ showInBrowserTimeline: true })
   async createInvitation(options: Partial<Invitation> & Pick<Invitation, 'kind'>): Promise<CancellableInvitation> {
     if (options.invitationId) {
       const existingInvitation = this._createInvitations.get(options.invitationId);
