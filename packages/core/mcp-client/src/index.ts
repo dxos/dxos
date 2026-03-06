@@ -2,4 +2,5 @@
 // Copyright 2026 DXOS.org
 //
 
-export {};
+export { make } from './McpToolkit';
+export type { McpToolkitOptions } from './McpToolkit';

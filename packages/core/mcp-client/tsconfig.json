@@ -1,6 +1,22 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {},
-  "include": ["src", "src/**/*.json"],
-  "references": [],
+  "include": [
+    "src",
+    "src/**/*.json"
+  ],
+  "references": [
+    {
+      "path": "../../common/effect"
+    },
+    {
+      "path": "../../common/invariant"
+    },
+    {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../ai"
+    }
+  ]
 }
