@@ -9,7 +9,7 @@ import { Graph, Node } from '@dxos/app-graph';
 import { faker } from '@dxos/random';
 
 import { type ActionGraphProps } from '../hooks/useMenuActions';
-import { type MenuItem, type MenuItemGroup } from '../types';
+import { type MenuItem, type MenuItemGroup, type MenuItemsAccessor } from '../types';
 
 export type CreateActionsProps = Partial<{
   type?: typeof Node.ActionType | typeof Node.ActionGroupType;
@@ -84,9 +84,9 @@ export const createNestedActionsResolver = (groupParams?: CreateActionsProps, pa
       Graph.expand(group.id, 'child'),
     );
   });
-  const resolveGroupItems = (groupNode?: MenuItemGroup) =>
-    (Graph.getActions(graph, groupNode?.id ?? Node.RootId) || null) as MenuItem[] | null;
-  return { resolveGroupItems };
+  const items: MenuItemsAccessor = (group?: MenuItemGroup) =>
+    graph.connections(group?.id ?? Node.RootId, 'child') as Atom.Atom<MenuItem[] | null>;
+  return { items };
 };
 
 /**

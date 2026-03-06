@@ -81,6 +81,7 @@ export const os = (appName?: string) => ({
   'continue label': 'Continue',
   'back label': 'Back',
   'next label': 'Next',
+  'open label': 'Open',
   'close label': 'Close',
   'auth choices label': 'Choose an identity',
   'create identity label': 'Create an identity',
