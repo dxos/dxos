@@ -3,14 +3,13 @@
 //
 
 import type * as LanguageModel from '@effect/ai/LanguageModel';
+import * as AnthropicClient from '@effect/ai-anthropic/AnthropicClient';
 import * as AnthropicLanguageModel from '@effect/ai-anthropic/AnthropicLanguageModel';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import * as AiModelResolver from '../../AiModelResolver';
-import { type ModelName } from '../../defs';
 import { AiModelNotAvailableError } from '../../errors';
-import { AnthropicClient } from '@effect/ai-anthropic';
 
 export const make = () =>
   AiModelResolver.AiModelResolver.resolver(
