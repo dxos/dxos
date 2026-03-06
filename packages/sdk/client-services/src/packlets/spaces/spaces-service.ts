@@ -70,7 +70,7 @@ export class SpacesServiceImpl implements SpacesService {
   async createSpace(): Promise<Space> {
     this._requireIdentity();
     const dataSpaceManager = await this._getDataSpaceManager();
-    const space = await dataSpaceManager.createSpace(new Context());
+    const space = await dataSpaceManager.createSpace(Context.default());
     await this._updateMetrics();
     return this._serializeSpace(space);
   }
@@ -292,7 +292,7 @@ export class SpacesServiceImpl implements SpacesService {
     const dataSpaceManager = await this._getDataSpaceManager();
     const extracted = await extractSpaceArchive(request.archive);
     invariant(extracted.metadata.echo?.currentRootUrl, 'Space archive does not contain a root URL');
-    const space = await dataSpaceManager.createSpace(new Context(), {
+    const space = await dataSpaceManager.createSpace(Context.default(), {
       documents: extracted.documents,
       rootUrl: extracted.metadata.echo?.currentRootUrl as AutomergeUrl,
     });
@@ -309,7 +309,7 @@ export class SpacesServiceImpl implements SpacesService {
     const dataSpaceManager = await this._getDataSpaceManager();
     let dataSpace = dataSpaceManager.spaces.get(assertion.spaceKey);
     if (!dataSpace) {
-      dataSpace = await dataSpaceManager.acceptSpace(new Context(), {
+      dataSpace = await dataSpaceManager.acceptSpace(Context.default(), {
         spaceKey: assertion.spaceKey,
         genesisFeedKey: assertion.genesisFeedKey,
       });

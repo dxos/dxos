@@ -256,14 +256,14 @@ describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
       await openAndClose(peer.echoHost, peer.dataSpaceManager);
       await peer.echoHost.addReplicator(peer.meshEchoReplicator);
       if (spaceKey == null) {
-        const space = await peer.dataSpaceManager.createSpace(new Context());
+        const space = await peer.dataSpaceManager.createSpace(Context.default());
         spaceKey = space.key;
       }
       const invitationHandler = new InvitationsHandler(peer.networkManager, undefined, {
         teleport: { controlHeartbeatInterval: 250 }, // faster peer failure detection
       });
       const protocol = new SpaceInvitationProtocol(peer.dataSpaceManager, peer.identity, peer.keyring, spaceKey);
-      const ctx = new Context();
+      const ctx = Context.default();
       onTestFinished(async () => {
         await ctx.dispose();
       });
@@ -273,7 +273,7 @@ describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
 
     const hostInvitation = async (setup: PeerSetup, invitation: Invitation) => {
       await setup.ctx.dispose();
-      setup.ctx = new Context();
+      setup.ctx = Context.default();
       onTestFinished(async () => {
         await setup.ctx.dispose();
       });
@@ -282,7 +282,7 @@ describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
 
     const acceptInvitation = async (setup: PeerSetup, invitation: Invitation): Promise<Trigger<string>> => {
       await setup.ctx.dispose();
-      setup.ctx = new Context();
+      setup.ctx = Context.default();
       onTestFinished(async () => {
         await setup.ctx.dispose();
       });
@@ -359,7 +359,7 @@ describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
     };
 
     const createInvitation = async (setup: PeerSetup, options?: Partial<Invitation>): Promise<Invitation> => {
-      const observable = await setup.peer.invitationsManager.createInvitation(new Context(), {
+      const observable = await setup.peer.invitationsManager.createInvitation(Context.default(), {
         type: Invitation.Type.DELEGATED,
         kind: Invitation.Kind.SPACE,
         authMethod: Invitation.AuthMethod.SHARED_SECRET,

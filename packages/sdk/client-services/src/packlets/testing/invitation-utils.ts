@@ -230,7 +230,7 @@ export const createInvitation = async (
   };
 
   if (host instanceof ServiceContext) {
-    return host.invitationsManager.createInvitation(new Context(), {
+    return host.invitationsManager.createInvitation(Context.default(), {
       kind: Invitation.Kind.SPACE,
       ...options,
     });

@@ -98,7 +98,7 @@ export class CoreDatabase {
 
   private _state = CoreDatabaseState.CLOSED;
 
-  private _ctx = new Context();
+  private _ctx = Context.default();
 
   // TODO(dmaretskyi): Refactor this.
   public readonly opened = new Trigger();
@@ -204,7 +204,7 @@ export class CoreDatabase {
     this.opened.reset();
 
     await this._ctx.dispose();
-    this._ctx = new Context();
+    this._ctx = Context.default();
 
     await this._repoProxy.close();
   }
@@ -928,7 +928,7 @@ export class CoreDatabase {
   private _objectsForNextUpdate = new Set<string>();
   private readonly _updateScheduler = new UpdateScheduler(
     this._ctx,
-    async () => this._emitDbUpdateEvents(new Context()),
+    async () => this._emitDbUpdateEvents(Context.default()),
     {
       maxFrequency: THROTTLED_UPDATE_FREQUENCY,
     },

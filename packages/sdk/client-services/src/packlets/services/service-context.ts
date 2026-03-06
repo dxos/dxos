@@ -292,7 +292,7 @@ export class ServiceContext extends Resource {
     const identity = await this.identityManager.createIdentity(params);
     await this._setNetworkIdentity();
     await identity.joinNetwork();
-    await this._initialize(new Context());
+    await this._initialize(Context.default());
     return identity;
   }
 
@@ -320,7 +320,7 @@ export class ServiceContext extends Resource {
     await this._setNetworkIdentity({ deviceCredential: params.authorizedDeviceCredential! });
     await identity.joinNetwork();
     await this.identityManager.acceptIdentity(identity, identityRecord, params.deviceProfile);
-    await this._initialize(new Context());
+    await this._initialize(Context.default());
     return identity;
   }
 
@@ -399,7 +399,7 @@ export class ServiceContext extends Resource {
 
         try {
           log('accepting space recorded in halo', { details: assertion });
-          await this.dataSpaceManager.acceptSpace(new Context(), {
+          await this.dataSpaceManager.acceptSpace(Context.default(), {
             spaceKey: assertion.spaceKey,
             genesisFeedKey: assertion.genesisFeedKey,
           });

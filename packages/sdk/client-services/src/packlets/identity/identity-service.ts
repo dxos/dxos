@@ -153,7 +153,7 @@ export class IdentityServiceImpl extends Resource implements IdentityService {
       dataSpaceManager.spaces.values(),
       async (space) => {
         if (space.state === SpaceState.SPACE_CLOSED) {
-          const ctx = new Context();
+          const ctx = Context.default();
           await space.open(ctx);
 
           // Wait until the space is either READY or REQUIRES_MIGRATION.

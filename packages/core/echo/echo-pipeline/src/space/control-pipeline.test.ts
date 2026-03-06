@@ -61,7 +61,7 @@ describe('space/control-pipeline', () => {
     expect(admittedFeeds).toEqual([]);
 
     await controlPipeline.setWriteFeed(genesisFeed);
-    await controlPipeline.start(new Context());
+    await controlPipeline.start(Context.default());
 
     onTestFinished(() => controlPipeline.stop());
 

@@ -44,7 +44,7 @@ const USE_SNAPSHOTS = true;
 @trace.resource()
 @trackLeaks('start', 'stop')
 export class ControlPipeline {
-  private readonly _ctx = new Context();
+  private readonly _ctx = Context.default();
   private readonly _pipeline: Pipeline;
   private readonly _spaceStateMachine: SpaceStateMachine;
 
@@ -130,7 +130,7 @@ export class ControlPipeline {
 
     log('starting...');
     setTimeout(async () => {
-      void this._consumePipeline(new Context());
+      void this._consumePipeline(Context.default());
     });
 
     await this._pipeline.start();

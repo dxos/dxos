@@ -183,7 +183,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     }
 
     // Create local space.
-    await this._spaceManager.acceptSpace(new Context(), {
+    await this._spaceManager.acceptSpace(Context.default(), {
       spaceKey: assertion.spaceKey,
       genesisFeedKey: assertion.genesisFeedKey,
       controlTimeframe,

@@ -97,7 +97,7 @@ export type CreateEpochOptions = {
 @trackLeaks('open', 'close')
 @trace.resource()
 export class DataSpace {
-  private _ctx = new Context();
+  private _ctx = Context.default();
   @trace.info()
   private readonly _inner: Space;
 
@@ -276,7 +276,7 @@ export class DataSpace {
     this._state = SpaceState.SPACE_CLOSED;
     log('new state', { state: SpaceState[this._state] });
     await this._ctx.dispose();
-    this._ctx = new Context();
+    this._ctx = Context.default();
 
     if (this._edgeFeedReplicator) {
       this.inner.protocol.feedAdded.remove(this._onFeedAdded);
@@ -311,7 +311,7 @@ export class DataSpace {
     scheduleTask(this._ctx, async () => {
       try {
         this.metrics.pipelineInitBegin = new Date();
-        await this.initializeDataPipeline(new Context());
+        await this.initializeDataPipeline(Context.default());
       } catch (err) {
         if (err instanceof CancelledError || err instanceof ContextDisposedError) {
           log('data pipeline initialization cancelled', err);
@@ -581,7 +581,7 @@ export class DataSpace {
     }
 
     await this._metadataStore.setSpaceState(this.key, SpaceState.SPACE_ACTIVE);
-    await this._open(new Context());
+    await this._open(Context.default());
     this.initializeDataPipelineAsync();
   }
 
@@ -593,7 +593,7 @@ export class DataSpace {
     // Unregister from data service.
     await this._metadataStore.setSpaceState(this.key, SpaceState.SPACE_INACTIVE);
     if (this._state !== SpaceState.SPACE_CLOSED) {
-      await this._close(new Context());
+      await this._close(Context.default());
     }
     this._state = SpaceState.SPACE_INACTIVE;
     log('new state', { state: SpaceState[this._state] });

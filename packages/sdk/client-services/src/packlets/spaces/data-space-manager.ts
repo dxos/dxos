@@ -254,7 +254,7 @@ export class DataSpaceManager extends Resource {
   protected override async _close(): Promise<void> {
     log('close');
     for (const space of this._spaces.values()) {
-      await space.close(new Context());
+      await space.close(Context.default());
     }
     this._spaces.clear();
   }
@@ -379,7 +379,7 @@ export class DataSpaceManager extends Resource {
   }
 
   async createDefaultSpace(): Promise<DataSpace> {
-    const space = await this.createSpace(new Context());
+    const space = await this.createSpace(Context.default());
     const document = await this._getSpaceRootDocument(space);
 
     // TODO(dmaretskyi): Better API for low-level data access.
@@ -400,7 +400,7 @@ export class DataSpaceManager extends Resource {
       setDeep(doc, ['objects', propertiesId], properties);
     });
 
-    await this._echoHost.flush(new Context());
+    await this._echoHost.flush(Context.default());
     return space;
   }
 
@@ -711,7 +711,7 @@ export class DataSpaceManager extends Resource {
     invitations: Array<[PublicKey, DelegateSpaceInvitation]>,
   ): Promise<void> {
     const tasks = invitations.map(([credentialId, invitation]) => {
-      return this._invitationsManager.createInvitation(new Context(), {
+      return this._invitationsManager.createInvitation(Context.default(), {
         type: Invitation.Type.DELEGATED,
         kind: Invitation.Kind.SPACE,
         spaceKey: space.key,

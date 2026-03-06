@@ -31,7 +31,7 @@ export class InvitationsServiceImpl implements InvitationsService {
   createInvitation(options: Invitation): Stream<Invitation> {
     return new Stream<Invitation>(({ next, close }) => {
       void this._invitationsManager
-        .createInvitation(new Context(), options)
+        .createInvitation(Context.default(), options)
         .then((invitation) => {
           trace.metrics.increment('dxos.invitation.created');
           invitation.subscribe(next, close, close);

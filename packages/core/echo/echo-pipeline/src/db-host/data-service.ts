@@ -105,7 +105,7 @@ export class DataServiceImpl implements DataService {
   }
 
   async flush(request: FlushRequest): Promise<void> {
-    await this._automergeHost.flush(new Context(), request);
+    await this._automergeHost.flush(Context.default(), request);
   }
 
   async getDocumentHeads(request: GetDocumentHeadsRequest): Promise<GetDocumentHeadsResponse> {

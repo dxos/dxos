@@ -24,13 +24,13 @@ export class ClientRuntime {
 
   async open(): Promise<void> {
     await this.mesh._open();
-    await this.spaces._open(new Context());
+    await this.spaces._open(Context.default());
     await this.halo._open();
   }
 
   async close(): Promise<void> {
     await this.halo._close();
-    await this.spaces._close(new Context());
+    await this.spaces._close(Context.default());
     await this.mesh._close();
   }
 }
