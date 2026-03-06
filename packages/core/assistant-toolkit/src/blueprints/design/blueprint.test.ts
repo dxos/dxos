@@ -7,14 +7,9 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { AiService, ConsolePrinter } from '@dxos/ai';
-import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { GenericToolkit } from '@dxos/ai';
-import {
-  AiConversation,
-  type ContextBinding,
-  GenerationObserver,
-  ToolExecutionServices,
-} from '@dxos/assistant';
+import { AiServiceTestingPreset } from '@dxos/ai/testing';
+import { AiConversation, type ContextBinding, GenerationObserver, ToolExecutionServices } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { Obj, Ref } from '@dxos/echo';
 import { Database } from '@dxos/echo';

@@ -7,9 +7,9 @@ import type * as Layer$ from 'effect/Layer';
 import type * as Schema$ from 'effect/Schema';
 
 import type { AiModelResolver as AiModelResolver$, AiService as AiService$ } from '@dxos/ai';
+import type { GenericToolkit } from '@dxos/ai';
 import { Capability as Capability$ } from '@dxos/app-framework';
 import type { BuilderExtensions, Graph, GraphBuilder } from '@dxos/app-graph';
-import type { GenericToolkit } from '@dxos/ai';
 import type { Blueprint } from '@dxos/blueprints';
 import type { Database, Type } from '@dxos/echo';
 import type { FunctionDefinition } from '@dxos/functions';

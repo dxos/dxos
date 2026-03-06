@@ -10,8 +10,8 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
-import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { GenericToolkit } from '@dxos/ai';
+import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { AiConversation, ToolExecutionServices } from '@dxos/assistant';
 import { acquireReleaseResource } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';

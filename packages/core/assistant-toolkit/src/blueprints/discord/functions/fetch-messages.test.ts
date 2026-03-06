@@ -9,8 +9,8 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
-import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { GenericToolkit } from '@dxos/ai';
+import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { ToolExecutionServices } from '@dxos/assistant';
 import { TestHelpers } from '@dxos/effect/testing';
 import { CredentialsService, FunctionInvocationService, TracingService } from '@dxos/functions';

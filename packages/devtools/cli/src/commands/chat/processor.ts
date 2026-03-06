@@ -11,13 +11,13 @@ import * as Layer from 'effect/Layer';
 import * as Runtime from 'effect/Runtime';
 
 import { AiService, type ModelName } from '@dxos/ai';
+import { GenericToolkit } from '@dxos/ai';
 import {
   AiConversation,
   type AiSessionRunError,
   type AiSessionRunRequirements,
   ToolExecutionServices,
 } from '@dxos/assistant';
-import { GenericToolkit } from '@dxos/ai';
 import { Chat } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';

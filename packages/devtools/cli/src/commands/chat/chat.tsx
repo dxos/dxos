@@ -10,8 +10,8 @@ import * as Option from 'effect/Option';
 import { createSignal } from 'solid-js';
 
 import { AiService, DEFAULT_EDGE_MODEL, DEFAULT_LMSTUDIO_MODEL, DEFAULT_OLLAMA_MODEL, ModelName } from '@dxos/ai';
-import { Capabilities, Capability } from '@dxos/app-framework';
 import { GenericToolkit } from '@dxos/ai';
+import { Capabilities, Capability } from '@dxos/app-framework';
 import { type AiConversation } from '@dxos/assistant';
 import { CommandConfig, Common, withTypes } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';

@@ -4,17 +4,14 @@
 
 import * as Tool from '@effect/ai/Tool';
 import * as Toolkit from '@effect/ai/Toolkit';
+import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import { SSEClientTransport } from '@modelcontextprotocol/sdk/client/sse.js';
+import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { GenericToolkit } from '@dxos/ai';
 import { invariant } from '@dxos/invariant';
-import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { SSEClientTransport } from '@modelcontextprotocol/sdk/client/sse.js';
-import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
-import type { Struct } from 'effect';
-import { dbg } from '@dxos/log';
 
 export interface McpToolkitOptions {
   url: string;

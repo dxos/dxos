@@ -7,9 +7,9 @@ import * as Toolkit from '@effect/ai/Toolkit';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
+import { GenericToolkit } from '@dxos/ai';
 import { Capabilities, Capability, type CapabilityManager } from '@dxos/app-framework';
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
-import { GenericToolkit } from '@dxos/ai';
 import { ArtifactId } from '@dxos/assistant';
 import { type SpaceId } from '@dxos/keys';
 import { trim } from '@dxos/util';
