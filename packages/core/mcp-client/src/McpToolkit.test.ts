@@ -51,4 +51,41 @@ describe('Browser Automation', () => {
     ),
     { timeout: 120_000 },
   );
+
+  it.effect(
+    'effect-blog',
+    Effect.fnUntraced(
+      function* (_) {
+        const browserAutomationToolkit = yield* McpToolkit.make({
+          url: 'https://playwright-mcp-example.dxos.workers.dev/sse',
+          kind: 'sse',
+        });
+
+        const chat = yield* Chat.empty;
+        let prompt: Prompt.RawInput =
+          'Scrape effect blog at https://effect.website/blog and return the content of last 3 articles';
+        let output: LanguageModel.GenerateTextResponse<GenericToolkit.GenericTools>;
+
+        do {
+          output = yield* chat
+            .generateText({
+              prompt,
+              toolkit: browserAutomationToolkit.toolkit,
+            })
+            .pipe(Effect.provide(browserAutomationToolkit.layer));
+          log.info('results', { text: output.text, toolCalls: output.toolCalls.map((_) => _.name) });
+          prompt = Prompt.empty;
+        } while (
+          // Agentic loop.
+          // TODO(burdon): Explain how this works?
+          output.toolCalls.length > 0
+        );
+        log.info('chat', { chat: yield* chat.export });
+      },
+      Effect.provide(AiServiceLayer),
+      TestHelpers.provideTestContext,
+      TestHelpers.taggedTest('llm'),
+    ),
+    { timeout: 120_000 },
+  );
 });

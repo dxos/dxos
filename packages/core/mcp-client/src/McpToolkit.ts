@@ -76,7 +76,7 @@ export const make = (options: McpToolkitOptions): Effect.Effect<GenericToolkit.G
             const result = yield* Effect.promise(() =>
               client.callTool({
                 name: mcpTool.name,
-                arguments: dbg(args) as any,
+                arguments: args as any,
               }),
             );
             return formatToolResult(result);
