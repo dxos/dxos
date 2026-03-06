@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { Obj } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
 import { Container, Toolbar } from '@dxos/react-ui';
 import { getStyles, mx } from '@dxos/ui-theme';
 
@@ -16,37 +16,34 @@ import { type VoxelData } from '../../types/Voxel';
 export type VoxelArticleProps = SurfaceComponentProps<Voxel.World>;
 
 export const VoxelArticle = ({ subject: world }: VoxelArticleProps) => {
-  const voxels = useMemo(() => Voxel.parseVoxels(world.voxels), [world.voxels]);
+  const [rawVoxels, updateVoxels] = useObject(world, 'voxels');
+  const voxels = useMemo(() => Voxel.parseVoxels(rawVoxels), [rawVoxels]);
   const [selectedColor, setSelectedColor] = useState(PALETTE[0].hex);
 
   const handleAddVoxel = useCallback(
     (voxel: VoxelData) => {
-      const current = Voxel.parseVoxels(world.voxels);
+      const current = Voxel.parseVoxels(rawVoxels);
       // Prevent duplicates at same position.
       const exists = current.some(
         (existing) => existing.x === voxel.x && existing.y === voxel.y && existing.z === voxel.z,
       );
       if (!exists) {
         current.push(voxel);
-        Obj.change(world, (draft) => {
-          draft.voxels = Voxel.serializeVoxels(current);
-        });
+        updateVoxels(Voxel.serializeVoxels(current));
       }
     },
-    [world],
+    [rawVoxels, updateVoxels],
   );
 
   const handleRemoveVoxel = useCallback(
     (position: { x: number; y: number; z: number }) => {
-      const current = Voxel.parseVoxels(world.voxels);
+      const current = Voxel.parseVoxels(rawVoxels);
       const filtered = current.filter(
         (voxel) => !(voxel.x === position.x && voxel.y === position.y && voxel.z === position.z),
       );
-      Obj.change(world, (draft) => {
-        draft.voxels = Voxel.serializeVoxels(filtered);
-      });
+      updateVoxels(Voxel.serializeVoxels(filtered));
     },
-    [world],
+    [rawVoxels, updateVoxels],
   );
 
   return (
