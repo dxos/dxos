@@ -80,7 +80,7 @@ Examples:
 
 ### Toolchain
 
-This project requires Node.js 24.x, pnpm 10.28.0, and moon 2.0.3. These are managed by **proto** (see `.prototools`). In the cloud VM, proto is installed at `~/.proto` and must be on PATH (`export PROTO_HOME="$HOME/.proto" && export PATH="$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH"`). Node 24 is also available via nvm (`nvm use 24`).
+This project requires Node.js 24.x, pnpm 10.28.0, and moon 2.0.3. All are managed by **proto** (see `.prototools`). In the cloud VM, proto is installed at `~/.proto` and must be on PATH (`export PROTO_HOME="$HOME/.proto" && export PATH="$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH"`). Do **not** use nvm; proto shims must take precedence.
 
 ### Running services
 
