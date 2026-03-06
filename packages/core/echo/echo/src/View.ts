@@ -8,7 +8,10 @@ import { QueryAST } from '@dxos/echo-protocol';
 import { JsonPath } from '@dxos/effect';
 import { PublicKey } from '@dxos/keys';
 
+import * as Filter from './Filter';
 import { JsonSchemaType, SystemTypeAnnotation } from './internal';
+import * as Obj from './Obj';
+import * as Query from './Query';
 import * as Type from './Type';
 
 /**
@@ -87,3 +90,11 @@ export interface View extends Schema.Schema.Type<typeof ViewSchema> {}
 //   any schema using Type.Ref(View) would inherit the non-portable type and fail to compile.
 // TODO(wittjosiah): Find a better solution that doesn't require manually keeping the interface in sync.
 export const View: Type.Obj<View> = ViewSchema as any;
+
+export const make = (props: Partial<Obj.MakeProps<typeof View>>): View => {
+  return Obj.make(View, {
+    query: { ast: Query.select(Filter.nothing()).ast },
+    projection: { fields: [] },
+    ...props,
+  });
+};

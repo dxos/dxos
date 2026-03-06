@@ -4,6 +4,7 @@
 
 import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
 import type * as Types from 'effect/Types';
 
 import { type ForeignKey, type QueryAST } from '@dxos/echo-protocol';
@@ -101,6 +102,18 @@ export const type = <S extends Schema.Schema.All>(
   schema: S | string,
   props?: Props<Schema.Schema.Type<S>>,
 ): Filter<Schema.Schema.Type<S>> => {
+  if (Schema.isSchema(schema) && SchemaAST.isUnion(schema.ast)) {
+    const typenames = schema.ast.types.map((type) => getTypeDXNFromSpecifier(Schema.make(type)));
+    return new FilterClass({
+      type: 'or',
+      filters: typenames.map((typename) => ({
+        type: 'object',
+        typename: typename.toString(),
+        props: {},
+      })),
+    });
+  }
+
   const dxn = getTypeDXNFromSpecifier(schema);
   return new FilterClass({
     type: 'object',
