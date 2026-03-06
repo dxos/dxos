@@ -11,13 +11,13 @@ import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj, type Ref } from '@dxos/echo';
+import { type Collection } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { Graph } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space/types';
 import { Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { AttentionProvider } from '@dxos/react-ui-attention';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
-import { type Collection } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { StackContext, StackSection } from '../../components';

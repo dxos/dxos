@@ -13,10 +13,11 @@ import { Capabilities, Capability, type PromiseIntentDispatcher } from '@dxos/ap
 import { createArtifactElement } from '@dxos/assistant';
 import { defineArtifact } from '@dxos/blueprints';
 import { Obj, Query } from '@dxos/echo';
+import { View } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceOperation } from '@dxos/plugin-space/types';
 import { Filter, type Space } from '@dxos/react-client/echo';
-import { View } from '@dxos/schema';
+import { ViewModel } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../../meta';
@@ -69,7 +70,7 @@ export default Capability.makeModule(() =>
               return ToolResult.Error(`Schema not found: ${typename}`);
             }
 
-            const { view } = await View.makeFromDatabase({
+            const { view } = await ViewModel.makeFromDatabase({
               db: extensions.space.db,
               typename,
               pivotFieldName: pivotColumn,

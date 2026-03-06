@@ -12,6 +12,7 @@ import { AssistantTestLayerWithTriggers } from '@dxos/assistant/testing';
 import { Blueprint } from '@dxos/blueprints';
 import { SpaceProperties } from '@dxos/client-protocol';
 import { Database, Obj, Ref } from '@dxos/echo';
+import { Collection } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
 import { FunctionDefinition, QueueService, Trigger } from '@dxos/functions';
@@ -21,7 +22,7 @@ import { ObjectId } from '@dxos/keys';
 import { MarkdownBlueprint } from '@dxos/plugin-markdown/blueprints';
 import { WithProperties } from '@dxos/plugin-markdown/testing';
 import { Markdown } from '@dxos/plugin-markdown/types';
-import { Collection, Text } from '@dxos/schema';
+import { Text } from '@dxos/schema';
 import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 

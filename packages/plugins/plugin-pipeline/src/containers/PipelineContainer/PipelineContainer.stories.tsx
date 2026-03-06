@@ -10,6 +10,7 @@ import React from 'react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter, Ref } from '@dxos/client/echo';
 import { Database, Feed, Obj, Query, Tag, Type } from '@dxos/echo';
+import { Collection, View } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { InboxPlugin } from '@dxos/plugin-inbox';
@@ -19,7 +20,7 @@ import { faker } from '@dxos/random';
 import { useDatabase, useQuery } from '@dxos/react-client/echo';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as stackTranslations } from '@dxos/react-ui-stack';
-import { Collection, View } from '@dxos/schema';
+import { ViewModel } from '@dxos/schema';
 import { createObjectFactory } from '@dxos/schema/testing';
 import { Message, Organization, Person, Pipeline, Task } from '@dxos/types';
 
@@ -80,25 +81,25 @@ const meta = {
               const tagDxn = Obj.getDXN(tag).toString();
 
               // Create a view for Contacts.
-              const personView = View.make({
+              const personView = ViewModel.make({
                 query: Query.select(Filter.type(Person.Person)),
                 jsonSchema: Type.toJsonSchema(Person.Person),
               });
 
               // Create a view for Organizations.
-              const organizationView = View.make({
+              const organizationView = ViewModel.make({
                 query: Query.select(Filter.type(Organization.Organization)).select(Filter.tag(tagDxn)),
                 jsonSchema: Type.toJsonSchema(Organization.Organization),
               });
 
               // Create a view for Tasks.
-              const taskView = View.make({
+              const taskView = ViewModel.make({
                 query: Query.select(Filter.type(Task.Task)).select(Filter.tag(tagDxn)),
                 jsonSchema: Type.toJsonSchema(Task.Task),
               });
 
               // Create a view for Project-Projects.
-              const projectView = View.make({
+              const projectView = ViewModel.make({
                 query: Query.select(Filter.type(Pipeline.Pipeline)),
                 jsonSchema: Type.toJsonSchema(Pipeline.Pipeline),
               });
@@ -115,7 +116,7 @@ const meta = {
               yield* Feed.append(messageFeed, messages);
 
               const messageQueueDxn = Feed.getQueueDxn(messageFeed)!.toString();
-              const messageView = View.make({
+              const messageView = ViewModel.make({
                 query: Query.select(Filter.type(Message.Message)).options({
                   queues: [messageQueueDxn],
                 }),

@@ -8,6 +8,7 @@ import * as Effect from 'effect/Effect';
 import { ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { Collection } from '@dxos/echo';
 import { ClientOperation, ClientPlugin } from '@dxos/plugin-client';
 import { SearchPlugin } from '@dxos/plugin-search';
 import { SpacePlugin } from '@dxos/plugin-space';
@@ -15,7 +16,6 @@ import { SpaceOperation } from '@dxos/plugin-space/types';
 import { corePlugins } from '@dxos/plugin-testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as searchTranslation } from '@dxos/react-ui-searchlist';
-import { Collection } from '@dxos/schema';
 
 import { OperationResolver, type SimpleLayoutStateOptions, State } from '../../capabilities';
 import { meta as pluginMeta } from '../../meta';

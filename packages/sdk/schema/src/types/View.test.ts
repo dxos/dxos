@@ -13,8 +13,7 @@ import { log } from '@dxos/log';
 import { ProjectionModel, createDirectChangeCallback } from '@dxos/schema';
 
 import { TestSchema } from '../testing';
-
-import * as View from './View';
+import { ViewModel } from '../types';
 
 describe('Projection', () => {
   let builder: EchoTestBuilder;
@@ -33,7 +32,7 @@ describe('Projection', () => {
     const registry = new RuntimeSchemaRegistry();
     await registry.register([TestSchema.Person, TestSchema.Organization]);
 
-    const view = await View.makeWithReferences({
+    const view = await ViewModel.makeWithReferences({
       query: Query.select(Filter.type(schema)),
       jsonSchema,
       registry,
@@ -102,7 +101,7 @@ describe('Projection', () => {
       ),
     });
 
-    const view = View.make({
+    const view = ViewModel.make({
       query: Query.select(Filter.typename(schema.typename)),
       jsonSchema: schema.jsonSchema,
       fields: ['name', 'email', 'salary'], // Explicitly define order.

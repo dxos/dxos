@@ -11,8 +11,8 @@ import { type PublicKey } from '@dxos/client';
 import { SpaceSchema } from '@dxos/client/echo';
 import { CancellableInvitationObservable, Invitation } from '@dxos/client/invitations';
 import { Database, type Obj, QueryAST, Type } from '@dxos/echo';
+import { Collection, View } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
-import { Collection, FieldSchema, View } from '@dxos/schema';
 import { type ComplexMap } from '@dxos/util';
 
 import { meta } from '../meta';
@@ -365,7 +365,7 @@ export namespace SpaceOperation {
   });
 
   export const DeleteFieldOutput = Schema.Struct({
-    field: FieldSchema.annotations({ description: 'The deleted field schema.' }),
+    field: View.FieldSchema.annotations({ description: 'The deleted field schema.' }),
     // TODO(wittjosiah): This creates a type error with PropertySchema.
     props: Schema.Any.annotations({ description: 'The deleted field properties.' }),
     index: Schema.Number.annotations({ description: 'The index the field was at.' }),
@@ -631,7 +631,7 @@ export namespace SpaceOperation {
     schema: {
       input: Schema.Struct({
         view: View.View.annotations({ description: 'The view to restore the field to.' }),
-        field: FieldSchema.annotations({ description: 'The field schema to restore.' }),
+        field: View.FieldSchema.annotations({ description: 'The field schema to restore.' }),
         // TODO(wittjosiah): This creates a type error with PropertySchema.
         props: Schema.Any.annotations({ description: 'The field properties to restore.' }),
         index: Schema.Number.annotations({ description: 'The index to restore the field at.' }),

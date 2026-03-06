@@ -7,8 +7,9 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
 import { Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { View } from '@dxos/echo';
 import { FormInputAnnotation, type JsonPath, type JsonSchemaType, LabelAnnotation } from '@dxos/echo/internal';
-import { View, ViewAnnotation } from '@dxos/schema';
+import { ViewAnnotation } from '@dxos/schema';
 
 export const Table = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
