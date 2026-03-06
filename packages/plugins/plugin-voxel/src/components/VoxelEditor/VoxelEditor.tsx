@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { OrbitControls, GizmoHelper, GizmoViewport } from '@react-three/drei';
+import { GizmoHelper, GizmoViewport, OrbitControls } from '@react-three/drei';
 import { Canvas, type ThreeEvent } from '@react-three/fiber';
 import React, { useCallback, useMemo, useState } from 'react';
 import * as THREE from 'three';
@@ -45,11 +45,7 @@ const VoxelBlock = ({
       onPointerOut={() => setHovered(false)}
     >
       <boxGeometry args={[1, 1, 1]} />
-      <meshStandardMaterial
-        color={hovered ? 0xaaaaaa : color}
-        transparent={hovered}
-        opacity={hovered ? 0.8 : 1}
-      />
+      <meshStandardMaterial color={hovered ? 0xaaaaaa : color} transparent={hovered} opacity={hovered ? 0.8 : 1} />
     </mesh>
   );
 };
@@ -76,7 +72,13 @@ const GroundPlane = ({
 };
 
 /** 3D scene containing the voxel world. */
-const VoxelScene = ({ voxels, gridSize, selectedColor, onAddVoxel, onRemoveVoxel }: {
+const VoxelScene = ({
+  voxels,
+  gridSize,
+  selectedColor,
+  onAddVoxel,
+  onRemoveVoxel,
+}: {
   voxels: VoxelData[];
   gridSize: number;
   selectedColor: number;
@@ -159,15 +161,7 @@ const VoxelScene = ({ voxels, gridSize, selectedColor, onAddVoxel, onRemoveVoxel
 };
 
 /** Color palette button. */
-const ColorButton = ({
-  color,
-  selected,
-  onClick,
-}: {
-  color: number;
-  selected: boolean;
-  onClick: () => void;
-}) => {
+const ColorButton = ({ color, selected, onClick }: { color: number; selected: boolean; onClick: () => void }) => {
   const hexStr = useMemo(() => `#${color.toString(16).padStart(6, '0')}`, [color]);
   return (
     <button
