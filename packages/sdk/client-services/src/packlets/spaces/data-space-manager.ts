@@ -254,7 +254,7 @@ export class DataSpaceManager extends Resource {
   protected override async _close(): Promise<void> {
     log('close');
     for (const space of this._spaces.values()) {
-      await space.close();
+      await space.close(Context.default());
     }
     this._spaces.clear();
   }
@@ -264,7 +264,7 @@ export class DataSpaceManager extends Resource {
    */
   @synchronized
   @trace.span({ showInBrowserTimeline: true })
-  async createSpace(options: CreateSpaceOptions = {}): Promise<DataSpace> {
+  async createSpace(ctx: Context, options: CreateSpaceOptions = {}): Promise<DataSpace> {
     assertArgument(
       !!options.rootUrl === !!options.documents,
       'options',
@@ -328,12 +328,12 @@ export class DataSpaceManager extends Resource {
     } else {
       root = await this._echoHost.createSpaceRoot(spaceKey);
     }
-    await this._echoHost.flush();
+    await this._echoHost.flush(ctx);
 
     log('constructing space...', { spaceKey });
 
     const space = await this._constructSpace(metadata);
-    await space.open();
+    await space.open(ctx);
 
     log('adding space...', { spaceKey });
 
@@ -344,7 +344,7 @@ export class DataSpaceManager extends Resource {
     invariant(getCredentialAssertion(memberCredential)['@type'] === 'dxos.halo.credentials.SpaceMember');
     await this._signingContext.recordCredential(memberCredential);
 
-    await space.initializeDataPipeline();
+    await space.initializeDataPipeline(ctx);
 
     log('space ready.', { spaceId, spaceKey });
 
@@ -379,7 +379,7 @@ export class DataSpaceManager extends Resource {
   }
 
   async createDefaultSpace(): Promise<DataSpace> {
-    const space = await this.createSpace();
+    const space = await this.createSpace(Context.default());
     const document = await this._getSpaceRootDocument(space);
 
     // TODO(dmaretskyi): Better API for low-level data access.
@@ -400,7 +400,7 @@ export class DataSpaceManager extends Resource {
       setDeep(doc, ['objects', propertiesId], properties);
     });
 
-    await this._echoHost.flush();
+    await this._echoHost.flush(Context.default());
     return space;
   }
 
@@ -417,7 +417,7 @@ export class DataSpaceManager extends Resource {
   // TODO(burdon): Rename join space.
   @synchronized
   @trace.span({ showInBrowserTimeline: true })
-  async acceptSpace(opts: AcceptSpaceOptions): Promise<DataSpace> {
+  async acceptSpace(ctx: Context, opts: AcceptSpaceOptions): Promise<DataSpace> {
     log('accept space', { opts });
     invariant(this._lifecycleState === LifecycleState.OPEN, 'Not open.');
     invariant(!this._spaces.has(opts.spaceKey), 'Space already exists.');
@@ -430,7 +430,7 @@ export class DataSpaceManager extends Resource {
     };
 
     const space = await this._constructSpace(metadata);
-    await space.open();
+    await space.open(ctx);
     await this._metadataStore.addSpace(metadata);
     space.initializeDataPipelineAsync();
 
@@ -711,7 +711,7 @@ export class DataSpaceManager extends Resource {
     invitations: Array<[PublicKey, DelegateSpaceInvitation]>,
   ): Promise<void> {
     const tasks = invitations.map(([credentialId, invitation]) => {
-      return this._invitationsManager.createInvitation({
+      return this._invitationsManager.createInvitation(Context.default(), {
         type: Invitation.Type.DELEGATED,
         kind: Invitation.Kind.SPACE,
         spaceKey: space.key,

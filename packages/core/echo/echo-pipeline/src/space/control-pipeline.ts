@@ -44,7 +44,7 @@ const USE_SNAPSHOTS = true;
 @trace.resource()
 @trackLeaks('start', 'stop')
 export class ControlPipeline {
-  private readonly _ctx = new Context();
+  private readonly _ctx = Context.default();
   private readonly _pipeline: Pipeline;
   private readonly _spaceStateMachine: SpaceStateMachine;
 
@@ -121,7 +121,7 @@ export class ControlPipeline {
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  async start(): Promise<void> {
+  async start(ctx: Context): Promise<void> {
     const snapshot = this._metadata.getSpaceControlPipelineSnapshot(this._spaceKey);
     log('load snapshot', { key: this._spaceKey, present: !!snapshot, tf: snapshot?.timeframe });
     if (USE_SNAPSHOTS && snapshot) {
@@ -130,7 +130,7 @@ export class ControlPipeline {
 
     log('starting...');
     setTimeout(async () => {
-      void this._consumePipeline(new Context());
+      void this._consumePipeline(Context.default());
     });
 
     await this._pipeline.start();

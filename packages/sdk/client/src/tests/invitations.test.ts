@@ -20,6 +20,7 @@ import {
   createPeers,
   performInvitation,
 } from '@dxos/client-services/testing';
+import { Context } from '@dxos/context';
 import { MetadataStore } from '@dxos/echo-pipeline';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -312,7 +313,7 @@ describe('Invitations', () => {
         const peers = await chain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
         host = peers[0];
         guest = peers[1];
-        space = await host.dataSpaceManager!.createSpace();
+        space = await host.dataSpaceManager!.createSpace(Context.default());
       });
 
       testSuite(
@@ -360,13 +361,13 @@ describe('Invitations', () => {
 
         const { service, metadata } = createInvitationsApi(hostContext);
         hostMetadata = metadata;
-        space = await hostContext.dataSpaceManager.createSpace();
+        space = await hostContext.dataSpaceManager.createSpace(Context.default());
         host = new InvitationsProxy(service, undefined, () => ({
           kind: Invitation.Kind.SPACE,
           spaceKey: space.key,
         }));
 
-        onTestFinished(() => space.close());
+        onTestFinished(() => space.close(Context.default()));
       });
       test('invitations expire', async () => {
         const expired = new Trigger();
@@ -410,8 +411,8 @@ describe('Invitations', () => {
         const { service: guestService, manager: guestManager } = createInvitationsApi(guestContext);
         await guestManager.loadPersistentInvitations();
 
-        const space = await hostContext?.dataSpaceManager.createSpace();
-        onTestFinished(() => space.close());
+        const space = await hostContext?.dataSpaceManager.createSpace(Context.default());
+        onTestFinished(() => space.close(Context.default()));
 
         const guest = new InvitationsProxy(guestService, undefined, () => ({ kind: Invitation.Kind.SPACE }));
         let persistentInvitationId: string;
@@ -503,8 +504,8 @@ describe('Invitations', () => {
 
         const hostApi = createInvitationsApi(hostContext);
 
-        const space = await hostContext?.dataSpaceManager.createSpace();
-        onTestFinished(() => space.close());
+        const space = await hostContext?.dataSpaceManager.createSpace(Context.default());
+        onTestFinished(() => space.close(Context.default()));
 
         {
           const tempHost = new InvitationsProxy(hostApi.service, undefined, () => ({
@@ -561,14 +562,14 @@ describe('Invitations', () => {
         const { service: hostService } = createInvitationsApi(hostContext);
         const { service: guestService } = createInvitationsApi(guestContext);
 
-        space = await hostContext.dataSpaceManager.createSpace();
+        space = await hostContext.dataSpaceManager.createSpace(Context.default());
         host = new InvitationsProxy(hostService, undefined, () => ({
           kind: Invitation.Kind.SPACE,
           spaceKey: space.key,
         }));
         guest = new InvitationsProxy(guestService, undefined, () => ({ kind: Invitation.Kind.SPACE }));
 
-        onTestFinished(() => space.close());
+        onTestFinished(() => space.close(Context.default()));
       });
 
       testSuite(

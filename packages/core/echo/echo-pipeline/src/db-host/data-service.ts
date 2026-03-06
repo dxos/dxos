@@ -7,6 +7,7 @@ import { type DocumentId } from '@automerge/automerge-repo';
 import { UpdateScheduler } from '@dxos/async';
 import { type RequestOptions } from '@dxos/codec-protobuf';
 import { Stream } from '@dxos/codec-protobuf/stream';
+import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -104,7 +105,7 @@ export class DataServiceImpl implements DataService {
   }
 
   async flush(request: FlushRequest): Promise<void> {
-    await this._automergeHost.flush(request);
+    await this._automergeHost.flush(Context.default(), request);
   }
 
   async getDocumentHeads(request: GetDocumentHeadsRequest): Promise<GetDocumentHeadsResponse> {

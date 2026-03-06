@@ -4,7 +4,7 @@
 
 import { Trigger, sleep } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf/stream';
-import { Resource } from '@dxos/context';
+import { Context, Resource } from '@dxos/context';
 import { createCredential, signPresentation } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
@@ -153,14 +153,15 @@ export class IdentityServiceImpl extends Resource implements IdentityService {
       dataSpaceManager.spaces.values(),
       async (space) => {
         if (space.state === SpaceState.SPACE_CLOSED) {
-          await space.open();
+          const ctx = Context.default();
+          await space.open(ctx);
 
           // Wait until the space is either READY or REQUIRES_MIGRATION.
           // NOTE: Space could potentially never initialize if the space data is corrupted.
           const requiresMigration = space.stateUpdate.waitForCondition(
             () => space.state === SpaceState.SPACE_REQUIRES_MIGRATION,
           );
-          await Promise.race([space.initializeDataPipeline(), requiresMigration]);
+          await Promise.race([space.initializeDataPipeline(ctx), requiresMigration]);
         }
         if (await dataSpaceManager.isDefaultSpace(space)) {
           if (foundDefaultSpace) {

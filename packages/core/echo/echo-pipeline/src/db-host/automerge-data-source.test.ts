@@ -5,6 +5,7 @@
 import { getHeads } from '@automerge/automerge';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
+import { Context } from '@dxos/context';
 import { type DatabaseDirectory, ObjectStructure, SpaceDocVersion } from '@dxos/echo-protocol';
 import { runAndForwardErrors } from '@dxos/effect';
 import { type IndexCursor } from '@dxos/index-core';
@@ -94,7 +95,7 @@ describe('AutomergeDataSource', () => {
     const handle = await createDatabaseDirectory(host, spaceKey, {
       'obj-1': ObjectStructure.makeObject({ type: TEST_TYPE as DXN.String, data: { title: 'Test Document' } }),
     });
-    await host.flush();
+    await host.flush(Context.default());
 
     const dataSource = new AutomergeDataSource(host);
     const result = await runAndForwardErrors(dataSource.getChangedObjects([]));
@@ -120,7 +121,7 @@ describe('AutomergeDataSource', () => {
     const handle2 = await createDatabaseDirectory(host, spaceKey, {
       'obj-2': ObjectStructure.makeObject({ type: TEST_TYPE as DXN.String, data: { title: 'Doc 2' } }),
     });
-    await host.flush();
+    await host.flush(Context.default());
 
     // Store the heads for doc2 (unchanged).
     const doc2Heads = headsCodec.encode(getHeads(handle2.doc()!));
@@ -129,7 +130,7 @@ describe('AutomergeDataSource', () => {
     handle1.change((doc) => {
       doc.objects!['obj-1'].data.title = 'Doc 1 Updated';
     });
-    await host.flush();
+    await host.flush(Context.default());
 
     const dataSource = new AutomergeDataSource(host);
     const cursors: IndexCursor[] = [
@@ -153,7 +154,7 @@ describe('AutomergeDataSource', () => {
     const handle = await createDatabaseDirectory(host, spaceKey, {
       'obj-1': ObjectStructure.makeObject({ type: TEST_TYPE as DXN.String, data: { title: 'Doc 1' } }),
     });
-    await host.flush();
+    await host.flush(Context.default());
 
     const currentHeads = headsCodec.encode(getHeads(handle.doc()!));
 
@@ -186,7 +187,7 @@ describe('AutomergeDataSource', () => {
         [`obj-${i}`]: ObjectStructure.makeObject({ type: TEST_TYPE as DXN.String, data: { title: `Doc ${i}` } }),
       });
     }
-    await host.flush();
+    await host.flush(Context.default());
 
     const dataSource = new AutomergeDataSource(host);
     const result = await runAndForwardErrors(dataSource.getChangedObjects([], { limit: 2 }));
@@ -205,7 +206,7 @@ describe('AutomergeDataSource', () => {
       'obj-1': ObjectStructure.makeObject({ type: TEST_TYPE as DXN.String, data: { title: 'Object 1' } }),
       'obj-2': ObjectStructure.makeObject({ type: OTHER_TYPE as DXN.String, data: { title: 'Object 2' } }),
     });
-    await host.flush();
+    await host.flush(Context.default());
 
     const dataSource = new AutomergeDataSource(host);
     const result = await runAndForwardErrors(dataSource.getChangedObjects([]));
@@ -233,7 +234,7 @@ describe('AutomergeDataSource', () => {
         'obj-1': ObjectStructure.makeObject({ type: TEST_TYPE as DXN.String, data: { title: 'Test' } }),
       };
     });
-    await host.flush();
+    await host.flush(Context.default());
 
     const dataSource = new AutomergeDataSource(host);
     const result = await runAndForwardErrors(dataSource.getChangedObjects([]));
@@ -253,7 +254,7 @@ describe('AutomergeDataSource', () => {
         data: { name: 'Alice', age: 30 },
       }),
     });
-    await host.flush();
+    await host.flush(Context.default());
 
     const dataSource = new AutomergeDataSource(host);
     const result = await runAndForwardErrors(dataSource.getChangedObjects([]));
@@ -282,7 +283,7 @@ describe('AutomergeDataSource', () => {
         'obj-1': ObjectStructure.makeObject({ type: TEST_TYPE as DXN.String, data: { title: 'No Space' } }),
       };
     });
-    await host.flush();
+    await host.flush(Context.default());
 
     const dataSource = new AutomergeDataSource(host);
     const result = await runAndForwardErrors(dataSource.getChangedObjects([]));

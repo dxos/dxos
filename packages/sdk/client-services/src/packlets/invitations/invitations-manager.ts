@@ -51,7 +51,10 @@ export class InvitationsManager {
   ) {}
 
   @trace.span({ showInBrowserTimeline: true })
-  async createInvitation(options: Partial<Invitation> & Pick<Invitation, 'kind'>): Promise<CancellableInvitation> {
+  async createInvitation(
+    ctx: Context,
+    options: Partial<Invitation> & Pick<Invitation, 'kind'>,
+  ): Promise<CancellableInvitation> {
     if (options.invitationId) {
       const existingInvitation = this._createInvitations.get(options.invitationId);
       if (existingInvitation) {
@@ -66,7 +69,7 @@ export class InvitationsManager {
     }
     const invitation = this._createInvitation(handler, options);
 
-    const { ctx, stream, observableInvitation } = this._createObservableInvitation(handler, invitation);
+    const { ctx: invitationCtx, stream, observableInvitation } = this._createObservableInvitation(handler, invitation);
 
     this._createInvitations.set(invitation.invitationId, observableInvitation);
     this.invitationCreated.emit(invitation);
@@ -87,7 +90,7 @@ export class InvitationsManager {
       return observableInvitation;
     }
 
-    this._invitationsHandler.handleInvitationFlow(ctx, stream, handler, observableInvitation.get());
+    this._invitationsHandler.handleInvitationFlow(invitationCtx, stream, handler, observableInvitation.get());
 
     return observableInvitation;
   }
@@ -104,7 +107,7 @@ export class InvitationsManager {
 
       const loadTasks = freshInvitations.map((persistentInvitation) => {
         invariant(!this._createInvitations.get(persistentInvitation.invitationId), 'invitation already exists');
-        return this.createInvitation({ ...persistentInvitation, persistent: false });
+        return this.createInvitation(Context.default(), { ...persistentInvitation, persistent: false });
       });
       const cInvitations = await Promise.all(loadTasks);
 

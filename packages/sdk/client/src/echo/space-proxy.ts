@@ -76,7 +76,7 @@ const EPOCH_CREATION_TIMEOUT = 60_000;
 export class SpaceProxy implements Space, CustomInspectable {
   readonly [SPACE_TAG] = true as const;
 
-  private _ctx = new Context();
+  private _ctx = Context.default();
 
   /**
    * Sent whenever any space data changes.
@@ -343,7 +343,7 @@ export class SpaceProxy implements Space, CustomInspectable {
     if (isFirstTimeInitializing) {
       await this._initialize();
     } else if (isReopening) {
-      await this._initializeDb();
+      await this._initializeDb(Context.default());
     } else if (shouldReset) {
       await this._reset();
     }
@@ -382,7 +382,7 @@ export class SpaceProxy implements Space, CustomInspectable {
     log('initializing...', { space: this.key });
     this._initializing = true;
     await this._invitationsProxy.open();
-    await this._initializeDb();
+    await this._initializeDb(Context.default());
 
     this._initialized = true;
     this._initializing = false;
@@ -393,7 +393,7 @@ export class SpaceProxy implements Space, CustomInspectable {
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  private async _initializeDb(): Promise<void> {
+  private async _initializeDb(ctx: Context): Promise<void> {
     this._databaseOpen = true;
 
     {
@@ -451,7 +451,7 @@ export class SpaceProxy implements Space, CustomInspectable {
   private async _reset(): Promise<void> {
     log('destroying...');
     await this._ctx.dispose();
-    this._ctx = new Context();
+    this._ctx = Context.default();
     await this._invitationsProxy.close();
     await this._db.close();
     this._initializationComplete.reset();

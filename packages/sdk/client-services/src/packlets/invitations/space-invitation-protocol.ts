@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Context } from '@dxos/context';
 import {
   createCancelDelegatedSpaceInvitationCredential,
   createDelegatedSpaceInvitationCredential,
@@ -182,7 +183,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     }
 
     // Create local space.
-    await this._spaceManager.acceptSpace({
+    await this._spaceManager.acceptSpace(Context.default(), {
       spaceKey: assertion.spaceKey,
       genesisFeedKey: assertion.genesisFeedKey,
       controlTimeframe,
