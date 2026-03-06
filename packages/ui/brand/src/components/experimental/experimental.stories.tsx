@@ -290,12 +290,11 @@ export const BrandArc: Story = {
     const gap = 0;
 
     return (
-      <div className='absolute inset-0 flex items-center justify-center'>
-        <svg key={cycle} width={size} height={size} aria-hidden='true'>
+      <div className='absolute inset-0 grid place-items-center'>
+        <svg width={size} height={size} aria-hidden='true'>
           {composerBrandColors.map((color, i) => {
             const outerR = size / 2 - i * ringWidth;
             const innerR = outerR - ringWidth + gap;
-            // Bottom uses mirror ring's radii.
             const mirror = n - 1 - i;
             const mirrorOuterR = size / 2 - mirror * ringWidth;
             const mirrorInnerR = mirrorOuterR - ringWidth + gap;
