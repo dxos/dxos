@@ -42,9 +42,9 @@
 
 ## Workflow
 
-- Never work on main, create a new git worktree for the branch you are working on.
-- When creating worktrees/branches, use a short (2-4 word) descriptive title (kebab-case) prefixed with the agent name (e.g. `antigravity/add-auth-to-client`).
-- Worktrees must be created inside the main repo at `.claude/worktrees/<branch-short-name>` (e.g. `git worktree add .claude/worktrees/add-auth antigravity/add-auth`).
+- Never work on main; create a new git worktree for the branch you are working on.
+- When creating worktrees/branches, use a short (2-4 word) descriptive title (kebab-case) prefixed with the agent name (e.g., `claude/add-auth-to-client`).
+- Worktrees must be created inside the main repo (e.g., `.claude/worktrees/<branch-short-name>`).
 - Check `moon.yml` for available package tasks
 - Run linter at natural stopping points
 - Confirm work complete before final build/lint check
@@ -53,17 +53,6 @@
 ## PR Naming Convention
 
 **IMPORTANT**: All PR titles MUST use conventional commit format:
-
-- `feat: <description>` - New features or functionality
-- `fix: <description>` - Bug fixes
-- `refactor: <description>` - Code refactoring without behavior changes
-- `docs: <description>` - Documentation changes
-- `test: <description>` - Adding or updating tests
-- `chore: <description>` - Maintenance tasks, dependency updates
-- `perf: <description>` - Performance improvements
-- `style: <description>` - Code style/formatting changes
-- `ci: <description>` - CI/CD configuration changes
-- `build: <description>` - Build system changes
 
 Use scope when relevant: `feat(package-name): <description>`
 
@@ -76,13 +65,13 @@ Examples:
 
 ## Submitting PRs
 
-- Use `gh` CLI to create and manage PRs
 - When the user asks you to submit a PR:
-  - commit any pending changes
-  - address PR review comments as appropriate and reply to all comments
-  - `moon run :lint -- --fix` succeeds
-  - `moon run :test` succeeds
-  - `pnpm -w gh-action --verify --watch` shows green CI
+  - Use `gh` CLI to create and manage PRs
+  - Check `moon run :lint -- --fix` succeeds
+  - Check `moon run :test` succeeds
+  - Commit and push any pending changes
+  - Monitor CI: `pnpm -w gh-action --verify --watch`
+  - Address all PR review comments (fix or explain why not) and post a reply to all comments
   - Update the PR description with a summary of the changes and the reasoning behind major changes.
-  - Add a reference linear issues if available in PR description as "closes DX-123" or "part of DX-123"
-- You can monitor the CI status with `pnpm -w gh-action --verify --watch`
+  - Add any reference linear issues if available in PR description as "closes DX-123" or "part of DX-123"
+  - After the CI succeesd, remove the local worktree and branch.
