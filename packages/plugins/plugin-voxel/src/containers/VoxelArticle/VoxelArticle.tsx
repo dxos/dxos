@@ -58,7 +58,7 @@ export const VoxelArticle = ({ subject: world }: VoxelArticleProps) => {
             <Toolbar.Button
               key={entry.hue}
               variant={entry.hex === selectedColor ? 'primary' : 'ghost'}
-              classNames={mx('bs-8 is-8 min-is-0 p-0 rounded', styles.fill)}
+              classNames={mx('w-8 h-8 min-w-0 p-0 rounded-sm', styles.fill)}
               onClick={() => setSelectedColor(entry.hex)}
               aria-label={entry.hue}
             />
