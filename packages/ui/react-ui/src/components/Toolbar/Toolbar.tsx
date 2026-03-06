@@ -8,11 +8,11 @@ import * as ToolbarPrimitive from '@radix-ui/react-toolbar';
 import React, { Fragment, forwardRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { osTranslations } from '@dxos/ui-theme';
-import { type ToolbarStyleProps } from '@dxos/ui-theme';
+import { type ToolbarStyleProps, osTranslations } from '@dxos/ui-theme';
 import { type SlottableProps } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
+import { translationKey } from '../../translations';
 import { type ThemedClassName } from '../../util';
 import {
   Button,
@@ -275,7 +275,7 @@ type ToolbarMenuProps<T extends any | void = void> = {
 
 // TODO(burdon): Make slottable.
 const ToolbarMenu = <T extends any | void = void>({ context, items }: ToolbarMenuProps<T>) => {
-  const { t } = useTranslation(osTranslations);
+  const { t } = useTranslation(translationKey);
 
   return (
     <DropdownMenu.Root>

@@ -45,10 +45,11 @@ type BoardColumnProps<TColumn = any> = Pick<MosaicTileProps<TColumn>, 'className
 
 type BoardColumnRootInnerProps<TColumn = any> = BoardColumnProps<TColumn> & {
   dragHandleRef: RefObject<HTMLButtonElement | null>;
+  [key: string]: any;
 };
 
 const BoardColumnRootInner = forwardRef<HTMLDivElement, PropsWithChildren<BoardColumnRootInnerProps>>(
-  ({ classNames, children, location, data, debug, dragHandleRef }, forwardedRef) => {
+  ({ classNames, children, location, data, debug, dragHandleRef, ...rest }, forwardedRef) => {
     const { model } = useBoard(BOARD_COLUMN_NAME);
     return (
       <Mosaic.Tile
@@ -60,6 +61,7 @@ const BoardColumnRootInner = forwardRef<HTMLDivElement, PropsWithChildren<BoardC
         dragHandle={dragHandleRef.current}
       >
         <Focus.Group
+          {...rest}
           classNames={mx(
             // NOTE: Reserves 2px for outer Focus.Group border.
             'h-full overflow-hidden w-[calc(100vw-2px)] md:w-card-default-width snap-center bg-deck-surface',
@@ -250,6 +252,7 @@ const DefaultBoardColumn = forwardRef<HTMLDivElement, DefaultBoardColumnProps>(
     return (
       <BoardColumnRootInner
         classNames={mx(
+          'group/column grid',
           debug
             ? 'grid-rows-[var(--dx-rail-action)_1fr_20rem]'
             : 'grid-rows-[var(--dx-rail-action)_1fr_var(--dx-rail-action)]',

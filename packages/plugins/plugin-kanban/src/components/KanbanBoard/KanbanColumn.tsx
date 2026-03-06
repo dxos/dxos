@@ -39,7 +39,7 @@ export const KanbanColumn = forwardRef<HTMLDivElement, KanbanColumnProps>(
       <Board.Column.Root
         data={column}
         location={location}
-        classNames='grid-rows-[var(--dx-rail-action)_1fr_var(--dx-rail-action)]'
+        classNames='grid grid-rows-[var(--dx-rail-action)_1fr_var(--dx-rail-action)]'
         debug={debug}
         dragHandleRef={dragHandleRef}
         ref={forwardedRef}

@@ -312,7 +312,7 @@ export const BrandArc: Story = {
             to   { opacity: 0; }
           }
         `}</style>
-        <svg key={cycle} width={size} height={size}>
+        <svg key={cycle} width={size} height={size} aria-hidden='true'>
           {composerBrandColors.map((color, i) => {
             const outerR = size / 2 - i * ringWidth;
             const innerR = outerR - ringWidth + gap;
