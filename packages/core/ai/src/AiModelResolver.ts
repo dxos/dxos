@@ -9,7 +9,7 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
 import { AiService, type Service, type ServiceMetadata } from './AiService';
-import { type ModelName as ModelName } from './defs';
+import { type ModelName as ModelName, type ModelOptions } from './defs';
 import { AiModelNotAvailableError } from './errors';
 
 export class AiModelResolver extends Context.Tag('@dxos/ai/AiModelResolver')<AiModelResolver, Service>() {
@@ -27,7 +27,10 @@ export class AiModelResolver extends Context.Tag('@dxos/ai/AiModelResolver')<AiM
   static resolver = <R>(
     metadata: ServiceMetadata,
     impl: Effect.Effect<
-      (model: ModelName) => Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, never>,
+      (
+        model: ModelName,
+        options?: ModelOptions,
+      ) => Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, never>,
       never,
       R
     >,
