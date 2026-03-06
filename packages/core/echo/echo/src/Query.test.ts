@@ -10,6 +10,7 @@ import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import * as Dataset from './Dataset';
+import * as Feed from './Feed';
 import * as Filter from './Filter';
 import * as Obj from './Obj';
 import * as Order from './Order';
@@ -548,6 +549,30 @@ describe('query api', () => {
           limit: 10,
           query: {
             type: 'order',
+          },
+        },
+      });
+    });
+
+    test('Query.type(...).from(feed) sets queue options', () => {
+      const feed = Feed.make({ name: 'test-feed' });
+      const queueDxn = DXN.parse('dxn:echo:test-space:test-queue');
+      Obj.change(feed, (mutable) => {
+        Obj.getMeta(mutable).keys.push({ source: Feed.DXN_KEY, id: queueDxn.toString() });
+      });
+
+      const query = Query.type(TestSchema.Person).from(feed);
+      Schema.validateSync(QueryAST.Query)(query.ast);
+      expect(query.ast).toMatchObject({
+        type: 'options',
+        options: {
+          queues: [queueDxn.toString()],
+        },
+        query: {
+          type: 'select',
+          filter: {
+            type: 'object',
+            typename: 'dxn:type:example.com/type/Person:0.1.0',
           },
         },
       });
