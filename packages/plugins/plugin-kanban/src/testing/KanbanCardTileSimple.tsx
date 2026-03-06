@@ -60,8 +60,8 @@ export const KanbanCardTileSimple = forwardRef<HTMLDivElement, KanbanCardProps>(
                     label={t('action menu label')}
                   />
                 </Menu.Trigger>
+                <Menu.Content items={menuItems} />
               </Card.Toolbar>
-              <Menu.Content items={menuItems} />
               <Card.Content>
                 <div className='p-2 text-sm text-fg'>{Obj.getLabel(data)}</div>
               </Card.Content>

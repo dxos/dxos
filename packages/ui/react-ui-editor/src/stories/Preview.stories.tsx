@@ -178,9 +178,9 @@ const PreviewBlockComponent = ({ link, el, view }: { link: PreviewLinkRef; el: H
                 label='Menu'
               />
             </Menu.Trigger>
+            <Menu.Content items={menuItems} />
           </Card.Toolbar>
         )}
-        <Menu.Content items={menuItems} />
         {target && (
           <Card.Row>
             <Card.Text className='text-description'>{target.text}</Card.Text>

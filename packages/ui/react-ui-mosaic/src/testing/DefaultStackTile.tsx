@@ -39,8 +39,8 @@ export const DefaultStackTile: MosaicStackTileComponent<Obj.Any> = (props) => {
               label='Menu'
             />
           </Menu.Trigger>
+          <Menu.Content items={menuItems} />
         </Card.Toolbar>
-        <Menu.Content items={menuItems} />
       </Menu.Root>
       {open && (
         <Card.Row>

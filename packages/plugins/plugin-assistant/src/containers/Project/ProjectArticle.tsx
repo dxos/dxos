@@ -97,8 +97,8 @@ const StackTile = forwardRef<HTMLDivElement, MosaicTileProps<Obj.Unknown>>(
                     label='Actions'
                   />
                 </Menu.Trigger>
+                <Menu.Content items={objectMenuItems} />
               </Card.Toolbar>
-              <Menu.Content items={objectMenuItems} />
               <Card.Content>
                 <Surface.Surface role='card--content' limit={1} data={{ subject: data }} />
               </Card.Content>

@@ -144,8 +144,8 @@ const BoardColumnHeader = forwardRef<HTMLDivElement, BoardColumnHeaderProps>(
               label={t('action menu label')}
             />
           </Menu.Trigger>
+          <Menu.Content items={columnMenuItems} />
         </Toolbar.Root>
-        <Menu.Content items={columnMenuItems} />
       </Menu.Root>
     );
   },

@@ -86,8 +86,8 @@ const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
                     label={t('action menu label')}
                   />
                 </Menu.Trigger>
+                <Menu.Content items={items} />
               </Card.Toolbar>
-              <Menu.Content items={items} />
               {/* TODO(burdon): Replace with surface. */}
               <Card.Row icon='ph--note--regular' classNames='text-description'>
                 {description}

@@ -87,8 +87,8 @@ const Item = ({ data }: { data: any }) => {
               label='Actions'
             />
           </Menu.Trigger>
+          <Menu.Content items={objectMenuItems} />
         </Card.Toolbar>
-        <Menu.Content items={objectMenuItems} />
         <Surface.Surface role='card--content' limit={1} data={{ subject: data }} />
       </Card.Root>
     </Menu.Root>

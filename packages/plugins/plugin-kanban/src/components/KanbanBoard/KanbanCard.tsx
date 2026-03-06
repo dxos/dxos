@@ -72,8 +72,8 @@ export const KanbanCard = forwardRef<HTMLDivElement, KanbanCardProps>(({ data, l
                   label={t('action menu label')}
                 />
               </Menu.Trigger>
+              <Menu.Content items={menuItems} />
             </Card.Toolbar>
-            <Menu.Content items={menuItems} />
             <Card.Content>
               {projection && <Surface.Surface role='card--content' limit={1} data={{ subject: data, projection }} />}
             </Card.Content>

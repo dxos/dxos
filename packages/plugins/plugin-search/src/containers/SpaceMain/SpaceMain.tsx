@@ -83,7 +83,7 @@ const NodeTile: MosaicStackTileComponent<Node.Node> = (props) => {
           iconClassNames={styles?.surfaceText}
         />
         <Card.Title onClick={handleClick}>{label}</Card.Title>
-        <div />
+        <Card.Menu />
       </Card.Toolbar>
     </Card.Root>
   );

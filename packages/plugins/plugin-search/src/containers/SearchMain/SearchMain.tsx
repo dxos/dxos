@@ -95,8 +95,8 @@ const SearchResultTile: MosaicStackTileComponent<SearchResult> = (props) => {
               label='Actions'
             />
           </Menu.Trigger>
+          <Menu.Content items={objectMenuItems} />
         </Card.Toolbar>
-        <Menu.Content items={objectMenuItems} />
         <Surface.Surface role='card--content' data={{ subject: data.object }} limit={1} />
       </Card.Root>
     </Menu.Root>
