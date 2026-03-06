@@ -1,8 +1,16 @@
 $schema: https://moonrepo.dev/schemas/tasks.json
 tasks:
+  oxlint:
+    command: pnpm exec oxlint --format unix
+    inputs:
+      - /.oxlintrc.json
+      - '@group(sources)'
   lint:
     command: pnpm exec eslint . --format unix --quiet
+    deps:
+      - ~:oxlint
     inputs:
+      - /.oxlintrc.json
       - /eslint.config.mjs
       # Is this fine:
       - /tools/eslint-plugin-rules/**/*
