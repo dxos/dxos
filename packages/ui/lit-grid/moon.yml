@@ -4,3 +4,8 @@ tags:
   - e2e
   - ts-compile
   - pack
+tasks:
+  e2e:
+    inputs:
+      - .storybook/*
+      - /tools/storybook-lit/.storybook/main.ts
