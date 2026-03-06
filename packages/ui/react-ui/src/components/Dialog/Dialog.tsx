@@ -25,7 +25,6 @@ import React, {
   type ForwardRefExoticComponent,
   type FunctionComponent,
   type PropsWithChildren,
-  type Ref,
   forwardRef,
 } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -155,7 +154,7 @@ const DialogHeader: ForwardRefExoticComponent<DialogTitleProps> = forwardRef<HTM
 // CloseIconButton
 //
 
-type DialogCloseIconButtonProps = { label?: string; ref?: Ref<HTMLButtonElement> };
+type DialogCloseIconButtonProps = { label?: string };
 
 const DialogCloseIconButton = forwardRef<HTMLButtonElement, DialogCloseIconButtonProps>(
   ({ label, ...props }, forwardedRef) => {
