@@ -18,7 +18,7 @@ import React, {
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
 import { IconButton, ScrollArea, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
-import { createMenuAction, Menu } from '@dxos/react-ui-menu';
+import { Menu, createMenuAction } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/ui-theme';
 
 import { useContainerDebug, useEventHandlerAdapter } from '../../hooks';

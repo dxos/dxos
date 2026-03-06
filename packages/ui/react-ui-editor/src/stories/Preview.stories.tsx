@@ -12,7 +12,7 @@ import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 import { Card, Popover, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { createMenuAction, Menu } from '@dxos/react-ui-menu';
+import { Menu, createMenuAction } from '@dxos/react-ui-menu';
 import {
   type PreviewBlock,
   type PreviewLinkRef,
@@ -171,12 +171,7 @@ const PreviewBlockComponent = ({ link, el, view }: { link: PreviewLinkRef; el: H
             <Card.Title>{link.label}</Card.Title>
             {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
             <Menu.Trigger asChild disabled={!menuItems?.length}>
-              <Toolbar.IconButton
-                iconOnly
-                variant='ghost'
-                icon='ph--dots-three-vertical--regular'
-                label='Menu'
-              />
+              <Toolbar.IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Menu' />
             </Menu.Trigger>
             <Menu.Content items={menuItems} />
           </Card.Toolbar>

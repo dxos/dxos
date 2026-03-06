@@ -8,7 +8,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { useObjectMenuItems, useObjectNavigate } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { Card, Toolbar, useTranslation } from '@dxos/react-ui';
-import { createMenuAction, Menu } from '@dxos/react-ui-menu';
+import { Menu, createMenuAction } from '@dxos/react-ui-menu';
 import { Focus, Mosaic, type MosaicTileProps, useBoard } from '@dxos/react-ui-mosaic';
 
 import { meta } from '../../meta';

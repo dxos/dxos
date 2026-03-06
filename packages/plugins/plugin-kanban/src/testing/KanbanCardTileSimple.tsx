@@ -6,7 +6,7 @@ import React, { forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { Card, Toolbar, useTranslation } from '@dxos/react-ui';
-import { createMenuAction, Menu } from '@dxos/react-ui-menu';
+import { Menu, createMenuAction } from '@dxos/react-ui-menu';
 import { Focus, Mosaic, useBoard } from '@dxos/react-ui-mosaic';
 
 import { type KanbanCardProps, useKanbanBoard } from '../components';

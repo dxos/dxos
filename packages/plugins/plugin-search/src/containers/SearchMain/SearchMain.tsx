@@ -88,12 +88,7 @@ const SearchResultTile: MosaicStackTileComponent<SearchResult> = (props) => {
           </Card.Title>
           {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
           <Menu.Trigger asChild disabled={!objectMenuItems?.length}>
-            <Toolbar.IconButton
-              iconOnly
-              variant='ghost'
-              icon='ph--dots-three-vertical--regular'
-              label='Actions'
-            />
+            <Toolbar.IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />
           </Menu.Trigger>
           <Menu.Content items={objectMenuItems} />
         </Card.Toolbar>

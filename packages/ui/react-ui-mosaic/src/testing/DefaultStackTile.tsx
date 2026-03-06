@@ -6,7 +6,7 @@ import React, { useMemo, useRef, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { Card, Toolbar } from '@dxos/react-ui';
-import { createMenuAction, Menu } from '@dxos/react-ui-menu';
+import { Menu, createMenuAction } from '@dxos/react-ui-menu';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 
 import { Mosaic, type MosaicStackTileComponent } from '../components';
@@ -32,12 +32,7 @@ export const DefaultStackTile: MosaicStackTileComponent<Obj.Any> = (props) => {
           <Card.Title>{Obj.getLabel(props.data) ?? props.data.id}</Card.Title>
           {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
           <Menu.Trigger asChild disabled={!menuItems?.length}>
-            <Toolbar.IconButton
-              iconOnly
-              variant='ghost'
-              icon='ph--dots-three-vertical--regular'
-              label='Menu'
-            />
+            <Toolbar.IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Menu' />
           </Menu.Trigger>
           <Menu.Content items={menuItems} />
         </Card.Toolbar>

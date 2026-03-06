@@ -7,7 +7,7 @@ import React, { type ReactElement, type Ref as ReactRef, forwardRef, useMemo, us
 
 import { Obj } from '@dxos/echo';
 import { Card, Tag, Toolbar, useTranslation } from '@dxos/react-ui';
-import { createMenuAction, Menu } from '@dxos/react-ui-menu';
+import { Menu, createMenuAction } from '@dxos/react-ui-menu';
 import { getHashStyles } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
