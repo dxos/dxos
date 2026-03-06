@@ -38,14 +38,14 @@ import { BoardItem } from './Item';
 type BoardColumnProps<TColumn = any> = Pick<MosaicTileProps<TColumn>, 'classNames' | 'location' | 'data' | 'debug'>;
 
 //
-// ColumnRoot
+// Column Root
 //
 
 const BOARD_COLUMN_ROOT_NAME = 'Board.Column.Root';
 
 type BoardColumnRootProps<TColumn = any> = PropsWithChildren<BoardColumnProps<TColumn>> & {
   dragHandleRef?: RefObject<HTMLButtonElement | null>;
-  [key: string]: any;
+  [key: string]: any; // TODO(burdon): Why?
 };
 
 const BoardColumnRootInner = forwardRef<HTMLDivElement, BoardColumnRootProps>(
@@ -117,20 +117,19 @@ BoardColumnHeader.displayName = BOARD_COLUMN_HEADER_NAME;
 
 const BOARD_COLUMN_BODY_NAME = 'Board.Column.Body';
 
-type BoardColumnBodyProps = Pick<BoardColumnProps, 'data'> & {
-  eventHandler?: MosaicContainerProps['eventHandler'];
-  Tile?: MosaicStackProps<Obj.Unknown>['Tile'];
-  debug?: MosaicContainerProps['debug'];
-};
+// TODO(burdon): Remove requirement for 'data' property and set this in the root component.
+type BoardColumnBodyProps = Pick<BoardColumnProps, 'data'> &
+  Pick<MosaicContainerProps, 'eventHandler' | 'debug'> & {
+    Tile?: MosaicStackProps<Obj.Unknown>['Tile'];
+  };
 
 const BoardColumnBody = ({ data, eventHandler, Tile = BoardItem, debug }: BoardColumnBodyProps) => {
   const { t } = useTranslation(translationKey);
-  const [viewport, setViewport] = useState<HTMLElement | null>(null);
   const { model } = useBoard(BOARD_COLUMN_BODY_NAME);
+  const [viewport, setViewport] = useState<HTMLElement | null>(null);
   const items = useAtomValue(model.items(data));
 
   // TODO(burdon): Add to menu context.
-  // TODO(burdon): Remove requirement for 'data' property and set this in the root component.
   // Context menu for items.
   const menuItems = useMemo<NonNullable<CardMenuProps<Obj.Unknown>['items']>>(
     () =>
