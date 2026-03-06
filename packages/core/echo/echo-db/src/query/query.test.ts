@@ -630,6 +630,29 @@ describe('Query', () => {
       const spaceResult = await db.query(Query.select(Filter.id(spaceItem.id)).from(feed)).run();
       expect(spaceResult).toHaveLength(0);
     });
+
+    test('Query.type(...).from(feed) scopes query to feed items', async () => {
+      const peer = await builder.createPeer({ types: [Type.Feed, TestSchema.Task] });
+      const db = await peer.createDatabase();
+      const queues = peer.client.constructQueueFactory(db.spaceId);
+      const queue = queues.create();
+
+      const feed = db.add(Feed.make({ name: 'test-feed' }));
+      Obj.change(feed, (mutable) => {
+        Obj.getMeta(mutable).keys.push({ source: Feed.DXN_KEY, id: queue.dxn.toString() });
+      });
+
+      db.add(Obj.make(TestSchema.Task, { title: 'Space Task' }));
+      await queue.append([
+        Obj.make(TestSchema.Task, { title: 'Feed Task 1' }),
+        Obj.make(TestSchema.Task, { title: 'Feed Task 2' }),
+      ]);
+      await db.flush({ indexes: true });
+
+      const feedResults = await db.query(Query.type(TestSchema.Task).from(feed)).run();
+      expect(feedResults).toHaveLength(2);
+      expect(feedResults.map((obj: any) => obj.title).sort()).toEqual(['Feed Task 1', 'Feed Task 2']);
+    });
   });
 
   test('query.run() queries everything after restart', async () => {
