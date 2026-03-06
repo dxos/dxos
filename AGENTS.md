@@ -19,6 +19,7 @@
 - Build package: `moon run package-name:build`.
 - Run single test file: `moon run package-name:test -- path/to/test.test.ts`.
 - Run all tests: `MOON_CONCURRENCY=4 moon run :test -- --no-file-parallelism`.
+- Storybook: `moon run storybook-react:serve` (defaults to port 9009).
 - Lint & fix: `moon run :lint -- --fix`.
 - Check package tasks: see `moon.yml` in package directory.
 - **Expected warning**: `Auth token DEPOT_TOKEN does not exist` is a normal warning about remote caching and should be ignored. Filter out warnings from your output.
@@ -41,31 +42,22 @@
 
 ## Workflow
 
-- Never work on main, create a new git worktree for the branch you are working on.
-- When creating worktrees/branches, use a short (2-4 word) descriptive title (kebab-case) prefixed with the agent name (e.g. `antigravity/add-auth-to-client`).
-- Worktrees must be created inside the main repo at `.claude/worktrees/<branch-short-name>` (e.g. `git worktree add .claude/worktrees/add-auth antigravity/add-auth`).
+- Never work on main; create a new git worktree for the branch you are working on.
+- When creating worktrees/branches, use a short (2-4 word) descriptive title (kebab-case) prefixed with the agent name (e.g., `claude/add-auth-to-client`).
+- Worktrees must be created inside the main repo (e.g., `.claude/worktrees/<branch-short-name>`).
 - Check `moon.yml` for available package tasks
 - Run linter at natural stopping points
 - Confirm work complete before final build/lint check
+- If updating `pnpm-workspace.yaml` make sure to preserve comments.
 
 ## PR Naming Convention
 
 **IMPORTANT**: All PR titles MUST use conventional commit format:
 
-- `feat: <description>` - New features or functionality
-- `fix: <description>` - Bug fixes
-- `refactor: <description>` - Code refactoring without behavior changes
-- `docs: <description>` - Documentation changes
-- `test: <description>` - Adding or updating tests
-- `chore: <description>` - Maintenance tasks, dependency updates
-- `perf: <description>` - Performance improvements
-- `style: <description>` - Code style/formatting changes
-- `ci: <description>` - CI/CD configuration changes
-- `build: <description>` - Build system changes
-
 Use scope when relevant: `feat(package-name): <description>`
 
 Examples:
+
 - `feat: add user authentication flow`
 - `fix(echo): resolve memory leak in subscription handler`
 - `refactor: simplify error handling in client SDK`
@@ -73,13 +65,34 @@ Examples:
 
 ## Submitting PRs
 
-- Use `gh` CLI to create and manage PRs
 - When the user asks you to submit a PR:
-  - commit any pending changes
-  - address and comment on major review comments
-  - `moon run :lint -- --fix` succeeds
-  - `moon run :test` succeeds
-  - `pnpm -w gh-action --verify --watch` shows green CI
+  - Use `gh` CLI to create and manage PRs
+  - Check `moon run :lint -- --fix` succeeds
+  - Check `moon run :test` succeeds
+  - Commit and push any pending changes
+  - Monitor CI: `pnpm -w gh-action --verify --watch`
+  - Address all PR review comments (fix or explain why not) and post a reply to all comments
   - Update the PR description with a summary of the changes and the reasoning behind major changes.
-  - Add a reference linear issues if available in PR description as "closes DX-123" or "part of DX-123"
-- You can monitor the CI status with `pnpm -w gh-action --verify --watch`
+  - Add any reference linear issues if available in PR description as "closes DX-123" or "part of DX-123"
+  - After the CI succeeds, remove the local worktree and branch.
+
+## Cursor Cloud specific instructions
+
+### Toolchain
+
+This project requires Node.js 24.x, pnpm 10.28.0, and moon 2.0.3. All are managed by **proto** (see `.prototools`). In the cloud VM, proto is installed at `~/.proto` and must be on PATH (`export PROTO_HOME="$HOME/.proto" && export PATH="$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH"`). Do **not** use nvm; proto shims must take precedence.
+
+### Running services
+
+- **Composer app** (main app): `moon run composer-app:serve --quiet` starts a Vite dev server on port 5173. The app auto-creates a local identity on first load; no external auth is required.
+- **Tasks app**: `moon run tasks-app:serve`
+- **Docs site**: `moon run docs:serve`
+- See `REPOSITORY_GUIDE.md` for the full list of run commands.
+
+### Gotchas
+
+- `pnpm install` must run with `CI=true` or `HUSKY=0` in non-interactive environments to skip the husky git hooks setup prompt.
+- The `DEPOT_TOKEN` warning from moon is expected and harmless (remote caching auth token).
+- The `pnpm.onlyBuiltDependencies` allowlist in `pnpm-workspace.yaml` controls which native addons are built; warnings about "ignored build scripts" for packages not in the list are normal.
+- Builds must complete before running `serve` commands, because moon tasks have `deps` on `:prebuild`/`:build` targets.
+- No Docker or external services are required for unit tests or local dev. Signal servers for networking tests are pre-compiled binaries spawned automatically by tests.

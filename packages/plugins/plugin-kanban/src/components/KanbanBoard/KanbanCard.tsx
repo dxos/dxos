@@ -7,9 +7,9 @@ import React, { forwardRef, useCallback, useMemo, useState } from 'react';
 import { Surface } from '@dxos/app-framework/ui';
 import { useObjectMenuItems, useObjectNavigate } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { useTranslation } from '@dxos/react-ui';
-import { createMenuAction } from '@dxos/react-ui-menu';
-import { Card, Focus, Mosaic, type MosaicTileProps, useBoard } from '@dxos/react-ui-mosaic';
+import { Card, Toolbar, useTranslation } from '@dxos/react-ui';
+import { createMenuAction, Menu } from '@dxos/react-ui-menu';
+import { Focus, Mosaic, type MosaicTileProps, useBoard } from '@dxos/react-ui-mosaic';
 
 import { meta } from '../../meta';
 
@@ -58,16 +58,27 @@ export const KanbanCard = forwardRef<HTMLDivElement, KanbanCardProps>(({ data, l
       dragHandle={dragHandle}
     >
       <Focus.Group asChild>
-        <Card.Root ref={forwardedRef} data-testid='board-item'>
-          <Card.Toolbar>
-            <Card.DragHandle ref={dragHandleRef} />
-            <Card.Title onClick={handleNavigate}>{Obj.getLabel(data)}</Card.Title>
-            <Card.Menu items={menuItems} />
-          </Card.Toolbar>
-          <Card.Content>
-            {projection && <Surface.Surface role='card--content' limit={1} data={{ subject: data, projection }} />}
-          </Card.Content>
-        </Card.Root>
+        <Menu.Root>
+          <Card.Root ref={forwardedRef} data-testid='board-item'>
+            <Card.Toolbar>
+              <Card.DragHandle ref={dragHandleRef} />
+              <Card.Title onClick={handleNavigate}>{Obj.getLabel(data)}</Card.Title>
+              {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
+              <Menu.Trigger asChild disabled={!menuItems?.length}>
+                <Toolbar.IconButton
+                  iconOnly
+                  variant='ghost'
+                  icon='ph--dots-three-vertical--regular'
+                  label={t('action menu label')}
+                />
+              </Menu.Trigger>
+            </Card.Toolbar>
+            <Menu.Content items={menuItems} />
+            <Card.Content>
+              {projection && <Surface.Surface role='card--content' limit={1} data={{ subject: data, projection }} />}
+            </Card.Content>
+          </Card.Root>
+        </Menu.Root>
       </Focus.Group>
     </Mosaic.Tile>
   );

@@ -6,13 +6,14 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { Type } from '@dxos/echo';
+import { View } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { View } from '@dxos/schema';
+import { ViewModel } from '@dxos/schema';
 import { type ValueGenerator } from '@dxos/schema/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 import { render } from '@dxos/storybook-utils';
@@ -36,7 +37,7 @@ const DefaultStory = () => {
   useAsyncEffect(async () => {
     const space = client.spaces.default;
     void generate(space, generator);
-    const { view } = await View.makeFromDatabase({ db: space.db, typename: Type.getTypename(Graph.Graph) });
+    const { view } = await ViewModel.makeFromDatabase({ db: space.db, typename: Type.getTypename(Graph.Graph) });
     const graph = Graph.make({ name: 'Test', view });
     space.db.add(graph);
     setSpace(space);

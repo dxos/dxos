@@ -23,6 +23,7 @@ import {
 } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt, Template } from '@dxos/blueprints';
 import { Feed, Filter, Obj, Query, Ref, Tag, Type } from '@dxos/echo';
+import { View } from '@dxos/echo';
 import { ExampleFunctions, Script, Trigger, serializeFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -39,7 +40,7 @@ import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
-import { Text, View } from '@dxos/schema';
+import { Text, ViewModel } from '@dxos/schema';
 import { render } from '@dxos/storybook-utils';
 import {
   AccessToken,
@@ -505,9 +506,12 @@ export const WithMap: Story = {
         import('@dxos/plugin-map/testing'),
       ]);
       const [schema] = await space.db.schemaRegistry.register([createLocationSchema()]);
-      const { view: tableView, jsonSchema } = await View.makeFromDatabase({ db: space.db, typename: schema.typename });
+      const { view: tableView, jsonSchema } = await ViewModel.makeFromDatabase({
+        db: space.db,
+        typename: schema.typename,
+      });
       const table = Table.make({ name: 'Table', view: tableView, jsonSchema });
-      const { view: mapView } = await View.makeFromDatabase({
+      const { view: mapView } = await ViewModel.makeFromDatabase({
         db: space.db,
         typename: schema.typename,
         pivotFieldName: 'location',
@@ -965,19 +969,19 @@ export const WithProject: Story = {
       });
       space.db.add(researchTrigger);
 
-      const mailboxView = View.make({
+      const mailboxView = ViewModel.make({
         query: Query.select(Filter.type(Message.Message)).select(Filter.tag(tagDxn)).from(mailbox),
         jsonSchema: Type.toJsonSchema(Message.Message),
       });
-      const contactsView = View.make({
+      const contactsView = ViewModel.make({
         query: contactsQuery,
         jsonSchema: Type.toJsonSchema(Person.Person),
       });
-      const organizationsView = View.make({
+      const organizationsView = ViewModel.make({
         query: organizationsQuery,
         jsonSchema: Type.toJsonSchema(Organization.Organization),
       });
-      const notesView = View.make({
+      const notesView = ViewModel.make({
         query: notesQuery,
         jsonSchema: Type.toJsonSchema(Markdown.Document),
       });

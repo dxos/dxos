@@ -4,13 +4,12 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Obj, type SchemaRegistry } from '@dxos/echo';
+import { Obj, type SchemaRegistry, type View } from '@dxos/echo';
 import { type EchoSchema, Format, FormatEnums, formatToType } from '@dxos/echo/internal';
 import { type SchemaProperty } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import {
-  type FieldType,
   type ProjectionModel,
   type PropertyType,
   formatToAdditionalPropertyAttributes,
@@ -23,7 +22,7 @@ import { Form, type FormFieldMap, type FormRootProps, SelectField, SelectOptionF
 
 export type FieldEditorProps = {
   projection: ProjectionModel;
-  field: FieldType;
+  field: View.FieldType;
   registry?: SchemaRegistry.SchemaRegistry;
   view?: Obj.Unknown;
   onSave: () => void;

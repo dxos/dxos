@@ -6,12 +6,12 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { type Filter } from '@dxos/echo';
+import { type View } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { useGlobalSearch } from '@dxos/plugin-search';
 import { getSpace, useObject } from '@dxos/react-client/echo';
 import { Container, Toolbar } from '@dxos/react-ui';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
-import { type View } from '@dxos/schema';
 
 import { D3ForceGraph } from '../../components/Graph';
 import { useGraphModel } from '../../hooks';

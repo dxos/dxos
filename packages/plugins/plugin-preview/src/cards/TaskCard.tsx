@@ -7,7 +7,7 @@ import React from 'react';
 
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { type PropertyMetaAnnotation, PropertyMetaAnnotationId } from '@dxos/echo/internal';
-import { Card } from '@dxos/react-ui-mosaic';
+import { Card } from '@dxos/react-ui';
 import { Task } from '@dxos/types';
 
 export const TaskCard = ({ subject }: SurfaceComponentProps<Task.Task>) => {

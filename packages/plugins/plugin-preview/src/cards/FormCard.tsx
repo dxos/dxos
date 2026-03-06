@@ -7,9 +7,8 @@ import React, { useCallback } from 'react';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { type JsonPath, splitJsonPath } from '@dxos/effect';
-import { useTranslation } from '@dxos/react-ui';
+import { Card, useTranslation } from '@dxos/react-ui';
 import { Form, omitId } from '@dxos/react-ui-form';
-import { Card } from '@dxos/react-ui-mosaic';
 import { type ProjectionModel } from '@dxos/schema';
 import { descriptionMessage, mx } from '@dxos/ui-theme';
 
@@ -31,7 +30,6 @@ export const FormCard = ({ subject, projection }: SurfaceComponentProps & { proj
   }, []);
 
   if (!schema) {
-    // TODO(burdon): Use Alert.
     return <p className={mx(descriptionMessage)}>{t('unable to create preview message')}</p>;
   }
 

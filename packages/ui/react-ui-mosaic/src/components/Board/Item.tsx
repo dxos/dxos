@@ -6,12 +6,11 @@ import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import React, { type ReactElement, type Ref as ReactRef, forwardRef, useMemo, useRef } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Tag, useTranslation } from '@dxos/react-ui';
-import { createMenuAction } from '@dxos/react-ui-menu';
+import { Card, Tag, Toolbar, useTranslation } from '@dxos/react-ui';
+import { createMenuAction, Menu } from '@dxos/react-ui-menu';
 import { getHashStyles } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
-import { Card } from '../Card';
 import { Focus } from '../Focus';
 import { Mosaic, type MosaicTileProps } from '../Mosaic';
 
@@ -68,29 +67,40 @@ const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
         debug={debug}
       >
         <Focus.Group asChild>
-          <Card.Root
-            classNames={classNames}
-            data-testid='board-item'
-            onClick={() => rootRef.current?.focus()}
-            ref={composedRef}
-          >
-            <Card.Toolbar>
-              <Card.DragHandle ref={dragHandleRef} />
-              <Card.Title>{label}</Card.Title>
-              <Card.Menu items={items} />
-            </Card.Toolbar>
-            {/* TODO(burdon): Replace with surface. */}
-            <Card.Row icon='ph--note--regular' classNames='text-description'>
-              {description}
-            </Card.Row>
-            <Card.Row icon='ph--tag--regular'>
-              {label && (
-                <div role='none' className='shrink-0 flex gap-1 items-center text-xs'>
-                  <Tag palette={getHashStyles(label).hue}>{label}</Tag>
-                </div>
-              )}
-            </Card.Row>
-          </Card.Root>
+          <Menu.Root>
+            <Card.Root
+              classNames={classNames}
+              data-testid='board-item'
+              onClick={() => rootRef.current?.focus()}
+              ref={composedRef}
+            >
+              <Card.Toolbar>
+                <Card.DragHandle ref={dragHandleRef} />
+                <Card.Title>{label}</Card.Title>
+                {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
+                <Menu.Trigger asChild disabled={!items?.length}>
+                  <Toolbar.IconButton
+                    iconOnly
+                    variant='ghost'
+                    icon='ph--dots-three-vertical--regular'
+                    label={t('action menu label')}
+                  />
+                </Menu.Trigger>
+              </Card.Toolbar>
+              <Menu.Content items={items} />
+              {/* TODO(burdon): Replace with surface. */}
+              <Card.Row icon='ph--note--regular' classNames='text-description'>
+                {description}
+              </Card.Row>
+              <Card.Row icon='ph--tag--regular'>
+                {label && (
+                  <div role='none' className='shrink-0 flex gap-1 items-center text-xs'>
+                    <Tag palette={getHashStyles(label).hue}>{label}</Tag>
+                  </div>
+                )}
+              </Card.Row>
+            </Card.Root>
+          </Menu.Root>
         </Focus.Group>
       </Mosaic.Tile>
     );

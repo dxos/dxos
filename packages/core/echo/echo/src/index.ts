@@ -25,3 +25,6 @@ export * as Relation from './Relation';
 export * as SchemaRegistry from './SchemaRegistry';
 export * as Tag from './Tag';
 export * as Type from './Type';
+export * as Collection from './Collection';
+export * as View from './View';
+export * as Dataset from './Dataset';

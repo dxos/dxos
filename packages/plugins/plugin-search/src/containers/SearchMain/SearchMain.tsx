@@ -8,9 +8,9 @@ import { Surface } from '@dxos/app-framework/ui';
 import { useObjectMenuItems, useObjectNavigate } from '@dxos/app-toolkit/ui';
 import { Entity, Query } from '@dxos/echo';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
-import { ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
-import { Container } from '@dxos/react-ui';
-import { Card, Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
+import { Card, Container, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Menu } from '@dxos/react-ui-menu';
+import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { Text } from '@dxos/schema';
 
@@ -79,13 +79,26 @@ const SearchResultTile: MosaicStackTileComponent<SearchResult> = (props) => {
   const handleNavigate = useObjectNavigate(object);
 
   return (
-    <Card.Root key={data.id}>
-      <Card.Toolbar>
-        <Card.DragHandle />
-        <Card.Title onClick={handleNavigate}>{data.label ?? (data.object && Entity.getLabel(data.object))}</Card.Title>
-        <Card.Menu items={objectMenuItems} />
-      </Card.Toolbar>
-      <Surface.Surface role='card--content' data={{ subject: data.object }} limit={1} />
-    </Card.Root>
+    <Menu.Root>
+      <Card.Root key={data.id}>
+        <Card.Toolbar>
+          <Card.DragHandle />
+          <Card.Title onClick={handleNavigate}>
+            {data.label ?? (data.object && Entity.getLabel(data.object))}
+          </Card.Title>
+          {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
+          <Menu.Trigger asChild disabled={!objectMenuItems?.length}>
+            <Toolbar.IconButton
+              iconOnly
+              variant='ghost'
+              icon='ph--dots-three-vertical--regular'
+              label='Actions'
+            />
+          </Menu.Trigger>
+        </Card.Toolbar>
+        <Menu.Content items={objectMenuItems} />
+        <Surface.Surface role='card--content' data={{ subject: data.object }} limit={1} />
+      </Card.Root>
+    </Menu.Root>
   );
 };

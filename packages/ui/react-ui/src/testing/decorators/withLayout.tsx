@@ -10,7 +10,7 @@ import { mx } from '@dxos/ui-theme';
 
 export type ContainerProps = ThemedClassName<PropsWithChildren>;
 
-export type ContainerType = 'default' | 'centered' | 'fullscreen' | 'column';
+export type ContainerType = 'default' | 'fullscreen' | 'centered' | 'column';
 
 export type WithLayoutProps =
   | FC<ContainerProps>
@@ -53,20 +53,22 @@ const layouts: Record<ContainerType, FC<ContainerProps>> = {
     </div>
   ),
 
-  centered: ({ classNames, children }: ContainerProps) => (
-    <div role='none' className={mx('fixed inset-0 flex grid place-items-center', classNames)}>
-      {children}
-    </div>
-  ),
-
   fullscreen: ({ classNames, children }: ContainerProps) => (
     <div role='none' className={mx('fixed inset-0 flex overflow-hidden bg-base-surface', classNames)}>
       {children}
     </div>
   ),
 
+  centered: ({ classNames, children }: ContainerProps) => (
+    <div role='none' className={mx('fixed inset-0 grid overflow-hidden place-items-center bg-base-surface')}>
+      <div role='none' className={mx('flex flex-col w-[40rem] bg-group-surface', classNames)}>
+        {children}
+      </div>
+    </div>
+  ),
+
   column: ({ classNames, children }: ContainerProps) => (
-    <div role='none' className='fixed inset-0 flex justify-center overflow-hidden bg-base-surface'>
+    <div role='none' className='fixed inset-0 flex overflow-hidden justify-center bg-base-surface'>
       <div role='none' className={mx('flex flex-col w-[40rem] bg-group-surface', classNames)}>
         {children}
       </div>

@@ -11,10 +11,10 @@ import { Obj, Query, Type } from '@dxos/echo';
 import { resolveSchemaWithRegistry } from '@dxos/plugin-space';
 import { Filter, getSpace, useObject } from '@dxos/react-client/echo';
 import { useAsyncEffect, useTranslation } from '@dxos/react-ui';
-import { Board, Card, Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
+import { Card } from '@dxos/react-ui';
+import { Board, Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { ProjectionModel, createEchoChangeCallback } from '@dxos/schema';
 import { type Pipeline } from '@dxos/types';
-import { mx } from '@dxos/ui-theme';
 
 import { meta } from '../meta';
 
@@ -82,18 +82,12 @@ export const PipelineColumn = ({ data: column, location, classNames, debug }: Pi
     <Board.Column.Root
       data={column}
       location={location}
-      classNames={classNames}
+      classNames={['group/column grid h-full overflow-hidden grid-rows-[var(--dx-rail-action)_1fr]', classNames]}
       debug={debug}
       dragHandleRef={dragHandleRef}
     >
-      <div
-        role='none'
-        data-testid='board-column'
-        className={mx('group/column grid h-full overflow-hidden grid-rows-[var(--dx-rail-action)_1fr]', classNames)}
-      >
-        <Board.Column.Header label={column.name ?? t('untitled view title')} dragHandleRef={dragHandleRef} />
-        <Board.Column.Body data={column} Tile={Tile} />
-      </div>
+      <Board.Column.Header label={column.name ?? t('untitled view title')} dragHandleRef={dragHandleRef} />
+      <Board.Column.Body data={column} Tile={Tile} />
     </Board.Column.Root>
   );
 };

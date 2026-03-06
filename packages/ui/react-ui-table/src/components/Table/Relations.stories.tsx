@@ -8,6 +8,7 @@ import React, { useCallback, useContext, useEffect, useMemo, useState } from 're
 import { expect, userEvent, within } from 'storybook/test';
 
 import { Obj, Type } from '@dxos/echo';
+import { View } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { type DxGrid } from '@dxos/lit-grid';
 import '@dxos/lit-ui/dx-tag-picker.pcss';
@@ -16,7 +17,7 @@ import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as formTranslations } from '@dxos/react-ui-form';
-import { View } from '@dxos/schema';
+import { ViewModel } from '@dxos/schema';
 import { type ValueGenerator, createAsyncGenerator } from '@dxos/schema/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 import { Organization, Person } from '@dxos/types';
@@ -50,7 +51,7 @@ const useTestModel = <S extends Type.Obj.Any>(schema: S, count: number) => {
       return;
     }
 
-    const { view, jsonSchema } = await View.makeFromDatabase({ db: space.db, typename: Type.getTypename(schema) });
+    const { view, jsonSchema } = await ViewModel.makeFromDatabase({ db: space.db, typename: Type.getTypename(schema) });
     const object = Table.make({ view, jsonSchema });
     setObject(object);
     space.db.add(object);

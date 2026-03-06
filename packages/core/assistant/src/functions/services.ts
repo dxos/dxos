@@ -12,12 +12,12 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
 import { AiToolNotFoundError, ToolExecutionService, ToolResolverService } from '@dxos/ai';
+import { GenericToolkit } from '@dxos/ai';
 import { todo } from '@dxos/debug';
 import { Type } from '@dxos/echo';
 import { type FunctionDefinition, FunctionInvocationService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 
-import { GenericToolkit } from '../session';
 import { RefFromLLM } from '../types';
 
 /**

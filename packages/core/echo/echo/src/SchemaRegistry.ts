@@ -76,6 +76,7 @@ export type ExtractQueryResult<Query> = Query extends { location: ('database' | 
   ? Type.Entity.Any
   : Type.RuntimeType;
 
+// TODO(dmaretskyi): Rename TypeRegistry
 export interface SchemaRegistry {
   /**
    * Checks if the provided schema is registered.

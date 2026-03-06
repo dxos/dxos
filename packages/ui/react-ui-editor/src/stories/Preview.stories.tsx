@@ -10,10 +10,9 @@ import { createPortal } from 'react-dom';
 
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
-import { Popover } from '@dxos/react-ui';
+import { Card, Popover, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { createMenuAction } from '@dxos/react-ui-menu';
-import { Card } from '@dxos/react-ui-mosaic';
+import { createMenuAction, Menu } from '@dxos/react-ui-menu';
 import {
   type PreviewBlock,
   type PreviewLinkRef,
@@ -65,7 +64,7 @@ const PreviewCard = () => {
               <Card.Icon toolbar icon='ph--file-text--regular' />
               <Card.Title>{target.label}</Card.Title>
               <Popover.Close asChild>
-                <Card.Close />
+                <Card.CloseIconButton />
               </Popover.Close>
             </Card.Toolbar>
             <Card.Row>
@@ -145,36 +144,50 @@ const PreviewBlockComponent = ({ link, el, view }: { link: PreviewLinkRef; el: H
     }
   }, [handleAction, link, target]);
 
+  const menuItems = useMemo(
+    () => [
+      createMenuAction('delete', handleDelete, {
+        label: link.suggest ? 'Discard' : 'Delete',
+        icon: 'ph--x--regular',
+      }),
+      ...(target
+        ? [
+            createMenuAction('apply', handleInsert, {
+              label: 'Apply',
+              icon: 'ph--check--regular',
+            }),
+          ]
+        : []),
+    ],
+    [handleDelete, handleInsert, link.suggest, target],
+  );
+
   return createPortal(
-    <Card.Root classNames={hoverableControls}>
-      {!view?.state.readOnly && (
-        <Card.Toolbar>
-          <Card.Icon toolbar icon='ph--bookmark--regular' />
-          <Card.Title>{link.label}</Card.Title>
-          <Card.Menu
-            items={[
-              createMenuAction('delete', handleDelete, {
-                label: link.suggest ? 'Discard' : 'Delete',
-                icon: 'ph--x--regular',
-              }),
-              ...(target
-                ? [
-                    createMenuAction('apply', handleInsert, {
-                      label: 'Apply',
-                      icon: 'ph--check--regular',
-                    }),
-                  ]
-                : []),
-            ]}
-          />
-        </Card.Toolbar>
-      )}
-      {target && (
-        <Card.Row>
-          <Card.Text className='text-description'>{target.text}</Card.Text>
-        </Card.Row>
-      )}
-    </Card.Root>,
+    <Menu.Root>
+      <Card.Root classNames={hoverableControls}>
+        {!view?.state.readOnly && (
+          <Card.Toolbar>
+            <Card.Icon toolbar icon='ph--bookmark--regular' />
+            <Card.Title>{link.label}</Card.Title>
+            {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
+            <Menu.Trigger asChild disabled={!menuItems?.length}>
+              <Toolbar.IconButton
+                iconOnly
+                variant='ghost'
+                icon='ph--dots-three-vertical--regular'
+                label='Menu'
+              />
+            </Menu.Trigger>
+          </Card.Toolbar>
+        )}
+        <Menu.Content items={menuItems} />
+        {target && (
+          <Card.Row>
+            <Card.Text className='text-description'>{target.text}</Card.Text>
+          </Card.Row>
+        )}
+      </Card.Root>
+    </Menu.Root>,
     el,
   );
 };
