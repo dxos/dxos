@@ -15,9 +15,9 @@ import { Voxel } from '../../types';
 export type VoxelArticleProps = SurfaceComponentProps<Voxel.World>;
 
 const TOOL_HINTS: Record<ToolMode, string> = {
-  select: 'Middle-drag to orbit | Shift+middle to pan | Scroll to zoom',
-  add: 'Click to place voxel | Middle-drag to orbit | Shift+middle to pan',
-  remove: 'Click voxel to remove | Middle-drag to orbit | Shift+middle to pan',
+  select: 'Option-drag or middle-drag to orbit | +Shift to pan | Scroll to zoom',
+  add: 'Click to place voxel | Option-drag to orbit | +Shift to pan',
+  remove: 'Click voxel to remove | Option-drag to orbit | +Shift to pan',
 };
 
 export const VoxelArticle = ({ subject: world }: VoxelArticleProps) => {

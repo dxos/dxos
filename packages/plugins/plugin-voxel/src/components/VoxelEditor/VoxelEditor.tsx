@@ -20,8 +20,12 @@ import { type Voxel } from '../../types';
 //   Mapping: voxel (x, y, z) → Three.js (x, z, y).
 //
 
-/** Convert voxel coordinates to Three.js position. */
-const toThree = (x: number, y: number, z: number): [number, number, number] => [x, z, y];
+/** Convert voxel coordinates to Three.js position, scaled by block size. */
+const toThree = (x: number, y: number, z: number, blockSize = 1): [number, number, number] => [
+  x * blockSize,
+  z * blockSize,
+  y * blockSize,
+];
 
 /** Convert Three.js position back to voxel coordinates. */
 const fromThree = (tx: number, ty: number, tz: number): { x: number; y: number; z: number } => ({
@@ -249,11 +253,23 @@ const Grid = ({ gridX, gridY, onClick, onPointerMove, onPointerOut }: GridProps)
   );
 };
 
+/** Ensures the camera looks at the grid center with correct orientation after mount. */
+const CameraSetup = ({ target }: { target: [number, number, number] }) => {
+  const { camera } = useThree();
+  useEffect(() => {
+    camera.up.set(0, 1, 0);
+    camera.lookAt(...target);
+    camera.updateProjectionMatrix();
+  }, [camera, target]);
+  return null;
+};
+
 /** Blender-style orbit controls: middle-click orbit, Shift+middle pan, scroll zoom. */
 const OrbitControlsManager = ({ gridX, gridY, blockSize }: { gridX: number; gridY: number; blockSize: number }) => {
   const { gl } = useThree();
   const controlsRef = useRef<any>(null);
   const maxDim = Math.max(gridX, gridY) * blockSize;
+  const gridCenter = toThree(-0.5, -0.5, 0, blockSize);
 
   useEffect(() => {
     const controls = controlsRef.current;
@@ -262,27 +278,27 @@ const OrbitControlsManager = ({ gridX, gridY, blockSize }: { gridX: number; grid
     }
 
     const handlePointerDown = (event: PointerEvent) => {
-      // Only middle-click activates controls.
-      if (event.button !== 1) {
-        controls.enabled = false;
-        return;
+      if (event.button === 1) {
+        // Shift+middle = pan, middle = orbit.
+        controls.mouseButtons.MIDDLE = event.shiftKey ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE;
       }
-      controls.enabled = true;
-      // Shift+middle = pan, middle = orbit.
-      controls.mouseButtons.MIDDLE = event.shiftKey ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE;
+      if (event.button === 0 && event.altKey) {
+        // Option+left-click = orbit (Shift+Option+left = pan).
+        controls.mouseButtons.LEFT = event.shiftKey ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE;
+      }
     };
 
-    const handlePointerUp = () => {
-      controls.enabled = false;
+    const handlePointerUp = (event: PointerEvent) => {
+      if (event.button === 0) {
+        controls.mouseButtons.LEFT = -1 as THREE.MOUSE;
+      }
     };
 
-    const domElement = gl.domElement;
-    domElement.addEventListener('pointerdown', handlePointerDown);
-    domElement.addEventListener('pointerup', handlePointerUp);
-
+    gl.domElement.addEventListener('pointerdown', handlePointerDown);
+    gl.domElement.addEventListener('pointerup', handlePointerUp);
     return () => {
-      domElement.removeEventListener('pointerdown', handlePointerDown);
-      domElement.removeEventListener('pointerup', handlePointerUp);
+      gl.domElement.removeEventListener('pointerdown', handlePointerDown);
+      gl.domElement.removeEventListener('pointerup', handlePointerUp);
     };
   }, [gl]);
 
@@ -290,14 +306,13 @@ const OrbitControlsManager = ({ gridX, gridY, blockSize }: { gridX: number; grid
     <OrbitControls
       ref={controlsRef}
       makeDefault
-      enabled={false}
       mouseButtons={{
         LEFT: -1 as THREE.MOUSE,
         MIDDLE: THREE.MOUSE.ROTATE,
         RIGHT: -1 as THREE.MOUSE,
       }}
       enableZoom
-      target={[0, 0, 0]}
+      target={gridCenter}
       maxPolarAngle={Math.PI / 2}
       minDistance={2}
       maxDistance={maxDim * 3}
@@ -466,7 +481,10 @@ const VoxelScene = ({
       {readOnly ? (
         <FitCamera voxels={visibleVoxels} blockSize={blockSize} />
       ) : (
-        <OrbitControlsManager gridX={gridX} gridY={gridY} blockSize={blockSize} />
+        <>
+          <CameraSetup target={toThree(-0.5, -0.5, 0, blockSize)} />
+          <OrbitControlsManager gridX={gridX} gridY={gridY} blockSize={blockSize} />
+        </>
       )}
       {!readOnly && (
         <GizmoHelper alignment='bottom-right' margin={[60, 60]}>
@@ -490,10 +508,15 @@ export const VoxelEditor = ({
   onRemoveVoxel,
 }: VoxelEditorProps) => {
   const maxDim = Math.max(gridX, gridY) * blockSize;
+  const gridCenter = toThree(-0.5, -0.5, 0, blockSize);
 
   return (
     <Canvas
-      camera={{ position: [maxDim, maxDim * 0.8, maxDim], fov: 50 }}
+      camera={{
+        position: [gridCenter[0], gridCenter[1] + maxDim * 0.5, gridCenter[2] + maxDim * 1.0],
+        fov: 50,
+        up: [0, 1, 0],
+      }}
       onContextMenu={(event) => event.preventDefault()}
     >
       <VoxelScene
