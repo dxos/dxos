@@ -46,6 +46,7 @@ export { toEffectSchema, toJsonSchema };
 /**
  * Returns all properties of an object or relation except for the id and kind.
  */
+// TODO(dmaretskyi): Narrow T to Entity.Unknown or Entity.Snapshot<Entity.Unknown>
 export type Properties<T = any> = Omit<T, 'id' | Entity$.KindId | Relation$.Source | Relation$.Target>;
 
 //
@@ -88,6 +89,7 @@ interface RelationJsonProps {
 //   - Generic operation schemas that preserve input type in output
 //   - Branded types that specific schemas also carry
 //   - Accept the limitation and require explicit type narrowing at call sites
+// TODO(dmaretskyi): Add `inviariant(Obj.instanceOf(Schema, obj))` to places where assignability is an issue.
 type ObjSchemaType = Schema.Schema<
   any & AnyEntity & Entity$.OfKind<typeof Entity$.Kind.Object> & AnyProperties,
   { id: string } & AnyProperties
@@ -175,6 +177,7 @@ type ObjectSchemaBase = Schema.Schema.AnyNoContext & {
   readonly version: string;
 };
 
+// TODO(dmaretskyi): Flatten 2nd level namespaces: Type.Obj.Any => Type.AnyObj.
 export namespace Obj {
   /**
    * Type that represents any ECHO object schema.
@@ -519,4 +522,7 @@ export const Feed = Schema.Struct({
 /**
  * TypeScript instance type for a Feed object.
  */
+// TODO(dmaretskyi): Inconsistency here:
+//                   Type.Obj -- type of schema that represents an object (see Obj interface definition in this file).
+//                   Type.Feed -- type of instance of a Feed object (see Feed interface definition in this file).
 export interface Feed extends Schema.Schema.Type<typeof Feed> {}
