@@ -285,6 +285,9 @@ const OrbitControlsManager = ({ gridX, gridY, blockSize }: { gridX: number; grid
       if (event.button === 0 && event.altKey) {
         // Option+left-click = orbit (Shift+Option+left = pan).
         controls.mouseButtons.LEFT = event.shiftKey ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE;
+      } else if (event.button === 0 && event.shiftKey) {
+        // Shift+left-click = pan.
+        controls.mouseButtons.LEFT = THREE.MOUSE.PAN;
       }
     };
 
