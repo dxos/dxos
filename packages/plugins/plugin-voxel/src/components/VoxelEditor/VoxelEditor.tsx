@@ -13,20 +13,29 @@ import { type ColorStyles, type Hue, palette } from '@dxos/ui-theme';
 
 import { type Voxel } from '../../types';
 
-/** Resolve the fill color for a hue by applying the Tailwind class to a temporary element. */
+/** Resolve the fill color for a hue by applying the Tailwind class and sampling via canvas. */
 const resolveHueColor = (hue: Hue): number => {
   const el = document.createElement('div');
   el.className = `bg-${hue}-fill`;
-  el.style.display = 'none';
+  el.style.position = 'absolute';
+  el.style.visibility = 'hidden';
   document.body.appendChild(el);
   const computed = getComputedStyle(el).backgroundColor;
   document.body.removeChild(el);
 
-  const match = computed.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-  if (!match) {
+  if (!computed || computed === 'transparent' || computed === 'rgba(0, 0, 0, 0)') {
     return 0x888888;
   }
-  return (parseInt(match[1]) << 16) | (parseInt(match[2]) << 8) | parseInt(match[3]);
+
+  // Use canvas to reliably convert any CSS color format (oklch, color(), rgb, etc.) to RGB.
+  const canvas = document.createElement('canvas');
+  canvas.width = 1;
+  canvas.height = 1;
+  const ctx = canvas.getContext('2d')!;
+  ctx.fillStyle = computed;
+  ctx.fillRect(0, 0, 1, 1);
+  const [red, green, blue] = ctx.getImageData(0, 0, 1, 1).data;
+  return (red << 16) | (green << 8) | blue;
 };
 
 export type VoxelBounds = {
