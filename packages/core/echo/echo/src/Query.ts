@@ -7,13 +7,17 @@ import type * as Schema from 'effect/Schema';
 
 import { type QueryAST } from '@dxos/echo-protocol';
 
+import type * as Collection from './Collection';
 import * as Database from './Database';
+import type * as Dataset from './Dataset';
 import * as Feed from './Feed';
 import * as Filter from './Filter';
 import { getTypeDXNFromSpecifier } from './internal';
+import * as Obj from './Obj';
 import type * as Order from './Order';
 import type * as Ref from './Ref';
 import type * as Type$ from './Type';
+import type * as View from './View';
 
 // TODO(dmaretskyi): Split up into interfaces for objects and relations so they can have separate verbs.
 // TODO(dmaretskyi): Undirected relation traversals.
@@ -170,6 +174,18 @@ export interface Query<T> {
   from(allSpaces: 'all-accessible-spaces', options?: { includeFeeds?: boolean }): Query<T>;
 
   /**
+   * Query from a dataset.
+   * Currently only feeds are supported.
+   *
+   * Example:
+   *
+   * ```ts
+   * Query.type(Person).from(feed);
+   * ```
+   */
+  from(dataset: Dataset.Dataset): Query<T>;
+
+  /**
    * Add options to a query.
    */
   options(options: QueryAST.QueryOptions): Query<T>;
@@ -287,7 +303,14 @@ class QueryClass implements Any {
   }
 
   'from'(
-    arg: Database.Database | Database.Database[] | Feed.Feed | Feed.Feed[] | 'all-accessible-spaces',
+    arg:
+      | Database.Database
+      | Database.Database[]
+      | Feed.Feed
+      | Feed.Feed[]
+      | Collection.Collection
+      | View.View
+      | 'all-accessible-spaces',
     options?: { includeFeeds?: boolean },
   ): Any {
     if (arg === 'all-accessible-spaces') {
@@ -312,6 +335,18 @@ class QueryClass implements Any {
           ...(options?.includeFeeds ? { allQueuesFromSpaces: true } : {}),
         },
       });
+    }
+
+    if (items.length > 0) {
+      const typename = Obj.getTypename(items[0] as Obj.Unknown);
+      // TODO(dmaretskyi): Support querying from views.
+      if (typename === 'dxos.org/type/View') {
+        throw new Error('Query.from(view) is not yet supported.');
+      }
+      // TODO(dmaretskyi): Support querying from collections.
+      if (typename === 'dxos.org/type/Collection') {
+        throw new Error('Query.from(collection) is not yet supported.');
+      }
     }
 
     const feeds = items as Feed.Feed[];

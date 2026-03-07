@@ -11,7 +11,7 @@ import React, { type CSSProperties, useCallback, useEffect, useState } from 'rea
 
 import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
-import { Toolbar } from '@dxos/react-ui';
+import { Input, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Domino } from '@dxos/ui';
 import { type XmlWidgetRegistry } from '@dxos/ui-editor';
@@ -57,6 +57,7 @@ type StoryProps = MarkdownStreamProps & { initialContent?: string; streamOptions
 const DefaultStory = ({ initialContent, content, streamOptions = defaultStreamOptions, ...props }: StoryProps) => {
   const [controller, setController] = useState<MarkdownStreamController | null>(null);
   const [streaming, setStreaming] = useState(false);
+  const [debug, setDebug] = useState(false);
 
   useEffect(() => {
     if (initialContent) {
@@ -114,8 +115,13 @@ const DefaultStory = ({ initialContent, content, streamOptions = defaultStreamOp
         <Toolbar.Button disabled={streaming} onClick={handleAppend}>
           Append
         </Toolbar.Button>
+        <Toolbar.Separator variant='gap' />
+        <Input.Root>
+          <Input.Label>Debug</Input.Label>
+          <Input.Switch checked={debug} onCheckedChange={setDebug} />
+        </Input.Root>
       </Toolbar.Root>
-      <MarkdownStream ref={setController} classNames='w-full overflow-hidden' {...props} />
+      <MarkdownStream {...props} classNames='w-full overflow-hidden' debug={debug} ref={setController} />
     </div>
   );
 };

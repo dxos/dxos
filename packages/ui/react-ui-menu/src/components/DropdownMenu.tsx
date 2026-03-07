@@ -11,7 +11,7 @@ import { type MenuAction, type MenuItem, type MenuItemGroup } from '../types';
 import { executeMenuAction } from '../util';
 
 import { ActionLabel } from './ActionLabel';
-import { type MenuScopedProps, useMenu, useMenuItems } from './MenuContext';
+import { type MenuScopedProps, useMenuItems, useMenuScoped } from './Menu';
 
 export type DropdownMenuProps = DropdownMenuRootProps & {
   group?: MenuItemGroup;
@@ -30,7 +30,7 @@ const DropdownMenuItem = ({
   // TODO(thure): handle other items.
   const action = item as MenuAction;
   const handleClick = useCallback((event: MouseEvent) => onClick(action, event), [action, onClick]);
-  const { iconSize } = useMenu('DropdownMenuItem', __menuScope);
+  const { iconSize } = useMenuScoped('DropdownMenuItem', __menuScope);
   return (
     <NaturalDropdownMenu.Item
       onClick={handleClick}
@@ -61,7 +61,7 @@ const DropdownMenuRoot = ({
     onChange: onOpenChange,
   });
 
-  const { onAction } = useMenu('DropdownMenuRoot', __menuScope);
+  const { onAction } = useMenuScoped('DropdownMenuRoot', __menuScope);
 
   const handleActionClick = useCallback(
     (action: MenuAction, event: MouseEvent) => {

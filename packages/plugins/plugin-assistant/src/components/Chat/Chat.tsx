@@ -19,7 +19,7 @@ import { useIdentity } from '@dxos/react-client/halo';
 import { Input, type ThemedClassName, useDynamicRef, useTranslation } from '@dxos/react-ui';
 import { ChatEditor, type ChatEditorController, type ChatEditorProps } from '@dxos/react-ui-chat';
 import { type MarkdownStreamController } from '@dxos/react-ui-components';
-import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
+import { Menu } from '@dxos/react-ui-menu';
 import { Message } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
@@ -84,7 +84,8 @@ const ChatRoot = ({ children, chat, processor, onEvent, ...props }: ChatRootProp
     return event.on((ev) => {
       switch (ev.type) {
         case 'toggle-debug': {
-          setDebug((current) => !current);
+          setDebug((debug) => !debug);
+
           // Dump state to console.
           queueMicrotask(async () => {
             const objects = processor.context.getObjects();
@@ -432,12 +433,12 @@ const ChatToolbar = ({ classNames, companionTo }: ChatToolbarProps) => {
   const menu = useChatToolbarActions({ chat, companionTo });
 
   return (
-    <MenuProvider
+    <Menu.Root
       {...menu}
       attendableId={companionTo ? Obj.getDXN(companionTo).toString() : chat ? Obj.getDXN(chat).toString() : ''}
     >
-      <ToolbarMenu classNames={classNames} textBlockWidth />
-    </MenuProvider>
+      <Menu.Toolbar classNames={classNames} textBlockWidth />
+    </Menu.Root>
   );
 };
 

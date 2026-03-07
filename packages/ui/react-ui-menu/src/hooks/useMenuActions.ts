@@ -7,7 +7,7 @@ import { useCallback, useContext, useRef } from 'react';
 
 import { Graph, Node } from '@dxos/app-graph';
 
-import { type MenuItem, type MenuItemGroup } from '../types';
+import { type MenuItem, type MenuItemGroup, type MenuItemsAccessor } from '../types';
 
 export type ActionGraphNodes = Node.NodeArg<any>[];
 export type ActionGraphEdges = Graph.Edge[];
@@ -17,7 +17,7 @@ export type ActionGraphProps = {
 };
 
 export type MenuActions = {
-  useGroupItems: (sourceNode?: MenuItemGroup) => MenuItem[];
+  items: MenuItemsAccessor;
 };
 
 export const useMenuActions = (props: Atom.Atom<ActionGraphProps>): MenuActions => {
@@ -35,13 +35,13 @@ export const useMenuActions = (props: Atom.Atom<ActionGraphProps>): MenuActions 
 
   const graph = graphRef.current.graph;
 
-  const useGroupItems = useCallback(
-    (sourceNode?: MenuItemGroup) => {
-      const items = useAtomValue(graph.connections(sourceNode?.id || Node.RootId, 'child')) as MenuItem[];
-      return items;
+  const items: MenuItemsAccessor = useCallback(
+    (group?: MenuItemGroup) => {
+      // TODO(wittjosiah): Migrate to using action relation instead of child.
+      return graph.connections(group?.id || Node.RootId, 'child') as Atom.Atom<MenuItem[] | null>;
     },
     [graph],
   );
 
-  return { useGroupItems };
+  return { items };
 };

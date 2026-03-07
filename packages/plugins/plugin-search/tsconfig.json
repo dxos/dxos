@@ -82,6 +82,9 @@
       "path": "../../ui/react-ui-components"
     },
     {
+      "path": "../../ui/react-ui-menu"
+    },
+    {
       "path": "../../ui/react-ui-mosaic"
     },
     {

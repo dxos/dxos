@@ -8,7 +8,19 @@ import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout, sleep } from '@dxos/async';
-import { type Entity, Feed, type Hypergraph, Obj, Order, Ref, Relation, Type } from '@dxos/echo';
+import {
+  Collection,
+  Dataset,
+  type Entity,
+  Feed,
+  type Hypergraph,
+  Obj,
+  Order,
+  Ref,
+  Relation,
+  Type,
+  View,
+} from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { DXN, PublicKey } from '@dxos/keys';
@@ -84,7 +96,7 @@ describe('Query', () => {
     let db: EchoDatabase;
 
     beforeEach(async () => {
-      ({ db } = await builder.createDatabase());
+      ({ db } = await builder.createDatabase({ types: [...Dataset.Dataset.members] }));
       createTestObjects().forEach((object) => db.add(object));
       await db.flush({ indexes: true });
     });
@@ -243,6 +255,16 @@ describe('Query', () => {
         const objects = await db.query(Query.select(Filter.everything()), { deleted: 'only' }).run();
         expect(objects).to.have.length(3);
       }
+    });
+
+    test('enumerate datasets', async () => {
+      db.add(Feed.make({ name: 'test-feed' }));
+      db.add(Collection.make({ name: 'test-collection' }));
+      db.add(View.make({}));
+      await db.flush({ indexes: true });
+
+      const datasets = await db.query(Query.type(Dataset.Dataset)).run();
+      expect(datasets).to.have.length(3);
     });
   });
 
@@ -607,6 +629,29 @@ describe('Query', () => {
       // Filter.id for a space item should NOT find it when scoped to feed.
       const spaceResult = await db.query(Query.select(Filter.id(spaceItem.id)).from(feed)).run();
       expect(spaceResult).toHaveLength(0);
+    });
+
+    test('Query.type(...).from(feed) scopes query to feed items', async () => {
+      const peer = await builder.createPeer({ types: [Type.Feed, TestSchema.Task] });
+      const db = await peer.createDatabase();
+      const queues = peer.client.constructQueueFactory(db.spaceId);
+      const queue = queues.create();
+
+      const feed = db.add(Feed.make({ name: 'test-feed' }));
+      Obj.change(feed, (mutable) => {
+        Obj.getMeta(mutable).keys.push({ source: Feed.DXN_KEY, id: queue.dxn.toString() });
+      });
+
+      db.add(Obj.make(TestSchema.Task, { title: 'Space Task' }));
+      await queue.append([
+        Obj.make(TestSchema.Task, { title: 'Feed Task 1' }),
+        Obj.make(TestSchema.Task, { title: 'Feed Task 2' }),
+      ]);
+      await db.flush({ indexes: true });
+
+      const feedResults = await db.query(Query.type(TestSchema.Task).from(feed)).run();
+      expect(feedResults).toHaveLength(2);
+      expect(feedResults.map((obj: any) => obj.title).sort()).toEqual(['Feed Task 1', 'Feed Task 2']);
     });
   });
 

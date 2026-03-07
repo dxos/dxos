@@ -52,6 +52,7 @@ import { ThemePlugin } from '@dxos/plugin-theme';
 import { ThreadPlugin } from '@dxos/plugin-thread';
 import { TokenManagerPlugin } from '@dxos/plugin-token-manager';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription';
+import { VoxelPlugin } from '@dxos/plugin-voxel';
 import { WnfsPlugin } from '@dxos/plugin-wnfs';
 import { isTruthy } from '@dxos/util';
 
@@ -221,6 +222,7 @@ export const getPlugins = ({
     ThreadPlugin(),
     TokenManagerPlugin(),
     TranscriptionPlugin(),
+    VoxelPlugin(),
     WelcomePlugin(),
     WnfsPlugin(),
   ]
