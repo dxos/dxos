@@ -13,6 +13,51 @@ import { type ChromaticPalette } from '@dxos/ui-types';
 
 import { type VoxelData } from '../../types/Voxel';
 
+export type VoxelBounds = {
+  /** Center of the bounding box. */
+  center: [number, number, number];
+  /** Camera position that frames all voxels. */
+  cameraPosition: [number, number, number];
+};
+
+/** Compute bounding box center and a camera position that frames all voxels. */
+export const computeVoxelBounds = (voxels: VoxelData[], padding = 1.5): VoxelBounds => {
+  if (voxels.length === 0) {
+    return { center: [0, 0, 0], cameraPosition: [4, 3, 4] };
+  }
+
+  let minX = Infinity;
+  let minY = Infinity;
+  let minZ = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  let maxZ = -Infinity;
+
+  for (const voxel of voxels) {
+    minX = Math.min(minX, voxel.x);
+    minY = Math.min(minY, voxel.y);
+    minZ = Math.min(minZ, voxel.z);
+    maxX = Math.max(maxX, voxel.x);
+    maxY = Math.max(maxY, voxel.y);
+    maxZ = Math.max(maxZ, voxel.z);
+  }
+
+  const centerX = (minX + maxX) / 2;
+  const centerY = (minY + maxY) / 2;
+  const centerZ = (minZ + maxZ) / 2;
+
+  const sizeX = maxX - minX + 1;
+  const sizeY = maxY - minY + 1;
+  const sizeZ = maxZ - minZ + 1;
+  const maxSize = Math.max(sizeX, sizeY, sizeZ);
+  const distance = maxSize * padding;
+
+  return {
+    center: [centerX, centerY, centerZ],
+    cameraPosition: [centerX + distance, centerY + distance * 0.7, centerZ + distance],
+  };
+};
+
 /** Tool modes for the voxel editor. */
 export type ToolMode = 'select' | 'add' | 'remove';
 
@@ -249,6 +294,20 @@ const OrbitControlsManager = ({ gridWidth, gridDepth }: { gridWidth: number; gri
   );
 };
 
+/** Positions the camera to frame all voxels in readOnly mode. */
+const FitCamera = ({ voxels }: { voxels: VoxelData[] }) => {
+  const { camera } = useThree();
+  const bounds = useMemo(() => computeVoxelBounds(voxels), [voxels]);
+
+  useEffect(() => {
+    camera.position.set(...bounds.cameraPosition);
+    camera.lookAt(...bounds.center);
+    camera.updateProjectionMatrix();
+  }, [camera, bounds]);
+
+  return <OrbitControls enablePan={false} enableZoom={false} enableRotate={false} target={bounds.center} />;
+};
+
 type VoxelSceneProps = {
   voxels: VoxelData[];
   gridWidth: number;
@@ -370,15 +429,17 @@ const VoxelScene = ({
       <pointLight position={[-10, 10, -10]} intensity={0.3} />
 
       {!readOnly && (
-        <GroundPlane
-          gridWidth={gridWidth}
-          gridDepth={gridDepth}
-          onClick={handleGroundClick}
-          onPointerMove={handleGroundPointerMove}
-          onPointerOut={clearGhost}
-        />
+        <>
+          <GroundPlane
+            gridWidth={gridWidth}
+            gridDepth={gridDepth}
+            onClick={handleGroundClick}
+            onPointerMove={handleGroundPointerMove}
+            onPointerOut={clearGhost}
+          />
+          <TransparentGrid gridWidth={gridWidth} gridDepth={gridDepth} />
+        </>
       )}
-      <TransparentGrid gridWidth={gridWidth} gridDepth={gridDepth} />
 
       {visibleVoxels.map((voxel, index) => (
         <VoxelBlock
@@ -394,7 +455,7 @@ const VoxelScene = ({
       {!readOnly && <GhostCursor position={ghostPosition} color={selectedColor} isRemove={toolMode === 'remove'} />}
 
       {readOnly ? (
-        <OrbitControls enablePan={false} enableZoom={false} enableRotate={false} />
+        <FitCamera voxels={visibleVoxels} />
       ) : (
         <OrbitControlsManager gridWidth={gridWidth} gridDepth={gridDepth} />
       )}
