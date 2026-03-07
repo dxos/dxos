@@ -60,7 +60,6 @@
     "@dxos/swc-log-plugin": "workspace:*",
     "@dxos/toolbox": "workspace:*",
     "@dxos/typings": "workspace:*",
-    "@dxos/vite-plugin-import-source": "workspace:*",
     "@effect/language-service": "catalog:",
     "@effect/vitest": "catalog:",
     "@eslint/js": "catalog:",

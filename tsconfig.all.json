@@ -646,9 +646,6 @@
       "path": "tools/vite-plugin-icons/tsconfig.json"
     },
     {
-      "path": "tools/vite-plugin-import-source/tsconfig.json"
-    },
-    {
       "path": "tools/x/tsconfig.json"
     },
     {

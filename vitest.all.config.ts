@@ -8,6 +8,9 @@ import react from '@vitejs/plugin-react-swc';
  * Config for the vitest vscode extension.
  */
 export default defineConfig(async () => ({
+  resolve: {
+    conditions: ['source', 'module', 'node', 'development', 'production'],
+  },
   esbuild: {
     target: 'esnext',
   },
@@ -31,9 +34,6 @@ export default defineConfig(async () => ({
     ],
   },
   plugins: [
-    // Vitest extension for VSCode doesnt support ESM.
-    await import('@dxos/vite-plugin-import-source').then((m) => m.default()),
-
     // We don't care about react but we want the SWC transforers.
     react({
       tsDecorators: true,

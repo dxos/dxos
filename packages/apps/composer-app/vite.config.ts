@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import importSource from '@dxos/vite-plugin-import-source';
 import react from '@vitejs/plugin-react-swc';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
@@ -36,29 +35,17 @@ const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(file
 
 // Shared plugins for worker that are using in prod build.
 // In dev vite uses root plugins for both worker and page.
-const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
-  // Building from dist when creating a prod bundle.
-  env.command === 'serve' &&
-    importSource({
-      exclude: [
-        '@dxos/random-access-storage',
-        '@dxos/lock-file',
-        '@dxos/network-manager',
-        '@dxos/teleport',
-        '@dxos/config',
-        '@dxos/client-services',
-        '@dxos/observability',
-        // TODO(dmaretskyi): Decorators break in lit.
-        '@dxos/lit-*',
-      ],
-    }),
-  wasm(),
-  sourcemaps(),
-];
+const sharedPlugins = (_env: ConfigEnv): PluginOption[] => [wasm(), sourcemaps()];
 
 /**
  * https://vitejs.dev/config
  */
+const resolveConditions = (env: ConfigEnv) =>
+  env.command === 'serve' ? ['source', 'module', 'browser', 'development', 'production'] : undefined;
+
+const ssrResolveConditions = (env: ConfigEnv) =>
+  env.command === 'serve' ? ['source', 'module', 'node', 'development', 'production'] : undefined;
+
 export default defineConfig((env) => ({
   root: dirname,
   server: {
@@ -110,6 +97,7 @@ export default defineConfig((env) => ({
     exclude: ['@dxos/wa-sqlite'],
   },
   resolve: {
+    conditions: resolveConditions(env),
     alias: {
       ['node-fetch']: 'isomorphic-fetch',
       ['node:util']: '@dxos/node-std/util',
@@ -132,6 +120,11 @@ export default defineConfig((env) => ({
       '@dxos/echo-solid': path.resolve(rootDir, 'packages/core/echo/echo-solid/src'),
       // Worker entry point for OPFS SQLite.
       '@dxos/client/opfs-worker': path.resolve(rootDir, 'packages/sdk/client/src/worker/opfs-worker.ts'),
+    },
+  },
+  ssr: {
+    resolve: {
+      conditions: ssrResolveConditions(env),
     },
   },
   worker: {

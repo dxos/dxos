@@ -13,12 +13,17 @@ import WasmPlugin from 'vite-plugin-wasm';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/ui-theme/plugin';
 import tsconfigPaths from 'vite-tsconfig-paths';
-import { UserConfig } from 'vitest/config';
+import { UserConfig, ConfigEnv } from 'vitest/config';
 
 import { createConfig as createTestConfig } from '../../../vitest.base.config';
-import PluginImportSource from '@dxos/vite-plugin-import-source';
 
 const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
+
+const resolveConditions = (env: ConfigEnv) =>
+  env.command === 'serve' ? ['source', 'module', 'browser', 'development', 'production'] : undefined;
+
+const ssrResolveConditions = (env: ConfigEnv) =>
+  env.command === 'serve' ? ['source', 'module', 'node', 'development', 'production'] : undefined;
 
 // https://vitejs.dev/config/
 export default defineConfig(
@@ -51,6 +56,7 @@ export default defineConfig(
         },
       },
       resolve: {
+        conditions: resolveConditions(env),
         alias: {
           ['node-fetch']: 'isomorphic-fetch',
           ['node:util']: '@dxos/node-std/util',
@@ -58,6 +64,11 @@ export default defineConfig(
           ['util']: '@dxos/node-std/util',
           ['path']: '@dxos/node-std/path',
           ['tiktoken/lite']: path.resolve(dirname, 'stub.mjs'),
+        },
+      },
+      ssr: {
+        resolve: {
+          conditions: ssrResolveConditions(env),
         },
       },
       esbuild: {
@@ -85,43 +96,10 @@ export default defineConfig(
       },
       worker: {
         format: 'es',
-        plugins: () => [
-          WasmPlugin(),
-          sourceMaps(),
-          env.command === 'serve' &&
-            PluginImportSource({
-              exclude: [
-                '@dxos/random-access-storage',
-                '@dxos/lock-file',
-                '@dxos/network-manager',
-                '@dxos/teleport',
-                '@dxos/config',
-                '@dxos/client-services',
-                '@dxos/observability',
-                // TODO(dmaretskyi): Decorators break in lit.
-                '@dxos/lit-*',
-              ],
-            }),
-        ],
+        plugins: () => [WasmPlugin(), sourceMaps()],
       },
       plugins: [
         sourceMaps(),
-
-        // Building from dist when creating a prod bundle.
-        env.command === 'serve' &&
-          PluginImportSource({
-            exclude: [
-              '@dxos/random-access-storage',
-              '@dxos/lock-file',
-              '@dxos/network-manager',
-              '@dxos/teleport',
-              '@dxos/config',
-              '@dxos/client-services',
-              '@dxos/observability',
-              // TODO(dmaretskyi): Decorators break in lit.
-              '@dxos/lit-*',
-            ],
-          }),
 
         ConfigPlugin({
           root: dirname,

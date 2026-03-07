@@ -23,7 +23,6 @@
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/vite-plugin-icons": "workspace:*",
-    "@dxos/vite-plugin-import-source": "workspace:*",
     "@storybook/addon-docs": "catalog:",
     "@storybook/addon-links": "catalog:",
     "@storybook/addon-themes": "catalog:",

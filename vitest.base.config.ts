@@ -14,7 +14,6 @@ import Inspect from 'vite-plugin-inspect';
 
 import { FixGracefulFsPlugin, NodeExternalPlugin } from '@dxos/esbuild-plugins';
 import { MODULES } from '@dxos/node-std/_/config';
-import PluginImportSource from '@dxos/vite-plugin-import-source';
 
 const isDebug = !!process.env.VITEST_DEBUG;
 const xmlReport = Boolean(process.env.VITEST_XML_REPORT);
@@ -87,6 +86,9 @@ const createBrowserProject = ({
   plugins = [],
 }: BrowserOptions) =>
   defineProject({
+    resolve: {
+      conditions: ['source', 'module', 'browser', 'development', 'production'],
+    },
     plugins: [
       nodeStdPlugin(),
       WasmPlugin(),
@@ -151,6 +153,9 @@ type NodeOptions = {
 
 const createNodeProject = ({ environment = 'node', retry, timeout, setupFiles = [], plugins = [] }: NodeOptions = {}) =>
   defineProject({
+    resolve: {
+      conditions: ['source', 'module', 'node', 'development', 'production'],
+    },
     esbuild: {
       target: 'esnext',
     },
@@ -178,7 +183,6 @@ const createNodeProject = ({ environment = 'node', retry, timeout, setupFiles = 
     // http://localhost:51204/__inspect/#/
     plugins: [
       ...plugins,
-      PluginImportSource(),
       process.env.VITE_INSPECT ? Inspect() : undefined,
       // Add react plugin to enable SWC transfors.
       react({
