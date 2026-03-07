@@ -178,35 +178,29 @@ type GridProps = {
   onPointerOut?: () => void;
 };
 
-/** Ground grid with transparent lines, colored axes, and an invisible click target. */
+/** Ground grid with transparent fill, colored axes, and a click target. */
 const Grid = ({ gridWidth, gridDepth, onClick, onPointerMove, onPointerOut }: GridProps) => {
   const gridLines = useMemo(() => {
     const points: THREE.Vector3[] = [];
     const colors: number[] = [];
+    const yPos = -0.5;
 
-    const halfW = gridWidth / 2;
-    const halfD = gridDepth / 2;
-    const offsetX = gridWidth / 2 - 0.5;
-    const offsetZ = gridDepth / 2 - 0.5;
-
-    // Lines along X-axis (varying z).
+    // Lines along X-axis (varying z), from z=-0.5 to z=gridDepth-0.5.
     for (let idx = 0; idx <= gridDepth; idx++) {
-      const zLocal = -halfD + idx;
-      const zWorld = zLocal + offsetZ;
-      const isOrigin = Math.abs(zWorld + 0.5) < 0.01;
-      points.push(new THREE.Vector3(-halfW + offsetX, -0.5, zWorld));
-      points.push(new THREE.Vector3(halfW + offsetX, -0.5, zWorld));
+      const zPos = idx - 0.5;
+      const isOrigin = idx === 0;
+      points.push(new THREE.Vector3(-0.5, yPos, zPos));
+      points.push(new THREE.Vector3(gridWidth - 0.5, yPos, zPos));
       const color = isOrigin ? [0.9, 0.2, 0.2] : [0.5, 0.5, 0.5];
       colors.push(...color, ...color);
     }
 
-    // Lines along Z-axis (varying x).
+    // Lines along Z-axis (varying x), from x=-0.5 to x=gridWidth-0.5.
     for (let idx = 0; idx <= gridWidth; idx++) {
-      const xLocal = -halfW + idx;
-      const xWorld = xLocal + offsetX;
-      const isOrigin = Math.abs(xWorld + 0.5) < 0.01;
-      points.push(new THREE.Vector3(xWorld, -0.5, -halfD + offsetZ));
-      points.push(new THREE.Vector3(xWorld, -0.5, halfD + offsetZ));
+      const xPos = idx - 0.5;
+      const isOrigin = idx === 0;
+      points.push(new THREE.Vector3(xPos, yPos, -0.5));
+      points.push(new THREE.Vector3(xPos, yPos, gridDepth - 0.5));
       const color = isOrigin ? [0.2, 0.2, 0.9] : [0.5, 0.5, 0.5];
       colors.push(...color, ...color);
     }
@@ -216,12 +210,20 @@ const Grid = ({ gridWidth, gridDepth, onClick, onPointerMove, onPointerOut }: Gr
     return geometry;
   }, [gridWidth, gridDepth]);
 
+  const centerX = gridWidth / 2 - 0.5;
+  const centerZ = gridDepth / 2 - 0.5;
+
   return (
     <group>
-      {/* Invisible click target for placing voxels on the ground. */}
+      {/* Ground fill plane. */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[centerX, -0.501, centerZ]}>
+        <planeGeometry args={[gridWidth, gridDepth]} />
+        <meshStandardMaterial color={0xcccccc} side={THREE.DoubleSide} transparent opacity={0.1} />
+      </mesh>
+      {/* Click target (slightly above fill to catch raycasts). */}
       <mesh
         rotation={[-Math.PI / 2, 0, 0]}
-        position={[gridWidth / 2 - 0.5, -0.501, gridDepth / 2 - 0.5]}
+        position={[centerX, -0.499, centerZ]}
         onClick={onClick}
         onPointerMove={onPointerMove}
         onPointerOut={onPointerOut}
