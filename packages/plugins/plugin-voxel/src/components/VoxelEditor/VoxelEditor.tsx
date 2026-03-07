@@ -249,7 +249,7 @@ const Grid = ({ gridX, gridY, onClick, onPointerMove, onPointerOut }: GridProps)
   );
 };
 
-/** Manage CMD-drag orbit controls. */
+/** Blender-style orbit controls: middle-click orbit, Shift+middle pan, scroll zoom. */
 const OrbitControlsManager = ({ gridX, gridY, blockSize }: { gridX: number; gridY: number; blockSize: number }) => {
   const { gl } = useThree();
   const controlsRef = useRef<any>(null);
@@ -262,16 +262,18 @@ const OrbitControlsManager = ({ gridX, gridY, blockSize }: { gridX: number; grid
     }
 
     const handlePointerDown = (event: PointerEvent) => {
-      // Enable orbit on CMD/Ctrl+left-click or middle-click.
-      if (event.button === 0 && !event.metaKey && !event.ctrlKey) {
+      // Only middle-click activates controls.
+      if (event.button !== 1) {
         controls.enabled = false;
-      } else {
-        controls.enabled = true;
+        return;
       }
+      controls.enabled = true;
+      // Shift+middle = pan, middle = orbit.
+      controls.mouseButtons.MIDDLE = event.shiftKey ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE;
     };
 
     const handlePointerUp = () => {
-      controls.enabled = true;
+      controls.enabled = false;
     };
 
     const domElement = gl.domElement;
@@ -288,11 +290,13 @@ const OrbitControlsManager = ({ gridX, gridY, blockSize }: { gridX: number; grid
     <OrbitControls
       ref={controlsRef}
       makeDefault
+      enabled={false}
       mouseButtons={{
-        LEFT: THREE.MOUSE.ROTATE,
-        MIDDLE: THREE.MOUSE.DOLLY,
-        RIGHT: THREE.MOUSE.PAN,
+        LEFT: -1 as THREE.MOUSE,
+        MIDDLE: THREE.MOUSE.ROTATE,
+        RIGHT: -1 as THREE.MOUSE,
       }}
+      enableZoom
       target={[0, 0, 0]}
       maxPolarAngle={Math.PI / 2}
       minDistance={2}
@@ -355,10 +359,6 @@ const VoxelScene = ({
   const handleVoxelClick = useCallback(
     (event: ThreeEvent<MouseEvent>) => {
       event.stopPropagation();
-      if (event.metaKey || event.ctrlKey) {
-        return;
-      }
-
       if (toolMode === 'remove' && onRemoveVoxel) {
         const pos = event.object.position;
         onRemoveVoxel(fromThree(pos.x, pos.y, pos.z));
@@ -403,9 +403,6 @@ const VoxelScene = ({
   const handleGroundClick = useCallback(
     (event: ThreeEvent<MouseEvent>) => {
       event.stopPropagation();
-      if (event.metaKey || event.ctrlKey) {
-        return;
-      }
       if (toolMode !== 'add' || !onAddVoxel || !event.point) {
         return;
       }

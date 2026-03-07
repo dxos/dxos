@@ -42,9 +42,14 @@ export const Default: Story = {
 export const WithVoxels: Story = {
   args: {
     voxels: [
-      { x: 0, y: 0, z: 0, hue: 'blue' },
+      { x: 0, y: 0, z: 0, hue: 'green' },
       { x: 1, y: 0, z: 0, hue: 'blue' },
-      { x: 2, y: 0, z: 0, hue: 'blue' },
+      { x: -1, y: 0, z: 0, hue: 'blue' },
+      { x: 0, y: 1, z: 0, hue: 'blue' },
+      { x: 0, y: -1, z: 0, hue: 'blue' },
+      { x: 0, y: 0, z: 1, hue: 'green' },
+      { x: 0, y: 0, z: 2, hue: 'yellow' },
+      { x: 0, y: 0, z: 3, hue: 'purple' },
     ],
   },
 };
