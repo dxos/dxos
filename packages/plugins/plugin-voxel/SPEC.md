@@ -25,4 +25,7 @@
 
 ### Phase 3
 
+- [ ] Physics (e.g., gravity)
+- [ ] Game -- e.g., missiles to knock down blocks
+
 ## Implementation Notes
