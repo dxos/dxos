@@ -22,7 +22,7 @@ export type VoxelData = {
   z: number;
 } & VoxelProps;
 
-/** Map of voxel coordinates to voxel properties. Keys are `${x}-${y}-${z}`. */
+/** Map of voxel coordinates to voxel properties. Keys are `${x}:${y}:${z}`. */
 export type VoxelMap = Record<string, VoxelProps>;
 
 /** A voxel world containing a set of 3D points. */
@@ -34,7 +34,7 @@ export const World = Schema.Struct({
   gridY: Schema.optional(Schema.Number),
   /** Size of each voxel block (default 1). */
   blockSize: Schema.optional(Schema.Number),
-  /** Map of voxel coordinates to voxel properties. Keys are `${x}-${y}-${z}`. */
+  /** Map of voxel coordinates to voxel properties. Keys are `${x}:${y}:${z}`. */
   voxels: Schema.optional(Schema.Record({ key: Schema.String, value: VoxelProps })),
 }).pipe(
   Type.object({
@@ -50,11 +50,11 @@ const DEFAULT_GRID_SIZE = 16;
 const DEFAULT_BLOCK_SIZE = 1;
 
 /** Create a voxel map key from coordinates. */
-export const voxelKey = (x: number, y: number, z: number): string => `${x}-${y}-${z}`;
+export const voxelKey = (x: number, y: number, z: number): string => `${x}:${y}:${z}`;
 
 /** Parse a voxel map key into coordinates. */
 export const parseVoxelKey = (key: string): { x: number; y: number; z: number } => {
-  const [x, y, z] = key.split('-').map(Number);
+  const [x, y, z] = key.split(':').map(Number);
   return { x, y, z };
 };
 
