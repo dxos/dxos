@@ -9,7 +9,7 @@ import { useObject } from '@dxos/echo-react';
 import { Container } from '@dxos/react-ui';
 import { type Hue } from '@dxos/ui-theme';
 
-import { DEFAULT_HUE, type ToolMode, VoxelEditor, VoxelToolbar, getHueHex } from '../../components';
+import { DEFAULT_HUE, type ToolMode, VoxelEditor, VoxelToolbar } from '../../components';
 import { Voxel } from '../../types';
 
 export type VoxelArticleProps = SurfaceComponentProps<Voxel.World>;
@@ -24,7 +24,6 @@ export const VoxelArticle = ({ subject: world }: VoxelArticleProps) => {
   const [voxelMap, updateVoxels] = useObject(world, 'voxels');
   const voxels = useMemo(() => Voxel.toVoxelArray(voxelMap), [voxelMap]);
   const [selectedHue, setSelectedHue] = useState<Hue>(DEFAULT_HUE);
-  const [selectedColor, setSelectedColor] = useState(() => getHueHex(DEFAULT_HUE));
   const [toolMode, setToolMode] = useState<ToolMode>('add');
   const { gridWidth, gridDepth, blockSize } = Voxel.getGridDimensions(world);
 
@@ -33,7 +32,7 @@ export const VoxelArticle = ({ subject: world }: VoxelArticleProps) => {
       const key = Voxel.voxelKey(voxel.x, voxel.y, voxel.z);
       updateVoxels((map) => {
         if (map === undefined || !(key in map)) {
-          (map ??= {} as any)[key] = voxel.color;
+          (map ??= {} as any)[key] = { hue: voxel.hue };
         }
       });
     },
@@ -56,18 +55,13 @@ export const VoxelArticle = ({ subject: world }: VoxelArticleProps) => {
     updateVoxels({});
   }, [updateVoxels]);
 
-  const handleColorChange = useCallback((hue: Hue, hex: number) => {
-    setSelectedHue(hue);
-    setSelectedColor(hex);
-  }, []);
-
   return (
     <Container.Main toolbar>
       <VoxelToolbar
         toolMode={toolMode}
         selectedHue={selectedHue}
         onToolModeChange={setToolMode}
-        onColorChange={handleColorChange}
+        onHueChange={setSelectedHue}
         onClear={handleClear}
       />
       <div className='relative grow'>
@@ -77,7 +71,7 @@ export const VoxelArticle = ({ subject: world }: VoxelArticleProps) => {
           gridDepth={gridDepth}
           blockSize={blockSize}
           toolMode={toolMode}
-          selectedColor={selectedColor}
+          selectedHue={selectedHue}
           onAddVoxel={handleAddVoxel}
           onRemoveVoxel={handleRemoveVoxel}
         />

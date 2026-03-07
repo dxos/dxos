@@ -21,7 +21,7 @@ const DefaultStory = () => {
       toolMode={toolMode}
       selectedHue={selectedHue}
       onToolModeChange={setToolMode}
-      onColorChange={(hue) => setSelectedHue(hue)}
+      onHueChange={setSelectedHue}
       onClear={() => {}}
     />
   );

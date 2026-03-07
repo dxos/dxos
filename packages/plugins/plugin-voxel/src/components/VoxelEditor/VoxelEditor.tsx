@@ -89,9 +89,6 @@ export type ToolMode = 'select' | 'add' | 'remove';
 /** Palette styles used in the voxel editor. */
 export const PALETTE_STYLES: ColorStyles[] = palette.hues.filter((style, i) => i % 2 === 0);
 
-/** Get the Three.js hex color for a hue by resolving CSS variables. */
-export const getHueHex = (hue: Hue): number => resolveHueColor(hue);
-
 /** Default hue. */
 export const DEFAULT_HUE: Hue = 'blue';
 
@@ -106,8 +103,8 @@ export type VoxelEditorProps = {
   blockSize?: number;
   /** Currently selected tool mode. */
   toolMode?: ToolMode;
-  /** Currently selected color hex value. */
-  selectedColor?: number;
+  /** Currently selected hue. */
+  selectedHue?: Hue;
   /** Read-only mode (no interaction, no ground plane, no orbit controls). */
   readOnly?: boolean;
   /** Called when user clicks to add a voxel. */
@@ -119,12 +116,12 @@ export type VoxelEditorProps = {
 type GhostPosition = [number, number, number] | null;
 
 /** Semi-transparent ghost cursor showing where a voxel will be placed. */
-const GhostCursor = ({ position, color, isRemove }: { position: GhostPosition; color: number; isRemove?: boolean }) => {
+const GhostCursor = ({ position, hue, isRemove }: { position: GhostPosition; hue: Hue; isRemove?: boolean }) => {
   if (!position) {
     return null;
   }
 
-  const displayColor = isRemove ? 0xff0000 : color;
+  const displayColor = isRemove ? 0xff0000 : resolveHueColor(hue);
 
   return (
     <mesh position={position} raycast={() => {}}>
@@ -328,7 +325,7 @@ type VoxelSceneProps = {
   gridDepth: number;
   blockSize: number;
   toolMode: ToolMode;
-  selectedColor: number;
+  selectedHue: Hue;
   readOnly?: boolean;
   onAddVoxel?: (voxel: Voxel.VoxelData) => void;
   onRemoveVoxel?: (position: { x: number; y: number; z: number }) => void;
@@ -341,7 +338,7 @@ const VoxelScene = ({
   gridDepth,
   blockSize,
   toolMode,
-  selectedColor,
+  selectedHue,
   readOnly,
   onAddVoxel,
   onRemoveVoxel,
@@ -376,11 +373,11 @@ const VoxelScene = ({
           x: Math.round(pos.x + normal.x),
           y: Math.round(pos.y + normal.y),
           z: Math.round(pos.z + normal.z),
-          color: selectedColor,
+          hue: selectedHue,
         });
       }
     },
-    [toolMode, onAddVoxel, onRemoveVoxel, selectedColor],
+    [toolMode, onAddVoxel, onRemoveVoxel, selectedHue],
   );
 
   const handleVoxelPointerMove = useCallback(
@@ -419,10 +416,10 @@ const VoxelScene = ({
         x: Math.round(point.x),
         y: 0,
         z: Math.round(point.z),
-        color: selectedColor,
+        hue: selectedHue,
       });
     },
-    [toolMode, onAddVoxel, selectedColor],
+    [toolMode, onAddVoxel, selectedHue],
   );
 
   const handleGroundPointerMove = useCallback(
@@ -462,14 +459,14 @@ const VoxelScene = ({
           <VoxelBlock
             key={`${voxel.x}-${voxel.y}-${voxel.z}-${index}`}
             position={[voxel.x, voxel.y, voxel.z]}
-            color={voxel.color}
+            color={resolveHueColor(voxel.hue as Hue)}
             onClick={readOnly ? () => {} : handleVoxelClick}
             onPointerMove={readOnly ? undefined : handleVoxelPointerMove}
             onPointerOut={readOnly ? undefined : clearGhost}
           />
         ))}
 
-        {!readOnly && <GhostCursor position={ghostPosition} color={selectedColor} isRemove={toolMode === 'remove'} />}
+        {!readOnly && <GhostCursor position={ghostPosition} hue={selectedHue} isRemove={toolMode === 'remove'} />}
       </group>
 
       {readOnly ? (
@@ -493,13 +490,12 @@ export const VoxelEditor = ({
   gridDepth = 16,
   blockSize = 1,
   toolMode = 'add',
-  selectedColor,
+  selectedHue = DEFAULT_HUE,
   readOnly,
   onAddVoxel,
   onRemoveVoxel,
 }: VoxelEditorProps) => {
   const maxDim = Math.max(gridWidth, gridDepth) * blockSize;
-  const resolvedColor = useMemo(() => selectedColor ?? getHueHex(DEFAULT_HUE), [selectedColor]);
 
   return (
     <Canvas
@@ -512,7 +508,7 @@ export const VoxelEditor = ({
         gridDepth={gridDepth}
         blockSize={blockSize}
         toolMode={toolMode}
-        selectedColor={resolvedColor}
+        selectedHue={selectedHue}
         readOnly={readOnly}
         onAddVoxel={onAddVoxel}
         onRemoveVoxel={onRemoveVoxel}

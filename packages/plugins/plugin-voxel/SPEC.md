@@ -7,7 +7,9 @@
 
 ### Data model
 
-- Each `Voxel` has an x/y/z coordinate and a color.
+NOTE: We need to develop agent-specific instructions for creating data sets, incl. concurrency, refs, and reactivity issues.
+
+- Each `Voxel` has an x/y/z coordinate and a `hue`.
 - The `World` should have a map of Voxel objects indexed by `${x}-${y}-${z}` coordinates.
 - ECHO objects (`@dxos/echo/Obj`) will automatically serialize and deserialize data and handle reactivity.
 

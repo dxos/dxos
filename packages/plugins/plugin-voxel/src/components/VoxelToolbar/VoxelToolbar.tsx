@@ -7,7 +7,7 @@ import React from 'react';
 import { Toolbar } from '@dxos/react-ui';
 import { type Hue } from '@dxos/ui-theme';
 
-import { PALETTE_STYLES, type ToolMode, getHueHex } from '../VoxelEditor';
+import { PALETTE_STYLES, type ToolMode } from '../VoxelEditor';
 
 export type VoxelToolbarProps = {
   /** Currently selected tool mode. */
@@ -16,8 +16,8 @@ export type VoxelToolbarProps = {
   selectedHue: Hue;
   /** Called when tool mode changes. */
   onToolModeChange: (mode: ToolMode) => void;
-  /** Called when color selection changes. */
-  onColorChange: (hue: Hue, hex: number) => void;
+  /** Called when hue selection changes. */
+  onHueChange: (hue: Hue) => void;
   /** Called when clear button is clicked. */
   onClear?: () => void;
 };
@@ -29,13 +29,7 @@ const TOOL_OPTIONS: { value: ToolMode; icon: string; label: string }[] = [
 ];
 
 /** Toolbar for the voxel editor with tool mode, color palette, and clear button. */
-export const VoxelToolbar = ({
-  toolMode,
-  selectedHue,
-  onToolModeChange,
-  onColorChange,
-  onClear,
-}: VoxelToolbarProps) => {
+export const VoxelToolbar = ({ toolMode, selectedHue, onToolModeChange, onHueChange, onClear }: VoxelToolbarProps) => {
   return (
     <Toolbar.Root>
       <Toolbar.ToggleGroup
@@ -65,7 +59,7 @@ export const VoxelToolbar = ({
           variant='ghost'
           label={colorStyle.hue}
           classNames={colorStyle.text}
-          onClick={() => onColorChange(colorStyle.hue, getHueHex(colorStyle.hue))}
+          onClick={() => onHueChange(colorStyle.hue)}
         />
       ))}
     </Toolbar.Root>

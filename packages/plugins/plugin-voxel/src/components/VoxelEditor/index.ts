@@ -7,7 +7,6 @@ export {
   PALETTE_STYLES,
   DEFAULT_HUE,
   computeVoxelBounds,
-  getHueHex,
   type VoxelBounds,
   type VoxelEditorProps,
   type ToolMode,
