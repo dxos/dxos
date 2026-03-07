@@ -2,4 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-export { VoxelEditor, PALETTE, type VoxelEditorProps, type PaletteEntry, type ToolMode } from './VoxelEditor';
+export {
+  VoxelEditor,
+  PALETTE_HUES,
+  DEFAULT_COLOR,
+  getHueHex,
+  type VoxelEditorProps,
+  type ToolMode,
+} from './VoxelEditor';

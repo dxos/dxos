@@ -18,7 +18,7 @@ export const VoxelCard = ({ subject: world }: VoxelCardProps) => {
 
   return (
     <div className='h-[200px] w-full'>
-      <VoxelEditor voxels={voxels} gridWidth={gridWidth} gridDepth={gridDepth} />
+      <VoxelEditor voxels={voxels} gridWidth={gridWidth} gridDepth={gridDepth} readOnly />
     </div>
   );
 };

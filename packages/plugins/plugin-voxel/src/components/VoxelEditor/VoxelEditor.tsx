@@ -9,28 +9,42 @@ import { Canvas, type ThreeEvent, useThree } from '@react-three/fiber';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 
+import { type ChromaticPalette } from '@dxos/ui-types';
+
 import { type VoxelData } from '../../types/Voxel';
 
 /** Tool modes for the voxel editor. */
 export type ToolMode = 'select' | 'add' | 'remove';
 
-/** Hue-to-hex mapping for the voxel color palette. */
-export type PaletteEntry = {
-  hue: string;
-  hex: number;
+/** Hex color mapping for ChromaticPalette hues (Tailwind 500 shades). */
+const HUE_HEX: Record<ChromaticPalette, number> = {
+  red: 0xef4444,
+  orange: 0xf97316,
+  amber: 0xf59e0b,
+  yellow: 0xeab308,
+  lime: 0x84cc16,
+  green: 0x22c55e,
+  emerald: 0x10b981,
+  teal: 0x14b8a6,
+  cyan: 0x06b6d4,
+  sky: 0x0ea5e9,
+  blue: 0x3b82f6,
+  indigo: 0x6366f1,
+  violet: 0x8b5cf6,
+  purple: 0xa855f7,
+  fuchsia: 0xd946ef,
+  pink: 0xec4899,
+  rose: 0xf43f5e,
 };
 
-/** Available voxel colors, aligned with ui-theme hues. */
-export const PALETTE: PaletteEntry[] = [
-  { hue: 'blue', hex: 0x4488ff },
-  { hue: 'green', hex: 0x44bb44 },
-  { hue: 'red', hex: 0xff4444 },
-  { hue: 'amber', hex: 0xffbb00 },
-  { hue: 'pink', hex: 0xff88ff },
-  { hue: 'cyan', hex: 0x88ffff },
-  { hue: 'orange', hex: 0xff8844 },
-  { hue: 'violet', hex: 0x8844ff },
-];
+/** Subset of hues used in the voxel palette. */
+export const PALETTE_HUES: ChromaticPalette[] = ['blue', 'green', 'red', 'amber', 'pink', 'cyan', 'orange', 'violet'];
+
+/** Get the Three.js hex color for a ChromaticPalette hue. */
+export const getHueHex = (hue: ChromaticPalette): number => HUE_HEX[hue];
+
+/** Default selected color. */
+export const DEFAULT_COLOR = HUE_HEX.blue;
 
 export type VoxelEditorProps = {
   /** Array of voxels to render. */
@@ -43,6 +57,8 @@ export type VoxelEditorProps = {
   toolMode?: ToolMode;
   /** Currently selected color hex value. */
   selectedColor?: number;
+  /** Read-only mode (no interaction, no ground plane, no orbit controls). */
+  readOnly?: boolean;
   /** Called when user clicks to add a voxel. */
   onAddVoxel?: (voxel: VoxelData) => void;
   /** Called when user clicks to remove a voxel. */
@@ -239,6 +255,7 @@ type VoxelSceneProps = {
   gridDepth: number;
   toolMode: ToolMode;
   selectedColor: number;
+  readOnly?: boolean;
   onAddVoxel?: (voxel: VoxelData) => void;
   onRemoveVoxel?: (position: { x: number; y: number; z: number }) => void;
 };
@@ -250,6 +267,7 @@ const VoxelScene = ({
   gridDepth,
   toolMode,
   selectedColor,
+  readOnly,
   onAddVoxel,
   onRemoveVoxel,
 }: VoxelSceneProps) => {
@@ -351,13 +369,15 @@ const VoxelScene = ({
       <directionalLight position={[10, 20, 10]} intensity={0.8} castShadow />
       <pointLight position={[-10, 10, -10]} intensity={0.3} />
 
-      <GroundPlane
-        gridWidth={gridWidth}
-        gridDepth={gridDepth}
-        onClick={handleGroundClick}
-        onPointerMove={handleGroundPointerMove}
-        onPointerOut={clearGhost}
-      />
+      {!readOnly && (
+        <GroundPlane
+          gridWidth={gridWidth}
+          gridDepth={gridDepth}
+          onClick={handleGroundClick}
+          onPointerMove={handleGroundPointerMove}
+          onPointerOut={clearGhost}
+        />
+      )}
       <TransparentGrid gridWidth={gridWidth} gridDepth={gridDepth} />
 
       {visibleVoxels.map((voxel, index) => (
@@ -365,18 +385,24 @@ const VoxelScene = ({
           key={`${voxel.x}-${voxel.y}-${voxel.z}-${index}`}
           position={[voxel.x, voxel.y, voxel.z]}
           color={voxel.color}
-          onClick={handleVoxelClick}
-          onPointerMove={handleVoxelPointerMove}
-          onPointerOut={clearGhost}
+          onClick={readOnly ? () => {} : handleVoxelClick}
+          onPointerMove={readOnly ? undefined : handleVoxelPointerMove}
+          onPointerOut={readOnly ? undefined : clearGhost}
         />
       ))}
 
-      <GhostCursor position={ghostPosition} color={selectedColor} isRemove={toolMode === 'remove'} />
+      {!readOnly && <GhostCursor position={ghostPosition} color={selectedColor} isRemove={toolMode === 'remove'} />}
 
-      <OrbitControlsManager gridWidth={gridWidth} gridDepth={gridDepth} />
-      <GizmoHelper alignment='bottom-right' margin={[60, 60]}>
-        <GizmoViewport />
-      </GizmoHelper>
+      {readOnly ? (
+        <OrbitControls enablePan={false} enableZoom={false} enableRotate={false} />
+      ) : (
+        <OrbitControlsManager gridWidth={gridWidth} gridDepth={gridDepth} />
+      )}
+      {!readOnly && (
+        <GizmoHelper alignment='bottom-right' margin={[60, 60]}>
+          <GizmoViewport />
+        </GizmoHelper>
+      )}
     </>
   );
 };
@@ -387,7 +413,8 @@ export const VoxelEditor = ({
   gridWidth = 16,
   gridDepth = 16,
   toolMode = 'add',
-  selectedColor = PALETTE[0].hex,
+  selectedColor = DEFAULT_COLOR,
+  readOnly,
   onAddVoxel,
   onRemoveVoxel,
 }: VoxelEditorProps) => {
@@ -404,6 +431,7 @@ export const VoxelEditor = ({
         gridDepth={gridDepth}
         toolMode={toolMode}
         selectedColor={selectedColor}
+        readOnly={readOnly}
         onAddVoxel={onAddVoxel}
         onRemoveVoxel={onRemoveVoxel}
       />

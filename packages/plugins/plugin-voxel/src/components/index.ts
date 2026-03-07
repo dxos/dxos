@@ -3,3 +3,4 @@
 //
 
 export * from './VoxelEditor';
+export * from './VoxelToolbar';

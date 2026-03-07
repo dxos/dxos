@@ -6,19 +6,13 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { useObject } from '@dxos/echo-react';
-import { Container, Icon, Toolbar } from '@dxos/react-ui';
-import { getStyles } from '@dxos/ui-theme';
+import { Container } from '@dxos/react-ui';
+import { type ChromaticPalette } from '@dxos/ui-types';
 
-import { PALETTE, type ToolMode, VoxelEditor } from '../../components';
+import { DEFAULT_COLOR, PALETTE_HUES, type ToolMode, VoxelEditor, VoxelToolbar } from '../../components';
 import { Voxel } from '../../types';
 
 export type VoxelArticleProps = SurfaceComponentProps<Voxel.World>;
-
-const TOOL_OPTIONS: { value: ToolMode; icon: string; label: string }[] = [
-  { value: 'select', icon: 'ph--cursor--regular', label: 'Select' },
-  { value: 'add', icon: 'ph--plus--regular', label: 'Add' },
-  { value: 'remove', icon: 'ph--minus--regular', label: 'Remove' },
-];
 
 const TOOL_HINTS: Record<ToolMode, string> = {
   select: 'Cmd+drag to rotate | Middle-click to zoom | Right-drag to pan',
@@ -29,14 +23,14 @@ const TOOL_HINTS: Record<ToolMode, string> = {
 export const VoxelArticle = ({ subject: world }: VoxelArticleProps) => {
   const [rawVoxels, updateVoxels] = useObject(world, 'voxels');
   const voxels = useMemo(() => Voxel.parseVoxels(rawVoxels), [rawVoxels]);
-  const [selectedColor, setSelectedColor] = useState(PALETTE[0].hex);
+  const [selectedHue, setSelectedHue] = useState<ChromaticPalette>(PALETTE_HUES[0]);
+  const [selectedColor, setSelectedColor] = useState(DEFAULT_COLOR);
   const [toolMode, setToolMode] = useState<ToolMode>('add');
   const { gridWidth, gridDepth } = Voxel.getGridDimensions(world);
 
   const handleAddVoxel = useCallback(
     (voxel: Voxel.VoxelData) => {
       const current = Voxel.parseVoxels(rawVoxels);
-      // Prevent duplicates at same position.
       const exists = current.some(
         (existing) => existing.x === voxel.x && existing.y === voxel.y && existing.z === voxel.z,
       );
@@ -59,36 +53,24 @@ export const VoxelArticle = ({ subject: world }: VoxelArticleProps) => {
     [rawVoxels, updateVoxels],
   );
 
+  const handleClear = useCallback(() => {
+    updateVoxels(Voxel.serializeVoxels([]));
+  }, [updateVoxels]);
+
+  const handleColorChange = useCallback((hue: ChromaticPalette, hex: number) => {
+    setSelectedHue(hue);
+    setSelectedColor(hex);
+  }, []);
+
   return (
     <Container.Main toolbar>
-      <Toolbar.Root>
-        <Toolbar.ToggleGroup
-          type='single'
-          value={toolMode}
-          onValueChange={(value) => value && setToolMode(value as ToolMode)}
-        >
-          {TOOL_OPTIONS.map((tool) => (
-            <Toolbar.ToggleGroupItem key={tool.value} value={tool.value} aria-label={tool.label}>
-              <Icon icon={tool.icon} size={4} />
-            </Toolbar.ToggleGroupItem>
-          ))}
-        </Toolbar.ToggleGroup>
-        <Toolbar.Separator variant='gap' />
-        {PALETTE.map((entry) => {
-          const styles = getStyles(entry.hue);
-          return (
-            <Toolbar.IconButton
-              key={entry.hue}
-              icon={entry.hex === selectedColor ? 'ph--square--fill' : 'ph--square--duotone'}
-              iconOnly
-              variant='ghost'
-              label={entry.hue}
-              classNames={styles.text}
-              onClick={() => setSelectedColor(entry.hex)}
-            />
-          );
-        })}
-      </Toolbar.Root>
+      <VoxelToolbar
+        toolMode={toolMode}
+        selectedHue={selectedHue}
+        onToolModeChange={setToolMode}
+        onColorChange={handleColorChange}
+        onClear={handleClear}
+      />
       <div className='relative grow'>
         <VoxelEditor
           voxels={voxels}

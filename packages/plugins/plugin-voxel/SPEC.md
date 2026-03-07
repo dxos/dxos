@@ -18,10 +18,10 @@
 - [x] BUG: Currently main axis isn't visible; should be in different color
 - [x] Hide any voxels that are outside of the current grid size
 - [x] Grid should have separate x/y dimension
-- [ ] Use `ChromaticPalette` `styles` from hash-styles for palette (replace hard coded values)
-- [ ] Factor out toolbar into separate component with story
-- [ ] Add "Clear" button in toolbar
-- [ ] Remove ground plane and orbit controls from card view
+- [x] Use `ChromaticPalette` `styles` from hash-styles for palette (replace hard coded values)
+- [x] Factor out toolbar into separate component with story
+- [x] Add "Clear" button in toolbar
+- [x] Remove ground plane and orbit controls from card view
 
 ### Phase 2 (Editor Enhancements)
 
