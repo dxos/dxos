@@ -84,7 +84,8 @@ const ChatRoot = ({ children, chat, processor, onEvent, ...props }: ChatRootProp
     return event.on((ev) => {
       switch (ev.type) {
         case 'toggle-debug': {
-          setDebug((current) => !current);
+          setDebug((debug) => !debug);
+
           // Dump state to console.
           queueMicrotask(async () => {
             const objects = processor.context.getObjects();

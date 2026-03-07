@@ -109,6 +109,8 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
       };
     }, [debug, themeMode, registry]);
 
+    // TODO(burdon): Update document if toggle debug.
+
     // Streaming queue.
     const [queue, setQueue, queueRef] = useStateWithRef(Effect.runSync(Queue.unbounded<string>()));
     useEffect(() => {

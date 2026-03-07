@@ -1,7 +1,7 @@
 # Voxel Plugin
 
 - This file represents the specification and plan for the Voxel plugin.
-- Use this document to record issues or implementation notes.
+- Update this document to record progress, issues, and any implementation notes.
 
 ## Spec
 
