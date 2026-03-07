@@ -16,7 +16,7 @@ export type ColorStyles = {
   border: string; // -border
 };
 
-const neutralColor: ColorStyles = {
+const neutral: ColorStyles = {
   hue: 'neutral',
   fill: 'bg-neutral-fill',
   surface: 'bg-neutral-surface',
@@ -27,7 +27,7 @@ const neutralColor: ColorStyles = {
 
 // NOTE: Cordinated with `tag.css`.
 // https://github.com/dxos/dxos/blob/main/packages/ui/react-ui-theme/src/styles/layers/tag.css
-export const styles: ColorStyles[] = [
+const styles: ColorStyles[] = [
   {
     hue: 'red',
     fill: 'bg-red-fill',
@@ -166,9 +166,14 @@ export const styles: ColorStyles[] = [
   },
 ];
 
+export const palette = {
+  neutral,
+  hues: styles,
+};
+
 // TODO(burdon): Rename getClassNames.
 export const getStyles = (hue: string): ColorStyles => {
-  return styles.find((color) => color.hue === hue) || neutralColor;
+  return styles.find((color) => color.hue === hue) || neutral;
 };
 
 // TODO(thure): Reconcile with `to-fallback.ts` which exports `toHue` which overlaps a lot.
