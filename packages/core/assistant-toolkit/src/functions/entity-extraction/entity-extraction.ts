@@ -8,7 +8,8 @@ import * as Predicate from 'effect/Predicate';
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
-import { AiSession, GenericToolkit, ToolExecutionServices } from '@dxos/assistant';
+import { GenericToolkit } from '@dxos/ai';
+import { AiSession, ToolExecutionServices } from '@dxos/assistant';
 import { Database, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { FunctionInvocationServiceLayerTest } from '@dxos/functions-runtime/testing';

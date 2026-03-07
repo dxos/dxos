@@ -7,6 +7,7 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 
 import { Annotation, type Database, Format, Obj, type QueryAST, Type } from '@dxos/echo';
+import { View } from '@dxos/echo';
 import { type Mutable, PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
@@ -16,7 +17,7 @@ import { ScrollArea } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { ViewEditor, translations as formTranslations } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { View, getSchemaFromPropertyDefinitions, getTypenameFromQuery } from '@dxos/schema';
+import { ViewModel, getSchemaFromPropertyDefinitions, getTypenameFromQuery } from '@dxos/schema';
 import { TestSchema, createObjectFactory } from '@dxos/schema/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 
@@ -165,7 +166,7 @@ const meta = {
       createSpace: true,
       onCreateSpace: async ({ space }) => {
         const [schema] = await space.db.schemaRegistry.register([Example]);
-        const { view, jsonSchema } = await View.makeFromDatabase({ db: space.db, typename: schema.typename });
+        const { view, jsonSchema } = await ViewModel.makeFromDatabase({ db: space.db, typename: schema.typename });
         const table = Table.make({ view, jsonSchema });
         Obj.change(view, (v) => {
           v.projection.fields = [
@@ -211,7 +212,7 @@ export const StaticSchema: StoryObj = {
       createIdentity: true,
       createSpace: true,
       onCreateSpace: async ({ space }) => {
-        const { view, jsonSchema } = await View.makeFromDatabase({
+        const { view, jsonSchema } = await ViewModel.makeFromDatabase({
           db: space.db,
           typename: TestSchema.Person.typename,
         });
@@ -257,7 +258,7 @@ export const ArrayOfObjects: StoryObj = {
       createIdentity: true,
       createSpace: true,
       onCreateSpace: async ({ space }) => {
-        const { view, jsonSchema } = await View.makeFromDatabase({
+        const { view, jsonSchema } = await ViewModel.makeFromDatabase({
           db: space.db,
           typename: ContactWithArrayOfEmails.typename,
         });
@@ -315,7 +316,7 @@ export const Tags: Meta<StoryProps> = {
         const [storedSchema] = await space.db.schemaRegistry.register([schema]);
 
         // Initialize table.
-        const { view, jsonSchema } = await View.makeFromDatabase({ db: space.db, typename });
+        const { view, jsonSchema } = await ViewModel.makeFromDatabase({ db: space.db, typename });
         const table = Table.make({ view, jsonSchema });
         space.db.add(table);
 

@@ -24,7 +24,6 @@ const cardRoot: ComponentFunction<CardStyleProps> = ({ border, fullWidth }, ...e
     ...etc,
   );
 
-// TODO(burdon): GRID?
 const cardToolbar: ComponentFunction<CardStyleProps> = ({ coarse }, ...etc) =>
   mx(
     'dx-card__toolbar dx-density-fine bg-transparent col-span-3 !grid grid-cols-subgrid [contain:none]',

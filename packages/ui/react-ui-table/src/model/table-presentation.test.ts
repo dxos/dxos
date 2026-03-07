@@ -8,7 +8,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import { Filter, Query, Type } from '@dxos/echo';
 import { createEchoSchema } from '@dxos/echo/testing';
-import { ProjectionModel, View, createDirectChangeCallback } from '@dxos/schema';
+import { ProjectionModel, ViewModel, createDirectChangeCallback } from '@dxos/schema';
 
 import { Table } from '../types';
 
@@ -99,7 +99,7 @@ const Test = Schema.Struct({
 
 const createTableModel = (registry: Registry.Registry, props: Partial<TableModelProps> = {}): TableModel => {
   const schema = createEchoSchema(Test);
-  const view = View.make({
+  const view = ViewModel.make({
     query: Query.select(Filter.type(schema)),
     jsonSchema: schema.jsonSchema,
   });

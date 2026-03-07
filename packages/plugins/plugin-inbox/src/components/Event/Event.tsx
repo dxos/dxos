@@ -7,7 +7,7 @@ import React, { type PropsWithChildren } from 'react';
 
 import { type Database } from '@dxos/react-client/echo';
 import { Icon, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
+import { Menu } from '@dxos/react-ui-menu';
 import { type Actor, type Event as EventType } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
@@ -55,9 +55,9 @@ const EventToolbar = ({ classNames, ...props }: EventToolbarProps) => {
   const actions = useEventToolbarActions(props);
 
   return (
-    <MenuProvider {...actions} attendableId={attendableId}>
-      <ToolbarMenu classNames={classNames} />
-    </MenuProvider>
+    <Menu.Root {...actions} attendableId={attendableId}>
+      <Menu.Toolbar classNames={classNames} />
+    </Menu.Root>
   );
 };
 

@@ -8,13 +8,7 @@ import React, { useMemo } from 'react';
 import { Obj } from '@dxos/echo';
 import { type Script } from '@dxos/functions';
 import { ElevationProvider, useTranslation } from '@dxos/react-ui';
-import {
-  type ActionGraphProps,
-  MenuProvider,
-  ToolbarMenu,
-  createGapSeparator,
-  useMenuActions,
-} from '@dxos/react-ui-menu';
+import { type ActionGraphProps, Menu, createGapSeparator, useMenuActions } from '@dxos/react-ui-menu';
 
 import {
   type CreateDeployOptions,
@@ -40,9 +34,9 @@ export const ScriptToolbar = ({ script, role, state }: ScriptToolbarProps) => {
 
   return (
     <ElevationProvider elevation={role === 'section' ? 'positioned' : 'base'}>
-      <MenuProvider {...actions} attendableId={Obj.getDXN(script).toString()}>
-        <ToolbarMenu />
-      </MenuProvider>
+      <Menu.Root {...actions} attendableId={Obj.getDXN(script).toString()}>
+        <Menu.Toolbar />
+      </Menu.Root>
     </ElevationProvider>
   );
 };

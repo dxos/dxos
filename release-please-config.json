@@ -360,6 +360,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/mcp-client/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/mesh/edge-client/package.json",
           "jsonpath": "$.version"
         },

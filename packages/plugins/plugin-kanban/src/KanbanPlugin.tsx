@@ -8,7 +8,7 @@ import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { Type } from '@dxos/echo';
 import { type CreateObject } from '@dxos/plugin-space/types';
-import { View } from '@dxos/schema';
+import { ViewModel } from '@dxos/schema';
 
 import { BlueprintDefinition, OperationResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
@@ -26,7 +26,7 @@ export const KanbanPlugin = Plugin.define(meta).pipe(
         inputSchema: CreateKanbanSchema,
         createObject: ((props, { db }) =>
           Effect.promise(async () => {
-            const { view } = await View.makeFromDatabase({
+            const { view } = await ViewModel.makeFromDatabase({
               db,
               typename: props.typename,
               pivotFieldName: props.initialPivotColumn,

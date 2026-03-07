@@ -7,13 +7,7 @@ import React, { type PropsWithChildren, useContext, useMemo } from 'react';
 
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { type CompleteCellRange } from '@dxos/compute';
-import {
-  type ActionGraphProps,
-  MenuProvider,
-  ToolbarMenu,
-  createGapSeparator,
-  useMenuActions,
-} from '@dxos/react-ui-menu';
+import { type ActionGraphProps, Menu, createGapSeparator, useMenuActions } from '@dxos/react-ui-menu';
 
 import { type SheetModel } from '../../model';
 import { useSheetContext } from '../SheetContext';
@@ -87,8 +81,8 @@ export const SheetToolbar = ({ id }: SheetToolbarProps) => {
   const menu = useMenuActions(actionsCreator);
 
   return (
-    <MenuProvider {...menu} attendableId={id}>
-      <ToolbarMenu />
-    </MenuProvider>
+    <Menu.Root {...menu} attendableId={id}>
+      <Menu.Toolbar />
+    </Menu.Root>
   );
 };

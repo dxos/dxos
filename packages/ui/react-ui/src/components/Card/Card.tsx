@@ -102,6 +102,7 @@ type CardMenuProps<T extends any | void = void> = ToolbarMenuProps<T>;
 const CardMenu = <T extends any | void = void>({ context, items }: CardMenuProps<T>) => {
   const { menuItems } = useContext(CardContext) ?? {};
   const combinedItems = [...(items ?? []), ...((menuItems as CardMenuItem<T>[]) ?? [])];
+
   return <Toolbar.Menu context={context} items={combinedItems} />;
 };
 
@@ -313,7 +314,6 @@ const CardIconBlock = ({
 //
 
 export const Card = {
-  Context: CardContext,
   Root: CardRoot,
 
   // Toolbar

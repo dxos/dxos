@@ -9,7 +9,7 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
 import { AiService, type Service, type ServiceMetadata } from './AiService';
-import { type ModelName as ModelName } from './defs';
+import { type ModelName as ModelName, type ModelOptions } from './defs';
 import { AiModelNotAvailableError } from './errors';
 
 export class AiModelResolver extends Context.Tag('@dxos/ai/AiModelResolver')<AiModelResolver, Service>() {
@@ -19,7 +19,7 @@ export class AiModelResolver extends Context.Tag('@dxos/ai/AiModelResolver')<AiM
       const resolver = yield* AiModelResolver;
       return {
         metadata: resolver.metadata,
-        model: (name) => resolver.model(name),
+        model: (name, options) => resolver.model(name, options),
       } satisfies Context.Tag.Service<AiService>;
     }),
   );
@@ -27,7 +27,10 @@ export class AiModelResolver extends Context.Tag('@dxos/ai/AiModelResolver')<AiM
   static resolver = <R>(
     metadata: ServiceMetadata,
     impl: Effect.Effect<
-      (model: ModelName) => Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, never>,
+      (
+        model: ModelName,
+        options?: ModelOptions,
+      ) => Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, never>,
       never,
       R
     >,
@@ -39,11 +42,11 @@ export class AiModelResolver extends Context.Tag('@dxos/ai/AiModelResolver')<AiM
         const upstream = yield* Effect.serviceOption(AiModelResolver);
         return {
           metadata,
-          model: (modelName) =>
-            getModel(modelName).pipe(
+          model: (modelName, options) =>
+            getModel(modelName, options).pipe(
               Layer.catchAll(() => {
                 if (Option.isSome(upstream)) {
-                  return upstream.value.model(modelName);
+                  return upstream.value.model(modelName, options);
                 } else {
                   return Layer.fail(new AiModelNotAvailableError(modelName));
                 }

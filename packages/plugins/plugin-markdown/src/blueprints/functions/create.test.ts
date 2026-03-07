@@ -12,12 +12,12 @@ import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { Blueprint } from '@dxos/blueprints';
 import { SpaceProperties } from '@dxos/client-protocol';
 import { DXN, Database, Obj, Query, Ref } from '@dxos/echo';
+import { Collection } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { FunctionInvocationService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 import { Markdown } from '@dxos/plugin-markdown/types';
-import { Collection } from '@dxos/schema';
 import { HasSubject } from '@dxos/types';
 
 import { WithProperties } from '../../testing';

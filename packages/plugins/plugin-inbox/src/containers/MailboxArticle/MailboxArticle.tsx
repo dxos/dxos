@@ -20,8 +20,7 @@ import { Container } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
 import { QueryEditor } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
-import { MenuBuilder, createGapSeparator, useMenuActions } from '@dxos/react-ui-menu';
-import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
+import { Menu, MenuBuilder, createGapSeparator, useMenuActions } from '@dxos/react-ui-menu';
 import { HasSubject, Message } from '@dxos/types';
 
 import { type MailboxActionHandler, Mailbox as MailboxComponent, MailboxEmpty } from '../../components';
@@ -188,8 +187,8 @@ export const MailboxArticle = ({ subject: feed, filter: filterProp, attendableId
   return (
     <Container.Main toolbar>
       <ElevationProvider elevation='positioned'>
-        <MenuProvider {...menuActions} attendableId={id}>
-          <ToolbarMenu />
+        <Menu.Root {...menuActions} attendableId={id}>
+          <Menu.Toolbar />
           {filterVisible.value && (
             <div
               role='none'
@@ -222,7 +221,7 @@ export const MailboxArticle = ({ subject: feed, filter: filterProp, attendableId
               </div>
             </div>
           )}
-        </MenuProvider>
+        </Menu.Root>
       </ElevationProvider>
 
       {messagesWithTags && messagesWithTags.length > 0 ? (

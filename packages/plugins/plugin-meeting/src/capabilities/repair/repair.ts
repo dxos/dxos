@@ -6,9 +6,10 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { Obj, Ref, Type } from '@dxos/echo';
+import { Collection } from '@dxos/echo';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { type Space } from '@dxos/react-client/echo';
-import { Collection } from '@dxos/schema';
+import { ManagedCollection } from '@dxos/schema';
 
 import { Meeting } from '../../types';
 
@@ -35,13 +36,16 @@ const ensureSystemCollection = async (space: Space) => {
 
   const objects = await Promise.all(rootCollection.objects.map((ref) => ref.load()));
   const meetings = objects.find(
-    (object) => Obj.instanceOf(Collection.Managed, object) && object.key === Type.getTypename(Meeting.Meeting),
+    (object) =>
+      Obj.instanceOf(ManagedCollection.ManagedCollection, object) && object.key === Type.getTypename(Meeting.Meeting),
   );
   if (meetings) {
     return;
   }
 
-  const meetingsCollectionRef = Ref.make(Collection.makeManaged({ key: Type.getTypename(Meeting.Meeting) }));
+  const meetingsCollectionRef = Ref.make(
+    ManagedCollection.makeManagedCollection({ key: Type.getTypename(Meeting.Meeting) }),
+  );
   Obj.change(rootCollection, (c) => {
     c.objects.push(meetingsCollectionRef);
   });

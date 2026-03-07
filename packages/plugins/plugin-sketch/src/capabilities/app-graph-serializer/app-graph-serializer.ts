@@ -7,9 +7,9 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
+import { Collection } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space/types';
 import { isSpace } from '@dxos/react-client/echo';
-import { Collection } from '@dxos/schema';
 
 import { translations } from '../../translations';
 import { Diagram, SketchOperation } from '../../types';

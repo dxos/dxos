@@ -8,10 +8,10 @@ import * as Option from 'effect/Option';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
+import { View } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { Operation } from '@dxos/operation';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
-import { View } from '@dxos/schema';
 
 import { meta } from '../../meta';
 import { Map, MapAction } from '../../types';

@@ -14,7 +14,7 @@ import type * as SchemaAST from 'effect/SchemaAST';
 /**
  * Unique identifier for generic toolkit instances.
  */
-export const TypeId = '~@dxos/assistant/GenericToolkit';
+export const TypeId = '~@dxos/ai/GenericToolkit';
 
 /**
  * Type-level representation of the generic toolkit identifier.
@@ -139,7 +139,7 @@ export interface AnyStructSchemaNoContext extends Pipeable.Pipeable {
 /**
  * Provides a generic toolkit to the agent.
  */
-export class Provider extends Context.Tag('@dxos/assistant/GenericToolkit.Provider')<
+export class Provider extends Context.Tag('@dxos/ai/GenericToolkit.Provider')<
   Provider,
   {
     readonly getToolkit: () => GenericToolkit;

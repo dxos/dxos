@@ -8,13 +8,14 @@ import React, { useCallback, useContext, useEffect } from 'react';
 
 import { Filter, Ref } from '@dxos/client/echo';
 import { Obj, Query, Type } from '@dxos/echo';
+import { Collection, View } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Form, omitId } from '@dxos/react-ui-form';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
-import { Collection, View } from '@dxos/schema';
+import { ViewModel } from '@dxos/schema';
 import { createObjectFactory } from '@dxos/schema/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 import { Person, Pipeline } from '@dxos/types';
@@ -54,7 +55,7 @@ const DefaultStory = () => {
     }
 
     // Create a new view for contacts similar to the initialization.
-    const view = View.make({
+    const view = ViewModel.make({
       query: Query.select(Filter.type(Person.Person)),
       jsonSchema: Type.toJsonSchema(Person.Person),
       fields: ['fullName'],
@@ -96,7 +97,7 @@ const MutationsStory = () => {
     }
 
     // Create a new view for contacts similar to the initialization.
-    const view = View.make({
+    const view = ViewModel.make({
       query: Query.select(Filter.type(Person.Person)),
       jsonSchema: Type.toJsonSchema(Person.Person),
       fields: ['fullName'],
@@ -166,7 +167,7 @@ const meta = {
       createSpace: true,
       onCreateSpace: async ({ space }) => {
         // Create a view for contacts.
-        const view = View.make({
+        const view = ViewModel.make({
           name: 'Contacts',
           query: Query.select(Filter.type(Person.Person)),
           jsonSchema: Type.toJsonSchema(Person.Person),

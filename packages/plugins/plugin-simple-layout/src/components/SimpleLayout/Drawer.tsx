@@ -10,7 +10,7 @@ import { type Node, useNode } from '@dxos/plugin-graph';
 import { Container } from '@dxos/react-ui';
 import { ErrorFallback } from '@dxos/react-ui';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
-import { MenuProvider, ToolbarMenu, useMenuActions } from '@dxos/react-ui-menu';
+import { Menu, useMenuActions } from '@dxos/react-ui-menu';
 
 import { useCompanions, useDrawerActions, useSimpleLayoutState } from '../../hooks';
 import { ContentLoading } from '../ContentLoading';
@@ -54,9 +54,9 @@ export const Drawer = () => {
 
   return (
     <Container.Main toolbar>
-      <MenuProvider {...menu} onAction={onAction} alwaysActive>
-        <ToolbarMenu density='coarse' />
-      </MenuProvider>
+      <Menu.Root {...menu} alwaysActive onAction={onAction}>
+        <Menu.Toolbar density='coarse' />
+      </Menu.Root>
       <Surface.Surface role='article' data={data} limit={1} fallback={ErrorFallback} placeholder={placeholder} />
     </Container.Main>
   );

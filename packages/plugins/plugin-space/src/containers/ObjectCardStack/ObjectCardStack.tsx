@@ -5,11 +5,12 @@
 import React, { forwardRef, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
+import { type View } from '@dxos/echo';
 import { Filter, useQuery, useSchema } from '@dxos/react-client/echo';
 import { Card, Container, Message, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
 import { Mosaic } from '@dxos/react-ui-mosaic';
-import { type View, getTypenameFromQuery } from '@dxos/schema';
+import { getTypenameFromQuery } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { ObjectForm } from '../../components';

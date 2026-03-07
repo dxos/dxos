@@ -8,6 +8,7 @@ import React from 'react';
 import { OperationPlugin, RuntimePlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj } from '@dxos/echo';
+import { View } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
 import { faker } from '@dxos/random';
 import { withClientProvider } from '@dxos/react-client/testing';
@@ -16,7 +17,7 @@ import { CardContainer } from '@dxos/react-ui-mosaic/testing';
 import { translations as tableTranslations } from '@dxos/react-ui-table';
 import { useTestTableModel } from '@dxos/react-ui-table/testing';
 import { Table } from '@dxos/react-ui-table/types';
-import { View, getSchemaFromPropertyDefinitions } from '@dxos/schema';
+import { ViewModel, getSchemaFromPropertyDefinitions } from '@dxos/schema';
 
 import { translations } from '../../translations';
 
@@ -73,7 +74,7 @@ const meta = {
         const [storedSchema] = await space.db.schemaRegistry.register([schema]);
 
         // Initialize table.
-        const { view, jsonSchema } = await View.makeFromDatabase({ db: space.db, typename });
+        const { view, jsonSchema } = await ViewModel.makeFromDatabase({ db: space.db, typename });
         const table = Table.make({ view, jsonSchema });
         space.db.add(table);
 
