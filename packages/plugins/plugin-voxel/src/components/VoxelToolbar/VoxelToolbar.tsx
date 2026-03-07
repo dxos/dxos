@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import { Icon, Toolbar } from '@dxos/react-ui';
-import { getStyles, mx } from '@dxos/ui-theme';
+import { Toolbar } from '@dxos/react-ui';
+import { getStyles } from '@dxos/ui-theme';
 import { type ChromaticPalette } from '@dxos/ui-types';
 
 import { PALETTE_HUES, type ToolMode, getHueHex } from '../VoxelEditor';
@@ -45,36 +45,33 @@ export const VoxelToolbar = ({
         onValueChange={(value) => value && onToolModeChange(value as ToolMode)}
       >
         {TOOL_OPTIONS.map((tool) => (
-          <Toolbar.ToggleGroupItem key={tool.value} value={tool.value} aria-label={tool.label}>
-            <Icon icon={tool.icon} size={4} />
-          </Toolbar.ToggleGroupItem>
+          <Toolbar.ToggleGroupIconItem
+            key={tool.value}
+            value={tool.value}
+            icon={tool.icon}
+            iconOnly
+            label={tool.label}
+          />
         ))}
       </Toolbar.ToggleGroup>
+      {onClear && (
+        <Toolbar.IconButton icon='ph--trash--regular' iconOnly variant='ghost' label='Clear' onClick={onClear} />
+      )}
       <Toolbar.Separator />
       {PALETTE_HUES.map((hue) => {
         const colorStyles = getStyles(hue);
         return (
-          <Toolbar.Button
+          <Toolbar.IconButton
             key={hue}
+            icon={hue === selectedHue ? 'ph--square--fill' : 'ph--square--duotone'}
+            iconOnly
             variant='ghost'
-            classNames={mx(
-              'w-8 h-8 min-w-0 p-0 rounded-sm',
-              colorStyles.fill,
-              hue === selectedHue && 'ring-2 ring-accentText',
-            )}
+            label={hue}
+            classNames={colorStyles.text}
             onClick={() => onColorChange(hue, getHueHex(hue))}
-            aria-label={hue}
           />
         );
       })}
-      {onClear && (
-        <>
-          <Toolbar.Separator />
-          <Toolbar.Button variant='ghost' onClick={onClear}>
-            <Icon icon='ph--trash--regular' size={4} />
-          </Toolbar.Button>
-        </>
-      )}
     </Toolbar.Root>
   );
 };
