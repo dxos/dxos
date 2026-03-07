@@ -424,6 +424,9 @@
       "path": "packages/plugins/plugin-transformer/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-voxel/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-wnfs/tsconfig.json"
     },
     {

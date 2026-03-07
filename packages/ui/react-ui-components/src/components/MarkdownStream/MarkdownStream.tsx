@@ -67,6 +67,7 @@ export type MarkdownStreamProps = ThemedClassName<
   } & (XmlTagsOptions & StreamerOptions & AutoScrollToProps)
 >;
 
+// TODO(burdon): Loses all content when debug is toggled.
 // TODO(burdon): Initial content isn't formatted.
 export const MarkdownStream = forwardRef<MarkdownStreamController | null, MarkdownStreamProps>(
   ({ classNames, debug, content, registry, fadeIn, cursor, onEvent }, forwardedRef) => {
@@ -108,6 +109,8 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
         ].filter(isNonNullable),
       };
     }, [debug, themeMode, registry]);
+
+    // TODO(burdon): Update document if toggle debug.
 
     // Streaming queue.
     const [queue, setQueue, queueRef] = useStateWithRef(Effect.runSync(Queue.unbounded<string>()));

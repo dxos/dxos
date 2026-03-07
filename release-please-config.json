@@ -730,6 +730,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-voxel/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-wnfs/package.json",
           "jsonpath": "$.version"
         },
