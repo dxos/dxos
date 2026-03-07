@@ -170,7 +170,7 @@ const VoxelBlock = ({ position, color, onClick, onPointerMove, onPointerOut }: V
   );
 };
 
-type GroundPlaneProps = {
+type GridProps = {
   gridWidth: number;
   gridDepth: number;
   onClick: (event: ThreeEvent<MouseEvent>) => void;
@@ -178,26 +178,8 @@ type GroundPlaneProps = {
   onPointerOut?: () => void;
 };
 
-/** Ground plane that accepts clicks to place voxels. */
-const GroundPlane = ({ gridWidth, gridDepth, onClick, onPointerMove, onPointerOut }: GroundPlaneProps) => {
-  return (
-    <mesh
-      rotation={[-Math.PI / 2, 0, 0]}
-      position={[gridWidth / 2 - 0.5, -0.5, gridDepth / 2 - 0.5]}
-      onClick={onClick}
-      onPointerMove={onPointerMove}
-      onPointerOut={onPointerOut}
-      receiveShadow
-    >
-      <planeGeometry args={[gridWidth, gridDepth]} />
-      <meshStandardMaterial color={0xcccccc} side={THREE.DoubleSide} transparent opacity={0.1} />
-    </mesh>
-  );
-};
-
-/** Custom grid with transparent lines and colored axes. */
-const TransparentGrid = ({ gridWidth, gridDepth }: { gridWidth: number; gridDepth: number }) => {
-  const gridRef = useRef<THREE.Group>(null);
+/** Ground grid with transparent lines, colored axes, and an invisible click target. */
+const Grid = ({ gridWidth, gridDepth, onClick, onPointerMove, onPointerOut }: GridProps) => {
   const gridLines = useMemo(() => {
     const points: THREE.Vector3[] = [];
     const colors: number[] = [];
@@ -214,7 +196,6 @@ const TransparentGrid = ({ gridWidth, gridDepth }: { gridWidth: number; gridDept
       const isOrigin = Math.abs(zWorld + 0.5) < 0.01;
       points.push(new THREE.Vector3(-halfW + offsetX, -0.5, zWorld));
       points.push(new THREE.Vector3(halfW + offsetX, -0.5, zWorld));
-      // Red for X-axis origin line.
       const color = isOrigin ? [0.9, 0.2, 0.2] : [0.5, 0.5, 0.5];
       colors.push(...color, ...color);
     }
@@ -226,7 +207,6 @@ const TransparentGrid = ({ gridWidth, gridDepth }: { gridWidth: number; gridDept
       const isOrigin = Math.abs(xWorld + 0.5) < 0.01;
       points.push(new THREE.Vector3(xWorld, -0.5, -halfD + offsetZ));
       points.push(new THREE.Vector3(xWorld, -0.5, halfD + offsetZ));
-      // Blue for Z-axis origin line.
       const color = isOrigin ? [0.2, 0.2, 0.9] : [0.5, 0.5, 0.5];
       colors.push(...color, ...color);
     }
@@ -237,7 +217,18 @@ const TransparentGrid = ({ gridWidth, gridDepth }: { gridWidth: number; gridDept
   }, [gridWidth, gridDepth]);
 
   return (
-    <group ref={gridRef}>
+    <group>
+      {/* Invisible click target for placing voxels on the ground. */}
+      <mesh
+        rotation={[-Math.PI / 2, 0, 0]}
+        position={[gridWidth / 2 - 0.5, -0.501, gridDepth / 2 - 0.5]}
+        onClick={onClick}
+        onPointerMove={onPointerMove}
+        onPointerOut={onPointerOut}
+      >
+        <planeGeometry args={[gridWidth, gridDepth]} />
+        <meshBasicMaterial visible={false} side={THREE.DoubleSide} />
+      </mesh>
       <lineSegments geometry={gridLines}>
         <lineBasicMaterial vertexColors transparent opacity={0.5} />
       </lineSegments>
@@ -443,16 +434,13 @@ const VoxelScene = ({
 
       <group scale={[blockSize, blockSize, blockSize]}>
         {!readOnly && (
-          <>
-            <GroundPlane
-              gridWidth={gridWidth}
-              gridDepth={gridDepth}
-              onClick={handleGroundClick}
-              onPointerMove={handleGroundPointerMove}
-              onPointerOut={clearGhost}
-            />
-            <TransparentGrid gridWidth={gridWidth} gridDepth={gridDepth} />
-          </>
+          <Grid
+            gridWidth={gridWidth}
+            gridDepth={gridDepth}
+            onClick={handleGroundClick}
+            onPointerMove={handleGroundPointerMove}
+            onPointerOut={clearGhost}
+          />
         )}
 
         {visibleVoxels.map((voxel, index) => (
