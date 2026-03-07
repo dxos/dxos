@@ -5,6 +5,8 @@
 
 ## Spec
 
+### Phase 1
+
 - [x] Select current color in toolbar
 - [x] Wheel to zoom
 - [x] Show "ghost" voxel at cursor
@@ -16,5 +18,9 @@
 - [ ] BUG: Currently main axis isn't visible; should be in different color
 - [ ] Hide any voxels that are outside of the current grid size
 - [ ] Grid should have separate x/y dimension
+
+### Phase 2
+
+### Phase 3
 
 ## Implementation Notes
