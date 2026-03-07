@@ -6,9 +6,17 @@ type Env = {
   ASSETS: Fetcher;
   ENVIRONMENT?: string;
   FEEDBACK_LOGS?: R2Bucket;
+  SIGNOZ_INGEST_URL?: string;
+  SIGNOZ_INGESTION_KEY?: string;
 };
 
 const MAX_BODY_SIZE = 2 * 1024 * 1024; // 2MB.
+
+const OTEL_CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+};
 
 /** Handle /api/feedback-logs — upload NDJSON debug logs to R2. */
 const handleFeedbackLogs = async (request: Request, env: Env): Promise<Response> => {
@@ -59,6 +67,42 @@ const handleFeedbackLogs = async (request: Request, env: Env): Promise<Response>
   });
 };
 
+const OTEL_PREFIX = '/api/otel';
+const OTEL_SIGNALS = new Set(['/v1/traces', '/v1/logs', '/v1/metrics']);
+
+/** Reverse-proxy OTel ingestion to SigNoz, injecting the access token server-side. */
+const handleOtelProxy = async (request: Request, env: Env, signal: string): Promise<Response> => {
+  if (request.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: OTEL_CORS_HEADERS });
+  }
+
+  if (request.method !== 'POST') {
+    return new Response('Method not allowed', { status: 405 });
+  }
+
+  if (!env.SIGNOZ_INGEST_URL || !env.SIGNOZ_INGESTION_KEY) {
+    return new Response('OTel proxy not configured', { status: 503 });
+  }
+
+  const upstream = `${env.SIGNOZ_INGEST_URL}${signal}`;
+  const response = await fetch(upstream, {
+    method: 'POST',
+    headers: {
+      'Content-Type': request.headers.get('Content-Type') ?? 'application/json',
+      'signoz-access-token': env.SIGNOZ_INGESTION_KEY,
+    },
+    body: request.body,
+  });
+
+  return new Response(response.body, {
+    status: response.status,
+    headers: {
+      'Content-Type': response.headers.get('Content-Type') ?? 'application/json',
+      ...OTEL_CORS_HEADERS,
+    },
+  });
+};
+
 /**
  * Cloudflare Pages Functions Advanced mode set-up.
  * https://developers.cloudflare.com/pages/functions/advanced-mode
@@ -71,6 +115,14 @@ const handler: ExportedHandler<Env> = {
     // API routes.
     if (url.pathname === '/api/feedback-logs') {
       return handleFeedbackLogs(request, env);
+    }
+
+    // OTel ingestion proxy.
+    if (url.pathname.startsWith(OTEL_PREFIX)) {
+      const signal = url.pathname.slice(OTEL_PREFIX.length);
+      if (OTEL_SIGNALS.has(signal)) {
+        return handleOtelProxy(request, env, signal);
+      }
     }
 
     return env.ASSETS.fetch(request);
