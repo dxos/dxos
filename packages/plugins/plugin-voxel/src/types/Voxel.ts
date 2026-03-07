@@ -8,15 +8,16 @@ import { Obj, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/internal';
 
 /** Single voxel position and color. */
-export const VoxelData = Schema.Struct({
-  x: Schema.Number,
-  y: Schema.Number,
-  z: Schema.Number,
+export type VoxelData = {
+  x: number;
+  y: number;
+  z: number;
   /** Hex color value (e.g., 0x4488ff). */
-  color: Schema.Number,
-});
+  color: number;
+};
 
-export interface VoxelData extends Schema.Schema.Type<typeof VoxelData> {}
+/** Map of voxel coordinates to color values. Keys are `${x}-${y}-${z}`. */
+export type VoxelMap = Record<string, number>;
 
 /** A voxel world containing a set of 3D points. */
 export const World = Schema.Struct({
@@ -27,8 +28,10 @@ export const World = Schema.Struct({
   gridWidth: Schema.optional(Schema.Number),
   /** Grid depth (z-axis). */
   gridDepth: Schema.optional(Schema.Number),
-  /** Serialized voxel data as JSON string array. */
-  voxels: Schema.optional(Schema.String),
+  /** Size of each voxel block (default 1). */
+  blockSize: Schema.optional(Schema.Number),
+  /** Map of voxel coordinates to color values. Keys are `${x}-${y}-${z}`. */
+  voxels: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Number })),
 }).pipe(
   Type.object({
     typename: 'dxos.org/type/Voxel',
@@ -40,31 +43,43 @@ export const World = Schema.Struct({
 export interface World extends Schema.Schema.Type<typeof World> {}
 
 const DEFAULT_GRID_SIZE = 16;
+const DEFAULT_BLOCK_SIZE = 1;
 
-const DEFAULT_VOXELS: VoxelData[] = [];
+/** Create a voxel map key from coordinates. */
+export const voxelKey = (x: number, y: number, z: number): string => `${x}-${y}-${z}`;
 
-/** Parse voxels from serialized JSON string. */
-export const parseVoxels = (voxelsStr?: string): VoxelData[] => {
-  if (!voxelsStr) {
-    return DEFAULT_VOXELS;
-  }
-  try {
-    return JSON.parse(voxelsStr) as VoxelData[];
-  } catch {
-    return DEFAULT_VOXELS;
-  }
+/** Parse a voxel map key into coordinates. */
+export const parseVoxelKey = (key: string): { x: number; y: number; z: number } => {
+  const [x, y, z] = key.split('-').map(Number);
+  return { x, y, z };
 };
 
-/** Serialize voxels to JSON string. */
-export const serializeVoxels = (voxels: VoxelData[]): string => {
-  return JSON.stringify(voxels);
+/** Convert a voxel map to an array of VoxelData. */
+export const toVoxelArray = (voxelMap?: VoxelMap): VoxelData[] => {
+  if (!voxelMap) {
+    return [];
+  }
+  return Object.entries(voxelMap).map(([key, color]) => ({
+    ...parseVoxelKey(key),
+    color,
+  }));
 };
 
-/** Get grid dimensions from a world object. */
-export const getGridDimensions = (world: World): { gridWidth: number; gridDepth: number } => {
+/** Convert an array of VoxelData to a voxel map. */
+export const toVoxelMap = (voxels: VoxelData[]): VoxelMap => {
+  const map: VoxelMap = {};
+  for (const voxel of voxels) {
+    map[voxelKey(voxel.x, voxel.y, voxel.z)] = voxel.color;
+  }
+  return map;
+};
+
+/** Get grid dimensions and block size from a world object. */
+export const getGridDimensions = (world: World): { gridWidth: number; gridDepth: number; blockSize: number } => {
   return {
     gridWidth: world.gridWidth ?? world.gridSize ?? DEFAULT_GRID_SIZE,
     gridDepth: world.gridDepth ?? world.gridSize ?? DEFAULT_GRID_SIZE,
+    blockSize: world.blockSize ?? DEFAULT_BLOCK_SIZE,
   };
 };
 
@@ -73,12 +88,14 @@ export const make = ({
   gridSize,
   gridWidth,
   gridDepth,
+  blockSize,
   voxels,
 }: {
   name?: string;
   gridSize?: number;
   gridWidth?: number;
   gridDepth?: number;
+  blockSize?: number;
   voxels?: VoxelData[];
 } = {}) => {
   return Obj.make(World, {
@@ -86,6 +103,7 @@ export const make = ({
     gridSize: gridSize ?? DEFAULT_GRID_SIZE,
     gridWidth: gridWidth ?? gridSize ?? DEFAULT_GRID_SIZE,
     gridDepth: gridDepth ?? gridSize ?? DEFAULT_GRID_SIZE,
-    voxels: serializeVoxels(voxels ?? DEFAULT_VOXELS),
+    blockSize: blockSize ?? DEFAULT_BLOCK_SIZE,
+    voxels: voxels ? toVoxelMap(voxels) : {},
   });
 };

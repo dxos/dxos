@@ -21,8 +21,8 @@ const TOOL_HINTS: Record<ToolMode, string> = {
 };
 
 export const VoxelArticle = ({ subject: world }: VoxelArticleProps) => {
-  const [rawVoxels, updateVoxels] = useObject(world, 'voxels');
-  const voxels = useMemo(() => Voxel.parseVoxels(rawVoxels), [rawVoxels]);
+  const [voxelMap, updateVoxels] = useObject(world, 'voxels');
+  const voxels = useMemo(() => Voxel.toVoxelArray(voxelMap), [voxelMap]);
   const [selectedHue, setSelectedHue] = useState<Hue>(DEFAULT_HUE);
   const [selectedColor, setSelectedColor] = useState(() => getHueHex(DEFAULT_HUE));
   const [toolMode, setToolMode] = useState<ToolMode>('add');
@@ -30,31 +30,30 @@ export const VoxelArticle = ({ subject: world }: VoxelArticleProps) => {
 
   const handleAddVoxel = useCallback(
     (voxel: Voxel.VoxelData) => {
-      const current = Voxel.parseVoxels(rawVoxels);
-      const exists = current.some(
-        (existing) => existing.x === voxel.x && existing.y === voxel.y && existing.z === voxel.z,
-      );
-      if (!exists) {
-        current.push(voxel);
-        updateVoxels(Voxel.serializeVoxels(current));
-      }
+      const key = Voxel.voxelKey(voxel.x, voxel.y, voxel.z);
+      updateVoxels((map) => {
+        if (map === undefined || !(key in map)) {
+          (map ??= {} as any)[key] = voxel.color;
+        }
+      });
     },
-    [rawVoxels, updateVoxels],
+    [updateVoxels],
   );
 
   const handleRemoveVoxel = useCallback(
     (position: { x: number; y: number; z: number }) => {
-      const current = Voxel.parseVoxels(rawVoxels);
-      const filtered = current.filter(
-        (voxel) => !(voxel.x === position.x && voxel.y === position.y && voxel.z === position.z),
-      );
-      updateVoxels(Voxel.serializeVoxels(filtered));
+      const key = Voxel.voxelKey(position.x, position.y, position.z);
+      updateVoxels((map) => {
+        if (map !== undefined) {
+          delete map[key];
+        }
+      });
     },
-    [rawVoxels, updateVoxels],
+    [updateVoxels],
   );
 
   const handleClear = useCallback(() => {
-    updateVoxels(Voxel.serializeVoxels([]));
+    updateVoxels({});
   }, [updateVoxels]);
 
   const handleColorChange = useCallback((hue: Hue, hex: number) => {

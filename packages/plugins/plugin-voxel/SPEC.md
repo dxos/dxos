@@ -5,6 +5,12 @@
 
 ## Spec
 
+### Data model
+
+- Each `Voxel` has an x/y/z coordinate and a color.
+- The `World` should have a map of Voxel objects indexed by `${x}-${y}-${z}` coordinates.
+- ECHO objects (`@dxos/echo/Obj`) will automatically serialize and deserialize data and handle reactivity.
+
 ### Phase 1
 
 - [x] Select current color in toolbar
