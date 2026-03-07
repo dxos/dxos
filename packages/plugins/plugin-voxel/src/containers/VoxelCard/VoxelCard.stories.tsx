@@ -12,12 +12,12 @@ import { Voxel } from '../../types';
 import { VoxelCard } from './VoxelCard';
 
 const SAMPLE_VOXELS: Voxel.VoxelData[] = [
-  { x: 0, y: 0, z: 0, color: 0x4488ff },
-  { x: 1, y: 0, z: 0, color: 0x4488ff },
-  { x: 2, y: 0, z: 0, color: 0x4488ff },
-  { x: 0, y: 1, z: 0, color: 0x44bb44 },
-  { x: 1, y: 1, z: 0, color: 0x44bb44 },
-  { x: 0, y: 2, z: 0, color: 0xff4444 },
+  { x: 0, y: 0, z: 0, hue: 'blue' },
+  { x: 1, y: 0, z: 0, hue: 'blue' },
+  { x: 2, y: 0, z: 0, hue: 'blue' },
+  { x: 0, y: 1, z: 0, hue: 'green' },
+  { x: 1, y: 1, z: 0, hue: 'green' },
+  { x: 0, y: 2, z: 0, hue: 'red' },
 ];
 
 const CardStory = () => {

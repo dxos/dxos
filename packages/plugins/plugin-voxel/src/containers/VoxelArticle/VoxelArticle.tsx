@@ -6,72 +6,85 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { useObject } from '@dxos/echo-react';
-import { Container, Toolbar } from '@dxos/react-ui';
-import { getStyles, mx } from '@dxos/ui-theme';
+import { Container } from '@dxos/react-ui';
+import { type Hue } from '@dxos/ui-theme';
 
-import { PALETTE, VoxelEditor } from '../../components';
+import { DEFAULT_HUE, type ToolMode, VoxelEditor, VoxelToolbar } from '../../components';
 import { Voxel } from '../../types';
-import { type VoxelData } from '../../types/Voxel';
 
 export type VoxelArticleProps = SurfaceComponentProps<Voxel.World>;
 
+const TOOL_HINTS: Record<ToolMode, string> = {
+  select: 'Option-drag to orbit | Shift-drag to pan | Scroll to zoom',
+  add: 'Click to place voxel | Option-drag to orbit | Shift-drag to pan',
+  remove: 'Click voxel to remove | Option-drag to orbit | Shift-drag to pan',
+};
+
 export const VoxelArticle = ({ subject: world }: VoxelArticleProps) => {
-  const [rawVoxels, updateVoxels] = useObject(world, 'voxels');
-  const voxels = useMemo(() => Voxel.parseVoxels(rawVoxels), [rawVoxels]);
-  const [selectedColor, setSelectedColor] = useState(PALETTE[0].hex);
+  const [voxelMap, updateVoxels] = useObject(world, 'voxels');
+  const voxels = useMemo(() => Voxel.toVoxelArray(voxelMap), [voxelMap]);
+  const [selectedHue, setSelectedHue] = useState<Hue>(DEFAULT_HUE);
+  const [toolMode, setToolMode] = useState<ToolMode>('add');
+  const { gridX, gridY, blockSize } = Voxel.getGridDimensions(world);
 
   const handleAddVoxel = useCallback(
-    (voxel: VoxelData) => {
-      const current = Voxel.parseVoxels(rawVoxels);
-      // Prevent duplicates at same position.
-      const exists = current.some(
-        (existing) => existing.x === voxel.x && existing.y === voxel.y && existing.z === voxel.z,
-      );
-      if (!exists) {
-        current.push(voxel);
-        updateVoxels(Voxel.serializeVoxels(current));
-      }
+    (voxel: Voxel.VoxelData) => {
+      const key = Voxel.voxelKey(voxel.x, voxel.y, voxel.z);
+      updateVoxels((map) => {
+        if (map !== undefined) {
+          if (!(key in map)) {
+            map[key] = { hue: voxel.hue };
+          }
+        } else {
+          return { [key]: { hue: voxel.hue } } as any;
+        }
+      });
     },
-    [rawVoxels, updateVoxels],
+    [updateVoxels],
   );
 
   const handleRemoveVoxel = useCallback(
     (position: { x: number; y: number; z: number }) => {
-      const current = Voxel.parseVoxels(rawVoxels);
-      const filtered = current.filter(
-        (voxel) => !(voxel.x === position.x && voxel.y === position.y && voxel.z === position.z),
-      );
-      updateVoxels(Voxel.serializeVoxels(filtered));
+      const key = Voxel.voxelKey(position.x, position.y, position.z);
+      updateVoxels((map) => {
+        if (map !== undefined) {
+          delete map[key];
+        }
+      });
     },
-    [rawVoxels, updateVoxels],
+    [updateVoxels],
   );
+
+  const handleClear = useCallback(() => {
+    updateVoxels({});
+  }, [updateVoxels]);
 
   return (
     <Container.Main toolbar>
-      <Toolbar.Root>
-        {PALETTE.map((entry) => {
-          const styles = getStyles(entry.hue);
-          return (
-            <Toolbar.Button
-              key={entry.hue}
-              variant={entry.hex === selectedColor ? 'primary' : 'ghost'}
-              classNames={mx('w-8 h-8 min-w-0 p-0 rounded-sm', styles.fill)}
-              onClick={() => setSelectedColor(entry.hex)}
-              aria-label={entry.hue}
-            />
-          );
-        })}
-        <span className='mlb-auto text-xs text-description pli-2'>
-          Click: add | Shift+click: remove | Right drag: rotate
-        </span>
-      </Toolbar.Root>
-      <VoxelEditor
-        voxels={voxels}
-        gridSize={world.gridSize ?? 16}
-        selectedColor={selectedColor}
-        onAddVoxel={handleAddVoxel}
-        onRemoveVoxel={handleRemoveVoxel}
+      <VoxelToolbar
+        toolMode={toolMode}
+        selectedHue={selectedHue}
+        onToolModeChange={setToolMode}
+        onHueChange={setSelectedHue}
+        onClear={handleClear}
       />
+      <div className='relative grow'>
+        <VoxelEditor
+          voxels={voxels}
+          gridX={gridX}
+          gridY={gridY}
+          blockSize={blockSize}
+          toolMode={toolMode}
+          selectedHue={selectedHue}
+          onAddVoxel={handleAddVoxel}
+          onRemoveVoxel={handleRemoveVoxel}
+        />
+        <div className='absolute bottom-4 left-1/2 -translate-x-1/2 pointer-events-none'>
+          <div className='px-3 py-1.5 text-xs text-description bg-base/80 dark:bg-neutral-800/80 backdrop-blur-sm rounded-full shadow-md border border-separator'>
+            {TOOL_HINTS[toolMode]}
+          </div>
+        </div>
+      </div>
     </Container.Main>
   );
 };

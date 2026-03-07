@@ -42,20 +42,14 @@ export const Default: Story = {
 export const WithVoxels: Story = {
   args: {
     voxels: [
-      { x: 0, y: 0, z: 0, color: 0x4488ff },
-      { x: 1, y: 0, z: 0, color: 0x4488ff },
-      { x: 2, y: 0, z: 0, color: 0x4488ff },
-      { x: 0, y: 1, z: 0, color: 0x44bb44 },
-      { x: 1, y: 1, z: 0, color: 0x44bb44 },
-      { x: 0, y: 2, z: 0, color: 0xff4444 },
-      { x: 3, y: 0, z: 3, color: 0xffbb00 },
-      { x: 4, y: 0, z: 3, color: 0xffbb00 },
-      { x: 3, y: 0, z: 4, color: 0xffbb00 },
-      { x: 4, y: 0, z: 4, color: 0xffbb00 },
-      { x: 3, y: 1, z: 3, color: 0xff88ff },
-      { x: 4, y: 1, z: 3, color: 0xff88ff },
-      { x: 3, y: 1, z: 4, color: 0xff88ff },
-      { x: 4, y: 1, z: 4, color: 0xff88ff },
+      { x: 0, y: 0, z: 0, hue: 'green' },
+      { x: 1, y: 0, z: 0, hue: 'blue' },
+      { x: -1, y: 0, z: 0, hue: 'blue' },
+      { x: 0, y: 1, z: 0, hue: 'blue' },
+      { x: 0, y: -1, z: 0, hue: 'blue' },
+      { x: 0, y: 0, z: 1, hue: 'green' },
+      { x: 0, y: 0, z: 2, hue: 'yellow' },
+      { x: 0, y: 0, z: 3, hue: 'purple' },
     ],
   },
 };

@@ -5,28 +5,48 @@
 
 ## Spec
 
+### Data model
+
+NOTE: We need to develop agent-specific instructions for creating data sets, incl. concurrency, refs, and reactivity issues.
+
+- Each `Voxel` has an x/y/z coordinate and a `hue`.
+- The `World` should have a map of Voxel objects indexed by `${x}-${y}-${z}` coordinates.
+- ECHO objects (`@dxos/echo/Obj`) will automatically serialize and deserialize data and handle reactivity.
+
 ### Phase 1
 
 - [x] Select current color in toolbar
-- [x] Wheel to zoom
+- [x] Orbit, pan, and zoom should use the default Blender key/mouse controls (for OS/X); also Option-drag to orbit
 - [x] Show "ghost" voxel at cursor
-- [ ] Select current tool in toolbar: Select, Add, Remove
-- [ ] Click to add/remove depending on tool mode
-- [ ] Show hints in floating panel at bottom of editor (not in toolbar)
-- [ ] CMD-drag (and middle button) to move/rotate world (not right-click)
-- [ ] Base grid should be 50% transparent
-- [ ] BUG: Currently main axis isn't visible; should be in different color
-- [ ] Hide any voxels that are outside of the current grid size
-- [ ] Grid should have separate x/y dimension
-- [ ] Configure block size
+- [x] Select current tool in toolbar: Select, Add, Remove
+- [x] Click to add/remove depending on tool mode
+- [x] Show hints in floating panel at bottom of editor (not in toolbar)
+- [x] CMD-drag (and middle button) to move/rotate world (not right-click)
+- [x] Base grid should be 50% transparent
+- [x] BUG: Currently main axis isn't visible; should be in different color
+- [x] Hide any voxels that are outside of the current grid size
+- [x] Grid should have separate x/y dimension
+- [x] Use `ChromaticPalette` `styles` from hash-styles for palette (replace hard coded values)
+- [x] Factor out toolbar into separate component with story
+- [x] Add "Clear" button in toolbar
+- [x] Remove ground plane and orbit controls from card view
+- [x] Configure block size via config option in Voxel.World
 
-### Phase 2
+### Phase 2 (Editor Enhancements)
 
 - [ ] Implement agent blueprint for creating/deleting blocks (e.g., "create tower five blocks high")
+- [ ] Paint tool to change color of existing voxels
+- [ ] Fill/Flood tool to fill a rectangular region or connected empty space
+- [ ] Copy/Paste/Mirror selection across an axis
 
-### Phase 3
+### Phase 3 (Advanced Features)
 
-- [ ] Physics (e.g., gravity)
-- [ ] Game -- e.g., missiles to knock down blocks
+- [ ] Undo/Redo with Cmd+Z / Cmd+Shift+Z (generalize with ECHO)
+- [ ] Physics simulation (e.g., gravity, collision, block toppling)
+- [ ] Game mode (e.g., missiles/projectiles to knock down structures)
+- [ ] Export to glTF/OBJ for downloading voxel models as standard 3D formats
+- [ ] Import image
+- [ ] Layer visibility toggle for editing interior structures by Y-axis
+- [ ] Collaborative cursors showing other users' ghost cursors and tool selections via ECHO
 
 ## Implementation Notes
