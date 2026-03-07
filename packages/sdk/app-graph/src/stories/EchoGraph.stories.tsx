@@ -104,9 +104,9 @@ const createGraph = (client: Client, registry: Registry.Registry): Graph.Expanda
   GraphBuilder.addExtension(builder, objectBuilderExtension);
   const graph = builder.graph;
   graph.onNodeChanged.on(({ id }) => {
-    Graph.expand(graph, id);
+    Graph.expand(graph, id, 'child');
   });
-  Graph.expand(graph, Node.RootId);
+  Graph.expand(graph, Node.RootId, 'child');
   (window as any).graph = graph;
   return graph;
 };
@@ -307,7 +307,7 @@ export const TreeView: Story = {
       () =>
         Atom.family((id: string) =>
           Atom.make((get) => {
-            const connections = get(graph.connections(id));
+            const connections = get(graph.connections(id, 'child'));
             return connections.map((connection) => connection.id);
           }),
         ),
@@ -336,7 +336,7 @@ export const TreeView: Story = {
             if (!node) {
               return { id, label: id };
             }
-            const connections = get(graph.connections(node.id, 'outbound'));
+            const connections = get(graph.connections(node.id, 'child'));
             const safeChildren = connections.filter((n) => !path.includes(n.id));
             const parentOf =
               safeChildren.length > 0

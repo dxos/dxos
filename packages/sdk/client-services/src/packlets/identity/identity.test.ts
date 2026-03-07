@@ -56,7 +56,7 @@ describe('identity/identity', () => {
       subject: setup.identityKey,
       assertion: {
         '@type': 'dxos.halo.credentials.IdentityProfile',
-        profile: {
+        'profile': {
           displayName: 'Alice',
         },
       },
@@ -93,8 +93,8 @@ describe('identity/identity', () => {
             subject: secondDevice.deviceKey,
             assertion: {
               '@type': 'dxos.halo.credentials.AuthorizedDevice',
-              identityKey: owner.identityKey,
-              deviceKey: secondDevice.deviceKey,
+              'identityKey': owner.identityKey,
+              'deviceKey': secondDevice.deviceKey,
             },
           }),
         },

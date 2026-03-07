@@ -44,7 +44,7 @@ describe('makeDynamicTable', () => {
 
   /**
    * Regression test for the path where jsonSchema comes from getBaseSchema(typename, properties).
-   * That path uses Echo (View.make, Type.toJsonSchema); mutations must run inside Obj.change and on a
+   * That path uses Echo (ViewModel.make, Type.toJsonSchema); mutations must run inside Obj.change and on a
    * cloned schema. This test ensures that flow does not throw.
    */
   test('makeDynamicTable with jsonSchema from getBaseSchema(typename, properties) and properties with title does not throw', () => {

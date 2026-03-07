@@ -43,7 +43,7 @@ test.describe('Basic tests', () => {
   test('create document', async () => {
     await host.createSpace();
     // Expand the Documents collection.
-    await host.toggleCollectionCollapsed(3);
+    await host.toggleCollectionCollapsed(4);
     await host.createObject({ type: 'Document' });
 
     const plank = host.deck.plank();

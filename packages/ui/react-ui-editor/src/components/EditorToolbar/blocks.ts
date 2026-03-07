@@ -52,8 +52,8 @@ export const createBlocks = (state: EditorToolbarState, getView: () => EditorVie
   return {
     nodes: [blockGroupAction as Node.NodeArg<any>, ...blockActions],
     edges: [
-      { source: 'root', target: 'block' },
-      ...blockActions.map(({ id }) => ({ source: blockGroupAction.id, target: id })),
+      { source: 'root', target: 'block', relation: 'child' },
+      ...blockActions.map(({ id }) => ({ source: blockGroupAction.id, target: id, relation: 'child' })),
     ],
   };
 };

@@ -6,7 +6,7 @@ import React, { useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { useTranslation } from '@dxos/react-ui';
-import { Card } from '@dxos/react-ui-mosaic';
+import { Card } from '@dxos/react-ui';
 import { Text } from '@dxos/schema';
 
 import { MarkdownEditor } from '../../components';

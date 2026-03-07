@@ -20,14 +20,14 @@ const perfomInvitation = async (host: AppManager, guest: AppManager) => {
 
 const navigateToNewDocument = async (app: AppManager) => {
   // Check if Documents collection (nth=1) is collapsed by looking for "Click to open" in its text.
-  const documentsCollection = app.page.getByTestId('spacePlugin.object').nth(3);
+  const documentsCollection = app.getObject(4);
   const documentsText = await documentsCollection.textContent();
   const isCollapsed = documentsText?.includes('Click to open');
   if (isCollapsed) {
-    await app.toggleCollectionCollapsed(3); // Documents managed collection.
+    await app.toggleCollectionCollapsed(4); // Documents managed collection.
   }
 
-  await app.navigateToObject(4); // New document.
+  await app.navigateToObject(5); // New document.
 };
 
 // TODO(wittjosiah): WebRTC only available in chromium browser for testing currently.

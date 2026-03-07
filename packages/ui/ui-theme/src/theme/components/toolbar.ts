@@ -30,7 +30,12 @@ export const toolbarInner: ComponentFunction<ToolbarStyleProps> = ({ layoutManag
   return mx(!layoutManaged && ['flex gap-1', textBlockWidth], ...etc);
 };
 
+export const toolbarText: ComponentFunction<ToolbarStyleProps> = (_, ...etc) => {
+  return mx('grow truncate items-center', textBlockWidth, ...etc);
+};
+
 export const toolbarTheme: Theme<ToolbarStyleProps> = {
   root: toolbarRoot,
   inner: toolbarInner,
+  text: toolbarText,
 };

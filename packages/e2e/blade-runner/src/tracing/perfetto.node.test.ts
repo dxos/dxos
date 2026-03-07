@@ -17,8 +17,8 @@ describe('perfetto traces', () => {
   test.skip('write traces to a file', async () => {
     const trace = new PerfettoEvents();
     trace.setDefaultFields({
-      cat: 'default',
-      args: {
+      'cat': 'default',
+      'args': {
         platform: globalThis.process?.platform,
         arch: globalThis.process?.arch,
       },
@@ -50,7 +50,7 @@ describe('perfetto traces', () => {
   test('traces are created correctly', async () => {
     const trace = new PerfettoEvents();
     trace.setDefaultFields({
-      cat: 'default',
+      'cat': 'default',
       'something-else': 'value',
     });
     onTestFinished(() => trace.destroy());
@@ -72,19 +72,19 @@ describe('perfetto traces', () => {
 
     expect(events).to.have.length(2);
     expect(events[0]).to.deep.include({
-      tid: 0,
-      ph: 'B',
-      cat: 'default',
+      'tid': 0,
+      'ph': 'B',
+      'cat': 'default',
       'something-else': 'value',
-      name: '1',
+      'name': '1',
     });
 
     expect(events[1]).to.deep.include({
-      tid: 0,
-      ph: 'E',
-      cat: 'default',
+      'tid': 0,
+      'ph': 'E',
+      'cat': 'default',
       'something-else': 'value',
-      name: '1',
+      'name': '1',
     });
   });
 

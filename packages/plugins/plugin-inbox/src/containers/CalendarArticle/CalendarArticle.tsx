@@ -37,7 +37,6 @@ export const CalendarArticle = ({ role, subject: feed }: SurfaceComponentProps<F
     (event: Event.Event) => {
       singleSelect(event.id);
       void invokePromise(DeckOperation.ChangeCompanion, {
-        primary: id,
         companion: `${id}${ATTENDABLE_PATH_SEPARATOR}event`,
       });
     },

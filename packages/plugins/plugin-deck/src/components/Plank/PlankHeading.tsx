@@ -71,7 +71,7 @@ export const PlankHeading = memo(
       const frame = requestAnimationFrame(() => {
         // Load actions for the node.
         if (node) {
-          void Graph.expand(graph, node.id);
+          void Graph.expand(graph, node.id, 'child');
         }
       });
 
@@ -139,14 +139,11 @@ export const PlankHeading = memo(
       (event: MouseEvent) => {
         const target = (event.target as HTMLElement).closest('[data-id]') as HTMLElement | null;
         const tabId = target?.dataset?.id;
-        if (primaryId && tabId) {
-          void invokePromise(DeckOperation.ChangeCompanion, {
-            primary: primaryId,
-            companion: tabId,
-          });
+        if (tabId) {
+          void invokePromise(DeckOperation.ChangeCompanion, { companion: tabId });
         }
       },
-      [primaryId, invokePromise],
+      [invokePromise],
     );
 
     return (

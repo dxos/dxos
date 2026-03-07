@@ -38,6 +38,7 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
       const actionMap = new Set<string>();
       const actions: Node.ActionLike[] = [];
       Graph.traverse(graph, {
+        relation: 'child',
         visitor: (node, path) => {
           if (
             (Node.isAction(node) || Node.isActionGroup(node)) &&
@@ -100,7 +101,11 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
 
                       invokeSync(LayoutOperation.UpdateDialog, { state: false });
                       setTimeout(() => {
-                        const node = Graph.getConnections(graph, group?.id ?? action.id, 'inbound')[0];
+                        const node = Graph.getConnections(
+                          graph,
+                          group?.id ?? action.id,
+                          Node.childRelation('inbound'),
+                        )[0];
                         if (node && Node.isAction(action)) {
                           void runAction(action, { parent: node, caller: KEY_BINDING });
                         }

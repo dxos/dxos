@@ -7,9 +7,9 @@ import * as Schema from 'effect/Schema';
 import { type Context, createContext } from 'react';
 
 import { Capability } from '@dxos/app-framework';
+import { Collection } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { Markdown } from '@dxos/plugin-markdown/types';
-import { Collection } from '@dxos/schema';
 
 import { meta } from './meta';
 

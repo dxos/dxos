@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
 import { Operation, OperationResolver } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { SpaceOperation } from '@dxos/plugin-space/types';
-import { Collection } from '@dxos/schema';
+import { ManagedCollection } from '@dxos/schema';
 import { Message, Organization, Person } from '@dxos/types';
 
 import { Calendar, InboxOperation, Mailbox } from '../../types';
@@ -24,13 +24,13 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: InboxOperation.OnCreateSpace,
         handler: Effect.fnUntraced(function* ({ rootCollection }) {
-          const mailboxCollection = Collection.makeManaged({
+          const mailboxCollection = ManagedCollection.makeManagedCollection({
             key: `${Type.getTypename(Type.Feed)}~${Mailbox.kind}`,
           });
-          const calendarCollection = Collection.makeManaged({
+          const calendarCollection = ManagedCollection.makeManagedCollection({
             key: `${Type.getTypename(Type.Feed)}~${Calendar.kind}`,
           });
-          const messageCollection = Collection.makeManaged({ key: Message.Message.typename });
+          const messageCollection = ManagedCollection.makeManagedCollection({ key: Message.Message.typename });
           Obj.change(rootCollection, (c) => {
             c.objects.push(Ref.make(mailboxCollection), Ref.make(calendarCollection), Ref.make(messageCollection));
           });

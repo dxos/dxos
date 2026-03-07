@@ -5,8 +5,9 @@
 import * as Schema from 'effect/Schema';
 
 import { Obj, Ref, Type } from '@dxos/echo';
+import { View } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
-import { View, ViewAnnotation } from '@dxos/schema';
+import { ViewAnnotation } from '@dxos/schema';
 
 export const Masonry = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),

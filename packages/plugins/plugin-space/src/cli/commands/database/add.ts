@@ -16,10 +16,10 @@ import { AppActivationEvents, AppCapabilities } from '@dxos/app-toolkit';
 import { CommandConfig, Common, flushAndSync, print, spaceLayer } from '@dxos/cli-util';
 import { SpaceProperties } from '@dxos/client/echo';
 import { Database, Filter, Obj, Ref, Type } from '@dxos/echo';
+import { Collection } from '@dxos/echo';
 import { EntityKind, getTypeAnnotation } from '@dxos/echo/internal';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import type { Operation } from '@dxos/operation';
-import { Collection } from '@dxos/schema';
 
 import { type CreateObject } from '../../../types';
 

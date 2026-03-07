@@ -124,7 +124,7 @@ describe('identity/identity-manager', () => {
       subject: deviceKey,
       assertion: {
         '@type': 'dxos.halo.credentials.AuthorizedDevice',
-        identityKey: identity1.identityKey,
+        'identityKey': identity1.identityKey,
         deviceKey,
       },
     });

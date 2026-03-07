@@ -14,7 +14,7 @@ import { ATTENDABLE_PATH_SEPARATOR, DeckOperation } from '@dxos/plugin-deck/type
 import { ObservabilityOperation } from '@dxos/plugin-observability/types';
 import { SpaceOperation } from '@dxos/plugin-space/types';
 import { Ref } from '@dxos/react-client/echo';
-import { Collection } from '@dxos/schema';
+import { ManagedCollection } from '@dxos/schema';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 
 import { meta } from '../../meta';
@@ -136,7 +136,7 @@ export default Capability.makeModule(
               return;
             }
 
-            const collection = Collection.makeManaged({ key: Type.getTypename(Channel.Channel) });
+            const collection = ManagedCollection.makeManagedCollection({ key: Type.getTypename(Channel.Channel) });
             Obj.change(rootCollection, (c) => {
               c.objects.push(Ref.make(collection));
             });
@@ -178,7 +178,6 @@ export default Capability.makeModule(
             // Follow-up operations.
             yield* Operation.invoke(ThreadOperation.Select, { current: Obj.getDXN(thread).toString() });
             yield* Operation.invoke(DeckOperation.ChangeCompanion, {
-              primary: subjectId,
               companion: `${subjectId}${ATTENDABLE_PATH_SEPARATOR}comments`,
             });
           }),

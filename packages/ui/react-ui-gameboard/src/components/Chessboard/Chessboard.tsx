@@ -63,7 +63,7 @@ const ChessboardComponent = forwardRef<HTMLDivElement, ChessboardProps>(
           <div
             key={locationToString(location)}
             {...{
-              ['data-location' as const]: locationToString(location),
+              'data-location': locationToString(location),
             }}
           />
         );

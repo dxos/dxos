@@ -38,7 +38,7 @@ export const steps: Step[] = [
   {
     ...base,
     before: ensureSidebar,
-    target: '[data-testid="spacePlugin.createObject"]',
+    target: '[data-testid="navtree.workspace.visible"] [data-testid="spacePlugin.createObject"]',
     title: 'Creating content',
     content: 'Press (+) to add new content.',
     placement: 'bottom',

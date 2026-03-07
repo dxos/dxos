@@ -11,6 +11,7 @@ import { expect, waitFor, within } from 'storybook/test';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
 import { Obj, type QueryAST, Type } from '@dxos/echo';
+import { View } from '@dxos/echo';
 import { type Mutable } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { ClientPlugin } from '@dxos/plugin-client';
@@ -22,7 +23,8 @@ import { Filter, type Space, useQuery, useSchema, useSpaces } from '@dxos/react-
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
-import { View, getTypenameFromQuery } from '@dxos/schema';
+import { ViewModel, getTypenameFromQuery } from '@dxos/schema';
+// TODO(wittjosiah): Replace with echo/testing.
 import { Organization, Person } from '@dxos/types';
 
 import { useProjectionModel } from '../../hooks';
@@ -32,12 +34,12 @@ import { Kanban } from '../../types';
 
 faker.seed(0);
 
-const createOrg = () => ({
+const createOrg = (status?: Organization.Organization['status']) => ({
   name: faker.commerce.productName(),
   description: faker.lorem.paragraph(),
   image: faker.image.url(),
   website: faker.internet.url(),
-  status: faker.helpers.arrayElement(Organization.StatusOptions).id as Organization.Organization['status'],
+  status: (status ?? faker.helpers.arrayElement(Organization.StatusOptions).id) as Organization.Organization['status'],
 });
 
 //
@@ -161,7 +163,7 @@ export const Default: Story = {
     withKanbanPlugins({
       types: [Organization.Organization, Person.Person],
       onSpaceCreated: async (space) => {
-        const { view } = await View.makeFromDatabase({
+        const { view } = await ViewModel.makeFromDatabase({
           db: space.db,
           typename: Organization.Organization.typename,
           pivotFieldName: 'status',
@@ -169,8 +171,7 @@ export const Default: Story = {
         const kanban = Kanban.make({ view });
         space.db.add(kanban);
 
-        // TODO(burdon): Replace with sdk/schema/testing.
-        Array.from({ length: 80 }).map(() => {
+        Array.from({ length: 10 }).map(() => {
           return space.db.add(Obj.make(Organization.Organization, createOrg()));
         });
       },
@@ -239,7 +240,7 @@ export const MutableSchema: Story = {
         // Register schema in the database to make it mutable (EchoSchema).
         const [schema] = await space.db.schemaRegistry.register([Organization.Organization]);
 
-        const { view } = await View.makeFromDatabase({
+        const { view } = await ViewModel.makeFromDatabase({
           db: space.db,
           typename: schema.typename,
           pivotFieldName: 'status',
@@ -248,9 +249,14 @@ export const MutableSchema: Story = {
         space.db.add(kanban);
 
         // Create test data using the registered schema.
-        Array.from({ length: 80 }).map(() => {
-          return space.db.add(Obj.make(schema, createOrg()));
-        });
+        const requiredOrgs = [
+          ...Array.from({ length: 2 }, () => createOrg('prospect')),
+          ...Array.from({ length: 5 }, () => createOrg('qualified')),
+          ...Array.from({ length: 1 }, () => createOrg('active')),
+          ...Array.from({ length: 1 }, () => createOrg('commit')),
+          ...Array.from({ length: 1 }, () => createOrg('reject')),
+        ];
+        requiredOrgs.forEach((org) => space.db.add(Obj.make(schema, org)));
       },
     }),
   ],

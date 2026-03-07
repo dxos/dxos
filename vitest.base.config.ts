@@ -36,6 +36,8 @@ export const createConfig = (options: ConfigOptions): ViteUserConfig => {
   return {
     test: {
       ...resolveReporterConfig(dirname),
+      // Suppress flaky WebSocket birpc teardown unhandled rejections from storybook test runner.
+      ...(storybook ? { dangerouslyIgnoreUnhandledErrors: true } : {}),
       projects: [nodeProject, storybookProject, ...browserProjects].filter(
         (project): project is UserWorkspaceConfig => project !== undefined,
       ),

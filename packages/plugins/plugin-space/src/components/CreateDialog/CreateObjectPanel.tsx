@@ -6,12 +6,12 @@ import type * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
 import { type Database, Obj } from '@dxos/echo';
+import { type Collection } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { type Space, type SpaceId } from '@dxos/react-client/echo';
 import { toLocalizedString, useDefaultValue, useTranslation } from '@dxos/react-ui';
 import { Form, omitId } from '@dxos/react-ui-form';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-searchlist';
-import { type Collection } from '@dxos/schema';
 import { type MaybePromise } from '@dxos/util';
 
 import { useInputSurfaceLookup } from '../../hooks';

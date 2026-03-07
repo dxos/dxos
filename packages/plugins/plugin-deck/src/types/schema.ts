@@ -46,8 +46,8 @@ export const DeckState = Schema.Struct({
   /** If false, the deck has not yet left solo mode and new planks should be soloed. */
   initialized: Schema.Boolean,
   active: Schema.mutable(Schema.Array(Schema.String)),
-  // TODO(wittjosiah): Piping into both mutable and optional caused invalid typescript output.
-  activeCompanions: Schema.optional(Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.String }))),
+  companionOpen: Schema.Boolean,
+  companionVariant: Schema.optional(Schema.String),
   inactive: Schema.mutable(Schema.Array(Schema.String)),
   solo: Schema.optional(Schema.String),
   fullscreen: Schema.Boolean,
@@ -59,7 +59,8 @@ export type DeckState = Schema.Schema.Type<typeof DeckState>;
 export const defaultDeck: DeckState = {
   initialized: false,
   active: [],
-  activeCompanions: {},
+  companionOpen: false,
+  companionVariant: undefined,
   inactive: [],
   solo: undefined,
   fullscreen: false,
@@ -153,7 +154,6 @@ export namespace DeckAction {
 
   export class ChangeCompanion extends Schema.TaggedClass<ChangeCompanion>()(`${meta.id}/action/change-companion`, {
     input: Schema.Struct({
-      primary: Schema.String,
       companion: Schema.Union(Schema.String, Schema.Null),
     }),
     output: Schema.Void,
@@ -215,7 +215,6 @@ export namespace DeckOperation {
     services: [Capability.Service],
     schema: {
       input: Schema.Struct({
-        primary: Schema.String,
         companion: Schema.Union(Schema.String, Schema.Null),
       }),
       output: Schema.Void,

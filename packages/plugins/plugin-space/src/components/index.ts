@@ -4,3 +4,4 @@
 
 export * from './AwaitingObject';
 export * from './CreateDialog';
+export * from './ObjectForm';

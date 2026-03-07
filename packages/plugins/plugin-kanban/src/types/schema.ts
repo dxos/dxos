@@ -5,9 +5,9 @@
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
+import { View } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { TypeInputOptionsAnnotation } from '@dxos/plugin-space/types';
-import { FieldSchema, View } from '@dxos/schema';
 
 import { meta } from '../meta';
 
@@ -53,7 +53,7 @@ const KANBAN_OPERATION = `${meta.id}/operation`;
 
 export namespace KanbanOperation {
   export const DeleteCardFieldOutput = Schema.Struct({
-    field: FieldSchema.annotations({ description: 'The deleted field schema.' }),
+    field: View.FieldSchema.annotations({ description: 'The deleted field schema.' }),
     props: Schema.Any.annotations({ description: 'The deleted field properties.' }),
     index: Schema.Number.annotations({ description: 'The index the field was at.' }),
   });
@@ -97,7 +97,7 @@ export namespace KanbanOperation {
     schema: {
       input: Schema.Struct({
         view: View.View.annotations({ description: 'The view to restore the field to.' }),
-        field: FieldSchema.annotations({ description: 'The field schema to restore.' }),
+        field: View.FieldSchema.annotations({ description: 'The field schema to restore.' }),
         props: Schema.Any.annotations({ description: 'The field properties to restore.' }),
         index: Schema.Number.annotations({ description: 'The index to restore the field at.' }),
       }),

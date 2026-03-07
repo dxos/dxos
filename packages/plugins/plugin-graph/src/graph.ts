@@ -37,7 +37,7 @@ export default Capability.makeModule(
     );
 
     // await builder.initialize();
-    void Graph.expand(builder.graph, Node.RootId);
+    void Graph.expand(builder.graph, Node.RootId, 'child');
 
     setupDevtools(builder.graph);
 

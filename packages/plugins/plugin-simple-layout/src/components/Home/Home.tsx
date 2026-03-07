@@ -9,7 +9,8 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Node, useConnections } from '@dxos/plugin-graph';
 import { Avatar, Container, Icon, ScrollArea, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Card, Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
+import { Card } from '@dxos/react-ui';
+import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchList, useSearchListItem, useSearchListResults } from '@dxos/react-ui-searchlist';
 import { mx } from '@dxos/ui-theme';
 import { byPosition } from '@dxos/util';
@@ -127,7 +128,7 @@ const filterItems = (node: Node.Node, disposition: string) => {
 /** Returns root-level items filtered by disposition. */
 const useItemsByDisposition = (disposition: string, sort = false) => {
   const { graph } = useAppGraph();
-  const connections = useConnections(graph, Node.RootId);
+  const connections = useConnections(graph, Node.RootId, 'child');
   const filtered = connections.filter((node) => filterItems(node, disposition));
   return sort ? filtered.toSorted((a, b) => byPosition(a.properties, b.properties)) : filtered;
 };

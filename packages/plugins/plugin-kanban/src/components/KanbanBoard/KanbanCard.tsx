@@ -7,7 +7,8 @@ import React, { forwardRef, useCallback, useMemo, useState } from 'react';
 import { Surface } from '@dxos/app-framework/ui';
 import { Obj } from '@dxos/echo';
 import { useTranslation } from '@dxos/react-ui';
-import { Card, Focus, Mosaic, type MosaicTileProps, useBoard } from '@dxos/react-ui-mosaic';
+import { Card } from '@dxos/react-ui';
+import { Focus, Mosaic, type MosaicTileProps, useBoard } from '@dxos/react-ui-mosaic';
 
 import { meta } from '../../meta';
 

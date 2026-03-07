@@ -8,7 +8,8 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
-import { ArtifactId, GenericToolkit } from '@dxos/assistant';
+import { GenericToolkit } from '@dxos/ai';
+import { ArtifactId } from '@dxos/assistant';
 import { Chat, WebSearchToolkit } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
 import { Tag, Type } from '@dxos/echo';

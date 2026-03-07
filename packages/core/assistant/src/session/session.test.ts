@@ -4,14 +4,14 @@
 
 import * as Tool from '@effect/ai/Tool';
 import * as Toolkit from '@effect/ai/Toolkit';
-import { describe, it } from '@effect/vitest';
+import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { dbg, log } from '@dxos/log';
+import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
 import { AssistantTestLayer } from '../testing';
@@ -147,7 +147,7 @@ describe('AiSession', () => {
             }),
           ],
         });
-        dbg(response);
+        expect(response).toBeDefined();
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

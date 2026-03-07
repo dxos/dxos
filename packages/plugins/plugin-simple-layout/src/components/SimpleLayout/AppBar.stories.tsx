@@ -35,7 +35,7 @@ const buildDefaultActions = (): ActionGraphProps => {
     }),
   ];
   result.nodes.push(...actions);
-  result.edges.push(...actions.map((a) => ({ source: 'root', target: a.id })));
+  result.edges.push(...actions.map((a) => ({ source: 'root', target: a.id, relation: 'child' })));
   return result;
 };
 

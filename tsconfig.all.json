@@ -205,6 +205,9 @@
       "path": "packages/core/halo/keyring/tsconfig.json"
     },
     {
+      "path": "packages/core/mcp-client/tsconfig.json"
+    },
+    {
       "path": "packages/core/mesh/edge-client/tsconfig.json"
     },
     {

@@ -37,7 +37,7 @@ export const useMenuActions = (props: Atom.Atom<ActionGraphProps>): MenuActions 
 
   const useGroupItems = useCallback(
     (sourceNode?: MenuItemGroup) => {
-      const items = useAtomValue(graph.connections(sourceNode?.id || Node.RootId)) as MenuItem[];
+      const items = useAtomValue(graph.connections(sourceNode?.id || Node.RootId, 'child')) as MenuItem[];
       return items;
     },
     [graph],

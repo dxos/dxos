@@ -12,12 +12,13 @@ import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { type Space, SpaceState, getSpace, isSpace, parseId } from '@dxos/client/echo';
 import { DXN, Filter, Obj, type Ref, Type } from '@dxos/echo';
+import { Collection } from '@dxos/echo';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { Operation } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { CreateAtom, GraphBuilder, type Node, NodeMatcher } from '@dxos/plugin-graph';
-import { Collection, Expando, ViewAnnotation, getTypenameFromQuery } from '@dxos/schema';
+import { Expando, ManagedCollection, ViewAnnotation, getTypenameFromQuery } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { getActiveSpace } from '../../hooks';
@@ -362,7 +363,8 @@ export default Capability.makeModule(
       // Create object nodes for schema-based system collections.
       GraphBuilder.createExtension({
         id: `${meta.id}/system-collections`,
-        match: (node) => (Obj.instanceOf(Collection.Managed, node.data) ? Option.some(node.data) : Option.none()),
+        match: (node) =>
+          Obj.instanceOf(ManagedCollection.ManagedCollection, node.data) ? Option.some(node.data) : Option.none(),
         connector: (collection, get) => {
           const [typename, feedKind] = collection.key.split('~');
           const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
@@ -404,7 +406,8 @@ export default Capability.makeModule(
       GraphBuilder.createExtension({
         id: `${meta.id}/static-schemas`,
         match: (node: Node.Node) =>
-          Obj.instanceOf(Collection.Managed, node.data) && node.data.key === Type.getTypename(Type.PersistentType)
+          Obj.instanceOf(ManagedCollection.ManagedCollection, node.data) &&
+          node.data.key === Type.getTypename(Type.PersistentType)
             ? Option.some(node.data)
             : Option.none(),
         connector: (collection, get) => {
@@ -537,7 +540,7 @@ export default Capability.makeModule(
 
           const isSchema = Obj.instanceOf(Type.PersistentType, object);
 
-          let deletable = !isSchema && !Obj.instanceOf(Collection.Managed, object);
+          let deletable = !isSchema && !Obj.instanceOf(ManagedCollection.ManagedCollection, object);
           if (isSchema) {
             const objects = get(AtomQuery.make(space.db, filter));
             // Filter views using AtomObj and AtomRef (cached via Atom.family).
@@ -601,6 +604,47 @@ export default Capability.makeModule(
                 label: ['companion selected objects label', { ns: meta.id }],
                 icon: 'ph--tree-view--regular',
                 disposition: 'hidden',
+              },
+            },
+          ]),
+      }),
+
+      // Space settings panel children (General settings, Members, Types).
+      GraphBuilder.createExtension({
+        id: `${meta.id}/settings-sections`,
+        match: NodeMatcher.whenNodeType(`${meta.id}/settings`),
+        connector: (node) =>
+          Effect.succeed([
+            {
+              id: `properties-${node.id}`,
+              type: `${meta.id}/properties`,
+              data: `${meta.id}/properties`,
+              properties: {
+                label: ['space settings properties label', { ns: meta.id }],
+                icon: 'ph--sliders--regular',
+                position: 'hoist',
+                testId: 'spacePlugin.general',
+              },
+            },
+            {
+              id: `members-${node.id}`,
+              type: `${meta.id}/members`,
+              data: `${meta.id}/members`,
+              properties: {
+                label: ['members panel label', { ns: meta.id }],
+                icon: 'ph--users--regular',
+                position: 'hoist',
+                testId: 'spacePlugin.members',
+              },
+            },
+            {
+              id: `schema-${node.id}`,
+              type: `${meta.id}/schema`,
+              data: `${meta.id}/schema`,
+              properties: {
+                label: ['space settings schema label', { ns: meta.id }],
+                icon: 'ph--shapes--regular',
+                testId: 'spacePlugin.schema',
               },
             },
           ]),

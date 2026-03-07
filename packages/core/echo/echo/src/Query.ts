@@ -30,7 +30,7 @@ export interface Query<T> {
   // TODO(dmaretskyi): See new effect-schema approach to variance.
   '~Query': { value: T };
 
-  ast: QueryAST.Query;
+  'ast': QueryAST.Query;
 
   /**
    * Filter the current selection based on a filter.
@@ -180,13 +180,13 @@ export type Any = Query<any>;
 export type Type<Q extends Any> = Q extends Query<infer T> ? T : never;
 
 class QueryClass implements Any {
-  private static variance: Any['~Query'] = {} as Any['~Query'];
+  private static 'variance': Any['~Query'] = {} as Any['~Query'];
 
-  constructor(public readonly ast: QueryAST.Query) {}
+  'constructor'(public readonly ast: QueryAST.Query) {}
 
   '~Query' = QueryClass.variance;
 
-  select(filter: Filter.Any | Filter.Props<any>): Any {
+  'select'(filter: Filter.Any | Filter.Props<any>): Any {
     if (Filter.is(filter)) {
       return new QueryClass({
         type: 'filter',
@@ -202,7 +202,7 @@ class QueryClass implements Any {
     }
   }
 
-  reference(key: string): Any {
+  'reference'(key: string): Any {
     return new QueryClass({
       type: 'reference-traversal',
       anchor: this.ast,
@@ -210,7 +210,7 @@ class QueryClass implements Any {
     });
   }
 
-  referencedBy(target?: Schema.Schema.All | string, key?: string): Any {
+  'referencedBy'(target?: Schema.Schema.All | string, key?: string): Any {
     const dxn = target !== undefined ? getTypeDXNFromSpecifier(target) : null;
     return new QueryClass({
       type: 'incoming-references',
@@ -220,7 +220,7 @@ class QueryClass implements Any {
     });
   }
 
-  sourceOf(relation?: Schema.Schema.All | string, predicates?: Filter.Props<unknown> | undefined): Any {
+  'sourceOf'(relation?: Schema.Schema.All | string, predicates?: Filter.Props<unknown> | undefined): Any {
     return new QueryClass({
       type: 'relation',
       anchor: this.ast,
@@ -229,7 +229,7 @@ class QueryClass implements Any {
     });
   }
 
-  targetOf(relation?: Schema.Schema.All | string, predicates?: Filter.Props<unknown> | undefined): Any {
+  'targetOf'(relation?: Schema.Schema.All | string, predicates?: Filter.Props<unknown> | undefined): Any {
     return new QueryClass({
       type: 'relation',
       anchor: this.ast,
@@ -238,7 +238,7 @@ class QueryClass implements Any {
     });
   }
 
-  source(): Any {
+  'source'(): Any {
     return new QueryClass({
       type: 'relation-traversal',
       anchor: this.ast,
@@ -246,7 +246,7 @@ class QueryClass implements Any {
     });
   }
 
-  target(): Any {
+  'target'(): Any {
     return new QueryClass({
       type: 'relation-traversal',
       anchor: this.ast,
@@ -254,7 +254,7 @@ class QueryClass implements Any {
     });
   }
 
-  parent(): Any {
+  'parent'(): Any {
     return new QueryClass({
       type: 'hierarchy-traversal',
       anchor: this.ast,
@@ -262,7 +262,7 @@ class QueryClass implements Any {
     });
   }
 
-  children(): Any {
+  'children'(): Any {
     return new QueryClass({
       type: 'hierarchy-traversal',
       anchor: this.ast,
@@ -270,7 +270,7 @@ class QueryClass implements Any {
     });
   }
 
-  orderBy(...order: Order.Order<any>[]): Any {
+  'orderBy'(...order: Order.Order<any>[]): Any {
     return new QueryClass({
       type: 'order',
       query: this.ast,
@@ -278,7 +278,7 @@ class QueryClass implements Any {
     });
   }
 
-  limit(limit: number): Any {
+  'limit'(limit: number): Any {
     return new QueryClass({
       type: 'limit',
       query: this.ast,
@@ -286,7 +286,7 @@ class QueryClass implements Any {
     });
   }
 
-  from(
+  'from'(
     arg: Database.Database | Database.Database[] | Feed.Feed | Feed.Feed[] | 'all-accessible-spaces',
     options?: { includeFeeds?: boolean },
   ): Any {
@@ -328,7 +328,7 @@ class QueryClass implements Any {
     });
   }
 
-  options(options: QueryAST.QueryOptions): Any {
+  'options'(options: QueryAST.QueryOptions): Any {
     return new QueryClass({
       type: 'options',
       query: this.ast,

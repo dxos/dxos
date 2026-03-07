@@ -27,7 +27,7 @@ export type BaseObjectSettingsProps = ThemedClassName<
   }>
 >;
 
-// TODO(wittjosiah): Reconcile w/ ObjectDetailsPanel.
+// TODO(wittjosiah): Reconcile w/ ObjectForm.
 export const BaseObjectSettings = ({ classNames, children, object }: BaseObjectSettingsProps) => {
   const db = Obj.getDatabase(object);
 
@@ -103,7 +103,7 @@ export const BaseObjectSettings = ({ classNames, children, object }: BaseObjectS
   return (
     <Form.Root
       schema={omitId(formSchema)}
-      values={values}
+      defaultValues={values}
       createOptionIcon='ph--plus--regular'
       createOptionLabel={['add tag label', { ns: pluginMeta.id }]}
       createInitialValuePath='label'
