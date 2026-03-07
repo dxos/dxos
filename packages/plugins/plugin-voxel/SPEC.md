@@ -18,6 +18,7 @@
 - [ ] BUG: Currently main axis isn't visible; should be in different color
 - [ ] Hide any voxels that are outside of the current grid size
 - [ ] Grid should have separate x/y dimension
+- [ ] Configure block size
 
 ### Phase 2
 
