@@ -52,7 +52,10 @@ const resolveHueColor = (hue: Hue): number => {
   const canvas = document.createElement('canvas');
   canvas.width = 1;
   canvas.height = 1;
-  const ctx = canvas.getContext('2d')!;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) {
+    return 0x888888;
+  }
   ctx.fillStyle = computed;
   ctx.fillRect(0, 0, 1, 1);
   const [red, green, blue] = ctx.getImageData(0, 0, 1, 1).data;
@@ -366,13 +369,12 @@ const VoxelScene = ({
   // Filter voxels to only show those within grid bounds (centered at origin, z >= 0).
   const halfX = Math.floor(gridX / 2);
   const halfY = Math.floor(gridY / 2);
-  const visibleVoxels = useMemo(
-    () =>
-      voxels.filter(
-        (voxel) => voxel.x >= -halfX && voxel.x < halfX && voxel.y >= -halfY && voxel.y < halfY && voxel.z >= 0,
-      ),
-    [voxels, halfX, halfY],
+  const isInBounds = useCallback(
+    (voxel: { x: number; y: number; z: number }) =>
+      voxel.x >= -halfX && voxel.x < halfX && voxel.y >= -halfY && voxel.y < halfY && voxel.z >= 0,
+    [halfX, halfY],
   );
+  const visibleVoxels = useMemo(() => voxels.filter(isInBounds), [voxels, isInBounds]);
 
   const handleVoxelClick = useCallback(
     (event: ThreeEvent<MouseEvent>) => {
@@ -390,10 +392,12 @@ const VoxelScene = ({
           Math.round(pos.y + normal.y),
           Math.round(pos.z + normal.z),
         );
-        onAddVoxel({ ...voxel, hue: selectedHue });
+        if (isInBounds(voxel)) {
+          onAddVoxel({ ...voxel, hue: selectedHue });
+        }
       }
     },
-    [toolMode, onAddVoxel, onRemoveVoxel, selectedHue],
+    [toolMode, onAddVoxel, onRemoveVoxel, selectedHue, isInBounds],
   );
 
   const handleVoxelPointerMove = useCallback(
@@ -426,14 +430,12 @@ const VoxelScene = ({
       }
       // Ground plane is at Three.js y=-0.5; place voxel at z=0 (height).
       const point = event.point;
-      onAddVoxel({
-        x: Math.round(point.x),
-        y: Math.round(point.z),
-        z: 0,
-        hue: selectedHue,
-      });
+      const voxel = { x: Math.round(point.x), y: Math.round(point.z), z: 0 };
+      if (isInBounds(voxel)) {
+        onAddVoxel({ ...voxel, hue: selectedHue });
+      }
     },
-    [toolMode, onAddVoxel, selectedHue],
+    [toolMode, onAddVoxel, selectedHue, isInBounds],
   );
 
   const handleGroundPointerMove = useCallback(

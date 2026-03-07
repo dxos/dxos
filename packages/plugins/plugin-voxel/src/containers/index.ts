@@ -2,5 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './VoxelArticle';
-export * from './VoxelCard';
+import { type ComponentType, lazy } from 'react';
+
+export const VoxelArticle: ComponentType<any> = lazy(() => import('./VoxelArticle'));
+export const VoxelCard: ComponentType<any> = lazy(() => import('./VoxelCard'));

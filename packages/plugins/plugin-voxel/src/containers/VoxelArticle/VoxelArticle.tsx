@@ -31,8 +31,12 @@ export const VoxelArticle = ({ subject: world }: VoxelArticleProps) => {
     (voxel: Voxel.VoxelData) => {
       const key = Voxel.voxelKey(voxel.x, voxel.y, voxel.z);
       updateVoxels((map) => {
-        if (map === undefined || !(key in map)) {
-          (map ??= {} as any)[key] = { hue: voxel.hue };
+        if (map !== undefined) {
+          if (!(key in map)) {
+            map[key] = { hue: voxel.hue };
+          }
+        } else {
+          return { [key]: { hue: voxel.hue } } as any;
         }
       });
     },

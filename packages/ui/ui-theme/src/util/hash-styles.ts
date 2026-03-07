@@ -25,7 +25,7 @@ const neutral: ColorStyles = {
   border: 'border-neutral-border',
 };
 
-// NOTE: Cordinated with `tag.css`.
+// NOTE: Coordinated with `tag.css`.
 // https://github.com/dxos/dxos/blob/main/packages/ui/react-ui-theme/src/styles/layers/tag.css
 const styles: ColorStyles[] = [
   {

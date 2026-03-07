@@ -2,4 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-export { VoxelArticle, type VoxelArticleProps } from './VoxelArticle';
+import { VoxelArticle } from './VoxelArticle';
+
+export default VoxelArticle;
