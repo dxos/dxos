@@ -16,7 +16,7 @@ NOTE: We need to develop agent-specific instructions for creating data sets, inc
 ### Phase 1
 
 - [x] Select current color in toolbar
-- [x] Orbit, pan, and zoom should use the default Blender key/mouse controls (for OS/X)
+- [x] Orbit, pan, and zoom should use the default Blender key/mouse controls (for OS/X); also Option-drag to orbit
 - [x] Show "ghost" voxel at cursor
 - [x] Select current tool in toolbar: Select, Add, Remove
 - [x] Click to add/remove depending on tool mode

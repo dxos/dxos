@@ -24,8 +24,8 @@ export type VoxelToolbarProps = {
 
 const TOOL_OPTIONS: { value: ToolMode; icon: string; label: string }[] = [
   { value: 'select', icon: 'ph--cursor--regular', label: 'Select' },
-  { value: 'add', icon: 'ph--plus--regular', label: 'Add' },
-  { value: 'remove', icon: 'ph--minus--regular', label: 'Remove' },
+  { value: 'add', icon: 'ph--plus-square--regular', label: 'Add' },
+  { value: 'remove', icon: 'ph--minus-square--regular', label: 'Remove' },
 ];
 
 /** Toolbar for the voxel editor with tool mode, color palette, and clear button. */
