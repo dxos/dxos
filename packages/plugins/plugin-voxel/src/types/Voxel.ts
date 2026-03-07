@@ -21,8 +21,12 @@ export interface VoxelData extends Schema.Schema.Type<typeof VoxelData> {}
 /** A voxel world containing a set of 3D points. */
 export const World = Schema.Struct({
   name: Schema.optional(Schema.String),
-  /** Grid size defining the world bounds. */
+  /** Grid size defining the world bounds (used as fallback when gridWidth/gridDepth not set). */
   gridSize: Schema.optional(Schema.Number),
+  /** Grid width (x-axis). */
+  gridWidth: Schema.optional(Schema.Number),
+  /** Grid depth (z-axis). */
+  gridDepth: Schema.optional(Schema.Number),
   /** Serialized voxel data as JSON string array. */
   voxels: Schema.optional(Schema.String),
 }).pipe(
@@ -56,10 +60,32 @@ export const serializeVoxels = (voxels: VoxelData[]): string => {
   return JSON.stringify(voxels);
 };
 
-export const make = ({ name, gridSize, voxels }: { name?: string; gridSize?: number; voxels?: VoxelData[] } = {}) => {
+/** Get grid dimensions from a world object. */
+export const getGridDimensions = (world: World): { gridWidth: number; gridDepth: number } => {
+  return {
+    gridWidth: world.gridWidth ?? world.gridSize ?? DEFAULT_GRID_SIZE,
+    gridDepth: world.gridDepth ?? world.gridSize ?? DEFAULT_GRID_SIZE,
+  };
+};
+
+export const make = ({
+  name,
+  gridSize,
+  gridWidth,
+  gridDepth,
+  voxels,
+}: {
+  name?: string;
+  gridSize?: number;
+  gridWidth?: number;
+  gridDepth?: number;
+  voxels?: VoxelData[];
+} = {}) => {
   return Obj.make(World, {
     name,
     gridSize: gridSize ?? DEFAULT_GRID_SIZE,
+    gridWidth: gridWidth ?? gridSize ?? DEFAULT_GRID_SIZE,
+    gridDepth: gridDepth ?? gridSize ?? DEFAULT_GRID_SIZE,
     voxels: serializeVoxels(voxels ?? DEFAULT_VOXELS),
   });
 };

@@ -5,11 +5,14 @@
 /* eslint-disable react/no-unknown-property */
 
 import { GizmoHelper, GizmoViewport, OrbitControls } from '@react-three/drei';
-import { Canvas, type ThreeEvent } from '@react-three/fiber';
-import React, { useCallback, useState } from 'react';
+import { Canvas, type ThreeEvent, useThree } from '@react-three/fiber';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 
 import { type VoxelData } from '../../types/Voxel';
+
+/** Tool modes for the voxel editor. */
+export type ToolMode = 'select' | 'add' | 'remove';
 
 /** Hue-to-hex mapping for the voxel color palette. */
 export type PaletteEntry = {
@@ -32,31 +35,37 @@ export const PALETTE: PaletteEntry[] = [
 export type VoxelEditorProps = {
   /** Array of voxels to render. */
   voxels: VoxelData[];
-  /** Grid size (default 16). */
-  gridSize?: number;
+  /** Grid width (x-axis, default 16). */
+  gridWidth?: number;
+  /** Grid depth (z-axis, default 16). */
+  gridDepth?: number;
+  /** Currently selected tool mode. */
+  toolMode?: ToolMode;
   /** Currently selected color hex value. */
   selectedColor?: number;
   /** Called when user clicks to add a voxel. */
   onAddVoxel?: (voxel: VoxelData) => void;
-  /** Called when user shift+clicks to remove a voxel. */
+  /** Called when user clicks to remove a voxel. */
   onRemoveVoxel?: (position: { x: number; y: number; z: number }) => void;
 };
 
 type GhostPosition = [number, number, number] | null;
 
 /** Semi-transparent ghost cursor showing where a voxel will be placed. */
-const GhostCursor = ({ position, color }: { position: GhostPosition; color: number }) => {
+const GhostCursor = ({ position, color, isRemove }: { position: GhostPosition; color: number; isRemove?: boolean }) => {
   if (!position) {
     return null;
   }
 
+  const displayColor = isRemove ? 0xff0000 : color;
+
   return (
     <mesh position={position} raycast={() => {}}>
       <boxGeometry args={[1, 1, 1]} />
-      <meshStandardMaterial color={color} transparent opacity={0.4} depthWrite={false} />
+      <meshStandardMaterial color={displayColor} transparent opacity={isRemove ? 0.3 : 0.4} depthWrite={false} />
       <lineSegments>
         <edgesGeometry args={[new THREE.BoxGeometry(1, 1, 1)]} />
-        <lineBasicMaterial color={color} transparent opacity={0.8} />
+        <lineBasicMaterial color={displayColor} transparent opacity={0.8} />
       </lineSegments>
     </mesh>
   );
@@ -98,52 +107,176 @@ const VoxelBlock = ({ position, color, onClick, onPointerMove, onPointerOut }: V
 };
 
 type GroundPlaneProps = {
-  gridSize: number;
+  gridWidth: number;
+  gridDepth: number;
   onClick: (event: ThreeEvent<MouseEvent>) => void;
   onPointerMove?: (event: ThreeEvent<PointerEvent>) => void;
   onPointerOut?: () => void;
 };
 
 /** Ground plane that accepts clicks to place voxels. */
-const GroundPlane = ({ gridSize, onClick, onPointerMove, onPointerOut }: GroundPlaneProps) => {
+const GroundPlane = ({ gridWidth, gridDepth, onClick, onPointerMove, onPointerOut }: GroundPlaneProps) => {
   return (
     <mesh
       rotation={[-Math.PI / 2, 0, 0]}
-      position={[gridSize / 2 - 0.5, -0.5, gridSize / 2 - 0.5]}
+      position={[gridWidth / 2 - 0.5, -0.5, gridDepth / 2 - 0.5]}
       onClick={onClick}
       onPointerMove={onPointerMove}
       onPointerOut={onPointerOut}
       receiveShadow
     >
-      <planeGeometry args={[gridSize, gridSize]} />
-      <meshStandardMaterial color={0xcccccc} side={THREE.DoubleSide} transparent opacity={0.5} />
+      <planeGeometry args={[gridWidth, gridDepth]} />
+      <meshStandardMaterial color={0xcccccc} side={THREE.DoubleSide} transparent opacity={0.1} />
     </mesh>
+  );
+};
+
+/** Custom grid with transparent lines and colored axes. */
+const TransparentGrid = ({ gridWidth, gridDepth }: { gridWidth: number; gridDepth: number }) => {
+  const gridRef = useRef<THREE.Group>(null);
+  const gridLines = useMemo(() => {
+    const points: THREE.Vector3[] = [];
+    const colors: number[] = [];
+
+    const halfW = gridWidth / 2;
+    const halfD = gridDepth / 2;
+    const offsetX = gridWidth / 2 - 0.5;
+    const offsetZ = gridDepth / 2 - 0.5;
+
+    // Lines along X-axis (varying z).
+    for (let idx = 0; idx <= gridDepth; idx++) {
+      const zLocal = -halfD + idx;
+      const zWorld = zLocal + offsetZ;
+      const isOrigin = Math.abs(zWorld + 0.5) < 0.01;
+      points.push(new THREE.Vector3(-halfW + offsetX, -0.5, zWorld));
+      points.push(new THREE.Vector3(halfW + offsetX, -0.5, zWorld));
+      // Red for X-axis origin line.
+      const color = isOrigin ? [0.9, 0.2, 0.2] : [0.5, 0.5, 0.5];
+      colors.push(...color, ...color);
+    }
+
+    // Lines along Z-axis (varying x).
+    for (let idx = 0; idx <= gridWidth; idx++) {
+      const xLocal = -halfW + idx;
+      const xWorld = xLocal + offsetX;
+      const isOrigin = Math.abs(xWorld + 0.5) < 0.01;
+      points.push(new THREE.Vector3(xWorld, -0.5, -halfD + offsetZ));
+      points.push(new THREE.Vector3(xWorld, -0.5, halfD + offsetZ));
+      // Blue for Z-axis origin line.
+      const color = isOrigin ? [0.2, 0.2, 0.9] : [0.5, 0.5, 0.5];
+      colors.push(...color, ...color);
+    }
+
+    const geometry = new THREE.BufferGeometry().setFromPoints(points);
+    geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+    return geometry;
+  }, [gridWidth, gridDepth]);
+
+  return (
+    <group ref={gridRef}>
+      <lineSegments geometry={gridLines}>
+        <lineBasicMaterial vertexColors transparent opacity={0.5} />
+      </lineSegments>
+    </group>
+  );
+};
+
+/** Manage CMD-drag orbit controls. */
+const OrbitControlsManager = ({ gridWidth, gridDepth }: { gridWidth: number; gridDepth: number }) => {
+  const { gl } = useThree();
+  const controlsRef = useRef<any>(null);
+  const maxDim = Math.max(gridWidth, gridDepth);
+
+  useEffect(() => {
+    const controls = controlsRef.current;
+    if (!controls) {
+      return;
+    }
+
+    const handlePointerDown = (event: PointerEvent) => {
+      // Enable orbit on CMD/Ctrl+left-click or middle-click.
+      if (event.button === 0 && !event.metaKey && !event.ctrlKey) {
+        controls.enabled = false;
+      } else {
+        controls.enabled = true;
+      }
+    };
+
+    const handlePointerUp = () => {
+      controls.enabled = true;
+    };
+
+    const domElement = gl.domElement;
+    domElement.addEventListener('pointerdown', handlePointerDown);
+    domElement.addEventListener('pointerup', handlePointerUp);
+
+    return () => {
+      domElement.removeEventListener('pointerdown', handlePointerDown);
+      domElement.removeEventListener('pointerup', handlePointerUp);
+    };
+  }, [gl]);
+
+  return (
+    <OrbitControls
+      ref={controlsRef}
+      makeDefault
+      mouseButtons={{
+        LEFT: THREE.MOUSE.ROTATE,
+        MIDDLE: THREE.MOUSE.DOLLY,
+        RIGHT: THREE.MOUSE.PAN,
+      }}
+      target={[gridWidth / 4, 0, gridDepth / 4]}
+      maxPolarAngle={Math.PI / 2}
+      minDistance={2}
+      maxDistance={maxDim * 3}
+    />
   );
 };
 
 type VoxelSceneProps = {
   voxels: VoxelData[];
-  gridSize: number;
+  gridWidth: number;
+  gridDepth: number;
+  toolMode: ToolMode;
   selectedColor: number;
   onAddVoxel?: (voxel: VoxelData) => void;
   onRemoveVoxel?: (position: { x: number; y: number; z: number }) => void;
 };
 
 /** 3D scene containing the voxel world. */
-const VoxelScene = ({ voxels, gridSize, selectedColor, onAddVoxel, onRemoveVoxel }: VoxelSceneProps) => {
+const VoxelScene = ({
+  voxels,
+  gridWidth,
+  gridDepth,
+  toolMode,
+  selectedColor,
+  onAddVoxel,
+  onRemoveVoxel,
+}: VoxelSceneProps) => {
   const [ghostPosition, setGhostPosition] = useState<GhostPosition>(null);
+
+  // Filter voxels to only show those within grid bounds.
+  const visibleVoxels = useMemo(
+    () =>
+      voxels.filter(
+        (voxel) => voxel.x >= 0 && voxel.x < gridWidth && voxel.z >= 0 && voxel.z < gridDepth && voxel.y >= 0,
+      ),
+    [voxels, gridWidth, gridDepth],
+  );
 
   const handleVoxelClick = useCallback(
     (event: ThreeEvent<MouseEvent>) => {
       event.stopPropagation();
-      if (event.shiftKey && onRemoveVoxel) {
-        // Shift+click: remove voxel.
+      if (event.metaKey || event.ctrlKey) {
+        return;
+      }
+
+      if (toolMode === 'remove' && onRemoveVoxel) {
         const pos = event.object.position;
         onRemoveVoxel({ x: pos.x, y: pos.y, z: pos.z });
         return;
       }
-      if (!event.shiftKey && onAddVoxel && event.face) {
-        // Click: add voxel adjacent to clicked face.
+      if (toolMode === 'add' && onAddVoxel && event.face) {
         const normal = event.face.normal;
         const pos = event.object.position;
         onAddVoxel({
@@ -154,30 +287,40 @@ const VoxelScene = ({ voxels, gridSize, selectedColor, onAddVoxel, onRemoveVoxel
         });
       }
     },
-    [onAddVoxel, onRemoveVoxel, selectedColor],
+    [toolMode, onAddVoxel, onRemoveVoxel, selectedColor],
   );
 
-  const handleVoxelPointerMove = useCallback((event: ThreeEvent<PointerEvent>) => {
-    if (event.shiftKey || !event.face) {
-      setGhostPosition(null);
-      return;
-    }
-    const normal = event.face.normal;
-    const pos = event.object.position;
-    setGhostPosition([
-      Math.round(pos.x + normal.x),
-      Math.round(pos.y + normal.y),
-      Math.round(pos.z + normal.z),
-    ]);
-  }, []);
+  const handleVoxelPointerMove = useCallback(
+    (event: ThreeEvent<PointerEvent>) => {
+      if (toolMode === 'select') {
+        setGhostPosition(null);
+        return;
+      }
+      if (toolMode === 'remove') {
+        const pos = event.object.position;
+        setGhostPosition([pos.x, pos.y, pos.z]);
+        return;
+      }
+      if (!event.face) {
+        setGhostPosition(null);
+        return;
+      }
+      const normal = event.face.normal;
+      const pos = event.object.position;
+      setGhostPosition([Math.round(pos.x + normal.x), Math.round(pos.y + normal.y), Math.round(pos.z + normal.z)]);
+    },
+    [toolMode],
+  );
 
   const handleGroundClick = useCallback(
     (event: ThreeEvent<MouseEvent>) => {
       event.stopPropagation();
-      if (!onAddVoxel || !event.point) {
+      if (event.metaKey || event.ctrlKey) {
         return;
       }
-      // Place voxel on the ground at the clicked position.
+      if (toolMode !== 'add' || !onAddVoxel || !event.point) {
+        return;
+      }
       const point = event.point;
       onAddVoxel({
         x: Math.round(point.x),
@@ -186,16 +329,19 @@ const VoxelScene = ({ voxels, gridSize, selectedColor, onAddVoxel, onRemoveVoxel
         color: selectedColor,
       });
     },
-    [onAddVoxel, selectedColor],
+    [toolMode, onAddVoxel, selectedColor],
   );
 
-  const handleGroundPointerMove = useCallback((event: ThreeEvent<PointerEvent>) => {
-    if (event.shiftKey || !event.point) {
-      setGhostPosition(null);
-      return;
-    }
-    setGhostPosition([Math.round(event.point.x), 0, Math.round(event.point.z)]);
-  }, []);
+  const handleGroundPointerMove = useCallback(
+    (event: ThreeEvent<PointerEvent>) => {
+      if (toolMode !== 'add' || !event.point) {
+        setGhostPosition(null);
+        return;
+      }
+      setGhostPosition([Math.round(event.point.x), 0, Math.round(event.point.z)]);
+    },
+    [toolMode],
+  );
 
   const clearGhost = useCallback(() => setGhostPosition(null), []);
 
@@ -206,14 +352,15 @@ const VoxelScene = ({ voxels, gridSize, selectedColor, onAddVoxel, onRemoveVoxel
       <pointLight position={[-10, 10, -10]} intensity={0.3} />
 
       <GroundPlane
-        gridSize={gridSize}
+        gridWidth={gridWidth}
+        gridDepth={gridDepth}
         onClick={handleGroundClick}
         onPointerMove={handleGroundPointerMove}
         onPointerOut={clearGhost}
       />
-      <gridHelper args={[gridSize, gridSize]} position={[gridSize / 2 - 0.5, -0.5, gridSize / 2 - 0.5]} />
+      <TransparentGrid gridWidth={gridWidth} gridDepth={gridDepth} />
 
-      {voxels.map((voxel, index) => (
+      {visibleVoxels.map((voxel, index) => (
         <VoxelBlock
           key={`${voxel.x}-${voxel.y}-${voxel.z}-${index}`}
           position={[voxel.x, voxel.y, voxel.z]}
@@ -224,16 +371,9 @@ const VoxelScene = ({ voxels, gridSize, selectedColor, onAddVoxel, onRemoveVoxel
         />
       ))}
 
-      <GhostCursor position={ghostPosition} color={selectedColor} />
+      <GhostCursor position={ghostPosition} color={selectedColor} isRemove={toolMode === 'remove'} />
 
-      <OrbitControls
-        makeDefault
-        mouseButtons={{ MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.ROTATE }}
-        target={[gridSize / 4, 0, gridSize / 4]}
-        maxPolarAngle={Math.PI / 2}
-        minDistance={2}
-        maxDistance={gridSize * 3}
-      />
+      <OrbitControlsManager gridWidth={gridWidth} gridDepth={gridDepth} />
       <GizmoHelper alignment='bottom-right' margin={[60, 60]}>
         <GizmoViewport />
       </GizmoHelper>
@@ -244,19 +384,25 @@ const VoxelScene = ({ voxels, gridSize, selectedColor, onAddVoxel, onRemoveVoxel
 /** Interactive 3D voxel editor with orbit controls. */
 export const VoxelEditor = ({
   voxels,
-  gridSize = 16,
+  gridWidth = 16,
+  gridDepth = 16,
+  toolMode = 'add',
   selectedColor = PALETTE[0].hex,
   onAddVoxel,
   onRemoveVoxel,
 }: VoxelEditorProps) => {
+  const maxDim = Math.max(gridWidth, gridDepth);
+
   return (
     <Canvas
-      camera={{ position: [gridSize, gridSize * 0.8, gridSize], fov: 50 }}
+      camera={{ position: [maxDim, maxDim * 0.8, maxDim], fov: 50 }}
       onContextMenu={(event) => event.preventDefault()}
     >
       <VoxelScene
         voxels={voxels}
-        gridSize={gridSize}
+        gridWidth={gridWidth}
+        gridDepth={gridDepth}
+        toolMode={toolMode}
         selectedColor={selectedColor}
         onAddVoxel={onAddVoxel}
         onRemoveVoxel={onRemoveVoxel}

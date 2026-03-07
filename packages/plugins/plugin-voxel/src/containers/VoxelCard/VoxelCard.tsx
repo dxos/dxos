@@ -14,10 +14,11 @@ export type VoxelCardProps = SurfaceComponentProps<Voxel.World>;
 /** Read-only card view of a voxel world. */
 export const VoxelCard = ({ subject: world }: VoxelCardProps) => {
   const voxels = useMemo(() => Voxel.parseVoxels(world.voxels), [world.voxels]);
+  const { gridWidth, gridDepth } = Voxel.getGridDimensions(world);
 
   return (
     <div className='h-[200px] w-full'>
-      <VoxelEditor voxels={voxels} gridSize={world.gridSize ?? 16} />
+      <VoxelEditor voxels={voxels} gridWidth={gridWidth} gridDepth={gridDepth} />
     </div>
   );
 };

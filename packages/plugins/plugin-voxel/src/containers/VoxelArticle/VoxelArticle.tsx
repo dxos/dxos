@@ -6,22 +6,35 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { useObject } from '@dxos/echo-react';
-import { Container, Toolbar } from '@dxos/react-ui';
-import { getStyles, mx } from '@dxos/ui-theme';
+import { Container, Icon, Toolbar } from '@dxos/react-ui';
+import { getStyles } from '@dxos/ui-theme';
 
-import { PALETTE, VoxelEditor } from '../../components';
+import { PALETTE, type ToolMode, VoxelEditor } from '../../components';
 import { Voxel } from '../../types';
-import { type VoxelData } from '../../types/Voxel';
 
 export type VoxelArticleProps = SurfaceComponentProps<Voxel.World>;
+
+const TOOL_OPTIONS: { value: ToolMode; icon: string; label: string }[] = [
+  { value: 'select', icon: 'ph--cursor--regular', label: 'Select' },
+  { value: 'add', icon: 'ph--plus--regular', label: 'Add' },
+  { value: 'remove', icon: 'ph--minus--regular', label: 'Remove' },
+];
+
+const TOOL_HINTS: Record<ToolMode, string> = {
+  select: 'Cmd+drag to rotate | Middle-click to zoom | Right-drag to pan',
+  add: 'Click to place voxel | Cmd+drag to rotate',
+  remove: 'Click voxel to remove | Cmd+drag to rotate',
+};
 
 export const VoxelArticle = ({ subject: world }: VoxelArticleProps) => {
   const [rawVoxels, updateVoxels] = useObject(world, 'voxels');
   const voxels = useMemo(() => Voxel.parseVoxels(rawVoxels), [rawVoxels]);
   const [selectedColor, setSelectedColor] = useState(PALETTE[0].hex);
+  const [toolMode, setToolMode] = useState<ToolMode>('add');
+  const { gridWidth, gridDepth } = Voxel.getGridDimensions(world);
 
   const handleAddVoxel = useCallback(
-    (voxel: VoxelData) => {
+    (voxel: Voxel.VoxelData) => {
       const current = Voxel.parseVoxels(rawVoxels);
       // Prevent duplicates at same position.
       const exists = current.some(
@@ -49,29 +62,49 @@ export const VoxelArticle = ({ subject: world }: VoxelArticleProps) => {
   return (
     <Container.Main toolbar>
       <Toolbar.Root>
+        <Toolbar.ToggleGroup
+          type='single'
+          value={toolMode}
+          onValueChange={(value) => value && setToolMode(value as ToolMode)}
+        >
+          {TOOL_OPTIONS.map((tool) => (
+            <Toolbar.ToggleGroupItem key={tool.value} value={tool.value} aria-label={tool.label}>
+              <Icon icon={tool.icon} size={4} />
+            </Toolbar.ToggleGroupItem>
+          ))}
+        </Toolbar.ToggleGroup>
+        <Toolbar.Separator variant='gap' />
         {PALETTE.map((entry) => {
           const styles = getStyles(entry.hue);
           return (
-            <Toolbar.Button
+            <Toolbar.IconButton
               key={entry.hue}
-              variant={entry.hex === selectedColor ? 'primary' : 'ghost'}
-              classNames={mx('w-8 h-8 min-w-0 p-0 rounded-sm', styles.fill)}
+              icon={entry.hex === selectedColor ? 'ph--square--fill' : 'ph--square--duotone'}
+              iconOnly
+              variant='ghost'
+              label={entry.hue}
+              classNames={styles.text}
               onClick={() => setSelectedColor(entry.hex)}
-              aria-label={entry.hue}
             />
           );
         })}
-        <span className='mlb-auto text-xs text-description pli-2'>
-          Click: add | Shift+click: remove | Right drag: rotate
-        </span>
       </Toolbar.Root>
-      <VoxelEditor
-        voxels={voxels}
-        gridSize={world.gridSize ?? 16}
-        selectedColor={selectedColor}
-        onAddVoxel={handleAddVoxel}
-        onRemoveVoxel={handleRemoveVoxel}
-      />
+      <div className='relative grow'>
+        <VoxelEditor
+          voxels={voxels}
+          gridWidth={gridWidth}
+          gridDepth={gridDepth}
+          toolMode={toolMode}
+          selectedColor={selectedColor}
+          onAddVoxel={handleAddVoxel}
+          onRemoveVoxel={handleRemoveVoxel}
+        />
+        <div className='absolute bottom-4 left-1/2 -translate-x-1/2 pointer-events-none'>
+          <div className='px-3 py-1.5 text-xs text-description bg-base/80 dark:bg-neutral-800/80 backdrop-blur-sm rounded-full shadow-md border border-separator'>
+            {TOOL_HINTS[toolMode]}
+          </div>
+        </div>
+      </div>
     </Container.Main>
   );
 };
