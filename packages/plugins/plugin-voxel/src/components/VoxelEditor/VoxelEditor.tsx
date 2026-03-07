@@ -178,43 +178,43 @@ type GridProps = {
   onPointerOut?: () => void;
 };
 
-/** Ground grid with transparent fill and a click target. */
+/** Ground grid with transparent fill and a click target, centered at origin. */
 const Grid = ({ gridWidth, gridDepth, onClick, onPointerMove, onPointerOut }: GridProps) => {
+  const halfW = Math.floor(gridWidth / 2);
+  const halfD = Math.floor(gridDepth / 2);
+
   const gridLines = useMemo(() => {
     const points: THREE.Vector3[] = [];
     const yPos = -0.5;
 
     // Lines along X-axis (varying z).
-    for (let idx = 0; idx <= gridDepth; idx++) {
-      const zPos = idx - 0.5;
-      points.push(new THREE.Vector3(-0.5, yPos, zPos));
-      points.push(new THREE.Vector3(gridWidth - 0.5, yPos, zPos));
+    for (let zIdx = -halfD; zIdx <= halfD; zIdx++) {
+      const zPos = zIdx - 0.5;
+      points.push(new THREE.Vector3(-halfW - 0.5, yPos, zPos));
+      points.push(new THREE.Vector3(halfW - 0.5, yPos, zPos));
     }
 
     // Lines along Z-axis (varying x).
-    for (let idx = 0; idx <= gridWidth; idx++) {
-      const xPos = idx - 0.5;
-      points.push(new THREE.Vector3(xPos, yPos, -0.5));
-      points.push(new THREE.Vector3(xPos, yPos, gridDepth - 0.5));
+    for (let xIdx = -halfW; xIdx <= halfW; xIdx++) {
+      const xPos = xIdx - 0.5;
+      points.push(new THREE.Vector3(xPos, yPos, -halfD - 0.5));
+      points.push(new THREE.Vector3(xPos, yPos, halfD - 0.5));
     }
 
     return new THREE.BufferGeometry().setFromPoints(points);
-  }, [gridWidth, gridDepth]);
-
-  const centerX = gridWidth / 2 - 0.5;
-  const centerZ = gridDepth / 2 - 0.5;
+  }, [halfW, halfD]);
 
   return (
     <group>
       {/* Ground fill plane. */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[centerX, -0.501, centerZ]}>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.501, 0]}>
         <planeGeometry args={[gridWidth, gridDepth]} />
         <meshStandardMaterial color={0xcccccc} side={THREE.DoubleSide} transparent opacity={0.1} />
       </mesh>
       {/* Click target (slightly above fill to catch raycasts). */}
       <mesh
         rotation={[-Math.PI / 2, 0, 0]}
-        position={[centerX, -0.499, centerZ]}
+        position={[0, -0.499, 0]}
         onClick={onClick}
         onPointerMove={onPointerMove}
         onPointerOut={onPointerOut}
@@ -281,7 +281,7 @@ const OrbitControlsManager = ({
         MIDDLE: THREE.MOUSE.DOLLY,
         RIGHT: THREE.MOUSE.PAN,
       }}
-      target={[(gridWidth / 4) * blockSize, 0, (gridDepth / 4) * blockSize]}
+      target={[0, 0, 0]}
       maxPolarAngle={Math.PI / 2}
       minDistance={2}
       maxDistance={maxDim * 3}
@@ -329,13 +329,15 @@ const VoxelScene = ({
 }: VoxelSceneProps) => {
   const [ghostPosition, setGhostPosition] = useState<GhostPosition>(null);
 
-  // Filter voxels to only show those within grid bounds.
+  // Filter voxels to only show those within grid bounds (centered at origin).
+  const halfW = Math.floor(gridWidth / 2);
+  const halfD = Math.floor(gridDepth / 2);
   const visibleVoxels = useMemo(
     () =>
       voxels.filter(
-        (voxel) => voxel.x >= 0 && voxel.x < gridWidth && voxel.z >= 0 && voxel.z < gridDepth && voxel.y >= 0,
+        (voxel) => voxel.x >= -halfW && voxel.x < halfW && voxel.z >= -halfD && voxel.z < halfD && voxel.y >= 0,
       ),
-    [voxels, gridWidth, gridDepth],
+    [voxels, halfW, halfD],
   );
 
   const handleVoxelClick = useCallback(
