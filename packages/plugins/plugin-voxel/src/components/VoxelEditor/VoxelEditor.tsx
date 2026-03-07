@@ -13,25 +13,20 @@ import { type ColorStyles, type Hue, palette } from '@dxos/ui-theme';
 
 import { type Voxel } from '../../types';
 
-/** Resolve a CSS color variable to a Three.js hex number. */
-const cssColorToHex = (cssColor: string): number => {
-  const canvas = document.createElement('canvas');
-  canvas.width = 1;
-  canvas.height = 1;
-  const ctx = canvas.getContext('2d')!;
-  ctx.fillStyle = cssColor;
-  ctx.fillRect(0, 0, 1, 1);
-  const [red, green, blue] = ctx.getImageData(0, 0, 1, 1).data;
-  return (red << 16) | (green << 8) | blue;
-};
-
-/** Resolve the fill color for a hue from CSS custom properties. */
+/** Resolve the fill color for a hue by applying the Tailwind class to a temporary element. */
 const resolveHueColor = (hue: Hue): number => {
-  const value = getComputedStyle(document.documentElement).getPropertyValue(`--color-${hue}-fill`).trim();
-  if (!value) {
+  const el = document.createElement('div');
+  el.className = `bg-${hue}-fill`;
+  el.style.display = 'none';
+  document.body.appendChild(el);
+  const computed = getComputedStyle(el).backgroundColor;
+  document.body.removeChild(el);
+
+  const match = computed.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+  if (!match) {
     return 0x888888;
   }
-  return cssColorToHex(value);
+  return (parseInt(match[1]) << 16) | (parseInt(match[2]) << 8) | parseInt(match[3]);
 };
 
 export type VoxelBounds = {
