@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Queue from 'effect/Queue';
 import * as Stream from 'effect/Stream';
-import React, { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
+import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { addEventListener } from '@dxos/async';
@@ -67,8 +67,6 @@ export type MarkdownStreamProps = ThemedClassName<
   } & (XmlTagsOptions & StreamerOptions & AutoScrollToProps)
 >;
 
-// TODO(burdon): Loses all content when debug is toggled.
-// TODO(burdon): Initial content isn't formatted.
 export const MarkdownStream = forwardRef<MarkdownStreamController | null, MarkdownStreamProps>(
   ({ classNames, debug, content, registry, fadeIn, cursor, onEvent }, forwardedRef) => {
     const { themeMode } = useThemeContext();
@@ -76,8 +74,12 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
     // Active widgets.
     const [widgets, setWidgets] = useState<XmlWidgetState[]>([]);
 
+    // Store current content so that we can toggle debug mode.
+    const currentContent = useRef(content);
+
     // Editor.
     const { parentRef, view } = useTextEditor(() => {
+      const content = currentContent.current;
       return {
         initialValue: content,
         selection: EditorSelection.cursor(content?.length ?? 0),
@@ -108,9 +110,7 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
               ],
         ].filter(isNonNullable),
       };
-    }, [debug, themeMode, registry]);
-
-    // TODO(burdon): Update document if toggle debug.
+    }, [debug, registry, themeMode]);
 
     // Streaming queue.
     const [queue, setQueue, queueRef] = useStateWithRef(Effect.runSync(Queue.unbounded<string>()));
@@ -149,6 +149,7 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
     const viewRef = useDynamicRef(view);
     useImperativeHandle(forwardedRef, () => {
       const reset = async (text: string) => {
+        currentContent.current = text;
         if (!viewRef.current) {
           return;
         }
@@ -195,13 +196,14 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
         reset,
         // Append to queue (and stream).
         append: async (text: string) => {
+          currentContent.current += text;
           if (viewRef.current?.state.doc.length === 0) {
             await reset(text);
           } else if (text.length) {
             await runAndForwardErrors(Queue.offer(queueRef.current, text));
           }
         },
-        // Update widget.
+        // Update widget state.
         updateWidget: (id: string, value: any) => {
           viewRef.current?.dispatch({
             effects: xmlTagUpdateEffect.of({ id, value }),
@@ -216,8 +218,8 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
         return;
       }
 
-      return addEventListener(parentRef.current, 'click', (ev) => {
-        const button = (ev.target as HTMLElement).closest('[data-action="submit"]');
+      return addEventListener(parentRef.current, 'click', (event) => {
+        const button = (event.target as HTMLElement).closest('[data-action="submit"]');
         if (button?.getAttribute('data-action') === 'submit') {
           onEvent?.({
             type: 'submit',
@@ -225,7 +227,7 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
           });
         }
       });
-    }, [view, onEvent]);
+    }, [view, parentRef, onEvent]);
 
     // Cleanup.
     useEffect(() => {
@@ -237,12 +239,14 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
     return (
       <>
         {/* Markdown editor. */}
-        <div ref={parentRef} className={mx('h-full w-full overflow-hidden', classNames)} />
+        <div className={mx('h-full w-full overflow-hidden', classNames)} ref={parentRef} />
 
         {/* React widgets are rendered in portals outside of the editor. */}
         <ErrorBoundary name='markdown-stream'>
           {widgets.map(({ Component, root, id, props }) => (
-            <div key={id}>{createPortal(<Component view={view} {...props} />, root)}</div>
+            <div key={id} role='none'>
+              {createPortal(<Component view={view} {...props} />, root)}
+            </div>
           ))}
         </ErrorBoundary>
       </>
