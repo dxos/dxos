@@ -25,7 +25,7 @@ export const VoxelArticle = ({ subject: world }: VoxelArticleProps) => {
   const voxels = useMemo(() => Voxel.toVoxelArray(voxelMap), [voxelMap]);
   const [selectedHue, setSelectedHue] = useState<Hue>(DEFAULT_HUE);
   const [toolMode, setToolMode] = useState<ToolMode>('add');
-  const { gridWidth, gridDepth, blockSize } = Voxel.getGridDimensions(world);
+  const { gridX, gridY, blockSize } = Voxel.getGridDimensions(world);
 
   const handleAddVoxel = useCallback(
     (voxel: Voxel.VoxelData) => {
@@ -67,8 +67,8 @@ export const VoxelArticle = ({ subject: world }: VoxelArticleProps) => {
       <div className='relative grow'>
         <VoxelEditor
           voxels={voxels}
-          gridWidth={gridWidth}
-          gridDepth={gridDepth}
+          gridX={gridX}
+          gridY={gridY}
           blockSize={blockSize}
           toolMode={toolMode}
           selectedHue={selectedHue}

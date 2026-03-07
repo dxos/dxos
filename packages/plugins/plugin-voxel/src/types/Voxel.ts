@@ -28,12 +28,10 @@ export type VoxelMap = Record<string, VoxelProps>;
 /** A voxel world containing a set of 3D points. */
 export const World = Schema.Struct({
   name: Schema.optional(Schema.String),
-  /** Grid size defining the world bounds (used as fallback when gridWidth/gridDepth not set). */
-  gridSize: Schema.optional(Schema.Number),
-  /** Grid width (x-axis). */
-  gridWidth: Schema.optional(Schema.Number),
-  /** Grid depth (z-axis). */
-  gridDepth: Schema.optional(Schema.Number),
+  /** Grid extent along x-axis. */
+  gridX: Schema.optional(Schema.Number),
+  /** Grid extent along y-axis. */
+  gridY: Schema.optional(Schema.Number),
   /** Size of each voxel block (default 1). */
   blockSize: Schema.optional(Schema.Number),
   /** Map of voxel coordinates to voxel properties. Keys are `${x}-${y}-${z}`. */
@@ -81,34 +79,31 @@ export const toVoxelMap = (voxels: VoxelData[]): VoxelMap => {
 };
 
 /** Get grid dimensions and block size from a world object. */
-export const getGridDimensions = (world: World): { gridWidth: number; gridDepth: number; blockSize: number } => {
+export const getGridDimensions = (world: World): { gridX: number; gridY: number; blockSize: number } => {
   return {
-    gridWidth: world.gridWidth ?? world.gridSize ?? DEFAULT_GRID_SIZE,
-    gridDepth: world.gridDepth ?? world.gridSize ?? DEFAULT_GRID_SIZE,
+    gridX: world.gridX ?? DEFAULT_GRID_SIZE,
+    gridY: world.gridY ?? DEFAULT_GRID_SIZE,
     blockSize: world.blockSize ?? DEFAULT_BLOCK_SIZE,
   };
 };
 
 export const make = ({
   name,
-  gridSize,
-  gridWidth,
-  gridDepth,
+  gridX,
+  gridY,
   blockSize,
   voxels,
 }: {
   name?: string;
-  gridSize?: number;
-  gridWidth?: number;
-  gridDepth?: number;
+  gridX?: number;
+  gridY?: number;
   blockSize?: number;
   voxels?: VoxelData[];
 } = {}) => {
   return Obj.make(World, {
     name,
-    gridSize: gridSize ?? DEFAULT_GRID_SIZE,
-    gridWidth: gridWidth ?? gridSize ?? DEFAULT_GRID_SIZE,
-    gridDepth: gridDepth ?? gridSize ?? DEFAULT_GRID_SIZE,
+    gridX: gridX ?? DEFAULT_GRID_SIZE,
+    gridY: gridY ?? DEFAULT_GRID_SIZE,
     blockSize: blockSize ?? DEFAULT_BLOCK_SIZE,
     voxels: voxels ? (toVoxelMap(voxels) as any) : {},
   });

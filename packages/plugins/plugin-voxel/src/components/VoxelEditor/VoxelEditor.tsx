@@ -13,6 +13,23 @@ import { type ColorStyles, type Hue, palette } from '@dxos/ui-theme';
 
 import { type Voxel } from '../../types';
 
+//
+// Coordinate convention:
+//   Voxel data: x (right), y (forward), z (up/height).
+//   Three.js:   x (right), y (up),      z (forward).
+//   Mapping: voxel (x, y, z) → Three.js (x, z, y).
+//
+
+/** Convert voxel coordinates to Three.js position. */
+const toThree = (x: number, y: number, z: number): [number, number, number] => [x, z, y];
+
+/** Convert Three.js position back to voxel coordinates. */
+const fromThree = (tx: number, ty: number, tz: number): { x: number; y: number; z: number } => ({
+  x: tx,
+  y: tz,
+  z: ty,
+});
+
 /** Resolve the fill color for a hue by applying the Tailwind class and sampling via canvas. */
 const resolveHueColor = (hue: Hue): number => {
   const el = document.createElement('div');
@@ -39,9 +56,9 @@ const resolveHueColor = (hue: Hue): number => {
 };
 
 export type VoxelBounds = {
-  /** Center of the bounding box. */
+  /** Center of the bounding box (Three.js coords). */
   center: [number, number, number];
-  /** Camera position that frames all voxels. */
+  /** Camera position that frames all voxels (Three.js coords). */
   cameraPosition: [number, number, number];
 };
 
@@ -59,12 +76,14 @@ export const computeVoxelBounds = (voxels: Voxel.VoxelData[], blockSize = 1, pad
   let maxZ = -Infinity;
 
   for (const voxel of voxels) {
-    minX = Math.min(minX, voxel.x);
-    minY = Math.min(minY, voxel.y);
-    minZ = Math.min(minZ, voxel.z);
-    maxX = Math.max(maxX, voxel.x);
-    maxY = Math.max(maxY, voxel.y);
-    maxZ = Math.max(maxZ, voxel.z);
+    // Compute bounds in Three.js space.
+    const [tx, ty, tz] = toThree(voxel.x, voxel.y, voxel.z);
+    minX = Math.min(minX, tx);
+    minY = Math.min(minY, ty);
+    minZ = Math.min(minZ, tz);
+    maxX = Math.max(maxX, tx);
+    maxY = Math.max(maxY, ty);
+    maxZ = Math.max(maxZ, tz);
   }
 
   const centerX = ((minX + maxX) / 2) * blockSize;
@@ -95,10 +114,10 @@ export const DEFAULT_HUE: Hue = 'blue';
 export type VoxelEditorProps = {
   /** Array of voxels to render. */
   voxels: Voxel.VoxelData[];
-  /** Grid width (x-axis, default 16). */
-  gridWidth?: number;
-  /** Grid depth (z-axis, default 16). */
-  gridDepth?: number;
+  /** Grid extent along x-axis (default 16). */
+  gridX?: number;
+  /** Grid extent along y-axis (default 16). */
+  gridY?: number;
   /** Size of each voxel block (default 1). */
   blockSize?: number;
   /** Currently selected tool mode. */
@@ -171,55 +190,56 @@ const VoxelBlock = ({ position, color, onClick, onPointerMove, onPointerOut }: V
 };
 
 type GridProps = {
-  gridWidth: number;
-  gridDepth: number;
+  gridX: number;
+  gridY: number;
   onClick: (event: ThreeEvent<MouseEvent>) => void;
   onPointerMove?: (event: ThreeEvent<PointerEvent>) => void;
   onPointerOut?: () => void;
 };
 
-/** Ground grid with transparent fill and a click target, centered at origin. */
-const Grid = ({ gridWidth, gridDepth, onClick, onPointerMove, onPointerOut }: GridProps) => {
-  const halfW = Math.floor(gridWidth / 2);
-  const halfD = Math.floor(gridDepth / 2);
+/** Ground grid on the Three.js X-Z plane (voxel X-Y plane), centered at origin. */
+const Grid = ({ gridX, gridY, onClick, onPointerMove, onPointerOut }: GridProps) => {
+  const halfX = Math.floor(gridX / 2);
+  const halfY = Math.floor(gridY / 2);
 
   const gridLines = useMemo(() => {
     const points: THREE.Vector3[] = [];
     const yPos = -0.5;
 
-    // Lines along X-axis (varying z).
-    for (let zIdx = -halfD; zIdx <= halfD; zIdx++) {
-      const zPos = zIdx - 0.5;
-      points.push(new THREE.Vector3(-halfW - 0.5, yPos, zPos));
-      points.push(new THREE.Vector3(halfW - 0.5, yPos, zPos));
+    // Lines along Three.js X-axis (varying Three.js Z = voxel Y).
+    for (let idx = -halfY; idx <= halfY; idx++) {
+      points.push(new THREE.Vector3(-halfX - 0.5, yPos, idx - 0.5));
+      points.push(new THREE.Vector3(halfX - 0.5, yPos, idx - 0.5));
     }
 
-    // Lines along Z-axis (varying x).
-    for (let xIdx = -halfW; xIdx <= halfW; xIdx++) {
-      const xPos = xIdx - 0.5;
-      points.push(new THREE.Vector3(xPos, yPos, -halfD - 0.5));
-      points.push(new THREE.Vector3(xPos, yPos, halfD - 0.5));
+    // Lines along Three.js Z-axis (varying Three.js X = voxel X).
+    for (let idx = -halfX; idx <= halfX; idx++) {
+      points.push(new THREE.Vector3(idx - 0.5, yPos, -halfY - 0.5));
+      points.push(new THREE.Vector3(idx - 0.5, yPos, halfY - 0.5));
     }
 
     return new THREE.BufferGeometry().setFromPoints(points);
-  }, [halfW, halfD]);
+  }, [halfX, halfY]);
+
+  const centerX = -0.5;
+  const centerZ = -0.5;
 
   return (
     <group>
       {/* Ground fill plane. */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.501, 0]}>
-        <planeGeometry args={[gridWidth, gridDepth]} />
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[centerX, -0.501, centerZ]}>
+        <planeGeometry args={[gridX, gridY]} />
         <meshStandardMaterial color={0xcccccc} side={THREE.DoubleSide} transparent opacity={0.1} />
       </mesh>
       {/* Click target (slightly above fill to catch raycasts). */}
       <mesh
         rotation={[-Math.PI / 2, 0, 0]}
-        position={[0, -0.499, 0]}
+        position={[centerX, -0.499, centerZ]}
         onClick={onClick}
         onPointerMove={onPointerMove}
         onPointerOut={onPointerOut}
       >
-        <planeGeometry args={[gridWidth, gridDepth]} />
+        <planeGeometry args={[gridX, gridY]} />
         <meshBasicMaterial visible={false} side={THREE.DoubleSide} />
       </mesh>
       <lineSegments geometry={gridLines}>
@@ -230,18 +250,10 @@ const Grid = ({ gridWidth, gridDepth, onClick, onPointerMove, onPointerOut }: Gr
 };
 
 /** Manage CMD-drag orbit controls. */
-const OrbitControlsManager = ({
-  gridWidth,
-  gridDepth,
-  blockSize,
-}: {
-  gridWidth: number;
-  gridDepth: number;
-  blockSize: number;
-}) => {
+const OrbitControlsManager = ({ gridX, gridY, blockSize }: { gridX: number; gridY: number; blockSize: number }) => {
   const { gl } = useThree();
   const controlsRef = useRef<any>(null);
-  const maxDim = Math.max(gridWidth, gridDepth) * blockSize;
+  const maxDim = Math.max(gridX, gridY) * blockSize;
 
   useEffect(() => {
     const controls = controlsRef.current;
@@ -305,8 +317,8 @@ const FitCamera = ({ voxels, blockSize }: { voxels: Voxel.VoxelData[]; blockSize
 
 type VoxelSceneProps = {
   voxels: Voxel.VoxelData[];
-  gridWidth: number;
-  gridDepth: number;
+  gridX: number;
+  gridY: number;
   blockSize: number;
   toolMode: ToolMode;
   selectedHue: Hue;
@@ -318,8 +330,8 @@ type VoxelSceneProps = {
 /** 3D scene containing the voxel world. */
 const VoxelScene = ({
   voxels,
-  gridWidth,
-  gridDepth,
+  gridX,
+  gridY,
   blockSize,
   toolMode,
   selectedHue,
@@ -329,15 +341,15 @@ const VoxelScene = ({
 }: VoxelSceneProps) => {
   const [ghostPosition, setGhostPosition] = useState<GhostPosition>(null);
 
-  // Filter voxels to only show those within grid bounds (centered at origin).
-  const halfW = Math.floor(gridWidth / 2);
-  const halfD = Math.floor(gridDepth / 2);
+  // Filter voxels to only show those within grid bounds (centered at origin, z >= 0).
+  const halfX = Math.floor(gridX / 2);
+  const halfY = Math.floor(gridY / 2);
   const visibleVoxels = useMemo(
     () =>
       voxels.filter(
-        (voxel) => voxel.x >= -halfW && voxel.x < halfW && voxel.z >= -halfD && voxel.z < halfD && voxel.y >= 0,
+        (voxel) => voxel.x >= -halfX && voxel.x < halfX && voxel.y >= -halfY && voxel.y < halfY && voxel.z >= 0,
       ),
-    [voxels, halfW, halfD],
+    [voxels, halfX, halfY],
   );
 
   const handleVoxelClick = useCallback(
@@ -349,18 +361,18 @@ const VoxelScene = ({
 
       if (toolMode === 'remove' && onRemoveVoxel) {
         const pos = event.object.position;
-        onRemoveVoxel({ x: pos.x, y: pos.y, z: pos.z });
+        onRemoveVoxel(fromThree(pos.x, pos.y, pos.z));
         return;
       }
       if (toolMode === 'add' && onAddVoxel && event.face) {
         const normal = event.face.normal;
         const pos = event.object.position;
-        onAddVoxel({
-          x: Math.round(pos.x + normal.x),
-          y: Math.round(pos.y + normal.y),
-          z: Math.round(pos.z + normal.z),
-          hue: selectedHue,
-        });
+        const voxel = fromThree(
+          Math.round(pos.x + normal.x),
+          Math.round(pos.y + normal.y),
+          Math.round(pos.z + normal.z),
+        );
+        onAddVoxel({ ...voxel, hue: selectedHue });
       }
     },
     [toolMode, onAddVoxel, onRemoveVoxel, selectedHue],
@@ -397,11 +409,12 @@ const VoxelScene = ({
       if (toolMode !== 'add' || !onAddVoxel || !event.point) {
         return;
       }
+      // Ground plane is at Three.js y=-0.5; place voxel at z=0 (height).
       const point = event.point;
       onAddVoxel({
         x: Math.round(point.x),
-        y: 0,
-        z: Math.round(point.z),
+        y: Math.round(point.z),
+        z: 0,
         hue: selectedHue,
       });
     },
@@ -414,6 +427,7 @@ const VoxelScene = ({
         setGhostPosition(null);
         return;
       }
+      // Ghost in Three.js space: ground is at y=0 for voxel rendering.
       setGhostPosition([Math.round(event.point.x), 0, Math.round(event.point.z)]);
     },
     [toolMode],
@@ -430,8 +444,8 @@ const VoxelScene = ({
       <group scale={[blockSize, blockSize, blockSize]}>
         {!readOnly && (
           <Grid
-            gridWidth={gridWidth}
-            gridDepth={gridDepth}
+            gridX={gridX}
+            gridY={gridY}
             onClick={handleGroundClick}
             onPointerMove={handleGroundPointerMove}
             onPointerOut={clearGhost}
@@ -441,7 +455,7 @@ const VoxelScene = ({
         {visibleVoxels.map((voxel, index) => (
           <VoxelBlock
             key={`${voxel.x}-${voxel.y}-${voxel.z}-${index}`}
-            position={[voxel.x, voxel.y, voxel.z]}
+            position={toThree(voxel.x, voxel.y, voxel.z)}
             color={resolveHueColor(voxel.hue as Hue)}
             onClick={readOnly ? () => {} : handleVoxelClick}
             onPointerMove={readOnly ? undefined : handleVoxelPointerMove}
@@ -455,7 +469,7 @@ const VoxelScene = ({
       {readOnly ? (
         <FitCamera voxels={visibleVoxels} blockSize={blockSize} />
       ) : (
-        <OrbitControlsManager gridWidth={gridWidth} gridDepth={gridDepth} blockSize={blockSize} />
+        <OrbitControlsManager gridX={gridX} gridY={gridY} blockSize={blockSize} />
       )}
       {!readOnly && (
         <GizmoHelper alignment='bottom-right' margin={[60, 60]}>
@@ -469,8 +483,8 @@ const VoxelScene = ({
 /** Interactive 3D voxel editor with orbit controls. */
 export const VoxelEditor = ({
   voxels,
-  gridWidth = 16,
-  gridDepth = 16,
+  gridX = 16,
+  gridY = 16,
   blockSize = 1,
   toolMode = 'add',
   selectedHue = DEFAULT_HUE,
@@ -478,7 +492,7 @@ export const VoxelEditor = ({
   onAddVoxel,
   onRemoveVoxel,
 }: VoxelEditorProps) => {
-  const maxDim = Math.max(gridWidth, gridDepth) * blockSize;
+  const maxDim = Math.max(gridX, gridY) * blockSize;
 
   return (
     <Canvas
@@ -487,8 +501,8 @@ export const VoxelEditor = ({
     >
       <VoxelScene
         voxels={voxels}
-        gridWidth={gridWidth}
-        gridDepth={gridDepth}
+        gridX={gridX}
+        gridY={gridY}
         blockSize={blockSize}
         toolMode={toolMode}
         selectedHue={selectedHue}
