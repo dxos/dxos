@@ -1,7 +1,7 @@
 # Voxel Plugin
 
 - This file represents the specification and plan for the Voxel plugin.
-- Use this document to record issues or implementation notes.
+- Update this document to record progress, issues, and any implementation notes.
 
 ## Spec
 
@@ -22,6 +22,7 @@
 - [x] Factor out toolbar into separate component with story
 - [x] Add "Clear" button in toolbar
 - [x] Remove ground plane and orbit controls from card view
+- [ ] Configure block size
 
 ### Phase 2 (Editor Enhancements)
 
