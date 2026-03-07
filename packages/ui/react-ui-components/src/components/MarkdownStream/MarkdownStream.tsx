@@ -67,6 +67,7 @@ export type MarkdownStreamProps = ThemedClassName<
   } & (XmlTagsOptions & StreamerOptions & AutoScrollToProps)
 >;
 
+// TODO(burdon): Loses all content when debug is toggled.
 // TODO(burdon): Initial content isn't formatted.
 export const MarkdownStream = forwardRef<MarkdownStreamController | null, MarkdownStreamProps>(
   ({ classNames, debug, content, registry, fadeIn, cursor, onEvent }, forwardedRef) => {
