@@ -22,7 +22,7 @@
 - [x] Factor out toolbar into separate component with story
 - [x] Add "Clear" button in toolbar
 - [x] Remove ground plane and orbit controls from card view
-- [ ] Configure block size
+- [x] Configure block size via config option in Voxel.World
 
 ### Phase 2 (Editor Enhancements)
 

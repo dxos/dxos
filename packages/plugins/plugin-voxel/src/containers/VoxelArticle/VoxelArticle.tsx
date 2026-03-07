@@ -26,7 +26,7 @@ export const VoxelArticle = ({ subject: world }: VoxelArticleProps) => {
   const [selectedHue, setSelectedHue] = useState<Hue>(DEFAULT_HUE);
   const [selectedColor, setSelectedColor] = useState(() => getHueHex(DEFAULT_HUE));
   const [toolMode, setToolMode] = useState<ToolMode>('add');
-  const { gridWidth, gridDepth } = Voxel.getGridDimensions(world);
+  const { gridWidth, gridDepth, blockSize } = Voxel.getGridDimensions(world);
 
   const handleAddVoxel = useCallback(
     (voxel: Voxel.VoxelData) => {
@@ -76,6 +76,7 @@ export const VoxelArticle = ({ subject: world }: VoxelArticleProps) => {
           voxels={voxels}
           gridWidth={gridWidth}
           gridDepth={gridDepth}
+          blockSize={blockSize}
           toolMode={toolMode}
           selectedColor={selectedColor}
           onAddVoxel={handleAddVoxel}

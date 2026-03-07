@@ -9,9 +9,9 @@ import { Canvas, type ThreeEvent, useThree } from '@react-three/fiber';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 
-import { type ColorStyles, type Hue, styles } from '@dxos/ui-theme';
+import { type ColorStyles, type Hue, palette } from '@dxos/ui-theme';
 
-import { type VoxelData } from '../../types/Voxel';
+import { type Voxel } from '../../types';
 
 /** Resolve a CSS color variable to a Three.js hex number. */
 const cssColorToHex = (cssColor: string): number => {
@@ -42,7 +42,7 @@ export type VoxelBounds = {
 };
 
 /** Compute bounding box center and a camera position that frames all voxels. */
-export const computeVoxelBounds = (voxels: VoxelData[], padding = 1.5): VoxelBounds => {
+export const computeVoxelBounds = (voxels: Voxel.VoxelData[], blockSize = 1, padding = 1.5): VoxelBounds => {
   if (voxels.length === 0) {
     return { center: [0, 0, 0], cameraPosition: [4, 3, 4] };
   }
@@ -63,13 +63,13 @@ export const computeVoxelBounds = (voxels: VoxelData[], padding = 1.5): VoxelBou
     maxZ = Math.max(maxZ, voxel.z);
   }
 
-  const centerX = (minX + maxX) / 2;
-  const centerY = (minY + maxY) / 2;
-  const centerZ = (minZ + maxZ) / 2;
+  const centerX = ((minX + maxX) / 2) * blockSize;
+  const centerY = ((minY + maxY) / 2) * blockSize;
+  const centerZ = ((minZ + maxZ) / 2) * blockSize;
 
-  const sizeX = maxX - minX + 1;
-  const sizeY = maxY - minY + 1;
-  const sizeZ = maxZ - minZ + 1;
+  const sizeX = (maxX - minX + 1) * blockSize;
+  const sizeY = (maxY - minY + 1) * blockSize;
+  const sizeZ = (maxZ - minZ + 1) * blockSize;
   const maxSize = Math.max(sizeX, sizeY, sizeZ);
   const distance = maxSize * padding;
 
@@ -83,7 +83,7 @@ export const computeVoxelBounds = (voxels: VoxelData[], padding = 1.5): VoxelBou
 export type ToolMode = 'select' | 'add' | 'remove';
 
 /** Palette styles used in the voxel editor. */
-export const PALETTE_STYLES: ColorStyles[] = styles;
+export const PALETTE_STYLES: ColorStyles[] = palette.hues.filter((style, i) => i % 2 === 0);
 
 /** Get the Three.js hex color for a hue by resolving CSS variables. */
 export const getHueHex = (hue: Hue): number => resolveHueColor(hue);
@@ -93,11 +93,13 @@ export const DEFAULT_HUE: Hue = 'blue';
 
 export type VoxelEditorProps = {
   /** Array of voxels to render. */
-  voxels: VoxelData[];
+  voxels: Voxel.VoxelData[];
   /** Grid width (x-axis, default 16). */
   gridWidth?: number;
   /** Grid depth (z-axis, default 16). */
   gridDepth?: number;
+  /** Size of each voxel block (default 1). */
+  blockSize?: number;
   /** Currently selected tool mode. */
   toolMode?: ToolMode;
   /** Currently selected color hex value. */
@@ -105,7 +107,7 @@ export type VoxelEditorProps = {
   /** Read-only mode (no interaction, no ground plane, no orbit controls). */
   readOnly?: boolean;
   /** Called when user clicks to add a voxel. */
-  onAddVoxel?: (voxel: VoxelData) => void;
+  onAddVoxel?: (voxel: Voxel.VoxelData) => void;
   /** Called when user clicks to remove a voxel. */
   onRemoveVoxel?: (position: { x: number; y: number; z: number }) => void;
 };
@@ -243,10 +245,18 @@ const TransparentGrid = ({ gridWidth, gridDepth }: { gridWidth: number; gridDept
 };
 
 /** Manage CMD-drag orbit controls. */
-const OrbitControlsManager = ({ gridWidth, gridDepth }: { gridWidth: number; gridDepth: number }) => {
+const OrbitControlsManager = ({
+  gridWidth,
+  gridDepth,
+  blockSize,
+}: {
+  gridWidth: number;
+  gridDepth: number;
+  blockSize: number;
+}) => {
   const { gl } = useThree();
   const controlsRef = useRef<any>(null);
-  const maxDim = Math.max(gridWidth, gridDepth);
+  const maxDim = Math.max(gridWidth, gridDepth) * blockSize;
 
   useEffect(() => {
     const controls = controlsRef.current;
@@ -286,7 +296,7 @@ const OrbitControlsManager = ({ gridWidth, gridDepth }: { gridWidth: number; gri
         MIDDLE: THREE.MOUSE.DOLLY,
         RIGHT: THREE.MOUSE.PAN,
       }}
-      target={[gridWidth / 4, 0, gridDepth / 4]}
+      target={[(gridWidth / 4) * blockSize, 0, (gridDepth / 4) * blockSize]}
       maxPolarAngle={Math.PI / 2}
       minDistance={2}
       maxDistance={maxDim * 3}
@@ -295,9 +305,9 @@ const OrbitControlsManager = ({ gridWidth, gridDepth }: { gridWidth: number; gri
 };
 
 /** Positions the camera to frame all voxels in readOnly mode. */
-const FitCamera = ({ voxels }: { voxels: VoxelData[] }) => {
+const FitCamera = ({ voxels, blockSize }: { voxels: Voxel.VoxelData[]; blockSize: number }) => {
   const { camera } = useThree();
-  const bounds = useMemo(() => computeVoxelBounds(voxels), [voxels]);
+  const bounds = useMemo(() => computeVoxelBounds(voxels, blockSize), [voxels, blockSize]);
 
   useEffect(() => {
     camera.position.set(...bounds.cameraPosition);
@@ -309,13 +319,14 @@ const FitCamera = ({ voxels }: { voxels: VoxelData[] }) => {
 };
 
 type VoxelSceneProps = {
-  voxels: VoxelData[];
+  voxels: Voxel.VoxelData[];
   gridWidth: number;
   gridDepth: number;
+  blockSize: number;
   toolMode: ToolMode;
   selectedColor: number;
   readOnly?: boolean;
-  onAddVoxel?: (voxel: VoxelData) => void;
+  onAddVoxel?: (voxel: Voxel.VoxelData) => void;
   onRemoveVoxel?: (position: { x: number; y: number; z: number }) => void;
 };
 
@@ -324,6 +335,7 @@ const VoxelScene = ({
   voxels,
   gridWidth,
   gridDepth,
+  blockSize,
   toolMode,
   selectedColor,
   readOnly,
@@ -428,36 +440,38 @@ const VoxelScene = ({
       <directionalLight position={[10, 20, 10]} intensity={0.8} castShadow />
       <pointLight position={[-10, 10, -10]} intensity={0.3} />
 
-      {!readOnly && (
-        <>
-          <GroundPlane
-            gridWidth={gridWidth}
-            gridDepth={gridDepth}
-            onClick={handleGroundClick}
-            onPointerMove={handleGroundPointerMove}
-            onPointerOut={clearGhost}
+      <group scale={[blockSize, blockSize, blockSize]}>
+        {!readOnly && (
+          <>
+            <GroundPlane
+              gridWidth={gridWidth}
+              gridDepth={gridDepth}
+              onClick={handleGroundClick}
+              onPointerMove={handleGroundPointerMove}
+              onPointerOut={clearGhost}
+            />
+            <TransparentGrid gridWidth={gridWidth} gridDepth={gridDepth} />
+          </>
+        )}
+
+        {visibleVoxels.map((voxel, index) => (
+          <VoxelBlock
+            key={`${voxel.x}-${voxel.y}-${voxel.z}-${index}`}
+            position={[voxel.x, voxel.y, voxel.z]}
+            color={voxel.color}
+            onClick={readOnly ? () => {} : handleVoxelClick}
+            onPointerMove={readOnly ? undefined : handleVoxelPointerMove}
+            onPointerOut={readOnly ? undefined : clearGhost}
           />
-          <TransparentGrid gridWidth={gridWidth} gridDepth={gridDepth} />
-        </>
-      )}
+        ))}
 
-      {visibleVoxels.map((voxel, index) => (
-        <VoxelBlock
-          key={`${voxel.x}-${voxel.y}-${voxel.z}-${index}`}
-          position={[voxel.x, voxel.y, voxel.z]}
-          color={voxel.color}
-          onClick={readOnly ? () => {} : handleVoxelClick}
-          onPointerMove={readOnly ? undefined : handleVoxelPointerMove}
-          onPointerOut={readOnly ? undefined : clearGhost}
-        />
-      ))}
-
-      {!readOnly && <GhostCursor position={ghostPosition} color={selectedColor} isRemove={toolMode === 'remove'} />}
+        {!readOnly && <GhostCursor position={ghostPosition} color={selectedColor} isRemove={toolMode === 'remove'} />}
+      </group>
 
       {readOnly ? (
-        <FitCamera voxels={visibleVoxels} />
+        <FitCamera voxels={visibleVoxels} blockSize={blockSize} />
       ) : (
-        <OrbitControlsManager gridWidth={gridWidth} gridDepth={gridDepth} />
+        <OrbitControlsManager gridWidth={gridWidth} gridDepth={gridDepth} blockSize={blockSize} />
       )}
       {!readOnly && (
         <GizmoHelper alignment='bottom-right' margin={[60, 60]}>
@@ -473,13 +487,14 @@ export const VoxelEditor = ({
   voxels,
   gridWidth = 16,
   gridDepth = 16,
+  blockSize = 1,
   toolMode = 'add',
   selectedColor,
   readOnly,
   onAddVoxel,
   onRemoveVoxel,
 }: VoxelEditorProps) => {
-  const maxDim = Math.max(gridWidth, gridDepth);
+  const maxDim = Math.max(gridWidth, gridDepth) * blockSize;
   const resolvedColor = useMemo(() => selectedColor ?? getHueHex(DEFAULT_HUE), [selectedColor]);
 
   return (
@@ -491,6 +506,7 @@ export const VoxelEditor = ({
         voxels={voxels}
         gridWidth={gridWidth}
         gridDepth={gridDepth}
+        blockSize={blockSize}
         toolMode={toolMode}
         selectedColor={resolvedColor}
         readOnly={readOnly}
