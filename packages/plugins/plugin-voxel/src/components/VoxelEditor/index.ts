@@ -4,8 +4,8 @@
 
 export {
   VoxelEditor,
-  PALETTE_HUES,
-  DEFAULT_COLOR,
+  PALETTE_STYLES,
+  DEFAULT_HUE,
   computeVoxelBounds,
   getHueHex,
   type VoxelBounds,

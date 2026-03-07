@@ -6,15 +6,15 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { type ChromaticPalette } from '@dxos/ui-types';
+import { type Hue } from '@dxos/ui-theme';
 
-import { PALETTE_HUES, type ToolMode } from '../VoxelEditor';
+import { DEFAULT_HUE, type ToolMode } from '../VoxelEditor';
 
 import { VoxelToolbar } from './VoxelToolbar';
 
 const DefaultStory = () => {
   const [toolMode, setToolMode] = useState<ToolMode>('add');
-  const [selectedHue, setSelectedHue] = useState<ChromaticPalette>(PALETTE_HUES[0]);
+  const [selectedHue, setSelectedHue] = useState<Hue>(DEFAULT_HUE);
 
   return (
     <VoxelToolbar

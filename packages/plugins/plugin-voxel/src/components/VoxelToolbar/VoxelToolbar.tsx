@@ -5,20 +5,19 @@
 import React from 'react';
 
 import { Toolbar } from '@dxos/react-ui';
-import { getStyles } from '@dxos/ui-theme';
-import { type ChromaticPalette } from '@dxos/ui-types';
+import { type Hue } from '@dxos/ui-theme';
 
-import { PALETTE_HUES, type ToolMode, getHueHex } from '../VoxelEditor';
+import { PALETTE_STYLES, type ToolMode, getHueHex } from '../VoxelEditor';
 
 export type VoxelToolbarProps = {
   /** Currently selected tool mode. */
   toolMode: ToolMode;
   /** Currently selected hue. */
-  selectedHue: ChromaticPalette;
+  selectedHue: Hue;
   /** Called when tool mode changes. */
   onToolModeChange: (mode: ToolMode) => void;
   /** Called when color selection changes. */
-  onColorChange: (hue: ChromaticPalette, hex: number) => void;
+  onColorChange: (hue: Hue, hex: number) => void;
   /** Called when clear button is clicked. */
   onClear?: () => void;
 };
@@ -58,20 +57,17 @@ export const VoxelToolbar = ({
         <Toolbar.IconButton icon='ph--trash--regular' iconOnly variant='ghost' label='Clear' onClick={onClear} />
       )}
       <Toolbar.Separator />
-      {PALETTE_HUES.map((hue) => {
-        const colorStyles = getStyles(hue);
-        return (
-          <Toolbar.IconButton
-            key={hue}
-            icon={hue === selectedHue ? 'ph--square--fill' : 'ph--square--duotone'}
-            iconOnly
-            variant='ghost'
-            label={hue}
-            classNames={colorStyles.text}
-            onClick={() => onColorChange(hue, getHueHex(hue))}
-          />
-        );
-      })}
+      {PALETTE_STYLES.map((colorStyle) => (
+        <Toolbar.IconButton
+          key={colorStyle.hue}
+          icon={colorStyle.hue === selectedHue ? 'ph--square--fill' : 'ph--square--duotone'}
+          iconOnly
+          variant='ghost'
+          label={colorStyle.hue}
+          classNames={colorStyle.text}
+          onClick={() => onColorChange(colorStyle.hue, getHueHex(colorStyle.hue))}
+        />
+      ))}
     </Toolbar.Root>
   );
 };

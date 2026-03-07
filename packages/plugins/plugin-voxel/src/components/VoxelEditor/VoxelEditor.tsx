@@ -9,9 +9,30 @@ import { Canvas, type ThreeEvent, useThree } from '@react-three/fiber';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 
-import { type ChromaticPalette } from '@dxos/ui-types';
+import { type ColorStyles, type Hue, styles } from '@dxos/ui-theme';
 
 import { type VoxelData } from '../../types/Voxel';
+
+/** Resolve a CSS color variable to a Three.js hex number. */
+const cssColorToHex = (cssColor: string): number => {
+  const canvas = document.createElement('canvas');
+  canvas.width = 1;
+  canvas.height = 1;
+  const ctx = canvas.getContext('2d')!;
+  ctx.fillStyle = cssColor;
+  ctx.fillRect(0, 0, 1, 1);
+  const [red, green, blue] = ctx.getImageData(0, 0, 1, 1).data;
+  return (red << 16) | (green << 8) | blue;
+};
+
+/** Resolve the fill color for a hue from CSS custom properties. */
+const resolveHueColor = (hue: Hue): number => {
+  const value = getComputedStyle(document.documentElement).getPropertyValue(`--color-${hue}-fill`).trim();
+  if (!value) {
+    return 0x888888;
+  }
+  return cssColorToHex(value);
+};
 
 export type VoxelBounds = {
   /** Center of the bounding box. */
@@ -61,35 +82,14 @@ export const computeVoxelBounds = (voxels: VoxelData[], padding = 1.5): VoxelBou
 /** Tool modes for the voxel editor. */
 export type ToolMode = 'select' | 'add' | 'remove';
 
-/** Hex color mapping for ChromaticPalette hues (Tailwind 500 shades). */
-const HUE_HEX: Record<ChromaticPalette, number> = {
-  red: 0xef4444,
-  orange: 0xf97316,
-  amber: 0xf59e0b,
-  yellow: 0xeab308,
-  lime: 0x84cc16,
-  green: 0x22c55e,
-  emerald: 0x10b981,
-  teal: 0x14b8a6,
-  cyan: 0x06b6d4,
-  sky: 0x0ea5e9,
-  blue: 0x3b82f6,
-  indigo: 0x6366f1,
-  violet: 0x8b5cf6,
-  purple: 0xa855f7,
-  fuchsia: 0xd946ef,
-  pink: 0xec4899,
-  rose: 0xf43f5e,
-};
+/** Palette styles used in the voxel editor. */
+export const PALETTE_STYLES: ColorStyles[] = styles;
 
-/** Subset of hues used in the voxel palette. */
-export const PALETTE_HUES: ChromaticPalette[] = ['blue', 'green', 'red', 'amber', 'pink', 'cyan', 'orange', 'violet'];
+/** Get the Three.js hex color for a hue by resolving CSS variables. */
+export const getHueHex = (hue: Hue): number => resolveHueColor(hue);
 
-/** Get the Three.js hex color for a ChromaticPalette hue. */
-export const getHueHex = (hue: ChromaticPalette): number => HUE_HEX[hue];
-
-/** Default selected color. */
-export const DEFAULT_COLOR = HUE_HEX.blue;
+/** Default hue. */
+export const DEFAULT_HUE: Hue = 'blue';
 
 export type VoxelEditorProps = {
   /** Array of voxels to render. */
@@ -474,12 +474,13 @@ export const VoxelEditor = ({
   gridWidth = 16,
   gridDepth = 16,
   toolMode = 'add',
-  selectedColor = DEFAULT_COLOR,
+  selectedColor,
   readOnly,
   onAddVoxel,
   onRemoveVoxel,
 }: VoxelEditorProps) => {
   const maxDim = Math.max(gridWidth, gridDepth);
+  const resolvedColor = useMemo(() => selectedColor ?? getHueHex(DEFAULT_HUE), [selectedColor]);
 
   return (
     <Canvas
@@ -491,7 +492,7 @@ export const VoxelEditor = ({
         gridWidth={gridWidth}
         gridDepth={gridDepth}
         toolMode={toolMode}
-        selectedColor={selectedColor}
+        selectedColor={resolvedColor}
         readOnly={readOnly}
         onAddVoxel={onAddVoxel}
         onRemoveVoxel={onRemoveVoxel}

@@ -7,9 +7,9 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { useObject } from '@dxos/echo-react';
 import { Container } from '@dxos/react-ui';
-import { type ChromaticPalette } from '@dxos/ui-types';
+import { type Hue } from '@dxos/ui-theme';
 
-import { DEFAULT_COLOR, PALETTE_HUES, type ToolMode, VoxelEditor, VoxelToolbar } from '../../components';
+import { DEFAULT_HUE, type ToolMode, VoxelEditor, VoxelToolbar, getHueHex } from '../../components';
 import { Voxel } from '../../types';
 
 export type VoxelArticleProps = SurfaceComponentProps<Voxel.World>;
@@ -23,8 +23,8 @@ const TOOL_HINTS: Record<ToolMode, string> = {
 export const VoxelArticle = ({ subject: world }: VoxelArticleProps) => {
   const [rawVoxels, updateVoxels] = useObject(world, 'voxels');
   const voxels = useMemo(() => Voxel.parseVoxels(rawVoxels), [rawVoxels]);
-  const [selectedHue, setSelectedHue] = useState<ChromaticPalette>(PALETTE_HUES[0]);
-  const [selectedColor, setSelectedColor] = useState(DEFAULT_COLOR);
+  const [selectedHue, setSelectedHue] = useState<Hue>(DEFAULT_HUE);
+  const [selectedColor, setSelectedColor] = useState(() => getHueHex(DEFAULT_HUE));
   const [toolMode, setToolMode] = useState<ToolMode>('add');
   const { gridWidth, gridDepth } = Voxel.getGridDimensions(world);
 
@@ -57,7 +57,7 @@ export const VoxelArticle = ({ subject: world }: VoxelArticleProps) => {
     updateVoxels(Voxel.serializeVoxels([]));
   }, [updateVoxels]);
 
-  const handleColorChange = useCallback((hue: ChromaticPalette, hex: number) => {
+  const handleColorChange = useCallback((hue: Hue, hex: number) => {
     setSelectedHue(hue);
     setSelectedColor(hex);
   }, []);
