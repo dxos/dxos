@@ -178,36 +178,27 @@ type GridProps = {
   onPointerOut?: () => void;
 };
 
-/** Ground grid with transparent fill, colored axes, and a click target. */
+/** Ground grid with transparent fill and a click target. */
 const Grid = ({ gridWidth, gridDepth, onClick, onPointerMove, onPointerOut }: GridProps) => {
   const gridLines = useMemo(() => {
     const points: THREE.Vector3[] = [];
-    const colors: number[] = [];
     const yPos = -0.5;
 
-    // Lines along X-axis (varying z), from z=-0.5 to z=gridDepth-0.5.
+    // Lines along X-axis (varying z).
     for (let idx = 0; idx <= gridDepth; idx++) {
       const zPos = idx - 0.5;
-      const isOrigin = idx === 0;
       points.push(new THREE.Vector3(-0.5, yPos, zPos));
       points.push(new THREE.Vector3(gridWidth - 0.5, yPos, zPos));
-      const color = isOrigin ? [0.9, 0.2, 0.2] : [0.5, 0.5, 0.5];
-      colors.push(...color, ...color);
     }
 
-    // Lines along Z-axis (varying x), from x=-0.5 to x=gridWidth-0.5.
+    // Lines along Z-axis (varying x).
     for (let idx = 0; idx <= gridWidth; idx++) {
       const xPos = idx - 0.5;
-      const isOrigin = idx === 0;
       points.push(new THREE.Vector3(xPos, yPos, -0.5));
       points.push(new THREE.Vector3(xPos, yPos, gridDepth - 0.5));
-      const color = isOrigin ? [0.2, 0.2, 0.9] : [0.5, 0.5, 0.5];
-      colors.push(...color, ...color);
     }
 
-    const geometry = new THREE.BufferGeometry().setFromPoints(points);
-    geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-    return geometry;
+    return new THREE.BufferGeometry().setFromPoints(points);
   }, [gridWidth, gridDepth]);
 
   const centerX = gridWidth / 2 - 0.5;
@@ -232,7 +223,7 @@ const Grid = ({ gridWidth, gridDepth, onClick, onPointerMove, onPointerOut }: Gr
         <meshBasicMaterial visible={false} side={THREE.DoubleSide} />
       </mesh>
       <lineSegments geometry={gridLines}>
-        <lineBasicMaterial vertexColors transparent opacity={0.5} />
+        <lineBasicMaterial color={0x888888} transparent opacity={0.5} />
       </lineSegments>
     </group>
   );
