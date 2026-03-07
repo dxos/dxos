@@ -21,6 +21,8 @@
 
 ### Phase 2
 
+- [ ] Implement agent blueprint for creating/deleting blocks (e.g., "create tower five blocks high")
+
 ### Phase 3
 
 ## Implementation Notes
