@@ -87,8 +87,6 @@ None
 - `dx-contain-layout`
 - `dx-article`
 - `dx-density-coarse`
-- `dx-overflow-anchor`
-- `dx-overflow-anchored`
 - `dx-size-container`
 - `dx-sticky-bottom-from-statusbar-bottom`
 - `dx-sticky-top-from-topbar-bottom`

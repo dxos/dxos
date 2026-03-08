@@ -166,7 +166,6 @@ export const CommentsThreadContainer = ({
 
       <ThreadComponent.Status activity={activity}>{t('activity message')}</ThreadComponent.Status>
 
-      {/* NOTE(thure): This can’t also be the `dx-overflow-anchor` because `ScrollArea` injects an interceding node that contains this necessary ref’d element. */}
       <div role='none' className='h-px -mt-px' ref={threadScrollRef} />
     </ThreadComponent.Root>
   );

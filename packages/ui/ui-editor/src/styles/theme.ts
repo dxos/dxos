@@ -107,7 +107,9 @@ export const baseTheme = EditorView.baseTheme({
   /**
    * Scroller
    */
-  '.cm-scroller': {},
+  '.cm-scroller': {
+    overflowAnchor: 'none',
+  },
   '.cm-scroller::-webkit-scrollbar': {
     width: '8px',
   },

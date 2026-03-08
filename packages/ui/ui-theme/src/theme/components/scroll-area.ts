@@ -12,7 +12,7 @@ export type ScrollAreaStyleProps = {
   /** Balance left/right, top/bottom "margin" with scrollbar. */
   margin?: boolean;
   /** Add default padding. */
-  /** TODO(burdon): Integrate with Container.Column padding. */
+  /** TODO(burdon): Integrate with Column.Root padding. */
   padding?: boolean;
   /** Use thin scrollbars. */
   /** TODO(burdon): Density fine/course. */
@@ -29,11 +29,12 @@ export const scrollAreaRoot: ComponentFunction<ScrollAreaStyleProps> = ({ orient
     orientation === 'horizontal' && 'group/scroll-h dx-container',
     orientation === 'all' && 'group/scroll-all dx-container',
 
-    // Apply col-span-full only when inside a Container.Column grid (detected via dx-column marker).
+    // TODO(burdon): Audit composition.
+    // Apply col-span-full only when inside a Column.Root grid (detected via dx-column marker).
     '[.dx-column_&]:col-span-full',
 
     // NOTE: Uses --gutter CSS variable
-    // If contained within Container.Column grid, the gutter is set by that component.
+    // If contained within Column.Root grid, the gutter is set by that component.
     margin && [
       orientation === 'vertical' &&
         (thin

@@ -7,13 +7,12 @@ import React from 'react';
 
 import { Input, ScrollArea, Toolbar } from '../../components';
 import { withLayout, withTheme } from '../../testing';
-import { Flex } from '../Flex';
 
 import { Container } from './Container';
 
 const List = () => {
   return (
-    <ScrollArea.Root margin>
+    <ScrollArea.Root margin role='list'>
       <ScrollArea.Viewport>
         {Array.from({ length: 100 }).map((_, i) => (
           <div key={i} role='listitem' className='p-1 hover:bg-hover-surface'>
@@ -25,7 +24,7 @@ const List = () => {
   );
 };
 
-const MainStory = () => {
+const DefaultStory = () => {
   return (
     <Container.Main toolbar statusbar>
       <Toolbar.Root classNames='gap-2'>
@@ -46,39 +45,9 @@ const MainStory = () => {
   );
 };
 
-const ColumnStory = () => {
-  return (
-    <Container.Column className='h-full overflow-hidden' gutter='md'>
-      <Container.Segment asChild>
-        <h1 className='p-1 bg-blue-500 text-black'>Header</h1>
-      </Container.Segment>
-
-      <Container.Segment asChild>
-        <div className='py-2'>
-          <Input.Root>
-            <Input.TextInput placeholder='Search' />
-          </Input.Root>
-        </div>
-      </Container.Segment>
-
-      <List />
-
-      <Container.Segment asChild>
-        <Flex column>
-          <h1 className='p-1 bg-red-500 text-black'>Section with overflow</h1>
-          <pre className='p-1 text-xs text-subdued overflow-auto'>{new Error().stack}</pre>
-        </Flex>
-      </Container.Segment>
-
-      <Container.Segment asChild>
-        <div className='p-1 bg-green-500 text-black'>Footer</div>
-      </Container.Segment>
-    </Container.Column>
-  );
-};
-
 const meta: Meta = {
   title: 'ui/react-ui-core/primitives/Container',
+  render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'w-[25rem]' })],
   parameters: {
     layout: 'fullscreen',
@@ -89,10 +58,4 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Main: Story = {
-  render: MainStory,
-};
-
-export const Column: Story = {
-  render: ColumnStory,
-};
+export const Default: Story = {};
