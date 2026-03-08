@@ -9,6 +9,8 @@
   --spacing-article-max-width: 50rem;
   --spacing-prose-max-width: 50rem;
 
+  --spacing-popover-min-width: 12rem;
+
   --spacing-card-default-width: 20rem;
   --spacing-card-min-width: 18rem;
   --spacing-card-max-width: 22rem;

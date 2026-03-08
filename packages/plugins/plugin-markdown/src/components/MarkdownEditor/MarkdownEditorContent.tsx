@@ -45,7 +45,6 @@ export type MarkdownEditorContentProps = ThemedClassName<{
   toolbarState?: Atom.Writable<EditorToolbarState>;
   onLinkQuery?: (query?: string) => Promise<EditorMenuGroup[]>;
 }> &
-  // prettier-ignore
   Pick<UseTextEditorProps, 'initialValue' | 'extensions'> &
   Pick<MarkdownEditorToolbarProps, 'onFileUpload'> &
   Pick<ThemeExtensionsOptions, 'slots'>;

@@ -25,10 +25,9 @@ export const scrollAreaRoot: ComponentFunction<ScrollAreaStyleProps> = ({ orient
   mx(
     'overflow-hidden',
 
-    // NOTE: min-h-0 is required for vertical scrollbars
-    orientation === 'vertical' && 'group/scroll-v flex-1 min-h-0 h-full w-full',
-    orientation === 'horizontal' && 'group/scroll-h h-full min-w-0 w-full',
-    orientation === 'all' && 'group/scroll-all flex-1 min-h-0 h-full min-w-0 w-full',
+    orientation === 'vertical' && 'group/scroll-v dx-container',
+    orientation === 'horizontal' && 'group/scroll-h dx-container',
+    orientation === 'all' && 'group/scroll-all dx-container',
 
     // Apply col-span-full only when inside a Container.Column grid (detected via dx-column marker).
     '[.dx-column_&]:col-span-full',
