@@ -152,7 +152,7 @@ type MenuProps = {
 const Menu = ({ groups, currentItem, onSelect }: MenuProps) => {
   const { tx } = useThemeContext();
   return (
-    <ul role='menu'>
+    <ul>
       {groups.map((group, index) => (
         <Fragment key={group.id}>
           <MenuGroup group={group} currentItem={currentItem} onSelect={onSelect} />
