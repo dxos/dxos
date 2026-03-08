@@ -21,27 +21,6 @@ export type ScrollAreaStyleProps = {
   snap?: boolean;
 };
 
-/**
- * Layout rules for flex-based scroll containment:
- *
- * - `flex flex-col`
- *      On a container: makes it a flex column so children stack and can use `flex-1`.
- * - `flex-1`
- *      On a child: grows to fill the flex parent. Requires the parent to be `flex`.
- * - `min-h-0` (alongside `flex-1`):
- *      Browsers default flex children to `min-height:auto` (sized to content), which prevents shrinking.
- *      `min-h-0` overrides this so the element can shrink and trigger overflow/scrolling.
- *      Always pair with `flex-1` when scroll is needed.
- * - `h-full`:
- *      Fills 100% of the parent's *computed* height.
- *      Use when the parent has a definite height but is not a flex container (e.g. `overflow:hidden` wrapper).
- *      Unlike `flex-1`, does not require the parent to be flex.
- *
- * Pattern for a scrollable region inside a flex ancestor:
- *   ancestor         → `flex flex-col`             (or `flex flex-row`)
- *   scroll root      → `flex-1 min-h-0`            (fills ancestor, can shrink)
- *   scroll viewport  → `h-full overflow-y-scroll`  (fills root, scrolls)
- */
 export const scrollAreaRoot: ComponentFunction<ScrollAreaStyleProps> = ({ orientation, margin, thin }, ...etc) =>
   mx(
     'overflow-hidden',
