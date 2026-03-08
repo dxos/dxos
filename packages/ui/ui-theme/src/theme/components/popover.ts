@@ -13,21 +13,21 @@ export type PopoverStyleProps = Partial<{
   elevation: Elevation;
 }>;
 
-export const popoverViewport: ComponentFunction<PopoverStyleProps> = ({ constrainBlock, constrainInline }, ...etc) =>
-  mx(
-    'flex flex-col rounded-md',
-    constrainBlock &&
-      'h-[min(var(--radix-popover-content-available-height),calc(100dvh_-_var(--spacing-screen-border)*2))] overflow-hidden',
-    constrainInline && 'max-w-(--radix-popover-content-available-width) overflow-hidden',
-    ...etc,
-  );
-
 export const popoverContent: ComponentFunction<PopoverStyleProps> = ({ elevation }, ...etc) =>
   mx(
-    'dx-modal-surface border border-separator rounded-md',
+    'dx-modal-surface flex-1 min-h-0 overflow-hidden border border-separator rounded-md',
     surfaceShadow({ elevation: 'positioned' }),
     surfaceZIndex({ elevation, level: 'menu' }),
     focusRing,
+    ...etc,
+  );
+
+export const popoverViewport: ComponentFunction<PopoverStyleProps> = ({ constrainBlock, constrainInline }, ...etc) =>
+  mx(
+    'flex flex-col overflow-y-auto',
+    constrainBlock &&
+      'h-[min(var(--radix-popover-content-available-height),calc(100dvh_-_var(--spacing-screen-border)*2))] overflow-hidden',
+    constrainInline && 'max-w-(--radix-popover-content-available-width) overflow-hidden',
     ...etc,
   );
 
