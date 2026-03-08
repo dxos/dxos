@@ -127,8 +127,8 @@ export const EditorMenuProvider = ({
           }}
           onOpenAutoFocus={(event) => event.preventDefault()}
         >
-          <Popover.Viewport>
-            <ScrollArea.Root thin>
+          <Popover.Viewport classNames='flex-1 min-h-0'>
+            <ScrollArea.Root thin className='flex flex-col'>
               <ScrollArea.Viewport>
                 <Menu groups={menuGroups} currentItem={currentItem} onSelect={handleSelect} />
               </ScrollArea.Viewport>
