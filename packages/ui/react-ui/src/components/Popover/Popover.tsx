@@ -303,8 +303,7 @@ const PopoverContentModal = forwardRef<PopoverContentTypeElement, PopoverContent
         <PopoverContentImpl
           {...props}
           ref={composedRefs}
-          // we make sure we're not trapping once it's been closed
-          // (closed !== unmounted when animating out)
+          // Make sure we're not trapping once it's been closed (closed !== unmounted when animating out).
           trapFocus={context.open}
           disableOutsidePointerEvents
           onCloseAutoFocus={composeEventHandlers(props.onCloseAutoFocus, (event) => {

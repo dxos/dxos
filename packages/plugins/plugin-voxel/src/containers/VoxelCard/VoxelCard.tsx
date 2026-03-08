@@ -5,6 +5,7 @@
 import React, { useMemo } from 'react';
 
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { Card } from '@dxos/react-ui';
 
 import { VoxelEditor } from '../../components';
 import { Voxel } from '../../types';
@@ -17,8 +18,10 @@ export const VoxelCard = ({ subject: world }: VoxelCardProps) => {
   const { gridX, gridY, blockSize } = Voxel.getGridDimensions(world);
 
   return (
-    <div className='h-[200px] w-full'>
-      <VoxelEditor voxels={voxels} gridX={gridX} gridY={gridY} blockSize={blockSize} readOnly />
-    </div>
+    <Card.Content>
+      <Card.Section>
+        <VoxelEditor voxels={voxels} gridX={gridX} gridY={gridY} blockSize={blockSize} readOnly />
+      </Card.Section>
+    </Card.Content>
   );
 };
