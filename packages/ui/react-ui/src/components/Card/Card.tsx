@@ -12,6 +12,7 @@ import React, {
   useContext,
 } from 'react';
 
+import { mx } from '@dxos/ui-theme';
 import { type Density } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
@@ -164,6 +165,22 @@ const CardRow = forwardRef<HTMLDivElement, CardRowProps>(
 );
 
 //
+// Section
+//
+
+type CardSectionProps = CardSharedProps;
+
+const CardSection = forwardRef<HTMLDivElement, CardSectionProps>(
+  ({ children, classNames, className, role, ...props }, forwardedRef) => {
+    return (
+      <div {...props} role={role ?? 'none'} className={mx(classNames, className, 'col-span-full')} ref={forwardedRef}>
+        {children}
+      </div>
+    );
+  },
+);
+
+//
 // Heading
 //
 
@@ -230,7 +247,7 @@ const CardPoster = (props: CardPosterProps) => {
   const aspect = props.aspect === 'auto' ? 'aspect-auto' : 'aspect-video';
   if (props.image) {
     return (
-      <div role='none' className='col-span-3 mb-1'>
+      <div role='none' className='col-span-full mb-1'>
         <Image classNames={[tx('card.poster', {}), aspect, props.classNames]} src={props.image} alt={props.alt} />
       </div>
     );
@@ -332,6 +349,7 @@ export const Card = {
   // Content
   Content: CardContent,
   Row: CardRow,
+  Section: CardSection,
   Heading: CardHeading,
   Text: CardText,
   Poster: CardPoster,

@@ -15,7 +15,7 @@ export type PopoverStyleProps = Partial<{
 
 export const popoverContent: ComponentFunction<PopoverStyleProps> = ({ elevation }, ...etc) =>
   mx(
-    'dx-modal-surface flex-1 min-h-0 border border-separator rounded-md',
+    'dx-modal-surface border border-separator rounded-sm',
     surfaceShadow({ elevation: 'positioned' }),
     surfaceZIndex({ elevation, level: 'menu' }),
     focusRing,
@@ -24,10 +24,11 @@ export const popoverContent: ComponentFunction<PopoverStyleProps> = ({ elevation
 
 export const popoverViewport: ComponentFunction<PopoverStyleProps> = ({ constrainBlock, constrainInline }, ...etc) =>
   mx(
-    'flex flex-col overflow-y-auto',
+    'flex flex-col min-h-0',
+    // Ensures it respects available height from Radix (or 100dvh).
     constrainBlock &&
-      'h-[min(var(--radix-popover-content-available-height),calc(100dvh_-_var(--spacing-screen-border)*2))] overflow-hidden',
-    constrainInline && 'max-w-(--radix-popover-content-available-width) overflow-hidden',
+      'overflow-hidden max-h-[min(var(--radix-popover-content-available-height),calc(100dvh-var(--spacing-screen-border)*2))]',
+    constrainInline && 'overflow-hidden max-w-(--radix-popover-content-available-width)',
     ...etc,
   );
 

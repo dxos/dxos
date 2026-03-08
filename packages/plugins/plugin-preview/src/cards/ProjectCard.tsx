@@ -10,7 +10,7 @@ import { Card } from '@dxos/react-ui';
 import { type Pipeline } from '@dxos/types';
 
 export const ProjectCard = ({ subject }: SurfaceComponentProps<Pipeline.Pipeline>) => {
-  const { name, image, description } = subject;
+  const { image, description } = subject;
 
   return (
     <Card.Content>
