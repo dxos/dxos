@@ -119,7 +119,12 @@ export const EditorMenuProvider = ({
             maxBlockSize: 36 * numItems + 10,
           }}
           // NOTE: We keep the focus in the editor, but Radix routes escape key.
-          onEscapeKeyDown={() => onCancel?.({ view: view! })}
+          onEscapeKeyDown={() => {
+            const currentView = viewRef.current;
+            if (currentView) {
+              onCancel?.({ view: currentView });
+            }
+          }}
           onOpenAutoFocus={(event) => event.preventDefault()}
         >
           <Popover.Viewport>
