@@ -146,17 +146,20 @@ const TRIGGER_NAME = 'PopoverTrigger';
 
 type PopoverTriggerElement = ElementRef<typeof Primitive.button>;
 type PrimitiveButtonProps = ComponentPropsWithoutRef<typeof Primitive.button>;
-interface PopoverTriggerProps extends PrimitiveButtonProps {}
+interface PopoverTriggerProps extends PrimitiveButtonProps {
+  asChild?: boolean;
+}
 
 const PopoverTrigger = forwardRef<PopoverTriggerElement, PopoverTriggerProps>(
   (props: ScopedProps<PopoverTriggerProps>, forwardedRef) => {
-    const { __scopePopover, ...triggerProps } = props;
+    const { __scopePopover, asChild, ...triggerProps } = props;
     const context = usePopoverContext(TRIGGER_NAME, __scopePopover);
     const popperScope = usePopperScope(__scopePopover);
     const composedTriggerRef = useComposedRefs(forwardedRef, context.triggerRef);
+    const Root = asChild ? Slot : Primitive.button;
 
     const trigger = (
-      <Primitive.button
+      <Root
         type='button'
         aria-haspopup='dialog'
         aria-expanded={context.open}

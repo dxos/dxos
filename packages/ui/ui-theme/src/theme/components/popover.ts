@@ -25,10 +25,11 @@ export const popoverContent: ComponentFunction<PopoverStyleProps> = ({ elevation
 export const popoverViewport: ComponentFunction<PopoverStyleProps> = ({ constrainBlock, constrainInline }, ...etc) =>
   mx(
     'flex flex-col min-h-0 min-w-popover-min-width',
+    (constrainBlock || constrainInline) && 'overflow-hidden',
     // Ensures it respects available height from Radix (or 100dvh).
     constrainBlock &&
-      'overflow-hidden max-h-[min(var(--radix-popover-content-available-height),calc(100dvh-var(--spacing-screen-border)*2))]',
-    constrainInline && 'overflow-hidden max-w-(--radix-popover-content-available-width)',
+      'max-h-[min(var(--radix-popover-content-available-height),calc(100dvh-var(--spacing-screen-border)*2))]',
+    constrainInline && 'max-w-(--radix-popover-content-available-width)',
     ...etc,
   );
 

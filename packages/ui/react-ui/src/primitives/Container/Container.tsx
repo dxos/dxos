@@ -4,9 +4,9 @@
 
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import React, { type CSSProperties, type PropsWithChildren, forwardRef } from 'react';
+import React, { type CSSProperties, forwardRef } from 'react';
 
-import { type SlottableClassName, type SlottableProps } from '@dxos/ui-types';
+import { type SlottableProps } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
 
@@ -16,19 +16,17 @@ import { useThemeContext } from '../../hooks';
 
 const CONTAINER_MAIN_NAME = 'Container.Main';
 
-type MainProps = SlottableClassName<
-  PropsWithChildren<{
-    role?: string;
-    toolbar?: boolean;
-    statusbar?: boolean;
-  }>
->;
+type MainProps = SlottableProps<HTMLDivElement> & {
+  toolbar?: boolean;
+  statusbar?: boolean;
+};
 
 const Main = forwardRef<HTMLDivElement, MainProps>(
-  ({ classNames, className, children, role, toolbar, statusbar, ...props }, forwardedRef) => {
+  ({ classNames, className, asChild, children, role, toolbar, statusbar, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
+    const Root = asChild ? Slot : Primitive.div;
     return (
-      <div
+      <Root
         ref={forwardedRef}
         role={role ?? 'none'}
         {...props}
@@ -38,7 +36,7 @@ const Main = forwardRef<HTMLDivElement, MainProps>(
         className={tx('container.main', { toolbar }, [className, classNames])}
       >
         {children}
-      </div>
+      </Root>
     );
   },
 );
@@ -67,6 +65,11 @@ type ColumnProps = SlottableProps<HTMLDivElement> & { gutter?: GutterSize };
  * The `--gutter` CSS variable is set for nested components (Dialog, ScrollArea, Form.Viewport, etc.).
  * Use `gutter='rail'` for icon-slot row layouts (Card); `gutter='md'` for whitespace layouts (Dialog).
  * Direct children must use Container.Row (spans all 3 cols) or Container.Segment (center col only).
+ *
+ * NOTE: The theme applies a `dx-column` marker class to this element.
+ * ScrollArea.Root detects this via `[.dx-column_&]:col-span-full` to span all 3 grid columns,
+ * ensuring scroll content extends under the gutters rather than being confined to the center column.
+ * The `--gutter` CSS variable is also consumed by ScrollArea's `margin` option to align scrollbar spacing.
  */
 const Column = forwardRef<HTMLDivElement, ColumnProps>(
   ({ classNames, className, asChild, role, children, gutter = 'md', ...props }, forwardedRef) => {
