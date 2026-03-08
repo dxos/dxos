@@ -16,6 +16,13 @@ Update this document with the results of the following tasks:
 
 ## Phase 2
 
+- [ ] Audit the following react-ui components: Container, Dialog, Popover, Splitter, ScrollArea.
+  - [ ] Audit composibility and adherance to radix asChild slot pattern.
+  - [ ] Audit dx-expand and dx-container classes which deal with container/scrolling behavior.
+  - [ ] Recommend any changes that would make container/scrolling behavior more robust and easier to reason about.
+
+## Phase 3
+
 - [ ] Density audit.
 - [ ] Semantic color audit.
 
