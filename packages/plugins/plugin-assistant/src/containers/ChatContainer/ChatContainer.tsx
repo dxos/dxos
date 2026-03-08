@@ -44,10 +44,12 @@ export const ChatContainer = forwardRef<HTMLDivElement, ChatContainerProps>((pro
   }
 
   return (
-    <Panel.Root role={role} ref={forwardedRef}>
-      <Panel.Content asChild>
-        <ChatComponent.Root db={space?.db} chat={chat} processor={processor} onEvent={onEvent}>
+    <ChatComponent.Root db={space?.db} chat={chat} processor={processor} onEvent={onEvent}>
+      <Panel.Root role={role} ref={forwardedRef}>
+        <Panel.Toolbar asChild>
           <ChatComponent.Toolbar companionTo={companionTo} />
+        </Panel.Toolbar>
+        <Panel.Content asChild>
           <ChatComponent.Viewport classNames='dx-article'>
             <ChatComponent.Thread />
             <div role='none' className='p-4'>
@@ -60,8 +62,8 @@ export const ChatContainer = forwardRef<HTMLDivElement, ChatContainerProps>((pro
               />
             </div>
           </ChatComponent.Viewport>
-        </ChatComponent.Root>
-      </Panel.Content>
-    </Panel.Root>
+        </Panel.Content>
+      </Panel.Root>
+    </ChatComponent.Root>
   );
 });
