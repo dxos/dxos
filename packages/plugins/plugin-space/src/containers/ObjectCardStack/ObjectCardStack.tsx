@@ -7,7 +7,7 @@ import React, { forwardRef, useState } from 'react';
 import { Obj } from '@dxos/echo';
 import { type View } from '@dxos/echo';
 import { Filter, useQuery, useSchema } from '@dxos/react-client/echo';
-import { Card, Container, Message, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Card, Message, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 import { getTypenameFromQuery } from '@dxos/schema';
@@ -41,38 +41,42 @@ export const ObjectCardStack = forwardRef<HTMLDivElement, ObjectCardStackProps>(
   }
 
   return (
-    <Container.Main toolbar ref={forwardedRef}>
-      <Toolbar.Root />
-      {selectedObjects.length === 0 ? (
-        <Message.Root>
-          <Message.Title>{t('row details no selection label')}</Message.Title>
-        </Message.Root>
-      ) : (
-        <Mosaic.Root>
-          <Mosaic.Container
-            asChild
-            orientation='vertical'
-            autoScroll={viewport}
-            eventHandler={{ id: objectId, canDrop: () => true }}
-          >
-            <ScrollArea.Root orientation='vertical'>
-              <ScrollArea.Viewport ref={setViewport}>
-                <Mosaic.Stack
-                  items={selectedObjects}
-                  getId={(obj) => obj.id}
-                  Tile={({ ...props }) => (
-                    <Mosaic.Tile {...props}>
-                      <Card.Root>
-                        <ObjectForm object={props.data} schema={schema} />
-                      </Card.Root>
-                    </Mosaic.Tile>
-                  )}
-                />
-              </ScrollArea.Viewport>
-            </ScrollArea.Root>
-          </Mosaic.Container>
-        </Mosaic.Root>
-      )}
-    </Container.Main>
+    <Panel.Root ref={forwardedRef}>
+      <Panel.Toolbar asChild>
+        <Toolbar.Root />
+      </Panel.Toolbar>
+      <Panel.Content>
+        {selectedObjects.length === 0 ? (
+          <Message.Root>
+            <Message.Title>{t('row details no selection label')}</Message.Title>
+          </Message.Root>
+        ) : (
+          <Mosaic.Root>
+            <Mosaic.Container
+              asChild
+              orientation='vertical'
+              autoScroll={viewport}
+              eventHandler={{ id: objectId, canDrop: () => true }}
+            >
+              <ScrollArea.Root orientation='vertical'>
+                <ScrollArea.Viewport ref={setViewport}>
+                  <Mosaic.Stack
+                    items={selectedObjects}
+                    getId={(obj) => obj.id}
+                    Tile={({ ...props }) => (
+                      <Mosaic.Tile {...props}>
+                        <Card.Root>
+                          <ObjectForm object={props.data} schema={schema} />
+                        </Card.Root>
+                      </Mosaic.Tile>
+                    )}
+                  />
+                </ScrollArea.Viewport>
+              </ScrollArea.Root>
+            </Mosaic.Container>
+          </Mosaic.Root>
+        )}
+      </Panel.Content>
+    </Panel.Root>
   );
 });

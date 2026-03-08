@@ -11,7 +11,7 @@ import { Obj } from '@dxos/echo';
 import { type FunctionDefinition } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { invokeFunctionWithTracing, useComputeRuntimeCallback } from '@dxos/plugin-automation';
-import { Container, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 
 import { TemplateEditor } from '../../components';
@@ -45,11 +45,15 @@ export const PromptArticle = ({ role, subject }: PromptArticleProps) => {
   );
 
   return (
-    <Container.Main role={role} toolbar>
-      <Toolbar.Root disabled={!hasAttention} onClick={handleRun}>
-        <Toolbar.IconButton iconOnly icon='ph--play--regular' label={t('run prompt label')} onClick={handleRun} />
-      </Toolbar.Root>
-      <TemplateEditor id={subject.id} template={subject.instructions} classNames='dx-article' />
-    </Container.Main>
+    <Panel.Root role={role}>
+      <Panel.Toolbar asChild>
+        <Toolbar.Root disabled={!hasAttention} onClick={handleRun}>
+          <Toolbar.IconButton iconOnly icon='ph--play--regular' label={t('run prompt label')} onClick={handleRun} />
+        </Toolbar.Root>
+      </Panel.Toolbar>
+      <Panel.Content asChild>
+        <TemplateEditor id={subject.id} template={subject.instructions} classNames='dx-article' />
+      </Panel.Content>
+    </Panel.Root>
   );
 };

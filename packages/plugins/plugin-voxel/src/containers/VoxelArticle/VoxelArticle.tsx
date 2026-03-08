@@ -6,7 +6,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { useObject } from '@dxos/echo-react';
-import { Container } from '@dxos/react-ui';
+import { Panel } from '@dxos/react-ui';
 import { type Hue } from '@dxos/ui-theme';
 
 import { DEFAULT_HUE, type ToolMode, VoxelEditor, VoxelToolbar } from '../../components';
@@ -60,31 +60,35 @@ export const VoxelArticle = ({ subject: world }: VoxelArticleProps) => {
   }, [updateVoxels]);
 
   return (
-    <Container.Main toolbar>
-      <VoxelToolbar
-        toolMode={toolMode}
-        selectedHue={selectedHue}
-        onToolModeChange={setToolMode}
-        onHueChange={setSelectedHue}
-        onClear={handleClear}
-      />
-      <div className='relative grow'>
-        <VoxelEditor
-          voxels={voxels}
-          gridX={gridX}
-          gridY={gridY}
-          blockSize={blockSize}
+    <Panel.Root>
+      <Panel.Toolbar asChild>
+        <VoxelToolbar
           toolMode={toolMode}
           selectedHue={selectedHue}
-          onAddVoxel={handleAddVoxel}
-          onRemoveVoxel={handleRemoveVoxel}
+          onToolModeChange={setToolMode}
+          onHueChange={setSelectedHue}
+          onClear={handleClear}
         />
-        <div className='absolute bottom-4 left-1/2 -translate-x-1/2 pointer-events-none'>
-          <div className='px-3 py-1.5 text-xs text-description bg-base/80 dark:bg-neutral-800/80 backdrop-blur-sm rounded-full shadow-md border border-separator'>
-            {TOOL_HINTS[toolMode]}
+      </Panel.Toolbar>
+      <Panel.Content asChild>
+        <div className='relative grow'>
+          <VoxelEditor
+            voxels={voxels}
+            gridX={gridX}
+            gridY={gridY}
+            blockSize={blockSize}
+            toolMode={toolMode}
+            selectedHue={selectedHue}
+            onAddVoxel={handleAddVoxel}
+            onRemoveVoxel={handleRemoveVoxel}
+          />
+          <div className='absolute bottom-4 left-1/2 -translate-x-1/2 pointer-events-none'>
+            <div className='px-3 py-1.5 text-xs text-description bg-base/80 dark:bg-neutral-800/80 backdrop-blur-sm rounded-full shadow-md border border-separator'>
+              {TOOL_HINTS[toolMode]}
+            </div>
           </div>
         </div>
-      </div>
-    </Container.Main>
+      </Panel.Content>
+    </Panel.Root>
   );
 };

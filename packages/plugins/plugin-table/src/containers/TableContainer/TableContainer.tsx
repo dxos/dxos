@@ -15,7 +15,7 @@ import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { SpaceOperation } from '@dxos/plugin-space/types';
 import { useQuery, useSchema } from '@dxos/react-client/echo';
-import { Container } from '@dxos/react-ui';
+import { Panel } from '@dxos/react-ui';
 import {
   Table as TableComponent,
   type TableController,
@@ -159,26 +159,30 @@ export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(
     );
 
     return (
-      <Container.Main toolbar role={role} ref={forwardedRef}>
-        <TableToolbar
-          attendableId={Obj.getDXN(object).toString()}
-          customActions={customActions}
-          viewDirty={model?.getViewDirty()}
-          onAdd={handleInsertRow}
-          onSave={handleSave}
-        />
-        <TableComponent.Root role={role}>
-          <TableComponent.Main
-            key={Obj.getDXN(object).toString()}
-            ref={tableRef}
-            model={model}
-            presentation={presentation}
-            schema={schema}
-            onCreate={handleCreate}
-            onRowClick={handleRowClick}
+      <Panel.Root role={role} ref={forwardedRef}>
+        <Panel.Toolbar asChild>
+          <TableToolbar
+            attendableId={Obj.getDXN(object).toString()}
+            customActions={customActions}
+            viewDirty={model?.getViewDirty()}
+            onAdd={handleInsertRow}
+            onSave={handleSave}
           />
-        </TableComponent.Root>
-      </Container.Main>
+        </Panel.Toolbar>
+        <Panel.Content asChild>
+          <TableComponent.Root role={role}>
+            <TableComponent.Main
+              key={Obj.getDXN(object).toString()}
+              ref={tableRef}
+              model={model}
+              presentation={presentation}
+              schema={schema}
+              onCreate={handleCreate}
+              onRowClick={handleRowClick}
+            />
+          </TableComponent.Root>
+        </Panel.Content>
+      </Panel.Root>
     );
   },
 );

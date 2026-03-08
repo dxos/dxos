@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { Container } from '@dxos/react-ui';
+import { Panel } from '@dxos/react-ui';
 
 import { Outline } from '../../components/Outline';
 import { type Outline as OutlineType } from '../../types';
@@ -16,8 +16,10 @@ export const OutlineContainer = ({ role, subject: outline }: SurfaceComponentPro
   }
 
   return (
-    <Container.Main role={role}>
-      <Outline id={outline.content.target.id} text={outline.content.target} classNames='dx-article' />
-    </Container.Main>
+    <Panel.Root role={role}>
+      <Panel.Content asChild>
+        <Outline id={outline.content.target.id} text={outline.content.target} classNames='dx-article' />
+      </Panel.Content>
+    </Panel.Root>
   );
 };

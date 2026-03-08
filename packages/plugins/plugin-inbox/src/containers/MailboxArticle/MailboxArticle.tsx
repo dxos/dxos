@@ -15,8 +15,7 @@ import { DXN } from '@dxos/keys';
 import { AttentionOperation } from '@dxos/plugin-attention/types';
 import { ATTENDABLE_PATH_SEPARATOR, DeckOperation } from '@dxos/plugin-deck/types';
 import { Filter, useQuery } from '@dxos/react-client/echo';
-import { ElevationProvider, IconButton, useTranslation } from '@dxos/react-ui';
-import { Container } from '@dxos/react-ui';
+import { ElevationProvider, IconButton, Panel, useTranslation } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
 import { QueryEditor } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
@@ -185,57 +184,61 @@ export const MailboxArticle = ({ subject: feed, filter: filterProp, attendableId
   }, [filterVisible, filterProp, parser]);
 
   return (
-    <Container.Main toolbar>
-      <ElevationProvider elevation='positioned'>
-        <Menu.Root {...menuActions} attendableId={id}>
-          <Menu.Toolbar />
-          {filterVisible.value && (
-            <div
-              role='none'
-              className='grid grid-cols-[1fr_min-content] w-full items-center p-1 gap-1 border-b border-separator'
-            >
-              <QueryEditor
-                ref={filterEditorRef}
-                classNames='min-w-0 ps-1'
-                autoFocus
-                db={db}
-                tags={tagMap}
-                value={filterText}
-                onChange={setFilterText}
-              />
-              <div role='none' className='flex shrink-0 gap-1 items-center'>
-                <IconButton
-                  ref={filterSaveButtonRef}
-                  disabled={!filter}
-                  label={t('mailbox toolbar save button label')}
-                  icon='ph--folder-plus--regular'
-                  iconOnly
-                  onClick={() => filter && handleAction({ type: 'save', filter: filterText })}
+    <Panel.Root>
+      <Panel.Toolbar>
+        <ElevationProvider elevation='positioned'>
+          <Menu.Root {...menuActions} attendableId={id}>
+            <Menu.Toolbar />
+            {filterVisible.value && (
+              <div
+                role='none'
+                className='grid grid-cols-[1fr_min-content] w-full items-center p-1 gap-1 border-b border-separator'
+              >
+                <QueryEditor
+                  ref={filterEditorRef}
+                  classNames='min-w-0 ps-1'
+                  autoFocus
+                  db={db}
+                  tags={tagMap}
+                  value={filterText}
+                  onChange={setFilterText}
                 />
-                <IconButton
-                  label={t('mailbox toolbar clear button label')}
-                  icon='ph--x--regular'
-                  iconOnly
-                  onClick={() => handleCancel()}
-                />
+                <div role='none' className='flex shrink-0 gap-1 items-center'>
+                  <IconButton
+                    ref={filterSaveButtonRef}
+                    disabled={!filter}
+                    label={t('mailbox toolbar save button label')}
+                    icon='ph--folder-plus--regular'
+                    iconOnly
+                    onClick={() => filter && handleAction({ type: 'save', filter: filterText })}
+                  />
+                  <IconButton
+                    label={t('mailbox toolbar clear button label')}
+                    icon='ph--x--regular'
+                    iconOnly
+                    onClick={() => handleCancel()}
+                  />
+                </div>
               </div>
-            </div>
-          )}
-        </Menu.Root>
-      </ElevationProvider>
+            )}
+          </Menu.Root>
+        </ElevationProvider>
+      </Panel.Toolbar>
 
-      {messagesWithTags && messagesWithTags.length > 0 ? (
-        <MailboxComponent
-          id={id}
-          messages={messagesWithTags}
-          labels={mergedLabels}
-          currentMessageId={currentMessageId}
-          onAction={handleAction}
-        />
-      ) : (
-        <MailboxEmpty feed={feed} />
-      )}
-    </Container.Main>
+      <Panel.Content>
+        {messagesWithTags && messagesWithTags.length > 0 ? (
+          <MailboxComponent
+            id={id}
+            messages={messagesWithTags}
+            labels={mergedLabels}
+            currentMessageId={currentMessageId}
+            onAction={handleAction}
+          />
+        ) : (
+          <MailboxEmpty feed={feed} />
+        )}
+      </Panel.Content>
+    </Panel.Root>
   );
 };
 

@@ -11,8 +11,7 @@ import { Filter, Obj, Query } from '@dxos/echo';
 import { Graph, Node, useActionRunner, useConnections } from '@dxos/plugin-graph';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { ScrollArea, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Container } from '@dxos/react-ui';
-import { Card } from '@dxos/react-ui';
+import { Card, Panel } from '@dxos/react-ui';
 import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { Text } from '@dxos/schema';
@@ -28,22 +27,24 @@ export const SpaceMain = ({ space }: { space: Space }) => {
   const { items, handleSearch } = useSpaceItems(space);
 
   return (
-    <Container.Main toolbar>
-      <SearchList.Root onSearch={handleSearch}>
-        <Toolbar.Root>
-          <SearchList.Input placeholder={t('search placeholder')} />
-        </Toolbar.Root>
-        <SearchList.Content>
-          <Mosaic.Container asChild>
-            <ScrollArea.Root orientation='vertical'>
-              <ScrollArea.Viewport classNames='p-2'>
-                <Mosaic.Stack items={items} getId={(node) => node.id} Tile={NodeTile} />
-              </ScrollArea.Viewport>
-            </ScrollArea.Root>
-          </Mosaic.Container>
-        </SearchList.Content>
-      </SearchList.Root>
-    </Container.Main>
+    <Panel.Root>
+      <Panel.Content asChild>
+        <SearchList.Root onSearch={handleSearch}>
+          <Toolbar.Root>
+            <SearchList.Input placeholder={t('search placeholder')} />
+          </Toolbar.Root>
+          <SearchList.Content>
+            <Mosaic.Container asChild>
+              <ScrollArea.Root orientation='vertical'>
+                <ScrollArea.Viewport classNames='p-2'>
+                  <Mosaic.Stack items={items} getId={(node) => node.id} Tile={NodeTile} />
+                </ScrollArea.Viewport>
+              </ScrollArea.Root>
+            </Mosaic.Container>
+          </SearchList.Content>
+        </SearchList.Root>
+      </Panel.Content>
+    </Panel.Root>
   );
 };
 

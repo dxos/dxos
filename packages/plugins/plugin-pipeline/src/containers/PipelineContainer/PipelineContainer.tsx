@@ -16,7 +16,7 @@ import {
 } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { ATTENDABLE_PATH_SEPARATOR, DeckOperation } from '@dxos/plugin-deck/types';
-import { Container } from '@dxos/react-ui';
+import { Panel } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { useMenu } from '@dxos/react-ui-menu';
 import { type Pipeline as PipelineType } from '@dxos/types';
@@ -43,12 +43,14 @@ export const PipelineContainer = ({ role, subject: pipeline }: PipelineContainer
   );
 
   return (
-    <Container.Main role={role} toolbar>
-      <PipelineComponent.Root Item={PipelineItem} model={model} onAddColumn={handleColumnAdd}>
-        <PipelineComponent.Toolbar disabled={!hasAttention} />
-        <PipelineComponent.Content pipeline={pipeline} />
-      </PipelineComponent.Root>
-    </Container.Main>
+    <Panel.Root role={role}>
+      <Panel.Content asChild>
+        <PipelineComponent.Root Item={PipelineItem} model={model} onAddColumn={handleColumnAdd}>
+          <PipelineComponent.Toolbar disabled={!hasAttention} />
+          <PipelineComponent.Content pipeline={pipeline} />
+        </PipelineComponent.Root>
+      </Panel.Content>
+    </Panel.Root>
   );
 };
 

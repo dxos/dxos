@@ -1,11 +1,17 @@
 # Container Audit
 
+## Goals
+
+Plugin development: 
+- Uses a standard set of react-ui containers.
+- Does not use raw HTML element (e.g., <div>) or className/classNames props.
+- Progressively factor out components into modular react-ui-xxx libs.
+- Surface containers just orchestrate composer framework capabilities.
+
 ## ISSUES
 
 - Nomralize Radix Content/Viewport.
-  - TODO: Map composition structures on to Column.Row/Segment with ScrollArea
-- Common pattern for all scroll containers (grow via dx-container/dx-expand) and use ScrollArea.
-- Integrate with Column.
+  - TODO: Audit all radix Content/Viewports and check composition with ScrollArea
 
 ## Top-level containers
 
@@ -16,7 +22,7 @@
 
 ## Container primitives
 
-- Article
+- Panel
 - Column
 
 ## Layout primitives
@@ -28,4 +34,6 @@
 ## Tasks
 
 - [x] Rename Container.Column to Column.Root; move Container Row, Segment to Column
-- [ ] Rename Container.Main to Article.Root
+- [ ] Rename Container.Main to Panel.Root
+- [ ] Move dx-article and scroll option to Panel.Main prop
+- [ ] Audit radix primitives; rename `Root` to `Comp` for all radix asChild elements

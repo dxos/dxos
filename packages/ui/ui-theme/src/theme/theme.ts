@@ -32,7 +32,7 @@ import {
   tooltipTheme,
   treegridTheme,
 } from './components';
-import { columnTheme, containerTheme } from './primitives';
+import { columnTheme, panelTheme } from './primitives';
 
 export const defaultTheme: Theme<Record<string, any>> = {
   themeName: () => 'default',
@@ -42,7 +42,7 @@ export const defaultTheme: Theme<Record<string, any>> = {
   //
 
   column: columnTheme,
-  container: containerTheme,
+  panel: panelTheme,
 
   //
   // Components

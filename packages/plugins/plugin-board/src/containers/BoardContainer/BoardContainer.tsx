@@ -10,7 +10,7 @@ import { Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { useQuery } from '@dxos/react-client/echo';
-import { Container } from '@dxos/react-ui';
+import { Panel } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { Board, type BoardController, type BoardRootProps, type Position } from '@dxos/react-ui-board';
 import { ObjectPicker, type ObjectPickerContentProps } from '@dxos/react-ui-form';
@@ -128,21 +128,23 @@ export const BoardContainer = ({ role, subject: board }: BoardContainerProps) =>
           setPickerState(nextOpen ? { position: DEFAULT_POSITION } : null);
         }}
       >
-        <Container.Main role={role} toolbar>
-          <Board.Toolbar disabled={!hasAttention} />
-          <Board.Container>
-            <Board.Viewport classNames='border-none'>
-              <Board.Backdrop />
-              <Board.Content>
-                {items?.map((item, index) => (
-                  <Board.Cell item={item} key={index} layout={board.layout?.cells[item.id] ?? { x: 0, y: 0 }}>
-                    <Surface.Surface role='card--content' data={{ subject: item }} limit={1} />
-                  </Board.Cell>
-                ))}
-              </Board.Content>
-            </Board.Viewport>
-          </Board.Container>
-        </Container.Main>
+        <Panel.Root role={role}>
+          <Panel.Toolbar asChild><Board.Toolbar disabled={!hasAttention} /></Panel.Toolbar>
+          <Panel.Content asChild>
+            <Board.Container>
+              <Board.Viewport classNames='border-none'>
+                <Board.Backdrop />
+                <Board.Content>
+                  {items?.map((item, index) => (
+                    <Board.Cell item={item} key={index} layout={board.layout?.cells[item.id] ?? { x: 0, y: 0 }}>
+                      <Surface.Surface role='card--content' data={{ subject: item }} limit={1} />
+                    </Board.Cell>
+                  ))}
+                </Board.Content>
+              </Board.Viewport>
+            </Board.Container>
+          </Panel.Content>
+        </Panel.Root>
         <ObjectPicker.Content options={options} onSelect={handleSelect} classNames='dx-card-popover-width' />
         <ObjectPicker.VirtualTrigger virtualRef={addTriggerRef} />
       </ObjectPicker.Root>

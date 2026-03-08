@@ -7,8 +7,7 @@ import React, { useMemo } from 'react';
 import { Surface } from '@dxos/app-framework/ui';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { type Node, useNode } from '@dxos/plugin-graph';
-import { Container } from '@dxos/react-ui';
-import { ErrorFallback } from '@dxos/react-ui';
+import { ErrorFallback, Panel } from '@dxos/react-ui';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
 import { Menu, useMenuActions } from '@dxos/react-ui-menu';
 
@@ -53,12 +52,16 @@ export const Drawer = () => {
   const menu = useMenuActions(actions);
 
   return (
-    <Container.Main toolbar>
-      <Menu.Root {...menu} alwaysActive onAction={onAction}>
-        <Menu.Toolbar density='coarse' />
-      </Menu.Root>
-      <Surface.Surface role='article' data={data} limit={1} fallback={ErrorFallback} placeholder={placeholder} />
-    </Container.Main>
+    <Panel.Root>
+      <Panel.Toolbar>
+        <Menu.Root {...menu} alwaysActive onAction={onAction}>
+          <Menu.Toolbar density='coarse' />
+        </Menu.Root>
+      </Panel.Toolbar>
+      <Panel.Content asChild>
+        <Surface.Surface role='article' data={data} limit={1} fallback={ErrorFallback} placeholder={placeholder} />
+      </Panel.Content>
+    </Panel.Root>
   );
 };
 

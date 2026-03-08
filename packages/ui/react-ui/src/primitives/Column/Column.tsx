@@ -129,7 +129,12 @@ const Segment = forwardRef<HTMLDivElement, ColumnSegmentProps>(
     }
 
     return (
-      <Component {...props} className={tx('column.segment', {}, [className, classNames])} role={role} ref={forwardedRef}>
+      <Component
+        {...props}
+        className={tx('column.segment', {}, [className, classNames])}
+        role={role}
+        ref={forwardedRef}
+      >
         <div className='contents'>{children}</div>
       </Component>
     );

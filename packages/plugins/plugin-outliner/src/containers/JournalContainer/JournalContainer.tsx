@@ -5,8 +5,7 @@
 import React, { useCallback, useRef } from 'react';
 
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { useMediaQuery } from '@dxos/react-ui';
-import { Container } from '@dxos/react-ui';
+import { useMediaQuery, Panel } from '@dxos/react-ui';
 import { Calendar, type CalendarController } from '@dxos/react-ui-calendar';
 import { mx } from '@dxos/ui-theme';
 
@@ -26,27 +25,29 @@ export const JournalContainer = ({ role, subject: journal, showCalendar = true }
   }, []);
 
   return (
-    <Container.Main role={role}>
-      <div
-        className={mx(
-          showCalendar
-            ? isNotMobile
-              ? 'h-full grid grid-cols-[min-content_1fr] overflow-hidden'
-              : 'flex flex-col overflow-hidden'
-            : 'contents',
-        )}
-      >
-        {showCalendar && (
-          <Calendar.Root ref={controllerRef}>
-            <Calendar.Viewport>
-              <Calendar.Toolbar />
-              <Calendar.Grid rows={isNotMobile ? undefined : 6} />
-            </Calendar.Viewport>
-          </Calendar.Root>
-        )}
+    <Panel.Root role={role}>
+      <Panel.Content asChild>
+        <div
+          className={mx(
+            showCalendar
+              ? isNotMobile
+                ? 'h-full grid grid-cols-[min-content_1fr] overflow-hidden'
+                : 'flex flex-col overflow-hidden'
+              : 'contents',
+          )}
+        >
+          {showCalendar && (
+            <Calendar.Root ref={controllerRef}>
+              <Calendar.Viewport>
+                <Calendar.Toolbar />
+                <Calendar.Grid rows={isNotMobile ? undefined : 6} />
+              </Calendar.Viewport>
+            </Calendar.Root>
+          )}
 
-        <JournalComponent journal={journal} classNames='dx-article' onSelect={handleSelect} />
-      </div>
-    </Container.Main>
+          <JournalComponent journal={journal} classNames='dx-article' onSelect={handleSelect} />
+        </div>
+      </Panel.Content>
+    </Panel.Root>
   );
 };

@@ -5,7 +5,7 @@
 import React, { useCallback, useRef, useState } from 'react';
 
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { Container, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { type Player } from '@dxos/react-ui-gameboard';
 import { mx } from '@dxos/ui-theme';
 
@@ -27,43 +27,45 @@ export const ChessArticle = ({ role, subject: game }: ChessArticleProps) => {
   }, []);
 
   return (
-    <Container.Main toolbar classNames='@container'>
-      <Chessboard.Root game={game} ref={controller}>
-        <Toolbar.Root>
-          <Toolbar.IconButton
-            icon='ph--info--regular'
-            iconOnly
-            label={t('toggle info button')}
-            disabled={open}
-            classNames={mx('invisible @3xl:visible')}
-            onClick={() => setOpen((open) => !open)}
-          />
-        </Toolbar.Root>
-        <div
-          className={mx(
-            'grid h-full w-full gap-2',
-            open && '@3xl:grid-cols-[1fr_320px]',
-            role === 'section' && 'aspect-square',
-            role === 'section' && open && '@3xl:aspect-auto',
-          )}
-        >
-          <Chessboard.Content>
-            <Chessboard.Board classNames='m-4 rounded-xs overflow-hidden' orientation={orientation} />
-          </Chessboard.Content>
-          {open && (
-            <div className='hidden @3xl:flex flex-col p-8 justify-center items-center overflow-hidden'>
-              <Chessboard.Info
-                orientation={orientation}
-                min={8}
-                max={8}
-                onOrientationChange={setOrientation}
-                onClose={() => setOpen(false)}
-                onSelect={handleSelect}
-              />
-            </div>
-          )}
-        </div>
-      </Chessboard.Root>
-    </Container.Main>
+    <Panel.Root role={role} classNames='@container'>
+      <Panel.Content asChild>
+        <Chessboard.Root game={game} ref={controller}>
+          <Toolbar.Root>
+            <Toolbar.IconButton
+              icon='ph--info--regular'
+              iconOnly
+              label={t('toggle info button')}
+              disabled={open}
+              classNames={mx('invisible @3xl:visible')}
+              onClick={() => setOpen((open) => !open)}
+            />
+          </Toolbar.Root>
+          <div
+            className={mx(
+              'grid h-full w-full gap-2',
+              open && '@3xl:grid-cols-[1fr_320px]',
+              role === 'section' && 'aspect-square',
+              role === 'section' && open && '@3xl:aspect-auto',
+            )}
+          >
+            <Chessboard.Content>
+              <Chessboard.Board classNames='m-4 rounded-xs overflow-hidden' orientation={orientation} />
+            </Chessboard.Content>
+            {open && (
+              <div className='hidden @3xl:flex flex-col p-8 justify-center items-center overflow-hidden'>
+                <Chessboard.Info
+                  orientation={orientation}
+                  min={8}
+                  max={8}
+                  onOrientationChange={setOrientation}
+                  onClose={() => setOpen(false)}
+                  onSelect={handleSelect}
+                />
+              </div>
+            )}
+          </div>
+        </Chessboard.Root>
+      </Panel.Content>
+    </Panel.Root>
   );
 };

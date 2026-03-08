@@ -11,8 +11,7 @@ import { AppCapabilities, CollaborationOperation, LayoutOperation } from '@dxos/
 import { Filter, Obj, Query, Relation } from '@dxos/echo';
 import { Ref, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
-import { Container } from '@dxos/react-ui';
+import { Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttended } from '@dxos/react-ui-attention';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { AnchoredTo, Thread } from '@dxos/types';
@@ -171,24 +170,28 @@ export const ThreadCompanion = ({ subject }: { subject: any }) => {
       orientation='horizontal'
       onValueChange={onChangeViewState}
     >
-      <Container.Main toolbar>
-        <Toolbar.Root>
-          <Tabs.Tablist>
-            <Tabs.Tab value='unresolved' classNames='text-sm'>
-              {t('show unresolved label')}
-            </Tabs.Tab>
-            <Tabs.Tab value='all' classNames='text-sm'>
-              {t('show all label')}
-            </Tabs.Tab>
-          </Tabs.Tablist>
-        </Toolbar.Root>
-        <ScrollArea.Root thin>
-          <ScrollArea.Viewport>
-            <Tabs.Tabpanel value='all'>{showResolvedThreads && comments}</Tabs.Tabpanel>
-            <Tabs.Tabpanel value='unresolved'>{!showResolvedThreads && comments}</Tabs.Tabpanel>
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
-      </Container.Main>
+      <Panel.Root>
+        <Panel.Toolbar asChild>
+          <Toolbar.Root>
+            <Tabs.Tablist>
+              <Tabs.Tab value='unresolved' classNames='text-sm'>
+                {t('show unresolved label')}
+              </Tabs.Tab>
+              <Tabs.Tab value='all' classNames='text-sm'>
+                {t('show all label')}
+              </Tabs.Tab>
+            </Tabs.Tablist>
+          </Toolbar.Root>
+        </Panel.Toolbar>
+        <Panel.Content asChild>
+          <ScrollArea.Root thin>
+            <ScrollArea.Viewport>
+              <Tabs.Tabpanel value='all'>{showResolvedThreads && comments}</Tabs.Tabpanel>
+              <Tabs.Tabpanel value='unresolved'>{!showResolvedThreads && comments}</Tabs.Tabpanel>
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
+        </Panel.Content>
+      </Panel.Root>
     </Tabs.Root>
   );
 };
