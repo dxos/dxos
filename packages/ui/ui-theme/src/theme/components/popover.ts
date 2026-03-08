@@ -4,8 +4,8 @@
 
 import { type ComponentFunction, type Elevation, type Theme } from '@dxos/ui-types';
 
+import { focusRing, surfaceShadow, surfaceZIndex } from '../../fragments';
 import { mx } from '../../util';
-import { focusRing, surfaceShadow, surfaceZIndex } from '../fragments';
 
 export type PopoverStyleProps = Partial<{
   constrainBlock: boolean;

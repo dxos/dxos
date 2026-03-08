@@ -3,5 +3,6 @@
 //
 
 export * from './defs';
-export * from './theme/index';
+export * from './fragments';
+export * from './theme';
 export * from './util';

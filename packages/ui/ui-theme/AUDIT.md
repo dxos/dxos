@@ -78,7 +78,7 @@ None
 - `dx-card-popover`
 - `dx-card-square`
 - `dx-contain-layout`
-- `dx-container-max-width`
+- `dx-article`
 - `dx-density-coarse`
 - `dx-overflow-anchor`
 - `dx-overflow-anchored`

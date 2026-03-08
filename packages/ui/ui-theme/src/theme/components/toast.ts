@@ -4,8 +4,8 @@
 
 import { type ComponentFunction, type Theme } from '@dxos/ui-types';
 
+import { focusRing, surfaceShadow } from '../../fragments';
 import { mx } from '../../util';
-import { focusRing, surfaceShadow } from '../fragments';
 
 export type ToastStyleProps = Partial<{
   srOnly: boolean;

@@ -17,7 +17,7 @@ export const OutlineContainer = ({ role, subject: outline }: SurfaceComponentPro
 
   return (
     <Container.Main role={role}>
-      <Outline id={outline.content.target.id} text={outline.content.target} classNames='dx-container-max-width' />
+      <Outline id={outline.content.target.id} text={outline.content.target} classNames='dx-article' />
     </Container.Main>
   );
 };
