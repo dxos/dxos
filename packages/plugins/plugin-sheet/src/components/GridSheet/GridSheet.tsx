@@ -3,6 +3,7 @@
 //
 
 import React, {
+  type ComponentPropsWithoutRef,
   type FocusEvent,
   type KeyboardEvent,
   type MouseEvent,
@@ -69,7 +70,7 @@ const sheetRowDefault = {
   grid: { size: defaultRowSize, resizeable: true },
 };
 
-export const GridSheet = () => {
+export const GridSheet = (props: ComponentPropsWithoutRef<'div'>) => {
   const { t } = useTranslation(meta.id);
   const { id, model, editing, setCursor, setRange, cursor, cursorFallbackRange, activeRefs, ignoreAttention } =
     useSheetContext();
@@ -317,7 +318,7 @@ export const GridSheet = () => {
   useSelectThreadOnCellFocus();
 
   return (
-    <div role='none' className='relative min-h-0'>
+    <div role='none' {...props} className='relative min-h-0'>
       <GridCellEditor getCellContent={getCellContent} extensions={extensions} onBlur={handleBlur} />
       <Grid.Content
         initialCells={initialCells}

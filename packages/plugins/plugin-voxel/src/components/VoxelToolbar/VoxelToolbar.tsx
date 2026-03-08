@@ -4,12 +4,12 @@
 
 import React from 'react';
 
-import { Toolbar } from '@dxos/react-ui';
+import { Toolbar, type ToolbarRootProps } from '@dxos/react-ui';
 import { type Hue } from '@dxos/ui-theme';
 
 import { PALETTE_STYLES, type ToolMode } from '../VoxelEditor';
 
-export type VoxelToolbarProps = {
+export type VoxelToolbarProps = ToolbarRootProps & {
   /** Currently selected tool mode. */
   toolMode: ToolMode;
   /** Currently selected hue. */
@@ -29,9 +29,16 @@ const TOOL_OPTIONS: { value: ToolMode; icon: string; label: string }[] = [
 ];
 
 /** Toolbar for the voxel editor with tool mode, color palette, and clear button. */
-export const VoxelToolbar = ({ toolMode, selectedHue, onToolModeChange, onHueChange, onClear }: VoxelToolbarProps) => {
+export const VoxelToolbar = ({
+  toolMode,
+  selectedHue,
+  onToolModeChange,
+  onHueChange,
+  onClear,
+  ...props
+}: VoxelToolbarProps) => {
   return (
-    <Toolbar.Root>
+    <Toolbar.Root {...props}>
       <Toolbar.ToggleGroup
         type='single'
         value={toolMode}

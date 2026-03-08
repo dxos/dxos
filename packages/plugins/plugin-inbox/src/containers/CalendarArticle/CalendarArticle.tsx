@@ -42,16 +42,19 @@ export const CalendarArticle = ({ role, subject: feed }: SurfaceComponentProps<F
     [singleSelect, invokePromise, id],
   );
 
+  // TODO(burdon): Create story.
   return (
     <Panel.Root role={role} classNames='@container'>
       <Panel.Content asChild>
         <div role='none' className='grid @2xl:grid-cols-[min-content_1fr] overflow-hidden'>
           <div role='none' className='hidden @2xl:flex'>
             <NaturalCalendar.Root>
-              <NaturalCalendar.Viewport classNames='grid grid-rows-[var(--dx-toolbar-size)_1fr]'>
-                <NaturalCalendar.Toolbar classNames='h-full border-b border-subdued-separator' />
+              <Panel.Toolbar asChild>
+                <NaturalCalendar.Toolbar />
+              </Panel.Toolbar>
+              <Panel.Content asChild>
                 <NaturalCalendar.Grid />
-              </NaturalCalendar.Viewport>
+              </Panel.Content>
             </NaturalCalendar.Root>
           </div>
 

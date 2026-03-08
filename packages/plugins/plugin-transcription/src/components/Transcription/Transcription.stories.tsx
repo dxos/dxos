@@ -31,7 +31,7 @@ import {
 import { translations } from '../../translations';
 import { renderByline } from '../../util';
 
-import { TranscriptView, type TranscriptViewProps } from './Transcript';
+import { Transcription, type TranscriptionProps } from './Transcription';
 
 faker.seed(1);
 
@@ -39,7 +39,7 @@ faker.seed(1);
  * Story wrapper with test controls.
  */
 const TranscriptContainer: FC<
-  TranscriptViewProps & {
+  TranscriptionProps & {
     running: boolean;
     onRunningChange: (running: boolean) => void;
     onReset?: () => void;
@@ -47,7 +47,7 @@ const TranscriptContainer: FC<
 > = ({ model, running, onRunningChange, onReset }) => {
   return (
     <div className='grid grid-rows-[1fr_40px] grow divide-y divide-separator'>
-      <TranscriptView model={model} />
+      <Transcription model={model} />
       <div className='grid grid-cols-[1fr_16rem] overflow-hidden'>
         <div className='flex items-center'>
           <SyntaxHighlighter language='json' className='text-sm'>
@@ -67,7 +67,7 @@ const TranscriptContainer: FC<
   );
 };
 
-type StoryProps = { messages?: Message.Message[] } & Pick<TranscriptViewProps, 'ignoreAttention' | 'attendableId'>;
+type StoryProps = { messages?: Message.Message[] } & Pick<TranscriptionProps, 'ignoreAttention' | 'attendableId'>;
 
 /**
  * Basic story mutates array of messages.
@@ -171,7 +171,7 @@ const QueueStoryWrapper = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-transcription/components/Transcript',
+  title: 'plugins/plugin-transcription/components/Transcription',
   decorators: [
     withTheme(),
     withLayout({ layout: 'fullscreen' }),

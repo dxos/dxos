@@ -3,7 +3,7 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import React, { type PropsWithChildren, useMemo, useState } from 'react';
+import React, { type ComponentPropsWithoutRef, type PropsWithChildren, useMemo, useState } from 'react';
 
 import { type DXN } from '@dxos/echo';
 import { Icon, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
@@ -82,15 +82,15 @@ MessageRoot.displayName = 'Message.Root';
 
 const MESSAGE_TOOLBAR_NAME = 'Message.Toolbar';
 
-type MessageToolbarProps = ThemedClassName<{}>;
+type MessageToolbarProps = ThemedClassName<ComponentPropsWithoutRef<typeof Menu.Root>>;
 
-export const MessageToolbar = ({ classNames }: MessageToolbarProps) => {
+export const MessageToolbar = ({ classNames, ...props }: MessageToolbarProps) => {
   const { attendableId, viewMode, setViewMode, onReply, onReplyAll, onForward } =
     useMessageContext(MESSAGE_TOOLBAR_NAME);
   const actions = useMessageToolbarActions({ viewMode, setViewMode, onReply, onReplyAll, onForward });
 
   return (
-    <Menu.Root {...actions} attendableId={attendableId}>
+    <Menu.Root {...props} {...actions} attendableId={attendableId}>
       <Menu.Toolbar classNames={classNames} />
     </Menu.Root>
   );
@@ -104,15 +104,17 @@ MessageToolbar.displayName = MESSAGE_TOOLBAR_NAME;
 
 const MESSAGE_VIEWPORT_NAME = 'Message.Viewport';
 
-type MessageViewportProps = ThemedClassName<PropsWithChildren<{ role?: string }>>;
+type MessageViewportProps = ThemedClassName<PropsWithChildren<ComponentPropsWithoutRef<'div'>>>;
 
-const MessageViewport = ({ classNames, children, role }: MessageViewportProps) => {
+const MessageViewport = ({ classNames, children, className, role, ...props }: MessageViewportProps) => {
   return (
     <div
       role='none'
+      {...props}
       className={mx(
         'overflow-hidden grid',
         role === 'section' ? 'grid-rows-[min-content_min-content]' : 'grid-rows-[min-content_1fr]',
+        className,
         classNames,
       )}
     >

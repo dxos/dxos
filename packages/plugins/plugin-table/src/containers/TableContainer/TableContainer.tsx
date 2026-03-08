@@ -159,18 +159,18 @@ export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(
     );
 
     return (
-      <Panel.Root role={role} ref={forwardedRef}>
-        <Panel.Toolbar asChild>
-          <TableToolbar
-            attendableId={Obj.getDXN(object).toString()}
-            customActions={customActions}
-            viewDirty={model?.getViewDirty()}
-            onAdd={handleInsertRow}
-            onSave={handleSave}
-          />
-        </Panel.Toolbar>
-        <Panel.Content asChild>
-          <TableComponent.Root role={role}>
+      <TableComponent.Root>
+        <Panel.Root role={role} ref={forwardedRef}>
+          <Panel.Toolbar asChild>
+            <TableToolbar
+              attendableId={Obj.getDXN(object).toString()}
+              customActions={customActions}
+              viewDirty={model?.getViewDirty()}
+              onAdd={handleInsertRow}
+              onSave={handleSave}
+            />
+          </Panel.Toolbar>
+          <Panel.Content asChild>
             <TableComponent.Main
               key={Obj.getDXN(object).toString()}
               ref={tableRef}
@@ -180,9 +180,9 @@ export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(
               onCreate={handleCreate}
               onRowClick={handleRowClick}
             />
-          </TableComponent.Root>
-        </Panel.Content>
-      </Panel.Root>
+          </Panel.Content>
+        </Panel.Root>
+      </TableComponent.Root>
     );
   },
 );

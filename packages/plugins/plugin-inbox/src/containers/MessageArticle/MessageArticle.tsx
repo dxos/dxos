@@ -63,24 +63,26 @@ export const MessageArticle = ({
   }, [db, invokePromise, message]);
 
   return (
-    <Panel.Root role={role}>
-      <Panel.Content asChild>
-        <Message.Root
-          attendableId={Obj.getDXN(feed).toString()}
-          viewMode={viewMode}
-          message={message}
-          sender={sender}
-          onReply={handleReply}
-          onReplyAll={handleReplyAll}
-          onForward={handleForward}
-        >
+    <Message.Root
+      attendableId={Obj.getDXN(feed).toString()}
+      viewMode={viewMode}
+      message={message}
+      sender={sender}
+      onReply={handleReply}
+      onReplyAll={handleReplyAll}
+      onForward={handleForward}
+    >
+      <Panel.Root role={role}>
+        <Panel.Toolbar asChild>
           <Message.Toolbar />
+        </Panel.Toolbar>
+        <Panel.Content asChild>
           <Message.Viewport role={role}>
             <Message.Header onContactCreate={handleContactCreate} />
             <Message.Content />
           </Message.Viewport>
-        </Message.Root>
-      </Panel.Content>
-    </Panel.Root>
+        </Panel.Content>
+      </Panel.Root>
+    </Message.Root>
   );
 };

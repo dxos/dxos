@@ -39,12 +39,14 @@ export const CollectionArticle = ({
   const { items, handleSearch } = useCollectionItems(subject, resolveMetadata);
 
   return (
-    <Panel.Root>
-      <Panel.Content asChild>
-        <SearchList.Root onSearch={handleSearch}>
+    <SearchList.Root onSearch={handleSearch}>
+      <Panel.Root>
+        <Panel.Toolbar asChild>
           <Toolbar.Root>
             <SearchList.Input placeholder={t('search placeholder')} />
           </Toolbar.Root>
+        </Panel.Toolbar>
+        <Panel.Content asChild>
           <SearchList.Content>
             <Mosaic.Container asChild>
               <ScrollArea.Root orientation='vertical'>
@@ -54,9 +56,9 @@ export const CollectionArticle = ({
               </ScrollArea.Root>
             </Mosaic.Container>
           </SearchList.Content>
-        </SearchList.Root>
-      </Panel.Content>
-    </Panel.Root>
+        </Panel.Content>
+      </Panel.Root>
+    </SearchList.Root>
   );
 };
 

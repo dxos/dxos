@@ -4,7 +4,14 @@
 
 import { type Atom, RegistryContext } from '@effect-atom/atom-react';
 import { createContext } from '@radix-ui/react-context';
-import React, { type ComponentType, type PropsWithChildren, useCallback, useContext, useMemo } from 'react';
+import React, {
+  type ComponentPropsWithoutRef,
+  type ComponentType,
+  type PropsWithChildren,
+  useCallback,
+  useContext,
+  useMemo,
+} from 'react';
 
 import { Obj } from '@dxos/echo';
 import { useTranslation } from '@dxos/react-ui';
@@ -68,7 +75,7 @@ type KanbanBoardRootProps = PropsWithChildren<
     items: Atom.Atom<Obj.Unknown[]>;
     onCardAdd?: (columnValue: string | undefined) => string | undefined;
     onCardRemove?: (card: Obj.Unknown) => void;
-  }
+  } & ComponentPropsWithoutRef<'div'>
 >;
 
 export const KanbanBoardRoot = ({
@@ -80,6 +87,7 @@ export const KanbanBoardRoot = ({
   items,
   onCardAdd,
   onCardRemove,
+  ...props
 }: KanbanBoardRootProps) => {
   const registry = useContext(RegistryContext);
   const { t } = useTranslation(meta.id);
@@ -110,7 +118,7 @@ export const KanbanBoardRoot = ({
 
   if (columns.length === 0) {
     return (
-      <div className='flex flex-1 items-center justify-center p-8 text-center text-description'>
+      <div {...props} className='flex flex-1 items-center justify-center p-8 text-center text-description'>
         {t('select pivot placeholder')}
       </div>
     );
@@ -128,7 +136,9 @@ export const KanbanBoardRoot = ({
       onCardAdd={onCardAdd}
       onCardRemove={onCardRemove}
     >
-      <Board.Root model={model}>{children}</Board.Root>
+      <Board.Root model={model}>
+        <div {...props}>{children}</div>
+      </Board.Root>
     </KanbanBoardContext>
   );
 };

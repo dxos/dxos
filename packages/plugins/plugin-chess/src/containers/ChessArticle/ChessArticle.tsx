@@ -21,15 +21,14 @@ export const ChessArticle = ({ role, subject: game }: ChessArticleProps) => {
   const [open, setOpen] = useState(true);
   const controller = useRef<ChessboardController>(null);
 
-  // TODO(burdon): Keyboard handler.
   const handleSelect = useCallback<NonNullable<ChessboardInfoProps['onSelect']>>((index) => {
     controller.current?.setMoveNumber(index);
   }, []);
 
   return (
-    <Panel.Root role={role} classNames='@container'>
-      <Panel.Content asChild>
-        <Chessboard.Root game={game} ref={controller}>
+    <Chessboard.Root game={game} ref={controller}>
+      <Panel.Root role={role} classNames='@container'>
+        <Panel.Toolbar asChild>
           <Toolbar.Root>
             <Toolbar.IconButton
               icon='ph--info--regular'
@@ -40,6 +39,8 @@ export const ChessArticle = ({ role, subject: game }: ChessArticleProps) => {
               onClick={() => setOpen((open) => !open)}
             />
           </Toolbar.Root>
+        </Panel.Toolbar>
+        <Panel.Content>
           <div
             className={mx(
               'grid h-full w-full gap-2',
@@ -64,8 +65,8 @@ export const ChessArticle = ({ role, subject: game }: ChessArticleProps) => {
               </div>
             )}
           </div>
-        </Chessboard.Root>
-      </Panel.Content>
-    </Panel.Root>
+        </Panel.Content>
+      </Panel.Root>
+    </Chessboard.Root>
   );
 };

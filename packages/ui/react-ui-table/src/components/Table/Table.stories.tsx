@@ -13,7 +13,7 @@ import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 import { PublicKey } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { ScrollArea } from '@dxos/react-ui';
+import { Panel, ScrollArea } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { ViewEditor, translations as formTranslations } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -24,7 +24,6 @@ import { withRegistry } from '@dxos/storybook-utils';
 import { useTestTableModel } from '../../testing';
 import { translations } from '../../translations';
 import { Table } from '../../types';
-import { TableToolbar } from '../TableToolbar';
 
 import { Table as TableComponent } from './Table';
 
@@ -120,19 +119,27 @@ const DefaultStory = () => {
 
   return (
     <div className='grow grid grid-cols-[1fr_350px]'>
-      <div className='grid grid-rows-[min-content_1fr] min-h-0 overflow-hidden'>
-        <TableToolbar classNames='border-b border-subdued-separator' onAdd={handleInsertRow} onSave={handleSaveView} />
-        <TableComponent.Root>
-          <TableComponent.Main
-            ref={tableRef}
-            schema={schema}
-            model={model}
-            presentation={presentation}
-            onRowClick={handleRowClick}
-            ignoreAttention
-          />
-        </TableComponent.Root>
-      </div>
+      <TableComponent.Root>
+        <Panel.Root>
+          <Panel.Toolbar asChild>
+            <TableComponent.Toolbar
+              classNames='border-b border-subdued-separator'
+              onAdd={handleInsertRow}
+              onSave={handleSaveView}
+            />
+          </Panel.Toolbar>
+          <Panel.Content asChild>
+            <TableComponent.Main
+              ref={tableRef}
+              schema={schema}
+              model={model}
+              presentation={presentation}
+              onRowClick={handleRowClick}
+              ignoreAttention
+            />
+          </Panel.Content>
+        </Panel.Root>
+      </TableComponent.Root>
       <ScrollArea.Root orientation='vertical' classNames='border-l border-separator'>
         <ScrollArea.Viewport>
           <StoryViewEditor view={table.view.target} schema={schema} db={db} handleDeleteColumn={handleDeleteColumn} />
@@ -151,7 +158,7 @@ type StoryProps = { rows?: number };
 // Story definitions.
 //
 
-// TODO(burdon): Need super simple story.
+// TODO(burdon): Need simpler story.
 
 const meta = {
   title: 'ui/react-ui-table/Table',

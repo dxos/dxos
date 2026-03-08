@@ -36,10 +36,12 @@ export const ChatModule = ({ space }: ComponentProps) => {
   }
 
   return (
-    <Panel.Root>
-      <Panel.Content asChild>
-        <Chat.Root chat={chat} processor={processor}>
+    <Chat.Root chat={chat} processor={processor}>
+      <Panel.Root>
+        <Panel.Toolbar asChild>
           <Chat.Toolbar />
+        </Panel.Toolbar>
+        <Panel.Content asChild>
           <Chat.Viewport classNames='relative dx-article'>
             <Toolbar.Root classNames='border-b border-subdued-separator'>
               <div className='px-1 grow truncate text-subdued'>{chat?.name}</div>
@@ -61,8 +63,8 @@ export const ChatModule = ({ space }: ComponentProps) => {
               <Chat.Prompt {...chatProps} outline preset={preset?.id} online={online} onOnlineChange={setOnline} />
             </div>
           </Chat.Viewport>
-        </Chat.Root>
-      </Panel.Content>
-    </Panel.Root>
+        </Panel.Content>
+      </Panel.Root>
+    </Chat.Root>
   );
 };

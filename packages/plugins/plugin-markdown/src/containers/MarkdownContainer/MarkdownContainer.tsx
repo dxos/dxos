@@ -91,26 +91,28 @@ export const MarkdownContainer = forwardRef<HTMLDivElement, MarkdownContainerPro
     const handleLinkQuery = useLinkQuery(db);
 
     return (
-      <Panel.Root ref={forwardedRef}>
-        <Panel.Content asChild>
-          <MarkdownEditor.Root
-            id={attendableId ?? id}
-            object={object}
-            extensions={extensions}
-            settings={settings}
-            onAction={runAction}
-            onFileUpload={handleFileUpload}
-            onLinkQuery={handleLinkQuery}
-            {...props}
-          >
-            {settings.toolbar && (
+      <MarkdownEditor.Root
+        id={attendableId ?? id}
+        object={object}
+        extensions={extensions}
+        settings={settings}
+        onAction={runAction}
+        onFileUpload={handleFileUpload}
+        onLinkQuery={handleLinkQuery}
+        {...props}
+      >
+        <Panel.Root ref={forwardedRef}>
+          {settings.toolbar && (
+            <Panel.Toolbar asChild>
               <MarkdownEditor.Toolbar id={attendableId ?? id} role={role} customActions={customActions} />
-            )}
+            </Panel.Toolbar>
+          )}
+          <Panel.Content>
             <MarkdownEditor.Content initialValue={initialValue} scrollPastEnd={role === 'article'} />
             <MarkdownEditor.Blocks />
-          </MarkdownEditor.Root>
-        </Panel.Content>
-      </Panel.Root>
+          </Panel.Content>
+        </Panel.Root>
+      </MarkdownEditor.Root>
     );
   },
 );

@@ -51,18 +51,20 @@ export const EventArticle = ({ role, subject, feed }: EventArticleProps) => {
   );
 
   return (
-    <Panel.Root role={role}>
-      <Panel.Content asChild>
-        <Event.Root event={subject}>
+    <Event.Root event={subject}>
+      <Panel.Root role={role}>
+        <Panel.Toolbar asChild>
           <Event.Toolbar onNoteCreate={handleNoteCreate} />
+        </Panel.Toolbar>
+        <Panel.Content asChild>
           <Event.Viewport>
             <Event.Header db={db} onContactCreate={handleContactCreate} />
             <Event.Content />
             {/* TODO(burdon): Suppress markdown toolbar if section. */}
             {notes && <Surface.Surface role='section' data={{ id, subject: notes }} limit={1} />}
           </Event.Viewport>
-        </Event.Root>
-      </Panel.Content>
-    </Panel.Root>
+        </Panel.Content>
+      </Panel.Root>
+    </Event.Root>
   );
 };

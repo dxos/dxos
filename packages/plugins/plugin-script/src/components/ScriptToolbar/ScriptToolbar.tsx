@@ -8,7 +8,7 @@ import React, { useMemo } from 'react';
 import { Obj } from '@dxos/echo';
 import { type Script } from '@dxos/functions';
 import { ElevationProvider, useTranslation } from '@dxos/react-ui';
-import { type ActionGraphProps, Menu, createGapSeparator, useMenuActions } from '@dxos/react-ui-menu';
+import { type ActionGraphProps, Menu, type MenuRootProps, createGapSeparator, useMenuActions } from '@dxos/react-ui-menu';
 
 import {
   type CreateDeployOptions,
@@ -20,13 +20,13 @@ import {
 } from '../../hooks';
 import { meta } from '../../meta';
 
-export type ScriptToolbarProps = {
+export type ScriptToolbarProps = Partial<MenuRootProps> & {
   role?: string;
   script: Script.Script;
   state: ScriptToolbarStateStore;
 };
 
-export const ScriptToolbar = ({ script, role, state }: ScriptToolbarProps) => {
+export const ScriptToolbar = ({ script, role, state, ...props }: ScriptToolbarProps) => {
   const { t } = useTranslation(meta.id);
   const options = useDeployDeps({ script });
   const menu = useMemo(() => createToolbarActions({ state, script, t, ...options }), [state, script, options, t]);
@@ -34,7 +34,7 @@ export const ScriptToolbar = ({ script, role, state }: ScriptToolbarProps) => {
 
   return (
     <ElevationProvider elevation={role === 'section' ? 'positioned' : 'base'}>
-      <Menu.Root {...actions} attendableId={Obj.getDXN(script).toString()}>
+      <Menu.Root {...props} {...actions} attendableId={Obj.getDXN(script).toString()}>
         <Menu.Toolbar />
       </Menu.Root>
     </ElevationProvider>

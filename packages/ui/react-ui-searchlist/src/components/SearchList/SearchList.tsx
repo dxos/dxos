@@ -5,6 +5,7 @@
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, {
   type ChangeEvent,
+  type ComponentPropsWithoutRef,
   type ComponentPropsWithRef,
   type KeyboardEvent,
   type PropsWithChildren,
@@ -231,12 +232,12 @@ SearchListRoot.displayName = 'SearchList.Root';
 // Content
 //
 
-type SearchListContentProps = ThemedClassName<PropsWithChildren<{}>>;
+type SearchListContentProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
 
 const SearchListContent = forwardRef<HTMLDivElement, SearchListContentProps>(
-  ({ classNames, children }, forwardedRef) => {
+  ({ classNames, children, ...props }, forwardedRef) => {
     return (
-      <div role='none' className={mx('grid h-full w-full min-h-0', classNames)} ref={forwardedRef}>
+      <div role='none' {...props} className={mx('grid h-full w-full min-h-0', classNames)} ref={forwardedRef}>
         {children}
       </div>
     );

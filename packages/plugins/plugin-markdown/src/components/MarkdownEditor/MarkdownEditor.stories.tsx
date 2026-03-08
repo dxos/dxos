@@ -35,16 +35,14 @@ const DefaultStory = (props: StoryProps) => {
   }
 
   return (
-    <div className='contents' {...attentionAttrs}>
-      <Panel.Root>
-        <Panel.Content asChild>
-          <MarkdownEditor.Root id={id} object={doc} {...props}>
-            <MarkdownEditor.Toolbar id={id} />
-            <MarkdownEditor.Content />
-          </MarkdownEditor.Root>
-        </Panel.Content>
-      </Panel.Root>
-    </div>
+    <Panel.Root {...attentionAttrs}>
+      <Panel.Content asChild>
+        <MarkdownEditor.Root id={id} object={doc} {...props}>
+          <MarkdownEditor.Toolbar id={id} />
+          <MarkdownEditor.Content />
+        </MarkdownEditor.Root>
+      </Panel.Content>
+    </Panel.Root>
   );
 };
 

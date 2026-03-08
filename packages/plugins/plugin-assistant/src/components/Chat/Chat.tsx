@@ -8,7 +8,15 @@ import { useAtomValue } from '@effect-atom/atom-react';
 import { createContext } from '@radix-ui/react-context';
 import * as Array from 'effect/Array';
 import * as Option from 'effect/Option';
-import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  type ComponentPropsWithoutRef,
+  type PropsWithChildren,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import { type Chat as ChatModule } from '@dxos/assistant-toolkit';
 import { Event } from '@dxos/async';
@@ -163,11 +171,11 @@ ChatRoot.displayName = 'Chat.Root';
 
 const CHAT_VIEWPORT_NAME = 'Chat.Viewport';
 
-type ChatViewportProps = ThemedClassName<PropsWithChildren>;
+type ChatViewportProps = ThemedClassName<PropsWithChildren<ComponentPropsWithoutRef<'div'>>>;
 
-const ChatViewport = ({ classNames, children }: ChatViewportProps) => {
+const ChatViewport = ({ classNames, children, ...props }: ChatViewportProps) => {
   return (
-    <div role='none' className={mx('flex flex-col h-full w-full', classNames)}>
+    <div role='none' {...props} className={mx('flex flex-col h-full w-full', classNames)}>
       {children}
     </div>
   );
@@ -426,14 +434,15 @@ ChatPrompt.displayName = CHAT_PROMPT_NAME;
 
 const CHAT_TOOLBAR_NAME = 'Chat.Toolbar';
 
-type ChatToolbarProps = ThemedClassName<{ companionTo?: Obj.Unknown }>;
+type ChatToolbarProps = ThemedClassName<{ companionTo?: Obj.Unknown } & ComponentPropsWithoutRef<typeof Menu.Root>>;
 
-const ChatToolbar = ({ classNames, companionTo }: ChatToolbarProps) => {
+const ChatToolbar = ({ classNames, companionTo, ...props }: ChatToolbarProps) => {
   const { chat } = useChatContext(CHAT_TOOLBAR_NAME);
   const menu = useChatToolbarActions({ chat, companionTo });
 
   return (
     <Menu.Root
+      {...props}
       {...menu}
       attendableId={companionTo ? Obj.getDXN(companionTo).toString() : chat ? Obj.getDXN(chat).toString() : ''}
     >

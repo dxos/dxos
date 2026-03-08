@@ -19,20 +19,19 @@ import { getStyles } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 
-/**
- *
- */
 export const SpaceMain = ({ space }: { space: Space }) => {
   const { t } = useTranslation(meta.id);
   const { items, handleSearch } = useSpaceItems(space);
 
   return (
-    <Panel.Root>
-      <Panel.Content asChild>
-        <SearchList.Root onSearch={handleSearch}>
+    <SearchList.Root onSearch={handleSearch}>
+      <Panel.Root>
+        <Panel.Toolbar asChild>
           <Toolbar.Root>
             <SearchList.Input placeholder={t('search placeholder')} />
           </Toolbar.Root>
+        </Panel.Toolbar>
+        <Panel.Content asChild>
           <SearchList.Content>
             <Mosaic.Container asChild>
               <ScrollArea.Root orientation='vertical'>
@@ -42,9 +41,9 @@ export const SpaceMain = ({ space }: { space: Space }) => {
               </ScrollArea.Root>
             </Mosaic.Container>
           </SearchList.Content>
-        </SearchList.Root>
-      </Panel.Content>
-    </Panel.Root>
+        </Panel.Content>
+      </Panel.Root>
+    </SearchList.Root>
   );
 };
 

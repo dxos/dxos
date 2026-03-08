@@ -22,11 +22,11 @@ import { isTruthy } from '@dxos/util';
 import { type SerializationModel } from '../../model';
 import { renderByline } from '../../util';
 
-import { transcript } from './transcript-extension';
+import { transcription } from './transcription-extension';
 
 export { renderByline };
 
-export type TranscriptViewProps = ThemedClassName<{
+export type TranscriptionProps = ThemedClassName<{
   transcript?: Transcript.Transcript;
   model: SerializationModel<Message.Message>;
   // TODO(burdon): Are these still in use?
@@ -37,7 +37,7 @@ export type TranscriptViewProps = ThemedClassName<{
 /**
  * Transcript component implemented using the editor.
  */
-export const TranscriptView = ({ classNames, transcript: object, model }: TranscriptViewProps) => {
+export const Transcription = ({ classNames, transcript: object, model }: TranscriptionProps) => {
   const { themeMode } = useThemeContext();
   const { parentRef } = useTextEditor(() => {
     return {
@@ -47,7 +47,7 @@ export const TranscriptView = ({ classNames, transcript: object, model }: Transc
         createThemeExtensions({ themeMode, slots: editorSlots }),
         decorateMarkdown(),
         preview(),
-        transcript({ model, started: object?.started ? new Date(object.started) : undefined }),
+        transcription({ model, started: object?.started ? new Date(object.started) : undefined }),
         autoScroll(),
       ].filter(isTruthy),
     };

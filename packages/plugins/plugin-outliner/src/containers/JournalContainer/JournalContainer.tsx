@@ -5,7 +5,7 @@
 import React, { useCallback, useRef } from 'react';
 
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { useMediaQuery, Panel } from '@dxos/react-ui';
+import { Panel, useMediaQuery } from '@dxos/react-ui';
 import { Calendar, type CalendarController } from '@dxos/react-ui-calendar';
 import { mx } from '@dxos/ui-theme';
 
@@ -38,10 +38,14 @@ export const JournalContainer = ({ role, subject: journal, showCalendar = true }
         >
           {showCalendar && (
             <Calendar.Root ref={controllerRef}>
-              <Calendar.Viewport>
-                <Calendar.Toolbar />
-                <Calendar.Grid rows={isNotMobile ? undefined : 6} />
-              </Calendar.Viewport>
+              <Panel.Root>
+                <Panel.Toolbar asChild>
+                  <Calendar.Toolbar />
+                </Panel.Toolbar>
+                <Panel.Content asChild>
+                  <Calendar.Grid rows={isNotMobile ? undefined : 6} />
+                </Panel.Content>
+              </Panel.Root>
             </Calendar.Root>
           )}
 

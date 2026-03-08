@@ -30,8 +30,8 @@ export const RecordArticle = ({ role, subject }: SurfaceComponentProps) => {
     <Panel.Root role={role}>
       <Panel.Content asChild>
         <ScrollArea.Root orientation='vertical'>
-          <ScrollArea.Viewport classNames={mx('p-4 gap-4')}>
-            <div role='none' className={mx('flex w-full dx-card-max-width')}>
+          <ScrollArea.Viewport classNames='p-4 gap-4'>
+            <div role='none' className='flex w-full dx-card-max-width'>
               <Surface.Surface role='section' data={data} limit={1} />
             </div>
 

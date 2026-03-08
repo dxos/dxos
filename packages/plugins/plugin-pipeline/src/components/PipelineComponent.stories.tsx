@@ -20,9 +20,10 @@ import { createObjectFactory } from '@dxos/schema/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 import { Person, Pipeline } from '@dxos/types';
 
+import { usePipelineBoardModel } from '../hooks';
 import { translations } from '../translations';
 
-import { type ItemProps, PipelineComponent, usePipelineBoardModel } from './PipelineComponent';
+import { type ItemProps, PipelineComponent } from './PipelineComponent';
 
 const StorybookProjectItem = ({ item, projectionModel }: ItemProps) => {
   if (Obj.instanceOf(Person.Person, item)) {
@@ -77,8 +78,10 @@ const DefaultStory = () => {
   }
 
   return (
-    <PipelineComponent.Root Item={StorybookProjectItem} model={model} onAddColumn={handleAddColumn}>
-      <PipelineComponent.Content pipeline={pipeline} />
+    <PipelineComponent.Root Item={StorybookProjectItem} onAddColumn={handleAddColumn}>
+      <PipelineComponent.Content model={model}>
+        <PipelineComponent.Columns pipeline={pipeline} />
+      </PipelineComponent.Content>
     </PipelineComponent.Root>
   );
 };
@@ -148,8 +151,10 @@ const MutationsStory = () => {
   }
 
   return (
-    <PipelineComponent.Root Item={StorybookProjectItem} model={model} onAddColumn={handleAddColumn}>
-      <PipelineComponent.Content pipeline={pipeline} />
+    <PipelineComponent.Root Item={StorybookProjectItem} onAddColumn={handleAddColumn}>
+      <PipelineComponent.Content model={model}>
+        <PipelineComponent.Columns pipeline={pipeline} />
+      </PipelineComponent.Content>
     </PipelineComponent.Root>
   );
 };
