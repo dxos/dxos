@@ -54,7 +54,7 @@ const Toolbar = forwardRef<HTMLDivElement, ToolbarProps>(
     const { tx } = useThemeContext();
     const Comp = asChild ? Slot : Primitive.div;
     return (
-      <Comp ref={forwardedRef} {...props} className={tx('panel.toolbar', {}, [className, classNames])}>
+      <Comp ref={forwardedRef} data-slot='toolbar' {...props} className={tx('panel.toolbar', {}, [className, classNames])}>
         {children}
       </Comp>
     );
@@ -74,7 +74,7 @@ const Content = forwardRef<HTMLDivElement, ContentProps>(
     const { tx } = useThemeContext();
     const Comp = asChild ? Slot : Primitive.div;
     return (
-      <Comp ref={forwardedRef} {...props} className={tx('panel.content', {}, [className, classNames])}>
+      <Comp ref={forwardedRef} data-slot='content' {...props} className={tx('panel.content', {}, [className, classNames])}>
         {children}
       </Comp>
     );
@@ -94,7 +94,7 @@ const Statusbar = forwardRef<HTMLDivElement, StatusbarProps>(
     const { tx } = useThemeContext();
     const Comp = asChild ? Slot : Primitive.div;
     return (
-      <Comp ref={forwardedRef} {...props} className={tx('panel.statusbar', {}, [className, classNames])}>
+      <Comp ref={forwardedRef} data-slot='statusbar' {...props} className={tx('panel.statusbar', {}, [className, classNames])}>
         {children}
       </Comp>
     );

@@ -7,7 +7,7 @@ import { type ComponentFunction } from '@dxos/ui-types';
 import { mx } from '../../util';
 
 const panelRoot: ComponentFunction<{}> = (_, ...etc) =>
-  mx('h-full w-full grid grid-cols-[100%] overflow-hidden', ...etc);
+  mx('h-full w-full grid grid-cols-[100%] overflow-hidden', '[&>*:not([data-slot])]:[grid-area:content]', ...etc);
 
 const panelToolbar: ComponentFunction<{}> = (_, ...etc) =>
   mx(
