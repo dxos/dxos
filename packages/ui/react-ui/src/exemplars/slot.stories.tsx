@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type PropsWithChildren, forwardRef } from 'react';
@@ -23,11 +24,11 @@ import { withTheme } from '../testing';
 const Outer = forwardRef<HTMLDivElement, SlottableProps<HTMLDivElement>>(
   ({ children, asChild, ...props }, forwardedRef) => {
     const { className, ...rest } = useComposableProps(props);
-    const Root = asChild ? Slot : 'div';
+    const Comp = asChild ? Slot : Primitive.div;
     return (
-      <Root {...rest} className={className} data-outer='true' ref={forwardedRef}>
+      <Comp {...rest} className={className} data-outer='true' ref={forwardedRef}>
         {children}
-      </Root>
+      </Comp>
     );
   },
 );
@@ -36,11 +37,11 @@ const Outer = forwardRef<HTMLDivElement, SlottableProps<HTMLDivElement>>(
 const Middle = forwardRef<HTMLDivElement, SlottableProps<HTMLDivElement>>(
   ({ children, asChild, ...props }, forwardedRef) => {
     const { className, ...rest } = useComposableProps(props);
-    const Root = asChild ? Slot : 'div';
+    const Comp = asChild ? Slot : Primitive.div;
     return (
-      <Root {...rest} className={className} data-middle='true' ref={forwardedRef}>
+      <Comp {...rest} className={className} data-middle='true' ref={forwardedRef}>
         {children}
-      </Root>
+      </Comp>
     );
   },
 );

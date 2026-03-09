@@ -48,7 +48,7 @@ const Group = forwardRef<HTMLDivElement, GroupProps>(
   ({ classNames, className, children, asChild, orientation = 'vertical', ...props }: GroupProps, forwardedRef) => {
     const rootRef = useRef<HTMLDivElement>(null);
     const composedRef = useComposedRefs<HTMLDivElement>(rootRef, forwardedRef);
-    const Root = asChild ? Slot : Primitive.div;
+    const Comp = asChild ? Slot : Primitive.div;
 
     // TODO(burdon): Configure.
     const focusableGroupAttrs = useFocusableGroup({
@@ -63,7 +63,7 @@ const Group = forwardRef<HTMLDivElement, GroupProps>(
 
     return (
       <FocusContext.Provider value={{ setFocus: setState }}>
-        <Root
+        <Comp
           {...props}
           {...tabsterAttrs}
           {...(state && {
@@ -87,7 +87,7 @@ const Group = forwardRef<HTMLDivElement, GroupProps>(
           ref={composedRef}
         >
           {children}
-        </Root>
+        </Comp>
       </FocusContext.Provider>
     );
   },

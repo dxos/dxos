@@ -14,9 +14,9 @@ import { type ClassNameValue } from './theme';
  * ```tsx
  * const Primitive = forwardRef<HTMLDivElement, SlottableProps<HTMLDivElement>>(
  *   ({ children, asChild, ...props }, ref) => {
- *     const Root = asChild ? Slot : 'div';
+ *     const Comp = asChild ? Slot : Primitive.div;
  *     const { className, ...rest } = useComposableProps(props);
- *     return <Root {...rest} className={className} ref={ref}>{children}</Root>;
+ *     return <Comp {...rest} className={className} ref={ref}>{children}</Comp>;
  *   },
  * );
  * ```

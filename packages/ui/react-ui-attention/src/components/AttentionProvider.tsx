@@ -178,9 +178,9 @@ export type AttendableContainerProps = ThemedClassName<
 const AttendableContainer = forwardRef<HTMLDivElement, AttendableContainerProps>(
   ({ id, classNames, children, asChild, ...props }, forwardedRef) => {
     const attentionAttrs = useAttentionAttributes(id);
-    const Root = asChild ? Slot : Primitive.div;
+    const Comp = asChild ? Slot : Primitive.div;
     return (
-      <Root
+      <Comp
         role='none'
         {...attentionAttrs}
         {...props}
@@ -188,7 +188,7 @@ const AttendableContainer = forwardRef<HTMLDivElement, AttendableContainerProps>
         ref={forwardedRef}
       >
         {children}
-      </Root>
+      </Comp>
     );
   },
 );

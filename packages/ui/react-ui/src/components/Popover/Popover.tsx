@@ -156,10 +156,10 @@ const PopoverTrigger = forwardRef<PopoverTriggerElement, PopoverTriggerProps>(
     const context = usePopoverContext(TRIGGER_NAME, __scopePopover);
     const popperScope = usePopperScope(__scopePopover);
     const composedTriggerRef = useComposedRefs(forwardedRef, context.triggerRef);
-    const Root = asChild ? Slot : Primitive.button;
+    const Comp = asChild ? Slot : Primitive.button;
 
     const trigger = (
-      <Root
+      <Comp
         type='button'
         aria-haspopup='dialog'
         aria-expanded={context.open}
@@ -574,15 +574,15 @@ type PopoverViewportProps = ThemedClassName<ComponentPropsWithRef<typeof Primiti
 const PopoverViewport = forwardRef<HTMLDivElement, PopoverViewportProps>(
   ({ classNames, asChild, constrainInline = true, constrainBlock = true, children, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
-    const Root = asChild ? Slot : Primitive.div;
+    const Comp = asChild ? Slot : Primitive.div;
     return (
-      <Root
+      <Comp
         {...props}
         className={tx('popover.viewport', { constrainInline, constrainBlock }, classNames)}
         ref={forwardedRef}
       >
         {children}
-      </Root>
+      </Comp>
     );
   },
 );

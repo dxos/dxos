@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import React, {
   type ComponentPropsWithRef,
@@ -30,10 +31,10 @@ export const StackItemHeading = ({
 }: StackItemHeadingProps) => {
   const { orientation } = useStack();
 
-  const Root = asChild ? Slot : 'div';
+  const Comp = asChild ? Slot : Primitive.div;
 
   return (
-    <Root
+    <Comp
       role='heading'
       {...props}
       className={mx(
@@ -47,7 +48,7 @@ export const StackItemHeading = ({
       )}
     >
       {children}
-    </Root>
+    </Comp>
   );
 };
 
