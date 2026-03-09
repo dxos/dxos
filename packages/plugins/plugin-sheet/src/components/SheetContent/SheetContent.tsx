@@ -3,7 +3,6 @@
 //
 
 import React, {
-  type ComponentPropsWithoutRef,
   type FocusEvent,
   type KeyboardEvent,
   type MouseEvent,

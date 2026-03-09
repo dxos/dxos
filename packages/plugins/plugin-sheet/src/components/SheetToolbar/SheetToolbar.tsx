@@ -59,7 +59,8 @@ const createToolbarActions = ({
   });
 };
 
-export type SheetToolbarProps = { id: string } & Partial<MenuRootProps> & PropsWithChildren<{ id: string } & Partial<MenuRootProps>>;
+export type SheetToolbarProps = { id: string } & Partial<MenuRootProps> &
+  PropsWithChildren<{ id: string } & Partial<MenuRootProps>>;
 
 export const SheetToolbar = ({ id, ...props }: SheetToolbarProps) => {
   const { model, cursorFallbackRange } = useSheetContext();
