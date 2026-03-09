@@ -6,8 +6,7 @@ import { type ComponentFunction } from '@dxos/ui-types';
 
 import { mx } from '../../util';
 
-const columnRoot: ComponentFunction<Record<string, any>> = (_, ...etc) =>
-  mx('dx-column w-full min-w-0 grid', ...etc);
+const columnRoot: ComponentFunction<Record<string, any>> = (_, ...etc) => mx('dx-column w-full min-w-0 grid', ...etc);
 
 /**
  * Three-column icon-slot row: spans all 3 columns of the parent Column.Root grid.
