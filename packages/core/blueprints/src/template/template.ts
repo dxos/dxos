@@ -45,7 +45,7 @@ export type Input = Schema.Schema.Type<typeof Input>;
  * Template type.
  */
 export const Template = Schema.Struct({
-  source: Type.Ref(Text.Text).annotations({ description: 'Handlebars template source' }),
+  source: Ref.Ref(Text.Text).annotations({ description: 'Handlebars template source' }),
   inputs: Schema.optional(Schema.Array(Input)),
 });
 

@@ -22,8 +22,8 @@ export default defineFunction({
   name: 'Agent',
   description: 'Agentic worker that executes a provided prompt using blueprints and tools.',
   inputSchema: Schema.Struct({
-    prompt: Type.Ref(Prompt.Prompt),
-    systemPrompt: Schema.optional(Type.Ref(Prompt.Prompt)),
+    prompt: Ref.Ref(Prompt.Prompt),
+    systemPrompt: Schema.optional(Ref.Ref(Prompt.Prompt)),
     /**
      * @default @anthropic/claude-opus-4-0
      */

@@ -69,7 +69,7 @@ interface RelationJsonProps {
 type ObjSchemaType = Obj<ObjModule.Unknown>;
 
 // Internal schema definition.
-// NOTE: The EchoObjectSchema annotation is required for Type.Ref(Type.Obj) to work.
+// NOTE: The EchoObjectSchema annotation is required for Ref.Ref(Type.Obj) to work.
 //   The typename/version only satisfy ECHO schema machinery for reference targets.
 const ObjSchema = Schema.Struct({
   id: Schema.String,
@@ -95,7 +95,7 @@ const ObjSchema = Schema.Struct({
  *
  * // Reference to any object type
  * const Collection = Schema.Struct({
- *   objects: Schema.Array(Type.Ref(Type.Obj)),
+ *   objects: Schema.Array(Ref.Ref(Type.Obj)),
  * }).pipe(Type.object({ typename: 'Collection', version: '0.1.0' }));
  * ```
  */
@@ -186,7 +186,7 @@ export interface PersistentType extends Schema.Schema.Type<typeof PersistentType
 type RelationSchemaType = Relation<RelationModule.Unknown, ObjModule.Any, ObjModule.Any>;
 
 // Internal schema definition.
-// NOTE: The EchoRelationSchema annotation is required for Type.Ref(Type.Relation) to work.
+// NOTE: The EchoRelationSchema annotation is required for Ref.Ref(Type.Relation) to work.
 //   The typename/version/source/target only satisfy ECHO schema machinery for reference targets.
 const RelationSchema = Schema.Struct({
   id: Schema.String,
@@ -227,12 +227,8 @@ export const Relation: RelationSchemaType = Object.assign(RelationSchema, {
  * `Source` and `Target` are the endpoint types.
  * `Fields` is the optional struct fields type for introspection.
  */
-export interface Relation<
-  T,
-  Source,
-  Target,
-  Fields extends Schema.Struct.Fields = Schema.Struct.Fields,
-> extends internal.TypeMeta,
+export interface Relation<T, Source, Target, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>
+  extends internal.TypeMeta,
     EchoSchemaKind<internal.EntityKind.Relation>,
     Schema.AnnotableClass<
       Relation<T, Source, Target, Fields>,
@@ -267,11 +263,13 @@ export type AnyRelation = RelationSchemaBase;
 /**
  * Get relation source type.
  */
+// TODO(dmaretskyi): Relation.SourceOf
 export type RelationSource<A> = A extends RelationEndpoints<infer S, infer _T> ? S : never;
 
 /**
  * Get relation target type.
  */
+// TODO(dmaretskyi): Relation.TargetOf
 export type RelationTarget<A> = A extends RelationEndpoints<infer _S, infer T> ? T : never;
 
 export type RelationEndpoints<Source, Target> = {
@@ -337,47 +335,6 @@ export const isObjectSchema = (schema: AnyEntity): schema is AnyObj => {
 export const isRelationSchema = (schema: AnyEntity): schema is AnyRelation => {
   return (schema as any)[internal.SchemaKindId] === internal.EntityKind.Relation;
 };
-
-//
-// Ref
-//
-// NOTE: `Type.Ref` vs `Ref.Ref`:
-// - `Type.Ref<T>` is the SCHEMA type - a schema that produces `Ref.Ref<T>` instances.
-// - `Ref.Ref<T>` is the INSTANCE type - the actual runtime ref object.
-//
-// Example:
-//   const taskRef: Ref.Ref<Task> = Ref.make(task);  // Instance
-//   const schema: Type.Ref<Task> = Type.Ref(Task);  // Schema
-//
-
-/**
- * TypeScript type for a Ref schema.
- * This is the type of the SCHEMA itself, not the runtime ref instance.
- * For the instance type, use `Ref.Ref<T>` from the Ref module.
- *
- * @example
- * ```ts
- * // Schema type annotation (rarely needed, usually inferred):
- * const refSchema: Type.Ref<typeof Task> = Type.Ref(Task);
- *
- * // Instance type annotation (use Ref.Ref instead):
- * const refInstance: Ref.Ref<Task> = Ref.make(task);
- * ```
- */
-export interface Ref<T extends Entity.Unknown> extends internal.RefSchema<T> {}
-
-/**
- * Factory function to create a Ref schema for the given target schema.
- * Use this in schema definitions to declare reference fields.
- *
- * @example
- * ```ts
- * const Task = Schema.Struct({
- *   assignee: Type.Ref(Person),  // Creates a Ref schema
- * }).pipe(Type.object({ typename: 'Task', version: '0.1.0' }));
- * ```
- */
-export const Ref: internal.RefFn = internal.Ref;
 
 /**
  * Type that represents any Ref schema (with unknown target type).

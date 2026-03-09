@@ -19,7 +19,7 @@ export default defineFunction({
   name: 'Create Proposals',
   description: 'Proposes a set of changes to a document.',
   inputSchema: Schema.Struct({
-    doc: Type.Ref(Markdown.Document).annotations({
+    doc: Ref.Ref(Markdown.Document).annotations({
       description: 'The ID of the document.',
     }),
     diffs: Schema.Array(Schema.String).annotations({

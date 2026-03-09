@@ -30,7 +30,7 @@ export default defineFunction({
   name: 'Commentary',
   description: 'Adds commentary about the most recent move to a markdown document associated with the chess game.',
   inputSchema: Schema.Struct({
-    game: Type.Ref(Chess.Game).annotations({
+    game: Ref.Ref(Chess.Game).annotations({
       description: 'The chess game to comment on.',
     }),
   }),

@@ -14,7 +14,7 @@ import * as Ref from 'effect/Ref';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
-import { Database, Feed, Filter, Obj, Type } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Ref as EchoRef, Type } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -34,7 +34,7 @@ export default defineFunction({
   description:
     'Sync events from Google Calendar. The initial sync uses startTime ordering for specified number of days. Subsequent syncs use updatedMin to catch all changes.',
   inputSchema: Schema.Struct({
-    feed: Type.Ref(Feed.Feed).annotations({
+    feed: EchoRef.Ref(Feed.Feed).annotations({
       description: 'Reference to the calendar feed.',
     }),
     googleCalendarId: Schema.optional(Schema.String),

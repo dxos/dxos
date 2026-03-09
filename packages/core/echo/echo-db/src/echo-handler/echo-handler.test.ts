@@ -125,7 +125,7 @@ describe('without database', () => {
     nested: Schema.Struct({
       name: Schema.optional(Schema.String),
       arr: Schema.optional(Schema.Array(Schema.String)),
-      ref: Schema.optional(Schema.suspend((): RefSchema<TestSchema> => Type.Ref(TestSchema))),
+      ref: Schema.optional(Schema.suspend((): RefSchema<TestSchema> => Ref.Ref(TestSchema))),
     }),
   }).pipe(
     EchoObjectSchema({
@@ -238,10 +238,10 @@ describe('Reactive Object with ECHO database', () => {
     const objectHost = db.add(Obj.make(TestSchema, { field: [] }));
     const object = db.add(Obj.make(TestSchema, { field: 'foo' }));
     Obj.change(objectHost, (o) => {
-      o.field?.push({ hosted: Type.Ref.make(object) });
+      o.field?.push({ hosted: Ref.make(object) });
     });
     Obj.make(TestSchema, {
-      field: [Obj.make(TestSchema, { field: Type.Ref.make(objectHost) })],
+      field: [Obj.make(TestSchema, { field: Ref.make(objectHost) })],
     });
     expect(objectHost.field[0].hosted).not.to.be.undefined;
   });
@@ -447,8 +447,8 @@ describe('Reactive Object with ECHO database', () => {
 
     const Contact = Schema.Struct({
       name: Schema.String,
-      organization: Type.Ref(Organization),
-      previousEmployment: Schema.optional(Schema.Array(Type.Ref(Organization))),
+      organization: Ref.Ref(Organization),
+      previousEmployment: Schema.optional(Schema.Array(Ref.Ref(Organization))),
     }).pipe(
       Type.object({
         typename: 'example.com/type/Person',
@@ -670,7 +670,7 @@ describe('Reactive Object with ECHO database', () => {
         field: Schema.Number,
       }).pipe(Type.object({ typename: 'example.com/type/TestNested', version: '0.1.0' }));
       const TestType = Schema.Struct({
-        objects: Schema.Array(Type.Ref(NestedType)),
+        objects: Schema.Array(Ref.Ref(NestedType)),
       }).pipe(Type.object({ typename: 'example.com/type/Test', version: '0.1.0' }));
 
       const key = foreignKey('example.com', '123');

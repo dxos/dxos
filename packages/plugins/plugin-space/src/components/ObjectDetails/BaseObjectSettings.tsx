@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import React, { type PropsWithChildren, useCallback, useMemo } from 'react';
 
-import { DXN, Obj, type Ref, Tag, Type } from '@dxos/echo';
+import { DXN, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { type JsonPath, splitJsonPath } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { type ThemedClassName } from '@dxos/react-ui';
@@ -18,7 +18,7 @@ import { meta as pluginMeta } from '../../meta';
 
 // TODO(wittjosiah): Would be nice to control order when extending so this isn't always first/last.
 const BaseSchema = Schema.Struct({
-  tags: Schema.Array(Type.Ref(Tag.Tag)).pipe(Schema.optional),
+  tags: Schema.Array(Ref.Ref(Tag.Tag)).pipe(Schema.optional),
 });
 
 export type BaseObjectSettingsProps = ThemedClassName<

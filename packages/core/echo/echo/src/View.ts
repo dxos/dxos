@@ -87,7 +87,7 @@ export interface View extends Schema.Schema.Type<typeof ViewSchema> {}
 // NOTE: This interface is explicitly defined rather than derived from the schema to avoid
 //   TypeScript "cannot be named" portability errors. The schema contains QueryAST.Query which
 //   references internal @dxos/echo-protocol module paths. Without this explicit interface,
-//   any schema using Type.Ref(View) would inherit the non-portable type and fail to compile.
+//   any schema using Ref.Ref(View) would inherit the non-portable type and fail to compile.
 // TODO(wittjosiah): Find a better solution that doesn't require manually keeping the interface in sync.
 export const View: Type.Obj<View> = ViewSchema as any;
 

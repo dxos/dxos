@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Type } from '@dxos/echo';
+import { Ref, Type } from '@dxos/echo';
 
 import * as Person from './Person';
 
@@ -17,7 +17,7 @@ export type Role = Schema.Schema.Type<typeof Role>;
  */
 export const Actor = Schema.Struct({
   role: Schema.optional(Role),
-  contact: Schema.optional(Type.Ref(Person.Person)),
+  contact: Schema.optional(Ref.Ref(Person.Person)),
   identityDid: Schema.optional(Schema.String),
   /** @deprecated */
   identityKey: Schema.optional(Schema.String),

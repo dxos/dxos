@@ -13,7 +13,7 @@ import * as Predicate from 'effect/Predicate';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
-import { Feed, Filter, Obj, Type } from '@dxos/echo';
+import { Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { DXN } from '@dxos/keys';
@@ -62,7 +62,7 @@ export default defineFunction({
   name: 'Sync Gmail',
   description: 'Sync emails from Gmail to the mailbox feed.',
   inputSchema: Schema.Struct({
-    feed: Type.Ref(Feed.Feed).annotations({ description: 'Reference to the mailbox feed to sync emails to.' }),
+    feed: Ref.Ref(Feed.Feed).annotations({ description: 'Reference to the mailbox feed to sync emails to.' }),
     userId: Schema.String.pipe(Schema.optional),
     label: Schema.String.pipe(
       Schema.annotations({

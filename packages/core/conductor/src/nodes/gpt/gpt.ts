@@ -13,7 +13,7 @@ import * as Struct from 'effect/Struct';
 
 import { AiService, DEFAULT_EDGE_MODEL, ToolExecutionService, ToolId, ToolResolverService } from '@dxos/ai';
 import { AiSession, GenerationObserver } from '@dxos/assistant';
-import { Type } from '@dxos/echo';
+import { Ref, Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
 import { ComputeEventLogger, FunctionInvocationService, QueueService, TracingService } from '@dxos/functions';
 import { assertArgument } from '@dxos/invariant';
@@ -55,7 +55,7 @@ export const GptInput = Schema.Struct({
    * Conversation queue.
    * If specified, node will read the history, and write the new messages to the queue.
    */
-  conversation: Schema.optional(Type.Ref(Queue)),
+  conversation: Schema.optional(Ref.Ref(Queue)),
 
   /**
    * History messages.
@@ -106,7 +106,7 @@ export const GptOutput = Schema.Struct({
    * Conversation queue containing the history and model's response.
    * Present if the conversation was passed as an input.
    */
-  conversation: Schema.optional(Type.Ref(Queue)),
+  conversation: Schema.optional(Ref.Ref(Queue)),
 });
 
 export type GptOutput = Schema.Schema.Type<typeof GptOutput>;

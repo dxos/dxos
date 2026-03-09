@@ -7,13 +7,14 @@ import * as Schema from 'effect/Schema';
 import * as internal from './internal';
 import * as Obj from './Obj';
 import * as Type from './Type';
+import * as Ref from './Ref';
 
 /**
  * A an ordered set of objects.
  */
 export const Collection = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
-  objects: Schema.Array(Type.Ref(Type.Obj)).pipe(internal.FormInputAnnotation.set(false)),
+  objects: Schema.Array(Ref.Ref(Type.Obj)).pipe(internal.FormInputAnnotation.set(false)),
 }).pipe(
   Type.object({
     typename: 'dxos.org/type/Collection',

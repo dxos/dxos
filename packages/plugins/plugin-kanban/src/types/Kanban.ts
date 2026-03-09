@@ -32,7 +32,7 @@ export type Arrangement = Schema.Schema.Type<typeof Arrangement>;
 export const Kanban = Schema.Struct({
   name: Schema.optional(Schema.String),
 
-  view: Type.Ref(View.View).pipe(FormInputAnnotation.set(false)),
+  view: Ref.Ref(View.View).pipe(FormInputAnnotation.set(false)),
 
   /** Column display order and per-column card ids. */
   arrangement: Arrangement,

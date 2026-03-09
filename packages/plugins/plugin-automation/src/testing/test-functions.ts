@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { TestSchema } from '@dxos/client/testing';
-import { JsonSchema, Type } from '@dxos/echo';
+import { JsonSchema, Ref, Type } from '@dxos/echo';
 
 export const functions = [
   {
@@ -35,7 +35,7 @@ export const functions = [
     version: '0.0.1',
     inputSchema: JsonSchema.toJsonSchema(
       Schema.Struct({
-        contact: Type.Ref(TestSchema.ContactType).annotations({ title: 'Contact' }),
+        contact: Ref.Ref(TestSchema.ContactType).annotations({ title: 'Contact' }),
       }),
     ),
   },

@@ -11,7 +11,7 @@ import * as Schema from 'effect/Schema';
 
 import { Blueprint } from '@dxos/blueprints';
 import { Resource } from '@dxos/context';
-import { DXN, Obj, Query, type Ref, Type } from '@dxos/echo';
+import { DXN, Obj, Query, Ref, Type } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
 import { assertArgument } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -23,13 +23,13 @@ import { ComplexSet, isTruthy } from '@dxos/util';
 // TODO(burdon): Move to @dxos/schema ContentBlock?
 export const ContextBinding = Schema.Struct({
   blueprints: Schema.Struct({
-    added: Schema.Array(Type.Ref(Blueprint.Blueprint)),
-    removed: Schema.Array(Type.Ref(Blueprint.Blueprint)),
+    added: Schema.Array(Ref.Ref(Blueprint.Blueprint)),
+    removed: Schema.Array(Ref.Ref(Blueprint.Blueprint)),
   }),
 
   objects: Schema.Struct({
-    added: Schema.Array(Type.Ref(Type.Obj)),
-    removed: Schema.Array(Type.Ref(Type.Obj)),
+    added: Schema.Array(Ref.Ref(Type.Obj)),
+    removed: Schema.Array(Ref.Ref(Type.Obj)),
   }),
 }).pipe(
   Type.object({

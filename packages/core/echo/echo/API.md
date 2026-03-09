@@ -9,14 +9,14 @@
 
 ```ts
 const Mailbox = Schema.Struct({
-  messages: Type.Ref(Feed.Feed)
+  messages: Ref.Ref(Feed.Feed)
 }).pipe(Type.object({ typename: 'example.com/type/Mailbox', version: '0.1.0' }));
 interface Mailbox extends Schema.Schema.Type<typeof Mailbox> {}
 
 typeof mailbox.messages === Feed.Feed;
 
 const Collection = Schema.Struct({
-  objects: Schema.Array(Type.Ref(Obj.Unknown))
+  objects: Schema.Array(Ref.Ref(Obj.Unknown))
 }).pipe(Type.relation({ typename: 'example.com/type/Collection', version: '0.1.0' }));
 interface Collection extends Schema.Schema.Type<typeof Collection> {}
 
@@ -64,7 +64,7 @@ Functions:
 - function `Type.object(...)` - defines a new object schema; returns `Type.Obj<T>`.
 - function `Type.relation(...)` - defines a new relation schema; returns `Type.Relation<T>`.
 - function `Type.get*(schema: Type.UnknownEntity)` - getters for schema metadata.
-- function `Type.Ref(...)` define a schema for a reference to an object of instance type `T`.
+- function `Ref.Ref(...)` define a schema for a reference to an object of instance type `T`.
 
 Worth mentioning:
 
@@ -180,7 +180,7 @@ Functions:
 
 ```ts
 const Foo = Schema.Struct({
-  feed: Type.Ref(Feed.Feed),
+  feed: Ref.Ref(Feed.Feed),
 }).pipe(Type.object({ typename: 'example.com/type/Foo', version: '0.1.0' }));
 
 Query.select(Filter.type(Feed.Feed));
@@ -243,7 +243,7 @@ import { Type, Annotation } from '@dxos/echo';
 const Document = Schema.Struct({
   name: Schema.optional(Schema.String),
   description: Schema.optional(Schema.String),
-  content: Type.Ref(Text), // Reference to another object
+  content: Ref.Ref(Text), // Reference to another object
 }).pipe(
   Type.object({
     typename: 'dxos.org/type/Document',
@@ -287,15 +287,15 @@ interface AnchoredTo extends Schema.Schema.Type<typeof AnchoredTo> {}
 | `Type.Relation.Any`                | Type alias for any relation schema                          |
 | `Type.relation({...})`             | Factory function - adds relation metadata to a schema       |
 | `Type.AnyEntity`                   | Runtime schema for any entity (union of `Obj                | Relation`) |
-| `Type.Ref(Schema)`                 | Schema constructor - creates a reference schema             |
+| `Ref.Ref(Schema)`                  | Schema constructor - creates a reference schema             |
 
 ### Reference Schemas
 
 ```ts
 // Type.Ref creates a schema for references to other objects
 const Task = Schema.Struct({
-  assignee: Type.Ref(Person), // Single reference
-  watchers: Ref.Array(Type.Ref(Person)), // Array of references
+  assignee: Ref.Ref(Person), // Single reference
+  watchers: Ref.Array(Ref.Ref(Person)), // Array of references
 }).pipe(Type.object({ typename: '...', version: '0.1.0' }));
 ```
 
@@ -618,7 +618,7 @@ const Person = Schema.Struct({
 const Task = Schema.Struct({
   title: Schema.String,
   completed: Schema.Boolean,
-  assignee: Schema.optional(Type.Ref(Person)),
+  assignee: Schema.optional(Ref.Ref(Person)),
 }).pipe(Type.object({ typename: 'example.com/type/Task', version: '0.1.0' }));
 
 interface Person extends Schema.Schema.Type<typeof Person> {}

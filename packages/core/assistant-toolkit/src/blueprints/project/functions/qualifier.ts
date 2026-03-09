@@ -21,7 +21,7 @@ export default defineFunction({
   description:
     'Qualifier that determines if the event is relevant to the project. Puts the data into the input queue of the project.',
   inputSchema: Schema.Struct({
-    project: Schema.suspend(() => Type.Ref(Project.Project)),
+    project: Schema.suspend(() => Ref.Ref(Project.Project)),
     event: TriggerEvent.TriggerEvent,
   }),
   outputSchema: Schema.Void,

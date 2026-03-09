@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Database, Entity, Obj, Tag, Type } from '@dxos/echo';
+import { Database, Entity, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { trim } from '@dxos/util';
 
@@ -17,8 +17,8 @@ export default defineFunction({
     Tags are objects of type ${Tag.Tag.typename}.
   `,
   inputSchema: Schema.Struct({
-    tag: Type.Ref(Type.Obj),
-    obj: Type.Ref(Type.Obj),
+    tag: Ref.Ref(Type.Obj),
+    obj: Ref.Ref(Type.Obj),
   }),
   outputSchema: Schema.Unknown,
   handler: Effect.fn(function* ({ data: { tag, obj } }) {

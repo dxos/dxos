@@ -21,7 +21,7 @@ export const TriggerShape = Schema.extend(
   ComputeShape,
   Schema.Struct({
     type: Schema.Literal('trigger'),
-    functionTrigger: Schema.optional(Type.Ref(Trigger.Trigger)),
+    functionTrigger: Schema.optional(Ref.Ref(Trigger.Trigger)),
   }),
 );
 

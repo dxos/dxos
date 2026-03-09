@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Feed, Obj, Type } from '@dxos/echo';
+import { Feed, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/internal';
 import { AccessToken } from '@dxos/types';
 
@@ -22,11 +22,11 @@ export const make = (props?: Omit<Obj.MakeProps<typeof Feed.Feed>, 'kind'>): Fee
 
 /** Configuration schema for a calendar feed. */
 export const Config = Schema.Struct({
-  feed: Type.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false)),
+  feed: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false)),
   // Track the last synced update timestamp to handle out-of-order event updates.
   lastSyncedUpdate: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
   accessToken: Schema.optional(
-    Type.Ref(AccessToken.AccessToken).annotations({
+    Ref.Ref(AccessToken.AccessToken).annotations({
       title: 'Account',
       description: 'Google account credentials for syncing this calendar.',
     }),
@@ -43,7 +43,7 @@ export interface Config extends Schema.Schema.Type<typeof Config> {}
 export const CreateCalendarSchema = Schema.Struct({
   name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
   accessToken: Schema.optional(
-    Type.Ref(AccessToken.AccessToken).annotations({
+    Ref.Ref(AccessToken.AccessToken).annotations({
       title: 'Account',
       description: 'Google account credentials for syncing this calendar.',
     }),

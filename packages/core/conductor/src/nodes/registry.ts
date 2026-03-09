@@ -137,7 +137,7 @@ export const registry: Record<NodeType, Executable> = {
   // Creates a new queue.
   'make-queue': defineComputeNode({
     input: Schema.Struct({}),
-    output: Schema.Struct({ [DEFAULT_OUTPUT]: Type.Ref(Queue) }),
+    output: Schema.Struct({ [DEFAULT_OUTPUT]: Ref.Ref(Queue) }),
     exec: synchronizedComputeFunction(
       Effect.fnUntraced(function* () {
         const { queues } = yield* QueueService;

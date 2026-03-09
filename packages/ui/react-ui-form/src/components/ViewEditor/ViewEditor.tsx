@@ -120,7 +120,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
       if (mode === 'tag') {
         return Schema.Struct({
           ...base.fields,
-          target: Schema.optional(Type.Ref(Feed.Feed).annotations({ title: 'Target Feed' })),
+          target: Schema.optional(Ref.Ref(Feed.Feed).annotations({ title: 'Target Feed' })),
         }).pipe(Schema.mutable);
       }
 
