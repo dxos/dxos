@@ -60,7 +60,9 @@ type PipelineContentProps = PropsWithChildren<{
 }>;
 
 const PipelineContent = ({ model, children, ...props }: PipelineContentProps) => (
-  <Board.Root {...props} model={model}>{children}</Board.Root>
+  <Board.Root {...props} model={model}>
+    {children}
+  </Board.Root>
 );
 
 PipelineContent.displayName = PIPELINE_CONTENT_NAME;

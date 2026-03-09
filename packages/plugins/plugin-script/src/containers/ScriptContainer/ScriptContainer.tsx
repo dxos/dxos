@@ -66,7 +66,9 @@ export const ScriptContainer = ({
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild><ScriptToolbar state={state} role={role} script={script} /></Panel.Toolbar>
+      <Panel.Toolbar asChild>
+        <ScriptToolbar state={state} role={role} script={script} />
+      </Panel.Toolbar>
       <Panel.Content asChild>
         <TypescriptEditor
           id={script.id}

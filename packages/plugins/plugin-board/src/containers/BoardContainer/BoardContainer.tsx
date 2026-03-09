@@ -129,7 +129,9 @@ export const BoardContainer = ({ role, subject: board }: BoardContainerProps) =>
         }}
       >
         <Panel.Root role={role}>
-          <Panel.Toolbar asChild><Board.Toolbar disabled={!hasAttention} /></Panel.Toolbar>
+          <Panel.Toolbar asChild>
+            <Board.Toolbar disabled={!hasAttention} />
+          </Panel.Toolbar>
           <Panel.Content asChild>
             <Board.Container>
               <Board.Viewport classNames='border-none'>

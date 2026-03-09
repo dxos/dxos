@@ -8,7 +8,13 @@ import React, { useMemo } from 'react';
 import { Obj } from '@dxos/echo';
 import { type Script } from '@dxos/functions';
 import { ElevationProvider, useTranslation } from '@dxos/react-ui';
-import { type ActionGraphProps, Menu, type MenuRootProps, createGapSeparator, useMenuActions } from '@dxos/react-ui-menu';
+import {
+  type ActionGraphProps,
+  Menu,
+  type MenuRootProps,
+  createGapSeparator,
+  useMenuActions,
+} from '@dxos/react-ui-menu';
 
 import {
   type CreateDeployOptions,

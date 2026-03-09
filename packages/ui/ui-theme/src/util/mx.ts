@@ -53,7 +53,7 @@ export const mx = extendTailwindMerge<AdditionalClassGroups>({
 /**
  * Reconcile className properties from slot.
  */
-export const useClassName = (
+export const useSlottedProps = (
   { classNames, className, ...props }: Pick<SlottableProps, 'classNames' | 'className'>,
   etc?: string,
 ) => ({
