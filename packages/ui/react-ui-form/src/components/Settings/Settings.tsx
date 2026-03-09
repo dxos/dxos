@@ -81,9 +81,7 @@ const SettingsSectionHeading = ({ title, description }: Omit<SettingsSectionProp
     <>
       <h2 className='px-trim-md mt-trim-md mb-trim-md dx-article text-xl'>{toLocalizedString(title, t)}</h2>
       {description && (
-        <p className='px-trim-md my-trim-md dx-article text-description'>
-          {toLocalizedString(description, t)}
-        </p>
+        <p className='px-trim-md my-trim-md dx-article text-description'>{toLocalizedString(description, t)}</p>
       )}
     </>
   );
