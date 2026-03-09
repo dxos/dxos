@@ -64,10 +64,10 @@ type AvatarLabelProps = ThemedClassName<Omit<ComponentPropsWithRef<typeof Primit
 
 const AvatarLabel = forwardRef<HTMLSpanElement, AvatarLabelProps>(
   ({ asChild, srOnly, classNames, ...props }, forwardedRef) => {
-    const Root = asChild ? Slot : Primitive.span;
+    const Comp = asChild ? Slot : Primitive.span;
     const { tx } = useThemeContext();
     const { labelId } = useAvatarContext('AvatarLabel');
-    return <Root {...props} id={labelId} ref={forwardedRef} className={tx('avatar.label', { srOnly }, classNames)} />;
+    return <Comp {...props} id={labelId} ref={forwardedRef} className={tx('avatar.label', { srOnly }, classNames)} />;
   },
 );
 
@@ -78,11 +78,11 @@ type AvatarDescriptionProps = ThemedClassName<Omit<ComponentPropsWithRef<typeof 
 
 const AvatarDescription = forwardRef<HTMLSpanElement, AvatarDescriptionProps>(
   ({ asChild, srOnly, classNames, ...props }, forwardedRef) => {
-    const Root = asChild ? Slot : Primitive.span;
+    const Comp = asChild ? Slot : Primitive.span;
     const { tx } = useThemeContext();
     const { descriptionId } = useAvatarContext('AvatarDescription');
     return (
-      <Root
+      <Comp
         {...props}
         id={descriptionId}
         ref={forwardedRef}

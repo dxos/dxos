@@ -99,7 +99,7 @@ const MosaicContainer = forwardRef<HTMLDivElement, MosaicContainerProps>(
   ) => {
     const rootRef = useRef<HTMLDivElement>(null);
     const composedRef = useComposedRefs<HTMLDivElement>(rootRef, forwardedRef);
-    const Root = asChild ? Slot : Primitive.div;
+    const Comp = asChild ? Slot : Primitive.div;
 
     // Handler.
     const eventHandler = useMemo(
@@ -258,7 +258,7 @@ const MosaicContainer = forwardRef<HTMLDivElement, MosaicContainerProps>(
         activeLocation={activeLocation}
         setActiveLocation={setActiveLocation}
       >
-        <Root
+        <Comp
           className={mx('h-full', className, classNames)}
           style={
             {
@@ -275,7 +275,7 @@ const MosaicContainer = forwardRef<HTMLDivElement, MosaicContainerProps>(
           ref={composedRef}
         >
           {children}
-        </Root>
+        </Comp>
         {debug?.()}
       </MosaicContainerContextProvider>
     );

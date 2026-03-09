@@ -45,7 +45,7 @@ type TreegridRootProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.
 const TreegridRoot = forwardRef<HTMLDivElement, TreegridRootProps>(
   ({ asChild, classNames, children, style, gridTemplateColumns, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
-    const Root = asChild ? Slot : Primitive.div;
+    const Comp = asChild ? Slot : Primitive.div;
     const { findFirstFocusable } = useFocusFinders();
 
     const handleKeyDown = useCallback(
@@ -95,7 +95,7 @@ const TreegridRoot = forwardRef<HTMLDivElement, TreegridRootProps>(
     );
 
     return (
-      <Root
+      <Comp
         role='treegrid'
         {...props}
         className={tx('treegrid.root', {}, classNames)}
@@ -104,7 +104,7 @@ const TreegridRoot = forwardRef<HTMLDivElement, TreegridRootProps>(
         ref={forwardedRef}
       >
         {children}
-      </Root>
+      </Comp>
     );
   },
 );
@@ -135,7 +135,7 @@ const TreegridRow = forwardRef<HTMLDivElement, TreegridRowScopedProps<TreegridRo
     forwardedRef,
   ) => {
     const { tx } = useThemeContext();
-    const Root = asChild ? Slot : Primitive.div;
+    const Comp = asChild ? Slot : Primitive.div;
     const pathParts = id.split(PATH_SEPARATOR);
     const level = pathParts.length - 1;
     const [open, onOpenChange] = useControllableState({
@@ -146,7 +146,7 @@ const TreegridRow = forwardRef<HTMLDivElement, TreegridRowScopedProps<TreegridRo
 
     return (
       <TreegridRowProvider open={open} onOpenChange={onOpenChange} scope={__treegridRowScope}>
-        <Root
+        <Comp
           role='row'
           aria-level={level}
           className={tx('treegrid.row', { level }, classNames)}
@@ -156,7 +156,7 @@ const TreegridRow = forwardRef<HTMLDivElement, TreegridRowScopedProps<TreegridRo
           ref={forwardedRef}
         >
           {children}
-        </Root>
+        </Comp>
       </TreegridRowProvider>
     );
   },

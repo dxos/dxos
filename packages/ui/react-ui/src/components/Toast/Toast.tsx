@@ -52,8 +52,8 @@ type ToastBodyProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div
 
 const ToastBody = forwardRef<HTMLDivElement, ToastBodyProps>(({ asChild, classNames, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
-  const Root = asChild ? Slot : Primitive.div;
-  return <Root {...props} className={tx('toast.body', {}, classNames)} ref={forwardedRef} />;
+  const Comp = asChild ? Slot : Primitive.div;
+  return <Comp {...props} className={tx('toast.body', {}, classNames)} ref={forwardedRef} />;
 });
 
 type ToastTitleProps = ThemedClassName<ToastTitlePrimitiveProps>;
@@ -61,8 +61,8 @@ type ToastTitleProps = ThemedClassName<ToastTitlePrimitiveProps>;
 const ToastTitle = forwardRef<HTMLHeadingElement, ToastTitleProps>(
   ({ asChild, classNames, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
-    const Root = asChild ? Slot : ToastTitlePrimitive;
-    return <Root {...props} className={tx('toast.title', {}, classNames)} ref={forwardedRef} />;
+    const Comp = asChild ? Slot : ToastTitlePrimitive;
+    return <Comp {...props} className={tx('toast.title', {}, classNames)} ref={forwardedRef} />;
   },
 );
 
@@ -71,8 +71,8 @@ type ToastDescriptionProps = ThemedClassName<ToastDescriptionPrimitiveProps>;
 const ToastDescription = forwardRef<HTMLParagraphElement, ToastDescriptionProps>(
   ({ asChild, classNames, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
-    const Root = asChild ? Slot : ToastDescriptionPrimitive;
-    return <Root {...props} className={tx('toast.description', {}, classNames)} ref={forwardedRef} />;
+    const Comp = asChild ? Slot : ToastDescriptionPrimitive;
+    return <Comp {...props} className={tx('toast.description', {}, classNames)} ref={forwardedRef} />;
   },
 );
 
@@ -81,8 +81,8 @@ type ToastActionsProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.
 const ToastActions = forwardRef<HTMLDivElement, ToastActionsProps>(
   ({ asChild, classNames, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
-    const Root = asChild ? Slot : Primitive.div;
-    return <Root {...props} className={tx('toast.actions', {}, classNames)} ref={forwardedRef} />;
+    const Comp = asChild ? Slot : Primitive.div;
+    return <Comp {...props} className={tx('toast.actions', {}, classNames)} ref={forwardedRef} />;
   },
 );
 

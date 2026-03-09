@@ -63,14 +63,14 @@ const ScrollAreaRoot = forwardRef<HTMLDivElement, ScrollAreaRootProps>(
     forwardedRef,
   ) => {
     const { tx } = useThemeContext();
-    const Root = asChild ? Slot : Primitive.div;
+    const Comp = asChild ? Slot : Primitive.div;
     const options = { orientation, autoHide, margin, padding, thin, snap };
 
     return (
       <ScrollAreaProvider {...options}>
-        <Root {...props} className={tx('scrollArea.root', options, [className, classNames])} ref={forwardedRef}>
+        <Comp {...props} className={tx('scrollArea.root', options, [className, classNames])} ref={forwardedRef}>
           {children}
-        </Root>
+        </Comp>
       </ScrollAreaProvider>
     );
   },

@@ -37,7 +37,9 @@ export const JoinDialog = (props: JoinPanelProps) => {
 
   return (
     <Dialog.Content>
-      <Dialog.Title classNames='sr-only'>{t('join space label', { ns: osTranslations })}</Dialog.Title>
+      <Dialog.Header>
+        <Dialog.Title classNames='sr-only'>{t('join space label', { ns: osTranslations })}</Dialog.Title>
+      </Dialog.Header>
       <JoinPanel
         mode='halo-only'
         {...props}
