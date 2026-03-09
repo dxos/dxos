@@ -27,7 +27,7 @@ import { type ItemProps, PipelineComponent } from './PipelineComponent';
 
 const StorybookProjectItem = ({ item, projectionModel }: ItemProps) => {
   if (Obj.instanceOf(Person.Person, item)) {
-    const contact = item as Obj.Obj<Person.Person>;
+    const contact = item as Obj.OfShape<Person.Person>;
 
     return (
       <Form.Root schema={omitId(Person.Person)} projection={projectionModel} values={contact} autoSave>

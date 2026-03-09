@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Collection, Type, View } from '@dxos/echo';
+import { Collection, Feed, Type, View } from '@dxos/echo';
 
 import * as CollectionModel from './CollectionModel';
 import * as Expando from './Expando';

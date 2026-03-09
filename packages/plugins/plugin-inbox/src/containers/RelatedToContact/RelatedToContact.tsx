@@ -9,7 +9,7 @@ import React, { useCallback } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { Filter, Obj, Query, Type } from '@dxos/echo';
+import { Feed, Filter, Obj, Query, Type } from '@dxos/echo';
 import { AttentionOperation } from '@dxos/plugin-attention/types';
 import { useActiveSpace } from '@dxos/plugin-space';
 import { useQuery } from '@dxos/react-client/echo';

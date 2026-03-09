@@ -10,7 +10,7 @@ import * as Option from 'effect/Option';
 import { type CapabilityManager } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
-import { type Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+import { type Database, Feed, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Migrations } from '@dxos/migrations';

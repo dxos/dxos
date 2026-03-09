@@ -170,7 +170,7 @@ export default Capability.makeModule(
       Surface.create({
         id: `${meta.id}/selected-objects`,
         role: 'article',
-        filter: (data): data is { companionTo: Obj.Obj<{ view: Ref.Ref<View.View> }>; subject: 'selected-objects' } => {
+        filter: (data): data is { companionTo: Obj.OfShape<{ view: Ref.Ref<View.View> }>; subject: 'selected-objects' } => {
           if (data.subject !== 'selected-objects' || !Obj.isObject(data.companionTo)) {
             return false;
           }

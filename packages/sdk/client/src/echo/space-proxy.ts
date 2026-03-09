@@ -128,7 +128,7 @@ export class SpaceProxy implements Space, CustomInspectable {
 
   private _databaseOpen = false;
   private _error: Error | undefined = undefined;
-  private _properties?: Obj.Obj<SpaceProperties> = undefined;
+  private _properties?: Obj.OfShape<SpaceProperties> = undefined;
 
   /**
    * When true, the space is waiting for the backend to finish re-initializing after a reconnect.
@@ -217,7 +217,7 @@ export class SpaceProxy implements Space, CustomInspectable {
   }
 
   @trace.info({ depth: 2 })
-  get properties(): Obj.Obj<SpaceProperties> {
+  get properties(): Obj.OfShape<SpaceProperties> {
     this._throwIfNotInitialized();
     invariant(this._properties, 'Properties not available');
     return this._properties;

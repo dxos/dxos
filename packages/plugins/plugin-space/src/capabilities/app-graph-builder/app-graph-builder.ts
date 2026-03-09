@@ -11,7 +11,7 @@ import * as Schema from 'effect/Schema';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { type Space, SpaceState, getSpace, isSpace, parseId } from '@dxos/client/echo';
-import { DXN, Filter, Obj, type Ref, Type } from '@dxos/echo';
+import { DXN, Feed, Filter, Obj, type Ref, Type } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { Operation } from '@dxos/operation';
