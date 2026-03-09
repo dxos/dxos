@@ -72,7 +72,7 @@ type RelationMakeProps<T extends Unknown> = {
   [internal.MetaId]?: internal.ObjectMeta;
   [Source]: T[Source];
   [Target]: T[Target];
-} & Type.Properties<T>;
+} & Entity.Properties<T>;
 
 /**
  * Props type for relation creation with a given schema.

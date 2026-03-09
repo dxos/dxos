@@ -33,13 +33,6 @@ export const RuntimeType = internal.EchoSchema;
  */
 export type RuntimeType = internal.EchoSchema;
 
-/**
- * Returns all properties of an object or relation except for the id and kind.
- */
-// TODO(dmaretskyi): Narrow T to Entity.Unknown or Entity.Snapshot<Entity.Unknown>
-// TODO(dmaretskyi): Rename `Entitiy.Properties`.
-export type Properties<T = any> = Omit<T, 'id' | EntityModule.KindId | RelationModule.Source | RelationModule.Target>;
-
 //
 // Internal types (not exported)
 //

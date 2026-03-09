@@ -6,6 +6,7 @@ import type { ForeignKey } from '@dxos/echo-protocol';
 import type { DXN, ObjectId } from '@dxos/keys';
 
 import * as internal from './internal';
+import type * as Relation from './Relation';
 
 // Re-export KindId and SnapshotKindId from internal.
 export const KindId = internal.KindId;
@@ -66,6 +67,11 @@ export interface Snapshot extends SnapshotOfKind<Kind> {}
 export interface Any extends OfKind<Kind> {
   [key: string]: unknown;
 }
+
+/**
+ * Returns all properties of an object or relation except for the id and kind.
+ */
+export type Properties<T> = Omit<T, 'id' | KindId | Relation.Source | Relation.Target>;
 
 /**
  * Check if a value is an ECHO entity (object or relation).

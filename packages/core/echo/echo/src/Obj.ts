@@ -76,7 +76,7 @@ const defaultMeta: internal.ObjectMeta = {
 type Props<T = any> = {
   id?: ObjectId;
   [Meta]?: Partial<internal.ObjectMeta>;
-} & Type.Properties<T>;
+} & Entity.Properties<T>;
 
 // TODO(burdon): Should we allow the caller to set the id?
 /**
