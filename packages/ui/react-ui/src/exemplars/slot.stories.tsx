@@ -6,7 +6,7 @@ import { Slot } from '@radix-ui/react-slot';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type PropsWithChildren, forwardRef } from 'react';
 
-import { mx } from '@dxos/ui-theme';
+import { useClassName } from '@dxos/ui-theme';
 import { type SlottableClassName, type SlottableProps, type ThemedClassName } from '@dxos/ui-types';
 
 import { withTheme } from '../testing';
@@ -21,10 +21,11 @@ import { withTheme } from '../testing';
 
 // Outer primitive (like Tooltip.Trigger or Focus.Group).
 const Outer = forwardRef<HTMLDivElement, SlottableProps<HTMLDivElement>>(
-  ({ children, className, classNames, asChild, ...props }, forwardedRef) => {
+  ({ children, asChild, ...props }, forwardedRef) => {
     const Root = asChild ? Slot : 'div';
+    const { className, ...rest } = useClassName(props);
     return (
-      <Root {...props} className={mx(className, classNames)} data-outer='true' ref={forwardedRef}>
+      <Root {...rest} className={className} data-outer='true' ref={forwardedRef}>
         {children}
       </Root>
     );
@@ -33,10 +34,11 @@ const Outer = forwardRef<HTMLDivElement, SlottableProps<HTMLDivElement>>(
 
 // Middle primitive (like Dialog.Trigger or Mosaic.Cell).
 const Middle = forwardRef<HTMLDivElement, SlottableProps<HTMLDivElement>>(
-  ({ children, className, classNames, asChild, ...props }, forwardedRef) => {
+  ({ children, asChild, ...props }, forwardedRef) => {
     const Root = asChild ? Slot : 'div';
+    const { className, ...rest } = useClassName(props);
     return (
-      <Root {...props} className={mx(className, classNames)} data-middle='true' ref={forwardedRef}>
+      <Root {...rest} className={className} data-middle='true' ref={forwardedRef}>
         {children}
       </Root>
     );
@@ -45,13 +47,10 @@ const Middle = forwardRef<HTMLDivElement, SlottableProps<HTMLDivElement>>(
 
 // Leaf component (like Card.Root).
 const Leaf = forwardRef<HTMLButtonElement, SlottableClassName<PropsWithChildren>>(
-  ({ className, classNames, children, ...props }, forwardedRef) => {
+  ({ children, ...props }, forwardedRef) => {
+    const { className, ...rest } = useClassName(props);
     return (
-      <button
-        {...props}
-        className={mx('p-2 outline-hidden border rounded-sm', className, classNames)}
-        ref={forwardedRef}
-      >
+      <button {...rest} className={className} ref={forwardedRef}>
         {children}
       </button>
     );
@@ -59,16 +58,20 @@ const Leaf = forwardRef<HTMLButtonElement, SlottableClassName<PropsWithChildren>
 );
 
 // Test 1: Single asChild.
-const TestSingle = ({ classNames, ...props }: ThemedClassName<{ role?: string }>) => (
-  <Outer asChild {...props} className={mx('p-2', classNames)}>
-    <Leaf>Single asChild</Leaf>
-  </Outer>
-);
+const TestSingle = (props: ThemedClassName<{ role?: string }>) => {
+  const { className, ...rest } = useClassName(props);
+  return (
+    <Outer asChild {...rest} className={className}>
+      <Leaf>Single asChild</Leaf>
+    </Outer>
+  );
+};
 
 // Test 2: Nested asChild.
-const TestNested = ({ classNames, ...props }: ThemedClassName<{ role?: string }>) => {
+const TestNested = (props: ThemedClassName<{ role?: string }>) => {
+  const { className, ...rest } = useClassName(props);
   return (
-    <Outer asChild {...props} className={mx('p-2', classNames)}>
+    <Outer asChild {...rest} className={className}>
       <Middle asChild>
         <Leaf>Nested asChild</Leaf>
       </Middle>
@@ -77,15 +80,18 @@ const TestNested = ({ classNames, ...props }: ThemedClassName<{ role?: string }>
 };
 
 // Test 3: Complex.
-const TestInner = ({ classNames, ...props }: ThemedClassName<{ role?: string }>) => (
-  <Outer asChild {...props} className={mx('p-2', classNames)}>
-    <Middle asChild>
-      <Leaf>
-        <div role='none'>Leaf</div>
-      </Leaf>
-    </Middle>
-  </Outer>
-);
+const TestInner = (props: ThemedClassName<{ role?: string }>) => {
+  const { className, ...rest } = useClassName(props);
+  return (
+    <Outer asChild {...rest} className={className}>
+      <Middle asChild>
+        <Leaf>
+          <div role='none'>Leaf</div>
+        </Leaf>
+      </Middle>
+    </Outer>
+  );
+};
 
 const meta = {
   title: 'ui/react-ui-core/exemplars/slot',
