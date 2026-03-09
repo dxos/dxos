@@ -54,21 +54,21 @@ export const useSheetContext = (): SheetContextValue => {
   return useContext(SheetContext) ?? raise(new Error('Missing SheetContext'));
 };
 
-export type SheetProviderProps = {
+export type SheetRootProps = {
   graph: ComputeGraph;
   sheet: Sheet.Sheet;
   readonly?: boolean;
   ignoreAttention?: boolean;
 } & Pick<SheetContextValue, 'onInfo'>;
 
-export const SheetProvider = ({
+export const SheetRoot = ({
   children,
   graph,
   sheet,
   readonly,
   ignoreAttention,
   onInfo,
-}: PropsWithChildren<SheetProviderProps>) => {
+}: PropsWithChildren<SheetRootProps>) => {
   const model = useSheetModel(graph, sheet, { readonly });
   if (!model) {
     return null;

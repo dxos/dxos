@@ -16,7 +16,7 @@ import { createTestCells, useTestSheet, withComputeGraphDecorator } from '../../
 import { translations } from '../../translations';
 import { Sheet } from '../../types';
 import { useComputeGraph } from '../ComputeGraph';
-import { SheetProvider } from '../SheetContext';
+import { SheetRoot } from '../SheetContext';
 
 import { SheetContent } from './GridSheet';
 
@@ -29,11 +29,11 @@ export const Basic = () => {
   }
 
   return (
-    <SheetProvider graph={graph} sheet={sheet} ignoreAttention>
+    <SheetRoot graph={graph} sheet={sheet} ignoreAttention>
       <div role='none' className='grid h-full w-full'>
         <SheetContent />
       </div>
-    </SheetProvider>
+    </SheetRoot>
   );
 };
 
