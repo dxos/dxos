@@ -8,20 +8,26 @@ import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { type ComputeGraphRegistry } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
-import { Panel as DxPanel, Flex, type FlexProps } from '@dxos/react-ui';
+import { Flex, type FlexProps, Panel } from '@dxos/react-ui';
 
-import { FunctionEditor, GridSheet, SheetProvider, SheetToolbar } from '../../components';
+import { Sheet } from '../../components';
 import { ComputeGraphContextProvider, useComputeGraph } from '../../components/ComputeGraph';
-import { type Sheet } from '../../types';
+import { type Sheet as SheetType } from '../../types';
 
 export type SheetContainerProps = SurfaceComponentProps<
-  Sheet.Sheet,
+  SheetType.Sheet,
   {
     space: Space;
     registry: ComputeGraphRegistry;
     ignoreAttention?: boolean;
   }
 >;
+
+export const SheetContainer = ({ registry, ...props }: SheetContainerProps) => (
+  <ComputeGraphContextProvider registry={registry}>
+    <SheetContainerInner {...props} />
+  </ComputeGraphContextProvider>
+);
 
 const SheetContainerInner = ({
   role,
@@ -37,28 +43,22 @@ const SheetContainerInner = ({
   const Root = role === 'section' ? Container : Fragment;
 
   return (
-    <SheetProvider sheet={sheet} graph={graph} ignoreAttention={ignoreAttention}>
+    <Sheet.Root sheet={sheet} graph={graph} ignoreAttention={ignoreAttention}>
       <Root>
-        <DxPanel.Root>
-          <DxPanel.Toolbar asChild>
-            <SheetToolbar id={Obj.getDXN(sheet).toString()} />
-          </DxPanel.Toolbar>
-          <DxPanel.Content asChild>
-            <GridSheet />
-          </DxPanel.Content>
-          <DxPanel.Statusbar asChild>
-            <FunctionEditor />
-          </DxPanel.Statusbar>
-        </DxPanel.Root>
+        <Panel.Root>
+          <Panel.Toolbar asChild>
+            <Sheet.Toolbar id={Obj.getDXN(sheet).toString()} />
+          </Panel.Toolbar>
+          <Panel.Content asChild>
+            <Sheet.Content />
+          </Panel.Content>
+          <Panel.Statusbar asChild>
+            <Sheet.Statusbar />
+          </Panel.Statusbar>
+        </Panel.Root>
       </Root>
-    </SheetProvider>
+    </Sheet.Root>
   );
 };
-
-export const SheetContainer = ({ registry, ...props }: SheetContainerProps) => (
-  <ComputeGraphContextProvider registry={registry}>
-    <SheetContainerInner {...props} />
-  </ComputeGraphContextProvider>
-);
 
 const Container = (props: FlexProps) => <Flex {...props} classNames='aspect-square' />;
