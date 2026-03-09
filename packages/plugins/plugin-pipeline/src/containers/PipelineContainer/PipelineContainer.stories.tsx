@@ -169,35 +169,29 @@ const meta = {
               // Generate sample Organizations.
               for (const _ of Array.from({ length: 20 })) {
                 yield* Database.add(
-                  Obj.make(
-                    Organization.Organization,
-                    {
-                      name: faker.company.name(),
-                      website: faker.internet.url(),
-                      description: faker.lorem.paragraph(),
-                      image: faker.image.url(),
-                    },
-                    {
+                  Obj.make(Organization.Organization, {
+                    [Obj.Meta]: {
                       tags: faker.datatype.boolean() ? [tagDxn] : [],
                     },
-                  ),
+                    name: faker.company.name(),
+                    website: faker.internet.url(),
+                    description: faker.lorem.paragraph(),
+                    image: faker.image.url(),
+                  }),
                 );
               }
 
               // Generate sample Tasks.
               for (const _ of Array.from({ length: 20 })) {
                 yield* Database.add(
-                  Obj.make(
-                    Task.Task,
-                    {
-                      title: faker.lorem.sentence(),
-                      status: faker.helpers.arrayElement(['todo', 'in-progress', 'done']) as any,
-                      priority: faker.helpers.arrayElement(['low', 'medium', 'high']) as any,
-                    },
-                    {
+                  Obj.make(Task.Task, {
+                    [Obj.Meta]: {
                       tags: faker.datatype.boolean() ? [tagDxn] : [],
                     },
-                  ),
+                    title: faker.lorem.sentence(),
+                    status: faker.helpers.arrayElement(['todo', 'in-progress', 'done']) as any,
+                    priority: faker.helpers.arrayElement(['low', 'medium', 'high']) as any,
+                  }),
                 );
               }
 

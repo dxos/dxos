@@ -85,7 +85,9 @@ export const generator = () => ({
           //   }),
           // );
 
-          space.db.add(Obj.make(Person.Person, { fullName: 'Rich', organization: Ref.make(org) }, { tags: [tagDxn] }));
+          space.db.add(
+            Obj.make(Person.Person, { [Obj.Meta]: { tags: [tagDxn] }, fullName: 'Rich', organization: Ref.make(org) }),
+          );
           space.db.add(
             Obj.make(Person.Person, {
               fullName: 'Josiah',
