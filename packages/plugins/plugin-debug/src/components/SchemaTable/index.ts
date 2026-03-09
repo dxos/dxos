@@ -3,4 +3,3 @@
 //
 
 export * from './SchemaTable';
-export * from './SpaceGenerator';

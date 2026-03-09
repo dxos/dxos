@@ -44,10 +44,38 @@ export const CalendarArticle = ({ role, subject: feed }: SurfaceComponentProps<F
 
   // TODO(burdon): Create story.
   return (
+    <NaturalCalendar.Root>
+      <div role='none' className='dx-container @container'>
+        <div role='none' className='dx-container grid @2xl:grid-cols-[min-content_1fr] overflow-hidden'>
+          <Panel.Root classNames='invisible @2xl:visible'>
+            <Panel.Toolbar asChild>
+              <NaturalCalendar.Toolbar />
+            </Panel.Toolbar>
+            <Panel.Content asChild>
+              <NaturalCalendar.Grid />
+            </Panel.Content>
+          </Panel.Root>
+
+          <Panel.Root>
+            <Panel.Toolbar asChild>
+              <Toolbar.Root>
+                <Toolbar.IconButton icon='ph--calendar--duotone' iconOnly variant='ghost' label={t('calendar')} />
+              </Toolbar.Root>
+            </Panel.Toolbar>
+            <Panel.Content asChild>
+              <EventList events={objects} selected={selected} onSelect={handleSelect} />
+            </Panel.Content>
+          </Panel.Root>
+        </div>
+      </div>
+    </NaturalCalendar.Root>
+  );
+
+  return (
     <Panel.Root role={role} classNames='@container'>
       <Panel.Content asChild>
         <div role='none' className='grid @2xl:grid-cols-[min-content_1fr] overflow-hidden'>
-          <div role='none' className='hidden @2xl:flex'>
+          <div role='none' className='hidden @2xl:flex border'>
             <NaturalCalendar.Root>
               <Panel.Toolbar asChild>
                 <NaturalCalendar.Toolbar />
@@ -60,7 +88,7 @@ export const CalendarArticle = ({ role, subject: feed }: SurfaceComponentProps<F
 
           <Panel.Root>
             <Panel.Toolbar asChild>
-              <Toolbar.Root classNames='border-b border-subdued-separator'>
+              <Toolbar.Root>
                 <Toolbar.IconButton icon='ph--calendar--duotone' iconOnly variant='ghost' label={t('calendar')} />
               </Toolbar.Root>
             </Panel.Toolbar>

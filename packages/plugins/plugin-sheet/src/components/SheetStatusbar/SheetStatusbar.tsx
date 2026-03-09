@@ -2,15 +2,17 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type ComponentPropsWithoutRef } from 'react';
+import React from 'react';
 
 import { addressToA1Notation, isFormula, rangeToA1Notation } from '@dxos/compute';
-import { Icon } from '@dxos/react-ui';
+import { type ComposableProps, Icon } from '@dxos/react-ui';
 
 import { mapFormulaIndicesToRefs } from '../../types';
 import { useSheetContext } from '../SheetRoot';
 
-export const SheetStatusbar = (props: ComponentPropsWithoutRef<'div'>) => {
+export type SheetStatusbarProps = ComposableProps;
+
+export const SheetStatusbar = (props: SheetStatusbarProps) => {
   const { model, cursor, range } = useSheetContext();
 
   let value;

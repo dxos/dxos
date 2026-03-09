@@ -134,7 +134,7 @@ export default Capability.makeModule(
           );
 
           return (
-            <Panel.Root role={role}>
+            <Panel.Root role={role} className='dx-article'>
               <Panel.Content asChild>
                 <SpaceGenerator space={data.subject.space} onCreateObjects={handleCreateObject} />
               </Panel.Content>

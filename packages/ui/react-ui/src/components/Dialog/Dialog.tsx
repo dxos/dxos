@@ -87,9 +87,9 @@ const DialogOverlay: ForwardRefExoticComponent<DialogOverlayProps> = forwardRef<
     return (
       <DialogOverlayPrimitive
         {...props}
+        data-block-align={blockAlign}
         className={tx('dialog.overlay', {}, classNames)}
         ref={forwardedRef}
-        data-h-align={blockAlign}
       >
         <OverlayLayoutProvider inOverlayLayout>{children}</OverlayLayoutProvider>
       </DialogOverlayPrimitive>

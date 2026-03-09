@@ -72,7 +72,7 @@ export const MessageArticle = ({
       onReplyAll={handleReplyAll}
       onForward={handleForward}
     >
-      <Panel.Root role={role}>
+      <Panel.Root role={role} className='dx-article'>
         <Panel.Toolbar asChild>
           <Message.Toolbar />
         </Panel.Toolbar>

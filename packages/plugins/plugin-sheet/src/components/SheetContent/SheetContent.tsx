@@ -3,7 +3,6 @@
 //
 
 import React, {
-  type ComponentPropsWithoutRef,
   type FocusEvent,
   type KeyboardEvent,
   type MouseEvent,
@@ -18,7 +17,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type CellRange, rangeToA1Notation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { defaultColSize, defaultRowSize } from '@dxos/lit-grid';
-import { DropdownMenu, Icon, useTranslation } from '@dxos/react-ui';
+import { type ComposableProps, DropdownMenu, Icon, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
   type DxGridCellIndex,
@@ -70,7 +69,7 @@ const sheetRowDefault = {
   grid: { size: defaultRowSize, resizeable: true },
 };
 
-export type SheetContentProps = ComponentPropsWithoutRef<'div'>;
+export type SheetContentProps = ComposableProps;
 
 export const SheetContent = (props: SheetContentProps) => {
   const { t } = useTranslation(meta.id);

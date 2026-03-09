@@ -18,12 +18,12 @@ export const BlueprintArticle = ({ role, subject }: BlueprintArticleProps) => {
   const { hasAttention } = useAttention(Obj.getDXN(subject).toString());
 
   return (
-    <Panel.Root role={role}>
+    <Panel.Root role={role} classNames='dx-article'>
       <Panel.Toolbar asChild>
         <Toolbar.Root disabled={!hasAttention} />
       </Panel.Toolbar>
       <Panel.Content asChild>
-        <TemplateEditor id={subject.id} template={subject.instructions} classNames='dx-article' />
+        <TemplateEditor id={subject.id} template={subject.instructions} />
       </Panel.Content>
     </Panel.Root>
   );

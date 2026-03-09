@@ -45,14 +45,14 @@ export const PromptArticle = ({ role, subject }: PromptArticleProps) => {
   );
 
   return (
-    <Panel.Root role={role}>
+    <Panel.Root role={role} className='dx-article'>
       <Panel.Toolbar asChild>
         <Toolbar.Root disabled={!hasAttention} onClick={handleRun}>
           <Toolbar.IconButton iconOnly icon='ph--play--regular' label={t('run prompt label')} onClick={handleRun} />
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content asChild>
-        <TemplateEditor id={subject.id} template={subject.instructions} classNames='dx-article' />
+        <TemplateEditor id={subject.id} template={subject.instructions} />
       </Panel.Content>
     </Panel.Root>
   );

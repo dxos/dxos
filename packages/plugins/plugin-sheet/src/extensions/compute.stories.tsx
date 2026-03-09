@@ -25,7 +25,7 @@ import { isNonNullable } from '@dxos/util';
 import { Sheet, useComputeGraph } from '../components';
 import { useSheetModel } from '../model';
 import { useTestSheet, withComputeGraphDecorator } from '../testing';
-import { Sheet } from '../types';
+import { Sheet as SheetType } from '../types';
 
 import { compute, computeGraphFacet } from './compute';
 
@@ -110,7 +110,7 @@ const meta = {
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
     withClientProvider({
-      types: [Sheet.Sheet],
+      types: [SheetType.Sheet],
       createIdentity: true,
       createSpace: true,
     }),

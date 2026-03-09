@@ -27,6 +27,7 @@ export const JournalContainer = ({ role, subject: journal, showCalendar = true }
   return (
     <Panel.Root role={role}>
       <Panel.Content asChild>
+        {/* TODO(burdon): Splitter. */}
         <div
           className={mx(
             showCalendar

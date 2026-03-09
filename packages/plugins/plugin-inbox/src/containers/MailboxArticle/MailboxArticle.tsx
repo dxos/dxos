@@ -184,8 +184,9 @@ export const MailboxArticle = ({ subject: feed, filter: filterProp, attendableId
   }, [filterVisible, filterProp, parser]);
 
   return (
-    <Panel.Root>
+    <Panel.Root className='dx-article'>
       <Panel.Toolbar>
+        {/* TODO(burdon): Factor out menu. */}
         <ElevationProvider elevation='positioned'>
           <Menu.Root {...menuActions} attendableId={id}>
             <Menu.Toolbar />

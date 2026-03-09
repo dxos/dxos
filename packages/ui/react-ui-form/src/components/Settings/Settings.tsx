@@ -43,7 +43,7 @@ type SettingsRootProps = PropsWithChildren;
 
 const SettingsRoot = ({ children }: SettingsRootProps) => {
   return (
-    <ScrollArea.Root orientation='vertical'>
+    <ScrollArea.Root orientation='vertical' className='dx-article'>
       <ScrollArea.Viewport classNames='p-trim-md'>{children}</ScrollArea.Viewport>
     </ScrollArea.Root>
   );
@@ -79,10 +79,8 @@ const SettingsSectionHeading = ({ title, description }: Omit<SettingsSectionProp
   const { t } = useTranslation(translationKey);
   return (
     <>
-      <h2 className='px-trim-md mt-trim-md mb-trim-md dx-article text-xl'>{toLocalizedString(title, t)}</h2>
-      {description && (
-        <p className='px-trim-md my-trim-md dx-article text-description'>{toLocalizedString(description, t)}</p>
-      )}
+      <h2 className='px-trim-md mt-trim-md mb-trim-md text-xl'>{toLocalizedString(title, t)}</h2>
+      {description && <p className='px-trim-md my-trim-md text-description'>{toLocalizedString(description, t)}</p>}
     </>
   );
 };
@@ -106,7 +104,7 @@ SettingsGroupButton.displayName = SETTINGS_GROUP_BUTTON_NAME;
 type SettingsGroupProps = ThemedClassName<PropsWithChildren>;
 
 const SettingsGroup = ({ children, classNames }: SettingsGroupProps) => (
-  <div role='none' className={mx('group dx-article space-y-trim-md', classNames)}>
+  <div role='none' className={mx('group space-y-trim-md', classNames)}>
     {children}
   </div>
 );
@@ -118,7 +116,7 @@ SettingsGroup.displayName = SETTINGS_GROUP_NAME;
 //
 
 const SettingsFrame = ({ children }: SettingsGroupProps) => (
-  <div role='none' className={mx('dx-article p-trim-md', 'border border-separator rounded-md')}>
+  <div role='none' className='p-trim-md border border-separator rounded-md'>
     {children}
   </div>
 );

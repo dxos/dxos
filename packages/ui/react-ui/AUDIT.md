@@ -47,13 +47,19 @@ They need to be made headless (context-only) so they can be moved outside Panel.
 - [x] Move headless Root components outside Panel.Root (Event.Root, MarkdownEditor.Root, SearchList.Root, Chat.Root)
 - [x] Wrap toolbars in Panel.Toolbar asChild where missing
 - [x] Make non-headless intermediate Root components headless (Chessboard.Root, PipelineComponent.Root, TableComponent.Root)
-
 - [x] All primitives must spread ...props and useClassName; use SlottableProps
-
-- [ ] Audit use of `@container` (e.g., <Panel.Root classNames='@container'>)
-- [ ] Move dx-article and scroll option to Panel.Content prop (need to ensure classNames are processed)
-- [ ] Check no nested Panel components
+- [x] Consistent use of `dx-article`, `@container`
 
 ## Cleanup
 
+- [ ] Dialog.Body should delegate grid to children
+  - Dialog.Text
+  - push down pattern to lower-level components like Form, SearchList.
+
+- [ ] Splitter (e.g., JournalContainer); mobile layout
 - [ ] Audit radix primitives; rename `Root` to `Comp` for all radix asChild elements
+- [ ] raise(new Error()) for context; follow solid Map.tsx warning pattern
+  - throw new Error(`${displayName} must be used within Map.Root`);
+- [ ] Doc -- how to write plugins; composable; separation of concerns; compact.
+  - [ ] Use radix context.
+  - [ ] All Root components should be headless or support asChild
