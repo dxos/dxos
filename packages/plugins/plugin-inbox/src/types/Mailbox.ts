@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, Feed, Obj, Type } from '@dxos/echo';
-import { FormInputAnnotation } from '@dxos/echo/internal';
+import { FormInputAnnotation, SystemTypeAnnotation } from '@dxos/echo/internal';
 import { AccessToken } from '@dxos/types';
 
 import { meta } from '../meta';
@@ -61,6 +61,7 @@ export const Config = Schema.Struct({
     icon: 'ph--tray--regular',
     hue: 'red',
   }),
+  SystemTypeAnnotation.set(true),
 );
 
 export interface Config extends Schema.Schema.Type<typeof Config> {}

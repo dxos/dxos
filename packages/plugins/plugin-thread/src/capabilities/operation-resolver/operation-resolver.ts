@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability, UndoMapping } from '@dxos/app-framework';
 import { sleep } from '@dxos/async';
-import { Obj, Relation, Type } from '@dxos/echo';
+import { Obj, Relation } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { OperationResolver } from '@dxos/operation';
 import { Operation } from '@dxos/operation';
@@ -14,7 +14,6 @@ import { ATTENDABLE_PATH_SEPARATOR, DeckOperation } from '@dxos/plugin-deck/type
 import { ObservabilityOperation } from '@dxos/plugin-observability/types';
 import { SpaceOperation } from '@dxos/plugin-space/types';
 import { Ref } from '@dxos/react-client/echo';
-import { Collection } from '@dxos/schema';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 
 import { meta } from '../../meta';
@@ -131,15 +130,10 @@ export default Capability.makeModule(
         //
         OperationResolver.make({
           operation: ThreadOperation.OnCreateSpace,
-          handler: Effect.fnUntraced(function* ({ space, isDefault, rootCollection }) {
+          handler: Effect.fnUntraced(function* ({ space, isDefault }) {
             if (isDefault) {
               return;
             }
-
-            const collection = Collection.makeManaged({ key: Type.getTypename(Channel.Channel) });
-            Obj.change(rootCollection, (c) => {
-              c.objects.push(Ref.make(collection));
-            });
 
             const { object: channel } = yield* Operation.invoke(ThreadOperation.CreateChannel, {
               name: 'General',

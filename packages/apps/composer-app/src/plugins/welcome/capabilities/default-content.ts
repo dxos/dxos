@@ -17,7 +17,7 @@ const SPACE_ICON = 'house-line';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const { Obj, Ref, Type } = yield* Effect.tryPromise(() => import('@dxos/echo'));
+    const { Obj } = yield* Effect.tryPromise(() => import('@dxos/echo'));
     const { ClientCapabilities } = yield* Effect.tryPromise(() => import('@dxos/plugin-client'));
     const { Markdown } = yield* Effect.tryPromise(() => import('@dxos/plugin-markdown/types'));
     const { Collection } = yield* Effect.tryPromise(() => import('@dxos/schema'));
@@ -32,13 +32,6 @@ export default Capability.makeModule(
       p.icon = SPACE_ICON;
     });
     const defaultSpaceCollection = space.properties[Collection.Collection.typename].target;
-
-    if (defaultSpaceCollection) {
-      const typesCollectionRef = Ref.make(Collection.makeManaged({ key: Type.getTypename(Type.PersistentType) }));
-      Obj.change(defaultSpaceCollection, (c) => {
-        c.objects.push(typesCollectionRef);
-      });
-    }
 
     yield* Plugin.activate(SpaceEvents.SpaceCreated);
     const onCreateSpaceCallbacks = yield* Capability.getAll(SpaceCapabilities.OnCreateSpace);

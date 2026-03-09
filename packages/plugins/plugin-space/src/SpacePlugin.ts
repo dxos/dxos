@@ -51,7 +51,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       {
         id: Collection.Collection.typename,
         metadata: {
-          icon: 'ph--cards-three--regular',
+          icon: 'ph--folder--regular',
           iconHue: 'neutral',
           // TODO(wittjosiah): Move out of metadata.
           loadReferences: async (collection: Collection.Collection) => await Ref.Array.loadAll(collection.objects),
@@ -89,24 +89,29 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
         id: Event.Event.typename,
         metadata: {
           icon: 'ph--calendar-dot--regular',
+          createObject: ((props) => Effect.sync(() => Event.make(props))) satisfies CreateObject,
         },
       },
       {
         id: Organization.Organization.typename,
         metadata: {
           icon: 'ph--building-office--regular',
+          createObject: ((props) => Effect.sync(() => Organization.make(props))) satisfies CreateObject,
         },
       },
       {
         id: Person.Person.typename,
         metadata: {
           icon: 'ph--user--regular',
+          createObject: ((props) => Effect.sync(() => Person.make(props))) satisfies CreateObject,
         },
       },
       {
         id: Task.Task.typename,
         metadata: {
           icon: 'ph--check-circle--regular',
+          inputSchema: Task.Task,
+          createObject: ((props) => Effect.sync(() => Task.make(props))) satisfies CreateObject,
         },
       },
     ],

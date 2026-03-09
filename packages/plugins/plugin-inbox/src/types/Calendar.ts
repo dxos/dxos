@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Feed, Obj, Type } from '@dxos/echo';
-import { FormInputAnnotation } from '@dxos/echo/internal';
+import { FormInputAnnotation, SystemTypeAnnotation } from '@dxos/echo/internal';
 import { AccessToken } from '@dxos/types';
 
 import { meta } from '../meta';
@@ -36,6 +36,7 @@ export const Config = Schema.Struct({
     typename: 'dxos.org/type/CalendarConfig',
     version: '0.1.0',
   }),
+  SystemTypeAnnotation.set(true),
 );
 
 export interface Config extends Schema.Schema.Type<typeof Config> {}

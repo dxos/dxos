@@ -28,6 +28,7 @@ import {
   type RefFn,
   type RefSchema,
   SchemaKindId,
+  SystemTypeAnnotation,
   type TypeAnnotation,
   type TypeMeta,
   getSchemaDXN,
@@ -514,6 +515,7 @@ export const Feed = Schema.Struct({
     typename: 'dxos.org/type/Feed',
     version: '0.1.0',
   }),
+  SystemTypeAnnotation.set(true),
 );
 
 /**

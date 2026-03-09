@@ -85,7 +85,7 @@ const useL0ItemClick = ({ item, parent, path }: L0ItemProps, type: string) => {
       switch (type) {
         case 'action': {
           const { properties: { caller } = {} } = item;
-          return void runAction(item as Node.Action, caller ? { parent, caller } : { parent });
+          return void runAction(item as Node.Action, caller ? { parent, path, caller } : { parent, path });
         }
 
         case 'tab':

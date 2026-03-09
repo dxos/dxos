@@ -13,7 +13,7 @@ import { ThreadCapabilities } from '@dxos/plugin-thread';
 import { ThreadOperation } from '@dxos/plugin-thread/types';
 import { TranscriptOperation } from '@dxos/plugin-transcription/types';
 import { Filter, Query, getSpace, parseId } from '@dxos/react-client/echo';
-import { Collection, Text } from '@dxos/schema';
+import { Text } from '@dxos/schema';
 import { type Message } from '@dxos/types';
 
 import { Meeting, MeetingCapabilities, MeetingOperation } from '../../types';
@@ -23,16 +23,8 @@ export default Capability.makeModule(
     return Capability.contributes(Capabilities.OperationResolver, [
       OperationResolver.make({
         operation: MeetingOperation.OnCreateSpace,
-        handler: Effect.fnUntraced(function* ({ isDefault, rootCollection }) {
-          if (isDefault) {
-            return;
-          }
-
-          const meetingCollection = Collection.makeManaged({ key: Type.getTypename(Meeting.Meeting) });
-          Obj.change(rootCollection, (c) => {
-            c.objects.push(Ref.make(meetingCollection));
-          });
-        }),
+        // TODO(wittjosiah): Remove?
+        handler: Effect.fnUntraced(function* () {}),
       }),
       OperationResolver.make({
         operation: MeetingOperation.Create,

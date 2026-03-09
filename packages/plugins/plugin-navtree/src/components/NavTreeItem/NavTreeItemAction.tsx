@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import React, { useCallback } from 'react';
 
 import { type Node } from '@dxos/app-graph';
 import { useActionRunner } from '@dxos/plugin-graph';
@@ -15,6 +15,7 @@ import { type ActionProperties } from '../../types';
 
 export type NavTreeItemActionMenuProps = ActionProperties & {
   parent: Node.Node;
+  path?: string[];
   caller?: string;
   monolithic?: boolean;
   menuActions?: Node.Action[];
@@ -33,6 +34,7 @@ const coarseActionButtonProps = {
 
 export const NavTreeItemActionDropdownMenu = ({
   parent,
+  path,
   label,
   icon,
   testId,
@@ -42,9 +44,13 @@ export const NavTreeItemActionDropdownMenu = ({
   const { t } = useTranslation(meta.id);
   const density = useDensityContext();
   const runAction = useActionRunner();
+  const handleAction = useCallback(
+    (action: Node.Action, params: Node.InvokeProps = {}) => runAction(action, { ...params, path }),
+    [runAction, path],
+  );
 
   return (
-    <MenuProvider onAction={runAction}>
+    <MenuProvider onAction={handleAction}>
       <DropdownMenu.Root group={parent} items={menuActions as MenuItem[]} caller={caller}>
         <DropdownMenu.Trigger asChild>
           <IconButton
@@ -63,10 +69,11 @@ export const NavTreeItemActionDropdownMenu = ({
 };
 
 export const NavTreeItemMonolithicAction = (
-  props: Node.Action & { parent: Node.Node; onAction?: (action: Node.Action) => void; baseLabel: string },
+  props: Node.Action & { parent: Node.Node; path?: string[]; onAction?: (action: Node.Action) => void; baseLabel: string },
 ) => {
   const {
     parent,
+    path,
     properties: { disabled, caller, testId, icon, variant = 'ghost', iconOnly = true } = { label: 'never' },
     baseLabel,
   } = props;
@@ -92,22 +99,22 @@ export const NavTreeItemMonolithicAction = (
           return;
         }
 
-        void runAction(props, caller ? { parent, caller } : { parent });
+        void runAction(props, caller ? { parent, caller, path } : { parent, path });
       }}
       data-testid={testId}
     />
   );
 };
 
-export const NavTreeItemAction = ({ monolithic, menuActions, parent: node, ...props }: NavTreeItemActionMenuProps) => {
+export const NavTreeItemAction = ({ monolithic, menuActions, parent: node, path, ...props }: NavTreeItemActionMenuProps) => {
   const { t } = useTranslation(meta.id);
 
   const monolithicAction = menuActions?.length === 1 && menuActions[0];
   const baseLabel = toLocalizedString(monolithicAction ? monolithicAction.properties!.label : props.label, t);
 
   return monolithic && menuActions?.length === 1 ? (
-    <NavTreeItemMonolithicAction baseLabel={baseLabel} parent={node} {...menuActions[0]} />
+    <NavTreeItemMonolithicAction baseLabel={baseLabel} parent={node} path={path} {...menuActions[0]} />
   ) : (
-    <NavTreeItemActionDropdownMenu {...props} label={baseLabel} parent={node} menuActions={menuActions} />
+    <NavTreeItemActionDropdownMenu {...props} label={baseLabel} parent={node} path={path} menuActions={menuActions} />
   );
 };

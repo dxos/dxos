@@ -416,11 +416,6 @@ export default Capability.makeModule(
               }
             });
 
-            // Create records smart collection.
-            Obj.change(collection, (c) => {
-              c.objects.push(Ref.make(Collection.makeManaged({ key: Type.getTypename(Type.PersistentType) })));
-            });
-
             // Allow other plugins to add default content.
             yield* Plugin.activate(SpaceEvents.SpaceCreated);
             const onCreateSpaceCallbacks = yield* Capability.getAll(SpaceCapabilities.OnCreateSpace);

@@ -29,6 +29,7 @@ export const make = (props: Partial<Obj.MakeProps<typeof Collection>> = {}): Col
 /**
  * System collections are used runtime collections of nodes in the app graph.
  * The purpose of this object is to allow them to be ordered within the root collection.
+ * @deprecated No longer created on space creation. Will be removed.
  */
 export const Managed = Schema.Struct({
   key: Schema.String,
@@ -46,6 +47,7 @@ export const Managed = Schema.Struct({
 
 export type Managed = Schema.Schema.Type<typeof Managed>;
 
+/** @deprecated No longer created on space creation. Will be removed. */
 export const makeManaged = (props: Obj.MakeProps<typeof Managed>): Managed => Obj.make(Managed, props);
 
 type AddProps = {

@@ -168,6 +168,7 @@ const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'item' | 'path
             label={toLocalizedString(primaryAction.properties?.label, t)}
             icon={primaryAction.properties?.icon ?? 'ph--placeholder--regular'}
             parent={item}
+            path={path}
             monolithic={Node.isAction(primaryAction)}
             menuActions={Node.isAction(primaryAction) ? [primaryAction] : groupedActions[primaryAction?.id ?? '']}
             menuType={primaryAction.properties?.menuType}
@@ -225,7 +226,7 @@ const useL1MenuActions = ({ item, path }: Pick<L1PanelProps, 'item' | 'path'>) =
   const isAlternate = useIsAlternateTree(alternatePath, item);
 
   // Graph actions.
-  const { actions: actionsProp, groupedActions } = useActions(item);
+  const { actions: actionsProp, groupedActions } = useActions(item, path);
   const [primaryAction, ...secondaryActions] = actionsProp.toSorted((a, _b) =>
     a.properties?.disposition === 'list-item-primary' ? -1 : 1,
   );
@@ -270,10 +271,10 @@ const useL1MenuActions = ({ item, path }: Pick<L1PanelProps, 'item' | 'path'>) =
         }
         setAlternateTree?.(alternatePath, !isAlternate);
       } else {
-        void runAction(action, params);
+        void runAction(action, { ...params, path });
       }
     },
-    [settingsActionId, setAlternateTree, alternatePath, isAlternate, runAction, graph, alternateTree],
+    [settingsActionId, setAlternateTree, alternatePath, isAlternate, runAction, graph, alternateTree, path],
   );
 
   return { primaryAction, groupedActions, menuActions, onAction };

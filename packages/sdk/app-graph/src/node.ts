@@ -107,6 +107,9 @@ export type InvokeProps = {
   /** Node the invoked action is connected to. */
   parent?: Node;
 
+  /** Path from root to the node in the current tree context. */
+  path?: string[];
+
   caller?: string;
 };
 

@@ -6,16 +6,15 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { Filter, Obj, Ref, Type } from '@dxos/echo';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Operation, OperationResolver } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { SpaceOperation } from '@dxos/plugin-space/types';
-import { Collection } from '@dxos/schema';
 import { Message, Organization, Person } from '@dxos/types';
 
-import { Calendar, InboxOperation, Mailbox } from '../../types';
+import { InboxOperation } from '../../types';
 import { buildDraftMessageProps } from '../../util';
 
 export default Capability.makeModule(
@@ -23,18 +22,8 @@ export default Capability.makeModule(
     return Capability.contributes(Capabilities.OperationResolver, [
       OperationResolver.make({
         operation: InboxOperation.OnCreateSpace,
-        handler: Effect.fnUntraced(function* ({ rootCollection }) {
-          const mailboxCollection = Collection.makeManaged({
-            key: `${Type.getTypename(Type.Feed)}~${Mailbox.kind}`,
-          });
-          const calendarCollection = Collection.makeManaged({
-            key: `${Type.getTypename(Type.Feed)}~${Calendar.kind}`,
-          });
-          const messageCollection = Collection.makeManaged({ key: Message.Message.typename });
-          Obj.change(rootCollection, (c) => {
-            c.objects.push(Ref.make(mailboxCollection), Ref.make(calendarCollection), Ref.make(messageCollection));
-          });
-        }),
+        // TODO(wittjosiah): Remove?
+        handler: Effect.fnUntraced(function* () {}),
       }),
       OperationResolver.make({
         operation: InboxOperation.ExtractContact,

@@ -5,11 +5,9 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Obj, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { OperationResolver } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { Collection } from '@dxos/schema';
 
 import { upload } from '../../helpers';
 import { WnfsCapabilities, WnfsFile, WnfsOperation } from '../../types';
@@ -19,12 +17,8 @@ export default Capability.makeModule(
     return Capability.contributes(Capabilities.OperationResolver, [
       OperationResolver.make({
         operation: WnfsOperation.OnCreateSpace,
-        handler: Effect.fnUntraced(function* ({ rootCollection }) {
-          const collection = Collection.makeManaged({ key: Type.getTypename(WnfsFile.File) });
-          Obj.change(rootCollection, (c) => {
-            c.objects.push(Ref.make(collection));
-          });
-        }),
+        // TODO(wittjosiah): Remove?
+        handler: Effect.fnUntraced(function* () {}),
       }),
       OperationResolver.make({
         operation: WnfsOperation.Create,

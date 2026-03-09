@@ -39,6 +39,8 @@ export const translations = [
         'typename label_one': 'Event',
         'typename label_other': 'Events',
         'object name placeholder': 'New event',
+        'rename object label': 'Rename event',
+        'delete object label': 'Delete event',
       },
       [Message.Message.typename]: {
         'typename label': 'Message',
@@ -46,6 +48,8 @@ export const translations = [
         'typename label_one': 'Message',
         'typename label_other': 'Messages',
         'object name placeholder': 'New message',
+        'rename object label': 'Rename message',
+        'delete object label': 'Delete message',
       },
       [Organization.Organization.typename]: {
         'typename label': 'Organization',
@@ -53,6 +57,8 @@ export const translations = [
         'typename label_one': 'Organization',
         'typename label_other': 'Organizations',
         'object name placeholder': 'New organization',
+        'rename object label': 'Rename organization',
+        'delete object label': 'Delete organization',
       },
       [Person.Person.typename]: {
         'typename label': 'Person',
@@ -60,6 +66,8 @@ export const translations = [
         'typename label_one': 'Person',
         'typename label_other': 'People',
         'object name placeholder': 'New person',
+        'rename object label': 'Rename person',
+        'delete object label': 'Delete person',
       },
       [Pipeline.Pipeline.typename]: {
         'typename label': 'Project',
@@ -67,6 +75,8 @@ export const translations = [
         'typename label_one': 'Project',
         'typename label_other': 'Projects',
         'object name placeholder': 'New project',
+        'rename object label': 'Rename project',
+        'delete object label': 'Delete project',
       },
       [Task.Task.typename]: {
         'typename label': 'Task',
@@ -74,6 +84,8 @@ export const translations = [
         'typename label_one': 'Task',
         'typename label_other': 'Tasks',
         'object name placeholder': 'New task',
+        'rename object label': 'Rename task',
+        'delete object label': 'Delete task',
       },
       [meta.id]: {
         'plugin name': 'Spaces',
@@ -131,6 +143,7 @@ export const translations = [
           'The requested object has not been found yet. Ensure there are enough peers online in the space with an updated copy.',
         'create object in space label': 'Add to space',
         'create object in collection label': 'Add to collection',
+        'remove from collection label': 'Remove from collection',
         'create object in system collection label': 'Add to system collection',
         'add view to schema label': 'Add view to type',
         'space members label': 'Space members',
@@ -238,6 +251,10 @@ export const translations = [
         'sync latency label': 'Latency',
         'sync upload label': 'Upload',
         'sync download label': 'Download',
+
+        'types section label': 'Types',
+        'collections section label': 'Collections',
+        'type collection all label': 'All',
 
         'search placeholder': 'Search…',
       },
