@@ -98,6 +98,16 @@ export const isSnapshot = (value: unknown): value is Snapshot => {
 // TODO(dmaretskyi): Type introspection -- move to kind.
 export const getKind = internal.getEntityKind;
 
+/**
+ * Property that accesses metadata for an entity.
+ */
+export const Meta: unique symbol = internal.MetaId as any;
+
+/**
+ * Property that accesses metadata for an entity.
+ */
+export type Meta = typeof Meta;
+
 //
 // Entity-level functions that work on any entity (object or relation).
 // Use these when you don't know or care about the specific entity kind.

@@ -67,9 +67,9 @@ export type Target = typeof Target;
 /**
  * Internal props type for relation instance creation.
  */
-type RelationMakeProps<T extends Unknown> = {
+type MakePropsInternal<T extends Unknown> = {
   id?: ObjectId;
-  [internal.MetaId]?: internal.ObjectMeta;
+  [Meta]?: internal.ObjectMeta;
   [Source]: T[Source];
   [Target]: T[Target];
 } & Entity.Properties<T>;
@@ -78,7 +78,7 @@ type RelationMakeProps<T extends Unknown> = {
  * Props type for relation creation with a given schema.
  * Takes a schema type (created with Type.Relation) and extracts the props type.
  */
-export type MakeProps<S extends Type.AnyRelation> = RelationMakeProps<Schema.Schema.Type<S>>;
+export type MakeProps<S extends Type.AnyRelation> = MakePropsInternal<Schema.Schema.Type<S>>;
 
 /**
  * Creates new relation.
@@ -91,8 +91,7 @@ export type MakeProps<S extends Type.AnyRelation> = RelationMakeProps<Schema.Sch
 // TODO(dmaretskyi): Move meta into props.
 export const make = <S extends Type.AnyRelation>(
   schema: S,
-  props: NoInfer<RelationMakeProps<Schema.Schema.Type<S>>>,
-  meta?: internal.ObjectMeta,
+  props: NoInfer<MakeProps<S>>,
 ): Schema.Schema.Type<S> & Entity.OfKind<typeof Entity.Kind.Relation> => {
   assertArgument(
     internal.getTypeAnnotation(schema)?.kind === internal.EntityKind.Relation,
@@ -100,6 +99,8 @@ export const make = <S extends Type.AnyRelation>(
     'Expected a relation schema',
   );
   assertArgument(props[internal.ParentId] === undefined, 'props', 'Parent is not allowed for relations');
+
+  let meta: internal.ObjectMeta | undefined = undefined;
 
   if (props[internal.MetaId] != null) {
     meta = props[internal.MetaId] as any;
@@ -318,6 +319,13 @@ export const getDatabase = (entity: Unknown | Snapshot): Database.Database | und
 //
 // Meta
 //
+
+/**
+ * Property that accesses metadata for an entity.
+ * 
+ * Alias for `Entity.Meta`.
+ */
+export const Meta = internal.MetaId;
 
 /**
  * Deeply read-only version of ObjectMeta.

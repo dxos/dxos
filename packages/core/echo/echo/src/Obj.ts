@@ -73,7 +73,7 @@ const defaultMeta: internal.ObjectMeta = {
   keys: [],
 };
 
-type Props<T = any> = {
+type MakePropsInternal<T extends Unknown> = {
   id?: ObjectId;
   [Meta]?: Partial<internal.ObjectMeta>;
 } & Entity.Properties<T>;
@@ -86,7 +86,7 @@ export type MakeProps<S extends Schema.Schema.AnyNoContext> = {
   id?: ObjectId;
   [Meta]?: Partial<internal.ObjectMeta>;
   [Parent]?: Unknown;
-} & Props<Schema.Schema.Type<S>>;
+} & MakePropsInternal<Schema.Schema.Type<S>>;
 
 /**
  * Creates a new echo object of the given schema.
@@ -109,16 +109,14 @@ export const make: {
    * @deprecated Pass meta as in the example: `Obj.make(Person, { [Obj.Meta]: { keys: [...] }, name: 'John' })`.
    */
   <S extends Type.AnyObj>(schema: S, props: MakeProps<S>, meta: Partial<Meta>): Obj<Schema.Schema.Type<S>>;
-} = <S extends Type.AnyObj>(
-  schema: S,
-  props: MakeProps<S>,
-  meta?: Partial<internal.ObjectMeta>,
-): Obj<Schema.Schema.Type<S>> => {
+} = <S extends Type.AnyObj>(schema: S, props: NoInfer<MakeProps<S>>): Obj<Schema.Schema.Type<S>> => {
   assertArgument(
     internal.getTypeAnnotation(schema)?.kind === Entity.Kind.Object,
     'schema',
     'Expected an object schema',
   );
+
+  let meta: internal.ObjectMeta | undefined = undefined;
 
   // Set default fields on meta on creation.
   if (props[internal.MetaId] != null) {
@@ -457,7 +455,12 @@ export const getDatabase = (entity: Entity.Unknown | Entity.Snapshot): Database.
 // Meta
 //
 
-export const Meta: unique symbol = internal.MetaId as any;
+/**
+ * Property that accesses metadata for an entity.
+ *
+ * Alias for `Entity.Meta`.
+ */
+export const Meta = internal.MetaId;
 
 /**
  * Deeply read-only version of ObjectMeta.
