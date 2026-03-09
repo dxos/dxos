@@ -325,6 +325,7 @@ export const SheetContent = (props: SheetContentProps) => {
     <div {...rest} role='none' className={mx('relative min-h-0', className)}>
       <GridCellEditor getCellContent={getCellContent} extensions={extensions} onBlur={handleBlur} />
       <Grid.Content
+        className='[--dx-grid-base:var(--base-surface)] [&_.dx-grid]:absolute [&_.dx-grid]:inset-0'
         initialCells={initialCells}
         limitColumns={DEFAULT_COLS}
         limitRows={DEFAULT_ROWS}
@@ -335,7 +336,6 @@ export const SheetContent = (props: SheetContentProps) => {
         activeRefs={activeRefs}
         frozen={frozen}
         overscroll='trap'
-        className='[--dx-grid-base:var(--base-surface)] [&_.dx-grid]:absolute [&_.dx-grid]:inset-0'
         onAxisResize={handleAxisResize}
         onSelect={handleSelect}
         onFocus={handleFocus}
