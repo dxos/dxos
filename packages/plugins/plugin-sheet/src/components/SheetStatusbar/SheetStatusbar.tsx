@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React from 'react';
+import React, { type ComponentPropsWithoutRef } from 'react';
 
 import { addressToA1Notation, isFormula, rangeToA1Notation } from '@dxos/compute';
 import { type ComposableProps, Icon } from '@dxos/react-ui';

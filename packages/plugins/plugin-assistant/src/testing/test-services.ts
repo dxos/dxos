@@ -6,7 +6,7 @@ import { Obj, type Type } from '@dxos/echo';
 
 import { type ApiAuthorization, type BaseServiceRegistry, ServiceType, categoryIcons } from '../types';
 
-const ServiceTypeSchema = ServiceType as unknown as Type.Obj.Any;
+const ServiceTypeSchema = ServiceType as unknown as Type.AnyObj;
 
 export class MockServiceRegistry implements BaseServiceRegistry {
   async queryServices(): Promise<ServiceType[]> {

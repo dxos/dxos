@@ -10,7 +10,7 @@ import * as Option from 'effect/Option';
 import { type CapabilityManager } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
-import { type Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+import { type Database, Feed, Filter, JsonSchema, Obj, Query, Ref, Type } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Migrations } from '@dxos/migrations';
@@ -270,7 +270,7 @@ export const createObjectNode = ({
   }
 
   // For feeds, use the kind property for metadata lookup instead of the generic Feed typename.
-  const metadataKey = Obj.instanceOf(Type.Feed, object) ? (object.kind ?? type) : type;
+  const metadataKey = Obj.instanceOf(Feed.Feed, object) ? (object.kind ?? type) : type;
   const metadata = resolve(metadataKey);
   const partials = Obj.instanceOf(Collection.Collection, object)
     ? getCollectionGraphNodePartials({ collection: object, db, resolve })
@@ -357,7 +357,7 @@ export const createObjectNode = ({
  * @param space - Space that owns the schema.
  * @returns A graph node for the schema.
  */
-export const createStaticSchemaNode = ({ schema, space }: { schema: Type.Entity.Any; space: Space }): Node.Node => {
+export const createStaticSchemaNode = ({ schema, space }: { schema: Type.AnyEntity; space: Space }): Node.Node => {
   return {
     id: `${space.id}/${Type.getTypename(schema)}`,
     type: `${meta.id}/static-schema`,
@@ -467,7 +467,7 @@ export const createStaticSchemaActions = ({
   space,
   deletable,
 }: {
-  schema: Type.Obj.Any;
+  schema: Type.AnyObj;
   space: Space;
   deletable: boolean;
 }) => {
@@ -586,7 +586,7 @@ export const constructObjectActions = ({
   const getId = (id: string) => `${id}/${Obj.getDXN(object).toString()}`;
 
   const metadataKey = Match.value(object).pipe(
-    Match.when(Obj.instanceOf(Type.Feed), (feed: Type.Feed) => feed.kind ?? Obj.getTypename(feed)!),
+    Match.when(Obj.instanceOf(Feed.Feed), (feed: Feed.Feed) => feed.kind ?? Obj.getTypename(feed)!),
     Match.when(Obj.instanceOf(ManagedCollection.ManagedCollection), (managed) => {
       const [, feedKind] = managed.key.split('~') ?? [];
       return feedKind ?? managed.key;
@@ -641,7 +641,7 @@ export const constructObjectActions = ({
             data: Effect.fnUntraced(function* () {
               const result = yield* Operation.invoke(SpaceOperation.Snapshot, {
                 db,
-                query: Query.select(Filter.type(Type.toEffectSchema(object.jsonSchema))).ast,
+                query: Query.select(Filter.type(JsonSchema.toEffectSchema(object.jsonSchema))).ast,
               });
               if (result.snapshot) {
                 yield* Effect.promise(() =>

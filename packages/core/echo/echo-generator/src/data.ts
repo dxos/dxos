@@ -49,7 +49,7 @@ const testSchemas = (): TestSchemaMap<TestSchemaType> => {
   const contact = Schema.Struct({
     name: Schema.String.annotations({ description: 'name of the person' }),
     email: Schema.optional(Schema.String),
-    org: Schema.optional(Type.Ref(organization)),
+    org: Schema.optional(Ref.Ref(organization)),
     lat: Schema.optional(Schema.Number),
     lng: Schema.optional(Schema.Number),
   }).pipe(Type.object({ typename: TestSchemaType.contact, version: '0.1.0' }));
@@ -62,7 +62,7 @@ const testSchemas = (): TestSchemaMap<TestSchemaType> => {
     status: Schema.String,
     priority: Schema.Number,
     active: Schema.Boolean,
-    org: Schema.optional(Type.Ref(organization)),
+    org: Schema.optional(Ref.Ref(organization)),
   }).pipe(Type.object({ typename: TestSchemaType.project, version: '0.1.0' }));
 
   return {

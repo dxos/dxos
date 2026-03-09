@@ -17,12 +17,12 @@ import { range } from '@dxos/util';
 export type TestItem = { id: string; type: string } & Record<string, any>;
 
 type ObjectDataGenerator = {
-  createSchema?: () => Type.Obj.Any;
+  createSchema?: () => Type.AnyObj;
   createData: () => any;
 };
 
 type ObjectFactory<T> = {
-  schema?: Type.Obj.Any; // TODO(burdon): Support both typed and expando schema.
+  schema?: Type.AnyObj; // TODO(burdon): Support both typed and expando schema.
   createObject: () => T;
 };
 
@@ -94,7 +94,7 @@ export class TestObjectGenerator {
       }, {});
   }
 
-  get schema(): Type.Obj.Any[] {
+  get schema(): Type.AnyObj[] {
     return Object.values(this.factories).map((f) => f.schema!);
   }
 

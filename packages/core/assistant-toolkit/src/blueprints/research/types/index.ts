@@ -12,7 +12,7 @@ export * as ResearchGraph from './ResearchGraph';
  * Data types for research.
  */
 // TODO(burdon): This should not be hardcoded.
-export const ResearchDataTypes: Type.Entity.Any[] = [
+export const ResearchDataTypes: Type.AnyEntity[] = [
   // Objects
   Event.Event,
   Task.Task,

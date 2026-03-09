@@ -12,11 +12,11 @@ import * as Database from './Database';
 import type * as Dataset from './Dataset';
 import * as Feed from './Feed';
 import * as Filter from './Filter';
-import { getTypeDXNFromSpecifier } from './internal';
+import * as internal from './internal';
 import * as Obj from './Obj';
 import type * as Order from './Order';
 import type * as Ref from './Ref';
-import type * as Type$ from './Type';
+import type * as Relation from './Relation';
 import type * as View from './View';
 
 // TODO(dmaretskyi): Split up into interfaces for objects and relations so they can have separate verbs.
@@ -100,13 +100,13 @@ export interface Query<T> {
    * For a query for relations, get the source objects.
    * @returns Query for the source objects.
    */
-  source(): Query<Type$.Relation.Source<T>>;
+  source(): Query<Relation.SourceOf<T>>;
 
   /**
    * For a query for relations, get the target objects.
    * @returns Query for the target objects.
    */
-  target(): Query<Type$.Relation.Target<T>>;
+  target(): Query<Relation.TargetOf<T>>;
 
   /**
    * Get the parent object of the current selection.
@@ -227,7 +227,7 @@ class QueryClass implements Any {
   }
 
   'referencedBy'(target?: Schema.Schema.All | string, key?: string): Any {
-    const dxn = target !== undefined ? getTypeDXNFromSpecifier(target) : null;
+    const dxn = target !== undefined ? internal.getTypeDXNFromSpecifier(target) : null;
     return new QueryClass({
       type: 'incoming-references',
       anchor: this.ast,

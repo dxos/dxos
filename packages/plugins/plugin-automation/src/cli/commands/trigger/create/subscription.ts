@@ -13,7 +13,7 @@ import * as Option from 'effect/Option';
 import { CommandConfig } from '@dxos/cli-util';
 import { flushAndSync, print, spaceLayer, withTypes } from '@dxos/cli-util';
 import { Common } from '@dxos/cli-util';
-import { Database, Filter, Query, Ref, Type } from '@dxos/echo';
+import { Database, Filter, JsonSchema, Query, Ref } from '@dxos/echo';
 import { Function, Trigger } from '@dxos/functions';
 
 import { Deep, Delay, Enabled, Input, Typename } from '../options';
@@ -85,7 +85,7 @@ export const subscription = Command.make(
       }
 
       const input = yield* Option.match(options.input, {
-        onNone: () => promptForSchemaInput(fn.inputSchema ? Type.toEffectSchema(fn.inputSchema) : undefined),
+        onNone: () => promptForSchemaInput(fn.inputSchema ? JsonSchema.toEffectSchema(fn.inputSchema) : undefined),
         onSome: (value) => Effect.succeed(Object.fromEntries(HashMap.toEntries(value))),
       });
 

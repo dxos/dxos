@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Database, Type } from '@dxos/echo';
+import { Database, JsonSchema, Type } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { trim } from '@dxos/util';
 
@@ -26,7 +26,7 @@ export default defineFunction({
       const meta = Type.getMeta(schema);
       return {
         typename: Type.getTypename(schema),
-        jsonSchema: Type.toJsonSchema(schema),
+        jsonSchema: JsonSchema.toJsonSchema(schema),
         kind: meta?.sourceSchema ? 'relation' : 'record',
       };
     });

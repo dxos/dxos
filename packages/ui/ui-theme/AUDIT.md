@@ -23,6 +23,7 @@ Update this document with the results of the following tasks:
 
 ## Phase 3
 
+
 - [ ] Density audit.
 - [ ] Semantic color audit.
 
@@ -274,10 +275,10 @@ Sub-components: `Root`, `Viewport`.
 | Location                                                        | Class          | How Applied                                                                    |
 | --------------------------------------------------------------- | -------------- | ------------------------------------------------------------------------------ |
 | `ScrollArea.Root` theme (`scroll-area.ts`)                      | `dx-container` | Via `mx()` for all orientations.                                               |
-| `Grid` component (`Grid.tsx`)                                   | `dx-expand`    | Conditional when `grow={true}` (default).                                      |
-| `ScrollContainer` component (`ScrollContainer.tsx`)             | `dx-expand`    | On the fade overlay container.                                                 |
+| `Grid` component (`Grid.tsx`)                                   | `dx-container` | Conditional when `grow={true}` (default).                                      |
+| `ScrollContainer` component (`ScrollContainer.tsx`)             | `dx-container` | On the fade overlay container.                                                 |
 | `Popover.Viewport` composition (e.g., `EditorMenuProvider.tsx`) | `dx-container` | Manually added via `classNames='dx-container'` when composing with ScrollArea. |
-| `MapSurface` (plugin-map-solid)                                 | `dx-expand`    | Direct class on map wrapper div.                                               |
+| `MapSurface` (plugin-map-solid)                                 | `dx-container` | Direct class on map wrapper div.                                               |
 | Devtools panels (LogPanel, ObjectsPanel)                        | `dx-container` | Direct class on container divs.                                                |
 
 #### Recommendations

@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 
-import { Annotation, type Database, Format, Obj, type QueryAST, Type } from '@dxos/echo';
+import { Annotation, type Database, Format, Obj, type QueryAST, Ref, Type } from '@dxos/echo';
 import { View } from '@dxos/echo';
 import { type Mutable, PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
@@ -48,7 +48,7 @@ const Example = Schema.Struct({
       }),
   ),
   description: Schema.optional(Schema.String).annotations({ title: 'Description' }),
-  parent: Schema.optional(Schema.suspend((): Type.Ref<Example> => Type.Ref(Example))).annotations({
+  parent: Schema.optional(Schema.suspend((): Ref.RefSchema<Example> => Ref.Ref(Example))).annotations({
     title: 'Parent',
   }),
 }).pipe(

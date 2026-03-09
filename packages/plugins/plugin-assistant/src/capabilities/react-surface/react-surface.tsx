@@ -85,7 +85,9 @@ export default Capability.makeModule(() =>
           return (
             <Panel.Root role={role} className='dx-article'>
               <Panel.Content asChild>
-                <InvocationTraceContainer db={space?.db} queueDxn={queueDxn} target={target} detailAxis='block' />
+                <Panel.Content asChild>
+                  <InvocationTraceContainer db={space?.db} queueDxn={queueDxn} target={target} detailAxis='block' />
+                </Panel.Content>
               </Panel.Content>
             </Panel.Root>
           );

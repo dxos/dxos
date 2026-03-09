@@ -6,7 +6,7 @@ import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Database, Entity, Type } from '@dxos/echo';
+import { Database, Entity, Ref, Type } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { trim } from '@dxos/util';
 
@@ -22,7 +22,7 @@ export default defineFunction({
     Note that returned data is only a snapshot in time, and might have changed since the object was last loaded.
   `,
   inputSchema: Schema.Struct({
-    refs: Schema.Array(Type.Ref(Type.Obj)),
+    refs: Schema.Array(Ref.Ref(Type.Obj)),
   }),
   outputSchema: Schema.Unknown,
   handler: Effect.fn(function* ({ data: { refs } }) {

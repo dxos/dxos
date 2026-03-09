@@ -19,7 +19,7 @@ export const Todo = Schema.Struct({
 export type Todo = Schema.Schema.Type<typeof Todo>;
 
 export const TodoList = Schema.Struct({
-  todos: Schema.Array(Type.Ref(Todo)),
+  todos: Schema.Array(Ref.Ref(Todo)),
 }).pipe(
   Type.object({
     typename: 'example.com/type/TodoList',

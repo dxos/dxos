@@ -279,7 +279,7 @@ const ViewSchemaV4 = Schema.Struct({
     ast: QueryAST.Query,
   }).pipe(FormInputAnnotation.set(false)),
   projection: View.Projection.pipe(FormInputAnnotation.set(false)),
-  presentation: Type.Ref(Type.Obj).pipe(FormInputAnnotation.set(false)),
+  presentation: Ref.Ref(Type.Obj).pipe(FormInputAnnotation.set(false)),
 }).pipe(
   Type.object({
     typename: 'dxos.org/type/View',

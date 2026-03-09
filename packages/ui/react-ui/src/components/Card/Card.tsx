@@ -3,17 +3,10 @@
 //
 
 import { Slot } from '@radix-ui/react-slot';
-import React, {
-  type ComponentPropsWithoutRef,
-  type HTMLAttributes,
-  type PropsWithChildren,
-  createContext,
-  forwardRef,
-  useContext,
-} from 'react';
+import React, { type HTMLAttributes, type PropsWithChildren, createContext, forwardRef, useContext } from 'react';
 
 import { mx } from '@dxos/ui-theme';
-import { type Density } from '@dxos/ui-types';
+import { type Density, type SlottableProps } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
 import { Column } from '../../primitives';
@@ -22,11 +15,6 @@ import { Button } from '../Button';
 import { Icon, type IconProps } from '../Icon';
 import { Image } from '../Image';
 import { Toolbar, type ToolbarMenuItem, type ToolbarMenuProps, type ToolbarRootProps } from '../Toolbar';
-
-type CardSharedProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
-  asChild?: boolean;
-  className?: string;
-};
 
 //
 // Context
@@ -43,7 +31,7 @@ const CardContext = createContext<CardContextValue>({});
 // Root
 //
 
-type CardRootProps = CardSharedProps & {
+type CardRootProps = SlottableProps<HTMLDivElement> & {
   id?: string;
   border?: boolean;
   fullWidth?: boolean;
@@ -80,6 +68,7 @@ type CardToolbarProps = ToolbarRootProps & {
 const CardToolbar = forwardRef<HTMLDivElement, CardToolbarProps>(
   ({ children, classNames, density = 'fine', ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
+
     return (
       <Toolbar.Root
         {...props}
@@ -99,7 +88,6 @@ const CardToolbar = forwardRef<HTMLDivElement, CardToolbarProps>(
 type CardMenuItem<T extends any | void = void> = ToolbarMenuItem<T>;
 type CardMenuProps<T extends any | void = void> = ToolbarMenuProps<T>;
 
-// TODO(burdon): Remove and Push up to Toolbar (incl. state).
 const CardMenu = <T extends any | void = void>({ context, items }: CardMenuProps<T>) => {
   const { menuItems } = useContext(CardContext) ?? {};
   const combinedItems = [...(items ?? []), ...((menuItems as CardMenuItem<T>[]) ?? [])];
@@ -111,7 +99,7 @@ const CardMenu = <T extends any | void = void>({ context, items }: CardMenuProps
 // Title
 //
 
-type CardTitleProps = CardSharedProps;
+type CardTitleProps = SlottableProps<HTMLDivElement>;
 
 const CardTitle = forwardRef<HTMLDivElement, CardTitleProps>(
   ({ children, classNames, className, asChild, role, ...props }, forwardedRef) => {
@@ -135,12 +123,13 @@ const CardTitle = forwardRef<HTMLDivElement, CardTitleProps>(
 // Content
 //
 
-type CardContentProps = CardSharedProps;
+type CardContentProps = SlottableProps<HTMLDivElement>;
 
 const CardContent = forwardRef<HTMLDivElement, CardContentProps>(({ children, role, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
+
   return (
-    <div role={role ?? 'none'} className={tx('card.content', {})} {...props} ref={forwardedRef}>
+    <div {...props} role={role ?? 'none'} className={tx('card.content', {})} ref={forwardedRef}>
       {children}
     </div>
   );
@@ -150,7 +139,7 @@ const CardContent = forwardRef<HTMLDivElement, CardContentProps>(({ children, ro
 // Row
 //
 
-type CardRowProps = CardSharedProps & { icon?: string };
+type CardRowProps = SlottableProps<HTMLDivElement> & { icon?: string };
 
 const CardRow = forwardRef<HTMLDivElement, CardRowProps>(
   ({ children, classNames, className, role, icon, ...props }, forwardedRef) => {
@@ -168,14 +157,16 @@ const CardRow = forwardRef<HTMLDivElement, CardRowProps>(
 // Section
 //
 
-type CardSectionProps = CardSharedProps;
+type CardSectionProps = SlottableProps<HTMLDivElement>;
 
 const CardSection = forwardRef<HTMLDivElement, CardSectionProps>(
-  ({ children, classNames, className, role, ...props }, forwardedRef) => {
+  ({ children, classNames, className, asChild, role, ...props }, forwardedRef) => {
+    const Root = asChild ? Slot : 'div';
+
     return (
-      <div {...props} role={role ?? 'none'} className={mx(classNames, className, 'col-span-full')} ref={forwardedRef}>
+      <Root {...props} role={role ?? 'none'} className={mx(classNames, className, 'col-span-full')} ref={forwardedRef}>
         {children}
-      </div>
+      </Root>
     );
   },
 );
@@ -184,7 +175,7 @@ const CardSection = forwardRef<HTMLDivElement, CardSectionProps>(
 // Heading
 //
 
-type CardHeadingProps = CardSharedProps & { variant?: 'default' | 'subtitle' };
+type CardHeadingProps = SlottableProps<HTMLDivElement> & { variant?: 'default' | 'subtitle' };
 
 /**
  * @deprecated Use typography.
@@ -211,7 +202,7 @@ const CardHeading = forwardRef<HTMLDivElement, CardHeadingProps>(
 // Text
 //
 
-type CardTextProps = CardSharedProps & { truncate?: boolean; variant?: 'default' | 'description' };
+type CardTextProps = SlottableProps<HTMLDivElement> & { truncate?: boolean; variant?: 'default' | 'description' };
 
 const CardText = forwardRef<HTMLDivElement, CardTextProps>(
   ({ children, classNames, className, asChild, role, truncate, variant = 'default', ...props }, forwardedRef) => {

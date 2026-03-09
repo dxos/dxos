@@ -111,7 +111,7 @@ export namespace AppCapabilities {
    */
   export const Metadata = Capability$.make<Metadata>('dxos.org/app-framework/capability/metadata');
 
-  export type Schema = ReadonlyArray<Type.Entity.Any>;
+  export type Schema = ReadonlyArray<Type.AnyEntity>;
 
   /**
    * @category Capability

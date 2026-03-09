@@ -16,7 +16,7 @@ type MaybeAccessor<T> = T | Accessor<T>;
  * @param typename - The schema typename to query (can be reactive)
  * @returns An accessor that returns the current schema or undefined
  */
-export const useSchema = <T extends Type.Entity.Any = Type.Entity.Any>(
+export const useSchema = <T extends Type.AnyEntity = Type.AnyEntity>(
   db?: MaybeAccessor<Database.Database | undefined>,
   typename?: MaybeAccessor<string | undefined>,
 ): Accessor<T | undefined> => {

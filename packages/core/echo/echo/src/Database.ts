@@ -145,7 +145,10 @@ export interface Database extends Queryable {
   /**
    * Return object by local ID.
    */
-  getObjectById<T extends Obj.Unknown = Obj.Obj<AnyProperties>>(id: string, opts?: GetObjectByIdOptions): T | undefined;
+  getObjectById<T extends Obj.Unknown = Obj.OfShape<AnyProperties>>(
+    id: string,
+    opts?: GetObjectByIdOptions,
+  ): T | undefined;
 
   /**
    * Query objects.
@@ -239,11 +242,11 @@ export const resolve: {
   // No type check.
   (ref: DXN | Ref<any>): Effect.Effect<Entity.Unknown, never, Service>;
   // Check matches schema.
-  <S extends Type.Entity.Any>(
+  <S extends Type.AnyEntity>(
     ref: DXN | Ref<any>,
     schema: S,
   ): Effect.Effect<Schema.Schema.Type<S>, Err.ObjectNotFoundError, Service>;
-} = (<S extends Type.Entity.Any>(
+} = (<S extends Type.AnyEntity>(
   ref: DXN | Ref<any>,
   schema?: S,
 ): Effect.Effect<Schema.Schema.Type<S>, Err.ObjectNotFoundError, Service> =>

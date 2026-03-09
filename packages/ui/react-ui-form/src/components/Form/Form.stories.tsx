@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useState } from 'react';
 
-import { Annotation, Format, Obj, Tag, Type } from '@dxos/echo';
+import { Annotation, Format, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
@@ -46,8 +46,8 @@ const Person = Schema.Struct({
       zip: Schema.Number,
     }).annotations({ title: 'Address' }),
   ),
-  employer: Schema.optional(Type.Ref(Organization).annotations({ title: 'Employer' })),
-  tags: Schema.optional(Schema.Array(Type.Ref(Tag.Tag)).annotations({ title: 'Tags' })),
+  employer: Schema.optional(Ref.Ref(Organization).annotations({ title: 'Employer' })),
+  tags: Schema.optional(Schema.Array(Ref.Ref(Tag.Tag)).annotations({ title: 'Tags' })),
   status: Schema.optional(Schema.Literal('active', 'inactive').annotations({ title: 'Status' })),
   notes: Schema.optional(Format.Text.annotations({ title: 'Notes' })),
   location: Schema.optional(Format.GeoPoint.annotations({ title: 'Location' })),

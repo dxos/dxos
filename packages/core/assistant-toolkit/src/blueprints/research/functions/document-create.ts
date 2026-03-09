@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Database, Obj, Relation, Type } from '@dxos/echo';
+import { Database, Obj, Ref, Relation, Type } from '@dxos/echo';
 import { TracingService, defineFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Markdown } from '@dxos/plugin-markdown/types';
@@ -17,7 +17,7 @@ export default defineFunction({
   name: 'Create research document',
   description: 'Creates a note summarizing the research.',
   inputSchema: Schema.Struct({
-    subject: Type.Ref(Type.Obj).annotations({
+    subject: Ref.Ref(Type.Obj).annotations({
       description: trim`
         ID of the object (organization, contact, etc.) for which the research was performed. 
       `,

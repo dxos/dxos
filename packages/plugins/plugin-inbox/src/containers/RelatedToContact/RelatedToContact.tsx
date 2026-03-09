@@ -9,7 +9,7 @@ import React, { useCallback } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { Filter, Obj, Query, Type } from '@dxos/echo';
+import { Feed, Filter, Obj, Query } from '@dxos/echo';
 import { AttentionOperation } from '@dxos/plugin-attention/types';
 import { useActiveSpace } from '@dxos/plugin-space';
 import { useQuery } from '@dxos/react-client/echo';
@@ -21,7 +21,7 @@ import { Calendar, Mailbox } from '../../types';
 export const RelatedToContact = ({ subject: contact }: SurfaceComponentProps<Person.Person>) => {
   const { invokePromise } = useOperationInvoker();
   const space = useActiveSpace();
-  const feeds = useQuery(space?.db, Filter.type(Type.Feed));
+  const feeds = useQuery(space?.db, Filter.type(Feed.Feed));
   const mailbox = feeds.find((f) => f.kind === Mailbox.kind);
   const calendar = feeds.find((f) => f.kind === Calendar.kind);
   // TODO(wittjosiah): Way to structure this query that does not require type assertions?

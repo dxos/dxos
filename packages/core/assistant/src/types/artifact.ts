@@ -5,7 +5,7 @@
 import type * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { type Err, Type } from '@dxos/echo';
+import { type Err, Ref, Type } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { EncodedReference } from '@dxos/echo-protocol';
 import { DXN, LOCAL_SPACE_TAG, type ObjectId, type SpaceId } from '@dxos/keys';
@@ -21,11 +21,11 @@ export const createArtifactElement = (id: ObjectId) => `<artifact id=${id} />`;
  * A model-friendly way to reference an object.
  * Supports vairous formats that will be normalized to a DXN.
  *
- * @deprecated Use `Type.Ref(XXX)` instead.
+ * @deprecated Use `Ref.Ref(XXX)` instead.
  */
 export const ArtifactId: Schema.Schema<string> & {
   toDXN: (reference: ArtifactId, owningSpaceId?: SpaceId) => DXN;
-  resolve: <S extends Type.Entity.Any>(
+  resolve: <S extends Type.AnyEntity>(
     schema: S,
     ref: ArtifactId,
   ) => Effect.Effect<Schema.Schema.Type<S>, Err.ObjectNotFoundError, Database.Service>;
@@ -66,7 +66,7 @@ export const ArtifactId: Schema.Schema<string> & {
   /**
    * Resolves an artifact ID to an object.
    */
-  static resolve<S extends Type.Entity.Any>(
+  static resolve<S extends Type.AnyEntity>(
     schema: S,
     ref: ArtifactId,
   ): Effect.Effect<Schema.Schema.Type<S>, Err.ObjectNotFoundError, Database.Service> {
@@ -80,7 +80,7 @@ export type ArtifactId = Schema.Schema.Type<typeof ArtifactId>;
 /**
  * Schema that decodes ECHO reference object from an LLM-friendly input.
  */
-export const RefFromLLM = Schema.transform(ArtifactId, Type.Ref(Type.Obj), {
+export const RefFromLLM = Schema.transform(ArtifactId, Ref.Ref(Type.Obj), {
   decode: (fromA, fromI) => EncodedReference.fromDXN(ArtifactId.toDXN(fromA)),
   encode: (toI, toA) => EncodedReference.toDXN(toI).toString(),
   strict: false,

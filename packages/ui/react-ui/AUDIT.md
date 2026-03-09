@@ -52,14 +52,46 @@ They need to be made headless (context-only) so they can be moved outside Panel.
 
 ## Cleanup
 
-- [ ] Dialog.Body should delegate grid to children
-  - Dialog.Text
-  - push down pattern to lower-level components like Form, SearchList.
-
 - [ ] Splitter (e.g., JournalContainer); mobile layout
 - [ ] Audit radix primitives; rename `Root` to `Comp` for all radix asChild elements
 - [ ] raise(new Error()) for context; follow solid Map.tsx warning pattern
   - throw new Error(`${displayName} must be used within Map.Root`);
+
 - [ ] Doc -- how to write plugins; composable; separation of concerns; compact.
   - [ ] Use radix context.
-  - [ ] All Root components should be headless or support asChild
+  - [ ] All Root components should be headless or support asChild.
+
+- [ ] Dialog.Body should delegate grid to children
+  - push down pattern to lower-level components like Form, SearchList.
+
+```
+  Column Grid Structure
+
+  --------------------------
+  | O |                | x |
+  |   |                |   |
+  |   |                |   |
+  |   |                |   |
+  |   |                |   |
+  --------------------------
+
+```
+
+- Grid provides minimal padding for form borders.
+- Provides left/right gutter for icons.
+- Provides right gutter for scrollbar.
+
+### Column-aware components
+
+TODO(burdon): Need to create playground for this.
+
+- Card
+- Dialog
+  - Dialog.Header
+    - Dialog.Title
+  - Dialog.Body
+    - Dialog.Text
+  - Dialog.ActionBar
+- Form
+- ScrollArea
+- SearchList

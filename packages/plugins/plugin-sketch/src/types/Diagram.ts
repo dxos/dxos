@@ -25,7 +25,7 @@ export interface Canvas extends Schema.Schema.Type<typeof Canvas> {}
 
 export const Diagram = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
-  canvas: Type.Ref(Canvas).pipe(FormInputAnnotation.set(false)),
+  canvas: Ref.Ref(Canvas).pipe(FormInputAnnotation.set(false)),
 }).pipe(
   Type.object({
     typename: 'dxos.org/type/Diagram',

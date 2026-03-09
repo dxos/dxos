@@ -7,6 +7,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type PropsWithChildren, forwardRef } from 'react';
 
 import { useComposableProps } from '@dxos/ui-theme';
+import { useSlottedProps } from '@dxos/ui-theme';
 import { type ComposableProps, type SlottableProps, type ThemedClassName } from '@dxos/ui-types';
 
 import { withTheme } from '../testing';
@@ -24,6 +25,7 @@ const Outer = forwardRef<HTMLDivElement, SlottableProps<HTMLDivElement>>(
   ({ children, asChild, ...props }, forwardedRef) => {
     const { className, ...rest } = useComposableProps(props);
     const Root = asChild ? Slot : 'div';
+    const { className, ...rest } = useSlottedProps(props);
     return (
       <Root {...rest} className={className} data-outer='true' ref={forwardedRef}>
         {children}
@@ -37,6 +39,7 @@ const Middle = forwardRef<HTMLDivElement, SlottableProps<HTMLDivElement>>(
   ({ children, asChild, ...props }, forwardedRef) => {
     const { className, ...rest } = useComposableProps(props);
     const Root = asChild ? Slot : 'div';
+    const { className, ...rest } = useSlottedProps(props);
     return (
       <Root {...rest} className={className} data-middle='true' ref={forwardedRef}>
         {children}
@@ -50,10 +53,10 @@ const Leaf = forwardRef<HTMLButtonElement, ComposableProps<PropsWithChildren>>(
   ({ children, ...props }, forwardedRef) => {
     const { className, ...rest } = useComposableProps(props);
     return (
-      <button {...rest} className={className} ref={forwardedRef}>
-        {children}
-      </button>
-    );
+    <button {...rest} className={className} ref={forwardedRef}>
+      {children}
+    </button>
+  );
   },
 );
 
@@ -71,12 +74,12 @@ const TestSingle = (props: ThemedClassName<{ role?: string }>) => {
 const TestNested = (props: ThemedClassName<{ role?: string }>) => {
   const { className, ...rest } = useComposableProps(props);
   return (
-    <Outer asChild {...rest} className={className}>
-      <Middle asChild>
-        <Leaf>Nested asChild</Leaf>
-      </Middle>
-    </Outer>
-  );
+  <Outer asChild {...rest} className={className}>
+    <Middle asChild>
+      <Leaf>Nested asChild</Leaf>
+    </Middle>
+  </Outer>
+);
 };
 
 // Test 3: Complex.

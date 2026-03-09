@@ -12,7 +12,7 @@ import { ViewAnnotation } from '@dxos/schema';
 export const Map = Schema.Struct({
   name: Schema.optional(Schema.String),
 
-  view: Type.Ref(View.View).pipe(FormInputAnnotation.set(false), Schema.optional),
+  view: Ref.Ref(View.View).pipe(FormInputAnnotation.set(false), Schema.optional),
 
   center: Format.GeoPoint.pipe(FormInputAnnotation.set(false), Schema.optional),
   zoom: Schema.Number.pipe(FormInputAnnotation.set(false), Schema.optional),
