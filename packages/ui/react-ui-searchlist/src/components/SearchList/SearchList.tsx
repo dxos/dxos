@@ -237,12 +237,7 @@ type SearchListContentProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
 const SearchListContent = forwardRef<HTMLDivElement, SearchListContentProps>(
   ({ classNames, children, ...props }, forwardedRef) => {
     return (
-      <div
-        role='none'
-        {...props}
-        className={mx('dx-container flex flex-col gap-3', classNames)}
-        ref={forwardedRef}
-      >
+      <div role='none' {...props} className={mx('dx-container flex flex-col gap-3', classNames)} ref={forwardedRef}>
         {children}
       </div>
     );
