@@ -41,7 +41,7 @@ const DefaultStory = ({ initialLines = 0, running: runningProp, ...props }: Stor
         <Toolbar.Root>
           <Button onClick={() => setRunning((running) => !running)}>{running ? 'Stop' : 'Start'}</Button>
           <Button onClick={() => scroller.current?.scrollToBottom()}>Scroll to bottom</Button>
-          <Toolbar.Separator variant='gap' />
+          <Toolbar.Separator />
           <div className='px-1'>{lines.length}</div>
         </Toolbar.Root>
       </Panel.Toolbar>
