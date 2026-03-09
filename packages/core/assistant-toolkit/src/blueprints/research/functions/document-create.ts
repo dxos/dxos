@@ -17,7 +17,7 @@ export default defineFunction({
   name: 'Create research document',
   description: 'Creates a note summarizing the research.',
   inputSchema: Schema.Struct({
-    subject: Ref.Ref(Type.Obj).annotations({
+    subject: Ref.Ref(Obj.Unknown).annotations({
       description: trim`
         ID of the object (organization, contact, etc.) for which the research was performed. 
       `,

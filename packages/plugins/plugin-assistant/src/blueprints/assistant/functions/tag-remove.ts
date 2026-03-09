@@ -17,8 +17,8 @@ export default defineFunction({
     Tags are objects of type ${Tag.Tag.typename}.
   `,
   inputSchema: Schema.Struct({
-    tag: Ref.Ref(Type.Obj),
-    obj: Ref.Ref(Type.Obj),
+    tag: Ref.Ref(Obj.Unknown),
+    obj: Ref.Ref(Obj.Unknown),
   }),
   outputSchema: Schema.Unknown,
   handler: Effect.fn(function* ({ data: { tag, obj } }) {

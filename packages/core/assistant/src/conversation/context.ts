@@ -28,8 +28,8 @@ export const ContextBinding = Schema.Struct({
   }),
 
   objects: Schema.Struct({
-    added: Schema.Array(Ref.Ref(Type.Obj)),
-    removed: Schema.Array(Ref.Ref(Type.Obj)),
+    added: Schema.Array(Ref.Ref(Obj.Unknown)),
+    removed: Schema.Array(Ref.Ref(Obj.Unknown)),
   }),
 }).pipe(
   Type.object({

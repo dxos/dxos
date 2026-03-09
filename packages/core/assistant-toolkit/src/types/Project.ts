@@ -35,7 +35,7 @@ export const Project = Schema.Struct({
     Schema.Struct({
       // TODO(dmaretskyi): Consider gettings names from the artifact itself using Obj.getLabel.
       name: Schema.String,
-      data: Ref.Ref(Type.Obj),
+      data: Ref.Ref(Obj.Unknown),
     }),
   ).pipe(FormInputAnnotation.set(false)),
 
@@ -53,7 +53,7 @@ export const Project = Schema.Struct({
    * Schema must have the QueueAnnotation.
    */
   // TODO(dmaretskyi): Turn into an array of objects when form-data
-  subscriptions: Schema.Array(Ref.Ref(Type.Obj)).pipe(FormInputAnnotation.set(false)),
+  subscriptions: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(FormInputAnnotation.set(false)),
 
   useQualifyingAgent: Schema.optional(Schema.Boolean).annotations({
     title: 'Use qualifying agent on subscriptions',

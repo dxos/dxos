@@ -6,7 +6,7 @@ import '@dxos/lit-ui/dx-tag-picker.pcss';
 
 import React, { useCallback, useMemo } from 'react';
 
-import { type Database, Entity, Filter, Ref, Type } from '@dxos/echo';
+import { type Database, Entity, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/internal';
 import { useQuery, useSchema as useSchema$ } from '@dxos/echo-react';
 import { findAnnotation } from '@dxos/effect';
@@ -36,8 +36,8 @@ const defaultResultsHook: NonNullable<RefFieldProps['resultsHook']> = (db, typen
   useQuery(
     db,
     typename
-      ? // For Ref.Ref(Type.Obj) we want to show all objects.
-        typename === Type.getTypename(Type.Obj)
+      ? // For Ref.Ref(Obj.Unknown) we want to show all objects.
+        typename === Type.getTypename(Obj.Unknown)
         ? Filter.everything()
         : Filter.typename(typename)
       : Filter.nothing(),

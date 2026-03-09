@@ -18,8 +18,8 @@ export default defineFunction({
     You must search database for available tags, or create a new one.
   `,
   inputSchema: Schema.Struct({
-    tag: Ref.Ref(Type.Obj),
-    obj: Ref.Ref(Type.Obj),
+    tag: Ref.Ref(Obj.Unknown),
+    obj: Ref.Ref(Obj.Unknown),
   }),
   outputSchema: Schema.Unknown,
   handler: Effect.fn(function* ({ data: { tag, obj } }) {

@@ -67,7 +67,7 @@ export const InvocationTraceStartEvent = Schema.Struct({
   /**
    * DXN of the invoked function/workflow.
    */
-  invocationTarget: Schema.optional(Ref.Ref(Type.Obj)),
+  invocationTarget: Schema.optional(Ref.Ref(Obj.Unknown)),
   /**
    * Present for automatic invocations.
    */

@@ -37,7 +37,7 @@ export default defineFunction({
   }),
   outputSchema: Schema.Struct({
     entities: Schema.optional(
-      Schema.Array(Type.Obj).annotations({
+      Schema.Array(Obj.Unknown).annotations({
         description: 'Extracted entities.',
       }),
     ),

@@ -13,7 +13,7 @@ import { BoardLayout, defaultLayout } from '@dxos/react-ui-board';
  */
 export const Board = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
-  items: Ref.Ref(Type.Obj).pipe(Schema.Array, FormInputAnnotation.set(false)),
+  items: Ref.Ref(Obj.Unknown).pipe(Schema.Array, FormInputAnnotation.set(false)),
   layout: BoardLayout.pipe(FormInputAnnotation.set(false)),
 }).pipe(
   Type.object({
