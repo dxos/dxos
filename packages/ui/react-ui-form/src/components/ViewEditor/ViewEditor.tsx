@@ -9,7 +9,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import React, { forwardRef, useCallback, useContext, useImperativeHandle, useMemo, useState } from 'react';
 
-import { Entity, Feed, Filter, Format, Obj, Query, QueryAST, Ref, type SchemaRegistry, Type } from '@dxos/echo';
+import { Entity, Feed, Filter, Format, Obj, Query, QueryAST, Ref, type SchemaRegistry } from '@dxos/echo';
 import { View } from '@dxos/echo';
 import { EchoSchema, type JsonProp, isMutable, toJsonSchema } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
@@ -105,7 +105,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
       Match.orElse(() => undefined),
     );
 
-    const feeds = useQuery(db, Filter.type(Type.Feed));
+    const feeds = useQuery(db, Filter.type(Feed.Feed));
 
     const targetRef = useMemo(() => {
       if (!queueTarget) {
@@ -126,8 +126,8 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
       if (mode === 'tag') {
         return Schema.Struct({
           ...base.fields,
-          // TODO(wittjosiah): Replace Type.Feed with Dataset.Dataset when Type.Ref supports unions.
-          target: Type.Ref(Type.Feed).pipe(
+          // TODO(wittjosiah): Replace Type.Feed with Dataset.Dataset when Ref.Ref supports unions.
+          target: Ref.Ref(Feed.Feed).pipe(
             Schema.annotations({ title: 'Target Feed' }),
             ParentLabelAnnotation.set(true),
             Schema.optional,

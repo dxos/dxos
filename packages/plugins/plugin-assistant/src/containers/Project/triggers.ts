@@ -5,7 +5,7 @@
 import * as Option from 'effect/Option';
 
 import { type Project, ProjectFunctions } from '@dxos/assistant-toolkit';
-import { Feed, Obj, Ref, Type } from '@dxos/echo';
+import { Feed, Obj, Ref } from '@dxos/echo';
 import { FunctionDefinition, Trigger } from '@dxos/functions';
 import { Filter } from '@dxos/react-client/echo';
 import { FeedAnnotation } from '@dxos/schema';
@@ -69,15 +69,15 @@ export const syncTriggers = async (project: Project.Project) => {
       continue;
     }
 
-    let feedObj: Type.Feed | undefined;
-    if (Obj.instanceOf(Type.Feed, target)) {
+    let feedObj: Feed.Feed | undefined;
+    if (Obj.instanceOf(Feed.Feed, target)) {
       feedObj = target;
     } else if (hasFeedAnnotation(target)) {
       feedObj = await (target as any).feed?.tryLoad();
     }
 
     const queueDxn = Option.fromNullable(feedObj).pipe(
-      Option.filter(Obj.instanceOf(Type.Feed)),
+      Option.filter(Obj.instanceOf(Feed.Feed)),
       Option.map(Feed.getQueueDxn),
       Option.getOrUndefined,
     );

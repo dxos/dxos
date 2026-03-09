@@ -4,7 +4,7 @@
 
 import { extendTailwindMerge, validators } from 'tailwind-merge';
 
-import { type SlottableProps } from '@dxos/ui-types';
+import { type ComposableProps } from '@dxos/ui-types';
 
 type AdditionalClassGroups = 'density' | 'dx-focus-ring';
 
@@ -51,10 +51,10 @@ export const mx = extendTailwindMerge<AdditionalClassGroups>({
 });
 
 /**
- * Reconcile className properties from slot.
+ * Reconciles className properties from slot.
  */
-export const useSlottedProps = (
-  { classNames, className, ...props }: Pick<SlottableProps, 'classNames' | 'className'>,
+export const useComposableProps = (
+  { classNames, className, ...props }: Pick<ComposableProps, 'classNames' | 'className'>,
   etc?: string,
 ) => ({
   className: mx(etc, classNames, className),

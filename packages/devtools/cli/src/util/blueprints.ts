@@ -12,7 +12,7 @@ import { GenericToolkit } from '@dxos/ai';
 import { ArtifactId } from '@dxos/assistant';
 import { Chat, WebSearchToolkit } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
-import { Tag, Type } from '@dxos/echo';
+import { Feed, Tag, type Type } from '@dxos/echo';
 import { type FunctionDefinition } from '@dxos/functions';
 import { AssistantBlueprint } from '@dxos/plugin-assistant/blueprints';
 import { ChessBlueprint } from '@dxos/plugin-chess/blueprints';
@@ -105,13 +105,13 @@ export const toolkits: GenericToolkit.GenericToolkit[] = [
   ),
 ];
 
-export const types: Type.Entity.Any[] = [
+export const types: Type.AnyEntity[] = [
   // NOTE: Types referenced by blueprints above need to be added here.
   DataTypes,
   [Chat.Chat],
   [Chess.Game],
   [Markdown.Document],
-  [Mailbox.Mailbox, Calendar.Calendar, Type.Feed],
+  [Mailbox.Mailbox, Calendar.Calendar, Feed.Feed],
   [Blueprint.Blueprint],
   [Tag.Tag],
   [Event.Event, Organization.Organization, Person.Person, Pipeline.Pipeline, Task.Task],

@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Obj, Type } from '@dxos/echo';
+import { Annotation, Obj, Ref, Type } from '@dxos/echo';
 
 import * as Chat from './Chat';
 
@@ -33,7 +33,7 @@ export const Task = Schema.Struct({
   /**
    * Chat object that this task is associated with.
    */
-  chat: Schema.optional(Type.Ref(Chat.Chat)),
+  chat: Schema.optional(Ref.Ref(Chat.Chat)),
 });
 export interface Task extends Schema.Schema.Type<typeof Task> {}
 

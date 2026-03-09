@@ -19,7 +19,7 @@ import {
   makeGraphWriterHandler,
   makeGraphWriterToolkit,
 } from '@dxos/assistant-toolkit';
-import { Database, Feed, Filter, Obj, Type } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { TracingService, defineFunction } from '@dxos/functions';
 import { Message, Organization, Person, Pipeline } from '@dxos/types';
 import { trim } from '@dxos/util';
@@ -35,7 +35,7 @@ export default defineFunction({
   name: 'Summarize',
   description: 'Summarize a mailbox.',
   inputSchema: Schema.Struct({
-    mailbox: Type.Ref(Mailbox.Mailbox).annotations({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotations({
       description: 'Reference to the mailbox object.',
     }),
     skip: Schema.Number.pipe(

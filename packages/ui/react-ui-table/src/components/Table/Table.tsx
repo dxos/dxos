@@ -69,7 +69,7 @@ export type TableController = {
   handleInsertRowResult?: (insertRowResult?: InsertRowResult) => void;
 };
 
-export type TableMainProps<T extends Type.Entity.Any = Type.Entity.Any> = {
+export type TableMainProps<T extends Type.AnyEntity = Type.AnyEntity> = {
   schema?: T;
   model?: TableModel;
   presentation?: TablePresentation;
@@ -83,7 +83,7 @@ export type TableMainProps<T extends Type.Entity.Any = Type.Entity.Any> = {
 const emptyRowsAtom = Atom.make<unknown[]>([]);
 const emptyCellUpdateAtom = Atom.make<number>(0);
 
-const TableMainInner = <T extends Type.Entity.Any = Type.Entity.Any>(
+const TableMainInner = <T extends Type.AnyEntity = Type.AnyEntity>(
   { schema, model, presentation, ignoreAttention, onCreate, onRowClick, testId }: TableMainProps<T>,
   forwardedRef: Ref<TableController>,
 ) => {
@@ -447,9 +447,13 @@ const TableMainInner = <T extends Type.Entity.Any = Type.Entity.Any>(
   );
 };
 
-const TableMain = forwardRef(TableMainInner) as <T extends Type.Entity.Any = Type.Entity.Any>(
+const TableMain = forwardRef(TableMainInner) as <T extends Type.AnyEntity = Type.AnyEntity>(
   props: TableMainProps<T> & { ref?: Ref<TableController> },
 ) => JSX.Element;
+
+//
+// Table
+//
 
 //
 // Table

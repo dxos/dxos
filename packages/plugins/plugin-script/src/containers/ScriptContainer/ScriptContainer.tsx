@@ -13,8 +13,7 @@ import { useIdentity } from '@dxos/react-client/halo';
 import { Panel } from '@dxos/react-ui';
 import { createDataExtensions, listener, stackItemContentEditorClassNames } from '@dxos/ui-editor';
 
-import { ScriptToolbar } from '../../components/ScriptToolbar';
-import { TypescriptEditor, type TypescriptEditorProps } from '../../components/TypescriptEditor';
+import { ScriptToolbar, TypescriptEditor, type TypescriptEditorProps } from '../../components';
 import { useDeployState, useToolbarState } from '../../hooks';
 import { type ScriptSettings } from '../../types';
 
@@ -65,7 +64,7 @@ export const ScriptContainer = ({
   }
 
   return (
-    <Panel.Root role={role}>
+    <Panel.Root role={role} className='dx-article'>
       <Panel.Toolbar asChild>
         <ScriptToolbar state={state} role={role} script={script} />
       </Panel.Toolbar>

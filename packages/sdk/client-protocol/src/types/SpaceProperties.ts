@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Type } from '@dxos/echo';
+import { Annotation, Ref, Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
 
 export const SpacePropertiesSchema = Schema.Struct(
@@ -17,7 +17,7 @@ export const SpacePropertiesSchema = Schema.Struct(
     // TODO(burdon): Change to mode (no booleans?)
     // TODO(wittjosiah): Make optional with default value.
     edgeReplication: Schema.optional(Schema.Boolean),
-    invocationTraceQueue: Schema.optional(Type.Ref(Queue)),
+    invocationTraceQueue: Schema.optional(Ref.Ref(Queue)),
 
     //
     // User properties.

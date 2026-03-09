@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 
-import { Database, Feed, Filter, Obj, Type } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { Message } from '@dxos/types';
 
@@ -19,7 +19,7 @@ export default defineFunction({
   name: 'Open email',
   description: 'Opens and reads the contents of a mailbox.',
   inputSchema: Schema.Struct({
-    mailbox: Type.Ref(Mailbox.Mailbox).annotations({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotations({
       description: 'Reference to the mailbox object.',
     }),
     skip: Schema.Number.pipe(

@@ -25,7 +25,7 @@ export const testStoragePath = ({ name = PublicKey.random().toHex() }: { name?: 
 const FIXED_SPACE_KEY = PublicKey.from('665c420e0dec9aa36c2bedca567afb0778701920e346eaf83ab2bd3403859723');
 
 export type TestDatabaseOptions = {
-  types?: Type.Entity.Any[];
+  types?: Type.AnyEntity[];
   /**
    * Setting this to fixed will use the same space key for all tests.
    * Important for tests with memoization.

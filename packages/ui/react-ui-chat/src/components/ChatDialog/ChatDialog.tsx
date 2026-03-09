@@ -71,7 +71,7 @@ const ChatDialogRoot = ({
       setSize={setSize}
     >
       <Dialog.Root modal={false} open={open} onOpenChange={setOpen}>
-        <div role='none' className='dx-dialog__overlay bg-transparent pointer-events-none' data-h-align='end'>
+        <div role='none' className='dx-dialog__overlay bg-transparent pointer-events-none' data-block-align='end'>
           <Dialog.Content
             size='md'
             inOverlayLayout

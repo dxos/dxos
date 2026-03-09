@@ -68,7 +68,7 @@ export const CalendarArticle = ({ role, subject: calendar }: SurfaceComponentPro
 
           <Panel.Root>
             <Panel.Toolbar asChild>
-              <Toolbar.Root classNames='border-b border-subdued-separator'>
+              <Toolbar.Root>
                 <Toolbar.IconButton icon='ph--calendar--duotone' iconOnly variant='ghost' label={t('calendar')} />
               </Toolbar.Root>
             </Panel.Toolbar>

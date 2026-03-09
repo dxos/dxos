@@ -82,7 +82,7 @@ type PanelProps = SlottableProps<HTMLDivElement> & {
 };
 
 const Panel = forwardRef<HTMLDivElement, ScopedProps<PanelProps>>(
-  ({ __scopeSplitter, classNames, className, asChild, children, position, style, ...panelProps }, forwardedRef) => {
+  ({ __scopeSplitter, classNames, className, asChild, children, position, style, ...props }, forwardedRef) => {
     const { mode, ratio, transition } = useSplitterContext(PANEL_NAME, __scopeSplitter);
     const { tx } = useThemeContext();
     const Root = asChild ? Slot : Primitive.div;
@@ -106,7 +106,7 @@ const Panel = forwardRef<HTMLDivElement, ScopedProps<PanelProps>>(
     return (
       <Root
         role='none'
-        {...panelProps}
+        {...props}
         ref={forwardedRef}
         className={tx('splitter.panel', {}, [className, classNames])}
         style={{

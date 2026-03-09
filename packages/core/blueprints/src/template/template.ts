@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Ref, Type } from '@dxos/echo';
+import { Ref } from '@dxos/echo';
 import { type ObjectId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 
@@ -45,7 +45,7 @@ export type Input = Schema.Schema.Type<typeof Input>;
  * Template type.
  */
 export const Template = Schema.Struct({
-  source: Type.Ref(Text.Text).annotations({ description: 'Handlebars template source' }),
+  source: Ref.Ref(Text.Text).annotations({ description: 'Handlebars template source' }),
   inputs: Schema.optional(Schema.Array(Input)),
 });
 

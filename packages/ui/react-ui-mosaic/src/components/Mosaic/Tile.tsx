@@ -31,7 +31,7 @@ import React, {
 } from 'react';
 import { createPortal } from 'react-dom';
 
-import { type SlottableClassName } from '@dxos/react-ui';
+import { type ComposableProps } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { useMosaicContainerContext } from './Container';
@@ -58,7 +58,7 @@ const [MosaicTileContextProvider, useMosaicTileContext] = createContext<MosaicTi
 // State attribute: data-[mosaic-tile-state=dragging]
 const MOSAIC_TILE_STATE_ATTR = 'mosaic-tile-state';
 
-type MosaicTileProps<TData = any, TLocation = LocationType> = SlottableClassName<
+type MosaicTileProps<TData = any, TLocation = LocationType> = ComposableProps<
   PropsWithChildren<{
     asChild?: boolean;
     dragHandle?: HTMLElement | null;
@@ -84,6 +84,7 @@ const MosaicTile = forwardRef<HTMLDivElement, MosaicTileProps>(
       id,
       data: dataProp,
       debug: _,
+      ...props
     }: MosaicTileProps,
     forwardedRef,
   ) => {
@@ -198,6 +199,7 @@ const MosaicTile = forwardRef<HTMLDivElement, MosaicTileProps>(
     return (
       <MosaicTileContextProvider state={state}>
         <Root
+          {...props}
           {...{
             [`data-${MOSAIC_TILE_STATE_ATTR}`]: state.type,
           }}

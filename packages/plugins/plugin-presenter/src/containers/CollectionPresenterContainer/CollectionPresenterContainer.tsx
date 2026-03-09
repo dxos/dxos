@@ -9,7 +9,7 @@ import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { type Collection } from '@dxos/echo';
 import { Panel } from '@dxos/react-ui';
 
-import { PageNumber, Pager, Layout as PresenterLayout } from '../../components/Presenter';
+import { PageNumber, Pager, Layout as PresenterLayout } from '../../components';
 import { PresenterContext } from '../../types';
 import { useExitPresenter } from '../../useExitPresenter';
 

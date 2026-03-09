@@ -237,7 +237,7 @@ type SearchListContentProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
 const SearchListContent = forwardRef<HTMLDivElement, SearchListContentProps>(
   ({ classNames, children, ...props }, forwardedRef) => {
     return (
-      <div role='none' {...props} className={mx('grid h-full w-full min-h-0', classNames)} ref={forwardedRef}>
+      <div role='none' {...props} className={mx('dx-container flex flex-col gap-3', classNames)} ref={forwardedRef}>
         {children}
       </div>
     );
@@ -350,28 +350,26 @@ const SearchListInput = forwardRef<HTMLInputElement, SearchListInputProps>(
     );
 
     return (
-      <div className='p-form-chrome'>
-        <input
-          {...props}
-          {...(props.autoFocus && !hasIosKeyboard && { autoFocus: true })}
-          type='text'
-          placeholder={placeholder ?? defaultPlaceholder}
-          className={tx(
-            'input.input',
-            {
-              variant,
-              disabled: props.disabled,
-              density,
-              elevation,
-            },
-            classNames,
-          )}
-          value={query}
-          onChange={handleChange}
-          onKeyDown={handleKeyDown}
-          ref={forwardedRef}
-        />
-      </div>
+      <input
+        {...props}
+        {...(props.autoFocus && !hasIosKeyboard && { autoFocus: true })}
+        type='text'
+        placeholder={placeholder ?? defaultPlaceholder}
+        className={tx(
+          'input.input',
+          {
+            variant,
+            disabled: props.disabled,
+            density,
+            elevation,
+          },
+          classNames,
+        )}
+        value={query}
+        onChange={handleChange}
+        onKeyDown={handleKeyDown}
+        ref={forwardedRef}
+      />
     );
   },
 );

@@ -26,7 +26,7 @@ export type ClientRepeaterProps<P extends ClientRepeatedComponentProps> = {
   controls?: FC<ClientRepeaterControlsProps>;
   count?: number;
   clients?: Client[];
-  types?: Type.Obj.Any[];
+  types?: Type.AnyObj[];
   args?: Omit<P, 'id' | 'count'>;
 } & Pick<WithClientProviderProps, 'createIdentity' | 'createSpace' | 'onCreateSpace'>;
 

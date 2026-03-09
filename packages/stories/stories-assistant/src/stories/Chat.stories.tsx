@@ -22,7 +22,7 @@ import {
   WebSearchBlueprint,
 } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt, Template } from '@dxos/blueprints';
-import { Feed, Filter, Obj, Query, Ref, Tag, Type } from '@dxos/echo';
+import { Feed, Filter, JsonSchema, Obj, Query, Ref, Tag } from '@dxos/echo';
 import { View } from '@dxos/echo';
 import { ExampleFunctions, Script, Trigger, serializeFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
@@ -400,7 +400,7 @@ export const WithMail: Story = {
       return { plugins: [InboxPlugin(), MarkdownPlugin(), ThreadPlugin()] };
     },
     config: config.remote,
-    types: [Type.Feed, Mailbox.Mailbox],
+    types: [Feed.Feed, Mailbox.Mailbox],
     onInit: async ({ space }) => {
       const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox' }));
       const feed = await mailbox.feed?.tryLoad();
@@ -438,7 +438,7 @@ export const WithGmail: Story = {
       return { plugins: [InboxPlugin(), TokenManagerPlugin()] };
     },
     config: config.persistent,
-    types: [Type.Feed, Mailbox.Mailbox],
+    types: [Feed.Feed, Mailbox.Mailbox],
     onInit: async ({ space }) => {
       space.db.add(Mailbox.make({ name: 'Mailbox' }));
     },
@@ -468,7 +468,7 @@ export const WithCalendar: Story = {
       return { plugins: [InboxPlugin(), TokenManagerPlugin()] };
     },
     config: config.remote,
-    types: [Type.Feed, Calendar.Calendar, Event.Event],
+    types: [Feed.Feed, Calendar.Calendar, Event.Event],
     onInit: async ({ space }) => {
       space.db.add(Calendar.make({ name: 'Calendar' }));
     },
@@ -866,7 +866,7 @@ export const WithProject: Story = {
       Person.Person,
       Pipeline.Pipeline,
       View.View,
-      Type.Feed,
+      Feed.Feed,
     ],
     onInit: async ({ space }) => {
       await addTestData(space);
@@ -973,19 +973,19 @@ export const WithProject: Story = {
 
       const mailboxView = ViewModel.make({
         query: Query.select(Filter.type(Message.Message)).select(Filter.tag(tagDxn)).from(mailbox),
-        jsonSchema: Type.toJsonSchema(Message.Message),
+        jsonSchema: JsonSchema.toJsonSchema(Message.Message),
       });
       const contactsView = ViewModel.make({
         query: contactsQuery,
-        jsonSchema: Type.toJsonSchema(Person.Person),
+        jsonSchema: JsonSchema.toJsonSchema(Person.Person),
       });
       const organizationsView = ViewModel.make({
         query: organizationsQuery,
-        jsonSchema: Type.toJsonSchema(Organization.Organization),
+        jsonSchema: JsonSchema.toJsonSchema(Organization.Organization),
       });
       const notesView = ViewModel.make({
         query: notesQuery,
-        jsonSchema: Type.toJsonSchema(Markdown.Document),
+        jsonSchema: JsonSchema.toJsonSchema(Markdown.Document),
       });
 
       space.db.add(

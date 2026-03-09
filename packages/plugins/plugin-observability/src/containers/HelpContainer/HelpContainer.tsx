@@ -11,7 +11,7 @@ import { runAndForwardErrors } from '@dxos/effect';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import { osTranslations } from '@dxos/ui-theme';
 
-import { FeedbackForm } from '../../components/FeedbackForm';
+import { FeedbackForm } from '../../components';
 import { meta } from '../../meta';
 import { ObservabilityCapabilities, ObservabilityOperation, type UserFeedback } from '../../types';
 

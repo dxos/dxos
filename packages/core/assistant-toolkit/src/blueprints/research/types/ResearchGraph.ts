@@ -15,7 +15,7 @@ import { ContextQueueService, QueueService } from '@dxos/functions';
  * Container for a set of ephemeral research results.
  */
 export const ResearchGraph = Schema.Struct({
-  queue: Type.Ref(Queue),
+  queue: Ref.Ref(Queue),
 }).pipe(
   Type.object({
     typename: 'dxos.org/type/ResearchGraph',

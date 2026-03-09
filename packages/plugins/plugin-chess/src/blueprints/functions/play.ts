@@ -6,7 +6,7 @@ import { Chess as ChessJS } from 'chess.js';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Database, Obj, Type } from '@dxos/echo';
+import { Database, Obj, Ref } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 
 import { Chess } from '../../types';
@@ -16,7 +16,7 @@ export default defineFunction({
   name: 'Play',
   description: 'Uses the chess engine to play the next move.',
   inputSchema: Schema.Struct({
-    game: Type.Ref(Chess.Game).annotations({
+    game: Ref.Ref(Chess.Game).annotations({
       description: 'The ID of the chess object.',
     }),
     side: Schema.optional(Schema.Literal('white', 'black', 'any')).annotations({

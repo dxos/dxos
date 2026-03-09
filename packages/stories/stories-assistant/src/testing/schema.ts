@@ -4,11 +4,11 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Type } from '@dxos/echo';
+import { Ref, Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
 
 export const ResearchInputQueue = Schema.Struct({
-  queue: Type.Ref(Queue),
+  queue: Ref.Ref(Queue),
 }).pipe(
   Type.object({
     typename: 'dxos.org/type/ResearchInputQueue',

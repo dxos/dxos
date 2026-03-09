@@ -8,7 +8,7 @@ import React, { memo, useMemo } from 'react';
 
 import { type Node } from '@dxos/app-graph';
 import { ElevationProvider, type ThemedClassName } from '@dxos/react-ui';
-import { type ActionGraphProps, Menu, type MenuAction, createGapSeparator, useMenuActions } from '@dxos/react-ui-menu';
+import { type ActionGraphProps, Menu, type MenuAction, MenuBuilder, useMenuActions } from '@dxos/react-ui-menu';
 import { type EditorViewMode } from '@dxos/ui-editor';
 
 import { createLists } from './actions';
@@ -66,6 +66,7 @@ type ToolbarActionsProps = Pick<EditorToolbarActionGraphProps, 'state' | 'getVie
 // TODO(wittjosiah): Toolbar re-rendering is causing this graph to be recreated and breaking reactivity in some cases.
 //   E.g. for toolbar dropdowns which use active icon, the icon is not updated when the active item changes.
 //   This is currently only happening in the markdown plugin usage and should be reproduced in an editor story.
+// TODO(burdon): Some actions should toggle the state (e.g., toggle bullets on/off depending on the current state).
 const useEditorToolbarActionGraph = ({ state, getView, customActions, ...features }: ToolbarActionsProps) => {
   const menuCreator = useMemo(
     () => createToolbarActions({ state, getView, customActions, ...features }),
@@ -93,48 +94,39 @@ const createToolbarActions = ({
   ...features
 }: ToolbarActionsProps): Atom.Atom<ActionGraphProps> => {
   return Atom.make((get) => {
-    const graph: ActionGraphProps = {
-      nodes: [],
-      edges: [],
-    };
-
-    // TODO(burdon): Builder pattern?
-    const addSubGraph = (graph: ActionGraphProps, subGraph: ActionGraphProps) => {
-      graph.nodes.push(...subGraph.nodes);
-      graph.edges.push(...subGraph.edges);
-    };
-
     // Subscribe to state changes.
     const stateSnapshot = get(state);
 
+    const builder = MenuBuilder.make();
+
     if (features?.showHeadings ?? true) {
-      addSubGraph(graph, createHeadings(stateSnapshot, getView));
+      builder.subgraph(createHeadings(stateSnapshot, getView));
     }
     if (features?.showFormatting ?? true) {
-      addSubGraph(graph, createFormatting(stateSnapshot, getView));
+      builder.subgraph(createFormatting(stateSnapshot, getView));
     }
     if (features?.showLists ?? true) {
-      addSubGraph(graph, createLists(stateSnapshot, getView));
+      builder.subgraph(createLists(stateSnapshot, getView));
     }
     if (features?.showBlocks ?? true) {
-      addSubGraph(graph, createBlocks(stateSnapshot, getView));
+      builder.subgraph(createBlocks(stateSnapshot, getView));
     }
     if (features?.onImageUpload) {
-      addSubGraph(graph, createImageUpload(features.onImageUpload!));
+      builder.subgraph(createImageUpload(features.onImageUpload!));
     }
 
-    addSubGraph(graph, createGapSeparator());
+    builder.separator('gap');
 
     if (customActions) {
-      addSubGraph(graph, get(customActions));
+      builder.subgraph(get(customActions));
     }
     if (features?.showSearch ?? true) {
-      addSubGraph(graph, createSearch(getView));
+      builder.subgraph(createSearch(getView));
     }
     if (features?.onViewModeChange) {
-      addSubGraph(graph, createViewMode(stateSnapshot, features.onViewModeChange!));
+      builder.subgraph(createViewMode(stateSnapshot, features.onViewModeChange!));
     }
 
-    return graph;
+    return builder.build();
   });
 };

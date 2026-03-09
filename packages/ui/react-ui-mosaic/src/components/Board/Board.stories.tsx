@@ -94,7 +94,7 @@ const useTestBoardModel = (): TestBoardModelResult => {
               const refs = get(AtomObj.makeProperty(column, 'items'));
               return (
                 refs
-                  ?.map((ref) => get(AtomObj.makeWithReactive(ref)))
+                  ?.map((ref: Ref.Ref<TestItem>) => get(AtomObj.makeWithReactive(ref)))
                   .filter((item): item is TestItem => item != null) ?? []
               );
             }),
@@ -130,7 +130,7 @@ const useTestBoardModel = (): TestBoardModelResult => {
           if (!mutableColumn.items) {
             return;
           }
-          const idx = mutableColumn.items.findIndex((ref) => ref.target?.id === current?.id);
+          const idx = mutableColumn.items.findIndex((ref: Ref.Ref<TestItem>) => ref.target?.id === current?.id);
           if (idx !== -1) {
             mutableColumn.items.splice(idx, 1);
           }

@@ -27,7 +27,7 @@ export type Labels = Schema.Schema.Type<typeof Labels>;
 /** Mailbox object schema. */
 export const Mailbox = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
-  feed: Type.Ref(Type.Feed).pipe(FormInputAnnotation.set(false)),
+  feed: Ref.Ref(Type.Feed).pipe(FormInputAnnotation.set(false)),
   labels: Labels.pipe(FormInputAnnotation.set(false), Schema.optional),
   // TODO(wittjosiah): Factor out to relation?
   filters: Schema.Array(
@@ -37,7 +37,7 @@ export const Mailbox = Schema.Struct({
     }),
   ).pipe(FormInputAnnotation.set(false)),
   accessToken: Schema.optional(
-    Type.Ref(AccessToken.AccessToken).annotations({
+    Ref.Ref(AccessToken.AccessToken).annotations({
       title: 'Account',
       description: 'Google account credentials for syncing this mailbox.',
     }),
@@ -62,7 +62,7 @@ export const instanceOf = (value: unknown): value is Mailbox => Obj.instanceOf(M
 export const CreateMailboxSchema = Schema.Struct({
   name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
   accessToken: Schema.optional(
-    Type.Ref(AccessToken.AccessToken).annotations({
+    Ref.Ref(AccessToken.AccessToken).annotations({
       title: 'Account',
       description: 'Google account credentials for syncing this mailbox.',
     }),

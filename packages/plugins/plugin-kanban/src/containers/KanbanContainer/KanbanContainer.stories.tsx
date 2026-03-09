@@ -47,7 +47,7 @@ const createOrg = (status?: Organization.Organization['status']) => ({
 //
 
 type ClientSetupOptions = {
-  types?: Type.Entity.Any[];
+  types?: Type.AnyEntity[];
   onSpaceCreated?: (space: Space) => Promise<void>;
 };
 

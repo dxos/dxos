@@ -9,7 +9,7 @@ import { JsonPath } from '@dxos/effect';
 import { PublicKey } from '@dxos/keys';
 
 import * as Filter from './Filter';
-import { JsonSchemaType, SystemTypeAnnotation } from './internal';
+import * as internal from './internal';
 import * as Obj from './Obj';
 import * as Query from './Query';
 import * as Type from './Type';
@@ -36,7 +36,7 @@ export const Projection = Schema.Struct({
   /**
    * Optional schema override used to customize the underlying schema.
    */
-  schema: JsonSchemaType.pipe(Schema.optional),
+  schema: internal.JsonSchemaType.pipe(Schema.optional),
 
   /**
    * UX metadata associated with displayed fields (in table, form, etc.)
@@ -76,7 +76,7 @@ const ViewSchema = Schema.Struct({
     typename: 'dxos.org/type/View',
     version: '0.5.0',
   }),
-  SystemTypeAnnotation.set(true),
+  internal.SystemTypeAnnotation.set(true),
 );
 
 export interface View extends Schema.Schema.Type<typeof ViewSchema> {}
@@ -87,7 +87,7 @@ export interface View extends Schema.Schema.Type<typeof ViewSchema> {}
 // NOTE: This interface is explicitly defined rather than derived from the schema to avoid
 //   TypeScript "cannot be named" portability errors. The schema contains QueryAST.Query which
 //   references internal @dxos/echo-protocol module paths. Without this explicit interface,
-//   any schema using Type.Ref(View) would inherit the non-portable type and fail to compile.
+//   any schema using Ref.Ref(View) would inherit the non-portable type and fail to compile.
 // TODO(wittjosiah): Find a better solution that doesn't require manually keeping the interface in sync.
 export const View: Type.Obj<View> = ViewSchema as any;
 

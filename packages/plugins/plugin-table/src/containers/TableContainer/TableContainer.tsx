@@ -115,7 +115,7 @@ export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(
     }, []);
 
     const handleCreate = useCallback(
-      (schema: Type.Entity.Any, values: any) => {
+      (schema: Type.AnyEntity, values: any) => {
         invariant(db);
         invariant(Type.isObjectSchema(schema));
         return db.add(Obj.make(schema, values));
@@ -194,7 +194,7 @@ export default TableContainer;
 const useQueryWorkaround = (
   db: Database.Database | undefined,
   ast: QueryAST.Query | undefined,
-  schema: Type.Entity.Any | undefined,
+  schema: Type.AnyEntity | undefined,
 ) => {
   // Extract order from query AST and apply it to the base filter query
   const query = useMemo(() => {

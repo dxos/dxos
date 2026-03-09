@@ -12,11 +12,11 @@ import { AccessToken } from '@dxos/types';
 /** Calendar object schema. */
 export const Calendar = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
-  feed: Type.Ref(Type.Feed).pipe(FormInputAnnotation.set(false)),
+  feed: Ref.Ref(Type.Feed).pipe(FormInputAnnotation.set(false)),
   // Track the last synced update timestamp to handle out-of-order event updates.
   lastSyncedUpdate: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
   accessToken: Schema.optional(
-    Type.Ref(AccessToken.AccessToken).annotations({
+    Ref.Ref(AccessToken.AccessToken).annotations({
       title: 'Account',
       description: 'Google account credentials for syncing this calendar.',
     }),
@@ -37,7 +37,7 @@ export const instanceOf = (value: unknown): value is Calendar => Obj.instanceOf(
 export const CreateCalendarSchema = Schema.Struct({
   name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
   accessToken: Schema.optional(
-    Type.Ref(AccessToken.AccessToken).annotations({
+    Ref.Ref(AccessToken.AccessToken).annotations({
       title: 'Account',
       description: 'Google account credentials for syncing this calendar.',
     }),

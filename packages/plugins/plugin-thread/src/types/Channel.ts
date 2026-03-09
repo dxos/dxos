@@ -10,9 +10,9 @@ import { Thread } from '@dxos/types';
 
 export const Channel = Schema.Struct({
   name: Schema.optional(Schema.String),
-  defaultThread: Type.Ref(Thread.Thread).pipe(FormInputAnnotation.set(false)),
+  defaultThread: Ref.Ref(Thread.Thread).pipe(FormInputAnnotation.set(false)),
   // TODO(wittjosiah): Should be an "ordered collection".
-  threads: Type.Ref(Thread.Thread).pipe(Schema.Array, FormInputAnnotation.set(false)),
+  threads: Ref.Ref(Thread.Thread).pipe(Schema.Array, FormInputAnnotation.set(false)),
 }).pipe(
   Type.object({
     typename: 'dxos.org/type/Channel',

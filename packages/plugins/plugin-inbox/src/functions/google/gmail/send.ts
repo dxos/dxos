@@ -6,7 +6,7 @@ import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Type } from '@dxos/echo';
+import { Ref, Type } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
@@ -23,7 +23,7 @@ export default defineFunction({
     userId: Schema.String.pipe(Schema.optional),
     // TODO(dmaretskyi): This should be a ref so we can send a message from database.
     message: Message.Message,
-    mailbox: Type.Ref(Mailbox.Mailbox).pipe(
+    mailbox: Ref.Ref(Mailbox.Mailbox).pipe(
       Schema.annotations({ description: 'Optional mailbox to send from. Uses mailbox credentials if provided.' }),
       Schema.optional,
     ),

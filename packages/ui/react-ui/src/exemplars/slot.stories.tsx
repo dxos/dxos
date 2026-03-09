@@ -6,8 +6,8 @@ import { Slot } from '@radix-ui/react-slot';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type PropsWithChildren, forwardRef } from 'react';
 
-import { useSlottedProps } from '@dxos/ui-theme';
-import { type SlottableClassName, type SlottableProps, type ThemedClassName } from '@dxos/ui-types';
+import { useComposableProps } from '@dxos/ui-theme';
+import { type ComposableProps, type SlottableProps, type ThemedClassName } from '@dxos/ui-types';
 
 import { withTheme } from '../testing';
 
@@ -22,8 +22,8 @@ import { withTheme } from '../testing';
 // Outer primitive (like Tooltip.Trigger or Focus.Group).
 const Outer = forwardRef<HTMLDivElement, SlottableProps<HTMLDivElement>>(
   ({ children, asChild, ...props }, forwardedRef) => {
+    const { className, ...rest } = useComposableProps(props);
     const Root = asChild ? Slot : 'div';
-    const { className, ...rest } = useSlottedProps(props);
     return (
       <Root {...rest} className={className} data-outer='true' ref={forwardedRef}>
         {children}
@@ -35,8 +35,8 @@ const Outer = forwardRef<HTMLDivElement, SlottableProps<HTMLDivElement>>(
 // Middle primitive (like Dialog.Trigger or Mosaic.Cell).
 const Middle = forwardRef<HTMLDivElement, SlottableProps<HTMLDivElement>>(
   ({ children, asChild, ...props }, forwardedRef) => {
+    const { className, ...rest } = useComposableProps(props);
     const Root = asChild ? Slot : 'div';
-    const { className, ...rest } = useSlottedProps(props);
     return (
       <Root {...rest} className={className} data-middle='true' ref={forwardedRef}>
         {children}
@@ -46,9 +46,9 @@ const Middle = forwardRef<HTMLDivElement, SlottableProps<HTMLDivElement>>(
 );
 
 // Leaf component (like Card.Root).
-const Leaf = forwardRef<HTMLButtonElement, SlottableClassName<PropsWithChildren>>(
+const Leaf = forwardRef<HTMLButtonElement, ComposableProps<PropsWithChildren>>(
   ({ children, ...props }, forwardedRef) => {
-    const { className, ...rest } = useSlottedProps(props);
+    const { className, ...rest } = useComposableProps(props);
     return (
       <button {...rest} className={className} ref={forwardedRef}>
         {children}
@@ -59,7 +59,7 @@ const Leaf = forwardRef<HTMLButtonElement, SlottableClassName<PropsWithChildren>
 
 // Test 1: Single asChild.
 const TestSingle = (props: ThemedClassName<{ role?: string }>) => {
-  const { className, ...rest } = useSlottedProps(props);
+  const { className, ...rest } = useComposableProps(props);
   return (
     <Outer asChild {...rest} className={className}>
       <Leaf>Single asChild</Leaf>
@@ -69,7 +69,7 @@ const TestSingle = (props: ThemedClassName<{ role?: string }>) => {
 
 // Test 2: Nested asChild.
 const TestNested = (props: ThemedClassName<{ role?: string }>) => {
-  const { className, ...rest } = useSlottedProps(props);
+  const { className, ...rest } = useComposableProps(props);
   return (
     <Outer asChild {...rest} className={className}>
       <Middle asChild>
@@ -81,7 +81,7 @@ const TestNested = (props: ThemedClassName<{ role?: string }>) => {
 
 // Test 3: Complex.
 const TestInner = (props: ThemedClassName<{ role?: string }>) => {
-  const { className, ...rest } = useSlottedProps(props);
+  const { className, ...rest } = useComposableProps(props);
   return (
     <Outer asChild {...rest} className={className}>
       <Middle asChild>

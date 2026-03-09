@@ -8,7 +8,7 @@ import React, { useMemo, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
-import { Obj, Query, Type } from '@dxos/echo';
+import { Feed, Obj, Query, Type } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
@@ -34,7 +34,7 @@ const DefaultStory = () => {
 
 const CompanionStory = () => {
   const db = useDatabase();
-  const feeds = useQuery(db, Filter.type(Type.Feed));
+  const feeds = useQuery(db, Filter.type(Feed.Feed));
   const feed = feeds.find((f) => Mailbox.instanceOf(f));
 
   const selected = useSelected(feed ? Obj.getDXN(feed).toString() : undefined, 'single');

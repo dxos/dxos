@@ -115,7 +115,7 @@ const DefaultStory = ({ initialContent, content, streamOptions = defaultStreamOp
         <Toolbar.Button disabled={streaming} onClick={handleAppend}>
           Append
         </Toolbar.Button>
-        <Toolbar.Separator variant='gap' />
+        <Toolbar.Separator />
         <Input.Root>
           <Input.Label>Debug</Input.Label>
           <Input.Switch checked={debug} onCheckedChange={setDebug} />

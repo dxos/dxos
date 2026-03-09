@@ -7,7 +7,7 @@ import type * as Schema from 'effect/Schema';
 import React, { forwardRef, useMemo, useRef, useState } from 'react';
 
 import { useObjectNavigate } from '@dxos/app-toolkit/ui';
-import { Obj, Query, Type } from '@dxos/echo';
+import { JsonSchema, Obj, Query, Type } from '@dxos/echo';
 import { resolveSchemaWithRegistry } from '@dxos/plugin-space';
 import { Filter, getSpace, useObject } from '@dxos/react-client/echo';
 import { useAsyncEffect, useTranslation } from '@dxos/react-ui';
@@ -63,7 +63,7 @@ export const PipelineColumn = ({ data: column, location, classNames, debug }: Pi
     }
 
     // For mutable schemas (EchoSchema), use the live jsonSchema reference for reactivity.
-    const jsonSchema = Type.isMutable(schema) ? schema.jsonSchema : Type.toJsonSchema(schema);
+    const jsonSchema = Type.isMutable(schema) ? schema.jsonSchema : JsonSchema.toJsonSchema(schema);
     const change = createEchoChangeCallback(view, Type.isMutable(schema) ? schema : undefined);
     return new ProjectionModel({ view, baseSchema: jsonSchema, change });
   }, [schema, view]);

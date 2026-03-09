@@ -13,7 +13,7 @@ import * as Option from 'effect/Option';
 import { CommandConfig } from '@dxos/cli-util';
 import { flushAndSync, print, spaceLayer, withTypes } from '@dxos/cli-util';
 import { Common } from '@dxos/cli-util';
-import { DXN, Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+import { DXN, Database, Filter, JsonSchema, Obj, Query, Ref } from '@dxos/echo';
 import { Function, Trigger } from '@dxos/functions';
 
 import { Deep, Delay, Enabled, Input, TriggerId, Typename } from '../options';
@@ -246,7 +246,7 @@ const updateInput = Effect.fn(function* (
   if (shouldChangeInput) {
     const inputObj = yield* Option.match(inputOption, {
       onNone: () =>
-        promptForSchemaInput(fn.inputSchema ? Type.toEffectSchema(fn.inputSchema) : undefined, currentInput),
+        promptForSchemaInput(fn.inputSchema ? JsonSchema.toEffectSchema(fn.inputSchema) : undefined, currentInput),
       onSome: (value) => Effect.succeed(value as Record<string, any>),
     });
     Obj.change(trigger, (mutableTrigger) => {

@@ -129,7 +129,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
         const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
         const schemas = client?.graph.schemaRegistry.query({ location: ['runtime'] }).runSync() ?? [];
 
-        const typename = Schema.isSchema(schema) ? Type.getTypename(schema as Type.Obj.Any) : schema.typename;
+        const typename = Schema.isSchema(schema) ? Type.getTypename(schema as Type.AnyObj) : schema.typename;
 
         // {All} virtual node.
         const allNode = {
@@ -205,13 +205,13 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
         const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
         const schemas = client?.graph.schemaRegistry.query({ location: ['runtime'] }).runSync() ?? [];
 
-        const targetTypename = Type.getTypename(schema as Type.Obj.Any);
+        const targetTypename = Type.getTypename(schema as Type.AnyObj);
         const filteredViews = getViewsForSchema(get, space, schemas, targetTypename);
         const deletable = filteredViews.length === 0;
 
         return Effect.succeed(
           createSchemaActions({
-            schema: schema as Type.Obj.Any,
+            schema: schema as Type.AnyObj,
             space,
             deletable,
           }),
@@ -231,7 +231,7 @@ const createSchemaNode = ({
   space,
   resolve,
 }: {
-  schema: Type.Entity.Any;
+  schema: Type.AnyEntity;
   space: Space;
   resolve: MetadataResolver;
 }): Node.Node => {
@@ -264,7 +264,7 @@ const createSchemaActions = ({
   space,
   deletable,
 }: {
-  schema: Type.Obj.Any;
+  schema: Type.AnyObj;
   space: Space;
   deletable: boolean;
 }) => {
@@ -347,7 +347,7 @@ const createSchemaActions = ({
 };
 
 /** Helper to get view objects filtered by schema typename. */
-const getViewsForSchema = (get: any, space: Space, schemas: Type.Entity.Any[], targetTypename: string) => {
+const getViewsForSchema = (get: any, space: Space, schemas: Type.AnyEntity[], targetTypename: string) => {
   const filter = Filter.or(
     ...schemas
       .filter((schema) => ViewAnnotation.get(schema).pipe(Option.getOrElse(() => false)))

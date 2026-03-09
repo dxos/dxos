@@ -38,7 +38,7 @@ export const SubscriptionEvent = Schema.Struct({
   /**
    * Reference to the object that was changed or created.
    */
-  subject: Type.Ref(Type.Obj),
+  subject: Ref.Ref(Type.Obj),
 
   /**
    * @deprecated

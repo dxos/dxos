@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability, UndoMapping } from '@dxos/app-framework';
 import { sleep } from '@dxos/async';
-import { Obj, Relation, Ref } from '@dxos/echo';
+import { Obj, Ref, Relation } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { OperationResolver } from '@dxos/operation';
 import { Operation } from '@dxos/operation';

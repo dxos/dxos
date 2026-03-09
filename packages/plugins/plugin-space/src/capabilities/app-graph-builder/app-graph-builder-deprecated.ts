@@ -362,7 +362,8 @@ export default Capability.makeModule(
       // Create object nodes for schema-based system collections.
       GraphBuilder.createExtension({
         id: `${meta.id}/system-collections`,
-        match: (node) => (Obj.instanceOf(ManagedCollection.ManagedCollection, node.data) ? Option.some(node.data) : Option.none()),
+        match: (node) =>
+          Obj.instanceOf(ManagedCollection.ManagedCollection, node.data) ? Option.some(node.data) : Option.none(),
         connector: (collection, get) => {
           const [typename, feedKind] = collection.key.split('~');
           const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
@@ -404,7 +405,8 @@ export default Capability.makeModule(
       GraphBuilder.createExtension({
         id: `${meta.id}/static-schemas`,
         match: (node: Node.Node) =>
-          Obj.instanceOf(ManagedCollection.ManagedCollection, node.data) && node.data.key === Type.getTypename(Type.PersistentType)
+          Obj.instanceOf(ManagedCollection.ManagedCollection, node.data) &&
+          node.data.key === Type.getTypename(Type.PersistentType)
             ? Option.some(node.data)
             : Option.none(),
         connector: (collection, get) => {
@@ -449,7 +451,7 @@ export default Capability.makeModule(
           const objects = get(AtomQuery.make(space.db, filter));
 
           // Filter views that match the schema typename using AtomObj and AtomRef (cached via Atom.family).
-          const targetTypename = Type.getTypename(schema as Type.Obj.Any);
+          const targetTypename = Type.getTypename(schema as Type.AnyObj);
           const filteredViews = objects.filter((viewObject) => {
             const viewSnapshot = get(AtomObj.make(viewObject));
             const viewRef = (viewSnapshot as any).view;
@@ -460,7 +462,7 @@ export default Capability.makeModule(
 
           return Effect.succeed(
             createStaticSchemaActions({
-              schema: schema as Type.Obj.Any,
+              schema: schema as Type.AnyObj,
               space,
               deletable,
             }),
@@ -489,7 +491,7 @@ export default Capability.makeModule(
               .map((schema) => Filter.type(schema)),
           );
 
-          const typename = Schema.isSchema(schema) ? Type.getTypename(schema as Type.Obj.Any) : schema.typename;
+          const typename = Schema.isSchema(schema) ? Type.getTypename(schema as Type.AnyObj) : schema.typename;
           const objects = get(AtomQuery.make(space.db, filter));
 
           // Filter and map using AtomObj and AtomRef (cached via Atom.family).

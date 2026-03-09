@@ -29,7 +29,8 @@ export const CommentsContainer = ({ anchors, currentId, showResolvedThreads, ...
     ? anchors.filter((anchor) => !!Relation.getSource(anchor))
     : anchors.filter((anchor) => {
         const thread = Relation.getSource(anchor);
-        return thread && thread.status !== 'resolved';
+        // TODO(dmaretskyi): Do Obj.instanceOf check instead.
+        return thread && (thread as any).status !== 'resolved';
       });
 
   useEffect(() => {

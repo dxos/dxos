@@ -12,7 +12,7 @@ import { ViewAnnotation } from '@dxos/schema';
 export const Masonry = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
 
-  view: Type.Ref(View.View).pipe(FormInputAnnotation.set(false)),
+  view: Ref.Ref(View.View).pipe(FormInputAnnotation.set(false)),
 
   arrangement: Schema.Array(
     Schema.Struct({
