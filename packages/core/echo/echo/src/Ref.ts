@@ -63,6 +63,7 @@ export const Array = internal.RefArray;
  */
 // TODO(dmaretskyi): Investigate if we can remove this type.
 //                   Post DX-836 it will become just `Schema.Schema<Ref.Ref<T>>`.
+//                   NOTE: This could be Type.Ref<T> instead, but since it going to be removed, it's better to keep it here, self-contained.
 export interface RefSchema<T extends Entity.Unknown> extends internal.RefSchema<T> {}
 
 /**
