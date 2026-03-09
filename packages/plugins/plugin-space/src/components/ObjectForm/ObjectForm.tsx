@@ -33,7 +33,7 @@ export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
   const tags = (meta.tags ?? []).map((tag) => db?.makeRef(DXN.parse(tag))).filter(isNonNullable);
   const values = useMemo(() => ({ tags, ...object }), [object, tags]);
 
-  const handleCreate = useCallback((schema: Type.Entity.Any, values: any) => {
+  const handleCreate = useCallback((schema: Type.AnyEntity, values: any) => {
     invariant(db);
     invariant(Type.isObjectSchema(schema));
     const newObject = db.add(Obj.make(schema, values));

@@ -86,7 +86,7 @@ export type FunctionDefinition<TInput = any, TOutput = any, S extends FunctionSe
    * List of types the function uses.
    * This is used to ensure that the types are available when the function is executed.
    */
-  types: readonly Type.Entity.Any[];
+  types: readonly Type.AnyEntity[];
 
   /**
    * Keys of the required services.
@@ -127,7 +127,7 @@ export type FunctionProps<T, O> = {
    * List of types the function uses.
    * This is used to ensure that the types are available when the function is executed.
    */
-  types?: readonly Type.Entity.Any[];
+  types?: readonly Type.AnyEntity[];
 
   // TODO(dmaretskyi): This currently doesn't cause a compile-time error if the handler requests a service that is not specified
   services?: readonly Context.Tag<any, any>[];

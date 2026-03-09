@@ -297,7 +297,7 @@ export const getTypeDXN = internal.getTypeDXN;
  * Get the schema of the relation.
  * Returns the branded ECHO schema used to create the relation.
  */
-export const getSchema: (rel: unknown | undefined) => Type.Entity.Any | undefined = internal.getSchema as any;
+export const getSchema: (rel: unknown | undefined) => Type.AnyEntity | undefined = internal.getSchema as any;
 
 /**
  * @returns The typename of the relation's type.

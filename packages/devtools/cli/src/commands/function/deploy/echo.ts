@@ -18,7 +18,7 @@ import { incrementSemverPatch } from '@dxos/functions-runtime/edge';
 import { type UploadFunctionResponseBody } from '@dxos/protocols';
 import { Text } from '@dxos/schema';
 
-export const DATA_TYPES: Type.Entity.Any[] = [Function.Function, Script.Script, Collection.Collection, Text.Text];
+export const DATA_TYPES: Type.AnyEntity[] = [Function.Function, Script.Script, Collection.Collection, Text.Text];
 
 export const getNextVersion = (fnObject: Option.Option<Function.Function>) => {
   return Option.match(fnObject, {

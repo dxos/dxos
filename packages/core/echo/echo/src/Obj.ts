@@ -371,9 +371,9 @@ export type ID = ObjectId;
  * ```
  */
 export const instanceOf: {
-  <S extends Type.Entity.Any>(schema: S): (value: unknown) => value is Schema.Schema.Type<S>;
-  <S extends Type.Entity.Any>(schema: S, value: unknown): value is Schema.Schema.Type<S>;
-} = ((...args: [schema: Type.Entity.Any, value: unknown] | [schema: Type.Entity.Any]) => {
+  <S extends Type.AnyEntity>(schema: S): (value: unknown) => value is Schema.Schema.Type<S>;
+  <S extends Type.AnyEntity>(schema: S, value: unknown): value is Schema.Schema.Type<S>;
+} = ((...args: [schema: Type.AnyEntity, value: unknown] | [schema: Type.AnyEntity]) => {
   if (args.length === 1) {
     return (entity: unknown) => internal.isInstanceOf(args[0], entity);
   }
@@ -395,9 +395,9 @@ export const instanceOf: {
  * ```
  */
 export const snapshotOf: {
-  <S extends Type.Entity.Any>(schema: S): (value: unknown) => value is Snapshot<Schema.Schema.Type<S>>;
-  <S extends Type.Entity.Any>(schema: S, value: unknown): value is Snapshot<Schema.Schema.Type<S>>;
-} = ((...args: [schema: Type.Entity.Any, value: unknown] | [schema: Type.Entity.Any]) => {
+  <S extends Type.AnyEntity>(schema: S): (value: unknown) => value is Snapshot<Schema.Schema.Type<S>>;
+  <S extends Type.AnyEntity>(schema: S, value: unknown): value is Snapshot<Schema.Schema.Type<S>>;
+} = ((...args: [schema: Type.AnyEntity, value: unknown] | [schema: Type.AnyEntity]) => {
   const check = (entity: unknown) =>
     entity != null &&
     typeof entity === 'object' &&
@@ -433,7 +433,7 @@ export const getTypeDXN: (obj: unknown | undefined) => DXN | undefined = interna
  * Returns the branded ECHO schema used to create the object.
  */
 // TODO(wittjosiah): Narrow types.
-export const getSchema: (obj: unknown | undefined) => Type.Entity.Any | undefined = internal.getSchema as any;
+export const getSchema: (obj: unknown | undefined) => Type.AnyEntity | undefined = internal.getSchema as any;
 
 /**
  * @returns The typename of the object's type.

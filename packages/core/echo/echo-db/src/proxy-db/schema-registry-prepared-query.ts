@@ -6,7 +6,7 @@ import { type CleanupFn, Event, Mutex } from '@dxos/async';
 import { type QueryResult, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 
-const resultToEntry = <T extends Type.Entity.Any>(result: T): QueryResult.Entry<T> => ({
+const resultToEntry = <T extends Type.AnyEntity>(result: T): QueryResult.Entry<T> => ({
   id: Type.getTypename(result),
   result,
 });
@@ -33,7 +33,7 @@ export interface SchemaRegistryQueryResolver<T> {
 /**
  * API for the schema queries.
  */
-export class SchemaRegistryPreparedQueryImpl<T extends Type.Entity.Any> implements QueryResult.QueryResult<T> {
+export class SchemaRegistryPreparedQueryImpl<T extends Type.AnyEntity> implements QueryResult.QueryResult<T> {
   private readonly _mutex = new Mutex();
   private readonly _changes = new Event<this>();
   private _isReactiveQueryRunning = false;

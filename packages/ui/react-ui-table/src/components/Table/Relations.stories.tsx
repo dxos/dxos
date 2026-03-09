@@ -88,7 +88,7 @@ const DefaultStory = () => {
   const { space } = useClientStory();
 
   const handleCreate = useCallback(
-    (schema: Type.Entity.Any, values: any) => {
+    (schema: Type.AnyEntity, values: any) => {
       invariant(Type.isObjectSchema(schema));
       invariant(space);
       return space.db.add(Obj.make(schema, values));

@@ -98,7 +98,7 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
     // Nothing to do.
   }
 
-  public hasSchema(schema: Type.Entity.Any): boolean {
+  public hasSchema(schema: Type.AnyEntity): boolean {
     const schemaId = schema instanceof Type.RuntimeType ? schema.id : getObjectIdFromSchema(schema);
     return schemaId != null && this.getSchemaById(schemaId) != null;
   }
@@ -114,7 +114,7 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
     type Entry =
       | {
           source: 'runtime';
-          schema: Type.Entity.Any;
+          schema: Type.AnyEntity;
         }
       | {
           source: 'database';

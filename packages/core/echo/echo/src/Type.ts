@@ -327,39 +327,33 @@ export const relation: {
   ) => Relation<Schema.Schema.Type<Self>, Schema.Schema.Type<SourceSchema>, Schema.Schema.Type<TargetSchema>>;
 } = internal.EchoRelationSchema as any;
 
-//
-// Entity - Entity schema types (union of Object | Relation)
-//
+/**
+ * Runtime Effect schema for any ECHO entity (object or relation).
+ * Use for validation, parsing, or type guards on unknown values.
+ *
+ * @example
+ * ```ts
+ * if (Schema.is(Type.AnyEntity)(unknownValue)) {
+ *   // unknownValue is an ECHO entity
+ * }
+ * ```
+ */
+export const AnyEntity: Schema.Schema<
+  { id: ObjectId } & Record<string, unknown>,
+  { id: string } & Record<string, unknown>
+> = Schema.Union(Obj, Relation);
 
-export namespace Entity {
-  /**
-   * Runtime Effect schema for any ECHO entity (object or relation).
-   * Use for validation, parsing, or type guards on unknown values.
-   *
-   * @example
-   * ```ts
-   * if (Schema.is(Type.Entity.Any)(unknownValue)) {
-   *   // unknownValue is an ECHO entity
-   * }
-   * ```
-   */
-  export const Any: Schema.Schema<
-    { id: ObjectId } & Record<string, unknown>,
-    { id: string } & Record<string, unknown>
-  > = Schema.Union(Obj, Relation);
-
-  /**
-   * Type alias for any ECHO entity schema (object or relation).
-   * Use this in type annotations for schema parameters.
-   */
-  export type Any = AnyObj | AnyRelation;
-}
+/**
+ * Type alias for any ECHO entity schema (object or relation).
+ * Use this in type annotations for schema parameters.
+ */
+export type AnyEntity = AnyObj | AnyRelation;
 
 /**
  * Type guard to check if a schema is an object schema.
  * NOTE: This checks SCHEMAS, not instances. Use Obj.isObject for instances.
  */
-export const isObjectSchema = (schema: Entity.Any): schema is AnyObj => {
+export const isObjectSchema = (schema: AnyEntity): schema is AnyObj => {
   return (schema as any)[internal.SchemaKindId] === internal.EntityKind.Object;
 };
 
@@ -367,7 +361,7 @@ export const isObjectSchema = (schema: Entity.Any): schema is AnyObj => {
  * Type guard to check if a schema is a relation schema.
  * NOTE: This checks SCHEMAS, not instances. Use Relation.isRelation for instances.
  */
-export const isRelationSchema = (schema: Entity.Any): schema is AnyRelation => {
+export const isRelationSchema = (schema: AnyEntity): schema is AnyRelation => {
   return (schema as any)[internal.SchemaKindId] === internal.EntityKind.Relation;
 };
 
@@ -439,7 +433,7 @@ export namespace Ref {
  * @example "dxn:example.com/type/Person:0.1.0"
  * @example "dxn:echo:SSSSSSSSSS:XXXXXXXXXXXXX"
  */
-export const getDXN = (schema: Entity.Any): DXN | undefined => {
+export const getDXN = (schema: AnyEntity): DXN | undefined => {
   return internal.getSchemaDXN(schema);
 };
 
@@ -447,7 +441,7 @@ export const getDXN = (schema: Entity.Any): DXN | undefined => {
  * @param schema - Schema to get the typename from.
  * @returns The typename of the schema. Example: `example.com/type/Person`.
  */
-export const getTypename = (schema: Entity.Any): string => {
+export const getTypename = (schema: AnyEntity): string => {
   const typename = internal.getSchemaTypename(schema);
   invariant(typeof typename === 'string' && !typename.startsWith('dxn:'), 'Invalid typename');
   return typename;
@@ -457,7 +451,7 @@ export const getTypename = (schema: Entity.Any): string => {
  * Gets the version of the schema.
  * @example 0.1.0
  */
-export const getVersion = (schema: Entity.Any): string => {
+export const getVersion = (schema: AnyEntity): string => {
   const version = internal.getSchemaVersion(schema);
   invariant(typeof version === 'string' && version.match(/^\d+\.\d+\.\d+$/), 'Invalid version');
   return version;
@@ -476,10 +470,6 @@ export type Meta = internal.TypeAnnotation;
 /**
  * Gets the meta data of the schema.
  */
-export const getMeta = (schema: Entity.Any): Meta | undefined => {
+export const getMeta = (schema: AnyEntity): Meta | undefined => {
   return internal.getTypeAnnotation(schema);
 };
-
-//
-// Feed
-//

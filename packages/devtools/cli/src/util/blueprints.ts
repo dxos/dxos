@@ -105,7 +105,7 @@ export const toolkits: GenericToolkit.GenericToolkit[] = [
   ),
 ];
 
-export const types: Type.Entity.Any[] = [
+export const types: Type.AnyEntity[] = [
   // NOTE: Types referenced by blueprints above need to be added here.
   DataTypes,
   [Chat.Chat],

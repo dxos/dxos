@@ -68,7 +68,7 @@ export const wrapFunctionHandler = (func: FunctionDefinition): FunctionProtocol.
 
         if (func.types.length > 0) {
           invariant(funcContext.db, 'Database is required for functions with types');
-          await funcContext.db.graph.schemaRegistry.register(func.types as Type.Entity.Any[]);
+          await funcContext.db.graph.schemaRegistry.register(func.types as Type.AnyEntity[]);
         }
 
         const dataWithDecodedRefs =

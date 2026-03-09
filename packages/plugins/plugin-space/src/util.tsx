@@ -357,7 +357,7 @@ export const createObjectNode = ({
  * @param space - Space that owns the schema.
  * @returns A graph node for the schema.
  */
-export const createStaticSchemaNode = ({ schema, space }: { schema: Type.Entity.Any; space: Space }): Node.Node => {
+export const createStaticSchemaNode = ({ schema, space }: { schema: Type.AnyEntity; space: Space }): Node.Node => {
   return {
     id: `${space.id}/${Type.getTypename(schema)}`,
     type: `${meta.id}/static-schema`,

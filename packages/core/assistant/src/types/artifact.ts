@@ -25,7 +25,7 @@ export const createArtifactElement = (id: ObjectId) => `<artifact id=${id} />`;
  */
 export const ArtifactId: Schema.Schema<string> & {
   toDXN: (reference: ArtifactId, owningSpaceId?: SpaceId) => DXN;
-  resolve: <S extends Type.Entity.Any>(
+  resolve: <S extends Type.AnyEntity>(
     schema: S,
     ref: ArtifactId,
   ) => Effect.Effect<Schema.Schema.Type<S>, Err.ObjectNotFoundError, Database.Service>;
@@ -66,7 +66,7 @@ export const ArtifactId: Schema.Schema<string> & {
   /**
    * Resolves an artifact ID to an object.
    */
-  static resolve<S extends Type.Entity.Any>(
+  static resolve<S extends Type.AnyEntity>(
     schema: S,
     ref: ArtifactId,
   ): Effect.Effect<Schema.Schema.Type<S>, Err.ObjectNotFoundError, Database.Service> {

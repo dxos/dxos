@@ -11,7 +11,7 @@ import { ProjectionModel, createEchoChangeCallback } from '@dxos/schema';
 
 import { type Table } from '../types';
 
-export const useProjectionModel = <S extends Type.Entity.Any>(
+export const useProjectionModel = <S extends Type.AnyEntity>(
   schema: S | undefined,
   table: Table.Table | undefined,
   registry: Registry.Registry,

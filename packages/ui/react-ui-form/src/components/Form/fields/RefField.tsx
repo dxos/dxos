@@ -47,9 +47,9 @@ export type RefFieldProps = FormFieldComponentProps &
   Pick<ObjectPickerContentProps, 'createOptionLabel' | 'createOptionIcon' | 'createInitialValuePath'> & {
     db?: Database.Database;
     resultsHook?: (db?: Database.Database, typename?: string) => Entity.Any[];
-    schemaHook?: (db?: Database.Database, typename?: string) => Type.Entity.Any;
+    schemaHook?: (db?: Database.Database, typename?: string) => Type.AnyEntity;
     getOptions?: (objects: Entity.Any[]) => RefOption[];
-    onCreate?: (schema: Type.Entity.Any, values: any) => void;
+    onCreate?: (schema: Type.AnyEntity, values: any) => void;
   };
 
 export const RefField = (props: RefFieldProps) => {

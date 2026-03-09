@@ -239,11 +239,11 @@ export const resolve: {
   // No type check.
   (ref: DXN | Ref<any>): Effect.Effect<Entity.Unknown, never, Service>;
   // Check matches schema.
-  <S extends Type.Entity.Any>(
+  <S extends Type.AnyEntity>(
     ref: DXN | Ref<any>,
     schema: S,
   ): Effect.Effect<Schema.Schema.Type<S>, Err.ObjectNotFoundError, Service>;
-} = (<S extends Type.Entity.Any>(
+} = (<S extends Type.AnyEntity>(
   ref: DXN | Ref<any>,
   schema?: S,
 ): Effect.Effect<Schema.Schema.Type<S>, Err.ObjectNotFoundError, Service> =>

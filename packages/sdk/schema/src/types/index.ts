@@ -12,7 +12,7 @@ import * as ViewModel from './ViewModel';
 
 export { Expando, Text, CollectionModel, ManagedCollection, ViewModel };
 
-export const DataTypes: Type.Entity.Any[] = [
+export const DataTypes: Type.AnyEntity[] = [
   Feed.Feed,
   Type.PersistentType,
 

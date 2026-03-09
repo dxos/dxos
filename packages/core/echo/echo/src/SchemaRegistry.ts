@@ -61,7 +61,7 @@ export type Query = {
  * - JSON schema with typename and version
  */
 export type RegisterSchemaInput =
-  | Type.Entity.Any
+  | Type.AnyEntity
   | {
       typename: string;
       version: string;
@@ -73,7 +73,7 @@ export type RegisterSchemaInput =
     };
 
 export type ExtractQueryResult<Query> = Query extends { location: ('database' | 'runtime')[] }
-  ? Type.Entity.Any
+  ? Type.AnyEntity
   : Type.RuntimeType;
 
 // TODO(dmaretskyi): Rename TypeRegistry
@@ -82,7 +82,7 @@ export interface SchemaRegistry {
    * Checks if the provided schema is registered.
    */
   // TODO(burdon): Type?
-  hasSchema(schema: Type.Entity.Any): boolean;
+  hasSchema(schema: Type.AnyEntity): boolean;
 
   /**
    * Registers the provided schema.

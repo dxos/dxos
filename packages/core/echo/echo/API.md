@@ -286,7 +286,7 @@ interface AnchoredTo extends Schema.Schema.Type<typeof AnchoredTo> {}
 | `Type.Relation<T, Source, Target>` | TypeScript type for a relation schema                       |
 | `Type.Relation.Any`                | Type alias for any relation schema                          |
 | `Type.relation({...})`             | Factory function - adds relation metadata to a schema       |
-| `Type.Entity.Any`                  | Runtime schema for any entity (union of `Obj                | Relation`) |
+| `Type.AnyEntity`                   | Runtime schema for any entity (union of `Obj                | Relation`) |
 | `Type.Ref(Schema)`                 | Schema constructor - creates a reference schema             |
 
 ### Reference Schemas
