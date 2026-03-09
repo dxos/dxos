@@ -18,6 +18,7 @@ import type * as Order from './Order';
 import type * as Ref from './Ref';
 import type * as TypeModule from './Type';
 import type * as View from './View';
+import type * as Relation from './Relation';
 
 // TODO(dmaretskyi): Split up into interfaces for objects and relations so they can have separate verbs.
 // TODO(dmaretskyi): Undirected relation traversals.
@@ -100,13 +101,13 @@ export interface Query<T> {
    * For a query for relations, get the source objects.
    * @returns Query for the source objects.
    */
-  source(): Query<TypeModule.RelationSource<T>>;
+  source(): Query<Relation.SourceOf<T>>;
 
   /**
    * For a query for relations, get the target objects.
    * @returns Query for the target objects.
    */
-  target(): Query<TypeModule.RelationTarget<T>>;
+  target(): Query<Relation.TargetOf<T>>;
 
   /**
    * Get the parent object of the current selection.

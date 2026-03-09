@@ -17,13 +17,18 @@ import * as internal from './internal';
 import type * as Obj from './Obj';
 import type * as Type from './Type';
 
+export type Endpoints<Source, Target> = {
+  [Source]: Source;
+  [Target]: Target;
+};
+
 /**
  * Base type for all ECHO relations.
  * @private
  */
 interface BaseRelation<Source, Target>
   extends internal.AnyEntity,
-    Type.RelationEndpoints<Source, Target>,
+    Endpoints<Source, Target>,
     Entity.OfKind<internal.EntityKind.Relation> {}
 
 /**
@@ -44,9 +49,18 @@ export type OfShape<Source extends Obj.Unknown, Target extends Obj.Unknown, Prop
 /**
  * Base type for snapshot relations (has SnapshotKindId instead of KindId).
  */
-interface BaseRelationSnapshot<Source, Target> extends internal.AnyEntity, Type.RelationEndpoints<Source, Target> {
+interface BaseRelationSnapshot<Source, Target> extends internal.AnyEntity, Endpoints<Source, Target> {
   readonly [Entity.SnapshotKindId]: internal.EntityKind.Relation;
   readonly id: ObjectId;
+}
+
+/**
+ * JSON-encoded properties for relations.
+ */
+export interface BaseRelationJson {
+  id: string;
+  [internal.ATTR_RELATION_SOURCE]: string;
+  [internal.ATTR_RELATION_TARGET]: string;
 }
 
 /**
@@ -63,6 +77,16 @@ export type Source = typeof Source;
 
 export const Target: unique symbol = internal.RelationTargetId as any;
 export type Target = typeof Target;
+
+/**
+ * Get relation source type.
+ */
+export type SourceOf<A> = A extends Endpoints<infer S, infer _T> ? S : never;
+
+/**
+ * Get relation target type.
+ */
+export type TargetOf<A> = A extends Endpoints<infer _S, infer T> ? T : never;
 
 /**
  * Internal props type for relation instance creation.
@@ -171,12 +195,12 @@ export const getTargetDXN = (value: Unknown | Snapshot): DXN => {
  * Accepts both reactive relations and snapshots.
  * @throws If the object is not a relation.
  */
-export const getSource = <T extends Unknown | Snapshot>(relation: T): Type.RelationSource<T> => {
+export const getSource = <T extends Unknown | Snapshot>(relation: T): SourceOf<T> => {
   assertArgument(isRelation(relation), 'Expected a relation');
   assumeType<internal.InternalObjectProps>(relation);
   const obj = (relation as internal.InternalObjectProps)[internal.RelationSourceId];
   invariant(obj !== undefined, `Invalid source: ${relation.id}`);
-  return obj as Type.RelationSource<T>;
+  return obj as SourceOf<T>;
 };
 
 /**
@@ -184,12 +208,12 @@ export const getSource = <T extends Unknown | Snapshot>(relation: T): Type.Relat
  * Accepts both reactive relations and snapshots.
  * @throws If the object is not a relation.
  */
-export const getTarget = <T extends Unknown | Snapshot>(relation: T): Type.RelationTarget<T> => {
+export const getTarget = <T extends Unknown | Snapshot>(relation: T): TargetOf<T> => {
   assertArgument(isRelation(relation), 'Expected a relation');
   assumeType<internal.InternalObjectProps>(relation);
   const obj = (relation as internal.InternalObjectProps)[internal.RelationTargetId];
   invariant(obj !== undefined, `Invalid target: ${relation.id}`);
-  return obj as Type.RelationTarget<T>;
+  return obj as TargetOf<T>;
 };
 
 //
@@ -322,7 +346,7 @@ export const getDatabase = (entity: Unknown | Snapshot): Database.Database | und
 
 /**
  * Property that accesses metadata for an entity.
- * 
+ *
  * Alias for `Entity.Meta`.
  */
 export const Meta = internal.MetaId;

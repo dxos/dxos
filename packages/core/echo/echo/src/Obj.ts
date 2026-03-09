@@ -69,6 +69,13 @@ interface BaseSnapshot extends internal.AnyEntity {
  */
 export type Snapshot<T extends Unknown = Unknown> = Omit<T, Entity.KindId> & BaseSnapshot;
 
+/**
+ * JSON-encoded properties for objects.
+ */
+export interface BaseObjJson {
+  id: string;
+}
+
 const defaultMeta: internal.ObjectMeta = {
   keys: [],
 };

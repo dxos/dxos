@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { type EncodedReference } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import { type DXN, type ObjectId } from '@dxos/keys';
+import { type DXN } from '@dxos/keys';
 import { type ToMutable } from '@dxos/util';
 
 import type * as EntityModule from './Entity';
@@ -36,22 +36,6 @@ export type RuntimeType = internal.EchoSchema;
 type EchoSchemaKind<K extends internal.EntityKind = internal.EntityKind> = {
   readonly [internal.SchemaKindId]: K;
 };
-
-/**
- * JSON-encoded properties for objects.
- */
-interface ObjJsonProps {
-  id: string;
-}
-
-/**
- * JSON-encoded properties for relations.
- */
-interface RelationJsonProps {
-  id: string;
-  [internal.ATTR_RELATION_SOURCE]: string;
-  [internal.ATTR_RELATION_TARGET]: string;
-}
 
 //
 // Obj - Runtime schema for any ECHO object
@@ -127,7 +111,7 @@ export interface Obj<T, Fields extends Schema.Struct.Fields = Schema.Struct.Fiel
     Schema.AnnotableClass<
       Obj<T, Fields>,
       EntityModule.OfKind<typeof EntityModule.Kind.Object> & T,
-      Schema.Simplify<ObjJsonProps & ToMutable<T>>,
+      Schema.Simplify<ObjModule.BaseObjJson & ToMutable<T>>,
       never
     > {
   /**
@@ -232,8 +216,8 @@ export interface Relation<T, Source, Target, Fields extends Schema.Struct.Fields
     EchoSchemaKind<internal.EntityKind.Relation>,
     Schema.AnnotableClass<
       Relation<T, Source, Target, Fields>,
-      EntityModule.OfKind<typeof EntityModule.Kind.Relation> & RelationEndpoints<Source, Target> & T,
-      Schema.Simplify<RelationJsonProps & ToMutable<T>>,
+      EntityModule.OfKind<typeof EntityModule.Kind.Relation> & RelationModule.Endpoints<Source, Target> & T,
+      Schema.Simplify<RelationModule.BaseRelationJson & ToMutable<T>>,
       never
     > {
   /**
@@ -259,23 +243,6 @@ type RelationSchemaBase = Schema.Schema.AnyNoContext & {
  * Accepts static schemas (Type.relation()).
  */
 export type AnyRelation = RelationSchemaBase;
-
-/**
- * Get relation source type.
- */
-// TODO(dmaretskyi): Relation.SourceOf
-export type RelationSource<A> = A extends RelationEndpoints<infer S, infer _T> ? S : never;
-
-/**
- * Get relation target type.
- */
-// TODO(dmaretskyi): Relation.TargetOf
-export type RelationTarget<A> = A extends RelationEndpoints<infer _S, infer T> ? T : never;
-
-export type RelationEndpoints<Source, Target> = {
-  [RelationModule.Source]: Source;
-  [RelationModule.Target]: Target;
-};
 
 /**
  * Factory function to create an ECHO relation schema.
