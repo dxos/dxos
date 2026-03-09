@@ -28,7 +28,7 @@ interface BaseObj extends internal.AnyEntity, Entity.OfKind<typeof Entity.Kind.O
 /**
  * Object type with specific properties.
  */
-export type Obj<Props> = BaseObj & Props;
+export type OfShape<Props> = BaseObj & Props;
 
 /**
  * Object with no known properties beyond id and kind.
@@ -104,12 +104,12 @@ export type MakeProps<S extends Schema.Schema.AnyNoContext> = {
  * Note: Only accepts object schemas, not relation schemas. Use `Relation.make` for relations.
  */
 export const make: {
-  <S extends Type.AnyObj>(schema: S, props: MakeProps<S>): Obj<Schema.Schema.Type<S>>;
+  <S extends Type.AnyObj>(schema: S, props: MakeProps<S>): OfShape<Schema.Schema.Type<S>>;
   /**
    * @deprecated Pass meta as in the example: `Obj.make(Person, { [Obj.Meta]: { keys: [...] }, name: 'John' })`.
    */
-  <S extends Type.AnyObj>(schema: S, props: MakeProps<S>, meta: Partial<Meta>): Obj<Schema.Schema.Type<S>>;
-} = <S extends Type.AnyObj>(schema: S, props: NoInfer<MakeProps<S>>): Obj<Schema.Schema.Type<S>> => {
+  <S extends Type.AnyObj>(schema: S, props: MakeProps<S>, meta: Partial<Meta>): OfShape<Schema.Schema.Type<S>>;
+} = <S extends Type.AnyObj>(schema: S, props: NoInfer<MakeProps<S>>): OfShape<Schema.Schema.Type<S>> => {
   assertArgument(
     internal.getTypeAnnotation(schema)?.kind === Entity.Kind.Object,
     'schema',

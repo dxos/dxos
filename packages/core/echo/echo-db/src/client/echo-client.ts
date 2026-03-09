@@ -3,6 +3,7 @@
 //
 
 import { type Context, ContextDisposedError, LifecycleState, Resource } from '@dxos/context';
+import type { Entity } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -217,7 +218,7 @@ export class EchoClient extends Resource {
     }
   }
 
-  private async _loadObjectFromDocument({ spaceId, objectId, documentId }: LoadObjectProps) {
+  private async _loadObjectFromDocument({ spaceId, objectId, documentId }: LoadObjectProps): Promise<Entity.Unknown | undefined> {
     const db = this._databases.get(spaceId);
     if (!db) {
       return undefined;

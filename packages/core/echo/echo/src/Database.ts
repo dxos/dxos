@@ -145,7 +145,10 @@ export interface Database extends Queryable {
   /**
    * Return object by local ID.
    */
-  getObjectById<T extends Obj.Unknown = Obj.Obj<AnyProperties>>(id: string, opts?: GetObjectByIdOptions): T | undefined;
+  getObjectById<T extends Obj.Unknown = Obj.OfShape<AnyProperties>>(
+    id: string,
+    opts?: GetObjectByIdOptions,
+  ): T | undefined;
 
   /**
    * Query objects.

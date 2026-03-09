@@ -36,7 +36,7 @@ type ObjectMigrationContext = {};
 
 type OnMigrateProps<From extends Schema.Schema.AnyNoContext, To extends Schema.Schema.AnyNoContext> = {
   before: Schema.Schema.Type<From>;
-  object: Obj.Obj<Schema.Schema.Type<To>>;
+  object: Schema.Schema.Type<To>;
   db: EchoDatabase;
 };
 

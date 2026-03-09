@@ -38,7 +38,7 @@ export interface Unknown extends BaseRelation<Obj.Unknown, Obj.Unknown> {}
 /**
  * Relation type with specific source and target types.
  */
-export type Relation<Source extends Obj.Unknown, Target extends Obj.Unknown, Props> = BaseRelation<Source, Target> &
+export type OfShape<Source extends Obj.Unknown, Target extends Obj.Unknown, Props> = BaseRelation<Source, Target> &
   Props;
 
 /**
