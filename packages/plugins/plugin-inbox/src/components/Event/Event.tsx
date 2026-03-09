@@ -71,9 +71,9 @@ const EVENT_VIEWPORT_NAME = 'Event.Viewport';
 
 type EventViewportProps = ThemedClassName<PropsWithChildren<ComponentPropsWithoutRef<'div'>>>;
 
-const EventViewport = ({ classNames, children, className, ...props }: EventViewportProps) => {
+const EventViewport = ({ classNames, children, ...props }: EventViewportProps) => {
   return (
-    <div {...props} className={mx(className, classNames)}>
+    <div {...props} className={mx(classNames)}>
       {children}
     </div>
   );

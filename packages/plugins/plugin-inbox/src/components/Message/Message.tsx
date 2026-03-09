@@ -106,7 +106,7 @@ const MESSAGE_VIEWPORT_NAME = 'Message.Viewport';
 
 type MessageViewportProps = ThemedClassName<PropsWithChildren<ComponentPropsWithoutRef<'div'>>>;
 
-const MessageViewport = ({ classNames, children, className, role, ...props }: MessageViewportProps) => {
+const MessageViewport = ({ classNames, children, role, ...props }: MessageViewportProps) => {
   return (
     <div
       role='none'
@@ -114,7 +114,6 @@ const MessageViewport = ({ classNames, children, className, role, ...props }: Me
       className={mx(
         'overflow-hidden grid',
         role === 'section' ? 'grid-rows-[min-content_min-content]' : 'grid-rows-[min-content_1fr]',
-        className,
         classNames,
       )}
     >
