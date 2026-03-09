@@ -65,6 +65,7 @@ They need to be made headless (context-only) so they can be moved outside Panel.
   - push down pattern to lower-level components like Form, SearchList.
 
 ```text
+
   Column Grid Structure
 
   --------------------------
