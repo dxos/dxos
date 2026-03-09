@@ -1,228 +1,19 @@
-# DXOS ECHO API Summary
+# DXOS ECHO API
 
-## API ontology proposal
-
-### Principles
-
-- Separation of APIs to work with data (Entity, Obj, Relation, Feed) and APIs to introspect schema (Type).
-- Symetry of names used to define schema, and names used to specify TypeScript types.
+## Imports
 
 ```ts
-const Mailbox = Schema.Struct({
-  messages: Ref.Ref(Feed.Feed)
-}).pipe(Type.object({ typename: 'example.com/type/Mailbox', version: '0.1.0' }));
-interface Mailbox extends Schema.Schema.Type<typeof Mailbox> {}
-
-typeof mailbox.messages === Feed.Feed;
-
-const Collection = Schema.Struct({
-  objects: Schema.Array(Ref.Ref(Obj.Unknown))
-}).pipe(Type.relation({ typename: 'example.com/type/Collection', version: '0.1.0' }));
-interface Collection extends Schema.Schema.Type<typeof Collection> {}
-
-typeof collection.objects === Obj.Unknown[];
-
-const feed = Feed.make({});
-typeof feed === Feed.Feed;
-```
-
-- Entity module defines APIs useful for both objects and relations, but Obj and Relation can specialize and alias those APIs.
-- Snaphots are deined as a higher-order type so that a snapshot type can be derived any type.
-
-```ts
-Entity.Snapshot<Person>;
-Entity.Snapshot<Relation.AnchoredTo>;
-Entity.Snapshot<Obj.Unknown>;
-Entity.Snapshot<Entity.Unknown>;
-```
-
-- Snapshots cannot be mutated or used with `db.add` or `db.remove`.
-
-### `Type` module
-
-Used when working with the schema definitions
-
-Two use-cases:
-
-- Definiting new schema.
-- Iterating and introspecting schema.
-
-The types are used when dealing with schema as values.
-
-Types:
-
-- type `Type.Entity<T extends Entity.Unknown>` - instance of a schema for an object or relation of instance type `T`.
-- type `Type.UnknownEntity` - instance of a schema for object or relation, but instance type is not known.
-- type `Type.Obj<T extends Obj.Unknown>` - instance of a schema for an object of instance type `T`.
-- type `Type.UnknownObj` - instance of a schema for object, but instance type is not known.
-- type `Type.Relation<T extends Relation.Unknown>` - instance of a schema for a relation of instance type `T`.
-- type `Type.UnknownRelation` - instance of a schema for a relation, but instance type is not known.
-- type `Type.Ref<T>` - instance of a schema for a reference to an object of instance type `T`.
-
-Functions:
-
-- function `Type.object(...)` - defines a new object schema; returns `Type.Obj<T>`.
-- function `Type.relation(...)` - defines a new relation schema; returns `Type.Relation<T>`.
-- function `Type.get*(schema: Type.UnknownEntity)` - getters for schema metadata.
-- function `Ref.Ref(...)` define a schema for a reference to an object of instance type `T`.
-
-Worth mentioning:
-
-- `Type.Obj<Feed.Feed>` - instance of a schema for a Feed object.
-
-### `Entity` module
-
-Used when working with instances of objects and relations.
-
-Types:
-
-- type `Entity.Base` - common base type for all entity instances.
-- type `Entity.Unknown` - instance of an entity, but properties are not known.
-- type `Entity.Any` - instance of an entity, but exposes arbitrary properties (on the way to deprecation).
-- type `Entity.Properties<T extends Entity.Base>` - properties of an entity of instance type `T`.
-- type `Entity.Snapshot<T extends Entity.Base>` - snapshot of an entity of instance type `T`. Readonly; cannot be mutated with `Obj.change`
-
-### `Obj` module
-
-Used when working with instances of objects.
-
-Types:
-
-- type `Obj.Base` - common base type for all object instances.
-- type `Obj.Unknown` - instance of an object, but properties are not known.
-- type `Obj.Any` - instance of an object, but exposes arbitrary properties (on the way to deprecation).
-- type `Obj.Properties<T extends Obj.Base>` - properties of an object of instance type `T`.
-- type `Obj.Snapshot<T extends Obj.Base>` - snapshot of an object of instance type `T`. Readonly; cannot be mutated with `Obj.change`
-
-Constants:
-
-- constant `Obj.Unknown` - schema that represents an object with unknown properties. **Deliberatly same name as the type.** Used in schema definitions.
-- constnat `Obj.Meta` - Used in `Obj.make` call to define metadata for the object.
-
-Functions:
-
-- function `Obj.make(schema: Type.Obj<T>, props: Obj.Properties<T>)` - create a new object of instance type `T`.
-- function `Obj.snapshot(obj: Obj.Obj<T>)` - get a snapshot of an object of instance type `T`.
-- function `Obj.change(obj: Obj.Obj<T>, callback: (obj: Obj.Mutable<T>) => void)` - mutate an object of instance type `T`.
-
-- fun
-  To define new schema:
-
-```ts
-const Person = Schema.Struct({
-  name: Schema.String,
-}).pipe(Type.object({ typename: 'example.com/type/Person', version: '0.1.0' }));
-interface Person extends Schema.Schema.Type<typeof Person> {}
-
-// Person extends Obj.Base
-// We don't need to wrap Person in Obj.Obj<Person>
-
-// **CORRECT**
-const x: Person;
-
-// **INCORRECT**
-const x: Obj.Obj<Person>;
-
-const schema: Type.Obj<Person>; // <--- this is an instance of a schema that produces `Person`
-```
-
-`Person` is a type that extends `Obj.Base`.
-
-### `Relation` module
-
-Used when working with instances of relations.
-
-Types:
-
-- type `Relation.Base` - common base type for all relation instances.
-- type `Relation.Unknown` - instance of a relation, but properties are not known.
-- type `Relation.Any` - instance of a relation, but exposes arbitrary properties (on the way to deprecation).
-- type `Relation.Source<T extends Relation.Base>` - get source of the relation.
-- type `Relation.Target<T extends Relation.Base>` - get target of the relation.
-- type `Relation.Properties<T extends Relation.Base>` - properties of a relation of instance type `T`.
-- type `Relation.Snapshot<T extends Relation.Base>` - snapshot of a relation of instance type `T`. Readonly; cannot be mutated with `Relation.change`
-
-Constants:
-
-- constant `Relation.Unknown` - schema that represents a relation with unknown properties. **Deliberatly same name as the type.** Used in schema definitions.
-- constant `Relation.Meta` - Used in `Relation.make` call to define metadata for the relation.
-- cosntant `Relation.Source` - Used in `Relation.make` call to define source ofthe relation
-- constant `Relation.Target` - Used in `Relation.make` call to define target of the relation.
-
-Functions:
-
-- function `Relation.make(schema: Type.Relation<T>, props: Relation.Properties<T>)` - create a new relation of instance type `T`.
-- function `Relation.snapshot(relation: Relation.Relation<T>)` - get a snapshot of a relation of instance type `T`.
-- function `Relation.change(relation: Relation.Relation<T>, callback: (relation: Relation.Mutable<T>) => void)` - mutate a relation of instance type `T`.
-
-### `Ref` module
-
-- type `Ref.Ref<T>` - instance of a reference to an object of instance type `T`.
-- function `Ref.make(object: Obj.Obj<T>)` - create a new reference to an object of instance type `T`.
-
-### `Feed` module
-
-Used when working with instances of feeds.
-
-Types:
-
-- type `Feed.Feed` - instance of a feed. **Deliberatly can't type items the feed stores.**.
-
-Constants:
-
-- constant `Feed.Feed` - schema that represents a feed. **Deliberatly same name as the type.** Used in schema definictions and queries.
-
-Functions:
-
-- function `Feed.make(props: Obj.MakeProps<typeof Feed.Feed>)` - create a new feed.
-- function `Feed.query(query: Query.Any)` - query a feed.
-- function `Feed.append(feed: Feed.Feed, items: Entity.Unknown[])` - append items to a feed.
-
-```ts
-const Foo = Schema.Struct({
-  feed: Ref.Ref(Feed.Feed),
-}).pipe(Type.object({ typename: 'example.com/type/Foo', version: '0.1.0' }));
-
-Query.select(Filter.type(Feed.Feed));
-```
-
-### Query APIs
-
-```ts
-// Query scopes:
-Database.query(Query.type(Contact)); // Query a database + feeds. BREAKING CHANGE: Currently it only queries feeds.
-Database.query(Query.type(Contact).options({ queryFeeds: false })); // Query a database only (no feeds).
-Feed.query(Query.type(Contact)); // Query a specific feed.
-Database.schemaQuery({ ... }); // Query schema (static and/or stored)
-
-graph.query(Query.type(Contact)); // Query all spaces and feeds.
-client.edge.query(Query.type(Contact)); // Query all spaces and feeds from EDGE.
-
-// Query execution:
-
-const result = yield* Database.query(Query.type(Contact)); // QueryResult
-result.subscribe(...)
-const objects = yield* Database.query(Query.type(Contact)).run;
-const object = yield* Database.query(Query.type(Contact)).first;
-
-const result = yield* Database.schemaQuery({ ... }); // SchemaQueryResult
-result.subscribe(...)
-const schemas = yield* Database.schemaQuery({ ... }).run;
-const schema = yield* Database.schemaQuery({ ... }).first;
-```
-
-## Core Modules
-
-The `@dxos/echo` package exports these primary namespaces:
-
-```ts
+import { Schema } from 'effect';
 import {
   Annotation, // Schema annotations (labels, descriptions, etc.)
   Database, // Database interface for persistence
   Entity, // Generic entity types & functions (works for both Obj and Relation)
+  Feed, // Feed (queue) types & functions
   Filter, // Filter construction for queries
   Obj, // Object types & functions
+  Order, // Sort-order construction for queries
   Query, // Query construction
+  QueryResult, // Query result types
   Ref, // Reference types & functions
   Relation, // Relation types & functions
   Type, // Schema types and factories
@@ -231,382 +22,11 @@ import {
 
 ---
 
-## Type Module - Schema Definitions
+## Defining Schemas
 
-### Defining Object Schemas
-
-```ts
-import { Schema } from 'effect';
-import { Type, Annotation } from '@dxos/echo';
-
-// Define an object schema with Type.object()
-const Document = Schema.Struct({
-  name: Schema.optional(Schema.String),
-  description: Schema.optional(Schema.String),
-  content: Ref.Ref(Text), // Reference to another object
-}).pipe(
-  Type.object({
-    typename: 'dxos.org/type/Document',
-    version: '0.1.0',
-  }),
-  Annotation.LabelAnnotation.set(['name']),
-  Annotation.DescriptionAnnotation.set('description'),
-) satisfies Type.AnyObj;
-
-interface Document extends Schema.Schema.Type<typeof Document> {}
-```
-
-### Defining Relation Schemas
+### Object schemas
 
 ```ts
-// Define a relation schema with Type.relation()
-const AnchoredTo = Schema.Struct({
-  anchor: Schema.optional(Schema.String),
-}).pipe(
-  Type.relation({
-    typename: 'dxos.org/relation/AnchoredTo',
-    version: '0.1.0',
-    source: Type.Obj, // Any object as source
-    target: Document, // Specific type as target
-  }),
-) satisfies Type.Relation.Any;
-
-interface AnchoredTo extends Schema.Schema.Type<typeof AnchoredTo> {}
-```
-
-### Type System Overview
-
-| Export                             | Description                                                 |
-| ---------------------------------- | ----------------------------------------------------------- | ---------- |
-| `Type.Obj`                         | Runtime schema for any ECHO object (for validation/parsing) |
-| `Type.Obj<T>`                      | TypeScript type for an object schema producing `T`          |
-| `Type.AnyObj`                      | Type alias for any object schema                            |
-| `Type.object({...})`               | Factory function - adds object metadata to a schema         |
-| `Type.Relation`                    | Runtime schema for any ECHO relation                        |
-| `Type.Relation<T, Source, Target>` | TypeScript type for a relation schema                       |
-| `Type.Relation.Any`                | Type alias for any relation schema                          |
-| `Type.relation({...})`             | Factory function - adds relation metadata to a schema       |
-| `Type.AnyEntity`                   | Runtime schema for any entity (union of `Obj                | Relation`) |
-| `Ref.Ref(Schema)`                  | Schema constructor - creates a reference schema             |
-
-### Reference Schemas
-
-```ts
-// Type.Ref creates a schema for references to other objects
-const Task = Schema.Struct({
-  assignee: Ref.Ref(Person), // Single reference
-  watchers: Ref.Array(Ref.Ref(Person)), // Array of references
-}).pipe(Type.object({ typename: '...', version: '0.1.0' }));
-```
-
----
-
-## Obj Module - Object Operations
-
-### Creating Objects
-
-```ts
-import { Obj, Type } from '@dxos/echo';
-
-// Create an object from a schema
-const doc = Obj.make(Document, {
-  name: 'My Document',
-  description: 'A sample document',
-  content: Ref.make(textObj),
-}) satisfies Obj.Obj<Document>;
-
-// With metadata
-const docWithMeta = Obj.make(Document, {
-  [Obj.Meta]: { keys: [{ source: 'external', id: '123' }] },
-  name: 'My Document',
-});
-```
-
-### Object Types
-
-| Type              | Description                                                |
-| ----------------- | ---------------------------------------------------------- |
-| `Obj.Obj<T>`      | Object with specific properties (readonly but reactive)    |
-| `Obj.Unknown`     | Object with no known properties (safe, forces type checks) |
-| `Obj.Any`         | Object with arbitrary properties (permissive)              |
-| `Obj.Snapshot<T>` | Point-in-time frozen copy (immutable)                      |
-| `Obj.Mutable<T>`  | Mutable view within `Obj.change` callback                  |
-
-### Mutating Objects
-
-```ts
-// Objects are readonly by default
-// @ts-expect-error - direct mutation throws
-doc.name = 'New Name';
-
-// Use Obj.change for mutations (batched, single notification)
-Obj.change(doc, (d) => {
-  d.name = 'New Name';
-  d.description = 'Updated description';
-});
-
-// Deep property access
-Obj.getValue(doc, ['nested', 'property']);
-
-// Deep property mutation (within change callback)
-Obj.change(doc, (d) => {
-  Obj.setValue(d, ['addresses', 0, 'street'], '123 Main St');
-});
-```
-
-### Type Guards and Introspection
-
-```ts
-Obj.isObject(value); // Check if value is an ECHO object
-Obj.instanceOf(Document, value); // Check if object matches schema
-Obj.instanceOf(Document); // Curried form: returns predicate
-
-Obj.getTypename(doc); // 'dxos.org/type/Document'
-Obj.getDXN(doc); // DXN (object identifier)
-Obj.getTypeDXN(doc); // DXN of the type
-Obj.getSchema(doc); // Returns the schema
-Obj.getDatabase(doc); // Returns the database (if added)
-```
-
-### Metadata Operations
-
-```ts
-// Read metadata (returns ReadonlyMeta outside change callback)
-const meta = Obj.getMeta(doc);
-Obj.getLabel(doc);
-Obj.getDescription(doc);
-Obj.getKeys(doc, 'external-source');
-Obj.isDeleted(doc);
-
-// Mutate metadata (within Obj.change)
-Obj.change(doc, (d) => {
-  const meta = Obj.getMeta(d); // Mutable meta inside change
-  Obj.setLabel(d, 'New Label');
-  Obj.setDescription(d, 'New description');
-  Obj.addTag(d, 'important');
-  Obj.removeTag(d, 'draft');
-  Obj.deleteKeys(d, 'old-source');
-});
-```
-
-### Snapshots and Subscriptions
-
-A **snapshot** is a deep-frozen, point-in-time copy of an object's state. Unlike a regular
-object (which is read-only but still reflects updates to the underlying data), a snapshot's
-values will never change - it captures the object's state at the moment it was created.
-
-```ts
-const snapshot = Obj.getSnapshot(doc); // Get point-in-time frozen copy
-
-const cloned = Obj.clone(doc); // Clone an object (new reactive object)
-const clonedWithId = Obj.clone(doc, { retainId: true });
-
-const unsubscribe = Obj.subscribe(doc, () => {
-  // Subscribe to changes
-  console.log('Object changed');
-});
-```
-
-### JSON Serialization
-
-```ts
-const json = Obj.toJSON(doc);
-const restored = await Obj.fromJSON(json, { refResolver });
-```
-
----
-
-## Relation Module - Relation Operations
-
-The Relation module mirrors the Obj module API. Only the differences are documented here.
-
-### Creating Relations
-
-```ts
-import { Relation } from '@dxos/echo';
-
-// Relations require source and target endpoints
-const anchoredTo = Relation.make(AnchoredTo, {
-  [Relation.Source]: sourceObj,
-  [Relation.Target]: targetObj,
-  anchor: 'section-1',
-});
-```
-
-### Relation-Specific Types
-
-| Type                                       | Description                   |
-| ------------------------------------------ | ----------------------------- |
-| `Relation.Relation<Source, Target, Props>` | Relation with typed endpoints |
-| `Relation.Unknown`                         | Unknown relation              |
-| `Relation.Source`                          | Symbol for source endpoint    |
-| `Relation.Target`                          | Symbol for target endpoint    |
-
-### Relation-Specific Operations
-
-```ts
-// Use Relation.change (not Obj.change) for mutations
-Relation.change(anchoredTo, (r) => {
-  r.anchor = 'section-2';
-});
-
-// Access endpoints
-Relation.getSource(anchoredTo); // Returns source object
-Relation.getTarget(anchoredTo); // Returns target object
-Relation.getSourceDXN(anchoredTo); // Returns source DXN
-Relation.getTargetDXN(anchoredTo); // Returns target DXN
-
-// Type guard
-Relation.isRelation(value); // Check if value is a relation
-```
-
----
-
-## Entity Module - Generic Operations
-
-Works on both objects and relations when you don't know or care about the specific kind:
-
-```ts
-import { Entity } from '@dxos/echo';
-
-const entity: Entity.Unknown = doc; // Accepts objects
-const entity2: Entity.Unknown = relation; // Accepts relations
-
-// Generic change (prefer Obj.change or Relation.change when type is known)
-Entity.change(entity, (e) => {
-  e.name = 'Updated';
-});
-
-// Generic operations
-Entity.getDXN(entity);
-Entity.getTypename(entity);
-Entity.getLabel(entity);
-Entity.subscribe(entity, callback);
-Entity.toJSON(entity);
-Entity.addTag(entity, 'tag');
-Entity.removeTag(entity, 'tag');
-```
-
----
-
-## Ref Module - References
-
-### Creating References
-
-```ts
-import { Ref } from '@dxos/echo';
-
-const ref = Ref.make(doc); // Create a reference to an object
-const ref2 = Ref.fromDXN(dxn); // Create from DXN (unhydrated)
-```
-
-### Reference Operations
-
-```ts
-Ref.isRef(value); // Type guard
-Ref.Target<R>; // Extract target type from Ref<T>
-
-// Loading references
-const target = await ref.tryLoad(); // Returns T | undefined
-const target = ref.target; // Synchronous access (may be undefined)
-```
-
----
-
-## Filter Module - Building Filters
-
-```ts
-import { Filter } from '@dxos/echo';
-
-// Basic filters
-Filter.everything(); // Match all objects
-Filter.nothing(); // Match no objects
-Filter.id('abc', 'def'); // Match by IDs
-Filter.type(Document); // Match by type
-Filter.typename('Document'); // Match by typename string
-Filter.tag('important'); // Match by tag
-Filter.text('search query'); // Full-text search
-
-// Property predicates
-Filter.type(Document, {
-  name: 'My Doc', // Shorthand for eq
-  rating: Filter.gt(5), // Greater than
-  status: Filter.in('active', 'pending'),
-});
-
-// Comparison predicates
-Filter.eq(value);
-Filter.neq(value);
-Filter.gt(value);
-Filter.gte(value);
-Filter.lt(value);
-Filter.lte(value);
-Filter.in(...values);
-Filter.contains(value); // Array contains
-Filter.between(from, to);
-
-// Logical combinators
-Filter.not(filter);
-Filter.and(filter1, filter2);
-Filter.or(filter1, filter2);
-```
-
----
-
-## Query Module - Building Queries
-
-```ts
-import { Query, Filter } from '@dxos/echo';
-
-// Start a query
-const query = Query.select(Filter.type(Document));
-const query2 = Query.type(Document); // Shorthand
-
-// Query methods (chainable)
-query
-  .select(Filter.props({ status: 'active' })) // Further filtering
-  .reference('author') // Traverse outgoing reference
-  .referencedBy(Comment, 'target') // Find incoming references
-  .sourceOf(AnchoredTo) // Find relations where this is source
-  .targetOf(AnchoredTo) // Find relations where this is target
-  .source() // Get source of relations
-  .target() // Get target of relations
-  .orderBy(Order.asc('name')) // Sort results
-  .limit(10); // Limit results
-
-// Combine queries
-Query.all(query1, query2); // Union
-Query.without(source, exclude); // Difference
-```
-
----
-
-## Database Module - Persistence
-
-```ts
-import { Database, Query, Filter } from '@dxos/echo';
-
-const db: Database.Database = space.db;
-
-db.add(doc); // Add objects
-db.query(Query.type(Document)); // Query objects
-db.query(Filter.type(Document)); // Query with filter
-db.getObjectById(id); // Get by ID
-db.remove(doc); // Remove objects
-db.makeRef<Document>(dxn); // Create hydrated reference
-await db.flush(); // Flush changes
-await db.flush({ indexes: true, updates: true });
-```
-
----
-
-## Complete Example
-
-```ts
-import { Schema } from 'effect';
-import { Type, Obj, Relation, Entity, Filter, Query, Ref, Annotation } from '@dxos/echo';
-
-// Define schemas
 const Person = Schema.Struct({
   name: Schema.String,
   email: Schema.optional(Schema.String),
@@ -615,40 +35,587 @@ const Person = Schema.Struct({
   Annotation.LabelAnnotation.set(['name']),
 );
 
+interface Person extends Schema.Schema.Type<typeof Person> {}
+```
+
+### Relation schemas
+
+```ts
+const AnchoredTo = Schema.Struct({
+  anchor: Schema.optional(Schema.String),
+}).pipe(
+  Type.relation({
+    typename: 'dxos.org/relation/AnchoredTo',
+    version: '0.1.0',
+    source: Type.Obj,
+    target: Document,
+  }),
+);
+
+interface AnchoredTo extends Schema.Schema.Type<typeof AnchoredTo> {}
+```
+
+### Reference fields
+
+```ts
 const Task = Schema.Struct({
-  title: Schema.String,
-  completed: Schema.Boolean,
-  assignee: Schema.optional(Ref.Ref(Person)),
+  assignee: Ref.Ref(Person),
+  watchers: Ref.Array(Ref.Ref(Person)),
 }).pipe(Type.object({ typename: 'example.com/type/Task', version: '0.1.0' }));
 
-interface Person extends Schema.Schema.Type<typeof Person> {}
 interface Task extends Schema.Schema.Type<typeof Task> {}
+```
 
-// Create objects
+---
+
+## Working with Objects
+
+```ts
+// Create
 const alice = Obj.make(Person, { name: 'Alice', email: 'alice@example.com' });
 const task = Obj.make(Task, {
+  [Obj.Meta]: { keys: [{ source: 'external', id: '123' }] },
   title: 'Review PR',
-  completed: false,
   assignee: Ref.make(alice),
 });
 
-// Mutate within change context
+// Mutate (batched, single notification)
 Obj.change(task, (t) => {
-  t.completed = true;
+  t.title = 'Updated';
+  Obj.setValue(t, ['nested', 0, 'field'], 'value');
 });
 
-// Type-safe access
-const doSomething = (entity: Entity.Unknown) => {
-  if (Obj.instanceOf(Task, entity)) {
-    console.log(entity.title); // TypeScript knows this is Task
-  }
-};
+// Snapshot (frozen point-in-time copy)
+const snapshot = Obj.getSnapshot(task);
 
-// Query (with Database)
-const incompleteTasks = db.query(Query.type(Task, { completed: false }).orderBy(Order.asc('title')).limit(10));
-
-// Subscribe to query results
-const subscription = incompleteTasks.subscribe((tasks) => {
-  console.log('Tasks updated:', tasks);
-});
+// Subscribe
+const unsub = Obj.subscribe(task, () => console.log('changed'));
 ```
+
+## Working with Relations
+
+```ts
+// Create
+const rel = Relation.make(AnchoredTo, {
+  [Relation.Source]: sourceObj,
+  [Relation.Target]: targetObj,
+  anchor: 'section-1',
+});
+
+// Mutate
+Relation.change(rel, (r) => {
+  r.anchor = 'section-2';
+});
+
+// Access endpoints
+Relation.getSource(rel);
+Relation.getTarget(rel);
+```
+
+## Querying
+
+```ts
+// Build queries
+const query = Query.select(Filter.type(Task));
+const query2 = Query.type(Task, { completed: false });
+
+// Chaining
+query
+  .select(Filter.props({ status: 'active' }))
+  .reference('assignee')
+  .referencedBy(Comment, 'target')
+  .sourceOf(AnchoredTo)
+  .targetOf(AnchoredTo)
+  .source()
+  .target()
+  .orderBy(Order.property('name', 'asc'))
+  .limit(10);
+
+// Combine
+Query.all(query1, query2);
+Query.without(source, exclude);
+
+// Execute against a database
+const result = db.query(Query.type(Task));
+const items = await result.run();
+result.subscribe((r) => console.log(r.results));
+```
+
+## Database Operations
+
+```ts
+const db: Database.Database = space.db;
+
+db.add(obj);
+db.remove(obj);
+db.getObjectById(id);
+db.query(Query.type(Task));
+db.query(Filter.type(Task));
+db.makeRef<Task>(dxn);
+await db.flush();
+await db.flush({ indexes: true, updates: true });
+```
+
+## Feed Operations
+
+```ts
+const feed = Feed.make({ name: 'notifications', kind: 'plugin/v1' });
+
+// Effectful operations (require Feed.Service)
+yield * Feed.append(feed, [item]);
+yield * Feed.remove(feed, [item]);
+const result = yield * Feed.query(feed, Filter.type(Person));
+const items = yield * Feed.runQuery(feed, Filter.type(Person));
+```
+
+## Live Objects vs Snapshots
+
+ECHO has two representations for every object and relation: **live** and **snapshot**.
+
+**Live object** -- A reactive proxy backed by the ECHO database. Reading a property always returns the latest value, including changes made locally, by other parts of the app, or replicated from a remote peer. Live objects can be mutated inside `Obj.change` (or `Relation.change`). Subscribing to a live object (`Obj.subscribe`) fires callbacks whenever any property changes.
+
+**Snapshot** -- An immutable, point-in-time copy of a live object's state. Property values are frozen at the moment the snapshot was created and will never change, regardless of subsequent mutations or remote replication. Snapshots are useful when you need a stable reference to an object's state, for example when rendering a list or computing a diff.
+
+### Type-level distinction
+
+A schema like `Person` is always the _live_ type. Wrap it in `Obj.Snapshot<Person>` (or `Relation.Snapshot<T>` for relations) to get the snapshot type. The two are not assignable to each other -- TypeScript will prevent accidentally mixing them.
+
+```ts
+const alice: Person; // live object
+const frozen: Obj.Snapshot<Person>; // snapshot -- values never change
+
+alice satisfies Person; // OK
+frozen satisfies Obj.Snapshot<Person>; // OK
+// frozen satisfies Person;              // TS error -- snapshot is not assignable to live
+// alice satisfies Obj.Snapshot<Person>; // TS error -- live is not assignable to snapshot
+```
+
+### Creating snapshots
+
+```ts
+const snapshot = Obj.getSnapshot(alice); // Obj.Snapshot<Person>
+snapshot.name; // string -- frozen value
+
+const relSnap = Relation.getSnapshot(rel); // Relation.Snapshot<AnchoredTo>
+```
+
+### What works on snapshots
+
+Read-only operations work identically on both live objects and snapshots:
+
+```ts
+Obj.getTypename(snapshot); // 'example.com/type/Person'
+Obj.getDXN(snapshot);
+Obj.getMeta(snapshot); // returns ReadonlyMeta
+Obj.getLabel(snapshot);
+Obj.getDescription(snapshot);
+Obj.isDeleted(snapshot);
+Obj.getValue(snapshot, ['nested', 'path']);
+Obj.toJSON(snapshot);
+Obj.instanceOf(Person, snapshot); // false -- use snapshotOf for snapshots
+Obj.snapshotOf(Person, snapshot); // true
+
+Relation.getSource(relSnap);
+Relation.getTarget(relSnap);
+Relation.getSourceDXN(relSnap);
+Relation.getTargetDXN(relSnap);
+```
+
+### What does NOT work on snapshots
+
+Mutation APIs reject snapshots:
+
+```ts
+// All of these are type errors and/or throw at runtime:
+Obj.change(snapshot, (s) => {
+  s.name = 'Bob';
+}); // Error
+Obj.subscribe(snapshot, () => {}); // Error
+Relation.change(relSnap, (r) => {
+  r.anchor = 'x';
+}); // Error
+```
+
+### Getting a live object from a snapshot
+
+Use the snapshot's `id` to query the live object back from the database:
+
+```ts
+const live = await db.query(Query.select(Filter.ids(snap.id)).select(Filter.type(Person))).first();
+```
+
+---
+
+## API Reference
+
+### `Type` module
+
+Schema definition and introspection.
+
+| Export                                     | Kind       | Description                                                              |
+| ------------------------------------------ | ---------- | ------------------------------------------------------------------------ |
+| `Type.Obj`                                 | const      | Runtime Effect schema for any ECHO object.                               |
+| `Type.Obj<T, Fields>`                      | type       | TypeScript type for an object schema producing instance type `T`.        |
+| `Type.AnyObj`                              | type       | Any object schema (structural base, accepts static and mutable schemas). |
+| `Type.object(opts)`                        | fn         | Factory: pipes an Effect schema into an ECHO object schema.              |
+| `Type.Relation`                            | const      | Runtime Effect schema for any ECHO relation.                             |
+| `Type.Relation<T, Source, Target, Fields>` | type       | TypeScript type for a relation schema.                                   |
+| `Type.AnyRelation`                         | type       | Any relation schema (structural base).                                   |
+| `Type.relation(opts)`                      | fn         | Factory: pipes an Effect schema into an ECHO relation schema.            |
+| `Type.AnyEntity`                           | const      | Runtime Effect schema for any entity (union of Obj and Relation).        |
+| `Type.AnyEntity`                           | type       | Union type `AnyObj \| AnyRelation`.                                      |
+| `Type.AnyRef`                              | type       | Any Ref schema (unknown target type).                                    |
+| `Type.RuntimeType`                         | type/const | Dynamic type stored in the ECHO database (`EchoSchema`).                 |
+| `Type.PersistentType`                      | const      | Object schema for persistent schemas stored in the database.             |
+| `Type.Meta`                                | type       | Schema metadata annotation type.                                         |
+| `Type.isObjectSchema(schema)`              | fn         | Type guard: checks if a schema is an object schema.                      |
+| `Type.isRelationSchema(schema)`            | fn         | Type guard: checks if a schema is a relation schema.                     |
+| `Type.getDXN(schema)`                      | fn         | Returns the full DXN of the schema (including version).                  |
+| `Type.getTypename(schema)`                 | fn         | Returns the typename string.                                             |
+| `Type.getVersion(schema)`                  | fn         | Returns the version string.                                              |
+| `Type.getMeta(schema)`                     | fn         | Returns the schema metadata annotation.                                  |
+| `Type.isMutable(schema)`                   | fn         | Returns true if the schema is a mutable (stored) schema.                 |
+
+### `Entity` module
+
+Generic operations on objects and relations.
+
+| Export                           | Kind       | Description                                                                  |
+| -------------------------------- | ---------- | ---------------------------------------------------------------------------- |
+| `Entity.Unknown`                 | type       | Entity with no known properties (object or relation).                        |
+| `Entity.Any`                     | type       | Entity with arbitrary `[key: string]: unknown` properties.                   |
+| `Entity.Snapshot`                | type       | Non-generic snapshot of an entity.                                           |
+| `Entity.Entity<Props>`           | type       | Entity with a specific set of properties.                                    |
+| `Entity.OfKind<K>`               | type       | Brand interface assigning a `Kind` to an entity.                             |
+| `Entity.SnapshotOfKind<K>`       | type       | Brand interface for entity snapshots.                                        |
+| `Entity.Properties<T>`           | type       | Extracts user-defined properties (omits `id`, `KindId`, `Source`, `Target`). |
+| `Entity.Mutable<T>`              | type       | Mutable view of an entity within a `change` callback.                        |
+| `Entity.JSON`                    | type       | JSON representation of an entity.                                            |
+| `Entity.Kind`                    | const/type | Enum of entity kinds (`Object`, `Relation`).                                 |
+| `Entity.KindId`                  | const/type | Symbol brand for reactive entities.                                          |
+| `Entity.SnapshotKindId`          | const/type | Symbol brand for entity snapshots.                                           |
+| `Entity.Meta`                    | const/type | Symbol to access entity metadata.                                            |
+| `Entity.isEntity(value)`         | fn         | Type guard for reactive entities.                                            |
+| `Entity.isSnapshot(value)`       | fn         | Type guard for entity snapshots.                                             |
+| `Entity.getKind(entity)`         | fn         | Returns the entity kind (Object or Relation).                                |
+| `Entity.getDXN(entity)`          | fn         | Returns the DXN of an entity.                                                |
+| `Entity.getTypeDXN(entity)`      | fn         | Returns the DXN of the entity's type.                                        |
+| `Entity.getTypename(entity)`     | fn         | Returns the typename string.                                                 |
+| `Entity.getDatabase(entity)`     | fn         | Returns the database the entity belongs to.                                  |
+| `Entity.getMeta(entity)`         | fn         | Returns metadata (mutable inside change, readonly otherwise).                |
+| `Entity.getKeys(entity, source)` | fn         | Returns foreign keys from the specified source.                              |
+| `Entity.getLabel(entity)`        | fn         | Returns the label annotation value.                                          |
+| `Entity.getDescription(entity)`  | fn         | Returns the description annotation value.                                    |
+| `Entity.isDeleted(entity)`       | fn         | Returns true if the entity is deleted.                                       |
+| `Entity.toJSON(entity)`          | fn         | Converts to JSON representation.                                             |
+| `Entity.subscribe(entity, cb)`   | fn         | Subscribes to changes; returns unsubscribe function.                         |
+| `Entity.change(entity, cb)`      | fn         | Batched mutations within a callback.                                         |
+| `Entity.addTag(entity, tag)`     | fn         | Adds a tag (must be inside a change callback).                               |
+| `Entity.removeTag(entity, tag)`  | fn         | Removes a tag (must be inside a change callback).                            |
+
+### `Obj` module
+
+Object-specific operations.
+
+| Export                             | Kind       | Description                                                            |
+| ---------------------------------- | ---------- | ---------------------------------------------------------------------- |
+| `Obj.Unknown`                      | type       | Object with no known properties.                                       |
+| `Obj.Any`                          | type       | Object with arbitrary properties.                                      |
+| `Obj.OfShape<Props>`               | type       | Object with specific properties.                                       |
+| `Obj.Snapshot<T>`                  | type       | Immutable snapshot of an object (branded with `SnapshotKindId`).       |
+| `Obj.Mutable<T>`                   | type       | Mutable view within an `Obj.change` callback.                          |
+| `Obj.MakeProps<S>`                 | type       | Props type for `Obj.make` with a given schema.                         |
+| `Obj.Comparator`                   | type       | Comparator function type for sorting objects.                          |
+| `Obj.Version`                      | type       | Object version representation.                                         |
+| `Obj.JSON`                         | type       | JSON representation of an object.                                      |
+| `Obj.ReadonlyMeta`                 | type       | Deeply read-only metadata type.                                        |
+| `Obj.Meta`                         | const/type | Symbol for passing metadata in `Obj.make`; also the mutable meta type. |
+| `Obj.Parent`                       | const      | Symbol to set parent in `Obj.make`.                                    |
+| `Obj.ID`                           | const/type | Alias for `ObjectId`.                                                  |
+| `Obj.make(schema, props)`          | fn         | Creates a new reactive object from a schema.                           |
+| `Obj.isObject(value)`              | fn         | Type guard for ECHO objects.                                           |
+| `Obj.isSnapshot(value)`            | fn         | Type guard for object snapshots.                                       |
+| `Obj.instanceOf(schema, value?)`   | fn         | Checks if an object matches a schema (curried).                        |
+| `Obj.snapshotOf(schema, value?)`   | fn         | Checks if a snapshot matches a schema (curried).                       |
+| `Obj.change(obj, cb)`              | fn         | Batched mutations within a callback.                                   |
+| `Obj.getSnapshot(obj)`             | fn         | Returns an immutable snapshot.                                         |
+| `Obj.getReactive(snapshot)`        | fn         | Effect: resolves the reactive object from a snapshot.                  |
+| `Obj.getReactiveOption(snapshot)`  | fn         | Effect: like `getReactive` but returns `Option`.                       |
+| `Obj.getReactiveOrThrow(snapshot)` | fn         | Synchronous `getReactive`; throws on failure.                          |
+| `Obj.clone(obj, opts?)`            | fn         | Clones an object (shallow by default).                                 |
+| `Obj.subscribe(obj, cb)`           | fn         | Subscribes to changes; returns unsubscribe function.                   |
+| `Obj.getValue(obj, path)`          | fn         | Deep property access by path.                                          |
+| `Obj.setValue(obj, path, value)`   | fn         | Deep property set (inside change callback).                            |
+| `Obj.getDXN(obj)`                  | fn         | Returns the DXN of the object.                                         |
+| `Obj.getTypeDXN(obj)`              | fn         | Returns the DXN of the object's type.                                  |
+| `Obj.getTypename(obj)`             | fn         | Returns the typename string.                                           |
+| `Obj.getSchema(obj)`               | fn         | Returns the schema used to create the object.                          |
+| `Obj.getDatabase(obj)`             | fn         | Returns the database the object belongs to.                            |
+| `Obj.getMeta(obj)`                 | fn         | Returns metadata (mutable inside change, readonly otherwise).          |
+| `Obj.getKeys(entity, source)`      | fn         | Returns foreign keys; also curried `(source) => (entity) => ...`.      |
+| `Obj.deleteKeys(obj, source)`      | fn         | Deletes foreign keys (inside change callback).                         |
+| `Obj.getLabel(obj)`                | fn         | Returns the label annotation value.                                    |
+| `Obj.setLabel(obj, label)`         | fn         | Sets the label (inside change callback).                               |
+| `Obj.getDescription(obj)`          | fn         | Returns the description annotation value.                              |
+| `Obj.setDescription(obj, desc)`    | fn         | Sets the description (inside change callback).                         |
+| `Obj.addTag(obj, tag)`             | fn         | Adds a tag (inside change callback).                                   |
+| `Obj.removeTag(obj, tag)`          | fn         | Removes a tag (inside change callback).                                |
+| `Obj.isDeleted(obj)`               | fn         | Returns true if the object is deleted.                                 |
+| `Obj.getParent(obj)`               | fn         | Returns the parent object.                                             |
+| `Obj.setParent(obj, parent)`       | fn         | Sets the parent object.                                                |
+| `Obj.toJSON(obj)`                  | fn         | Converts to JSON representation.                                       |
+| `Obj.fromJSON(json, opts?)`        | fn         | Creates an object from JSON (async, validates against schema).         |
+| `Obj.sortByLabel`                  | const      | Comparator that sorts by label.                                        |
+| `Obj.sortByTypename`               | const      | Comparator that sorts by typename.                                     |
+| `Obj.sort(...comparators)`         | fn         | Composes multiple comparators.                                         |
+| `Obj.version(obj)`                 | fn         | Returns the object's version.                                          |
+| `Obj.isVersion(value)`             | fn         | Type guard for version values.                                         |
+| `Obj.versionValid(version)`        | fn         | Checks if a version is valid.                                          |
+| `Obj.compareVersions(a, b)`        | fn         | Compares two versions.                                                 |
+| `Obj.encodeVersion(version)`       | fn         | Encodes a version to a string.                                         |
+| `Obj.decodeVersion(str)`           | fn         | Decodes a version from a string.                                       |
+
+### `Relation` module
+
+Relation-specific operations.
+
+| Export                                    | Kind       | Description                                                                 |
+| ----------------------------------------- | ---------- | --------------------------------------------------------------------------- |
+| `Relation.Unknown`                        | type       | Relation with no known properties.                                          |
+| `Relation.OfShape<Source, Target, Props>` | type       | Relation with specific endpoint types and properties.                       |
+| `Relation.Snapshot<T>`                    | type       | Immutable snapshot of a relation.                                           |
+| `Relation.Mutable<T>`                     | type       | Mutable view within a `Relation.change` callback.                           |
+| `Relation.MakeProps<S>`                   | type       | Props type for `Relation.make` with a given schema.                         |
+| `Relation.Endpoints<Source, Target>`      | type       | Interface carrying source and target endpoints.                             |
+| `Relation.SourceOf<T>`                    | type       | Extracts the source type of a relation.                                     |
+| `Relation.TargetOf<T>`                    | type       | Extracts the target type of a relation.                                     |
+| `Relation.Comparator`                     | type       | Comparator function type for sorting relations.                             |
+| `Relation.Version`                        | type       | Relation version representation.                                            |
+| `Relation.JSON`                           | type       | JSON representation of a relation.                                          |
+| `Relation.ReadonlyMeta`                   | type       | Deeply read-only metadata type.                                             |
+| `Relation.Meta`                           | const/type | Symbol for passing metadata in `Relation.make`; also the mutable meta type. |
+| `Relation.Source`                         | const/type | Symbol for the source endpoint.                                             |
+| `Relation.Target`                         | const/type | Symbol for the target endpoint.                                             |
+| `Relation.make(schema, props)`            | fn         | Creates a new reactive relation.                                            |
+| `Relation.isRelation(value)`              | fn         | Type guard for ECHO relations.                                              |
+| `Relation.isSnapshot(value)`              | fn         | Type guard for relation snapshots.                                          |
+| `Relation.change(rel, cb)`                | fn         | Batched mutations within a callback.                                        |
+| `Relation.getSnapshot(rel)`               | fn         | Returns an immutable snapshot.                                              |
+| `Relation.subscribe(rel, cb)`             | fn         | Subscribes to changes; returns unsubscribe function.                        |
+| `Relation.getSource(rel)`                 | fn         | Returns the source object.                                                  |
+| `Relation.getTarget(rel)`                 | fn         | Returns the target object.                                                  |
+| `Relation.getSourceDXN(rel)`              | fn         | Returns the source DXN.                                                     |
+| `Relation.getTargetDXN(rel)`              | fn         | Returns the target DXN.                                                     |
+| `Relation.getValue(rel, path)`            | fn         | Deep property access by path.                                               |
+| `Relation.setValue(rel, path, value)`     | fn         | Deep property set (inside change callback).                                 |
+| `Relation.getDXN(rel)`                    | fn         | Returns the DXN of the relation.                                            |
+| `Relation.getTypeDXN(rel)`                | fn         | Returns the DXN of the relation's type.                                     |
+| `Relation.getTypename(rel)`               | fn         | Returns the typename string.                                                |
+| `Relation.getSchema(rel)`                 | fn         | Returns the schema used to create the relation.                             |
+| `Relation.getDatabase(rel)`               | fn         | Returns the database the relation belongs to.                               |
+| `Relation.getMeta(rel)`                   | fn         | Returns metadata (mutable inside change, readonly otherwise).               |
+| `Relation.getKeys(rel, source)`           | fn         | Returns foreign keys from the specified source.                             |
+| `Relation.deleteKeys(rel, source)`        | fn         | Deletes foreign keys (inside change callback).                              |
+| `Relation.getLabel(rel)`                  | fn         | Returns the label annotation value.                                         |
+| `Relation.setLabel(rel, label)`           | fn         | Sets the label (inside change callback).                                    |
+| `Relation.getDescription(rel)`            | fn         | Returns the description annotation value.                                   |
+| `Relation.setDescription(rel, desc)`      | fn         | Sets the description (inside change callback).                              |
+| `Relation.addTag(rel, tag)`               | fn         | Adds a tag (inside change callback).                                        |
+| `Relation.removeTag(rel, tag)`            | fn         | Removes a tag (inside change callback).                                     |
+| `Relation.isDeleted(rel)`                 | fn         | Returns true if the relation is deleted.                                    |
+| `Relation.toJSON(rel)`                    | fn         | Converts to JSON representation.                                            |
+| `Relation.sortByLabel`                    | const      | Comparator that sorts by label.                                             |
+| `Relation.sortByTypename`                 | const      | Comparator that sorts by typename.                                          |
+| `Relation.sort(...comparators)`           | fn         | Composes multiple comparators.                                              |
+| `Relation.version(rel)`                   | fn         | Returns the relation's version.                                             |
+| `Relation.isVersion(value)`               | fn         | Type guard for version values.                                              |
+
+### `Ref` module
+
+Reference types and operations.
+
+| Export               | Kind | Description                                                             |
+| -------------------- | ---- | ----------------------------------------------------------------------- |
+| `Ref.Ref<T>`         | type | Instance type for a lazy-loaded reference to an entity.                 |
+| `Ref.Unknown`        | type | `Ref<Obj.Unknown>`.                                                     |
+| `Ref.Target<R>`      | type | Extracts the target type from a Ref.                                    |
+| `Ref.RefSchema<T>`   | type | TypeScript type for a Ref schema (the schema itself, not the instance). |
+| `Ref.Resolver`       | type | Reference resolver interface.                                           |
+| `Ref.Ref(schema)`    | fn   | Schema factory: creates a Ref schema for the given target schema.       |
+| `Ref.Array(schema)`  | fn   | Schema factory: creates an array-of-refs schema.                        |
+| `Ref.make(obj)`      | fn   | Creates a reference to an existing object.                              |
+| `Ref.fromDXN(dxn)`   | fn   | Creates an unhydrated reference from a DXN.                             |
+| `Ref.isRef(value)`   | fn   | Type guard for references.                                              |
+| `Ref.isRefType(ast)` | fn   | Checks if an AST node is a ref type.                                    |
+
+### `Feed` module
+
+Feed (queue) types and operations.
+
+| Export                          | Kind       | Description                                          |
+| ------------------------------- | ---------- | ---------------------------------------------------- |
+| `Feed.Feed`                     | const/type | Schema and instance type for a feed object.          |
+| `Feed.Cursor<T>`                | type       | Opaque cursor for iterating feed items.              |
+| `Feed.RetentionOptions`         | type       | Retention policy options.                            |
+| `Feed.Service`                  | class      | Effect service tag for feed operations.              |
+| `Feed.DXN_KEY`                  | const      | Meta key source for the backing DXN.                 |
+| `Feed.notAvailable`             | const      | Layer providing a Feed.Service that throws.          |
+| `Feed.make(props)`              | fn         | Creates a new feed object.                           |
+| `Feed.getQueueDxn(feed)`        | fn         | Reads the queue DXN from feed metadata.              |
+| `Feed.append(feed, items)`      | fn         | Effect: appends items to a feed.                     |
+| `Feed.remove(feed, items)`      | fn         | Effect: removes items from a feed by ID.             |
+| `Feed.query(feed, query)`       | fn         | Effect: creates a reactive query over feed items.    |
+| `Feed.runQuery(feed, query)`    | fn         | Effect: executes a feed query once, returns results. |
+| `Feed.cursor(feed)`             | fn         | Effect: creates a cursor (stubbed).                  |
+| `Feed.next(cursor)`             | fn         | Effect: returns the next item (stubbed).             |
+| `Feed.nextOption(cursor)`       | fn         | Effect: returns the next item as Option (stubbed).   |
+| `Feed.setRetention(feed, opts)` | fn         | Effect: sets retention policy (stubbed).             |
+
+### `Filter` module
+
+Filter construction for queries.
+
+| Export                             | Kind | Description                                               |
+| ---------------------------------- | ---- | --------------------------------------------------------- |
+| `Filter.Filter<T>`                 | type | A typed filter.                                           |
+| `Filter.Props<T>`                  | type | Property predicate map for a type.                        |
+| `Filter.Any`                       | type | `Filter<any>`.                                            |
+| `Filter.Type<F>`                   | type | Extracts the filtered type from a Filter.                 |
+| `Filter.is(value)`                 | fn   | Type guard for filters.                                   |
+| `Filter.fromAst(ast)`              | fn   | Constructs a filter from a QueryAST node.                 |
+| `Filter.everything()`              | fn   | Matches all objects.                                      |
+| `Filter.nothing()`                 | fn   | Matches no objects.                                       |
+| `Filter.id(...ids)`                | fn   | Matches by ObjectId.                                      |
+| `Filter.type(schema, props?)`      | fn   | Matches by schema type with optional property predicates. |
+| `Filter.typename(name)`            | fn   | Matches by unqualified typename string.                   |
+| `Filter.typeDXN(dxn)`              | fn   | Matches by fully qualified type DXN.                      |
+| `Filter.tag(tag)`                  | fn   | Matches by tag.                                           |
+| `Filter.props(props)`              | fn   | Matches by property predicates only (no type constraint). |
+| `Filter.text(text, opts?)`         | fn   | Full-text or vector search.                               |
+| `Filter.foreignKeys(schema, keys)` | fn   | Matches by foreign keys.                                  |
+| `Filter.eq(value)`                 | fn   | Predicate: equal.                                         |
+| `Filter.neq(value)`                | fn   | Predicate: not equal.                                     |
+| `Filter.gt(value)`                 | fn   | Predicate: greater than.                                  |
+| `Filter.gte(value)`                | fn   | Predicate: greater than or equal.                         |
+| `Filter.lt(value)`                 | fn   | Predicate: less than.                                     |
+| `Filter.lte(value)`                | fn   | Predicate: less than or equal.                            |
+| `Filter.in(...values)`             | fn   | Predicate: value in set.                                  |
+| `Filter.contains(value)`           | fn   | Predicate: array contains value.                          |
+| `Filter.between(from, to)`         | fn   | Predicate: value in range.                                |
+| `Filter.not(filter)`               | fn   | Logical NOT.                                              |
+| `Filter.and(...filters)`           | fn   | Logical AND.                                              |
+| `Filter.or(...filters)`            | fn   | Logical OR.                                               |
+
+### `Query` module
+
+Query construction and composition.
+
+| Export                                              | Kind   | Description                                     |
+| --------------------------------------------------- | ------ | ----------------------------------------------- |
+| `Query.Query<T>`                                    | type   | A typed, chainable query.                       |
+| `Query.Any`                                         | type   | `Query<any>`.                                   |
+| `Query.Type<Q>`                                     | type   | Extracts the result type from a Query.          |
+| `Query.is(value)`                                   | fn     | Type guard for queries.                         |
+| `Query.fromAst(ast)`                                | fn     | Constructs a query from a QueryAST node.        |
+| `Query.select(filter)`                              | fn     | Creates a query from a filter.                  |
+| `Query.type(schema, predicates?)`                   | fn     | Shorthand for `select(Filter.type(...))`.       |
+| `Query.all(...queries)`                             | fn     | Union of multiple queries.                      |
+| `Query.without(source, exclude)`                    | fn     | Set difference of two queries.                  |
+| `query.select(filter)`                              | method | Further filter the selection.                   |
+| `query.reference(key)`                              | method | Traverse an outgoing reference.                 |
+| `query.referencedBy(schema?, key?)`                 | method | Find incoming references.                       |
+| `query.sourceOf(schema?, props?)`                   | method | Find relations where this is the source.        |
+| `query.targetOf(schema?, props?)`                   | method | Find relations where this is the target.        |
+| `query.source()`                                    | method | Get the source objects of relations.            |
+| `query.target()`                                    | method | Get the target objects of relations.            |
+| `query.parent()`                                    | method | Get parent objects.                             |
+| `query.children()`                                  | method | Get child objects.                              |
+| `query.orderBy(...orders)`                          | method | Sort results.                                   |
+| `query.limit(n)`                                    | method | Limit result count.                             |
+| `query.from(db \| feed \| 'all-accessible-spaces')` | method | Scope the query to specific databases or feeds. |
+| `query.options(opts)`                               | method | Add query options.                              |
+
+### `QueryResult` module
+
+Query result types.
+
+| Export                            | Kind   | Description                                        |
+| --------------------------------- | ------ | -------------------------------------------------- |
+| `QueryResult.QueryResult<T>`      | type   | Reactive query result.                             |
+| `QueryResult.Entry<T>`            | type   | Individual result entry with match metadata.       |
+| `QueryResult.EntityEntry<T>`      | type   | Entry specialized for entities.                    |
+| `QueryResult.RunOptions`          | type   | Options for `run()` and `first()`.                 |
+| `QueryResult.SubscriptionOptions` | type   | Options for `subscribe()`.                         |
+| `result.entries`                  | prop   | Currently available entries with match metadata.   |
+| `result.results`                  | prop   | Currently available result values.                 |
+| `result.run(opts?)`               | method | Async: returns all results.                        |
+| `result.runEntries(opts?)`        | method | Async: returns all entries with metadata.          |
+| `result.runSync()`                | method | Sync: returns currently available results.         |
+| `result.runSyncEntries()`         | method | Sync: returns currently available entries.         |
+| `result.first(opts?)`             | method | Async: returns first result (throws if none).      |
+| `result.firstOrUndefined(opts?)`  | method | Async: returns first result or undefined.          |
+| `result.subscribe(cb?, opts?)`    | method | Subscribes to result changes; returns unsubscribe. |
+
+### `Order` module
+
+Sort-order construction for queries.
+
+| Export                           | Kind  | Description                                   |
+| -------------------------------- | ----- | --------------------------------------------- |
+| `Order.Order<T>`                 | type  | A typed sort order.                           |
+| `Order.Any`                      | type  | `Order<any>`.                                 |
+| `Order.natural`                  | const | Natural (insertion) order.                    |
+| `Order.property(key, direction)` | fn    | Order by a property (`'asc'` or `'desc'`).    |
+| `Order.rank(direction?)`         | fn    | Order by relevance rank (for search results). |
+
+### `Database` module
+
+Database persistence interface and Effect service.
+
+| Export                           | Kind       | Description                                           |
+| -------------------------------- | ---------- | ----------------------------------------------------- |
+| `Database.Database`              | type/const | ECHO database interface and Effect schema.            |
+| `Database.Queryable`             | type       | Interface exposing `query`.                           |
+| `Database.QueryFn`               | type       | Overloaded query function signature.                  |
+| `Database.TypeId`                | const/type | Symbol identifying a Database instance.               |
+| `Database.QueryOptions`          | type       | Legacy query options (deprecated).                    |
+| `Database.GetObjectByIdOptions`  | type       | Options for `getObjectById`.                          |
+| `Database.AddOptions`            | type       | Options for `add` (placement).                        |
+| `Database.FlushOptions`          | type       | Options for `flush`.                                  |
+| `Database.Service`               | class      | Effect service tag for Database.                      |
+| `Database.notAvailable`          | const      | Layer providing a Database.Service that throws.       |
+| `Database.makeService(db)`       | fn         | Creates a Database service instance.                  |
+| `Database.layer(db)`             | fn         | Creates a Layer providing the Database service.       |
+| `Database.isDatabase(value)`     | fn         | Type guard for databases.                             |
+| `Database.spaceId`               | const      | Effect: returns the space ID of the current database. |
+| `Database.resolve(ref, schema?)` | fn         | Effect: resolves an object by DXN.                    |
+| `Database.load(ref)`             | fn         | Effect: loads an object reference.                    |
+| `Database.loadOption(ref)`       | fn         | Effect: loads a reference as Option.                  |
+| `Database.add(obj)`              | fn         | Effect: adds an object to the database.               |
+| `Database.remove(obj)`           | fn         | Effect: removes an object from the database.          |
+| `Database.flush(opts?)`          | fn         | Effect: flushes pending changes.                      |
+| `Database.query(query)`          | fn         | Effect: creates a QueryResult.                        |
+| `Database.runQuery(query)`       | fn         | Effect: executes query once, returns results.         |
+| `Database.schemaQuery(opts?)`    | fn         | Effect: creates a schema QueryResult.                 |
+| `Database.runSchemaQuery(opts?)` | fn         | Effect: executes schema query once, returns results.  |
+
+### `Annotation` module
+
+Schema annotation helpers.
+
+| Export                                                   | Kind  | Description                                   |
+| -------------------------------------------------------- | ----- | --------------------------------------------- |
+| `Annotation.make(props)`                                 | fn    | Creates a new serializable schema annotation. |
+| `Annotation.LabelAnnotation`                             | const | Annotation for object labels.                 |
+| `Annotation.DescriptionAnnotation`                       | const | Annotation for object descriptions.           |
+| `Annotation.IconAnnotation`                              | const | Annotation for object icons.                  |
+| `Annotation.FormInputAnnotation`                         | const | Annotation controlling form input visibility. |
+| `Annotation.GeneratorAnnotation`                         | const | Annotation for value generators.              |
+| `Annotation.ReferenceAnnotation`                         | const | Annotation for reference metadata.            |
+| `Annotation.SystemTypeAnnotation`                        | const | Annotation marking system types.              |
+| `Annotation.TypeAnnotation`                              | const | Core type metadata annotation.                |
+| `Annotation.getLabelWithSchema(obj, schema)`             | fn    | Gets label using schema metadata.             |
+| `Annotation.setLabelWithSchema(obj, schema, label)`      | fn    | Sets label using schema metadata.             |
+| `Annotation.getDescriptionWithSchema(obj, schema)`       | fn    | Gets description using schema metadata.       |
+| `Annotation.setDescriptionWithSchema(obj, schema, desc)` | fn    | Sets description using schema metadata.       |
+| `Annotation.getTypeAnnotation(schema)`                   | fn    | Gets type annotation from a schema.           |
