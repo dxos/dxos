@@ -20,7 +20,6 @@ export const VoxelPlugin = Plugin.define(meta).pipe(
       metadata: {
         icon: 'ph--cube--regular',
         createObject: ((props) => Effect.sync(() => Voxel.make(props))) satisfies CreateObject,
-        addToCollectionOnCreate: true,
       },
     },
   }),

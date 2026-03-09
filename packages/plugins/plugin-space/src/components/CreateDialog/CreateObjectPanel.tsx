@@ -29,7 +29,6 @@ export type CreateObjectOption = {
 export type Metadata = {
   createObject: CreateObject;
   inputSchema?: Schema.Schema.AnyNoContext;
-  addToCollectionOnCreate?: boolean;
   icon?: string;
 };
 

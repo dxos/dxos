@@ -24,7 +24,6 @@ export const ChessPlugin = Plugin.define(meta).pipe(
         iconHue: 'amber',
         blueprints: [ChessBlueprint.key],
         createObject: ((props) => Effect.sync(() => Chess.make(props))) satisfies CreateObject,
-        addToCollectionOnCreate: true,
       },
     },
   }),

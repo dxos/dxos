@@ -21,14 +21,12 @@ export const InboxPlugin = Plugin.define(meta).pipe(
         id: Mailbox.Mailbox.typename,
         metadata: {
           createObject: ((props) => Effect.sync(() => Mailbox.make(props))) satisfies CreateObject,
-          addToCollectionOnCreate: true,
         },
       },
       {
         id: Calendar.Calendar.typename,
         metadata: {
           createObject: ((props) => Effect.sync(() => Calendar.make(props))) satisfies CreateObject,
-          addToCollectionOnCreate: true,
         },
       },
     ],

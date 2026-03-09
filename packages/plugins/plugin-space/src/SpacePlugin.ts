@@ -58,7 +58,6 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
           loadReferences: async (collection: Collection.Collection) => await Ref.Array.loadAll(collection.objects),
           inputSchema: Schema.Struct({ name: Schema.optional(Schema.String) }),
           createObject: ((props) => Effect.sync(() => Collection.make(props))) satisfies CreateObject,
-          addToCollectionOnCreate: true,
         },
       },
       {

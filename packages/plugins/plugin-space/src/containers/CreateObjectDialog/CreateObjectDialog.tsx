@@ -9,8 +9,7 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { Capability } from '@dxos/app-framework';
 import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
-import { Database, Obj, Type } from '@dxos/echo';
-import { type Collection } from '@dxos/echo';
+import { Collection, Database, Obj, Type } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { Operation } from '@dxos/operation';
@@ -106,12 +105,10 @@ export const CreateObjectDialog = ({
         invariant(db, 'Missing database');
         const object = yield* metadata.createObject(data, { db });
         if (Obj.isObject(object) && !Obj.instanceOf(Type.PersistentType, object)) {
-          // TODO(wittjosiah): Selection in navtree isn't working as expected when hidden typenames evals to true.
-          const hidden = !metadata.addToCollectionOnCreate;
           yield* operationInvoker.invoke(SpaceOperation.AddObject, {
             target,
             object,
-            hidden,
+            hidden: !Obj.instanceOf(Collection.Collection, target),
           });
           const shouldNavigate = _shouldNavigate ?? (() => true);
           if (shouldNavigate(object)) {

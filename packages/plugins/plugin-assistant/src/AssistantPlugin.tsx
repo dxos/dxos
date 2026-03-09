@@ -74,7 +74,6 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
           icon: 'ph--circuitry--regular',
           iconHue: 'sky',
           createObject: ((props) => Effect.sync(() => Obj.make(Sequence, props))) satisfies CreateObject,
-          addToCollectionOnCreate: true,
         },
       },
       {
@@ -90,7 +89,6 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
               },
               ProjectBlueprint.make(),
             ).pipe(withComputeRuntime(db.spaceId))) satisfies CreateObject,
-          addToCollectionOnCreate: true,
         },
       },
     ],

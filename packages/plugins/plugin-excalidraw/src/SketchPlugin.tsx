@@ -21,7 +21,6 @@ export const ExcalidrawPlugin = Plugin.define(meta).pipe(
         icon: 'ph--compass-tool--regular',
         iconHue: 'indigo',
         createObject: ((props) => Effect.sync(() => Diagram.make(props))) satisfies CreateObject,
-        addToCollectionOnCreate: true,
       },
     },
   }),
