@@ -40,7 +40,7 @@ const SheetContainerInner = ({
   }
 
   return (
-    <Sheet.Root sheet={sheet} graph={graph} ignoreAttention={ignoreAttention}>
+    <Sheet.Root graph={graph} sheet={sheet} ignoreAttention={ignoreAttention}>
       <Panel.Root classNames={role === 'section' && 'aspect-aquare'}>
         <Panel.Toolbar asChild>
           <Sheet.Toolbar id={Obj.getDXN(sheet).toString()} />

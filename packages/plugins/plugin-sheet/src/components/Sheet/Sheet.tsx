@@ -3,9 +3,12 @@
 //
 
 import { SheetContent } from '../SheetContent';
-import { SheetRoot, type SheetRootProps } from '../SheetRoot';
+import { SheetRoot } from '../SheetRoot';
 import { SheetStatusbar } from '../SheetStatusbar';
-import { SheetToolbar, type SheetToolbarProps } from '../SheetToolbar';
+import { SheetToolbar } from '../SheetToolbar';
+
+export { useSheetContext, type SheetContextValue, type SheetRootProps } from '../SheetRoot';
+export { type SheetToolbarProps } from '../SheetToolbar';
 
 export const Sheet = {
   Root: SheetRoot,
@@ -13,5 +16,3 @@ export const Sheet = {
   Content: SheetContent,
   Statusbar: SheetStatusbar,
 };
-
-export type { SheetRootProps, SheetToolbarProps };

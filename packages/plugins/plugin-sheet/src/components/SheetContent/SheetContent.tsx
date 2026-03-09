@@ -70,7 +70,9 @@ const sheetRowDefault = {
   grid: { size: defaultRowSize, resizeable: true },
 };
 
-export const SheetContent = (props: ComponentPropsWithoutRef<'div'>) => {
+export type SheetContentProps = ComponentPropsWithoutRef<'div'>;
+
+export const SheetContent = (props: SheetContentProps) => {
   const { t } = useTranslation(meta.id);
   const { id, model, editing, setCursor, setRange, cursor, cursorFallbackRange, activeRefs, ignoreAttention } =
     useSheetContext();
