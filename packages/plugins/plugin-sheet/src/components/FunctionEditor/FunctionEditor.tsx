@@ -10,7 +10,7 @@ import { Icon } from '@dxos/react-ui';
 import { mapFormulaIndicesToRefs } from '../../types';
 import { useSheetContext } from '../SheetContext';
 
-export const FunctionEditor = (props: ComponentPropsWithoutRef<'div'>) => {
+export const SheetStatusbar = (props: ComponentPropsWithoutRef<'div'>) => {
   const { model, cursor, range } = useSheetContext();
 
   let value;

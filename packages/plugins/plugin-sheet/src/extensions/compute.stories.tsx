@@ -22,7 +22,7 @@ import {
 } from '@dxos/ui-editor';
 import { isNonNullable } from '@dxos/util';
 
-import { GridSheet, SheetProvider, useComputeGraph } from '../components';
+import { SheetContent, SheetProvider, useComputeGraph } from '../components';
 import { useSheetModel } from '../model';
 import { useTestSheet, withComputeGraphDecorator } from '../testing';
 import { Sheet } from '../types';
@@ -89,7 +89,7 @@ const Grid = () => {
   return (
     <div className='flex w-[40rem] overflow-hidden'>
       <SheetProvider graph={graph} sheet={sheet}>
-        <GridSheet />
+        <SheetContent />
       </SheetProvider>
     </div>
   );

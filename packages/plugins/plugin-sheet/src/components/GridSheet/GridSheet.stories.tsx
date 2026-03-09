@@ -18,7 +18,7 @@ import { Sheet } from '../../types';
 import { useComputeGraph } from '../ComputeGraph';
 import { SheetProvider } from '../SheetContext';
 
-import { GridSheet } from './GridSheet';
+import { SheetContent } from './GridSheet';
 
 export const Basic = () => {
   const space = useSpace();
@@ -31,15 +31,15 @@ export const Basic = () => {
   return (
     <SheetProvider graph={graph} sheet={sheet} ignoreAttention>
       <div role='none' className='grid h-full w-full'>
-        <GridSheet />
+        <SheetContent />
       </div>
     </SheetProvider>
   );
 };
 
 const meta = {
-  title: 'plugins/plugin-sheet/components/GridSheet',
-  component: GridSheet,
+  title: 'plugins/plugin-sheet/components/SheetContent',
+  component: SheetContent,
   decorators: [
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
@@ -53,7 +53,7 @@ const meta = {
     layout: 'fullscreen',
     translations,
   },
-} satisfies Meta<typeof GridSheet>;
+} satisfies Meta<typeof SheetContent>;
 
 export default meta;
 
