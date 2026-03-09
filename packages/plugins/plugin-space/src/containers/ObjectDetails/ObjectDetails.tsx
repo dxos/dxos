@@ -9,7 +9,7 @@ import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { type Obj } from '@dxos/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 
-import { BaseObjectSettings } from '../../components/ObjectDetails/BaseObjectSettings';
+import { BaseObjectSettings } from '../../components';
 
 export type ObjectDetailsProps = SurfaceComponentProps<Obj.Unknown>;
 

@@ -138,12 +138,12 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
 
     return (
       <div
+        {...focusAttributes}
         role='none'
-        ref={parentRef}
         data-testid='composer.markdownRoot'
         data-popover-collision-boundary={true}
         className={mx(stackItemContentEditorClassNames(role), classNames)}
-        {...focusAttributes}
+        ref={parentRef}
       />
     );
   },

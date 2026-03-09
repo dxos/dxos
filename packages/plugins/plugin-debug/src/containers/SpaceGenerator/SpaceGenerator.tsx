@@ -95,7 +95,7 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
       <Panel.Toolbar asChild>
         <Toolbar.Root>
           <IconButton icon='ph--arrow-clockwise--regular' iconOnly label='Refresh' onClick={updateInfo} />
-          <Toolbar.Separator variant='gap' />
+          <Toolbar.Separator />
           <Input.Root>
             <Input.TextInput
               type='number'

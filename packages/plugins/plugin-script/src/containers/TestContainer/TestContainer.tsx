@@ -7,7 +7,7 @@ import React from 'react';
 import { type Script } from '@dxos/functions';
 import { Panel } from '@dxos/react-ui';
 
-import { TestPanel } from '../../components/TestPanel';
+import { TestPanel } from '../../components';
 import { useDeployState, useToolbarState } from '../../hooks';
 
 export type TestContainerProps = {

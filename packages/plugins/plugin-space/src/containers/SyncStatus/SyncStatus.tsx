@@ -14,8 +14,7 @@ import { Icon, Popover, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 import { Unit, type UnitFormat } from '@dxos/util';
 
-import { createClientSaveTracker } from '../../components/SyncStatus/save-tracker';
-import { getIcon, getStatus } from '../../components/SyncStatus/status';
+import { createClientSaveTracker, getIcon, getStatus } from '../../components';
 import { meta } from '../../meta';
 
 const SYNC_STALLED_TIMEOUT = 5_000;

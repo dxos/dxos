@@ -19,7 +19,7 @@ import { Settings } from '@dxos/react-ui-form';
 import { Menu, createMenuAction, createMenuItemGroup, useMenuActions } from '@dxos/react-ui-menu';
 import { useSoundEffect } from '@dxos/react-ui-sfx';
 
-import { Call } from '../../components/Call';
+import { Call } from '../../components';
 import { meta } from '../../meta';
 import { ThreadCapabilities } from '../../types';
 import { type Channel } from '../../types';
