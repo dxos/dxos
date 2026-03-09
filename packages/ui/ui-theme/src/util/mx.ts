@@ -4,6 +4,8 @@
 
 import { extendTailwindMerge, validators } from 'tailwind-merge';
 
+import { type SlottableProps } from '@dxos/ui-types';
+
 type AdditionalClassGroups = 'density' | 'dx-focus-ring';
 
 export const mx = extendTailwindMerge<AdditionalClassGroups>({
@@ -46,4 +48,15 @@ export const mx = extendTailwindMerge<AdditionalClassGroups>({
       ],
     },
   },
+});
+
+/**
+ * Reconcile className properties from slot.
+ */
+export const useSlottedProps = (
+  { classNames, className, ...props }: Pick<SlottableProps, 'classNames' | 'className'>,
+  etc?: string,
+) => ({
+  className: mx(etc, classNames, className),
+  props,
 });

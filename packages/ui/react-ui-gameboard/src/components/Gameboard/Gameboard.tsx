@@ -33,19 +33,13 @@ const useGameboardContext = <M extends GameboardModel<any>>(consumerName: string
 
 type GameboardRootProps<M extends GameboardModel<any>> = PropsWithChildren<{
   model?: M;
-  moveNumber?: number;
   onDrop?: (move: Move) => boolean;
 }>;
 
 /**
  * Generic board container.
  */
-const GameboardRoot = <M extends GameboardModel<any>>({
-  children,
-  model,
-  moveNumber,
-  onDrop,
-}: GameboardRootProps<M>) => {
+const GameboardRoot = <M extends GameboardModel<any>>({ children, model, onDrop }: GameboardRootProps<M>) => {
   const [dragging, setDragging] = useState(false);
   const [promoting, setPromoting] = useState<PieceRecord | undefined>();
 

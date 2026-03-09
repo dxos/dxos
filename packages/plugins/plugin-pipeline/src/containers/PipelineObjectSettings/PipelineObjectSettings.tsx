@@ -13,7 +13,7 @@ import { getSpace, useObject, useQuery } from '@dxos/react-client/echo';
 import { IconButton, type ThemedClassName, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Form, ViewEditor } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';
-import { type ProjectionModel, View } from '@dxos/schema';
+import { type ProjectionModel, ViewModel } from '@dxos/schema';
 import { Pipeline, Task } from '@dxos/types';
 import { mx, osTranslations, subtleHover } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';
@@ -90,7 +90,7 @@ export const PipelineObjectSettings = ({ classNames, pipeline }: PipelineObjectS
         return;
       }
 
-      const newView = View.make({
+      const newView = ViewModel.make({
         query,
         jsonSchema: Type.toJsonSchema(newSchema),
       });
@@ -145,7 +145,7 @@ export const PipelineObjectSettings = ({ classNames, pipeline }: PipelineObjectS
     if (!space) {
       return;
     }
-    const newView = View.make({
+    const newView = ViewModel.make({
       query: Query.select(Filter.type(Task.Task)),
       jsonSchema: Type.toJsonSchema(Task.Task),
     });

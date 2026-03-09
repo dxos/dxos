@@ -6,14 +6,13 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability, UndoMapping } from '@dxos/app-framework';
 import { sleep } from '@dxos/async';
-import { Obj, Relation } from '@dxos/echo';
+import { Obj, Relation, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { OperationResolver } from '@dxos/operation';
 import { Operation } from '@dxos/operation';
 import { ATTENDABLE_PATH_SEPARATOR, DeckOperation } from '@dxos/plugin-deck/types';
 import { ObservabilityOperation } from '@dxos/plugin-observability/types';
 import { SpaceOperation } from '@dxos/plugin-space/types';
-import { Ref } from '@dxos/react-client/echo';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 
 import { meta } from '../../meta';

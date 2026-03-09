@@ -5,8 +5,8 @@
 import React, { forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { useTranslation } from '@dxos/react-ui';
-import { Card } from '@dxos/react-ui';
+import { Card, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Menu, createMenuAction } from '@dxos/react-ui-menu';
 import { Focus, Mosaic, useBoard } from '@dxos/react-ui-mosaic';
 
 import { type KanbanCardProps, useKanbanBoard } from '../components';
@@ -27,13 +27,13 @@ export const KanbanCardTileSimple = forwardRef<HTMLDivElement, KanbanCardProps>(
       () =>
         onCardRemove
           ? [
-              {
+              createMenuAction('remove', () => onCardRemove(data), {
                 label: t('remove card label'),
-                onClick: (card: Obj.Unknown) => onCardRemove(card),
-              },
+                icon: 'ph--trash--regular',
+              }),
             ]
           : [],
-      [onCardRemove, t],
+      [onCardRemove, data, t],
     );
 
     return (
@@ -46,16 +46,27 @@ export const KanbanCardTileSimple = forwardRef<HTMLDivElement, KanbanCardProps>(
         dragHandle={dragHandle}
       >
         <Focus.Group asChild>
-          <Card.Root ref={forwardedRef} data-testid='board-item'>
-            <Card.Toolbar>
-              <Card.DragHandle ref={dragHandleRef} />
-              <Card.Title>{Obj.getLabel(data)}</Card.Title>
-              {menuItems.length > 0 && <Card.Menu context={data} items={menuItems} />}
-            </Card.Toolbar>
-            <Card.Content>
-              <div className='p-2 text-sm text-fg'>{Obj.getLabel(data)}</div>
-            </Card.Content>
-          </Card.Root>
+          <Menu.Root>
+            <Card.Root ref={forwardedRef} data-testid='board-item'>
+              <Card.Toolbar>
+                <Card.DragHandle ref={dragHandleRef} />
+                <Card.Title>{Obj.getLabel(data)}</Card.Title>
+                {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
+                <Menu.Trigger asChild disabled={!menuItems?.length}>
+                  <Toolbar.IconButton
+                    iconOnly
+                    variant='ghost'
+                    icon='ph--dots-three-vertical--regular'
+                    label={t('action menu label')}
+                  />
+                </Menu.Trigger>
+                <Menu.Content items={menuItems} />
+              </Card.Toolbar>
+              <Card.Content>
+                <div className='p-2 text-sm text-fg'>{Obj.getLabel(data)}</div>
+              </Card.Content>
+            </Card.Root>
+          </Menu.Root>
         </Focus.Group>
       </Mosaic.Tile>
     );

@@ -4,8 +4,8 @@
 
 import { type ComponentFunction, type Density, type Theme } from '@dxos/ui-types';
 
+import { textBlockWidth } from '../../fragments';
 import { mx } from '../../util';
-import { textBlockWidth } from '../fragments';
 
 export type ToolbarStyleProps = Partial<{
   density: Density;
@@ -30,7 +30,12 @@ export const toolbarInner: ComponentFunction<ToolbarStyleProps> = ({ layoutManag
   return mx(!layoutManaged && ['flex gap-1', textBlockWidth], ...etc);
 };
 
+export const toolbarText: ComponentFunction<ToolbarStyleProps> = (_, ...etc) => {
+  return mx('grow truncate items-center', textBlockWidth, ...etc);
+};
+
 export const toolbarTheme: Theme<ToolbarStyleProps> = {
   root: toolbarRoot,
   inner: toolbarInner,
+  text: toolbarText,
 };

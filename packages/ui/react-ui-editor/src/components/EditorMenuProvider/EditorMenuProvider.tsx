@@ -13,6 +13,7 @@ import {
   type DxAnchorActivate,
   Icon,
   Popover,
+  ScrollArea,
   toLocalizedString,
   useDynamicRef,
   useThemeContext,
@@ -113,32 +114,32 @@ export const EditorMenuProvider = ({
       <Popover.Portal>
         <Popover.Content
           align='start'
-          classNames={tx('menu.content', { elevation: 'positioned' }, [
-            'overflow-y-auto',
-            !menuGroups.length && 'hidden',
-          ])}
+          classNames={['flex flex-col', !menuGroups.length && 'hidden']}
           style={{
             maxBlockSize: 36 * numItems + 10,
           }}
-          /**
-           * NOTE: We keep the focus in the editor, but Radix routes escape key.
-           */
+          // NOTE: We keep the focus in the editor, but Radix routes escape key.
           onEscapeKeyDown={() => {
-            // NOTE: Able to cancel if not in valid state.
-            // event.preventDefault();
-            onCancel?.({ view: view! });
+            const currentView = viewRef.current;
+            if (currentView) {
+              onCancel?.({ view: currentView });
+            }
           }}
           onOpenAutoFocus={(event) => event.preventDefault()}
         >
-          <Popover.Viewport classNames={tx('menu.viewport', {})}>
-            <Menu groups={menuGroups} currentItem={currentItem} onSelect={handleSelect} />
+          <Popover.Viewport asChild classNames='dx-container'>
+            <ScrollArea.Root thin>
+              <ScrollArea.Viewport>
+                <Menu groups={menuGroups} currentItem={currentItem} onSelect={handleSelect} />
+              </ScrollArea.Viewport>
+            </ScrollArea.Root>
           </Popover.Viewport>
           <Popover.Arrow />
         </Popover.Content>
       </Popover.Portal>
 
       {/* Content */}
-      <div ref={setRoot} role='none' className='contents'>
+      <div role='none' className='contents' ref={setRoot}>
         {children}
       </div>
     </Popover.Root>

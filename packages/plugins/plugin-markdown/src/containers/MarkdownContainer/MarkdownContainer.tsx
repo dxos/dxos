@@ -13,7 +13,7 @@ import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useActionRunner } from '@dxos/plugin-graph';
 import { useObject } from '@dxos/react-client/echo';
-import { Container } from '@dxos/react-ui';
+import { Panel } from '@dxos/react-ui';
 import { type SelectionManager } from '@dxos/react-ui-attention';
 import { Text } from '@dxos/schema';
 
@@ -91,24 +91,28 @@ export const MarkdownContainer = forwardRef<HTMLDivElement, MarkdownContainerPro
     const handleLinkQuery = useLinkQuery(db);
 
     return (
-      <Container.Main toolbar={settings.toolbar} ref={forwardedRef}>
-        <MarkdownEditor.Root
-          id={attendableId ?? id}
-          object={object}
-          extensions={extensions}
-          settings={settings}
-          onAction={runAction}
-          onFileUpload={handleFileUpload}
-          onLinkQuery={handleLinkQuery}
-          {...props}
-        >
+      <MarkdownEditor.Root
+        id={attendableId ?? id}
+        object={object}
+        extensions={extensions}
+        settings={settings}
+        onAction={runAction}
+        onFileUpload={handleFileUpload}
+        onLinkQuery={handleLinkQuery}
+        {...props}
+      >
+        <Panel.Root ref={forwardedRef}>
           {settings.toolbar && (
-            <MarkdownEditor.Toolbar id={attendableId ?? id} role={role} customActions={customActions} />
+            <Panel.Toolbar asChild>
+              <MarkdownEditor.Toolbar id={attendableId ?? id} role={role} customActions={customActions} />
+            </Panel.Toolbar>
           )}
-          <MarkdownEditor.Content initialValue={initialValue} scrollPastEnd={role === 'article'} />
-          <MarkdownEditor.Blocks />
-        </MarkdownEditor.Root>
-      </Container.Main>
+          <Panel.Content>
+            <MarkdownEditor.Content initialValue={initialValue} scrollPastEnd={role === 'article'} />
+            <MarkdownEditor.Blocks />
+          </Panel.Content>
+        </Panel.Root>
+      </MarkdownEditor.Root>
     );
   },
 );

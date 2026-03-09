@@ -8,6 +8,7 @@ import { Capabilities, Capability, Plugin, UndoMapping } from '@dxos/app-framewo
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { SpaceState, getSpace } from '@dxos/client/echo';
 import { Database, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
+import { Collection } from '@dxos/echo';
 import { EchoDatabaseImpl, Serializer } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { Migrations } from '@dxos/migrations';
@@ -18,7 +19,13 @@ import { ObservabilityOperation } from '@dxos/plugin-observability/types';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention/types';
 import { iconValues } from '@dxos/react-ui-pickers/icons';
-import { Collection, ProjectionModel, createEchoChangeCallback, getTypenameFromQuery } from '@dxos/schema';
+import {
+  CollectionModel,
+  ManagedCollection,
+  ProjectionModel,
+  createEchoChangeCallback,
+  getTypenameFromQuery,
+} from '@dxos/schema';
 import { hues } from '@dxos/ui-theme';
 
 import {
@@ -275,7 +282,7 @@ export default Capability.makeModule(
                 shouldNavigate: navigable
                   ? (object: Obj.Unknown) => {
                       const isCollection = Obj.instanceOf(Collection.Collection, object);
-                      const isSystemCollection = Obj.instanceOf(Collection.Managed, object);
+                      const isSystemCollection = Obj.instanceOf(ManagedCollection.ManagedCollection, object);
                       return (!isCollection && !isSystemCollection) || ephemeralState.navigableCollections;
                     }
                   : () => false,
@@ -295,7 +302,7 @@ export default Capability.makeModule(
             const db = Database.isDatabase(target) ? target : Obj.getDatabase(target);
             invariant(db, 'Database not found.');
 
-            yield* Collection.add({
+            yield* CollectionModel.add({
               object,
               target: Database.isDatabase(target) ? undefined : target,
               hidden: input.hidden,

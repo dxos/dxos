@@ -5,28 +5,32 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type ComponentPropsWithoutRef, forwardRef, useState } from 'react';
 
-import { Container } from '../../primitives';
+import { Panel } from '../../primitives';
 import { withLayout, withTheme } from '../../testing';
 import { ScrollArea } from '../ScrollArea';
 import { Toolbar } from '../Toolbar';
 
 import { Splitter, type SplitterRootProps } from './Splitter';
 
-const Panel = forwardRef<HTMLDivElement, ComponentPropsWithoutRef<'div'> & { label: string }>(
+const PanelContent = forwardRef<HTMLDivElement, ComponentPropsWithoutRef<'div'> & { label: string }>(
   ({ label, ...props }, ref) => (
     <div ref={ref} {...props}>
-      <Container.Main toolbar>
-        <Toolbar.Root>{label}</Toolbar.Root>
-        <ScrollArea.Root orientation='vertical'>
-          <ScrollArea.Viewport>
-            {Array.from({ length: 100 }).map((_, i) => (
-              <div key={i} className='p-1'>
-                {label}-{i}
-              </div>
-            ))}
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
-      </Container.Main>
+      <Panel.Root>
+        <Panel.Toolbar asChild>
+          <Toolbar.Root>{label}</Toolbar.Root>
+        </Panel.Toolbar>
+        <Panel.Content asChild>
+          <ScrollArea.Root orientation='vertical'>
+            <ScrollArea.Viewport>
+              {Array.from({ length: 100 }).map((_, i) => (
+                <div key={i} className='p-1'>
+                  {label}-{i}
+                </div>
+              ))}
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
+        </Panel.Content>
+      </Panel.Root>
     </div>
   ),
 );
@@ -35,21 +39,25 @@ const DefaultStory = (props: SplitterRootProps) => {
   const [mode, setMode] = useState(props.mode ?? 'both');
 
   return (
-    <Container.Main toolbar>
-      <Toolbar.Root>
-        <Toolbar.Button onClick={() => setMode('upper')}>A</Toolbar.Button>
-        <Toolbar.Button onClick={() => setMode('both')}>A + B</Toolbar.Button>
-        <Toolbar.Button onClick={() => setMode('lower')}>B</Toolbar.Button>
-      </Toolbar.Root>
-      <Splitter.Root mode={mode} ratio={props.ratio}>
-        <Splitter.Panel asChild position='upper'>
-          <Panel label='A' />
-        </Splitter.Panel>
-        <Splitter.Panel asChild position='lower'>
-          <Panel label='B' />
-        </Splitter.Panel>
-      </Splitter.Root>
-    </Container.Main>
+    <Panel.Root>
+      <Panel.Toolbar asChild>
+        <Toolbar.Root>
+          <Toolbar.Button onClick={() => setMode('upper')}>A</Toolbar.Button>
+          <Toolbar.Button onClick={() => setMode('both')}>A + B</Toolbar.Button>
+          <Toolbar.Button onClick={() => setMode('lower')}>B</Toolbar.Button>
+        </Toolbar.Root>
+      </Panel.Toolbar>
+      <Panel.Content asChild>
+        <Splitter.Root mode={mode} ratio={props.ratio}>
+          <Splitter.Panel asChild position='upper'>
+            <PanelContent label='A' />
+          </Splitter.Panel>
+          <Splitter.Panel asChild position='lower'>
+            <PanelContent label='B' />
+          </Splitter.Panel>
+        </Splitter.Root>
+      </Panel.Content>
+    </Panel.Root>
   );
 };
 

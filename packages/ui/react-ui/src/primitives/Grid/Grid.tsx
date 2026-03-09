@@ -35,7 +35,7 @@ export const Grid = ({
         gridTemplateRows: rows ? `repeat(${rows}, 1fr)` : undefined,
         ...style,
       }}
-      className={mx('grid min-h-0 overflow-hidden', grow && 'flex-1', className, classNames)}
+      className={mx('grid overflow-hidden', grow && 'dx-expand', className, classNames)}
     >
       {children}
     </div>

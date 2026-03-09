@@ -360,6 +360,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/mcp-client/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/mesh/edge-client/package.json",
           "jsonpath": "$.version"
         },
@@ -721,6 +726,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-transformer/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-voxel/package.json",
           "jsonpath": "$.version"
         },
         {

@@ -5,9 +5,9 @@
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
+import { Collection } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { SpaceSchema } from '@dxos/react-client/echo';
-import { Collection } from '@dxos/schema';
 import { EditorViewMode } from '@dxos/ui-editor/types';
 
 import { meta } from '../meta';

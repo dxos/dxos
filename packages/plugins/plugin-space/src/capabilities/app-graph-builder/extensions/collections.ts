@@ -8,13 +8,12 @@ import * as Option from 'effect/Option';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { SpaceState, getSpace, isSpace } from '@dxos/client/echo';
-import { DXN, Filter, Obj, Type } from '@dxos/echo';
+import { Collection, DXN, Filter, Obj, Type } from '@dxos/echo';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
 import { Operation } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { CreateAtom, Graph, GraphBuilder, Node } from '@dxos/plugin-graph';
-import { Collection } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../../../meta';

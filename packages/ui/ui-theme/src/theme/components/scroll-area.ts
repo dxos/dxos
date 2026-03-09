@@ -12,7 +12,7 @@ export type ScrollAreaStyleProps = {
   /** Balance left/right, top/bottom "margin" with scrollbar. */
   margin?: boolean;
   /** Add default padding. */
-  /** TODO(burdon): Integrate with Container.Column padding. */
+  /** TODO(burdon): Integrate with Column.Root padding. */
   padding?: boolean;
   /** Use thin scrollbars. */
   /** TODO(burdon): Density fine/course. */
@@ -25,16 +25,16 @@ export const scrollAreaRoot: ComponentFunction<ScrollAreaStyleProps> = ({ orient
   mx(
     'overflow-hidden',
 
-    // NOTE: min-h-0 is required for vertical scrollbars
-    orientation === 'vertical' && 'group/scroll-v flex-1 w-full min-h-0 h-full',
-    orientation === 'horizontal' && 'group/scroll-h w-full min-w-0 h-full',
-    orientation === 'all' && 'group/scroll-all flex-1 h-full min-h-0 w-full min-w-0',
+    orientation === 'vertical' && 'group/scroll-v dx-container',
+    orientation === 'horizontal' && 'group/scroll-h dx-container',
+    orientation === 'all' && 'group/scroll-all dx-container',
 
-    // Apply col-span-full only when inside a Container.Column grid (detected via dx-column marker).
+    // TODO(burdon): Audit composition.
+    // Apply col-span-full only when inside a Column.Root grid (detected via dx-column marker).
     '[.dx-column_&]:col-span-full',
 
     // NOTE: Uses --gutter CSS variable
-    // If contained within Container.Column grid, the gutter is set by that component.
+    // If contained within Column.Root grid, the gutter is set by that component.
     margin && [
       orientation === 'vertical' &&
         (thin

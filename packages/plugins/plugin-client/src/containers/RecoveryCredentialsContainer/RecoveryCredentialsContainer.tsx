@@ -46,12 +46,12 @@ export const RecoveryCredentialsContainer = () => {
       </Settings.Section>
       <Settings.Section title={t('credentials list label')}>
         {recoveryCredentials.length < 1 ? (
-          <Message.Root valence='error' classNames='dx-container-max-width'>
+          <Message.Root valence='error' classNames='dx-article'>
             <Message.Title icon='ph--shield-warning--duotone'>{t('no credentials title')}</Message.Title>
             <Message.Content>{t('no credentials message')}</Message.Content>
           </Message.Root>
         ) : (
-          <List classNames='dx-container-max-width px-2'>
+          <List classNames='dx-article px-2'>
             {recoveryCredentials.map((credential) => (
               <ListItem.Root key={credential.id?.toHex()}>
                 <ListItem.Endcap>

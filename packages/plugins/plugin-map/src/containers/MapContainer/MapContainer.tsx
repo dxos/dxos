@@ -8,7 +8,7 @@ import React, { Fragment } from 'react';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { Filter, useQuery, useSchema } from '@dxos/react-client/echo';
-import { Container as DxContainer, Flex, type FlexProps, useControlledState } from '@dxos/react-ui';
+import { Panel as DxPanel, Flex, type FlexProps, useControlledState } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
 import { type GeoMarker, type MapRootProps } from '@dxos/react-ui-geo';
 import { getTypenameFromQuery } from '@dxos/schema';
@@ -65,14 +65,16 @@ export const MapContainer = ({ role, subject: object, type: typeProp = 'map', ..
 
   return (
     <Root>
-      <DxContainer.Main>
-        {type === 'map' && (
-          <MapControl markers={markers} selected={selected} onToggle={() => setType('globe')} {...props} />
-        )}
-        {type === 'globe' && (
-          <GlobeControl markers={markers} selected={selected} onToggle={() => setType('map')} {...props} />
-        )}
-      </DxContainer.Main>
+      <DxPanel.Root>
+        <DxPanel.Content>
+          {type === 'map' && (
+            <MapControl markers={markers} selected={selected} onToggle={() => setType('globe')} {...props} />
+          )}
+          {type === 'globe' && (
+            <GlobeControl markers={markers} selected={selected} onToggle={() => setType('map')} {...props} />
+          )}
+        </DxPanel.Content>
+      </DxPanel.Root>
     </Root>
   );
 };

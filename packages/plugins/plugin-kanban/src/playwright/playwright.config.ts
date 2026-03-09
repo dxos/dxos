@@ -12,7 +12,7 @@ export default defineConfig({
   timeout: 60_000,
   // TODO(wittjosiah): Avoid hard-coding ports.
   webServer: {
-    command: 'moon run storybook-react:serve-e2e -- --port=9011',
+    command: 'pnpm storybook dev --ci --quiet --port=9011 --config-dir=.storybook',
     port: 9011,
     reuseExistingServer: false,
   },

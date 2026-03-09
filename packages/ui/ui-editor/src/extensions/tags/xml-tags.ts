@@ -359,6 +359,9 @@ const createWidgetDecorationsField = (registry: XmlWidgetRegistry = {}, notifier
       // Check for reset effect.
       for (const effect of tr.effects) {
         if (effect.is(xmlTagResetEffect)) {
+          if (tr.docChanged) {
+            return buildDecorations(tr.state, { from: 0, to: tr.state.doc.length }, registry, notifier);
+          }
           return { from: 0, decorations: Decoration.none };
         }
       }

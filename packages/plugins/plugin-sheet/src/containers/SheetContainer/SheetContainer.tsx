@@ -8,7 +8,7 @@ import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { type ComputeGraphRegistry } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
-import { Container as DxContainer, Flex, type FlexProps } from '@dxos/react-ui';
+import { Panel as DxPanel, Flex, type FlexProps } from '@dxos/react-ui';
 
 import { FunctionEditor, GridSheet, SheetProvider, SheetToolbar } from '../../components';
 import { ComputeGraphContextProvider, useComputeGraph } from '../../components/ComputeGraph';
@@ -39,11 +39,17 @@ const SheetContainerInner = ({
   return (
     <SheetProvider sheet={sheet} graph={graph} ignoreAttention={ignoreAttention}>
       <Root>
-        <DxContainer.Main toolbar statusbar>
-          <SheetToolbar id={Obj.getDXN(sheet).toString()} />
-          <GridSheet />
-          <FunctionEditor />
-        </DxContainer.Main>
+        <DxPanel.Root>
+          <DxPanel.Toolbar asChild>
+            <SheetToolbar id={Obj.getDXN(sheet).toString()} />
+          </DxPanel.Toolbar>
+          <DxPanel.Content asChild>
+            <GridSheet />
+          </DxPanel.Content>
+          <DxPanel.Statusbar asChild>
+            <FunctionEditor />
+          </DxPanel.Statusbar>
+        </DxPanel.Root>
       </Root>
     </SheetProvider>
   );

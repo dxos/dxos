@@ -8,20 +8,22 @@ import React, { useCallback, useContext, useEffect } from 'react';
 
 import { Filter, Ref } from '@dxos/client/echo';
 import { Obj, Query, Type } from '@dxos/echo';
+import { Collection, View } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Form, omitId } from '@dxos/react-ui-form';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
-import { Collection, View } from '@dxos/schema';
+import { ViewModel } from '@dxos/schema';
 import { createObjectFactory } from '@dxos/schema/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 import { Person, Pipeline } from '@dxos/types';
 
+import { usePipelineBoardModel } from '../hooks';
 import { translations } from '../translations';
 
-import { type ItemProps, PipelineComponent, usePipelineBoardModel } from './PipelineComponent';
+import { type ItemProps, PipelineComponent } from './PipelineComponent';
 
 const StorybookProjectItem = ({ item, projectionModel }: ItemProps) => {
   if (Obj.instanceOf(Person.Person, item)) {
@@ -54,7 +56,7 @@ const DefaultStory = () => {
     }
 
     // Create a new view for contacts similar to the initialization.
-    const view = View.make({
+    const view = ViewModel.make({
       query: Query.select(Filter.type(Person.Person)),
       jsonSchema: Type.toJsonSchema(Person.Person),
       fields: ['fullName'],
@@ -76,8 +78,10 @@ const DefaultStory = () => {
   }
 
   return (
-    <PipelineComponent.Root Item={StorybookProjectItem} model={model} onAddColumn={handleAddColumn}>
-      <PipelineComponent.Content pipeline={pipeline} />
+    <PipelineComponent.Root Item={StorybookProjectItem} onAddColumn={handleAddColumn}>
+      <PipelineComponent.Content model={model}>
+        <PipelineComponent.Columns pipeline={pipeline} />
+      </PipelineComponent.Content>
     </PipelineComponent.Root>
   );
 };
@@ -96,7 +100,7 @@ const MutationsStory = () => {
     }
 
     // Create a new view for contacts similar to the initialization.
-    const view = View.make({
+    const view = ViewModel.make({
       query: Query.select(Filter.type(Person.Person)),
       jsonSchema: Type.toJsonSchema(Person.Person),
       fields: ['fullName'],
@@ -147,8 +151,10 @@ const MutationsStory = () => {
   }
 
   return (
-    <PipelineComponent.Root Item={StorybookProjectItem} model={model} onAddColumn={handleAddColumn}>
-      <PipelineComponent.Content pipeline={pipeline} />
+    <PipelineComponent.Root Item={StorybookProjectItem} onAddColumn={handleAddColumn}>
+      <PipelineComponent.Content model={model}>
+        <PipelineComponent.Columns pipeline={pipeline} />
+      </PipelineComponent.Content>
     </PipelineComponent.Root>
   );
 };
@@ -166,7 +172,7 @@ const meta = {
       createSpace: true,
       onCreateSpace: async ({ space }) => {
         // Create a view for contacts.
-        const view = View.make({
+        const view = ViewModel.make({
           name: 'Contacts',
           query: Query.select(Filter.type(Person.Person)),
           jsonSchema: Type.toJsonSchema(Person.Person),

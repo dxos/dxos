@@ -12,11 +12,12 @@ import { type ClassNameValue } from './theme';
  * - Primitives should not define styles directly.
  *
  * const Component = forwardRef<HTMLButtonElement, SlottableProps<HTMLButtonElement>>(
- *   ({ classNames, className, children, ...props }, ref) => {
+ *   ({ children, ...props }, ref) => {
+ *     const rest = useSlottedProps(props);
  *     return (
- *       <button {...props} className={mx(className, classNames)} ref={ref}>
+ *       <button {...rest} ref={ref}>
  *         {children}
- *       </button>
+ *       </button>s
  *     );
  *   },
  * );

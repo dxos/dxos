@@ -6,12 +6,12 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { type Filter } from '@dxos/echo';
+import { type View } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { useGlobalSearch } from '@dxos/plugin-search';
 import { getSpace, useObject } from '@dxos/react-client/echo';
-import { Container, Toolbar } from '@dxos/react-ui';
+import { Panel, Toolbar } from '@dxos/react-ui';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
-import { type View } from '@dxos/schema';
 
 import { D3ForceGraph } from '../../components/Graph';
 import { useGraphModel } from '../../hooks';
@@ -37,13 +37,17 @@ export const ExplorerContainer = ({ role, subject: view }: ExplorerContainerProp
   }
 
   return (
-    <Container.Main role={role} toolbar={showToolbar}>
+    <Panel.Root role={role}>
       {showToolbar && (
-        <Toolbar.Root>
-          <QueryEditor db={space.db} onChange={handleChange} />
-        </Toolbar.Root>
+        <Panel.Toolbar asChild>
+          <Toolbar.Root>
+            <QueryEditor db={space.db} onChange={handleChange} />
+          </Toolbar.Root>
+        </Panel.Toolbar>
       )}
-      <D3ForceGraph model={model} match={match} />
-    </Container.Main>
+      <Panel.Content asChild>
+        <D3ForceGraph model={model} match={match} />
+      </Panel.Content>
+    </Panel.Root>
   );
 };

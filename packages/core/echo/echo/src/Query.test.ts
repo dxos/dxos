@@ -9,6 +9,8 @@ import { QueryAST } from '@dxos/echo-protocol';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 
+import * as Dataset from './Dataset';
+import * as Feed from './Feed';
 import * as Filter from './Filter';
 import * as Obj from './Obj';
 import * as Order from './Order';
@@ -133,6 +135,72 @@ describe('query api', () => {
       log('query', { ast: PeopleOrOrganizations.ast });
       Schema.validateSync(QueryAST.Query)(PeopleOrOrganizations.ast);
       log('PeopleOrOrganizations', { ast: PeopleOrOrganizations.ast });
+    });
+
+    test('Filter.query(Dataset.Dataset) (union of schemas)', () => {
+      const AllDatasets = Query.select(Filter.type(Dataset.Dataset));
+
+      log('query', { ast: AllDatasets.ast });
+      Schema.validateSync(QueryAST.Query)(AllDatasets.ast);
+      log('AllDatasets', { ast: AllDatasets.ast });
+      expect(AllDatasets.ast).toMatchInlineSnapshot(`
+        {
+          "filter": {
+            "filters": [
+              {
+                "props": {},
+                "type": "object",
+                "typename": "dxn:type:dxos.org/type/Feed:0.1.0",
+              },
+              {
+                "props": {},
+                "type": "object",
+                "typename": "dxn:type:dxos.org/type/Collection:0.1.0",
+              },
+              {
+                "props": {},
+                "type": "object",
+                "typename": "dxn:type:dxos.org/type/View:0.5.0",
+              },
+            ],
+            "type": "or",
+          },
+          "type": "select",
+        }
+      `);
+    });
+
+    test('Query.type(Dataset.Dataset) (union of schemas)', () => {
+      const AllDatasets = Query.type(Dataset.Dataset);
+
+      log('query', { ast: AllDatasets.ast });
+      Schema.validateSync(QueryAST.Query)(AllDatasets.ast);
+      log('AllDatasets', { ast: AllDatasets.ast });
+      expect(AllDatasets.ast).toMatchInlineSnapshot(`
+        {
+          "filter": {
+            "filters": [
+              {
+                "props": {},
+                "type": "object",
+                "typename": "dxn:type:dxos.org/type/Feed:0.1.0",
+              },
+              {
+                "props": {},
+                "type": "object",
+                "typename": "dxn:type:dxos.org/type/Collection:0.1.0",
+              },
+              {
+                "props": {},
+                "type": "object",
+                "typename": "dxn:type:dxos.org/type/View:0.5.0",
+              },
+            ],
+            "type": "or",
+          },
+          "type": "select",
+        }
+      `);
     });
 
     test('get all people not in orgs', () => {
@@ -481,6 +549,30 @@ describe('query api', () => {
           limit: 10,
           query: {
             type: 'order',
+          },
+        },
+      });
+    });
+
+    test('Query.type(...).from(feed) sets queue options', () => {
+      const feed = Feed.make({ name: 'test-feed' });
+      const queueDxn = DXN.parse('dxn:echo:test-space:test-queue');
+      Obj.change(feed, (mutable) => {
+        Obj.getMeta(mutable).keys.push({ source: Feed.DXN_KEY, id: queueDxn.toString() });
+      });
+
+      const query = Query.type(TestSchema.Person).from(feed);
+      Schema.validateSync(QueryAST.Query)(query.ast);
+      expect(query.ast).toMatchObject({
+        type: 'options',
+        options: {
+          queues: [queueDxn.toString()],
+        },
+        query: {
+          type: 'select',
+          filter: {
+            type: 'object',
+            typename: 'dxn:type:example.com/type/Person:0.1.0',
           },
         },
       });

@@ -8,7 +8,7 @@ import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { Type } from '@dxos/echo';
 import { type CreateObject } from '@dxos/plugin-space/types';
-import { View } from '@dxos/schema';
+import { ViewModel } from '@dxos/schema';
 
 import { ReactSurface } from './capabilities';
 import { meta } from './meta';
@@ -25,7 +25,7 @@ export const MasonryPlugin = Plugin.define(meta).pipe(
         inputSchema: MasonryAction.MasonryProps,
         createObject: ((props, { db }) =>
           Effect.promise(async () => {
-            const { view } = await View.makeFromDatabase({ db, typename: props.typename });
+            const { view } = await ViewModel.makeFromDatabase({ db, typename: props.typename });
             return Masonry.make({ name: props.name, view });
           })) satisfies CreateObject,
       },

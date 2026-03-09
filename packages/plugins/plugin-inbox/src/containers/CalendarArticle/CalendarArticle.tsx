@@ -9,8 +9,7 @@ import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { type Feed, Obj, Query } from '@dxos/echo';
 import { ATTENDABLE_PATH_SEPARATOR, DeckOperation } from '@dxos/plugin-deck/types';
 import { Filter, useObject, useQuery } from '@dxos/react-client/echo';
-import { Toolbar, useTranslation } from '@dxos/react-ui';
-import { Container } from '@dxos/react-ui';
+import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useSelected, useSelectionActions } from '@dxos/react-ui-attention';
 import { Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
 import { Event } from '@dxos/types';
@@ -51,25 +50,34 @@ export const CalendarArticle = ({ role, subject: calendar }: SurfaceComponentPro
     [singleSelect, invokePromise, id],
   );
 
+  // TODO(burdon): Create story.
   return (
-    <Container.Main role={role} classNames='@container'>
-      <div role='none' className='grid @2xl:grid-cols-[min-content_1fr] overflow-hidden'>
-        <div role='none' className='hidden @2xl:flex'>
-          <NaturalCalendar.Root>
-            <NaturalCalendar.Viewport classNames='grid grid-rows-[var(--dx-toolbar-size)_1fr]'>
-              <NaturalCalendar.Toolbar classNames='h-full border-b border-subdued-separator' />
-              <NaturalCalendar.Grid />
-            </NaturalCalendar.Viewport>
-          </NaturalCalendar.Root>
-        </div>
+    <Panel.Root role={role} classNames='@container'>
+      <Panel.Content asChild>
+        <div role='none' className='grid @2xl:grid-cols-[min-content_1fr] overflow-hidden'>
+          <div role='none' className='hidden @2xl:flex'>
+            <NaturalCalendar.Root>
+              <Panel.Toolbar asChild>
+                <NaturalCalendar.Toolbar />
+              </Panel.Toolbar>
+              <Panel.Content asChild>
+                <NaturalCalendar.Grid />
+              </Panel.Content>
+            </NaturalCalendar.Root>
+          </div>
 
-        <Container.Main toolbar>
-          <Toolbar.Root classNames='border-b border-subdued-separator'>
-            <Toolbar.IconButton icon='ph--calendar--duotone' iconOnly variant='ghost' label={t('calendar')} />
-          </Toolbar.Root>
-          <EventList events={objects} selected={selected} onSelect={handleSelect} />
-        </Container.Main>
-      </div>
-    </Container.Main>
+          <Panel.Root>
+            <Panel.Toolbar asChild>
+              <Toolbar.Root classNames='border-b border-subdued-separator'>
+                <Toolbar.IconButton icon='ph--calendar--duotone' iconOnly variant='ghost' label={t('calendar')} />
+              </Toolbar.Root>
+            </Panel.Toolbar>
+            <Panel.Content asChild>
+              <EventList events={objects} selected={selected} onSelect={handleSelect} />
+            </Panel.Content>
+          </Panel.Root>
+        </div>
+      </Panel.Content>
+    </Panel.Root>
   );
 };

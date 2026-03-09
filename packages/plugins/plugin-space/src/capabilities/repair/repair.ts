@@ -5,9 +5,8 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { Obj, Ref } from '@dxos/echo';
+import { Collection, Obj, Ref } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
-import { Collection } from '@dxos/schema';
 
 import { SpaceCapabilities } from '../../types';
 

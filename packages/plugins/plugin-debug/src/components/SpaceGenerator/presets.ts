@@ -30,7 +30,7 @@ import {
   createTrigger,
 } from '@dxos/react-ui-canvas-compute';
 import { CanvasBoard, CanvasGraphModel, pointMultiply, pointsToRect, rectToPoints } from '@dxos/react-ui-canvas-editor';
-import { View } from '@dxos/schema';
+import { ViewModel } from '@dxos/schema';
 import { Message, Organization, Person, Pipeline } from '@dxos/types';
 import { range, trim } from '@dxos/util';
 
@@ -195,7 +195,7 @@ export const generator = () => ({
             }),
           );
 
-          const mailboxView = View.make({
+          const mailboxView = ViewModel.make({
             query: Query.select(
               Filter.type(Message.Message, {
                 properties: { labels: Filter.contains('investor') },
@@ -205,15 +205,15 @@ export const generator = () => ({
             }),
             jsonSchema: Type.toJsonSchema(Message.Message),
           });
-          const contactsView = View.make({
+          const contactsView = ViewModel.make({
             query: contactsQuery,
             jsonSchema: Type.toJsonSchema(Person.Person),
           });
-          const organizationsView = View.make({
+          const organizationsView = ViewModel.make({
             query: organizationsQuery,
             jsonSchema: Type.toJsonSchema(Organization.Organization),
           });
-          const notesView = View.make({
+          const notesView = ViewModel.make({
             query: notesQuery,
             jsonSchema: Type.toJsonSchema(Markdown.Document),
           });

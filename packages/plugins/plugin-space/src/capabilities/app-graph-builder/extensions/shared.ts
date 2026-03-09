@@ -6,12 +6,12 @@ import { type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-
 import * as Option from 'effect/Option';
 
 import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
-import { type Database, Obj, Ref, Type } from '@dxos/echo';
+import { Collection, type Database, Obj, Ref, Type } from '@dxos/echo';
 import { Migrations } from '@dxos/migrations';
 import { type Operation } from '@dxos/operation';
 import { Node } from '@dxos/plugin-graph';
 import { type TreeData } from '@dxos/react-ui-list';
-import { Collection, Expando } from '@dxos/schema';
+import { Expando } from '@dxos/schema';
 import { type Label } from '@dxos/ui-types';
 
 import { meta } from '../../../meta';

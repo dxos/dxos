@@ -7,6 +7,7 @@ import * as Layer from 'effect/Layer';
 import * as Match from 'effect/Match';
 
 import { AiService, type ModelName } from '@dxos/ai';
+import { GenericToolkit } from '@dxos/ai';
 import { TestAiService } from '@dxos/ai/testing';
 import { Feed, type Type } from '@dxos/echo';
 import { CredentialsService, type FunctionDefinition, type ServiceCredential, TracingService } from '@dxos/functions';
@@ -14,7 +15,6 @@ import { TracingServiceExt, TriggerDispatcher, TriggerStateStore } from '@dxos/f
 import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 
 import { ToolExecutionServices } from '../functions';
-import { GenericToolkit } from '../session';
 
 interface TestLayerOptions {
   aiServicePreset?: 'direct' | 'edge-local' | 'edge-remote';

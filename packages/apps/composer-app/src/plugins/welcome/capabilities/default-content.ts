@@ -20,7 +20,7 @@ export default Capability.makeModule(
     const { Obj } = yield* Effect.tryPromise(() => import('@dxos/echo'));
     const { ClientCapabilities } = yield* Effect.tryPromise(() => import('@dxos/plugin-client'));
     const { Markdown } = yield* Effect.tryPromise(() => import('@dxos/plugin-markdown/types'));
-    const { Collection } = yield* Effect.tryPromise(() => import('@dxos/schema'));
+    const { Collection } = yield* Effect.tryPromise(() => import('@dxos/echo'));
 
     const operationInvoker = yield* Capability.get(Capabilities.OperationInvoker);
     const { invoke, schedule } = operationInvoker;

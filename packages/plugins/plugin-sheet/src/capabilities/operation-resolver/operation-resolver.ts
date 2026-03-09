@@ -8,7 +8,7 @@ import { Capabilities, Capability, UndoMapping } from '@dxos/app-framework';
 import { OperationResolver } from '@dxos/operation';
 
 import { meta } from '../../meta';
-import { SheetOperation } from '../../types';
+import { Sheet, SheetOperation } from '../../types';
 
 export default Capability.makeModule(() =>
   Effect.succeed([

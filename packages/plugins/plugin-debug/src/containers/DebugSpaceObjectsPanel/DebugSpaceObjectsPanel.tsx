@@ -11,7 +11,7 @@ import { type Database, Filter, Query } from '@dxos/echo';
 import type { ObjectId } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { parseId, useQuery } from '@dxos/react-client/echo';
-import { Clipboard, Container, Grid, Input, ScrollArea, Toolbar } from '@dxos/react-ui';
+import { Clipboard, Grid, Input, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 
 export const DebugSpaceObjectsPanel = () => {
@@ -36,21 +36,25 @@ const DebugSpaceObjectsPanelMain = ({ database }: { database: Database.Database 
 
   return (
     <Clipboard.Provider>
-      <Container.Main toolbar>
-        <Toolbar.Root>
-          <Input.Root>
-            <Input.TextInput disabled placeholder='Search...' />
-          </Input.Root>
-        </Toolbar.Root>
-        <Grid rows={2} classNames='divide-y divide-separator'>
-          <ScrollArea.Root>
-            <ScrollArea.Viewport>
-              <ObjectsTree db={database} onSelect={(entity) => setSelectedId(entity.id)} />
-            </ScrollArea.Viewport>
-          </ScrollArea.Root>
-          {selectedObject && <Json classNames='p-1' data={selectedObject} />}
-        </Grid>
-      </Container.Main>
+      <Panel.Root>
+        <Panel.Toolbar asChild>
+          <Toolbar.Root>
+            <Input.Root>
+              <Input.TextInput disabled placeholder='Search...' />
+            </Input.Root>
+          </Toolbar.Root>
+        </Panel.Toolbar>
+        <Panel.Content asChild>
+          <Grid rows={2} classNames='divide-y divide-separator'>
+            <ScrollArea.Root>
+              <ScrollArea.Viewport>
+                <ObjectsTree db={database} onSelect={(entity) => setSelectedId(entity.id)} />
+              </ScrollArea.Viewport>
+            </ScrollArea.Root>
+            {selectedObject && <Json classNames='p-1' data={selectedObject} />}
+          </Grid>
+        </Panel.Content>
+      </Panel.Root>
     </Clipboard.Provider>
   );
 };

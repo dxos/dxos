@@ -11,6 +11,7 @@ import { expect, waitFor, within } from 'storybook/test';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
 import { Obj, type QueryAST, Type } from '@dxos/echo';
+import { View } from '@dxos/echo';
 import { type Mutable } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { ClientPlugin } from '@dxos/plugin-client';
@@ -22,7 +23,7 @@ import { Filter, type Space, useQuery, useSchema, useSpaces } from '@dxos/react-
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
-import { View, getTypenameFromQuery } from '@dxos/schema';
+import { ViewModel, getTypenameFromQuery } from '@dxos/schema';
 // TODO(wittjosiah): Replace with echo/testing.
 import { Organization, Person } from '@dxos/types';
 
@@ -162,7 +163,7 @@ export const Default: Story = {
     withKanbanPlugins({
       types: [Organization.Organization, Person.Person],
       onSpaceCreated: async (space) => {
-        const { view } = await View.makeFromDatabase({
+        const { view } = await ViewModel.makeFromDatabase({
           db: space.db,
           typename: Organization.Organization.typename,
           pivotFieldName: 'status',
@@ -239,7 +240,7 @@ export const MutableSchema: Story = {
         // Register schema in the database to make it mutable (EchoSchema).
         const [schema] = await space.db.schemaRegistry.register([Organization.Organization]);
 
-        const { view } = await View.makeFromDatabase({
+        const { view } = await ViewModel.makeFromDatabase({
           db: space.db,
           typename: schema.typename,
           pivotFieldName: 'status',

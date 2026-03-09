@@ -37,7 +37,7 @@ import {
   useMediaQuery,
   useTranslation,
 } from '@dxos/react-ui';
-import { DropdownMenu, type MenuItem, MenuProvider } from '@dxos/react-ui-menu';
+import { Menu, type MenuItem } from '@dxos/react-ui-menu';
 import type { StackItemRearrangeHandler } from '@dxos/react-ui-stack';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { mx } from '@dxos/ui-theme';
@@ -324,32 +324,32 @@ export const L0Menu = ({
       ]}
     >
       {/* TODO(wittjosiah): Use L0Item trigger. */}
-      <MenuProvider onAction={handleAction}>
-        <DropdownMenu.Root group={parent} items={menuActions}>
+      <Menu.Root onAction={handleAction}>
+        <Menu.Trigger
+          asChild
+          data-testid='spacePlugin.addSpace'
+          className={mx(
+            l0ItemRoot,
+            'grid place-items-center dx-focus-ring-group',
+            '[body[data-platform="macos"]_&]:mt-[30px]',
+          )}
+        >
           <Tooltip.Trigger content={t('app menu label')} side='right' asChild>
             <Tabs.TabPrimitive value='options' asChild role='button'>
-              <DropdownMenu.Trigger
-                data-testid='spacePlugin.addSpace'
+              <div
+                role='none'
                 className={mx(
-                  l0ItemRoot,
-                  'grid place-items-center dx-focus-ring-group',
-                  '[body[data-platform="macos"]_&]:mt-[30px]',
+                  l0ItemContent,
+                  'h-(--dx-rail-action) w-(--dx-rail-action) group-hover/l0item:bg-hover-surface',
                 )}
               >
-                <div
-                  role='none'
-                  className={mx(
-                    l0ItemContent,
-                    'h-(--dx-rail-action) w-(--dx-rail-action) group-hover/l0item:bg-hover-surface',
-                  )}
-                >
-                  <Icon icon='ph--list--regular' size={5} />
-                </div>
-              </DropdownMenu.Trigger>
+                <Icon icon='ph--list--regular' size={5} />
+              </div>
             </Tabs.TabPrimitive>
           </Tooltip.Trigger>
-        </DropdownMenu.Root>
-      </MenuProvider>
+        </Menu.Trigger>
+        <Menu.Content group={parent} items={menuActions} />
+      </Menu.Root>
 
       {/* Space list. */}
       <ScrollArea.Root thin orientation='vertical'>
