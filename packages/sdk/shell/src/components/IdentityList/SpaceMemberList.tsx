@@ -8,7 +8,7 @@ import { type PublicKey, useClient } from '@dxos/react-client';
 import type { SpaceMember } from '@dxos/react-client/echo';
 import { useMembers } from '@dxos/react-client/echo';
 import { List, useTranslation } from '@dxos/react-ui';
-import { descriptionText, mx } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
 
@@ -61,7 +61,7 @@ export const SpaceMemberListImpl = ({ members, onSelect }: SpaceMemberListImplPr
     </List>
   ) : (
     <div role='none' className='grow flex items-center p-2'>
-      <p className={mx(descriptionText, 'text-center w-full my-2')}>{t('empty space members message')}</p>
+      <p className={mx('text-description', 'text-center w-full my-2')}>{t('empty space members message')}</p>
     </div>
   );
 };

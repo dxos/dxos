@@ -39,7 +39,7 @@ const buildCompanionOnlyActions = (): ActionGraphProps => {
     }),
   ];
   result.nodes.push(...companions);
-  result.edges.push(...companions.map((c) => ({ source: 'root', target: c.id })));
+  result.edges.push(...companions.map((c) => ({ source: 'root', target: c.id, relation: 'child' })));
   return result;
 };
 
@@ -81,16 +81,16 @@ const buildDefaultActions = (): ActionGraphProps => {
   ];
   result.nodes.push(...companions, ...gapSeparator.nodes, mainMenuGroup, ...menuActions);
   result.edges.push(
-    ...companions.map((c) => ({ source: 'root', target: c.id })),
+    ...companions.map((c) => ({ source: 'root', target: c.id, relation: 'child' })),
     ...gapSeparator.edges,
-    { source: 'root', target: mainMenuGroup.id },
-    ...menuActions.map((action) => ({ source: MAIN_MENU_GROUP_ID, target: action.id })),
+    { source: 'root', target: mainMenuGroup.id, relation: 'child' },
+    ...menuActions.map((action) => ({ source: MAIN_MENU_GROUP_ID, target: action.id, relation: 'child' })),
   );
   return result;
 };
 
 const meta = {
-  title: 'plugins/plugin-simple-layout/NavBar',
+  title: 'plugins/plugin-simple-layout/components/NavBar',
   component: NavBar,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withRegistry],
   parameters: {

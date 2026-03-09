@@ -7,11 +7,17 @@ import type * as Schema from 'effect/Schema';
 
 import { type QueryAST } from '@dxos/echo-protocol';
 
+import type * as Collection from './Collection';
+import * as Database from './Database';
+import type * as Dataset from './Dataset';
+import * as Feed from './Feed';
 import * as Filter from './Filter';
 import { getTypeDXNFromSpecifier } from './internal';
+import * as Obj from './Obj';
 import type * as Order from './Order';
 import type * as Ref from './Ref';
 import type * as Type$ from './Type';
+import type * as View from './View';
 
 // TODO(dmaretskyi): Split up into interfaces for objects and relations so they can have separate verbs.
 // TODO(dmaretskyi): Undirected relation traversals.
@@ -28,7 +34,7 @@ export interface Query<T> {
   // TODO(dmaretskyi): See new effect-schema approach to variance.
   '~Query': { value: T };
 
-  ast: QueryAST.Query;
+  'ast': QueryAST.Query;
 
   /**
    * Filter the current selection based on a filter.
@@ -75,7 +81,7 @@ export interface Query<T> {
    * @param predicates - Predicates to filter the relation objects.
    */
   sourceOf<S extends Schema.Schema.All>(
-    relation: S | string,
+    relation?: S | string,
     predicates?: Filter.Props<Schema.Schema.Type<S>>,
   ): Query<Schema.Schema.Type<S>>;
 
@@ -86,7 +92,7 @@ export interface Query<T> {
    * @param predicates - Predicates to filter the relation objects.
    */
   targetOf<S extends Schema.Schema.All>(
-    relation: S | string,
+    relation?: S | string,
     predicates?: Filter.Props<Schema.Schema.Type<S>>,
   ): Query<Schema.Schema.Type<S>>;
 
@@ -130,6 +136,56 @@ export interface Query<T> {
   limit(limit: number): Query<T>;
 
   /**
+   * Query from selected databases only.
+   *
+   * Example:
+   *
+   * ```ts
+   * Query.select(Filter.type(Person)).from(db);
+   * ```
+   *
+   * @param options.includeFeeds [false] - Whether to include feeds in the query. Default is to query from automerge documents only.
+   */
+  from(database: Database.Database | Database.Database[], options?: { includeFeeds?: boolean }): Query<T>;
+
+  /**
+   * Query from selected feeds only.
+   *
+   * Example:
+   *
+   * ```ts
+   * Query.select(Filter.type(Person)).from(feed);
+   * ```
+   *
+   */
+  from(feeds: Feed.Feed | Feed.Feed[]): Query<T>;
+
+  /**
+   * Query from all accessible spaces.
+   *
+   * Example:
+   *
+   * ```ts
+   * Query.select(Filter.type(Person)).from('all-accessible-spaces');
+   * ```
+   *
+   * @param options.includeFeeds [false] - Whether to include feeds in the query. Default is to query from automerge documents only.
+   */
+  from(allSpaces: 'all-accessible-spaces', options?: { includeFeeds?: boolean }): Query<T>;
+
+  /**
+   * Query from a dataset.
+   * Currently only feeds are supported.
+   *
+   * Example:
+   *
+   * ```ts
+   * Query.type(Person).from(feed);
+   * ```
+   */
+  from(dataset: Dataset.Dataset): Query<T>;
+
+  /**
    * Add options to a query.
    */
   options(options: QueryAST.QueryOptions): Query<T>;
@@ -140,13 +196,13 @@ export type Any = Query<any>;
 export type Type<Q extends Any> = Q extends Query<infer T> ? T : never;
 
 class QueryClass implements Any {
-  private static variance: Any['~Query'] = {} as Any['~Query'];
+  private static 'variance': Any['~Query'] = {} as Any['~Query'];
 
-  constructor(public readonly ast: QueryAST.Query) {}
+  'constructor'(public readonly ast: QueryAST.Query) {}
 
   '~Query' = QueryClass.variance;
 
-  select(filter: Filter.Any | Filter.Props<any>): Any {
+  'select'(filter: Filter.Any | Filter.Props<any>): Any {
     if (Filter.is(filter)) {
       return new QueryClass({
         type: 'filter',
@@ -162,7 +218,7 @@ class QueryClass implements Any {
     }
   }
 
-  reference(key: string): Any {
+  'reference'(key: string): Any {
     return new QueryClass({
       type: 'reference-traversal',
       anchor: this.ast,
@@ -170,7 +226,7 @@ class QueryClass implements Any {
     });
   }
 
-  referencedBy(target?: Schema.Schema.All | string, key?: string): Any {
+  'referencedBy'(target?: Schema.Schema.All | string, key?: string): Any {
     const dxn = target !== undefined ? getTypeDXNFromSpecifier(target) : null;
     return new QueryClass({
       type: 'incoming-references',
@@ -180,25 +236,25 @@ class QueryClass implements Any {
     });
   }
 
-  sourceOf(relation: Schema.Schema.All | string, predicates?: Filter.Props<unknown> | undefined): Any {
+  'sourceOf'(relation?: Schema.Schema.All | string, predicates?: Filter.Props<unknown> | undefined): Any {
     return new QueryClass({
       type: 'relation',
       anchor: this.ast,
       direction: 'outgoing',
-      filter: Filter.type(relation, predicates).ast,
+      filter: relation !== undefined ? Filter.type(relation, predicates).ast : undefined,
     });
   }
 
-  targetOf(relation: Schema.Schema.All | string, predicates?: Filter.Props<unknown> | undefined): Any {
+  'targetOf'(relation?: Schema.Schema.All | string, predicates?: Filter.Props<unknown> | undefined): Any {
     return new QueryClass({
       type: 'relation',
       anchor: this.ast,
       direction: 'incoming',
-      filter: Filter.type(relation, predicates).ast,
+      filter: relation !== undefined ? Filter.type(relation, predicates).ast : undefined,
     });
   }
 
-  source(): Any {
+  'source'(): Any {
     return new QueryClass({
       type: 'relation-traversal',
       anchor: this.ast,
@@ -206,7 +262,7 @@ class QueryClass implements Any {
     });
   }
 
-  target(): Any {
+  'target'(): Any {
     return new QueryClass({
       type: 'relation-traversal',
       anchor: this.ast,
@@ -214,7 +270,7 @@ class QueryClass implements Any {
     });
   }
 
-  parent(): Any {
+  'parent'(): Any {
     return new QueryClass({
       type: 'hierarchy-traversal',
       anchor: this.ast,
@@ -222,7 +278,7 @@ class QueryClass implements Any {
     });
   }
 
-  children(): Any {
+  'children'(): Any {
     return new QueryClass({
       type: 'hierarchy-traversal',
       anchor: this.ast,
@@ -230,7 +286,7 @@ class QueryClass implements Any {
     });
   }
 
-  orderBy(...order: Order.Order<any>[]): Any {
+  'orderBy'(...order: Order.Order<any>[]): Any {
     return new QueryClass({
       type: 'order',
       query: this.ast,
@@ -238,7 +294,7 @@ class QueryClass implements Any {
     });
   }
 
-  limit(limit: number): Any {
+  'limit'(limit: number): Any {
     return new QueryClass({
       type: 'limit',
       query: this.ast,
@@ -246,7 +302,68 @@ class QueryClass implements Any {
     });
   }
 
-  options(options: QueryAST.QueryOptions): Any {
+  'from'(
+    arg:
+      | Database.Database
+      | Database.Database[]
+      | Feed.Feed
+      | Feed.Feed[]
+      | Collection.Collection
+      | View.View
+      | 'all-accessible-spaces',
+    options?: { includeFeeds?: boolean },
+  ): Any {
+    if (arg === 'all-accessible-spaces') {
+      return new QueryClass({
+        type: 'options',
+        query: this.ast,
+        options: {
+          ...(options?.includeFeeds ? { allQueuesFromSpaces: true } : {}),
+        },
+      });
+    }
+
+    const items = Array.isArray(arg) ? arg : [arg];
+
+    if (items.length > 0 && Database.isDatabase(items[0])) {
+      const databases = items as Database.Database[];
+      return new QueryClass({
+        type: 'options',
+        query: this.ast,
+        options: {
+          spaceIds: databases.map((db) => db.spaceId),
+          ...(options?.includeFeeds ? { allQueuesFromSpaces: true } : {}),
+        },
+      });
+    }
+
+    if (items.length > 0) {
+      const typename = Obj.getTypename(items[0] as Obj.Unknown);
+      // TODO(dmaretskyi): Support querying from views.
+      if (typename === 'dxos.org/type/View') {
+        throw new Error('Query.from(view) is not yet supported.');
+      }
+      // TODO(dmaretskyi): Support querying from collections.
+      if (typename === 'dxos.org/type/Collection') {
+        throw new Error('Query.from(collection) is not yet supported.');
+      }
+    }
+
+    const feeds = items as Feed.Feed[];
+    const queueDxns = feeds.flatMap((feed) => {
+      const dxn = Feed.getQueueDxn(feed);
+      return dxn ? [dxn.toString()] : [];
+    });
+    return new QueryClass({
+      type: 'options',
+      query: this.ast,
+      options: {
+        queues: queueDxns,
+      },
+    });
+  }
+
+  'options'(options: QueryAST.QueryOptions): Any {
     return new QueryClass({
       type: 'options',
       query: this.ast,

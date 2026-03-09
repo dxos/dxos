@@ -3,7 +3,7 @@
 //
 
 import { type EditorView } from '@codemirror/view';
-import React, { useCallback, useState } from 'react';
+import React, { type ComponentPropsWithoutRef, useCallback, useState } from 'react';
 
 import { type FileInfo } from '@dxos/app-toolkit';
 import { invariant } from '@dxos/invariant';
@@ -14,7 +14,7 @@ import { type EditorViewMode } from '@dxos/ui-editor';
 import { FileUpload, type FileUploadAction } from './FileUpload';
 
 export type MarkdownEditorToolbarProps = ThemedClassName<
-  {
+  ComponentPropsWithoutRef<'div'> & {
     id: string;
     editorView?: EditorView;
     onFileUpload?: (file: File) => Promise<FileInfo | undefined>;
@@ -31,6 +31,7 @@ export const MarkdownEditorToolbar = ({
   onAction,
   onFileUpload,
   onViewModeChange,
+  ...props
 }: MarkdownEditorToolbarProps) => {
   const [upload, setUpload] = useState<FileUploadAction | null>(null);
   const uploadRef = useCallback((next: FileUploadAction) => setUpload(() => next), []);
@@ -43,11 +44,11 @@ export const MarkdownEditorToolbar = ({
   }, [editorView]);
 
   if (!editorView) {
-    return <div />;
+    return <div {...props} />;
   }
 
   return (
-    <>
+    <div role='none' {...props}>
       <EditorToolbar
         classNames={classNames}
         attendableId={id}
@@ -61,6 +62,6 @@ export const MarkdownEditorToolbar = ({
       />
 
       {onFileUpload && <FileUpload ref={uploadRef} editorView={editorView} onFileUpload={onFileUpload} />}
-    </>
+    </div>
   );
 };

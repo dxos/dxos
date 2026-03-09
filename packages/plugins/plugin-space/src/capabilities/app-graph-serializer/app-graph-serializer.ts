@@ -8,7 +8,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
-import { Collection } from '@dxos/schema';
+import { Collection } from '@dxos/echo';
 
 import { meta } from '../../meta';
 import { translations } from '../../translations';

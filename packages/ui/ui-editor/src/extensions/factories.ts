@@ -27,8 +27,7 @@ import { type DocAccessor } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { type Messenger } from '@dxos/protocols';
 import { type Identity } from '@dxos/protocols/proto/dxos/client/services';
-import { type HuePalette } from '@dxos/ui-theme';
-import { type ThemeMode } from '@dxos/ui-types';
+import { type ChromaticPalette, type ThemeMode } from '@dxos/ui-types';
 import { hexToHue, isTruthy } from '@dxos/util';
 
 import { baseTheme, createFontTheme, editorGutter } from '../styles';
@@ -263,7 +262,7 @@ export const createDataExtensions = <T>({ id, text, messenger, identity }: DataE
 
   if (messenger && identity) {
     const peerId = identity?.identityKey.toHex();
-    const hue = (identity?.profile?.data?.hue as HuePalette | undefined) ?? hexToHue(peerId ?? '0');
+    const hue = (identity?.profile?.data?.hue as ChromaticPalette | undefined) ?? hexToHue(peerId ?? '0');
     extensions.push(
       awareness(
         new SpaceAwarenessProvider({
@@ -271,8 +270,8 @@ export const createDataExtensions = <T>({ id, text, messenger, identity }: DataE
           channel: `awareness.${id}`,
           peerId: identity.identityKey.toHex(),
           info: {
-            darkColor: `var(--color-${hue}-cursor)`,
-            lightColor: `var(--color-${hue}-cursor)`,
+            darkColor: `var(--color-${hue}-border)`,
+            lightColor: `var(--color-${hue}-border)`,
             displayName: identity.profile?.displayName ?? generateName(identity.identityKey.toHex()),
           },
         }),

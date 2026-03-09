@@ -12,16 +12,14 @@ import React, { type FC, useCallback, useEffect, useMemo, useRef, useState } fro
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { ErrorBoundary, ErrorFallback, type FallbackProps } from '@dxos/react-error-boundary';
 import { useAsyncEffect, useDefaultValue } from '@dxos/react-hooks';
 import { ContextProtocolProvider } from '@dxos/web-context-react';
 
 import { ActivationEvents, Capabilities } from '../../common';
 import { PluginManagerContext } from '../../context';
 import { type ActivationEvent, type Plugin, PluginManager } from '../../core';
-import { App } from '../components/App';
-import { DefaultFallback } from '../components/DefaultFallback';
-import { ErrorBoundary } from '../components/ErrorBoundary';
-import { PluginManagerProvider } from '../components/PluginManagerProvider';
+import { App, PluginManagerProvider } from '../components';
 
 const ENABLED_KEY = 'dxos.org/app-framework/enabled';
 
@@ -36,12 +34,12 @@ export type UseAppOptions = {
    * These are fired alongside SetupReactSurface before the Startup event.
    */
   setupEvents?: ActivationEvent.ActivationEvent[];
-  placeholder?: FC<{ stage: number }>;
-  fallback?: ErrorBoundary['props']['fallback'];
   cacheEnabled?: boolean;
   safeMode?: boolean;
   debounce?: number;
   timeout?: number;
+  fallback?: FC<FallbackProps>;
+  placeholder?: FC<{ stage: number }>;
 };
 
 /**
@@ -64,10 +62,10 @@ export type UseAppOptions = {
  * @param params.plugins All plugins available to the application.
  * @param params.core Core plugins which will always be enabled.
  * @param params.defaults Default plugins are enabled by default but can be disabled by the user.
- * @param params.placeholder Placeholder component to render during startup.
- * @param params.fallback Fallback component to render if an error occurs during startup.
  * @param params.cacheEnabled Whether to cache enabled plugins in localStorage.
  * @param params.safeMode Whether to enable safe mode, which disables optional plugins.
+ * @param params.fallback Fallback component to render if an error occurs during startup.
+ * @param params.placeholder Placeholder component to render during startup.
  */
 export const useApp = ({
   pluginManager,
@@ -77,7 +75,7 @@ export const useApp = ({
   defaults: defaultsProp,
   setupEvents: setupEventsProp,
   placeholder,
-  fallback = DefaultFallback,
+  fallback = ErrorFallback,
   cacheEnabled = false,
   safeMode = false,
   debounce = 0,
@@ -195,7 +193,7 @@ export const useApp = ({
 
   return useCallback(
     () => (
-      <ErrorBoundary fallback={fallback}>
+      <ErrorBoundary name='app' FallbackComponent={fallback}>
         <PluginManagerProvider value={manager}>
           <ContextProtocolProvider value={manager} context={PluginManagerContext}>
             <RegistryContext.Provider value={manager.registry}>

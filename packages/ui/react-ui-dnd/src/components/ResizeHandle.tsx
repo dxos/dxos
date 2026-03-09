@@ -34,7 +34,7 @@ const getNextSize = (
     Math.max(
       minSize,
       startSize +
-        ((location.current.input[client] - location.initial.input[client]) / REM) * (side.endsWith('end') ? 1 : -1),
+        ((location.current.input[client] - location.initial.input[client]) / REM) * (side.endsWith('end') ? -1 : 1),
     ),
   );
 };
@@ -64,14 +64,14 @@ export const ResizeHandle = ({
   iconPosition = 'start',
   defaultSize,
   fallbackSize,
-  size: _size,
+  size: sizeProp,
   minSize,
   maxSize,
   onSizeChange,
 }: ResizeHandleProps) => {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [size = 'min-content', setSize] = useControllableState({
-    prop: _size,
+    prop: sizeProp,
     defaultProp: defaultSize,
     onChange: onSizeChange,
   });
@@ -153,42 +153,6 @@ export const ResizeHandle = ({
         'before:absolute before:block before:bg-neutral-focus-indicator',
         classNames,
       )}
-    >
-      <div
-        role='none'
-        data-side={side}
-        className={mx(
-          'grid place-items-center group-hover:opacity-0 group-focus-visible:opacity-0 group-active:opacity-0',
-          orientation === 'horizontal' ? 'h-(--rail-size) w-4' : 'w-(--rail-size) h-4',
-        )}
-      >
-        <DragHandleSignifier side={side} />
-      </div>
-    </button>
-  );
-};
-
-const DragHandleSignifier = ({ side }: Pick<ResizeHandleProps, 'side'>) => {
-  return (
-    <svg
-      xmlns='http://www.w3.org/2000/svg'
-      viewBox='0 0 256 256'
-      fill='currentColor'
-      className={mx(
-        'shrink-0 h-4 w-4 text-un-accent',
-        side === 'inline-end'
-          ? 'rotate-90'
-          : side === 'inline-start'
-            ? '-rotate-90'
-            : side === 'block-start' && 'rotate-180',
-      )}
-    >
-      {/* two pips: <path d='M256,120c-8.8,0-16-7.2-16-16v-56c0-8.8,7.2-16,16-16v88Z' />
-      <path d='M256,232c-8.8,0-16-7.2-16-16v-56c0-8.8,7.2-16,16-16v88Z' /> */}
-      <path d='M256,64c-8.8,0-16-7.2-16-16s7.2-16,16-16v32Z' />
-      <path d='M256,120c-8.8,0-16-7.2-16-16s7.2-16,16-16v32Z' />
-      <path d='M256,176c-8.8,0-16-7.2-16-16s7.2-16,16-16v32Z' />
-      <path d='M256,232c-8.8,0-16-7.2-16-16s7.2-16,16-16v32Z' />
-    </svg>
+    />
   );
 };

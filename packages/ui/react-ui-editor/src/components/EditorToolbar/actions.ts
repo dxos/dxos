@@ -31,8 +31,8 @@ export const createLists = (state: EditorToolbarState, getView: () => EditorView
   return {
     nodes: [listGroupAction as Node.NodeArg<any>, ...listActionsMap],
     edges: [
-      { source: 'root', target: 'list' },
-      ...listActionsMap.map(({ id }) => ({ source: listGroupAction.id, target: id })),
+      { source: 'root', target: 'list', relation: 'child' },
+      ...listActionsMap.map(({ id }) => ({ source: listGroupAction.id, target: id, relation: 'child' })),
     ],
   };
 };

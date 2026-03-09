@@ -13,7 +13,7 @@ import { type Size } from '../defs';
 export type ImageLoadingStatus = 'idle' | 'loading' | 'loaded' | 'error';
 
 export type AvatarVariant = 'square' | 'circle';
-export type AvatarStatus = 'active' | 'inactive' | 'current' | 'error' | 'warning' | 'internal';
+export type AvatarStatus = 'active' | 'inactive' | 'current' | 'internal' | 'error' | 'warning';
 export type AvatarAnimation = 'pulse' | 'none';
 
 const rx = '0.125rem';

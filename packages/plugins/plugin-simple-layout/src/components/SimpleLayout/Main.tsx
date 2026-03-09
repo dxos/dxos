@@ -7,11 +7,11 @@ import React, { useMemo } from 'react';
 import { Surface } from '@dxos/app-framework/ui';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { useNode } from '@dxos/plugin-graph';
+import { ErrorFallback } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/ui-theme';
 
 import { useAppBarProps, useNavbarActions, useSimpleLayoutState } from '../../hooks';
-import { ContentError } from '../ContentError';
 import { ContentLoading } from '../ContentLoading';
 import { useLoadDescendents } from '../hooks';
 import { useMobileLayout } from '../MobileLayout/MobileLayout';
@@ -58,7 +58,9 @@ export const Main = () => {
       role='none'
       className={mx(
         'h-full grid overflow-hidden bg-toolbar-surface',
-        showNavBar ? 'grid-rows-[var(--rail-action)_1fr_var(--toolbar-size)]' : 'grid-rows-[var(--rail-action)_1fr]',
+        showNavBar
+          ? 'grid-rows-[var(--dx-rail-action)_1fr_var(--dx-toolbar-size)]'
+          : 'grid-rows-[var(--dx-rail-action)_1fr]',
       )}
       {...attentionAttrs}
     >
@@ -69,7 +71,7 @@ export const Main = () => {
           role='article'
           data={data}
           limit={1}
-          fallback={ContentError}
+          fallback={ErrorFallback}
           placeholder={placeholder}
         />
       </article>

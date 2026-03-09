@@ -2,12 +2,18 @@
 // Copyright 2022 DXOS.org
 //
 
+// Suppress Lit dev mode warning (https://lit.dev/msg/dev-mode).
+// Pre-populating this set prevents Lit from issuing the warning on load.
+(globalThis as any).litIssuedWarnings ??= new Set();
+(globalThis as any).litIssuedWarnings.add('dev-mode');
+
 import '@dxos-theme';
 
 import { withThemeByClassName } from '@storybook/addon-themes';
 import { type Preview } from '@storybook/react';
 
 import { docsTheme } from './theme';
+import './cubes.css';
 
 /**
  * Configure Storybook rendering.
@@ -36,8 +42,7 @@ export const preview: Preview = {
       argTypesRegex: '^on.*',
     },
     backgrounds: {
-      backgrounds: { default: 'dark' },
-      options: {},
+      disable: true,
     },
     controls: {
       matchers: {

@@ -142,7 +142,7 @@ export const SchemaPanel = (props: { space?: Space }) => {
           />
           <div
             className={mx(
-              'h-(--statusbar-size)',
+              'h-(--dx-statusbar-size)',
               'flex shrink-0 justify-end items-center gap-2',
               'bg-base-surface text-description',
             )}
@@ -151,7 +151,7 @@ export const SchemaPanel = (props: { space?: Space }) => {
           </div>
         </div>
 
-        <div className='min-h-0 h-full border-separator! border-s border-t'>
+        <div className='min-h-0 h-full border-s border-t border-separator'>
           <div className={mx('p-1 min-h-0 h-full overflow-auto')}>
             {selected ? (
               <ObjectViewer

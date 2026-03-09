@@ -8,9 +8,10 @@ import { Capability } from '@dxos/app-framework';
 import { Chat } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Obj, Ref, Type } from '@dxos/echo';
+import { Collection } from '@dxos/echo';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { type Space } from '@dxos/react-client/echo';
-import { Collection } from '@dxos/schema';
+import { ManagedCollection } from '@dxos/schema';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -31,30 +32,36 @@ const ensureSystemCollections = async (space: Space) => {
 
   const objects = await Promise.all(rootCollection.objects.map((ref) => ref.load()));
   const chats = objects.find(
-    (object) => Obj.instanceOf(Collection.Managed, object) && object.key === Chat.Chat.typename,
+    (object) => Obj.instanceOf(ManagedCollection.ManagedCollection, object) && object.key === Chat.Chat.typename,
   );
   if (!chats) {
-    const chatsCollectionRef = Ref.make(Collection.makeManaged({ key: Chat.Chat.typename }));
+    const chatsCollectionRef = Ref.make(ManagedCollection.makeManagedCollection({ key: Chat.Chat.typename }));
     Obj.change(rootCollection, (c) => {
       c.objects.push(chatsCollectionRef);
     });
   }
 
   const blueprints = objects.find(
-    (object) => Obj.instanceOf(Collection.Managed, object) && object.key === Blueprint.Blueprint.typename,
+    (object) =>
+      Obj.instanceOf(ManagedCollection.ManagedCollection, object) && object.key === Blueprint.Blueprint.typename,
   );
   if (!blueprints) {
-    const blueprintsCollectionRef = Ref.make(Collection.makeManaged({ key: Blueprint.Blueprint.typename }));
+    const blueprintsCollectionRef = Ref.make(
+      ManagedCollection.makeManagedCollection({ key: Blueprint.Blueprint.typename }),
+    );
     Obj.change(rootCollection, (c) => {
       c.objects.push(blueprintsCollectionRef);
     });
   }
 
   const prompts = objects.find(
-    (object) => Obj.instanceOf(Collection.Managed, object) && object.key === Type.getTypename(Prompt.Prompt),
+    (object) =>
+      Obj.instanceOf(ManagedCollection.ManagedCollection, object) && object.key === Type.getTypename(Prompt.Prompt),
   );
   if (!prompts) {
-    const promptsCollectionRef = Ref.make(Collection.makeManaged({ key: Type.getTypename(Prompt.Prompt) }));
+    const promptsCollectionRef = Ref.make(
+      ManagedCollection.makeManagedCollection({ key: Type.getTypename(Prompt.Prompt) }),
+    );
     Obj.change(rootCollection, (c) => {
       c.objects.push(promptsCollectionRef);
     });

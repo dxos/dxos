@@ -5,7 +5,7 @@
 // TODO(burdon): Create theme type and picker.
 
 export const theme = {
-  root: 'bg-attention leading-relaxed font-mono',
+  root: 'bg-attention-surface leading-relaxed font-mono',
 
   padding: 'px-40 py-16 gap-8',
 

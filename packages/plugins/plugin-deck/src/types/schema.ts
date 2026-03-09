@@ -20,8 +20,8 @@ export const DECK_COMPANION_TYPE = `${meta.id}/deck-companion`;
 export const NewPlankPositions = ['start', 'end'] as const;
 export type NewPlankPositioning = (typeof NewPlankPositions)[number];
 
-export const OverscrollOptions = ['none', 'centering'] as const;
-export type Overscroll = (typeof OverscrollOptions)[number];
+export const OverScrollToProps = ['none', 'centering'] as const;
+export type Overscroll = (typeof OverScrollToProps)[number];
 
 export type Part = 'solo' | 'deck' | 'complementary';
 export type ResolvedPart = Part | 'solo-primary' | 'solo-companion';
@@ -32,7 +32,7 @@ export const DeckSettingsSchema = Schema.Struct({
   enableStatusbar: Schema.optional(Schema.Boolean),
   enableNativeRedirect: Schema.optional(Schema.Boolean),
   newPlankPositioning: Schema.optional(Schema.Literal(...NewPlankPositions)),
-  overscroll: Schema.optional(Schema.Literal(...OverscrollOptions)),
+  overscroll: Schema.optional(Schema.Literal(...OverScrollToProps)),
   // TODO(burdon): Rename layoutMode? (e.g., bento | encapsulated?)
   encapsulatedPlanks: Schema.optional(Schema.Boolean),
 }).pipe(Schema.mutable);
@@ -46,8 +46,8 @@ export const DeckState = Schema.Struct({
   /** If false, the deck has not yet left solo mode and new planks should be soloed. */
   initialized: Schema.Boolean,
   active: Schema.mutable(Schema.Array(Schema.String)),
-  // TODO(wittjosiah): Piping into both mutable and optional caused invalid typescript output.
-  activeCompanions: Schema.optional(Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.String }))),
+  companionOpen: Schema.Boolean,
+  companionVariant: Schema.optional(Schema.String),
   inactive: Schema.mutable(Schema.Array(Schema.String)),
   solo: Schema.optional(Schema.String),
   fullscreen: Schema.Boolean,
@@ -59,7 +59,8 @@ export type DeckState = Schema.Schema.Type<typeof DeckState>;
 export const defaultDeck: DeckState = {
   initialized: false,
   active: [],
-  activeCompanions: {},
+  companionOpen: false,
+  companionVariant: undefined,
   inactive: [],
   solo: undefined,
   fullscreen: false,
@@ -153,7 +154,6 @@ export namespace DeckAction {
 
   export class ChangeCompanion extends Schema.TaggedClass<ChangeCompanion>()(`${meta.id}/action/change-companion`, {
     input: Schema.Struct({
-      primary: Schema.String,
       companion: Schema.Union(Schema.String, Schema.Null),
     }),
     output: Schema.Void,
@@ -215,7 +215,6 @@ export namespace DeckOperation {
     services: [Capability.Service],
     schema: {
       input: Schema.Struct({
-        primary: Schema.String,
         companion: Schema.Union(Schema.String, Schema.Null),
       }),
       output: Schema.Void,

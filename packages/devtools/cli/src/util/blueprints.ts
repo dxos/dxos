@@ -8,10 +8,11 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
-import { ArtifactId, GenericToolkit } from '@dxos/assistant';
+import { GenericToolkit } from '@dxos/ai';
+import { ArtifactId } from '@dxos/assistant';
 import { Chat, WebSearchToolkit } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
-import { Tag, type Type } from '@dxos/echo';
+import { Tag, Type } from '@dxos/echo';
 import { type FunctionDefinition } from '@dxos/functions';
 import { AssistantBlueprint } from '@dxos/plugin-assistant/blueprints';
 import { ChessBlueprint } from '@dxos/plugin-chess/blueprints';
@@ -110,7 +111,7 @@ export const types: Type.Entity.Any[] = [
   [Chat.Chat],
   [Chess.Game],
   [Markdown.Document],
-  [Mailbox.Mailbox, Calendar.Calendar],
+  [Mailbox.Config, Calendar.Config, Type.Feed],
   [Blueprint.Blueprint],
   [Tag.Tag],
   [Event.Event, Organization.Organization, Person.Person, Pipeline.Pipeline, Task.Task],

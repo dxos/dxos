@@ -4,13 +4,22 @@
 
 import { type Atom, RegistryContext } from '@effect-atom/atom-react';
 import { createContext } from '@radix-ui/react-context';
-import React, { type ComponentType, type PropsWithChildren, useCallback, useContext, useMemo } from 'react';
+import React, {
+  type ComponentPropsWithoutRef,
+  type ComponentType,
+  type PropsWithChildren,
+  useCallback,
+  useContext,
+  useMemo,
+} from 'react';
 
 import { Obj } from '@dxos/echo';
+import { useTranslation } from '@dxos/react-ui';
 import { Board, useBoard } from '@dxos/react-ui-mosaic';
 import type { ProjectionModel } from '@dxos/schema';
 
 import { useKanbanBoardModel, useKanbanColumnEventHandler } from '../../hooks';
+import { meta } from '../../meta';
 import { type Kanban, type KanbanChangeCallback, UNCATEGORIZED_ATTRIBUTES, UNCATEGORIZED_VALUE } from '../../types';
 
 import { KanbanCard, type KanbanCardProps } from './KanbanCard';
@@ -66,7 +75,7 @@ type KanbanBoardRootProps = PropsWithChildren<
     items: Atom.Atom<Obj.Unknown[]>;
     onCardAdd?: (columnValue: string | undefined) => string | undefined;
     onCardRemove?: (card: Obj.Unknown) => void;
-  }
+  } & ComponentPropsWithoutRef<'div'>
 >;
 
 export const KanbanBoardRoot = ({
@@ -78,10 +87,12 @@ export const KanbanBoardRoot = ({
   items,
   onCardAdd,
   onCardRemove,
+  ...props
 }: KanbanBoardRootProps) => {
   const registry = useContext(RegistryContext);
+  const { t } = useTranslation(meta.id);
   const model = useKanbanBoardModel(kanban, projection, items, registry);
-
+  const columns = model?.getColumns?.() ?? [];
   const view = kanban?.view?.target;
   const pivotFieldId = view?.projection?.pivotFieldId;
   const columnFieldPath = useMemo(() => {
@@ -105,6 +116,14 @@ export const KanbanBoardRoot = ({
     [projection, pivotFieldId],
   );
 
+  if (columns.length === 0) {
+    return (
+      <div {...props} className='flex flex-1 items-center justify-center p-8 text-center text-description'>
+        {t('select pivot placeholder')}
+      </div>
+    );
+  }
+
   return (
     <KanbanBoardContext
       kanbanId={Obj.getDXN(kanban).toString()}
@@ -117,7 +136,9 @@ export const KanbanBoardRoot = ({
       onCardAdd={onCardAdd}
       onCardRemove={onCardRemove}
     >
-      <Board.Root model={model}>{children}</Board.Root>
+      <Board.Root model={model}>
+        <div {...props}>{children}</div>
+      </Board.Root>
     </KanbanBoardContext>
   );
 };

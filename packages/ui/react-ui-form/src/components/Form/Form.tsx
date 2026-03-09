@@ -9,7 +9,14 @@ import React, { type PropsWithChildren, useEffect, useMemo, useRef } from 'react
 
 import { type AnyProperties } from '@dxos/echo/internal';
 import { createJsonPath, getValue as getValue$ } from '@dxos/effect';
-import { IconButton, type IconButtonProps, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import {
+  IconButton,
+  type IconButtonProps,
+  ScrollArea,
+  type ScrollAreaRootProps,
+  type ThemedClassName,
+  useTranslation,
+} from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import {
@@ -28,19 +35,19 @@ import {
 } from './FormFieldSet';
 
 // New features/polish
-// [x] Unify readonly/inline modes
-// [ ] auto save doesn't work for combobox + select due to only firing on blur (workaround is to use onValuesChanged)
-// [ ] Don't call save/autoSave if value hasn't changed
-// [ ] Fix onCancel (restore values)
-// [ ] Fix useSchema Type.Obj.Any cast
-// [ ] TableCellEditor (handleEnter/ModalController).
-// [ ] Use FormFieldWrapper uniformly
-// [ ] Inline tables for object arrays
-// [ ] Defer query until popover
-// [ ] Omit id from sub properties.
+// [x] Unify readonly/inline modes.
 // [x] Refs
 //   [x] Single-select (fix popover)
 //   [x] Multi-select (array)
+// [ ] auto save doesn't work for combobox + select due to only firing on blur (workaround is to use onValuesChanged).
+// [ ] Don't call save/autoSave if value hasn't changed.
+// [ ] Fix onCancel (restore values).
+// [ ] Fix useSchema Type.Obj.Any cast.
+// [ ] TableCellEditor (handleEnter/ModalController).
+// [ ] Use FormFieldWrapper uniformly
+// [ ] Inline tables.
+// [ ] Defer query until popover.
+// [ ] Omit id from sub properties.
 
 // TODO(burdon): Move to @dxos/schema (re-export here).
 export type ExcludeId<S extends Schema.Schema.AnyNoContext> = Omit<Schema.Schema.Type<S>, 'id'>;
@@ -170,12 +177,25 @@ FormRoot.displayName = 'Form.Root';
 
 const FORM_VIEWPORT_NAME = 'Form.Viewport';
 
-type FormViewportProps = PropsWithChildren<{}>;
+type FormViewportProps = PropsWithChildren<ScrollAreaRootProps>;
 
-// TODO(burdon): Ref and props (allow asChild).
-const FormViewport = ({ children }: FormViewportProps) => {
+const FormViewport = ({
+  children,
+  classNames,
+  margin = true,
+  padding = true,
+  thin = true,
+  ...props
+}: FormViewportProps) => {
   return (
-    <ScrollArea.Root orientation='vertical'>
+    <ScrollArea.Root
+      orientation='vertical'
+      classNames={classNames}
+      margin={margin}
+      padding={padding}
+      thin={thin}
+      {...props}
+    >
       <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
     </ScrollArea.Root>
   );
@@ -191,19 +211,13 @@ const FORM_CONTENT_NAME = 'Form.Content';
 
 type FormContentProps = ThemedClassName<PropsWithChildren<{}>>;
 
-// TOOD(burdon): Figure out nesting (indent and testId).
 const FormContent = ({ classNames, children }: FormContentProps) => {
   const { form, testId } = useFormContext(FORM_CONTENT_NAME);
   const ref = useRef<HTMLDivElement>(null);
   useKeyHandler(ref.current, form);
 
   return (
-    <div
-      ref={ref}
-      role='form'
-      className={mx('w-full flex flex-col gap-card-padding px-card-padding', classNames)}
-      data-testid={testId}
-    >
+    <div ref={ref} role='form' className={mx('w-full flex flex-col gap-form-padding', classNames)} data-testid={testId}>
       {children}
     </div>
   );
@@ -217,12 +231,12 @@ FormContent.displayName = FORM_CONTENT_NAME;
 
 const FORM_FIELDSET_NAME = 'Form.FieldSet';
 
-type FormFieldSetProps = ThemedClassName<{}>;
+type FormFieldSetProps = ThemedClassName<NaturalFormFieldSetProps<any>>;
 
-const FormFieldSet = ({ classNames }: FormFieldSetProps) => {
-  const { form, ...props } = useFormContext(FORM_FIELDSET_NAME);
+const FormFieldSet = (props: FormFieldSetProps) => {
+  const { form, ...contextProps } = useFormContext(FORM_FIELDSET_NAME);
 
-  return <NaturalFormFieldSet classNames={classNames} schema={form.schema} {...props} />;
+  return <NaturalFormFieldSet schema={form.schema} {...contextProps} {...props} />;
 };
 
 FormFieldSet.displayName = FORM_FIELDSET_NAME;
@@ -251,7 +265,7 @@ const FormActions = ({ classNames }: FormActionsProps) => {
   //   Deprecate FormSubmit ans use FormActions without Cancel button if no callback is supplied.
 
   return (
-    <div role='none' className={mx('grid grid-flow-col gap-2 auto-cols-fr py-card-padding', classNames)}>
+    <div role='none' className={mx('grid grid-flow-col gap-2 auto-cols-fr py-form-padding', classNames)}>
       {onCancel && (
         <IconButton
           icon='ph--x--regular'
@@ -300,7 +314,7 @@ const FormSubmit = ({ classNames, label, icon, disabled }: FormSubmitProps) => {
   }
 
   return (
-    <div role='none' className={mx('flex w-full pt-formSpacing', classNames)}>
+    <div role='none' className={mx('flex w-full pt-form-padding', classNames)}>
       <IconButton
         classNames='w-full'
         type='submit'
@@ -339,7 +353,7 @@ export type {
   FormViewportProps,
   FormContentProps,
   FormFieldSetProps,
-  FormFieldLabelProps as LabelProps,
+  FormFieldLabelProps,
   FormActionsProps,
   FormSubmitProps,
 };

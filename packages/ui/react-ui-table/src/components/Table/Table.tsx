@@ -40,6 +40,7 @@ import { mx } from '@dxos/ui-theme';
 import { type InsertRowResult, ModalController, type TableModel, type TablePresentation } from '../../model';
 import { tableButtons, tableControls } from '../../util';
 import { type OnCreateHandler, type TableCellEditorProps, TableValueEditor } from '../TableCellEditor';
+import { TableToolbar } from '../TableToolbar';
 
 import { ColumnActionsMenu } from './ColumnActionsMenu';
 import { ColumnSettings } from './ColumnSettings';
@@ -53,24 +54,10 @@ const emptyColumnMeta = Atom.make<DxGridAxisMeta>({ grid: {} });
 // Table.Root
 //
 
-export type TableRootProps = PropsWithChildren<{ role?: string }>;
+export type TableRootProps = PropsWithChildren;
 
-const TableRoot = ({ children, role = 'article' }: TableRootProps) => {
-  return (
-    <div
-      role='none'
-      className={mx(
-        'relative border-separator! [&_.dx-grid]:max-w-(--dx-grid-content-w-size) [&_.dx-grid]:max-h-(--dx-grid-content-h-size)',
-        // TODO(burdon): Move role-dependent logic to plugin.
-        role === 'section' && 'attention-surface',
-        role === 'card--content' && 'popover-card-height',
-        ['section'].includes(role) && 'overflow-hidden',
-        ['article', 'slide'].includes(role) && 'flex flex-col [&_.dx-grid]:grow [&_.dx-grid]:h-0',
-      )}
-    >
-      {children}
-    </div>
-  );
+const TableRoot = ({ children }: TableRootProps) => {
+  return <>{children}</>;
 };
 
 //
@@ -424,7 +411,7 @@ const TableMainInner = <T extends Type.Entity.Any = Type.Entity.Any>(
   }, [dxGrid, model, presentation]);
 
   if (!model || !modals) {
-    return <span role='none' className='attention-surface' />;
+    return <span role='none' className='dx-attention-surface' />;
   }
 
   return (
@@ -464,7 +451,12 @@ const TableMain = forwardRef(TableMainInner) as <T extends Type.Entity.Any = Typ
   props: TableMainProps<T> & { ref?: Ref<TableController> },
 ) => JSX.Element;
 
+//
+// Table
+//
+
 export const Table = {
   Root: TableRoot,
   Main: TableMain,
+  Toolbar: TableToolbar,
 };

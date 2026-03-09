@@ -15,7 +15,7 @@ import { invariant } from '@dxos/invariant';
 import { Operation, OperationResolver } from '@dxos/operation';
 import { AutomationCapabilities } from '@dxos/plugin-automation';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { Collection } from '@dxos/schema';
+import { ManagedCollection } from '@dxos/schema';
 import { type Message } from '@dxos/types';
 
 import { AssistantBlueprint } from '../../blueprints';
@@ -28,9 +28,9 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: AssistantOperation.OnCreateSpace,
         handler: Effect.fnUntraced(function* ({ space, rootCollection }) {
-          const chatCollection = Collection.makeManaged({ key: Chat.Chat.typename });
-          const blueprintCollection = Collection.makeManaged({ key: Blueprint.Blueprint.typename });
-          const promptCollection = Collection.makeManaged({ key: Type.getTypename(Prompt.Prompt) });
+          const chatCollection = ManagedCollection.makeManagedCollection({ key: Chat.Chat.typename });
+          const blueprintCollection = ManagedCollection.makeManagedCollection({ key: Blueprint.Blueprint.typename });
+          const promptCollection = ManagedCollection.makeManagedCollection({ key: Type.getTypename(Prompt.Prompt) });
           Obj.change(rootCollection, (c) => {
             c.objects.push(Ref.make(chatCollection), Ref.make(blueprintCollection), Ref.make(promptCollection));
           });
@@ -51,7 +51,7 @@ export default Capability.makeModule(
           const space = client.spaces.get(db.spaceId);
           invariant(space, 'Space not found');
           const queue = space.queues.create();
-          const chat = Chat.make({ name, queue: Ref.fromDXN(queue.dxn) });
+          const chat = Chat.make({ name, queue: db.makeRef<any>(queue.dxn) });
           if (addToSpace) {
             space.db.add(chat);
           }

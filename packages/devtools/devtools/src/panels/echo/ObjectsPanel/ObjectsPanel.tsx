@@ -193,7 +193,7 @@ export const ObjectsPanel = (props: { space?: Space }) => {
           />
           <div
             className={mx(
-              'h-(--statusbar-size)',
+              'h-(--dx-statusbar-size)',
               'flex shrink-0 justify-end items-center gap-2',
               'bg-base-surface text-description',
             )}
@@ -202,8 +202,8 @@ export const ObjectsPanel = (props: { space?: Space }) => {
           </div>
         </div>
 
-        <div className='min-h-0 h-full grid grid-rows-[1fr_16rem] border-separator! border-s border-t'>
-          <div className={mx('p-1 min-h-0 overflow-auto')}>
+        <div className='dx-container grid grid-rows-[1fr_16rem] border-s border-t border-separator'>
+          <div className='p-1 min-h-0 overflow-auto'>
             {selected ? (
               <ObjectViewer
                 object={selectedVersionObject ?? selected}
@@ -214,7 +214,7 @@ export const ObjectsPanel = (props: { space?: Space }) => {
               <Placeholder label='Data' />
             )}
           </div>
-          <div className={mx(!selected && 'p-1 border-t border-separator!')}>
+          <div className={mx(!selected && 'p-1 border-t border-separator')}>
             {selected ? (
               <DynamicTable properties={historyProperties} rows={historyRows} onRowClick={handleHistoryRowClicked} />
             ) : (

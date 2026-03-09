@@ -65,6 +65,7 @@
     "@dxos/context": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-atom": "workspace:*",
+    "@dxos/echo-db": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/functions": "workspace:*",
     "@dxos/functions-runtime": "workspace:*",

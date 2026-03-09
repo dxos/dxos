@@ -4,8 +4,8 @@
 
 import { type ComponentFunction, type Theme } from '@dxos/ui-types';
 
+import { focusRing } from '../../fragments';
 import { mx } from '../../util';
-import { focusRing } from '../fragments';
 
 export type LinkStyleProps = {
   variant?: 'accent' | 'neutral';

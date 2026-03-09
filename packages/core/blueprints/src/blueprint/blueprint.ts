@@ -60,6 +60,10 @@ export const Blueprint = Schema.Struct({
     version: '0.1.0',
   }),
   Annotation.LabelAnnotation.set(['name']),
+  Annotation.IconAnnotation.set({
+    icon: 'ph--blueprint--regular',
+    hue: 'blue',
+  }),
 );
 
 /**

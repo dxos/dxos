@@ -11,7 +11,7 @@ import { IconButton } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 
-import { MenuProvider, DropdownMenu as NaturalDropdownMenu, ToolbarMenu } from '../components';
+import { Menu } from '../components';
 import { type ActionGraphProps, useMenuActions } from '../hooks';
 import { createActions, createNestedActions, createNestedActionsResolver, useMutateActions } from '../testing';
 import { translations } from '../translations';
@@ -20,12 +20,12 @@ faker.seed(1234);
 
 const meta = {
   title: 'ui/react-ui-menu/ToolbarMenu',
-  component: ToolbarMenu,
+  component: Menu.Toolbar,
   decorators: [withTheme(), withRegistry],
   parameters: {
     translations,
   },
-} satisfies Meta<typeof ToolbarMenu>;
+} satisfies Meta<typeof Menu.Toolbar>;
 
 export default meta;
 
@@ -37,20 +37,19 @@ export const DropdownMenu: Story = {
       const actions = createActions();
       return Atom.make<ActionGraphProps>({
         nodes: actions,
-        edges: actions.map((action) => ({ source: 'root', target: action.id })),
+        edges: actions.map((action) => ({ source: 'root', target: action.id, relation: 'child' })),
       }).pipe(Atom.keepAlive);
     }, []);
     useMutateActions(actionsAtom);
     const menu = useMenuActions(actionsAtom);
 
     return (
-      <MenuProvider {...menu}>
-        <NaturalDropdownMenu.Root>
-          <NaturalDropdownMenu.Trigger asChild>
-            <IconButton icon='ph--list-checks--regular' label='Options' />
-          </NaturalDropdownMenu.Trigger>
-        </NaturalDropdownMenu.Root>
-      </MenuProvider>
+      <Menu.Root {...menu}>
+        <Menu.Trigger asChild>
+          <IconButton icon='ph--list-checks--regular' label='Options' />
+        </Menu.Trigger>
+        <Menu.Content />
+      </Menu.Root>
     );
   },
 };
@@ -60,9 +59,9 @@ export const Toolbar: Story = {
     const nestedMenuActions = useMemo(() => createNestedActionsResolver(), []);
 
     return (
-      <MenuProvider {...nestedMenuActions}>
-        <ToolbarMenu />
-      </MenuProvider>
+      <Menu.Root {...nestedMenuActions}>
+        <Menu.Toolbar />
+      </Menu.Root>
     );
   },
 };
@@ -73,9 +72,9 @@ export const UseMenuActionsToolbar: Story = {
     const menu = useMenuActions(createNestedActions);
 
     return (
-      <MenuProvider {...menu}>
-        <ToolbarMenu />
-      </MenuProvider>
+      <Menu.Root {...menu}>
+        <Menu.Toolbar />
+      </Menu.Root>
     );
   },
 };

@@ -32,8 +32,9 @@ import { useTranslation } from 'react-i18next';
 import { type DialogSize, osTranslations } from '@dxos/ui-theme';
 
 import { useThemeContext } from '../../hooks';
+import { Column } from '../../primitives';
 import { type ThemedClassName } from '../../util';
-import { IconButton, type IconButtonProps } from '../Button';
+import { IconButton } from '../Button';
 import { ElevationProvider } from '../ElevationProvider';
 
 //
@@ -110,20 +111,20 @@ type DialogContentProps = ThemedClassName<ComponentPropsWithRef<typeof DialogCon
 };
 
 const DialogContent: ForwardRefExoticComponent<DialogContentProps> = forwardRef<HTMLDivElement, DialogContentProps>(
-  ({ classNames, children, size, inOverlayLayout: propsInOverlayLayout, ...props }, forwardedRef) => {
+  ({ classNames, children, size = 'md', inOverlayLayout: propsInOverlayLayout, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const { inOverlayLayout } = useOverlayLayoutContext(DIALOG_CONTENT_NAME);
 
     return (
       <DialogContentPrimitive
+        {...props}
         // NOTE: Radix warning unless set to undefined.
         // https://www.radix-ui.com/primitives/docs/components/dialog#description
         aria-describedby={undefined}
-        {...props}
         className={tx('dialog.content', { inOverlayLayout: propsInOverlayLayout || inOverlayLayout, size }, classNames)}
         ref={forwardedRef}
       >
-        {children}
+        <Column.Root>{children}</Column.Root>
       </DialogContentPrimitive>
     );
   },
@@ -140,7 +141,35 @@ type DialogHeaderProps = ThemedClassName<PropsWithChildren> & { srOnly?: boolean
 const DialogHeader: ForwardRefExoticComponent<DialogTitleProps> = forwardRef<HTMLHeadingElement, DialogTitleProps>(
   ({ classNames, srOnly, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
-    return <div {...props} role='header' className={tx('dialog.header', { srOnly }, classNames)} ref={forwardedRef} />;
+    return (
+      <Column.Segment asChild>
+        <div role='heading' {...props} className={tx('dialog.header', { srOnly }, [classNames])} ref={forwardedRef} />
+      </Column.Segment>
+    );
+  },
+);
+
+//
+// CloseIconButton
+//
+
+type DialogCloseIconButtonProps = { label?: string };
+
+const DialogCloseIconButton = forwardRef<HTMLButtonElement, DialogCloseIconButtonProps>(
+  ({ label, ...props }, forwardedRef) => {
+    const { t } = useTranslation(osTranslations);
+    return (
+      <IconButton
+        {...props}
+        label={label ?? t('close dialog label')}
+        icon='ph--x--regular'
+        iconOnly
+        size={4}
+        density='fine'
+        variant='ghost'
+        ref={forwardedRef}
+      />
+    );
   },
 );
 
@@ -154,14 +183,14 @@ const DialogBody: ForwardRefExoticComponent<DialogBodyProps> = forwardRef<HTMLDi
   ({ children, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
-      <div {...props} className={tx('dialog.body')} ref={forwardedRef}>
-        {children}
-      </div>
+      <Column.Segment asChild>
+        <div role='none' {...props} className={tx('dialog.body')} ref={forwardedRef}>
+          {children}
+        </div>
+      </Column.Segment>
     );
   },
 );
-
-// TODO(burdon): Add ActionBar.
 
 //
 // Title
@@ -210,9 +239,11 @@ const DialogActionBar: ForwardRefExoticComponent<DialogActionBarProps> = forward
 >(({ children, classNames, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   return (
-    <div {...props} className={tx('dialog.actionbar', {}, classNames)} ref={forwardedRef}>
-      {children}
-    </div>
+    <Column.Segment asChild>
+      <div {...props} className={tx('dialog.actionbar', {}, classNames)} ref={forwardedRef}>
+        {children}
+      </div>
+    </Column.Segment>
   );
 });
 
@@ -223,31 +254,6 @@ const DialogActionBar: ForwardRefExoticComponent<DialogActionBarProps> = forward
 type DialogCloseProps = DialogClosePrimitiveProps;
 
 const DialogClose: FunctionComponent<DialogCloseProps> = DialogClosePrimitive;
-
-//
-// Close Button
-//
-
-type DialogCloseIconButtonProps = ThemedClassName<Partial<IconButtonProps>>;
-
-const DialogCloseIconButton: ForwardRefExoticComponent<DialogCloseIconButtonProps> = forwardRef<
-  HTMLButtonElement,
-  DialogCloseIconButtonProps
->((props, forwardedRef) => {
-  const { t } = useTranslation(osTranslations);
-  return (
-    <IconButton
-      {...props}
-      label={props.label ?? t('close dialog label')}
-      icon='ph--x--regular'
-      iconOnly
-      size={4}
-      density='fine'
-      variant='ghost'
-      ref={forwardedRef}
-    />
-  );
-});
 
 //
 // Dialog
@@ -280,5 +286,4 @@ export type {
   DialogDescriptionProps,
   DialogActionBarProps,
   DialogCloseProps,
-  DialogCloseIconButtonProps,
 };

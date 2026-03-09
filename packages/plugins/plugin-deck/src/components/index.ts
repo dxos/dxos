@@ -3,4 +3,3 @@
 //
 
 export * from './DeckLayout';
-export * from './DeckSettings';

@@ -8,7 +8,7 @@ import React from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { Obj } from '@dxos/echo';
-import { Card } from '@dxos/react-ui-mosaic';
+import { Card } from '@dxos/react-ui';
 import { type ProjectionModel } from '@dxos/schema';
 import { Organization, Person, Pipeline, Task } from '@dxos/types';
 
@@ -83,7 +83,7 @@ export default Capability.makeModule(() =>
         component: ({ data }) => {
           return (
             <div role='none' className='flex w-full justify-center'>
-              <div role='none' className='pt-2 pb-2 card-min-width card-max-width'>
+              <div role='none' className='pt-2 pb-2 dx-card-min-width dx-card-max-width'>
                 <Card.Root>
                   <Surface.Surface role='card--content' data={data} limit={1} />
                 </Card.Root>

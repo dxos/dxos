@@ -20,8 +20,8 @@ export const createImageUpload = (
   onImageUpload: () => void,
 ): {
   nodes: Node.NodeArg<any>[];
-  edges: Array<{ source: string; target: string }>;
+  edges: Array<{ source: string; target: string; relation: 'child' }>;
 } => ({
   nodes: [createImageUploadAction(onImageUpload)],
-  edges: [{ source: 'root', target: 'image' }],
+  edges: [{ source: 'root', target: 'image', relation: 'child' }],
 });

@@ -8,7 +8,15 @@ import { useAtomValue } from '@effect-atom/atom-react';
 import { createContext } from '@radix-ui/react-context';
 import * as Array from 'effect/Array';
 import * as Option from 'effect/Option';
-import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  type ComponentPropsWithoutRef,
+  type PropsWithChildren,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import { type Chat as ChatModule } from '@dxos/assistant-toolkit';
 import { Event } from '@dxos/async';
@@ -19,7 +27,7 @@ import { useIdentity } from '@dxos/react-client/halo';
 import { Input, type ThemedClassName, useDynamicRef, useTranslation } from '@dxos/react-ui';
 import { ChatEditor, type ChatEditorController, type ChatEditorProps } from '@dxos/react-ui-chat';
 import { type MarkdownStreamController } from '@dxos/react-ui-components';
-import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
+import { Menu } from '@dxos/react-ui-menu';
 import { Message } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
@@ -84,7 +92,8 @@ const ChatRoot = ({ children, chat, processor, onEvent, ...props }: ChatRootProp
     return event.on((ev) => {
       switch (ev.type) {
         case 'toggle-debug': {
-          setDebug((current) => !current);
+          setDebug((debug) => !debug);
+
           // Dump state to console.
           queueMicrotask(async () => {
             const objects = processor.context.getObjects();
@@ -162,11 +171,11 @@ ChatRoot.displayName = 'Chat.Root';
 
 const CHAT_VIEWPORT_NAME = 'Chat.Viewport';
 
-type ChatViewportProps = ThemedClassName<PropsWithChildren>;
+type ChatViewportProps = ThemedClassName<PropsWithChildren<ComponentPropsWithoutRef<'div'>>>;
 
-const ChatViewport = ({ classNames, children }: ChatViewportProps) => {
+const ChatViewport = ({ classNames, children, ...props }: ChatViewportProps) => {
   return (
-    <div role='none' className={mx('flex flex-col h-full w-full', classNames)}>
+    <div role='none' {...props} className={mx('flex flex-col h-full w-full', classNames)}>
       {children}
     </div>
   );
@@ -362,7 +371,7 @@ const ChatPrompt = ({
     <div
       role='group'
       className={mx(
-        'flex flex-col w-full density-fine',
+        'flex flex-col w-full dx-density-fine',
         outline &&
           'bg-group-surface border border-subdued-separator transition transition-border [&:has(.cm-content:focus)]:border-separator rounded-sm',
         classNames,
@@ -425,19 +434,20 @@ ChatPrompt.displayName = CHAT_PROMPT_NAME;
 
 const CHAT_TOOLBAR_NAME = 'Chat.Toolbar';
 
-type ChatToolbarProps = ThemedClassName<{ companionTo?: Obj.Unknown }>;
+type ChatToolbarProps = ThemedClassName<{ companionTo?: Obj.Unknown } & ComponentPropsWithoutRef<typeof Menu.Root>>;
 
-const ChatToolbar = ({ classNames, companionTo }: ChatToolbarProps) => {
+const ChatToolbar = ({ classNames, companionTo, ...props }: ChatToolbarProps) => {
   const { chat } = useChatContext(CHAT_TOOLBAR_NAME);
   const menu = useChatToolbarActions({ chat, companionTo });
 
   return (
-    <MenuProvider
+    <Menu.Root
+      {...props}
       {...menu}
       attendableId={companionTo ? Obj.getDXN(companionTo).toString() : chat ? Obj.getDXN(chat).toString() : ''}
     >
-      <ToolbarMenu classNames={classNames} textBlockWidth />
-    </MenuProvider>
+      <Menu.Toolbar classNames={classNames} textBlockWidth />
+    </Menu.Root>
   );
 };
 

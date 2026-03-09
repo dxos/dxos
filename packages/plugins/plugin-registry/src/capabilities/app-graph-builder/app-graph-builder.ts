@@ -48,9 +48,9 @@ export default Capability.makeModule(
               },
               nodes: [
                 {
-                  id: `${REGISTRY_KEY}+all`,
-                  type: 'category',
-                  data: `${REGISTRY_KEY}+all`,
+                  id: `${REGISTRY_KEY}>all`,
+                  type: 'category' as const,
+                  data: `${REGISTRY_KEY}>all`,
                   properties: {
                     label: ['all plugins label', { ns: meta.id }],
                     icon: 'ph--squares-four--regular',
@@ -59,9 +59,9 @@ export default Capability.makeModule(
                   },
                 },
                 {
-                  id: `${REGISTRY_KEY}+installed`,
-                  type: 'category',
-                  data: `${REGISTRY_KEY}+installed`,
+                  id: `${REGISTRY_KEY}>installed`,
+                  type: 'category' as const,
+                  data: `${REGISTRY_KEY}>installed`,
                   properties: {
                     label: ['installed plugins label', { ns: meta.id }],
                     icon: 'ph--check--regular',
@@ -70,9 +70,9 @@ export default Capability.makeModule(
                   },
                 },
                 {
-                  id: `${REGISTRY_KEY}+recommended`,
-                  type: 'category',
-                  data: `${REGISTRY_KEY}+recommended`,
+                  id: `${REGISTRY_KEY}>recommended`,
+                  type: 'category' as const,
+                  data: `${REGISTRY_KEY}>recommended`,
                   properties: {
                     label: ['recommended plugins label', { ns: meta.id }],
                     icon: 'ph--star--regular',
@@ -81,9 +81,9 @@ export default Capability.makeModule(
                   },
                 },
                 {
-                  id: `${REGISTRY_KEY}+labs`,
-                  type: 'category',
-                  data: `${REGISTRY_KEY}+labs`,
+                  id: `${REGISTRY_KEY}>labs`,
+                  type: 'category' as const,
+                  data: `${REGISTRY_KEY}>labs`,
                   properties: {
                     label: ['labs plugins label', { ns: meta.id }],
                     icon: 'ph--flask--regular',

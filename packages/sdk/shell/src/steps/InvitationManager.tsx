@@ -7,10 +7,10 @@ import { QR } from 'react-qr-rounded';
 
 import { type InvitationStatus } from '@dxos/react-client/invitations';
 import { Clipboard, Icon, useId, useTranslation } from '@dxos/react-ui';
-import { descriptionText, getSize, mx } from '@dxos/ui-theme';
+import { getSize, mx } from '@dxos/ui-theme';
 import { hexToEmoji } from '@dxos/util';
 
-import { Action, Actions, AuthCode, Centered, Emoji, Label, Viewport, type ViewportViewProps } from '../components';
+import { Action, ActionBar, AuthCode, Centered, Emoji, Label, Viewport, type ViewportViewProps } from '../components';
 import { translationKey } from '../translations';
 import { invitationStatusValue } from '../util';
 
@@ -20,14 +20,6 @@ export type InvitationManagerProps = StepProps &
   Partial<InvitationStatus> & {
     invitationUrl?: string;
   };
-
-const InvitationManagerView = ({ children, ...props }: ViewportViewProps & { emoji?: string }) => {
-  return (
-    <Viewport.View {...props} classNames='grow flex flex-col justify-around items-center'>
-      {children}
-    </Viewport.View>
-  );
-};
 
 export const InvitationManager = ({
   invitationUrl,
@@ -66,7 +58,7 @@ export const InvitationManager = ({
             <p className='text-sm my-1 font-normal text-center'>
               {t(multiUse ? 'invite many qr label' : 'invite one qr label')}
             </p>
-            <div role='none' className={mx(descriptionText, 'w-full max-w-[14rem] relative')}>
+            <div role='none' className={mx('text-description', 'w-full max-w-[14rem] relative')}>
               <QR
                 rounding={100}
                 backgroundColor='transparent'
@@ -102,11 +94,19 @@ export const InvitationManager = ({
           </InvitationManagerView>
         </Viewport.Views>
       </Viewport.Root>
-      <Actions classNames='mt-4'>
+      <ActionBar classNames='mt-4'>
         <Action disabled={!active} onClick={() => send?.({ type: 'deselectInvitation' })}>
           {t('back label')}
         </Action>
-      </Actions>
+      </ActionBar>
     </>
+  );
+};
+
+const InvitationManagerView = ({ children, ...props }: ViewportViewProps & { emoji?: string }) => {
+  return (
+    <Viewport.View {...props} classNames='grow flex flex-col justify-around items-center'>
+      {children}
+    </Viewport.View>
   );
 };

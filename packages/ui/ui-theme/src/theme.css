@@ -14,48 +14,53 @@
 @import 'tailwindcss';
 
 /* @theme extensions */
-@import './config/theme/animation.css';
-@import './config/theme/border.css';
-@import './config/theme/palette.css';
-@import './config/theme/colors.css';
-@import './config/theme/spacing.css';
-@import './config/theme/text.css';
+@import './css/theme/animation.css';
+@import './css/theme/border.css';
+@import './css/theme/palette.css';
+@import './css/theme/semantic.css';
+@import './css/theme/spacing.css';
+@import './css/theme/styles.css';
+@import './css/theme/text.css';
 
 /* @layer dx-base, dx-tokens */
-@import './config/base/base.css';
-@import './config/base/typography.css';
+@import './css/base/base.css';
+@import './css/base/typography.css';
 
 /* @layer dx-components (components) */
-@import './config/components/button.css';
-@import './config/components/checkbox.css';
-@import './config/components/dialog.css';
-@import './config/components/drag-preview.css';
-@import './config/components/focus-ring.css';
-@import './config/components/hues.css';
-@import './config/components/link.css';
-@import './config/components/scrollbar.css';
-@import './config/components/surface.css';
-@import './config/components/tag.css';
+@import './css/components/button.css';
+@import './css/components/checkbox.css';
+@import './css/components/dialog.css';
+@import './css/components/focus-ring.css';
+@import './css/components/panel.css';
+@import './css/components/link.css';
+@import './css/components/scrollbar.css';
+@import './css/components/surface.css';
+@import './css/components/tag.css';
+@import './css/components/text.css';
 
 /* @layer dx-components (layout) */
-@import './config/layout/main.css';
-@import './config/layout/native.css';
-@import './config/layout/positioning.css';
-@import './config/layout/size.css';
+@import './css/layout/main.css';
+@import './css/layout/native.css';
+@import './css/layout/positioning.css';
+@import './css/layout/size.css';
 
 /* @layer dx-utilities */
-@import './config/utility/utilities.css';
+@import './css/utilities.css';
 
 /* Third-party integrations */
-@import './config/integrations/codemirror.css';
-@import './config/integrations/tldraw.css';
+@import './css/integrations/codemirror.css';
+@import './css/integrations/tldraw.css';
 
 /**
- * Force-emit CSS variables for the full color palette so all --color-{hue}-{shade}
- * custom properties are available in :root regardless of which utility classes are
- * detected in source files.
+ * Force-emit CSS variables for the full color palette for all: 
+ * --color-{hue}-{shade}
+ * --color-{hue}-{style}
  */
 @source inline("bg-{neutral,red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose}-{50,100,200,300,400,500,600,700,800,900,950}");
+@source inline("bg-{neutral,red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose}-{fill,surface,surface-text,text,border}");
+@source inline("border-{neutral,red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose}-border");
+@source inline("bg-{info,success,warning,error}-{fill,surface,surface-text,text,border}");
+@source inline("border-{info,success,warning,error}-border");
 
 /**
  * Plugins must come after all imports.

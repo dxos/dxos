@@ -15,7 +15,7 @@ import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { SpaceOperation } from '@dxos/plugin-space/types';
 import { useQuery, useSchema } from '@dxos/react-client/echo';
-import { Layout } from '@dxos/react-ui';
+import { Panel } from '@dxos/react-ui';
 import {
   Table as TableComponent,
   type TableController,
@@ -61,7 +61,7 @@ export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(
         const nodes = actions.filter((action) => action.properties.disposition === 'toolbar');
         return {
           nodes,
-          edges: nodes.map((node) => ({ source: 'root', target: node.id })),
+          edges: nodes.map((node) => ({ source: 'root', target: node.id, relation: 'child' })),
         };
       });
     }, [graph]);
@@ -159,26 +159,30 @@ export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(
     );
 
     return (
-      <Layout.Main toolbar role={role} ref={forwardedRef}>
-        <TableToolbar
-          attendableId={Obj.getDXN(object).toString()}
-          customActions={customActions}
-          viewDirty={model?.getViewDirty()}
-          onAdd={handleInsertRow}
-          onSave={handleSave}
-        />
-        <TableComponent.Root role={role}>
-          <TableComponent.Main
-            key={Obj.getDXN(object).toString()}
-            ref={tableRef}
-            model={model}
-            presentation={presentation}
-            schema={schema}
-            onCreate={handleCreate}
-            onRowClick={handleRowClick}
-          />
-        </TableComponent.Root>
-      </Layout.Main>
+      <TableComponent.Root>
+        <Panel.Root role={role} ref={forwardedRef}>
+          <Panel.Toolbar asChild>
+            <TableToolbar
+              attendableId={Obj.getDXN(object).toString()}
+              customActions={customActions}
+              viewDirty={model?.getViewDirty()}
+              onAdd={handleInsertRow}
+              onSave={handleSave}
+            />
+          </Panel.Toolbar>
+          <Panel.Content asChild>
+            <TableComponent.Main
+              key={Obj.getDXN(object).toString()}
+              ref={tableRef}
+              model={model}
+              presentation={presentation}
+              schema={schema}
+              onCreate={handleCreate}
+              onRowClick={handleRowClick}
+            />
+          </Panel.Content>
+        </Panel.Root>
+      </TableComponent.Root>
     );
   },
 );

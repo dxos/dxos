@@ -23,7 +23,7 @@ import { executeMenuAction } from '../util';
 
 import { ActionLabel, actionLabel } from './ActionLabel';
 import { DropdownMenu } from './DropdownMenu';
-import { type MenuScopedProps, useMenu, useMenuItems } from './MenuContext';
+import { type MenuScopedProps, useMenuItems, useMenuScoped } from './Menu';
 
 export type ToolbarMenuDropdownMenuActionGroup = Omit<MenuActionProperties, 'variant' | 'icon'> & {
   variant: 'dropdownMenu';
@@ -54,7 +54,7 @@ export type ToolbarMenuActionProps = {
 };
 
 const ActionToolbarItem = ({ action, __menuScope }: MenuScopedProps<{ action: MenuAction }>) => {
-  const { iconSize, onAction } = useMenu('ActionToolbarItem', __menuScope);
+  const { iconSize, onAction } = useMenuScoped('ActionToolbarItem', __menuScope);
   const { t } = useTranslation(translationKey);
 
   const { icon, iconOnly = true, disabled, testId, hidden, classNames } = action.properties;
@@ -91,7 +91,7 @@ const DropdownMenuToolbarItem = ({
 }: MenuScopedProps<ToolbarMenuActionGroupProps>) => {
   const { iconOnly, disabled, testId } = group.properties;
   const { t } = useTranslation(translationKey);
-  const { iconSize } = useMenu('DropdownMenuToolbarItem', __menuScope);
+  const { iconSize } = useMenuScoped('DropdownMenuToolbarItem', __menuScope);
   const items = useMenuItems(group, propsItems, 'DropdownMenuToolbarItem', __menuScope);
   const activeItem = items?.find((item) => !!(item as MenuAction).properties.checked);
   const icon =
@@ -128,7 +128,7 @@ const DropdownMenuToolbarItem = ({
 };
 
 const ToggleGroupItem = ({ group, action, __menuScope }: MenuScopedProps<ToolbarMenuActionProps>) => {
-  const { iconSize, onAction } = useMenu('ToggleGroupItem', __menuScope);
+  const { iconSize, onAction } = useMenuScoped('ToggleGroupItem', __menuScope);
   const { t } = useTranslation(translationKey);
   const { icon, iconOnly = true, disabled, testId, hidden, classNames } = action.properties;
   const handleClick = useCallback(() => {
@@ -187,7 +187,7 @@ export const ToolbarMenu = ({
   ...props
 }: MenuScopedProps<ToolbarMenuProps>) => {
   const items = useMenuItems(undefined, undefined, 'ToolbarMenu', __menuScope);
-  const { attendableId, alwaysActive } = useMenu('ToolbarMenu', __menuScope);
+  const { attendableId, alwaysActive } = useMenuScoped('ToolbarMenu', __menuScope);
   const { hasAttention } = useAttention(attendableId);
   const InnerRoot = textBlockWidthProp ? 'div' : Fragment;
   const innerRootProps = textBlockWidthProp

@@ -155,9 +155,9 @@ export interface MonthProps {
  */
 export interface UseCalendarReturn {
   containerProps: {
-    ref: RefObject<HTMLDivElement>;
-    tabIndex?: number;
-    className?: string;
+    'ref': RefObject<HTMLDivElement>;
+    'tabIndex'?: number;
+    'className'?: string;
     'aria-label': string;
   };
   display: DisplayMode;
@@ -175,9 +175,9 @@ export interface UseCalendarReturn {
 
 export interface UseDayReturn {
   dayProps: {
-    onClick: () => void;
+    'onClick': () => void;
     'data-date': DateString;
-    className?: string;
+    'className'?: string;
   };
   isSelected: boolean;
   isToday: boolean;

@@ -11,11 +11,11 @@ import * as Layer from 'effect/Layer';
 import * as Runtime from 'effect/Runtime';
 
 import { AiService, type ModelName } from '@dxos/ai';
+import { GenericToolkit } from '@dxos/ai';
 import {
   AiConversation,
   type AiSessionRunError,
   type AiSessionRunRequirements,
-  GenericToolkit,
   ToolExecutionServices,
 } from '@dxos/assistant';
 import { Chat } from '@dxos/assistant-toolkit';

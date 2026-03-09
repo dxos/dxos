@@ -14,7 +14,9 @@ const preventDefault = (event: Event) => event.preventDefault();
 // TODO(burdon): Factor out.
 const Endcap = ({ children }: PropsWithChildren) => {
   return (
-    <div className='grid w-[var(--rail-action)] h-[var(--rail-action)] items-center justify-center'>{children}</div>
+    <div className='grid w-[var(--dx-rail-action)] h-[var(--dx-rail-action)] items-center justify-center'>
+      {children}
+    </div>
   );
 };
 
@@ -71,10 +73,10 @@ const ChatDialogRoot = ({
       <Dialog.Root modal={false} open={open} onOpenChange={setOpen}>
         <div role='none' className='dx-dialog__overlay bg-transparent pointer-events-none' data-h-align='end'>
           <Dialog.Content
+            size='md'
             inOverlayLayout
             classNames={[
-              'grid grid-rows-[var(--rail-action)_1fr_min-content] p-0 overflow-hidden',
-              'box-content md:w-[35rem] md:max-w-none pointer-events-auto',
+              'grid grid-rows-[var(--dx-rail-action)_1fr_min-content] p-0 overflow-hidden box-content pointer-events-auto',
             ]}
             onEscapeKeyDown={onEscape}
             onInteractOutside={preventDefault}
@@ -103,7 +105,9 @@ const ChatDialogHeader = ({ classNames, title }: ChatDialogHeaderProps) => {
   const { expanded, setExpanded } = useChatDialogContext(CHAT_DIALOG_HEADER_NAME);
 
   return (
-    <div className={mx('grid grid-cols-[var(--rail-action)_1fr_min-content] items-center overflow-hidden', classNames)}>
+    <div
+      className={mx('grid grid-cols-[var(--dx-rail-action)_1fr_min-content] items-center overflow-hidden', classNames)}
+    >
       <Endcap>
         <Dialog.Close>
           <Icon icon='ph--x--regular' />

@@ -162,9 +162,8 @@ export const whenEchoObject = (node: Node.Node): Option.Option<Obj.Unknown> =>
 export const whenAll =
   (...matchers: NodeMatcher[]): NodeMatcher =>
   (node: Node.Node): Option.Option<Node.Node> => {
-    for (const matcher of matchers) {
-      const result = matcher(node);
-      if (Option.isNone(result)) {
+    for (const candidate of matchers) {
+      if (Option.isNone(candidate(node))) {
         return Option.none();
       }
     }
@@ -190,9 +189,8 @@ export const whenAll =
 export const whenAny =
   (...matchers: NodeMatcher[]): NodeMatcher =>
   (node: Node.Node): Option.Option<Node.Node> => {
-    for (const matcher of matchers) {
-      const result = matcher(node);
-      if (Option.isSome(result)) {
+    for (const candidate of matchers) {
+      if (Option.isSome(candidate(node))) {
         return Option.some(node);
       }
     }

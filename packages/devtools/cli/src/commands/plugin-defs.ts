@@ -32,14 +32,10 @@ export const getCore = (): string[] => [
 export const getDefaults = (): string[] => [ChessPlugin.meta.id, InboxPlugin.meta.id, MarkdownPlugin.meta.id];
 
 export const getPlugins = ({ config }: PluginConfig): Plugin.Plugin[] => {
-  // Derive sqlitePath from config's dataRoot for persistent indexing in CLI.
-  const dataRoot = config?.get('runtime.client.storage.dataRoot');
-  const sqlitePath = dataRoot ? `${dataRoot}/sqlite.db` : undefined;
-
   return [
     AutomationPlugin(),
     ChessPlugin(),
-    ClientPlugin({ config, sqlitePath }),
+    ClientPlugin({ config }),
     InboxPlugin(),
     MarkdownPlugin(),
     OperationPlugin(),

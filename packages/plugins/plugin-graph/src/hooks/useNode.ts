@@ -20,10 +20,19 @@ export const useNode = <T = any>(graph: Graph.ReadableGraph, id?: string): Node.
   return Option.getOrElse(useAtomValue(graph.node(id ?? '')), () => undefined);
 };
 
-export const useConnections = (graph: Graph.ReadableGraph, id?: string, relation?: Node.Relation): Node.Node[] => {
+export const useConnections = (
+  graph: Graph.ReadableGraph,
+  id: string | undefined,
+  relation: Node.RelationInput,
+): Node.Node[] => {
   return useAtomValue(graph.connections(id ?? '', relation));
 };
 
 export const useActions = (graph: Graph.ReadableGraph, id?: string): Node.Node[] => {
   return useAtomValue(graph.actions(id ?? ''));
+};
+
+/** Subscribe to just the edge topology (inbound/outbound IDs) of a node without subscribing to node content. */
+export const useEdges = (graph: Graph.ReadableGraph, id?: string): Graph.Edges => {
+  return useAtomValue(graph.edges(id ?? ''));
 };

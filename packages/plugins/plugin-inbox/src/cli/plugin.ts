@@ -4,9 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
-import { ClientCapabilities } from '@dxos/plugin-client/types';
+import { Ref } from '@dxos/echo';
 import { type CreateObject } from '@dxos/plugin-space/types';
 import { Event, Message } from '@dxos/types';
 
@@ -19,25 +19,27 @@ export const InboxPlugin = Plugin.define(meta).pipe(
   AppPlugin.addMetadataModule({
     metadata: [
       {
-        id: Mailbox.Mailbox.typename,
+        id: Mailbox.kind,
         metadata: {
           createObject: ((props, { db }) =>
-            Effect.gen(function* () {
-              const client = yield* Capability.get(ClientCapabilities.Client);
-              const space = client.spaces.get(db.spaceId);
-              return Mailbox.make({ ...props, space });
+            Effect.sync(() => {
+              const feed = Mailbox.make(props);
+              const config = Mailbox.makeConfig({ feed: Ref.make(feed), accessToken: props.accessToken });
+              db.add(config);
+              return feed;
             })) satisfies CreateObject,
           addToCollectionOnCreate: true,
         },
       },
       {
-        id: Calendar.Calendar.typename,
+        id: Calendar.kind,
         metadata: {
           createObject: ((props, { db }) =>
-            Effect.gen(function* () {
-              const client = yield* Capability.get(ClientCapabilities.Client);
-              const space = client.spaces.get(db.spaceId);
-              return Calendar.make({ ...props, space });
+            Effect.sync(() => {
+              const feed = Calendar.make(props);
+              const config = Calendar.makeConfig({ feed: Ref.make(feed), accessToken: props.accessToken });
+              db.add(config);
+              return feed;
             })) satisfies CreateObject,
           addToCollectionOnCreate: true,
         },
@@ -46,7 +48,7 @@ export const InboxPlugin = Plugin.define(meta).pipe(
   }),
   AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
   AppPlugin.addSchemaModule({
-    schema: [Calendar.Calendar, Event.Event, Mailbox.Mailbox, Message.Message],
+    schema: [Event.Event, Mailbox.Config, Calendar.Config, Message.Message],
   }),
   Plugin.make,
 );

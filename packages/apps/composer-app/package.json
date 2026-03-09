@@ -82,6 +82,7 @@
     "@dxos/plugin-thread": "workspace:*",
     "@dxos/plugin-token-manager": "workspace:*",
     "@dxos/plugin-transcription": "workspace:*",
+    "@dxos/plugin-voxel": "workspace:*",
     "@dxos/plugin-wnfs": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",

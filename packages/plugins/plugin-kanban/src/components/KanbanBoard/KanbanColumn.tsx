@@ -39,29 +39,28 @@ export const KanbanColumn = forwardRef<HTMLDivElement, KanbanColumnProps>(
       <Board.Column.Root
         data={column}
         location={location}
+        classNames='grid grid-rows-[var(--dx-rail-action)_1fr_var(--dx-rail-action)]'
         debug={debug}
         dragHandleRef={dragHandleRef}
         ref={forwardedRef}
       >
-        <Board.Column.Grid classNames='grid-rows-[var(--rail-action)_1fr_var(--rail-action)]'>
-          {uncategorized ? (
-            <div className='border-b border-separator p-2' data-testid='board-column-header'>
-              <span className='font-medium'>{title}</span>
-            </div>
-          ) : (
-            <Board.Column.Header label={title} dragHandleRef={dragHandleRef as React.RefObject<HTMLButtonElement>} />
-          )}
-          <Board.Column.Body
-            data={column}
-            eventHandler={eventHandler}
-            Tile={itemTile as React.FC<MosaicTileProps<Obj.Unknown>>}
+        {uncategorized ? (
+          <div className='border-b border-separator p-2' data-testid='board-column-header'>
+            <span className='font-medium'>{title}</span>
+          </div>
+        ) : (
+          <Board.Column.Header label={title} dragHandleRef={dragHandleRef as React.RefObject<HTMLButtonElement>} />
+        )}
+        <Board.Column.Body
+          data={column}
+          eventHandler={eventHandler}
+          Tile={itemTile as React.FC<MosaicTileProps<Obj.Unknown>>}
+        />
+        {onCardAdd && (
+          <Board.Column.Footer
+            onAdd={() => onCardAdd(column.columnValue === UNCATEGORIZED_VALUE ? undefined : column.columnValue)}
           />
-          {onCardAdd && (
-            <Board.Column.Footer
-              onAdd={() => onCardAdd(column.columnValue === UNCATEGORIZED_VALUE ? undefined : column.columnValue)}
-            />
-          )}
-        </Board.Column.Grid>
+        )}
       </Board.Column.Root>
     );
   },

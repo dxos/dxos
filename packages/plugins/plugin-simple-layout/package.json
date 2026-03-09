@@ -14,9 +14,9 @@
   "type": "module",
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs",
-      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts"
     }
   },
@@ -29,6 +29,7 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/async": "workspace:*",
+    "@dxos/echo": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/operation": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",

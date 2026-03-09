@@ -15,7 +15,8 @@ import {
   toLocalizedString,
   useTranslation,
 } from '@dxos/react-ui';
-import { Card, Mosaic } from '@dxos/react-ui-mosaic';
+import { Card } from '@dxos/react-ui';
+import { Mosaic } from '@dxos/react-ui-mosaic';
 import { descriptionMessage, mx } from '@dxos/ui-theme';
 
 import { meta } from '../meta';
@@ -106,7 +107,7 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
                 role='dialog'
                 data={layout.dialogContent}
                 limit={1}
-                fallback={ContentError}
+                fallback={ErrorFallback}
                 placeholder={<div />}
               />
             ) : (
@@ -115,7 +116,7 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
                 classNames={layout.dialogOverlayClasses}
                 style={layout.dialogOverlayStyle}
               >
-                <Surface.Surface role='dialog' data={layout.dialogContent} limit={1} fallback={ContentError} />
+                <Surface.Surface role='dialog' data={layout.dialogContent} limit={1} fallback={ErrorFallback} />
               </DialogOverlay>
             )}
           </DialogRoot>
@@ -140,7 +141,7 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
                       ) : (
                         <span />
                       )}
-                      <Card.Close onClick={handleClose} />
+                      <Card.CloseIconButton onClick={handleClose} />
                     </Card.Toolbar>
                     <Surface.Surface role='card--content' data={layout.popoverContent} limit={1} />
                   </Card.Root>
@@ -158,15 +159,16 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
   );
 };
 
-export const ContentError = ({ error }: { error?: Error }) => {
+export const ErrorFallback = ({ error }: { error?: Error }) => {
   const { t } = useTranslation(meta.id);
   const errorString = error?.toString() ?? '';
   return (
-    <div role='none' className='overflow-auto p-8 attention-surface grid place-items-center'>
-      <p
-        role='alert'
-        className={mx(descriptionMessage, 'break-words rounded-md p-8', errorString.length < 256 && 'text-lg')}
-      >
+    <div
+      role='alert'
+      data-testid='error-boundary-fallback'
+      className={mx('overflow-auto p-8 dx-attention-surface grid place-items-center')}
+    >
+      <p className={mx(descriptionMessage, 'break-words rounded-md p-8', errorString.length < 256 && 'text-lg')}>
         {error ? errorString : t('error fallback message')}
       </p>
     </div>

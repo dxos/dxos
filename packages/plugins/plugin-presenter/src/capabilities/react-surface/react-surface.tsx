@@ -9,15 +9,15 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useSettingsState } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
+import { Collection } from '@dxos/echo';
 import { Markdown } from '@dxos/plugin-markdown/types';
-import { Collection } from '@dxos/schema';
 
 import {
   CollectionPresenterContainer,
   DocumentPresenterContainer,
   MarkdownSlide,
   PresenterSettings,
-} from '../../components';
+} from '../../containers';
 import { meta } from '../../meta';
 import { type PresenterSettingsProps } from '../../types';
 

@@ -169,6 +169,7 @@ export default tseslint.config(
       // General
       camelcase: 'off',
       'jsx-quotes': ['error', 'prefer-single'],
+      'quote-props': ['error', 'consistent-as-needed'],
       'no-unused-vars': 'off',
       'no-console': 'error',
       'no-constant-binary-expression': 'off',

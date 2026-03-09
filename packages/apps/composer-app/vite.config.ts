@@ -116,7 +116,12 @@ export default defineConfig((env) => ({
       ['node:path']: '@dxos/node-std/path',
       ['util']: '@dxos/node-std/util',
       ['path']: '@dxos/node-std/path',
+      ['node:crypto']: '@dxos/node-std/crypto',
+      ['crypto']: '@dxos/node-std/crypto',
       ['tiktoken/lite']: path.resolve(dirname, 'stub.mjs'),
+      // NOTE: react-ui must be aliased because vite-plugin-import-source only intercepts imports from
+      //   source files — imports embedded inside compiled dist/ files bypass it entirely.
+      '@dxos/react-ui': path.resolve(rootDir, 'packages/ui/react-ui/src'),
       // TODO(wittjosiah): Remove this once we have a better solution.
       // NOTE: This is a workaround to fix "dual package hazard" where dist output and local sources
       //   might resolve differently, resulting in two distinct module instances.
@@ -140,7 +145,7 @@ export default defineConfig((env) => ({
     // Handle .md?raw imports.
     {
       name: 'raw-md-loader',
-      load(id) {
+      load(id: string) {
         if (id.endsWith('.md?raw')) {
           const filePath = id.replace(/\?raw$/, '');
           const content = readFileSync(filePath, 'utf-8');

@@ -4,7 +4,7 @@
 
 export * from './design';
 export * from './discord';
-export * from './initiative';
+export * from './project';
 export * from './linear';
 export * from './markdown';
 export * from './planning';

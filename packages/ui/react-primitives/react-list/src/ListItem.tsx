@@ -122,7 +122,7 @@ const ListItem = forwardRef<ListItemElement, ListItemProps>(
         id={id}
         ref={forwardedRef}
         aria-labelledby={headingId}
-        {...(selectable && { role: 'option', 'aria-selected': !!selected })}
+        {...(selectable && { 'role': 'option', 'aria-selected': !!selected })}
         {...(open && { 'aria-expanded': true })}
       >
         {children}

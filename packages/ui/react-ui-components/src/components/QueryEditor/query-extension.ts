@@ -259,10 +259,10 @@ class TagWidget extends WidgetType {
   }
 
   override toDOM() {
-    const { bg, border, surface } = getStyles(this._hue);
+    const { fill, border, surface } = getStyles(this._hue);
     return container(
       border,
-      Domino.of('span').classNames(mx('flex items-center px-1 text-black text-xs', bg)).text('#'),
+      Domino.of('span').classNames(mx('flex items-center px-1 text-black text-xs', fill)).text('#'),
       Domino.of('span')
         .classNames(mx('flex items-center px-1 text-subdued text-sm rounded-r-[3px]', surface))
         .text(this._str),
@@ -334,18 +334,18 @@ const styles = EditorView.theme({
 const queryHighlighting = styleTags({
   // Keywords
   'Not And Or': t.keyword,
-  TypeKeyword: t.attributeName,
+  'TypeKeyword': t.attributeName,
 
   // Literals
-  String: t.string,
-  Number: t.number,
-  Boolean: t.bool,
-  Null: t.null,
+  'String': t.string,
+  'Number': t.number,
+  'Boolean': t.bool,
+  'Null': t.null,
 
   // Identifiers
-  Identifier: t.variableName,
-  PropertyPath: t.propertyName,
-  Tagname: t.variableName,
+  'Identifier': t.variableName,
+  'PropertyPath': t.propertyName,
+  'Tagname': t.variableName,
 
   // Punctuation
   '{ }': t.brace,

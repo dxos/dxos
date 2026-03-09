@@ -6,6 +6,7 @@ import { Atom, type Registry } from '@effect-atom/atom-react';
 import * as Predicate from 'effect/Predicate';
 
 import { Obj } from '@dxos/echo';
+import { type View } from '@dxos/echo';
 import { Format, TypeEnum, getValue } from '@dxos/echo/internal';
 import { cellClassesForFieldType, formatForDisplay } from '@dxos/react-ui-form';
 import {
@@ -15,7 +16,7 @@ import {
   type DxGridPlaneRange,
   toPlaneCellIndex,
 } from '@dxos/react-ui-grid';
-import { type FieldType, VIEW_FIELD_LIMIT } from '@dxos/schema';
+import { VIEW_FIELD_LIMIT } from '@dxos/schema';
 import { mx } from '@dxos/ui-theme';
 
 import { tableButtons, tableControls } from '../util';
@@ -107,7 +108,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
   private createDataCell(
     cells: DxGridPlaneCells,
     obj: T,
-    field: FieldType,
+    field: View.FieldType,
     colIndex: number,
     displayIndex: number,
   ): void {
@@ -473,7 +474,7 @@ export const cellClassesForRowSelection = (selected: boolean, selectionMode: Sel
 
   switch (selectionMode) {
     case 'single':
-      return ['!bg-currentRelated dx-grid__cell--no-focus-unfurl hover:bg-hover-surface cursor-pointer!'];
+      return ['dx-grid__cell--no-focus-unfurl !bg-current-surface hover:bg-hover-surface cursor-pointer!'];
     case 'multiple':
       return ['!bg-grid-cell-selected'];
   }

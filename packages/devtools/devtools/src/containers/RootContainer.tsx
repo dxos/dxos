@@ -6,10 +6,9 @@ import React, { Suspense } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 
 import { DeviceKind, useDevices, useIdentity } from '@dxos/react-client/halo';
-import { Icon, ScrollArea } from '@dxos/react-ui';
+import { ErrorBoundary, Icon, ScrollArea } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { ErrorBoundary } from '../components';
 import { useSections } from '../hooks';
 
 export const RootContainer = () => {
@@ -19,7 +18,7 @@ export const RootContainer = () => {
     <div className='flex w-full h-full overflow-hidden'>
       <Sidebar />
       <div className='flex flex-col grow overflow-hidden'>
-        <ErrorBoundary key={pathname}>
+        <ErrorBoundary key={pathname} name='devtools.root'>
           <Suspense>
             <Outlet />
           </Suspense>

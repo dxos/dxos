@@ -9,16 +9,16 @@ export const RESEARCH_SEQUENCE_DEFINITION: SequenceDefinition = {
   steps: [
     {
       instructions: 'Research information and entities related to the selected objects.',
-      tools: [ToolId.make('search/web_search')],
+      tools: [ToolId.make('search/web-search')],
     },
     {
       instructions:
         'Based on your research find matching entires that are already in the graph. Do exaustive research.',
-      tools: [ToolId.make('search/local_search')],
+      tools: [ToolId.make('search/local-search')],
     },
     {
       instructions: 'Add researched data to the graph. Make connections to existing objects.',
-      tools: [ToolId.make('search/local_search'), ToolId.make('graph/writer')],
+      tools: [ToolId.make('search/local-search'), ToolId.make('graph/writer')],
     },
   ],
 };

@@ -4,8 +4,8 @@
 
 import { type ComponentFunction, type Elevation, type MessageValence, type Theme } from '@dxos/ui-types';
 
+import { messageValence } from '../../fragments';
 import { mx } from '../../util';
-import { messageValence } from '../fragments';
 
 export type MessageStyleProps = {
   valence?: MessageValence;
@@ -13,7 +13,7 @@ export type MessageStyleProps = {
 };
 
 export const messageRoot: ComponentFunction<MessageStyleProps> = ({ valence }, etc) => {
-  return mx('grid grid-cols-[min-content_1fr] gap-x-2 p-trim-sm rounded-md', messageValence(valence), etc);
+  return mx('grid grid-cols-[min-content_1fr] gap-x-2 p-trim-sm rounded-sm', messageValence(valence), etc);
 };
 
 export const messageHeader: ComponentFunction<MessageStyleProps> = (_, etc) => {
@@ -21,7 +21,7 @@ export const messageHeader: ComponentFunction<MessageStyleProps> = (_, etc) => {
 };
 
 export const messageTitle: ComponentFunction<MessageStyleProps> = (_, etc) => {
-  return mx('col-start-2 text-lg gap-trim-sm', etc);
+  return mx('col-start-2 text-lg gap-trim-sm [&>svg]:inline-block', etc);
 };
 
 export const messageIcon: ComponentFunction<MessageStyleProps> = (_, etc) => {
@@ -29,7 +29,7 @@ export const messageIcon: ComponentFunction<MessageStyleProps> = (_, etc) => {
 };
 
 export const messageContent: ComponentFunction<MessageStyleProps> = (_, etc) => {
-  return mx('col-span-2 grid grid-cols-subgrid col-start-2 first:font-medium', etc);
+  return mx('grid grid-cols-subgrid col-start-2 first:font-medium', etc);
 };
 
 export const messageTheme: Theme<MessageStyleProps> = {

@@ -35,7 +35,7 @@ const buildDefaultActions = (): ActionGraphProps => {
     }),
   ];
   result.nodes.push(...actions);
-  result.edges.push(...actions.map((a) => ({ source: 'root', target: a.id })));
+  result.edges.push(...actions.map((a) => ({ source: 'root', target: a.id, relation: 'child' })));
   return result;
 };
 
@@ -53,7 +53,7 @@ const DefaultStory = ({ actions: actionsProp, ...props }: StoryProps) => {
 };
 
 const meta = {
-  title: 'plugins/plugin-simple-layout/AppBar',
+  title: 'plugins/plugin-simple-layout/components/AppBar',
   render: DefaultStory,
   decorators: [
     withTheme(),

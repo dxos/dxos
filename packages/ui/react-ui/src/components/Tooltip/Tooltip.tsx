@@ -3,6 +3,7 @@
 //
 
 // This is based upon `@radix-ui/react-tooltip` fetched 17 March 2025 at https://github.com/radix-ui/primitives at commit 6e75e11.
+// TODO(burdon): Replace with https://ui.shadcn.com/docs/components/radix/tooltip
 
 import { composeEventHandlers } from '@radix-ui/primitive';
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
@@ -492,12 +493,12 @@ interface TooltipContentImplProps extends Omit<PopperContentProps, 'onPlaced'> {
    * Event handler called when the escape key is down.
    * Can be prevented.
    */
-  onEscapeKeyDown?: DismissableLayerProps['onEscapeKeyDown'];
+  'onEscapeKeyDown'?: DismissableLayerProps['onEscapeKeyDown'];
   /**
    * Event handler called when the a `pointerdown` event happens outside of the `Tooltip`.
    * Can be prevented.
    */
-  onPointerDownOutside?: DismissableLayerProps['onPointerDownOutside'];
+  'onPointerDownOutside'?: DismissableLayerProps['onPointerDownOutside'];
 }
 
 const TooltipContentImpl = forwardRef<TooltipContentImplElement, TooltipContentImplProps>(

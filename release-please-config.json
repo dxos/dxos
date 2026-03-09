@@ -360,6 +360,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/mcp-client/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/mesh/edge-client/package.json",
           "jsonpath": "$.version"
         },
@@ -725,6 +730,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-voxel/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-wnfs/package.json",
           "jsonpath": "$.version"
         },
@@ -831,6 +841,11 @@
         {
           "type": "json",
           "path": "packages/ui/lit-ui/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/react-primitives/react-error-boundary/package.json",
           "jsonpath": "$.version"
         },
         {

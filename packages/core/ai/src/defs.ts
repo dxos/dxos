@@ -94,3 +94,10 @@ export class MockModelRegistry implements ModelRegistry {
     return this._models.get(model);
   }
 }
+
+export interface ModelOptions {
+  /**
+   * Enable thinking.
+   */
+  thinking?: boolean;
+}

@@ -30,7 +30,10 @@ import React, {
   forwardRef,
 } from 'react';
 
+import { type DialogSize } from '@dxos/ui-theme';
+
 import { useThemeContext } from '../../hooks';
+import { Column } from '../../primitives';
 import { type ThemedClassName } from '../../util';
 import { ElevationProvider } from '../ElevationProvider';
 
@@ -122,6 +125,7 @@ type OverlayLayoutContextValue = { inOverlayLayout?: boolean };
 
 const ALERT_DIALOG_OVERLAY_NAME = 'AlertDialogOverlay';
 const ALERT_DIALOG_CONTENT_NAME = 'AlertDialogContent';
+const ALERT_DIALOG_BODY_NAME = 'AlertDialogBody';
 const ALERT_DIALOG_ACTIONBAR_NAME = 'AlertDialogActionBar';
 
 const [OverlayLayoutProvider, useOverlayLayoutContext] = createContext<OverlayLayoutContextValue>(
@@ -151,6 +155,7 @@ const AlertDialogOverlay: ForwardRefExoticComponent<AlertDialogOverlayProps> = f
         'dialog.overlay',
         {},
         classNames,
+        // TODO(burdon): Move to dialog.ts.
         'data-[h-align=start]:justify-center',
         'data-[h-align=start]:items-start',
         'data-[h-align=center]:place-content-center',
@@ -169,26 +174,48 @@ AlertDialogOverlay.displayName = ALERT_DIALOG_OVERLAY_NAME;
 // Content
 //
 
-type AlertDialogContentProps = ThemedClassName<AlertDialogContentPrimitiveProps>;
+type AlertDialogContentProps = ThemedClassName<AlertDialogContentPrimitiveProps> & { size?: DialogSize };
 
 const AlertDialogContent: ForwardRefExoticComponent<AlertDialogContentProps> = forwardRef<
   HTMLDivElement,
   AlertDialogContentProps
->(({ classNames, children, ...props }, forwardedRef) => {
+>(({ classNames, children, size = 'md', ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   const { inOverlayLayout } = useOverlayLayoutContext(ALERT_DIALOG_CONTENT_NAME);
   return (
     <AlertDialogContentPrimitive
       {...props}
-      className={tx('dialog.content', { inOverlayLayout }, classNames)}
+      className={tx('dialog.content', { inOverlayLayout, size }, classNames)}
       ref={forwardedRef}
     >
-      {children}
+      <Column.Root>{children}</Column.Root>
     </AlertDialogContentPrimitive>
   );
 });
 
 AlertDialogContent.displayName = ALERT_DIALOG_CONTENT_NAME;
+
+//
+// Body
+//
+
+type AlertDialogBodyProps = PropsWithChildren;
+
+const AlertDialogBody: ForwardRefExoticComponent<AlertDialogBodyProps> = forwardRef<
+  HTMLDivElement,
+  AlertDialogBodyProps
+>(({ children, ...props }, forwardedRef) => {
+  const { tx } = useThemeContext();
+  return (
+    <Column.Segment asChild>
+      <div role='none' {...props} className={tx('dialog.body')} ref={forwardedRef}>
+        {children}
+      </div>
+    </Column.Segment>
+  );
+});
+
+AlertDialogBody.displayName = ALERT_DIALOG_BODY_NAME;
 
 //
 // ActionBar
@@ -202,9 +229,11 @@ const AlertDialogActionBar: ForwardRefExoticComponent<AlertDialogActionBarProps>
 >(({ children, classNames, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   return (
-    <div {...props} className={tx('dialog.actionbar', {}, classNames)} ref={forwardedRef}>
-      {children}
-    </div>
+    <Column.Segment asChild>
+      <div {...props} className={tx('dialog.actionbar', {}, classNames)} ref={forwardedRef}>
+        {children}
+      </div>
+    </Column.Segment>
   );
 });
 
@@ -220,6 +249,7 @@ export const AlertDialog = {
   Portal: AlertDialogPortal,
   Overlay: AlertDialogOverlay,
   Content: AlertDialogContent,
+  Body: AlertDialogBody,
   Title: AlertDialogTitle,
   Description: AlertDialogDescription,
   ActionBar: AlertDialogActionBar,
@@ -233,6 +263,7 @@ export type {
   AlertDialogPortalProps,
   AlertDialogOverlayProps,
   AlertDialogContentProps,
+  AlertDialogBodyProps,
   AlertDialogTitleProps,
   AlertDialogDescriptionProps,
   AlertDialogActionBarProps,

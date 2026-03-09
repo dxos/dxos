@@ -2,23 +2,29 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
 import { type Database, Obj } from '@dxos/echo';
-import { type AnyProperties, type TypeAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
+import { type Collection } from '@dxos/echo';
+import { type AnyProperties } from '@dxos/echo/internal';
 import { type Space, type SpaceId } from '@dxos/react-client/echo';
 import { toLocalizedString, useDefaultValue, useTranslation } from '@dxos/react-ui';
 import { Form, omitId } from '@dxos/react-ui-form';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-searchlist';
-import { type Collection, ViewAnnotation } from '@dxos/schema';
-import { type MaybePromise, isNonNullable } from '@dxos/util';
+import { type MaybePromise } from '@dxos/util';
 
 import { useInputSurfaceLookup } from '../../hooks';
 import { meta } from '../../meta';
 import { type CreateObject } from '../../types';
 import { getSpaceDisplayName } from '../../util';
+
+/** Display-ready option for the create object search list. */
+export type CreateObjectOption = {
+  id: string;
+  label: string;
+  icon?: string;
+};
 
 export type Metadata = {
   createObject: CreateObject;
@@ -28,11 +34,10 @@ export type Metadata = {
 };
 
 export type CreateObjectPanelProps = {
-  schemas: Schema.Schema.AnyNoContext[];
+  options: CreateObjectOption[];
   spaces: Space[];
   typename?: string;
   target?: Database.Database | Collection.Collection;
-  views?: boolean;
   initialFormValues?: Partial<AnyProperties>;
   defaultSpaceId?: SpaceId;
   resolve?: (typename: string) => Metadata | undefined;
@@ -42,42 +47,21 @@ export type CreateObjectPanelProps = {
 };
 
 export const CreateObjectPanel = ({
-  schemas,
+  options,
   spaces,
   typename,
   target,
-  views,
-  initialFormValues: _initialFormValues,
+  initialFormValues: initialFormValuesProp,
   defaultSpaceId,
   resolve,
   onTargetChange,
   onTypenameChange,
   onCreateObject,
 }: CreateObjectPanelProps) => {
-  const { t } = useTranslation(meta.id);
-  const initialFormValues = useDefaultValue(_initialFormValues, () => ({}));
+  const initialFormValues = useDefaultValue(initialFormValuesProp, () => ({}));
   const metadata = typename && resolve?.(typename);
-  const options: TypeAnnotation[] = schemas
-    .filter((schema) => {
-      if (views == null) {
-        return true;
-      } else {
-        return views === ViewAnnotation.get(schema).pipe(Option.getOrElse(() => false));
-      }
-    })
-    .map((schema) => getTypeAnnotation(schema))
-    .filter(isNonNullable)
-    .sort((a, b) => {
-      const nameA = t('typename label', {
-        ns: a.typename,
-        defaultValue: a.typename,
-      });
-      const nameB = t('typename label', {
-        ns: b.typename,
-        defaultValue: b.typename,
-      });
-      return nameA.localeCompare(nameB);
-    });
+
+  const sortedOptions = useMemo(() => [...options].sort((a, b) => a.label.localeCompare(b.label)), [options]);
 
   const handleCreateObject = useCallback(
     async (props: Record<string, any>) => {
@@ -89,13 +73,13 @@ export const CreateObjectPanel = ({
     [onCreateObject, metadata],
   );
 
-  const handleSetTypename = useCallback(
-    async (typename: string) => {
-      const metadata = resolve?.(typename);
+  const handleSelectOption = useCallback(
+    async (id: string) => {
+      const metadata = resolve?.(id);
       if (metadata && !metadata.inputSchema) {
         await onCreateObject?.({ metadata });
       } else {
-        onTypenameChange?.(typename);
+        onTypenameChange?.(id);
       }
     },
     [resolve, onCreateObject],
@@ -105,7 +89,7 @@ export const CreateObjectPanel = ({
 
   // TODO(wittjosiah): These inputs should be rolled into a `Form` once it supports the necessary variants.
   return !metadata ? (
-    <SelectSchema options={options} resolve={resolve} onChange={handleSetTypename} />
+    <SelectType options={sortedOptions} onChange={handleSelectOption} />
   ) : !target ? (
     <SelectSpace spaces={spaces} defaultSpaceId={defaultSpaceId} onChange={onTargetChange} />
   ) : metadata.inputSchema ? (
@@ -113,7 +97,7 @@ export const CreateObjectPanel = ({
       testId='create-object-form'
       autoFocus
       schema={omitId(metadata.inputSchema)}
-      values={initialFormValues}
+      defaultValues={initialFormValues}
       db={Obj.isObject(target) ? Obj.getDatabase(target) : target}
       fieldProvider={inputSurfaceLookup}
       onSave={handleCreateObject}
@@ -198,23 +182,12 @@ const SelectSpace = ({
   );
 };
 
-const SelectSchema = ({
-  options,
-  resolve,
-  onChange,
-}: {
-  options: TypeAnnotation[];
-  onChange: (type: string) => void;
-} & Pick<CreateObjectPanelProps, 'resolve'>) => {
+const SelectType = ({ options, onChange }: { options: CreateObjectOption[]; onChange: (id: string) => void }) => {
   const { t } = useTranslation(meta.id);
 
   const { results, handleSearch } = useSearchListResults({
     items: options,
-    extract: (option) =>
-      t('typename label', {
-        ns: option.typename,
-        defaultValue: option.typename,
-      }),
+    extract: (option) => option.label,
   });
 
   return (
@@ -228,15 +201,12 @@ const SelectSchema = ({
         <SearchList.Viewport>
           {results.map((option) => (
             <SearchList.Item
-              key={option.typename}
-              value={option.typename}
-              label={t('typename label', {
-                ns: option.typename,
-                defaultValue: option.typename,
-              })}
-              icon={resolve?.(option.typename)?.icon ?? 'ph--placeholder--regular'}
-              onSelect={() => onChange(option.typename)}
+              key={option.id}
+              value={option.id}
+              label={option.label}
+              icon={option.icon ?? 'ph--placeholder--regular'}
               classNames='flex items-center gap-2'
+              onSelect={() => onChange(option.id)}
             />
           ))}
         </SearchList.Viewport>

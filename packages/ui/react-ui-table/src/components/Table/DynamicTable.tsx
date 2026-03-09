@@ -42,7 +42,7 @@ export const DynamicTable = <T extends Type.Entity.Any = Type.Entity.Any>({
   name = 'example.com/dynamic-table', // Rmove default or make random; this will lead to type collisions.
   rows,
   properties,
-  jsonSchema: _jsonSchema,
+  jsonSchema: jsonSchemaProp,
   rowActions,
   onRowClick,
   onRowAction,
@@ -53,8 +53,8 @@ export const DynamicTable = <T extends Type.Entity.Any = Type.Entity.Any>({
 
   // TODO(burdon): Remove variance from the props (should be normalized externally; possibly via hooks).
   const { jsonSchema } = useMemo(
-    () => getBaseSchema({ typename: name, properties, jsonSchema: _jsonSchema, schema }),
-    [name, properties, _jsonSchema, schema],
+    () => getBaseSchema({ typename: name, properties, jsonSchema: jsonSchemaProp, schema }),
+    [name, properties, jsonSchemaProp, schema],
   );
 
   useEffect(() => {

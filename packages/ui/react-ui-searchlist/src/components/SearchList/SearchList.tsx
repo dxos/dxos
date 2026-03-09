@@ -6,6 +6,7 @@ import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, {
   type ChangeEvent,
   type ComponentPropsWithRef,
+  type ComponentPropsWithoutRef,
   type KeyboardEvent,
   type PropsWithChildren,
   type ReactNode,
@@ -21,13 +22,14 @@ import {
   type Density,
   type Elevation,
   Icon,
+  ScrollArea,
   type ThemedClassName,
   useDensityContext,
   useElevationContext,
   useThemeContext,
   useTranslation,
 } from '@dxos/react-ui';
-import { descriptionText, mx } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
 
@@ -230,17 +232,12 @@ SearchListRoot.displayName = 'SearchList.Root';
 // Content
 //
 
-type SearchListContentProps = ThemedClassName<PropsWithChildren<{}>>;
+type SearchListContentProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
 
 const SearchListContent = forwardRef<HTMLDivElement, SearchListContentProps>(
-  ({ classNames, children }, forwardedRef) => {
+  ({ classNames, children, ...props }, forwardedRef) => {
     return (
-      <div
-        role='none'
-        // TODO(burdon): Remove p-1 hack.
-        className={mx('flex flex-col gap-2 h-full w-full min-h-0 overflow-hidden p-1', classNames)}
-        ref={forwardedRef}
-      >
+      <div role='none' {...props} className={mx('grid h-full w-full min-h-0', classNames)} ref={forwardedRef}>
         {children}
       </div>
     );
@@ -248,29 +245,6 @@ const SearchListContent = forwardRef<HTMLDivElement, SearchListContentProps>(
 );
 
 SearchListContent.displayName = 'SearchList.Content';
-
-//
-// Viewport
-//
-
-type SearchListViewportProps = ThemedClassName<PropsWithChildren>;
-
-/**
- * Scrollable viewport wrapper for Content.
- * Only Content wrapped in Viewport will be scrollable.
- */
-// TODO(burdon): Reconcile with Mosaic.Viewport (factor out common core?).
-const SearchListViewport = forwardRef<HTMLDivElement, SearchListViewportProps>(
-  ({ classNames, children }, forwardedRef) => {
-    return (
-      <div role='listbox' className={mx('h-full w-full min-h-0 overflow-y-auto', classNames)} ref={forwardedRef}>
-        {children}
-      </div>
-    );
-  },
-);
-
-SearchListViewport.displayName = 'SearchList.Viewport';
 
 //
 // Input
@@ -376,31 +350,51 @@ const SearchListInput = forwardRef<HTMLInputElement, SearchListInputProps>(
     );
 
     return (
-      <input
-        {...props}
-        {...(props.autoFocus && !hasIosKeyboard && { autoFocus: true })}
-        type='text'
-        placeholder={placeholder ?? defaultPlaceholder}
-        className={tx(
-          'input.input',
-          {
-            variant,
-            disabled: props.disabled,
-            density,
-            elevation,
-          },
-          classNames,
-        )}
-        value={query}
-        onChange={handleChange}
-        onKeyDown={handleKeyDown}
-        ref={forwardedRef}
-      />
+      <div className='p-form-chrome'>
+        <input
+          {...props}
+          {...(props.autoFocus && !hasIosKeyboard && { autoFocus: true })}
+          type='text'
+          placeholder={placeholder ?? defaultPlaceholder}
+          className={tx(
+            'input.input',
+            {
+              variant,
+              disabled: props.disabled,
+              density,
+              elevation,
+            },
+            classNames,
+          )}
+          value={query}
+          onChange={handleChange}
+          onKeyDown={handleKeyDown}
+          ref={forwardedRef}
+        />
+      </div>
     );
   },
 );
 
 SearchListInput.displayName = 'SearchList.Input';
+
+//
+// Viewport
+//
+
+type SearchListViewportProps = ThemedClassName<PropsWithChildren>;
+
+const SearchListViewport = forwardRef<HTMLDivElement, SearchListViewportProps>(
+  ({ classNames, children }, forwardedRef) => {
+    return (
+      <ScrollArea.Root role='listbox' classNames={mx(classNames)} ref={forwardedRef} thin>
+        <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
+      </ScrollArea.Root>
+    );
+  },
+);
+
+SearchListViewport.displayName = 'SearchList.Viewport';
 
 //
 // Item
@@ -479,7 +473,7 @@ const SearchListItem = forwardRef<HTMLDivElement, SearchListItemProps>(
       >
         {icon && <Icon icon={icon} size={5} />}
         <span className='w-0 grow truncate'>{label}</span>
-        {suffix && <span className={mx('shrink-0', descriptionText)}>{suffix}</span>}
+        {suffix && <span className='shrink-0 text-description'>{suffix}</span>}
         {checked && <Icon icon='ph--check--regular' size={5} />}
       </div>
     );

@@ -63,6 +63,5 @@ export {
 // Deprecated
 //
 
-export { MessageV1, MessageV1ToV2 } from './Message';
 export { LegacyOrganization } from './Organization';
 export { LegacyPerson } from './Person';

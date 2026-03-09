@@ -12,11 +12,11 @@ import { InvocationTraceContainer } from '@dxos/devtools';
 import { Obj } from '@dxos/echo';
 import { Script } from '@dxos/functions';
 import { getSpace } from '@dxos/react-client/echo';
-import { Layout } from '@dxos/react-ui';
+import { Panel } from '@dxos/react-ui';
 import { type AccessToken } from '@dxos/types';
 
+import { DEPLOYMENT_DIALOG } from '../../constants';
 import {
-  DEPLOYMENT_DIALOG,
   DeploymentDialog,
   NotebookContainer,
   ScriptContainer,
@@ -24,7 +24,7 @@ import {
   ScriptPluginSettings,
   ScriptProperties,
   TestContainer,
-} from '../../components';
+} from '../../containers';
 import { useCompiler } from '../../hooks';
 import { meta } from '../../meta';
 import { Notebook, ScriptCapabilities, type ScriptSettings } from '../../types';
@@ -96,14 +96,16 @@ export default Capability.makeModule(() =>
           const space = getSpace(data.companionTo);
           const queueDxn = space?.properties.invocationTraceQueue?.dxn;
           return (
-            <Layout.Main role={role}>
-              <InvocationTraceContainer
-                db={space?.db}
-                queueDxn={queueDxn}
-                target={data.companionTo}
-                detailAxis='block'
-              />
-            </Layout.Main>
+            <Panel.Root role={role}>
+              <Panel.Content asChild>
+                <InvocationTraceContainer
+                  db={space?.db}
+                  queueDxn={queueDxn}
+                  target={data.companionTo}
+                  detailAxis='block'
+                />
+              </Panel.Content>
+            </Panel.Root>
           );
         },
       }),

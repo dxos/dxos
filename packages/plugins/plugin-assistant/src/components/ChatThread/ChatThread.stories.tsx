@@ -15,10 +15,10 @@ import { faker } from '@dxos/random';
 import { useQueue, useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Popover } from '@dxos/react-ui';
+import { Card } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { MarkdownStream } from '@dxos/react-ui-components';
 import { EditorPreviewProvider, useEditorPreview } from '@dxos/react-ui-editor';
-import { Card } from '@dxos/react-ui-mosaic';
 import { render } from '@dxos/storybook-utils';
 import { type Message, Organization, Person } from '@dxos/types';
 
@@ -95,7 +95,7 @@ const PreviewCard = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-assistant/ChatThread',
+  title: 'plugins/plugin-assistant/components/ChatThread',
   component: ChatThread,
   render: render(DefaultStory),
   decorators: [

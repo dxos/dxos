@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { DescriptionAnnotation, FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { Text } from '@dxos/schema';
 import { EditorInputMode, EditorViewMode } from '@dxos/ui-editor/types';
@@ -24,6 +24,10 @@ export const Document = Schema.Struct({
   }),
   LabelAnnotation.set(['name', 'fallbackName']),
   DescriptionAnnotation.set('description'),
+  Annotation.IconAnnotation.set({
+    icon: 'ph--text-aa--regular',
+    hue: 'green',
+  }),
 );
 
 export type Document = Schema.Schema.Type<typeof Document>;
@@ -34,8 +38,12 @@ export type Document = Schema.Schema.Type<typeof Document>;
 export const make = ({
   content = '',
   ...props
-}: Partial<{ name: string; fallbackName: string; content: string }> = {}) =>
-  Obj.make(Document, { ...props, content: Ref.make(Text.make(content)) });
+}: Partial<{ name: string; fallbackName: string; content: string }> = {}) => {
+  const doc = Obj.make(Document, { ...props, content: Ref.make(Text.make(content)) });
+  // TODO(dmaretskyi): We need a better way to set parents when creating hierarchies.
+  Obj.setParent(doc.content.target!, doc);
+  return doc;
+};
 
 /**
  * Plugin settings.

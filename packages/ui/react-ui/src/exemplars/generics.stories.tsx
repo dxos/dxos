@@ -31,6 +31,7 @@ const Component = ComponentInner as <P extends HTMLElement>(
 const meta = {
   title: 'ui/react-ui-core/exemplars/generics',
   component: Component,
+  render: (props) => <Component<HTMLDivElement> {...props} />,
   decorators: [withTheme()],
   parameters: {
     layout: 'centered',
@@ -41,4 +42,8 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Single: Story = {};
+export const Default: Story = {
+  args: {
+    children: 'Hello',
+  },
+};

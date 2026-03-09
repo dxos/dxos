@@ -20,7 +20,7 @@ import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { Text } from '@dxos/schema';
 import { type EditorViewMode } from '@dxos/ui-editor';
 
-import { MarkdownCard, MarkdownContainer, type MarkdownContainerProps, MarkdownSettings } from '../../components';
+import { MarkdownCard, MarkdownContainer, type MarkdownContainerProps, MarkdownSettings } from '../../containers';
 import { meta } from '../../meta';
 import { Markdown, MarkdownCapabilities } from '../../types';
 

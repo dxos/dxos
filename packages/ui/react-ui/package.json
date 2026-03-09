@@ -14,15 +14,15 @@
   "type": "module",
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs",
-      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts"
     },
     "./testing": {
+      "source": "./src/testing/index.ts",
       "browser": "./dist/lib/browser/testing/index.mjs",
       "node": "./dist/lib/node-esm/testing/index.mjs",
-      "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts"
     }
   },
@@ -45,6 +45,7 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/lit-ui": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/react-error-boundary": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
     "@dxos/react-input": "workspace:*",
     "@dxos/react-list": "workspace:*",
@@ -84,8 +85,10 @@
     "@radix-ui/react-visually-hidden": "catalog:",
     "aria-hidden": "catalog:",
     "date-fns": "catalog:",
+    "error-stack-parser": "catalog:",
     "i18next": "catalog:",
     "keyborg": "catalog:",
+    "react-error-boundary": "catalog:",
     "react-i18next": "catalog:",
     "react-remove-scroll": "catalog:"
   },

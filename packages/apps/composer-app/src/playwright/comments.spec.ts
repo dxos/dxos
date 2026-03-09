@@ -26,7 +26,7 @@ test.describe('Comments tests', () => {
 
   test('create', async () => {
     await host.createSpace();
-    await host.createObject({ type: 'Document', nth: 0 });
+    await host.createObject({ type: 'Document' });
 
     const plank = host.deck.plank();
     const editorTextbox = Markdown.getMarkdownTextboxWithLocator(plank.locator);
@@ -40,7 +40,7 @@ test.describe('Comments tests', () => {
 
   test('edit message', async () => {
     await host.createSpace();
-    await host.createObject({ type: 'Document', nth: 0 });
+    await host.createObject({ type: 'Document' });
 
     const plank = host.deck.plank();
     const editorTextbox = Markdown.getMarkdownTextboxWithLocator(plank.locator);
@@ -81,7 +81,7 @@ test.describe('Comments tests', () => {
     }
 
     await host.createSpace();
-    await host.createObject({ type: 'Document', nth: 0 });
+    await host.createObject({ type: 'Document' });
 
     const plank = host.deck.plank();
     const editorTextbox = Markdown.getMarkdownTextboxWithLocator(plank.locator);
@@ -113,7 +113,7 @@ test.describe('Comments tests', () => {
 
   test('delete thread', async () => {
     await host.createSpace();
-    await host.createObject({ type: 'Document', nth: 0 });
+    await host.createObject({ type: 'Document' });
 
     const plank = host.deck.plank();
     const editorTextbox = Markdown.getMarkdownTextboxWithLocator(plank.locator);
@@ -134,7 +134,7 @@ test.describe('Comments tests', () => {
 
   test('undo delete thread', async () => {
     await host.createSpace();
-    await host.createObject({ type: 'Document', nth: 0 });
+    await host.createObject({ type: 'Document' });
 
     const plank = host.deck.plank();
     const editorTextbox = Markdown.getMarkdownTextboxWithLocator(plank.locator);
@@ -160,7 +160,7 @@ test.describe('Comments tests', () => {
 
   test('selecting comment highlights thread and vice versa', async () => {
     await host.createSpace();
-    await host.createObject({ type: 'Document', nth: 0 });
+    await host.createObject({ type: 'Document' });
 
     const plank = host.deck.plank();
     const editorTextbox = Markdown.getMarkdownTextboxWithLocator(plank.locator);
@@ -193,7 +193,7 @@ test.describe('Comments tests', () => {
   // TODO(wittjosiah): Paste doesn't work in headless mode.
   test.skip('cut & paste comment', async () => {
     await host.createSpace();
-    await host.createObject({ type: 'Document', nth: 0 });
+    await host.createObject({ type: 'Document' });
 
     const plank = host.deck.plank();
     const editorTextbox = Markdown.getMarkdownTextboxWithLocator(plank.locator);

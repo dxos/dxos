@@ -4,6 +4,7 @@
 
 import { type Resource } from '@dxos/react-ui';
 import { translations as componentsTranslations } from '@dxos/react-ui-components';
+import { Message } from '@dxos/types';
 
 import { meta } from './meta';
 import { Calendar, Mailbox } from './types';
@@ -11,7 +12,7 @@ import { Calendar, Mailbox } from './types';
 export const translations = [
   {
     'en-US': {
-      [Mailbox.Mailbox.typename]: {
+      [Mailbox.kind]: {
         'typename label': 'Mailbox',
         'typename label_zero': 'Mailboxes',
         'typename label_one': 'Mailbox',
@@ -21,7 +22,17 @@ export const translations = [
         'delete object label': 'Delete mailbox',
         'object deleted label': 'Mailbox deleted',
       },
-      [Calendar.Calendar.typename]: {
+      [Message.Message.typename]: {
+        'typename label': 'Message',
+        'typename label_zero': 'Messages',
+        'typename label_one': 'Message',
+        'typename label_other': 'Messages',
+        'object name placeholder': 'New message',
+        'rename object label': 'Rename message',
+        'delete object label': 'Delete message',
+        'object deleted label': 'Message deleted',
+      },
+      [Calendar.kind]: {
         'typename label': 'Calendar',
         'typename label_zero': 'Calendars',
         'typename label_one': 'Calendar',
@@ -50,9 +61,18 @@ export const translations = [
         'show contact label': 'Show contact',
         'create contact label': 'Create contact',
 
+        'mailbox account label': 'Account',
+        'mailbox account placeholder': 'Select account...',
         'mailbox sync label': 'Mailbox Sync',
-        'mailbox object settings configure sync button label': 'Configure sync',
-        'mailbox object settings configure subscription button label': 'Configure subscription',
+
+        'calendar account label': 'Account',
+        'calendar account placeholder': 'Select account...',
+        'calendar sync label': 'Calendar Sync',
+
+        'enable background sync label': 'Enable background sync',
+        'enabling background sync label': 'Enabling...',
+        'disable background sync label': 'Disable background sync',
+        'view trigger label': 'View trigger',
 
         'event untitled label': 'Untitled',
         'event toolbar create note menu': 'Create note',
@@ -95,6 +115,11 @@ export const translations = [
         'send email error unknown': 'An unknown error occurred',
 
         'send as email label': 'Send as email',
+
+        'draft subject label': 'Subject',
+        'draft subject placeholder': 'Message subject',
+        'draft body label': 'Body',
+        'draft body placeholder': 'Write your message...',
       },
     },
   },

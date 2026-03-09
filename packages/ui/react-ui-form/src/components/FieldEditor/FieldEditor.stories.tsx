@@ -9,7 +9,7 @@ import { Filter, Query } from '@dxos/echo';
 import { createEchoSchema } from '@dxos/echo/testing';
 import { log } from '@dxos/log';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { ProjectionModel, View, createEchoChangeCallback } from '@dxos/schema';
+import { ProjectionModel, ViewModel, createEchoChangeCallback } from '@dxos/schema';
 import { Example } from '@dxos/schema/testing';
 
 import { translations } from '../../translations';
@@ -17,17 +17,15 @@ import { FIELD_EDITOR_DEBUG_SYMBOL, TestLayout } from '../testing';
 
 import { FieldEditor, type FieldEditorProps } from './FieldEditor';
 
-// Type definition for debug objects exposed to tests.
 export type FieldEditorDebugObjects = {
   props: FieldEditorProps;
   projection: ProjectionModel;
 };
 
-// TODO(wittjosiah): ECHO objects don't work when passed via Storybook args.
 const useTestProjection = () => {
   return useMemo(() => {
     const schema = createEchoSchema(Example);
-    const view = View.make({
+    const view = ViewModel.make({
       name: 'Test',
       query: Query.select(Filter.type(Example)),
       jsonSchema: schema.jsonSchema,

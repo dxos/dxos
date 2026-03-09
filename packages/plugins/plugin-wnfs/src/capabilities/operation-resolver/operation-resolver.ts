@@ -9,7 +9,7 @@ import { Obj, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { OperationResolver } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { Collection } from '@dxos/schema';
+import { ManagedCollection } from '@dxos/schema';
 
 import { upload } from '../../helpers';
 import { WnfsCapabilities, WnfsFile, WnfsOperation } from '../../types';
@@ -20,7 +20,7 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: WnfsOperation.OnCreateSpace,
         handler: Effect.fnUntraced(function* ({ rootCollection }) {
-          const collection = Collection.makeManaged({ key: Type.getTypename(WnfsFile.File) });
+          const collection = ManagedCollection.makeManagedCollection({ key: Type.getTypename(WnfsFile.File) });
           Obj.change(rootCollection, (c) => {
             c.objects.push(Ref.make(collection));
           });

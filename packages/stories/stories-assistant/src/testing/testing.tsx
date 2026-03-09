@@ -7,7 +7,9 @@ import * as Toolkit from '@effect/ai/Toolkit';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
+import React, { useEffect, useMemo, useState } from 'react';
 
+import { GenericToolkit } from '@dxos/ai';
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
 import {
   ActivationEvent,
@@ -16,10 +18,12 @@ import {
   Capability,
   type CapabilityManager,
   Plugin,
+  PluginManager,
 } from '@dxos/app-framework';
-import { withPluginManager } from '@dxos/app-framework/testing';
+import { type WithPluginManagerOptions, withPluginManager } from '@dxos/app-framework/testing';
+import { useApp } from '@dxos/app-framework/ui';
 import { AppActivationEvents, AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
-import { AiContextBinder, ArtifactId, GenericToolkit } from '@dxos/assistant';
+import { AiContextBinder, ArtifactId } from '@dxos/assistant';
 import { AgentFunctions, DesignBlueprint, MarkdownBlueprint, PlanningBlueprint } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
@@ -87,82 +91,166 @@ namespace TestingToolkit {
     });
 }
 
+type LazyPluginsResult = {
+  plugins: Plugin.Plugin[];
+  types?: any[];
+};
+
 type DecoratorsProps = {
   plugins?: Plugin.Plugin[];
+  lazyPlugins?: () => Promise<LazyPluginsResult>;
   accessTokens?: AccessToken.AccessToken[];
   onInit?: (props: { client: Client; space: Space }) => Promise<void>;
 } & (Omit<ClientPluginOptions, 'onClientInitialized' | 'onSpacesReady'> & Pick<StoryPluginOptions, 'onChatCreated'>);
 
 /**
- * Create storybook decorators.
+ * Builds the full plugin list for the plugin manager.
  */
-export const getDecorators = ({
+const buildPluginManagerOptions = ({
   types = [],
   plugins = [],
   accessTokens = [],
   onInit,
   onChatCreated,
   ...props
-}: DecoratorsProps) => [
-  withPluginManager({
-    plugins: [
-      ...corePlugins(),
-      ClientPlugin({
-        types: [
-          Assistant.Chat,
-          Blueprint.Blueprint,
-          AccessToken.AccessToken,
-          Function.Function,
-          Markdown.Document,
-          Prompt.Prompt,
-          Trigger.Trigger,
-          ...types,
-        ],
-        onClientInitialized: ({ client }) =>
-          Effect.gen(function* () {
-            log('onClientInitialized', { identity: client.halo.identity.get()?.did });
-            // Abort if already initialized.
-            if (client.halo.identity.get()) {
-              return;
-            }
+}: Omit<DecoratorsProps, 'lazyPlugins'>): WithPluginManagerOptions => ({
+  plugins: [
+    ...corePlugins(),
+    ClientPlugin({
+      types: [
+        AccessToken.AccessToken,
+        Assistant.Chat,
+        Blueprint.Blueprint,
+        Function.Function,
+        Markdown.Document,
+        Prompt.Prompt,
+        Trigger.Trigger,
+        ...types,
+      ],
+      onClientInitialized: ({ client }) =>
+        Effect.gen(function* () {
+          log('onClientInitialized', { identity: client.halo.identity.get()?.did });
+          // Abort if already initialized.
+          if (client.halo.identity.get()) {
+            return;
+          }
 
-            yield* Effect.promise(() => client.halo.createIdentity());
-            yield* Effect.promise(() => client.spaces.waitUntilReady());
+          yield* Effect.promise(() => client.halo.createIdentity());
+          yield* Effect.promise(() => client.spaces.waitUntilReady());
 
-            const space = client.spaces.default;
-            // TODO(burdon): Should not require this.
-            //  ERROR: invariant violation: Database was not initialized with root object.
-            // TODO(burdon): onSpacesReady is never called.
-            yield* Effect.promise(() => space.waitUntilReady());
+          const space = client.spaces.default;
+          // TODO(burdon): Should not require this.
+          //  ERROR: invariant violation: Database was not initialized with root object.
+          // TODO(burdon): onSpacesReady is never called.
+          yield* Effect.promise(() => space.waitUntilReady());
 
-            // Add tokens.
-            for (const accessToken of accessTokens) {
-              space.db.add(Obj.clone(accessToken));
-            }
+          // Add tokens.
+          for (const accessToken of accessTokens) {
+            space.db.add(Obj.clone(accessToken));
+          }
 
-            yield* Effect.promise(() => space.db.flush({ indexes: true }));
-            if (onInit) {
-              yield* Effect.promise(() => onInit({ client, space }));
-            }
-            yield* Effect.promise(() => space.db.flush({ indexes: true }));
-          }),
-        // Directly importing the "@dxos/client/opfs-worker" didn't work.
-        createOpfsWorker: () => new Worker(new URL('./opfs-worker', import.meta.url), { type: 'module' }),
-        ...props,
-      }),
+          yield* Effect.promise(() => space.db.flush({ indexes: true }));
+          if (onInit) {
+            yield* Effect.promise(() => onInit({ client, space }));
+          }
+          yield* Effect.promise(() => space.db.flush({ indexes: true }));
+        }),
+      // Directly importing the "@dxos/client/opfs-worker" didn't work.
+      createOpfsWorker: () => new Worker(new URL('./opfs-worker', import.meta.url), { type: 'module' }),
+      ...props,
+    }),
 
-      // User plugins.
-      PreviewPlugin(),
-      AutomationPlugin(),
-      AssistantPlugin(),
+    // User plugins.
+    PreviewPlugin(),
+    AutomationPlugin(),
+    AssistantPlugin(),
 
-      // Test-specific.
-      StorybookPlugin({}),
-      StoryPlugin({ onChatCreated }),
-      ...plugins,
-    ],
-  }),
-];
+    // Test-specific.
+    StorybookPlugin({}),
+    StoryPlugin({ onChatCreated }),
+    ...plugins,
+  ],
+});
+
+/**
+ * Inner component that creates the plugin manager and renders the app.
+ * Separated to respect React hooks rules (hooks must be called unconditionally).
+ */
+const PluginManagerHost: React.FC<{
+  options: WithPluginManagerOptions;
+  children: React.ReactNode;
+  contextId: string;
+}> = ({ options, children, contextId }) => {
+  const manager = useMemo(() => {
+    const pluginManager = PluginManager.make({
+      pluginLoader: () => Effect.die(new Error('Not implemented')),
+      plugins: options.plugins ?? [],
+      core: (options.plugins ?? []).map(({ meta }) => meta.id),
+    });
+    return pluginManager;
+  }, [options]);
+
+  useEffect(() => {
+    const capability = Capability.contributes(Capabilities.ReactRoot, {
+      id: contextId,
+      root: () => <>{children}</>,
+    });
+
+    manager.capabilities.contribute({
+      ...capability,
+      module: 'dxos.org/app-framework/withPluginManager/lazy',
+    });
+
+    return () => {
+      manager.capabilities.remove(capability.interface, capability.implementation);
+    };
+  }, [manager, contextId, children]);
+
+  const App = useApp({ pluginManager: manager });
+  return <App />;
+};
+
+/**
+ * Create storybook decorators.
+ * Supports lazy plugin loading via the `lazyPlugins` option.
+ */
+export const getDecorators = ({ lazyPlugins, ...props }: DecoratorsProps) => {
+  if (lazyPlugins) {
+    return [
+      ((Story: React.FC, context: { id: string }) => {
+        const [lazyResult, setLazyResult] = useState<LazyPluginsResult | null>(null);
+
+        useEffect(() => {
+          void lazyPlugins().then(setLazyResult);
+        }, []);
+
+        const options = useMemo(
+          () =>
+            lazyResult
+              ? buildPluginManagerOptions({
+                  ...props,
+                  plugins: lazyResult.plugins,
+                  types: [...(props.types ?? []), ...(lazyResult.types ?? [])],
+                })
+              : null,
+          [lazyResult],
+        );
+
+        if (!options) {
+          return null;
+        }
+
+        return (
+          <PluginManagerHost options={options} contextId={context.id}>
+            <Story />
+          </PluginManagerHost>
+        );
+      }) as any,
+    ];
+  }
+
+  return [withPluginManager(buildPluginManagerOptions(props))];
+};
 
 /**
  * Creates access tokens from environment variables.

@@ -4,11 +4,16 @@
 
 import { mx } from '@dxos/ui-theme';
 
+// TODO(burdon): Move to these as dx-components?
+
+/** @private */
 export const soloInlinePadding =
-  'ps-[calc(env(safe-area-inset-left)+.25rem)] pe-[calc(env(safe-area-inset-left)+.25rem)]';
+  'ps-[calc(env(safe-area-inset-left)+.25rem)] pe-[calc(env(safe-area-inset-right)+.25rem)]';
 
-const sidebarToggleStyles = 'h-(--rail-item) w-(--rail-item) absolute bottom-2 z-[1] !bg-deck-surface lg:hidden';
+const sidebarToggleStyles = 'h-(--dx-rail-item) w-(--dx-rail-item) absolute bottom-2 z-[1] !bg-deck-surface lg:hidden';
 
+/** @private */
 export const fixedSidebarToggleStyles = mx(sidebarToggleStyles, 'left-2');
 
+/** @private */
 export const fixedComplementarySidebarToggleStyles = mx(sidebarToggleStyles, 'right-2');

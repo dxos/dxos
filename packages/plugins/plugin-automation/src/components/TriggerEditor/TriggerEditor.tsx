@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { ComputeGraph } from '@dxos/conductor';
-import { DXN, type Database, type Query } from '@dxos/echo';
+import { DXN, type Database, Obj, type Query } from '@dxos/echo';
 import { Function, Script, Trigger } from '@dxos/functions';
 import { Filter, Ref, useQuery } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
@@ -43,13 +43,28 @@ export const TriggerEditor = ({ db, types, tags, readonlySpec, trigger, ...formP
     readonlySpec,
   });
 
+  const handleValuesChanged = useCallback(
+    (newValues: Partial<TriggerFormSchema>) => {
+      Obj.change(trigger, (t) => {
+        Object.assign(t, newValues);
+      });
+    },
+    [trigger],
+  );
+
+  const defaultValues = useMemo(() => {
+    const { id: _, ...values } = trigger;
+    return values;
+  }, [trigger]);
+
   return (
     <Form.Root<TriggerFormSchema>
       {...formProps}
       schema={omitId(Trigger.Trigger)}
-      values={trigger}
+      defaultValues={defaultValues}
       db={db}
       fieldMap={fieldMap}
+      onValuesChanged={handleValuesChanged}
     >
       <Form.Viewport>
         <Form.Content>
@@ -105,11 +120,11 @@ const useCustomInputs = ({ db, readonlySpec, types, tags }: UseCustomInputsProps
       },
 
       // Spec selector.
-      ['spec.kind' as const]: (props) => <SpecSelector {...props} readonly={readonlySpec} />,
+      'spec.kind': (props) => <SpecSelector {...props} readonly={readonlySpec} />,
 
       // TODO(wittjosiah): Copied from ViewEditor.
       // Query input editor.
-      ['spec.query' as const]: (props) => {
+      'spec.query': (props) => {
         const handleChange = useCallback(
           (query: Query.Any) => props.onValueChange(props.type, { ast: query.ast }),
           [props.type, props.onValueChange],
@@ -124,7 +139,7 @@ const useCustomInputs = ({ db, readonlySpec, types, tags }: UseCustomInputsProps
       },
 
       // Function input editor.
-      ['input' as const]: (props) => <FunctionInputEditor {...props} functions={functions} db={db} />,
+      'input': (props) => <FunctionInputEditor {...props} functions={functions} db={db} />,
     }),
     [workflows, scripts, functions, readonlySpec],
   );

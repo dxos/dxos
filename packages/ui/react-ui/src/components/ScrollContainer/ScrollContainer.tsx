@@ -126,7 +126,7 @@ const Root = forwardRef<ScrollController, RootProps>(
 
     return (
       <ScrollContainerProvider pinned={pinned} controller={controller} scrollToBottom={scrollToBottom}>
-        <div className='relative grid flex-1 min-h-0 overflow-hidden'>
+        <div className='relative grid dx-expand overflow-hidden'>
           {fade && (
             <div
               role='none'

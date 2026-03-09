@@ -98,24 +98,6 @@ const CalendarRoot = forwardRef<CalendarController, CalendarRootProps>(
 );
 
 //
-// Viewport
-//
-
-const CALENDAR_VIEWPORT_NAME = 'CalendarContent';
-
-type CalendarViewportProps = PropsWithChildren<ThemedClassName>;
-
-const CalendarViewport = ({ children, classNames }: CalendarViewportProps) => {
-  return (
-    <div role='none' className={mx('flex flex-col items-center overflow-hidden bg-input-surface', classNames)}>
-      {children}
-    </div>
-  );
-};
-
-CalendarViewport.displayName = CALENDAR_VIEWPORT_NAME;
-
-//
 // Header
 //
 
@@ -123,7 +105,7 @@ const CALENDAR_TOOLBAR_NAME = 'CalendarHeader';
 
 type CalendarToolbarProps = ThemedClassName;
 
-const CalendarToolbar = ({ classNames }: CalendarToolbarProps) => {
+const CalendarToolbar = ({ classNames, ...props }: CalendarToolbarProps) => {
   const { t } = useTranslation(translationKey);
   const { weekStartsOn, event, index, selected } = useCalendarContext(CALENDAR_TOOLBAR_NAME);
   const top = useMemo(() => getDate(start, index ?? 0, 6, weekStartsOn), [index, weekStartsOn]);
@@ -135,8 +117,9 @@ const CalendarToolbar = ({ classNames }: CalendarToolbarProps) => {
 
   return (
     <div
+      {...props}
       role='none'
-      className={mx('shink-0 w-full grid grid-cols-3 items-center bg-barSurface', classNames)}
+      className={mx('shrink-0 w-full m-auto grid grid-cols-3 items-center bg-toolbar-surface', classNames)}
       style={{ width: defaultWidth }}
     >
       <div className='flex justify-start'>
@@ -171,7 +154,7 @@ type CalendarGridProps = ThemedClassName<{
   onSelect?: (event: { date: Date }) => void;
 }>;
 
-const CalendarGrid = ({ classNames, rows, onSelect }: CalendarGridProps) => {
+const CalendarGrid = ({ classNames, rows, onSelect, ...props }: CalendarGridProps) => {
   const { weekStartsOn, event, setIndex, selected, setSelected } = useCalendarContext(CALENDAR_GRID_NAME);
   const { ref: containerRef, width = 0, height = 0 } = useResizeDetector();
   const maxHeight = rows ? rows * size : undefined;
@@ -227,9 +210,19 @@ const CalendarGrid = ({ classNames, rows, onSelect }: CalendarGridProps) => {
     ({ key, index, style }) => {
       const getBgColor = (date: Date) => date.getMonth() % 2 === 0 && 'bg-modal-surface';
       return (
-        <div key={key} role='none' style={style} className='w-full grid grid-cols-[1fr_max-content_1fr] snap-center'>
+        <div
+          key={key}
+          {...props}
+          role='none'
+          style={style}
+          className='w-full grid grid-cols-[1fr_max-content_1fr] snap-center'
+        >
           <div role='none' className={mx(getBgColor(getDate(start, index, 0, weekStartsOn)))} />
-          <div role='none' className='grid grid-cols-7' style={{ gridTemplateColumns: `repeat(7, ${size}px)` }}>
+          <div
+            role='none'
+            className='grid grid-cols-7 bg-input-surface'
+            style={{ gridTemplateColumns: `repeat(7, ${size}px)` }}
+          >
             {Array.from({ length: 7 }).map((_, i) => {
               const date = getDate(start, index, i, weekStartsOn);
               const num = getNumAppointments(date);
@@ -316,9 +309,8 @@ CalendarGrid.displayName = CALENDAR_GRID_NAME;
 
 export const Calendar = {
   Root: CalendarRoot,
-  Viewport: CalendarViewport,
   Toolbar: CalendarToolbar,
   Grid: CalendarGrid,
 };
 
-export type { CalendarController, CalendarRootProps, CalendarViewportProps, CalendarToolbarProps, CalendarGridProps };
+export type { CalendarController, CalendarRootProps, CalendarToolbarProps, CalendarGridProps };

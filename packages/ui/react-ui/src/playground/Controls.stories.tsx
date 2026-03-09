@@ -31,9 +31,6 @@ const DefaultStory = () => {
             </Select.Content>
           </Select.Portal>
         </Select.Root>
-        {/* TODO(burdon): Highlight is cyan. */}
-        {/* TODO(burdon): Show vertical divider by default. */}
-        {/* TODO(burdon): Icon sizes should adapt to density. */}
         <Toolbar.ToggleGroup type='multiple'>
           <Toolbar.ToggleGroupItem value='a'>
             <Icon icon='ph--text-b--regular' />
@@ -45,7 +42,6 @@ const DefaultStory = () => {
             <Icon icon='ph--text-underline--regular' />
           </Toolbar.ToggleGroupItem>
         </Toolbar.ToggleGroup>
-        {/* TODO(burdon): Highlight isn't shown. */}
         <Toolbar.ToggleGroup type='single' defaultValue='a'>
           <Toolbar.ToggleGroupItem value='a'>
             <Icon icon='ph--file-ts--regular' />
@@ -59,11 +55,9 @@ const DefaultStory = () => {
             <Icon icon='ph--bug--regular' />
           </Toggle>
         </Toolbar.Button>
-        {/* TODO(burdon): Should not be 'w-full' by default. */}
         <Input.Root>
           <Input.TextInput placeholder='Enter text...' />
         </Input.Root>
-        {/* TODO(burdon): Checkbox collapsed. */}
         <Input.Root>
           <Input.Checkbox checked={checked} onCheckedChange={(value) => setChecked(!!value)} />
           <Input.Label>Checkbox</Input.Label>

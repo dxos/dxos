@@ -8,8 +8,9 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Node, useConnections } from '@dxos/plugin-graph';
-import { Avatar, Icon, Layout, ScrollArea, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Card, Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
+import { Avatar, Icon, Panel, ScrollArea, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Card } from '@dxos/react-ui';
+import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchList, useSearchListItem, useSearchListResults } from '@dxos/react-ui-searchlist';
 import { mx } from '@dxos/ui-theme';
 import { byPosition } from '@dxos/util';
@@ -40,22 +41,26 @@ export const Home = (_: HomeProps) => {
   });
 
   return (
-    <Layout.Main toolbar>
-      <SearchList.Root onSearch={handleSearch}>
-        <Toolbar.Root>
-          <SearchList.Input placeholder={t('search placeholder')} autoFocus />
-        </Toolbar.Root>
-        <SearchList.Content>
-          <Mosaic.Container asChild>
-            <ScrollArea.Root orientation='vertical'>
-              <ScrollArea.Viewport classNames='p-2'>
-                <Mosaic.Stack items={results} getId={(node) => node.id} Tile={WorkspaceTile} />
-              </ScrollArea.Viewport>
-            </ScrollArea.Root>
-          </Mosaic.Container>
-        </SearchList.Content>
-      </SearchList.Root>
-    </Layout.Main>
+    <SearchList.Root onSearch={handleSearch}>
+      <Panel.Root>
+        <Panel.Toolbar asChild>
+          <Toolbar.Root>
+            <SearchList.Input placeholder={t('search placeholder')} autoFocus />
+          </Toolbar.Root>
+        </Panel.Toolbar>
+        <Panel.Content asChild>
+          <SearchList.Content>
+            <Mosaic.Container asChild>
+              <ScrollArea.Root orientation='vertical'>
+                <ScrollArea.Viewport classNames='p-2'>
+                  <Mosaic.Stack items={results} getId={(node) => node.id} Tile={WorkspaceTile} />
+                </ScrollArea.Viewport>
+              </ScrollArea.Root>
+            </Mosaic.Container>
+          </SearchList.Content>
+        </Panel.Content>
+      </Panel.Root>
+    </SearchList.Root>
   );
 };
 
@@ -127,7 +132,7 @@ const filterItems = (node: Node.Node, disposition: string) => {
 /** Returns root-level items filtered by disposition. */
 const useItemsByDisposition = (disposition: string, sort = false) => {
   const { graph } = useAppGraph();
-  const connections = useConnections(graph, Node.RootId);
+  const connections = useConnections(graph, Node.RootId, 'child');
   const filtered = connections.filter((node) => filterItems(node, disposition));
   return sort ? filtered.toSorted((a, b) => byPosition(a.properties, b.properties)) : filtered;
 };

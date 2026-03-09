@@ -1,0 +1,61 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+import React, { useCallback, useRef, useState } from 'react';
+
+import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
+import { type Feed, Obj } from '@dxos/echo';
+import { Button, Input, Popover, useTranslation } from '@dxos/react-ui';
+
+import { meta } from '../../meta';
+import { type Mailbox } from '../../types';
+
+export const SaveFilterPopover = ({
+  feed,
+  config,
+  filter,
+}: {
+  feed: Feed.Feed;
+  config?: Mailbox.Config;
+  filter: string;
+}) => {
+  const { t } = useTranslation(meta.id);
+  const doneButton = useRef<HTMLButtonElement>(null);
+  const [name, setName] = useState('');
+  const { invokePromise } = useOperationInvoker();
+
+  const handleDone = useCallback(() => {
+    if (config) {
+      Obj.change(config, (c: any) => {
+        (c.filters ??= []).push({ name, filter });
+      });
+    }
+    void invokePromise(LayoutOperation.UpdatePopover, { state: false, anchorId: '' });
+  }, [config, name, filter, invokePromise]);
+
+  // TODO(thure): Why does the input value need to be uncontrolled to work?
+  return (
+    <div role='none' className='p-2 flex gap-2'>
+      <div role='none' className='flex-1'>
+        <Input.Root>
+          <Input.Label srOnly>{t('saved filter name label')}</Input.Label>
+          <Input.TextInput
+            defaultValue={name}
+            placeholder={t('save filter placeholder')}
+            onChange={({ target: { value } }) => setName(value)}
+            // TODO(wittjosiah): Ideally this should access the popover context to close the popover.
+            //   Currently this is not possible because Radix does not expose the popover context.
+            onKeyDown={({ key }) => key === 'Enter' && doneButton.current?.click()}
+          />
+        </Input.Root>
+      </div>
+      <Popover.Close asChild>
+        <Button ref={doneButton} classNames='self-stretch' disabled={!name || !config} onClick={handleDone}>
+          {t('save filter button')}
+        </Button>
+      </Popover.Close>
+    </div>
+  );
+};

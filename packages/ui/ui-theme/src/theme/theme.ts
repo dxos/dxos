@@ -6,10 +6,10 @@ import { type ClassNameArray, type ComponentFunction, type Theme, type ThemeFunc
 import { getDeep } from '@dxos/util';
 
 import {
-  anchoredOverflowTheme,
   avatarTheme,
   breadcrumbTheme,
   buttonTheme,
+  cardTheme,
   dialogTheme,
   iconButtonTheme,
   iconTheme,
@@ -24,6 +24,7 @@ import {
   selectTheme,
   separatorTheme,
   skeletonTheme,
+  splitterTheme,
   statusTheme,
   tagTheme,
   toastTheme,
@@ -31,7 +32,7 @@ import {
   tooltipTheme,
   treegridTheme,
 } from './components';
-import { containerTheme } from './primitives';
+import { columnTheme, panelTheme } from './primitives';
 
 export const defaultTheme: Theme<Record<string, any>> = {
   themeName: () => 'default',
@@ -40,16 +41,17 @@ export const defaultTheme: Theme<Record<string, any>> = {
   // Primitives
   //
 
-  container: containerTheme,
+  column: columnTheme,
+  panel: panelTheme,
 
   //
   // Components
   //
 
-  anchoredOverflow: anchoredOverflowTheme,
   avatar: avatarTheme,
   breadcrumb: breadcrumbTheme,
   button: buttonTheme,
+  card: cardTheme,
   dialog: dialogTheme,
   icon: iconTheme,
   iconButton: iconButtonTheme,
@@ -64,6 +66,7 @@ export const defaultTheme: Theme<Record<string, any>> = {
   select: selectTheme,
   separator: separatorTheme,
   skeleton: skeletonTheme,
+  splitter: splitterTheme,
   status: statusTheme,
   tag: tagTheme,
   toast: toastTheme,

@@ -55,7 +55,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-sketch/Sketch',
+  title: 'plugins/plugin-sketch/components/Sketch',
   component: Sketch as any,
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],

@@ -114,6 +114,9 @@ export const createConfig = ({
             'node-fetch': 'isomorphic-fetch',
             'tiktoken/lite': resolve(__dirname, './stub.mjs'),
             'node:util': '@dxos/node-std/util',
+            'util': '@dxos/node-std/util',
+            'node:crypto': '@dxos/node-std/crypto',
+            'crypto': '@dxos/node-std/crypto',
             // Storybook builds from source; ensure worker entrypoints resolve without `dist/` artifacts.
             '@dxos/client/opfs-worker': resolve(rootDir, 'packages/sdk/client/src/worker/opfs-worker.ts'),
           },

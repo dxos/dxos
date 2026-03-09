@@ -68,9 +68,7 @@ export default Capability.makeModule(
                   subject: ASSISTANT_DIALOG,
                   state: true,
                   blockAlign: 'end',
-                  props: {
-                    chat,
-                  },
+                  props: { chat },
                 });
               }),
               properties: {

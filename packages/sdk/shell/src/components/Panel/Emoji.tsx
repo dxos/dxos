@@ -6,6 +6,9 @@ import React, { type PropsWithChildren } from 'react';
 
 import { getSize, mx } from '@dxos/ui-theme';
 
+/**
+ * @deprecated use Avatar.Emoji
+ */
 export const Emoji = ({ text, className }: { text?: string; className?: string }) => {
   const size = 14;
   return (
@@ -26,6 +29,9 @@ export const Emoji = ({ text, className }: { text?: string; className?: string }
   );
 };
 
+/**
+ * @deprecated
+ */
 export const Centered = (props: PropsWithChildren) => {
   const { children } = props;
   return (

@@ -1,0 +1,62 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React, { useEffect, useState } from 'react';
+
+import { TestObjectGenerator } from '@dxos/echo-generator';
+import { faker } from '@dxos/random';
+import { withTheme } from '@dxos/react-ui/testing';
+import { AccessToken } from '@dxos/types';
+
+import { TokensPanel, type TokensPanelProps } from './TokensPanel';
+
+faker.seed(1);
+
+const generator = new TestObjectGenerator(
+  { [AccessToken.AccessToken.typename]: AccessToken.AccessToken },
+  {
+    [AccessToken.AccessToken.typename]: async () => ({
+      token: faker.string.hexadecimal({ length: 32 }),
+      source: faker.internet.url(),
+      note: faker.lorem.sentence(faker.number.int({ min: 1, max: 9 })),
+    }),
+  },
+);
+
+const TokensPanelStory = (props: Omit<TokensPanelProps, 'tokens' | 'spaceId'>) => {
+  const [tokens, setTokens] = useState<AccessToken.AccessToken[]>([]);
+  useEffect(() => {
+    void Promise.all([...Array(5)].map(() => generator.createObject())).then((generated) =>
+      setTokens(generated as AccessToken.AccessToken[]),
+    );
+  }, []);
+  if (tokens.length === 0) {
+    return <div>Loading tokens...</div>;
+  }
+  return <TokensPanel tokens={tokens} spaceId={'space:test' as any} {...props} />;
+};
+
+const meta = {
+  title: 'plugins/plugin-token-manager/components/TokensPanel',
+  decorators: [withTheme()],
+  component: TokensPanelStory,
+  args: {
+    adding: false,
+    onNew: () => console.log('onNew'),
+    onCancel: () => console.log('onCancel'),
+    onAdd: (form: any) => console.log('onAdd', form),
+    onDelete: (token: any) => console.log('onDelete', token),
+    onAddAccessToken: (token: any) => console.log('onAddAccessToken', token),
+  },
+} satisfies Meta<typeof TokensPanelStory>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+// Show form view by default (list view requires client context for NewTokenSelector).
+export const Default: Story = {
+  args: { adding: true },
+};

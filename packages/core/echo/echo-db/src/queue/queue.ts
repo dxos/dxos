@@ -236,8 +236,12 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
 
   private _query(queryOrFilter: Query.Any | Filter.Any, options?: Database.QueryOptions) {
     assertArgument(options === undefined, 'options', 'not supported');
-    queryOrFilter = Filter.is(queryOrFilter) ? Query.select(queryOrFilter) : queryOrFilter;
-    return new QueryResultImpl(new QueueQueryContext(this), queryOrFilter);
+    const query = Filter.is(queryOrFilter) ? Query.select(queryOrFilter) : queryOrFilter;
+    const queryWithOptions = query.options({
+      spaceIds: [this._spaceId],
+      queues: [this._dxn.toString()],
+    });
+    return new QueryResultImpl(new QueueQueryContext(this), queryWithOptions);
   }
 
   async sync({

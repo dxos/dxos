@@ -2,8 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { inspect } from 'node:util';
-
 import { type CallMetadata } from './meta';
 /**
  * Debug-log value to console.
@@ -27,9 +25,9 @@ export const dbg: {
   <T>(value: T, _meta?: CallMetadata): T;
 } = <T>(arg: T, meta?: CallMetadata): T => {
   if (meta?.A) {
-    console.log(`${meta.A[0]} =`, inspect(arg, { colors: true }));
+    console.log(`${meta.A[0]} =`, arg);
   } else {
-    console.log(inspect(arg, { colors: true }));
+    console.log(arg);
   }
 
   return arg;

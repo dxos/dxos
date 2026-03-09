@@ -35,12 +35,10 @@ describe('Serializer', () => {
       const data = serializer.exportObject(task);
 
       expect(data).to.deep.include({
-        '@id': task.id,
+        'id': task.id,
         '@meta': { keys: [] },
-        '@type': {
-          '/': `dxn:type:${Type.getTypename(TestSchema.Task)}:${Type.getVersion(TestSchema.Task)}`,
-        },
-        title: 'Testing',
+        '@type': `dxn:type:${Type.getTypename(TestSchema.Task)}:${Type.getVersion(TestSchema.Task)}`,
+        'title': 'Testing',
       });
     });
   });
@@ -63,9 +61,9 @@ describe('Serializer', () => {
         data = await serializer.export(db);
         expect(data.objects).to.have.length(1);
         expect(data.objects[0]).to.deep.include({
-          '@id': obj.id,
+          'id': obj.id,
           '@meta': { keys: [] },
-          title: 'Test',
+          'title': 'Test',
         });
       }
 
@@ -98,9 +96,9 @@ describe('Serializer', () => {
         data = await serializer.export(db, Query.select(Filter.props({ title: 'Hello' })));
         expect(data.objects).to.have.length(1);
         expect(data.objects[0]).to.deep.include({
-          '@id': obj1.id,
+          'id': obj1.id,
           '@meta': { keys: [] },
-          title: 'Hello',
+          'title': 'Hello',
         });
       }
 
@@ -132,7 +130,7 @@ describe('Serializer', () => {
         data = await serializer.export(db);
         expect(data.objects).to.have.length(1);
         expect(data.objects[0]).to.deep.include({
-          '@id': preserved.id,
+          'id': preserved.id,
           '@meta': { keys: [] },
           ...objValue,
         });

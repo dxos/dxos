@@ -36,8 +36,8 @@ export type WaveformProps = ThemedClassName<{
   size?: number;
 }>;
 
-export const Waveform = ({ classNames, active, size: _size = 4 }: WaveformProps) => {
-  const size = Math.max(3, Math.min(6, _size));
+export const Waveform = ({ classNames, active, size: sizeProp = 4 }: WaveformProps) => {
+  const size = Math.max(3, Math.min(6, sizeProp));
   const { range, classNames: waveClassNames, h } = sizes[size];
 
   return (

@@ -4,6 +4,7 @@
 
 export { HelpCapabilities } from './types';
 export * from './components';
+export * from './constants';
 export * from './meta';
 export * from './HelpPlugin';
 export * from './hooks';

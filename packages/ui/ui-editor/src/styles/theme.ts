@@ -107,7 +107,9 @@ export const baseTheme = EditorView.baseTheme({
   /**
    * Scroller
    */
-  '.cm-scroller': {},
+  '.cm-scroller': {
+    overflowAnchor: 'none',
+  },
   '.cm-scroller::-webkit-scrollbar': {
     width: '8px',
   },
@@ -250,11 +252,11 @@ export const baseTheme = EditorView.baseTheme({
   },
   '.cm-tooltip.cm-tooltip-autocomplete > ul > li[aria-selected]': {
     background: 'var(--color-active-surface)',
-    color: 'var(--dx-activeSurfaceText)',
+    color: 'var(--color-base-surface-text)',
   },
   '.cm-tooltip.cm-tooltip-autocomplete > ul > completion-section': {
     paddingLeft: '4px !important',
-    color: 'var(--dx-hoverSurfaceText)',
+    color: 'var(--color-base-surface-text)',
   },
 
   /**
@@ -274,7 +276,7 @@ export const baseTheme = EditorView.baseTheme({
     padding: '0 4px',
   },
   '.cm-completionMatchedText': {
-    color: 'var(--color-base-text)',
+    color: 'var(--color-base-surface-text)',
     textDecoration: 'none !important',
   },
 

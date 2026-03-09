@@ -8,25 +8,15 @@ import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Queue from 'effect/Queue';
 import * as Stream from 'effect/Stream';
-import React, {
-  Component,
-  type ErrorInfo,
-  type PropsWithChildren,
-  forwardRef,
-  useEffect,
-  useImperativeHandle,
-  useState,
-} from 'react';
+import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { addEventListener } from '@dxos/async';
 import { runAndForwardErrors } from '@dxos/effect';
-import { log } from '@dxos/log';
-import { type ThemedClassName, useDynamicRef, useStateWithRef } from '@dxos/react-ui';
-import { useThemeContext } from '@dxos/react-ui';
+import { ErrorBoundary, type ThemedClassName, useDynamicRef, useStateWithRef, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import {
-  type AutoScrollOptions,
+  type AutoScrollToProps,
   type StreamerOptions,
   type XmlTagsOptions,
   type XmlWidgetState,
@@ -39,8 +29,9 @@ import {
   navigateNextEffect,
   navigatePreviousEffect,
   preview,
-  scrollToLineEffect,
-  smoothScroll,
+  scrollToLine,
+  scroller,
+  scrollerLineEffect,
   streamer,
   xmlTagContextEffect,
   xmlTagResetEffect,
@@ -71,20 +62,24 @@ export type MarkdownStreamProps = ThemedClassName<
   {
     debug?: boolean;
     content?: string;
-    autoScroll?: boolean;
+    autoScroll?: boolean; // TODO(burdon): On/off.
     onEvent?: (event: MarkdownStreamEvent) => void;
-  } & (XmlTagsOptions & StreamerOptions & AutoScrollOptions)
+  } & (XmlTagsOptions & StreamerOptions & AutoScrollToProps)
 >;
 
 export const MarkdownStream = forwardRef<MarkdownStreamController | null, MarkdownStreamProps>(
-  ({ classNames, debug, content, autoScroll: autoScrollProp, registry, fadeIn, cursor, onEvent }, forwardedRef) => {
+  ({ classNames, debug, content, registry, fadeIn, cursor, onEvent }, forwardedRef) => {
     const { themeMode } = useThemeContext();
 
     // Active widgets.
     const [widgets, setWidgets] = useState<XmlWidgetState[]>([]);
 
+    // Store current content so that we can toggle debug mode.
+    const currentContent = useRef(content);
+
     // Editor.
     const { parentRef, view } = useTextEditor(() => {
+      const content = currentContent.current;
       return {
         initialValue: content,
         selection: EditorSelection.cursor(content?.length ?? 0),
@@ -95,13 +90,13 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
             slots: {
               scroll: {
                 // NOTE: Child widgets must have `max-w-[100cqi]`.
-                className: 'size-container p-card-padding',
+                className: 'dx-size-container p-form-padding',
               },
             },
           }),
           createBasicExtensions({ lineWrapping: true, readOnly: true, scrollPastEnd: false }),
           extendedMarkdown({ registry }),
-          smoothScroll(),
+          scroller({ overScroll: 64 }),
           debug
             ? []
             : [
@@ -115,20 +110,7 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
               ],
         ].filter(isNonNullable),
       };
-    }, [debug, themeMode, registry]);
-
-    // Autoscroll.
-    useEffect(() => {
-      if (!view) {
-        return;
-      }
-
-      if (autoScrollProp) {
-        view.dispatch({
-          // effects: scrollToLineEffect.of({ line: -1, options: { behavior: 'smooth' } }),
-        });
-      }
-    }, [view, autoScrollProp]);
+    }, [debug, registry, themeMode]);
 
     // Streaming queue.
     const [queue, setQueue, queueRef] = useStateWithRef(Effect.runSync(Queue.unbounded<string>()));
@@ -166,13 +148,32 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
     // Expose controller as API.
     const viewRef = useDynamicRef(view);
     useImperativeHandle(forwardedRef, () => {
+      const reset = async (text: string) => {
+        currentContent.current = text;
+        if (!viewRef.current) {
+          return;
+        }
+
+        viewRef.current.dispatch({
+          effects: [xmlTagContextEffect.of(null), xmlTagResetEffect.of(null)],
+          changes: [{ from: 0, to: viewRef.current.state.doc.length, insert: text }],
+          selection: EditorSelection.cursor(text.length),
+        });
+
+        scrollToLine(viewRef.current, { line: -1, behavior: 'instant' });
+
+        // New queue.
+        const queue = Effect.runSync(Queue.unbounded<string>());
+        setQueue(queue);
+      };
+
       return {
         get view() {
           return viewRef.current;
         },
         scrollToBottom: (behavior?: ScrollBehavior) => {
           viewRef.current?.dispatch({
-            effects: scrollToLineEffect.of({ line: -1, options: { behavior } }),
+            effects: scrollerLineEffect.of({ line: -1, behavior }),
           });
         },
         navigatePrevious: () => {
@@ -192,23 +193,17 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
           });
         },
         // Reset document.
-        reset: async (text: string) => {
-          viewRef.current?.dispatch({
-            effects: [xmlTagContextEffect.of(null), xmlTagResetEffect.of(null)],
-            changes: [{ from: 0, to: viewRef.current?.state.doc.length ?? 0, insert: text }],
-          });
-
-          // New queue.
-          const queue = Effect.runSync(Queue.unbounded<string>());
-          setQueue(queue);
-        },
+        reset,
         // Append to queue (and stream).
         append: async (text: string) => {
-          if (text.length) {
+          currentContent.current += text;
+          if (viewRef.current?.state.doc.length === 0) {
+            await reset(text);
+          } else if (text.length) {
             await runAndForwardErrors(Queue.offer(queueRef.current, text));
           }
         },
-        // Update widget.
+        // Update widget state.
         updateWidget: (id: string, value: any) => {
           viewRef.current?.dispatch({
             effects: xmlTagUpdateEffect.of({ id, value }),
@@ -223,8 +218,8 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
         return;
       }
 
-      return addEventListener(parentRef.current, 'click', (ev) => {
-        const button = (ev.target as HTMLElement).closest('[data-action="submit"]');
+      return addEventListener(parentRef.current, 'click', (event) => {
+        const button = (event.target as HTMLElement).closest('[data-action="submit"]');
         if (button?.getAttribute('data-action') === 'submit') {
           onEvent?.({
             type: 'submit',
@@ -232,7 +227,7 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
           });
         }
       });
-    }, [view, onEvent]);
+    }, [view, parentRef, onEvent]);
 
     // Cleanup.
     useEffect(() => {
@@ -244,34 +239,17 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
     return (
       <>
         {/* Markdown editor. */}
-        <div ref={parentRef} className={mx('h-full w-full overflow-hidden', classNames)} />
+        <div className={mx('h-full w-full overflow-hidden', classNames)} ref={parentRef} />
 
         {/* React widgets are rendered in portals outside of the editor. */}
-        <ErrorBoundary>
+        <ErrorBoundary name='markdown-stream'>
           {widgets.map(({ Component, root, id, props }) => (
-            <div key={id}>{createPortal(<Component view={view} {...props} />, root)}</div>
+            <div key={id} role='none'>
+              {createPortal(<Component view={view} {...props} />, root)}
+            </div>
           ))}
         </ErrorBoundary>
       </>
     );
   },
 );
-
-class ErrorBoundary extends Component<PropsWithChildren, { hasError: boolean }> {
-  override state = { hasError: false };
-
-  static getDerivedStateFromError() {
-    return { hasError: true };
-  }
-
-  override componentDidCatch(error: unknown, info: ErrorInfo) {
-    log.catch(error, info);
-  }
-
-  override render() {
-    if (this.state.hasError) {
-      return <div>Something went wrong.</div>;
-    }
-    return this.props.children;
-  }
-}

@@ -5,13 +5,15 @@
 // TODO(burdon): Document why this is required.
 import '@dxos/lit-ui';
 
+import { WidgetType } from '@codemirror/view';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type CSSProperties, useCallback, useEffect, useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
-import { Toolbar } from '@dxos/react-ui';
+import { Input, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { Domino } from '@dxos/ui';
 import { type XmlWidgetRegistry } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { keyToFallback } from '@dxos/util';
@@ -19,7 +21,6 @@ import { keyToFallback } from '@dxos/util';
 import { MarkdownStream, type MarkdownStreamController, type MarkdownStreamProps } from './MarkdownStream';
 import { type TextStreamOptions, textStream } from './testing';
 import TEXT from './testing/text.md?raw';
-import { SuggestionWidget } from './widgets';
 
 // TODO(burdon): Get user hue from identity.
 const userHue = keyToFallback(PublicKey.random()).hue;
@@ -30,18 +31,39 @@ const defaultStreamOptions: TextStreamOptions = {
   variance: 0.5,
 };
 
-const testRegistry: XmlWidgetRegistry = {
-  ['suggestion' as const]: {
+export class TestWidget extends WidgetType {
+  constructor(private text: string) {
+    super();
+  }
+
+  override eq(other: this) {
+    return this.text === other.text;
+  }
+
+  override toDOM() {
+    return Domino.of('span').classNames(mx('flex m-2 p-8 border border-separator rounded')).text(this.text).root;
+  }
+}
+
+const registry: XmlWidgetRegistry = {
+  test: {
     block: true,
-    factory: (props: any) => new SuggestionWidget(props.children?.[0]),
+    factory: (props) => new TestWidget(props.children?.[0]),
   },
 };
 
-type StoryProps = MarkdownStreamProps & { streamOptions?: TextStreamOptions };
+type StoryProps = MarkdownStreamProps & { initialContent?: string; streamOptions?: TextStreamOptions };
 
-const DefaultStory = ({ content = '', streamOptions = defaultStreamOptions, ...props }: StoryProps) => {
+const DefaultStory = ({ initialContent, content, streamOptions = defaultStreamOptions, ...props }: StoryProps) => {
   const [controller, setController] = useState<MarkdownStreamController | null>(null);
   const [streaming, setStreaming] = useState(false);
+  const [debug, setDebug] = useState(false);
+
+  useEffect(() => {
+    if (initialContent) {
+      void controller?.append(initialContent);
+    }
+  }, [controller, initialContent]);
 
   useEffect(() => {
     if (!controller || !streaming) {
@@ -73,9 +95,7 @@ const DefaultStory = ({ content = '', streamOptions = defaultStreamOptions, ...p
 
   const handleAppend = useCallback(() => {
     void controller?.append(
-      ['', faker.lorem.paragraph(), `<suggestion>${faker.lorem.word()}</suggestion>`, faker.lorem.paragraph(), ''].join(
-        '\n\n',
-      ),
+      [faker.lorem.paragraph(), `<test>${faker.lorem.word()}</test>`, faker.lorem.paragraph()].join('\n'),
     );
   }, [controller]);
 
@@ -95,8 +115,13 @@ const DefaultStory = ({ content = '', streamOptions = defaultStreamOptions, ...p
         <Toolbar.Button disabled={streaming} onClick={handleAppend}>
           Append
         </Toolbar.Button>
+        <Toolbar.Separator variant='gap' />
+        <Input.Root>
+          <Input.Label>Debug</Input.Label>
+          <Input.Switch checked={debug} onCheckedChange={setDebug} />
+        </Input.Root>
       </Toolbar.Root>
-      <MarkdownStream ref={setController} classNames='w-full overflow-hidden' {...props} />
+      <MarkdownStream {...props} classNames='w-full overflow-hidden' debug={debug} ref={setController} />
     </div>
   );
 };
@@ -117,7 +142,17 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     content: TEXT,
-    registry: testRegistry,
+    registry: registry,
+    fadeIn: true,
+    cursor: false,
+  },
+};
+
+export const WithInitialContent: Story = {
+  args: {
+    initialContent: TEXT,
+    content: TEXT,
+    registry: registry,
     fadeIn: true,
     cursor: false,
   },

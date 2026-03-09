@@ -4,8 +4,95 @@
 
 import { format, formatDistance, isThisWeek, isToday } from 'date-fns';
 
+import { type Obj } from '@dxos/echo';
 import { type Message } from '@dxos/types';
 import { toHue } from '@dxos/util';
+
+export type CreateDraftOptions = {
+  mode?: 'compose' | 'reply' | 'reply-all' | 'forward';
+  replyToMessage?: Message.Message;
+  subject?: string;
+  body?: string;
+};
+
+const formatQuotedBody = (message: Message.Message): string => {
+  const textBlock = message.blocks.find((b) => b._tag === 'text');
+  const originalText = textBlock?.text ?? '';
+  const senderName = message.sender?.name ?? message.sender?.email ?? 'Unknown';
+  const date = message.created ? new Date(message.created).toLocaleString() : '';
+  return `\n\n---\nOn ${date}, ${senderName} wrote:\n\n${originalText}`;
+};
+
+/**
+ * Builds draft message make-props for Obj.make(Message.Message, ...).
+ * Used when creating a draft locally and adding via SpaceOperation.AddObject.
+ */
+export const buildDraftMessageProps = (options: CreateDraftOptions): Obj.MakeProps<typeof Message.Message> => {
+  const { mode = 'compose', replyToMessage, subject = '', body = '' } = options;
+
+  let to = '';
+  let cc: string | undefined;
+  let draftSubject = subject;
+  let draftBody = body;
+  const properties: Record<string, unknown> = {};
+
+  if (replyToMessage && mode !== 'compose') {
+    const originalSubject = replyToMessage.properties?.subject ?? '';
+    const quotedBody = formatQuotedBody(replyToMessage);
+
+    switch (mode) {
+      case 'reply': {
+        to = replyToMessage.sender?.email ?? '';
+        draftSubject = originalSubject.startsWith('Re:') ? originalSubject : `Re: ${originalSubject}`;
+        draftBody = quotedBody;
+        break;
+      }
+      case 'reply-all': {
+        to = replyToMessage.sender?.email ?? '';
+        const originalTo = replyToMessage.properties?.to ?? '';
+        const originalCc = replyToMessage.properties?.cc ?? '';
+        const senderEmail = replyToMessage.sender?.email ?? '';
+        const allRecipients = [originalTo, originalCc]
+          .flatMap((r: string) => r.split(',').map((e: string) => e.trim()))
+          .filter((r: string) => r && r !== senderEmail);
+        cc = allRecipients.join(', ') || undefined;
+        draftSubject = originalSubject.startsWith('Re:') ? originalSubject : `Re: ${originalSubject}`;
+        draftBody = quotedBody;
+        break;
+      }
+      case 'forward': {
+        draftSubject = originalSubject.startsWith('Fwd:') ? originalSubject : `Fwd: ${originalSubject}`;
+        draftBody = quotedBody;
+        break;
+      }
+    }
+
+    // Set threading headers on the draft so send can use them directly.
+    if (replyToMessage.properties) {
+      if (replyToMessage.properties.threadId) {
+        properties.threadId = replyToMessage.properties.threadId;
+      }
+      const originalMsgId = replyToMessage.properties.messageId;
+      if (originalMsgId) {
+        properties.inReplyTo = originalMsgId;
+        const existingRefs = replyToMessage.properties.references ?? '';
+        properties.references = [existingRefs, originalMsgId].filter(Boolean).join(' ');
+      }
+    }
+  }
+
+  return {
+    created: new Date().toISOString(),
+    sender: { name: 'Me' },
+    blocks: [{ _tag: 'text' as const, text: draftBody }],
+    properties: {
+      to,
+      ...(cc !== undefined && { cc }),
+      subject: draftSubject,
+      ...properties,
+    },
+  };
+};
 
 /**
  * Hashes a string into a number

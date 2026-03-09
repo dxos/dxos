@@ -8,9 +8,10 @@ import * as Schema from 'effect/Schema';
 import { beforeEach, describe, test } from 'vitest';
 
 import { Filter, Obj, Query, Type } from '@dxos/echo';
+import { type View } from '@dxos/echo';
 import { Format, FormatAnnotation, PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { ObjectId } from '@dxos/keys';
-import { ProjectionModel, View, createDirectChangeCallback } from '@dxos/schema';
+import { ProjectionModel, ViewModel, createDirectChangeCallback } from '@dxos/schema';
 
 import { Kanban } from '../types';
 
@@ -53,7 +54,7 @@ describe('useKanbanBoardModel', () => {
   beforeEach(() => {
     registry = Registry.make();
     const jsonSchema = Type.toJsonSchema(KanbanTaskSchema) as Parameters<typeof createDirectChangeCallback>[1];
-    view = View.make({
+    view = ViewModel.make({
       query: Query.select(Filter.type(KanbanTaskSchema)),
       jsonSchema,
       pivotFieldName: 'status',

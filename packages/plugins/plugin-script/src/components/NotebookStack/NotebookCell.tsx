@@ -165,7 +165,7 @@ const NotebookCellValue = ({ cell, graph }: NotebookCellProps) => {
     >
       {name && (
         <>
-          <span className='text-success'>{name}</span>
+          <span className='text-success-text'>{name}</span>
           <span className='text-description'>&nbsp;=&nbsp;</span>
         </>
       )}

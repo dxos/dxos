@@ -13,7 +13,7 @@ import { VideoObject as VideoObjectComponent } from '../Media';
 import { ResponsiveContainer } from './ResponsiveContainer';
 
 const meta = {
-  title: 'plugins/plugin-thread/ResponsiveContainer',
+  title: 'plugins/plugin-thread/components/ResponsiveContainer',
   component: ResponsiveContainer,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {

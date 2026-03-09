@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { AgentFunctions, EntityExtractionFunctions, ResearchBlueprint } from '@dxos/assistant-toolkit';
 import { Prompt } from '@dxos/blueprints';
 import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
-import { DXN, Filter, Key, Obj, Query, type QueryAST, Ref, Tag, Type } from '@dxos/echo';
+import { DXN, Feed, Filter, Key, Obj, Query, type QueryAST, Ref, Tag, Type } from '@dxos/echo';
 import { Trigger, serializeFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { GmailFunctions } from '@dxos/plugin-inbox';
@@ -30,7 +30,7 @@ import {
   createTrigger,
 } from '@dxos/react-ui-canvas-compute';
 import { CanvasBoard, CanvasGraphModel, pointMultiply, pointsToRect, rectToPoints } from '@dxos/react-ui-canvas-editor';
-import { View } from '@dxos/schema';
+import { ViewModel } from '@dxos/schema';
 import { Message, Organization, Person, Pipeline } from '@dxos/types';
 import { range, trim } from '@dxos/util';
 
@@ -114,7 +114,11 @@ export const generator = () => ({
     [
       PresetName.ORG_RESEARCH_PROJECT,
       async (space, n, cb) => {
-        const mailbox = await space.db.query(Filter.type(Mailbox.Mailbox)).first();
+        const feeds = await space.db.query(Filter.type(Type.Feed)).run();
+        const mailbox = feeds.find((feed) => feed.kind === Mailbox.kind);
+        invariant(mailbox, 'Mailbox feed not found');
+        const queueDxn = Feed.getQueueDxn(mailbox)?.toString();
+        invariant(queueDxn, 'Mailbox feed missing queue DXN key');
         const tag = await space.db.query(Filter.type(Tag.Tag, { label: 'Investor' })).first();
         const tagDxn = Obj.getDXN(tag).toString();
 
@@ -143,7 +147,7 @@ export const generator = () => ({
               // TODO(wittjosiah): Queue trigger doesn't support matching query of the column.
               spec: {
                 kind: 'queue',
-                queue: mailbox.queue.dxn.toString(),
+                queue: queueDxn,
               },
               function: Ref.make(serializeFunction(EntityExtractionFunctions.Extract)),
               input: {
@@ -189,25 +193,25 @@ export const generator = () => ({
             }),
           );
 
-          const mailboxView = View.make({
+          const mailboxView = ViewModel.make({
             query: Query.select(
               Filter.type(Message.Message, {
                 properties: { labels: Filter.contains('investor') },
               }),
             ).options({
-              queues: [mailbox.queue.dxn.toString()],
+              queues: [queueDxn],
             }),
             jsonSchema: Type.toJsonSchema(Message.Message),
           });
-          const contactsView = View.make({
+          const contactsView = ViewModel.make({
             query: contactsQuery,
             jsonSchema: Type.toJsonSchema(Person.Person),
           });
-          const organizationsView = View.make({
+          const organizationsView = ViewModel.make({
             query: organizationsQuery,
             jsonSchema: Type.toJsonSchema(Organization.Organization),
           });
-          const notesView = View.make({
+          const notesView = ViewModel.make({
             query: notesQuery,
             jsonSchema: Type.toJsonSchema(Markdown.Document),
           });

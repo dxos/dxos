@@ -29,7 +29,7 @@ export type DeckCompanion = NodeType.Node<
 
 export const useDeckCompanions = (): DeckCompanion[] => {
   const { graph } = useAppGraph();
-  const connections = useConnections(graph, Node.RootId);
+  const connections = useConnections(graph, Node.RootId, 'child');
   const companions = connections.filter((node) => node.type === DECK_COMPANION_TYPE) as DeckCompanion[];
   return companions.toSorted((a, b) => byPosition(a.properties, b.properties));
 };

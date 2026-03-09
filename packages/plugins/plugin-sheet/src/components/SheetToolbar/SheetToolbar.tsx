@@ -9,8 +9,8 @@ import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { type CompleteCellRange } from '@dxos/compute';
 import {
   type ActionGraphProps,
-  MenuProvider,
-  ToolbarMenu,
+  Menu,
+  type MenuRootProps,
   createGapSeparator,
   useMenuActions,
 } from '@dxos/react-ui-menu';
@@ -59,9 +59,9 @@ const createToolbarActions = ({
   });
 };
 
-export type SheetToolbarProps = PropsWithChildren<{ id: string }>;
+export type SheetToolbarProps = PropsWithChildren<{ id: string }> & Partial<MenuRootProps>;
 
-export const SheetToolbar = ({ id }: SheetToolbarProps) => {
+export const SheetToolbar = ({ id, ...props }: SheetToolbarProps) => {
   const { model, cursorFallbackRange } = useSheetContext();
   const stateAtom = useToolbarState({});
   const registry = useContext(RegistryContext);
@@ -75,7 +75,7 @@ export const SheetToolbar = ({ id }: SheetToolbarProps) => {
       const nodes = actions.filter((action) => action.properties.disposition === 'toolbar');
       return {
         nodes,
-        edges: nodes.map((node) => ({ source: 'root', target: node.id })),
+        edges: nodes.map((node) => ({ source: 'root', target: node.id, relation: 'child' })),
       };
     });
   }, [graph, id]);
@@ -87,8 +87,8 @@ export const SheetToolbar = ({ id }: SheetToolbarProps) => {
   const menu = useMenuActions(actionsCreator);
 
   return (
-    <MenuProvider {...menu} attendableId={id}>
-      <ToolbarMenu />
-    </MenuProvider>
+    <Menu.Root {...props} {...menu} attendableId={id}>
+      <Menu.Toolbar />
+    </Menu.Root>
   );
 };

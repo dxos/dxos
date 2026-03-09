@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React from 'react';
+import React, { type ComponentPropsWithoutRef } from 'react';
 
 import { addressToA1Notation, isFormula, rangeToA1Notation } from '@dxos/compute';
 import { Icon } from '@dxos/react-ui';
@@ -10,7 +10,7 @@ import { Icon } from '@dxos/react-ui';
 import { mapFormulaIndicesToRefs } from '../../types';
 import { useSheetContext } from '../SheetContext';
 
-export const FunctionEditor = () => {
+export const FunctionEditor = (props: ComponentPropsWithoutRef<'div'>) => {
   const { model, cursor, range } = useSheetContext();
 
   let value;
@@ -26,7 +26,10 @@ export const FunctionEditor = () => {
   }
 
   return (
-    <div className='flex shrink-0 justify-between items-center px-4 py-1 text-sm bg-toolbar-surface border-y !border-subdued-separator'>
+    <div
+      {...props}
+      className='flex shrink-0 justify-between items-center px-4 py-1 text-sm bg-toolbar-surface border-y !border-subdued-separator'
+    >
       <div className='flex gap-4 items-center'>
         <div className='flex w-16 items-center font-mono'>
           {(range && rangeToA1Notation(range)) || (cursor && addressToA1Notation(cursor))}

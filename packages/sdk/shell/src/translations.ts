@@ -121,6 +121,7 @@ export const translations = [
         'sign out chooser message': 'Proceeding with the action below will erase all data on this device.',
         'join new identity label': 'Join an existing identity',
         'reset device label': 'Reset storage',
+        'recover reset input label': '', // TODO(burdon): ???
         'reset device confirm message': 'Are you sure you want to reset your device? All data will be lost.',
         'emoji and color label': 'Emoji and color',
         'clear label': 'Use default',

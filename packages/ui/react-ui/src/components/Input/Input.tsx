@@ -4,7 +4,7 @@
 
 import { Root as CheckboxPrimitive, type CheckboxProps as CheckboxPrimitiveProps } from '@radix-ui/react-checkbox';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { type ComponentPropsWithRef, type ForwardRefExoticComponent, forwardRef, useCallback } from 'react';
+import React, { type ComponentPropsWithRef, type ForwardRefExoticComponent, forwardRef } from 'react';
 
 import {
   DescriptionAndValidation as DescriptionAndValidationPrimitive,
@@ -28,7 +28,7 @@ import {
   useInputContext,
 } from '@dxos/react-input';
 import { mx } from '@dxos/ui-theme';
-import { type ClassNameValue, type Density, type Elevation, type Size } from '@dxos/ui-types';
+import { type Density, type Elevation, type Size } from '@dxos/ui-types';
 
 import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
@@ -40,7 +40,7 @@ type InputSharedProps = Partial<{ density: Density; elevation: Elevation; varian
 
 type LabelProps = ThemedClassName<LabelPrimitiveProps> & { srOnly?: boolean };
 
-const Label = forwardRef<HTMLLabelElement, LabelProps>(({ srOnly, classNames, children, ...props }, forwardedRef) => {
+const Label = forwardRef<HTMLLabelElement, LabelProps>(({ classNames, children, srOnly, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   return (
     <LabelPrimitive {...props} className={tx('input.label', { srOnly }, classNames)} ref={forwardedRef}>
@@ -52,7 +52,7 @@ const Label = forwardRef<HTMLLabelElement, LabelProps>(({ srOnly, classNames, ch
 type DescriptionProps = ThemedClassName<DescriptionPrimitiveProps> & { srOnly?: boolean };
 
 const Description = forwardRef<HTMLSpanElement, DescriptionProps>(
-  ({ srOnly, classNames, children, ...props }, forwardedRef) => {
+  ({ classNames, children, srOnly, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
       <DescriptionPrimitive {...props} className={tx('input.description', { srOnly }, classNames)} ref={forwardedRef}>
@@ -65,7 +65,7 @@ const Description = forwardRef<HTMLSpanElement, DescriptionProps>(
 type ValidationProps = ThemedClassName<ValidationPrimitiveProps> & { srOnly?: boolean };
 
 const Validation = forwardRef<HTMLSpanElement, InputScopedProps<ValidationProps>>(
-  ({ __inputScope, srOnly, classNames, children, ...props }, forwardedRef) => {
+  ({ __inputScope, classNames, children, srOnly, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const { validationValence } = useInputContext(INPUT_NAME, __inputScope);
     return (
@@ -83,7 +83,7 @@ const Validation = forwardRef<HTMLSpanElement, InputScopedProps<ValidationProps>
 type DescriptionAndValidationProps = ThemedClassName<DescriptionAndValidationPrimitiveProps> & { srOnly?: boolean };
 
 const DescriptionAndValidation = forwardRef<HTMLParagraphElement, DescriptionAndValidationProps>(
-  ({ srOnly, classNames, children, ...props }, forwardedRef) => {
+  ({ classNames, children, srOnly, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
       <DescriptionAndValidationPrimitive
@@ -97,52 +97,23 @@ const DescriptionAndValidation = forwardRef<HTMLParagraphElement, DescriptionAnd
   },
 );
 
-type PinInputProps = InputSharedProps &
-  Omit<PinInputPrimitiveProps, 'segmentClassName' | 'inputClassName'> & {
-    segmentClassName?: ClassNameValue;
-    inputClassName?: ClassNameValue;
-  };
+type PinInputProps = ThemedClassName<InputSharedProps & Omit<PinInputPrimitiveProps, 'className' | 'segmentClassName'>>;
 
 const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
-  (
-    {
-      density: propsDensity,
-      elevation: propsElevation,
-      segmentClassName: propsSegmentClassName,
-      inputClassName,
-      ...props
-    },
-    forwardedRef,
-  ) => {
+  ({ classNames, density: propsDensity, elevation: propsElevation, ...props }, forwardedRef) => {
     const { hasIosKeyboard } = useThemeContext();
     const { tx } = useThemeContext();
     const density = useDensityContext(propsDensity);
     const elevation = useElevationContext(propsElevation);
-    const segmentClassName = useCallback(
-      ({ focused, validationValence }: Parameters<Exclude<PinInputPrimitiveProps['segmentClassName'], undefined>>[0]) =>
-        tx(
-          'input.input',
-          {
-            variant: 'static',
-            focused,
-            disabled: props.disabled,
-            density,
-            elevation,
-            validationValence,
-          },
-          propsSegmentClassName,
-        ) || '',
-      [tx, props.disabled, elevation, propsElevation, density],
-    );
 
     return (
       <PinInputPrimitive
         {...{
           ...props,
-          segmentClassName,
           ...(props.autoFocus && !hasIosKeyboard && { autoFocus: true }),
         }}
-        inputClassName={tx('input.inputWithSegments', { disabled: props.disabled }, inputClassName) || ''}
+        className={tx('input.inputWithSegments', { disabled: props.disabled }, classNames) || ''}
+        segmentClassName={tx('input.segment', { disabled: props.disabled, density, elevation }) || ''}
         ref={forwardedRef}
       />
     );
@@ -233,11 +204,11 @@ const Checkbox: ForwardRefExoticComponent<CheckboxProps> = forwardRef<
   (
     {
       __inputScope,
+      classNames,
       checked: propsChecked,
       defaultChecked: propsDefaultChecked,
       onCheckedChange: propsOnCheckedChange,
       size,
-      classNames,
       ...props
     },
     forwardedRef,
@@ -262,7 +233,7 @@ const Checkbox: ForwardRefExoticComponent<CheckboxProps> = forwardRef<
             'aria-invalid': 'true' as const,
             'aria-errormessage': errorMessageId,
           }),
-          className: tx('input.checkbox', { size }, 'shrink-0', classNames),
+          'className': tx('input.checkbox', { size }, 'shrink-0', classNames),
         }}
         ref={forwardedRef}
       >
@@ -283,10 +254,10 @@ const Switch = forwardRef<HTMLInputElement, InputScopedProps<SwitchProps>>(
   (
     {
       __inputScope,
+      classNames,
       checked: propsChecked,
       defaultChecked: propsDefaultChecked,
       onCheckedChange: propsOnCheckedChange,
-      classNames,
       ...props
     },
     forwardedRef,

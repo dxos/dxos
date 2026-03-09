@@ -7,10 +7,11 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import { Filter, Obj, Query, Type } from '@dxos/echo';
+import { type View } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
-import { ProjectionModel, View, createEchoChangeCallback } from '@dxos/schema';
+import { ProjectionModel, ViewModel, createEchoChangeCallback } from '@dxos/schema';
 import { withRegistry } from '@dxos/storybook-utils';
 import { Organization } from '@dxos/types';
 
@@ -46,7 +47,7 @@ const DefaultStory = () => {
   }>();
 
   useEffect(() => {
-    const view = View.make({
+    const view = ViewModel.make({
       query: Query.select(Filter.typename(Organization.Organization.typename)),
       jsonSchema: Type.toJsonSchema(Organization.Organization),
       pivotFieldName: 'status',
@@ -122,7 +123,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-kanban/KanbanBoard',
+  title: 'plugins/plugin-kanban/components/KanbanBoard',
   component: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withMosaic(), withRegistry],
   parameters: {

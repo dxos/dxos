@@ -59,6 +59,7 @@
     "@dxos/react-ui-components": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
+    "@dxos/react-ui-menu": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/schema": "workspace:*",
@@ -69,6 +70,7 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@dxos/echo-db": "workspace:*",
     "@dxos/plugin-attention": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-preview": "workspace:*",

@@ -200,6 +200,11 @@ export const isObject = (obj: unknown): obj is Unknown => {
   return typeof obj === 'object' && obj !== null && obj[Entity.KindId] === Entity.Kind.Object;
 };
 
+export const isSnapshot = (obj: unknown): obj is Snapshot => {
+  assumeType<InternalObjectProps>(obj);
+  return typeof obj === 'object' && obj !== null && (obj as any)[SnapshotKindId] === Entity.Kind.Object;
+};
+
 /**
  * Subscribe to object updates.
  * The callback is called synchronously when the object is modified.

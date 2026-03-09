@@ -33,19 +33,13 @@ const useGameboardContext = <M extends GameboardModel<any>>(consumerName: string
 
 type GameboardRootProps<M extends GameboardModel<any>> = PropsWithChildren<{
   model?: M;
-  moveNumber?: number;
   onDrop?: (move: Move) => boolean;
 }>;
 
 /**
  * Generic board container.
  */
-const GameboardRoot = <M extends GameboardModel<any>>({
-  children,
-  model,
-  moveNumber,
-  onDrop,
-}: GameboardRootProps<M>) => {
+const GameboardRoot = <M extends GameboardModel<any>>({ children, model, onDrop }: GameboardRootProps<M>) => {
   const [dragging, setDragging] = useState(false);
   const [promoting, setPromoting] = useState<PieceRecord | undefined>();
 
@@ -113,7 +107,7 @@ const GameboardContent = forwardRef<HTMLDivElement, GameboardContentProps>(
     return (
       <div
         role='none'
-        className={mx(grow && 'grid w-full h-full size-container place-content-center', classNames)}
+        className={mx(grow && 'grid w-full h-full dx-size-container place-content-center', classNames)}
         ref={forwardedRef}
       >
         {contain ? <div className='w-[min(100cqw,100cqh)] h-[min(100cqw,100cqh)]'>{children}</div> : children}

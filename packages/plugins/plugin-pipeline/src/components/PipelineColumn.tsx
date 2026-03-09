@@ -6,14 +6,15 @@ import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import type * as Schema from 'effect/Schema';
 import React, { forwardRef, useMemo, useRef, useState } from 'react';
 
+import { useObjectNavigate } from '@dxos/app-toolkit/ui';
 import { Obj, Query, Type } from '@dxos/echo';
 import { resolveSchemaWithRegistry } from '@dxos/plugin-space';
 import { Filter, getSpace, useObject } from '@dxos/react-client/echo';
 import { useAsyncEffect, useTranslation } from '@dxos/react-ui';
-import { Board, Card, Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
+import { Card } from '@dxos/react-ui';
+import { Board, Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { ProjectionModel, createEchoChangeCallback } from '@dxos/schema';
 import { type Pipeline } from '@dxos/types';
-import { mx } from '@dxos/ui-theme';
 
 import { meta } from '../meta';
 
@@ -81,18 +82,12 @@ export const PipelineColumn = ({ data: column, location, classNames, debug }: Pi
     <Board.Column.Root
       data={column}
       location={location}
-      classNames={classNames}
+      classNames={['group/column grid h-full overflow-hidden grid-rows-[var(--dx-rail-action)_1fr]', classNames]}
       debug={debug}
       dragHandleRef={dragHandleRef}
     >
-      <div
-        role='none'
-        data-testid='board-column'
-        className={mx('group/column grid h-full overflow-hidden grid-rows-[var(--rail-action)_1fr]', classNames)}
-      >
-        <Board.Column.Header label={column.name ?? t('untitled view title')} dragHandleRef={dragHandleRef} />
-        <Board.Column.Body data={column} Tile={Tile} />
-      </div>
+      <Board.Column.Header label={column.name ?? t('untitled view title')} dragHandleRef={dragHandleRef} />
+      <Board.Column.Body data={column} Tile={Tile} />
     </Board.Column.Root>
   );
 };
@@ -114,6 +109,7 @@ const ItemTile = forwardRef<HTMLDivElement, ItemTileProps>(
     const rootRef = useRef<HTMLDivElement>(null);
     const composedRef = useComposedRefs<HTMLDivElement>(rootRef, forwardedRef);
     const { Item } = usePipeline(ITEM_TILE_NAME);
+    const handleNavigate = useObjectNavigate(data);
 
     return (
       <Mosaic.Tile asChild id={data.id} data={data} location={location} debug={debug}>
@@ -121,7 +117,7 @@ const ItemTile = forwardRef<HTMLDivElement, ItemTileProps>(
           <Card.Root classNames={classNames} ref={composedRef}>
             <Card.Toolbar>
               <Card.DragHandle />
-              <Card.Title>{Obj.getLabel(data)}</Card.Title>
+              <Card.Title onClick={handleNavigate}>{Obj.getLabel(data)}</Card.Title>
               <Card.Menu />
             </Card.Toolbar>
             <Card.Content>

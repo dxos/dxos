@@ -45,7 +45,6 @@ export type MarkdownEditorContentProps = ThemedClassName<{
   toolbarState?: Atom.Writable<EditorToolbarState>;
   onLinkQuery?: (query?: string) => Promise<EditorMenuGroup[]>;
 }> &
-  // prettier-ignore
   Pick<UseTextEditorProps, 'initialValue' | 'extensions'> &
   Pick<MarkdownEditorToolbarProps, 'onFileUpload'> &
   Pick<ThemeExtensionsOptions, 'slots'>;
@@ -142,8 +141,8 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
         role='none'
         ref={parentRef}
         data-testid='composer.markdownRoot'
-        className={mx(stackItemContentEditorClassNames(role), classNames)}
         data-popover-collision-boundary={true}
+        className={mx(stackItemContentEditorClassNames(role), classNames)}
         {...focusAttributes}
       />
     );

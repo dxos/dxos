@@ -108,7 +108,13 @@ export const useEditorMenu = ({
   );
 
   const handleSelect = useCallback<NonNullable<UseEditorMenu['onSelect']>>(({ view, item }) => {
+    // Delete trigger range (e.g., "/" and any typed filter text).
+    const { range } = view.state.field(popoverStateField) ?? {};
+    if (range) {
+      view.dispatch({ changes: { from: range.from, to: range.to, insert: '' } });
+    }
     void item.onSelect?.({ view, head: view.state.selection.main.head });
+    view.focus();
   }, []);
 
   const handleCancel = useCallback<NonNullable<UseEditorMenu['onCancel']>>(({ view }) => {
