@@ -7,10 +7,9 @@ import React, { useCallback, useMemo } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { DXN, type Feed, Obj } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { type JsonPath, splitJsonPath } from '@dxos/echo/internal';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
-import { Filter, useQuery } from '@dxos/react-client/echo';
 import { Button, ButtonGroup, IconButton, useTranslation } from '@dxos/react-ui';
 import { Form, omitId } from '@dxos/react-ui-form';
 
@@ -18,35 +17,29 @@ import { useSyncTrigger } from '../../hooks';
 import { meta } from '../../meta';
 import { Mailbox } from '../../types';
 
-export const MailboxSettings = ({ subject }: SurfaceComponentProps<Feed.Feed>) => {
+export const MailboxSettings = ({ subject }: SurfaceComponentProps<Mailbox.Mailbox>) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const db = useMemo(() => Obj.getDatabase(subject), [subject]);
 
-  const configs = useQuery(db, Filter.type(Mailbox.Config));
-  const config = useMemo(
-    () => configs.find((config) => DXN.equalsEchoId(config.feed.dxn, Obj.getDXN(subject))),
-    [configs, subject],
-  );
-
-  const handleConfigChange = useCallback(
+  const handleChange = useCallback(
     (values: any, { isValid, changed }: { isValid: boolean; changed: Record<JsonPath, boolean> }) => {
-      if (!isValid || !config) {
+      if (!isValid) {
         return;
       }
 
       const changedPaths = Object.keys(changed).filter((path) => changed[path as JsonPath]) as JsonPath[];
       if (changedPaths.length > 0) {
-        Obj.change(config, () => {
+        Obj.change(subject, () => {
           for (const path of changedPaths) {
             const parts = splitJsonPath(path);
             const value = Obj.getValue(values, parts);
-            Obj.setValue(config, parts, value);
+            Obj.setValue(subject, parts, value);
           }
         });
       }
     },
-    [config],
+    [subject],
   );
 
   const { syncEnabled, syncTrigger, pending, handleToggleSync } = useSyncTrigger({
@@ -68,15 +61,13 @@ export const MailboxSettings = ({ subject }: SurfaceComponentProps<Feed.Feed>) =
 
   return (
     <div className='flex flex-col gap-4'>
-      {config && (
-        <Form.Root schema={omitId(Mailbox.Config)} values={config} db={db} onValuesChanged={handleConfigChange}>
-          <Form.Viewport>
-            <Form.Content>
-              <Form.FieldSet />
-            </Form.Content>
-          </Form.Viewport>
-        </Form.Root>
-      )}
+      <Form.Root schema={omitId(Mailbox.Mailbox)} values={subject} db={db} onValuesChanged={handleChange}>
+        <Form.Viewport>
+          <Form.Content>
+            <Form.FieldSet />
+          </Form.Content>
+        </Form.Viewport>
+      </Form.Root>
       <h2>{t('mailbox sync label')}</h2>
       <div className='p-1 flex flex-row gap-1'>
         <ButtonGroup>

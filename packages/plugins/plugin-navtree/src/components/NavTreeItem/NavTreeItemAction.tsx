@@ -69,7 +69,12 @@ export const NavTreeItemActionDropdownMenu = ({
 };
 
 export const NavTreeItemMonolithicAction = (
-  props: Node.Action & { parent: Node.Node; path?: string[]; onAction?: (action: Node.Action) => void; baseLabel: string },
+  props: Node.Action & {
+    parent: Node.Node;
+    path?: string[];
+    onAction?: (action: Node.Action) => void;
+    baseLabel: string;
+  },
 ) => {
   const {
     parent,
@@ -106,7 +111,13 @@ export const NavTreeItemMonolithicAction = (
   );
 };
 
-export const NavTreeItemAction = ({ monolithic, menuActions, parent: node, path, ...props }: NavTreeItemActionMenuProps) => {
+export const NavTreeItemAction = ({
+  monolithic,
+  menuActions,
+  parent: node,
+  path,
+  ...props
+}: NavTreeItemActionMenuProps) => {
   const { t } = useTranslation(meta.id);
 
   const monolithicAction = menuActions?.length === 1 && menuActions[0];

@@ -295,7 +295,10 @@ class GraphBuilderImpl implements GraphBuilder {
         const trigger = this._initialized[id];
         Option.match(node, {
           onSome: (node) => {
-            Graph.addNodes(this._graph, [node]);
+            const existing = this._registry.get(this._graph._node(id));
+            if (Option.isNone(existing)) {
+              Graph.addNodes(this._graph, [node]);
+            }
             trigger?.wake();
           },
           onNone: () => {

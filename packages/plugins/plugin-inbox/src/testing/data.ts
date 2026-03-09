@@ -119,11 +119,15 @@ export const createMessage = (space?: Space, options: CreateOptions = { paragrap
 };
 
 /**
- * Initializes a mailbox feed with messages in the given space.
+ * Initializes a mailbox with messages in the given space.
  */
 export const initializeMailbox = async (space: Space, count = 30) => {
-  const feed = space.db.add(Mailbox.make());
+  const mailbox = space.db.add(Mailbox.make());
+  const feed = await mailbox.feed?.tryLoad();
+  if (!feed) {
+    throw new Error('Mailbox missing backing feed');
+  }
   const messages = createMessages(count, space);
   await runAndForwardErrors(Feed.append(feed, messages).pipe(Effect.provide(createFeedServiceLayer(space.queues))));
-  return feed;
+  return mailbox;
 };

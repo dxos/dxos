@@ -253,8 +253,7 @@ export const createObjectNode = ({
     return null;
   }
 
-  const metadataKey = Obj.instanceOf(Type.Feed, object) ? (object.kind ?? type) : type;
-  const metadata = resolve(metadataKey);
+  const metadata = resolve(type);
   const partials = Obj.instanceOf(Collection.Collection, object)
     ? getCollectionGraphNodePartials({ collection: object, db, resolve })
     : metadata.graphProps;
@@ -263,7 +262,7 @@ export const createObjectNode = ({
     (object as any).name ||
     Obj.getLabel(object) ||
     metadata.label?.(object) ||
-    getDynamicLabel('object name placeholder', metadataKey, { default: 'New item' });
+    getDynamicLabel('object name placeholder', type, { default: 'New item' });
 
   const selectable =
     !Obj.instanceOf(Collection.Collection, object) || (navigable && Obj.instanceOf(Collection.Collection, object));

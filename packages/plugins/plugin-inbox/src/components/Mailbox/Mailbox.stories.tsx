@@ -85,7 +85,7 @@ export const WithCompanion: Story = {
       plugins: [
         ...corePlugins(),
         ClientPlugin({
-          types: [Type.Feed, Mailbox.Config, Message.Message, Person.Person],
+          types: [Type.Feed, Mailbox.Mailbox, Message.Message, Person.Person],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               yield* Effect.promise(() => client.halo.createIdentity());

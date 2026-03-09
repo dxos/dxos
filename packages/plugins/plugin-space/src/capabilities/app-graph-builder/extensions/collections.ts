@@ -185,10 +185,11 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
           return Effect.succeed(null);
         }
 
+        get(AtomObj.make(object));
         return Effect.succeed(
           createObjectNode({
-            object,
             db: space.db,
+            object,
             resolve: resolve(get),
             disposition: 'hidden',
           }),
@@ -268,8 +269,6 @@ const constructObjectActions = ({
 
   const getId = (id: string) => `${id}/${Obj.getDXN(object).toString()}`;
 
-  const metadataKey = Obj.instanceOf(Type.Feed, object) ? ((object as Type.Feed).kind ?? typename) : typename;
-
   const actions: Node.NodeArg<Node.ActionData<Operation.Service>>[] = [
     ...(Obj.instanceOf(Collection.Collection, object)
       ? [
@@ -292,7 +291,7 @@ const constructObjectActions = ({
       data: (params?: Node.InvokeProps) =>
         Operation.invoke(SpaceOperation.RenameObject, { object, caller: params?.caller }),
       properties: {
-        label: getDynamicLabel('rename object label', metadataKey, { defaultValue: 'Rename' }),
+        label: getDynamicLabel('rename object label', typename, { defaultValue: 'Rename' }),
         icon: 'ph--pencil-simple-line--regular',
         disposition: 'list-item',
         testId: 'spacePlugin.renameObject',
@@ -331,7 +330,7 @@ const constructObjectActions = ({
           target: getParentCollection(graph, params?.path),
         }),
       properties: {
-        label: getDynamicLabel('delete object label', metadataKey, { defaultValue: 'Delete' }),
+        label: getDynamicLabel('delete object label', typename, { defaultValue: 'Delete' }),
         icon: 'ph--trash--regular',
         disposition: 'list-item',
         disabled: !deletable,

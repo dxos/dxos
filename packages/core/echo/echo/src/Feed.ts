@@ -59,7 +59,7 @@ export interface RetentionOptions {
  * ```
  */
 // TODO(wittjosiah): How to control the feed namespace (data/trace)? Why do feeds have namespaces?
-export const make = (props: Obj.MakeProps<typeof Type.Feed>): Feed => Obj.make(Type.Feed, props);
+export const make = (props: Obj.MakeProps<typeof Type.Feed> = {}): Feed => Obj.make(Type.Feed, props);
 
 /**
  * Reads the queue DXN from feed metadata.

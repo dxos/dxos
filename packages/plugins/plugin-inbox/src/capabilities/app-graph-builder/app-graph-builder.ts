@@ -8,8 +8,8 @@ import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { DXN, Filter, Obj, Query, Ref } from '@dxos/echo';
-import { AtomQuery } from '@dxos/echo-atom';
+import { type Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { AtomQuery, AtomRef } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { AutomationCapabilities, invokeFunctionWithTracing } from '@dxos/plugin-automation';
@@ -40,41 +40,36 @@ export default Capability.makeModule(
           if (!Mailbox.instanceOf(node.data)) {
             return Option.none();
           }
-          const feed = node.data;
-          const db = Obj.getDatabase(feed);
+          const mailbox = node.data;
+          const db = Obj.getDatabase(mailbox);
           if (!db || node.properties.filter !== undefined) {
             return Option.none();
           }
-          return Option.some(feed);
+          return Option.some(mailbox);
         },
-        connector: (feed, get) => {
-          const db = Obj.getDatabase(feed);
-          if (!db) {
+        connector: (mailbox, _get) => {
+          const db = Obj.getDatabase(mailbox);
+          if (!db || !mailbox.filters?.length) {
             return Effect.succeed([]);
           }
 
-          // TODO(wittjosiah): Not possible to filter by references yet.
-          const configs = get(AtomQuery.make(db, Filter.type(Mailbox.Config)));
-          const config = configs.find((config) => DXN.equals(config.feed.dxn, Obj.getDXN(feed)));
-          if (!config?.filters?.length) {
-            return Effect.succeed([]);
-          }
+          const filterType = `${Mailbox.Mailbox.typename}-filter`;
 
           return Effect.succeed([
             {
-              id: `${Obj.getDXN(feed).toString()}-unfiltered`,
-              type: `${Mailbox.kind}-filter`,
-              data: feed,
+              id: `${Obj.getDXN(mailbox).toString()}-unfiltered`,
+              type: filterType,
+              data: mailbox,
               properties: {
                 label: ['inbox label', { ns: meta.id }],
                 icon: 'ph--tray--regular',
                 filter: null,
               },
             },
-            ...(config.filters?.map(({ name, filter }: { name: string; filter: any }) => ({
-              id: `${Obj.getDXN(feed).toString()}-filter-${kebabize(name)}`,
-              type: `${Mailbox.kind}-filter`,
-              data: feed,
+            ...(mailbox.filters?.map(({ name, filter }: { name: string; filter: any }) => ({
+              id: `${Obj.getDXN(mailbox).toString()}-filter-${kebabize(name)}`,
+              type: filterType,
+              data: mailbox,
               properties: {
                 label: name,
                 icon: 'ph--tray--regular',
@@ -82,12 +77,12 @@ export default Capability.makeModule(
               },
               nodes: [
                 {
-                  id: `${Obj.getDXN(feed).toString()}-filter-${kebabize(name)}-delete`,
+                  id: `${Obj.getDXN(mailbox).toString()}-filter-${kebabize(name)}-delete`,
                   type: Node.ActionType,
                   data: Effect.fnUntraced(function* () {
-                    const index = config.filters.findIndex((f: any) => f.name === name);
-                    Obj.change(config, (c: any) => {
-                      c.filters.splice(index, 1);
+                    const index = mailbox.filters.findIndex((f: any) => f.name === name);
+                    Obj.change(mailbox, (mutable: any) => {
+                      mutable.filters.splice(index, 1);
                     });
                   }),
                   properties: {
@@ -104,13 +99,14 @@ export default Capability.makeModule(
       GraphBuilder.createExtension({
         id: `${meta.id}/mailbox-message`,
         match: (node) => (Mailbox.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
-        connector: (feed, get) => {
-          const db = Obj.getDatabase(feed);
-          if (!db) {
+        connector: (mailbox, get) => {
+          const db = Obj.getDatabase(mailbox);
+          const feed = mailbox.feed ? (get(AtomRef.make(mailbox.feed)) as Feed.Feed | undefined) : undefined;
+          if (!db || !feed) {
             return Effect.succeed([]);
           }
 
-          const nodeId = Obj.getDXN(feed).toString();
+          const nodeId = Obj.getDXN(mailbox).toString();
           const messageId = get(selectedId(nodeId));
           const message = get(
             AtomQuery.make<Message.Message>(
@@ -135,13 +131,14 @@ export default Capability.makeModule(
       GraphBuilder.createExtension({
         id: `${meta.id}/calendar-event`,
         match: (node) => (Calendar.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
-        connector: (feed, get) => {
-          const db = Obj.getDatabase(feed);
-          if (!db) {
+        connector: (calendar, get) => {
+          const db = Obj.getDatabase(calendar);
+          const feed = calendar.feed ? (get(AtomRef.make(calendar.feed)) as Feed.Feed | undefined) : undefined;
+          if (!db || !feed) {
             return Effect.succeed([]);
           }
 
-          const nodeId = Obj.getDXN(feed).toString();
+          const nodeId = Obj.getDXN(calendar).toString();
           const eventId = get(selectedId(nodeId));
           const event = get(
             AtomQuery.make<Event.Event>(db, Query.select(eventId ? Filter.id(eventId) : Filter.nothing()).from(feed)),
@@ -163,19 +160,19 @@ export default Capability.makeModule(
       GraphBuilder.createExtension({
         id: `${meta.id}/sync-mailbox`,
         match: (node) => (Mailbox.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
-        actions: (feed) =>
+        actions: (mailbox) =>
           Effect.succeed([
             {
-              id: `${Obj.getDXN(feed).toString()}-sync`,
+              id: `${Obj.getDXN(mailbox).toString()}-sync`,
               data: Effect.fnUntraced(function* () {
                 const computeRuntime = yield* Capability.get(AutomationCapabilities.ComputeRuntime);
-                const db = Obj.getDatabase(feed);
+                const db = Obj.getDatabase(mailbox);
                 invariant(db);
                 const runtime = computeRuntime.getRuntime(db.spaceId);
                 yield* Effect.tryPromise(() =>
                   runtime.runPromise(
                     invokeFunctionWithTracing(GmailFunctions.Sync, {
-                      feed: Ref.make(feed),
+                      mailbox: Ref.make(mailbox),
                     }),
                   ),
                 );
@@ -191,19 +188,19 @@ export default Capability.makeModule(
       GraphBuilder.createExtension({
         id: `${meta.id}/sync-calendar`,
         match: (node) => (Calendar.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
-        actions: (feed) =>
+        actions: (calendar) =>
           Effect.succeed([
             {
-              id: `${Obj.getDXN(feed).toString()}-sync`,
+              id: `${Obj.getDXN(calendar).toString()}-sync`,
               data: Effect.fnUntraced(function* () {
                 const computeRuntime = yield* Capability.get(AutomationCapabilities.ComputeRuntime);
-                const db = Obj.getDatabase(feed);
+                const db = Obj.getDatabase(calendar);
                 invariant(db);
                 const runtime = computeRuntime.getRuntime(db.spaceId);
                 yield* Effect.tryPromise(() =>
                   runtime.runPromise(
                     invokeFunctionWithTracing(CalendarFunctions.Sync, {
-                      feed: Ref.make(feed),
+                      calendar: Ref.make(calendar),
                     }),
                   ),
                 );

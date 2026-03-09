@@ -180,14 +180,15 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
 
         return Effect.succeed(
           objects
-            .map((object: Obj.Unknown) =>
-              createObjectNode({
+            .map((object: Obj.Unknown) => {
+              get(AtomObj.make(object));
+              return createObjectNode({
                 db: space.db,
                 object,
                 resolve: resolve(get),
                 droppable: false,
-              }),
-            )
+              });
+            })
             .filter(isNonNullable),
         );
       },

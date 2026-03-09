@@ -41,9 +41,7 @@ const createItemPropsFamily = (graph: ReturnType<typeof useAppGraph>['graph']) =
             ? []
             : undefined;
       const parentId = path.length >= 2 ? path[path.length - 2] : undefined;
-      const parentNode = parentId
-        ? Option.getOrElse(get(graph.node(parentId)), () => undefined)
-        : undefined;
+      const parentNode = parentId ? Option.getOrElse(get(graph.node(parentId)), () => undefined) : undefined;
       const droppable =
         node.properties.droppable === false || parentNode?.properties.childrenDroppable === false ? false : undefined;
 
@@ -74,8 +72,7 @@ const createItemFamily = (graph: ReturnType<typeof useAppGraph>['graph']) =>
   Atom.family((id: string) =>
     Atom.make((get) => {
       const node = Option.getOrElse(get(graph.node(id)), () => undefined);
-      const passed = node ? filterItems(node) : false;
-      return node && passed ? node : undefined;
+      return node && filterItems(node) ? node : undefined;
     }).pipe(Atom.keepAlive),
   );
 

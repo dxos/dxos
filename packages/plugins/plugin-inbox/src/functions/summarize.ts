@@ -24,6 +24,7 @@ import { TracingService, defineFunction } from '@dxos/functions';
 import { Message, Organization, Person, Pipeline } from '@dxos/types';
 import { trim } from '@dxos/util';
 
+import * as Mailbox from '../types/Mailbox';
 import { renderMarkdown } from '../util';
 
 /**
@@ -34,8 +35,8 @@ export default defineFunction({
   name: 'Summarize',
   description: 'Summarize a mailbox.',
   inputSchema: Schema.Struct({
-    feed: Type.Ref(Type.Feed).annotations({
-      description: 'The ID of the mailbox feed.',
+    mailbox: Type.Ref(Mailbox.Mailbox).annotations({
+      description: 'Reference to the mailbox object.',
     }),
     skip: Schema.Number.pipe(
       Schema.annotations({
@@ -55,10 +56,12 @@ export default defineFunction({
       description: 'The summary of the mailbox.',
     }),
   }),
+  types: [Type.Feed, Mailbox.Mailbox],
   services: [Database.Service, Feed.Service],
   handler: Effect.fnUntraced(
-    function* ({ data: { feed: feedRef, skip = 0, limit = 20 } }) {
-      const feed = yield* Database.load(feedRef);
+    function* ({ data: { mailbox: mailboxRef, skip = 0, limit = 20 } }) {
+      const mailbox = yield* Database.load(mailboxRef);
+      const feed = yield* Database.load(mailbox.feed);
       const objects = yield* Feed.runQuery(feed, Filter.type(Message.Message));
       const messages = Function.pipe(
         objects,

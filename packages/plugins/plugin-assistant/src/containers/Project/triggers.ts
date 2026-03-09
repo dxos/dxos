@@ -8,6 +8,7 @@ import { type Project, ProjectFunctions } from '@dxos/assistant-toolkit';
 import { Feed, Obj, Ref, Type } from '@dxos/echo';
 import { FunctionDefinition, Trigger } from '@dxos/functions';
 import { Filter } from '@dxos/react-client/echo';
+import { FeedAnnotation } from '@dxos/schema';
 
 // TODO(dmaretskyi): Perhaps the association is better done with a relation.
 
@@ -20,6 +21,16 @@ const PROJECT_TRIGGER_EXTENSION_KEY = 'dxos.org/extension/ProjectTrigger';
  * Foreign key {@link PROJECT_TRIGGER_EXTENSION_KEY} => <dxn string of subscription target>
  */
 const PROJECT_TRIGGER_TARGET_EXTENSION_KEY = 'dxos.org/extension/ProjectTriggerTarget';
+
+/** Checks if an object's schema has the FeedAnnotation. */
+const hasFeedAnnotation = (obj: Obj.Unknown): boolean => {
+  const schema = Obj.getSchema(obj);
+  if (!schema) {
+    return false;
+  }
+  const annotation = FeedAnnotation.get(schema);
+  return Option.isSome(annotation) && annotation.value === true;
+};
 
 /**
  * Syncs triggers in the database with the project subscriptions.
@@ -58,7 +69,14 @@ export const syncTriggers = async (project: Project.Project) => {
       continue;
     }
 
-    const queueDxn = Option.some(target).pipe(
+    let feedObj: Type.Feed | undefined;
+    if (Obj.instanceOf(Type.Feed, target)) {
+      feedObj = target;
+    } else if (hasFeedAnnotation(target)) {
+      feedObj = await (target as any).feed?.tryLoad();
+    }
+
+    const queueDxn = Option.fromNullable(feedObj).pipe(
       Option.filter(Obj.instanceOf(Type.Feed)),
       Option.map(Feed.getQueueDxn),
       Option.getOrUndefined,

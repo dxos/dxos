@@ -14,9 +14,8 @@ import * as Ref from 'effect/Ref';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
-import { Database, Feed, Filter, Obj, Type } from '@dxos/echo';
+import { Database, Feed, Obj, Type } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
-import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Event } from '@dxos/types';
 
@@ -34,8 +33,8 @@ export default defineFunction({
   description:
     'Sync events from Google Calendar. The initial sync uses startTime ordering for specified number of days. Subsequent syncs use updatedMin to catch all changes.',
   inputSchema: Schema.Struct({
-    feed: Type.Ref(Type.Feed).annotations({
-      description: 'Reference to the calendar feed.',
+    calendar: Type.Ref(Calendar.Calendar).annotations({
+      description: 'Reference to the calendar object.',
     }),
     googleCalendarId: Schema.optional(Schema.String),
     syncBackDays: Schema.optional(Schema.Number),
@@ -45,27 +44,29 @@ export default defineFunction({
   outputSchema: Schema.Struct({
     newEvents: Schema.Number,
   }),
-  types: [Type.Feed, Calendar.Config],
+  types: [Type.Feed, Calendar.Calendar],
   services: [Database.Service, Feed.Service],
   handler: ({
     // TODO(wittjosiah): Schema-based defaults are not yet supported.
-    data: { feed: feedRef, googleCalendarId = 'primary', syncBackDays = 30, syncForwardDays = 365, pageSize = 100 },
+    data: {
+      calendar: calendarRef,
+      googleCalendarId = 'primary',
+      syncBackDays = 30,
+      syncForwardDays = 365,
+      pageSize = 100,
+    },
   }) =>
     Effect.gen(function* () {
       log('syncing google calendar', {
-        feed: feedRef,
+        calendar: calendarRef.dxn.toString(),
         googleCalendarId,
         syncBackDays,
         syncForwardDays,
         pageSize,
       });
 
-      const feed = yield* Database.load(feedRef);
-
-      // Find the calendar config linked to this feed.
-      // TODO(wittjosiah): Not possible to filter by references yet.
-      const configs = yield* Database.runQuery(Filter.type(Calendar.Config));
-      const config = configs.find((config) => DXN.equals(config.feed.dxn, Obj.getDXN(feed)));
+      const calendar = yield* Database.load(calendarRef);
+      const feed = yield* Database.load(calendar.feed);
 
       // State management for sync process.
       const newEvents = yield* Ref.make<Event.Event[]>([]);
@@ -73,7 +74,7 @@ export default defineFunction({
       const latestUpdate = yield* Ref.make<string | undefined>(undefined);
 
       // Determine sync strategy and execute.
-      const isInitialSync = !config?.lastSyncedUpdate;
+      const isInitialSync = !calendar.lastSyncedUpdate;
       if (isInitialSync) {
         yield* performInitialSync({
           googleCalendarId,
@@ -87,7 +88,7 @@ export default defineFunction({
       } else {
         yield* performIncrementalSync({
           googleCalendarId,
-          updatedMin: config.lastSyncedUpdate!,
+          updatedMin: calendar.lastSyncedUpdate!,
           pageSize,
           newEvents,
           nextPage,
@@ -95,11 +96,11 @@ export default defineFunction({
         });
       }
 
-      // Update the config's last synced update timestamp.
+      // Update the calendar's last synced update timestamp.
       const lastUpdate = yield* Ref.get(latestUpdate);
-      if (lastUpdate && config) {
-        Obj.change(config, (config) => {
-          config.lastSyncedUpdate = lastUpdate;
+      if (lastUpdate) {
+        Obj.change(calendar, (calendar) => {
+          calendar.lastSyncedUpdate = lastUpdate;
         });
         log('updated lastSyncedUpdate', { lastUpdate });
       }
@@ -122,7 +123,7 @@ export default defineFunction({
       };
     }).pipe(
       Effect.provide(
-        Layer.mergeAll(FetchHttpClient.layer, InboxResolver.Live, GoogleCredentials.fromCalendar(feedRef)),
+        Layer.mergeAll(FetchHttpClient.layer, InboxResolver.Live, GoogleCredentials.fromCalendar(calendarRef)),
       ),
     ),
 });

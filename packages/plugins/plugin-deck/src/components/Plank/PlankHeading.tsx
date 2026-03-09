@@ -100,8 +100,11 @@ export const PlankHeading = memo(
       } else {
         return [
           actions,
-          Graph.getActions(graph, node.id).filter((a) =>
-            ['list-item', 'list-item-primary', 'heading-list-item'].includes(a.properties.disposition),
+          Graph.getActions(graph, node.id).filter(
+            (a) =>
+              ['list-item', 'list-item-primary', 'heading-list-item'].includes(a.properties.disposition) &&
+              // TODO(wittjosiah): Consider having a separate disposition for only navtree actions.
+              !a.properties.parentMatch,
           ),
         ].filter((a) => a.length > 0);
       }

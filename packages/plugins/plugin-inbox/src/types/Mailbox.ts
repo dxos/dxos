@@ -4,11 +4,10 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Feed, Obj, Type } from '@dxos/echo';
-import { FormInputAnnotation, SystemTypeAnnotation } from '@dxos/echo/internal';
+import { Annotation, Feed, Obj, Ref, Type } from '@dxos/echo';
+import { FormInputAnnotation } from '@dxos/echo/internal';
+import { FeedAnnotation } from '@dxos/schema';
 import { AccessToken } from '@dxos/types';
-
-import { meta } from '../meta';
 
 // TODO(burdon): Implement as labels?
 export enum MessageState {
@@ -25,18 +24,9 @@ export const Labels = Schema.Record({
 
 export type Labels = Schema.Schema.Type<typeof Labels>;
 
-/** Feed kind identifier for mailbox feeds. */
-export const kind = `${meta.id}/mailbox`;
-
-/** Checks if a value is a mailbox feed. */
-export const instanceOf = (value: unknown): value is Feed.Feed =>
-  Obj.instanceOf(Type.Feed, value) && value.kind === kind;
-
-/** Creates a mailbox feed. */
-export const make = (props?: Omit<Obj.MakeProps<typeof Type.Feed>, 'kind'>): Feed.Feed => Feed.make({ kind, ...props });
-
-/** Configuration schema for a mailbox feed. */
-export const Config = Schema.Struct({
+/** Mailbox object schema. */
+export const Mailbox = Schema.Struct({
+  name: Schema.String.pipe(Schema.optional),
   feed: Type.Ref(Type.Feed).pipe(FormInputAnnotation.set(false)),
   labels: Labels.pipe(FormInputAnnotation.set(false), Schema.optional),
   // TODO(wittjosiah): Factor out to relation?
@@ -54,17 +44,20 @@ export const Config = Schema.Struct({
   ),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/MailboxConfig',
-    version: '0.1.0',
+    typename: 'dxos.org/type/Mailbox',
+    version: '0.2.0',
   }),
   Annotation.IconAnnotation.set({
     icon: 'ph--tray--regular',
     hue: 'red',
   }),
-  SystemTypeAnnotation.set(true),
+  FeedAnnotation.set(true),
 );
 
-export interface Config extends Schema.Schema.Type<typeof Config> {}
+export interface Mailbox extends Schema.Schema.Type<typeof Mailbox> {}
+
+/** Checks if a value is a Mailbox object. */
+export const instanceOf = (value: unknown): value is Mailbox => Obj.instanceOf(Mailbox, value);
 
 export const CreateMailboxSchema = Schema.Struct({
   name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
@@ -76,14 +69,17 @@ export const CreateMailboxSchema = Schema.Struct({
   ),
 });
 
-type ConfigProps = Omit<Obj.MakeProps<typeof Config>, 'filters'> & {
+type MailboxProps = Omit<Obj.MakeProps<typeof Mailbox>, 'feed' | 'filters'> & {
   filters?: { name: string; filter: string }[];
 };
 
-/** Creates a mailbox config object linked to a feed. */
-export const makeConfig = (props: ConfigProps) =>
-  Obj.make(Config, {
+/** Creates a mailbox object with a backing feed. */
+export const make = (props: MailboxProps = {}) => {
+  const feed = Feed.make();
+  return Obj.make(Mailbox, {
+    feed: Ref.make(feed),
     labels: {},
     filters: [],
     ...props,
   });
+};

@@ -16,7 +16,6 @@ import * as Stream from 'effect/Stream';
 import { Feed, Filter, Obj, Type } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
-import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
@@ -62,7 +61,7 @@ export default defineFunction({
   name: 'Sync Gmail',
   description: 'Sync emails from Gmail to the mailbox feed.',
   inputSchema: Schema.Struct({
-    feed: Type.Ref(Type.Feed).annotations({ description: 'Reference to the mailbox feed to sync emails to.' }),
+    mailbox: Type.Ref(Mailbox.Mailbox).annotations({ description: 'Reference to the mailbox object.' }),
     userId: Schema.String.pipe(Schema.optional),
     label: Schema.String.pipe(
       Schema.annotations({
@@ -86,13 +85,12 @@ export default defineFunction({
   outputSchema: Schema.Struct({
     newMessages: Schema.Number,
   }),
-  // TODO(wittjosiah): Include Type.Feed by default?
-  types: [Type.Feed, Mailbox.Config],
+  types: [Type.Feed, Mailbox.Mailbox],
   services: [Database.Service, Feed.Service],
   handler: ({
     // TODO(wittjosiah): Schema-based defaults are not yet supported.
     data: {
-      feed: feedRef,
+      mailbox: mailboxRef,
       userId = 'me',
       label = 'inbox',
       after = format(subDays(new Date(), 30), 'yyyy-MM-dd'),
@@ -100,23 +98,18 @@ export default defineFunction({
     },
   }) =>
     Effect.gen(function* () {
-      log('syncing gmail', { feed: feedRef.dxn.toString(), userId, after, restrictedMode });
-      const feed = yield* Database.load(feedRef);
+      log('syncing gmail', { mailbox: mailboxRef.dxn.toString(), userId, after, restrictedMode });
+      const mailbox = yield* Database.load(mailboxRef);
+      const feed = yield* Database.load(mailbox.feed);
 
-      // Find the mailbox config linked to this feed.
-      const configs = yield* Database.runQuery(Filter.type(Mailbox.Config));
-      const config = configs.find((config) => DXN.equals(config.feed.dxn, Obj.getDXN(feed)));
-
-      // Get labels.
-      if (config) {
-        const labelCount = yield* syncLabels(config, userId).pipe(
-          Effect.catchAll((error) => {
-            log.catch(error);
-            return Effect.succeed(0);
-          }),
-        );
-        log('synced labels', { count: labelCount });
-      }
+      // Sync labels to the mailbox object.
+      const labelCount = yield* syncLabels(mailbox, userId).pipe(
+        Effect.catchAll((error) => {
+          log.catch(error);
+          return Effect.succeed(0);
+        }),
+      );
+      log('synced labels', { count: labelCount });
 
       // Query existing messages from feed.
       const objects = yield* Feed.runQuery(feed, Filter.type(Message.Message));
@@ -152,7 +145,9 @@ export default defineFunction({
         newMessages: newMessagesCount,
       };
     }).pipe(
-      Effect.provide(Layer.mergeAll(FetchHttpClient.layer, InboxResolver.Live, GoogleCredentials.fromMailbox(feedRef))),
+      Effect.provide(
+        Layer.mergeAll(FetchHttpClient.layer, InboxResolver.Live, GoogleCredentials.fromMailbox(mailboxRef)),
+      ),
     ),
 });
 
@@ -161,13 +156,13 @@ export default defineFunction({
 //
 
 /**
- * Sync labels to the mailbox config.
+ * Sync labels to the mailbox object.
  */
-const syncLabels = Effect.fn(function* (config: Mailbox.Config, userId: string) {
+const syncLabels = Effect.fn(function* (mailbox: Mailbox.Mailbox, userId: string) {
   const { labels } = yield* GoogleMail.listLabels(userId);
-  Obj.change(config, (config) => {
-    labels.forEach((label) => {
-      (config.labels ??= {})[label.id] = label.name;
+  Obj.change(mailbox, (mutable: any) => {
+    labels.forEach((label: any) => {
+      (mutable.labels ??= {})[label.id] = label.name;
     });
   });
   return labels.length;

@@ -6,7 +6,6 @@ import * as Effect from 'effect/Effect';
 
 import { ActivationEvent, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { Ref } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
@@ -30,20 +29,13 @@ export const InboxPlugin = Plugin.define(meta).pipe(
   AppPlugin.addMetadataModule({
     metadata: [
       {
-        id: Mailbox.kind,
+        id: Mailbox.Mailbox.typename,
         metadata: {
           icon: 'ph--tray--regular',
           iconHue: 'rose',
           blueprints: [InboxBlueprint.key],
           inputSchema: CreateMailboxSchema,
-          createObject: ((props, { db }) =>
-            // TODO(wittjosiah): Should this allow multiple objects to be returned?
-            Effect.sync(() => {
-              const feed = Mailbox.make(props);
-              const config = Mailbox.makeConfig({ feed: Ref.make(feed), accessToken: props.accessToken });
-              db.add(config);
-              return feed;
-            })) satisfies CreateObject,
+          createObject: ((props) => Effect.sync(() => Mailbox.make(props))) satisfies CreateObject,
         },
       },
       {
@@ -55,19 +47,13 @@ export const InboxPlugin = Plugin.define(meta).pipe(
         },
       },
       {
-        id: Calendar.kind,
+        id: Calendar.Calendar.typename,
         metadata: {
           icon: 'ph--calendar--regular',
           iconHue: 'rose',
           blueprints: [CalendarBlueprint.key],
           inputSchema: CreateCalendarSchema,
-          createObject: ((props, { db }) =>
-            Effect.sync(() => {
-              const feed = Calendar.make(props);
-              const config = Calendar.makeConfig({ feed: Ref.make(feed), accessToken: props.accessToken });
-              db.add(config);
-              return feed;
-            })) satisfies CreateObject,
+          createObject: ((props) => Effect.sync(() => Calendar.make(props))) satisfies CreateObject,
         },
       },
       {
@@ -81,7 +67,7 @@ export const InboxPlugin = Plugin.define(meta).pipe(
   }),
   AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
   AppPlugin.addSchemaModule({
-    schema: [Event.Event, Mailbox.Config, Calendar.Config, Message.Message],
+    schema: [Event.Event, Mailbox.Mailbox, Calendar.Calendar, Message.Message],
   }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),

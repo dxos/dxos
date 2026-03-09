@@ -5,11 +5,13 @@
 import { useCallback, useMemo, useState } from 'react';
 
 import { type Client } from '@dxos/client';
-import { DXN, type Database, type Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { DXN, type Database, Filter, Obj, Ref } from '@dxos/echo';
 import { Function, Trigger } from '@dxos/functions';
 import { getDeployedFunctions } from '@dxos/functions-runtime/edge';
 import { useClient } from '@dxos/react-client';
 import { Query, useObject, useQuery } from '@dxos/react-client/echo';
+
+import { Calendar } from '../types';
 
 /**
  * Finds or imports a function by key from Edge into the space database.
@@ -37,7 +39,7 @@ const ensureFunction = async (
 };
 
 /**
- * Hook to find, create, and toggle a timer-based sync trigger for a feed.
+ * Hook to find, create, and toggle a timer-based sync trigger for a mailbox or calendar.
  * Imports the required function from Edge if it doesn't exist in the space.
  */
 export const useSyncTrigger = ({
@@ -47,9 +49,9 @@ export const useSyncTrigger = ({
   input: extraInput,
 }: {
   db: Database.Database | undefined;
-  subject: Feed.Feed;
+  subject: Obj.Unknown;
   functionKey: string;
-  /** Additional input fields merged into the trigger input alongside the feed ref. */
+  /** Additional input fields merged into the trigger input alongside the subject ref. */
   input?: Record<string, unknown>;
 }) => {
   const client = useClient();
@@ -63,8 +65,10 @@ export const useSyncTrigger = ({
         if (trigger.spec?.kind !== 'timer') {
           return false;
         }
-        const feedRef = trigger.input?.feed;
-        return feedRef?.dxn && DXN.equalsEchoId(feedRef.dxn, subjectDxn);
+        const mailboxRef = trigger.input?.mailbox;
+        const calendarRef = trigger.input?.calendar;
+        const ref = mailboxRef ?? calendarRef;
+        return ref?.dxn && DXN.equalsEchoId(ref.dxn, subjectDxn);
       }),
     [triggers, subjectDxn],
   );
@@ -88,11 +92,12 @@ export const useSyncTrigger = ({
         return;
       }
 
+      const inputKey = Obj.getTypename(subject) === Calendar.Calendar.typename ? 'calendar' : 'mailbox';
       const trigger = Trigger.make({
         enabled: true,
         spec: { kind: 'timer', cron: '*/5 * * * *' },
         function: Ref.make(fn),
-        input: { feed: db.makeRef(Obj.getDXN(subject)), ...extraInput },
+        input: { [inputKey]: db.makeRef(Obj.getDXN(subject)), ...extraInput },
       });
 
       db.add(trigger);
