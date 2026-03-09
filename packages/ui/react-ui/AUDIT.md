@@ -64,14 +64,16 @@ They need to be made headless (context-only) so they can be moved outside Panel.
 - [ ] Dialog.Body should delegate grid to children
   - push down pattern to lower-level components like Form, SearchList.
 
-```
+```text
   Column Grid Structure
 
   --------------------------
-  | O |                | x |
+  | O |                | X |
+  --------------------------
   |   |                |   |
   |   |                |   |
   |   |                |   |
+  --------------------------
   |   |                |   |
   --------------------------
 

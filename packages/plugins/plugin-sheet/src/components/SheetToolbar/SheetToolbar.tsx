@@ -89,7 +89,7 @@ export const SheetToolbar = ({ id, ...props }: SheetToolbarProps) => {
 
   return (
     <Menu.Root {...props} {...menu} attendableId={id}>
-      <Menu.Toolbar {...props} />
+      <Menu.Toolbar />
     </Menu.Root>
   );
 };

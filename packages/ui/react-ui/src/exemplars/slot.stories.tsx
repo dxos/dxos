@@ -7,7 +7,6 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type PropsWithChildren, forwardRef } from 'react';
 
 import { useComposableProps } from '@dxos/ui-theme';
-import { useSlottedProps } from '@dxos/ui-theme';
 import { type ComposableProps, type SlottableProps, type ThemedClassName } from '@dxos/ui-types';
 
 import { withTheme } from '../testing';
@@ -25,7 +24,6 @@ const Outer = forwardRef<HTMLDivElement, SlottableProps<HTMLDivElement>>(
   ({ children, asChild, ...props }, forwardedRef) => {
     const { className, ...rest } = useComposableProps(props);
     const Root = asChild ? Slot : 'div';
-    const { className, ...rest } = useSlottedProps(props);
     return (
       <Root {...rest} className={className} data-outer='true' ref={forwardedRef}>
         {children}
@@ -39,7 +37,6 @@ const Middle = forwardRef<HTMLDivElement, SlottableProps<HTMLDivElement>>(
   ({ children, asChild, ...props }, forwardedRef) => {
     const { className, ...rest } = useComposableProps(props);
     const Root = asChild ? Slot : 'div';
-    const { className, ...rest } = useSlottedProps(props);
     return (
       <Root {...rest} className={className} data-middle='true' ref={forwardedRef}>
         {children}

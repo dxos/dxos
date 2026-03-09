@@ -129,11 +129,7 @@ export const ChannelContainer = ({ role, subject: channel, roomId: roomIdProp, f
           ) : (
             <DisplayNameMissing />
           )}
-          <Call.Grid fullscreen={fullscreen} />
         </Panel.Content>
-        <Panel.Statusbar>
-          <Call.Toolbar channel={channel} onLeave={handleLeave} />
-        </Panel.Statusbar>
       </Panel.Root>
     );
   }

@@ -151,7 +151,7 @@ const SettingsContainer = ({ classNames, children }: ThemedClassName<PropsWithCh
       role='none'
       className={mx([
         'dx-article',
-        '*:first:!mt-0 *:last:!mb-0 px-trim-md py-trim-md',
+        '*:first:mt-0! *:last:mb-0! px-trim-md py-trim-md',
         'border border-separator rounded-md',
         classNames,
       ])}

@@ -69,7 +69,7 @@ const sheetRowDefault = {
   grid: { size: defaultRowSize, resizeable: true },
 };
 
-export type SheetContentProps = ComposableProps;
+export type SheetContentProps = ComposableProps<React.HTMLAttributes<HTMLDivElement>>;
 
 export const SheetContent = (props: SheetContentProps) => {
   const { t } = useTranslation(meta.id);
