@@ -11,7 +11,7 @@ import { Map } from '@dxos/plugin-map/types';
 
 import { meta } from '../../meta';
 
-import '../../components/MapSurface';
+import '../../components';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

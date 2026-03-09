@@ -8,7 +8,7 @@ import React from 'react';
 import { useConfig } from '@dxos/react-client';
 import { Icon, Link, Message, Popover, Trans, useTranslation } from '@dxos/react-ui';
 
-import { StatusBar } from '../../components/StatusBar';
+import { StatusBar } from '../../components';
 import { meta } from '../../meta';
 
 export type VersionNumberProps = {};

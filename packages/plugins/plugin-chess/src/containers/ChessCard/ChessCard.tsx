@@ -6,7 +6,7 @@ import React from 'react';
 
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 
-import { Chessboard } from '../../components/Chessboard';
+import { Chessboard } from '../../components';
 import { type Chess } from '../../types';
 
 export type ChessCardProps = SurfaceComponentProps<Chess.Game>;

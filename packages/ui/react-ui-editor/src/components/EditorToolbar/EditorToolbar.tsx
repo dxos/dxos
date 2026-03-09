@@ -66,6 +66,7 @@ type ToolbarActionsProps = Pick<EditorToolbarActionGraphProps, 'state' | 'getVie
 // TODO(wittjosiah): Toolbar re-rendering is causing this graph to be recreated and breaking reactivity in some cases.
 //   E.g. for toolbar dropdowns which use active icon, the icon is not updated when the active item changes.
 //   This is currently only happening in the markdown plugin usage and should be reproduced in an editor story.
+// TODO(burdon): Some actions should toggle the state (e.g., toggle bullets on/off depending on the current state).
 const useEditorToolbarActionGraph = ({ state, getView, customActions, ...features }: ToolbarActionsProps) => {
   const menuCreator = useMemo(
     () => createToolbarActions({ state, getView, customActions, ...features }),
@@ -98,7 +99,7 @@ const createToolbarActions = ({
       edges: [],
     };
 
-    // TODO(burdon): Builder pattern?
+    // TODO(burdon): Replace with builder.
     const addSubGraph = (graph: ActionGraphProps, subGraph: ActionGraphProps) => {
       graph.nodes.push(...subGraph.nodes);
       graph.edges.push(...subGraph.edges);
