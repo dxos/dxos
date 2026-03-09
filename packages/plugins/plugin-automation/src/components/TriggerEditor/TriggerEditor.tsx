@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { ComputeGraph } from '@dxos/conductor';
-import { DXN, type Database, Obj, type Query } from '@dxos/echo';
+import { DXN, type Database, Entity, Feed, Obj, type Query, Type } from '@dxos/echo';
 import { Function, Script, Trigger } from '@dxos/functions';
 import { Filter, Ref, useQuery } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
@@ -85,6 +85,7 @@ const useCustomInputs = ({ db, readonlySpec, types, tags }: UseCustomInputsProps
   const functions = useQuery(db, Filter.type(Function.Function));
   const workflows = useQuery(db, Filter.type(ComputeGraph));
   const scripts = useQuery(db, Filter.type(Script.Script));
+  const feeds = useQuery(db, Filter.type(Type.Feed));
 
   return useMemo(
     (): FormFieldMap => ({
@@ -122,6 +123,9 @@ const useCustomInputs = ({ db, readonlySpec, types, tags }: UseCustomInputsProps
       // Spec selector.
       'spec.kind': (props) => <SpecSelector {...props} readonly={readonlySpec} />,
 
+      // Queue feed selector with parent labels.
+      'spec.queue': (props) => <SelectField {...props} options={getFeedQueueOptions(feeds)} />,
+
       // TODO(wittjosiah): Copied from ViewEditor.
       // Query input editor.
       'spec.query': (props) => {
@@ -141,7 +145,7 @@ const useCustomInputs = ({ db, readonlySpec, types, tags }: UseCustomInputsProps
       // Function input editor.
       'input': (props) => <FunctionInputEditor {...props} functions={functions} db={db} />,
     }),
-    [workflows, scripts, functions, readonlySpec],
+    [workflows, scripts, functions, feeds, readonlySpec],
   );
 };
 
@@ -152,4 +156,16 @@ const getWorkflowOptions = (graphs: ComputeGraph[]) => {
 const getFunctionOptions = (scripts: Script.Script[], functions: Function.Function[]) => {
   const getLabel = (fn: Function.Function) => scripts.find((s) => fn.source?.target?.id === s.id)?.name ?? fn.name;
   return functions.map((fn) => ({ label: getLabel(fn), value: `dxn:echo:@:${fn.id}` }));
+};
+
+const getFeedQueueOptions = (feeds: Entity.Any[]) => {
+  return feeds.flatMap((feed) => {
+    const queueDxn = Feed.getQueueDxn(feed as Feed.Feed);
+    if (!queueDxn) {
+      return [];
+    }
+    const parent = Obj.getParent(feed as Obj.Unknown);
+    const label = parent ? Entity.getLabel(parent) : Entity.getLabel(feed);
+    return [{ label: label ?? feed.id, value: queueDxn.toString() }];
+  });
 };

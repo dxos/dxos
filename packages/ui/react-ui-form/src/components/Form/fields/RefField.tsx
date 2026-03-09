@@ -6,13 +6,14 @@ import '@dxos/lit-ui/dx-tag-picker.pcss';
 
 import React, { useCallback, useMemo } from 'react';
 
-import { type Database, Entity, Filter, Ref, Type } from '@dxos/echo';
+import { type Database, Entity, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/internal';
 import { useQuery, useSchema as useSchema$ } from '@dxos/echo-react';
 import { findAnnotation } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { DxAnchor } from '@dxos/lit-ui/react';
 import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
+import { ParentLabelAnnotationId } from '@dxos/schema';
 import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../../translations';
@@ -25,10 +26,11 @@ const isRefSnapshot = (val: any): val is { '/': string } => {
   return typeof val === 'object' && typeof (val as any)?.['/'] === 'string';
 };
 
-const defaultGetOptions: NonNullable<RefFieldProps['getOptions']> = (results) =>
+const defaultGetOptions: NonNullable<RefFieldProps['getOptions']> = (results, { parentLabel } = {}) =>
   results.map((result) => {
     const id = Entity.getDXN(result).toString();
-    const label = Entity.getLabel(result);
+    const parent = parentLabel ? Obj.getParent(result as Obj.Unknown) : undefined;
+    const label = parent ? Entity.getLabel(parent) : Entity.getLabel(result);
     return { id, label: label ?? id };
   });
 
@@ -48,7 +50,7 @@ export type RefFieldProps = FormFieldComponentProps &
     db?: Database.Database;
     resultsHook?: (db?: Database.Database, typename?: string) => Entity.Any[];
     schemaHook?: (db?: Database.Database, typename?: string) => Type.Entity.Any;
-    getOptions?: (objects: Entity.Any[]) => RefOption[];
+    getOptions?: (objects: Entity.Any[], options?: { parentLabel?: boolean }) => RefOption[];
     onCreate?: (schema: Type.Entity.Any, values: any) => void;
   };
 
@@ -80,7 +82,10 @@ export const RefField = (props: RefFieldProps) => {
   );
 
   const results = useResults(db, typename);
-  const options = useMemo(() => getOptions(results), [results, getOptions]);
+  const options = useMemo(() => {
+    const parentLabel = type ? findAnnotation<boolean>(type, ParentLabelAnnotationId) === true : false;
+    return getOptions(results, { parentLabel });
+  }, [results, getOptions, type]);
 
   const handleGetValue = useCallback(() => {
     const formValue = getValue();

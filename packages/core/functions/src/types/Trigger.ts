@@ -25,6 +25,7 @@ export const EmailSpec = Schema.Struct({
 });
 export type EmailSpec = Schema.Schema.Type<typeof EmailSpec>;
 
+// TODO(wittjosiah): Remove. Migrate to Subscription triggers once EDGE supports them for feed queries.
 export const QueueSpec = Schema.Struct({
   kind: Schema.Literal('queue').annotations(kindLiteralAnnotations),
 

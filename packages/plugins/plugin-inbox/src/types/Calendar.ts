@@ -49,8 +49,11 @@ type CalendarProps = Omit<Obj.MakeProps<typeof Calendar>, 'feed' | 'lastSyncedUp
 /** Creates a calendar object with a backing feed. */
 export const make = (props: CalendarProps = {}) => {
   const feed = Feed.make();
-  return Obj.make(Calendar, {
+  const calendar = Obj.make(Calendar, {
     feed: Ref.make(feed),
     ...props,
   });
+  // TODO(wittjosiah): Parent should be declarative in the schema.
+  Obj.setParent(feed, calendar);
+  return calendar;
 };

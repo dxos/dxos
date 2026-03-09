@@ -76,10 +76,13 @@ type MailboxProps = Omit<Obj.MakeProps<typeof Mailbox>, 'feed' | 'filters'> & {
 /** Creates a mailbox object with a backing feed. */
 export const make = (props: MailboxProps = {}) => {
   const feed = Feed.make();
-  return Obj.make(Mailbox, {
+  const mailbox = Obj.make(Mailbox, {
     feed: Ref.make(feed),
     labels: {},
     filters: [],
     ...props,
   });
+  // TODO(wittjosiah): Parent should be declarative in the schema.
+  Obj.setParent(feed, mailbox);
+  return mailbox;
 };

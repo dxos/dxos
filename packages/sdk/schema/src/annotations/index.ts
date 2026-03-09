@@ -4,6 +4,7 @@
 
 export * from './feed';
 export * from './icon';
+export * from './parent-label';
 export * from './queue';
 export * from './view';
 export * from './subscription-target';
