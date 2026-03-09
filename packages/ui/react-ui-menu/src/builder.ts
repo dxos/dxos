@@ -30,6 +30,8 @@ export interface MenuBuilder extends ActionGroupBuilder {
 }
 
 class MenuBuilderImpl implements MenuBuilder {
+  private _separatorCount = 0;
+
   constructor(
     private readonly _data: ActionGraphProps,
     private readonly _rootId: string,
@@ -69,7 +71,8 @@ class MenuBuilderImpl implements MenuBuilder {
     return this;
   }
 
-  separator(id: string = 'separator', variant: 'gap' | 'line' = 'gap'): this {
+  separator(id?: string, variant: 'gap' | 'line' = 'gap'): this {
+    id ??= `separator-${++this._separatorCount}`;
     this._data.nodes.push({
       id,
       type: MenuSeparatorType,
