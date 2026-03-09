@@ -677,7 +677,7 @@ describe('Reactive Object with ECHO database', () => {
       const { db, graph } = await builder.createDatabase();
       await graph.schemaRegistry.register([TestType, NestedType]);
       const obj = db.add(Obj.make(TestType, { objects: [] }));
-      const objectWithMeta = Obj.make(NestedType, { field: 42 }, { keys: [key] });
+      const objectWithMeta = Obj.make(NestedType, { [Obj.Meta]: { keys: [key] }, field: 42 });
       Obj.change(obj, (o) => {
         o.objects.push(Ref.make(objectWithMeta));
       });
@@ -690,7 +690,7 @@ describe('Reactive Object with ECHO database', () => {
       }).pipe(Type.object({ typename: 'example.com/type/Test', version: '0.1.0' }));
       const { db, graph } = await builder.createDatabase();
       await graph.schemaRegistry.register([TestType]);
-      const obj = db.add(Obj.make(TestType, { field: 1 }, { keys: [foreignKey('example.com', '123')] }));
+      const obj = db.add(Obj.make(TestType, { [Obj.Meta]: { keys: [foreignKey('example.com', '123')] }, field: 1 }));
       Obj.change(obj, (obj) => {
         Obj.getMeta(obj).keys.push(foreignKey('example.com', '456'));
       });
