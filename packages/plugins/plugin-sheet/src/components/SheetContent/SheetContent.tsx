@@ -76,6 +76,7 @@ export const SheetContent = (props: SheetContentProps) => {
   const { t } = useTranslation(meta.id);
   const { id, model, editing, setCursor, setRange, cursor, cursorFallbackRange, activeRefs, ignoreAttention } =
     useSheetContext();
+
   // NOTE(thure): using `useState` instead of `useRef` works with refs provided by `@lit/react` and gives us
   //  a reliable dependency for `useEffect` whereas `useLayoutEffect` does not guarantee the element will be defined.
   const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
@@ -329,10 +330,12 @@ export const SheetContent = (props: SheetContentProps) => {
         limitRows={DEFAULT_ROWS}
         columns={columns}
         rows={rows}
-        // TODO(burdon): `col` vs. `column`?
         columnDefault={sheetColDefault}
         rowDefault={sheetRowDefault}
+        activeRefs={activeRefs}
         frozen={frozen}
+        overscroll='trap'
+        className='[--dx-grid-base:var(--base-surface)] [&_.dx-grid]:absolute [&_.dx-grid]:inset-0'
         onAxisResize={handleAxisResize}
         onSelect={handleSelect}
         onFocus={handleFocus}
@@ -340,9 +343,6 @@ export const SheetContent = (props: SheetContentProps) => {
         onKeyDown={handleKeyDown}
         onContextMenu={handleContextMenu}
         onClick={handleClick}
-        overscroll='trap'
-        className='[--dx-grid-base:var(--base-surface)] [&_.dx-grid]:absolute [&_.dx-grid]:inset-0'
-        activeRefs={activeRefs}
         ref={setDxGrid}
       />
       <DropdownMenu.Root
