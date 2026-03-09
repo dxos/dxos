@@ -83,7 +83,7 @@ const Content = forwardRef<HTMLDivElement, ContentProps>(
         ref={forwardedRef}
         data-slot='content'
         {...props}
-        className={tx('panel.content', {}, [className, classNames])}
+        className={tx('panel.content', { asChild }, [className, classNames])}
       >
         {children}
       </Comp>

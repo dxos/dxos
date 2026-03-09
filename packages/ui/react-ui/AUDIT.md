@@ -99,3 +99,5 @@ TODO(burdon): Need to create playground for this.
 - ScrollArea
 - SearchList
 - Settings
+
+ISSUE: Prevent spreading other props (e.g., `extensions` in MarkdownToolbar)
