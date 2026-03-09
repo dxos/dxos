@@ -6,7 +6,7 @@ import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, JsonSchema, Obj, Ref, Type } from '@dxos/echo';
 import { View } from '@dxos/echo';
 import { FormInputAnnotation, type JsonPath, type JsonSchemaType, LabelAnnotation } from '@dxos/echo/internal';
 import { ViewAnnotation } from '@dxos/schema';
@@ -52,7 +52,7 @@ export const make = ({ name, sizes = {}, view, jsonSchema }: MakeProps): Table =
 
   // Preset sizes.
   if (jsonSchema) {
-    const schema = Type.toEffectSchema(jsonSchema);
+    const schema = JsonSchema.toEffectSchema(jsonSchema);
     const properties = SchemaAST.getPropertySignatures(schema.ast);
     for (const property of properties) {
       const name = property.name.toString() as JsonPath;

@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { AgentFunctions, EntityExtractionFunctions, ResearchBlueprint } from '@dxos/assistant-toolkit';
 import { Prompt } from '@dxos/blueprints';
 import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
-import { DXN, Feed, Filter, Key, Obj, Query, type QueryAST, Ref, Tag, Type } from '@dxos/echo';
+import { DXN, Feed, Filter, JsonSchema, Key, Obj, Query, type QueryAST, Ref, Tag, Type } from '@dxos/echo';
 import { Trigger, serializeFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { GmailFunctions } from '@dxos/plugin-inbox';
@@ -201,19 +201,19 @@ export const generator = () => ({
             ).options({
               queues: [queueDxn],
             }),
-            jsonSchema: Type.toJsonSchema(Message.Message),
+            jsonSchema: JsonSchema.toJsonSchema(Message.Message),
           });
           const contactsView = ViewModel.make({
             query: contactsQuery,
-            jsonSchema: Type.toJsonSchema(Person.Person),
+            jsonSchema: JsonSchema.toJsonSchema(Person.Person),
           });
           const organizationsView = ViewModel.make({
             query: organizationsQuery,
-            jsonSchema: Type.toJsonSchema(Organization.Organization),
+            jsonSchema: JsonSchema.toJsonSchema(Organization.Organization),
           });
           const notesView = ViewModel.make({
             query: notesQuery,
-            jsonSchema: Type.toJsonSchema(Markdown.Document),
+            jsonSchema: JsonSchema.toJsonSchema(Markdown.Document),
           });
 
           return space.db.add(
@@ -396,7 +396,7 @@ export const generator = () => ({
     //       const templateComputeNode = computeModel.nodes.find((n) => n.id === template.node);
     //       invariant(templateComputeNode, 'Template compute node was not created.');
     //       templateComputeNode.value = templateContent.join('\n');
-    //       templateComputeNode.inputSchema = Type.toJsonSchema(EmailTriggerOutput);
+    //       templateComputeNode.inputSchema = JsonSchema.toJsonSchema(EmailTriggerOutput);
 
     //       attachTrigger(functionTrigger, computeModel);
 
@@ -530,7 +530,7 @@ export const generator = () => ({
     //       invariant(templateComputeNode, 'Template compute node was not created.');
     //       templateComputeNode.value = templateContent.join('\n');
     //       const extendedSchema = Schema.extend(EmailTriggerOutput, Schema.Struct({ text: Schema.String }));
-    //       templateComputeNode.inputSchema = Type.toJsonSchema(extendedSchema);
+    //       templateComputeNode.inputSchema = JsonSchema.toJsonSchema(extendedSchema);
 
     //       attachTrigger(functionTrigger, computeModel);
 
@@ -769,7 +769,9 @@ const createQueueSinkPreset = <SpecType extends Trigger.Kind>(
   invariant(templateComputeNode, 'Template compute node was not created.');
   // NOTE: These are plain object mutations during model construction, not ECHO object mutations.
   templateComputeNode.value = ['{', '  "@type": "{{type}}",', '  "id": "@{{changeId}}"', '}'].join('\n');
-  templateComputeNode.inputSchema = Type.toJsonSchema(Schema.Struct({ type: Schema.String, changeId: Schema.String }));
+  templateComputeNode.inputSchema = JsonSchema.toJsonSchema(
+    Schema.Struct({ type: Schema.String, changeId: Schema.String }),
+  );
   attachTrigger(functionTrigger, computeModel);
 
   return { canvasModel, computeModel };

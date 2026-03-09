@@ -5,7 +5,7 @@
 import type * as SchemaAST from 'effect/SchemaAST';
 import React, { useCallback, useMemo } from 'react';
 
-import { type Database, Obj, Ref, Type } from '@dxos/echo';
+import { type Database, JsonSchema, Obj, Ref, Type } from '@dxos/echo';
 import { type JsonPath } from '@dxos/echo/internal';
 import { type Function } from '@dxos/functions';
 import { useOnTransition, useTranslation } from '@dxos/react-ui';
@@ -48,7 +48,7 @@ export const FunctionInputEditor = ({ type, functions, db, getValue, onValueChan
   );
 
   const inputSchema = useMemo(() => selectedFunction?.inputSchema, [selectedFunction]);
-  const effectSchema = useMemo(() => (inputSchema ? Type.toEffectSchema(inputSchema) : undefined), [inputSchema]);
+  const effectSchema = useMemo(() => (inputSchema ? JsonSchema.toEffectSchema(inputSchema) : undefined), [inputSchema]);
   const propertyCount = inputSchema?.properties ? Object.keys(inputSchema.properties).length : 0;
   const defaultValues = useMemo(() => {
     const raw = getValue() ?? {};

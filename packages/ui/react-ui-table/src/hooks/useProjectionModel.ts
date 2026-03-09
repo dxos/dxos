@@ -5,7 +5,7 @@
 import { type Registry } from '@effect-atom/atom-react';
 import { useState } from 'react';
 
-import { Type } from '@dxos/echo';
+import { JsonSchema, Type } from '@dxos/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { ProjectionModel, createEchoChangeCallback } from '@dxos/schema';
 
@@ -23,7 +23,7 @@ export const useProjectionModel = <S extends Type.AnyEntity>(
       const view = await table.view.load();
       // For mutable schemas (EchoSchema), use the live jsonSchema reference for reactivity.
       // For immutable schemas, create a snapshot.
-      const jsonSchema = Type.isMutable(schema) ? schema.jsonSchema : Type.toJsonSchema(schema);
+      const jsonSchema = Type.isMutable(schema) ? schema.jsonSchema : JsonSchema.toJsonSchema(schema);
 
       // Always use createEchoChangeCallback since the view is ECHO-backed.
       // Pass schema only when mutable to allow schema mutations.

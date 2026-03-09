@@ -9,7 +9,7 @@ import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter, Ref } from '@dxos/client/echo';
-import { Database, Feed, Obj, Query, Tag, Type } from '@dxos/echo';
+import { Database, Feed, JsonSchema, Obj, Query, Tag, Type } from '@dxos/echo';
 import { Collection, View } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { ClientPlugin } from '@dxos/plugin-client';
@@ -83,25 +83,25 @@ const meta = {
               // Create a view for Contacts.
               const personView = ViewModel.make({
                 query: Query.select(Filter.type(Person.Person)),
-                jsonSchema: Type.toJsonSchema(Person.Person),
+                jsonSchema: JsonSchema.toJsonSchema(Person.Person),
               });
 
               // Create a view for Organizations.
               const organizationView = ViewModel.make({
                 query: Query.select(Filter.type(Organization.Organization)).select(Filter.tag(tagDxn)),
-                jsonSchema: Type.toJsonSchema(Organization.Organization),
+                jsonSchema: JsonSchema.toJsonSchema(Organization.Organization),
               });
 
               // Create a view for Tasks.
               const taskView = ViewModel.make({
                 query: Query.select(Filter.type(Task.Task)).select(Filter.tag(tagDxn)),
-                jsonSchema: Type.toJsonSchema(Task.Task),
+                jsonSchema: JsonSchema.toJsonSchema(Task.Task),
               });
 
               // Create a view for Project-Projects.
               const projectView = ViewModel.make({
                 query: Query.select(Filter.type(Pipeline.Pipeline)),
-                jsonSchema: Type.toJsonSchema(Pipeline.Pipeline),
+                jsonSchema: JsonSchema.toJsonSchema(Pipeline.Pipeline),
               });
 
               // Create a feed for Messages.
@@ -120,7 +120,7 @@ const meta = {
                 query: Query.select(Filter.type(Message.Message)).options({
                   queues: [messageQueueDxn],
                 }),
-                jsonSchema: Type.toJsonSchema(Message.Message),
+                jsonSchema: JsonSchema.toJsonSchema(Message.Message),
               });
 
               // Create a feed for Tasks (for testing feed switching in settings).

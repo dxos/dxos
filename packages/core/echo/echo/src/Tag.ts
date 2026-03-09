@@ -24,7 +24,6 @@ export type Tag = Schema.Schema.Type<typeof Tag>;
 
 export const make = (props: Obj.MakeProps<typeof Tag>) => Obj.make(Tag, props);
 
-// TODO(burdon): Rename Map.
 export type Map = Record<string, Tag>;
 
 export const sortTags = ({ label: a }: Tag, { label: b }: Tag) => a.localeCompare(b);

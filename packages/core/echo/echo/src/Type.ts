@@ -14,17 +14,6 @@ import * as internal from './internal';
 import type * as Entity from './Entity';
 import type * as RelationModule from './Relation';
 import type * as ObjModule from './Obj';
-import type { Type } from './Filter';
-
-/**
- * @deprecated Use JsonSchema.toEffectSchema instead.
- */
-export const toEffectSchema = internal.toEffectSchema;
-
-/**
- * @deprecated Use JsonSchema.toJsonSchema instead.
- */
-export const toJsonSchema = internal.toJsonSchema;
 
 /**
  * Dynamic type that can be constructed, mutated, and persisted in the ECHO database.

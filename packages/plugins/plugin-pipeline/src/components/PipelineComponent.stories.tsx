@@ -7,7 +7,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useContext, useEffect } from 'react';
 
 import { Filter, Ref } from '@dxos/client/echo';
-import { Obj, Query, Type } from '@dxos/echo';
+import { JsonSchema, Obj, Query, Type } from '@dxos/echo';
 import { Collection, View } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
@@ -58,7 +58,7 @@ const DefaultStory = () => {
     // Create a new view for contacts similar to the initialization.
     const view = ViewModel.make({
       query: Query.select(Filter.type(Person.Person)),
-      jsonSchema: Type.toJsonSchema(Person.Person),
+      jsonSchema: JsonSchema.toJsonSchema(Person.Person),
       fields: ['fullName'],
     });
 
@@ -102,7 +102,7 @@ const MutationsStory = () => {
     // Create a new view for contacts similar to the initialization.
     const view = ViewModel.make({
       query: Query.select(Filter.type(Person.Person)),
-      jsonSchema: Type.toJsonSchema(Person.Person),
+      jsonSchema: JsonSchema.toJsonSchema(Person.Person),
       fields: ['fullName'],
     });
 
@@ -175,7 +175,7 @@ const meta = {
         const view = ViewModel.make({
           name: 'Contacts',
           query: Query.select(Filter.type(Person.Person)),
-          jsonSchema: Type.toJsonSchema(Person.Person),
+          jsonSchema: JsonSchema.toJsonSchema(Person.Person),
           fields: ['fullName'],
         });
 

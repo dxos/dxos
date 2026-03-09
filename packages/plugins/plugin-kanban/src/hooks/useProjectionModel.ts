@@ -5,7 +5,7 @@
 import { type Registry } from '@effect-atom/atom-react';
 import { useState } from 'react';
 
-import { Type } from '@dxos/echo';
+import { JsonSchema, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { ProjectionModel, createEchoChangeCallback } from '@dxos/schema';
@@ -39,7 +39,7 @@ export const useProjectionModel = <S extends Type.AnyEntity>(
           return;
         }
 
-        const jsonSchema = Type.isMutable(schema) ? schema.jsonSchema : Type.toJsonSchema(schema);
+        const jsonSchema = Type.isMutable(schema) ? schema.jsonSchema : JsonSchema.toJsonSchema(schema);
         const change = createEchoChangeCallback(view, Type.isMutable(schema) ? schema : undefined);
 
         const projection = new ProjectionModel({ registry, view, baseSchema: jsonSchema, change });

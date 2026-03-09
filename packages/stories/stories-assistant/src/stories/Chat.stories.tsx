@@ -22,7 +22,7 @@ import {
   WebSearchBlueprint,
 } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt, Template } from '@dxos/blueprints';
-import { Feed, Filter, Obj, Query, Ref, Tag, Type } from '@dxos/echo';
+import { Feed, Filter, JsonSchema, Obj, Query, Ref, Tag, Type } from '@dxos/echo';
 import { View } from '@dxos/echo';
 import { ExampleFunctions, Script, Trigger, serializeFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
@@ -971,19 +971,19 @@ export const WithProject: Story = {
 
       const mailboxView = ViewModel.make({
         query: Query.select(Filter.type(Message.Message)).select(Filter.tag(tagDxn)).from(mailbox),
-        jsonSchema: Type.toJsonSchema(Message.Message),
+        jsonSchema: JsonSchema.toJsonSchema(Message.Message),
       });
       const contactsView = ViewModel.make({
         query: contactsQuery,
-        jsonSchema: Type.toJsonSchema(Person.Person),
+        jsonSchema: JsonSchema.toJsonSchema(Person.Person),
       });
       const organizationsView = ViewModel.make({
         query: organizationsQuery,
-        jsonSchema: Type.toJsonSchema(Organization.Organization),
+        jsonSchema: JsonSchema.toJsonSchema(Organization.Organization),
       });
       const notesView = ViewModel.make({
         query: notesQuery,
-        jsonSchema: Type.toJsonSchema(Markdown.Document),
+        jsonSchema: JsonSchema.toJsonSchema(Markdown.Document),
       });
 
       space.db.add(

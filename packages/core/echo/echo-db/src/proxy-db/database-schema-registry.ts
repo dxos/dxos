@@ -272,7 +272,7 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
         results.push(this._addSchema(input));
       } else if (typeof input === 'object' && 'typename' in input && 'version' in input && 'jsonSchema' in input) {
         const schema = this._addSchema(
-          Type.toEffectSchema({
+          JsonSchema.toEffectSchema({
             ...input.jsonSchema,
             typename: input.typename,
             version: input.version,

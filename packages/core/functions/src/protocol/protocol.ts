@@ -11,7 +11,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { AiModelResolver, AiService } from '@dxos/ai';
 import { AnthropicResolver } from '@dxos/ai/resolvers';
 import { LifecycleState, Resource } from '@dxos/context';
-import { Database, Feed, Ref, Type } from '@dxos/echo';
+import { Database, Feed, JsonSchema, Ref, Type } from '@dxos/echo';
 import { refFromEncodedReference } from '@dxos/echo/internal';
 import { EchoClient, type EchoDatabaseImpl, type QueueFactory, createFeedServiceLayer } from '@dxos/echo-db';
 import { runAndForwardErrors } from '@dxos/effect';
@@ -38,8 +38,8 @@ export const wrapFunctionHandler = (func: FunctionDefinition): FunctionProtocol.
       key: func.key,
       name: func.name,
       description: func.description,
-      inputSchema: Type.toJsonSchema(func.inputSchema),
-      outputSchema: func.outputSchema === undefined ? undefined : Type.toJsonSchema(func.outputSchema),
+      inputSchema: JsonSchema.toJsonSchema(func.inputSchema),
+      outputSchema: func.outputSchema === undefined ? undefined : JsonSchema.toJsonSchema(func.outputSchema),
       services: func.services,
     },
     handler: async ({ data, context }) => {
