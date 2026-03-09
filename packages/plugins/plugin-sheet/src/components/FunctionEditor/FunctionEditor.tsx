@@ -26,7 +26,10 @@ export const FunctionEditor = (props: ComponentPropsWithoutRef<'div'>) => {
   }
 
   return (
-    <div {...props} className='flex shrink-0 justify-between items-center px-4 py-1 text-sm bg-toolbar-surface border-y !border-subdued-separator'>
+    <div
+      {...props}
+      className='flex shrink-0 justify-between items-center px-4 py-1 text-sm bg-toolbar-surface border-y !border-subdued-separator'
+    >
       <div className='flex gap-4 items-center'>
         <div className='flex w-16 items-center font-mono'>
           {(range && rangeToA1Notation(range)) || (cursor && addressToA1Notation(cursor))}

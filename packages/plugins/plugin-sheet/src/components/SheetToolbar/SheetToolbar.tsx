@@ -7,7 +7,13 @@ import React, { type PropsWithChildren, useContext, useMemo } from 'react';
 
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { type CompleteCellRange } from '@dxos/compute';
-import { type ActionGraphProps, Menu, type MenuRootProps, createGapSeparator, useMenuActions } from '@dxos/react-ui-menu';
+import {
+  type ActionGraphProps,
+  Menu,
+  type MenuRootProps,
+  createGapSeparator,
+  useMenuActions,
+} from '@dxos/react-ui-menu';
 
 import { type SheetModel } from '../../model';
 import { useSheetContext } from '../SheetContext';
