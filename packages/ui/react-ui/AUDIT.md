@@ -95,3 +95,4 @@ TODO(burdon): Need to create playground for this.
 - Form
 - ScrollArea
 - SearchList
+- Settings
