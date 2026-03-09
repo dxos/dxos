@@ -38,12 +38,12 @@ const randomElement = <T>(elements: T[]): T => elements[Math.floor(Math.random()
 
 /**
  * Type that has typename and version properties (created with Type.Obj).
- * @deprecated Use Type.Obj.Any instead.
+ * @deprecated Use Type.AnyObj instead.
  */
-export type TypedSchema = Type.Obj.Any;
+export type TypedSchema = Type.AnyObj;
 
 export type TypeSpec = {
-  type: Type.Obj.Any;
+  type: Type.AnyObj;
   count: number;
 };
 
@@ -72,7 +72,7 @@ export const createObjectFactory =
 /**
  * Set properties based on generator annotation.
  */
-export const createProps = <S extends Type.Obj.Any>(generator: ValueGenerator, schema: S, force = false) => {
+export const createProps = <S extends Type.AnyObj>(generator: ValueGenerator, schema: S, force = false) => {
   type T = Schema.Schema.Type<S>;
   return (data: Type.Properties<T> = {} as Type.Properties<T>): Type.Properties<T> => {
     return getProperties(schema.ast).reduce<Type.Properties<T>>((obj, property) => {
@@ -89,7 +89,7 @@ export const createProps = <S extends Type.Obj.Any>(generator: ValueGenerator, s
 /**
  * Generate value for property.
  */
-const createValue = <S extends Type.Obj.Any>(
+const createValue = <S extends Type.AnyObj>(
   generator: ValueGenerator,
   schema: S,
   property: SchemaProperty,
@@ -134,7 +134,7 @@ const createValue = <S extends Type.Obj.Any>(
 /**
  * Set references.
  */
-export const createReferences = <S extends Type.Obj.Any>(schema: S, db: Database.Database) => {
+export const createReferences = <S extends Type.AnyObj>(schema: S, db: Database.Database) => {
   type T = Schema.Schema.Type<S>;
   return async (obj: T): Promise<T> => {
     // Collect all references to set.
@@ -172,7 +172,7 @@ export const createReferences = <S extends Type.Obj.Any>(schema: S, db: Database
   };
 };
 
-export const createReactiveObject = <S extends Type.Obj.Any>(type: S) => {
+export const createReactiveObject = <S extends Type.AnyObj>(type: S) => {
   return (data: Type.Properties<Schema.Schema.Type<S>>) => Obj.make<S>(type, data);
 };
 
@@ -204,7 +204,7 @@ export type CreateOptions = {
 /**
  * Create an object creation pipeline.
  */
-export const createObjectPipeline = <S extends Type.Obj.Any>(
+export const createObjectPipeline = <S extends Type.AnyObj>(
   generator: ValueGenerator,
   type: S,
   { db, force }: CreateOptions,
@@ -240,16 +240,12 @@ export type ObjectGenerator<T extends AnyProperties> = {
 
 // TODO(ZaymonFC): Sync generator doesn't work with db; createReferences is async and can't be invoked with `Effect.runSync`.
 // TODO(dmaretskyi): Expose effect API instead of pairs of sync/async APIs.
-export const createGenerator = <S extends Type.Obj.Any>(
+export const createGenerator = <S extends Type.AnyObj>(
   generator: ValueGenerator,
   type: S,
   options: Omit<CreateOptions, 'db'> = {},
 ): ObjectGenerator<Schema.Schema.Type<S>> => {
-  const pipeline = createObjectPipeline(
-    generator,
-    type as Type.Obj.Any & Schema.Schema<Schema.Schema.Type<S>>,
-    options,
-  );
+  const pipeline = createObjectPipeline(generator, type as Type.AnyObj & Schema.Schema<Schema.Schema.Type<S>>, options);
 
   return {
     createObject: () => Effect.runSync(pipeline({} as Type.Properties<Schema.Schema.Type<S>>)),
@@ -262,7 +258,7 @@ export type AsyncObjectGenerator<T> = {
   createObjects: (n: number) => Promise<T[]>;
 };
 
-export const createAsyncGenerator = <S extends Type.Obj.Any>(
+export const createAsyncGenerator = <S extends Type.AnyObj>(
   generator: ValueGenerator,
   type: S,
   options: CreateOptions = {},

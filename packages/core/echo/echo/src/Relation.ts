@@ -23,7 +23,7 @@ import type * as Type from './Type';
  */
 interface BaseRelation<Source, Target>
   extends internal.AnyEntity,
-    Type.Relation.Endpoints<Source, Target>,
+    Type.RelationEndpoints<Source, Target>,
     Entity.OfKind<internal.EntityKind.Relation> {}
 
 /**
@@ -44,7 +44,7 @@ export type Relation<Source extends Obj.Unknown, Target extends Obj.Unknown, Pro
 /**
  * Base type for snapshot relations (has SnapshotKindId instead of KindId).
  */
-interface BaseRelationSnapshot<Source, Target> extends internal.AnyEntity, Type.Relation.Endpoints<Source, Target> {
+interface BaseRelationSnapshot<Source, Target> extends internal.AnyEntity, Type.RelationEndpoints<Source, Target> {
   readonly [Entity.SnapshotKindId]: internal.EntityKind.Relation;
   readonly id: ObjectId;
 }
@@ -78,7 +78,7 @@ type RelationMakeProps<T extends Unknown> = {
  * Props type for relation creation with a given schema.
  * Takes a schema type (created with Type.Relation) and extracts the props type.
  */
-export type MakeProps<S extends Type.Relation.Any> = RelationMakeProps<Schema.Schema.Type<S>>;
+export type MakeProps<S extends Type.AnyRelation> = RelationMakeProps<Schema.Schema.Type<S>>;
 
 /**
  * Creates new relation.
@@ -89,7 +89,7 @@ export type MakeProps<S extends Type.Relation.Any> = RelationMakeProps<Schema.Sc
  */
 // NOTE: Writing the definition this way (with generic over schema) makes typescript perfer to infer the type from the first param (this schema) rather than the second param (the props).
 // TODO(dmaretskyi): Move meta into props.
-export const make = <S extends Type.Relation.Any>(
+export const make = <S extends Type.AnyRelation>(
   schema: S,
   props: NoInfer<RelationMakeProps<Schema.Schema.Type<S>>>,
   meta?: internal.ObjectMeta,
@@ -170,12 +170,12 @@ export const getTargetDXN = (value: Unknown | Snapshot): DXN => {
  * Accepts both reactive relations and snapshots.
  * @throws If the object is not a relation.
  */
-export const getSource = <T extends Unknown | Snapshot>(relation: T): Type.Relation.Source<T> => {
+export const getSource = <T extends Unknown | Snapshot>(relation: T): Type.RelationSource<T> => {
   assertArgument(isRelation(relation), 'Expected a relation');
   assumeType<internal.InternalObjectProps>(relation);
   const obj = (relation as internal.InternalObjectProps)[internal.RelationSourceId];
   invariant(obj !== undefined, `Invalid source: ${relation.id}`);
-  return obj as Type.Relation.Source<T>;
+  return obj as Type.RelationSource<T>;
 };
 
 /**
@@ -183,12 +183,12 @@ export const getSource = <T extends Unknown | Snapshot>(relation: T): Type.Relat
  * Accepts both reactive relations and snapshots.
  * @throws If the object is not a relation.
  */
-export const getTarget = <T extends Unknown | Snapshot>(relation: T): Type.Relation.Target<T> => {
+export const getTarget = <T extends Unknown | Snapshot>(relation: T): Type.RelationTarget<T> => {
   assertArgument(isRelation(relation), 'Expected a relation');
   assumeType<internal.InternalObjectProps>(relation);
   const obj = (relation as internal.InternalObjectProps)[internal.RelationTargetId];
   invariant(obj !== undefined, `Invalid target: ${relation.id}`);
-  return obj as Type.Relation.Target<T>;
+  return obj as Type.RelationTarget<T>;
 };
 
 //

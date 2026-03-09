@@ -251,7 +251,7 @@ const Document = Schema.Struct({
   }),
   Annotation.LabelAnnotation.set(['name']),
   Annotation.DescriptionAnnotation.set('description'),
-) satisfies Type.Obj.Any;
+) satisfies Type.AnyObj;
 
 interface Document extends Schema.Schema.Type<typeof Document> {}
 ```
@@ -280,7 +280,7 @@ interface AnchoredTo extends Schema.Schema.Type<typeof AnchoredTo> {}
 | ---------------------------------- | ----------------------------------------------------------- | ---------- |
 | `Type.Obj`                         | Runtime schema for any ECHO object (for validation/parsing) |
 | `Type.Obj<T>`                      | TypeScript type for an object schema producing `T`          |
-| `Type.Obj.Any`                     | Type alias for any object schema                            |
+| `Type.AnyObj`                      | Type alias for any object schema                            |
 | `Type.object({...})`               | Factory function - adds object metadata to a schema         |
 | `Type.Relation`                    | Runtime schema for any ECHO relation                        |
 | `Type.Relation<T, Source, Target>` | TypeScript type for a relation schema                       |

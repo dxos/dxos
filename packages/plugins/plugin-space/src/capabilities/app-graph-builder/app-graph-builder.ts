@@ -452,7 +452,7 @@ export default Capability.makeModule(
           const objects = get(AtomQuery.make(space.db, filter));
 
           // Filter views that match the schema typename using AtomObj and AtomRef (cached via Atom.family).
-          const targetTypename = Type.getTypename(schema as Type.Obj.Any);
+          const targetTypename = Type.getTypename(schema as Type.AnyObj);
           const filteredViews = objects.filter((viewObject) => {
             const viewSnapshot = get(AtomObj.make(viewObject));
             const viewRef = (viewSnapshot as any).view;
@@ -463,7 +463,7 @@ export default Capability.makeModule(
 
           return Effect.succeed(
             createStaticSchemaActions({
-              schema: schema as Type.Obj.Any,
+              schema: schema as Type.AnyObj,
               space,
               deletable,
             }),
@@ -492,7 +492,7 @@ export default Capability.makeModule(
               .map((schema) => Filter.type(schema)),
           );
 
-          const typename = Schema.isSchema(schema) ? Type.getTypename(schema as Type.Obj.Any) : schema.typename;
+          const typename = Schema.isSchema(schema) ? Type.getTypename(schema as Type.AnyObj) : schema.typename;
           const objects = get(AtomQuery.make(space.db, filter));
 
           // Filter and map using AtomObj and AtomRef (cached via Atom.family).

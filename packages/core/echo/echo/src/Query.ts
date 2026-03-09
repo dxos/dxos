@@ -16,7 +16,7 @@ import * as internal from './internal';
 import * as Obj from './Obj';
 import type * as Order from './Order';
 import type * as Ref from './Ref';
-import type * as Type$ from './Type';
+import type * as TypeModule from './Type';
 import type * as View from './View';
 
 // TODO(dmaretskyi): Split up into interfaces for objects and relations so they can have separate verbs.
@@ -100,13 +100,13 @@ export interface Query<T> {
    * For a query for relations, get the source objects.
    * @returns Query for the source objects.
    */
-  source(): Query<Type$.Relation.Source<T>>;
+  source(): Query<TypeModule.RelationSource<T>>;
 
   /**
    * For a query for relations, get the target objects.
    * @returns Query for the target objects.
    */
-  target(): Query<Type$.Relation.Target<T>>;
+  target(): Query<TypeModule.RelationTarget<T>>;
 
   /**
    * Get the parent object of the current selection.

@@ -9,18 +9,14 @@ import { invariant } from '@dxos/invariant';
 import { type DXN, type ObjectId } from '@dxos/keys';
 import { type ToMutable } from '@dxos/util';
 
-import type * as Entity$ from './Entity';
+import type * as EntityModule from './Entity';
 import * as internal from './internal';
-import type * as Relation$ from './Relation';
+import type * as RelationModule from './Relation';
 
 /**
  * @deprecated Use JsonSchema.toEffectSchema instead.
  */
 export const toEffectSchema = internal.toEffectSchema;
-
-/**
- * @deprecated Use JsonSchema.toJsonSchema instead.
- */
 export const toJsonSchema = internal.toJsonSchema;
 
 export const RuntimeType = internal.EchoSchema;
@@ -31,7 +27,7 @@ export type RuntimeType = internal.EchoSchema;
  */
 // TODO(dmaretskyi): Narrow T to Entity.Unknown or Entity.Snapshot<Entity.Unknown>
 // TODO(dmaretskyi): Rename `Entitiy.Properties`.
-export type Properties<T = any> = Omit<T, 'id' | Entity$.KindId | Relation$.Source | Relation$.Target>;
+export type Properties<T = any> = Omit<T, 'id' | EntityModule.KindId | RelationModule.Source | RelationModule.Target>;
 
 //
 // Internal types (not exported)
@@ -75,7 +71,7 @@ interface RelationJsonProps {
 //   - Accept the limitation and require explicit type narrowing at call sites
 // TODO(dmaretskyi): Add `inviariant(Obj.instanceOf(Schema, obj))` to places where assignability is an issue.
 type ObjSchemaType = Schema.Schema<
-  any & internal.AnyEntity & Entity$.OfKind<typeof Entity$.Kind.Object> & internal.AnyProperties,
+  any & internal.AnyEntity & EntityModule.OfKind<typeof EntityModule.Kind.Object> & internal.AnyProperties,
   { id: string } & internal.AnyProperties
 > &
   EchoSchemaKind<internal.EntityKind.Object> &
@@ -139,7 +135,7 @@ export interface Obj<T = any, Fields extends Schema.Struct.Fields = Schema.Struc
     EchoSchemaKind<internal.EntityKind.Object>,
     Schema.AnnotableClass<
       Obj<T, Fields>,
-      Entity$.OfKind<typeof Entity$.Kind.Object> & T,
+      EntityModule.OfKind<typeof EntityModule.Kind.Object> & T,
       Schema.Simplify<ObjJsonProps & ToMutable<T>>,
       never
     > {
@@ -161,14 +157,11 @@ type ObjectSchemaBase = Schema.Schema.AnyNoContext & {
   readonly version: string;
 };
 
-// TODO(dmaretskyi): Flatten 2nd level namespaces: Type.Obj.Any => Type.AnyObj.
-export namespace Obj {
-  /**
-   * Type that represents any ECHO object schema.
-   * Accepts both static schemas (Type.object()) and mutable schemas (EchoSchema).
-   */
-  export type Any = ObjectSchemaBase;
-}
+/**
+ * Type that represents any ECHO object schema.
+ * Accepts both static schemas (Type.object()) and mutable schemas (EchoSchema).
+ */
+export type AnyObj = ObjectSchemaBase;
 
 /**
  * Factory function to create an ECHO object schema.
@@ -256,7 +249,7 @@ export interface Relation<
     EchoSchemaKind<internal.EntityKind.Relation>,
     Schema.AnnotableClass<
       Relation<T, Source, Target, Fields>,
-      Entity$.OfKind<typeof Entity$.Kind.Relation> & Relation.Endpoints<Source, Target> & T,
+      EntityModule.OfKind<typeof EntityModule.Kind.Relation> & RelationEndpoints<Source, Target> & T,
       Schema.Simplify<RelationJsonProps & ToMutable<T>>,
       never
     > {
@@ -278,28 +271,26 @@ type RelationSchemaBase = Schema.Schema.AnyNoContext & {
   readonly version: string;
 };
 
-export namespace Relation {
-  /**
-   * Type that represents any ECHO relation schema.
-   * Accepts static schemas (Type.relation()).
-   */
-  export type Any = RelationSchemaBase;
+/**
+ * Type that represents any ECHO relation schema.
+ * Accepts static schemas (Type.relation()).
+ */
+export type AnyRelation = RelationSchemaBase;
 
-  /**
-   * Get relation source type.
-   */
-  export type Source<A> = A extends Relation.Endpoints<infer S, infer _T> ? S : never;
+/**
+ * Get relation source type.
+ */
+export type RelationSource<A> = A extends RelationEndpoints<infer S, infer _T> ? S : never;
 
-  /**
-   * Get relation target type.
-   */
-  export type Target<A> = A extends Relation.Endpoints<infer _S, infer T> ? T : never;
+/**
+ * Get relation target type.
+ */
+export type RelationTarget<A> = A extends RelationEndpoints<infer _S, infer T> ? T : never;
 
-  export type Endpoints<Source, Target> = {
-    [Relation$.Source]: Source;
-    [Relation$.Target]: Target;
-  };
-}
+export type RelationEndpoints<Source, Target> = {
+  [RelationModule.Source]: Source;
+  [RelationModule.Target]: Target;
+};
 
 /**
  * Factory function to create an ECHO relation schema.
@@ -350,14 +341,14 @@ export namespace Entity {
    * Type alias for any ECHO entity schema (object or relation).
    * Use this in type annotations for schema parameters.
    */
-  export type Any = Obj.Any | Relation.Any;
+  export type Any = AnyObj | AnyRelation;
 }
 
 /**
  * Type guard to check if a schema is an object schema.
  * NOTE: This checks SCHEMAS, not instances. Use Obj.isObject for instances.
  */
-export const isObjectSchema = (schema: Entity.Any): schema is Obj.Any => {
+export const isObjectSchema = (schema: Entity.Any): schema is AnyObj => {
   return (schema as any)[internal.SchemaKindId] === internal.EntityKind.Object;
 };
 
@@ -365,7 +356,7 @@ export const isObjectSchema = (schema: Entity.Any): schema is Obj.Any => {
  * Type guard to check if a schema is a relation schema.
  * NOTE: This checks SCHEMAS, not instances. Use Relation.isRelation for instances.
  */
-export const isRelationSchema = (schema: Entity.Any): schema is Relation.Any => {
+export const isRelationSchema = (schema: Entity.Any): schema is AnyRelation => {
   return (schema as any)[internal.SchemaKindId] === internal.EntityKind.Relation;
 };
 

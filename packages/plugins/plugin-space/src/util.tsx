@@ -467,7 +467,7 @@ export const createStaticSchemaActions = ({
   space,
   deletable,
 }: {
-  schema: Type.Obj.Any;
+  schema: Type.AnyObj;
   space: Space;
   deletable: boolean;
 }) => {

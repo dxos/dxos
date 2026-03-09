@@ -104,12 +104,12 @@ export type MakeProps<S extends Schema.Schema.AnyNoContext> = {
  * Note: Only accepts object schemas, not relation schemas. Use `Relation.make` for relations.
  */
 export const make: {
-  <S extends Type.Obj.Any>(schema: S, props: MakeProps<S>): Obj<Schema.Schema.Type<S>>;
+  <S extends Type.AnyObj>(schema: S, props: MakeProps<S>): Obj<Schema.Schema.Type<S>>;
   /**
    * @deprecated Pass meta as in the example: `Obj.make(Person, { [Obj.Meta]: { keys: [...] }, name: 'John' })`.
    */
-  <S extends Type.Obj.Any>(schema: S, props: MakeProps<S>, meta: Partial<Meta>): Obj<Schema.Schema.Type<S>>;
-} = <S extends Type.Obj.Any>(
+  <S extends Type.AnyObj>(schema: S, props: MakeProps<S>, meta: Partial<Meta>): Obj<Schema.Schema.Type<S>>;
+} = <S extends Type.AnyObj>(
   schema: S,
   props: MakeProps<S>,
   meta?: Partial<internal.ObjectMeta>,
