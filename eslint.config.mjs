@@ -333,4 +333,62 @@ export default tseslint.config(
       'storybook/context-in-play-function': 'off',
     },
   },
+
+  //
+  // Explicit context propagation (ctx: Context as first param).
+  // Applied to core SDK internals; public API classes are exempt.
+  //
+  {
+    files: [
+      'packages/core/echo/echo-pipeline/src/**/*.ts',
+      'packages/core/echo/echo-db/src/**/*.ts',
+      'packages/sdk/client-services/src/**/*.ts',
+      'packages/sdk/client/src/**/*.ts',
+    ],
+    ignores: [
+      '**/*.test.ts',
+      '**/testing/**',
+    ],
+    rules: {
+      'dxos-plugin/require-context-param': [
+        'warn',
+        {
+          allowClasses: [
+            // @dxos/client public API.
+            'Client',
+            'LocalClientServices',
+            'WorkerClientServices',
+            'AgentClientServiceProvider',
+            'DedicatedWorkerClientServices',
+            'ClientServicesProxy',
+            'Shell',
+            'ShellManager',
+            'IFrameManager',
+            'SharedWorkerConnection',
+            'AgentManagerClient',
+            'InvitationsProxy',
+            // @dxos/echo public API implementations.
+            'Filter',
+            'FilterClass',
+            'Query',
+            'QueryClass',
+            // Proxy classes (implement public Space/Echo interfaces).
+            'SpaceProxy',
+            'SpaceList',
+            'HaloProxy',
+            'MeshProxy',
+            // Infrastructure not in traced call chains.
+            'MetadataStore',
+            'LevelDBStorageAdapter',
+            'HeadsStore',
+            'EchoDataMonitor',
+          ],
+          allowMethods: [
+            'toJSON',
+            'toString',
+          ],
+        },
+      ],
+    },
+  },
 );
