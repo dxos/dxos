@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
@@ -17,27 +17,31 @@ import { mx } from '@dxos/ui-theme';
 import { meta } from '../../meta';
 import { useLoadDescendents } from '../hooks';
 
-export type WorkspaceProps = {
+export type NavBranchProps = {
   id: string;
 };
 
 /**
- * Displays the contents of a workspace disposition graph node as a searchable list.
- * Shows direct children of the workspace with icons and labels,
- * allowing users to filter via search and navigate by selecting an item.
+ * Renders the children of a graph branch node as a searchable mosaic list.
+ * Used for any node with `role: 'branch'` or a workspace disposition, including
+ * spaces, collection sections, type sections, and schema nodes.
  */
-export const Workspace = ({ id }: WorkspaceProps) => {
+export const NavBranch = ({ id }: NavBranchProps) => {
   const { t } = useTranslation(meta.id);
   const { graph } = useAppGraph();
 
-  // Expand the workspace node to load its children.
   useLoadDescendents(id);
 
-  // Get direct children of the workspace node.
   const children = useConnections(graph, id, 'child');
 
+  // TODO(wittjosiah): Move alternate-tree nodes to a non-child relation so they don't need filtering.
+  const visibleChildren = useMemo(
+    () => children.filter((node) => node.properties.disposition !== 'alternate-tree'),
+    [children],
+  );
+
   const { results, handleSearch } = useSearchListResults({
-    items: children,
+    items: visibleChildren,
     extract: (child) => toLocalizedString(child.properties.label, t),
   });
 
@@ -46,6 +50,7 @@ export const Workspace = ({ id }: WorkspaceProps) => {
       <Panel.Root>
         <Panel.Toolbar asChild>
           <Toolbar.Root>
+            {/* TODO(wittjosiah): Search should be pluggable. Must support searching via ECHO query inside a space. */}
             <SearchList.Input placeholder={t('search placeholder')} autoFocus />
           </Toolbar.Root>
         </Panel.Toolbar>
@@ -54,7 +59,7 @@ export const Workspace = ({ id }: WorkspaceProps) => {
             <Mosaic.Container asChild>
               <ScrollArea.Root orientation='vertical'>
                 <ScrollArea.Viewport classNames='p-2'>
-                  <Mosaic.Stack items={results} getId={(child) => child.id} Tile={WorkspaceChildTile} />
+                  <Mosaic.Stack items={results} getId={(child) => child.id} Tile={NavBranchTile} />
                 </ScrollArea.Viewport>
               </ScrollArea.Root>
             </Mosaic.Container>
@@ -65,7 +70,7 @@ export const Workspace = ({ id }: WorkspaceProps) => {
   );
 };
 
-const WorkspaceChildTile: MosaicStackTileComponent<Node.Node> = (props) => {
+const NavBranchTile: MosaicStackTileComponent<Node.Node> = (props) => {
   const data = props.data;
   const { t } = useTranslation(meta.id);
   const { invokeSync } = useOperationInvoker();
@@ -80,7 +85,6 @@ const WorkspaceChildTile: MosaicStackTileComponent<Node.Node> = (props) => {
     [invokeSync, data.id],
   );
 
-  // Register this item with the search context.
   useEffect(() => {
     if (ref.current) {
       registerItem(data.id, ref.current, handleSelect);
@@ -89,7 +93,6 @@ const WorkspaceChildTile: MosaicStackTileComponent<Node.Node> = (props) => {
     return () => unregisterItem(data.id);
   }, [data.id, handleSelect, registerItem, unregisterItem]);
 
-  // Scroll into view when selected.
   useEffect(() => {
     if (isSelected && ref.current) {
       ref.current.scrollIntoView({ block: 'nearest', behavior: 'smooth' });

@@ -18,7 +18,7 @@ import { type Space, SpaceState, getSpace, isSpace, parseId, useSpace } from '@d
 import { Input } from '@dxos/react-ui';
 import { type FormFieldComponentProps, SelectField } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
-import { ManagedCollection, ViewAnnotation } from '@dxos/schema';
+import { ViewAnnotation } from '@dxos/schema';
 import { type JoinPanelProps } from '@dxos/shell/react';
 
 import {
@@ -72,29 +72,11 @@ export default Capability.makeModule(
 
     return Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}/article`,
-        role: 'article',
-        filter: (data): data is { subject: Space } =>
-          // TODO(wittjosiah): Need to avoid shotgun parsing space state everywhere.
-          isSpace(data.subject) && data.subject.state.get() === SpaceState.SPACE_READY,
-        component: ({ data, role, ...rest }) => (
-          <Surface.Surface
-            data={{
-              id: data.subject.id,
-              subject: data.subject.properties[Collection.Collection.typename]?.target,
-            }}
-            role={role}
-            {...rest}
-          />
-        ),
-      }),
-      Surface.create({
         id: `${meta.id}/collection-fallback`,
         role: 'article',
         position: 'fallback',
-        filter: (data): data is { subject: Collection.Collection | ManagedCollection.ManagedCollection } =>
-          Obj.instanceOf(Collection.Collection, data.subject) ||
-          Obj.instanceOf(ManagedCollection.ManagedCollection, data.subject),
+        filter: (data): data is { subject: Collection.Collection } =>
+          Obj.instanceOf(Collection.Collection, data.subject),
         component: ({ data }) => <CollectionArticle subject={data.subject} />,
       }),
       Surface.create({
