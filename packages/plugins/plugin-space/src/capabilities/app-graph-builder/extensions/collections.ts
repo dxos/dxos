@@ -297,30 +297,34 @@ const constructObjectActions = ({
         testId: 'spacePlugin.renameObject',
       },
     },
-    {
-      id: getId('remove-from-collection'),
-      type: Node.ActionType,
-      data: (params?: Node.InvokeProps) =>
-        Effect.sync(() => {
-          const collection = getParentCollection(graph, params?.path);
-          if (!collection) {
-            return;
-          }
-          const index = collection.objects.findIndex((ref: any) => ref.target === object);
-          if (index !== -1) {
-            Obj.change(collection, (mutable) => {
-              mutable.objects.splice(index, 1);
-            });
-          }
-        }),
-      properties: {
-        label: REMOVE_FROM_COLLECTION_LABEL,
-        icon: 'ph--minus-circle--regular',
-        disposition: 'list-item',
-        parentMatch: (parent: Node.Node) => Obj.instanceOf(Collection.Collection, parent.data),
-        testId: 'spacePlugin.removeFromCollection',
-      },
-    },
+    ...(!Obj.instanceOf(Collection.Collection, object)
+      ? [
+          {
+            id: getId('remove-from-collection'),
+            type: Node.ActionType,
+            data: (params?: Node.InvokeProps) =>
+              Effect.sync(() => {
+                const collection = getParentCollection(graph, params?.path);
+                if (!collection) {
+                  return;
+                }
+                const index = collection.objects.findIndex((ref: any) => ref.target === object);
+                if (index !== -1) {
+                  Obj.change(collection, (mutable) => {
+                    mutable.objects.splice(index, 1);
+                  });
+                }
+              }),
+            properties: {
+              label: REMOVE_FROM_COLLECTION_LABEL,
+              icon: 'ph--minus-circle--regular',
+              disposition: 'list-item',
+              parentMatch: (parent: Node.Node) => Obj.instanceOf(Collection.Collection, parent.data),
+              testId: 'spacePlugin.removeFromCollection',
+            },
+          },
+        ]
+      : []),
     {
       id: getId(SpaceOperation.RemoveObjects.meta.key),
       type: Node.ActionType,
