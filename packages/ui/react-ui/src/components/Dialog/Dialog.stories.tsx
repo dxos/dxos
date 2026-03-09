@@ -19,7 +19,7 @@ type StoryProps = Pick<DialogContentProps, 'size'> &
     description: string;
     openTrigger: string;
     closeTrigger: string;
-    blockAlign: 'center' | 'start';
+    blockAlign: 'start' | 'center';
   }>;
 
 const DefaultStory = ({ size, title, description, openTrigger, closeTrigger, blockAlign }: StoryProps) => {
