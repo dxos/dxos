@@ -53,10 +53,10 @@ const Leaf = forwardRef<HTMLButtonElement, ComposableProps<PropsWithChildren>>(
   ({ children, ...props }, forwardedRef) => {
     const { className, ...rest } = useComposableProps(props);
     return (
-    <button {...rest} className={className} ref={forwardedRef}>
-      {children}
-    </button>
-  );
+      <button {...rest} className={className} ref={forwardedRef}>
+        {children}
+      </button>
+    );
   },
 );
 
@@ -74,12 +74,12 @@ const TestSingle = (props: ThemedClassName<{ role?: string }>) => {
 const TestNested = (props: ThemedClassName<{ role?: string }>) => {
   const { className, ...rest } = useComposableProps(props);
   return (
-  <Outer asChild {...rest} className={className}>
-    <Middle asChild>
-      <Leaf>Nested asChild</Leaf>
-    </Middle>
-  </Outer>
-);
+    <Outer asChild {...rest} className={className}>
+      <Middle asChild>
+        <Leaf>Nested asChild</Leaf>
+      </Middle>
+    </Outer>
+  );
 };
 
 // Test 3: Complex.
