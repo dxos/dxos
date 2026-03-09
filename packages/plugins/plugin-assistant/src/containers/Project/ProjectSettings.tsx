@@ -10,7 +10,7 @@ import React, { useCallback, useEffect, useMemo } from 'react';
 import { useCapability } from '@dxos/app-framework/ui';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Project } from '@dxos/assistant-toolkit';
-import { Obj, Query, Ref, Type } from '@dxos/echo';
+import { Feed, Obj, Query, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/echo';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';
 import { QueueService } from '@dxos/functions';
@@ -52,7 +52,7 @@ export const ProjectSettings = ({ subject: project }: SurfaceComponentProps<Proj
     });
   }, [project]);
 
-  const subscribableObjects = useQuery(Obj.getDatabase(project), Query.select(Filter.type(Type.Feed)));
+  const subscribableObjects = useQuery(Obj.getDatabase(project), Query.select(Filter.type(Feed.Feed)));
 
   const existingSubscripts = useAtomValue(
     useMemo(

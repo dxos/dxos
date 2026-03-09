@@ -21,7 +21,7 @@ interface TestLayerOptions {
   model?: ModelName;
   functions?: FunctionDefinition.Any[];
   toolkits?: GenericToolkit.GenericToolkit[];
-  types?: Type.Entity.Any[];
+  types?: Type.AnyEntity[];
   credentials?: ServiceCredential[];
   /*
    * Tracing configuration.

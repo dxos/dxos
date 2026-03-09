@@ -34,7 +34,7 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
   const { invokePromise } = useOperationInvoker();
   const client = useClient();
   const staticTypes = [Markdown.Document, Diagram.Diagram, Sheet.Sheet, ComputeGraph]; // TODO(burdon): Make extensible.
-  const recordTypes: Type.Obj.Any[] = [Organization.Organization, Person.Person, Task.Task];
+  const recordTypes: Type.AnyObj[] = [Organization.Organization, Person.Person, Task.Task];
   const [count, setCount] = useState(1);
   const [info, setInfo] = useState<any>({});
   const presets = useMemo(() => generator(), []);

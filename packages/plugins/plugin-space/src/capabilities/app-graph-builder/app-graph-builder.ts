@@ -11,7 +11,7 @@ import * as Schema from 'effect/Schema';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { type Space, SpaceState, getSpace, isSpace, parseId } from '@dxos/client/echo';
-import { DXN, Filter, Obj, type Ref, Type } from '@dxos/echo';
+import { DXN, Feed, Filter, Obj, type Ref, Type } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { Operation } from '@dxos/operation';
@@ -374,7 +374,7 @@ export default Capability.makeModule(
           }
 
           const filter = Match.value(typename).pipe(
-            Match.when(Type.Feed.typename, () => Filter.type(Type.Feed, { kind: feedKind })),
+            Match.when(Feed.Feed.typename, () => Filter.type(Feed.Feed, { kind: feedKind })),
             Match.orElse((typename) => {
               const schema = client.graph.schemaRegistry
                 .query({ typename, location: ['runtime'], includeSystem: true })
@@ -452,7 +452,7 @@ export default Capability.makeModule(
           const objects = get(AtomQuery.make(space.db, filter));
 
           // Filter views that match the schema typename using AtomObj and AtomRef (cached via Atom.family).
-          const targetTypename = Type.getTypename(schema as Type.Obj.Any);
+          const targetTypename = Type.getTypename(schema as Type.AnyObj);
           const filteredViews = objects.filter((viewObject) => {
             const viewSnapshot = get(AtomObj.make(viewObject));
             const viewRef = (viewSnapshot as any).view;
@@ -463,7 +463,7 @@ export default Capability.makeModule(
 
           return Effect.succeed(
             createStaticSchemaActions({
-              schema: schema as Type.Obj.Any,
+              schema: schema as Type.AnyObj,
               space,
               deletable,
             }),
@@ -492,7 +492,7 @@ export default Capability.makeModule(
               .map((schema) => Filter.type(schema)),
           );
 
-          const typename = Schema.isSchema(schema) ? Type.getTypename(schema as Type.Obj.Any) : schema.typename;
+          const typename = Schema.isSchema(schema) ? Type.getTypename(schema as Type.AnyObj) : schema.typename;
           const objects = get(AtomQuery.make(space.db, filter));
 
           // Filter and map using AtomObj and AtomRef (cached via Atom.family).

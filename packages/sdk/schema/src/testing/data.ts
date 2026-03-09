@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Filter, Format, Obj, Query, Type, type View } from '@dxos/echo';
+import { Filter, Format, JsonSchema, Obj, Query, Type, type View } from '@dxos/echo';
 
 import { ViewModel } from '../types';
 
@@ -49,11 +49,11 @@ export type Example = Schema.Schema.Type<typeof Example>;
 export const testSchema = Obj.make(Type.PersistentType, {
   typename: 'example.com/type/Test',
   version: '0.1.0',
-  jsonSchema: Type.toJsonSchema(Example),
+  jsonSchema: JsonSchema.toJsonSchema(Example),
 });
 
 export const testView: View.View = ViewModel.make({
   name: 'Test',
   query: Query.select(Filter.type(Example)),
-  jsonSchema: Type.toJsonSchema(Example),
+  jsonSchema: JsonSchema.toJsonSchema(Example),
 });

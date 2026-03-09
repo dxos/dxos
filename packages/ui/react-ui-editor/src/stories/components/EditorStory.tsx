@@ -38,7 +38,7 @@ export type StoryProps = Pick<UseTextEditorProps, 'id' | 'scrollTo' | 'selection
     debug?: DebugMode;
     debugCustom?: (view: EditorView) => ReactNode;
     text?: string;
-    object?: Obj.Obj<TestSchema.Expando>;
+    object?: Obj.OfShape<TestSchema.Expando>;
     readOnly?: boolean;
     placeholder?: string;
     lineNumbers?: boolean;

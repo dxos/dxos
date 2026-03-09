@@ -5,43 +5,22 @@
 import type { ForeignKey } from '@dxos/echo-protocol';
 import type { DXN, ObjectId } from '@dxos/keys';
 
-import {
-  type ChangeCallback,
-  EntityKind,
-  EntityKindSchema,
-  KindId,
-  type Mutable,
-  type ObjectJSON,
-  type ObjectMeta,
-  type ReadonlyMeta,
-  SnapshotKindId,
-  addTag as addTag$,
-  change as change$,
-  getDXN as getDXN$,
-  getDatabase as getDatabase$,
-  getDescription as getDescription$,
-  getEntityKind,
-  getKeys as getKeys$,
-  getLabel as getLabel$,
-  getMetaChecked as getMeta$,
-  getTypeDXN as getTypeDXN$,
-  getTypename as getTypename$,
-  isDeleted as isDeleted$,
-  removeTag as removeTag$,
-  subscribe as subscribe$,
-  objectToJSON as toJSON$,
-} from './internal';
+import * as internal from './internal';
+import type * as Relation from './Relation';
 
 // Re-export KindId and SnapshotKindId from internal.
-export { KindId, SnapshotKindId };
+export const KindId = internal.KindId;
+export type KindId = typeof internal.KindId;
+export const SnapshotKindId = internal.SnapshotKindId;
+export type SnapshotKindId = typeof internal.SnapshotKindId;
 
 // NOTE: Relation does not extend Obj so that, for example, we can prevent Relations from being used as source and target objects.
 //  However, we generally refer to Obj and Relation instances as "objects",
 //  and many API methods accept both Obj.Unknown and Relation.Unknown (i.e., Entity.Unknown) instances.
 
-export const Kind = EntityKind;
-export type Kind = EntityKind;
-export const KindSchema = EntityKindSchema;
+export const Kind = internal.EntityKind;
+export type Kind = internal.EntityKind;
+export const KindSchema = internal.EntityKindSchema;
 
 /**
  * Assigns a kind to an Object or Relation instance.
@@ -90,6 +69,11 @@ export interface Any extends OfKind<Kind> {
 }
 
 /**
+ * Returns all properties of an object or relation except for the id and kind.
+ */
+export type Properties<T> = Omit<T, 'id' | KindId | Relation.Source | Relation.Target>;
+
+/**
  * Check if a value is an ECHO entity (object or relation).
  * Returns `false` for snapshots.
  */
@@ -112,7 +96,17 @@ export const isSnapshot = (value: unknown): value is Snapshot => {
 };
 
 // TODO(dmaretskyi): Type introspection -- move to kind.
-export const getKind = getEntityKind;
+export const getKind = internal.getEntityKind;
+
+/**
+ * Property that accesses metadata for an entity.
+ */
+export const Meta: unique symbol = internal.MetaId as any;
+
+/**
+ * Property that accesses metadata for an entity.
+ */
+export type Meta = typeof Meta;
 
 //
 // Entity-level functions that work on any entity (object or relation).
@@ -123,27 +117,27 @@ export const getKind = getEntityKind;
 /**
  * JSON representation of an entity.
  */
-export type JSON = ObjectJSON;
+export type JSON = internal.ObjectJSON;
 
 /**
  * Get the DXN of an entity (object or relation).
  */
-export const getDXN = (entity: Unknown | Snapshot): DXN => getDXN$(entity);
+export const getDXN = (entity: Unknown | Snapshot): DXN => internal.getDXN(entity);
 
 /**
  * Get the DXN of an entity's type.
  */
-export const getTypeDXN = getTypeDXN$;
+export const getTypeDXN = internal.getTypeDXN;
 
 /**
  * Get the typename of an entity's type.
  */
-export const getTypename = (entity: Unknown | Snapshot): string | undefined => getTypename$(entity);
+export const getTypename = (entity: Unknown | Snapshot): string | undefined => internal.getTypename(entity);
 
 /**
  * Get the database an entity belongs to.
  */
-export const getDatabase = (entity: Unknown | Snapshot): any | undefined => getDatabase$(entity);
+export const getDatabase = (entity: Unknown | Snapshot): any | undefined => internal.getDatabase(entity);
 
 /**
  * Get the metadata for an entity.
@@ -151,43 +145,43 @@ export const getDatabase = (entity: Unknown | Snapshot): any | undefined => getD
  * Returns read-only meta when passed a regular entity or snapshot.
  */
 // TODO(wittjosiah): When passed a Snapshot, should return a snapshot of meta, not the live meta proxy.
-export function getMeta(entity: Mutable<Unknown>): ObjectMeta;
-export function getMeta(entity: Unknown | Snapshot): ReadonlyMeta;
-export function getMeta(entity: Unknown | Snapshot | Mutable<Unknown>): ObjectMeta | ReadonlyMeta {
-  return getMeta$(entity);
+export function getMeta(entity: Mutable<Unknown>): internal.ObjectMeta;
+export function getMeta(entity: Unknown | Snapshot): internal.ReadonlyMeta;
+export function getMeta(entity: Unknown | Snapshot | Mutable<Unknown>): internal.ObjectMeta | internal.ReadonlyMeta {
+  return internal.getMetaChecked(entity);
 }
 
 /**
  * Get foreign keys for an entity from the specified source.
  */
-export const getKeys = (entity: Unknown | Snapshot, source: string): ForeignKey[] => getKeys$(entity, source);
+export const getKeys = (entity: Unknown | Snapshot, source: string): ForeignKey[] => internal.getKeys(entity, source);
 
 /**
  * Check if an entity is deleted.
  */
-export const isDeleted = (entity: Unknown | Snapshot): boolean => isDeleted$(entity);
+export const isDeleted = (entity: Unknown | Snapshot): boolean => internal.isDeleted(entity);
 
 /**
  * Get the label of an entity.
  */
-export const getLabel = (entity: Unknown | Snapshot): string | undefined => getLabel$(entity);
+export const getLabel = (entity: Unknown | Snapshot): string | undefined => internal.getLabel(entity);
 
 /**
  * Get the description of an entity.
  */
-export const getDescription = (entity: Unknown | Snapshot): string | undefined => getDescription$(entity);
+export const getDescription = (entity: Unknown | Snapshot): string | undefined => internal.getDescription(entity);
 
 /**
  * Convert an entity to its JSON representation.
  */
-export const toJSON = (entity: Unknown | Snapshot): JSON => toJSON$(entity);
+export const toJSON = (entity: Unknown | Snapshot): JSON => internal.objectToJSON(entity);
 
 /**
  * Subscribe to changes on an entity (object or relation).
  * @returns Unsubscribe function.
  */
 export const subscribe = (entity: Unknown, callback: () => void): (() => void) => {
-  return subscribe$(entity, callback);
+  return internal.subscribe(entity, callback);
 };
 
 //
@@ -197,7 +191,7 @@ export const subscribe = (entity: Unknown, callback: () => void): (() => void) =
 /**
  * Used to provide a mutable view of an entity within `Entity.change`.
  */
-export type { Mutable };
+export type Mutable<T> = internal.Mutable<T>;
 
 /**
  * Perform mutations on an entity (object or relation) within a change context.
@@ -223,18 +217,18 @@ export type { Mutable };
  *
  * Note: For type-specific operations, prefer `Obj.change` or `Relation.change`.
  */
-export const change = <T extends Unknown>(entity: T, callback: ChangeCallback<T>): void => {
-  change$(entity, callback);
+export const change = <T extends Unknown>(entity: T, callback: internal.ChangeCallback<T>): void => {
+  internal.change(entity, callback);
 };
 
 /**
  * Add a tag to an entity.
  * Must be called within an `Entity.change`, `Obj.change`, or `Relation.change` callback.
  */
-export const addTag = (entity: Mutable<Unknown>, tag: string): void => addTag$(entity, tag);
+export const addTag = (entity: Mutable<Unknown>, tag: string): void => internal.addTag(entity, tag);
 
 /**
  * Remove a tag from an entity.
  * Must be called within an `Entity.change`, `Obj.change`, or `Relation.change` callback.
  */
-export const removeTag = (entity: Mutable<Unknown>, tag: string): void => removeTag$(entity, tag);
+export const removeTag = (entity: Mutable<Unknown>, tag: string): void => internal.removeTag(entity, tag);

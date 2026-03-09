@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Database, Obj, Type } from '@dxos/echo';
+import { Database, Obj, Ref } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { Message } from '@dxos/types';
 
@@ -24,7 +24,7 @@ export default defineFunction({
     body: Schema.String.annotations({
       description: 'The body of the email.',
     }),
-    replyTo: Schema.optional(Type.Ref(Message.Message)).annotations({
+    replyTo: Schema.optional(Ref.Ref(Message.Message)).annotations({
       description: 'The message to reply to.',
     }),
   }),

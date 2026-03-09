@@ -20,7 +20,7 @@ export const Transcript = Schema.Struct({
   /**
    * Queue containing TranscriptBlock objects.
    */
-  queue: Type.Ref(Queue),
+  queue: Ref.Ref(Queue),
 }).pipe(
   Type.object({
     typename: 'dxos.org/type/Transcript',

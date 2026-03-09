@@ -30,7 +30,7 @@
 
 - [x] QueryResult namespace
 - [x] SchemaRegistry interface
-- [x] Schema registry should return Type.Entity.Any instead of Schema.Schema.AnyNoContext.
+- [x] Schema registry should return Type.AnyEntity instead of Schema.Schema.AnyNoContext.
 - [x] Hypergraph interface
 - [x] Obj.getDatabase
 - [x] SpaceAction.AddObject target should be a db not a space.

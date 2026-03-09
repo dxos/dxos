@@ -42,7 +42,7 @@ export type QueryResult = Pick<Completion, 'label'> & {
   data: any;
 };
 
-export type TableCellEditorProps<T extends Type.Entity.Any = Type.Entity.Any> = {
+export type TableCellEditorProps<T extends Type.AnyEntity = Type.AnyEntity> = {
   schema?: T;
   model?: TableModel;
   modals?: ModalController;
@@ -51,7 +51,7 @@ export type TableCellEditorProps<T extends Type.Entity.Any = Type.Entity.Any> = 
   onSave?: () => void;
 };
 
-export const TableValueEditor = <T extends Type.Entity.Any = Type.Entity.Any>({
+export const TableValueEditor = <T extends Type.AnyEntity = Type.AnyEntity>({
   __gridScope,
   schema,
   model,

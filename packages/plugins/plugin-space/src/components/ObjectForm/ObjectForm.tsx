@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
-import { DXN, Obj, type Ref, Tag, Type } from '@dxos/echo';
+import { DXN, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { type JsonPath, splitJsonPath } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { Form, omitId } from '@dxos/react-ui-form';
@@ -24,7 +24,7 @@ export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
   const formSchema = useMemo(
     () =>
       Schema.Struct({
-        tags: Schema.Array(Type.Ref(Tag.Tag)).pipe(Schema.optional),
+        tags: Schema.Array(Ref.Ref(Tag.Tag)).pipe(Schema.optional),
       }).pipe(Schema.extend(omitId(schema))),
     [schema],
   );
@@ -33,7 +33,7 @@ export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
   const tags = (meta.tags ?? []).map((tag) => db?.makeRef(DXN.parse(tag))).filter(isNonNullable);
   const values = useMemo(() => ({ tags, ...object }), [object, tags]);
 
-  const handleCreate = useCallback((schema: Type.Entity.Any, values: any) => {
+  const handleCreate = useCallback((schema: Type.AnyEntity, values: any) => {
     invariant(db);
     invariant(Type.isObjectSchema(schema));
     const newObject = db.add(Obj.make(schema, values));

@@ -5,7 +5,7 @@
 import * as Option from 'effect/Option';
 
 import { type Project, ProjectFunctions } from '@dxos/assistant-toolkit';
-import { Feed, Obj, Ref, Type } from '@dxos/echo';
+import { Feed, Obj, Ref } from '@dxos/echo';
 import { FunctionDefinition, Trigger } from '@dxos/functions';
 import { Filter } from '@dxos/react-client/echo';
 
@@ -59,7 +59,7 @@ export const syncTriggers = async (project: Project.Project) => {
     }
 
     const queueDxn = Option.some(target).pipe(
-      Option.filter(Obj.instanceOf(Type.Feed)),
+      Option.filter(Obj.instanceOf(Feed.Feed)),
       Option.map(Feed.getQueueDxn),
       Option.getOrUndefined,
     );

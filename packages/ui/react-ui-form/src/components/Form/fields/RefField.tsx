@@ -36,7 +36,7 @@ const defaultResultsHook: NonNullable<RefFieldProps['resultsHook']> = (db, typen
   useQuery(
     db,
     typename
-      ? // For Type.Ref(Type.Obj) we want to show all objects.
+      ? // For Ref.Ref(Type.Obj) we want to show all objects.
         typename === Type.getTypename(Type.Obj)
         ? Filter.everything()
         : Filter.typename(typename)
@@ -47,9 +47,9 @@ export type RefFieldProps = FormFieldComponentProps &
   Pick<ObjectPickerContentProps, 'createOptionLabel' | 'createOptionIcon' | 'createInitialValuePath'> & {
     db?: Database.Database;
     resultsHook?: (db?: Database.Database, typename?: string) => Entity.Any[];
-    schemaHook?: (db?: Database.Database, typename?: string) => Type.Entity.Any;
+    schemaHook?: (db?: Database.Database, typename?: string) => Type.AnyEntity;
     getOptions?: (objects: Entity.Any[]) => RefOption[];
-    onCreate?: (schema: Type.Entity.Any, values: any) => void;
+    onCreate?: (schema: Type.AnyEntity, values: any) => void;
   };
 
 export const RefField = (props: RefFieldProps) => {

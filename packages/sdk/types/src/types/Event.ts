@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Type } from '@dxos/echo';
+import { Obj, Ref, Type } from '@dxos/echo';
 import { DescriptionAnnotation, FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { Text } from '@dxos/schema';
 import { type MakeOptional } from '@dxos/util';
@@ -29,22 +29,22 @@ export const Event = Schema.Struct({
   /**
    * Transcript of the meeting.
    */
-  transcript: Type.Ref(Transcript.Transcript).pipe(FormInputAnnotation.set(false), Schema.optional),
+  transcript: Ref.Ref(Transcript.Transcript).pipe(FormInputAnnotation.set(false), Schema.optional),
 
   /**
    * Markdown notes for the meeting.
    */
-  notes: Type.Ref(Text.Text).pipe(FormInputAnnotation.set(false), Schema.optional),
+  notes: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false), Schema.optional),
 
   /**
    * Generated summary of the meeting.
    */
-  summary: Type.Ref(Text.Text).pipe(FormInputAnnotation.set(false), Schema.optional),
+  summary: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false), Schema.optional),
 
   /**
    * Message thread for the meeting.
    */
-  thread: Type.Ref(Thread.Thread).pipe(FormInputAnnotation.set(false), Schema.optional),
+  thread: Ref.Ref(Thread.Thread).pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
   Type.object({
     typename: 'dxos.org/type/Event',

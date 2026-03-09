@@ -19,6 +19,7 @@ export type AnyProperties = Record<string, any>;
 
 /**
  * Canonical type for all ECHO entities (objects and relations).
+ * @depreacted Remove, use Entity.Unknown instead.
  */
 // TODO(wittjosiah): Remove. Prefer higher level types (e.g. Entity.Unknown).
 export interface AnyEntity {

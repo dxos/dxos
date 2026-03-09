@@ -29,7 +29,7 @@ export const buttonGroupClassNames = 'flex flex-row items-center gap-0.5 pe-2';
 export const buttonClassNames = 'p-1! transition-opacity';
 
 export type MessageContainerProps = {
-  message: Obj.Obj<Message.Message> | Ref.Ref<Obj.Obj<Message.Message>>;
+  message: Obj.OfShape<Message.Message> | Ref.Ref<Obj.OfShape<Message.Message>>;
   members: SpaceMember[];
   editable?: boolean;
   onDelete?: (id: string) => void;

@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Database, Entity, Type } from '@dxos/echo';
+import { Database, Entity, Ref, Type } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { trim } from '@dxos/util';
 
@@ -16,7 +16,7 @@ export default defineFunction({
     Updates the object properties.
   `,
   inputSchema: Schema.Struct({
-    obj: Type.Ref(Type.Obj),
+    obj: Ref.Ref(Type.Obj),
     properties: Schema.Record({ key: Schema.String, value: Schema.Any }),
   }),
   outputSchema: Schema.Unknown,

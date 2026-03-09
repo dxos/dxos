@@ -12,7 +12,7 @@ import { ViewAnnotation } from '@dxos/schema';
 const GraphSchema = Schema.Struct({
   name: Schema.optional(Schema.String),
 
-  view: Type.Ref(View.View).pipe(FormInputAnnotation.set(false)),
+  view: Ref.Ref(View.View).pipe(FormInputAnnotation.set(false)),
 
   query: Schema.Struct({
     raw: Schema.optional(Schema.String),

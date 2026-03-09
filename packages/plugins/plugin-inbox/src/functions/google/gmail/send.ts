@@ -6,7 +6,7 @@ import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Type } from '@dxos/echo';
+import { Feed, Ref } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
@@ -23,7 +23,7 @@ export default defineFunction({
     userId: Schema.String.pipe(Schema.optional),
     // TODO(dmaretskyi): This should be a ref s we can send a message from database.
     message: Message.Message,
-    feed: Type.Ref(Type.Feed).pipe(
+    feed: Ref.Ref(Feed.Feed).pipe(
       Schema.annotations({ description: 'Optional mailbox feed to send from. Uses feed credentials if provided.' }),
       Schema.optional,
     ),
@@ -32,7 +32,7 @@ export default defineFunction({
     id: Schema.String,
     threadId: Schema.String,
   }),
-  types: [Message.Message, Type.Feed, Mailbox.Config],
+  types: [Message.Message, Feed.Feed, Mailbox.Config],
   handler: ({ data: { userId = 'me', message, feed: feedRef } }) =>
     Effect.gen(function* () {
       log('sending email', { userId, feed: feedRef?.dxn.toString() });
