@@ -6,6 +6,7 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import type * as Option from 'effect/Option';
+import * as Schema from 'effect/Schema';
 
 import { DXN } from '@dxos/keys';
 
@@ -15,6 +16,32 @@ import * as Obj from './Obj';
 import type * as Query from './Query';
 import type * as QueryResult from './QueryResult';
 import * as Type from './Type';
+import * as internal from './internal';
+
+/**
+ * Runtime schema for a Feed object.
+ *
+ * @example
+ * ```ts
+ * const feed = Obj.make(Feed.Feed, { name: 'notifications', kind: 'dxos.org/plugin/notifications/v1' });
+ * ```
+ */
+export const Feed = Schema.Struct({
+  /** User-facing display name. */
+  name: Schema.String.pipe(Schema.optional),
+  /** Identifier for the feed's kind (e.g., plugin id). */
+  kind: Schema.String.pipe(internal.FormInputAnnotation.set(false), Schema.optional),
+}).pipe(
+  Type.object({
+    typename: 'dxos.org/type/Feed',
+    version: '0.1.0',
+  }),
+);
+
+/**
+ * TypeScript instance type for a Feed object.
+ */
+export interface Feed extends Schema.Schema.Type<typeof Feed> {}
 
 //
 // Types
@@ -25,11 +52,6 @@ import * as Type from './Type';
  */
 // TODO(dmaretskyi): Enforce that Feed ObjectId = feed storage ID. And remove this key.
 export const DXN_KEY = 'dxos.org/key/feed';
-
-/**
- * A Feed echo object instance.
- */
-export type Feed = Obj.Obj<Type.Feed>;
 
 /**
  * Opaque cursor for iterating over feed items.
@@ -61,7 +83,7 @@ export interface RetentionOptions {
  * ```
  */
 // TODO(wittjosiah): How to control the feed namespace (data/trace)? Why do feeds have namespaces?
-export const make = (props: Obj.MakeProps<typeof Type.Feed>): Feed => Obj.make(Type.Feed, props);
+export const make = (props: Obj.MakeProps<typeof Feed>): Feed => Obj.make(Feed, props);
 
 /**
  * Reads the queue DXN from feed metadata.

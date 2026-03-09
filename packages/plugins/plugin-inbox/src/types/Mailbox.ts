@@ -30,14 +30,14 @@ export const kind = `${meta.id}/mailbox`;
 
 /** Checks if a value is a mailbox feed. */
 export const instanceOf = (value: unknown): value is Feed.Feed =>
-  Obj.instanceOf(Type.Feed, value) && value.kind === kind;
+  Obj.instanceOf(Feed.Feed, value) && value.kind === kind;
 
 /** Creates a mailbox feed. */
-export const make = (props?: Omit<Obj.MakeProps<typeof Type.Feed>, 'kind'>): Feed.Feed => Feed.make({ kind, ...props });
+export const make = (props?: Omit<Obj.MakeProps<typeof Feed.Feed>, 'kind'>): Feed.Feed => Feed.make({ kind, ...props });
 
 /** Configuration schema for a mailbox feed. */
 export const Config = Schema.Struct({
-  feed: Type.Ref(Type.Feed).pipe(FormInputAnnotation.set(false)),
+  feed: Type.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false)),
   labels: Labels.pipe(FormInputAnnotation.set(false), Schema.optional),
   // TODO(wittjosiah): Factor out to relation?
   filters: Schema.Array(

@@ -34,7 +34,7 @@ export default defineFunction({
   description:
     'Sync events from Google Calendar. The initial sync uses startTime ordering for specified number of days. Subsequent syncs use updatedMin to catch all changes.',
   inputSchema: Schema.Struct({
-    feed: Type.Ref(Type.Feed).annotations({
+    feed: Type.Ref(Feed.Feed).annotations({
       description: 'Reference to the calendar feed.',
     }),
     googleCalendarId: Schema.optional(Schema.String),
@@ -45,7 +45,7 @@ export default defineFunction({
   outputSchema: Schema.Struct({
     newEvents: Schema.Number,
   }),
-  types: [Type.Feed, Calendar.Config],
+  types: [Feed.Feed, Calendar.Config],
   services: [Database.Service, Feed.Service],
   handler: ({
     // TODO(wittjosiah): Schema-based defaults are not yet supported.

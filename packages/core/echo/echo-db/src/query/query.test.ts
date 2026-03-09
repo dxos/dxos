@@ -580,7 +580,7 @@ describe('Query', () => {
     });
 
     test('from(feed) scopes query to feed items', async () => {
-      const peer = await builder.createPeer({ types: [Type.Feed, TestSchema.Task] });
+      const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task] });
       const db = await peer.createDatabase();
       const queues = peer.client.constructQueueFactory(db.spaceId);
       const queue = queues.create();
@@ -606,7 +606,7 @@ describe('Query', () => {
     });
 
     test('from(feed) with Filter.id scopes to feed', async () => {
-      const peer = await builder.createPeer({ types: [Type.Feed, TestSchema.Task] });
+      const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task] });
       const db = await peer.createDatabase();
       const queues = peer.client.constructQueueFactory(db.spaceId);
       const queue = queues.create();
@@ -632,7 +632,7 @@ describe('Query', () => {
     });
 
     test('Query.type(...).from(feed) scopes query to feed items', async () => {
-      const peer = await builder.createPeer({ types: [Type.Feed, TestSchema.Task] });
+      const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task] });
       const db = await peer.createDatabase();
       const queues = peer.client.constructQueueFactory(db.spaceId);
       const queue = queues.create();

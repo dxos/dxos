@@ -270,7 +270,7 @@ export const createObjectNode = ({
   }
 
   // For feeds, use the kind property for metadata lookup instead of the generic Feed typename.
-  const metadataKey = Obj.instanceOf(Type.Feed, object) ? (object.kind ?? type) : type;
+  const metadataKey = Obj.instanceOf(Feed.Feed, object) ? (object.kind ?? type) : type;
   const metadata = resolve(metadataKey);
   const partials = Obj.instanceOf(Collection.Collection, object)
     ? getCollectionGraphNodePartials({ collection: object, db, resolve })
@@ -586,7 +586,7 @@ export const constructObjectActions = ({
   const getId = (id: string) => `${id}/${Obj.getDXN(object).toString()}`;
 
   const metadataKey = Match.value(object).pipe(
-    Match.when(Obj.instanceOf(Type.Feed), (feed: Type.Feed) => feed.kind ?? Obj.getTypename(feed)!),
+    Match.when(Obj.instanceOf(Feed.Feed), (feed: Feed.Feed) => feed.kind ?? Obj.getTypename(feed)!),
     Match.when(Obj.instanceOf(ManagedCollection.ManagedCollection), (managed) => {
       const [, feedKind] = managed.key.split('~') ?? [];
       return feedKind ?? managed.key;

@@ -21,7 +21,7 @@ import { Calendar, Mailbox } from '../../types';
 export const RelatedToContact = ({ subject: contact }: SurfaceComponentProps<Person.Person>) => {
   const { invokePromise } = useOperationInvoker();
   const space = useActiveSpace();
-  const feeds = useQuery(space?.db, Filter.type(Type.Feed));
+  const feeds = useQuery(space?.db, Filter.type(Feed.Feed));
   const mailbox = feeds.find((f) => f.kind === Mailbox.kind);
   const calendar = feeds.find((f) => f.kind === Calendar.kind);
   // TODO(wittjosiah): Way to structure this query that does not require type assertions?

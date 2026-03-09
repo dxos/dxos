@@ -126,8 +126,8 @@ const useManagedCollectionItems = (collection: ManagedCollection.ManagedCollecti
 
   const filter = useMemo(
     () =>
-      typename === Type.Feed.typename
-        ? Filter.type(Type.Feed, { kind: feedKind })
+      typename === Feed.Feed.typename
+        ? Filter.type(Feed.Feed, { kind: feedKind })
         : schema
           ? Filter.type(schema)
           : Filter.nothing(),

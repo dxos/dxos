@@ -400,7 +400,7 @@ export const WithMail: Story = {
       return { plugins: [InboxPlugin(), MarkdownPlugin(), ThreadPlugin()] };
     },
     config: config.remote,
-    types: [Type.Feed],
+    types: [Feed.Feed],
     onInit: async ({ space }) => {
       const feed = space.db.add(Mailbox.make({ name: 'Mailbox' }));
       const queue = space.queues.create<Message.Message>();
@@ -411,7 +411,7 @@ export const WithMail: Story = {
       await queue.append(messages);
     },
     onChatCreated: async ({ space, binder }) => {
-      const feeds = await space.db.query(Filter.type(Type.Feed)).run();
+      const feeds = await space.db.query(Filter.type(Feed.Feed)).run();
       const mailbox = feeds.find((feed) => feed.kind === Mailbox.kind);
       if (mailbox) {
         await binder.bind({ objects: [Ref.make(mailbox)] });
@@ -436,12 +436,12 @@ export const WithGmail: Story = {
       return { plugins: [InboxPlugin(), TokenManagerPlugin()] };
     },
     config: config.persistent,
-    types: [Type.Feed],
+    types: [Feed.Feed],
     onInit: async ({ space }) => {
       space.db.add(Mailbox.make({ name: 'Mailbox' }));
     },
     onChatCreated: async ({ space, binder }) => {
-      const feeds = await space.db.query(Filter.type(Type.Feed)).run();
+      const feeds = await space.db.query(Filter.type(Feed.Feed)).run();
       const mailbox = feeds.find((feed) => feed.kind === Mailbox.kind);
       if (mailbox) {
         await binder.bind({ objects: [Ref.make(mailbox)] });
@@ -466,12 +466,12 @@ export const WithCalendar: Story = {
       return { plugins: [InboxPlugin(), TokenManagerPlugin()] };
     },
     config: config.remote,
-    types: [Type.Feed, Event.Event],
+    types: [Feed.Feed, Event.Event],
     onInit: async ({ space }) => {
       space.db.add(Calendar.make({ name: 'Calendar' }));
     },
     onChatCreated: async ({ space, binder }) => {
-      const feeds = await space.db.query(Filter.type(Type.Feed)).run();
+      const feeds = await space.db.query(Filter.type(Feed.Feed)).run();
       const calendar = feeds.find((feed) => feed.kind === Calendar.kind);
       if (calendar) {
         await binder.bind({ objects: [Ref.make(calendar)] });
@@ -864,7 +864,7 @@ export const WithProject: Story = {
       Person.Person,
       Pipeline.Pipeline,
       View.View,
-      Type.Feed,
+      Feed.Feed,
     ],
     onInit: async ({ space }) => {
       await addTestData(space);

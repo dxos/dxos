@@ -99,7 +99,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
       Match.orElse(() => undefined),
     );
 
-    const feeds = useQuery(db, Filter.type(Type.Feed));
+    const feeds = useQuery(db, Filter.type(Feed.Feed));
 
     const targetRef = useMemo(() => {
       if (!queueTarget) {
@@ -120,7 +120,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
       if (mode === 'tag') {
         return Schema.Struct({
           ...base.fields,
-          target: Schema.optional(Type.Ref(Type.Feed).annotations({ title: 'Target Feed' })),
+          target: Schema.optional(Type.Ref(Feed.Feed).annotations({ title: 'Target Feed' })),
         }).pipe(Schema.mutable);
       }
 

@@ -52,7 +52,7 @@ export const ProjectSettings = ({ subject: project }: SurfaceComponentProps<Proj
     });
   }, [project]);
 
-  const subscribableObjects = useQuery(Obj.getDatabase(project), Query.select(Filter.type(Type.Feed)));
+  const subscribableObjects = useQuery(Obj.getDatabase(project), Query.select(Filter.type(Feed.Feed)));
 
   const existingSubscripts = useAtomValue(
     useMemo(

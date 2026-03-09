@@ -140,7 +140,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
 const setup = async () => {
   const client = await new Client({
     config,
-    types: [Type.Feed, Mailbox.Config, AccessToken.AccessToken, Function.Function, Trigger.Trigger],
+    types: [Feed.Feed, Mailbox.Config, AccessToken.AccessToken, Function.Function, Trigger.Trigger],
   }).initialize();
   await client.halo.createIdentity();
 

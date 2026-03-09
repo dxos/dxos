@@ -18,7 +18,7 @@ export default defineFunction({
   name: 'Open email',
   description: 'Opens and reads the contents of a mailbox feed.',
   inputSchema: Schema.Struct({
-    feed: Type.Ref(Type.Feed).annotations({
+    feed: Type.Ref(Feed.Feed).annotations({
       description: 'The ID of the mailbox feed.',
     }),
     skip: Schema.Number.pipe(

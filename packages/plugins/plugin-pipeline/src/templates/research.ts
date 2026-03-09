@@ -12,7 +12,7 @@ export const createResearchProject = async (
   db: Database.Database,
   name?: string,
 ): Promise<Pipeline.Pipeline | null> => {
-  const feeds = await db.query(Filter.type(Type.Feed)).run();
+  const feeds = await db.query(Filter.type(Feed.Feed)).run();
   const mailbox = feeds.find((feed) => feed.kind === Mailbox.kind);
   if (!mailbox) {
     return null;

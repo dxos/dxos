@@ -34,7 +34,7 @@ export default defineFunction({
   name: 'Summarize',
   description: 'Summarize a mailbox.',
   inputSchema: Schema.Struct({
-    feed: Type.Ref(Type.Feed).annotations({
+    feed: Type.Ref(Feed.Feed).annotations({
       description: 'The ID of the mailbox feed.',
     }),
     skip: Schema.Number.pipe(

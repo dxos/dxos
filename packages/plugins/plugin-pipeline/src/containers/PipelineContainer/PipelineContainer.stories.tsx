@@ -61,7 +61,7 @@ const meta = {
         ClientPlugin({
           types: [
             Tag.Tag,
-            Type.Feed,
+            Feed.Feed,
             Pipeline.Pipeline,
             View.View,
             Collection.Collection,

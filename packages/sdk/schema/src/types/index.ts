@@ -13,7 +13,7 @@ import * as ViewModel from './ViewModel';
 export { Expando, Text, CollectionModel, ManagedCollection, ViewModel };
 
 export const DataTypes: Type.Entity.Any[] = [
-  Type.Feed,
+  Feed.Feed,
   Type.PersistentType,
 
   // System

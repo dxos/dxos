@@ -17,9 +17,20 @@ import type * as RelationModule from './Relation';
  * @deprecated Use JsonSchema.toEffectSchema instead.
  */
 export const toEffectSchema = internal.toEffectSchema;
+
+/**
+ * @deprecated Use JsonSchema.toJsonSchema instead.
+ */
 export const toJsonSchema = internal.toJsonSchema;
 
+/**
+ * Dynamic type that can be constructed, mutated, and persisted in the ECHO database.
+ */
 export const RuntimeType = internal.EchoSchema;
+
+/**
+ * Dynamic type that can be constructed, mutated, and persisted in the ECHO database.
+ */
 export type RuntimeType = internal.EchoSchema;
 
 /**
@@ -472,31 +483,3 @@ export const getMeta = (schema: Entity.Any): Meta | undefined => {
 //
 // Feed
 //
-
-/**
- * Runtime schema for a Feed object.
- *
- * @example
- * ```ts
- * const feed = Obj.make(Type.Feed, { name: 'notifications', kind: 'dxos.org/plugin/notifications/v1' });
- * ```
- */
-export const Feed = Schema.Struct({
-  /** User-facing display name. */
-  name: Schema.String.pipe(Schema.optional),
-  /** Identifier for the feed's kind (e.g., plugin id). */
-  kind: Schema.String.pipe(internal.FormInputAnnotation.set(false), Schema.optional),
-}).pipe(
-  object({
-    typename: 'dxos.org/type/Feed',
-    version: '0.1.0',
-  }),
-);
-
-/**
- * TypeScript instance type for a Feed object.
- */
-// TODO(dmaretskyi): Inconsistency here:
-//                   Type.Obj -- type of schema that represents an object (see Obj interface definition in this file).
-//                   Type.Feed -- type of instance of a Feed object (see Feed interface definition in this file).
-export interface Feed extends Schema.Schema.Type<typeof Feed> {}

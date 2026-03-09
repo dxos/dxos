@@ -114,7 +114,7 @@ export const generator = () => ({
     [
       PresetName.ORG_RESEARCH_PROJECT,
       async (space, n, cb) => {
-        const feeds = await space.db.query(Filter.type(Type.Feed)).run();
+        const feeds = await space.db.query(Filter.type(Feed.Feed)).run();
         const mailbox = feeds.find((feed) => feed.kind === Mailbox.kind);
         invariant(mailbox, 'Mailbox feed not found');
         const queueDxn = Feed.getQueueDxn(mailbox)?.toString();

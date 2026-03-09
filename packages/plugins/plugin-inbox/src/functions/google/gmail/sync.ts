@@ -62,7 +62,7 @@ export default defineFunction({
   name: 'Sync Gmail',
   description: 'Sync emails from Gmail to the mailbox feed.',
   inputSchema: Schema.Struct({
-    feed: Type.Ref(Type.Feed).annotations({ description: 'Reference to the mailbox feed to sync emails to.' }),
+    feed: Type.Ref(Feed.Feed).annotations({ description: 'Reference to the mailbox feed to sync emails to.' }),
     userId: Schema.String.pipe(Schema.optional),
     label: Schema.String.pipe(
       Schema.annotations({
@@ -86,8 +86,8 @@ export default defineFunction({
   outputSchema: Schema.Struct({
     newMessages: Schema.Number,
   }),
-  // TODO(wittjosiah): Include Type.Feed by default?
-  types: [Type.Feed, Mailbox.Config],
+  // TODO(wittjosiah): Include Feed.Feed by default?
+  types: [Feed.Feed, Mailbox.Config],
   services: [Database.Service, Feed.Service],
   handler: ({
     // TODO(wittjosiah): Schema-based defaults are not yet supported.

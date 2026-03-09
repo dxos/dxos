@@ -374,7 +374,7 @@ export default Capability.makeModule(
           }
 
           const filter = Match.value(typename).pipe(
-            Match.when(Type.Feed.typename, () => Filter.type(Type.Feed, { kind: feedKind })),
+            Match.when(Feed.Feed.typename, () => Filter.type(Feed.Feed, { kind: feedKind })),
             Match.orElse((typename) => {
               const schema = client.graph.schemaRegistry
                 .query({ typename, location: ['runtime'], includeSystem: true })

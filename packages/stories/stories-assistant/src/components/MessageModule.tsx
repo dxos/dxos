@@ -13,7 +13,7 @@ import { useSelected } from '@dxos/react-ui-attention';
 import { type ComponentProps } from './types';
 
 export const MessageModule = ({ space }: ComponentProps) => {
-  const feeds = useQuery(space.db, Filter.type(Type.Feed));
+  const feeds = useQuery(space.db, Filter.type(Feed.Feed));
   const mailbox = feeds.find((feed) => feed.kind === Mailbox.kind);
   const mailboxDxn = mailbox ? Obj.getDXN(mailbox).toString() : undefined;
   const selected = useSelected(mailboxDxn, 'single');

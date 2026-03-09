@@ -34,7 +34,7 @@ const DefaultStory = () => {
 
 const CompanionStory = () => {
   const db = useDatabase();
-  const feeds = useQuery(db, Filter.type(Type.Feed));
+  const feeds = useQuery(db, Filter.type(Feed.Feed));
   const feed = feeds.find((f) => Mailbox.instanceOf(f));
 
   const selected = useSelected(feed ? Obj.getDXN(feed).toString() : undefined, 'single');
@@ -85,7 +85,7 @@ export const WithCompanion: Story = {
       plugins: [
         ...corePlugins(),
         ClientPlugin({
-          types: [Type.Feed, Mailbox.Config, Message.Message, Person.Person],
+          types: [Feed.Feed, Mailbox.Config, Message.Message, Person.Person],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               yield* Effect.promise(() => client.halo.createIdentity());

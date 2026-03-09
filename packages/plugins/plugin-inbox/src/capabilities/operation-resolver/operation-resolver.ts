@@ -25,10 +25,10 @@ export default Capability.makeModule(
         operation: InboxOperation.OnCreateSpace,
         handler: Effect.fnUntraced(function* ({ rootCollection }) {
           const mailboxCollection = ManagedCollection.makeManagedCollection({
-            key: `${Type.getTypename(Type.Feed)}~${Mailbox.kind}`,
+            key: `${Type.getTypename(Feed.Feed)}~${Mailbox.kind}`,
           });
           const calendarCollection = ManagedCollection.makeManagedCollection({
-            key: `${Type.getTypename(Type.Feed)}~${Calendar.kind}`,
+            key: `${Type.getTypename(Feed.Feed)}~${Calendar.kind}`,
           });
           const messageCollection = ManagedCollection.makeManagedCollection({ key: Message.Message.typename });
           Obj.change(rootCollection, (c) => {
