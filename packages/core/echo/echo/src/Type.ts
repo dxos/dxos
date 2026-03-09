@@ -408,13 +408,11 @@ export const Ref: internal.RefFn = internal.Ref;
  */
 export interface Ref<T> extends Schema.SchemaClass<internal.Ref<T>, EncodedReference> {}
 
-export namespace Ref {
-  /**
-   * Type that represents any Ref schema (with unknown target type).
-   * This is a schema type, not an instance type.
-   */
-  export type Any = Schema.Schema<internal.Ref<any>, EncodedReference>;
-}
+/**
+ * Type that represents any Ref schema (with unknown target type).
+ * This is a schema type, not an instance type.
+ */
+export type AnyRef = Schema.Schema<internal.Ref<any>, EncodedReference>;
 
 //
 // Schema utility functions
