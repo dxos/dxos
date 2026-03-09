@@ -38,7 +38,7 @@ import { type RangeController, rangeExtension, sheetExtension } from '../../exte
 import { useSelectThreadOnCellFocus, useUpdateFocusedCellOnThreadSelection } from '../../integrations';
 import { meta } from '../../meta';
 import { DEFAULT_COLS, DEFAULT_ROWS, SheetOperation } from '../../types';
-import { useSheetContext } from '../SheetContext';
+import { useSheetContext } from '../SheetRoot';
 
 import { colLabelCell, rowLabelCell, useSheetModelDxGridProps } from './util';
 

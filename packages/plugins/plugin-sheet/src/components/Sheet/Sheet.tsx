@@ -2,15 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { SheetStatusbar } from '../FunctionEditor';
-import { SheetContent } from '../GridSheet';
-import { SheetRoot, type SheetRootProps } from '../SheetContext';
+import { SheetContent } from '../SheetContent';
+import { SheetRoot, type SheetRootProps } from '../SheetRoot';
+import { SheetStatusbar } from '../SheetStatusbar';
 import { SheetToolbar, type SheetToolbarProps } from '../SheetToolbar';
 
 export const Sheet = {
   Root: SheetRoot,
-  Content: SheetContent,
   Toolbar: SheetToolbar,
+  Content: SheetContent,
   Statusbar: SheetStatusbar,
 };
 

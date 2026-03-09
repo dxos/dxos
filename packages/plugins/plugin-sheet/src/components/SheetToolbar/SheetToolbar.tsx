@@ -16,7 +16,7 @@ import {
 } from '@dxos/react-ui-menu';
 
 import { type SheetModel } from '../../model';
-import { useSheetContext } from '../SheetContext';
+import { useSheetContext } from '../SheetRoot';
 
 import { createAlign, useAlignState } from './align';
 import { createStyle, useStyleState } from './style';

@@ -3,8 +3,8 @@
 //
 
 export * from './ComputeGraph';
-export * from './FunctionEditor';
-export * from './GridSheet';
 export * from './Sheet';
-export * from './SheetContext';
+export * from './SheetContent';
+export * from './SheetRoot';
+export * from './SheetStatusbar';
 export * from './SheetToolbar';
