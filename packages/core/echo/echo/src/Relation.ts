@@ -13,58 +13,7 @@ import { assumeType } from '@dxos/util';
 
 import type * as Database from './Database';
 import * as Entity from './Entity';
-import {
-  type ObjectJSON as APIJSON,
-  ATTR_RELATION_SOURCE,
-  ATTR_RELATION_TARGET,
-  type AnyEntity,
-  type Comparator as ApiComparator,
-  type Meta as ApiMeta,
-  type ReadonlyMeta as ApiReadonlyMeta,
-  type EntityVersion as ApiVersion,
-  type ChangeCallback,
-  EntityKind,
-  type InternalObjectProps,
-  type KindId,
-  MetaId,
-  type Mutable,
-  type ObjectMeta,
-  ParentId,
-  RelationSourceDXNId,
-  RelationSourceId,
-  RelationTargetDXNId,
-  RelationTargetId,
-  SnapshotKindId,
-  VersionTypeId,
-  addTag as addTag$,
-  change as change$,
-  deleteKeys as deleteKeys$,
-  getDXN as getDXN$,
-  getDatabase as getDatabase$,
-  getDescription as getDescription$,
-  getKeys as getKeys$,
-  getLabel as getLabel$,
-  getMetaChecked as getMeta$,
-  getObjectDXN,
-  getSchema as getSchema$,
-  getSnapshot as getSnapshot$,
-  getTypeAnnotation,
-  getTypeDXN as getTypeDXN$,
-  getTypename as getTypename$,
-  isDeleted as isDeleted$,
-  isVersion,
-  makeObject,
-  removeTag as removeTag$,
-  setDescription as setDescription$,
-  setLabel as setLabel$,
-  setValue as setValue$,
-  sort as sort$,
-  sortByLabel as sortByLabel$,
-  sortByTypename as sortByTypename$,
-  subscribe as subscribe$,
-  objectToJSON as toJSON$,
-  version as version$,
-} from './internal';
+import * as internal from './internal';
 import type * as Obj from './Obj';
 import type * as Type from './Type';
 
@@ -73,9 +22,9 @@ import type * as Type from './Type';
  * @private
  */
 interface BaseRelation<Source, Target>
-  extends AnyEntity,
+  extends internal.AnyEntity,
     Type.Relation.Endpoints<Source, Target>,
-    Entity.OfKind<EntityKind.Relation> {}
+    Entity.OfKind<internal.EntityKind.Relation> {}
 
 /**
  * Relation with no known properties beyond id, kind, source, and target.
@@ -95,8 +44,8 @@ export type Relation<Source extends Obj.Unknown, Target extends Obj.Unknown, Pro
 /**
  * Base type for snapshot relations (has SnapshotKindId instead of KindId).
  */
-interface BaseRelationSnapshot<Source, Target> extends AnyEntity, Type.Relation.Endpoints<Source, Target> {
-  readonly [SnapshotKindId]: EntityKind.Relation;
+interface BaseRelationSnapshot<Source, Target> extends internal.AnyEntity, Type.Relation.Endpoints<Source, Target> {
+  readonly [Entity.SnapshotKindId]: internal.EntityKind.Relation;
   readonly id: ObjectId;
 }
 
@@ -106,12 +55,13 @@ interface BaseRelationSnapshot<Source, Target> extends AnyEntity, Type.Relation.
  * Property values are frozen at the time the snapshot was created.
  * Returned by getSnapshot() and hooks.
  */
-export type Snapshot<T extends Unknown = Unknown> = Omit<T, KindId> & BaseRelationSnapshot<Obj.Unknown, Obj.Unknown>;
+export type Snapshot<T extends Unknown = Unknown> = Omit<T, Entity.KindId> &
+  BaseRelationSnapshot<Obj.Unknown, Obj.Unknown>;
 
-export const Source: unique symbol = RelationSourceId as any;
+export const Source: unique symbol = internal.RelationSourceId as any;
 export type Source = typeof Source;
 
-export const Target: unique symbol = RelationTargetId as any;
+export const Target: unique symbol = internal.RelationTargetId as any;
 export type Target = typeof Target;
 
 /**
@@ -119,7 +69,7 @@ export type Target = typeof Target;
  */
 type RelationMakeProps<T extends Unknown> = {
   id?: ObjectId;
-  [MetaId]?: ObjectMeta;
+  [internal.MetaId]?: internal.ObjectMeta;
   [Source]: T[Source];
   [Target]: T[Target];
 } & Type.Properties<T>;
@@ -142,23 +92,27 @@ export type MakeProps<S extends Type.Relation.Any> = RelationMakeProps<Schema.Sc
 export const make = <S extends Type.Relation.Any>(
   schema: S,
   props: NoInfer<RelationMakeProps<Schema.Schema.Type<S>>>,
-  meta?: ObjectMeta,
+  meta?: internal.ObjectMeta,
 ): Schema.Schema.Type<S> & Entity.OfKind<typeof Entity.Kind.Relation> => {
-  assertArgument(getTypeAnnotation(schema)?.kind === EntityKind.Relation, 'schema', 'Expected a relation schema');
-  assertArgument(props[ParentId] === undefined, 'props', 'Parent is not allowed for relations');
+  assertArgument(
+    internal.getTypeAnnotation(schema)?.kind === internal.EntityKind.Relation,
+    'schema',
+    'Expected a relation schema',
+  );
+  assertArgument(props[internal.ParentId] === undefined, 'props', 'Parent is not allowed for relations');
 
-  if (props[MetaId] != null) {
-    meta = props[MetaId] as any;
-    delete props[MetaId];
+  if (props[internal.MetaId] != null) {
+    meta = props[internal.MetaId] as any;
+    delete props[internal.MetaId];
   }
 
-  const sourceDXN = getObjectDXN(props[Source]) ?? raise(new Error('Unresolved relation source'));
-  const targetDXN = getObjectDXN(props[Target]) ?? raise(new Error('Unresolved relation target'));
+  const sourceDXN = internal.getObjectDXN(props[Source]) ?? raise(new Error('Unresolved relation source'));
+  const targetDXN = internal.getObjectDXN(props[Target]) ?? raise(new Error('Unresolved relation target'));
 
-  (props as any)[RelationSourceDXNId] = sourceDXN;
-  (props as any)[RelationTargetDXNId] = targetDXN;
+  (props as any)[internal.RelationSourceDXNId] = sourceDXN;
+  (props as any)[internal.RelationTargetDXNId] = targetDXN;
 
-  return makeObject<Schema.Schema.Type<S>>(schema, props as any, meta);
+  return internal.makeObject<Schema.Schema.Type<S>>(schema, props as any, meta);
 };
 
 /**
@@ -169,20 +123,20 @@ export const isRelation = (value: unknown): value is Unknown => {
   if (typeof value !== 'object' || value === null) {
     return false;
   }
-  if (ATTR_RELATION_SOURCE in value || ATTR_RELATION_TARGET in value) {
+  if (internal.ATTR_RELATION_SOURCE in value || internal.ATTR_RELATION_TARGET in value) {
     return true;
   }
 
   // Check for reactive relation (KindId) or snapshot (SnapshotKindId).
-  const kind = (value as any)[Entity.KindId] ?? (value as any)[SnapshotKindId];
-  return kind === EntityKind.Relation;
+  const kind = (value as any)[Entity.KindId] ?? (value as any)[Entity.SnapshotKindId];
+  return kind === internal.EntityKind.Relation;
 };
 
 export const isSnapshot = (value: unknown): value is Snapshot => {
   if (typeof value !== 'object' || value === null) {
     return false;
   }
-  return (value as any)[SnapshotKindId] === EntityKind.Relation;
+  return (value as any)[Entity.SnapshotKindId] === internal.EntityKind.Relation;
 };
 
 /**
@@ -192,8 +146,8 @@ export const isSnapshot = (value: unknown): value is Snapshot => {
  */
 export const getSourceDXN = (value: Unknown | Snapshot): DXN => {
   assertArgument(isRelation(value), 'Expected a relation');
-  assumeType<InternalObjectProps>(value);
-  const dxn = (value as InternalObjectProps)[RelationSourceDXNId];
+  assumeType<internal.InternalObjectProps>(value);
+  const dxn = (value as internal.InternalObjectProps)[internal.RelationSourceDXNId];
   invariant(dxn instanceof DXN);
   return dxn;
 };
@@ -205,8 +159,8 @@ export const getSourceDXN = (value: Unknown | Snapshot): DXN => {
  */
 export const getTargetDXN = (value: Unknown | Snapshot): DXN => {
   assertArgument(isRelation(value), 'Expected a relation');
-  assumeType<InternalObjectProps>(value);
-  const dxn = (value as InternalObjectProps)[RelationTargetDXNId];
+  assumeType<internal.InternalObjectProps>(value);
+  const dxn = (value as internal.InternalObjectProps)[internal.RelationTargetDXNId];
   invariant(dxn instanceof DXN);
   return dxn;
 };
@@ -218,8 +172,8 @@ export const getTargetDXN = (value: Unknown | Snapshot): DXN => {
  */
 export const getSource = <T extends Unknown | Snapshot>(relation: T): Type.Relation.Source<T> => {
   assertArgument(isRelation(relation), 'Expected a relation');
-  assumeType<InternalObjectProps>(relation);
-  const obj = (relation as InternalObjectProps)[RelationSourceId];
+  assumeType<internal.InternalObjectProps>(relation);
+  const obj = (relation as internal.InternalObjectProps)[internal.RelationSourceId];
   invariant(obj !== undefined, `Invalid source: ${relation.id}`);
   return obj as Type.Relation.Source<T>;
 };
@@ -231,8 +185,8 @@ export const getSource = <T extends Unknown | Snapshot>(relation: T): Type.Relat
  */
 export const getTarget = <T extends Unknown | Snapshot>(relation: T): Type.Relation.Target<T> => {
   assertArgument(isRelation(relation), 'Expected a relation');
-  assumeType<InternalObjectProps>(relation);
-  const obj = (relation as InternalObjectProps)[RelationTargetId];
+  assumeType<internal.InternalObjectProps>(relation);
+  const obj = (relation as internal.InternalObjectProps)[internal.RelationTargetId];
   invariant(obj !== undefined, `Invalid target: ${relation.id}`);
   return obj as Type.Relation.Target<T>;
 };
@@ -245,7 +199,7 @@ export const getTarget = <T extends Unknown | Snapshot>(relation: T): Type.Relat
  * Makes all properties mutable recursively.
  * Used to provide a mutable view of a relation within `Relation.change`.
  */
-export type { Mutable };
+export type Mutable<T> = internal.Mutable<T>;
 
 /**
  * Perform mutations on an echo relation within a controlled context.
@@ -273,8 +227,8 @@ export type { Mutable };
  *
  * Note: Only accepts relations. Use `Obj.change` for objects.
  */
-export const change = <T extends Unknown>(relation: T, callback: ChangeCallback<T>): void => {
-  change$(relation, callback);
+export const change = <T extends Unknown>(relation: T, callback: internal.ChangeCallback<T>): void => {
+  internal.change(relation, callback);
 };
 
 //
@@ -286,7 +240,7 @@ export const change = <T extends Unknown>(relation: T, callback: ChangeCallback<
  * The snapshot is branded with SnapshotKindId instead of KindId,
  * making it distinguishable from the reactive relation at the type level.
  */
-export const getSnapshot: <T extends Unknown>(rel: T) => Snapshot<T> = getSnapshot$ as any;
+export const getSnapshot: <T extends Unknown>(rel: T) => Snapshot<T> = internal.getSnapshot as any;
 
 //
 // Subscribe
@@ -299,7 +253,7 @@ export const getSnapshot: <T extends Unknown>(rel: T) => Snapshot<T> = getSnapsh
  * @returns Unsubscribe function.
  */
 export const subscribe = (rel: Unknown, callback: () => void): (() => void) => {
-  return subscribe$(rel, callback);
+  return internal.subscribe(rel, callback);
 };
 
 //
@@ -311,7 +265,7 @@ export const subscribe = (rel: Unknown, callback: () => void): (() => void) => {
  * Accepts both reactive relations and snapshots.
  */
 export const getValue = (rel: Unknown | Snapshot, path: readonly (string | number)[]): any => {
-  return getValue$(rel, createJsonPath(path));
+  return internal.getValue(rel, createJsonPath(path));
 };
 
 /**
@@ -322,7 +276,7 @@ export const getValue = (rel: Unknown | Snapshot, path: readonly (string | numbe
  * parameters, so there is no compile-time error. Enforcement is runtime-only.
  */
 export const setValue: (rel: Mutable<Unknown>, path: readonly (string | number)[], value: any) => void =
-  setValue$ as any;
+  internal.setValue as any;
 
 //
 // Type
@@ -332,24 +286,24 @@ export const setValue: (rel: Mutable<Unknown>, path: readonly (string | number)[
  * Get the DXN of the relation.
  * Accepts both reactive relations and snapshots.
  */
-export const getDXN = (entity: Unknown | Snapshot): DXN => getDXN$(entity);
+export const getDXN = (entity: Unknown | Snapshot): DXN => internal.getDXN(entity);
 
 /**
  * @returns The DXN of the relation's type.
  */
-export const getTypeDXN = getTypeDXN$;
+export const getTypeDXN = internal.getTypeDXN;
 
 /**
  * Get the schema of the relation.
  * Returns the branded ECHO schema used to create the relation.
  */
-export const getSchema: (rel: unknown | undefined) => Type.Entity.Any | undefined = getSchema$ as any;
+export const getSchema: (rel: unknown | undefined) => Type.Entity.Any | undefined = internal.getSchema as any;
 
 /**
  * @returns The typename of the relation's type.
  * Accepts both reactive relations and snapshots.
  */
-export const getTypename = (entity: Unknown | Snapshot): string | undefined => getTypename$(entity);
+export const getTypename = (entity: Unknown | Snapshot): string | undefined => internal.getTypename(entity);
 
 //
 // Database
@@ -359,7 +313,7 @@ export const getTypename = (entity: Unknown | Snapshot): string | undefined => g
  * Get the database the relation belongs to.
  * Accepts both reactive relations and snapshots.
  */
-export const getDatabase = (entity: Unknown | Snapshot): Database.Database | undefined => getDatabase$(entity);
+export const getDatabase = (entity: Unknown | Snapshot): Database.Database | undefined => internal.getDatabase(entity);
 
 //
 // Meta
@@ -368,12 +322,12 @@ export const getDatabase = (entity: Unknown | Snapshot): Database.Database | und
 /**
  * Deeply read-only version of ObjectMeta.
  */
-export type ReadonlyMeta = ApiReadonlyMeta;
+export type ReadonlyMeta = internal.ReadonlyMeta;
 
 /**
  * Mutable meta type returned by `Relation.getMeta` inside a `Relation.change` callback.
  */
-export type Meta = ApiMeta;
+export type Meta = internal.Meta;
 
 /**
  * Get the metadata for a relation.
@@ -384,14 +338,14 @@ export type Meta = ApiMeta;
 export function getMeta(entity: Mutable<Unknown>): Meta;
 export function getMeta(entity: Unknown | Snapshot): ReadonlyMeta;
 export function getMeta(entity: Unknown | Snapshot | Mutable<Unknown>): Meta | ReadonlyMeta {
-  return getMeta$(entity);
+  return internal.getMetaChecked(entity);
 }
 
 /**
  * @returns Foreign keys for the relation from the specified source.
  * Accepts both reactive relations and snapshots.
  */
-export const getKeys = (entity: Unknown | Snapshot, source: string): ForeignKey[] => getKeys$(entity, source);
+export const getKeys = (entity: Unknown | Snapshot, source: string): ForeignKey[] => internal.getKeys(entity, source);
 
 /**
  * Delete all keys from the relation for the specified source.
@@ -400,7 +354,7 @@ export const getKeys = (entity: Unknown | Snapshot, source: string): ForeignKey[
  * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
  * parameters, so there is no compile-time error. Enforcement is runtime-only.
  */
-export const deleteKeys = (entity: Mutable<Unknown>, source: string): void => deleteKeys$(entity, source);
+export const deleteKeys = (entity: Mutable<Unknown>, source: string): void => internal.deleteKeys(entity, source);
 
 /**
  * Add a tag to the relation.
@@ -409,7 +363,7 @@ export const deleteKeys = (entity: Mutable<Unknown>, source: string): void => de
  * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
  * parameters, so there is no compile-time error. Enforcement is runtime-only.
  */
-export const addTag = (entity: Mutable<Unknown>, tag: string): void => addTag$(entity, tag);
+export const addTag = (entity: Mutable<Unknown>, tag: string): void => internal.addTag(entity, tag);
 
 /**
  * Remove a tag from the relation.
@@ -418,13 +372,13 @@ export const addTag = (entity: Mutable<Unknown>, tag: string): void => addTag$(e
  * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
  * parameters, so there is no compile-time error. Enforcement is runtime-only.
  */
-export const removeTag = (entity: Mutable<Unknown>, tag: string): void => removeTag$(entity, tag);
+export const removeTag = (entity: Mutable<Unknown>, tag: string): void => internal.removeTag(entity, tag);
 
 /**
  * Check if the relation is deleted.
  * Accepts both reactive relations and snapshots.
  */
-export const isDeleted = (entity: Unknown | Snapshot): boolean => isDeleted$(entity);
+export const isDeleted = (entity: Unknown | Snapshot): boolean => internal.isDeleted(entity);
 
 //
 // Annotations
@@ -434,7 +388,7 @@ export const isDeleted = (entity: Unknown | Snapshot): boolean => isDeleted$(ent
  * Get the label of the relation.
  * Accepts both reactive relations and snapshots.
  */
-export const getLabel = (entity: Unknown | Snapshot): string | undefined => getLabel$(entity);
+export const getLabel = (entity: Unknown | Snapshot): string | undefined => internal.getLabel(entity);
 
 /**
  * Set the label of the relation.
@@ -443,13 +397,13 @@ export const getLabel = (entity: Unknown | Snapshot): string | undefined => getL
  * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
  * parameters, so there is no compile-time error. Enforcement is runtime-only.
  */
-export const setLabel = (entity: Mutable<Unknown>, label: string): void => setLabel$(entity, label);
+export const setLabel = (entity: Mutable<Unknown>, label: string): void => internal.setLabel(entity, label);
 
 /**
  * Get the description of the relation.
  * Accepts both reactive relations and snapshots.
  */
-export const getDescription = (entity: Unknown | Snapshot): string | undefined => getDescription$(entity);
+export const getDescription = (entity: Unknown | Snapshot): string | undefined => internal.getDescription(entity);
 
 /**
  * Set the description of the relation.
@@ -459,7 +413,7 @@ export const getDescription = (entity: Unknown | Snapshot): string | undefined =
  * parameters, so there is no compile-time error. Enforcement is runtime-only.
  */
 export const setDescription = (entity: Mutable<Unknown>, description: string): void =>
-  setDescription$(entity, description);
+  internal.setDescription(entity, description);
 
 //
 // JSON
@@ -468,13 +422,13 @@ export const setDescription = (entity: Mutable<Unknown>, description: string): v
 /**
  * JSON representation of a relation.
  */
-export type JSON = APIJSON;
+export type JSON = internal.ObjectJSON;
 
 /**
  * Converts relation to its JSON representation.
  * Accepts both reactive relations and snapshots.
  */
-export const toJSON = (entity: Unknown | Snapshot): JSON => toJSON$(entity);
+export const toJSON = (entity: Unknown | Snapshot): JSON => internal.objectToJSON(entity);
 
 //
 // Sorting
@@ -484,25 +438,26 @@ export const toJSON = (entity: Unknown | Snapshot): JSON => toJSON$(entity);
  * Comparator function type for sorting relations.
  * Accepts both reactive relations and snapshots.
  */
-export type Comparator = ApiComparator<Unknown | Snapshot>;
+export type Comparator = internal.Comparator<Unknown | Snapshot>;
 
-export const sortByLabel: Comparator = sortByLabel$ as Comparator;
-export const sortByTypename: Comparator = sortByTypename$ as Comparator;
-export const sort = (...comparators: Comparator[]): Comparator => sort$(...comparators) as Comparator;
+export const sortByLabel: Comparator = internal.sortByLabel as Comparator;
+export const sortByTypename: Comparator = internal.sortByTypename as Comparator;
+export const sort = (...comparators: Comparator[]): Comparator => internal.sort(...comparators) as Comparator;
 
 //
 // Version
 //
 
-export { VersionTypeId, isVersion };
+export const VersionTypeId = internal.VersionTypeId;
+export const isVersion = internal.isVersion;
 
 /**
  * Represent relation version.
  */
-export type Version = ApiVersion;
+export type Version = internal.EntityVersion;
 
 /**
  * Returns the version of the relation.
  * Accepts both reactive relations and snapshots.
  */
-export const version = (entity: Unknown | Snapshot): Version => version$(entity);
+export const version = (entity: Unknown | Snapshot): Version => internal.version(entity);

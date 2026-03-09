@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { FormInputAnnotation } from './internal';
+import * as internal from './internal';
 import * as Obj from './Obj';
 import * as Type from './Type';
 
@@ -13,7 +13,7 @@ import * as Type from './Type';
  */
 export const Collection = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
-  objects: Schema.Array(Type.Ref(Type.Obj)).pipe(FormInputAnnotation.set(false)),
+  objects: Schema.Array(Type.Ref(Type.Obj)).pipe(internal.FormInputAnnotation.set(false)),
 }).pipe(
   Type.object({
     typename: 'dxos.org/type/Collection',

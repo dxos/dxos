@@ -10,43 +10,27 @@ import { type DXN, type ObjectId } from '@dxos/keys';
 import { type ToMutable } from '@dxos/util';
 
 import type * as Entity$ from './Entity';
-import {
-  ANY_OBJECT_TYPENAME,
-  ANY_OBJECT_VERSION,
-  type ATTR_RELATION_SOURCE,
-  type ATTR_RELATION_TARGET,
-  type AnyEntity,
-  type AnyProperties,
-  EchoObjectSchema,
-  EchoRelationSchema,
-  type EchoRelationSchemaOptions,
-  EchoSchema,
-  EntityKind,
-  FormInputAnnotation,
-  PersistentSchema,
-  Ref as Ref$,
-  type RefFn,
-  type RefSchema,
-  SchemaKindId,
-  type TypeAnnotation,
-  type TypeMeta,
-  getSchemaDXN,
-  getSchemaTypename,
-  getSchemaVersion,
-  getTypeAnnotation,
-  isMutable as isMutable$,
-  toEffectSchema,
-  toJsonSchema,
-} from './internal';
+import * as internal from './internal';
 import type * as Relation$ from './Relation';
 
-// TODO(burdon): Remove toEffectSchema, toJsonSchema (moved to JsonSchema export).
-export { toEffectSchema, toJsonSchema };
+/**
+ * @deprecated Use JsonSchema.toEffectSchema instead.
+ */
+export const toEffectSchema = internal.toEffectSchema;
+
+/**
+ * @deprecated Use JsonSchema.toJsonSchema instead.
+ */
+export const toJsonSchema = internal.toJsonSchema;
+
+export const RuntimeType = internal.EchoSchema;
+export type RuntimeType = internal.EchoSchema;
 
 /**
  * Returns all properties of an object or relation except for the id and kind.
  */
 // TODO(dmaretskyi): Narrow T to Entity.Unknown or Entity.Snapshot<Entity.Unknown>
+// TODO(dmaretskyi): Rename `Entitiy.Properties`.
 export type Properties<T = any> = Omit<T, 'id' | Entity$.KindId | Relation$.Source | Relation$.Target>;
 
 //
@@ -57,8 +41,8 @@ export type Properties<T = any> = Omit<T, 'id' | Entity$.KindId | Relation$.Sour
  * Type that marks a schema as an ECHO schema.
  * The value indicates the entity kind (Object or Relation).
  */
-type EchoSchemaKind<K extends EntityKind = EntityKind> = {
-  readonly [SchemaKindId]: K;
+type EchoSchemaKind<K extends internal.EntityKind = internal.EntityKind> = {
+  readonly [internal.SchemaKindId]: K;
 };
 
 /**
@@ -73,8 +57,8 @@ interface ObjJsonProps {
  */
 interface RelationJsonProps {
   id: string;
-  [ATTR_RELATION_SOURCE]: string;
-  [ATTR_RELATION_TARGET]: string;
+  [internal.ATTR_RELATION_SOURCE]: string;
+  [internal.ATTR_RELATION_TARGET]: string;
 }
 
 //
@@ -91,11 +75,11 @@ interface RelationJsonProps {
 //   - Accept the limitation and require explicit type narrowing at call sites
 // TODO(dmaretskyi): Add `inviariant(Obj.instanceOf(Schema, obj))` to places where assignability is an issue.
 type ObjSchemaType = Schema.Schema<
-  any & AnyEntity & Entity$.OfKind<typeof Entity$.Kind.Object> & AnyProperties,
-  { id: string } & AnyProperties
+  any & internal.AnyEntity & Entity$.OfKind<typeof Entity$.Kind.Object> & internal.AnyProperties,
+  { id: string } & internal.AnyProperties
 > &
-  EchoSchemaKind<EntityKind.Object> &
-  TypeMeta;
+  EchoSchemaKind<internal.EntityKind.Object> &
+  internal.TypeMeta;
 
 // Internal schema definition.
 // NOTE: The EchoObjectSchema annotation is required for Type.Ref(Type.Obj) to work.
@@ -104,7 +88,7 @@ const ObjSchema = Schema.Struct({
   id: Schema.String,
 }).pipe(
   Schema.extend(Schema.Record({ key: Schema.String, value: Schema.Unknown })),
-  EchoObjectSchema({ typename: ANY_OBJECT_TYPENAME, version: ANY_OBJECT_VERSION }),
+  internal.EchoObjectSchema({ typename: internal.ANY_OBJECT_TYPENAME, version: internal.ANY_OBJECT_VERSION }),
 );
 
 /**
@@ -132,7 +116,7 @@ const ObjSchema = Schema.Struct({
 //   Effect Schema normalizes proxy objects to plain objects before calling filter predicates.
 //   Possible approaches: custom Schema.declare, AST manipulation, or upstream contribution.
 export const Obj: ObjSchemaType = Object.assign(ObjSchema, {
-  [SchemaKindId]: (ObjSchema as any)[SchemaKindId],
+  [internal.SchemaKindId]: (ObjSchema as any)[internal.SchemaKindId],
 }) as unknown as ObjSchemaType;
 
 /**
@@ -151,8 +135,8 @@ export const Obj: ObjSchemaType = Object.assign(ObjSchema, {
  * ```
  */
 export interface Obj<T = any, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>
-  extends TypeMeta,
-    EchoSchemaKind<EntityKind.Object>,
+  extends internal.TypeMeta,
+    EchoSchemaKind<internal.EntityKind.Object>,
     Schema.AnnotableClass<
       Obj<T, Fields>,
       Entity$.OfKind<typeof Entity$.Kind.Object> & T,
@@ -198,18 +182,16 @@ export namespace Obj {
  * ```
  */
 export const object: {
-  (opts: TypeMeta): <Self extends Schema.Schema.Any>(self: Self) => Obj<Schema.Schema.Type<Self>>;
-} = EchoObjectSchema as any;
+  (opts: internal.TypeMeta): <Self extends Schema.Schema.Any>(self: Self) => Obj<Schema.Schema.Type<Self>>;
+} = internal.EchoObjectSchema as any;
 
 //
 // PersistentType (Schema stored in database)
 //
 
-export const PersistentType: Obj<PersistentSchema> = PersistentSchema as any;
+export const PersistentType: Obj<internal.PersistentSchema> = internal.PersistentSchema as any;
 
 export interface PersistentType extends Schema.Schema.Type<typeof PersistentType> {}
-
-export { EchoSchema as RuntimeType };
 
 //
 // Relation - Runtime schema for any ECHO relation
@@ -220,8 +202,8 @@ type RelationSchemaType = Schema.Schema<
   { id: ObjectId } & Record<string, unknown>,
   { id: string } & Record<string, unknown>
 > &
-  EchoSchemaKind<EntityKind.Relation> &
-  TypeMeta;
+  EchoSchemaKind<internal.EntityKind.Relation> &
+  internal.TypeMeta;
 
 // Internal schema definition.
 // NOTE: The EchoRelationSchema annotation is required for Type.Ref(Type.Relation) to work.
@@ -230,7 +212,7 @@ const RelationSchema = Schema.Struct({
   id: Schema.String,
 }).pipe(
   Schema.extend(Schema.Record({ key: Schema.String, value: Schema.Unknown })),
-  EchoRelationSchema({
+  internal.EchoRelationSchema({
     typename: 'dxos.org/schema/AnyRelation',
     version: '0.0.0',
     source: ObjSchema,
@@ -256,7 +238,7 @@ const RelationSchema = Schema.Struct({
  * ```
  */
 export const Relation: RelationSchemaType = Object.assign(RelationSchema, {
-  [SchemaKindId]: (RelationSchema as any)[SchemaKindId],
+  [internal.SchemaKindId]: (RelationSchema as any)[internal.SchemaKindId],
 }) as unknown as RelationSchemaType;
 
 /**
@@ -270,8 +252,8 @@ export interface Relation<
   Source = any,
   Target = any,
   Fields extends Schema.Struct.Fields = Schema.Struct.Fields,
-> extends TypeMeta,
-    EchoSchemaKind<EntityKind.Relation>,
+> extends internal.TypeMeta,
+    EchoSchemaKind<internal.EntityKind.Relation>,
     Schema.AnnotableClass<
       Relation<T, Source, Target, Fields>,
       Entity$.OfKind<typeof Entity$.Kind.Relation> & Relation.Endpoints<Source, Target> & T,
@@ -337,11 +319,11 @@ export namespace Relation {
  */
 export const relation: {
   <SourceSchema extends Schema.Schema.AnyNoContext, TargetSchema extends Schema.Schema.AnyNoContext>(
-    opts: EchoRelationSchemaOptions<SourceSchema, TargetSchema>,
+    opts: internal.EchoRelationSchemaOptions<SourceSchema, TargetSchema>,
   ): <Self extends Schema.Schema.Any>(
     self: Self,
   ) => Relation<Schema.Schema.Type<Self>, Schema.Schema.Type<SourceSchema>, Schema.Schema.Type<TargetSchema>>;
-} = EchoRelationSchema as any;
+} = internal.EchoRelationSchema as any;
 
 //
 // Entity - Entity schema types (union of Object | Relation)
@@ -376,7 +358,7 @@ export namespace Entity {
  * NOTE: This checks SCHEMAS, not instances. Use Obj.isObject for instances.
  */
 export const isObjectSchema = (schema: Entity.Any): schema is Obj.Any => {
-  return (schema as any)[SchemaKindId] === EntityKind.Object;
+  return (schema as any)[internal.SchemaKindId] === internal.EntityKind.Object;
 };
 
 /**
@@ -384,7 +366,7 @@ export const isObjectSchema = (schema: Entity.Any): schema is Obj.Any => {
  * NOTE: This checks SCHEMAS, not instances. Use Relation.isRelation for instances.
  */
 export const isRelationSchema = (schema: Entity.Any): schema is Relation.Any => {
-  return (schema as any)[SchemaKindId] === EntityKind.Relation;
+  return (schema as any)[internal.SchemaKindId] === internal.EntityKind.Relation;
 };
 
 //
@@ -405,7 +387,8 @@ export const isRelationSchema = (schema: Entity.Any): schema is Relation.Any => 
  * This typedef avoids `TS4023` error (name from external module cannot be used named).
  * See Effect's note on interface types.
  */
-export interface ref<TargetSchema extends Schema.Schema.Any> extends RefSchema<Schema.Schema.Type<TargetSchema>> {}
+export interface ref<TargetSchema extends Schema.Schema.Any>
+  extends internal.RefSchema<Schema.Schema.Type<TargetSchema>> {}
 
 /**
  * Factory function to create a Ref schema for the given target schema.
@@ -418,7 +401,7 @@ export interface ref<TargetSchema extends Schema.Schema.Any> extends RefSchema<S
  * }).pipe(Type.object({ typename: 'Task', version: '0.1.0' }));
  * ```
  */
-export const Ref: RefFn = Ref$;
+export const Ref: internal.RefFn = internal.Ref;
 
 /**
  * TypeScript type for a Ref schema.
@@ -434,14 +417,14 @@ export const Ref: RefFn = Ref$;
  * const refInstance: Ref.Ref<Task> = Ref.make(task);
  * ```
  */
-export interface Ref<T> extends Schema.SchemaClass<Ref$<T>, EncodedReference> {}
+export interface Ref<T> extends Schema.SchemaClass<internal.Ref<T>, EncodedReference> {}
 
 export namespace Ref {
   /**
    * Type that represents any Ref schema (with unknown target type).
    * This is a schema type, not an instance type.
    */
-  export type Any = Schema.Schema<Ref$<any>, EncodedReference>;
+  export type Any = Schema.Schema<internal.Ref<any>, EncodedReference>;
 }
 
 //
@@ -455,7 +438,7 @@ export namespace Ref {
  * @example "dxn:echo:SSSSSSSSSS:XXXXXXXXXXXXX"
  */
 export const getDXN = (schema: Entity.Any): DXN | undefined => {
-  return getSchemaDXN(schema);
+  return internal.getSchemaDXN(schema);
 };
 
 /**
@@ -463,7 +446,7 @@ export const getDXN = (schema: Entity.Any): DXN | undefined => {
  * @returns The typename of the schema. Example: `example.com/type/Person`.
  */
 export const getTypename = (schema: Entity.Any): string => {
-  const typename = getSchemaTypename(schema);
+  const typename = internal.getSchemaTypename(schema);
   invariant(typeof typename === 'string' && !typename.startsWith('dxn:'), 'Invalid typename');
   return typename;
 };
@@ -473,7 +456,7 @@ export const getTypename = (schema: Entity.Any): string => {
  * @example 0.1.0
  */
 export const getVersion = (schema: Entity.Any): string => {
-  const version = getSchemaVersion(schema);
+  const version = internal.getSchemaVersion(schema);
   invariant(typeof version === 'string' && version.match(/^\d+\.\d+\.\d+$/), 'Invalid version');
   return version;
 };
@@ -481,18 +464,18 @@ export const getVersion = (schema: Entity.Any): string => {
 /**
  * @returns True if the schema is mutable.
  */
-export const isMutable = isMutable$;
+export const isMutable = internal.isMutable;
 
 /**
  * ECHO type metadata.
  */
-export type Meta = TypeAnnotation;
+export type Meta = internal.TypeAnnotation;
 
 /**
  * Gets the meta data of the schema.
  */
 export const getMeta = (schema: Entity.Any): Meta | undefined => {
-  return getTypeAnnotation(schema);
+  return internal.getTypeAnnotation(schema);
 };
 
 //
@@ -511,7 +494,7 @@ export const Feed = Schema.Struct({
   /** User-facing display name. */
   name: Schema.String.pipe(Schema.optional),
   /** Identifier for the feed's kind (e.g., plugin id). */
-  kind: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
+  kind: Schema.String.pipe(internal.FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
   object({
     typename: 'dxos.org/type/Feed',

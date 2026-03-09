@@ -12,7 +12,7 @@ import * as Database from './Database';
 import type * as Dataset from './Dataset';
 import * as Feed from './Feed';
 import * as Filter from './Filter';
-import { getTypeDXNFromSpecifier } from './internal';
+import * as internal from './internal';
 import * as Obj from './Obj';
 import type * as Order from './Order';
 import type * as Ref from './Ref';
@@ -227,7 +227,7 @@ class QueryClass implements Any {
   }
 
   'referencedBy'(target?: Schema.Schema.All | string, key?: string): Any {
-    const dxn = target !== undefined ? getTypeDXNFromSpecifier(target) : null;
+    const dxn = target !== undefined ? internal.getTypeDXNFromSpecifier(target) : null;
     return new QueryClass({
       type: 'incoming-references',
       anchor: this.ast,
