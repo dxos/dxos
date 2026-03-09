@@ -12,7 +12,7 @@ import { type Project } from '@dxos/assistant-toolkit';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';
 import { useQuery } from '@dxos/react-client/echo';
-import { Card, Container, ScrollArea, Toolbar } from '@dxos/react-ui';
+import { Card, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { Menu } from '@dxos/react-ui-menu';
 import { Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { isNonNullable } from '@dxos/util';
@@ -47,31 +47,33 @@ export const ProjectArticle = ({ subject: project }: ProjectArticleProps) => {
   const stackObjects = [...artifacts, ...inputQueueItems].filter(isNonNullable);
 
   return (
-    <Container.Main classNames='overflow-y-auto'>
-      {stackObjects.length === 0 && (
-        <div className='text-subdued'>
-          Project has no objects associated with it.
-          <br />
-          <br />
-          To get started:
-          <br />- Write the initative spec: what is the goal of the project?
-          <br />- subscribe project to your email.
-          <br />- Chat with the agent.
-        </div>
-      )}
+    <Panel.Root>
+      <Panel.Content classNames='overflow-y-auto'>
+        {stackObjects.length === 0 && (
+          <div className='text-subdued'>
+            Project has no objects associated with it.
+            <br />
+            <br />
+            To get started:
+            <br />- Write the initative spec: what is the goal of the project?
+            <br />- subscribe project to your email.
+            <br />- Chat with the agent.
+          </div>
+        )}
 
-      {stackObjects.length > 0 && (
-        <Focus.Group asChild>
-          <Mosaic.Container asChild withFocus autoScroll={viewport}>
-            <ScrollArea.Root orientation='vertical'>
-              <ScrollArea.Viewport classNames='p-2' ref={setViewport}>
-                <Mosaic.Stack items={stackObjects} getId={(item) => item.id} draggable={false} Tile={StackTile} />
-              </ScrollArea.Viewport>
-            </ScrollArea.Root>
-          </Mosaic.Container>
-        </Focus.Group>
-      )}
-    </Container.Main>
+        {stackObjects.length > 0 && (
+          <Focus.Group asChild>
+            <Mosaic.Container asChild withFocus autoScroll={viewport}>
+              <ScrollArea.Root orientation='vertical'>
+                <ScrollArea.Viewport classNames='p-2' ref={setViewport}>
+                  <Mosaic.Stack items={stackObjects} getId={(item) => item.id} draggable={false} Tile={StackTile} />
+                </ScrollArea.Viewport>
+              </ScrollArea.Root>
+            </Mosaic.Container>
+          </Focus.Group>
+        )}
+      </Panel.Content>
+    </Panel.Root>
   );
 };
 

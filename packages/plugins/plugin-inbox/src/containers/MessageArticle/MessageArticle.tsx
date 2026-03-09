@@ -7,7 +7,7 @@ import React, { useCallback, useMemo } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { type Feed, Obj } from '@dxos/echo';
-import { Container } from '@dxos/react-ui';
+import { Panel } from '@dxos/react-ui';
 import { type Message as MessageType } from '@dxos/types';
 
 import { Message, type MessageHeaderProps, type ViewMode } from '../../components';
@@ -63,22 +63,26 @@ export const MessageArticle = ({
   }, [db, invokePromise, message]);
 
   return (
-    <Container.Main role={role} toolbar>
-      <Message.Root
-        attendableId={Obj.getDXN(feed).toString()}
-        viewMode={viewMode}
-        message={message}
-        sender={sender}
-        onReply={handleReply}
-        onReplyAll={handleReplyAll}
-        onForward={handleForward}
-      >
-        <Message.Toolbar />
-        <Message.Viewport role={role}>
-          <Message.Header onContactCreate={handleContactCreate} />
-          <Message.Content />
-        </Message.Viewport>
-      </Message.Root>
-    </Container.Main>
+    <Message.Root
+      attendableId={Obj.getDXN(feed).toString()}
+      viewMode={viewMode}
+      message={message}
+      sender={sender}
+      onReply={handleReply}
+      onReplyAll={handleReplyAll}
+      onForward={handleForward}
+    >
+      <Panel.Root role={role}>
+        <Panel.Toolbar asChild>
+          <Message.Toolbar />
+        </Panel.Toolbar>
+        <Panel.Content asChild>
+          <Message.Viewport role={role}>
+            <Message.Header onContactCreate={handleContactCreate} />
+            <Message.Content />
+          </Message.Viewport>
+        </Panel.Content>
+      </Panel.Root>
+    </Message.Root>
   );
 };

@@ -1,8 +1,6 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2022 DXOS.org
 //
 
 export * from './components';
-export * from './fragments';
-export * from './primitives';
 export * from './theme';

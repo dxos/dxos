@@ -3,16 +3,52 @@
  */
 
 @layer dx-components {
-  /**
-   * Container query root.
+  /** 
+   * Registers the element as a size query container. 
+   * Children can use @container queries to apply styles based on the container's dimensions (both width and height).
    */
-
   .dx-size-container {
     container-type: size;
   }
 
-  .dx-container-max-width {
-    @apply w-full max-w-container-max-width mx-auto;
+  /**
+   * Layout rules for flex-based scroll containment:
+   * `flex flex-col`
+   *   On a container: makes it a flex column so children stack and can use `flex-1`.
+   * `flex-1`
+   *   On a child: grows to fill the flex parent. Requires the parent to be `flex`.
+   * `min-h-0` (alongside `flex-1`):
+   *   Overrides default flex children: `min-height:auto` (sized to content), which prevents shrinking.
+   *   Allows element to shrink and trigger overflow/scrolling.
+   *   Always pair with `flex-1` when scroll is needed.
+   * `h-full`:
+   *   Fills 100% of the parent's *computed* height.
+   *   Use when the parent has a definite height but is not a flex container (e.g. `overflow:hidden` wrapper).
+   *   Unlike `flex-1`, does not require the parent to be flex.
+   *
+   * Pattern for a scrollable region inside a flex ancestor:
+   *   ancestor         → `flex flex-col`             (or `flex flex-row`)
+   *   scroll root      → `flex-1 min-h-0`            (fills ancestor, can shrink)
+   *   scroll viewport  → `h-full overflow-y-scroll`  (fills root, scrolls)
+   *
+   * `dx-expand` — lightweight flex child that can shrink (`flex-1 min-h-0 min-w-0`).
+   * `dx-container` — full-size flex child (`dx-expand h-full w-full`).
+   */
+
+  .dx-expand {
+    @apply flex-1 min-h-0 min-w-0;
+  }
+
+  .dx-container {
+    @apply flex-1 min-h-0 min-w-0 h-full w-full;
+  }
+
+  /** 
+   * Article
+   */
+
+  .dx-article {
+    @apply w-full max-w-article-max-width mx-auto;
   }
 
   /**

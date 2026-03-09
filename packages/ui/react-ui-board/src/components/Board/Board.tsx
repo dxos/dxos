@@ -155,9 +155,9 @@ BoardRoot.displayName = 'Board.Root';
 
 const BOARD_CONTAINER_NAME = 'Board.Container';
 
-type BoardContainerProps = ThemedClassName<PropsWithChildren>;
+type BoardContainerProps = ThemedClassName<PropsWithChildren<ComponentPropsWithoutRef<'div'>>>;
 
-const BoardContainer = ({ classNames, children }: BoardContainerProps) => {
+const BoardContainer = ({ classNames, children, ...props }: BoardContainerProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const { width, height } = useResizeDetector({ targetRef: containerRef });
   const { bounds, grid, center } = useBoardContext(BOARD_CONTAINER_NAME);
@@ -188,6 +188,7 @@ const BoardContainer = ({ classNames, children }: BoardContainerProps) => {
 
   return (
     <div
+      {...props}
       ref={containerRef}
       className={mx(
         'flex items-center justify-center overflow-auto scrollbar-none overscroll-x-contain',

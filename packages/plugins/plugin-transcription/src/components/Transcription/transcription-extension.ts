@@ -15,7 +15,7 @@ import { DocumentAdapter, type SerializationModel } from '../../model';
 /**
  * Data structure that maps Chunks queue to lines with transcript state.
  */
-export type TranscriptOptions = {
+export type TranscriptionOptions = {
   model: SerializationModel<Message.Message>;
   started?: Date;
 };
@@ -23,7 +23,7 @@ export type TranscriptOptions = {
 /**
  * Scrolling transcript with timestamps.
  */
-export const transcript = ({ model, started }: TranscriptOptions): Extension => {
+export const transcription = ({ model, started }: TranscriptionOptions): Extension => {
   return [
     // Show timestamps in the gutter.
     gutter({

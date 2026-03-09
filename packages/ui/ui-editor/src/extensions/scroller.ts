@@ -153,6 +153,7 @@ export const scroller = ({ overScroll = 0 }: ScrollerOptions = {}) => {
         paddingBottom: `${overScroll}px`,
       },
       '.cm-scroller': {
+        overflowAnchor: 'none',
         paddingBottom: '0',
       },
       '.cm-scroller.cm-hide-scrollbar::-webkit-scrollbar': {

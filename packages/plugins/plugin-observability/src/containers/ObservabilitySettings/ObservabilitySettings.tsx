@@ -33,7 +33,7 @@ export const ObservabilitySettings = ({ settings }: ObservabilitySettingsCompone
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
 
-  // TODO(burdon): dx-container-max-width
+  // TODO(burdon): dx-article
   return (
     <Settings.Root>
       <Settings.Section title={t('settings title', { ns: meta.id })}>

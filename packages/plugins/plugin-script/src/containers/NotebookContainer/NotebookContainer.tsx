@@ -19,8 +19,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { useComputeRuntimeCallback } from '@dxos/plugin-automation';
 import { Graph } from '@dxos/plugin-explorer/types';
-import { DropdownMenu, IconButton, Toolbar, useTranslation } from '@dxos/react-ui';
-import { Container } from '@dxos/react-ui';
+import { DropdownMenu, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { Text, ViewModel } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
@@ -188,36 +187,40 @@ export const NotebookContainer = ({ role, subject: notebook, env }: NotebookCont
   );
 
   return (
-    <Container.Main role={role} toolbar>
-      <Toolbar.Root disabled={!hasAttention} textBlockWidth>
-        <DropdownMenu.Root>
-          <DropdownMenu.Trigger asChild>
-            <IconButton icon='ph--plus--regular' iconOnly label={t('notebook cell insert label')} />
-          </DropdownMenu.Trigger>
-          <NotebookMenu onCellInsert={handleCellInsert} />
-        </DropdownMenu.Root>
-        <Toolbar.IconButton
-          icon='ph--play--fill'
-          iconOnly
-          label={t('compute label')}
-          classNames='text-green-500'
-          onClick={handleCompute}
-        />
-      </Toolbar.Root>
-      <div role='none' className='flex h-full overflow-hidden -ms-[1px] -me-[1px]'>
-        <NotebookStack
-          classNames='dx-container-max-width border-l border-r border-subdued-separator'
-          db={db}
-          notebook={notebook}
-          graph={graph}
-          env={env}
-          promptResults={promptResults}
-          onRearrange={handleRearrange}
-          onCellInsert={handleCellInsert}
-          onCellDelete={handleCellDelete}
-        />
-      </div>
-    </Container.Main>
+    <Panel.Root role={role}>
+      <Panel.Toolbar asChild>
+        <Toolbar.Root disabled={!hasAttention} textBlockWidth>
+          <DropdownMenu.Root>
+            <DropdownMenu.Trigger asChild>
+              <IconButton icon='ph--plus--regular' iconOnly label={t('notebook cell insert label')} />
+            </DropdownMenu.Trigger>
+            <NotebookMenu onCellInsert={handleCellInsert} />
+          </DropdownMenu.Root>
+          <Toolbar.IconButton
+            icon='ph--play--fill'
+            iconOnly
+            label={t('compute label')}
+            classNames='text-green-500'
+            onClick={handleCompute}
+          />
+        </Toolbar.Root>
+      </Panel.Toolbar>
+      <Panel.Content asChild>
+        <div role='none' className='flex h-full overflow-hidden -ms-[1px] -me-[1px]'>
+          <NotebookStack
+            classNames='dx-article border-l border-r border-subdued-separator'
+            db={db}
+            notebook={notebook}
+            graph={graph}
+            env={env}
+            promptResults={promptResults}
+            onRearrange={handleRearrange}
+            onCellInsert={handleCellInsert}
+            onCellDelete={handleCellDelete}
+          />
+        </div>
+      </Panel.Content>
+    </Panel.Root>
   );
 };
 

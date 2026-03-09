@@ -94,6 +94,7 @@ export const TableToolbar = ({
   onAdd,
   onSave,
   customActions,
+  ...props
 }: TableToolbarProps) => {
   const registry = useContext(RegistryContext);
   const stateAtom = useMemo(() => Atom.make<TableToolbarState>({ viewDirty }), []);
@@ -110,7 +111,7 @@ export const TableToolbar = ({
   const menu = useMenuActions(actionsCreator);
 
   return (
-    <Menu.Root {...menu} attendableId={attendableId}>
+    <Menu.Root {...props} {...menu} attendableId={attendableId}>
       <Menu.Toolbar classNames={classNames} />
     </Menu.Root>
   );

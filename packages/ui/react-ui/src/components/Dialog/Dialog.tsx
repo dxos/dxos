@@ -32,7 +32,7 @@ import { useTranslation } from 'react-i18next';
 import { type DialogSize, osTranslations } from '@dxos/ui-theme';
 
 import { useThemeContext } from '../../hooks';
-import { Container } from '../../primitives';
+import { Column } from '../../primitives';
 import { type ThemedClassName } from '../../util';
 import { IconButton } from '../Button';
 import { ElevationProvider } from '../ElevationProvider';
@@ -124,7 +124,7 @@ const DialogContent: ForwardRefExoticComponent<DialogContentProps> = forwardRef<
         className={tx('dialog.content', { inOverlayLayout: propsInOverlayLayout || inOverlayLayout, size }, classNames)}
         ref={forwardedRef}
       >
-        <Container.Column>{children}</Container.Column>
+        <Column.Root>{children}</Column.Root>
       </DialogContentPrimitive>
     );
   },
@@ -142,9 +142,9 @@ const DialogHeader: ForwardRefExoticComponent<DialogTitleProps> = forwardRef<HTM
   ({ classNames, srOnly, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
-      <Container.Segment asChild>
+      <Column.Segment asChild>
         <div role='heading' {...props} className={tx('dialog.header', { srOnly }, [classNames])} ref={forwardedRef} />
-      </Container.Segment>
+      </Column.Segment>
     );
   },
 );
@@ -183,11 +183,11 @@ const DialogBody: ForwardRefExoticComponent<DialogBodyProps> = forwardRef<HTMLDi
   ({ children, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
-      <Container.Segment asChild>
+      <Column.Segment asChild>
         <div role='none' {...props} className={tx('dialog.body')} ref={forwardedRef}>
           {children}
         </div>
-      </Container.Segment>
+      </Column.Segment>
     );
   },
 );
@@ -239,11 +239,11 @@ const DialogActionBar: ForwardRefExoticComponent<DialogActionBarProps> = forward
 >(({ children, classNames, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   return (
-    <Container.Segment asChild>
+    <Column.Segment asChild>
       <div {...props} className={tx('dialog.actionbar', {}, classNames)} ref={forwardedRef}>
         {children}
       </div>
-    </Container.Segment>
+    </Column.Segment>
   );
 });
 

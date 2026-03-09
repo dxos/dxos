@@ -79,11 +79,9 @@ const SettingsSectionHeading = ({ title, description }: Omit<SettingsSectionProp
   const { t } = useTranslation(translationKey);
   return (
     <>
-      <h2 className='px-trim-md mt-trim-md mb-trim-md dx-container-max-width text-xl'>{toLocalizedString(title, t)}</h2>
+      <h2 className='px-trim-md mt-trim-md mb-trim-md dx-article text-xl'>{toLocalizedString(title, t)}</h2>
       {description && (
-        <p className='px-trim-md my-trim-md dx-container-max-width text-description'>
-          {toLocalizedString(description, t)}
-        </p>
+        <p className='px-trim-md my-trim-md dx-article text-description'>{toLocalizedString(description, t)}</p>
       )}
     </>
   );
@@ -108,7 +106,7 @@ SettingsGroupButton.displayName = SETTINGS_GROUP_BUTTON_NAME;
 type SettingsGroupProps = ThemedClassName<PropsWithChildren>;
 
 const SettingsGroup = ({ children, classNames }: SettingsGroupProps) => (
-  <div role='none' className={mx('group dx-container-max-width space-y-trim-md', classNames)}>
+  <div role='none' className={mx('group dx-article space-y-trim-md', classNames)}>
     {children}
   </div>
 );
@@ -120,7 +118,7 @@ SettingsGroup.displayName = SETTINGS_GROUP_NAME;
 //
 
 const SettingsFrame = ({ children }: SettingsGroupProps) => (
-  <div role='none' className={mx('dx-container-max-width p-trim-md', 'border border-separator rounded-md')}>
+  <div role='none' className={mx('dx-article p-trim-md', 'border border-separator rounded-md')}>
     {children}
   </div>
 );
@@ -154,7 +152,7 @@ const SettingsContainer = ({ classNames, children }: ThemedClassName<PropsWithCh
     <div
       role='none'
       className={mx([
-        'dx-container-max-width',
+        'dx-article',
         '*:first:!mt-0 *:last:!mb-0 px-trim-md py-trim-md',
         'border border-separator rounded-md',
         classNames,

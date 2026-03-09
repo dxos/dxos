@@ -8,7 +8,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { useObjectMenuItems, useObjectNavigate } from '@dxos/app-toolkit/ui';
 import { Entity, Query } from '@dxos/echo';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
-import { Card, Container, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Card, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Menu } from '@dxos/react-ui-menu';
 import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchList } from '@dxos/react-ui-searchlist';
@@ -52,23 +52,27 @@ export const SearchMain = ({ space }: { space?: Space }) => {
   );
 
   return (
-    <Container.Main toolbar>
-      <SearchList.Root onSearch={handleSearch}>
-        <Toolbar.Root>
-          <SearchList.Input placeholder={t('search placeholder')} />
-        </Toolbar.Root>
-        <SearchList.Content>
-          <Mosaic.Container asChild>
-            <ScrollArea.Root orientation='vertical'>
-              <ScrollArea.Viewport>
-                <Mosaic.Stack items={allResults} getId={(result) => result.object!.id} Tile={SearchResultTile} />
-              </ScrollArea.Viewport>
-            </ScrollArea.Root>
-          </Mosaic.Container>
-          {allResults.length === 0 && <SearchList.Empty>{t('empty results message')}</SearchList.Empty>}
-        </SearchList.Content>
-      </SearchList.Root>
-    </Container.Main>
+    <SearchList.Root onSearch={handleSearch}>
+      <Panel.Root>
+        <Panel.Toolbar asChild>
+          <Toolbar.Root>
+            <SearchList.Input placeholder={t('search placeholder')} />
+          </Toolbar.Root>
+        </Panel.Toolbar>
+        <Panel.Content asChild>
+          <SearchList.Content>
+            <Mosaic.Container asChild>
+              <ScrollArea.Root orientation='vertical'>
+                <ScrollArea.Viewport>
+                  <Mosaic.Stack items={allResults} getId={(result) => result.object!.id} Tile={SearchResultTile} />
+                </ScrollArea.Viewport>
+              </ScrollArea.Root>
+            </Mosaic.Container>
+            {allResults.length === 0 && <SearchList.Empty>{t('empty results message')}</SearchList.Empty>}
+          </SearchList.Content>
+        </Panel.Content>
+      </Panel.Root>
+    </SearchList.Root>
   );
 };
 

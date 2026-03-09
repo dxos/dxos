@@ -138,10 +138,7 @@ export const StackContainer = ({ id, subject: collection }: StackContainerProps)
   );
 
   return (
-    <StackItem.Content
-      toolbar
-      classNames='dx-container-max-width overflow-hidden border-l border-r border-subdued-separator'
-    >
+    <StackItem.Content toolbar classNames='dx-article overflow-hidden border-l border-r border-subdued-separator'>
       <Toolbar.Root>
         <Toolbar.IconButton
           icon='ph--plus--regular'

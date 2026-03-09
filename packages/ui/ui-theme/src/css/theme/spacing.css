@@ -3,11 +3,13 @@
  */
 
 @theme {
-  --spacing-prose-max-width: 50rem;
-  --spacing-container-max-width: 50rem;
-
   /** Minimum inset from the viewport edge for floating surfaces. */
   --spacing-screen-border: 1rem;
+
+  --spacing-article-max-width: 50rem;
+  --spacing-prose-max-width: 50rem;
+
+  --spacing-popover-min-width: 12rem;
 
   --spacing-card-default-width: 20rem;
   --spacing-card-min-width: 18rem;

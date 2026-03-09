@@ -44,7 +44,7 @@ import { type Graph } from '@dxos/plugin-graph';
 import { ScriptOperation } from '@dxos/plugin-script/types';
 import { SpaceOperation } from '@dxos/plugin-space/types';
 import { type Space, SpaceState, isSpace, parseId } from '@dxos/react-client/echo';
-import { Container } from '@dxos/react-ui';
+import { Panel } from '@dxos/react-ui';
 
 import {
   DebugGraph,
@@ -134,9 +134,11 @@ export default Capability.makeModule(
           );
 
           return (
-            <Container.Main role={role}>
-              <SpaceGenerator space={data.subject.space} onCreateObjects={handleCreateObject} />
-            </Container.Main>
+            <Panel.Root role={role}>
+              <Panel.Content asChild>
+                <SpaceGenerator space={data.subject.space} onCreateObjects={handleCreateObject} />
+              </Panel.Content>
+            </Panel.Root>
           );
         },
       }),

@@ -4,7 +4,7 @@
 
 import { type Size } from '@dxos/ui-types';
 
-import { mx } from '../../util';
+import { mx } from '../util';
 
 const sizeWidthMap = new Map<Size, string>([
   [0, 'w-0'],

@@ -4,8 +4,8 @@
 
 import { type ComponentFunction, type Size, type Theme } from '@dxos/ui-types';
 
+import { getSize, getSizeHeight } from '../../fragments';
 import { mx } from '../../util';
-import { getSize, getSizeHeight } from '../fragments';
 
 export type AvatarStyleProps = Partial<{
   size: Size;

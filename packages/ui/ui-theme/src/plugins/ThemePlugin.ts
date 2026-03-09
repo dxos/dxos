@@ -14,9 +14,8 @@ import postcssNesting from 'postcss-nesting';
 import { type HtmlTagDescriptor, type Plugin, type UserConfig } from 'vite';
 
 /**
- * CSS cascade layer order. Must be established before any stylesheets load so that
- * Tailwind's own @layer declarations don't override our ordering. Exported so consuming
- * apps can reference the canonical list without duplicating it.
+ * CSS cascade layer order.
+ * Must be established before any stylesheets load so that Tailwind's own @layer declarations don't override our ordering. Exported so consuming
  */
 export const LAYER_ORDER = [
   'properties',
@@ -62,9 +61,7 @@ export const ThemePlugin = (options: ThemePluginOptions): Plugin => {
     ...options,
   };
 
-  // In monorepo dev, derive project root from the source theme.css location so Tailwind
-  // scans all packages (not just ui-theme). srcThemePath is always at
-  // packages/ui/ui-theme/src/theme.css, so dirname + 4 levels up = project root.
+  // Derive project root from the source location so Tailwind scans all packages.
   const base = isMonorepo ? resolve(dirname(srcThemePath), ROOT) : undefined;
 
   if (process.env.DEBUG || options.verbose) {

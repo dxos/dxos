@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './anchored-overflow';
 export * from './avatar';
 export * from './breadcrumb';
 export * from './card';

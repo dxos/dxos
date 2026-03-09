@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-// This is based upon `@radix-ui/react-popover` fetched 25 Oct 2024 at https://github.com/radix-ui/primitives at commit 374c7d7.
+// This is based upon `@radix-ui/react-popover` fetched Oct 25, 2024 at https://github.com/radix-ui/primitives at commit 374c7d7.
 
 import { composeEventHandlers } from '@radix-ui/primitive';
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
@@ -23,9 +23,9 @@ import { hideOthers } from 'aria-hidden';
 import React, {
   type ComponentPropsWithRef,
   type ComponentPropsWithoutRef,
+  type ComponentRef,
   type ElementRef,
   type FC,
-  type MutableRefObject,
   type ReactNode,
   type RefObject,
   forwardRef,
@@ -52,7 +52,7 @@ const [createPopoverContext, createPopoverScope] = createContextScope(POPOVER_NA
 const usePopperScope = createPopperScope();
 
 type PopoverContextValue = {
-  triggerRef: MutableRefObject<HTMLButtonElement>;
+  triggerRef: RefObject<HTMLButtonElement>;
   contentId: string;
   open: boolean;
   onOpenChange(open: boolean): void;
@@ -93,7 +93,7 @@ const PopoverRoot: FC<PopoverRootProps> = (props: ScopedProps<PopoverRootProps>)
       <PopoverProvider
         scope={__scopePopover}
         contentId={useId()}
-        triggerRef={triggerRef as MutableRefObject<HTMLButtonElement>}
+        triggerRef={triggerRef as RefObject<HTMLButtonElement>}
         open={open}
         onOpenChange={setOpen}
         onOpenToggle={useCallback(() => setOpen((prevOpen) => !prevOpen), [setOpen])}
@@ -116,7 +116,7 @@ PopoverRoot.displayName = POPOVER_NAME;
 
 const ANCHOR_NAME = 'PopoverAnchor';
 
-type PopoverAnchorElement = ElementRef<typeof PopperPrimitive.Anchor>;
+type PopoverAnchorElement = ComponentRef<typeof PopperPrimitive.Anchor>;
 type PopperAnchorProps = ComponentPropsWithoutRef<typeof PopperPrimitive.Anchor>;
 interface PopoverAnchorProps extends PopperAnchorProps {}
 
@@ -146,17 +146,20 @@ const TRIGGER_NAME = 'PopoverTrigger';
 
 type PopoverTriggerElement = ElementRef<typeof Primitive.button>;
 type PrimitiveButtonProps = ComponentPropsWithoutRef<typeof Primitive.button>;
-interface PopoverTriggerProps extends PrimitiveButtonProps {}
+interface PopoverTriggerProps extends PrimitiveButtonProps {
+  asChild?: boolean;
+}
 
 const PopoverTrigger = forwardRef<PopoverTriggerElement, PopoverTriggerProps>(
   (props: ScopedProps<PopoverTriggerProps>, forwardedRef) => {
-    const { __scopePopover, ...triggerProps } = props;
+    const { __scopePopover, asChild, ...triggerProps } = props;
     const context = usePopoverContext(TRIGGER_NAME, __scopePopover);
     const popperScope = usePopperScope(__scopePopover);
     const composedTriggerRef = useComposedRefs(forwardedRef, context.triggerRef);
+    const Root = asChild ? Slot : Primitive.button;
 
     const trigger = (
-      <Primitive.button
+      <Root
         type='button'
         aria-haspopup='dialog'
         aria-expanded={context.open}

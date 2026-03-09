@@ -9,7 +9,7 @@ import { mx } from '@dxos/ui-theme';
 import { type Density, type SlottableProps } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
-import { Container } from '../../primitives';
+import { Column } from '../../primitives';
 import { type ThemedClassName } from '../../util';
 import { Button } from '../Button';
 import { Icon, type IconProps } from '../Icon';
@@ -50,7 +50,7 @@ const CardRoot = forwardRef<HTMLDivElement, CardRootProps>(
         className={tx('card.root', { border, fullWidth }, [className, classNames])}
         ref={forwardedRef}
       >
-        <Container.Column gutter='rail'>{children}</Container.Column>
+        <Column.Root gutter='rail'>{children}</Column.Root>
       </Root>
     );
   },
@@ -144,11 +144,11 @@ type CardRowProps = SlottableProps<HTMLDivElement> & { icon?: string };
 const CardRow = forwardRef<HTMLDivElement, CardRowProps>(
   ({ children, classNames, className, role, icon, ...props }, forwardedRef) => {
     return (
-      <Container.Row {...props} role={role ?? 'none'} classNames={[classNames, className]} ref={forwardedRef}>
+      <Column.Row {...props} role={role ?? 'none'} classNames={[classNames, className]} ref={forwardedRef}>
         {(icon && <CardIcon classNames='text-subdued' icon={icon} />) || <div />}
         {children}
         <div />
-      </Container.Row>
+      </Column.Row>
     );
   },
 );

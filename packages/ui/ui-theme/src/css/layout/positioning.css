@@ -3,13 +3,6 @@
  */
 
 @layer dx-components {
-  .dx-overflow-anchored * {
-    overflow-anchor: none;
-  }
-  .dx-overflow-anchor {
-    overflow-anchor: auto;
-  }
-
   .dx-contain-layout {
     contain: layout;
   }

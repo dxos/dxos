@@ -10,7 +10,7 @@ import { createDocAccessor } from '@dxos/echo-db';
 import { type Script } from '@dxos/functions';
 import { getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Container } from '@dxos/react-ui';
+import { Panel } from '@dxos/react-ui';
 import { createDataExtensions, listener, stackItemContentEditorClassNames } from '@dxos/ui-editor';
 
 import { ScriptToolbar } from '../../components/ScriptToolbar';
@@ -65,17 +65,21 @@ export const ScriptContainer = ({
   }
 
   return (
-    <Container.Main role={role} toolbar>
-      <ScriptToolbar state={state} role={role} script={script} />
-      <TypescriptEditor
-        id={script.id}
-        env={env}
-        initialValue={script.source?.target?.content}
-        extensions={extensions}
-        classNames={stackItemContentEditorClassNames(role)}
-        inputMode={settings.editorInputMode}
-        toolbar
-      />
-    </Container.Main>
+    <Panel.Root role={role}>
+      <Panel.Toolbar asChild>
+        <ScriptToolbar state={state} role={role} script={script} />
+      </Panel.Toolbar>
+      <Panel.Content asChild>
+        <TypescriptEditor
+          id={script.id}
+          env={env}
+          initialValue={script.source?.target?.content}
+          extensions={extensions}
+          classNames={stackItemContentEditorClassNames(role)}
+          inputMode={settings.editorInputMode}
+          toolbar
+        />
+      </Panel.Content>
+    </Panel.Root>
   );
 };

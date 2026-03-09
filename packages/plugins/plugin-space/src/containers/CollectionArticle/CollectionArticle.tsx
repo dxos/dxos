@@ -11,7 +11,7 @@ import { Filter, Obj, Type } from '@dxos/echo';
 import { type Collection } from '@dxos/echo';
 import { useClient } from '@dxos/react-client';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
-import { Container, ScrollArea, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Panel, ScrollArea, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui';
 import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-searchlist';
@@ -39,22 +39,26 @@ export const CollectionArticle = ({
   const { items, handleSearch } = useCollectionItems(subject, resolveMetadata);
 
   return (
-    <Container.Main toolbar>
-      <SearchList.Root onSearch={handleSearch}>
-        <Toolbar.Root>
-          <SearchList.Input placeholder={t('search placeholder')} />
-        </Toolbar.Root>
-        <SearchList.Content>
-          <Mosaic.Container asChild>
-            <ScrollArea.Root orientation='vertical'>
-              <ScrollArea.Viewport classNames='p-2'>
-                <Mosaic.Stack items={items} getId={(item) => item.id} Tile={ObjectTile} />
-              </ScrollArea.Viewport>
-            </ScrollArea.Root>
-          </Mosaic.Container>
-        </SearchList.Content>
-      </SearchList.Root>
-    </Container.Main>
+    <SearchList.Root onSearch={handleSearch}>
+      <Panel.Root>
+        <Panel.Toolbar asChild>
+          <Toolbar.Root>
+            <SearchList.Input placeholder={t('search placeholder')} />
+          </Toolbar.Root>
+        </Panel.Toolbar>
+        <Panel.Content asChild>
+          <SearchList.Content>
+            <Mosaic.Container asChild>
+              <ScrollArea.Root orientation='vertical'>
+                <ScrollArea.Viewport classNames='p-2'>
+                  <Mosaic.Stack items={items} getId={(item) => item.id} Tile={ObjectTile} />
+                </ScrollArea.Viewport>
+              </ScrollArea.Root>
+            </Mosaic.Container>
+          </SearchList.Content>
+        </Panel.Content>
+      </Panel.Root>
+    </SearchList.Root>
   );
 };
 
