@@ -14,11 +14,10 @@ import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { ElevationProvider, Input, useTranslation } from '@dxos/react-ui';
+import { ElevationProvider, Input, Panel, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
 import { Menu, createMenuAction, createMenuItemGroup, useMenuActions } from '@dxos/react-ui-menu';
 import { useSoundEffect } from '@dxos/react-ui-sfx';
-import { StackItem } from '@dxos/react-ui-stack';
 
 import { Call } from '../../components/Call';
 import { meta } from '../../meta';
@@ -118,24 +117,37 @@ export const ChannelContainer = ({ role, subject: channel, roomId: roomIdProp, f
   }, [extensions, roomId]);
 
   const isJoined = joined && currentRoomId === roomId;
+  if (isJoined) {
+    return (
+      <Panel.Root>
+        <Panel.Content>
+          {isNamed ? (
+            <Call.Root>
+              <Call.Grid fullscreen={fullscreen} />
+              <Call.Toolbar channel={channel} onLeave={handleLeave} />
+            </Call.Root>
+          ) : (
+            <DisplayNameMissing />
+          )}
+        </Panel.Content>
+      </Panel.Root>
+    );
+  }
 
-  return (
-    <StackItem.Content classNames={isJoined && 'h-full'} toolbar={!isJoined}>
-      {isJoined && !isNamed && <DisplayNameMissing />}
-      {isJoined && isNamed && (
-        <Call.Root>
-          <Call.Grid fullscreen={fullscreen} />
-          <Call.Toolbar channel={channel} onLeave={handleLeave} />
-        </Call.Root>
-      )}
-      {!isJoined && channel && channel.defaultThread.target && space && (
-        <>
+  if (channel && channel.defaultThread.target && space) {
+    return (
+      <Panel.Root classNames='dx-article'>
+        <Panel.Toolbar asChild>
           <ChannelToolbar attendableId={attendableId} role={role} onJoinCall={handleJoin} />
-          <ChatContainer space={space} thread={channel.defaultThread.target} classNames='dx-article' />
-        </>
-      )}
-    </StackItem.Content>
-  );
+        </Panel.Toolbar>
+        <Panel.Content asChild>
+          <ChatContainer space={space} thread={channel.defaultThread.target} />
+        </Panel.Content>
+      </Panel.Root>
+    );
+  }
+
+  return null;
 };
 
 const DisplayNameMissing = () => {

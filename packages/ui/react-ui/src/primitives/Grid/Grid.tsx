@@ -5,9 +5,9 @@
 import React, { type HTMLAttributes } from 'react';
 
 import { mx } from '@dxos/ui-theme';
-import { type SlottableClassName } from '@dxos/ui-types';
+import { type ComposableProps } from '@dxos/ui-types';
 
-export type GridProps = SlottableClassName<
+export type GridProps = ComposableProps<
   HTMLAttributes<HTMLDivElement> & {
     cols?: number;
     rows?: number;
@@ -35,7 +35,7 @@ export const Grid = ({
         gridTemplateRows: rows ? `repeat(${rows}, 1fr)` : undefined,
         ...style,
       }}
-      className={mx('grid overflow-hidden', grow && 'dx-expand', className, classNames)}
+      className={mx('grid overflow-hidden', grow && 'dx-container', className, classNames)}
     >
       {children}
     </div>

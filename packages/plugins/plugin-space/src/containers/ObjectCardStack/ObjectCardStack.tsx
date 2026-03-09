@@ -41,7 +41,7 @@ export const ObjectCardStack = forwardRef<HTMLDivElement, ObjectCardStackProps>(
   }
 
   return (
-    <Panel.Root ref={forwardedRef}>
+    <Panel.Root className='dx-article' ref={forwardedRef}>
       <Panel.Toolbar asChild>
         <Toolbar.Root />
       </Panel.Toolbar>

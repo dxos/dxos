@@ -5,8 +5,8 @@
 import React, { type PropsWithChildren, createContext, useCallback, useContext, useState } from 'react';
 
 import { type CellAddress, type CellRange, type CompleteCellRange, type ComputeGraph } from '@dxos/compute';
+import { raise } from '@dxos/debug';
 import { Obj } from '@dxos/echo';
-import { invariant } from '@dxos/invariant';
 import {
   Grid,
   type GridContentProps,
@@ -39,20 +39,48 @@ export type SheetContextValue = {
   activeRefs: GridContentProps['activeRefs'];
   setActiveRefs: (activeRefs: GridContentProps['activeRefs']) => void;
 
+  // Flags
+  ignoreAttention?: boolean;
+
   // Events.
   // TODO(burdon): Generalize.
   onInfo?: () => void;
-
-  // Flags
-  ignoreAttention?: boolean;
 };
 
+// TODO(burdon): Use radix context.
 const SheetContext = createContext<SheetContextValue | undefined>(undefined);
 
 export const useSheetContext = (): SheetContextValue => {
-  const context = useContext(SheetContext);
-  invariant(context);
-  return context;
+  return useContext(SheetContext) ?? raise(new Error('Missing SheetContext'));
+};
+
+export type SheetRootProps = {
+  graph: ComputeGraph;
+  sheet: Sheet.Sheet;
+  readonly?: boolean;
+  ignoreAttention?: boolean;
+} & Pick<SheetContextValue, 'onInfo'>;
+
+export const SheetRoot = ({
+  children,
+  graph,
+  sheet,
+  readonly,
+  ignoreAttention,
+  onInfo,
+}: PropsWithChildren<SheetRootProps>) => {
+  const model = useSheetModel(graph, sheet, { readonly });
+  if (!model) {
+    return null;
+  }
+
+  return (
+    <Grid.Root id={Obj.getDXN(sheet).toString()}>
+      <SheetProviderImpl model={model} onInfo={onInfo} ignoreAttention={ignoreAttention}>
+        {children}
+      </SheetProviderImpl>
+    </Grid.Root>
+  );
 };
 
 const SheetProviderImpl = ({
@@ -102,38 +130,12 @@ const SheetProviderImpl = ({
         cursorFallbackRange,
         activeRefs,
         setActiveRefs,
+        ignoreAttention,
         // TODO(burdon): Change to event.
         onInfo,
-        ignoreAttention,
       }}
     >
       {children}
     </SheetContext.Provider>
-  );
-};
-
-export type SheetProviderProps = {
-  graph: ComputeGraph;
-  sheet: Sheet.Sheet;
-  readonly?: boolean;
-  ignoreAttention?: boolean;
-} & Pick<SheetContextValue, 'onInfo'>;
-
-export const SheetProvider = ({
-  children,
-  graph,
-  sheet,
-  readonly,
-  ignoreAttention,
-  onInfo,
-}: PropsWithChildren<SheetProviderProps>) => {
-  const model = useSheetModel(graph, sheet, { readonly });
-
-  return !model ? null : (
-    <Grid.Root id={Obj.getDXN(sheet).toString()}>
-      <SheetProviderImpl model={model} onInfo={onInfo} ignoreAttention={ignoreAttention}>
-        {children}
-      </SheetProviderImpl>
-    </Grid.Root>
   );
 };

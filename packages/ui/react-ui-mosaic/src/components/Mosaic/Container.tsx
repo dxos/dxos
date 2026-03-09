@@ -21,7 +21,7 @@ import React, {
   useState,
 } from 'react';
 
-import { type AllowedAxis, type SlottableClassName } from '@dxos/react-ui';
+import { type AllowedAxis, type ComposableProps } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 
@@ -69,7 +69,7 @@ const MOSAIC_CONTAINER_PLACEHOLDER_HEIGHT = '--mosaic-placeholder-height';
 
 let counter = 0;
 
-type MosaicContainerProps = SlottableClassName<
+type MosaicContainerProps = ComposableProps<
   PropsWithChildren<
     Partial<Pick<MosaicContainerContextValue, 'eventHandler' | 'orientation'>> & {
       asChild?: boolean;

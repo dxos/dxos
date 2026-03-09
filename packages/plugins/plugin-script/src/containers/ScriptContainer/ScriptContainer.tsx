@@ -65,7 +65,7 @@ export const ScriptContainer = ({
   }
 
   return (
-    <Panel.Root role={role}>
+    <Panel.Root role={role} className='dx-article'>
       <Panel.Toolbar asChild>
         <ScriptToolbar state={state} role={role} script={script} />
       </Panel.Toolbar>

@@ -37,12 +37,12 @@ export const ChatModule = ({ space }: ComponentProps) => {
 
   return (
     <Chat.Root chat={chat} processor={processor}>
-      <Panel.Root>
+      <Panel.Root className='dx-article'>
         <Panel.Toolbar asChild>
           <Chat.Toolbar />
         </Panel.Toolbar>
         <Panel.Content asChild>
-          <Chat.Viewport classNames='relative dx-article'>
+          <Chat.Viewport classNames='relative'>
             <Toolbar.Root classNames='border-b border-subdued-separator'>
               <div className='px-1 grow truncate text-subdued'>{chat?.name}</div>
               <Popover.Root>

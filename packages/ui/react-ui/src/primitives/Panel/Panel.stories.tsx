@@ -26,7 +26,7 @@ const List = () => {
 
 const DefaultStory = () => {
   return (
-    <Panel.Root>
+    <Panel.Root className='dx-article'>
       <Panel.Toolbar asChild>
         <Toolbar.Root classNames='gap-2'>
           <Toolbar.IconButton icon='ph--plus--regular' variant='primary' label='Add' />
@@ -54,7 +54,7 @@ const DefaultStory = () => {
 const meta: Meta = {
   title: 'ui/react-ui-core/primitives/Panel',
   render: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'w-[25rem]' })],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
   },

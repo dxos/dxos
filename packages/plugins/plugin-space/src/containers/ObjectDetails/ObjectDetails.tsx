@@ -18,7 +18,7 @@ export const ObjectDetails = forwardRef<HTMLDivElement, ObjectDetailsProps>(
     const data = useMemo(() => ({ subject: object }), [object]);
 
     return (
-      <Panel.Root role={role} ref={forwardedRef}>
+      <Panel.Root role={role} className='dx-article' ref={forwardedRef}>
         <Panel.Toolbar asChild>
           <Toolbar.Root />
         </Panel.Toolbar>

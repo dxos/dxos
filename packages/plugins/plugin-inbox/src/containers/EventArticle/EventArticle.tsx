@@ -52,7 +52,7 @@ export const EventArticle = ({ role, subject, feed }: EventArticleProps) => {
 
   return (
     <Event.Root event={subject}>
-      <Panel.Root role={role}>
+      <Panel.Root role={role} className='dx-article'>
         <Panel.Toolbar asChild>
           <Event.Toolbar onNoteCreate={handleNoteCreate} />
         </Panel.Toolbar>

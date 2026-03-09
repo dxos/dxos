@@ -31,7 +31,7 @@ export const DraftMessageArticle = ({ role, subject }: DraftMessageArticleProps)
   );
 
   return (
-    <Panel.Root role={role}>
+    <Panel.Root role={role} className='dx-article'>
       <Panel.Content asChild>
         <ComposeEmailPanel draft={subject} onSend={handleSend} />
       </Panel.Content>

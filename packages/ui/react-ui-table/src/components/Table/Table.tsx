@@ -455,6 +455,10 @@ const TableMain = forwardRef(TableMainInner) as <T extends Type.AnyEntity = Type
 // Table
 //
 
+//
+// Table
+//
+
 export const Table = {
   Root: TableRoot,
   Main: TableMain,
