@@ -158,13 +158,13 @@ const getFunctionOptions = (scripts: Script.Script[], functions: Function.Functi
   return functions.map((fn) => ({ label: getLabel(fn), value: `dxn:echo:@:${fn.id}` }));
 };
 
-const getFeedQueueOptions = (feeds: Entity.Any[]) => {
+const getFeedQueueOptions = (feeds: Feed.Feed[]) => {
   return feeds.flatMap((feed) => {
-    const queueDxn = Feed.getQueueDxn(feed as Feed.Feed);
+    const queueDxn = Feed.getQueueDxn(feed);
     if (!queueDxn) {
       return [];
     }
-    const parent = Obj.getParent(feed as Obj.Unknown);
+    const parent = Obj.getParent(feed);
     const label = parent ? Entity.getLabel(parent) : Entity.getLabel(feed);
     return [{ label: label ?? feed.id, value: queueDxn.toString() }];
   });
