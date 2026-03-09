@@ -7,7 +7,7 @@ import React, { useCallback, useMemo } from 'react';
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { Feed, Filter, Obj, Type } from '@dxos/echo';
+import { Feed, Filter, Obj } from '@dxos/echo';
 import { type Collection } from '@dxos/echo';
 import { useClient } from '@dxos/react-client';
 import { getSpace, useQuery } from '@dxos/react-client/echo';

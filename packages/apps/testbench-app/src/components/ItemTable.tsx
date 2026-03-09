@@ -5,7 +5,7 @@
 import type * as Schema from 'effect/Schema';
 import React, { useMemo } from 'react';
 
-import { JsonSchema, Type } from '@dxos/echo';
+import { JsonSchema } from '@dxos/echo';
 import { DynamicTable } from '@dxos/react-ui-table';
 
 export type ItemTableProps<T> = {

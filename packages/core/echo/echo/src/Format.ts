@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as internal from './internal';
+import type * as internal from './internal';
 
 export * from './internal/formats';
 

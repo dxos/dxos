@@ -11,7 +11,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { AiModelResolver, AiService } from '@dxos/ai';
 import { AnthropicResolver } from '@dxos/ai/resolvers';
 import { LifecycleState, Resource } from '@dxos/context';
-import { Database, Feed, JsonSchema, Ref, Type } from '@dxos/echo';
+import { Database, Feed, JsonSchema, Ref, type Type } from '@dxos/echo';
 import { refFromEncodedReference } from '@dxos/echo/internal';
 import { EchoClient, type EchoDatabaseImpl, type QueueFactory, createFeedServiceLayer } from '@dxos/echo-db';
 import { runAndForwardErrors } from '@dxos/effect';

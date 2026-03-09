@@ -6,7 +6,7 @@ import { type DXN } from '@dxos/keys';
 
 import type * as Database from './Database';
 import type * as Entity from './Entity';
-import * as internal from './internal';
+import type * as internal from './internal';
 import type * as Key from './Key';
 import type * as Ref from './Ref';
 import type * as SchemaRegistry from './SchemaRegistry';

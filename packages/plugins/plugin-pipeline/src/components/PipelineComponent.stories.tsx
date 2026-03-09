@@ -7,7 +7,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useContext, useEffect } from 'react';
 
 import { Filter, Ref } from '@dxos/client/echo';
-import { JsonSchema, Obj, Query, Type } from '@dxos/echo';
+import { JsonSchema, Obj, Query } from '@dxos/echo';
 import { Collection, View } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';

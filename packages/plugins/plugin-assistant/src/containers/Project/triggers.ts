@@ -5,7 +5,7 @@
 import * as Option from 'effect/Option';
 
 import { type Project, ProjectFunctions } from '@dxos/assistant-toolkit';
-import { Feed, Obj, Ref, Type } from '@dxos/echo';
+import { Feed, Obj, Ref } from '@dxos/echo';
 import { FunctionDefinition, Trigger } from '@dxos/functions';
 import { Filter } from '@dxos/react-client/echo';
 

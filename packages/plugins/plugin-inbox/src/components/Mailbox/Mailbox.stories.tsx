@@ -8,7 +8,7 @@ import React, { useMemo, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
-import { Feed, Obj, Query, Type } from '@dxos/echo';
+import { Feed, Obj, Query } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';

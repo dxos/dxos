@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Database, Entity, Feed, Filter, Obj, Type } from '@dxos/echo';
+import { Database, Entity, Feed, Filter, Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { runAndForwardErrors } from '@dxos/effect';
 import { DXN } from '@dxos/keys';

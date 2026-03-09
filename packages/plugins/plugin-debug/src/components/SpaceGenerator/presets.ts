@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { AgentFunctions, EntityExtractionFunctions, ResearchBlueprint } from '@dxos/assistant-toolkit';
 import { Prompt } from '@dxos/blueprints';
 import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
-import { DXN, Feed, Filter, JsonSchema, Key, Obj, Query, type QueryAST, Ref, Tag, Type } from '@dxos/echo';
+import { DXN, Feed, Filter, JsonSchema, Key, Obj, Query, type QueryAST, Ref, Tag } from '@dxos/echo';
 import { Trigger, serializeFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { GmailFunctions } from '@dxos/plugin-inbox';

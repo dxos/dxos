@@ -8,7 +8,7 @@ import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 
 import { computeDiffsWithCursors } from '@dxos/assistant';
-import { Database, Obj, Ref, Relation, Type } from '@dxos/echo';
+import { Database, Obj, Ref, Relation } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
 import { defineFunction } from '@dxos/functions';
 import { Markdown } from '@dxos/plugin-markdown/types';

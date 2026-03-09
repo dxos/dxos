@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Database, Ref, Type } from '@dxos/echo';
+import { Database, Ref } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 
 import { Markdown } from '../../types';

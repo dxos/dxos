@@ -4,7 +4,7 @@
 
 import type * as Schema from 'effect/Schema';
 
-import type { Entity, Obj, Type } from '@dxos/echo';
+import type { Entity, Type } from '@dxos/echo';
 import { getSchemaDXN } from '@dxos/echo/internal';
 import { type DXN } from '@dxos/keys';
 

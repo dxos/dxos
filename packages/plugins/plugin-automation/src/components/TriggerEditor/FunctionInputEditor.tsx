@@ -5,7 +5,7 @@
 import type * as SchemaAST from 'effect/SchemaAST';
 import React, { useCallback, useMemo } from 'react';
 
-import { type Database, JsonSchema, Obj, Ref, Type } from '@dxos/echo';
+import { type Database, JsonSchema, Obj, Ref } from '@dxos/echo';
 import { type JsonPath } from '@dxos/echo/internal';
 import { type Function } from '@dxos/functions';
 import { useOnTransition, useTranslation } from '@dxos/react-ui';

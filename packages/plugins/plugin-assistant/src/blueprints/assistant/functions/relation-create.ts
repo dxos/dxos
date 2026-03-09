@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Database, Entity, Relation, Ref, Type } from '@dxos/echo';
+import { Database, Entity, Ref, Relation, Type } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { trim } from '@dxos/util';

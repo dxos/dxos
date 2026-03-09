@@ -14,7 +14,7 @@ import * as Schema from 'effect/Schema';
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { AiSession, GenerationObserver } from '@dxos/assistant';
 import { ArtifactId } from '@dxos/assistant';
-import { Database, Filter, Obj, Ref, Relation, Type } from '@dxos/echo';
+import { Database, Filter, Obj, Ref, Relation } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
 import { TracingService, defineFunction } from '@dxos/functions';

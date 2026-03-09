@@ -13,7 +13,7 @@ import * as Predicate from 'effect/Predicate';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
-import { Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
+import { Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { DXN } from '@dxos/keys';

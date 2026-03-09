@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { Feed, Filter, Type } from '@dxos/echo';
+import { Feed, Filter } from '@dxos/echo';
 import { Mailbox } from '@dxos/plugin-inbox/types';
 import { useQuery } from '@dxos/react-client/echo';
 

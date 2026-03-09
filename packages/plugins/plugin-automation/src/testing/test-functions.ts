@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { TestSchema } from '@dxos/client/testing';
-import { JsonSchema, Ref, Type } from '@dxos/echo';
+import { JsonSchema, Ref } from '@dxos/echo';
 
 export const functions = [
   {

@@ -7,6 +7,7 @@ import * as Schema from 'effect/Schema';
 import { ForeignKey } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { type Comparator, intersection } from '@dxos/util';
+
 import type * as Entity from '../../Entity';
 
 import { type AnyProperties } from './base';

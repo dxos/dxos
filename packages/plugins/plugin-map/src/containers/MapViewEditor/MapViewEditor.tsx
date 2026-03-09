@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { JsonSchema, Obj, Type } from '@dxos/echo';
+import { JsonSchema, Obj, type Type } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
 import { useSchema } from '@dxos/react-client/echo';
 import { Form, type FormFieldMap, SelectField } from '@dxos/react-ui-form';

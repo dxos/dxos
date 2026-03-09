@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { type AiService } from '@dxos/ai';
-import { type Feed, JsonSchema, Obj, Type } from '@dxos/echo';
+import { type Feed, JsonSchema, Obj, type Type } from '@dxos/echo';
 import { type Database } from '@dxos/echo';
 import { assertArgument, failedInvariant } from '@dxos/invariant';
 import { Operation } from '@dxos/operation';

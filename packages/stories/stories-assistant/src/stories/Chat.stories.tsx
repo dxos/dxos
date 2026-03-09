@@ -22,7 +22,7 @@ import {
   WebSearchBlueprint,
 } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt, Template } from '@dxos/blueprints';
-import { Feed, Filter, JsonSchema, Obj, Query, Ref, Tag, Type } from '@dxos/echo';
+import { Feed, Filter, JsonSchema, Obj, Query, Ref, Tag } from '@dxos/echo';
 import { View } from '@dxos/echo';
 import { ExampleFunctions, Script, Trigger, serializeFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';

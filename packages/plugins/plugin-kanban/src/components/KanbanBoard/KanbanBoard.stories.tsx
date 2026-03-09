@@ -6,7 +6,7 @@ import { Atom, RegistryContext } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
-import { Filter, JsonSchema, Obj, Query, Type } from '@dxos/echo';
+import { Filter, JsonSchema, Obj, Query } from '@dxos/echo';
 import { type View } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';

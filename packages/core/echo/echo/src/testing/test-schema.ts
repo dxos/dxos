@@ -4,8 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import * as Type from '../Type';
 import * as Ref from '../Ref';
+import * as Type from '../Type';
 
 export namespace TestSchema {
   //

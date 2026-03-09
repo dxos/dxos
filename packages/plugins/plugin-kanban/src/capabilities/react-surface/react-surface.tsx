@@ -8,7 +8,7 @@ import React, { useMemo } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
-import { Database, JsonSchema, Obj, Type } from '@dxos/echo';
+import { Database, JsonSchema, Obj } from '@dxos/echo';
 import { type Collection } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
 import { type FormFieldComponentProps, SelectField, useFormValues } from '@dxos/react-ui-form';

@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Ref, Type } from '@dxos/echo';
+import { Ref } from '@dxos/echo';
 
 import * as Person from './Person';
 

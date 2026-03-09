@@ -3,13 +3,13 @@
 //
 
 import * as Option from 'effect/Option';
+import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import type * as Schema from 'effect/Schema';
+import type * as Entity from './Entity';
 import * as internal from './internal';
 import type * as JsonSchema from './JsonSchema';
 import type * as Obj from './Obj';
-import type * as Entity from './Entity';
 
 /**
  * Instance type for a reference.

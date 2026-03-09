@@ -12,7 +12,7 @@ import { GenericToolkit } from '@dxos/ai';
 import { ArtifactId } from '@dxos/assistant';
 import { Chat, WebSearchToolkit } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
-import { Feed, Tag, Type } from '@dxos/echo';
+import { Feed, Tag, type Type } from '@dxos/echo';
 import { type FunctionDefinition } from '@dxos/functions';
 import { AssistantBlueprint } from '@dxos/plugin-assistant/blueprints';
 import { ChessBlueprint } from '@dxos/plugin-chess/blueprints';

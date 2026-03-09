@@ -6,7 +6,7 @@ import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Feed, Ref, Type } from '@dxos/echo';
+import { Feed, Ref } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';

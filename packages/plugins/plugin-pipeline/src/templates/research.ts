@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Database, Feed, Filter, JsonSchema, Query, Ref, Type } from '@dxos/echo';
+import { type Database, Feed, Filter, JsonSchema, Query, Ref } from '@dxos/echo';
 import { Mailbox } from '@dxos/plugin-inbox/types';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { ViewModel } from '@dxos/schema';

@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import type { ForeignKey } from '@dxos/echo-protocol';
-import { createJsonPath, getValue as getValue$ } from '@dxos/effect';
+import { createJsonPath } from '@dxos/effect';
 import { assertArgument } from '@dxos/invariant';
 import { type DXN, ObjectId } from '@dxos/keys';
 import { assumeType } from '@dxos/util';

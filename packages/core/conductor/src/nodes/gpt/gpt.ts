@@ -13,7 +13,7 @@ import * as Struct from 'effect/Struct';
 
 import { AiService, DEFAULT_EDGE_MODEL, ToolExecutionService, ToolId, ToolResolverService } from '@dxos/ai';
 import { AiSession, GenerationObserver } from '@dxos/assistant';
-import { Ref, Type } from '@dxos/echo';
+import { Ref } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
 import { ComputeEventLogger, FunctionInvocationService, QueueService, TracingService } from '@dxos/functions';
 import { assertArgument } from '@dxos/invariant';

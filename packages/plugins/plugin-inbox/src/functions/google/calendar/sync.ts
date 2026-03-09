@@ -14,7 +14,7 @@ import * as Ref from 'effect/Ref';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
-import { Database, Feed, Filter, Obj, Ref as EchoRef, Type } from '@dxos/echo';
+import { Database, Ref as EchoRef, Feed, Filter, Obj } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';

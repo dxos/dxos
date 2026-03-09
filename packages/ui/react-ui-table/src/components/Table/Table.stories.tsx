@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 
-import { Annotation, type Database, Format, Obj, type QueryAST, Type, Ref } from '@dxos/echo';
+import { Annotation, type Database, Format, Obj, type QueryAST, Ref, Type } from '@dxos/echo';
 import { View } from '@dxos/echo';
 import { type Mutable, PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';

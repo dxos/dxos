@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { DXN, Filter, JsonSchema, Obj, Query, type QueryAST, Ref, Tag, Type } from '@dxos/echo';
+import { DXN, Filter, JsonSchema, Obj, Query, type QueryAST, Ref, Tag } from '@dxos/echo';
 import { type JsonPath, type Mutable } from '@dxos/echo/internal';
 import { useTypeOptions } from '@dxos/plugin-space';
 import { resolveSchemaWithRegistry } from '@dxos/plugin-space';

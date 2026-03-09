@@ -16,9 +16,8 @@ import * as internal from './internal';
 import * as Obj from './Obj';
 import type * as Order from './Order';
 import type * as Ref from './Ref';
-import type * as TypeModule from './Type';
-import type * as View from './View';
 import type * as Relation from './Relation';
+import type * as View from './View';
 
 // TODO(dmaretskyi): Split up into interfaces for objects and relations so they can have separate verbs.
 // TODO(dmaretskyi): Undirected relation traversals.

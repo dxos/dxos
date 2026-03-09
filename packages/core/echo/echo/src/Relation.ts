@@ -6,7 +6,7 @@ import type * as Schema from 'effect/Schema';
 
 import { raise } from '@dxos/debug';
 import type { ForeignKey } from '@dxos/echo-protocol';
-import { createJsonPath, getValue as getValue$ } from '@dxos/effect';
+import { createJsonPath } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, type ObjectId } from '@dxos/keys';
 import { assumeType } from '@dxos/util';

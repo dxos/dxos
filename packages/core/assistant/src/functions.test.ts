@@ -10,7 +10,7 @@ import { ConsolePrinter } from '@dxos/ai';
 import { MemoizedAiService } from '@dxos/ai/testing';
 import { AiSession, GenerationObserver, createToolkit } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
-import { Database, Obj, Ref, Type } from '@dxos/echo';
+import { Database, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { defineFunction } from '@dxos/functions';
 import { ObjectId } from '@dxos/keys';

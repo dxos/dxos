@@ -13,7 +13,7 @@ import * as Option from 'effect/Option';
 import { CommandConfig } from '@dxos/cli-util';
 import { flushAndSync, print, spaceLayer, withTypes } from '@dxos/cli-util';
 import { Common } from '@dxos/cli-util';
-import { Database, Filter, JsonSchema, Ref, Type } from '@dxos/echo';
+import { Database, Filter, JsonSchema, Ref } from '@dxos/echo';
 import { Function, Trigger } from '@dxos/functions';
 
 import { Cron, Enabled, Input } from '../options';

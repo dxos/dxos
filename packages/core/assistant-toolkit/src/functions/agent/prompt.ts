@@ -11,7 +11,7 @@ import * as Schema from 'effect/Schema';
 import { AiService, ConsolePrinter, ModelName } from '@dxos/ai';
 import { AiSession, GenerationObserver, createToolkit } from '@dxos/assistant';
 import { Prompt, Template } from '@dxos/blueprints';
-import { Database, Obj, Ref, Type } from '@dxos/echo';
+import { Database, Obj, Ref } from '@dxos/echo';
 import { TracingService, defineFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
 

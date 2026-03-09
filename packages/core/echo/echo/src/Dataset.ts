@@ -7,9 +7,9 @@ import * as Predicate from 'effect/Predicate';
 import * as Schema from 'effect/Schema';
 
 import * as Collection from './Collection';
+import * as Feed from './Feed';
 import * as Obj from './Obj';
 import * as View from './View';
-import * as Feed from './Feed';
 
 /**
  * Abstart set of objects, represented by a view, feed, or collection.

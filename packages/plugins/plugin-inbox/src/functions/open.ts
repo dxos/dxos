@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 
-import { Database, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { Message } from '@dxos/types';
 
