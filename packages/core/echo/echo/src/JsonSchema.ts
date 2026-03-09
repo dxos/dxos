@@ -6,7 +6,14 @@ import type * as Schema from 'effect/Schema';
 
 import * as internal from './internal';
 
+/**
+ * Decode JSON Schema to Effect Schema.
+ */
 export const toEffectSchema = internal.toEffectSchema;
+
+/**
+ * Encode Effect Schema to JSON Schema.
+ */
 export const toJsonSchema = internal.toJsonSchema;
 
 /**

@@ -11,7 +11,10 @@ import { type ToMutable } from '@dxos/util';
 
 import type * as EntityModule from './Entity';
 import * as internal from './internal';
+import type * as Entity from './Entity';
 import type * as RelationModule from './Relation';
+import type * as ObjModule from './Obj';
+import type { Type } from './Filter';
 
 /**
  * @deprecated Use JsonSchema.toEffectSchema instead.
@@ -74,12 +77,7 @@ interface RelationJsonProps {
 //   - Branded types that specific schemas also carry
 //   - Accept the limitation and require explicit type narrowing at call sites
 // TODO(dmaretskyi): Add `inviariant(Obj.instanceOf(Schema, obj))` to places where assignability is an issue.
-type ObjSchemaType = Schema.Schema<
-  any & internal.AnyEntity & EntityModule.OfKind<typeof EntityModule.Kind.Object> & internal.AnyProperties,
-  { id: string } & internal.AnyProperties
-> &
-  EchoSchemaKind<internal.EntityKind.Object> &
-  internal.TypeMeta;
+type ObjSchemaType = Obj<ObjModule.Unknown>;
 
 // Internal schema definition.
 // NOTE: The EchoObjectSchema annotation is required for Type.Ref(Type.Obj) to work.
@@ -134,7 +132,7 @@ export const Obj: ObjSchemaType = Object.assign(ObjSchema, {
  * Object.keys(PersonSchema.fields); // ['name']
  * ```
  */
-export interface Obj<T = any, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>
+export interface Obj<T, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>
   extends internal.TypeMeta,
     EchoSchemaKind<internal.EntityKind.Object>,
     Schema.AnnotableClass<
@@ -195,12 +193,8 @@ export interface PersistentType extends Schema.Schema.Type<typeof PersistentType
 //
 
 // Internal type for the Relation schema constant.
-type RelationSchemaType = Schema.Schema<
-  { id: ObjectId } & Record<string, unknown>,
-  { id: string } & Record<string, unknown>
-> &
-  EchoSchemaKind<internal.EntityKind.Relation> &
-  internal.TypeMeta;
+// TODO(dmaretskyi): Change ObjModule.Any to ObjModule.Unknown to have stricter types.
+type RelationSchemaType = Relation<RelationModule.Unknown, ObjModule.Any, ObjModule.Any>;
 
 // Internal schema definition.
 // NOTE: The EchoRelationSchema annotation is required for Type.Ref(Type.Relation) to work.
@@ -245,9 +239,9 @@ export const Relation: RelationSchemaType = Object.assign(RelationSchema, {
  * `Fields` is the optional struct fields type for introspection.
  */
 export interface Relation<
-  T = any,
-  Source = any,
-  Target = any,
+  T,
+  Source,
+  Target,
   Fields extends Schema.Struct.Fields = Schema.Struct.Fields,
 > extends internal.TypeMeta,
     EchoSchemaKind<internal.EntityKind.Relation>,
@@ -331,10 +325,7 @@ export const relation: {
  * }
  * ```
  */
-export const AnyEntity: Schema.Schema<
-  { id: ObjectId } & Record<string, unknown>,
-  { id: string } & Record<string, unknown>
-> = Schema.Union(Obj, Relation);
+export const AnyEntity: Schema.Schema<Entity.Unknown> = Schema.Union(Obj, Relation) as any;
 
 /**
  * Type alias for any ECHO entity schema (object or relation).
@@ -371,13 +362,20 @@ export const isRelationSchema = (schema: AnyEntity): schema is AnyRelation => {
 //
 
 /**
- * Return type of the `Ref` schema constructor.
+ * TypeScript type for a Ref schema.
+ * This is the type of the SCHEMA itself, not the runtime ref instance.
+ * For the instance type, use `Ref.Ref<T>` from the Ref module.
  *
- * This typedef avoids `TS4023` error (name from external module cannot be used named).
- * See Effect's note on interface types.
+ * @example
+ * ```ts
+ * // Schema type annotation (rarely needed, usually inferred):
+ * const refSchema: Type.Ref<typeof Task> = Type.Ref(Task);
+ *
+ * // Instance type annotation (use Ref.Ref instead):
+ * const refInstance: Ref.Ref<Task> = Ref.make(task);
+ * ```
  */
-export interface ref<TargetSchema extends Schema.Schema.Any>
-  extends internal.RefSchema<Schema.Schema.Type<TargetSchema>> {}
+export interface Ref<T extends Entity.Unknown> extends internal.RefSchema<T> {}
 
 /**
  * Factory function to create a Ref schema for the given target schema.
@@ -391,22 +389,6 @@ export interface ref<TargetSchema extends Schema.Schema.Any>
  * ```
  */
 export const Ref: internal.RefFn = internal.Ref;
-
-/**
- * TypeScript type for a Ref schema.
- * This is the type of the SCHEMA itself, not the runtime ref instance.
- * For the instance type, use `Ref.Ref<T>` from the Ref module.
- *
- * @example
- * ```ts
- * // Schema type annotation (rarely needed, usually inferred):
- * const refSchema: Type.Ref<Task> = Type.Ref(Task);
- *
- * // Instance type annotation (use Ref.Ref instead):
- * const refInstance: Ref.Ref<Task> = Ref.make(task);
- * ```
- */
-export interface Ref<T> extends Schema.SchemaClass<internal.Ref<T>, EncodedReference> {}
 
 /**
  * Type that represents any Ref schema (with unknown target type).
