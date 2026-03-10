@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
+import { Context } from '@dxos/context';
 import { Database, Entity, Feed, Filter, Obj, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { runAndForwardErrors } from '@dxos/effect';
@@ -14,7 +15,6 @@ import { DXN } from '@dxos/keys';
 import { EchoTestBuilder } from '../testing';
 
 import { createFeedServiceLayer } from './feed-service';
-import { Context } from '@dxos/context';
 
 describe('Feed', () => {
   let builder: EchoTestBuilder;

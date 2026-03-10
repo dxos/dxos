@@ -37,7 +37,9 @@ describe('CoreDatabase', () => {
       expect(docHandles.linkedDocHandles.length).to.eq(1);
       const rootDoc = docHandles.spaceRootHandle.doc(Context.default());
       expect(rootDoc?.objects?.[object.id]).to.be.undefined;
-      expect(docHandles.spaceRootHandle.doc(Context.default())?.links?.[object.id].toString()).to.eq(docHandles.linkedDocHandles[0].url);
+      expect(docHandles.spaceRootHandle.doc(Context.default())?.links?.[object.id].toString()).to.eq(
+        docHandles.linkedDocHandles[0].url,
+      );
     });
 
     test('text objects are created in a separate doc and link from the root doc is added', async () => {
@@ -49,7 +51,9 @@ describe('CoreDatabase', () => {
       await db.flush();
       const docHandles = getDocHandles(db);
       expect(docHandles.linkedDocHandles.length).to.eq(1);
-      expect(docHandles.spaceRootHandle.doc(Context.default())?.links?.[object.id].toString()).to.eq(docHandles.linkedDocHandles[0].url);
+      expect(docHandles.spaceRootHandle.doc(Context.default())?.links?.[object.id].toString()).to.eq(
+        docHandles.linkedDocHandles[0].url,
+      );
     });
 
     test('reference loading via load() method', async () => {
@@ -125,7 +129,9 @@ describe('CoreDatabase', () => {
         getDocHandles(db).spaceRootHandle.doc(Context.default()).links?.[beforeUpdate.id].toString(),
       );
       await db.coreDatabase.updateSpaceState(Context.default(), { rootUrl: newRootDocHandle.url });
-      expect(getObjectDocHandle(beforeUpdate).url).to.eq(newRootDocHandle.doc(Context.default()).links?.[beforeUpdate.id].toString());
+      expect(getObjectDocHandle(beforeUpdate).url).to.eq(
+        newRootDocHandle.doc(Context.default()).links?.[beforeUpdate.id].toString(),
+      );
     });
 
     test('linked objects are loaded on update only if they were loaded before', async () => {

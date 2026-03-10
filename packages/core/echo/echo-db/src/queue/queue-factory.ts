@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Context, Resource } from '@dxos/context';
+import { type Context, Resource } from '@dxos/context';
 import { type Entity, type Hypergraph } from '@dxos/echo';
 import { assertArgument, assertState } from '@dxos/invariant';
 import { DXN, ObjectId, type QueueSubspaceTag, QueueSubspaceTags, type SpaceId } from '@dxos/keys';
@@ -13,7 +13,10 @@ import { type Queue } from './types';
 
 export interface QueueAPI {
   get<T extends Entity.Unknown = Entity.Unknown>(ctx: Context, dxn: DXN): Queue<T>;
-  create<T extends Entity.Unknown = Entity.Unknown>(ctx: Context, options?: { subspaceTag?: QueueSubspaceTag }): Queue<T>;
+  create<T extends Entity.Unknown = Entity.Unknown>(
+    ctx: Context,
+    options?: { subspaceTag?: QueueSubspaceTag },
+  ): Queue<T>;
 }
 
 export class QueueFactory extends Resource implements QueueAPI {
@@ -55,9 +58,10 @@ export class QueueFactory extends Resource implements QueueAPI {
     return newQueue as any as Queue<T>;
   }
 
-  create<T extends Entity.Unknown>(ctx: Context, {
-    subspaceTag = QueueSubspaceTags.DATA,
-  }: { subspaceTag?: QueueSubspaceTag } = {}): Queue<T> {
+  create<T extends Entity.Unknown>(
+    ctx: Context,
+    { subspaceTag = QueueSubspaceTags.DATA }: { subspaceTag?: QueueSubspaceTag } = {},
+  ): Queue<T> {
     const dxn = DXN.fromQueue(subspaceTag, this._spaceId, ObjectId.random());
     return this.get<T>(ctx, dxn);
   }

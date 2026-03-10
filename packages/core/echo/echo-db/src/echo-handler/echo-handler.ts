@@ -295,7 +295,10 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         const objectId = value.id ?? value;
         // TODO(dmaretskyi): Validate object is from the same space.
         invariant(ObjectId.isValid(objectId));
-        target[symbolInternals].core.setParent(Context.default(), EncodedReference.fromDXN(DXN.fromLocalObjectId(objectId)));
+        target[symbolInternals].core.setParent(
+          Context.default(),
+          EncodedReference.fromDXN(DXN.fromLocalObjectId(objectId)),
+        );
       }
       return true;
     }
@@ -644,7 +647,11 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     const validatedItems = this._validateForArray(target, path, items, target.length);
 
     const encodedItems = this._encodeForArray(target, validatedItems);
-    const result = target[symbolInternals].core.arrayPush(Context.default(), [getNamespace(target), ...path], encodedItems);
+    const result = target[symbolInternals].core.arrayPush(
+      Context.default(),
+      [getNamespace(target), ...path],
+      encodedItems,
+    );
     return result;
   }
 
@@ -1267,8 +1274,14 @@ const setRelationSourceAndTarget = (
       throw new TypeError('target must be an ECHO object');
     }
 
-    core.setSource(Context.default(), EncodedReference.fromDXN(EchoReactiveHandler.instance.createRef(target, sourceRef)));
-    core.setTarget(Context.default(), EncodedReference.fromDXN(EchoReactiveHandler.instance.createRef(target, targetRef)));
+    core.setSource(
+      Context.default(),
+      EncodedReference.fromDXN(EchoReactiveHandler.instance.createRef(target, sourceRef)),
+    );
+    core.setTarget(
+      Context.default(),
+      EncodedReference.fromDXN(EchoReactiveHandler.instance.createRef(target, targetRef)),
+    );
   }
 };
 

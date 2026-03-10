@@ -8,6 +8,7 @@ import { next as A, type ChangeFn, type ChangeOptions, type Doc, type Heads } fr
 import { type DocHandleChangePayload } from '@automerge/automerge-repo';
 
 import { Event } from '@dxos/async';
+import { type Context } from '@dxos/context';
 import { inspectCustom } from '@dxos/debug';
 import { EntityKind, type ObjectMeta } from '@dxos/echo/internal';
 import { isProxy } from '@dxos/echo/internal';
@@ -27,7 +28,6 @@ import { type DocHandleProxy } from '../automerge';
 import { type CoreDatabase } from './core-database';
 import { docChangeSemaphore } from './doc-semaphore';
 import { type DecodedAutomergePrimaryValue, type DocAccessor, type KeyPath, isValidKeyPath } from './types';
-import { Context } from '@dxos/context';
 
 // Strings longer than this will have collaborative editing disabled for performance reasons.
 // TODO(dmaretskyi): Remove in favour of explicitly specifying this in the API/Schema.
@@ -313,7 +313,9 @@ export class ObjectCore {
       return convertLegacyProtoReference(value);
     }
     if (typeof value === 'object') {
-      return Object.fromEntries(Object.entries(value).map(([key, value]): [string, any] => [key, this.decode(ctx, value)]));
+      return Object.fromEntries(
+        Object.entries(value).map(([key, value]): [string, any] => [key, this.decode(ctx, value)]),
+      );
     }
 
     return value;

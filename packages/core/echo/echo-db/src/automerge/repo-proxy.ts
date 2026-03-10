@@ -8,7 +8,7 @@ import { type AnyDocumentId, type DocumentId, interpretAsDocumentId } from '@aut
 import { Event, UpdateScheduler } from '@dxos/async';
 import { type Struct } from '@dxos/codec-protobuf';
 import { type Stream } from '@dxos/codec-protobuf/stream';
-import { Context, LifecycleState, Resource } from '@dxos/context';
+import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -192,12 +192,15 @@ export class RepoProxy extends Resource {
   }
 
   /** Returns an existing handle if we have it; creates one otherwise. */
-  private _getOrLoadHandle<T>(ctx: Context, {
-    documentId,
-  }: {
-    /** The documentId of the handle to look up or create. */
-    documentId: DocumentId;
-  }): DocHandleProxy<T> {
+  private _getOrLoadHandle<T>(
+    ctx: Context,
+    {
+      documentId,
+    }: {
+      /** The documentId of the handle to look up or create. */
+      documentId: DocumentId;
+    },
+  ): DocHandleProxy<T> {
     // If we have the handle cached, return it
     if (this._handles[documentId]) {
       return this._handles[documentId];

@@ -71,7 +71,8 @@ describe('DocHandleProxy', () => {
     const workerHandle = await host.createDoc<DocType>(Context.default());
     const synchronizer = new DocumentsSynchronizer({
       automergeHost: host,
-      sendUpdates: ({ updates }) => updates?.forEach((update) => clientHandle._integrateHostUpdate(Context.default(), update.mutation)),
+      sendUpdates: ({ updates }) =>
+        updates?.forEach((update) => clientHandle._integrateHostUpdate(Context.default(), update.mutation)),
     });
     await openAndClose(synchronizer);
     workerHandle.change((doc: DocType) => {

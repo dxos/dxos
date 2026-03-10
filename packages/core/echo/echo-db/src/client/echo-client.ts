@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Context, ContextDisposedError, LifecycleState, Resource } from '@dxos/context';
+import { type Context, ContextDisposedError, LifecycleState, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -128,13 +128,10 @@ export class EchoClient extends Resource {
   }
 
   // TODO(dmaretskyi): Make async?
-  constructDatabase(ctx: Context, {
-    spaceId,
-    owningObject,
-    reactiveSchemaQuery,
-    preloadSchemaOnOpen,
-    spaceKey,
-  }: ConstructDatabaseProps): EchoDatabaseImpl {
+  constructDatabase(
+    ctx: Context,
+    { spaceId, owningObject, reactiveSchemaQuery, preloadSchemaOnOpen, spaceKey }: ConstructDatabaseProps,
+  ): EchoDatabaseImpl {
     invariant(this._lifecycleState === LifecycleState.OPEN);
     invariant(!this._databases.has(spaceId), 'Database already exists.');
     const db = new EchoDatabaseImpl({
@@ -166,15 +163,18 @@ export class EchoClient extends Resource {
    * Update service references after reconnection.
    * Must be called before _notifyReconnect.
    */
-  _updateServices(ctx: Context, {
-    dataService,
-    queryService,
-    queueService,
-  }: {
-    dataService: DataService;
-    queryService: QueryService;
-    queueService?: FeedProtocol.QueueService;
-  }): void {
+  _updateServices(
+    ctx: Context,
+    {
+      dataService,
+      queryService,
+      queueService,
+    }: {
+      dataService: DataService;
+      queryService: QueryService;
+      queueService?: FeedProtocol.QueueService;
+    },
+  ): void {
     log('updating service references');
     this._dataService = dataService;
     this._queryService = queryService;

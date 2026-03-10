@@ -5,6 +5,7 @@
 import { next as A, type Doc } from '@automerge/automerge';
 import { describe, it } from 'vitest';
 
+import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 
@@ -12,7 +13,6 @@ import { DocAccessor } from '../core-db';
 import { EchoTestBuilder } from '../testing';
 
 import { createDocAccessor } from './doc-accessor';
-import { Context } from '@dxos/context';
 
 describe('diff', () => {
   it('should replace a word', async ({ expect }) => {

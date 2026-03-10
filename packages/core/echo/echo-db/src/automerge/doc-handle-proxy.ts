@@ -7,11 +7,11 @@ import { type AutomergeUrl, type DocumentId, stringifyAutomergeUrl } from '@auto
 import { EventEmitter } from 'eventemitter3';
 
 import { Trigger, TriggerState } from '@dxos/async';
+import { type Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 
 import { type IDocHandle } from '../core-db';
-import { Context } from '@dxos/context';
 
 export type ChangeEvent<T> = {
   handle: DocHandleProxy<T>;
@@ -123,7 +123,12 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
     });
   }
 
-  changeAt(ctx: Context, heads: A.Heads, fn: (doc: A.Doc<T>) => void, opts?: A.ChangeOptions<any>): A.Heads | undefined {
+  changeAt(
+    ctx: Context,
+    heads: A.Heads,
+    fn: (doc: A.Doc<T>) => void,
+    opts?: A.ChangeOptions<any>,
+  ): A.Heads | undefined {
     invariant(this._doc, 'DocHandleProxy.changeAt called on deleted doc');
     const before = this._doc;
     const headsBefore = A.getHeads(this._doc);

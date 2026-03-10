@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type Context } from '@dxos/context';
 import { Filter, Obj, type Query } from '@dxos/echo';
 import { EncodedReference as EncodedRef, type EncodedReference } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
@@ -10,7 +11,6 @@ import { isNonNullable } from '@dxos/util';
 
 import { type EchoDatabase } from './proxy-db';
 import type { SerializedSpace } from './serialized-space';
-import { Context } from '@dxos/context';
 
 const MAX_LOAD_OBJECT_CHUNK_SIZE = 30;
 

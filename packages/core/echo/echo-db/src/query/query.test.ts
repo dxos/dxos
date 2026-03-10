@@ -8,6 +8,7 @@ import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout, sleep } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { type Entity, Feed, type Hypergraph, Obj, Order, Ref, Relation, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
@@ -22,7 +23,6 @@ import { type EchoDatabase } from '../proxy-db';
 import { EchoTestBuilder, type EchoTestPeer, createTmpPath } from '../testing';
 
 import { Filter, Query } from './api';
-import { Context } from '@dxos/context';
 
 faker.seed(1);
 
@@ -694,7 +694,11 @@ describe('Query', () => {
       const obj1DocHandle = getObjectCore(obj1).docHandle!;
       const anotherDocHandle = getObjectCore(obj2).docHandle!;
       // Wait for documents to be ready before accessing url and objects.
-      await Promise.all([rootDocHandle.whenReady(Context.default()), obj1DocHandle.whenReady(Context.default()), anotherDocHandle.whenReady(Context.default())]);
+      await Promise.all([
+        rootDocHandle.whenReady(Context.default()),
+        obj1DocHandle.whenReady(Context.default()),
+        anotherDocHandle.whenReady(Context.default()),
+      ]);
       anotherDocHandle.change(Context.default(), (doc: DatabaseDirectory) => {
         doc.objects![obj1.id] = obj1DocHandle.doc(Context.default())!.objects![obj1.id];
       });

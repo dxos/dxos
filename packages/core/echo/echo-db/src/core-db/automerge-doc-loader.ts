@@ -6,7 +6,7 @@ import { next as A } from '@automerge/automerge';
 import { type AutomergeUrl, type DocumentId, interpretAsDocumentId } from '@automerge/automerge-repo';
 
 import { Event } from '@dxos/async';
-import { Context, cancelWithContext } from '@dxos/context';
+import { type Context, cancelWithContext } from '@dxos/context';
 import { warnAfterTimeout } from '@dxos/debug';
 import { DatabaseDirectory, SpaceDocVersion, type SpaceState } from '@dxos/echo-protocol';
 import { assertState, invariant } from '@dxos/invariant';
@@ -277,7 +277,11 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     });
   }
 
-  private async _loadHandleForObject(ctx: Context, handle: DocHandleProxy<DatabaseDirectory>, objectId: string): Promise<void> {
+  private async _loadHandleForObject(
+    ctx: Context,
+    handle: DocHandleProxy<DatabaseDirectory>,
+    objectId: string,
+  ): Promise<void> {
     invariant(handle.url, 'Document URL is not available');
     try {
       if (this._currentlyLoadingObjects.has({ url: handle.url, objectId })) {

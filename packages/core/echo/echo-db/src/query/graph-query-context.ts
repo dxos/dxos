@@ -230,7 +230,12 @@ export class SpaceQuerySource implements QuerySource {
     const results: QueryResult.EntityEntry<Obj.Any>[] = [];
     if (isObjectIdFilter(filter)) {
       results.push(
-        ...(await this._database.coreDatabase.batchLoadObjectCores(this._ctx, (filter as QueryAST.FilterObject).id as ObjectId[]))
+        ...(
+          await this._database.coreDatabase.batchLoadObjectCores(
+            this._ctx,
+            (filter as QueryAST.FilterObject).id as ObjectId[],
+          )
+        )
           .filter(Predicate.isNotUndefined)
           .filter((core) => this._filterCore(this._ctx, core, filter, options))
           .map((core) => this._mapCoreToResult(this._ctx, core)),
@@ -327,7 +332,12 @@ export class SpaceQuerySource implements QuerySource {
     };
   }
 
-  private _filterCore(ctx: Context, core: ObjectCore, filter: QueryAST.Filter, options: QueryAST.QueryOptions | undefined): boolean {
+  private _filterCore(
+    ctx: Context,
+    core: ObjectCore,
+    filter: QueryAST.Filter,
+    options: QueryAST.QueryOptions | undefined,
+  ): boolean {
     return (
       filterCoreByDeletedFlag(core, options) &&
       filterMatchObject(filter, {

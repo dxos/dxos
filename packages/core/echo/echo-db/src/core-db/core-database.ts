@@ -165,7 +165,9 @@ export class CoreDatabase {
 
     await this._repoProxy.open();
     this._ctx.onDispose(() => this._unsubscribeFromHandles(this._ctx));
-    this._automergeDocLoader.onObjectDocumentLoaded.on(this._ctx, (event) => this._onObjectDocumentLoaded(this._ctx, event));
+    this._automergeDocLoader.onObjectDocumentLoaded.on(this._ctx, (event) =>
+      this._onObjectDocumentLoaded(this._ctx, event),
+    );
 
     try {
       await this._automergeDocLoader.loadSpaceRootDocHandle(this._ctx, spaceState);
@@ -388,7 +390,8 @@ export class CoreDatabase {
 
               const isDeleted = this._objects.get(objectToLoad.id)?.isDeleted(this._ctx);
               const depsUnsatisfied =
-                this._objects.get(objectToLoad.id) && !this._areDepsSatisfied(this._ctx, this._objects.get(objectToLoad.id)!);
+                this._objects.get(objectToLoad.id) &&
+                !this._areDepsSatisfied(this._ctx, this._objects.get(objectToLoad.id)!);
 
               if (!returnDeleted && isDeleted) {
                 diagnostics.push('object-deleted');
@@ -531,7 +534,10 @@ export class CoreDatabase {
   }
 
   // TODO(wittjosiah): Handle RpcClosedError and TimeoutError during reconnection gracefully.
-  async flush(ctx: Context, { disk = true, indexes = false, updates = false }: Database.FlushOptions = {}): Promise<void> {
+  async flush(
+    ctx: Context,
+    { disk = true, indexes = false, updates = false }: Database.FlushOptions = {},
+  ): Promise<void> {
     log('flush', { disk, indexes, updates });
     // Wait for pending document creations to complete before flushing.
     await this._automergeDocLoader.waitForPendingCreations(this._ctx);
@@ -669,7 +675,10 @@ export class CoreDatabase {
   /**
    * Update service references after reconnection.
    */
-  _updateServices(ctx: Context, { dataService, queryService }: { dataService: DataService; queryService: QueryService }): void {
+  _updateServices(
+    ctx: Context,
+    { dataService, queryService }: { dataService: DataService; queryService: QueryService },
+  ): void {
     (this as any)._dataService = dataService;
     (this as any)._queryService = queryService;
     this._repoProxy._updateDataService(ctx, dataService);
@@ -855,7 +864,11 @@ export class CoreDatabase {
     }
   }
 
-  private _createObjectInDocument(ctx: Context, docHandle: DocHandleProxy<DatabaseDirectory>, objectId: string): ObjectCore {
+  private _createObjectInDocument(
+    ctx: Context,
+    docHandle: DocHandleProxy<DatabaseDirectory>,
+    objectId: string,
+  ): ObjectCore {
     invariant(!this._objects.get(objectId));
     const core = new ObjectCore();
     core.id = objectId;

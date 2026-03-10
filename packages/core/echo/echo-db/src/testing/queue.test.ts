@@ -5,6 +5,7 @@
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Event } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { Entity, Filter, Obj, Query, type Ref, Relation, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { DXN, SpaceId } from '@dxos/keys';
@@ -13,7 +14,6 @@ import { FeedProtocol } from '@dxos/protocols';
 import { type Queue } from '../queue';
 
 import { EchoTestBuilder } from './echo-test-builder';
-import { Context } from '@dxos/context';
 
 describe('queues', () => {
   let builder: EchoTestBuilder;
