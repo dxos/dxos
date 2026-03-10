@@ -647,10 +647,10 @@ export class DataSpaceManager extends Resource {
       log.warn('p2p automerge replication disabled', { space: space.key });
       return;
     }
-    await replicator.authorizeDevice(space.key, session.remotePeerId);
+    await replicator.authorizeDevice(this._ctx, space.key, session.remotePeerId);
     // session ended during device authorization
     if (session.isOpen) {
-      session.addExtension('dxos.mesh.teleport.automerge', replicator.createExtension());
+      session.addExtension('dxos.mesh.teleport.automerge', replicator.createExtension(this._ctx));
     }
   }
 
@@ -666,7 +666,7 @@ export class DataSpaceManager extends Resource {
         return (s && (member.role === SpaceMember.Role.REMOVED) !== (s.authStatus === AuthStatus.FAILURE)) ?? false;
       });
       sessionsToClose.forEach((session) => {
-        void session.close(this._ctx).catch(log.error);
+        void session.close().catch(log.error);
       });
       closedSessions += sessionsToClose.length;
     }
@@ -685,7 +685,7 @@ export class DataSpaceManager extends Resource {
       const session = peerState.peerId && space.protocol.sessions.get(peerState.peerId);
       if (session != null) {
         log('closing a session with a removed peer', { peerId: peerState.peerId });
-        void session.close(this._ctx).catch(log.error);
+        void session.close().catch(log.error);
       }
     }
   }
