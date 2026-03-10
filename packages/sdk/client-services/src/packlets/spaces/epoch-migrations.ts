@@ -36,7 +36,7 @@ const LOAD_DOC_TIMEOUT = 10_000;
 export const runEpochMigration = async (ctx: Context, context: MigrationContext): Promise<MigrationResult> => {
   switch (context.migration) {
     case CreateEpochRequest.Migration.INIT_AUTOMERGE: {
-      const document = await context.echoHost.createDoc();
+      const document = await context.echoHost.createDoc(ctx);
       await context.echoHost.flush(ctx);
       return { newRoot: document.url };
     }
@@ -48,7 +48,7 @@ export const runEpochMigration = async (ctx: Context, context: MigrationContext)
         timeout: LOAD_DOC_TIMEOUT,
       });
 
-      const newRoot = await context.echoHost.createDoc(rootHandle.doc());
+      const newRoot = await context.echoHost.createDoc(ctx, rootHandle.doc());
       await context.echoHost.flush(ctx);
       return { newRoot: newRoot.url };
     }

@@ -243,10 +243,10 @@ export class ServiceContext extends Resource {
     await this.echoHost.open(ctx);
 
     if (this._meshReplicator) {
-      await this.echoHost.addReplicator(this._meshReplicator);
+      await this.echoHost.addReplicator(ctx, this._meshReplicator);
     }
     if (this._echoEdgeReplicator) {
-      await this.echoHost.addReplicator(this._echoEdgeReplicator);
+      await this.echoHost.addReplicator(ctx, this._echoEdgeReplicator);
     }
 
     await this.metadataStore.load();

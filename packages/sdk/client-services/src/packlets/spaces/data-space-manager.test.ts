@@ -228,7 +228,7 @@ describe('DataSpaceManager', () => {
   });
 
   const connectReplicators = (peers: TestPeer[]) => {
-    return Promise.all(peers.map((peer) => peer.echoHost.addReplicator(peer.meshEchoReplicator)));
+    return Promise.all(peers.map((peer) => peer.echoHost.addReplicator(Context.default(), peer.meshEchoReplicator)));
   };
 
   const reloadDataSpaces = async (peer: TestPeer) => {

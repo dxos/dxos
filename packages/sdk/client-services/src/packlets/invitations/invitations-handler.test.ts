@@ -254,7 +254,7 @@ describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
       const peer = testBuilder.createPeer();
       await peer.createIdentity();
       await openAndClose(peer.echoHost, peer.dataSpaceManager);
-      await peer.echoHost.addReplicator(peer.meshEchoReplicator);
+      await peer.echoHost.addReplicator(Context.default(), peer.meshEchoReplicator);
       if (spaceKey == null) {
         const space = await peer.dataSpaceManager.createSpace(Context.default());
         spaceKey = space.key;
