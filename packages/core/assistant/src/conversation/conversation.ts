@@ -9,9 +9,12 @@ import * as Array from 'effect/Array';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Either from 'effect/Either';
+import { pipe } from 'effect/Function';
 import * as Layer from 'effect/Layer';
 
 import { type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
+import { type GenericToolkit } from '@dxos/ai';
+import { type Blueprint } from '@dxos/blueprints';
 import { Resource } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
@@ -20,8 +23,6 @@ import { QueueService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { McpToolkit } from '@dxos/mcp-client';
-import { type Blueprint } from '@dxos/blueprints';
-import { type GenericToolkit } from '@dxos/ai';
 import { Message } from '@dxos/types';
 
 import {
@@ -33,7 +34,6 @@ import {
 } from '../session';
 
 import { AiContextBinder, AiContextService, type ContextBinding } from './context';
-import { pipe } from 'effect/Function';
 
 export interface AiConversationRunProps {
   prompt: string;
