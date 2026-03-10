@@ -20,10 +20,6 @@ import { createMessageSelector } from './message-selector';
 import { TimeframeClock, mapFeedIndexesToTimeframe, startAfter } from './timeframe-clock';
 
 export type WaitUntilReachedTargetProps = {
-  /**
-   * For cancellation.
-   */
-  ctx?: Context;
   timeout?: number;
 
   /**

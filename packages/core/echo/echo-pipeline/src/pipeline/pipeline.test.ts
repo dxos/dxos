@@ -5,6 +5,7 @@
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Event, sleep } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Timeframe } from '@dxos/timeframe';
 import { range } from '@dxos/util';
@@ -20,6 +21,7 @@ const TEST_MESSAGE: FeedMessage = {
 
 describe('pipeline/Pipeline', () => {
   test('asynchronous reader & writer without ordering', async () => {
+    const ctx = Context.default();
     const pipeline = new Pipeline();
 
     const builder = new TestFeedBuilder();
@@ -31,7 +33,7 @@ describe('pipeline/Pipeline', () => {
     for (const _ in range(numFeeds)) {
       const key = await builder.keyring.createKey();
       const feed = await feedStore.openFeed(key, { writable: true });
-      void pipeline.addFeed(feed);
+      void pipeline.addFeed(ctx, feed);
 
       setTimeout(async () => {
         for (const _ in range(messagesPerFeed)) {
@@ -43,32 +45,33 @@ describe('pipeline/Pipeline', () => {
     // Local feed.
     const key = await builder.keyring.createKey();
     const feed = await feedStore.openFeed(key, { writable: true });
-    void pipeline.addFeed(feed);
-    pipeline.setWriteFeed(feed);
+    void pipeline.addFeed(ctx, feed);
+    pipeline.setWriteFeed(ctx, feed);
 
     for (const _ in range(messagesPerFeed)) {
       await pipeline.writer!.write({});
     }
 
-    await pipeline.start();
+    await pipeline.start(ctx);
 
     let msgCount = 0;
-    for await (const _ of pipeline.consume()) {
+    for await (const _ of pipeline.consume(ctx)) {
       if (++msgCount === numFeeds * messagesPerFeed) {
-        void pipeline.stop();
+        void pipeline.stop(ctx);
       }
     }
   });
 
   test('reading and writing with cursor changes', async () => {
+    const ctx = Context.default();
     const pipeline = new Pipeline();
-    onTestFinished(() => pipeline.stop());
+    onTestFinished(() => pipeline.stop(ctx));
 
     const builder = new TestFeedBuilder();
     const feedStore = builder.createFeedStore();
     const key = await builder.keyring.createKey();
     const feed = await feedStore.openFeed(key, { writable: true });
-    await pipeline.addFeed(feed);
+    await pipeline.addFeed(ctx, feed);
 
     const numMessages = 30;
     const sequenceNumbers: number[] = [];
@@ -82,21 +85,21 @@ describe('pipeline/Pipeline', () => {
     // Skip first 10, process the rest, and the repeat the last 10.
     const expectedSequenceNumbers = [...sequenceNumbers.slice(10, 30), ...sequenceNumbers.slice(20, 30)];
 
-    await pipeline.setCursor(new Timeframe([[feed.key, 9]]));
-    await pipeline.start();
+    await pipeline.setCursor(ctx, new Timeframe([[feed.key, 9]]));
+    await pipeline.start(ctx);
 
-    for await (const block of pipeline.consume()) {
+    for await (const block of pipeline.consume(ctx)) {
       processedSequenceNumbers.push(block.seq);
 
       if (processedSequenceNumbers.length === 20) {
         // not awaited to avoid a deadlock.
-        void pipeline.pause().then(async () => {
-          await pipeline.setCursor(new Timeframe([[feed.key, 19]]));
-          await pipeline.unpause();
+        void pipeline.pause(ctx).then(async () => {
+          await pipeline.setCursor(ctx, new Timeframe([[feed.key, 19]]));
+          await pipeline.unpause(ctx);
         });
       }
       if (processedSequenceNumbers.length === 30) {
-        void pipeline.stop();
+        void pipeline.stop(ctx);
       }
     }
 
@@ -104,14 +107,15 @@ describe('pipeline/Pipeline', () => {
   });
 
   test('cursor change while polling', async () => {
+    const ctx = Context.default();
     const pipeline = new Pipeline();
-    onTestFinished(() => pipeline.stop());
+    onTestFinished(() => pipeline.stop(ctx));
 
     const builder = new TestFeedBuilder();
     const feedStore = builder.createFeedStore();
     const key = await builder.keyring.createKey();
     const feed = await feedStore.openFeed(key, { writable: true });
-    await pipeline.addFeed(feed);
+    await pipeline.addFeed(ctx, feed);
 
     for (const _ of range(20)) {
       await feed.appendWithReceipt(TEST_MESSAGE);
@@ -122,18 +126,18 @@ describe('pipeline/Pipeline', () => {
     const expectedSequenceNumbers = range(20).slice(10);
     const processedEvent = new Event();
     setTimeout(async () => {
-      for await (const block of pipeline.consume()) {
+      for await (const block of pipeline.consume(ctx)) {
         processedSequenceNumbers.push(block.seq);
         processedEvent.emit();
       }
     });
 
-    await pipeline.start();
+    await pipeline.start(ctx);
     await sleep(1000);
 
-    await pipeline.pause();
-    await pipeline.setCursor(new Timeframe([[feed.key, 9]]));
-    await pipeline.unpause();
+    await pipeline.pause(ctx);
+    await pipeline.setCursor(ctx, new Timeframe([[feed.key, 9]]));
+    await pipeline.unpause(ctx);
 
     await processedEvent.waitForCondition(() => processedSequenceNumbers.length === 10);
     expect(processedSequenceNumbers).toEqual(expectedSequenceNumbers);

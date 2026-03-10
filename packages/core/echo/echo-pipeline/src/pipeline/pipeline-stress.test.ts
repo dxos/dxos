@@ -8,6 +8,7 @@ import * as fc from 'fast-check';
 import { describe, expect, test } from 'vitest';
 
 import { asyncTimeout } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { type FeedStore, type FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -79,6 +80,8 @@ class Agent {
   public messages: FeedMessageBlock[] = [];
   public writePromise: Promise<any> = Promise.resolve();
 
+  private readonly _ctx = Context.default();
+
   constructor(
     private readonly builder: TestFeedBuilder,
     public feedStore: FeedStore<FeedMessage>,
@@ -92,19 +95,19 @@ class Agent {
 
   async start(): Promise<void> {
     this.pipeline = new Pipeline();
-    await this.pipeline.setCursor(this.startingTimeframe);
-    await this.pipeline.start();
+    await this.pipeline.setCursor(this._ctx, this.startingTimeframe);
+    await this.pipeline.start(this._ctx);
 
     // NOTE: not awaiting here breaks the test.
-    await Promise.all(this.feedStore.feeds.map((feed) => this.pipeline.addFeed(feed)));
-    this.pipeline.setWriteFeed(this.feed);
+    await Promise.all(this.feedStore.feeds.map((feed) => this.pipeline.addFeed(this._ctx, feed)));
+    this.pipeline.setWriteFeed(this._ctx, this.feed);
 
     // consume in async task.
     void this.consume();
   }
 
   async stop(): Promise<void> {
-    await this.pipeline.stop();
+    await this.pipeline.stop(this._ctx);
     this.startingTimeframe = this.pipeline.state.timeframe;
   }
 
@@ -119,7 +122,7 @@ class Agent {
   }
 
   async consume(): Promise<void> {
-    for await (const msg of this.pipeline.consume()) {
+    for await (const msg of this.pipeline.consume(this._ctx)) {
       this.messages.push(msg);
     }
 
@@ -156,6 +159,8 @@ class WriteCommand implements fc.AsyncCommand<Model, Real> {
 }
 
 class SyncCommand implements fc.AsyncCommand<Model, Real> {
+  private readonly _ctx = Context.default();
+
   check = () => true;
 
   async run(model: Model, real: Real): Promise<void> {
@@ -173,10 +178,10 @@ class SyncCommand implements fc.AsyncCommand<Model, Real> {
           log('empty endtimeframe', {
             id: agent.id,
             endTimeframe: agent.pipeline.state.endTimeframe,
-            feeds: agent.pipeline.getFeeds().map((feed) => [feed.key.toString(), feed.length]),
+            feeds: agent.pipeline.getFeeds(this._ctx).map((feed) => [feed.key.toString(), feed.length]),
           });
         }
-        await asyncTimeout(agent.pipeline.state.waitUntilTimeframe(agent.pipeline.state.endTimeframe), 1000);
+        await asyncTimeout(agent.pipeline.state.waitUntilTimeframe(this._ctx, agent.pipeline.state.endTimeframe), 1000);
       }
 
       const tf: Timeframe = real.agents.values().next().value!.pipeline.state.timeframe;
@@ -195,7 +200,7 @@ class SyncCommand implements fc.AsyncCommand<Model, Real> {
             agents: Array.from(real.agents.values()).map((agent) => ({
               id: agent.id,
               messages: agent.messages.length,
-              feeds: agent.pipeline.getFeeds().map((feed) => [feed.key, feed.length]),
+              feeds: agent.pipeline.getFeeds(this._ctx).map((feed) => [feed.key, feed.length]),
               timeframe: agent.pipeline.state.timeframe,
               endTimeframe: agent.pipeline.state.endTimeframe,
             })),

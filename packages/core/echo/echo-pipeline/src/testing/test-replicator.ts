@@ -127,14 +127,14 @@ export class TestReplicator implements AutomergeReplicator {
   public context: AutomergeReplicatorContext | undefined = undefined;
   public connections = new Set<TestReplicatorConnection>();
 
-  async connect(context: AutomergeReplicatorContext): Promise<void> {
+  async connect(_ctx: Context, context: AutomergeReplicatorContext): Promise<void> {
     log('connect', { peerId: context.peerId });
     this.context = context;
     this.connected = true;
     await this._params.onConnect();
   }
 
-  async disconnect(): Promise<void> {
+  async disconnect(_ctx: Context): Promise<void> {
     log('disconnect', { peerId: this.context!.peerId });
     this.connected = false;
     await this._params.onDisconnect();
@@ -167,11 +167,11 @@ export class TestReplicatorConnection implements AutomergeReplicatorConnection {
     return false;
   }
 
-  async shouldAdvertise(_params: ShouldAdvertiseProps): Promise<boolean> {
+  async shouldAdvertise(_ctx: Context, _params: ShouldAdvertiseProps): Promise<boolean> {
     return true;
   }
 
-  shouldSyncCollection(_params: ShouldSyncCollectionProps): boolean {
+  shouldSyncCollection(_ctx: Context, _params: ShouldSyncCollectionProps): boolean {
     return true;
   }
 }

@@ -300,7 +300,7 @@ export class DataSpaceManager extends Resource {
         Object.entries(options.documents).map(async ([documentId, data]) => {
           log('creating document...', { documentId });
           // TODO(dmaretskyi): Broken types -- the bytes get interpreted as CRDT data.
-          const newDoc = await this._echoHost.createDoc(data as any as DatabaseDirectory, {
+          const newDoc = await this._echoHost.createDoc(ctx, data as any as DatabaseDirectory, {
             preserveHistory: true,
           });
 
@@ -324,9 +324,9 @@ export class DataSpaceManager extends Resource {
       const rootDocHandle = await this._echoHost.loadDoc<DatabaseDirectory>(ctx, newRootDocId);
       DatabaseRoot.mapLinks(rootDocHandle, documentIdMapping);
 
-      root = await this._echoHost.openSpaceRoot(spaceId, `automerge:${newRootDocId}` as AutomergeUrl);
+      root = await this._echoHost.openSpaceRoot(ctx, spaceId, `automerge:${newRootDocId}` as AutomergeUrl);
     } else {
-      root = await this._echoHost.createSpaceRoot(spaceKey);
+      root = await this._echoHost.createSpaceRoot(ctx, spaceKey);
     }
     await this._echoHost.flush(ctx);
 
@@ -356,7 +356,7 @@ export class DataSpaceManager extends Resource {
     if (!space.databaseRoot) {
       return false;
     }
-    switch (space.databaseRoot.getVersion()) {
+    switch (space.databaseRoot.getVersion(this._ctx)) {
       case SpaceDocVersion.CURRENT: {
         if (!space.databaseRoot.handle.isReady()) {
           log.warn('waiting for space root to be ready', { spaceId: space.id });
@@ -364,7 +364,7 @@ export class DataSpaceManager extends Resource {
         }
 
         const [_, properties] =
-          findInlineObjectOfType(space.databaseRoot.doc()!, Type.getTypename(SpaceProperties)) ?? [];
+          findInlineObjectOfType(space.databaseRoot.doc(this._ctx)!, Type.getTypename(SpaceProperties)) ?? [];
         return properties?.data?.[DEFAULT_SPACE_KEY] === this._signingContext.identityKey.toHex();
       }
 
@@ -373,7 +373,7 @@ export class DataSpaceManager extends Resource {
       }
 
       default:
-        log.warn('unknown space version', { version: space.databaseRoot.getVersion(), spaceId: space.id });
+        log.warn('unknown space version', { version: space.databaseRoot.getVersion(this._ctx), spaceId: space.id });
         return false;
     }
   }
@@ -634,7 +634,7 @@ export class DataSpaceManager extends Resource {
     });
 
     if (metadata.controlTimeframe) {
-      dataSpace.inner.controlPipeline.state.setTargetTimeframe(metadata.controlTimeframe);
+      dataSpace.inner.controlPipeline.state.setTargetTimeframe(this._ctx, metadata.controlTimeframe);
     }
 
     this._spaces.set(metadata.key, dataSpace);

@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Context } from '@dxos/context';
 import { generateSeedPhrase, keyPairFromSeedPhrase } from '@dxos/credentials';
 import { sign } from '@dxos/crypto';
 import { type EdgeHttpClient } from '@dxos/edge-client';
@@ -67,7 +68,10 @@ export class EdgeIdentityRecoveryManager {
     });
 
     const receipt = await identity.controlPipeline.writer.write({ credential: { credential } });
-    await identity.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
+    await identity.controlPipeline.state.waitUntilTimeframe(
+      Context.default(),
+      new Timeframe([[receipt.feedKey, receipt.seq]]),
+    );
 
     return { recoveryCode };
   }

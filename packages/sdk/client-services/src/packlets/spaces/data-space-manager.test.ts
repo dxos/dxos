@@ -26,7 +26,10 @@ describe('DataSpaceManager', () => {
     const space = await peer.dataSpaceManager.createSpace(Context.default());
 
     // Process all written mutations.
-    await space.inner.controlPipeline.state.waitUntilTimeframe(space.inner.controlPipeline.state.endTimeframe);
+    await space.inner.controlPipeline.state.waitUntilTimeframe(
+      Context.default(),
+      space.inner.controlPipeline.state.endTimeframe,
+    );
 
     expect(space.inner.spaceState.genesisCredential).to.exist;
     expect(space.inner.spaceState.members.size).to.equal(1);
@@ -47,7 +50,10 @@ describe('DataSpaceManager', () => {
     await connectReplicators([peer1, peer2]);
 
     const space1 = await peer1.dataSpaceManager.createSpace(Context.default());
-    await space1.inner.controlPipeline.state.waitUntilTimeframe(space1.inner.controlPipeline.state.endTimeframe);
+    await space1.inner.controlPipeline.state.waitUntilTimeframe(
+      Context.default(),
+      space1.inner.controlPipeline.state.endTimeframe,
+    );
 
     // Admit peer2 to space1.
     await writeMessages(
@@ -82,8 +88,14 @@ describe('DataSpaceManager', () => {
       },
     });
 
-    await space1.inner.controlPipeline.state.waitUntilTimeframe(space1.inner.controlPipeline.state.endTimeframe);
-    await space2.inner.controlPipeline.state.waitUntilTimeframe(space1.inner.controlPipeline.state.endTimeframe);
+    await space1.inner.controlPipeline.state.waitUntilTimeframe(
+      Context.default(),
+      space1.inner.controlPipeline.state.endTimeframe,
+    );
+    await space2.inner.controlPipeline.state.waitUntilTimeframe(
+      Context.default(),
+      space1.inner.controlPipeline.state.endTimeframe,
+    );
 
     log('', {
       space1: {
@@ -117,7 +129,10 @@ describe('DataSpaceManager', () => {
     await connectReplicators([peer1, peer2]);
 
     const space1 = await peer1.dataSpaceManager.createSpace(Context.default());
-    await space1.inner.controlPipeline.state.waitUntilTimeframe(space1.inner.controlPipeline.state.endTimeframe);
+    await space1.inner.controlPipeline.state.waitUntilTimeframe(
+      Context.default(),
+      space1.inner.controlPipeline.state.endTimeframe,
+    );
 
     // Admit peer2 to space1.
     await writeMessages(
@@ -159,7 +174,10 @@ describe('DataSpaceManager', () => {
       await openAndClose(peer.echoHost, peer.dataSpaceManager);
 
       const space = await peer.dataSpaceManager.createSpace(Context.default());
-      await space.inner.controlPipeline.state.waitUntilTimeframe(space.inner.controlPipeline.state.endTimeframe);
+      await space.inner.controlPipeline.state.waitUntilTimeframe(
+        Context.default(),
+        space.inner.controlPipeline.state.endTimeframe,
+      );
       expect(space.state).to.equal(SpaceState.SPACE_READY);
 
       await space.deactivate();

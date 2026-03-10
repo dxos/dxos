@@ -58,7 +58,10 @@ describe('services/space-invitations-protocol', () => {
       await host.dataSpaceManager?.waitUntilSpaceReady(space1.key);
       await guest.dataSpaceManager?.waitUntilSpaceReady(space2.key);
 
-      await space2.inner.controlPipeline.state.waitUntilTimeframe(space1.inner.controlPipeline.state.timeframe);
+      await space2.inner.controlPipeline.state.waitUntilTimeframe(
+        Context.default(),
+        space1.inner.controlPipeline.state.timeframe,
+      );
 
       await space1.close(Context.default());
       await space2.close(Context.default());
@@ -142,7 +145,10 @@ describe('services/space-invitations-protocol', () => {
       await host.dataSpaceManager?.waitUntilSpaceReady(space1.key);
       await guest.dataSpaceManager?.waitUntilSpaceReady(space2.key);
 
-      await space2.inner.controlPipeline.state.waitUntilTimeframe(space1.inner.controlPipeline.state.timeframe);
+      await space2.inner.controlPipeline.state.waitUntilTimeframe(
+        Context.default(),
+        space1.inner.controlPipeline.state.timeframe,
+      );
 
       await space1.close(Context.default());
       await space2.close(Context.default());

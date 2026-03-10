@@ -220,7 +220,10 @@ export class Identity {
       assertion: { '@type': 'dxos.halo.credentials.DefaultSpace', spaceId },
     });
     const receipt = await this.controlPipeline.writer.write({ credential: { credential } });
-    await this.controlPipeline.state.waitUntilTimeframe(Context.default(), new Timeframe([[receipt.feedKey, receipt.seq]]));
+    await this.controlPipeline.state.waitUntilTimeframe(
+      Context.default(),
+      new Timeframe([[receipt.feedKey, receipt.seq]]),
+    );
   }
 
   async admitDevice({ deviceKey, controlFeedKey, dataFeedKey }: DeviceAdmissionRequest): Promise<Credential> {

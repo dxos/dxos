@@ -3,7 +3,7 @@
 //
 
 import { Event } from '@dxos/async';
-import { Context } from '@dxos/context';
+import { type Context } from '@dxos/context';
 import { timed } from '@dxos/debug';
 import { type FeedIndex } from '@dxos/feed-store';
 import { type PublicKey } from '@dxos/keys';

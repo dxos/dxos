@@ -23,7 +23,10 @@ describe('services/ServiceContext', () => {
     const space1 = await device1.dataSpaceManager!.createSpace(Context.default());
     await device2.dataSpaceManager!.waitUntilSpaceReady(space1!.key);
     const space2 = await device2.dataSpaceManager!.spaces.get(space1.key);
-    await space2!.inner.controlPipeline.state.waitUntilTimeframe(space1.inner.controlPipeline.state.timeframe);
+    await space2!.inner.controlPipeline.state.waitUntilTimeframe(
+      Context.default(),
+      space1.inner.controlPipeline.state.timeframe,
+    );
   });
 
   test('joined space is synchronized on device invitations', async () => {
@@ -47,7 +50,10 @@ describe('services/ServiceContext', () => {
 
     await device2.dataSpaceManager!.waitUntilSpaceReady(space1!.key);
     const space2 = await device2.dataSpaceManager!.spaces.get(space1.key);
-    await space2!.inner.controlPipeline.state.waitUntilTimeframe(space1.inner.controlPipeline.state.timeframe);
+    await space2!.inner.controlPipeline.state.waitUntilTimeframe(
+      Context.default(),
+      space1.inner.controlPipeline.state.timeframe,
+    );
   });
 
   const createOpenServiceContext = async (networkContext: MemorySignalManagerContext) => {

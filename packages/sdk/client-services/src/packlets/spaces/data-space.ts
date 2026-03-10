@@ -357,11 +357,11 @@ export class DataSpace {
 
   async *getAllDocuments(): AsyncIterable<[string, Uint8Array]> {
     invariant(this._databaseRoot, 'Space is not ready');
-    const doc = this._databaseRoot.doc() ?? failedInvariant();
+    const doc = this._databaseRoot.doc(this._ctx) ?? failedInvariant();
     const root = save(doc);
     yield [this._databaseRoot.documentId, root];
 
-    for (const documentUrl of this._databaseRoot.getAllLinkedDocuments()) {
+    for (const documentUrl of this._databaseRoot.getAllLinkedDocuments(this._ctx)) {
       const data = await this._echoHost.exportDoc(Context.default(), documentUrl);
       yield [documentUrl.replace(/^automerge:/, ''), data];
     }
@@ -497,11 +497,11 @@ export class DataSpace {
 
         // TODO(dmaretskyi): Close roots.
         // TODO(dmaretskyi): How do we handle changing to the next EPOCH?
-        const root = await this._echoHost.openSpaceRoot(this.id, handle.url);
+        const root = await this._echoHost.openSpaceRoot(this._ctx, this.id, handle.url);
 
         // NOTE: Make sure this assignment happens synchronously together with the state change.
         this._databaseRoot = root;
-        if (root.getVersion() !== SpaceDocVersion.CURRENT) {
+        if (root.getVersion(this._ctx) !== SpaceDocVersion.CURRENT) {
           this._state = SpaceState.SPACE_REQUIRES_MIGRATION;
           this.stateUpdate.emit();
         } else if (this._state !== SpaceState.SPACE_READY) {
@@ -568,7 +568,7 @@ export class DataSpace {
 
     const timeframe = new Timeframe([[receipt.feedKey, receipt.seq]]);
     await this.inner.controlPipeline.state.waitUntilTimeframe(this._ctx, timeframe);
-    await this._echoHost.updateIndexes();
+    await this._echoHost.updateIndexes(this._ctx);
 
     return { credential, timeframe };
   }

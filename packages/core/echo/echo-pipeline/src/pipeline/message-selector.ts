@@ -2,6 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
+import { type Context } from '@dxos/context';
 import { type FeedBlock, type FeedBlockSelector } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -15,7 +16,7 @@ import { type TimeframeClock } from './timeframe-clock';
  * As we encounter and process FeedAdmit messages those are added to the Space's trust,
  * and we begin processing messages from them as well.
  */
-export const createMessageSelector = (timeframeClock: TimeframeClock): FeedBlockSelector<FeedMessage> => {
+export const createMessageSelector = (ctx: Context, timeframeClock: TimeframeClock): FeedBlockSelector<FeedMessage> => {
   return (messages: FeedBlock<FeedMessage>[]) => {
     // Pick the first candidate with a valid timeframe that has no gaps.
     for (let i = 0; i < messages.length; i++) {
@@ -24,7 +25,7 @@ export const createMessageSelector = (timeframeClock: TimeframeClock): FeedBlock
       } = messages[i];
       invariant(timeframe);
 
-      if (!timeframeClock.hasGaps(timeframe)) {
+      if (!timeframeClock.hasGaps(ctx, timeframe)) {
         return i;
       }
     }
