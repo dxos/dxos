@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Array from 'effect/Array';
+import * as Arr from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import { pipe } from 'effect/Function';
 
@@ -46,9 +46,9 @@ export const addBlueprints = Effect.fnUntraced(function* (blueprints: AppCapabil
   yield* AiContextService.bindContext({
     blueprints: yield* pipe(
       blueprints,
-      Array.map((_) => _.make()),
+      Arr.map((blueprint) => blueprint.make()),
       Effect.forEach(Database.add),
-      Effect.map(Array.map(Ref.make)),
+      Effect.map(Arr.map(Ref.make)),
     ),
   });
 });
