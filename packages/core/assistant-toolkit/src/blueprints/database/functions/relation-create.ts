@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Database, Entity, Ref, Relation, Type } from '@dxos/echo';
+import { Database, Entity, Obj, Ref, Relation, Type } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { trim } from '@dxos/util';
@@ -19,8 +19,8 @@ export default defineFunction({
   `,
   inputSchema: Schema.Struct({
     typename: Schema.String,
-    source: Ref.Ref(Type.Obj),
-    target: Ref.Ref(Type.Obj),
+    source: Ref.Ref(Obj.Unknown),
+    target: Ref.Ref(Obj.Unknown),
     properties: Schema.Any.annotations({
       description: 'The data to be stored in the relation.',
     }),

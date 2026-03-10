@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { AiContextService } from '@dxos/assistant';
-import { Ref, Type } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { trim } from '@dxos/util';
 
@@ -18,7 +18,7 @@ export default defineFunction({
     Use this it for objects that are useful long-term for the conversation.
   `,
   inputSchema: Schema.Struct({
-    obj: Ref.Ref(Type.Obj).annotations({
+    obj: Ref.Ref(Obj.Unknown).annotations({
       description: 'Object to add to the chat context.',
     }),
   }),

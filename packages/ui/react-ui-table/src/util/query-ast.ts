@@ -15,5 +15,8 @@ export const extractOrder = (queryAst: QueryAST.Query): readonly QueryAST.Order[
   if (queryAst.type === 'options') {
     return extractOrder(queryAst.query);
   }
+  if (queryAst.type === 'from') {
+    return extractOrder(queryAst.query);
+  }
   return undefined;
 };

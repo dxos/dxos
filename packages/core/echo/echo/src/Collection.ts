@@ -14,7 +14,7 @@ import * as Type from './Type';
  */
 export const Collection = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
-  objects: Schema.Array(Ref.Ref(Type.Obj)).pipe(internal.FormInputAnnotation.set(false)),
+  objects: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(internal.FormInputAnnotation.set(false)),
 }).pipe(
   Type.object({
     typename: 'dxos.org/type/Collection',
