@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type Context } from '@dxos/context';
 import { Order } from '@dxos/echo';
 import { QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
@@ -32,42 +33,42 @@ export class QueryPlanner {
     };
   }
 
-  createPlan(query: QueryAST.Query): QueryPlan.Plan {
-    this._validateQueryQualified(query);
-    let plan = this._generate(query, { ...DEFAULT_CONTEXT, originalQuery: query });
-    plan = this._optimizeEmptyFilters(plan);
-    plan = this._optimizeSoloUnions(plan);
-    plan = this._ensureOrderStep(plan);
-    plan = this._optimizeLimits(plan);
+  createPlan(ctx: Context, query: QueryAST.Query): QueryPlan.Plan {
+    this._validateQueryQualified(ctx, query);
+    let plan = this._generate(ctx, query, { ...DEFAULT_CONTEXT, originalQuery: query });
+    plan = this._optimizeEmptyFilters(ctx, plan);
+    plan = this._optimizeSoloUnions(ctx, plan);
+    plan = this._ensureOrderStep(ctx, plan);
+    plan = this._optimizeLimits(ctx, plan);
     return plan;
   }
 
-  private _generate(query: QueryAST.Query, context: GenerationContext): QueryPlan.Plan {
+  private _generate(ctx: Context, query: QueryAST.Query, context: GenerationContext): QueryPlan.Plan {
     switch (query.type) {
       case 'options':
-        return this._generateOptionsClause(query, context);
+        return this._generateOptionsClause(ctx, query, context);
       case 'select':
-        return this._generateSelectClause(query, context);
+        return this._generateSelectClause(ctx, query, context);
       case 'filter':
-        return this._generateFilterClause(query, context);
+        return this._generateFilterClause(ctx, query, context);
       case 'incoming-references':
-        return this._generateIncomingReferencesClause(query, context);
+        return this._generateIncomingReferencesClause(ctx, query, context);
       case 'relation':
-        return this._generateRelationClause(query, context);
+        return this._generateRelationClause(ctx, query, context);
       case 'relation-traversal':
-        return this._generateRelationTraversalClause(query, context);
+        return this._generateRelationTraversalClause(ctx, query, context);
       case 'reference-traversal':
-        return this._generateReferenceTraversalClause(query, context);
+        return this._generateReferenceTraversalClause(ctx, query, context);
       case 'hierarchy-traversal':
-        return this._generateHierarchyTraversalClause(query, context);
+        return this._generateHierarchyTraversalClause(ctx, query, context);
       case 'union':
-        return this._generateUnionClause(query, context);
+        return this._generateUnionClause(ctx, query, context);
       case 'set-difference':
-        return this._generateSetDifferenceClause(query, context);
+        return this._generateSetDifferenceClause(ctx, query, context);
       case 'order':
-        return this._generateOrderClause(query, context);
+        return this._generateOrderClause(ctx, query, context);
       case 'limit':
-        return this._generateLimitClause(query, context);
+        return this._generateLimitClause(ctx, query, context);
       default:
         throw new QueryError({
           message: `Unsupported query type: ${(query as any).type}`,
@@ -76,7 +77,7 @@ export class QueryPlanner {
     }
   }
 
-  private _generateOptionsClause(query: QueryAST.QueryOptionsClause, context: GenerationContext): QueryPlan.Plan {
+  private _generateOptionsClause(ctx: Context, query: QueryAST.QueryOptionsClause, context: GenerationContext): QueryPlan.Plan {
     const newContext = {
       ...context,
     };
@@ -92,16 +93,16 @@ export class QueryPlanner {
     if (query.options.deleted) {
       newContext.deletedHandling = query.options.deleted;
     }
-    return this._generate(query.query, newContext);
+    return this._generate(ctx, query.query, newContext);
   }
 
-  private _generateSelectClause(query: QueryAST.QuerySelectClause, context: GenerationContext): QueryPlan.Plan {
-    return this._generateSelectionFromFilter(query.filter, context);
+  private _generateSelectClause(ctx: Context, query: QueryAST.QuerySelectClause, context: GenerationContext): QueryPlan.Plan {
+    return this._generateSelectionFromFilter(ctx, query.filter, context);
   }
 
   // TODO(dmaretskyi): This can be rewritten as a function of (filter[]) -> (selection ? undefined, rest: filter[]) that recurses onto itself.
   // TODO(dmaretskyi): If the tip of the query ast is a [select, ...filter] shape we can reorder the filters so the query is most efficient.
-  private _generateSelectionFromFilter(filter: QueryAST.Filter, context: GenerationContext): QueryPlan.Plan {
+  private _generateSelectionFromFilter(ctx: Context, filter: QueryAST.Filter, context: GenerationContext): QueryPlan.Plan {
     switch (filter.type) {
       // Props
       case 'object': {
@@ -116,7 +117,7 @@ export class QueryPlanner {
             {
               _tag: 'ClearWorkingSetStep',
             },
-            ...this._generateDeletedHandlingSteps(context),
+            ...this._generateDeletedHandlingSteps(ctx, context),
           ]);
         }
         if (context.selectionInverted) {
@@ -140,7 +141,7 @@ export class QueryPlanner {
                 objectIds: filter.id,
               },
             },
-            ...this._generateDeletedHandlingSteps(context),
+            ...this._generateDeletedHandlingSteps(ctx, context),
             {
               _tag: 'FilterStep',
               filter: { ...filter, id: undefined },
@@ -159,7 +160,7 @@ export class QueryPlanner {
                 inverted: false,
               },
             },
-            ...this._generateDeletedHandlingSteps(context),
+            ...this._generateDeletedHandlingSteps(ctx, context),
             // TODO(dmaretskyi): Normally we could skip filtering by typename here, but since the index does not separate schema versions, we need to do additional filter to only select the correct version.
             {
               _tag: 'FilterStep',
@@ -177,7 +178,7 @@ export class QueryPlanner {
                 _tag: 'WildcardSelector',
               },
             },
-            ...this._generateDeletedHandlingSteps(context),
+            ...this._generateDeletedHandlingSteps(ctx, context),
             {
               _tag: 'FilterStep',
               filter: { ...filter },
@@ -198,7 +199,7 @@ export class QueryPlanner {
               _tag: 'WildcardSelector',
             },
           },
-          ...this._generateDeletedHandlingSteps(context),
+          ...this._generateDeletedHandlingSteps(ctx, context),
           {
             _tag: 'FilterStep',
             filter: { ...filter },
@@ -221,7 +222,7 @@ export class QueryPlanner {
               typename: null,
             },
           },
-          ...this._generateDeletedHandlingSteps(context),
+          ...this._generateDeletedHandlingSteps(ctx, context),
         ]);
       }
 
@@ -235,7 +236,7 @@ export class QueryPlanner {
 
       // Boolean
       case 'not':
-        return this._generateSelectionFromFilter(filter.filter, {
+        return this._generateSelectionFromFilter(ctx, filter.filter, {
           ...context,
           selectionInverted: !context.selectionInverted,
         });
@@ -261,7 +262,7 @@ export class QueryPlanner {
                 inverted: context.selectionInverted,
               },
             },
-            ...this._generateDeletedHandlingSteps(context),
+            ...this._generateDeletedHandlingSteps(ctx, context),
             {
               _tag: 'FilterStep',
               filter: { ...filter },
@@ -279,7 +280,7 @@ export class QueryPlanner {
     }
   }
 
-  private _generateDeletedHandlingSteps(context: GenerationContext): QueryPlan.Step[] {
+  private _generateDeletedHandlingSteps(_ctx: Context, context: GenerationContext): QueryPlan.Step[] {
     switch (context.deletedHandling) {
       case 'include':
         return [];
@@ -300,34 +301,36 @@ export class QueryPlanner {
     }
   }
 
-  private _generateUnionClause(query: QueryAST.QueryUnionClause, context: GenerationContext): QueryPlan.Plan {
+  private _generateUnionClause(ctx: Context, query: QueryAST.QueryUnionClause, context: GenerationContext): QueryPlan.Plan {
     return QueryPlan.Plan.make([
       {
         _tag: 'UnionStep',
-        plans: query.queries.map((query) => this._generate(query, context)),
+        plans: query.queries.map((query) => this._generate(ctx, query, context)),
       },
     ]);
   }
 
   private _generateSetDifferenceClause(
+    ctx: Context,
     query: QueryAST.QuerySetDifferenceClause,
     context: GenerationContext,
   ): QueryPlan.Plan {
     return QueryPlan.Plan.make([
       {
         _tag: 'SetDifferenceStep',
-        source: this._generate(query.source, context),
-        exclude: this._generate(query.exclude, context),
+        source: this._generate(ctx, query.source, context),
+        exclude: this._generate(ctx, query.exclude, context),
       },
     ]);
   }
 
   private _generateReferenceTraversalClause(
+    ctx: Context,
     query: QueryAST.QueryReferenceTraversalClause,
     context: GenerationContext,
   ): QueryPlan.Plan {
     return QueryPlan.Plan.make([
-      ...this._generate(query.anchor, context).steps,
+      ...this._generate(ctx, query.anchor, context).steps,
       {
         _tag: 'TraverseStep',
         traversal: {
@@ -336,16 +339,17 @@ export class QueryPlanner {
           property: query.property,
         },
       },
-      ...this._generateDeletedHandlingSteps(context),
+      ...this._generateDeletedHandlingSteps(ctx, context),
     ]);
   }
 
   private _generateIncomingReferencesClause(
+    ctx: Context,
     query: QueryAST.QueryIncomingReferencesClause,
     context: GenerationContext,
   ): QueryPlan.Plan {
     return QueryPlan.Plan.make([
-      ...this._generate(query.anchor, context).steps,
+      ...this._generate(ctx, query.anchor, context).steps,
       {
         _tag: 'TraverseStep',
         traversal: {
@@ -354,7 +358,7 @@ export class QueryPlanner {
           property: query.property ?? null,
         },
       },
-      ...this._generateDeletedHandlingSteps(context),
+      ...this._generateDeletedHandlingSteps(ctx, context),
       {
         _tag: 'FilterStep',
         filter: {
@@ -367,26 +371,27 @@ export class QueryPlanner {
   }
 
   private _generateRelationTraversalClause(
+    ctx: Context,
     query: QueryAST.QueryRelationTraversalClause,
     context: GenerationContext,
   ): QueryPlan.Plan {
     switch (query.direction) {
       case 'source': {
         return QueryPlan.Plan.make([
-          ...this._generate(query.anchor, context).steps,
+          ...this._generate(ctx, query.anchor, context).steps,
           createRelationTraversalStep('relation-to-source'),
-          ...this._generateDeletedHandlingSteps(context),
+          ...this._generateDeletedHandlingSteps(ctx, context),
         ]);
       }
       case 'target': {
         return QueryPlan.Plan.make([
-          ...this._generate(query.anchor, context).steps,
+          ...this._generate(ctx, query.anchor, context).steps,
           createRelationTraversalStep('relation-to-target'),
-          ...this._generateDeletedHandlingSteps(context),
+          ...this._generateDeletedHandlingSteps(ctx, context),
         ]);
       }
       case 'both': {
-        const anchorPlan = this._generate(query.anchor, context);
+        const anchorPlan = this._generate(ctx, query.anchor, context);
         return QueryPlan.Plan.make([
           ...anchorPlan.steps,
           {
@@ -396,19 +401,19 @@ export class QueryPlanner {
               QueryPlan.Plan.make([createRelationTraversalStep('relation-to-target')]),
             ],
           },
-          ...this._generateDeletedHandlingSteps(context),
+          ...this._generateDeletedHandlingSteps(ctx, context),
         ]);
       }
     }
   }
 
-  private _generateRelationClause(query: QueryAST.QueryRelationClause, context: GenerationContext): QueryPlan.Plan {
+  private _generateRelationClause(ctx: Context, query: QueryAST.QueryRelationClause, context: GenerationContext): QueryPlan.Plan {
     switch (query.direction) {
       case 'outgoing': {
         return QueryPlan.Plan.make([
-          ...this._generate(query.anchor, context).steps,
+          ...this._generate(ctx, query.anchor, context).steps,
           createRelationTraversalStep('source-to-relation'),
-          ...this._generateDeletedHandlingSteps(context),
+          ...this._generateDeletedHandlingSteps(ctx, context),
           {
             _tag: 'FilterStep',
             filter: query.filter ?? NOOP_FILTER,
@@ -417,9 +422,9 @@ export class QueryPlanner {
       }
       case 'incoming': {
         return QueryPlan.Plan.make([
-          ...this._generate(query.anchor, context).steps,
+          ...this._generate(ctx, query.anchor, context).steps,
           createRelationTraversalStep('target-to-relation'),
-          ...this._generateDeletedHandlingSteps(context),
+          ...this._generateDeletedHandlingSteps(ctx, context),
           {
             _tag: 'FilterStep',
             filter: query.filter ?? NOOP_FILTER,
@@ -427,7 +432,7 @@ export class QueryPlanner {
         ]);
       }
       case 'both': {
-        const anchorPlan = this._generate(query.anchor, context);
+        const anchorPlan = this._generate(ctx, query.anchor, context);
         return QueryPlan.Plan.make([
           ...anchorPlan.steps,
           {
@@ -437,7 +442,7 @@ export class QueryPlanner {
               QueryPlan.Plan.make([createRelationTraversalStep('target-to-relation')]),
             ],
           },
-          ...this._generateDeletedHandlingSteps(context),
+          ...this._generateDeletedHandlingSteps(ctx, context),
           {
             _tag: 'FilterStep',
             filter: query.filter ?? NOOP_FILTER,
@@ -447,9 +452,9 @@ export class QueryPlanner {
     }
   }
 
-  private _generateFilterClause(query: QueryAST.QueryFilterClause, context: GenerationContext): QueryPlan.Plan {
+  private _generateFilterClause(ctx: Context, query: QueryAST.QueryFilterClause, context: GenerationContext): QueryPlan.Plan {
     return QueryPlan.Plan.make([
-      ...this._generate(query.selection, context).steps,
+      ...this._generate(ctx, query.selection, context).steps,
       {
         _tag: 'FilterStep',
         filter: query.filter,
@@ -458,11 +463,12 @@ export class QueryPlanner {
   }
 
   private _generateHierarchyTraversalClause(
+    ctx: Context,
     query: QueryAST.QueryHierarchyTraversalClause,
     context: GenerationContext,
   ): QueryPlan.Plan {
     return QueryPlan.Plan.make([
-      ...this._generate(query.anchor, context).steps,
+      ...this._generate(ctx, query.anchor, context).steps,
       {
         _tag: 'TraverseStep',
         traversal: {
@@ -470,11 +476,11 @@ export class QueryPlanner {
           direction: query.direction,
         },
       },
-      ...this._generateDeletedHandlingSteps(context),
+      ...this._generateDeletedHandlingSteps(ctx, context),
     ]);
   }
 
-  private _validateQueryQualified(query: QueryAST.Query): void {
+  private _validateQueryQualified(_ctx: Context, query: QueryAST.Query): void {
     let hasOptions = false;
     QueryAST.visit(query, (node) => {
       if (node.type === 'options') {
@@ -492,7 +498,7 @@ export class QueryPlanner {
   /**
    * Removes filter steps that have no predicates.
    */
-  private _optimizeEmptyFilters(plan: QueryPlan.Plan): QueryPlan.Plan {
+  private _optimizeEmptyFilters(ctx: Context, plan: QueryPlan.Plan): QueryPlan.Plan {
     return QueryPlan.Plan.make(
       plan.steps
         .filter((step) => {
@@ -506,7 +512,7 @@ export class QueryPlanner {
           if (step._tag === 'UnionStep') {
             return {
               _tag: 'UnionStep',
-              plans: step.plans.map((plan) => this._optimizeEmptyFilters(plan)),
+              plans: step.plans.map((plan) => this._optimizeEmptyFilters(ctx, plan)),
             };
           } else {
             return step;
@@ -518,14 +524,14 @@ export class QueryPlanner {
   /**
    * Removes union steps that have only one child.
    */
-  private _optimizeSoloUnions(plan: QueryPlan.Plan): QueryPlan.Plan {
+  private _optimizeSoloUnions(_ctx: Context, plan: QueryPlan.Plan): QueryPlan.Plan {
     // TODO(dmaretskyi): Implement this.
     return plan;
   }
 
-  private _generateOrderClause(query: QueryAST.QueryOrderClause, context: GenerationContext): QueryPlan.Plan {
+  private _generateOrderClause(ctx: Context, query: QueryAST.QueryOrderClause, context: GenerationContext): QueryPlan.Plan {
     return QueryPlan.Plan.make([
-      ...this._generate(query.query, context).steps,
+      ...this._generate(ctx, query.query, context).steps,
       {
         _tag: 'OrderStep',
         order: query.order,
@@ -533,9 +539,9 @@ export class QueryPlanner {
     ]);
   }
 
-  private _generateLimitClause(query: QueryAST.QueryLimitClause, context: GenerationContext): QueryPlan.Plan {
+  private _generateLimitClause(ctx: Context, query: QueryAST.QueryLimitClause, context: GenerationContext): QueryPlan.Plan {
     return QueryPlan.Plan.make([
-      ...this._generate(query.query, context).steps,
+      ...this._generate(ctx, query.query, context).steps,
       {
         _tag: 'LimitStep',
         limit: query.limit,
@@ -548,19 +554,19 @@ export class QueryPlanner {
   //   - If an order step is found, skip.
   //   - Otherwise insert natural order before any limit steps (since limit should be applied after ordering).
   // This method is recursive and also processes sub-plans in unions and set differences.
-  private _ensureOrderStep(plan: QueryPlan.Plan): QueryPlan.Plan {
+  private _ensureOrderStep(ctx: Context, plan: QueryPlan.Plan): QueryPlan.Plan {
     // First, recursively process any sub-plans.
     const processedSteps = plan.steps.map((step): QueryPlan.Step => {
       if (step._tag === 'UnionStep') {
         return {
           _tag: 'UnionStep',
-          plans: step.plans.map((subPlan) => this._ensureOrderStep(subPlan)),
+          plans: step.plans.map((subPlan) => this._ensureOrderStep(ctx, subPlan)),
         };
       } else if (step._tag === 'SetDifferenceStep') {
         return {
           _tag: 'SetDifferenceStep',
-          source: this._ensureOrderStep(step.source),
-          exclude: this._ensureOrderStep(step.exclude),
+          source: this._ensureOrderStep(ctx, step.source),
+          exclude: this._ensureOrderStep(ctx, step.exclude),
         };
       }
       return step;
@@ -602,19 +608,19 @@ export class QueryPlanner {
    * Propagates limits from LimitStep to SelectStep and OrderStep when possible.
    * Limits can only be propagated if there are no unions or traversals between the LimitStep and SelectStep/OrderStep.
    */
-  private _optimizeLimits(plan: QueryPlan.Plan): QueryPlan.Plan {
+  private _optimizeLimits(ctx: Context, plan: QueryPlan.Plan): QueryPlan.Plan {
     // First, recursively process any sub-plans.
     const processedSteps = plan.steps.map((step): QueryPlan.Step => {
       if (step._tag === 'UnionStep') {
         return {
           _tag: 'UnionStep',
-          plans: step.plans.map((subPlan) => this._optimizeLimits(subPlan)),
+          plans: step.plans.map((subPlan) => this._optimizeLimits(ctx, subPlan)),
         };
       } else if (step._tag === 'SetDifferenceStep') {
         return {
           _tag: 'SetDifferenceStep',
-          source: this._optimizeLimits(step.source),
-          exclude: this._optimizeLimits(step.exclude),
+          source: this._optimizeLimits(ctx, step.source),
+          exclude: this._optimizeLimits(ctx, step.exclude),
         };
       }
       return step;

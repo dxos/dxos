@@ -80,13 +80,13 @@ export interface AutomergeReplicatorConnection {
   /**
    * Pushes the batch of documents to the remote peer.
    */
-  pushBundle?(bundle: { documentId: DocumentId; data: Uint8Array; heads: Heads }[]): Promise<void>;
+  pushBundle?(ctx: Context, bundle: { documentId: DocumentId; data: Uint8Array; heads: Heads }[]): Promise<void>;
 
   /**
    * Pulls the batch of documents from the remote peer.
    */
   // TODO(mykola): Use automerge-repo-bundles Bundle type here.
-  pullBundle?(docHeads: Record<DocumentId, Heads>): Promise<Record<DocumentId, Uint8Array>>;
+  pullBundle?(ctx: Context, docHeads: Record<DocumentId, Heads>): Promise<Record<DocumentId, Uint8Array>>;
 }
 
 export type ShouldAdvertiseProps = {

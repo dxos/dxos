@@ -8,6 +8,7 @@
 
 import { describe, expect, test } from 'vitest';
 
+import { Context } from '@dxos/context';
 import { Filter, Order, Query } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { type QueryAST } from '@dxos/echo-protocol';
@@ -21,7 +22,7 @@ describe('QueryPlanner', () => {
   test('get all people', () => {
     const query = Query.select(Filter.type(TestSchema.Person));
 
-    const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+    const plan = planner.createPlan(Context.default(), withSpaceIdOptions(query.ast));
     expect(plan).toMatchInlineSnapshot(`
       {
         "steps": [
@@ -69,7 +70,7 @@ describe('QueryPlanner', () => {
   test('get all people ordered by name', () => {
     const query = Query.select(Filter.type(TestSchema.Person)).orderBy(Order.property('name', 'asc'));
 
-    const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+    const plan = planner.createPlan(Context.default(), withSpaceIdOptions(query.ast));
     expect(plan).toMatchInlineSnapshot(`
       {
         "steps": [
@@ -119,7 +120,7 @@ describe('QueryPlanner', () => {
   test('get all people named Fred', () => {
     const query = Query.select(Filter.type(TestSchema.Person, { name: 'Fred' }));
 
-    const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+    const plan = planner.createPlan(Context.default(), withSpaceIdOptions(query.ast));
     expect(plan).toMatchInlineSnapshot(`
       {
         "steps": [
@@ -177,7 +178,7 @@ describe('QueryPlanner', () => {
       })
       .target();
 
-    const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+    const plan = planner.createPlan(Context.default(), withSpaceIdOptions(query.ast));
     expect(plan).toMatchInlineSnapshot(`
       {
         "steps": [
@@ -264,7 +265,7 @@ describe('QueryPlanner', () => {
       'assignee',
     );
 
-    const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+    const plan = planner.createPlan(Context.default(), withSpaceIdOptions(query.ast));
     expect(plan).toMatchInlineSnapshot(`
       {
         "steps": [
@@ -334,7 +335,7 @@ describe('QueryPlanner', () => {
       .source()
       .referencedBy(TestSchema.Task, 'assignee');
 
-    const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+    const plan = planner.createPlan(Context.default(), withSpaceIdOptions(query.ast));
     expect(plan).toMatchInlineSnapshot(`
       {
         "steps": [
@@ -442,7 +443,7 @@ describe('QueryPlanner', () => {
       Query.select(Filter.type(TestSchema.Organization)),
     );
 
-    const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+    const plan = planner.createPlan(Context.default(), withSpaceIdOptions(query.ast));
     expect(plan).toMatchInlineSnapshot(`
       {
         "steps": [
@@ -550,7 +551,7 @@ describe('QueryPlanner', () => {
       Query.select(Filter.type(TestSchema.Person)).sourceOf(TestSchema.EmployedBy).source(),
     );
 
-    const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+    const plan = planner.createPlan(Context.default(), withSpaceIdOptions(query.ast));
     expect(plan).toMatchInlineSnapshot(`
       {
         "steps": [
@@ -688,7 +689,7 @@ describe('QueryPlanner', () => {
       }),
     ).reference('assignee');
 
-    const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+    const plan = planner.createPlan(Context.default(), withSpaceIdOptions(query.ast));
     expect(plan).toMatchInlineSnapshot(`
       {
         "steps": [
@@ -754,7 +755,7 @@ describe('QueryPlanner', () => {
   test('contact full-text search', () => {
     const query = Query.select(Filter.text('Bill')).select(Filter.type(TestSchema.Person));
 
-    const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+    const plan = planner.createPlan(Context.default(), withSpaceIdOptions(query.ast));
     expect(plan).toMatchInlineSnapshot(`
       {
         "steps": [
@@ -801,7 +802,7 @@ describe('QueryPlanner', () => {
   test('vector search', () => {
     const query = Query.select(Filter.text('Bill', { type: 'vector' }));
 
-    const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+    const plan = planner.createPlan(Context.default(), withSpaceIdOptions(query.ast));
     expect(plan).toMatchInlineSnapshot(`
       {
         "steps": [
@@ -839,7 +840,7 @@ describe('QueryPlanner', () => {
   test('select multiple types', () => {
     const query = Query.select(Filter.or(Filter.type(TestSchema.Organization), Filter.type(TestSchema.Person)));
 
-    const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+    const plan = planner.createPlan(Context.default(), withSpaceIdOptions(query.ast));
     expect(plan).toMatchInlineSnapshot(`
       {
         "steps": [
@@ -900,7 +901,7 @@ describe('QueryPlanner', () => {
   test.skip('select everything but the type', () => {
     const query = Query.select(Filter.not(Filter.type(TestSchema.Person)));
 
-    const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+    const plan = planner.createPlan(Context.default(), withSpaceIdOptions(query.ast));
     expect(plan).toMatchInlineSnapshot();
   });
 
@@ -909,7 +910,7 @@ describe('QueryPlanner', () => {
       Filter.not(Filter.or(Filter.type(TestSchema.Organization), Filter.type(TestSchema.Person))),
     );
 
-    const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+    const plan = planner.createPlan(Context.default(), withSpaceIdOptions(query.ast));
     expect(plan).toMatchInlineSnapshot(`
       {
         "steps": [
@@ -969,7 +970,7 @@ describe('QueryPlanner', () => {
   test('select deleted tasks', () => {
     const query = Query.select(Filter.type(TestSchema.Task)).options({ deleted: 'only' });
 
-    const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+    const plan = planner.createPlan(Context.default(), withSpaceIdOptions(query.ast));
     expect(plan).toMatchInlineSnapshot(`
       {
         "steps": [
@@ -1017,7 +1018,7 @@ describe('QueryPlanner', () => {
   test('select items from a specific queue', () => {
     const query = Query.select(Filter.type(TestSchema.Task)).options({ queues: [QUEUE_DXN] });
 
-    const plan = planner.createPlan(query.ast);
+    const plan = planner.createPlan(Context.default(), query.ast);
     expect(plan).toMatchInlineSnapshot(`
       {
         "steps": [
@@ -1068,7 +1069,7 @@ describe('QueryPlanner', () => {
       allQueuesFromSpaces: true,
     });
 
-    const plan = planner.createPlan(query.ast);
+    const plan = planner.createPlan(Context.default(), query.ast);
     expect(plan).toMatchInlineSnapshot(`
       {
         "steps": [
@@ -1116,7 +1117,7 @@ describe('QueryPlanner', () => {
   test('limit results', () => {
     const query = Query.select(Filter.type(TestSchema.Task)).limit(10);
 
-    const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+    const plan = planner.createPlan(Context.default(), withSpaceIdOptions(query.ast));
     expect(plan).toMatchInlineSnapshot(`
       {
         "steps": [
@@ -1166,7 +1167,7 @@ describe('QueryPlanner', () => {
   test('ordered and limited results', () => {
     const query = Query.select(Filter.type(TestSchema.Task)).orderBy(Order.property('title', 'asc')).limit(10);
 
-    const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+    const plan = planner.createPlan(Context.default(), withSpaceIdOptions(query.ast));
     expect(plan).toMatchInlineSnapshot(`
       {
         "steps": [
@@ -1221,7 +1222,7 @@ describe('QueryPlanner', () => {
       Query.select(Filter.type(TestSchema.Organization)).limit(5),
     );
 
-    const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+    const plan = planner.createPlan(Context.default(), withSpaceIdOptions(query.ast));
     expect(plan).toMatchInlineSnapshot(`
       {
         "steps": [
@@ -1328,13 +1329,13 @@ describe('QueryPlanner', () => {
   });
   test('throws when query has no options clause', () => {
     const query = Query.select(Filter.type(TestSchema.Person));
-    expect(() => planner.createPlan(query.ast)).toThrow('Query must be qualified with a from() or options() clause');
+    expect(() => planner.createPlan(Context.default(), query.ast)).toThrow('Query must be qualified with a from() or options() clause');
   });
 
   test('from all accessible spaces', () => {
     const query = Query.select(Filter.type(TestSchema.Person)).from('all-accessible-spaces');
 
-    const plan = planner.createPlan(query.ast);
+    const plan = planner.createPlan(Context.default(), query.ast);
     expect(plan).toMatchInlineSnapshot(`
       {
         "steps": [
@@ -1382,7 +1383,7 @@ describe('QueryPlanner', () => {
       includeFeeds: true,
     });
 
-    const plan = planner.createPlan(query.ast);
+    const plan = planner.createPlan(Context.default(), query.ast);
     expect(plan).toMatchInlineSnapshot(`
       {
         "steps": [
@@ -1428,7 +1429,7 @@ describe('QueryPlanner', () => {
   test('from specific feed via queues option', () => {
     const query = Query.select(Filter.type(TestSchema.Task)).options({ queues: [QUEUE_DXN] });
 
-    const plan = planner.createPlan(query.ast);
+    const plan = planner.createPlan(Context.default(), query.ast);
     expect(plan.steps[0]).toMatchObject({
       _tag: 'SelectStep',
       spaces: [],
@@ -1443,7 +1444,7 @@ describe('QueryPlanner', () => {
       allQueuesFromSpaces: true,
     });
 
-    const plan = planner.createPlan(query.ast);
+    const plan = planner.createPlan(Context.default(), query.ast);
     expect(plan.steps[0]).toMatchObject({
       _tag: 'SelectStep',
       spaces: [SPACE_ID],

@@ -227,7 +227,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     if (!connection) {
       throw new Error('Connection not found.');
     }
-    return connection.connection.pushBundle!(bundle);
+    return connection.connection.pushBundle!(ctx, bundle);
   }
 
   async pullBundle(ctx: Context, peerId: PeerId, docHeads: Record<DocumentId, Heads>) {
@@ -235,7 +235,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     if (!connection) {
       throw new Error('Connection not found.');
     }
-    return connection.connection.pullBundle!(docHeads);
+    return connection.connection.pullBundle!(ctx, docHeads);
   }
 
   private _send(ctx: Context, message: Message): void {

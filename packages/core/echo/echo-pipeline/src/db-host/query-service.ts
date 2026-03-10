@@ -172,11 +172,11 @@ export class QueryServiceImpl extends Resource {
         count++;
 
         try {
-          const { changed } = await query.executor.execQuery();
+          const { changed } = await query.executor.execQuery(ctx);
           query.dirty = false;
           if (changed || query.firstResult) {
             query.firstResult = false;
-            query.sendResults(query.executor.getResults());
+            query.sendResults(query.executor.getResults(ctx));
           }
         } catch (err) {
           log.catch(err);

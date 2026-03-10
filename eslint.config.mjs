@@ -427,6 +427,9 @@ export default tseslint.config(
             'PublicKey',
             'SpaceId',
 
+            // Automerge NetworkAdapter (external interface with fixed signatures).
+            'EchoNetworkAdapter',
+
             // Infrastructure / storage (no tracing).
             'MetadataStore',
             'LevelDBStorageAdapter',

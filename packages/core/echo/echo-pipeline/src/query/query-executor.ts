@@ -268,7 +268,7 @@ export class QueryExecutor extends Resource {
     this._reactivity = options.reactivity;
 
     const queryPlanner = new QueryPlanner();
-    this._plan = queryPlanner.createPlan(this._query);
+    this._plan = queryPlanner.createPlan(Context.default(), this._query);
   }
 
   get query(): QueryAST.Query {
@@ -283,7 +283,7 @@ export class QueryExecutor extends Resource {
     return this._trace;
   }
 
-  getResults(): QueryResult[] {
+  getResults(ctx: Context): QueryResult[] {
     return this._lastResultSet.map(
       (item): QueryResult => ({
         id: item.objectId,
@@ -299,11 +299,11 @@ export class QueryExecutor extends Resource {
     );
   }
 
-  async execQuery(): Promise<QueryExecutionResult> {
+  async execQuery(ctx: Context): Promise<QueryExecutionResult> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
 
     const prevResultSet = this._lastResultSet;
-    const { workingSet, trace } = await this._execPlan(this._plan, []);
+    const { workingSet, trace } = await this._execPlan(ctx, this._plan, []);
     this._lastResultSet = workingSet;
     trace.name = 'Root';
     trace.details = JSON.stringify({ id: this._id, query: prettyQuery(this._query) });
@@ -331,14 +331,14 @@ export class QueryExecutor extends Resource {
     };
   }
 
-  private async _execPlan(plan: QueryPlan.Plan, workingSet: QueryItem[]): Promise<StepExecutionResult> {
+  private async _execPlan(ctx: Context, plan: QueryPlan.Plan, workingSet: QueryItem[]): Promise<StepExecutionResult> {
     const trace = ExecutionTrace.makeEmpty();
     for (const step of plan.steps) {
       if (this._ctx.disposed) {
         throw new ContextDisposedError();
       }
 
-      const result = await this._execStep(step, workingSet);
+      const result = await this._execStep(ctx, step, workingSet);
       workingSet = result.workingSet;
       trace.children.push(result.trace);
     }
@@ -347,7 +347,7 @@ export class QueryExecutor extends Resource {
     return { workingSet, trace };
   }
 
-  private async _execStep(step: QueryPlan.Step, workingSet: QueryItem[]): Promise<StepExecutionResult> {
+  private async _execStep(ctx: Context, step: QueryPlan.Step, workingSet: QueryItem[]): Promise<StepExecutionResult> {
     if (this._ctx.disposed) {
       return { workingSet, trace: ExecutionTrace.makeEmpty() };
     }
@@ -360,28 +360,28 @@ export class QueryExecutor extends Resource {
         trace = ExecutionTrace.makeEmpty();
         break;
       case 'SelectStep':
-        ({ workingSet: newWorkingSet, trace } = await this._execSelectStep(step, workingSet));
+        ({ workingSet: newWorkingSet, trace } = await this._execSelectStep(ctx, step, workingSet));
         break;
       case 'FilterStep':
-        ({ workingSet: newWorkingSet, trace } = await this._execFilterStep(step, workingSet));
+        ({ workingSet: newWorkingSet, trace } = await this._execFilterStep(ctx, step, workingSet));
         break;
       case 'FilterDeletedStep':
-        ({ workingSet: newWorkingSet, trace } = await this._execFilterDeletedStep(step, workingSet));
+        ({ workingSet: newWorkingSet, trace } = await this._execFilterDeletedStep(ctx, step, workingSet));
         break;
       case 'UnionStep':
-        ({ workingSet: newWorkingSet, trace } = await this._execUnionStep(step, workingSet));
+        ({ workingSet: newWorkingSet, trace } = await this._execUnionStep(ctx, step, workingSet));
         break;
       case 'SetDifferenceStep':
-        ({ workingSet: newWorkingSet, trace } = await this._execSetDifferenceStep(step, workingSet));
+        ({ workingSet: newWorkingSet, trace } = await this._execSetDifferenceStep(ctx, step, workingSet));
         break;
       case 'TraverseStep':
-        ({ workingSet: newWorkingSet, trace } = await this._execTraverseStep(step, workingSet));
+        ({ workingSet: newWorkingSet, trace } = await this._execTraverseStep(ctx, step, workingSet));
         break;
       case 'OrderStep':
-        ({ workingSet: newWorkingSet, trace } = await this._execOrderStep(step, workingSet));
+        ({ workingSet: newWorkingSet, trace } = await this._execOrderStep(ctx, step, workingSet));
         break;
       case 'LimitStep':
-        ({ workingSet: newWorkingSet, trace } = await this._execLimitStep(step, workingSet));
+        ({ workingSet: newWorkingSet, trace } = await this._execLimitStep(ctx, step, workingSet));
         break;
       default:
         throw new Error(`Unknown step type: ${(step as any)._tag}`);
@@ -392,7 +392,7 @@ export class QueryExecutor extends Resource {
     return { workingSet: newWorkingSet, trace };
   }
 
-  private async _execSelectStep(step: QueryPlan.SelectStep, workingSet: QueryItem[]): Promise<StepExecutionResult> {
+  private async _execSelectStep(ctx: Context, step: QueryPlan.SelectStep, workingSet: QueryItem[]): Promise<StepExecutionResult> {
     workingSet = [...workingSet];
 
     const trace: ExecutionTrace = {
@@ -406,7 +406,7 @@ export class QueryExecutor extends Resource {
       case 'WildcardSelector': {
         const beginIndexQuery = performance.now();
         const queueIds = extractQueueIds(step.queues);
-        const metas = await this._queryAllFromSqlIndex(step.spaces, step.allQueuesFromSpaces, queueIds);
+        const metas = await this._queryAllFromSqlIndex(ctx, step.spaces, step.allQueuesFromSpaces, queueIds);
         trace.indexHits = metas.length;
         trace.indexQueryTime += performance.now() - beginIndexQuery;
 
@@ -415,7 +415,7 @@ export class QueryExecutor extends Resource {
         }
 
         const documentLoadStart = performance.now();
-        const results = await this._loadDocumentsAfterSqlQuery(metas);
+        const results = await this._loadDocumentsAfterSqlQuery(ctx, metas);
         trace.documentsLoaded += results.length;
         trace.documentLoadTime += performance.now() - documentLoadStart;
 
@@ -432,9 +432,9 @@ export class QueryExecutor extends Resource {
           step.selector.objectIds.map((id) => {
             if (step.queues.length > 0) {
               const { spaceId } = DXN.parse(step.queues[0]).asQueueDXN()!;
-              return this._loadFromDXN(DXN.parse(step.queues[0]).extend([id]), { sourceSpaceId: spaceId });
+              return this._loadFromDXN(ctx, DXN.parse(step.queues[0]).extend([id]), { sourceSpaceId: spaceId });
             } else if (step.spaces.length > 0) {
-              return this._loadFromDXN(DXN.fromLocalObjectId(id), { sourceSpaceId: step.spaces[0] });
+              return this._loadFromDXN(ctx, DXN.fromLocalObjectId(id), { sourceSpaceId: step.spaces[0] });
             } else {
               return null; // Unknown scope.
             }
@@ -451,6 +451,7 @@ export class QueryExecutor extends Resource {
         const beginIndexQuery = performance.now();
         const queueIds = extractQueueIds(step.queues);
         const metas = await this._queryTypesFromSqlIndex(
+          ctx,
           step.spaces,
           step.selector.typename,
           step.selector.inverted,
@@ -465,7 +466,7 @@ export class QueryExecutor extends Resource {
         }
 
         const documentLoadStart = performance.now();
-        const results = await this._loadDocumentsAfterSqlQuery(metas);
+        const results = await this._loadDocumentsAfterSqlQuery(ctx, metas);
         trace.documentsLoaded += results.length;
         trace.documentLoadTime += performance.now() - documentLoadStart;
 
@@ -488,7 +489,7 @@ export class QueryExecutor extends Resource {
         const beginIndexQuery = performance.now();
         invariant(step.spaces.length <= 1, 'Multiple spaces are not supported for full-text search');
         const queueIds = extractQueueIds(step.queues);
-        const textResults = await this._runInRuntime(
+        const textResults = await this._runInRuntime(ctx,
           this._indexEngine.queryText({
             query: step.selector.text,
             spaceId: step.spaces,
@@ -516,7 +517,7 @@ export class QueryExecutor extends Resource {
         // Load queue items from indexed snapshots.
         let queueItems: QueryItem[] = [];
         if (queueResults.length > 0) {
-          const snapshots = await this._runInRuntime(
+          const snapshots = await this._runInRuntime(ctx,
             this._indexEngine.querySnapshotsJSON(queueResults.map((r) => r.recordId)),
           );
           const snapshotMap = new Map(snapshots.map((s) => [s.recordId, s.snapshot]));
@@ -544,7 +545,7 @@ export class QueryExecutor extends Resource {
         const spaceItems = await Promise.all(
           spaceResults.map(async (result): Promise<QueryItem | null> => {
             const dxn = DXN.fromLocalObjectId(result.objectId);
-            const item = await this._loadFromDXN(dxn, { sourceSpaceId: result.spaceId as SpaceId });
+            const item = await this._loadFromDXN(ctx, dxn, { sourceSpaceId: result.spaceId as SpaceId });
             if (item) {
               // Override the default rank with the FTS rank.
               item.rank = rankMap.get(result.recordId) ?? 1;
@@ -588,7 +589,7 @@ export class QueryExecutor extends Resource {
     return { workingSet, trace };
   }
 
-  private async _execFilterStep(step: QueryPlan.FilterStep, workingSet: QueryItem[]): Promise<StepExecutionResult> {
+  private async _execFilterStep(_ctx: Context, step: QueryPlan.FilterStep, workingSet: QueryItem[]): Promise<StepExecutionResult> {
     const result = workingSet.filter((item) => {
       if (item.doc) {
         return filterMatchObject(step.filter, {
@@ -615,6 +616,7 @@ export class QueryExecutor extends Resource {
   }
 
   private async _execFilterDeletedStep(
+    ctx: Context,
     step: QueryPlan.FilterDeletedStep,
     workingSet: QueryItem[],
   ): Promise<StepExecutionResult> {
@@ -626,7 +628,7 @@ export class QueryExecutor extends Resource {
         if (deletedState[index]) {
           return;
         }
-        deletedState[index] ||= await this._getTransitiveDeletionState(item, MAX_DEPTH_FOR_DELETION_TRACING);
+        deletedState[index] ||= await this._getTransitiveDeletionState(ctx, item, MAX_DEPTH_FOR_DELETION_TRACING);
       }),
     );
 
@@ -645,7 +647,7 @@ export class QueryExecutor extends Resource {
   }
 
   // TODO(dmaretskyi): This needs to be completed.
-  private async _execTraverseStep(step: QueryPlan.TraverseStep, workingSet: QueryItem[]): Promise<StepExecutionResult> {
+  private async _execTraverseStep(ctx: Context, step: QueryPlan.TraverseStep, workingSet: QueryItem[]): Promise<StepExecutionResult> {
     const trace: ExecutionTrace = {
       ...ExecutionTrace.makeEmpty(),
       name: 'Traverse',
@@ -683,7 +685,7 @@ export class QueryExecutor extends Resource {
 
             const beginLoad = performance.now();
             const items = await Promise.all(
-              refs.map(({ ref, spaceId }) => this._loadFromDXN(ref, { sourceSpaceId: spaceId })),
+              refs.map(({ ref, spaceId }) => this._loadFromDXN(ctx, ref, { sourceSpaceId: spaceId })),
             );
             trace.documentLoadTime += performance.now() - beginLoad;
 
@@ -694,12 +696,12 @@ export class QueryExecutor extends Resource {
           }
           case 'incoming': {
             const beginIndexQuery = performance.now();
-            const metas = await this._queryIncomingReferencesFromSqlIndex(workingSet, step.traversal.property);
+            const metas = await this._queryIncomingReferencesFromSqlIndex(ctx, workingSet, step.traversal.property);
             trace.indexHits += metas.length;
             trace.indexQueryTime += performance.now() - beginIndexQuery;
 
             const documentLoadStart = performance.now();
-            const results = await this._loadDocumentsAfterSqlQuery(metas);
+            const results = await this._loadDocumentsAfterSqlQuery(ctx, metas);
             trace.documentsLoaded += results.length;
             trace.documentLoadTime += performance.now() - documentLoadStart;
 
@@ -738,7 +740,7 @@ export class QueryExecutor extends Resource {
 
             const beginLoad = performance.now();
             const items = await Promise.all(
-              refs.map(({ ref, spaceId }) => this._loadFromDXN(ref, { sourceSpaceId: spaceId })),
+              refs.map(({ ref, spaceId }) => this._loadFromDXN(ctx, ref, { sourceSpaceId: spaceId })),
             );
             trace.documentLoadTime += performance.now() - beginLoad;
 
@@ -752,6 +754,7 @@ export class QueryExecutor extends Resource {
           case 'target-to-relation': {
             const beginIndexQuery = performance.now();
             const metas = await this._queryRelationsFromSqlIndex(
+              ctx,
               workingSet,
               step.traversal.direction === 'source-to-relation' ? 'source' : 'target',
             );
@@ -759,7 +762,7 @@ export class QueryExecutor extends Resource {
             trace.indexQueryTime += performance.now() - beginIndexQuery;
 
             const documentLoadStart = performance.now();
-            const results = await this._loadDocumentsAfterSqlQuery(metas);
+            const results = await this._loadDocumentsAfterSqlQuery(ctx, metas);
             trace.documentsLoaded += results.length;
             trace.documentLoadTime += performance.now() - documentLoadStart;
 
@@ -798,7 +801,7 @@ export class QueryExecutor extends Resource {
 
             const beginLoad = performance.now();
             const items = await Promise.all(
-              refs.map(({ ref, spaceId }) => this._loadFromDXN(ref, { sourceSpaceId: spaceId })),
+              refs.map(({ ref, spaceId }) => this._loadFromDXN(ctx, ref, { sourceSpaceId: spaceId })),
             );
             trace.documentLoadTime += performance.now() - beginLoad;
 
@@ -823,7 +826,7 @@ export class QueryExecutor extends Resource {
             // Query children for each space.
             const allChildren: { spaceId: SpaceId; objectId: ObjectId }[] = [];
             for (const [spaceId, parentIds] of bySpace) {
-              const children = await this._runInRuntime(
+              const children = await this._runInRuntime(ctx,
                 this._indexEngine.queryChildren({ spaceId: [spaceId], parentIds }),
               );
 
@@ -837,7 +840,7 @@ export class QueryExecutor extends Resource {
             const documentLoadStart = performance.now();
             const results = await Promise.all(
               allChildren.map(({ spaceId, objectId }) =>
-                this._loadFromDXN(DXN.fromLocalObjectId(objectId), { sourceSpaceId: spaceId }),
+                this._loadFromDXN(ctx, DXN.fromLocalObjectId(objectId), { sourceSpaceId: spaceId }),
               ),
             );
             trace.documentsLoaded += results.filter(isNonNullable).length;
@@ -857,10 +860,10 @@ export class QueryExecutor extends Resource {
     return { workingSet: newWorkingSet, trace };
   }
 
-  private async _execUnionStep(step: QueryPlan.UnionStep, workingSet: QueryItem[]): Promise<StepExecutionResult> {
+  private async _execUnionStep(ctx: Context, step: QueryPlan.UnionStep, workingSet: QueryItem[]): Promise<StepExecutionResult> {
     const results = new Map<ObjectId, QueryItem>();
 
-    const resultSets = await Promise.all(step.plans.map((plan) => this._execPlan(plan, [...workingSet])));
+    const resultSets = await Promise.all(step.plans.map((plan) => this._execPlan(ctx, plan, [...workingSet])));
 
     const trace: ExecutionTrace = {
       ...ExecutionTrace.makeEmpty(),
@@ -883,6 +886,7 @@ export class QueryExecutor extends Resource {
   }
 
   private async _execSetDifferenceStep(
+    ctx: Context,
     step: QueryPlan.SetDifferenceStep,
     workingSet: QueryItem[],
   ): Promise<StepExecutionResult> {
@@ -891,8 +895,8 @@ export class QueryExecutor extends Resource {
       name: 'SetDifference',
     };
 
-    const sourceResult = await this._execPlan(step.source, [...workingSet]);
-    const excludeResult = await this._execPlan(step.exclude, [...workingSet]);
+    const sourceResult = await this._execPlan(ctx, step.source, [...workingSet]);
+    const excludeResult = await this._execPlan(ctx, step.exclude, [...workingSet]);
     trace.children.push(sourceResult.trace, excludeResult.trace);
 
     return {
@@ -904,8 +908,8 @@ export class QueryExecutor extends Resource {
     };
   }
 
-  private async _execOrderStep(step: QueryPlan.OrderStep, workingSet: QueryItem[]): Promise<StepExecutionResult> {
-    let sortedWorkingSet = [...workingSet].sort((a, b) => this._compareMultiOrder(a, b, step.order));
+  private async _execOrderStep(ctx: Context, step: QueryPlan.OrderStep, workingSet: QueryItem[]): Promise<StepExecutionResult> {
+    let sortedWorkingSet = [...workingSet].sort((a, b) => this._compareMultiOrder(ctx, a, b, step.order));
 
     // Apply limit if specified on the order step.
     if (step.limit !== undefined && sortedWorkingSet.length > step.limit) {
@@ -923,7 +927,7 @@ export class QueryExecutor extends Resource {
     };
   }
 
-  private async _execLimitStep(step: QueryPlan.LimitStep, workingSet: QueryItem[]): Promise<StepExecutionResult> {
+  private async _execLimitStep(_ctx: Context, step: QueryPlan.LimitStep, workingSet: QueryItem[]): Promise<StepExecutionResult> {
     const limitedWorkingSet = workingSet.slice(0, step.limit);
 
     return {
@@ -937,16 +941,16 @@ export class QueryExecutor extends Resource {
     };
   }
 
-  private _compareMultiOrder(a: QueryItem, b: QueryItem, orders: readonly QueryAST.Order[]): number {
+  private _compareMultiOrder(ctx: Context, a: QueryItem, b: QueryItem, orders: readonly QueryAST.Order[]): number {
     // Short circuit for common cases.
     if (orders.length === 0) {
       return 0;
     } else if (orders.length === 1) {
-      return this._compareByOrder(a, b, orders[0]);
+      return this._compareByOrder(ctx, a, b, orders[0]);
     }
 
     for (const order of orders) {
-      const comparison = this._compareByOrder(a, b, order);
+      const comparison = this._compareByOrder(ctx, a, b, order);
       if (comparison !== 0) {
         return comparison;
       }
@@ -954,12 +958,12 @@ export class QueryExecutor extends Resource {
     return 0;
   }
 
-  private _compareByOrder(a: QueryItem, b: QueryItem, order: QueryAST.Order): number {
+  private _compareByOrder(ctx: Context, a: QueryItem, b: QueryItem, order: QueryAST.Order): number {
     switch (order.kind) {
       case 'natural':
         return a.objectId.localeCompare(b.objectId);
       case 'property': {
-        const comparison = this._compareByProperty(a, b, order.property);
+        const comparison = this._compareByProperty(ctx, a, b, order.property);
         return order.direction === 'desc' ? -comparison : comparison;
       }
       case 'rank': {
@@ -973,7 +977,7 @@ export class QueryExecutor extends Resource {
     }
   }
 
-  private _compareByProperty(a: QueryItem, b: QueryItem, property: string): number {
+  private _compareByProperty(_ctx: Context, a: QueryItem, b: QueryItem, property: string): number {
     const aValue = QueryItem.getProperty(a, [property]);
     const bValue = QueryItem.getProperty(b, [property]);
 
@@ -1011,7 +1015,7 @@ export class QueryExecutor extends Resource {
     return String(aValue).localeCompare(String(bValue));
   }
 
-  private async _runInRuntime<T>(effect: Effect.Effect<T, unknown, SqlClient.SqlClient>): Promise<T> {
+  private async _runInRuntime<T>(_ctx: Context, effect: Effect.Effect<T, unknown, SqlClient.SqlClient>): Promise<T> {
     const runtimeProvider = this._runtime;
     invariant(runtimeProvider, 'SQL runtime is required.');
     const runtime = await runAndForwardErrors(runtimeProvider);
@@ -1019,33 +1023,36 @@ export class QueryExecutor extends Resource {
   }
 
   private async _queryAllFromSqlIndex(
+    ctx: Context,
     spaceIds: readonly SpaceId[],
     includeAllQueues: boolean,
     queueIds: readonly ObjectId[] | null,
   ): Promise<readonly ObjectMeta[]> {
-    return await this._runInRuntime(this._indexEngine.queryAll({ spaceIds, includeAllQueues, queueIds }));
+    return await this._runInRuntime(ctx, this._indexEngine.queryAll({ spaceIds, includeAllQueues, queueIds }));
   }
 
   private async _queryTypesFromSqlIndex(
+    ctx: Context,
     spaceIds: readonly SpaceId[],
     typeDxns: readonly string[],
     inverted: boolean,
     includeAllQueues: boolean,
     queueIds: readonly ObjectId[] | null,
   ): Promise<readonly ObjectMeta[]> {
-    return await this._runInRuntime(
+    return await this._runInRuntime(ctx,
       this._indexEngine.queryTypes({ spaceIds, typeDxns, inverted, includeAllQueues, queueIds }),
     );
   }
 
   private async _queryIncomingReferencesFromSqlIndex(
+    ctx: Context,
     workingSet: QueryItem[],
     property: EscapedPropPath | null,
   ): Promise<readonly ObjectMeta[]> {
     const anchorDxns = workingSet.map((item) => DXN.fromLocalObjectId(item.objectId).toString());
     const rows: readonly ReverseRef[] = (
       await Promise.all(
-        anchorDxns.map((targetDxn) => this._runInRuntime(this._indexEngine.queryReverseRef({ targetDxn }))),
+        anchorDxns.map((targetDxn) => this._runInRuntime(ctx, this._indexEngine.queryReverseRef({ targetDxn }))),
       )
     ).flat();
 
@@ -1062,7 +1069,7 @@ export class QueryExecutor extends Resource {
       .map((row) => row.recordId);
 
     const uniqueRecordIds = Array.from(new Set<number>(recordIds));
-    return await this._runInRuntime(this._indexEngine.lookupByRecordIds(uniqueRecordIds));
+    return await this._runInRuntime(ctx, this._indexEngine.lookupByRecordIds(uniqueRecordIds));
   }
 
   /**
@@ -1113,25 +1120,26 @@ export class QueryExecutor extends Resource {
   }
 
   private async _queryRelationsFromSqlIndex(
+    ctx: Context,
     workingSet: QueryItem[],
     endpoint: 'source' | 'target',
   ): Promise<readonly ObjectMeta[]> {
     const anchorDxns = workingSet.map((item) => DXN.fromLocalObjectId(item.objectId).toString());
-    return await this._runInRuntime(this._indexEngine.queryRelations({ endpoint, anchorDxns }));
+    return await this._runInRuntime(ctx, this._indexEngine.queryRelations({ endpoint, anchorDxns }));
   }
 
-  private async _loadDocumentsAfterSqlQuery(metas: readonly ObjectMeta[]): Promise<(QueryItem | null)[]> {
-    const snapshotMap = await this._loadQueueSnapshotMap(metas);
+  private async _loadDocumentsAfterSqlQuery(ctx: Context, metas: readonly ObjectMeta[]): Promise<(QueryItem | null)[]> {
+    const snapshotMap = await this._loadQueueSnapshotMap(ctx, metas);
     return await Promise.all(
       metas.map(async (meta) => {
         // Branch 1: Document-backed object.
         if (meta.documentId) {
-          return this._loadFromAutomerge(meta);
+          return this._loadFromAutomerge(ctx, meta);
         }
 
         // Branch 2: Queue-backed object.
         if (meta.queueId) {
-          return this._loadFromQueue(meta, snapshotMap);
+          return this._loadFromQueue(ctx, meta, snapshotMap);
         }
 
         return null;
@@ -1139,13 +1147,13 @@ export class QueryExecutor extends Resource {
     );
   }
 
-  private async _loadQueueSnapshotMap(metas: readonly ObjectMeta[]): Promise<Map<number, unknown>> {
+  private async _loadQueueSnapshotMap(ctx: Context, metas: readonly ObjectMeta[]): Promise<Map<number, unknown>> {
     const queueMetas = metas.filter((meta) => !meta.documentId && !!meta.queueId);
     if (queueMetas.length === 0) {
       return new Map();
     }
 
-    const snapshots = await this._runInRuntime(
+    const snapshots = await this._runInRuntime(ctx,
       this._indexEngine.querySnapshotsJSON(queueMetas.map((meta) => meta.recordId)),
     );
     return new Map(snapshots.map((s) => [s.recordId, s.snapshot]));
@@ -1155,7 +1163,7 @@ export class QueryExecutor extends Resource {
    * Loads a queue-backed object from an indexed snapshot (by `recordId`).
    * Returns `null` when the snapshot is missing or is not a JSON object.
    */
-  private _loadFromQueue(meta: ObjectMeta, snapshotMap: Map<number, unknown>): QueryItem | null {
+  private _loadFromQueue(_ctx: Context, meta: ObjectMeta, snapshotMap: Map<number, unknown>): QueryItem | null {
     const snapshot = snapshotMap.get(meta.recordId);
     if (!snapshot || typeof snapshot !== 'object') {
       return null;
@@ -1178,12 +1186,12 @@ export class QueryExecutor extends Resource {
    * Returns `null` if the document can't be loaded, the inline object isn't present, or if the meta does not have a
    * document id (e.g. queue-backed objects).
    */
-  private async _loadFromAutomerge(meta: ObjectMeta): Promise<QueryItem | null> {
+  private async _loadFromAutomerge(ctx: Context, meta: ObjectMeta): Promise<QueryItem | null> {
     if (!meta.documentId) {
       return null;
     }
     const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(
-      Context.default(),
+      ctx,
       meta.documentId as DocumentId,
       {
         fetchFromNetwork: true,
@@ -1209,7 +1217,7 @@ export class QueryExecutor extends Resource {
     };
   }
 
-  private async _loadFromDXN(dxn: DXN, { sourceSpaceId }: { sourceSpaceId: SpaceId }): Promise<QueryItem | null> {
+  private async _loadFromDXN(ctx: Context, dxn: DXN, { sourceSpaceId }: { sourceSpaceId: SpaceId }): Promise<QueryItem | null> {
     switch (dxn.kind) {
       case DXN.kind.ECHO: {
         const echoDxn = dxn.asEchoDXN();
@@ -1250,7 +1258,7 @@ export class QueryExecutor extends Resource {
           return null;
         }
 
-        const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(Context.default(), link as AutomergeUrl, {
+        const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(ctx, link as AutomergeUrl, {
           fetchFromNetwork: true,
         });
         const doc = handle.doc();
@@ -1283,7 +1291,7 @@ export class QueryExecutor extends Resource {
         }
 
         const { spaceId, queueId, objectId } = queueDxn;
-        const meta = await this._runInRuntime(
+        const meta = await this._runInRuntime(ctx,
           this._indexEngine.lookupByObjectId({
             objectId,
             spaceId,
@@ -1294,8 +1302,8 @@ export class QueryExecutor extends Resource {
           return null;
         }
 
-        const snapshotMap = await this._loadQueueSnapshotMap([meta]);
-        return this._loadFromQueue(meta, snapshotMap);
+        const snapshotMap = await this._loadQueueSnapshotMap(ctx, [meta]);
+        return this._loadFromQueue(ctx, meta, snapshotMap);
       }
       default: {
         log.warn('unable to resolve DXN', { dxn });
@@ -1304,7 +1312,7 @@ export class QueryExecutor extends Resource {
     }
   }
 
-  private async _getTransitiveDeletionState(item: QueryItem, remainingDepth: number): Promise<boolean> {
+  private async _getTransitiveDeletionState(ctx: Context, item: QueryItem, remainingDepth: number): Promise<boolean> {
     const strongDeps = [
       QueryItem.getParent(item),
       QueryItem.getRelationSource(item),
@@ -1318,7 +1326,7 @@ export class QueryExecutor extends Resource {
     // TODO(dmaretskyi): This could be optimized to bail early if any of the dependencies are deleted.
     const strongDepStates = await Promise.all(
       strongDeps.map(async (dxn) => {
-        const dep = await this._loadFromDXN(DXN.parse(dxn), { sourceSpaceId: item.spaceId });
+        const dep = await this._loadFromDXN(ctx, DXN.parse(dxn), { sourceSpaceId: item.spaceId });
         if (!dep) {
           return false;
         }
@@ -1326,7 +1334,7 @@ export class QueryExecutor extends Resource {
           return true;
         }
         if (remainingDepth > 0) {
-          return this._getTransitiveDeletionState(dep, remainingDepth - 1);
+          return this._getTransitiveDeletionState(ctx, dep, remainingDepth - 1);
         }
         return false;
       }),

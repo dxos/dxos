@@ -29,7 +29,7 @@ describe('EchoEdgeReplicator', () => {
 
     const { context, connectionOpen } = createMockContext();
     const replicator = await connectReplicator(client, context);
-    await replicator.connectToSpace(spaceId);
+    await replicator.connectToSpace(Context.default(), spaceId);
 
     client.setIdentity(await createEphemeralEdgeIdentity());
     await connectionOpen.waitForCount(1);
@@ -56,7 +56,7 @@ describe('EchoEdgeReplicator', () => {
         documentSpaceId: { [documentId]: spaceId },
       });
       const replicator = await connectReplicator(client, context);
-      await replicator.connectToSpace(spaceId);
+      await replicator.connectToSpace(Context.default(), spaceId);
 
       await expect.poll(() => openConnections.length === 1).toBeTruthy();
       expect(openConnections[0].shouldAdvertise(Context.default(), { documentId })).toBeTruthy();
@@ -70,7 +70,7 @@ describe('EchoEdgeReplicator', () => {
       const remoteCollections: { [peerId: string]: { [documentId: string]: boolean } } = {};
       const { context, openConnections } = createMockContext({ remoteCollections });
       const replicator = await connectReplicator(client, context);
-      await replicator.connectToSpace(spaceId);
+      await replicator.connectToSpace(Context.default(), spaceId);
 
       await expect.poll(() => openConnections.length === 1).toBeTruthy();
       const connection = openConnections[0];
