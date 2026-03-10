@@ -7,19 +7,30 @@ import * as Effect from 'effect/Effect';
 import { pipe } from 'effect/Function';
 
 import { ConsolePrinter } from '@dxos/ai';
-import { type AppCapabilities } from '@dxos/app-toolkit';
 import {
   AiContextService,
   type AiConversation,
   type AiConversationRunProps,
   GenerationObserver,
 } from '@dxos/assistant';
+import type { Blueprint } from '@dxos/blueprints';
 import { Database, Ref } from '@dxos/echo';
+import { type FunctionDefinition } from '@dxos/functions';
 import { log } from '@dxos/log';
 
 export type TestStep = Pick<AiConversationRunProps, 'prompt' | 'system'> & {
   test?: () => Promise<void>;
 };
+
+/**
+ * Blueprint definition type for testing.
+ * Mirrors AppCapabilities.BlueprintDefinition to avoid circular dependency with app-toolkit.
+ */
+export interface BlueprintDefinition {
+  key: string;
+  functions: FunctionDefinition.Any[];
+  make: () => Blueprint.Blueprint;
+}
 
 /**
  * Runs the prompt steps, calling the test function after each step.
@@ -42,7 +53,7 @@ export const runSteps = Effect.fn(function* (conversation: AiConversation, steps
  * Binds blueprints from the blueprint definitions.
  */
 // TODO(dmaretskyi): Potentially the agent will auto-bind the blueprints.
-export const addBlueprints = Effect.fnUntraced(function* (blueprints: AppCapabilities.BlueprintDefinition[]) {
+export const addBlueprints = Effect.fnUntraced(function* (blueprints: BlueprintDefinition[]) {
   yield* AiContextService.bindContext({
     blueprints: yield* pipe(
       blueprints,

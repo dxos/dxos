@@ -9,7 +9,6 @@ import * as Match from 'effect/Match';
 import { AiService, type ModelName } from '@dxos/ai';
 import { GenericToolkit } from '@dxos/ai';
 import { TestAiService } from '@dxos/ai/testing';
-import { type AppCapabilities } from '@dxos/app-toolkit';
 import { Feed, type Type } from '@dxos/echo';
 import { CredentialsService, type FunctionDefinition, type ServiceCredential, TracingService } from '@dxos/functions';
 import { TracingServiceExt, TriggerDispatcher, TriggerStateStore } from '@dxos/functions-runtime';
@@ -17,12 +16,20 @@ import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/fun
 
 import { ToolExecutionServices } from '../functions';
 
+/**
+ * Blueprint-like type for test layer configuration.
+ * Simplified version of AppCapabilities.BlueprintDefinition to avoid circular dependency.
+ */
+interface BlueprintLike {
+  functions: FunctionDefinition.Any[];
+}
+
 interface TestLayerOptions {
   aiServicePreset?: 'direct' | 'edge-local' | 'edge-remote';
   model?: ModelName;
   functions?: FunctionDefinition.Any[];
   toolkits?: GenericToolkit.GenericToolkit[];
-  blueprints?: AppCapabilities.BlueprintDefinition[];
+  blueprints?: BlueprintLike[];
   types?: Type.AnyEntity[];
   credentials?: ServiceCredential[];
   /*
