@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as Schema from 'effect/Schema';
+import * as Schema from 'effect/Schema';
 
 import { raise } from '@dxos/debug';
 import type { ForeignKey } from '@dxos/echo-protocol';
@@ -14,7 +14,7 @@ import { assumeType } from '@dxos/util';
 import type * as Database from './Database';
 import * as Entity from './Entity';
 import * as internal from './internal';
-import type * as Obj from './Obj';
+import * as Obj from './Obj';
 import type * as Type from './Type';
 
 export type Endpoints<Source, Target> = {
@@ -39,6 +39,43 @@ interface BaseRelation<Source, Target>
  * To validate that a value is an ECHO relation, use `Relation.isRelation`.
  */
 export interface Unknown extends BaseRelation<Obj.Unknown, Obj.Unknown> {}
+
+/**
+ * Runtime Effect schema for any ECHO relation.
+ * Use for validation, parsing, or as a reference target for collections.
+ * A relation has `id`, source, and target fields plus any additional properties.
+ *
+ * NOTE: `Schema.is(Type.Relation)` does STRUCTURAL validation only (checks for `id` field).
+ * Use `Relation.isRelation()` for proper ECHO instance type guards that check the KindId brand.
+ *
+ * @example
+ * ```ts
+ * // Structural type guard (accepts any object with id field)
+ * if (Schema.is(Type.Relation)(unknownValue)) { ... }
+ *
+ * // ECHO instance type guard (checks KindId brand)
+ * if (Relation.isRelation(unknownValue)) { ... }
+ * ```
+ */
+// TODO(dmaretskyi): Change ObjModule.Any to ObjModule.Unknown to have stricter types.
+export const Unknown: Type.Relation<Unknown, Obj.Any, Obj.Any> = Schema.Struct({
+  id: Schema.String,
+}).pipe(
+  Schema.extend(Schema.Record({ key: Schema.String, value: Schema.Unknown })),
+  // TODO(dmaretskyi): Clean this up.
+  // NOTE: The EchoRelationSchema annotation is required for Ref.Ref(Relation.Unknown) to work.
+  //   The typename/version/source/target only satisfy ECHO schema machinery for reference targets.
+  internal.EchoRelationSchema({
+    typename: 'dxos.org/schema/AnyRelation',
+    version: '0.0.0',
+    source: Obj.Unknown,
+    target: Obj.Unknown,
+  }),
+  (schema) =>
+    Object.assign(schema, {
+      [internal.SchemaKindId]: (schema as any)[internal.SchemaKindId],
+    }) as unknown as Type.Relation<Unknown, Obj.Any, Obj.Any>,
+);
 
 /**
  * Relation type with specific source and target types.

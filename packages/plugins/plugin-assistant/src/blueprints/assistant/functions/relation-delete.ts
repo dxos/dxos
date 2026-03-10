@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Database, Ref, Type } from '@dxos/echo';
+import { Database, Ref, Relation } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { trim } from '@dxos/util';
 
@@ -16,7 +16,7 @@ export default defineFunction({
     Deletes the relation.
   `,
   inputSchema: Schema.Struct({
-    rel: Ref.Ref(Type.Relation),
+    rel: Ref.Ref(Relation.Unknown),
   }),
   outputSchema: Schema.Void,
   handler: Effect.fn(function* ({ data: { rel } }) {

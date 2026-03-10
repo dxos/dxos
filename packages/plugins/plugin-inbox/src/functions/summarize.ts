@@ -19,7 +19,7 @@ import {
   makeGraphWriterHandler,
   makeGraphWriterToolkit,
 } from '@dxos/assistant-toolkit';
-import { Database, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TracingService, defineFunction } from '@dxos/functions';
 import { Message, Organization, Person, Pipeline } from '@dxos/types';
 import { trim } from '@dxos/util';
@@ -56,7 +56,7 @@ export default defineFunction({
       description: 'The summary of the mailbox.',
     }),
   }),
-  types: [Type.Feed, Mailbox.Mailbox],
+  types: [Feed.Feed, Mailbox.Mailbox],
   services: [Database.Service, Feed.Service],
   handler: Effect.fnUntraced(
     function* ({ data: { mailbox: mailboxRef, skip = 0, limit = 20 } }) {

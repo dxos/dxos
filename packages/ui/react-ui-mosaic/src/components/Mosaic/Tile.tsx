@@ -90,7 +90,7 @@ const MosaicTile = forwardRef<HTMLDivElement, MosaicTileProps>(
   ) => {
     const rootRef = useRef<HTMLDivElement>(null);
     const composedRef = composeRefs<HTMLDivElement>(rootRef, forwardedRef);
-    const Root = asChild ? Slot : Primitive.div;
+    const Comp = asChild ? Slot : Primitive.div;
 
     // State.
     const {
@@ -198,7 +198,7 @@ const MosaicTile = forwardRef<HTMLDivElement, MosaicTileProps>(
     // NOTE: Ensure padding doesn't change position of cursor when dragging (no margins).
     return (
       <MosaicTileContextProvider state={state}>
-        <Root
+        <Comp
           {...props}
           {...{
             [`data-${MOSAIC_TILE_STATE_ATTR}`]: state.type,
@@ -208,11 +208,11 @@ const MosaicTile = forwardRef<HTMLDivElement, MosaicTileProps>(
           ref={composedRef}
         >
           {children}
-        </Root>
+        </Comp>
 
         {state.type === 'preview' &&
           createPortal(
-            <Root
+            <Comp
               {...{
                 // NOTE: Use to control appearance while dragging.
                 [`data-${MOSAIC_TILE_STATE_ATTR}`]: state.type,
@@ -227,7 +227,7 @@ const MosaicTile = forwardRef<HTMLDivElement, MosaicTileProps>(
               }
             >
               {children}
-            </Root>,
+            </Comp>,
             state.container,
           )}
       </MosaicTileContextProvider>

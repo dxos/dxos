@@ -11,7 +11,7 @@ import * as Schema from 'effect/Schema';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { type Space, SpaceState, getSpace, isSpace, parseId } from '@dxos/client/echo';
-import { Collection, DXN, Filter, Obj, type Ref, Type } from '@dxos/echo';
+import { Collection, DXN, Feed, Filter, Obj, type Ref, Type } from '@dxos/echo';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { Operation } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -373,7 +373,7 @@ export default Capability.makeModule(
           }
 
           const filter = Match.value(typename).pipe(
-            Match.when(Type.Feed.typename, () => Filter.type(Type.Feed, { kind: feedKind })),
+            Match.when(Feed.Feed.typename, () => Filter.type(Feed.Feed, { kind: feedKind })),
             Match.orElse((typename) => {
               const schema = client.graph.schemaRegistry
                 .query({ typename, location: ['runtime'], includeSystem: true })

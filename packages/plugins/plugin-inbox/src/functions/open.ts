@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 
-import { Database, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { Message } from '@dxos/types';
 
@@ -38,7 +38,7 @@ export default defineFunction({
   outputSchema: Schema.Struct({
     content: Schema.String,
   }),
-  types: [Type.Feed, Mailbox.Mailbox],
+  types: [Feed.Feed, Mailbox.Mailbox],
   services: [Database.Service, Feed.Service],
   handler: Effect.fn(function* ({ data: { mailbox: mailboxRef, skip = 0, limit = 20 } }) {
     const mailbox = yield* Database.load(mailboxRef);

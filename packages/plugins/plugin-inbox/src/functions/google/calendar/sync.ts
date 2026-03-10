@@ -14,7 +14,7 @@ import * as Ref from 'effect/Ref';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
-import { Database, Ref as EchoRef, Feed, Obj, Type } from '@dxos/echo';
+import { Database, Ref as EchoRef, Feed, Obj } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { type Event } from '@dxos/types';
@@ -44,7 +44,7 @@ export default defineFunction({
   outputSchema: Schema.Struct({
     newEvents: Schema.Number,
   }),
-  types: [Type.Feed, Calendar.Calendar],
+  types: [Feed.Feed, Calendar.Calendar],
   services: [Database.Service, Feed.Service],
   handler: ({
     // TODO(wittjosiah): Schema-based defaults are not yet supported.

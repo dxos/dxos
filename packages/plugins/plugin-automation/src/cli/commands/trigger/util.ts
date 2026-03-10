@@ -364,7 +364,7 @@ export const selectQueue = Effect.fn(function* () {
         }
 
         const feedObj = yield* Effect.promise(() => feedRef.tryLoad());
-        if (!feedObj || !Obj.instanceOf(Type.Feed, feedObj)) {
+        if (!feedObj || !Obj.instanceOf(Feed.Feed, feedObj)) {
           continue;
         }
 

@@ -13,7 +13,7 @@ import * as Predicate from 'effect/Predicate';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
-import { Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
+import { Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
@@ -85,7 +85,7 @@ export default defineFunction({
   outputSchema: Schema.Struct({
     newMessages: Schema.Number,
   }),
-  types: [Type.Feed, Mailbox.Mailbox],
+  types: [Feed.Feed, Mailbox.Mailbox],
   services: [Database.Service, Feed.Service],
   handler: ({
     // TODO(wittjosiah): Schema-based defaults are not yet supported.

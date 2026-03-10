@@ -27,7 +27,7 @@ export type Labels = Schema.Schema.Type<typeof Labels>;
 /** Mailbox object schema. */
 export const Mailbox = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
-  feed: Ref.Ref(Type.Feed).pipe(FormInputAnnotation.set(false)),
+  feed: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false)),
   labels: Labels.pipe(FormInputAnnotation.set(false), Schema.optional),
   // TODO(wittjosiah): Factor out to relation?
   filters: Schema.Array(

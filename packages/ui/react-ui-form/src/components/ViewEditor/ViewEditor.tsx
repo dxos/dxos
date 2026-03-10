@@ -96,9 +96,13 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
     useImperativeHandle(forwardedRef, () => projectionModel, [projectionModel]);
 
     const queueTarget = Match.value(view.query.ast).pipe(
-      Match.when({ type: 'options' }, ({ options }) => {
-        return Option.fromNullable(options.queues).pipe(
+      Match.when({ type: 'from' }, ({ from }) => {
+        if (from._tag !== 'scope') {
+          return undefined;
+        }
+        return Option.fromNullable(from.scope.queues).pipe(
           Option.flatMap((queues) => Array.head(queues)),
+          Option.map(String),
           Option.getOrUndefined,
         );
       }),

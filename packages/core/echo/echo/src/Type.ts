@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Schema from 'effect/Schema';
+import type * as Schema from 'effect/Schema';
 
 import { type EncodedReference } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
@@ -11,7 +11,6 @@ import { type ToMutable } from '@dxos/util';
 
 import type * as Entity from './Entity';
 import * as internal from './internal';
-import { FormInputAnnotation, SystemTypeAnnotation } from './internal';
 import type * as ObjModule from './Obj';
 import type * as RelationModule from './Relation';
 
@@ -40,55 +39,6 @@ type EchoSchemaKind<K extends internal.EntityKind = internal.EntityKind> = {
 //
 // Obj - Runtime schema for any ECHO object
 //
-
-// Internal type for the Obj schema constant.
-// NOTE: The `any` in the type intersection is intentional - it makes this type bidirectionally
-//   assignable with specific object types (e.g., Type.Obj can be assigned to/from Meeting.Meeting).
-//   This is needed because operation schemas erase type information.
-// TODO(wittjosiah): Consider alternatives to the `any` intersection hack:
-//   - Generic operation schemas that preserve input type in output
-//   - Branded types that specific schemas also carry
-//   - Accept the limitation and require explicit type narrowing at call sites
-// TODO(dmaretskyi): Add `inviariant(Obj.instanceOf(Schema, obj))` to places where assignability is an issue.
-type ObjSchemaType = Obj<ObjModule.Unknown>;
-
-// Internal schema definition.
-// NOTE: The EchoObjectSchema annotation is required for Ref.Ref(Type.Obj) to work.
-//   The typename/version only satisfy ECHO schema machinery for reference targets.
-const ObjSchema = Schema.Struct({
-  id: Schema.String,
-}).pipe(
-  Schema.extend(Schema.Record({ key: Schema.String, value: Schema.Unknown })),
-  internal.EchoObjectSchema({ typename: internal.ANY_OBJECT_TYPENAME, version: internal.ANY_OBJECT_VERSION }),
-);
-
-/**
- * Runtime Effect schema for any ECHO object.
- * Use for validation, parsing, or as a reference target for collections.
- *
- * NOTE: `Schema.is(Type.Obj)` does STRUCTURAL validation only (checks for `id` field).
- * Use `Obj.isObject()` for proper ECHO instance type guards that check the KindId brand.
- *
- * @example
- * ```ts
- * // Structural type guard (accepts any object with id field)
- * if (Schema.is(Type.Obj)(unknownValue)) { ... }
- *
- * // ECHO instance type guard (checks KindId brand)
- * if (Obj.isObject(unknownValue)) { ... }
- *
- * // Reference to any object type
- * const Collection = Schema.Struct({
- *   objects: Schema.Array(Ref.Ref(Type.Obj)),
- * }).pipe(Type.object({ typename: 'Collection', version: '0.1.0' }));
- * ```
- */
-// TODO(wittjosiah): Investigate if Schema.filter can validate KindId on ECHO instances.
-//   Effect Schema normalizes proxy objects to plain objects before calling filter predicates.
-//   Possible approaches: custom Schema.declare, AST manipulation, or upstream contribution.
-export const Obj: ObjSchemaType = Object.assign(ObjSchema, {
-  [internal.SchemaKindId]: (ObjSchema as any)[internal.SchemaKindId],
-}) as unknown as ObjSchemaType;
 
 /**
  * TypeScript type for an ECHO object schema.
@@ -161,50 +111,6 @@ export const PersistentType: Obj<internal.PersistentSchema> = internal.Persisten
 
 export interface PersistentType extends Schema.Schema.Type<typeof PersistentType> {}
 
-//
-// Relation - Runtime schema for any ECHO relation
-//
-
-// Internal type for the Relation schema constant.
-// TODO(dmaretskyi): Change ObjModule.Any to ObjModule.Unknown to have stricter types.
-type RelationSchemaType = Relation<RelationModule.Unknown, ObjModule.Any, ObjModule.Any>;
-
-// Internal schema definition.
-// NOTE: The EchoRelationSchema annotation is required for Ref.Ref(Type.Relation) to work.
-//   The typename/version/source/target only satisfy ECHO schema machinery for reference targets.
-const RelationSchema = Schema.Struct({
-  id: Schema.String,
-}).pipe(
-  Schema.extend(Schema.Record({ key: Schema.String, value: Schema.Unknown })),
-  internal.EchoRelationSchema({
-    typename: 'dxos.org/schema/AnyRelation',
-    version: '0.0.0',
-    source: ObjSchema,
-    target: ObjSchema,
-  }),
-);
-
-/**
- * Runtime Effect schema for any ECHO relation.
- * Use for validation, parsing, or as a reference target for collections.
- * A relation has `id`, source, and target fields plus any additional properties.
- *
- * NOTE: `Schema.is(Type.Relation)` does STRUCTURAL validation only (checks for `id` field).
- * Use `Relation.isRelation()` for proper ECHO instance type guards that check the KindId brand.
- *
- * @example
- * ```ts
- * // Structural type guard (accepts any object with id field)
- * if (Schema.is(Type.Relation)(unknownValue)) { ... }
- *
- * // ECHO instance type guard (checks KindId brand)
- * if (Relation.isRelation(unknownValue)) { ... }
- * ```
- */
-export const Relation: RelationSchemaType = Object.assign(RelationSchema, {
-  [internal.SchemaKindId]: (RelationSchema as any)[internal.SchemaKindId],
-}) as unknown as RelationSchemaType;
-
 /**
  * TypeScript type for an ECHO relation schema.
  * `T` is the instance type produced by the schema (excluding source/target).
@@ -267,19 +173,6 @@ export const relation: {
     self: Self,
   ) => Relation<Schema.Schema.Type<Self>, Schema.Schema.Type<SourceSchema>, Schema.Schema.Type<TargetSchema>>;
 } = internal.EchoRelationSchema as any;
-
-/**
- * Runtime Effect schema for any ECHO entity (object or relation).
- * Use for validation, parsing, or type guards on unknown values.
- *
- * @example
- * ```ts
- * if (Schema.is(Type.AnyEntity)(unknownValue)) {
- *   // unknownValue is an ECHO entity
- * }
- * ```
- */
-export const AnyEntity: Schema.Schema<Entity.Unknown> = Schema.Union(Obj, Relation) as any;
 
 /**
  * Type alias for any ECHO entity schema (object or relation).
@@ -359,33 +252,3 @@ export type Meta = internal.TypeAnnotation;
 export const getMeta = (schema: AnyEntity): Meta | undefined => {
   return internal.getTypeAnnotation(schema);
 };
-
-//
-// Feed
-//
-
-/**
- * Runtime schema for a Feed object.
- *
- * @example
- * ```ts
- * const feed = Obj.make(Type.Feed, { name: 'notifications', kind: 'dxos.org/plugin/notifications/v1' });
- * ```
- */
-export const Feed = Schema.Struct({
-  /** User-facing display name. */
-  name: Schema.String.pipe(Schema.optional),
-  /** Identifier for the feed's kind (e.g., plugin id). */
-  kind: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
-}).pipe(
-  object({
-    typename: 'dxos.org/type/Feed',
-    version: '0.1.0',
-  }),
-  SystemTypeAnnotation.set(true),
-);
-
-/**
- * TypeScript instance type for a Feed object.
- */
-export interface Feed extends Schema.Schema.Type<typeof Feed> {}

@@ -105,7 +105,10 @@ export default defineFunction({
     } else {
       query = Query.select(Filter.everything());
     }
-    query = query.limit(limit).options({ allQueuesFromSpaces: includeQueues });
+    query = query.limit(limit);
+    if (includeQueues) {
+      query = query.from({ allQueuesFromSpaces: true });
+    }
 
     // Update indexes before querying to make sure we get the latest results.
     yield* Database.flush({ indexes: true });

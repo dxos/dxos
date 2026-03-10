@@ -53,17 +53,17 @@ const Root = forwardRef<HTMLDivElement, ScopedProps<RootProps>>(
     forwardedRef,
   ) => {
     const { tx } = useThemeContext();
-    const Root = asChild ? Slot : Primitive.div;
+    const Comp = asChild ? Slot : Primitive.div;
     return (
       <SplitterProvider scope={__scopeSplitter} mode={mode} ratio={ratio} transition={transition}>
-        <Root
+        <Comp
           role='none'
           {...rootProps}
           ref={forwardedRef}
           className={tx('splitter.root', {}, [className, classNames])}
         >
           {children}
-        </Root>
+        </Comp>
       </SplitterProvider>
     );
   },
@@ -85,7 +85,7 @@ const Panel = forwardRef<HTMLDivElement, ScopedProps<PanelProps>>(
   ({ __scopeSplitter, classNames, className, asChild, children, position, style, ...props }, forwardedRef) => {
     const { mode, ratio, transition } = useSplitterContext(PANEL_NAME, __scopeSplitter);
     const { tx } = useThemeContext();
-    const Root = asChild ? Slot : Primitive.div;
+    const Comp = asChild ? Slot : Primitive.div;
 
     // Calculate position and height based on mode and ratio.
     const isUpper = position === 'upper';
@@ -104,7 +104,7 @@ const Panel = forwardRef<HTMLDivElement, ScopedProps<PanelProps>>(
           : `${(1 - ratio) * 100}%`;
 
     return (
-      <Root
+      <Comp
         role='none'
         {...props}
         ref={forwardedRef}
@@ -117,7 +117,7 @@ const Panel = forwardRef<HTMLDivElement, ScopedProps<PanelProps>>(
         }}
       >
         {children}
-      </Root>
+      </Comp>
     );
   },
 );

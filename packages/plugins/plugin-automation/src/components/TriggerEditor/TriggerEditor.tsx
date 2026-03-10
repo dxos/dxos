@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { ComputeGraph } from '@dxos/conductor';
-import { DXN, type Database, Entity, Feed, Obj, type Query, Type } from '@dxos/echo';
+import { DXN, type Database, Entity, Feed, Obj, type Query } from '@dxos/echo';
 import { Function, Script, Trigger } from '@dxos/functions';
 import { Filter, Ref, useQuery } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
@@ -85,7 +85,7 @@ const useCustomInputs = ({ db, readonlySpec, types, tags }: UseCustomInputsProps
   const functions = useQuery(db, Filter.type(Function.Function));
   const workflows = useQuery(db, Filter.type(ComputeGraph));
   const scripts = useQuery(db, Filter.type(Script.Script));
-  const feeds = useQuery(db, Filter.type(Type.Feed));
+  const feeds = useQuery(db, Filter.type(Feed.Feed));
 
   return useMemo(
     (): FormFieldMap => ({

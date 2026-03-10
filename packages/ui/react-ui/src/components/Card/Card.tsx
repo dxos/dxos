@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import React, { type HTMLAttributes, type PropsWithChildren, createContext, forwardRef, useContext } from 'react';
 
@@ -40,18 +41,18 @@ type CardRootProps = SlottableProps<HTMLDivElement> & {
 const CardRoot = forwardRef<HTMLDivElement, CardRootProps>(
   ({ children, classNames, className, id, asChild, role, border = true, fullWidth, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
-    const Root = asChild ? Slot : 'div';
+    const Comp = asChild ? Slot : Primitive.div;
 
     return (
-      <Root
-        {...(id && { 'data-object-id': id })}
+      <Comp
         {...props}
+        {...(id && { 'data-object-id': id })}
         role={role ?? 'group'}
         className={tx('card.root', { border, fullWidth }, [className, classNames])}
         ref={forwardedRef}
       >
         <Column.Root gutter='rail'>{children}</Column.Root>
-      </Root>
+      </Comp>
     );
   },
 );
@@ -104,17 +105,17 @@ type CardTitleProps = SlottableProps<HTMLDivElement>;
 const CardTitle = forwardRef<HTMLDivElement, CardTitleProps>(
   ({ children, classNames, className, asChild, role, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
-    const Root = asChild ? Slot : 'div';
+    const Comp = asChild ? Slot : Primitive.div;
 
     return (
-      <Root
+      <Comp
         {...props}
         role={role ?? 'heading'}
         className={tx('card.title', {}, [className, classNames])}
         ref={forwardedRef}
       >
         {children}
-      </Root>
+      </Comp>
     );
   },
 );
@@ -161,12 +162,12 @@ type CardSectionProps = SlottableProps<HTMLDivElement>;
 
 const CardSection = forwardRef<HTMLDivElement, CardSectionProps>(
   ({ children, classNames, className, asChild, role, ...props }, forwardedRef) => {
-    const Root = asChild ? Slot : 'div';
+    const Comp = asChild ? Slot : Primitive.div;
 
     return (
-      <Root {...props} role={role ?? 'none'} className={mx(classNames, className, 'col-span-full')} ref={forwardedRef}>
+      <Comp {...props} role={role ?? 'none'} className={mx(classNames, className, 'col-span-full')} ref={forwardedRef}>
         {children}
-      </Root>
+      </Comp>
     );
   },
 );
@@ -183,17 +184,17 @@ type CardHeadingProps = SlottableProps<HTMLDivElement> & { variant?: 'default' |
 const CardHeading = forwardRef<HTMLDivElement, CardHeadingProps>(
   ({ children, classNames, className, asChild, role, variant = 'default', ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
-    const Root = asChild ? Slot : 'div';
+    const Comp = asChild ? Slot : Primitive.div;
 
     return (
-      <Root
+      <Comp
         {...props}
         role={role ?? 'heading'}
         className={tx('card.heading', { variant }, [classNames, className])}
         ref={forwardedRef}
       >
         {children}
-      </Root>
+      </Comp>
     );
   },
 );
@@ -207,17 +208,17 @@ type CardTextProps = SlottableProps<HTMLDivElement> & { truncate?: boolean; vari
 const CardText = forwardRef<HTMLDivElement, CardTextProps>(
   ({ children, classNames, className, asChild, role, truncate, variant = 'default', ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
-    const Root = asChild ? Slot : 'div';
+    const Comp = asChild ? Slot : Primitive.div;
 
     return (
-      <Root
+      <Comp
         {...props}
         role={role ?? 'none'}
         className={tx('card.text', { variant }, [classNames, className])}
         ref={forwardedRef}
       >
         <span className={tx('card.text-span', { variant, truncate })}>{children}</span>
-      </Root>
+      </Comp>
     );
   },
 );

@@ -202,7 +202,7 @@ export const generator = () => ({
               Filter.type(Message.Message, {
                 properties: { labels: Filter.contains('investor') },
               }),
-            ).options({
+            ).from({
               queues: [queueDxn],
             }),
             jsonSchema: JsonSchema.toJsonSchema(Message.Message),

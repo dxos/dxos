@@ -12,7 +12,7 @@ import { AccessToken } from '@dxos/types';
 /** Calendar object schema. */
 export const Calendar = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
-  feed: Ref.Ref(Type.Feed).pipe(FormInputAnnotation.set(false)),
+  feed: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false)),
   // Track the last synced update timestamp to handle out-of-order event updates.
   lastSyncedUpdate: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
   accessToken: Schema.optional(

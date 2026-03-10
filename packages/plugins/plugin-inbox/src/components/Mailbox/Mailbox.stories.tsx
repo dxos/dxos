@@ -8,7 +8,7 @@ import React, { useMemo, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
-import { Feed, Obj, Query, Type } from '@dxos/echo';
+import { Feed, Obj, Query } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
@@ -85,7 +85,7 @@ export const WithCompanion: Story = {
       plugins: [
         ...corePlugins(),
         ClientPlugin({
-          types: [Type.Feed, Mailbox.Mailbox, Message.Message, Person.Person],
+          types: [Feed.Feed, Mailbox.Mailbox, Message.Message, Person.Person],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               yield* Effect.promise(() => client.halo.createIdentity());

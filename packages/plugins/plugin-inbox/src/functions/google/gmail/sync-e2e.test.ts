@@ -11,7 +11,7 @@ import { sleep } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { configPreset } from '@dxos/config';
-import { Feed, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+import { Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { Function } from '@dxos/functions';
 import { Trigger } from '@dxos/functions';
 import { InvocationTraceEndEvent, InvocationTraceStartEvent } from '@dxos/functions-runtime';
@@ -140,7 +140,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
 const setup = async () => {
   const client = await new Client({
     config,
-    types: [Type.Feed, Mailbox.Mailbox, AccessToken.AccessToken, Function.Function, Trigger.Trigger],
+    types: [Feed.Feed, Mailbox.Mailbox, AccessToken.AccessToken, Function.Function, Trigger.Trigger],
   }).initialize();
   await client.halo.createIdentity();
 

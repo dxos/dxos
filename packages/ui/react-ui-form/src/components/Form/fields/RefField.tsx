@@ -38,8 +38,8 @@ const defaultResultsHook: NonNullable<RefFieldProps['resultsHook']> = (db, typen
   useQuery(
     db,
     typename
-      ? // For Ref.Ref(Type.Obj) we want to show all objects.
-        typename === Type.getTypename(Type.Obj)
+      ? // For Ref.Ref(Obj.Unknown) we want to show all objects.
+        typename === Type.getTypename(Obj.Unknown)
         ? Filter.everything()
         : Filter.typename(typename)
       : Filter.nothing(),

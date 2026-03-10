@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Ref, Type } from '@dxos/echo';
+import { Obj, Ref, Type } from '@dxos/echo';
 
 /**
  * @deprecated Use @dxos/echo/testing.
@@ -49,7 +49,7 @@ export namespace TestSchema {
   const BlockSchema = Schema.Struct({
     timestamp: Schema.String,
     content: Schema.optional(Ref.Ref(TextV0Type)),
-    object: Schema.optional(Ref.Ref(Type.Obj)),
+    object: Schema.optional(Ref.Ref(Obj.Unknown)),
   });
 
   export interface BlockType extends Schema.Schema.Type<typeof BlockSchema> {}
@@ -60,7 +60,7 @@ export namespace TestSchema {
     date: Schema.optional(Schema.String),
     subject: Schema.optional(Schema.String),
     blocks: Schema.mutable(Schema.Array(BlockSchema)),
-    links: Schema.optional(Schema.Array(Ref.Ref(Type.Obj))),
+    links: Schema.optional(Schema.Array(Ref.Ref(Obj.Unknown))),
     read: Schema.optional(Schema.Boolean),
     context: Schema.optional(
       Schema.Struct({

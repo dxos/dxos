@@ -23,7 +23,6 @@ import {
   type TableModelProps,
   TablePresentation,
   type TableRowAction,
-  TableToolbar,
   extractOrder,
   useAddRow,
   useProjectionModel,
@@ -162,7 +161,7 @@ export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(
       <TableComponent.Root>
         <Panel.Root role={role} ref={forwardedRef}>
           <Panel.Toolbar asChild>
-            <TableToolbar
+            <TableComponent.Toolbar
               attendableId={Obj.getDXN(object).toString()}
               customActions={customActions}
               viewDirty={model?.getViewDirty()}

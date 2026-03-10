@@ -42,7 +42,7 @@ export const CompanionTo = Schema.Struct({
     typename: 'dxos.org/relation/assistant/CompanionTo',
     version: '0.1.0',
     source: Chat,
-    target: Type.Obj,
+    target: Obj.Unknown,
   }),
 );
 
