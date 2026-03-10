@@ -3,7 +3,7 @@
 //
 
 import { Event, scheduleMicroTask, synchronized, trackLeaks } from '@dxos/async';
-import { type Context, Resource } from '@dxos/context';
+import { Context, Resource } from '@dxos/context';
 import { type DelegateInvitationCredential, type FeedInfo, type MemberInfo } from '@dxos/credentials';
 import { type FeedOptions, type FeedWrapper } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
@@ -90,7 +90,7 @@ export class Space extends Resource {
 
       if (!info.key.equals(params.genesisFeed.key)) {
         scheduleMicroTask(this._ctx, async () => {
-          await this.protocol.addFeed(await params.feedProvider(info.key, { sparse }));
+          await this.protocol.addFeed(this._ctx, await params.feedProvider(info.key, { sparse }));
         });
       }
     });
@@ -152,14 +152,14 @@ export class Space extends Resource {
     return this._controlPipeline.pipeline;
   }
 
-  async setControlFeed(feed: FeedWrapper<FeedMessage>): Promise<this> {
+  async setControlFeed(ctx: Context, feed: FeedWrapper<FeedMessage>): Promise<this> {
     invariant(!this._controlFeed, 'Control feed already set.');
     this._controlFeed = feed;
-    await this._controlPipeline.setWriteFeed(feed);
+    await this._controlPipeline.setWriteFeed(ctx, feed);
     return this;
   }
 
-  async setDataFeed(feed: FeedWrapper<FeedMessage>): Promise<this> {
+  async setDataFeed(ctx: Context, feed: FeedWrapper<FeedMessage>): Promise<this> {
     invariant(!this._dataFeed, 'Data feed already set.');
     this._dataFeed = feed;
     return this;
@@ -168,7 +168,7 @@ export class Space extends Resource {
   /**
    * Use for diagnostics.
    */
-  getControlFeeds(): FeedInfo[] {
+  getControlFeeds(ctx: Context): FeedInfo[] {
     return Array.from(this._controlPipeline.spaceState.feeds.values());
   }
 
@@ -183,19 +183,19 @@ export class Space extends Resource {
   }
 
   @synchronized
-  public async startProtocol(): Promise<void> {
+  public async startProtocol(ctx: Context): Promise<void> {
     invariant(this.isOpen);
-    await this.protocol.start();
-    await this.protocol.addFeed(await this._feedProvider(this._genesisFeedKey));
+    await this.protocol.start(ctx);
+    await this.protocol.addFeed(ctx, await this._feedProvider(this._genesisFeedKey));
   }
 
   @synchronized
-  protected override async _close(): Promise<void> {
+  protected override async _close(ctx: Context): Promise<void> {
     log('closing...', { key: this._key });
 
     // Closes in reverse order to open.
-    await this.protocol.stop();
-    await this._controlPipeline.stop();
+    await this.protocol.stop(ctx);
+    await this._controlPipeline.stop(ctx);
 
     log('closed');
   }

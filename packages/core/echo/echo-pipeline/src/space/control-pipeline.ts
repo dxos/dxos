@@ -67,14 +67,14 @@ export class ControlPipeline {
 
   private _snapshotTask = new DeferredTask(this._ctx, async () => {
     await sleepWithContext(this._ctx, CONTROL_PIPELINE_SNAPSHOT_DELAY);
-    await this._saveSnapshot();
+    await this._saveSnapshot(this._ctx);
   });
 
   constructor({ spaceKey, genesisFeed, feedProvider, metadataStore }: ControlPipelineProps) {
     this._spaceKey = spaceKey;
     this._metadata = metadataStore;
     this._pipeline = new Pipeline();
-    void this._pipeline.addFeed(genesisFeed); // TODO(burdon): Require async open/close?
+    void this._pipeline.addFeed(this._ctx, genesisFeed); // TODO(burdon): Require async open/close?
 
     this._spaceStateMachine = new SpaceStateMachine(spaceKey);
     this._spaceStateMachine.onFeedAdmitted.set(async (info) => {
@@ -89,8 +89,8 @@ export class ControlPipeline {
             if (this._ctx.disposed) {
               return;
             }
-            if (!this._pipeline.hasFeed(feed.key)) {
-              await this._pipeline.addFeed(feed);
+            if (!this._pipeline.hasFeed(this._ctx, feed.key)) {
+              await this._pipeline.addFeed(this._ctx, feed);
             }
           } catch (err: any) {
             log.catch(err);
@@ -115,9 +115,9 @@ export class ControlPipeline {
     return this._pipeline;
   }
 
-  async setWriteFeed(feed: FeedWrapper<FeedMessage>): Promise<void> {
-    await this._pipeline.addFeed(feed);
-    this._pipeline.setWriteFeed(feed);
+  async setWriteFeed(ctx: Context, feed: FeedWrapper<FeedMessage>): Promise<void> {
+    await this._pipeline.addFeed(ctx, feed);
+    this._pipeline.setWriteFeed(ctx, feed);
   }
 
   @trace.span({ showInBrowserTimeline: true })
@@ -125,7 +125,7 @@ export class ControlPipeline {
     const snapshot = this._metadata.getSpaceControlPipelineSnapshot(this._spaceKey);
     log('load snapshot', { key: this._spaceKey, present: !!snapshot, tf: snapshot?.timeframe });
     if (USE_SNAPSHOTS && snapshot) {
-      await this._processSnapshot(snapshot);
+      await this._processSnapshot(ctx, snapshot);
     }
 
     log('starting...');
@@ -133,12 +133,12 @@ export class ControlPipeline {
       void this._consumePipeline(this._ctx);
     });
 
-    await this._pipeline.start();
+    await this._pipeline.start(ctx);
     log('started');
   }
 
-  private async _processSnapshot(snapshot: ControlPipelineSnapshot): Promise<void> {
-    await this._pipeline.setCursor(snapshot.timeframe);
+  private async _processSnapshot(ctx: Context, snapshot: ControlPipelineSnapshot): Promise<void> {
+    await this._pipeline.setCursor(ctx, snapshot.timeframe);
 
     for (const message of snapshot.messages ?? []) {
       const result = await this._spaceStateMachine.process(message.credential, {
@@ -152,8 +152,8 @@ export class ControlPipeline {
     }
   }
 
-  private async _saveSnapshot(): Promise<void> {
-    await this._pipeline.pause();
+  private async _saveSnapshot(ctx: Context): Promise<void> {
+    await this._pipeline.pause(ctx);
     const snapshot: ControlPipelineSnapshot = {
       timeframe: this._pipeline.state.timeframe,
       messages: this._spaceStateMachine.credentialEntries.map((entry) => ({
@@ -161,7 +161,7 @@ export class ControlPipeline {
         credential: entry.credential,
       })),
     };
-    await this._pipeline.unpause();
+    await this._pipeline.unpause(ctx);
 
     log('save snapshot', { key: this._spaceKey, snapshot: getSnapshotLoggerContext(snapshot) });
     await this._metadata.setSpaceControlPipelineSnapshot(this._spaceKey, snapshot);
@@ -169,7 +169,7 @@ export class ControlPipeline {
 
   @trace.span()
   private async _consumePipeline(ctx: Context): Promise<void> {
-    for await (const msg of this._pipeline.consume()) {
+    for await (const msg of this._pipeline.consume(ctx)) {
       const span = this._usage.beginRecording();
       this._mutations.inc();
 
@@ -196,32 +196,32 @@ export class ControlPipeline {
       if (!result) {
         log.warn('processing failed', { msg });
       } else {
-        await this._noteTargetStateIfNeeded(this._pipeline.state.pendingTimeframe);
+        await this._noteTargetStateIfNeeded(ctx, this._pipeline.state.pendingTimeframe);
       }
 
       this._snapshotTask.schedule();
     }
   }
 
-  private async _noteTargetStateIfNeeded(timeframe: Timeframe): Promise<void> {
+  private async _noteTargetStateIfNeeded(ctx: Context, timeframe: Timeframe): Promise<void> {
     // TODO(dmaretskyi): Replace this with a proper debounce/throttle.
 
     if (Date.now() - this._lastTimeframeSaveTime > TIMEFRAME_SAVE_DEBOUNCE_INTERVAL) {
       this._lastTimeframeSaveTime = Date.now();
 
-      await this._saveTargetTimeframe(timeframe);
+      await this._saveTargetTimeframe(ctx, timeframe);
     }
   }
 
-  async stop(): Promise<void> {
+  async stop(ctx: Context): Promise<void> {
     log('stopping...');
     await this._ctx.dispose();
-    await this._pipeline.stop();
-    await this._saveTargetTimeframe(this._pipeline.state.timeframe);
+    await this._pipeline.stop(ctx);
+    await this._saveTargetTimeframe(ctx, this._pipeline.state.timeframe);
     log('stopped');
   }
 
-  private async _saveTargetTimeframe(timeframe: Timeframe): Promise<void> {
+  private async _saveTargetTimeframe(ctx: Context, timeframe: Timeframe): Promise<void> {
     try {
       const newTimeframe = Timeframe.merge(this._targetTimeframe ?? new Timeframe(), timeframe);
       await this._metadata.setSpaceControlLatestTimeframe(this._spaceKey, newTimeframe);

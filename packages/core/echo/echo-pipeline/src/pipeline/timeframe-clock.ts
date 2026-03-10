@@ -3,6 +3,7 @@
 //
 
 import { Event } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { timed } from '@dxos/debug';
 import { type FeedIndex } from '@dxos/feed-store';
 import { type PublicKey } from '@dxos/keys';
@@ -45,28 +46,28 @@ export class TimeframeClock {
     return this._pendingTimeframe;
   }
 
-  setTimeframe(timeframe: Timeframe): void {
+  setTimeframe(ctx: Context, timeframe: Timeframe): void {
     this._timeframe = timeframe;
     this._pendingTimeframe = timeframe;
     this.update.emit(this._timeframe);
   }
 
-  updatePendingTimeframe(key: PublicKey, seq: number): void {
+  updatePendingTimeframe(ctx: Context, key: PublicKey, seq: number): void {
     this._pendingTimeframe = Timeframe.merge(this._pendingTimeframe, new Timeframe([[key, seq]]));
   }
 
-  updateTimeframe(): void {
+  updateTimeframe(ctx: Context): void {
     this._timeframe = this._pendingTimeframe;
     this.update.emit(this._timeframe);
   }
 
-  hasGaps(timeframe: Timeframe): boolean {
+  hasGaps(ctx: Context, timeframe: Timeframe): boolean {
     const gaps = Timeframe.dependencies(timeframe, this._timeframe);
     return !gaps.isEmpty();
   }
 
   @timed(5_000)
-  async waitUntilReached(target: Timeframe): Promise<void> {
+  async waitUntilReached(ctx: Context, target: Timeframe): Promise<void> {
     log('waitUntilReached', { target, current: this._timeframe });
     await this.update.waitForCondition(() => {
       log('check if reached', {

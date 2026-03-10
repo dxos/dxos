@@ -3,6 +3,7 @@
 //
 
 import { type Event } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { discoveryKey, subtleCrypto } from '@dxos/crypto';
 import { type FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
@@ -127,7 +128,7 @@ export class SpaceProtocol {
   }
 
   // TODO(burdon): Create abstraction for Space (e.g., add keys and have provider).
-  async addFeed(feed: FeedWrapper<FeedMessage>): Promise<void> {
+  async addFeed(ctx: Context, feed: FeedWrapper<FeedMessage>): Promise<void> {
     log('addFeed', { key: feed.key });
 
     this._feeds.add(feed);
@@ -139,7 +140,7 @@ export class SpaceProtocol {
   }
 
   // TODO(burdon): Rename open? Common open/close interfaces for all services?
-  async start(): Promise<void> {
+  async start(ctx: Context): Promise<void> {
     if (this._connection) {
       return;
     }
@@ -152,7 +153,7 @@ export class SpaceProtocol {
     log('starting...');
     const topic = await this._topic;
     this._connection = await this._networkManager.joinSwarm({
-      protocolProvider: this._createProtocolProvider(credentials),
+      protocolProvider: this._createProtocolProvider(ctx, credentials),
       topic,
       topology: this._topology,
       label: `swarm ${topic.truncate()} for space ${this._spaceKey.truncate()}`,
@@ -161,11 +162,11 @@ export class SpaceProtocol {
     log('started');
   }
 
-  public updateTopology(): void {
+  public updateTopology(ctx: Context): void {
     this._topology.forceUpdate();
   }
 
-  async stop(): Promise<void> {
+  async stop(ctx: Context): Promise<void> {
     await this.blobSync.close();
 
     if (this._connection) {
@@ -175,7 +176,7 @@ export class SpaceProtocol {
     }
   }
 
-  private _createProtocolProvider(credentials: Uint8Array | undefined): WireProtocolProvider {
+  private _createProtocolProvider(ctx: Context, credentials: Uint8Array | undefined): WireProtocolProvider {
     return (wireProps) => {
       const session = new SpaceProtocolSession({
         wireProps,
@@ -274,7 +275,7 @@ export class SpaceProtocolSession implements WireProtocol {
     return this._teleport.stream;
   }
 
-  async open(sessionId?: PublicKey): Promise<void> {
+  async open(_ctx: Context, sessionId?: PublicKey): Promise<void> {
     await this._teleport.open(sessionId);
     this._teleport.addExtension(
       'dxos.mesh.teleport.auth',
@@ -300,12 +301,12 @@ export class SpaceProtocolSession implements WireProtocol {
     this._teleport.addExtension('dxos.mesh.teleport.blobsync', this._blobSync.createExtension());
   }
 
-  async close(): Promise<void> {
+  async close(_ctx: Context): Promise<void> {
     log('close');
     await this._teleport.close();
   }
 
-  async abort(): Promise<void> {
+  async abort(_ctx: Context): Promise<void> {
     await this._teleport.abort();
   }
 }
