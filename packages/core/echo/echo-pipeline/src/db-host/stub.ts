@@ -2,32 +2,32 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type Context } from '@dxos/context';
 import type {
   DeleteFromQueueRequest,
   InsertIntoQueueRequest,
   QueryQueueRequest,
   QueueQueryResult,
-  QueueService,
   SyncQueueRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
 
 /**
  * Stub implementation for when Edge is not available.
  */
-export class QueueServiceStub implements QueueService {
-  queryQueue(request: QueryQueueRequest): Promise<QueueQueryResult> {
+export class QueueServiceStub {
+  queryQueue(_ctx: Context, request: QueryQueueRequest): Promise<QueueQueryResult> {
     throw new Error('Not available.');
   }
 
-  insertIntoQueue(request: InsertIntoQueueRequest): Promise<void> {
+  insertIntoQueue(_ctx: Context, request: InsertIntoQueueRequest): Promise<void> {
     throw new Error('Not available.');
   }
 
-  deleteFromQueue(request: DeleteFromQueueRequest): Promise<void> {
+  deleteFromQueue(_ctx: Context, request: DeleteFromQueueRequest): Promise<void> {
     throw new Error('Not available.');
   }
 
-  syncQueue(request: SyncQueueRequest): Promise<void> {
+  syncQueue(_ctx: Context, request: SyncQueueRequest): Promise<void> {
     throw new Error('Not available.');
   }
 }

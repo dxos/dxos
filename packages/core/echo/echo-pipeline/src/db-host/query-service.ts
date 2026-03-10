@@ -7,18 +7,13 @@ import * as Schema from 'effect/Schema';
 
 import { DeferredTask, scheduleMicroTask, synchronized } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf/stream';
-import { Context, Resource } from '@dxos/context';
+import { type Context, Resource } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { QueryAST } from '@dxos/echo-protocol';
 import { type RuntimeProvider } from '@dxos/effect';
 import { type IndexEngine } from '@dxos/index-core';
 import { log } from '@dxos/log';
-import {
-  type QueryRequest,
-  type QueryResponse,
-  type QueryResult,
-  type QueryService,
-} from '@dxos/protocols/proto/dxos/echo/query';
+import { type QueryRequest, type QueryResponse, type QueryResult } from '@dxos/protocols/proto/dxos/echo/query';
 import { trace } from '@dxos/tracing';
 
 import { type AutomergeHost } from '../automerge';
@@ -54,7 +49,7 @@ type ActiveQuery = {
 };
 
 @trace.resource()
-export class QueryServiceImpl extends Resource implements QueryService {
+export class QueryServiceImpl extends Resource {
   // TODO(dmaretskyi): We need to implement query deduping. Idle composer has 80 queries with only 10 being unique.
   private readonly _queries = new Set<ActiveQuery>();
 
@@ -79,12 +74,12 @@ export class QueryServiceImpl extends Resource implements QueryService {
     });
   }
 
-  override async _open(): Promise<void> {
+  override async _open(ctx: Context): Promise<void> {
     this._updateQueries = new DeferredTask(this._ctx, () => this._executeQueries(this._ctx));
   }
 
   @synchronized
-  override async _close(): Promise<void> {
+  override async _close(ctx: Context): Promise<void> {
     await this._updateQueries.join();
     await Promise.all(Array.from(this._queries).map((query) => query.close()));
   }
@@ -92,22 +87,22 @@ export class QueryServiceImpl extends Resource implements QueryService {
   /**
    * @deprecated No longer needed with SQL-based indexing.
    */
-  async setConfig(): Promise<void> {
+  async setConfig(ctx: Context): Promise<void> {
     // No-op: SQL indexer doesn't need explicit configuration.
   }
 
   /**
    * @deprecated No longer needed with SQL-based indexing.
    */
-  async reindex(): Promise<void> {
+  async reindex(ctx: Context): Promise<void> {
     // No-op: SQL indexer handles re-indexing automatically.
     log.warn('reindex() is deprecated and no longer has any effect');
   }
 
-  execQuery(request: QueryRequest): Stream<QueryResponse> {
-    return new Stream<QueryResponse>(({ next, close, ctx }) => {
-      const queryEntry = this._createQuery(ctx, request, next, close, close);
-      scheduleMicroTask(ctx, async () => {
+  execQuery(ctx: Context, request: QueryRequest): Stream<QueryResponse> {
+    return new Stream<QueryResponse>(({ next, close, ctx: streamCtx }) => {
+      const queryEntry = this._createQuery(streamCtx, request, next, close, close);
+      scheduleMicroTask(streamCtx, async () => {
         await queryEntry.executor.open();
         queryEntry.open = true;
         this._updateQueries.schedule();
@@ -119,7 +114,7 @@ export class QueryServiceImpl extends Resource implements QueryService {
   /**
    * Schedule re-execution of all queries.
    */
-  invalidateQueries() {
+  invalidateQueries(ctx: Context) {
     for (const query of this._queries) {
       query.dirty = true;
     }

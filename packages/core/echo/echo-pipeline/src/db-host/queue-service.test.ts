@@ -8,6 +8,7 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
+import { Context } from '@dxos/context';
 import { RuntimeProvider } from '@dxos/effect';
 import { FeedStore } from '@dxos/feed';
 import { ObjectId, SpaceId } from '@dxos/keys';
@@ -38,7 +39,7 @@ describe('LocalQueueServiceImpl', () => {
       const object2 = { id: 'obj2', data: 'test2' };
 
       yield* Effect.promise(() =>
-        service.insertIntoQueue({
+        service.insertIntoQueue(Context.default(), {
           subspaceTag: FeedProtocol.WellKnownNamespaces.data,
           spaceId,
           queueId,
@@ -47,7 +48,7 @@ describe('LocalQueueServiceImpl', () => {
       );
 
       const result = yield* Effect.promise(() =>
-        service.queryQueue({
+        service.queryQueue(Context.default(), {
           query: { spaceId, queueIds: [queueId] },
         }),
       );
@@ -69,7 +70,7 @@ describe('LocalQueueServiceImpl', () => {
       const object1 = { id: object1Id, data: 'test1' };
 
       yield* Effect.promise(() =>
-        service.insertIntoQueue({
+        service.insertIntoQueue(Context.default(), {
           subspaceTag: FeedProtocol.WellKnownNamespaces.data,
           spaceId,
           queueId,
@@ -77,7 +78,7 @@ describe('LocalQueueServiceImpl', () => {
         }),
       );
       yield* Effect.promise(() =>
-        service.deleteFromQueue({
+        service.deleteFromQueue(Context.default(), {
           subspaceTag: FeedProtocol.WellKnownNamespaces.data,
           spaceId,
           queueId,
@@ -86,7 +87,7 @@ describe('LocalQueueServiceImpl', () => {
       );
 
       const result = yield* Effect.promise(() =>
-        service.queryQueue({
+        service.queryQueue(Context.default(), {
           query: { spaceId, queueIds: [queueId] },
         }),
       );
@@ -107,7 +108,7 @@ describe('LocalQueueServiceImpl', () => {
       // Insert 10 items
       const items = Array.from({ length: 10 }, (_, i) => ({ id: `obj${i}`, data: `test${i}` }));
       yield* Effect.promise(() =>
-        service.insertIntoQueue({
+        service.insertIntoQueue(Context.default(), {
           subspaceTag: FeedProtocol.WellKnownNamespaces.data,
           spaceId,
           queueId,
@@ -117,7 +118,7 @@ describe('LocalQueueServiceImpl', () => {
 
       // Query first 5
       const page1 = yield* Effect.promise(() =>
-        service.queryQueue({
+        service.queryQueue(Context.default(), {
           query: { spaceId, queueIds: [queueId], limit: 5 },
         }),
       );
@@ -128,7 +129,7 @@ describe('LocalQueueServiceImpl', () => {
 
       // Query next 5
       const page2 = yield* Effect.promise(() =>
-        service.queryQueue({
+        service.queryQueue(Context.default(), {
           query: {
             spaceId,
             queueIds: [queueId],

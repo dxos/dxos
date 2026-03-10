@@ -6,7 +6,7 @@ import { type AnyDocumentId, type AutomergeUrl, type DocHandle, type DocumentId 
 import type * as SqlClient from '@effect/sql/SqlClient';
 
 import { DeferredTask, sleep } from '@dxos/async';
-import { Context, LifecycleState, Resource } from '@dxos/context';
+import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { todo } from '@dxos/debug';
 import { type DatabaseDirectory, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { RuntimeProvider } from '@dxos/effect';
@@ -16,7 +16,6 @@ import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
-import { type FeedProtocol } from '@dxos/protocols';
 import type { SyncQueueRequest } from '@dxos/protocols/proto/dxos/client/services';
 import type * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { trace } from '@dxos/tracing';
@@ -81,7 +80,7 @@ export class EchoHost extends Resource {
 
   private _updateIndexes!: DeferredTask;
 
-  private _queuesService: FeedProtocol.QueueService;
+  private _queuesService: LocalQueueServiceImpl;
 
   private _indexesUpToDate = false;
 
@@ -152,9 +151,9 @@ export class EchoHost extends Resource {
         return Array.from(this._spaceStateManager.roots.values()).map((root) => ({
           url: root.url,
           isLoaded: root.isLoaded,
-          spaceKey: root.getSpaceKey(),
-          inlineObjects: root.getInlineObjectCount(),
-          linkedObjects: root.getLinkedObjectCount(),
+          spaceKey: root.getSpaceKey(this._ctx),
+          inlineObjects: root.getInlineObjectCount(this._ctx),
+          linkedObjects: root.getLinkedObjectCount(this._ctx),
         }));
       },
     });
@@ -166,10 +165,10 @@ export class EchoHost extends Resource {
         return Array.from(this._spaceStateManager.roots.values()).map((root) => ({
           url: root.url,
           isLoaded: root.isLoaded,
-          spaceKey: root.getSpaceKey(),
-          inlineObjects: root.getInlineObjectCount(),
-          linkedObjects: root.getLinkedObjectCount(),
-          ...(root.measureMetrics() ?? {}),
+          spaceKey: root.getSpaceKey(this._ctx),
+          inlineObjects: root.getInlineObjectCount(this._ctx),
+          linkedObjects: root.getLinkedObjectCount(this._ctx),
+          ...(root.measureMetrics(this._ctx) ?? {}),
         }));
       },
     });
@@ -187,7 +186,7 @@ export class EchoHost extends Resource {
     return this._dataService;
   }
 
-  get queuesService(): FeedProtocol.QueueService {
+  get queuesService(): LocalQueueServiceImpl {
     return this._queuesService;
   }
 
@@ -216,21 +215,25 @@ export class EchoHost extends Resource {
 
     await RuntimeProvider.runPromise(this._runtime)(this._feedStore.migrate());
     this._feedStore.onNewBlocks.on(this._ctx, () => {
-      this._queryService.invalidateQueries();
+      this._queryService.invalidateQueries(this._ctx);
       this._updateIndexes.schedule();
     });
 
     this._spaceStateManager.spaceDocumentListUpdated.on(this._ctx, (e) => {
       if (e.previousRootId) {
-        void this._automergeHost.clearLocalCollectionState(deriveCollectionIdFromSpaceId(e.spaceId, e.previousRootId));
+        void this._automergeHost.clearLocalCollectionState(
+          this._ctx,
+          deriveCollectionIdFromSpaceId(e.spaceId, e.previousRootId),
+        );
       }
       void this._automergeHost.updateLocalCollectionState(
+        this._ctx,
         deriveCollectionIdFromSpaceId(e.spaceId, e.spaceRootId),
         e.documentIds,
       );
     });
     this._automergeHost.documentsSaved.on(this._ctx, () => {
-      this._queryService.invalidateQueries();
+      this._queryService.invalidateQueries(this._ctx);
       this._updateIndexes.schedule();
     });
     this._updateIndexes.schedule();
@@ -252,7 +255,7 @@ export class EchoHost extends Resource {
   /**
    * Perform any pending index updates.
    */
-  async updateIndexes(): Promise<void> {
+  async updateIndexes(ctx: Context): Promise<void> {
     do {
       await this._updateIndexes.runBlocking();
     } while (!this._indexesUpToDate);
@@ -272,18 +275,18 @@ export class EchoHost extends Resource {
   /**
    * Create new persisted document.
    */
-  async createDoc<T>(initialValue?: T, opts?: CreateDocOptions): Promise<DocHandle<T>> {
-    return this._automergeHost.createDoc(initialValue, opts);
+  async createDoc<T>(ctx: Context, initialValue?: T, opts?: CreateDocOptions): Promise<DocHandle<T>> {
+    return this._automergeHost.createDoc(ctx, initialValue, opts);
   }
 
   /**
    * Create new space root.
    */
-  async createSpaceRoot(spaceKey: PublicKey): Promise<DatabaseRoot> {
+  async createSpaceRoot(ctx: Context, spaceKey: PublicKey): Promise<DatabaseRoot> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
     const spaceId = await createIdFromSpaceKey(spaceKey);
 
-    const automergeRoot = await this._automergeHost.createDoc<DatabaseDirectory>({
+    const automergeRoot = await this._automergeHost.createDoc<DatabaseDirectory>(ctx, {
       version: SpaceDocVersion.CURRENT,
       access: { spaceKey: spaceKey.toHex() },
 
@@ -292,51 +295,51 @@ export class EchoHost extends Resource {
       links: {},
     });
 
-    await this._automergeHost.flush(this._ctx, { documentIds: [automergeRoot.documentId] });
+    await this._automergeHost.flush(ctx, { documentIds: [automergeRoot.documentId] });
 
-    return await this.openSpaceRoot(spaceId, automergeRoot.url);
+    return await this.openSpaceRoot(ctx, spaceId, automergeRoot.url);
   }
 
   // TODO(dmaretskyi): Change to document id.
-  async openSpaceRoot(spaceId: SpaceId, automergeUrl: AutomergeUrl): Promise<DatabaseRoot> {
+  async openSpaceRoot(ctx: Context, spaceId: SpaceId, automergeUrl: AutomergeUrl): Promise<DatabaseRoot> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
-    const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(Context.default(), automergeUrl, {
+    const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(ctx, automergeUrl, {
       fetchFromNetwork: true,
     });
     await handle.whenReady();
 
-    return this._spaceStateManager.assignRootToSpace(spaceId, handle);
+    return this._spaceStateManager.assignRootToSpace(ctx, spaceId, handle);
   }
 
   // TODO(dmaretskyi): Change to document id.
-  async closeSpaceRoot(_automergeUrl: AutomergeUrl): Promise<void> {
+  async closeSpaceRoot(ctx: Context, _automergeUrl: AutomergeUrl): Promise<void> {
     todo();
   }
 
   /**
    * Install data replicator.
    */
-  async addReplicator(replicator: AutomergeReplicator): Promise<void> {
-    await this._automergeHost.addReplicator(replicator);
+  async addReplicator(ctx: Context, replicator: AutomergeReplicator): Promise<void> {
+    await this._automergeHost.addReplicator(ctx, replicator);
   }
 
   /**
    * Remove data replicator.
    */
-  async removeReplicator(replicator: AutomergeReplicator): Promise<void> {
-    await this._automergeHost.removeReplicator(replicator);
+  async removeReplicator(ctx: Context, replicator: AutomergeReplicator): Promise<void> {
+    await this._automergeHost.removeReplicator(ctx, replicator);
   }
 
   /**
    * Run collection sync for the given space.
    * Does not wait for the sync to complete.
    */
-  async runCollectionSync(spaceId: SpaceId) {
-    const root = this._spaceStateManager.getRootBySpaceId(spaceId);
+  async runCollectionSync(ctx: Context, spaceId: SpaceId) {
+    const root = this._spaceStateManager.getRootBySpaceId(ctx, spaceId);
     if (!root) {
       throw new Error(`Space not found: ${spaceId}`);
     }
-    this._automergeHost.refreshCollection(deriveCollectionIdFromSpaceId(spaceId, root.documentId));
+    this._automergeHost.refreshCollection(ctx, deriveCollectionIdFromSpaceId(spaceId, root.documentId));
   }
 
   private _runUpdateIndexes = async (): Promise<void> => {
@@ -346,7 +349,7 @@ export class EchoHost extends Resource {
     {
       performance.mark('indexEngine.update.automerge:start');
       const { updated, done } = await this._indexEngine
-        .update(this._automergeDataSource, { spaceId: null, limit: 50 })
+        .update(this._ctx, this._automergeDataSource, { spaceId: null, limit: 50 })
         .pipe(RuntimeProvider.runPromise(this._runtime));
       totalUpdated += updated;
       totalDone &&= done;
@@ -367,7 +370,7 @@ export class EchoHost extends Resource {
     {
       performance.mark('indexEngine.update.queue:start');
       const { updated, done } = await this._indexEngine
-        .update(this._queueDataSource, { spaceId: null, limit: 50 })
+        .update(this._ctx, this._queueDataSource, { spaceId: null, limit: 50 })
         .pipe(RuntimeProvider.runPromise(this._runtime));
       totalUpdated += updated;
       totalDone &&= done;
@@ -396,7 +399,7 @@ export class EchoHost extends Resource {
 
     // Invalidate queries after index update completes so queries can see newly indexed data.
     if (totalUpdated > 0) {
-      this._queryService.invalidateQueries();
+      this._queryService.invalidateQueries(this._ctx);
     }
   };
 }

@@ -32,10 +32,10 @@ describe('DocumentsSynchronizer', () => {
     await openAndClose(synchronizer);
 
     // First create the document on the host (simulates DataService.createDocument).
-    const handle = await host.createDoc<{ text: string }>({ text: 'hello' });
+    const handle = await host.createDoc<{ text: string }>(Context.default(), { text: 'hello' });
 
     // Add document to synchronizer (simulates updateSubscription with addIds).
-    await synchronizer.addDocuments([handle.documentId]);
+    await synchronizer.addDocuments(Context.default(), [handle.documentId]);
 
     // Wait for the changes to be processed.
     await sleep(100);
@@ -64,11 +64,11 @@ describe('DocumentsSynchronizer', () => {
         await openAndClose(synchronizer);
 
         // Create document on host (simulates DataService.createDocument).
-        const handle = await host.createDoc<{ text: string }>({ text });
+        const handle = await host.createDoc<{ text: string }>(Context.default(), { text });
         documentId = handle.documentId;
 
         // Add to synchronizer (simulates updateSubscription with addIds).
-        await synchronizer.addDocuments([documentId]);
+        await synchronizer.addDocuments(Context.default(), [documentId]);
 
         // Wait for auto-save (no explicit flush).
         await sleep(500);

@@ -145,7 +145,9 @@ describe('AutomergeHost', () => {
     await host2.updateLocalCollectionState(Context.default(), collectionId, documentIds);
 
     for (const documentId of documentIds) {
-      await expect.poll(() => host1.getHeads(Context.default(), [documentId])).toEqual(await host2.getHeads(Context.default(), [documentId]));
+      await expect
+        .poll(() => host1.getHeads(Context.default(), [documentId]))
+        .toEqual(await host2.getHeads(Context.default(), [documentId]));
     }
 
     await host1.close();

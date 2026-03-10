@@ -6,6 +6,7 @@ import type * as SqlClient from '@effect/sql/SqlClient';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 
+import { type Context } from '@dxos/context';
 import { type ObjectJSON } from '@dxos/echo/internal';
 import { EchoFeedCodec } from '@dxos/echo-protocol';
 import { RuntimeProvider } from '@dxos/effect';
@@ -18,7 +19,6 @@ import {
   type InsertIntoQueueRequest,
   type QueryQueueRequest,
   type QueueQueryResult,
-  type QueueService,
   type SyncQueueRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
 import type { SqlTransaction } from '@dxos/sql-sqlite';
@@ -26,7 +26,7 @@ import type { SqlTransaction } from '@dxos/sql-sqlite';
 /**
  * Writes queue data to a local FeedStore.
  */
-export class LocalQueueServiceImpl implements QueueService {
+export class LocalQueueServiceImpl {
   #runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>;
   #feedStore: FeedStore;
   #syncQueue?: (request: SyncQueueRequest) => Promise<void>;
@@ -41,7 +41,7 @@ export class LocalQueueServiceImpl implements QueueService {
     this.#syncQueue = syncQueue;
   }
 
-  queryQueue(request: QueryQueueRequest): Promise<QueueQueryResult> {
+  queryQueue(_ctx: Context, request: QueryQueueRequest): Promise<QueueQueryResult> {
     const { query } = request;
     invariant(query, 'query is required');
     const { spaceId, queueIds } = query;
@@ -75,7 +75,7 @@ export class LocalQueueServiceImpl implements QueueService {
     );
   }
 
-  insertIntoQueue(request: InsertIntoQueueRequest): Promise<void> {
+  insertIntoQueue(_ctx: Context, request: InsertIntoQueueRequest): Promise<void> {
     const { subspaceTag, spaceId, queueId, objects } = request;
     const feedNamespace = subspaceTag ?? FeedProtocol.WellKnownNamespaces.data;
     assertArgument(
@@ -97,7 +97,7 @@ export class LocalQueueServiceImpl implements QueueService {
     );
   }
 
-  deleteFromQueue(request: DeleteFromQueueRequest): Promise<void> {
+  deleteFromQueue(_ctx: Context, request: DeleteFromQueueRequest): Promise<void> {
     const { subspaceTag, spaceId, queueId, objectIds } = request;
     const feedNamespace = subspaceTag ?? FeedProtocol.WellKnownNamespaces.data;
     assertArgument(
@@ -119,7 +119,7 @@ export class LocalQueueServiceImpl implements QueueService {
     );
   }
 
-  async syncQueue(request: SyncQueueRequest): Promise<void> {
+  async syncQueue(_ctx: Context, request: SyncQueueRequest): Promise<void> {
     await this.#syncQueue?.(request);
   }
 }

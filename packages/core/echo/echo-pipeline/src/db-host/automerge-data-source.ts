@@ -6,7 +6,7 @@ import { type Heads } from '@automerge/automerge';
 import { type DocumentId } from '@automerge/automerge-repo';
 import * as Effect from 'effect/Effect';
 
-import { Context } from '@dxos/context';
+import { type Context } from '@dxos/context';
 import { objectStructureToJson } from '@dxos/echo/internal';
 import { DatabaseDirectory, SpaceDocVersion } from '@dxos/echo-protocol';
 import { type DataSourceCursor, type IndexDataSource, type IndexerObject } from '@dxos/index-core';
@@ -58,6 +58,7 @@ export class AutomergeDataSource implements IndexDataSource {
   }
 
   getChangedObjects(
+    ctx: Context,
     cursors: DataSourceCursor[],
     opts?: { limit?: number },
   ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[] }> {
@@ -75,7 +76,7 @@ export class AutomergeDataSource implements IndexDataSource {
         const result: { documentId: DocumentId; heads: Heads }[] = [];
         const limit = opts?.limit ?? Infinity;
 
-        for await (const { documentId, heads } of this.#automergeHost.listDocumentHeads()) {
+        for await (const { documentId, heads } of this.#automergeHost.listDocumentHeads(ctx)) {
           const existingCursor = cursorMap.get(documentId);
           if (hasChanged(existingCursor, heads)) {
             result.push({ documentId, heads });
@@ -93,9 +94,7 @@ export class AutomergeDataSource implements IndexDataSource {
 
       for (const { documentId, heads: docHeads } of changedDocuments) {
         try {
-          const handle = yield* Effect.promise(() =>
-            this.#automergeHost.loadDoc<DatabaseDirectory>(Context.default(), documentId),
-          );
+          const handle = yield* Effect.promise(() => this.#automergeHost.loadDoc<DatabaseDirectory>(ctx, documentId));
           const doc = handle.doc();
           if (!doc) {
             continue;

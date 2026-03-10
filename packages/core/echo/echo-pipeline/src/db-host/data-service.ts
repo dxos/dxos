@@ -7,7 +7,7 @@ import { type DocumentId } from '@automerge/automerge-repo';
 import { UpdateScheduler } from '@dxos/async';
 import { type RequestOptions } from '@dxos/codec-protobuf';
 import { Stream } from '@dxos/codec-protobuf/stream';
-import { Context } from '@dxos/context';
+import { type Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -15,7 +15,6 @@ import {
   type BatchedDocumentUpdates,
   type CreateDocumentRequest,
   type CreateDocumentResponse,
-  type DataService,
   type FlushRequest,
   type GetDocumentHeadsRequest,
   type GetDocumentHeadsResponse,
@@ -43,7 +42,7 @@ export type DataServiceProps = {
  * Data sync between client and services.
  */
 // TODO(burdon): Move to client-services.
-export class DataServiceImpl implements DataService {
+export class DataServiceImpl {
   /**
    * Map of subscriptions.
    * subscriptionId -> DocumentsSynchronizer
@@ -60,7 +59,7 @@ export class DataServiceImpl implements DataService {
     this._updateIndexes = params.updateIndexes;
   }
 
-  subscribe(request: SubscribeRequest): Stream<BatchedDocumentUpdates> {
+  subscribe(ctx: Context, request: SubscribeRequest): Stream<BatchedDocumentUpdates> {
     return new Stream<BatchedDocumentUpdates>(({ next, ready }) => {
       const synchronizer = new DocumentsSynchronizer({
         automergeHost: this._automergeHost,
@@ -77,43 +76,43 @@ export class DataServiceImpl implements DataService {
     });
   }
 
-  async updateSubscription(request: UpdateSubscriptionRequest): Promise<void> {
+  async updateSubscription(ctx: Context, request: UpdateSubscriptionRequest): Promise<void> {
     const synchronizer = this._subscriptions.get(request.subscriptionId);
     invariant(synchronizer, 'Subscription not found');
 
     if (request.addIds?.length) {
-      await synchronizer.addDocuments(request.addIds as DocumentId[]);
+      await synchronizer.addDocuments(ctx, request.addIds as DocumentId[]);
     }
     if (request.removeIds?.length) {
-      await synchronizer.removeDocuments(request.removeIds as DocumentId[]);
+      synchronizer.removeDocuments(ctx, request.removeIds as DocumentId[]);
     }
   }
 
-  async createDocument(request: CreateDocumentRequest): Promise<CreateDocumentResponse> {
-    const handle = await this._automergeHost.createDoc(request.initialValue);
+  async createDocument(ctx: Context, request: CreateDocumentRequest): Promise<CreateDocumentResponse> {
+    const handle = await this._automergeHost.createDoc(ctx, request.initialValue);
     return { documentId: handle.documentId };
   }
 
-  async update(request: UpdateRequest): Promise<void> {
+  async update(ctx: Context, request: UpdateRequest): Promise<void> {
     if (!request.updates) {
       return;
     }
     const synchronizer = this._subscriptions.get(request.subscriptionId);
     invariant(synchronizer, 'Subscription not found');
 
-    await synchronizer.update(request.updates);
+    await synchronizer.update(ctx, request.updates);
   }
 
-  async flush(request: FlushRequest): Promise<void> {
-    await this._automergeHost.flush(Context.default(), request);
+  async flush(ctx: Context, request: FlushRequest): Promise<void> {
+    await this._automergeHost.flush(ctx, request);
   }
 
-  async getDocumentHeads(request: GetDocumentHeadsRequest): Promise<GetDocumentHeadsResponse> {
+  async getDocumentHeads(ctx: Context, request: GetDocumentHeadsRequest): Promise<GetDocumentHeadsResponse> {
     const documentIds = request.documentIds;
     if (!documentIds) {
       return { heads: { entries: [] } };
     }
-    const heads = await this._automergeHost.getHeads(documentIds as DocumentId[]);
+    const heads = await this._automergeHost.getHeads(ctx, documentIds as DocumentId[]);
     return {
       heads: {
         entries: heads.map((heads, idx) => ({ documentId: documentIds[idx], heads })),
@@ -122,28 +121,29 @@ export class DataServiceImpl implements DataService {
   }
 
   async waitUntilHeadsReplicated(
+    ctx: Context,
     request: WaitUntilHeadsReplicatedRequest,
     options?: RequestOptions | undefined,
   ): Promise<void> {
-    await this._automergeHost.waitUntilHeadsReplicated(request.heads);
+    await this._automergeHost.waitUntilHeadsReplicated(ctx, request.heads);
   }
 
-  async reIndexHeads(request: ReIndexHeadsRequest, options?: RequestOptions): Promise<void> {
-    await this._automergeHost.reIndexHeads((request.documentIds ?? []) as DocumentId[]);
+  async reIndexHeads(ctx: Context, request: ReIndexHeadsRequest, options?: RequestOptions): Promise<void> {
+    await this._automergeHost.reIndexHeads(ctx, (request.documentIds ?? []) as DocumentId[]);
   }
 
-  async updateIndexes(): Promise<void> {
+  async updateIndexes(ctx: Context): Promise<void> {
     await this._updateIndexes();
   }
 
-  subscribeSpaceSyncState(request: GetSpaceSyncStateRequest): Stream<SpaceSyncState> {
-    return new Stream<SpaceSyncState>(({ ctx, next, ready }) => {
+  subscribeSpaceSyncState(ctx: Context, request: GetSpaceSyncStateRequest): Stream<SpaceSyncState> {
+    return new Stream<SpaceSyncState>(({ ctx: streamCtx, next, ready }) => {
       const spaceId = request.spaceId;
       invariant(SpaceId.isValid(spaceId));
 
-      const rootDocumentId = this._spaceStateManager.getSpaceRootDocumentId(spaceId);
+      const rootDocumentId = this._spaceStateManager.getSpaceRootDocumentId(streamCtx, spaceId);
       let collectionId = rootDocumentId && deriveCollectionIdFromSpaceId(spaceId, rootDocumentId);
-      this._spaceStateManager.spaceDocumentListUpdated.on(ctx, (event) => {
+      this._spaceStateManager.spaceDocumentListUpdated.on(streamCtx, (event) => {
         const newId = deriveCollectionIdFromSpaceId(spaceId, event.spaceRootId);
         if (newId !== collectionId) {
           collectionId = newId;
@@ -151,13 +151,15 @@ export class DataServiceImpl implements DataService {
         }
       });
 
-      const scheduler = new UpdateScheduler(ctx, async () => {
-        const state = collectionId ? await this._automergeHost.getCollectionSyncState(collectionId) : { peers: [] };
+      const scheduler = new UpdateScheduler(streamCtx, async () => {
+        const state = collectionId
+          ? await this._automergeHost.getCollectionSyncState(streamCtx, collectionId)
+          : { peers: [] };
 
         next({ peers: state.peers });
       });
 
-      this._automergeHost.collectionStateUpdated.on(ctx, (e) => {
+      this._automergeHost.collectionStateUpdated.on(streamCtx, (e) => {
         if (e.collectionId === collectionId) {
           scheduler.trigger();
         }

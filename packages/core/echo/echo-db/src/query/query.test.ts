@@ -8,6 +8,7 @@ import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout, sleep } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { type Entity, Feed, type Hypergraph, Obj, Order, Ref, Relation, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
@@ -701,7 +702,7 @@ describe('Query', () => {
         doc.links![obj1.id] = new A.RawString(anotherDocHandle.url!);
       });
       await db.flush();
-      await peer.host.queryService.reindex();
+      await peer.host.queryService.reindex(Context.default());
 
       root = rootDocHandle.url!;
       assertion = { objectId: obj2.id, documentUrl: anotherDocHandle.url! };

@@ -926,13 +926,9 @@ export class CoreDatabase {
    * This happens for objects which were loaded for the first time (_onObjectDocumentLoaded).
    */
   private _objectsForNextUpdate = new Set<string>();
-  private readonly _updateScheduler = new UpdateScheduler(
-    this._ctx,
-    async () => this._emitDbUpdateEvents(this._ctx),
-    {
-      maxFrequency: THROTTLED_UPDATE_FREQUENCY,
-    },
-  );
+  private readonly _updateScheduler = new UpdateScheduler(this._ctx, async () => this._emitDbUpdateEvents(this._ctx), {
+    maxFrequency: THROTTLED_UPDATE_FREQUENCY,
+  });
 
   @trace.span({ showInBrowserTimeline: true })
   private _emitDbUpdateEvents(ctx: Context): void {
