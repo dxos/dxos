@@ -185,7 +185,10 @@ export class WorkerRuntime {
   /**
    * Create a new session.
    */
-  async createSession(ctx: Context, { appPort, systemPort, shellPort, onClose }: CreateSessionProps): Promise<WorkerSession> {
+  async createSession(
+    ctx: Context,
+    { appPort, systemPort, shellPort, onClose }: CreateSessionProps,
+  ): Promise<WorkerSession> {
     const session = new WorkerSession({
       serviceHost: this._clientServices,
       appPort,

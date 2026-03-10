@@ -176,17 +176,20 @@ export class FeedSyncer extends Resource {
   /**
    * Performs queue sync and blocks until there are no pending sync batches.
    */
-  async syncBlocking(ctx: Context, {
-    spaceId,
-    subspaceTag,
-    shouldPush = true,
-    shouldPull = true,
-  }: {
-    spaceId: SpaceId;
-    subspaceTag: string;
-    shouldPush?: boolean;
-    shouldPull?: boolean;
-  }): Promise<void> {
+  async syncBlocking(
+    ctx: Context,
+    {
+      spaceId,
+      subspaceTag,
+      shouldPush = true,
+      shouldPull = true,
+    }: {
+      spaceId: SpaceId;
+      subspaceTag: string;
+      shouldPush?: boolean;
+      shouldPull?: boolean;
+    },
+  ): Promise<void> {
     invariant(SpaceId.isValid(spaceId));
     invariant(FeedProtocol.isWellKnownNamespace(subspaceTag));
     if (!shouldPush && !shouldPull) {

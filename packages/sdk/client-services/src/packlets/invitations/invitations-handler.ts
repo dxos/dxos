@@ -4,7 +4,7 @@
 
 import { type PushStream, TimeoutError, type Trigger, scheduleTask } from '@dxos/async';
 import { INVITATION_TIMEOUT, getExpirationTime } from '@dxos/client-protocol';
-import { Context, ContextDisposedError } from '@dxos/context';
+import { type Context, ContextDisposedError } from '@dxos/context';
 import { createKeyPair, sign } from '@dxos/crypto';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';

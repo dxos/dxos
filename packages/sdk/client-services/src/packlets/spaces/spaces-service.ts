@@ -274,7 +274,8 @@ export class SpacesServiceImpl implements SpacesService {
     assertArgument(SpaceId.isValid(request.spaceId), 'spaceId', 'Invalid space ID');
 
     const dataSpaceManager = await this._getDataSpaceManager();
-    const space = dataSpaceManager.getSpaceById(Context.default(), request.spaceId) ?? raise(new Error('Space not found'));
+    const space =
+      dataSpaceManager.getSpaceById(Context.default(), request.spaceId) ?? raise(new Error('Space not found'));
     await writer.begin(Context.default(), { spaceId: space.id });
     const rootUrl = space.automergeSpaceState.lastEpoch?.subject.assertion.automergeRoot;
     assertState(rootUrl, 'Space does not have a root URL');

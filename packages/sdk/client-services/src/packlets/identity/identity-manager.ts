@@ -372,7 +372,10 @@ export class IdentityManager {
     return identity;
   }
 
-  private async _constructSpace(ctx: Context, { spaceRecord, swarmIdentity, identityKey, gossip }: ConstructSpaceProps) {
+  private async _constructSpace(
+    ctx: Context,
+    { spaceRecord, swarmIdentity, identityKey, gossip }: ConstructSpaceProps,
+  ) {
     return this._spaceManager.constructSpace(Context.default(), {
       metadata: {
         key: spaceRecord.key,

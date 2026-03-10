@@ -224,7 +224,10 @@ export class Identity {
     );
   }
 
-  async admitDevice(ctx: Context, { deviceKey, controlFeedKey, dataFeedKey }: DeviceAdmissionRequest): Promise<Credential> {
+  async admitDevice(
+    ctx: Context,
+    { deviceKey, controlFeedKey, dataFeedKey }: DeviceAdmissionRequest,
+  ): Promise<Credential> {
     log('Admitting device:', {
       identityKey: this.identityKey,
       hostDevice: this.deviceKey,

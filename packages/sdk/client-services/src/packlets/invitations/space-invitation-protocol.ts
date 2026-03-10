@@ -142,7 +142,10 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     await writeMessages(space.inner.controlPipeline.writer, [credential]);
   }
 
-  checkInvitation(ctx: Context, invitation: Partial<Invitation>): InvalidInvitationError | AlreadyJoinedError | undefined {
+  checkInvitation(
+    ctx: Context,
+    invitation: Partial<Invitation>,
+  ): InvalidInvitationError | AlreadyJoinedError | undefined {
     if (invitation.spaceKey == null) {
       return new InvalidInvitationError({ message: 'No spaceKey was provided for a space invitation.' });
     }

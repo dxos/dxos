@@ -3,7 +3,7 @@
 //
 
 import { DeferredTask, Event, scheduleTask, synchronized } from '@dxos/async';
-import { Context, Resource } from '@dxos/context';
+import { type Context, Resource } from '@dxos/context';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -167,7 +167,11 @@ export class EdgeAgentManager extends Resource {
 
     if (activePollingEnabled) {
       // Check again to see if active edge polling can be disabled (agent feed is notarized in all the spaces)
-      scheduleTask(this._ctx, () => this._ensureAgentIsInSpaces(this._ctx, agentDeviceKey), AGENT_FEED_ADDED_CHECK_INTERVAL_MS);
+      scheduleTask(
+        this._ctx,
+        () => this._ensureAgentIsInSpaces(this._ctx, agentDeviceKey),
+        AGENT_FEED_ADDED_CHECK_INTERVAL_MS,
+      );
     }
   }
 

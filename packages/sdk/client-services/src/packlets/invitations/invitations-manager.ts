@@ -69,7 +69,11 @@ export class InvitationsManager {
     }
     const invitation = this._createInvitation(ctx, handler, options);
 
-    const { ctx: invitationCtx, stream, observableInvitation } = this._createObservableInvitation(ctx, handler, invitation);
+    const {
+      ctx: invitationCtx,
+      stream,
+      observableInvitation,
+    } = this._createObservableInvitation(ctx, handler, invitation);
 
     this._createInvitations.set(invitation.invitationId, observableInvitation);
     this.invitationCreated.emit(invitation);
@@ -127,8 +131,20 @@ export class InvitationsManager {
     }
 
     const handler = this._getHandler(options);
-    const { ctx: invitationCtx, invitation, stream, otpEnteredTrigger } = this._createObservableAcceptingInvitation(ctx, handler, options);
-    this._invitationsHandler.acceptInvitation(invitationCtx, stream, handler, options, otpEnteredTrigger, request.deviceProfile);
+    const {
+      ctx: invitationCtx,
+      invitation,
+      stream,
+      otpEnteredTrigger,
+    } = this._createObservableAcceptingInvitation(ctx, handler, options);
+    this._invitationsHandler.acceptInvitation(
+      invitationCtx,
+      stream,
+      handler,
+      options,
+      otpEnteredTrigger,
+      request.deviceProfile,
+    );
     this._acceptInvitations.set(invitation.get().invitationId, invitation);
     this.invitationAccepted.emit(invitation.get());
 

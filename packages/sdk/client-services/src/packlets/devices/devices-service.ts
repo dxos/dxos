@@ -4,6 +4,7 @@
 
 import { SubscriptionList } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf/stream';
+import { Context } from '@dxos/context';
 import { type EdgeConnection } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import {
@@ -14,7 +15,6 @@ import {
   type QueryDevicesResponse,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { Context } from '@dxos/context';
 
 import { type IdentityManager } from '../identity';
 

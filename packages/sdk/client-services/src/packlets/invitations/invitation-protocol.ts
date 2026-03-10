@@ -47,7 +47,12 @@ export interface InvitationProtocol {
   /**
    * Once authentication is successful, the host can admit the guest to the requested resource.
    */
-  admit(ctx: Context, invitation: Invitation, request: AdmissionRequest, guestProfile?: ProfileDocument): Promise<AdmissionResponse>;
+  admit(
+    ctx: Context,
+    invitation: Invitation,
+    request: AdmissionRequest,
+    guestProfile?: ProfileDocument,
+  ): Promise<AdmissionResponse>;
 
   //
   // Guest

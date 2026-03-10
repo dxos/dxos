@@ -497,7 +497,11 @@ export class DataSpaceManager extends Resource {
     });
   }
 
-  async setSpaceEdgeReplicationSetting(ctx: Context, spaceKey: PublicKey, setting: EdgeReplicationSetting): Promise<void> {
+  async setSpaceEdgeReplicationSetting(
+    ctx: Context,
+    spaceKey: PublicKey,
+    setting: EdgeReplicationSetting,
+  ): Promise<void> {
     const space = this._spaces.get(spaceKey);
     invariant(space, 'Space not found.');
 
@@ -654,7 +658,12 @@ export class DataSpaceManager extends Resource {
     }
   }
 
-  private _handleMemberRoleChanges(ctx: Context, presence: Presence, spaceProtocol: SpaceProtocol, memberInfo: MemberInfo[]): void {
+  private _handleMemberRoleChanges(
+    ctx: Context,
+    presence: Presence,
+    spaceProtocol: SpaceProtocol,
+    memberInfo: MemberInfo[],
+  ): void {
     let closedSessions = 0;
     for (const member of memberInfo) {
       if (member.key.equals(presence.getLocalState().identityKey)) {

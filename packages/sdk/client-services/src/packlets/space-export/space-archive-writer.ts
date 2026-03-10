@@ -4,7 +4,7 @@
 
 import type * as tar from '@obsidize/tar-browserify';
 
-import { Context, Resource } from '@dxos/context';
+import { type Context, Resource } from '@dxos/context';
 import { assertArgument, assertState } from '@dxos/invariant';
 import type { IdentityDid, SpaceId } from '@dxos/keys';
 import { SpaceArchiveFileStructure, type SpaceArchiveMetadata, SpaceArchiveVersion } from '@dxos/protocols';

@@ -114,7 +114,9 @@ export class DataSpace {
   private readonly _edgeFeedReplicator?: EdgeFeedReplicator = undefined;
 
   // TODO(dmaretskyi): Move into Space?
-  private readonly _automergeSpaceState = new AutomergeSpaceState((rootUrl) => this._onNewAutomergeRoot(this._ctx, rootUrl));
+  private readonly _automergeSpaceState = new AutomergeSpaceState((rootUrl) =>
+    this._onNewAutomergeRoot(this._ctx, rootUrl),
+  );
 
   private readonly _epochProcessingMutex = new Mutex();
 
