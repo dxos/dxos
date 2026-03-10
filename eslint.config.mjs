@@ -340,7 +340,6 @@ export default tseslint.config(
   //
   {
     files: [
-      'packages/common/**/src/**/*.ts',
       'packages/core/**/src/**/*.ts',
       'packages/sdk/**/src/**/*.ts',
     ],
