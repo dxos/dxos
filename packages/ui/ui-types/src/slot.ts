@@ -6,6 +6,9 @@ import { type HTMLAttributes } from 'react';
 
 import { type ClassNameValue } from './theme';
 
+// TODO(burdon): Define base type for component with `testId`, etc.
+//  And base component function wrapper.
+
 /**
  * Props for components that render a default DOM element but support `asChild` to delegate rendering to a child via Radix Slot.
  * Extends `ComposableProps` with standard HTML attributes.
@@ -13,10 +16,10 @@ import { type ClassNameValue } from './theme';
  * @example
  * ```tsx
  * const Primitive = forwardRef<HTMLDivElement, SlottableProps<HTMLDivElement>>(
- *   ({ children, asChild, ...props }, ref) => {
- *     const Comp = asChild ? Slot : Primitive.div;
+ *   ({ children, asChild, ...props }, forwardedRef) => {
  *     const { className, ...rest } = useComposableProps(props);
- *     return <Comp {...rest} className={className} ref={ref}>{children}</Comp>;
+ *     const Comp = asChild ? Slot : Primitive.div;
+ *     return <Comp {...rest} className={mx('border border-separator', className)} ref={forwardedRef}>{children}</Comp>;
  *   },
  * );
  * ```

@@ -111,8 +111,8 @@ export const TableToolbar = ({
   const menu = useMenuActions(actionsCreator);
 
   return (
-    <Menu.Root {...props} {...menu} attendableId={attendableId}>
-      <Menu.Toolbar classNames={classNames} />
+    <Menu.Root {...menu} attendableId={attendableId}>
+      <Menu.Toolbar {...props} classNames={classNames} />
     </Menu.Root>
   );
 };

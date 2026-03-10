@@ -72,6 +72,7 @@ type GridRootProps = PropsWithChildren<
   }>
 >;
 
+// TODO(burdon): Make headless.
 const GridRoot = ({
   __gridScope,
   children,
