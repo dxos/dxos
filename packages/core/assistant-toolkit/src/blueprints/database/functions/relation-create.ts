@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { trim } from '@dxos/util';
 
 export default defineFunction({
-  key: 'dxos.org/function/assistant/relation-create',
+  key: 'dxos.org/function/database/relation-create',
   name: 'Create relation',
   description: trim`
     Creates a new relation and adds it to the current space.

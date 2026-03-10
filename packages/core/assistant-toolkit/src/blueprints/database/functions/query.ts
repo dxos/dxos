@@ -12,7 +12,7 @@ import { trim } from '@dxos/util';
 
 // TODO(burdon): Move to toolkit (i.e., tool not function).
 export default defineFunction({
-  key: 'dxos.org/function/assistant/query',
+  key: 'dxos.org/function/database/query',
   name: 'Query',
   description: trim`
       Query for objects in ECHO.

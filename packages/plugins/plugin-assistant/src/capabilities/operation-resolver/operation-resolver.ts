@@ -18,6 +18,7 @@ import { ClientCapabilities } from '@dxos/plugin-client';
 import { ManagedCollection } from '@dxos/schema';
 import { type Message } from '@dxos/types';
 
+import { DatabaseBlueprint } from '@dxos/assistant-toolkit';
 import { AssistantBlueprint } from '../../blueprints';
 import { type AiChatServices, updateName } from '../../processor';
 import { AssistantCapabilities, AssistantOperation } from '../../types';
@@ -59,14 +60,22 @@ export default Capability.makeModule(
           // TODO(wittjosiah): This should be a space-level setting.
           // TODO(burdon): Clone when activated. Copy-on-write for template.
           const blueprints = yield* Effect.promise(() => db.query(Filter.type(Blueprint.Blueprint)).run());
-          let defaultBlueprint = blueprints.find((blueprint) => blueprint.key === AssistantBlueprint.key);
-          if (!defaultBlueprint) {
-            defaultBlueprint = db.add(AssistantBlueprint.make());
+          let defaultAssistantBlueprint = blueprints.find((blueprint) => blueprint.key === AssistantBlueprint.key);
+          if (!defaultAssistantBlueprint) {
+            defaultAssistantBlueprint = db.add(AssistantBlueprint.make());
+          }
+          let defaultDatabaseBlueprint = blueprints.find((blueprint) => blueprint.key === DatabaseBlueprint.key);
+          if (!defaultDatabaseBlueprint) {
+            defaultDatabaseBlueprint = db.add(DatabaseBlueprint.make());
           }
 
           const binder = new AiContextBinder({ queue, registry });
           yield* Effect.promise(() =>
-            binder.use((b: AiContextBinder) => b.bind({ blueprints: [Ref.make(defaultBlueprint!)] })),
+            binder.use((b: AiContextBinder) =>
+              b.bind({
+                blueprints: [Ref.make(defaultAssistantBlueprint!), Ref.make(defaultDatabaseBlueprint!)],
+              }),
+            ),
           );
 
           return { object: chat };

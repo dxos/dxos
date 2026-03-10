@@ -16,7 +16,7 @@ import { default as SchemaList } from './schema-list';
 import { default as TagAdd } from './tag-add';
 import { default as TagRemove } from './tag-remove';
 
-export const AssistantFunctions = {
+export const DatabaseFunctions = {
   ContextAdd,
   ContextRemove,
   Load,

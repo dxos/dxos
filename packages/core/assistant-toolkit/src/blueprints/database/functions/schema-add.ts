@@ -10,7 +10,7 @@ import { defineFunction } from '@dxos/functions';
 import { trim } from '@dxos/util';
 
 export default defineFunction({
-  key: 'dxos.org/function/assistant/schema-add',
+  key: 'dxos.org/function/database/schema-add',
   name: 'Add schema',
   description: trim`
     Adds a schema to the space.

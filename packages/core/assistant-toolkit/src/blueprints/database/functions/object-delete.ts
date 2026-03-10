@@ -10,7 +10,7 @@ import { defineFunction } from '@dxos/functions';
 import { trim } from '@dxos/util';
 
 export default defineFunction({
-  key: 'dxos.org/function/assistant/object-delete',
+  key: 'dxos.org/function/database/object-delete',
   name: 'Delete object',
   description: trim`
     Deletes the object.

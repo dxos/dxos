@@ -14,6 +14,7 @@ import { Chat, WebSearchToolkit } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
 import { Feed, Tag, type Type } from '@dxos/echo';
 import { type FunctionDefinition } from '@dxos/functions';
+import { DatabaseBlueprint } from '@dxos/assistant-toolkit';
 import { AssistantBlueprint } from '@dxos/plugin-assistant/blueprints';
 import { ChessBlueprint } from '@dxos/plugin-chess/blueprints';
 import { Chess } from '@dxos/plugin-chess/types';
@@ -46,6 +47,7 @@ import * as TestToolkit from './test-toolkit';
 export const blueprintRegistry = new Blueprint.Registry([
   // Blueprints available to the chat.
   AssistantBlueprint.make(),
+  DatabaseBlueprint.make(),
   CalendarBlueprint.make(),
   ChessBlueprint.make(),
   InboxBlueprint.make(),
@@ -66,7 +68,7 @@ export const blueprintRegistry = new Blueprint.Registry([
 
 export const functions: FunctionDefinition.Any[] = [
   // NOTE: Functions referenced by blueprints above need to be added here.
-  ...AssistantBlueprint.functions,
+  ...DatabaseBlueprint.functions,
   ...CalendarBlueprint.functions,
   ...ChessBlueprint.functions,
   ...InboxBlueprint.functions,

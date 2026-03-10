@@ -10,12 +10,11 @@ import { defineFunction } from '@dxos/functions';
 import { trim } from '@dxos/util';
 
 export default defineFunction({
-  key: 'dxos.org/function/assistant/tag-add',
-  name: 'Add tag',
+  key: 'dxos.org/function/database/tag-remove',
+  name: 'Remove tag',
   description: trim`
-    Adds a tag to an object.
+    Removes a tag from an object.
     Tags are objects of type ${Tag.Tag.typename}.
-    You must search database for available tags, or create a new one.
   `,
   inputSchema: Schema.Struct({
     tag: Ref.Ref(Type.Obj),
@@ -25,7 +24,7 @@ export default defineFunction({
   handler: Effect.fn(function* ({ data: { tag, obj } }) {
     const object = yield* Database.load(obj);
     const tagObj = yield* Database.load(tag);
-    Entity.change(object, (obj) => Entity.addTag(obj, Obj.getDXN(tagObj).toString()));
+    Entity.change(object, (obj) => Entity.removeTag(obj, Obj.getDXN(tagObj).toString()));
     return Entity.toJSON(object);
   }),
 });

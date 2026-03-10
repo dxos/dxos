@@ -10,7 +10,7 @@ import { defineFunction } from '@dxos/functions';
 import { trim } from '@dxos/util';
 
 export default defineFunction({
-  key: 'dxos.org/function/assistant/schema-list',
+  key: 'dxos.org/function/database/schema-list',
   name: 'List schemas',
   description: trim`
     Lists schemas definitions.

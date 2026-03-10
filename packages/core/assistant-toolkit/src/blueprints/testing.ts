@@ -5,8 +5,18 @@
 import * as Effect from 'effect/Effect';
 
 import { ConsolePrinter } from '@dxos/ai';
-import { type AiConversation, type AiConversationRunProps, GenerationObserver } from '@dxos/assistant';
+import {
+  AiContextService,
+  type AiConversation,
+  type AiConversationRunProps,
+  GenerationObserver,
+} from '@dxos/assistant';
 import { log } from '@dxos/log';
+import { type AppCapabilities } from '@dxos/app-toolkit';
+import { pipe } from 'effect';
+import { BrowserBlueprint } from './browser';
+import * as Array from 'effect/Array';
+import { Database, Ref } from '@dxos/echo';
 
 export type TestStep = Pick<AiConversationRunProps, 'prompt' | 'system'> & {
   test?: () => Promise<void>;
@@ -27,4 +37,19 @@ export const runSteps = Effect.fn(function* (conversation: AiConversation, steps
       yield* Effect.promise(() => test());
     }
   }
+});
+
+/**
+ * Binds blueprints from the blueprint definitions.
+ */
+// TODO(dmaretskyi): Potentially the agent will auto-bind the blueprints.
+export const addBlueprints = Effect.fnUntraced(function* (blueprints: AppCapabilities.BlueprintDefinition[]) {
+  yield* AiContextService.bindContext({
+    blueprints: yield* pipe(
+      blueprints,
+      Array.map((_) => _.make()),
+      Effect.forEach(Database.add),
+      Effect.map(Array.map(Ref.make)),
+    ),
+  });
 });

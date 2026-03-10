@@ -10,7 +10,7 @@ import { defineFunction } from '@dxos/functions';
 import { trim } from '@dxos/util';
 
 export default defineFunction({
-  key: 'dxos.org/function/assistant/relation-delete',
+  key: 'dxos.org/function/database/relation-delete',
   name: 'Delete relation',
   description: trim`
     Deletes the relation.

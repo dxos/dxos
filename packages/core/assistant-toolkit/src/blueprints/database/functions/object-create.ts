@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { trim } from '@dxos/util';
 
 export default defineFunction({
-  key: 'dxos.org/function/assistant/object-create',
+  key: 'dxos.org/function/database/object-create',
   name: 'Create object',
   description: trim`
     Creates a new object and adds it to the current space.

@@ -11,22 +11,22 @@ import { defineFunction } from '@dxos/functions';
 import { trim } from '@dxos/util';
 
 export default defineFunction({
-  key: 'dxos.org/function/assistant/context-add',
-  name: 'Add to context',
+  key: 'dxos.org/function/database/context-remove',
+  name: 'Remove from context',
   description: trim`
-    Adds the object to the chat context.
-    Use this it for objects that are useful long-term for the conversation.
+    Removes the object from the chat context.
+    Use this it for objects that are no longer useful for the conversation.
   `,
   inputSchema: Schema.Struct({
     obj: Ref.Ref(Type.Obj).annotations({
-      description: 'Object to add to the chat context.',
+      description: 'Object to remove from the chat context.',
     }),
   }),
   outputSchema: Schema.Void,
   handler: Effect.fn(function* ({ data: { obj } }) {
     const { binder } = yield* AiContextService;
     yield* Effect.promise(() =>
-      binder.bind({
+      binder.unbind({
         blueprints: [],
         objects: [obj],
       }),

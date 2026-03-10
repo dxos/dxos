@@ -11,7 +11,7 @@ import { defineFunction } from '@dxos/functions';
 import { trim } from '@dxos/util';
 
 export default defineFunction({
-  key: 'dxos.org/function/assistant/load',
+  key: 'dxos.org/function/database/load',
   name: 'Load object',
   description: trim`
     Loads the object or relation content.
