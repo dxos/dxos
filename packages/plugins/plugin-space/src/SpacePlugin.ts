@@ -68,20 +68,12 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
           inputSchema: SpaceOperation.StoredSchemaForm,
           createObject: ((props, { db }) =>
             Effect.gen(function* () {
-              if (props.typename) {
-                const result = yield* Operation.invoke(SpaceOperation.UseStaticSchema, {
-                  db,
-                  typename: props.typename,
-                });
-                return result as any;
-              } else {
-                const result = yield* Operation.invoke(SpaceOperation.AddSchema, {
-                  db,
-                  name: props.name,
-                  schema: createDefaultSchema(),
-                });
-                return result.object;
-              }
+              const result = yield* Operation.invoke(SpaceOperation.AddSchema, {
+                db,
+                name: props.name,
+                schema: createDefaultSchema(),
+              });
+              return result.object;
             })) satisfies CreateObject,
         },
       },

@@ -81,7 +81,7 @@ export const CreateObjectDialog = ({
       manager.capabilities
         .getAll(AppCapabilities.Metadata)
         .filter((entry) => entry.metadata?.createObject)
-        .filter((entry) => (views === true ? viewTypenames.has(entry.id) : !viewTypenames.has(entry.id)))
+        .filter((entry) => (views === true ? viewTypenames.has(entry.id) : true))
         .map((entry) => ({
           id: entry.id,
           label: t('typename label', { ns: entry.id, defaultValue: entry.id }),

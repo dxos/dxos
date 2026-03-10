@@ -16,6 +16,7 @@ export const translations = [
         'typename label_one': 'Excalidraw',
         'typename label_other': 'Excalidraws',
         'object name placeholder': 'New excalidraw',
+        'add object label': 'Add excalidraw',
         'rename object label': 'Rename excalidraw',
         'delete object label': 'Delete excalidraw',
         'object deleted label': 'Excalidraw deleted',

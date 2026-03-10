@@ -17,6 +17,7 @@ export const translations = [
         'typename label_one': 'Masonry',
         'typename label_other': 'Masonries',
         'object name placeholder': 'New masonry',
+        'add object label': 'Add masonry',
         'rename object label': 'Rename masonry',
         'delete object label': 'Delete masonry',
         'object deleted label': 'Masonry deleted',

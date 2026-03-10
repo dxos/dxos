@@ -17,8 +17,6 @@ import { type ComplexMap } from '@dxos/util';
 
 import { meta } from '../meta';
 
-import { TypeInputOptionsAnnotation } from './form';
-
 export const SPACE_DIRECTORY_HANDLE = `${meta.id}/directory`;
 
 export const SPACE_TYPE = 'dxos.org/type/Space';
@@ -525,15 +523,6 @@ export namespace SpaceOperation {
 
   export const StoredSchemaForm = Schema.Struct({
     name: Schema.optional(Schema.String),
-    typename: Schema.String.pipe(
-      Schema.annotations({ title: 'Select type (leave blank to create a new type)' }),
-      TypeInputOptionsAnnotation.set({
-        location: ['runtime'],
-        kind: ['user'],
-        registered: ['unregistered'],
-      }),
-      Schema.optional,
-    ),
   });
 
   export const UseStaticSchema = Operation.make({

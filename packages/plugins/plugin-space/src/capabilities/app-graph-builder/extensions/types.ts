@@ -2,12 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
+import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
 import { Collection, Filter, Obj, Query, Type } from '@dxos/echo';
 import { EntityKind, SystemTypeAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
@@ -15,9 +17,8 @@ import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { Operation } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { CreateAtom, GraphBuilder, Node } from '@dxos/plugin-graph';
-import { ViewAnnotation, getTypenameFromQuery } from '@dxos/schema';
-import { isNonNullable } from '@dxos/util';
-import { createFilename } from '@dxos/util';
+import { ViewAnnotation } from '@dxos/schema';
+import { createFilename, isNonNullable } from '@dxos/util';
 
 import { meta } from '../../../meta';
 import { SpaceOperation } from '../../../types';
@@ -30,6 +31,7 @@ import {
   STATIC_SCHEMA_TYPE,
   TYPES_SECTION_TYPE,
   TYPE_COLLECTION_TYPE,
+  buildViewIndex,
   createObjectNode,
   downloadBlob,
   getDynamicLabel,
@@ -85,7 +87,10 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
         return node.type === TYPES_SECTION_TYPE && space ? Option.some(space) : Option.none();
       },
       connector: (space, get) => {
-        const allSchemas = space.db.schemaRegistry.query({ location: ['runtime'] }).runSync();
+        // Reactive subscription to database schema objects so the connector re-runs on schema changes.
+        get(AtomQuery.make(space.db, Filter.type(Type.PersistentType)));
+
+        const allSchemas = space.db.schemaRegistry.query({ location: ['runtime', 'database'] }).runSync();
 
         const userSchemas = allSchemas.filter((schema) => {
           if (getTypeAnnotation(schema)?.kind === EntityKind.Relation) {
@@ -103,14 +108,16 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
           return true;
         });
 
-        const populatedSchemas = userSchemas.filter((schema) => {
+        const viewIndex = buildViewIndex(get, space, allSchemas);
+
+        const visibleSchemas = userSchemas.filter((schema) => {
           const typename = Type.getTypename(schema);
           const objects = get(AtomQuery.make(space.db, Filter.typename(typename)));
-          return objects.length > 0;
+          return objects.length > 0 || viewIndex.typenamesWithViews.has(typename);
         });
 
         return Effect.succeed(
-          populatedSchemas.map((schema) => createSchemaNode({ schema, space, resolve: resolve(get) })),
+          visibleSchemas.map((schema) => createSchemaNode({ schema, space, resolve: resolve(get), get })),
         );
       },
     }),
@@ -149,8 +156,9 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
         };
 
         // View objects for this schema.
-        const viewObjects = getViewsForSchema(get, space, schemas, typename);
-        const viewNodes = viewObjects
+        const viewIndex = buildViewIndex(get, space, schemas);
+        const viewNodes = viewIndex
+          .getViewsForTypename(typename)
           .map((object: Obj.Unknown) =>
             createObjectNode({
               db: space.db,
@@ -205,14 +213,16 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
         const schemas = client?.graph.schemaRegistry.query({ location: ['runtime'] }).runSync() ?? [];
 
         const targetTypename = Type.getTypename(schema as Type.AnyObj);
-        const filteredViews = getViewsForSchema(get, space, schemas, targetTypename);
-        const deletable = filteredViews.length === 0;
+        const viewIndex = buildViewIndex(get, space, schemas);
+        const deletable =
+          Type.isMutable(schema as Type.AnyObj) && viewIndex.getViewsForTypename(targetTypename).length === 0;
 
         return Effect.succeed(
           createSchemaActions({
             schema: schema as Type.AnyObj,
             space,
             deletable,
+            resolve: resolve(get),
           }),
         );
       },
@@ -229,22 +239,35 @@ const createSchemaNode = ({
   schema,
   space,
   resolve,
+  get,
 }: {
   schema: Type.AnyEntity;
   space: Space;
   resolve: MetadataResolver;
+  get: Atom.Context;
 }): Node.Node => {
   const typename = Type.getTypename(schema);
   const metadata = resolve(typename);
+  const { label, nodeId } = Match.value(schema).pipe(
+    Match.when(Type.isMutable, (mutableSchema) => {
+      const persistentSchema = mutableSchema.persistentSchema;
+      const snapshot = get(AtomObj.make(persistentSchema));
+      return {
+        label: snapshot.name || ['object name placeholder', { ns: Type.PersistentType.typename }],
+        nodeId: Obj.getDXN(persistentSchema).toString(),
+      };
+    }),
+    Match.orElse(() => ({
+      label: getDynamicLabel('typename label', typename, { count: 2, default: typename }),
+      nodeId: `${space.id}/${typename}`,
+    })),
+  );
   return {
-    id: `${space.id}/${typename}`,
+    id: nodeId,
     type: STATIC_SCHEMA_TYPE,
     data: schema,
     properties: {
-      label: getDynamicLabel('typename label', typename, {
-        count: 2,
-        default: typename,
-      }),
+      label,
       icon: metadata.icon ?? 'ph--placeholder--regular',
       iconHue: metadata.iconHue,
       role: 'branch',
@@ -262,16 +285,58 @@ const createSchemaActions = ({
   schema,
   space,
   deletable,
+  resolve,
 }: {
   schema: Type.AnyObj;
   space: Space;
   deletable: boolean;
+  resolve: MetadataResolver;
 }) => {
-  const getId = (id: string) => `${space.id}/${Type.getTypename(schema)}/${id}`;
+  const typename = Type.getTypename(schema);
+  const getId = (id: string) => `${space.id}/${typename}/${id}`;
+  const metadata = resolve(typename);
+  const createObjectFn = metadata.createObject;
+  const inputSchema = metadata.inputSchema;
 
   const actions: Node.NodeArg<Node.ActionData<Operation.Service>>[] = [
+    ...(createObjectFn
+      ? [
+          {
+            id: getId(SpaceOperation.OpenCreateObject.meta.key),
+            type: Node.ActionType,
+            data: Effect.fnUntraced(function* () {
+              if (inputSchema) {
+                yield* Operation.invoke(SpaceOperation.OpenCreateObject, {
+                  target: space.db,
+                  typename,
+                });
+              } else {
+                const createdObject = yield* createObjectFn({}, { db: space.db }) as Effect.Effect<
+                  Obj.Unknown,
+                  Error,
+                  never
+                >;
+                const addResult = yield* Operation.invoke(SpaceOperation.AddObject, {
+                  target: space.db,
+                  hidden: true,
+                  object: createdObject,
+                });
+                if (addResult.id) {
+                  yield* Operation.invoke(LayoutOperation.Open, { subject: [addResult.id] });
+                }
+              }
+            }),
+            properties: {
+              label: getDynamicLabel('add object label', typename),
+              icon: 'ph--plus--regular',
+              disposition: 'list-item-primary',
+              testId: 'spacePlugin.createObject',
+            },
+          },
+        ]
+      : []),
     {
-      id: getId(SpaceOperation.AddObject.meta.key),
+      id: getId(`${SpaceOperation.AddObject.meta.key}-view`),
       type: Node.ActionType,
       data: () =>
         Operation.invoke(SpaceOperation.OpenCreateObject, {
@@ -281,19 +346,25 @@ const createSchemaActions = ({
         }),
       properties: {
         label: ADD_VIEW_TO_SCHEMA_LABEL,
-        icon: 'ph--plus--regular',
-        disposition: 'list-item-primary',
+        icon: 'ph--circles-three-plus--regular',
+        disposition: 'list-item',
         testId: 'spacePlugin.addViewToSchema',
       },
     },
     {
       id: getId(SpaceOperation.RenameObject.meta.key),
       type: Node.ActionType,
-      data: () => Effect.fail(new Error('Not implemented')),
+      data: (params?: Node.InvokeProps) =>
+        Type.isMutable(schema)
+          ? Operation.invoke(SpaceOperation.RenameObject, {
+              object: (schema as Type.RuntimeType).persistentSchema as any,
+              caller: params?.caller,
+            })
+          : Effect.fail(new Error('Cannot rename immutable schema')),
       properties: {
         label: getDynamicLabel('rename object label', Type.getTypename(Type.PersistentType)),
         icon: 'ph--pencil-simple-line--regular',
-        disabled: true,
+        disabled: !Type.isMutable(schema),
         disposition: 'list-item',
         testId: 'spacePlugin.renameObject',
       },
@@ -343,21 +414,4 @@ const createSchemaActions = ({
   ];
 
   return actions;
-};
-
-/** Helper to get view objects filtered by schema typename. */
-const getViewsForSchema = (get: any, space: Space, schemas: Type.AnyEntity[], targetTypename: string) => {
-  const filter = Filter.or(
-    ...schemas
-      .filter((schema) => ViewAnnotation.get(schema).pipe(Option.getOrElse(() => false)))
-      .map((schema) => Filter.type(schema)),
-  );
-
-  const objects = get(AtomQuery.make(space.db, filter));
-  return objects.filter((viewObject: any) => {
-    const viewSnapshot = get(AtomObj.make(viewObject));
-    const viewRef = (viewSnapshot as any).view;
-    const viewTarget = viewRef ? get(AtomObj.make(viewRef)) : undefined;
-    return getTypenameFromQuery((viewTarget as any)?.query?.ast) === targetTypename;
-  });
 };
