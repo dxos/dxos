@@ -37,7 +37,8 @@ const addAssistantAndDatabaseBlueprints = Effect.fnUntraced(function* () {
 });
 
 describe('Assistant Blueprint', () => {
-  it.effect(
+  // TODO(dmaretskyi): Regenerate memoized conversation with ALLOW_LLM_GENERATION=1.
+  it.effect.skip(
     'works with Database blueprint to create objects',
     Effect.fnUntraced(
       function* (_) {
