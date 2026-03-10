@@ -130,7 +130,7 @@ export class ControlPipeline {
 
     log('starting...');
     setTimeout(async () => {
-      void this._consumePipeline(Context.default());
+      void this._consumePipeline(this._ctx);
     });
 
     await this._pipeline.start();

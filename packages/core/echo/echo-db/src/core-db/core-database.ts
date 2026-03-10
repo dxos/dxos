@@ -928,7 +928,7 @@ export class CoreDatabase {
   private _objectsForNextUpdate = new Set<string>();
   private readonly _updateScheduler = new UpdateScheduler(
     this._ctx,
-    async () => this._emitDbUpdateEvents(Context.default()),
+    async () => this._emitDbUpdateEvents(this._ctx),
     {
       maxFrequency: THROTTLED_UPDATE_FREQUENCY,
     },

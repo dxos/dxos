@@ -254,7 +254,7 @@ export class DataSpaceManager extends Resource {
   protected override async _close(): Promise<void> {
     log('close');
     for (const space of this._spaces.values()) {
-      await space.close(Context.default());
+      await space.close(this._ctx);
     }
     this._spaces.clear();
   }
@@ -711,7 +711,7 @@ export class DataSpaceManager extends Resource {
     invitations: Array<[PublicKey, DelegateSpaceInvitation]>,
   ): Promise<void> {
     const tasks = invitations.map(([credentialId, invitation]) => {
-      return this._invitationsManager.createInvitation(Context.default(), {
+      return this._invitationsManager.createInvitation(this._ctx, {
         type: Invitation.Type.DELEGATED,
         kind: Invitation.Kind.SPACE,
         spaceKey: space.key,

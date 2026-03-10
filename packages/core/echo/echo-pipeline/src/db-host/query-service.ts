@@ -80,7 +80,7 @@ export class QueryServiceImpl extends Resource implements QueryService {
   }
 
   override async _open(): Promise<void> {
-    this._updateQueries = new DeferredTask(this._ctx, () => this._executeQueries(Context.default()));
+    this._updateQueries = new DeferredTask(this._ctx, () => this._executeQueries(this._ctx));
   }
 
   @synchronized

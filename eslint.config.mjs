@@ -336,14 +336,13 @@ export default tseslint.config(
 
   //
   // Explicit context propagation (ctx: Context as first param).
-  // Applied to core SDK internals; public API classes are exempt.
+  // Applied broadly; public API classes and UI/plugin packages are exempt.
   //
   {
     files: [
-      'packages/core/echo/echo-pipeline/src/**/*.ts',
-      'packages/core/echo/echo-db/src/**/*.ts',
-      'packages/sdk/client-services/src/**/*.ts',
-      'packages/sdk/client/src/**/*.ts',
+      'packages/common/**/src/**/*.ts',
+      'packages/core/**/src/**/*.ts',
+      'packages/sdk/**/src/**/*.ts',
     ],
     ignores: [
       '**/*.test.ts',
@@ -354,7 +353,7 @@ export default tseslint.config(
         'warn',
         {
           allowClasses: [
-            // @dxos/client public API.
+            // @dxos/client — public API.
             'Client',
             'LocalClientServices',
             'WorkerClientServices',
@@ -367,17 +366,51 @@ export default tseslint.config(
             'SharedWorkerConnection',
             'AgentManagerClient',
             'InvitationsProxy',
-            // @dxos/echo public API implementations.
+
+            // @dxos/echo — public API.
             'Filter',
             'FilterClass',
             'Query',
             'QueryClass',
-            // Proxy classes (implement public Space/Echo interfaces).
+
+            // Proxy classes (implement public Space/Echo/Halo interfaces).
             'SpaceProxy',
             'SpaceList',
             'HaloProxy',
             'MeshProxy',
-            // Infrastructure not in traced call chains.
+
+            // @dxos/client-protocol — public API.
+            'CancellableInvitation',
+            'AuthenticatingInvitation',
+            'InvitationEncoder',
+
+            // @dxos/context — Context itself.
+            'Context',
+
+            // @dxos/async — low-level primitives.
+            'Event',
+            'Trigger',
+            'Mutex',
+            'DeferredTask',
+            'UpdateScheduler',
+            'PushStream',
+            'Callback',
+            'MulticastObservable',
+            'SubscriptionList',
+            'Lock',
+            'Latch',
+
+            // @dxos/codec-protobuf — serialization.
+            'Stream',
+
+            // @dxos/log — logging.
+            'LogConfig',
+
+            // @dxos/keys — value types.
+            'PublicKey',
+            'SpaceId',
+
+            // Infrastructure / storage (no tracing).
             'MetadataStore',
             'LevelDBStorageAdapter',
             'HeadsStore',

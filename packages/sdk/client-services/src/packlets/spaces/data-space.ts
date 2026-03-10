@@ -311,7 +311,7 @@ export class DataSpace {
     scheduleTask(this._ctx, async () => {
       try {
         this.metrics.pipelineInitBegin = new Date();
-        await this.initializeDataPipeline(Context.default());
+        await this.initializeDataPipeline(this._ctx);
       } catch (err) {
         if (err instanceof CancelledError || err instanceof ContextDisposedError) {
           log('data pipeline initialization cancelled', err);
@@ -581,7 +581,7 @@ export class DataSpace {
     }
 
     await this._metadataStore.setSpaceState(this.key, SpaceState.SPACE_ACTIVE);
-    await this._open(Context.default());
+    await this._open(this._ctx);
     this.initializeDataPipelineAsync();
   }
 
@@ -593,7 +593,7 @@ export class DataSpace {
     // Unregister from data service.
     await this._metadataStore.setSpaceState(this.key, SpaceState.SPACE_INACTIVE);
     if (this._state !== SpaceState.SPACE_CLOSED) {
-      await this._close(Context.default());
+      await this._close(this._ctx);
     }
     this._state = SpaceState.SPACE_INACTIVE;
     log('new state', { state: SpaceState[this._state] });

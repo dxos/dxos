@@ -54,32 +54,32 @@ The lifecycle ctx is correct because:
 - It is disposed when the object closes, automatically cancelling pending work.
 - It carries no trace span — these callbacks are trace roots.
 
-### 3. Detached async work: fresh Context.default()
+### 3. Detached async work: use class lifecycle ctx
 
-`setTimeout`, `scheduleTask`, `DeferredTask`, and similar scheduling mechanisms create work that runs independently of the original call. The caller's span may have already ended. Use `Context.default()`.
+`setTimeout`, `scheduleTask`, `DeferredTask`, `scheduleMicroTask`, and `queueMicrotask` create work that runs outside the caller's call stack. The original span has ended. Use the class lifecycle `this._ctx` — it ties the work to the object's lifetime and is disposed on close.
 
 ```typescript
 setTimeout(async () => {
-  await this._consumePipeline(Context.default());
+  await this._consumePipeline(this._ctx);
 });
 
 this._updateTask = new DeferredTask(this._ctx, () =>
-  this._executeQueries(Context.default()),
+  this._executeQueries(this._ctx),
 );
-```
 
-Use lifecycle `this._ctx` as the *cancellation* context (first arg to `DeferredTask` / `scheduleTask`), and `Context.default()` as the *trace* context (first arg to the method being called).
+scheduleMicroTask(this._ctx, async () => {
+  await this._handleFeedAdmission(this._ctx, info);
+});
 
-### 4. queueMicrotask: fresh Context.default()
-
-Same as `setTimeout` — the microtask runs after the current call stack unwinds. It's a new trace root.
-
-```typescript
 queueMicrotask(async () => {
-  const ctx = Context.default();
-  await this._processNewRoot(ctx, rootUrl);
+  await this._processNewRoot(this._ctx, rootUrl);
 });
 ```
+
+The lifecycle ctx is the right choice because:
+- The work belongs to the class instance and should be cancelled when it closes.
+- `Context.default()` creates an orphaned context nobody disposes — a resource leak.
+- The lifecycle ctx carries no trace span, so these become trace roots (correct for detached work).
 
 ### 5. Parallel fan-out (Promise.all): share the parent ctx
 
@@ -98,18 +98,19 @@ async initializeAll(ctx: Context): Promise<void> {
 
 ### 6. Class lifecycle ctx
 
-Many classes (especially `Resource` subclasses) have `private _ctx = Context.default()`. This context is tied to the object's open/close lifecycle.
+Many classes (especially `Resource` subclasses) have `private _ctx = Context.default()`. This context is tied to the object's open/close lifecycle and disposed on close.
 
 Use it when:
 - A method is called from a lifecycle hook and no caller-provided ctx exists.
 - Registering event handlers or scheduling background work.
+- Running detached tasks (setTimeout, DeferredTask, etc.).
 
 ```typescript
 class DataSpace {
   private _ctx = Context.default();
 
   async activate(): Promise<void> {
-    await this._open(Context.default());
+    await this._open(this._ctx);
     this.initializeDataPipelineAsync();
   }
 
@@ -120,6 +121,10 @@ class DataSpace {
   }
 }
 ```
+
+`Context.default()` should only be used:
+- In public API entry points (creating the root trace context).
+- Resetting `this._ctx` after dispose (as shown above).
 
 ## How context flows through a call chain
 
@@ -151,10 +156,10 @@ Methods **without** `@trace.span()` just forward ctx as-is, preserving the chain
 | Direct call inside a method | Forward the method's `ctx` |
 | Public API entry point | `Context.default()` |
 | Event/callback subscription | Lifecycle `this._ctx` |
-| setTimeout / scheduleTask / DeferredTask | `Context.default()` for trace ctx |
-| queueMicrotask | `Context.default()` |
+| setTimeout / scheduleTask / DeferredTask | Lifecycle `this._ctx` |
+| queueMicrotask | Lifecycle `this._ctx` |
 | Promise.all fan-out | Same `ctx` for all branches |
-| No caller ctx available | Lifecycle `this._ctx` or `Context.default()` |
+| No caller ctx available | Lifecycle `this._ctx` |
 
 ## ESLint enforcement
 

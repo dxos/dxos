@@ -156,7 +156,7 @@ export class Transcriber extends Resource {
       return;
     }
 
-    const ctx = Context.default();
+    const ctx = this._ctx;
     const audio = await this._mergeAudioChunks(ctx, chunks);
     const segments = await this._fetchTranscription(ctx, audio);
     if (!Array.isArray(segments) || segments.length === 0) {
