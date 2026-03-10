@@ -9,7 +9,6 @@ import * as Array from 'effect/Array';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Either from 'effect/Either';
-import { pipe } from 'effect/Function';
 import * as Layer from 'effect/Layer';
 
 import { type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
@@ -21,6 +20,8 @@ import { QueueService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { McpToolkit } from '@dxos/mcp-client';
+import { type Blueprint } from '@dxos/blueprints';
+import { type GenericToolkit } from '@dxos/ai';
 import { Message } from '@dxos/types';
 
 import {
@@ -32,6 +33,7 @@ import {
 } from '../session';
 
 import { AiContextBinder, AiContextService, type ContextBinding } from './context';
+import { pipe } from 'effect/Function';
 
 export interface AiConversationRunProps {
   prompt: string;
@@ -112,20 +114,7 @@ export class AiConversation extends Resource {
       // Create toolkit.
       const blueprints = this.context.getBlueprints();
 
-      const mcps = yield* pipe(
-        blueprints,
-        Array.flatMap((_) => _.mcpServers ?? []),
-        Effect.forEach(({ url, protocol }) =>
-          McpToolkit.make({ url, kind: protocol }).pipe(
-            Effect.tap((toolkit) =>
-              log.info('Connected to MCP server', { url, tools: Object.keys(toolkit.toolkit.tools).length }),
-            ),
-            Effect.tapDefect((error) => Effect.sync(() => log.warn('Failed to connect to MCP server', { error }))),
-            Effect.either,
-          ),
-        ),
-        Effect.map(Array.filterMap((_) => Either.getRight(_))),
-      );
+      const mcps = yield* connectMcpServers(blueprints);
 
       const toolkit = yield* createToolkit({
         toolkit: this._toolkit,
@@ -237,3 +226,22 @@ const aiContextFromConversation = Layer.effect(
     };
   }),
 );
+
+const connectMcpServers = (
+  blueprints: readonly Blueprint.Blueprint[],
+): Effect.Effect<GenericToolkit.GenericToolkit[]> =>
+  pipe(
+    blueprints,
+    Array.flatMap((_) => _.mcpServers ?? []),
+    Effect.forEach(({ url, protocol }) =>
+      McpToolkit.make({ url, kind: protocol }).pipe(
+        // NOTE: Type-inference fails here without explicit void return.
+        Effect.tap((toolkit): void =>
+          log.info('Connected to MCP server', { url, tools: Object.keys(toolkit.toolkit.tools).length }),
+        ),
+        Effect.tapDefect((error) => Effect.sync(() => log.warn('Failed to connect to MCP server', { error }))),
+        Effect.either,
+      ),
+    ),
+    Effect.map(Array.filterMap((_) => Either.getRight(_))),
+  );
