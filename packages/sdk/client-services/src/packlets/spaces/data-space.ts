@@ -249,7 +249,7 @@ export class DataSpace {
     }
 
     await this._inner.open(ctx);
-    await this._inner.startProtocol();
+    await this._inner.startProtocol(ctx);
 
     await this._edgeFeedReplicator?.open();
 
@@ -379,8 +379,7 @@ export class DataSpace {
 
   @trace.span({ showInBrowserTimeline: true })
   private async _initializeAndReadControlPipeline(ctx: Context): Promise<void> {
-    await this._inner.controlPipeline.state.waitUntilReachedTargetTimeframe({
-      ctx: this._ctx,
+    await this._inner.controlPipeline.state.waitUntilReachedTargetTimeframe(this._ctx, {
       timeout: 10_000,
       breakOnStall: false,
     });
@@ -408,7 +407,7 @@ export class DataSpace {
     const credentials: Credential[] = [];
     if (!this.inner.controlFeedKey) {
       const controlFeed = await this._feedStore.openFeed(await this._keyring.createKey(), { writable: true });
-      await this.inner.setControlFeed(controlFeed);
+      await this.inner.setControlFeed(this._ctx, controlFeed);
 
       credentials.push(
         await this._signingContext.credentialSigner.createCredential({
@@ -428,7 +427,7 @@ export class DataSpace {
         writable: true,
         sparse: true,
       });
-      await this.inner.setDataFeed(dataFeed);
+      await this.inner.setDataFeed(this._ctx, dataFeed);
 
       credentials.push(
         await this._signingContext.credentialSigner.createCredential({
@@ -568,7 +567,7 @@ export class DataSpace {
     });
 
     const timeframe = new Timeframe([[receipt.feedKey, receipt.seq]]);
-    await this.inner.controlPipeline.state.waitUntilTimeframe(timeframe);
+    await this.inner.controlPipeline.state.waitUntilTimeframe(this._ctx, timeframe);
     await this._echoHost.updateIndexes();
 
     return { credential, timeframe };

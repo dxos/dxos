@@ -3,7 +3,7 @@
 //
 
 import { type Event } from '@dxos/async';
-import { Context } from '@dxos/context';
+import { type Context } from '@dxos/context';
 import { discoveryKey, subtleCrypto } from '@dxos/crypto';
 import { type FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';

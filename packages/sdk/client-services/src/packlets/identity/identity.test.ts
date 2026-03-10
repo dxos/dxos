@@ -204,8 +204,9 @@ describe('identity/identity', () => {
       onDelegatedInvitationStatusChange: async () => {},
       onMemberRolesChanged: async () => {},
     });
-    await space.setControlFeed(controlFeed);
-    await space.setDataFeed(dataFeed);
+    const ctx = Context.default();
+    await space.setControlFeed(ctx, controlFeed);
+    await space.setDataFeed(ctx, dataFeed);
 
     const identity = new Identity({
       signer: keyring,

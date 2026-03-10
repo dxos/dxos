@@ -3,7 +3,7 @@
 //
 
 import { Event, scheduleMicroTask, synchronized, trackLeaks } from '@dxos/async';
-import { Context, Resource } from '@dxos/context';
+import { type Context, Resource } from '@dxos/context';
 import { type DelegateInvitationCredential, type FeedInfo, type MemberInfo } from '@dxos/credentials';
 import { type FeedOptions, type FeedWrapper } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';

@@ -5,7 +5,7 @@
 import { type AutomergeUrl, parseAutomergeUrl } from '@automerge/automerge-repo';
 
 import { Trigger, synchronized, trackLeaks } from '@dxos/async';
-import { Context } from '@dxos/context';
+import { type Context } from '@dxos/context';
 import { type DelegateInvitationCredential, type MemberInfo, getCredentialAssertion } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import { type FeedStore } from '@dxos/feed-store';
@@ -92,15 +92,18 @@ export class SpaceManager {
     await Promise.all([...this._spaces.values()].map((space) => space.close()));
   }
 
-  async constructSpace(ctx: Context, {
-    metadata,
-    swarmIdentity,
-    onAuthorizedConnection,
-    onAuthFailure,
-    onDelegatedInvitationStatusChange,
-    onMemberRolesChanged,
-    memberKey,
-  }: ConstructSpaceProps): Promise<Space> {
+  async constructSpace(
+    ctx: Context,
+    {
+      metadata,
+      swarmIdentity,
+      onAuthorizedConnection,
+      onAuthFailure,
+      onDelegatedInvitationStatusChange,
+      onMemberRolesChanged,
+      memberKey,
+    }: ConstructSpaceProps,
+  ): Promise<Space> {
     log.trace('dxos.echo.space-manager.construct-space', trace.begin({ id: this._instanceId }));
     log('constructing space...', { spaceKey: metadata.genesisFeedKey });
 
@@ -136,7 +139,10 @@ export class SpaceManager {
     return space;
   }
 
-  public async requestSpaceAdmissionCredential(ctx: Context, params: RequestSpaceAdmissionCredentialProps): Promise<Credential> {
+  public async requestSpaceAdmissionCredential(
+    ctx: Context,
+    params: RequestSpaceAdmissionCredentialProps,
+  ): Promise<Credential> {
     const traceKey = 'dxos.echo.space-manager.request-space-admission';
     log.trace(traceKey, trace.begin({ id: this._instanceId }));
     log('requesting space admission credential...', { spaceKey: params.spaceKey });

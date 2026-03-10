@@ -4,7 +4,7 @@
 
 import { Event } from '@dxos/async';
 import { AUTH_TIMEOUT, LOAD_CONTROL_FEEDS_TIMEOUT } from '@dxos/client-protocol';
-import { type Context } from '@dxos/context';
+import { Context } from '@dxos/context';
 import {
   type CredentialSigner,
   DeviceStateMachine,
@@ -129,7 +129,8 @@ export class Identity {
   }
 
   public async joinNetwork(): Promise<void> {
-    await this.space.startProtocol();
+    const ctx = Context.default();
+    await this.space.startProtocol(ctx);
     await this._edgeFeedReplicator?.open();
   }
 
@@ -153,7 +154,9 @@ export class Identity {
   async ready(): Promise<void> {
     await this._deviceStateMachine.deviceChainReady.wait();
 
-    await this.controlPipeline.state.waitUntilReachedTargetTimeframe({ timeout: LOAD_CONTROL_FEEDS_TIMEOUT });
+    await this.controlPipeline.state.waitUntilReachedTargetTimeframe(Context.default(), {
+      timeout: LOAD_CONTROL_FEEDS_TIMEOUT,
+    });
   }
 
   get profileDocument(): ProfileDocument | undefined {
@@ -217,7 +220,7 @@ export class Identity {
       assertion: { '@type': 'dxos.halo.credentials.DefaultSpace', spaceId },
     });
     const receipt = await this.controlPipeline.writer.write({ credential: { credential } });
-    await this.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
+    await this.controlPipeline.state.waitUntilTimeframe(Context.default(), new Timeframe([[receipt.feedKey, receipt.seq]]));
   }
 
   async admitDevice({ deviceKey, controlFeedKey, dataFeedKey }: DeviceAdmissionRequest): Promise<Credential> {

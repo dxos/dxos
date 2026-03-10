@@ -483,7 +483,8 @@ export class DataSpaceManager extends Resource {
   }
 
   public async requestSpaceAdmissionCredential(spaceKey: PublicKey): Promise<Credential> {
-    return this._spaceManager.requestSpaceAdmissionCredential({
+    const ctx = Context.default();
+    return this._spaceManager.requestSpaceAdmissionCredential(ctx, {
       spaceKey,
       identityKey: this._signingContext.identityKey,
       timeout: 15_000,
@@ -537,7 +538,7 @@ export class DataSpaceManager extends Resource {
         sparse: true,
       }));
 
-    const space: Space = await this._spaceManager.constructSpace({
+    const space: Space = await this._spaceManager.constructSpace(this._ctx, {
       metadata,
       swarmIdentity: {
         identityKey: this._signingContext.identityKey,
@@ -576,8 +577,8 @@ export class DataSpaceManager extends Resource {
         return this._handleInvitationStatusChange(dataSpace, invitation, isActive);
       },
     });
-    controlFeed && (await space.setControlFeed(controlFeed));
-    dataFeed && (await space.setDataFeed(dataFeed));
+    controlFeed && (await space.setControlFeed(this._ctx, controlFeed));
+    dataFeed && (await space.setDataFeed(this._ctx, dataFeed));
 
     const dataSpace = new DataSpace({
       inner: space,
@@ -665,7 +666,7 @@ export class DataSpaceManager extends Resource {
         return (s && (member.role === SpaceMember.Role.REMOVED) !== (s.authStatus === AuthStatus.FAILURE)) ?? false;
       });
       sessionsToClose.forEach((session) => {
-        void session.close().catch(log.error);
+        void session.close(this._ctx).catch(log.error);
       });
       closedSessions += sessionsToClose.length;
     }
@@ -675,7 +676,7 @@ export class DataSpaceManager extends Resource {
       closedSessions,
     });
     // Handle the case when there was a removed peer online, we can now establish a connection with them
-    spaceProtocol.updateTopology();
+    spaceProtocol.updateTopology(this._ctx);
   }
 
   private _handleNewPeerConnected(space: Space, peerState: PeerState): void {
@@ -684,7 +685,7 @@ export class DataSpaceManager extends Resource {
       const session = peerState.peerId && space.protocol.sessions.get(peerState.peerId);
       if (session != null) {
         log('closing a session with a removed peer', { peerId: peerState.peerId });
-        void session.close().catch(log.error);
+        void session.close(this._ctx).catch(log.error);
       }
     }
   }

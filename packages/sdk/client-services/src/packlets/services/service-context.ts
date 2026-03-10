@@ -167,7 +167,8 @@ export class ServiceContext extends Resource {
     this.echoHost = new EchoHost({
       kv: this.level,
       peerIdProvider: () => this.identityManager.identity?.deviceKey?.toHex(),
-      getSpaceKeyByRootDocumentId: (documentId) => this.spaceManager.findSpaceByRootDocumentId(documentId)?.key,
+      getSpaceKeyByRootDocumentId: (documentId) =>
+        this.spaceManager.findSpaceByRootDocumentId(this._ctx, documentId)?.key,
       runtime: this._runtime,
       syncQueue: async (request) => {
         return this._feedSyncer?.syncBlocking({
@@ -249,7 +250,7 @@ export class ServiceContext extends Resource {
     }
 
     await this.metadataStore.load();
-    await this.spaceManager.open();
+    await this.spaceManager.open(ctx);
 
     if (this.identityManager.identity) {
       await this.identityManager.identity.joinNetwork();
@@ -276,7 +277,7 @@ export class ServiceContext extends Resource {
     await this.dataSpaceManager?.close();
     await this.edgeAgentManager?.close();
     await this.identityManager.close();
-    await this.spaceManager.close();
+    await this.spaceManager.close(ctx);
     await this.echoHost.close(ctx);
 
     await this.networkManager.close();

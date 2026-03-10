@@ -4,6 +4,7 @@
 
 import { describe, expect, onTestFinished, test } from 'vitest';
 
+import { Context } from '@dxos/context';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { createStorage } from '@dxos/random-access-storage';
@@ -35,11 +36,12 @@ describe('space/space-protocol', () => {
     const presence2 = peer2.createPresence(gossip2);
     const protocol2 = peer2.createSpaceProtocol(topic, gossip2);
 
-    await protocol1.start();
-    await protocol2.start();
+    const ctx = Context.default();
+    await protocol1.start(ctx);
+    await protocol2.start(ctx);
 
-    onTestFinished(() => protocol1.stop());
-    onTestFinished(() => protocol2.stop());
+    onTestFinished(() => protocol1.stop(ctx));
+    onTestFinished(() => protocol2.stop(ctx));
 
     await expect
       .poll(() => presence1.getPeersOnline().some(({ identityKey }) => identityKey.equals(peer2.identityKey)))
@@ -62,11 +64,12 @@ describe('space/space-protocol', () => {
     const peer2 = await builder.createPeer();
     const protocol2 = peer2.createSpaceProtocol(topic);
 
-    await protocol1.start();
-    await protocol2.start();
+    const ctx = Context.default();
+    await protocol1.start(ctx);
+    await protocol2.start(ctx);
 
-    onTestFinished(() => protocol1.stop());
-    onTestFinished(() => protocol2.stop());
+    onTestFinished(() => protocol1.stop(ctx));
+    onTestFinished(() => protocol2.stop(ctx));
 
     const builder1 = new TestFeedBuilder();
     const feedStore1 = builder1.createFeedStore();
@@ -78,8 +81,8 @@ describe('space/space-protocol', () => {
     const feed1 = await feedStore1.openFeed(feedKey, { writable: true });
     const feed2 = await feedStore2.openFeed(feedKey);
 
-    await protocol1.addFeed(feed1);
-    await protocol2.addFeed(feed2);
+    await protocol1.addFeed(ctx, feed1);
+    await protocol2.addFeed(ctx, feed2);
 
     await feed1.append({ timeframe: new Timeframe() });
     await expect.poll(() => feed2.properties.length).toEqual(1);
@@ -109,19 +112,20 @@ describe('space/space-protocol', () => {
     const peer2 = await builder.createPeer();
     const protocol2 = peer2.createSpaceProtocol(topic);
 
-    await protocol1.start();
-    await protocol2.start();
+    const ctx = Context.default();
+    await protocol1.start(ctx);
+    await protocol2.start(ctx);
 
-    onTestFinished(() => protocol1.stop());
-    onTestFinished(() => protocol2.stop());
+    onTestFinished(() => protocol1.stop(ctx));
+    onTestFinished(() => protocol2.stop(ctx));
 
     const feedKey = await peer1.keyring.createKey();
 
     const feed1 = await peer1.feedStore.openFeed(feedKey, { writable: true });
     const feed2 = await peer2.feedStore.openFeed(feedKey);
 
-    await protocol1.addFeed(feed1);
-    await protocol2.addFeed(feed2);
+    await protocol1.addFeed(ctx, feed1);
+    await protocol2.addFeed(ctx, feed2);
 
     await feed1.append({ timeframe: new Timeframe() });
     await expect.poll(() => feed2.properties.length).toEqual(1);

@@ -181,8 +181,9 @@ export class TestAgent {
       await this.metadataStore.addSpace(metadata);
     }
 
-    await this.spaceManager.open();
-    const space = await this.spaceManager.constructSpace({
+    const ctx = Context.default();
+    await this.spaceManager.open(ctx);
+    const space = await this.spaceManager.constructSpace(ctx, {
       metadata,
       swarmIdentity: {
         identityKey: this.identityKey,
@@ -200,8 +201,8 @@ export class TestAgent {
       onDelegatedInvitationStatusChange: async () => {},
       onMemberRolesChanged: async () => {},
     });
-    await space.setControlFeed(controlFeed);
-    await space.setDataFeed(dataFeed);
+    await space.setControlFeed(ctx, controlFeed);
+    await space.setDataFeed(ctx, dataFeed);
 
     await space.open(new Context());
 

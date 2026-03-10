@@ -60,10 +60,11 @@ describe('space/control-pipeline', () => {
     });
     expect(admittedFeeds).toEqual([]);
 
-    await controlPipeline.setWriteFeed(genesisFeed);
-    await controlPipeline.start(Context.default());
+    const ctx = Context.default();
+    await controlPipeline.setWriteFeed(ctx, genesisFeed);
+    await controlPipeline.start(ctx);
 
-    onTestFinished(() => controlPipeline.stop());
+    onTestFinished(() => controlPipeline.stop(ctx));
 
     //
     // Genesis
@@ -81,7 +82,7 @@ describe('space/control-pipeline', () => {
         });
       }
 
-      await controlPipeline.pipeline.state.waitUntilTimeframe(controlPipeline.pipeline.state.endTimeframe);
+      await controlPipeline.pipeline.state.waitUntilTimeframe(ctx, controlPipeline.pipeline.state.endTimeframe);
       expect(admittedFeeds).toEqual([genesisFeed.key]);
     }
 
@@ -105,7 +106,7 @@ describe('space/control-pipeline', () => {
         },
       });
 
-      await controlPipeline.pipeline.state.waitUntilTimeframe(controlPipeline.pipeline.state.endTimeframe);
+      await controlPipeline.pipeline.state.waitUntilTimeframe(ctx, controlPipeline.pipeline.state.endTimeframe);
       expect(admittedFeeds).toEqual([genesisFeed.key, controlFeed2.key]);
     }
 
@@ -130,7 +131,7 @@ describe('space/control-pipeline', () => {
       });
 
       const end = controlPipeline.pipeline.state.endTimeframe;
-      await controlPipeline.pipeline.state.waitUntilTimeframe(end);
+      await controlPipeline.pipeline.state.waitUntilTimeframe(ctx, end);
       expect(admittedFeeds).toEqual([genesisFeed.key, controlFeed2.key, dataFeed1.key]);
     }
 
@@ -159,7 +160,7 @@ describe('space/control-pipeline', () => {
         timeframe: new Timeframe(),
       });
 
-      await controlPipeline.pipeline.state.waitUntilTimeframe(controlPipeline.pipeline.state.endTimeframe);
+      await controlPipeline.pipeline.state.waitUntilTimeframe(ctx, controlPipeline.pipeline.state.endTimeframe);
       expect(admittedFeeds).toEqual([genesisFeed.key, controlFeed2.key, dataFeed1.key]);
     }
   });

@@ -303,7 +303,10 @@ export class IdentityManager {
     });
 
     const receipt = await this._identity.controlPipeline.writer.write({ credential: { credential } });
-    await this._identity.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
+    await this._identity.controlPipeline.state.waitUntilTimeframe(
+      Context.default(),
+      new Timeframe([[receipt.feedKey, receipt.seq]]),
+    );
     this.stateUpdate.emit();
     return profile;
   }
@@ -324,7 +327,10 @@ export class IdentityManager {
     });
 
     const receipt = await this._identity.controlPipeline.writer.write({ credential: { credential } });
-    await this._identity.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
+    await this._identity.controlPipeline.state.waitUntilTimeframe(
+      Context.default(),
+      new Timeframe([[receipt.feedKey, receipt.seq]]),
+    );
     this.stateUpdate.emit();
     return {
       deviceKey: this._identity.deviceKey,
@@ -370,8 +376,8 @@ export class IdentityManager {
       gossip,
       identityKey: identityRecord.identityKey,
     });
-    await space.setControlFeed(controlFeed);
-    await space.setDataFeed(dataFeed);
+    await space.setControlFeed(Context.default(), controlFeed);
+    await space.setDataFeed(Context.default(), dataFeed);
 
     const did = await createDidFromIdentityKey(identityRecord.identityKey);
     const identity: Identity = new Identity({
@@ -388,7 +394,7 @@ export class IdentityManager {
 
     // TODO(mykola): Set new timeframe on a write to a feed.
     if (identityRecord.haloSpace.controlTimeframe) {
-      identity.controlPipeline.state.setTargetTimeframe(identityRecord.haloSpace.controlTimeframe);
+      identity.controlPipeline.state.setTargetTimeframe(Context.default(), identityRecord.haloSpace.controlTimeframe);
     }
 
     identity.stateUpdate.on(() => this.stateUpdate.emit());
@@ -396,7 +402,7 @@ export class IdentityManager {
   }
 
   private async _constructSpace({ spaceRecord, swarmIdentity, identityKey, gossip }: ConstructSpaceProps) {
-    return this._spaceManager.constructSpace({
+    return this._spaceManager.constructSpace(Context.default(), {
       metadata: {
         key: spaceRecord.key,
         genesisFeedKey: spaceRecord.genesisFeedKey,
