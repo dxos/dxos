@@ -386,6 +386,24 @@ export default tseslint.config(
             // @dxos/context — Context itself.
             'Context',
 
+            // Classes implementing fixed external interfaces (WireProtocol, NetworkAdapter, Protobuf services, etc.).
+            'SpaceProtocolSession',
+            'DataServiceImpl',
+            'QueryServiceImpl',
+            'LocalQueueServiceImpl',
+            'QueueServiceStub',
+            'SpacesServiceImpl',
+            'IdentityServiceImpl',
+            'InvitationsServiceImpl',
+            'DevicesServiceImpl',
+            'NetworkServiceImpl',
+
+            // Teleport extensions (implement fixed Teleport handler interfaces).
+            'CredentialRetrieverExtension',
+            'CredentialServerExtension',
+            'AuthExtension',
+            'NotarizationPlugin',
+
             // @dxos/async — low-level primitives.
             'Event',
             'Trigger',
