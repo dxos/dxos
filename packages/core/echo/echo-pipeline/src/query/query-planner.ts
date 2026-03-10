@@ -77,7 +77,11 @@ export class QueryPlanner {
     }
   }
 
-  private _generateOptionsClause(ctx: Context, query: QueryAST.QueryOptionsClause, context: GenerationContext): QueryPlan.Plan {
+  private _generateOptionsClause(
+    ctx: Context,
+    query: QueryAST.QueryOptionsClause,
+    context: GenerationContext,
+  ): QueryPlan.Plan {
     const newContext = {
       ...context,
     };
@@ -96,13 +100,21 @@ export class QueryPlanner {
     return this._generate(ctx, query.query, newContext);
   }
 
-  private _generateSelectClause(ctx: Context, query: QueryAST.QuerySelectClause, context: GenerationContext): QueryPlan.Plan {
+  private _generateSelectClause(
+    ctx: Context,
+    query: QueryAST.QuerySelectClause,
+    context: GenerationContext,
+  ): QueryPlan.Plan {
     return this._generateSelectionFromFilter(ctx, query.filter, context);
   }
 
   // TODO(dmaretskyi): This can be rewritten as a function of (filter[]) -> (selection ? undefined, rest: filter[]) that recurses onto itself.
   // TODO(dmaretskyi): If the tip of the query ast is a [select, ...filter] shape we can reorder the filters so the query is most efficient.
-  private _generateSelectionFromFilter(ctx: Context, filter: QueryAST.Filter, context: GenerationContext): QueryPlan.Plan {
+  private _generateSelectionFromFilter(
+    ctx: Context,
+    filter: QueryAST.Filter,
+    context: GenerationContext,
+  ): QueryPlan.Plan {
     switch (filter.type) {
       // Props
       case 'object': {
@@ -301,7 +313,11 @@ export class QueryPlanner {
     }
   }
 
-  private _generateUnionClause(ctx: Context, query: QueryAST.QueryUnionClause, context: GenerationContext): QueryPlan.Plan {
+  private _generateUnionClause(
+    ctx: Context,
+    query: QueryAST.QueryUnionClause,
+    context: GenerationContext,
+  ): QueryPlan.Plan {
     return QueryPlan.Plan.make([
       {
         _tag: 'UnionStep',
@@ -407,7 +423,11 @@ export class QueryPlanner {
     }
   }
 
-  private _generateRelationClause(ctx: Context, query: QueryAST.QueryRelationClause, context: GenerationContext): QueryPlan.Plan {
+  private _generateRelationClause(
+    ctx: Context,
+    query: QueryAST.QueryRelationClause,
+    context: GenerationContext,
+  ): QueryPlan.Plan {
     switch (query.direction) {
       case 'outgoing': {
         return QueryPlan.Plan.make([
@@ -452,7 +472,11 @@ export class QueryPlanner {
     }
   }
 
-  private _generateFilterClause(ctx: Context, query: QueryAST.QueryFilterClause, context: GenerationContext): QueryPlan.Plan {
+  private _generateFilterClause(
+    ctx: Context,
+    query: QueryAST.QueryFilterClause,
+    context: GenerationContext,
+  ): QueryPlan.Plan {
     return QueryPlan.Plan.make([
       ...this._generate(ctx, query.selection, context).steps,
       {
@@ -529,7 +553,11 @@ export class QueryPlanner {
     return plan;
   }
 
-  private _generateOrderClause(ctx: Context, query: QueryAST.QueryOrderClause, context: GenerationContext): QueryPlan.Plan {
+  private _generateOrderClause(
+    ctx: Context,
+    query: QueryAST.QueryOrderClause,
+    context: GenerationContext,
+  ): QueryPlan.Plan {
     return QueryPlan.Plan.make([
       ...this._generate(ctx, query.query, context).steps,
       {
@@ -539,7 +567,11 @@ export class QueryPlanner {
     ]);
   }
 
-  private _generateLimitClause(ctx: Context, query: QueryAST.QueryLimitClause, context: GenerationContext): QueryPlan.Plan {
+  private _generateLimitClause(
+    ctx: Context,
+    query: QueryAST.QueryLimitClause,
+    context: GenerationContext,
+  ): QueryPlan.Plan {
     return QueryPlan.Plan.make([
       ...this._generate(ctx, query.query, context).steps,
       {

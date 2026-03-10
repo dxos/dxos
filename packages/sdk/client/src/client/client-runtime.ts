@@ -22,13 +22,13 @@ export class ClientRuntime {
     this.shell = shell;
   }
 
-  async open(): Promise<void> {
+  async open(_ctx: Context): Promise<void> {
     await this.mesh._open();
     await this.spaces._open(Context.default());
     await this.halo._open();
   }
 
-  async close(): Promise<void> {
+  async close(_ctx: Context): Promise<void> {
     await this.halo._close();
     await this.spaces._close(Context.default());
     await this.mesh._close();

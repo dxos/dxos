@@ -328,7 +328,7 @@ class LeaderSession extends Resource {
     });
   }
 
-  protected override async _close(): Promise<void> {
+  protected override async _close(_ctx: Context): Promise<void> {
     if (isWorker(this.#worker)) {
       this.#worker?.terminate();
     } else if (this.#worker instanceof MessagePort) {

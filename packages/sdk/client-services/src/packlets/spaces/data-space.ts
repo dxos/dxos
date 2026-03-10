@@ -286,7 +286,7 @@ export class DataSpace {
 
     await this._edgeFeedReplicator?.close();
 
-    await this.authVerifier.close();
+    await this.authVerifier.close(_ctx);
 
     await this._inner.close();
     await this._inner.spaceState.removeCredentialProcessor(this._automergeSpaceState);

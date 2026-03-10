@@ -82,7 +82,7 @@ export class RemoteEdgeQueryContext<T extends Entity.Unknown = Entity.Unknown> i
 
   constructor(private readonly _params: RemoteEdgeQueryContextParams) {}
 
-  getResults(): QueryResult.EntityEntry<T>[] {
+  getResults(_ctx: Context): QueryResult.EntityEntry<T>[] {
     // Reactive queries are not supported for remote edge queries.
     return [];
   }
@@ -124,11 +124,11 @@ export class RemoteEdgeQueryContext<T extends Entity.Unknown = Entity.Unknown> i
     // Note: We don't emit changed events since reactive queries are not supported.
   }
 
-  start(): void {
+  start(_ctx: Context): void {
     // No-op: Reactive queries are not supported for remote edge queries.
   }
 
-  stop(): void {
+  stop(_ctx: Context): void {
     // No-op: Reactive queries are not supported for remote edge queries.
   }
 }

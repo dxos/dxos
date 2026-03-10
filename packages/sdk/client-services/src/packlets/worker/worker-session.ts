@@ -121,7 +121,7 @@ export class WorkerSession {
 
   async open(ctx: Context): Promise<void> {
     log('opening...');
-    await Promise.all([this._clientRpc.open(), this._iframeRpc.open(), this._maybeOpenShell(ctx)]);
+    await Promise.all([this._clientRpc.open(ctx), this._iframeRpc.open(), this._maybeOpenShell(ctx)]);
 
     // Wait until the worker's RPC service has started.
     await this._startTrigger.wait({ timeout: PROXY_CONNECTION_TIMEOUT });
@@ -142,13 +142,13 @@ export class WorkerSession {
       log.catch(err);
     }
 
-    await Promise.all([this._clientRpc.close(), this._iframeRpc.close()]);
+    await Promise.all([this._clientRpc.close(ctx), this._iframeRpc.close()]);
     log.debug('closed');
   }
 
   private async _maybeOpenShell(ctx: Context): Promise<void> {
     try {
-      this._shellClientRpc && (await asyncTimeout(this._shellClientRpc.open(), 1_000));
+      this._shellClientRpc && (await asyncTimeout(this._shellClientRpc.open(ctx), 1_000));
     } catch {
       log.info('No shell connected.');
     }

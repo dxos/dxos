@@ -471,7 +471,7 @@ export class Client {
       throw err;
     }
 
-    await this._runtime.open();
+    await this._runtime.open(this._ctx);
 
     // TODO(wittjosiah): Factor out iframe manager and proxy into shell manager.
     await this._iframeManager?.open();
@@ -529,7 +529,7 @@ export class Client {
     log('closing...');
     this._statusTimeout && clearTimeout(this._statusTimeout);
     await this._statusStream?.close();
-    await this._runtime?.close();
+    await this._runtime?.close(this._ctx);
     await this._echoClient.close(this._ctx);
     await this._services?.close();
     this._edgeHttpClient = undefined;

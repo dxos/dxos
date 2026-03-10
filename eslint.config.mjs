@@ -475,6 +475,19 @@ export default tseslint.config(
             'LevelDBStorageAdapter',
             'HeadsStore',
             'EchoDataMonitor',
+
+            // @dxos/credentials — CredentialProcessor interface (fixed signature).
+            'AutomergeSpaceState',
+            'DefaultSpaceStateMachine',
+
+            // @dxos/client-services — utility / internal.
+            'WebLockWrapper',
+
+            // @dxos/client — public/test API, coordinator interface.
+            'FakeAgentHostingProvider',
+            'SingleClientCoordinator',
+            'SharedWorkerCoordinator',
+            'MemoryWorkerCoordiantor',
           ],
           allowMethods: [
             'toJSON',

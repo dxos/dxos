@@ -5,7 +5,7 @@
 import { WaveFile } from 'wavefile';
 
 import { DeferredTask, Trigger } from '@dxos/async';
-import { Context, LifecycleState, Resource } from '@dxos/context';
+import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { type ContentBlock } from '@dxos/types';

@@ -1329,7 +1329,9 @@ describe('QueryPlanner', () => {
   });
   test('throws when query has no options clause', () => {
     const query = Query.select(Filter.type(TestSchema.Person));
-    expect(() => planner.createPlan(Context.default(), query.ast)).toThrow('Query must be qualified with a from() or options() clause');
+    expect(() => planner.createPlan(Context.default(), query.ast)).toThrow(
+      'Query must be qualified with a from() or options() clause',
+    );
   });
 
   test('from all accessible spaces', () => {
