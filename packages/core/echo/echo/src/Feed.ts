@@ -36,6 +36,7 @@ export const Feed = Schema.Struct({
     typename: 'dxos.org/type/Feed',
     version: '0.1.0',
   }),
+  internal.SystemTypeAnnotation.set(true),
 );
 
 /**

@@ -95,6 +95,11 @@ export const translations = [
         'save filter button': 'Save',
         'delete filter label': 'Delete filter',
 
+        'mailboxes section label': 'Mailboxes',
+        'all mail label': 'All Mail',
+        'drafts label': 'Drafts',
+        'create draft label': 'Create draft',
+
         'message header view mode plain': 'Plain',
         'message header view mode enriched': 'Enriched',
         'message header view mode plain only': 'Plain',

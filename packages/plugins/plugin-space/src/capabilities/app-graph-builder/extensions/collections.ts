@@ -78,7 +78,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
               icon: 'ph--folder--regular',
               iconHue: 'neutral',
               role: 'branch',
-              selectable: false,
+              position: 'hoist',
               draggable: false,
               droppable: false,
               space,
@@ -190,7 +190,6 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
             db: space.db,
             object,
             resolve: resolve(get),
-            disposition: 'hidden',
           }),
         );
       },

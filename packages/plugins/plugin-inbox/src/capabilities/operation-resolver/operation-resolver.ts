@@ -125,12 +125,13 @@ export default Capability.makeModule(
       }),
       OperationResolver.make({
         operation: InboxOperation.CreateDraft,
-        handler: Effect.fnUntraced(function* ({ db, mode, replyToMessage, subject, body }) {
+        handler: Effect.fnUntraced(function* ({ db, mode, replyToMessage, subject, body, mailbox }) {
           const props = buildDraftMessageProps({
             mode,
             replyToMessage: replyToMessage as Message.Message | undefined,
             subject,
             body,
+            mailbox,
           });
           const draft = Obj.make(Message.Message, props);
           yield* Operation.invoke(SpaceOperation.AddObject, {

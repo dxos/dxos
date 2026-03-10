@@ -13586,6 +13586,9 @@ importers:
 
   packages/sdk/app-toolkit:
     dependencies:
+      '@atlaskit/pragmatic-drag-and-drop-hitbox':
+        specifier: 'catalog:'
+        version: 1.1.0
       '@dxos/ai':
         specifier: workspace:*
         version: link:../../core/ai
@@ -13613,9 +13616,15 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
+      '@dxos/react-ui-list':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-list
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../../ui/react-ui-menu
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../schema
       '@dxos/types':
         specifier: workspace:*
         version: link:../types

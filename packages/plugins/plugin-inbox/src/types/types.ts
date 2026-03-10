@@ -51,6 +51,8 @@ export namespace InboxOperation {
         replyToMessage: Schema.optional(Schema.Any),
         subject: Schema.optional(Schema.String),
         body: Schema.optional(Schema.String),
+        // TODO(wittjosiah): Should be Mailbox.Mailbox.
+        mailbox: Schema.optional(Schema.Any),
       }),
       output: Schema.Void,
     },

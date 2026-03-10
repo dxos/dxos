@@ -39,6 +39,9 @@
       "path": "../../ui/react-ui"
     },
     {
+      "path": "../../ui/react-ui-list"
+    },
+    {
       "path": "../../ui/react-ui-menu"
     },
     {
@@ -52,6 +55,9 @@
     },
     {
       "path": "../app-graph"
+    },
+    {
+      "path": "../schema"
     },
     {
       "path": "../types"

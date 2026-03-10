@@ -68,7 +68,6 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
               icon: 'ph--shapes--regular',
               iconHue: 'neutral',
               role: 'branch',
-              selectable: false,
               draggable: false,
               droppable: false,
               space,
