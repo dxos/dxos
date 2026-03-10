@@ -405,6 +405,8 @@ type SearchListItemProps = ThemedClassName<{
   label: string;
   /** Icon to display (string identifier for Icon component). */
   icon?: string;
+  /** Additional class names for the icon element. */
+  iconClassNames?: string;
   /** Whether to show a check icon. */
   checked?: boolean;
   /** Suffix text to display after the label. */
@@ -416,7 +418,7 @@ type SearchListItemProps = ThemedClassName<{
 }>;
 
 const SearchListItem = forwardRef<HTMLDivElement, SearchListItemProps>(
-  ({ classNames, value, label, icon, checked, suffix, onSelect, disabled }, forwardedRef) => {
+  ({ classNames, value, label, icon, iconClassNames, checked, suffix, onSelect, disabled }, forwardedRef) => {
     const { selectedValue, registerItem, unregisterItem } = useSearchListItemContext('SearchList.Item');
     const internalRef = useRef<HTMLDivElement>(null);
 
@@ -469,7 +471,7 @@ const SearchListItem = forwardRef<HTMLDivElement, SearchListItemProps>(
         )}
         onClick={handleClick}
       >
-        {icon && <Icon icon={icon} size={5} />}
+        {icon && <Icon icon={icon} size={5} classNames={iconClassNames} />}
         <span className='w-0 grow truncate'>{label}</span>
         {suffix && <span className='shrink-0 text-description'>{suffix}</span>}
         {checked && <Icon icon='ph--check--regular' size={5} />}

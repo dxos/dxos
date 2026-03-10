@@ -8,9 +8,7 @@ import { Blueprint } from '@dxos/blueprints';
 
 const BLUEPRINT_KEY = 'dxos.org/blueprint/assistant';
 
-const deckTools = ['open-item'];
-
-const tools = [...deckTools];
+const tools = ['open-item'];
 
 const make = () =>
   Blueprint.make({
