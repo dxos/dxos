@@ -11,6 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 
 import { type IDocHandle } from '../core-db';
+import { Context } from '@dxos/context';
 
 export type ChangeEvent<T> = {
   handle: DocHandleProxy<T>;
@@ -94,22 +95,22 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
     return this._ready.state === TriggerState.RESOLVED ? 'ready' : 'pending';
   }
 
-  doc(): A.Doc<T> {
+  doc(ctx: Context): A.Doc<T> {
     if (!this._doc) {
       throw new Error('DocHandleProxy.doc called on deleted doc');
     }
     return this._doc;
   }
 
-  async whenReady(): Promise<void> {
+  async whenReady(ctx: Context): Promise<void> {
     await this._ready.wait();
   }
 
-  isReady(): boolean {
+  isReady(ctx: Context): boolean {
     return this._ready.state === TriggerState.RESOLVED;
   }
 
-  change(fn: (doc: A.Doc<T>) => void, opts?: A.ChangeOptions<any>): void {
+  change(ctx: Context, fn: (doc: A.Doc<T>) => void, opts?: A.ChangeOptions<any>): void {
     invariant(this._doc, 'DocHandleProxy.change called on deleted doc');
     const before = this._doc;
     const headsBefore = A.getHeads(this._doc);
@@ -122,7 +123,7 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
     });
   }
 
-  changeAt(heads: A.Heads, fn: (doc: A.Doc<T>) => void, opts?: A.ChangeOptions<any>): A.Heads | undefined {
+  changeAt(ctx: Context, heads: A.Heads, fn: (doc: A.Doc<T>) => void, opts?: A.ChangeOptions<any>): A.Heads | undefined {
     invariant(this._doc, 'DocHandleProxy.changeAt called on deleted doc');
     const before = this._doc;
     const headsBefore = A.getHeads(this._doc);
@@ -138,7 +139,7 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
     return newHeads ?? undefined;
   }
 
-  update(updateCallback: (doc: A.Doc<T>) => A.Doc<T>): void {
+  update(ctx: Context, updateCallback: (doc: A.Doc<T>) => A.Doc<T>): void {
     invariant(this._doc, 'DocHandleProxy.update called on deleted doc');
     const before = this._doc;
     const headsBefore = A.getHeads(this._doc);
@@ -153,7 +154,7 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
     });
   }
 
-  delete(): void {
+  delete(ctx: Context): void {
     this._onDelete();
     this.emit('delete', { handle: this });
     this._doc = undefined;
@@ -162,14 +163,14 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
   /**
    * @internal
    */
-  _setDocumentId(documentId: DocumentId): void {
+  _setDocumentId(ctx: Context, documentId: DocumentId): void {
     this._documentId = documentId;
   }
 
   /**
    * @internal
    */
-  _wakeReady(): void {
+  _wakeReady(ctx: Context): void {
     this._ready.wake();
   }
 
@@ -177,7 +178,7 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
    * Get pending changes since last write.
    * @internal
    */
-  _getPendingChanges(): Uint8Array | undefined {
+  _getPendingChanges(ctx: Context): Uint8Array | undefined {
     invariant(this._doc, 'Doc is deleted, cannot get last write mutation');
     if (A.equals(A.getHeads(this._doc), this._lastSentHeads)) {
       return;
@@ -195,7 +196,7 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
    * Confirm that the last write was successful.
    * @internal
    */
-  _confirmSync(): void {
+  _confirmSync(ctx: Context): void {
     this._lastSentHeads = this._currentlySendingHeads;
   }
 
@@ -203,7 +204,7 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
    * Update the doc with a foreign mutation from worker.
    * @internal
    */
-  _integrateHostUpdate(mutation: Uint8Array): void {
+  _integrateHostUpdate(ctx: Context, mutation: Uint8Array): void {
     invariant(this._doc, 'Doc is deleted, cannot write mutation');
     const before = this._doc;
     const headsBefore = A.getHeads(this._doc);

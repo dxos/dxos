@@ -57,13 +57,11 @@ export type JoinIdentityProps = {
    * We will try to catch up to this timeframe before starting the data pipeline.
    */
   controlTimeframe?: Timeframe;
-  // Custom device profile, merged with defaults, to be applied once the identity is accepted.
   deviceProfile?: DeviceProfileDocument;
 };
 
 export type CreateIdentityOptions = {
   profile?: ProfileDocument;
-  // device profile for device creating the identity.
   deviceProfile?: DeviceProfileDocument;
 };
 
@@ -78,7 +76,6 @@ export type IdentityManagerProps = {
   devicePresenceOfflineTimeout?: number;
 };
 
-// TODO(dmaretskyi): Rename: represents the peer's state machine.
 @Trace.resource()
 export class IdentityManager {
   readonly stateUpdate = new Event();
@@ -94,7 +91,6 @@ export class IdentityManager {
 
   private _identity?: Identity;
 
-  // TODO(dmaretskyi): Perhaps this should take/generate the peerKey outside of an initialized identity.
   constructor(params: IdentityManagerProps) {
     this._metadataStore = params.metadataStore;
     this._keyring = params.keyring;
@@ -118,9 +114,9 @@ export class IdentityManager {
     const identityRecord = this._metadataStore.getIdentityRecord();
     log('identity record', { identityRecord });
     if (identityRecord) {
-      this._identity = await this._constructIdentity(identityRecord);
+      this._identity = await this._constructIdentity(ctx, identityRecord);
       await this._identity.open(ctx);
-      await this._identity.ready();
+      await this._identity.ready(ctx);
       log.trace('dxos.halo.identity', {
         identityKey: identityRecord.identityKey,
         displayName: this._identity.profileDocument?.displayName,
@@ -131,12 +127,11 @@ export class IdentityManager {
     log.trace('dxos.halo.identity-manager.open', trace.end({ id: traceId }));
   }
 
-  async close(): Promise<void> {
+  async close(ctx: Context): Promise<void> {
     await this._identity?.close(new Context());
   }
 
-  async createIdentity({ profile, deviceProfile }: CreateIdentityOptions = {}): Promise<Identity> {
-    // TODO(nf): populate using context from ServiceContext?
+  async createIdentity(ctx: Context, { profile, deviceProfile }: CreateIdentityOptions = {}): Promise<Identity> {
     invariant(!this._identity, 'Identity already exists.');
     log('creating identity...');
 
@@ -152,7 +147,7 @@ export class IdentityManager {
       },
     };
 
-    const identity = await this._constructIdentity(identityRecord);
+    const identity = await this._constructIdentity(ctx, identityRecord);
     await identity.open(new Context());
 
     {
@@ -160,10 +155,7 @@ export class IdentityManager {
       invariant(identityRecord.haloSpace.genesisFeedKey, 'Genesis feed key is required.');
       invariant(identityRecord.haloSpace.dataFeedKey, 'Data feed key is required.');
       const credentials = [
-        // Space genesis.
         ...(await generator.createSpaceGenesis(identityRecord.haloSpace.key, identityRecord.haloSpace.genesisFeedKey)),
-
-        // Feed admission.
         await generator.createFeedAdmission(
           identityRecord.haloSpace.key,
           identityRecord.haloSpace.dataFeedKey,
@@ -175,14 +167,11 @@ export class IdentityManager {
         credentials.push(await generator.createProfileCredential(profile));
       }
 
-      // Device authorization (writes device chain).
-      // NOTE: This credential is written last. This is a hack to make sure that display name is set before identity is "ready".
       credentials.push(await generator.createDeviceAuthorization(identityRecord.deviceKey));
 
-      // Write device metadata to profile.
       credentials.push(
         await generator.createDeviceProfile({
-          ...this.createDefaultDeviceProfile(),
+          ...this.createDefaultDeviceProfile(ctx),
           ...deviceProfile,
         }),
       );
@@ -195,7 +184,7 @@ export class IdentityManager {
 
     await this._metadataStore.setIdentityRecord(identityRecord);
     this._identity = identity;
-    await this._identity.ready();
+    await this._identity.ready(ctx);
     log.trace('dxos.halo.identity', {
       identityKey: identityRecord.identityKey,
       displayName: this._identity.profileDocument?.displayName,
@@ -211,10 +200,8 @@ export class IdentityManager {
     return identity;
   }
 
-  // TODO(nf): receive platform info rather than generating it here.
-  createDefaultDeviceProfile(): DeviceProfileDocument {
+  createDefaultDeviceProfile(ctx: Context): DeviceProfileDocument {
     let type: DeviceType;
-    // TODO(nf): call Platform service instead?
     if (isNode()) {
       type = DeviceType.AGENT;
     } else {
@@ -237,10 +224,7 @@ export class IdentityManager {
     };
   }
 
-  /**
-   * Prepare an identity object as the first step of acceptIdentity flow.
-   */
-  async prepareIdentity(params: JoinIdentityProps) {
+  async prepareIdentity(ctx: Context, params: JoinIdentityProps) {
     log('accepting identity', { params });
     invariant(!this._identity, 'Identity already exists.');
 
@@ -255,23 +239,20 @@ export class IdentityManager {
         controlTimeframe: params.controlTimeframe,
       },
     };
-    const identity = await this._constructIdentity(identityRecord);
+    const identity = await this._constructIdentity(ctx, identityRecord);
     await identity.open(new Context());
     return { identity, identityRecord };
   }
 
-  /**
-   * Accept an existing identity. Expects its device key to be authorized (now or later).
-   */
   public async acceptIdentity(
+    ctx: Context,
     identity: Identity,
     identityRecord: IdentityRecord,
     profile?: DeviceProfileDocument,
   ): Promise<void> {
     this._identity = identity;
 
-    // Identity becomes ready after device chain is replicated. Wait for it before storing the record.
-    await this._identity.ready();
+    await this._identity.ready(ctx);
     await this._metadataStore.setIdentityRecord(identityRecord);
 
     log.trace('dxos.halo.identity', {
@@ -279,8 +260,8 @@ export class IdentityManager {
       displayName: this._identity.profileDocument?.displayName,
     });
 
-    await this.updateDeviceProfile({
-      ...this.createDefaultDeviceProfile(),
+    await this.updateDeviceProfile(ctx, {
+      ...this.createDefaultDeviceProfile(ctx),
       ...profile,
     });
     this.stateUpdate.emit();
@@ -288,13 +269,9 @@ export class IdentityManager {
     log('accepted identity', { identityKey: identity.identityKey, deviceKey: identity.deviceKey });
   }
 
-  /**
-   * Update the profile document of an existing identity.
-   */
-  async updateProfile(profile: ProfileDocument): Promise<ProfileDocument> {
+  async updateProfile(ctx: Context, profile: ProfileDocument): Promise<ProfileDocument> {
     invariant(this._identity, 'Identity not initialized.');
-    // TODO(wittjosiah): Use CredentialGenerator.
-    const credential = await this._identity.getIdentityCredentialSigner().createCredential({
+    const credential = await this._identity.getIdentityCredentialSigner(ctx).createCredential({
       subject: this._identity.identityKey,
       assertion: {
         '@type': 'dxos.halo.credentials.IdentityProfile',
@@ -311,14 +288,10 @@ export class IdentityManager {
     return profile;
   }
 
-  async updateDeviceProfile(profile: DeviceProfileDocument): Promise<Device> {
+  async updateDeviceProfile(ctx: Context, profile: DeviceProfileDocument): Promise<Device> {
     invariant(this._identity, 'Identity not initialized.');
 
-    // TODO(nf): CredentialGenerator doesn't work when not updating own device.
-    // const generator = new CredentialGenerator(this._keyring, this._identity.identityKey, this._identity.deviceKey);
-    // const credential = await generator.createDeviceProfile(profile);
-
-    const credential = await this._identity.getDeviceCredentialSigner().createCredential({
+    const credential = await this._identity.getDeviceCredentialSigner(ctx).createCredential({
       subject: this._identity.deviceKey,
       assertion: {
         '@type': 'dxos.halo.credentials.DeviceProfile',
@@ -340,7 +313,7 @@ export class IdentityManager {
     };
   }
 
-  private async _constructIdentity(identityRecord: IdentityRecord): Promise<Identity> {
+  private async _constructIdentity(ctx: Context, identityRecord: IdentityRecord): Promise<Identity> {
     invariant(!this._identity);
     log('constructing identity', { identityRecord });
 
@@ -354,7 +327,6 @@ export class IdentityManager {
       gossip,
     });
 
-    // Must be created before the space so the feeds are writable.
     invariant(identityRecord.haloSpace.controlFeedKey);
     const controlFeed = await this._feedStore.openFeed(identityRecord.haloSpace.controlFeedKey, {
       writable: true,
@@ -365,7 +337,7 @@ export class IdentityManager {
       sparse: true,
     });
 
-    const space = await this._constructSpace({
+    const space = await this._constructSpace(ctx, {
       spaceRecord: identityRecord.haloSpace,
       swarmIdentity: {
         identityKey: identityRecord.identityKey,
@@ -392,7 +364,6 @@ export class IdentityManager {
     });
     log('done', { identityKey: identityRecord.identityKey });
 
-    // TODO(mykola): Set new timeframe on a write to a feed.
     if (identityRecord.haloSpace.controlTimeframe) {
       identity.controlPipeline.state.setTargetTimeframe(Context.default(), identityRecord.haloSpace.controlTimeframe);
     }
@@ -401,7 +372,7 @@ export class IdentityManager {
     return identity;
   }
 
-  private async _constructSpace({ spaceRecord, swarmIdentity, identityKey, gossip }: ConstructSpaceProps) {
+  private async _constructSpace(ctx: Context, { spaceRecord, swarmIdentity, identityKey, gossip }: ConstructSpaceProps) {
     return this._spaceManager.constructSpace(Context.default(), {
       metadata: {
         key: spaceRecord.key,
@@ -418,8 +389,8 @@ export class IdentityManager {
         log.warn('auth failure');
       },
       memberKey: identityKey,
-      onDelegatedInvitationStatusChange: async () => {}, // TODO: will be used for recovery keys
-      onMemberRolesChanged: async () => {}, // TODO: will be used for device revocation
+      onDelegatedInvitationStatusChange: async () => {},
+      onMemberRolesChanged: async () => {},
     });
   }
 }

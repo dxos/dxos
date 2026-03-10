@@ -229,7 +229,7 @@ describe('EdgeFeedReplicator', () => {
     const spaceId = SpaceId.random();
     const feed = await createNewFeed();
     const replicator = new EdgeFeedReplicator({ messenger, spaceId });
-    await replicator.addFeed(feed);
+    await replicator.addFeed(Context.default(), feed);
     if (!options?.skipOpen) {
       await openAndClose(replicator);
     }

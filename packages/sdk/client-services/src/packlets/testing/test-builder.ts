@@ -91,7 +91,7 @@ export const createPeers = async (numPeers: number, signalManagerFactory?: () =>
 };
 
 export const createIdentity = async (peer: ServiceContext) => {
-  await peer.createIdentity();
+  await peer.createIdentity(Context.default());
   return peer;
 };
 

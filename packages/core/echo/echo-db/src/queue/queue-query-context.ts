@@ -32,7 +32,7 @@ export class QueueQueryContext<T extends Entity.Unknown = Entity.Unknown> implem
   /**
    * One-shot run.
    */
-  async run(query: QueryAST.Query): Promise<QueryResult.EntityEntry<T>[]> {
+  async run(ctx: Context, query: QueryAST.Query): Promise<QueryResult.EntityEntry<T>[]> {
     const trivial = isSimpleSelectionQuery(query);
     if (!trivial) {
       throw new Error('Query not supported.');
@@ -40,9 +40,9 @@ export class QueueQueryContext<T extends Entity.Unknown = Entity.Unknown> implem
     const { filter } = trivial;
 
     const objects = await Function.pipe(
-      await this.#queue.fetchObjectsJSON(),
+      await this.#queue.fetchObjectsJSON(ctx),
       Array.filter((obj) => filterMatchObjectJSON(filter, obj)),
-      Array.map(async (obj) => this.#queue.hydrateObject(obj)),
+      Array.map(async (obj) => this.#queue.hydrateObject(ctx, obj)),
       (_) => Promise.all(_),
     );
 
@@ -55,9 +55,9 @@ export class QueueQueryContext<T extends Entity.Unknown = Entity.Unknown> implem
   /**
    * Start reactive query.
    */
-  start(): void {
+  start(ctx: Context): void {
     this.#runCtx = Context.default();
-    this.#runCtx.onDispose(this.#queue.beginPolling());
+    this.#runCtx.onDispose(this.#queue.beginPolling(ctx));
     this.#queue.updated.on(this.#runCtx, () => {
       this.changed.emit();
     });
@@ -66,7 +66,7 @@ export class QueueQueryContext<T extends Entity.Unknown = Entity.Unknown> implem
   /**
    * Stop reactive query.
    */
-  stop(): void {
+  stop(ctx: Context): void {
     void this.#runCtx?.dispose();
     this.#runCtx = null;
   }
@@ -74,7 +74,7 @@ export class QueueQueryContext<T extends Entity.Unknown = Entity.Unknown> implem
   /**
    * Update the filter (for reactive queries).
    */
-  update(query: QueryAST.Query): void {
+  update(ctx: Context, query: QueryAST.Query): void {
     const trivial = isSimpleSelectionQuery(query);
     if (!trivial) {
       throw new Error('Query not supported.');
@@ -87,11 +87,11 @@ export class QueueQueryContext<T extends Entity.Unknown = Entity.Unknown> implem
   /**
    * Synchronously get the results.
    */
-  getResults(): QueryResult.EntityEntry<T>[] {
+  getResults(ctx: Context): QueryResult.EntityEntry<T>[] {
     invariant(this.#filter);
 
     return Function.pipe(
-      this.#queue.getObjectsSync(),
+      this.#queue.getObjectsSync(ctx),
       // TODO(dmaretskyi): We end-up marshaling objects from JSON and back.
       Array.filter((obj) => filterMatchObjectJSON(this.#filter!, Entity.toJSON(obj))),
       Array.map((object) => ({

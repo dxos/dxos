@@ -57,14 +57,14 @@ describe('IndexQuerySource', () => {
     const query = makeQuery();
 
     // Update before open should not hit the remote service.
-    source.update(query);
+    source.update(Context.default(), query);
     expect(calls).toHaveLength(0);
 
     // Open alone should not start the query until the next update (GraphQueryContext calls update after open).
-    source.open();
+    source.open(Context.default());
     expect(calls).toHaveLength(0);
 
-    source.update(query);
+    source.update(Context.default(), query);
     expect(calls).toHaveLength(1);
     expect(calls[0].reactivity).toBe(QueryReactivity.REACTIVE);
   });
@@ -97,8 +97,8 @@ describe('IndexQuerySource', () => {
     source.changed.on(ctx, () => {});
 
     const query = makeQuery();
-    source.update(query);
-    const results = await source.run(query);
+    source.update(Context.default(), query);
+    const results = await source.run(Context.default(), query);
 
     expect(results).toEqual([]);
     expect(calls).toHaveLength(1);

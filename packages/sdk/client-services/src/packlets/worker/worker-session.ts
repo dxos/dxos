@@ -9,6 +9,7 @@ import {
   iframeServiceBundle,
   workerServiceBundle,
 } from '@dxos/client-protocol';
+import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log, logInfo } from '@dxos/log';
 import { type BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
@@ -103,7 +104,7 @@ export class WorkerSession {
           stop: async () => {
             setTimeout(async () => {
               try {
-                await this.close();
+                await this.close(Context.default());
               } catch (err: any) {
                 log.catch(err);
               }
@@ -118,22 +119,22 @@ export class WorkerSession {
     this.bridgeService = this._iframeRpc.rpc.BridgeService;
   }
 
-  async open(): Promise<void> {
+  async open(ctx: Context): Promise<void> {
     log('opening...');
-    await Promise.all([this._clientRpc.open(), this._iframeRpc.open(), this._maybeOpenShell()]);
+    await Promise.all([this._clientRpc.open(), this._iframeRpc.open(), this._maybeOpenShell(ctx)]);
 
     // Wait until the worker's RPC service has started.
     await this._startTrigger.wait({ timeout: PROXY_CONNECTION_TIMEOUT });
 
     // TODO(burdon): Comment required.
     if (this.lockKey) {
-      void this._afterLockReleases(this.lockKey, () => this.close());
+      void this._afterLockReleases(ctx, this.lockKey, () => this.close(ctx));
     }
 
     log('opened');
   }
 
-  async close(): Promise<void> {
+  async close(ctx: Context): Promise<void> {
     log.debug('closing...');
     try {
       await this.onClose.callIfSet();
@@ -145,7 +146,7 @@ export class WorkerSession {
     log.debug('closed');
   }
 
-  private async _maybeOpenShell(): Promise<void> {
+  private async _maybeOpenShell(ctx: Context): Promise<void> {
     try {
       this._shellClientRpc && (await asyncTimeout(this._shellClientRpc.open(), 1_000));
     } catch {
@@ -153,7 +154,7 @@ export class WorkerSession {
     }
   }
 
-  private _afterLockReleases(lockKey: string, callback: () => MaybePromise<void>): Promise<void> {
+  private _afterLockReleases(ctx: Context, lockKey: string, callback: () => MaybePromise<void>): Promise<void> {
     return navigator.locks
       .request(lockKey, () => {
         // No-op.

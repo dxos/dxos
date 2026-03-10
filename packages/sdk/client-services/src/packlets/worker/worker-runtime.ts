@@ -109,7 +109,7 @@ export class WorkerRuntime {
     );
     this._clientServices = new ClientServicesHost({
       callbacks: {
-        onReset: async () => this.stop(),
+        onReset: async () => this.stop(Context.default()),
       },
       runtime: this._runtime.runtimeEffect,
       runtimeProps: {
@@ -128,7 +128,7 @@ export class WorkerRuntime {
     return this._livenessLock.key;
   }
 
-  async start(): Promise<void> {
+  async start(ctx: Context): Promise<void> {
     log('starting...');
     try {
       void this._livenessLock.acquire();
@@ -138,14 +138,14 @@ export class WorkerRuntime {
       this._broadcastChannel.postMessage({ action: 'stop' });
       this._broadcastChannel.onmessage = async (event) => {
         if (event.data?.action === 'stop') {
-          await this.stop();
+          await this.stop(Context.default());
         }
       };
 
       await this._acquireLock();
       this._config = await this._configProvider();
       const signals = this._config.get('runtime.services.signaling');
-      this._clientServices.initialize({
+      this._clientServices.initialize(ctx, {
         config: this._config,
         signalManager: this._config.get('runtime.client.edgeFeatures')?.signaling
           ? undefined
@@ -171,12 +171,12 @@ export class WorkerRuntime {
     }
   }
 
-  async stop(): Promise<void> {
+  async stop(ctx: Context): Promise<void> {
     // Release the lock to notify remote clients that the worker is terminating.
     this._releaseLock();
     this._broadcastChannel?.close();
     this._broadcastChannel = undefined;
-    await this._clientServices.close();
+    await this._clientServices.close(ctx);
     await this._runtime.dispose();
     await this._onStop?.();
     await this._livenessLock.release();
@@ -185,7 +185,7 @@ export class WorkerRuntime {
   /**
    * Create a new session.
    */
-  async createSession({ appPort, systemPort, shellPort, onClose }: CreateSessionProps): Promise<WorkerSession> {
+  async createSession(ctx: Context, { appPort, systemPort, shellPort, onClose }: CreateSessionProps): Promise<WorkerSession> {
     const session = new WorkerSession({
       serviceHost: this._clientServices,
       appPort,
@@ -198,17 +198,16 @@ export class WorkerRuntime {
     session.onClose.set(async () => {
       this._sessions.delete(session);
       if (this._sessions.size === 0) {
-        // Terminate the worker when all sessions are closed.
-        await this.stop();
+        await this.stop(Context.default());
       } else {
         if (this._automaticallyConnectWebrtc) {
-          this._reconnectWebrtc();
+          this._reconnectWebrtc(Context.default());
         }
       }
       await onClose?.();
     });
 
-    await session.open();
+    await session.open(ctx);
     // A worker can only service one origin currently
     invariant(
       !this._signalMetadataTags.origin || this._signalMetadataTags.origin === session.origin,
@@ -222,7 +221,7 @@ export class WorkerRuntime {
     this._sessions.add(session);
 
     if (this._automaticallyConnectWebrtc) {
-      this._reconnectWebrtc();
+      this._reconnectWebrtc(ctx);
     }
 
     return session;
@@ -236,7 +235,7 @@ export class WorkerRuntime {
    *
    * @param session The session to connect the WebRTC bridge to.
    */
-  connectWebrtcBridge(session: WorkerSession | undefined): void {
+  connectWebrtcBridge(ctx: Context, session: WorkerSession | undefined): void {
     this._sessionForNetworking = session;
     this._transportFactory.setBridgeService(session?.bridgeService);
   }
@@ -244,7 +243,7 @@ export class WorkerRuntime {
   /**
    * Selects one of the existing session for WebRTC networking.
    */
-  private _reconnectWebrtc(): void {
+  private _reconnectWebrtc(ctx: Context): void {
     log('reconnecting webrtc...');
     // Check if current session is already closed.
     if (this._sessionForNetworking) {
@@ -256,7 +255,7 @@ export class WorkerRuntime {
     // Select existing session.
     if (!this._sessionForNetworking) {
       const selected = Array.from(this._sessions).find((session) => session.bridgeService);
-      this.connectWebrtcBridge(selected);
+      this.connectWebrtcBridge(ctx, selected);
     }
   }
 }

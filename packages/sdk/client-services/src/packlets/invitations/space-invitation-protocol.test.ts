@@ -37,7 +37,7 @@ describe('services/space-invitations-protocol', () => {
     const space = await peer.dataSpaceManager!.createSpace(Context.default());
     expect(peer.dataSpaceManager!.spaces.has(space.key)).to.be.true;
 
-    await peer.dataSpaceManager?.waitUntilSpaceReady(space.key);
+    await peer.dataSpaceManager?.waitUntilSpaceReady(Context.default(), space.key);
     await space.close(Context.default());
   });
 
@@ -55,8 +55,8 @@ describe('services/space-invitations-protocol', () => {
       expect(space1).not.to.be.undefined;
       expect(space2).not.to.be.undefined;
 
-      await host.dataSpaceManager?.waitUntilSpaceReady(space1.key);
-      await guest.dataSpaceManager?.waitUntilSpaceReady(space2.key);
+      await host.dataSpaceManager?.waitUntilSpaceReady(Context.default(), space1.key);
+      await guest.dataSpaceManager?.waitUntilSpaceReady(Context.default(), space2.key);
 
       await space2.inner.controlPipeline.state.waitUntilTimeframe(
         Context.default(),
@@ -82,8 +82,8 @@ describe('services/space-invitations-protocol', () => {
       expect(space1).not.to.be.undefined;
       expect(space2).not.to.be.undefined;
 
-      await host.dataSpaceManager?.waitUntilSpaceReady(space1.key);
-      await guest.dataSpaceManager?.waitUntilSpaceReady(space2.key);
+      await host.dataSpaceManager?.waitUntilSpaceReady(Context.default(), space1.key);
+      await guest.dataSpaceManager?.waitUntilSpaceReady(Context.default(), space2.key);
     }
 
     const [_, guestResult] = performInvitation({
@@ -142,8 +142,8 @@ describe('services/space-invitations-protocol', () => {
       expect(space1).not.to.be.undefined;
       expect(space2).not.to.be.undefined;
 
-      await host.dataSpaceManager?.waitUntilSpaceReady(space1.key);
-      await guest.dataSpaceManager?.waitUntilSpaceReady(space2.key);
+      await host.dataSpaceManager?.waitUntilSpaceReady(Context.default(), space1.key);
+      await guest.dataSpaceManager?.waitUntilSpaceReady(Context.default(), space2.key);
 
       await space2.inner.controlPipeline.state.waitUntilTimeframe(
         Context.default(),

@@ -14,6 +14,7 @@ import { DXN } from '@dxos/keys';
 import { EchoTestBuilder } from '../testing';
 
 import { createFeedServiceLayer } from './feed-service';
+import { Context } from '@dxos/context';
 
 describe('Feed', () => {
   let builder: EchoTestBuilder;
@@ -29,7 +30,7 @@ describe('Feed', () => {
   test('remove items from a feed', async ({ expect }) => {
     await using peer = await builder.createPeer({ types: [Type.Feed, TestSchema.Person] });
     const db = await peer.createDatabase();
-    const queues = peer.client.constructQueueFactory(db.spaceId);
+    const queues = peer.client.constructQueueFactory(Context.default(), db.spaceId);
     const testLayer = Layer.merge(Database.layer(db), createFeedServiceLayer(queues));
 
     await Effect.gen(function* () {
@@ -46,7 +47,7 @@ describe('Feed', () => {
   test('DXN is stored as meta key on feed object', async ({ expect }) => {
     await using peer = await builder.createPeer({ types: [Type.Feed, TestSchema.Person] });
     const db = await peer.createDatabase();
-    const queues = peer.client.constructQueueFactory(db.spaceId);
+    const queues = peer.client.constructQueueFactory(Context.default(), db.spaceId);
     const testLayer = Layer.merge(Database.layer(db), createFeedServiceLayer(queues));
 
     await Effect.gen(function* () {
@@ -92,7 +93,7 @@ describe('Feed', () => {
   test('query items in a feed', async ({ expect }) => {
     await using peer = await builder.createPeer({ types: [Type.Feed, TestSchema.Person] });
     const db = await peer.createDatabase();
-    const queues = peer.client.constructQueueFactory(db.spaceId);
+    const queues = peer.client.constructQueueFactory(Context.default(), db.spaceId);
     const testLayer = Layer.merge(Database.layer(db), createFeedServiceLayer(queues));
 
     await Effect.gen(function* () {

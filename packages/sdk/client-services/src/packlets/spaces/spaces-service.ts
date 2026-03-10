@@ -82,11 +82,11 @@ export class SpacesServiceImpl implements SpacesService {
     if (state) {
       switch (state) {
         case SpaceState.SPACE_ACTIVE:
-          await space.activate();
+          await space.activate(Context.default());
           break;
 
         case SpaceState.SPACE_INACTIVE:
-          await space.deactivate();
+          await space.deactivate(Context.default());
           break;
         default:
           throw new ApiError({ message: 'Invalid space state' });
@@ -94,7 +94,7 @@ export class SpacesServiceImpl implements SpacesService {
     }
 
     if (edgeReplication !== undefined) {
-      await dataSpaceManager.setSpaceEdgeReplicationSetting(spaceKey, edgeReplication);
+      await dataSpaceManager.setSpaceEdgeReplicationSetting(Context.default(), spaceKey, edgeReplication);
     }
   }
 
@@ -114,7 +114,7 @@ export class SpacesServiceImpl implements SpacesService {
       });
     }
     const credentials = await createAdmissionCredentials(
-      identity.getIdentityCredentialSigner(),
+      identity.getIdentityCredentialSigner(Context.default()),
       request.memberKey,
       space.key,
       space.genesisFeedKey,
@@ -193,7 +193,7 @@ export class SpacesServiceImpl implements SpacesService {
   async postMessage({ spaceKey, channel, message }: PostMessageRequest): Promise<void> {
     const dataSpaceManager = await this._getDataSpaceManager();
     const space = dataSpaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
-    await space.postMessage(getChannelId(channel), message);
+    await space.postMessage(Context.default(), getChannelId(channel), message);
   }
 
   subscribeMessages({ spaceKey, channel }: SubscribeMessagesRequest): Stream<GossipMessage> {
@@ -201,7 +201,7 @@ export class SpacesServiceImpl implements SpacesService {
       scheduleTask(ctx, async () => {
         const dataSpaceManager = await this._getDataSpaceManager();
         const space = dataSpaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
-        const handle = space.listen(getChannelId(channel), (message) => {
+        const handle = space.listen(Context.default(), getChannelId(channel), (message) => {
           next(message);
         });
         ctx.onDispose(() => handle.unsubscribe());
@@ -236,7 +236,7 @@ export class SpacesServiceImpl implements SpacesService {
       } else {
         invariant(!credential.id, 'Id on unsigned credentials is not allowed');
         invariant(this._identityManager.identity, 'Identity is not available');
-        const signer = this._identityManager.identity.getIdentityCredentialSigner();
+        const signer = this._identityManager.identity.getIdentityCredentialSigner(Context.default());
         invariant(credential.issuer.equals(signer.getIssuer()));
         const signedCredential = await signer.createCredential({
           subject: credential.subject.id,
@@ -250,13 +250,13 @@ export class SpacesServiceImpl implements SpacesService {
   async createEpoch({ spaceKey, migration, automergeRootUrl }: CreateEpochRequest): Promise<CreateEpochResponse> {
     const dataSpaceManager = await this._getDataSpaceManager();
     const space = dataSpaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
-    const result = await space.createEpoch({ migration, newAutomergeRoot: automergeRootUrl });
+    const result = await space.createEpoch(Context.default(), { migration, newAutomergeRoot: automergeRootUrl });
     return { epochCredential: result?.credential, controlTimeframe: result?.timeframe };
   }
 
   async admitContact(request: AdmitContactRequest): Promise<void> {
     const dataSpaceManager = await this._getDataSpaceManager();
-    await dataSpaceManager.admitMember({
+    await dataSpaceManager.admitMember(Context.default(), {
       spaceKey: request.spaceKey,
       identityKey: request.contact.identityKey,
       role: request.role,
@@ -265,7 +265,7 @@ export class SpacesServiceImpl implements SpacesService {
 
   async joinBySpaceKey({ spaceKey }: JoinBySpaceKeyRequest): Promise<JoinSpaceResponse> {
     const dataSpaceManager = await this._getDataSpaceManager();
-    const credential = await dataSpaceManager.requestSpaceAdmissionCredential(spaceKey);
+    const credential = await dataSpaceManager.requestSpaceAdmissionCredential(Context.default(), spaceKey);
     return this._joinByAdmission({ credential });
   }
 
@@ -274,17 +274,17 @@ export class SpacesServiceImpl implements SpacesService {
     assertArgument(SpaceId.isValid(request.spaceId), 'spaceId', 'Invalid space ID');
 
     const dataSpaceManager = await this._getDataSpaceManager();
-    const space = dataSpaceManager.getSpaceById(request.spaceId) ?? raise(new Error('Space not found'));
-    await writer.begin({ spaceId: space.id });
+    const space = dataSpaceManager.getSpaceById(Context.default(), request.spaceId) ?? raise(new Error('Space not found'));
+    await writer.begin(Context.default(), { spaceId: space.id });
     const rootUrl = space.automergeSpaceState.lastEpoch?.subject.assertion.automergeRoot;
     assertState(rootUrl, 'Space does not have a root URL');
-    await writer.setCurrentRootUrl(rootUrl);
+    await writer.setCurrentRootUrl(Context.default(), rootUrl);
 
-    for await (const [documentId, data] of space.getAllDocuments()) {
-      await writer.writeDocument(documentId, data);
+    for await (const [documentId, data] of space.getAllDocuments(Context.default())) {
+      await writer.writeDocument(Context.default(), documentId, data);
     }
 
-    const archive = await writer.finish();
+    const archive = await writer.finish(Context.default());
     return { archive };
   }
 
@@ -366,7 +366,7 @@ export class SpacesServiceImpl implements SpacesService {
       creator: space.inner.spaceState.creator?.key,
       cache: space.cache,
       metrics: space.metrics,
-      edgeReplication: space.getEdgeReplicationSetting(),
+      edgeReplication: space.getEdgeReplicationSetting(Context.default()),
     };
   }
 

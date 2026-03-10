@@ -13,6 +13,7 @@ import { FeedProtocol } from '@dxos/protocols';
 import { type Queue } from '../queue';
 
 import { EchoTestBuilder } from './echo-test-builder';
+import { Context } from '@dxos/context';
 
 describe('queues', () => {
   let builder: EchoTestBuilder;
@@ -26,11 +27,11 @@ describe('queues', () => {
   test('resolve reference to a queue', async () => {
     await using peer = await builder.createPeer({ types: [TestSchema.Person] });
     const db = await peer.createDatabase();
-    const queues = peer.client.constructQueueFactory(db.spaceId);
+    const queues = peer.client.constructQueueFactory(Context.default(), db.spaceId);
     const obj = db.add(
       Obj.make(TestSchema.Expando, {
         // TODO(dmaretskyi): Support Ref.make
-        queue: Type.Ref.fromDXN(queues.create().dxn) as Ref.Ref<Queue>,
+        queue: Type.Ref.fromDXN(queues.create(Context.default()).dxn) as Ref.Ref<Queue>,
       }),
     );
 
@@ -42,10 +43,10 @@ describe('queues', () => {
   test('Entity.getDXN on queue objects returns absolute dxn', async () => {
     await using peer = await builder.createPeer({ types: [TestSchema.Person] });
     const db = await peer.createDatabase();
-    const queues = peer.client.constructQueueFactory(db.spaceId);
-    const queue = queues.create();
+    const queues = peer.client.constructQueueFactory(Context.default(), db.spaceId);
+    const queue = queues.create(Context.default());
 
-    await queue.append([Obj.make(TestSchema.Person, { name: 'john' })]);
+    await queue.append(Context.default(), [Obj.make(TestSchema.Person, { name: 'john' })]);
     const obj = queue.objects[0];
     expect(Entity.getDXN(obj)?.toString()).toEqual(queue.dxn.extend([obj.id]).toString());
   });
@@ -53,11 +54,11 @@ describe('queues', () => {
   test('create and resolve an object from a queue', async () => {
     await using peer = await builder.createPeer({ types: [TestSchema.Person] });
     const spaceId = SpaceId.random();
-    const queues = peer.client.constructQueueFactory(spaceId);
-    const queue = queues.create();
+    const queues = peer.client.constructQueueFactory(Context.default(), spaceId);
+    const queue = queues.create(Context.default());
 
     const obj = Obj.make(TestSchema.Person, { name: 'john' });
-    await queue.append([obj]);
+    await queue.append(Context.default(), [obj]);
 
     {
       const resolved = await peer.client.graph
@@ -81,10 +82,10 @@ describe('queues', () => {
   test('objects in queues have positions', async () => {
     await using peer = await builder.createPeer({ types: [TestSchema.Person], assignQueuePositions: true });
     const spaceId = SpaceId.random();
-    const queues = peer.client.constructQueueFactory(spaceId);
-    const queue = queues.create();
+    const queues = peer.client.constructQueueFactory(Context.default(), spaceId);
+    const queue = queues.create(Context.default());
 
-    await queue.append([
+    await queue.append(Context.default(), [
       // prettier-ignore
       Obj.make(TestSchema.Person, { name: "john" }),
       Obj.make(TestSchema.Person, { name: 'jane' }),
@@ -98,7 +99,7 @@ describe('queues', () => {
     }
 
     {
-      await queue.refresh();
+      await queue.refresh(Context.default());
       const objects = queue.objects;
       expect(objects).toHaveLength(2);
       expect(Entity.getKeys(objects[0], FeedProtocol.KEY_QUEUE_POSITION).at(0)?.id).toEqual('0');
@@ -111,8 +112,8 @@ describe('queues', () => {
       types: [TestSchema.Person, TestSchema.EmployedBy],
     });
     const spaceId = SpaceId.random();
-    const queues = peer.client.constructQueueFactory(spaceId);
-    const queue = queues.create();
+    const queues = peer.client.constructQueueFactory(Context.default(), spaceId);
+    const queue = queues.create(Context.default());
 
     {
       const obj1 = Obj.make(TestSchema.Person, { name: 'john' });
@@ -123,11 +124,11 @@ describe('queues', () => {
         role: 'CIO',
       });
 
-      await queue.append([obj1, obj2, relation]);
+      await queue.append(Context.default(), [obj1, obj2, relation]);
     }
 
     {
-      const [obj1, obj2, relation] = await queue.queryObjects();
+      const [obj1, obj2, relation] = await queue.queryObjects(Context.default());
       expect((obj1 as TestSchema.Person).name).toEqual('john');
       expect((obj2 as TestSchema.Organization).name).toEqual('DXOS');
       expect(Relation.getSource(relation as TestSchema.EmployedBy).name).toEqual('john');
@@ -140,8 +141,8 @@ describe('queues', () => {
       types: [TestSchema.Person, TestSchema.EmployedBy],
     });
     const db = await peer.createDatabase();
-    const queues = peer.client.constructQueueFactory(db.spaceId);
-    const queue = queues.create();
+    const queues = peer.client.constructQueueFactory(Context.default(), db.spaceId);
+    const queue = queues.create(Context.default());
 
     {
       const contact = db.add(Obj.make(TestSchema.Person, { name: 'alice' }));
@@ -152,11 +153,11 @@ describe('queues', () => {
         role: 'CTO',
       });
 
-      await queue.append([org, relation]);
+      await queue.append(Context.default(), [org, relation]);
     }
 
     {
-      const [org, relation] = await queue.queryObjects();
+      const [org, relation] = await queue.queryObjects(Context.default());
       expect((org as TestSchema.Organization).name).toEqual('DXOS');
       expect(Relation.getSource(relation as TestSchema.EmployedBy).name).toEqual('alice');
       expect(Relation.getTarget(relation as TestSchema.EmployedBy).name).toEqual('DXOS');
@@ -169,10 +170,10 @@ describe('queues', () => {
         types: [TestSchema.Person, TestSchema.EmployedBy],
       });
       const spaceId = SpaceId.random();
-      const queues = peer.client.constructQueueFactory(spaceId);
-      const queue = queues.create();
+      const queues = peer.client.constructQueueFactory(Context.default(), spaceId);
+      const queue = queues.create(Context.default());
 
-      await queue.append([
+      await queue.append(Context.default(), [
         Obj.make(TestSchema.Person, {
           name: 'john',
         }),
@@ -194,10 +195,10 @@ describe('queues', () => {
         types: [TestSchema.Person, TestSchema.Task],
       });
       const spaceId = SpaceId.random();
-      const queues = peer.client.constructQueueFactory(spaceId);
-      const queue = queues.create();
+      const queues = peer.client.constructQueueFactory(Context.default(), spaceId);
+      const queue = queues.create(Context.default());
 
-      await queue.append([
+      await queue.append(Context.default(), [
         Obj.make(TestSchema.Person, {
           name: 'john',
         }),
@@ -217,11 +218,11 @@ describe('queues', () => {
     test('queries local queue with TestSchema.Person schema', async ({ expect }) => {
       await using peer = await builder.createPeer();
       const db = await peer.createDatabase();
-      const queues = peer.client.constructQueueFactory(db.spaceId);
-      const queue = queues.create();
+      const queues = peer.client.constructQueueFactory(Context.default(), db.spaceId);
+      const queue = queues.create(Context.default());
 
       const localObject = Obj.make(TestSchema.Person, { name: 'local-only' });
-      await queue.append([localObject]);
+      await queue.append(Context.default(), [localObject]);
 
       const localQueueObjects = await queue
         .query(Query.select(Filter.type(TestSchema.Person, { name: 'local-only' })))
@@ -235,11 +236,11 @@ describe('queues', () => {
     test('queries local queue with TestSchema.Expando schema', async ({ expect }) => {
       await using peer = await builder.createPeer();
       const db = await peer.createDatabase();
-      const queues = peer.client.constructQueueFactory(db.spaceId);
-      const queue = queues.create();
+      const queues = peer.client.constructQueueFactory(Context.default(), db.spaceId);
+      const queue = queues.create(Context.default());
 
       const localObject = Obj.make(TestSchema.Expando, { message: 'local-only' });
-      await queue.append([localObject]);
+      await queue.append(Context.default(), [localObject]);
 
       const localQueueObjects = await queue
         .query(Query.select(Filter.type(TestSchema.Expando, { message: 'local-only' })))
@@ -255,10 +256,10 @@ describe('queues', () => {
         types: [TestSchema.Person],
       });
       const spaceId = SpaceId.random();
-      const queues = peer.client.constructQueueFactory(spaceId);
-      const queue = queues.create();
+      const queues = peer.client.constructQueueFactory(Context.default(), spaceId);
+      const queue = queues.create(Context.default());
 
-      await queue.append([
+      await queue.append(Context.default(), [
         Obj.make(TestSchema.Person, {
           name: 'john',
         }),
@@ -280,14 +281,14 @@ describe('queues', () => {
         types: [TestSchema.Person],
       });
       const spaceId = SpaceId.random();
-      const queues = peer.client.constructQueueFactory(spaceId);
-      const queue = queues.create();
+      const queues = peer.client.constructQueueFactory(Context.default(), spaceId);
+      const queue = queues.create(Context.default());
 
       const john = Obj.make(TestSchema.Person, { name: 'john' });
       const jane = Obj.make(TestSchema.Person, { name: 'jane' });
       const alice = Obj.make(TestSchema.Person, { name: 'alice' });
 
-      await queue.append([john, jane, alice]);
+      await queue.append(Context.default(), [john, jane, alice]);
 
       // Query by specific ID.
       const result = await queue.query(Query.select(Filter.id(jane.id))).run();
@@ -301,10 +302,10 @@ describe('queues', () => {
         types: [TestSchema.Person],
       });
       const spaceId = SpaceId.random();
-      const queues = peer.client.constructQueueFactory(spaceId);
-      const queue = queues.create();
+      const queues = peer.client.constructQueueFactory(Context.default(), spaceId);
+      const queue = queues.create(Context.default());
 
-      await queue.append([
+      await queue.append(Context.default(), [
         Obj.make(TestSchema.Person, {
           name: 'john',
         }),
@@ -330,10 +331,10 @@ describe('queues', () => {
         types: [TestSchema.Person],
       });
       const spaceId = SpaceId.random();
-      const queues = peer.client.constructQueueFactory(spaceId);
-      const queue = queues.create();
+      const queues = peer.client.constructQueueFactory(Context.default(), spaceId);
+      const queue = queues.create(Context.default());
 
-      await queue.append([
+      await queue.append(Context.default(), [
         Obj.make(TestSchema.Person, {
           name: 'john',
         }),
@@ -345,7 +346,7 @@ describe('queues', () => {
       const sub = query.subscribe(() => called.emit());
 
       // Append new contact.
-      await queue.append([
+      await queue.append(Context.default(), [
         Obj.make(TestSchema.Person, {
           name: 'jane',
         }),
@@ -365,10 +366,10 @@ describe('queues', () => {
         types: [TestSchema.Person],
       });
       const spaceId = SpaceId.random();
-      const queues = peer.client.constructQueueFactory(spaceId);
-      const queue = queues.create();
+      const queues = peer.client.constructQueueFactory(Context.default(), spaceId);
+      const queue = queues.create(Context.default());
 
-      await queue.append([
+      await queue.append(Context.default(), [
         Obj.make(TestSchema.Person, {
           name: 'john',
         }),
@@ -376,8 +377,8 @@ describe('queues', () => {
 
       await peer.reload();
 
-      const queues2 = peer.client.constructQueueFactory(spaceId);
-      const objects2 = await queues2.get(queue.dxn).query(Filter.everything()).run();
+      const queues2 = peer.client.constructQueueFactory(Context.default(), spaceId);
+      const objects2 = await queues2.get(Context.default(), queue.dxn).query(Filter.everything()).run();
 
       expect(objects2).toHaveLength(1);
       expect(objects2[0].name).toEqual('john');

@@ -179,7 +179,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   @synchronized
   protected override async _open(): Promise<void> {
     if (this._rootUrl !== undefined) {
-      await this._coreDatabase.open({ rootUrl: this._rootUrl });
+      await this._coreDatabase.open(this._ctx, { rootUrl: this._rootUrl });
     }
 
     await this._schemaRegistry.open();
@@ -188,7 +188,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   @synchronized
   protected override async _close(): Promise<void> {
     await this._schemaRegistry.close();
-    await this._coreDatabase.close();
+    await this._coreDatabase.close(this._ctx);
   }
 
   @synchronized
@@ -198,17 +198,17 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     this._rootUrl = rootUrl;
     if (this._lifecycleState === LifecycleState.OPEN) {
       if (firstTime) {
-        await this._coreDatabase.open({ rootUrl });
+        await this._coreDatabase.open(this._ctx, { rootUrl });
       } else {
-        await this._coreDatabase.updateSpaceState({ rootUrl });
+        await this._coreDatabase.updateSpaceState(this._ctx, { rootUrl });
       }
     }
   }
 
   // TODO(burdon): Type check.
   getObjectById<T extends Entity.Unknown = Entity.Any>(id: string, { deleted = false } = {}): T | undefined {
-    const core = this._coreDatabase.getObjectCoreById(id);
-    if (!core || (core.isDeleted() && !deleted)) {
+    const core = this._coreDatabase.getObjectCoreById(this._ctx, id);
+    if (!core || (core.isDeleted(this._ctx) && !deleted)) {
       return undefined;
     }
 
@@ -278,7 +278,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     const target = getProxyTarget(obj) as ProxyTarget & Entity.Unknown;
     EchoReactiveHandler.instance.setDatabase(target, this);
     EchoReactiveHandler.instance.saveRefs(target);
-    this._coreDatabase.addCore(getObjectCore(obj), opts);
+    this._coreDatabase.addCore(this._ctx, getObjectCore(obj), opts);
     return obj;
   }
 
@@ -287,11 +287,11 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
    */
   remove<T extends Entity.Unknown = Entity.Unknown>(obj: T): void {
     invariant(isEchoObject(obj));
-    return this._coreDatabase.removeCore(getObjectCore(obj));
+    return this._coreDatabase.removeCore(this._ctx, getObjectCore(obj));
   }
 
   async flush(opts?: Database.FlushOptions): Promise<void> {
-    await this._coreDatabase.flush(opts);
+    await this._coreDatabase.flush(this._ctx, opts);
   }
 
   async runMigrations(migrations: ObjectMigration[]): Promise<void> {
@@ -310,7 +310,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
         // TODO(dmaretskyi): Output validation.
         delete (output as any).id;
 
-        await this._coreDatabase.atomicReplaceObject(object.id, {
+        await this._coreDatabase.atomicReplaceObject(this._ctx, object.id, {
           data: output,
           type: migration.toType,
         });
@@ -324,7 +324,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   }
 
   getSyncState(): Promise<SpaceSyncState> {
-    return this._coreDatabase.getSyncState();
+    return this._coreDatabase.getSyncState(this._ctx);
   }
 
   subscribeToSyncState(ctx: Context, callback: (state: SpaceSyncState) => void): CleanupFn {
@@ -335,22 +335,22 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
    * Update service references after reconnection.
    */
   _updateServices({ dataService, queryService }: { dataService: DataService; queryService: QueryService }): void {
-    this._coreDatabase._updateServices({ dataService, queryService });
+    this._coreDatabase._updateServices(this._ctx, { dataService, queryService });
   }
 
   /**
    * Handle reconnection to re-establish RPC streams.
    */
   async _onReconnect(): Promise<void> {
-    await this._coreDatabase._onReconnect();
+    await this._coreDatabase._onReconnect(this._ctx);
   }
 
   /**
    * @internal
    */
   async _loadObjectById(objectId: string, options: LoadObjectOptions = {}): Promise<Entity.Unknown | undefined> {
-    const core = await this._coreDatabase.loadObjectCoreById(objectId, options);
-    if (!core || (core?.isDeleted() && !options.allowDeleted)) {
+    const core = await this._coreDatabase.loadObjectCoreById(this._ctx, objectId, options);
+    if (!core || (core?.isDeleted(this._ctx) && !options.allowDeleted)) {
       return undefined;
     }
 

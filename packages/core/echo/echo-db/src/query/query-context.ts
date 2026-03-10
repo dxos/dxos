@@ -3,6 +3,7 @@
 //
 
 import { type Event } from '@dxos/async';
+import { type Context } from '@dxos/context';
 import { type Entity, type QueryResult } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { type QueryAST } from '@dxos/echo-protocol';
@@ -11,7 +12,7 @@ import { type QueryAST } from '@dxos/echo-protocol';
 export type Sort<T extends AnyProperties> = (a: T, b: T) => -1 | 0 | 1;
 
 export interface QueryContext<T extends AnyProperties = AnyProperties, O extends Entity.Entity<T> = Entity.Entity<T>> {
-  getResults(): QueryResult.EntityEntry<O>[];
+  getResults(ctx: Context): QueryResult.EntityEntry<O>[];
 
   // TODO(dmaretskyi): Update info?
   changed: Event<void>;
@@ -19,12 +20,12 @@ export interface QueryContext<T extends AnyProperties = AnyProperties, O extends
   /**
    * One-shot query.
    */
-  run(query: QueryAST.Query, opts?: QueryResult.RunOptions): Promise<QueryResult.EntityEntry<O>[]>;
+  run(ctx: Context, query: QueryAST.Query, opts?: QueryResult.RunOptions): Promise<QueryResult.EntityEntry<O>[]>;
 
   /**
    * Set the filter and trigger continuous updates.
    */
-  update(query: QueryAST.Query): void;
+  update(ctx: Context, query: QueryAST.Query): void;
 
   /**
    * Start creating query sources and firing events.
@@ -32,7 +33,7 @@ export interface QueryContext<T extends AnyProperties = AnyProperties, O extends
    * `start` and `stop` are re-entrant.
    */
   // TODO(dmaretskyi): Make async.
-  start(): void;
+  start(ctx: Context): void;
 
   /**
    * Clear any resources associated with the query.
@@ -40,5 +41,5 @@ export interface QueryContext<T extends AnyProperties = AnyProperties, O extends
    * `start` and `stop` are re-entrant.
    */
   // TODO(dmaretskyi): Make async.
-  stop(): void;
+  stop(ctx: Context): void;
 }

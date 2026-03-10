@@ -37,7 +37,7 @@ describe('SpacesService', () => {
     });
 
     test('creates a new space', async () => {
-      await serviceContext.createIdentity();
+      await serviceContext.createIdentity(Context.default());
       const space = await spacesService.createSpace();
       expect(space).to.exist;
       expect(space.spaceKey).to.be.instanceof(PublicKey);
@@ -58,7 +58,7 @@ describe('SpacesService', () => {
     });
 
     test('returns list of existing spaces', async () => {
-      await serviceContext.createIdentity();
+      await serviceContext.createIdentity(Context.default());
       const existingSpaces = [
         await spacesService.createSpace(),
         await spacesService.createSpace(),
@@ -78,7 +78,7 @@ describe('SpacesService', () => {
     });
 
     test('updates when new space is added', async () => {
-      await serviceContext.createIdentity();
+      await serviceContext.createIdentity(Context.default());
       const query = spacesService.querySpaces();
       const result = new Trigger<Space[] | undefined>();
       query.subscribe(({ spaces }) => {

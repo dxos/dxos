@@ -7,6 +7,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { sleep } from '@dxos/async';
 import { WorkerRuntime } from '@dxos/client-services';
 import { Config } from '@dxos/config';
+import { Context } from '@dxos/context';
 import { createLinkedPorts } from '@dxos/rpc';
 import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
 import { type MaybePromise, type Provider } from '@dxos/util';
@@ -33,7 +34,7 @@ const setup = (configProvider: Provider<MaybePromise<Config>>) => {
   const systemPorts = createLinkedPorts();
   const appPorts = createLinkedPorts();
   const shellPorts = createLinkedPorts();
-  void workerRuntime.createSession({
+  void workerRuntime.createSession(Context.default(), {
     systemPort: systemPorts[1],
     appPort: appPorts[1],
     shellPort: shellPorts[1],
@@ -49,7 +50,7 @@ const setup = (configProvider: Provider<MaybePromise<Config>>) => {
   onTestFinished(async () => {
     await client.destroy();
     await clientProxy.close().catch(() => {});
-    await workerRuntime.stop();
+    await workerRuntime.stop(Context.default());
   });
 
   return { workerRuntime, clientProxy, client };
@@ -59,7 +60,7 @@ describe('Shared worker', () => {
   test('client connects to the worker', async () => {
     const { workerRuntime, clientProxy, client } = setup(() => new Config({}));
 
-    await Promise.all([workerRuntime.start(), clientProxy.open({ origin: '*' }), client.initialize()]);
+    await Promise.all([workerRuntime.start(Context.default()), clientProxy.open({ origin: '*' }), client.initialize()]);
 
     await client.halo.createIdentity();
   });
@@ -72,7 +73,7 @@ describe('Shared worker', () => {
 
     const promise = Promise.all([
       // This error should be propagated to client.initialize() call.
-      workerRuntime.start().catch(() => {}),
+      workerRuntime.start(Context.default()).catch(() => {}),
       clientProxy.open({ origin: '*' }).catch(() => {}),
     ]);
 
@@ -87,7 +88,7 @@ describe('Shared worker', () => {
       return new Config({});
     });
 
-    await Promise.all([workerRuntime.start(), clientProxy.open({ origin: '*' }), client.initialize()]);
+    await Promise.all([workerRuntime.start(Context.default()), clientProxy.open({ origin: '*' }), client.initialize()]);
 
     await client.halo.createIdentity();
   });

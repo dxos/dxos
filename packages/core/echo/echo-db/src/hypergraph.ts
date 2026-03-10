@@ -78,7 +78,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     }
 
     for (const context of this._queryContexts.values()) {
-      context.addQuerySource(new SpaceQuerySource(database));
+      context.addQuerySource(Context.default(), new SpaceQuerySource(database));
     }
   }
 
@@ -158,7 +158,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
           if (object) {
             return middleware(object);
           } else if (queue && load && onLoad) {
-            queue.refresh().then(
+            queue.refresh(Context.default()).then(
               () => onLoad(),
               (err) => log.catch(err),
             );
@@ -353,7 +353,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     if (!queueFactory) {
       return undefined;
     }
-    return queueFactory.get(DXN.fromQueue(subspaceTag, spaceId, queueId));
+    return queueFactory.get(Context.default(), DXN.fromQueue(subspaceTag, spaceId, queueId));
   }
 
   private async _resolveQueueObjectAsync(
@@ -366,19 +366,19 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     if (!queueFactory) {
       return undefined;
     }
-    const queue = queueFactory.get(DXN.fromQueue(subspaceTag, spaceId, queueId));
+    const queue = queueFactory.get(Context.default(), DXN.fromQueue(subspaceTag, spaceId, queueId));
     if (!queue) {
       return undefined;
     }
 
-    const [obj] = await queue.getObjectsById([objectId]);
+    const [obj] = await queue.getObjectsById(Context.default(), [objectId]);
     return obj;
   }
 
   registerQuerySourceProvider(provider: QuerySourceProvider): void {
     this._querySourceProviders.push(provider);
     for (const context of this._queryContexts.values()) {
-      context.addQuerySource(provider.create());
+      context.addQuerySource(Context.default(), provider.create(Context.default()));
     }
   }
 
@@ -430,10 +430,10 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     });
 
     for (const database of this._databases.values()) {
-      context.addQuerySource(new SpaceQuerySource(database));
+      context.addQuerySource(Context.default(), new SpaceQuerySource(database));
     }
     for (const provider of this._querySourceProviders) {
-      context.addQuerySource(provider.create());
+      context.addQuerySource(Context.default(), provider.create(Context.default()));
     }
 
     return context;
@@ -441,7 +441,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
 }
 
 export interface QuerySourceProvider {
-  create(): QuerySource;
+  create(ctx: Context): QuerySource;
 }
 
 type ObjectDiagnostic = {

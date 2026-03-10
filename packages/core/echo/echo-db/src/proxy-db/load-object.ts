@@ -3,6 +3,7 @@
 //
 
 import { asyncTimeout } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { type Obj } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 
@@ -13,7 +14,7 @@ import { getObjectCore } from '../echo-handler';
  */
 // TODO(burdon): Rename/review SDK.
 export const loadObject = <T extends AnyProperties>(obj: T): T => {
-  return getObjectCore(obj).getDecoded(['data']) as any;
+  return getObjectCore(obj).getDecoded(Context.default(), ['data']) as any;
 };
 
 /**

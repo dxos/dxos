@@ -15,13 +15,13 @@ describe('services/ServiceContext', () => {
   test('new space is synchronized on device invitations', async () => {
     const networkContext = new MemorySignalManagerContext();
     const device1 = await createOpenServiceContext(networkContext);
-    await device1.createIdentity();
+    await device1.createIdentity(Context.default());
 
     const device2 = await createOpenServiceContext(networkContext);
     await Promise.all(performInvitation({ host: device1, guest: device2, options: { kind: Invitation.Kind.DEVICE } }));
 
     const space1 = await device1.dataSpaceManager!.createSpace(Context.default());
-    await device2.dataSpaceManager!.waitUntilSpaceReady(space1!.key);
+    await device2.dataSpaceManager!.waitUntilSpaceReady(Context.default(), space1!.key);
     const space2 = await device2.dataSpaceManager!.spaces.get(space1.key);
     await space2!.inner.controlPipeline.state.waitUntilTimeframe(
       Context.default(),
@@ -32,13 +32,13 @@ describe('services/ServiceContext', () => {
   test('joined space is synchronized on device invitations', async () => {
     const networkContext = new MemorySignalManagerContext();
     const device1 = await createOpenServiceContext(networkContext);
-    await device1.createIdentity();
+    await device1.createIdentity(Context.default());
 
     const device2 = await createOpenServiceContext(networkContext);
     await Promise.all(performInvitation({ host: device1, guest: device2, options: { kind: Invitation.Kind.DEVICE } }));
 
     const identity2 = await createOpenServiceContext(networkContext);
-    await identity2.createIdentity();
+    await identity2.createIdentity(Context.default());
     const space1 = await identity2.dataSpaceManager!.createSpace(Context.default());
     await Promise.all(
       performInvitation({
@@ -48,7 +48,7 @@ describe('services/ServiceContext', () => {
       }),
     );
 
-    await device2.dataSpaceManager!.waitUntilSpaceReady(space1!.key);
+    await device2.dataSpaceManager!.waitUntilSpaceReady(Context.default(), space1!.key);
     const space2 = await device2.dataSpaceManager!.spaces.get(space1.key);
     await space2!.inner.controlPipeline.state.waitUntilTimeframe(
       Context.default(),

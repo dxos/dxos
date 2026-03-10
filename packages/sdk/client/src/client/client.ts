@@ -425,7 +425,7 @@ export class Client {
       this._edgeApi = createClientEdgeAPI({ client: this, edgeClient: this._edgeHttpClient });
     }
 
-    this._echoClient.connectToService({
+    this._echoClient.connectToService(this._ctx, {
       dataService: this._services.services.DataService ?? raise(new Error('DataService not available')),
       queryService: this._services.services.QueryService ?? raise(new Error('QueryService not available')),
       queueService: this._services.services.QueueService ?? raise(new Error('QueueService not available')),

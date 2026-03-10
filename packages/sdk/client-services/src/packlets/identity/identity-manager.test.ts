@@ -64,9 +64,9 @@ describe('identity/identity-manager', () => {
   test('creates identity', async () => {
     const { identityManager } = await setupPeer();
     await identityManager.open(new Context());
-    onTestFinished(() => identityManager.close());
+    onTestFinished(() => identityManager.close(Context.default()));
 
-    const identity = await identityManager.createIdentity();
+    const identity = await identityManager.createIdentity(Context.default());
     expect(identity).to.exist;
   });
 
@@ -76,8 +76,8 @@ describe('identity/identity-manager', () => {
     const peer1 = await setupPeer({ storage });
     await peer1.metadataStore.load();
     await peer1.identityManager.open(new Context());
-    const identity1 = await peer1.identityManager.createIdentity();
-    await peer1.identityManager.close();
+    const identity1 = await peer1.identityManager.createIdentity(Context.default());
+    await peer1.identityManager.close(Context.default());
     await peer1.feedStore.close();
     await peer1.metadataStore.close();
 
@@ -95,11 +95,11 @@ describe('identity/identity-manager', () => {
   test('update profile', async () => {
     const { identityManager } = await setupPeer();
     await identityManager.open(new Context());
-    onTestFinished(() => identityManager.close());
+    onTestFinished(() => identityManager.close(Context.default()));
 
-    const identity = await identityManager.createIdentity();
+    const identity = await identityManager.createIdentity(Context.default());
     expect(identity.profileDocument?.displayName).to.be.undefined;
-    await identityManager.updateProfile({ displayName: 'Example' });
+    await identityManager.updateProfile(Context.default(), { displayName: 'Example' });
     expect(identity.profileDocument?.displayName).to.equal('Example');
   });
 
@@ -107,12 +107,12 @@ describe('identity/identity-manager', () => {
     const signalContext = new MemorySignalManagerContext();
 
     const peer1 = await setupPeer({ signalContext });
-    const identity1 = await peer1.identityManager.createIdentity();
+    const identity1 = await peer1.identityManager.createIdentity(Context.default());
     peer1.networkManager.setPeerInfo({
       peerKey: identity1.deviceKey.toHex(),
       identityKey: identity1.identityKey.toHex(),
     });
-    await identity1.joinNetwork();
+    await identity1.joinNetwork(Context.default());
 
     const peer2 = await setupPeer({ signalContext });
 
@@ -120,7 +120,7 @@ describe('identity/identity-manager', () => {
     const controlFeedKey = await peer2.keyring.createKey();
     const dataFeedKey = await peer2.keyring.createKey();
 
-    const credential = await identity1.getIdentityCredentialSigner().createCredential({
+    const credential = await identity1.getIdentityCredentialSigner(Context.default()).createCredential({
       subject: deviceKey,
       assertion: {
         '@type': 'dxos.halo.credentials.AuthorizedDevice',
@@ -135,7 +135,7 @@ describe('identity/identity-manager', () => {
       },
     });
 
-    const { identity: identity2, identityRecord } = await peer2.identityManager.prepareIdentity({
+    const { identity: identity2, identityRecord } = await peer2.identityManager.prepareIdentity(Context.default(), {
       identityKey: identity1.identityKey,
       deviceKey,
       haloSpaceKey: identity1.haloSpaceKey,
@@ -148,14 +148,14 @@ describe('identity/identity-manager', () => {
       peerKey: identity2.deviceKey.toHex(),
       identityKey: identity2.identityKey.toHex(),
     });
-    await identity2.joinNetwork();
+    await identity2.joinNetwork(Context.default());
 
     // Identity2 is not yet ready at this point. Peer1 needs to admit peer2 device key and feed keys.
-    await peer2.identityManager.acceptIdentity(identity2, identityRecord);
+    await peer2.identityManager.acceptIdentity(Context.default(), identity2, identityRecord);
 
     // TODO(dmaretskyi): We'd also need to admit device2's feeds otherwise messages from them won't be processed by the pipeline.
     // This would mean that peer2 has replicated it's device credential chain from peer1 and is ready to issue credentials.
-    await identity2.ready();
+    await identity2.ready(Context.default());
 
     // Connection is authenticated.
     expect(identity1.space.protocol.sessions.get(identity2.deviceKey)).to.exist;
@@ -169,7 +169,7 @@ describe('identity/identity-manager', () => {
     const signalContext = new MemorySignalManagerContext();
 
     const peer = await setupPeer({ signalContext });
-    const identity = await peer.identityManager.createIdentity();
+    const identity = await peer.identityManager.createIdentity(Context.default());
 
     // Note: Waiting for device profile credential to be processed.
     await identity.stateUpdate.waitForCount(1);
@@ -182,7 +182,7 @@ describe('identity/identity-manager', () => {
 
     const peer = await setupPeer({ signalContext });
 
-    const identity = await peer.identityManager.createIdentity();
+    const identity = await peer.identityManager.createIdentity(Context.default());
 
     // Note: Waiting for device profile credential to be processed.
     await identity.stateUpdate.waitForCount(1);
@@ -191,7 +191,7 @@ describe('identity/identity-manager', () => {
     expect(deviceProfile).to.exist;
 
     deviceProfile!.label = 'updated profile';
-    await peer.identityManager.updateDeviceProfile(deviceProfile!);
+    await peer.identityManager.updateDeviceProfile(Context.default(), deviceProfile!);
 
     expect(identity.authorizedDeviceKeys.get(identity.deviceKey)?.label).to.equal('updated profile');
   });

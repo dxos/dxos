@@ -50,8 +50,8 @@ describe('identity/identity', () => {
     await writeGenesisCredential(setup);
 
     // Wait for identity to be ready.
-    await setup.identity.ready();
-    const identitySigner = setup.identity.getIdentityCredentialSigner();
+    await setup.identity.ready(Context.default());
+    const identitySigner = setup.identity.getIdentityCredentialSigner(Context.default());
     const credential = await identitySigner.createCredential({
       subject: setup.identityKey,
       assertion: {
@@ -71,7 +71,7 @@ describe('identity/identity', () => {
 
     const owner = await setupIdentity({ signalContext });
     await writeGenesisCredential(owner);
-    await owner.identity.ready();
+    await owner.identity.ready(Context.default());
 
     const secondDevice = (
       await setupIdentity({
@@ -86,7 +86,7 @@ describe('identity/identity', () => {
     // Second device admission
     //
     {
-      const signer = owner.identity.getIdentityCredentialSigner();
+      const signer = owner.identity.getIdentityCredentialSigner(Context.default());
       void owner.identity.controlPipeline.writer.write({
         credential: {
           credential: await signer.createCredential({
@@ -100,7 +100,7 @@ describe('identity/identity', () => {
         },
       });
 
-      await secondDevice.ready();
+      await secondDevice.ready(Context.default());
     }
 
     expect(Array.from(owner.identity.authorizedDeviceKeys.keys())).toEqual([owner.deviceKey, secondDevice.deviceKey]);
@@ -219,7 +219,7 @@ describe('identity/identity', () => {
     });
 
     await identity.open(new Context());
-    await identity.joinNetwork();
+    await identity.joinNetwork(Context.default());
     onTestFinished(() => identity.close(new Context()));
     return { identity, identityKey, keyring, deviceKey, controlFeed, spaceKey, dataFeed };
   };

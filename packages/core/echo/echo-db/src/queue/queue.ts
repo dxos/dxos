@@ -141,7 +141,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
   /**
    * Subscribe to queue updates.
    */
-  subscribe(callback: () => void): () => void {
+  subscribe(ctx: Context, callback: () => void): () => void {
     return this.updated.on(callback);
   }
 
@@ -163,7 +163,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
    * @deprecated Use `query` method instead.
    */
   get objects(): T[] {
-    return this.getObjectsSync();
+    return this.getObjectsSync(this._ctx);
   }
 
   get refResolver(): Ref.Resolver {
@@ -173,7 +173,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
   /**
    * Insert into queue with optimistic update.
    */
-  async append(items: T[]): Promise<void> {
+  async append(ctx: Context, items: T[]): Promise<void> {
     items.forEach((item) => assertObjectModel(item));
 
     for (const item of items) {
@@ -206,7 +206,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
     }
   }
 
-  async delete(ids: string[]): Promise<void> {
+  async delete(ctx: Context, ids: string[]): Promise<void> {
     // Optimistic update.
     // TODO(dmaretskyi): Restrict types.
     this._objects = this._objects.filter((item) => !ids.includes((item as any).id));
@@ -244,7 +244,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
     return new QueryResultImpl(new QueueQueryContext(this), queryWithOptions);
   }
 
-  async sync({
+  async sync(ctx: Context, {
     shouldPush = true,
     shouldPull = true,
   }: { shouldPush?: boolean; shouldPull?: boolean } = {}): Promise<void> {
@@ -260,8 +260,8 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
   /**
    * @deprecated Use `query` method instead.
    */
-  async queryObjects(): Promise<T[]> {
-    const objects = await this.fetchObjectsJSON();
+  async queryObjects(ctx: Context): Promise<T[]> {
+    const objects = await this.fetchObjectsJSON(ctx);
     const decodedObjects = await Promise.all(
       objects
         .map(async (obj) => {
@@ -283,7 +283,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
     return decodedObjects as T[];
   }
 
-  async fetchObjectsJSON(): Promise<ObjectJSON[]> {
+  async fetchObjectsJSON(ctx: Context): Promise<ObjectJSON[]> {
     const { objects } = await this._service.queryQueue({
       query: {
         queuesNamespace: this._subspaceTag,
@@ -294,7 +294,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
     return objects as ObjectJSON[];
   }
 
-  async hydrateObject(obj: ObjectJSON): Promise<Entity.Unknown> {
+  async hydrateObject(ctx: Context, obj: ObjectJSON): Promise<Entity.Unknown> {
     const decoded = await Obj.fromJSON(obj, {
       refResolver: this._refResolver,
       dxn: this._dxn.extend([(obj as any).id]),
@@ -306,20 +306,20 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
    * Internal use.
    * Doesn't trigger update events.
    */
-  getObjectsSync(): T[] {
+  getObjectsSync(ctx: Context): T[] {
     return this._objects;
   }
 
   /**
    * @deprecated Use `query` method instead.
    */
-  async getObjectsById(ids: ObjectId[]): Promise<(T | undefined)[]> {
+  async getObjectsById(ctx: Context, ids: ObjectId[]): Promise<(T | undefined)[]> {
     const missingIds = ids.filter((id) => !this._objectCache.has(id));
     if (missingIds.length > 0) {
       if (!this._querying) {
         try {
           this._querying = true;
-          await this.queryObjects();
+          await this.queryObjects(this._ctx);
         } finally {
           this._querying = false;
         }
@@ -335,13 +335,13 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
    * @deprecated Use `query` method instead.
    */
   // TODO(dmaretskyi): Split optimistic into separate state so it doesn't get overridden.
-  async refresh(): Promise<void> {
+  async refresh(ctx: Context): Promise<void> {
     await this._refreshTask.runBlocking();
   }
 
   private _pollingInterval: NodeJS.Timeout | null = null;
 
-  beginPolling(): () => void {
+  beginPolling(ctx: Context): () => void {
     if (this._pollingHandlers++ === 0) {
       const poll = async () => {
         await this._refreshTask.runBlocking();
@@ -360,7 +360,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
     };
   }
 
-  async dispose() {
+  async dispose(ctx: Context) {
     await this._ctx.dispose();
     await this._refreshTask.join();
   }

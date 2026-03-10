@@ -3,6 +3,7 @@
 //
 
 import { Event } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { type Entity } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { DXN, ObjectId, SpaceId } from '@dxos/keys';
@@ -30,7 +31,7 @@ export class MemoryQueue<T extends Entity.Unknown> implements Queue<T> {
 
     const queue = new MemoryQueue<T>(dxn);
     if (objects?.length) {
-      void queue.append(objects);
+      void queue.append(Context.default(), objects);
     }
 
     return queue;
@@ -53,7 +54,7 @@ export class MemoryQueue<T extends Entity.Unknown> implements Queue<T> {
     return this._dxn;
   }
 
-  subscribe(callback: () => void): () => void {
+  subscribe(ctx: Context, callback: () => void): () => void {
     return this.updated.on(callback);
   }
 
@@ -69,37 +70,37 @@ export class MemoryQueue<T extends Entity.Unknown> implements Queue<T> {
     return [...this._objects];
   }
 
-  query(): never {
+  query(ctx: Context): never {
     throw new Error('Method not implemented.');
   }
 
-  async sync(): Promise<void> {
+  async sync(ctx: Context): Promise<void> {
     // No-op.
   }
 
   /**
    * Insert into queue with optimistic update.
    */
-  async append(objects: T[]): Promise<void> {
+  async append(ctx: Context, objects: T[]): Promise<void> {
     this._objects = [...this._objects, ...objects];
     this.updated.emit();
   }
 
-  async queryObjects(): Promise<T[]> {
+  async queryObjects(ctx: Context): Promise<T[]> {
     return this._objects;
   }
 
-  async getObjectsById(ids: ObjectId[]): Promise<(T | undefined)[]> {
+  async getObjectsById(ctx: Context, ids: ObjectId[]): Promise<(T | undefined)[]> {
     return ids.map((id) => this._objects.find((object) => object.id === id));
   }
 
-  async delete(ids: ObjectId[]): Promise<void> {
+  async delete(ctx: Context, ids: ObjectId[]): Promise<void> {
     // TODO(dmaretskyi): Restrict types.
     this._objects = this._objects.filter((object) => !ids.includes(object.id));
     this.updated.emit();
   }
 
-  async refresh(): Promise<void> {
+  async refresh(ctx: Context): Promise<void> {
     // No-op.
   }
 }

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Context, ContextDisposedError, LifecycleState, Resource } from '@dxos/context';
+import { Context, ContextDisposedError, LifecycleState, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -83,7 +83,7 @@ export class EchoClient extends Resource {
    * Connects to the ECHO service.
    * Must be called before open.
    */
-  connectToService({ dataService, queryService, queueService }: ConnectToServiceProps): this {
+  connectToService(ctx: Context, { dataService, queryService, queueService }: ConnectToServiceProps): this {
     invariant(this._lifecycleState === LifecycleState.CLOSED);
     this._dataService = dataService;
     this._queryService = queryService;
@@ -91,7 +91,7 @@ export class EchoClient extends Resource {
     return this;
   }
 
-  disconnectFromService(): void {
+  disconnectFromService(ctx: Context): void {
     invariant(this._lifecycleState === LifecycleState.CLOSED);
     this._dataService = undefined;
     this._queryService = undefined;
@@ -104,7 +104,7 @@ export class EchoClient extends Resource {
     this._indexQuerySourceProvider = new IndexQuerySourceProvider({
       service: this._queryService,
       objectLoader: {
-        loadObject: this._loadObjectFromDocument.bind(this),
+        loadObject: (params) => this._loadObjectFromDocument(ctx, params),
       },
       graph: this._graph,
     });
@@ -128,7 +128,7 @@ export class EchoClient extends Resource {
   }
 
   // TODO(dmaretskyi): Make async?
-  constructDatabase({
+  constructDatabase(ctx: Context, {
     spaceId,
     owningObject,
     reactiveSchemaQuery,
@@ -151,12 +151,12 @@ export class EchoClient extends Resource {
     return db;
   }
 
-  constructQueueFactory(spaceId: SpaceId): QueueFactory {
+  constructQueueFactory(ctx: Context, spaceId: SpaceId): QueueFactory {
     const queueFactory = new QueueFactory(spaceId, this._graph);
     this._queues.set(spaceId, queueFactory);
     this._graph._registerQueueFactory(spaceId, queueFactory);
     if (this._queuesService) {
-      queueFactory.setService(this._queuesService);
+      queueFactory.setService(this._ctx, this._queuesService);
     }
 
     return queueFactory;
@@ -166,7 +166,7 @@ export class EchoClient extends Resource {
    * Update service references after reconnection.
    * Must be called before _notifyReconnect.
    */
-  _updateServices({
+  _updateServices(ctx: Context, {
     dataService,
     queryService,
     queueService,
@@ -186,7 +186,7 @@ export class EchoClient extends Resource {
       this._indexQuerySourceProvider = new IndexQuerySourceProvider({
         service: this._queryService,
         objectLoader: {
-          loadObject: this._loadObjectFromDocument.bind(this),
+          loadObject: (params) => this._loadObjectFromDocument(ctx, params),
         },
         graph: this._graph,
       });
@@ -201,7 +201,7 @@ export class EchoClient extends Resource {
     // Update all queue factories with new service.
     if (queueService) {
       for (const queueFactory of this._queues.values()) {
-        queueFactory.setService(queueService);
+        queueFactory.setService(this._ctx, queueService);
       }
     }
   }
@@ -210,14 +210,14 @@ export class EchoClient extends Resource {
    * Notify all databases that the service connection has been re-established.
    * Called after a dedicated worker leader change.
    */
-  async _notifyReconnect(): Promise<void> {
+  async _notifyReconnect(ctx: Context): Promise<void> {
     log('notifying databases of reconnection');
     for (const db of this._databases.values()) {
       await db._onReconnect();
     }
   }
 
-  private async _loadObjectFromDocument({ spaceId, objectId, documentId }: LoadObjectProps) {
+  private async _loadObjectFromDocument(ctx: Context, { spaceId, objectId, documentId }: LoadObjectProps) {
     const db = this._databases.get(spaceId);
     if (!db) {
       return undefined;
@@ -234,7 +234,7 @@ export class EchoClient extends Resource {
       throw err;
     }
 
-    const objectDocId = db.coreDatabase._automergeDocLoader.getObjectDocumentId(objectId);
+    const objectDocId = db.coreDatabase._automergeDocLoader.getObjectDocumentId(this._ctx, objectId);
     if (objectDocId !== documentId) {
       log("documentIds don't match", { objectId, expected: documentId, actual: objectDocId ?? null });
       return undefined;

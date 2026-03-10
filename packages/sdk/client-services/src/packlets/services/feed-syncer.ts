@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { AsyncTask, scheduleTask } from '@dxos/async';
-import { Resource } from '@dxos/context';
+import { type Context, Resource } from '@dxos/context';
 import { type EdgeConnection, MessageSchema } from '@dxos/edge-client';
 import { RuntimeProvider } from '@dxos/effect';
 import { type FeedStore, SyncClient } from '@dxos/feed';
@@ -103,7 +103,7 @@ export class FeedSyncer extends Resource {
     this.#pollRequestThrottleMs = options.pollRequestThrottleMs ?? DEFAULT_POLL_REQUEST_THROTTLE_MS;
   }
 
-  protected override async _open(): Promise<void> {
+  protected override async _open(ctx: Context): Promise<void> {
     this._ctx.onDispose(
       this.#edgeClient.onMessage((msg: RouterMessage) => {
         if (!msg.serviceId) {
@@ -142,7 +142,7 @@ export class FeedSyncer extends Resource {
     this.#pollTask.schedule();
   }
 
-  protected override async _close(): Promise<void> {
+  protected override async _close(ctx: Context): Promise<void> {
     await this.#pollTask.close();
     await this.#pushTask.close();
   }
@@ -150,7 +150,7 @@ export class FeedSyncer extends Resource {
   /**
    * Schedules a best-effort pull without blocking the caller.
    */
-  schedulePoll(): void {
+  schedulePoll(ctx: Context): void {
     this.#resetSpacesToPoll();
     if (this.#throttledPollScheduled) {
       return;
@@ -176,7 +176,7 @@ export class FeedSyncer extends Resource {
   /**
    * Performs queue sync and blocks until there are no pending sync batches.
    */
-  async syncBlocking({
+  async syncBlocking(ctx: Context, {
     spaceId,
     subspaceTag,
     shouldPush = true,

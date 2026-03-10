@@ -369,7 +369,7 @@ describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
       });
       // cancel to avoid interfering with invitations-handler direct invocations
       const invitation = observable.get();
-      await setup.peer.invitationsManager.cancelInvitation(invitation);
+      await setup.peer.invitationsManager.cancelInvitation(Context.default(), invitation);
       return { ...invitation, swarmKey: PublicKey.random() };
     };
   },

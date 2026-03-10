@@ -403,6 +403,22 @@ export default tseslint.config(
             'CredentialServerExtension',
             'AuthExtension',
             'NotarizationPlugin',
+            'NotarizationTeleportExtension',
+            'InvitationHostExtension',
+            'InvitationGuestExtension',
+            'InvitationTopology',
+
+            // Proto-generated service implementations (method signatures fixed by proto definition).
+            'DevtoolsServiceImpl',
+            'SystemServiceImpl',
+            'LoggingServiceImpl',
+            'SpacesServiceImpl',
+            'InvitationsServiceImpl',
+            'IdentityServiceImpl',
+            'NetworkServiceImpl',
+            'EdgeAgentServiceImpl',
+            'DevicesServiceImpl',
+            'ContactsServiceImpl',
 
             // @dxos/async — low-level primitives.
             'Event',
@@ -426,6 +442,30 @@ export default tseslint.config(
             // @dxos/keys — value types.
             'PublicKey',
             'SpaceId',
+
+            // @dxos/echo-db — Proxy handler (implements ProxyHandler with fixed trap signatures).
+            'EchoReactiveHandler',
+
+            // @dxos/echo-db — public Database API implementation.
+            'EchoDatabaseImpl',
+
+            // @dxos/echo-db — implements Hypergraph interface from @dxos/echo.
+            'HypergraphImpl',
+
+            // @dxos/echo-db — implements SchemaRegistry interface from @dxos/echo.
+            'RuntimeSchemaRegistry',
+            'DatabaseSchemaRegistry',
+
+            // @dxos/echo-db — implements QueryResult interface from @dxos/echo.
+            'SchemaRegistryPreparedQueryImpl',
+            'QueryResultImpl',
+
+            // @dxos/echo-db — implements external service interface.
+            'QueueServiceImpl',
+            'MockQueueService',
+
+            // @dxos/echo-db — QueueImpl._query is bound to Database.QueryFn (external type).
+            'QueueImpl',
 
             // Automerge NetworkAdapter (external interface with fixed signatures).
             'EchoNetworkAdapter',

@@ -153,12 +153,12 @@ export class SpaceProxy implements Space, CustomInspectable {
       }),
     );
 
-    this._db = echoClient.constructDatabase({
+    this._db = echoClient.constructDatabase(this._ctx, {
       spaceId: this.id,
       spaceKey: this.key,
       owningObject: this,
     });
-    this._queues = echoClient.constructQueueFactory(this.id);
+    this._queues = echoClient.constructQueueFactory(this._ctx, this.id);
 
     const self = this;
     this._internal = {
@@ -612,7 +612,7 @@ export class SpaceProxy implements Space, CustomInspectable {
     // Needed to have space root set to be able to make next check.
     await this._databaseInitialized.wait();
 
-    if (this._db.coreDatabase.getNumberOfInlineObjects() > 1) {
+    if (this._db.coreDatabase.getNumberOfInlineObjects(this._ctx) > 1) {
       await this._createEpoch({
         migration: CreateEpochRequest.Migration.FRAGMENT_AUTOMERGE_ROOT,
       });

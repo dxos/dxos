@@ -4,6 +4,7 @@
 
 import { Trigger } from '@dxos/async';
 import { Config, Defaults, Envs, Local, Storage } from '@dxos/config';
+import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
 import { layerMemory } from '@dxos/sql-sqlite/platform';
@@ -53,7 +54,7 @@ const workerRuntimePromise = setupRuntime();
 
 const start = Date.now();
 void workerRuntimePromise
-  .then((workerRuntime) => workerRuntime.start())
+  .then((workerRuntime) => workerRuntime.start(Context.default()))
   .then(
     () => {
       log.info('worker ready', { initTimeMs: Date.now() - start });
@@ -88,7 +89,7 @@ export const onconnect = async (event: MessageEvent<any>) => {
   );
 
   const workerRuntime = await workerRuntimePromise;
-  await workerRuntime.createSession({
+  await workerRuntime.createSession(Context.default(), {
     systemPort: createWorkerPort({ port: systemChannel.port2 }),
     appPort: createWorkerPort({ port: appChannel.port2 }),
   });

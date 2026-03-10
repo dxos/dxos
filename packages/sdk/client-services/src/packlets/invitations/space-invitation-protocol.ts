@@ -43,7 +43,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     };
   }
 
-  checkCanInviteNewMembers(): Error | undefined {
+  checkCanInviteNewMembers(ctx: Context): Error | undefined {
     if (this._spaceKey == null) {
       return new InvalidInvitationError({ message: 'No spaceKey was provided for a space invitation.' });
     }
@@ -57,7 +57,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     return undefined;
   }
 
-  getInvitationContext(): Partial<Invitation> & Pick<Invitation, 'kind'> {
+  getInvitationContext(ctx: Context): Partial<Invitation> & Pick<Invitation, 'kind'> {
     invariant(this._spaceKey);
     const space = this._spaceManager.spaces.get(this._spaceKey);
     invariant(space);
@@ -69,6 +69,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
   }
 
   async admit(
+    ctx: Context,
     invitation: Invitation,
     request: AdmissionRequest,
     guestProfile?: ProfileDocument | undefined,
@@ -76,7 +77,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     invariant(this._spaceKey && request.space);
     log('writing guest credentials', { host: this._signingContext.deviceKey, guest: request.space.deviceKey });
 
-    const spaceMemberCredential = await this._spaceManager.admitMember({
+    const spaceMemberCredential = await this._spaceManager.admitMember(ctx, {
       spaceKey: this._spaceKey,
       identityKey: request.space.identityKey,
       role: invitation.role ?? SpaceMember.Role.ADMIN,
@@ -93,7 +94,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     };
   }
 
-  async delegate(invitation: Invitation): Promise<PublicKey> {
+  async delegate(ctx: Context, invitation: Invitation): Promise<PublicKey> {
     invariant(this._spaceKey);
     const space = this._spaceManager.spaces.get(this._spaceKey);
     invariant(space);
@@ -124,7 +125,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     return credential.credential.credential.id!;
   }
 
-  async cancelDelegation(invitation: Invitation): Promise<void> {
+  async cancelDelegation(ctx: Context, invitation: Invitation): Promise<void> {
     invariant(this._spaceKey);
     invariant(invitation.type === Invitation.Type.DELEGATED && invitation.delegationCredentialId);
     const space = this._spaceManager.spaces.get(this._spaceKey);
@@ -141,7 +142,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     await writeMessages(space.inner.controlPipeline.writer, [credential]);
   }
 
-  checkInvitation(invitation: Partial<Invitation>): InvalidInvitationError | AlreadyJoinedError | undefined {
+  checkInvitation(ctx: Context, invitation: Partial<Invitation>): InvalidInvitationError | AlreadyJoinedError | undefined {
     if (invitation.spaceKey == null) {
       return new InvalidInvitationError({ message: 'No spaceKey was provided for a space invitation.' });
     }
@@ -150,14 +151,13 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     }
   }
 
-  createIntroduction(): IntroductionRequest {
+  createIntroduction(ctx: Context): IntroductionRequest {
     return {
       profile: this._signingContext.getProfile(),
     };
   }
 
-  async createAdmissionRequest(): Promise<AdmissionRequest> {
-    // Generate a pair of keys for our feeds.
+  async createAdmissionRequest(ctx: Context): Promise<AdmissionRequest> {
     const controlFeedKey = await this._keyring.createKey();
     const dataFeedKey = await this._keyring.createKey();
 
@@ -171,7 +171,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     };
   }
 
-  async accept(response: AdmissionResponse): Promise<Partial<Invitation>> {
+  async accept(ctx: Context, response: AdmissionResponse): Promise<Partial<Invitation>> {
     invariant(response.space);
     const { credential, controlTimeframe, dataTimeframe } = response.space;
     const assertion = getCredentialAssertion(credential);
@@ -182,7 +182,6 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
       throw new AlreadyJoinedError({ message: 'Already joined space.' });
     }
 
-    // Create local space.
     await this._spaceManager.acceptSpace(Context.default(), {
       spaceKey: assertion.spaceKey,
       genesisFeedKey: assertion.genesisFeedKey,

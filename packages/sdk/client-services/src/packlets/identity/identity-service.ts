@@ -57,10 +57,10 @@ export class IdentityServiceImpl extends Resource implements IdentityService {
   }
 
   private async _createDefaultSpace(dataSpaceManager: DataSpaceManager): Promise<void> {
-    const space = await dataSpaceManager!.createDefaultSpace();
+    const space = await dataSpaceManager!.createDefaultSpace(Context.default());
     const identity = this._identityManager.identity;
     invariant(identity);
-    await identity.updateDefaultSpace(space.id);
+    await identity.updateDefaultSpace(Context.default(), space.id);
   }
 
   queryIdentity(): Stream<QueryIdentityResponse> {
@@ -87,26 +87,26 @@ export class IdentityServiceImpl extends Resource implements IdentityService {
 
   async updateProfile(profile: ProfileDocument): Promise<IdentityProto> {
     invariant(this._identityManager.identity, 'Identity not initialized.');
-    await this._identityManager.updateProfile(profile);
+    await this._identityManager.updateProfile(Context.default(), profile);
     await this._onProfileUpdate?.(this._identityManager.identity.profileDocument);
     return this._getIdentity()!;
   }
 
   async createRecoveryCredential(request: CreateRecoveryCredentialRequest) {
-    return this._recoveryManager.createRecoveryCredential(request);
+    return this._recoveryManager.createRecoveryCredential(Context.default(), request);
   }
 
   async requestRecoveryChallenge() {
-    return this._recoveryManager.requestRecoveryChallenge();
+    return this._recoveryManager.requestRecoveryChallenge(Context.default());
   }
 
   async recoverIdentity(request: RecoverIdentityRequest): Promise<IdentityProto> {
     if (request.recoveryCode) {
-      await this._recoveryManager.recoverIdentity({ recoveryCode: request.recoveryCode });
+      await this._recoveryManager.recoverIdentity(Context.default(), { recoveryCode: request.recoveryCode });
     } else if (request.external) {
-      await this._recoveryManager.recoverIdentityWithExternalSignature(request.external);
+      await this._recoveryManager.recoverIdentityWithExternalSignature(Context.default(), request.external);
     } else if (request.token) {
-      await this._recoveryManager.recoverIdentityWithToken({ token: request.token });
+      await this._recoveryManager.recoverIdentityWithToken(Context.default(), { token: request.token });
     } else {
       throw new Error('Invalid request.');
     }
@@ -163,14 +163,14 @@ export class IdentityServiceImpl extends Resource implements IdentityService {
           );
           await Promise.race([space.initializeDataPipeline(ctx), requiresMigration]);
         }
-        if (await dataSpaceManager.isDefaultSpace(space)) {
+        if (await dataSpaceManager.isDefaultSpace(Context.default(), space)) {
           if (foundDefaultSpace) {
             log.warn('Multiple default spaces found. Using the first one.', { duplicate: space.id });
             return;
           }
 
           foundDefaultSpace = true;
-          await identity.updateDefaultSpace(space.id);
+          await identity.updateDefaultSpace(Context.default(), space.id);
           recodedDefaultSpace = true;
           recordedDefaultSpaceTrigger.wake();
         }

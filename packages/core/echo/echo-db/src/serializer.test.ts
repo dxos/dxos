@@ -33,7 +33,7 @@ describe('Serializer', () => {
       await graph.schemaRegistry.register([TestSchema.Task]);
 
       const task = db.add(Obj.make(TestSchema.Task, { title: 'Testing' }));
-      const data = serializer.exportObject(task);
+      const data = serializer.exportObject(Context.default(), task);
 
       expect(data).to.deep.include({
         id: task.id,
@@ -59,7 +59,7 @@ describe('Serializer', () => {
         const objects = await db.query(Query.select(Filter.everything())).run();
         expect(objects).to.have.length(1);
 
-        data = await serializer.export(db);
+        data = await serializer.export(Context.default(), db);
         expect(data.objects).to.have.length(1);
         expect(data.objects[0]).to.deep.include({
           id: obj.id,
@@ -73,7 +73,7 @@ describe('Serializer', () => {
 
       {
         const { db } = await builder.createDatabase();
-        await serializer.import(db, data);
+        await serializer.import(Context.default(), db, data);
 
         const objects = await db.query(Query.select(Filter.everything())).run();
         expect(objects).to.have.length(1);
@@ -94,7 +94,7 @@ describe('Serializer', () => {
         const objects = await db.query(Query.select(Filter.everything())).run();
         expect(objects).to.have.length(2);
 
-        data = await serializer.export(db, Query.select(Filter.props({ title: 'Hello' })));
+        data = await serializer.export(Context.default(), db, Query.select(Filter.props({ title: 'Hello' })));
         expect(data.objects).to.have.length(1);
         expect(data.objects[0]).to.deep.include({
           id: obj1.id,
@@ -108,7 +108,7 @@ describe('Serializer', () => {
 
       {
         const { db } = await builder.createDatabase();
-        await serializer.import(db, data);
+        await serializer.import(Context.default(), db, data);
 
         const objects = await db.query(Query.select(Filter.everything())).run();
         expect(objects).to.have.length(1);
@@ -128,7 +128,7 @@ describe('Serializer', () => {
         db.remove(deleted);
         await db.flush();
 
-        data = await serializer.export(db);
+        data = await serializer.export(Context.default(), db);
         expect(data.objects).to.have.length(1);
         expect(data.objects[0]).to.deep.include({
           id: preserved.id,
@@ -142,7 +142,7 @@ describe('Serializer', () => {
 
       {
         const { db } = await builder.createDatabase();
-        await serializer.import(db, data);
+        await serializer.import(Context.default(), db, data);
 
         const objects = await db.query(Query.select(Filter.everything())).run();
         expect(objects).to.have.length(1);
@@ -180,7 +180,7 @@ describe('Serializer', () => {
         db.add(obj);
         await db.flush();
 
-        data = await serializer.export(db);
+        data = await serializer.export(Context.default(), db);
         expect(data.objects).to.have.length(4);
       }
 
@@ -189,7 +189,7 @@ describe('Serializer', () => {
 
       {
         const { db } = await builder.createDatabase();
-        await serializer.import(db, data);
+        await serializer.import(Context.default(), db, data);
 
         await assertNestedObjects(db);
       }
@@ -205,7 +205,7 @@ describe('Serializer', () => {
         const contact = Obj.make(TestSchema.Person, { name });
         db.add(contact);
         await db.flush();
-        data = await new Serializer().export(db);
+        data = await new Serializer().export(Context.default(), db);
       }
 
       // Simulate JSON serialization.
@@ -215,7 +215,7 @@ describe('Serializer', () => {
         const { db, graph } = await builder.createDatabase();
         await graph.schemaRegistry.register([TestSchema.Person]);
 
-        await new Serializer().import(db, data);
+        await new Serializer().import(Context.default(), db, data);
         expect(await db.query(Query.select(Filter.everything())).run()).to.have.length(1);
 
         const [contact] = await db.query(Filter.type(TestSchema.Person)).run();
@@ -251,7 +251,7 @@ describe('Serializer', () => {
           kv: createTestLevel(tmpPath),
         });
         const db = await peer.openDatabase(spaceKey, root.url);
-        data = await serializer.export(db);
+        data = await serializer.export(Context.default(), db);
         expect(data.objects.length).to.eq(totalObjects);
       }
     });

@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Context } from '@dxos/context';
 import { type Entity } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { type DXN } from '@dxos/keys';
@@ -33,7 +34,7 @@ export const resolveRef = <T extends Entity.Unknown = Entity.Unknown>(
   if (queueDxn) {
     const { spaceId, objectId } = dxn.asQueueDXN()!;
     invariant(objectId, 'objectId missing');
-    const queue = client.spaces.get(spaceId)?.queues.get<T>(dxn);
+    const queue = client.spaces.get(spaceId)?.queues.get<T>(Context.default(), dxn);
     invariant(queue, 'queue missing');
     return queue.objects.find((object) => object.id === objectId);
   }

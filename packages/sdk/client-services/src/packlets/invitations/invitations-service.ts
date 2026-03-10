@@ -41,18 +41,18 @@ export class InvitationsServiceImpl implements InvitationsService {
   }
 
   acceptInvitation(request: AcceptInvitationRequest): Stream<Invitation> {
-    const invitation = this._invitationsManager.acceptInvitation(request);
+    const invitation = this._invitationsManager.acceptInvitation(Context.default(), request);
     return new Stream<Invitation>(({ next, close }) => {
       invitation.subscribe(next, close, close);
     });
   }
 
   async authenticate(request: AuthenticationRequest): Promise<void> {
-    return this._invitationsManager.authenticate(request);
+    return this._invitationsManager.authenticate(Context.default(), request);
   }
 
   async cancelInvitation(request: { invitationId: string }): Promise<void> {
-    return this._invitationsManager.cancelInvitation(request);
+    return this._invitationsManager.cancelInvitation(Context.default(), request);
   }
 
   queryInvitations(): Stream<QueryInvitationsResponse> {
@@ -104,14 +104,14 @@ export class InvitationsServiceImpl implements InvitationsService {
       next({
         action: QueryInvitationsResponse.Action.ADDED,
         type: QueryInvitationsResponse.Type.CREATED,
-        invitations: this._invitationsManager.getCreatedInvitations(),
+        invitations: this._invitationsManager.getCreatedInvitations(Context.default()),
         existing: true,
       });
 
       next({
         action: QueryInvitationsResponse.Action.ADDED,
         type: QueryInvitationsResponse.Type.ACCEPTED,
-        invitations: this._invitationsManager.getAcceptedInvitations(),
+        invitations: this._invitationsManager.getAcceptedInvitations(Context.default()),
         existing: true,
       });
 

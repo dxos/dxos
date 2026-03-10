@@ -3,7 +3,7 @@
 //
 
 import { DeferredTask, Event, scheduleTask, synchronized } from '@dxos/async';
-import { Resource } from '@dxos/context';
+import { Context, Resource } from '@dxos/context';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -50,7 +50,7 @@ export class EdgeAgentManager extends Resource {
   }
 
   @synchronized
-  public async createAgent(): Promise<void> {
+  public async createAgent(ctx: Context): Promise<void> {
     invariant(this.isOpen);
     invariant(this._edgeHttpClient);
     invariant(this._edgeFeatures?.agents);
@@ -65,11 +65,11 @@ export class EdgeAgentManager extends Resource {
 
     if (await this._identity.authorizedDeviceKeys.has(deviceKey)) {
       log.info('agent was already added to HALO, ignoring response', { response });
-      this._updateStatus(EdgeAgentStatus.ACTIVE, deviceKey);
+      this._updateStatus(ctx, EdgeAgentStatus.ACTIVE, deviceKey);
       return;
     }
 
-    await this._identity.admitDevice({
+    await this._identity.admitDevice(ctx, {
       deviceKey,
       controlFeedKey: PublicKey.fromHex(response.feedKey),
       // TODO: agents don't have data feed, should be removed
@@ -78,10 +78,10 @@ export class EdgeAgentManager extends Resource {
 
     log('agent created', response);
 
-    this._updateStatus(EdgeAgentStatus.ACTIVE, deviceKey);
+    this._updateStatus(ctx, EdgeAgentStatus.ACTIVE, deviceKey);
   }
 
-  protected override async _open(): Promise<void> {
+  protected override async _open(ctx: Context): Promise<void> {
     const isEnabled = this._edgeHttpClient && this._edgeFeatures?.agents;
 
     log('edge agent manager open', { isEnabled });
@@ -92,13 +92,13 @@ export class EdgeAgentManager extends Resource {
 
     this._lastKnownDeviceCount = this._identity.authorizedDeviceKeys.size;
     this._fetchAgentStatusTask = new DeferredTask(this._ctx, async () => {
-      await this._fetchAgentStatus();
+      await this._fetchAgentStatus(this._ctx);
     });
     this._fetchAgentStatusTask.schedule();
 
     this._dataSpaceManager.updated.on(this._ctx, () => {
       if (this._agentDeviceKey) {
-        this._ensureAgentIsInSpaces(this._agentDeviceKey);
+        this._ensureAgentIsInSpaces(this._ctx, this._agentDeviceKey);
       }
     });
 
@@ -112,12 +112,12 @@ export class EdgeAgentManager extends Resource {
     });
   }
 
-  protected override async _close(): Promise<void> {
+  protected override async _close(ctx: Context): Promise<void> {
     this._fetchAgentStatusTask = undefined;
     this._lastKnownDeviceCount = 0;
   }
 
-  protected async _fetchAgentStatus(): Promise<void> {
+  protected async _fetchAgentStatus(ctx: Context): Promise<void> {
     invariant(this._edgeHttpClient);
     try {
       log('fetching agent status');
@@ -125,7 +125,7 @@ export class EdgeAgentManager extends Resource {
       const wasAgentCreatedDuringQuery = this._agentStatus === EdgeAgentStatus.ACTIVE;
       if (!wasAgentCreatedDuringQuery) {
         const deviceKey = agent.deviceKey ? PublicKey.fromHex(agent.deviceKey) : undefined;
-        this._updateStatus(agent.status, deviceKey);
+        this._updateStatus(ctx, agent.status, deviceKey);
       }
     } catch (err) {
       if (err instanceof EdgeCallFailedError) {
@@ -145,10 +145,10 @@ export class EdgeAgentManager extends Resource {
    * because most of the time we'll be getting an empty response.
    * Instead, we stay in active polling mode while there are spaces where we don't see our agent's feed.
    */
-  protected _ensureAgentIsInSpaces(agentDeviceKey: PublicKey): void {
+  protected _ensureAgentIsInSpaces(ctx: Context, agentDeviceKey: PublicKey): void {
     let activePollingEnabled = false;
     for (const space of this._dataSpaceManager.spaces.values()) {
-      if (space.getEdgeReplicationSetting() === EdgeReplicationSetting.DISABLED) {
+      if (space.getEdgeReplicationSetting(ctx) === EdgeReplicationSetting.DISABLED) {
         space.notarizationPlugin.setActiveEdgePollingEnabled(false);
         continue;
       }
@@ -167,16 +167,16 @@ export class EdgeAgentManager extends Resource {
 
     if (activePollingEnabled) {
       // Check again to see if active edge polling can be disabled (agent feed is notarized in all the spaces)
-      scheduleTask(this._ctx, () => this._ensureAgentIsInSpaces(agentDeviceKey), AGENT_FEED_ADDED_CHECK_INTERVAL_MS);
+      scheduleTask(this._ctx, () => this._ensureAgentIsInSpaces(this._ctx, agentDeviceKey), AGENT_FEED_ADDED_CHECK_INTERVAL_MS);
     }
   }
 
-  private _updateStatus(status: EdgeAgentStatus, deviceKey: PublicKey | undefined): void {
+  private _updateStatus(ctx: Context, status: EdgeAgentStatus, deviceKey: PublicKey | undefined): void {
     this._agentStatus = status;
     this._agentDeviceKey = deviceKey;
     this.agentStatusChanged.emit(status);
     if (deviceKey) {
-      this._ensureAgentIsInSpaces(deviceKey);
+      this._ensureAgentIsInSpaces(ctx, deviceKey);
     }
     log.verbose('agent status update', { status });
   }

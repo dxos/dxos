@@ -65,7 +65,7 @@ describe('Spaces', () => {
 
     const host = testBuilder.createClientServicesHost();
     await host.open(new Context());
-    onTestFinished(() => host.close());
+    onTestFinished(() => host.close(Context.default()));
     const [client, server] = testBuilder.createClientServer(host);
     void server.open();
     onTestFinished(() => server.close());
@@ -464,7 +464,7 @@ describe('Spaces', () => {
     const [wait, inc] = latch({ count: 2, timeout: 1000 });
 
     const getTypename = (obj: any) => {
-      const typeRef = getObjectCore(obj).getType();
+      const typeRef = getObjectCore(obj).getType(Context.default());
       return typeRef ? EncodedReference.toDXN(typeRef).asTypeDXN()?.type : undefined;
     };
 

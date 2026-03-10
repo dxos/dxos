@@ -4,7 +4,7 @@
 
 import { WorkerRuntime } from '@dxos/client-services';
 import { Config } from '@dxos/config';
-import { Resource } from '@dxos/context';
+import { Context, Resource } from '@dxos/context';
 import { log } from '@dxos/log';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
 import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
@@ -65,8 +65,8 @@ export class TestWorkerFactory extends Resource {
               // Use in-memory SQLite for testing instead of OPFS which only works in browsers.
               sqliteLayer: sqliteLayerMemory,
             });
-            await runtime.start();
-            this._ctx.onDispose(() => runtime.stop());
+            await runtime.start(Context.default());
+            this._ctx.onDispose(() => runtime.stop(Context.default()));
             messageChannel.port1.postMessage({
               type: 'ready',
               livenessLockKey: runtime.livenessLockKey,
@@ -95,12 +95,12 @@ export class TestWorkerFactory extends Resource {
 
             // Will block until the other side finishes the handshake.
             {
-              const session = await runtime.createSession({
+              const session = await runtime.createSession(Context.default(), {
                 systemPort: createWorkerPort({ port: systemChannel.port2 }),
                 appPort: createWorkerPort({ port: appChannel.port2 }),
               });
               if (ev.data.clientId === owningClientId) {
-                runtime.connectWebrtcBridge(session);
+                runtime.connectWebrtcBridge(Context.default(), session);
               }
             }
             break;

@@ -8,6 +8,7 @@ import * as A from '@automerge/automerge';
 import * as Schema from 'effect/Schema';
 
 import { Event } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { type DevtoolsFormatter, devtoolsFormatter, inspectCustom } from '@dxos/debug';
 import { Entity, Obj } from '@dxos/echo';
 import {
@@ -205,7 +206,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
           }
         }
         case Entity.KindId: {
-          return target[symbolInternals].core.getKind();
+          return target[symbolInternals].core.getKind(Context.default());
         }
         case ParentId:
           return this._getParent(target);
@@ -216,11 +217,11 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
           return (callback: (mutableObj: any) => void) => executeChange(core, target, receiver, callback);
         }
         case RelationSourceDXNId: {
-          const sourceRef = target[symbolInternals].core.getSource();
+          const sourceRef = target[symbolInternals].core.getSource(Context.default());
           return sourceRef ? EncodedReference.toDXN(sourceRef) : undefined;
         }
         case RelationTargetDXNId: {
-          const targetRef = target[symbolInternals].core.getTarget();
+          const targetRef = target[symbolInternals].core.getTarget(Context.default());
           return targetRef ? EncodedReference.toDXN(targetRef) : undefined;
         }
         case RelationSourceId: {
@@ -289,12 +290,12 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     invariant(Array.isArray(target[symbolPath]));
     if (prop === ParentId) {
       if (value === undefined) {
-        target[symbolInternals].core.setParent(undefined);
+        target[symbolInternals].core.setParent(Context.default(), undefined);
       } else {
         const objectId = value.id ?? value;
         // TODO(dmaretskyi): Validate object is from the same space.
         invariant(ObjectId.isValid(objectId));
-        target[symbolInternals].core.setParent(EncodedReference.fromDXN(DXN.fromLocalObjectId(objectId)));
+        target[symbolInternals].core.setParent(Context.default(), EncodedReference.fromDXN(DXN.fromLocalObjectId(objectId)));
       }
       return true;
     }
@@ -314,10 +315,10 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     const fullPath = [getNamespace(target), ...target[symbolPath], prop];
     const validatedValue = this._validateValue(target, [...target[symbolPath], prop], value);
     if (validatedValue === undefined) {
-      target[symbolInternals].core.delete(fullPath);
+      target[symbolInternals].core.delete(Context.default(), fullPath);
     } else {
       const withLinks = this._handleLinksAssignment(target, validatedValue);
-      target[symbolInternals].core.setDecoded(fullPath, withLinks);
+      target[symbolInternals].core.setDecoded(Context.default(), fullPath, withLinks);
     }
 
     // Note: EventId.emit() is called centrally in core.updates.on() to handle both local and remote changes.
@@ -337,7 +338,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   private _getParent(target: ProxyTarget): any {
-    const parentRef = target[symbolInternals].core.getParent();
+    const parentRef = target[symbolInternals].core.getParent(Context.default());
     if (parentRef === undefined) {
       return undefined;
     }
@@ -361,7 +362,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   private _getRelationSource(target: ProxyTarget): any {
-    const sourceRef = target[symbolInternals].core.getSource();
+    const sourceRef = target[symbolInternals].core.getSource(Context.default());
     invariant(sourceRef);
     const sourceDXN = EncodedReference.toDXN(sourceRef);
     const database = target[symbolInternals].database;
@@ -383,7 +384,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   private _getRelationTarget(target: ProxyTarget): any {
-    const targetRef = target[symbolInternals].core.getTarget();
+    const targetRef = target[symbolInternals].core.getTarget(Context.default());
     invariant(targetRef);
     const targetDXN = EncodedReference.toDXN(targetRef);
     const database = target[symbolInternals].database;
@@ -469,7 +470,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       dataPath.push(prop);
     }
     const fullPath = [getNamespace(target), ...dataPath];
-    const value: any = target[symbolInternals].core.getDecoded(fullPath);
+    const value: any = target[symbolInternals].core.getDecoded(Context.default(), fullPath);
     // if (value instanceof Reference) {
     //   value = this.lookupRef(target, value);
     // }
@@ -515,7 +516,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     throwIfCustomClass(path[path.length - 1], value);
     const rootObjectSchema = this.getSchema(target);
     if (rootObjectSchema == null) {
-      const typeRef = target[symbolInternals].core.getType();
+      const typeRef = target[symbolInternals].core.getType(Context.default());
       if (typeRef) {
         // The object has schema, but we can't access it to validate the value being set.
         throw new Error(`Schema not found in schema registry: ${EncodedReference.getReferenceString(typeRef)}`);
@@ -527,7 +528,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     // DynamicEchoSchema is a utility-wrapper around the object we actually store in automerge, unwrap it
     const unwrappedValue = value instanceof EchoSchema ? value.persistentSchema : value;
     const propertySchema = SchemaValidator.getPropertySchema(rootObjectSchema, path, (path) => {
-      return target[symbolInternals].core.getDecoded([getNamespace(target), ...path]);
+      return target[symbolInternals].core.getDecoded(Context.default(), [getNamespace(target), ...path]);
     });
     if (propertySchema == null) {
       return unwrappedValue;
@@ -579,7 +580,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return undefined;
     }
 
-    const typeRef = target[symbolInternals].core.getType();
+    const typeRef = target[symbolInternals].core.getType(Context.default());
     if (typeRef == null) {
       return undefined;
     }
@@ -603,7 +604,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (target[symbolNamespace] !== DATA_NAMESPACE) {
       return undefined;
     }
-    const typeRef = target[symbolInternals].core.getType();
+    const typeRef = target[symbolInternals].core.getType(Context.default());
     return typeRef ? EncodedReference.toDXN(typeRef) : undefined;
   }
 
@@ -632,7 +633,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return false;
     } else if (typeof property === 'string') {
       const fullPath = [getNamespace(target), ...target[symbolPath], property];
-      target[symbolInternals].core.delete(fullPath);
+      target[symbolInternals].core.delete(Context.default(), fullPath);
       return true;
     }
     return false;
@@ -643,7 +644,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     const validatedItems = this._validateForArray(target, path, items, target.length);
 
     const encodedItems = this._encodeForArray(target, validatedItems);
-    const result = target[symbolInternals].core.arrayPush([getNamespace(target), ...path], encodedItems);
+    const result = target[symbolInternals].core.arrayPush(Context.default(), [getNamespace(target), ...path], encodedItems);
     return result;
   }
 
@@ -652,7 +653,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     const fullPath = this._getPropertyMountPath(target, path);
 
     let returnValue: any | undefined;
-    target[symbolInternals].core.change((doc) => {
+    target[symbolInternals].core.change(Context.default(), (doc) => {
       const array = getDeep(doc, fullPath);
       invariant(Array.isArray(array));
       returnValue = array.pop();
@@ -666,7 +667,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     const fullPath = this._getPropertyMountPath(target, path);
 
     let returnValue: any | undefined;
-    target[symbolInternals].core.change((doc) => {
+    target[symbolInternals].core.change(Context.default(), (doc) => {
       const array = getDeep(doc, fullPath);
       invariant(Array.isArray(array));
       returnValue = array.shift();
@@ -682,7 +683,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     const encodedItems = this._encodeForArray(target, validatedItems);
 
     let newLength: number = -1;
-    target[symbolInternals].core.change((doc) => {
+    target[symbolInternals].core.change(Context.default(), (doc) => {
       const array = getDeep(doc, fullPath);
       invariant(Array.isArray(array));
       newLength = array.unshift(...encodedItems);
@@ -700,7 +701,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     const encodedItems = this._encodeForArray(target, validatedItems);
 
     let deletedElements: any[] | undefined;
-    target[symbolInternals].core.change((doc) => {
+    target[symbolInternals].core.change(Context.default(), (doc) => {
       const array = getDeep(doc, fullPath);
       invariant(Array.isArray(array));
       if (deleteCount != null) {
@@ -718,7 +719,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     this._checkArrayMutationAllowed(target, 'sort');
     const fullPath = this._getPropertyMountPath(target, path);
 
-    target[symbolInternals].core.change((doc) => {
+    target[symbolInternals].core.change(Context.default(), (doc) => {
       const array = getDeep(doc, fullPath);
       invariant(Array.isArray(array));
       const sortedArray = [...array].sort(compareFn);
@@ -732,7 +733,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     this._checkArrayMutationAllowed(target, 'reverse');
     const fullPath = this._getPropertyMountPath(target, path);
 
-    target[symbolInternals].core.change((doc) => {
+    target[symbolInternals].core.change(Context.default(), (doc) => {
       const array = getDeep(doc, fullPath);
       invariant(Array.isArray(array));
       const reversedArray = [...array].reverse();
@@ -859,7 +860,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
     const fullPath = this._getPropertyMountPath(target, path);
 
-    target[symbolInternals].core.change((doc) => {
+    target[symbolInternals].core.change(Context.default(), (doc) => {
       const array = getDeep(doc, fullPath);
       invariant(Array.isArray(array));
       const trimmedArray = [...array];
@@ -877,7 +878,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   // TODO(dmaretskyi): Change to not rely on object-core doing linking.
   private _encodeForArray(target: ProxyTarget, items: any[] | undefined): any[] {
     const linksEncoded = this._handleLinksAssignment(target, items);
-    return target[symbolInternals].core.encode(linksEncoded);
+    return target[symbolInternals].core.encode(Context.default(), linksEncoded);
   }
 
   private _getPropertyMountPath(target: ProxyTarget, path: KeyPath): KeyPath {
@@ -893,9 +894,9 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   ) {
     const handler = this[symbolHandler] as EchoReactiveHandler;
     const typename = handler._getTypename(this);
-    const isRelation = this[symbolInternals].core.getKind() === EntityKind.Relation;
+    const isRelation = this[symbolInternals].core.getKind(Context.default()) === EntityKind.Relation;
 
-    const isTyped = !!this[symbolInternals].core.getType();
+    const isTyped = !!this[symbolInternals].core.getType(Context.default());
     const reified = handler._getReified(this);
     reified.id = this[symbolInternals].core.id;
     return `${isTyped ? 'Typed' : ''}Echo${isRelation ? 'Relation' : 'Object'}${typename ? `(${typename})` : ''} ${inspectFn(
@@ -910,8 +911,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   };
 
   private _getVersion(target: ProxyTarget): Obj.Version {
-    const accessor = target[symbolInternals].core.getDocAccessor();
-    const doc = accessor.handle.doc();
+    const accessor = target[symbolInternals].core.getDocAccessor(Context.default());
+    const doc = accessor.handle.doc(Context.default());
     invariant(doc);
     const heads = A.getHeads(doc);
     return {
@@ -923,7 +924,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
   // TODO(dmaretskyi): Re-use existing json serializer.
   private _toJSON(target: ProxyTarget): ObjectJSON {
-    const typeRef = target[symbolInternals].core.getType();
+    const typeRef = target[symbolInternals].core.getType(Context.default());
     const reified = this._getReified(target);
 
     const obj: Partial<ObjectJSON> = {
@@ -932,15 +933,15 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       [ATTR_META]: { ...this.getMeta(target) } as ObjectMetaJSON,
     };
 
-    if (target[symbolInternals].core.isDeleted()) {
+    if (target[symbolInternals].core.isDeleted(Context.default())) {
       obj[ATTR_DELETED] = true;
     }
 
-    const sourceRef = target[symbolInternals].core.getSource();
+    const sourceRef = target[symbolInternals].core.getSource(Context.default());
     if (sourceRef) {
       obj[ATTR_RELATION_SOURCE] = EncodedReference.getReferenceString(sourceRef) as DXN.String;
     }
-    const targetRef = target[symbolInternals].core.getTarget();
+    const targetRef = target[symbolInternals].core.getTarget(Context.default());
     if (targetRef) {
       obj[ATTR_RELATION_TARGET] = EncodedReference.getReferenceString(targetRef) as DXN.String;
     }
@@ -962,7 +963,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   private _getReified(target: ProxyTarget): any {
     const dataPath = [...target[symbolPath]];
     const fullPath = [getNamespace(target), ...dataPath];
-    return target[symbolInternals].core.getDecoded(fullPath);
+    return target[symbolInternals].core.getDecoded(Context.default(), fullPath);
   }
 
   private _getDevtoolsFormatter(target: ProxyTarget): DevtoolsFormatter {
@@ -1027,7 +1028,7 @@ export { getObjectCore };
  */
 export const getObjectDocument = (obj: Obj.Any): A.Doc<ObjectStructure> => {
   const core = getObjectCore(obj);
-  return getDeep(core.getDoc(), core.mountPath)!;
+  return getDeep(core.getDoc(Context.default()), core.mountPath)!;
 };
 
 // Re-export from echo-object-utils for backward compatibility.
@@ -1127,7 +1128,7 @@ export const createObject = <T extends AnyProperties>(obj: T): CreateObjectRetur
     setRelationSourceAndTarget(target, core, schema);
 
     if (meta && metaNotEmpty(meta)) {
-      target[symbolInternals].core.setMeta(meta);
+      target[symbolInternals].core.setMeta(Context.default(), meta);
     }
 
     return obj as CreateObjectReturn<T>;
@@ -1183,14 +1184,14 @@ const initCore = (core: ObjectCore, target: ProxyTarget) => {
     delete target[PROPERTY_ID];
   }
 
-  core.initNewObject(linkAllNestedProperties(target));
+  core.initNewObject(Context.default(), linkAllNestedProperties(target));
 
   // Handle parent reference set via [Obj.Parent] in Obj.make.
   const parentValue = (target as any)[ParentId];
   if (parentValue !== undefined) {
     const parentId = parentValue.id ?? parentValue;
     if (ObjectId.isValid(parentId)) {
-      core.setParent(EncodedReference.fromDXN(DXN.fromLocalObjectId(parentId)));
+      core.setParent(Context.default(), EncodedReference.fromDXN(DXN.fromLocalObjectId(parentId)));
     }
     delete (target as any)[ParentId];
   }
@@ -1238,11 +1239,11 @@ const setSchemaPropertiesOnObjectCore = (
   if (schema != null) {
     const dxn = getSchemaDXN(schema);
     invariant(dxn, 'Schema must be defined via TypedObject.');
-    internals.core.setType(EncodedReference.fromDXN(dxn));
+    internals.core.setType(Context.default(), EncodedReference.fromDXN(dxn));
 
     const kind = getEntityKind(schema);
     invariant(kind);
-    internals.core.setKind(kind);
+    internals.core.setKind(Context.default(), kind);
   }
 };
 
@@ -1266,8 +1267,8 @@ const setRelationSourceAndTarget = (
       throw new TypeError('target must be an ECHO object');
     }
 
-    core.setSource(EncodedReference.fromDXN(EchoReactiveHandler.instance.createRef(target, sourceRef)));
-    core.setTarget(EncodedReference.fromDXN(EchoReactiveHandler.instance.createRef(target, targetRef)));
+    core.setSource(Context.default(), EncodedReference.fromDXN(EchoReactiveHandler.instance.createRef(target, sourceRef)));
+    core.setTarget(Context.default(), EncodedReference.fromDXN(EchoReactiveHandler.instance.createRef(target, targetRef)));
   }
 };
 

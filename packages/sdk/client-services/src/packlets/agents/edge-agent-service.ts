@@ -11,6 +11,7 @@ import {
   QueryAgentStatusResponse,
   type QueryEdgeStatusResponse,
 } from '@dxos/protocols/proto/dxos/client/services';
+import { Context } from '@dxos/context';
 
 import { type EdgeAgentManager } from './edge-agent-manager';
 
@@ -44,7 +45,7 @@ export class EdgeAgentServiceImpl implements EdgeAgentService {
   }
 
   async createAgent(): Promise<void> {
-    return (await this._agentManagerProvider()).createAgent();
+    return (await this._agentManagerProvider()).createAgent(Context.default());
   }
 
   queryAgentStatus(): Stream<QueryAgentStatusResponse> {

@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { type Context } from '@dxos/context';
 import { type ServiceBundle } from '@dxos/rpc';
 
 /**
@@ -22,15 +23,15 @@ export class ServiceRegistry<Services> {
     return this._handlers;
   }
 
-  setServices(services: Partial<Services>): void {
+  setServices(ctx: Context, services: Partial<Services>): void {
     this._handlers = services;
   }
 
-  addService(name: keyof Services, service: Services[keyof Services]): void {
+  addService(ctx: Context, name: keyof Services, service: Services[keyof Services]): void {
     this._handlers[name] = service;
   }
 
-  removeService(name: keyof Services): void {
+  removeService(ctx: Context, name: keyof Services): void {
     delete this._handlers[name];
   }
 }

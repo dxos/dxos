@@ -247,7 +247,7 @@ export const acceptInvitation = (
   invitation = sanitizeInvitation(invitation);
 
   if (guest instanceof ServiceContext) {
-    return guest.invitationsManager.acceptInvitation({
+    return guest.invitationsManager.acceptInvitation(Context.default(), {
       invitation,
       deviceProfile: guestDeviceProfile,
     });

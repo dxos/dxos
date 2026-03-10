@@ -4,6 +4,7 @@
 
 import { next as A, type Doc, type Heads, type State } from '@automerge/automerge';
 
+import { Context } from '@dxos/context';
 import type { Obj } from '@dxos/echo';
 import { ATTR_META, ATTR_TYPE } from '@dxos/echo/internal';
 import { ObjectStructure } from '@dxos/echo-protocol';
@@ -24,7 +25,7 @@ export const getEditHistory = (object: Obj.Unknown): State<any>[] => {
   assertArgument(isEchoObject(object), 'expected ECHO object stored in the database');
 
   const objectCore = getObjectCore(object);
-  const doc = objectCore.getDoc();
+  const doc = objectCore.getDoc(Context.default());
   const changes = A.getHistory(doc as Doc<any>);
   return changes;
 };
@@ -39,7 +40,7 @@ export const checkoutVersion = (object: Obj.Unknown, version: Heads): unknown =>
   assertArgument(Array.isArray(version), 'version', 'expected automerge heads array');
 
   const objectCore = getObjectCore(object);
-  const doc = objectCore.getDoc();
+  const doc = objectCore.getDoc(Context.default());
   const snapshot = A.view(doc as Doc<any>, version);
 
   // TODO(dmaretskyi): Refactor so this doesn't have to create another core.

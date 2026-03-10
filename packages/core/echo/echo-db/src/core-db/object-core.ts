@@ -27,6 +27,7 @@ import { type DocHandleProxy } from '../automerge';
 import { type CoreDatabase } from './core-database';
 import { docChangeSemaphore } from './doc-semaphore';
 import { type DecodedAutomergePrimaryValue, type DocAccessor, type KeyPath, isValidKeyPath } from './types';
+import { Context } from '@dxos/context';
 
 // Strings longer than this will have collaborative editing disabled for performance reasons.
 // TODO(dmaretskyi): Remove in favour of explicitly specifying this in the API/Schema.
@@ -84,21 +85,21 @@ export class ObjectCore {
     return `ObjectCore { id: ${this.id} }`;
   }
 
-  [inspectCustom](depth: number, options: InspectOptionsStylized, inspectFn: typeof inspect): string {
+  [inspectCustom](ctx: Context, depth: number, options: InspectOptionsStylized, inspectFn: typeof inspect): string {
     return `ObjectCore ${inspectFn({ id: this.id }, options)}`;
   }
 
   /**
    * Create local doc with initial state from this object.
    */
-  initNewObject(initialProps?: unknown, opts?: ObjectCoreOptions): void {
+  initNewObject(ctx: Context, initialProps?: unknown, opts?: ObjectCoreOptions): void {
     invariant(!this.docHandle && !this.doc);
 
     initialProps ??= {};
 
     this.doc = A.from<ObjectStructure>({
-      data: this.encode(initialProps as any),
-      meta: this.encode({
+      data: this.encode(ctx, initialProps as any),
+      meta: this.encode(ctx, {
         keys: [],
         ...opts?.meta,
       }),
@@ -106,10 +107,10 @@ export class ObjectCore {
     });
   }
 
-  bind(options: BindOptions): void {
+  bind(ctx: Context, options: BindOptions): void {
     // When loading existing documents, wait for the document to be ready.
     // When creating new documents (assignFromLocalState), the local doc is immediately usable.
-    invariant(options.assignFromLocalState || options.docHandle.isReady());
+    invariant(options.assignFromLocalState || options.docHandle.isReady(ctx));
     this.database = options.db;
     this.docHandle = options.docHandle;
     this.mountPath = options.path;
@@ -123,7 +124,7 @@ export class ObjectCore {
       // Prevent recursive change calls.
       using _ = defer(docChangeSemaphore(this.docHandle ?? this));
 
-      this.docHandle.change((newDoc: DatabaseDirectory) => {
+      this.docHandle.change(ctx, (newDoc: DatabaseDirectory) => {
         setDeep(newDoc, this.mountPath, doc);
       });
     }
@@ -131,26 +132,26 @@ export class ObjectCore {
     this.notifyUpdate();
   }
 
-  getDoc(): Doc<unknown> {
+  getDoc(ctx: Context): Doc<unknown> {
     if (this.doc) {
       return this.doc;
     }
 
     if (this.docHandle) {
-      return this.docHandle.doc();
+      return this.docHandle.doc(ctx);
     }
 
     throw new Error('Invalid ObjectCore state');
   }
 
-  getObjectStructure(): ObjectStructure {
-    return getDeep(this.getDoc(), this.mountPath) as ObjectStructure;
+  getObjectStructure(ctx: Context): ObjectStructure {
+    return getDeep(this.getDoc(ctx), this.mountPath) as ObjectStructure;
   }
 
   /**
    * Do not take into account mountPath.
    */
-  change(changeFn: ChangeFn<any>, options?: A.ChangeOptions<any>): void {
+  change(ctx: Context, changeFn: ChangeFn<any>, options?: A.ChangeOptions<any>): void {
     // Prevent recursive change calls.
     using _ = defer(docChangeSemaphore(this.docHandle ?? this));
 
@@ -165,7 +166,7 @@ export class ObjectCore {
       this.notifyUpdate();
     } else {
       invariant(this.docHandle);
-      this.docHandle.change(changeFn, options);
+      this.docHandle.change(ctx, changeFn, options);
       // Note: We don't need to notify listeners here, since `change` event is already processed by DB.
     }
   }
@@ -173,7 +174,7 @@ export class ObjectCore {
   /**
    * Do not take into account mountPath.
    */
-  changeAt(heads: Heads, callback: ChangeFn<any>, options?: ChangeOptions<any>): Heads | undefined {
+  changeAt(ctx: Context, heads: Heads, callback: ChangeFn<any>, options?: ChangeOptions<any>): Heads | undefined {
     // Prevent recursive change calls.
     using _ = defer(docChangeSemaphore(this.docHandle ?? this));
 
@@ -193,19 +194,19 @@ export class ObjectCore {
       this.notifyUpdate();
     } else {
       invariant(this.docHandle);
-      result = this.docHandle.changeAt(heads, callback, options);
+      result = this.docHandle.changeAt(ctx, heads, callback, options);
       // Note: We don't need to notify listeners here, since `change` event is already processed by DB.
     }
 
     return result;
   }
 
-  getDocAccessor(path: KeyPath = []): DocAccessor {
+  getDocAccessor(ctx: Context, path: KeyPath = []): DocAccessor {
     invariant(isValidKeyPath(path));
     const self = this;
     return {
       handle: {
-        doc: () => this.getDoc(),
+        doc: () => this.getDoc(ctx),
         change: (callback, options) => {
           this.change(callback, options);
         },
@@ -257,7 +258,7 @@ export class ObjectCore {
   /**
    * Encode a value to be stored in the Automerge document.
    */
-  encode(value: DecodedAutomergePrimaryValue) {
+  encode(ctx: Context, value: DecodedAutomergePrimaryValue) {
     if (isProxy(value) as boolean) {
       throw new TypeError('Linking is not allowed');
     }
@@ -274,12 +275,12 @@ export class ObjectCore {
       return value;
     }
     if (Array.isArray(value)) {
-      const values: any = value.map((val) => this.encode(val));
+      const values: any = value.map((val) => this.encode(ctx, val));
       return values;
     }
     if (typeof value === 'object' && value !== null) {
       const entries = Object.entries(value).filter(([_, value]) => value !== undefined);
-      return Object.fromEntries(entries.map(([key, value]): [string, any] => [key, this.encode(value)]));
+      return Object.fromEntries(entries.map(([key, value]): [string, any] => [key, this.encode(ctx, value)]));
     }
 
     if (typeof value === 'string' && value.length > STRING_CRDT_LIMIT) {
@@ -292,12 +293,12 @@ export class ObjectCore {
   /**
    * Decode a value from the Automerge document.
    */
-  decode(value: any): DecodedAutomergePrimaryValue {
+  decode(ctx: Context, value: any): DecodedAutomergePrimaryValue {
     if (value === null) {
       return value;
     }
     if (Array.isArray(value)) {
-      return value.map((val) => this.decode(val));
+      return value.map((val) => this.decode(ctx, val));
     }
     if (value instanceof A.RawString) {
       return value.toString();
@@ -312,17 +313,17 @@ export class ObjectCore {
       return convertLegacyProtoReference(value);
     }
     if (typeof value === 'object') {
-      return Object.fromEntries(Object.entries(value).map(([key, value]): [string, any] => [key, this.decode(value)]));
+      return Object.fromEntries(Object.entries(value).map(([key, value]): [string, any] => [key, this.decode(ctx, value)]));
     }
 
     return value;
   }
 
-  arrayPush(path: KeyPath, items: DecodedAutomergePrimaryValue[]): number {
-    const itemsEncoded = items.map((item) => this.encode(item));
+  arrayPush(ctx: Context, path: KeyPath, items: DecodedAutomergePrimaryValue[]): number {
+    const itemsEncoded = items.map((item) => this.encode(ctx, item));
 
     let newLength: number = -1;
-    this.change((doc) => {
+    this.change(ctx, (doc) => {
       const fullPath = [...this.mountPath, ...path];
       const array = getDeep(doc, fullPath);
       invariant(Array.isArray(array));
@@ -332,10 +333,10 @@ export class ObjectCore {
     return newLength;
   }
 
-  private _getRaw(path: KeyPath): Doc<ObjectStructure> | Doc<DatabaseDirectory> {
+  private _getRaw(ctx: Context, path: KeyPath): Doc<ObjectStructure> | Doc<DatabaseDirectory> {
     const fullPath = [...this.mountPath, ...path];
 
-    let value = this.getDoc();
+    let value = this.getDoc(ctx);
     for (const key of fullPath) {
       value = (value as any)?.[key];
     }
@@ -343,47 +344,47 @@ export class ObjectCore {
     return value;
   }
 
-  private _setRaw(path: KeyPath, value: any): void {
+  private _setRaw(ctx: Context, path: KeyPath, value: any): void {
     const fullPath = [...this.mountPath, ...path];
 
-    this.change((doc) => {
+    this.change(ctx, (doc) => {
       setDeep(doc, fullPath, value);
     });
   }
 
   // TODO(dmaretskyi): Rename to `get`.
-  getDecoded(path: KeyPath): DecodedAutomergePrimaryValue {
-    return this.decode(this._getRaw(path)) as DecodedAutomergePrimaryValue;
+  getDecoded(ctx: Context, path: KeyPath): DecodedAutomergePrimaryValue {
+    return this.decode(ctx, this._getRaw(ctx, path)) as DecodedAutomergePrimaryValue;
   }
 
   // TODO(dmaretskyi): Rename to `set`.
-  setDecoded(path: KeyPath, value: DecodedAutomergePrimaryValue): void {
-    this._setRaw(path, this.encode(value));
+  setDecoded(ctx: Context, path: KeyPath, value: DecodedAutomergePrimaryValue): void {
+    this._setRaw(ctx, path, this.encode(ctx, value));
   }
 
   /**
    * Deletes key at path.
    */
-  delete(path: KeyPath): void {
+  delete(ctx: Context, path: KeyPath): void {
     const fullPath = [...this.mountPath, ...path];
 
-    this.change((doc) => {
+    this.change(ctx, (doc) => {
       const value: any = getDeep(doc, fullPath.slice(0, fullPath.length - 1));
       delete value[fullPath[fullPath.length - 1]];
     });
   }
 
-  getKind(): EntityKind {
-    return (this._getRaw([SYSTEM_NAMESPACE, 'kind']) as any) ?? EntityKind.Object;
+  getKind(ctx: Context): EntityKind {
+    return (this._getRaw(ctx, [SYSTEM_NAMESPACE, 'kind']) as any) ?? EntityKind.Object;
   }
 
   // TODO(dmaretskyi): Just set statically during construction.
-  setKind(kind: EntityKind): void {
-    this._setRaw([SYSTEM_NAMESPACE, 'kind'], kind);
+  setKind(ctx: Context, kind: EntityKind): void {
+    this._setRaw(ctx, [SYSTEM_NAMESPACE, 'kind'], kind);
   }
 
-  getSource(): EncodedReference | undefined {
-    const res = this._getRaw([SYSTEM_NAMESPACE, 'source']);
+  getSource(ctx: Context): EncodedReference | undefined {
+    const res = this._getRaw(ctx, [SYSTEM_NAMESPACE, 'source']);
     if (!res || !EncodedReference.isEncodedReference(res)) {
       return undefined;
     }
@@ -391,12 +392,12 @@ export class ObjectCore {
   }
 
   // TODO(dmaretskyi): Just set statically during construction.
-  setSource(ref: EncodedReference): void {
-    this._setRaw([SYSTEM_NAMESPACE, 'source'], ref);
+  setSource(ctx: Context, ref: EncodedReference): void {
+    this._setRaw(ctx, [SYSTEM_NAMESPACE, 'source'], ref);
   }
 
-  getTarget(): EncodedReference | undefined {
-    const res = this._getRaw([SYSTEM_NAMESPACE, 'target']);
+  getTarget(ctx: Context): EncodedReference | undefined {
+    const res = this._getRaw(ctx, [SYSTEM_NAMESPACE, 'target']);
     if (!res || !EncodedReference.isEncodedReference(res)) {
       return undefined;
     }
@@ -404,55 +405,55 @@ export class ObjectCore {
   }
 
   // TODO(dmaretskyi): Just set statically during construction.
-  setTarget(ref: EncodedReference): void {
-    this._setRaw([SYSTEM_NAMESPACE, 'target'], ref);
+  setTarget(ctx: Context, ref: EncodedReference): void {
+    this._setRaw(ctx, [SYSTEM_NAMESPACE, 'target'], ref);
   }
 
-  getParent(): EncodedReference | undefined {
-    const res = this._getRaw([SYSTEM_NAMESPACE, 'parent']);
+  getParent(ctx: Context): EncodedReference | undefined {
+    const res = this._getRaw(ctx, [SYSTEM_NAMESPACE, 'parent']);
     if (!res || !EncodedReference.isEncodedReference(res)) {
       return undefined;
     }
     return res;
   }
 
-  setParent(ref: EncodedReference | undefined): void {
+  setParent(ctx: Context, ref: EncodedReference | undefined): void {
     if (ref === undefined) {
-      this.delete([SYSTEM_NAMESPACE, 'parent']);
+      this.delete(ctx, [SYSTEM_NAMESPACE, 'parent']);
     } else {
-      this._setRaw([SYSTEM_NAMESPACE, 'parent'], ref);
+      this._setRaw(ctx, [SYSTEM_NAMESPACE, 'parent'], ref);
     }
   }
 
-  getType(): EncodedReference | undefined {
-    const res = this._getRaw([SYSTEM_NAMESPACE, 'type']);
+  getType(ctx: Context): EncodedReference | undefined {
+    const res = this._getRaw(ctx, [SYSTEM_NAMESPACE, 'type']);
     if (!res || !EncodedReference.isEncodedReference(res)) {
       return undefined;
     }
     return res;
   }
 
-  setType(ref: EncodedReference): void {
-    this._setRaw([SYSTEM_NAMESPACE, 'type'], ref);
+  setType(ctx: Context, ref: EncodedReference): void {
+    this._setRaw(ctx, [SYSTEM_NAMESPACE, 'type'], ref);
   }
 
-  getMeta(): ObjectMeta {
-    return this.getDecoded([META_NAMESPACE]) as ObjectMeta;
+  getMeta(ctx: Context): ObjectMeta {
+    return this.getDecoded(ctx, [META_NAMESPACE]) as ObjectMeta;
   }
 
-  setMeta(meta: ObjectMeta): void {
-    this._setRaw([META_NAMESPACE], this.encode(meta));
+  setMeta(ctx: Context, meta: ObjectMeta): void {
+    this._setRaw(ctx, [META_NAMESPACE], this.encode(ctx, meta));
   }
 
-  isDeleted(remainingDepth: number = 10): boolean {
-    const value = this._getRaw([SYSTEM_NAMESPACE, 'deleted']);
+  isDeleted(ctx: Context, remainingDepth: number = 10): boolean {
+    const value = this._getRaw(ctx, [SYSTEM_NAMESPACE, 'deleted']);
     const ownDeleted = typeof value === 'boolean' ? value : false;
     if (ownDeleted) {
       return true;
     }
 
     if (this.database && remainingDepth > 0) {
-      const parentRef = this.getParent();
+      const parentRef = this.getParent(ctx);
       if (parentRef) {
         // Checks if the reference is pointing to an object in the same space.
         const parentDXN = EncodedReference.toDXN(parentRef);
@@ -462,8 +463,8 @@ export class ObjectCore {
           // NOTE: We can't use `loadObjectCoreById` here because it might be async and we need a sync check.
           // If the parent is not loaded, we assume it's not deleted for now, or should we assume deleted?
           // Given strong dependencies, the parent SHOULD be loaded if the child is loaded.
-          const parent = this.database.getObjectCoreById(parentId);
-          if (parent && parent.isDeleted(remainingDepth - 1)) {
+          const parent = this.database.getObjectCoreById(ctx, parentId);
+          if (parent && parent.isDeleted(ctx, remainingDepth - 1)) {
             return true;
           }
         }
@@ -472,8 +473,8 @@ export class ObjectCore {
     return false;
   }
 
-  setDeleted(value: boolean): void {
-    this._setRaw([SYSTEM_NAMESPACE, 'deleted'], value);
+  setDeleted(ctx: Context, value: boolean): void {
+    this._setRaw(ctx, [SYSTEM_NAMESPACE, 'deleted'], value);
   }
 
   /**
@@ -481,10 +482,10 @@ export class ObjectCore {
    * Strong references are loaded together with the source object.
    * Currently this is the schema reference and the source and target for relations.
    */
-  getStrongDependencies(): DXN[] {
+  getStrongDependencies(ctx: Context): DXN[] {
     const res: DXN[] = [];
 
-    const typeRef = this.getType();
+    const typeRef = this.getType(ctx);
     if (typeRef) {
       const typeDXN = EncodedReference.toDXN(typeRef);
       if (typeDXN.kind === DXN.kind.ECHO) {
@@ -492,18 +493,18 @@ export class ObjectCore {
       }
     }
 
-    if (this.getKind() === EntityKind.Relation) {
-      const sourceRef = this.getSource();
+    if (this.getKind(ctx) === EntityKind.Relation) {
+      const sourceRef = this.getSource(ctx);
       if (sourceRef) {
         res.push(EncodedReference.toDXN(sourceRef));
       }
-      const targetRef = this.getTarget();
+      const targetRef = this.getTarget(ctx);
       if (targetRef) {
         res.push(EncodedReference.toDXN(targetRef));
       }
     }
 
-    const parentRef = this.getParent();
+    const parentRef = this.getParent(ctx);
     if (parentRef) {
       res.push(EncodedReference.toDXN(parentRef));
     }

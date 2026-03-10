@@ -26,26 +26,26 @@ const SPACE_KEY = PublicKey.random();
 describe('AutomergeDocumentLoader', () => {
   test('space access is set on root doc handle and it is accessible', async () => {
     const { loader, spaceRootDocHandle } = await setupTest();
-    expect(loader.getSpaceRootDocHandle()).not.to.throw;
-    expect(spaceRootDocHandle.doc()?.access?.spaceKey).to.eq(SPACE_KEY.toHex());
+    expect(loader.getSpaceRootDocHandle(Context.default())).not.to.throw;
+    expect(spaceRootDocHandle.doc(Context.default())?.access?.spaceKey).to.eq(SPACE_KEY.toHex());
   });
 
   test('new object document is linked with space and root document', async () => {
     const objectId = ObjectId.random();
     const { loader, spaceRootDocHandle } = await setupTest();
-    const objectDocHandle = loader.createDocumentForObject(objectId);
+    const objectDocHandle = loader.createDocumentForObject(Context.default(), objectId);
     // Wait for the document to be created before accessing url.
-    await objectDocHandle.whenReady();
-    const handle = spaceRootDocHandle.doc();
-    expect(objectDocHandle.doc()?.access?.spaceKey).to.eq(SPACE_KEY.toHex());
+    await objectDocHandle.whenReady(Context.default());
+    const handle = spaceRootDocHandle.doc(Context.default());
+    expect(objectDocHandle.doc(Context.default())?.access?.spaceKey).to.eq(SPACE_KEY.toHex());
     expect(handle?.links?.[objectId].toString()).to.eq(objectDocHandle.url);
   });
 
   test('listener is invoked after a document is loaded', async () => {
     const objectId = ObjectId.random();
     const { loader, repo } = await setupTest();
-    const handle = repo.create<DatabaseDirectory>();
-    await handle.whenReady();
+    const handle = repo.create<DatabaseDirectory>(Context.default());
+    await handle.whenReady(Context.default());
     const docLoadInfo = waitForDocumentLoad(loader, { objectId, handle });
     loadLinkedObjects(loader, { [objectId]: handle.url! });
     await sleep(10);
@@ -55,12 +55,12 @@ describe('AutomergeDocumentLoader', () => {
   test('listener is not invoked if an object was rebound during document loading', async () => {
     const objectId = ObjectId.random();
     const { loader, repo } = await setupTest();
-    const oldDocHandle = repo.create<DatabaseDirectory>();
-    const newDocHandle = repo.create<DatabaseDirectory>();
-    await Promise.all([oldDocHandle.whenReady(), newDocHandle.whenReady()]);
+    const oldDocHandle = repo.create<DatabaseDirectory>(Context.default());
+    const newDocHandle = repo.create<DatabaseDirectory>(Context.default());
+    await Promise.all([oldDocHandle.whenReady(Context.default()), newDocHandle.whenReady(Context.default())]);
     const docLoadInfo = waitForDocumentLoad(loader, { objectId, handle: oldDocHandle });
     loadLinkedObjects(loader, { [objectId]: oldDocHandle.url! });
-    loader.onObjectBoundToDocument(newDocHandle, objectId);
+    loader.onObjectBoundToDocument(Context.default(), newDocHandle, objectId);
     await sleep(10);
     expect(docLoadInfo.loaded).to.be.false;
   });
@@ -68,11 +68,11 @@ describe('AutomergeDocumentLoader', () => {
   test('document link is not loaded if object exists as inline object', async () => {
     const objectId = ObjectId.random();
     const { loader, repo } = await setupTest();
-    const existingHandle = repo.create<DatabaseDirectory>();
-    await existingHandle.whenReady();
-    loader.onObjectBoundToDocument(existingHandle, objectId);
-    const newDocHandle = repo.create<DatabaseDirectory>();
-    await newDocHandle.whenReady();
+    const existingHandle = repo.create<DatabaseDirectory>(Context.default());
+    await existingHandle.whenReady(Context.default());
+    loader.onObjectBoundToDocument(Context.default(), existingHandle, objectId);
+    const newDocHandle = repo.create<DatabaseDirectory>(Context.default());
+    await newDocHandle.whenReady(Context.default());
     const docLoadInfo = waitForDocumentLoad(loader, { objectId, handle: newDocHandle });
     loadLinkedObjects(loader, { [objectId]: existingHandle.url! });
     await sleep(10);
@@ -103,14 +103,14 @@ describe('AutomergeDocumentLoader', () => {
   };
 
   const createRootDoc = async (repo: RepoProxy) => {
-    const handle = repo.create<DatabaseDirectory>({ version: SpaceDocVersion.CURRENT });
-    await handle.whenReady();
+    const handle = repo.create<DatabaseDirectory>(Context.default(), { version: SpaceDocVersion.CURRENT });
+    await handle.whenReady(Context.default());
     return handle;
   };
 
   const loadLinkedObjects = (loader: AutomergeDocumentLoader, links: DatabaseDirectory['links']) => {
-    Object.keys(links ?? {}).forEach((objectId) => loader.loadObjectDocument(objectId));
-    loader.onObjectLinksUpdated(links);
+    Object.keys(links ?? {}).forEach((objectId) => loader.loadObjectDocument(Context.default(), objectId));
+    loader.onObjectLinksUpdated(Context.default(), links);
   };
 
   const waitForDocumentLoad = (loader: AutomergeDocumentLoader, expected: ObjectDocumentLoaded) => {

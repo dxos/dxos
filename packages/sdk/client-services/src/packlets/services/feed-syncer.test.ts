@@ -268,7 +268,7 @@ describe('FeedSyncer', () => {
       expect(blocks).toHaveLength(1);
     }
 
-    syncer.schedulePoll();
+    syncer.schedulePoll(Context.default());
 
     await vi.waitFor(async () => {
       const { blocks } = await clientFeedStore

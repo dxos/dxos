@@ -10,6 +10,7 @@ import { isNonNullable } from '@dxos/util';
 
 import { type EchoDatabase } from './proxy-db';
 import type { SerializedSpace } from './serialized-space';
+import { Context } from '@dxos/context';
 
 const MAX_LOAD_OBJECT_CHUNK_SIZE = 30;
 
@@ -29,14 +30,14 @@ export type ImportOptions = {
 export class Serializer {
   static version = 1;
 
-  async export(database: EchoDatabase, query?: Query.Any): Promise<SerializedSpace> {
+  async export(ctx: Context, database: EchoDatabase, query?: Query.Any): Promise<SerializedSpace> {
     const loadedObjects: Array<Obj.Any | undefined> = [];
 
     if (query) {
       const objects = await database.query(query).run();
       loadedObjects.push(...objects);
     } else {
-      const ids = database.coreDatabase.getAllObjectIds();
+      const ids = database.coreDatabase.getAllObjectIds(ctx);
       for (const chunk of chunkArray(ids, MAX_LOAD_OBJECT_CHUNK_SIZE)) {
         const objects = await database.query(Filter.id(...chunk)).run({ timeout: 60_000 });
         loadedObjects.push(...objects);
@@ -47,14 +48,14 @@ export class Serializer {
       version: Serializer.version,
       timestamp: new Date().toISOString(),
       objects: loadedObjects.filter(isNonNullable).map((object) => {
-        return this.exportObject(object as any);
+        return this.exportObject(ctx, object as any);
       }),
     };
 
     return data;
   }
 
-  async import(database: EchoDatabase, data: SerializedSpace, opts?: ImportOptions): Promise<void> {
+  async import(ctx: Context, database: EchoDatabase, data: SerializedSpace, opts?: ImportOptions): Promise<void> {
     invariant(data.version === Serializer.version, `Invalid version: ${data.version}`);
 
     const { objects } = data;
@@ -62,17 +63,17 @@ export class Serializer {
       const shouldImport = opts?.onObject ? await opts.onObject(object) : true;
 
       if (shouldImport) {
-        await this._importObject(database, object);
+        await this._importObject(ctx, database, object);
       }
     }
     await database.flush();
   }
 
-  exportObject(object: Obj.Any): Obj.JSON {
+  exportObject(ctx: Context, object: Obj.Any): Obj.JSON {
     return Obj.toJSON(object);
   }
 
-  private async _importObject(database: EchoDatabase, data: Obj.JSON): Promise<void> {
+  private async _importObject(ctx: Context, database: EchoDatabase, data: Obj.JSON): Promise<void> {
     const obj = await Obj.fromJSON(data, {
       refResolver: database.graph.createRefResolver({ context: { space: database.spaceId } }),
     });

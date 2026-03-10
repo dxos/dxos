@@ -334,7 +334,7 @@ describe('Invitations', () => {
         const peers = await chain<ServiceContext>([closeAfterTest])(createPeers(2));
         host = peers[0];
         guest = peers[1];
-        await host.createIdentity();
+        await host.createIdentity(Context.default());
       });
 
       testSuite(
@@ -406,10 +406,10 @@ describe('Invitations', () => {
         invariant(guestContext.dataSpaceManager);
         const hostApi = createInvitationsApi(hostContext);
         // TODO(nf): require calling manually outside of service-host?
-        await hostApi.manager.loadPersistentInvitations();
+        await hostApi.manager.loadPersistentInvitations(Context.default());
 
         const { service: guestService, manager: guestManager } = createInvitationsApi(guestContext);
-        await guestManager.loadPersistentInvitations();
+        await guestManager.loadPersistentInvitations(Context.default());
 
         const space = await hostContext?.dataSpaceManager.createSpace(Context.default());
         onTestFinished(() => space.close(Context.default()));
@@ -449,7 +449,7 @@ describe('Invitations', () => {
           spaceKey: space.key,
         }));
 
-        const loadedInvitations = await newHostManager.loadPersistentInvitations();
+        const loadedInvitations = await newHostManager.loadPersistentInvitations(Context.default());
         await host.open();
         expect(loadedInvitations.invitations).to.have.lengthOf(1);
 
@@ -514,7 +514,7 @@ describe('Invitations', () => {
             persistent: false,
           }));
           // TODO(nf): require calling manually outside of service-host?
-          await hostApi.manager.loadPersistentInvitations();
+          await hostApi.manager.loadPersistentInvitations(Context.default());
           await tempHost.open();
 
           const createdTrigger = new Trigger();
@@ -531,7 +531,7 @@ describe('Invitations', () => {
           hostContext,
           hostApi.metadata,
         );
-        await newHostManager.loadPersistentInvitations();
+        await newHostManager.loadPersistentInvitations(Context.default());
         expect(hostApi.metadata.getInvitations()).to.have.lengthOf(0);
 
         const host = new InvitationsProxy(newHostService, undefined, () => ({
@@ -540,7 +540,7 @@ describe('Invitations', () => {
         }));
         await host.open();
 
-        const loadedInvitations = await newHostManager.loadPersistentInvitations();
+        const loadedInvitations = await newHostManager.loadPersistentInvitations(Context.default());
         expect(loadedInvitations.invitations).to.have.lengthOf(0);
         expect(host.created.get()).to.have.lengthOf(0);
       });
@@ -589,7 +589,7 @@ describe('Invitations', () => {
         hostContext = peers[0];
         guestContext = peers[1];
 
-        await hostContext.createIdentity();
+        await hostContext.createIdentity(Context.default());
 
         const { service: hostService } = createInvitationsApi(hostContext);
         const { service: guestService } = createInvitationsApi(guestContext);
@@ -686,7 +686,7 @@ const createInvitationsApi = (
 ) => {
   const manager = new InvitationsManager(
     context.invitations,
-    (invitation) => context.getInvitationHandler(invitation),
+    (invitation) => context.getInvitationHandler(Context.default(), invitation),
     metadata,
   );
   const service = new InvitationsServiceImpl(manager);

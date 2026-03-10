@@ -4,7 +4,7 @@
 
 import { type PushStream, TimeoutError, type Trigger, scheduleTask } from '@dxos/async';
 import { INVITATION_TIMEOUT, getExpirationTime } from '@dxos/client-protocol';
-import { type Context, ContextDisposedError } from '@dxos/context';
+import { Context, ContextDisposedError } from '@dxos/context';
 import { createKeyPair, sign } from '@dxos/crypto';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
@@ -110,7 +110,7 @@ export class InvitationsHandler {
             });
             const deviceKey = admissionRequest.device?.deviceKey ?? admissionRequest.space?.deviceKey;
             invariant(deviceKey);
-            const admissionResponse = await protocol.admit(invitation, admissionRequest, extension.guestProfile);
+            const admissionResponse = await protocol.admit(ctx, invitation, admissionRequest, extension.guestProfile);
 
             // Updating credentials complete.
             extension.completedTrigger.wake(deviceKey);
@@ -302,7 +302,7 @@ export class InvitationsHandler {
               });
               const introductionResponse = await extension.rpc.InvitationHostService.introduce({
                 invitationId: invitation.invitationId,
-                ...protocol.createIntroduction(),
+                ...protocol.createIntroduction(connectionCtx),
               });
               log.verbose('dxos.sdk.invitations-handler.guest.introduce-response', {
                 invitationId: invitation.invitationId,
@@ -316,6 +316,7 @@ export class InvitationsHandler {
                 switch (invitation.authMethod) {
                   case Invitation.AuthMethod.SHARED_SECRET:
                     await this._handleGuestOtpAuth(
+                      connectionCtx,
                       extension,
                       (state) => guardedState.set(extension, state),
                       otpEnteredTrigger,
@@ -324,6 +325,7 @@ export class InvitationsHandler {
                     break;
                   case Invitation.AuthMethod.KNOWN_PUBLIC_KEY:
                     await this._handleGuestKpkAuth(
+                      connectionCtx,
                       extension,
                       (state) => guardedState.set(extension, state),
                       invitation,
@@ -338,14 +340,14 @@ export class InvitationsHandler {
                 invitationId: invitation.invitationId,
                 ...protocol.toJSON(),
               });
-              const admissionRequest = await protocol.createAdmissionRequest(deviceProfile);
+              const admissionRequest = await protocol.createAdmissionRequest(connectionCtx, deviceProfile);
               const admissionResponse = await extension.rpc.InvitationHostService.admit(admissionRequest);
 
               // Remote connection no longer needed.
               admitted = true;
 
               // 4. Record credential in our HALO.
-              const result = await protocol.accept(admissionResponse, admissionRequest);
+              const result = await protocol.accept(connectionCtx, admissionResponse, admissionRequest);
 
               // 5. Success.
               log.verbose('dxos.sdk.invitations-handler.guest.admitted-by-host', {
@@ -390,7 +392,7 @@ export class InvitationsHandler {
 
     const edgeInvitationHandler = new EdgeInvitationHandler(this._connectionProps?.edgeInvitations, this._edgeClient, {
       onInvitationSuccess: async (admissionResponse, admissionRequest) => {
-        const result = await protocol.accept(admissionResponse, admissionRequest);
+        const result = await protocol.accept(ctx, admissionResponse, admissionRequest);
         log.info('admitted by edge', { ...protocol.toJSON() });
         guardedState.complete({ ...guardedState.current, ...result, state: Invitation.State.SUCCESS });
       },
@@ -398,7 +400,7 @@ export class InvitationsHandler {
     edgeInvitationHandler.handle(ctx, guardedState, protocol, deviceProfile);
 
     scheduleTask(ctx, async () => {
-      const error = checkInvitation(protocol, invitation);
+      const error = checkInvitation(ctx, protocol, invitation);
       if (error) {
         stream.error(error);
         await ctx.dispose();
@@ -449,6 +451,7 @@ export class InvitationsHandler {
   }
 
   private async _handleGuestOtpAuth(
+    ctx: Context,
     extension: InvitationGuestExtension,
     setState: (newState: Invitation.State) => void,
     authenticated: Trigger<string>,
@@ -478,6 +481,7 @@ export class InvitationsHandler {
   }
 
   private async _handleGuestKpkAuth(
+    ctx: Context,
     extension: InvitationGuestExtension,
     setState: (newState: Invitation.State) => void,
     invitation: Invitation,
@@ -500,12 +504,12 @@ export class InvitationsHandler {
   }
 }
 
-const checkInvitation = (protocol: InvitationProtocol, invitation: Partial<Invitation>) => {
+const checkInvitation = (ctx: Context, protocol: InvitationProtocol, invitation: Partial<Invitation>) => {
   const expiresOn = getExpirationTime(invitation);
   if (expiresOn && expiresOn.getTime() < Date.now()) {
     return new InvalidInvitationError({ message: 'Invitation already expired.' });
   }
-  return protocol.checkInvitation(invitation);
+  return protocol.checkInvitation(ctx, invitation);
 };
 
 export const createAdmissionKeypair = (): AdmissionKeypair => {

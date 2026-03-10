@@ -22,6 +22,7 @@ import { type EchoDatabase } from '../proxy-db';
 import { EchoTestBuilder, type EchoTestPeer, createTmpPath } from '../testing';
 
 import { Filter, Query } from './api';
+import { Context } from '@dxos/context';
 
 faker.seed(1);
 
@@ -259,12 +260,12 @@ describe('Query', () => {
 
       const peer = await builder.createPeer({ types: [ContactV1, ContactV2] });
       const db = await peer.createDatabase();
-      const queues = peer.client.constructQueueFactory(db.spaceId);
-      const queue = queues.create();
+      const queues = peer.client.constructQueueFactory(Context.default(), db.spaceId);
+      const queue = queues.create(Context.default());
 
       const contactV1 = Obj.make(ContactV1, { firstName: 'John', lastName: 'Doe' });
       const contactV2 = Obj.make(ContactV2, { name: 'Brian Smith' });
-      await queue.append([contactV1, contactV2]);
+      await queue.append(Context.default(), [contactV1, contactV2]);
 
       const both = await queue.query(Query.select(Filter.typeDXN(DXN.parse('dxn:type:example.com/type/Person')))).run();
       expect(both).toHaveLength(2);
@@ -283,11 +284,11 @@ describe('Query', () => {
     test('sqlIndex: type selector loads queue-backed objects', async () => {
       const peer = await builder.createPeer({ types: [TestSchema.Task] });
       const db = await peer.createDatabase();
-      const queues = peer.client.constructQueueFactory(db.spaceId);
-      const queue = queues.create();
+      const queues = peer.client.constructQueueFactory(Context.default(), db.spaceId);
+      const queue = queues.create(Context.default());
 
       const task = Obj.make(TestSchema.Task, { title: 'Queue type selector task' });
-      await queue.append([task]);
+      await queue.append(Context.default(), [task]);
 
       await db.flush({ indexes: true });
 
@@ -309,21 +310,21 @@ describe('Query', () => {
       const peer = await builder.createPeer({ types: [TestSchema.Task, TestSchema.Person] });
 
       const db1 = await peer.createDatabase();
-      const queueFactory1 = peer.client.constructQueueFactory(db1.spaceId);
-      const queue1 = queueFactory1.create();
+      const queueFactory1 = peer.client.constructQueueFactory(Context.default(), db1.spaceId);
+      const queue1 = queueFactory1.create(Context.default());
 
       const db2 = await peer.createDatabase();
-      const queueFactory2 = peer.client.constructQueueFactory(db2.spaceId);
-      const queue2 = queueFactory2.create();
+      const queueFactory2 = peer.client.constructQueueFactory(Context.default(), db2.spaceId);
+      const queue2 = queueFactory2.create(Context.default());
 
       const spaceTask1 = db1.add(Obj.make(TestSchema.Task, { title: 'space1-task' }));
       const spacePerson1 = db1.add(Obj.make(TestSchema.Person, { name: 'space1-person' }));
       const queueTask1 = Obj.make(TestSchema.Task, { title: 'queue1-task' });
-      await queue1.append([queueTask1]);
+      await queue1.append(Context.default(), [queueTask1]);
 
       const spaceTask2 = db2.add(Obj.make(TestSchema.Task, { title: 'space2-task' }));
       const queueTask2 = Obj.make(TestSchema.Task, { title: 'queue2-task' });
-      await queue2.append([queueTask2]);
+      await queue2.append(Context.default(), [queueTask2]);
 
       await db1.flush({ indexes: true });
       await db2.flush({ indexes: true });
@@ -500,11 +501,11 @@ describe('Query', () => {
     test('from(db, { includeFeeds: true }) includes feeds in full-text search', async () => {
       const peer = await builder.createPeer({ types: [TestSchema.Task] });
       const db = await peer.createDatabase();
-      const queues = peer.client.constructQueueFactory(db.spaceId);
-      const queue = queues.create();
+      const queues = peer.client.constructQueueFactory(Context.default(), db.spaceId);
+      const queue = queues.create(Context.default());
 
       db.add(Obj.make(TestSchema.Task, { title: 'Space TypeScript Task' }));
-      await queue.append([Obj.make(TestSchema.Task, { title: 'Queue TypeScript Task' })]);
+      await queue.append(Context.default(), [Obj.make(TestSchema.Task, { title: 'Queue TypeScript Task' })]);
       await db.flush({ indexes: true });
 
       const withFeeds: TestSchema.Task[] = await db
@@ -560,8 +561,8 @@ describe('Query', () => {
     test('from(feed) scopes query to feed items', async () => {
       const peer = await builder.createPeer({ types: [Type.Feed, TestSchema.Task] });
       const db = await peer.createDatabase();
-      const queues = peer.client.constructQueueFactory(db.spaceId);
-      const queue = queues.create();
+      const queues = peer.client.constructQueueFactory(Context.default(), db.spaceId);
+      const queue = queues.create(Context.default());
 
       // Create a feed object and bind it to the queue.
       const feed = db.add(Feed.make({ name: 'test-feed' }));
@@ -571,7 +572,7 @@ describe('Query', () => {
 
       // Add items to the queue and a separate item to the space.
       db.add(Obj.make(TestSchema.Task, { title: 'Space Task' }));
-      await queue.append([
+      await queue.append(Context.default(), [
         Obj.make(TestSchema.Task, { title: 'Feed Task 1' }),
         Obj.make(TestSchema.Task, { title: 'Feed Task 2' }),
       ]);
@@ -586,8 +587,8 @@ describe('Query', () => {
     test('from(feed) with Filter.id scopes to feed', async () => {
       const peer = await builder.createPeer({ types: [Type.Feed, TestSchema.Task] });
       const db = await peer.createDatabase();
-      const queues = peer.client.constructQueueFactory(db.spaceId);
-      const queue = queues.create();
+      const queues = peer.client.constructQueueFactory(Context.default(), db.spaceId);
+      const queue = queues.create(Context.default());
 
       const feed = db.add(Feed.make({ name: 'test-feed' }));
       Obj.change(feed, (mutable) => {
@@ -596,7 +597,7 @@ describe('Query', () => {
 
       const feedItem = Obj.make(TestSchema.Task, { title: 'Feed Task' });
       const spaceItem = db.add(Obj.make(TestSchema.Task, { title: 'Space Task' }));
-      await queue.append([feedItem]);
+      await queue.append(Context.default(), [feedItem]);
       await db.flush({ indexes: true });
 
       // Filter.id for a feed item should find it when scoped to feed.
@@ -626,7 +627,7 @@ describe('Query', () => {
       await createObjects(peer, db, { count: 3 });
 
       expect((await db.query(Query.select(Filter.everything())).run()).length).to.eq(3);
-      root = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle().url!;
+      root = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle(Context.default()).url!;
       await peer.close();
     }
 
@@ -654,8 +655,8 @@ describe('Query', () => {
       const [obj1, obj2] = await createObjects(peer, db, { count: 2 });
 
       expect((await db.query(Query.select(Filter.everything())).run()).length).to.eq(2);
-      const rootDocHandle = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle();
-      rootDocHandle.change((doc: DatabaseDirectory) => {
+      const rootDocHandle = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle(Context.default());
+      rootDocHandle.change(Context.default(), (doc: DatabaseDirectory) => {
         doc.links![obj1.id] = 'automerge:4hjTgo9zLNsfRTJiLcpPY8P4smy';
       });
       await db.flush();
@@ -689,15 +690,15 @@ describe('Query', () => {
       const [obj1, obj2] = await createObjects(peer, db, { count: 2 });
 
       expect((await db.query(Query.select(Filter.everything())).run()).length).to.eq(2);
-      const rootDocHandle = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle();
+      const rootDocHandle = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle(Context.default());
       const obj1DocHandle = getObjectCore(obj1).docHandle!;
       const anotherDocHandle = getObjectCore(obj2).docHandle!;
       // Wait for documents to be ready before accessing url and objects.
-      await Promise.all([rootDocHandle.whenReady(), obj1DocHandle.whenReady(), anotherDocHandle.whenReady()]);
-      anotherDocHandle.change((doc: DatabaseDirectory) => {
-        doc.objects![obj1.id] = obj1DocHandle.doc()!.objects![obj1.id];
+      await Promise.all([rootDocHandle.whenReady(Context.default()), obj1DocHandle.whenReady(Context.default()), anotherDocHandle.whenReady(Context.default())]);
+      anotherDocHandle.change(Context.default(), (doc: DatabaseDirectory) => {
+        doc.objects![obj1.id] = obj1DocHandle.doc(Context.default())!.objects![obj1.id];
       });
-      rootDocHandle.change((doc: DatabaseDirectory) => {
+      rootDocHandle.change(Context.default(), (doc: DatabaseDirectory) => {
         doc.links![obj1.id] = new A.RawString(anotherDocHandle.url!);
       });
       await db.flush();
@@ -711,7 +712,7 @@ describe('Query', () => {
 
     {
       const db = await peer.openDatabase(spaceKey, root);
-      await db.coreDatabase.updateIndexes();
+      await db.coreDatabase.updateIndexes(Context.default());
       const queryResult = await db.query(Query.select(Filter.everything())).run();
       expect(queryResult.length).to.eq(2);
 
@@ -755,7 +756,7 @@ describe('Query', () => {
     const [obj1] = await createObjects(peer, db, { count: 2 });
 
     const obj2Core = getObjectCore(obj1);
-    obj2Core.docHandle!.delete(); // Deleted handle access throws an exception.
+    obj2Core.docHandle!.delete(Context.default()); // Deleted handle access throws an exception.
 
     await expect(db.query(Query.select(Filter.everything())).run()).rejects.toBeInstanceOf(Error);
   });
@@ -1475,11 +1476,11 @@ describe('Query', () => {
     test('full-text search in queues via indexer2', async () => {
       const peer = await builder.createPeer({ types: [TestSchema.Task] });
       const db = await peer.createDatabase();
-      const queues = peer.client.constructQueueFactory(db.spaceId);
-      const queue = queues.create();
+      const queues = peer.client.constructQueueFactory(Context.default(), db.spaceId);
+      const queue = queues.create(Context.default());
 
       // Add objects to the queue.
-      await queue.append([
+      await queue.append(Context.default(), [
         Obj.make(TestSchema.Task, { title: 'Introduction to TypeScript' }),
         Obj.make(TestSchema.Task, { title: 'Getting Started with React' }),
         Obj.make(TestSchema.Task, { title: 'Advanced Python Programming' }),
@@ -1522,14 +1523,14 @@ describe('Query', () => {
     test('full-text search with allQueuesFromSpaces via indexer2', async () => {
       const peer = await builder.createPeer({ types: [TestSchema.Task] });
       const db = await peer.createDatabase();
-      const queues = peer.client.constructQueueFactory(db.spaceId);
-      const queue = queues.create();
+      const queues = peer.client.constructQueueFactory(Context.default(), db.spaceId);
+      const queue = queues.create(Context.default());
 
       // Add objects to the database (space objects).
       db.add(Obj.make(TestSchema.Task, { title: 'Space Object TypeScript' }));
 
       // Add objects to the queue.
-      await queue.append([Obj.make(TestSchema.Task, { title: 'Queue Object TypeScript' })]);
+      await queue.append(Context.default(), [Obj.make(TestSchema.Task, { title: 'Queue Object TypeScript' })]);
 
       // Wait for indexing.
       await db.flush({ indexes: true });
@@ -1562,10 +1563,10 @@ describe('Query', () => {
     test('full-text search from queue returns valid echo objects', async () => {
       const peer = await builder.createPeer({ types: [TestSchema.Task] });
       const db = await peer.createDatabase();
-      const queues = peer.client.constructQueueFactory(db.spaceId);
-      const queue = queues.create();
+      const queues = peer.client.constructQueueFactory(Context.default(), db.spaceId);
+      const queue = queues.create(Context.default());
       const task = Obj.make(TestSchema.Task, { title: 'Queue Object TypeScript' });
-      await queue.append([task]);
+      await queue.append(Context.default(), [task]);
       await db.flush({ indexes: true });
 
       const obj: TestSchema.Task = await db

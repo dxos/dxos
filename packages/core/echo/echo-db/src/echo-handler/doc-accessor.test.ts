@@ -12,6 +12,7 @@ import { DocAccessor } from '../core-db';
 import { EchoTestBuilder } from '../testing';
 
 import { createDocAccessor } from './doc-accessor';
+import { Context } from '@dxos/context';
 
 describe('diff', () => {
   it('should replace a word', async ({ expect }) => {
@@ -21,11 +22,11 @@ describe('diff', () => {
 
     const obj = db.add(Obj.make(TestSchema.Task, { description: 'This is a document.' }));
     const accessor = createDocAccessor(obj, ['description']);
-    accessor.handle.change((doc: Doc<TestSchema.Task>) => {
-      const idx = DocAccessor.getValue<string>(accessor).indexOf('a');
+    accessor.handle.change(Context.default(), (doc: Doc<TestSchema.Task>) => {
+      const idx = DocAccessor.getValue<string>(Context.default(), accessor).indexOf('a');
       A.splice(doc, accessor.path as A.Prop[], idx, 1, 'the');
     });
-    const text = DocAccessor.getValue<string>(accessor);
+    const text = DocAccessor.getValue<string>(Context.default(), accessor);
     expect(text).toBe('This is the document.');
   });
 });

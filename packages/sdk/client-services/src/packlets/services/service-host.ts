@@ -136,7 +136,7 @@ export class ClientServicesHost {
     this._runtimeProps = runtimeProps ?? {};
 
     if (config) {
-      this.initialize({ config, transportFactory, signalManager });
+      this.initialize(Context.default(), { config, transportFactory, signalManager });
     }
 
     if (lockKey) {
@@ -147,7 +147,7 @@ export class ClientServicesHost {
             void this.open(new Context());
           }
         },
-        onRelease: () => this.close(),
+        onRelease: () => this.close(Context.default()),
       });
     }
 
@@ -167,7 +167,7 @@ export class ClientServicesHost {
         }
       },
       onReset: async () => {
-        await this.reset();
+        await this.reset(Context.default());
       },
     });
 
@@ -207,7 +207,7 @@ export class ClientServicesHost {
   /**
    * Debugging util.
    */
-  async exportSqliteDatabase(): Promise<Uint8Array> {
+  async exportSqliteDatabase(ctx: Context): Promise<Uint8Array> {
     return await RuntimeProvider.runPromise(this._runtime)(
       Effect.gen(function* () {
         const sql = yield* SqlExport.SqlExport;
@@ -219,7 +219,7 @@ export class ClientServicesHost {
   /**
    * Debugging util.
    */
-  async runSqliteQuery(query: string, params?: any[]): Promise<readonly Record<string, unknown>[]> {
+  async runSqliteQuery(ctx: Context, query: string, params?: any[]): Promise<readonly Record<string, unknown>[]> {
     return await RuntimeProvider.runPromise(this._runtime)(
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
@@ -233,7 +233,7 @@ export class ClientServicesHost {
    * Config can also be provided in the constructor.
    * Can only be called once.
    */
-  initialize({ config, ...options }: InitializeOptions): void {
+  initialize(ctx: Context, { config, ...options }: InitializeOptions): void {
     invariant(!this._open, 'service host is open');
     log('initializing...');
 
@@ -346,11 +346,11 @@ export class ClientServicesHost {
       this._serviceContext.recoveryManager,
       this._serviceContext.keyring,
       () => this._serviceContext.dataSpaceManager!,
-      (params) => this._createIdentity(params),
-      (profile) => this._serviceContext.broadcastProfileUpdate(profile),
+      (params) => this._createIdentity(Context.default(), params),
+      (profile) => this._serviceContext.broadcastProfileUpdate(Context.default(), profile),
     );
 
-    this._serviceRegistry.setServices({
+    this._serviceRegistry.setServices(ctx, {
       SystemService: this._systemService,
       IdentityService: identityService,
       ContactsService: new ContactsServiceImpl(
@@ -417,7 +417,7 @@ export class ClientServicesHost {
 
   @synchronized
   @Trace.span()
-  async close(): Promise<void> {
+  async close(ctx: Context): Promise<void> {
     if (!this._open) {
       return;
     }
@@ -426,7 +426,7 @@ export class ClientServicesHost {
     log('closing...', { deviceKey });
     this.diagnosticsBroadcastHandler.stop();
     await this._devtoolsProxy?.close();
-    this._serviceRegistry.setServices({ SystemService: this._systemService });
+    this._serviceRegistry.setServices(ctx, { SystemService: this._systemService });
     await this._loggingService.close();
     await this._serviceContext.close();
     await this._level?.close();
@@ -435,7 +435,7 @@ export class ClientServicesHost {
     log('closed', { deviceKey });
   }
 
-  async reset(): Promise<void> {
+  async reset(ctx: Context): Promise<void> {
     const traceId = PublicKey.random().toHex();
     log.trace('dxos.sdk.client-services-host.reset', trace.begin({ id: traceId }));
 
@@ -457,8 +457,8 @@ export class ClientServicesHost {
     await this._callbacks?.onReset?.();
   }
 
-  private async _createIdentity(params: CreateIdentityOptions) {
-    const identity = await this._serviceContext.createIdentity(params);
+  private async _createIdentity(ctx: Context, params: CreateIdentityOptions) {
+    const identity = await this._serviceContext.createIdentity(ctx, params);
     await this._serviceContext.initialized.wait();
     return identity;
   }

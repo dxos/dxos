@@ -65,7 +65,7 @@ describe('DevicesService', () => {
       expect(await result.wait()).to.be.length(0);
 
       result = new Trigger<Device[] | undefined>();
-      await serviceContext.createIdentity();
+      await serviceContext.createIdentity(Context.default());
       expect(await result.wait()).to.be.length(1);
     });
   });

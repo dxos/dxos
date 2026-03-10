@@ -74,7 +74,7 @@ export class EchoTestBuilder extends Resource {
       host: peer.host,
       graph: db.graph,
       db,
-      queues: peer.client.constructQueueFactory(db.spaceId),
+      queues: peer.client.constructQueueFactory(this._ctx, db.spaceId),
     };
   }
 }
@@ -158,7 +158,7 @@ export class EchoTestPeer extends Resource {
   protected override async _open(ctx: Context): Promise<void> {
     await this._kv.open();
     this._initEcho();
-    this._echoClient.connectToService({
+    this._echoClient.connectToService(ctx, {
       dataService: this._echoHost.dataService,
       queryService: this._echoHost.queryService,
       queueService: this._echoHost.queuesService,
@@ -170,7 +170,7 @@ export class EchoTestPeer extends Resource {
   protected override async _close(ctx: Context): Promise<void> {
     for (const client of this._clients) {
       await client.close(ctx);
-      client.disconnectFromService();
+      client.disconnectFromService(this._ctx);
     }
     await this._echoHost.close(ctx);
     await this._kv.close();
@@ -198,7 +198,7 @@ export class EchoTestPeer extends Resource {
     const client = new EchoClient();
     await client.graph.schemaRegistry.register(this._types);
     this._clients.add(client);
-    client.connectToService({
+    client.connectToService(this._ctx, {
       dataService: this._echoHost.dataService,
       queryService: this._echoHost.queryService,
     });
@@ -214,7 +214,7 @@ export class EchoTestPeer extends Resource {
     // NOTE: Client closes the database when it is closed.
     const root = await this.host.createSpaceRoot(this._ctx, spaceKey);
     const spaceId = await createIdFromSpaceKey(spaceKey);
-    const db = client.constructDatabase({ spaceId, spaceKey, reactiveSchemaQuery, preloadSchemaOnOpen });
+    const db = client.constructDatabase(this._ctx, { spaceId, spaceKey, reactiveSchemaQuery, preloadSchemaOnOpen });
     await db.setSpaceRoot(root.url);
     await db.open();
 
@@ -232,7 +232,7 @@ export class EchoTestPeer extends Resource {
     // NOTE: Client closes the database when it is closed.
     const spaceId = await createIdFromSpaceKey(spaceKey);
     await this.host.openSpaceRoot(this._ctx, spaceId, rootUrl as AutomergeUrl);
-    const db = client.constructDatabase({ spaceId, spaceKey, reactiveSchemaQuery, preloadSchemaOnOpen });
+    const db = client.constructDatabase(this._ctx, { spaceId, spaceKey, reactiveSchemaQuery, preloadSchemaOnOpen });
     await db.setSpaceRoot(rootUrl);
     await db.open();
     return db;

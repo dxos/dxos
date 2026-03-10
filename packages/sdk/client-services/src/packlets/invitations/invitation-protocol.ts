@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type Context } from '@dxos/context';
 import { type PublicKey } from '@dxos/keys';
 import type { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import type { DeviceProfileDocument, ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -25,28 +26,28 @@ export interface InvitationProtocol {
   // Host
   //
 
-  checkCanInviteNewMembers(): Error | undefined;
+  checkCanInviteNewMembers(ctx: Context): Error | undefined;
 
   /**
    * Protocol-specific information to include in the invitation.
    */
-  getInvitationContext(): Partial<Invitation> & Pick<Invitation, 'kind'>;
+  getInvitationContext(ctx: Context): Partial<Invitation> & Pick<Invitation, 'kind'>;
 
   /**
    * Allow authorized peers to handle this invitation behalf of invitation creator.
    * @return id of the delegation credential written to subject control-feed.
    */
-  delegate(invitation: Invitation): Promise<PublicKey>;
+  delegate(ctx: Context, invitation: Invitation): Promise<PublicKey>;
 
   /**
    * Notify other peers that a delegated invitation was cancelled;
    */
-  cancelDelegation(invitation: Invitation): Promise<void>;
+  cancelDelegation(ctx: Context, invitation: Invitation): Promise<void>;
 
   /**
    * Once authentication is successful, the host can admit the guest to the requested resource.
    */
-  admit(invitation: Invitation, request: AdmissionRequest, guestProfile?: ProfileDocument): Promise<AdmissionResponse>;
+  admit(ctx: Context, invitation: Invitation, request: AdmissionRequest, guestProfile?: ProfileDocument): Promise<AdmissionResponse>;
 
   //
   // Guest
@@ -57,20 +58,20 @@ export interface InvitationProtocol {
    *
    * For example, the guest may already be a member of the space.
    */
-  checkInvitation(invitation: Partial<Invitation>): Error | undefined;
+  checkInvitation(ctx: Context, invitation: Partial<Invitation>): Error | undefined;
 
   /**
    * Get profile information to send to the host to identify the guest.
    */
-  createIntroduction(): IntroductionRequest;
+  createIntroduction(ctx: Context): IntroductionRequest;
 
   /**
    * Get key information to send to the host in order to create an admission credential for the guest.
    */
-  createAdmissionRequest(deviceProfile?: DeviceProfileDocument): Promise<AdmissionRequest>;
+  createAdmissionRequest(ctx: Context, deviceProfile?: DeviceProfileDocument): Promise<AdmissionRequest>;
 
   /**
    * Redeem the admission credential.
    */
-  accept(response: AdmissionResponse, request: AdmissionRequest): Promise<Partial<Invitation>>;
+  accept(ctx: Context, response: AdmissionResponse, request: AdmissionRequest): Promise<Partial<Invitation>>;
 }

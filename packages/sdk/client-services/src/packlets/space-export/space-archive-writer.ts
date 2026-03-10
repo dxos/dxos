@@ -4,7 +4,7 @@
 
 import type * as tar from '@obsidize/tar-browserify';
 
-import { type Context, Resource } from '@dxos/context';
+import { Context, Resource } from '@dxos/context';
 import { assertArgument, assertState } from '@dxos/invariant';
 import type { IdentityDid, SpaceId } from '@dxos/keys';
 import { SpaceArchiveFileStructure, type SpaceArchiveMetadata, SpaceArchiveVersion } from '@dxos/protocols';
@@ -33,31 +33,31 @@ export class SpaceArchiveWriter extends Resource {
     this._tar = await import('@obsidize/tar-browserify');
   }
 
-  protected override async _close(): Promise<void> {
+  protected override async _close(ctx: Context): Promise<void> {
     return Promise.resolve();
   }
 
-  async begin(meta: SpaceArchiveBeginProps): Promise<void> {
+  async begin(ctx: Context, meta: SpaceArchiveBeginProps): Promise<void> {
     assertState(this._tar, 'Not open');
     assertState(!this._meta, 'Already started');
     this._meta = meta;
     this._archive = new this._tar.Archive();
   }
 
-  async setCurrentRootUrl(url: string): Promise<void> {
+  async setCurrentRootUrl(ctx: Context, url: string): Promise<void> {
     assertArgument(url.startsWith('automerge:'), 'url', 'Invalid root URL');
     assertState(this._tar, 'Not open');
     assertState(this._meta, 'Not started');
     this._currentRootUrl = url;
   }
 
-  async writeDocument(documentId: string, data: Uint8Array): Promise<void> {
+  async writeDocument(ctx: Context, documentId: string, data: Uint8Array): Promise<void> {
     assertArgument(!documentId.startsWith('automerge:'), 'documentId', 'Invalid document ID');
     assertState(this._archive, 'Not open');
     this._archive.addBinaryFile(`${SpaceArchiveFileStructure.documents}/${documentId}.bin`, data);
   }
 
-  async finish(): Promise<SpaceArchive> {
+  async finish(ctx: Context): Promise<SpaceArchive> {
     assertState(this._archive, 'Not open');
     assertState(this._meta, 'Not started');
     assertState(this._meta.spaceId, 'No space ID set');

@@ -14,6 +14,7 @@ import {
   type QueryDevicesResponse,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { Context } from '@dxos/context';
 
 import { type IdentityManager } from '../identity';
 
@@ -24,7 +25,7 @@ export class DevicesServiceImpl implements DevicesService {
   ) {}
 
   async updateDevice(profile: DeviceProfileDocument): Promise<Device> {
-    return this._identityManager.updateDeviceProfile(profile);
+    return this._identityManager.updateDeviceProfile(Context.default(), profile);
   }
 
   queryDevices(): Stream<QueryDevicesResponse> {

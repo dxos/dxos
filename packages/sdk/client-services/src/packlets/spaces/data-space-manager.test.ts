@@ -71,7 +71,7 @@ describe('DataSpaceManager', () => {
       spaceKey: space1.key,
       genesisFeedKey: space1.inner.genesisFeedKey,
     });
-    await peer2.dataSpaceManager.waitUntilSpaceReady(space2.key);
+    await peer2.dataSpaceManager.waitUntilSpaceReady(Context.default(), space2.key);
 
     log('', {
       peer1: {
@@ -153,15 +153,15 @@ describe('DataSpaceManager', () => {
 
     // Coincidentally, this also waits until a P2P connection is established between peers.
     // TODO(dmaretskyi): Refine this to wait for connection specifically.
-    await peer2.dataSpaceManager.waitUntilSpaceReady(space2.key);
+    await peer2.dataSpaceManager.waitUntilSpaceReady(Context.default(), space2.key);
 
     const [receivedMessage, inc] = latch({ count: 1 });
-    space2.listen('test', (message) => {
+    space2.listen(Context.default(), 'test', (message) => {
       expect(message.channelId).to.equal('test');
       inc();
     });
 
-    await space1.postMessage('test', { '@type': 'google.protobuf.Any', test: true });
+    await space1.postMessage(Context.default(), 'test', { '@type': 'google.protobuf.Any', test: true });
     await receivedMessage();
   });
 
@@ -180,10 +180,10 @@ describe('DataSpaceManager', () => {
       );
       expect(space.state).to.equal(SpaceState.SPACE_READY);
 
-      await space.deactivate();
+      await space.deactivate(Context.default());
       expect(space.state).to.equal(SpaceState.SPACE_INACTIVE);
 
-      await space.activate();
+      await space.activate(Context.default());
       await asyncTimeout(
         space.stateUpdate.waitForCondition(() => space.state === SpaceState.SPACE_READY),
         500,
@@ -202,7 +202,7 @@ describe('DataSpaceManager', () => {
 
       const space = getFirstSpace(peer);
       expect(space.state).to.equal(SpaceState.SPACE_CLOSED);
-      await space.activate();
+      await space.activate(Context.default());
       await asyncTimeout(
         space.stateUpdate.waitForCondition(() => space.state === SpaceState.SPACE_READY),
         500,
@@ -219,7 +219,7 @@ describe('DataSpaceManager', () => {
       await peer.dataSpaceManager.createSpace(Context.default());
       await reloadDataSpaces(peer);
 
-      await getFirstSpace(peer).deactivate();
+      await getFirstSpace(peer).deactivate(Context.default());
 
       await reloadDataSpaces(peer);
 
