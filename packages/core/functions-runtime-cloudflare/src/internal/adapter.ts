@@ -9,11 +9,11 @@ import { SpaceId } from '@dxos/keys';
 import { type EdgeFunctionEnv } from '@dxos/protocols';
 
 export const queryToDataServiceRequest = (query: QueryAST.Query): EdgeFunctionEnv.QueryRequest => {
-  const { filter, options } = isSimpleSelectionQuery(query) ?? failUndefined();
-  invariant(options?.spaceIds?.length === 1, 'Only one space is supported');
+  const { filter, spaceIds } = extractSimpleQuery(query) ?? failUndefined();
+  invariant(spaceIds?.length === 1, 'Only one space is supported');
   invariant(filter.type === 'object', 'Only object filters are supported');
 
-  const spaceId = options.spaceIds[0];
+  const spaceId = spaceIds[0];
   invariant(SpaceId.isValid(spaceId));
 
   return {
@@ -24,22 +24,26 @@ export const queryToDataServiceRequest = (query: QueryAST.Query): EdgeFunctionEn
 };
 
 /**
- * Extracts the filter and options from a query.
- * Supports Select(...) and Options(Select(...)) queries.
+ * Extracts the filter and space IDs from a query.
+ * Supports Select(...), Options(Select(...)), and From(Select(...)) queries.
  */
-export const isSimpleSelectionQuery = (
+const extractSimpleQuery = (
   query: QueryAST.Query,
-): { filter: QueryAST.Filter; options?: QueryAST.QueryOptions } | null => {
+): { filter: QueryAST.Filter; spaceIds?: readonly string[] } | null => {
   switch (query.type) {
     case 'options': {
-      const maybeFilter = isSimpleSelectionQuery(query.query);
-      if (!maybeFilter) {
+      return extractSimpleQuery(query.query);
+    }
+    case 'from': {
+      const inner = extractSimpleQuery(query.query);
+      if (!inner) {
         return null;
       }
-      return { filter: maybeFilter.filter, options: query.options };
+      const spaceIds = query.from._tag === 'scope' ? query.from.scope.spaceIds : undefined;
+      return { filter: inner.filter, spaceIds: spaceIds ?? inner.spaceIds };
     }
     case 'select': {
-      return { filter: query.filter, options: undefined };
+      return { filter: query.filter };
     }
     default: {
       return null;

@@ -41,6 +41,46 @@ export type OfShape<Props> = BaseObj & Props;
 export interface Unknown extends BaseObj {}
 
 /**
+ * Runtime Effect schema for any ECHO object.
+ * Use for validation, parsing, or as a reference target for collections.
+ *
+ * NOTE: `Schema.is(Type.Obj)` does STRUCTURAL validation only (checks for `id` field).
+ * Use `Obj.isObject()` for proper ECHO instance type guards that check the KindId brand.
+ *
+ * @example
+ * ```ts
+ * // Structural type guard (accepts any object with id field)
+ * if (Schema.is(Type.Obj)(unknownValue)) { ... }
+ *
+ * // ECHO instance type guard (checks KindId brand)
+ * if (Obj.isObject(unknownValue)) { ... }
+ *
+ * // Reference to any object type
+ * const Collection = Schema.Struct({
+ *   objects: Schema.Array(Ref.Ref(Obj.Unknown)),
+ * }).pipe(Type.object({ typename: 'Collection', version: '0.1.0' }));
+ * ```
+ */
+// TODO(wittjosiah): Investigate if Schema.filter can validate KindId on ECHO instances.
+//   Effect Schema normalizes proxy objects to plain objects before calling filter predicates.
+//   Possible approaches: custom Schema.declare, AST manipulation, or upstream contribution.
+export const Unknown: Type.Obj<Unknown> = Schema.Struct({
+  id: Schema.String,
+}).pipe(
+  Schema.extend(Schema.Record({ key: Schema.String, value: Schema.Unknown })),
+  // TODO(dmaretskyi): Clean this up.
+  // NOTE: The EchoObjectSchema annotation is required for Ref.Ref(Obj.Unknown) to work.
+  //   The typename/version only satisfy ECHO schema machinery for reference targets.
+  internal.EchoObjectSchema({ typename: internal.ANY_OBJECT_TYPENAME, version: internal.ANY_OBJECT_VERSION }),
+  (schema) =>
+    Object.assign(schema, {
+      [internal.SchemaKindId]: (schema as any)[internal.SchemaKindId],
+    }) as unknown as Type.Obj<Unknown>,
+);
+
+/**
+
+/**
  * Object with arbitrary properties.
  *
  * NOTE: Due to how TypeScript works, this type is not assignable to a specific schema type.

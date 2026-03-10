@@ -4,6 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import * as Obj from '../Obj';
 import * as Ref from '../Ref';
 import * as Type from '../Type';
 
@@ -216,7 +217,7 @@ export namespace TestSchema {
   }
 
   export const Container = Schema.Struct({
-    objects: Schema.Array(Ref.Ref(Type.Obj)),
+    objects: Schema.Array(Ref.Ref(Obj.Unknown)),
     records: Schema.Array(
       Schema.partial(
         Schema.Struct({

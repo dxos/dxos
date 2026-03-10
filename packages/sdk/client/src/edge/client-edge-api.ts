@@ -139,9 +139,9 @@ const getTargetSpacesForQuery = (query: QueryAST.Query): string[] => {
   const spaces = new Set<string>();
 
   const visitor = (node: QueryAST.Query) => {
-    if (node.type === 'options') {
-      if (node.options.spaceIds) {
-        for (const spaceId of node.options.spaceIds) {
+    if (node.type === 'from' && node.from._tag === 'scope') {
+      if (node.from.scope.spaceIds) {
+        for (const spaceId of node.from.scope.spaceIds) {
           spaces.add(spaceId);
         }
       }

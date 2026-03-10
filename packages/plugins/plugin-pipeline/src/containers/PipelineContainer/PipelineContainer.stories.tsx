@@ -117,7 +117,7 @@ const meta = {
 
               const messageQueueDxn = Feed.getQueueDxn(messageFeed)!.toString();
               const messageView = ViewModel.make({
-                query: Query.select(Filter.type(Message.Message)).options({
+                query: Query.select(Filter.type(Message.Message)).from({
                   queues: [messageQueueDxn],
                 }),
                 jsonSchema: JsonSchema.toJsonSchema(Message.Message),

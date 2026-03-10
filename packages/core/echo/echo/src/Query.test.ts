@@ -494,7 +494,10 @@ describe('query api', () => {
       Schema.validateSync(QueryAST.Query)(query.ast);
       expect(query.ast).toMatchInlineSnapshot(`
         {
-          "options": {},
+          "from": {
+            "_tag": "scope",
+            "scope": {},
+          },
           "query": {
             "filter": {
               "id": undefined,
@@ -504,7 +507,7 @@ describe('query api', () => {
             },
             "type": "select",
           },
-          "type": "options",
+          "type": "from",
         }
       `);
     });
@@ -517,8 +520,11 @@ describe('query api', () => {
       Schema.validateSync(QueryAST.Query)(query.ast);
       expect(query.ast).toMatchInlineSnapshot(`
         {
-          "options": {
-            "allQueuesFromSpaces": true,
+          "from": {
+            "_tag": "scope",
+            "scope": {
+              "allQueuesFromSpaces": true,
+            },
           },
           "query": {
             "filter": {
@@ -529,7 +535,7 @@ describe('query api', () => {
             },
             "type": "select",
           },
-          "type": "options",
+          "type": "from",
         }
       `);
     });
@@ -542,8 +548,8 @@ describe('query api', () => {
 
       Schema.validateSync(QueryAST.Query)(query.ast);
       expect(query.ast).toMatchObject({
-        type: 'options',
-        options: {},
+        type: 'from',
+        from: { _tag: 'scope', scope: {} },
         query: {
           type: 'limit',
           limit: 10,
@@ -554,7 +560,7 @@ describe('query api', () => {
       });
     });
 
-    test('Query.type(...).from(feed) sets queue options', () => {
+    test('Query.type(...).from(feed) sets queue scope', () => {
       const feed = Feed.make({ name: 'test-feed' });
       const queueDxn = DXN.parse('dxn:echo:test-space:test-queue');
       Obj.change(feed, (mutable) => {
@@ -564,9 +570,12 @@ describe('query api', () => {
       const query = Query.type(TestSchema.Person).from(feed);
       Schema.validateSync(QueryAST.Query)(query.ast);
       expect(query.ast).toMatchObject({
-        type: 'options',
-        options: {
-          queues: [queueDxn.toString()],
+        type: 'from',
+        from: {
+          _tag: 'scope',
+          scope: {
+            queues: [queueDxn.toString()],
+          },
         },
         query: {
           type: 'select',

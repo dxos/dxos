@@ -10,7 +10,7 @@ import { type PublicKey } from '@dxos/client';
 // TODO(wittjosiah): This pulls in full client.
 import { SpaceSchema } from '@dxos/client/echo';
 import { CancellableInvitationObservable, Invitation } from '@dxos/client/invitations';
-import { Database, type Obj, QueryAST, Type } from '@dxos/echo';
+import { Database, Obj, QueryAST, Type } from '@dxos/echo';
 import { Collection, View } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { type ComplexMap } from '@dxos/util';
@@ -320,7 +320,7 @@ export namespace SpaceOperation {
     services: [Capability.Service],
     schema: {
       input: Schema.Struct({
-        object: Type.Obj.annotations({ description: 'The object to add.' }),
+        object: Obj.Unknown.annotations({ description: 'The object to add.' }),
         target: Schema.Union(Database.Database, Collection.Collection).annotations({
           description: 'The database or collection to add to.',
         }),
@@ -329,16 +329,16 @@ export namespace SpaceOperation {
       output: Schema.Struct({
         id: Schema.String,
         subject: Schema.Array(Schema.String),
-        object: Type.Obj,
+        object: Obj.Unknown,
       }),
     },
   });
 
   export const RemoveObjectsOutput = Schema.Struct({
-    objects: Schema.Array(Type.Obj).annotations({ description: 'The removed objects.' }),
+    objects: Schema.Array(Obj.Unknown).annotations({ description: 'The removed objects.' }),
     parentCollection: Collection.Collection.annotations({ description: 'The collection removed from.' }),
     indices: Schema.Array(Schema.Number).annotations({ description: 'The indices the objects were at.' }),
-    nestedObjectsList: Schema.Array(Schema.Array(Type.Obj)).annotations({
+    nestedObjectsList: Schema.Array(Schema.Array(Obj.Unknown)).annotations({
       description: 'Nested objects that were removed.',
     }),
     wasActive: Schema.Array(Schema.String).annotations({
@@ -357,7 +357,7 @@ export namespace SpaceOperation {
     services: [Capability.Service],
     schema: {
       input: Schema.Struct({
-        objects: Schema.Array(Type.Obj).annotations({ description: 'The objects to remove.' }),
+        objects: Schema.Array(Obj.Unknown).annotations({ description: 'The objects to remove.' }),
         target: Schema.optional(Collection.Collection).annotations({ description: 'The collection to remove from.' }),
       }),
       output: RemoveObjectsOutput,
@@ -484,7 +484,7 @@ export namespace SpaceOperation {
     services: [Capability.Service],
     schema: {
       input: Schema.Struct({
-        object: Type.Obj,
+        object: Obj.Unknown,
         caller: Schema.optional(Schema.String),
       }),
       output: Schema.Void,
@@ -590,8 +590,8 @@ export namespace SpaceOperation {
         db: Database.Database,
         // TODO(wittjosiah): Relation schema.
         schema: Schema.Any,
-        source: Type.Obj,
-        target: Type.Obj,
+        source: Obj.Unknown,
+        target: Obj.Unknown,
         // TODO(wittjosiah): Type based on relation schema.
         fields: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
       }),
@@ -611,7 +611,7 @@ export namespace SpaceOperation {
     services: [Capability.Service],
     schema: {
       input: Schema.Struct({
-        object: Type.Obj,
+        object: Obj.Unknown,
         target: Schema.Union(Database.Database, Collection.Collection),
       }),
       output: Schema.Void,
@@ -652,10 +652,10 @@ export namespace SpaceOperation {
     services: [Capability.Service],
     schema: {
       input: Schema.Struct({
-        objects: Schema.Array(Type.Obj).annotations({ description: 'The objects to restore.' }),
+        objects: Schema.Array(Obj.Unknown).annotations({ description: 'The objects to restore.' }),
         parentCollection: Collection.Collection.annotations({ description: 'The collection to restore to.' }),
         indices: Schema.Array(Schema.Number).annotations({ description: 'The indices to restore at.' }),
-        nestedObjectsList: Schema.Array(Schema.Array(Type.Obj)).annotations({
+        nestedObjectsList: Schema.Array(Schema.Array(Obj.Unknown)).annotations({
           description: 'Nested objects to restore.',
         }),
         wasActive: Schema.Array(Schema.String).annotations({

@@ -44,10 +44,13 @@ export const normalizeQuery = (
   }
 
   if (userOptions) {
-    query = query.options({
-      spaceIds: userOptions.spaceIds ?? (opts?.defaultSpaceId ? [opts.defaultSpaceId] : undefined),
-      deleted: userOptions.deleted,
-    });
+    const spaceIds = userOptions.spaceIds ?? (opts?.defaultSpaceId ? [opts.defaultSpaceId] : undefined);
+    if (spaceIds) {
+      query = query.from({ spaceIds });
+    }
+    if (userOptions.deleted) {
+      query = query.options({ deleted: userOptions.deleted });
+    }
   }
 
   return query;

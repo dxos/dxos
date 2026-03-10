@@ -16,7 +16,7 @@ import { IndexQuerySource } from './index-query-source-provider';
 const mockGraph = {} as Hypergraph.Hypergraph;
 
 const makeQuery = (): QueryAST.Query => ({
-  type: 'options',
+  type: 'from',
   query: {
     type: 'select',
     filter: {
@@ -25,8 +25,11 @@ const makeQuery = (): QueryAST.Query => ({
       props: {},
     },
   },
-  options: {
-    spaceIds: [SpaceId.random()],
+  from: {
+    _tag: 'scope',
+    scope: {
+      spaceIds: [SpaceId.random()],
+    },
   },
 });
 
