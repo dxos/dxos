@@ -7,7 +7,7 @@ import { type DocumentId } from '@automerge/automerge-repo';
 import { UpdateScheduler } from '@dxos/async';
 import { type RequestOptions } from '@dxos/codec-protobuf';
 import { Stream } from '@dxos/codec-protobuf/stream';
-import { type Context } from '@dxos/context';
+import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -59,7 +59,7 @@ export class DataServiceImpl {
     this._updateIndexes = params.updateIndexes;
   }
 
-  subscribe(ctx: Context, request: SubscribeRequest): Stream<BatchedDocumentUpdates> {
+  subscribe(request: SubscribeRequest): Stream<BatchedDocumentUpdates> {
     return new Stream<BatchedDocumentUpdates>(({ next, ready }) => {
       const synchronizer = new DocumentsSynchronizer({
         automergeHost: this._automergeHost,
@@ -76,7 +76,8 @@ export class DataServiceImpl {
     });
   }
 
-  async updateSubscription(ctx: Context, request: UpdateSubscriptionRequest): Promise<void> {
+  async updateSubscription(request: UpdateSubscriptionRequest): Promise<void> {
+    const ctx = Context.default();
     const synchronizer = this._subscriptions.get(request.subscriptionId);
     invariant(synchronizer, 'Subscription not found');
 
@@ -88,12 +89,14 @@ export class DataServiceImpl {
     }
   }
 
-  async createDocument(ctx: Context, request: CreateDocumentRequest): Promise<CreateDocumentResponse> {
+  async createDocument(request: CreateDocumentRequest): Promise<CreateDocumentResponse> {
+    const ctx = Context.default();
     const handle = await this._automergeHost.createDoc(ctx, request.initialValue);
     return { documentId: handle.documentId };
   }
 
-  async update(ctx: Context, request: UpdateRequest): Promise<void> {
+  async update(request: UpdateRequest): Promise<void> {
+    const ctx = Context.default();
     if (!request.updates) {
       return;
     }
@@ -103,11 +106,13 @@ export class DataServiceImpl {
     await synchronizer.update(ctx, request.updates);
   }
 
-  async flush(ctx: Context, request: FlushRequest): Promise<void> {
+  async flush(request: FlushRequest): Promise<void> {
+    const ctx = Context.default();
     await this._automergeHost.flush(ctx, request);
   }
 
-  async getDocumentHeads(ctx: Context, request: GetDocumentHeadsRequest): Promise<GetDocumentHeadsResponse> {
+  async getDocumentHeads(request: GetDocumentHeadsRequest): Promise<GetDocumentHeadsResponse> {
+    const ctx = Context.default();
     const documentIds = request.documentIds;
     if (!documentIds) {
       return { heads: { entries: [] } };
@@ -121,22 +126,23 @@ export class DataServiceImpl {
   }
 
   async waitUntilHeadsReplicated(
-    ctx: Context,
     request: WaitUntilHeadsReplicatedRequest,
     options?: RequestOptions | undefined,
   ): Promise<void> {
+    const ctx = Context.default();
     await this._automergeHost.waitUntilHeadsReplicated(ctx, request.heads);
   }
 
-  async reIndexHeads(ctx: Context, request: ReIndexHeadsRequest, options?: RequestOptions): Promise<void> {
+  async reIndexHeads(request: ReIndexHeadsRequest, options?: RequestOptions): Promise<void> {
+    const ctx = Context.default();
     await this._automergeHost.reIndexHeads(ctx, (request.documentIds ?? []) as DocumentId[]);
   }
 
-  async updateIndexes(ctx: Context): Promise<void> {
+  async updateIndexes(): Promise<void> {
     await this._updateIndexes();
   }
 
-  subscribeSpaceSyncState(ctx: Context, request: GetSpaceSyncStateRequest): Stream<SpaceSyncState> {
+  subscribeSpaceSyncState(request: GetSpaceSyncStateRequest): Stream<SpaceSyncState> {
     return new Stream<SpaceSyncState>(({ ctx: streamCtx, next, ready }) => {
       const spaceId = request.spaceId;
       invariant(SpaceId.isValid(spaceId));

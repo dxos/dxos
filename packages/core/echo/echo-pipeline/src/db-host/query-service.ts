@@ -87,19 +87,19 @@ export class QueryServiceImpl extends Resource {
   /**
    * @deprecated No longer needed with SQL-based indexing.
    */
-  async setConfig(ctx: Context): Promise<void> {
+  async setConfig(): Promise<void> {
     // No-op: SQL indexer doesn't need explicit configuration.
   }
 
   /**
    * @deprecated No longer needed with SQL-based indexing.
    */
-  async reindex(ctx: Context): Promise<void> {
+  async reindex(): Promise<void> {
     // No-op: SQL indexer handles re-indexing automatically.
     log.warn('reindex() is deprecated and no longer has any effect');
   }
 
-  execQuery(ctx: Context, request: QueryRequest): Stream<QueryResponse> {
+  execQuery(request: QueryRequest): Stream<QueryResponse> {
     return new Stream<QueryResponse>(({ next, close, ctx: streamCtx }) => {
       const queryEntry = this._createQuery(streamCtx, request, next, close, close);
       scheduleMicroTask(streamCtx, async () => {
@@ -114,7 +114,7 @@ export class QueryServiceImpl extends Resource {
   /**
    * Schedule re-execution of all queries.
    */
-  invalidateQueries(ctx: Context) {
+  invalidateQueries() {
     for (const query of this._queries) {
       query.dirty = true;
     }

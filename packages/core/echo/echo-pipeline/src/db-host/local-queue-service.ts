@@ -6,7 +6,6 @@ import type * as SqlClient from '@effect/sql/SqlClient';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 
-import { type Context } from '@dxos/context';
 import { type ObjectJSON } from '@dxos/echo/internal';
 import { EchoFeedCodec } from '@dxos/echo-protocol';
 import { RuntimeProvider } from '@dxos/effect';
@@ -41,7 +40,7 @@ export class LocalQueueServiceImpl {
     this.#syncQueue = syncQueue;
   }
 
-  queryQueue(_ctx: Context, request: QueryQueueRequest): Promise<QueueQueryResult> {
+  queryQueue(request: QueryQueueRequest): Promise<QueueQueryResult> {
     const { query } = request;
     invariant(query, 'query is required');
     const { spaceId, queueIds } = query;
@@ -75,7 +74,7 @@ export class LocalQueueServiceImpl {
     );
   }
 
-  insertIntoQueue(_ctx: Context, request: InsertIntoQueueRequest): Promise<void> {
+  insertIntoQueue(request: InsertIntoQueueRequest): Promise<void> {
     const { subspaceTag, spaceId, queueId, objects } = request;
     const feedNamespace = subspaceTag ?? FeedProtocol.WellKnownNamespaces.data;
     assertArgument(
@@ -97,7 +96,7 @@ export class LocalQueueServiceImpl {
     );
   }
 
-  deleteFromQueue(_ctx: Context, request: DeleteFromQueueRequest): Promise<void> {
+  deleteFromQueue(request: DeleteFromQueueRequest): Promise<void> {
     const { subspaceTag, spaceId, queueId, objectIds } = request;
     const feedNamespace = subspaceTag ?? FeedProtocol.WellKnownNamespaces.data;
     assertArgument(
@@ -119,7 +118,7 @@ export class LocalQueueServiceImpl {
     );
   }
 
-  async syncQueue(_ctx: Context, request: SyncQueueRequest): Promise<void> {
+  async syncQueue(request: SyncQueueRequest): Promise<void> {
     await this.#syncQueue?.(request);
   }
 }

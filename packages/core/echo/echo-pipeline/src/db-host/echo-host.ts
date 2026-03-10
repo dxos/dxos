@@ -215,7 +215,7 @@ export class EchoHost extends Resource {
 
     await RuntimeProvider.runPromise(this._runtime)(this._feedStore.migrate());
     this._feedStore.onNewBlocks.on(this._ctx, () => {
-      this._queryService.invalidateQueries(this._ctx);
+      this._queryService.invalidateQueries();
       this._updateIndexes.schedule();
     });
 
@@ -233,7 +233,7 @@ export class EchoHost extends Resource {
       );
     });
     this._automergeHost.documentsSaved.on(this._ctx, () => {
-      this._queryService.invalidateQueries(this._ctx);
+      this._queryService.invalidateQueries();
       this._updateIndexes.schedule();
     });
     this._updateIndexes.schedule();
@@ -399,7 +399,7 @@ export class EchoHost extends Resource {
 
     // Invalidate queries after index update completes so queries can see newly indexed data.
     if (totalUpdated > 0) {
-      this._queryService.invalidateQueries(this._ctx);
+      this._queryService.invalidateQueries();
     }
   };
 }
