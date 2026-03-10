@@ -6,6 +6,8 @@ import { type HTMLAttributes } from 'react';
 
 import { type ClassNameValue } from './theme';
 
+// TODO(burdon): Define base type for component with `testId`, etc.
+
 /**
  * Props for components that render a default DOM element but support `asChild` to delegate rendering to a child via Radix Slot.
  * Extends `ComposableProps` with standard HTML attributes.
