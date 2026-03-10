@@ -186,6 +186,22 @@ export interface Query<T> {
   from(dataset: Dataset.Dataset): Query<T>;
 
   /**
+   * Query from the results of another query.
+   *
+   * Example:
+   *
+   * ```ts
+   * Query.select(Filter.props({ foo: 'foo' })).from(Query.select(Filter.type(Contact)).reference('org'));
+   * ```
+   */
+  from(query: Any): Query<T>;
+
+  /**
+   * Query from a raw scope specification.
+   */
+  from(scope: QueryAST.Scope): Query<T>;
+
+  /**
    * Add options to a query.
    */
   options(options: QueryAST.QueryOptions): Query<T>;
@@ -310,16 +326,37 @@ class QueryClass implements Any {
       | Feed.Feed[]
       | Collection.Collection
       | View.View
+      | Any
+      | QueryAST.Scope
       | 'all-accessible-spaces',
     options?: { includeFeeds?: boolean },
   ): Any {
+    if (is(arg)) {
+      return new QueryClass({
+        type: 'from',
+        query: this.ast,
+        from: { _tag: 'query', query: arg.ast },
+      });
+    }
+
     if (arg === 'all-accessible-spaces') {
       return new QueryClass({
-        type: 'options',
+        type: 'from',
         query: this.ast,
-        options: {
-          ...(options?.includeFeeds ? { allQueuesFromSpaces: true } : {}),
+        from: {
+          _tag: 'scope',
+          scope: {
+            ...(options?.includeFeeds ? { allQueuesFromSpaces: true } : {}),
+          },
         },
+      });
+    }
+
+    if (_isScope(arg)) {
+      return new QueryClass({
+        type: 'from',
+        query: this.ast,
+        from: { _tag: 'scope', scope: arg },
       });
     }
 
@@ -328,11 +365,14 @@ class QueryClass implements Any {
     if (items.length > 0 && Database.isDatabase(items[0])) {
       const databases = items as Database.Database[];
       return new QueryClass({
-        type: 'options',
+        type: 'from',
         query: this.ast,
-        options: {
-          spaceIds: databases.map((db) => db.spaceId),
-          ...(options?.includeFeeds ? { allQueuesFromSpaces: true } : {}),
+        from: {
+          _tag: 'scope',
+          scope: {
+            spaceIds: databases.map((db) => db.spaceId),
+            ...(options?.includeFeeds ? { allQueuesFromSpaces: true } : {}),
+          },
         },
       });
     }
@@ -355,10 +395,13 @@ class QueryClass implements Any {
       return dxn ? [dxn.toString()] : [];
     });
     return new QueryClass({
-      type: 'options',
+      type: 'from',
       query: this.ast,
-      options: {
-        queues: queueDxns,
+      from: {
+        _tag: 'scope',
+        scope: {
+          queues: queueDxns,
+        },
       },
     });
   }
@@ -438,4 +481,40 @@ export const without = <T>(source: Query<T>, exclude: Query<T>): Query<T> => {
     source: source.ast,
     exclude: exclude.ast,
   });
+};
+
+/**
+ * Create a query scoped to a data source.
+ * The returned query selects everything from the source; chain `.select()` to narrow results.
+ *
+ * @param source - Data source: database, feed, 'all-accessible-spaces', or another query.
+ * @returns Query scoped to the given source.
+ */
+export const from = (
+  source:
+    | Database.Database
+    | Database.Database[]
+    | Feed.Feed
+    | Feed.Feed[]
+    | Any
+    | QueryAST.Scope
+    | 'all-accessible-spaces',
+  options?: { includeFeeds?: boolean },
+): Any => {
+  const baseQuery: QueryAST.Query = {
+    type: 'select',
+    filter: Filter.everything().ast,
+  };
+  const wrapper = new QueryClass(baseQuery);
+  return wrapper.from(source as any, options);
+};
+
+const SCOPE_KEYS = new Set(['spaceIds', 'queues', 'allQueuesFromSpaces']);
+
+/** Detect a raw Scope object (plain object with only Scope-valid keys). */
+const _isScope = (value: unknown): value is QueryAST.Scope => {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return false;
+  }
+  return Object.keys(value).every((key) => SCOPE_KEYS.has(key));
 };

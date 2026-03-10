@@ -395,6 +395,10 @@ export class QueryExecutor extends Resource {
   private async _execSelectStep(step: QueryPlan.SelectStep, workingSet: QueryItem[]): Promise<StepExecutionResult> {
     workingSet = [...workingSet];
 
+    const spaces = (step.scope.spaceIds ?? []) as SpaceId[];
+    const queues = (step.scope.queues ?? []) as DXN.String[];
+    const allQueuesFromSpaces = step.scope.allQueuesFromSpaces ?? false;
+
     const trace: ExecutionTrace = {
       ...ExecutionTrace.makeEmpty(),
       name: 'Select',
@@ -405,8 +409,8 @@ export class QueryExecutor extends Resource {
     switch (step.selector._tag) {
       case 'WildcardSelector': {
         const beginIndexQuery = performance.now();
-        const queueIds = extractQueueIds(step.queues);
-        const metas = await this._queryAllFromSqlIndex(step.spaces, step.allQueuesFromSpaces, queueIds);
+        const queueIds = extractQueueIds(queues);
+        const metas = await this._queryAllFromSqlIndex(spaces, allQueuesFromSpaces, queueIds);
         trace.indexHits = metas.length;
         trace.indexQueryTime += performance.now() - beginIndexQuery;
 
@@ -430,11 +434,11 @@ export class QueryExecutor extends Resource {
 
         const items = await Promise.all(
           step.selector.objectIds.map((id) => {
-            if (step.queues.length > 0) {
-              const { spaceId } = DXN.parse(step.queues[0]).asQueueDXN()!;
-              return this._loadFromDXN(DXN.parse(step.queues[0]).extend([id]), { sourceSpaceId: spaceId });
-            } else if (step.spaces.length > 0) {
-              return this._loadFromDXN(DXN.fromLocalObjectId(id), { sourceSpaceId: step.spaces[0] });
+            if (queues.length > 0) {
+              const { spaceId } = DXN.parse(queues[0]).asQueueDXN()!;
+              return this._loadFromDXN(DXN.parse(queues[0]).extend([id]), { sourceSpaceId: spaceId });
+            } else if (spaces.length > 0) {
+              return this._loadFromDXN(DXN.fromLocalObjectId(id), { sourceSpaceId: spaces[0] });
             } else {
               return null; // Unknown scope.
             }
@@ -449,12 +453,12 @@ export class QueryExecutor extends Resource {
 
       case 'TypeSelector': {
         const beginIndexQuery = performance.now();
-        const queueIds = extractQueueIds(step.queues);
+        const queueIds = extractQueueIds(queues);
         const metas = await this._queryTypesFromSqlIndex(
-          step.spaces,
+          spaces,
           step.selector.typename,
           step.selector.inverted,
-          step.allQueuesFromSpaces,
+          allQueuesFromSpaces,
           queueIds,
         );
         trace.indexHits = metas.length;
@@ -486,13 +490,13 @@ export class QueryExecutor extends Resource {
 
         // Full-text search using SQLite FTS5.
         const beginIndexQuery = performance.now();
-        invariant(step.spaces.length <= 1, 'Multiple spaces are not supported for full-text search');
-        const queueIds = extractQueueIds(step.queues);
+        invariant(spaces.length <= 1, 'Multiple spaces are not supported for full-text search');
+        const queueIds = extractQueueIds(queues);
         const textResults = await this._runInRuntime(
           this._indexEngine.queryText({
             query: step.selector.text,
-            spaceId: step.spaces,
-            includeAllQueues: step.allQueuesFromSpaces,
+            spaceId: spaces,
+            includeAllQueues: allQueuesFromSpaces,
             queueIds,
           }),
         );
@@ -559,11 +563,11 @@ export class QueryExecutor extends Resource {
 
         workingSet.push(
           ...items.filter((item) => {
-            if (step.spaces.includes(item.spaceId)) {
+            if (spaces.includes(item.spaceId)) {
               return true;
             }
             if (item.queueId) {
-              return step.queues.some((dxn) => {
+              return queues.some((dxn) => {
                 const { queueId, spaceId } = DXN.parse(dxn).asQueueDXN()!;
                 return queueId === item.queueId && spaceId === item.spaceId;
               });
@@ -1428,19 +1432,27 @@ const prettyQuery = (query: QueryAST.Query): string => {
     case 'options': {
       const opts = query.options;
       const parts: string[] = [];
-      if (opts.spaceIds !== undefined) {
-        parts.push(`spaceIds: [${opts.spaceIds.map((s) => JSON.stringify(s)).join(', ')}]`);
-      }
-      if (opts.queues !== undefined) {
-        parts.push(`queues: [${opts.queues.map(String).join(', ')}]`);
-      }
       if (opts.deleted !== undefined) {
         parts.push(`deleted: ${JSON.stringify(opts.deleted)}`);
       }
-      if (opts.allQueuesFromSpaces !== undefined) {
-        parts.push(`allQueuesFromSpaces: ${opts.allQueuesFromSpaces}`);
-      }
       return `${prettyQuery(query.query)}.options({ ${parts.join(', ')} })`;
+    }
+    case 'from': {
+      if (query.from._tag === 'scope') {
+        const scope = query.from.scope;
+        const parts: string[] = [];
+        if (scope.spaceIds !== undefined) {
+          parts.push(`spaceIds: [${scope.spaceIds.map((s) => JSON.stringify(s)).join(', ')}]`);
+        }
+        if (scope.queues !== undefined) {
+          parts.push(`queues: [${scope.queues.map(String).join(', ')}]`);
+        }
+        if (scope.allQueuesFromSpaces !== undefined) {
+          parts.push(`allQueuesFromSpaces: ${scope.allQueuesFromSpaces}`);
+        }
+        return `${prettyQuery(query.query)}.from({ ${parts.join(', ')} })`;
+      }
+      return `${prettyQuery(query.query)}.from(${prettyQuery(query.from.query)})`;
     }
     case 'limit':
       return `${prettyQuery(query.query)}.limit(${query.limit})`;
