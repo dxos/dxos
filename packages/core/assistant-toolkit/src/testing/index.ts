@@ -3,3 +3,4 @@
 //
 
 export * from '../blueprints/testing';
+export * from './plugins';
