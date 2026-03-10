@@ -12,7 +12,7 @@ import {
 } from '@automerge/automerge-repo';
 
 import { Event, Trigger, synchronized } from '@dxos/async';
-import { LifecycleState } from '@dxos/context';
+import { Context, LifecycleState } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -93,7 +93,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
   }
 
   override send(message: Message): void {
-    this._send(message);
+    this._send(Context.default(), message);
   }
 
   override disconnect(): void {
@@ -101,7 +101,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
   }
 
   @synchronized
-  async open(): Promise<void> {
+  async open(ctx: Context): Promise<void> {
     if (this._lifecycleState === LifecycleState.OPEN) {
       return;
     }
@@ -110,13 +110,13 @@ export class EchoNetworkAdapter extends NetworkAdapter {
   }
 
   @synchronized
-  async close(): Promise<this | undefined> {
+  async close(ctx: Context): Promise<this | undefined> {
     if (this._lifecycleState === LifecycleState.CLOSED) {
       return this;
     }
 
     for (const replicator of this._replicators) {
-      await replicator.disconnect();
+      await replicator.disconnect(ctx);
     }
     this._replicators.clear();
 
@@ -124,29 +124,29 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     this._lifecycleState = LifecycleState.CLOSED;
   }
 
-  async whenConnected(): Promise<void> {
+  async whenConnected(ctx: Context): Promise<void> {
     await this._connected.wait({ timeout: 10_000 });
   }
 
-  public onConnectionAuthScopeChanged(peer: PeerId): void {
+  public onConnectionAuthScopeChanged(ctx: Context, peer: PeerId): void {
     const entry = this._connections.get(peer);
     if (entry) {
-      this._onConnectionAuthScopeChanged(entry.connection);
+      this._onConnectionAuthScopeChanged(ctx, entry.connection);
     }
   }
 
   @synchronized
-  async addReplicator(replicator: AutomergeReplicator): Promise<void> {
+  async addReplicator(ctx: Context, replicator: AutomergeReplicator): Promise<void> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
     invariant(this.peerId);
     invariant(!this._replicators.has(replicator));
 
     this._replicators.add(replicator);
-    await replicator.connect({
+    await replicator.connect(ctx, {
       peerId: this.peerId,
-      onConnectionOpen: this._onConnectionOpen.bind(this),
-      onConnectionClosed: this._onConnectionClosed.bind(this),
-      onConnectionAuthScopeChanged: this._onConnectionAuthScopeChanged.bind(this),
+      onConnectionOpen: (connection) => this._onConnectionOpen(ctx, connection),
+      onConnectionClosed: (connection) => this._onConnectionClosed(ctx, connection),
+      onConnectionAuthScopeChanged: (connection) => this._onConnectionAuthScopeChanged(ctx, connection),
       isDocumentInRemoteCollection: this._params.isDocumentInRemoteCollection,
       getContainingSpaceForDocument: this._params.getContainingSpaceForDocument,
       getContainingSpaceIdForDocument: async (documentId) => {
@@ -157,42 +157,42 @@ export class EchoNetworkAdapter extends NetworkAdapter {
   }
 
   @synchronized
-  async removeReplicator(replicator: AutomergeReplicator): Promise<void> {
+  async removeReplicator(ctx: Context, replicator: AutomergeReplicator): Promise<void> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
     invariant(this._replicators.has(replicator));
-    await replicator.disconnect();
+    await replicator.disconnect(ctx);
     this._replicators.delete(replicator);
   }
 
-  async shouldAdvertise(peerId: PeerId, params: ShouldAdvertiseProps): Promise<boolean> {
+  async shouldAdvertise(ctx: Context, peerId: PeerId, params: ShouldAdvertiseProps): Promise<boolean> {
     const connection = this._connections.get(peerId);
     if (!connection) {
       return false;
     }
 
-    return connection.connection.shouldAdvertise(params);
+    return connection.connection.shouldAdvertise(ctx, params);
   }
 
-  shouldSyncCollection(peerId: PeerId, params: ShouldSyncCollectionProps): boolean {
+  shouldSyncCollection(ctx: Context, peerId: PeerId, params: ShouldSyncCollectionProps): boolean {
     const connection = this._connections.get(peerId);
     if (!connection) {
       return false;
     }
 
-    return connection.connection.shouldSyncCollection(params);
+    return connection.connection.shouldSyncCollection(ctx, params);
   }
 
-  queryCollectionState(collectionId: string, targetId: PeerId): void {
+  queryCollectionState(ctx: Context, collectionId: string, targetId: PeerId): void {
     const message: CollectionQueryMessage = {
       type: 'collection-query',
       senderId: this.peerId as PeerId,
       targetId,
       collectionId,
     };
-    this._send(message);
+    this._send(ctx, message);
   }
 
-  sendCollectionState(collectionId: string, targetId: PeerId, state: unknown): void {
+  sendCollectionState(ctx: Context, collectionId: string, targetId: PeerId, state: unknown): void {
     const message: CollectionStateMessage = {
       type: 'collection-state',
       senderId: this.peerId as PeerId,
@@ -200,21 +200,21 @@ export class EchoNetworkAdapter extends NetworkAdapter {
       collectionId,
       state,
     };
-    this._send(message);
+    this._send(ctx, message);
   }
 
   // TODO(dmaretskyi): Remove.
-  getPeersInterestedInCollection(collectionId: string): PeerId[] {
+  getPeersInterestedInCollection(ctx: Context, collectionId: string): PeerId[] {
     return Array.from(this._connections.values())
       .map((connection) => {
-        return connection.connection.shouldSyncCollection({ collectionId })
+        return connection.connection.shouldSyncCollection(ctx, { collectionId })
           ? (connection.connection.peerId as PeerId)
           : null;
       })
       .filter(isNonNullable);
   }
 
-  bundleSyncEnabledForPeer(peerId: PeerId): boolean {
+  bundleSyncEnabledForPeer(ctx: Context, peerId: PeerId): boolean {
     const connection = this._connections.get(peerId);
     if (!connection) {
       return false;
@@ -222,7 +222,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     return connection.connection.bundleSyncEnabled;
   }
 
-  async pushBundle(peerId: PeerId, bundle: { documentId: DocumentId; data: Uint8Array; heads: Heads }[]) {
+  async pushBundle(ctx: Context, peerId: PeerId, bundle: { documentId: DocumentId; data: Uint8Array; heads: Heads }[]) {
     const connection = this._connections.get(peerId);
     if (!connection) {
       throw new Error('Connection not found.');
@@ -230,7 +230,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     return connection.connection.pushBundle!(bundle);
   }
 
-  async pullBundle(peerId: PeerId, docHeads: Record<DocumentId, Heads>) {
+  async pullBundle(ctx: Context, peerId: PeerId, docHeads: Record<DocumentId, Heads>) {
     const connection = this._connections.get(peerId);
     if (!connection) {
       throw new Error('Connection not found.');
@@ -238,7 +238,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     return connection.connection.pullBundle!(docHeads);
   }
 
-  private _send(message: Message): void {
+  private _send(ctx: Context, message: Message): void {
     const connectionEntry = this._connections.get(message.targetId);
     if (!connectionEntry) {
       throw new Error('Connection not found.');
@@ -260,7 +260,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
       });
   }
 
-  private _onConnectionOpen(connection: AutomergeReplicatorConnection): void {
+  private _onConnectionOpen(ctx: Context, connection: AutomergeReplicatorConnection): void {
     log('connection opened', { peerId: connection.peerId });
     invariant(!this._connections.has(connection.peerId as PeerId));
     const connectionEntry: ConnectionEntry = {
@@ -283,7 +283,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
             break;
           }
 
-          this._onMessage(connectionEntry, value as Message);
+          this._onMessage(ctx, connectionEntry, value as Message);
         }
       } catch (err) {
         if (connectionEntry.isOpen) {
@@ -293,11 +293,11 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     });
 
     log('emit peer-candidate', { peerId: connection.peerId });
-    this._emitPeerCandidate(connection);
+    this._emitPeerCandidate(ctx, connection);
     this._params.monitor?.recordPeerConnected(connection.peerId);
   }
 
-  private _onMessage(connectionEntry: ConnectionEntry, message: Message): void {
+  private _onMessage(ctx: Context, connectionEntry: ConnectionEntry, message: Message): void {
     const amMessage = message as AutomergeProtocolMessage;
     if (amMessage.type === 'request') {
       this.documentRequested.emit({
@@ -316,7 +316,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     this._params.monitor?.recordMessageReceived(message);
   }
 
-  private _onConnectionClosed(connection: AutomergeReplicatorConnection): void {
+  private _onConnectionClosed(ctx: Context, connection: AutomergeReplicatorConnection): void {
     log('connection closed', { peerId: connection.peerId });
     const entry = this._connections.get(connection.peerId as PeerId);
     invariant(entry);
@@ -335,15 +335,15 @@ export class EchoNetworkAdapter extends NetworkAdapter {
    * Trigger doc-synchronizer shared documents set recalculation. Happens on peer-candidate.
    * TODO(y): replace with a proper API call when sharePolicy update becomes supported by automerge-repo
    */
-  private _onConnectionAuthScopeChanged(connection: AutomergeReplicatorConnection): void {
+  private _onConnectionAuthScopeChanged(ctx: Context, connection: AutomergeReplicatorConnection): void {
     log('Connection auth scope changed', { peerId: connection.peerId });
     const entry = this._connections.get(connection.peerId as PeerId);
     invariant(entry);
     this.emit('peer-disconnected', { peerId: connection.peerId as PeerId });
-    this._emitPeerCandidate(connection);
+    this._emitPeerCandidate(ctx, connection);
   }
 
-  private _emitPeerCandidate(connection: AutomergeReplicatorConnection): void {
+  private _emitPeerCandidate(ctx: Context, connection: AutomergeReplicatorConnection): void {
     this.emit('peer-candidate', {
       peerId: connection.peerId as PeerId,
       peerMetadata: createEchoPeerMetadata(),

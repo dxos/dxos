@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type Context } from '@dxos/context';
 import type { CollectionId } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
@@ -44,11 +45,11 @@ export class MeshEchoReplicator implements AutomergeReplicator {
 
   private _context: AutomergeReplicatorContext | null = null;
 
-  async connect(context: AutomergeReplicatorContext): Promise<void> {
+  async connect(ctx: Context, context: AutomergeReplicatorContext): Promise<void> {
     this._context = context;
   }
 
-  async disconnect(): Promise<void> {
+  async disconnect(ctx: Context): Promise<void> {
     for (const connection of this._connections) {
       if (connection.isEnabled) {
         this._context?.onConnectionClosed(connection);
@@ -66,6 +67,7 @@ export class MeshEchoReplicator implements AutomergeReplicator {
   }
 
   createExtension(
+    ctx: Context,
     extensionFactory?: TeleportAutomergeReplicator.AutomergeReplicatorFactory,
   ): TeleportAutomergeReplicator.AutomergeReplicator {
     invariant(this._context);
@@ -85,7 +87,7 @@ export class MeshEchoReplicator implements AutomergeReplicator {
         } else {
           this._connectionsPerPeer.set(connection.peerId, [connection]);
           this._context.onConnectionOpen(connection);
-          connection.enable();
+          connection.enable(ctx);
         }
       },
       onRemoteDisconnected: async () => {
@@ -105,12 +107,12 @@ export class MeshEchoReplicator implements AutomergeReplicator {
 
         if (connection.isEnabled) {
           this._context?.onConnectionClosed(connection);
-          connection.disable();
+          connection.disable(ctx);
 
           // Promote the next connection to enabled
           if (existingConnections.length > 0) {
             this._context?.onConnectionOpen(existingConnections[0]);
-            existingConnections[0].enable();
+            existingConnections[0].enable(ctx);
           }
         }
       },
@@ -185,7 +187,7 @@ export class MeshEchoReplicator implements AutomergeReplicator {
     return connection.replicatorExtension;
   }
 
-  async authorizeDevice(spaceKey: PublicKey, deviceKey: PublicKey): Promise<void> {
+  async authorizeDevice(ctx: Context, spaceKey: PublicKey, deviceKey: PublicKey): Promise<void> {
     log('authorizeDevice', { spaceKey, deviceKey });
     const spaceId = await createIdFromSpaceKey(spaceKey);
     defaultMap(this._authorizedDevices, spaceId, () => new ComplexSet(PublicKey.hash)).add(deviceKey);

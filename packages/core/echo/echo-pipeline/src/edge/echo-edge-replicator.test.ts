@@ -7,6 +7,7 @@ import { getRandomPort } from 'get-port-please';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Event } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { EdgeClient, type EdgeHttpClient, MessageSchema, createEphemeralEdgeIdentity } from '@dxos/edge-client';
 import { createTestEdgeWsServer } from '@dxos/edge-client/testing';
 import { PublicKey, SpaceId } from '@dxos/keys';
@@ -42,7 +43,7 @@ describe('EchoEdgeReplicator', () => {
     await server.sendMessage(forbidden);
     await connectionOpen.waitForCount(1);
 
-    await replicator.disconnect();
+    await replicator.disconnect(Context.default());
   });
 
   describe('shouldAdvertise', () => {
@@ -58,7 +59,7 @@ describe('EchoEdgeReplicator', () => {
       await replicator.connectToSpace(spaceId);
 
       await expect.poll(() => openConnections.length === 1).toBeTruthy();
-      expect(openConnections[0].shouldAdvertise({ documentId })).toBeTruthy();
+      expect(openConnections[0].shouldAdvertise(Context.default(), { documentId })).toBeTruthy();
     });
 
     test('checks remote collection if space id can not be resolved', async () => {
@@ -73,17 +74,17 @@ describe('EchoEdgeReplicator', () => {
 
       await expect.poll(() => openConnections.length === 1).toBeTruthy();
       const connection = openConnections[0];
-      expect(await connection.shouldAdvertise({ documentId })).toBeFalsy();
+      expect(await connection.shouldAdvertise(Context.default(), { documentId })).toBeFalsy();
       remoteCollections[connection.peerId] = { [documentId]: true };
-      expect(await connection.shouldAdvertise({ documentId })).toBeTruthy();
+      expect(await connection.shouldAdvertise(Context.default(), { documentId })).toBeTruthy();
     });
   });
 
   const connectReplicator = async (client: EdgeClient, context: AutomergeReplicatorContext) => {
     // EdgeHttpClient functionality is not tested here.
     const replicator = new EchoEdgeReplicator({ edgeConnection: client, edgeHttpClient: {} as EdgeHttpClient });
-    await replicator.connect(context);
-    onTestFinished(() => replicator.disconnect());
+    await replicator.connect(Context.default(), context);
+    onTestFinished(() => replicator.disconnect(Context.default()));
     return replicator;
   };
 

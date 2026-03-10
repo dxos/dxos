@@ -73,7 +73,7 @@ export class EchoEdgeReplicator implements AutomergeReplicator {
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  async connect(context: AutomergeReplicatorContext): Promise<void> {
+  async connect(_ctx: Context, context: AutomergeReplicatorContext): Promise<void> {
     log('connecting...', { peerId: context.peerId, connectedSpaces: this._connectedSpaces.size });
     this._context = context;
     this._ctx = Context.default();
@@ -101,7 +101,7 @@ export class EchoEdgeReplicator implements AutomergeReplicator {
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  async disconnect(): Promise<void> {
+  async disconnect(_ctx: Context): Promise<void> {
     using _guard = await this._mutex.acquire();
     await this._ctx?.dispose();
 
@@ -318,7 +318,7 @@ class EdgeReplicatorConnection extends Resource implements AutomergeReplicatorCo
     return this._remotePeerId;
   }
 
-  async shouldAdvertise(params: ShouldAdvertiseProps): Promise<boolean> {
+  async shouldAdvertise(_ctx: Context, params: ShouldAdvertiseProps): Promise<boolean> {
     if (!this._sharedPolicyEnabled) {
       return true;
     }
@@ -343,7 +343,7 @@ class EdgeReplicatorConnection extends Resource implements AutomergeReplicatorCo
     return spaceId === this._spaceId;
   }
 
-  shouldSyncCollection(params: ShouldSyncCollectionProps): boolean {
+  shouldSyncCollection(_ctx: Context, params: ShouldSyncCollectionProps): boolean {
     if (!this._sharedPolicyEnabled) {
       return true;
     }

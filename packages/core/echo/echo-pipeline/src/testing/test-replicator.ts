@@ -3,7 +3,7 @@
 //
 
 import { sleep, synchronized } from '@dxos/async';
-import { type Context, LifecycleState, Resource } from '@dxos/context';
+import { Context, LifecycleState, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import type { AutomergeProtocolMessage } from '@dxos/protocols';

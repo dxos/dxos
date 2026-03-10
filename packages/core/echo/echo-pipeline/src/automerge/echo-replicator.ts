@@ -5,6 +5,7 @@
 import { type Heads } from '@automerge/automerge';
 import { type DocumentId } from '@automerge/automerge-repo';
 
+import { type Context } from '@dxos/context';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { type AutomergeProtocolMessage } from '@dxos/protocols';
 
@@ -13,12 +14,12 @@ export interface AutomergeReplicator {
   /**
    * Called on when replicator is added to EchoHost.
    */
-  connect(context: AutomergeReplicatorContext): Promise<void>;
+  connect(ctx: Context, context: AutomergeReplicatorContext): Promise<void>;
 
   /**
    * Called on when replicator is removed from EchoHost.
    */
-  disconnect(): Promise<void>;
+  disconnect(ctx: Context): Promise<void>;
 }
 
 export interface AutomergeReplicatorContext {
@@ -63,12 +64,12 @@ export interface AutomergeReplicatorConnection {
    * @returns true if the document should be advertised to this peer.
    * The remote peer can still request the document by its id bypassing this check.
    */
-  shouldAdvertise(params: ShouldAdvertiseProps): Promise<boolean>;
+  shouldAdvertise(ctx: Context, params: ShouldAdvertiseProps): Promise<boolean>;
 
   /**
    * @returns true if the collection should be synced to this peer.
    */
-  shouldSyncCollection(params: ShouldSyncCollectionProps): boolean;
+  shouldSyncCollection(ctx: Context, params: ShouldSyncCollectionProps): boolean;
 
   /**
    * Batch syncing considered enabled if AutomergeReplicatorConnection implements `pushBatch` and `pullBatch` methods.

@@ -6,6 +6,7 @@ import { type PeerId, cbor } from '@automerge/automerge-repo';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, sleep, waitForCondition } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type SyncMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/automerge';
@@ -77,7 +78,7 @@ describe('EchoNetworkAdapter', () => {
     await controller.connectPeer(ANOTHER_PEER_ID);
     const onDisconnected = new Trigger<any>();
     adapter.on('peer-disconnected', (payload) => onDisconnected.wake(payload));
-    await adapter.removeReplicator(controller.replicator);
+    await adapter.removeReplicator(Context.default(), controller.replicator);
     const disconnectedPeer = await onDisconnected.wait();
     expect(disconnectedPeer.peerId).to.eq(ANOTHER_PEER_ID);
   });
@@ -109,11 +110,11 @@ describe('EchoNetworkAdapter', () => {
       onCollectionStateReceived: () => {},
     });
     adapter.connect(PEER_ID);
-    await adapter.open();
+    await adapter.open(Context.default());
     onTestFinished(async () => {
-      await adapter.close();
+      await adapter.close(Context.default());
     });
-    await adapter.addReplicator(replicator);
+    await adapter.addReplicator(Context.default(), replicator);
     return adapter;
   };
 
@@ -123,7 +124,7 @@ describe('EchoNetworkAdapter', () => {
       replicator,
       connectPeer: async (peerId: string) => {
         let callbacks: AutomergeReplicatorCallbacks | undefined;
-        replicator.createExtension((params) => {
+        replicator.createExtension(Context.default(), (params) => {
           callbacks = params[1];
           return { sendSyncMessage } as AutomergeReplicator;
         });

@@ -30,6 +30,7 @@ import {
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout, sleep } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { randomBytes } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
@@ -957,11 +958,11 @@ const createTeleportTestPeer = async (
     network: [echoAdapter],
     storage: options?.storage,
     sharePolicy: async (peerId, documentId) =>
-      documentId ? echoAdapter.shouldAdvertise(peerId, { documentId }) : false,
+      documentId ? echoAdapter.shouldAdvertise(Context.default(), peerId, { documentId }) : false,
   });
-  await echoAdapter.open();
-  await echoAdapter.whenConnected();
-  await echoAdapter.addReplicator(meshAdapter);
+  await echoAdapter.open(Context.default());
+  await echoAdapter.whenConnected(Context.default());
+  await echoAdapter.addReplicator(Context.default(), meshAdapter);
   const [teleport] = teleportBuilder.createPeers({ factory: () => new TeleportPeer() });
   return { repo, meshAdapter, teleport };
 };
@@ -973,10 +974,10 @@ const connectPeers = async (
   peer2: TeleportTestPeer,
 ) => {
   const [connection1, connection2] = await builder.connect(peer1.teleport, peer2.teleport);
-  await peer1.meshAdapter.authorizeDevice(spaceKey, peer2.teleport.peerId);
-  connection1.teleport.addExtension('automerge', peer1.meshAdapter.createExtension());
-  await peer2.meshAdapter.authorizeDevice(spaceKey, peer1.teleport.peerId);
-  connection2.teleport.addExtension('automerge', peer2.meshAdapter.createExtension());
+  await peer1.meshAdapter.authorizeDevice(Context.default(), spaceKey, peer2.teleport.peerId);
+  connection1.teleport.addExtension('automerge', peer1.meshAdapter.createExtension(Context.default()));
+  await peer2.meshAdapter.authorizeDevice(Context.default(), spaceKey, peer1.teleport.peerId);
+  connection2.teleport.addExtension('automerge', peer2.meshAdapter.createExtension(Context.default()));
 };
 
 type TeleportTestPeer = { repo: Repo; meshAdapter: MeshEchoReplicator; teleport: TeleportPeer };
