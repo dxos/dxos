@@ -4,26 +4,27 @@
 
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
 import { MemoizedAiService } from '@dxos/ai/testing';
 import { AiConversationService } from '@dxos/assistant';
 import { AssistantTestLayerWithTriggers } from '@dxos/assistant/testing';
 import { Blueprint } from '@dxos/blueprints';
+import { SpaceProperties } from '@dxos/client-protocol';
+import { Collection, Database, Query } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { ObjectId } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { MarkdownBlueprint } from '@dxos/plugin-markdown/blueprints';
+import { WithProperties } from '@dxos/plugin-markdown/testing';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { Person } from '@dxos/types';
-
-import { Layer } from 'effect';
-import { WithProperties } from '@dxos/plugin-markdown/testing';
-import { addBlueprints } from '../testing';
-import { DatabaseBlueprint } from '../database';
-import BrowserBlueprint from './blueprint';
-import { Collection, Database, Query } from '@dxos/echo';
-import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
-import { SpaceProperties } from '@dxos/client-protocol';
+
+import { DatabaseBlueprint } from '../database';
+import { addBlueprints } from '../testing';
+
+import BrowserBlueprint from './blueprint';
 
 ObjectId.dangerouslyDisableRandomness();
 

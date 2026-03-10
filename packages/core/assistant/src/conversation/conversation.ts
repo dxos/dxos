@@ -5,8 +5,11 @@
 import type * as Tool from '@effect/ai/Tool';
 import type * as Toolkit from '@effect/ai/Toolkit';
 import type { Registry } from '@effect-atom/atom-react';
+import * as Array from 'effect/Array';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Either from 'effect/Either';
+import { pipe } from 'effect/Function';
 import * as Layer from 'effect/Layer';
 
 import { type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
@@ -17,8 +20,8 @@ import { acquireReleaseResource } from '@dxos/effect';
 import { QueueService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Message } from '@dxos/types';
 import { McpToolkit } from '@dxos/mcp-client';
+import { Message } from '@dxos/types';
 
 import {
   AiSession,
@@ -29,7 +32,6 @@ import {
 } from '../session';
 
 import { AiContextBinder, AiContextService, type ContextBinding } from './context';
-import { pipe, Array, Either } from 'effect';
 
 export interface AiConversationRunProps {
   prompt: string;

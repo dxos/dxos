@@ -2,11 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Option from 'effect/Option';
 import React, { type JSX, useMemo, useState } from 'react';
 
 import { type AiContextBinder } from '@dxos/assistant';
 import { type Blueprint } from '@dxos/blueprints';
 import { type Database, Filter, Obj, Type } from '@dxos/echo';
+import { Annotation } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { IconButton, Popover, Select, useTranslation } from '@dxos/react-ui';
 import { Listbox, SearchList, useSearchListResults } from '@dxos/react-ui-searchlist';
@@ -21,8 +23,6 @@ import {
   useFilteredTypes,
 } from '../../hooks';
 import { meta } from '../../meta';
-import { Annotation } from '@dxos/echo';
-import * as Option from 'effect/Option';
 
 const panelClassNames = 'w-[calc(100dvw-.5rem)] sm:w-max md:w-72 max-w-text-content';
 

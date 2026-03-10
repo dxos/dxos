@@ -2,9 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import React from 'react';
-
 import * as Option from 'effect/Option';
+import React from 'react';
 
 import { type AiContextBinder } from '@dxos/assistant';
 import { Annotation, type Database, Obj } from '@dxos/echo';

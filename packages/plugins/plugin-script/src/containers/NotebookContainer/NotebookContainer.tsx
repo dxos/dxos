@@ -29,7 +29,11 @@ import { meta } from '../../meta';
 import { ComputeGraph } from '../../notebook';
 import { type Notebook } from '../../types';
 
-const INCLUDE_BLUEPRINTS = ['dxos.org/blueprint/assistant', 'dxos.org/blueprint/database', 'dxos.org/blueprint/markdown'];
+const INCLUDE_BLUEPRINTS = [
+  'dxos.org/blueprint/assistant',
+  'dxos.org/blueprint/database',
+  'dxos.org/blueprint/markdown',
+];
 
 // TODO(burdon): Support calling named deployed functions (as with sheet).
 

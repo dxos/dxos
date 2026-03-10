@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AiContextBinder, AiConversation } from '@dxos/assistant';
 import { AgentFunctions, Chat } from '@dxos/assistant-toolkit';
+import { DatabaseBlueprint } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { type Queue } from '@dxos/client/echo';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
@@ -18,7 +19,6 @@ import { ClientCapabilities } from '@dxos/plugin-client';
 import { ManagedCollection } from '@dxos/schema';
 import { type Message } from '@dxos/types';
 
-import { DatabaseBlueprint } from '@dxos/assistant-toolkit';
 import { AssistantBlueprint } from '../../blueprints';
 import { type AiChatServices, updateName } from '../../processor';
 import { AssistantCapabilities, AssistantOperation } from '../../types';

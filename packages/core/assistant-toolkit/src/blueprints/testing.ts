@@ -2,21 +2,20 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
+import { pipe } from 'effect/Function';
 
 import { ConsolePrinter } from '@dxos/ai';
+import { type AppCapabilities } from '@dxos/app-toolkit';
 import {
   AiContextService,
   type AiConversation,
   type AiConversationRunProps,
   GenerationObserver,
 } from '@dxos/assistant';
-import { log } from '@dxos/log';
-import { type AppCapabilities } from '@dxos/app-toolkit';
-import { pipe } from 'effect';
-import { BrowserBlueprint } from './browser';
-import * as Array from 'effect/Array';
 import { Database, Ref } from '@dxos/echo';
+import { log } from '@dxos/log';
 
 export type TestStep = Pick<AiConversationRunProps, 'prompt' | 'system'> & {
   test?: () => Promise<void>;

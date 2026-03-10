@@ -8,11 +8,11 @@ import * as Layer from 'effect/Layer';
 
 import { AiContextService, AiConversationService } from '@dxos/assistant';
 import { AssistantTestLayer } from '@dxos/assistant/testing';
+import { DatabaseBlueprint } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { ObjectId } from '@dxos/keys';
-import { DatabaseBlueprint } from '@dxos/assistant-toolkit';
 import { Organization } from '@dxos/types';
 
 import AssistantBlueprint from './blueprint';
