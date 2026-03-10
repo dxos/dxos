@@ -68,7 +68,7 @@ describe('RepoProxy', () => {
     await openAndClose(clientRepo);
 
     const text = 'Hello World!';
-    const hostHandle = await host.createDoc<{ text: string }>({ text });
+    const hostHandle = await host.createDoc<{ text: string }>(Context.default(), { text });
     const clientHandle = clientRepo.find<{ text: string }>(hostHandle.url);
     await asyncTimeout(clientHandle.whenReady(), 1000);
     expect(clientHandle.doc()?.text).to.equal(text);
@@ -84,8 +84,8 @@ describe('RepoProxy', () => {
     await openAndClose(repo2);
     const network = await new TestReplicationNetwork().open();
 
-    await peer1.host.addReplicator(await network.createReplicator());
-    await peer2.host.addReplicator(await network.createReplicator());
+    await peer1.host.addReplicator(Context.default(), await network.createReplicator());
+    await peer2.host.addReplicator(Context.default(), await network.createReplicator());
 
     const text = 'Hello World!';
     const handle1 = repo1.create<{ text: string }>({ text });
@@ -381,7 +381,7 @@ const setup = async (kv = createTestLevel()) => {
   const refreshCollectionState = async () => {
     const documentIds = Record.keys(host.handles);
     log('refreshCollectionState', { documentIds });
-    await host.updateLocalCollectionState('default', documentIds);
+    await host.updateLocalCollectionState(Context.default(), 'default', documentIds);
   };
   return { kv, host, dataService, refreshCollectionState };
 };

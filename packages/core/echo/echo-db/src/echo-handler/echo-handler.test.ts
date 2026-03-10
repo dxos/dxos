@@ -7,6 +7,7 @@ import { inspect } from 'node:util';
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
+import { Context } from '@dxos/context';
 import { Entity, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import {
   ATTR_RELATION_SOURCE,
@@ -263,7 +264,7 @@ describe('Reactive Object with ECHO database', () => {
     const builder = new EchoTestBuilder();
     await openAndClose(builder);
     const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
-    const root = await peer.host.createSpaceRoot(spaceKey);
+    const root = await peer.host.createSpaceRoot(Context.default(), spaceKey);
     await peer.client.graph.schemaRegistry.register([TestSchema.Example]);
 
     let id: string;
@@ -297,7 +298,7 @@ describe('Reactive Object with ECHO database', () => {
     const builder = new EchoTestBuilder();
     await openAndClose(builder);
     const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
-    const root = await peer.host.createSpaceRoot(spaceKey);
+    const root = await peer.host.createSpaceRoot(Context.default(), spaceKey);
 
     let id: string;
     {
@@ -713,7 +714,7 @@ describe('Reactive Object with ECHO database', () => {
       const builder = new EchoTestBuilder();
       await openAndClose(builder);
       const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
-      const root = await peer.host.createSpaceRoot(spaceKey);
+      const root = await peer.host.createSpaceRoot(Context.default(), spaceKey);
 
       let id: string;
       {
