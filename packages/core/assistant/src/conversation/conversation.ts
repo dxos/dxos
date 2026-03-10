@@ -18,6 +18,7 @@ import { QueueService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
+import { McpToolkit } from '@dxos/mcp-client';
 
 import {
   AiSession,
@@ -28,6 +29,7 @@ import {
 } from '../session';
 
 import { AiContextBinder, AiContextService, type ContextBinding } from './context';
+import { pipe, Array, Either } from 'effect';
 
 export interface AiConversationRunProps {
   prompt: string;
@@ -107,9 +109,26 @@ export class AiConversation extends Resource {
 
       // Create toolkit.
       const blueprints = this.context.getBlueprints();
+
+      const mcps = yield* pipe(
+        blueprints,
+        Array.flatMap((_) => _.mcpServers ?? []),
+        Effect.forEach(({ url, protocol }) =>
+          McpToolkit.make({ url, kind: protocol }).pipe(
+            Effect.tap((toolkit) =>
+              log.info('Connected to MCP server', { url, tools: Object.keys(toolkit.toolkit.tools).length }),
+            ),
+            Effect.tapDefect((error) => Effect.sync(() => log.warn('Failed to connect to MCP server', { error }))),
+            Effect.either,
+          ),
+        ),
+        Effect.map(Array.filterMap((_) => Either.getRight(_))),
+      );
+
       const toolkit = yield* createToolkit({
         toolkit: this._toolkit,
         blueprints,
+        genericToolkits: mcps,
       });
 
       // Context objects.

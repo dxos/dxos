@@ -13,6 +13,7 @@ import { Feed, type Type } from '@dxos/echo';
 import { CredentialsService, type FunctionDefinition, type ServiceCredential, TracingService } from '@dxos/functions';
 import { TracingServiceExt, TriggerDispatcher, TriggerStateStore } from '@dxos/functions-runtime';
 import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
+import { type AppCapabilities } from '@dxos/app-toolkit';
 
 import { ToolExecutionServices } from '../functions';
 
@@ -21,6 +22,7 @@ interface TestLayerOptions {
   model?: ModelName;
   functions?: FunctionDefinition.Any[];
   toolkits?: GenericToolkit.GenericToolkit[];
+  blueprints?: AppCapabilities.BlueprintDefinition[];
   types?: Type.AnyEntity[];
   credentials?: ServiceCredential[];
   /*
@@ -34,19 +36,21 @@ interface TestLayerOptions {
 
 export const AssistantTestLayer = ({
   aiServicePreset = 'direct',
-  model = '@anthropic/claude-opus-4-0',
+  model = '@anthropic/claude-opus-4-6',
   functions = [],
   toolkits = [],
   types = [],
   credentials = [],
+  blueprints = [],
   tracing = 'noop',
   disableLlmMemoization = false,
 }: TestLayerOptions = {}) => {
   const toolkit = GenericToolkit.merge(...toolkits);
+  const allFunctions = [...functions, ...blueprints.flatMap((blueprint) => blueprint.functions)];
   return Layer.mergeAll(AiService.model(model), ToolExecutionServices).pipe(
     Layer.provideMerge(
       FunctionInvocationServiceLayerTest({
-        functions,
+        functions: allFunctions,
       }),
     ),
     Layer.provideMerge(
