@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import React, { type ComponentPropsWithoutRef } from 'react';
 
@@ -12,11 +13,11 @@ export type StackItemDragHandleProps = ComponentPropsWithoutRef<'button'> & { as
 export const StackItemDragHandle = ({ asChild, children }: StackItemDragHandleProps) => {
   const { selfDragHandleRef } = useStackItem();
 
-  const Root = asChild ? Slot : 'div';
+  const Comp = asChild ? Slot : Primitive.div;
 
   return (
-    <Root ref={selfDragHandleRef} role='button'>
+    <Comp ref={selfDragHandleRef} role='button'>
       {children}
-    </Root>
+    </Comp>
   );
 };

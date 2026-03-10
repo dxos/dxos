@@ -17,13 +17,7 @@ import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { Organization, Person, Task } from '@dxos/types';
 import { jsonKeyReplacer, sortKeys } from '@dxos/util';
 
-import {
-  type ObjectGenerator,
-  createGenerator,
-  staticGenerators,
-} from '../../components/SpaceGenerator/ObjectGenerator';
-import { generator } from '../../components/SpaceGenerator/presets';
-import { SchemaTable } from '../../components/SpaceGenerator/SchemaTable';
+import { type ObjectGenerator, SchemaTable, createGenerator, generator, staticGenerators } from '../../components';
 
 export type SpaceGeneratorProps = {
   space: Space;
@@ -101,7 +95,7 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
       <Panel.Toolbar asChild>
         <Toolbar.Root>
           <IconButton icon='ph--arrow-clockwise--regular' iconOnly label='Refresh' onClick={updateInfo} />
-          <Toolbar.Separator variant='gap' />
+          <Toolbar.Separator />
           <Input.Root>
             <Input.TextInput
               type='number'

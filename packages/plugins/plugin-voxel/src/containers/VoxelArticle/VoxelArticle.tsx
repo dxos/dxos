@@ -83,12 +83,18 @@ export const VoxelArticle = ({ subject: world }: VoxelArticleProps) => {
             onRemoveVoxel={handleRemoveVoxel}
           />
           <div className='absolute bottom-4 left-1/2 -translate-x-1/2 pointer-events-none'>
-            <div className='px-3 py-1.5 text-xs text-description bg-base/80 dark:bg-neutral-800/80 backdrop-blur-sm rounded-full shadow-md border border-separator'>
-              {TOOL_HINTS[toolMode]}
-            </div>
+            <Hint toolMode={toolMode} />
           </div>
         </div>
       </Panel.Content>
     </Panel.Root>
+  );
+};
+
+const Hint = ({ toolMode }: { toolMode: ToolMode }) => {
+  return (
+    <div className='px-3 py-1.5 text-xs text-description bg-base-surface backdrop-blur-sm rounded-full shadow-md border border-separator'>
+      {TOOL_HINTS[toolMode]}
+    </div>
   );
 };

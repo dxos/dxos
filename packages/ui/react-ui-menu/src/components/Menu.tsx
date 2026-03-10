@@ -214,7 +214,7 @@ type MenuRootProps = PropsWithChildren<
  * Provides the menu context (action dispatch, contribution registry, icon size, etc.)
  * and an optional dropdown root for use with `Menu.Trigger` + `Menu.Content`.
  */
-const MenuRoot = ({ children, open, defaultOpen, onOpenChange, caller, ...providerProps }: MenuRootProps) => {
+const MenuRoot = ({ children, open, defaultOpen, onOpenChange, caller, ...props }: MenuRootProps) => {
   const [menuOpen, setMenuOpen] = useControllableState({
     prop: open,
     defaultProp: defaultOpen,
@@ -224,7 +224,7 @@ const MenuRoot = ({ children, open, defaultOpen, onOpenChange, caller, ...provid
   const closeMenu = useCallback(() => setMenuOpen(false), [setMenuOpen]);
 
   return (
-    <MenuProvider {...providerProps}>
+    <MenuProvider {...props}>
       <MenuDropdownContext.Provider value={{ closeMenu, caller }}>
         <NaturalDropdownMenu.Root open={menuOpen} onOpenChange={setMenuOpen}>
           {children}

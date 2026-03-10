@@ -10,7 +10,7 @@ import { invariant } from '@dxos/invariant';
 import { getSpace } from '@dxos/react-client/echo';
 import { Panel, useAsyncEffect } from '@dxos/react-ui';
 
-import { FilePreview } from '../../components/FilePreview';
+import { FilePreview } from '../../components';
 import { filePath, getBlobUrl, loadWnfs, wnfsUrl } from '../../helpers';
 import { WnfsCapabilities, type WnfsFile } from '../../types';
 
@@ -45,9 +45,11 @@ export const FileContainer = ({ role, subject: file }: FileContainerProps) => {
   }
 
   return (
-    <Panel.Root role={role}>
+    <Panel.Root role={role} className='dx-article'>
       <Panel.Content asChild>
-        <FilePreview type={file.type} url={blobUrl} />
+        <Panel.Content asChild>
+          <FilePreview type={file.type} url={blobUrl} />
+        </Panel.Content>
       </Panel.Content>
     </Panel.Root>
   );

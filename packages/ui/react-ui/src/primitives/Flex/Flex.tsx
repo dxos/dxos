@@ -5,9 +5,9 @@
 import React, { type HTMLAttributes } from 'react';
 
 import { mx } from '@dxos/ui-theme';
-import { type SlottableClassName } from '@dxos/ui-types';
+import { type ComposableProps } from '@dxos/ui-types';
 
-export type FlexProps = SlottableClassName<
+export type FlexProps = ComposableProps<
   HTMLAttributes<HTMLDivElement> & {
     column?: boolean;
     grow?: boolean;

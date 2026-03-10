@@ -30,20 +30,13 @@
    *   ancestor         → `flex flex-col`             (or `flex flex-row`)
    *   scroll root      → `flex-1 min-h-0`            (fills ancestor, can shrink)
    *   scroll viewport  → `h-full overflow-y-scroll`  (fills root, scrolls)
-   *
-   * `dx-expand` — lightweight flex child that can shrink (`flex-1 min-h-0 min-w-0`).
-   * `dx-container` — full-size flex child (`dx-expand h-full w-full`).
    */
-
-  .dx-expand {
-    @apply flex-1 min-h-0 min-w-0;
-  }
 
   .dx-container {
     @apply flex-1 min-h-0 min-w-0 h-full w-full;
   }
 
-  /** 
+  /**
    * Article
    */
 
@@ -56,10 +49,14 @@
    */
 
   .dx-card-square {
-    inline-size: min(min(var(--radix-popper-available-width), var(--spacing-card-max-width)),
-        min(var(--radix-popper-available-height), 100dvh));
-    block-size: min(min(var(--radix-popper-available-width), var(--spacing-card-max-width)),
-        min(var(--radix-popper-available-height), 100dvh));
+    inline-size: min(
+      min(var(--radix-popper-available-width), var(--spacing-card-max-width)),
+      min(var(--radix-popper-available-height), 100dvh)
+    );
+    block-size: min(
+      min(var(--radix-popper-available-width), var(--spacing-card-max-width)),
+      min(var(--radix-popper-available-height), 100dvh)
+    );
   }
 
   .dx-card-default-width {
@@ -82,7 +79,6 @@
 }
 
 @layer dx-components {
-
   /* Block size */
   [data-size='0'],
   [data-block-size='0'] {

@@ -17,11 +17,7 @@ import { Panel } from '@dxos/react-ui';
 import { type SelectionManager } from '@dxos/react-ui-attention';
 import { Text } from '@dxos/schema';
 
-import {
-  MarkdownEditor,
-  type MarkdownEditorContentProps,
-  type MarkdownEditorRootProps,
-} from '../../components/MarkdownEditor';
+import { MarkdownEditor, type MarkdownEditorContentProps, type MarkdownEditorRootProps } from '../../components';
 import { useLinkQuery } from '../../hooks';
 import { Markdown, MarkdownCapabilities, type MarkdownPluginState } from '../../types';
 

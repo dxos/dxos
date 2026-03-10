@@ -6,32 +6,51 @@ import { type HTMLAttributes } from 'react';
 
 import { type ClassNameValue } from './theme';
 
-/**
- * NOTE:
- * - Classnames must be composed.
- * - Primitives should not define styles directly.
- *
- * const Component = forwardRef<HTMLButtonElement, SlottableProps<HTMLButtonElement>>(
- *   ({ children, ...props }, ref) => {
- *     const rest = useSlottedProps(props);
- *     return (
- *       <button {...rest} ref={ref}>
- *         {children}
- *       </button>s
- *     );
- *   },
- * );
- */
-export type SlottableClassName<P = unknown> = P & {
-  className?: string;
-  classNames?: ClassNameValue;
-};
+// TODO(burdon): Define base type for component with `testId`, etc.
+//  And base component function wrapper.
 
 /**
- * Properties type for components that implement Radix-style primitives.
+ * Props for components that render a default DOM element but support `asChild` to delegate rendering to a child via Radix Slot.
+ * Extends `ComposableProps` with standard HTML attributes.
+ *
+ * @example
+ * ```tsx
+ * const Primitive = forwardRef<HTMLDivElement, SlottableProps<HTMLDivElement>>(
+ *   ({ children, asChild, ...props }, forwardedRef) => {
+ *     const { className, ...rest } = useComposableProps(props);
+ *     const Comp = asChild ? Slot : Primitive.div;
+ *     return <Comp {...rest} className={mx('border border-separator', className)} ref={forwardedRef}>{children}</Comp>;
+ *   },
+ * );
+ * ```
+ *
+ * @see slot.stories.tsx (@dxos/react-ui)
  */
-export type SlottableProps<P extends HTMLElement | null = null> = SlottableClassName<
+export type SlottableProps<P extends HTMLElement | null = null> = ComposableProps<
   HTMLAttributes<P> & {
     asChild?: boolean;
   }
 >;
+
+/**
+ * Props for components that can receive merged props from a Radix Slot parent.
+ * - `className` is set by the Slot merge mechanism.
+ * - `classNames` is the consumer-facing prop for theming overrides.
+ * Use `useComposableProps` to reconcile both into a single `className`.
+ *
+ * @example
+ * ```tsx
+ * const Leaf = forwardRef<HTMLButtonElement, ComposableProps<PropsWithChildren>>(
+ *   ({ children, ...props }, ref) => {
+ *     const { className, ...rest } = useComposableProps(props);
+ *     return <button {...rest} className={className} ref={ref}>{children}</button>;
+ *   },
+ * );
+ * ```
+ *
+ * @see slot.stories.tsx (@dxos/react-ui)
+ */
+export type ComposableProps<P = unknown> = P & {
+  className?: string;
+  classNames?: ClassNameValue;
+};

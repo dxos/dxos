@@ -53,7 +53,7 @@ export const SearchMain = ({ space }: { space?: Space }) => {
 
   return (
     <SearchList.Root onSearch={handleSearch}>
-      <Panel.Root>
+      <Panel.Root className='dx-article'>
         <Panel.Toolbar asChild>
           <Toolbar.Root>
             <SearchList.Input placeholder={t('search placeholder')} />

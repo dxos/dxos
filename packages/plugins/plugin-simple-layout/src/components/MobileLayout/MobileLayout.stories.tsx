@@ -60,7 +60,7 @@ const StoryPanel = ({ children, label }: PropsWithChildren<{ label: string }>) =
       <Panel.Toolbar asChild>
         <Toolbar.Root>
           {label}
-          <Toolbar.Separator variant='gap' />
+          <Toolbar.Separator />
           {children}
         </Toolbar.Root>
       </Panel.Toolbar>

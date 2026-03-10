@@ -16,7 +16,7 @@ import {
 } from '@dxos/react-ui-menu';
 
 import { type SheetModel } from '../../model';
-import { useSheetContext } from '../SheetContext';
+import { useSheetContext } from '../SheetRoot';
 
 import { createAlign, useAlignState } from './align';
 import { createStyle, useStyleState } from './style';
@@ -59,7 +59,8 @@ const createToolbarActions = ({
   });
 };
 
-export type SheetToolbarProps = PropsWithChildren<{ id: string }> & Partial<MenuRootProps>;
+export type SheetToolbarProps = { id: string } & Partial<MenuRootProps> &
+  PropsWithChildren<{ id: string } & Partial<MenuRootProps>>;
 
 export const SheetToolbar = ({ id, ...props }: SheetToolbarProps) => {
   const { model, cursorFallbackRange } = useSheetContext();

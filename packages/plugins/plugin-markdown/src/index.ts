@@ -10,4 +10,4 @@ export * from './util';
 
 export * from './MarkdownPlugin';
 
-export { MarkdownEditor } from './components/MarkdownEditor';
+export { MarkdownEditor } from './components';

@@ -24,8 +24,7 @@ import { useAttention } from '@dxos/react-ui-attention';
 import { Text, ViewModel } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
-import { NotebookMenu, NotebookStack, type NotebookStackProps } from '../../components/NotebookStack';
-import { type TypescriptEditorProps } from '../../components/TypescriptEditor';
+import { NotebookMenu, NotebookStack, type NotebookStackProps, type TypescriptEditorProps } from '../../components';
 import { meta } from '../../meta';
 import { ComputeGraph } from '../../notebook';
 import { type Notebook } from '../../types';
@@ -187,7 +186,7 @@ export const NotebookContainer = ({ role, subject: notebook, env }: NotebookCont
   );
 
   return (
-    <Panel.Root role={role}>
+    <Panel.Root role={role} className='dx-article'>
       <Panel.Toolbar asChild>
         <Toolbar.Root disabled={!hasAttention} textBlockWidth>
           <DropdownMenu.Root>
@@ -206,19 +205,16 @@ export const NotebookContainer = ({ role, subject: notebook, env }: NotebookCont
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content asChild>
-        <div role='none' className='flex h-full overflow-hidden -ms-[1px] -me-[1px]'>
-          <NotebookStack
-            classNames='dx-article border-l border-r border-subdued-separator'
-            db={db}
-            notebook={notebook}
-            graph={graph}
-            env={env}
-            promptResults={promptResults}
-            onRearrange={handleRearrange}
-            onCellInsert={handleCellInsert}
-            onCellDelete={handleCellDelete}
-          />
-        </div>
+        <NotebookStack
+          db={db}
+          notebook={notebook}
+          graph={graph}
+          env={env}
+          promptResults={promptResults}
+          onRearrange={handleRearrange}
+          onCellInsert={handleCellInsert}
+          onCellDelete={handleCellDelete}
+        />
       </Panel.Content>
     </Panel.Root>
   );

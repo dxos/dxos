@@ -3,7 +3,6 @@
 //
 
 import React, {
-  type ComponentPropsWithoutRef,
   type FocusEvent,
   type KeyboardEvent,
   type MouseEvent,
@@ -18,7 +17,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type CellRange, rangeToA1Notation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { defaultColSize, defaultRowSize } from '@dxos/lit-grid';
-import { DropdownMenu, Icon, useTranslation } from '@dxos/react-ui';
+import { type ComposableProps, DropdownMenu, Icon, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
   type DxGridCellIndex,
@@ -33,12 +32,13 @@ import {
   editorKeys,
   parseCellIndex,
 } from '@dxos/react-ui-grid';
+import { mx, useComposableProps } from '@dxos/ui-theme';
 
 import { type RangeController, rangeExtension, sheetExtension } from '../../extensions';
 import { useSelectThreadOnCellFocus, useUpdateFocusedCellOnThreadSelection } from '../../integrations';
 import { meta } from '../../meta';
 import { DEFAULT_COLS, DEFAULT_ROWS, SheetOperation } from '../../types';
-import { useSheetContext } from '../SheetContext';
+import { useSheetContext } from '../SheetRoot';
 
 import { colLabelCell, rowLabelCell, useSheetModelDxGridProps } from './util';
 
@@ -70,10 +70,13 @@ const sheetRowDefault = {
   grid: { size: defaultRowSize, resizeable: true },
 };
 
-export const GridSheet = (props: ComponentPropsWithoutRef<'div'>) => {
+export type SheetContentProps = ComposableProps<React.HTMLAttributes<HTMLDivElement>>;
+
+export const SheetContent = (props: SheetContentProps) => {
   const { t } = useTranslation(meta.id);
   const { id, model, editing, setCursor, setRange, cursor, cursorFallbackRange, activeRefs, ignoreAttention } =
     useSheetContext();
+
   // NOTE(thure): using `useState` instead of `useRef` works with refs provided by `@lit/react` and gives us
   //  a reliable dependency for `useEffect` whereas `useLayoutEffect` does not guarantee the element will be defined.
   const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
@@ -81,6 +84,7 @@ export const GridSheet = (props: ComponentPropsWithoutRef<'div'>) => {
   const { invokePromise } = useOperationInvoker();
   const rangeController = useRef<RangeController>(null);
   const { hasAttention } = useAttention(id);
+  const { className, ...rest } = useComposableProps(props);
 
   const handleFocus = useCallback(
     (event: FocusEvent) => {
@@ -318,18 +322,20 @@ export const GridSheet = (props: ComponentPropsWithoutRef<'div'>) => {
   useSelectThreadOnCellFocus();
 
   return (
-    <div role='none' {...props} className='relative min-h-0'>
+    <div {...rest} role='none' className={mx('relative min-h-0', className)}>
       <GridCellEditor getCellContent={getCellContent} extensions={extensions} onBlur={handleBlur} />
       <Grid.Content
+        className='[--dx-grid-base:var(--base-surface)] [&_.dx-grid]:absolute [&_.dx-grid]:inset-0'
         initialCells={initialCells}
         limitColumns={DEFAULT_COLS}
         limitRows={DEFAULT_ROWS}
         columns={columns}
         rows={rows}
-        // TODO(burdon): `col` vs. `column`?
         columnDefault={sheetColDefault}
         rowDefault={sheetRowDefault}
+        activeRefs={activeRefs}
         frozen={frozen}
+        overscroll='trap'
         onAxisResize={handleAxisResize}
         onSelect={handleSelect}
         onFocus={handleFocus}
@@ -337,9 +343,6 @@ export const GridSheet = (props: ComponentPropsWithoutRef<'div'>) => {
         onKeyDown={handleKeyDown}
         onContextMenu={handleContextMenu}
         onClick={handleClick}
-        overscroll='trap'
-        className='[--dx-grid-base:var(--base-surface)] [&_.dx-grid]:absolute [&_.dx-grid]:inset-0'
-        activeRefs={activeRefs}
         ref={setDxGrid}
       />
       <DropdownMenu.Root

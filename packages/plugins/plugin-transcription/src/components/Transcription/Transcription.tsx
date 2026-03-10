@@ -56,7 +56,7 @@ export const Transcription = ({ classNames, transcript: object, model }: Transcr
   return (
     <div
       ref={parentRef}
-      className={mx('flex grow overflow-hidden dx-article', classNames)}
+      className={mx('dx-container', classNames)}
       data-popover-collision-boundary={true /* TODO(thure): Make this a constant and document it. */}
     />
   );
