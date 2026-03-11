@@ -4,9 +4,9 @@
 
 import { describe, test } from 'vitest';
 
-import { type LogConfig, type LogEntry, LogLevel } from '@dxos/log';
-
 import { LogBuffer } from './log-buffer';
+
+import { type LogConfig, type LogEntry, LogLevel } from './index';
 
 const baseConfig: LogConfig = {
   options: {},
@@ -48,7 +48,7 @@ describe('LogBuffer', () => {
 
     expect(buffer.size).toBe(3);
     const lines = buffer.serialize().split('\n');
-    const messages = lines.map((l) => JSON.parse(l).m);
+    const messages = lines.map((line) => JSON.parse(line).m);
     expect(messages).toEqual(['b', 'c', 'd']);
   });
 
@@ -130,5 +130,27 @@ describe('LogBuffer', () => {
   test('serialize returns empty string for empty buffer', ({ expect }) => {
     const buffer = new LogBuffer(10);
     expect(buffer.serialize()).toBe('');
+  });
+
+  test('clear discards all entries', ({ expect }) => {
+    const buffer = new LogBuffer(10);
+    buffer.logProcessor(baseConfig, createEntry({ message: 'a' }));
+    buffer.logProcessor(baseConfig, createEntry({ message: 'b' }));
+    expect(buffer.size).toBe(2);
+
+    buffer.clear();
+    expect(buffer.size).toBe(0);
+    expect(buffer.serialize()).toBe('');
+  });
+
+  test('clear allows new entries', ({ expect }) => {
+    const buffer = new LogBuffer(10);
+    buffer.logProcessor(baseConfig, createEntry({ message: 'old' }));
+    buffer.clear();
+    buffer.logProcessor(baseConfig, createEntry({ message: 'new' }));
+
+    expect(buffer.size).toBe(1);
+    const record = JSON.parse(buffer.serialize());
+    expect(record.m).toBe('new');
   });
 });

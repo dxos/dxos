@@ -2,8 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type LogConfig, type LogEntry, LogLevel, type LogProcessor, shortLevelName } from '@dxos/log';
 import { CircularBuffer } from '@dxos/util';
+
+import { type LogConfig, LogLevel, shortLevelName } from './config';
+import { type LogEntry, type LogProcessor } from './context';
 
 const DEFAULT_BUFFER_SIZE = 2_000;
 const MAX_CONTEXT_LENGTH = 500;
@@ -29,7 +31,7 @@ export type LogRecord = {
 };
 
 /**
- * Captures recent log entries in a circular buffer for debug log dump on feedback submission.
+ * Captures recent log entries in a circular buffer for debug log dump.
  */
 export class LogBuffer {
   private readonly _buffer: CircularBuffer<LogRecord>;
@@ -80,6 +82,11 @@ export class LogBuffer {
   /** Number of entries currently in the buffer. */
   get size(): number {
     return this._buffer.elementCount;
+  }
+
+  /** Discard all buffered entries. */
+  clear(): void {
+    this._buffer.clear();
   }
 
   /** Serialize buffer contents as NDJSON (newline-delimited JSON). */

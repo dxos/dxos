@@ -6,9 +6,8 @@ import * as Effect from 'effect/Effect';
 import { type PostHogConfig } from 'posthog-js';
 
 import { type Config } from '@dxos/config';
-import { log } from '@dxos/log';
+import { LogBuffer, log } from '@dxos/log';
 
-import { LogBuffer } from '../../log-buffer';
 import { type Extension } from '../../observability-extension';
 import { stubExtension } from '../stub';
 

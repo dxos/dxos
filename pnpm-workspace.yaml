@@ -191,6 +191,7 @@ catalog:
   '@storybook/addon-themes': ^10.2.12
   '@storybook/addon-vitest': ^10.2.12
   '@storybook/builder-vite': ^10.2.12
+  '@storybook/icons': ^2.0.1
   '@storybook/html-vite': ^10.2.12
   '@storybook/mdx2-csf': ^1.1.0
   '@storybook/react-vite': ^10.2.12
