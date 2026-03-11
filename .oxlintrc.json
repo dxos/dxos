@@ -1,21 +1,10 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": [
-    "eslint",
-    "typescript",
-    "unicorn",
-    "oxc",
-    "react",
-    "react-perf",
-    "promise",
-    "vitest",
-    "jsdoc",
-    "node"
-  ],
+  "plugins": ["eslint", "typescript", "unicorn", "oxc", "react", "react-perf", "promise", "vitest", "jsdoc", "node"],
   "categories": {},
   "options": {
+    "typeAware": true,
     "denyWarnings": true,
-    "typeAware": true
   },
   "rules": {
     "no-unused-vars": "off",
@@ -77,19 +66,19 @@
     "@dxos/eslint-plugin-rules/header": "warn",
     "@dxos/eslint-plugin-rules/no-bare-dot-imports": "error",
     "@dxos/eslint-plugin-rules/no-effect-run-promise": "error",
-    "@dxos/eslint-plugin-rules/no-empty-promise-catch": "error"
+    "@dxos/eslint-plugin-rules/no-empty-promise-catch": "error",
   },
   "settings": {
     "jsx-a11y": {
       "polymorphicPropName": null,
       "components": {},
-      "attributes": {}
+      "attributes": {},
     },
     "react": {
       "formComponents": [],
       "linkComponents": [],
       "version": null,
-      "componentWrapperFunctions": []
+      "componentWrapperFunctions": [],
     },
     "jsdoc": {
       "ignorePrivate": false,
@@ -99,30 +88,30 @@
       "augmentsExtendsReplacesDocs": false,
       "implementsReplacesDocs": false,
       "exemptDestructuredRootsFromChecks": false,
-      "tagNamePreference": {}
+      "tagNamePreference": {},
     },
     "vitest": {
-      "typecheck": false
-    }
+      "typecheck": false,
+    },
   },
   "env": {
-    "builtin": true
+    "builtin": true,
   },
   "globals": {},
   "ignorePatterns": [
-    "templates/**",
-    "scripts/**",
+    "*.d.ts",
+    "**/tailwind.ts",
+    "**/gen/**",
     "**/typings/**",
-    "tools/swc-log-plugin/tests/__swc_snapshots__/**",
     ".idea/**",
     ".vscode/**",
     ".claude/**",
     "docs",
-    "**/gen/**",
-    "**/tailwind.ts",
-    "tools/swc-log-plugin/test-rig/**"
+    "templates/**",
+    "scripts/**",
+    "docs/legacy/**",
+    "tools/swc-log-plugin/tests/__swc_snapshots__/**",
+    "tools/swc-log-plugin/test-rig/**",
   ],
-  "jsPlugins": [
-    "@dxos/eslint-plugin-rules"
-  ]
+  "jsPlugins": ["@dxos/eslint-plugin-rules"],
 }
