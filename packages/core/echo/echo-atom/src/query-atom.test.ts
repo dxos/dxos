@@ -6,6 +6,7 @@ import * as Registry from '@effect-atom/atom/Registry';
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
+import { Context } from '@dxos/context';
 import { Obj, type QueryResult, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { type EchoDatabase, Filter, Query } from '@dxos/echo-db';
@@ -217,12 +218,12 @@ describe('AtomQuery with queues', () => {
   test('AtomQuery.make with Filter.type on queue', async () => {
     const peer = await testBuilder.createPeer({ types: [TestSchema.Person] });
     const spaceId = SpaceId.random();
-    const queues = peer.client.constructQueueFactory(spaceId);
-    const queue = queues.create();
+    const queues = peer.client.constructQueueFactory(Context.default(), spaceId);
+    const queue = queues.create(Context.default());
 
     const john = Obj.make(TestSchema.Person, { name: 'john' });
     const jane = Obj.make(TestSchema.Person, { name: 'jane' });
-    await queue.append([john, jane]);
+    await queue.append(Context.default(), [john, jane]);
 
     // Verify queue.query works directly (sanity check).
     const directResult = await queue.query(Query.select(Filter.type(TestSchema.Person))).run();
@@ -239,13 +240,13 @@ describe('AtomQuery with queues', () => {
   test('AtomQuery.make with Filter.id on queue', async () => {
     const peer = await testBuilder.createPeer({ types: [TestSchema.Person] });
     const spaceId = SpaceId.random();
-    const queues = peer.client.constructQueueFactory(spaceId);
-    const queue = queues.create();
+    const queues = peer.client.constructQueueFactory(Context.default(), spaceId);
+    const queue = queues.create(Context.default());
 
     const john = Obj.make(TestSchema.Person, { name: 'john' });
     const jane = Obj.make(TestSchema.Person, { name: 'jane' });
     const alice = Obj.make(TestSchema.Person, { name: 'alice' });
-    await queue.append([john, jane, alice]);
+    await queue.append(Context.default(), [john, jane, alice]);
 
     // Verify queue.query works directly (sanity check).
     const directResult = await queue.query(Query.select(Filter.id(jane.id))).run();

@@ -152,7 +152,7 @@ export class SpaceProtocol {
 
     log('starting...');
     const topic = await this._topic;
-    this._connection = await this._networkManager.joinSwarm({
+    this._connection = await this._networkManager.joinSwarm(ctx, {
       protocolProvider: this._createProtocolProvider(ctx, credentials),
       topic,
       topology: this._topology,
