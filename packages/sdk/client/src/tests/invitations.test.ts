@@ -288,7 +288,7 @@ const testSuite = (getProps: () => PerformInvitationProps, getPeers: () => [Serv
         hooks: {
           guest: {
             onConnected: () => {
-              void guest.networkManager.setConnectionState(ConnectionState.OFFLINE);
+              void guest.networkManager.setConnectionState(Context.default(), ConnectionState.OFFLINE);
               return true;
             },
           },
@@ -298,7 +298,7 @@ const testSuite = (getProps: () => PerformInvitationProps, getPeers: () => [Serv
     await expectErrorState({ hostResult, guestResult });
 
     // Test cleanup fails if the guest is offline.
-    await guest.networkManager.setConnectionState(ConnectionState.ONLINE);
+    await guest.networkManager.setConnectionState(Context.default(), ConnectionState.ONLINE);
   });
 };
 
@@ -437,7 +437,7 @@ describe('Invitations', () => {
             condition: () => hostContext.networkManager.topics.includes(persistentInvitation.get().swarmKey),
           });
           // TODO(nf): expose this in API as suspendInvitation()/SuspendableInvitation?
-          await hostContext.networkManager.leaveSwarm(persistentInvitation.get().swarmKey);
+          await hostContext.networkManager.leaveSwarm(Context.default(), persistentInvitation.get().swarmKey);
         }
 
         const { service: newHostService, manager: newHostManager } = createInvitationsApi(
