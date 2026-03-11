@@ -142,7 +142,7 @@ describe('InvitationStateMachine', () => {
       subject: identity,
       assertion: {
         '@type': 'dxos.halo.invitations.CancelDelegatedInvitation',
-        'credentialId': invitation.id!,
+        credentialId: invitation.id!,
       },
       signer: keyring,
     });
@@ -154,10 +154,10 @@ describe('InvitationStateMachine', () => {
       subject: identity,
       assertion: {
         '@type': 'dxos.halo.credentials.SpaceMember',
-        'spaceKey': space,
-        'role': SpaceMember.Role.ADMIN,
-        'genesisFeedKey': PublicKey.random(),
-        'invitationCredentialId': invitation.id,
+        spaceKey: space,
+        role: SpaceMember.Role.ADMIN,
+        genesisFeedKey: PublicKey.random(),
+        invitationCredentialId: invitation.id,
       },
       signer: keyring,
     });

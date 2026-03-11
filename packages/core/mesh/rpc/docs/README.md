@@ -69,17 +69,17 @@ dxos/protocols --> dxos/timeframe
 
 ## Dependencies
 
-| Module | Direct |
-|---|---|
-| [`@dxos/async`](../../../../common/async/docs/README.md) | &check; |
-| [`@dxos/codec-protobuf`](../../../../common/codec-protobuf/docs/README.md) | &check; |
-| [`@dxos/context`](../../../../common/context/docs/README.md) |  |
-| [`@dxos/crypto`](../../../../common/crypto/docs/README.md) |  |
-| [`@dxos/debug`](../../../../common/debug/docs/README.md) | &check; |
-| [`@dxos/hypercore`](../../../../common/hypercore/docs/README.md) |  |
-| [`@dxos/keys`](../../../../common/keys/docs/README.md) |  |
-| [`@dxos/log`](../../../../common/log/docs/README.md) | &check; |
-| [`@dxos/protocols`](../../../protocols/docs/README.md) | &check; |
-| [`@dxos/random-access-storage`](../../../../common/random-access-storage/docs/README.md) |  |
-| [`@dxos/timeframe`](../../../../common/timeframe/docs/README.md) |  |
-| [`@dxos/util`](../../../../common/util/docs/README.md) | &check; |
+| Module                                                                                   | Direct  |
+| ---------------------------------------------------------------------------------------- | ------- |
+| [`@dxos/async`](../../../../common/async/docs/README.md)                                 | &check; |
+| [`@dxos/codec-protobuf`](../../../../common/codec-protobuf/docs/README.md)               | &check; |
+| [`@dxos/context`](../../../../common/context/docs/README.md)                             |         |
+| [`@dxos/crypto`](../../../../common/crypto/docs/README.md)                               |         |
+| [`@dxos/debug`](../../../../common/debug/docs/README.md)                                 | &check; |
+| [`@dxos/hypercore`](../../../../common/hypercore/docs/README.md)                         |         |
+| [`@dxos/keys`](../../../../common/keys/docs/README.md)                                   |         |
+| [`@dxos/log`](../../../../common/log/docs/README.md)                                     | &check; |
+| [`@dxos/protocols`](../../../protocols/docs/README.md)                                   | &check; |
+| [`@dxos/random-access-storage`](../../../../common/random-access-storage/docs/README.md) |         |
+| [`@dxos/timeframe`](../../../../common/timeframe/docs/README.md)                         |         |
+| [`@dxos/util`](../../../../common/util/docs/README.md)                                   | &check; |

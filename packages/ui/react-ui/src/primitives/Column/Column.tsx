@@ -50,7 +50,7 @@ const Root = forwardRef<HTMLDivElement, ColumnRootProps>(
         style={
           {
             '--gutter': gutterSize,
-            'gridTemplateColumns': [gutterSize, 'minmax(0,1fr)', gutterSize].join(' '),
+            gridTemplateColumns: [gutterSize, 'minmax(0,1fr)', gutterSize].join(' '),
           } as CSSProperties
         }
         className={tx('column.root', { gutter }, [className, classNames])}

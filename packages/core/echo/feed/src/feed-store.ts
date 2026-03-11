@@ -192,7 +192,7 @@ export class FeedStore {
         // If spaceId is not provided in request (e.g. feedIds query), we can't easily validate token unless we look up spaceId for feedIds.
         // Ideally spaceId should be required for token validation.
 
-        /* 
+        /*
            Logic:
            1. If `cursor` is present, it's `token|insertionId`.
            2. If `position` is present, it's `position` (legacy/manual).

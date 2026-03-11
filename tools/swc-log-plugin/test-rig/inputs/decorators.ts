@@ -4,7 +4,7 @@
 
 // @ts-nocheck
 
-import { type Schema } from 'effect';
+import type * as Schema from 'effect/Schema';
 
 import { raise } from '@dxos/debug';
 import { type Obj } from '@dxos/echo';

@@ -17,7 +17,7 @@ Effect is a TypeScript library for building complex synchronous and asynchronous
 - **Error**: Expected (typed) errors; use `never` when effect cannot fail.
 - **Requirements**: Services/dependencies from `Context`; use `never` when none needed.
 
-Effects are *descriptions*, not executions. They run via the Effect runtime at a single entry point.
+Effects are _descriptions_, not executions. They run via the Effect runtime at a single entry point.
 
 ```ts
 import { Effect, Context, Layer } from 'effect';
@@ -31,23 +31,23 @@ const failure = Effect.fail(new Error('failed'));
 
 ### Two Types of Errors
 
-| Type          | Tracked in type | Purpose                                            |
-|---------------|-----------------|----------------------------------------------------|
-| **Expected**  | Yes (`Error` in Effect) | Anticipated, domain errors, recoverable (like checked exceptions) |
-| **Unexpected**| No              | Defects, bugs, unanticipated (like unchecked exceptions) |
+| Type           | Tracked in type         | Purpose                                                           |
+| -------------- | ----------------------- | ----------------------------------------------------------------- |
+| **Expected**   | Yes (`Error` in Effect) | Anticipated, domain errors, recoverable (like checked exceptions) |
+| **Unexpected** | No                      | Defects, bugs, unanticipated (like unchecked exceptions)          |
 
 Use `Effect.fail()` for expected errors. Thrown errors in sync/async code become defects. Avoid `throw`; prefer `Effect.fail` or `Effect.try`.
 
 ### Creating Effects
 
-| Constructor        | Use case                                      |
-|--------------------|-----------------------------------------------|
-| `Effect.succeed(v)`| Pure success                                  |
-| `Effect.fail(e)`   | Expected failure                              |
-| `Effect.sync(() => x)` | Sync side effect; must not throw           |
-| `Effect.try(() => x)`  | Sync that may throw → defect or caught     |
-| `Effect.promise(() => Promise)` | Wrap Promise (reject → defect)   |
-| `Effect.gen(function* () { ... })` | Generator style, like async/await |
+| Constructor                        | Use case                               |
+| ---------------------------------- | -------------------------------------- |
+| `Effect.succeed(v)`                | Pure success                           |
+| `Effect.fail(e)`                   | Expected failure                       |
+| `Effect.sync(() => x)`             | Sync side effect; must not throw       |
+| `Effect.try(() => x)`              | Sync that may throw → defect or caught |
+| `Effect.promise(() => Promise)`    | Wrap Promise (reject → defect)         |
+| `Effect.gen(function* () { ... })` | Generator style, like async/await      |
 
 ```ts
 const program = Effect.gen(function* () {
@@ -59,11 +59,11 @@ const program = Effect.gen(function* () {
 
 ### Running Effects
 
-| Function              | Returns   | When to use                         |
-|-----------------------|-----------|-------------------------------------|
-| `Effect.runSync(e)`   | `A`       | Sync only, no fail; throws otherwise |
-| `Effect.runPromise(e)`| `Promise<A>` | Async; rejects on failure         |
-| `Effect.runPromiseExit(e)` | `Promise<Exit<A, E>>` | Get Exit for custom handling |
+| Function                   | Returns               | When to use                          |
+| -------------------------- | --------------------- | ------------------------------------ |
+| `Effect.runSync(e)`        | `A`                   | Sync only, no fail; throws otherwise |
+| `Effect.runPromise(e)`     | `Promise<A>`          | Async; rejects on failure            |
+| `Effect.runPromiseExit(e)` | `Promise<Exit<A, E>>` | Get Exit for custom handling         |
 
 Provide requirements before running: `Effect.runPromise(Effect.provide(program, layer))`.
 
@@ -112,17 +112,20 @@ Provide at the edge: `Effect.provide(program, AppLive)`.
 ## Quick Reference
 
 **Import:**
+
 ```ts
 import { Effect, Context, Layer, Data } from 'effect';
 ```
 
 **Run program with layer:**
+
 ```ts
 const runnable = Effect.provide(program, AppLive);
 Effect.runPromise(runnable);
 ```
 
 **Typed error:**
+
 ```ts
 class HttpError extends Data.TaggedClass('HttpError')<{ readonly status: number }> {}
 ```

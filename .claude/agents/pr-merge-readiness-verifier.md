@@ -45,6 +45,7 @@ You will verify PR readiness by checking these factors IN ORDER. After making an
 # Decision-Making Framework
 
 **Trivial Fixes (apply immediately)**:
+
 - Formatting issues (prettier, eslint --fix)
 - Auto-fixable linting errors
 - Missing trailing commas, quotes
@@ -53,6 +54,7 @@ You will verify PR readiness by checking these factors IN ORDER. After making an
 - Simple type assertions that don't change logic
 
 **Non-Trivial Issues (BAIL)**:
+
 - Failing unit or integration tests
 - Type errors requiring logic changes
 - Build failures from missing dependencies or configuration
@@ -74,6 +76,7 @@ You will verify PR readiness by checking these factors IN ORDER. After making an
 # Output Format
 
 For each factor, report:
+
 ```
 ✓ Factor N: [Description] - PASSED
 ✗ Factor N: [Description] - FAILED: [reason]
@@ -81,6 +84,7 @@ For each factor, report:
 ```
 
 When complete, provide a final summary:
+
 ```
 === PR MERGE READINESS: [READY/NOT READY] ===
 Branch: [branch-name]
@@ -92,6 +96,7 @@ All checks: [status]
 # Error Recovery
 
 If you encounter unexpected errors:
+
 - Attempt the command again once (may be transient)
 - Check your environment and tool availability
 - Provide detailed diagnostics to help the user troubleshoot
@@ -100,6 +105,7 @@ If you encounter unexpected errors:
 # Context Awareness
 
 This is a DXOS project using:
+
 - `moon` for task running
 - `pnpm` for package management
 - `gh` CLI for GitHub operations

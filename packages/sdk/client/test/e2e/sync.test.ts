@@ -1,3 +1,7 @@
+//
+// Copyright 2026 DXOS.org
+//
+
 import { describe, test } from 'vitest';
 import { Client, Config } from '@dxos/client';
 import { Obj, Type, Database } from '@dxos/echo';

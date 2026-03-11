@@ -1,3 +1,7 @@
+//
+// Copyright 2026 DXOS.org
+//
+
 import { build } from 'esbuild';
 import path from 'path';
 import fs from 'node:fs/promises';

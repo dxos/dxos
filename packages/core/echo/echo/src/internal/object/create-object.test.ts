@@ -54,13 +54,13 @@ describe('create (static version)', () => {
 
     const json = JSON.parse(JSON.stringify(contact));
     expect(json).toEqual({
-      'id': contact.id,
+      id: contact.id,
       '@type': DXN.fromTypenameAndVersion(TestSchema.Person.typename, TestSchema.Person.version).toString(),
       '@meta': {
         keys: [],
       },
-      'name': 'Bot',
-      'email': 'bot@example.com',
+      name: 'Bot',
+      email: 'bot@example.com',
     });
     expect(objectToJSON(contact)).toStrictEqual(json);
   });

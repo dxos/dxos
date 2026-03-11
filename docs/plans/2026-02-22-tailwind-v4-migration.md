@@ -5,6 +5,7 @@
 **Goal:** Complete the Tailwind v4 migration so Storybook loads without errors and TW utility classes are visible in the browser.
 
 **Architecture:**
+
 - `packages/ui/ui-theme/src/theme.css` is the source CSS with `@import 'tailwindcss'`, `@theme`, `@plugin`, and layer imports
 - `scripts/process-theme-css.mjs` builds `dist/plugin/node-esm/theme.css` by inlining all `@import`s, leaving `@apply` for Vite to process at runtime
 - `ThemePlugin` (Vite plugin) resolves the virtual `@dxos-theme` module to the dist/theme.css, runs it through PostCSS+Tailwind with content paths to generate utilities and process `@apply`
@@ -15,7 +16,7 @@
 
 ## Current Errors
 
-1. **Runtime crash**: `Cannot apply unknown utility class \`ease-[cubic-bezier(0.4,\`` in `dist/plugin/node-esm/theme.css`
+1. **Runtime crash**: `Cannot apply unknown utility class \`ease-[cubic-bezier(0.4,\``in`dist/plugin/node-esm/theme.css`
    - Root cause: `process-theme-css.mjs` uses the removed `@ch-ui/tokens` package and runs `tailwindcss()` without content, producing a stale dist/theme.css where cubic-bezier values have spaces (e.g. `0.4, 0, 0.6, 1`) which Tailwind v4 misparses as multiple class names
    - Source files are correct (no spaces in cubic-bezier values)
 
@@ -27,6 +28,7 @@
 ## Task 1: Fix process-theme-css.mjs
 
 **Files:**
+
 - Modify: `packages/ui/ui-theme/scripts/process-theme-css.mjs`
 
 **Context:** This script builds the dist/theme.css. It currently imports the removed `@ch-ui/tokens` package. The script should ONLY inline imports (postcss-import + postcss-nesting) so that `@apply` directives are preserved for Vite to process at runtime with content paths.
@@ -51,16 +53,10 @@ import postcssNesting from 'postcss-nesting';
 
 // Only inline @imports and process nesting.
 // Do NOT run tailwindcss() here - @apply is processed at Vite runtime with content paths.
-const processor = postcss([
-  postcssImport(),
-  postcssNesting(),
-]);
+const processor = postcss([postcssImport(), postcssNesting()]);
 
 const inputFile = 'src/theme.css';
-const outputFiles = [
-  'dist/plugin/node-esm/theme.css',
-  'dist/plugin/node-cjs/theme.css',
-];
+const outputFiles = ['dist/plugin/node-esm/theme.css', 'dist/plugin/node-cjs/theme.css'];
 
 async function processCSS() {
   console.log(`Reading ${inputFile}...`);
@@ -94,6 +90,7 @@ cd packages/ui/ui-theme && node scripts/process-theme-css.mjs
 ```
 
 Expected output:
+
 ```
 Reading src/theme.css...
 Processing CSS (inlining imports)...
@@ -195,9 +192,11 @@ DEBUG=1 moon run storybook-react:serve 2>&1 | grep -i "content" | head -10
 **Step 5: If content paths are wrong, fix resolveContent.ts**
 
 The content paths in main.ts are absolute paths computed at config time:
+
 ```ts
 export const content = modules.map((dir) => join(packages, dir, contentFiles));
 ```
+
 These are absolute, so `resolveKnownPeers` should pass them through unchanged.
 
 ---

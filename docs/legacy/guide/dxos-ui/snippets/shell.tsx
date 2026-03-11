@@ -18,8 +18,7 @@ const Component = () => {
         await client.shell.open();
 
         // open the identity creation flow
-        const { identity: id2, cancelled } =
-          await client.shell.createIdentity();
+        const { identity: id2, cancelled } = await client.shell.createIdentity();
 
         // join another device using an invitation
         const { identity: id1 } = await client.shell.joinIdentity({

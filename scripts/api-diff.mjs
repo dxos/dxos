@@ -406,9 +406,9 @@ function outputChanges(packageName, oldVersion, newVersion, changes) {
 
   // Create a flat list of all changes with their type
   const allChanges = [
-    ...changes.added.map(item => ({ type: 'added', name: item.name, item })),
-    ...changes.changed.map(item => ({ type: 'changed', name: item.name, item })),
-    ...changes.removed.map(item => ({ type: 'removed', name: item.name, item }))
+    ...changes.added.map((item) => ({ type: 'added', name: item.name, item })),
+    ...changes.changed.map((item) => ({ type: 'changed', name: item.name, item })),
+    ...changes.removed.map((item) => ({ type: 'removed', name: item.name, item })),
   ];
 
   // Sort all changes by name

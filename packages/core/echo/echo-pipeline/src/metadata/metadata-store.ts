@@ -366,9 +366,9 @@ const fromBytesInt32 = (buf: Buffer) => buf.readInt32LE(0);
 export const hasInvitationExpired = (invitation: Invitation): boolean => {
   return Boolean(
     invitation.created &&
-      invitation.lifetime &&
-      invitation.lifetime !== 0 &&
-      invitation.created.getTime() + invitation.lifetime * 1000 < Date.now(),
+    invitation.lifetime &&
+    invitation.lifetime !== 0 &&
+    invitation.created.getTime() + invitation.lifetime * 1000 < Date.now(),
   );
 };
 

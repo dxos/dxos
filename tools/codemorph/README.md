@@ -20,7 +20,7 @@ px affected --target=lint --fix
 Command:
 
 ```bash
- ./scripts/run.sh -t src/imports.ts --replace=@dxos/async#Event:@dxos/foo 
+ ./scripts/run.sh -t src/imports.ts --replace=@dxos/async#Event:@dxos/foo
 ```
 
 Before:

@@ -14,4 +14,3 @@
     - Copy URL and paste in browser
     - Authorize bot (should be offline)
   - Ensure bot has permission to test channel (dev-null)
-

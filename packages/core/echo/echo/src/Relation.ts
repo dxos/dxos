@@ -27,9 +27,7 @@ export type Endpoints<Source, Target> = {
  * @private
  */
 interface BaseRelation<Source, Target>
-  extends internal.AnyEntity,
-    Endpoints<Source, Target>,
-    Entity.OfKind<internal.EntityKind.Relation> {}
+  extends internal.AnyEntity, Endpoints<Source, Target>, Entity.OfKind<internal.EntityKind.Relation> {}
 
 /**
  * Relation with no known properties beyond id, kind, source, and target.

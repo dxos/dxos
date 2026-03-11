@@ -89,7 +89,6 @@ catalog:
   '@effect/workflow': ^0.16.0
   '@emoji-mart/data': ^1.1.2
   '@emoji-mart/react': ^1.1.1
-  '@eslint/js': ^9.37.0
   '@excalidraw/excalidraw': ^0.18.0
   '@fluentui/react-tabster': 9.26.11
   '@fontsource-variable/inter': 5.2.8
@@ -183,7 +182,6 @@ catalog:
   '@rive-app/react-canvas': ^4.14.0
   '@robloche/chartjs-plugin-streaming': 3.1.0
   '@rollup/plugin-inject': ^5.0.5
-  '@rushstack/eslint-patch': ^1.12.0
   '@solid-primitives/utils': ^6.3.2
   '@solidjs/testing-library': ^0.8.10
   '@storybook/addon-docs': ^10.2.12
@@ -223,7 +221,6 @@ catalog:
   '@tldraw/tldraw': ^3.0.0
   '@tldraw/tlschema': ^3.0.0
   '@tldraw/utils': ^3.0.0
-  '@trivago/prettier-plugin-sort-imports': ^5.2.2
   '@trpc/server': ^10.45.3
   '@types/argparse': ^2.0.0
   '@types/bytes': ^3.1.1
@@ -382,17 +379,6 @@ catalog:
   esbuild-plugin-yaml: ^0.0.1
   esbuild-style-plugin: ^1.6.1
   esbuild-wasm: ^0.16.14
-  eslint: ^9.37.0
-  eslint-config-prettier: ^10.1.8
-  eslint-formatter-unix: ^8.40.0
-  eslint-plugin-i18next: ^6.1.3
-  eslint-plugin-import-x: 4.6.1
-  eslint-plugin-prefer-arrow-functions: ^3.6.2
-  eslint-plugin-prettier: ^5.5.4
-  eslint-plugin-react: ^7.37.5
-  eslint-plugin-sort-exports: ^0.9.1
-  eslint-plugin-storybook: ^10.2.12
-  eslint-plugin-unused-imports: ^4.1.4
   eventemitter3: ^5.0.1
   events: ^3.3.0
   exa-js: ^1.5.12
@@ -521,7 +507,6 @@ catalog:
   posthog-js: ^1.353.0
   preact: ^10.26.10
   prettier: ^3.6.2
-  prettier-plugin-packagejson: ^2.5.19
   protobufjs: ^7.2.5
   pwa-asset-generator: ^6.4.0
   quickjs-emscripten: 0.31.0
@@ -610,7 +595,6 @@ catalog:
   typedoc: 0.28.1
   types-package-json: ^2.0.39
   typescript: ^5.9.3
-  typescript-eslint: ^8.39.0
   ua-parser-js: ^1.0.39
   uint8arrays: ^5.1.0
   ulidx: ^2.3.0

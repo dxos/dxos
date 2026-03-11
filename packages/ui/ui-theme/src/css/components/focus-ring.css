@@ -189,7 +189,8 @@
     }
   }
 
-  .dx-focus-ring-inset-over-all, .dx-focus-ring-inset-over-all-always {
+  .dx-focus-ring-inset-over-all,
+  .dx-focus-ring-inset-over-all-always {
     &:not([disabled]),
     &[disabled='false'] {
       &::after {

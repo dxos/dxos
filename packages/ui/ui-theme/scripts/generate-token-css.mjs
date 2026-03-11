@@ -17,6 +17,10 @@
  *
  * The generated CSS will be written to src/styles/generated-tokens.css
  */
+//
+// Copyright 2026 DXOS.org
+//
+
 import { writeFile } from 'node:fs/promises';
 import { renderTokenSet } from '@ch-ui/tokens';
 
