@@ -1,6 +1,17 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": null,
+  "plugins": [
+    "eslint",
+    "typescript",
+    "unicorn",
+    "oxc",
+    "react",
+    "react-perf",
+    "promise",
+    "vitest",
+    "jsdoc",
+    "node"
+  ],
   "categories": {},
   "options": {
     "denyWarnings": true,
@@ -44,6 +55,24 @@
     "typescript/no-floating-promises": "error",
     "typescript/no-unsafe-unary-minus": "off",
     "typescript/require-array-sort-compare": "off",
+    "jest/expect-expect": "off",
+    "jest/no-conditional-expect": "off",
+    "jest/no-disabled-tests": "off",
+    "jest/no-export": "off",
+    "jest/no-focused-tests": "off",
+    "jest/no-standalone-expect": "off",
+    "jest/require-to-throw-message": "off",
+    "jest/valid-describe-callback": "off",
+    "jest/valid-expect": "off",
+    "jest/valid-title": "off",
+    "vitest/warn-todo": "off",
+    "promise/no-callback-in-promise": "off",
+    "promise/valid-params": "off",
+    "react/jsx-key": "off",
+    "react-hooks/exhaustive-deps": "off",
+    "jsdoc/check-tag-names": "off",
+    "jsdoc/no-defaults": "off",
+    "jsdoc/require-yields": "off",
     "@dxos/eslint-plugin-rules/effect-subpath-imports": "warn",
     "@dxos/eslint-plugin-rules/header": "warn",
     "@dxos/eslint-plugin-rules/no-bare-dot-imports": "error",
@@ -93,5 +122,7 @@
     "**/tailwind.ts",
     "tools/swc-log-plugin/test-rig/**"
   ],
-  "jsPlugins": ["@dxos/eslint-plugin-rules"]
+  "jsPlugins": [
+    "@dxos/eslint-plugin-rules"
+  ]
 }
