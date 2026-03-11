@@ -3,6 +3,7 @@
 //
 
 import { type CleanupFn, Event, SubscriptionList } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type PeerInfo as MessagingPeer, PeerInfoHash } from '@dxos/messaging';
@@ -26,6 +27,7 @@ export interface PeerInfo {
 }
 
 export class SwarmMapper {
+  private readonly _ctx = Context.default();
   private readonly _subscriptions = new SubscriptionList();
   private readonly _connectionSubscriptions = new ComplexMap<MessagingPeer, CleanupFn>(PeerInfoHash);
   private readonly _peers = new ComplexMap<MessagingPeer, PeerInfo>(PeerInfoHash);
@@ -39,11 +41,11 @@ export class SwarmMapper {
   constructor(private readonly _swarm: Swarm) {
     this._subscriptions.add(
       _swarm.connectionAdded.on((connection) => {
-        this._update();
+        this._update(this._ctx);
         this._connectionSubscriptions.set(
           connection.remoteInfo,
           connection.stateChanged.on(() => {
-            this._update();
+            this._update(this._ctx);
           }),
         );
       }),
@@ -53,27 +55,21 @@ export class SwarmMapper {
       _swarm.disconnected.on((peerId) => {
         this._connectionSubscriptions.get(peerId)?.();
         this._connectionSubscriptions.delete(peerId);
-        this._update();
+        this._update(this._ctx);
       }),
     );
 
-    // if (_presence) {
-    //   this._subscriptions.add(_presence.graphUpdated.on(() => {
-    //     this._update();
-    //   }));
-    // }
-
     // TODO(burdon): Do not call from constructor.
-    this._update();
+    this._update(this._ctx);
   }
 
-  private _update(): void {
+  private _update(ctx: Context): void {
     log('updating swarm');
 
     this._peers.clear();
     this._peers.set(this._swarm.ownPeer, {
       id: this._swarm.ownPeerId,
-      state: 'ME', // TODO(burdon): Enum (rename "local").
+      state: 'ME',
       connections: [],
     });
 
@@ -85,30 +81,6 @@ export class SwarmMapper {
       });
     }
 
-    // if (this._presence) {
-    //   this._presence.graph.forEachNode((node: any) => {
-    //     const id = PublicKey.fromHex(node.id);
-    //     if (this._peers.has(id)) {
-    //       return;
-    //     }
-
-    //     this._peers.set(id, {
-    //       id,
-    //       state: 'INDIRECTLY_CONNECTED',
-    //       connections: []
-    //     });
-    //   });
-
-    //   this._presence.graph.forEachLink((link: any) => {
-    //     const from = PublicKey.from(link.fromId);
-    //     const to = PublicKey.from(link.toId);
-    //     // Ignore connections to self, they are already handled.
-    //     if (!from.equals(this._swarm.ownPeerId) && !to.equals(this._swarm.ownPeerId)) {
-    //       this._peers.get(from)!.connections.push(to);
-    //     }
-    //   });
-    // }
-
     log('graph changed', {
       directConnections: this._swarm.connections.length,
       totalPeersInSwarm: this._peers.size,
@@ -118,7 +90,7 @@ export class SwarmMapper {
   }
 
   // TODO(burdon): Async open/close.
-  destroy(): void {
+  destroy(ctx: Context): void {
     Array.from(this._connectionSubscriptions.values()).forEach((cb) => cb());
     this._connectionSubscriptions.clear();
     this._subscriptions.clear();

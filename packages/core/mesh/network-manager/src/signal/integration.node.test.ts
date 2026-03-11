@@ -4,6 +4,7 @@
 
 import { afterAll, beforeAll, describe, expect, onTestFinished, test } from 'vitest';
 
+import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { Messenger, type PeerInfo, WebsocketSignalManager } from '@dxos/messaging';
 import { type SignalServerRunner, runTestSignalServer } from '@dxos/signal';
@@ -38,9 +39,9 @@ describe('Signal Integration Test', () => {
     const messenger = new Messenger({
       signalManager,
     });
-    messenger.open();
-    onTestFinished(() => messenger.close());
-    await messenger.listen({
+    messenger.open(Context.default());
+    onTestFinished(() => messenger.close(Context.default()));
+    await messenger.listen(Context.default(), {
       peer,
       onMessage: async (message) => await messageRouter.receiveMessage(message),
     });
@@ -50,7 +51,7 @@ describe('Signal Integration Test', () => {
       receivedSignals.push(msg);
     };
     const messageRouter = new SwarmMessenger({
-      sendMessage: messenger.sendMessage.bind(messenger),
+      sendMessage: (message) => messenger.sendMessage(Context.default(), message),
       onSignal: signalMock,
       onOffer: async () => ({ accept: true }),
       topic,

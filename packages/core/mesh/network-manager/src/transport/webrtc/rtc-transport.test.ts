@@ -5,6 +5,7 @@
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { TestStream, sleep } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 
 import { type TransportOptions } from '../transport';
@@ -191,7 +192,7 @@ describe.skip('RtcTransport', () => {
   };
 
   const createChannel = (args: TestSetup) => {
-    const channel = args.connection.createTransportChannel(args.options);
+    const channel = args.connection.createTransportChannel(Context.default(), args.options);
     const originalOpen = channel.open.bind(channel);
     (channel as any).open = async () => {
       await originalOpen();

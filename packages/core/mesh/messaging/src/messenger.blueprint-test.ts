@@ -5,6 +5,7 @@
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout, latch, sleep } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { range } from '@dxos/util';
 
 import { WebsocketSignalManager } from './signal-manager';
@@ -30,7 +31,7 @@ export const messengerTests = (signalManagerFactory: TestBuilder['createSignalMa
 
     const promise = peer2.waitTillReceive(message);
 
-    await peer1.messenger.sendMessage(message);
+    await peer1.messenger.sendMessage(Context.default(), message);
 
     await promise;
   });
@@ -52,7 +53,7 @@ export const messengerTests = (signalManagerFactory: TestBuilder['createSignalMa
       };
 
       const promise = peer2.waitTillReceive(message);
-      await peer1.messenger.sendMessage(message);
+      await peer1.messenger.sendMessage(Context.default(), message);
       await asyncTimeout(promise, 1_000);
     }
 
@@ -64,7 +65,7 @@ export const messengerTests = (signalManagerFactory: TestBuilder['createSignalMa
       };
 
       const promise = peer3.waitTillReceive(message);
-      await peer1.messenger.sendMessage(message);
+      await peer1.messenger.sendMessage(Context.default(), message);
       await asyncTimeout(promise, 1_000);
     }
 
@@ -76,7 +77,7 @@ export const messengerTests = (signalManagerFactory: TestBuilder['createSignalMa
       };
 
       const promise = peer1.waitTillReceive(message);
-      await peer2.messenger.sendMessage(message);
+      await peer2.messenger.sendMessage(Context.default(), message);
       await asyncTimeout(promise, 1_000);
     }
   });
@@ -91,7 +92,7 @@ export const messengerTests = (signalManagerFactory: TestBuilder['createSignalMa
 
     // Subscribe first listener for second messenger.
     const onMessage1: Message[] = [];
-    await peer2.messenger.listen({
+    await peer2.messenger.listen(Context.default(), {
       peer: peer2.peerInfo,
       payloadType: PAYLOAD_1.type_url,
       onMessage: async (message) => {
@@ -101,7 +102,7 @@ export const messengerTests = (signalManagerFactory: TestBuilder['createSignalMa
 
     // Subscribe first listener for second messenger.
     const onMessage2: Message[] = [];
-    await peer2.messenger.listen({
+    await peer2.messenger.listen(Context.default(), {
       peer: peer2.peerInfo,
       payloadType: PAYLOAD_1.type_url,
       onMessage: async (message) => {
@@ -111,7 +112,7 @@ export const messengerTests = (signalManagerFactory: TestBuilder['createSignalMa
 
     // Subscribe third listener for second messenger.
     const onMessage3: Message[] = [];
-    await peer2.messenger.listen({
+    await peer2.messenger.listen(Context.default(), {
       peer: peer2.peerInfo,
       payloadType: PAYLOAD_2.type_url,
       onMessage: async (message) => {
@@ -128,7 +129,7 @@ export const messengerTests = (signalManagerFactory: TestBuilder['createSignalMa
       };
       const promise = peer2.waitTillReceive(message);
 
-      await peer1.messenger.sendMessage(message);
+      await peer1.messenger.sendMessage(Context.default(), message);
 
       // 3 listeners (default one that was returned by setupPeer() and 2 that listen for type "1") should receive message.
       await asyncTimeout(promise, 1_000);
@@ -148,7 +149,7 @@ export const messengerTests = (signalManagerFactory: TestBuilder['createSignalMa
 
     // Subscribe first listener for second messenger.
     const messages1: Message[] = [];
-    await peer2.messenger.listen({
+    await peer2.messenger.listen(Context.default(), {
       peer: peer2.peerInfo,
       payloadType: PAYLOAD_1.type_url,
       onMessage: async (message) => {
@@ -158,7 +159,7 @@ export const messengerTests = (signalManagerFactory: TestBuilder['createSignalMa
 
     // Subscribe first listener for second messenger.
     const messages2: Message[] = [];
-    const listenerHandle2 = await peer2.messenger.listen({
+    const listenerHandle2 = await peer2.messenger.listen(Context.default(), {
       peer: peer2.peerInfo,
       payloadType: PAYLOAD_1.type_url,
       onMessage: async (message) => {
@@ -175,7 +176,7 @@ export const messengerTests = (signalManagerFactory: TestBuilder['createSignalMa
       };
 
       const receivePromise = peer2.waitTillReceive(message);
-      await peer1.messenger.sendMessage(message);
+      await peer1.messenger.sendMessage(Context.default(), message);
 
       // 2 subscribed listeners should receive message.
       await asyncTimeout(receivePromise, 1_000);
@@ -195,7 +196,7 @@ export const messengerTests = (signalManagerFactory: TestBuilder['createSignalMa
       };
 
       const receivePromise = peer2.waitTillReceive(message);
-      await peer1.messenger.sendMessage(message);
+      await peer1.messenger.sendMessage(Context.default(), message);
 
       // 1 listener that was not unsubscribed should receive message.
       await asyncTimeout(receivePromise, 1_000);
@@ -221,7 +222,7 @@ export const messengerTests = (signalManagerFactory: TestBuilder['createSignalMa
 
     {
       const receivePromise = peer2.waitTillReceive(message);
-      await peer1.messenger.sendMessage(message);
+      await peer1.messenger.sendMessage(Context.default(), message);
       await asyncTimeout(receivePromise, 1_000);
     }
 
@@ -236,7 +237,7 @@ export const messengerTests = (signalManagerFactory: TestBuilder['createSignalMa
 
     {
       const receivePromise = peer2.waitTillReceive(message);
-      await peer1.messenger.sendMessage(message);
+      await peer1.messenger.sendMessage(Context.default(), message);
       await asyncTimeout(receivePromise, 1_000);
     }
   });
@@ -275,7 +276,7 @@ export const messengerTests = (signalManagerFactory: TestBuilder['createSignalMa
       Array(3)
         .fill(0)
         .forEach(async () => {
-          await peer2.messenger.sendMessage(message);
+          await peer2.messenger.sendMessage(Context.default(), message);
         });
 
       // expect to receive 3 messages.
@@ -302,7 +303,7 @@ export const messengerTests = (signalManagerFactory: TestBuilder['createSignalMa
         count = inc();
       });
       // sending message.
-      await peer2.messenger.sendMessage({
+      await peer2.messenger.sendMessage(Context.default(), {
         author: peer2.peerInfo,
         recipient: peer1.peerInfo,
         payload: PAYLOAD_1,
@@ -322,7 +323,7 @@ export const messengerTests = (signalManagerFactory: TestBuilder['createSignalMa
       void range(100).map(async () => {
         const peer = await builder.createPeer();
 
-        void peer.messenger.sendMessage({
+        void peer.messenger.sendMessage(Context.default(), {
           author: peer.peerInfo,
           recipient: peer.peerInfo,
           payload: {

@@ -5,7 +5,7 @@
 import { Duplex } from 'node:stream';
 
 import { Event as AsyncEvent } from '@dxos/async';
-import { Resource } from '@dxos/context';
+import { Context, Resource } from '@dxos/context';
 import { ErrorStream } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -57,7 +57,7 @@ export class RtcTransportChannel extends Resource implements Transport {
     invariant(!this._isChannelCreationInProgress);
     this._isChannelCreationInProgress = true;
     this._connection
-      .createDataChannel(this._options.topic)
+      .createDataChannel(this._ctx, this._options.topic)
       .then((channel) => {
         if (this.isOpen) {
           this._channel = channel;
@@ -189,7 +189,7 @@ export class RtcTransportChannel extends Resource implements Transport {
   }
 
   public onSignal(signal: Signal): Promise<void> {
-    return this._connection.onSignal(signal);
+    return this._connection.onSignal(this._ctx, signal);
   }
 
   async getDetails(): Promise<string> {

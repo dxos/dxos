@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
@@ -92,7 +93,7 @@ export class TestPeer {
   ) {
     this._signalManager = this.testBuilder.createSignalManager();
     this._networkManager = this.createNetworkManager(this.transport);
-    this._networkManager.setPeerInfo({ identityKey: peerId.toHex(), peerKey: peerId.toHex() });
+    this._networkManager.setPeerInfo(Context.default(), { identityKey: peerId.toHex(), peerKey: peerId.toHex() });
   }
 
   // TODO(burdon): Move to TestBuilder.
@@ -158,7 +159,7 @@ export class TestPeer {
   }
 
   async open(): Promise<void> {
-    await this._networkManager.open();
+    await this._networkManager.open(Context.default());
     await this._proxy?.open();
     await this._service?.open();
   }
@@ -169,7 +170,7 @@ export class TestPeer {
 
     await this._proxy?.close();
     await this._service?.close();
-    await this._networkManager.close();
+    await this._networkManager.close(Context.default());
   }
 
   getSwarm(topic: PublicKey): TestSwarmConnection {
@@ -193,11 +194,11 @@ export class TestPeer {
   }
 
   async goOffline(): Promise<void> {
-    await this._networkManager.setConnectionState(ConnectionState.OFFLINE);
+    await this._networkManager.setConnectionState(Context.default(), ConnectionState.OFFLINE);
   }
 
   async goOnline(): Promise<void> {
-    await this._networkManager.setConnectionState(ConnectionState.ONLINE);
+    await this._networkManager.setConnectionState(Context.default(), ConnectionState.ONLINE);
   }
 }
 
@@ -218,7 +219,7 @@ export class TestSwarmConnection {
   // TODO(burdon): Need to create new plugin instance per swarm?
   //  If so, then perhaps joinSwarm should return swarm object with access to plugins.
   async join(topology = new FullyConnectedTopology()): Promise<this> {
-    await this.peer._networkManager.joinSwarm({
+    await this.peer._networkManager.joinSwarm(Context.default(), {
       topic: this.topic,
       peerInfo: { peerKey: this.peer.peerId.toHex(), identityKey: this.peer.peerId.toHex() },
       protocolProvider: this.protocol.factory,
@@ -229,7 +230,7 @@ export class TestSwarmConnection {
   }
 
   async leave(): Promise<this> {
-    await this.peer._networkManager.leaveSwarm(this.topic);
+    await this.peer._networkManager.leaveSwarm(Context.default(), this.topic);
     return this;
   }
 }

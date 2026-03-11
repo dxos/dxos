@@ -5,6 +5,7 @@
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout, sleep } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import {
   MemorySignalManager,
@@ -62,11 +63,11 @@ describe.skip('Swarm', () => {
     );
 
     onTestFinished(async () => {
-      await swarm.destroy();
+      await swarm.destroy(Context.default());
       await signalManager.close();
     });
 
-    await swarm.open();
+    await swarm.open(Context.default());
 
     return { swarm, protocol, topic, peer, signalManager };
   };
@@ -136,8 +137,8 @@ describe.skip('Swarm', () => {
 
     await connectSwarms(peer1, peer2, () => sleep(15));
 
-    void peer1.swarm._peers.get(peer2.peer)!.connection!.close();
-    void peer2.swarm.goOffline();
+    void peer1.swarm._peers.get(peer2.peer)!.connection!.close(Context.default());
+    void peer2.swarm.goOffline(Context.default());
 
     const reconnectedPeer2 = await setupSwarm({ topic, peer: peer2.peer });
 
@@ -207,7 +208,7 @@ const connectSwarms = async (peer1: TestPeer, peer2: TestPeer, delay = async () 
   const connect1 = peer1.swarm.connected.waitForCount(1);
   const connect2 = peer2.swarm.connected.waitForCount(1);
 
-  void peer1.swarm.onSwarmEvent({
+  void peer1.swarm.onSwarmEvent(Context.default(), {
     topic: peer2.topic,
     peerAvailable: {
       peer: peer2.peer,
@@ -217,7 +218,7 @@ const connectSwarms = async (peer1: TestPeer, peer2: TestPeer, delay = async () 
 
   await delay();
 
-  void peer2.swarm.onSwarmEvent({
+  void peer2.swarm.onSwarmEvent(Context.default(), {
     topic: peer1.topic,
     peerAvailable: {
       peer: peer1.peer,

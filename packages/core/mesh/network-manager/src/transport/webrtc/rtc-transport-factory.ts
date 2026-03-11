@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Context } from '@dxos/context';
+
 import type { IceProvider } from '../../signal';
 import type { TransportFactory } from '../transport';
 
@@ -24,7 +26,7 @@ export const createRtcTransportFactory = (
         webrtcConfig,
         iceProvider,
       });
-      return connection.createTransportChannel(options);
+      return connection.createTransportChannel(Context.default(), options);
     },
   };
 };

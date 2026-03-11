@@ -5,6 +5,7 @@
 import { afterAll, beforeAll, describe, expect, onTestFinished, test } from 'vitest';
 
 import { type Any } from '@dxos/codec-protobuf';
+import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols/proto';
@@ -27,7 +28,7 @@ describe('SignalRPCClient', () => {
   // TODO(burdon): Convert to TestBuilder pattern.
   const setupClient = async () => {
     const client = new SignalRPCClient({ url: broker.url() });
-    onTestFinished(async () => await client.close());
+    onTestFinished(async () => await client.close(Context.default()));
     return client;
   };
 
@@ -38,7 +39,7 @@ describe('SignalRPCClient', () => {
     const peerId1 = PublicKey.random();
     const peerId2 = PublicKey.random();
 
-    const stream1 = await client1.receiveMessages(peerId1);
+    const stream1 = await client1.receiveMessages(Context.default(), peerId1);
     const payload: Any = {
       type_url: 'example.testing.data.TestPayload',
       value: schema.getCodecForType('example.testing.data.TestPayload').encode({ data: 'Some payload' }),
@@ -58,7 +59,7 @@ describe('SignalRPCClient', () => {
       );
     });
 
-    await client2.sendMessage({
+    await client2.sendMessage(Context.default(), {
       author: peerId2,
       recipient: peerId1,
       payload,
@@ -77,7 +78,7 @@ describe('SignalRPCClient', () => {
     const peerId2 = PublicKey.random();
     const topic = PublicKey.random();
 
-    const stream1 = await client1.join({ topic, peerId: peerId1 });
+    const stream1 = await client1.join(Context.default(), { topic, peerId: peerId1 });
     const promise = new Promise<SwarmEvent>((resolve) => {
       stream1.subscribe(
         (event: SwarmEvent) => {
@@ -93,7 +94,7 @@ describe('SignalRPCClient', () => {
         },
       );
     });
-    const stream2 = await client2.join({ topic, peerId: peerId2 });
+    const stream2 = await client2.join(Context.default(), { topic, peerId: peerId2 });
 
     expect((await promise).peerAvailable?.peer).toEqual(peerId2.asBuffer());
     void stream1.close();

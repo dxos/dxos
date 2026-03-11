@@ -5,6 +5,7 @@
 import { expect, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { range } from '@dxos/util';
@@ -149,7 +150,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     // Going offline and back online
     //
     const connectionDropped = peer2._networkManager
-      .getSwarm(topic)
+      .getSwarm(Context.default(), topic)
       ?.disconnected.waitFor(({ peerKey }) => peer1.peerId.equals(peerKey!));
 
     const peerLeft = peer2._signalManager.swarmEvent.waitFor(
@@ -162,7 +163,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
 
     // Wait for peer to be removed from the swarm.
     await expect
-      .poll(() => !!peer2._networkManager.getSwarm(topic)!._peers.get({ peerKey: peer1.peerId.toHex() })?.advertizing, {
+      .poll(() => !!peer2._networkManager.getSwarm(Context.default(), topic)!._peers.get({ peerKey: peer1.peerId.toHex() })?.advertizing, {
         timeout: 1_000,
       })
       .toBe(false);
@@ -170,12 +171,12 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     await peer1.goOnline();
 
     await expect
-      .poll(() => peer1._networkManager.getSwarm(topic)?._peers.get({ peerKey: peer2.peerId.toHex() })?.advertizing, {
+      .poll(() => peer1._networkManager.getSwarm(Context.default(), topic)?._peers.get({ peerKey: peer2.peerId.toHex() })?.advertizing, {
         timeout: 2_000,
       })
       .toBe(true);
     await expect
-      .poll(() => peer2._networkManager.getSwarm(topic)?._peers.get({ peerKey: peer1.peerId.toHex() })?.advertizing, {
+      .poll(() => peer2._networkManager.getSwarm(Context.default(), topic)?._peers.get({ peerKey: peer1.peerId.toHex() })?.advertizing, {
         timeout: 2_000,
       })
       .toBe(true);

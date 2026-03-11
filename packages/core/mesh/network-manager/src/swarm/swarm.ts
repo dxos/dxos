@@ -91,12 +91,12 @@ export class Swarm {
       trace.begin({ id: this._instanceId, data: { topic: this._topic.toHex(), peer: this._ownPeer } }),
     );
     log('creating swarm', { peerId: _ownPeer });
-    _topology.init(this._getSwarmController());
+    _topology.init(this._getSwarmController(this._ctx));
 
     this._swarmMessenger = new SwarmMessenger({
-      sendMessage: async (msg) => await this._messenger.sendMessage(msg),
-      onSignal: async (msg) => await this.onSignal(msg),
-      onOffer: async (msg) => await this.onOffer(msg),
+      sendMessage: async (msg) => await this._messenger.sendMessage(this._ctx, msg),
+      onSignal: async (msg) => await this.onSignal(this._ctx, msg),
+      onOffer: async (msg) => await this.onOffer(this._ctx, msg),
       topic: this._topic,
     });
     log.trace('dxos.mesh.swarm.constructor', trace.end({ id: this._instanceId }));
@@ -129,9 +129,9 @@ export class Swarm {
     return this._topic;
   }
 
-  async open(): Promise<void> {
+  async open(ctx: Context): Promise<void> {
     invariant(!this._listeningHandle);
-    this._listeningHandle = await this._messenger.listen({
+    this._listeningHandle = await this._messenger.listen(ctx, {
       peer: this._ownPeer,
       payloadType: 'dxos.mesh.swarm.SwarmMessage',
       onMessage: async (message) => {
@@ -143,18 +143,18 @@ export class Swarm {
     });
   }
 
-  async destroy(): Promise<void> {
+  async destroy(ctx: Context): Promise<void> {
     log('destroying...');
     await this._listeningHandle?.unsubscribe();
     this._listeningHandle = undefined;
 
     await this._ctx.dispose();
     await this._topology.destroy();
-    await Promise.all(Array.from(this._peers.keys()).map((key) => this._destroyPeer(key, 'swarm destroyed')));
+    await Promise.all(Array.from(this._peers.keys()).map((key) => this._destroyPeer(ctx, key, 'swarm destroyed')));
     log('destroyed');
   }
 
-  async setTopology(topology: Topology): Promise<void> {
+  async setTopology(ctx: Context, topology: Topology): Promise<void> {
     invariant(!this._ctx.disposed, 'Swarm is offline');
     if (topology === this._topology) {
       return;
@@ -166,12 +166,12 @@ export class Swarm {
 
     await this._topology.destroy();
     this._topology = topology;
-    this._topology.init(this._getSwarmController());
+    this._topology.init(this._getSwarmController(this._ctx));
     this._topology.update();
   }
 
   @synchronized
-  async onSwarmEvent(swarmEvent: SwarmEvent): Promise<void> {
+  async onSwarmEvent(ctx: Context, swarmEvent: SwarmEvent): Promise<void> {
     log('swarm event', { swarmEvent }); // TODO(burdon): Stringify.
 
     if (this._ctx.disposed) {
@@ -183,7 +183,7 @@ export class Swarm {
       const peerId = swarmEvent.peerAvailable.peer.peerKey;
       if (peerId !== this._ownPeer.peerKey) {
         log('new peer', { peerId });
-        const peer = this._getOrCreatePeer(swarmEvent.peerAvailable.peer);
+        const peer = this._getOrCreatePeer(ctx, swarmEvent.peerAvailable.peer);
         peer.advertizing = true;
       }
     } else if (swarmEvent.peerLeft) {
@@ -192,9 +192,9 @@ export class Swarm {
         peer.advertizing = false;
         // Destroy peer only if there is no p2p-connection established. Otherwise, let peers go through
         // the graceful shutdown protocol.
-        if (this._isConnectionEstablishmentInProgress(peer)) {
+        if (this._isConnectionEstablishmentInProgress(ctx, peer)) {
           log(`destroying peer, state: ${peer.connection?.state}`);
-          void this._destroyPeer(swarmEvent.peerLeft.peer, 'peer left').catch((err) => log.catch(err));
+          void this._destroyPeer(ctx, swarmEvent.peerLeft.peer, 'peer left').catch((err) => log.catch(err));
         }
       } else {
         log('received peerLeft but no peer found', { peer: swarmEvent.peerLeft.peer.peerKey });
@@ -205,7 +205,7 @@ export class Swarm {
   }
 
   @synchronized
-  async onOffer(message: OfferMessage): Promise<Answer> {
+  async onOffer(ctx: Context, message: OfferMessage): Promise<Answer> {
     log('offer', { message });
     if (this._ctx.disposed) {
       log('ignored for disposed swarm');
@@ -223,27 +223,27 @@ export class Swarm {
       return { accept: false };
     }
 
-    const peer = this._getOfferSenderPeer(message.author);
-    const answer = await peer.onOffer(message);
+    const peer = this._getOfferSenderPeer(ctx, message.author);
+    const answer = await peer.onOffer(ctx, message);
     this._topology.update();
     return answer;
   }
 
-  private _getOfferSenderPeer(senderInfo: PeerInfo): Peer {
-    const peer = this._getOrCreatePeer(senderInfo);
+  private _getOfferSenderPeer(ctx: Context, senderInfo: PeerInfo): Peer {
+    const peer = this._getOrCreatePeer(ctx, senderInfo);
 
     // Handle fast peer reconnect (eg. tab reload)
     const connectionState = peer.connection?.state;
     if (connectionState === ConnectionState.CLOSING || connectionState === ConnectionState.ABORTING) {
       this._peers.delete(peer.remoteInfo);
       this.disconnected.emit(peer.remoteInfo);
-      return this._getOrCreatePeer(peer.remoteInfo);
+      return this._getOrCreatePeer(ctx, peer.remoteInfo);
     }
 
     return peer;
   }
 
-  async onSignal(message: SignalMessage): Promise<void> {
+  async onSignal(ctx: Context, message: SignalMessage): Promise<void> {
     log('signal', { message });
     if (this._ctx.disposed) {
       log.info('ignored for offline swarm');
@@ -256,24 +256,24 @@ export class Swarm {
     invariant(message.topic?.equals(this._topic));
     invariant(message.author);
 
-    const peer = this._getOrCreatePeer(message.author);
-    await peer.onSignal(message);
+    const peer = this._getOrCreatePeer(ctx, message.author);
+    await peer.onSignal(ctx, message);
   }
 
   // For debug purposes
   @synchronized
-  async goOffline(): Promise<void> {
+  async goOffline(ctx: Context): Promise<void> {
     await this._ctx.dispose();
-    await Promise.all([...this._peers.keys()].map((peerId) => this._destroyPeer(peerId, 'goOffline')));
+    await Promise.all([...this._peers.keys()].map((peerId) => this._destroyPeer(ctx, peerId, 'goOffline')));
   }
 
   // For debug purposes
   @synchronized
-  async goOnline(): Promise<void> {
+  async goOnline(ctx: Context): Promise<void> {
     this._ctx = new Context();
   }
 
-  private _getOrCreatePeer(peerInfo: PeerInfo): Peer {
+  private _getOrCreatePeer(ctx: Context, peerInfo: PeerInfo): Peer {
     invariant(peerInfo.peerKey, 'PeerInfo.peerKey is required');
     let peer = this._peers.get(peerInfo);
     if (!peer) {
@@ -293,12 +293,12 @@ export class Swarm {
             this.connected.emit(peerInfo);
           },
           onDisconnected: async () => {
-            if (this._isUnregistered(peer)) {
+            if (this._isUnregistered(this._ctx, peer)) {
               log.verbose('ignored onDisconnected for unregistered peer');
               return;
             }
             if (!peer!.advertizing) {
-              await this._destroyPeer(peerInfo, 'peer disconnected');
+              await this._destroyPeer(this._ctx, peerInfo, 'peer disconnected');
             }
 
             this.disconnected.emit(peerInfo);
@@ -307,9 +307,9 @@ export class Swarm {
           onRejected: () => {
             // If the peer rejected our connection remove it from the set of candidates.
             // TODO(dmaretskyi): Set flag instead.
-            if (!this._isUnregistered(peer)) {
+            if (!this._isUnregistered(this._ctx, peer)) {
               log('peer rejected connection', { peerInfo });
-              void this._destroyPeer(peerInfo, 'peer rejected connection');
+              void this._destroyPeer(this._ctx, peerInfo, 'peer rejected connection');
             }
           },
           onAccepted: () => {
@@ -329,15 +329,15 @@ export class Swarm {
     return peer;
   }
 
-  private async _destroyPeer(peerInfo: PeerInfo, reason?: string): Promise<void> {
+  private async _destroyPeer(ctx: Context, peerInfo: PeerInfo, reason?: string): Promise<void> {
     log('destroy peer', { peerKey: peerInfo.peerKey, reason });
     const peer = this._peers.get(peerInfo);
     invariant(peer);
     this._peers.delete(peerInfo);
-    await peer.safeDestroy(reason);
+    await peer.safeDestroy(ctx, reason);
   }
 
-  private _getSwarmController(): SwarmController {
+  private _getSwarmController(ctx: Context): SwarmController {
     return {
       getState: () => ({
         ownPeerId: PublicKey.from(this._ownPeer.peerKey),
@@ -357,7 +357,7 @@ export class Swarm {
         // Run in a separate non-blocking task.
         scheduleTask(this._ctx, async () => {
           try {
-            await this._initiateConnection({ peerKey: peer.toHex() });
+            await this._initiateConnection(this._ctx, { peerKey: peer.toHex() });
           } catch (err: any) {
             log('initiation error', err);
           }
@@ -370,7 +370,7 @@ export class Swarm {
 
         // Run in a separate non-blocking task.
         scheduleTask(this._ctx, async () => {
-          await this._closeConnection({ peerKey: peer.toHex() });
+          await this._closeConnection(this._ctx, { peerKey: peer.toHex() });
           this._topology.update();
         });
       },
@@ -380,12 +380,11 @@ export class Swarm {
   /**
    * Creates a connection then sends message over signal network.
    */
-  private async _initiateConnection(remotePeer: PeerInfo): Promise<void> {
-    const ctx = this._ctx; // Copy to avoid getting reset while sleeping.
+  private async _initiateConnection(ctx: Context, remotePeer: PeerInfo): Promise<void> {
 
     // It is likely that the other peer will also try to connect to us at the same time.
     // If our peerId is higher, we will wait for a bit so that other peer has a chance to connect first.
-    const peer = this._getOrCreatePeer(remotePeer);
+    const peer = this._getOrCreatePeer(ctx, remotePeer);
     if (remotePeer.peerKey < this._ownPeer.peerKey) {
       log('initiation delay', { remotePeer });
       await sleep(this._initiationDelay);
@@ -394,7 +393,7 @@ export class Swarm {
       return;
     }
 
-    if (this._isUnregistered(peer)) {
+    if (this._isUnregistered(ctx, peer)) {
       throw new Error('Peer left during initiation delay');
     }
 
@@ -404,21 +403,21 @@ export class Swarm {
     }
 
     log('initiating connection...', { remotePeer });
-    await peer.initiateConnection();
+    await peer.initiateConnection(ctx);
     this._topology.update();
     log('initiated', { remotePeer });
   }
 
-  private async _closeConnection(peerInfo: PeerInfo): Promise<void> {
+  private async _closeConnection(ctx: Context, peerInfo: PeerInfo): Promise<void> {
     const peer = this._peers.get(peerInfo);
     if (!peer) {
       return;
     }
 
-    await peer.closeConnection();
+    await peer.closeConnection(ctx);
   }
 
-  private _isConnectionEstablishmentInProgress(peer: Peer): boolean {
+  private _isConnectionEstablishmentInProgress(ctx: Context, peer: Peer): boolean {
     if (!peer.connection) {
       return true;
     }
@@ -427,7 +426,7 @@ export class Swarm {
     );
   }
 
-  private _isUnregistered(peer?: Peer): boolean {
+  private _isUnregistered(ctx: Context, peer?: Peer): boolean {
     return !peer || this._peers.get(peer.remoteInfo) !== peer;
   }
 }

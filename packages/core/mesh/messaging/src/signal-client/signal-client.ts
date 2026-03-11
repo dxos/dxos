@@ -86,7 +86,7 @@ export class SignalClient extends Resource implements SignalClientMethods {
 
     this.localState = new SignalLocalState(
       async (message) => {
-        this._monitor.recordMessageReceived(message);
+        this._monitor.recordMessageReceived(this._ctx, message);
         this.onMessage.emit(message);
       },
       async (event) => this.swarmEvent.emit(event),
@@ -106,16 +106,15 @@ export class SignalClient extends Resource implements SignalClientMethods {
         await cancelWithContext(this._connectionCtx!, this._clientReady.wait({ timeout: 5_000 }));
         invariant(this._state === SignalState.CONNECTED, 'Not connected to Signal Server');
         await this.localState.reconcile(this._connectionCtx!, this._client!);
-        this._monitor.recordReconciliation({ success: true });
+        this._monitor.recordReconciliation(this._ctx, { success: true });
         this._lastReconciliationFailed = false;
       } catch (err) {
         this._lastReconciliationFailed = true;
-        this._monitor.recordReconciliation({ success: false });
+        this._monitor.recordReconciliation(this._ctx, { success: false });
         throw err;
       }
     });
 
-    // Reconcile subscriptions periodically.
     scheduleTaskInterval(
       this._ctx,
       async () => {
@@ -129,9 +128,9 @@ export class SignalClient extends Resource implements SignalClientMethods {
     this._reconnectTask = new DeferredTask(this._ctx, async () => {
       try {
         await this._reconnect();
-        this._monitor.recordReconnect({ success: true });
+        this._monitor.recordReconnect(this._ctx, { success: true });
       } catch (err) {
-        this._monitor.recordReconnect({ success: false });
+        this._monitor.recordReconnect(this._ctx, { success: false });
         throw err;
       }
     });
@@ -144,7 +143,6 @@ export class SignalClient extends Resource implements SignalClientMethods {
     if (this._state === SignalState.CLOSED || this._ctx.disposed) {
       return;
     }
-    // Don't log consecutive reconciliation failures.
     if (this._state === SignalState.CONNECTED && !this._lastReconciliationFailed) {
       log.warn('SignalClient error:', err);
     }
@@ -169,21 +167,21 @@ export class SignalClient extends Resource implements SignalClientMethods {
       state: this._state,
       error: this._lastError?.message,
       reconnectIn: this._reconnectAfter,
-      ...this._monitor.getRecordedTimestamps(),
+      ...this._monitor.getRecordedTimestamps(this._ctx),
     };
   }
 
   async join(args: JoinRequest): Promise<void> {
     log('joining', { topic: args.topic, peerId: args.peer.peerKey });
-    this._monitor.recordJoin();
-    this.localState.join({ topic: args.topic, peerId: PublicKey.from(args.peer.peerKey) });
+    this._monitor.recordJoin(this._ctx);
+    this.localState.join(this._ctx, { topic: args.topic, peerId: PublicKey.from(args.peer.peerKey) });
     this._reconcileTask?.schedule();
   }
 
   async leave(args: LeaveRequest): Promise<void> {
     log('leaving', { topic: args.topic, peerId: args.peer.peerKey });
-    this._monitor.recordLeave();
-    this.localState.leave({ topic: args.topic, peerId: PublicKey.from(args.peer.peerKey) });
+    this._monitor.recordLeave(this._ctx);
+    this.localState.leave(this._ctx, { topic: args.topic, peerId: PublicKey.from(args.peer.peerKey) });
   }
 
   async query(params: QueryRequest): Promise<SwarmResponse> {
@@ -191,12 +189,12 @@ export class SignalClient extends Resource implements SignalClientMethods {
   }
 
   async sendMessage(msg: Message): Promise<void> {
-    return this._monitor.recordMessageSending(msg, async () => {
+    return this._monitor.recordMessageSending(this._ctx, msg, async () => {
       await this._clientReady.wait();
       invariant(this._state === SignalState.CONNECTED, 'Not connected to Signal Server');
       invariant(msg.author.peerKey, 'Author key required');
       invariant(msg.recipient.peerKey, 'Recipient key required');
-      await this._client!.sendMessage({
+      await this._client!.sendMessage(this._ctx, {
         author: PublicKey.from(msg.author.peerKey),
         recipient: PublicKey.from(msg.recipient.peerKey),
         payload: msg.payload,
@@ -207,14 +205,14 @@ export class SignalClient extends Resource implements SignalClientMethods {
   async subscribeMessages(peer: PeerInfo): Promise<void> {
     invariant(peer.peerKey, 'Peer key required');
     log('subscribing to messages', { peer });
-    this.localState.subscribeMessages(PublicKey.from(peer.peerKey));
+    this.localState.subscribeMessages(this._ctx, PublicKey.from(peer.peerKey));
     this._reconcileTask?.schedule();
   }
 
   async unsubscribeMessages(peer: PeerInfo): Promise<void> {
     invariant(peer.peerKey, 'Peer key required');
     log('unsubscribing from messages', { peer });
-    this.localState.unsubscribeMessages(PublicKey.from(peer.peerKey));
+    this.localState.unsubscribeMessages(this._ctx, PublicKey.from(peer.peerKey));
   }
 
   private _scheduleReconcileAfterError(): void {
@@ -225,14 +223,13 @@ export class SignalClient extends Resource implements SignalClientMethods {
     log('creating client', { host: this._host, state: this._state });
     invariant(!this._client, 'Client already created');
 
-    this._monitor.recordConnectionStartTime();
+    this._monitor.recordConnectionStartTime(this._ctx);
 
-    // Create new context for each connection.
     this._connectionCtx = this._ctx.derive();
     this._connectionCtx.onDispose(async () => {
       log('connection context disposed');
-      const { failureCount } = await this.localState.safeCloseStreams();
-      this._monitor.recordStreamCloseErrors(failureCount);
+      const { failureCount } = await this.localState.safeCloseStreams(this._ctx);
+      this._monitor.recordStreamCloseErrors(this._ctx, failureCount);
     });
 
     try {
@@ -252,8 +249,6 @@ export class SignalClient extends Resource implements SignalClientMethods {
             }
             log('socket disconnected', { state: this._state });
             if (this._state === SignalState.ERROR) {
-              // Ignore disconnects after error.
-              // Handled by error handler before disconnect handler.
               this._setState(SignalState.DISCONNECTED);
             } else {
               this._onDisconnected();
@@ -320,7 +315,7 @@ export class SignalClient extends Resource implements SignalClientMethods {
 
   private _setState(newState: SignalState): void {
     this._state = newState;
-    this._monitor.recordStateChangeTime();
+    this._monitor.recordStateChangeTime(this._ctx);
     log('signal state changed', { status: this.getStatus() });
     this.statusChanged.emit(this.getStatus());
   }
@@ -337,7 +332,7 @@ export class SignalClient extends Resource implements SignalClientMethods {
     this._connectionCtx = undefined;
 
     this._clientReady.reset();
-    await this._client?.close().catch(() => {});
+    await this._client?.close(this._ctx).catch(() => {});
     this._client = undefined;
   }
 }

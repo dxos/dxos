@@ -5,6 +5,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { type Awaited } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { Messenger, WebsocketSignalManager } from '@dxos/messaging';
 import { type Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
@@ -49,15 +50,14 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
     });
 
     const messenger = new Messenger({ signalManager });
-    await messenger.listen({
+    await messenger.listen(Context.default(), {
       peer,
       payloadType: 'dxos.mesh.swarm.SwarmMessage',
       onMessage: async (message) => await router.receiveMessage(message),
     });
 
     const router: SwarmMessenger = new SwarmMessenger({
-      // todo(mykola): added catch to avoid not finished request.
-      sendMessage: async (message) => await messenger.sendMessage(message),
+      sendMessage: async (message) => await messenger.sendMessage(Context.default(), message),
       onSignal,
       onOffer,
       topic,

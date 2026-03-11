@@ -3,6 +3,7 @@
 //
 
 import { Event } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { type ConnectionInfo, type SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
@@ -27,10 +28,11 @@ export class ConnectionLog {
    * SwarmId => info
    */
   private readonly _swarms = new ComplexMap<PublicKey, SwarmInfo>(PublicKey.hash);
+  private readonly _ctx = Context.default();
 
   readonly update = new Event();
 
-  getSwarmInfo(swarmId: PublicKey): SwarmInfo {
+  getSwarmInfo(ctx: Context, swarmId: PublicKey): SwarmInfo {
     return this._swarms.get(swarmId) ?? raise(new Error(`Swarm not found: ${swarmId}`));
   }
 
@@ -38,7 +40,7 @@ export class ConnectionLog {
     return Array.from(this._swarms.values());
   }
 
-  joinedSwarm(swarm: Swarm): void {
+  joinedSwarm(ctx: Context, swarm: Swarm): void {
     const info: SwarmInfo = {
       id: PublicKey.from(swarm._instanceId),
       topic: swarm.topic,
@@ -97,37 +99,11 @@ export class ConnectionLog {
       });
 
       gcSwarm(info);
-
-      // connection.protocol.protocol?.error.on((error) => {
-      //   connectionInfo.events!.push({
-      //     type: EventType.PROTOCOL_ERROR,
-      //     error: error.stack ?? error.message
-      //   });
-      //   this.update.emit();
-      // });
-      // connection.protocol.protocol?.extensionsInitialized.on(() => {
-      //   connectionInfo.events!.push({
-      //     type: EventType.PROTOCOL_EXTENSIONS_INITIALIZED
-      //   });
-      //   this.update.emit();
-      // });
-      // connection.protocol.protocol?.extensionsHandshake.on(() => {
-      //   connectionInfo.events!.push({
-      //     type: EventType.PROTOCOL_EXTENSIONS_HANDSHAKE
-      //   });
-      //   this.update.emit();
-      // });
-      // connection.protocol.protocol?.handshake.on(() => {
-      //   connectionInfo.events!.push({
-      //     type: EventType.PROTOCOL_HANDSHAKE
-      //   });
-      //   this.update.emit();
-      // });
     });
   }
 
-  leftSwarm(swarm: Swarm): void {
-    this.getSwarmInfo(PublicKey.from(swarm._instanceId)).isActive = false;
+  leftSwarm(ctx: Context, swarm: Swarm): void {
+    this.getSwarmInfo(ctx, PublicKey.from(swarm._instanceId)).isActive = false;
     this.update.emit();
   }
 }

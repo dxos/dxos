@@ -118,7 +118,7 @@ export class Connection {
   public readonly transportStats = new Event<TransportStats>();
 
   private readonly _signalSendTask = new DeferredTask(this._ctx, async () => {
-    await this._flushSignalBuffer();
+    await this._flushSignalBuffer(this._ctx);
   });
 
   private _signallingDelay = STARTING_SIGNALLING_DELAY;
@@ -163,7 +163,7 @@ export class Connection {
   /**
    * Create an underlying transport and prepares it for the connection.
    */
-  async openConnection(): Promise<void> {
+  async openConnection(ctx: Context): Promise<void> {
     invariant(this._state === ConnectionState.INITIAL, 'Invalid state.');
     log.trace('dxos.mesh.connection.open-connection', trace.begin({ id: this._instanceId }));
     log.trace('dxos.mesh.connection.open', {
@@ -174,18 +174,16 @@ export class Connection {
       initiator: this.initiator,
     });
 
-    this._changeState(ConnectionState.CONNECTING);
+    this._changeState(ctx, ConnectionState.CONNECTING);
 
-    // TODO(dmaretskyi): Initialize only after the transport has established connection.
     this._protocol.open(this.sessionId).catch((err) => {
       this.errors.raise(err);
     });
 
-    // TODO(dmaretskyi): Piped streams should do this automatically, but it break's without this code.
     this._protocol.stream.on('close', () => {
       log('protocol stream closed');
       this._protocolClosed.wake();
-      this.close({ error: new ProtocolError({ message: 'protocol stream closed' }) }).catch((err) =>
+      this.close(this._ctx, { error: new ProtocolError({ message: 'protocol stream closed' }) }).catch((err) =>
         this.errors.raise(err),
       );
     });
@@ -195,6 +193,7 @@ export class Connection {
       async () => {
         log.info(`timeout waiting ${TRANSPORT_CONNECTION_TIMEOUT / 1000}s for transport to connect, aborting`);
         await this.abort(
+          this._ctx,
           new TimeoutError({ message: `${TRANSPORT_CONNECTION_TIMEOUT / 1000}s for transport to connect` }),
         ).catch((err) => this.errors.raise(err));
       },
@@ -208,23 +207,23 @@ export class Connection {
       topic: this.topic.toHex(),
       initiator: this.initiator,
       stream: this._protocol.stream,
-      sendSignal: async (signal) => this._sendSignal(signal),
+      sendSignal: async (signal) => this._sendSignal(ctx, signal),
       sessionId: this.sessionId,
     });
 
     this._transport.connected.once(async () => {
-      this._changeState(ConnectionState.CONNECTED);
+      this._changeState(this._ctx, ConnectionState.CONNECTED);
       await this.connectedTimeoutContext.dispose();
       this._callbacks?.onConnected?.();
 
-      scheduleTaskInterval(this._ctx, async () => this._emitTransportStats(), TRANSPORT_STATS_INTERVAL);
+      scheduleTaskInterval(this._ctx, async () => this._emitTransportStats(this._ctx), TRANSPORT_STATS_INTERVAL);
     });
 
     this._transport.closed.once(() => {
       this._transport = undefined;
       this._transportClosed.wake();
       log('abort triggered by transport close');
-      this.abort().catch((err) => this.errors.raise(err));
+      this.abort(this._ctx).catch((err) => this.errors.raise(err));
     });
 
     this._transport.errors.handle(async (err) => {
@@ -233,13 +232,12 @@ export class Connection {
         this.closeReason = err?.message;
       }
 
-      // TODO(nf): fix ErrorStream so instanceof works here
       if (err instanceof ConnectionResetError) {
         log.info('aborting due to transport ConnectionResetError');
-        this.abort(err).catch((err) => this.errors.raise(err));
+        this.abort(this._ctx, err).catch((err) => this.errors.raise(err));
       } else if (err instanceof ConnectivityError) {
         log.info('aborting due to transport ConnectivityError');
-        this.abort(err).catch((err) => this.errors.raise(err));
+        this.abort(this._ctx, err).catch((err) => this.errors.raise(err));
       }
 
       if (this._state !== ConnectionState.CLOSED && this._state !== ConnectionState.CLOSING) {
@@ -250,9 +248,8 @@ export class Connection {
 
     await this._transport.open();
 
-    // Replay signals that were received before transport was created.
     for (const signal of this._incomingSignalBuffer) {
-      void this._transport.onSignal(signal); // TODO(burdon): Remove async?
+      void this._transport.onSignal(signal);
     }
 
     this._incomingSignalBuffer = [];
@@ -261,9 +258,7 @@ export class Connection {
   }
 
   @synchronized
-  // TODO(nf): make the caller responsible for recording the reason and determining flow control.
-  // TODO(nf): make abort cancel an existing close in progress.
-  async abort(err?: Error): Promise<void> {
+  async abort(ctx: Context, err?: Error): Promise<void> {
     log('abort', { err });
     if (this._state === ConnectionState.CLOSED || this._state === ConnectionState.ABORTED) {
       log(`abort ignored: already ${this._state}`, this.closeReason);
@@ -271,7 +266,7 @@ export class Connection {
     }
 
     await this.connectedTimeoutContext.dispose();
-    this._changeState(ConnectionState.ABORTING);
+    this._changeState(ctx, ConnectionState.ABORTING);
     if (!this.closeReason) {
       this.closeReason = err?.message;
     }
@@ -281,15 +276,13 @@ export class Connection {
     log('aborting...', { peerId: this.localInfo, err });
 
     try {
-      // Forcefully close the stream flushing any unsent data packets.
-      await this._closeProtocol({ abort: true });
+      await this._closeProtocol(ctx, { abort: true });
     } catch (err: any) {
       log.catch(err);
     }
 
     try {
-      // After the transport is closed streams are disconnected.
-      await this._closeTransport();
+      await this._closeTransport(ctx);
     } catch (err: any) {
       log.catch(err);
     }
@@ -299,11 +292,11 @@ export class Connection {
     } catch (err) {
       log.catch(err);
     }
-    this._changeState(ConnectionState.ABORTED);
+    this._changeState(ctx, ConnectionState.ABORTED);
   }
 
   @synchronized
-  async close({ error, reason }: { error?: Error; reason?: string } = {}): Promise<void> {
+  async close(ctx: Context, { error, reason }: { error?: Error; reason?: string } = {}): Promise<void> {
     log('close', { error });
     if (!this.closeReason) {
       this.closeReason = reason ?? error?.message;
@@ -319,7 +312,7 @@ export class Connection {
       return;
     }
     const lastState = this._state;
-    this._changeState(ConnectionState.CLOSING);
+    this._changeState(ctx, ConnectionState.CLOSING);
 
     await this.connectedTimeoutContext.dispose();
     await this._ctx.dispose();
@@ -333,40 +326,39 @@ export class Connection {
     log('closing...', { peerId: this.localInfo, abortProtocol, error });
 
     try {
-      await this._closeProtocol({ abort: abortProtocol });
+      await this._closeProtocol(ctx, { abort: abortProtocol });
     } catch (err: any) {
       log.catch(err);
     }
     try {
-      // After the transport is closed streams are disconnected.
-      await this._closeTransport();
+      await this._closeTransport(ctx);
     } catch (err: any) {
       log.catch(err);
     }
 
     log('closed', { peerId: this.localInfo });
-    this._changeState(ConnectionState.CLOSED);
+    this._changeState(ctx, ConnectionState.CLOSED);
     this._callbacks?.onClosed?.(error);
   }
 
-  private async _closeProtocol(options?: { abort: boolean }): Promise<void> {
+  private async _closeProtocol(ctx: Context, options?: { abort: boolean }): Promise<void> {
     log('closing protocol', options);
     await Promise.race([options?.abort ? this._protocol.abort() : this._protocol.close(), this._protocolClosed.wait()]);
     log('protocol closed', options);
   }
 
-  private async _closeTransport(): Promise<void> {
+  private async _closeTransport(ctx: Context): Promise<void> {
     log('closing transport');
     await Promise.race([this._transport?.close(), this._transportClosed.wait()]);
     log('transport closed');
   }
 
-  private _sendSignal(signal: Signal): void {
+  private _sendSignal(ctx: Context, signal: Signal): void {
     this._outgoingSignalBuffer.push(signal);
     this._signalSendTask.schedule();
   }
 
-  private async _flushSignalBuffer(): Promise<void> {
+  private async _flushSignalBuffer(ctx: Context): Promise<void> {
     if (this._outgoingSignalBuffer.length === 0) {
       return;
     }
@@ -388,7 +380,6 @@ export class Connection {
         data: { signalBatch: { signals } },
       });
     } catch (err) {
-      // TODO(nf): determine why instanceof doesn't work here
       if (
         err instanceof CancelledError ||
         err instanceof ContextDisposedError ||
@@ -397,16 +388,15 @@ export class Connection {
         return;
       }
 
-      // If signal fails treat connection as failed
       log.info('signal message failed to deliver', { err });
-      await this.close({ error: new ConnectivityError({ message: 'signal message failed to deliver', cause: err }) });
+      await this.close(this._ctx, { error: new ConnectivityError({ message: 'signal message failed to deliver', cause: err }) });
     }
   }
 
   /**
    * Receive a signal from the remote peer.
    */
-  async signal(msg: SignalMessage): Promise<void> {
+  async signal(ctx: Context, msg: SignalMessage): Promise<void> {
     invariant(msg.sessionId);
     if (!msg.sessionId.equals(this.sessionId)) {
       log('dropping signal for incorrect session id');
@@ -433,18 +423,18 @@ export class Connection {
     }
   }
 
-  initiate(): void {
-    this._changeState(ConnectionState.INITIAL);
+  initiate(ctx: Context): void {
+    this._changeState(ctx, ConnectionState.INITIAL);
   }
 
-  private _changeState(state: ConnectionState): void {
+  private _changeState(ctx: Context, state: ConnectionState): void {
     log('stateChanged', { from: this._state, to: state, peerId: this.localInfo });
     invariant(state !== this._state, 'Already in this state.');
     this._state = state;
     this.stateChanged.emit(state);
   }
 
-  private async _emitTransportStats(): Promise<void> {
+  private async _emitTransportStats(ctx: Context): Promise<void> {
     const stats = await this.transport?.getStats();
     if (stats) {
       this.transportStats.emit(stats);

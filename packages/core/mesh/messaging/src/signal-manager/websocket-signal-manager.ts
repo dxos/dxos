@@ -133,7 +133,7 @@ export class WebsocketSignalManager extends Resource implements SignalManager {
         .catch((err) => {
           if (err instanceof RateLimitExceededError) {
             log.info('WSS rate limit exceeded', { err });
-            this._monitor.recordRateLimitExceeded();
+            this._monitor.recordRateLimitExceeded(this._ctx);
           } else if (err instanceof TimeoutError || err.constructor.name === 'TimeoutError') {
             log.info('WSS sendMessage timeout', { err });
             void this.checkServerFailure(serverName, index);
@@ -149,7 +149,7 @@ export class WebsocketSignalManager extends Resource implements SignalManager {
   async checkServerFailure(serverName: string, index: number): Promise<void> {
     const failureCount = this.failureCount.get(serverName!) ?? 0;
     const isRestartRequired = failureCount > MAX_SERVER_FAILURES;
-    this._monitor.recordServerFailure({ serverName, willRestart: isRestartRequired });
+    this._monitor.recordServerFailure(this._ctx, { serverName, willRestart: isRestartRequired });
     if (isRestartRequired) {
       if (!BitField.get(this._failedServersBitfield, index)) {
         log.warn('too many failures for ws-server, restarting', { serverName, failureCount });

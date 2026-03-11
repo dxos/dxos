@@ -5,6 +5,7 @@
 import { describe, expect, test } from 'vitest';
 
 import { asyncTimeout } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 
 import { ConnectionLimiter } from './connection-limiter';
@@ -17,8 +18,8 @@ describe('ConnectionLimiter', () => {
       const sessionId = PublicKey.random();
       yield {
         sessionId,
-        connecting: () => asyncTimeout(limiter.connecting(sessionId), 500),
-        doneConnecting: () => limiter.doneConnecting(sessionId),
+        connecting: () => asyncTimeout(limiter.connecting(Context.default(), sessionId), 500),
+        doneConnecting: () => limiter.doneConnecting(Context.default(), sessionId),
       };
     }
   }

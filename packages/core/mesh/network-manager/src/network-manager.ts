@@ -3,6 +3,7 @@
 //
 
 import { Event, synchronized } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -70,6 +71,7 @@ export class SwarmNetworkManager {
   readonly _swarms = new ComplexMap<PublicKey, Swarm>(PublicKey.hash);
   private readonly _mappers = new ComplexMap<PublicKey, SwarmMapper>(PublicKey.hash);
 
+  private readonly _ctx = Context.default();
   private readonly _transportFactory: TransportFactory;
   private readonly _signalManager: SignalManager;
   private readonly _messenger: Messenger;
@@ -88,7 +90,7 @@ export class SwarmNetworkManager {
 
     // Listen for signal manager events.
     this._signalManager = signalManager;
-    this._signalManager.swarmEvent.on((event) => this._swarms.get(event.topic)?.onSwarmEvent(event));
+    this._signalManager.swarmEvent.on((event) => this._swarms.get(event.topic)?.onSwarmEvent(this._ctx, event));
     this._messenger = new Messenger({ signalManager: this._signalManager });
     this._signalConnection = {
       join: (opts) => this._signalManager.join(opts),
@@ -117,46 +119,50 @@ export class SwarmNetworkManager {
     return Array.from(this._swarms.keys());
   }
 
-  getSwarmMap(topic: PublicKey): SwarmMapper | undefined {
+  getSwarmMap(ctx: Context, topic: PublicKey): SwarmMapper | undefined {
     return this._mappers.get(topic);
   }
 
-  getSwarm(topic: PublicKey): Swarm | undefined {
+  getSwarm(ctx: Context, topic: PublicKey): Swarm | undefined {
     return this._swarms.get(topic);
   }
 
-  setPeerInfo(peerInfo: PeerInfo): void {
+  setPeerInfo(ctx: Context, peerInfo: PeerInfo): void {
     this._peerInfo = peerInfo;
   }
 
-  async open(): Promise<void> {
+  async open(ctx: Context): Promise<void> {
     log.trace('dxos.mesh.network-manager.open', trace.begin({ id: this._instanceId }));
-    await this._messenger.open();
+    this._messenger.open(ctx);
     await this._signalManager.open();
     log.trace('dxos.mesh.network-manager.open', trace.end({ id: this._instanceId }));
   }
 
-  async close(): Promise<void> {
+  async close(ctx: Context): Promise<void> {
     for (const topic of this._swarms.keys()) {
-      await this.leaveSwarm(topic).catch((err) => {
+      await this.leaveSwarm(ctx, topic).catch((err) => {
         log(err);
       });
     }
 
-    await this._messenger.close();
+    await this._messenger.close(ctx);
     await this._signalManager.close();
   }
+
 
   /**
    * Join the swarm.
    */
   @synchronized
-  async joinSwarm({
-    topic, //
-    topology,
-    protocolProvider: protocol,
-    label,
-  }: SwarmOptions): Promise<SwarmConnection> {
+  async joinSwarm(
+    ctx: Context,
+    {
+      topic, //
+      topology,
+      protocolProvider: protocol,
+      label,
+    }: SwarmOptions,
+  ): Promise<SwarmConnection> {
     invariant(PublicKey.isPublicKey(topic));
     invariant(topology);
     invariant(this._peerInfo);
@@ -185,16 +191,16 @@ export class SwarmNetworkManager {
     this._mappers.set(topic, new SwarmMapper(swarm));
 
     // Open before joining.
-    await swarm.open();
+    await swarm.open(ctx);
 
     this._signalConnection.join({ topic, peer: this._peerInfo }).catch((error) => log.catch(error));
 
     this.topicsUpdated.emit();
-    this._connectionLog?.joinedSwarm(swarm);
+    this._connectionLog?.joinedSwarm(ctx, swarm);
     log('joined', { topic: PublicKey.from(topic), count: this._swarms.size });
 
     return {
-      close: () => this.leaveSwarm(topic),
+      close: () => this.leaveSwarm(this._ctx, topic),
     };
   }
 
@@ -202,7 +208,7 @@ export class SwarmNetworkManager {
    * Close the connection.
    */
   @synchronized
-  async leaveSwarm(topic: PublicKey): Promise<void> {
+  async leaveSwarm(ctx: Context, topic: PublicKey): Promise<void> {
     if (!this._swarms.has(topic)) {
       // log.warn('swarm not open', { topic: PublicKey.from(topic).truncate() });
       return;
@@ -213,19 +219,19 @@ export class SwarmNetworkManager {
     await this._signalConnection.leave({ topic, peer: swarm.ownPeer });
 
     const map = this._mappers.get(topic)!;
-    map.destroy();
+    map.destroy(ctx);
     this._mappers.delete(topic);
 
-    this._connectionLog?.leftSwarm(swarm);
+    this._connectionLog?.leftSwarm(ctx, swarm);
 
-    await swarm.destroy();
+    await swarm.destroy(ctx);
     this._swarms.delete(topic);
 
     this.topicsUpdated.emit();
     log('left', { topic: PublicKey.from(topic), count: this._swarms.size });
   }
 
-  async setConnectionState(state: ConnectionState): Promise<void> {
+  async setConnectionState(ctx: Context, state: ConnectionState): Promise<void> {
     if (state === this._connectionState) {
       return;
     }
@@ -234,16 +240,16 @@ export class SwarmNetworkManager {
       case ConnectionState.OFFLINE: {
         this._connectionState = state;
         // go offline
-        await Promise.all([...this._swarms.values()].map((swarm) => swarm.goOffline()));
-        await this._messenger.close();
+        await Promise.all([...this._swarms.values()].map((swarm) => swarm.goOffline(ctx)));
+        await this._messenger.close(ctx);
         await this._signalManager.close();
         break;
       }
       case ConnectionState.ONLINE: {
         this._connectionState = state;
         // go online
-        this._messenger.open();
-        await Promise.all([...this._swarms.values()].map((swarm) => swarm.goOnline()));
+        this._messenger.open(ctx);
+        await Promise.all([...this._swarms.values()].map((swarm) => swarm.goOnline(ctx)));
         await this._signalManager.open();
         break;
       }

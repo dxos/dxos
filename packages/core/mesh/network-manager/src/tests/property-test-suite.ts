@@ -6,6 +6,7 @@ import * as fc from 'fast-check';
 import { type ModelRunSetup } from 'fast-check';
 import { test } from 'vitest';
 
+import { Context } from '@dxos/context';
 import { todo } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { ComplexMap, ComplexSet, range } from '@dxos/util';
@@ -62,7 +63,7 @@ export const propertyTestSuite = () => {
 
       real.peers.forEach((peer) =>
         peer.networkManager.topics.forEach((topic) => {
-          peer.networkManager.getSwarm(topic)!.errors.assertNoUnhandledErrors();
+          peer.networkManager.getSwarm(Context.default(), topic)!.errors.assertNoUnhandledErrors();
         }),
       );
     };
@@ -97,7 +98,7 @@ export const propertyTestSuite = () => {
         model.joinedPeers.delete(this.peerId);
 
         const peer = real.peers.get(this.peerId);
-        await peer!.networkManager.close();
+        await peer!.networkManager.close(Context.default());
         real.peers.delete(this.peerId);
 
         await assertState(model, real);
@@ -119,7 +120,7 @@ export const propertyTestSuite = () => {
         // afterTest(() => presence.stop());
         // const protocol = createProtocolFactory(model.topic, this.peerId, [presence]);
 
-        await peer.networkManager.joinSwarm({
+        await peer.networkManager.joinSwarm(Context.default(), {
           peerInfo: {
             peerKey: this.peerId.toHex(),
             identityKey: this.peerId.toHex(),
@@ -146,7 +147,7 @@ export const propertyTestSuite = () => {
         model.joinedPeers.delete(this.peerId);
 
         const peer = real.peers.get(this.peerId)!;
-        await peer.networkManager.leaveSwarm(model.topic);
+        await peer.networkManager.leaveSwarm(Context.default(), model.topic);
         peer.presence = undefined;
 
         await assertState(model, real);

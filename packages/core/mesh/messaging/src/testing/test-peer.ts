@@ -3,7 +3,7 @@
 //
 
 import { Event } from '@dxos/async';
-import { Resource } from '@dxos/context';
+import { Context, Resource } from '@dxos/context';
 import { PeerSchema } from '@dxos/edge-client';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -47,9 +47,9 @@ export class TestPeer extends Resource {
     this.messenger = new Messenger({ signalManager: this.signalManager, retryDelay: 300 });
 
     await this.signalManager.open();
-    this.messenger.open();
+    this.messenger.open(this._ctx);
     await this.messenger
-      .listen({
+      .listen(this._ctx, {
         peer: this.peerInfo,
         onMessage: async (msg) => {
           this.defaultReceived.emit(msg);
@@ -59,7 +59,7 @@ export class TestPeer extends Resource {
   }
 
   protected override async _close(): Promise<void> {
-    await this.messenger.close();
+    await this.messenger.close(this._ctx);
     await this.signalManager.close();
   }
 }
