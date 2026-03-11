@@ -1,5 +1,9 @@
 // https://pnpm.io/pnpmfile
 
+//
+// Copyright 2026 DXOS.org
+//
+
 function lockfileWarning() {
   if (process.env.NO_LOCKFILE_WARNING) {
     return;

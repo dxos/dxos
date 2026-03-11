@@ -1,4 +1,8 @@
 #!/usr/bin/env node
+//
+// Copyright 2026 DXOS.org
+//
+
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import postcss from 'postcss';

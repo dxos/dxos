@@ -9,6 +9,10 @@
  * Works on macOS, Linux, and Windows (where we fall back to `taskkill /T`).
  */
 
+//
+// Copyright 2026 DXOS.org
+//
+
 import { spawn, execSync } from 'child_process';
 import os from 'os';
 

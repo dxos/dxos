@@ -24,6 +24,10 @@
  *   --top <n>           Show only the top N unknown classes (default: 50)
  */
 
+//
+// Copyright 2026 DXOS.org
+//
+
 import { __unstable__loadDesignSystem } from 'tailwindcss';
 import { Scanner } from '@tailwindcss/oxide';
 import { execSync } from 'node:child_process';

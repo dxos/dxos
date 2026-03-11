@@ -27,16 +27,18 @@
     "oxc/only-used-in-recursion": "off",
     "typescript/no-this-alias": "off",
     "typescript/no-unnecessary-parameter-property-assignment": "off",
-    "typescript/no-useless-empty-export": "off"
+    "typescript/no-useless-empty-export": "off",
+    "@dxos/eslint-plugin-rules/effect-subpath-imports": "error",
+    "@dxos/eslint-plugin-rules/header": "error",
+    "@dxos/eslint-plugin-rules/no-bare-dot-imports": "error",
+    "@dxos/eslint-plugin-rules/no-effect-run-promise": "error",
+    "@dxos/eslint-plugin-rules/no-empty-promise-catch": "error"
   },
   "settings": {
     "jsx-a11y": {
       "polymorphicPropName": null,
       "components": {},
       "attributes": {}
-    },
-    "next": {
-      "rootDir": []
     },
     "react": {
       "formComponents": [],
@@ -62,5 +64,19 @@
     "builtin": true
   },
   "globals": {},
-  "ignorePatterns": ["templates/**", "**/typings/**", "tools/swc-log-plugin/tests/__swc_snapshots__/**"]
+  "ignorePatterns": [
+    "templates/**",
+    "scripts/**",
+    "**/typings/**",
+    "tools/swc-log-plugin/tests/__swc_snapshots__/**",
+    ".idea/**",
+    ".vscode/**",
+    ".claude/**",
+    "docs",
+    "**/gen/**",
+    "**/tailwind.ts"
+  ],
+  "jsPlugins": [
+    "@dxos/eslint-plugin-rules"
+  ]
 }

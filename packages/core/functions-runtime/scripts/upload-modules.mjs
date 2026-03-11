@@ -1,5 +1,9 @@
 #!/usr/bin/env node
 
+//
+// Copyright 2026 DXOS.org
+//
+
 import { chalk, fs } from 'zx';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';

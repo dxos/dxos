@@ -1,5 +1,9 @@
 // @ts-check
 
+//
+// Copyright 2026 DXOS.org
+//
+
 import eslint from '@eslint/js';
 import sortImports from '@trivago/prettier-plugin-sort-imports';
 import sortExports from 'eslint-plugin-sort-exports';

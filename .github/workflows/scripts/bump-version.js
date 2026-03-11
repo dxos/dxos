@@ -1,3 +1,7 @@
+//
+// Copyright 2026 DXOS.org
+//
+
 const { exec } = require('node:child_process');
 const { writeFile, readFile } = require('node:fs/promises');
 const semver = require('semver');
