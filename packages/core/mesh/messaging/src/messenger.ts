@@ -62,7 +62,7 @@ export class Messenger {
     this.open(Context.default());
   }
 
-  open(ctx: Context): void {
+  open(_ctx: Context): void {
     if (!this._closed) {
       return;
     }
@@ -90,7 +90,7 @@ export class Messenger {
     log.trace('dxos.mesh.messenger.open', trace.end({ id: traceId }));
   }
 
-  async close(ctx: Context): Promise<void> {
+  async close(_ctx: Context): Promise<void> {
     if (this._closed) {
       return;
     }
@@ -321,7 +321,7 @@ export class Messenger {
     }
   }
 
-  private _performGc(ctx: Context): void {
+  private _performGc(_ctx: Context): void {
     const start = performance.now();
 
     for (const key of this._toClear.keys()) {

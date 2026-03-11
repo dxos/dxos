@@ -6,7 +6,7 @@ import { type Context } from '@dxos/context';
 import { trace } from '@dxos/tracing';
 
 export class WebsocketSignalManagerMonitor {
-  public recordRateLimitExceeded(ctx: Context): void {
+  public recordRateLimitExceeded(_ctx: Context): void {
     trace.metrics.increment('dxos.mesh.signal.signal-manager.rate-limit-hit', 1);
   }
 

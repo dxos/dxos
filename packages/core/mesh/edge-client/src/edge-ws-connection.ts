@@ -224,7 +224,7 @@ export class EdgeWsConnection extends Resource {
     this._rescheduleHeartbeatTimeout(ctx);
   }
 
-  private _rescheduleHeartbeatTimeout(ctx: Context): void {
+  private _rescheduleHeartbeatTimeout(_ctx: Context): void {
     if (!this.isOpen) {
       return;
     }
@@ -273,7 +273,7 @@ export class EdgeWsConnection extends Resource {
     this._calculateRates(ctx);
   }
 
-  private _calculateRates(ctx: Context): void {
+  private _calculateRates(_ctx: Context): void {
     const now = Date.now();
     const cutoff = now - this._rateWindow;
 

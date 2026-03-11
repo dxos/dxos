@@ -216,7 +216,7 @@ export class SignalRPCClient {
     });
   }
 
-  private async _safeCloseRpc(ctx: Context): Promise<void> {
+  private async _safeCloseRpc(_ctx: Context): Promise<void> {
     try {
       this._connectTrigger.reset();
       await this._rpc.close();

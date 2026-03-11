@@ -184,7 +184,7 @@ export class SignalClient extends Resource implements SignalClientMethods {
     this.localState.leave(this._ctx, { topic: args.topic, peerId: PublicKey.from(args.peer.peerKey) });
   }
 
-  async query(params: QueryRequest): Promise<SwarmResponse> {
+  async query(_params: QueryRequest): Promise<SwarmResponse> {
     throw new Error('Not implemented');
   }
 

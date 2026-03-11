@@ -6,7 +6,7 @@ import { type Context } from '@dxos/context';
 import { trace } from '@dxos/tracing';
 
 export class MessengerMonitor {
-  public recordMessageAckFailed(ctx: Context): void {
+  public recordMessageAckFailed(_ctx: Context): void {
     trace.metrics.increment('dxos.mesh.signal.messenger.failed-ack', 1);
   }
 

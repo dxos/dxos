@@ -25,18 +25,18 @@ export class SignalClientMonitor {
    */
   private _lastStateChange = new Date();
 
-  public getRecordedTimestamps(ctx: Context): { connectionStarted: Date; lastStateChange: Date } {
+  public getRecordedTimestamps(_ctx: Context): { connectionStarted: Date; lastStateChange: Date } {
     return {
       connectionStarted: this._connectionStarted,
       lastStateChange: this._lastStateChange,
     };
   }
 
-  public recordStateChangeTime(ctx: Context): void {
+  public recordStateChangeTime(_ctx: Context): void {
     this._lastStateChange = new Date();
   }
 
-  public recordConnectionStartTime(ctx: Context): void {
+  public recordConnectionStartTime(_ctx: Context): void {
     this._connectionStarted = new Date();
   }
 
@@ -49,11 +49,11 @@ export class SignalClientMonitor {
     });
   }
 
-  public recordJoin(ctx: Context): void {
+  public recordJoin(_ctx: Context): void {
     this._performance.joinCounter++;
   }
 
-  public recordLeave(ctx: Context): void {
+  public recordLeave(_ctx: Context): void {
     this._performance.leaveCounter++;
   }
 
@@ -77,7 +77,7 @@ export class SignalClientMonitor {
       const reqDuration = Date.now() - reqStart;
       trace.metrics.distribution('dxos.mesh.signal.signal-client.send-duration', reqDuration, { tags });
       trace.metrics.distribution('dxos.mesh.signal.signal-client.bytes-out', getByteCount(message), { tags });
-    } catch (err) {
+    } catch {
       success = false;
     }
     trace.metrics.increment('dxos.mesh.signal.signal-client.sent-total', 1, {

@@ -54,7 +54,7 @@ export class SignalLocalState {
     private readonly _onSwarmEvent: (params: SwarmEvent) => Promise<void>,
   ) {}
 
-  async safeCloseStreams(ctx: Context): Promise<{ failureCount: number }> {
+  async safeCloseStreams(_ctx: Context): Promise<{ failureCount: number }> {
     const streams = ([...this._swarmStreams.values()] as Stream<any>[]).concat([...this.messageStreams.values()]);
     this._swarmStreams.clear();
     this.messageStreams.clear();

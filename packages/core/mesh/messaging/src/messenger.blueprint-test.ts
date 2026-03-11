@@ -299,7 +299,7 @@ export const messengerTests = (signalManagerFactory: TestBuilder['createSignalMa
 
       const [promise, inc] = latch({ count: 1 });
       let count = 0;
-      peer1.defaultReceived.on((msg) => {
+      peer1.defaultReceived.on((_msg) => {
         count = inc();
       });
       // sending message.

@@ -124,7 +124,7 @@ export class WebSocketMuxer {
     return message;
   }
 
-  public destroy(ctx: Context): void {
+  public destroy(_ctx: Context): void {
     if (this._sendTimeout) {
       clearTimeout(this._sendTimeout);
       this._sendTimeout = undefined;
@@ -137,7 +137,7 @@ export class WebSocketMuxer {
     this._outMessageChannelByService.clear();
   }
 
-  private _sendChunkedMessages(ctx: Context): void {
+  private _sendChunkedMessages(_ctx: Context): void {
     if (this._sendTimeout) {
       return;
     }
