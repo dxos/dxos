@@ -14286,6 +14286,9 @@ importers:
       '@dxos/client-protocol':
         specifier: workspace:*
         version: link:../client-protocol
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../../common/context
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
