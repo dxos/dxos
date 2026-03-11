@@ -2,8 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import 'zone.js';
-
 import { runDedicatedWorker } from '@dxos/client';
 import { log } from '@dxos/log';
 import { isTauri } from '@dxos/util';

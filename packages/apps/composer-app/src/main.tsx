@@ -2,7 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-import 'zone.js';
 import '@dxos-theme';
 
 import * as Effect from 'effect/Effect';
