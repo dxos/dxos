@@ -30,7 +30,7 @@ const WIN_CONDITIONS: number[][] = [
  * Derives full game state from an ordered list of cell indices.
  * Even-indexed moves are X; odd-indexed moves are O.
  */
-export const deriveState = (moves: number[]): GameState => {
+export const deriveState = (moves: readonly number[]): GameState => {
   const cells: CellValue[] = Array(9).fill(null);
   moves.forEach((cell, index) => {
     cells[cell] = index % 2 === 0 ? 'X' : 'O';
@@ -57,7 +57,7 @@ export const deriveState = (moves: number[]): GameState => {
 /**
  * Returns true if placing a mark at the given cell index is legal.
  */
-export const canMove = (moves: number[], cell: number): boolean => {
+export const canMove = (moves: readonly number[], cell: number): boolean => {
   if (cell < 0 || cell > 8) {
     return false;
   }
