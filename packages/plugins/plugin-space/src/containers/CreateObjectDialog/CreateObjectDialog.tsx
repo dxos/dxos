@@ -108,7 +108,7 @@ export const CreateObjectDialog = ({
           yield* operationInvoker.invoke(SpaceOperation.AddObject, {
             target,
             object,
-            hidden: !Obj.instanceOf(Collection.Collection, target),
+            hidden: !Obj.instanceOf(Collection.Collection, object),
           });
           const shouldNavigate = _shouldNavigate ?? (() => true);
           if (shouldNavigate(object)) {
