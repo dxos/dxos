@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Resource } from '@dxos/context';
+import { type Context, Resource } from '@dxos/context';
 import { Query, type QueryAST } from '@dxos/echo';
 import { trim } from '@dxos/util';
 import { type QuickJSRuntime, type QuickJSWASMModule, createQuickJS } from '@dxos/vendor-quickjs';
@@ -29,7 +29,7 @@ export class QuerySandbox extends Resource {
 
   #runtime!: QuickJSRuntime;
 
-  protected override async _open() {
+  protected override async _open(_ctx: Context) {
     const quickJS = await QuerySandbox.getQuickJS();
     this.#runtime = quickJS.newRuntime({
       moduleLoader: (moduleName, _context) => {
@@ -43,7 +43,7 @@ export class QuerySandbox extends Resource {
     });
   }
 
-  protected override async _close() {
+  protected override async _close(_ctx: Context) {
     this.#runtime.dispose();
   }
 

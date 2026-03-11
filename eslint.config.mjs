@@ -483,6 +483,49 @@ export default tseslint.config(
             // @dxos/client-services — utility / internal.
             'WebLockWrapper',
 
+            // @dxos/network-manager — Transport interface implementations (fixed open/close/onSignal/getDetails/getStats signatures).
+            'MemoryTransport',
+            'TcpTransport',
+            'RtcTransportChannel',
+            'RtcTransportProxy',
+
+            // @dxos/network-manager — Topology interface implementations (fixed init/update/onOffer/destroy signatures).
+            'FullyConnectedTopology',
+            'MMSTTopology',
+            'StarTopology',
+
+            // @dxos/network-manager — TransportFactory interface (fixed createTransport signature).
+            'RtcTransportProxyFactory',
+
+            // @dxos/network-manager — RtcConnectionFactory interface implementations.
+            'BrowserRtcConnectionFactory',
+            'NodeRtcConnectionFactory',
+
+            // @dxos/network-manager — BridgeService proto-generated interface implementation.
+            'RtcTransportService',
+
+            // @dxos/network-manager — SignalMessenger interface implementation.
+            'SwarmMessenger',
+
+            // @dxos/messaging — SignalManager interface implementations (fixed join/leave/open/close signatures).
+            'WebsocketSignalManager',
+            'EdgeSignalManager',
+            'MemorySignalManager',
+
+            // @dxos/messaging — SignalClientMethods interface implementation.
+            'SignalClient',
+
+            // @dxos/edge-client — EdgeConnection interface implementation (extends Resource with fixed lifecycle).
+            'EdgeClient',
+
+            // @dxos/teleport — TeleportExtension interface implementations (fixed onOpen/onClose/onAbort signatures).
+            'ControlExtension',
+            'RpcExtension',
+            'GossipExtension',
+            'BlobSyncExtension',
+            'ReplicatorExtension',
+            'AutomergeReplicator',
+
             // @dxos/client — public/test API, coordinator interface.
             'FakeAgentHostingProvider',
             'SingleClientCoordinator',
@@ -525,6 +568,58 @@ export default tseslint.config(
             // @dxos/shell — shell runtime (implements ShellRuntime interface).
             'MemoryShellRuntime',
             'ShellRuntimeImpl',
+
+            // @dxos/credentials — CredentialProcessor interface implementations.
+            'DeviceStateMachine',
+            'ProfileStateMachine',
+
+            // @dxos/credentials — SpaceState interface implementation.
+            'SpaceStateMachine',
+
+            // @dxos/credentials — CredentialGraphStateHandler interface implementation.
+            'MemberStateMachine',
+
+            // @dxos/credentials — internal graph / state machines (callers in allowClasses lack ctx).
+            'CredentialGraph',
+            'FeedStateMachine',
+            'InvitationStateMachine',
+            'CredentialConsumer',
+            'CredentialGenerator',
+
+            // @dxos/keyring — implements Signer interface from @dxos/crypto.
+            'Keyring',
+
+            // @dxos/echo — ProxyHandler / ReactiveHandler interface implementations (fixed trap signatures).
+            'ProxyHandlerSlot',
+            'TypedReactiveHandler',
+
+            // @dxos/echo — Ref / RefResolver interface implementations.
+            'RefImpl',
+            'StaticRefResolver',
+
+            // @dxos/echo — public API (BaseSchema interface).
+            'EchoSchema',
+
+            // @dxos/echo-query — stateless parser (pure computation, no side effects).
+            'QueryBuilder',
+
+            // @dxos/echo-query — Resource subclass (eval is pure computation).
+            'QuerySandbox',
+
+            // @dxos/index-core — Effect-based engine / indexes (thin delegation, Effect patterns).
+            'IndexEngine',
+            'FtsIndex',
+
+            // @dxos/echo-generator — testing utilities.
+            'TestObjectGenerator',
+            'SpaceObjectGenerator',
+
+            // @dxos/feed — Effect-based sync protocol.
+            'SyncClient',
+            'SyncServer',
+
+            // @dxos/echo-protocol — deprecated value type.
+            'Reference',
           ],
           allowMethods: [
             'toJSON',
