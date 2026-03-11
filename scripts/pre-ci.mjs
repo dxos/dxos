@@ -160,7 +160,7 @@ async function main() {
   // Step 5a: Run oxfmt formatting and commit changes if any
   console.log(chalk.blue('Step 5a: Running oxfmt formatting...'));
   try {
-    await $`npx oxfmt@latest`;
+    await $`pnpm run format`;
 
     if (await hasUncommittedChanges()) {
       await commitChanges('style: format with oxfmt');

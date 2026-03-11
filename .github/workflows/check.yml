@@ -69,7 +69,7 @@ jobs:
         run: pnpm run check-cycles
 
       - name: Check formatting
-        run: npx oxfmt@latest --check
+        run: pnpm run format-check
 
       - name: Check Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
