@@ -438,7 +438,7 @@ export class InvitationsHandler {
     } else {
       label = `invitation host for space ${invitation.spaceKey?.truncate()}`;
     }
-    const swarmConnection = await this._networkManager.joinSwarm({
+    const swarmConnection = await this._networkManager.joinSwarm(ctx, {
       topic: invitation.swarmKey,
       protocolProvider: createTeleportProtocolFactory(async (teleport) => {
         teleport.addExtension('dxos.halo.invitations', extensionFactory());

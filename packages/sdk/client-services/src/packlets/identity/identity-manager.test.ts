@@ -108,7 +108,7 @@ describe('identity/identity-manager', () => {
 
     const peer1 = await setupPeer({ signalContext });
     const identity1 = await peer1.identityManager.createIdentity(Context.default());
-    peer1.networkManager.setPeerInfo({
+    peer1.networkManager.setPeerInfo(Context.default(), {
       peerKey: identity1.deviceKey.toHex(),
       identityKey: identity1.identityKey.toHex(),
     });
@@ -144,7 +144,7 @@ describe('identity/identity-manager', () => {
       dataFeedKey,
       authorizedDeviceCredential: credential,
     });
-    peer2.networkManager.setPeerInfo({
+    peer2.networkManager.setPeerInfo(Context.default(), {
       peerKey: identity2.deviceKey.toHex(),
       identityKey: identity2.identityKey.toHex(),
     });

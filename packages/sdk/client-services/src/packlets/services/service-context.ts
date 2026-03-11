@@ -238,7 +238,7 @@ export class ServiceContext extends Resource {
 
     await this._edgeConnection?.open();
     await this.signalManager.open();
-    await this.networkManager.open();
+    await this.networkManager.open(ctx);
 
     await this.echoHost.open(ctx);
 
@@ -280,7 +280,7 @@ export class ServiceContext extends Resource {
     await this.spaceManager.close(ctx);
     await this.echoHost.close(ctx);
 
-    await this.networkManager.close();
+    await this.networkManager.close(ctx);
     await this.signalManager.close();
     await this._edgeConnection?.close();
     await this.feedStore.close();
@@ -454,7 +454,7 @@ export class ServiceContext extends Resource {
 
     this._edgeConnection?.setIdentity(edgeIdentity);
     this._edgeHttpClient?.setIdentity(edgeIdentity);
-    this.networkManager.setPeerInfo({
+    this.networkManager.setPeerInfo(ctx, {
       identityKey: edgeIdentity.identityKey,
       peerKey: edgeIdentity.peerKey,
     });
