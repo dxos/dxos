@@ -6,9 +6,11 @@ import * as Effect from 'effect/Effect';
 
 import { ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
+import { log } from '@dxos/log';
 import { type Client } from '@dxos/react-client';
 
 import { AppGraphBuilder, DebugSettings, ReactContext, ReactSurface } from './capabilities';
+import { logBuffer } from './log-buffer';
 import { meta } from './meta';
 import { translations } from './translations';
 
@@ -20,12 +22,21 @@ export const DebugPlugin = Plugin.define(meta).pipe(
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
+    id: 'setup-log-buffer',
+    activatesOn: ActivationEvents.Startup,
+    activate: () => Effect.sync(() => setupLogBuffer()),
+  }),
+  Plugin.addModule({
     id: 'setup-devtools',
     activatesOn: ActivationEvents.Startup,
     activate: () => Effect.sync(() => setupDevtools()),
   }),
   Plugin.make,
 );
+
+const setupLogBuffer = () => {
+  log.addProcessor(logBuffer.logProcessor);
+};
 
 const setupDevtools = () => {
   (globalThis as any).composer ??= {};

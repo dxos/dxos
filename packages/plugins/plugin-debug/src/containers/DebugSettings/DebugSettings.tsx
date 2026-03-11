@@ -13,6 +13,7 @@ import { Icon, IconButton, Input, Select, Toast, useFileDownload, useTranslation
 import { Settings } from '@dxos/react-ui-form';
 import { setDeep } from '@dxos/util';
 
+import { logBuffer } from '../../log-buffer';
 import { meta } from '../../meta';
 import { type DebugSettingsProps } from '../../types';
 
@@ -80,6 +81,13 @@ export const DebugSettings = ({ settings, onSettingsChange }: DebugSettingsCompo
     }
   };
 
+  const handleDownloadLogs = () => {
+    const ndjson = logBuffer.serialize();
+    const file = new Blob([ndjson], { type: 'application/x-ndjson' });
+    const fileName = `composer-logs-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.ndjson`;
+    download(file, fileName);
+  };
+
   const handleRepair = async () => {
     try {
       const info = await client.repair();
@@ -112,6 +120,14 @@ export const DebugSettings = ({ settings, onSettingsChange }: DebugSettingsCompo
               iconOnly
               label={t('settings download diagnostics')}
               onClick={handleDownload}
+            />
+          </Settings.ItemInput>
+          <Settings.ItemInput title={t('settings download logs')}>
+            <IconButton
+              icon='ph--download-simple--regular'
+              iconOnly
+              label={t('settings download logs')}
+              onClick={handleDownloadLogs}
             />
           </Settings.ItemInput>
           <Settings.ItemInput title={t('settings repair')}>
