@@ -533,6 +533,39 @@ export default tseslint.config(
             // @dxos/edge-client — Protocol codec utility (pure serialization, no side effects).
             'Protocol',
 
+            // @dxos/teleport — core infrastructure classes (widely used lifecycle/stream APIs across packages).
+            'Teleport',
+            'Muxer',
+            'Balancer',
+            'Framer',
+
+            // @dxos/rpc — fundamental RPC infrastructure (open/close/call used by every RPC consumer).
+            'RpcPeer',
+            'ProtoRpcPeer',
+
+            // @dxos/websocket-rpc — RPC over websocket (lifecycle methods used across packages).
+            'WebsocketRpcClient',
+            'WebsocketRpcServer',
+
+            // @dxos/signal — test signal server runner (test infrastructure utility).
+            'SignalServerRunner',
+
+            // @dxos/rpc-tunnel — port multiplexing utility (used across packages).
+            'PortMuxer',
+
+            // @dxos/teleport-extension-gossip — Resource subclass (_open/_catch overrides fixed by Resource base class).
+            'Presence',
+
+            // @dxos/teleport-extension-gossip — test utility.
+            'TestAgent',
+
+            // @dxos/teleport-extension-gossip — internal gossip manager (callers in allowClasses lack ctx).
+            'Gossip',
+
+            // @dxos/teleport-extension-object-sync — blob storage/sync (@synchronized methods, callers in allowClasses).
+            'BlobStore',
+            'BlobSync',
+
             // @dxos/teleport — TeleportExtension interface implementations (fixed onOpen/onClose/onAbort signatures).
             'ControlExtension',
             'RpcExtension',
