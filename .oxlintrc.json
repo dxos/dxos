@@ -41,7 +41,7 @@
     "typescript/no-for-in-array": "off",
     "typescript/no-meaningless-void-operator": "off",
     "typescript/no-redundant-type-constituents": "off",
-    "typescript/no-floating-promises": "off",
+    "typescript/no-floating-promises": "error",
     "typescript/no-unsafe-unary-minus": "off",
     "typescript/require-array-sort-compare": "off",
     "@dxos/eslint-plugin-rules/effect-subpath-imports": "warn",

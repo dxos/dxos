@@ -58,7 +58,7 @@ const pgid = -child.pid;
 // 3. When the main process ends, reap the stragglers.
 // ─────────────────────────────────────────────────────────────────────────────
 child.on('exit', (code, signal) => {
-  cleanup().then(() => {
+  void cleanup().then(() => {
     // Propagate the *same* exit status as the main command
     if (signal) {
       // Re-raise the same signal so shells see it (posix behaviour)
