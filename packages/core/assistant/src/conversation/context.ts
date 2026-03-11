@@ -183,7 +183,7 @@ export class AiContextBinder extends Resource {
     this._registry.set(this._objects, nextObjects);
 
     log('bind', { blueprints: addedBlueprints.length, objects: addedObjects.length });
-    await this._queue.append([
+    await this._queue.append(this._ctx, [
       Obj.make(ContextBinding, {
         blueprints: {
           added: addedBlueprints,
@@ -203,7 +203,7 @@ export class AiContextBinder extends Resource {
     }
 
     log('unbind', { blueprints: blueprints?.length, objects: objects?.length });
-    await this._queue.append([
+    await this._queue.append(this._ctx, [
       Obj.make(ContextBinding, {
         blueprints: {
           added: [],

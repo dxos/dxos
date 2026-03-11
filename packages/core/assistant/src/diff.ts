@@ -4,6 +4,7 @@
 
 import { next as A, type Doc } from '@automerge/automerge';
 
+import { Context } from '@dxos/context';
 import { DocAccessor, toCursorRange } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { isNonNullable } from '@dxos/util';
@@ -57,7 +58,7 @@ export const reduceDiffs = (diffs: readonly string[]): Diff[] => {
 export const computeDiffsWithCursors = <T>(accessor: DocAccessor<T>, diffs: readonly string[]) => {
   return reduceDiffs(diffs)
     .map((diff) => {
-      const text = DocAccessor.getValue<string>(accessor);
+      const text = DocAccessor.getValue<string>(Context.default(), accessor);
       const idx = text.indexOf(diff.match);
       if (idx !== -1) {
         return { cursor: toCursorRange(accessor, idx, idx + diff.match.length), text: diff.replace };
@@ -72,12 +73,10 @@ export const applyDiffs = <T>(
   { errorOnNotFound = false }: { errorOnNotFound?: boolean } = {},
 ): string => {
   for (const diff of reduceDiffs(diffs)) {
-    accessor.handle.change((doc: Doc<T>) => {
-      const text = DocAccessor.getValue<string>(accessor);
+    accessor.handle.change(Context.default(), (doc: Doc<T>) => {
+      const text = DocAccessor.getValue<string>(Context.default(), accessor);
       const idx = text.indexOf(diff.match);
       if (idx !== -1) {
-        // TODO(burdon): Replace smallest substring.
-        // NOTE: This only replaces the first match.
         A.splice(doc, accessor.path as A.Prop[], idx, diff.match.length, diff.replace);
       } else {
         if (errorOnNotFound) {
@@ -89,5 +88,5 @@ export const applyDiffs = <T>(
     });
   }
 
-  return DocAccessor.getValue<string>(accessor);
+  return DocAccessor.getValue<string>(Context.default(), accessor);
 };
