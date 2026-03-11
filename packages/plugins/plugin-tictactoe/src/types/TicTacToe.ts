@@ -21,9 +21,11 @@ export const Game = Schema.Struct({
       }),
     ),
   }).pipe(FormInputAnnotation.set(false), Schema.optional),
-  moves: Schema.Array(Schema.Number).annotations({
-    description: 'Ordered cell indices (0–8) of moves played. Even-indexed are X; odd-indexed are O.',
-  }).pipe(FormInputAnnotation.set(false), Schema.optional),
+  moves: Schema.Array(Schema.Number)
+    .annotations({
+      description: 'Ordered cell indices (0–8) of moves played. Even-indexed are X; odd-indexed are O.',
+    })
+    .pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
   Type.object({
     typename: 'dxos.org/type/TicTacToe',

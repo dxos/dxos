@@ -26,9 +26,7 @@ export default defineFunction({
   handler: Effect.fn(function* ({ data: { moves } }) {
     const { cells } = deriveState(moves);
     const row = (start: number) =>
-      [cells[start], cells[start + 1], cells[start + 2]]
-        .map((c) => CELL_CHARS[String(c)])
-        .join(' | ');
+      [cells[start], cells[start + 1], cells[start + 2]].map((c) => CELL_CHARS[String(c)]).join(' | ');
     const ascii = [row(0), '---------', row(3), '---------', row(6)].join('\n');
     return { ascii };
   }),

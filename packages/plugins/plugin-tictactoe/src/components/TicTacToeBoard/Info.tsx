@@ -11,6 +11,7 @@ import { Button, Icon, Select, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
+
 import { useTicTacToeBoardContext } from './context';
 
 export const Info = () => {
@@ -43,11 +44,7 @@ export const Info = () => {
 
       <div className='flex flex-col items-center justify-center gap-2 py-2'>
         <span
-          className={mx(
-            'text-sm font-medium',
-            winner && 'text-green-500',
-            isDraw && 'text-subdued',
-          )}
+          className={mx('text-sm font-medium', winner && 'text-green-500', isDraw && 'text-subdued')}
           data-testid='tictactoe-status'
         >
           {statusLabel}
