@@ -30,7 +30,7 @@ ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayerWithTriggers({
   aiServicePreset: 'edge-remote',
-  blueprints: [DatabaseBlueprint, MarkdownBlueprint, BrowserBlueprint],
+  functions: [DatabaseBlueprint, MarkdownBlueprint, BrowserBlueprint].flatMap((blueprint) => blueprint.functions),
   types: [Blueprint.Blueprint, Person.Person, Markdown.Document, SpaceProperties, Collection.Collection],
   tracing: 'pretty',
 });

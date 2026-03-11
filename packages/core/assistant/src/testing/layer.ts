@@ -16,20 +16,11 @@ import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/fun
 
 import { ToolExecutionServices } from '../functions';
 
-/**
- * Blueprint-like type for test layer configuration.
- * Simplified version of AppCapabilities.BlueprintDefinition to avoid circular dependency.
- */
-interface BlueprintLike {
-  functions: FunctionDefinition.Any[];
-}
-
 interface TestLayerOptions {
   aiServicePreset?: 'direct' | 'edge-local' | 'edge-remote';
   model?: ModelName;
   functions?: FunctionDefinition.Any[];
   toolkits?: GenericToolkit.GenericToolkit[];
-  blueprints?: BlueprintLike[];
   types?: Type.AnyEntity[];
   credentials?: ServiceCredential[];
   /*
@@ -48,16 +39,14 @@ export const AssistantTestLayer = ({
   toolkits = [],
   types = [],
   credentials = [],
-  blueprints = [],
   tracing = 'noop',
   disableLlmMemoization = false,
 }: TestLayerOptions = {}) => {
   const toolkit = GenericToolkit.merge(...toolkits);
-  const allFunctions = [...functions, ...blueprints.flatMap((blueprint) => blueprint.functions)];
   return Layer.mergeAll(AiService.model(model), ToolExecutionServices).pipe(
     Layer.provideMerge(
       FunctionInvocationServiceLayerTest({
-        functions: allFunctions,
+        functions,
       }),
     ),
     Layer.provideMerge(
