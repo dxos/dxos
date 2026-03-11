@@ -101,7 +101,7 @@
   "ignorePatterns": [
     "*.d.ts",
     "**/tailwind.ts",
-    "**/gen/**",
+    "**/gen/*",
     "**/typings/**",
     ".idea/**",
     ".vscode/**",

@@ -17,7 +17,7 @@
     "packages/common/typings/src/streamx.d.ts",
     "templates/**",
     "**/__swc_snapshots__/**",
-    "**/gen/*",
+    "**/gen/**",
     "**/vendor/**",
     "packages/ui/react-ui-geo/data/**",
     "packages/ui/solid-ui-geo/data/**",
