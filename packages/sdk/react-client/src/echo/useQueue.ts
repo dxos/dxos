@@ -5,6 +5,7 @@
 import { useEffect, useMemo, useRef } from 'react';
 
 import { type Queue } from '@dxos/client/echo';
+import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { type Entity } from '@dxos/echo';
 import { type DXN } from '@dxos/keys';
@@ -37,11 +38,11 @@ export const useQueue = <T extends Entity.Unknown>(
     }
 
     const { spaceId } = queueDxn.asQueueDXN() ?? raise(new TypeError('Invalid queue DXN'));
-    return client.spaces.get(spaceId)?.queues.get<T>(queueDxn);
+    return client.spaces.get(spaceId)?.queues.get<T>(Context.default(), queueDxn);
   }, [client, queueDxn?.toString()]);
 
   useEffect(() => {
-    void queue?.refresh();
+    void queue?.refresh(Context.default());
   }, [queue]);
 
   useEffect(() => {
@@ -53,7 +54,7 @@ export const useQueue = <T extends Entity.Unknown>(
         return;
       }
 
-      void queue?.refresh().finally(() => {
+      void queue?.refresh(Context.default()).finally(() => {
         if (mountedRef.current && options.pollInterval) {
           timeout = setTimeout(poll, Math.max(options.pollInterval ?? 0, MIN_POLL_INTERVAL));
         }
