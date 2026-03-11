@@ -193,15 +193,18 @@ export class SignalRPCClient {
     return messageStream;
   }
 
-  async sendMessage(ctx: Context, {
-    author,
-    recipient,
-    payload,
-  }: {
-    author: PublicKey;
-    recipient: PublicKey;
-    payload: Any;
-  }): Promise<void> {
+  async sendMessage(
+    ctx: Context,
+    {
+      author,
+      recipient,
+      payload,
+    }: {
+      author: PublicKey;
+      recipient: PublicKey;
+      payload: Any;
+    },
+  ): Promise<void> {
     log('sendMessage', { author, recipient, payload, metadata: this._callbacks?.getMetadata?.() });
     invariant(!this._closed, 'SignalRPCClient is closed');
     await this._connectTrigger.wait();

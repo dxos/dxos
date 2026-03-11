@@ -3,7 +3,7 @@
 //
 
 import { Event } from '@dxos/async';
-import { Context, Resource } from '@dxos/context';
+import { Resource } from '@dxos/context';
 import { PeerSchema } from '@dxos/edge-client';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';

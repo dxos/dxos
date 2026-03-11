@@ -162,15 +162,18 @@ export class Messenger {
    * Subscribes onMessage function to messages that contains payload with payloadType.
    * @param payloadType if not specified, onMessage will be subscribed to all types of messages.
    */
-  async listen(ctx: Context, {
-    peer,
-    payloadType,
-    onMessage,
-  }: {
-    peer: PeerInfo;
-    payloadType?: string;
-    onMessage: OnMessage;
-  }): Promise<ListeningHandle> {
+  async listen(
+    ctx: Context,
+    {
+      peer,
+      payloadType,
+      onMessage,
+    }: {
+      peer: PeerInfo;
+      payloadType?: string;
+      onMessage: OnMessage;
+    },
+  ): Promise<ListeningHandle> {
     invariant(!this._closed, 'Closed');
 
     await this._signalManager.subscribeMessages(peer);
@@ -200,15 +203,18 @@ export class Messenger {
     };
   }
 
-  private async _encodeAndSend(ctx: Context, {
-    author,
-    recipient,
-    reliablePayload,
-  }: {
-    author: PeerInfo;
-    recipient: PeerInfo;
-    reliablePayload: ReliablePayload;
-  }): Promise<void> {
+  private async _encodeAndSend(
+    ctx: Context,
+    {
+      author,
+      recipient,
+      reliablePayload,
+    }: {
+      author: PeerInfo;
+      recipient: PeerInfo;
+      reliablePayload: ReliablePayload;
+    },
+  ): Promise<void> {
     await this._signalManager.sendMessage({
       author,
       recipient,
@@ -267,15 +273,18 @@ export class Messenger {
     this._onAckCallbacks.get(Acknowledgement.decode(payload.value).messageId)?.();
   }
 
-  private async _sendAcknowledgement(ctx: Context, {
-    author,
-    recipient,
-    messageId,
-  }: {
-    author: PeerInfo;
-    recipient: PeerInfo;
-    messageId: PublicKey;
-  }): Promise<void> {
+  private async _sendAcknowledgement(
+    ctx: Context,
+    {
+      author,
+      recipient,
+      messageId,
+    }: {
+      author: PeerInfo;
+      recipient: PeerInfo;
+      messageId: PublicKey;
+    },
+  ): Promise<void> {
     log('sending ACK', { messageId, from: recipient, to: author });
 
     await this._signalManager.sendMessage({
