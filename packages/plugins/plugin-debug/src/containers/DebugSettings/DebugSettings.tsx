@@ -7,13 +7,12 @@ import React, { useEffect, useState } from 'react';
 import { useCapabilities } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { type ConfigProto, SaveConfig, Storage, defs } from '@dxos/config';
-import { log } from '@dxos/log';
+import { type LogBuffer, log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { Icon, IconButton, Input, Select, Toast, useFileDownload, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
 import { setDeep } from '@dxos/util';
 
-import { logBuffer } from '../../log-buffer';
 import { meta } from '../../meta';
 import { type DebugSettingsProps } from '../../types';
 
@@ -30,9 +29,10 @@ const StorageAdapters = {
 export type DebugSettingsComponentProps = {
   settings: DebugSettingsProps;
   onSettingsChange: (fn: (current: DebugSettingsProps) => DebugSettingsProps) => void;
+  logBuffer: LogBuffer;
 };
 
-export const DebugSettings = ({ settings, onSettingsChange }: DebugSettingsComponentProps) => {
+export const DebugSettings = ({ settings, onSettingsChange, logBuffer }: DebugSettingsComponentProps) => {
   const { t } = useTranslation(meta.id);
   const [toast, setToast] = useState<Toast>();
   const client = useClient();

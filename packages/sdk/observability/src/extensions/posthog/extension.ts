@@ -18,6 +18,8 @@ export type ExtensionsOptions = {
   /** Deployment environment, e.g. `production` or `staging`. */
   environment?: string;
   posthog?: Partial<PostHogConfig>;
+  /** Shared log buffer for debug log dumps. Creates a local one if not provided. */
+  logBuffer?: LogBuffer;
 };
 
 /** Upload serialized logs to the feedback-logs endpoint. Returns the R2 key on success. */
@@ -46,6 +48,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   release,
   environment,
   posthog: posthogConfig,
+  logBuffer: externalLogBuffer,
 }) {
   if (typeof window === 'undefined') {
     log('PostHog is being stubbed because it is running in a worker.');
@@ -62,7 +65,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
 
   const { default: posthog } = yield* Effect.promise(() => import('posthog-js'));
   const { logProcessor } = yield* Effect.promise(() => import('./log-processor'));
-  const logBuffer = new LogBuffer();
+  const logBuffer = externalLogBuffer ?? new LogBuffer();
   let feedbackSurveyAvailable: boolean | null = null;
 
   const checkFeedbackSurveyAvailable = (): Effect.Effect<boolean> =>

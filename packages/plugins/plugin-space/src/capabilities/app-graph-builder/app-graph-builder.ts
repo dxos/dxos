@@ -39,8 +39,7 @@ const whenSpace = (node: Node.Node): Option.Option<Space> =>
   node.type === SPACE_TYPE && isSpace(node.data) ? Option.some(node.data) : Option.none();
 
 export default Capability.makeModule(
-  Effect.fnUntraced(function* (props?: SpacePluginOptions) {
-    const { shareableLinkOrigin = window.location.origin } = props ?? {};
+  Effect.fnUntraced(function* ({ shareableLinkOrigin = window.location.origin }: SpacePluginOptions = {}) {
     const capabilities = yield* Capability.Service;
 
     // TODO(wittjosiah): Using `get` and being reactive seems to cause a bug with Atom where disposed atoms are accessed.
