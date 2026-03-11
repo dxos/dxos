@@ -158,7 +158,7 @@ export default Capability.makeModule(
           const settings = registry.get(settingsAtom);
           return Obj.isObject(data.subject) && !!settings.wireframe;
         },
-        component: ({ data, role }) => (
+        component: ({ data, role, name }) => (
           <Wireframe label={`${role}:${name}`} object={data.subject} classNames='row-span-2 overflow-hidden' />
         ),
       }),

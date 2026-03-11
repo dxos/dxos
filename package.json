@@ -142,6 +142,7 @@
     "nyc": "catalog:",
     "oxc-resolver": "catalog:",
     "oxlint": "^1.53.0",
+    "oxlint-tsgolint": "^0.16.0",
     "pkg-up": "catalog:",
     "prettier": "catalog:",
     "prettier-plugin-packagejson": "catalog:",

@@ -2,6 +2,10 @@
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "plugins": null,
   "categories": {},
+  "options": {
+    "denyWarnings": true,
+    "typeAware": true
+  },
   "rules": {
     "no-unused-vars": "off",
     "eslint/no-async-promise-executor": "off",
@@ -28,8 +32,20 @@
     "typescript/no-this-alias": "off",
     "typescript/no-unnecessary-parameter-property-assignment": "off",
     "typescript/no-useless-empty-export": "off",
-    "@dxos/eslint-plugin-rules/effect-subpath-imports": "error",
-    "@dxos/eslint-plugin-rules/header": "error",
+    "typescript/no-misused-spread": "off",
+    "typescript/no-base-to-string": "off",
+    "typescript/restrict-template-expressions": "off",
+    "typescript/unbound-method": "off",
+    "typescript/await-thenable": "off",
+    "typescript/no-duplicate-type-constituents": "off",
+    "typescript/no-for-in-array": "off",
+    "typescript/no-meaningless-void-operator": "off",
+    "typescript/no-redundant-type-constituents": "off",
+    "typescript/no-floating-promises": "off",
+    "typescript/no-unsafe-unary-minus": "off",
+    "typescript/require-array-sort-compare": "off",
+    "@dxos/eslint-plugin-rules/effect-subpath-imports": "warn",
+    "@dxos/eslint-plugin-rules/header": "warn",
     "@dxos/eslint-plugin-rules/no-bare-dot-imports": "error",
     "@dxos/eslint-plugin-rules/no-effect-run-promise": "error",
     "@dxos/eslint-plugin-rules/no-empty-promise-catch": "error"
@@ -74,7 +90,8 @@
     ".claude/**",
     "docs",
     "**/gen/**",
-    "**/tailwind.ts"
+    "**/tailwind.ts",
+    "tools/swc-log-plugin/test-rig/**"
   ],
   "jsPlugins": [
     "@dxos/eslint-plugin-rules"

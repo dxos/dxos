@@ -1872,18 +1872,13 @@ catalogs:
 
 overrides:
   '@automerge/automerge': 3.2.3
+  '@grpc/grpc-js': '>=1.10.9'
   '@lezer/lr': ^1.4.2
+  '@modelcontextprotocol/sdk': '>=1.26.0'
+  '@remix-run/router': '>=1.23.2'
   '@types/node': 22.10.2
   '@types/react': ~19.2.7
   '@types/react-dom': ~19.2.3
-  effect: 3.19.16
-  nan: 2.23.0
-  react: ~19.2.3
-  react-dom: ~19.2.3
-  typescript: ^5.9.3
-  '@grpc/grpc-js': '>=1.10.9'
-  '@modelcontextprotocol/sdk': '>=1.26.0'
-  '@remix-run/router': '>=1.23.2'
   ajv@8: '>=8.18.0'
   axios: '>=1.13.5'
   base-x@4: 4.0.1
@@ -1892,6 +1887,7 @@ overrides:
   devalue: '>=5.6.3'
   diff: '>=5.2.2'
   dompurify: '>=3.2.4'
+  effect: 3.19.16
   esbuild: '>=0.25.0'
   fast-xml-parser: '>=5.3.6'
   glob: '>=10.5.0'
@@ -1900,6 +1896,7 @@ overrides:
   mdast-util-to-hast: '>=13.2.1'
   mermaid: '>=10.9.4'
   minimatch: '>=10.2.1'
+  nan: 2.23.0
   nanoid: '>=3.3.8'
   node.extend: '>=1.1.7'
   nth-check: '>=2.0.1'
@@ -1907,14 +1904,17 @@ overrides:
   path-to-regexp: '>=3.3.0'
   prismjs: '>=1.30.0'
   qs: '>=6.14.1'
+  react: ~19.2.3
+  react-dom: ~19.2.3
   tar: '>=7.5.7'
   tar-fs: '>=3.1.1'
+  typescript: ^5.9.3
   undici: '>=7.18.2'
   vite: '>=7.1.11'
   wrangler: '>=4.59.1'
   ws: '>=8.17.1'
 
-pnpmfileChecksum: sha256-wjQyuGoV+tUt3v7ESmDlZqBpAkltbG8H+T1szikzFeM=
+pnpmfileChecksum: sha256-bgK2K5LxTn+NFMJ2ICiQxjhpUkvLtPC8fbLhPtY0Itk=
 
 patchedDependencies:
   '@automerge/automerge-repo@2.5.1':
@@ -2237,7 +2237,10 @@ importers:
         version: 11.9.0
       oxlint:
         specifier: ^1.53.0
-        version: 1.53.0
+        version: 1.53.0(oxlint-tsgolint@0.16.0)
+      oxlint-tsgolint:
+        specifier: ^0.16.0
+        version: 0.16.0
       pkg-up:
         specifier: 'catalog:'
         version: 3.1.0
@@ -22888,6 +22891,36 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  '@oxlint-tsgolint/darwin-arm64@0.16.0':
+    resolution: {integrity: sha512-WQt5lGwRPJBw7q2KNR0mSPDAaMmZmVvDlEEti96xLO7ONhyomQc6fBZxxwZ4qTFedjJnrHX94sFelZ4OKzS7UQ==}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@oxlint-tsgolint/darwin-x64@0.16.0':
+    resolution: {integrity: sha512-VJo29XOzdkalvCTiE2v6FU3qZlgHaM8x8hUEVJGPU2i5W+FlocPpmn00+Ld2n7Q0pqIjyD5EyvZ5UmoIEJMfqg==}
+    cpu: [x64]
+    os: [darwin]
+
+  '@oxlint-tsgolint/linux-arm64@0.16.0':
+    resolution: {integrity: sha512-MPfqRt1+XRHv9oHomcBMQ3KpTE+CSkZz14wUxDQoqTNdUlV0HWdzwIE9q65I3D9YyxEnqpM7j4qtDQ3apqVvbQ==}
+    cpu: [arm64]
+    os: [linux]
+
+  '@oxlint-tsgolint/linux-x64@0.16.0':
+    resolution: {integrity: sha512-XQSwVUsnwLokMhe1TD6IjgvW5WMTPzOGGkdFDtXWQmlN2YeTw94s/NN0KgDrn2agM1WIgAenEkvnm0u7NgwEyw==}
+    cpu: [x64]
+    os: [linux]
+
+  '@oxlint-tsgolint/win32-arm64@0.16.0':
+    resolution: {integrity: sha512-EWdlspQiiFGsP2AiCYdhg5dTYyAlj6y1nRyNI2dQWq4Q/LITFHiSRVPe+7m7K7lcsZCEz2icN/bCeSkZaORqIg==}
+    cpu: [arm64]
+    os: [win32]
+
+  '@oxlint-tsgolint/win32-x64@0.16.0':
+    resolution: {integrity: sha512-1ufk8cgktXJuJZHKF63zCHAkaLMwZrEXnZ89H2y6NO85PtOXqu4zbdNl0VBpPP3fCUuUBu9RvNqMFiv0VsbXWA==}
+    cpu: [x64]
+    os: [win32]
+
   '@oxlint/binding-android-arm-eabi@1.53.0':
     resolution: {integrity: sha512-JC89/jAx4d2zhDIbK8MC4L659FN1WiMXMBkNg7b33KXSkYpUgcbf+0nz7+EPRg+VwWiZVfaoFkNHJ7RXYb5Neg==}
     engines: {node: ^20.19.0 || >=22.12.0}
@@ -33153,6 +33186,10 @@ packages:
   oxc-resolver@11.9.0:
     resolution: {integrity: sha512-u714L0DBBXpD0ERErCQlun2XwinuBfIGo2T8bA7xE8WLQ4uaJudO/VOEQCWslOmcDY2nEkS+UVir5PpyvSG23w==}
 
+  oxlint-tsgolint@0.16.0:
+    resolution: {integrity: sha512-4RuJK2jP08XwqtUu+5yhCbxEauCm6tv2MFHKEMsjbosK2+vy5us82oI3VLuHwbNyZG7ekZA26U2LLHnGR4frIA==}
+    hasBin: true
+
   oxlint@1.53.0:
     resolution: {integrity: sha512-TLW0PzGbpO1JxUnuy1pIqVPjQUGh4fNfxu5XJbdFIRFVaJ0UFzTjjk/hSFTMRxN6lZub53xL/IwJNEkrh7VtDg==}
     engines: {node: ^20.19.0 || >=22.12.0}
@@ -42377,6 +42414,24 @@ snapshots:
     optional: true
 
   '@oxc-resolver/binding-win32-x64-msvc@11.9.0':
+    optional: true
+
+  '@oxlint-tsgolint/darwin-arm64@0.16.0':
+    optional: true
+
+  '@oxlint-tsgolint/darwin-x64@0.16.0':
+    optional: true
+
+  '@oxlint-tsgolint/linux-arm64@0.16.0':
+    optional: true
+
+  '@oxlint-tsgolint/linux-x64@0.16.0':
+    optional: true
+
+  '@oxlint-tsgolint/win32-arm64@0.16.0':
+    optional: true
+
+  '@oxlint-tsgolint/win32-x64@0.16.0':
     optional: true
 
   '@oxlint/binding-android-arm-eabi@1.53.0':
@@ -54750,7 +54805,16 @@ snapshots:
       '@oxc-resolver/binding-win32-ia32-msvc': 11.9.0
       '@oxc-resolver/binding-win32-x64-msvc': 11.9.0
 
-  oxlint@1.53.0:
+  oxlint-tsgolint@0.16.0:
+    optionalDependencies:
+      '@oxlint-tsgolint/darwin-arm64': 0.16.0
+      '@oxlint-tsgolint/darwin-x64': 0.16.0
+      '@oxlint-tsgolint/linux-arm64': 0.16.0
+      '@oxlint-tsgolint/linux-x64': 0.16.0
+      '@oxlint-tsgolint/win32-arm64': 0.16.0
+      '@oxlint-tsgolint/win32-x64': 0.16.0
+
+  oxlint@1.53.0(oxlint-tsgolint@0.16.0):
     optionalDependencies:
       '@oxlint/binding-android-arm-eabi': 1.53.0
       '@oxlint/binding-android-arm64': 1.53.0
@@ -54771,6 +54835,7 @@ snapshots:
       '@oxlint/binding-win32-arm64-msvc': 1.53.0
       '@oxlint/binding-win32-ia32-msvc': 1.53.0
       '@oxlint/binding-win32-x64-msvc': 1.53.0
+      oxlint-tsgolint: 0.16.0
 
   p-cancelable@3.0.0: {}
 
