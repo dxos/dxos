@@ -5,12 +5,12 @@
   "description": "A decentralized alternative to the commercial cloud for privacy preserving software.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "license": "MIT",
-  "author": "info@dxos.org",
   "repository": {
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
+  "license": "MIT",
+  "author": "info@dxos.org",
   "sideEffects": false,
   "scripts": {
     "1p-credentials": "bash -c \"op inject -i '$(git rev-parse --show-toplevel)/.env.1password'\"",
@@ -180,8 +180,8 @@
     "yargs": "catalog:",
     "zx": "catalog:"
   },
+  "packageManager": "pnpm@10.28.0",
   "engines": {
     "node": "^24.0.0"
-  },
-  "packageManager": "pnpm@10.28.0"
+  }
 }

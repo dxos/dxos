@@ -23,7 +23,10 @@
     "packages/ui/solid-ui-geo/data/**",
     "packages/common/esbuild-plugins/polyfills/**",
     "packages/common/node-std/**",
-    "**/*.conversations.json"
+    "**/*.conversations.json",
+    "**/package.json",
+    "**/README.md",
+    "**/tsconfig.json"
   ],
   "overrides": [
     {
