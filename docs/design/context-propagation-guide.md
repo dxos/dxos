@@ -4,7 +4,7 @@
 
 Every internal method takes `ctx: Context` as its first parameter (Go-style). This enables hierarchical OTEL traces in the browser without Zone.js. The `@trace.span()` decorator detects `ctx` as `args[0]`, uses it as the parent span, and replaces it with a child context before calling the method body.
 
-```
+```typescript
 import { Context } from '@dxos/context';
 ```
 
@@ -81,7 +81,7 @@ The lifecycle ctx is the right choice because:
 - `Context.default()` creates an orphaned context nobody disposes — a resource leak.
 - The lifecycle ctx carries no trace span, so these become trace roots (correct for detached work).
 
-### 5. Parallel fan-out (Promise.all): share the parent ctx
+### 4. Parallel fan-out (Promise.all): share the parent ctx
 
 When a method fans out to multiple concurrent calls, pass the same `ctx` to each. The `@trace.span()` decorator derives a child context per span, so concurrent spans get independent contexts with a shared parent.
 
@@ -96,7 +96,7 @@ async initializeAll(ctx: Context): Promise<void> {
 }
 ```
 
-### 6. Class lifecycle ctx
+### 5. Class lifecycle ctx
 
 Many classes (especially `Resource` subclasses) have `private _ctx = Context.default()`. This context is tied to the object's open/close lifecycle and disposed on close.
 
@@ -111,10 +111,10 @@ class DataSpace {
 
   async activate(): Promise<void> {
     await this._open(this._ctx);
-    this.initializeDataPipelineAsync();
+    this.initializeDataPipelineAsync(this._ctx);
   }
 
-  private async _close(_ctx: Context): Promise<void> {
+  private async _close(ctx: Context): Promise<void> {
     await this._ctx.dispose();
     this._ctx = Context.default();
     // ...
@@ -128,7 +128,7 @@ class DataSpace {
 
 ## How context flows through a call chain
 
-```
+```text
 User code (no ctx)
   → public API creates ctx = Context.default()
     → @trace.span() method receives ctx

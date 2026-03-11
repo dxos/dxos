@@ -139,7 +139,6 @@ export class DataSpace {
 
   constructor(params: DataSpaceProps) {
     this._inner = params.inner;
-    this._inner.stateUpdate.on(this._ctx, () => this.stateUpdate.emit());
 
     this._gossip = params.gossip;
     this._presence = params.presence;
@@ -239,6 +238,8 @@ export class DataSpace {
   }
 
   private async _open(ctx: Context): Promise<void> {
+    this._inner.stateUpdate.on(this._ctx, () => this.stateUpdate.emit());
+
     await this._presence.open();
     await this._gossip.open();
     await this._notarizationPlugin.open();
@@ -381,7 +382,7 @@ export class DataSpace {
 
   @trace.span({ showInBrowserTimeline: true })
   private async _initializeAndReadControlPipeline(ctx: Context): Promise<void> {
-    await this._inner.controlPipeline.state.waitUntilReachedTargetTimeframe(this._ctx, {
+    await this._inner.controlPipeline.state.waitUntilReachedTargetTimeframe(ctx, {
       timeout: 10_000,
       breakOnStall: false,
     });

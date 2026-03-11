@@ -400,20 +400,25 @@ export class DataSpaceManager extends Resource {
       setDeep(doc, ['objects', propertiesId], properties);
     });
 
-    await this._echoHost.flush(Context.default());
+    await this._echoHost.flush(ctx);
     return space;
   }
 
   private async _getSpaceRootDocument(ctx: Context, space: DataSpace): Promise<DocHandle<DatabaseDirectory>> {
     const automergeIndex = space.automergeSpaceState.rootUrl;
     invariant(automergeIndex);
-    const document = await this._echoHost.loadDoc<DatabaseDirectory>(Context.default(), automergeIndex as any, {
+    const document = await this._echoHost.loadDoc<DatabaseDirectory>(ctx, automergeIndex as any, {
       fetchFromNetwork: true,
     });
     await document.whenReady();
     return document;
   }
 
+  /**
+   * Accepts an existing space by joining its swarm and initializing the data pipeline.
+   * @param ctx - Caller context for cancellation and tracing.
+   * @param opts - Space keys and optional timeframes for catch-up.
+   */
   // TODO(burdon): Rename join space.
   @synchronized
   @trace.span({ showInBrowserTimeline: true })
