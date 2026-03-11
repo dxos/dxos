@@ -7,6 +7,7 @@ import * as Schema from 'effect/Schema';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Client } from '@dxos/client';
+import { Context } from '@dxos/context';
 import { Obj, Type } from '@dxos/echo';
 import { getObjectCore } from '@dxos/echo-db';
 import { faker } from '@dxos/random';
@@ -80,14 +81,14 @@ describe('TestObjectGenerator', () => {
     const document = await generator.createObject({ types: [TestSchemaType.document] });
     expect(Obj.getTypeDXN(document)).to.exist;
 
-    const beforeChangesCount = A.getAllChanges(getObjectCore(document).docHandle!.doc()).length;
+    const beforeChangesCount = A.getAllChanges(getObjectCore(document).docHandle!.doc(Context.default())).length;
 
     // Mutate the document.
     const mutationsCount = 10;
     await generator.mutateObject(document, { count: mutationsCount, maxContentLength: 1000, mutationSize: 10 });
     await space.db.flush();
 
-    const changesCount = A.getAllChanges(getObjectCore(document).docHandle!.doc()).length;
+    const changesCount = A.getAllChanges(getObjectCore(document).docHandle!.doc(Context.default())).length;
     expect(changesCount - beforeChangesCount).to.be.eq(mutationsCount);
   });
 
