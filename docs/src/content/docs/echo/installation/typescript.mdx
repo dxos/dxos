@@ -12,9 +12,21 @@ import createClient from './snippets/create-client.ts?raw';
 Install using package manager of choice:
 
 <Tabs>
-  <TabItem label='npm'>```bash npm install --save @dxos/client ```</TabItem>
-  <TabItem label='pnpm'>```bash pnpm add @dxos/client ```</TabItem>
-  <TabItem label='yarn'>```bash yarn add @dxos/client ```</TabItem>
+  <TabItem label="npm">
+    ```bash
+    npm install --save @dxos/client
+    ```
+  </TabItem>
+  <TabItem label="pnpm">
+    ```bash
+    pnpm add @dxos/client
+    ```
+  </TabItem>
+  <TabItem label="yarn">
+    ```bash
+    yarn add @dxos/client
+    ```
+  </TabItem>
 </Tabs>
 
 ## Configuration
@@ -38,7 +50,7 @@ export default defineConfig({
 
 Create and initialize a `Client`:
 
-<Code code={createClient.slice(34)} lang='ts' />
+<Code code={createClient.slice(34)} lang="ts" />
 
 An options object can be passed to `Client()`. See [configuration examples](/echo/typescript/config).
 

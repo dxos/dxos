@@ -21,16 +21,14 @@ When an object comes out of an [ECHO](/echo/introduction) query, it is tracked b
 In the example below, clicking a task sets `completed = true`.
 
 {/* TODO(burdon): Replace with better example. */}
-
-<Code code={createObject.slice(34)} lang='tsx' />
+<Code code={createObject.slice(34)} lang="tsx" />
 
 ### Creating objects
 
 To create (insert) a new object, simply construct a `new Expando` and pass any initial values into the constructor.
 
-<Aside type='note'>
-  Calling `space.db.add(task)` needs to happen only once. All changes to the
-  object afterwards will be tracked by ECHO.
+<Aside type="note">
+Calling `space.db.add(task)` needs to happen only once. All changes to the object afterwards will be tracked by ECHO.
 </Aside>
 
 ## Typed Mutations
@@ -41,7 +39,7 @@ The following example uses the same schema definition as in the [Typed Queries](
 
 In the example below, clicking a task sets `completed = true` in the same way as the untyped API.
 
-<Code code={createObjectTyped.slice(34)} lang='tsx' />
+<Code code={createObjectTyped.slice(34)} lang="tsx" />
 
 ### Creating objects
 
@@ -55,10 +53,6 @@ To remove an object (typed or untyped) call the `remove` API on a space.
 space.db.remove(task);
 ```
 
-<Aside type='note'>
-  Objects in ECHO are not physically deleted, they are marked with a removed
-  field and remain in the change history until the next
-  [epoch](/additional-resources/glossary#epoch). This ECHO mutation feed design
-  is required to allow any latent offline writers to reconcile changes when they
-  come online.
+<Aside type="note">
+Objects in ECHO are not physically deleted, they are marked with a removed field and remain in the change history until the next [epoch](/additional-resources/glossary#epoch). This ECHO mutation feed design is required to allow any latent offline writers to reconcile changes when they come online.
 </Aside>

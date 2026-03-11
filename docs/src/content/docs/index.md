@@ -14,11 +14,11 @@ If you are interested in working with or contributing to either the SDK or Compo
 
 The DXOS SDK includes several technologies that work together:
 
-- [ECHO](/echo/introduction) - Peer-to-peer database and reactive state container for offline-first, real-time, collaborative apps.
-- [HALO](/halo/introduction) - Auth, identity & contact management for decentralized apps.
-- MESH - Networking transports used by ECHO & HALO.
-- EDGE - Web services running on Cloudflare workers, providing sync, backup, compute, etc.
-- App Framework - Build modular applications based around plugins & capabilities, such as [Composer](/composer/introduction).
+* [ECHO](/echo/introduction) - Peer-to-peer database and reactive state container for offline-first, real-time, collaborative apps.
+* [HALO](/halo/introduction) - Auth, identity & contact management for decentralized apps.
+* MESH - Networking transports used by ECHO & HALO.
+* EDGE - Web services running on Cloudflare workers, providing sync, backup, compute, etc.
+* App Framework - Build modular applications based around plugins & capabilities, such as [Composer](/composer/introduction).
 
 ## Compare
 

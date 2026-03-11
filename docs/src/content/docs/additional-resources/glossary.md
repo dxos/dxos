@@ -16,7 +16,7 @@ There can be multiple clients per [device](#device). An example is browser tabs 
 
 A collection of [Clients](#client) connected to a DXOS [identity](#identity). Every browser profile/domain combination is a device, with the tabs running DXOS as its clients.
 
-_Device_ doesn't refer to a physical machine, there can be multiple devices per computer.
+*Device* doesn't refer to a physical machine, there can be multiple devices per computer.
 
 ### [ECHO](/echo/introduction)
 
