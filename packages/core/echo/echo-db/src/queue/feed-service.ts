@@ -35,13 +35,13 @@ export const createFeedServiceLayer = (queues: QueueFactory) =>
     append: async (feed: Feed.Feed, items: Entity.Unknown[]): Promise<void> => {
       const feedDxn = resolveDxn(feed, queues);
       const queue = queues.get(Context.default(), feedDxn);
-      await queue.append(Context.default(), items);
+      await queue.append(items);
     },
 
     remove: async (feed: Feed.Feed, ids: string[]): Promise<void> => {
       const feedDxn = resolveDxn(feed, queues);
       const queue = queues.get(Context.default(), feedDxn);
-      await queue.delete(Context.default(), ids);
+      await queue.delete(ids);
     },
 
     query: (feed: Feed.Feed, queryOrFilter: Query.Any | Filter.Any) => {

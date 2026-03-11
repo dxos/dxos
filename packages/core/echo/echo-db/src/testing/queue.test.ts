@@ -46,7 +46,7 @@ describe('queues', () => {
     const queues = peer.client.constructQueueFactory(Context.default(), db.spaceId);
     const queue = queues.create(Context.default());
 
-    await queue.append(Context.default(), [Obj.make(TestSchema.Person, { name: 'john' })]);
+    await queue.append([Obj.make(TestSchema.Person, { name: 'john' })]);
     const obj = queue.objects[0];
     expect(Entity.getDXN(obj)?.toString()).toEqual(queue.dxn.extend([obj.id]).toString());
   });
@@ -58,7 +58,7 @@ describe('queues', () => {
     const queue = queues.create(Context.default());
 
     const obj = Obj.make(TestSchema.Person, { name: 'john' });
-    await queue.append(Context.default(), [obj]);
+    await queue.append([obj]);
 
     {
       const resolved = await peer.client.graph
@@ -85,7 +85,7 @@ describe('queues', () => {
     const queues = peer.client.constructQueueFactory(Context.default(), spaceId);
     const queue = queues.create(Context.default());
 
-    await queue.append(Context.default(), [
+    await queue.append([
       // prettier-ignore
       Obj.make(TestSchema.Person, { name: "john" }),
       Obj.make(TestSchema.Person, { name: 'jane' }),
@@ -99,7 +99,7 @@ describe('queues', () => {
     }
 
     {
-      await queue.refresh(Context.default());
+      await queue.refresh();
       const objects = queue.objects;
       expect(objects).toHaveLength(2);
       expect(Entity.getKeys(objects[0], FeedProtocol.KEY_QUEUE_POSITION).at(0)?.id).toEqual('0');
@@ -124,11 +124,11 @@ describe('queues', () => {
         role: 'CIO',
       });
 
-      await queue.append(Context.default(), [obj1, obj2, relation]);
+      await queue.append([obj1, obj2, relation]);
     }
 
     {
-      const [obj1, obj2, relation] = await queue.queryObjects(Context.default());
+      const [obj1, obj2, relation] = await queue.queryObjects();
       expect((obj1 as TestSchema.Person).name).toEqual('john');
       expect((obj2 as TestSchema.Organization).name).toEqual('DXOS');
       expect(Relation.getSource(relation as TestSchema.EmployedBy).name).toEqual('john');
@@ -153,11 +153,11 @@ describe('queues', () => {
         role: 'CTO',
       });
 
-      await queue.append(Context.default(), [org, relation]);
+      await queue.append([org, relation]);
     }
 
     {
-      const [org, relation] = await queue.queryObjects(Context.default());
+      const [org, relation] = await queue.queryObjects();
       expect((org as TestSchema.Organization).name).toEqual('DXOS');
       expect(Relation.getSource(relation as TestSchema.EmployedBy).name).toEqual('alice');
       expect(Relation.getTarget(relation as TestSchema.EmployedBy).name).toEqual('DXOS');
@@ -173,7 +173,7 @@ describe('queues', () => {
       const queues = peer.client.constructQueueFactory(Context.default(), spaceId);
       const queue = queues.create(Context.default());
 
-      await queue.append(Context.default(), [
+      await queue.append([
         Obj.make(TestSchema.Person, {
           name: 'john',
         }),
@@ -198,7 +198,7 @@ describe('queues', () => {
       const queues = peer.client.constructQueueFactory(Context.default(), spaceId);
       const queue = queues.create(Context.default());
 
-      await queue.append(Context.default(), [
+      await queue.append([
         Obj.make(TestSchema.Person, {
           name: 'john',
         }),
@@ -222,7 +222,7 @@ describe('queues', () => {
       const queue = queues.create(Context.default());
 
       const localObject = Obj.make(TestSchema.Person, { name: 'local-only' });
-      await queue.append(Context.default(), [localObject]);
+      await queue.append([localObject]);
 
       const localQueueObjects = await queue
         .query(Query.select(Filter.type(TestSchema.Person, { name: 'local-only' })))
@@ -240,7 +240,7 @@ describe('queues', () => {
       const queue = queues.create(Context.default());
 
       const localObject = Obj.make(TestSchema.Expando, { message: 'local-only' });
-      await queue.append(Context.default(), [localObject]);
+      await queue.append([localObject]);
 
       const localQueueObjects = await queue
         .query(Query.select(Filter.type(TestSchema.Expando, { message: 'local-only' })))
@@ -259,7 +259,7 @@ describe('queues', () => {
       const queues = peer.client.constructQueueFactory(Context.default(), spaceId);
       const queue = queues.create(Context.default());
 
-      await queue.append(Context.default(), [
+      await queue.append([
         Obj.make(TestSchema.Person, {
           name: 'john',
         }),
@@ -288,7 +288,7 @@ describe('queues', () => {
       const jane = Obj.make(TestSchema.Person, { name: 'jane' });
       const alice = Obj.make(TestSchema.Person, { name: 'alice' });
 
-      await queue.append(Context.default(), [john, jane, alice]);
+      await queue.append([john, jane, alice]);
 
       // Query by specific ID.
       const result = await queue.query(Query.select(Filter.id(jane.id))).run();
@@ -305,7 +305,7 @@ describe('queues', () => {
       const queues = peer.client.constructQueueFactory(Context.default(), spaceId);
       const queue = queues.create(Context.default());
 
-      await queue.append(Context.default(), [
+      await queue.append([
         Obj.make(TestSchema.Person, {
           name: 'john',
         }),
@@ -334,7 +334,7 @@ describe('queues', () => {
       const queues = peer.client.constructQueueFactory(Context.default(), spaceId);
       const queue = queues.create(Context.default());
 
-      await queue.append(Context.default(), [
+      await queue.append([
         Obj.make(TestSchema.Person, {
           name: 'john',
         }),
@@ -346,7 +346,7 @@ describe('queues', () => {
       const sub = query.subscribe(() => called.emit());
 
       // Append new contact.
-      await queue.append(Context.default(), [
+      await queue.append([
         Obj.make(TestSchema.Person, {
           name: 'jane',
         }),
@@ -369,7 +369,7 @@ describe('queues', () => {
       const queues = peer.client.constructQueueFactory(Context.default(), spaceId);
       const queue = queues.create(Context.default());
 
-      await queue.append(Context.default(), [
+      await queue.append([
         Obj.make(TestSchema.Person, {
           name: 'john',
         }),

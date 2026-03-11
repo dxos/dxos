@@ -175,6 +175,6 @@ export class TranscriptionManager extends Resource {
       block = await this._messageEnricher(block);
     }
 
-    await this._queue.append(this._ctx, [block]);
+    await this._queue.append([block]);
   }
 }

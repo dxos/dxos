@@ -35,7 +35,7 @@ export class QueueLogger implements SequenceLogger {
   log(event: SequenceEvent) {
     switch (event.type) {
       case 'begin':
-        void this._invocationTraceQueue.append(Context.default(), [
+        void this._invocationTraceQueue.append([
           Obj.make(InvocationTraceStartEvent, {
             type: InvocationTraceEventType.START,
             invocationId: event.invocationId,
@@ -47,7 +47,7 @@ export class QueueLogger implements SequenceLogger {
         ]);
         break;
       case 'end':
-        void this._invocationTraceQueue.append(Context.default(), [
+        void this._invocationTraceQueue.append([
           Obj.make(InvocationTraceEndEvent, {
             type: InvocationTraceEventType.END,
             invocationId: event.invocationId,
@@ -58,7 +58,7 @@ export class QueueLogger implements SequenceLogger {
         break;
       case 'step-start':
       case 'step-complete':
-        void this._getTraceEventQueue(event.invocationId).append(Context.default(), [
+        void this._getTraceEventQueue(event.invocationId).append([
           Obj.make(TraceEvent, {
             outcome: event.type,
             truncated: false,
@@ -76,7 +76,7 @@ export class QueueLogger implements SequenceLogger {
         ]);
         break;
       case 'message':
-        void this._getTraceEventQueue(event.invocationId).append(Context.default(), [
+        void this._getTraceEventQueue(event.invocationId).append([
           Obj.make(TraceEvent, {
             outcome: event.type,
             truncated: false,
@@ -94,7 +94,7 @@ export class QueueLogger implements SequenceLogger {
         ]);
         break;
       case 'block':
-        void this._getTraceEventQueue(event.invocationId).append(Context.default(), [
+        void this._getTraceEventQueue(event.invocationId).append([
           Obj.make(TraceEvent, {
             outcome: event.type,
             truncated: false,

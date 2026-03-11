@@ -64,7 +64,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
       Effect.fnUntraced(function* () {
         const conversation = queues.create(Context.default());
         yield* Effect.promise(() =>
-          conversation.append(Context.default(), [
+          conversation.append([
             Obj.make(Message.Message, {
               created: new Date().toISOString(),
               sender: { role: 'user' },
@@ -87,7 +87,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
         expect(output.text.length).toBeGreaterThan(10);
 
         const conversationMessages = yield* Effect.promise(() =>
-          queues.get<Message.Message>(Context.default(), conversation.dxn).queryObjects(Context.default()),
+          queues.get<Message.Message>(Context.default(), conversation.dxn).queryObjects(),
         );
         log.info('conversationMessages', { conversationMessages });
         expect(conversationMessages.at(-1)?.sender.role).toEqual('assistant');

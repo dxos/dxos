@@ -117,7 +117,7 @@ describe.skip('SentenceNormalization', () => {
           void ctx.dispose();
           return;
         }
-        await queue.append(ctx, [messages[idx]]);
+        await queue.append([messages[idx]]);
         idx++;
       },
       2_000,

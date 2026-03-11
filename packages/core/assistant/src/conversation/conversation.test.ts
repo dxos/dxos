@@ -42,7 +42,7 @@ describe('AiConversation', () => {
 
       // Add blueprint to queue via binding.
       yield* Effect.promise(() =>
-        queue.append(DxosContext.default(), [
+        queue.append([
           Obj.make(ContextBinding, {
             blueprints: {
               added: [Ref.make(blueprint)],

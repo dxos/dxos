@@ -82,10 +82,10 @@ export default defineFunction({
         const queueTarget = yield* Database.load(queue);
         if ('queue' in data.event && data.event.item) {
           const obj = data.event.item;
-          yield* Effect.promise(() => queueTarget.append(Context.default(), [obj]));
+          yield* Effect.promise(() => queueTarget.append([obj]));
         } else if ('subject' in data.event && Ref.isRef(data.event.subject)) {
           const obj = yield* Database.load(data.event.subject);
-          yield* Effect.promise(() => queueTarget.append(Context.default(), [obj]));
+          yield* Effect.promise(() => queueTarget.append([obj]));
         } else {
           throw new Error('Invalid event.');
         }

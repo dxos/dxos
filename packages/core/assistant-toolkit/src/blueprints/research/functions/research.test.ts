@@ -65,7 +65,7 @@ describe('Research', () => {
         const researchGraph = yield* ResearchGraph.query();
         if (researchGraph) {
           const data = yield* Database.load(researchGraph.queue).pipe(
-            Effect.flatMap((queue) => Effect.promise(() => queue.queryObjects(Context.default()))),
+            Effect.flatMap((queue) => Effect.promise(() => queue.queryObjects())),
           );
           console.log(inspect(data, { depth: null, colors: true }));
         }

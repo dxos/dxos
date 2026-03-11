@@ -84,7 +84,7 @@ export class AiConversation extends Resource {
   }
 
   public async getHistory(): Promise<Message.Message[]> {
-    const queueItems = await this._queue.queryObjects(this._ctx); // TODO(burdon): Update.
+    const queueItems = await this._queue.queryObjects(); // TODO(burdon): Update.
     return queueItems.filter(Obj.instanceOf(Message.Message));
   }
 
@@ -133,7 +133,7 @@ export class AiConversation extends Resource {
           toolkit,
           objects,
           ...params,
-          onOutput: (message) => Effect.promise(() => this._queue.append(this._ctx, [message])),
+          onOutput: (message) => Effect.promise(() => this._queue.append([message])),
         })
         .pipe(
           Effect.provide(

@@ -126,7 +126,7 @@ export const gptNode = defineComputeNode({
     const { queues } = yield* QueueService;
     const historyMessages = conversation
       ? yield* Effect.tryPromise({
-          try: () => queues.get<Message.Message>(DxosContext.default(), conversation.dxn).queryObjects(DxosContext.default()),
+          try: () => queues.get<Message.Message>(DxosContext.default(), conversation.dxn).queryObjects(),
           catch: (e) => e as Error,
         })
       : (history ?? []);
@@ -173,7 +173,7 @@ export const gptNode = defineComputeNode({
       log.info('messages', { messages });
 
       if (conversation) {
-        yield* Effect.promise(() => queues.get<Message.Message>(DxosContext.default(), conversation.dxn).append(DxosContext.default(), [...messages]));
+        yield* Effect.promise(() => queues.get<Message.Message>(DxosContext.default(), conversation.dxn).append([...messages]));
       }
 
       const text = messages

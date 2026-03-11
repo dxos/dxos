@@ -217,7 +217,7 @@ export namespace TracingServiceExt {
     Layer.succeed(TracingService, {
       getTraceContext: () => ({}),
       write: (event: Obj.Unknown) => {
-        void queue.append(DxosContext.default(), [event]).catch((error) => {
+        void queue.append([event]).catch((error) => {
           log.warn('Failed to write trace event to queue', { error });
         });
       },
@@ -261,7 +261,7 @@ export namespace TracingServiceExt {
             const queue = specificQueueDXN
               ? queueService.queues.get(DxosContext.default(), DXN.parse(specificQueueDXN))
               : opts.invocationTraceQueue;
-            void queue.append(DxosContext.default(), [event]).catch((error) => {
+            void queue.append([event]).catch((error) => {
               log.warn('Failed to write trace event to queue', { error });
             });
           },

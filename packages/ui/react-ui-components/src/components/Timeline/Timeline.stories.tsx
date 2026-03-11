@@ -6,7 +6,6 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useRef, useState } from 'react';
 
 import { AgentStatus } from '@dxos/ai';
-import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { LogLevel, log } from '@dxos/log';
 import { faker } from '@dxos/random';
@@ -220,18 +219,18 @@ const slice = 0;
 export const ExecutionGraph: Story = {
   render: () => {
     const space = useSpace();
-    const queue = useMemo(() => space?.queues.create(Context.default()), [space]);
+    const queue = useMemo(() => space?.queues.create(), [space]);
     useAsyncEffect(async () => {
       const objects = await Promise.all(research.map((obj) => Obj.fromJSON(obj)));
       if (slice > 0) {
-        await queue?.append(Context.default(), objects.slice(0, slice));
+        await queue?.append(objects.slice(0, slice));
         return;
       }
 
       let i = 0;
       const interval = setInterval(async () => {
         const obj = objects[i];
-        await queue?.append(Context.default(), [obj]);
+        await queue?.append([obj]);
 
         i++;
         if (i >= objects.length) {

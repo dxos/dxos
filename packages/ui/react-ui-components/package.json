@@ -36,7 +36,6 @@
     "@dxos/assistant": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
-    "@dxos/context": "catalog:",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-query": "workspace:*",
     "@dxos/effect": "workspace:*",

@@ -68,7 +68,7 @@ export class QueueService extends Context.Tag('@dxos/functions/QueueService')<
     QueueService.pipe(Effect.map(({ queues }) => queues.create<T>(DxosContext.default(), options)));
 
   static append = <T extends Entity.Unknown = Entity.Unknown>(queue: Queue<T>, objects: T[]): Effect.Effect<void> =>
-    Effect.promise(() => queue.append(DxosContext.default(), objects));
+    Effect.promise(() => queue.append(objects));
 }
 
 /**

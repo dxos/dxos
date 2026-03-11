@@ -265,7 +265,7 @@ describe('Query', () => {
 
       const contactV1 = Obj.make(ContactV1, { firstName: 'John', lastName: 'Doe' });
       const contactV2 = Obj.make(ContactV2, { name: 'Brian Smith' });
-      await queue.append(Context.default(), [contactV1, contactV2]);
+      await queue.append([contactV1, contactV2]);
 
       const both = await queue.query(Query.select(Filter.typeDXN(DXN.parse('dxn:type:example.com/type/Person')))).run();
       expect(both).toHaveLength(2);
@@ -288,7 +288,7 @@ describe('Query', () => {
       const queue = queues.create(Context.default());
 
       const task = Obj.make(TestSchema.Task, { title: 'Queue type selector task' });
-      await queue.append(Context.default(), [task]);
+      await queue.append([task]);
 
       await db.flush({ indexes: true });
 
@@ -320,11 +320,11 @@ describe('Query', () => {
       const spaceTask1 = db1.add(Obj.make(TestSchema.Task, { title: 'space1-task' }));
       const spacePerson1 = db1.add(Obj.make(TestSchema.Person, { name: 'space1-person' }));
       const queueTask1 = Obj.make(TestSchema.Task, { title: 'queue1-task' });
-      await queue1.append(Context.default(), [queueTask1]);
+      await queue1.append([queueTask1]);
 
       const spaceTask2 = db2.add(Obj.make(TestSchema.Task, { title: 'space2-task' }));
       const queueTask2 = Obj.make(TestSchema.Task, { title: 'queue2-task' });
-      await queue2.append(Context.default(), [queueTask2]);
+      await queue2.append([queueTask2]);
 
       await db1.flush({ indexes: true });
       await db2.flush({ indexes: true });
@@ -505,7 +505,7 @@ describe('Query', () => {
       const queue = queues.create(Context.default());
 
       db.add(Obj.make(TestSchema.Task, { title: 'Space TypeScript Task' }));
-      await queue.append(Context.default(), [Obj.make(TestSchema.Task, { title: 'Queue TypeScript Task' })]);
+      await queue.append([Obj.make(TestSchema.Task, { title: 'Queue TypeScript Task' })]);
       await db.flush({ indexes: true });
 
       const withFeeds: TestSchema.Task[] = await db
@@ -572,7 +572,7 @@ describe('Query', () => {
 
       // Add items to the queue and a separate item to the space.
       db.add(Obj.make(TestSchema.Task, { title: 'Space Task' }));
-      await queue.append(Context.default(), [
+      await queue.append([
         Obj.make(TestSchema.Task, { title: 'Feed Task 1' }),
         Obj.make(TestSchema.Task, { title: 'Feed Task 2' }),
       ]);
@@ -597,7 +597,7 @@ describe('Query', () => {
 
       const feedItem = Obj.make(TestSchema.Task, { title: 'Feed Task' });
       const spaceItem = db.add(Obj.make(TestSchema.Task, { title: 'Space Task' }));
-      await queue.append(Context.default(), [feedItem]);
+      await queue.append([feedItem]);
       await db.flush({ indexes: true });
 
       // Filter.id for a feed item should find it when scoped to feed.
@@ -1484,7 +1484,7 @@ describe('Query', () => {
       const queue = queues.create(Context.default());
 
       // Add objects to the queue.
-      await queue.append(Context.default(), [
+      await queue.append([
         Obj.make(TestSchema.Task, { title: 'Introduction to TypeScript' }),
         Obj.make(TestSchema.Task, { title: 'Getting Started with React' }),
         Obj.make(TestSchema.Task, { title: 'Advanced Python Programming' }),
@@ -1534,7 +1534,7 @@ describe('Query', () => {
       db.add(Obj.make(TestSchema.Task, { title: 'Space Object TypeScript' }));
 
       // Add objects to the queue.
-      await queue.append(Context.default(), [Obj.make(TestSchema.Task, { title: 'Queue Object TypeScript' })]);
+      await queue.append([Obj.make(TestSchema.Task, { title: 'Queue Object TypeScript' })]);
 
       // Wait for indexing.
       await db.flush({ indexes: true });
@@ -1570,7 +1570,7 @@ describe('Query', () => {
       const queues = peer.client.constructQueueFactory(Context.default(), db.spaceId);
       const queue = queues.create(Context.default());
       const task = Obj.make(TestSchema.Task, { title: 'Queue Object TypeScript' });
-      await queue.append(Context.default(), [task]);
+      await queue.append([task]);
       await db.flush({ indexes: true });
 
       const obj: TestSchema.Task = await db

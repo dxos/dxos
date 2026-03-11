@@ -408,7 +408,7 @@ export const WithMail: Story = {
         Obj.getMeta(mutable).keys.push({ source: Feed.DXN_KEY, id: queue.dxn.toString() });
       });
       const messages = createTestMailbox();
-      await queue.append(Context.default(), messages);
+      await queue.append(messages);
     },
     onChatCreated: async ({ space, binder }) => {
       const feeds = await space.db.query(Filter.type(Type.Feed)).run();
@@ -674,7 +674,7 @@ export const WithTranscription: Story = {
     onInit: async ({ space }) => {
       const queue = space.queues.create(Context.default());
       const messages = createTestTranscription();
-      await queue.append(Context.default(), messages);
+      await queue.append(messages);
       space.db.add(Transcript.make(queue.dxn));
     },
     onChatCreated: async ({ space, binder }) => {
@@ -797,7 +797,7 @@ export const WithResearchQueue: Story = {
         Obj.make(ResearchInputQueue, { queue: Ref.fromDXN(space.queues.create(Context.default()).dxn) }),
       );
       const orgs = organizations.map(({ id: _, ...org }) => Obj.make(Organization.Organization, org));
-      await researchInputQueue.queue.target!.append(Context.default(), orgs);
+      await researchInputQueue.queue.target!.append(orgs);
 
       const researchPrompt = space.db.add(
         Prompt.make({
@@ -882,7 +882,7 @@ export const WithProject: Story = {
         Obj.getMeta(mutable).keys.push({ source: Feed.DXN_KEY, id: queue.dxn.toString() });
       });
       const messages = createTestMailbox(people);
-      await queue.append(Context.default(), messages);
+      await queue.append(messages);
 
       const dxosResearch = space.db.add(
         Markdown.make({

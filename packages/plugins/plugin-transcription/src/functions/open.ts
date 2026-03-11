@@ -28,7 +28,7 @@ export default defineFunction({
     const transcriptObj = yield* Database.load(transcript);
     const { dxn } = yield* Effect.promise(() => transcriptObj.queue.load());
     const queue = yield* QueueService.getQueue(dxn);
-    yield* Effect.promise(() => queue?.queryObjects(Context.default()));
+    yield* Effect.promise(() => queue?.queryObjects());
     const content = queue?.objects
       .filter((message) => Obj.instanceOf(Message.Message, message))
       .flatMap((message, index) => renderByline([])(message, index))

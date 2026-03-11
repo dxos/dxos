@@ -67,7 +67,7 @@ export class MessageNormalizer extends Resource {
     updateMessages();
 
     // Subscribe to queue changes.
-    const unsubscribe = this._queue.subscribe(this._ctx, updateMessages);
+    const unsubscribe = this._queue.subscribe(updateMessages);
     this._ctx.onDispose(unsubscribe);
   }
 
@@ -108,6 +108,6 @@ export class MessageNormalizer extends Resource {
     log.info('writing messages', { messages });
     const lastMessage = messages[messages.length - 1];
     this._cursor.timestamp = lastMessage.created;
-    void this._queue.append(this._ctx, messages);
+    void this._queue.append(messages);
   }
 }

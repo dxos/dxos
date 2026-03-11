@@ -40,9 +40,9 @@ export class QueueQueryContext<T extends Entity.Unknown = Entity.Unknown> implem
     const { filter } = trivial;
 
     const objects = await Function.pipe(
-      await this.#queue.fetchObjectsJSON(ctx),
+      await this.#queue._fetchObjectsJSON(),
       Array.filter((obj) => filterMatchObjectJSON(filter, obj)),
-      Array.map(async (obj) => this.#queue.hydrateObject(ctx, obj)),
+      Array.map(async (obj) => this.#queue.hydrateObject(obj)),
       (_) => Promise.all(_),
     );
 
@@ -57,7 +57,7 @@ export class QueueQueryContext<T extends Entity.Unknown = Entity.Unknown> implem
    */
   start(ctx: Context): void {
     this.#runCtx = Context.default();
-    this.#runCtx.onDispose(this.#queue.beginPolling(ctx));
+    this.#runCtx.onDispose(this.#queue.beginPolling());
     this.#queue.updated.on(this.#runCtx, () => {
       this.changed.emit();
     });
@@ -91,7 +91,7 @@ export class QueueQueryContext<T extends Entity.Unknown = Entity.Unknown> implem
     invariant(this.#filter);
 
     return Function.pipe(
-      this.#queue.getObjectsSync(ctx),
+      this.#queue._getObjectsSync(),
       // TODO(dmaretskyi): We end-up marshaling objects from JSON and back.
       Array.filter((obj) => filterMatchObjectJSON(this.#filter!, Entity.toJSON(obj))),
       Array.map((object) => ({

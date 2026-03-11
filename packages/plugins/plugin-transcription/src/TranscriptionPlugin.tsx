@@ -27,7 +27,7 @@ export const TranscriptionPlugin = Plugin.define(meta).pipe(
           const space = getSpace(transcript);
           const members = space?.members.get().map((member) => member.identity) ?? [];
           const queue = space?.queues.get<Message.Message>(Context.default(), transcript.queue.dxn);
-          await queue?.refresh(Context.default());
+          await queue?.refresh();
           const content = queue?.objects
             .filter((message) => Obj.instanceOf(Message.Message, message))
             .flatMap((message, index) => renderByline(members)(message, index))

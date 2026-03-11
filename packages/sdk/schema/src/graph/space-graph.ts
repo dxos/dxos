@@ -3,7 +3,6 @@
 //
 
 import { type CleanupFn } from '@dxos/async';
-import { Context } from '@dxos/context';
 import { type Database, type Entity, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { type Queue, type QueueImpl } from '@dxos/echo-db';
 import { type Graph, GraphModel } from '@dxos/graph';
@@ -155,12 +154,12 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
     );
 
     if (this._queue) {
-      // Cast to QueueImpl to access updated event and getObjectsSync().
+      // Cast to QueueImpl to access updated event and _getObjectsSync().
       const queueImpl = this._queue as QueueImpl;
 
       // Subscribe to queue updates via Event.
       const unsubscribeUpdated = queueImpl.updated.on(() => {
-        const items = queueImpl.getObjectsSync(Context.default());
+        const items = queueImpl._getObjectsSync();
         if (items) {
           this._queueItems = [...items];
         }
@@ -168,13 +167,13 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
       });
 
       // Initialize with current items.
-      const initialItems = queueImpl.getObjectsSync(Context.default());
+      const initialItems = queueImpl._getObjectsSync();
       if (initialItems) {
         this._queueItems = [...initialItems];
       }
 
       const pollingTask = setInterval(() => {
-        void this._queue?.refresh(Context.default());
+        void this._queue?.refresh();
       }, 1000);
 
       this._queueSubscription = () => {

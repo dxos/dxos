@@ -209,7 +209,7 @@ export const registry: Record<NodeType, Executable> = {
     exec: synchronizedComputeFunction(({ [DEFAULT_INPUT]: id }) =>
       Effect.gen(function* () {
         const { queues } = yield* QueueService;
-        const messages = yield* Effect.promise(() => queues.get(DxosContext.default(), DXN.parse(id)).queryObjects(DxosContext.default()));
+        const messages = yield* Effect.promise(() => queues.get(DxosContext.default(), DXN.parse(id)).queryObjects());
         const decoded = Schema.decodeUnknownSync(Schema.Any)(messages);
         return {
           [DEFAULT_OUTPUT]: decoded,
@@ -232,7 +232,7 @@ export const registry: Record<NodeType, Executable> = {
               id: item.id ?? ObjectId.random(),
             }));
             const { queues } = yield* QueueService;
-            yield* Effect.promise(() => queues.get(DxosContext.default(), DXN.parse(id)).append(DxosContext.default(), mappedItems));
+            yield* Effect.promise(() => queues.get(DxosContext.default(), DXN.parse(id)).append(mappedItems));
             return {};
           }
 

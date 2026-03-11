@@ -137,7 +137,7 @@ const DefaultStory = ({
         blocks,
       });
       if (!space) {
-        void queue.append(Context.default(), [message]);
+        void queue.append([message]);
         return;
       }
 
@@ -156,9 +156,9 @@ const DefaultStory = ({
             timeout: 30_000,
           },
         });
-        void queue.append(Context.default(), [result.message]);
+        void queue.append([result.message]);
       } else {
-        void queue.append(Context.default(), [message]);
+        void queue.append([message]);
       }
     },
     [queue, space],

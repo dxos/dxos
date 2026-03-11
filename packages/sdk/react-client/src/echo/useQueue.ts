@@ -42,7 +42,7 @@ export const useQueue = <T extends Entity.Unknown>(
   }, [client, queueDxn?.toString()]);
 
   useEffect(() => {
-    void queue?.refresh(Context.default());
+    void queue?.refresh();
   }, [queue]);
 
   useEffect(() => {
@@ -54,7 +54,7 @@ export const useQueue = <T extends Entity.Unknown>(
         return;
       }
 
-      void queue?.refresh(Context.default()).finally(() => {
+      void queue?.refresh().finally(() => {
         if (mountedRef.current && options.pollInterval) {
           timeout = setTimeout(poll, Math.max(options.pollInterval ?? 0, MIN_POLL_INTERVAL));
         }

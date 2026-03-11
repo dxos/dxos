@@ -4,7 +4,6 @@
 
 import * as Schema from 'effect/Schema';
 
-import { type Context } from '@dxos/context';
 import { type Database, type Entity } from '@dxos/echo';
 import { EntityKind, type TypeAnnotation, TypeAnnotationId } from '@dxos/echo/internal';
 import { type DXN, type ObjectId } from '@dxos/keys';
@@ -21,7 +20,7 @@ export interface Queue<T extends Entity.Unknown = Entity.Unknown> extends Databa
    * Subscribe to queue updates.
    * @returns Unsubscribe function.
    */
-  subscribe(ctx: Context, callback: () => void): () => void;
+  subscribe(callback: () => void): () => void;
 
   /**
    * @deprecated Use query() API instead.
@@ -42,40 +41,40 @@ export interface Queue<T extends Entity.Unknown = Entity.Unknown> extends Databa
   /**
    * Appends objects to the queue.
    */
-  append(ctx: Context, objects: T[]): Promise<void>;
+  append(objects: T[]): Promise<void>;
 
   /**
    * Deletes objects from the queue.
    */
-  delete(ctx: Context, ids: string[]): Promise<void>;
+  delete(ids: string[]): Promise<void>;
 
   /**
    * Syncs the queue with the server.
    * @param shouldPush - Whether to push local changes to the server. Defaults to true.
    * @param shouldPull - Whether to pull remote changes from the server. Defaults to true.
    */
-  sync(ctx: Context, request?: { shouldPush?: boolean; shouldPull?: boolean }): Promise<void>;
+  sync(request?: { shouldPush?: boolean; shouldPull?: boolean }): Promise<void>;
 
   /**
    * Query all objects in the queue.
    * @deprecated Use query() API instead.
    */
   // TODO(dmaretskyi): Replace with unified query(query) => QueryResult<T> API.
-  queryObjects(ctx: Context): Promise<T[]>;
+  queryObjects(): Promise<T[]>;
 
   /**
    * Queries objects by id.
    * @deprecated Use query() API instead.
    */
   // TODO(dmaretskyi): Replace with unified query(query) => QueryResult<T> API.
-  getObjectsById(ctx: Context, ids: ObjectId[]): Promise<(T | undefined)[]>;
+  getObjectsById(ids: ObjectId[]): Promise<(T | undefined)[]>;
 
   /**
    * Refreshes the queue from the server.
    * @deprecated Use query() API instead.
    */
   // TODO(dmaretskyi): Remove.
-  refresh(ctx: Context): Promise<void>;
+  refresh(): Promise<void>;
 }
 
 // TODO(dmaretskyi): Implement.

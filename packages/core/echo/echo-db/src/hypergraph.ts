@@ -158,7 +158,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
           if (object) {
             return middleware(object);
           } else if (queue && load && onLoad) {
-            queue.refresh(Context.default()).then(
+            queue.refresh().then(
               () => onLoad(),
               (err) => log.catch(err),
             );
@@ -371,7 +371,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
       return undefined;
     }
 
-    const [obj] = await queue.getObjectsById(Context.default(), [objectId]);
+    const [obj] = await queue.getObjectsById([objectId]);
     return obj;
   }
 

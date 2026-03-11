@@ -33,7 +33,7 @@ export const query = Command.make(
     const { json } = yield* CommandConfig;
     const client = yield* ClientService;
     const queue = (yield* Effect.promise(() => client.graph.createRefResolver({}).resolve(dxn))) as Queue<any>;
-    const objects = yield* Effect.promise(() => queue.queryObjects(Context.default()));
+    const objects = yield* Effect.promise(() => queue.queryObjects());
 
     if (json) {
       yield* Console.log(JSON.stringify(objects, null, 2));

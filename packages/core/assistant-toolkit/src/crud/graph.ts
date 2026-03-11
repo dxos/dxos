@@ -118,7 +118,7 @@ export const LocalSearchHandler = LocalSearchToolkit.toLayer({
 
     const option = yield* Effect.serviceOption(ContextQueueService);
     if (Option.isSome(option)) {
-      const queueObjects = yield* Effect.promise(() => option.value.queue.queryObjects(DxosContext.default()));
+      const queueObjects = yield* Effect.promise(() => option.value.queue.queryObjects());
       // TODO(dmaretskyi): Text search on the queue.
       results.push(...queueObjects);
     }
@@ -174,7 +174,7 @@ export const makeGraphWriterHandler = (
       const { db } = yield* Database.Service;
       const { queue } = yield* ContextQueueService;
       const data = yield* Effect.promise(() => sanitizeObjects(schema, input as any, db, queue));
-      yield* Effect.promise(() => queue.append(DxosContext.default(), data as Obj.Unknown[]));
+      yield* Effect.promise(() => queue.append(data as Obj.Unknown[]));
 
       const dxns = data.map((obj) => Obj.getDXN(obj));
       onAppend?.(dxns);
@@ -292,7 +292,7 @@ export const sanitizeObjects = async (
 
   // TODO(dmaretskyi): Use ref resolver.
   const dbObjects = await db.query(Query.select(Filter.id(...existingIds))).run();
-  const queueObjects = (await queue?.getObjectsById(DxosContext.default(), [...existingIds])) ?? [];
+  const queueObjects = (await queue?.getObjectsById([...existingIds])) ?? [];
   const objects = [...dbObjects, ...queueObjects].filter(isNonNullable);
 
   // TODO(dmaretskyi): Returns everything if IDs are empty!

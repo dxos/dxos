@@ -10,7 +10,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Context } from '@dxos/context';
 import { Obj, Ref } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
-import { DocAccessor, type IDocHandle, createDocAccessor } from '@dxos/echo-db';
+import { DocAccessor, createDocAccessor } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { type Messenger } from '@dxos/protocols';
 import { Query, useQuery, useSpace } from '@dxos/react-client/echo';
@@ -29,15 +29,6 @@ const initialContent = 'Hello world!';
 type TestObject = {
   text: string;
 };
-
-/** Adapts an automerge-repo DocHandle to the IDocHandle interface expected by DocAccessor. */
-const adaptDocHandle = <T,>(handle: DocHandle<T>): IDocHandle<T> => ({
-  doc: (_ctx) => handle.doc(),
-  change: (_ctx, callback, options?) => handle.change(callback, options),
-  changeAt: (_ctx, heads: any, callback, options?) => handle.changeAt(heads, callback, options) as any,
-  addListener: (event, listener) => handle.addListener(event, listener),
-  removeListener: (event, listener) => handle.removeListener(event, listener),
-});
 
 type EditorProps = {
   source: DocAccessor;

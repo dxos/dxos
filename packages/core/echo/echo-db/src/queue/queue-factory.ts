@@ -32,7 +32,7 @@ export class QueueFactory extends Resource implements QueueAPI {
   }
 
   protected override async _close(_ctx: Context): Promise<void> {
-    await Promise.allSettled(this._queues.values().map((queue) => queue.dispose(this._ctx)));
+    await Promise.allSettled(this._queues.values().map((queue) => queue.dispose()));
   }
 
   setService(ctx: Context, service: FeedProtocol.QueueService): void {

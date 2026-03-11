@@ -223,7 +223,7 @@ describe('AtomQuery with queues', () => {
 
     const john = Obj.make(TestSchema.Person, { name: 'john' });
     const jane = Obj.make(TestSchema.Person, { name: 'jane' });
-    await queue.append(Context.default(), [john, jane]);
+    await queue.append([john, jane]);
 
     // Verify queue.query works directly (sanity check).
     const directResult = await queue.query(Query.select(Filter.type(TestSchema.Person))).run();
@@ -246,7 +246,7 @@ describe('AtomQuery with queues', () => {
     const john = Obj.make(TestSchema.Person, { name: 'john' });
     const jane = Obj.make(TestSchema.Person, { name: 'jane' });
     const alice = Obj.make(TestSchema.Person, { name: 'alice' });
-    await queue.append(Context.default(), [john, jane, alice]);
+    await queue.append([john, jane, alice]);
 
     // Verify queue.query works directly (sanity check).
     const directResult = await queue.query(Query.select(Filter.id(jane.id))).run();

@@ -90,7 +90,7 @@ const meta = {
               const queue = space.queues.create(Context.default());
               const kai = Obj.make(Person.Person, { fullName: 'Kai' });
               const dxos = Obj.make(Organization.Organization, { name: 'DXOS' });
-              yield* Effect.promise(() => queue.append(Context.default(), [kai, dxos]));
+              yield* Effect.promise(() => queue.append([kai, dxos]));
 
               space.db.add(
                 Markdown.make({
