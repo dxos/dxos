@@ -5,7 +5,7 @@
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
-import { type Database, type Entity, Filter, type Hypergraph, Query, type QueryAST, Ref } from '@dxos/echo';
+import { type Database, type Entity, Filter, type Hypergraph, Query, Ref } from '@dxos/echo';
 import { type AnyProperties, setRefResolver } from '@dxos/echo/internal';
 import { batchEvents } from '@dxos/echo/internal';
 import { failedInvariant } from '@dxos/invariant';
@@ -16,14 +16,7 @@ import { entry } from '@dxos/util';
 
 import { type ItemsUpdatedEvent } from './core-db';
 import { type EchoDatabaseImpl, RuntimeSchemaRegistry } from './proxy-db';
-import {
-  GraphQueryContext,
-  type QueryContext,
-  QueryResultImpl,
-  type QuerySource,
-  SpaceQuerySource,
-  normalizeQuery,
-} from './query';
+import { GraphQueryContext, type QueryContext, QueryResultImpl, type QuerySource, SpaceQuerySource } from './query';
 import type { Queue, QueueFactory } from './queue';
 
 const TRACE_REF_RESOLUTION = false;
@@ -114,9 +107,9 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     this.prototype.query = this.prototype._query;
   }
 
-  private _query(query: Query.Any | Filter.Any, options?: Database.QueryOptions & QueryAST.QueryOptions) {
-    query = Filter.is(query) ? Query.select(query) : query;
-    return new QueryResultImpl(this._createLiveObjectQueryContext(), normalizeQuery(query, options));
+  private _query(queryOrFilter: Query.Any | Filter.Any) {
+    const query = Filter.is(queryOrFilter) ? Query.select(queryOrFilter) : queryOrFilter;
+    return new QueryResultImpl(this._createLiveObjectQueryContext(), query);
   }
 
   /**

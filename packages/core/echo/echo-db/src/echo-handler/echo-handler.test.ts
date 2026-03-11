@@ -8,6 +8,7 @@ import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Entity, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
+import { Filter } from '@dxos/echo';
 import {
   ATTR_RELATION_SOURCE,
   ATTR_RELATION_TARGET,
@@ -26,7 +27,6 @@ import { openAndClose } from '@dxos/test-utils';
 import { defer } from '@dxos/util';
 
 import { DocAccessor } from '../core-db';
-import { Filter } from '../query';
 import { EchoTestBuilder, createTmpPath } from '../testing';
 
 import { createDocAccessor } from './doc-accessor';

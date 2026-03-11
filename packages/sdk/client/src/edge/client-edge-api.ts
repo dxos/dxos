@@ -3,8 +3,8 @@
 //
 
 import { Event } from '@dxos/async';
-import type { Database, Entity, Filter, Hypergraph, Query, QueryResult } from '@dxos/echo';
-import { type QueryContext, QueryResultImpl, normalizeQuery } from '@dxos/echo-db';
+import { type Database, type Entity, Filter, type Hypergraph, Query, type QueryResult } from '@dxos/echo';
+import { type QueryContext, QueryResultImpl } from '@dxos/echo-db';
 import { QueryAST } from '@dxos/echo-protocol';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
@@ -41,9 +41,8 @@ export type ClientEdgeAPIParams = {
 export const createClientEdgeAPI = ({ client, edgeClient }: ClientEdgeAPIParams): ClientEdgeAPI => {
   const queryFn: Database.QueryFn = <Q extends Query.Any>(
     query: Q | Filter.Any,
-    options?: Database.QueryOptions & QueryAST.QueryOptions,
   ): QueryResult.QueryResult<Query.Type<Q>> => {
-    const normalizedQuery = normalizeQuery(query, options);
+    const normalizedQuery = Filter.is(query) ? Query.select(query) : query;
 
     const spaceIds = getTargetSpacesForQuery(normalizedQuery.ast);
     invariant(spaceIds.length === 1, 'Edge query must target exactly one space');
@@ -55,7 +54,7 @@ export const createClientEdgeAPI = ({ client, edgeClient }: ClientEdgeAPIParams)
       graph: client.graph,
     });
 
-    return new QueryResultImpl(queryContext, normalizedQuery);
+    return new QueryResultImpl(queryContext as any, normalizedQuery) as QueryResult.QueryResult<Query.Type<Q>>;
   };
 
   return {

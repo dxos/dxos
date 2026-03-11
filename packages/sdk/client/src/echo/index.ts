@@ -11,14 +11,13 @@ export {
   createSubscription,
   getVersion,
   type EchoDatabase,
-  Filter,
   type ObjectMigration,
   ObjectVersion,
-  Query,
   Queue,
   type Selection,
   type SubscriptionHandle,
 } from '@dxos/echo-db';
+export { Filter, Query } from '@dxos/echo';
 
 // TODO(dmaretskyi): Remove this export.
 export { decodeReference as internalDecodeReference } from '@dxos/echo-protocol';

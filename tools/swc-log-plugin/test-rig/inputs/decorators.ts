@@ -8,7 +8,8 @@ import type * as Schema from 'effect/Schema';
 
 import { raise } from '@dxos/debug';
 import { type Obj } from '@dxos/echo';
-import { type EchoDatabase, Filter } from '@dxos/echo-db';
+import { Filter } from '@dxos/echo';
+import { type EchoDatabase } from '@dxos/echo-db';
 import { getSchema, getSchemaTypename, StoredSchema, toJsonSchema } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
 
