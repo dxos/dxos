@@ -9,6 +9,8 @@ import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import {
   AgentFunctions,
+  BrowserBlueprint,
+  DatabaseBlueprint,
   DiscordBlueprint,
   EntityExtractionFunctions,
   LinearBlueprint,
@@ -24,6 +26,8 @@ import { AssistantBlueprint } from '../../blueprints';
 const blueprintDefinition = Capability.makeModule(() =>
   Effect.succeed([
     Capability.contributes(AppCapabilities.BlueprintDefinition, AssistantBlueprint),
+    Capability.contributes(AppCapabilities.BlueprintDefinition, BrowserBlueprint),
+    Capability.contributes(AppCapabilities.BlueprintDefinition, DatabaseBlueprint),
     Capability.contributes(AppCapabilities.BlueprintDefinition, ResearchBlueprint),
     Capability.contributes(AppCapabilities.BlueprintDefinition, WebSearchBlueprint),
     Capability.contributes(AppCapabilities.BlueprintDefinition, DiscordBlueprint),
