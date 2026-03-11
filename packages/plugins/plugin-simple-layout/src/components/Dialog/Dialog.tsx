@@ -6,9 +6,9 @@ import React from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AlertDialog, Dialog as NaturalDialog } from '@dxos/react-ui';
+import { ErrorFallback } from '@dxos/react-ui';
 
 import { useSimpleLayoutState } from '../../hooks';
-import { ContentError } from '../ContentError';
 
 export const Dialog = () => {
   const { state, updateState } = useSimpleLayoutState();
@@ -23,14 +23,14 @@ export const Dialog = () => {
       onOpenChange={(nextOpen) => updateState((state) => ({ ...state, dialogOpen: nextOpen }))}
     >
       {state.dialogBlockAlign === 'end' ? (
-        <Surface.Surface role='dialog' data={state.dialogContent} limit={1} fallback={ContentError} />
+        <Surface.Surface role='dialog' data={state.dialogContent} limit={1} fallback={ErrorFallback} />
       ) : (
         <DialogOverlay
           blockAlign={state.dialogBlockAlign}
           classNames={state.dialogOverlayClasses}
           style={state.dialogOverlayStyle}
         >
-          <Surface.Surface role='dialog' data={state.dialogContent} limit={1} fallback={ContentError} />
+          <Surface.Surface role='dialog' data={state.dialogContent} limit={1} fallback={ErrorFallback} />
         </DialogOverlay>
       )}
     </DialogRoot>

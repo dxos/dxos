@@ -9,7 +9,7 @@ import { Filter, Query } from '@dxos/echo';
 import { createEchoSchema } from '@dxos/echo/testing';
 import { log } from '@dxos/log';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { ProjectionModel, View, createEchoChangeCallback } from '@dxos/schema';
+import { ProjectionModel, ViewModel, createEchoChangeCallback } from '@dxos/schema';
 import { Example } from '@dxos/schema/testing';
 
 import { translations } from '../../translations';
@@ -25,7 +25,7 @@ export type FieldEditorDebugObjects = {
 const useTestProjection = () => {
   return useMemo(() => {
     const schema = createEchoSchema(Example);
-    const view = View.make({
+    const view = ViewModel.make({
       name: 'Test',
       query: Query.select(Filter.type(Example)),
       jsonSchema: schema.jsonSchema,

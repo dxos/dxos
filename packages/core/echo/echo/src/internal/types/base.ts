@@ -14,12 +14,12 @@ import { type ATTR_META, type ObjectMeta } from './meta';
  * NOTE: This describes the base type for all database objects.
  * It is stricter than `T extends {}` or `T extends object`.
  */
-// TODO(burdon): Make internal.
 // TODO(burdon): Prefer Record<string, unknown>.
 export type AnyProperties = Record<string, any>;
 
 /**
  * Canonical type for all ECHO entities (objects and relations).
+ * @depreacted Remove, use Entity.Unknown instead.
  */
 // TODO(wittjosiah): Remove. Prefer higher level types (e.g. Entity.Unknown).
 export interface AnyEntity {

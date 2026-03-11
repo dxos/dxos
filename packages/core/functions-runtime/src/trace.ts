@@ -63,15 +63,15 @@ export const InvocationTraceStartEvent = Schema.Struct({
   /**
    * Queue  for function/workflow invocation events.
    */
-  invocationTraceQueue: Schema.optional(Type.Ref(Queue)),
+  invocationTraceQueue: Schema.optional(Ref.Ref(Queue)),
   /**
    * DXN of the invoked function/workflow.
    */
-  invocationTarget: Schema.optional(Type.Ref(Type.Obj)),
+  invocationTarget: Schema.optional(Ref.Ref(Obj.Unknown)),
   /**
    * Present for automatic invocations.
    */
-  trigger: Schema.optional(Type.Ref(Trigger.Trigger)),
+  trigger: Schema.optional(Ref.Ref(Trigger.Trigger)),
   /**
    * Runtime executing the function.
    */

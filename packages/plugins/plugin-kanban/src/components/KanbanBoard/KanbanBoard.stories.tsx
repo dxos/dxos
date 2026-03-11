@@ -6,11 +6,12 @@ import { Atom, RegistryContext } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
-import { Filter, Obj, Query, Type } from '@dxos/echo';
+import { Filter, JsonSchema, Obj, Query } from '@dxos/echo';
+import { type View } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
-import { ProjectionModel, View, createEchoChangeCallback } from '@dxos/schema';
+import { ProjectionModel, ViewModel, createEchoChangeCallback } from '@dxos/schema';
 import { withRegistry } from '@dxos/storybook-utils';
 import { Organization } from '@dxos/types';
 
@@ -46,9 +47,9 @@ const DefaultStory = () => {
   }>();
 
   useEffect(() => {
-    const view = View.make({
+    const view = ViewModel.make({
       query: Query.select(Filter.typename(Organization.Organization.typename)),
-      jsonSchema: Type.toJsonSchema(Organization.Organization),
+      jsonSchema: JsonSchema.toJsonSchema(Organization.Organization),
       pivotFieldName: 'status',
     });
     const kanban = Kanban.make({ view });
@@ -56,7 +57,7 @@ const DefaultStory = () => {
     const projection = new ProjectionModel({
       registry,
       view,
-      baseSchema: Type.toJsonSchema(Organization.Organization),
+      baseSchema: JsonSchema.toJsonSchema(Organization.Organization),
       change: createEchoChangeCallback(view),
     });
     projection.normalizeView();

@@ -16,4 +16,5 @@ tasks:
       - '--platform=node'
   e2e:
     inputs:
+      - .storybook/*
       - /tools/storybook-react/.storybook/main.ts

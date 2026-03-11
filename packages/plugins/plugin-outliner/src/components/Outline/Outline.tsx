@@ -3,7 +3,7 @@
 //
 
 import { EditorSelection } from '@codemirror/state';
-import React, { forwardRef, useCallback, useImperativeHandle, useMemo } from 'react';
+import React, { type ComponentPropsWithoutRef, forwardRef, useCallback, useImperativeHandle, useMemo } from 'react';
 
 import { createDocAccessor } from '@dxos/echo-db';
 import { type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
@@ -38,11 +38,12 @@ export type OutlineProps = ThemedClassName<
     text: Text.Text;
     scrollable?: boolean;
     showSelected?: boolean;
-  } & Pick<UseTextEditorProps, 'id' | 'autoFocus'>
+  } & Pick<UseTextEditorProps, 'id' | 'autoFocus'> &
+    ComponentPropsWithoutRef<'div'>
 >;
 
 export const Outline = forwardRef<OutlineController, OutlineProps>(
-  ({ classNames, text, id, autoFocus, scrollable = true, showSelected = true }, forwardedRef) => {
+  ({ classNames, text, id, autoFocus, scrollable = true, showSelected = true, ...props }, forwardedRef) => {
     const { t } = useTranslation(meta.id);
     const { themeMode } = useThemeContext();
     const { parentRef, focusAttributes, view } = useTextEditor(
@@ -109,7 +110,7 @@ export const Outline = forwardRef<OutlineController, OutlineProps>(
 
     return (
       <EditorMenuProvider view={view} groups={commandGroups} onSelect={handleSelect}>
-        <div ref={parentRef} className={mx(classNames)} {...focusAttributes} />
+        <div {...props} ref={parentRef} className={mx(classNames)} {...focusAttributes} />
       </EditorMenuProvider>
     );
   },

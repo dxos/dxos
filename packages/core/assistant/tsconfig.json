@@ -66,6 +66,9 @@
     },
     {
       "path": "../functions-runtime"
+    },
+    {
+      "path": "../mcp-client"
     }
   ]
 }

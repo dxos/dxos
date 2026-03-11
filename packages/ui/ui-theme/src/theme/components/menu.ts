@@ -4,16 +4,13 @@
 
 import { type ComponentFunction, type Elevation, type Theme } from '@dxos/ui-types';
 
+import { dataDisabled, subduedFocus, surfaceShadow, surfaceZIndex } from '../../fragments';
 import { mx } from '../../util';
-import { dataDisabled, subduedFocus, surfaceShadow, surfaceZIndex } from '../fragments';
 
 export type MenuStyleProps = Partial<{
   constrainBlockSize: boolean;
   elevation: Elevation;
 }>;
-
-export const menuViewport: ComponentFunction<MenuStyleProps> = (_props, ...etc) =>
-  mx('rounded-sm p-1 max-h-[var(--radix-dropdown-menu-content-available-height)] overflow-y-auto', ...etc);
 
 export const menuContent: ComponentFunction<MenuStyleProps> = ({ elevation }, ...etc) =>
   mx(
@@ -22,6 +19,9 @@ export const menuContent: ComponentFunction<MenuStyleProps> = ({ elevation }, ..
     surfaceShadow({ elevation: 'positioned' }),
     ...etc,
   );
+
+export const menuViewport: ComponentFunction<MenuStyleProps> = (_props, ...etc) =>
+  mx('rounded-sm p-1 max-h-[var(--radix-dropdown-menu-content-available-height)] overflow-y-auto', ...etc);
 
 export const menuItem: ComponentFunction<MenuStyleProps> = (_props, ...etc) =>
   mx(

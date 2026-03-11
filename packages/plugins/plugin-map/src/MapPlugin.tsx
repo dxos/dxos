@@ -8,7 +8,7 @@ import { Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Type } from '@dxos/echo';
 import { type CreateObject } from '@dxos/plugin-space/types';
-import { View } from '@dxos/schema';
+import { ViewModel } from '@dxos/schema';
 
 import { AppGraphBuilder, BlueprintDefinition, MapState, OperationResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
@@ -29,7 +29,7 @@ export const MapPlugin = Plugin.define(meta).pipe(
           Effect.promise(async () => {
             const view = props.typename
               ? (
-                  await View.makeFromDatabase({
+                  await ViewModel.makeFromDatabase({
                     db,
                     typename: props.typename,
                     pivotFieldName: props.locationFieldName,

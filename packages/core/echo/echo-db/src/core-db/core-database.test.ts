@@ -7,6 +7,7 @@ import { describe, expect, test } from 'vitest';
 import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type Entity, Filter, Obj, Ref } from '@dxos/echo';
+import { Query } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { type DatabaseDirectory, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { ObjectId } from '@dxos/keys';
@@ -18,7 +19,6 @@ import { range } from '@dxos/util';
 import { type DocHandleProxy, type RepoProxy } from '../automerge';
 import { getObjectCore } from '../echo-handler';
 import { type EchoDatabase, type EchoDatabaseImpl } from '../proxy-db';
-import { Query } from '../query';
 import { EchoTestBuilder, createTmpPath } from '../testing';
 
 import { type CoreDatabase } from './core-database';

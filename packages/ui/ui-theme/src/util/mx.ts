@@ -4,13 +4,15 @@
 
 import { extendTailwindMerge, validators } from 'tailwind-merge';
 
+import { type ComposableProps } from '@dxos/ui-types';
+
 type AdditionalClassGroups = 'density' | 'dx-focus-ring';
 
 export const mx = extendTailwindMerge<AdditionalClassGroups>({
   extend: {
     classGroups: {
-      ['font-family' as const]: ['font-body', 'font-mono'],
-      ['font-weight' as const]: [
+      'font-family': ['font-body', 'font-mono'],
+      'font-weight': [
         // App weights
         'font-thin',
         'font-extralight',
@@ -26,9 +28,9 @@ export const mx = extendTailwindMerge<AdditionalClassGroups>({
         validators.isArbitraryNumber,
       ],
 
-      ['density' as const]: ['dx-density-fine', 'dx-density-coarse'],
+      density: ['dx-density-fine', 'dx-density-coarse'],
 
-      ['dx-focus-ring' as const]: [
+      'dx-focus-ring': [
         'dx-focus-ring',
         'dx-focus-ring-inset',
         'dx-focus-ring-always',
@@ -46,4 +48,15 @@ export const mx = extendTailwindMerge<AdditionalClassGroups>({
       ],
     },
   },
+});
+
+/**
+ * Reconciles className properties from slot.
+ */
+export const useComposableProps = (
+  { classNames, className, ...props }: Pick<ComposableProps, 'classNames' | 'className'>,
+  etc?: string,
+) => ({
+  className: mx(etc, classNames, className),
+  props,
 });

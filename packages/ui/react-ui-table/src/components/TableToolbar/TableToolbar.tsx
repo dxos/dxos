@@ -10,9 +10,8 @@ import {
   type ActionGraphEdges,
   type ActionGraphNodes,
   type ActionGraphProps,
+  Menu,
   type MenuAction,
-  MenuProvider,
-  ToolbarMenu,
   createGapSeparator,
   createMenuAction,
   useMenuActions,
@@ -95,6 +94,7 @@ export const TableToolbar = ({
   onAdd,
   onSave,
   customActions,
+  ...props
 }: TableToolbarProps) => {
   const registry = useContext(RegistryContext);
   const stateAtom = useMemo(() => Atom.make<TableToolbarState>({ viewDirty }), []);
@@ -111,8 +111,8 @@ export const TableToolbar = ({
   const menu = useMenuActions(actionsCreator);
 
   return (
-    <MenuProvider {...menu} attendableId={attendableId}>
-      <ToolbarMenu classNames={classNames} />
-    </MenuProvider>
+    <Menu.Root {...menu} attendableId={attendableId}>
+      <Menu.Toolbar {...props} classNames={classNames} />
+    </Menu.Root>
   );
 };

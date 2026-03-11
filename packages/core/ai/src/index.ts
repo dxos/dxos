@@ -8,6 +8,7 @@ export * as AiPreprocessor from './AiPreprocessor';
 export * as AiService from './AiService';
 export * as AiSummarizer from './AiSummarizer';
 export * as ToolFormatter from './ToolFormatter';
+export * as GenericToolkit from './GenericToolkit';
 
 export * from './defs';
 export * from './errors';

@@ -6,16 +6,18 @@ import React from 'react';
 
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { Container } from '@dxos/react-ui';
+import { Panel } from '@dxos/react-ui';
 
 export type TemplateContainerProps = SurfaceComponentProps<Obj.Unknown>;
 
 export const TemplateContainer = ({ role, subject: object }: TemplateContainerProps) => {
   return (
-    <Container.Main role={role}>
-      <pre className='m-4 p-2 ring'>
-        <span>{Obj.getDXN(object).toString()}</span>
-      </pre>
-    </Container.Main>
+    <Panel.Root role={role} className='dx-article'>
+      <Panel.Content>
+        <Panel.Content>
+          <span>{Obj.getDXN(object).toString()}</span>
+        </Panel.Content>
+      </Panel.Content>
+    </Panel.Root>
   );
 };

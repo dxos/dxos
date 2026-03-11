@@ -11,7 +11,7 @@ import { Filter, Obj } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { corePlugins } from '@dxos/plugin-testing';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
-import { Container } from '@dxos/react-ui';
+import { Panel } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { translations as editorTranslations } from '@dxos/react-ui-editor';
@@ -35,14 +35,16 @@ const DefaultStory = (props: StoryProps) => {
   }
 
   return (
-    <div className='contents' {...attentionAttrs}>
-      <Container.Main toolbar>
-        <MarkdownEditor.Root id={id} object={doc} {...props}>
+    <MarkdownEditor.Root id={id} object={doc} {...props}>
+      <Panel.Root {...attentionAttrs}>
+        <Panel.Toolbar asChild>
           <MarkdownEditor.Toolbar id={id} />
+        </Panel.Toolbar>
+        <Panel.Content asChild>
           <MarkdownEditor.Content />
-        </MarkdownEditor.Root>
-      </Container.Main>
-    </div>
+        </Panel.Content>
+      </Panel.Root>
+    </MarkdownEditor.Root>
   );
 };
 

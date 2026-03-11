@@ -2,6 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
+// Suppress Lit dev mode warning (https://lit.dev/msg/dev-mode).
+(globalThis as any).litIssuedWarnings ??= new Set();
+(globalThis as any).litIssuedWarnings.add('dev-mode');
+
 import '@dxos-theme';
 
 import * as Effect from 'effect/Effect';
@@ -13,10 +17,10 @@ import { useRegisterSW } from 'virtual:pwa-register/react';
 import { useApp } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { runAndForwardErrors } from '@dxos/effect';
-import { LogLevel, log } from '@dxos/log';
+import { LogBuffer, LogLevel, log } from '@dxos/log';
 import { Observability } from '@dxos/observability';
 import { ThemeProvider, Tooltip } from '@dxos/react-ui';
-import { TRACE_PROCESSOR, trace } from '@dxos/tracing';
+import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { defaultTx } from '@dxos/ui-theme';
 import { getHostPlatform, isMobile as isMobile$, isTauri as isTauri$ } from '@dxos/util';
 
@@ -27,67 +31,6 @@ import { APP_KEY } from './constants';
 import { type PluginConfig, getCore, getDefaults, getPlugins } from './plugin-defs';
 import { translations } from './translations';
 import { defaultStorageIsEmpty, isFalse, isTrue } from './util';
-
-/** Instrumented instance — has @trace.span() decorators. */
-@trace.resource()
-class ServiceA {
-  @trace.span({ op: 'test' })
-  async handleRequest() {
-    await new Promise((resolve) => setTimeout(resolve, 20));
-    const bridge = new Bridge();
-    await bridge.forward();
-  }
-}
-
-/** Uninstrumented intermediary — no decorators, just passes calls through. */
-class Bridge {
-  async forward() {
-    await new Promise((resolve) => setTimeout(resolve, 10));
-    const downstream = new ServiceB();
-    await downstream.process();
-  }
-}
-
-/** Instrumented downstream — receives trace context via Zone.js OTEL propagation. */
-@trace.resource()
-class ServiceB {
-  @trace.span({ op: 'test' })
-  async process() {
-    await new Promise((resolve) => setTimeout(resolve, 15));
-    await this.finalStep();
-  }
-
-  @trace.span({ op: 'test' })
-  async finalStep() {
-    await new Promise((resolve) => setTimeout(resolve, 10));
-  }
-}
-
-/** Same-instance async chain test. */
-@trace.resource()
-class TracingTest {
-  @trace.span({ op: 'test' })
-  async rootOperation() {
-    await this.childA();
-    await this.childB();
-  }
-
-  @trace.span({ op: 'test' })
-  async childA() {
-    await new Promise((resolve) => setTimeout(resolve, 30));
-    await this.grandchild();
-  }
-
-  @trace.span({ op: 'test' })
-  async childB() {
-    await new Promise((resolve) => setTimeout(resolve, 20));
-  }
-
-  @trace.span({ op: 'test' })
-  async grandchild() {
-    await new Promise((resolve) => setTimeout(resolve, 10));
-  }
-}
 
 const main = async () => {
   const url = new URL(window.location.href);
@@ -103,6 +46,9 @@ const main = async () => {
   }
 
   TRACE_PROCESSOR.setInstanceTag('app');
+
+  const logBuffer = new LogBuffer();
+  log.addProcessor(logBuffer.logProcessor);
 
   const { defs, SaveConfig } = await import('@dxos/config');
   const { createClientServices } = await import('@dxos/react-client');
@@ -138,11 +84,7 @@ const main = async () => {
   }
 
   // Intentionally do not await; i.e., don't block app startup for telemetry.
-  const observability = initializeObservability(config, isTauri);
-  void observability.then(async () => {
-    await new TracingTest().rootOperation();
-    await new ServiceA().handleRequest();
-  });
+  const observability = initializeObservability(config, isTauri, logBuffer);
   const observabilityDisabled = await Observability.isObservabilityDisabled(APP_KEY);
   const observabilityGroup = await Observability.getObservabilityGroup(APP_KEY);
 
@@ -218,6 +160,7 @@ const main = async () => {
     config,
     services,
     observability,
+    logBuffer,
 
     isDev: !['production', 'staging'].includes(config.values.runtime?.app?.env?.DX_ENVIRONMENT),
     isPwa: !isFalse(config.values.runtime?.app?.env?.DX_PWA),
@@ -248,6 +191,7 @@ const main = async () => {
             needRefresh={needRefresh}
             onRefresh={needRefresh ? () => void updateServiceWorker(true) : undefined}
             observability={observability}
+            logBuffer={logBuffer}
           />
         </Tooltip.Provider>
       </ThemeProvider>

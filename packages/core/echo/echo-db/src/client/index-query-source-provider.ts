@@ -5,7 +5,7 @@
 import { Event } from '@dxos/async';
 import { type Stream } from '@dxos/codec-protobuf/stream';
 import { Context } from '@dxos/context';
-import { type Hypergraph, Obj, type QueryResult } from '@dxos/echo';
+import { type Entity, type Hypergraph, Obj, type QueryResult } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { DXN, type ObjectId, type QueueSubspaceTag, SpaceId } from '@dxos/keys';
@@ -29,7 +29,7 @@ export type LoadObjectProps = {
 };
 
 export interface ObjectLoader {
-  loadObject(params: LoadObjectProps): Promise<Obj.Obj<any> | undefined>;
+  loadObject(params: LoadObjectProps): Promise<Entity.Unknown | undefined>;
 }
 
 export type IndexQueryProviderProps = {

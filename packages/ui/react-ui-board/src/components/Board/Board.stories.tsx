@@ -6,8 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useRef, useState } from 'react';
 
 import { faker } from '@dxos/random';
+import { Card } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { Card } from '@dxos/react-ui-mosaic';
 import { translations as stackTranslations } from '@dxos/react-ui-stack';
 
 import { translations } from '../../translations';
@@ -123,13 +123,13 @@ export const Default: Story = {
     layout: {
       size: { width: 7, height: 5 },
       cells: {
-        '0': { x: 0, y: 0 },
-        '1': { x: -3, y: -2 },
-        '2': { x: 3, y: 2 },
-        '3': { x: -2, y: 0, width: 2, height: 2 },
-        '4': { x: -1, y: -1, width: 3 },
-        '5': { x: 1, y: 0 },
-        '6': { x: 0, y: 1, width: 2 },
+        0: { x: 0, y: 0 },
+        1: { x: -3, y: -2 },
+        2: { x: 3, y: 2 },
+        3: { x: -2, y: 0, width: 2, height: 2 },
+        4: { x: -1, y: -1, width: 3 },
+        5: { x: 1, y: 0 },
+        6: { x: 0, y: 1, width: 2 },
       },
     },
   },

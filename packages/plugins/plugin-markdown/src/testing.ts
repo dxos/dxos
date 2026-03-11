@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import { SpaceProperties } from '@dxos/client-protocol';
 import { Obj, Ref } from '@dxos/echo';
 import { Database } from '@dxos/echo';
-import { Collection } from '@dxos/schema';
+import { Collection } from '@dxos/echo';
 
 // TODO(wittjosiah): Factor out.
 export const WithProperties = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R | Database.Service> =>

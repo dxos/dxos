@@ -21,7 +21,7 @@ import React, {
   useState,
 } from 'react';
 
-import { type AllowedAxis, type SlottableClassName } from '@dxos/react-ui';
+import { type AllowedAxis, type ComposableProps } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 
@@ -69,7 +69,7 @@ const MOSAIC_CONTAINER_PLACEHOLDER_HEIGHT = '--mosaic-placeholder-height';
 
 let counter = 0;
 
-type MosaicContainerProps = SlottableClassName<
+type MosaicContainerProps = ComposableProps<
   PropsWithChildren<
     Partial<Pick<MosaicContainerContextValue, 'eventHandler' | 'orientation'>> & {
       asChild?: boolean;
@@ -99,7 +99,7 @@ const MosaicContainer = forwardRef<HTMLDivElement, MosaicContainerProps>(
   ) => {
     const rootRef = useRef<HTMLDivElement>(null);
     const composedRef = useComposedRefs<HTMLDivElement>(rootRef, forwardedRef);
-    const Root = asChild ? Slot : Primitive.div;
+    const Comp = asChild ? Slot : Primitive.div;
 
     // Handler.
     const eventHandler = useMemo(
@@ -258,7 +258,7 @@ const MosaicContainer = forwardRef<HTMLDivElement, MosaicContainerProps>(
         activeLocation={activeLocation}
         setActiveLocation={setActiveLocation}
       >
-        <Root
+        <Comp
           className={mx('h-full', className, classNames)}
           style={
             {
@@ -275,7 +275,7 @@ const MosaicContainer = forwardRef<HTMLDivElement, MosaicContainerProps>(
           ref={composedRef}
         >
           {children}
-        </Root>
+        </Comp>
         {debug?.()}
       </MosaicContainerContextProvider>
     );

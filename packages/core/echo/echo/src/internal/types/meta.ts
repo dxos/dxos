@@ -8,6 +8,8 @@ import { ForeignKey } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { type Comparator, intersection } from '@dxos/util';
 
+import type * as Entity from '../../Entity';
+
 import { type AnyProperties } from './base';
 
 /**
@@ -18,7 +20,7 @@ export const ATTR_META = '@meta';
 /**
  * Metadata section.
  */
-export const MetaId = Symbol.for('@dxos/echo/Meta');
+export const MetaId: Entity.Meta = Symbol.for('@dxos/echo/Meta') as any;
 
 //
 // ObjectMeta

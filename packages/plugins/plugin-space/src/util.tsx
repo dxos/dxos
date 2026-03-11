@@ -10,14 +10,15 @@ import * as Option from 'effect/Option';
 import { type CapabilityManager } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
-import { type Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+import { type Database, Feed, Filter, JsonSchema, Obj, Query, Ref, Type } from '@dxos/echo';
+import { Collection } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Migrations } from '@dxos/migrations';
 import { Operation } from '@dxos/operation';
 import { Graph, Node } from '@dxos/plugin-graph';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention/types';
 import { type TreeData } from '@dxos/react-ui-list';
-import { Collection, Expando } from '@dxos/schema';
+import { Expando, ManagedCollection } from '@dxos/schema';
 import { type Label } from '@dxos/ui-types';
 import { createFilename } from '@dxos/util';
 
@@ -38,9 +39,6 @@ const META_NS: { ns: string } = { ns: meta.id };
 const PERSONAL_SPACE_LABEL: Label = ['personal space label', META_NS];
 const UNNAMED_SPACE_LABEL: Label = ['unnamed space label', META_NS];
 const SETTINGS_PANEL_LABEL: Label = ['settings panel label', META_NS];
-const SPACE_SETTINGS_PROPERTIES_LABEL: Label = ['space settings properties label', META_NS];
-const MEMBERS_PANEL_LABEL: Label = ['members panel label', META_NS];
-const SPACE_SETTINGS_SCHEMA_LABEL: Label = ['space settings schema label', META_NS];
 const MIGRATE_SPACE_LABEL: Label = ['migrate space label', META_NS];
 const CREATE_OBJECT_IN_SPACE_LABEL: Label = ['create object in space label', META_NS];
 const RENAME_SPACE_LABEL: Label = ['rename space label', META_NS];
@@ -228,40 +226,6 @@ export const constructSpaceNode = ({
           icon: 'ph--faders--regular',
           disposition: 'alternate-tree',
         },
-        nodes: [
-          {
-            id: `properties-settings${ATTENDABLE_PATH_SEPARATOR}${space.id}`,
-            type: `${meta.id}/properties`,
-            data: `${meta.id}/properties`,
-            properties: {
-              label: SPACE_SETTINGS_PROPERTIES_LABEL,
-              icon: 'ph--sliders--regular',
-              position: 'hoist',
-              testId: 'spacePlugin.general',
-            },
-          },
-          {
-            id: `members-settings${ATTENDABLE_PATH_SEPARATOR}${space.id}`,
-            type: `${meta.id}/members`,
-            data: `${meta.id}/members`,
-            properties: {
-              label: MEMBERS_PANEL_LABEL,
-              icon: 'ph--users--regular',
-              position: 'hoist',
-              testId: 'spacePlugin.members',
-            },
-          },
-          {
-            id: `schema-settings${ATTENDABLE_PATH_SEPARATOR}${space.id}`,
-            type: `${meta.id}/schema`,
-            data: `${meta.id}/schema`,
-            properties: {
-              label: SPACE_SETTINGS_SCHEMA_LABEL,
-              icon: 'ph--shapes--regular',
-              testId: 'spacePlugin.schema',
-            },
-          },
-        ],
       },
     ],
   };
@@ -306,11 +270,11 @@ export const createObjectNode = ({
   }
 
   // For feeds, use the kind property for metadata lookup instead of the generic Feed typename.
-  const metadataKey = Obj.instanceOf(Type.Feed, object) ? (object.kind ?? type) : type;
+  const metadataKey = Obj.instanceOf(Feed.Feed, object) ? (object.kind ?? type) : type;
   const metadata = resolve(metadataKey);
   const partials = Obj.instanceOf(Collection.Collection, object)
     ? getCollectionGraphNodePartials({ collection: object, db, resolve })
-    : Obj.instanceOf(Collection.Managed, object)
+    : Obj.instanceOf(ManagedCollection.ManagedCollection, object)
       ? getSystemCollectionNodePartials({ collection: object, db, resolve })
       : Obj.instanceOf(Type.PersistentType, object)
         ? getSchemaGraphNodePartials()
@@ -327,7 +291,7 @@ export const createObjectNode = ({
 
   const selectable =
     (!Obj.instanceOf(Type.PersistentType, object) &&
-      !Obj.instanceOf(Collection.Managed, object) &&
+      !Obj.instanceOf(ManagedCollection.ManagedCollection, object) &&
       !Obj.instanceOf(Collection.Collection, object)) ||
     (navigable && Obj.instanceOf(Collection.Collection, object));
 
@@ -353,7 +317,7 @@ export const createObjectNode = ({
       if (source.item.properties.managedCollectionChild) {
         return true;
       }
-      if (Obj.instanceOf(Collection.Managed, object)) {
+      if (Obj.instanceOf(ManagedCollection.ManagedCollection, object)) {
         return !instruction.type.startsWith('reorder');
       }
       return managedCollectionChild;
@@ -393,7 +357,7 @@ export const createObjectNode = ({
  * @param space - Space that owns the schema.
  * @returns A graph node for the schema.
  */
-export const createStaticSchemaNode = ({ schema, space }: { schema: Type.Entity.Any; space: Space }): Node.Node => {
+export const createStaticSchemaNode = ({ schema, space }: { schema: Type.AnyEntity; space: Space }): Node.Node => {
   return {
     id: `${space.id}/${Type.getTypename(schema)}`,
     type: `${meta.id}/static-schema`,
@@ -503,7 +467,7 @@ export const createStaticSchemaActions = ({
   space,
   deletable,
 }: {
-  schema: Type.Obj.Any;
+  schema: Type.AnyObj;
   space: Space;
   deletable: boolean;
 }) => {
@@ -622,15 +586,15 @@ export const constructObjectActions = ({
   const getId = (id: string) => `${id}/${Obj.getDXN(object).toString()}`;
 
   const metadataKey = Match.value(object).pipe(
-    Match.when(Obj.instanceOf(Type.Feed), (feed: Type.Feed) => feed.kind ?? Obj.getTypename(feed)!),
-    Match.when(Obj.instanceOf(Collection.Managed), (managed) => {
+    Match.when(Obj.instanceOf(Feed.Feed), (feed: Feed.Feed) => feed.kind ?? Obj.getTypename(feed)!),
+    Match.when(Obj.instanceOf(ManagedCollection.ManagedCollection), (managed) => {
       const [, feedKind] = managed.key.split('~') ?? [];
       return feedKind ?? managed.key;
     }),
     Match.orElse((obj) => Obj.getTypename(obj)!),
   );
   const managedCollection = Option.some(object).pipe(
-    Option.filter(Obj.instanceOf(Collection.Managed)),
+    Option.filter(Obj.instanceOf(ManagedCollection.ManagedCollection)),
     Option.getOrUndefined,
   );
   const metadata = metadataKey ? resolve(metadataKey) : {};
@@ -677,7 +641,7 @@ export const constructObjectActions = ({
             data: Effect.fnUntraced(function* () {
               const result = yield* Operation.invoke(SpaceOperation.Snapshot, {
                 db,
-                query: Query.select(Filter.type(Type.toEffectSchema(object.jsonSchema))).ast,
+                query: Query.select(Filter.type(JsonSchema.toEffectSchema(object.jsonSchema))).ast,
               });
               if (result.snapshot) {
                 yield* Effect.promise(() =>
@@ -774,7 +738,7 @@ export const constructObjectActions = ({
         ]),
     ...(navigable ||
     (!Obj.instanceOf(Collection.Collection, object) &&
-      !Obj.instanceOf(Collection.Managed, object) &&
+      !Obj.instanceOf(ManagedCollection.ManagedCollection, object) &&
       !Obj.instanceOf(Type.PersistentType, object))
       ? [
           {
@@ -923,7 +887,7 @@ const getSystemCollectionNodePartials = ({
   db,
   resolve,
 }: {
-  collection: Collection.Managed;
+  collection: ManagedCollection.ManagedCollection;
   db: Database.Database;
   resolve: (typename: string) => Record<string, any>;
 }) => {

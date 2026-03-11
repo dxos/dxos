@@ -6,7 +6,7 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { Database, Filter, Obj, type Ref, type Type } from '@dxos/echo';
+import { Database, type Feed, Filter, Obj, type Ref } from '@dxos/echo';
 import { CredentialsService } from '@dxos/functions';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -45,7 +45,7 @@ const loadAccessToken = (accessTokenRef: Ref.Ref<AccessToken.AccessToken> | unde
  * Queries for a config that references the given feed and extracts the access token.
  */
 const loadTokenFromConfig = <T extends Mailbox.Config | Calendar.Config>(
-  feedRef: Ref.Ref<Type.Feed>,
+  feedRef: Ref.Ref<Feed.Feed>,
   configFilter: Filter.Any,
   label: string,
 ) =>
@@ -74,7 +74,7 @@ export class GoogleCredentials extends Context.Tag('GoogleCredentials')<
   /**
    * Creates a credentials layer by querying for the mailbox config that references the given feed.
    */
-  static fromMailbox = (feedRef: Ref.Ref<Type.Feed>) =>
+  static fromMailbox = (feedRef: Ref.Ref<Feed.Feed>) =>
     Layer.effect(
       GoogleCredentials,
       Effect.map(loadTokenFromConfig<Mailbox.Config>(feedRef, Filter.type(Mailbox.Config), 'mailbox'), makeService),
@@ -83,7 +83,7 @@ export class GoogleCredentials extends Context.Tag('GoogleCredentials')<
   /**
    * Creates a credentials layer by querying for the calendar config that references the given feed.
    */
-  static fromCalendar = (feedRef: Ref.Ref<Type.Feed>) =>
+  static fromCalendar = (feedRef: Ref.Ref<Feed.Feed>) =>
     Layer.effect(
       GoogleCredentials,
       Effect.map(loadTokenFromConfig<Calendar.Config>(feedRef, Filter.type(Calendar.Config), 'calendar'), makeService),

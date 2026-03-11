@@ -33,7 +33,7 @@ import React, {
 import { type DialogSize } from '@dxos/ui-theme';
 
 import { useThemeContext } from '../../hooks';
-import { Container } from '../../primitives';
+import { Column } from '../../primitives';
 import { type ThemedClassName } from '../../util';
 import { ElevationProvider } from '../ElevationProvider';
 
@@ -151,6 +151,7 @@ const AlertDialogOverlay: ForwardRefExoticComponent<AlertDialogOverlayProps> = f
   return (
     <AlertDialogOverlayPrimitive
       {...props}
+      data-block-align={blockAlign}
       className={tx(
         'dialog.overlay',
         {},
@@ -161,7 +162,6 @@ const AlertDialogOverlay: ForwardRefExoticComponent<AlertDialogOverlayProps> = f
         'data-[h-align=center]:place-content-center',
       )}
       ref={forwardedRef}
-      data-h-align={blockAlign}
     >
       <OverlayLayoutProvider inOverlayLayout>{children}</OverlayLayoutProvider>
     </AlertDialogOverlayPrimitive>
@@ -188,7 +188,7 @@ const AlertDialogContent: ForwardRefExoticComponent<AlertDialogContentProps> = f
       className={tx('dialog.content', { inOverlayLayout, size }, classNames)}
       ref={forwardedRef}
     >
-      <Container.Column>{children}</Container.Column>
+      <Column.Root>{children}</Column.Root>
     </AlertDialogContentPrimitive>
   );
 });
@@ -207,11 +207,11 @@ const AlertDialogBody: ForwardRefExoticComponent<AlertDialogBodyProps> = forward
 >(({ children, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   return (
-    <Container.Segment>
+    <Column.Segment asChild>
       <div role='none' {...props} className={tx('dialog.body')} ref={forwardedRef}>
         {children}
       </div>
-    </Container.Segment>
+    </Column.Segment>
   );
 });
 
@@ -229,11 +229,11 @@ const AlertDialogActionBar: ForwardRefExoticComponent<AlertDialogActionBarProps>
 >(({ children, classNames, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   return (
-    <Container.Segment>
+    <Column.Segment asChild>
       <div {...props} className={tx('dialog.actionbar', {}, classNames)} ref={forwardedRef}>
         {children}
       </div>
-    </Container.Segment>
+    </Column.Segment>
   );
 });
 

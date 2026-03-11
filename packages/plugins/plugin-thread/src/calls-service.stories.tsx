@@ -172,7 +172,7 @@ const DefaultStory = ({ source }: StoryProps) => {
 };
 
 const meta = {
-  title: 'plugins/plugin-thread/calls-service',
+  title: 'plugins/plugin-thread/experimental/Calls',
   render: DefaultStory,
   decorators: [
     withTheme(),

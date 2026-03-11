@@ -3,10 +3,9 @@
 //
 
 /**
- * Version type symbol.
+ * Version type identifier.
  */
-export const VersionTypeId: unique symbol = Symbol.for('@dxos/echo/VersionTypeId');
-
+export const VersionTypeId = '~@dxos/echo/VersionTypeId' as const;
 export type VersionTypeId = typeof VersionTypeId;
 
 /**

@@ -4,13 +4,14 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Type } from '@dxos/echo';
+import { Obj, Ref, Type } from '@dxos/echo';
+import { View } from '@dxos/echo';
 import { FormInputAnnotation, Format, GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/internal';
-import { IconAnnotation, View } from '@dxos/schema';
+import { IconAnnotation } from '@dxos/schema';
 
 export const Column = Schema.Struct({
   name: Schema.String,
-  view: Type.Ref(View.View),
+  view: Ref.Ref(View.View),
   order: Schema.Array(Schema.String),
 });
 

@@ -210,14 +210,14 @@ export class TestPeer extends Resource {
   }
 
   pull({ spaceId, feedNamespace, limit = 10 }: { spaceId: SpaceId; feedNamespace: string; limit?: number }) {
-    return this.#client!.pull({ spaceId, feedNamespace, limit }).pipe(
-      RuntimeProvider.runPromise(this.#runtime.runtimeEffect),
-    );
+    return this.#client!
+      .pull({ spaceId, feedNamespace, limit })
+      .pipe(RuntimeProvider.runPromise(this.#runtime.runtimeEffect));
   }
 
   push({ spaceId, feedNamespace, limit = 10 }: { spaceId: SpaceId; feedNamespace: string; limit?: number }) {
-    return this.#client!.push({ spaceId, feedNamespace, limit }).pipe(
-      RuntimeProvider.runPromise(this.#runtime.runtimeEffect),
-    );
+    return this.#client!
+      .push({ spaceId, feedNamespace, limit })
+      .pipe(RuntimeProvider.runPromise(this.#runtime.runtimeEffect));
   }
 }

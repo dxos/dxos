@@ -111,7 +111,7 @@ describe('Research', () => {
             Query.select(Filter.id(organization.id)).targetOf(HasSubject.HasSubject).source(),
           );
           if (docs.length !== 1) {
-            throw new Error(`Expected 1 research document; got ${docs.length}: ${docs.map((_) => _.name)}`);
+            throw new Error(`Expected 1 research document; got ${docs.length}: ${docs.map((_) => (_ as any).name)}`);
           }
 
           const doc = docs[0];
@@ -131,7 +131,7 @@ describe('Research', () => {
             Query.select(Filter.id(organization.id)).targetOf(HasSubject.HasSubject).source(),
           );
           if (docs.length !== 1) {
-            throw new Error(`Expected 1 research document; got ${docs.length}: ${docs.map((_) => _.name)}`);
+            throw new Error(`Expected 1 research document; got ${docs.length}: ${docs.map((_) => (_ as any).name)}`);
           }
 
           const doc = docs[0];

@@ -3,9 +3,8 @@
 //
 
 import { Event } from '@dxos/async';
-import { type Context } from '@dxos/context';
-import type { Database, Entity, Filter, Hypergraph, Query, QueryResult } from '@dxos/echo';
-import { type QueryContext, QueryResultImpl, normalizeQuery } from '@dxos/echo-db';
+import { type Database, type Entity, Filter, type Hypergraph, Query, type QueryResult } from '@dxos/echo';
+import { type QueryContext, QueryResultImpl } from '@dxos/echo-db';
 import { QueryAST } from '@dxos/echo-protocol';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
@@ -42,9 +41,8 @@ export type ClientEdgeAPIParams = {
 export const createClientEdgeAPI = ({ client, edgeClient }: ClientEdgeAPIParams): ClientEdgeAPI => {
   const queryFn: Database.QueryFn = <Q extends Query.Any>(
     query: Q | Filter.Any,
-    options?: Database.QueryOptions & QueryAST.QueryOptions,
   ): QueryResult.QueryResult<Query.Type<Q>> => {
-    const normalizedQuery = normalizeQuery(query, options);
+    const normalizedQuery = Filter.is(query) ? Query.select(query) : query;
 
     const spaceIds = getTargetSpacesForQuery(normalizedQuery.ast);
     invariant(spaceIds.length === 1, 'Edge query must target exactly one space');
@@ -56,7 +54,7 @@ export const createClientEdgeAPI = ({ client, edgeClient }: ClientEdgeAPIParams)
       graph: client.graph,
     });
 
-    return new QueryResultImpl(queryContext, normalizedQuery);
+    return new QueryResultImpl(queryContext as any, normalizedQuery) as QueryResult.QueryResult<Query.Type<Q>>;
   };
 
   return {
@@ -82,12 +80,12 @@ export class RemoteEdgeQueryContext<T extends Entity.Unknown = Entity.Unknown> i
 
   constructor(private readonly _params: RemoteEdgeQueryContextParams) {}
 
-  getResults(_ctx: Context): QueryResult.EntityEntry<T>[] {
+  getResults(): QueryResult.EntityEntry<T>[] {
     // Reactive queries are not supported for remote edge queries.
     return [];
   }
 
-  async run(ctx: Context, query: QueryAST.Query, opts?: QueryResult.RunOptions): Promise<QueryResult.EntityEntry<T>[]> {
+  async run(query: QueryAST.Query, opts?: QueryResult.RunOptions): Promise<QueryResult.EntityEntry<T>[]> {
     const start = Date.now();
 
     log('executing edge query', { spaceId: this._params.spaceId, query });
@@ -119,16 +117,16 @@ export class RemoteEdgeQueryContext<T extends Entity.Unknown = Entity.Unknown> i
     return results;
   }
 
-  update(ctx: Context, query: QueryAST.Query): void {
+  update(query: QueryAST.Query): void {
     this._query = query;
     // Note: We don't emit changed events since reactive queries are not supported.
   }
 
-  start(_ctx: Context): void {
+  start(): void {
     // No-op: Reactive queries are not supported for remote edge queries.
   }
 
-  stop(_ctx: Context): void {
+  stop(): void {
     // No-op: Reactive queries are not supported for remote edge queries.
   }
 }
@@ -140,9 +138,9 @@ const getTargetSpacesForQuery = (query: QueryAST.Query): string[] => {
   const spaces = new Set<string>();
 
   const visitor = (node: QueryAST.Query) => {
-    if (node.type === 'options') {
-      if (node.options.spaceIds) {
-        for (const spaceId of node.options.spaceIds) {
+    if (node.type === 'from' && node.from._tag === 'scope') {
+      if (node.from.scope.spaceIds) {
+        for (const spaceId of node.from.scope.spaceIds) {
           spaces.add(spaceId);
         }
       }

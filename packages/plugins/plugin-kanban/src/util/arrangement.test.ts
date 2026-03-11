@@ -5,9 +5,10 @@
 import * as Schema from 'effect/Schema';
 import { beforeEach, describe, test } from 'vitest';
 
-import { Filter, Query, Type } from '@dxos/echo';
+import { Filter, JsonSchema, Query, Type } from '@dxos/echo';
+import { type View } from '@dxos/echo';
 import { ObjectId } from '@dxos/keys';
-import { View } from '@dxos/schema';
+import { ViewModel } from '@dxos/schema';
 
 import { Kanban, UNCATEGORIZED_VALUE } from '../types';
 
@@ -32,9 +33,9 @@ describe('arrangement utils', () => {
   let view: View.View;
 
   beforeEach(() => {
-    view = View.make({
+    view = ViewModel.make({
       query: Query.select(Filter.type(MinimalSchema)),
-      jsonSchema: Type.toJsonSchema(MinimalSchema),
+      jsonSchema: JsonSchema.toJsonSchema(MinimalSchema),
     });
   });
 

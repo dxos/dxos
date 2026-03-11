@@ -37,7 +37,6 @@
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "catalog:",
     "chromatic": "catalog:",
-    "eslint-plugin-storybook": "catalog:",
     "lodash.flatten": "catalog:",
     "playwright": "catalog:",
     "react": "catalog:",

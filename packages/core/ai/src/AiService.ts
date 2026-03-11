@@ -7,7 +7,7 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { type ModelName } from './defs';
+import { type ModelName, type ModelOptions } from './defs';
 import { AiModelNotAvailableError } from './errors';
 
 export type ServiceMetadata = {
@@ -23,7 +23,10 @@ export interface Service {
   /**
    * Maps model name ont a LanguageModel layer.
    */
-  readonly model: (model: ModelName) => Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, never>;
+  readonly model: (
+    model: ModelName,
+    options?: ModelOptions,
+  ) => Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, never>;
 }
 
 /**
@@ -33,9 +36,10 @@ export class AiService extends Context.Tag('@dxos/ai/AiService')<AiService, Serv
 
 export const model: (
   model: ModelName,
-) => Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, AiService> = (model) =>
+  options?: ModelOptions,
+) => Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, AiService> = (model, options) =>
   AiService.pipe(
-    Effect.map((_) => _.model(model)),
+    Effect.map((_) => _.model(model, options)),
     Layer.unwrapEffect,
   );
 

@@ -9,8 +9,7 @@ import { Clipboard, Dialog, type DialogContentProps, useId } from '@dxos/react-u
 import { IdentityPanel, type IdentityPanelProps } from '../../panels';
 
 export interface IdentityDialogProps
-  extends Omit<DialogContentProps, 'children'>,
-    Omit<IdentityPanelProps, 'doneActionParent'> {
+  extends Omit<DialogContentProps, 'children'>, Omit<IdentityPanelProps, 'doneActionParent'> {
   onDone: () => void;
 }
 

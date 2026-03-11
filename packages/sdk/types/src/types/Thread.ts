@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Type } from '@dxos/echo';
+import { Obj, Ref, Type } from '@dxos/echo';
 import { SystemTypeAnnotation } from '@dxos/echo/internal';
 
 import * as Message from './Message';
@@ -18,7 +18,7 @@ export const ThreadStatus = Schema.Union(
 export const Thread = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
   status: ThreadStatus.pipe(Schema.optional),
-  messages: Schema.Array(Type.Ref(Message.Message)),
+  messages: Schema.Array(Ref.Ref(Message.Message)),
 }).pipe(
   Type.object({
     typename: 'dxos.org/type/Thread',

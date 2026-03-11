@@ -6,7 +6,7 @@ import { type ReactVirtualizerOptions, useVirtualizer } from '@tanstack/react-vi
 import React, { type FC, Fragment, type ReactElement, type Ref, forwardRef } from 'react';
 
 import { invariant } from '@dxos/invariant';
-import { type Axis, type SlottableClassName } from '@dxos/react-ui';
+import { type Axis, type ComposableProps } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { useVisibleItems } from '../../hooks';
@@ -42,7 +42,7 @@ const MOSAIC_STACK_NAME = 'MosaicStack';
 
 type MosaicStackTileComponent<TData = any> = FC<MosaicTileProps<TData>>;
 
-type MosaicStackProps<TData = any> = SlottableClassName<
+type MosaicStackProps<TData = any> = ComposableProps<
   {
     Tile: MosaicStackTileComponent<TData>;
     getId: GetId<TData>;

@@ -7,8 +7,9 @@ import React, { type PropsWithChildren, useCallback, useEffect, useRef, useState
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
+import { useObjectNavigate } from '@dxos/app-toolkit/ui';
 import { Popover, type PopoverContentInteractOutsideEvent, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Card } from '@dxos/react-ui-mosaic';
+import { Card } from '@dxos/react-ui';
 
 import { useDeckState } from '../../hooks';
 import { meta } from '../../meta';
@@ -56,11 +57,16 @@ export const PopoverRoot = ({ children }: DeckPopoverRootProps) => {
   );
 };
 
+// Extracts the subject from popover content if it has one, otherwise returns the content as-is.
+const getPopoverSubject = (content: unknown): unknown =>
+  content && typeof content === 'object' && 'subject' in content ? (content as { subject: unknown }).subject : content;
+
 export const PopoverContent = () => {
   const { t } = useTranslation(meta.id);
   const { state, updateEphemeral } = useDeckState();
   const { setOpen } = useDeckPopoverContext('PopoverContent');
   const { invokeSync } = useOperationInvoker();
+  const handleNavigate = useObjectNavigate(getPopoverSubject(state.popoverContent));
 
   const handleClose = useCallback(() => {
     setOpen(false);
@@ -118,8 +124,12 @@ export const PopoverContent = () => {
                 ) : (
                   <div />
                 )}
-                {state.popoverTitle ? <Card.Title>{toLocalizedString(state.popoverTitle, t)}</Card.Title> : <span />}
-                <Card.Close onClick={handleClose} />
+                {state.popoverTitle ? (
+                  <Card.Title onClick={handleNavigate}>{toLocalizedString(state.popoverTitle, t)}</Card.Title>
+                ) : (
+                  <span />
+                )}
+                <Card.CloseIconButton onClick={handleClose} />
               </Card.Toolbar>
               <Surface.Surface role='card--content' data={state.popoverContent} limit={1} />
             </Card.Root>

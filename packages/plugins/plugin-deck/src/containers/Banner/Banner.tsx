@@ -2,4 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-export { Banner } from '../../components/DeckLayout';
+export { Banner } from '../../components';

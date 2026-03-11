@@ -12,8 +12,8 @@ import { PublicKey } from '@dxos/react-client';
 import { type SpaceMember } from '@dxos/react-client/echo';
 import { type Identity, useIdentity } from '@dxos/react-client/halo';
 import { IconButton, useOnTransition, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { Card } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
-import { Card } from '@dxos/react-ui-mosaic';
 import { MessageHeading, MessageRoot } from '@dxos/react-ui-thread';
 import { type ContentBlock, type Message } from '@dxos/types';
 import { createBasicExtensions, createThemeExtensions } from '@dxos/ui-editor';
@@ -29,7 +29,7 @@ export const buttonGroupClassNames = 'flex flex-row items-center gap-0.5 pe-2';
 export const buttonClassNames = 'p-1! transition-opacity';
 
 export type MessageContainerProps = {
-  message: Obj.Obj<Message.Message> | Ref.Ref<Obj.Obj<Message.Message>>;
+  message: Obj.OfShape<Message.Message> | Ref.Ref<Obj.OfShape<Message.Message>>;
   members: SpaceMember[];
   editable?: boolean;
   onDelete?: (id: string) => void;

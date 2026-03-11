@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { DXN, Filter, Obj, Query, type QueryAST, Ref, Tag, Type } from '@dxos/echo';
+import { DXN, Filter, JsonSchema, Obj, Query, type QueryAST, Ref, Tag } from '@dxos/echo';
 import { type JsonPath, type Mutable } from '@dxos/echo/internal';
 import { useTypeOptions } from '@dxos/plugin-space';
 import { resolveSchemaWithRegistry } from '@dxos/plugin-space';
@@ -13,7 +13,7 @@ import { getSpace, useObject, useQuery } from '@dxos/react-client/echo';
 import { IconButton, type ThemedClassName, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Form, ViewEditor } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';
-import { type ProjectionModel, View } from '@dxos/schema';
+import { type ProjectionModel, ViewModel } from '@dxos/schema';
 import { Pipeline, Task } from '@dxos/types';
 import { mx, osTranslations, subtleHover } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';
@@ -81,7 +81,7 @@ export const PipelineObjectSettings = ({ classNames, pipeline }: PipelineObjectS
       }
 
       const queue = target && DXN.tryParse(target) ? target : undefined;
-      const query = queue ? Query.fromAst(newQuery).options({ queues: [queue] }) : Query.fromAst(newQuery);
+      const query = queue ? Query.fromAst(newQuery).from({ queues: [queue] }) : Query.fromAst(newQuery);
       updateView((view) => {
         view.query.ast = query.ast as Mutable<typeof query.ast>;
       });
@@ -90,9 +90,9 @@ export const PipelineObjectSettings = ({ classNames, pipeline }: PipelineObjectS
         return;
       }
 
-      const newView = View.make({
+      const newView = ViewModel.make({
         query,
-        jsonSchema: Type.toJsonSchema(newSchema),
+        jsonSchema: JsonSchema.toJsonSchema(newSchema),
       });
       updateView((view) => {
         view.projection = Obj.getSnapshot(newView).projection as Mutable<typeof view.projection>;
@@ -145,9 +145,9 @@ export const PipelineObjectSettings = ({ classNames, pipeline }: PipelineObjectS
     if (!space) {
       return;
     }
-    const newView = View.make({
+    const newView = ViewModel.make({
       query: Query.select(Filter.type(Task.Task)),
-      jsonSchema: Type.toJsonSchema(Task.Task),
+      jsonSchema: JsonSchema.toJsonSchema(Task.Task),
     });
     space.db.add(newView);
     updateColumns((columns) => {

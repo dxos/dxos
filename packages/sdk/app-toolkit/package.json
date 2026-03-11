@@ -47,7 +47,10 @@
     "@dxos/echo": "workspace:*",
     "@dxos/functions": "workspace:*",
     "@dxos/operation": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-menu": "workspace:*",
     "@dxos/types": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/cli": "catalog:"
   },

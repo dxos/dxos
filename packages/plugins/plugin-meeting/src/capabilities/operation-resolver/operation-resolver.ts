@@ -14,7 +14,7 @@ import { ThreadCapabilities } from '@dxos/plugin-thread';
 import { ThreadOperation } from '@dxos/plugin-thread/types';
 import { TranscriptOperation } from '@dxos/plugin-transcription/types';
 import { Filter, Query, getSpace, parseId } from '@dxos/react-client/echo';
-import { Collection, Text } from '@dxos/schema';
+import { ManagedCollection, Text } from '@dxos/schema';
 import { type Message } from '@dxos/types';
 
 import { Meeting, MeetingCapabilities, MeetingOperation } from '../../types';
@@ -29,7 +29,7 @@ export default Capability.makeModule(
             return;
           }
 
-          const meetingCollection = Collection.makeManaged({ key: Type.getTypename(Meeting.Meeting) });
+          const meetingCollection = ManagedCollection.makeManagedCollection({ key: Type.getTypename(Meeting.Meeting) });
           Obj.change(rootCollection, (c) => {
             c.objects.push(Ref.make(meetingCollection));
           });

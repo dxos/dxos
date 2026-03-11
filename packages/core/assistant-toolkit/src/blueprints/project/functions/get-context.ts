@@ -40,10 +40,12 @@ export default defineFunction({
         Effect.map((_) => _.content),
         Effect.catchTag('ObjectNotFoundError', () => Effect.succeed('No spec found.')),
       ),
-      plan: yield* project.plan?.pipe(Database.load).pipe(
-        Effect.map(Plan.formatPlan),
-        Effect.catchTag('ObjectNotFoundError', () => Effect.succeed('No plan found.')),
-      ) ?? Effect.succeed('No plan found.'),
+      plan: yield* (
+        project.plan?.pipe(Database.load).pipe(
+          Effect.map(Plan.formatPlan),
+          Effect.catchTag('ObjectNotFoundError', () => Effect.succeed('No plan found.')),
+        ) ?? Effect.succeed('No plan found.')
+      ),
       artifacts: yield* Effect.forEach(project.artifacts, (artifact) =>
         Effect.gen(function* () {
           return {

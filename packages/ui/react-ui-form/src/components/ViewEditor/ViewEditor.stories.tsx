@@ -6,13 +6,14 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { DXN, Filter, Obj, Query, type QueryAST, Tag, Type } from '@dxos/echo';
+import { DXN, Filter, JsonSchema, Obj, Query, type QueryAST, Tag, Type } from '@dxos/echo';
+import { type View } from '@dxos/echo';
 import { type EchoSchema, Format, type Mutable } from '@dxos/echo/internal';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { type ProjectionModel, View, getTypenameFromQuery } from '@dxos/schema';
+import { type ProjectionModel, ViewModel, getTypenameFromQuery } from '@dxos/schema';
 import { Employer, Organization, Person, Pipeline } from '@dxos/types';
 
 import { translations } from '../../translations';
@@ -70,10 +71,10 @@ const DefaultStory = (props: StoryProps) => {
       );
 
       const [testSchema] = await space.db.schemaRegistry.register([TestSchema, AlternateSchema]);
-      const view = View.make({
+      const view = ViewModel.make({
         name: 'Test',
         query: Query.select(Filter.type(TestSchema)),
-        jsonSchema: Type.toJsonSchema(TestSchema),
+        jsonSchema: JsonSchema.toJsonSchema(TestSchema),
       });
 
       setSchema(testSchema);
@@ -89,7 +90,7 @@ const DefaultStory = (props: StoryProps) => {
 
       if (props.mode === 'tag') {
         const queue = target && DXN.tryParse(target) ? target : undefined;
-        const query = queue ? Query.fromAst(newQuery).options({ queues: [queue] }) : Query.fromAst(newQuery);
+        const query = queue ? Query.fromAst(newQuery).from({ queues: [queue] }) : Query.fromAst(newQuery);
         Obj.change(view, (v) => {
           v.query.ast = query.ast as Mutable<typeof query.ast>;
         });
@@ -100,7 +101,7 @@ const DefaultStory = (props: StoryProps) => {
           return;
         }
 
-        const newView = View.make({
+        const newView = ViewModel.make({
           query,
           jsonSchema: newSchema.jsonSchema,
         });

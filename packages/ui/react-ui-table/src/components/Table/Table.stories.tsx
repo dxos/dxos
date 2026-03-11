@@ -6,24 +6,24 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 
-import { Annotation, type Database, Format, Obj, type QueryAST, Type } from '@dxos/echo';
+import { Annotation, type Database, Format, Obj, type QueryAST, Ref, Type } from '@dxos/echo';
+import { View } from '@dxos/echo';
 import { type Mutable, PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 import { PublicKey } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { ScrollArea } from '@dxos/react-ui';
+import { Panel, ScrollArea } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { ViewEditor, translations as formTranslations } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { View, getSchemaFromPropertyDefinitions, getTypenameFromQuery } from '@dxos/schema';
+import { ViewModel, getSchemaFromPropertyDefinitions, getTypenameFromQuery } from '@dxos/schema';
 import { TestSchema, createObjectFactory } from '@dxos/schema/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 
 import { useTestTableModel } from '../../testing';
 import { translations } from '../../translations';
 import { Table } from '../../types';
-import { TableToolbar } from '../TableToolbar';
 
 import { Table as TableComponent } from './Table';
 
@@ -48,7 +48,7 @@ const Example = Schema.Struct({
       }),
   ),
   description: Schema.optional(Schema.String).annotations({ title: 'Description' }),
-  parent: Schema.optional(Schema.suspend((): Type.Ref<Example> => Type.Ref(Example))).annotations({
+  parent: Schema.optional(Schema.suspend((): Ref.RefSchema<Example> => Ref.Ref(Example))).annotations({
     title: 'Parent',
   }),
 }).pipe(
@@ -119,19 +119,27 @@ const DefaultStory = () => {
 
   return (
     <div className='grow grid grid-cols-[1fr_350px]'>
-      <div className='grid grid-rows-[min-content_1fr] min-h-0 overflow-hidden'>
-        <TableToolbar classNames='border-b border-subdued-separator' onAdd={handleInsertRow} onSave={handleSaveView} />
-        <TableComponent.Root>
-          <TableComponent.Main
-            ref={tableRef}
-            schema={schema}
-            model={model}
-            presentation={presentation}
-            onRowClick={handleRowClick}
-            ignoreAttention
-          />
-        </TableComponent.Root>
-      </div>
+      <TableComponent.Root>
+        <Panel.Root>
+          <Panel.Toolbar asChild>
+            <TableComponent.Toolbar
+              classNames='border-b border-subdued-separator'
+              onAdd={handleInsertRow}
+              onSave={handleSaveView}
+            />
+          </Panel.Toolbar>
+          <Panel.Content asChild>
+            <TableComponent.Main
+              ref={tableRef}
+              schema={schema}
+              model={model}
+              presentation={presentation}
+              onRowClick={handleRowClick}
+              ignoreAttention
+            />
+          </Panel.Content>
+        </Panel.Root>
+      </TableComponent.Root>
       <ScrollArea.Root orientation='vertical' classNames='border-l border-separator'>
         <ScrollArea.Viewport>
           <StoryViewEditor view={table.view.target} schema={schema} db={db} handleDeleteColumn={handleDeleteColumn} />
@@ -150,7 +158,7 @@ type StoryProps = { rows?: number };
 // Story definitions.
 //
 
-// TODO(burdon): Need super simple story.
+// TODO(burdon): Need simpler story.
 
 const meta = {
   title: 'ui/react-ui-table/Table',
@@ -165,7 +173,7 @@ const meta = {
       createSpace: true,
       onCreateSpace: async ({ space }) => {
         const [schema] = await space.db.schemaRegistry.register([Example]);
-        const { view, jsonSchema } = await View.makeFromDatabase({ db: space.db, typename: schema.typename });
+        const { view, jsonSchema } = await ViewModel.makeFromDatabase({ db: space.db, typename: schema.typename });
         const table = Table.make({ view, jsonSchema });
         Obj.change(view, (v) => {
           v.projection.fields = [
@@ -211,7 +219,7 @@ export const StaticSchema: StoryObj = {
       createIdentity: true,
       createSpace: true,
       onCreateSpace: async ({ space }) => {
-        const { view, jsonSchema } = await View.makeFromDatabase({
+        const { view, jsonSchema } = await ViewModel.makeFromDatabase({
           db: space.db,
           typename: TestSchema.Person.typename,
         });
@@ -257,7 +265,7 @@ export const ArrayOfObjects: StoryObj = {
       createIdentity: true,
       createSpace: true,
       onCreateSpace: async ({ space }) => {
-        const { view, jsonSchema } = await View.makeFromDatabase({
+        const { view, jsonSchema } = await ViewModel.makeFromDatabase({
           db: space.db,
           typename: ContactWithArrayOfEmails.typename,
         });
@@ -315,7 +323,7 @@ export const Tags: Meta<StoryProps> = {
         const [storedSchema] = await space.db.schemaRegistry.register([schema]);
 
         // Initialize table.
-        const { view, jsonSchema } = await View.makeFromDatabase({ db: space.db, typename });
+        const { view, jsonSchema } = await ViewModel.makeFromDatabase({ db: space.db, typename });
         const table = Table.make({ view, jsonSchema });
         space.db.add(table);
 

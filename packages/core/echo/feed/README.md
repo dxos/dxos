@@ -260,4 +260,3 @@ All timestamps (e.g., `insertionTimestamp`) are Unix timestamps in milliseconds.
 ### TODOs
 
 - [ ] Sync protocol only works if each namespace is synced separately.
-

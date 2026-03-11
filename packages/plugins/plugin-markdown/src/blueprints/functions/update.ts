@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { Context } from '@dxos/context';
-import { Database, Type } from '@dxos/echo';
+import { Database, Ref } from '@dxos/echo';
 import { DocAccessor, createDocAccessor } from '@dxos/echo-db';
 import { defineFunction } from '@dxos/functions';
 import { trim } from '@dxos/util';
@@ -35,7 +35,7 @@ export default defineFunction({
     Applies a set of edits to the markdown document.
   `,
   inputSchema: Schema.Struct({
-    doc: Type.Ref(Markdown.Document).annotations({
+    doc: Ref.Ref(Markdown.Document).annotations({
       description: 'The ID of the markdown document.',
     }),
     edits: Schema.Array(Edit).annotations({

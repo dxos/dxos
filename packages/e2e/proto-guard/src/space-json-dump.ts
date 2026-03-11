@@ -11,7 +11,8 @@ import isEqual from 'fast-deep-equal';
 import { type Client } from '@dxos/client';
 import { Context } from '@dxos/context';
 import { type Obj, Type } from '@dxos/echo';
-import { Filter, Serializer } from '@dxos/echo-db';
+import { Filter } from '@dxos/echo';
+import { Serializer } from '@dxos/echo-db';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
@@ -111,7 +112,7 @@ export class SpacesDumper {
     return data;
   }
 
-  static getExpectedObjectsOfType = (expected: SpacesDump, spaceId: SpaceId, schema: Type.Entity.Any) => {
+  static getExpectedObjectsOfType = (expected: SpacesDump, spaceId: SpaceId, schema: Type.AnyEntity) => {
     const objects = expected[spaceId] ?? [];
     return Record.values(objects).filter((obj) => obj['@type'] === Type.getDXN(schema)?.toString());
   };

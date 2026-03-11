@@ -13,7 +13,7 @@ import * as Predicate from 'effect/Predicate';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
-import { Feed, Filter, Obj, Type } from '@dxos/echo';
+import { Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { DXN } from '@dxos/keys';
@@ -62,7 +62,7 @@ export default defineFunction({
   name: 'Sync Gmail',
   description: 'Sync emails from Gmail to the mailbox feed.',
   inputSchema: Schema.Struct({
-    feed: Type.Ref(Type.Feed).annotations({ description: 'Reference to the mailbox feed to sync emails to.' }),
+    feed: Ref.Ref(Feed.Feed).annotations({ description: 'Reference to the mailbox feed to sync emails to.' }),
     userId: Schema.String.pipe(Schema.optional),
     label: Schema.String.pipe(
       Schema.annotations({
@@ -86,8 +86,8 @@ export default defineFunction({
   outputSchema: Schema.Struct({
     newMessages: Schema.Number,
   }),
-  // TODO(wittjosiah): Include Type.Feed by default?
-  types: [Type.Feed, Mailbox.Config],
+  // TODO(wittjosiah): Include Feed.Feed by default?
+  types: [Feed.Feed, Mailbox.Config],
   services: [Database.Service, Feed.Service],
   handler: ({
     // TODO(wittjosiah): Schema-based defaults are not yet supported.

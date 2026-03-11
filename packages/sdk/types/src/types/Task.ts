@@ -4,7 +4,9 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Type } from '@dxos/echo';
+import { Obj, Ref, Type } from '@dxos/echo';
+// eslint-disable-next-line unused-imports/no-unused-imports
+import { View as _View } from '@dxos/echo';
 import {
   Format,
   FormatAnnotation,
@@ -12,8 +14,6 @@ import {
   LabelAnnotation,
   PropertyMetaAnnotationId,
 } from '@dxos/echo/internal';
-// eslint-disable-next-line unused-imports/no-unused-imports
-import { View as _View } from '@dxos/schema';
 
 import * as Person from './Person';
 import * as Pipeline from './Pipeline';
@@ -68,7 +68,7 @@ export const Task = Schema.Struct({
     }),
     Schema.optional,
   ),
-  assigned: Schema.optional(Type.Ref(Person.Person).annotations({ title: 'Assigned' })),
+  assigned: Schema.optional(Ref.Ref(Person.Person).annotations({ title: 'Assigned' })),
   estimate: Schema.optional(Schema.Number.annotations({ title: 'Estimate' })),
   description: Schema.optional(
     Schema.String.annotations({ title: 'Description' }).pipe(
@@ -78,7 +78,7 @@ export const Task = Schema.Struct({
       }),
     ),
   ),
-  project: Schema.optional(Type.Ref(Pipeline.Pipeline).annotations({ title: 'Project' })),
+  project: Schema.optional(Ref.Ref(Pipeline.Pipeline).annotations({ title: 'Project' })),
   // TODO(burdon): Created date metadata.
   // due: Date,
   // TODO(burdon): Generic tags.

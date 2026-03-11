@@ -158,6 +158,7 @@ export default Capability.makeModule(
                     hidden: true,
                     object: createResult.object,
                   });
+                  invariant(Obj.instanceOf(Meeting.Meeting, addResult.object));
                   yield* Operation.invoke(MeetingOperation.SetActive, { object: addResult.object });
                   meeting = addResult.object as Meeting.Meeting;
                 }

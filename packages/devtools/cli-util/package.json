@@ -31,7 +31,7 @@
   ],
   "dependencies": {
     "@dxos/client": "workspace:*",
-    "@dxos/context": "catalog:",
+    "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/effect": "workspace:*",

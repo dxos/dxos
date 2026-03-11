@@ -191,23 +191,25 @@ const createBaseExtensions = ({
 };
 
 const selectionChange = (selectionManager: SelectionManager) => {
-  return EditorView.updateListener.of(
-    debounceAndThrottle((update: ViewUpdate) => {
-      if (update.selectionSet) {
-        const id = update.state.facet(documentId);
-        const cursorConverter = update.state.facet(Cursor.converter);
-        const selection = update.state.selection;
-        const ranges = selection.ranges
-          .map((range) => ({
-            from: cursorConverter.toCursor(range.from),
-            to: cursorConverter.toCursor(range.to),
-          }))
-          .filter(({ from, to }) => to > from);
+  const debouncedHandler = debounceAndThrottle((update: ViewUpdate) => {
+    const id = update.state.facet(documentId);
+    const cursorConverter = update.state.facet(Cursor.converter);
+    const selection = update.state.selection;
+    const ranges = selection.ranges
+      .map((range) => ({
+        from: cursorConverter.toCursor(range.from),
+        to: cursorConverter.toCursor(range.to),
+      }))
+      .filter(({ from, to }) => to > from);
 
-        selectionManager.updateMultiRange(id, ranges);
-      }
-    }, 100),
-  );
+    selectionManager.updateMultiRange(id, ranges);
+  }, 100);
+
+  return EditorView.updateListener.of((update: ViewUpdate) => {
+    if (update.selectionSet) {
+      debouncedHandler(update);
+    }
+  });
 };
 
 const createRenderLink =

@@ -7,13 +7,14 @@ import * as Option from 'effect/Option';
 import React, { forwardRef, useMemo, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { type SurfaceComponentProps, useObjectMenuItems, useObjectNavigate } from '@dxos/app-toolkit/ui';
 import { type Project } from '@dxos/assistant-toolkit';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';
 import { useQuery } from '@dxos/react-client/echo';
-import { Container, ScrollArea } from '@dxos/react-ui';
-import { Card, Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
+import { Card, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
+import { Menu } from '@dxos/react-ui-menu';
+import { Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { isNonNullable } from '@dxos/util';
 
 export type ProjectArticleProps = SurfaceComponentProps<Project.Project>;
@@ -46,49 +47,66 @@ export const ProjectArticle = ({ subject: project }: ProjectArticleProps) => {
   const stackObjects = [...artifacts, ...inputQueueItems].filter(isNonNullable);
 
   return (
-    <Container.Main classNames='overflow-y-auto'>
-      {stackObjects.length === 0 && (
-        <div className='text-subdued'>
-          Project has no objects associated with it.
-          <br />
-          <br />
-          To get started:
-          <br />- Write the initative spec: what is the goal of the project?
-          <br />- subscribe project to your email.
-          <br />- Chat with the agent.
-        </div>
-      )}
+    <Panel.Root className='dx-article'>
+      <Panel.Content>
+        {/* TODO(burdon): Factor out. */}
+        {stackObjects.length === 0 && (
+          <div className='text-subdued'>
+            Project has no objects associated with it.
+            <br />
+            <br />
+            To get started:
+            <br />- Write the initative spec: what is the goal of the project?
+            <br />- subscribe project to your email.
+            <br />- Chat with the agent.
+          </div>
+        )}
 
-      {stackObjects.length > 0 && (
-        <Focus.Group asChild>
-          <Mosaic.Container asChild withFocus autoScroll={viewport}>
-            <ScrollArea.Root orientation='vertical'>
-              <ScrollArea.Viewport classNames='p-2' ref={setViewport}>
-                <Mosaic.Stack items={stackObjects} getId={(item) => item.id} draggable={false} Tile={StackTile} />
-              </ScrollArea.Viewport>
-            </ScrollArea.Root>
-          </Mosaic.Container>
-        </Focus.Group>
-      )}
-    </Container.Main>
+        {stackObjects.length > 0 && (
+          <Focus.Group asChild>
+            <Mosaic.Container asChild withFocus autoScroll={viewport}>
+              <ScrollArea.Root orientation='vertical'>
+                <ScrollArea.Viewport classNames='p-2' ref={setViewport}>
+                  <Mosaic.Stack items={stackObjects} getId={(item) => item.id} draggable={false} Tile={StackTile} />
+                </ScrollArea.Viewport>
+              </ScrollArea.Root>
+            </Mosaic.Container>
+          </Focus.Group>
+        )}
+      </Panel.Content>
+    </Panel.Root>
   );
 };
 
 const StackTile = forwardRef<HTMLDivElement, MosaicTileProps<Obj.Unknown>>(
   ({ data, location, debug }, forwardedRef) => {
+    const objectMenuItems = useObjectMenuItems(data);
+    const handleNavigate = useObjectNavigate(data);
+
     return (
       <Mosaic.Tile asChild id={data.id} data={data} location={location} debug={debug}>
         <Focus.Group asChild>
-          <Card.Root ref={forwardedRef} data-testid='board-item'>
-            <Card.Toolbar>
-              <Card.IconBlock></Card.IconBlock>
-              <Card.Title>{Obj.getLabel(data)}</Card.Title>
-              <Card.Menu />
-            </Card.Toolbar>
-            <Card.Content>
-              <Surface.Surface role='card--content' limit={1} data={{ subject: data }} />
-            </Card.Content>
-          </Card.Root>
+          <Menu.Root>
+            <Card.Root ref={forwardedRef} data-testid='board-item'>
+              <Card.Toolbar>
+                <Card.IconBlock></Card.IconBlock>
+                <Card.Title onClick={handleNavigate}>{Obj.getLabel(data)}</Card.Title>
+                {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
+                <Menu.Trigger asChild disabled={!objectMenuItems?.length}>
+                  <Toolbar.IconButton
+                    iconOnly
+                    variant='ghost'
+                    icon='ph--dots-three-vertical--regular'
+                    label='Actions'
+                  />
+                </Menu.Trigger>
+                <Menu.Content items={objectMenuItems} />
+              </Card.Toolbar>
+              <Card.Content>
+                <Surface.Surface role='card--content' limit={1} data={{ subject: data }} />
+              </Card.Content>
+            </Card.Root>
+          </Menu.Root>
         </Focus.Group>
       </Mosaic.Tile>
     );

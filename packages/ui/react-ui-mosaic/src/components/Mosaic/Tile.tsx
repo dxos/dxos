@@ -31,7 +31,7 @@ import React, {
 } from 'react';
 import { createPortal } from 'react-dom';
 
-import { type SlottableClassName } from '@dxos/react-ui';
+import { type ComposableProps } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { useMosaicContainerContext } from './Container';
@@ -58,7 +58,7 @@ const [MosaicTileContextProvider, useMosaicTileContext] = createContext<MosaicTi
 // State attribute: data-[mosaic-tile-state=dragging]
 const MOSAIC_TILE_STATE_ATTR = 'mosaic-tile-state';
 
-type MosaicTileProps<TData = any, TLocation = LocationType> = SlottableClassName<
+type MosaicTileProps<TData = any, TLocation = LocationType> = ComposableProps<
   PropsWithChildren<{
     asChild?: boolean;
     dragHandle?: HTMLElement | null;
@@ -84,12 +84,13 @@ const MosaicTile = forwardRef<HTMLDivElement, MosaicTileProps>(
       id,
       data: dataProp,
       debug: _,
+      ...props
     }: MosaicTileProps,
     forwardedRef,
   ) => {
     const rootRef = useRef<HTMLDivElement>(null);
     const composedRef = composeRefs<HTMLDivElement>(rootRef, forwardedRef);
-    const Root = asChild ? Slot : Primitive.div;
+    const Comp = asChild ? Slot : Primitive.div;
 
     // State.
     const {
@@ -197,7 +198,8 @@ const MosaicTile = forwardRef<HTMLDivElement, MosaicTileProps>(
     // NOTE: Ensure padding doesn't change position of cursor when dragging (no margins).
     return (
       <MosaicTileContextProvider state={state}>
-        <Root
+        <Comp
+          {...props}
           {...{
             [`data-${MOSAIC_TILE_STATE_ATTR}`]: state.type,
           }}
@@ -206,11 +208,11 @@ const MosaicTile = forwardRef<HTMLDivElement, MosaicTileProps>(
           ref={composedRef}
         >
           {children}
-        </Root>
+        </Comp>
 
         {state.type === 'preview' &&
           createPortal(
-            <Root
+            <Comp
               {...{
                 // NOTE: Use to control appearance while dragging.
                 [`data-${MOSAIC_TILE_STATE_ATTR}`]: state.type,
@@ -225,7 +227,7 @@ const MosaicTile = forwardRef<HTMLDivElement, MosaicTileProps>(
               }
             >
               {children}
-            </Root>,
+            </Comp>,
             state.container,
           )}
       </MosaicTileContextProvider>

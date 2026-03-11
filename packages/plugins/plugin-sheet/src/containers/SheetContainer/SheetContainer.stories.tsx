@@ -16,7 +16,7 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { AttendableContainer } from '@dxos/react-ui-attention';
 
-import { ComputeGraphContext, useComputeGraph } from '../../components/ComputeGraph';
+import { ComputeGraphContext, useComputeGraph } from '../../components';
 import { createTestCells, useTestSheet, withComputeGraphDecorator } from '../../testing';
 import { translations } from '../../translations';
 import { Sheet, SheetOperation } from '../../types';
@@ -25,7 +25,7 @@ import RangeList from '../RangeList';
 import { SheetContainer } from './SheetContainer';
 
 const meta = {
-  title: 'plugins/plugin-sheet/SheetContainer',
+  title: 'plugins/plugin-sheet/containers/SheetContainer',
   component: SheetContainer,
   decorators: [
     withTheme(),

@@ -6,6 +6,7 @@ import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, {
   type ChangeEvent,
   type ComponentPropsWithRef,
+  type ComponentPropsWithoutRef,
   type KeyboardEvent,
   type PropsWithChildren,
   type ReactNode,
@@ -231,12 +232,12 @@ SearchListRoot.displayName = 'SearchList.Root';
 // Content
 //
 
-type SearchListContentProps = ThemedClassName<PropsWithChildren<{}>>;
+type SearchListContentProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
 
 const SearchListContent = forwardRef<HTMLDivElement, SearchListContentProps>(
-  ({ classNames, children }, forwardedRef) => {
+  ({ classNames, children, ...props }, forwardedRef) => {
     return (
-      <div role='none' className={mx('grid h-full w-full min-h-0', classNames)} ref={forwardedRef}>
+      <div role='none' {...props} className={mx('dx-container flex flex-col gap-3', classNames)} ref={forwardedRef}>
         {children}
       </div>
     );
@@ -349,28 +350,26 @@ const SearchListInput = forwardRef<HTMLInputElement, SearchListInputProps>(
     );
 
     return (
-      <div className='p-form-chrome'>
-        <input
-          {...props}
-          {...(props.autoFocus && !hasIosKeyboard && { autoFocus: true })}
-          type='text'
-          placeholder={placeholder ?? defaultPlaceholder}
-          className={tx(
-            'input.input',
-            {
-              variant,
-              disabled: props.disabled,
-              density,
-              elevation,
-            },
-            classNames,
-          )}
-          value={query}
-          onChange={handleChange}
-          onKeyDown={handleKeyDown}
-          ref={forwardedRef}
-        />
-      </div>
+      <input
+        {...props}
+        {...(props.autoFocus && !hasIosKeyboard && { autoFocus: true })}
+        type='text'
+        placeholder={placeholder ?? defaultPlaceholder}
+        className={tx(
+          'input.input',
+          {
+            variant,
+            disabled: props.disabled,
+            density,
+            elevation,
+          },
+          classNames,
+        )}
+        value={query}
+        onChange={handleChange}
+        onKeyDown={handleKeyDown}
+        ref={forwardedRef}
+      />
     );
   },
 );
@@ -406,6 +405,8 @@ type SearchListItemProps = ThemedClassName<{
   label: string;
   /** Icon to display (string identifier for Icon component). */
   icon?: string;
+  /** Additional class names for the icon element. */
+  iconClassNames?: string;
   /** Whether to show a check icon. */
   checked?: boolean;
   /** Suffix text to display after the label. */
@@ -417,7 +418,7 @@ type SearchListItemProps = ThemedClassName<{
 }>;
 
 const SearchListItem = forwardRef<HTMLDivElement, SearchListItemProps>(
-  ({ classNames, value, label, icon, checked, suffix, onSelect, disabled }, forwardedRef) => {
+  ({ classNames, value, label, icon, iconClassNames, checked, suffix, onSelect, disabled }, forwardedRef) => {
     const { selectedValue, registerItem, unregisterItem } = useSearchListItemContext('SearchList.Item');
     const internalRef = useRef<HTMLDivElement>(null);
 
@@ -470,7 +471,7 @@ const SearchListItem = forwardRef<HTMLDivElement, SearchListItemProps>(
         )}
         onClick={handleClick}
       >
-        {icon && <Icon icon={icon} size={5} />}
+        {icon && <Icon icon={icon} size={5} classNames={iconClassNames} />}
         <span className='w-0 grow truncate'>{label}</span>
         {suffix && <span className='shrink-0 text-description'>{suffix}</span>}
         {checked && <Icon icon='ph--check--regular' size={5} />}

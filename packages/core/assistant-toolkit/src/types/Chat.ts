@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Obj, Type } from '@dxos/echo';
+import { Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { Queue } from '@dxos/echo-db';
 
@@ -13,9 +13,9 @@ import { Queue } from '@dxos/echo-db';
  */
 export const Chat = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
-  queue: Type.Ref(Queue).pipe(FormInputAnnotation.set(false)),
+  queue: Ref.Ref(Queue).pipe(FormInputAnnotation.set(false)),
   // TODO(dmaretskyi): Eventually this and the message queue will be the same.
-  traceQueue: Type.Ref(Queue).pipe(FormInputAnnotation.set(false), Schema.optional),
+  traceQueue: Ref.Ref(Queue).pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
   Type.object({
     typename: 'dxos.org/type/assistant/Chat',
@@ -42,7 +42,7 @@ export const CompanionTo = Schema.Struct({
     typename: 'dxos.org/relation/assistant/CompanionTo',
     version: '0.1.0',
     source: Chat,
-    target: Type.Obj,
+    target: Obj.Unknown,
   }),
 );
 

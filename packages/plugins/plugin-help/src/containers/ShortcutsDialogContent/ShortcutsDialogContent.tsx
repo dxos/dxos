@@ -6,7 +6,7 @@ import React from 'react';
 
 import { Dialog, IconButton, useTranslation } from '@dxos/react-ui';
 
-import { ShortcutsList } from '../../components/Shortcuts';
+import { ShortcutsList } from '../../components';
 import { meta } from '../../meta';
 
 export const ShortcutsDialogContent = () => {

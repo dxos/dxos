@@ -9,7 +9,7 @@ import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { useQuery, useSchema } from '@dxos/react-client/echo';
-import { Card } from '@dxos/react-ui-mosaic';
+import { Card } from '@dxos/react-ui';
 import {
   Table as TableComponent,
   type TableController,
@@ -55,7 +55,7 @@ export const TableCard = ({ role, subject: object }: TableCardProps) => {
 
   return (
     <Card.Content>
-      <TableComponent.Root role={role}>
+      <TableComponent.Root>
         <TableComponent.Main
           key={Obj.getDXN(object).toString()}
           ref={tableRef}

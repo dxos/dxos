@@ -7,81 +7,90 @@ import React, { useCallback, useMemo } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { type Feed, Obj, Ref } from '@dxos/echo';
-import { Feed as FeedModule } from '@dxos/echo';
-import { Trigger } from '@dxos/functions';
-import { invariant } from '@dxos/invariant';
-import { AutomationOperation } from '@dxos/plugin-automation/types';
+import { DXN, type Feed, Obj } from '@dxos/echo';
+import { type JsonPath, splitJsonPath } from '@dxos/echo/internal';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { Filter, useQuery } from '@dxos/react-client/echo';
-import { Button, useTranslation } from '@dxos/react-ui';
+import { Button, ButtonGroup, IconButton, useTranslation } from '@dxos/react-ui';
+import { Form, omitId } from '@dxos/react-ui-form';
 
+import { useSyncTrigger } from '../../hooks';
 import { meta } from '../../meta';
+import { Mailbox } from '../../types';
 
 export const MailboxSettings = ({ subject }: SurfaceComponentProps<Feed.Feed>) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const db = useMemo(() => Obj.getDatabase(subject), [subject]);
-  const triggers = useQuery(db, Filter.type(Trigger.Trigger));
 
-  // Get the feed's queue DXN from meta keys.
-  const queueDxn = useMemo(() => FeedModule.getQueueDxn(subject), [subject]);
+  const configs = useQuery(db, Filter.type(Mailbox.Config));
+  const config = useMemo(
+    () => configs.find((config) => DXN.equalsEchoId(config.feed.dxn, Obj.getDXN(subject))),
+    [configs, subject],
+  );
 
-  const handleConfigureSync = useCallback(() => {
-    invariant(db);
-
-    const syncTrigger = triggers.find(
-      (trigger) => trigger.spec?.kind === 'timer' && trigger.input?.feedId === subject.id,
-    );
-    if (syncTrigger) {
-      void invokePromise(LayoutOperation.Open, {
-        subject: [`automation-settings${ATTENDABLE_PATH_SEPARATOR}${db.spaceId}`],
-        workspace: db.spaceId,
-      });
-    } else {
-      void invokePromise(AutomationOperation.CreateTriggerFromTemplate, {
-        db,
-        template: { type: 'timer', cron: '*/5 * * * *' },
-        scriptName: 'Gmail',
-        input: { feed: Ref.make(subject) },
-      });
-    }
-  }, [invokePromise, db, subject.id, triggers, subject]);
-
-  const handleConfigureSubscription = useCallback(() => {
-    invariant(db);
-
-    const subscriptionTrigger = triggers.find((trigger) => {
-      if (trigger.spec?.kind === 'queue' && queueDxn) {
-        if (trigger.spec.queue === queueDxn.toString()) {
-          return true;
-        }
+  const handleConfigChange = useCallback(
+    (values: any, { isValid, changed }: { isValid: boolean; changed: Record<JsonPath, boolean> }) => {
+      if (!isValid || !config) {
+        return;
       }
-      return false;
-    });
-    if (subscriptionTrigger) {
-      void invokePromise(LayoutOperation.Open, {
-        subject: [`automation-settings${ATTENDABLE_PATH_SEPARATOR}${db.spaceId}`],
-        workspace: db.spaceId,
-      });
-    } else if (queueDxn) {
-      void invokePromise(AutomationOperation.CreateTriggerFromTemplate, {
-        db,
-        template: { type: 'queue', queueDXN: queueDxn },
-      });
-    }
-  }, [invokePromise, db, queueDxn, triggers]);
 
-  // TODO(wittjosiah): More than one trigger may be desired, particularly for subscription.
-  //   Distinguish between configuring existing triggers and adding new ones.
+      const changedPaths = Object.keys(changed).filter((path) => changed[path as JsonPath]) as JsonPath[];
+      if (changedPaths.length > 0) {
+        Obj.change(config, () => {
+          for (const path of changedPaths) {
+            const parts = splitJsonPath(path);
+            const value = Obj.getValue(values, parts);
+            Obj.setValue(config, parts, value);
+          }
+        });
+      }
+    },
+    [config],
+  );
+
+  const { syncEnabled, syncTrigger, pending, handleToggleSync } = useSyncTrigger({
+    db,
+    subject,
+    functionKey: 'dxos.org/function/inbox/google-mail-sync',
+    input: { restrictedMode: true },
+  });
+
+  const handleViewTrigger = useCallback(() => {
+    if (!db) {
+      return;
+    }
+    void invokePromise(LayoutOperation.Open, {
+      subject: [`automation-settings${ATTENDABLE_PATH_SEPARATOR}${db.spaceId}`],
+      workspace: db.spaceId,
+    });
+  }, [invokePromise, db]);
+
   return (
     <div className='flex flex-col gap-4'>
+      {config && (
+        <Form.Root schema={omitId(Mailbox.Config)} values={config} db={db} onValuesChanged={handleConfigChange}>
+          <Form.Viewport>
+            <Form.Content>
+              <Form.FieldSet />
+            </Form.Content>
+          </Form.Viewport>
+        </Form.Root>
+      )}
       <h2>{t('mailbox sync label')}</h2>
       <div className='p-1 flex flex-row gap-1'>
-        <Button onClick={handleConfigureSync}>{t('mailbox object settings configure sync button label')}</Button>
-        <Button onClick={handleConfigureSubscription}>
-          {t('mailbox object settings configure subscription button label')}
-        </Button>
+        <ButtonGroup>
+          <Button onClick={handleToggleSync} disabled={pending}>
+            {pending
+              ? t('enabling background sync label')
+              : syncEnabled
+                ? t('disable background sync label')
+                : t('enable background sync label')}
+          </Button>
+          {syncTrigger && (
+            <IconButton iconOnly icon='ph--gear--regular' label={t('view trigger label')} onClick={handleViewTrigger} />
+          )}
+        </ButtonGroup>
       </div>
     </div>
   );

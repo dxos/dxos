@@ -12,18 +12,12 @@ import { Sheet } from '@dxos/plugin-sheet/types';
 import { Diagram } from '@dxos/plugin-sketch/types';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
-import { Container, IconButton, Input, ScrollArea, Toolbar, useAsyncEffect } from '@dxos/react-ui';
+import { IconButton, Input, Panel, ScrollArea, Toolbar, useAsyncEffect } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { Organization, Person, Task } from '@dxos/types';
 import { jsonKeyReplacer, sortKeys } from '@dxos/util';
 
-import {
-  type ObjectGenerator,
-  createGenerator,
-  staticGenerators,
-} from '../../components/SpaceGenerator/ObjectGenerator';
-import { generator } from '../../components/SpaceGenerator/presets';
-import { SchemaTable } from '../../components/SpaceGenerator/SchemaTable';
+import { type ObjectGenerator, SchemaTable, createGenerator, generator, staticGenerators } from '../../components';
 
 export type SpaceGeneratorProps = {
   space: Space;
@@ -34,7 +28,7 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
   const { invokePromise } = useOperationInvoker();
   const client = useClient();
   const staticTypes = [Markdown.Document, Diagram.Diagram, Sheet.Sheet, ComputeGraph]; // TODO(burdon): Make extensible.
-  const recordTypes: Type.Obj.Any[] = [Organization.Organization, Person.Person, Task.Task];
+  const recordTypes: Type.AnyObj[] = [Organization.Organization, Person.Person, Task.Task];
   const [count, setCount] = useState(1);
   const [info, setInfo] = useState<any>({});
   const presets = useMemo(() => generator(), []);
@@ -97,34 +91,37 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
   );
 
   return (
-    <Container.Main toolbar>
-      <Toolbar.Root>
-        <IconButton icon='ph--arrow-clockwise--regular' iconOnly label='Refresh' onClick={updateInfo} />
-        <Toolbar.Separator variant='gap' />
-        <Input.Root>
-          <Input.TextInput
-            type='number'
-            placeholder='Count'
-            classNames='w-[4rem] text-right'
-            min={1}
-            max={100}
-            size={8}
-            value={count}
-            onChange={(event) => setCount(parseInt(event.target.value))}
-          />
-        </Input.Root>
-      </Toolbar.Root>
-
-      <ScrollArea.Root thin orientation='vertical'>
-        <ScrollArea.Viewport classNames='gap-4 divide-y divide-subdued-separator'>
-          <SchemaTable types={staticTypes} objects={info.objects} label='Static Types' onClick={handleCreateData} />
-          <SchemaTable types={recordTypes} objects={info.objects} label='Record Types' onClick={handleCreateData} />
-          <SchemaTable types={presets.types} objects={info.objects} label='Presets' onClick={handleCreateData} />
-          <SyntaxHighlighter language='json' classNames='text-xs'>
-            {JSON.stringify({ space, ...info }, jsonKeyReplacer({ truncate: true }), 2)}
-          </SyntaxHighlighter>
-        </ScrollArea.Viewport>
-      </ScrollArea.Root>
-    </Container.Main>
+    <Panel.Root>
+      <Panel.Toolbar asChild>
+        <Toolbar.Root>
+          <IconButton icon='ph--arrow-clockwise--regular' iconOnly label='Refresh' onClick={updateInfo} />
+          <Toolbar.Separator />
+          <Input.Root>
+            <Input.TextInput
+              type='number'
+              placeholder='Count'
+              classNames='w-[4rem] text-right'
+              min={1}
+              max={100}
+              size={8}
+              value={count}
+              onChange={(event) => setCount(parseInt(event.target.value))}
+            />
+          </Input.Root>
+        </Toolbar.Root>
+      </Panel.Toolbar>
+      <Panel.Content asChild>
+        <ScrollArea.Root thin orientation='vertical'>
+          <ScrollArea.Viewport classNames='gap-4 divide-y divide-subdued-separator'>
+            <SchemaTable types={staticTypes} objects={info.objects} label='Static Types' onClick={handleCreateData} />
+            <SchemaTable types={recordTypes} objects={info.objects} label='Record Types' onClick={handleCreateData} />
+            <SchemaTable types={presets.types} objects={info.objects} label='Presets' onClick={handleCreateData} />
+            <SyntaxHighlighter language='json' classNames='text-xs'>
+              {JSON.stringify({ space, ...info }, jsonKeyReplacer({ truncate: true }), 2)}
+            </SyntaxHighlighter>
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </Panel.Content>
+    </Panel.Root>
   );
 };

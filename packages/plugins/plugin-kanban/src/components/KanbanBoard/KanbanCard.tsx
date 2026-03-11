@@ -5,9 +5,11 @@
 import React, { forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
+import { useObjectMenuItems, useObjectNavigate } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { useTranslation } from '@dxos/react-ui';
-import { Card, Focus, Mosaic, type MosaicTileProps, useBoard } from '@dxos/react-ui-mosaic';
+import { Card, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Menu, createMenuAction } from '@dxos/react-ui-menu';
+import { Focus, Mosaic, type MosaicTileProps, useBoard } from '@dxos/react-ui-mosaic';
 
 import { meta } from '../../meta';
 
@@ -28,17 +30,22 @@ export const KanbanCard = forwardRef<HTMLDivElement, KanbanCardProps>(({ data, l
   const [dragHandle, setDragHandle] = useState<HTMLButtonElement | null>(null);
   const dragHandleRef = useCallback((el: HTMLButtonElement | null) => setDragHandle(el), []);
 
+  const objectMenuItems = useObjectMenuItems(data);
+  const handleNavigate = useObjectNavigate(data);
+
   const menuItems = useMemo(
-    () =>
-      onCardRemove
+    () => [
+      ...objectMenuItems,
+      ...(onCardRemove
         ? [
-            {
+            createMenuAction('remove', () => onCardRemove(data), {
               label: t('remove card label'),
-              onClick: (card: Obj.Unknown) => onCardRemove(card),
-            },
+              icon: 'ph--trash--regular',
+            }),
           ]
-        : [],
-    [onCardRemove, t],
+        : []),
+    ],
+    [objectMenuItems, onCardRemove, data, t],
   );
 
   return (
@@ -51,16 +58,27 @@ export const KanbanCard = forwardRef<HTMLDivElement, KanbanCardProps>(({ data, l
       dragHandle={dragHandle}
     >
       <Focus.Group asChild>
-        <Card.Root ref={forwardedRef} data-testid='board-item'>
-          <Card.Toolbar>
-            <Card.DragHandle ref={dragHandleRef} />
-            <Card.Title>{Obj.getLabel(data)}</Card.Title>
-            {menuItems.length > 0 && <Card.Menu context={data} items={menuItems} />}
-          </Card.Toolbar>
-          <Card.Content>
-            {projection && <Surface.Surface role='card--content' limit={1} data={{ subject: data, projection }} />}
-          </Card.Content>
-        </Card.Root>
+        <Menu.Root>
+          <Card.Root ref={forwardedRef} data-testid='board-item'>
+            <Card.Toolbar>
+              <Card.DragHandle ref={dragHandleRef} />
+              <Card.Title onClick={handleNavigate}>{Obj.getLabel(data)}</Card.Title>
+              {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
+              <Menu.Trigger asChild disabled={!menuItems?.length}>
+                <Toolbar.IconButton
+                  iconOnly
+                  variant='ghost'
+                  icon='ph--dots-three-vertical--regular'
+                  label={t('action menu label')}
+                />
+              </Menu.Trigger>
+              <Menu.Content items={menuItems} />
+            </Card.Toolbar>
+            <Card.Content>
+              {projection && <Surface.Surface role='card--content' limit={1} data={{ subject: data, projection }} />}
+            </Card.Content>
+          </Card.Root>
+        </Menu.Root>
       </Focus.Group>
     </Mosaic.Tile>
   );

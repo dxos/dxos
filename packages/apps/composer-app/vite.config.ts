@@ -120,6 +120,8 @@ export default defineConfig((env) => {
       ['node:path']: '@dxos/node-std/path',
       ['util']: '@dxos/node-std/util',
       ['path']: '@dxos/node-std/path',
+      ['node:crypto']: '@dxos/node-std/crypto',
+      ['crypto']: '@dxos/node-std/crypto',
       ['tiktoken/lite']: path.resolve(dirname, 'stub.mjs'),
       // NOTE: react-ui must be aliased because vite-plugin-import-source only intercepts imports from
       //   source files — imports embedded inside compiled dist/ files bypass it entirely.

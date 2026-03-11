@@ -25,6 +25,7 @@ export const translations = [
         'settings wireframe': 'Show wireframes.',
         'settings repair': 'Run repair tool.',
         'settings download diagnostics': 'Download diagnostics.',
+        'settings download logs': 'Download log buffer.',
         'settings uploaded': 'Uploaded to IPFS',
         'settings uploaded to clipboard': 'URL copied to clipboard.',
         'settings repair success': 'Repair succeeded',

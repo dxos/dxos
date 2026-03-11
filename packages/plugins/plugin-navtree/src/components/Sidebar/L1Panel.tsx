@@ -11,7 +11,7 @@ import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Graph, useActionRunner, useConnections, useEdges } from '@dxos/plugin-graph';
 import { DensityProvider, IconButton, ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Tree } from '@dxos/react-ui-list';
-import { DropdownMenu, type MenuItem, MenuProvider } from '@dxos/react-ui-menu';
+import { Menu, type MenuItem } from '@dxos/react-ui-menu';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
 
@@ -188,22 +188,21 @@ const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'item' | 'path
           />
         )}
         {menuActions.length > 1 && (
-          <MenuProvider onAction={onAction}>
-            <DropdownMenu.Root group={item} items={menuActions as MenuItem[]} caller={NAV_TREE_ITEM}>
-              <DropdownMenu.Trigger asChild>
-                <IconButton
-                  size={5}
-                  density='coarse'
-                  classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
-                  variant='ghost'
-                  icon='ph--dots-three-vertical--regular'
-                  iconOnly
-                  label={t('tree item actions label')}
-                  data-testid='navtree.treeItem.actionsLevel0'
-                />
-              </DropdownMenu.Trigger>
-            </DropdownMenu.Root>
-          </MenuProvider>
+          <Menu.Root caller={NAV_TREE_ITEM} onAction={onAction}>
+            <Menu.Trigger asChild>
+              <IconButton
+                size={5}
+                density='coarse'
+                classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
+                variant='ghost'
+                icon='ph--dots-three-vertical--regular'
+                iconOnly
+                label={t('tree item actions label')}
+                data-testid='navtree.treeItem.actionsLevel0'
+              />
+            </Menu.Trigger>
+            <Menu.Content group={item} items={menuActions as MenuItem[]} />
+          </Menu.Root>
         )}
         {ItemEnd && <ItemEnd node={item} open />}
       </div>
@@ -217,6 +216,7 @@ const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'item' | 'path
 const useL1MenuActions = ({ item, path }: Pick<L1PanelProps, 'item' | 'path'>) => {
   const { t } = useTranslation(meta.id);
   const { setAlternateTree } = useNavTreeContext();
+  const { graph } = useAppGraph();
   const runAction = useActionRunner();
 
   const alternateTree = useAlternateTreeItem(item);
@@ -264,12 +264,15 @@ const useL1MenuActions = ({ item, path }: Pick<L1PanelProps, 'item' | 'path'>) =
   const onAction = useCallback(
     (action: Node.Action, params?: Node.InvokeProps) => {
       if (action.id === settingsActionId) {
+        if (alternateTree && !isAlternate) {
+          Graph.expand(graph, alternateTree.id, 'child');
+        }
         setAlternateTree?.(alternatePath, !isAlternate);
       } else {
         void runAction(action, params);
       }
     },
-    [settingsActionId, setAlternateTree, alternatePath, isAlternate, runAction],
+    [settingsActionId, setAlternateTree, alternatePath, isAlternate, runAction, graph, alternateTree],
   );
 
   return { primaryAction, groupedActions, menuActions, onAction };

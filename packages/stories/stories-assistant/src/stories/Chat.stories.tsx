@@ -22,7 +22,8 @@ import {
   WebSearchBlueprint,
 } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt, Template } from '@dxos/blueprints';
-import { Feed, Filter, Obj, Query, Ref, Tag, Type } from '@dxos/echo';
+import { Feed, Filter, JsonSchema, Obj, Query, Ref, Tag } from '@dxos/echo';
+import { View } from '@dxos/echo';
 import { ExampleFunctions, Script, Trigger, serializeFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -39,7 +40,7 @@ import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
-import { Text, View } from '@dxos/schema';
+import { Text, ViewModel } from '@dxos/schema';
 import { render } from '@dxos/storybook-utils';
 import {
   AccessToken,
@@ -399,7 +400,7 @@ export const WithMail: Story = {
       return { plugins: [InboxPlugin(), MarkdownPlugin(), ThreadPlugin()] };
     },
     config: config.remote,
-    types: [Type.Feed],
+    types: [Feed.Feed],
     onInit: async ({ space }) => {
       const feed = space.db.add(Mailbox.make({ name: 'Mailbox' }));
       const queue = space.queues.create<Message.Message>();
@@ -410,7 +411,7 @@ export const WithMail: Story = {
       await queue.append(messages);
     },
     onChatCreated: async ({ space, binder }) => {
-      const feeds = await space.db.query(Filter.type(Type.Feed)).run();
+      const feeds = await space.db.query(Filter.type(Feed.Feed)).run();
       const mailbox = feeds.find((feed) => feed.kind === Mailbox.kind);
       if (mailbox) {
         await binder.bind({ objects: [Ref.make(mailbox)] });
@@ -435,12 +436,12 @@ export const WithGmail: Story = {
       return { plugins: [InboxPlugin(), TokenManagerPlugin()] };
     },
     config: config.persistent,
-    types: [Type.Feed],
+    types: [Feed.Feed],
     onInit: async ({ space }) => {
       space.db.add(Mailbox.make({ name: 'Mailbox' }));
     },
     onChatCreated: async ({ space, binder }) => {
-      const feeds = await space.db.query(Filter.type(Type.Feed)).run();
+      const feeds = await space.db.query(Filter.type(Feed.Feed)).run();
       const mailbox = feeds.find((feed) => feed.kind === Mailbox.kind);
       if (mailbox) {
         await binder.bind({ objects: [Ref.make(mailbox)] });
@@ -465,12 +466,12 @@ export const WithCalendar: Story = {
       return { plugins: [InboxPlugin(), TokenManagerPlugin()] };
     },
     config: config.remote,
-    types: [Type.Feed, Event.Event],
+    types: [Feed.Feed, Event.Event],
     onInit: async ({ space }) => {
       space.db.add(Calendar.make({ name: 'Calendar' }));
     },
     onChatCreated: async ({ space, binder }) => {
-      const feeds = await space.db.query(Filter.type(Type.Feed)).run();
+      const feeds = await space.db.query(Filter.type(Feed.Feed)).run();
       const calendar = feeds.find((feed) => feed.kind === Calendar.kind);
       if (calendar) {
         await binder.bind({ objects: [Ref.make(calendar)] });
@@ -505,9 +506,12 @@ export const WithMap: Story = {
         import('@dxos/plugin-map/testing'),
       ]);
       const [schema] = await space.db.schemaRegistry.register([createLocationSchema()]);
-      const { view: tableView, jsonSchema } = await View.makeFromDatabase({ db: space.db, typename: schema.typename });
+      const { view: tableView, jsonSchema } = await ViewModel.makeFromDatabase({
+        db: space.db,
+        typename: schema.typename,
+      });
       const table = Table.make({ name: 'Table', view: tableView, jsonSchema });
-      const { view: mapView } = await View.makeFromDatabase({
+      const { view: mapView } = await ViewModel.makeFromDatabase({
         db: space.db,
         typename: schema.typename,
         pivotFieldName: 'location',
@@ -860,7 +864,7 @@ export const WithProject: Story = {
       Person.Person,
       Pipeline.Pipeline,
       View.View,
-      Type.Feed,
+      Feed.Feed,
     ],
     onInit: async ({ space }) => {
       await addTestData(space);
@@ -965,21 +969,21 @@ export const WithProject: Story = {
       });
       space.db.add(researchTrigger);
 
-      const mailboxView = View.make({
+      const mailboxView = ViewModel.make({
         query: Query.select(Filter.type(Message.Message)).select(Filter.tag(tagDxn)).from(mailbox),
-        jsonSchema: Type.toJsonSchema(Message.Message),
+        jsonSchema: JsonSchema.toJsonSchema(Message.Message),
       });
-      const contactsView = View.make({
+      const contactsView = ViewModel.make({
         query: contactsQuery,
-        jsonSchema: Type.toJsonSchema(Person.Person),
+        jsonSchema: JsonSchema.toJsonSchema(Person.Person),
       });
-      const organizationsView = View.make({
+      const organizationsView = ViewModel.make({
         query: organizationsQuery,
-        jsonSchema: Type.toJsonSchema(Organization.Organization),
+        jsonSchema: JsonSchema.toJsonSchema(Organization.Organization),
       });
-      const notesView = View.make({
+      const notesView = ViewModel.make({
         query: notesQuery,
-        jsonSchema: Type.toJsonSchema(Markdown.Document),
+        jsonSchema: JsonSchema.toJsonSchema(Markdown.Document),
       });
 
       space.db.add(

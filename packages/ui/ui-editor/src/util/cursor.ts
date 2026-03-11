@@ -26,7 +26,7 @@ export const overlap = (a: Range, b: Range): boolean => a.from <= b.to && a.to >
  *  while positive - with the next one.
  */
 export interface CursorConverter {
-  toCursor(position: number, assoc?: -1 | 1 | undefined): string;
+  toCursor(position: number, assoc?: -1 | 1): string;
   fromCursor(cursor: string): number;
 }
 

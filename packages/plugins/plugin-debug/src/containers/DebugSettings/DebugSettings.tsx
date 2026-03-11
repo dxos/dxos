@@ -7,7 +7,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useCapabilities } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { type ConfigProto, SaveConfig, Storage, defs } from '@dxos/config';
-import { log } from '@dxos/log';
+import { type LogBuffer, log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Icon, IconButton, Input, Select, Toast, useFileDownload, useTranslation } from '@dxos/react-ui';
@@ -30,9 +30,10 @@ const StorageAdapters = {
 export type DebugSettingsComponentProps = {
   settings: DebugSettingsProps;
   onSettingsChange: (fn: (current: DebugSettingsProps) => DebugSettingsProps) => void;
+  logBuffer: LogBuffer;
 };
 
-export const DebugSettings = ({ settings, onSettingsChange }: DebugSettingsComponentProps) => {
+export const DebugSettings = ({ settings, onSettingsChange, logBuffer }: DebugSettingsComponentProps) => {
   const { t } = useTranslation(meta.id);
   const [toast, setToast] = useState<Toast>();
   const client = useClient();
@@ -90,6 +91,13 @@ export const DebugSettings = ({ settings, onSettingsChange }: DebugSettingsCompo
     }
   };
 
+  const handleDownloadLogs = () => {
+    const ndjson = logBuffer.serialize();
+    const file = new Blob([ndjson], { type: 'application/x-ndjson' });
+    const fileName = `composer-logs-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.ndjson`;
+    download(file, fileName);
+  };
+
   const handleRepair = async () => {
     try {
       const info = await client.repair();
@@ -122,6 +130,14 @@ export const DebugSettings = ({ settings, onSettingsChange }: DebugSettingsCompo
               iconOnly
               label={t('settings download diagnostics')}
               onClick={handleDownload}
+            />
+          </Settings.ItemInput>
+          <Settings.ItemInput title={t('settings download logs')}>
+            <IconButton
+              icon='ph--download-simple--regular'
+              iconOnly
+              label={t('settings download logs')}
+              onClick={handleDownloadLogs}
             />
           </Settings.ItemInput>
           <Settings.ItemInput title={t('settings repair')}>

@@ -4,3 +4,6 @@
 
 export * from './AwaitingObject';
 export * from './CreateDialog';
+export * from './ObjectDetails';
+export * from './ObjectForm';
+export * from './SyncStatus';

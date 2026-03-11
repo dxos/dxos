@@ -8,8 +8,9 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Context } from '@dxos/context';
 import { Obj, type QueryResult, Type } from '@dxos/echo';
+import { Filter, Query } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
-import { type EchoDatabase, Filter, Query } from '@dxos/echo-db';
+import { type EchoDatabase } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { SpaceId } from '@dxos/keys';
 

@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Format, Type } from '@dxos/echo';
+import { Annotation, Format, Ref, Type } from '@dxos/echo';
 import { FieldLookupAnnotationId, GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 
 /**
@@ -70,7 +70,7 @@ export namespace TestSchema {
     ),
     email: Schema.optional(Format.Email.pipe(GeneratorAnnotation.set('internet.email'))),
     organization: Schema.optional(
-      Type.Ref(Organization).annotations({
+      Ref.Ref(Organization).annotations({
         [FieldLookupAnnotationId]: 'name',
       }),
     ),

@@ -7,7 +7,7 @@ import React, { type FC, useMemo } from 'react';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { faker } from '@dxos/random';
-import { Card } from '@dxos/react-ui-mosaic';
+import { Card } from '@dxos/react-ui';
 import { CardContainer, type CardContainerProps } from '@dxos/react-ui-mosaic/testing';
 import { Organization, Person, Pipeline, Task } from '@dxos/types';
 
@@ -22,11 +22,11 @@ export const DefaultStory = <T extends Obj.Any>({ Component, createObject, image
   const roles: CardContainerProps['role'][] = ['intrinsic', 'popover'];
 
   return (
-    <div className='h-full grid grid-rows-2 p-16 gap-16'>
+    <div className='w-full h-full grid grid-cols-2 py-16 gap-8'>
       {roles.map((role, i) => (
         <div key={i} className='flex h-full justify-center overflow-hidden'>
           <div className='flex flex-col gap-4 w-full items-center'>
-            <label className='text-sm text-description'>{role}</label>
+            <span className='text-sm text-description'>{role}</span>
             <CardContainer role={role}>
               <Card.Root border={false}>
                 <Card.Toolbar>

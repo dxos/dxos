@@ -393,11 +393,11 @@ const MainContent = forwardRef<HTMLDivElement, MainContentProps>(
   ({ asChild, classNames, bounce, handlesFocus, children, role, ...props }: MainContentProps, forwardedRef) => {
     const { navigationSidebarState, complementarySidebarState } = useMainContext(MAIN_NAME);
     const { tx } = useThemeContext();
-    const Root = asChild ? Slot : role ? 'div' : 'main';
+    const Comp = asChild ? Slot : role ? Primitive.div : 'main';
     const mover = useLandmarkMover(props.onKeyDown, '1');
 
     return (
-      <Root
+      <Comp
         role={role}
         {...(handlesFocus && { ...mover })}
         {...props}
@@ -408,7 +408,7 @@ const MainContent = forwardRef<HTMLDivElement, MainContentProps>(
         ref={forwardedRef}
       >
         {children}
-      </Root>
+      </Comp>
     );
   },
 );

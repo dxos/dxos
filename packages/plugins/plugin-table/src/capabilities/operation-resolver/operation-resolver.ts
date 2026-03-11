@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { Operation, OperationResolver } from '@dxos/operation';
 import { SpaceOperation } from '@dxos/plugin-space/types';
 import { Table } from '@dxos/react-ui-table/types';
-import { View, getTypenameFromQuery } from '@dxos/schema';
+import { ViewModel, getTypenameFromQuery } from '@dxos/schema';
 import { Task } from '@dxos/types';
 
 import { TableOperation } from '../../types';
@@ -51,7 +51,7 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: TableOperation.Create,
         handler: Effect.fnUntraced(function* ({ db, name, typename }) {
-          const { view, jsonSchema } = yield* Effect.promise(() => View.makeFromDatabase({ db, typename }));
+          const { view, jsonSchema } = yield* Effect.promise(() => ViewModel.makeFromDatabase({ db, typename }));
           const table = Table.make({ name, view, jsonSchema });
           return { object: table };
         }),
