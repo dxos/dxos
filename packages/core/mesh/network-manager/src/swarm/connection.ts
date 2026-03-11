@@ -347,7 +347,7 @@ export class Connection {
     log('protocol closed', options);
   }
 
-  private async _closeTransport(ctx: Context): Promise<void> {
+  private async _closeTransport(_ctx: Context): Promise<void> {
     log('closing transport');
     await Promise.race([this._transport?.close(), this._transportClosed.wait()]);
     log('transport closed');
@@ -358,7 +358,7 @@ export class Connection {
     this._signalSendTask.schedule();
   }
 
-  private async _flushSignalBuffer(ctx: Context): Promise<void> {
+  private async _flushSignalBuffer(_ctx: Context): Promise<void> {
     if (this._outgoingSignalBuffer.length === 0) {
       return;
     }
@@ -436,7 +436,7 @@ export class Connection {
     this.stateChanged.emit(state);
   }
 
-  private async _emitTransportStats(ctx: Context): Promise<void> {
+  private async _emitTransportStats(_ctx: Context): Promise<void> {
     const stats = await this.transport?.getStats();
     if (stats) {
       this.transportStats.emit(stats);

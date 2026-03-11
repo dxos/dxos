@@ -392,7 +392,7 @@ export class RtcPeerConnection {
     }
   }
 
-  private async _loadConnectionConfig(ctx: Context) {
+  private async _loadConnectionConfig(_ctx: Context) {
     const config = { ...this._options.webrtcConfig };
     try {
       const providedIceServers = (await this._options.iceProvider?.getIceServers()) ?? [];

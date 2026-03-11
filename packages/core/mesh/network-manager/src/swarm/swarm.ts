@@ -269,7 +269,7 @@ export class Swarm {
 
   // For debug purposes
   @synchronized
-  async goOnline(ctx: Context): Promise<void> {
+  async goOnline(_ctx: Context): Promise<void> {
     this._ctx = new Context();
   }
 
@@ -337,7 +337,7 @@ export class Swarm {
     await peer.safeDestroy(ctx, reason);
   }
 
-  private _getSwarmController(ctx: Context): SwarmController {
+  private _getSwarmController(_ctx: Context): SwarmController {
     return {
       getState: () => ({
         ownPeerId: PublicKey.from(this._ownPeer.peerKey),

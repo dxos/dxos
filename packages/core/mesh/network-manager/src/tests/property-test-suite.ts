@@ -72,7 +72,7 @@ export const propertyTestSuite = () => {
       constructor(readonly peerId: PublicKey) {}
 
       check = (model: Model) => !model.peers.has(this.peerId);
-      async run(model: Model, real: Real) {
+      async run(_model: Model, _real: Real) {
         // TODO(burdon): ???
         throw new Error('Not implemented.');
         // model.peers.add(this.peerId);

@@ -45,7 +45,7 @@ describe.skip('Connection', () => {
       sessionId,
       true,
       {
-        offer: async (msg) => ({ accept: true }),
+        offer: async (_msg) => ({ accept: true }),
         signal: async (msg) => {
           await fastConnection.signal(Context.default(), msg);
         },
@@ -67,7 +67,7 @@ describe.skip('Connection', () => {
       sessionId,
       false,
       {
-        offer: async (msg) => ({ accept: true }),
+        offer: async (_msg) => ({ accept: true }),
         signal: async (msg) => {
           await slowConnection.signal(Context.default(), msg);
         },
