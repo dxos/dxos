@@ -488,6 +488,43 @@ export default tseslint.config(
             'SingleClientCoordinator',
             'SharedWorkerCoordinator',
             'MemoryWorkerCoordiantor',
+
+            // @dxos/app-framework — plugin infrastructure (implements Plugin/capability interfaces).
+            'CapabilityManagerImpl',
+            'ManagerImpl',
+            'PluginBuilderImpl',
+
+            // @dxos/app-graph — graph builder/implementation (implements Graph interfaces).
+            'GraphBuilderImpl',
+            'GraphImpl',
+
+            // @dxos/config — configuration utility/public API.
+            'Config',
+
+            // @dxos/examples — Playwright test utility.
+            'AppManager',
+
+            // @dxos/migrations — migration utility/public API.
+            'MigrationBuilder',
+
+            // @dxos/observability — tracing/observability infrastructure.
+            'OtelLogs',
+            'OtelMetrics',
+            'TagInjectorSpanProcessor',
+            'OtelTraces',
+            'LogBuffer',
+            'ObservabilityImpl',
+
+            // @dxos/react-client — React hooks/providers.
+            'KeyStore',
+
+            // @dxos/schema — schema-related utility/public API.
+            'SpaceGraphModel',
+            'ProjectionModel',
+
+            // @dxos/shell — shell runtime (implements ShellRuntime interface).
+            'MemoryShellRuntime',
+            'ShellRuntimeImpl',
           ],
           allowMethods: [
             'toJSON',
