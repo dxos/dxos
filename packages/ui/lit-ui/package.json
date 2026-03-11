@@ -4,30 +4,17 @@
   "description": "Web Components for DXOS using Lit",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "license": "MIT",
-  "author": "DXOS.org",
   "repository": {
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "files": [
-    "src",
-    "dist"
-  ],
-  "type": "module",
+  "license": "MIT",
+  "author": "DXOS.org",
   "sideEffects": [
     "*.css",
     "*.pcss"
   ],
-  "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "react": [
-        "./dist/src/react.d.ts"
-      ]
-    }
-  },
+  "type": "module",
   "exports": {
     ".": {
       "types": "./dist/src/index.d.ts",
@@ -40,9 +27,19 @@
     "./dx-avatar.pcss": "./src/dx-avatar/dx-avatar.pcss",
     "./dx-tag-picker.pcss": "./src/dx-tag-picker/dx-tag-picker.pcss"
   },
-  "publishConfig": {
-    "access": "public"
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "react": [
+        "./dist/src/react.d.ts"
+      ]
+    }
   },
+  "files": [
+    "src",
+    "dist"
+  ],
   "dependencies": {
     "@dxos/react-hooks": "workspace:*",
     "@dxos/ui-types": "workspace:*",
@@ -52,5 +49,8 @@
   },
   "devDependencies": {
     "@dxos/test-utils": "workspace:*"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

@@ -4,9 +4,17 @@
     "allowSyntheticDefaultImports": true,
     "emitDeclarationOnly": false,
     "outDir": "dist",
-    "types": ["node"]
+    "types": [
+      "node"
+    ]
   },
-  "exclude": ["dist", "node_modules", "out"],
-  "include": ["src/**/*"],
+  "exclude": [
+    "dist",
+    "node_modules",
+    "out"
+  ],
+  "include": [
+    "src/**/*"
+  ],
   "references": []
 }

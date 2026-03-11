@@ -3,18 +3,15 @@
   "version": "0.8.3",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "license": "MIT",
-  "author": "DXOS.org",
   "repository": {
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
+  "license": "MIT",
+  "author": "DXOS.org",
   "sideEffects": true,
   "main": "./dist/src/index.js",
   "types": "./dist/src/index.d.ts",
-  "publishConfig": {
-    "access": "public"
-  },
   "dependencies": {
     "debug": "catalog:",
     "domain-browser": "catalog:",
@@ -23,5 +20,8 @@
     "readable-stream": "catalog:",
     "tty-browserify": "catalog:"
   },
-  "devDependencies": {}
+  "devDependencies": {},
+  "publishConfig": {
+    "access": "public"
+  }
 }

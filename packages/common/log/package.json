@@ -4,22 +4,14 @@
   "description": "Logger",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "license": "MIT",
-  "author": "DXOS.org",
   "repository": {
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "files": [
-    "dist",
-    "src"
-  ],
-  "type": "module",
+  "license": "MIT",
+  "author": "DXOS.org",
   "sideEffects": true,
-  "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {}
-  },
+  "type": "module",
   "imports": {
     "#platform": {
       "source": {
@@ -50,9 +42,14 @@
       }
     }
   },
-  "publishConfig": {
-    "access": "public"
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {}
   },
+  "files": [
+    "dist",
+    "src"
+  ],
   "dependencies": {
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
@@ -63,5 +60,8 @@
   "devDependencies": {
     "@types/js-yaml": "catalog:",
     "@types/lodash.defaultsdeep": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

@@ -1,10 +1,20 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "types": ["node"]
+    "types": [
+      "node"
+    ]
   },
-  "exclude": ["*.t.ts", "vite.config.ts"],
-  "include": ["../ui-editor/src/util/util.ts", "src/**/*.ts", "src/**/*.tsx", "src/*.ts"],
+  "exclude": [
+    "*.t.ts",
+    "vite.config.ts"
+  ],
+  "include": [
+    "../ui-editor/src/util/util.ts",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/*.ts"
+  ],
   "references": [
     {
       "path": "../../common/async"

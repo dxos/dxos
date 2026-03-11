@@ -3,26 +3,14 @@
   "version": "0.8.3",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "license": "MIT",
-  "author": "DXOS.org",
   "repository": {
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "files": [
-    "dist",
-    "src"
-  ],
-  "type": "module",
+  "license": "MIT",
+  "author": "DXOS.org",
   "sideEffects": false,
-  "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "stream": [
-        "dist/types/src/stream.d.ts"
-      ]
-    }
-  },
+  "type": "module",
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
@@ -41,9 +29,18 @@
       }
     }
   },
-  "publishConfig": {
-    "access": "public"
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "stream": [
+        "dist/types/src/stream.d.ts"
+      ]
+    }
   },
+  "files": [
+    "dist",
+    "src"
+  ],
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/context": "workspace:*",
@@ -57,5 +54,8 @@
   },
   "devDependencies": {
     "@types/lodash.merge": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

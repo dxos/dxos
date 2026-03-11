@@ -4,23 +4,14 @@
   "description": "DXOS brand assets.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "license": "MIT",
-  "author": "DXOS.org",
   "repository": {
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "files": [
-    "assets",
-    "dist",
-    "src"
-  ],
-  "type": "module",
+  "license": "MIT",
+  "author": "DXOS.org",
   "sideEffects": false,
-  "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {}
-  },
+  "type": "module",
   "exports": {
     ".": {
       "source": "./src/index.ts",
@@ -28,6 +19,15 @@
       "browser": "./dist/lib/browser/index.mjs"
     }
   },
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {}
+  },
+  "files": [
+    "assets",
+    "dist",
+    "src"
+  ],
   "dependencies": {
     "d3": "catalog:"
   },

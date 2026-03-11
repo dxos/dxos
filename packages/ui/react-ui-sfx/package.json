@@ -4,21 +4,13 @@
   "description": "Special effects.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "license": "MIT",
-  "author": "DXOS.org",
   "repository": {
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "files": [
-    "dist",
-    "src"
-  ],
+  "license": "MIT",
+  "author": "DXOS.org",
   "type": "module",
-  "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {}
-  },
   "exports": {
     ".": {
       "source": "./src/index.ts",
@@ -27,9 +19,14 @@
       "node": "./dist/lib/node-esm/index.mjs"
     }
   },
-  "publishConfig": {
-    "access": "public"
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {}
   },
+  "files": [
+    "dist",
+    "src"
+  ],
   "scripts": {
     "glsl": "mkdir -p ./src/shaders/glsl/gen && pnpm run glsl:sim:frag && pnpm run glsl:sim:vert && pnpm run glsl:dof:frag && pnpm run glsl:dof:vert",
     "glsl:dof:frag": "pnpm glslify ./src/shaders/glsl/dof.frag > ./src/shaders/glsl/gen/dof.frag",
@@ -76,5 +73,8 @@
     "@dxos/ui-theme": "workspace:*",
     "react": "catalog:",
     "react-dom": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

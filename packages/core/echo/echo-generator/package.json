@@ -4,22 +4,14 @@
   "description": "ECHO data generator for testing.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "license": "MIT",
-  "author": "info@dxos.org",
   "repository": {
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "files": [
-    "dist",
-    "src"
-  ],
-  "type": "module",
+  "license": "MIT",
+  "author": "info@dxos.org",
   "sideEffects": false,
-  "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {}
-  },
+  "type": "module",
   "exports": {
     ".": {
       "source": "./src/index.ts",
@@ -27,9 +19,14 @@
       "default": "./dist/lib/neutral/index.mjs"
     }
   },
-  "publishConfig": {
-    "access": "public"
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {}
   },
+  "files": [
+    "dist",
+    "src"
+  ],
   "dependencies": {
     "@automerge/automerge": "catalog:",
     "@dxos/client": "workspace:*",
@@ -47,5 +44,8 @@
   "peerDependencies": {
     "@dxos/random": "workspace:*",
     "effect": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

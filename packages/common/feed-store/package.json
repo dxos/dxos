@@ -4,28 +4,14 @@
   "description": "A consistent store for hypercore feeds.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "license": "MIT",
-  "author": "info@dxos.org",
   "repository": {
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "files": [
-    "testing.d.ts",
-    "testing.js",
-    "dist",
-    "src"
-  ],
-  "type": "module",
+  "license": "MIT",
+  "author": "info@dxos.org",
   "sideEffects": false,
-  "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "testing": [
-        "dist/types/src/testing/index.d.ts"
-      ]
-    }
-  },
+  "type": "module",
   "exports": {
     ".": {
       "source": "./src/index.ts",
@@ -40,9 +26,20 @@
       "node": "./dist/lib/node-esm/testing/index.mjs"
     }
   },
-  "publishConfig": {
-    "access": "public"
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "testing": [
+        "dist/types/src/testing/index.d.ts"
+      ]
+    }
   },
+  "files": [
+    "testing.d.ts",
+    "testing.js",
+    "dist",
+    "src"
+  ],
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
@@ -69,6 +66,9 @@
   },
   "optionalDependencies": {
     "@dxos/random": "workspace:*"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "beast": {
     "classDiagrams": [

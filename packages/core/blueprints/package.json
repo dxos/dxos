@@ -4,18 +4,13 @@
   "description": "Blueprint definitions.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "license": "MIT",
-  "author": "DXOS.org",
   "repository": {
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "files": [
-    "dist",
-    "src"
-  ],
+  "license": "MIT",
+  "author": "DXOS.org",
   "type": "module",
-  "types": "dist/types/src/index.d.ts",
   "exports": {
     ".": {
       "source": "./src/index.ts",
@@ -23,9 +18,11 @@
       "default": "./dist/lib/neutral/index.mjs"
     }
   },
-  "publishConfig": {
-    "access": "public"
-  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
   "dependencies": {
     "@dxos/ai": "workspace:*",
     "@dxos/echo": "workspace:*",
@@ -41,5 +38,8 @@
   "devDependencies": {},
   "peerDependencies": {
     "effect": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

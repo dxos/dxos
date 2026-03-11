@@ -1,9 +1,15 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "types": ["node"]
+    "types": [
+      "node"
+    ]
   },
-  "include": ["../react-ui/src/exemplars/slot.stories.tsx", "../react-ui/src/primitives/Layout", "src"],
+  "include": [
+    "../react-ui/src/exemplars/slot.stories.tsx",
+    "../react-ui/src/primitives/Layout",
+    "src"
+  ],
   "references": [
     {
       "path": "../../common/async"

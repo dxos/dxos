@@ -4,25 +4,13 @@
   "description": "A collection of picker components.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "license": "MIT",
-  "author": "DXOS.org",
   "repository": {
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "files": [
-    "dist",
-    "src"
-  ],
+  "license": "MIT",
+  "author": "DXOS.org",
   "type": "module",
-  "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "icons": [
-        "./dist/types/src/components/IconPicker/icons.d.ts"
-      ]
-    }
-  },
   "exports": {
     ".": {
       "source": "./src/index.ts",
@@ -37,9 +25,18 @@
       "node": "./dist/lib/node-esm/components/IconPicker/icons.mjs"
     }
   },
-  "publishConfig": {
-    "access": "public"
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "icons": [
+        "./dist/types/src/components/IconPicker/icons.d.ts"
+      ]
+    }
   },
+  "files": [
+    "dist",
+    "src"
+  ],
   "dependencies": {
     "@dxos/log": "workspace:*",
     "@dxos/ui-types": "workspace:*",
@@ -64,5 +61,8 @@
     "@dxos/ui-theme": "workspace:*",
     "react": "catalog:",
     "react-dom": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

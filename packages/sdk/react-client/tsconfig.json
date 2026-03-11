@@ -3,7 +3,10 @@
   "compilerOptions": {
     "module": "ESNext"
   },
-  "include": ["playwright", "src"],
+  "include": [
+    "playwright",
+    "src"
+  ],
   "references": [
     {
       "path": "../../common/async"

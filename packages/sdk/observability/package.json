@@ -4,23 +4,14 @@
   "description": "Provides a common interface for app and platform observability",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "license": "MIT",
-  "author": "DXOS.org",
   "repository": {
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "files": [
-    "dist",
-    "src"
-  ],
-  "type": "module",
+  "license": "MIT",
+  "author": "DXOS.org",
   "sideEffects": false,
-  "browser": {
-    "./src/storage/node.ts": "./src/storage/browser.ts",
-    "./src/extensions/otel/traces.ts": "./src/extensions/otel/traces-browser.ts"
-  },
-  "types": "dist/types/src/index.d.ts",
+  "type": "module",
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
@@ -28,9 +19,15 @@
       "node": "./dist/lib/node-esm/index.mjs"
     }
   },
-  "publishConfig": {
-    "access": "public"
+  "browser": {
+    "./src/storage/node.ts": "./src/storage/browser.ts",
+    "./src/extensions/otel/traces.ts": "./src/extensions/otel/traces-browser.ts"
   },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
@@ -74,5 +71,8 @@
   "peerDependencies": {
     "@effect/platform": "catalog:",
     "effect": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

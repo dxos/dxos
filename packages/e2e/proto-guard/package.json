@@ -5,19 +5,14 @@
   "description": "Test to detect breaking change in DXOS protocols and version them.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "license": "MIT",
-  "author": "DXOS.org",
   "repository": {
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "files": [
-    "dist",
-    "src"
-  ],
-  "type": "module",
+  "license": "MIT",
+  "author": "DXOS.org",
   "sideEffects": true,
-  "types": "dist/types/src/index.d.ts",
+  "type": "module",
   "exports": {
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
@@ -26,9 +21,11 @@
       "require": "./dist/lib/node/index.cjs"
     }
   },
-  "publishConfig": {
-    "access": "restricted"
-  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
   "scripts": {
     "snapshot": "moon run proto-guard:build && vite-node ./src/bin/snapshot.ts"
   },
@@ -51,5 +48,8 @@
   },
   "devDependencies": {
     "@types/yargs": "catalog:"
+  },
+  "publishConfig": {
+    "access": "restricted"
   }
 }

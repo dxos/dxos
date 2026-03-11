@@ -1,7 +1,10 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {},
-  "include": ["src", "src/**/*.json"],
+  "include": [
+    "src",
+    "src/**/*.json"
+  ],
   "references": [
     {
       "path": "../../common/async"

@@ -4,31 +4,16 @@
   "description": "GEM Graph.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "license": "MIT",
-  "author": "DXOS.org",
   "repository": {
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "files": [
-    "testing.d.ts",
-    "testing.js",
-    "dist",
-    "src",
-    "styles"
-  ],
-  "type": "module",
+  "license": "MIT",
+  "author": "DXOS.org",
   "sideEffects": [
     "*.css"
   ],
-  "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "testing": [
-        "dist/types/src/testing/index.d.ts"
-      ]
-    }
-  },
+  "type": "module",
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
@@ -42,9 +27,21 @@
     },
     "./styles/graph.css": "./styles/graph.css"
   },
-  "publishConfig": {
-    "access": "public"
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "testing": [
+        "dist/types/src/testing/index.d.ts"
+      ]
+    }
   },
+  "files": [
+    "testing.d.ts",
+    "testing.js",
+    "dist",
+    "src",
+    "styles"
+  ],
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/debug": "workspace:*",
@@ -88,5 +85,8 @@
   },
   "optionalDependencies": {
     "@dxos/random": "workspace:*"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

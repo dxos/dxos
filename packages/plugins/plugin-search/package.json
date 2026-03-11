@@ -4,19 +4,14 @@
   "description": "Search plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "license": "MIT",
-  "author": "DXOS.org",
   "repository": {
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "files": [
-    "dist",
-    "src"
-  ],
-  "type": "module",
+  "license": "MIT",
+  "author": "DXOS.org",
   "sideEffects": true,
-  "types": "dist/types/src/index.d.ts",
+  "type": "module",
   "exports": {
     ".": {
       "source": "./src/index.ts",
@@ -25,9 +20,11 @@
       "node": "./dist/lib/node-esm/index.mjs"
     }
   },
-  "publishConfig": {
-    "access": "public"
-  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
   "dependencies": {
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
@@ -83,5 +80,8 @@
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

@@ -4,22 +4,14 @@
   "description": "Replicator extension for teleport.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "license": "MIT",
-  "author": "DXOS.org",
   "repository": {
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "files": [
-    "dist",
-    "src"
-  ],
-  "type": "module",
+  "license": "MIT",
+  "author": "DXOS.org",
   "sideEffects": false,
-  "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {}
-  },
+  "type": "module",
   "exports": {
     ".": {
       "source": "./src/index.ts",
@@ -27,9 +19,14 @@
       "default": "./dist/lib/neutral/index.mjs"
     }
   },
-  "publishConfig": {
-    "access": "public"
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {}
   },
+  "files": [
+    "dist",
+    "src"
+  ],
   "scripts": {
     "check": "true"
   },
@@ -51,5 +48,8 @@
     "@dxos/keyring": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
     "fast-check": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

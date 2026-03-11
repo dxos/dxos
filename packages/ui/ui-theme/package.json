@@ -4,27 +4,16 @@
   "description": "A set of design system tokens to use with DXOS UI.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "license": "MIT",
-  "author": "DXOS.org",
   "repository": {
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "files": [
-    "dist",
-    "src"
-  ],
-  "type": "module",
+  "license": "MIT",
+  "author": "DXOS.org",
   "sideEffects": [
     "*.css"
   ],
-  "typesVersions": {
-    "*": {
-      "plugin": [
-        "dist/types/src/plugins/ThemePlugin.d.ts"
-      ]
-    }
-  },
+  "type": "module",
   "exports": {
     ".": {
       "source": "./src/index.ts",
@@ -38,9 +27,17 @@
       "require": "./dist/plugin/node-cjs/plugins/ThemePlugin.cjs"
     }
   },
-  "publishConfig": {
-    "access": "public"
+  "typesVersions": {
+    "*": {
+      "plugin": [
+        "dist/types/src/plugins/ThemePlugin.d.ts"
+      ]
+    }
   },
+  "files": [
+    "dist",
+    "src"
+  ],
   "scripts": {
     "audit-classes": "npx tsx bin/audit-classes.mts",
     "tailwind-check": "tailwindcss -i ./dist/plugin/node-esm/theme.css --config ./src/tailwind.ts --content \"./src/**/*.{js,ts,jsx,tsx,vue}\" --check"
@@ -72,5 +69,8 @@
     "@types/postcss-import": "catalog:",
     "esbuild": "catalog:",
     "vite": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

@@ -1,10 +1,18 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "lib": ["DOM", "ES2021"],
-    "types": ["@types/node"]
+    "lib": [
+      "DOM",
+      "ES2021"
+    ],
+    "types": [
+      "@types/node"
+    ]
   },
-  "include": ["src", "test"],
+  "include": [
+    "src",
+    "test"
+  ],
   "references": [
     {
       "path": "../web-context"

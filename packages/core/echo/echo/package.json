@@ -4,18 +4,14 @@
   "description": "ECHO API",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "license": "MIT",
-  "author": "info@dxos.org",
   "repository": {
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "files": [
-    "dist",
-    "src"
-  ],
-  "type": "module",
+  "license": "MIT",
+  "author": "info@dxos.org",
   "sideEffects": false,
+  "type": "module",
   "exports": {
     ".": {
       "source": "./src/index.ts",
@@ -123,9 +119,10 @@
       "default": "./dist/lib/neutral/Type.mjs"
     }
   },
-  "publishConfig": {
-    "access": "public"
-  },
+  "files": [
+    "dist",
+    "src"
+  ],
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/context": "workspace:*",
@@ -140,6 +137,9 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "beast": {}
 }

@@ -4,17 +4,17 @@
   "private": true,
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "license": "MIT",
-  "author": "info@dxos.org",
   "repository": {
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
+  "license": "MIT",
+  "author": "info@dxos.org",
+  "sideEffects": false,
+  "type": "module",
+  "main": "dist/src/main.js",
+  "types": "dist/src/index.d.ts",
   "bin": {
     "dx-killorphans": "src/killorphans.mjs"
-  },
-  "type": "module",
-  "sideEffects": false,
-  "main": "dist/src/main.js",
-  "types": "dist/src/index.d.ts"
+  }
 }

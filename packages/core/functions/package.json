@@ -4,20 +4,14 @@
   "description": "Functions API.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "license": "MIT",
-  "author": "info@dxos.org",
   "repository": {
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "files": [
-    "dist",
-    "schema",
-    "src"
-  ],
-  "type": "module",
+  "license": "MIT",
+  "author": "info@dxos.org",
   "sideEffects": false,
-  "types": "dist/types/src/index.d.ts",
+  "type": "module",
   "exports": {
     ".": {
       "source": "./src/index.ts",
@@ -25,9 +19,12 @@
       "default": "./dist/lib/neutral/index.mjs"
     }
   },
-  "publishConfig": {
-    "access": "public"
-  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "schema",
+    "src"
+  ],
   "scripts": {},
   "dependencies": {
     "@dxos/ai": "workspace:*",
@@ -47,5 +44,8 @@
     "@effect/ai-anthropic": "catalog:",
     "@effect/platform": "catalog:",
     "effect": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

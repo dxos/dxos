@@ -4,46 +4,14 @@
   "description": "A framework for building applications from composible plugins.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "license": "MIT",
-  "author": "DXOS.org",
   "repository": {
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "type": "module",
+  "license": "MIT",
+  "author": "DXOS.org",
   "sideEffects": false,
-  "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "ActivationEvent": [
-        "dist/types/src/activation-event/index.d.ts"
-      ],
-      "ActivationEvents": [
-        "dist/types/src/common/activation-events.d.ts"
-      ],
-      "Capabilities": [
-        "dist/types/src/common/capabilities.d.ts"
-      ],
-      "Capability": [
-        "dist/types/src/capability/index.d.ts"
-      ],
-      "Plugin": [
-        "dist/types/src/plugin/index.d.ts"
-      ],
-      "PluginManager": [
-        "dist/types/src/plugin-manager/index.d.ts"
-      ],
-      "cli": [
-        "dist/types/src/cli/index.d.ts"
-      ],
-      "testing": [
-        "dist/types/src/testing/index.d.ts"
-      ],
-      "ui": [
-        "dist/types/src/ui/index.d.ts"
-      ]
-    }
-  },
+  "type": "module",
   "exports": {
     ".": {
       "source": "./src/index.ts",
@@ -106,8 +74,37 @@
       "types": "./dist/types/src/ui/index.d.ts"
     }
   },
-  "publishConfig": {
-    "access": "public"
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "ActivationEvent": [
+        "dist/types/src/activation-event/index.d.ts"
+      ],
+      "ActivationEvents": [
+        "dist/types/src/common/activation-events.d.ts"
+      ],
+      "Capabilities": [
+        "dist/types/src/common/capabilities.d.ts"
+      ],
+      "Capability": [
+        "dist/types/src/capability/index.d.ts"
+      ],
+      "Plugin": [
+        "dist/types/src/plugin/index.d.ts"
+      ],
+      "PluginManager": [
+        "dist/types/src/plugin-manager/index.d.ts"
+      ],
+      "cli": [
+        "dist/types/src/cli/index.d.ts"
+      ],
+      "testing": [
+        "dist/types/src/testing/index.d.ts"
+      ],
+      "ui": [
+        "dist/types/src/ui/index.d.ts"
+      ]
+    }
   },
   "scripts": {
     "typedoc": "typedoc --out typedoc"
@@ -149,5 +146,8 @@
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

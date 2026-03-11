@@ -4,22 +4,14 @@
   "description": "Multiple random storage types.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "license": "MIT",
-  "author": "DXOS.org",
   "repository": {
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "files": [
-    "dist",
-    "src"
-  ],
-  "type": "module",
+  "license": "MIT",
+  "author": "DXOS.org",
   "sideEffects": false,
-  "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {}
-  },
+  "type": "module",
   "imports": {
     "#storage": {
       "source": {
@@ -39,9 +31,14 @@
       "node": "./dist/lib/node-esm/index.mjs"
     }
   },
-  "publishConfig": {
-    "access": "public"
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {}
   },
+  "files": [
+    "dist",
+    "src"
+  ],
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/debug": "workspace:*",
@@ -66,5 +63,8 @@
     "@types/randombytes": "catalog:",
     "random-access-idb": "catalog:",
     "randombytes": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

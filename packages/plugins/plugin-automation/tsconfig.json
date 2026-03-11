@@ -1,9 +1,15 @@
 {
-  "extends": ["../../../tsconfig.base.json"],
+  "extends": [
+    "../../../tsconfig.base.json"
+  ],
   "compilerOptions": {
-    "types": ["node"]
+    "types": [
+      "node"
+    ]
   },
-  "include": ["src"],
+  "include": [
+    "src"
+  ],
   "references": [
     {
       "path": "../../common/async"

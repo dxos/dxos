@@ -4,27 +4,14 @@
   "description": "AI utils.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "license": "MIT",
-  "author": "info@dxos.org",
   "repository": {
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "files": [
-    "dist",
-    "vendor",
-    "src"
-  ],
-  "type": "module",
+  "license": "MIT",
+  "author": "info@dxos.org",
   "sideEffects": false,
-  "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "testing": [
-        "dist/types/src/testing/index.d.ts"
-      ]
-    }
-  },
+  "type": "module",
   "imports": {
     "#parsimmon": "./vendor/parsimmon.mjs"
   },
@@ -45,9 +32,19 @@
       "default": "./dist/lib/neutral/testing/index.mjs"
     }
   },
-  "publishConfig": {
-    "access": "public"
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "testing": [
+        "dist/types/src/testing/index.d.ts"
+      ]
+    }
   },
+  "files": [
+    "dist",
+    "vendor",
+    "src"
+  ],
   "scripts": {
     "run:chat": "vite-node src/bin/chat.ts"
   },
@@ -88,6 +85,9 @@
   },
   "peerDependencies": {
     "effect": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "beast": {}
 }

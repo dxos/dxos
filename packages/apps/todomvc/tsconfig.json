@@ -2,13 +2,24 @@
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "emitDeclarationOnly": false,
-    "lib": ["DOM", "ESNext"],
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
     "module": "ESNext",
     "outDir": "dist/types",
-    "types": ["node", "sharedworker"]
+    "types": [
+      "node",
+      "sharedworker"
+    ]
   },
-  "exclude": ["src/playwright/playwright.config.ts", "vite.config.ts"],
-  "include": ["src"],
+  "exclude": [
+    "src/playwright/playwright.config.ts",
+    "vite.config.ts"
+  ],
+  "include": [
+    "src"
+  ],
   "references": [
     {
       "path": "../../common/async"

@@ -1,7 +1,10 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {},
-  "include": ["src", "test"],
+  "include": [
+    "src",
+    "test"
+  ],
   "references": [
     {
       "path": "../node-std"

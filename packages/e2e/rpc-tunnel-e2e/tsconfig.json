@@ -2,13 +2,23 @@
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "emitDeclarationOnly": false,
-    "lib": ["DOM", "ESNext"],
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
     "noEmit": true,
     "outDir": "dist",
-    "types": ["node", "sharedworker"]
+    "types": [
+      "node",
+      "sharedworker"
+    ]
   },
-  "exclude": ["src/playwright/playwright.config.ts"],
-  "include": ["src"],
+  "exclude": [
+    "src/playwright/playwright.config.ts"
+  ],
+  "include": [
+    "src"
+  ],
   "references": [
     {
       "path": "../../common/async"

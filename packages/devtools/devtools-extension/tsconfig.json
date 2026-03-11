@@ -5,10 +5,15 @@
     "declaration": false,
     "declarationMap": false,
     "emitDeclarationOnly": false,
-    "lib": ["DOM", "ES6"],
+    "lib": [
+      "DOM",
+      "ES6"
+    ],
     "rootDir": "src"
   },
-  "include": ["src"],
+  "include": [
+    "src"
+  ],
   "references": [
     {
       "path": "../../common/async"

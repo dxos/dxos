@@ -4,16 +4,14 @@
   "private": true,
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "license": "MIT",
-  "author": "info@dxos.org",
   "repository": {
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "type": "module",
+  "license": "MIT",
+  "author": "info@dxos.org",
   "sideEffects": true,
-  "main": "dist/src/main.js",
-  "types": "dist/src/index.d.ts",
+  "type": "module",
   "exports": {
     ".": {
       "source": "./dist/src/index.ts",
@@ -21,6 +19,8 @@
       "default": "./dist/src/index.js"
     }
   },
+  "main": "dist/src/main.js",
+  "types": "dist/src/index.d.ts",
   "scripts": {
     "toolbox": "vite-node ./src/main.ts"
   },

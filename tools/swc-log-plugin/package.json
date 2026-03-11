@@ -7,15 +7,15 @@
   ],
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "license": "ISC",
-  "author": "info@dxos.org",
   "repository": {
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
+  "license": "ISC",
+  "author": "info@dxos.org",
+  "sideEffects": true,
+  "main": "./target/wasm32-wasip1/release/swc_log_plugin.wasm",
   "files": [
     "./target/wasm32-wasip1/release/swc_log_plugin.wasm"
-  ],
-  "sideEffects": true,
-  "main": "./target/wasm32-wasip1/release/swc_log_plugin.wasm"
+  ]
 }

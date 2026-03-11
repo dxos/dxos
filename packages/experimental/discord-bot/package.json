@@ -5,22 +5,14 @@
   "description": "Experimental Discord bot.",
   "homepage": "https://github.com/dxos",
   "bugs": "https://github.com/dxos/issues",
-  "license": "MIT",
-  "author": "DXOS.org",
   "repository": {
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "files": [
-    "dist",
-    "src"
-  ],
-  "type": "module",
+  "license": "MIT",
+  "author": "DXOS.org",
   "sideEffects": true,
-  "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {}
-  },
+  "type": "module",
   "exports": {
     ".": {
       "source": "./src/index.ts",
@@ -29,6 +21,14 @@
       "node": "./dist/lib/node-esm/index.mjs"
     }
   },
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {}
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
   "scripts": {
     "test-bot": "vite-node ./src/test-bot.ts"
   },

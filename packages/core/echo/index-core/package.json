@@ -4,18 +4,14 @@
   "description": "Indexing core.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "license": "MIT",
-  "author": "info@dxos.org",
   "repository": {
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "files": [
-    "dist",
-    "src"
-  ],
-  "type": "module",
+  "license": "MIT",
+  "author": "info@dxos.org",
   "sideEffects": false,
+  "type": "module",
   "exports": {
     ".": {
       "source": "./src/index.ts",
@@ -23,9 +19,10 @@
       "default": "./dist/lib/neutral/index.mjs"
     }
   },
-  "publishConfig": {
-    "access": "public"
-  },
+  "files": [
+    "dist",
+    "src"
+  ],
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/context": "workspace:*",
@@ -45,6 +42,9 @@
   },
   "devDependencies": {
     "@effect/sql-sqlite-node": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "beast": {}
 }

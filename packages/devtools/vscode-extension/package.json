@@ -9,15 +9,12 @@
   ],
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "license": "MIT",
-  "author": "info@dxos.org",
   "repository": {
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "devDependencies": {
-    "@types/vscode": "catalog:"
-  },
+  "license": "MIT",
+  "author": "info@dxos.org",
   "contributes": {
     "commands": [
       {
@@ -47,6 +44,9 @@
     }
   },
   "activationEvents": [],
+  "devDependencies": {
+    "@types/vscode": "catalog:"
+  },
   "engines": {
     "vscode": "^1.74.0"
   }

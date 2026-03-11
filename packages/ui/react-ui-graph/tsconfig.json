@@ -3,7 +3,10 @@
   "compilerOptions": {
     "strict": false
   },
-  "include": ["src", "stories"],
+  "include": [
+    "src",
+    "stories"
+  ],
   "references": [
     {
       "path": "../../common/async"

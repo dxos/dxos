@@ -3,19 +3,19 @@
   "version": "0.8.3",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "license": "MIT",
-  "author": "info@dxos.org",
   "repository": {
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "type": "module",
+  "license": "MIT",
+  "author": "info@dxos.org",
   "sideEffects": true,
+  "type": "module",
   "main": "dist/src/index.js",
-  "publishConfig": {
-    "access": "public"
-  },
   "scripts": {
     "build": "tsc"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

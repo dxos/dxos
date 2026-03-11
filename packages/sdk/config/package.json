@@ -4,33 +4,14 @@
   "description": "Config utilities",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "license": "MIT",
-  "author": "DXOS.org",
   "repository": {
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "files": [
-    "dist",
-    "src"
-  ],
-  "type": "module",
+  "license": "MIT",
+  "author": "DXOS.org",
   "sideEffects": false,
-  "main": "dist/lib/node/index.cjs",
-  "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "esbuild-plugin": [
-        "dist/types/src/esbuild-plugin/index.d.ts"
-      ],
-      "rollup-plugin": [
-        "dist/types/src/rollup-plugin/index.d.ts"
-      ],
-      "vite-plugin": [
-        "dist/types/src/vite-plugin/index.d.ts"
-      ]
-    }
-  },
+  "type": "module",
   "imports": {
     "#loaders": {
       "source": {
@@ -89,9 +70,25 @@
       "require": "./dist/plugin/node/vite-plugin.cjs"
     }
   },
-  "publishConfig": {
-    "access": "public"
+  "main": "dist/lib/node/index.cjs",
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "esbuild-plugin": [
+        "dist/types/src/esbuild-plugin/index.d.ts"
+      ],
+      "rollup-plugin": [
+        "dist/types/src/rollup-plugin/index.d.ts"
+      ],
+      "vite-plugin": [
+        "dist/types/src/vite-plugin/index.d.ts"
+      ]
+    }
   },
+  "files": [
+    "dist",
+    "src"
+  ],
   "scripts": {
     "test-build": "node ./src/testing/build.js"
   },
@@ -115,6 +112,9 @@
     "@types/lodash.defaultsdeep": "catalog:",
     "@types/lodash.ismatch": "catalog:",
     "webpack": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "typedoc": {
     "entryPoint": "src/index.ts"

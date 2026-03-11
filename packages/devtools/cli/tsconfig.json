@@ -5,9 +5,13 @@
     "jsxImportSource": "@opentui/solid",
     "noEmit": true,
     "rootDir": "src",
-    "types": ["node"]
+    "types": [
+      "node"
+    ]
   },
-  "include": ["src"],
+  "include": [
+    "src"
+  ],
   "references": [
     {
       "path": "../../common/async"

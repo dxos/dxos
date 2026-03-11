@@ -4,30 +4,14 @@
   "description": "Prompt chain plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "license": "MIT",
-  "author": "DXOS.org",
   "repository": {
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "files": [
-    "assets",
-    "dist",
-    "src"
-  ],
-  "type": "module",
+  "license": "MIT",
+  "author": "DXOS.org",
   "sideEffects": true,
-  "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "hooks": [
-        "dist/types/src/hooks/index.d.ts"
-      ],
-      "types": [
-        "dist/types/src/types/index.d.ts"
-      ]
-    }
-  },
+  "type": "module",
   "exports": {
     ".": {
       "source": "./src/index.ts",
@@ -53,9 +37,22 @@
       "node": "./dist/lib/node-esm/types/index.mjs"
     }
   },
-  "publishConfig": {
-    "access": "public"
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "hooks": [
+        "dist/types/src/hooks/index.d.ts"
+      ],
+      "types": [
+        "dist/types/src/types/index.d.ts"
+      ]
+    }
   },
+  "files": [
+    "assets",
+    "dist",
+    "src"
+  ],
   "dependencies": {
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
@@ -117,5 +114,8 @@
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

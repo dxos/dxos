@@ -4,50 +4,14 @@
   "description": "DXOS Client API.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "license": "MIT",
-  "author": "DXOS.org",
   "repository": {
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "files": [
-    "dist",
-    "src"
-  ],
-  "type": "module",
+  "license": "MIT",
+  "author": "DXOS.org",
   "sideEffects": true,
-  "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "devtools": [
-        "dist/types/src/devtools/index.d.ts"
-      ],
-      "echo": [
-        "dist/types/src/echo/index.d.ts"
-      ],
-      "halo": [
-        "dist/types/src/halo/index.d.ts"
-      ],
-      "edge": [
-        "dist/types/src/edge/index.d.ts"
-      ],
-      "invitations": [
-        "dist/types/src/invitations/index.d.ts"
-      ],
-      "mesh": [
-        "dist/types/src/mesh/index.d.ts"
-      ],
-      "testing": [
-        "dist/types/src/testing/index.d.ts"
-      ],
-      "worker": [
-        "dist/types/src/worker/index.d.ts"
-      ],
-      "opfs-worker": [
-        "dist/types/src/worker/opfs-worker.d.ts"
-      ]
-    }
-  },
+  "type": "module",
   "imports": {
     "#opfs-worker": {
       "source": "./src/worker/opfs-worker.ts",
@@ -132,9 +96,42 @@
       "browser": "./dist/lib/browser/services/dedicated/coordinator-worker-entrypoint.mjs"
     }
   },
-  "publishConfig": {
-    "access": "public"
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "devtools": [
+        "dist/types/src/devtools/index.d.ts"
+      ],
+      "echo": [
+        "dist/types/src/echo/index.d.ts"
+      ],
+      "halo": [
+        "dist/types/src/halo/index.d.ts"
+      ],
+      "edge": [
+        "dist/types/src/edge/index.d.ts"
+      ],
+      "invitations": [
+        "dist/types/src/invitations/index.d.ts"
+      ],
+      "mesh": [
+        "dist/types/src/mesh/index.d.ts"
+      ],
+      "testing": [
+        "dist/types/src/testing/index.d.ts"
+      ],
+      "worker": [
+        "dist/types/src/worker/index.d.ts"
+      ],
+      "opfs-worker": [
+        "dist/types/src/worker/opfs-worker.d.ts"
+      ]
+    }
   },
+  "files": [
+    "dist",
+    "src"
+  ],
   "scripts": {
     "typedoc": "typedoc --out typedoc"
   },
@@ -195,6 +192,9 @@
   },
   "engines": {
     "node": ">=12.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "beast": {
     "classDiagrams": [

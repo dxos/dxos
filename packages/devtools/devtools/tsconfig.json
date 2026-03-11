@@ -2,9 +2,15 @@
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "emitDeclarationOnly": false,
-    "types": ["@dxos/typings", "node"]
+    "types": [
+      "@dxos/typings",
+      "node"
+    ]
   },
-  "include": ["scripts", "src"],
+  "include": [
+    "scripts",
+    "src"
+  ],
   "references": [
     {
       "path": "../../common/async"
