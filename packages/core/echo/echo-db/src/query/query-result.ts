@@ -10,7 +10,7 @@ import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { isNonNullable } from '@dxos/util';
 
-import { type Query } from './api';
+import { type Query } from '@dxos/echo';
 import { type QueryContext } from './query-context';
 
 /**

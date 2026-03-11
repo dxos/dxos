@@ -26,7 +26,7 @@ import { openAndClose } from '@dxos/test-utils';
 import { defer } from '@dxos/util';
 
 import { DocAccessor } from '../core-db';
-import { Filter } from '../query';
+import { Filter } from '@dxos/echo';
 import { EchoTestBuilder, createTmpPath } from '../testing';
 
 import { createDocAccessor } from './doc-accessor';

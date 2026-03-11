@@ -10,7 +10,7 @@ import { getSchemaDXN } from '@dxos/echo/internal';
 import { JsonPath } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 
-import { Filter } from '../query';
+import { Filter } from '@dxos/echo';
 import { EchoTestBuilder } from '../testing';
 
 import { defineObjectMigration } from './object-migration';

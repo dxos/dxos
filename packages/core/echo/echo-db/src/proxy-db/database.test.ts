@@ -22,7 +22,7 @@ import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
 import { clone, getObjectCore } from '../echo-handler';
-import { Filter } from '../query';
+import { Filter } from '@dxos/echo';
 import { EchoTestBuilder, createTmpPath } from '../testing';
 
 // TODO(burdon): Normalize tests to use common graph data (see query.test.ts).

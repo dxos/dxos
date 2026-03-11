@@ -39,6 +39,7 @@
 - React: arrow function components, TailwindCSS for styles, proper event handler types.
 - Remember to remove/update TODOs as you go.
 - Avoid single letter variable names.
+- Avoid re-exports. Prefer importing symbols directly from the package that defines them.
 
 ## Workflow
 

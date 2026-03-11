@@ -24,7 +24,7 @@ import { log } from '@dxos/log';
 import { coerceArray } from '@dxos/util';
 
 import { getObjectCore } from '../echo-handler';
-import { Filter } from '../query';
+import { Filter } from '@dxos/echo';
 
 import { type EchoDatabase } from './database';
 import { SchemaRegistryPreparedQueryImpl } from './schema-registry-prepared-query';

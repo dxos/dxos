@@ -29,51 +29,12 @@ import type * as SchemaRegistry from './SchemaRegistry';
 import type * as Type from './Type';
 
 /**
- * @deprecated Use `QueryAST.QueryOptions` instead.
- */
-export type QueryOptions = {
-  /**
-   * @deprecated Use `spaceIds` instead.
-   */
-  spaces?: PublicKey[];
-
-  /**
-   * Query only in specific spaces.
-   */
-  // TODO(dmaretskyi): Change this to SpaceId.
-  spaceIds?: string[];
-
-  /**
-   * Return only the first `limit` results.
-   */
-  limit?: number;
-
-  /**
-   * Query only local spaces, or remote on agent.
-   * @default `QueryOptions.DataLocation.LOCAL`
-   *
-   * Options:
-   *   - proto3_optional = true
-   */
-  // TODO(burdon): Remove?
-  dataLocation?: QueryOptionsProto.DataLocation;
-};
-
-/**
  * `query` API function declaration.
  */
 // TODO(burdon): Reconcile Query and Filter (should only have one root type).
-// TODO(dmaretskyi): Remove query options.
 export interface QueryFn {
-  <Q extends Query.Any>(
-    query: Q,
-    options?: (QueryAST.QueryOptions & QueryOptions) | undefined,
-  ): QueryResult.QueryResult<Query.Type<Q>>;
-
-  <F extends Filter.Any>(
-    filter: F,
-    options?: (QueryAST.QueryOptions & QueryOptions) | undefined,
-  ): QueryResult.QueryResult<Filter.Type<F>>;
+  <Q extends Query.Any>(query: Q): QueryResult.QueryResult<Query.Type<Q>>;
+  <F extends Filter.Any>(filter: F): QueryResult.QueryResult<Filter.Type<F>>;
 }
 
 /**

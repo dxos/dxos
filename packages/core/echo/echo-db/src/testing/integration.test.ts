@@ -19,7 +19,7 @@ import { DXN, type ObjectId, PublicKey } from '@dxos/keys';
 import { TestBuilder as TeleportTestBuilder, TestPeer as TeleportTestPeer } from '@dxos/teleport/testing';
 import { deferAsync } from '@dxos/util';
 
-import { Filter, Query } from '../query';
+import { Filter, Query } from '@dxos/echo';
 
 import { EchoTestBuilder, createDataAssertion } from './echo-test-builder';
 
@@ -558,7 +558,9 @@ describe('Integration tests', () => {
       expect(objects.length).to.eq(0);
 
       // Verify object appears in deleted-only query.
-      const deletedObjects = await db.query(Query.select(Filter.type(TestSchema.Person)), { deleted: 'only' }).run();
+      const deletedObjects = await db
+        .query(Query.select(Filter.type(TestSchema.Person)).options({ deleted: 'only' }))
+        .run();
       expect(deletedObjects.length).to.eq(1);
       expect(deletedObjects[0].name).to.eq('Alice');
       expect(Obj.isDeleted(deletedObjects[0])).to.be.true;

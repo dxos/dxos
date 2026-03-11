@@ -16,7 +16,7 @@ import {
   getSchemaDXN,
 } from '@dxos/echo/internal';
 
-import { Filter } from '../query';
+import { Filter } from '@dxos/echo';
 import { EchoTestBuilder } from '../testing';
 
 const TestEmpty = Schema.Struct({}).pipe(

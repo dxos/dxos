@@ -11,7 +11,7 @@ import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
 
 import { type EchoDatabase } from './proxy-db';
-import { Filter } from './query';
+import { Filter } from '@dxos/echo';
 import { type SerializedSpace } from './serialized-space';
 import { Serializer } from './serializer';
 import { EchoTestBuilder, createTmpPath } from './testing';

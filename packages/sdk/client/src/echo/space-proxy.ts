@@ -55,7 +55,6 @@ import {
   SpaceState,
   type UpdateMemberRoleRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
-import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import {
@@ -416,10 +415,7 @@ export class SpaceProxy implements Space, CustomInspectable {
     //   This is needed to ensure reactivity for newly created spaces.
     // TODO(wittjosiah): Transfer subscriptions from cached properties to the new properties object.
     {
-      const unsubscribe = this._db
-        .query(Filter.type(SpaceProperties), {
-          dataLocation: QueryOptions.DataLocation.LOCAL,
-        })
+      const unsubscribe = this._db.query(Filter.type(SpaceProperties))
         .subscribe(
           (query) => {
             if (query.results.length === 1) {

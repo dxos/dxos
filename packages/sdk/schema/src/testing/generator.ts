@@ -15,7 +15,7 @@ import {
   type JsonSchemaType,
   getSchemaReference,
 } from '@dxos/echo/internal';
-import { Filter, Query } from '@dxos/echo-db';
+import { Filter, Query } from '@dxos/echo';
 import {
   type SchemaProperty,
   findAnnotation,

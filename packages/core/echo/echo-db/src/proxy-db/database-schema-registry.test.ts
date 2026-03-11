@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { JsonSchema, Obj, Type } from '@dxos/echo';
 import { EchoSchema } from '@dxos/echo/internal';
 
-import { Filter } from '../query';
+import { Filter } from '@dxos/echo';
 import { EchoTestBuilder } from '../testing';
 
 const Organization = Schema.Struct({

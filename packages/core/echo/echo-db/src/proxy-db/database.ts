@@ -28,7 +28,7 @@ import {
   isEchoObject,
 } from '../echo-handler';
 import { type HypergraphImpl } from '../hypergraph';
-import { Filter, Query } from '../query';
+import { Filter, Query } from '@dxos/echo';
 
 import { DatabaseSchemaRegistry } from './database-schema-registry';
 import { type ObjectMigration } from './object-migration';
@@ -227,14 +227,14 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     this.prototype.query = this.prototype._query;
   }
 
-  private _query(query: Query.Any | Filter.Any, options?: Database.QueryOptions & QueryAST.QueryOptions) {
+  private _query(query: Query.Any | Filter.Any) {
     query = Filter.is(query) ? Query.select(query) : query;
 
     if (!isQueryScoped(query.ast)) {
       query = query.from({ spaceIds: [this.spaceId] });
     }
 
-    return this._coreDatabase.graph.query(query, options);
+    return this._coreDatabase.graph.query(query);
   }
 
   /**

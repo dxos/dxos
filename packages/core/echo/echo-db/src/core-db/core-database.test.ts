@@ -17,7 +17,7 @@ import { range } from '@dxos/util';
 import { type DocHandleProxy, type RepoProxy } from '../automerge';
 import { getObjectCore } from '../echo-handler';
 import { type EchoDatabase, type EchoDatabaseImpl } from '../proxy-db';
-import { Query } from '../query';
+import { Query } from '@dxos/echo';
 import { EchoTestBuilder, createTmpPath } from '../testing';
 
 import { type CoreDatabase } from './core-database';

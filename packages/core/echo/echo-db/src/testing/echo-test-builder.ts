@@ -28,7 +28,7 @@ import { range } from '@dxos/util';
 
 import { EchoClient } from '../client';
 import { type EchoDatabase } from '../proxy-db';
-import { Filter, Query } from '../query';
+import { Filter, Query } from '@dxos/echo';
 
 type OpenDatabaseOptions = {
   client?: EchoClient;

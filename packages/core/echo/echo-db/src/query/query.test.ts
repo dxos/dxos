@@ -33,7 +33,7 @@ import { getObjectCore } from '../echo-handler';
 import { type EchoDatabase } from '../proxy-db';
 import { EchoTestBuilder, type EchoTestPeer, createTmpPath } from '../testing';
 
-import { Filter, Query } from './api';
+import { Filter, Query } from '@dxos/echo';
 
 faker.seed(1);
 
@@ -242,17 +242,17 @@ describe('Query', () => {
       }
 
       {
-        const objects = await db.query(Query.select(Filter.everything()), { deleted: 'exclude' }).run();
+        const objects = await db.query(Query.select(Filter.everything()).options({ deleted: 'exclude' })).run();
         expect(objects).to.have.length(7);
       }
 
       {
-        const objects = await db.query(Query.select(Filter.everything()), { deleted: 'include' }).run();
+        const objects = await db.query(Query.select(Filter.everything()).options({ deleted: 'include' })).run();
         expect(objects).to.have.length(10);
       }
 
       {
-        const objects = await db.query(Query.select(Filter.everything()), { deleted: 'only' }).run();
+        const objects = await db.query(Query.select(Filter.everything()).options({ deleted: 'only' })).run();
         expect(objects).to.have.length(3);
       }
     });
