@@ -483,6 +483,12 @@ export default tseslint.config(
             // @dxos/client-services — utility / internal.
             'WebLockWrapper',
 
+            // @dxos/network-manager — fast-check AsyncCommand implementations (external library interface).
+            'CreatePeerCommand',
+            'RemovePeerCommand',
+            'JoinTopicCommand',
+            'LeaveTopicCommand',
+
             // @dxos/network-manager — Transport interface implementations (fixed open/close/onSignal/getDetails/getStats signatures).
             'MemoryTransport',
             'TcpTransport',
@@ -620,6 +626,81 @@ export default tseslint.config(
 
             // @dxos/echo-protocol — deprecated value type.
             'Reference',
+
+            // @dxos/ai — mock model registry (testing utility).
+            'MockModelRegistry',
+
+            // @dxos/assistant — execution graph visualization utility.
+            'ExecutionGraph',
+
+            // @dxos/compute — Resource subclasses (HyperFormula compute graph runtime).
+            'ComputeGraphRegistry',
+            'ComputeGraph',
+            'ComputeNode',
+
+            // @dxos/functions-runtime-cloudflare — Resource subclass / queue API implementation.
+            'FunctionsClient',
+            'QueuesAPIImpl',
+
+            // @dxos/functions-runtime — tracing utility.
+            'PrettyConsoleTracer',
+
+            // @dxos/conductor — extends AbstractGraphModel / AbstractBuilder (method signatures fixed by base class).
+            'ComputeGraphModel',
+            'ComputeGraphBuilder',
+
+            // @dxos/conductor — implements SequenceLogger interface.
+            'SequenceLoggerAdapter',
+
+            // @dxos/conductor — Effect-based compute pipeline (methods return Effect.Effect; Effect handles context propagation).
+            'GraphExecutor',
+            'Workflow',
+            'WorkflowLoader',
+
+            // @dxos/conductor — private namespace builder/parser classes (builder pattern).
+            'Builder',
+            'Parser',
+
+            // @dxos/conductor — testing utility (also excluded by **/testing/** ignore).
+            'TestRuntime',
+
+            // @dxos/assistant — Resource subclass (context binding manager, conversation manager).
+            'AiContextBinder',
+            'AiConversation',
+
+            // @dxos/compute — HyperFormula plugin framework (method names mapped via implementedFunctions).
+            'FunctionContext',
+            'AsyncFunctionPlugin',
+            'EdgeFunctionPlugin',
+            'TestPlugin',
+            'TestBuilder',
+
+            // @dxos/functions-runtime — HTTP client wrapper / @deprecated service container.
+            'FunctionsServiceClient',
+            'FunctionExecutor',
+            'ServiceContainer',
+
+            // @dxos/functions — implements CredentialsService tag interface.
+            'ConfiguredCredentialsService',
+
+            // @dxos/ai — stateless parser/decoder/logging utilities (pure data transformation, no async lifecycle).
+            'StreamTransform',
+            'ConsolePrinter',
+            'SSEDecoder',
+            'LineDecoder',
+
+            // @dxos/operation — Effect-based invoker/scheduler (flagged methods are private).
+            'OperationInvokerImpl',
+            'FollowupSchedulerImpl',
+
+            // @dxos/blueprints — read-only collection.
+            'Registry',
+
+            // @dxos/assistant-toolkit — markdown data-transformation utility.
+            'MarkdownTasks',
+
+            // @dxos/functions-simulator-cloudflare — Resource subclass (test worker).
+            'FunctionWorker',
           ],
           allowMethods: [
             'toJSON',

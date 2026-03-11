@@ -10,7 +10,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 
 import { AiModelResolver, AiService } from '@dxos/ai';
 import { AnthropicResolver } from '@dxos/ai/resolvers';
-import { LifecycleState, Resource } from '@dxos/context';
+import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { Database, Feed, Ref, Type } from '@dxos/echo';
 import { refFromEncodedReference } from '@dxos/echo/internal';
 import { EchoClient, type EchoDatabaseImpl, type QueueFactory, createFeedServiceLayer } from '@dxos/echo-db';
@@ -125,7 +125,7 @@ class FunctionContext extends Resource {
     }
   }
 
-  override async _open() {
+  override async _open(_ctx: Context) {
     await this.client?.open();
     this.db =
       this.client && this.context.spaceId
@@ -143,7 +143,7 @@ class FunctionContext extends Resource {
       this.client && this.context.spaceId ? this.client.constructQueueFactory(this.context.spaceId) : undefined;
   }
 
-  override async _close() {
+  override async _close(_ctx: Context) {
     await this.db?.close();
     await this.client?.close();
   }
