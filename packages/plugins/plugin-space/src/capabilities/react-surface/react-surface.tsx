@@ -67,9 +67,7 @@ type ReactSurfaceOptions = {
 };
 
 export default Capability.makeModule(
-  Effect.fnUntraced(function* (props?: ReactSurfaceOptions) {
-    const { createInvitationUrl } = props!;
-
+  Effect.fnUntraced(function* ({ createInvitationUrl }: ReactSurfaceOptions) {
     return Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
         id: `${meta.id}/collection-fallback`,

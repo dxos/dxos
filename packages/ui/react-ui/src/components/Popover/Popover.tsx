@@ -283,8 +283,10 @@ const PopoverContent = forwardRef<PopoverContentTypeElement, PopoverContentProps
 PopoverContent.displayName = CONTENT_NAME;
 
 type PopoverContentTypeElement = PopoverContentImplElement;
-export interface PopoverContentTypeProps
-  extends Omit<PopoverContentImplProps, 'trapFocus' | 'disableOutsidePointerEvents'> {}
+export interface PopoverContentTypeProps extends Omit<
+  PopoverContentImplProps,
+  'trapFocus' | 'disableOutsidePointerEvents'
+> {}
 
 const PopoverContentModal = forwardRef<PopoverContentTypeElement, PopoverContentTypeProps>(
   (props: ScopedProps<PopoverContentTypeProps>, forwardedRef) => {
@@ -401,8 +403,7 @@ type DismissableLayerProps = ComponentPropsWithoutRef<typeof DismissableLayer>;
 type PopperContentProps = ThemedClassName<ComponentPropsWithoutRef<typeof PopperPrimitive.Content>>;
 
 interface PopoverContentImplProps
-  extends Omit<PopperContentProps, 'onPlaced'>,
-    Omit<DismissableLayerProps, 'onDismiss'> {
+  extends Omit<PopperContentProps, 'onPlaced'>, Omit<DismissableLayerProps, 'onDismiss'> {
   /**
    * Whether focus should be trapped within the `Popover`
    * (default: false)

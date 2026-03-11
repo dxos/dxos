@@ -4,8 +4,23 @@
 
 import { type Preview } from '@storybook/react';
 import React, { memo, useEffect } from 'react';
+import { STORY_CHANGED } from 'storybook/internal/core-events';
+import { addons } from 'storybook/preview-api';
 
-import { LogLevel, log } from '@dxos/log';
+import { LogBuffer, LogLevel, log } from '@dxos/log';
+
+import { DOWNLOAD_EVENT, LOGS_DATA_EVENT } from './constants';
+
+const logBuffer = new LogBuffer();
+log.addProcessor(logBuffer.logProcessor);
+
+const channel = addons.getChannel();
+channel.on(DOWNLOAD_EVENT, () => {
+  channel.emit(LOGS_DATA_EVENT, { ndjson: logBuffer.serialize() });
+});
+channel.on(STORY_CHANGED, () => {
+  logBuffer.clear();
+});
 
 // TODO(burdon): Create separate addon for global types.
 const preview: Preview = {

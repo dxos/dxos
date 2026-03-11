@@ -145,7 +145,7 @@ describe('DataSpaceManager', () => {
       inc();
     });
 
-    await space1.postMessage('test', { '@type': 'google.protobuf.Any', 'test': true });
+    await space1.postMessage('test', { '@type': 'google.protobuf.Any', test: true });
     await receivedMessage();
   });
 

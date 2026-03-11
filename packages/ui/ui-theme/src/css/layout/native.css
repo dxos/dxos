@@ -3,7 +3,6 @@
  */
 
 @layer dx-components {
-
   /**
    * Native app drag regions.
    * For Tauri apps, the data-tauri-drag-region attribute is applied

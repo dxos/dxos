@@ -73,11 +73,11 @@ import { createDynamicFrame, FrameManifest } from '@dxos/react-framekit';
 import { Main } from './Main';
 
 export const manifest: FrameManifest = {
-  component: createDynamicFrame(Main)
+  component: createDynamicFrame(Main),
 };
 ```
 
-In order to make an interactive frame we need to implement the `register` and `createRootItem` functions in the manifest -- we'll start with `register`. The `register` function registers ECHO models that our frames rely on, but creating your own models is a more advanced ECHO topic. To get started we can simply always register the `DocumentModel` which causes the items in ECHO to behave the same as Javascript objects. 
+In order to make an interactive frame we need to implement the `register` and `createRootItem` functions in the manifest -- we'll start with `register`. The `register` function registers ECHO models that our frames rely on, but creating your own models is a more advanced ECHO topic. To get started we can simply always register the `DocumentModel` which causes the items in ECHO to behave the same as Javascript objects.
 
 ```ts
 import { DocumentModel } from '@dxos/document-model';
@@ -86,7 +86,7 @@ export const manifest: FrameManifest = {
   component: createDynamicFrame(Main),
   register: async (client) => {
     client.registerModel(DocumentModel);
-  }
+  },
 };
 ```
 
@@ -116,11 +116,11 @@ export const manifest: FrameManifest = {
     const item = await space.database.createItem({
       type: TYPE_TASKS_LIST,
       model: DocumentModel,
-      props
+      props,
     });
 
     return item;
-  }
+  },
 };
 ```
 
@@ -135,7 +135,15 @@ import React, { ChangeEvent, useState } from 'react';
 
 import { Add as AddIcon } from '@mui/icons-material';
 import {
-  Box, Checkbox, IconButton, List, ListItem, ListItemIcon, ListItemSecondaryAction, ListItemText, TextField
+  Box,
+  Checkbox,
+  IconButton,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemSecondaryAction,
+  ListItemText,
+  TextField,
 } from '@mui/material';
 ```
 
@@ -146,11 +154,7 @@ return (
   <List dense>
     <ListItem>
       <ListItemIcon />
-      <TextField
-        fullWidth
-        autoFocus
-        variant='standard'
-      />
+      <TextField fullWidth autoFocus variant='standard' />
       <ListItemSecondaryAction>
         <IconButton size='small'>
           <AddIcon />
@@ -196,8 +200,8 @@ const handleCreateTask = async () => {
     model: DocumentModel,
     parent: item.id,
     props: {
-      title: newTask
-    }
+      title: newTask,
+    },
   });
 
   setNewTask('');
@@ -216,14 +220,11 @@ return (
         autoFocus
         value={newTask}
         variant='standard'
-        onChange={event => setNewTask(event.target.value)}
-        onKeyPress={event => (event.key === 'Enter') && handleCreateTask()}
+        onChange={(event) => setNewTask(event.target.value)}
+        onKeyPress={(event) => event.key === 'Enter' && handleCreateTask()}
       />
       <ListItemSecondaryAction>
-        <IconButton
-          size='small'
-          onClick={handleCreateTask}
-        >
+        <IconButton size='small' onClick={handleCreateTask}>
           <AddIcon />
         </IconButton>
       </ListItemSecondaryAction>
@@ -247,10 +248,11 @@ import { useSelection } from '@dxos/react-client';
 
 // ...
 
-const tasks = useSelection(space?.database.select(selection => selection
-  .filter({ type: TYPE_TASKS_TASK })
-  .items
-), [space, item]) ?? [];
+const tasks =
+  useSelection(
+    space?.database.select((selection) => selection.filter({ type: TYPE_TASKS_TASK }).items),
+    [space, item],
+  ) ?? [];
 ```
 
 When creating a new task we set the `title` property on that item with the value of that task. Here we will read that property from the item in order to display the task.
@@ -290,7 +292,7 @@ const handleToggleComplete = async (item: Item<DocumentModel>, complete: boolean
     />
   </ListItemIcon>
   <ListItemText primary={item.model.getProperty('title')} />
-</ListItem>
+</ListItem>;
 ```
 
 That's it, we now have a fully functioning task list!

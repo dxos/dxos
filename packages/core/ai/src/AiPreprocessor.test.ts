@@ -423,7 +423,9 @@ describe('AiPreprocessor.preprocessPrompt', () => {
       expect(input.content).toHaveLength(2);
       expect(input.content[0].role).toBe('assistant');
       expect((input.content[0] as Prompt.AssistantMessage).content).toEqual([
-        Prompt.makePart('text', { text: '<summary>User asked an old question.</summary>' }),
+        Prompt.makePart('text', {
+          text: 'This is the continuation of a conversation that was compacted to preserve context-window space. Summary of what happened in this conversation previously: <summary>User asked an old question.</summary>',
+        }),
       ]);
       expect(input.content[1].role).toBe('user');
       expect((input.content[1] as Prompt.UserMessage).content).toEqual([

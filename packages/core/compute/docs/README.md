@@ -18,4 +18,3 @@ Scenarios:
 - Automation plugin configures a function to be run when an email is received.
 - AI service responds to a chat.
 - Automation plugin configures a pipeline of local and remote functions to run in the background (agent).
-

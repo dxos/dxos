@@ -5,6 +5,7 @@
 Replace the current flat table-based ObjectsPanel with a tree view that shows object hierarchy (parent-child), relations, and provides a context menu for common operations.
 
 **Current state:** `packages/devtools/devtools/src/panels/echo/ObjectsPanel/ObjectsPanel.tsx`
+
 - Flat `DynamicTable` listing all objects with columns: id, type, version, deleted, schemaAvailable.
 - Right side: `ObjectViewer` (JSON) + history table.
 
@@ -51,8 +52,8 @@ Given all items from `useQuery(space.db, Query.select(Filter.everything()).optio
 
 ```typescript
 // Partition items.
-const objects: Obj.Any[] = [];     // Non-relation objects.
-const relations: Obj.Any[] = [];   // Relations.
+const objects: Obj.Any[] = []; // Non-relation objects.
+const relations: Obj.Any[] = []; // Relations.
 
 for (const item of items) {
   if (Relation.isRelation(item)) {
@@ -63,7 +64,7 @@ for (const item of items) {
 }
 
 // Build parent → children map.
-const childrenMap = new Map<string, Obj.Any[]>();  // parentId → children
+const childrenMap = new Map<string, Obj.Any[]>(); // parentId → children
 const rootObjects: Obj.Any[] = [];
 
 for (const obj of objects) {
@@ -109,6 +110,7 @@ Each tree node renders:
 ```
 
 Where:
+
 - **Icon:** Determined by schema `IconAnnotation` if present, otherwise default `ph--cube--regular`.
 - **Label:** `Obj.getLabel(obj)` falling back to `Obj.getTypename(obj)` then `obj.id`.
 - **Deleted objects:** Label has strikethrough styling and reduced opacity.
@@ -119,12 +121,12 @@ Where:
 
 ## Icons
 
-| Entity Type | Icon | Source |
-|---|---|---|
-| Default object | `ph--cube--regular` | Fallback |
-| Schema-annotated | From `IconAnnotation` | `getIconAnnotation(Obj.getSchema(obj))` |
-| Outgoing relation | `ph--arrow-right--regular` | Hardcoded |
-| Incoming relation | `ph--arrow-left--regular` | Hardcoded |
+| Entity Type       | Icon                       | Source                                  |
+| ----------------- | -------------------------- | --------------------------------------- |
+| Default object    | `ph--cube--regular`        | Fallback                                |
+| Schema-annotated  | From `IconAnnotation`      | `getIconAnnotation(Obj.getSchema(obj))` |
+| Outgoing relation | `ph--arrow-right--regular` | Hardcoded                               |
+| Incoming relation | `ph--arrow-left--regular`  | Hardcoded                               |
 
 ### Getting the Icon
 
@@ -146,6 +148,7 @@ const getObjectIcon = (obj: Obj.Any): string => {
 ### JSON Viewer
 
 Keep the existing `ObjectViewer` component. When a tree node is clicked:
+
 - If it's a regular object or relation, show its JSON.
 - Update on selection change.
 
@@ -153,14 +156,15 @@ Keep the existing `ObjectViewer` component. When a tree node is clicked:
 
 Display as a toolbar/action bar below or above the JSON viewer:
 
-| Action | Description | Implementation |
-|---|---|---|
-| **Copy JSON** | Copy serialized object to clipboard | `navigator.clipboard.writeText(JSON.stringify(obj, null, 2))` |
-| **Print in Console** | Log object to browser console | `console.log(obj)` |
-| **Delete** | Soft-delete the object | `space.db.remove(obj)` |
-| **Undelete** | Restore a deleted object | *If API available, otherwise hide* |
+| Action               | Description                         | Implementation                                                |
+| -------------------- | ----------------------------------- | ------------------------------------------------------------- |
+| **Copy JSON**        | Copy serialized object to clipboard | `navigator.clipboard.writeText(JSON.stringify(obj, null, 2))` |
+| **Print in Console** | Log object to browser console       | `console.log(obj)`                                            |
+| **Delete**           | Soft-delete the object              | `space.db.remove(obj)`                                        |
+| **Undelete**         | Restore a deleted object            | _If API available, otherwise hide_                            |
 
 Icons for actions:
+
 - Copy JSON: `ph--copy--regular`
 - Print in console: `ph--terminal--regular`
 - Delete: `ph--trash--regular`
@@ -170,24 +174,25 @@ Show Delete for non-deleted objects, Undelete for deleted objects.
 
 ## Key APIs
 
-| API | Import | Purpose |
-|---|---|---|
-| `Obj.getLabel(obj)` | `@dxos/echo` | Get display label for tree node |
-| `Obj.getParent(obj)` | `@dxos/echo` | Determine parent-child hierarchy |
-| `Obj.getTypename(obj)` | `@dxos/echo` | Fallback label / type display |
-| `Obj.getSchema(obj)` | `@dxos/echo` | Get schema for icon annotation lookup |
-| `Obj.isDeleted(obj)` | `@dxos/echo` | Strikethrough + sort deleted to bottom |
-| `Obj.getDXN(obj)` | `@dxos/echo` | Get DXN for display in viewer |
-| `Relation.isRelation(obj)` | `@dxos/echo` | Partition objects vs relations |
-| `Relation.getSource(rel)` | `@dxos/echo` | Get source endpoint of relation |
-| `Relation.getTarget(rel)` | `@dxos/echo` | Get target endpoint of relation |
-| `getIconAnnotation(schema)` | `@dxos/schema` | Get icon from schema annotation |
+| API                         | Import         | Purpose                                |
+| --------------------------- | -------------- | -------------------------------------- |
+| `Obj.getLabel(obj)`         | `@dxos/echo`   | Get display label for tree node        |
+| `Obj.getParent(obj)`        | `@dxos/echo`   | Determine parent-child hierarchy       |
+| `Obj.getTypename(obj)`      | `@dxos/echo`   | Fallback label / type display          |
+| `Obj.getSchema(obj)`        | `@dxos/echo`   | Get schema for icon annotation lookup  |
+| `Obj.isDeleted(obj)`        | `@dxos/echo`   | Strikethrough + sort deleted to bottom |
+| `Obj.getDXN(obj)`           | `@dxos/echo`   | Get DXN for display in viewer          |
+| `Relation.isRelation(obj)`  | `@dxos/echo`   | Partition objects vs relations         |
+| `Relation.getSource(rel)`   | `@dxos/echo`   | Get source endpoint of relation        |
+| `Relation.getTarget(rel)`   | `@dxos/echo`   | Get target endpoint of relation        |
+| `getIconAnnotation(schema)` | `@dxos/schema` | Get icon from schema annotation        |
 
 ## Implementation Steps
 
 ### Step 1: Tree Data Model
 
 Create a `useObjectTree` hook that:
+
 1. Takes `items: Obj.Any[]` from `useQuery`.
 2. Partitions into objects and relations.
 3. Builds parent→children and object→relations maps.
@@ -208,6 +213,7 @@ type TreeNode = {
 ### Step 2: Tree View Component
 
 Build a recursive `ObjectTree` component:
+
 - Uses simple `<div>` nesting with indentation (or `@dxos/react-ui-list` Tree component if suitable).
 - Each node is clickable → sets selected object.
 - Expand/collapse toggles for nodes with children.
@@ -216,6 +222,7 @@ Build a recursive `ObjectTree` component:
 ### Step 3: Context Menu / Action Bar
 
 Replace the history table with an action bar:
+
 - Buttons: Copy JSON, Print in Console, Delete/Undelete.
 - Show only when an object is selected.
 
@@ -235,12 +242,12 @@ Replace the history table with an action bar:
 
 ## File Changes
 
-| File | Change |
-|---|---|
-| `ObjectsPanel.tsx` | Rewrite left pane from table to tree; add context actions |
-| `ObjectsPanel.stories.tsx` | Already set up with diverse seeded data |
-| *(optional)* `useObjectTree.ts` | Extract tree-building logic into a hook |
-| *(optional)* `ObjectTree.tsx` | Extract tree view component |
+| File                            | Change                                                    |
+| ------------------------------- | --------------------------------------------------------- |
+| `ObjectsPanel.tsx`              | Rewrite left pane from table to tree; add context actions |
+| `ObjectsPanel.stories.tsx`      | Already set up with diverse seeded data                   |
+| _(optional)_ `useObjectTree.ts` | Extract tree-building logic into a hook                   |
+| _(optional)_ `ObjectTree.tsx`   | Extract tree view component                               |
 
 ## Open Questions
 

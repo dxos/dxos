@@ -8,10 +8,7 @@ import { InvitationEncoder } from '@dxos/client-protocol';
 /** Accepts a device join invitation by prompting the user for:
  *    - invitation code
  *    - authentication code */
-const acceptInvitation = async (
-  client: Client,
-  deviceInvitationCode: string,
-) => {
+const acceptInvitation = async (client: Client, deviceInvitationCode: string) => {
   const decodedInvitation = InvitationEncoder.decode(deviceInvitationCode);
   const invitationResult = client.halo.join(decodedInvitation);
 
@@ -26,9 +23,7 @@ const acceptInvitation = async (
 /** Extracts device invitation code from a URL or string. */
 const extractDeviceInvitationCode = (encoded: string) => {
   if (encoded.startsWith('http')) {
-    const searchParams = new URLSearchParams(
-      encoded.substring(encoded.lastIndexOf('?')),
-    );
+    const searchParams = new URLSearchParams(encoded.substring(encoded.lastIndexOf('?')));
 
     return searchParams.get('deviceInvitationCode') ?? null;
   }

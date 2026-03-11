@@ -17,7 +17,7 @@ import { useRegisterSW } from 'virtual:pwa-register/react';
 import { useApp } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { runAndForwardErrors } from '@dxos/effect';
-import { LogLevel, log } from '@dxos/log';
+import { LogBuffer, LogLevel, log } from '@dxos/log';
 import { Observability } from '@dxos/observability';
 import { ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
@@ -46,6 +46,9 @@ const main = async () => {
   }
 
   TRACE_PROCESSOR.setInstanceTag('app');
+
+  const logBuffer = new LogBuffer();
+  log.addProcessor(logBuffer.logProcessor);
 
   const { defs, SaveConfig } = await import('@dxos/config');
   const { createClientServices } = await import('@dxos/react-client');
@@ -81,7 +84,7 @@ const main = async () => {
   }
 
   // Intentionally do not await; i.e., don't block app startup for telemetry.
-  const observability = initializeObservability(config, isTauri);
+  const observability = initializeObservability(config, isTauri, logBuffer);
   const observabilityDisabled = await Observability.isObservabilityDisabled(APP_KEY);
   const observabilityGroup = await Observability.getObservabilityGroup(APP_KEY);
 
@@ -157,6 +160,7 @@ const main = async () => {
     config,
     services,
     observability,
+    logBuffer,
 
     isDev: !['production', 'staging'].includes(config.values.runtime?.app?.env?.DX_ENVIRONMENT),
     isPwa: !isFalse(config.values.runtime?.app?.env?.DX_PWA),
@@ -187,6 +191,7 @@ const main = async () => {
             needRefresh={needRefresh}
             onRefresh={needRefresh ? () => void updateServiceWorker(true) : undefined}
             observability={observability}
+            logBuffer={logBuffer}
           />
         </Tooltip.Provider>
       </ThemeProvider>

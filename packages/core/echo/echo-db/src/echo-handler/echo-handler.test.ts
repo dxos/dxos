@@ -8,6 +8,7 @@ import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Entity, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
+import { Filter } from '@dxos/echo';
 import {
   ATTR_RELATION_SOURCE,
   ATTR_RELATION_TARGET,
@@ -26,7 +27,6 @@ import { openAndClose } from '@dxos/test-utils';
 import { defer } from '@dxos/util';
 
 import { DocAccessor } from '../core-db';
-import { Filter } from '../query';
 import { EchoTestBuilder, createTmpPath } from '../testing';
 
 import { createDocAccessor } from './doc-accessor';
@@ -384,7 +384,7 @@ describe('Reactive Object with ECHO database', () => {
       const objData: any = (obj as any).toJSON();
       expect(objData).to.deep.contain({
         ...TEST_OBJECT,
-        'id': obj.id,
+        id: obj.id,
         '@type': 'dxn:type:example.com/type/Example:0.1.0',
         '@meta': { keys: [] },
       });
@@ -743,11 +743,11 @@ describe('Reactive Object with ECHO database', () => {
 
       const employeeJson = JSON.parse(JSON.stringify(employee));
       expect(employeeJson).to.deep.eq({
-        'id': employee.id,
+        id: employee.id,
         '@meta': { keys: [] },
         '@type': 'dxn:type:example.com/type/Expando:0.1.0',
-        'name': 'John',
-        'worksAt': EncodedReference.fromDXN(DXN.fromLocalObjectId(org.id)),
+        name: 'John',
+        worksAt: EncodedReference.fromDXN(DXN.fromLocalObjectId(org.id)),
       });
     });
 

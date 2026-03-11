@@ -38,6 +38,7 @@ import {
 } from '@dxos/devtools';
 import { Obj } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
+import { type LogBuffer } from '@dxos/log';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { type Graph } from '@dxos/plugin-graph';
@@ -86,8 +87,12 @@ const useCurrentSpace = () => {
   return space;
 };
 
+type ReactSurfaceOptions = {
+  logBuffer: LogBuffer;
+};
+
 export default Capability.makeModule(
-  Effect.fnUntraced(function* () {
+  Effect.fnUntraced(function* ({ logBuffer }: ReactSurfaceOptions) {
     const capabilities = yield* Capability.Service;
     const registry = capabilities.get(Capabilities.AtomRegistry);
     const settingsAtom = capabilities.get(DebugCapabilities.Settings);
@@ -100,7 +105,7 @@ export default Capability.makeModule(
           AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.id,
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<DebugSettingsProps>(subject.atom);
-          return <DebugSettings settings={settings} onSettingsChange={updateSettings} />;
+          return <DebugSettings settings={settings} onSettingsChange={updateSettings} logBuffer={logBuffer} />;
         },
       }),
       Surface.create({
@@ -158,7 +163,7 @@ export default Capability.makeModule(
           const settings = registry.get(settingsAtom);
           return Obj.isObject(data.subject) && !!settings.wireframe;
         },
-        component: ({ data, role }) => (
+        component: ({ data, role, name }) => (
           <Wireframe label={`${role}:${name}`} object={data.subject} classNames='row-span-2 overflow-hidden' />
         ),
       }),

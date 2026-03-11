@@ -12,8 +12,7 @@ import { meta } from '../../meta';
 import { ObservabilityCapabilities } from '../../types';
 
 export default Capability.makeModule(
-  Effect.fnUntraced(function* (props?: { namespace: string }) {
-    const { namespace } = props!;
+  Effect.fnUntraced(function* ({ namespace }: { namespace: string }) {
     const stateAtom = createKvsStore({
       key: meta.id,
       schema: ObservabilityCapabilities.StateSchema,

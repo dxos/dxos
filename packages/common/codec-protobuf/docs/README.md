@@ -1,7 +1,5 @@
 # @dxos/codec-protobuf
 
-
-
 ## Dependency Graph
 
 ```mermaid
@@ -43,11 +41,11 @@ dxos/async --> dxos/context
 
 ## Dependencies
 
-| Module | Direct |
-|---|---|
-| [`@dxos/async`](../../async/docs/README.md) | &check; |
+| Module                                          | Direct  |
+| ----------------------------------------------- | ------- |
+| [`@dxos/async`](../../async/docs/README.md)     | &check; |
 | [`@dxos/context`](../../context/docs/README.md) | &check; |
-| [`@dxos/debug`](../../debug/docs/README.md) |  |
-| [`@dxos/keys`](../../keys/docs/README.md) |  |
-| [`@dxos/log`](../../log/docs/README.md) |  |
-| [`@dxos/util`](../../util/docs/README.md) | &check; |
+| [`@dxos/debug`](../../debug/docs/README.md)     |         |
+| [`@dxos/keys`](../../keys/docs/README.md)       |         |
+| [`@dxos/log`](../../log/docs/README.md)         |         |
+| [`@dxos/util`](../../util/docs/README.md)       | &check; |

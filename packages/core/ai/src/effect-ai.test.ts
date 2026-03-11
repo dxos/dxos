@@ -89,7 +89,7 @@ const TestToolkit = Toolkit.make(
 
 // Tool handlers.
 const toolkitLayer = TestToolkit.toLayer({
-  'calculator': ({ input }) =>
+  calculator: ({ input }) =>
     Effect.gen(function* () {
       const result = (() => {
         // Restrict to basic arithmetic operations for safety.

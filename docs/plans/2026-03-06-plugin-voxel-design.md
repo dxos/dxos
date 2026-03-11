@@ -11,6 +11,7 @@ A DXOS plugin providing a collaborative 3D voxel editor. Users can create voxel 
 ## Data Type
 
 ECHO schema `dxos.org/type/Voxel` (version 0.1.0) with:
+
 - `name`: Optional string label.
 - `voxels`: Record map keyed by `${x}:${y}:${z}` coordinates, values are `{ hue: string }` (ChromaticPalette hue name).
 - `gridX`: Number (default 16) defining the grid extent along the x-axis.
@@ -22,7 +23,9 @@ Coordinate convention: x (right), y (forward), z (up/height). Grid is centered a
 ## Components
 
 ### VoxelEditor (component)
+
 Pure 3D editor component (no ECHO dependency). Props:
+
 - `voxels`: Array of voxel data.
 - `gridX`, `gridY`: Grid dimensions.
 - `blockSize`: Size of each voxel block.
@@ -33,6 +36,7 @@ Pure 3D editor component (no ECHO dependency). Props:
 - `onRemoveVoxel(position)`: Callback when user left-clicks to remove (in remove mode).
 
 Uses:
+
 - `@react-three/fiber` Canvas for rendering.
 - `@react-three/drei` OrbitControls with Blender-style controls (Option-drag to orbit, Shift-drag to pan, scroll to zoom).
 - Grid centered at origin with ground plane.
@@ -40,12 +44,15 @@ Uses:
 - Ghost cursor preview showing where the next voxel will be placed.
 
 ### VoxelToolbar (component)
+
 Standalone toolbar with tool mode toggle, color palette (ChromaticPalette hues), and clear button.
 
 ### VoxelArticle (container)
+
 Connects ECHO `Voxel.World` data to VoxelEditor via `useObject`. Handles add/remove/clear mutations. Full article view with toolbar and hint overlay.
 
 ### VoxelCard (container)
+
 Minimal read-only card view showing the voxel world with auto-framing camera.
 
 ## Plugin Structure

@@ -15,7 +15,7 @@ const edgeToOrientationMap: Record<InstructionType, Orientation> = {
   'reorder-above': 'sibling',
   'reorder-below': 'sibling',
   'make-child': 'child',
-  'reparent': 'child',
+  reparent: 'child',
 };
 
 const orientationStyles: Record<Orientation, HTMLAttributes<HTMLElement>['className']> = {
@@ -30,7 +30,7 @@ const instructionStyles: Record<InstructionType, HTMLAttributes<HTMLElement>['cl
   'reorder-below': 'bottom-(--line-offset) before:bottom-(--offset-terminal)',
   'make-child': 'border-accent-surface',
   // TODO(wittjosiah): This is not occurring in the current implementation.
-  'reparent': '',
+  reparent: '',
 };
 
 const strokeSize = 2;

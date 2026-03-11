@@ -18,8 +18,7 @@ import {
 } from './extensions';
 
 export default Capability.makeModule(
-  Effect.fnUntraced(function* (props?: SpacePluginOptions) {
-    const { shareableLinkOrigin = window.location.origin } = props ?? {};
+  Effect.fnUntraced(function* ({ shareableLinkOrigin = window.location.origin }: SpacePluginOptions = {}) {
     const extensions = yield* Effect.all([
       createSpaceExtensions(),
       createTypeExtensions(),
@@ -27,6 +26,7 @@ export default Capability.makeModule(
       createCompanionExtensions(),
       createSettingsExtensions(),
     ]);
+
     return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions.flat());
   }),
 );

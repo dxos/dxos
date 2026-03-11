@@ -7,8 +7,9 @@
     color-scheme: light;
     touch-action: pan-x pan-y;
     font-synthesis: none;
-    font-variation-settings: 'wght' 400,
-    'slnt' 0;
+    font-variation-settings:
+      'wght' 400,
+      'slnt' 0;
     scroll-padding-block-start: var(--spacing-14);
     scroll-padding-block-end: var(--spacing-2);
     @apply font-body;
@@ -29,7 +30,9 @@
     --dx-tag-padding-block: var(--spacing-tag-padding-block);
   }
 
-  html, html.dark, html .dark,
+  html,
+  html.dark,
+  html .dark,
   .sb-show-main {
     background-color: var(--color-base-surface);
     color: var(--color-base-surface-text);

@@ -1,15 +1,15 @@
 ---
 title: Creating data
 sidebar_title: 4. Creating data
-description: 
+description:
 ---
 
-So far, we have been preparing our app to be able to interact with DXOS Stack, but we haven't added any fun logic yet. 
+So far, we have been preparing our app to be able to interact with DXOS Stack, but we haven't added any fun logic yet.
 Let's add some more stuff to our `src/components/TaskList.js` file.
 
 ## Creating items
 
-On our app the `items` that we are going to create are going to be Tasks. 
+On our app the `items` that we are going to create are going to be Tasks.
 Add the following code to your `TaskList` component and take a look at the function `handleCreateItem`. We are calling to `space.database.createItem` function, sending some required information.
 
 ```jsx:title=src/components/TaskList.js
