@@ -17,6 +17,7 @@ export const translations = [
           'If you are encountering issues, reloading may fix the issue. If reloading doesn’t help, consider resetting the app.',
         'caught error message': 'Something went wrong; check the console for details.',
         'copy error label': 'Copy this error',
+        'download logs label': 'Download logs',
         'feedback label': 'Feedback',
         'update and reload page label': 'Update',
         'reload page label': 'Reload',

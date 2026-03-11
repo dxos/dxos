@@ -27,8 +27,7 @@ type ReactSurfaceOptions = Pick<ClientPluginOptions, 'onReset'> & {
 };
 
 export default Capability.makeModule(
-  Effect.fnUntraced(function* (props?: ReactSurfaceOptions) {
-    const { createInvitationUrl, onReset } = props!;
+  Effect.fnUntraced(function* ({ createInvitationUrl, onReset }: ReactSurfaceOptions) {
     const capabilityManager = yield* Capability.Service;
 
     return Capability.contributes(Capabilities.ReactSurface, [
