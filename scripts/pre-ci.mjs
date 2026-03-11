@@ -8,9 +8,10 @@ import { $, cd, chalk, fs, question } from 'zx';
  * 2. Run circular dependency check.
  * 3. Merge the latest origin/main.
  * 4. Run pnpm install and commit the changes if any.
- * 5. Run moon run :lint -- --fix. If it errors -- abort, otherwise commit changes if any.
- * 6. Push
- * 7. Run moon run :build :test
+ * 5. Run pnpm run format and commit changes if any.
+ * 6. Run moon run :lint -- --fix. If it errors -- abort, otherwise commit changes if any.
+ * 7. Push
+ * 8. Run moon run :build :test
  */
 
 // Set error handling to capture specific failures
@@ -78,7 +79,7 @@ async function main() {
   }
 
   // Step 3: Merge the latest origin/main
-  console.log(chalk.blue('Step 2: Merging latest origin/main...'));
+  console.log(chalk.blue('Step 3: Merging latest origin/main...'));
   try {
     // Fetch the latest changes from origin
     await $`git fetch origin`;
@@ -157,8 +158,8 @@ async function main() {
     process.exit(1);
   }
 
-  // Step 5a: Run oxfmt formatting and commit changes if any
-  console.log(chalk.blue('Step 5a: Running oxfmt formatting...'));
+  // Step 5: Run oxfmt formatting and commit changes if any
+  console.log(chalk.blue('Step 5: Running oxfmt formatting...'));
   try {
     await $`pnpm run format`;
 
@@ -172,8 +173,8 @@ async function main() {
     process.exit(1);
   }
 
-  // Step 5b: Run lint with fixes and commit changes if any
-  console.log(chalk.blue('Step 5b: Running linting with auto-fix...'));
+  // Step 6: Run lint with fixes and commit changes if any
+  console.log(chalk.blue('Step 6: Running linting with auto-fix...'));
   try {
     await $`moon exec --on-failure continue --quiet :lint -- --fix`;
 
@@ -187,8 +188,8 @@ async function main() {
     process.exit(1);
   }
 
-  // Step 6: Push changes to remote
-  console.log(chalk.blue('Step 6: Pushing changes to remote...'));
+  // Step 7: Push changes to remote
+  console.log(chalk.blue('Step 7: Pushing changes to remote...'));
   try {
     await $`git push`;
     console.log(chalk.green('Successfully pushed changes.'));
@@ -197,8 +198,8 @@ async function main() {
     process.exit(1);
   }
 
-  // Step 7: Run build and test
-  console.log(chalk.blue('Step 7: Running build and tests...'));
+  // Step 8: Run build and test
+  console.log(chalk.blue('Step 8: Running build and tests...'));
   try {
     await $`moon exec --on-failure continue --quiet :build`;
     await $({
