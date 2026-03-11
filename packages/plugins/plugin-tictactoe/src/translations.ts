@@ -11,11 +11,11 @@ export const translations = [
   {
     'en-US': {
       [TicTacToe.Game.typename]: {
-        'typename label': 'Game',
-        'typename label_zero': 'Games',
-        'typename label_one': 'Game',
-        'typename label_other': 'Games',
-        'object name placeholder': 'New game',
+        'typename label': 'Tic-Tac-Toe',
+        'typename label_zero': 'Tic-Tac-Toe games',
+        'typename label_one': 'Tic-Tac-Toe game',
+        'typename label_other': 'Tic-Tac-Toe games',
+        'object name placeholder': 'New Tic-Tac-Toe game',
         'rename object label': 'Rename game',
         'delete object label': 'Delete game',
         'object deleted label': 'Game deleted',
