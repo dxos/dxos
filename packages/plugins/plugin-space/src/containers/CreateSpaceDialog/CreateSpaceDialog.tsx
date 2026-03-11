@@ -54,7 +54,7 @@ export const CreateSpaceDialog = () => {
         testId='create-space-form'
         autoFocus
         schema={SpaceForm}
-        values={initialValues}
+        defaultValues={initialValues}
         fieldProvider={inputSurfaceLookup}
         onSave={handleCreateSpace}
       >
