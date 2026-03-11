@@ -139,20 +139,20 @@ export class PackageDependencyBuilder {
 
     const flowchart = new Flowchart({
       linkStyle: {
-        'stroke': '#333',
+        stroke: '#333',
         'stroke-width': '1px',
       },
     });
 
     flowchart
       .addClassDef('def', {
-        'fill': '#fff',
-        'stroke': '#333',
+        fill: '#fff',
+        stroke: '#333',
         'stroke-width': '1px',
       })
       .addClassDef('root', {
-        'fill': '#fff',
-        'stroke': '#333',
+        fill: '#fff',
+        stroke: '#333',
         'stroke-width': '4px',
       });
 
@@ -248,8 +248,8 @@ export class PackageDependencyBuilder {
               label: hidden ? ' ' : folder.label,
               style: hidden
                 ? {
-                    'fill': colorHash.hex(parent.label),
-                    'stroke': '#333',
+                    fill: colorHash.hex(parent.label),
+                    stroke: '#333',
                     'stroke-dasharray': '5 5',
                   }
                 : {

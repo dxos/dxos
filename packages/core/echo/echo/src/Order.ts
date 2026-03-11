@@ -8,7 +8,7 @@ export interface Order<T> {
   // TODO(dmaretskyi): See new effect-schema approach to variance.
   '~Order': { value: T };
 
-  'ast': QueryAST.Order;
+  ast: QueryAST.Order;
 }
 
 export type Any = Order<any>;
@@ -16,11 +16,11 @@ export type Any = Order<any>;
 class OrderClass implements Order<any> {
   private static 'variance': Order<any>['~Order'] = {} as Order<any>['~Order'];
 
-  static 'is'(value: unknown): value is Order<any> {
+  static is(value: unknown): value is Order<any> {
     return typeof value === 'object' && value !== null && '~Order' in value;
   }
 
-  'constructor'(public readonly ast: QueryAST.Order) {}
+  constructor(public readonly ast: QueryAST.Order) {}
 
   '~Order' = OrderClass.variance;
 }

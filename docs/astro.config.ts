@@ -29,9 +29,9 @@ export default defineConfig({
         replacesTitle: true,
       },
       social: {
-        'github': 'https://github.com/dxos/dxos',
-        'discord': 'https://dxos.org/discord',
-        'blueSky': 'https://bsky.app/profile/dxos.org',
+        github: 'https://github.com/dxos/dxos',
+        discord: 'https://dxos.org/discord',
+        blueSky: 'https://bsky.app/profile/dxos.org',
         'x.com': 'https://x.com/dxos_org',
       },
       expressiveCode: {

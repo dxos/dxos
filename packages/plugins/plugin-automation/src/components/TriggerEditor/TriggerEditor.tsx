@@ -139,7 +139,7 @@ const useCustomInputs = ({ db, readonlySpec, types, tags }: UseCustomInputsProps
       },
 
       // Function input editor.
-      'input': (props) => <FunctionInputEditor {...props} functions={functions} db={db} />,
+      input: (props) => <FunctionInputEditor {...props} functions={functions} db={db} />,
     }),
     [workflows, scripts, functions, readonlySpec],
   );

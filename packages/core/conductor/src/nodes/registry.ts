@@ -105,30 +105,30 @@ export const registry: Record<NodeType, Executable> = {
   //
 
   // TODO(burdon): Template?
-  'template': templateNode,
+  template: templateNode,
 
-  'audio': defineComputeNode({
+  audio: defineComputeNode({
     input: VoidInput,
     output: Schema.Struct({ [DEFAULT_OUTPUT]: Schema.String }),
   }),
 
-  'chat': defineComputeNode({
+  chat: defineComputeNode({
     input: VoidInput,
     output: Schema.Struct({ [DEFAULT_OUTPUT]: Schema.String }),
   }),
 
-  'constant': defineComputeNode({
+  constant: defineComputeNode({
     input: VoidInput,
     output: ConstantOutput,
     exec: (_, node) => Effect.succeed(ValueBag.make({ [DEFAULT_OUTPUT]: node!.value })),
   }),
 
-  'switch': defineComputeNode({
+  switch: defineComputeNode({
     input: VoidInput,
     output: Schema.Struct({ [DEFAULT_OUTPUT]: Schema.Boolean }),
   }),
 
-  'rng': defineComputeNode({
+  rng: defineComputeNode({
     input: VoidInput,
     output: Schema.Struct({ [DEFAULT_OUTPUT]: Schema.Number }),
     exec: () => Effect.succeed(ValueBag.make({ [DEFAULT_OUTPUT]: Math.random() })),
@@ -153,22 +153,22 @@ export const registry: Record<NodeType, Executable> = {
   // Outputs/views
   //
 
-  'beacon': defineComputeNode({
+  beacon: defineComputeNode({
     input: Schema.Struct({ [DEFAULT_INPUT]: Schema.Boolean }),
     output: VoidOutput,
   }),
 
-  'scope': defineComputeNode({
+  scope: defineComputeNode({
     input: Schema.Struct({ [DEFAULT_INPUT]: Schema.String }),
     output: VoidOutput,
   }),
 
-  'text': defineComputeNode({
+  text: defineComputeNode({
     input: DefaultInput,
     output: VoidOutput,
   }),
 
-  'json': defineComputeNode({
+  json: defineComputeNode({
     input: Schema.Struct({ [DEFAULT_INPUT]: Schema.Any }),
     output: Schema.Struct({ [DEFAULT_OUTPUT]: Schema.Any }),
     exec: synchronizedComputeFunction(({ [DEFAULT_INPUT]: input }) => Effect.succeed({ [DEFAULT_OUTPUT]: input })),
@@ -185,17 +185,17 @@ export const registry: Record<NodeType, Executable> = {
     }),
   }),
 
-  'surface': defineComputeNode({
+  surface: defineComputeNode({
     input: DefaultInput,
     output: VoidOutput,
   }),
 
-  'reducer': defineComputeNode({
+  reducer: defineComputeNode({
     input: ReducerInput,
     output: ReducerOutput,
   }),
 
-  'thread': defineComputeNode({
+  thread: defineComputeNode({
     input: VoidInput,
     output: Schema.Struct({
       id: ObjectId,
@@ -203,7 +203,7 @@ export const registry: Record<NodeType, Executable> = {
     }),
   }),
 
-  'queue': defineComputeNode({
+  queue: defineComputeNode({
     input: QueueInput,
     output: QueueOutput,
     exec: synchronizedComputeFunction(({ [DEFAULT_INPUT]: id }) =>
@@ -218,7 +218,7 @@ export const registry: Record<NodeType, Executable> = {
     ),
   }),
 
-  'append': defineComputeNode({
+  append: defineComputeNode({
     input: AppendInput,
     output: VoidOutput,
     exec: synchronizedComputeFunction(({ id, items }) =>
@@ -278,19 +278,19 @@ export const registry: Record<NodeType, Executable> = {
   // Boolean ops.
   //
 
-  'and': defineComputeNode({
+  and: defineComputeNode({
     input: Schema.Struct({ a: Schema.Boolean, b: Schema.Boolean }),
     output: Schema.Struct({ [DEFAULT_OUTPUT]: Schema.Boolean }),
     exec: synchronizedComputeFunction(({ a, b }) => Effect.succeed({ [DEFAULT_OUTPUT]: isTruthy(a) && isTruthy(b) })),
   }),
 
-  'or': defineComputeNode({
+  or: defineComputeNode({
     input: Schema.Struct({ a: Schema.Boolean, b: Schema.Boolean }),
     output: Schema.Struct({ [DEFAULT_OUTPUT]: Schema.Boolean }),
     exec: synchronizedComputeFunction(({ a, b }) => Effect.succeed({ [DEFAULT_OUTPUT]: isTruthy(a) || isTruthy(b) })),
   }),
 
-  'not': defineComputeNode({
+  not: defineComputeNode({
     input: Schema.Struct({ [DEFAULT_INPUT]: Schema.Boolean }),
     output: Schema.Struct({ [DEFAULT_OUTPUT]: Schema.Boolean }),
     exec: synchronizedComputeFunction(({ [DEFAULT_INPUT]: input }) =>
@@ -302,7 +302,7 @@ export const registry: Record<NodeType, Executable> = {
   // Logic ops.
   //
 
-  'if': defineComputeNode({
+  if: defineComputeNode({
     input: Schema.Struct({ condition: Schema.Boolean, value: Schema.Any }),
     output: Schema.Struct({
       true: Schema.optional(Schema.Any),
@@ -345,7 +345,7 @@ export const registry: Record<NodeType, Executable> = {
   // Processing
   //
 
-  'function': defineComputeNode({
+  function: defineComputeNode({
     input: AnyInput,
     output: AnyOutput,
     exec: synchronizedComputeFunction((input, node) =>
@@ -362,7 +362,7 @@ export const registry: Record<NodeType, Executable> = {
     ),
   }),
 
-  'gpt': gptNode,
+  gpt: gptNode,
 
   'gpt-realtime': defineComputeNode({
     input: Schema.Struct({
@@ -377,7 +377,7 @@ export const registry: Record<NodeType, Executable> = {
   //
 
   // TODO(burdon): Rename 'echo' (since we may have other dbs).
-  'database': defineComputeNode({
+  database: defineComputeNode({
     input: VoidInput,
     output: VoidOutput, // TODO(burdon): Fix.
     exec: synchronizedComputeFunction(() =>

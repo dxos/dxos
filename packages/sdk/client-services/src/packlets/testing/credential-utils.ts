@@ -20,9 +20,9 @@ export const createMockCredential = async ({
     subject: new PublicKey(Buffer.from('test')),
     assertion: {
       '@type': 'example.testing.rpc.MessageWithAny',
-      'payload': {
+      payload: {
         '@type': 'google.protobuf.Any',
-        'value': Buffer.from('test'),
+        value: Buffer.from('test'),
       },
     },
   });

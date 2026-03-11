@@ -17,7 +17,7 @@ describe('Mermaid builder', () => {
       .addSubgraph({
         id: 'G1',
         style: {
-          'fill': '#EEE',
+          fill: '#EEE',
           'stroke-width': 'none',
         },
       })
@@ -29,7 +29,7 @@ describe('Mermaid builder', () => {
       })
       .addNode({
         id: 'B',
-        style: { 'fill': 'blue', 'stroke-width': '4px' },
+        style: { fill: 'blue', 'stroke-width': '4px' },
       })
       .addSubgraph({ id: 'G2', label: ' ' })
       .addNode({ id: 'C' });
