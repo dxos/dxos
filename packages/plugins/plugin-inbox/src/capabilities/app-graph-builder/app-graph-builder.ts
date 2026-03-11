@@ -94,7 +94,7 @@ export default Capability.makeModule(
                 type: Mailbox.Mailbox.typename,
                 data: null,
                 properties: {
-                  label: mailbox.name ?? ['mailbox label', { ns: meta.id }],
+                  label: mailbox.name ?? ['object name placeholder', { ns: Mailbox.Mailbox.typename }],
                   icon: 'ph--tray--regular',
                   iconHue: 'rose',
                   role: 'branch',
