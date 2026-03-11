@@ -5,12 +5,12 @@
   "description": "A decentralized alternative to the commercial cloud for privacy preserving software.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
   "repository": {
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
-  "author": "info@dxos.org",
   "sideEffects": false,
   "scripts": {
     "1p-credentials": "bash -c \"op inject -i '$(git rev-parse --show-toplevel)/.env.1password'\"",
@@ -20,6 +20,8 @@
     "changed-packages": "scripts/changed",
     "check-cycles": "node scripts/check-cycles.mjs",
     "create-worktree": "./scripts/create-worktree",
+    "format": "npx oxfmt@latest",
+    "format-check": "npx oxfmt@latest --check",
     "gh-action": "./scripts/gh-action.mjs",
     "postinstall": "[ \"$CI\" != \"true\" ] && vite-node tools/toolbox/src/main.ts || true",
     "install-playwright": "playwright install",
@@ -78,7 +80,6 @@
     "@testing-library/jest-dom": "catalog:",
     "@testing-library/react": "catalog:",
     "@testing-library/user-event": "catalog:",
-    "@trivago/prettier-plugin-sort-imports": "catalog:",
     "@types/glob": "catalog:",
     "@types/globrex": "catalog:",
     "@types/json-stringify-safe": "catalog:",
@@ -118,7 +119,6 @@
     "eslint-plugin-i18next": "catalog:",
     "eslint-plugin-import-x": "catalog:",
     "eslint-plugin-prefer-arrow-functions": "catalog:",
-    "eslint-plugin-prettier": "catalog:",
     "eslint-plugin-react": "catalog:",
     "eslint-plugin-sort-exports": "catalog:",
     "eslint-plugin-storybook": "catalog:",
@@ -145,7 +145,6 @@
     "oxlint-tsgolint": "^0.16.0",
     "pkg-up": "catalog:",
     "prettier": "catalog:",
-    "prettier-plugin-packagejson": "catalog:",
     "raf": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
@@ -180,8 +179,8 @@
     "yargs": "catalog:",
     "zx": "catalog:"
   },
-  "packageManager": "pnpm@10.28.0",
   "engines": {
     "node": "^24.0.0"
-  }
+  },
+  "packageManager": "pnpm@10.28.0"
 }

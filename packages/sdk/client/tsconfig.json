@@ -1,14 +1,9 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "types": [
-      "node",
-      "sharedworker"
-    ]
+    "types": ["node", "sharedworker"]
   },
-  "include": [
-    "src"
-  ],
+  "include": ["src"],
   "references": [
     {
       "path": "../../common/async"

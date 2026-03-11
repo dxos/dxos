@@ -4,14 +4,26 @@
   "description": "Compute graph implementation",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
   "repository": {
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
-  "author": "info@dxos.org",
-  "sideEffects": true,
+  "files": [
+    "dist",
+    "src"
+  ],
   "type": "module",
+  "sideEffects": true,
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "testing": [
+        "dist/types/src/testing/index.d.ts"
+      ]
+    }
+  },
   "exports": {
     ".": {
       "source": "./src/index.ts",
@@ -26,18 +38,9 @@
       "node": "./dist/lib/node-esm/testing/index.mjs"
     }
   },
-  "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "testing": [
-        "dist/types/src/testing/index.d.ts"
-      ]
-    }
+  "publishConfig": {
+    "access": "public"
   },
-  "files": [
-    "dist",
-    "src"
-  ],
   "dependencies": {
     "@dxos/ai": "workspace:*",
     "@dxos/assistant": "workspace:*",
@@ -68,8 +71,5 @@
   },
   "devDependencies": {
     "@dxos/functions-runtime": "workspace:*"
-  },
-  "publishConfig": {
-    "access": "public"
   }
 }

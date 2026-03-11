@@ -49,14 +49,14 @@
 
 @layer dx-tokens {
   :root {
-    --dx-line-0: 0.000px;
-    --dx-line-1: 1.000px;
-    --dx-line-2: 2.000px;
+    --dx-line-0: 0px;
+    --dx-line-1: 1px;
+    --dx-line-2: 2px;
 
-    --dx-lacuna-12: 1.500rem;
+    --dx-lacuna-12: 1.5rem;
     --dx-lacuna-3: 0.375rem;
-    --dx-lacuna-4: 0.500rem;
-    --dx-lacuna-6: 0.750rem;
+    --dx-lacuna-4: 0.5rem;
+    --dx-lacuna-6: 0.75rem;
 
     --dx-gutter-xs: 0.125rem;
     --dx-gutter-sm: 0.5rem;
@@ -85,7 +85,7 @@
     --dx-input-coarse: var(--dx-lacuna-4);
   }
 
-  [data-grid-focus-indicator-variant="stack"] {
+  [data-grid-focus-indicator-variant='stack'] {
     --dx-grid-focus-indicator-width: var(--dx-thick-line);
   }
 
@@ -94,7 +94,7 @@
     --dx-rail-size: calc(var(--dx-rail-content) + 1px);
     --dx-rail-item: calc(var(--dx-rail-content) - 1rem);
     --dx-rail-action: calc(var(--dx-rail-content) - 0.5rem + 1px);
- 
+
     --dx-topbar-size: var(--dx-rail-size);
     --dx-toolbar-size: var(--dx-rail-content);
     --dx-statusbar-size: var(--dx-rail-content);

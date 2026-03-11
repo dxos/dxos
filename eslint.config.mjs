@@ -5,12 +5,11 @@
 //
 
 import eslint from '@eslint/js';
-import sortImports from '@trivago/prettier-plugin-sort-imports';
+import prettierConfig from 'eslint-config-prettier';
 import sortExports from 'eslint-plugin-sort-exports';
 import reactPlugin from 'eslint-plugin-react';
 import importX from 'eslint-plugin-import-x';
 import arrowFunctions from 'eslint-plugin-prefer-arrow-functions';
-import prettierRecommended from 'eslint-plugin-prettier/recommended';
 import storybook from 'eslint-plugin-storybook';
 import unusedImports from 'eslint-plugin-unused-imports';
 import tseslint from 'typescript-eslint';
@@ -102,7 +101,6 @@ export default tseslint.config(
     plugins: {
       'import-x': importX,
       'prefer-arrow-functions': arrowFunctions,
-      'sort-imports': sortImports,
       'sort-exports': sortExports,
       'unused-imports': unusedImports,
     },
@@ -117,7 +115,7 @@ export default tseslint.config(
       eslint.configs.recommended,
       tseslint.configs.recommendedTypeChecked,
       reactPlugin.configs.flat.recommended,
-      prettierRecommended,
+      prettierConfig,
       dxos.configs.recommended,
     ],
     rules: {
@@ -171,7 +169,7 @@ export default tseslint.config(
       '@typescript-eslint/unbound-method': 'off',
 
       // General
-      camelcase: 'off',
+      'camelcase': 'off',
       'jsx-quotes': ['error', 'prefer-single'],
       'quote-props': ['error', 'consistent-as-needed'],
       'no-unused-vars': 'off',
@@ -192,7 +190,6 @@ export default tseslint.config(
           destructuring: 'all',
         },
       ],
-      'prettier/prettier': 'error',
       'require-yield': 'off',
 
       // React
@@ -235,12 +232,12 @@ export default tseslint.config(
       'import-x/order': [
         'error',
         {
-          alphabetize: {
+          'alphabetize': {
             order: 'asc',
             caseInsensitive: true,
           },
-          groups: ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'],
-          pathGroups: [
+          'groups': ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'],
+          'pathGroups': [
             {
               pattern: '#**',
               group: 'parent',
@@ -252,7 +249,7 @@ export default tseslint.config(
               position: 'after',
             },
           ],
-          pathGroupsExcludedImportTypes: ['builtin'],
+          'pathGroupsExcludedImportTypes': ['builtin'],
           'newlines-between': 'always',
         },
       ],
@@ -293,9 +290,7 @@ export default tseslint.config(
       'tools/storybook-solid/**/*.{js,ts,jsx,tsx,mts,cts,mjs,cjs}',
     ],
     rules: {
-      ...Object.fromEntries(
-        Object.keys(reactPlugin.rules).map((rule) => [`react/${rule}`, 'off']),
-      ),
+      ...Object.fromEntries(Object.keys(reactPlugin.rules).map((rule) => [`react/${rule}`, 'off'])),
     },
   },
 

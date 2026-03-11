@@ -5,10 +5,7 @@
     "jsxImportSource": "solid-js",
     "strict": false
   },
-  "include": [
-    "data/*.ts",
-    "src"
-  ],
+  "include": ["data/*.ts", "src"],
   "references": [
     {
       "path": "../../common/async"

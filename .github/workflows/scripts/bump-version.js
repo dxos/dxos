@@ -15,11 +15,11 @@ const bump = async () => {
 
   const {
     packages: {
-      '.': { 'extra-files': extraFiles }
-    }
+      '.': { 'extra-files': extraFiles },
+    },
   } = releasePleaseConfig;
 
-  extraFiles.push({ type: 'json', path: 'package.json', jsonpath: '$.version' })
+  extraFiles.push({ type: 'json', path: 'package.json', jsonpath: '$.version' });
 
   const { '.': currentVersion } = releasePleaseManifest;
 

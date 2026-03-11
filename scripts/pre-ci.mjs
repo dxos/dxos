@@ -157,8 +157,23 @@ async function main() {
     process.exit(1);
   }
 
-  // Step 5: Run lint with fixes and commit changes if any
-  console.log(chalk.blue('Step 5: Running linting with auto-fix...'));
+  // Step 5a: Run oxfmt formatting and commit changes if any
+  console.log(chalk.blue('Step 5a: Running oxfmt formatting...'));
+  try {
+    await $`npx oxfmt@latest`;
+
+    if (await hasUncommittedChanges()) {
+      await commitChanges('style: format with oxfmt');
+    } else {
+      console.log(chalk.green('No formatting changes needed.'));
+    }
+  } catch (error) {
+    console.error(chalk.red('Formatting failed:'), error.message);
+    process.exit(1);
+  }
+
+  // Step 5b: Run lint with fixes and commit changes if any
+  console.log(chalk.blue('Step 5b: Running linting with auto-fix...'));
   try {
     await $`moon exec --on-failure continue --quiet :lint -- --fix`;
 

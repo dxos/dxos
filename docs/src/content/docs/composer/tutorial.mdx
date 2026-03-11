@@ -301,7 +301,8 @@ export default (context: PluginsContext) =>
     Capabilities.AppGraphBuilder,
     createExtension({
       id: MapAction.Toggle._tag,
-      filter: (node): node is Node<Map.Map> => Obj.instanceOf(Map.Map, node.data),
+      filter: (node): node is Node<Map.Map> =>
+        Obj.instanceOf(Map.Map, node.data),
       actions: () => {
         return [
           {

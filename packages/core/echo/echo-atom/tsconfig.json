@@ -1,14 +1,9 @@
 {
   "extends": "../../../../tsconfig.base.json",
   "compilerOptions": {
-    "types": [
-      "node"
-    ]
+    "types": ["node"]
   },
-  "include": [
-    "src/**/*.ts",
-    "src/*.ts"
-  ],
+  "include": ["src/**/*.ts", "src/*.ts"],
   "references": [
     {
       "path": "../../../common/invariant"

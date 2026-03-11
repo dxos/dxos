@@ -5,12 +5,12 @@
   "description": "Lockfile explorer.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
   "repository": {
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
-  "author": "info@dxos.org",
   "type": "module",
   "scripts": {
     "lockfile-explorer": "vite-node ./src/main.ts",

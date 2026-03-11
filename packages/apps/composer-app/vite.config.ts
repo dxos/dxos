@@ -93,9 +93,9 @@ export default defineConfig((env) => ({
       // NOTE: Set cache to `false` to help debug flaky builds.
       // cache: false,
       input: {
-        internal: path.resolve(dirname, './internal.html'),
-        main: path.resolve(dirname, './index.html'),
-        devtools: path.resolve(dirname, './devtools.html'),
+        'internal': path.resolve(dirname, './internal.html'),
+        'main': path.resolve(dirname, './index.html'),
+        'devtools': path.resolve(dirname, './devtools.html'),
         'script-frame': path.resolve(dirname, './script-frame/index.html'),
       },
       output: {

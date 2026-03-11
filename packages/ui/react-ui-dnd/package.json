@@ -4,14 +4,22 @@
   "description": "Drag and drop components.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
   "repository": {
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
-  "author": "DXOS.org",
-  "sideEffects": false,
+  "files": [
+    "dist",
+    "src"
+  ],
   "type": "module",
+  "sideEffects": false,
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {}
+  },
   "exports": {
     ".": {
       "source": "./src/index.ts",
@@ -20,14 +28,9 @@
       "node": "./dist/lib/node-esm/index.mjs"
     }
   },
-  "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {}
+  "publishConfig": {
+    "access": "public"
   },
-  "files": [
-    "dist",
-    "src"
-  ],
   "dependencies": {
     "@atlaskit/pragmatic-drag-and-drop": "catalog:",
     "@radix-ui/react-use-controllable-state": "catalog:"
@@ -46,8 +49,5 @@
     "@dxos/ui-theme": "workspace:*",
     "react": "catalog:",
     "react-dom": "catalog:"
-  },
-  "publishConfig": {
-    "access": "public"
   }
 }

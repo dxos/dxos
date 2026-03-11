@@ -4,14 +4,38 @@
   "description": "Protobuf definitions for DXOS protocols.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
   "repository": {
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
-  "author": "info@dxos.org",
-  "sideEffects": false,
+  "files": [
+    "dist",
+    "src"
+  ],
   "type": "module",
+  "sideEffects": false,
+  "types": "dist/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "proto/*": [
+        "dist/src/proto/gen/*"
+      ],
+      "buf/*": [
+        "dist/src/buf/proto/gen/*"
+      ],
+      "feed-replication": [
+        "dist/src/feed-replication.d.ts"
+      ],
+      "buf": [
+        "dist/src/buf/index.d.ts"
+      ],
+      "proto": [
+        "dist/src/proto/index.d.ts"
+      ]
+    }
+  },
   "exports": {
     ".": {
       "browser": "./dist/src/index.js",
@@ -38,30 +62,9 @@
       "import": "./dist/src/buf/proto/gen/*.js"
     }
   },
-  "types": "dist/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "proto/*": [
-        "dist/src/proto/gen/*"
-      ],
-      "buf/*": [
-        "dist/src/buf/proto/gen/*"
-      ],
-      "feed-replication": [
-        "dist/src/feed-replication.d.ts"
-      ],
-      "buf": [
-        "dist/src/buf/index.d.ts"
-      ],
-      "proto": [
-        "dist/src/proto/index.d.ts"
-      ]
-    }
+  "publishConfig": {
+    "access": "public"
   },
-  "files": [
-    "dist",
-    "src"
-  ],
   "dependencies": {
     "@bufbuild/protobuf": "catalog:",
     "@dxos/codec-protobuf": "workspace:*",
@@ -80,8 +83,5 @@
   },
   "peerDependencies": {
     "effect": "catalog:"
-  },
-  "publishConfig": {
-    "access": "public"
   }
 }

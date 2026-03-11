@@ -1,23 +1,10 @@
 {
-  "extends": [
-    "../../../tsconfig.base.json"
-  ],
+  "extends": ["../../../tsconfig.base.json"],
   "compilerOptions": {
-    "types": [
-      "node"
-    ]
+    "types": ["node"]
   },
-  "exclude": [
-    "*.stories.tsx",
-    "*.t.ts",
-    "vite.config.ts"
-  ],
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "src/*.ts",
-    "typings/*.d.ts"
-  ],
+  "exclude": ["*.stories.tsx", "*.t.ts", "vite.config.ts"],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/*.ts", "typings/*.d.ts"],
   "references": [
     {
       "path": "../../common/async"

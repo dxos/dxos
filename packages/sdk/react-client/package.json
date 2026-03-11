@@ -4,14 +4,40 @@
   "description": "React client API",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
   "repository": {
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
-  "author": "DXOS.org",
-  "sideEffects": false,
   "type": "module",
+  "sideEffects": false,
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "devtools": [
+        "dist/types/src/devtools/index.d.ts"
+      ],
+      "echo": [
+        "dist/types/src/echo/index.d.ts"
+      ],
+      "halo": [
+        "dist/types/src/halo/index.d.ts"
+      ],
+      "invitations": [
+        "dist/types/src/invitations/index.d.ts"
+      ],
+      "mesh": [
+        "dist/types/src/mesh/index.d.ts"
+      ],
+      "testing": [
+        "dist/types/src/testing/index.d.ts"
+      ],
+      "worker": [
+        "dist/types/src/worker.d.ts"
+      ]
+    }
+  },
   "exports": {
     "./devtools": {
       "source": "./src/devtools/index.ts",
@@ -62,31 +88,8 @@
       "node": "./dist/lib/node-esm/worker.mjs"
     }
   },
-  "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "devtools": [
-        "dist/types/src/devtools/index.d.ts"
-      ],
-      "echo": [
-        "dist/types/src/echo/index.d.ts"
-      ],
-      "halo": [
-        "dist/types/src/halo/index.d.ts"
-      ],
-      "invitations": [
-        "dist/types/src/invitations/index.d.ts"
-      ],
-      "mesh": [
-        "dist/types/src/mesh/index.d.ts"
-      ],
-      "testing": [
-        "dist/types/src/testing/index.d.ts"
-      ],
-      "worker": [
-        "dist/types/src/worker.d.ts"
-      ]
-    }
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "typedoc": "typedoc --out typedoc"
@@ -128,9 +131,6 @@
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*"
-  },
-  "publishConfig": {
-    "access": "public"
   },
   "typedoc": {
     "entryPoint": "src/index.ts"

@@ -4,14 +4,29 @@
   "description": "Natural language interface to DXOS",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
   "repository": {
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
-  "author": "info@dxos.org",
-  "sideEffects": true,
+  "files": [
+    "dist",
+    "src"
+  ],
   "type": "module",
+  "sideEffects": true,
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "types": [
+        "dist/types/src/types/index.d.ts"
+      ],
+      "extraction": [
+        "dist/types/src/extraction/index.d.ts"
+      ]
+    }
+  },
   "exports": {
     ".": {
       "source": "./src/index.ts",
@@ -29,21 +44,9 @@
       "default": "./dist/lib/neutral/testing/index.mjs"
     }
   },
-  "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "types": [
-        "dist/types/src/types/index.d.ts"
-      ],
-      "extraction": [
-        "dist/types/src/extraction/index.d.ts"
-      ]
-    }
+  "publishConfig": {
+    "access": "public"
   },
-  "files": [
-    "dist",
-    "src"
-  ],
   "scripts": {
     "run:chat": "vite-node ./bin/chat.ts"
   },
@@ -84,9 +87,6 @@
   },
   "peerDependencies": {
     "effect": "catalog:"
-  },
-  "publishConfig": {
-    "access": "public"
   },
   "beast": {}
 }

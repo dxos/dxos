@@ -4,14 +4,23 @@
   "description": "Basic cross-platform crypto utils.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
   "repository": {
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
-  "author": "DXOS.org",
-  "sideEffects": false,
+  "files": [
+    "dist",
+    "src",
+    "vendor"
+  ],
   "type": "module",
+  "sideEffects": false,
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {}
+  },
   "imports": {
     "#subtle": {
       "types": "./vendor/subtle.d.ts",
@@ -27,23 +36,14 @@
       "node": "./dist/lib/node-esm/index.mjs"
     }
   },
-  "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {}
+  "publishConfig": {
+    "access": "public"
   },
-  "files": [
-    "dist",
-    "src",
-    "vendor"
-  ],
   "dependencies": {
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/vendor-hypercore": "workspace:*"
   },
-  "devDependencies": {},
-  "publishConfig": {
-    "access": "public"
-  }
+  "devDependencies": {}
 }

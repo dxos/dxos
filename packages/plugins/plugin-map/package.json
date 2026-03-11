@@ -4,14 +4,32 @@
   "description": "Map plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
   "repository": {
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
-  "author": "DXOS.org",
-  "sideEffects": true,
+  "files": [
+    "dist",
+    "src"
+  ],
   "type": "module",
+  "sideEffects": true,
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "blueprints": [
+        "dist/types/src/blueprints/index.d.ts"
+      ],
+      "testing": [
+        "dist/types/src/testing.d.ts"
+      ],
+      "types": [
+        "dist/types/src/types/index.d.ts"
+      ]
+    }
+  },
   "exports": {
     ".": {
       "source": "./src/index.ts",
@@ -38,24 +56,9 @@
       "types": "./dist/types/src/types/index.d.ts"
     }
   },
-  "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "blueprints": [
-        "dist/types/src/blueprints/index.d.ts"
-      ],
-      "testing": [
-        "dist/types/src/testing.d.ts"
-      ],
-      "types": [
-        "dist/types/src/types/index.d.ts"
-      ]
-    }
+  "publishConfig": {
+    "access": "public"
   },
-  "files": [
-    "dist",
-    "src"
-  ],
   "dependencies": {
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
@@ -106,8 +109,5 @@
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
-  },
-  "publishConfig": {
-    "access": "public"
   }
 }

@@ -6,8 +6,6 @@
     "moduleResolution": "Node",
     "outDir": "dist"
   },
-  "include": [
-    "src"
-  ],
+  "include": ["src"],
   "references": []
 }

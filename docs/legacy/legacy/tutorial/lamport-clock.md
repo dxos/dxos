@@ -2,7 +2,7 @@
 
 ## Lamport Clock
 
-A [Lamport Timestamp](https://en.wikipedia.org/wiki/Lamport_timestamps) 
+A [Lamport Timestamp](https://en.wikipedia.org/wiki/Lamport_timestamps)
 is a simple algorithm used to determine the order of events in a decentralized system.
 It is a simple form of the more general concept of a [Vector Clock](https://en.wikipedia.org/wiki/Vector_clock).
 

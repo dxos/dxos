@@ -5,12 +5,8 @@
     "module": "CommonJS",
     "moduleResolution": "Node",
     "outDir": "dist",
-    "types": [
-      "node"
-    ]
+    "types": ["node"]
   },
-  "include": [
-    "src"
-  ],
+  "include": ["src"],
   "references": []
 }

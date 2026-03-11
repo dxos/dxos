@@ -5,14 +5,17 @@
   "description": "Storybook config package for the DXOS monorepo.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
   "repository": {
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
-  "author": "DXOS.org",
-  "sideEffects": true,
   "type": "module",
+  "sideEffects": true,
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "chromatic": "chromatic --project-token=\"chpt_8565ce3985dc41b\" --storybook-build-dir ./out/storybook",
     "test": "test-storybook --url http://127.0.0.1:9009"
@@ -49,8 +52,5 @@
   "peerDependencies": {
     "react": "catalog:",
     "react-dom": "catalog:"
-  },
-  "publishConfig": {
-    "access": "public"
   }
 }

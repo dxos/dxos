@@ -3,12 +3,8 @@
   "compilerOptions": {
     "allowJs": true
   },
-  "exclude": [
-    "src/testing"
-  ],
-  "include": [
-    "src"
-  ],
+  "exclude": ["src/testing"],
+  "include": ["src"],
   "references": [
     {
       "path": "../../common/invariant"

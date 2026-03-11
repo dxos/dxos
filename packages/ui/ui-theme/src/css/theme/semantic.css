@@ -22,7 +22,7 @@
 
   --color-deck-surface: light-dark(var(--color-neutral-50), var(--color-neutral-950));
   --color-scrim-surface: light-dark(
-    oklch(from var(--color-neutral-50) l c h / 0.5), 
+    oklch(from var(--color-neutral-50) l c h / 0.5),
     oklch(from var(--color-neutral-950) l c h / 0.25)
   );
   --color-toolbar-surface: light-dark(var(--color-neutral-75), var(--color-neutral-925));
@@ -83,7 +83,10 @@
   --color-grid-surface: light-dark(var(--color-neutral-50), var(--color-neutral-950));
   --color-grid-highlight: oklch(from var(--color-emerald-500) l c h / 0.5);
   --color-grid-comment: light-dark(var(--color-green-400), var(--color-green-600));
-  --color-grid-comment-active: light-dark(oklch(from var(--color-green-400) l c h / 0.5), oklch(from var(--color-green-600) l c h / 0.5));
+  --color-grid-comment-active: light-dark(
+    oklch(from var(--color-green-400) l c h / 0.5),
+    oklch(from var(--color-green-600) l c h / 0.5)
+  );
   --color-grid-hover-overlay: oklch(from var(--color-neutral-500) l c h / 0.1);
   --color-grid-selection-overlay: var(--color-blue-500);
   --color-grid-line: light-dark(var(--color-neutral-200), var(--color-neutral-800));

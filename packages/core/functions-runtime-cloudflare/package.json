@@ -4,14 +4,20 @@
   "description": "Functions runtime for Cloudflare.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
   "repository": {
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
-  "author": "info@dxos.org",
-  "sideEffects": false,
+  "files": [
+    "dist",
+    "schema",
+    "src"
+  ],
   "type": "module",
+  "sideEffects": false,
+  "types": "dist/types/src/index.d.ts",
   "exports": {
     ".": {
       "source": "./src/index.ts",
@@ -20,12 +26,9 @@
       "node": "./dist/lib/node-esm/index.mjs"
     }
   },
-  "types": "dist/types/src/index.d.ts",
-  "files": [
-    "dist",
-    "schema",
-    "src"
-  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {},
   "dependencies": {
     "@dxos/codec-protobuf": "workspace:*",
@@ -45,8 +48,5 @@
   "devDependencies": {
     "@cloudflare/workers-types": "catalog:",
     "@dxos/types": "workspace:*"
-  },
-  "publishConfig": {
-    "access": "public"
   }
 }

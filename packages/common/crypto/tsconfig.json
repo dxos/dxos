@@ -2,14 +2,9 @@
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "declarationDir": "dist/types",
-    "types": [
-      "@dxos/typings",
-      "node"
-    ]
+    "types": ["@dxos/typings", "node"]
   },
-  "include": [
-    "src"
-  ],
+  "include": ["src"],
   "references": [
     {
       "path": "../../../vendor/hypercore"

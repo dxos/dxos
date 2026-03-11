@@ -64,7 +64,7 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
     variant,
     isFull = true,
     actions = defaultActions,
-    'activeAction': propsActiveAction,
+    activeAction: propsActiveAction,
     onChangeActiveAction,
     defaultActiveAction,
     'data-testid': testId,

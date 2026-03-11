@@ -68,6 +68,9 @@ jobs:
       - name: Check for import cycles
         run: pnpm run check-cycles
 
+      - name: Check formatting
+        run: npx oxfmt@latest --check
+
       - name: Check Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
         run: moon run :lint :build --affected remote

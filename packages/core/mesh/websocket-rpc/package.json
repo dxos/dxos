@@ -4,14 +4,23 @@
   "description": "websocket-rpc",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
   "repository": {
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
-  "author": "DXOS.org",
-  "sideEffects": false,
+  "files": [
+    "dist",
+    "src",
+    "README.md"
+  ],
   "type": "module",
+  "sideEffects": false,
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {}
+  },
   "exports": {
     ".": {
       "source": "./src/index.ts",
@@ -19,15 +28,9 @@
       "default": "./dist/lib/neutral/index.mjs"
     }
   },
-  "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {}
+  "publishConfig": {
+    "access": "public"
   },
-  "files": [
-    "dist",
-    "src",
-    "README.md"
-  ],
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/log": "workspace:*",
@@ -37,8 +40,5 @@
     "isomorphic-ws": "catalog:",
     "ws": "catalog:"
   },
-  "devDependencies": {},
-  "publishConfig": {
-    "access": "public"
-  }
+  "devDependencies": {}
 }

@@ -6,12 +6,12 @@ This document describes the different OAuth flows implemented in the token manag
 
 The token manager plugin supports OAuth authentication across four different environments:
 
-| Environment | Callback Mechanism | Browser | Key Component |
-|-------------|-------------------|---------|---------------|
-| Web | `postMessage` | Popup window | `window.open()` |
-| Native Desktop (Tauri) | Localhost HTTP server | System browser | Rust HTTP server |
-| Native Mobile (Tauri) | Custom URL scheme | ASWebAuthenticationSession | `tauri-plugin-web-auth` |
-| CLI | Localhost HTTP server | System browser | Bun HTTP server |
+| Environment            | Callback Mechanism    | Browser                    | Key Component           |
+| ---------------------- | --------------------- | -------------------------- | ----------------------- |
+| Web                    | `postMessage`         | Popup window               | `window.open()`         |
+| Native Desktop (Tauri) | Localhost HTTP server | System browser             | Rust HTTP server        |
+| Native Mobile (Tauri)  | Custom URL scheme     | ASWebAuthenticationSession | `tauri-plugin-web-auth` |
+| CLI                    | Localhost HTTP server | System browser             | Bun HTTP server         |
 
 ## Common Components
 
@@ -167,15 +167,16 @@ App                       Tauri                    Edge                    Googl
 
 ```typescript
 // Desktop path: Use localhost server for OAuth callback.
-yield* performOAuthFlow(
-  preset,
-  token,
-  edgeClient,
-  spaceId,
-  createTauriServerProvider(),  // Rust HTTP server
-  openTauriBrowser,              // @tauri-apps/plugin-opener
-  createTauriOAuthInitiator(),   // Rust HTTP client (sets Origin header)
-);
+yield *
+  performOAuthFlow(
+    preset,
+    token,
+    edgeClient,
+    spaceId,
+    createTauriServerProvider(), // Rust HTTP server
+    openTauriBrowser, // @tauri-apps/plugin-opener
+    createTauriOAuthInitiator(), // Rust HTTP client (sets Origin header)
+  );
 ```
 
 ### Why Rust Server?
@@ -246,15 +247,17 @@ App                   ASWebAuthSession              Edge                Google
 
 ```typescript
 // Mobile path: Use ASWebAuthenticationSession
-const authUrl = yield* oauthInitiator.initiate({
-  // ...
-  nativeAppRedirect: true,  // Tell Edge to use 302 redirect
-});
+const authUrl =
+  yield *
+  oauthInitiator.initiate({
+    // ...
+    nativeAppRedirect: true, // Tell Edge to use 302 redirect
+  });
 
 const { authenticate } = await import('tauri-plugin-web-auth-api');
 const response = await authenticate({
   url: authUrl,
-  callbackScheme: 'composer',  // Capture composer:// URLs
+  callbackScheme: 'composer', // Capture composer:// URLs
 });
 
 // Parse token from response.callbackUrl
@@ -372,14 +375,14 @@ const openBrowser = (url: string): Effect.Effect<void, Error> =>
 
 ## Comparison Table
 
-| Aspect | Web | Desktop | Mobile | CLI |
-|--------|-----|---------|--------|-----|
-| **Server** | None | Rust (hyper) | None | Bun (Effect) |
-| **Browser** | Popup | System | ASWebAuthSession | System |
-| **Callback** | postMessage | localhost redirect | Custom scheme 302 | localhost redirect |
-| **Origin Header** | Browser | Rust | Rust | Effect HTTP |
-| **Token Delivery** | postMessage | HTTP + poll | URL params | HTTP + poll |
-| **Cleanup** | Window close | Server stop | Auto close | Server stop |
+| Aspect             | Web          | Desktop            | Mobile            | CLI                |
+| ------------------ | ------------ | ------------------ | ----------------- | ------------------ |
+| **Server**         | None         | Rust (hyper)       | None              | Bun (Effect)       |
+| **Browser**        | Popup        | System             | ASWebAuthSession  | System             |
+| **Callback**       | postMessage  | localhost redirect | Custom scheme 302 | localhost redirect |
+| **Origin Header**  | Browser      | Rust               | Rust              | Effect HTTP        |
+| **Token Delivery** | postMessage  | HTTP + poll        | URL params        | HTTP + poll        |
+| **Cleanup**        | Window close | Server stop        | Auto close        | Server stop        |
 
 ---
 
@@ -399,7 +402,7 @@ const openBrowser = (url: string): Effect.Effect<void, Error> =>
 Currently, each platform uses a different mechanism to deliver the token back to the app:
 
 | Platform | Token Delivery                 |
-|----------|--------------------------------|
+| -------- | ------------------------------ |
 | Web      | `postMessage` from popup       |
 | Desktop  | Localhost HTTP server          |
 | Mobile   | Custom URL scheme query params |
@@ -417,6 +420,7 @@ A simpler and more secure approach would eliminate the need to deliver the token
 4. The callback URL only signals success/failure (no token in URL)
 
 This approach:
+
 - **Unifies all platforms** - no platform-specific token delivery mechanisms needed
 - **More secure** - token never appears in URLs, postMessage, or HTTP responses
 - **Simpler client code** - just wait for ECHO sync instead of handling callbacks

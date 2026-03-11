@@ -1,0 +1,36 @@
+{
+  "jsxSingleQuote": true,
+  "printWidth": 120,
+  "quoteProps": "consistent",
+  "singleQuote": true,
+  "trailingComma": "all",
+  "sortPackageJson": {},
+  "ignorePatterns": [
+    "coverage",
+    "dist",
+    "node_modules",
+    "out",
+    "tmp",
+    ".moon/cache",
+    "*.tpl",
+    "docs/design/refs/example.yml",
+    "packages/common/typings/src/streamx.d.ts",
+    "templates/**",
+    "**/__swc_snapshots__/**",
+    "**/gen/*",
+    "**/vendor/**",
+    "packages/ui/react-ui-geo/data/**",
+    "packages/ui/solid-ui-geo/data/**",
+    "packages/common/esbuild-plugins/polyfills/**",
+    "packages/common/node-std/**",
+    "**/*.conversations.json"
+  ],
+  "overrides": [
+    {
+      "files": ["docs/src/content/docs/**"],
+      "options": {
+        "printWidth": 80
+      }
+    }
+  ]
+}

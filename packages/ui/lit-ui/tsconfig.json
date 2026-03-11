@@ -4,16 +4,10 @@
     "emitDeclarationOnly": false,
     "experimentalDecorators": true,
     "outDir": "dist",
-    "types": [
-      "node"
-    ],
+    "types": ["node"],
     "useDefineForClassFields": false
   },
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "src/*.ts"
-  ],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/*.ts"],
   "references": [
     {
       "path": "../../common/test-utils"

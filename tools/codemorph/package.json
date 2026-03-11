@@ -5,12 +5,12 @@
   "description": "Large scale code refactoring.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
   "repository": {
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
-  "author": "info@dxos.org",
   "scripts": {
     "codemorph": "vite-node ./src/main.ts"
   },

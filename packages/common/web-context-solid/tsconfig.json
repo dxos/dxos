@@ -3,23 +3,13 @@
   "compilerOptions": {
     "jsx": "preserve",
     "jsxImportSource": "solid-js",
-    "lib": [
-      "DOM",
-      "ES2021"
-    ],
+    "lib": ["DOM", "ES2021"],
     "paths": {
-      "@dxos/web-context": [
-        "../web-context/src/index.ts"
-      ]
+      "@dxos/web-context": ["../web-context/src/index.ts"]
     },
-    "types": [
-      "@testing-library/jest-dom"
-    ]
+    "types": ["@testing-library/jest-dom"]
   },
-  "include": [
-    "src",
-    "test"
-  ],
+  "include": ["src", "test"],
   "references": [
     {
       "path": "../web-context"

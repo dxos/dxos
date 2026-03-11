@@ -93,7 +93,5 @@
     "**/tailwind.ts",
     "tools/swc-log-plugin/test-rig/**"
   ],
-  "jsPlugins": [
-    "@dxos/eslint-plugin-rules"
-  ]
+  "jsPlugins": ["@dxos/eslint-plugin-rules"]
 }

@@ -4,14 +4,28 @@
   "description": "ECHO database.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
   "repository": {
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
-  "author": "info@dxos.org",
-  "sideEffects": false,
+  "files": [
+    "testing.d.ts",
+    "testing.js",
+    "dist",
+    "src"
+  ],
   "type": "module",
+  "sideEffects": false,
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "testing": [
+        "dist/types/src/testing/index.d.ts"
+      ]
+    }
+  },
   "exports": {
     ".": {
       "source": "./src/index.ts",
@@ -29,20 +43,9 @@
       "default": "./dist/lib/neutral/filter/index.mjs"
     }
   },
-  "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "testing": [
-        "dist/types/src/testing/index.d.ts"
-      ]
-    }
+  "publishConfig": {
+    "access": "public"
   },
-  "files": [
-    "testing.d.ts",
-    "testing.js",
-    "dist",
-    "src"
-  ],
   "dependencies": {
     "@automerge/automerge": "catalog:",
     "@automerge/automerge-repo": "catalog:",
@@ -92,8 +95,5 @@
     "@dxos/test-utils": "workspace:*",
     "fast-check": "catalog:",
     "get-port-please": "catalog:"
-  },
-  "publishConfig": {
-    "access": "public"
   }
 }

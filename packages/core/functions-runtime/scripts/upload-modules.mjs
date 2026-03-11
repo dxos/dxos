@@ -37,14 +37,11 @@ const MAX_RETRIES = 6;
 const BASE_RETRY_DELAY_MS = 200;
 const MAX_RETRY_DELAY_MS = 10_000;
 
-
 const getRetryDelayMs = (attempt) => {
   const backoffMs = Math.min(MAX_RETRY_DELAY_MS, BASE_RETRY_DELAY_MS * 2 ** Math.max(0, attempt - 1));
   const jitter = 0.5 + Math.random();
   return Math.round(backoffMs * jitter);
 };
-
-
 
 const createS3Client = () =>
   new S3Client({

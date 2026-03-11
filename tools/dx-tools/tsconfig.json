@@ -4,10 +4,6 @@
     "emitDeclarationOnly": false,
     "outDir": "dist"
   },
-  "include": [
-    "src/**/*.mjs",
-    "src/**/*.ts",
-    "src/**/*.tsx"
-  ],
+  "include": ["src/**/*.mjs", "src/**/*.ts", "src/**/*.tsx"],
   "references": []
 }

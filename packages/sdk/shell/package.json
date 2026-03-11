@@ -4,16 +4,31 @@
   "description": "DXOS’s OS experiences",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
   "repository": {
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
-  "author": "DXOS.org",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "type": "module",
   "sideEffects": [
     "*.css"
   ],
-  "type": "module",
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "react": [
+        "dist/types/src/react.d.ts"
+      ],
+      "testing": [
+        "dist/types/src/testing/index.d.ts"
+      ]
+    }
+  },
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
@@ -34,21 +49,9 @@
       }
     }
   },
-  "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "react": [
-        "dist/types/src/react.d.ts"
-      ],
-      "testing": [
-        "dist/types/src/testing/index.d.ts"
-      ]
-    }
+  "publishConfig": {
+    "access": "public"
   },
-  "files": [
-    "dist",
-    "src"
-  ],
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
@@ -106,8 +109,5 @@
     "@dxos/ui-theme": "workspace:*",
     "@testing-library/react": "catalog:",
     "@testing-library/user-event": "catalog:"
-  },
-  "publishConfig": {
-    "access": "public"
   }
 }

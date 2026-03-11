@@ -4,13 +4,25 @@
   "description": "Effect utils.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
   "repository": {
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
-  "author": "info@dxos.org",
+  "files": [
+    "dist",
+    "src"
+  ],
   "type": "module",
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "testing": [
+        "./dist/types/src/testing.d.ts"
+      ]
+    }
+  },
   "exports": {
     ".": {
       "source": "./src/index.ts",
@@ -25,18 +37,9 @@
       "node": "./dist/lib/node-esm/testing.mjs"
     }
   },
-  "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "testing": [
-        "./dist/types/src/testing.d.ts"
-      ]
-    }
+  "publishConfig": {
+    "access": "public"
   },
-  "files": [
-    "dist",
-    "src"
-  ],
   "dependencies": {
     "@dxos/context": "workspace:*",
     "@dxos/invariant": "workspace:*",
@@ -63,9 +66,6 @@
     "@effect/platform": "catalog:",
     "@effect/platform-browser": "catalog:",
     "effect": "catalog:"
-  },
-  "publishConfig": {
-    "access": "public"
   },
   "beast": {}
 }

@@ -4,14 +4,27 @@
   "description": "Geo components.",
   "homepage": "https://github.com/dxos",
   "bugs": "https://github.com/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
   "repository": {
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
-  "author": "DXOS.org",
-  "sideEffects": true,
+  "files": [
+    "data",
+    "dist",
+    "src"
+  ],
   "type": "module",
+  "sideEffects": true,
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "data": [
+        "dist/types/src/data.d.ts"
+      ]
+    }
+  },
   "exports": {
     "./data": {
       "source": "./src/data.ts",
@@ -26,19 +39,9 @@
       "node": "./dist/lib/node-esm/index.mjs"
     }
   },
-  "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "data": [
-        "dist/types/src/data.d.ts"
-      ]
-    }
+  "publishConfig": {
+    "access": "public"
   },
-  "files": [
-    "data",
-    "dist",
-    "src"
-  ],
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/debug": "workspace:*",
@@ -85,8 +88,5 @@
     "@dxos/ui-theme": "workspace:*",
     "react": "catalog:",
     "react-dom": "catalog:"
-  },
-  "publishConfig": {
-    "access": "public"
   }
 }

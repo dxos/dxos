@@ -56,7 +56,8 @@ type EchoSchemaKind<K extends internal.EntityKind = internal.EntityKind> = {
  * ```
  */
 export interface Obj<T, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>
-  extends internal.TypeMeta,
+  extends
+    internal.TypeMeta,
     EchoSchemaKind<internal.EntityKind.Object>,
     Schema.AnnotableClass<
       Obj<T, Fields>,
@@ -118,7 +119,8 @@ export interface PersistentType extends Schema.Schema.Type<typeof PersistentType
  * `Fields` is the optional struct fields type for introspection.
  */
 export interface Relation<T, Source, Target, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>
-  extends internal.TypeMeta,
+  extends
+    internal.TypeMeta,
     EchoSchemaKind<internal.EntityKind.Relation>,
     Schema.AnnotableClass<
       Relation<T, Source, Target, Fields>,

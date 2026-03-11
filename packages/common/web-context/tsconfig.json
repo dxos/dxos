@@ -1,13 +1,8 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "lib": [
-      "DOM",
-      "ES2021"
-    ]
+    "lib": ["DOM", "ES2021"]
   },
-  "include": [
-    "src"
-  ],
+  "include": ["src"],
   "references": []
 }

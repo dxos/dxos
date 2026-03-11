@@ -1,9 +1,7 @@
 {
   "extends": "../../../../tsconfig.base.json",
   "compilerOptions": {},
-  "include": [
-    "src"
-  ],
+  "include": ["src"],
   "references": [
     {
       "path": "../../../common/crypto"

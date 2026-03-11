@@ -1,15 +1,9 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "types": [
-      "@cloudflare/workers-types/2023-07-01",
-      "@dxos/typings"
-    ]
+    "types": ["@cloudflare/workers-types/2023-07-01", "@dxos/typings"]
   },
-  "include": [
-    "src",
-    "tools"
-  ],
+  "include": ["src", "tools"],
   "references": [
     {
       "path": "../../common/codec-protobuf"

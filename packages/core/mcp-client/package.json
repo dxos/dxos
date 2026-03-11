@@ -4,12 +4,16 @@
   "description": "MCP client.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
   "repository": {
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
-  "author": "info@dxos.org",
+  "files": [
+    "dist",
+    "src"
+  ],
   "type": "module",
   "exports": {
     ".": {
@@ -18,10 +22,9 @@
       "default": "./dist/lib/neutral/index.mjs"
     }
   },
-  "files": [
-    "dist",
-    "src"
-  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "@dxos/ai": "workspace:*",
     "@dxos/effect": "workspace:*",
@@ -30,9 +33,6 @@
     "@effect/ai": "catalog:",
     "@modelcontextprotocol/sdk": "catalog:",
     "effect": "catalog:"
-  },
-  "publishConfig": {
-    "access": "public"
   },
   "beast": {}
 }

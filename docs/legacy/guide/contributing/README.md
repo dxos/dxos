@@ -18,14 +18,14 @@ We welcome all your input! Our mission is to enable developers to build a fully 
 
 We love your input. Please submit an issue for any of these reasons:
 
-* Reporting a reproducible bug
-* Discussing the current state of the code
-* Proposing new features, ideas, or process
+- Reporting a reproducible bug
+- Discussing the current state of the code
+- Proposing new features, ideas, or process
 
 Some of these other needs are not best handled by github issues:
 
-* Asking a question about something not working -> [Discord](https://dxos.org/discord)
-* A security vulnerability or incident -> email security@braneframe.com directly. do NOT post anywhere else please.
+- Asking a question about something not working -> [Discord](https://dxos.org/discord)
+- A security vulnerability or incident -> email security@braneframe.com directly. do NOT post anywhere else please.
 
 ## Setting up a developer environment
 

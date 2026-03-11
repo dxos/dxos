@@ -14,14 +14,13 @@
 - Users may install service-workers that remain active in the browser (or mobile device) even when individual applications are not active.
 - Agents and Functions enable create microservices that are connected to the peer-to-peer network as full peers.
 
-
 ## Use Cases
 
 - **Sync**: If a Space has two members who are not online at the same time then they will not be able to sync with each other.
   Similarly a user with two devices will not be able to sync changes to their HALO (e.g., settings, credentials).
   If either (or both) users deploy an Agent then this acts as a highly available peer that maintains a full replica of the Space.
 
-- **Epochs**: Spaces may designate an Agent to manage Epochs and secure backups. 
+- **Epochs**: Spaces may designate an Agent to manage Epochs and secure backups.
   Epochs perform Space compaction and enable long-term state consensus between peers.
 
 - **Universal Search**: Users may enjoin Agents to one or more (or all) of their private and shared Spaces.
@@ -29,11 +28,7 @@
 
 - **Gateways**:
 
-- **AI**: 
-
-
-
-
+- **AI**:
 
 - Run long-lived functions that operate over users' ECHO spaces and interface with external systems.
 - Isolation of individual functions.
@@ -44,14 +39,12 @@
 
 - Sync only (encrypted)
 
-
 ## Use Cases
 
 - Backups and epoch management for individual private and shared spaces (auto-provisioned by user/app.)
 - Universal search across user's (or groups)'s spaces.
 - Local training of LLM over a set of spaces.
 - Bridges to external data sources (e.g., Protonmail, Calendar, enterprise SQL database, web crawler, OAuth APIs.)
-
 
 ## Goals
 
@@ -61,12 +54,10 @@
 - Local testing environment.
 - Ability to self-host (e.g., not require require complex K8s infrastructure)
 
-
 ## Non-Goals
 
 - Coordination of functions (or function state) runtime across multiple VMs (i.e., homogenous network).
 - Scale-on-demand: Functions run within the context of a deployed agent; it is not expected to support running 100s of function invocations. "Heavy lifting" might be achieved via external systems, which are out of bound.
-
 
 ## Issues
 
@@ -76,9 +67,8 @@
 - Support for low-spec machines (e.g., Raspberry PI, IoT).
 - Access control for inbound events.
 - Asynchronous functions (e.g., async external function calls); implement via chaining?
-- Security, isolation. 
+- Security, isolation.
 - KMS (HALO + external keys: e.g., OAuth tokens; token renewal via public DNS endpoint).
-
 
 ## Architecture
 
@@ -90,7 +80,7 @@
   - manages agent connectivity (e.g., swarms).
   - controls function invocation via events.
   - monitoring and resource management.
-- **Agent**: 
+- **Agent**:
   - DXOS peer (`@dxos/client`) with HALO (identity) and access to Spaces.
   - Context for function invocation.
 - **Function**:
@@ -107,7 +97,6 @@
 
 ![d](./diagrams/remote-functions.drawio.svg)
 
-
 ### Research
 
 - OpenFaaS, `faasd`
@@ -117,8 +106,6 @@
 - Up: https://github.com/apex/up
 - Serverless: https://www.serverless.com/framework
 - https://aws.amazon.com/blogs/opensource/24-open-source-tools-for-the-serverless-developer-part-1
-
-
 
 ## Model
 

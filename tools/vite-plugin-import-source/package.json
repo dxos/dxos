@@ -5,14 +5,19 @@
   "description": "Vite plugin that resolves npm package imports to their source files.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
   "repository": {
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
-  "author": "DXOS.org",
-  "sideEffects": false,
+  "files": [
+    "dist",
+    "src"
+  ],
   "type": "module",
+  "sideEffects": false,
+  "types": "dist/src/index.d.ts",
   "exports": {
     ".": {
       "source": "./dist/src/index.ts",
@@ -20,11 +25,6 @@
       "default": "./dist/src/index.js"
     }
   },
-  "types": "dist/src/index.d.ts",
-  "files": [
-    "dist",
-    "src"
-  ],
   "dependencies": {
     "minimatch": "catalog:",
     "oxc-resolver": "catalog:"

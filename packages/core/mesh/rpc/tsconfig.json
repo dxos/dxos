@@ -1,13 +1,8 @@
 {
   "extends": "../../../../tsconfig.base.json",
   "compilerOptions": {},
-  "exclude": [
-    "node_modules"
-  ],
-  "include": [
-    "src",
-    "test"
-  ],
+  "exclude": ["node_modules"],
+  "include": ["src", "test"],
   "references": [
     {
       "path": "../../../common/async"

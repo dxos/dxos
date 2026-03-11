@@ -1,10 +1,7 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {},
-  "include": [
-    "src",
-    "stories"
-  ],
+  "include": ["src", "stories"],
   "references": [
     {
       "path": "../../ui/react-ui"

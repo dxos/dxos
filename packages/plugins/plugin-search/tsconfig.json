@@ -1,19 +1,10 @@
 {
-  "extends": [
-    "../../../tsconfig.base.json"
-  ],
+  "extends": ["../../../tsconfig.base.json"],
   "compilerOptions": {
-    "types": [
-      "node"
-    ]
+    "types": ["node"]
   },
-  "exclude": [
-    "*.t.ts",
-    "vite.config.ts"
-  ],
-  "include": [
-    "src"
-  ],
+  "exclude": ["*.t.ts", "vite.config.ts"],
+  "include": ["src"],
   "references": [
     {
       "path": "../../common/async"

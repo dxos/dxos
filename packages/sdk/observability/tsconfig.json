@@ -2,23 +2,12 @@
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "emitDeclarationOnly": false,
-    "lib": [
-      "DOM",
-      "ESNext"
-    ],
+    "lib": ["DOM", "ESNext"],
     "outDir": "dist/types",
-    "rootDirs": [
-      "./src"
-    ],
-    "types": [
-      "@dxos/typings",
-      "node"
-    ]
+    "rootDirs": ["./src"],
+    "types": ["@dxos/typings", "node"]
   },
-  "include": [
-    "src",
-    "src/cli-observability-secrets.json"
-  ],
+  "include": ["src", "src/cli-observability-secrets.json"],
   "references": [
     {
       "path": "../../common/async"

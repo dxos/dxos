@@ -4,14 +4,18 @@
   "description": "Sqlite client",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
   "repository": {
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
-  "author": "info@dxos.org",
-  "sideEffects": true,
+  "files": [
+    "dist",
+    "src"
+  ],
   "type": "module",
+  "sideEffects": true,
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
@@ -50,10 +54,9 @@
       "node": "./dist/lib/node-esm/SqlTransaction.mjs"
     }
   },
-  "files": [
-    "dist",
-    "src"
-  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "@dxos/wa-sqlite": "catalog:",
     "@effect/experimental": "catalog:",
@@ -66,9 +69,6 @@
   "devDependencies": {
     "@effect/sql-sqlite-wasm": "catalog:",
     "@effect/wa-sqlite": "catalog:"
-  },
-  "publishConfig": {
-    "access": "public"
   },
   "beast": {}
 }

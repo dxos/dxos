@@ -4,14 +4,22 @@
   "description": "Async utilities.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
   "repository": {
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
-  "author": "DXOS.org",
-  "sideEffects": true,
+  "files": [
+    "dist",
+    "src"
+  ],
   "type": "module",
+  "sideEffects": true,
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {}
+  },
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
@@ -22,14 +30,9 @@
       }
     }
   },
-  "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {}
+  "publishConfig": {
+    "access": "public"
   },
-  "files": [
-    "dist",
-    "src"
-  ],
   "dependencies": {
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
@@ -42,8 +45,5 @@
   },
   "devDependencies": {
     "@types/zen-observable": "catalog:"
-  },
-  "publishConfig": {
-    "access": "public"
   }
 }

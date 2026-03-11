@@ -1,6 +1,5 @@
 {
   "jsxSingleQuote": true,
-  "plugins": ["prettier-plugin-packagejson"],
   "printWidth": 120,
   "quoteProps": "consistent",
   "singleQuote": true,

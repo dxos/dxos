@@ -1,32 +1,14 @@
 {
-  "extends": [
-    "../../../tsconfig.base.json"
-  ],
+  "extends": ["../../../tsconfig.base.json"],
   "compilerOptions": {
     "emitDeclarationOnly": false,
-    "lib": [
-      "DOM",
-      "ESNext"
-    ],
+    "lib": ["DOM", "ESNext"],
     "module": "ESNext",
     "outDir": "dist/types",
-    "types": [
-      "node",
-      "sharedworker"
-    ]
+    "types": ["node", "sharedworker"]
   },
-  "exclude": [
-    "demos/*",
-    "src/functions/*",
-    "src/playwright/playwright.config.ts",
-    "vite.config.ts"
-  ],
-  "include": [
-    "demos",
-    "script-frame",
-    "scripts",
-    "src"
-  ],
+  "exclude": ["demos/*", "src/functions/*", "src/playwright/playwright.config.ts", "vite.config.ts"],
+  "include": ["demos", "script-frame", "scripts", "src"],
   "references": [
     {
       "path": "../../../tools/vite-plugin-icons"

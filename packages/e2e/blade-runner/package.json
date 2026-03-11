@@ -5,14 +5,22 @@
   "description": "DXOS simulation tests runner.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
   "repository": {
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
-  "author": "DXOS.org",
-  "sideEffects": true,
   "type": "module",
+  "sideEffects": true,
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "main": [
+        "dist/types/src/main.d.ts"
+      ]
+    }
+  },
   "exports": {
     ".": {
       "source": "./src/index.ts",
@@ -27,13 +35,8 @@
       "node": "./dist/lib/node-esm/main.mjs"
     }
   },
-  "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "main": [
-        "dist/types/src/main.d.ts"
-      ]
-    }
+  "publishConfig": {
+    "access": "restricted"
   },
   "scripts": {
     "run-tests": "moon run blade-runner:build && node ./dist/lib/node-esm/main.mjs"
@@ -102,8 +105,5 @@
     "chart.js": "catalog:",
     "js-yaml": "catalog:",
     "yargs": "catalog:"
-  },
-  "publishConfig": {
-    "access": "restricted"
   }
 }

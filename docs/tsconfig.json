@@ -1,13 +1,7 @@
 {
   "extends": "astro/tsconfigs/strict",
-  "exclude": [
-    "dist",
-    "legacy"
-  ],
-  "include": [
-    ".astro/types.d.ts",
-    "src"
-  ],
+  "exclude": ["dist", "legacy"],
+  "include": [".astro/types.d.ts", "src"],
   "references": [
     {
       "path": "../packages/core/echo/echo"

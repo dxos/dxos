@@ -4,13 +4,25 @@
   "description": "Test utilities",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
   "repository": {
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
-  "author": "DXOS.org",
+  "files": [
+    "dist",
+    "src"
+  ],
   "type": "module",
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "playwright": [
+        "dist/types/src/playwright.d.ts"
+      ]
+    }
+  },
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
@@ -23,18 +35,9 @@
       "node": "./dist/lib/node-esm/playwright.mjs"
     }
   },
-  "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "playwright": [
-        "dist/types/src/playwright.d.ts"
-      ]
-    }
+  "publishConfig": {
+    "access": "public"
   },
-  "files": [
-    "dist",
-    "src"
-  ],
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/node-std": "workspace:*",
@@ -43,8 +46,5 @@
   },
   "peerDependencies": {
     "vitest": "catalog:"
-  },
-  "publishConfig": {
-    "access": "public"
   }
 }
