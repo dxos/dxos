@@ -32,7 +32,7 @@ import {
   editorKeys,
   parseCellIndex,
 } from '@dxos/react-ui-grid';
-import { mx, useComposableProps } from '@dxos/ui-theme';
+import { composableProps } from '@dxos/ui-theme';
 
 import { type RangeController, rangeExtension, sheetExtension } from '../../extensions';
 import { useSelectThreadOnCellFocus, useUpdateFocusedCellOnThreadSelection } from '../../integrations';
@@ -84,7 +84,6 @@ export const SheetContent = (props: SheetContentProps) => {
   const { invokePromise } = useOperationInvoker();
   const rangeController = useRef<RangeController>(null);
   const { hasAttention } = useAttention(id);
-  const { className, ...rest } = useComposableProps(props);
 
   const handleFocus = useCallback(
     (event: FocusEvent) => {
@@ -322,7 +321,7 @@ export const SheetContent = (props: SheetContentProps) => {
   useSelectThreadOnCellFocus();
 
   return (
-    <div {...rest} role='none' className={mx('relative min-h-0', className)}>
+    <div {...composableProps(props, 'relative min-h-0')} role='none'>
       <GridCellEditor getCellContent={getCellContent} extensions={extensions} onBlur={handleBlur} />
       <Grid.Content
         className='[--dx-grid-base:var(--base-surface)] [&_.dx-grid]:absolute [&_.dx-grid]:inset-0'

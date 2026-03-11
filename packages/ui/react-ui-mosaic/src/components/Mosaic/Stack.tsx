@@ -7,7 +7,7 @@ import React, { type FC, Fragment, type ReactElement, type Ref, forwardRef } fro
 
 import { invariant } from '@dxos/invariant';
 import { type Axis, type ComposableProps } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
+import { composableProps, mx } from '@dxos/ui-theme';
 
 import { useVisibleItems } from '../../hooks';
 
@@ -59,8 +59,6 @@ type MosaicStackProps<TData = any> = ComposableProps<
 const MosaicStackInner = forwardRef<HTMLDivElement, MosaicStackProps>(
   (
     {
-      classNames,
-      className,
       role = 'list',
       orientation: orientationProp = 'vertical',
       draggable = true,
@@ -72,6 +70,7 @@ const MosaicStackInner = forwardRef<HTMLDivElement, MosaicStackProps>(
     },
     forwardedRef,
   ) => {
+    const { className, ...rest } = composableProps(props);
     invariant(Tile);
     const { id, orientation = orientationProp, dragging } = useMosaicContainerContext(MOSAIC_STACK_NAME);
     const visibleItems = useVisibleItems({ id, items, dragging: dragging?.source.data, getId });
@@ -79,13 +78,12 @@ const MosaicStackInner = forwardRef<HTMLDivElement, MosaicStackProps>(
 
     return (
       <div
-        {...props}
+        {...rest}
         role={role}
         className={mx(
           'flex',
           orientation === 'horizontal' && 'h-full [&>*]:shrink-0',
           orientation === 'vertical' && 'flex-col',
-          classNames,
           className,
         )}
         ref={forwardedRef}
@@ -123,8 +121,6 @@ type MosaicVirtualStackProps<TData = any> = MosaicStackProps<TData> &
 const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackProps>(
   (
     {
-      classNames,
-      className,
       role = 'list',
       orientation = 'vertical',
       items,
@@ -139,6 +135,7 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
     },
     forwardedRef,
   ) => {
+    const { className, ...rest } = composableProps(props);
     invariant(Tile);
     const { id, dragging } = useMosaicContainerContext(MOSAIC_VIRTUAL_STACK_NAME);
     const visibleItems = useVisibleItems({ id, items, dragging: dragging?.source.data, getId });
@@ -154,13 +151,12 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
 
     return (
       <div
-        {...props}
+        {...rest}
         role={role}
         className={mx(
           'flex',
           orientation === 'horizontal' && 'h-full [&>*]:shrink-0',
           orientation === 'vertical' && 'flex-col',
-          classNames,
           className,
         )}
         style={{

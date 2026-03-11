@@ -7,6 +7,7 @@ import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import React, { type HTMLAttributes, forwardRef } from 'react';
 
+import { composableProps } from '@dxos/ui-theme';
 import { type AllowedAxis, type SlottableProps, type ThemedClassName } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
@@ -48,10 +49,8 @@ type ScrollAreaRootProps = SlottableProps<HTMLDivElement> & Partial<ScrollAreaCo
 const ScrollAreaRoot = forwardRef<HTMLDivElement, ScrollAreaRootProps>(
   (
     {
-      classNames,
-      className,
-      asChild,
       children,
+      asChild,
       orientation = 'vertical',
       autoHide = true,
       margin = false,
@@ -62,13 +61,14 @@ const ScrollAreaRoot = forwardRef<HTMLDivElement, ScrollAreaRootProps>(
     },
     forwardedRef,
   ) => {
-    const { tx } = useThemeContext();
+    const { className, ...rest } = composableProps(props);
     const Comp = asChild ? Slot : Primitive.div;
+    const { tx } = useThemeContext();
     const options = { orientation, autoHide, margin, padding, thin, snap };
 
     return (
       <ScrollAreaProvider {...options}>
-        <Comp {...props} className={tx('scrollArea.root', options, [className, classNames])} ref={forwardedRef}>
+        <Comp {...rest} className={tx('scrollArea.root', options, className)} ref={forwardedRef}>
           {children}
         </Comp>
       </ScrollAreaProvider>

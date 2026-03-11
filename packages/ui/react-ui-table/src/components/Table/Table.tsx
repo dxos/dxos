@@ -35,7 +35,7 @@ import {
   gridSeparatorInlineEnd,
 } from '@dxos/react-ui-grid';
 import { DxEditRequest } from '@dxos/react-ui-grid';
-import { mx, useComposableProps } from '@dxos/ui-theme';
+import { composableProps, mx } from '@dxos/ui-theme';
 import { type ComposableProps } from '@dxos/ui-types';
 
 import { type InsertRowResult, ModalController, type TableModel, type TablePresentation } from '../../model';
@@ -415,9 +415,8 @@ const TableMainInner = <T extends Type.AnyEntity = Type.AnyEntity>(
     return <span role='none' className='dx-attention-surface' />;
   }
 
-  const { className, ...rest } = useComposableProps(props);
   return (
-    <div {...rest} role='none' className={mx('dx-container relative', className)}>
+    <div {...composableProps(props, 'dx-container relative')} role='none'>
       <Grid.Root id={model.id ?? 'table-grid'}>
         <TableValueEditor<T>
           model={model}

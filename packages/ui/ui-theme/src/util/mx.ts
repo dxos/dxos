@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { extendTailwindMerge, validators } from 'tailwind-merge';
+import { type ClassNameValue, extendTailwindMerge, validators } from 'tailwind-merge';
 
 import { type ComposableProps } from '@dxos/ui-types';
 
@@ -23,7 +23,6 @@ export const mx = extendTailwindMerge<AdditionalClassGroups>({
         'font-bold',
         'font-extrabold',
         'font-black',
-
         // Arbitrary numbers
         validators.isArbitraryNumber,
       ],
@@ -51,12 +50,17 @@ export const mx = extendTailwindMerge<AdditionalClassGroups>({
 });
 
 /**
- * Reconciles className properties from slot.
+ * Reconciles className properties from a parent slot.
+ * - className
+ * - style
+ * - ref
+ * - event handlers (onClick, onFocus, etc.)
+ * - data attributes (data-slot, data-testid, etc.)
  */
-export const useComposableProps = (
-  { classNames, className, ...props }: Pick<ComposableProps, 'classNames' | 'className'>,
-  etc?: string,
+export const composableProps = (
+  { className, classNames, ...props }: Pick<ComposableProps, 'className' | 'classNames'>,
+  ...etc: ClassNameValue[]
 ) => ({
-  className: mx(etc, classNames, className),
+  className: mx(...etc, className, classNames),
   props,
 });

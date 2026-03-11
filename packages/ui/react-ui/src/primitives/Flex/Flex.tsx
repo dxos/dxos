@@ -4,7 +4,7 @@
 
 import React, { type HTMLAttributes } from 'react';
 
-import { mx } from '@dxos/ui-theme';
+import { composableProps, mx } from '@dxos/ui-theme';
 import { type ComposableProps } from '@dxos/ui-types';
 
 export type FlexProps = ComposableProps<
@@ -14,12 +14,13 @@ export type FlexProps = ComposableProps<
   }
 >;
 
-export const Flex = ({ children, classNames, className, role, column, grow, ...props }: FlexProps) => {
+export const Flex = ({ children, role, column, grow, ...props }: FlexProps) => {
+  const { className, ...rest } = composableProps(props);
   return (
     <div
-      {...props}
+      {...rest}
       role={role ?? 'none'}
-      className={mx('flex', column && 'flex-col', grow && 'flex-1 overflow-hidden', className, classNames)}
+      className={mx('flex', column && 'flex-col', grow && 'flex-1 overflow-hidden', className)}
     >
       {children}
     </div>

@@ -6,6 +6,7 @@ import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import React, { type CSSProperties, forwardRef } from 'react';
 
+import { composableProps } from '@dxos/ui-theme';
 import { type SlottableProps } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
@@ -39,13 +40,14 @@ type ColumnRootProps = SlottableProps<HTMLDivElement> & { gutter?: GutterSize };
  * The `--gutter` CSS variable is also consumed by ScrollArea's `margin` option to align scrollbar spacing.
  */
 const Root = forwardRef<HTMLDivElement, ColumnRootProps>(
-  ({ classNames, className, asChild, role, children, gutter = 'md', ...props }, forwardedRef) => {
-    const { tx } = useThemeContext();
+  ({ children, asChild, role, gutter = 'md', ...props }, forwardedRef) => {
+    const { className, ...rest } = composableProps(props);
     const Component = asChild ? Slot : Primitive.div;
+    const { tx } = useThemeContext();
     const gutterSize = gutterSizes[gutter];
     return (
       <Component
-        {...props}
+        {...rest}
         role={role ?? 'none'}
         style={
           {
@@ -53,7 +55,7 @@ const Root = forwardRef<HTMLDivElement, ColumnRootProps>(
             'gridTemplateColumns': [gutterSize, 'minmax(0,1fr)', gutterSize].join(' '),
           } as CSSProperties
         }
-        className={tx('column.root', { gutter }, [className, classNames])}
+        className={tx('column.root', { gutter }, className)}
         ref={forwardedRef}
       >
         {children}
@@ -78,13 +80,14 @@ type ColumnRowProps = SlottableProps<HTMLDivElement>;
  * Must be a direct child of Column.Root.
  */
 const Row = forwardRef<HTMLDivElement, ColumnRowProps>(
-  ({ classNames, className, asChild, role, children, ...props }, forwardedRef) => {
-    const { tx } = useThemeContext();
+  ({ children, asChild, role, ...props }, forwardedRef) => {
+    const { className, ...rest } = composableProps(props);
     const Component = asChild ? Slot : Primitive.div;
+    const { tx } = useThemeContext();
     return (
       <Component
-        {...props}
-        className={tx('column.row', {}, [className, classNames])}
+        {...rest}
+        className={tx('column.row', {}, className)}
         role={role ?? 'none'}
         ref={forwardedRef}
       >
@@ -110,17 +113,18 @@ type ColumnSegmentProps = SlottableProps<HTMLDivElement>;
  * NOTE: Must not use overflow-hidden here since it will clip input focus rings.
  */
 const Segment = forwardRef<HTMLDivElement, ColumnSegmentProps>(
-  ({ classNames, className, asChild, role, children, ...props }, forwardedRef) => {
-    const { tx } = useThemeContext();
+  ({ children, asChild, role, ...props }, forwardedRef) => {
+    const { className, ...rest } = composableProps(props);
     const Component = asChild ? Slot : Primitive.div;
+    const { tx } = useThemeContext();
 
     if (asChild) {
       // With asChild, merge col-start-2 directly onto the child — no contents wrapper needed.
       return (
         <Component
-          {...props}
+          {...rest}
           role={role ?? 'none'}
-          className={tx('column.segment', {}, [className, classNames])}
+          className={tx('column.segment', {}, className)}
           ref={forwardedRef}
         >
           {children}
@@ -130,8 +134,8 @@ const Segment = forwardRef<HTMLDivElement, ColumnSegmentProps>(
 
     return (
       <Component
-        {...props}
-        className={tx('column.segment', {}, [className, classNames])}
+        {...rest}
+        className={tx('column.segment', {}, className)}
         role={role}
         ref={forwardedRef}
       >

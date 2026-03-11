@@ -7,6 +7,7 @@ import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import React, { forwardRef } from 'react';
 
+import { composableProps } from '@dxos/ui-theme';
 import { type SlottableProps } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
@@ -41,26 +42,25 @@ const Root = forwardRef<HTMLDivElement, ScopedProps<RootProps>>(
   (
     {
       __scopeSplitter,
-      classNames,
-      className,
       asChild,
       mode = 'upper',
       ratio = 0.5,
       transition = 250,
       children,
-      ...rootProps
+      ...props
     },
     forwardedRef,
   ) => {
-    const { tx } = useThemeContext();
+    const { className, ...rest } = composableProps(props);
     const Comp = asChild ? Slot : Primitive.div;
+    const { tx } = useThemeContext();
     return (
       <SplitterProvider scope={__scopeSplitter} mode={mode} ratio={ratio} transition={transition}>
         <Comp
           role='none'
-          {...rootProps}
+          {...rest}
           ref={forwardedRef}
-          className={tx('splitter.root', {}, [className, classNames])}
+          className={tx('splitter.root', {}, className)}
         >
           {children}
         </Comp>
@@ -82,10 +82,11 @@ type PanelProps = SlottableProps<HTMLDivElement> & {
 };
 
 const Panel = forwardRef<HTMLDivElement, ScopedProps<PanelProps>>(
-  ({ __scopeSplitter, classNames, className, asChild, children, position, style, ...props }, forwardedRef) => {
+  ({ __scopeSplitter, asChild, children, position, style, ...props }, forwardedRef) => {
+    const { className, ...rest } = composableProps(props);
+    const Comp = asChild ? Slot : Primitive.div;
     const { mode, ratio, transition } = useSplitterContext(PANEL_NAME, __scopeSplitter);
     const { tx } = useThemeContext();
-    const Comp = asChild ? Slot : Primitive.div;
 
     // Calculate position and height based on mode and ratio.
     const isUpper = position === 'upper';
@@ -106,9 +107,9 @@ const Panel = forwardRef<HTMLDivElement, ScopedProps<PanelProps>>(
     return (
       <Comp
         role='none'
-        {...props}
+        {...rest}
         ref={forwardedRef}
-        className={tx('splitter.panel', {}, [className, classNames])}
+        className={tx('splitter.panel', {}, className)}
         style={{
           top,
           height,
