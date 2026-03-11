@@ -87,11 +87,11 @@ export abstract class AbstractAutomergeStoreAdapter<Element extends BaseElement>
     // Initialize the component store with the automerge doc records.
     //
     {
-      const map: Record<string, Element> = getDeep(accessor.handle.doc(), accessor.path) ?? {};
+      const map: Record<string, Element> = getDeep(accessor.handle.doc(this._ctx!), accessor.path) ?? {};
       const records = Object.values(map);
       if (records.length === 0) {
         // If the automerge doc is empty, initialize the automerge doc with the default store records.
-        accessor.handle.change((doc) => {
+        accessor.handle.change(this._ctx!, (doc) => {
           const map: Record<string, Element> = getDeep(doc, accessor.path, true);
           for (const record of this.getElements()) {
             map[record.id] = encode(record);
@@ -110,7 +110,7 @@ export abstract class AbstractAutomergeStoreAdapter<Element extends BaseElement>
     //
     {
       const updateModel = () => {
-        const doc = accessor.handle.doc()!;
+        const doc = accessor.handle.doc(this._ctx!)!;
         const map: Record<string, Element> = getDeep(doc, accessor.path);
 
         const updated = new Set<Element['id']>();
@@ -204,7 +204,7 @@ export abstract class AbstractAutomergeStoreAdapter<Element extends BaseElement>
     }
 
     const accessor = this._accessor!;
-    accessor.handle.change((doc) => {
+    accessor.handle.change(this._ctx!, (doc) => {
       log('updateDatabase', {
         added: batch.added?.length ?? 0,
         updated: batch.updated?.length ?? 0,

@@ -235,7 +235,7 @@ const mapSpaces = (spaces: Space[], options: MapSpacesOptions = { verbose: false
       key: space.key.truncate(),
       open: space.isOpen,
       members: space.members.get().length,
-      objects: space.internal.db.coreDatabase.getAllObjectIds().length,
+      objects: space.internal.db.coreDatabase.getAllObjectIds(Context.default()).length,
       startup,
       epoch,
       // appliedEpoch,

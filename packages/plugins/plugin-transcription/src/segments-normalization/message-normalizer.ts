@@ -7,7 +7,7 @@
 //
 
 import { DeferredTask, asyncTimeout } from '@dxos/async';
-import { LifecycleState, Resource } from '@dxos/context';
+import { Context, LifecycleState, Resource } from '@dxos/context';
 import { type Queue } from '@dxos/echo-db';
 import { type FunctionExecutor } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
@@ -67,7 +67,7 @@ export class MessageNormalizer extends Resource {
     updateMessages();
 
     // Subscribe to queue changes.
-    const unsubscribe = this._queue.subscribe(updateMessages);
+    const unsubscribe = this._queue.subscribe(this._ctx, updateMessages);
     this._ctx.onDispose(unsubscribe);
   }
 
@@ -108,6 +108,6 @@ export class MessageNormalizer extends Resource {
     log.info('writing messages', { messages });
     const lastMessage = messages[messages.length - 1];
     this._cursor.timestamp = lastMessage.created;
-    void this._queue.append(messages);
+    void this._queue.append(this._ctx, messages);
   }
 }

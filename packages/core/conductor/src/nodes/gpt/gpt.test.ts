@@ -5,6 +5,7 @@
 import { afterEach, beforeEach, describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
+import { Context } from '@dxos/context';
 import { type Database, Obj, Ref } from '@dxos/echo';
 import type { QueueFactory } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
@@ -61,9 +62,9 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
     it.effect(
       'gpt with history',
       Effect.fnUntraced(function* () {
-        const conversation = queues.create();
+        const conversation = queues.create(Context.default());
         yield* Effect.promise(() =>
-          conversation.append([
+          conversation.append(Context.default(), [
             Obj.make(Message.Message, {
               created: new Date().toISOString(),
               sender: { role: 'user' },
@@ -86,7 +87,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
         expect(output.text.length).toBeGreaterThan(10);
 
         const conversationMessages = yield* Effect.promise(() =>
-          queues.get<Message.Message>(conversation.dxn).queryObjects(),
+          queues.get<Message.Message>(Context.default(), conversation.dxn).queryObjects(Context.default()),
         );
         log.info('conversationMessages', { conversationMessages });
         expect(conversationMessages.at(-1)?.sender.role).toEqual('assistant');

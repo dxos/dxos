@@ -8,6 +8,7 @@ import { next as A } from '@automerge/automerge';
 import { type StateField } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
 
+import { Context } from '@dxos/context';
 import { type IDocHandle } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 
@@ -60,9 +61,10 @@ export class Syncer {
     log('onAutomergeChange');
 
     // Get the diff between the updated state of the document and the heads and apply that to the codemirror doc.
+    const ctx = Context.default();
     const oldHeads = getLastHeads(view.state, this._state);
-    const newHeads = A.getHeads(this._handle.doc()!);
-    const diff = A.equals(oldHeads, newHeads) ? [] : A.diff(this._handle.doc()!, oldHeads, newHeads);
+    const newHeads = A.getHeads(this._handle.doc(ctx)!);
+    const diff = A.equals(oldHeads, newHeads) ? [] : A.diff(this._handle.doc(ctx)!, oldHeads, newHeads);
 
     const selection = view.state.selection;
     const path = getPath(view.state, this._state);

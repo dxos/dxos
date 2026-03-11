@@ -2,14 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Repo } from '@automerge/automerge-repo';
+import { type DocHandle, Repo } from '@automerge/automerge-repo';
 import { BroadcastChannelNetworkAdapter } from '@automerge/automerge-repo-network-broadcastchannel';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useState } from 'react';
 
+import { Context } from '@dxos/context';
 import { Obj, Ref } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
-import { DocAccessor, createDocAccessor } from '@dxos/echo-db';
+import { DocAccessor, type IDocHandle, createDocAccessor } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { type Messenger } from '@dxos/protocols';
 import { Query, useQuery, useSpace } from '@dxos/react-client/echo';
@@ -29,6 +30,15 @@ type TestObject = {
   text: string;
 };
 
+/** Adapts an automerge-repo DocHandle to the IDocHandle interface expected by DocAccessor. */
+const adaptDocHandle = <T,>(handle: DocHandle<T>): IDocHandle<T> => ({
+  doc: (_ctx) => handle.doc(),
+  change: (_ctx, callback, options?) => handle.change(callback, options),
+  changeAt: (_ctx, heads: any, callback, options?) => handle.changeAt(heads, callback, options) as any,
+  addListener: (event, listener) => handle.addListener(event, listener),
+  removeListener: (event, listener) => handle.removeListener(event, listener),
+});
+
 type EditorProps = {
   source: DocAccessor;
   messenger?: Messenger;
@@ -41,7 +51,7 @@ const Editor = ({ source, messenger, identity, autoFocus }: EditorProps) => {
   const { parentRef } = useTextEditor(
     () => ({
       autoFocus,
-      initialValue: DocAccessor.getValue(source),
+      initialValue: DocAccessor.getValue(Context.default(), source),
       extensions: [
         createBasicExtensions({ placeholder: 'Type here...', search: true }),
         createThemeExtensions({ themeMode, slots: { scroll: { className: 'p-2' } } }),
@@ -71,8 +81,8 @@ const DefaultStory = () => {
       const object2 = await repo2.find<TestObject>(object1.url);
       await object2.whenReady();
 
-      setObject1({ handle: object1, path: ['text'] });
-      setObject2({ handle: object2, path: ['text'] });
+      setObject1({ handle: adaptDocHandle(object1), path: ['text'] });
+      setObject2({ handle: adaptDocHandle(object2), path: ['text'] });
     });
   }, []);
 

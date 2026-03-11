@@ -8,6 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
+import { Context } from '@dxos/context';
 import { Database, Obj, Ref, Type } from '@dxos/echo';
 import { TriggerEvent, defineFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
@@ -81,10 +82,10 @@ export default defineFunction({
         const queueTarget = yield* Database.load(queue);
         if ('queue' in data.event && data.event.item) {
           const obj = data.event.item;
-          yield* Effect.promise(() => queueTarget.append([obj]));
+          yield* Effect.promise(() => queueTarget.append(Context.default(), [obj]));
         } else if ('subject' in data.event && Ref.isRef(data.event.subject)) {
           const obj = yield* Database.load(data.event.subject);
-          yield* Effect.promise(() => queueTarget.append([obj]));
+          yield* Effect.promise(() => queueTarget.append(Context.default(), [obj]));
         } else {
           throw new Error('Invalid event.');
         }

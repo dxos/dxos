@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability, Plugin, UndoMapping } from '@dxos/app-framework';
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { SpaceState, getSpace } from '@dxos/client/echo';
+import { Context } from '@dxos/context';
 import { Database, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { EchoDatabaseImpl, Serializer } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
@@ -484,7 +485,7 @@ export default Capability.makeModule(
             Effect.promise(async () => {
               const db = input.db as any;
               invariant(db instanceof EchoDatabaseImpl, 'Database must be an instance of EchoDatabaseImpl');
-              const backup = await new Serializer().export(db, input.query && Query.fromAst(input.query));
+              const backup = await new Serializer().export(Context.default(), db, input.query && Query.fromAst(input.query));
               return {
                 snapshot: new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' }),
               };

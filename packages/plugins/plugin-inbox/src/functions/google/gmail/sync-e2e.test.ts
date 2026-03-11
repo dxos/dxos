@@ -11,6 +11,7 @@ import { sleep } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { configPreset } from '@dxos/config';
+import { Context } from '@dxos/context';
 import { Feed, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { Function } from '@dxos/functions';
 import { Trigger } from '@dxos/functions';
@@ -192,7 +193,7 @@ const checkEmails = async (feed: Feed.Feed, space: Space) => {
     console.log('No feed found for mailbox');
     return [];
   }
-  const queue = space.queues.get<Message.Message>(queueDxn);
+  const queue = space.queues.get<Message.Message>(Context.default(), queueDxn);
   const messages = await queue.query(Query.type(Message.Message)).run();
   console.log(`Messages in mailbox: ${messages.length}`);
   return messages;

@@ -12,6 +12,7 @@ import { MemoizedAiService } from '@dxos/ai/testing';
 import { AiConversation, type ContextBinding, GenerationObserver } from '@dxos/assistant';
 import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { Blueprint } from '@dxos/blueprints';
+import { Context } from '@dxos/context';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -64,7 +65,7 @@ describe('Research', () => {
         const researchGraph = yield* ResearchGraph.query();
         if (researchGraph) {
           const data = yield* Database.load(researchGraph.queue).pipe(
-            Effect.flatMap((queue) => Effect.promise(() => queue.queryObjects())),
+            Effect.flatMap((queue) => Effect.promise(() => queue.queryObjects(Context.default()))),
           );
           console.log(inspect(data, { depth: null, colors: true }));
         }

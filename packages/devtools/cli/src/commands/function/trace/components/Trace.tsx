@@ -5,6 +5,7 @@
 import * as Option from 'effect/Option';
 import { createEffect, createSignal, onCleanup } from 'solid-js';
 
+import { Context } from '@dxos/context';
 import { type Database, Filter, Obj } from '@dxos/echo';
 import { type Queue, type QueueAPI } from '@dxos/echo-db';
 import { Function, getUserFunctionIdInMetadata } from '@dxos/functions';
@@ -186,7 +187,7 @@ const useTraceQueue = (
     }
 
     try {
-      const queue = queues.get<InvocationTraceEvent>(queueDxn.value);
+      const queue = queues.get<InvocationTraceEvent>(Context.default(), queueDxn.value);
       setTraceQueue(queue);
     } catch {
       setTraceQueue(undefined);

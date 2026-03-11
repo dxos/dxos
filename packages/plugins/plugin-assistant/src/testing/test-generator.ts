@@ -4,6 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
+import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { ContextQueueService } from '@dxos/functions';
@@ -26,7 +27,7 @@ export const createMessageGenerator = (): MessageGenerator[] => [
   Effect.gen(function* () {
     const { queue } = yield* ContextQueueService;
     yield* Effect.promise(() =>
-      queue.append([
+      queue.append(Context.default(), [
         createMessage('user', [
           {
             _tag: 'text',
@@ -40,7 +41,7 @@ export const createMessageGenerator = (): MessageGenerator[] => [
   Effect.gen(function* () {
     const { queue } = yield* ContextQueueService;
     yield* Effect.promise(() =>
-      queue.append([
+      queue.append(Context.default(), [
         createMessage('assistant', [
           {
             _tag: 'text',
@@ -84,7 +85,7 @@ export const createMessageGenerator = (): MessageGenerator[] => [
   Effect.gen(function* () {
     const { queue } = yield* ContextQueueService;
     yield* Effect.promise(() =>
-      queue.append([
+      queue.append(Context.default(), [
         createMessage('assistant', [
           {
             _tag: 'text',
@@ -120,7 +121,7 @@ export const createMessageGenerator = (): MessageGenerator[] => [
   Effect.gen(function* () {
     const { queue } = yield* ContextQueueService;
     yield* Effect.promise(() =>
-      queue.append([
+      queue.append(Context.default(), [
         createMessage('assistant', [
           {
             _tag: 'toolkit',
@@ -133,7 +134,7 @@ export const createMessageGenerator = (): MessageGenerator[] => [
   Effect.gen(function* () {
     const { queue } = yield* ContextQueueService;
     yield* Effect.promise(() =>
-      queue.append([
+      queue.append(Context.default(), [
         createMessage('user', [
           {
             _tag: 'text',
@@ -152,7 +153,7 @@ export const createMessageGenerator = (): MessageGenerator[] => [
     // const obj3 = db.add(Obj.make(Person.Person, { fullName: 'Bob' }));
     // const obj4 = db.add(Obj.make(Person.Person, { fullName: 'Charlie' }));
     yield* Effect.promise(() =>
-      queue.append([
+      queue.append(Context.default(), [
         createMessage('assistant', [
           // Inline tag.
           {
@@ -176,7 +177,7 @@ export const createMessageGenerator = (): MessageGenerator[] => [
   Effect.gen(function* () {
     const { queue } = yield* ContextQueueService;
     yield* Effect.promise(() =>
-      queue.append([
+      queue.append(Context.default(), [
         createMessage('assistant', [
           {
             _tag: 'text',
@@ -208,7 +209,7 @@ export const createMessageGenerator = (): MessageGenerator[] => [
   Effect.gen(function* () {
     const { queue } = yield* ContextQueueService;
     yield* Effect.promise(() =>
-      queue.append([
+      queue.append(Context.default(), [
         createMessage('assistant', [
           {
             _tag: 'text',
@@ -249,7 +250,7 @@ export const createMessageGenerator = (): MessageGenerator[] => [
   Effect.gen(function* () {
     const { queue } = yield* ContextQueueService;
     yield* Effect.promise(() =>
-      queue.append([
+      queue.append(Context.default(), [
         createMessage('assistant', [
           {
             _tag: 'text',

@@ -11,6 +11,7 @@ import * as Schema from 'effect/Schema';
 import { CommandConfig, printList } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import { type Queue } from '@dxos/client/echo';
+import { Context } from '@dxos/context';
 import { DXN } from '@dxos/keys';
 
 import { printQueueObject } from './util';
@@ -32,7 +33,7 @@ export const query = Command.make(
     const { json } = yield* CommandConfig;
     const client = yield* ClientService;
     const queue = (yield* Effect.promise(() => client.graph.createRefResolver({}).resolve(dxn))) as Queue<any>;
-    const objects = yield* Effect.promise(() => queue.queryObjects());
+    const objects = yield* Effect.promise(() => queue.queryObjects(Context.default()));
 
     if (json) {
       yield* Console.log(JSON.stringify(objects, null, 2));

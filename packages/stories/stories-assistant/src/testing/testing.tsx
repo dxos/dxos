@@ -26,6 +26,7 @@ import { AiContextBinder, ArtifactId, GenericToolkit } from '@dxos/assistant';
 import { AgentFunctions, DesignBlueprint, MarkdownBlueprint, PlanningBlueprint } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
+import { Context } from '@dxos/context';
 import { Obj, Ref } from '@dxos/echo';
 import { ExampleFunctions, Function, Trigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
@@ -342,8 +343,8 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
               const space = client.spaces.get(db.spaceId);
               invariant(space, 'Space not found');
 
-              const queue = space.queues.create();
-              const traceQueue = space.queues.create();
+              const queue = space.queues.create(Context.default());
+              const traceQueue = space.queues.create(Context.default());
               const chat = Obj.make(Assistant.Chat, {
                 name,
                 queue: Ref.fromDXN(queue.dxn),

@@ -63,6 +63,7 @@
     "@dxos/blueprints": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/conductor": "workspace:*",
+    "@dxos/context": "catalog:",
     "@dxos/debug": "workspace:*",
     "@dxos/display-name": "workspace:*",
     "@dxos/echo": "workspace:*",

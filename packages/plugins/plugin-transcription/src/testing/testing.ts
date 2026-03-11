@@ -175,7 +175,7 @@ export const useTestTranscriptionQueue: UseTestTranscriptionQueue = (
 
     const i = setInterval(() => {
       void builder.createMessage(Math.ceil(Math.random() * 3)).then(async (message) => {
-        await queue.append([Obj.make(Message.Message, message)]);
+        await queue.append(Context.default(), [Obj.make(Message.Message, message)]);
       });
     }, interval);
     return () => clearInterval(i);
@@ -213,7 +213,7 @@ export const useTestTranscriptionQueueWithEntityExtraction: UseTestTranscription
       ctx,
       async () => {
         const message = await builder.createMessage();
-        void queue.append([Obj.make(Message.Message, message)]);
+        void queue.append(Context.default(), [Obj.make(Message.Message, message)]);
       },
       interval,
     );

@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
+import { Context } from '@dxos/context';
 import { Database, Obj, Type } from '@dxos/echo';
 import { QueueService, defineFunction } from '@dxos/functions';
 import { Message, Transcript } from '@dxos/types';
@@ -27,7 +28,7 @@ export default defineFunction({
     const transcriptObj = yield* Database.load(transcript);
     const { dxn } = yield* Effect.promise(() => transcriptObj.queue.load());
     const queue = yield* QueueService.getQueue(dxn);
-    yield* Effect.promise(() => queue?.queryObjects());
+    yield* Effect.promise(() => queue?.queryObjects(Context.default()));
     const content = queue?.objects
       .filter((message) => Obj.instanceOf(Message.Message, message))
       .flatMap((message, index) => renderByline([])(message, index))

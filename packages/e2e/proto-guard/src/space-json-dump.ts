@@ -9,6 +9,7 @@ import * as Record from 'effect/Record';
 import isEqual from 'fast-deep-equal';
 
 import { type Client } from '@dxos/client';
+import { Context } from '@dxos/context';
 import { type Obj, Type } from '@dxos/echo';
 import { Filter, Serializer } from '@dxos/echo-db';
 import { type SpaceId } from '@dxos/keys';
@@ -37,7 +38,7 @@ export class SpacesDumper {
 
       dump[space.id] = {};
       for (const object of objects) {
-        dump[space.id][object.id] = serializer.exportObject(object);
+        dump[space.id][object.id] = serializer.exportObject(Context.default(), object);
       }
     }
 

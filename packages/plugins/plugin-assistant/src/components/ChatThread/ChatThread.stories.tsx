@@ -8,6 +8,7 @@ import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 import React, { type CSSProperties, useEffect, useMemo, useState } from 'react';
 
+import { Context } from '@dxos/context';
 import { Database } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 import { ContextQueueService } from '@dxos/functions';
@@ -37,7 +38,7 @@ type StoryProps = { generator?: MessageGenerator[]; delay?: number; wait?: boole
 
 const DefaultStory = ({ generator = [], delay = 0, wait, ...props }: StoryProps) => {
   const space = useSpace();
-  const queueDxn = useMemo(() => space?.queues.create().dxn, [space]);
+  const queueDxn = useMemo(() => space?.queues.create(Context.default()).dxn, [space]);
   const queue = useQueue<Message.Message>(queueDxn);
   const [done, setDone] = useState(false);
 

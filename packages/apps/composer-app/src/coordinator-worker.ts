@@ -8,7 +8,6 @@
 // See: https://github.com/Menci/vite-plugin-wasm/issues/37
 
 onconnect = async (ev) => {
-  await import('zone.js');
   const { createCoordinatorOnConnect } = await import('@dxos/client');
 
   const handler = createCoordinatorOnConnect();
@@ -16,7 +15,6 @@ onconnect = async (ev) => {
 };
 
 const initializeObservability = async () => {
-  await import('zone.js');
   const { log } = await import('@dxos/log');
   const { isTauri } = await import('@dxos/util');
   const Config = await import('./config');

@@ -8,6 +8,7 @@ import type * as Schema from 'effect/Schema';
 
 import { type Space } from '@dxos/client/echo';
 import { CreateEpochRequest } from '@dxos/client/halo';
+import { Context } from '@dxos/context';
 import { getSchemaDXN } from '@dxos/echo/internal';
 import { type DocHandleProxy, ObjectCore, type RepoProxy, migrateDocument } from '@dxos/echo-db';
 import { type DatabaseDirectory, EncodedReference, type ObjectStructure, SpaceDocVersion } from '@dxos/echo-protocol';
@@ -45,22 +46,24 @@ export class MigrationBuilder {
   private _newRoot?: DocHandleProxy<DatabaseDirectory> = undefined;
 
   constructor(private readonly _space: Space) {
+    const ctx = Context.default();
     this._repo = this._space.internal.db.coreDatabase._repo;
     // TODO(wittjosiah): Accessing private API.
     this._rootDoc = (this._space.internal.db.coreDatabase as any)._automergeDocLoader
-      .getSpaceRootDocHandle()
-      .doc() as Doc<DatabaseDirectory>;
+      .getSpaceRootDocHandle(ctx)
+      .doc(ctx) as Doc<DatabaseDirectory>;
   }
 
   async findObject(id: string): Promise<ObjectStructure | undefined> {
+    const ctx = Context.default();
     const documentId = (this._rootDoc.links?.[id] || this._newLinks[id])?.toString() as AnyDocumentId | undefined;
-    const docHandle = documentId && this._repo.find(documentId);
+    const docHandle = documentId && this._repo.find(ctx, documentId);
     if (!docHandle) {
       return undefined;
     }
 
-    await docHandle.whenReady();
-    const doc = docHandle.doc() as Doc<DatabaseDirectory>;
+    await docHandle.whenReady(ctx);
+    const doc = docHandle.doc(ctx) as Doc<DatabaseDirectory>;
     return doc.objects?.[id];
   }
 
@@ -95,9 +98,10 @@ export class MigrationBuilder {
         },
       },
     };
-    const migratedDoc = migrateDocument(oldHandle.doc() as Doc<DatabaseDirectory>, newState);
-    const newHandle = this._repo.import<DatabaseDirectory>(A.save(migratedDoc));
-    await newHandle.whenReady();
+    const ctx = Context.default();
+    const migratedDoc = migrateDocument(oldHandle.doc(ctx) as Doc<DatabaseDirectory>, newState);
+    const newHandle = this._repo.import<DatabaseDirectory>(ctx, A.save(migratedDoc));
+    await newHandle.whenReady(ctx);
     invariant(newHandle.url, 'Migrated document URL not available after whenReady');
     this._newLinks[id] = newHandle.url;
     this._addHandleToFlushList(newHandle.documentId!);
@@ -122,11 +126,12 @@ export class MigrationBuilder {
     }
     invariant(this._newRoot, 'New root not created');
 
-    this._newRoot.change((doc: DatabaseDirectory) => {
+    const ctx = Context.default();
+    this._newRoot.change(ctx, (doc: DatabaseDirectory) => {
       const propertiesStructure = doc.objects?.[this._space.properties.id];
       propertiesStructure && changeFn(propertiesStructure);
     });
-    await this._newRoot.whenReady();
+    await this._newRoot.whenReady(ctx);
     this._addHandleToFlushList(this._newRoot.documentId!);
   }
 
@@ -139,7 +144,7 @@ export class MigrationBuilder {
     }
     invariant(this._newRoot, 'New root not created');
 
-    await this._space.db.flush();
+    await this._space.internal.db.coreDatabase.flush(Context.default());
 
     // Create new epoch.
     invariant(this._newRoot.url, 'New root URL not available');
@@ -150,13 +155,14 @@ export class MigrationBuilder {
   }
 
   private async _findObjectContainingHandle(id: string): Promise<DocHandleProxy<DatabaseDirectory> | undefined> {
+    const ctx = Context.default();
     const documentId = (this._rootDoc.links?.[id] || this._newLinks[id])?.toString() as AnyDocumentId | undefined;
-    const docHandle = documentId && this._repo.find(documentId);
+    const docHandle = documentId && this._repo.find(ctx, documentId);
     if (!docHandle) {
       return undefined;
     }
 
-    await docHandle.whenReady();
+    await docHandle.whenReady(ctx);
     return docHandle;
   }
 
@@ -170,7 +176,8 @@ export class MigrationBuilder {
       links[id] = new A.RawString(url);
     }
 
-    this._newRoot = this._repo.create<DatabaseDirectory>({
+    const ctx = Context.default();
+    this._newRoot = this._repo.create<DatabaseDirectory>(ctx, {
       version: SpaceDocVersion.CURRENT,
       access: {
         spaceKey: this._space.key.toHex(),
@@ -178,7 +185,7 @@ export class MigrationBuilder {
       objects: this._rootDoc.objects,
       links,
     });
-    await this._newRoot.whenReady();
+    await this._newRoot.whenReady(ctx);
     this._addHandleToFlushList(this._newRoot.documentId!);
   }
 
@@ -196,18 +203,19 @@ export class MigrationBuilder {
       core.id = id;
     }
 
-    core.initNewObject(props);
-    core.setType(EncodedReference.fromDXN(getSchemaDXN(schema)!));
-    const newHandle = this._repo.create<DatabaseDirectory>({
+    const ctx = Context.default();
+    core.initNewObject(ctx, props);
+    core.setType(ctx, EncodedReference.fromDXN(getSchemaDXN(schema)!));
+    const newHandle = this._repo.create<DatabaseDirectory>(ctx, {
       version: SpaceDocVersion.CURRENT,
       access: {
         spaceKey: this._space.key.toHex(),
       },
       objects: {
-        [core.id]: core.getDoc() as ObjectStructure,
+        [core.id]: core.getDoc(ctx) as ObjectStructure,
       },
     });
-    await newHandle.whenReady();
+    await newHandle.whenReady(ctx);
     this._newLinks[core.id] = newHandle.url!;
     this._addHandleToFlushList(newHandle.documentId!);
 

@@ -10,6 +10,7 @@ import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
+import { Context } from '@dxos/context';
 import { DXN, Filter, Key, Query, type QueryAST, type SchemaRegistry } from '@dxos/echo';
 import {
   ReferenceAnnotationId,
@@ -147,7 +148,7 @@ export const getQueryTarget = (query: QueryAST.Query, space?: Space) => {
         Option.flatMap((parsed) => {
           const q = parsed.asQueueDXN();
           if (!q || !Key.ObjectId.isValid(q.queueId)) return Option.none();
-          return Option.fromNullable(space?.queues.get(parsed));
+          return Option.fromNullable(space?.queues.get(Context.default(), parsed));
         }),
       );
       // Skip query when a requested queue is not found (structurally invalid DXN or valid DXN

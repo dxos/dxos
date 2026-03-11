@@ -6,6 +6,7 @@ import { next as A, type Doc } from '@automerge/automerge';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
+import { Context } from '@dxos/context';
 import { Database, Type } from '@dxos/echo';
 import { DocAccessor, createDocAccessor } from '@dxos/echo-db';
 import { defineFunction } from '@dxos/functions';
@@ -53,13 +54,13 @@ export default defineFunction({
     const accessor = createDocAccessor(content, ['content']);
 
     for (const edit of edits) {
-      accessor.handle.change((doc: Doc<typeof content>) => {
-        const text = DocAccessor.getValue<string>(accessor);
+      accessor.handle.change(Context.default(), (doc: Doc<typeof content>) => {
+        const text = DocAccessor.getValue<string>(Context.default(), accessor);
         if (edit.replaceAll) {
           let idx = text.indexOf(edit.oldString);
           while (idx !== -1) {
             A.splice(doc, accessor.path as A.Prop[], idx, edit.oldString.length, edit.newString);
-            const updated = DocAccessor.getValue<string>(accessor);
+            const updated = DocAccessor.getValue<string>(Context.default(), accessor);
             idx = updated.indexOf(edit.oldString, idx + edit.newString.length);
           }
         } else {
@@ -73,7 +74,7 @@ export default defineFunction({
     }
 
     return {
-      newContent: DocAccessor.getValue<string>(accessor),
+      newContent: DocAccessor.getValue<string>(Context.default(), accessor),
     };
   }),
 });

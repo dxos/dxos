@@ -22,6 +22,7 @@ import {
   WebSearchBlueprint,
 } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt, Template } from '@dxos/blueprints';
+import { Context } from '@dxos/context';
 import { Feed, Filter, Obj, Query, Ref, Tag, Type } from '@dxos/echo';
 import { ExampleFunctions, Script, Trigger, serializeFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
@@ -402,12 +403,12 @@ export const WithMail: Story = {
     types: [Type.Feed],
     onInit: async ({ space }) => {
       const feed = space.db.add(Mailbox.make({ name: 'Mailbox' }));
-      const queue = space.queues.create<Message.Message>();
+      const queue = space.queues.create<Message.Message>(Context.default());
       Obj.change(feed, (mutable) => {
         Obj.getMeta(mutable).keys.push({ source: Feed.DXN_KEY, id: queue.dxn.toString() });
       });
       const messages = createTestMailbox();
-      await queue.append(messages);
+      await queue.append(Context.default(), messages);
     },
     onChatCreated: async ({ space, binder }) => {
       const feeds = await space.db.query(Filter.type(Type.Feed)).run();
@@ -671,9 +672,9 @@ export const WithTranscription: Story = {
     config: config.remote,
     types: [Transcript.Transcript],
     onInit: async ({ space }) => {
-      const queue = space.queues.create();
+      const queue = space.queues.create(Context.default());
       const messages = createTestTranscription();
-      await queue.append(messages);
+      await queue.append(Context.default(), messages);
       space.db.add(Transcript.make(queue.dxn));
     },
     onChatCreated: async ({ space, binder }) => {
@@ -793,10 +794,10 @@ export const WithResearchQueue: Story = {
     accessTokens: [Obj.make(AccessToken.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
     onInit: async ({ space }) => {
       const researchInputQueue = space.db.add(
-        Obj.make(ResearchInputQueue, { queue: Ref.fromDXN(space.queues.create().dxn) }),
+        Obj.make(ResearchInputQueue, { queue: Ref.fromDXN(space.queues.create(Context.default()).dxn) }),
       );
       const orgs = organizations.map(({ id: _, ...org }) => Obj.make(Organization.Organization, org));
-      await researchInputQueue.queue.target!.append(orgs);
+      await researchInputQueue.queue.target!.append(Context.default(), orgs);
 
       const researchPrompt = space.db.add(
         Prompt.make({
@@ -876,12 +877,12 @@ export const WithProject: Story = {
       });
 
       const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox' }));
-      const queue = space.queues.create<Message.Message>();
+      const queue = space.queues.create<Message.Message>(Context.default());
       Obj.change(mailbox, (mutable) => {
         Obj.getMeta(mutable).keys.push({ source: Feed.DXN_KEY, id: queue.dxn.toString() });
       });
       const messages = createTestMailbox(people);
-      await queue.append(messages);
+      await queue.append(Context.default(), messages);
 
       const dxosResearch = space.db.add(
         Markdown.make({

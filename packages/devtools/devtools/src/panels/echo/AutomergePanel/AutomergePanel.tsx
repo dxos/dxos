@@ -4,6 +4,7 @@
 
 import React, { useMemo, useState } from 'react';
 
+import { Context } from '@dxos/context';
 import { Format } from '@dxos/echo/internal';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { useClient } from '@dxos/react-client';
@@ -65,7 +66,7 @@ export const AutomergePanel = (props: { space?: Space }) => {
       client.spaces
         .get()
         .find((s) => s.id === space.id)
-        ?.internal.db.coreDatabase?.getLoadedDocumentHandles()) ??
+        ?.internal.db.coreDatabase?.getLoadedDocumentHandles(Context.default())) ??
     [];
 
   const [filter, setFilter] = useState('');
@@ -82,7 +83,7 @@ export const AutomergePanel = (props: { space?: Space }) => {
   const data = useMemo(() => {
     return handles
       .map((handle) => {
-        const doc = handle.doc();
+        const doc = handle.doc(Context.default());
         return {
           id: handle.documentId!,
           documentId: handle.documentId!,

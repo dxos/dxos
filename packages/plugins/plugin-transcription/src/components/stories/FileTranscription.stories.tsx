@@ -83,7 +83,7 @@ const AudioFile = ({
   const model = useQueueModelAdapter(renderByline([]), queue);
   const handleSegments = useCallback<TranscriberProps['onSegments']>(
     async (blocks) => {
-      void queue?.append([
+      void queue?.append(Context.default(), [
         Obj.make(Message.Message, {
           created: new Date().toISOString(),
           sender: actor,

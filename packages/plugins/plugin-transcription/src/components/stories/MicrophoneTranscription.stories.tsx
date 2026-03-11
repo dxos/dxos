@@ -15,6 +15,7 @@ import {
   getNer,
   processTranscriptMessage,
 } from '@dxos/assistant/extraction';
+import { Context } from '@dxos/context';
 import { Filter, type Obj } from '@dxos/echo';
 import { createQueueDXN } from '@dxos/echo/internal';
 import { MemoryQueue } from '@dxos/echo-db';
@@ -136,7 +137,7 @@ const DefaultStory = ({
         blocks,
       });
       if (!space) {
-        void queue.append([message]);
+        void queue.append(Context.default(), [message]);
         return;
       }
 
@@ -155,9 +156,9 @@ const DefaultStory = ({
             timeout: 30_000,
           },
         });
-        void queue.append([result.message]);
+        void queue.append(Context.default(), [result.message]);
       } else {
-        void queue.append([message]);
+        void queue.append(Context.default(), [message]);
       }
     },
     [queue, space],

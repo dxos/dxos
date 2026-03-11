@@ -309,9 +309,6 @@ catalogs:
     '@opentelemetry/auto-instrumentations-web':
       specifier: ^0.51.0
       version: 0.51.3
-    '@opentelemetry/context-zone-peer-dep':
-      specifier: ^2.6.0
-      version: 2.6.0
     '@opentelemetry/core':
       specifier: ^2.5.0
       version: 2.5.0
@@ -1872,27 +1869,19 @@ catalogs:
     zen-push:
       specifier: ^0.3.1
       version: 0.3.1
-    zone.js:
-      specifier: ^0.15.0
-      version: 0.15.1
     zx:
       specifier: ^8.8.5
       version: 8.8.5
 
 overrides:
   '@automerge/automerge': 3.2.3
+  '@grpc/grpc-js': '>=1.10.9'
   '@lezer/lr': ^1.4.2
+  '@modelcontextprotocol/sdk': '>=1.26.0'
+  '@remix-run/router': '>=1.23.2'
   '@types/node': 22.10.2
   '@types/react': ~19.2.7
   '@types/react-dom': ~19.2.3
-  effect: 3.19.16
-  nan: 2.23.0
-  react: ~19.2.3
-  react-dom: ~19.2.3
-  typescript: ^5.9.3
-  '@grpc/grpc-js': '>=1.10.9'
-  '@modelcontextprotocol/sdk': '>=1.26.0'
-  '@remix-run/router': '>=1.23.2'
   ajv@8: '>=8.18.0'
   axios: '>=1.13.5'
   base-x@4: 4.0.1
@@ -1901,6 +1890,7 @@ overrides:
   devalue: '>=5.6.3'
   diff: '>=5.2.2'
   dompurify: '>=3.2.4'
+  effect: 3.19.16
   esbuild: '>=0.25.0'
   fast-xml-parser: '>=5.3.6'
   glob: '>=10.5.0'
@@ -1909,6 +1899,7 @@ overrides:
   mdast-util-to-hast: '>=13.2.1'
   mermaid: '>=10.9.4'
   minimatch: '>=10.2.1'
+  nan: 2.23.0
   nanoid: '>=3.3.8'
   node.extend: '>=1.1.7'
   nth-check: '>=2.0.1'
@@ -1916,8 +1907,11 @@ overrides:
   path-to-regexp: '>=3.3.0'
   prismjs: '>=1.30.0'
   qs: '>=6.14.1'
+  react: ~19.2.3
+  react-dom: ~19.2.3
   tar: '>=7.5.7'
   tar-fs: '>=3.1.1'
+  typescript: ^5.9.3
   undici: '>=7.18.2'
   vite: '>=7.1.11'
   wrangler: '>=4.59.1'
@@ -2644,9 +2638,6 @@ importers:
       solid-js:
         specifier: 'catalog:'
         version: 1.9.11
-      zone.js:
-        specifier: 'catalog:'
-        version: 0.15.1
     devDependencies:
       '@babel/core':
         specifier: 'catalog:'
@@ -8921,6 +8912,9 @@ importers:
       '@dxos/conductor':
         specifier: workspace:*
         version: link:../../core/conductor
+      '@dxos/context':
+        specifier: 'catalog:'
+        version: 0.8.3
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
@@ -9441,6 +9435,9 @@ importers:
       '@dxos/client-protocol':
         specifier: workspace:*
         version: link:../../sdk/client-protocol
+      '@dxos/context':
+        specifier: 'catalog:'
+        version: 0.8.3
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -10936,6 +10933,9 @@ importers:
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
+      '@dxos/context':
+        specifier: 'catalog:'
+        version: 0.8.3
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
@@ -14110,10 +14110,7 @@ importers:
         version: 0.203.0
       '@opentelemetry/auto-instrumentations-web':
         specifier: 'catalog:'
-        version: 0.51.3(@opentelemetry/api@1.9.0)(zone.js@0.15.1)
-      '@opentelemetry/context-zone-peer-dep':
-        specifier: 'catalog:'
-        version: 2.6.0(@opentelemetry/api@1.9.0)(zone.js@0.15.1)
+        version: 0.51.3(@opentelemetry/api@1.9.0)
       '@opentelemetry/core':
         specifier: 'catalog:'
         version: 2.5.0(@opentelemetry/api@1.9.0)
@@ -16089,6 +16086,9 @@ importers:
       '@dxos/client-protocol':
         specifier: workspace:*
         version: link:../../sdk/client-protocol
+      '@dxos/context':
+        specifier: 'catalog:'
+        version: 0.8.3
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -21998,13 +21998,6 @@ packages:
     engines: {node: ^18.19.0 || >=20.6.0}
     peerDependencies:
       '@opentelemetry/api': '>=1.0.0 <1.10.0'
-
-  '@opentelemetry/context-zone-peer-dep@2.6.0':
-    resolution: {integrity: sha512-cFSbc+3Osyo3nBmdteNarJaI3GqTRn0YgcEJWt/PkgazLqfwMifPIoSBLpLCZQzGtkTbdef2htgE7Tw6qe/bkw==}
-    engines: {node: ^18.19.0 || >=20.6.0}
-    peerDependencies:
-      '@opentelemetry/api': '>=1.0.0 <1.10.0'
-      zone.js: ^0.10.2 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^0.14.0 || ^0.15.0 || ^0.16.0
 
   '@opentelemetry/core@2.0.1':
     resolution: {integrity: sha512-MaZk9SJIDgo1peKevlbhP6+IwIiNPNmswNL4AF0WaQJLbHXjr9SrZMgS12+iqr9ToV4ZVosCcc0f8Rg67LXjxw==}
@@ -37030,9 +37023,6 @@ packages:
   zod@4.1.12:
     resolution: {integrity: sha512-JInaHOamG8pt5+Ey8kGmdcAcg3OL9reK8ltczgHTAwNhMys/6ThXHityHxVV2p3fkw/c+MAvBHFVYHFZDmjMCQ==}
 
-  zone.js@0.15.1:
-    resolution: {integrity: sha512-XE96n56IQpJM7NAoXswY3XRLcWFW83xe0BiAOeMD7K5k5xecOeul3Qcpx6GqEeeHNkW5DWL5zOyTbEfB4eti8w==}
-
   zustand@3.7.2:
     resolution: {integrity: sha512-PIJDIZKtokhof+9+60cpockVOq05sJzHCriyvaLBmEJixseQ1a5Kdov6fWZfWOu5SK9c+FhH1jU0tntLxRJYMA==}
     engines: {node: '>=12.7.0'}
@@ -41184,15 +41174,14 @@ snapshots:
       - encoding
       - supports-color
 
-  '@opentelemetry/auto-instrumentations-web@0.51.3(@opentelemetry/api@1.9.0)(zone.js@0.15.1)':
+  '@opentelemetry/auto-instrumentations-web@0.51.3(@opentelemetry/api@1.9.0)':
     dependencies:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/instrumentation': 0.205.0(@opentelemetry/api@1.9.0)
       '@opentelemetry/instrumentation-document-load': 0.51.2(@opentelemetry/api@1.9.0)
       '@opentelemetry/instrumentation-fetch': 0.205.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/instrumentation-user-interaction': 0.50.2(@opentelemetry/api@1.9.0)(zone.js@0.15.1)
+      '@opentelemetry/instrumentation-user-interaction': 0.50.2(@opentelemetry/api@1.9.0)
       '@opentelemetry/instrumentation-xml-http-request': 0.205.0(@opentelemetry/api@1.9.0)
-      zone.js: 0.15.1
     transitivePeerDependencies:
       - supports-color
 
@@ -41203,11 +41192,6 @@ snapshots:
   '@opentelemetry/context-async-hooks@2.1.0(@opentelemetry/api@1.9.0)':
     dependencies:
       '@opentelemetry/api': 1.9.0
-
-  '@opentelemetry/context-zone-peer-dep@2.6.0(@opentelemetry/api@1.9.0)(zone.js@0.15.1)':
-    dependencies:
-      '@opentelemetry/api': 1.9.0
-      zone.js: 0.15.1
 
   '@opentelemetry/core@2.0.1(@opentelemetry/api@1.9.0)':
     dependencies:
@@ -41790,13 +41774,12 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@opentelemetry/instrumentation-user-interaction@0.50.2(@opentelemetry/api@1.9.0)(zone.js@0.15.1)':
+  '@opentelemetry/instrumentation-user-interaction@0.50.2(@opentelemetry/api@1.9.0)':
     dependencies:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/core': 2.5.0(@opentelemetry/api@1.9.0)
       '@opentelemetry/instrumentation': 0.205.0(@opentelemetry/api@1.9.0)
       '@opentelemetry/sdk-trace-web': 2.1.0(@opentelemetry/api@1.9.0)
-      zone.js: 0.15.1
     transitivePeerDependencies:
       - supports-color
 
@@ -59544,8 +59527,6 @@ snapshots:
   zod@3.25.76: {}
 
   zod@4.1.12: {}
-
-  zone.js@0.15.1: {}
 
   zustand@3.7.2(react@19.2.3):
     optionalDependencies:

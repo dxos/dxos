@@ -5,6 +5,7 @@
 import { useEffect, useState } from 'react';
 
 import { SpaceState } from '@dxos/client/echo';
+import { Context } from '@dxos/context';
 import { type NetworkStatus } from '@dxos/client/mesh';
 import { type EchoDataStats, type EchoStatsDiagnostic } from '@dxos/echo-pipeline';
 import { log } from '@dxos/log';
@@ -154,7 +155,7 @@ export const useStats = (): [Stats, () => void] => {
       client.spaces
         .get()
         .filter((space) => space.state.get() === SpaceState.SPACE_READY)
-        .map((space) => space.internal.db.coreDatabase.getSyncState()),
+        .map((space) => space.internal.db.coreDatabase.getSyncState(Context.default())),
     );
     const documentsToReconcile = syncStates
       .flatMap((s) => s.peers?.map((p) => p.differentDocuments + p.missingOnLocal + p.missingOnRemote) ?? [])
