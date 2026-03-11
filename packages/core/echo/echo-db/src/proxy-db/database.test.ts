@@ -15,6 +15,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { asyncTimeout, sleep } from '@dxos/async';
 import { Obj, Query, Ref, Type } from '@dxos/echo';
 import { Err } from '@dxos/echo';
+import { Filter } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
@@ -22,7 +23,6 @@ import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
 import { clone, getObjectCore } from '../echo-handler';
-import { Filter } from '@dxos/echo';
 import { EchoTestBuilder, createTmpPath } from '../testing';
 
 // TODO(burdon): Normalize tests to use common graph data (see query.test.ts).

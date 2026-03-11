@@ -9,11 +9,9 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import type * as Types from 'effect/Types';
 
-import { type QueryAST } from '@dxos/echo-protocol';
 import { promiseWithCauseCapture } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { DXN, type PublicKey, type SpaceId } from '@dxos/keys';
-import { type QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/echo/filter';
+import { DXN, type SpaceId } from '@dxos/keys';
 
 import type * as Entity from './Entity';
 import * as Err from './Err';

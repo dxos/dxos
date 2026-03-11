@@ -21,6 +21,7 @@ import {
   Type,
   View,
 } from '@dxos/echo';
+import { Filter, Query } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { DXN, PublicKey } from '@dxos/keys';
@@ -32,8 +33,6 @@ import { range } from '@dxos/util';
 import { getObjectCore } from '../echo-handler';
 import { type EchoDatabase } from '../proxy-db';
 import { EchoTestBuilder, type EchoTestPeer, createTmpPath } from '../testing';
-
-import { Filter, Query } from '@dxos/echo';
 
 faker.seed(1);
 

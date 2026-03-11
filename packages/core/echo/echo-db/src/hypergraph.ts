@@ -5,7 +5,7 @@
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
-import { type Database, type Entity, Filter, type Hypergraph, Query, type QueryAST, Ref } from '@dxos/echo';
+import { type Database, type Entity, Filter, type Hypergraph, Query, Ref } from '@dxos/echo';
 import { type AnyProperties, setRefResolver } from '@dxos/echo/internal';
 import { batchEvents } from '@dxos/echo/internal';
 import { failedInvariant } from '@dxos/invariant';

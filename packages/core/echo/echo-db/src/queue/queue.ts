@@ -8,14 +8,14 @@ import { DeferredTask } from '@dxos/async';
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type Database, Entity, Obj, type Ref } from '@dxos/echo';
+import { Filter, Query } from '@dxos/echo';
 import { type ObjectJSON, SelfDXNId, assertObjectModel, setRefResolverOnData } from '@dxos/echo/internal';
 import { defineHiddenProperty } from '@dxos/echo/internal';
-import { assertArgument, failedInvariant } from '@dxos/invariant';
+import { failedInvariant } from '@dxos/invariant';
 import { type DXN, type ObjectId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type FeedProtocol } from '@dxos/protocols';
 
-import { Filter, Query } from '@dxos/echo';
 import { QueryResultImpl } from '../query';
 
 import { QueueQueryContext } from './queue-query-context';

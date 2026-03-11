@@ -5,13 +5,13 @@
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Obj, Query, Ref, Type } from '@dxos/echo';
+import { Filter } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
 
 import { type EchoDatabase } from './proxy-db';
-import { Filter } from '@dxos/echo';
 import { type SerializedSpace } from './serialized-space';
 import { Serializer } from './serializer';
 import { EchoTestBuilder, createTmpPath } from './testing';

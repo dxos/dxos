@@ -3,14 +3,7 @@
 //
 
 import { Event } from '@dxos/async';
-import {
-  type Database,
-  type Entity,
-  Filter,
-  type Hypergraph,
-  Query,
-  type QueryResult,
-} from '@dxos/echo';
+import { type Database, type Entity, Filter, type Hypergraph, Query, type QueryResult } from '@dxos/echo';
 import { type QueryContext, QueryResultImpl } from '@dxos/echo-db';
 import { QueryAST } from '@dxos/echo-protocol';
 import { type EdgeHttpClient } from '@dxos/edge-client';

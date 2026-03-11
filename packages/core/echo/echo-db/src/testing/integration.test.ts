@@ -7,6 +7,7 @@ import { afterEach, assert, beforeEach, describe, expect, test } from 'vitest';
 
 import { asyncTimeout } from '@dxos/async';
 import { Obj, Relation, Type } from '@dxos/echo';
+import { Filter, Query } from '@dxos/echo';
 import { Ref, getSchemaDXN, getTypeAnnotation, makeObject } from '@dxos/echo/internal';
 import { TestSchema } from '@dxos/echo/testing';
 import { MeshEchoReplicator } from '@dxos/echo-pipeline';
@@ -18,8 +19,6 @@ import {
 import { DXN, type ObjectId, PublicKey } from '@dxos/keys';
 import { TestBuilder as TeleportTestBuilder, TestPeer as TeleportTestPeer } from '@dxos/teleport/testing';
 import { deferAsync } from '@dxos/util';
-
-import { Filter, Query } from '@dxos/echo';
 
 import { EchoTestBuilder, createDataAssertion } from './echo-test-builder';
 
