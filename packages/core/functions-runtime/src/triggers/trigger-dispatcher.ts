@@ -20,6 +20,7 @@ import * as Record from 'effect/Record';
 import * as Schedule from 'effect/Schedule';
 import * as Struct from 'effect/Struct';
 
+import { Context as DxosContext } from '@dxos/context';
 import { DXN, Entity, Filter, Obj, Query } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { causeToError } from '@dxos/effect';
@@ -434,7 +435,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
               const concurrency = Math.min(trigger.concurrency ?? 1, this._maxConcurrency);
 
               // TODO(dmaretskyi): Include cursor & limit in the query.
-              const chunks = yield* Effect.promise(() => queue.queryObjects()).pipe(
+              const chunks = yield* Effect.promise(() => queue.queryObjects(DxosContext.default())).pipe(
                 Effect.map(
                   Array.dropWhile((object) => {
                     const objectPos = Entity.getKeys(object, FeedProtocol.KEY_QUEUE_POSITION).at(0)?.id;

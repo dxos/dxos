@@ -9,6 +9,7 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { ConsolePrinter } from '@dxos/ai';
+import { Context as DxosContext } from '@dxos/context';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
 import { QueueService, TracingService, Trigger } from '@dxos/functions';
@@ -216,7 +217,7 @@ export namespace TracingServiceExt {
     Layer.succeed(TracingService, {
       getTraceContext: () => ({}),
       write: (event: Obj.Unknown) => {
-        void queue.append([event]).catch((error) => {
+        void queue.append(DxosContext.default(), [event]).catch((error) => {
           log.warn('Failed to write trace event to queue', { error });
         });
       },
@@ -258,9 +259,9 @@ export namespace TracingServiceExt {
           write: (event: Obj.Any, traceContext: TracingService.TraceContext) => {
             const specificQueueDXN = traceContext.currentInvocation?.invocationTraceQueue;
             const queue = specificQueueDXN
-              ? queueService.queues.get(DXN.parse(specificQueueDXN))
+              ? queueService.queues.get(DxosContext.default(), DXN.parse(specificQueueDXN))
               : opts.invocationTraceQueue;
-            void queue.append([event]).catch((error) => {
+            void queue.append(DxosContext.default(), [event]).catch((error) => {
               log.warn('Failed to write trace event to queue', { error });
             });
           },

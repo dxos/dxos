@@ -6,6 +6,7 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
+import { Context as DxosContext } from '@dxos/context';
 import { Database, type Type } from '@dxos/echo';
 import { type EchoDatabaseImpl, type QueueFactory } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
@@ -68,7 +69,7 @@ export const TestDatabaseLayer = ({ types, spaceKey, storagePath, onInit }: Test
         log('starting persistant test db', { storagePath, testMetadata });
         if (!testMetadata) {
           db = yield* Effect.promise(() => peer.createDatabase(key));
-          queues = peer.client.constructQueueFactory(db.spaceId);
+          queues = peer.client.constructQueueFactory(DxosContext.default(), db.spaceId);
 
           yield* Effect.promise(() =>
             kv!.put('test-metadata', { key: key.toHex(), rootUrl: db!.rootUrl }, { valueEncoding: 'json' }),
@@ -84,13 +85,13 @@ export const TestDatabaseLayer = ({ types, spaceKey, storagePath, onInit }: Test
           const key = PublicKey.from((testMetadata as any).key);
           const rootUrl = (testMetadata as any).rootUrl;
           db = yield* Effect.promise(() => peer.openDatabase(key, rootUrl));
-          queues = peer.client.constructQueueFactory(db.spaceId);
+          queues = peer.client.constructQueueFactory(DxosContext.default(), db.spaceId);
           // Rebuild index after reopening since in-memory SQLite is recreated.
           yield* Effect.promise(() => db!.flush({ indexes: true }));
         }
       } else {
         db = yield* Effect.promise(() => peer.createDatabase(key));
-        queues = peer.client.constructQueueFactory(db.spaceId);
+        queues = peer.client.constructQueueFactory(DxosContext.default(), db.spaceId);
         if (onInit) {
           yield* onInit().pipe(
             Effect.provideService(Database.Service, Database.makeService(db)),
