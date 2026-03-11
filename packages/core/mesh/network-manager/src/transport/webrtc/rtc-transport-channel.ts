@@ -5,7 +5,7 @@
 import { Duplex } from 'node:stream';
 
 import { Event as AsyncEvent } from '@dxos/async';
-import { Context, Resource } from '@dxos/context';
+import { Resource } from '@dxos/context';
 import { ErrorStream } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';

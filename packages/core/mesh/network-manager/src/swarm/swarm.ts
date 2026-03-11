@@ -381,7 +381,6 @@ export class Swarm {
    * Creates a connection then sends message over signal network.
    */
   private async _initiateConnection(ctx: Context, remotePeer: PeerInfo): Promise<void> {
-
     // It is likely that the other peer will also try to connect to us at the same time.
     // If our peerId is higher, we will wait for a bit so that other peer has a chance to connect first.
     const peer = this._getOrCreatePeer(ctx, remotePeer);

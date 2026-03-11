@@ -389,7 +389,9 @@ export class Connection {
       }
 
       log.info('signal message failed to deliver', { err });
-      await this.close(this._ctx, { error: new ConnectivityError({ message: 'signal message failed to deliver', cause: err }) });
+      await this.close(this._ctx, {
+        error: new ConnectivityError({ message: 'signal message failed to deliver', cause: err }),
+      });
     }
   }
 

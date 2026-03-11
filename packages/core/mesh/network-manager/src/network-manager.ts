@@ -149,7 +149,6 @@ export class SwarmNetworkManager {
     await this._signalManager.close();
   }
 
-
   /**
    * Join the swarm.
    */

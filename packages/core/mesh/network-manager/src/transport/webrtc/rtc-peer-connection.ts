@@ -339,7 +339,11 @@ export class RtcPeerConnection {
     log('signal processed', { type: data.type });
   }
 
-  private async _processIceCandidate(ctx: Context, connection: RTCPeerConnection, candidate: RTCIceCandidate): Promise<void> {
+  private async _processIceCandidate(
+    ctx: Context,
+    connection: RTCPeerConnection,
+    candidate: RTCIceCandidate,
+  ): Promise<void> {
     try {
       // ICE candidates are associated with a session, so we need to wait for the remote description to be set.
       await this._readyForCandidates.wait();
@@ -421,7 +425,11 @@ export class RtcPeerConnection {
     }
   }
 
-  private async _sendDescription(ctx: Context, connection: RTCPeerConnection, description: RTCSessionDescriptionInit): Promise<void> {
+  private async _sendDescription(
+    ctx: Context,
+    connection: RTCPeerConnection,
+    description: RTCSessionDescriptionInit,
+  ): Promise<void> {
     if (connection !== this._connection) {
       // Connection was closed while description was being created.
       return;

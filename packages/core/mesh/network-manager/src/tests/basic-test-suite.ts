@@ -163,22 +163,37 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
 
     // Wait for peer to be removed from the swarm.
     await expect
-      .poll(() => !!peer2._networkManager.getSwarm(Context.default(), topic)!._peers.get({ peerKey: peer1.peerId.toHex() })?.advertizing, {
-        timeout: 1_000,
-      })
+      .poll(
+        () =>
+          !!peer2._networkManager.getSwarm(Context.default(), topic)!._peers.get({ peerKey: peer1.peerId.toHex() })
+            ?.advertizing,
+        {
+          timeout: 1_000,
+        },
+      )
       .toBe(false);
 
     await peer1.goOnline();
 
     await expect
-      .poll(() => peer1._networkManager.getSwarm(Context.default(), topic)?._peers.get({ peerKey: peer2.peerId.toHex() })?.advertizing, {
-        timeout: 2_000,
-      })
+      .poll(
+        () =>
+          peer1._networkManager.getSwarm(Context.default(), topic)?._peers.get({ peerKey: peer2.peerId.toHex() })
+            ?.advertizing,
+        {
+          timeout: 2_000,
+        },
+      )
       .toBe(true);
     await expect
-      .poll(() => peer2._networkManager.getSwarm(Context.default(), topic)?._peers.get({ peerKey: peer1.peerId.toHex() })?.advertizing, {
-        timeout: 2_000,
-      })
+      .poll(
+        () =>
+          peer2._networkManager.getSwarm(Context.default(), topic)?._peers.get({ peerKey: peer1.peerId.toHex() })
+            ?.advertizing,
+        {
+          timeout: 2_000,
+        },
+      )
       .toBe(true);
 
     await exchangeMessages(swarm1, swarm2);
