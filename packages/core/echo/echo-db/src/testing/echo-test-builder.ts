@@ -14,6 +14,7 @@ import isEqual from 'fast-deep-equal';
 import { waitForCondition } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
 import { type Obj, type Type } from '@dxos/echo';
+import { Filter, Query } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { EchoHost } from '@dxos/echo-pipeline';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';
@@ -28,7 +29,6 @@ import { range } from '@dxos/util';
 
 import { EchoClient } from '../client';
 import { type EchoDatabase } from '../proxy-db';
-import { Filter, Query } from '../query';
 
 type OpenDatabaseOptions = {
   client?: EchoClient;
