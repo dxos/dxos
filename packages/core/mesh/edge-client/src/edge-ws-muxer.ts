@@ -3,6 +3,7 @@
 //
 
 import { Trigger } from '@dxos/async';
+import { type Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { buf } from '@dxos/protocols/buf';
 import { type Message, MessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
@@ -52,9 +53,9 @@ export class WebSocketMuxer {
   /**
    * Resolves when all the message chunks get enqueued for sending.
    */
-  public async send(message: Message): Promise<void> {
+  public async send(ctx: Context, message: Message): Promise<void> {
     const binary = buf.toBinary(MessageSchema, message);
-    const channelId = this._resolveChannel(message);
+    const channelId = this._resolveChannel(ctx, message);
     if (
       (channelId == null && binary.byteLength > CLOUDFLARE_MESSAGE_MAX_BYTES) ||
       binary.byteLength > CLOUDFLARE_RPC_MAX_BYTES
@@ -76,9 +77,9 @@ export class WebSocketMuxer {
 
     const terminatorSentTrigger = new Trigger();
     const messageChunks: MessageChunk[] = [];
-    for (let i = 0; i < binary.length; i += this._maxChunkLength) {
-      const chunk = binary.slice(i, i + this._maxChunkLength);
-      const isLastChunk = i + this._maxChunkLength >= binary.length;
+    for (let index = 0; index < binary.length; index += this._maxChunkLength) {
+      const chunk = binary.slice(index, index + this._maxChunkLength);
+      const isLastChunk = index + this._maxChunkLength >= binary.length;
       if (isLastChunk) {
         const flags = Buffer.from([FLAG_SEGMENT_SEQ | FLAG_SEGMENT_SEQ_TERMINATED, channelId]);
         messageChunks.push({ payload: Buffer.concat([flags, chunk]), trigger: terminatorSentTrigger });
@@ -95,12 +96,12 @@ export class WebSocketMuxer {
       this._outMessageChunks.set(channelId, messageChunks);
     }
 
-    this._sendChunkedMessages();
+    this._sendChunkedMessages(ctx);
 
     return terminatorSentTrigger.wait();
   }
 
-  public receiveData(data: Uint8Array): Message | undefined {
+  public receiveData(ctx: Context, data: Uint8Array): Message | undefined {
     if ((data[0] & FLAG_SEGMENT_SEQ) === 0) {
       return buf.fromBinary(MessageSchema, data.slice(1));
     }
@@ -123,7 +124,7 @@ export class WebSocketMuxer {
     return message;
   }
 
-  public destroy(): void {
+  public destroy(ctx: Context): void {
     if (this._sendTimeout) {
       clearTimeout(this._sendTimeout);
       this._sendTimeout = undefined;
@@ -136,7 +137,7 @@ export class WebSocketMuxer {
     this._outMessageChannelByService.clear();
   }
 
-  private _sendChunkedMessages(): void {
+  private _sendChunkedMessages(ctx: Context): void {
     if (this._sendTimeout) {
       return;
     }
@@ -178,7 +179,7 @@ export class WebSocketMuxer {
     this._sendTimeout = setTimeout(send);
   }
 
-  private _resolveChannel(message: Message): number | undefined {
+  private _resolveChannel(ctx: Context, message: Message): number | undefined {
     if (!message.serviceId) {
       return undefined;
     }

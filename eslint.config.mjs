@@ -524,6 +524,15 @@ export default tseslint.config(
             // @dxos/edge-client — EdgeConnection interface implementation (extends Resource with fixed lifecycle).
             'EdgeClient',
 
+            // @dxos/edge-client — HTTP client utility (many callers across codebase, adding ctx would cascade widely).
+            'EdgeHttpClient',
+
+            // @dxos/edge-client — Resource subclass (_open/_close override signatures fixed by base class).
+            'EdgeWsConnection',
+
+            // @dxos/edge-client — Protocol codec utility (pure serialization, no side effects).
+            'Protocol',
+
             // @dxos/teleport — TeleportExtension interface implementations (fixed onOpen/onClose/onAbort signatures).
             'ControlExtension',
             'RpcExtension',

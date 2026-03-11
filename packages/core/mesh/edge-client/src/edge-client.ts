@@ -143,7 +143,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
       throw new EdgeIdentityChangedError();
     }
 
-    this._currentConnection.send(message);
+    this._currentConnection.send(this._ctx, message);
   }
 
   public onMessage(listener: MessageListener) {

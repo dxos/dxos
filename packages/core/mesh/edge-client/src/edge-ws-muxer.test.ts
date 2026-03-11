@@ -4,6 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
+import { Context } from '@dxos/context';
 import { bufWkt } from '@dxos/protocols/buf';
 import { TextMessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 
@@ -18,14 +19,14 @@ describe('WebSocketMuxerTest', () => {
     const { muxer: muxer1, sentMessages } = await createMuxer();
     const { muxer: muxer2 } = await createMuxer();
     const content = 'A'.repeat(MAX_CHUNK_LENGTH);
-    await muxer1.send(textMessage(content));
+    await muxer1.send(Context.default(), textMessage(content));
 
     expect(sentMessages.length).toBeGreaterThan(1);
     for (const chunk of sentMessages.slice(0, -1)) {
-      expect(muxer2.receiveData(chunk)).toBeUndefined();
+      expect(muxer2.receiveData(Context.default(), chunk)).toBeUndefined();
     }
 
-    const reassembledMessage = muxer2.receiveData(sentMessages.at(-1)!)!;
+    const reassembledMessage = muxer2.receiveData(Context.default(), sentMessages.at(-1)!)!;
     expect(reassembledMessage).toBeDefined();
 
     const decoded = bufWkt.anyUnpack(reassembledMessage.payload!, TextMessageSchema);

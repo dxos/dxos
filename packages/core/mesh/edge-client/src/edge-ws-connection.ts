@@ -35,15 +35,13 @@ export class EdgeWsConnection extends Resource {
 
   private _openTimestamp: number | undefined;
 
-  // Latency tracking.
   private _pingTimestamp: number | undefined;
   private _rtt = 0;
 
-  // Rate tracking with sliding window.
   private _uploadRate = 0;
   private _downloadRate = 0;
-  private readonly _rateWindow = 10000; // 10 second sliding window.
-  private readonly _rateUpdateInterval = 1000; // Update rates every second.
+  private readonly _rateWindow = 10000;
+  private readonly _rateUpdateInterval = 1000;
   private _bytesSamples: Array<{ timestamp: number; sent: number; received: number }> = [];
 
   private _messagesSent = 0;
@@ -90,7 +88,7 @@ export class EdgeWsConnection extends Resource {
     return this._messagesReceived;
   }
 
-  public send(message: Message): void {
+  public send(ctx: Context, message: Message): void {
     invariant(this._ws);
     invariant(this._wsMuxer);
     log('sending...', { peerKey: this._identity.peerKey, payload: protocol.getPayloadType(message) });
@@ -105,20 +103,18 @@ export class EdgeWsConnection extends Resource {
         });
         return;
       }
-      this._recordBytes(binary.byteLength, 0);
+      this._recordBytes(ctx, binary.byteLength, 0);
       this._ws.send(binary);
     } else {
-      // For muxer, we need to track the size of the message being sent.
       const binary = buf.toBinary(MessageSchema, message);
-      this._recordBytes(binary.byteLength, 0);
-      this._wsMuxer.send(message).catch((e) => log.catch(e));
+      this._recordBytes(ctx, binary.byteLength, 0);
+      this._wsMuxer.send(ctx, message).catch((e) => log.catch(e));
     }
   }
 
   protected override async _open(): Promise<void> {
     const baseProtocols = [...Object.values(EdgeWebsocketProtocol)];
 
-    // Inject W3C trace context as query params since browser WebSocket API does not support custom headers.
     const wsUrl = new URL(this._connectionInfo.url.toString());
     const carrier: Record<string, string> = {};
     propagation.inject(otelContext.active(), carrier);
@@ -143,8 +139,8 @@ export class EdgeWsConnection extends Resource {
         log('connected');
         this._openTimestamp = Date.now();
         this._callbacks.onConnected();
-        this._scheduleHeartbeats();
-        this._scheduleRateCalculation();
+        this._scheduleHeartbeats(this._ctx);
+        this._scheduleRateCalculation(this._ctx);
       } else {
         log.verbose('connected after becoming inactive', { currentIdentity: this._identity });
       }
@@ -153,7 +149,7 @@ export class EdgeWsConnection extends Resource {
       if (this.isOpen) {
         log.warn('server disconnected', { code: event.code, reason: event.reason });
         this._callbacks.onRestartRequired();
-        muxer.destroy();
+        muxer.destroy(this._ctx);
       }
     };
     this._ws.onerror = (event: WebSocket.ErrorEvent) => {
@@ -164,9 +160,6 @@ export class EdgeWsConnection extends Resource {
         log.verbose('error ignored on closed connection', { error: event.error });
       }
     };
-    /**
-     * https://developer.mozilla.org/en-US/docs/Web/API/MessageEvent/data
-     */
     this._ws.onmessage = async (event: WebSocket.MessageEvent) => {
       if (!this.isOpen) {
         log.verbose('message ignored on closed connection', { event: event.type });
@@ -174,16 +167,15 @@ export class EdgeWsConnection extends Resource {
       }
       this._lastReceivedMessageTimestamp = Date.now();
       if (event.data === '__pong__') {
-        // Calculate latency.
         if (this._pingTimestamp) {
           this._rtt = Date.now() - this._pingTimestamp;
           this._pingTimestamp = undefined;
         }
-        this._rescheduleHeartbeatTimeout();
+        this._rescheduleHeartbeatTimeout(this._ctx);
         return;
       }
       const bytes = await toUint8Array(event.data);
-      this._recordBytes(0, bytes.byteLength);
+      this._recordBytes(this._ctx, 0, bytes.byteLength);
       if (!this.isOpen) {
         return;
       }
@@ -192,7 +184,7 @@ export class EdgeWsConnection extends Resource {
 
       const message = this._ws?.protocol?.includes(EdgeWebsocketProtocol.V0)
         ? buf.fromBinary(MessageSchema, bytes)
-        : muxer.receiveData(bytes);
+        : muxer.receiveData(this._ctx, bytes);
 
       if (message) {
         log('received', { from: message.source, payload: protocol.getPayloadType(message) });
@@ -207,7 +199,7 @@ export class EdgeWsConnection extends Resource {
     try {
       this._ws?.close();
       this._ws = undefined;
-      this._wsMuxer?.destroy();
+      this._wsMuxer?.destroy(this._ctx);
       this._wsMuxer = undefined;
     } catch (err) {
       if (err instanceof Error && err.message.includes('WebSocket is closed before the connection is established.')) {
@@ -217,13 +209,11 @@ export class EdgeWsConnection extends Resource {
     }
   }
 
-  private _scheduleHeartbeats(): void {
+  private _scheduleHeartbeats(ctx: Context): void {
     invariant(this._ws);
     scheduleTaskInterval(
       this._ctx,
       async () => {
-        // TODO(mykola): use RFC6455 ping/pong once implemented in the browser?
-        // Cloudflare's worker responds to this `without interrupting hibernation`. https://developers.cloudflare.com/durable-objects/api/websockets/#setwebsocketautoresponse
         this._pingTimestamp = Date.now();
         this._ws?.send('__ping__');
       },
@@ -231,10 +221,10 @@ export class EdgeWsConnection extends Resource {
     );
     this._pingTimestamp = Date.now();
     this._ws.send('__ping__');
-    this._rescheduleHeartbeatTimeout();
+    this._rescheduleHeartbeatTimeout(ctx);
   }
 
-  private _rescheduleHeartbeatTimeout(): void {
+  private _rescheduleHeartbeatTimeout(ctx: Context): void {
     if (!this.isOpen) {
       return;
     }
@@ -250,7 +240,7 @@ export class EdgeWsConnection extends Resource {
             });
             this._callbacks.onRestartRequired();
           } else {
-            this._rescheduleHeartbeatTimeout();
+            this._rescheduleHeartbeatTimeout(this._ctx);
           }
         }
       },
@@ -258,10 +248,9 @@ export class EdgeWsConnection extends Resource {
     );
   }
 
-  private _recordBytes(sent: number, received: number): void {
+  private _recordBytes(ctx: Context, sent: number, received: number): void {
     const now = Date.now();
 
-    // Find if we have a sample for the current second.
     const currentSecond = Math.floor(now / 1000) * 1000;
     const existingSample = this._bytesSamples.find((s) => Math.floor(s.timestamp / 1000) * 1000 === currentSecond);
 
@@ -273,23 +262,21 @@ export class EdgeWsConnection extends Resource {
     }
   }
 
-  private _scheduleRateCalculation(): void {
+  private _scheduleRateCalculation(ctx: Context): void {
     scheduleTaskInterval(
       this._ctx,
       async () => {
-        this._calculateRates();
+        this._calculateRates(this._ctx);
       },
       this._rateUpdateInterval,
     );
-    // Calculate initial rates.
-    this._calculateRates();
+    this._calculateRates(ctx);
   }
 
-  private _calculateRates(): void {
+  private _calculateRates(ctx: Context): void {
     const now = Date.now();
     const cutoff = now - this._rateWindow;
 
-    // Remove old samples.
     this._bytesSamples = this._bytesSamples.filter((s) => s.timestamp > cutoff);
 
     if (this._bytesSamples.length === 0) {
@@ -298,18 +285,16 @@ export class EdgeWsConnection extends Resource {
       return;
     }
 
-    // Calculate total bytes and time span.
     let totalSent = 0;
     let totalReceived = 0;
     const oldestTimestamp = Math.min(...this._bytesSamples.map((s) => s.timestamp));
-    const timeSpan = (now - oldestTimestamp) / 1000; // Convert to seconds.
+    const timeSpan = (now - oldestTimestamp) / 1000;
 
     for (const sample of this._bytesSamples) {
       totalSent += sample.sent;
       totalReceived += sample.received;
     }
 
-    // Calculate rates (bytes per second).
     this._uploadRate = timeSpan > 0 ? Math.round(totalSent / timeSpan) : 0;
     this._downloadRate = timeSpan > 0 ? Math.round(totalReceived / timeSpan) : 0;
   }
