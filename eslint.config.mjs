@@ -334,21 +334,5 @@ export default tseslint.config(
     },
   },
 
-  //
-  // Explicit context propagation (ctx: Context as first param).
-  // Applied broadly; public API classes and UI/plugin packages are exempt.
-  //
-  {
-    files: [
-      'packages/core/**/src/**/*.ts',
-      'packages/sdk/**/src/**/*.ts',
-    ],
-    ignores: [
-      '**/*.test.ts',
-      '**/testing/**',
-    ],
-    rules: {
-      'dxos-plugin/require-context-param': 'warn',
-    },
-  },
+
 );

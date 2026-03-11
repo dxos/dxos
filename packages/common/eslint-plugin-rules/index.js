@@ -8,7 +8,6 @@ import header from './rules/header.js';
 import noBareDotImports from './rules/no-bare-dot-imports.js';
 import noEffectRunPromise from './rules/no-effect-run-promise.js';
 import noEmptyPromiseCatch from './rules/no-empty-promise-catch.js';
-import requireContextParam from './rules/require-context-param.js';
 import fs from 'node:fs';
 
 const pkg = JSON.parse(fs.readFileSync(new URL('./package.json', import.meta.url), 'utf8'));
@@ -26,7 +25,6 @@ const plugin = {
     'no-bare-dot-imports': noBareDotImports,
     'no-effect-run-promise': noEffectRunPromise,
     'no-empty-promise-catch': noEmptyPromiseCatch,
-    'require-context-param': requireContextParam,
   },
   configs: {
     recommended: {
