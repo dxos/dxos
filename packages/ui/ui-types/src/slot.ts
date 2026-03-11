@@ -2,34 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type FC, type HTMLAttributes, type JSX, type ReactElement } from 'react';
+import { type HTMLAttributes } from 'react';
 
 import { type ClassNameValue } from './theme';
 
 // TODO(burdon): Define base type for component with `testId`, etc.
-// TODO(burdon): Branded type for slot-compliant components.
-// marker symbol — not exported, so can't be faked
-
-declare const __slotCompliant: unique symbol;
-
-/** Marker interface for components that properly spread all slot props. */
-export type SlotCompliant = {
-  readonly [__slotCompliant]: true;
-};
-
-/** A component that is guaranteed to forward all slot props. */
-export type SlotCompliantComponent<P> = FC<P> & SlotCompliant;
-
-/** Either a branded custom component, OR any native element. */
-export type SlotChild<P> =
-  | { type: SlotCompliantComponent<P> } // Custom: must have brand.
-  | { type: keyof JSX.IntrinsicElements }; // Native: inherently safe.
-
-/** Props for components that support `asChild`. */
-export type AsChildProps<P> = {
-  asChild?: boolean;
-  children?: ReactElement<P> & SlotChild<P>;
-};
 
 /**
  * Props for components that render a default DOM element but support `asChild` to delegate rendering to a child via Radix Slot.
