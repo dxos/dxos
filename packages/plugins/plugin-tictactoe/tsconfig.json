@@ -1,0 +1,72 @@
+{
+  "extends": [
+    "../../../tsconfig.base.json"
+  ],
+  "compilerOptions": {
+    "types": [
+      "node"
+    ]
+  },
+  "exclude": [
+    "*.t.ts",
+    "vite.config.ts"
+  ],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/*.ts"
+  ],
+  "references": [
+    {
+      "path": "../../common/display-name"
+    },
+    {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../common/storybook-utils"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../core/blueprints"
+    },
+    {
+      "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../core/echo/echo-react"
+    },
+    {
+      "path": "../../core/functions"
+    },
+    {
+      "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/app-toolkit"
+    },
+    {
+      "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-mosaic"
+    },
+    {
+      "path": "../../ui/react-ui-sfx"
+    },
+    {
+      "path": "../../ui/ui-theme"
+    },
+    {
+      "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-theme"
+    }
+  ]
+}
