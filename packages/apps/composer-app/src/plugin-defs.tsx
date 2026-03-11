@@ -12,6 +12,7 @@ import { AttentionPlugin } from '@dxos/plugin-attention';
 import { AutomationPlugin } from '@dxos/plugin-automation';
 import { BoardPlugin } from '@dxos/plugin-board';
 import { ChessPlugin } from '@dxos/plugin-chess';
+import { TicTacToePlugin } from '@dxos/plugin-tictactoe';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { ConductorPlugin } from '@dxos/plugin-conductor';
 import { DebugPlugin } from '@dxos/plugin-debug';
@@ -156,6 +157,7 @@ export const getPlugins = ({
     AutomationPlugin(),
     BoardPlugin(),
     ChessPlugin(),
+    TicTacToePlugin(),
     ClientPlugin({
       config,
       services,
