@@ -13,6 +13,7 @@ import * as Struct from 'effect/Struct';
 
 import { AiService, DEFAULT_EDGE_MODEL, ToolExecutionService, ToolId, ToolResolverService } from '@dxos/ai';
 import { AiSession, GenerationObserver } from '@dxos/assistant';
+import { Context as DxosContext } from '@dxos/context';
 import { Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
 import { ComputeEventLogger, FunctionInvocationService, QueueService, TracingService } from '@dxos/functions';
@@ -125,7 +126,7 @@ export const gptNode = defineComputeNode({
     const { queues } = yield* QueueService;
     const historyMessages = conversation
       ? yield* Effect.tryPromise({
-          try: () => queues.get<Message.Message>(conversation.dxn).queryObjects(),
+          try: () => queues.get<Message.Message>(DxosContext.default(), conversation.dxn).queryObjects(DxosContext.default()),
           catch: (e) => e as Error,
         })
       : (history ?? []);
@@ -172,7 +173,7 @@ export const gptNode = defineComputeNode({
       log.info('messages', { messages });
 
       if (conversation) {
-        yield* Effect.promise(() => queues.get<Message.Message>(conversation.dxn).append([...messages]));
+        yield* Effect.promise(() => queues.get<Message.Message>(DxosContext.default(), conversation.dxn).append(DxosContext.default(), [...messages]));
       }
 
       const text = messages
