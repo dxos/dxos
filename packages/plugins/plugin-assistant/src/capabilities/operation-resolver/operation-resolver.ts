@@ -9,7 +9,6 @@ import { AiContextBinder, AiConversation } from '@dxos/assistant';
 import { AgentFunctions, Chat } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { type Queue } from '@dxos/client/echo';
-import { Context } from '@dxos/context';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { TracingService, serializeFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
@@ -51,7 +50,7 @@ export default Capability.makeModule(
           const client = yield* Capability.get(ClientCapabilities.Client);
           const space = client.spaces.get(db.spaceId);
           invariant(space, 'Space not found');
-          const queue = space.queues.create(Context.default());
+          const queue = space.queues.create();
           const chat = Chat.make({ name, queue: db.makeRef<any>(queue.dxn) });
           if (addToSpace) {
             space.db.add(chat);

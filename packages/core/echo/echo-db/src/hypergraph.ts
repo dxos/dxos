@@ -353,7 +353,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     if (!queueFactory) {
       return undefined;
     }
-    return queueFactory.get(Context.default(), DXN.fromQueue(subspaceTag, spaceId, queueId));
+    return queueFactory.get(DXN.fromQueue(subspaceTag, spaceId, queueId));
   }
 
   private async _resolveQueueObjectAsync(
@@ -366,7 +366,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     if (!queueFactory) {
       return undefined;
     }
-    const queue = queueFactory.get(Context.default(), DXN.fromQueue(subspaceTag, spaceId, queueId));
+    const queue = queueFactory.get(DXN.fromQueue(subspaceTag, spaceId, queueId));
     if (!queue) {
       return undefined;
     }

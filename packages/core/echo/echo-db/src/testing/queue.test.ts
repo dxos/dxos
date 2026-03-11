@@ -31,7 +31,7 @@ describe('queues', () => {
     const obj = db.add(
       Obj.make(TestSchema.Expando, {
         // TODO(dmaretskyi): Support Ref.make
-        queue: Type.Ref.fromDXN(queues.create(Context.default()).dxn) as Ref.Ref<Queue>,
+        queue: Type.Ref.fromDXN(queues.create().dxn) as Ref.Ref<Queue>,
       }),
     );
 
@@ -44,7 +44,7 @@ describe('queues', () => {
     await using peer = await builder.createPeer({ types: [TestSchema.Person] });
     const db = await peer.createDatabase();
     const queues = peer.client.constructQueueFactory(Context.default(), db.spaceId);
-    const queue = queues.create(Context.default());
+    const queue = queues.create();
 
     await queue.append([Obj.make(TestSchema.Person, { name: 'john' })]);
     const obj = queue.objects[0];
@@ -55,7 +55,7 @@ describe('queues', () => {
     await using peer = await builder.createPeer({ types: [TestSchema.Person] });
     const spaceId = SpaceId.random();
     const queues = peer.client.constructQueueFactory(Context.default(), spaceId);
-    const queue = queues.create(Context.default());
+    const queue = queues.create();
 
     const obj = Obj.make(TestSchema.Person, { name: 'john' });
     await queue.append([obj]);
@@ -83,7 +83,7 @@ describe('queues', () => {
     await using peer = await builder.createPeer({ types: [TestSchema.Person], assignQueuePositions: true });
     const spaceId = SpaceId.random();
     const queues = peer.client.constructQueueFactory(Context.default(), spaceId);
-    const queue = queues.create(Context.default());
+    const queue = queues.create();
 
     await queue.append([
       // prettier-ignore
@@ -113,7 +113,7 @@ describe('queues', () => {
     });
     const spaceId = SpaceId.random();
     const queues = peer.client.constructQueueFactory(Context.default(), spaceId);
-    const queue = queues.create(Context.default());
+    const queue = queues.create();
 
     {
       const obj1 = Obj.make(TestSchema.Person, { name: 'john' });
@@ -142,7 +142,7 @@ describe('queues', () => {
     });
     const db = await peer.createDatabase();
     const queues = peer.client.constructQueueFactory(Context.default(), db.spaceId);
-    const queue = queues.create(Context.default());
+    const queue = queues.create();
 
     {
       const contact = db.add(Obj.make(TestSchema.Person, { name: 'alice' }));
@@ -171,7 +171,7 @@ describe('queues', () => {
       });
       const spaceId = SpaceId.random();
       const queues = peer.client.constructQueueFactory(Context.default(), spaceId);
-      const queue = queues.create(Context.default());
+      const queue = queues.create();
 
       await queue.append([
         Obj.make(TestSchema.Person, {
@@ -196,7 +196,7 @@ describe('queues', () => {
       });
       const spaceId = SpaceId.random();
       const queues = peer.client.constructQueueFactory(Context.default(), spaceId);
-      const queue = queues.create(Context.default());
+      const queue = queues.create();
 
       await queue.append([
         Obj.make(TestSchema.Person, {
@@ -219,7 +219,7 @@ describe('queues', () => {
       await using peer = await builder.createPeer();
       const db = await peer.createDatabase();
       const queues = peer.client.constructQueueFactory(Context.default(), db.spaceId);
-      const queue = queues.create(Context.default());
+      const queue = queues.create();
 
       const localObject = Obj.make(TestSchema.Person, { name: 'local-only' });
       await queue.append([localObject]);
@@ -237,7 +237,7 @@ describe('queues', () => {
       await using peer = await builder.createPeer();
       const db = await peer.createDatabase();
       const queues = peer.client.constructQueueFactory(Context.default(), db.spaceId);
-      const queue = queues.create(Context.default());
+      const queue = queues.create();
 
       const localObject = Obj.make(TestSchema.Expando, { message: 'local-only' });
       await queue.append([localObject]);
@@ -257,7 +257,7 @@ describe('queues', () => {
       });
       const spaceId = SpaceId.random();
       const queues = peer.client.constructQueueFactory(Context.default(), spaceId);
-      const queue = queues.create(Context.default());
+      const queue = queues.create();
 
       await queue.append([
         Obj.make(TestSchema.Person, {
@@ -282,7 +282,7 @@ describe('queues', () => {
       });
       const spaceId = SpaceId.random();
       const queues = peer.client.constructQueueFactory(Context.default(), spaceId);
-      const queue = queues.create(Context.default());
+      const queue = queues.create();
 
       const john = Obj.make(TestSchema.Person, { name: 'john' });
       const jane = Obj.make(TestSchema.Person, { name: 'jane' });
@@ -303,7 +303,7 @@ describe('queues', () => {
       });
       const spaceId = SpaceId.random();
       const queues = peer.client.constructQueueFactory(Context.default(), spaceId);
-      const queue = queues.create(Context.default());
+      const queue = queues.create();
 
       await queue.append([
         Obj.make(TestSchema.Person, {
@@ -332,7 +332,7 @@ describe('queues', () => {
       });
       const spaceId = SpaceId.random();
       const queues = peer.client.constructQueueFactory(Context.default(), spaceId);
-      const queue = queues.create(Context.default());
+      const queue = queues.create();
 
       await queue.append([
         Obj.make(TestSchema.Person, {
@@ -367,7 +367,7 @@ describe('queues', () => {
       });
       const spaceId = SpaceId.random();
       const queues = peer.client.constructQueueFactory(Context.default(), spaceId);
-      const queue = queues.create(Context.default());
+      const queue = queues.create();
 
       await queue.append([
         Obj.make(TestSchema.Person, {
@@ -378,7 +378,7 @@ describe('queues', () => {
       await peer.reload();
 
       const queues2 = peer.client.constructQueueFactory(Context.default(), spaceId);
-      const objects2 = await queues2.get(Context.default(), queue.dxn).query(Filter.everything()).run();
+      const objects2 = await queues2.get(queue.dxn).query(Filter.everything()).run();
 
       expect(objects2).toHaveLength(1);
       expect(objects2[0].name).toEqual('john');

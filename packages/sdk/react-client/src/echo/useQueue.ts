@@ -5,7 +5,6 @@
 import { useEffect, useMemo, useRef } from 'react';
 
 import { type Queue } from '@dxos/client/echo';
-import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { type Entity } from '@dxos/echo';
 import { type DXN } from '@dxos/keys';
@@ -38,7 +37,7 @@ export const useQueue = <T extends Entity.Unknown>(
     }
 
     const { spaceId } = queueDxn.asQueueDXN() ?? raise(new TypeError('Invalid queue DXN'));
-    return client.spaces.get(spaceId)?.queues.get<T>(Context.default(), queueDxn);
+    return client.spaces.get(spaceId)?.queues.get<T>(queueDxn);
   }, [client, queueDxn?.toString()]);
 
   useEffect(() => {

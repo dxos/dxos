@@ -9,7 +9,6 @@ import React from 'react';
 import { Capability } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { Context } from '@dxos/context';
 import { Obj, Ref } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { MarkdownPlugin } from '@dxos/plugin-markdown';
@@ -58,7 +57,7 @@ const meta = {
                 Obj.make(Meeting.Meeting, {
                   created: new Date().toISOString(),
                   participants: [],
-                  transcript: Ref.make(Transcript.make(space.queues.create(Context.default()).dxn)),
+                  transcript: Ref.make(Transcript.make(space.queues.create().dxn)),
                   notes: Ref.make(Text.make('Notes')),
                   summary: Ref.make(Text.make()),
                   thread: Ref.make(Thread.make()),

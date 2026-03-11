@@ -6,7 +6,6 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { JSONPath } from 'jsonpath-plus';
 
-import { Context as DxosContext } from '@dxos/context';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { isInstanceOf } from '@dxos/echo/internal';
@@ -141,7 +140,7 @@ export const registry: Record<NodeType, Executable> = {
     exec: synchronizedComputeFunction(
       Effect.fnUntraced(function* () {
         const { queues } = yield* QueueService;
-        const queue = queues.create(DxosContext.default());
+        const queue = queues.create();
         return {
           [DEFAULT_OUTPUT]: Ref.fromDXN(queue.dxn),
         };
@@ -209,7 +208,7 @@ export const registry: Record<NodeType, Executable> = {
     exec: synchronizedComputeFunction(({ [DEFAULT_INPUT]: id }) =>
       Effect.gen(function* () {
         const { queues } = yield* QueueService;
-        const messages = yield* Effect.promise(() => queues.get(DxosContext.default(), DXN.parse(id)).queryObjects());
+        const messages = yield* Effect.promise(() => queues.get(DXN.parse(id)).queryObjects());
         const decoded = Schema.decodeUnknownSync(Schema.Any)(messages);
         return {
           [DEFAULT_OUTPUT]: decoded,
@@ -232,7 +231,7 @@ export const registry: Record<NodeType, Executable> = {
               id: item.id ?? ObjectId.random(),
             }));
             const { queues } = yield* QueueService;
-            yield* Effect.promise(() => queues.get(DxosContext.default(), DXN.parse(id)).append(mappedItems));
+            yield* Effect.promise(() => queues.get(DXN.parse(id)).append(mappedItems));
             return {};
           }
 

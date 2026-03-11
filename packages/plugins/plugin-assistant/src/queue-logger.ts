@@ -4,7 +4,6 @@
 
 import { type Queue, Ref, type Space, getSpace } from '@dxos/client/echo';
 import { type Sequence, type SequenceEvent, type SequenceLogger } from '@dxos/conductor';
-import { Context } from '@dxos/context';
 import { DXN, Key, Obj } from '@dxos/echo';
 import { InvocationTraceEndEvent, InvocationTraceEventType, InvocationTraceStartEvent } from '@dxos/functions-runtime';
 import { TraceEvent } from '@dxos/functions-runtime';
@@ -29,7 +28,7 @@ export class QueueLogger implements SequenceLogger {
         p.invocationTraceQueue = Ref.fromDXN(newDxn);
       });
     }
-    this._invocationTraceQueue = this._space.queues.get(Context.default(), dxn);
+    this._invocationTraceQueue = this._space.queues.get(dxn);
   }
 
   log(event: SequenceEvent) {
@@ -120,6 +119,6 @@ export class QueueLogger implements SequenceLogger {
 
   private _getTraceEventQueue(invocationId: string): Queue<TraceEvent> {
     const dxn = this._getTraceQueueDxn(invocationId);
-    return this._space.queues.get(Context.default(), dxn);
+    return this._space.queues.get(dxn);
   }
 }

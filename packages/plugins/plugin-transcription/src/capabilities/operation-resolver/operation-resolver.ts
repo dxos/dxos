@@ -5,7 +5,6 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Context } from '@dxos/context';
 import { OperationResolver } from '@dxos/operation';
 import { Transcript } from '@dxos/types';
 
@@ -18,7 +17,7 @@ export default Capability.makeModule(() =>
         operation: TranscriptOperation.Create,
         handler: ({ space }) =>
           Effect.succeed({
-            object: Transcript.make(space.queues.create(Context.default()).dxn),
+            object: Transcript.make(space.queues.create().dxn),
           }),
       }),
     ]),

@@ -9,7 +9,6 @@ import { useContext, useMemo, useState } from 'react';
 import { AiConversation } from '@dxos/assistant';
 import { type Chat } from '@dxos/assistant-toolkit';
 import { type Blueprint } from '@dxos/blueprints';
-import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { type Queue, type Space } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
@@ -48,7 +47,7 @@ export const useChatProcessor = ({
 
     // NOTE: Passing in space and getting queue from space rather than resolving the reference.
     //  This is because if the chat isn't in a space yet, the reference will not be resolvable.
-    const queue = space.queues.get(Context.default(), chat.queue.dxn);
+    const queue = space.queues.get(chat.queue.dxn);
     const conversation = new AiConversation({
       queue: queue as Queue<any>,
       registry: observableRegistry as Registry.Registry,

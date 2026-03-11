@@ -261,7 +261,7 @@ describe('Query', () => {
       const peer = await builder.createPeer({ types: [ContactV1, ContactV2] });
       const db = await peer.createDatabase();
       const queues = peer.client.constructQueueFactory(Context.default(), db.spaceId);
-      const queue = queues.create(Context.default());
+      const queue = queues.create();
 
       const contactV1 = Obj.make(ContactV1, { firstName: 'John', lastName: 'Doe' });
       const contactV2 = Obj.make(ContactV2, { name: 'Brian Smith' });
@@ -285,7 +285,7 @@ describe('Query', () => {
       const peer = await builder.createPeer({ types: [TestSchema.Task] });
       const db = await peer.createDatabase();
       const queues = peer.client.constructQueueFactory(Context.default(), db.spaceId);
-      const queue = queues.create(Context.default());
+      const queue = queues.create();
 
       const task = Obj.make(TestSchema.Task, { title: 'Queue type selector task' });
       await queue.append([task]);
@@ -311,11 +311,11 @@ describe('Query', () => {
 
       const db1 = await peer.createDatabase();
       const queueFactory1 = peer.client.constructQueueFactory(Context.default(), db1.spaceId);
-      const queue1 = queueFactory1.create(Context.default());
+      const queue1 = queueFactory1.create();
 
       const db2 = await peer.createDatabase();
       const queueFactory2 = peer.client.constructQueueFactory(Context.default(), db2.spaceId);
-      const queue2 = queueFactory2.create(Context.default());
+      const queue2 = queueFactory2.create();
 
       const spaceTask1 = db1.add(Obj.make(TestSchema.Task, { title: 'space1-task' }));
       const spacePerson1 = db1.add(Obj.make(TestSchema.Person, { name: 'space1-person' }));
@@ -502,7 +502,7 @@ describe('Query', () => {
       const peer = await builder.createPeer({ types: [TestSchema.Task] });
       const db = await peer.createDatabase();
       const queues = peer.client.constructQueueFactory(Context.default(), db.spaceId);
-      const queue = queues.create(Context.default());
+      const queue = queues.create();
 
       db.add(Obj.make(TestSchema.Task, { title: 'Space TypeScript Task' }));
       await queue.append([Obj.make(TestSchema.Task, { title: 'Queue TypeScript Task' })]);
@@ -562,7 +562,7 @@ describe('Query', () => {
       const peer = await builder.createPeer({ types: [Type.Feed, TestSchema.Task] });
       const db = await peer.createDatabase();
       const queues = peer.client.constructQueueFactory(Context.default(), db.spaceId);
-      const queue = queues.create(Context.default());
+      const queue = queues.create();
 
       // Create a feed object and bind it to the queue.
       const feed = db.add(Feed.make({ name: 'test-feed' }));
@@ -588,7 +588,7 @@ describe('Query', () => {
       const peer = await builder.createPeer({ types: [Type.Feed, TestSchema.Task] });
       const db = await peer.createDatabase();
       const queues = peer.client.constructQueueFactory(Context.default(), db.spaceId);
-      const queue = queues.create(Context.default());
+      const queue = queues.create();
 
       const feed = db.add(Feed.make({ name: 'test-feed' }));
       Obj.change(feed, (mutable) => {
@@ -1481,7 +1481,7 @@ describe('Query', () => {
       const peer = await builder.createPeer({ types: [TestSchema.Task] });
       const db = await peer.createDatabase();
       const queues = peer.client.constructQueueFactory(Context.default(), db.spaceId);
-      const queue = queues.create(Context.default());
+      const queue = queues.create();
 
       // Add objects to the queue.
       await queue.append([
@@ -1528,7 +1528,7 @@ describe('Query', () => {
       const peer = await builder.createPeer({ types: [TestSchema.Task] });
       const db = await peer.createDatabase();
       const queues = peer.client.constructQueueFactory(Context.default(), db.spaceId);
-      const queue = queues.create(Context.default());
+      const queue = queues.create();
 
       // Add objects to the database (space objects).
       db.add(Obj.make(TestSchema.Task, { title: 'Space Object TypeScript' }));
@@ -1568,7 +1568,7 @@ describe('Query', () => {
       const peer = await builder.createPeer({ types: [TestSchema.Task] });
       const db = await peer.createDatabase();
       const queues = peer.client.constructQueueFactory(Context.default(), db.spaceId);
-      const queue = queues.create(Context.default());
+      const queue = queues.create();
       const task = Obj.make(TestSchema.Task, { title: 'Queue Object TypeScript' });
       await queue.append([task]);
       await db.flush({ indexes: true });

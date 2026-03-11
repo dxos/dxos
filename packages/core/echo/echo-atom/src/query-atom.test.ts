@@ -219,7 +219,7 @@ describe('AtomQuery with queues', () => {
     const peer = await testBuilder.createPeer({ types: [TestSchema.Person] });
     const spaceId = SpaceId.random();
     const queues = peer.client.constructQueueFactory(Context.default(), spaceId);
-    const queue = queues.create(Context.default());
+    const queue = queues.create();
 
     const john = Obj.make(TestSchema.Person, { name: 'john' });
     const jane = Obj.make(TestSchema.Person, { name: 'jane' });
@@ -241,7 +241,7 @@ describe('AtomQuery with queues', () => {
     const peer = await testBuilder.createPeer({ types: [TestSchema.Person] });
     const spaceId = SpaceId.random();
     const queues = peer.client.constructQueueFactory(Context.default(), spaceId);
-    const queue = queues.create(Context.default());
+    const queue = queues.create();
 
     const john = Obj.make(TestSchema.Person, { name: 'john' });
     const jane = Obj.make(TestSchema.Person, { name: 'jane' });

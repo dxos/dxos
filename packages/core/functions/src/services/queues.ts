@@ -6,7 +6,6 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { Context as DxosContext } from '@dxos/context';
 import type { Entity } from '@dxos/echo';
 import type { Queue, QueueAPI, QueueFactory } from '@dxos/echo-db';
 import type { DXN, QueueSubspaceTag } from '@dxos/keys';
@@ -57,7 +56,7 @@ export class QueueService extends Context.Tag('@dxos/functions/QueueService')<
   static getQueue = <T extends Entity.Unknown = Entity.Unknown>(
     dxn: DXN,
   ): Effect.Effect<Queue<T>, never, QueueService> =>
-    QueueService.pipe(Effect.map(({ queues }) => queues.get<T>(DxosContext.default(), dxn)));
+    QueueService.pipe(Effect.map(({ queues }) => queues.get<T>(dxn)));
 
   /**
    * Creates a new queue.
@@ -65,7 +64,7 @@ export class QueueService extends Context.Tag('@dxos/functions/QueueService')<
   static createQueue = <T extends Entity.Unknown = Entity.Unknown>(options?: {
     subspaceTag?: QueueSubspaceTag;
   }): Effect.Effect<Queue<T>, never, QueueService> =>
-    QueueService.pipe(Effect.map(({ queues }) => queues.create<T>(DxosContext.default(), options)));
+    QueueService.pipe(Effect.map(({ queues }) => queues.create<T>(options)));
 
   static append = <T extends Entity.Unknown = Entity.Unknown>(queue: Queue<T>, objects: T[]): Effect.Effect<void> =>
     Effect.promise(() => queue.append(objects));

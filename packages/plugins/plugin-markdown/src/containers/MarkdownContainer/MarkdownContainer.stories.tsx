@@ -10,7 +10,6 @@ import { Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppActivationEvents, LayoutOperation } from '@dxos/app-toolkit';
-import { Context } from '@dxos/context';
 import { Obj, Query } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
@@ -87,7 +86,7 @@ const meta = {
               const createObjects = createObjectFactory(space.db, generator);
               yield* Effect.promise(() => createObjects([{ type: Organization.Organization, count: 10 }]));
 
-              const queue = space.queues.create(Context.default());
+              const queue = space.queues.create();
               const kai = Obj.make(Person.Person, { fullName: 'Kai' });
               const dxos = Obj.make(Organization.Organization, { name: 'DXOS' });
               yield* Effect.promise(() => queue.append([kai, dxos]));

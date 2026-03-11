@@ -153,7 +153,7 @@ export class EchoClient extends Resource {
     this._queues.set(spaceId, queueFactory);
     this._graph._registerQueueFactory(spaceId, queueFactory);
     if (this._queuesService) {
-      queueFactory.setService(this._ctx, this._queuesService);
+      queueFactory.setService(this._queuesService);
     }
 
     return queueFactory;
@@ -201,7 +201,7 @@ export class EchoClient extends Resource {
     // Update all queue factories with new service.
     if (queueService) {
       for (const queueFactory of this._queues.values()) {
-        queueFactory.setService(this._ctx, queueService);
+        queueFactory.setService(queueService);
       }
     }
   }

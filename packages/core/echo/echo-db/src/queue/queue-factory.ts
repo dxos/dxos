@@ -12,9 +12,8 @@ import { QueueImpl } from './queue';
 import { type Queue } from './types';
 
 export interface QueueAPI {
-  get<T extends Entity.Unknown = Entity.Unknown>(ctx: Context, dxn: DXN): Queue<T>;
+  get<T extends Entity.Unknown = Entity.Unknown>(dxn: DXN): Queue<T>;
   create<T extends Entity.Unknown = Entity.Unknown>(
-    ctx: Context,
     options?: { subspaceTag?: QueueSubspaceTag },
   ): Queue<T>;
 }
@@ -35,11 +34,11 @@ export class QueueFactory extends Resource implements QueueAPI {
     await Promise.allSettled(this._queues.values().map((queue) => queue.dispose()));
   }
 
-  setService(ctx: Context, service: FeedProtocol.QueueService): void {
+  setService(service: FeedProtocol.QueueService): void {
     this._service = service;
   }
 
-  get<T extends Entity.Unknown>(ctx: Context, dxn: DXN): Queue<T> {
+  get<T extends Entity.Unknown>(dxn: DXN): Queue<T> {
     assertArgument(dxn instanceof DXN, 'dxn', 'dxn must be a DXN');
     assertState(this._service, 'Service not set');
 
@@ -59,10 +58,9 @@ export class QueueFactory extends Resource implements QueueAPI {
   }
 
   create<T extends Entity.Unknown>(
-    ctx: Context,
     { subspaceTag = QueueSubspaceTags.DATA }: { subspaceTag?: QueueSubspaceTag } = {},
   ): Queue<T> {
     const dxn = DXN.fromQueue(subspaceTag, this._spaceId, ObjectId.random());
-    return this.get<T>(ctx, dxn);
+    return this.get<T>(dxn);
   }
 }

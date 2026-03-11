@@ -98,6 +98,7 @@ const DEFAULT_ALLOW_CLASSES = [
   // @dxos/echo-db — public Queue API implementations (Queue interface is public API; no ctx on public methods).
   'QueueImpl',
   'MemoryQueue',
+  'QueueFactory',
 
   // Automerge NetworkAdapter (external interface with fixed signatures).
   'EchoNetworkAdapter',
