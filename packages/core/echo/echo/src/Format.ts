@@ -4,6 +4,6 @@
 
 import type * as internal from './internal';
 
-export * from './internal/formats';
+export * from './internal/common/formats';
 
 export type Format = internal.TypeFormat;

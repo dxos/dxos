@@ -9,8 +9,8 @@ import { describe, expect, test } from 'vitest';
 
 import { DXN } from '@dxos/keys';
 
-import { Relation } from '../../index';
-import { TestSchema } from '../../testing';
+import { Relation } from '../../../index';
+import { TestSchema } from '../../../testing';
 import { getSchemaDXN, getTypeDXN, isInstanceOf } from '../annotations';
 import { ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET } from '../entities';
 import { ATTR_META, ATTR_TYPE, getSchema } from '../types';

@@ -11,8 +11,8 @@ import { type JsonProp, findAnnotation } from '@dxos/effect';
 import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { TestSchema, prepareAstForCompare } from '../../testing';
-import * as Type from '../../Type';
+import { TestSchema, prepareAstForCompare } from '../../../testing';
+import * as Type from '../../../Type';
 import {
   FieldLookupAnnotationId,
   GeneratorAnnotation,

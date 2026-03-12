@@ -4,9 +4,9 @@
 
 import { describe, test } from 'vitest';
 
-import * as Obj from '../../Obj';
-import * as Relation from '../../Relation';
-import { TestSchema } from '../../testing';
+import * as Obj from '../../../Obj';
+import * as Relation from '../../../Relation';
+import { TestSchema } from '../../../testing';
 
 /**
  * Tests for Obj.change context enforcement and mutator type safety.

@@ -16,11 +16,11 @@ export {
   setDescriptionWithSchema,
   setLabelWithSchema,
   IconAnnotation,
-} from './internal/annotations';
+} from './internal/common/annotations';
 
 import type * as Schema from 'effect/Schema';
 
-import * as internalAnnotations from './internal/annotations';
+import * as internalAnnotations from './internal/common/annotations';
 
 interface MakeProps<T> {
   id: string;

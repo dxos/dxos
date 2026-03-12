@@ -8,7 +8,7 @@ import { describe, expect, test } from 'vitest';
 
 import { isNode } from '@dxos/util';
 
-import { TestSchema, updateCounter } from '../../testing';
+import { TestSchema, updateCounter } from '../../../testing';
 import { createObject } from '../object';
 import { ATTR_META } from '../types';
 

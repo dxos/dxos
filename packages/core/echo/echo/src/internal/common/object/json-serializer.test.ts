@@ -6,8 +6,8 @@ import { describe, expect, test } from 'vitest';
 
 import { DXN } from '@dxos/keys';
 
-import * as Obj from '../../Obj';
-import { TestSchema } from '../../testing';
+import * as Obj from '../../../Obj';
+import { TestSchema } from '../../../testing';
 import { getSchemaDXN, getSchemaTypename, getTypeDXN, getTypename } from '../annotations';
 import { getMetaChecked } from '../api';
 import { RelationSourceId, RelationTargetId, getObjectDXN } from '../entities';

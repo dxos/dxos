@@ -5,9 +5,9 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import * as Obj from '../../Obj';
-import { TestSchema } from '../../testing';
-import * as Type from '../../Type';
+import * as Obj from '../../../Obj';
+import { TestSchema } from '../../../testing';
+import * as Type from '../../../Type';
 
 describe('Obj.setValue', () => {
   test('sets simple nested object property', ({ expect }) => {

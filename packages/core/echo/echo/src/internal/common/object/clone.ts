@@ -5,7 +5,7 @@
 import { invariant } from '@dxos/invariant';
 import { deepMapValues } from '@dxos/util';
 
-import type * as Obj from '../../Obj';
+import type * as Obj from '../../../Obj';
 import { makeObject } from '../proxy';
 import { Ref } from '../ref';
 import { getMeta, getSchema } from '../types';

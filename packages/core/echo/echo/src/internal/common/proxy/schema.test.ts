@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import { describe, expect, test } from 'vitest';
 
-import { createEchoSchema } from '../../testing';
+import { createEchoSchema } from '../../../testing';
 import { PropertyMeta, getPropertyMetaAnnotation, getTypeAnnotation } from '../annotations';
 import { EchoObjectSchema } from '../entities';
 

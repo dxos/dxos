@@ -10,7 +10,7 @@ import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
 import { assumeType, deepMapValues, visitValues } from '@dxos/util';
 
-import type * as Obj from '../../Obj';
+import type * as Obj from '../../../Obj';
 import { getTypeDXN, setTypename } from '../annotations';
 import {
   ATTR_DELETED,
