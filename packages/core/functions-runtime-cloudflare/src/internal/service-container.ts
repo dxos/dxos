@@ -17,7 +17,7 @@ import { QueueServiceImpl } from './queue-service-impl';
  */
 export class ServiceContainer {
   constructor(
-    private readonly _executionContext: EdgeFunctionEnv.ExecutionContext,
+    private readonly _executionContext: EdgeFunctionEnv.TraceContext,
     private readonly _dataService: EdgeFunctionEnv.DataService,
     private readonly _queueService: EdgeFunctionEnv.QueueService,
     private readonly _functionsService: EdgeFunctionEnv.FunctionsAiService,

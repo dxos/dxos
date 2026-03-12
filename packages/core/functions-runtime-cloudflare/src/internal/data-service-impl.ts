@@ -30,7 +30,7 @@ export class DataServiceImpl implements DataServiceProto {
   private dataSubscriptions = new Map<string, { spaceId: SpaceId; next: (msg: BatchedDocumentUpdates) => void }>();
 
   constructor(
-    private _executionContext: EdgeFunctionEnv.ExecutionContext,
+    private _executionContext: EdgeFunctionEnv.TraceContext,
     private _dataService: EdgeFunctionEnv.DataService,
   ) {}
 
