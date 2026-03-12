@@ -69,33 +69,33 @@ export interface Env {
  *
  * NOTE: Currently unused in functions.
  */
-export interface ExecutionContext {}
+export interface TraceContext {}
 
 /**
  * Database API for other CF services like functions.
  */
 export interface DataService {
-  getSpaceMeta(ctx: ExecutionContext, spaceId: SpaceId): Promise<RpcResult<SpaceMeta | undefined>>;
-  getDocument(ctx: ExecutionContext, spaceId: SpaceId, documentId: string): Promise<RpcResult<RawDocument | undefined>>;
+  getSpaceMeta(ctx: TraceContext, spaceId: SpaceId): Promise<RpcResult<SpaceMeta | undefined>>;
+  getDocument(ctx: TraceContext, spaceId: SpaceId, documentId: string): Promise<RpcResult<RawDocument | undefined>>;
 
-  executeQuery(ctx: ExecutionContext, request: QueryRequest): Promise<RpcResult<QueryResponse>>;
-  createDocument(ctx: ExecutionContext, request: CreateDocumentRequest): Promise<RpcResult<CreateDocumentResponse>>;
+  execQuery(ctx: TraceContext, request: QueryRequest): Promise<RpcResult<QueryResponse>>;
+  createDocument(ctx: TraceContext, request: CreateDocumentRequest): Promise<RpcResult<CreateDocumentResponse>>;
 
   // TODO(burdon): Update? Return DocumentEntry?
-  changeDocument(ctx: ExecutionContext, spaceId: SpaceId, documentId: string, changes: Uint8Array): Promise<void>;
+  changeDocument(ctx: TraceContext, spaceId: SpaceId, documentId: string, changes: Uint8Array): Promise<void>;
 }
 
 export interface QueueService {
   queryQueue: (
-    ctx: ExecutionContext,
+    ctx: TraceContext,
     request: FeedProtocol.QueryQueueRequest,
   ) => Promise<RpcResult<FeedProtocol.QueryResult>>;
   insertIntoQueue: (
-    ctx: ExecutionContext,
+    ctx: TraceContext,
     request: FeedProtocol.InsertIntoQueueRequest,
   ) => Promise<RpcResult<RpcDisposable>>;
   deleteFromQueue: (
-    ctx: ExecutionContext,
+    ctx: TraceContext,
     request: FeedProtocol.DeleteFromQueueRequest,
   ) => Promise<RpcResult<RpcDisposable>>;
 }

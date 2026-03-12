@@ -24,7 +24,7 @@ export class QueryServiceImpl implements QueryServiceProto {
   private _queryCount = 0;
 
   constructor(
-    private readonly _executionContext: EdgeFunctionEnv.ExecutionContext,
+    private readonly _executionContext: EdgeFunctionEnv.TraceContext,
     private readonly _dataService: EdgeFunctionEnv.DataService,
   ) {}
 
@@ -40,7 +40,7 @@ export class QueryServiceImpl implements QueryServiceProto {
         try {
           this._queryCount++;
           log.info('begin query', { spaceId });
-          using queryResponse = await this._dataService.executeQuery(
+          using queryResponse = await this._dataService.execQuery(
             this._executionContext,
             request
           );
