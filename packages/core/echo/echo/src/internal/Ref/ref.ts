@@ -18,10 +18,10 @@ import { EncodedReference } from '@dxos/echo-protocol';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
 
-import * as Database from '../../../Database';
-import { ReferenceAnnotationId, getSchemaDXN, getTypeAnnotation, getTypeIdentifierAnnotation } from '../../Annotation';
-import { type JsonSchemaType } from '../json-schema';
-import type { AnyEntity, AnyProperties } from '../types';
+import * as Database from '../../Database';
+import { ReferenceAnnotationId, getSchemaDXN, getTypeAnnotation, getTypeIdentifierAnnotation } from '../Annotation';
+import { type JsonSchemaType } from '../common/json-schema';
+import type { AnyEntity, AnyProperties } from '../common/types';
 
 /**
  * The `$id` and `$ref` fields for an ECHO reference schema.

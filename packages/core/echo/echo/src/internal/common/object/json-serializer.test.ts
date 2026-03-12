@@ -12,7 +12,7 @@ import { getSchemaDXN, getSchemaTypename, getTypeDXN, getTypename } from '../../
 import { getMetaChecked } from '../api';
 import { RelationSourceId, RelationTargetId, getObjectDXN } from '../entities';
 import { makeObject } from '../proxy';
-import { Ref, StaticRefResolver } from '../ref';
+import { Ref, StaticRefResolver } from '../../Ref';
 import { ATTR_TYPE, EntityKind, KindId, MetaId, TypeId, getSchema } from '../types';
 
 import { createObject } from './create-object';

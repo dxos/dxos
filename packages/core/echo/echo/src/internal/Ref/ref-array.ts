@@ -5,7 +5,7 @@
 import { type ObjectId } from '@dxos/keys';
 import { isNonNullable } from '@dxos/util';
 
-import { type AnyEntity } from '../types';
+import { type AnyEntity } from '../common/types';
 
 import { Ref } from './ref';
 

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type RefTypeId } from '../ref/ref';
+import { type RefTypeId } from '../../Ref/ref';
 
 import { getProxyTarget } from './proxy-utils';
 import { ChangeId, EventId } from './symbols';

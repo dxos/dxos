@@ -26,7 +26,7 @@ import {
   assertObjectModel,
 } from '../entities';
 import { attachTypedJsonSerializer, defineHiddenProperty, typedJsonSerializer } from '../proxy';
-import { Ref, type RefResolver, refFromEncodedReference, setRefResolver } from '../ref';
+import { Ref, type RefResolver, refFromEncodedReference, setRefResolver } from '../../Ref';
 import {
   ATTR_META,
   ATTR_PARENT,

@@ -15,7 +15,7 @@ import {
   RelationTargetDXNId,
   SelfDXNId,
 } from '../entities';
-import { Ref } from '../ref';
+import { Ref } from '../../Ref';
 import { ATTR_META, ATTR_TYPE, MetaId, TypeId } from '../types';
 
 /**
