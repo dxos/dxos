@@ -94,6 +94,11 @@
       "source": "./src/services/dedicated/coordinator-worker-entrypoint.ts",
       "types": "./dist/types/src/services/dedicated/coordinator-worker-entrypoint.d.ts",
       "browser": "./dist/lib/browser/services/dedicated/coordinator-worker-entrypoint.mjs"
+    },
+    "./coordinator-worker-onconnect": {
+      "source": "./src/services/dedicated/coordinator-worker.ts",
+      "types": "./dist/types/src/services/dedicated/coordinator-worker.d.ts",
+      "browser": "./dist/lib/browser/services/dedicated/coordinator-worker.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
