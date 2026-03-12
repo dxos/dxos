@@ -27,6 +27,7 @@ import { APP_KEY } from './src/constants';
 
 const isTrue = (str?: string) => str === 'true' || str === '1';
 const isFalse = (str?: string) => str === 'false' || str === '0';
+const isFastBundle = isTrue(process.env.DX_FASTBUNDLE);
 
 const rootDir = searchForWorkspaceRoot(process.cwd());
 const phosphorIconsCore = path.join(rootDir, '/node_modules/@phosphor-icons/core/assets');
@@ -39,6 +40,7 @@ const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(file
 const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
   // Building from dist when creating a prod bundle.
   env.command === 'serve' &&
+    !isFastBundle &&
     importSource({
       exclude: [
         '@dxos/random-access-storage',
@@ -108,6 +110,76 @@ export default defineConfig((env) => ({
   },
   optimizeDeps: {
     exclude: ['@dxos/wa-sqlite'],
+    ...(isFastBundle && {
+      include: [
+        // React.
+        'react',
+        'react-dom',
+        'react/jsx-runtime',
+        // Effect (with subpath imports).
+        'effect',
+        'effect/Effect',
+        'effect/Array',
+        'effect/Ref',
+        'effect/Option',
+        'effect/Cause',
+        'effect/Exit',
+        'effect/Layer',
+        'effect/Runtime',
+        'effect/Fiber',
+        'effect/Deferred',
+        'effect/Function',
+        'effect/HashSet',
+        'effect/PubSub',
+        'effect/Schema',
+        'effect/Context',
+        'effect/Stream',
+        'effect/Console',
+        '@effect/platform',
+        '@effect/platform-browser',
+        // Effect AI (with submodule exports).
+        '@effect/ai',
+        '@effect/ai/AiError',
+        '@effect/ai/Chat',
+        '@effect/ai/LanguageModel',
+        '@effect/ai/Prompt',
+        '@effect/ai/Response',
+        '@effect/ai/Tool',
+        '@effect/ai/Toolkit',
+        '@effect/ai-anthropic',
+        '@effect/ai-anthropic/AnthropicClient',
+        '@effect/ai-anthropic/AnthropicLanguageModel',
+        '@effect/ai-anthropic/AnthropicTool',
+        '@effect/ai-openai',
+        '@effect/ai-openai/OpenAiClient',
+        '@effect/ai-openai/OpenAiLanguageModel',
+        // Automerge.
+        '@automerge/automerge',
+        '@automerge/automerge-repo',
+        // CodeMirror (many files in HAR).
+        'codemirror',
+        '@codemirror/state',
+        '@codemirror/view',
+        '@codemirror/language',
+        '@codemirror/commands',
+        '@codemirror/autocomplete',
+        '@codemirror/lang-javascript',
+        '@codemirror/lang-json',
+        '@codemirror/lang-markdown',
+        '@codemirror/theme-one-dark',
+        // Radix (many requests in HAR).
+        '@radix-ui/react-dialog',
+        '@radix-ui/react-dropdown-menu',
+        '@radix-ui/react-tooltip',
+        '@radix-ui/react-scroll-area',
+        '@radix-ui/react-popover',
+        '@radix-ui/react-slot',
+        '@radix-ui/react-context-menu',
+        // Atlaskit drag-and-drop.
+        '@atlaskit/pragmatic-drag-and-drop',
+        '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator',
+      ],
+    }),
   },
   resolve: {
     alias: {
