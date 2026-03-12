@@ -4,10 +4,6 @@
 
 import { type ViewUpdate } from '@codemirror/view';
 import { useMemo } from 'react';
-
-import { type Capabilities } from '@dxos/app-framework';
-import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
 import { debounceAndThrottle } from '@dxos/async';
 import { Obj } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
@@ -48,12 +44,13 @@ export type DocumentType = Markdown.Document | Text.Text | { id: string; text: s
 export type ExtensionsOptions = {
   id: string;
   object?: DocumentType;
-  invokePromise?: Capabilities.OperationInvoker['invokePromise'];
   settings?: Markdown.Settings;
   selectionManager?: SelectionManager;
   viewMode?: EditorViewMode;
   editorStateStore?: EditorStateStore;
   previewOptions?: PreviewOptions;
+  /** Callback when an internal link is clicked. */
+  onSelectObject?: (objectId: string) => void;
 };
 
 // TODO(burdon): Merge with createBaseExtensions below.
@@ -65,8 +62,8 @@ export const useExtensions = ({
   viewMode,
   editorStateStore,
   previewOptions,
+  onSelectObject,
 }: ExtensionsOptions): Extension[] => {
-  const { invokePromise } = useOperationInvoker();
   const identity = useIdentity();
   const space = getSpace(object);
 
@@ -91,14 +88,14 @@ export const useExtensions = ({
         selectionManager,
         viewMode,
         previewOptions,
-        invokePromise,
+        onSelectObject,
       }),
     [
       id,
       object,
       viewMode,
-      invokePromise,
       previewOptions,
+      onSelectObject,
       settings,
       settings?.debug,
       settings?.editorInputMode,
@@ -143,7 +140,7 @@ export const useExtensions = ({
 const createBaseExtensions = ({
   id,
   object,
-  invokePromise,
+  onSelectObject,
   settings,
   selectionManager,
   viewMode,
@@ -166,12 +163,7 @@ const createBaseExtensions = ({
           selectionChangeDelay: 100,
           numberedHeadings: settings?.numberedHeadings ? { from: 2 } : undefined,
           // TODO(wittjosiah): For internal links render the label of the object.
-          renderLinkButton: createRenderLink((targetId: string) => {
-            void invokePromise?.(LayoutOperation.Open, {
-              subject: [targetId],
-              pivotId: object && Obj.isObject(object) ? Obj.getDXN(object).toString() : id,
-            });
-          }),
+          renderLinkButton: onSelectObject && createRenderLink(onSelectObject),
         }),
         linkTooltip(renderLinkTooltip),
         preview(previewOptions),

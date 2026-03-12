@@ -6,10 +6,12 @@ import { type Extension } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
 import { type Atom } from '@effect-atom/atom-react';
 import { createContext } from '@radix-ui/react-context';
-import React, { type PropsWithChildren, useMemo, useState } from 'react';
+import React, { type PropsWithChildren, useCallback, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { Surface } from '@dxos/app-framework/ui';
+import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
+import { Obj } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { useClient } from '@dxos/react-client';
 import {
@@ -66,7 +68,7 @@ type MarkdownEditorRootProps = PropsWithChildren<
     extensions?: Extension[];
   } & Pick<MarkdownEditorContextValue, 'id' | 'onAction' | 'onFileUpload' | 'onViewModeChange' | 'viewMode'> &
     Pick<UseEditorMenuOptionsProps, 'slashCommandGroups' | 'onLinkQuery'> &
-    Pick<ExtensionsOptions, 'editorStateStore' | 'selectionManager' | 'settings'>
+    Pick<ExtensionsOptions, 'editorStateStore' | 'selectionManager' | 'settings' | 'onSelectObject'>
 >;
 
 const MarkdownEditorRoot = ({
@@ -80,9 +82,25 @@ const MarkdownEditorRoot = ({
   extensions: extensionsProp,
   slashCommandGroups,
   onLinkQuery,
+  onSelectObject: onSelectObjectProp,
   ...props
 }: MarkdownEditorRootProps) => {
   const [editorView, setEditorView] = useState<EditorView>();
+  const { invokePromise } = useOperationInvoker();
+
+  const onSelectObject = useCallback(
+    (targetId: string) => {
+      if (onSelectObjectProp) {
+        onSelectObjectProp(targetId);
+      } else {
+        void invokePromise?.(LayoutOperation.Open, {
+          subject: [targetId],
+          pivotId: object && Obj.isObject(object) ? Obj.getDXN(object).toString() : id,
+        });
+      }
+    },
+    [onSelectObjectProp, invokePromise, object, id],
+  );
 
   // Preview blocks.
   const [previewBlocks, setPreviewBlocks] = useState<PreviewBlock[]>([]);
@@ -118,6 +136,7 @@ const MarkdownEditorRoot = ({
     selectionManager,
     settings,
     viewMode,
+    onSelectObject,
   });
 
   const extensions = useMemo(
