@@ -77,6 +77,9 @@ export const useExtensions = ({
   // Get the actual live object target via .target (needed for createDocAccessor).
   const target = contentRef?.target ?? (Obj.instanceOf(Text.Text, object) ? object : undefined);
 
+  // TODO(burdon): Remove debug logging.
+  console.log('[useExtensions]', { id, object: !!object, contentRef: !!contentRef, target: !!target, identity: !!identity, space: !!space });
+
   // TODO(wittjosiah): Autocomplete is not working and this query is causing performance issues.
   // TODO(burdon): Unsubscribe.
   // const query = space?.db.query(Filter.type(DocumentType));

@@ -12,6 +12,7 @@ import { EditorToolbar, type EditorToolbarProps } from '@dxos/react-ui-editor';
 import { type EditorViewMode } from '@dxos/ui-editor';
 
 import { FileUpload, type FileUploadAction } from './FileUpload';
+import { composableProps } from '@dxos/ui-theme';
 
 export type MarkdownEditorToolbarProps = ThemedClassName<
   ComponentPropsWithoutRef<'div'> & {
@@ -22,7 +23,6 @@ export type MarkdownEditorToolbarProps = ThemedClassName<
 >;
 
 export const MarkdownEditorToolbar = ({
-  classNames,
   id,
   role,
   state,
@@ -33,10 +33,9 @@ export const MarkdownEditorToolbar = ({
   onViewModeChange,
   ...props
 }: MarkdownEditorToolbarProps) => {
+  const { className, ...rest } = composableProps(props);
   const [upload, setUpload] = useState<FileUploadAction | null>(null);
   const uploadRef = useCallback((next: FileUploadAction) => setUpload(() => next), []);
-
-  const handleViewModeChange = useCallback((mode: EditorViewMode) => onViewModeChange?.(mode), [onViewModeChange]);
 
   const getView = useCallback(() => {
     invariant(editorView);
@@ -48,9 +47,10 @@ export const MarkdownEditorToolbar = ({
   }
 
   return (
-    <div role='none' {...props}>
+    <div role='none' className='contents'>
       <EditorToolbar
-        classNames={classNames}
+        {...rest}
+        classNames={className}
         attendableId={id}
         role={role}
         state={state}
@@ -58,7 +58,7 @@ export const MarkdownEditorToolbar = ({
         getView={getView}
         onAction={onAction}
         onImageUpload={upload ?? undefined}
-        onViewModeChange={handleViewModeChange}
+        onViewModeChange={onViewModeChange}
       />
 
       {onFileUpload && <FileUpload ref={uploadRef} editorView={editorView} onFileUpload={onFileUpload} />}

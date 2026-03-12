@@ -97,10 +97,10 @@ export const MarkdownContainer = forwardRef<HTMLDivElement, MarkdownContainerPro
         onLinkQuery={handleLinkQuery}
         {...props}
       >
-        <Panel.Root ref={forwardedRef}>
+        <Panel.Root role={role} ref={forwardedRef}>
           {settings.toolbar && (
             <Panel.Toolbar asChild>
-              <MarkdownEditor.Toolbar id={attendableId ?? id} role={role} customActions={customActions} />
+              <MarkdownEditor.Toolbar customActions={customActions} />
             </Panel.Toolbar>
           )}
           <Panel.Content>

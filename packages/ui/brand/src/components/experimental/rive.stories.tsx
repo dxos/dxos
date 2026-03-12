@@ -8,8 +8,7 @@ import React, { useEffect } from 'react';
 
 import { log } from '@dxos/log';
 import { useAsyncState } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { render } from '@dxos/storybook-utils';
+import { withLayout, withTheme, Loading } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
 const useFlash = (rive: Rive | null, name: string, delay: number, period: number) => {
@@ -56,7 +55,7 @@ const DefaultStory = () => {
   });
 
   if (!buffer) {
-    return null;
+    return <Loading data={{ buffer: !!buffer }} />;
   }
 
   return (
@@ -84,7 +83,7 @@ const DefaultStory = () => {
 
 const meta = {
   title: 'ui/brand/experimental/Rive',
-  render: render(DefaultStory),
+  render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',

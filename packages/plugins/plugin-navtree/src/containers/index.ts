@@ -4,7 +4,7 @@
 
 import { type ComponentType, lazy } from 'react';
 
-export { NODE_TYPE } from './NavTreeContainer/NavTreeContainer';
+export { NODE_TYPE } from './NavTreeContainer';
 
 export const CommandsDialogContent: ComponentType<any> = lazy(() => import('./CommandsDialogContent'));
 export const CommandsTrigger: ComponentType<any> = lazy(() => import('./CommandsTrigger'));

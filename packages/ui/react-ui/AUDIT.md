@@ -110,13 +110,14 @@ When a Radix `Slot` parent merges props, the child receives a `className` prop v
 Components must use `composableProps` to reconcile the incoming `className` with their own `classNames`.
 
 Status:
+
 - OK: Uses `composableProps` — properly merges `className` + `classNames`.
 - ISSUE: Uses `ThemedClassName` only — parent's `className` from Slot merge is lost (overridden by `tx`/`mx`).
 
 #### react-ui
 
 | Component              | Type              | Status | Slotted by                                                                                            |
-|------------------------|-------------------|--------|-------------------------------------------------------------------------------------------------------|
+| ---------------------- | ----------------- | ------ | ----------------------------------------------------------------------------------------------------- |
 | `Button`               | `ThemedClassName` | ISSUE  | `ToolbarPrimitive.Button`, `Dialog.Trigger`, `ToggleGroupItemPrimitive`, `TabsPrimitive.Trigger`, etc |
 | `ButtonGroup`          | `ThemedClassName` | ISSUE  | `ToggleGroupPrimitive`                                                                                |
 | `Card.Root`            | `SlottableProps`  | OK     | —                                                                                                     |
@@ -145,98 +146,99 @@ Status:
 
 #### react-ui-board
 
-| Component              | Type              | Status | Slotted by                                                                                            |
-|------------------------|-------------------|--------|-------------------------------------------------------------------------------------------------------|
-| `Board.Container`      | `ThemedClassName` | ISSUE  | `Panel.Content`                                                                                       |
-| `Board.Toolbar`        | `ThemedClassName` | ISSUE  | `Panel.Toolbar`                                                                                       |
+| Component         | Type              | Status | Slotted by      |
+| ----------------- | ----------------- | ------ | --------------- |
+| `Board.Container` | `ThemedClassName` | ISSUE  | `Panel.Content` |
+| `Board.Toolbar`   | `ThemedClassName` | ISSUE  | `Panel.Toolbar` |
 
 #### react-ui-calendar
 
-| Component              | Type              | Status | Slotted by                                                                                            |
-|------------------------|-------------------|--------|-------------------------------------------------------------------------------------------------------|
-| `Calendar.Grid`        | `ThemedClassName` | ISSUE  | `Panel.Content`                                                                                       |
-| `Calendar.Toolbar`     | `ThemedClassName` | ISSUE  | `Panel.Toolbar`                                                                                       |
+| Component          | Type              | Status | Slotted by      |
+| ------------------ | ----------------- | ------ | --------------- |
+| `Calendar.Grid`    | `ThemedClassName` | ISSUE  | `Panel.Content` |
+| `Calendar.Toolbar` | `ThemedClassName` | ISSUE  | `Panel.Toolbar` |
 
 #### react-ui-chat
 
-| Component              | Type              | Status | Slotted by                                                                                            |
-|------------------------|-------------------|--------|-------------------------------------------------------------------------------------------------------|
-| `Chat.Toolbar`         | `ThemedClassName` | OK     | `Panel.Toolbar` (delegates to `Menu.Root`)                                                            |
-| `Chat.Viewport`        | `ThemedClassName` | OK     | `Panel.Content` (spreads props, uses `mx`)                                                            |
+| Component       | Type              | Status | Slotted by                                 |
+| --------------- | ----------------- | ------ | ------------------------------------------ |
+| `Chat.Toolbar`  | `ThemedClassName` | OK     | `Panel.Toolbar` (delegates to `Menu.Root`) |
+| `Chat.Viewport` | `ThemedClassName` | OK     | `Panel.Content` (spreads props, uses `mx`) |
 
 #### react-ui-mosaic
 
-| Component              | Type              | Status | Slotted by                                                                                            |
-|------------------------|-------------------|--------|-------------------------------------------------------------------------------------------------------|
-| `Focus.Group`          | `ThemedClassName` | OK     | —                                                                                                     |
-| `MosaicContainer`      | `ComposableProps` | OK     | —                                                                                                     |
-| `MosaicStack`          | `ComposableProps` | OK     | —                                                                                                     |
-| `MosaicTile`           | `ComposableProps` | OK     | —                                                                                                     |
+| Component         | Type              | Status | Slotted by |
+| ----------------- | ----------------- | ------ | ---------- |
+| `Focus.Group`     | `ThemedClassName` | OK     | —          |
+| `MosaicContainer` | `ComposableProps` | OK     | —          |
+| `MosaicStack`     | `ComposableProps` | OK     | —          |
+| `MosaicTile`      | `ComposableProps` | OK     | —          |
 
 #### react-ui-searchlist
 
-| Component              | Type              | Status | Slotted by                                                                                            |
-|------------------------|-------------------|--------|-------------------------------------------------------------------------------------------------------|
-| `SearchList.Content`   | `ThemedClassName` | ISSUE  | `Panel.Content`                                                                                       |
+| Component            | Type              | Status | Slotted by      |
+| -------------------- | ----------------- | ------ | --------------- |
+| `SearchList.Content` | `ThemedClassName` | ISSUE  | `Panel.Content` |
 
 #### react-ui-stack
 
-| Component              | Type              | Status | Slotted by                                                                                            |
-|------------------------|-------------------|--------|-------------------------------------------------------------------------------------------------------|
-| `Stack`                | `ThemedClassName` | ISSUE  | `Panel.Content`                                                                                       |
+| Component | Type              | Status | Slotted by      |
+| --------- | ----------------- | ------ | --------------- |
+| `Stack`   | `ThemedClassName` | ISSUE  | `Panel.Content` |
 
 #### react-ui-table
 
-| Component              | Type              | Status | Slotted by                                                                                            |
-|------------------------|-------------------|--------|-------------------------------------------------------------------------------------------------------|
-| `Table.Main`           | `ComposableProps` | OK     | `Panel.Content`                                                                                       |
-| `Table.Toolbar`        | `ThemedClassName` | ISSUE  | `Panel.Toolbar`                                                                                       |
+| Component       | Type              | Status | Slotted by      |
+| --------------- | ----------------- | ------ | --------------- |
+| `Table.Main`    | `ComposableProps` | OK     | `Panel.Content` |
+| `Table.Toolbar` | `ThemedClassName` | ISSUE  | `Panel.Toolbar` |
 
 #### react-ui-tabs
 
-| Component              | Type              | Status | Slotted by                                                                                            |
-|------------------------|-------------------|--------|-------------------------------------------------------------------------------------------------------|
-| `Tabs.Trigger`         | `ButtonProps`     | ISSUE  | `TabsPrimitive.Trigger`                                                                               |
+| Component      | Type          | Status | Slotted by              |
+| -------------- | ------------- | ------ | ----------------------- |
+| `Tabs.Trigger` | `ButtonProps` | ISSUE  | `TabsPrimitive.Trigger` |
 
 #### plugin components (slotted by Panel)
 
-| Component                   | Type              | Status | Slotted by        |
-|-----------------------------|-------------------|--------|--------------------|
-| `BaseObjectSettings`        | `ThemedClassName` | OK     | `Panel.Content`    |
-| `ChannelToolbar`            | `ThemedClassName` | OK     | `Panel.Toolbar`    |
-| `ChatContainer`             | plain             | OK     | `Panel.Content`    |
-| `ComposeEmailPanel`         | plain             | OK     | `Panel.Content`    |
-| `D3ForceGraph`              | `ThemedClassName` | OK     | `Panel.Content`    |
-| `Event.Toolbar`             | `ThemedClassName` | OK     | `Panel.Toolbar`    |
-| `Event.Viewport`            | `ThemedClassName` | OK     | `Panel.Content`    |
-| `EventList`                 | `ThemedClassName` | OK     | `Panel.Content`    |
-| `FilePreview`               | `ThemedClassName` | OK     | `Panel.Content`    |
-| `InvocationTraceContainer`  | `ThemedClassName` | OK     | `Panel.Content`    |
-| `KanbanBoard.Root`          | plain             | ISSUE  | `Panel.Content`    |
-| `MarkdownEditor.Content`    | `ThemedClassName` | OK     | `Panel.Content`    |
-| `MarkdownEditor.Toolbar`    | `ThemedClassName` | ISSUE  | `Panel.Toolbar`    |
-| `Message.Toolbar`           | `ThemedClassName` | OK     | `Panel.Toolbar`    |
-| `Message.Viewport`          | `ThemedClassName` | OK     | `Panel.Content`    |
-| `NotebookStack`             | `ThemedClassName` | OK     | `Panel.Content`    |
-| `Outline`                   | `ThemedClassName` | OK     | `Panel.Content`    |
-| `PipelineComponent.Content` | plain             | OK     | `Panel.Content`    |
-| `PipelineComponent.Toolbar` | `ToolbarRootProps`| OK     | `Panel.Toolbar`    |
-| `PresenterLayout`           | `ThemedClassName` | OK     | `Panel.Content`    |
-| `RevealPlayer`              | `ThemedClassName` | OK     | `Panel.Content`    |
-| `ScriptToolbar`             | `MenuRootProps`   | OK     | `Panel.Toolbar`    |
-| `Sheet.Content`             | `ComposableProps` | OK     | `Panel.Content`    |
-| `Sheet.Statusbar`           | `ComposableProps` | ISSUE  | `Panel.Statusbar`  |
-| `Sheet.Toolbar`             | `MenuRootProps`   | OK     | `Panel.Toolbar`    |
-| `SpaceGenerator`            | `ThemedClassName` | OK     | `Panel.Content`    |
-| `Surface.Surface`           | plain             | OK     | `Panel.Content`    |
-| `TemplateEditor`            | `ThemedClassName` | OK     | `Panel.Content`    |
-| `TestPanel`                 | `ThemedClassName` | OK     | `Panel.Content`    |
-| `Transcription`             | `ThemedClassName` | OK     | `Panel.Content`    |
-| `TypescriptEditor`          | `ThemedClassName` | OK     | `Panel.Content`    |
-| `VoxelEditor`               | plain             | OK     | `Panel.Content`    |
-| `VoxelToolbar`              | `ToolbarRootProps`| OK     | `Panel.Toolbar`    |
+| Component                   | Type               | Status | Slotted by        |
+| --------------------------- | ------------------ | ------ | ----------------- |
+| `BaseObjectSettings`        | `ThemedClassName`  | OK     | `Panel.Content`   |
+| `ChannelToolbar`            | `ThemedClassName`  | OK     | `Panel.Toolbar`   |
+| `ChatContainer`             | plain              | OK     | `Panel.Content`   |
+| `ComposeEmailPanel`         | plain              | OK     | `Panel.Content`   |
+| `D3ForceGraph`              | `ThemedClassName`  | OK     | `Panel.Content`   |
+| `Event.Toolbar`             | `ThemedClassName`  | OK     | `Panel.Toolbar`   |
+| `Event.Viewport`            | `ThemedClassName`  | OK     | `Panel.Content`   |
+| `EventList`                 | `ThemedClassName`  | OK     | `Panel.Content`   |
+| `FilePreview`               | `ThemedClassName`  | OK     | `Panel.Content`   |
+| `InvocationTraceContainer`  | `ThemedClassName`  | OK     | `Panel.Content`   |
+| `KanbanBoard.Root`          | plain              | ISSUE  | `Panel.Content`   |
+| `MarkdownEditor.Content`    | `ThemedClassName`  | OK     | `Panel.Content`   |
+| `MarkdownEditor.Toolbar`    | `ThemedClassName`  | OK     | `Panel.Toolbar`   |
+| `Message.Toolbar`           | `ThemedClassName`  | OK     | `Panel.Toolbar`   |
+| `Message.Viewport`          | `ThemedClassName`  | OK     | `Panel.Content`   |
+| `NotebookStack`             | `ThemedClassName`  | OK     | `Panel.Content`   |
+| `Outline`                   | `ThemedClassName`  | OK     | `Panel.Content`   |
+| `PipelineComponent.Content` | plain              | OK     | `Panel.Content`   |
+| `PipelineComponent.Toolbar` | `ToolbarRootProps` | OK     | `Panel.Toolbar`   |
+| `PresenterLayout`           | `ThemedClassName`  | OK     | `Panel.Content`   |
+| `RevealPlayer`              | `ThemedClassName`  | OK     | `Panel.Content`   |
+| `ScriptToolbar`             | `MenuRootProps`    | OK     | `Panel.Toolbar`   |
+| `Sheet.Content`             | `ComposableProps`  | OK     | `Panel.Content`   |
+| `Sheet.Statusbar`           | `ComposableProps`  | OK     | `Panel.Statusbar` |
+| `Sheet.Toolbar`             | `MenuRootProps`    | OK     | `Panel.Toolbar`   |
+| `SpaceGenerator`            | `ThemedClassName`  | OK     | `Panel.Content`   |
+| `Surface.Surface`           | plain              | OK     | `Panel.Content`   |
+| `TemplateEditor`            | `ThemedClassName`  | OK     | `Panel.Content`   |
+| `TestPanel`                 | `ThemedClassName`  | OK     | `Panel.Content`   |
+| `Transcription`             | `ThemedClassName`  | OK     | `Panel.Content`   |
+| `TypescriptEditor`          | `ThemedClassName`  | OK     | `Panel.Content`   |
+| `VoxelEditor`               | plain              | OK     | `Panel.Content`   |
+| `VoxelToolbar`              | `ToolbarRootProps` | OK     | `Panel.Toolbar`   |
 
 Components marked ISSUE need to:
+
 1. Change type from `ThemedClassName<...>` to `SlottableProps<...>` (or `ComposableProps<...>` if no `asChild`).
 2. Use `composableProps(props)` to extract and merge `className` + `classNames`.
 3. Pass merged `className` to `tx()`/`mx()` instead of raw `classNames`.

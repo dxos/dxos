@@ -12,16 +12,15 @@ import { ClientPlugin } from '@dxos/plugin-client';
 import { corePlugins } from '@dxos/plugin-testing';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { useAttentionAttributes } from '@dxos/react-ui-attention';
+import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
+import { AttendableContainer } from '@dxos/react-ui-attention';
 import { translations as editorTranslations } from '@dxos/react-ui-editor';
+import { Text } from '@dxos/schema';
 
 import { translations } from '../../translations';
 import { Markdown } from '../../types';
 
 import { MarkdownEditor, type MarkdownEditorRootProps } from './MarkdownEditor';
-
-const content = Array.from({ length: 100 }, (_, i) => `Line ${i + 1}`).join('\n');
 
 type StoryProps = Omit<MarkdownEditorRootProps, 'id' | 'extensions'>;
 
@@ -29,45 +28,47 @@ const DefaultStory = (props: StoryProps) => {
   const space = useSpace();
   const [doc] = useQuery(space?.db, Filter.type(Markdown.Document));
   const id = doc && Obj.getDXN(doc).toString();
-  const attentionAttrs = useAttentionAttributes(id);
   if (!id) {
-    return null;
+    return <Loading data={{ id }} />;
   }
 
   return (
-    <MarkdownEditor.Root id={id} object={doc} {...props}>
-      <Panel.Root {...attentionAttrs}>
-        <Panel.Toolbar asChild>
-          <MarkdownEditor.Toolbar id={id} />
-        </Panel.Toolbar>
-        <Panel.Content asChild>
-          <MarkdownEditor.Content />
-        </Panel.Content>
-      </Panel.Root>
-    </MarkdownEditor.Root>
+    <AttendableContainer id={id} tabIndex={0} classNames='dx-container'>
+      <MarkdownEditor.Root id={id} object={doc} {...props}>
+        <Panel.Root>
+          <Panel.Toolbar asChild>
+            <MarkdownEditor.Toolbar />
+          </Panel.Toolbar>
+          <Panel.Content asChild>
+            <MarkdownEditor.Content />
+          </Panel.Content>
+        </Panel.Root>
+      </MarkdownEditor.Root>
+    </AttendableContainer>
   );
 };
 
 const meta: Meta<typeof DefaultStory> = {
   title: 'plugins/plugin-markdown/components/MarkdownEditor',
-  component: DefaultStory,
-  render: DefaultStory as any,
+  render: DefaultStory,
   decorators: [
     withTheme(),
     withLayout({ layout: 'column' }),
     withPluginManager({
       plugins: [
         ...corePlugins(),
+        // TODO(burdon): Try to write story without ClientPlugin.
         ClientPlugin({
-          types: [Markdown.Document],
+          types: [Markdown.Document, Text.Text],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               yield* Effect.promise(() => client.halo.createIdentity());
               yield* Effect.promise(() => client.spaces.waitUntilReady());
               const space = client.spaces.default;
               yield* Effect.promise(() => space.waitUntilReady());
-
-              space.db.add(Markdown.make({ content }));
+              space.db.add(
+                Markdown.make({ content: Array.from({ length: 100 }, (_, i) => `Line ${i + 1}`).join('\n') }),
+              );
             }),
         }),
       ],

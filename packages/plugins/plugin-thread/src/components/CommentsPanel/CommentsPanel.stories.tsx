@@ -15,8 +15,7 @@ import { faker } from '@dxos/random';
 import { useDatabase, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { render } from '@dxos/storybook-utils';
+import { withLayout, withTheme, Loading } from '@dxos/react-ui/testing';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 
 import { translations } from '../../translations';
@@ -54,7 +53,7 @@ const DefaultStory = () => {
   }, [identity, db]);
 
   if (!identity || !db || !anchors) {
-    return null;
+    return <Loading data={{ identity: !!identity, db: !!db, anchors: !!anchors }} />;
   }
 
   return <CommentsPanel anchors={anchors} onThreadDelete={console.log} onAcceptProposal={console.log} />;
@@ -62,7 +61,7 @@ const DefaultStory = () => {
 
 const meta = {
   title: 'plugins/plugin-thread/components/Comments',
-  render: render(DefaultStory),
+  render: DefaultStory,
   decorators: [
     withTheme(),
     withLayout({ layout: 'column' }),

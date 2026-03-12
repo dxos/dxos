@@ -187,16 +187,17 @@ const MARKDOWN_EDITOR_TOOLBAR_NAME = 'MarkdownEditor.Toolbar';
 
 type MarkdownEditorToolbarProps = Omit<
   NaturalMarkdownToolbarProps,
-  'state' | 'editorView' | 'onAction' | 'onFileUpload' | 'onViewModeChange'
+  'state' | 'editorView' | 'onAction' | 'onFileUpload' | 'onViewModeChange' | 'id'
 >;
 
 const MarkdownEditorToolbar = (props: MarkdownEditorToolbarProps) => {
-  const { editorView, toolbarState, onAction, onFileUpload, onViewModeChange } =
+  const { id, editorView, toolbarState, onAction, onFileUpload, onViewModeChange } =
     useMarkdownEditorContext(MARKDOWN_EDITOR_TOOLBAR_NAME);
 
   return (
     <NaturalMarkdownToolbar
       {...props}
+      id={id}
       editorView={editorView}
       state={toolbarState}
       onAction={onAction}
