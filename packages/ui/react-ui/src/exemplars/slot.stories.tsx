@@ -8,7 +8,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type PropsWithChildren, forwardRef } from 'react';
 
 import { composableProps } from '@dxos/ui-theme';
-import { type ComposableProps, type SlottableProps, type ThemedClassName, slotCompliant } from '@dxos/ui-types';
+import { type ComposableProps, type SlottableProps, type ThemedClassName } from '@dxos/ui-types';
 
 import { withTheme } from '../testing';
 
@@ -58,19 +58,6 @@ const Leaf = forwardRef<HTMLButtonElement, ComposableProps<PropsWithChildren>>(
   },
 );
 
-// Slot-compliant version of Leaf — opted in via slotCompliant().
-const SlotCompliantLeaf = slotCompliant(
-  forwardRef<HTMLButtonElement, ComposableProps<PropsWithChildren>>(({ children, ...props }, forwardedRef) => {
-    const { className, ...rest } = composableProps(props);
-    return (
-      <button {...rest} className={className} ref={forwardedRef}>
-        {children}
-      </button>
-    );
-  }),
-);
-
-// Test 1: Non-compliant child — assertSlotCompliant prints a console.warn for Leaf.
 const TestSingle = (props: ThemedClassName<{ role?: string }>) => {
   const { className, ...rest } = composableProps(props);
   return (
@@ -80,17 +67,6 @@ const TestSingle = (props: ThemedClassName<{ role?: string }>) => {
   );
 };
 
-// Test 2: Compliant child — SlotCompliantLeaf passes assertSlotCompliant silently.
-const TestCompliant = (props: ThemedClassName<{ role?: string }>) => {
-  const { className, ...rest } = composableProps(props);
-  return (
-    <Outer {...rest} asChild className={className}>
-      <SlotCompliantLeaf>Single asChild (compliant — no warning)</SlotCompliantLeaf>
-    </Outer>
-  );
-};
-
-// Test 3: Nested asChild.
 const TestNested = (props: ThemedClassName<{ role?: string }>) => {
   const { className, ...rest } = composableProps(props);
   return (
@@ -102,7 +78,6 @@ const TestNested = (props: ThemedClassName<{ role?: string }>) => {
   );
 };
 
-// Test 4: Complex.
 const TestInner = (props: ThemedClassName<{ role?: string }>) => {
   const { className, ...rest } = composableProps(props);
   return (
@@ -130,10 +105,6 @@ type Story = StoryObj<typeof meta>;
 
 export const Single: Story = {
   render: () => <TestSingle role='listitem' classNames='border-red-500' />,
-};
-
-export const Compliant: Story = {
-  render: () => <TestCompliant role='listitem' classNames='border-green-500' />,
 };
 
 export const Nested: Story = {
