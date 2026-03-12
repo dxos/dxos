@@ -7,7 +7,7 @@ import react from '@vitejs/plugin-react-swc';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import sourcemaps from 'rollup-plugin-sourcemaps';
+// import sourcemaps from 'rollup-plugin-sourcemaps';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { defineConfig, searchForWorkspaceRoot, type ConfigEnv, type Plugin, type PluginOption } from 'vite';
 import devtoolsJson from 'vite-plugin-devtools-json';
@@ -55,7 +55,7 @@ const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
       ],
     }),
   wasm(),
-  sourcemaps(),
+  // sourcemaps(),
 ];
 
 /**
@@ -193,7 +193,7 @@ export default defineConfig((env) => ({
       ['tiktoken/lite']: path.resolve(dirname, 'stub.mjs'),
       // NOTE: react-ui must be aliased because vite-plugin-import-source only intercepts imports from
       //   source files — imports embedded inside compiled dist/ files bypass it entirely.
-      '@dxos/react-ui': path.resolve(rootDir, 'packages/ui/react-ui/src'),
+      // '@dxos/react-ui': path.resolve(rootDir, 'packages/ui/react-ui/src'),
       // TODO(wittjosiah): Remove this once we have a better solution.
       // NOTE: This is a workaround to fix "dual package hazard" where dist output and local sources
       //   might resolve differently, resulting in two distinct module instances.
@@ -230,7 +230,7 @@ export default defineConfig((env) => ({
     // Open: http://localhost:5173/__inspect
     isTrue(process.env.DX_INSPECT) && inspect(),
 
-    env.command === 'serve' && devtoolsJson(),
+    // env.command === 'serve' && devtoolsJson(),
 
     // Solid JSX transform for Solid packages.
     // Must be placed before React plugin to process Solid files first.
