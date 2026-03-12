@@ -23,7 +23,6 @@ Update this document with the results of the following tasks:
 
 ## Phase 3
 
-
 - [ ] Density audit.
 - [ ] Semantic color audit.
 

@@ -107,7 +107,7 @@ export const createFetchOAuthInitiator = (): OAuthInitiator => ({
       // Build headers.
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
-        'Origin': params.redirectOrigin,
+        Origin: params.redirectOrigin,
       };
       if (params.authHeader) {
         headers['Authorization'] = params.authHeader;

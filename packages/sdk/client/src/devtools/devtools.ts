@@ -255,9 +255,8 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
 
       const data = await uploadFile();
 
-      const { createLevel, createStorageObjects, decodeProfileArchive, importProfileData } = await import(
-        '@dxos/client-services'
-      );
+      const { createLevel, createStorageObjects, decodeProfileArchive, importProfileData } =
+        await import('@dxos/client-services');
 
       const storageConfig = client.config.get('runtime.client.storage', {})!;
 

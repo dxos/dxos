@@ -15,7 +15,7 @@
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "default": "./dist/lib/default/index.mjs"
+      "default": "./dist/lib/neutral/index.mjs"
     }
   },
   "files": [

@@ -8,6 +8,7 @@ import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
 import { type Database, type Entity, Obj, Ref, Type } from '@dxos/echo';
+import { Filter, Query } from '@dxos/echo';
 import {
   type AnyProperties,
   GeneratorAnnotationId,
@@ -15,7 +16,6 @@ import {
   type JsonSchemaType,
   getSchemaReference,
 } from '@dxos/echo/internal';
-import { Filter, Query } from '@dxos/echo-db';
 import {
   type SchemaProperty,
   findAnnotation,

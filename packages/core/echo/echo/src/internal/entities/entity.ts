@@ -22,7 +22,9 @@ export interface EchoTypeSchema<
   ExtraFields = {},
   K extends EntityKind = EntityKind,
   Fields extends Schema.Struct.Fields = Schema.Struct.Fields,
-> extends TypeMeta,
+>
+  extends
+    TypeMeta,
     Schema.AnnotableClass<
       EchoTypeSchema<Self, ExtraFields, K, Fields>,
       EchoTypeSchemaProps<Schema.Schema.Type<Self>, ExtraFields>,

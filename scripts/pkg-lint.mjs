@@ -86,7 +86,11 @@ for (const { name, path: pkgPath } of packages) {
 
   // Package is not type: module - warning.
   if (pkgJson.type !== 'module') {
-    addDiagnostic('warning', 'type-module', `package.json is not "type": "module" (got: ${pkgJson.type ?? 'undefined'})`);
+    addDiagnostic(
+      'warning',
+      'type-module',
+      `package.json is not "type": "module" (got: ${pkgJson.type ?? 'undefined'})`,
+    );
   } else {
     addDiagnostic('conventional', 'type-module', 'package.json is "type": "module"');
   }
@@ -147,7 +151,11 @@ for (const { name, path: pkgPath } of packages) {
   if (pkgJson.dependencies) {
     for (const [dep, version] of Object.entries(pkgJson.dependencies)) {
       if (!version.startsWith('workspace:') && !version.startsWith('catalog:')) {
-        addDiagnostic('warning', 'non-catalog-dep', `dependency "${dep}" uses version "${version}" instead of catalog:`);
+        addDiagnostic(
+          'warning',
+          'non-catalog-dep',
+          `dependency "${dep}" uses version "${version}" instead of catalog:`,
+        );
       }
     }
   }
@@ -197,14 +205,22 @@ for (const { name, path: pkgPath } of packages) {
     // No default export condition - warning (unless has browser/node).
     const hasRuntimeCondition = conditions.some((c) => ['default', 'browser', 'node', 'import', 'require'].includes(c));
     if (!hasRuntimeCondition) {
-      addDiagnostic('warning', 'no-runtime-export', `export "${exportPath}" has no runtime condition (default/browser/node)`);
+      addDiagnostic(
+        'warning',
+        'no-runtime-export',
+        `export "${exportPath}" has no runtime condition (default/browser/node)`,
+      );
     }
 
     // Check if types file exists.
     if (conditions.includes('types') && typeof exportValue.types === 'string') {
       const typesPath = join(pkgPath, exportValue.types);
       if (!existsSync(typesPath)) {
-        addDiagnostic('info', 'types-missing', `export "${exportPath}": types file does not exist yet: ${exportValue.types}`);
+        addDiagnostic(
+          'info',
+          'types-missing',
+          `export "${exportPath}": types file does not exist yet: ${exportValue.types}`,
+        );
       }
     }
   }

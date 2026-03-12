@@ -47,8 +47,7 @@ type OperationResolverOptions = {
 };
 
 export default Capability.makeModule(
-  Effect.fnUntraced(function* (props?: OperationResolverOptions) {
-    const { createInvitationUrl, observability } = props!;
+  Effect.fnUntraced(function* ({ createInvitationUrl, observability }: OperationResolverOptions) {
     const capabilityManager = yield* Capability.Service;
 
     const resolve = (typename: string) =>

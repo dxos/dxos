@@ -122,8 +122,8 @@ const L0ItemRoot = memo(
       const handleClick = useL0ItemClick({ item, parent, path: itemPath }, type);
       const rootProps =
         type === 'tab'
-          ? { 'value': item.id, 'tabIndex': 0, 'onClick': handleClick, 'data-testid': testId, 'data-object-id': id }
-          : { 'onClick': handleClick, 'data-testid': testId, 'data-object-id': id };
+          ? { value: item.id, tabIndex: 0, onClick: handleClick, 'data-testid': testId, 'data-object-id': id }
+          : { onClick: handleClick, 'data-testid': testId, 'data-object-id': id };
 
       return (
         <Tooltip.Trigger asChild delayDuration={0} side='right' content={localizedString}>

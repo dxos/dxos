@@ -5,13 +5,13 @@
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Obj, Query, Ref, Type } from '@dxos/echo';
+import { Filter } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
 
 import { type EchoDatabase } from './proxy-db';
-import { Filter } from './query';
 import { type SerializedSpace } from './serialized-space';
 import { Serializer } from './serializer';
 import { EchoTestBuilder, createTmpPath } from './testing';
@@ -35,10 +35,10 @@ describe('Serializer', () => {
       const data = serializer.exportObject(task);
 
       expect(data).to.deep.include({
-        'id': task.id,
+        id: task.id,
         '@meta': { keys: [] },
         '@type': `dxn:type:${Type.getTypename(TestSchema.Task)}:${Type.getVersion(TestSchema.Task)}`,
-        'title': 'Testing',
+        title: 'Testing',
       });
     });
   });
@@ -61,9 +61,9 @@ describe('Serializer', () => {
         data = await serializer.export(db);
         expect(data.objects).to.have.length(1);
         expect(data.objects[0]).to.deep.include({
-          'id': obj.id,
+          id: obj.id,
           '@meta': { keys: [] },
-          'title': 'Test',
+          title: 'Test',
         });
       }
 
@@ -96,9 +96,9 @@ describe('Serializer', () => {
         data = await serializer.export(db, Query.select(Filter.props({ title: 'Hello' })));
         expect(data.objects).to.have.length(1);
         expect(data.objects[0]).to.deep.include({
-          'id': obj1.id,
+          id: obj1.id,
           '@meta': { keys: [] },
-          'title': 'Hello',
+          title: 'Hello',
         });
       }
 
@@ -130,7 +130,7 @@ describe('Serializer', () => {
         data = await serializer.export(db);
         expect(data.objects).to.have.length(1);
         expect(data.objects[0]).to.deep.include({
-          'id': preserved.id,
+          id: preserved.id,
           '@meta': { keys: [] },
           ...objValue,
         });

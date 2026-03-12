@@ -1,3 +1,7 @@
+//
+// Copyright 2026 DXOS.org
+//
+
 import { renderToStaticMarkup } from 'react-dom/server';
 import React from 'react';
 import { mx } from '@dxos/ui-theme';

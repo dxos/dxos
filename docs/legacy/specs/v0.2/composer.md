@@ -106,8 +106,8 @@ export const Plugin = {
   provides: {
     someCapability: {
       /* some capability API fulfillment provided here */
-    }
-  }
+    },
+  },
 };
 ```
 
@@ -166,7 +166,7 @@ Below is an example of how the App in the diagram above would be instantiated il
     new ComposerPlugin(), // provides Composer
     new ImagePlugin(), // provides Image
     new HaloPlugin(), // provides the HALO button and shell in the tools surface
-    new SearchPlugin() // provides the Search element in the tools surface
+    new SearchPlugin(), // provides the Search element in the tools surface
   ]}
 >
   <Surface
@@ -176,11 +176,11 @@ Below is an example of how the App in the diagram above would be instantiated il
         nestedSurfaces: {
           sidebar: { component: 'TreePlugin.Tree' },
           tools: {
-            component: ['HaloPlugin.HaloButton', 'SearchPlugin.Search']
+            component: ['HaloPlugin.HaloButton', 'SearchPlugin.Search'],
           },
-          main: { component: 'TreePlugin.Selection' }
-        }
-      }
+          main: { component: 'TreePlugin.Selection' },
+        },
+      },
     }}
   />
 </PluginProvider>
@@ -228,9 +228,9 @@ The average tree or list item has mostly similar properties:
 type Node = {
   label: string;
   icon: any;
-  // ... 
+  // ...
   children: Node[]; // if a tree
-}
+};
 ```
 
 The `graph` contract is derived by working backwards from these UI models which are chosen to view and navigate "everything".
@@ -250,6 +250,7 @@ To assemble the tree, every plugin `provides.graph(): Node[]` node arrays and th
 ## Hero Scenarios
 
 Priority legend:
+
 - P0 - must have
 - P1 - painful cut
 - P2 - nice to have
@@ -257,7 +258,7 @@ Priority legend:
 
 ### 5. Users can collaborate on documents in a stack-editor paradigm
 
-This scenario expands the plain-text-editor to support multimedia and other arbitrary content types by envisioning the document as a vertical sequence (**stack**) of **stack items**. 
+This scenario expands the plain-text-editor to support multimedia and other arbitrary content types by envisioning the document as a vertical sequence (**stack**) of **stack items**.
 
 Users are free to drag-arrange section order, insert new sections, and interact with the contents of each section.
 

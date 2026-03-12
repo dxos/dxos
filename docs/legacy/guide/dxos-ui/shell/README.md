@@ -48,10 +48,7 @@ export default defineConfig({
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width,initial-scale=1,user-scalable=no"
-    />
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no" />
     <style>
       html,
       body {
@@ -63,11 +60,9 @@ export default defineConfig({
         document.documentElement.classList[darkMode ? 'add' : 'remove']('dark');
       }
       setTheme(window.matchMedia('(prefers-color-scheme: dark)').matches);
-      window
-        .matchMedia('(prefers-color-scheme: dark)')
-        .addEventListener('change', function (e) {
-          setTheme(e.matches);
-        });
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function (e) {
+        setTheme(e.matches);
+      });
     </script>
   </head>
   <body>

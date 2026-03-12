@@ -5,12 +5,12 @@
 import { type CleanupFn, Event } from '@dxos/async';
 import { StackTrace } from '@dxos/debug';
 import { type Entity, type QueryResult } from '@dxos/echo';
+import { type Query } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { isNonNullable } from '@dxos/util';
 
-import { type Query } from './api';
 import { type QueryContext } from './query-context';
 
 /**

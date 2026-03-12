@@ -10,12 +10,20 @@
    * Fade
    */
   @keyframes fade-in {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
   }
   @keyframes fade-out {
-    from { opacity: 1; }
-    to { opacity: 0; }
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
   }
   --animate-fade-in: fade-in 200ms ease-out;
   --animate-fade-out: fade-out 400ms ease-out;
@@ -24,20 +32,44 @@
    * Popper/dialog slide 
    */
   @keyframes slide-down-and-fade {
-    from { opacity: 1; transform: translateY(0); }
-    to { opacity: 0; transform: translateY(16px); }
+    from {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    to {
+      opacity: 0;
+      transform: translateY(16px);
+    }
   }
   @keyframes slide-left-and-fade {
-    from { opacity: 0; transform: translateX(-16px); }
-    to { opacity: 1; transform: translateX(0); }
+    from {
+      opacity: 0;
+      transform: translateX(-16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
   }
   @keyframes slide-up-and-fade {
-    from { opacity: 0; transform: translateY(16px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
   @keyframes slide-right-and-fade {
-    from { opacity: 0; transform: translateX(16px); }
-    to { opacity: 1; transform: translateX(0); }
+    from {
+      opacity: 0;
+      transform: translateX(16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
   }
   --animate-slide-down-and-fade: slide-down-and-fade 400ms cubic-bezier(0.16, 1, 0.3, 1);
   --animate-slide-left-and-fade: slide-left-and-fade 400ms cubic-bezier(0.16, 1, 0.3, 1);
@@ -48,20 +80,36 @@
    * Toast 
    */
   @keyframes toast-hide {
-    0% { opacity: 1; }
-    100% { opacity: 0; }
+    0% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
   }
   @keyframes toast-slide-in-right {
-    0% { transform: translateX(calc(100% + 1rem)); }
-    100% { transform: translateX(0); }
+    0% {
+      transform: translateX(calc(100% + 1rem));
+    }
+    100% {
+      transform: translateX(0);
+    }
   }
   @keyframes toast-slide-in-bottom {
-    0% { transform: translateY(calc(100% + 1rem)); }
-    100% { transform: translateY(0); }
+    0% {
+      transform: translateY(calc(100% + 1rem));
+    }
+    100% {
+      transform: translateY(0);
+    }
   }
   @keyframes toast-swipe-out {
-    0% { transform: translateX(var(--radix-toast-swipe-end-x)); }
-    100% { transform: translateX(calc(100% + 1rem)); }
+    0% {
+      transform: translateX(var(--radix-toast-swipe-end-x));
+    }
+    100% {
+      transform: translateX(calc(100% + 1rem));
+    }
   }
   --animate-toast-hide: toast-hide 100ms ease-in forwards;
   --animate-toast-slide-in-right: toast-slide-in-right 150ms cubic-bezier(0.16, 1, 0.3, 1);
@@ -72,12 +120,20 @@
    * Accordion 
    */
   @keyframes slide-down {
-    from { height: 0px; }
-    to { height: var(--radix-accordion-content-height); }
+    from {
+      height: 0px;
+    }
+    to {
+      height: var(--radix-accordion-content-height);
+    }
   }
   @keyframes slide-up {
-    from { height: var(--radix-accordion-content-height); }
-    to { height: 0px; }
+    from {
+      height: var(--radix-accordion-content-height);
+    }
+    to {
+      height: 0px;
+    }
   }
   --animate-slide-down: slide-down 300ms cubic-bezier(0.87, 0, 0.13, 1);
   --animate-slide-up: slide-up 300ms cubic-bezier(0.87, 0, 0.13, 1);
@@ -86,7 +142,9 @@
    * Shimmer 
    */
   @keyframes shimmer-loop {
-    100% { transform: translateX(100%); }
+    100% {
+      transform: translateX(100%);
+    }
   }
   --animate-shimmer: shimmer-loop 2s infinite;
 
@@ -94,9 +152,15 @@
    * Halo pulse 
    */
   @keyframes halo-pulse {
-    0% { opacity: 0.3; }
-    5% { opacity: 1; }
-    100% { opacity: 0.3; }
+    0% {
+      opacity: 0.3;
+    }
+    5% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0.3;
+    }
   }
   --animate-halo-pulse: halo-pulse 2s ease-out infinite;
 
@@ -104,10 +168,22 @@
    * Progress 
    */
   @keyframes progress-indeterminate {
-    0% { left: 0; width: 0%; }
-    25% { left: 25%; width: 50%; }
-    75% { left: 50%; width: 100%; }
-    100% { left: 100%; width: 0%; }
+    0% {
+      left: 0;
+      width: 0%;
+    }
+    25% {
+      left: 25%;
+      width: 50%;
+    }
+    75% {
+      left: 50%;
+      width: 100%;
+    }
+    100% {
+      left: 100%;
+      width: 0%;
+    }
   }
   --animate-progress-indeterminate: progress-indeterminate 2s ease-out infinite;
 
@@ -115,11 +191,17 @@
    * Border trail 
    */
   @keyframes trail {
-    to { offset-distance: 100%; }
+    to {
+      offset-distance: 100%;
+    }
   }
   @keyframes trail-offset {
-    0% { offset-distance: 50%; }
-    100% { offset-distance: 150%; }
+    0% {
+      offset-distance: 50%;
+    }
+    100% {
+      offset-distance: 150%;
+    }
   }
   --animate-trail: trail 6s linear infinite;
   --animate-trail-offset: trail-offset 6s linear infinite;
@@ -133,8 +215,15 @@
    * Blink 
    */
   @keyframes blink {
-    0%, 50%, 100% { opacity: 1; }
-    25%, 75% { opacity: 0; }
+    0%,
+    50%,
+    100% {
+      opacity: 1;
+    }
+    25%,
+    75% {
+      opacity: 0;
+    }
   }
   --animate-blink: blink 1s step-start infinite;
 }

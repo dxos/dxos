@@ -5,11 +5,16 @@
 import type * as Tool from '@effect/ai/Tool';
 import type * as Toolkit from '@effect/ai/Toolkit';
 import type { Registry } from '@effect-atom/atom-react';
+import * as Array from 'effect/Array';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Either from 'effect/Either';
+import { pipe } from 'effect/Function';
 import * as Layer from 'effect/Layer';
 
 import { type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
+import { type GenericToolkit } from '@dxos/ai';
+import { type Blueprint } from '@dxos/blueprints';
 import { Resource } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
@@ -17,6 +22,7 @@ import { acquireReleaseResource } from '@dxos/effect';
 import { QueueService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { McpToolkit } from '@dxos/mcp-client';
 import { Message } from '@dxos/types';
 
 import {
@@ -107,9 +113,13 @@ export class AiConversation extends Resource {
 
       // Create toolkit.
       const blueprints = this.context.getBlueprints();
+
+      const mcps = yield* connectMcpServers(blueprints);
+
       const toolkit = yield* createToolkit({
         toolkit: this._toolkit,
         blueprints,
+        genericToolkits: mcps,
       });
 
       // Context objects.
@@ -216,3 +226,22 @@ const aiContextFromConversation = Layer.effect(
     };
   }),
 );
+
+const connectMcpServers = (
+  blueprints: readonly Blueprint.Blueprint[],
+): Effect.Effect<GenericToolkit.GenericToolkit[]> =>
+  pipe(
+    blueprints,
+    Array.flatMap((_) => _.mcpServers ?? []),
+    Effect.forEach(({ url, protocol }) =>
+      McpToolkit.make({ url, kind: protocol }).pipe(
+        // NOTE: Type-inference fails here without explicit void return.
+        Effect.tap((toolkit): void =>
+          log.info('Connected to MCP server', { url, tools: Object.keys(toolkit.toolkit.tools).length }),
+        ),
+        Effect.tapDefect((error) => Effect.sync(() => log.warn('Failed to connect to MCP server', { error }))),
+        Effect.either,
+      ),
+    ),
+    Effect.map(Array.filterMap((_) => Either.getRight(_))),
+  );

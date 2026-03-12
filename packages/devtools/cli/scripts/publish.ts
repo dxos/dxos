@@ -11,8 +11,7 @@ import { spawnSync } from 'child_process';
 // Parse command line arguments.
 const args = process.argv.slice(2);
 const tagIndex = args.indexOf('--tag');
-const tag =
-  tagIndex !== -1 && args[tagIndex + 1] ? args[tagIndex + 1] : 'latest';
+const tag = tagIndex !== -1 && args[tagIndex + 1] ? args[tagIndex + 1] : 'latest';
 const dryRun = args.includes('--dry-run');
 
 console.log(`[Publish] Publishing cli packages with tag: ${tag}`);
@@ -29,9 +28,7 @@ if (!existsSync(distDir)) {
 
 // Get all package directories.
 const packageDirs = readdirSync(distDir, { withFileTypes: true })
-  .filter(
-    (dirent) => dirent.isDirectory() && dirent.name.startsWith('cli'),
-  )
+  .filter((dirent) => dirent.isDirectory() && dirent.name.startsWith('cli'))
   .map((dirent) => dirent.name);
 
 if (packageDirs.length === 0) {
@@ -59,9 +56,7 @@ function publishPackage(packageDir: string): boolean {
   }
 
   const packageJson = require(`../${packageJsonPath}`);
-  console.log(
-    `[Publish] Publishing ${packageJson.name}@${packageJson.version}...`,
-  );
+  console.log(`[Publish] Publishing ${packageJson.name}@${packageJson.version}...`);
 
   const publishArgs = ['publish', '--tag', tag, '--no-git-checks'];
   if (dryRun) {

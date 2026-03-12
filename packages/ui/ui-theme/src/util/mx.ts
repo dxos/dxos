@@ -27,7 +27,7 @@ export const mx = extendTailwindMerge<AdditionalClassGroups>({
         validators.isArbitraryNumber,
       ],
 
-      'density': ['dx-density-fine', 'dx-density-coarse'],
+      density: ['dx-density-fine', 'dx-density-coarse'],
 
       'dx-focus-ring': [
         'dx-focus-ring',

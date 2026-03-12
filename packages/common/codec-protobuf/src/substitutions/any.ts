@@ -53,8 +53,8 @@ export const anySubstitutions = {
       if (options.preserveAny || field.getOption('preserve_any')) {
         return {
           '@type': 'google.protobuf.Any',
-          'type_url': value.type_url ?? '',
-          'value': value.value ?? new Uint8Array(),
+          type_url: value.type_url ?? '',
+          value: value.value ?? new Uint8Array(),
         };
       }
 

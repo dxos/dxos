@@ -9,8 +9,7 @@ import { Clipboard, Dialog, type DialogContentProps, useId } from '@dxos/react-u
 import { SpacePanel, type SpacePanelProps } from '../../panels';
 
 export interface SpaceDialogProps
-  extends Omit<DialogContentProps, 'children'>,
-    Omit<SpacePanelProps, 'doneActionParent'> {}
+  extends Omit<DialogContentProps, 'children'>, Omit<SpacePanelProps, 'doneActionParent'> {}
 
 export const SpaceDialog = (spacePanelProps: SpaceDialogProps) => {
   const titleId = useId('spaceDialog__title');

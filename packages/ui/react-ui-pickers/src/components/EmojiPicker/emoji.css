@@ -1,9 +1,9 @@
 /**
  * https://github.com/missive/emoji-mart/blob/main/packages/emoji-mart-website/example-custom-styles.html
  */
-[data-theme="dark"] em-emoji-picker {
+[data-theme='dark'] em-emoji-picker {
   /* TODO(burdon): Use tailwind tokens. */
-  --background-rgb: #3B3B3F;
-  --rgb-background: #3B3B3F;
-  --font-family: "Inter Variable", ui-sans-serif;
+  --background-rgb: #3b3b3f;
+  --rgb-background: #3b3b3f;
+  --font-family: 'Inter Variable', ui-sans-serif;
 }

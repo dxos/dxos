@@ -25,9 +25,7 @@ type OperationResolverOptions = {
 const RECOVER_IDENTITY_RPC_TIMEOUT = 20_000;
 
 export default Capability.makeModule(
-  Effect.fnUntraced(function* (props?: OperationResolverOptions) {
-    const { appName = 'Composer' } = props ?? {};
-
+  Effect.fnUntraced(function* ({ appName = 'Composer' }: OperationResolverOptions = {}) {
     return Capability.contributes(Capabilities.OperationResolver, [
       //
       // CreateIdentity

@@ -29,7 +29,7 @@ describe('SpaceStateMachine', () => {
           subject: space,
           assertion: {
             '@type': 'dxos.halo.credentials.SpaceGenesis',
-            'spaceKey': space,
+            spaceKey: space,
           },
           signer: keyring,
         }),
@@ -44,9 +44,9 @@ describe('SpaceStateMachine', () => {
           subject: identity,
           assertion: {
             '@type': 'dxos.halo.credentials.SpaceMember',
-            'spaceKey': space,
-            'role': SpaceMember.Role.ADMIN,
-            'genesisFeedKey': feed,
+            spaceKey: space,
+            role: SpaceMember.Role.ADMIN,
+            genesisFeedKey: feed,
           },
           signer: keyring,
         }),
@@ -58,8 +58,8 @@ describe('SpaceStateMachine', () => {
       credential: await createCredential({
         assertion: {
           '@type': 'dxos.halo.credentials.AuthorizedDevice',
-          'deviceKey': device,
-          'identityKey': identity,
+          deviceKey: device,
+          identityKey: identity,
         },
         subject: device,
         issuer: identity,
@@ -74,10 +74,10 @@ describe('SpaceStateMachine', () => {
           subject: feed,
           assertion: {
             '@type': 'dxos.halo.credentials.AdmittedFeed',
-            'spaceKey': space,
-            'identityKey': identity,
-            'deviceKey': device,
-            'designation': AdmittedFeed.Designation.CONTROL,
+            spaceKey: space,
+            identityKey: identity,
+            deviceKey: device,
+            designation: AdmittedFeed.Designation.CONTROL,
           },
           signer: keyring,
           signingKey: device,
@@ -129,7 +129,7 @@ describe('SpaceStateMachine', () => {
           subject: space,
           assertion: {
             '@type': 'dxos.halo.credentials.SpaceGenesis',
-            'spaceKey': space,
+            spaceKey: space,
           },
           signer: keyring,
         }),
@@ -145,9 +145,9 @@ describe('SpaceStateMachine', () => {
           subject: identity,
           assertion: {
             '@type': 'dxos.halo.credentials.SpaceMember',
-            'spaceKey': space,
-            'role': SpaceMember.Role.ADMIN,
-            'genesisFeedKey': feed,
+            spaceKey: space,
+            role: SpaceMember.Role.ADMIN,
+            genesisFeedKey: feed,
           },
           signer: keyring,
         }),
@@ -159,8 +159,8 @@ describe('SpaceStateMachine', () => {
       credential: await createCredential({
         assertion: {
           '@type': 'dxos.halo.credentials.AuthorizedDevice',
-          'deviceKey': device,
-          'identityKey': identity,
+          deviceKey: device,
+          identityKey: identity,
         },
         subject: device,
         issuer: identity,
@@ -175,9 +175,9 @@ describe('SpaceStateMachine', () => {
           subject: identity2,
           assertion: {
             '@type': 'dxos.halo.credentials.SpaceMember',
-            'spaceKey': space,
-            'role': SpaceMember.Role.EDITOR,
-            'genesisFeedKey': feed,
+            spaceKey: space,
+            role: SpaceMember.Role.EDITOR,
+            genesisFeedKey: feed,
           },
           signer: keyring,
           signingKey: device,
@@ -229,7 +229,7 @@ describe('SpaceStateMachine', () => {
           subject: haloSpace,
           assertion: {
             '@type': 'dxos.halo.credentials.SpaceGenesis',
-            'spaceKey': haloSpace,
+            spaceKey: haloSpace,
           },
           signer: keyring,
         }),
@@ -245,9 +245,9 @@ describe('SpaceStateMachine', () => {
           subject: identity,
           assertion: {
             '@type': 'dxos.halo.credentials.SpaceMember',
-            'spaceKey': haloSpace,
-            'role': SpaceMember.Role.ADMIN,
-            'genesisFeedKey': feed,
+            spaceKey: haloSpace,
+            role: SpaceMember.Role.ADMIN,
+            genesisFeedKey: feed,
           },
           signer: keyring,
         }),
@@ -263,8 +263,8 @@ describe('SpaceStateMachine', () => {
           subject: identity,
           assertion: {
             '@type': 'dxos.halo.credentials.HaloSpace',
-            'identityKey': identity,
-            'haloKey': haloSpace,
+            identityKey: identity,
+            haloKey: haloSpace,
           },
           signer: keyring,
         }),
@@ -278,8 +278,8 @@ describe('SpaceStateMachine', () => {
         await createCredential({
           assertion: {
             '@type': 'dxos.halo.credentials.AuthorizedDevice',
-            'deviceKey': device1,
-            'identityKey': identity,
+            deviceKey: device1,
+            identityKey: identity,
           },
           subject: device1,
           issuer: identity,
@@ -295,8 +295,8 @@ describe('SpaceStateMachine', () => {
         await createCredential({
           assertion: {
             '@type': 'dxos.halo.credentials.AuthorizedDevice',
-            'deviceKey': device2,
-            'identityKey': identity,
+            deviceKey: device2,
+            identityKey: identity,
           },
           subject: device2,
           issuer: identity,
@@ -319,10 +319,10 @@ describe('SpaceStateMachine', () => {
     const credential = await createCredential({
       assertion: {
         '@type': 'dxos.halo.credentials.AdmittedFeed',
-        'spaceKey': haloSpace,
-        'deviceKey': device2,
-        'designation': AdmittedFeed.Designation.CONTROL,
-        'identityKey': identity,
+        spaceKey: haloSpace,
+        deviceKey: device2,
+        designation: AdmittedFeed.Designation.CONTROL,
+        identityKey: identity,
       },
       issuer: identity,
       signer: keyring,

@@ -12,9 +12,9 @@ const Component = () => {
 
   const items = useSelection(
     space.database.select(
-      (s) => s.filter({ type: EXAMPLE_TYPE }).filter((item) => !item.model.getProperty('deleted')).items
+      (s) => s.filter({ type: EXAMPLE_TYPE }).filter((item) => !item.model.getProperty('deleted')).items,
     ),
-    [space_key]
+    [space_key],
   );
 
   // ...

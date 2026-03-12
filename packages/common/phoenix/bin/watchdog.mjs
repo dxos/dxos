@@ -1,5 +1,9 @@
 #!/usr/bin/env -S node
 
+//
+// Copyright 2026 DXOS.org
+//
+
 import { log } from '@dxos/log';
 import { WatchDog } from '../dist/lib/node-esm/index.mjs';
 
