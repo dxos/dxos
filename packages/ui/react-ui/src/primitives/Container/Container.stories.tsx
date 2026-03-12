@@ -11,9 +11,7 @@ import { Container } from './Container';
 
 const DefaultStory = () => (
   <Container asChild>
-    <div className='grid place-items-center border border-red-500'>
-      Hello
-    </div>
+    <div className='grid place-items-center border border-red-500'>Hello</div>
   </Container>
 );
 

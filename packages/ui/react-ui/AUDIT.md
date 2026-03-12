@@ -243,7 +243,6 @@ Components marked ISSUE need to:
 2. Use `composableProps(props)` to extract and merge `className` + `classNames`.
 3. Pass merged `className` to `tx()`/`mx()` instead of raw `classNames`.
 
-
 ### RULE
 
 - Only container components (that expand) can be asChild of Panel.Content

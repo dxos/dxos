@@ -32,11 +32,14 @@ const CardContext = createContext<CardContextValue>({});
 // Root
 //
 
-type CardRootProps = SlottableProps<HTMLDivElement, {
-  id?: string;
-  border?: boolean;
-  fullWidth?: boolean;
-}>;
+type CardRootProps = SlottableProps<
+  HTMLDivElement,
+  {
+    id?: string;
+    border?: boolean;
+    fullWidth?: boolean;
+  }
+>;
 
 const CardRoot = forwardRef<HTMLDivElement, CardRootProps>(
   ({ children, id, asChild, role, border = true, fullWidth, ...props }, forwardedRef) => {
@@ -103,24 +106,17 @@ const CardMenu = <T extends any | void = void>({ context, items }: CardMenuProps
 
 type CardTitleProps = SlottableProps<HTMLDivElement>;
 
-const CardTitle = forwardRef<HTMLDivElement, CardTitleProps>(
-  ({ children, asChild, role, ...props }, forwardedRef) => {
-    const { className, ...rest } = composableProps(props);
-    const Comp = asChild ? Slot : Primitive.div;
-    const { tx } = useThemeContext();
+const CardTitle = forwardRef<HTMLDivElement, CardTitleProps>(({ children, asChild, role, ...props }, forwardedRef) => {
+  const { className, ...rest } = composableProps(props);
+  const Comp = asChild ? Slot : Primitive.div;
+  const { tx } = useThemeContext();
 
-    return (
-      <Comp
-        {...rest}
-        role={role ?? 'heading'}
-        className={tx('card.title', {}, className)}
-        ref={forwardedRef}
-      >
-        {children}
-      </Comp>
-    );
-  },
-);
+  return (
+    <Comp {...rest} role={role ?? 'heading'} className={tx('card.title', {}, className)} ref={forwardedRef}>
+      {children}
+    </Comp>
+  );
+});
 
 //
 // Content
@@ -144,18 +140,16 @@ const CardContent = forwardRef<HTMLDivElement, CardContentProps>(({ children, ro
 
 type CardRowProps = SlottableProps<HTMLDivElement, { icon?: string }>;
 
-const CardRow = forwardRef<HTMLDivElement, CardRowProps>(
-  ({ children, role, icon, ...props }, forwardedRef) => {
-    const { className, ...rest } = composableProps(props);
-    return (
-      <Column.Row {...rest} role={role ?? 'none'} classNames={className} ref={forwardedRef}>
-        {(icon && <CardIcon classNames='text-subdued' icon={icon} />) || <div />}
-        {children}
-        <div />
-      </Column.Row>
-    );
-  },
-);
+const CardRow = forwardRef<HTMLDivElement, CardRowProps>(({ children, role, icon, ...props }, forwardedRef) => {
+  const { className, ...rest } = composableProps(props);
+  return (
+    <Column.Row {...rest} role={role ?? 'none'} classNames={className} ref={forwardedRef}>
+      {(icon && <CardIcon classNames='text-subdued' icon={icon} />) || <div />}
+      {children}
+      <div />
+    </Column.Row>
+  );
+});
 
 //
 // Section
@@ -217,12 +211,7 @@ const CardText = forwardRef<HTMLDivElement, CardTextProps>(
     const { tx } = useThemeContext();
 
     return (
-      <Comp
-        {...rest}
-        role={role ?? 'none'}
-        className={tx('card.text', { variant }, className)}
-        ref={forwardedRef}
-      >
+      <Comp {...rest} role={role ?? 'none'} className={tx('card.text', { variant }, className)} ref={forwardedRef}>
         <span className={tx('card.text-span', { variant, truncate })}>{children}</span>
       </Comp>
     );

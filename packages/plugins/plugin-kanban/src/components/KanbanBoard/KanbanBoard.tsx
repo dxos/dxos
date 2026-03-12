@@ -135,9 +135,7 @@ export const KanbanBoardRoot = ({
       onCardAdd={onCardAdd}
       onCardRemove={onCardRemove}
     >
-      <Board.Root model={model}>
-        {children}
-      </Board.Root>
+      <Board.Root model={model}>{children}</Board.Root>
     </KanbanBoardContext>
   );
 };

@@ -79,23 +79,16 @@ type ColumnRowProps = SlottableProps<HTMLDivElement>;
  * Children map to: [col-1: icon/slot] [col-2: content] [col-3: icon/action].
  * Must be a direct child of Column.Root.
  */
-const Row = forwardRef<HTMLDivElement, ColumnRowProps>(
-  ({ children, asChild, role, ...props }, forwardedRef) => {
-    const { className, ...rest } = composableProps(props);
-    const Component = asChild ? Slot : Primitive.div;
-    const { tx } = useThemeContext();
-    return (
-      <Component
-        {...rest}
-        className={tx('column.row', {}, className)}
-        role={role ?? 'none'}
-        ref={forwardedRef}
-      >
-        {children}
-      </Component>
-    );
-  },
-);
+const Row = forwardRef<HTMLDivElement, ColumnRowProps>(({ children, asChild, role, ...props }, forwardedRef) => {
+  const { className, ...rest } = composableProps(props);
+  const Component = asChild ? Slot : Primitive.div;
+  const { tx } = useThemeContext();
+  return (
+    <Component {...rest} className={tx('column.row', {}, className)} role={role ?? 'none'} ref={forwardedRef}>
+      {children}
+    </Component>
+  );
+});
 
 Row.displayName = COLUMN_ROW_NAME;
 
@@ -121,24 +114,14 @@ const Segment = forwardRef<HTMLDivElement, ColumnSegmentProps>(
     if (asChild) {
       // With asChild, merge col-start-2 directly onto the child — no contents wrapper needed.
       return (
-        <Component
-          {...rest}
-          role={role ?? 'none'}
-          className={tx('column.segment', {}, className)}
-          ref={forwardedRef}
-        >
+        <Component {...rest} role={role ?? 'none'} className={tx('column.segment', {}, className)} ref={forwardedRef}>
           {children}
         </Component>
       );
     }
 
     return (
-      <Component
-        {...rest}
-        className={tx('column.segment', {}, className)}
-        role={role}
-        ref={forwardedRef}
-      >
+      <Component {...rest} className={tx('column.segment', {}, className)} role={role} ref={forwardedRef}>
         <div className='contents'>{children}</div>
       </Component>
     );

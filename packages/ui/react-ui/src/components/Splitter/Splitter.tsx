@@ -39,29 +39,13 @@ const ROOT_NAME = 'Splitter.Root';
 type RootProps = SlottableProps<HTMLDivElement, Partial<SplitterContextValue>>;
 
 const Root = forwardRef<HTMLDivElement, ScopedProps<RootProps>>(
-  (
-    {
-      __scopeSplitter,
-      asChild,
-      mode = 'upper',
-      ratio = 0.5,
-      transition = 250,
-      children,
-      ...props
-    },
-    forwardedRef,
-  ) => {
+  ({ __scopeSplitter, asChild, mode = 'upper', ratio = 0.5, transition = 250, children, ...props }, forwardedRef) => {
     const { className, ...rest } = composableProps(props);
     const Comp = asChild ? Slot : Primitive.div;
     const { tx } = useThemeContext();
     return (
       <SplitterProvider scope={__scopeSplitter} mode={mode} ratio={ratio} transition={transition}>
-        <Comp
-          role='none'
-          {...rest}
-          ref={forwardedRef}
-          className={tx('splitter.root', {}, className)}
-        >
+        <Comp role='none' {...rest} ref={forwardedRef} className={tx('splitter.root', {}, className)}>
           {children}
         </Comp>
       </SplitterProvider>
@@ -77,9 +61,12 @@ Root.displayName = ROOT_NAME;
 
 const PANEL_NAME = 'Splitter.Panel';
 
-type PanelProps = SlottableProps<HTMLDivElement, {
-  position: 'upper' | 'lower';
-}>;
+type PanelProps = SlottableProps<
+  HTMLDivElement,
+  {
+    position: 'upper' | 'lower';
+  }
+>;
 
 const Panel = forwardRef<HTMLDivElement, ScopedProps<PanelProps>>(
   ({ __scopeSplitter, asChild, children, position, style, ...props }, forwardedRef) => {

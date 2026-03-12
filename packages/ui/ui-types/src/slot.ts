@@ -26,8 +26,8 @@ import { type ClassNameValue } from './theme';
  * @see slot.stories.tsx (@dxos/react-ui)
  */
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export type SlottableProps<E extends HTMLElement, P extends Record<string, unknown> = {}> =
-  HTMLAttributes<E> & P & {
+export type SlottableProps<E extends HTMLElement, P extends Record<string, unknown> = {}> = HTMLAttributes<E> &
+  P & {
     classNames?: ClassNameValue;
     asChild?: boolean;
   };
@@ -76,7 +76,6 @@ export type ComposableProps<P extends HTMLElement = HTMLElement> = HTMLAttribute
  * ```
  */
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export type SlotCompatible<
-  E extends HTMLElement,
-  P extends Record<string, unknown> = {},
-> = ForwardRefExoticComponent<HTMLAttributes<E> & P & RefAttributes<E>>;
+export type SlotCompatible<E extends HTMLElement, P extends Record<string, unknown> = {}> = ForwardRefExoticComponent<
+  HTMLAttributes<E> & P & RefAttributes<E>
+>;

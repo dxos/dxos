@@ -15,11 +15,7 @@ export const Container = forwardRef<HTMLDivElement, ContainerProps>(({ children,
   const { className, ...rest } = composableProps<HTMLDivElement>(props, { role: 'none' });
   const Comp = asChild ? Slot : Primitive.div;
   return (
-    <Comp
-      {...rest}
-      className={mx('dx-container', className)}
-      ref={forwardedRef}
-    >
+    <Comp {...rest} className={mx('dx-container', className)} ref={forwardedRef}>
       {children}
     </Comp>
   );
@@ -28,9 +24,7 @@ export const Container = forwardRef<HTMLDivElement, ContainerProps>(({ children,
 const Foo = ({ count, ...props }: { count?: number }) => {
   return (
     <Container {...props} classNames={['flex flex-col']}>
-      <div className='border border-red-500'>
-        {count}
-      </div>
+      <div className='border border-red-500'>{count}</div>
     </Container>
-  )
-}
+  );
+};
