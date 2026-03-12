@@ -2,10 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { getTypename } from '../../Annotation';
+import { getLabel, getTypename } from '../../Annotation';
 import type { AnyEntity } from '../types';
-
-import { getLabel } from './annotations';
 
 /**
  * String comparison helper for sorting.

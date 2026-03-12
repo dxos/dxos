@@ -12,7 +12,6 @@
  * and prevent external packages from using internals directly.
  */
 
-export * from './annotations';
 export * from './entity';
 export * from './meta';
 export * from './sorting';
