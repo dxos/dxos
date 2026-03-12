@@ -14,9 +14,7 @@ export const TemplatePanel = ({ role, subject: object }: TemplatePanelProps) => 
   return (
     <Panel.Root role={role} className='dx-article'>
       <Panel.Content>
-        <Panel.Content>
-          <span>{Obj.getDXN(object).toString()}</span>
-        </Panel.Content>
+        <span>{Obj.getDXN(object).toString()}</span>
       </Panel.Content>
     </Panel.Root>
   );
