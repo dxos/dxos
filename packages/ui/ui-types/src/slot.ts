@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type HTMLAttributes } from 'react';
+import { type ForwardRefExoticComponent, type HTMLAttributes, type RefAttributes } from 'react';
 
 import { type ClassNameValue } from './theme';
 
@@ -54,3 +54,29 @@ export type SlottableProps<E extends HTMLElement, P extends Record<string, unkno
 export type ComposableProps<P extends HTMLElement = HTMLElement> = HTMLAttributes<P> & {
   classNames?: ClassNameValue;
 };
+
+/**
+ * Marks a component as slot-compatible — its root element accepts and merges
+ * structural props from a parent slot (Panel.Content, Panel.Toolbar, etc.).
+ *
+ * Requirements:
+ *   - Spreads unknown props onto the root DOM element.
+ *   - Forwards ref to the root DOM element.
+ *   - Merges className (does not overwrite).
+ *   - Does not add wrapper elements around its root for layout purposes.
+ *
+ * @example
+ * ```tsx
+ * const MyComponent: SlotCompatible<HTMLDivElement, { icon?: string }> = forwardRef(
+ *   ({ children, icon, ...props }, ref) => {
+ *     const { className, ...rest } = composableProps(props);
+ *     return <div {...rest} className={mx('my-class', className)} ref={ref}>{children}</div>;
+ *   },
+ * );
+ * ```
+ */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export type SlotCompatible<
+  E extends HTMLElement,
+  P extends Record<string, unknown> = {},
+> = ForwardRefExoticComponent<HTMLAttributes<E> & P & RefAttributes<E>>;
