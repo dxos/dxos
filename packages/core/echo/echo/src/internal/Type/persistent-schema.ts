@@ -4,10 +4,10 @@
 
 import * as Schema from 'effect/Schema';
 
-import { IconAnnotation } from '../../Annotation';
-import { LabelAnnotation, TypenameSchema, VersionSchema } from '../../Annotation';
-import { EchoObjectSchema } from '../entities';
-import { JsonSchemaType } from '../../JsonSchema';
+import { IconAnnotation } from '../Annotation';
+import { LabelAnnotation, TypenameSchema, VersionSchema } from '../Annotation';
+import { EchoObjectSchema } from '../common/entities';
+import { JsonSchemaType } from '../JsonSchema';
 
 /**
  * Persistent representation of a schema.

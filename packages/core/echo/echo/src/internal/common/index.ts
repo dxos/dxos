@@ -16,4 +16,4 @@ export * from './types';
 // TODO(wittjosiah): Required to ensure types are portable (need to export all types required for downstream inference).
 export * from './object';
 export * from './proxy';
-export * from './schema';
+export * from '../Type';

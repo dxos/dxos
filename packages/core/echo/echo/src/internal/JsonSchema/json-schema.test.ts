@@ -25,7 +25,7 @@ import { EchoObjectSchema } from '../common/entities';
 import { Email, FormatAnnotation, TypeFormat } from '../Format';
 import { JsonSchemaType, getNormalizedEchoAnnotations, getSchemaProperty, setSchemaProperty } from '../JsonSchema';
 import { Ref, createSchemaReference, getReferenceAst, getSchemaReference } from '../Ref';
-import { PersistentSchema } from '../common/schema';
+import { PersistentSchema } from '../Type';
 import { EntityKind } from '../common/types';
 
 import { toEffectSchema, toJsonSchema } from './json-schema';
