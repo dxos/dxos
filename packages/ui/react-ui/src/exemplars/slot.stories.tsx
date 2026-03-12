@@ -24,7 +24,7 @@ const Outer = forwardRef<HTMLDivElement, SlottableProps<HTMLDivElement>>(
   ({ children, asChild, ...props }, forwardedRef) => {
     const Comp = asChild ? Slot : Primitive.div;
     return (
-      <Comp {...composableProps<HTMLAttributes<HTMLDivElement>>(props, { role: 'none' })} ref={forwardedRef}>
+      <Comp {...composableProps<HTMLDivElement>(props, { role: 'none' })} ref={forwardedRef}>
         {children}
       </Comp>
     );
@@ -35,7 +35,7 @@ const Middle = forwardRef<HTMLDivElement, SlottableProps<HTMLDivElement>>(
   ({ children, asChild, ...props }, forwardedRef) => {
     const Comp = asChild ? Slot : Primitive.div;
     return (
-      <Comp {...composableProps<HTMLAttributes<HTMLDivElement>>(props, { role: 'none' })} ref={forwardedRef}>
+      <Comp {...composableProps<HTMLDivElement>(props, { role: 'none' })} ref={forwardedRef}>
         {children}
       </Comp>
     );
@@ -45,7 +45,7 @@ const Middle = forwardRef<HTMLDivElement, SlottableProps<HTMLDivElement>>(
 const Leaf = forwardRef<HTMLButtonElement, ComposableProps<PropsWithChildren>>(
   ({ children, ...props }, forwardedRef) => {
     return (
-      <button {...composableProps<HTMLAttributes<HTMLButtonElement>>(props, { role: 'none' })} ref={forwardedRef}>
+      <button {...composableProps<HTMLButtonElement>(props, { role: 'none' })} ref={forwardedRef}>
         {children}
       </button>
     );
@@ -54,7 +54,7 @@ const Leaf = forwardRef<HTMLButtonElement, ComposableProps<PropsWithChildren>>(
 
 const TestSingle = (props: ThemedClassName<{ role?: string }>) => {
   return (
-    <Outer asChild {...composableProps<HTMLAttributes<HTMLDivElement>>(props, { role: 'none' })}>
+    <Outer asChild {...composableProps<HTMLDivElement>(props, { role: 'none' })}>
       <Leaf>Single asChild (non-compliant — see console)</Leaf>
     </Outer>
   );
@@ -62,7 +62,7 @@ const TestSingle = (props: ThemedClassName<{ role?: string }>) => {
 
 const TestNested = (props: ThemedClassName<{ role?: string }>) => {
   return (
-    <Outer asChild {...composableProps<HTMLAttributes<HTMLDivElement>>(props, { role: 'none' })}>
+    <Outer asChild {...composableProps<HTMLDivElement>(props, { role: 'none' })}>
       <Middle asChild>
         <Leaf>Nested asChild</Leaf>
       </Middle>
@@ -72,7 +72,7 @@ const TestNested = (props: ThemedClassName<{ role?: string }>) => {
 
 const TestInner = (props: ThemedClassName<{ role?: string }>) => {
   return (
-    <Outer asChild {...composableProps<HTMLAttributes<HTMLDivElement>>(props, { role: 'none' })}>
+    <Outer asChild {...composableProps<HTMLDivElement>(props, { role: 'none' })}>
       <Middle asChild>
         <Leaf>
           <div role='none'>Leaf</div>

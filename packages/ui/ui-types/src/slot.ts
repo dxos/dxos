@@ -25,6 +25,7 @@ import { type ClassNameValue } from './theme';
  *
  * @see slot.stories.tsx (@dxos/react-ui)
  */
+// TODO(burdon): Same sig as ComposableProps?
 export type SlottableProps<P extends HTMLElement | null = null> = ComposableProps<
   HTMLAttributes<P> & {
     asChild?: boolean;

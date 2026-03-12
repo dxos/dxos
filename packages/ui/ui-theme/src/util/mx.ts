@@ -59,13 +59,12 @@ export const mx = extendTailwindMerge<AdditionalClassGroups>({
  * Use `composableProps` to reconcile both into a single `className`.
  */
 export const composableProps = <
-  I extends ComposableProps,
-  P extends HTMLAttributes<HTMLElement> = HTMLAttributes<HTMLElement>,
+  P extends HTMLElement = HTMLElement,
 >(
-  { className, classNames, ...props }: I,
-  { className: defaultClassNames, ...defaults }: Partial<P> | undefined = {},
-): Omit<I, 'className' | 'classNames'> & { className: string } => ({
+  { className, classNames, ...props }: ComposableProps,
+  { className: defaultClassNames, ...defaults }: Partial<HTMLAttributes<P>> | undefined = {},
+) => ({
   ...(defaults as object),
   ...props,
   className: mx(defaultClassNames, className, classNames),
-} as Omit<I, 'className' | 'classNames'> & { className: string });
+});
