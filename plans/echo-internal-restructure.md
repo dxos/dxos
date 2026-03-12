@@ -12,24 +12,7 @@ import * as objInternal from './internal/Obj';
 
 Modules that don't map cleanly to a single API module go in `internal/common/`.
 
-## Current Structure
-
-```
-internal/
-  annotations/     → used by Annotation.ts (+ many others)
-  api/             → used by Entity, Obj, Relation (shared helpers)
-  entities/        → used by Entity, Obj, Relation
-  formats/         → used by Format.ts
-  json-schema/     → used by JsonSchema.ts
-  object/          → used by Obj.ts
-  proxy/           → used by Obj, Relation (shared)
-  ref/             → used by Ref.ts
-  schema/          → used by Type.ts
-  types/           → used by many (shared base types)
-  index.ts         → re-exports everything
-```
-
-## Target Structure
+## Final Structure
 
 ```
 internal/
@@ -40,7 +23,10 @@ internal/
   Obj/             ← from object/
   Ref/             ← from ref/
   Type/            ← from schema/
-  common/          ← from api/, proxy/, types/
+  common/
+    api/           ← shared API helpers (entity, meta, sorting, version, annotations)
+    proxy/         ← shared proxy/reactivity (make-object, reactive, change-context, etc.)
+    types/         ← shared base types (entity, meta, typename, version, base)
   index.ts         ← re-exports everything (backward compat for @dxos/echo/internal)
 ```
 
