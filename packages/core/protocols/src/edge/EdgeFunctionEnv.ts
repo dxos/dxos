@@ -6,6 +6,7 @@ import { type SpaceId } from '@dxos/keys';
 
 import type * as FeedProtocol from '../FeedProtocol';
 import { type CreateDocumentRequest, type CreateDocumentResponse } from '../proto/gen/dxos/echo/service';
+import { type QueryRequest, type QueryResponse } from '../proto/gen/dxos/echo/query';
 
 /*
 
@@ -77,10 +78,7 @@ export interface DataService {
   getSpaceMeta(ctx: ExecutionContext, spaceId: SpaceId): Promise<RpcResult<SpaceMeta | undefined>>;
   getDocument(ctx: ExecutionContext, spaceId: SpaceId, documentId: string): Promise<RpcResult<RawDocument | undefined>>;
 
-  query(ctx: ExecutionContext, request: QueryRequest): Promise<RpcResult<QueryResponse>>;
-  queryDocuments(ctx: ExecutionContext, request: QueryRequest): Promise<RpcResult<QueryDocumentsResponse>>;
-  queryReferences(ctx: ExecutionContext, request: QueryReferencesRequest): Promise<RpcResult<QueryReferencesResponse>>;
-
+  executeQuery(ctx: ExecutionContext, request: QueryRequest): Promise<RpcResult<QueryResponse>>;
   createDocument(ctx: ExecutionContext, request: CreateDocumentRequest): Promise<RpcResult<CreateDocumentResponse>>;
 
   // TODO(burdon): Update? Return DocumentEntry?
@@ -123,20 +121,6 @@ export type ObjectDocumentJson = {
 export type SpaceMeta = {
   spaceKey: string;
   rootDocumentId: string;
-};
-
-export type QueryRequest = {
-  spaceId: string;
-  type?: string;
-  where?: Record<string, any>;
-  objectIds?: string[];
-  cursor?: string;
-  limit?: number;
-};
-
-export type QueryResponse = {
-  results: ObjectSnapshot[];
-  cursor?: string;
 };
 
 /**

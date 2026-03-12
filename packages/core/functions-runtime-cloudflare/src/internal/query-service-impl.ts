@@ -19,8 +19,6 @@ import {
   type QueryService as QueryServiceProto,
 } from '@dxos/protocols/proto/dxos/echo/query';
 
-import { queryToDataServiceRequest } from './adapter';
-import { copyUint8Array } from './utils';
 
 export class QueryServiceImpl implements QueryServiceProto {
   private _queryCount = 0;
@@ -42,26 +40,12 @@ export class QueryServiceImpl implements QueryServiceProto {
         try {
           this._queryCount++;
           log.info('begin query', { spaceId });
-          using queryResponse = await this._dataService.queryDocuments(
+          using queryResponse = await this._dataService.executeQuery(
             this._executionContext,
-            queryToDataServiceRequest(query),
+            request
           );
-          log.info('query response', { spaceId, filter: request.filter, resultCount: queryResponse.results.length });
-          return {
-            results: queryResponse.results.map(
-              (object): QueryResultProto => ({
-                id: object.objectId,
-                spaceId,
-                spaceKey: PublicKey.ZERO,
-                documentId: object.document.documentId,
-                // Rank 1 for predicate matches where ranking is not determined.
-                rank: 1,
-                // Copy returned object to avoid hanging RPC stub.
-                // See https://developers.cloudflare.com/workers/runtime-apis/rpc/lifecycle/
-                documentAutomerge: copyUint8Array(object.document.data),
-              }),
-            ),
-          } satisfies QueryResponse;
+          log.info('query response', { spaceId, resultCount: queryResponse.results?.length });
+          return queryResponse satisfies QueryResponse;
         } catch (error) {
           log.error('query failed', { err: error });
           throw new RuntimeServiceError({
