@@ -32,11 +32,11 @@ const CardContext = createContext<CardContextValue>({});
 // Root
 //
 
-type CardRootProps = SlottableProps<HTMLDivElement> & {
+type CardRootProps = SlottableProps<HTMLDivElement, {
   id?: string;
   border?: boolean;
   fullWidth?: boolean;
-};
+}>;
 
 const CardRoot = forwardRef<HTMLDivElement, CardRootProps>(
   ({ children, id, asChild, role, border = true, fullWidth, ...props }, forwardedRef) => {
@@ -142,7 +142,7 @@ const CardContent = forwardRef<HTMLDivElement, CardContentProps>(({ children, ro
 // Row
 //
 
-type CardRowProps = SlottableProps<HTMLDivElement> & { icon?: string };
+type CardRowProps = SlottableProps<HTMLDivElement, { icon?: string }>;
 
 const CardRow = forwardRef<HTMLDivElement, CardRowProps>(
   ({ children, role, icon, ...props }, forwardedRef) => {
@@ -180,7 +180,7 @@ const CardSection = forwardRef<HTMLDivElement, CardSectionProps>(
 // Heading
 //
 
-type CardHeadingProps = SlottableProps<HTMLDivElement> & { variant?: 'default' | 'subtitle' };
+type CardHeadingProps = SlottableProps<HTMLDivElement, { variant?: 'default' | 'subtitle' }>;
 
 /**
  * @deprecated Use typography.
@@ -208,7 +208,7 @@ const CardHeading = forwardRef<HTMLDivElement, CardHeadingProps>(
 // Text
 //
 
-type CardTextProps = SlottableProps<HTMLDivElement> & { truncate?: boolean; variant?: 'default' | 'description' };
+type CardTextProps = SlottableProps<HTMLDivElement, { truncate?: boolean; variant?: 'default' | 'description' }>;
 
 const CardText = forwardRef<HTMLDivElement, CardTextProps>(
   ({ children, asChild, role, truncate, variant = 'default', ...props }, forwardedRef) => {

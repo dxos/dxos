@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React from 'react';
+import React, { forwardRef } from 'react';
 
 import { addressToA1Notation, isFormula, rangeToA1Notation } from '@dxos/compute';
 import { type ComposableProps, Icon } from '@dxos/react-ui';
@@ -13,7 +13,7 @@ import { composableProps, mx } from '@dxos/ui-theme';
 
 export type SheetStatusbarProps = ComposableProps;
 
-export const SheetStatusbar = (props: SheetStatusbarProps) => {
+export const SheetStatusbar = forwardRef<HTMLDivElement, SheetStatusbarProps>((props, forwardedRef) => {
   const { className, ...rest } = composableProps(props);
   const { model, cursor, range } = useSheetContext();
 
@@ -31,6 +31,7 @@ export const SheetStatusbar = (props: SheetStatusbarProps) => {
 
   return (
     <div
+      ref={forwardedRef}
       {...rest}
       className={mx(
         'flex shrink-0 justify-between items-center px-4 py-1 text-sm bg-toolbar-surface border-y !border-subdued-separator',
@@ -48,4 +49,4 @@ export const SheetStatusbar = (props: SheetStatusbarProps) => {
       </div>
     </div>
   );
-};
+});

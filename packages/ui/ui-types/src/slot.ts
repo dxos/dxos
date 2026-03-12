@@ -25,10 +25,12 @@ import { type ClassNameValue } from './theme';
  *
  * @see slot.stories.tsx (@dxos/react-ui)
  */
-export type SlottableProps<P extends HTMLElement = HTMLElement> = HTMLAttributes<P> & {
-  classNames?: ClassNameValue;
-  asChild?: boolean;
-};
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export type SlottableProps<E extends HTMLElement, P extends Record<string, unknown> = {}> =
+  HTMLAttributes<E> & P & {
+    classNames?: ClassNameValue;
+    asChild?: boolean;
+  };
 
 /**
  * Props for components that can receive merged props from a Radix Slot parent.

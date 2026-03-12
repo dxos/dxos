@@ -26,7 +26,7 @@ const gutterSizes: Record<GutterSize, string> = {
   rail: 'var(--dx-rail-item)',
 };
 
-type ColumnRootProps = SlottableProps<HTMLDivElement> & { gutter?: GutterSize };
+type ColumnRootProps = SlottableProps<HTMLDivElement, { gutter?: GutterSize }>;
 
 /**
  * Creates a vertical channel with left/right gutter columns.

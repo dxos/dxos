@@ -41,7 +41,7 @@ const [ScrollAreaProvider, useScrollAreaContext] = createContext<ScrollAreaConte
 
 const SCROLLAREA_ROOT_NAME = 'ScrollArea.Root';
 
-type ScrollAreaRootProps = SlottableProps<HTMLDivElement> & Partial<ScrollAreaContextType>;
+type ScrollAreaRootProps = SlottableProps<HTMLDivElement, Partial<ScrollAreaContextType>>;
 
 /**
  * ScrollArea provides native scrollbars with custom styling.

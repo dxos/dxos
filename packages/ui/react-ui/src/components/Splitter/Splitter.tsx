@@ -36,7 +36,7 @@ const [SplitterProvider, useSplitterContext] = createSplitterContext<SplitterCon
 
 const ROOT_NAME = 'Splitter.Root';
 
-type RootProps = SlottableProps<HTMLDivElement> & Partial<SplitterContextValue>;
+type RootProps = SlottableProps<HTMLDivElement, Partial<SplitterContextValue>>;
 
 const Root = forwardRef<HTMLDivElement, ScopedProps<RootProps>>(
   (
@@ -77,9 +77,9 @@ Root.displayName = ROOT_NAME;
 
 const PANEL_NAME = 'Splitter.Panel';
 
-type PanelProps = SlottableProps<HTMLDivElement> & {
+type PanelProps = SlottableProps<HTMLDivElement, {
   position: 'upper' | 'lower';
-};
+}>;
 
 const Panel = forwardRef<HTMLDivElement, ScopedProps<PanelProps>>(
   ({ __scopeSplitter, asChild, children, position, style, ...props }, forwardedRef) => {

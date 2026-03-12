@@ -4,7 +4,7 @@
 
 import React, {
   type FocusEvent,
-  HTMLAttributes,
+  forwardRef,
   type KeyboardEvent,
   type MouseEvent,
   type WheelEvent,
@@ -73,7 +73,7 @@ const sheetRowDefault = {
 
 export type SheetContentProps = ComposableProps;
 
-export const SheetContent = (props: SheetContentProps) => {
+export const SheetContent = forwardRef<HTMLDivElement, SheetContentProps>((props, forwardedRef) => {
   const { t } = useTranslation(meta.id);
   const { id, model, editing, setCursor, setRange, cursor, cursorFallbackRange, activeRefs, ignoreAttention } =
     useSheetContext();
@@ -322,7 +322,7 @@ export const SheetContent = (props: SheetContentProps) => {
   useSelectThreadOnCellFocus();
 
   return (
-    <div {...composableProps(props, { role: 'none', className: 'relative min-h-0' })}>
+    <div ref={forwardedRef} {...composableProps(props, { role: 'none', className: 'relative min-h-0' })}>
       <GridCellEditor getCellContent={getCellContent} extensions={extensions} onBlur={handleBlur} />
       <Grid.Content
         className='[--dx-grid-base:var(--base-surface)] [&_.dx-grid]:absolute [&_.dx-grid]:inset-0'
@@ -386,4 +386,4 @@ export const SheetContent = (props: SheetContentProps) => {
       </DropdownMenu.Root>
     </div>
   );
-};
+});
