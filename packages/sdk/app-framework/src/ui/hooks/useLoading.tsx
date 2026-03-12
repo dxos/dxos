@@ -23,46 +23,46 @@ export enum LoadingState {
  */
 export const useLoading = (ready: boolean, debounce = 0) => {
   const [stage, setStage] = useState<LoadingState>(LoadingState.Loading);
-  useEffect(() => {
-    if (!debounce) {
-      return;
-    }
+  // useEffect(() => {
+  //   if (!debounce) {
+  //     return;
+  //   }
 
-    const i = setInterval(() => {
-      setStage((stage) => {
-        switch (stage) {
-          case LoadingState.Loading: {
-            if (!ready) {
-              return LoadingState.FadeIn;
-            } else {
-              clearInterval(i);
-              return LoadingState.Done;
-            }
-          }
+  //   const i = setInterval(() => {
+  //     setStage((stage) => {
+  //       switch (stage) {
+  //         case LoadingState.Loading: {
+  //           if (!ready) {
+  //             return LoadingState.FadeIn;
+  //           } else {
+  //             clearInterval(i);
+  //             return LoadingState.Done;
+  //           }
+  //         }
 
-          case LoadingState.FadeIn: {
-            if (ready) {
-              return LoadingState.FadeOut;
-            }
-            break;
-          }
+  //         case LoadingState.FadeIn: {
+  //           if (ready) {
+  //             return LoadingState.FadeOut;
+  //           }
+  //           break;
+  //         }
 
-          case LoadingState.FadeOut: {
-            clearInterval(i);
-            return LoadingState.Done;
-          }
-        }
+  //         case LoadingState.FadeOut: {
+  //           clearInterval(i);
+  //           return LoadingState.Done;
+  //         }
+  //       }
 
-        return stage;
-      });
-    }, debounce);
+  //       return stage;
+  //     });
+  //   }, debounce);
 
-    return () => clearInterval(i);
-  }, [debounce]);
+  //   return () => clearInterval(i);
+  // }, [debounce]);
 
-  if (!debounce) {
-    return ready ? LoadingState.Done : LoadingState.Loading;
-  }
+  // if (!debounce) {
+  return ready ? LoadingState.Done : LoadingState.Loading;
+  // }
 
-  return stage;
+  // return stage;
 };
