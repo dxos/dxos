@@ -8,23 +8,23 @@
 // See: https://github.com/Menci/vite-plugin-wasm/issues/37
 
 onconnect = async (ev) => {
-  const { createCoordinatorOnConnect } = await import('@dxos/client');
+  const { createCoordinatorOnConnect } = await import('@dxos/client/coordinator-worker-onconnect');
 
   const handler = createCoordinatorOnConnect();
   return handler(ev);
 };
 
-const initializeObservability = async () => {
-  const { log } = await import('@dxos/log');
-  const { isTauri } = await import('@dxos/util');
-  const Config = await import('./config');
+// const initializeObservability = async () => {s
+//   const { log } = await import('@dxos/log');
+//   const { isTauri } = await import('@dxos/util');
+//   const Config = await import('./config');
 
-  try {
-    const config = await Config.setupConfig();
-    await Config.initializeObservability(config, isTauri());
-  } catch (err) {
-    log.catch(err);
-  }
-};
+//   try {
+//     const config = await Config.setupConfig();
+//     await Config.initializeObservability(config, isTauri());
+//   } catch (err) {
+//     log.catch(err);
+//   }
+// };
 
-void initializeObservability();
+// void initializeObservability();
