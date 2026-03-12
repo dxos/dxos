@@ -13,7 +13,7 @@ import { meta } from '../../meta';
 import { ThreadCapabilities } from '../../types';
 import { Toolbar, type ToolbarProps } from '../Call';
 import { VideoObject } from '../Media';
-import { ResponsiveContainer } from '../ResponsiveGrid';
+import { ResponsivePanel } from '../ResponsiveGrid';
 
 // TODO(wittjosiah): Repurpose lobby for preview.
 
@@ -58,7 +58,7 @@ const LobbyPreview: FC<LobbyPreviewProps> = () => {
 
   return (
     <div className='grid grow p-4'>
-      <ResponsiveContainer>
+      <ResponsivePanel>
         {(media.videoEnabled && (
           <VideoObject
             videoStream={media.videoStream}
@@ -70,7 +70,7 @@ const LobbyPreview: FC<LobbyPreviewProps> = () => {
             )}
           />
         )) || <div className='p-4 outline outline-separator rounded-md'>{t('camera off label')}</div>}
-      </ResponsiveContainer>
+      </ResponsivePanel>
     </div>
   );
 };
