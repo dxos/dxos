@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { JsonPath, type JsonProp } from '@dxos/effect';
 
-import { FormatAnnotation, TypeFormat } from '../formats';
+import { FormatAnnotation, TypeFormat } from '../../Format';
 import { type Mutable } from '../proxy';
 import { EntityKindSchema } from '../types';
 

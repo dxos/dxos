@@ -22,7 +22,7 @@ import {
   getTypeIdentifierAnnotation,
 } from '../../Annotation';
 import { EchoObjectSchema } from '../entities';
-import { Email, FormatAnnotation, TypeFormat } from '../formats';
+import { Email, FormatAnnotation, TypeFormat } from '../../Format';
 import { JsonSchemaType, getNormalizedEchoAnnotations, getSchemaProperty, setSchemaProperty } from '../json-schema';
 import { Ref, createSchemaReference, getReferenceAst, getSchemaReference } from '../../Ref';
 import { PersistentSchema } from '../schema';
