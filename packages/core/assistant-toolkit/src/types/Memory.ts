@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
 import { Annotation, Type } from '@dxos/echo';
 
