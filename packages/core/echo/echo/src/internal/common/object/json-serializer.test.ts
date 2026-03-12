@@ -8,7 +8,7 @@ import { DXN } from '@dxos/keys';
 
 import * as Obj from '../../../Obj';
 import { TestSchema } from '../../../testing';
-import { getSchemaDXN, getSchemaTypename, getTypeDXN, getTypename } from '../annotations';
+import { getSchemaDXN, getSchemaTypename, getTypeDXN, getTypename } from '../../Annotation';
 import { getMetaChecked } from '../api';
 import { RelationSourceId, RelationTargetId, getObjectDXN } from '../entities';
 import { makeObject } from '../proxy';

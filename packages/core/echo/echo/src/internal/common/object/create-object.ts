@@ -8,7 +8,7 @@ import { raise } from '@dxos/debug';
 import { assertArgument, failedInvariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 
-import { getSchemaDXN, getTypeAnnotation, setTypename } from '../annotations';
+import { getSchemaDXN, getTypeAnnotation, setTypename } from '../../Annotation';
 import {
   RelationSourceDXNId,
   RelationSourceId,

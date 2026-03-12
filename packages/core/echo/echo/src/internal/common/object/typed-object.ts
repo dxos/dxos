@@ -4,7 +4,7 @@
 
 import type * as Schema from 'effect/Schema';
 
-import { type TypeMeta } from '../annotations';
+import { type TypeMeta } from '../../Annotation';
 import { type AnyEntity } from '../types';
 
 /**

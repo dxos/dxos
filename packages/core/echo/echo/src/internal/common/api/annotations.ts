@@ -11,7 +11,7 @@ import {
   getLabelWithSchema,
   setDescriptionWithSchema,
   setLabelWithSchema,
-} from '../annotations';
+} from '../../Annotation';
 import { type Mutable } from '../proxy';
 import { type AnyProperties, getSchema as getSchema$ } from '../types';
 

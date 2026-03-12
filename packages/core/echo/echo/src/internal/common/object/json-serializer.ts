@@ -11,7 +11,7 @@ import { DXN, ObjectId } from '@dxos/keys';
 import { assumeType, deepMapValues, visitValues } from '@dxos/util';
 
 import type * as Obj from '../../../Obj';
-import { getTypeDXN, setTypename } from '../annotations';
+import { getTypeDXN, setTypename } from '../../Annotation';
 import {
   ATTR_DELETED,
   ATTR_RELATION_SOURCE,

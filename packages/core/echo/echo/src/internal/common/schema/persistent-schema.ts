@@ -4,8 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { IconAnnotation } from '../annotations';
-import { LabelAnnotation, TypenameSchema, VersionSchema } from '../annotations';
+import { IconAnnotation } from '../../Annotation';
+import { LabelAnnotation, TypenameSchema, VersionSchema } from '../../Annotation';
 import { EchoObjectSchema } from '../entities';
 import { JsonSchemaType } from '../json-schema';
 

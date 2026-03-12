@@ -6,7 +6,7 @@ import type * as Schema from 'effect/Schema';
 
 import { ObjectId } from '@dxos/keys';
 
-import { getTypeAnnotation } from '../annotations';
+import { getTypeAnnotation } from '../../Annotation';
 import { type AnyProperties, KindId, MetaId, type ObjectMeta, ObjectMetaSchema, ParentId } from '../types';
 
 import { defineHiddenProperty } from './define-hidden-property';

@@ -17,7 +17,7 @@ import type * as Entity from './Entity';
 import * as Err from './Err';
 import type * as Filter from './Filter';
 import type * as Hypergraph from './Hypergraph';
-import { isInstanceOf } from './internal/common/annotations';
+import { isInstanceOf } from './internal/Annotation';
 import type { Ref } from './internal/common/ref/ref';
 import { type AnyProperties } from './internal/common/types';
 import type * as Obj from './Obj';

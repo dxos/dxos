@@ -9,7 +9,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { assertArgument } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
-import { EntityKind } from '../types';
+import { EntityKind } from '../common/types';
 
 export interface AnnotationHelper<T> {
   /**

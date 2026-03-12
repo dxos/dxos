@@ -11,7 +11,7 @@ import { Event } from '@dxos/async';
 import { inspectCustom } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 
-import { getSchemaDXN } from '../annotations';
+import { getSchemaDXN } from '../../Annotation';
 import { ObjectDeletedId } from '../entities';
 import { ParentId, SchemaId, TypeId } from '../types';
 

@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { getTypename } from '../annotations';
+import { getTypename } from '../../Annotation';
 import { type AnyProperties } from '../types';
 
 // TODO(dmaretskyi): Rename to represent commonality between objects and relations (e.g. `entity`).

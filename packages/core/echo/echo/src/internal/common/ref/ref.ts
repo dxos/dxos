@@ -19,7 +19,7 @@ import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
 
 import * as Database from '../../../Database';
-import { ReferenceAnnotationId, getSchemaDXN, getTypeAnnotation, getTypeIdentifierAnnotation } from '../annotations';
+import { ReferenceAnnotationId, getSchemaDXN, getTypeAnnotation, getTypeIdentifierAnnotation } from '../../Annotation';
 import { type JsonSchemaType } from '../json-schema';
 import type { AnyEntity, AnyProperties } from '../types';
 

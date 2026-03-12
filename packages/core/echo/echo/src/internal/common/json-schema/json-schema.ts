@@ -22,7 +22,7 @@ import {
   TypeAnnotationId,
   TypeIdentifierAnnotationId,
   makeTypeJsonSchemaAnnotation,
-} from '../annotations';
+} from '../../Annotation';
 import { type JsonSchemaReferenceInfo, createEchoReferenceSchema } from '../ref';
 import { ANY_OBJECT_TYPENAME, ANY_OBJECT_VERSION, EntityKind, EntityKindSchema } from '../types';
 

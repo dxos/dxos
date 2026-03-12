@@ -13,7 +13,7 @@ import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { type Primitive } from '@dxos/util';
 
-import { type AnyProperties, EntityKind, TypeId, getSchema } from '../types';
+import { type AnyProperties, EntityKind, TypeId, getSchema } from '../common/types';
 
 import { type AnnotationHelper, createAnnotationHelper } from './util';
 

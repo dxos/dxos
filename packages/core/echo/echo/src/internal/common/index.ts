@@ -5,7 +5,7 @@
 // TODO(burdon): Import directly (not part of ECHO API).
 export { JsonPath, JsonProp, getValue, splitJsonPath } from '@dxos/effect';
 
-export * from './annotations';
+export * from '../Annotation';
 export * from './api';
 export * from './entities';
 export * from './formats';

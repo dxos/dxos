@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { getTypename } from '../annotations';
+import { getTypename } from '../../Annotation';
 import type { AnyEntity } from '../types';
 
 import { getLabel } from './annotations';
