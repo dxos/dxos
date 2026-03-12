@@ -7,7 +7,7 @@ import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
 import type * as Entity from './Entity';
-import * as internal from './internal';
+import * as refInternal from './internal/Ref';
 import type * as JsonSchema from './JsonSchema';
 import type * as Obj from './Obj';
 
@@ -29,8 +29,8 @@ import type * as Obj from './Obj';
  * database.makeRef(dxn); // Create a ref from a DXN.
  * ```
  */
-export type Ref<T> = internal.Ref<T>;
-export type Unknown = internal.Ref<Obj.Unknown>;
+export type Ref<T> = refInternal.Ref<T>;
+export type Unknown = refInternal.Ref<Obj.Unknown>;
 
 /**
  * Factory function to create a Ref schema for the given target schema.
@@ -43,9 +43,9 @@ export type Unknown = internal.Ref<Obj.Unknown>;
  * }).pipe(Type.object({ typename: 'Task', version: '0.1.0' }));
  * ```
  */
-export const Ref: <S extends Schema.Schema.Any>(schema: S) => RefSchema<Schema.Schema.Type<S>> = internal.Ref;
+export const Ref: <S extends Schema.Schema.Any>(schema: S) => RefSchema<Schema.Schema.Type<S>> = refInternal.Ref;
 
-export const Array = internal.RefArray;
+export const Array = refInternal.RefArray;
 
 /**
  * TypeScript type for a Ref schema.
@@ -64,31 +64,31 @@ export const Array = internal.RefArray;
 // TODO(dmaretskyi): Investigate if we can remove this type.
 //                   Post DX-836 it will become just `Schema.Schema<Ref.Ref<T>>`.
 //                   NOTE: This could be Type.Ref<T> instead, but since it going to be removed, it's better to keep it here, self-contained.
-export interface RefSchema<T extends Entity.Unknown> extends internal.RefSchema<T> {}
+export interface RefSchema<T extends Entity.Unknown> extends refInternal.RefSchema<T> {}
 
 /**
  * Extract reference target.
  */
-export type Target<R extends Unknown> = R extends internal.Ref<infer T> ? T : never;
+export type Target<R extends Unknown> = R extends refInternal.Ref<infer T> ? T : never;
 
 /**
  * Reference resolver.
  */
-export type Resolver = internal.RefResolver;
+export type Resolver = refInternal.RefResolver;
 
-export const isRef: (value: unknown) => value is Unknown = internal.Ref.isRef;
+export const isRef: (value: unknown) => value is Unknown = refInternal.Ref.isRef;
 
-export const make = internal.Ref.make;
+export const make = refInternal.Ref.make;
 
 // TODO(dmaretskyi): Consider just allowing `make` to accept DXN.
-export const fromDXN = internal.Ref.fromDXN;
+export const fromDXN = refInternal.Ref.fromDXN;
 
 // TODO(wittjosiah): Factor out?
 export const isRefType = (ast: SchemaAST.AST): boolean => {
   return SchemaAST.getAnnotation<JsonSchema.JsonSchema>(ast, SchemaAST.JSONSchemaAnnotationId).pipe(
     Option.flatMap((jsonSchema) => ('$id' in jsonSchema ? Option.some(jsonSchema) : Option.none())),
     Option.flatMap((jsonSchema) => {
-      const { typename } = internal.getSchemaReference(jsonSchema) ?? {};
+      const { typename } = refInternal.getSchemaReference(jsonSchema) ?? {};
       return typename ? Option.some(true) : Option.some(false);
     }),
     Option.getOrElse(() => false),

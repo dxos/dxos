@@ -13,6 +13,7 @@ import { assumeType } from '@dxos/util';
 
 import type * as Database from './Database';
 import * as Entity from './Entity';
+import * as entityInternal from './internal/Entity';
 import * as internal from './internal';
 import * as Obj from './Obj';
 import type * as Type from './Type';
@@ -107,10 +108,10 @@ export interface BaseRelationJson {
 export type Snapshot<T extends Unknown = Unknown> = Omit<T, Entity.KindId> &
   BaseRelationSnapshot<Obj.Unknown, Obj.Unknown>;
 
-export const Source: unique symbol = internal.RelationSourceId as any;
+export const Source: unique symbol = entityInternal.RelationSourceId as any;
 export type Source = typeof Source;
 
-export const Target: unique symbol = internal.RelationTargetId as any;
+export const Target: unique symbol = entityInternal.RelationTargetId as any;
 export type Target = typeof Target;
 
 /**
