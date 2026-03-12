@@ -10,7 +10,7 @@ import * as Obj from '../../../Obj';
 import { TestSchema } from '../../../testing';
 import { getSchemaDXN, getSchemaTypename, getTypeDXN, getTypename } from '../../Annotation';
 import { getMetaChecked } from '../api';
-import { RelationSourceId, RelationTargetId, getObjectDXN } from '../entities';
+import { RelationSourceId, RelationTargetId, getObjectDXN } from '../../Entity';
 import { makeObject } from '../proxy';
 import { Ref, StaticRefResolver } from '../../Ref';
 import { ATTR_TYPE, EntityKind, KindId, MetaId, TypeId, getSchema } from '../types';

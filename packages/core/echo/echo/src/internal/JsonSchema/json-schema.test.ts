@@ -21,7 +21,7 @@ import {
   getTypeAnnotation,
   getTypeIdentifierAnnotation,
 } from '../Annotation';
-import { EchoObjectSchema } from '../common/entities';
+import { EchoObjectSchema } from '../Entity';
 import { Email, FormatAnnotation, TypeFormat } from '../Format';
 import { JsonSchemaType, getNormalizedEchoAnnotations, getSchemaProperty, setSchemaProperty } from '../JsonSchema';
 import { Ref, createSchemaReference, getReferenceAst, getSchemaReference } from '../Ref';

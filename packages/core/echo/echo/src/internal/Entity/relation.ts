@@ -17,8 +17,8 @@ import {
   getSchemaTypename,
   getTypeIdentifierAnnotation,
   makeTypeJsonSchemaAnnotation,
-} from '../../Annotation';
-import { EntityKind } from '../types';
+} from '../Annotation';
+import { EntityKind } from '../common/types';
 
 import { type EchoTypeSchema, makeEchoTypeSchema } from './entity';
 

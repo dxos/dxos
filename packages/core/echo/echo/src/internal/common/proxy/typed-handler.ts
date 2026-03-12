@@ -12,7 +12,7 @@ import { inspectCustom } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 
 import { getSchemaDXN } from '../../Annotation';
-import { ObjectDeletedId } from '../entities';
+import { ObjectDeletedId } from '../../Entity';
 import { ParentId, SchemaId, TypeId } from '../types';
 
 import { executeChange, isInChangeContext, queueNotification } from './change-context';

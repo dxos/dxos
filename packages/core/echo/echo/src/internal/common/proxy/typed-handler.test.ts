@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
 import { TestSchema } from '../../../testing';
-import { EchoObjectSchema } from '../entities';
+import { EchoObjectSchema } from '../../Entity';
 import { setValue } from '../object';
 import { Ref } from '../../Ref';
 import { foreignKey, getMeta } from '../types';

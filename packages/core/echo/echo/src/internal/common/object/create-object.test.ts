@@ -12,7 +12,7 @@ import { DXN } from '@dxos/keys';
 import { Relation } from '../../../index';
 import { TestSchema } from '../../../testing';
 import { getSchemaDXN, getTypeDXN, isInstanceOf } from '../../Annotation';
-import { ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET } from '../entities';
+import { ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET } from '../../Entity';
 import { ATTR_META, ATTR_TYPE, getSchema } from '../types';
 
 import { createObject } from './create-object';

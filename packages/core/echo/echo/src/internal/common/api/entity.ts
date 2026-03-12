@@ -6,7 +6,7 @@ import { invariant } from '@dxos/invariant';
 import { type DXN } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
-import { type InternalObjectProps, ObjectDatabaseId, getObjectDXN } from '../entities';
+import { type InternalObjectProps, ObjectDatabaseId, getObjectDXN } from '../../Entity';
 import type { AnyEntity } from '../types';
 
 /**

@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import { describe, expect, test } from 'vitest';
 
-import { EchoObjectSchema } from '../entities';
+import { EchoObjectSchema } from '../../Entity';
 
 const Organization = Schema.Struct({
   name: Schema.String,

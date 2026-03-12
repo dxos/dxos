@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { EchoObjectSchema } from '../common/entities';
+import { EchoObjectSchema } from '../Entity';
 
 import { LabelAnnotation, TypenameSchema, VersionSchema, getLabelWithSchema } from './annotations';
 

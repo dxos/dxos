@@ -8,7 +8,7 @@ import { describe, expect, test } from 'vitest';
 
 import { createEchoSchema } from '../../../testing';
 import { PropertyMeta, getPropertyMetaAnnotation, getTypeAnnotation } from '../../Annotation';
-import { EchoObjectSchema } from '../entities';
+import { EchoObjectSchema } from '../../Entity';
 
 // TODO(dmaretskyi): Comment.
 const EmptySchemaType = Schema.Struct({}).pipe(

@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import type * as Types from 'effect/Types';
 import { describe, expect, test } from 'vitest';
 
-import { EchoObjectSchema } from '../entities';
+import { EchoObjectSchema } from '../../Entity';
 import { getSchema } from '../types';
 
 import { makeObject } from './make-object';

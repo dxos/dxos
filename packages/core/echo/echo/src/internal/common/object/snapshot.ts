@@ -5,8 +5,8 @@
 import { assertArgument } from '@dxos/invariant';
 import { deepMapValues } from '@dxos/util';
 
-import { ObjectDatabaseId, ObjectDeletedId, SelfDXNId } from '../entities/model';
-import { RelationSourceDXNId, RelationSourceId, RelationTargetDXNId, RelationTargetId } from '../entities/relation';
+import { ObjectDatabaseId, ObjectDeletedId, SelfDXNId } from '../../Entity/model';
+import { RelationSourceDXNId, RelationSourceId, RelationTargetDXNId, RelationTargetId } from '../../Entity/relation';
 import { KindId, SnapshotKindId } from '../types/entity';
 import { MetaId } from '../types/meta';
 import { SchemaId, TypeId } from '../types/typename';

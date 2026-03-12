@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ObjectDeletedId } from '../entities';
+import { ObjectDeletedId } from '../../Entity';
 import { type AnyProperties } from '../types';
 
 /**

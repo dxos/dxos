@@ -16,7 +16,7 @@ import {
   RelationTargetId,
   assertObjectModel,
   getObjectDXN,
-} from '../entities';
+} from '../../Entity';
 import { defineHiddenProperty } from '../proxy';
 import { EntityKind, KindId, MetaId, setSchema } from '../types';
 

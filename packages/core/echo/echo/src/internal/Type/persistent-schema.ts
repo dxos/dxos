@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { IconAnnotation } from '../Annotation';
 import { LabelAnnotation, TypenameSchema, VersionSchema } from '../Annotation';
-import { EchoObjectSchema } from '../common/entities';
+import { EchoObjectSchema } from '../Entity';
 import { JsonSchemaType } from '../JsonSchema';
 
 /**

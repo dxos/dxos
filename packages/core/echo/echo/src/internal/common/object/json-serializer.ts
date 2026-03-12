@@ -24,7 +24,7 @@ import {
   RelationTargetId,
   SelfDXNId,
   assertObjectModel,
-} from '../entities';
+} from '../../Entity';
 import { attachTypedJsonSerializer, defineHiddenProperty, typedJsonSerializer } from '../proxy';
 import { Ref, type RefResolver, refFromEncodedReference, setRefResolver } from '../../Ref';
 import {

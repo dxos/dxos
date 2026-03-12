@@ -9,7 +9,7 @@ import { invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
-import type * as Database from '../../../Database';
+import type * as Database from '../../Database';
 import {
   type ATTR_META,
   type ATTR_PARENT,
@@ -22,7 +22,7 @@ import {
   type SchemaId,
   TypeId,
   type Version,
-} from '../types';
+} from '../common/types';
 
 import {
   type ATTR_RELATION_SOURCE,
