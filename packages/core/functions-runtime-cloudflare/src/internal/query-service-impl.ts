@@ -2,25 +2,18 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as Schema from 'effect/Schema';
 
 import { Stream } from '@dxos/codec-protobuf/stream';
-import { QueryAST } from '@dxos/echo-protocol';
 import { NotImplementedError, RuntimeServiceError } from '@dxos/errors';
-import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
-import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type EdgeFunctionEnv } from '@dxos/protocols';
 import {
   type QueryRequest,
   type QueryResponse,
-  type QueryResult as QueryResultProto,
-  type QueryService as QueryServiceProto,
+  type QueryService,
 } from '@dxos/protocols/proto/dxos/echo/query';
 
-
-export class QueryServiceImpl implements QueryServiceProto {
+export class QueryServiceImpl implements QueryService {
   private _queryCount = 0;
 
   constructor(
