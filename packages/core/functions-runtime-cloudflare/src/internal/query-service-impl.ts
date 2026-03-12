@@ -45,7 +45,7 @@ export class QueryServiceImpl implements QueryServiceProto {
             request
           );
           log.info('query response', { spaceId, resultCount: queryResponse.results?.length });
-          return queryResponse satisfies QueryResponse;
+          return structuredClone(queryResponse);
         } catch (error) {
           log.error('query failed', { err: error });
           throw new RuntimeServiceError({
@@ -70,22 +70,3 @@ export class QueryServiceImpl implements QueryServiceProto {
     });
   }
 }
-
-/**
- * Lists spaces this query will select from.
- */
-export const getTargetSpacesForQuery = (query: QueryAST.Query): SpaceId[] => {
-  const spaces = new Set<SpaceId>();
-
-  const visitor = (node: QueryAST.Query) => {
-    if (node.type === 'from' && node.from._tag === 'scope') {
-      if (node.from.scope.spaceIds) {
-        for (const spaceId of node.from.scope.spaceIds) {
-          spaces.add(SpaceId.make(spaceId));
-        }
-      }
-    }
-  };
-  QueryAST.visit(query, visitor);
-  return [...spaces];
-};
