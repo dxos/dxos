@@ -22,9 +22,9 @@ import {
   TypeAnnotationId,
   TypeIdentifierAnnotationId,
   makeTypeJsonSchemaAnnotation,
-} from '../../Annotation';
-import { type JsonSchemaReferenceInfo, createEchoReferenceSchema } from '../../Ref';
-import { ANY_OBJECT_TYPENAME, ANY_OBJECT_VERSION, EntityKind, EntityKindSchema } from '../types';
+} from '../Annotation';
+import { type JsonSchemaReferenceInfo, createEchoReferenceSchema } from '../Ref';
+import { ANY_OBJECT_TYPENAME, ANY_OBJECT_VERSION, EntityKind, EntityKindSchema } from '../common/types';
 
 import { CustomAnnotations, DecodedAnnotations, EchoAnnotations } from './annotations';
 import {

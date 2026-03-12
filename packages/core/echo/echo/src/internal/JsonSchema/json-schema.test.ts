@@ -11,8 +11,8 @@ import { type JsonProp, findAnnotation } from '@dxos/effect';
 import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { TestSchema, prepareAstForCompare } from '../../../testing';
-import * as Type from '../../../Type';
+import { TestSchema, prepareAstForCompare } from '../../testing';
+import * as Type from '../../Type';
 import {
   FieldLookupAnnotationId,
   GeneratorAnnotation,
@@ -20,13 +20,13 @@ import {
   PropertyMeta,
   getTypeAnnotation,
   getTypeIdentifierAnnotation,
-} from '../../Annotation';
-import { EchoObjectSchema } from '../entities';
-import { Email, FormatAnnotation, TypeFormat } from '../../Format';
-import { JsonSchemaType, getNormalizedEchoAnnotations, getSchemaProperty, setSchemaProperty } from '../json-schema';
-import { Ref, createSchemaReference, getReferenceAst, getSchemaReference } from '../../Ref';
-import { PersistentSchema } from '../schema';
-import { EntityKind } from '../types';
+} from '../Annotation';
+import { EchoObjectSchema } from '../common/entities';
+import { Email, FormatAnnotation, TypeFormat } from '../Format';
+import { JsonSchemaType, getNormalizedEchoAnnotations, getSchemaProperty, setSchemaProperty } from '../JsonSchema';
+import { Ref, createSchemaReference, getReferenceAst, getSchemaReference } from '../Ref';
+import { PersistentSchema } from '../common/schema';
+import { EntityKind } from '../common/types';
 
 import { toEffectSchema, toJsonSchema } from './json-schema';
 

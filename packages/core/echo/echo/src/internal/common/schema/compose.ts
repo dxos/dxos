@@ -6,7 +6,7 @@ import type * as Types from 'effect/Types';
 
 import { invariant } from '@dxos/invariant';
 
-import { type JsonSchemaType } from '../json-schema';
+import { type JsonSchemaType } from '../../JsonSchema';
 
 /**
  * Creates a composite schema from the source and projection schemas.

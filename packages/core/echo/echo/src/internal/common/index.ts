@@ -9,7 +9,7 @@ export * from '../Annotation';
 export * from './api';
 export * from './entities';
 export * from '../Format';
-export * from './json-schema';
+export * from '../JsonSchema';
 export * from '../Ref';
 export * from './types';
 

@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import * as SchemaAST from 'effect/SchemaAST';
 
 import { createAnnotationHelper } from '../Annotation';
-import { type JsonSchemaType } from '../common/json-schema';
+import { type JsonSchemaType } from '../JsonSchema';
 
 // TODO(burdon): Rename PropertyType.
 export type ScalarType =

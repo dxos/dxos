@@ -7,7 +7,7 @@ import { describe, expect, test } from 'vitest';
 
 import { log } from '@dxos/log';
 
-import { toJsonSchema } from '../common/json-schema';
+import { toJsonSchema } from '../JsonSchema';
 
 import {
   DateOnly,
