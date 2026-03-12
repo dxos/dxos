@@ -3,4 +3,4 @@
 //
 
 // Re-export from proxy for backward compatibility.
-export { SchemaValidator, checkIdNotPresentOnSchema } from '../proxy';
+export { SchemaValidator, checkIdNotPresentOnSchema } from '../common/proxy';

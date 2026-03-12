@@ -5,11 +5,11 @@
 import { assertArgument } from '@dxos/invariant';
 import { deepMapValues } from '@dxos/util';
 
-import { ObjectDatabaseId, ObjectDeletedId, SelfDXNId } from '../../Entity/model';
-import { RelationSourceDXNId, RelationSourceId, RelationTargetDXNId, RelationTargetId } from '../../Entity/relation';
-import { KindId, SnapshotKindId } from '../types/entity';
-import { MetaId } from '../types/meta';
-import { SchemaId, TypeId } from '../types/typename';
+import { ObjectDatabaseId, ObjectDeletedId, SelfDXNId } from '../Entity/model';
+import { RelationSourceDXNId, RelationSourceId, RelationTargetDXNId, RelationTargetId } from '../Entity/relation';
+import { KindId, SnapshotKindId } from '../common/types/entity';
+import { MetaId } from '../common/types/meta';
+import { SchemaId, TypeId } from '../common/types/typename';
 
 /**
  * Copy a Symbol-keyed property from source to target if it has a defined value.

@@ -16,8 +16,8 @@ import {
 } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
-import { type Mutable } from '../proxy';
-import { getSchema } from '../types';
+import { type Mutable } from '../common/proxy';
+import { getSchema } from '../common/types';
 
 /**
  * Set a deeply nested property on an object.

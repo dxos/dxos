@@ -7,7 +7,7 @@ import { describe, expect, test } from 'vitest';
 
 import { TestSchema } from '../../../testing';
 import { EchoObjectSchema } from '../../Entity';
-import { setValue } from '../object';
+import { setValue } from '../../Obj';
 import { Ref } from '../../Ref';
 import { foreignKey, getMeta } from '../types';
 

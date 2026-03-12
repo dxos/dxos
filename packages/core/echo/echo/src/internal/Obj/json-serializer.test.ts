@@ -6,14 +6,14 @@ import { describe, expect, test } from 'vitest';
 
 import { DXN } from '@dxos/keys';
 
-import * as Obj from '../../../Obj';
-import { TestSchema } from '../../../testing';
-import { getSchemaDXN, getSchemaTypename, getTypeDXN, getTypename } from '../../Annotation';
-import { getMetaChecked } from '../api';
-import { RelationSourceId, RelationTargetId, getObjectDXN } from '../../Entity';
-import { makeObject } from '../proxy';
-import { Ref, StaticRefResolver } from '../../Ref';
-import { ATTR_TYPE, EntityKind, KindId, MetaId, TypeId, getSchema } from '../types';
+import * as Obj from '../../Obj';
+import { TestSchema } from '../../testing';
+import { getSchemaDXN, getSchemaTypename, getTypeDXN, getTypename } from '../Annotation';
+import { getMetaChecked } from '../common/api';
+import { RelationSourceId, RelationTargetId, getObjectDXN } from '../Entity';
+import { makeObject } from '../common/proxy';
+import { Ref, StaticRefResolver } from '../Ref';
+import { ATTR_TYPE, EntityKind, KindId, MetaId, TypeId, getSchema } from '../common/types';
 
 import { createObject } from './create-object';
 import { objectFromJSON, objectToJSON } from './json-serializer';

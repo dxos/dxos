@@ -9,11 +9,11 @@ import { describe, expect, test } from 'vitest';
 
 import { DXN } from '@dxos/keys';
 
-import { Relation } from '../../../index';
-import { TestSchema } from '../../../testing';
-import { getSchemaDXN, getTypeDXN, isInstanceOf } from '../../Annotation';
-import { ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET } from '../../Entity';
-import { ATTR_META, ATTR_TYPE, getSchema } from '../types';
+import { Relation } from '../../index';
+import { TestSchema } from '../../testing';
+import { getSchemaDXN, getTypeDXN, isInstanceOf } from '../Annotation';
+import { ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET } from '../Entity';
+import { ATTR_META, ATTR_TYPE, getSchema } from '../common/types';
 
 import { createObject } from './create-object';
 import { objectToJSON } from './json-serializer';

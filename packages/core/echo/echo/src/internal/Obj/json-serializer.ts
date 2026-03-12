@@ -10,8 +10,8 @@ import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
 import { assumeType, deepMapValues, visitValues } from '@dxos/util';
 
-import type * as Obj from '../../../Obj';
-import { getTypeDXN, setTypename } from '../../Annotation';
+import type * as Obj from '../../Obj';
+import { getTypeDXN, setTypename } from '../Annotation';
 import {
   ATTR_DELETED,
   ATTR_RELATION_SOURCE,
@@ -24,9 +24,9 @@ import {
   RelationTargetId,
   SelfDXNId,
   assertObjectModel,
-} from '../../Entity';
-import { attachTypedJsonSerializer, defineHiddenProperty, typedJsonSerializer } from '../proxy';
-import { Ref, type RefResolver, refFromEncodedReference, setRefResolver } from '../../Ref';
+} from '../Entity';
+import { attachTypedJsonSerializer, defineHiddenProperty, typedJsonSerializer } from '../common/proxy';
+import { Ref, type RefResolver, refFromEncodedReference, setRefResolver } from '../Ref';
 import {
   ATTR_META,
   ATTR_PARENT,
@@ -38,7 +38,7 @@ import {
   ObjectMetaSchema,
   ParentId,
   setSchema,
-} from '../types';
+} from '../common/types';
 
 // Re-export for backward compatibility.
 export { attachTypedJsonSerializer };

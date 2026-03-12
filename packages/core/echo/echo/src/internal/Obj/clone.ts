@@ -5,10 +5,10 @@
 import { invariant } from '@dxos/invariant';
 import { deepMapValues } from '@dxos/util';
 
-import type * as Obj from '../../../Obj';
-import { makeObject } from '../proxy';
-import { Ref } from '../../Ref';
-import { getMeta, getSchema } from '../types';
+import type * as Obj from '../../Obj';
+import { makeObject } from '../common/proxy';
+import { Ref } from '../Ref';
+import { getMeta, getSchema } from '../common/types';
 
 /**
  * Clones an object or relation.
