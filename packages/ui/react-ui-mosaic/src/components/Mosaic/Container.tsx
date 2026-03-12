@@ -69,7 +69,7 @@ const MOSAIC_CONTAINER_PLACEHOLDER_HEIGHT = '--mosaic-placeholder-height';
 
 let counter = 0;
 
-type MosaicContainerProps = ComposableProps<
+type MosaicContainerProps = ComposableProps<HTMLDivElement> &
   PropsWithChildren<
     Partial<Pick<MosaicContainerContextValue, 'eventHandler' | 'orientation'>> & {
       asChild?: boolean;
@@ -77,8 +77,7 @@ type MosaicContainerProps = ComposableProps<
       withFocus?: boolean;
       debug?: () => ReactNode;
     }
-  >
->;
+  >;
 
 // TODO(burdon): Make generic.
 const MosaicContainer = forwardRef<HTMLDivElement, MosaicContainerProps>(

@@ -58,7 +58,7 @@ const [MosaicTileContextProvider, useMosaicTileContext] = createContext<MosaicTi
 // State attribute: data-[mosaic-tile-state=dragging]
 const MOSAIC_TILE_STATE_ATTR = 'mosaic-tile-state';
 
-type MosaicTileProps<TData = any, TLocation = LocationType> = ComposableProps<
+type MosaicTileProps<TData = any, TLocation = LocationType> = ComposableProps<HTMLDivElement> &
   PropsWithChildren<{
     asChild?: boolean;
     dragHandle?: HTMLElement | null;
@@ -68,8 +68,7 @@ type MosaicTileProps<TData = any, TLocation = LocationType> = ComposableProps<
     location: TLocation;
     draggable?: boolean; // TODO(burdon): Not currently implemented.
     debug?: boolean;
-  }>
->;
+  }>;
 
 const MosaicTile = forwardRef<HTMLDivElement, MosaicTileProps>(
   (

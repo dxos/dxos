@@ -25,22 +25,21 @@ import { type ClassNameValue } from './theme';
  *
  * @see slot.stories.tsx (@dxos/react-ui)
  */
-// TODO(burdon): Same sig as ComposableProps?
-export type SlottableProps<P extends HTMLElement | null = null> = ComposableProps<
-  HTMLAttributes<P> & {
-    asChild?: boolean;
-  }
->;
+export type SlottableProps<P extends HTMLElement = HTMLElement> = HTMLAttributes<P> & {
+  classNames?: ClassNameValue;
+  asChild?: boolean;
+};
 
 /**
  * Props for components that can receive merged props from a Radix Slot parent.
  * - `className` is set by the Slot merge mechanism.
  * - `classNames` is the consumer-facing prop for theming overrides.
- * Use `composableProps` to reconcile both into a single `className`.
+ *
+ * NOTE: Use `composableProps` to reconcile both into a single `className`.
  *
  * @example
  * ```tsx
- * const Leaf = forwardRef<HTMLButtonElement, ComposableProps<PropsWithChildren>>(
+ * const Leaf = forwardRef<HTMLButtonElement, ComposableProps & PropsWithChildren>(
  *   ({ children, ...props }, ref) => {
  *     const { className, ...rest } = composableProps(props);
  *     return <button {...rest} className={className} ref={ref}>{children}</button>;
@@ -50,7 +49,6 @@ export type SlottableProps<P extends HTMLElement | null = null> = ComposableProp
  *
  * @see slot.stories.tsx (@dxos/react-ui)
  */
-export type ComposableProps<P = unknown> = P & {
-  className?: string;
+export type ComposableProps<P extends HTMLElement = HTMLElement> = HTMLAttributes<P> & {
   classNames?: ClassNameValue;
 };
