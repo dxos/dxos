@@ -14,58 +14,29 @@ import {
   type ATTR_META,
   type ATTR_PARENT,
   type ATTR_TYPE,
+  ATTR_DELETED,
+  ATTR_RELATION_SOURCE,
+  ATTR_RELATION_TARGET,
+  ATTR_SELF_DXN,
   EntityKind,
   KindId,
   type MetaId,
+  ObjectDatabaseId,
+  ObjectDeletedId,
   type ObjectMeta,
+  ObjectVersionId,
   type ParentId,
-  type SchemaId,
-  TypeId,
-  type Version,
-} from '../common/types';
-
-import {
-  type ATTR_RELATION_SOURCE,
-  type ATTR_RELATION_TARGET,
   RelationSourceDXNId,
   RelationSourceId,
   RelationTargetDXNId,
   RelationTargetId,
-} from './relation';
+  type SchemaId,
+  SelfDXNId,
+  TypeId,
+  type Version,
+} from '../common/types';
 
-//
-// Defines the internal model of the echo object.
-//
-
-/**
- * Property name for self DXN when object is serialized to JSON.
- */
-export const ATTR_SELF_DXN = '@dxn';
-
-/**
- * DXN to the object itself.
- */
-export const SelfDXNId = Symbol.for('@dxos/echo/DXN');
-
-/**
- * Property name for deleted when object is serialized to JSON.
- */
-export const ATTR_DELETED = '@deleted';
-
-/**
- * Deletion marker.
- */
-export const ObjectDeletedId = Symbol.for('@dxos/echo/Deleted');
-
-/**
- * Object version accessor symbol.
- */
-export const ObjectVersionId: unique symbol = Symbol.for('@dxos/echo/Version');
-
-/**
- * Object database accessor symbol.
- */
-export const ObjectDatabaseId = Symbol.for('@dxos/echo/Database');
+export { ATTR_DELETED, ATTR_SELF_DXN, ObjectDatabaseId, ObjectDeletedId, ObjectVersionId, SelfDXNId };
 
 /**
  * Internal runtime representation of an object.

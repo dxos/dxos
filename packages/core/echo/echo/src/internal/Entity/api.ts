@@ -6,8 +6,10 @@ import { invariant } from '@dxos/invariant';
 import { type DXN } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
-import { type InternalObjectProps, ObjectDatabaseId, getObjectDXN } from '../../Entity';
-import type { AnyEntity } from '../types';
+import type { AnyEntity } from '../common/types';
+
+import { type InternalObjectProps, ObjectDatabaseId } from './model';
+import { getObjectDXN } from './util';
 
 /**
  * Get the DXN of an entity.

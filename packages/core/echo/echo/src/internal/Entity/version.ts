@@ -4,8 +4,9 @@
 
 import { assertArgument } from '@dxos/invariant';
 
-import { ObjectVersionId } from '../../Entity';
-import { type AnyEntity, VersionTypeId } from '../types';
+import { type AnyEntity, VersionTypeId } from '../common/types';
+
+import { ObjectVersionId } from './model';
 
 /**
  * Represent entity version.

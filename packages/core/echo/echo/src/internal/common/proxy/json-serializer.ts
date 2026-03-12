@@ -7,16 +7,19 @@ import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { deepMapValues } from '@dxos/util';
 
+import { Ref } from '../../Ref';
 import {
+  ATTR_META,
   ATTR_RELATION_SOURCE,
   ATTR_RELATION_TARGET,
   ATTR_SELF_DXN,
+  ATTR_TYPE,
+  MetaId,
   RelationSourceDXNId,
   RelationTargetDXNId,
   SelfDXNId,
-} from '../../Entity';
-import { Ref } from '../../Ref';
-import { ATTR_META, ATTR_TYPE, MetaId, TypeId } from '../types';
+  TypeId,
+} from '../types';
 
 /**
  * Attaches a toJSON method to the object for typed serialization.

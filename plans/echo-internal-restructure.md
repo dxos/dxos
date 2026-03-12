@@ -13,22 +13,31 @@ import * as objInternal from './internal/Obj';
 
 Modules that don't map cleanly to a single API module go in `internal/common/`.
 
+## Rules
+
+1. **common/ must not import from non-common modules.** The dependency direction is:
+   `Annotation/`, `Entity/`, `Obj/`, `Ref/`, etc. → `common/` (never the reverse).
+   `common/` is the shared foundation; non-common modules depend on it.
+2. `internal/index.ts` must continue to re-export everything (backward compat for `@dxos/echo/internal`).
+3. No behavioral changes — only file moves and import path updates.
+4. Each internal subdir must NOT create circular imports with common/.
+
 ## Final Structure
 
 ```
 internal/
-  Annotation/      ← from annotations/
-  Entity/          ← from entities/
-  Format/          ← from formats/
-  JsonSchema/      ← from json-schema/
-  Obj/             ← from object/
-  Ref/             ← from ref/
-  Type/            ← from schema/
+  Annotation/      ← annotations + sorting helpers
+  Entity/          ← entity model, api helpers (getDXN, getDatabase), version
+  Format/          ← format definitions
+  JsonSchema/      ← json-schema conversion
+  Obj/             ← object operations (create, clone, snapshot, serialization)
+  Ref/             ← references
+  Type/            ← echo schema (EchoSchema, compose, persistent)
   common/
-    api/           ← shared API helpers (entity, meta, sorting, version, annotations)
-    proxy/         ← shared proxy/reactivity (make-object, reactive, change-context, etc.)
-    types/         ← shared base types (entity, meta, typename, version, base)
-  index.ts         ← re-exports everything (backward compat for @dxos/echo/internal)
+    api/           ← meta helpers only (getMetaChecked, getKeys, addTag, etc.)
+    proxy/         ← proxy/reactivity (make-object, reactive, change-context, etc.)
+    types/         ← base types, entity kinds, model symbols, meta, typename, version
+  index.ts         ← re-exports everything (backward compat)
 ```
 
 ## API Module → Internal Import Mapping
@@ -112,7 +121,35 @@ internal/
 - [x] Update `Obj.ts` to `import * as objInternal from './internal/Obj'`
 - [x] Verify: cycles, build, tests
 
-## Verification Commands
+### Stage 9: Enforce common/ isolation — **DONE**
+
+- [x] Move `common/api/sorting.ts` → `Annotation/sorting.ts` (depends on Annotation)
+- [x] Move `common/api/entity.ts` → `Entity/api.ts` (depends on Entity)
+- [x] Move `common/api/version.ts` → `Entity/version.ts` (depends on Entity)
+- [x] Move `common/api/annotations.ts` content → `Annotation/annotations.ts` (previous stage)
+- [x] Move model symbol constants (`ObjectDeletedId`, `SelfDXNId`, `RelationSourceId`, etc.) from Entity/ into `common/types/model-symbols.ts` so proxy/ can use them
+- [x] Entity/ re-exports moved symbols for backward compat
+- [x] `common/api/` now contains only `meta.ts` (no non-common imports)
+- [x] Verify: cycles, build, tests
+
+## Remaining common/ violations (proxy/)
+
+The following `common/proxy/` source files still import from non-common modules.
+These are function/class imports that cannot be trivially moved to common/ without
+pulling in significant dependency trees:
+
+| File                       | Non-common import  | Symbol              |
+| -------------------------- | ------------------ | ------------------- |
+| `proxy/make-object.ts`     | `../../Annotation` | `getTypeAnnotation` |
+| `proxy/typed-handler.ts`   | `../../Annotation` | `getSchemaDXN`      |
+| `proxy/json-serializer.ts` | `../../Ref`        | `Ref`               |
+| `proxy/reactive.ts`        | `../../Ref/ref`    | `RefTypeId`         |
+
+Fixing these requires either moving the referenced functions/types into common/
+or restructuring proxy/ to not depend on them directly (e.g., via dependency injection
+or by splitting proxy/ into a common core and module-specific parts).
+
+## Verification
 
 ```bash
 # Check cycles
@@ -123,11 +160,10 @@ moon run echo:build
 
 # Test
 moon run echo:test
+
+# Verify common/ isolation (source files only, excluding index.ts barrel and tests)
+# Should return only the 4 known proxy violations listed above.
+rg "from ['\"]\.\./(Annotation|Entity|Ref|Obj|Format|JsonSchema|Type)" \
+  packages/core/echo/echo/src/internal/common/ \
+  --glob '!**/index.ts' --glob '!**/*.test.ts'
 ```
-
-## Constraints
-
-- `internal/index.ts` must continue to re-export everything (backward compat for `@dxos/echo/internal`)
-- No behavioral changes — only file moves and import path updates
-- Shared modules (proxy, api, types) remain in `common/`
-- Each internal subdir must NOT create circular imports with common/

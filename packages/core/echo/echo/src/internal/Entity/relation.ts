@@ -18,43 +18,26 @@ import {
   getTypeIdentifierAnnotation,
   makeTypeJsonSchemaAnnotation,
 } from '../Annotation';
-import { EntityKind } from '../common/types';
+import {
+  ATTR_RELATION_SOURCE,
+  ATTR_RELATION_TARGET,
+  EntityKind,
+  RelationSourceDXNId,
+  RelationSourceId,
+  RelationTargetDXNId,
+  RelationTargetId,
+} from '../common/types';
+
+export {
+  ATTR_RELATION_SOURCE,
+  ATTR_RELATION_TARGET,
+  RelationSourceDXNId,
+  RelationSourceId,
+  RelationTargetDXNId,
+  RelationTargetId,
+};
 
 import { type EchoTypeSchema, makeEchoTypeSchema } from './entity';
-
-/**
- * Property name for relation source when object is serialized to JSON.
- */
-export const ATTR_RELATION_SOURCE = '@relationSource';
-
-/**
- * Used to access relation source ref on live ECHO objects.
- * Reading this symbol must return `Live<EchoObjectSchema<any>>` or a DXN.
- */
-export const RelationSourceId: unique symbol = Symbol.for('@dxos/echo/RelationSource');
-
-/**
- * Used to access relation source ref on live ECHO objects.
- * Reading this symbol must return `Live<EchoObjectSchema<any>>` or a DXN.
- */
-export const RelationSourceDXNId: unique symbol = Symbol.for('@dxos/echo/RelationSourceDXN');
-
-/**
- * Property name for relation target when object is serialized to JSON.
- */
-export const ATTR_RELATION_TARGET = '@relationTarget';
-
-/**
- * Used to access relation target ref on live ECHO objects.
- * Reading this symbol must return `Live<EchoObjectSchema<any>>` or a DXN.
- */
-export const RelationTargetId: unique symbol = Symbol.for('@dxos/echo/RelationTarget');
-
-/**
- * Used to access relation target ref on live ECHO objects.
- * Reading this symbol must return `Live<EchoObjectSchema<any>>` or a DXN.
- */
-export const RelationTargetDXNId: unique symbol = Symbol.for('@dxos/echo/RelationTargetDXN');
 
 /**
  * Source and target props on relations.

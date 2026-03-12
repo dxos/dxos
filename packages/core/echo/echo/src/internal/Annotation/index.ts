@@ -3,4 +3,5 @@
 //
 
 export * from './annotations';
+export * from './sorting';
 export * from './util';
