@@ -213,7 +213,7 @@ Status:
 | `EventList`                 | `ThemedClassName`  | OK     | `Panel.Content`   |
 | `FilePreview`               | `ThemedClassName`  | OK     | `Panel.Content`   |
 | `InvocationTraceContainer`  | `ThemedClassName`  | OK     | `Panel.Content`   |
-| `KanbanBoard.Root`          | plain              | ISSUE  | `Panel.Content`   |
+| `KanbanBoard.Root`          | plain              | OK     | `Panel.Content`   |
 | `MarkdownEditor.Content`    | `ThemedClassName`  | OK     | `Panel.Content`   |
 | `MarkdownEditor.Toolbar`    | `ThemedClassName`  | OK     | `Panel.Toolbar`   |
 | `Message.Toolbar`           | `ThemedClassName`  | OK     | `Panel.Toolbar`   |
@@ -242,3 +242,11 @@ Components marked ISSUE need to:
 1. Change type from `ThemedClassName<...>` to `SlottableProps<...>` (or `ComposableProps<...>` if no `asChild`).
 2. Use `composableProps(props)` to extract and merge `className` + `classNames`.
 3. Pass merged `className` to `tx()`/`mx()` instead of raw `classNames`.
+
+
+### RULE
+
+- Only container components (that expand) can be asChild of Panel.Content
+- Create HOC for container
+
+withSlot();

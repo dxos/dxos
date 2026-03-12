@@ -18444,6 +18444,9 @@ importers:
       '@fontsource/poiret-one':
         specifier: 'catalog:'
         version: 5.2.8
+      '@radix-ui/react-slot':
+        specifier: 'catalog:'
+        version: 1.1.2(@types/react@19.2.7)(react@19.2.3)
       '@tailwindcss/forms':
         specifier: 'catalog:'
         version: 0.5.11(tailwindcss@4.2.0)

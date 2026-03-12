@@ -22,22 +22,10 @@ import { mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import { MessagePanel } from '../../components';
-import { command } from '../../extensions/command';
+import { command } from '../../extensions';
 import { useStatus } from '../../hooks';
 import { meta } from '../../meta';
 import { getMessageMetadata } from '../../util';
-
-export const ChatHeading = ({ attendableId }: { attendableId?: string }) => {
-  const { t } = useTranslation(meta.id);
-  return (
-    <div role='none' className='flex items-center'>
-      <StackItem.SigilButton attendableId={attendableId}>
-        <Icon icon='ph--chat--regular' size={5} />
-      </StackItem.SigilButton>
-      <StackItem.HeadingLabel attendableId={attendableId}>{t('chat heading')}</StackItem.HeadingLabel>
-    </div>
-  );
-};
 
 export type ChatContainerProps = ThemedClassName<
   {
@@ -53,8 +41,8 @@ export const ChatContainer = ({
   space,
   thread,
   context,
-  current,
   autoFocusTextbox,
+  current,
 }: ChatContainerProps) => {
   const { t } = useTranslation(meta.id);
   const { themeMode } = useThemeContext();
@@ -121,13 +109,9 @@ export const ChatContainer = ({
 
   return (
     <ThreadComponent.Root
-      current={current}
       id={id}
-      classNames={[
-        'h-full grid-rows-[1fr_min-content_min-content] overflow-hidden',
-        'transition-[padding-h-end] [[data-sidebar-left-state=open]_&]:lg:pb-0',
-        classNames,
-      ]}
+      current={current}
+      classNames={['dx-container grid-rows-[1fr_min-content_min-content]', classNames]}
     >
       <ScrollArea.Root classNames='col-span-2' orientation='vertical'>
         <ScrollArea.Viewport ref={threadScrollRef}>
@@ -145,5 +129,17 @@ export const ChatContainer = ({
       <MessageTextbox extensions={extensions} autoFocus={autoFocus} onSend={handleCreate} {...textboxMetadata} />
       <ThreadComponent.Status activity={activity}>{t('activity message')}</ThreadComponent.Status>
     </ThreadComponent.Root>
+  );
+};
+
+export const ChatHeading = ({ attendableId }: { attendableId?: string }) => {
+  const { t } = useTranslation(meta.id);
+  return (
+    <div role='none' className='flex items-center'>
+      <StackItem.SigilButton attendableId={attendableId}>
+        <Icon icon='ph--chat--regular' size={5} />
+      </StackItem.SigilButton>
+      <StackItem.HeadingLabel attendableId={attendableId}>{t('chat heading')}</StackItem.HeadingLabel>
+    </div>
   );
 };

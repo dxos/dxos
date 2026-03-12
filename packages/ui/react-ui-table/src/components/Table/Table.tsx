@@ -416,7 +416,7 @@ const TableMainInner = <T extends Type.AnyEntity = Type.AnyEntity>(
   }
 
   return (
-    <div {...composableProps(props, 'dx-container relative')} role='none'>
+    <div {...composableProps(props, { role: 'none', classNames: 'dx-container relative' })}>
       <Grid.Root id={model.id ?? 'table-grid'}>
         <TableValueEditor<T>
           model={model}

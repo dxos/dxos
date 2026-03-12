@@ -321,7 +321,7 @@ export const SheetContent = (props: SheetContentProps) => {
   useSelectThreadOnCellFocus();
 
   return (
-    <div {...composableProps(props, 'relative min-h-0')} role='none'>
+    <div {...composableProps(props, { role: 'none', classNames: 'relative min-h-0' })}>
       <GridCellEditor getCellContent={getCellContent} extensions={extensions} onBlur={handleBlur} />
       <Grid.Content
         className='[--dx-grid-base:var(--base-surface)] [&_.dx-grid]:absolute [&_.dx-grid]:inset-0'

@@ -12,9 +12,12 @@ const panelRoot: ComponentFunction<PanelProps> = (_, ...etc) =>
   mx(
     // prettier-ignore
     'h-full w-full grid grid-cols-[100%] overflow-hidden',
+    // Add uncategorized children to content slot.
     '[&>*:not([data-slot])]:[grid-area:content]',
     ...etc,
   );
+
+// TODO(burdon): Drop asChild (or make it not necessary).
 
 const panelToolbar: ComponentFunction<PanelProps> = (_, ...etc) =>
   mx(
