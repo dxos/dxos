@@ -19,10 +19,10 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { render } from '@dxos/storybook-utils';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 
-import { translations } from '../translations';
+import { translations } from '../../translations';
 
-import { CommentsContainer } from './CommentsContainer';
-import { createCommentThread, createProposalThread } from './testing';
+import { CommentsPanel } from './CommentsPanel';
+import { createCommentThread, createProposalThread } from '../../testing/data';
 
 faker.seed(1);
 
@@ -57,7 +57,7 @@ const DefaultStory = () => {
     return null;
   }
 
-  return <CommentsContainer anchors={anchors} onThreadDelete={console.log} onAcceptProposal={console.log} />;
+  return <CommentsPanel anchors={anchors} onThreadDelete={console.log} onAcceptProposal={console.log} />;
 };
 
 const meta = {

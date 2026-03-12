@@ -21,8 +21,8 @@ import { createBasicExtensions, createThemeExtensions, listener } from '@dxos/ui
 import { mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
-import { MessageContainer } from '../../components';
-import { command } from '../../components/command-extension';
+import { MessagePanel } from '../../components';
+import { command } from '../../extensions/command';
 import { useStatus } from '../../hooks';
 import { meta } from '../../meta';
 import { getMessageMetadata } from '../../util';
@@ -136,7 +136,7 @@ export const ChatContainer = ({
               .map((message) => message.target)
               .filter(isNonNullable)
               .map((message) => (
-                <MessageContainer key={message.id} message={message} members={members} />
+                <MessagePanel key={message.id} message={message} members={members} />
               ))}
           </div>
         </ScrollArea.Viewport>

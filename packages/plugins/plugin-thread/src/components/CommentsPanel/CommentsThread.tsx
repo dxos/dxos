@@ -19,14 +19,14 @@ import { type AnchoredTo, type Thread } from '@dxos/types';
 import { createBasicExtensions, createThemeExtensions, listener } from '@dxos/ui-editor';
 import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
 
-import { useStatus } from '../hooks';
-import { meta } from '../meta';
-import { getMessageMetadata } from '../util';
+import { useStatus } from '../../hooks';
+import { meta } from '../../meta';
+import { getMessageMetadata } from '../../util';
 
-import { command } from './command-extension';
-import { MessageContainer, buttonClassNames, buttonGroupClassNames } from './MessageContainer';
+import { command } from '../../extensions/command';
+import { MessagePanel, buttonClassNames, buttonGroupClassNames } from '../MessagePanel';
 
-export type CommentsThreadContainerProps = {
+export type CommentsThreadProps = {
   anchor: AnchoredTo.AnchoredTo;
   onAttend?: (anchor: AnchoredTo.AnchoredTo) => void;
   onComment?: (anchor: AnchoredTo.AnchoredTo, message: string) => void;
@@ -36,7 +36,7 @@ export type CommentsThreadContainerProps = {
   onAcceptProposal?: (anchor: AnchoredTo.AnchoredTo, messageId: string) => void;
 } & Pick<ThreadRootProps, 'current'>;
 
-export const CommentsThreadContainer = ({
+export const CommentsThread = ({
   anchor,
   current,
   onAttend,
@@ -45,7 +45,7 @@ export const CommentsThreadContainer = ({
   onMessageDelete,
   onThreadDelete,
   onAcceptProposal,
-}: CommentsThreadContainerProps) => {
+}: CommentsThreadProps) => {
   const { themeMode } = useThemeContext();
   const { t } = useTranslation(meta.id);
   const identity = useIdentity()!;
@@ -146,7 +146,7 @@ export const CommentsThreadContainer = ({
       </div>
 
       {messages?.map((ref) => (
-        <MessageContainer
+        <MessagePanel
           key={ref.dxn.toString()}
           editable
           message={ref}

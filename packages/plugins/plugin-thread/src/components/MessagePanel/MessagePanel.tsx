@@ -19,16 +19,16 @@ import { type ContentBlock, type Message } from '@dxos/types';
 import { createBasicExtensions, createThemeExtensions } from '@dxos/ui-editor';
 import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
 
-import { useOnEditAnalytics } from '../hooks';
-import { meta } from '../meta';
-import { getMessageMetadata } from '../util';
+import { useOnEditAnalytics } from '../../hooks';
+import { meta } from '../../meta';
+import { getMessageMetadata } from '../../util';
 
-import { command } from './command-extension';
+import { command } from '../../extensions/command';
 
 export const buttonGroupClassNames = 'flex flex-row items-center gap-0.5 pe-2';
 export const buttonClassNames = 'p-1! transition-opacity';
 
-export type MessageContainerProps = {
+export type MessagePanelProps = {
   message: Obj.OfShape<Message.Message> | Ref.Ref<Obj.OfShape<Message.Message>>;
   members: SpaceMember[];
   editable?: boolean;
@@ -36,13 +36,13 @@ export type MessageContainerProps = {
   onAcceptProposal?: (id: string) => void;
 };
 
-export const MessageContainer = ({
+export const MessagePanel = ({
   message: messageOrRef,
   members,
   editable = false,
   onDelete,
   onAcceptProposal,
-}: MessageContainerProps) => {
+}: MessagePanelProps) => {
   const { t } = useTranslation(meta.id);
   const [message, updateMessage] = useObject(messageOrRef);
   const identity = useIdentity();

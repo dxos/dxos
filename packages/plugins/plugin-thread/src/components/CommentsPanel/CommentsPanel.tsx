@@ -8,11 +8,11 @@ import { Obj, Relation } from '@dxos/echo';
 import { Icon, Message, Trans, useTranslation } from '@dxos/react-ui';
 import { type AnchoredTo, type Thread } from '@dxos/types';
 
-import { meta } from '../meta';
+import { meta } from '../../meta';
 
-import { CommentsThreadContainer, type CommentsThreadContainerProps } from './CommentsThreadContainer';
+import { CommentsThread, type CommentsThreadProps } from './CommentsThread';
 
-export type CommentsContainerProps = Omit<CommentsThreadContainerProps, 'anchor' | 'current'> & {
+export type CommentsPanelProps = Omit<CommentsThreadProps, 'anchor' | 'current'> & {
   anchors: AnchoredTo.AnchoredTo[];
   currentId?: string;
   showResolvedThreads?: boolean;
@@ -21,7 +21,7 @@ export type CommentsContainerProps = Omit<CommentsThreadContainerProps, 'anchor'
 /**
  * Root container for collection of comment threads.
  */
-export const CommentsContainer = ({ anchors, currentId, showResolvedThreads, ...props }: CommentsContainerProps) => {
+export const CommentsPanel = ({ anchors, currentId, showResolvedThreads, ...props }: CommentsPanelProps) => {
   const { t } = useTranslation(meta.id);
 
   // TODO(wittjosiah): There seems to be a race between thread and anchor being deleted.
@@ -64,7 +64,7 @@ export const CommentsContainer = ({ anchors, currentId, showResolvedThreads, ...
       {filteredAnchors.map((anchor) => {
         const thread = Relation.getSource(anchor) as Thread.Thread;
         const threadId = Obj.getDXN(thread).toString();
-        return <CommentsThreadContainer key={threadId} anchor={anchor} current={currentId === threadId} {...props} />;
+        return <CommentsThread key={threadId} anchor={anchor} current={currentId === threadId} {...props} />;
       })}
     </div>
   );
