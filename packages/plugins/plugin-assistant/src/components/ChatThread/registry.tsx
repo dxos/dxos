@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { log } from '@dxos/log';
-import { ToggleContainer } from '@dxos/react-ui-components';
+import { TogglePanel } from '@dxos/react-ui-components';
 import {
   PromptWidget,
   ReasoningWidget,
@@ -24,21 +24,21 @@ import { type BlockRenderer, type MessageThreadContext } from './sync';
 
 const Fallback = ({ _tag, ...props }: XmlWidgetProps<MessageThreadContext>) => {
   return (
-    <ToggleContainer.Root classNames='rounded-xs'>
-      <ToggleContainer.Header classNames='bg-group-surface'>{_tag}</ToggleContainer.Header>
-      <ToggleContainer.Content classNames='bg-modal-surface'>
+    <TogglePanel.Root classNames='rounded-xs'>
+      <TogglePanel.Header classNames='bg-group-surface'>{_tag}</TogglePanel.Header>
+      <TogglePanel.Content classNames='bg-modal-surface'>
         <Json classNames='p-2! text-sm' data={props} />
-      </ToggleContainer.Content>
-    </ToggleContainer.Root>
+      </TogglePanel.Content>
+    </TogglePanel.Root>
   );
 };
 
 const Summary = ({ text }: { text: string }) => {
   return (
-    <ToggleContainer.Root classNames='rounded-sm'>
-      <ToggleContainer.Header classNames='bg-group-surface'>Conversation summarized</ToggleContainer.Header>
-      <ToggleContainer.Content classNames='bg-modal-surface'>{text}</ToggleContainer.Content>
-    </ToggleContainer.Root>
+    <TogglePanel.Root classNames='rounded-sm'>
+      <TogglePanel.Header classNames='bg-group-surface'>Conversation summarized</TogglePanel.Header>
+      <TogglePanel.Content classNames='bg-modal-surface'>{text}</TogglePanel.Content>
+    </TogglePanel.Root>
   );
 };
 

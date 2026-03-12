@@ -26,7 +26,7 @@ type ContextValue = {
   expandY: boolean;
 };
 
-const [ToggleContainerContext, useToggleContainerContext] = createContext<ContextValue>('ToggleContainer');
+const [TogglePanelContext, useTogglePanelContext] = createContext<ContextValue>('TogglePanel');
 
 //
 // Root
@@ -83,7 +83,7 @@ const Root = ({
   }, [open]);
 
   return (
-    <ToggleContainerContext
+    <TogglePanelContext
       shrink={shrink}
       duration={duration}
       expandX={expandX}
@@ -94,7 +94,7 @@ const Root = ({
       <div role='none' className={mx('overflow-hidden', !shrink && 'w-full', classNames)}>
         {children}
       </div>
-    </ToggleContainerContext>
+    </TogglePanelContext>
   );
 };
 
@@ -102,7 +102,7 @@ const Root = ({
 // Header
 //
 
-const HEADER_NAME = 'ToggleContainer.Header';
+const HEADER_NAME = 'TogglePanel.Header';
 
 type HeaderProps = ThemedClassName<
   PropsWithChildren<{
@@ -112,7 +112,7 @@ type HeaderProps = ThemedClassName<
 >;
 
 const Header = ({ classNames, children, icon }: HeaderProps) => {
-  const { open, setOpen, shrink, duration } = useToggleContainerContext(HEADER_NAME);
+  const { open, setOpen, shrink, duration } = useTogglePanelContext(HEADER_NAME);
 
   return (
     <div
@@ -139,12 +139,12 @@ Header.displayName = HEADER_NAME;
 // Content
 //
 
-const CONTENT_NAME = 'ToggleContainer.Content';
+const CONTENT_NAME = 'TogglePanel.Content';
 
 type ContentProps = ThemedClassName<PropsWithChildren>;
 
 const Content = ({ classNames, children }: ContentProps) => {
-  const { duration, expandX, expandY } = useToggleContainerContext(CONTENT_NAME);
+  const { duration, expandX, expandY } = useTogglePanelContext(CONTENT_NAME);
 
   return (
     <div
@@ -174,17 +174,17 @@ const Content = ({ classNames, children }: ContentProps) => {
 Content.displayName = CONTENT_NAME;
 
 //
-// ToggleContainer
+// TogglePanel
 //
 
-export const ToggleContainer = {
+export const TogglePanel = {
   Root,
   Header,
   Content,
 };
 
 export type {
-  RootProps as ToggleContainerRootProps,
-  HeaderProps as ToggleContainerHeaderProps,
-  ContentProps as ToggleContainerContentProps,
+  RootProps as TogglePanelRootProps,
+  HeaderProps as TogglePanelHeaderProps,
+  ContentProps as TogglePanelContentProps,
 };

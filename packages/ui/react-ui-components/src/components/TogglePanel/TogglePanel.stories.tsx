@@ -12,7 +12,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { MarkdownViewer } from '@dxos/react-ui-markdown';
 import { withRegistry } from '@dxos/storybook-utils';
 
-import { ToggleContainer, type ToggleContainerRootProps } from './ToggleContainer';
+import { TogglePanel, type TogglePanelRootProps } from './TogglePanel';
 
 class Generator {
   private readonly _current: Atom.Writable<string>;
@@ -54,7 +54,7 @@ class Generator {
   }
 }
 
-const DefaultStory = (props: ToggleContainerRootProps) => {
+const DefaultStory = (props: TogglePanelRootProps) => {
   const registry = useContext(RegistryContext);
   const generator = useMemo(() => new Generator(registry), [registry]);
   const [running, setRunning] = useState(false);
@@ -79,8 +79,8 @@ const DefaultStory = (props: ToggleContainerRootProps) => {
         <div>{count}</div>
       </Toolbar.Root>
       <div className='flex p-4'>
-        <ToggleContainer.Root classNames='border border-separator rounded-md' {...props}>
-          <ToggleContainer.Header
+        <TogglePanel.Root classNames='border border-separator rounded-md' {...props}>
+          <TogglePanel.Header
             icon={
               running ? (
                 <Icon icon={'ph--circle-notch--regular'} classNames='text-subdued animate-spin' size={4} />
@@ -88,25 +88,25 @@ const DefaultStory = (props: ToggleContainerRootProps) => {
             }
           >
             Test
-          </ToggleContainer.Header>
-          <ToggleContainer.Content classNames='bg-modal-surface'>
+          </TogglePanel.Header>
+          <TogglePanel.Content classNames='bg-modal-surface'>
             <MarkdownViewer classNames='p-2 text-sm' content={text.join('\n\n')} />
-          </ToggleContainer.Content>
-        </ToggleContainer.Root>
+          </TogglePanel.Content>
+        </TogglePanel.Root>
       </div>
     </div>
   );
 };
 
 const meta = {
-  title: 'ui/react-ui-components/ToggleContainer',
-  component: ToggleContainer.Root,
+  title: 'ui/react-ui-components/TogglePanel',
+  component: TogglePanel.Root,
   render: DefaultStory,
   decorators: [withRegistry, withTheme(), withLayout({ layout: 'column' })],
   parameters: {
     layout: 'fullscreen',
   },
-} satisfies Meta<typeof ToggleContainer.Root>;
+} satisfies Meta<typeof TogglePanel.Root>;
 
 export default meta;
 

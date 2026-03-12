@@ -4,6 +4,7 @@
 
 import React, {
   type FocusEvent,
+  HTMLAttributes,
   type KeyboardEvent,
   type MouseEvent,
   type WheelEvent,
@@ -17,7 +18,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type CellRange, rangeToA1Notation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { defaultColSize, defaultRowSize } from '@dxos/lit-grid';
-import { type ComposableProps, DropdownMenu, Icon, useTranslation } from '@dxos/react-ui';
+import { type ComposableProps, DropdownMenu, Icon, SlottableProps, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
   type DxGridCellIndex,
@@ -70,7 +71,7 @@ const sheetRowDefault = {
   grid: { size: defaultRowSize, resizeable: true },
 };
 
-export type SheetContentProps = ComposableProps<HTMLDivElement>;
+export type SheetContentProps = ComposableProps;
 
 export const SheetContent = (props: SheetContentProps) => {
   const { t } = useTranslation(meta.id);
@@ -321,7 +322,7 @@ export const SheetContent = (props: SheetContentProps) => {
   useSelectThreadOnCellFocus();
 
   return (
-    <div {...composableProps(props, { role: 'none', classNames: 'relative min-h-0' })}>
+    <div {...composableProps(props, { role: 'none', className: 'relative min-h-0' })}>
       <GridCellEditor getCellContent={getCellContent} extensions={extensions} onBlur={handleBlur} />
       <Grid.Content
         className='[--dx-grid-base:var(--base-surface)] [&_.dx-grid]:absolute [&_.dx-grid]:inset-0'

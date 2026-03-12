@@ -42,7 +42,7 @@ const Middle = forwardRef<HTMLDivElement, SlottableProps<HTMLDivElement>>(
   },
 );
 
-const Leaf = forwardRef<HTMLButtonElement, ComposableProps<PropsWithChildren>>(
+const Leaf = forwardRef<HTMLButtonElement, ComposableProps<HTMLButtonElement>>(
   ({ children, ...props }, forwardedRef) => {
     return (
       <button {...composableProps<HTMLButtonElement>(props, { role: 'none' })} ref={forwardedRef}>

@@ -7,12 +7,10 @@ import React, { type HTMLAttributes } from 'react';
 import { composableProps, mx } from '@dxos/ui-theme';
 import { type ComposableProps } from '@dxos/ui-types';
 
-export type FlexProps = ComposableProps<
-  HTMLAttributes<HTMLDivElement> & {
-    column?: boolean;
-    grow?: boolean;
-  }
->;
+export type FlexProps = ComposableProps<HTMLDivElement> & {
+  column?: boolean;
+  grow?: boolean;
+};
 
 export const Flex = ({ children, role, column, grow, ...props }: FlexProps) => {
   const { className, ...rest } = composableProps(props);

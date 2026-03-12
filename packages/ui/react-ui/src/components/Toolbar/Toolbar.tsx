@@ -47,7 +47,7 @@ const ToolbarRoot = forwardRef<HTMLDivElement, ToolbarRootProps>(
     { children, density, disabled, layoutManaged, textBlockWidth: textBlockWidthProp, orientation, ...props },
     forwardedRef,
   ) => {
-    const { className, ...rest } = composableProps(props);
+    const { className, dir: _, ...rest } = composableProps(props);
     const { tx } = useThemeContext();
     const InnerRoot = textBlockWidthProp ? 'div' : Fragment;
     const innerRootProps = textBlockWidthProp
@@ -77,18 +77,16 @@ const ToolbarRoot = forwardRef<HTMLDivElement, ToolbarRootProps>(
 
 type ToolbarTextProps = SlottableProps<HTMLDivElement>;
 
-const ToolbarText = forwardRef<HTMLDivElement, ToolbarTextProps>(
-  ({ children, asChild, ...props }, forwardedRef) => {
-    const { className, ...rest } = composableProps(props);
-    const Comp = asChild ? Slot : Primitive.div;
-    const { tx } = useThemeContext();
-    return (
-      <Comp {...rest} className={tx('toolbar.text', {}, className)} ref={forwardedRef}>
-        {children}
-      </Comp>
-    );
-  },
-);
+const ToolbarText = forwardRef<HTMLDivElement, ToolbarTextProps>(({ children, asChild, ...props }, forwardedRef) => {
+  const { className, ...rest } = composableProps(props);
+  const Comp = asChild ? Slot : Primitive.div;
+  const { tx } = useThemeContext();
+  return (
+    <Comp {...rest} className={tx('toolbar.text', {}, className)} ref={forwardedRef}>
+      {children}
+    </Comp>
+  );
+});
 
 //
 // Button

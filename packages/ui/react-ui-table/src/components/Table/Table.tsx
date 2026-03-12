@@ -73,7 +73,7 @@ export type TableController = {
   handleInsertRowResult?: (insertRowResult?: InsertRowResult) => void;
 };
 
-export type TableMainProps<T extends Type.AnyEntity = Type.AnyEntity> = ComposableProps<{
+export type TableMainProps<T extends Type.AnyEntity = Type.AnyEntity> = ComposableProps<HTMLDivElement> & {
   schema?: T;
   model?: TableModel;
   presentation?: TablePresentation;
@@ -82,7 +82,7 @@ export type TableMainProps<T extends Type.AnyEntity = Type.AnyEntity> = Composab
   onCreate?: OnCreateHandler;
   onRowClick?: (row: any) => void;
   testId?: string;
-}>;
+};
 
 const TableMainInner = <T extends Type.AnyEntity = Type.AnyEntity>(
   { schema, model, presentation, ignoreAttention, onCreate, onRowClick, testId, ...props }: TableMainProps<T>,
@@ -416,7 +416,7 @@ const TableMainInner = <T extends Type.AnyEntity = Type.AnyEntity>(
   }
 
   return (
-    <div {...composableProps(props, { role: 'none', classNames: 'dx-container relative' })}>
+    <div {...composableProps(props, { role: 'none', className: 'dx-container relative' })}>
       <Grid.Root id={model.id ?? 'table-grid'}>
         <TableValueEditor<T>
           model={model}

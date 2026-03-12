@@ -7,13 +7,11 @@ import React, { type HTMLAttributes } from 'react';
 import { composableProps, mx } from '@dxos/ui-theme';
 import { type ComposableProps } from '@dxos/ui-types';
 
-export type GridProps = ComposableProps<
-  HTMLAttributes<HTMLDivElement> & {
-    cols?: number;
-    rows?: number;
-    grow?: boolean;
-  }
->;
+export type GridProps = ComposableProps<HTMLDivElement> & {
+  cols?: number;
+  rows?: number;
+  grow?: boolean;
+};
 
 export const Grid = ({ children, style, role, cols, rows, grow = true, ...props }: GridProps) => {
   const { className, ...rest } = composableProps(props);
