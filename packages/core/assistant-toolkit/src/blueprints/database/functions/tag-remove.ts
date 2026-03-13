@@ -10,7 +10,7 @@ import { defineFunction } from '@dxos/functions';
 import { trim } from '@dxos/util';
 
 export default defineFunction({
-  key: 'dxos.org/function/database/tag-remove',
+  key: 'org.dxos.function.database.tag-remove',
   name: 'Remove tag',
   description: trim`
     Removes a tag from an object.

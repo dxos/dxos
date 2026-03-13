@@ -5,7 +5,7 @@
 import React, { Fragment, type MouseEvent, memo, useCallback, useEffect, useMemo } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import { LayoutOperation, getCompanionVariant } from '@dxos/app-toolkit';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Graph, type Node, useActionRunner } from '@dxos/plugin-graph';
 import { Icon, IconButton, Popover, toLocalizedString, useTranslation } from '@dxos/react-ui';
@@ -14,7 +14,6 @@ import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 import { hoverableControls, hoverableFocusedWithinControls } from '@dxos/ui-theme';
 
 import { useBreakpoints } from '../../hooks';
-import { parseEntryId } from '../../layout';
 import { meta } from '../../meta';
 import { DeckOperation, type LayoutMode, PLANK_COMPANION_TYPE, type ResolvedPart } from '../../types';
 import { soloInlinePadding } from '../fragments';
@@ -91,7 +90,7 @@ export const PlankHeading = memo(
       [breakpoint, part, companions, canIncrementStart, canIncrementEnd, isCompanionNode, deckEnabled],
     );
 
-    const { variant } = parseEntryId(id);
+    const variant = isCompanionNode ? getCompanionVariant(id) : undefined;
     const sigilActions = useMemo(() => {
       if (!node) {
         return undefined;
@@ -100,8 +99,8 @@ export const PlankHeading = memo(
       } else {
         return [
           actions,
-          Graph.getActions(graph, node.id).filter((a) =>
-            ['list-item', 'list-item-primary', 'heading-list-item'].includes(a.properties.disposition),
+          Graph.getActions(graph, node.id).filter((action) =>
+            ['list-item', 'list-item-primary', 'heading-list-item'].includes(action.properties.disposition),
           ),
         ].filter((a) => a.length > 0);
       }
@@ -133,7 +132,7 @@ export const PlankHeading = memo(
       [invokePromise, invokeSync, id, part],
     );
 
-    const ActionRoot = node && popoverAnchorId === `dxos.org/ui/${meta.id}/${node.id}` ? Popover.Anchor : Fragment;
+    const ActionRoot = node && popoverAnchorId === `${meta.id}:${node.id}` ? Popover.Anchor : Fragment;
 
     const handleTabClick = useCallback(
       (event: MouseEvent) => {

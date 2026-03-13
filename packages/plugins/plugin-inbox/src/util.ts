@@ -4,15 +4,18 @@
 
 import { format, formatDistance, isThisWeek, isToday } from 'date-fns';
 
-import { type Obj } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { type Message } from '@dxos/types';
 import { toHue } from '@dxos/util';
+
+import { type Mailbox } from './types';
 
 export type CreateDraftOptions = {
   mode?: 'compose' | 'reply' | 'reply-all' | 'forward';
   replyToMessage?: Message.Message;
   subject?: string;
   body?: string;
+  mailbox?: Mailbox.Mailbox;
 };
 
 const formatQuotedBody = (message: Message.Message): string => {
@@ -28,7 +31,7 @@ const formatQuotedBody = (message: Message.Message): string => {
  * Used when creating a draft locally and adding via SpaceOperation.AddObject.
  */
 export const buildDraftMessageProps = (options: CreateDraftOptions): Obj.MakeProps<typeof Message.Message> => {
-  const { mode = 'compose', replyToMessage, subject = '', body = '' } = options;
+  const { mode = 'compose', replyToMessage, subject = '', body = '', mailbox } = options;
 
   let to = '';
   let cc: string | undefined;
@@ -79,6 +82,10 @@ export const buildDraftMessageProps = (options: CreateDraftOptions): Obj.MakePro
         properties.references = [existingRefs, originalMsgId].filter(Boolean).join(' ');
       }
     }
+  }
+
+  if (mailbox && Obj.isObject(mailbox)) {
+    properties.mailbox = Obj.getDXN(mailbox).toString();
   }
 
   return {

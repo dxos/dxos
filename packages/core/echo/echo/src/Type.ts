@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { type DXN } from '@dxos/keys';
 import { type ToMutable } from '@dxos/util';
 
-import type * as EntityModule from './Entity';
+import type * as Entity from './Entity';
 import * as typeInternal from './internal/Type';
 import * as internal from './internal';
 import type * as ObjModule from './Obj';
@@ -64,7 +64,7 @@ export interface Obj<T, Fields extends Schema.Struct.Fields = Schema.Struct.Fiel
     EchoSchemaKind<internal.EntityKind.Object>,
     Schema.AnnotableClass<
       Obj<T, Fields>,
-      EntityModule.OfKind<typeof EntityModule.Kind.Object> & T,
+      Entity.OfKind<typeof Entity.Kind.Object> & T,
       Schema.Simplify<ObjModule.BaseObjJson & ToMutable<T>>,
       never
     > {
@@ -100,7 +100,7 @@ export type AnyObj = ObjectSchemaBase;
  * ```ts
  * const Person = Schema.Struct({
  *   name: Schema.String,
- * }).pipe(Type.object({ typename: 'example.com/type/Person', version: '0.1.0' }));
+ * }).pipe(Type.object({ typename: 'com.example.type.person', version: '0.1.0' }));
  * ```
  */
 export const object: {
@@ -127,7 +127,7 @@ export interface Relation<T, Source, Target, Fields extends Schema.Struct.Fields
     EchoSchemaKind<internal.EntityKind.Relation>,
     Schema.AnnotableClass<
       Relation<T, Source, Target, Fields>,
-      EntityModule.OfKind<typeof EntityModule.Kind.Relation> & RelationModule.Endpoints<Source, Target> & T,
+      Entity.OfKind<typeof Entity.Kind.Relation> & RelationModule.Endpoints<Source, Target> & T,
       Schema.Simplify<RelationModule.BaseRelationJson & ToMutable<T>>,
       never
     > {
@@ -164,7 +164,7 @@ export type AnyRelation = RelationSchemaBase;
  * const WorksFor = Schema.Struct({
  *   role: Schema.String,
  * }).pipe(Type.relation({
- *   typename: 'example.com/type/WorksFor',
+ *   typename: 'com.example.type.works-for',
  *   version: '0.1.0',
  *   source: Person,
  *   target: Company,
@@ -214,7 +214,7 @@ export type AnyRef = Schema.Schema<internal.Ref<any>, EncodedReference>;
 /**
  * Gets the full DXN of the schema.
  * Will include the version if it's a `type` DXN.
- * @example "dxn:example.com/type/Person:0.1.0"
+ * @example "dxn:com.example.type.person:0.1.0"
  * @example "dxn:echo:SSSSSSSSSS:XXXXXXXXXXXXX"
  */
 export const getDXN = (schema: AnyEntity): DXN | undefined => {
@@ -223,7 +223,7 @@ export const getDXN = (schema: AnyEntity): DXN | undefined => {
 
 /**
  * @param schema - Schema to get the typename from.
- * @returns The typename of the schema. Example: `example.com/type/Person`.
+ * @returns The typename of the schema. Example: `com.example.type.person`.
  */
 export const getTypename = (schema: AnyEntity): string => {
   const typename = internal.getSchemaTypename(schema);

@@ -38,7 +38,7 @@ export default Capability.makeModule(() =>
     Capability.contributes(
       Capabilities.ReactSurface,
       Surface.create({
-        id: 'dxos.org/test/debug/main',
+        id: 'org.dxos.test.debug.main',
         role: 'secondary',
         component: Debug,
       }),

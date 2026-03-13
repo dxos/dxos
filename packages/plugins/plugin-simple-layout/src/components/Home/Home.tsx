@@ -16,7 +16,7 @@ import { mx } from '@dxos/ui-theme';
 import { byPosition } from '@dxos/util';
 
 import { meta } from '../../meta';
-import { useLoadDescendents } from '../hooks';
+import { useExpandPath } from '../hooks';
 
 export type HomeProps = {};
 
@@ -28,7 +28,7 @@ export const Home = (_: HomeProps) => {
   const userAccountItem = useItemsByDisposition('user-account')[0];
   const pinnedItems = useItemsByDisposition('pin-end', true);
   const workspaceItems = useItemsByDisposition('workspace');
-  useLoadDescendents(Node.RootId);
+  useExpandPath(Node.RootId);
 
   const items = useMemo(
     () => [...(userAccountItem ? [userAccountItem] : []), ...pinnedItems, ...workspaceItems],
@@ -73,7 +73,7 @@ const WorkspaceTile: MosaicStackTileComponent<Node.Node> = (props) => {
   const isSelected = selectedValue === data.id;
   const cardRef = useRef<HTMLDivElement>(null);
 
-  useLoadDescendents(data.id);
+  useExpandPath(data.id);
 
   const handleSelect = useCallback(
     () => invokePromise(LayoutOperation.SwitchWorkspace, { subject: data.id }),

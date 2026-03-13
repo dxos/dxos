@@ -48,13 +48,13 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
   });
 
   test('inbox sync function (invoke)', { timeout: 120_000 }, async () => {
-    const { space, feed, functionsServiceClient } = await setup();
+    const { space, mailbox, feed, functionsServiceClient } = await setup();
     await sync(space);
     const func = await deployFunction(space, functionsServiceClient, new URL('./sync.ts', import.meta.url).pathname);
     const result = await functionsServiceClient.invoke(
       func,
       {
-        feed: Ref.make(feed),
+        mailbox: Ref.make(mailbox),
         restrictedMode: true,
       },
       {
@@ -66,7 +66,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
   });
 
   test('deployes inbox sync function (force-trigger)', { timeout: 120_000 }, async () => {
-    const { space, feed, functionsServiceClient } = await setup();
+    const { space, mailbox, feed, functionsServiceClient } = await setup();
     await sync(space);
 
     const func = await deployFunction(space, functionsServiceClient, new URL('./sync.ts', import.meta.url).pathname);
@@ -75,7 +75,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
         enabled: true,
         function: Ref.make(func),
         spec: { kind: 'timer', cron: '*/30 * * * * *' },
-        input: { feed: Ref.make(feed), restrictedMode: true },
+        input: { mailbox: Ref.make(mailbox), restrictedMode: true },
       }),
     );
     await sync(space);
@@ -92,7 +92,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
   });
 
   test('deployes inbox sync function (wait for trigger)', { timeout: 120_000 }, async ({ expect }) => {
-    const { space, feed, functionsServiceClient } = await setup();
+    const { space, mailbox, feed, functionsServiceClient } = await setup();
     await sync(space);
     const func = await deployFunction(space, functionsServiceClient, new URL('./sync.ts', import.meta.url).pathname);
     space.db.add(
@@ -100,7 +100,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
         enabled: true,
         function: Ref.make(func),
         spec: { kind: 'timer', cron: '*/30 * * * * *' },
-        input: { feed: Ref.make(feed), restrictedMode: true },
+        input: { mailbox: Ref.make(mailbox), restrictedMode: true },
       }),
     );
     await sync(space);
@@ -116,14 +116,14 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
   });
 
   test('deployes inbox sync function (wait for trigger)', { timeout: 0 }, async ({ expect }) => {
-    const { client: _client, space, feed, functionsServiceClient } = await setup();
+    const { client: _client, space, mailbox, feed, functionsServiceClient } = await setup();
     const func = await deployFunction(space, functionsServiceClient, new URL('./sync.ts', import.meta.url).pathname);
     space.db.add(
       Obj.make(Trigger.Trigger, {
         enabled: true,
         function: Ref.make(func),
         spec: { kind: 'timer', cron: '*/3 * * * * *' },
-        input: { feed: Ref.make(feed), restrictedMode: true },
+        input: { mailbox: Ref.make(mailbox), restrictedMode: true },
       }),
     );
     await sync(space);
@@ -140,7 +140,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
 const setup = async () => {
   const client = await new Client({
     config,
-    types: [Feed.Feed, Mailbox.Config, AccessToken.AccessToken, Function.Function, Trigger.Trigger],
+    types: [Feed.Feed, Mailbox.Mailbox, AccessToken.AccessToken, Function.Function, Trigger.Trigger],
   }).initialize();
   await client.halo.createIdentity();
 
@@ -148,7 +148,11 @@ const setup = async () => {
   await space.waitUntilReady();
   await space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED);
 
-  const feed = space.db.add(Mailbox.make({ name: 'test' }));
+  const mailbox = space.db.add(Mailbox.make({ name: 'test' }));
+  const feed = await mailbox.feed?.tryLoad();
+  if (!feed) {
+    throw new Error('Mailbox missing backing feed');
+  }
   space.db.add(
     Obj.make(AccessToken.AccessToken, {
       note: 'Email read access.',
@@ -158,7 +162,7 @@ const setup = async () => {
   );
 
   const functionsServiceClient = FunctionsServiceClient.fromClient(client);
-  return { client, space, feed, functionsServiceClient };
+  return { client, space, mailbox, feed, functionsServiceClient };
 };
 
 const sync = async (space: Space) => {

@@ -7,10 +7,11 @@ import * as Match from 'effect/Match';
 import React, { forwardRef, useCallback, useContext, useMemo, useRef } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { type Database, Filter, Obj, Order, Query, type QueryAST, Type } from '@dxos/echo';
+
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { SpaceOperation } from '@dxos/plugin-space/types';
@@ -37,7 +38,7 @@ export type TableContainerProps = SurfaceComponentProps<Table.Table>;
 
 // TODO(wittjosiah): Need to handle more complex queries by restricting add row.
 export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(
-  ({ role, subject: object }, forwardedRef) => {
+  ({ role, subject: object, attendableId }, forwardedRef) => {
     const registry = useContext(RegistryContext);
     const { invokePromise } = useOperationInvoker();
     const tableRef = useRef<TableController>(null);
@@ -56,14 +57,14 @@ export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(
     const { graph } = useAppGraph();
     const customActions = useMemo(() => {
       return Atom.make((get) => {
-        const actions = get(graph.actions(Obj.getDXN(object).toString()));
+        const actions = get(graph.actions(attendableId!));
         const nodes = actions.filter((action) => action.properties.disposition === 'toolbar');
         return {
           nodes,
           edges: nodes.map((node) => ({ source: 'root', target: node.id, relation: 'child' })),
         };
       });
-    }, [graph]);
+    }, [graph, attendableId]);
 
     const addRow = useAddRow({ db, schema });
 
@@ -103,7 +104,7 @@ export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(
     const handleRowAction = useCallback(
       (actionId: string, data: any) =>
         Match.value(actionId).pipe(
-          Match.when('open', () => invokePromise(LayoutOperation.Open, { subject: [Obj.getDXN(data).toString()] })),
+          Match.when('open', () => invokePromise(LayoutOperation.Open, { subject: [getObjectPathFromObject(data)] })),
           Match.orElseAbsurd,
         ),
       [invokePromise],
@@ -162,7 +163,7 @@ export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(
         <Panel.Root role={role} ref={forwardedRef}>
           <Panel.Toolbar asChild>
             <TableComponent.Toolbar
-              attendableId={Obj.getDXN(object).toString()}
+              attendableId={attendableId}
               customActions={customActions}
               viewDirty={model?.getViewDirty()}
               onAdd={handleInsertRow}
@@ -171,7 +172,7 @@ export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(
           </Panel.Toolbar>
           <Panel.Content asChild>
             <TableComponent.Main
-              key={Obj.getDXN(object).toString()}
+              key={attendableId}
               ref={tableRef}
               model={model}
               presentation={presentation}

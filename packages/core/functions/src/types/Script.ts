@@ -20,7 +20,7 @@ export const Script = Schema.Struct({
   source: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Script',
+    typename: 'org.dxos.type.script',
     version: '0.1.0',
   }),
   Annotation.LabelAnnotation.set(['name']),

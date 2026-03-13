@@ -13,7 +13,7 @@ import { osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 
-export const SPACE_RENAME_POPOVER = `${meta.id}/SpaceRenamePopover`;
+export const SPACE_RENAME_POPOVER = `${meta.id}.SpaceRenamePopover`;
 
 export const SpaceRenamePopover = ({ space }: { space: Space }) => {
   const { t } = useTranslation(meta.id);

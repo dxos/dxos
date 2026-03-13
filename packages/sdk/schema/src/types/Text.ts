@@ -13,7 +13,7 @@ export const Text = Schema.Struct({
   content: Schema.String,
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Text',
+    typename: 'org.dxos.type.text',
     version: '0.1.0',
   }),
   Annotation.SystemTypeAnnotation.set(true),

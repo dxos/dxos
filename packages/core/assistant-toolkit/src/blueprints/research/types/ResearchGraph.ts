@@ -18,7 +18,7 @@ export const ResearchGraph = Schema.Struct({
   queue: Ref.Ref(Queue),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/ResearchGraph',
+    typename: 'org.dxos.type.research-graph',
     version: '0.1.0',
   }),
   SystemTypeAnnotation.set(true),

@@ -110,7 +110,7 @@ export const Person = PersonSchema.pipe(
     }),
   ),
   Type.object({
-    typename: 'dxos.org/type/Person',
+    typename: 'org.dxos.type.person',
     version: '0.1.0',
   }),
   Schema.annotations({ title: 'Person' }),
@@ -126,7 +126,7 @@ export const make = (props: Partial<Obj.MakeProps<typeof Person>> = {}) => Obj.m
  */
 export const LegacyPerson = PersonSchema.pipe(
   Type.object({
-    typename: 'dxos.org/type/Person',
+    typename: 'org.dxos.type.person',
     version: '0.1.0',
   }),
   Schema.annotations({ title: 'Person' }),

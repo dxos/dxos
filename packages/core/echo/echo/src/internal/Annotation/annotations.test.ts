@@ -20,7 +20,7 @@ type TestObject = Schema.Schema.Type<typeof TestObject>;
 
 const TestEchoSchema = TestObject.pipe(
   EchoObjectSchema({
-    typename: 'dxos.org/type/Test',
+    typename: 'org.dxos.type.test',
     version: '0.1.0',
   }),
 );
@@ -30,10 +30,10 @@ type TestEchoSchema = Schema.Schema.Type<typeof TestEchoSchema>;
 describe('annotations', () => {
   describe('Typename', () => {
     test('should validate typename', ({ expect }) => {
-      // Valid.
-      expect(TypenameSchema.make('dxos.org/type/foo')).to.exist;
-      expect(TypenameSchema.make('dxos.org/type/foo-bar')).to.exist;
-      expect(TypenameSchema.make('dxos.org/type/foo_bar')).to.exist;
+      // Valid (reverse-DNS format).
+      expect(TypenameSchema.make('org.dxos.type.foo')).to.exist;
+      expect(TypenameSchema.make('org.dxos.type.foo-bar')).to.exist;
+      expect(TypenameSchema.make('org.dxos.type.foobar')).to.exist;
 
       // Invalid.
       expect(() => TypenameSchema.make('dxn:dxos.org')).to.throw();

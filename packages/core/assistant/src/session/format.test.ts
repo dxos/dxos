@@ -20,7 +20,7 @@ import { AssistantTestLayer } from '../testing';
 import { formatSystemPrompt } from './format';
 
 const organizationListFunction = defineFunction({
-  key: 'dxos.org/function/organization-list',
+  key: 'org.dxos.function.organization-list',
   name: 'Organization List',
   description: 'List organizations',
   inputSchema: Schema.Struct({}),

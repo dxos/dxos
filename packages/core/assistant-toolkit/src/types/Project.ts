@@ -64,7 +64,7 @@ export const Project = Schema.Struct({
   }),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Project',
+    typename: 'org.dxos.type.project',
     version: '0.1.0',
   }),
   Annotation.IconAnnotation.set({

@@ -67,7 +67,7 @@ export const Unknown: Type.Relation<Unknown, Obj.Any, Obj.Any> = Schema.Struct({
   // NOTE: The EchoRelationSchema annotation is required for Ref.Ref(Relation.Unknown) to work.
   //   The typename/version/source/target only satisfy ECHO schema machinery for reference targets.
   internal.EchoRelationSchema({
-    typename: 'dxos.org/schema/AnyRelation',
+    typename: 'org.dxos.schema.any-relation',
     version: '0.0.0',
     source: Obj.Unknown,
     target: Obj.Unknown,

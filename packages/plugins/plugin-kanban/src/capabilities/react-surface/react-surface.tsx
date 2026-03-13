@@ -27,14 +27,14 @@ export default Capability.makeModule(() =>
         component: ({ data, role }) => <KanbanContainer role={role} subject={data.subject} />,
       }),
       Surface.create({
-        id: `${meta.id}/object-settings`,
+        id: `${meta.id}.object-settings`,
         role: 'object-settings',
         position: 'hoist',
         filter: (data): data is { subject: Kanban.Kanban } => Obj.instanceOf(Kanban.Kanban, data.subject),
         component: ({ data }) => <KanbanViewEditor subject={data.subject} />,
       }),
       Surface.create({
-        id: `${meta.id}/create-initial-schema-form-[pivot-column]`,
+        id: `${meta.id}.create-initial-schema-form-[pivot-column]`,
         role: 'form-input',
         filter: (
           data,

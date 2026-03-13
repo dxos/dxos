@@ -21,7 +21,7 @@ import { AssistantTestLayer } from './testing';
 ObjectId.dangerouslyDisableRandomness();
 
 const readName = defineFunction({
-  key: 'dxos.org/function/read-name',
+  key: 'org.dxos.function.read-name',
   name: 'Read Name',
   description: 'Reads the name of an organization.',
   inputSchema: Schema.Struct({
@@ -35,7 +35,7 @@ const readName = defineFunction({
 });
 
 const blueprint = Blueprint.make({
-  key: 'dxos.org/blueprint/test',
+  key: 'org.dxos.blueprint.test',
   name: 'Test blueprint',
   tools: Blueprint.toolDefinitions({ functions: [readName] }),
 });

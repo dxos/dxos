@@ -17,7 +17,13 @@ import { useObject, useQuery } from '@dxos/react-client/echo';
 import { IconButton, Input, Message, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { QueryForm, type QueryFormProps } from '@dxos/react-ui-components';
 import { List } from '@dxos/react-ui-list';
-import { ProjectionModel, VIEW_FIELD_LIMIT, createEchoChangeCallback, getTypenameFromQuery } from '@dxos/schema';
+import {
+  ParentLabelAnnotation,
+  ProjectionModel,
+  VIEW_FIELD_LIMIT,
+  createEchoChangeCallback,
+  getTypenameFromQuery,
+} from '@dxos/schema';
 import { mx, osTranslations, subtleHover } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
@@ -124,7 +130,12 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
       if (mode === 'tag') {
         return Schema.Struct({
           ...base.fields,
-          target: Schema.optional(Ref.Ref(Feed.Feed).annotations({ title: 'Target Feed' })),
+          // TODO(wittjosiah): Replace Type.Feed with Dataset.Dataset when Ref.Ref supports unions.
+          target: Ref.Ref(Feed.Feed).pipe(
+            Schema.annotations({ title: 'Target Feed' }),
+            ParentLabelAnnotation.set(true),
+            Schema.optional,
+          ),
         }).pipe(Schema.mutable);
       }
 

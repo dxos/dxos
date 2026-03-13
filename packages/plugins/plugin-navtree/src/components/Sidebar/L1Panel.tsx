@@ -7,9 +7,11 @@ import * as Option from 'effect/Option';
 import React, { memo, useCallback, useMemo } from 'react';
 
 import { Node } from '@dxos/app-graph';
+import { isPinnedWorkspace } from '@dxos/app-toolkit';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Graph, useActionRunner, useConnections, useEdges } from '@dxos/plugin-graph';
 import { DensityProvider, IconButton, ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { useAttended } from '@dxos/react-ui-attention';
 import { Tree } from '@dxos/react-ui-list';
 import { Menu, type MenuItem } from '@dxos/react-ui-menu';
 import { Tabs } from '@dxos/react-ui-tabs';
@@ -137,10 +139,24 @@ const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'item' | 'path
   const { t } = useTranslation(meta.id);
   const { renderItemEnd: ItemEnd } = useNavTreeContext();
   const title = toLocalizedString(item.properties.label, t);
-  const backCapableWorkspace = item.id.startsWith('!');
+  const backCapableWorkspace = isPinnedWorkspace(item.id);
 
   const { primaryAction, groupedActions, menuActions, onAction } = useL1MenuActions({ item, path });
   useLoadDescendents(item);
+
+  // TODO(wittjosiah): Hack to only show containsAttended when attended item is within alternate tree (e.g. settings).
+  //  Since every object in the space is a descendant of the space node, we'd otherwise always show containsAttended.
+  const alternateTree = useAlternateTreeItem(item);
+  const attended = useAttended();
+  const alternateTreeOpen = useMemo(() => {
+    if (!alternateTree) {
+      return true;
+    }
+    const hasAlternateAttended = attended.some(
+      (attendedId) => attendedId === alternateTree.id || attendedId.startsWith(alternateTree.id + '/'),
+    );
+    return !hasAlternateAttended;
+  }, [alternateTree, attended]);
 
   return (
     <div className='flex w-full items-center border-b border-subdued-separator dx-app-drag dx-density-coarse pe-1'>
@@ -168,6 +184,7 @@ const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'item' | 'path
             label={toLocalizedString(primaryAction.properties?.label, t)}
             icon={primaryAction.properties?.icon ?? 'ph--placeholder--regular'}
             parent={item}
+            path={path}
             monolithic={Node.isAction(primaryAction)}
             menuActions={Node.isAction(primaryAction) ? [primaryAction] : groupedActions[primaryAction?.id ?? '']}
             menuType={primaryAction.properties?.menuType}
@@ -204,7 +221,7 @@ const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'item' | 'path
             <Menu.Content group={item} items={menuActions as MenuItem[]} />
           </Menu.Root>
         )}
-        {ItemEnd && <ItemEnd node={item} open />}
+        {ItemEnd && <ItemEnd node={item} open={alternateTreeOpen} />}
       </div>
     </div>
   );
@@ -269,10 +286,10 @@ const useL1MenuActions = ({ item, path }: Pick<L1PanelProps, 'item' | 'path'>) =
         }
         setAlternateTree?.(alternatePath, !isAlternate);
       } else {
-        void runAction(action, params);
+        void runAction(action, { ...params, path });
       }
     },
-    [settingsActionId, setAlternateTree, alternatePath, isAlternate, runAction, graph, alternateTree],
+    [settingsActionId, setAlternateTree, alternatePath, isAlternate, runAction, graph, alternateTree, path],
   );
 
   return { primaryAction, groupedActions, menuActions, onAction };

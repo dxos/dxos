@@ -8,7 +8,7 @@ import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-const BLUEPRINT_KEY = 'dxos.org/blueprint/browser';
+const BLUEPRINT_KEY = 'org.dxos.blueprint.browser';
 
 const instructions = trim`
   You are able to connect and use a virtual browser with persistent session.

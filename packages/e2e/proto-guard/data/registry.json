@@ -5,5 +5,12 @@
     "dataRoot": "snapshots/2026-03-04/snapshot",
     "jsonDataPath": "snapshots/2026-03-04/expected.json",
     "timestamp": "2026-03-04T13:06:51.761Z"
+  },
+  {
+    "name": "2026-03-12",
+    "version": 2,
+    "dataRoot": "snapshots/2026-03-12/snapshot",
+    "jsonDataPath": "snapshots/2026-03-12/expected.json",
+    "timestamp": "2026-03-13T11:42:22.202Z"
   }
 ]

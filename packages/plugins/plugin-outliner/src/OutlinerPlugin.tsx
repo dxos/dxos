@@ -4,16 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/operation';
-import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { type CreateObject } from '@dxos/plugin-space/types';
 
 import { AppGraphBuilder, OperationResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { Journal, Outline, OutlinerOperation } from './types';
+import { Journal, Outline } from './types';
 
 export const OutlinerPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
@@ -43,15 +41,5 @@ export const OutlinerPlugin = Plugin.define(meta).pipe(
   }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
-  Plugin.addModule({
-    id: 'on-space-created',
-    activatesOn: SpaceEvents.SpaceCreated,
-    activate: () =>
-      Effect.succeed(
-        Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) =>
-          Operation.invoke(OutlinerOperation.OnCreateSpace, params),
-        ),
-      ),
-  }),
   Plugin.make,
 );

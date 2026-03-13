@@ -21,7 +21,7 @@ export namespace TestSchema {
     content: Schema.String,
   }).pipe(
     Type.object({
-      typename: 'dxos.org/example/Document',
+      typename: 'org.dxos.example.document',
       version: '0.1.0',
     }),
   );
@@ -49,7 +49,7 @@ export namespace TestSchema {
 
   export const Organization = OrganizationSchema.pipe(
     Type.object({
-      typename: 'example.com/type/Organization',
+      typename: 'com.example.type.organization',
       version: '0.1.0',
     }),
   );
@@ -82,7 +82,7 @@ export namespace TestSchema {
 
   export const Person = PersonSchema.pipe(
     Type.object({
-      typename: 'example.com/type/Person',
+      typename: 'com.example.type.person',
       version: '0.1.0',
     }),
   );
@@ -105,7 +105,7 @@ export namespace TestSchema {
 
   export const Project = ProjectSchema.pipe(
     Type.object({
-      typename: 'example.com/type/Project',
+      typename: 'com.example.type.project',
       version: '0.1.0',
     }),
   );
@@ -125,7 +125,7 @@ export namespace TestSchema {
 
   export const Message = MessageSchema.pipe(
     Type.object({
-      typename: 'example.com/type/Message',
+      typename: 'com.example.type.message',
       version: '0.1.0',
     }),
   );

@@ -114,7 +114,7 @@ export default Capability.makeModule(
     subscriptions.add(attention.subscribeCurrent(updateCurrentFile));
 
     const savedRootHandle = yield* Effect.tryPromise(() =>
-      localforage.getItem<FileSystemDirectoryHandle>(`${meta.id}/rootHandle`),
+      localforage.getItem<FileSystemDirectoryHandle>(`${meta.id}.rootHandle`),
     );
     if (savedRootHandle) {
       registry.update(stateAtom, (current) => ({ ...current, rootHandle: savedRootHandle }));
@@ -125,7 +125,7 @@ export default Capability.makeModule(
       registry.subscribe(stateAtom, () => {
         const rootHandle = getState().rootHandle;
         if (rootHandle) {
-          void localforage.setItem(`${meta.id}/rootHandle`, rootHandle);
+          void localforage.setItem(`${meta.id}.rootHandle`, rootHandle);
         }
       }),
     );

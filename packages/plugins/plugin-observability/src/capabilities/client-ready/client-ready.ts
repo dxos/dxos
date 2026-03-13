@@ -31,7 +31,7 @@ export default Capability.makeModule(
       const state = registry.get(stateAtom);
       if (!state.notified && notify) {
         await invokePromise(LayoutOperation.AddToast, {
-          id: `${meta.id}/notice`,
+          id: `${meta.id}.notice`,
           title: ['observability toast label', { ns: meta.id }],
           description: ['observability toast description', { ns: meta.id }],
           duration: Infinity,

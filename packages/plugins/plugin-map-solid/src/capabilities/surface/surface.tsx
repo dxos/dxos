@@ -17,7 +17,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.createWeb({
-        id: `${meta.id}/surface/map`,
+        id: `${meta.id}.surface.map`,
         role: ['article', 'section'],
         tagName: 'dx-map-surface',
         position: 'hoist',

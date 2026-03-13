@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
 import { Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Operation, OperationResolver } from '@dxos/operation';
@@ -42,9 +42,7 @@ export default Capability.makeModule(
           yield* Operation.invoke(SpaceOperation.AddObject, { target: db, object, hidden: true });
 
           if (show) {
-            yield* Operation.invoke(LayoutOperation.Open, {
-              subject: [Obj.getDXN(object).toString()],
-            });
+            yield* Operation.invoke(LayoutOperation.Open, { subject: [getObjectPathFromObject(object)] });
           }
         }),
       }),

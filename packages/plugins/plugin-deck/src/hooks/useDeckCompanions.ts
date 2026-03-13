@@ -8,12 +8,7 @@ import { useConnections } from '@dxos/plugin-graph';
 import { type Label } from '@dxos/ui-types';
 import { type Position, byPosition } from '@dxos/util';
 
-import { ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE } from '../types';
-
-export const getCompanionId = (id: string) => {
-  const [_, companionId] = id.split(ATTENDABLE_PATH_SEPARATOR);
-  return companionId ?? 'never';
-};
+import { DECK_COMPANION_TYPE } from '../types';
 
 export type DeckCompanion = NodeType.Node<
   any,

@@ -6,7 +6,7 @@ import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
 
 export const meta: Plugin.Meta = {
-  id: 'dxos.org/plugin/attention',
+  id: 'org.dxos.plugin.attention',
   name: 'Attention',
   description: trim`
     Track and manage focused attention on objects across your workspace.

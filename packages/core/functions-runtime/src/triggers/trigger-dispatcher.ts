@@ -654,4 +654,4 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
 /**
  * Key for the current queue cursor for queue triggers.
  */
-export const KEY_QUEUE_CURSOR = 'dxos.org/key/local-trigger-dispatcher/queue-cursor';
+export const KEY_QUEUE_CURSOR = 'org.dxos.key.local-trigger-dispatcher.queue-cursor';

@@ -107,9 +107,19 @@ const RawTreeItem = <T extends { id: string } = any>({
   } = useTree();
   const path = useMemo(() => [...pathProp, item.id], [pathProp, item.id]);
 
-  const { id, parentOf, label, className, headingClassName, icon, iconHue, disabled, testId } = useAtomValue(
-    itemPropsAtom(path),
-  );
+  const {
+    id,
+    parentOf,
+    draggable: itemDraggable,
+    droppable: itemDroppable,
+    label,
+    className,
+    headingClassName,
+    icon,
+    iconHue,
+    disabled,
+    testId,
+  } = useAtomValue(itemPropsAtom(path));
   const childIds = useAtomValue(childIdsAtom(item.id));
   const open = useAtomValue(itemOpenAtom(path));
   const current = useAtomValue(itemCurrentAtom(path));
@@ -127,6 +137,9 @@ const RawTreeItem = <T extends { id: string } = any>({
     }
   }, []);
 
+  const isItemDraggable = draggableProp && itemDraggable !== false;
+  const isItemDroppable = itemDroppable !== false;
+
   useEffect(() => {
     if (!draggableProp) {
       return;
@@ -134,10 +147,9 @@ const RawTreeItem = <T extends { id: string } = any>({
 
     invariant(buttonRef.current);
 
-    // https://atlassian.design/components/pragmatic-drag-and-drop/core-package/adapters/element/about
-    return combine(
+    const makeDraggable = () =>
       draggable({
-        element: buttonRef.current,
+        element: buttonRef.current!,
         getInitialData: () => data,
         onDragStart: () => {
           setState('dragging');
@@ -152,62 +164,72 @@ const RawTreeItem = <T extends { id: string } = any>({
             onOpenChange?.({ item, path, open: true });
           }
         },
-      }),
-      // https://github.com/atlassian/pragmatic-drag-and-drop/blob/main/packages/hitbox/constellation/index/about.mdx
-      dropTargetForElements({
-        element: buttonRef.current,
-        getData: ({ input, element }) => {
-          return attachInstruction(data, {
-            input,
-            element,
-            indentPerLevel: DEFAULT_INDENTATION,
-            currentLevel: level,
-            mode,
-            block: isBranch ? [] : ['make-child'],
-          });
-        },
-        canDrop: ({ source }) => {
-          const _canDrop = canDrop ?? (() => true);
-          return source.element !== buttonRef.current && _canDrop({ source: source.data as TreeData, target: data });
-        },
-        getIsSticky: () => true,
-        onDrag: ({ self, source }) => {
-          const desired = extractInstruction(self.data);
-          const block =
-            desired && blockInstruction?.({ instruction: desired, source: source.data as TreeData, target: data });
-          const instruction: Instruction | null =
-            block && desired.type !== 'instruction-blocked' ? { type: 'instruction-blocked', desired } : desired;
+      });
 
-          if (source.data.id !== id) {
-            if (instruction?.type === 'make-child' && isBranch && !open && !cancelExpandRef.current) {
-              cancelExpandRef.current = setTimeout(() => {
-                onOpenChange?.({ item, path, open: true });
-              }, 500);
-            }
+    if (!isItemDroppable) {
+      return isItemDraggable ? makeDraggable() : undefined;
+    }
 
-            if (instruction?.type !== 'make-child') {
-              cancelExpand();
-            }
+    const dropTarget = dropTargetForElements({
+      element: buttonRef.current,
+      getData: ({ input, element }) => {
+        return attachInstruction(data, {
+          input,
+          element,
+          indentPerLevel: DEFAULT_INDENTATION,
+          currentLevel: level,
+          mode,
+          block: isBranch ? [] : ['make-child'],
+        });
+      },
+      canDrop: ({ source }) => {
+        const _canDrop = canDrop ?? (() => true);
+        return source.element !== buttonRef.current && _canDrop({ source: source.data as TreeData, target: data });
+      },
+      getIsSticky: () => true,
+      onDrag: ({ self, source }) => {
+        const desired = extractInstruction(self.data);
+        const block =
+          desired && blockInstruction?.({ instruction: desired, source: source.data as TreeData, target: data });
+        const instruction: Instruction | null =
+          block && desired.type !== 'instruction-blocked' ? { type: 'instruction-blocked', desired } : desired;
 
-            setInstruction(instruction);
-          } else if (instruction?.type === 'reparent') {
-            // TODO(wittjosiah): This is not occurring in the current implementation.
-            setInstruction(instruction);
-          } else {
-            setInstruction(null);
+        if (source.data.id !== id) {
+          if (instruction?.type === 'make-child' && isBranch && !open && !cancelExpandRef.current) {
+            cancelExpandRef.current = setTimeout(() => {
+              onOpenChange?.({ item, path, open: true });
+            }, 500);
           }
-        },
-        onDragLeave: () => {
-          cancelExpand();
+
+          if (instruction?.type !== 'make-child') {
+            cancelExpand();
+          }
+
+          setInstruction(instruction);
+        } else if (instruction?.type === 'reparent') {
+          // TODO(wittjosiah): This is not occurring in the current implementation.
+          setInstruction(instruction);
+        } else {
           setInstruction(null);
-        },
-        onDrop: () => {
-          cancelExpand();
-          setInstruction(null);
-        },
-      }),
-    );
-  }, [draggableProp, item, id, mode, path, open, blockInstruction, canDrop]);
+        }
+      },
+      onDragLeave: () => {
+        cancelExpand();
+        setInstruction(null);
+      },
+      onDrop: () => {
+        cancelExpand();
+        setInstruction(null);
+      },
+    });
+
+    if (!isItemDraggable) {
+      return dropTarget;
+    }
+
+    // https://atlassian.design/components/pragmatic-drag-and-drop/core-package/adapters/element/about
+    return combine(makeDraggable(), dropTarget);
+  }, [draggableProp, isItemDraggable, isItemDroppable, item, id, mode, path, open, blockInstruction, canDrop]);
 
   // Cancel expand on unmount.
   useEffect(() => () => cancelExpand(), [cancelExpand]);

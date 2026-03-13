@@ -30,7 +30,7 @@ describe('AiContextBinder', () => {
 
     const TestSchema = Schema.Struct({}).pipe(
       Type.object({
-        typename: 'dxos.org/type/Example',
+        typename: 'org.dxos.type.example',
         version: '0.1.0',
       }),
     );

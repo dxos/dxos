@@ -140,7 +140,7 @@ const TriggerSchema = Schema.Struct({
   input: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Trigger',
+    typename: 'org.dxos.type.trigger',
     version: '0.1.0',
   }),
   SystemTypeAnnotation.set(true),

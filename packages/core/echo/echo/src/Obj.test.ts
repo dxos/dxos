@@ -46,8 +46,8 @@ describe('Obj', () => {
       expect(Obj.getDXN(snapshot)).toBeDefined();
 
       // getTypename - works with both.
-      expect(Obj.getTypename(obj)).toBe('example.com/type/Person');
-      expect(Obj.getTypename(snapshot)).toBe('example.com/type/Person');
+      expect(Obj.getTypename(obj)).toBe('com.example.type.person');
+      expect(Obj.getTypename(snapshot)).toBe('com.example.type.person');
 
       // getMeta - works with both.
       expect(Obj.getMeta(obj)).toBeDefined();

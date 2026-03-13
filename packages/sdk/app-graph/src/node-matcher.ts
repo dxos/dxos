@@ -69,7 +69,7 @@ export const whenId =
  * ```ts
  * GraphBuilder.createExtension({
  *   id: 'space-settings-extension',
- *   match: NodeMatcher.whenNodeType('dxos.org/plugin/space/settings'),
+ *   match: NodeMatcher.whenNodeType('org.dxos.plugin.space.settings'),
  *   connector: (node) => Effect.succeed([...]),
  * });
  * ```
@@ -129,7 +129,7 @@ export const whenEchoType =
  *   connector: (object) => {
  *     // `object` is typed as Obj.Unknown
  *     const id = Obj.getDXN(object).toString();
- *     return Effect.succeed([{ id: `${id}/settings`, ... }]);
+ *     return Effect.succeed([{ id: `${id}.settings`, ... }]);
  *   },
  * });
  * ```

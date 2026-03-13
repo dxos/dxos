@@ -51,7 +51,7 @@ export const Function = Schema.Struct({
   binding: Schema.optional(Schema.String),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Function',
+    typename: 'org.dxos.type.function',
     version: '0.1.0',
   }),
   Annotation.LabelAnnotation.set(['name']),

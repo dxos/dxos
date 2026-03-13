@@ -438,7 +438,7 @@ const testExecutionGraph = [
         toolCallId: 'toolu_01Diussd9i7CVjeaq8hc1AbU',
         name: 'dxos_org_function_research',
         result:
-          '{"note":"The research run in test-mode and was mocked. Proceed as usual. We reference John Doe to test reference: dxn:echo:BIPW3L5QLSIYF4EZTKNL3S4O7PKMVRXGP:01K616X0C5ZK6NMRDSAHX1VD7T","objects":[{"id":"01K616X0C5ZK6NMRDSAHX1VD7T","@type":"dxn:type:dxos.org/type/Person:0.1.0","@dxn":"dxn:echo:BIPW3L5QLSIYF4EZTKNL3S4O7PKMVRXGP:01K616X0C5ZK6NMRDSAHX1VD7T","@meta":{"keys":[]},"emails":[{"value":"john.doe@example.com"}],"phoneNumbers":[{"value":"123-456-7890"}],"preferredName":"John Doe"}]}',
+          '{"note":"The research run in test-mode and was mocked. Proceed as usual. We reference John Doe to test reference: dxn:echo:BIPW3L5QLSIYF4EZTKNL3S4O7PKMVRXGP:01K616X0C5ZK6NMRDSAHX1VD7T","objects":[{"id":"01K616X0C5ZK6NMRDSAHX1VD7T","@type":"dxn:type:org.dxos.type.person:0.1.0","@dxn":"dxn:echo:BIPW3L5QLSIYF4EZTKNL3S4O7PKMVRXGP:01K616X0C5ZK6NMRDSAHX1VD7T","@meta":{"keys":[]},"emails":[{"value":"john.doe@example.com"}],"phoneNumbers":[{"value":"123-456-7890"}],"preferredName":"John Doe"}]}',
         providerExecuted: false,
       },
     ],

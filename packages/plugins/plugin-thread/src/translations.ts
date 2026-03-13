@@ -17,6 +17,7 @@ export const translations = [
         'typename label_one': 'Channel',
         'typename label_other': 'Channels',
         'object name placeholder': 'New channel',
+        'add object label': 'Add channel',
         'rename object label': 'Rename channel',
         'delete object label': 'Delete channel',
         'object deleted label': 'Channel deleted',

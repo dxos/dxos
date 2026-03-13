@@ -20,5 +20,5 @@ export namespace HelpCapabilities {
 
   export type State = Schema.Schema.Type<typeof StateSchema>;
 
-  export const State = Capability.make<Atom.Writable<State>>(`${meta.id}/capability/state`);
+  export const State = Capability.make<Atom.Writable<State>>(`${meta.id}.capability.state`);
 }

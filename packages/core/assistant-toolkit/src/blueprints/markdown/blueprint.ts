@@ -10,7 +10,7 @@ import { trim } from '@dxos/util';
 
 import { MarkdownFunctions } from './functions';
 
-const BLUEPRINT_KEY = 'dxos.org/blueprint/markdown';
+const BLUEPRINT_KEY = 'org.dxos.blueprint.markdown';
 
 const instructions = trim`
   You read, write & create markdown documents.

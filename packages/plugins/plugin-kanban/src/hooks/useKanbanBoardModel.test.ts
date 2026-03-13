@@ -38,7 +38,7 @@ const KanbanTaskSchema = Schema.Struct({
   ),
 }).pipe(
   Type.object({
-    typename: 'example.com/type/KanbanTask',
+    typename: 'com.example.type.kanban-task',
     version: '0.1.0',
   }),
 );

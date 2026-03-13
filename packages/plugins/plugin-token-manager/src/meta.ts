@@ -6,7 +6,7 @@ import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
 
 export const meta: Plugin.Meta = {
-  id: 'dxos.org/plugin/token-manager',
+  id: 'org.dxos.plugin.token-manager',
   name: 'Tokens',
   description: trim`
     Secure credential management for API keys and authentication tokens.

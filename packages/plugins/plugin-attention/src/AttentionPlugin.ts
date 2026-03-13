@@ -54,9 +54,9 @@ const setupDevtools = (attention: AttentionManager) => {
     },
     get currentSpace() {
       for (const id of attention.getCurrent()) {
-        const [spaceId, objectId] = id.split(':');
-        if (spaceId && objectId && spaceId.length === 33) {
-          return spaceId;
+        const segments = id.split('/');
+        if (segments.length > 1 && segments[1].length === 33) {
+          return segments[1];
         }
       }
     },

@@ -12,7 +12,7 @@ import { Filter, Obj, Query, Relation } from '@dxos/echo';
 import { Ref, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
-import { useAttended } from '@dxos/react-ui-attention';
+import { getParentId, useAttention } from '@dxos/react-ui-attention';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { AnchoredTo, Thread } from '@dxos/types';
 
@@ -22,11 +22,12 @@ import { ThreadCapabilities, ThreadOperation, type ViewState } from '../../types
 
 const initialViewState: ViewState = { showResolvedThreads: false };
 
-export const ThreadCompanion = ({ subject }: { subject: any }) => {
+export const ThreadCompanion = ({ attendableId, subject }: { attendableId?: string; subject: any }) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const identity = useIdentity();
   const subjectId = Obj.getDXN(subject).toString();
+  const parentId = attendableId ? getParentId(attendableId) : undefined;
   const registry = useCapability(Capabilities.AtomRegistry);
 
   const stateAtom = useCapability(ThreadCapabilities.State);
@@ -68,7 +69,8 @@ export const ThreadCompanion = ({ subject }: { subject: any }) => {
     .filter((anchor) => Obj.instanceOf(Thread.Thread, Relation.getSource(anchor)))
     .concat(drafts ?? []);
 
-  const attended = useAttended();
+  const { hasAttention, isAncestor, isRelated } = useAttention(parentId);
+  const isAttended = hasAttention || isAncestor || isRelated;
 
   const handleAttend = useCallback(
     (anchor: AnchoredTo.AnchoredTo) => {
@@ -82,13 +84,13 @@ export const ThreadCompanion = ({ subject }: { subject: any }) => {
         //  The layout doesn't know about threads and this working depends on other plugins conditionally handling it.
         //  This may be overloading this intent or highjacking its intended purpose.
         void invokePromise(LayoutOperation.ScrollIntoView, {
-          subject: Obj.getDXN(subject).toString(),
+          subject: parentId,
           cursor: anchor.anchor,
           ref: threadId,
         });
       }
     },
-    [state.current, invokePromise, subject, registry, stateAtom],
+    [state.current, invokePromise, registry, stateAtom, parentId],
   );
 
   const handleComment = useCallback(
@@ -152,7 +154,7 @@ export const ThreadCompanion = ({ subject }: { subject: any }) => {
   const comments = (
     <CommentsPanel
       anchors={anchors}
-      currentId={attended.includes(subjectId) ? state.current : undefined}
+      currentId={isAttended ? state.current : undefined}
       showResolvedThreads={showResolvedThreads}
       onAttend={handleAttend}
       onComment={handleComment}

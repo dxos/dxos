@@ -86,7 +86,7 @@ export const Queue: Schema.Schema<Queue> = Schema.declare(isQueue, {
   [TypeAnnotationId]: {
     // TODO(dmaretskyi): Perhaps queue should be its own entity kind.
     kind: EntityKind.Object,
-    typename: 'dxos.org/type/Queue',
+    typename: 'org.dxos.type.queue',
     version: '0.1.0',
   } satisfies TypeAnnotation,
 });

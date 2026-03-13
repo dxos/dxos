@@ -15,17 +15,17 @@ export const RootId = 'root';
 /**
  * Root node type.
  */
-export const RootType = 'dxos.org/type/GraphRoot';
+export const RootType = 'org.dxos.type.graph-root';
 
 /**
  * Action node type.
  */
-export const ActionType = 'dxos.org/type/GraphAction';
+export const ActionType = 'org.dxos.type.graph-action';
 
 /**
  * Action group node type.
  */
-export const ActionGroupType = 'dxos.org/type/GraphActionGroup';
+export const ActionGroupType = 'org.dxos.type.graph-action-group';
 
 /**
  * Represents a node in the graph.
@@ -106,6 +106,9 @@ export type NodeArg<TData, TProperties extends Record<string, any> = Record<stri
 export type InvokeProps = {
   /** Node the invoked action is connected to. */
   parent?: Node;
+
+  /** Path from root to the node in the current tree context. */
+  path?: string[];
 
   caller?: string;
 };

@@ -11,9 +11,9 @@ import { SelectionSchema } from '@dxos/react-ui-attention';
 import { meta } from '../meta';
 
 export namespace AttentionAction {
-  const ATTENTION_ACTION = `${meta.id}/action`;
+  const ATTENTION_ACTION = `${meta.id}.action`;
 
-  export class Select extends Schema.TaggedClass<Select>()(`${ATTENTION_ACTION}/select`, {
+  export class Select extends Schema.TaggedClass<Select>()(`${ATTENTION_ACTION}.select`, {
     input: Schema.Struct({
       contextId: Schema.String,
       selection: SelectionSchema,
@@ -25,7 +25,7 @@ export namespace AttentionAction {
 export namespace AttentionOperation {
   export const Select = Operation.make({
     meta: {
-      key: `${meta.id}/operation/select`,
+      key: `${meta.id}.operation.select`,
       name: 'Select',
       description: 'Select items in an attention context.',
     },

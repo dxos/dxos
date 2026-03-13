@@ -7,9 +7,9 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
-import { useLayout } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { getSpace, parseId, useSpace } from '@dxos/react-client/echo';
+import { useActiveSpace } from '@dxos/plugin-space';
+import { getSpace } from '@dxos/react-client/echo';
 
 import { AutomationSettings, FunctionsContainer } from '../../containers';
 import { meta } from '../../meta';
@@ -18,13 +18,11 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}/space-settings-functions`,
+        id: `${meta.id}.space-settings-functions`,
         role: 'article',
-        filter: (data): data is { subject: string } => data.subject === `${meta.id}/space-settings-functions`,
+        filter: (data): data is { subject: string } => data.subject === `${meta.id}.space-settings-functions`,
         component: () => {
-          const layout = useLayout();
-          const { spaceId } = parseId(layout.workspace);
-          const space = useSpace(spaceId);
+          const space = useActiveSpace();
           if (!space) {
             return null;
           }
@@ -33,13 +31,11 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}/space-settings-automation`,
+        id: `${meta.id}.space-settings-automation`,
         role: 'article',
-        filter: (data): data is { subject: string } => data.subject === `${meta.id}/space-settings-automation`,
+        filter: (data): data is { subject: string } => data.subject === `${meta.id}.space-settings-automation`,
         component: () => {
-          const layout = useLayout();
-          const { spaceId } = parseId(layout.workspace);
-          const space = useSpace(spaceId);
+          const space = useActiveSpace();
           if (!space) {
             return null;
           }
@@ -48,7 +44,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}/companion/automation`,
+        id: `${meta.id}.companion.automation`,
         role: 'article',
         filter: (data): data is { companionTo: Obj.Unknown; subject: 'automation' } =>
           Obj.isObject(data.companionTo) && data.subject === 'automation',

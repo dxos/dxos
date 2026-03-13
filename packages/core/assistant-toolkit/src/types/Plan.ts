@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, Obj, Ref, Type } from '@dxos/echo';
 
 import * as Chat from './Chat';
 
@@ -46,9 +46,10 @@ export const Plan = Schema.Struct({
   tasks: Schema.Array(Task),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Plan',
+    typename: 'org.dxos.type.plan',
     version: '0.1.0',
   }),
+  Annotation.SystemTypeAnnotation.set(true),
 );
 export interface Plan extends Schema.Schema.Type<typeof Plan> {}
 

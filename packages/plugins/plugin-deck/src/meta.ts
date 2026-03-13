@@ -6,7 +6,7 @@ import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
 
 export const meta: Plugin.Meta = {
-  id: 'dxos.org/plugin/deck',
+  id: 'org.dxos.plugin.deck',
   name: 'Layout',
   description: trim`
     Flexible layout system for arranging workspace views in tabs, splits, and panels.

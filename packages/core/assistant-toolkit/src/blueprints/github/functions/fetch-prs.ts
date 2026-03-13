@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { CredentialsService, defineFunction, withAuthorization } from '@dxos/functions';
 
 export default defineFunction({
-  key: 'dxos.org/function/github/fetch-prs',
+  key: 'org.dxos.function.github.fetch-prs',
   name: 'Fetch PRs',
   description: 'Fetches PRs from GitHub.',
   inputSchema: Schema.Struct({
