@@ -479,7 +479,7 @@ export class DataSpaceManager extends Resource {
    */
   async waitUntilSpaceReady(ctx: Context, spaceKey: PublicKey): Promise<void> {
     await cancelWithContext(
-      this._ctx,
+      ctx,
       this.updated.waitForCondition(() => {
         const space = this._spaces.get(spaceKey);
         return !!space && space.state === SpaceState.SPACE_READY;
@@ -689,7 +689,7 @@ export class DataSpaceManager extends Resource {
       closedSessions,
     });
     // Handle the case when there was a removed peer online, we can now establish a connection with them
-    spaceProtocol.updateTopology(this._ctx);
+    spaceProtocol.updateTopology(ctx);
   }
 
   private _handleNewPeerConnected(ctx: Context, space: Space, peerState: PeerState): void {

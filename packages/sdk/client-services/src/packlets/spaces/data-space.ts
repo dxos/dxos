@@ -450,7 +450,7 @@ export class DataSpace {
       try {
         log('will notarize credentials for feed admission', { count: credentials.length });
         // Never times out
-        await this.notarizationPlugin.notarize({ ctx: this._ctx, credentials, timeout: 0 });
+        await this.notarizationPlugin.notarize({ ctx, credentials, timeout: 0 });
 
         log('credentials notarized');
       } catch (err) {
