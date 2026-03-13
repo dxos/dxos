@@ -429,7 +429,9 @@ describe('GraphBuilder', () => {
             Atom.make((get) =>
               Function.pipe(
                 get(node),
-                Option.flatMap((node) => (node.id === qualifiedId('root', EXAMPLE_ID) ? Option.some(get(sub)) : Option.none())),
+                Option.flatMap((node) =>
+                  node.id === qualifiedId('root', EXAMPLE_ID) ? Option.some(get(sub)) : Option.none(),
+                ),
                 Option.map((sub) => [{ id: exampleId(2), type: EXAMPLE_TYPE, data: sub }]),
                 Option.getOrElse(() => []),
               ),
@@ -441,7 +443,9 @@ describe('GraphBuilder', () => {
             Atom.make((get) =>
               Function.pipe(
                 get(node),
-                Option.flatMap((node) => (node.id === qualifiedId('root', EXAMPLE_ID) ? Option.some(node.data) : Option.none())),
+                Option.flatMap((node) =>
+                  node.id === qualifiedId('root', EXAMPLE_ID) ? Option.some(node.data) : Option.none(),
+                ),
                 Option.map((data) => [{ id: exampleId(3), type: EXAMPLE_TYPE, data }]),
                 Option.getOrElse(() => []),
               ),
@@ -1165,7 +1169,6 @@ describe('GraphBuilder', () => {
       expect(deepNode).to.not.be.null;
       expect(deepNode?.id).to.equal('root/parent-node/inline-child/deep-child');
     });
-
 
     test('constant connector produces distinct nodes under different parents', async () => {
       const registry = Registry.make();

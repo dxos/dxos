@@ -23,7 +23,13 @@ import { StackItem, railGridHorizontal } from '@dxos/react-ui-stack';
 import { mainIntrinsicSize, mx } from '@dxos/ui-theme';
 
 import { useCompanions, useDeckState, useMainSize, useSelectedCompanion } from '../../hooks';
-import { DeckOperation, type DeckSettingsProps, type LayoutMode, PLANK_COMPANION_TYPE, type ResolvedPart } from '../../types';
+import {
+  DeckOperation,
+  type DeckSettingsProps,
+  type LayoutMode,
+  PLANK_COMPANION_TYPE,
+  type ResolvedPart,
+} from '../../types';
 
 import { PlankError, PlankErrorFallback } from './PlankError';
 import { PlankHeading } from './PlankHeading';

@@ -61,8 +61,7 @@ export const nodeArgsUnchanged = (prev: Node.NodeArg<any>[], next: Node.NodeArg<
 /**
  * Build a qualified node ID by joining a parent path with a local segment.
  */
-export const qualifyId = (parentId: string, segmentId: string): string =>
-  `${parentId}${Separators.path}${segmentId}`;
+export const qualifyId = (parentId: string, segmentId: string): string => `${parentId}${Separators.path}${segmentId}`;
 
 /**
  * Validate that a segment ID does not contain the path separator.

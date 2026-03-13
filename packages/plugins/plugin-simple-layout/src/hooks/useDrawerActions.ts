@@ -84,7 +84,9 @@ export const useDrawerActions = (consumerName: string): DrawerActions => {
             iconOnly: true,
           },
           data: () =>
-            Effect.sync(() => updateState((state) => ({ ...state, drawerState: 'closed', companionVariant: undefined }))),
+            Effect.sync(() =>
+              updateState((state) => ({ ...state, drawerState: 'closed', companionVariant: undefined })),
+            ),
         };
         nodes.push(closeAction);
         edges.push({ source: 'root', target: closeAction.id, relation: 'child' });

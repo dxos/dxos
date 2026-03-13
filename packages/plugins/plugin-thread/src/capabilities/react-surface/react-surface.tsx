@@ -67,9 +67,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.comments`,
         role: 'article',
-        filter: (
-          data,
-        ): data is { attendableId?: string; companionTo: { threads: Ref.Ref<Thread.Thread>[] } } =>
+        filter: (data): data is { attendableId?: string; companionTo: { threads: Ref.Ref<Thread.Thread>[] } } =>
           data.subject === 'comments' && Obj.isObject(data.companionTo),
         // TODO(wittjosiah): This isn't scrolling properly in a plank.
         component: ({ data }) => <ThreadCompanion attendableId={data.attendableId} subject={data.companionTo} />,

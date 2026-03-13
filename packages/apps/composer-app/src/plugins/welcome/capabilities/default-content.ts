@@ -49,9 +49,7 @@ export default Capability.makeModule(
     });
     space.db.add(readme);
 
-    const gettingStarted = space.db.add(
-      Obj.make(Collection.Collection, { name: 'Getting Started', objects: [] }),
-    );
+    const gettingStarted = space.db.add(Obj.make(Collection.Collection, { name: 'Getting Started', objects: [] }));
     Obj.change(gettingStarted, (collection) => {
       collection.objects.push(Ref.make(readme));
     });

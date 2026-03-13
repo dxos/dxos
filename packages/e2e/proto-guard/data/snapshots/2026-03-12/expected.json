@@ -38,11 +38,7 @@
         "keys": []
       },
       "@dxn": "dxn:echo:BNNICGF5DRWB2N2A37HAVKFNH4QUN4Y74:01KKKG2EJQ1RQBD4C4F1BGER84",
-      "array": [
-        "one",
-        "two",
-        "three"
-      ],
+      "array": ["one", "two", "three"],
       "string": "hello world!",
       "value": 100
     },
@@ -117,16 +113,8 @@
             }
           }
         },
-        "required": [
-          "testField",
-          "id"
-        ],
-        "propertyOrder": [
-          "testField",
-          "id",
-          "name",
-          "todo"
-        ],
+        "required": ["testField", "id"],
+        "propertyOrder": ["testField", "id", "name", "todo"],
         "additionalProperties": false,
         "annotations": {
           "schemaId": "dxn:echo:@:01KKKG2FHWCMTR0BY00GJSVT1X"

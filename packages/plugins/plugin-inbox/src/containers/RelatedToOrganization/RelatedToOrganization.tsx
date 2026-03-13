@@ -48,7 +48,10 @@ export const RelatedToOrganization = ({ subject: organization }: SurfaceComponen
         if (view) {
           const id = getObjectPathFromObject(view);
           yield* Effect.promise(() =>
-            invokePromise(LayoutOperation.Open, { subject: [id], workspace: db ? getSpacePath(db.spaceId) : undefined }),
+            invokePromise(LayoutOperation.Open, {
+              subject: [id],
+              workspace: db ? getSpacePath(db.spaceId) : undefined,
+            }),
           );
           yield* Effect.promise(() =>
             invokePromise(DeckOperation.ChangeCompanion, {

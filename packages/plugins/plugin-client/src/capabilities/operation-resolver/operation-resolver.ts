@@ -66,7 +66,9 @@ export default Capability.makeModule(
         operation: ClientOperation.ShareIdentity,
         handler: Effect.fnUntraced(function* () {
           yield* Operation.invoke(LayoutOperation.SwitchWorkspace, { subject: getSpacePath(Account.id) });
-          yield* Operation.invoke(LayoutOperation.Open, { subject: [`${getSpacePath(Account.id)}/${Account.Profile}`] });
+          yield* Operation.invoke(LayoutOperation.Open, {
+            subject: [`${getSpacePath(Account.id)}/${Account.Profile}`],
+          });
           yield* Operation.schedule(ObservabilityOperation.SendEvent, { name: 'identity.share' });
         }),
       }),
