@@ -18,6 +18,7 @@ import { assumeType } from '@dxos/util';
 import type * as Database from './Database';
 import * as Entity from './Entity';
 import * as Err from './Err';
+import * as objInternal from './internal/Obj';
 import * as internal from './internal';
 import type * as Ref from './Ref';
 import type * as Type from './Type';
@@ -219,7 +220,7 @@ export const subscribe = (obj: Unknown, callback: () => void): (() => void) => {
  * The snapshot is branded with SnapshotKindId instead of KindId,
  * making it distinguishable from the reactive object at the type level.
  */
-export const getSnapshot: <T extends Unknown>(obj: T) => Snapshot<T> = internal.getSnapshot as any;
+export const getSnapshot: <T extends Unknown>(obj: T) => Snapshot<T> = objInternal.getSnapshot as any;
 
 /**
  * Returns the reactive version of an object from the database, given its snapshot.
@@ -294,7 +295,7 @@ export type CloneOptions = {
  * This does not clone referenced objects, only the properties in the object.
  * @returns A new object with the same schema and properties.
  */
-export const clone: <T extends Unknown>(obj: T, opts?: CloneOptions) => T = internal.clone;
+export const clone: <T extends Unknown>(obj: T, opts?: CloneOptions) => T = objInternal.clone;
 
 //
 // Change
@@ -393,7 +394,7 @@ export const getValue = (obj: Unknown | Snapshot, path: readonly (string | numbe
  */
 // TODO(wittjosiah): Compute possible path values + type value based on generic object type.
 export const setValue: (obj: Mutable<Unknown>, path: readonly (string | number)[], value: any) => void =
-  internal.setValue as any;
+  objInternal.setValue as any;
 
 //
 // Type
@@ -587,7 +588,7 @@ export const removeTag = (entity: Mutable<Unknown>, tag: string): void => intern
  * Accepts both reactive objects and snapshots.
  */
 // TODO(dmaretskyi): Default to `false`.
-export const isDeleted = (entity: Unknown | Snapshot): boolean => internal.isDeleted(entity);
+export const isDeleted = (entity: Unknown | Snapshot): boolean => objInternal.isDeleted(entity);
 
 //
 // Annotations
@@ -676,7 +677,7 @@ export type JSON = internal.ObjectJSON;
  *
  * The same algorithm is used when calling the standard `JSON.stringify(obj)` function.
  */
-export const toJSON = (entity: Unknown | Snapshot): JSON => internal.objectToJSON(entity);
+export const toJSON = (entity: Unknown | Snapshot): JSON => objInternal.objectToJSON(entity);
 
 /**
  * Creates an object from its json representation, performing schema validation.
@@ -688,7 +689,7 @@ export const toJSON = (entity: Unknown | Snapshot): JSON => internal.objectToJSO
  * @param options.dxn - Override object DXN. Changes the result of `Obj.getDXN`.
  */
 export const fromJSON: (json: unknown, options?: { refResolver?: Ref.Resolver; dxn?: DXN }) => Promise<Unknown> =
-  internal.objectFromJSON as any;
+  objInternal.objectFromJSON as any;
 
 /**
  * Comparator function type for sorting objects.
