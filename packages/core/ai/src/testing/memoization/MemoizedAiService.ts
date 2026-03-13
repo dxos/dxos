@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 

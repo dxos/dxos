@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import type * as Schema from 'effect/Schema';
 
 import { type EncodedReference } from '@dxos/echo-protocol';
@@ -9,10 +11,10 @@ import { invariant } from '@dxos/invariant';
 import { type DXN } from '@dxos/keys';
 import { type ToMutable } from '@dxos/util';
 
-import type * as EntityModule from './Entity';
+import type * as Entity from './Entity';
 import * as internal from './internal';
-import type * as ObjModule from './Obj';
-import type * as RelationModule from './Relation';
+import type * as Obj from './Obj';
+import type * as Relation from './Relation';
 
 /**
  * Dynamic type that can be constructed, mutated, and persisted in the ECHO database.

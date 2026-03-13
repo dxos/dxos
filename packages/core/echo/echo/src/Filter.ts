@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';

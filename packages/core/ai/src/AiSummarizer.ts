@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import type * as AiError from '@effect/ai/AiError';
 import * as LanguageModel from '@effect/ai/LanguageModel';
 import * as Prompt from '@effect/ai/Prompt';

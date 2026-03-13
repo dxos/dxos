@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import type * as Schema from 'effect/Schema';
 
 import * as internal from './internal';

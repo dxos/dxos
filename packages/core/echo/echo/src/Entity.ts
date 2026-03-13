@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import type { ForeignKey } from '@dxos/echo-protocol';
 import type { DXN, ObjectId } from '@dxos/keys';
 

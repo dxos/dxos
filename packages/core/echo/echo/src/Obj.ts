@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
