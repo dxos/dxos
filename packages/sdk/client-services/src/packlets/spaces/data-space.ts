@@ -360,11 +360,11 @@ export class DataSpace {
 
   async *getAllDocuments(ctx: Context): AsyncIterable<[string, Uint8Array]> {
     invariant(this._databaseRoot, 'Space is not ready');
-    const doc = this._databaseRoot.doc(ctx) ?? failedInvariant();
+    const doc = this._databaseRoot.doc() ?? failedInvariant();
     const root = save(doc);
     yield [this._databaseRoot.documentId, root];
 
-    for (const documentUrl of this._databaseRoot.getAllLinkedDocuments(ctx)) {
+    for (const documentUrl of this._databaseRoot.getAllLinkedDocuments()) {
       const data = await this._echoHost.exportDoc(ctx, documentUrl);
       yield [documentUrl.replace(/^automerge:/, ''), data];
     }

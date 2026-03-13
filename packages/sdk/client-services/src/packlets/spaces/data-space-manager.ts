@@ -356,7 +356,7 @@ export class DataSpaceManager extends Resource {
     if (!space.databaseRoot) {
       return false;
     }
-    switch (space.databaseRoot.getVersion(ctx)) {
+    switch (space.databaseRoot.getVersion()) {
       case SpaceDocVersion.CURRENT: {
         if (!space.databaseRoot.handle.isReady()) {
           log.warn('waiting for space root to be ready', { spaceId: space.id });
@@ -364,7 +364,7 @@ export class DataSpaceManager extends Resource {
         }
 
         const [_, properties] =
-          findInlineObjectOfType(space.databaseRoot.doc(ctx)!, Type.getTypename(SpaceProperties)) ?? [];
+          findInlineObjectOfType(space.databaseRoot.doc()!, Type.getTypename(SpaceProperties)) ?? [];
         return properties?.data?.[DEFAULT_SPACE_KEY] === this._signingContext.identityKey.toHex();
       }
 
@@ -373,7 +373,7 @@ export class DataSpaceManager extends Resource {
       }
 
       default:
-        log.warn('unknown space version', { version: space.databaseRoot.getVersion(ctx), spaceId: space.id });
+        log.warn('unknown space version', { version: space.databaseRoot.getVersion(), spaceId: space.id });
         return false;
     }
   }
