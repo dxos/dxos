@@ -7,10 +7,12 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { DXN, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { AtomQuery } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
+import { Operation } from '@dxos/operation';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { AutomationCapabilities, invokeFunctionWithTracing } from '@dxos/plugin-automation';
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
@@ -178,6 +180,17 @@ export default Capability.makeModule(
                       feed: Ref.make(feed),
                     }),
                   ),
+                ).pipe(
+                  Effect.catchAll((error) => {
+                    log.catch(error);
+                    return Operation.invoke(LayoutOperation.AddToast, {
+                      id: `${meta.id}/sync-mailbox-error`,
+                      icon: 'ph--warning--regular',
+                      duration: 5_000,
+                      title: ['sync mailbox error title', { ns: meta.id }],
+                      closeLabel: ['close label', { ns: meta.id }],
+                    });
+                  }),
                 );
               }),
               properties: {
@@ -206,6 +219,17 @@ export default Capability.makeModule(
                       feed: Ref.make(feed),
                     }),
                   ),
+                ).pipe(
+                  Effect.catchAll((error) => {
+                    log.catch(error);
+                    return Operation.invoke(LayoutOperation.AddToast, {
+                      id: `${meta.id}/sync-calendar-error`,
+                      icon: 'ph--warning--regular',
+                      duration: 5_000,
+                      title: ['sync calendar error title', { ns: meta.id }],
+                      closeLabel: ['close label', { ns: meta.id }],
+                    });
+                  }),
                 );
               }),
               properties: {
