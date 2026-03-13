@@ -133,6 +133,8 @@ export type VoxelEditorProps = {
   selectedHue?: Hue;
   /** Whether to show the ground grid (default true). */
   showGrid?: boolean;
+  /** Position of the currently selected/last-placed voxel. */
+  selectedPosition?: { x: number; y: number; z: number } | null;
   /** Read-only mode (no interaction, no ground plane, no orbit controls). */
   readOnly?: boolean;
   /** Called when user clicks to add a voxel. */
@@ -160,6 +162,16 @@ const GhostCursor = ({ position, hue, isRemove }: { position: GhostPosition; hue
         <lineBasicMaterial color={displayColor} transparent opacity={0.8} />
       </lineSegments>
     </mesh>
+  );
+};
+
+/** Wireframe outline indicating the currently selected voxel. */
+const SelectionIndicator = ({ position }: { position: [number, number, number] }) => {
+  return (
+    <lineSegments position={position} raycast={() => {}}>
+      <edgesGeometry args={[new THREE.BoxGeometry(1.02, 1.02, 1.02)]} />
+      <lineBasicMaterial color={0xffff00} linewidth={2} />
+    </lineSegments>
   );
 };
 
@@ -350,6 +362,7 @@ type VoxelSceneProps = {
   toolMode: ToolMode;
   selectedHue: Hue;
   showGrid?: boolean;
+  selectedPosition?: { x: number; y: number; z: number } | null;
   readOnly?: boolean;
   onAddVoxel?: (voxel: Voxel.VoxelData) => void;
   onRemoveVoxel?: (position: { x: number; y: number; z: number }) => void;
@@ -364,11 +377,38 @@ const VoxelScene = ({
   toolMode,
   selectedHue,
   showGrid = true,
+  selectedPosition,
   readOnly,
   onAddVoxel,
   onRemoveVoxel,
 }: VoxelSceneProps) => {
   const [ghostPosition, setGhostPosition] = useState<GhostPosition>(null);
+  const isDraggingRef = useRef(false);
+  const { gl } = useThree();
+
+  // Suppress ghost cursor during drag (orbit/pan) for performance.
+  useEffect(() => {
+    const handlePointerDown = () => {
+      isDraggingRef.current = false;
+    };
+    const handlePointerMove = (event: PointerEvent) => {
+      if (event.buttons > 0) {
+        isDraggingRef.current = true;
+        setGhostPosition(null);
+      }
+    };
+    const handlePointerUp = () => {
+      isDraggingRef.current = false;
+    };
+    gl.domElement.addEventListener('pointerdown', handlePointerDown);
+    gl.domElement.addEventListener('pointermove', handlePointerMove);
+    gl.domElement.addEventListener('pointerup', handlePointerUp);
+    return () => {
+      gl.domElement.removeEventListener('pointerdown', handlePointerDown);
+      gl.domElement.removeEventListener('pointermove', handlePointerMove);
+      gl.domElement.removeEventListener('pointerup', handlePointerUp);
+    };
+  }, [gl]);
 
   // Filter voxels to only show those within grid bounds (centered at origin, z >= 0).
   const halfX = Math.floor(gridX / 2);
@@ -406,6 +446,9 @@ const VoxelScene = ({
 
   const handleVoxelPointerMove = useCallback(
     (event: ThreeEvent<PointerEvent>) => {
+      if (isDraggingRef.current) {
+        return;
+      }
       if (toolMode === 'select') {
         setGhostPosition(null);
         return;
@@ -444,6 +487,9 @@ const VoxelScene = ({
 
   const handleGroundPointerMove = useCallback(
     (event: ThreeEvent<PointerEvent>) => {
+      if (isDraggingRef.current) {
+        return;
+      }
       if (toolMode !== 'add' || !event.point) {
         setGhostPosition(null);
         return;
@@ -485,6 +531,9 @@ const VoxelScene = ({
         ))}
 
         {!readOnly && <GhostCursor position={ghostPosition} hue={selectedHue} isRemove={toolMode === 'remove'} />}
+        {!readOnly && selectedPosition && (
+          <SelectionIndicator position={toThree(selectedPosition.x, selectedPosition.y, selectedPosition.z)} />
+        )}
       </group>
 
       {readOnly ? (
@@ -513,6 +562,7 @@ export const VoxelEditor = ({
   toolMode = 'add',
   selectedHue = DEFAULT_HUE,
   showGrid = true,
+  selectedPosition,
   readOnly,
   onAddVoxel,
   onRemoveVoxel,
@@ -537,6 +587,7 @@ export const VoxelEditor = ({
         toolMode={toolMode}
         selectedHue={selectedHue}
         showGrid={showGrid}
+        selectedPosition={selectedPosition}
         readOnly={readOnly}
         onAddVoxel={onAddVoxel}
         onRemoveVoxel={onRemoveVoxel}

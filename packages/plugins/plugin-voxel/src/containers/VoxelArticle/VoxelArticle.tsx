@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { useObject } from '@dxos/echo-react';
@@ -27,13 +27,13 @@ export const VoxelArticle = ({ subject: world }: VoxelArticleProps) => {
   const [selectedHue, setSelectedHue] = useState<Hue>(DEFAULT_HUE);
   const [toolMode, setToolMode] = useState<ToolMode>('add');
   const [showGrid, setShowGrid] = useState(true);
-  const lastOriginRef = useRef<{ x: number; y: number; z: number }>({ x: 0, y: 0, z: 0 });
+  const [selectedPosition, setSelectedPosition] = useState<{ x: number; y: number; z: number } | null>(null);
   const { gridX, gridY, blockSize } = Voxel.getGridDimensions(world);
 
   const handleAddVoxel = useCallback(
     (voxel: Voxel.VoxelData) => {
       const key = Voxel.voxelKey(voxel.x, voxel.y, voxel.z);
-      lastOriginRef.current = { x: voxel.x, y: voxel.y, z: voxel.z };
+      setSelectedPosition({ x: voxel.x, y: voxel.y, z: voxel.z });
       updateVoxels((map) => {
         if (map !== undefined) {
           if (!(key in map)) {
@@ -64,7 +64,7 @@ export const VoxelArticle = ({ subject: world }: VoxelArticleProps) => {
   }, [updateVoxels]);
 
   const handleGenerate = useCallback(() => {
-    const origin = lastOriginRef.current;
+    const origin = selectedPosition ?? { x: 0, y: 0, z: 0 };
     const { voxels: newVoxels } = generateRandomModel(origin, selectedHue);
     updateVoxels((map) => {
       if (map !== undefined) {
@@ -76,7 +76,7 @@ export const VoxelArticle = ({ subject: world }: VoxelArticleProps) => {
         return Voxel.toVoxelMap(newVoxels) as any;
       }
     });
-  }, [selectedHue, updateVoxels]);
+  }, [selectedHue, selectedPosition, updateVoxels]);
 
   const handleToggleGrid = useCallback(() => {
     setShowGrid((prev) => !prev);
@@ -106,6 +106,7 @@ export const VoxelArticle = ({ subject: world }: VoxelArticleProps) => {
             toolMode={toolMode}
             selectedHue={selectedHue}
             showGrid={showGrid}
+            selectedPosition={selectedPosition}
             onAddVoxel={handleAddVoxel}
             onRemoveVoxel={handleRemoveVoxel}
           />
