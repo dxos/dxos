@@ -140,7 +140,9 @@ class FunctionContext extends Resource {
     await this.db?.setSpaceRoot(this.context.spaceRootUrl ?? failedInvariant('spaceRootUrl missing in context'));
     await this.db?.open();
     this.queues =
-      this.client && this.context.spaceId ? this.client.constructQueueFactory(this._ctx, this.context.spaceId) : undefined;
+      this.client && this.context.spaceId
+        ? this.client.constructQueueFactory(this._ctx, this.context.spaceId)
+        : undefined;
   }
 
   override async _close(_ctx: Context) {

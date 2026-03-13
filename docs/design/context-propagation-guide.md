@@ -50,6 +50,7 @@ this.stateUpdate.on(this._ctx, () => {
 ```
 
 The lifecycle ctx is correct because:
+
 - It is scoped to the lifetime of the owning object.
 - It is disposed when the object closes, automatically cancelling pending work.
 - It carries no trace span — these callbacks are trace roots.
@@ -63,9 +64,7 @@ setTimeout(async () => {
   await this._consumePipeline(this._ctx);
 });
 
-this._updateTask = new DeferredTask(this._ctx, () =>
-  this._executeQueries(this._ctx),
-);
+this._updateTask = new DeferredTask(this._ctx, () => this._executeQueries(this._ctx));
 
 scheduleMicroTask(this._ctx, async () => {
   await this._handleFeedAdmission(this._ctx, info);
@@ -77,6 +76,7 @@ queueMicrotask(async () => {
 ```
 
 The lifecycle ctx is the right choice because:
+
 - The work belongs to the class instance and should be cancelled when it closes.
 - `Context.default()` creates an orphaned context nobody disposes — a resource leak.
 - The lifecycle ctx carries no trace span, so these become trace roots (correct for detached work).
@@ -101,6 +101,7 @@ async initializeAll(ctx: Context): Promise<void> {
 Many classes (especially `Resource` subclasses) have `private _ctx = Context.default()`. This context is tied to the object's open/close lifecycle and disposed on close.
 
 Use it when:
+
 - A method is called from a lifecycle hook and no caller-provided ctx exists.
 - Registering event handlers or scheduling background work.
 - Running detached tasks (setTimeout, DeferredTask, etc.).
@@ -123,6 +124,7 @@ class DataSpace {
 ```
 
 `Context.default()` should only be used:
+
 - In public API entry points (creating the root trace context).
 - Resetting `this._ctx` after dispose (as shown above).
 
@@ -142,6 +144,7 @@ User code (no ctx)
 ```
 
 Each `@trace.span()` method automatically:
+
 1. Reads the parent span ID from the incoming ctx (`getAttribute(TRACE_SPAN_ATTRIBUTE)`).
 2. Creates a new span with that parent.
 3. Derives a new child context with `TRACE_SPAN_ATTRIBUTE` set to the new span's ID.
@@ -151,15 +154,15 @@ Methods **without** `@trace.span()` just forward ctx as-is, preserving the chain
 
 ## Summary
 
-| Situation | What ctx to use |
-|---|---|
-| Direct call inside a method | Forward the method's `ctx` |
-| Public API entry point | `Context.default()` |
-| Event/callback subscription | Lifecycle `this._ctx` |
-| setTimeout / scheduleTask / DeferredTask | Lifecycle `this._ctx` |
-| queueMicrotask | Lifecycle `this._ctx` |
-| Promise.all fan-out | Same `ctx` for all branches |
-| No caller ctx available | Lifecycle `this._ctx` |
+| Situation                                | What ctx to use             |
+| ---------------------------------------- | --------------------------- |
+| Direct call inside a method              | Forward the method's `ctx`  |
+| Public API entry point                   | `Context.default()`         |
+| Event/callback subscription              | Lifecycle `this._ctx`       |
+| setTimeout / scheduleTask / DeferredTask | Lifecycle `this._ctx`       |
+| queueMicrotask                           | Lifecycle `this._ctx`       |
+| Promise.all fan-out                      | Same `ctx` for all branches |
+| No caller ctx available                  | Lifecycle `this._ctx`       |
 
 ## ESLint enforcement
 

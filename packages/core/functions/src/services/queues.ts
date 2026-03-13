@@ -55,8 +55,7 @@ export class QueueService extends Context.Tag('@dxos/functions/QueueService')<
    */
   static getQueue = <T extends Entity.Unknown = Entity.Unknown>(
     dxn: DXN,
-  ): Effect.Effect<Queue<T>, never, QueueService> =>
-    QueueService.pipe(Effect.map(({ queues }) => queues.get<T>(dxn)));
+  ): Effect.Effect<Queue<T>, never, QueueService> => QueueService.pipe(Effect.map(({ queues }) => queues.get<T>(dxn)));
 
   /**
    * Creates a new queue.

@@ -135,7 +135,10 @@ export class TestAgent {
     }
 
     this._networkManager = this._networkManagerProvider();
-    this._networkManager.setPeerInfo(Context.default(), { peerKey: this.deviceKey.toHex(), identityKey: this.identityKey.toHex() });
+    this._networkManager.setPeerInfo(Context.default(), {
+      peerKey: this.deviceKey.toHex(),
+      identityKey: this.identityKey.toHex(),
+    });
 
     return this._networkManager;
   }

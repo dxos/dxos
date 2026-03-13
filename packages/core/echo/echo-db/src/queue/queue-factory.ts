@@ -13,9 +13,7 @@ import { type Queue } from './types';
 
 export interface QueueAPI {
   get<T extends Entity.Unknown = Entity.Unknown>(dxn: DXN): Queue<T>;
-  create<T extends Entity.Unknown = Entity.Unknown>(
-    options?: { subspaceTag?: QueueSubspaceTag },
-  ): Queue<T>;
+  create<T extends Entity.Unknown = Entity.Unknown>(options?: { subspaceTag?: QueueSubspaceTag }): Queue<T>;
 }
 
 export class QueueFactory extends Resource implements QueueAPI {
@@ -57,9 +55,9 @@ export class QueueFactory extends Resource implements QueueAPI {
     return newQueue as any as Queue<T>;
   }
 
-  create<T extends Entity.Unknown>(
-    { subspaceTag = QueueSubspaceTags.DATA }: { subspaceTag?: QueueSubspaceTag } = {},
-  ): Queue<T> {
+  create<T extends Entity.Unknown>({
+    subspaceTag = QueueSubspaceTags.DATA,
+  }: { subspaceTag?: QueueSubspaceTag } = {}): Queue<T> {
     const dxn = DXN.fromQueue(subspaceTag, this._spaceId, ObjectId.random());
     return this.get<T>(dxn);
   }
