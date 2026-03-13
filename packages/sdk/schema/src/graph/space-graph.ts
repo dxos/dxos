@@ -159,7 +159,7 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
 
       // Subscribe to queue updates via Event.
       const unsubscribeUpdated = queueImpl.updated.on(() => {
-        const items = queueImpl.getObjectsSync();
+        const items = queueImpl._getObjectsSync();
         if (items) {
           this._queueItems = [...items];
         }
@@ -167,7 +167,7 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
       });
 
       // Initialize with current items.
-      const initialItems = queueImpl.getObjectsSync();
+      const initialItems = queueImpl._getObjectsSync();
       if (initialItems) {
         this._queueItems = [...initialItems];
       }

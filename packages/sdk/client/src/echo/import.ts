@@ -3,15 +3,17 @@
 //
 
 import { SpaceProperties } from '@dxos/client-protocol';
+import { Context } from '@dxos/context';
 import { Obj, Type } from '@dxos/echo';
 import { Filter, type SerializedSpace, Serializer, decodeDXNFromJSON } from '@dxos/echo-db';
 import { type EchoDatabase } from '@dxos/echo-db';
 
 export const importSpace = async (db: EchoDatabase, data: SerializedSpace) => {
+  const ctx = Context.default();
   const [properties] = await db.query(Filter.type(SpaceProperties)).run();
 
-  await new Serializer().import(db, data, {
-    onObject: async (object) => {
+  await new Serializer().import(ctx, db, data, {
+    onObject: async (object: Obj.JSON) => {
       const { '@type': typeEncoded, ...data } = object;
       const typeDXN = decodeDXNFromJSON(typeEncoded);
       const typename = typeDXN?.asTypeDXN()?.type;

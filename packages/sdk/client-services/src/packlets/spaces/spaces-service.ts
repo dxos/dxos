@@ -276,16 +276,16 @@ export class SpacesServiceImpl implements SpacesService {
     const dataSpaceManager = await this._getDataSpaceManager();
     const space =
       dataSpaceManager.getSpaceById(Context.default(), request.spaceId) ?? raise(new Error('Space not found'));
-    await writer.begin(Context.default(), { spaceId: space.id });
+    await writer.begin({ spaceId: space.id });
     const rootUrl = space.automergeSpaceState.lastEpoch?.subject.assertion.automergeRoot;
     assertState(rootUrl, 'Space does not have a root URL');
-    await writer.setCurrentRootUrl(Context.default(), rootUrl);
+    await writer.setCurrentRootUrl(rootUrl);
 
     for await (const [documentId, data] of space.getAllDocuments(Context.default())) {
-      await writer.writeDocument(Context.default(), documentId, data);
+      await writer.writeDocument(documentId, data);
     }
 
-    const archive = await writer.finish(Context.default());
+    const archive = await writer.finish();
     return { archive };
   }
 

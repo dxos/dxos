@@ -504,7 +504,7 @@ export class DataSpace {
 
         // NOTE: Make sure this assignment happens synchronously together with the state change.
         this._databaseRoot = root;
-        if (root.getVersion(this._ctx) !== SpaceDocVersion.CURRENT) {
+        if (root.getVersion() !== SpaceDocVersion.CURRENT) {
           this._state = SpaceState.SPACE_REQUIRES_MIGRATION;
           this.stateUpdate.emit();
         } else if (this._state !== SpaceState.SPACE_READY) {

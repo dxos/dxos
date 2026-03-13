@@ -350,7 +350,7 @@ export class ClientServicesHost {
       (profile) => this._serviceContext.broadcastProfileUpdate(Context.default(), profile),
     );
 
-    this._serviceRegistry.setServices(ctx, {
+    this._serviceRegistry.setServices({
       SystemService: this._systemService,
       IdentityService: identityService,
       ContactsService: new ContactsServiceImpl(
@@ -426,7 +426,7 @@ export class ClientServicesHost {
     log('closing...', { deviceKey });
     this.diagnosticsBroadcastHandler.stop();
     await this._devtoolsProxy?.close();
-    this._serviceRegistry.setServices(ctx, { SystemService: this._systemService });
+    this._serviceRegistry.setServices({ SystemService: this._systemService });
     await this._loggingService.close();
     await this._serviceContext.close();
     await this._level?.close();

@@ -4,6 +4,7 @@
 
 import { Trigger } from '@dxos/async';
 import { type AuthenticatingInvitation, type CancellableInvitation, InvitationEncoder } from '@dxos/client-protocol';
+import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -229,7 +230,7 @@ export const createInvitation = async (
   };
 
   if (host instanceof ServiceContext) {
-    return host.invitationsManager.createInvitation({
+    return host.invitationsManager.createInvitation(Context.default(), {
       kind: Invitation.Kind.SPACE,
       ...options,
     });
@@ -246,7 +247,7 @@ export const acceptInvitation = (
   invitation = sanitizeInvitation(invitation);
 
   if (guest instanceof ServiceContext) {
-    return guest.invitationsManager.acceptInvitation({
+    return guest.invitationsManager.acceptInvitation(Context.default(), {
       invitation,
       deviceProfile: guestDeviceProfile,
     });
