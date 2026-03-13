@@ -332,7 +332,7 @@ components should add a `play` function that waits for the component to mount. S
 - `ScriptPluginSettings` → already in `containers/ScriptPluginSettings/`
 - `ScriptProperties` → already in `containers/ScriptProperties/`
 - `TestContainer` → already in `containers/TestContainer/`
-- `FrameContainer`, `NotebookStack`, `QueryEditor`, `ScriptToolbar`, `TestPanel`, `TypescriptEditor` → primitives; stay in `components/`
+- `FramePanel`, `NotebookStack`, `QueryEditor`, `ScriptToolbar`, `TestPanel`, `TypescriptEditor` → primitives; stay in `components/`
 - Time: 2026-02-25, ~3 min
 
 ## plugin-search

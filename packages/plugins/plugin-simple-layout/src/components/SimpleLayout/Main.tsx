@@ -14,7 +14,7 @@ import { mx } from '@dxos/ui-theme';
 import { useAppBarProps, useNavbarActions, useSimpleLayoutState } from '../../hooks';
 import { ContentLoading } from '../ContentLoading';
 import { useExpandPath } from '../hooks';
-import { useMobileLayout } from '../MobileLayout/MobileLayout';
+import { useMobileLayout } from '../MobileLayout';
 
 import { AppBar } from './AppBar';
 import { NavBar } from './NavBar';

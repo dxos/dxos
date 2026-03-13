@@ -6,6 +6,7 @@ import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import React, { type CSSProperties, forwardRef } from 'react';
 
+import { composableProps } from '@dxos/ui-theme';
 import { type SlottableProps } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
@@ -25,7 +26,7 @@ const gutterSizes: Record<GutterSize, string> = {
   rail: 'var(--dx-rail-item)',
 };
 
-type ColumnRootProps = SlottableProps<HTMLDivElement> & { gutter?: GutterSize };
+type ColumnRootProps = SlottableProps<HTMLDivElement, { gutter?: GutterSize }>;
 
 /**
  * Creates a vertical channel with left/right gutter columns.
@@ -39,13 +40,14 @@ type ColumnRootProps = SlottableProps<HTMLDivElement> & { gutter?: GutterSize };
  * The `--gutter` CSS variable is also consumed by ScrollArea's `margin` option to align scrollbar spacing.
  */
 const Root = forwardRef<HTMLDivElement, ColumnRootProps>(
-  ({ classNames, className, asChild, role, children, gutter = 'md', ...props }, forwardedRef) => {
+  ({ children, asChild, role, gutter = 'md', ...props }, forwardedRef) => {
+    const { className, ...rest } = composableProps(props);
+    const Comp = asChild ? Slot : Primitive.div;
     const { tx } = useThemeContext();
-    const Component = asChild ? Slot : Primitive.div;
     const gutterSize = gutterSizes[gutter];
     return (
-      <Component
-        {...props}
+      <Comp
+        {...rest}
         role={role ?? 'none'}
         style={
           {
@@ -53,11 +55,11 @@ const Root = forwardRef<HTMLDivElement, ColumnRootProps>(
             gridTemplateColumns: [gutterSize, 'minmax(0,1fr)', gutterSize].join(' '),
           } as CSSProperties
         }
-        className={tx('column.root', { gutter }, [className, classNames])}
+        className={tx('column.root', { gutter }, className)}
         ref={forwardedRef}
       >
         {children}
-      </Component>
+      </Comp>
     );
   },
 );
@@ -77,22 +79,16 @@ type ColumnRowProps = SlottableProps<HTMLDivElement>;
  * Children map to: [col-1: icon/slot] [col-2: content] [col-3: icon/action].
  * Must be a direct child of Column.Root.
  */
-const Row = forwardRef<HTMLDivElement, ColumnRowProps>(
-  ({ classNames, className, asChild, role, children, ...props }, forwardedRef) => {
-    const { tx } = useThemeContext();
-    const Component = asChild ? Slot : Primitive.div;
-    return (
-      <Component
-        {...props}
-        className={tx('column.row', {}, [className, classNames])}
-        role={role ?? 'none'}
-        ref={forwardedRef}
-      >
-        {children}
-      </Component>
-    );
-  },
-);
+const Row = forwardRef<HTMLDivElement, ColumnRowProps>(({ children, asChild, role, ...props }, forwardedRef) => {
+  const { className, ...rest } = composableProps(props);
+  const Comp = asChild ? Slot : Primitive.div;
+  const { tx } = useThemeContext();
+  return (
+    <Comp {...rest} role={role ?? 'none'} className={tx('column.row', {}, className)} ref={forwardedRef}>
+      {children}
+    </Comp>
+  );
+});
 
 Row.displayName = COLUMN_ROW_NAME;
 
@@ -110,33 +106,15 @@ type ColumnSegmentProps = SlottableProps<HTMLDivElement>;
  * NOTE: Must not use overflow-hidden here since it will clip input focus rings.
  */
 const Segment = forwardRef<HTMLDivElement, ColumnSegmentProps>(
-  ({ classNames, className, asChild, role, children, ...props }, forwardedRef) => {
+  ({ children, asChild, role, ...props }, forwardedRef) => {
+    const { className, ...rest } = composableProps(props);
+    const Comp = asChild ? Slot : Primitive.div;
     const { tx } = useThemeContext();
-    const Component = asChild ? Slot : Primitive.div;
-
-    if (asChild) {
-      // With asChild, merge col-start-2 directly onto the child — no contents wrapper needed.
-      return (
-        <Component
-          {...props}
-          role={role ?? 'none'}
-          className={tx('column.segment', {}, [className, classNames])}
-          ref={forwardedRef}
-        >
-          {children}
-        </Component>
-      );
-    }
-
+    // With asChild, merge col-start-2 directly onto the child — no contents wrapper needed.
     return (
-      <Component
-        {...props}
-        className={tx('column.segment', {}, [className, classNames])}
-        role={role}
-        ref={forwardedRef}
-      >
-        <div className='contents'>{children}</div>
-      </Component>
+      <Comp {...rest} role={role ?? 'none'} className={tx('column.segment', {}, className)} ref={forwardedRef}>
+        {asChild ? children : <div className='contents'>{children}</div>}
+      </Comp>
     );
   },
 );

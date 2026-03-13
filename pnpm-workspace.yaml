@@ -505,7 +505,7 @@ catalog:
   posthog-js: ^1.353.0
   preact: ^10.26.10
   prettier: ^3.6.2
-  protobufjs: ^7.2.5
+  protobufjs: ^8.0.0
   pwa-asset-generator: ^6.4.0
   quickjs-emscripten: 0.31.0
   race-as-promised: ^0.0.3

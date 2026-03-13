@@ -10,6 +10,7 @@ import { type DXN } from '@dxos/keys';
 import { type ToMutable } from '@dxos/util';
 
 import type * as Entity from './Entity';
+import * as typeInternal from './internal/Type';
 import * as internal from './internal';
 import type * as ObjModule from './Obj';
 import type * as RelationModule from './Relation';
@@ -17,12 +18,12 @@ import type * as RelationModule from './Relation';
 /**
  * Dynamic type that can be constructed, mutated, and persisted in the ECHO database.
  */
-export const RuntimeType = internal.EchoSchema;
+export const RuntimeType = typeInternal.EchoSchema;
 
 /**
  * Dynamic type that can be constructed, mutated, and persisted in the ECHO database.
  */
-export type RuntimeType = internal.EchoSchema;
+export type RuntimeType = typeInternal.EchoSchema;
 
 //
 // Internal types (not exported)
@@ -108,7 +109,7 @@ export const object: {
 // PersistentType (Schema stored in database)
 //
 
-export const PersistentType: Obj<internal.PersistentSchema> = internal.PersistentSchema as any;
+export const PersistentType: Obj<typeInternal.PersistentSchema> = typeInternal.PersistentSchema as any;
 
 export interface PersistentType extends Schema.Schema.Type<typeof PersistentType> {}
 
@@ -241,7 +242,7 @@ export const getVersion = (schema: AnyEntity): string => {
 /**
  * @returns True if the schema is mutable.
  */
-export const isMutable = internal.isMutable;
+export const isMutable = typeInternal.isMutable;
 
 /**
  * ECHO type metadata.

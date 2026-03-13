@@ -35,7 +35,7 @@ import {
   gridSeparatorInlineEnd,
 } from '@dxos/react-ui-grid';
 import { DxEditRequest } from '@dxos/react-ui-grid';
-import { mx, useComposableProps } from '@dxos/ui-theme';
+import { composableProps, mx } from '@dxos/ui-theme';
 import { type ComposableProps } from '@dxos/ui-types';
 
 import { type InsertRowResult, ModalController, type TableModel, type TablePresentation } from '../../model';
@@ -73,7 +73,7 @@ export type TableController = {
   handleInsertRowResult?: (insertRowResult?: InsertRowResult) => void;
 };
 
-export type TableMainProps<T extends Type.AnyEntity = Type.AnyEntity> = ComposableProps<{
+export type TableMainProps<T extends Type.AnyEntity = Type.AnyEntity> = ComposableProps<HTMLDivElement> & {
   schema?: T;
   model?: TableModel;
   presentation?: TablePresentation;
@@ -82,7 +82,7 @@ export type TableMainProps<T extends Type.AnyEntity = Type.AnyEntity> = Composab
   onCreate?: OnCreateHandler;
   onRowClick?: (row: any) => void;
   testId?: string;
-}>;
+};
 
 const TableMainInner = <T extends Type.AnyEntity = Type.AnyEntity>(
   { schema, model, presentation, ignoreAttention, onCreate, onRowClick, testId, ...props }: TableMainProps<T>,
@@ -415,9 +415,8 @@ const TableMainInner = <T extends Type.AnyEntity = Type.AnyEntity>(
     return <span role='none' className='dx-attention-surface' />;
   }
 
-  const { className, ...rest } = useComposableProps(props);
   return (
-    <div {...rest} role='none' className={mx('dx-container relative', className)}>
+    <div {...composableProps(props, { role: 'none', className: 'dx-container relative' })}>
       <Grid.Root id={model.id ?? 'table-grid'}>
         <TableValueEditor<T>
           model={model}

@@ -10,6 +10,7 @@ import React, { type PropsWithChildren, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { Surface } from '@dxos/app-framework/ui';
+import { Obj } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { useClient } from '@dxos/react-client';
 import {
@@ -70,7 +71,7 @@ type MarkdownEditorRootProps = PropsWithChildren<
     'id' | 'attendableId' | 'onAction' | 'onFileUpload' | 'onViewModeChange' | 'viewMode'
   > &
     Pick<UseEditorMenuOptionsProps, 'slashCommandGroups' | 'onLinkQuery'> &
-    Pick<ExtensionsOptions, 'editorStateStore' | 'selectionManager' | 'settings'>
+    Pick<ExtensionsOptions, 'editorStateStore' | 'selectionManager' | 'settings' | 'onSelectObject'>
 >;
 
 const MarkdownEditorRoot = ({
@@ -85,6 +86,7 @@ const MarkdownEditorRoot = ({
   extensions: extensionsProp,
   slashCommandGroups,
   onLinkQuery,
+  onSelectObject,
   ...props
 }: MarkdownEditorRootProps) => {
   const [editorView, setEditorView] = useState<EditorView>();
@@ -123,6 +125,7 @@ const MarkdownEditorRoot = ({
     selectionManager,
     settings,
     viewMode,
+    onSelectObject,
   });
 
   const extensions = useMemo(
@@ -195,16 +198,17 @@ const MARKDOWN_EDITOR_TOOLBAR_NAME = 'MarkdownEditor.Toolbar';
 
 type MarkdownEditorToolbarProps = Omit<
   NaturalMarkdownToolbarProps,
-  'state' | 'editorView' | 'onAction' | 'onFileUpload' | 'onViewModeChange'
+  'state' | 'editorView' | 'onAction' | 'onFileUpload' | 'onViewModeChange' | 'id'
 >;
 
 const MarkdownEditorToolbar = (props: MarkdownEditorToolbarProps) => {
-  const { editorView, toolbarState, onAction, onFileUpload, onViewModeChange } =
+  const { id, attendableId, editorView, toolbarState, onAction, onFileUpload, onViewModeChange } =
     useMarkdownEditorContext(MARKDOWN_EDITOR_TOOLBAR_NAME);
 
   return (
     <NaturalMarkdownToolbar
       {...props}
+      id={attendableId ?? id}
       editorView={editorView}
       state={toolbarState}
       onAction={onAction}

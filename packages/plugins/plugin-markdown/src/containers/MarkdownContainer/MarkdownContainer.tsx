@@ -4,10 +4,10 @@
 
 import { type Extension } from '@codemirror/state';
 import { Atom } from '@effect-atom/atom-react';
-import React, { forwardRef, useMemo } from 'react';
+import React, { forwardRef, useCallback, useMemo } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/ui';
-import { AppCapabilities, getObjectPathFromObject } from '@dxos/app-toolkit';
+import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
@@ -27,13 +27,16 @@ export type MarkdownContainerProps = SurfaceComponentProps<
     id: string;
     settings: Markdown.Settings;
     selectionManager?: SelectionManager;
-  } & Pick<MarkdownEditorRootProps, 'viewMode' | 'onViewModeChange'> &
-    Pick<MarkdownEditorContentProps, 'editorStateStore'> &
-    Pick<MarkdownPluginState, 'extensionProviders'>
+  } & Pick<MarkdownPluginState, 'extensionProviders'> &
+    Pick<MarkdownEditorRootProps, 'viewMode' | 'onSelectObject' | 'onViewModeChange'> &
+    Pick<MarkdownEditorContentProps, 'editorStateStore'>
 >;
 
 export const MarkdownContainer = forwardRef<HTMLDivElement, MarkdownContainerProps>(
-  ({ role, subject: object, id, attendableId, settings, extensionProviders, ...props }, forwardedRef) => {
+  (
+    { role, subject: object, id, attendableId, settings, extensionProviders, onSelectObject, ...props },
+    forwardedRef,
+  ) => {
     const db = Obj.isObject(object) ? Obj.getDatabase(object) : undefined;
     const [docContent] = useObject(Obj.instanceOf(Markdown.Document, object) ? object.content : undefined, 'content');
     const [textContent] = useObject(Obj.instanceOf(Text.Text, object) ? object : undefined, 'content');
@@ -85,6 +88,22 @@ export const MarkdownContainer = forwardRef<HTMLDivElement, MarkdownContainerPro
     // Query for @ refs.
     const handleLinkQuery = useLinkQuery(db);
 
+    // Open linked objects.
+    const { invokePromise } = useOperationInvoker();
+    const handleSelectObject = useCallback(
+      (targetId: string) => {
+        if (onSelectObject) {
+          onSelectObject(targetId);
+        } else {
+          void invokePromise?.(LayoutOperation.Open, {
+            subject: [targetId],
+            pivotId: attendableId,
+          });
+        }
+      },
+      [onSelectObject, invokePromise, object, id],
+    );
+
     return (
       <MarkdownEditor.Root
         id={id}
@@ -95,12 +114,13 @@ export const MarkdownContainer = forwardRef<HTMLDivElement, MarkdownContainerPro
         onAction={runAction}
         onFileUpload={handleFileUpload}
         onLinkQuery={handleLinkQuery}
+        onSelectObject={handleSelectObject}
         {...props}
       >
-        <Panel.Root ref={forwardedRef}>
+        <Panel.Root role={role} ref={forwardedRef}>
           {settings.toolbar && (
             <Panel.Toolbar asChild>
-              <MarkdownEditor.Toolbar id={attendableId ?? id} role={role} customActions={customActions} />
+              <MarkdownEditor.Toolbar customActions={customActions} />
             </Panel.Toolbar>
           )}
           <Panel.Content>

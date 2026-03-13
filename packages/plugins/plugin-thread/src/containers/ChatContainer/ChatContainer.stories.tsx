@@ -14,9 +14,8 @@ import { type Space } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme, Loading } from '@dxos/react-ui/testing';
 import { Thread as ThreadComponent } from '@dxos/react-ui-thread';
-import { render } from '@dxos/storybook-utils';
 import { Message, Thread } from '@dxos/types';
 
 import { translations } from '../../translations';
@@ -42,7 +41,7 @@ const DefaultStory = () => {
   }, [identity]);
 
   if (!identity || !channel || !space || !channel.defaultThread.target) {
-    return null;
+    return <Loading data={{ identity: !!identity, space: !!space, channel: !!channel }} />;
   }
 
   return <ChatContainer space={space} thread={channel.defaultThread.target} />;
@@ -51,7 +50,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'plugins/plugin-thread/containers/ChatContainer',
   component: ThreadComponent.Root as any,
-  render: render(DefaultStory),
+  render: DefaultStory,
   decorators: [
     withTheme(),
     withLayout({ layout: 'column' }),

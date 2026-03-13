@@ -13,11 +13,11 @@ import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { Filter, useDatabase, useQuery } from '@dxos/react-client/echo';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { useAttentionAttributes, useSelected } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
-import { render } from '@dxos/storybook-utils';
+
 import { Message, Person } from '@dxos/types';
 
 import { InboxPlugin } from '../../InboxPlugin';
@@ -50,7 +50,7 @@ const CompanionStory = () => {
   const attentionAttrs = useAttentionAttributes(feed ? Obj.getDXN(feed).toString() : undefined);
 
   if (!db || !feed) {
-    return null;
+    return <Loading data={{ db: !!db, feed: !!feed }} />;
   }
 
   return (
@@ -78,7 +78,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 export const WithCompanion: Story = {
-  render: render(CompanionStory),
+  render: CompanionStory,
   decorators: [
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({

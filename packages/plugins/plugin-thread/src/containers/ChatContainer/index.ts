@@ -4,4 +4,5 @@
 
 import { ChatContainer } from './ChatContainer';
 
+export { ChatContainer };
 export default ChatContainer;

@@ -7,8 +7,8 @@ import React, { useEffect, useState } from 'react';
 
 import { type Obj, Tag } from '@dxos/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { withTheme } from '@dxos/react-ui/testing';
-import { render } from '@dxos/storybook-utils';
+import { Loading, withTheme } from '@dxos/react-ui/testing';
+
 import { Pipeline } from '@dxos/types';
 
 import { translations } from '../../translations';
@@ -27,7 +27,7 @@ const DefaultStory = () => {
   }, [space, object]);
 
   if (!object) {
-    return null;
+    return <Loading data={{ space: !!space, object: !!object }} />;
   }
 
   return <BaseObjectSettings object={object} classNames='w-[20rem]' />;
@@ -36,7 +36,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'plugins/plugin-space/components/BaseObjectSettings',
   component: BaseObjectSettings as any,
-  render: render(DefaultStory),
+  render: DefaultStory,
   decorators: [
     withTheme(),
     withClientProvider({

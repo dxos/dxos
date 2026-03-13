@@ -2,7 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import { extendTailwindMerge, validators } from 'tailwind-merge';
+import { type ElementType, type HTMLAttributes } from 'react';
+import { type ClassNameValue, extendTailwindMerge, validators } from 'tailwind-merge';
+
+import { Slot } from '@radix-ui/react-slot';
 
 import { type ComposableProps } from '@dxos/ui-types';
 
@@ -23,7 +26,6 @@ export const mx = extendTailwindMerge<AdditionalClassGroups>({
         'font-bold',
         'font-extrabold',
         'font-black',
-
         // Arbitrary numbers
         validators.isArbitraryNumber,
       ],
@@ -51,12 +53,16 @@ export const mx = extendTailwindMerge<AdditionalClassGroups>({
 });
 
 /**
- * Reconciles className properties from slot.
+ * Reconciles className properties from a parent slot.
+ * - `className` is set by the Slot merge mechanism.
+ * - `classNames` is the consumer-facing prop for theming overrides.
+ * Use `composableProps` to reconcile both into a single `className`.
  */
-export const useComposableProps = (
-  { classNames, className, ...props }: Pick<ComposableProps, 'classNames' | 'className'>,
-  etc?: string,
+export const composableProps = <P extends HTMLElement = HTMLElement>(
+  { className, classNames, ...props }: ComposableProps,
+  { className: defaultClassNames, ...defaults }: Partial<HTMLAttributes<P>> | undefined = {},
 ) => ({
-  className: mx(etc, classNames, className),
-  props,
+  ...(defaults as object),
+  ...props,
+  className: mx(defaultClassNames, className, classNames),
 });

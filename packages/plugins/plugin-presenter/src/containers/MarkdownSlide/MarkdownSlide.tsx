@@ -6,7 +6,7 @@ import React from 'react';
 
 import { type Markdown } from '@dxos/plugin-markdown/types';
 
-import { Container, Slide } from '../../components';
+import { Panel, Slide } from '../../components';
 
 type MarkdownSlideProps = {
   document: Markdown.Document;
@@ -19,8 +19,8 @@ export const MarkdownSlide = ({ document }: MarkdownSlideProps) => {
   }
 
   return (
-    <Container>
+    <Panel>
       <Slide content={content} />
-    </Container>
+    </Panel>
   );
 };

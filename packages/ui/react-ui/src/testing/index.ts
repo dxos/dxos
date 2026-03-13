@@ -3,3 +3,5 @@
 //
 
 export * from './decorators';
+
+export * from './Loading';
