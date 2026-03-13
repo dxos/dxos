@@ -247,15 +247,23 @@ const Grid = ({ gridX, gridY, onClick, onPointerMove, onPointerOut }: GridProps)
 
   return (
     <group>
-      {/* Ground fill plane. */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[centerX, -0.501, centerZ]}>
+      {/* Ground fill plane (pushed back via polygonOffset to avoid z-fighting with grid lines). */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[centerX, -0.5, centerZ]}>
         <planeGeometry args={[gridX, gridY]} />
-        <meshStandardMaterial color={0xcccccc} side={THREE.DoubleSide} transparent opacity={0.1} />
+        <meshStandardMaterial
+          color={0xcccccc}
+          side={THREE.DoubleSide}
+          transparent
+          opacity={0.1}
+          polygonOffset
+          polygonOffsetFactor={1}
+          polygonOffsetUnits={1}
+        />
       </mesh>
-      {/* Click target (slightly above fill to catch raycasts). */}
+      {/* Click target (invisible, sits just above grid lines). */}
       <mesh
         rotation={[-Math.PI / 2, 0, 0]}
-        position={[centerX, -0.499, centerZ]}
+        position={[centerX, -0.49, centerZ]}
         onClick={onClick}
         onPointerMove={onPointerMove}
         onPointerOut={onPointerOut}
