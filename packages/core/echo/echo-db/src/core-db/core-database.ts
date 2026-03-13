@@ -469,7 +469,7 @@ export class CoreDatabase {
     });
   }
 
-  removeCore(_ctx: Context, core: ObjectCore): void {
+  removeCore(core: ObjectCore): void {
     invariant(this._objects.has(core.id));
     core.setDeleted(true);
   }
@@ -538,10 +538,7 @@ export class CoreDatabase {
   }
 
   // TODO(wittjosiah): Handle RpcClosedError and TimeoutError during reconnection gracefully.
-  async flush(
-    ctx: Context,
-    { disk = true, indexes = false, updates = false }: Database.FlushOptions = {},
-  ): Promise<void> {
+  async flush({ disk = true, indexes = false, updates = false }: Database.FlushOptions = {}): Promise<void> {
     log('flush', { disk, indexes, updates });
     // Wait for pending document creations to complete before flushing.
     await this._automergeDocLoader.waitForPendingCreations();
@@ -644,7 +641,7 @@ export class CoreDatabase {
     await this._dataService.updateIndexes(undefined, { timeout: 0 });
   }
 
-  async getSyncState(ctx: Context): Promise<SpaceSyncState> {
+  async getSyncState(): Promise<SpaceSyncState> {
     const value = await Stream.first(
       this._dataService.subscribeSpaceSyncState({ spaceId: this.spaceId }, { timeout: RPC_TIMEOUT }),
     );

@@ -5,7 +5,7 @@
 import { inspect } from 'node:util';
 
 import { type CleanupFn, Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
-import { type Context, LifecycleState, Resource } from '@dxos/context';
+import { Context, LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
 import { Database, type Entity, Obj, QueryAST, Ref } from '@dxos/echo';
 import { Filter, Query } from '@dxos/echo';
@@ -275,7 +275,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     const target = getProxyTarget(obj) as ProxyTarget & Entity.Unknown;
     EchoReactiveHandler.instance.setDatabase(target, this);
     EchoReactiveHandler.instance.saveRefs(target);
-    this._coreDatabase.addCore(this._ctx, getObjectCore(obj), opts);
+    this._coreDatabase.addCore(Context.default(), getObjectCore(obj), opts);
     return obj;
   }
 
@@ -284,11 +284,11 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
    */
   remove<T extends Entity.Unknown = Entity.Unknown>(obj: T): void {
     invariant(isEchoObject(obj));
-    return this._coreDatabase.removeCore(this._ctx, getObjectCore(obj));
+    return this._coreDatabase.removeCore(getObjectCore(obj));
   }
 
   async flush(opts?: Database.FlushOptions): Promise<void> {
-    await this._coreDatabase.flush(this._ctx, opts);
+    await this._coreDatabase.flush(opts);
   }
 
   async runMigrations(migrations: ObjectMigration[]): Promise<void> {
@@ -307,7 +307,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
         // TODO(dmaretskyi): Output validation.
         delete (output as any).id;
 
-        await this._coreDatabase.atomicReplaceObject(this._ctx, object.id, {
+        await this._coreDatabase.atomicReplaceObject(Context.default(), object.id, {
           data: output,
           type: migration.toType,
         });
@@ -321,7 +321,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   }
 
   getSyncState(): Promise<SpaceSyncState> {
-    return this._coreDatabase.getSyncState(this._ctx);
+    return this._coreDatabase.getSyncState();
   }
 
   subscribeToSyncState(ctx: Context, callback: (state: SpaceSyncState) => void): CleanupFn {
