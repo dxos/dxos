@@ -52,7 +52,7 @@ const Example = Schema.Struct({
     title: 'Parent',
   }),
 }).pipe(
-  Type.object({ typename: `example.com/type/${PublicKey.random().truncate()}`, version: '0.1.0' }),
+  Type.object({ typename: `com.example.type.${PublicKey.random().truncate()}`, version: '0.1.0' }),
   Annotation.LabelAnnotation.set(['name']),
 );
 interface Example extends Schema.Schema.Type<typeof Example> {}
@@ -252,7 +252,7 @@ const ContactWithArrayOfEmails = Schema.Struct({
   ),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/ContactWithArrayOfEmails',
+    typename: 'org.dxos.type.contact-with-array-of-emails',
     version: '0.1.0',
   }),
 );
@@ -297,7 +297,7 @@ export const Tags: Meta<StoryProps> = {
       createSpace: true,
       onCreateSpace: async ({ space }) => {
         // Configure schema.
-        const typename = 'example.com/SingleSelect';
+        const typename = 'com.example.type.single-select';
         const selectOptions = [
           { id: 'one', title: 'One', color: 'emerald' },
           { id: 'two', title: 'Two', color: 'blue' },

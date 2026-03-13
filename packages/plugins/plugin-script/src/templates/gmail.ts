@@ -27,7 +27,7 @@ import * as Schedule from 'https://esm.sh/effect@3.17.0/Schedule?bundle=false';
 import * as Stream from 'https://esm.sh/effect@3.17.0/Stream?bundle=false';
 
 export default defineFunction({
-  key: 'dxos.org/script/gmail',
+  key: 'org.dxos.script.gmail',
   name: 'Gmail',
   inputSchema: S.Struct({
     mailboxId: S.String,
@@ -47,7 +47,7 @@ export default defineFunction({
   handler: ({ context: { space }, data: { mailboxId, userId, after, pageSize } }: any) =>
     Effect.gen(function* () {
       const { token } = yield* Effect.tryPromise({
-        try: () => space.db.query(Filter.typename('dxos.org/type/AccessToken', { source: 'gmail.com' })).first(),
+        try: () => space.db.query(Filter.typename('org.dxos.type.access-token', { source: 'gmail.com' })).first(),
         catch: (e: any) => e,
       });
 
@@ -216,8 +216,8 @@ const MessageType = S.Struct({
   ),
 }).pipe(
   EchoObject({
-    typename: 'dxos.org/type/Message',
-    version: '0.2.0',
+    typename: 'org.dxos.type.message',
+    version: '0.1.0',
   }),
 );
 type MessageType = S.Schema.Type<typeof MessageType>;

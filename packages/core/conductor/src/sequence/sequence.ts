@@ -31,7 +31,7 @@ export const Sequence = Schema.Struct({
   steps: Schema.Array(SequenceStep),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Sequence',
+    typename: 'org.dxos.type.sequence',
     version: '0.1.0',
   }),
 );

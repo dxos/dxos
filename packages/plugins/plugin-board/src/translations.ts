@@ -16,6 +16,7 @@ export const translations = [
         'typename label_one': 'Board',
         'typename label_other': 'Boards',
         'object name placeholder': 'New board',
+        'add object label': 'Add board',
         'rename object label': 'Rename board',
         'delete object label': 'Delete board',
         'object deleted label': 'Board deleted',

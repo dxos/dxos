@@ -9,7 +9,7 @@ import { ComputeGraph } from '@dxos/conductor';
 import { Filter, Obj, type Type } from '@dxos/echo';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { Sheet } from '@dxos/plugin-sheet/types';
-import { Diagram } from '@dxos/plugin-sketch/types';
+import { Sketch } from '@dxos/plugin-sketch/types';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { IconButton, Input, Panel, ScrollArea, Toolbar, useAsyncEffect } from '@dxos/react-ui';
@@ -27,7 +27,7 @@ export type SpaceGeneratorProps = {
 export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) => {
   const { invokePromise } = useOperationInvoker();
   const client = useClient();
-  const staticTypes = [Markdown.Document, Diagram.Diagram, Sheet.Sheet, ComputeGraph]; // TODO(burdon): Make extensible.
+  const staticTypes = [Markdown.Document, Sketch.Sketch, Sheet.Sheet, ComputeGraph]; // TODO(burdon): Make extensible.
   const recordTypes: Type.AnyObj[] = [Organization.Organization, Person.Person, Task.Task];
   const [count, setCount] = useState(1);
   const [info, setInfo] = useState<any>({});

@@ -16,7 +16,7 @@ import { trim } from '@dxos/util';
 import { Plan, Project } from '../../../types';
 
 export default defineFunction({
-  key: 'dxos.org/function/project/qualifier',
+  key: 'org.dxos.function.project.qualifier',
   name: 'Project Qualifier',
   description:
     'Qualifier that determines if the event is relevant to the project. Puts the data into the input queue of the project.',

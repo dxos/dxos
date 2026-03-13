@@ -34,10 +34,10 @@ NOTE: We need to develop agent-specific instructions for creating data sets, inc
 
 ### Phase 2 (Modeler)
 
-- [ ] Toolbar to toggle grid visibility
-- [ ] Model class that maintains a collection of 3D objects that are rendered as voxels (e.g., cube, wall, sphere, cylinder, text characters)
-- [ ] Toolbar to generate (and render) a random object from the Model objects
-- [ ] Implement agent blueprint for creating/deleting blocks (e.g., "create tower five blocks high")
+- [x] Toolbar to toggle grid visibility
+- [x] Model class that maintains a collection of 3D objects that are rendered as voxels (e.g., cube, wall, sphere, cylinder, text characters)
+- [x] Toolbar to generate (and render) a random object from the Model objects
+- [x] Implement agent blueprint for creating/deleting blocks (e.g., "create tower five blocks high")
 
 ### Phase 3 (Advanced Features)
 

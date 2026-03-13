@@ -6,7 +6,7 @@ import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
 
 export const meta: Plugin.Meta = {
-  id: 'dxos.org/plugin/assistant',
+  id: 'org.dxos.plugin.assistant',
   name: 'Assistant',
   description: trim`
     Intelligent AI assistant that can analyze and interact with objects across your spaces.
@@ -18,4 +18,4 @@ export const meta: Plugin.Meta = {
   tags: ['labs'],
 };
 
-export const ASSISTANT_DIALOG = `${meta.id}/assistant/dialog`;
+export const ASSISTANT_DIALOG = `${meta.id}.assistant.dialog`;

@@ -6,14 +6,13 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { Database, type Feed, Filter, Obj, type Ref } from '@dxos/echo';
+import { Database, type Ref } from '@dxos/echo';
 import { CredentialsService } from '@dxos/functions';
-import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type AccessToken } from '@dxos/types';
 
-import * as Calendar from '../../types/Calendar';
-import * as Mailbox from '../../types/Mailbox';
+import type * as Calendar from '../../types/Calendar';
+import type * as Mailbox from '../../types/Mailbox';
 
 /**
  * Creates the service interface from a cached token.
@@ -42,27 +41,8 @@ const loadAccessToken = (accessTokenRef: Ref.Ref<AccessToken.AccessToken> | unde
   });
 
 /**
- * Queries for a config that references the given feed and extracts the access token.
- */
-const loadTokenFromConfig = <T extends Mailbox.Config | Calendar.Config>(
-  feedRef: Ref.Ref<Feed.Feed>,
-  configFilter: Filter.Any,
-  label: string,
-) =>
-  Effect.gen(function* () {
-    const feed = yield* Database.load(feedRef);
-    const configs = yield* Database.runQuery(configFilter);
-    // TODO(wittjosiah): Not possible to filter by references yet.
-    const config = configs.find((config: T) => DXN.equalsEchoId(config.feed.dxn, Obj.getDXN(feed)));
-    if (!config) {
-      log.warn(`${label} config not found for feed`, { feed: feedRef.dxn.toString() });
-    }
-    return yield* loadAccessToken(config?.accessToken, label);
-  });
-
-/**
  * Service for accessing Google API credentials.
- * Provides the Google API token either from a config's access token or falls back to database credentials.
+ * Provides the Google API token either from a mailbox/calendar's access token or falls back to database credentials.
  */
 export class GoogleCredentials extends Context.Tag('GoogleCredentials')<
   GoogleCredentials,
@@ -72,21 +52,29 @@ export class GoogleCredentials extends Context.Tag('GoogleCredentials')<
   }
 >() {
   /**
-   * Creates a credentials layer by querying for the mailbox config that references the given feed.
+   * Creates a credentials layer from a mailbox object ref.
    */
-  static fromMailbox = (feedRef: Ref.Ref<Feed.Feed>) =>
+  static fromMailbox = (mailboxRef: Ref.Ref<Mailbox.Mailbox>) =>
     Layer.effect(
       GoogleCredentials,
-      Effect.map(loadTokenFromConfig<Mailbox.Config>(feedRef, Filter.type(Mailbox.Config), 'mailbox'), makeService),
+      Effect.gen(function* () {
+        const mailbox = yield* Database.load(mailboxRef);
+        const token = yield* loadAccessToken(mailbox.accessToken, 'mailbox');
+        return makeService(token);
+      }),
     );
 
   /**
-   * Creates a credentials layer by querying for the calendar config that references the given feed.
+   * Creates a credentials layer from a calendar object ref.
    */
-  static fromCalendar = (feedRef: Ref.Ref<Feed.Feed>) =>
+  static fromCalendar = (calendarRef: Ref.Ref<Calendar.Calendar>) =>
     Layer.effect(
       GoogleCredentials,
-      Effect.map(loadTokenFromConfig<Calendar.Config>(feedRef, Filter.type(Calendar.Config), 'calendar'), makeService),
+      Effect.gen(function* () {
+        const calendar = yield* Database.load(calendarRef);
+        const token = yield* loadAccessToken(calendar.accessToken, 'calendar');
+        return makeService(token);
+      }),
     );
 
   /**

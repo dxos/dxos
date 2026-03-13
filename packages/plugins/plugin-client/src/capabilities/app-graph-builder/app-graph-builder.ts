@@ -21,7 +21,7 @@ export default Capability.makeModule(
       actions: () =>
         Effect.succeed([
           {
-            id: `${meta.id}/open-user-account`,
+            id: `${meta.id}.open-user-account`,
             data: () => Operation.invoke(ClientOperation.ShareIdentity),
             properties: {
               label: ['open user account label', { ns: meta.id }],

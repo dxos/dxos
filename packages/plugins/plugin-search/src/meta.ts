@@ -6,7 +6,7 @@ import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
 
 export const meta: Plugin.Meta = {
-  id: 'dxos.org/plugin/search',
+  id: 'org.dxos.plugin.search',
   name: 'Search',
   description: trim`
     Full-text search engine for finding content across all spaces and object types.
@@ -17,4 +17,4 @@ export const meta: Plugin.Meta = {
   tags: ['labs'],
 };
 
-export const SEARCH_RESULT = `${meta.id}/result`;
+export const SEARCH_RESULT = `${meta.id}.result`;

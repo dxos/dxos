@@ -37,6 +37,7 @@ import { type MarkdownEditorToolbarProps } from './MarkdownEditorToolbar';
 
 export type MarkdownEditorContentProps = ThemedClassName<{
   id: string;
+  attendableId?: string;
   role?: string;
   viewMode?: EditorViewMode;
   scrollPastEnd?: boolean;
@@ -54,6 +55,7 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
     {
       classNames,
       id,
+      attendableId,
       role,
       viewMode,
       initialValue,
@@ -132,7 +134,7 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
 
     useImperativeHandle<EditorView | null, EditorView | null>(forwardedRef, () => editorView, [editorView]);
 
-    useSelectCurrentThread(editorView, id);
+    useSelectCurrentThread(editorView, id, attendableId ?? id);
 
     useTest(editorView);
 

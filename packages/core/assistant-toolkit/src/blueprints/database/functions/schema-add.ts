@@ -10,7 +10,7 @@ import { defineFunction } from '@dxos/functions';
 import { trim } from '@dxos/util';
 
 export default defineFunction({
-  key: 'dxos.org/function/database/schema-add',
+  key: 'org.dxos.function.database.schema-add',
   name: 'Add schema',
   description: trim`
     Adds a schema to the space.
@@ -19,7 +19,7 @@ export default defineFunction({
   inputSchema: Schema.Struct({
     name: Schema.String,
     typename: Schema.String.annotations({
-      description: 'The typename of the schema in the format of "example.com/type/Type".',
+      description: 'The typename of the schema in the format of "com.example.type.type".',
     }),
     jsonSchema: Schema.Any,
   }),

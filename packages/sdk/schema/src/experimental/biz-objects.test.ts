@@ -51,7 +51,7 @@ namespace Proposition {
 
   export const Object = Fields.pipe(
     Type.object({
-      typename: 'dxos.org/type/Proposition',
+      typename: 'org.dxos.type.proposition',
       version: '0.1.0',
     }),
   );
@@ -87,7 +87,7 @@ export namespace OKR {
 
   const Object = Properties.pipe(
     Type.object({
-      typename: 'dxos.org/type/OKR',
+      typename: 'org.dxos.type.okr',
       version: '0.1.0',
     }),
   );
@@ -124,7 +124,7 @@ export namespace SWOT {
 
   const Object = Properties.pipe(
     Type.object({
-      typename: 'dxos.org/type/SWOT',
+      typename: 'org.dxos.type.swot',
       version: '0.1.0',
     }),
   );
@@ -141,7 +141,7 @@ export namespace Plan {
 
   const Object = Properties.pipe(
     Type.object({
-      typename: 'dxos.org/type/Plan',
+      typename: 'org.dxos.type.plan',
       version: '0.1.0',
     }),
   );

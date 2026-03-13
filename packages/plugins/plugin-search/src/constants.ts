@@ -4,4 +4,4 @@
 
 import { meta } from './meta';
 
-export const SEARCH_DIALOG = `${meta.id}/SearchDialog`;
+export const SEARCH_DIALOG = `${meta.id}.SearchDialog`;

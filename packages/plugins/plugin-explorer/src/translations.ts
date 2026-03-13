@@ -18,6 +18,7 @@ export const translations = [
         'typename label_one': 'Explorer',
         'typename label_other': 'Explorers',
         'object name placeholder': 'New explorer',
+        'add object label': 'Add explorer',
         'rename object label': 'Rename explorer',
         'delete object label': 'Delete explorer',
         'object deleted label': 'Explorer deleted',

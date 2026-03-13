@@ -11,7 +11,7 @@ export const ResearchInputQueue = Schema.Struct({
   queue: Ref.Ref(Queue),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/ResearchInputQueue',
+    typename: 'org.dxos.type.research-input-queue',
     version: '0.1.0',
   }),
 );

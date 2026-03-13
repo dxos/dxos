@@ -34,7 +34,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}/plugin-settings`,
+        id: `${meta.id}.plugin-settings`,
         role: 'article',
         filter: (data): data is { subject: AppCapabilities.Settings } =>
           AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.id,
@@ -44,27 +44,27 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}/chat`,
+        id: `${meta.id}.chat`,
         role: 'article',
         filter: (data): data is { subject: Chat.Chat; variant: undefined } =>
           Obj.instanceOf(Chat.Chat, data.subject) && data.variant !== 'assistant-chat',
         component: ({ data, role, ref }) => <ChatContainer role={role} subject={data.subject} ref={ref} />,
       }),
       Surface.create({
-        id: `${meta.id}/project`,
+        id: `${meta.id}.project`,
         role: 'article',
         filter: (data): data is { subject: Project.Project } => Obj.instanceOf(Project.Project, data.subject),
         component: ({ data, role }) => <ProjectArticle role={role} subject={data.subject} />,
       }),
       Surface.create({
-        id: `${meta.id}/project/companion/settings`,
+        id: `${meta.id}.project.companion.settings`,
         role: 'object-settings',
         filter: (data): data is { subject: Project.Project } => Obj.instanceOf(Project.Project, data.subject),
         component: ({ data }) => <ProjectSettings subject={data.subject} />,
       }),
       // TODO(wittjosiah): This is flashing when chat changes.
       Surface.create({
-        id: `${meta.id}/companion-chat`,
+        id: `${meta.id}.companion-chat`,
         role: 'article',
         filter: (data): data is { companionTo: Obj.Unknown; subject: Chat.Chat | 'assistant-chat' } =>
           Obj.isObject(data.companionTo) &&
@@ -72,7 +72,7 @@ export default Capability.makeModule(() =>
         component: ({ data, role, ref }) => <ChatCompanion role={role} data={data} ref={ref} />,
       }),
       Surface.create({
-        id: `${meta.id}/companion-invocations`,
+        id: `${meta.id}.companion-invocations`,
         role: 'article',
         filter: (data): data is { companionTo: Sequence } =>
           (Obj.instanceOf(Sequence, data.companionTo) || Obj.instanceOf(Prompt.Prompt, data.companionTo)) &&
@@ -92,13 +92,13 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}/blueprint`,
+        id: `${meta.id}.blueprint`,
         role: 'article',
         filter: (data): data is { subject: Blueprint.Blueprint } => Obj.instanceOf(Blueprint.Blueprint, data.subject),
         component: ({ data }) => <BlueprintArticle subject={data.subject} />,
       }),
       Surface.create({
-        id: `${meta.id}/prompt`,
+        id: `${meta.id}.prompt`,
         role: 'article',
         filter: (data): data is { subject: Prompt.Prompt } => Obj.instanceOf(Prompt.Prompt, data.subject),
         component: ({ data }) => <PromptArticle subject={data.subject} />,
@@ -110,7 +110,7 @@ export default Capability.makeModule(() =>
         component: ({ data }) => <ChatDialog {...data.props} />,
       }),
       Surface.create({
-        id: `${meta.id}/status`,
+        id: `${meta.id}.status`,
         role: 'status',
         component: () => <TriggerStatus />,
       }),

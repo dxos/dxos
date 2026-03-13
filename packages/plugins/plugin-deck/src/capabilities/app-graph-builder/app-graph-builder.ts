@@ -41,7 +41,7 @@ export default Capability.makeModule(
           // };
 
           const closeCurrent = {
-            id: `${LayoutOperation.Close.meta.key}/current`,
+            id: `${LayoutOperation.Close.meta.key}.current`,
             data: Effect.fnUntraced(function* () {
               const attention = yield* Capability.get(AttentionCapabilities.Attention);
               const attended = attention.getCurrent().at(-1);
@@ -56,7 +56,7 @@ export default Capability.makeModule(
           };
 
           const closeOthers = {
-            id: `${LayoutOperation.Close.meta.key}/others`,
+            id: `${LayoutOperation.Close.meta.key}.others`,
             data: Effect.fnUntraced(function* () {
               const attention = yield* Capability.get(AttentionCapabilities.Attention);
               const deck = yield* DeckCapabilities.getDeck();
@@ -71,7 +71,7 @@ export default Capability.makeModule(
           };
 
           const closeAll = {
-            id: `${LayoutOperation.Close.meta.key}/all`,
+            id: `${LayoutOperation.Close.meta.key}.all`,
             data: Effect.fnUntraced(function* () {
               const deck = yield* DeckCapabilities.getDeck();
               yield* Operation.invoke(LayoutOperation.Close, { subject: deck.active });
@@ -86,7 +86,7 @@ export default Capability.makeModule(
           const deck = state.decks[state.activeDeck];
 
           const toggleSidebar = {
-            id: `${LayoutOperation.UpdateSidebar.meta.key}/nav`,
+            id: `${LayoutOperation.UpdateSidebar.meta.key}.nav`,
             data: Effect.fnUntraced(function* () {
               yield* Capabilities.updateAtomValue(DeckCapabilities.State, (s) => ({
                 ...s,

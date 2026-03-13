@@ -16,8 +16,7 @@ import { renderByline } from '../../util';
 
 export type TranscriptionContainerProps = SurfaceComponentProps<Transcript.Transcript>;
 
-export const TranscriptionContainer = ({ role, subject: transcript }: TranscriptionContainerProps) => {
-  const attendableId = Obj.getDXN(transcript).toString();
+export const TranscriptionContainer = ({ role, subject: transcript, attendableId }: TranscriptionContainerProps) => {
   const db = Obj.getDatabase(transcript);
   const members = useMembers(db?.spaceId).map((member) => member.identity);
   const queue = useQueue<Message.Message>(transcript.queue.dxn, { pollInterval: 1_000 });

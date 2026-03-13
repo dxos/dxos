@@ -29,7 +29,7 @@ const MessageSchema = S.Struct({
   content: S.String,
 }).pipe(
   EchoObject({
-    typename: 'example.com/type/Message',
+    typename: 'com.example.type.message',
     version: '0.1.0',
   }),
 );
@@ -42,7 +42,7 @@ const generateSnowflake = (unixTimestamp: number): bigint => {
 };
 
 export default defineFunction({
-  key: 'dxos.org/script/discord',
+  key: 'org.dxos.script.discord',
   name: 'Discord',
   inputSchema: S.Struct({
     // TODO(wittjosiah): Remove. This is used to provide a terminal for a cron trigger.
@@ -60,7 +60,7 @@ export default defineFunction({
   handler: ({ data: { channelId, queueId, after = DEFAULT_AFTER, pageSize = 5 }, context: { space } }: any) =>
     Effect.gen(function* () {
       const { token } = yield* Effect.tryPromise({
-        try: () => space.db.query(Filter.typename('dxos.org/type/AccessToken', { source: 'discord.com' })).first(),
+        try: () => space.db.query(Filter.typename('org.dxos.type.access-token', { source: 'discord.com' })).first(),
         catch: (e: any) => e,
       });
       const { objects } = yield* Effect.tryPromise({

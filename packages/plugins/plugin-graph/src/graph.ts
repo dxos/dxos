@@ -12,7 +12,7 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 // TODO(wittjosiah): Remove or restore graph caching.
 // import { meta } from './meta';
 
-// const KEY = `${meta.id}/app-graph`;
+// const KEY = `${meta.id}.app-graph`;
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

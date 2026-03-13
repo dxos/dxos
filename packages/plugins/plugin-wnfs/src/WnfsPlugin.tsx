@@ -9,7 +9,6 @@ import { AppPlugin } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/operation';
 import { ClientEvents } from '@dxos/plugin-client';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
-import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { type CreateObject } from '@dxos/plugin-space/types';
 
 import { Blockstore, FileUploader, Markdown, OperationResolver, ReactSurface } from './capabilities';
@@ -51,16 +50,6 @@ export const WnfsPlugin = Plugin.define(meta).pipe(
         const instances: WnfsCapabilities.Instances = {};
         return Capability.contributes(WnfsCapabilities.Instances, instances);
       }),
-  }),
-  Plugin.addModule({
-    id: 'on-space-created',
-    activatesOn: SpaceEvents.SpaceCreated,
-    activate: () =>
-      Effect.succeed(
-        Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) =>
-          Operation.invoke(WnfsOperation.OnCreateSpace, params),
-        ),
-      ),
   }),
   Plugin.addModule({
     id: 'file-uploader',

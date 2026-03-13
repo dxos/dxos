@@ -6,12 +6,12 @@ import * as Effect from 'effect/Effect';
 import { useCallback, useEffect, useMemo } from 'react';
 
 import { useOperationInvoker, useOperationResolver } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import { COMPANION_PREFIX, LayoutOperation } from '@dxos/app-toolkit';
 import { debounce } from '@dxos/async';
 import { type CellAddress, type CompleteCellRange, inRange } from '@dxos/compute';
 import { Obj, Relation } from '@dxos/echo';
 import { OperationResolver } from '@dxos/operation';
-import { ATTENDABLE_PATH_SEPARATOR, DeckOperation } from '@dxos/plugin-deck/types';
+import { DeckOperation } from '@dxos/plugin-deck/types';
 import { ThreadOperation } from '@dxos/plugin-thread/types';
 import { Filter, Query, useQuery } from '@dxos/react-client/echo';
 import { type DxGridElement, type GridContentProps } from '@dxos/react-ui-grid';
@@ -38,8 +38,7 @@ export const parseThreadAnchorAsCellRange = (cursor: string): CompleteCellRange 
 };
 
 export const useUpdateFocusedCellOnThreadSelection = (grid: DxGridElement | null) => {
-  const { model, setActiveRefs } = useSheetContext();
-  const sheetId = Obj.getDXN(model.sheet).toString();
+  const { attendableId: sheetId, model, setActiveRefs } = useSheetContext();
 
   const scrollIntoViewHandler = useMemo(
     () =>
@@ -88,11 +87,10 @@ export const useSelectThreadOnCellFocus = () => {
       });
 
       if (closestThread) {
-        const primary = Obj.getDXN(model.sheet).toString();
         void (async () => {
           await invokePromise(ThreadOperation.Select, { current: Relation.getDXN(closestThread).toString() });
           await invokePromise(DeckOperation.ChangeCompanion, {
-            companion: `${primary}${ATTENDABLE_PATH_SEPARATOR}comments`,
+            companion: `${COMPANION_PREFIX}comments`,
           });
         })();
       }

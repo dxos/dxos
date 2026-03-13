@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
 import { Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Operation, OperationResolver } from '@dxos/operation';
@@ -27,25 +27,17 @@ export default Capability.makeModule(
             typename: Task.Task.typename,
           });
           space.db.add(object);
-          Obj.change(space.properties, (p) => {
-            p.staticRecords = [Task.Task.typename];
-          });
         }),
       }),
       OperationResolver.make({
         operation: TableOperation.OnSchemaAdded,
-        handler: Effect.fnUntraced(function* ({ db, schema, show = true }) {
+        handler: Effect.fnUntraced(function* ({ db, schema }) {
           const { object } = yield* Operation.invoke(TableOperation.Create, {
             db,
             typename: Type.getTypename(schema),
           });
-          yield* Operation.invoke(SpaceOperation.AddObject, { target: db, object, hidden: true });
-
-          if (show) {
-            yield* Operation.invoke(LayoutOperation.Open, {
-              subject: [Obj.getDXN(object).toString()],
-            });
-          }
+          const { subject } = yield* Operation.invoke(SpaceOperation.AddObject, { target: db, object, hidden: true });
+          yield* Operation.invoke(LayoutOperation.Open, { subject });
         }),
       }),
       OperationResolver.make({

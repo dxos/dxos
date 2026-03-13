@@ -6,7 +6,7 @@ import { type AppCapabilities } from '@dxos/app-toolkit';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { trim } from '@dxos/util';
 
-const BLUEPRINT_KEY = 'dxos.org/blueprint/script';
+const BLUEPRINT_KEY = 'org.dxos.blueprint.script';
 
 const functions: AppCapabilities.BlueprintDefinition['functions'] = [];
 

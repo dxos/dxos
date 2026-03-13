@@ -13,7 +13,7 @@ import { HasSubject } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 export default defineFunction({
-  key: 'dxos.org/function/research/document-create',
+  key: 'org.dxos.function.research.document-create',
   name: 'Create research document',
   description: 'Creates a note summarizing the research.',
   inputSchema: Schema.Struct({

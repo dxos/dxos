@@ -8,7 +8,7 @@ import { trim } from '@dxos/util';
 
 import { TranscriptionFunctions } from '../functions';
 
-const BLUEPRINT_KEY = 'dxos.org/blueprint/transcription';
+const BLUEPRINT_KEY = 'org.dxos.blueprint.transcription';
 
 const functions = Object.values(TranscriptionFunctions);
 

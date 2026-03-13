@@ -159,8 +159,8 @@ export const Spec: Story = {
     await expect(combobox).not.toBeDisabled();
     await expect(canvas.queryByLabelText('Method')).not.toBeInTheDocument();
 
-    // Queue — should show DXN field (the queue address).
+    // Queue — should show DXN field (the queue address). DXN is a combobox, not an input, so use getByText.
     await selectKind(combobox, 'q');
-    await expect(canvas.findByLabelText('DXN')).resolves.toBeInTheDocument();
+    await expect(canvas.findByText('DXN')).resolves.toBeInTheDocument();
   },
 };

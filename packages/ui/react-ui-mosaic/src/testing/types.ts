@@ -17,7 +17,7 @@ export const TestItem = Schema.Struct({
   label: Schema.optional(Schema.String),
 }).pipe(
   Type.object({
-    typename: 'example.com/type/Item',
+    typename: 'com.example.type.item',
     version: '0.1.0',
   }),
 );
@@ -30,7 +30,7 @@ export const TestColumn = Schema.Struct({
   items: Schema.mutable(Schema.Array(Ref.Ref(TestItem))),
 }).pipe(
   Type.object({
-    typename: 'example.com/type/Column',
+    typename: 'com.example.type.column',
     version: '0.1.0',
   }),
 );

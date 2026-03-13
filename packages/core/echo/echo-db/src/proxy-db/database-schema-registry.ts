@@ -30,7 +30,7 @@ import { type EchoDatabase } from './database';
 import { SchemaRegistryPreparedQueryImpl } from './schema-registry-prepared-query';
 
 // TODO(wittjosiah): Use Annotation.SystemTypeAnnotation.
-const SYSTEM_SCHEMA = ['dxos.org/type/Schema'];
+const SYSTEM_SCHEMA = ['org.dxos.type.schema'];
 
 type SchemaSubscriptionCallback = (schema: Type.RuntimeType[]) => void;
 

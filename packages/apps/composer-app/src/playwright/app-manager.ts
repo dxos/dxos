@@ -181,12 +181,12 @@ export class AppManager {
         }
 
         const selectedSpace = document.querySelector('[data-testid="spacePlugin.space"][aria-selected="true"]');
-        return selectedSpace?.getAttribute('data-object-id') === workspaceId;
+        return selectedSpace?.getAttribute('data-object-id') === `root/${workspaceId}`;
       },
       { timeout },
     );
     // TODO(wittjosiah): This improves reliability significantly. Find a better thing to wait for.
-    await this.page.waitForTimeout(200);
+    await this.page.waitForTimeout(500);
   }
 
   getSpacePresenceMembers(): Locator {
@@ -208,6 +208,34 @@ export class AppManager {
 
   toggleCollectionCollapsed(nth = 0, delay = 100): Promise<void> {
     return this.getObjectLinks().nth(nth).getByRole('button').first().click({ delay });
+  }
+
+  toggleCollectionsSection(delay = 100): Promise<void> {
+    return this.currentWorkspace
+      .getByTestId('spacePlugin.collectionsSection')
+      .getByRole('button')
+      .first()
+      .click({ delay });
+  }
+
+  toggleTypesSection(delay = 100): Promise<void> {
+    return this.currentWorkspace.getByTestId('spacePlugin.typesSection').getByRole('button').first().click({ delay });
+  }
+
+  toggleSchemaNode(typename: string, delay = 100): Promise<void> {
+    return this.currentWorkspace
+      .getByTestId(`spacePlugin.schemaNode.${typename}`)
+      .getByRole('button')
+      .first()
+      .click({ delay });
+  }
+
+  toggleTypeCollectionAll(typename: string, delay = 100): Promise<void> {
+    return this.currentWorkspace
+      .getByTestId(`spacePlugin.typeCollectionAll.${typename}`)
+      .getByRole('button')
+      .first()
+      .click({ delay });
   }
 
   async createObject({ type, name, nth }: { type: string; name?: string; nth?: number }): Promise<void> {
@@ -238,7 +266,7 @@ export class AppManager {
 
   async renameObject(newName: string, nth = 0): Promise<void> {
     await this.getObjectLinks().nth(nth).hover();
-    await this.getObjectLinks().nth(nth).getByTestId('navtree.treeItem.actionsLevel1').first().click();
+    await this.getObjectLinks().nth(nth).getByTestId('navtree.treeItem.actionsLevel2').first().click();
     // TODO(thure): For some reason, actions move around when simulating the mouse in Firefox.
     await this.page.keyboard.press('ArrowDown');
     await this.page.getByTestId('spacePlugin.renameObject').last().focus();
@@ -249,7 +277,7 @@ export class AppManager {
   }
 
   async deleteObject(nth = 0): Promise<void> {
-    await this.getObjectLinks().nth(nth).getByTestId('navtree.treeItem.actionsLevel1').first().click();
+    await this.getObjectLinks().nth(nth).getByTestId('navtree.treeItem.actionsLevel2').first().click();
     // TODO(thure): For some reason, actions move around when simulating the mouse in Firefox.
     await this.page.keyboard.press('ArrowDown');
     await this.page.getByTestId('spacePlugin.deleteObject').last().focus();

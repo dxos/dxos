@@ -7,17 +7,17 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/operation';
-import { Diagram } from '@dxos/plugin-sketch/types';
+import { Sketch } from '@dxos/plugin-sketch/types';
 
 import { meta } from './meta';
 
 export const EXCALIDRAW_SCHEMA = 'excalidraw.com/2';
 
-const SKETCH_OPERATION = `${meta.id}/operation`;
+const SKETCH_OPERATION = `${meta.id}.operation`;
 
 export namespace SketchOperation {
   export const Create = Operation.make({
-    meta: { key: `${SKETCH_OPERATION}/create`, name: 'Create Excalidraw Sketch' },
+    meta: { key: `${SKETCH_OPERATION}.create`, name: 'Create Excalidraw Sketch' },
     schema: {
       input: Schema.Struct({
         name: Schema.optional(Schema.String),
@@ -25,7 +25,7 @@ export namespace SketchOperation {
         content: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
       }),
       output: Schema.Struct({
-        object: Diagram.Diagram,
+        object: Sketch.Sketch,
       }),
     },
   });
@@ -46,5 +46,5 @@ export const SketchSettingsSchema = Schema.mutable(
 export type SketchSettingsProps = Schema.Schema.Type<typeof SketchSettingsSchema>;
 
 export namespace ExcalidrawCapabilities {
-  export const Settings = Capability.make<Atom.Writable<SketchSettingsProps>>(`${meta.id}/capability/settings`);
+  export const Settings = Capability.make<Atom.Writable<SketchSettingsProps>>(`${meta.id}.capability.settings`);
 }

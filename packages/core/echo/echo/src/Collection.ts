@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Schema from 'effect/Schema';
 
 import * as internal from './internal';
@@ -17,7 +19,7 @@ export const Collection = Schema.Struct({
   objects: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(internal.FormInputAnnotation.set(false)),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Collection',
+    typename: 'org.dxos.type.collection',
     version: '0.1.0',
   }),
 );

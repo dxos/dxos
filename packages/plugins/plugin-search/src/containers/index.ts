@@ -8,4 +8,3 @@ export type { SearchDialogProps } from './SearchDialog';
 
 export const SearchDialog: ComponentType<any> = lazy(() => import('./SearchDialog'));
 export const SearchMain: ComponentType<any> = lazy(() => import('./SearchMain'));
-export const SpaceMain: ComponentType<any> = lazy(() => import('./SpaceMain'));

@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -17,9 +19,9 @@ import type * as Entity from './Entity';
 import * as Err from './Err';
 import type * as Filter from './Filter';
 import type * as Hypergraph from './Hypergraph';
-import { isInstanceOf } from './internal/annotations';
-import type { Ref } from './internal/ref/ref';
-import { type AnyProperties } from './internal/types';
+import { isInstanceOf } from './internal/Annotation';
+import type { Ref } from './internal/Ref/ref';
+import { type AnyProperties } from './internal/common/types';
 import type * as Obj from './Obj';
 import type * as Query from './Query';
 import type * as QueryResult from './QueryResult';

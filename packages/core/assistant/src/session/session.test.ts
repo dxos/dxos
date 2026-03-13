@@ -26,7 +26,7 @@ const CalendarEventSchema = Schema.Struct({
   description: Schema.String,
 }).pipe(
   Type.object({
-    typename: 'example.com/type/CalendarEvent',
+    typename: 'com.example.type.calendar-event',
     version: '0.1.0',
   }),
 );

@@ -6,7 +6,7 @@ import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
 
 export const meta: Plugin.Meta = {
-  id: 'dxos.org/plugin/storybook-layout',
+  id: 'org.dxos.plugin.storybook-layout',
   name: 'Storybook',
   description: trim`
     Development layout optimized for Storybook component testing and documentation.

@@ -13,11 +13,11 @@ import { Actor } from '@dxos/types';
 
 import { meta } from '../meta';
 
-const INBOX_OPERATION = `${meta.id}/operation`;
+const INBOX_OPERATION = `${meta.id}.operation`;
 
 export namespace InboxOperation {
   export const OnCreateSpace = Operation.make({
-    meta: { key: `${INBOX_OPERATION}/on-create-space`, name: 'On Create Space' },
+    meta: { key: `${INBOX_OPERATION}.on-create-space`, name: 'On Create Space' },
     services: [Capability.Service],
     schema: {
       input: Schema.Struct({
@@ -30,7 +30,7 @@ export namespace InboxOperation {
   });
 
   export const ExtractContact = Operation.make({
-    meta: { key: `${INBOX_OPERATION}/extract-contact`, name: 'Extract Contact' },
+    meta: { key: `${INBOX_OPERATION}.extract-contact`, name: 'Extract Contact' },
     services: [Capability.Service],
     schema: {
       input: Schema.Struct({
@@ -42,7 +42,7 @@ export namespace InboxOperation {
   });
 
   export const CreateDraft = Operation.make({
-    meta: { key: `${INBOX_OPERATION}/create-draft`, name: 'Create Draft' },
+    meta: { key: `${INBOX_OPERATION}.create-draft`, name: 'Create Draft' },
     services: [Capability.Service],
     schema: {
       input: Schema.Struct({
@@ -51,6 +51,8 @@ export namespace InboxOperation {
         replyToMessage: Schema.optional(Schema.Any),
         subject: Schema.optional(Schema.String),
         body: Schema.optional(Schema.String),
+        // TODO(wittjosiah): Should be Mailbox.Mailbox.
+        mailbox: Schema.optional(Schema.Any),
       }),
       output: Schema.Void,
     },

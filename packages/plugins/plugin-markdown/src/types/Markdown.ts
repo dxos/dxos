@@ -19,7 +19,7 @@ export const Document = Schema.Struct({
   content: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Document',
+    typename: 'org.dxos.type.document',
     version: '0.1.0',
   }),
   LabelAnnotation.set(['name', 'fallbackName']),

@@ -17,7 +17,7 @@ import { trim } from '@dxos/util';
 import { QueryEditor, type QueryEditorProps } from './QueryEditor';
 
 const SCRIPT = trim`
-  Query.select(Filter.type('dxos.org/type/Person'))
+  Query.select(Filter.type('org.dxos.type.person'))
 `;
 
 const DefaultStory = (props: QueryEditorProps) => {

@@ -15,7 +15,7 @@ import { translations } from './translations';
 
 export const WelcomePlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
-    id: `${meta.id}/module/onboarding`,
+    id: `${meta.id}.module.onboarding`,
     activatesOn: ActivationEvent.allOf(
       AppActivationEvents.AppGraphReady,
       ActivationEvents.OperationInvokerReady,
@@ -25,17 +25,17 @@ export const WelcomePlugin = Plugin.define(meta).pipe(
     activate: Onboarding,
   }),
   Plugin.addModule({
-    id: `${meta.id}/module/translations`,
+    id: `${meta.id}.module.translations`,
     activatesOn: AppActivationEvents.SetupTranslations,
     activate: () => Effect.succeed(Capability.contributes(AppCapabilities.Translations, translations)),
   }),
   Plugin.addModule({
-    id: `${meta.id}/module/react-surface`,
+    id: `${meta.id}.module.react-surface`,
     activatesOn: ActivationEvents.SetupReactSurface,
     activate: ReactSurface,
   }),
   Plugin.addModule({
-    id: `${meta.id}/module/default-content`,
+    id: `${meta.id}.module.default-content`,
     activatesOn: SpaceEvents.DefaultSpaceReady,
     activate: DefaultContent,
   }),

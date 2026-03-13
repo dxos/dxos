@@ -33,10 +33,11 @@ export type MarkdownContainerProps = SurfaceComponentProps<
 >;
 
 export const MarkdownContainer = forwardRef<HTMLDivElement, MarkdownContainerProps>(
-  ({ role, subject: object, id, settings, extensionProviders, onSelectObject, ...props }, forwardedRef) => {
+  (
+    { role, subject: object, id, attendableId, settings, extensionProviders, onSelectObject, ...props },
+    forwardedRef,
+  ) => {
     const db = Obj.isObject(object) ? Obj.getDatabase(object) : undefined;
-    const attendableId = Obj.instanceOf(Markdown.Document, object) ? Obj.getDXN(object).toString() : undefined;
-    const editorId = attendableId ?? id;
     const [docContent] = useObject(Obj.instanceOf(Markdown.Document, object) ? object.content : undefined, 'content');
     const [textContent] = useObject(Obj.instanceOf(Text.Text, object) ? object : undefined, 'content');
     const initialValue = docContent ?? textContent;
@@ -67,7 +68,7 @@ export const MarkdownContainer = forwardRef<HTMLDivElement, MarkdownContainerPro
     const runAction = useActionRunner();
     const customActions = useMemo(() => {
       return Atom.make((get) => {
-        const actions = get(graph.actions(id));
+        const actions = get(graph.actions(attendableId ?? id));
         const nodes = actions.filter((action) => action.properties.disposition === 'toolbar');
         const edges = nodes.map((node) => ({ source: 'root', target: node.id, relation: 'child' }));
         return { nodes, edges };
@@ -96,16 +97,17 @@ export const MarkdownContainer = forwardRef<HTMLDivElement, MarkdownContainerPro
         } else {
           void invokePromise?.(LayoutOperation.Open, {
             subject: [targetId],
-            pivotId: Obj.isObject(object) ? Obj.getDXN(object).toString() : editorId,
+            pivotId: attendableId,
           });
         }
       },
-      [onSelectObject, invokePromise, object, editorId],
+      [onSelectObject, invokePromise, object, id],
     );
 
     return (
       <MarkdownEditor.Root
-        id={editorId}
+        id={id}
+        attendableId={attendableId}
         object={object}
         extensions={extensions}
         settings={settings}

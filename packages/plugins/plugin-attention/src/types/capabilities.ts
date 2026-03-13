@@ -8,6 +8,6 @@ import { type AttentionManager, type SelectionManager } from '@dxos/react-ui-att
 import { meta } from '../meta';
 
 export namespace AttentionCapabilities {
-  export const Attention = Capability.make<AttentionManager>(`${meta.id}/capability/attention`);
-  export const Selection = Capability.make<SelectionManager>(`${meta.id}/capability/selection`);
+  export const Attention = Capability.make<AttentionManager>(`${meta.id}.capability.attention`);
+  export const Selection = Capability.make<SelectionManager>(`${meta.id}.capability.selection`);
 }

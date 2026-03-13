@@ -23,7 +23,6 @@ import {
   OperationResolver,
   ReactRoot,
   ReactSurface,
-  Repair,
   ThreadState,
 } from './capabilities';
 import { THREAD_ITEM, meta } from './meta';
@@ -107,11 +106,6 @@ export const ThreadPlugin = Plugin.define(meta).pipe(
           Operation.invoke(ThreadOperation.OnCreateSpace, params),
         ),
       ),
-  }),
-  Plugin.addModule({
-    id: 'repair',
-    activatesOn: ClientEvents.SpacesReady,
-    activate: Repair,
   }),
   Plugin.addModule({
     id: 'markdown',

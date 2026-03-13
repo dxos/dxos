@@ -24,7 +24,7 @@ export default Capability.makeModule(() =>
       //
 
       Surface.create<{ subject: Person.Person }>({
-        id: `${meta.id}/schema-popover--contact`,
+        id: `${meta.id}.schema-popover--contact`,
         role: 'card--content',
         position: 'hoist',
         filter: (data): data is { subject: Person.Person } => Obj.instanceOf(Person.Person, data.subject),
@@ -33,7 +33,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}/schema-popover--organization`,
+        id: `${meta.id}.schema-popover--organization`,
         role: 'card--content',
         position: 'hoist',
         filter: (data): data is { subject: Organization.Organization } =>
@@ -43,7 +43,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}/schema-popover--project`,
+        id: `${meta.id}.schema-popover--project`,
         role: 'card--content',
         position: 'hoist',
         filter: (data): data is { subject: Pipeline.Pipeline } => Obj.instanceOf(Pipeline.Pipeline, data.subject),
@@ -52,7 +52,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}/schema-popover--task`,
+        id: `${meta.id}.schema-popover--task`,
         role: 'card--content',
         position: 'hoist',
         filter: (data): data is { subject: Task.Task } => Obj.instanceOf(Task.Task, data.subject),
@@ -66,7 +66,7 @@ export default Capability.makeModule(() =>
       //
 
       Surface.create({
-        id: `${meta.id}/fallback-popover`,
+        id: `${meta.id}.fallback-popover`,
         role: 'card--content',
         position: 'fallback',
         filter: (data): data is { subject: Obj.Unknown; projection?: ProjectionModel } => Obj.isObject(data.subject),
@@ -76,7 +76,7 @@ export default Capability.makeModule(() =>
       }),
 
       Surface.create({
-        id: `${meta.id}/section`,
+        id: `${meta.id}.section`,
         role: ['section'],
         position: 'fallback',
         filter: (data): data is { subject: Obj.Unknown } => Obj.isObject(data.subject),

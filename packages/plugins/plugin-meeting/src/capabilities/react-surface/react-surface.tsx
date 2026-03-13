@@ -19,7 +19,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}/plugin-settings`,
+        id: `${meta.id}.plugin-settings`,
         role: 'article',
         filter: (data): data is { subject: AppCapabilities.Settings } =>
           AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.id,
@@ -29,13 +29,13 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}/meeting`,
+        id: `${meta.id}.meeting`,
         role: 'article',
         filter: (data): data is { subject: Meeting.Meeting } => Obj.instanceOf(Meeting.Meeting, data.subject),
         component: ({ role, data }) => <MeetingContainer role={role} subject={data.subject} />,
       }),
       Surface.create({
-        id: `${meta.id}/meeting-companion`,
+        id: `${meta.id}.meeting-companion`,
         role: 'article',
         filter: (data): data is { subject: Meeting.Meeting | 'meeting'; companionTo: Channel.Channel } =>
           (Obj.instanceOf(Meeting.Meeting, data.subject) || data.subject === 'meeting') &&

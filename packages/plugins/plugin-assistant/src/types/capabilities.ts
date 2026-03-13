@@ -12,7 +12,7 @@ import { meta } from '../meta';
 import { type Assistant } from './';
 
 export namespace AssistantCapabilities {
-  export const Settings = Capability.make<Atom.Writable<Assistant.Settings>>(`${meta.id}/capability/settings`);
+  export const Settings = Capability.make<Atom.Writable<Assistant.Settings>>(`${meta.id}.capability.settings`);
 
   export const StateSchema = Schema.mutable(
     Schema.Struct({
@@ -23,5 +23,5 @@ export namespace AssistantCapabilities {
 
   export type AssistantState = Schema.Schema.Type<typeof StateSchema>;
 
-  export const State = Capability.make<Atom.Writable<AssistantState>>(`${meta.id}/capability/state`);
+  export const State = Capability.make<Atom.Writable<AssistantState>>(`${meta.id}.capability.state`);
 }

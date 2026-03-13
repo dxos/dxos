@@ -19,7 +19,7 @@ import { meta } from '../meta';
 
 import { Welcome, WelcomeState } from './Welcome';
 
-export const WELCOME_SCREEN = `${meta.id}/component/WelcomeScreen`;
+export const WELCOME_SCREEN = `${meta.id}.component.welcome-screen`;
 const TEST_EMAIL = 'test@dxos.org';
 
 export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {

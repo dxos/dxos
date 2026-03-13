@@ -18,7 +18,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}/article/journal`,
+        id: `${meta.id}.article.journal`,
         role: ['article', 'section'],
         filter: (data): data is { subject: Journal.Journal } => Obj.instanceOf(Journal.Journal, data.subject),
         component: ({ role, data }) => (
@@ -26,7 +26,7 @@ export default Capability.makeModule(() =>
         ),
       }),
       Surface.create({
-        id: `${meta.id}/article/outline`,
+        id: `${meta.id}.article.outline`,
         role: ['article', 'section'],
         filter: (data): data is { subject: Outline.Outline } => Obj.instanceOf(Outline.Outline, data.subject),
         component: ({ role, data }) => (
@@ -34,7 +34,7 @@ export default Capability.makeModule(() =>
         ),
       }),
       Surface.create({
-        id: `${meta.id}/card/outline`,
+        id: `${meta.id}.card.outline`,
         role: ['card'],
         filter: (data): data is { subject: Outline.Outline } => Obj.instanceOf(Outline.Outline, data.subject),
         component: ({ data }) => <OutlineCard subject={data.subject} />,

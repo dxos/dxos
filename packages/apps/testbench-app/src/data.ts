@@ -17,7 +17,7 @@ export const Item = Schema.Struct({
   // due: S.optional(S.Date),
 }).pipe(
   Type.object({
-    typename: 'example.com/type/Item',
+    typename: 'com.example.type.item',
     version: '0.1.0',
   }),
 );
@@ -28,7 +28,7 @@ export const Document = Schema.Struct({
   content: Schema.optional(Schema.String),
 }).pipe(
   Type.object({
-    typename: 'example.com/type/Document',
+    typename: 'com.example.type.document',
     version: '0.1.0',
   }),
 );

@@ -11,7 +11,7 @@ import { defineFunction } from '@dxos/functions';
 import { Chess } from '@dxos/plugin-chess/types';
 
 export default defineFunction({
-  key: 'dxos.org/script/chess-bot',
+  key: 'org.dxos.script.chess-bot',
   name: 'Chess Bot',
   description: 'Plays a random move in a chess game.',
 

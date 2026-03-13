@@ -54,7 +54,7 @@ export default Capability.makeModule(
 
     // Persisted state using KVS store.
     const stateAtom = createKvsStore({
-      key: `${meta.id}/state`,
+      key: `${meta.id}.state`,
       schema: DeckStateSchema,
       defaultValue: () => ({ ...defaultDeckState }),
     });

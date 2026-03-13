@@ -22,7 +22,7 @@ import { ResearchGraph } from '../../blueprints';
 import { makeGraphWriterHandler, makeGraphWriterToolkit } from '../../crud';
 
 export default defineFunction({
-  key: 'dxos.org/functions/entity-extraction',
+  key: 'org.dxos.functions.entity-extraction',
   name: 'Entity Extraction',
   description: 'Extracts entities from emails and transcripts.',
   inputSchema: Schema.Struct({

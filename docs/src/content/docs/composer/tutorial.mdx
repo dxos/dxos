@@ -182,21 +182,6 @@ defineModule({
 // ...
 ```
 
-<Aside type="note">
-If you want the object to be added to a collection when it is created, you can set the `addToCollectionOnCreate` property to `true`.
-
-```ts
-{
-  icon: 'ph--compass--regular',
-  inputSchema: MapAction.CreateMap,
-  createObjectIntent: ((props, options) =>
-    createIntent(MapAction.Create, { ...props, space: options.space })) satisfies CreateObjectIntent,
-  addToCollectionOnCreate: true,
-}
-```
-
-</Aside>
-
 ## Surfaces
 
 A Surface is a component which allows one plugin to delegate rendering of a subtree to another plugin.

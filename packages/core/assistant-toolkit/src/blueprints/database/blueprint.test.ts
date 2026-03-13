@@ -62,11 +62,11 @@ describe('Database Blueprint', () => {
         yield* addDatabaseBlueprint();
         yield* AiConversationService.run({
           prompt:
-            'Add a new schema called "Project" with typename "example.com/type/Project" and fields: name (string), description (string), and status (string).',
+            'Add a new schema called "Project" with typename "com.example.type.project" and fields: name (string), description (string), and status (string).',
         });
         const { db } = yield* Database.Service;
         const schemas = yield* Effect.promise(() =>
-          db.schemaRegistry.query({ typename: 'example.com/type/Project', location: ['database', 'runtime'] }).run(),
+          db.schemaRegistry.query({ typename: 'com.example.type.project', location: ['database', 'runtime'] }).run(),
         );
         expect(schemas.length).toBeGreaterThanOrEqual(1);
       },

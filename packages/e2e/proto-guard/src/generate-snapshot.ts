@@ -69,7 +69,7 @@ const seedData = async (client: Client) => {
       testField: Schema.String,
     }).pipe(
       Type.object({
-        typename: 'example.org/type/Test',
+        typename: 'com.example.type.test',
         version: '0.1.0',
       }),
     );

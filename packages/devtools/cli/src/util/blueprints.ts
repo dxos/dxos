@@ -113,7 +113,7 @@ export const types: Type.AnyEntity[] = [
   [Chat.Chat],
   [Chess.Game],
   [Markdown.Document],
-  [Mailbox.Config, Calendar.Config, Feed.Feed],
+  [Mailbox.Mailbox, Calendar.Calendar, Feed.Feed],
   [Blueprint.Blueprint],
   [Tag.Tag],
   [Event.Event, Organization.Organization, Person.Person, Pipeline.Pipeline, Task.Task],

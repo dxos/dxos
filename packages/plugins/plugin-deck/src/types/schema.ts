@@ -11,10 +11,8 @@ import { type DeepReadonly } from '@dxos/util';
 
 import { meta } from '../meta';
 
-export { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
-
-export const PLANK_COMPANION_TYPE = `${meta.id}/plank-companion`;
-export const DECK_COMPANION_TYPE = `${meta.id}/deck-companion`;
+export const PLANK_COMPANION_TYPE = `${meta.id}.plank-companion`;
+export const DECK_COMPANION_TYPE = `${meta.id}.deck-companion`;
 
 // TODO(Zan): In the future we should consider adding new planks adjacent to the attended plank.
 export const NewPlankPositions = ['start', 'end'] as const;
@@ -139,12 +137,12 @@ export namespace DeckAction {
   export type Adjustment = Schema.Schema.Type<typeof Adjustment>;
 
   // An atomic transaction to apply to the deck, describing which element to move to which location.
-  export class Adjust extends Schema.TaggedClass<Adjust>()(`${meta.id}/action/adjust`, {
+  export class Adjust extends Schema.TaggedClass<Adjust>()(`${meta.id}.action.adjust`, {
     input: Adjustment,
     output: Schema.Void,
   }) {}
 
-  export class UpdatePlankSize extends Schema.TaggedClass<UpdatePlankSize>()(`${meta.id}/action/update-plank-size`, {
+  export class UpdatePlankSize extends Schema.TaggedClass<UpdatePlankSize>()(`${meta.id}.action.update-plank-size`, {
     input: Schema.Struct({
       id: Schema.String,
       size: Schema.Number,
@@ -152,7 +150,7 @@ export namespace DeckAction {
     output: Schema.Void,
   }) {}
 
-  export class ChangeCompanion extends Schema.TaggedClass<ChangeCompanion>()(`${meta.id}/action/change-companion`, {
+  export class ChangeCompanion extends Schema.TaggedClass<ChangeCompanion>()(`${meta.id}.action.change-companion`, {
     input: Schema.Struct({
       companion: Schema.Union(Schema.String, Schema.Null),
     }),
@@ -176,7 +174,7 @@ export namespace DeckOperation {
 
   export const Adjust = Operation.make({
     meta: {
-      key: `${meta.id}/operation/adjust`,
+      key: `${meta.id}.operation.adjust`,
       name: 'Adjust',
       description: 'Adjust the layout of a plank.',
     },
@@ -192,7 +190,7 @@ export namespace DeckOperation {
 
   export const UpdatePlankSize = Operation.make({
     meta: {
-      key: `${meta.id}/operation/update-plank-size`,
+      key: `${meta.id}.operation.update-plank-size`,
       name: 'Update Plank Size',
       description: 'Update the size of a plank.',
     },
@@ -208,7 +206,7 @@ export namespace DeckOperation {
 
   export const ChangeCompanion = Operation.make({
     meta: {
-      key: `${meta.id}/operation/change-companion`,
+      key: `${meta.id}.operation.change-companion`,
       name: 'Change Companion',
       description: 'Change the companion plank for a primary plank.',
     },

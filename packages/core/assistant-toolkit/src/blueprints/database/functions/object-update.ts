@@ -10,7 +10,7 @@ import { defineFunction } from '@dxos/functions';
 import { trim } from '@dxos/util';
 
 export default defineFunction({
-  key: 'dxos.org/function/database/object-update',
+  key: 'org.dxos.function.database.object-update',
   name: 'Update object',
   description: trim`
     Updates the object properties.

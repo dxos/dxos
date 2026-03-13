@@ -2,14 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
-
-import { ActivationEvent, Capability, Plugin } from '@dxos/app-framework';
+import { ActivationEvent, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Type } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
-import { ClientEvents } from '@dxos/plugin-client';
-import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 
 import {
   AppGraphBuilder,
@@ -18,11 +13,10 @@ import {
   MeetingState,
   OperationResolver,
   ReactSurface,
-  Repair,
 } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { Meeting, MeetingCapabilities, MeetingOperation } from './types';
+import { Meeting, MeetingCapabilities } from './types';
 
 const StateReady = AppActivationEvents.createStateEvent(meta.id);
 const SettingsReady = AppActivationEvents.createSettingsEvent(MeetingCapabilities.Settings.identifier);
@@ -55,20 +49,6 @@ export const MeetingPlugin = Plugin.define(meta).pipe(
     activatesOn: ActivationEvent.oneOf(AppActivationEvents.SetupSettings, AppActivationEvents.SetupAppGraph),
     activatesAfter: [StateReady],
     activate: MeetingState,
-  }),
-  Plugin.addModule({
-    id: 'on-space-created',
-    activatesOn: SpaceEvents.SpaceCreated,
-    activate: () =>
-      Effect.succeed(
-        Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) =>
-          Operation.invoke(MeetingOperation.OnCreateSpace, params),
-        ),
-      ),
-  }),
-  Plugin.addModule({
-    activatesOn: ClientEvents.SpacesReady,
-    activate: Repair,
   }),
   Plugin.addModule({
     activatesOn: ActivationEvent.allOf(SettingsReady, StateReady),

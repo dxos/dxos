@@ -14,6 +14,7 @@ import { ObservabilityOperation } from '@dxos/plugin-observability/types';
 import { ScrollArea } from '@dxos/react-ui';
 
 import { PluginList } from '../../components';
+import { getPluginPath } from '../../meta';
 
 const sortByPluginMeta = ({ meta: { name: a = '' } }: Plugin.Plugin, { meta: { name: b = '' } }: Plugin.Plugin) =>
   a.localeCompare(b);
@@ -54,8 +55,7 @@ export const PluginRegistry = ({ id, plugins: pluginsProp }: PluginRegistryProps
   const handleClick = useCallback(
     (pluginId: string) =>
       invokePromise(LayoutOperation.Open, {
-        // TODO(wittjosiah): `/` currently is not supported in ids.
-        subject: [pluginId.replaceAll('/', ':')],
+        subject: [getPluginPath(pluginId)],
         pivotId: id,
         positioning: 'end',
       }),

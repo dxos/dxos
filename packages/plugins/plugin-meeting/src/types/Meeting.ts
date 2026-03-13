@@ -51,7 +51,7 @@ export const Meeting = Schema.Struct({
   thread: Ref.Ref(Thread.Thread).pipe(FormInputAnnotation.set(false)),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Meeting',
+    typename: 'org.dxos.type.meeting',
     version: '0.1.0',
   }),
   LabelAnnotation.set(['name']),

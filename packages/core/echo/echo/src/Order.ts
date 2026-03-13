@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import { type QueryAST } from '@dxos/echo-protocol';
 
 export interface Order<T> {

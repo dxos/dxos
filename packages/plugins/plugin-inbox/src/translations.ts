@@ -12,12 +12,13 @@ import { Calendar, Mailbox } from './types';
 export const translations = [
   {
     'en-US': {
-      [Mailbox.kind]: {
+      [Mailbox.Mailbox.typename]: {
         'typename label': 'Mailbox',
         'typename label_zero': 'Mailboxes',
         'typename label_one': 'Mailbox',
         'typename label_other': 'Mailboxes',
         'object name placeholder': 'New mailbox',
+        'add object label': 'Add mailbox',
         'rename object label': 'Rename mailbox',
         'delete object label': 'Delete mailbox',
         'object deleted label': 'Mailbox deleted',
@@ -28,16 +29,18 @@ export const translations = [
         'typename label_one': 'Message',
         'typename label_other': 'Messages',
         'object name placeholder': 'New message',
+        'add object label': 'Add message',
         'rename object label': 'Rename message',
         'delete object label': 'Delete message',
         'object deleted label': 'Message deleted',
       },
-      [Calendar.kind]: {
+      [Calendar.Calendar.typename]: {
         'typename label': 'Calendar',
         'typename label_zero': 'Calendars',
         'typename label_one': 'Calendar',
         'typename label_other': 'Calendars',
         'object name placeholder': 'New calendar',
+        'add object label': 'Add calendar',
         'rename object label': 'Rename calendar',
         'delete object label': 'Delete calendar',
         'object deleted label': 'Calendar deleted',
@@ -56,7 +59,9 @@ export const translations = [
         'inbox label': 'Inbox',
 
         'sync mailbox label': 'Sync mailbox',
+        'sync mailbox error title': 'Failed to sync mailbox',
         'sync calendar label': 'Sync calendar',
+        'sync calendar error title': 'Failed to sync calendar',
 
         'show contact label': 'Show contact',
         'create contact label': 'Create contact',
@@ -94,6 +99,11 @@ export const translations = [
         'save filter placeholder': 'Filter name',
         'save filter button': 'Save',
         'delete filter label': 'Delete filter',
+
+        'mailboxes section label': 'Mailboxes',
+        'all mail label': 'All Mail',
+        'drafts label': 'Drafts',
+        'create draft label': 'Create draft',
 
         'message header view mode plain': 'Plain',
         'message header view mode enriched': 'Enriched',

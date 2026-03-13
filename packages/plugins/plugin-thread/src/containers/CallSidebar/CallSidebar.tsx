@@ -13,5 +13,5 @@ import ChannelContainer from '../ChannelContainer';
 export const CallSidebar = () => {
   const call = useCapability(ThreadCapabilities.CallManager);
   const roomId = useAtomValue(call.roomIdAtom);
-  return <ChannelContainer subject={undefined} roomId={roomId} />;
+  return <ChannelContainer subject={undefined} attendableId={roomId ?? ''} roomId={roomId} />;
 };

@@ -12,7 +12,6 @@ import { EntityKind, SystemTypeAnnotation, createAnnotationHelper, getTypeAnnota
 export const TypeInputOptions = Schema.Struct({
   location: Schema.Array(Schema.Literal('database', 'runtime')),
   kind: Schema.Array(Schema.Literal('system', 'user')),
-  registered: Schema.Array(Schema.Literal('registered', 'unregistered')),
 });
 
 export type TypeInputOptions = Schema.Schema.Type<typeof TypeInputOptions>;
@@ -29,8 +28,6 @@ export const getTypenames = ({ annotation, space }: { annotation: TypeInputOptio
   const includeDatabase = annotation.location.includes('database');
   const includeSystemType = annotation.kind.includes('system');
   const includeUserType = annotation.kind.includes('user');
-  const includeRegistered = annotation.registered.includes('registered');
-  const includeUnregistered = annotation.registered.includes('unregistered');
 
   const runtimeTypenames =
     includeRuntime && space
@@ -50,15 +47,11 @@ export const getTypenames = ({ annotation, space }: { annotation: TypeInputOptio
 
             return includeUserType;
           })
-          .filter((schema) => {
-            const registered = space?.properties.staticRecords?.includes(Type.getTypename(schema));
-            return registered ? includeRegistered : includeUnregistered;
-          })
           .map((schema) => Type.getTypename(schema))
       : [];
 
   const databaseTypenames =
-    includeDatabase && includeRegistered && space
+    includeDatabase && space
       ? space.db.schemaRegistry
           .query({ location: ['database'] })
           .runSync()
