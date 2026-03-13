@@ -42,11 +42,11 @@ type ColumnRootProps = SlottableProps<HTMLDivElement, { gutter?: GutterSize }>;
 const Root = forwardRef<HTMLDivElement, ColumnRootProps>(
   ({ children, asChild, role, gutter = 'md', ...props }, forwardedRef) => {
     const { className, ...rest } = composableProps(props);
-    const Component = asChild ? Slot : Primitive.div;
+    const Comp = asChild ? Slot : Primitive.div;
     const { tx } = useThemeContext();
     const gutterSize = gutterSizes[gutter];
     return (
-      <Component
+      <Comp
         {...rest}
         role={role ?? 'none'}
         style={
@@ -59,7 +59,7 @@ const Root = forwardRef<HTMLDivElement, ColumnRootProps>(
         ref={forwardedRef}
       >
         {children}
-      </Component>
+      </Comp>
     );
   },
 );
@@ -81,12 +81,12 @@ type ColumnRowProps = SlottableProps<HTMLDivElement>;
  */
 const Row = forwardRef<HTMLDivElement, ColumnRowProps>(({ children, asChild, role, ...props }, forwardedRef) => {
   const { className, ...rest } = composableProps(props);
-  const Component = asChild ? Slot : Primitive.div;
+  const Comp = asChild ? Slot : Primitive.div;
   const { tx } = useThemeContext();
   return (
-    <Component {...rest} className={tx('column.row', {}, className)} role={role ?? 'none'} ref={forwardedRef}>
+    <Comp {...rest} role={role ?? 'none'} className={tx('column.row', {}, className)} ref={forwardedRef}>
       {children}
-    </Component>
+    </Comp>
   );
 });
 
@@ -108,22 +108,13 @@ type ColumnSegmentProps = SlottableProps<HTMLDivElement>;
 const Segment = forwardRef<HTMLDivElement, ColumnSegmentProps>(
   ({ children, asChild, role, ...props }, forwardedRef) => {
     const { className, ...rest } = composableProps(props);
-    const Component = asChild ? Slot : Primitive.div;
+    const Comp = asChild ? Slot : Primitive.div;
     const { tx } = useThemeContext();
-
-    if (asChild) {
-      // With asChild, merge col-start-2 directly onto the child — no contents wrapper needed.
-      return (
-        <Component {...rest} role={role ?? 'none'} className={tx('column.segment', {}, className)} ref={forwardedRef}>
-          {children}
-        </Component>
-      );
-    }
-
+    // With asChild, merge col-start-2 directly onto the child — no contents wrapper needed.
     return (
-      <Component {...rest} className={tx('column.segment', {}, className)} role={role} ref={forwardedRef}>
-        <div className='contents'>{children}</div>
-      </Component>
+      <Comp {...rest} role={role ?? 'none'} className={tx('column.segment', {}, className)} ref={forwardedRef}>
+        {asChild ? children : <div className='contents'>{children}</div>}
+      </Comp>
     );
   },
 );
