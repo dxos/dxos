@@ -16,7 +16,7 @@ import { useAttended } from '@dxos/react-ui-attention';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { AnchoredTo, Thread } from '@dxos/types';
 
-import { CommentsContainer, type CommentsContainerProps } from '../../components';
+import { CommentsPanel, type CommentsPanelProps } from '../../components';
 import { meta } from '../../meta';
 import { ThreadCapabilities, ThreadOperation, type ViewState } from '../../types';
 
@@ -129,7 +129,7 @@ export const ThreadCompanion = ({ subject }: { subject: any }) => {
     [invokePromise, subject],
   );
 
-  const handleAcceptProposal = useCallback<NonNullable<CommentsContainerProps['onAcceptProposal']>>(
+  const handleAcceptProposal = useCallback<NonNullable<CommentsPanelProps['onAcceptProposal']>>(
     async (anchor, messageId) => {
       const thread = Relation.getSource(anchor) as Thread.Thread;
       const messageIndex = thread.messages.findIndex(Ref.hasObjectId(messageId));
@@ -150,7 +150,7 @@ export const ThreadCompanion = ({ subject }: { subject: any }) => {
   );
 
   const comments = (
-    <CommentsContainer
+    <CommentsPanel
       anchors={anchors}
       currentId={attended.includes(subjectId) ? state.current : undefined}
       showResolvedThreads={showResolvedThreads}

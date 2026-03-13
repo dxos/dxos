@@ -87,7 +87,6 @@ export const KanbanBoardRoot = ({
   items,
   onCardAdd,
   onCardRemove,
-  ...props
 }: KanbanBoardRootProps) => {
   const registry = useContext(RegistryContext);
   const { t } = useTranslation(meta.id);
@@ -118,7 +117,7 @@ export const KanbanBoardRoot = ({
 
   if (columns.length === 0) {
     return (
-      <div {...props} className='flex flex-1 items-center justify-center p-8 text-center text-description'>
+      <div className='flex flex-1 items-center justify-center p-8 text-center text-description'>
         {t('select pivot placeholder')}
       </div>
     );
@@ -136,9 +135,7 @@ export const KanbanBoardRoot = ({
       onCardAdd={onCardAdd}
       onCardRemove={onCardRemove}
     >
-      <Board.Root model={model}>
-        <div {...props}>{children}</div>
-      </Board.Root>
+      <Board.Root model={model}>{children}</Board.Root>
     </KanbanBoardContext>
   );
 };
@@ -151,7 +148,9 @@ KanbanBoardRoot.displayName = KANBAN_BOARD_ROOT;
 
 const KANBAN_BOARD_CONTENT = 'KanbanBoard.Content';
 
-export const KanbanBoardContent = () => {
+type KanbanBoardContentProps = {};
+
+export const KanbanBoardContent = (props: KanbanBoardContentProps) => {
   const { model } = useBoard(KANBAN_BOARD_CONTENT);
   const { kanbanId, projection, pivotFieldId, change } = useKanbanBoard(KANBAN_BOARD_CONTENT);
 

@@ -74,11 +74,12 @@ export const automerge = (accessor: DocAccessor): Extension => {
             const value = DocAccessor.getValue<string>(Context.default(), accessor);
             const current = this._view.state.doc.toString();
             if (value !== current) {
-              // TODO(burdon): This attempts to set the initial state, but creates problems.
-              // this._view.dispatch({
-              //   changes: { from: 0, to: this._view.state.doc.length, insert: value },
-              //   annotations: initialSync,
-              // });
+              // TODO(burdon): This attempts to set the initial state.
+              console.warn('ENABLING INITIAL SYNC -- THIS MAY BE A REGRESSION');
+              this._view.dispatch({
+                changes: { from: 0, to: this._view.state.doc.length, insert: value },
+                annotations: initialSync,
+              });
             }
           });
         }

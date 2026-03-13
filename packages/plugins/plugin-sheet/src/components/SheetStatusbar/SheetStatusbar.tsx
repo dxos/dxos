@@ -2,17 +2,19 @@
 // Copyright 2024 DXOS.org
 //
 
-import React from 'react';
+import React, { forwardRef } from 'react';
 
 import { addressToA1Notation, isFormula, rangeToA1Notation } from '@dxos/compute';
 import { type ComposableProps, Icon } from '@dxos/react-ui';
 
 import { mapFormulaIndicesToRefs } from '../../types';
 import { useSheetContext } from '../SheetRoot';
+import { composableProps, mx } from '@dxos/ui-theme';
 
 export type SheetStatusbarProps = ComposableProps;
 
-export const SheetStatusbar = (props: SheetStatusbarProps) => {
+export const SheetStatusbar = forwardRef<HTMLDivElement, SheetStatusbarProps>((props, forwardedRef) => {
+  const { className, ...rest } = composableProps(props);
   const { model, cursor, range } = useSheetContext();
 
   let value;
@@ -29,8 +31,12 @@ export const SheetStatusbar = (props: SheetStatusbarProps) => {
 
   return (
     <div
-      {...props}
-      className='flex shrink-0 justify-between items-center px-4 py-1 text-sm bg-toolbar-surface border-y !border-subdued-separator'
+      ref={forwardedRef}
+      {...rest}
+      className={mx(
+        'flex shrink-0 justify-between items-center px-4 py-1 text-sm bg-toolbar-surface border-y !border-subdued-separator',
+        className,
+      )}
     >
       <div className='flex gap-4 items-center'>
         <div className='flex w-16 items-center font-mono'>
@@ -43,4 +49,4 @@ export const SheetStatusbar = (props: SheetStatusbarProps) => {
       </div>
     </div>
   );
-};
+});

@@ -3,14 +3,14 @@
 //
 
 import { Primitive } from '@radix-ui/react-primitive';
-import { Slot } from '@radix-ui/react-slot';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { type PropsWithChildren, forwardRef } from 'react';
+import React, { HTMLAttributes, type PropsWithChildren, forwardRef } from 'react';
 
-import { useComposableProps } from '@dxos/ui-theme';
+import { composableProps } from '@dxos/ui-theme';
 import { type ComposableProps, type SlottableProps, type ThemedClassName } from '@dxos/ui-types';
 
 import { withTheme } from '../testing';
+import { Slot } from '@radix-ui/react-slot';
 
 /**
  * Composition
@@ -20,59 +20,49 @@ import { withTheme } from '../testing';
  * https://www.radix-ui.com/primitives/docs/guides/composition
  */
 
-// Outer primitive (like Tooltip.Trigger or Focus.Group).
 const Outer = forwardRef<HTMLDivElement, SlottableProps<HTMLDivElement>>(
   ({ children, asChild, ...props }, forwardedRef) => {
-    const { className, ...rest } = useComposableProps(props);
     const Comp = asChild ? Slot : Primitive.div;
     return (
-      <Comp {...rest} className={className} data-outer='true' ref={forwardedRef}>
+      <Comp {...composableProps<HTMLDivElement>(props, { role: 'none' })} ref={forwardedRef}>
         {children}
       </Comp>
     );
   },
 );
 
-// Middle primitive (like Dialog.Trigger or Mosaic.Cell).
 const Middle = forwardRef<HTMLDivElement, SlottableProps<HTMLDivElement>>(
   ({ children, asChild, ...props }, forwardedRef) => {
-    const { className, ...rest } = useComposableProps(props);
     const Comp = asChild ? Slot : Primitive.div;
     return (
-      <Comp {...rest} className={className} data-middle='true' ref={forwardedRef}>
+      <Comp {...composableProps<HTMLDivElement>(props, { role: 'none' })} ref={forwardedRef}>
         {children}
       </Comp>
     );
   },
 );
 
-// Leaf component (like Card.Root).
-const Leaf = forwardRef<HTMLButtonElement, ComposableProps<PropsWithChildren>>(
+const Leaf = forwardRef<HTMLButtonElement, ComposableProps<HTMLButtonElement>>(
   ({ children, ...props }, forwardedRef) => {
-    const { className, ...rest } = useComposableProps(props);
     return (
-      <button {...rest} className={className} ref={forwardedRef}>
+      <button {...composableProps<HTMLButtonElement>(props, { role: 'none' })} ref={forwardedRef}>
         {children}
       </button>
     );
   },
 );
 
-// Test 1: Single asChild.
 const TestSingle = (props: ThemedClassName<{ role?: string }>) => {
-  const { className, ...rest } = useComposableProps(props);
   return (
-    <Outer asChild {...rest} className={className}>
-      <Leaf>Single asChild</Leaf>
+    <Outer asChild {...composableProps<HTMLDivElement>(props, { role: 'none' })}>
+      <Leaf>Single asChild (non-compliant — see console)</Leaf>
     </Outer>
   );
 };
 
-// Test 2: Nested asChild.
 const TestNested = (props: ThemedClassName<{ role?: string }>) => {
-  const { className, ...rest } = useComposableProps(props);
   return (
-    <Outer asChild {...rest} className={className}>
+    <Outer asChild {...composableProps<HTMLDivElement>(props, { role: 'none' })}>
       <Middle asChild>
         <Leaf>Nested asChild</Leaf>
       </Middle>
@@ -80,11 +70,9 @@ const TestNested = (props: ThemedClassName<{ role?: string }>) => {
   );
 };
 
-// Test 3: Complex.
 const TestInner = (props: ThemedClassName<{ role?: string }>) => {
-  const { className, ...rest } = useComposableProps(props);
   return (
-    <Outer asChild {...rest} className={className}>
+    <Outer asChild {...composableProps<HTMLDivElement>(props, { role: 'none' })}>
       <Middle asChild>
         <Leaf>
           <div role='none'>Leaf</div>

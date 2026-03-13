@@ -36,7 +36,7 @@ import {
   OBJECT_RENAME_POPOVER,
   SPACE_RENAME_POPOVER,
 } from '../../constants';
-import { type JoinDialogProps } from '../../containers/JoinDialog/JoinDialog';
+import { type JoinDialogProps } from '../../containers/JoinDialog';
 import { meta } from '../../meta';
 import { SpaceEvents } from '../../types';
 import { SpaceCapabilities, SpaceOperation } from '../../types';

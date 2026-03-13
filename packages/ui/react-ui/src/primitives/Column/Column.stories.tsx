@@ -32,6 +32,12 @@ const DefaultStory = () => {
         <h1 className='p-1 bg-blue-500 text-black'>Header</h1>
       </Column.Segment>
 
+      <Column.Row>
+        <div className='p-1 bg-blue-500'>A</div>
+        <div className='p-1 bg-red-500'>B</div>
+        <div className='p-1 bg-blue-500'>C</div>
+      </Column.Row>
+
       <Column.Segment asChild>
         <div className='py-2'>
           <Input.Root>

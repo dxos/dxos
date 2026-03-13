@@ -22,7 +22,7 @@ import React, {
 } from 'react';
 
 import { type AllowedAxis, type ComposableProps } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
+import { composableProps, mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 
 import { useFocus } from '../Focus';
@@ -69,7 +69,7 @@ const MOSAIC_CONTAINER_PLACEHOLDER_HEIGHT = '--mosaic-placeholder-height';
 
 let counter = 0;
 
-type MosaicContainerProps = ComposableProps<
+type MosaicContainerProps = ComposableProps<HTMLDivElement> &
   PropsWithChildren<
     Partial<Pick<MosaicContainerContextValue, 'eventHandler' | 'orientation'>> & {
       asChild?: boolean;
@@ -77,15 +77,12 @@ type MosaicContainerProps = ComposableProps<
       withFocus?: boolean;
       debug?: () => ReactNode;
     }
-  >
->;
+  >;
 
 // TODO(burdon): Make generic.
 const MosaicContainer = forwardRef<HTMLDivElement, MosaicContainerProps>(
   (
     {
-      classNames,
-      className,
       children,
       eventHandler: eventHandlerProp,
       orientation = 'vertical',
@@ -97,9 +94,10 @@ const MosaicContainer = forwardRef<HTMLDivElement, MosaicContainerProps>(
     }: MosaicContainerProps,
     forwardedRef,
   ) => {
+    const { className, ...rest } = composableProps(props);
+    const Comp = asChild ? Slot : Primitive.div;
     const rootRef = useRef<HTMLDivElement>(null);
     const composedRef = useComposedRefs<HTMLDivElement>(rootRef, forwardedRef);
-    const Comp = asChild ? Slot : Primitive.div;
 
     // Handler.
     const eventHandler = useMemo(
@@ -259,7 +257,7 @@ const MosaicContainer = forwardRef<HTMLDivElement, MosaicContainerProps>(
         setActiveLocation={setActiveLocation}
       >
         <Comp
-          className={mx('h-full', className, classNames)}
+          className={mx('h-full', className)}
           style={
             {
               [MOSAIC_CONTAINER_PLACEHOLDER_WIDTH]:
@@ -268,7 +266,7 @@ const MosaicContainer = forwardRef<HTMLDivElement, MosaicContainerProps>(
                 state.type === 'active' && state.bounds ? `${state.bounds.height}px` : '0px',
             } as CSSProperties
           }
-          {...props}
+          {...rest}
           {...{
             [`data-${MOSAIC_CONTAINER_STATE_ATTR}`]: state.type,
           }}

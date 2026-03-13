@@ -203,7 +203,7 @@ export const NotebookContainer = ({ role, subject: notebook, env }: NotebookCont
             icon='ph--play--fill'
             iconOnly
             label={t('compute label')}
-            classNames='text-green-500'
+            classNames='text-success-text'
             onClick={handleCompute}
           />
         </Toolbar.Root>
