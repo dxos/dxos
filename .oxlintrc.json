@@ -4,12 +4,12 @@
   "categories": {},
   "options": {
     "typeAware": true,
-    "denyWarnings": true
+    "denyWarnings": true,
   },
   "rules": {
     "@dxos/eslint-plugin-rules/effect-subpath-imports": "warn",
     "@dxos/eslint-plugin-rules/header": "warn",
-    "@dxos/eslint-plugin-rules/import-as-namespace": "error",
+    "@dxos/eslint-plugin-rules/import-as-namespace": "warn",
     "@dxos/eslint-plugin-rules/no-bare-dot-imports": "error",
     "@dxos/eslint-plugin-rules/no-effect-run-promise": "error",
     "@dxos/eslint-plugin-rules/no-empty-promise-catch": "error",
@@ -67,19 +67,19 @@
     "unicorn/no-useless-fallback-in-spread": "off",
     "unicorn/no-useless-spread": "off",
     "unicorn/prefer-string-starts-ends-with": "off",
-    "vitest/warn-todo": "off"
+    "vitest/warn-todo": "off",
   },
   "settings": {
     "jsx-a11y": {
       "polymorphicPropName": null,
       "components": {},
-      "attributes": {}
+      "attributes": {},
     },
     "react": {
       "formComponents": [],
       "linkComponents": [],
       "version": null,
-      "componentWrapperFunctions": []
+      "componentWrapperFunctions": [],
     },
     "jsdoc": {
       "ignorePrivate": false,
@@ -89,14 +89,14 @@
       "augmentsExtendsReplacesDocs": false,
       "implementsReplacesDocs": false,
       "exemptDestructuredRootsFromChecks": false,
-      "tagNamePreference": {}
+      "tagNamePreference": {},
     },
     "vitest": {
-      "typecheck": false
-    }
+      "typecheck": false,
+    },
   },
   "env": {
-    "builtin": true
+    "builtin": true,
   },
   "globals": {},
   "ignorePatterns": [
@@ -112,7 +112,7 @@
     "scripts/**",
     "docs/legacy/**",
     "tools/swc-log-plugin/tests/__swc_snapshots__/**",
-    "tools/swc-log-plugin/test-rig/**"
+    "tools/swc-log-plugin/test-rig/**",
   ],
-  "jsPlugins": ["@dxos/eslint-plugin-rules"]
+  "jsPlugins": ["@dxos/eslint-plugin-rules"],
 }
