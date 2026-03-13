@@ -36,7 +36,7 @@ export const SleepArticle = ({ role, subject: dream }: SleepArticleProps) => {
   }
 
   return (
-    <Panel.Root role={role}>
+    <Panel.Root role={role} classNames='dx-article'>
       <Panel.Content>
         <Form.Root schema={omitId(schema)} values={dream} autoSave onSave={handleSave}>
           <Form.Viewport>
