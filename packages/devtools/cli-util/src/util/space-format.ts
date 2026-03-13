@@ -5,7 +5,6 @@
 import * as Effect from 'effect/Effect';
 
 import { type Space, SpaceState, type SpaceSyncState } from '@dxos/client/echo';
-import { Context } from '@dxos/context';
 
 import * as FormBuilder from './form-builder';
 
@@ -23,9 +22,7 @@ export const formatSpace = Effect.fn(function* (space: Space, options = { verbos
   const pipeline = space.internal.data.pipeline;
   const epoch = pipeline?.currentEpoch?.subject.assertion.number;
 
-  const syncState = aggregateSyncState(
-    yield* Effect.tryPromise(() => space.internal.db.coreDatabase.getSyncState(Context.default())),
-  );
+  const syncState = aggregateSyncState(yield* Effect.tryPromise(() => space.internal.db.coreDatabase.getSyncState()));
 
   return {
     id: space.id,
@@ -33,7 +30,7 @@ export const formatSpace = Effect.fn(function* (space: Space, options = { verbos
     name: space.state.get() === SpaceState.SPACE_READY ? space.properties.name : 'loading...',
 
     members: space.members.get().length,
-    objects: space.internal.db.coreDatabase.getAllObjectIds(Context.default()).length,
+    objects: space.internal.db.coreDatabase.getAllObjectIds().length,
 
     key: options.truncateKeys ? space.key.truncate() : space.key.toHex(),
     epoch,
